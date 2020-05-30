@@ -1,0 +1,34 @@
+Start testing: May 30 22:01 JST
+----------------------------------------------------------
+1/1 Testing: passive_joints_test
+1/1 Test: passive_joints_test
+Command: "/home/sotaro/src/InvDynOCP/test/build/robot/passive_joints_test"
+Directory: /home/sotaro/src/InvDynOCP/test/build/robot
+"passive_joints_test" start time: May 30 22:01 JST
+Output:
+----------------------------------------------------------
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from PassiveJointsTest
+[ RUN      ] PassiveJointsTest.passive_torque_indices
+0
+1
+2
+3
+4
+5
+[       OK ] PassiveJointsTest.passive_torque_indices (6 ms)
+[----------] 1 test from PassiveJointsTest (6 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (6 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"passive_joints_test" end time: May 30 22:01 JST
+"passive_joints_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: May 30 22:01 JST

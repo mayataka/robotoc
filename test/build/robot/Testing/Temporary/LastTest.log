@@ -1,0 +1,77 @@
+Start testing: May 30 23:36 JST
+----------------------------------------------------------
+1/2 Testing: passive_joints_test
+1/2 Test: passive_joints_test
+Command: "/home/sotaro/src/InvDynOCP/test/build/robot/passive_joints_test"
+Directory: /home/sotaro/src/InvDynOCP/test/build/robot
+"passive_joints_test" start time: May 30 23:36 JST
+Output:
+----------------------------------------------------------
+[==========] Running 3 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 3 tests from PassiveJointsTest
+[ RUN      ] PassiveJointsTest.passive_torque_indices
+[       OK ] PassiveJointsTest.passive_torque_indices (3 ms)
+[ RUN      ] PassiveJointsTest.setPassiveTorques
+[       OK ] PassiveJointsTest.setPassiveTorques (4 ms)
+[ RUN      ] PassiveJointsTest.computePassiveConstraintViolation
+[       OK ] PassiveJointsTest.computePassiveConstraintViolation (4 ms)
+[----------] 3 tests from PassiveJointsTest (11 ms total)
+
+[----------] Global test environment tear-down
+[==========] 3 tests from 1 test suite ran. (11 ms total)
+[  PASSED  ] 3 tests.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"passive_joints_test" end time: May 30 23:36 JST
+"passive_joints_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/2 Testing: point_contact_test
+2/2 Test: point_contact_test
+Command: "/home/sotaro/src/InvDynOCP/test/build/robot/point_contact_test"
+Directory: /home/sotaro/src/InvDynOCP/test/build/robot
+"point_contact_test" start time: May 30 23:36 JST
+Output:
+----------------------------------------------------------
+[==========] Running 11 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 11 tests from PointContactTest
+[ RUN      ] PointContactTest.parameters
+[       OK ] PointContactTest.parameters (4 ms)
+[ RUN      ] PointContactTest.copy
+[       OK ] PointContactTest.copy (4 ms)
+[ RUN      ] PointContactTest.assign
+[       OK ] PointContactTest.assign (4 ms)
+[ RUN      ] PointContactTest.moveConstructor
+[       OK ] PointContactTest.moveConstructor (3 ms)
+[ RUN      ] PointContactTest.stdvector
+[       OK ] PointContactTest.stdvector (4 ms)
+[ RUN      ] PointContactTest.computeJointForceFromContactForce
+[       OK ] PointContactTest.computeJointForceFromContactForce (3 ms)
+[ RUN      ] PointContactTest.contactJacobianAndItsBlock
+[       OK ] PointContactTest.contactJacobianAndItsBlock (5 ms)
+[ RUN      ] PointContactTest.baumgarteResidual
+[       OK ] PointContactTest.baumgarteResidual (4 ms)
+[ RUN      ] PointContactTest.baumgarteDerivatives
+[       OK ] PointContactTest.baumgarteDerivatives (5 ms)
+[ RUN      ] PointContactTest.baumgarteDerivativesBlock
+[       OK ] PointContactTest.baumgarteDerivativesBlock (5 ms)
+[ RUN      ] PointContactTest.baumgarteDerivativesAndItsBlock
+[       OK ] PointContactTest.baumgarteDerivativesAndItsBlock (5 ms)
+[----------] 11 tests from PointContactTest (46 ms total)
+
+[----------] Global test environment tear-down
+[==========] 11 tests from 1 test suite ran. (46 ms total)
+[  PASSED  ] 11 tests.
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"point_contact_test" end time: May 30 23:36 JST
+"point_contact_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: May 30 23:36 JST
