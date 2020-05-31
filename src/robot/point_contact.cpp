@@ -83,7 +83,7 @@ void PointContact::resetContactPointByCurrentKinematics(
 
 void PointContact::computeJointForceFromContactForce(
     const Eigen::Vector3d& contact_force, 
-    pinocchio::container::aligned_vector<pinocchio::Force>& joint_forces) {
+    pinocchio::container::aligned_vector<pinocchio::Force>& joint_forces) const {
   joint_forces[parent_joint_id_] 
       = jXf_.act(pinocchio::Force(contact_force, Eigen::Vector3d::Zero()));
 }
@@ -91,9 +91,10 @@ void PointContact::computeJointForceFromContactForce(
 
 void PointContact::getContactJacobian(const pinocchio::Model& model, 
                                       pinocchio::Data& data, 
-                                      Eigen::MatrixXd& J_contact) {
+                                      Eigen::MatrixXd& J_contact) const {
   pinocchio::getFrameJacobian(model, data, contact_frame_id_, pinocchio::LOCAL, 
-                              J_contact);
+                              J_frame_);
+  J_contact = J_frame_.topRows<3>(); 
 }
 
 
@@ -101,16 +102,17 @@ void PointContact::getContactJacobian(const pinocchio::Model& model,
                                       pinocchio::Data& data, 
                                       const unsigned int result_mat_row_begin, 
                                       const unsigned int result_mat_col_begin, 
-                                      Eigen::MatrixXd& J_contacts) {
+                                      Eigen::MatrixXd& J_contacts) const {
   pinocchio::getFrameJacobian(model, data, contact_frame_id_, pinocchio::LOCAL, 
-                              J_contacts.block(result_mat_row_begin, 
-                                               result_mat_col_begin, 6, dimv_));
+                              J_frame_);
+  J_contacts.block(result_mat_row_begin, result_mat_col_begin, 3, dimv_) 
+      = J_frame_.topRows<3>(); 
 }
 
 
 void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
-    Eigen::Vector3d& baumgarte_residual) {
+    Eigen::Vector3d& baumgarte_residual) const {
   baumgarte_residual
       = (data.oMi[parent_joint_id_].act(data.a[parent_joint_id_])).linear()
           + baumgarte_alpha_ 
@@ -123,7 +125,7 @@ void PointContact::computeBaumgarteResidual(
 void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
     const unsigned int result_vec_start_index, 
-    Eigen::VectorXd& baumgarte_residual) {
+    Eigen::VectorXd& baumgarte_residual) const {
   baumgarte_residual.segment<3>(result_vec_start_index)
       = (data.oMi[parent_joint_id_].act(data.a[parent_joint_id_])).linear()
           + baumgarte_alpha_ 
@@ -139,11 +141,11 @@ void PointContact::computeBaumgarteDerivatives(
     Eigen::MatrixXd& baumgarte_partial_dv, 
     Eigen::MatrixXd& baumgarte_partial_da) {
  pinocchio::getJointAccelerationDerivatives(model, data, parent_joint_id_, 
-                                             pinocchio::WORLD,
-                                             joint_v_partial_dq_, 
-                                             joint_a_partial_dq_, 
-                                             joint_a_partial_dv_, 
-                                             joint_a_partial_da_);
+                                            pinocchio::WORLD,
+                                            joint_v_partial_dq_, 
+                                            joint_a_partial_dq_, 
+                                            joint_a_partial_dv_, 
+                                            joint_a_partial_da_);
   pinocchio::getFrameJacobian(model, data, contact_frame_id_, 
                               pinocchio::LOCAL_WORLD_ALIGNED, J_frame_);
   baumgarte_partial_dq

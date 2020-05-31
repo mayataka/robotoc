@@ -1,3 +1,0 @@
-passive_joints_test 4 0.00463349
-point_contact_test 1 0.0508449
----

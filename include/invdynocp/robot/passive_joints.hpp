@@ -22,6 +22,13 @@ public:
   // Destructor. 
   ~PassiveJoints();
 
+  // Use dafault copy constructor.
+  PassiveJoints(const PassiveJoints&) = default;
+
+  // Use dafule copy operator.
+  PassiveJoints& operator=(const PassiveJoints&) = default;
+
+
   void setPassiveTorques(Eigen::VectorXd& tau) const;
 
   void computePassiveConstraintViolation(const Eigen::VectorXd& torques, 
@@ -33,12 +40,6 @@ public:
   unsigned int dim_passive() const;
 
   std::vector<unsigned int> passive_torque_indices() const;
-
-  // Prohibits copy constructor.
-  PassiveJoints(const PassiveJoints&) = delete;
-
-  // Prohibits copy operator.
-  PassiveJoints& operator=(const PassiveJoints&) = delete;
 
 private:
   std::vector<unsigned int> passive_torque_indices_;

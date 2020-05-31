@@ -103,7 +103,7 @@ TEST_F(PointContactTest, copy) {
 }
 
 
-TEST_F(PointContactTest, assign) {
+TEST_F(PointContactTest, moveAssign) {
   PointContact contact_ref(model_, contact_frame_id_, baumgarte_alpha_, 
                            baumgarte_beta_);
   PointContact contact(model_, 0, 0, 0);
@@ -233,12 +233,12 @@ TEST_F(PointContactTest, contactJacobianAndItsBlock) {
   PointContact contact(model_, contact_frame_id_, baumgarte_alpha_, baumgarte_beta_);
   pinocchio::forwardKinematics(model_, data_, q_);
   pinocchio::computeJointJacobians(model_, data_, q_);
-  Eigen::MatrixXd J_contact = Eigen::MatrixXd::Zero(6, dimv_);
+  Eigen::MatrixXd J_contact = Eigen::MatrixXd::Zero(3, dimv_);
   Eigen::MatrixXd J_contact_ref = Eigen::MatrixXd::Zero(6, dimv_);
   contact.getContactJacobian(model_, data_, J_contact);
   pinocchio::getFrameJacobian(model_, data_, contact_frame_id_, 
                               pinocchio::LOCAL, J_contact_ref);
-  EXPECT_TRUE(J_contact.isApprox(J_contact_ref));
+  EXPECT_TRUE(J_contact.isApprox(J_contact_ref.topRows(3)));
   Eigen::MatrixXd J_contact_block = Eigen::MatrixXd::Zero(2*6, 2*dimv_);
   Eigen::MatrixXd J_contact_block_ref = Eigen::MatrixXd::Zero(2*6, 2*dimv_);
   const int row_begin = rand() % 6;
@@ -248,9 +248,9 @@ TEST_F(PointContactTest, contactJacobianAndItsBlock) {
                               pinocchio::LOCAL, 
                               J_contact_block_ref.block(row_begin, column_begin, 
                                                         6, dimv_));
-  EXPECT_TRUE(J_contact_block.isApprox(J_contact_block_ref));
+  EXPECT_TRUE(J_contact_block.topRows(row_begin+3).isApprox(J_contact_block_ref.topRows(row_begin+3)));
   EXPECT_TRUE(J_contact.isApprox(J_contact_block.block(row_begin, column_begin, 
-                                                       6, dimv_)));
+                                                       3, dimv_)));
 }
 
 
@@ -272,11 +272,9 @@ TEST_F(PointContactTest, baumgarteResidual) {
           + baumgarte_beta_  
               * (data_.oMf[contact_frame_id_].translation()-contact.contact_point());
   EXPECT_TRUE(residual.isApprox(residual_ref));
-
   Eigen::VectorXd residual_large = Eigen::VectorXd::Zero(10);
   contact.computeBaumgarteResidual(model_, data_, 5, residual_large);
   EXPECT_TRUE(residual_large.segment<3>(5).isApprox(residual_ref));
-
 }
 
 

@@ -30,10 +30,10 @@ public:
   ~Robot();
 
   // Copy constructor.
-  Robot(const Robot& other);
+  Robot(const Robot& other) = default;
 
   // Copy operator.
-  Robot& operator=(const Robot& other);
+  Robot& operator=(const Robot& other) = default;
 
   // Move constructor.
   Robot(const Robot&& other) noexcept;
@@ -49,7 +49,7 @@ public:
   //   integration_length: The length of the integration.
   void integrateConfiguration(const Eigen::VectorXd& v, 
                               const double integration_length,
-                              Eigen::VectorXd& q);
+                              Eigen::VectorXd& q) const;
 
   // Integrates the generalized velocity, integration_length * v. 
   // The initial configuration is evolves to q_plus.
@@ -61,7 +61,7 @@ public:
   void integrateConfiguration(const Eigen::VectorXd& q, 
                               const Eigen::VectorXd& v, 
                               const double integration_length, 
-                              Eigen::VectorXd& q_plus);
+                              Eigen::VectorXd& q_plus) const;
 
   // Computes difference of the two configurations represented in the tangent 
   // space. The tangent vector from q_minus to q_plus is stored in difference.
@@ -72,7 +72,7 @@ public:
   //      be dimv().
   void differenceConfigurations(const Eigen::VectorXd& q_plus, 
                                 const Eigen::VectorXd& q_minus, 
-                                Eigen::VectorXd& difference);
+                                Eigen::VectorXd& difference) const;
 
   // Updates the kinematics of the robot. The frame placements, frame velocity,
   // frame acceleration, and the relevant Jacobians are calculated. After that, 
@@ -89,7 +89,7 @@ public:
   // updateKinematics() must be called.
   // Argments: 
   //   residual: The array where the result is stored. The must be dimf.
-  void computeBaumgarteResidual(Eigen::VectorXd& baumgarte_residual);
+  void computeBaumgarteResidual(Eigen::VectorXd& baumgarte_residual) const;
 
   // Computes the product of a vector and the derivatives of the contact 
   // constriants represented by Baumgarte's stabilization method. 
@@ -248,7 +248,7 @@ public:
 private:
   pinocchio::Model model_;
   pinocchio::Data data_;
-  const std::string urdf_file_name_;
+  std::string urdf_file_name_;
   std::vector<PointContact> point_contacts_;
   PassiveJoints passive_joints_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;

@@ -65,7 +65,7 @@ public:
   //      this term.
   void computeJointForceFromContactForce(
       const Eigen::Vector3d& contact_force, 
-      pinocchio::container::aligned_vector<pinocchio::Force>& joint_forces);
+      pinocchio::container::aligned_vector<pinocchio::Force>& joint_forces) const;
 
   // Computes the 3xdimv contact Jacobian represented in the local coordinate 
   // of the contact frame. Before calling this function, you have to update the 
@@ -76,7 +76,7 @@ public:
   //    J_contact: Contact jacobian is stored in this variable. size must be 
   //        3xdimv.
   void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
-                          Eigen::MatrixXd& J_contact);
+                          Eigen::MatrixXd& J_contact) const;
 
   // Computes the 3xdimv contact Jacobian represented in the local coordinate 
   // of the contact frame. Before calling this function, you have to update the 
@@ -91,7 +91,7 @@ public:
   void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
                           const unsigned int result_mat_row_begin, 
                           const unsigned int result_mat_col_begin,
-                          Eigen::MatrixXd& J_contacts);
+                          Eigen::MatrixXd& J_contacts) const;
 
   // Computes the residual of the contact constraints considered by the 
   // Baumgarte's stabilization method. Before calling this function, you have 
@@ -102,7 +102,7 @@ public:
   //    baumgarte_residual: The double array that the result is stored in. 
   void computeBaumgarteResidual(const pinocchio::Model& model, 
                                 const pinocchio::Data& data, 
-                                Eigen::Vector3d& baumgarte_residual);
+                                Eigen::Vector3d& baumgarte_residual) const;
 
   // Computes the residual of the contact constraints considered by the 
   // Baumgarte's stabilization method. Before calling this function, you have 
@@ -114,7 +114,7 @@ public:
   void computeBaumgarteResidual(const pinocchio::Model& model, 
                                 const pinocchio::Data& data, 
                                 const unsigned int result_vec_start_index,
-                                Eigen::VectorXd& baumgarte_residual);
+                                Eigen::VectorXd& baumgarte_residual) const;
 
   // Computes the the partial derivatives of the contact constraints
   // considered by the Baumgarte's stabilization method. Before calling this 
