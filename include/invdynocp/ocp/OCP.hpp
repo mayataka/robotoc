@@ -1,13 +1,13 @@
 #ifndef INVDYNOCP_OCP_HPP_
 #define INVDYNOCP_OCP_HPP_ 
 
-#include <omp.h>
-#include <string>
 #include <vector>
+#include <omp.h>
 
 #include "Eigen/Core"
 
 #include "robot/robot.hpp"
+#include "ocp/split_ocp.hpp"
 #include "ocp/cost_function_interface.hpp"
 #include "ocp/constraints_interface.hpp"
 
@@ -16,40 +16,28 @@ namespace invdynocp {
 
 class OCP {
 public:
-  // Constructor. Does not allocate raw arrays.
-  // Argments:
-  //    model: The pinocchio model. Before call this function, pinocchio model
-  //      must be initialized by pinocchio::buildModel().
+  // Constructor. 
   OCP(const Robot& robot, const CostFunctionInterface* cost,
       const ConstraintsInterface* constraints, const double T, 
       const unsigned int N, const unsigned int num_proc);
 
-  // Destructor. 
-  ~OCP();
-
-  void solveOCP(const double t, const Eigen::VectorXd& x);
-
-  void getInitialContorlInpnut(Eigen::VectorXd& u);
-
-  // Returns the dimension of the torques correspoinding to the passive joints.
-  unsigned int dimq() const;
-
-  unsigned int dimv() const;
-
-  unsigned int dimu() const;
+  void solveSQP(const double t, const Eigen::VectorXd& x);
 
   // Prohibits copy constructor.
-  OCP(const OCP&) = default;
+  OCP(const OCP&) = delete;
 
   // Prohibits copy operator.
-  OCP& operator=(const OCP&) = default;
+  OCP& operator=(const OCP&) = delete;
 
 private:
+  std::vector<SplitOCP> split_ocps_;
   std::vector<Robot> robots_;
   CostFunctionInterface* cost_;
   ConstraintsInterface* constraints_;
-  double T_;
-  unsigned int N_, num_proc_, dimx_, dimTx_, dimu_, dimc_;
+  double T_, dtau_;
+  unsigned int N_, num_proc_;
+  std::vector<Eigen::VectorXd> x_, a_, lmd_, dx_, da_, dlmd_, s_;
+  std::vector<Eigen::MatrixXd> P_;
 
 };
 
