@@ -26,14 +26,16 @@ public:
   Robot(const std::string& urdf_file_name, 
         const unsigned int max_point_contacts);
 
+  Robot();
+
   // Destructor. 
   ~Robot();
 
   // Copy constructor.
-  Robot(const Robot& other) = default;
+  Robot(const Robot& other);
 
   // Copy operator.
-  Robot& operator=(const Robot& other) = default;
+  Robot& operator=(const Robot& other);
 
   // Move constructor.
   Robot(const Robot&& other) noexcept;
@@ -47,13 +49,16 @@ public:
   //   q: Generalized configuration. Size must be dimq().
   //   v: Generalized velocity. Size must be dimv().
   //   integration_length: The length of the integration.
-  void integrateState(const Eigen::VectorXd& x, const Eigen::VectorXd& a,
-                      const double integration_length,
-                      Eigen::VectorXd& x_plus) const;
+  void integrateConfiguration(const Eigen::VectorXd& q, 
+                              const Eigen::VectorXd& v, 
+                              const double integration_length, 
+                              Eigen::VectorXd& q_plus) const;
 
-  void dIntegrateConfiguration(const Eigen::VectorXd& x, 
+  void dIntegrateConfiguration(const Eigen::VectorXd& q, 
+                               const Eigen::VectorXd& v,
                                const double integration_length,
-                               Eigen::MatrixXd& x_plus) const;
+                               Eigen::MatrixXd& dIntegrate_dq,
+                               Eigen::MatrixXd& dIntegrate_dv) const;
 
   // Integrates the generalized velocity, integration_length * v. 
   // The generalized configuration q is then incremented.
@@ -61,9 +66,9 @@ public:
   //   q: Generalized configuration. Size must be dimq().
   //   v: Generalized velocity. Size must be dimv().
   //   integration_length: The length of the integration.
-  void differenceState(const Eigen::VectorXd& x_plus, 
-                       const Eigen::VectorXd& x_minus,
-                       Eigen::VectorXd& difference) const;
+  void differenceConfiguration(const Eigen::VectorXd& q_plus, 
+                               const Eigen::VectorXd& q_minus,
+                               Eigen::VectorXd& difference) const;
 
   // Updates the kinematics of the robot. The frame placements, frame velocity,
   // frame acceleration, and the relevant Jacobians are calculated. After that, 
@@ -72,7 +77,8 @@ public:
   //   q: Generalized configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
   //   a: Generalized acceleration. Size must be dimv.
-  void updateKinematics(const Eigen::VectorXd& x, const Eigen::VectorXd& a);
+  void updateKinematics(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                        const Eigen::VectorXd& a);
 
   // Computes the residual of the contact constriants represented by 
   // Baumgarte's stabilization method. Before calling this function, 
@@ -94,7 +100,8 @@ public:
   //      assumed to be dimv.
   //   dBaum_da_dot_vec: The array where the result is stored. The size is
   //      assumed to be dimv.
-  void computeBaumgarteDerivatives(Eigen::MatrixXd& dBaumgarte_partial_dx, 
+  void computeBaumgarteDerivatives(Eigen::MatrixXd& dBaumgarte_partial_dq, 
+                                   Eigen::MatrixXd& dBaumgarte_partial_dv,
                                    Eigen::MatrixXd& dBaumgarte_partial_da);
                                       
 
@@ -129,8 +136,10 @@ public:
   //      assumed to be dimv.
   //   dRNEA_da_dot_vec: The array where the result is stored. The size is
   //      assumed to be dimv.
-  void RNEADerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& a, 
-                       Eigen::MatrixXd& dRNEA_partial_dx, 
+  void RNEADerivatives(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                       const Eigen::VectorXd& a, 
+                       Eigen::MatrixXd& dRNEA_partial_dq, 
+                       Eigen::MatrixXd& dRNEA_partial_dv, 
                        Eigen::MatrixXd& dRNEA_partial_da);
 
   // Computes the partial dervatives of the function of inverse dynamics with 
@@ -148,8 +157,11 @@ public:
   //      assumed to be dimv.
   //   dRNEA_da_dot_vec: The array where the result is stored. The size is
   //      assumed to be dimv.
-  void RNEADerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& a, 
-                       Eigen::MatrixXd& dRNEA_partial_dx, 
+  void RNEADerivatives(const Eigen::VectorXd& q, 
+                       const Eigen::VectorXd& v, 
+                       const Eigen::VectorXd& a, 
+                       Eigen::MatrixXd& dRNEA_partial_dq, 
+                       Eigen::MatrixXd& dRNEA_partial_dv, 
                        Eigen::MatrixXd& dRNEA_partial_da, 
                        Eigen::MatrixXd& dRNEA_partial_dfext);
 

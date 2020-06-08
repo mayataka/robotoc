@@ -27,7 +27,55 @@ Robot::Robot(const std::string& urdf_file_name,
 }
 
 
+Robot::Robot()
+  : model_(),
+    data_(model_),
+    urdf_file_name_(),
+    point_contacts_(),
+    passive_joints_(),
+    fjoint_(),
+    dimq_(0),
+    dimv_(0),
+    max_point_contacts_(0) {
+}
+
+
 Robot::~Robot() {
+}
+
+
+Robot::Robot(const Robot& other) 
+  : model_(), 
+    data_(model_),
+    urdf_file_name_(other.urdf_file_name()),
+    point_contacts_(),
+    passive_joints_(),
+    fjoint_(),
+    dimq_(0),
+    dimv_(0),
+    max_point_contacts_(other.max_point_contacts()) {
+  // Build Pinocchio model from URDF.
+  pinocchio::urdf::buildModel(other.urdf_file_name(), model_);
+  data_ = pinocchio::Data(model_);
+  passive_joints_ = PassiveJoints(model_);
+  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
+                 model_.joints.size(), pinocchio::Force::Zero());
+  dimq_ = model_.nq;
+  dimv_ = model_.nv;
+}
+
+
+Robot& Robot::operator=(const Robot& other) {
+  // Build Pinocchio model from URDF.
+  pinocchio::urdf::buildModel(other.urdf_file_name(), model_);
+  data_ = pinocchio::Data(model_);
+  urdf_file_name_ = other.urdf_file_name();
+  passive_joints_ = PassiveJoints(model_);
+  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
+                 model_.joints.size(), pinocchio::Force::Zero());
+  dimq_ = model_.nq;
+  dimv_ = model_.nv;
+  max_point_contacts_ = other.max_point_contacts();
 }
 
 
@@ -66,30 +114,25 @@ Robot& Robot::operator=(const Robot&& other) noexcept {
 }
 
 
-void Robot::integrateState(const Eigen::VectorXd& x, 
-                           const Eigen::VectorXd& a,
-                           const double integration_length,
-                           Eigen::VectorXd& x_plus) const {
-  pinocchio::integrate(model_, x.head(dimq_), integration_length*x.tail(dimv_), 
-                       x_plus.head(dimq_));
-  x_plus.tail(dimv_) = x.tail(dimv_) + integration_length * a;
+void Robot::integrateConfiguration(const Eigen::VectorXd& q, 
+                                   const Eigen::VectorXd& v, 
+                                   const double integration_length, 
+                                   Eigen::VectorXd& q_plus) const {
+  pinocchio::integrate(model_, q, integration_length*v, q_plus);
 }
 
 
-void Robot::differenceState(const Eigen::VectorXd& x_plus, 
-                            const Eigen::VectorXd& x_minus,
-                            Eigen::VectorXd& difference) const {
-  pinocchio::difference(model_, x_minus.head(dimq_), x_plus.head(dimq_), 
-                        difference.head(dimv_));
-  difference.tail(dimv_) = x_plus.tail(dimv_) - x_minus.tail(dimv_);
+void Robot::differenceConfiguration(const Eigen::VectorXd& q_plus, 
+                                    const Eigen::VectorXd& q_minus,
+                                    Eigen::VectorXd& difference) const {
+  pinocchio::difference(model_, q_minus, q_plus, difference);
 }
 
 
-void Robot::updateKinematics(const Eigen::VectorXd& x, 
+void Robot::updateKinematics(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
                              const Eigen::VectorXd& a) {
-  pinocchio::forwardKinematics(model_, data_, x.head(dimq_), x.tail(dimv_), a);
-  pinocchio::computeForwardKinematicsDerivatives(model_, data_, x.head(dimq_), 
-                                                 x.tail(dimv_), a);
+  pinocchio::forwardKinematics(model_, data_, q, v, a);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q, v, a);
   pinocchio::updateFramePlacements(model_, data_);
   for (int i=0; i<point_contacts_.size(); ++i) {
     point_contacts_[i].resetContactPointByCurrentKinematics(data_);
@@ -106,14 +149,15 @@ void Robot::computeBaumgarteResidual(
 }
 
 
-void Robot::computeBaumgarteDerivatives(Eigen::MatrixXd& baumgarte_partial_dx, 
+void Robot::computeBaumgarteDerivatives(Eigen::MatrixXd& baumgarte_partial_dq, 
+                                        Eigen::MatrixXd& baumgarte_partial_dv,
                                         Eigen::MatrixXd& baumgarte_partial_da) {
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    point_contacts_[i].computeBaumgarteDerivatives(model_, data_, 0, 3*i, 
-                                                   baumgarte_partial_dx.head(), 
-                                                   baumgarte_partial_dx.tail(), 
-                                                   baumgarte_partial_da);
-  }
+  // for (int i=0; i<point_contacts_.size(); ++i) {
+  //   point_contacts_[i].computeBaumgarteDerivatives(model_, data_, 0, 3*i, 
+  //                                                  baumgarte_partial_dx.head(), 
+  //                                                  baumgarte_partial_dx.tail(), 
+  //                                                  baumgarte_partial_da);
+  // }
 }
 
 
@@ -127,37 +171,40 @@ void Robot::setFext(const Eigen::VectorXd& fext) {
 
 void Robot::RNEA(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                  const Eigen::VectorXd& a, Eigen::VectorXd& tau) {
-  if (point_contacts_.size() > 0) {
-    tau = pinocchio::rnea(model_, data_, q, v, a);
-  }
-  else {
-    tau = pinocchio::rnea(model_, data_, q, v, a, fjoint_);
-  }
+  tau = pinocchio::rnea(model_, data_, q, v, a);
+  // if (point_contacts_.size() == 0) {
+  //   tau = pinocchio::rnea(model_, data_, x.head(dimq_), x.tail(dimv_), a);
+  // }
+  // else {
+  //   tau = pinocchio::rnea(model_, data_, x.head(dimq_), x.tail(dimv_), a, 
+  //                         fjoint_);
+  // }
 }
 
 
-void Robot::RNEADerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& a, 
-                            Eigen::MatrixXd& dRNEA_partial_dx, 
+void Robot::RNEADerivatives(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                            const Eigen::VectorXd& a, 
+                            Eigen::MatrixXd& dRNEA_partial_dq, 
+                            Eigen::MatrixXd& dRNEA_partial_dv, 
                             Eigen::MatrixXd& dRNEA_partial_da) {
-  pinocchio::computeRNEADerivatives(model_, data_, x.head(dimq_), x.tail(dimq_), 
-                                    a, 
-                                    dRNEA_partial_dx.leftCols(dimv_), 
-                                    dRNEA_partial_dx.rightCols(dimv_), 
-                                    dRNEA_partial_da);
+  pinocchio::computeRNEADerivatives(model_, data_, q, v, a, dRNEA_partial_dq, 
+                                    dRNEA_partial_dv, dRNEA_partial_da);
   dRNEA_partial_da.triangularView<Eigen::StrictlyLower>() 
       = dRNEA_partial_da.transpose().triangularView<Eigen::StrictlyLower>();
 }
 
 
-void Robot::RNEADerivatives(const Eigen::VectorXd& x, const Eigen::VectorXd& a, 
-                            Eigen::MatrixXd& dRNEA_partial_dx, 
+void Robot::RNEADerivatives(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                            const Eigen::VectorXd& a, 
+                            Eigen::MatrixXd& dRNEA_partial_dq, 
+                            Eigen::MatrixXd& dRNEA_partial_dv, 
                             Eigen::MatrixXd& dRNEA_partial_da, 
                             Eigen::MatrixXd& dRNEA_partial_dfext) {
-  pinocchio::computeRNEADerivatives(model_, data_, x.head(dimq_), x.tail(dimq_), 
-                                    a, fjoint_, 
-                                    dRNEA_partial_dx.leftCols(dimv_), 
-                                    dRNEA_partial_dx.rightCols(dimv_), 
+  pinocchio::computeRNEADerivatives(model_, data_, q, v, a, fjoint_, 
+                                    dRNEA_partial_dq, dRNEA_partial_dv,
                                     dRNEA_partial_da);
+  dRNEA_partial_da.triangularView<Eigen::StrictlyLower>() 
+      = dRNEA_partial_da.transpose().triangularView<Eigen::StrictlyLower>();
   for (int i=0; i<point_contacts_.size(); ++i) {
     point_contacts_[i].getContactJacobian(model_, data_, 3*i, 0, 
                                           dRNEA_partial_dfext);
