@@ -11,7 +11,7 @@ CostFunction::CostFunction(const Robot* robot_ptr, const Eigen::VectorXd& q_ref)
         Eigen::VectorXd::Zero(robot_ptr->dimv()),
         Eigen::VectorXd::Constant(robot_ptr->dimv(), 0.1), 
         Eigen::VectorXd::Zero(robot_ptr->dimv()),
-        Eigen::VectorXd::Constant(robot_ptr->dimv(), 0.001), 
+        Eigen::VectorXd::Constant(robot_ptr->dimv(), 0.01), 
         Eigen::VectorXd::Zero(robot_ptr->dimv()),
         Eigen::VectorXd::Constant(robot_ptr->dimv(), 0.001)) {
 }

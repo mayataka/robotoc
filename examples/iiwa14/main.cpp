@@ -29,15 +29,17 @@ int main() {
 
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
-  const int num_iteration = 1000;
+  const int num_iteration = 100;
+  std::cout << ocp_.optimalityError(t, q, v) << std::endl;
   for (int i=0; i<num_iteration; ++i) {
     ocp_.solveSQP(t, q, v);
+    std::cout << ocp_.optimalityError(t, q, v) << std::endl;
   }
   end_clock = std::chrono::system_clock::now();
-  ocp_.printSolution();
-  std::cout << "q0: " << q.transpose() << std::endl;
-  std::cout << "v0: " << v.transpose() << std::endl;
-  std::cout << "per update: " << 1e-03 * std::chrono::duration_cast<std::chrono::microseconds>(end_clock-start_clock).count() / num_iteration << "[ms]" << std::endl;
+  // ocp_.printSolution();
+  // std::cout << "q0: " << q.transpose() << std::endl;
+  // std::cout << "v0: " << v.transpose() << std::endl;
+  // std::cout << "per update: " << 1e-03 * std::chrono::duration_cast<std::chrono::microseconds>(end_clock-start_clock).count() / num_iteration << "[ms]" << std::endl;
 
   return 0;
 }

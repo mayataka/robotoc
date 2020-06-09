@@ -66,6 +66,26 @@ public:
                  Eigen::VectorXd& q, Eigen::VectorXd& v, Eigen::VectorXd& a, 
                  Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
 
+  void updateOCP(Robot& robot, const Eigen::VectorXd& dq, 
+                 const Eigen::VectorXd& dv, const Eigen::MatrixXd& Pqq, 
+                 const Eigen::MatrixXd& Pqv, const Eigen::MatrixXd& Pvq, 
+                 const Eigen::MatrixXd& Pvv, const Eigen::VectorXd& sq, 
+                 const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
+                 Eigen::VectorXd& v, Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
+
+  double optimalityError(Robot& robot, const double t, const double dtau, 
+                         const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
+                         const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                         const Eigen::VectorXd& a, 
+                         const Eigen::VectorXd& lmd_next, 
+                         const Eigen::VectorXd& gmm_next, 
+                         const Eigen::VectorXd& q_next,
+                         const Eigen::VectorXd& v_next);
+
+  double terminalError(Robot& robot, const double t, const Eigen::VectorXd& lmd, 
+                       const Eigen::VectorXd& gmm, const Eigen::VectorXd& q, 
+                       const Eigen::VectorXd& v);
+
 private:
   CostFunctionInterface *cost_;
   ConstraintsInterface *constraints_;

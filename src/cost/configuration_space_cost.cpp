@@ -129,7 +129,7 @@ void ConfigurationSpaceCost::phiv(const Robot* robot_ptr,
 void ConfigurationSpaceCost::phiqq(const Robot* robot_ptr, 
                                    Eigen::MatrixXd& phiqq) {
   for (int i=0; i<dimq_; ++i) {
-    phiqq.coeffRef(i, i) += q_weight_.coeff(i);
+    phiqq.coeffRef(i, i) = q_weight_.coeff(i);
   }
 }
 
@@ -137,7 +137,7 @@ void ConfigurationSpaceCost::phiqq(const Robot* robot_ptr,
 void ConfigurationSpaceCost::phivv(const Robot* robot_ptr, 
                                    Eigen::MatrixXd& phivv) {
   for (int i=0; i<dimv_; ++i) {
-    phivv.coeffRef(i, i) += v_weight_.coeff(i);
+    phivv.coeffRef(i, i) = v_weight_.coeff(i);
   }
 }
 

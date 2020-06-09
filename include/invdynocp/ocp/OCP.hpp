@@ -26,8 +26,8 @@ public:
 
   void getInitialControlInput(Eigen::VectorXd& u);
 
-  void setStateTrajectory(Eigen::VectorXd& q0, Eigen::VectorXd& v0, 
-                          Eigen::VectorXd& qN, Eigen::VectorXd& vN);
+  double optimalityError(const double t, const Eigen::VectorXd& q, 
+                         const Eigen::VectorXd& v);
 
   void printSolution() const;
 
