@@ -24,12 +24,14 @@ int main() {
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  ocp_.solveSQP(t, q, v);
-  ocp_.printSolution();
+  // ocp_.solveSQP(t, q, v);
+  // ocp_.printSolution();
 
+  std::cout << "q0: " << q.transpose() << std::endl;
+  std::cout << "v0: " << v.transpose() << std::endl;
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
-  const int num_iteration = 100;
+  const int num_iteration = 6;
   std::cout << ocp_.optimalityError(t, q, v) << std::endl;
   for (int i=0; i<num_iteration; ++i) {
     ocp_.solveSQP(t, q, v);
