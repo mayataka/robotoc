@@ -1,5 +1,5 @@
-#ifndef INVDYN_OCP_ROBOT_HPP_
-#define INVDYN_OCP_ROBOT_HPP_
+#ifndef IDOCP_ROBOT_HPP_
+#define IDOCP_ROBOT_HPP_
 
 #include <string>
 #include <vector>
@@ -18,7 +18,7 @@
 #include "robot/passive_joints.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 
 class Robot {
 public:
@@ -31,11 +31,11 @@ public:
   // Destructor. 
   ~Robot();
 
-  // Copy constructor.
-  Robot(const Robot& other);
+  // Use default copy constructor.
+  Robot(const Robot& other) = default;
 
-  // Copy operator.
-  Robot& operator=(const Robot& other);
+  // Use default copy operator.
+  Robot& operator=(const Robot& other) = default;
 
   // Move constructor.
   Robot(const Robot&& other) noexcept;
@@ -242,7 +242,7 @@ private:
 
 };
 
-} // namespace invdynocp
+} // namespace idocp
 
 
-#endif // INVDYN_OCP_ROBOT_HPP_
+#endif // IDOCP_OCP_ROBOT_HPP_ 

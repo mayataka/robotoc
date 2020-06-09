@@ -1,5 +1,5 @@
-#ifndef INVDYNOCP_IIWA14_COST_FUNCTION_HPP_
-#define INVDYNOCP_IIWA14_COST_FUNCTION_HPP_
+#ifndef IDOCP_IIWA14_COST_FUNCTION_HPP_
+#define IDOCP_IIWA14_COST_FUNCTION_HPP_
 
 #include "Eigen/Core"
 
@@ -8,7 +8,7 @@
 #include "cost/configuration_space_cost.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 namespace iiwa14 {
 
 class CostFunction final : public CostFunctionInterface {
@@ -75,6 +75,6 @@ private:
 };
 
 } // namespace iiwa14
-} // namespace invdynocp
+} // namespace idocp
 
-#endif // INVDYNOCP_IIWA14_COST_FUNCTION_HPP_
+#endif // IDOCP_IIWA14_COST_FUNCTION_HPP_

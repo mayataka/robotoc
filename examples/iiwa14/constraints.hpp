@@ -1,5 +1,5 @@
-#ifndef INVDYNOCP_IIWA14_CONSTRAINTS_HPP_
-#define INVDYNOCP_IIWA14_CONSTRAINTS_HPP_
+#ifndef IDOCP_IIWA14_CONSTRAINTS_HPP_
+#define IDOCP_IIWA14_CONSTRAINTS_HPP_
 
 #include "Eigen/Core"
 
@@ -8,7 +8,7 @@
 #include "constraints/configuration_space_constraints.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 namespace iiwa14 {
 
 class Constraints final : public ConstraintsInterface {
@@ -74,6 +74,6 @@ private:
 };
 
 } // namespace iiwa14
-} // namespace invdynocp
+} // namespace idocp
 
-#endif // INVDYNOCP_IIWA14_CONSTRAINTS_HPP_
+#endif // IDOCP_IIWA14_CONSTRAINTS_HPP_

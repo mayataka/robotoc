@@ -1,7 +1,7 @@
 #include "constraints.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 namespace iiwa14 {
 
 Constraints::Constraints(const Robot* robot_ptr)
@@ -89,4 +89,4 @@ unsigned int Constraints::dimc() const {
 }
 
 } // namespace iiwa14
-} // namespace invdynocp
+} // namespace idocp

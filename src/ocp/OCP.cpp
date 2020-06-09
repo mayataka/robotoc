@@ -1,9 +1,10 @@
 #include "ocp/OCP.hpp"
 
+#include <cmath>
 #include <assert.h>
 
 
-namespace invdynocp {
+namespace idocp {
 
 OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
          const ConstraintsInterface* constraints, const double T, 
@@ -80,22 +81,22 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
     for (time_step=0; time_step<N_; ++time_step) {
       if (time_step < N_) {
         split_OCPs_[time_step].updateOCP(robots_[omp_get_thread_num()], 
-                                        dq_[time_step], dv_[time_step], 
-                                        da_[time_step], Pqq_[time_step], 
-                                        Pqv_[time_step], Pvq_[time_step], 
-                                        Pvv_[time_step], sq_[time_step], 
-                                        sv_[time_step], q_[time_step], 
-                                        v_[time_step], a_[time_step], 
-                                        lmd_[time_step], gmm_[time_step]);
+                                         dq_[time_step], dv_[time_step], 
+                                         da_[time_step], Pqq_[time_step], 
+                                         Pqv_[time_step], Pvq_[time_step], 
+                                         Pvv_[time_step], sq_[time_step], 
+                                         sv_[time_step], q_[time_step], 
+                                         v_[time_step], a_[time_step], 
+                                         lmd_[time_step], gmm_[time_step]);
       }
       else {
         split_OCPs_[time_step].updateOCP(robots_[omp_get_thread_num()], 
-                                        dq_[time_step], dv_[time_step], 
-                                        Pqq_[time_step], Pqv_[time_step], 
-                                        Pvq_[time_step], Pvv_[time_step], 
-                                        sq_[time_step], sv_[time_step], 
-                                        q_[time_step], v_[time_step], 
-                                        lmd_[time_step], gmm_[time_step]);
+                                         dq_[time_step], dv_[time_step], 
+                                         Pqq_[time_step], Pqv_[time_step], 
+                                         Pvq_[time_step], Pvv_[time_step], 
+                                         sq_[time_step], sv_[time_step], 
+                                         q_[time_step], v_[time_step], 
+                                         lmd_[time_step], gmm_[time_step]);
       }
     }
   }
@@ -110,17 +111,17 @@ void OCP::getInitialControlInput(Eigen::VectorXd& u) {
 double OCP::optimalityError(const double t, const Eigen::VectorXd& q, 
                             const Eigen::VectorXd& v) {
   double error = 0;
-  error += (q-q_[0]).norm();
-  error += (v-v_[0]).norm();
+  error += (q-q_[0]).squaredNorm();
+  error += (v-v_[0]).squaredNorm();
   for (int i=0; i<N_; ++i) {
-    error += split_OCPs_[i].optimalityError(robots_[0], t+i*dtau_, dtau_, 
-                                            lmd_[i], gmm_[i], q_[i], v_[i], 
-                                            a_[i], lmd_[i+1], gmm_[i+1], 
-                                            q_[i+1], v_[i+1]);
+    error += split_OCPs_[i].squaredOCPErrorNorm(robots_[0], t+i*dtau_, dtau_, 
+                                                lmd_[i], gmm_[i], q_[i], v_[i], 
+                                                a_[i], lmd_[i+1], gmm_[i+1], 
+                                                q_[i+1], v_[i+1]);
   }
-  error += split_OCPs_[N_-1].terminalError(robots_[0], t+T_, lmd_[N_], gmm_[N_], 
-                                           q_[N_], v_[N_]);
-  return error;
+  error += split_OCPs_[N_-1].squaredTerminalErrorNorm(robots_[0], t+T_, lmd_[N_], 
+                                                      gmm_[N_], q_[N_], v_[N_]);
+  return std::sqrt(error);
 }
 
 
@@ -136,4 +137,4 @@ void OCP::printSolution() const {
   std::cout << "v: " << v_[N_].transpose() << std::endl;
 }
 
-} // namespace invdynOCP
+} // namespace idocp

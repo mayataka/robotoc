@@ -3,7 +3,7 @@
 #include <algorithm>
 
 
-namespace invdynocp {
+namespace idocp {
 
 Robot::Robot(const std::string& urdf_file_name, 
              const unsigned int max_point_contacts)
@@ -41,41 +41,6 @@ Robot::Robot()
 
 
 Robot::~Robot() {
-}
-
-
-Robot::Robot(const Robot& other) 
-  : model_(), 
-    data_(model_),
-    urdf_file_name_(other.urdf_file_name()),
-    point_contacts_(),
-    passive_joints_(),
-    fjoint_(),
-    dimq_(0),
-    dimv_(0),
-    max_point_contacts_(other.max_point_contacts()) {
-  // Build Pinocchio model from URDF.
-  pinocchio::urdf::buildModel(other.urdf_file_name(), model_);
-  data_ = pinocchio::Data(model_);
-  passive_joints_ = PassiveJoints(model_);
-  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
-                 model_.joints.size(), pinocchio::Force::Zero());
-  dimq_ = model_.nq;
-  dimv_ = model_.nv;
-}
-
-
-Robot& Robot::operator=(const Robot& other) {
-  // Build Pinocchio model from URDF.
-  pinocchio::urdf::buildModel(other.urdf_file_name(), model_);
-  data_ = pinocchio::Data(model_);
-  urdf_file_name_ = other.urdf_file_name();
-  passive_joints_ = PassiveJoints(model_);
-  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
-                 model_.joints.size(), pinocchio::Force::Zero());
-  dimq_ = model_.nq;
-  dimv_ = model_.nv;
-  max_point_contacts_ = other.max_point_contacts();
 }
 
 
@@ -288,4 +253,4 @@ std::string Robot::urdf_file_name() const {
   return urdf_file_name_;
 }
 
-} // namespace invdynocp
+} // namespace idocp 

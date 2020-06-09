@@ -1,5 +1,5 @@
-#ifndef INVDYNOCP_SPLIT_OCP_HPP_
-#define INVDYNOCP_SPLIT_OCP_HPP_
+#ifndef IDOCP_SPLIT_OCP_HPP_
+#define IDOCP_SPLIT_OCP_HPP_
 
 #include <vector>
 
@@ -10,7 +10,7 @@
 #include "constraints/constraints_interface.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 
 class SplitOCP {
 public:
@@ -73,18 +73,21 @@ public:
                  const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
                  Eigen::VectorXd& v, Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
 
-  double optimalityError(Robot& robot, const double t, const double dtau, 
-                         const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
-                         const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                         const Eigen::VectorXd& a, 
-                         const Eigen::VectorXd& lmd_next, 
-                         const Eigen::VectorXd& gmm_next, 
-                         const Eigen::VectorXd& q_next,
-                         const Eigen::VectorXd& v_next);
+  double squaredOCPErrorNorm(Robot& robot, const double t, const double dtau, 
+                             const Eigen::VectorXd& lmd, 
+                             const Eigen::VectorXd& gmm, 
+                             const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                             const Eigen::VectorXd& a, 
+                             const Eigen::VectorXd& lmd_next, 
+                             const Eigen::VectorXd& gmm_next, 
+                             const Eigen::VectorXd& q_next,
+                             const Eigen::VectorXd& v_next);
 
-  double terminalError(Robot& robot, const double t, const Eigen::VectorXd& lmd, 
-                       const Eigen::VectorXd& gmm, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v);
+  double squaredTerminalErrorNorm(Robot& robot, const double t, 
+                                  const Eigen::VectorXd& lmd, 
+                                  const Eigen::VectorXd& gmm, 
+                                  const Eigen::VectorXd& q, 
+                                  const Eigen::VectorXd& v);
 
 private:
   CostFunctionInterface *cost_;
@@ -97,7 +100,7 @@ private:
 
 };
 
-} // namespace invdynocp
+} // namespace idocp
 
 
-#endif // INVDYNOCP_SPLIT_OCP_HPP_
+#endif // IDOCP_SPLIT_OCP_HPP_

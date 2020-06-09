@@ -1,12 +1,12 @@
-#ifndef INVDYNOCP_COST_FUNCTION_INTERFACE_HPP_
-#define INVDYNOCP_COST_FUNCTION_INTERFACE_HPP_
+#ifndef IDOCP_COST_FUNCTION_INTERFACE_HPP_
+#define IDOCP_COST_FUNCTION_INTERFACE_HPP_
 
 #include "Eigen/Core"
 
 #include "robot/robot.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 
 class CostFunctionInterface {
 public:
@@ -78,6 +78,6 @@ public:
 
 };
 
-} // namespace invdynocp
+} // namespace idocp
 
-#endif // INVDYNOCP_COST_FUNCTION_INTERFACE_HPP_
+#endif // IDOCP_COST_FUNCTION_INTERFACE_HPP_

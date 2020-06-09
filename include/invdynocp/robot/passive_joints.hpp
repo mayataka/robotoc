@@ -1,5 +1,5 @@
-#ifndef INVDYNOCP_PASSIVE_JOINTS_HPP_
-#define INVDYNOCP_PASSIVE_JOINTS_HPP_
+#ifndef IDOCP_PASSIVE_JOINTS_HPP_
+#define IDOCP_PASSIVE_JOINTS_HPP_
 
 #include <vector>
 
@@ -7,7 +7,7 @@
 #include "pinocchio/multibody/model.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 
 class PassiveJoints {
 public:
@@ -45,7 +45,7 @@ private:
   std::vector<unsigned int> passive_torque_indices_;
 };
 
-} // namespace invdynocp
+} // namespace idocp
 
 
-#endif // INVDYNOCP_PASSIVE_JOINTS_HPP_
+#endif // IDOCP_PASSIVE_JOINTS_HPP_

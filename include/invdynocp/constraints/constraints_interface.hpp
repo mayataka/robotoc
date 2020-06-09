@@ -1,12 +1,12 @@
-#ifndef INVDYNOCP_CONSTRAINTS_INTERFACE_HPP_
-#define INVDYNOCP_CONSTRAINTS_INTERFACE_HPP_
+#ifndef IDOCP_CONSTRAINTS_INTERFACE_HPP_
+#define IDOCP_CONSTRAINTS_INTERFACE_HPP_
 
 #include "Eigen/Core"
 
 #include "robot/robot.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 
 class ConstraintsInterface {
 public:
@@ -74,6 +74,6 @@ public:
 
 };
 
-} // namespace invdynocp
+} // namespace idocp
 
-#endif // INVDYNOCP_CONSTRAINTS_INTERFACE_HPP_
+#endif // IDOCP_CONSTRAINTS_INTERFACE_HPP_

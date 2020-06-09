@@ -3,7 +3,7 @@
 #include <assert.h>
 
 
-namespace invdynocp {
+namespace idocp {
 
 ConfigurationSpaceCost::ConfigurationSpaceCost(const Robot* robot_ptr, 
                                                const Eigen::VectorXd& q_weight,  
@@ -142,4 +142,4 @@ void ConfigurationSpaceCost::phivv(const Robot* robot_ptr,
 }
 
 
-} // namespace invdynocp
+} // namespace idocp

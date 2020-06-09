@@ -1,7 +1,7 @@
 #include "robot/passive_joints.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 
 PassiveJoints::PassiveJoints(const pinocchio::Model& model) 
   : passive_torque_indices_() {
@@ -63,4 +63,4 @@ std::vector<unsigned int> PassiveJoints::passive_torque_indices() const {
   return passive_torque_indices_;
 }
 
-} // namespace invdynocp
+} // namespace idocp

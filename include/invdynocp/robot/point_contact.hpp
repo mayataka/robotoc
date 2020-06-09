@@ -1,5 +1,5 @@
-#ifndef INVDYNOCP_POINT_CONTACT_HPP_
-#define INVDYNOCP_POINT_CONTACT_HPP_
+#ifndef IDOCP_POINT_CONTACT_HPP_
+#define IDOCP_POINT_CONTACT_HPP_
 
 #include "Eigen/Core"
 #include "pinocchio/multibody/model.hpp"
@@ -11,7 +11,7 @@
 #include "pinocchio/spatial/force.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 
 class PointContact {
 public:
@@ -191,7 +191,7 @@ private:
                   joint_a_partial_dv_, joint_a_partial_da_;
 };
 
-} // namespace invdynocp
+} // namespace idocp
 
 
-#endif // INVDYNOCP_POINT_CONTACT_HPP_
+#endif // IDOCP_POINT_CONTACT_HPP_ 

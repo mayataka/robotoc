@@ -1,5 +1,5 @@
-#ifndef INVDYNOCP_OCP_HPP_
-#define INVDYNOCP_OCP_HPP_ 
+#ifndef IDOCP_OCP_HPP_
+#define IDOCP_OCP_HPP_ 
 
 #include <vector>
 #include <omp.h>
@@ -7,12 +7,12 @@
 #include "Eigen/Core"
 
 #include "robot/robot.hpp"
-#include "ocp/split_ocp.hpp"
+#include "ocp/split_OCP.hpp"
 #include "cost/cost_function_interface.hpp"
 #include "constraints/constraints_interface.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 
 class OCP {
 public:
@@ -50,7 +50,7 @@ private:
 
 };
 
-} // namespace invdynocp
+} // namespace idocp 
 
 
-#endif // INVDYNOCP_OCP_HPP_
+#endif // IDOCP_OCP_HPP_

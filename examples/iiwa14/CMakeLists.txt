@@ -54,7 +54,7 @@ add_library(
     invdynocp
     SHARED 
     ${INVDYN_SRC_DIR}/ocp/OCP.cpp
-    ${INVDYN_SRC_DIR}/ocp/split_ocp.cpp
+    ${INVDYN_SRC_DIR}/ocp/split_OCP.cpp
     ${INVDYN_SRC_DIR}/cost/configuration_space_cost.cpp
     ${INVDYN_SRC_DIR}/constraints/configuration_space_constraints.cpp
 )

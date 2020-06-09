@@ -1,12 +1,12 @@
-#ifndef INVDYNOCP_CONFIGURATION_SPACE_CONSTRAINTS_HPP_
-#define INVDYNOCP_CONFIGURATION_SPACE_CONSTRAINTS_HPP_
+#ifndef IDOCP_CONFIGURATION_SPACE_CONSTRAINTS_HPP_
+#define IDOCP_CONFIGURATION_SPACE_CONSTRAINTS_HPP_
 
 #include "Eigen/Core"
 
 #include "robot/robot.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 
 class ConfigurationSpaceConstraints {
 public:
@@ -45,6 +45,6 @@ private:
 
 };
 
-} // namespace invdynocp
+} // namespace idocp
 
-#endif // INVDYNOCP_CONFIGURATION_SPACE_CONSTRAINTS_HPP_
+#endif // IDOCP_CONFIGURATION_SPACE_CONSTRAINTS_HPP_

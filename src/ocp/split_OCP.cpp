@@ -1,9 +1,9 @@
-#include "ocp/split_ocp.hpp"
+#include "ocp/split_OCP.hpp"
 
 #include "Eigen/LU"
 
 
-namespace invdynocp {
+namespace idocp {
 
 SplitOCP::SplitOCP(const Robot& robot, const CostFunctionInterface* cost, 
                    const ConstraintsInterface* constraints) 
@@ -115,7 +115,8 @@ void SplitOCP::backwardRecursion(const double dtau,
   Qqa_.noalias() += dtau * Pqv_next;
   Qva_.noalias() += (dtau*dtau) * Pqv_next + dtau * Pvv_next;
   Qaa_.noalias() += (dtau*dtau) * Pvv_next;
-  Ginv_ = Qaa_.inverse();
+  // Ginv_ = Qaa_.inverse();
+  Ginv_ = Qaa_.llt().solve(Eigen::MatrixXd::Identity(dimv_, dimv_));
   Kq_ = - Ginv_ * Qqa_.transpose();
   Kv_ = - Ginv_ * Qva_.transpose();
   Pqq = Qqq_;
@@ -183,16 +184,16 @@ void SplitOCP::updateOCP(Robot& robot, const Eigen::VectorXd& dq,
 }
 
 
-double SplitOCP::optimalityError(Robot& robot, const double t, 
-                                 const double dtau, const Eigen::VectorXd& lmd, 
-                                 const Eigen::VectorXd& gmm, 
-                                 const Eigen::VectorXd& q, 
-                                 const Eigen::VectorXd& v, 
-                                 const Eigen::VectorXd& a, 
-                                 const Eigen::VectorXd& lmd_next, 
-                                 const Eigen::VectorXd& gmm_next, 
-                                 const Eigen::VectorXd& q_next,
-                                 const Eigen::VectorXd& v_next) {
+double SplitOCP::squaredOCPErrorNorm(Robot& robot, const double t, 
+                                     const double dtau, const Eigen::VectorXd& lmd, 
+                                     const Eigen::VectorXd& gmm, 
+                                     const Eigen::VectorXd& q, 
+                                     const Eigen::VectorXd& v, 
+                                     const Eigen::VectorXd& a, 
+                                     const Eigen::VectorXd& lmd_next, 
+                                     const Eigen::VectorXd& gmm_next, 
+                                     const Eigen::VectorXd& q_next,
+                                     const Eigen::VectorXd& v_next) {
   robot.RNEA(q, v, a, u_);
   cost_->lu(&robot, t, dtau, q, v, a, u_, lu_);
   cost_->lq(&robot, t, dtau, q, v, a, u_, lq_);
@@ -208,27 +209,27 @@ double SplitOCP::optimalityError(Robot& robot, const double t,
   q_res_ = q + dtau * v - q_next;
   v_res_ = v + dtau * a - v_next;
   double error = 0;
-  error += lq_.norm();
-  error += lv_.norm();
-  error += la_.norm();
-  error += q_res_.norm();
-  error += v_res_.norm();
+  error += lq_.squaredNorm();
+  error += lv_.squaredNorm();
+  error += la_.squaredNorm();
+  error += q_res_.squaredNorm();
+  error += v_res_.squaredNorm();
   return error;
 }
 
 
-double SplitOCP::terminalError(Robot& robot, const double t, 
-                               const Eigen::VectorXd& lmd, 
-                               const Eigen::VectorXd& gmm, 
-                               const Eigen::VectorXd& q, 
-                               const Eigen::VectorXd& v) {
+double SplitOCP::squaredTerminalErrorNorm(Robot& robot, const double t, 
+                                          const Eigen::VectorXd& lmd, 
+                                          const Eigen::VectorXd& gmm, 
+                                          const Eigen::VectorXd& q, 
+                                          const Eigen::VectorXd& v) {
   cost_->phiq(&robot, t, q, v, lq_);
   cost_->phiv(&robot, t, q, v, lv_);
   lq_.noalias() -= lmd;
   lv_.noalias() -= gmm;
-  double error = lq_.norm() + lv_.norm();
+  double error = lq_.squaredNorm() + lv_.squaredNorm();
   return error;
 }
 
 
-} // namespace invdynocp
+} // namespace idocp

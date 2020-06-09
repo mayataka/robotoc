@@ -1,7 +1,7 @@
 #include "constraints/configuration_space_constraints.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 
 
 ConfigurationSpaceConstraints::ConfigurationSpaceConstraints(
@@ -51,4 +51,4 @@ void ConfigurationSpaceConstraints::Cu(const Robot* robot_ptr,
                                        Eigen::MatrixXd& Cu) {
 }
 
-}
+} // namespace idocp

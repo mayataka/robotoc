@@ -1,7 +1,7 @@
 #include "cost_function.hpp"
 
 
-namespace invdynocp {
+namespace idocp {
 namespace iiwa14 {
 
 CostFunction::CostFunction(const Robot* robot_ptr, const Eigen::VectorXd& q_ref)
@@ -112,4 +112,4 @@ void CostFunction::phivv(const Robot* robot_ptr, const double t,
 }
 
 } // namespace iiwa14
-} // namespace invdynocp
+} // namespace idocp

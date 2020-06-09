@@ -3,7 +3,7 @@
 #include <assert.h>
 
 
-namespace invdynocp {
+namespace idocp {
 
 PointContact::PointContact(const pinocchio::Model& model, 
                            const unsigned int contact_frame_id, 
@@ -224,4 +224,4 @@ pinocchio::SE3 PointContact::jXf() const {
   return jXf_;
 }
 
-} // namespace invdynocp 
+} // namespace idocp
