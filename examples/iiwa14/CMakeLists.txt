@@ -4,8 +4,8 @@ project(iiwa14 CXX)
 set(CMAKE_CXX_STANDARD 11)
 
 
-set(INVDYN_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../../include/invdynocp)
-set(INVDYN_SRC_DIR ${PROJECT_SOURCE_DIR}/../../src)
+set(IDOCP_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../../include/IDOCP)
+set(IDOCP_SRC_DIR ${PROJECT_SOURCE_DIR}/../../src)
 set(IIWA_DIR ${PROJECT_SOURCE_DIR})
 
 find_package(Eigen3 REQUIRED)
@@ -29,15 +29,15 @@ endif()
 add_library(
     robot
     SHARED 
-    ${INVDYN_SRC_DIR}/robot/robot.cpp
-    ${INVDYN_SRC_DIR}/robot/passive_joints.cpp
-    ${INVDYN_SRC_DIR}/robot/point_contact.cpp
+    ${IDOCP_SRC_DIR}/robot/robot.cpp
+    ${IDOCP_SRC_DIR}/robot/passive_joints.cpp
+    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
 )
 target_include_directories(
     robot
     PRIVATE
     ${EIGEN3_INCLUDE_DIR}
-    ${INVDYN_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${PINOCCHIO_INCLUDEDIR}
 )
@@ -53,16 +53,16 @@ target_link_libraries(
 add_library(
     invdynocp
     SHARED 
-    ${INVDYN_SRC_DIR}/ocp/OCP.cpp
-    ${INVDYN_SRC_DIR}/ocp/split_OCP.cpp
-    ${INVDYN_SRC_DIR}/cost/configuration_space_cost.cpp
-    ${INVDYN_SRC_DIR}/constraints/configuration_space_constraints.cpp
+    ${IDOCP_SRC_DIR}/ocp/OCP.cpp
+    ${IDOCP_SRC_DIR}/ocp/split_OCP.cpp
+    ${IDOCP_SRC_DIR}/cost/configuration_space_cost.cpp
+    ${IDOCP_SRC_DIR}/constraints/configuration_space_constraints.cpp
 )
 target_include_directories(
     invdynocp
     PRIVATE
     ${EIGEN3_INCLUDE_DIR}
-    ${INVDYN_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${PINOCCHIO_INCLUDEDIR}
 )
@@ -88,7 +88,7 @@ target_include_directories(
     a.out 
     PRIVATE
     ${EIGEN3_INCLUDE_DIR}
-    ${INVDYN_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${PINOCCHIO_INCLUDEDIR}
 )
