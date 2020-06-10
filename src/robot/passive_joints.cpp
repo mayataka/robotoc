@@ -47,13 +47,6 @@ void PassiveJoints::computePassiveConstraintViolation(
 }
 
 
-void PassiveJoints::computePassiveConstraintDerivative(
-    Eigen::MatrixXd& derivative) const {
-  for (int i=0; i<passive_torque_indices_.size(); ++i) {
-  }
-}
-
-
 unsigned int PassiveJoints::dim_passive() const {
   return passive_torque_indices_.size();
 }

@@ -51,15 +51,15 @@ target_link_libraries(
 )
 
 add_library(
-    invdynocp
+    idocp
     SHARED 
     ${IDOCP_SRC_DIR}/ocp/OCP.cpp
     ${IDOCP_SRC_DIR}/ocp/split_OCP.cpp
-    ${IDOCP_SRC_DIR}/cost/configuration_space_cost.cpp
-    ${IDOCP_SRC_DIR}/constraints/configuration_space_constraints.cpp
+    ${IDOCP_SRC_DIR}/cost/joint_space_cost.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints.cpp
 )
 target_include_directories(
-    invdynocp
+    idocp
     PRIVATE
     ${EIGEN3_INCLUDE_DIR}
     ${IDOCP_INCLUDE_DIR}
@@ -67,7 +67,7 @@ target_include_directories(
     ${PINOCCHIO_INCLUDEDIR}
 )
 target_link_libraries(
-    invdynocp
+    idocp
     PRIVATE
     robot
 )
@@ -82,7 +82,7 @@ target_link_libraries(
     a.out
     PRIVATE
     robot
-    invdynocp
+    idocp
 )
 target_include_directories(
     a.out 
@@ -91,9 +91,4 @@ target_include_directories(
     ${IDOCP_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${PINOCCHIO_INCLUDEDIR}
-)
-target_compile_options(
-    a.out
-    PRIVATE
-    -O3
 )

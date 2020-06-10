@@ -2,6 +2,7 @@
 #define IDOCP_ROBOT_HPP_
 
 #include <string>
+#include <map>
 #include <vector>
 
 #include "Eigen/Core"
@@ -22,9 +23,12 @@ namespace idocp {
 
 class Robot {
 public:
-  // Constructor. Creates workspace for pinocchio.
+  Robot(const std::string& urdf_file_name);
+
   Robot(const std::string& urdf_file_name, 
-        const unsigned int max_point_contacts);
+        const std::vector<unsigned int>& contact_frames, 
+        const double baumgarte_weight_on_position, 
+        const double baumgarte_weight_on_velocity);
 
   Robot();
 
@@ -37,28 +41,15 @@ public:
   // Use default copy operator.
   Robot& operator=(const Robot& other) = default;
 
-  // Move constructor.
-  Robot(const Robot&& other) noexcept;
-
-  // Copy operator.
-  Robot& operator=(const Robot&& other) noexcept;
-
   // Integrates the generalized velocity, integration_length * v. 
   // The generalized configuration q is then incremented.
   // Argments: 
   //   q: Generalized configuration. Size must be dimq().
   //   v: Generalized velocity. Size must be dimv().
   //   integration_length: The length of the integration.
-  void integrateConfiguration(const Eigen::VectorXd& q, 
-                              const Eigen::VectorXd& v, 
+  void integrateConfiguration(const Eigen::VectorXd& v, 
                               const double integration_length, 
-                              Eigen::VectorXd& q_plus) const;
-
-  void dIntegrateConfiguration(const Eigen::VectorXd& q, 
-                               const Eigen::VectorXd& v,
-                               const double integration_length,
-                               Eigen::MatrixXd& dIntegrate_dq,
-                               Eigen::MatrixXd& dIntegrate_dv) const;
+                              Eigen::VectorXd& q) const;
 
   // Integrates the generalized velocity, integration_length * v. 
   // The generalized configuration q is then incremented.
@@ -69,6 +60,12 @@ public:
   void differenceConfiguration(const Eigen::VectorXd& q_plus, 
                                const Eigen::VectorXd& q_minus,
                                Eigen::VectorXd& difference) const;
+
+  void dIntegrateConfiguration(const Eigen::VectorXd& q, 
+                               const Eigen::VectorXd& v,
+                               const double integration_length,
+                               Eigen::MatrixXd& dIntegrate_dq,
+                               Eigen::MatrixXd& dIntegrate_dv) const;
 
   // Updates the kinematics of the robot. The frame placements, frame velocity,
   // frame acceleration, and the relevant Jacobians are calculated. After that, 
@@ -109,7 +106,8 @@ public:
   // The array is converted into joint forces.
   //   fext: The stack of the contact forces represented in the world frame.
   //      The size is assumed to be dimf.
-  void setFext(const Eigen::VectorXd& fext);
+  void setActiveContacts(const std::vector<bool>& is_each_contact_active, 
+                         const Eigen::VectorXd& fext);
 
   // Computes generalized torques tau corresponding to given q, v, and a.
   // No external forces are assumed.
@@ -157,32 +155,7 @@ public:
   //      assumed to be dimv.
   //   dRNEA_da_dot_vec: The array where the result is stored. The size is
   //      assumed to be dimv.
-  void RNEADerivatives(const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v, 
-                       const Eigen::VectorXd& a, 
-                       Eigen::MatrixXd& dRNEA_partial_dq, 
-                       Eigen::MatrixXd& dRNEA_partial_dv, 
-                       Eigen::MatrixXd& dRNEA_partial_da, 
-                       Eigen::MatrixXd& dRNEA_partial_dfext);
-
-  // Adds the point contact to the robot.
-  // If there is a contact that have contact_frame_id, the contact does not 
-  //    increased. Otherwise, a contact that has contact_frame_id is added.
-  // Argments:
-  //    contact_frame_id: The frame index of the contact. 
-  //    baumgarte_alpha: The weight parameter of the Baumgrate's stabilization
-  //      method
-  //    baumgarte_beta: The weight parameter of the Baumgrate's stabilization
-  //      method
-  void addPointContact(const unsigned int contact_frame_id, 
-                       const double baumgarte_alpha, 
-                       const double baumgarte_beta);
-
-  // Removes the point contact from the robot. If there is no contact that has 
-  //    contact_frame_id, this function does not do anything.
-  // Argments:
-  //    contact_frame_id: The frame index of the contact. 
-  void removePointContact(const unsigned int contact_frame_id);
+  void dRNEAPartialdFext(Eigen::MatrixXd& dRNEA_partial_dfext);
 
   // Substitutes zero in the generalized torques tau corresponding to the 
   // passive joints.
@@ -199,27 +172,19 @@ public:
   void passiveConstraintViolation(const Eigen::VectorXd& tau, 
                                   Eigen::VectorXd& violation) const;
 
-  // Calculates the product of a vector and the derivative of the residual of 
-  // the constrains on the passive joints. In usually, the vector must be 
-  // the corresponding Lagrange multiplier.
-  // Argments:
-  //   vec: A vector whose size is dim_passive.
-  //   added_vec: A vector which vec is added. The size must be Robot::dimv().
-  void passiveConstraintsDerivative(Eigen::MatrixXd& derivative) const;
+  Eigen::VectorXd jointEffortLimit() const;
+
+  Eigen::VectorXd jointVelocityLimit() const;
+
+  Eigen::VectorXd lowerJointPositionLimit() const;
+
+  Eigen::VectorXd upperJointPositionLimit() const;
 
   // Returns the dimensiton of the generalized configuration.
   unsigned int dimq() const;
 
   // Returns the dimensiton of the generalized velocity.
   unsigned int dimv() const;
-
-  // Returns the dimensiton of the contacts that is equal to the dimension of 
-  //    the contact forces.
-  unsigned int dimf() const;
-
-  // Returns the maximum dimensiton of the contacts that is equal to the 
-  // dimension of the contact forces.
-  unsigned int dimfmax() const;
 
   // Returns the dimensiton of the generalized torques corresponding to the 
   // passive joints.
@@ -228,9 +193,6 @@ public:
   // Returns the maximum number of the point contacts.
   unsigned int max_point_contacts() const;
 
-  // Returns the name of the URDF file name.
-  std::string urdf_file_name() const;
-
 private:
   pinocchio::Model model_;
   pinocchio::Data data_;
@@ -238,8 +200,7 @@ private:
   std::vector<PointContact> point_contacts_;
   PassiveJoints passive_joints_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
-  unsigned int dimq_, dimv_, max_point_contacts_;
-
+  unsigned int dimq_, dimv_;
 };
 
 } // namespace idocp

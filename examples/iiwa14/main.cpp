@@ -14,9 +14,9 @@
 int main() {
   srand((unsigned int) time(0));
   const std::string urdf_file_name = "../urdf/iiwa14.urdf";
-  idocp::Robot robot(urdf_file_name, 0);
-  idocp::iiwa14::CostFunction cost(&robot, Eigen::VectorXd::Zero(robot.dimq()));
-  idocp::iiwa14::Constraints constraints(&robot);
+  idocp::Robot robot(urdf_file_name);
+  idocp::iiwa14::CostFunction cost(robot, Eigen::VectorXd::Zero(robot.dimq()));
+  idocp::iiwa14::Constraints constraints(robot);
   const double T = 2;
   const unsigned int N = 100;
   const unsigned int num_proc = 4;
@@ -27,11 +27,11 @@ int main() {
   // ocp_.solveSQP(t, q, v);
   // ocp_.printSolution();
 
-  std::cout << "q0: " << q.transpose() << std::endl;
-  std::cout << "v0: " << v.transpose() << std::endl;
+  // std::cout << "q0: " << q.transpose() << std::endl;
+  // std::cout << "v0: " << v.transpose() << std::endl;
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
-  const int num_iteration = 1000;
+  const int num_iteration = 10;
   std::cout << ocp_.optimalityError(t, q, v) << std::endl;
   for (int i=0; i<num_iteration; ++i) {
     ocp_.solveSQP(t, q, v);

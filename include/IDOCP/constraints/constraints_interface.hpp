@@ -14,52 +14,52 @@ public:
 
   virtual ~ConstraintsInterface() {}
 
-  virtual void C(const Robot* robot_ptr, const double t, const double dtau, 
+  virtual void C(const Robot& robot, const double t, const double dtau, 
                  const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                  Eigen::VectorXd& C) = 0;
 
-  virtual void Cq(const Robot* robot_ptr, const double t, const double dtau,
+  virtual void Cq(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                   const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                   Eigen::MatrixXd& Cq) = 0;
 
-  virtual void Cq(const Robot* robot_ptr, const double t, const double dtau,
+  virtual void Cq(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                   const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                   const Eigen::VectorXd& fext, Eigen::MatrixXd& Cq) = 0;
 
-  virtual void Cv(const Robot* robot_ptr, const double t, const double dtau,
+  virtual void Cv(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                   const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                   Eigen::MatrixXd& Cv) = 0;
 
-  virtual void Cv(const Robot* robot_ptr, const double t, const double dtau,
+  virtual void Cv(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                   const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                   const Eigen::VectorXd& fext, Eigen::MatrixXd& Cv) = 0;
 
-  virtual void Ca(const Robot* robot_ptr, const double t, const double dtau,
+  virtual void Ca(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                   const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                   Eigen::MatrixXd& Ca) = 0;
 
-  virtual void Ca(const Robot* robot_ptr, const double t, const double dtau,
+  virtual void Ca(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                   const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                   const Eigen::VectorXd& fext, Eigen::MatrixXd& Ca) = 0;
 
-  virtual void Cu(const Robot* robot_ptr, const double t, const double dtau,
+  virtual void Cu(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                   const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                   Eigen::MatrixXd& Cu) = 0;
 
-  virtual void Cu(const Robot* robot_ptr, const double t, const double dtau,
+  virtual void Cu(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                   const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                   const Eigen::VectorXd& fext, Eigen::MatrixXd& Cu) = 0;
 
-  virtual void Cfext(const Robot* robot_ptr, const double t, const double dtau,
+  virtual void Cfext(const Robot& robot, const double t, const double dtau,
                      const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                      const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                      const Eigen::VectorXd& fext, Eigen::MatrixXd& Cfext) = 0;

@@ -29,7 +29,7 @@ public:
   PointContact(const pinocchio::Model& model, 
                const unsigned int contact_frame_id, 
                const double baumgarte_alpha, const double baumgarte_beta);
- 
+
   // Destructor. 
   ~PointContact();
 
@@ -157,6 +157,12 @@ public:
                                    Eigen::MatrixXd& baumgarte_partial_dv, 
                                    Eigen::MatrixXd& baumgarte_partial_da);
 
+  void activate();
+  
+  void deactivate();
+
+  bool isActive() const;
+
   // Returns contact_frame_id, the index of the contact frame.
   unsigned int contact_frame_id() const;
 
@@ -182,6 +188,7 @@ public:
   pinocchio::SE3 jXf() const;
 
 private:
+  bool is_active_;
   unsigned int contact_frame_id_, parent_joint_id_, dimv_;
   double baumgarte_alpha_, baumgarte_beta_;
   Eigen::Vector3d contact_point_;

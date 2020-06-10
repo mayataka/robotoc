@@ -28,13 +28,10 @@ public:
   // Use dafule copy operator.
   PassiveJoints& operator=(const PassiveJoints&) = default;
 
-
   void setPassiveTorques(Eigen::VectorXd& tau) const;
 
   void computePassiveConstraintViolation(const Eigen::VectorXd& torques, 
                                          Eigen::VectorXd& violation) const;
-
-  void computePassiveConstraintDerivative(Eigen::MatrixXd& derivative) const;
 
   // Returns the dimension of the torques correspoinding to the passive joints.
   unsigned int dim_passive() const;

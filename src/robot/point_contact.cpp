@@ -9,7 +9,8 @@ PointContact::PointContact(const pinocchio::Model& model,
                            const unsigned int contact_frame_id, 
                            const double baumgarte_alpha, 
                            const double baumgarte_beta) 
-  : contact_frame_id_(contact_frame_id),
+  : is_active_(false),
+    contact_frame_id_(contact_frame_id),
     parent_joint_id_(model.frames[contact_frame_id_].parent), 
     dimv_(model.nv),
     baumgarte_alpha_(baumgarte_alpha),
@@ -30,7 +31,8 @@ PointContact::~PointContact() {
 
 
 PointContact::PointContact(PointContact&& other) noexcept
-  : contact_frame_id_(other.contact_frame_id()),
+  : is_active_(other.isActive()),
+    contact_frame_id_(other.contact_frame_id()),
     parent_joint_id_(other.parent_joint_id()), 
     dimv_(other.dimv()),
     baumgarte_alpha_(other.baumgarte_alpha()),
@@ -52,6 +54,7 @@ PointContact::PointContact(PointContact&& other) noexcept
 
 
 PointContact& PointContact::operator=(PointContact&& other) noexcept {
+  is_active_ = other.isActive();
   contact_frame_id_ = other.contact_frame_id();
   parent_joint_id_ = other.parent_joint_id();
   dimv_ = other.dimv();
@@ -187,6 +190,21 @@ void PointContact::computeBaumgarteDerivatives(
   baumgarte_partial_da.block(result_mat_row_begin, result_mat_col_begin, 3, 
                              dimv_) 
       = joint_a_partial_da_.template topRows<3>();
+}
+
+
+void PointContact::activate() {
+  is_active_ = true;
+}
+
+
+void PointContact::deactivate() {
+  is_active_ = false;
+}
+
+
+bool PointContact::isActive() const {
+  return is_active_;
 }
 
 

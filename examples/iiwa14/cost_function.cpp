@@ -4,16 +4,19 @@
 namespace idocp {
 namespace iiwa14 {
 
-CostFunction::CostFunction(const Robot* robot_ptr, const Eigen::VectorXd& q_ref)
+CostFunction::CostFunction(const Robot& robot, const Eigen::VectorXd& q_ref)
   : CostFunctionInterface(),
-    configuration_space_cost_(
-        robot_ptr, q_ref, Eigen::VectorXd::Constant(robot_ptr->dimq(), 10), 
-        Eigen::VectorXd::Zero(robot_ptr->dimv()),
-        Eigen::VectorXd::Constant(robot_ptr->dimv(), 0.1), 
-        Eigen::VectorXd::Zero(robot_ptr->dimv()),
-        Eigen::VectorXd::Constant(robot_ptr->dimv(), 0.01), 
-        Eigen::VectorXd::Zero(robot_ptr->dimv()),
-        Eigen::VectorXd::Constant(robot_ptr->dimv(), 0.001)) {
+    joint_space_cost_(
+        robot, q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
+        Eigen::VectorXd::Zero(robot.dimv()),
+        Eigen::VectorXd::Constant(robot.dimv(), 0.1), 
+        Eigen::VectorXd::Zero(robot.dimv()),
+        Eigen::VectorXd::Constant(robot.dimv(), 0.01), 
+        Eigen::VectorXd::Zero(robot.dimv()),
+        Eigen::VectorXd::Constant(robot.dimv(), 0.001),
+        q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
+        Eigen::VectorXd::Zero(robot.dimv()),
+        Eigen::VectorXd::Constant(robot.dimv(), 0.1)) {
 }
 
 
@@ -21,94 +24,94 @@ CostFunction::~CostFunction() {
 }
 
 
-void CostFunction::lq(const Robot* robot_ptr, const double t, const double dtau,
+void CostFunction::lq(const Robot& robot, const double t, const double dtau,
                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                       const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                       Eigen::VectorXd& lq) {
-  configuration_space_cost_.lq(robot_ptr, dtau, q, lq);
+  joint_space_cost_.lq(robot, dtau, q, lq);
 }
 
 
-void CostFunction::lv(const Robot* robot_ptr, const double t, const double dtau,
+void CostFunction::lv(const Robot& robot, const double t, const double dtau,
                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                       const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                       Eigen::VectorXd& lv) {
-  configuration_space_cost_.lv(robot_ptr, dtau, v, lv);
+  joint_space_cost_.lv(robot, dtau, v, lv);
 }
 
 
-void CostFunction::la(const Robot* robot_ptr, const double t, const double dtau,
+void CostFunction::la(const Robot& robot, const double t, const double dtau,
                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                       const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                       Eigen::VectorXd& la) {
-  configuration_space_cost_.la(robot_ptr, dtau, a, la);
+  joint_space_cost_.la(robot, dtau, a, la);
 }
 
 
-void CostFunction::lu(const Robot* robot_ptr, const double t, const double dtau,
+void CostFunction::lu(const Robot& robot, const double t, const double dtau,
                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                       const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                       Eigen::VectorXd& lu) {
-  configuration_space_cost_.lu(robot_ptr, dtau, u, lu);
+  joint_space_cost_.lu(robot, dtau, u, lu);
 }
 
 
-void CostFunction::lqq(const Robot* robot_ptr, const double t, 
+void CostFunction::lqq(const Robot& robot, const double t, 
                        const double dtau, const Eigen::VectorXd& q, 
                        const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
                        const Eigen::VectorXd& u, Eigen::MatrixXd& lqq) {
-  configuration_space_cost_.lqq(robot_ptr, dtau, lqq);
+  joint_space_cost_.lqq(robot, dtau, lqq);
 }
 
 
-void CostFunction::lvv(const Robot* robot_ptr, const double t, 
+void CostFunction::lvv(const Robot& robot, const double t, 
                        const double dtau, const Eigen::VectorXd& q, 
                        const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
                        const Eigen::VectorXd& u, Eigen::MatrixXd& lvv) {
-  configuration_space_cost_.lvv(robot_ptr, dtau, lvv);
+  joint_space_cost_.lvv(robot, dtau, lvv);
 }
 
-void CostFunction::laa(const Robot* robot_ptr, const double t, 
+void CostFunction::laa(const Robot& robot, const double t, 
                        const double dtau, const Eigen::VectorXd& q, 
                        const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
                        const Eigen::VectorXd& u, Eigen::MatrixXd& laa) {
-  configuration_space_cost_.laa(robot_ptr, dtau, laa);
+  joint_space_cost_.laa(robot, dtau, laa);
 }
 
 
-void CostFunction::luu(const Robot* robot_ptr, const double t, 
+void CostFunction::luu(const Robot& robot, const double t, 
                        const double dtau, const Eigen::VectorXd& q, 
                        const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
                        const Eigen::VectorXd& u, Eigen::MatrixXd& luu) {
-  configuration_space_cost_.luu(robot_ptr, dtau, luu);
+  joint_space_cost_.luu(robot, dtau, luu);
 }
 
 
-void CostFunction::phiq(const Robot* robot_ptr, const double t, 
+void CostFunction::phiq(const Robot& robot, const double t, 
                         const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                         Eigen::VectorXd& phiq) {
-  configuration_space_cost_.phiq(robot_ptr, q, phiq);
+  joint_space_cost_.phiq(robot, q, phiq);
 }
 
 
-void CostFunction::phiv(const Robot* robot_ptr, const double t, 
+void CostFunction::phiv(const Robot& robot, const double t, 
                         const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                         Eigen::VectorXd& phiv) {
-  configuration_space_cost_.phiv(robot_ptr, v, phiv);
+  joint_space_cost_.phiv(robot, v, phiv);
 }
 
 
-void CostFunction::phiqq(const Robot* robot_ptr, const double t, 
+void CostFunction::phiqq(const Robot& robot, const double t, 
                          const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                          Eigen::MatrixXd& phiqq) {
-  configuration_space_cost_.phiqq(robot_ptr, phiqq);
+  joint_space_cost_.phiqq(robot, phiqq);
 }
 
 
-void CostFunction::phivv(const Robot* robot_ptr, const double t, 
+void CostFunction::phivv(const Robot& robot, const double t, 
                          const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                          Eigen::MatrixXd& phivv) {
-  configuration_space_cost_.phivv(robot_ptr, phivv);
+  joint_space_cost_.phivv(robot, phivv);
 }
 
 } // namespace iiwa14

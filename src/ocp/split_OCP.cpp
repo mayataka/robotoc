@@ -51,10 +51,10 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
                             const Eigen::VectorXd& q_next,
                             const Eigen::VectorXd& v_next) {
   robot.RNEA(q, v, a, u_);
-  cost_->lu(&robot, t, dtau, q, v, a, u_, lu_);
-  cost_->lq(&robot, t, dtau, q, v, a, u_, lq_);
-  cost_->lv(&robot, t, dtau, q, v, a, u_, lv_);
-  cost_->la(&robot, t, dtau, q, v, a, u_, la_);
+  cost_->lu(robot, t, dtau, q, v, a, u_, lu_);
+  cost_->lq(robot, t, dtau, q, v, a, u_, lq_);
+  cost_->lv(robot, t, dtau, q, v, a, u_, lv_);
+  cost_->la(robot, t, dtau, q, v, a, u_, la_);
   robot.RNEADerivatives(q, v, a, du_dq_, du_dv_, du_da_);
   lq_.noalias() += du_dq_.transpose() * lu_;
   lv_.noalias() += du_dv_.transpose() * lu_;
@@ -64,7 +64,7 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   la_.noalias() += dtau * gmm_next;
   q_res_ = q + dtau * v - q_next;
   v_res_ = v + dtau * a - v_next;
-  cost_->luu(&robot, t, dtau, q, v, a, u_, luu_);
+  cost_->luu(robot, t, dtau, q, v, a, u_, luu_);
   Qqq_ = luu_ * du_dq_.transpose() * du_dq_;
   Qqv_ = luu_ * du_dq_.transpose() * du_dv_;
   Qqa_ = luu_ * du_dq_.transpose() * du_da_;
@@ -72,9 +72,9 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   Qva_ = luu_ * du_dv_.transpose() * du_da_;
   Qaa_ = luu_ * du_da_.transpose() * du_da_;
   Qvq_ = Qqv_.transpose();
-  cost_->lqq(&robot, t, dtau, q, v, a, u_, Qqq_);
-  cost_->lvv(&robot, t, dtau, q, v, a, u_, Qvv_);
-  cost_->laa(&robot, t, dtau, q, v, a, u_, Qaa_);
+  cost_->lqq(robot, t, dtau, q, v, a, u_, Qqq_);
+  cost_->lvv(robot, t, dtau, q, v, a, u_, Qvv_);
+  cost_->laa(robot, t, dtau, q, v, a, u_, Qaa_);
 }
 
 
@@ -84,12 +84,12 @@ void SplitOCP::linearizeTerminalCost(Robot& robot, const double t,
                                      Eigen::MatrixXd& Qqq, Eigen::MatrixXd& Qqv, 
                                      Eigen::MatrixXd& Qvq, Eigen::MatrixXd& Qvv, 
                                      Eigen::VectorXd& Qq, Eigen::VectorXd& Qv) {
-  cost_->phiq(&robot, t, q, v, Qq);
-  cost_->phiv(&robot, t, q, v, Qv);
+  cost_->phiq(robot, t, q, v, Qq);
+  cost_->phiv(robot, t, q, v, Qv);
   Qq *= -1;
   Qv *= -1;
-  cost_->phiqq(&robot, t, q, v, Qqq);
-  cost_->phivv(&robot, t, q, v, Qvv);
+  cost_->phiqq(robot, t, q, v, Qqq);
+  cost_->phivv(robot, t, q, v, Qvv);
 }
 
 
@@ -195,10 +195,10 @@ double SplitOCP::squaredOCPErrorNorm(Robot& robot, const double t,
                                      const Eigen::VectorXd& q_next,
                                      const Eigen::VectorXd& v_next) {
   robot.RNEA(q, v, a, u_);
-  cost_->lu(&robot, t, dtau, q, v, a, u_, lu_);
-  cost_->lq(&robot, t, dtau, q, v, a, u_, lq_);
-  cost_->lv(&robot, t, dtau, q, v, a, u_, lv_);
-  cost_->la(&robot, t, dtau, q, v, a, u_, la_);
+  cost_->lu(robot, t, dtau, q, v, a, u_, lu_);
+  cost_->lq(robot, t, dtau, q, v, a, u_, lq_);
+  cost_->lv(robot, t, dtau, q, v, a, u_, lv_);
+  cost_->la(robot, t, dtau, q, v, a, u_, la_);
   robot.RNEADerivatives(q, v, a, du_dq_, du_dv_, du_da_);
   lq_.noalias() += du_dq_.transpose() * lu_;
   lv_.noalias() += du_dv_.transpose() * lu_;
@@ -223,8 +223,8 @@ double SplitOCP::squaredTerminalErrorNorm(Robot& robot, const double t,
                                           const Eigen::VectorXd& gmm, 
                                           const Eigen::VectorXd& q, 
                                           const Eigen::VectorXd& v) {
-  cost_->phiq(&robot, t, q, v, lq_);
-  cost_->phiv(&robot, t, q, v, lv_);
+  cost_->phiq(robot, t, q, v, lq_);
+  cost_->phiv(robot, t, q, v, lv_);
   lq_.noalias() -= lmd;
   lv_.noalias() -= gmm;
   double error = lq_.squaredNorm() + lv_.squaredNorm();
