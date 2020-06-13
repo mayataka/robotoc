@@ -156,11 +156,15 @@ public:
                                    Eigen::MatrixXd& baumgarte_partial_dq, 
                                    Eigen::MatrixXd& baumgarte_partial_dv, 
                                    Eigen::MatrixXd& baumgarte_partial_da);
-
+ 
+  // Activate the contact.
   void activate();
   
+  // Deactivate the contact.
   void deactivate();
 
+  // Check if the contact is active or not. If the contact is active, return 
+  // true. If the contact is not active, return false.
   bool isActive() const;
 
   // Returns contact_frame_id, the index of the contact frame.

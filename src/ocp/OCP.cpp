@@ -9,7 +9,7 @@ namespace idocp {
 OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
          const ConstraintsInterface* constraints, const double T, 
          const unsigned int N, const unsigned int num_proc)
-  : split_OCPs_(N, SplitOCP(robot, cost, constraints)),
+  : split_OCPs_(N+1, SplitOCP(robot, cost, constraints)),
     robots_(num_proc, robot),
     cost_(const_cast<CostFunctionInterface*>(cost)),
     constraints_(const_cast<ConstraintsInterface*>(constraints)),
@@ -32,32 +32,48 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
     Pqq_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Pqv_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Pvq_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Pvv_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())) {
+    Pvv_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    step_length_(Eigen::VectorXd::Ones(N+1)) {
   if (num_proc_ == 0) {
     num_proc_ = 1;
+  }
+  int time_step;
+  #pragma omp parallel num_threads(num_proc_) 
+  {
+    #pragma omp for  
+    for (time_step=0; time_step<N_; ++time_step) {
+      split_OCPs_[time_step].initConstraints(robots_[omp_get_thread_num()], 
+                                             dtau_, q_[time_step], 
+                                             v_[time_step], a_[time_step]);
+    }
   }
 }
 
 
-void OCP::solveSQP(const double t, const Eigen::VectorXd& q, 
+void OCP::solveLQR(const double t, const Eigen::VectorXd& q, 
                    const Eigen::VectorXd& v) {
   int time_step;
   #pragma omp parallel num_threads(num_proc_) 
   {
     #pragma omp for  
     for (time_step=0; time_step<N_; ++time_step) {
-      split_OCPs_[time_step].linearizeOCP(robots_[omp_get_thread_num()], 
-                                          t+time_step*dtau_, dtau_, 
-                                          lmd_[time_step], gmm_[time_step],
-                                          q_[time_step], v_[time_step], 
-                                          a_[time_step], 
-                                          lmd_[time_step+1], gmm_[time_step+1], 
-                                          q_[time_step+1], v_[time_step+1]);
+      if (time_step < N_) {
+        split_OCPs_[time_step].linearizeOCP(robots_[omp_get_thread_num()], 
+                                            t+time_step*dtau_, dtau_, 
+                                            lmd_[time_step], gmm_[time_step],
+                                            q_[time_step], v_[time_step], 
+                                            a_[time_step], 
+                                            lmd_[time_step+1], gmm_[time_step+1], 
+                                            q_[time_step+1], v_[time_step+1]);
+      }
+      else {
+        split_OCPs_[N_].linearizeOCP(robots_[omp_get_thread_num()], t+T_, 
+                                     lmd_[N_], gmm_[N_], q_[N_], v_[N_], 
+                                     Pqq_[N_], Pqv_[N_], Pvq_[N_], Pvv_[N_], 
+                                     sq_[N_], sv_[N_]);
+      }
     }
   }
-  split_OCPs_[N_-1].linearizeTerminalCost(robots_[num_proc_-1], t+T_, q_[N_], 
-                                          v_[N_], Pqq_[N_], Pqv_[N_], Pvq_[N_], 
-                                          Pvv_[N_], sq_[N_], sv_[N_]);
   for (time_step=N_-1; time_step>=0; --time_step) {
     split_OCPs_[time_step].backwardRecursion(dtau_, Pqq_[time_step+1], 
                                              Pqv_[time_step+1], 
@@ -78,10 +94,10 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
   #pragma omp parallel num_threads(num_proc_) 
   {
     #pragma omp for 
-    for (time_step=0; time_step<N_; ++time_step) {
+    for (time_step=0; time_step<=N_; ++time_step) {
       if (time_step < N_) {
         split_OCPs_[time_step].updateOCP(robots_[omp_get_thread_num()], 
-                                         dq_[time_step], dv_[time_step], 
+                                         dtau_, dq_[time_step], dv_[time_step], 
                                          da_[time_step], Pqq_[time_step], 
                                          Pqv_[time_step], Pvq_[time_step], 
                                          Pvv_[time_step], sq_[time_step], 
@@ -90,13 +106,10 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
                                          lmd_[time_step], gmm_[time_step]);
       }
       else {
-        split_OCPs_[time_step].updateOCP(robots_[omp_get_thread_num()], 
-                                         dq_[time_step], dv_[time_step], 
-                                         Pqq_[time_step], Pqv_[time_step], 
-                                         Pvq_[time_step], Pvv_[time_step], 
-                                         sq_[time_step], sv_[time_step], 
-                                         q_[time_step], v_[time_step], 
-                                         lmd_[time_step], gmm_[time_step]);
+        split_OCPs_[N_].updateOCP(robots_[omp_get_thread_num()], dq_[N_], 
+                                  dv_[N_], Pqq_[N_], Pqv_[N_], Pvq_[N_], 
+                                  Pvv_[N_], sq_[N_], sv_[N_], q_[N_], v_[N_], 
+                                  lmd_[N_], gmm_[N_]);
       }
     }
   }
@@ -105,6 +118,21 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
 
 void OCP::getInitialControlInput(Eigen::VectorXd& u) {
   robots_[0].RNEA(q_[0], v_[0], a_[0], u);
+}
+
+
+void OCP::setStateTrajectory(const Eigen::VectorXd& q0, 
+                             const Eigen::VectorXd& v0, 
+                             const Eigen::VectorXd& qN, 
+                             const Eigen::VectorXd& vN) {
+  Eigen::VectorXd dv = (vN-v0) / N_;
+  for (int i=0; i<=N_; ++i) {
+    v_[i] = v0 + i * dv;
+  }
+  Eigen::VectorXd dq = (qN-q0) / N_;
+  for (int i=0; i<=N_; ++i) {
+    q_[i] = q0 + i * dq;
+  }
 }
 
 
@@ -119,18 +147,21 @@ double OCP::optimalityError(const double t, const Eigen::VectorXd& q,
                                                 a_[i], lmd_[i+1], gmm_[i+1], 
                                                 q_[i+1], v_[i+1]);
   }
-  error += split_OCPs_[N_-1].squaredTerminalErrorNorm(robots_[0], t+T_, lmd_[N_], 
-                                                      gmm_[N_], q_[N_], v_[N_]);
+  error += split_OCPs_[N_].squaredOCPErrorNorm(robots_[0], t+T_, lmd_[N_], 
+                                               gmm_[N_], q_[N_], v_[N_]);
   return std::sqrt(error);
 }
 
 
-void OCP::printSolution() const {
+void OCP::printSolution() {
+  Eigen::VectorXd u(Eigen::VectorXd::Zero(robots_[0].dimv()));
   for (int i=0; i<N_; ++i) {
+    robots_[0].RNEA(q_[i], v_[i], a_[i], u);
     std::cout << "time step: " << i << std::endl;
     std::cout << "q: " << q_[i].transpose() << std::endl;
     std::cout << "v: " << v_[i].transpose() << std::endl;
     std::cout << "a: " << a_[i].transpose() << std::endl;
+    std::cout << "u: " << u.transpose() << std::endl;
   }
   std::cout << "time step: " << N_ << std::endl;
   std::cout << "q: " << q_[N_].transpose() << std::endl;

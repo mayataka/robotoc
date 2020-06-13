@@ -57,6 +57,12 @@ add_library(
     ${IDOCP_SRC_DIR}/ocp/split_OCP.cpp
     ${IDOCP_SRC_DIR}/cost/joint_space_cost.cpp
     ${IDOCP_SRC_DIR}/constraints/joint_space_constraints.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_position_upper_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_position_lower_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_velocity_upper_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_velocity_lower_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_torque_upper_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_torque_lower_limits.cpp
 )
 target_include_directories(
     idocp

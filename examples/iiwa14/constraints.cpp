@@ -5,8 +5,7 @@ namespace idocp {
 namespace iiwa14 {
 
 Constraints::Constraints(const Robot& robot)
-  : ConstraintsInterface(),
-    joint_space_constraints_(robot) {
+  : ConstraintsInterface() {
 }
 
 

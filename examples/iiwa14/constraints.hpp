@@ -5,7 +5,6 @@
 
 #include "robot/robot.hpp"
 #include "constraints/constraints_interface.hpp"
-#include "constraints/joint_space_constraints.hpp"
 
 
 namespace idocp {
@@ -69,7 +68,6 @@ public:
 
 
 private:
-  JointSpaceConstraints joint_space_constraints_;  
 
 };
 

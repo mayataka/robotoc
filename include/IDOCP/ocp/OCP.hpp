@@ -21,15 +21,18 @@ public:
       const ConstraintsInterface* constraints, const double T, 
       const unsigned int N, const unsigned int num_proc);
 
-  void solveSQP(const double t, const Eigen::VectorXd& q, 
+  void solveLQR(const double t, const Eigen::VectorXd& q, 
                 const Eigen::VectorXd& v);
 
   void getInitialControlInput(Eigen::VectorXd& u);
 
+  void setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0, 
+                          const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
+
   double optimalityError(const double t, const Eigen::VectorXd& q, 
                          const Eigen::VectorXd& v);
 
-  void printSolution() const;
+  void printSolution();
 
   // Prohibits copy constructor.
   OCP(const OCP&) = delete;
@@ -47,6 +50,7 @@ private:
   std::vector<Eigen::VectorXd> q_, v_, a_, lmd_, gmm_, 
                                dq_, dv_, da_, dlmd_, dgmm_, sq_, sv_;
   std::vector<Eigen::MatrixXd> Pqq_, Pqv_, Pvq_, Pvv_;
+  Eigen::VectorXd step_length_;
 
 };
 

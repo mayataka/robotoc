@@ -8,6 +8,7 @@
 #include "robot/robot.hpp"
 #include "cost/cost_function_interface.hpp"
 #include "constraints/constraints_interface.hpp"
+#include "constraints/joint_space_constraints.hpp"
 
 
 namespace idocp {
@@ -29,6 +30,10 @@ public:
   // Copy operator.
   SplitOCP& operator=(const SplitOCP& other) = default;
 
+  void initConstraints(Robot& robot, const double dtau,
+                       const Eigen::VectorXd& q, 
+                       const Eigen::VectorXd& v, const Eigen::VectorXd& a);
+
   void linearizeOCP(Robot& robot, const double t, const double dtau, 
                     const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
                     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
@@ -37,11 +42,12 @@ public:
                     const Eigen::VectorXd& q_next,
                     const Eigen::VectorXd& v_next);
 
-  void linearizeTerminalCost(Robot& robot, const double t, 
-                             const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                             Eigen::MatrixXd& Qqq, Eigen::MatrixXd& Qqv, 
-                             Eigen::MatrixXd& Qvq, Eigen::MatrixXd& Qvv, 
-                             Eigen::VectorXd& Qq, Eigen::VectorXd& Qv);
+  void linearizeOCP(Robot& robot, const double t, const Eigen::VectorXd& lmd, 
+                    const Eigen::VectorXd& gmm, const Eigen::VectorXd& q, 
+                    const Eigen::VectorXd& v, Eigen::MatrixXd& Qqq, 
+                    Eigen::MatrixXd& Qqv, Eigen::MatrixXd& Qvq, 
+                    Eigen::MatrixXd& Qvv, Eigen::VectorXd& Qq, 
+                    Eigen::VectorXd& Qv);
 
   void backwardRecursion(const double dtau, const Eigen::MatrixXd& Pqq_next, 
                          const Eigen::MatrixXd& Pqv_next, 
@@ -58,7 +64,11 @@ public:
                         Eigen::VectorXd& dq_next, 
                         Eigen::VectorXd& dv_next) const;
 
-  void updateOCP(Robot& robot, const Eigen::VectorXd& dq, 
+  double stepLength(Robot& robot, const double dtau, const Eigen::VectorXd& dq, 
+                    const Eigen::VectorXd& dv, const Eigen::VectorXd& da, 
+                    Eigen::VectorXd& q, Eigen::VectorXd& v, Eigen::VectorXd& a);
+
+  void updateOCP(Robot& robot, const double dtau,   const Eigen::VectorXd& dq, 
                  const Eigen::VectorXd& dv, const Eigen::VectorXd& da, 
                  const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
                  const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
@@ -71,7 +81,8 @@ public:
                  const Eigen::MatrixXd& Pqv, const Eigen::MatrixXd& Pvq, 
                  const Eigen::MatrixXd& Pvv, const Eigen::VectorXd& sq, 
                  const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
-                 Eigen::VectorXd& v, Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
+                 Eigen::VectorXd& v, Eigen::VectorXd& lmd, 
+                 Eigen::VectorXd& gmm) const;
 
   double squaredOCPErrorNorm(Robot& robot, const double t, const double dtau, 
                              const Eigen::VectorXd& lmd, 
@@ -83,21 +94,21 @@ public:
                              const Eigen::VectorXd& q_next,
                              const Eigen::VectorXd& v_next);
 
-  double squaredTerminalErrorNorm(Robot& robot, const double t, 
-                                  const Eigen::VectorXd& lmd, 
-                                  const Eigen::VectorXd& gmm, 
-                                  const Eigen::VectorXd& q, 
-                                  const Eigen::VectorXd& v);
+  double squaredOCPErrorNorm(Robot& robot, const double t, 
+                             const Eigen::VectorXd& lmd, 
+                             const Eigen::VectorXd& gmm, 
+                             const Eigen::VectorXd& q, 
+                             const Eigen::VectorXd& v);
 
 private:
   CostFunctionInterface *cost_;
   ConstraintsInterface *constraints_;
+  JointSpaceConstraints joint_constraints_;
   unsigned int dimq_, dimv_;
   Eigen::VectorXd u_, lu_, lq_, lv_, la_, k_;
   Eigen::VectorXd q_res_, v_res_, a_res_;
   Eigen::MatrixXd luu_, du_dq_, du_dv_, du_da_, Qqq_, Qqv_, Qqa_, Qvq_, Qvv_, 
                   Qva_, Qaa_, Ginv_, Kq_, Kv_;
-
 };
 
 } // namespace idocp

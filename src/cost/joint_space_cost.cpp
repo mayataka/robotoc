@@ -146,6 +146,7 @@ void JointSpaceCost::laa(const Robot& robot, const double dtau,
   }
 }
 
+
 void JointSpaceCost::luu(const Robot& robot, const double dtau, 
                          Eigen::MatrixXd& luu) {
   assert(dtau > 0);

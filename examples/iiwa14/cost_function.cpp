@@ -7,16 +7,13 @@ namespace iiwa14 {
 CostFunction::CostFunction(const Robot& robot, const Eigen::VectorXd& q_ref)
   : CostFunctionInterface(),
     joint_space_cost_(
-        robot, q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
-        Eigen::VectorXd::Zero(robot.dimv()),
-        Eigen::VectorXd::Constant(robot.dimv(), 0.1), 
-        Eigen::VectorXd::Zero(robot.dimv()),
-        Eigen::VectorXd::Constant(robot.dimv(), 0.01), 
-        Eigen::VectorXd::Zero(robot.dimv()),
-        Eigen::VectorXd::Constant(robot.dimv(), 0.001),
+        robot, 
         q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
-        Eigen::VectorXd::Zero(robot.dimv()),
-        Eigen::VectorXd::Constant(robot.dimv(), 0.1)) {
+        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.1), 
+        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.01), 
+        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.0),
+        q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
+        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.1)) {
 }
 
 
@@ -70,6 +67,7 @@ void CostFunction::lvv(const Robot& robot, const double t,
                        const Eigen::VectorXd& u, Eigen::MatrixXd& lvv) {
   joint_space_cost_.lvv(robot, dtau, lvv);
 }
+
 
 void CostFunction::laa(const Robot& robot, const double t, 
                        const double dtau, const Eigen::VectorXd& q, 
