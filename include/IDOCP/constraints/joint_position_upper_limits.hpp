@@ -10,7 +10,7 @@ namespace idocp {
 
 class JointPositionUpperLimits {
 public:
-  JointPositionUpperLimits(const Robot& robot);
+  JointPositionUpperLimits(const Robot& robot, const double barrier);
 
   // Use default copy constructor.
   JointPositionUpperLimits(const JointPositionUpperLimits&) = default;
@@ -18,24 +18,27 @@ public:
   // Use default copy operator.
   JointPositionUpperLimits& operator=(const JointPositionUpperLimits&) = default;
 
-  void setSlackAndDual(const Robot& robot, const double barrier, 
+  void setSlackAndDual(const Robot& robot, const double dtau, 
                        const Eigen::VectorXd& q);
 
-  void linearizeConstraint(const Robot& robot, const double barrier, 
+  void linearizeConstraint(const Robot& robot, const double dtau, 
                            const Eigen::VectorXd& q);
 
-  void updateSlackAndDual(const Robot& robot, const Eigen::VectorXd& dq); 
+  void updateSlackAndDual(const Robot& robot, const double dtau, 
+                          const Eigen::VectorXd& dq); 
 
-  void condenseSlackAndDual(const Robot& robot, Eigen::MatrixXd& Cqq, 
-                            Eigen::VectorXd& Cq) const;
+  void condenseSlackAndDual(const Robot& robot, const double dtau, 
+                            Eigen::MatrixXd& Cqq, Eigen::VectorXd& Cq) const;
 
-  void augmentDualResidual(const Robot& robot, Eigen::VectorXd& Cq);
+  void augmentDualResidual(const Robot& robot, const double dtau, 
+                           Eigen::VectorXd& Cq);
 
-  double squaredConstraintsResidualNrom(const Robot& robot, 
+  double squaredConstraintsResidualNrom(const Robot& robot, const double dtau, 
                                         const Eigen::VectorXd& q);
 
 private:
   unsigned int dimq_, dimv_, dimc_;
+  double barrier_;
   Eigen::VectorXd qmax_, slack_, dual_, residual_, FB_residual_, dslack_, 
                   ddual_; 
 };

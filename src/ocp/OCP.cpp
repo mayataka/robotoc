@@ -120,6 +120,16 @@ void OCP::getInitialControlInput(Eigen::VectorXd& u) {
   robots_[0].RNEA(q_[0], v_[0], a_[0], u);
 }
 
+void OCP::setStateTrajectory(const Eigen::VectorXd& q, 
+                             const Eigen::VectorXd& v) {
+  for (int i=0; i<=N_; ++i) {
+    v_[i] = v;
+  }
+  for (int i=0; i<=N_; ++i) {
+    q_[i] = q;
+  }
+}
+
 
 void OCP::setStateTrajectory(const Eigen::VectorXd& q0, 
                              const Eigen::VectorXd& v0, 

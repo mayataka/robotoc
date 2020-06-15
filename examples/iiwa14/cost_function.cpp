@@ -9,11 +9,11 @@ CostFunction::CostFunction(const Robot& robot, const Eigen::VectorXd& q_ref)
     joint_space_cost_(
         robot, 
         q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
+        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 1), 
         Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.1), 
-        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.01), 
-        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.0),
+        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.1),
         q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
-        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.1)) {
+        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 1)) {
 }
 
 

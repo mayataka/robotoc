@@ -24,19 +24,23 @@ public:
   // Use default copy operator.
   JointSpaceConstraints& operator=(const JointSpaceConstraints&) = default;
 
-  void setSlackAndDual(const Robot& robot, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v, const Eigen::VectorXd& u);
+  void setSlackAndDual(const Robot& robot, const double dtau, 
+                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                       const Eigen::VectorXd& u);
 
-  void linearizeConstraint(const Robot& robot, const Eigen::VectorXd& q, 
-                           const Eigen::VectorXd& v, const Eigen::VectorXd& u);
+  void linearizeConstraint(const Robot& robot, const double dtau,
+                           const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                           const Eigen::VectorXd& u);
 
-  void updateSlackAndDual(const Robot& robot, const Eigen::MatrixXd& du_dq,
+  void updateSlackAndDual(const Robot& robot, const double dtau, 
+                          const Eigen::MatrixXd& du_dq,
                           const Eigen::MatrixXd& du_dv,
                           const Eigen::MatrixXd& du_da,
                           const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
                           const Eigen::VectorXd& da);
 
-  void condenseSlackAndDual(const Robot& robot, const Eigen::MatrixXd& du_dq, 
+  void condenseSlackAndDual(const Robot& robot, const double dtau, 
+                            const Eigen::MatrixXd& du_dq, 
                             const Eigen::MatrixXd& du_dv,
                             const Eigen::MatrixXd& du_da, Eigen::MatrixXd& Cqq, 
                             Eigen::MatrixXd& Cqv, Eigen::MatrixXd& Cqa, 
@@ -44,12 +48,13 @@ public:
                             Eigen::MatrixXd& Caa, Eigen::VectorXd& Cq, 
                             Eigen::VectorXd& Cv, Eigen::VectorXd& Ca);
 
-  void augmentDualResidual(const Robot& robot, const Eigen::MatrixXd& du_dq,
+  void augmentDualResidual(const Robot& robot, const double dtau, 
+                           const Eigen::MatrixXd& du_dq,
                            const Eigen::MatrixXd& du_dv, 
                            const Eigen::MatrixXd& du_da, Eigen::VectorXd& Cq,
                            Eigen::VectorXd& Cv, Eigen::VectorXd& Ca);
 
-  double squaredConstraintsResidualNrom(const Robot& robot, 
+  double squaredConstraintsResidualNrom(const Robot& robot, const double dtau,
                                         const Eigen::VectorXd& q, 
                                         const Eigen::VectorXd& v, 
                                         const Eigen::VectorXd& u);

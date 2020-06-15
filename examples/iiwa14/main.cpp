@@ -15,7 +15,7 @@ int main() {
   srand((unsigned int) time(0));
   const std::string urdf_file_name = "../urdf/iiwa14.urdf";
   idocp::Robot robot(urdf_file_name);
-  const Eigen::VectorXd q_ref = Eigen::VectorXd::Constant(robot.dimq(), 0);
+  const Eigen::VectorXd q_ref = Eigen::VectorXd::Constant(robot.dimq(), -2);
   idocp::iiwa14::CostFunction cost(robot, q_ref);
   idocp::iiwa14::Constraints constraints(robot);
   const double T = 1;
@@ -25,12 +25,13 @@ int main() {
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  q.fill(-2);
+  q.fill(2);
   v.fill(0);
 
+  ocp_.setStateTrajectory(q, v, q_ref, Eigen::VectorXd::Zero(robot.dimv()));
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
-  const int num_iteration = 5;
+  const int num_iteration = 3;
   std::cout << ocp_.optimalityError(t, q, v) << std::endl;
   for (int i=0; i<num_iteration; ++i) {
     ocp_.solveLQR(t, q, v);

@@ -26,6 +26,8 @@ public:
 
   void getInitialControlInput(Eigen::VectorXd& u);
 
+  void setStateTrajectory(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
+
   void setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0, 
                           const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
 
