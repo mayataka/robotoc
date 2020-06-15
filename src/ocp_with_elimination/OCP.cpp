@@ -20,8 +20,6 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
     q_(N+1, Eigen::VectorXd::Zero(robot.dimq())),
     v_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
     a_(N, Eigen::VectorXd::Zero(robot.dimv())),
-    u_(N, Eigen::VectorXd::Zero(robot.dimv())),
-    beta_(N, Eigen::VectorXd::Zero(robot.dimv())),
     lmd_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
     gmm_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
     dq_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
@@ -46,8 +44,7 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
     for (time_step=0; time_step<N_; ++time_step) {
       split_OCPs_[time_step].initConstraints(robots_[omp_get_thread_num()], 
                                              dtau_, q_[time_step], 
-                                             v_[time_step], a_[time_step], 
-                                             u_[time_step]);
+                                             v_[time_step], a_[time_step]);
     }
   }
 }
@@ -65,11 +62,9 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
                                             t+time_step*dtau_, dtau_, 
                                             lmd_[time_step], gmm_[time_step],
                                             q_[time_step], v_[time_step], 
-                                            a_[time_step], u_[time_step], 
-                                            beta_[time_step],
-                                            lmd_[time_step+1], 
-                                            gmm_[time_step+1], q_[time_step+1], 
-                                            v_[time_step+1]);
+                                            a_[time_step], 
+                                            lmd_[time_step+1], gmm_[time_step+1], 
+                                            q_[time_step+1], v_[time_step+1]);
       }
       else {
         split_OCPs_[N_].linearizeOCP(robots_[omp_get_thread_num()], t+T_, 
@@ -108,7 +103,6 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
                                          Pvv_[time_step], sq_[time_step], 
                                          sv_[time_step], q_[time_step], 
                                          v_[time_step], a_[time_step], 
-                                         u_[time_step], beta_[time_step],
                                          lmd_[time_step], gmm_[time_step]);
       }
       else {
@@ -123,7 +117,7 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
 
 
 void OCP::getInitialControlInput(Eigen::VectorXd& u) {
-  u = u_[0];
+  robots_[0].RNEA(q_[0], v_[0], a_[0], u);
 }
 
 void OCP::setStateTrajectory(const Eigen::VectorXd& q, 
@@ -160,8 +154,7 @@ double OCP::optimalityError(const double t, const Eigen::VectorXd& q,
   for (int i=0; i<N_; ++i) {
     error += split_OCPs_[i].squaredOCPErrorNorm(robots_[0], t+i*dtau_, dtau_, 
                                                 lmd_[i], gmm_[i], q_[i], v_[i], 
-                                                a_[i], u_[i], beta_[i], 
-                                                lmd_[i+1], gmm_[i+1], 
+                                                a_[i], lmd_[i+1], gmm_[i+1], 
                                                 q_[i+1], v_[i+1]);
   }
   error += split_OCPs_[N_].squaredOCPErrorNorm(robots_[0], t+T_, lmd_[N_], 
@@ -171,12 +164,14 @@ double OCP::optimalityError(const double t, const Eigen::VectorXd& q,
 
 
 void OCP::printSolution() {
+  Eigen::VectorXd u(Eigen::VectorXd::Zero(robots_[0].dimv()));
   for (int i=0; i<N_; ++i) {
+    robots_[0].RNEA(q_[i], v_[i], a_[i], u);
     std::cout << "time step: " << i << std::endl;
     std::cout << "q: " << q_[i].transpose() << std::endl;
     std::cout << "v: " << v_[i].transpose() << std::endl;
     std::cout << "a: " << a_[i].transpose() << std::endl;
-    std::cout << "u: " << u_[i].transpose() << std::endl;
+    std::cout << "u: " << u.transpose() << std::endl;
   }
   std::cout << "time step: " << N_ << std::endl;
   std::cout << "q: " << q_[N_].transpose() << std::endl;

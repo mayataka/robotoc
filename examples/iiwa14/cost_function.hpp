@@ -19,43 +19,33 @@ public:
 
   void lq(const Robot& robot, const double t, const double dtau,
           const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-          const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-          Eigen::VectorXd& lq) override;
+          const Eigen::VectorXd& a, Eigen::VectorXd& lq) override;
 
   void lv(const Robot& robot, const double t, const double dtau,
           const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-          const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-          Eigen::VectorXd& lv) override;
+          const Eigen::VectorXd& a, Eigen::VectorXd& lv) override;
 
   void la(const Robot& robot, const double t, const double dtau,
           const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-          const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-          Eigen::VectorXd& la) override;
+          const Eigen::VectorXd& a, Eigen::VectorXd& la) override;
 
   void lu(const Robot& robot, const double t, const double dtau,
-          const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-          const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-          Eigen::VectorXd& lu) override;
+          const Eigen::VectorXd& u, Eigen::VectorXd& lu) override;
 
   void lqq(const Robot& robot, const double t, const double dtau,
            const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-           const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-           Eigen::MatrixXd& lqq) override;
+           const Eigen::VectorXd& a, Eigen::MatrixXd& lqq) override;
 
   void lvv(const Robot& robot, const double t, const double dtau,
            const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-           const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-           Eigen::MatrixXd& lvv) override;
+           const Eigen::VectorXd& a, Eigen::MatrixXd& lvv) override;
 
   void laa(const Robot& robot, const double t, const double dtau,
            const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-           const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-           Eigen::MatrixXd& laa) override;
+           const Eigen::VectorXd& a, Eigen::MatrixXd& laa) override;
 
   void luu(const Robot& robot, const double t, const double dtau,
-           const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-           const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-           Eigen::MatrixXd& luu) override;
+           const Eigen::VectorXd& u, Eigen::MatrixXd& luu) override;
 
   void phiq(const Robot& robot, const double t, const Eigen::VectorXd& q, 
             const Eigen::VectorXd& v, Eigen::VectorXd& phiq) override;

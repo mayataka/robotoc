@@ -10,8 +10,8 @@ CostFunction::CostFunction(const Robot& robot, const Eigen::VectorXd& q_ref)
         robot, 
         q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
         Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 1), 
-        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.1), 
-        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.1),
+        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.01), 
+        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.0),
         q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
         Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 1)) {
 }
@@ -23,63 +23,53 @@ CostFunction::~CostFunction() {
 
 void CostFunction::lq(const Robot& robot, const double t, const double dtau,
                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                      const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                      Eigen::VectorXd& lq) {
+                      const Eigen::VectorXd& a, Eigen::VectorXd& lq) {
   joint_space_cost_.lq(robot, dtau, q, lq);
 }
 
 
 void CostFunction::lv(const Robot& robot, const double t, const double dtau,
                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                      const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                      Eigen::VectorXd& lv) {
+                      const Eigen::VectorXd& a, Eigen::VectorXd& lv) {
   joint_space_cost_.lv(robot, dtau, v, lv);
 }
 
 
 void CostFunction::la(const Robot& robot, const double t, const double dtau,
                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                      const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                      Eigen::VectorXd& la) {
+                      const Eigen::VectorXd& a, Eigen::VectorXd& la) {
   joint_space_cost_.la(robot, dtau, a, la);
 }
 
 
 void CostFunction::lu(const Robot& robot, const double t, const double dtau,
-                      const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                      const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                      Eigen::VectorXd& lu) {
+                      const Eigen::VectorXd& u, Eigen::VectorXd& lu) {
   joint_space_cost_.lu(robot, dtau, u, lu);
 }
 
 
-void CostFunction::lqq(const Robot& robot, const double t, 
-                       const double dtau, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-                       const Eigen::VectorXd& u, Eigen::MatrixXd& lqq) {
+void CostFunction::lqq(const Robot& robot, const double t, const double dtau, 
+                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                       const Eigen::VectorXd& a, Eigen::MatrixXd& lqq) {
   joint_space_cost_.lqq(robot, dtau, lqq);
 }
 
 
-void CostFunction::lvv(const Robot& robot, const double t, 
-                       const double dtau, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-                       const Eigen::VectorXd& u, Eigen::MatrixXd& lvv) {
+void CostFunction::lvv(const Robot& robot, const double t, const double dtau, 
+                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                       const Eigen::VectorXd& a, Eigen::MatrixXd& lvv) {
   joint_space_cost_.lvv(robot, dtau, lvv);
 }
 
 
-void CostFunction::laa(const Robot& robot, const double t, 
-                       const double dtau, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-                       const Eigen::VectorXd& u, Eigen::MatrixXd& laa) {
+void CostFunction::laa(const Robot& robot, const double t, const double dtau, 
+                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                       const Eigen::VectorXd& a, Eigen::MatrixXd& laa) {
   joint_space_cost_.laa(robot, dtau, laa);
 }
 
 
-void CostFunction::luu(const Robot& robot, const double t, 
-                       const double dtau, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+void CostFunction::luu(const Robot& robot, const double t, const double dtau, 
                        const Eigen::VectorXd& u, Eigen::MatrixXd& luu) {
   joint_space_cost_.luu(robot, dtau, luu);
 }

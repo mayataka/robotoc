@@ -50,19 +50,58 @@ target_link_libraries(
     ${PINOCCHIO_LIBRARIES}
 )
 
+
+add_library(
+    soft_constraints
+    SHARED 
+    ${IDOCP_SRC_DIR}/constraints/soft/joint_space_soft_constraints.cpp
+    ${IDOCP_SRC_DIR}/constraints/soft/joint_position_upper_limits_soft.cpp
+    ${IDOCP_SRC_DIR}/constraints/soft/joint_position_lower_limits_soft.cpp
+    ${IDOCP_SRC_DIR}/constraints/soft/joint_velocity_upper_limits_soft.cpp
+    ${IDOCP_SRC_DIR}/constraints/soft/joint_velocity_lower_limits_soft.cpp
+    ${IDOCP_SRC_DIR}/constraints/soft/joint_torque_upper_limits_soft.cpp
+    ${IDOCP_SRC_DIR}/constraints/soft/joint_torque_lower_limits_soft.cpp
+)
+target_include_directories(
+    soft_constraints
+    PRIVATE
+    ${EIGEN3_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${PINOCCHIO_INCLUDEDIR}
+)
+target_link_libraries(
+    soft_constraints
+    PRIVATE
+    robot
+)
+
+
+add_library(
+    cost_function
+    SHARED 
+    ${IDOCP_SRC_DIR}/cost/joint_space_cost.cpp
+)
+target_include_directories(
+    cost_function
+    PRIVATE
+    ${EIGEN3_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${PINOCCHIO_INCLUDEDIR}
+)
+target_link_libraries(
+    cost_function
+    PRIVATE
+    robot
+)
+
+
 add_library(
     idocp
     SHARED 
     ${IDOCP_SRC_DIR}/ocp/OCP.cpp
     ${IDOCP_SRC_DIR}/ocp/split_OCP.cpp
-    ${IDOCP_SRC_DIR}/cost/joint_space_cost.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_position_upper_limits.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_position_lower_limits.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_velocity_upper_limits.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_velocity_lower_limits.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_torque_upper_limits.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_torque_lower_limits.cpp
 )
 target_include_directories(
     idocp
@@ -76,6 +115,8 @@ target_link_libraries(
     idocp
     PRIVATE
     robot
+    cost_function
+    soft_constraints
 )
 
 add_executable(
@@ -89,6 +130,7 @@ target_link_libraries(
     PRIVATE
     robot
     idocp
+    cost_function
 )
 target_include_directories(
     a.out 

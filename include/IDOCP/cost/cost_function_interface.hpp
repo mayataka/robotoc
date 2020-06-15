@@ -16,43 +16,33 @@ public:
 
   virtual void lq(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                  Eigen::VectorXd& lq) = 0;
+                  const Eigen::VectorXd& a, Eigen::VectorXd& lq) = 0;
 
   virtual void lv(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                  Eigen::VectorXd& lv) = 0;
+                  const Eigen::VectorXd& a, Eigen::VectorXd& lv) = 0;
 
   virtual void la(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                  Eigen::VectorXd& la) = 0;
+                  const Eigen::VectorXd& a, Eigen::VectorXd& la) = 0;
 
   virtual void lu(const Robot& robot, const double t, const double dtau,
-                  const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                  Eigen::VectorXd& lu) = 0;
+                  const Eigen::VectorXd& u, Eigen::VectorXd& lu) = 0;
 
   virtual void lqq(const Robot& robot, const double t, const double dtau,
                    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                   const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                   Eigen::MatrixXd& lqq) = 0;
+                   const Eigen::VectorXd& a, Eigen::MatrixXd& lqq) = 0;
 
   virtual void lvv(const Robot& robot, const double t, const double dtau,
                    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                   const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                   Eigen::MatrixXd& lvv) = 0;
+                   const Eigen::VectorXd& a, Eigen::MatrixXd& lvv) = 0;
 
   virtual void laa(const Robot& robot, const double t, const double dtau,
                    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                   const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                   Eigen::MatrixXd& laa) = 0;
+                   const Eigen::VectorXd& a, Eigen::MatrixXd& laa) = 0;
 
   virtual void luu(const Robot& robot, const double t, const double dtau,
-                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                   const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                   Eigen::MatrixXd& laa) = 0;
+                   const Eigen::VectorXd& u, Eigen::MatrixXd& laa) = 0;
 
   virtual void phiq(const Robot& robot, const double t, 
                     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 

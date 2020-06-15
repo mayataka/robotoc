@@ -1,5 +1,5 @@
-#ifndef IDOCP_JOINT_TORQUE_UPPER_LIMITS_HPP_
-#define IDOCP_JOINT_TORQUE_UPPER_LIMITS_HPP_
+#ifndef IDOCP_JOINT_TORQUE_LOWER_LIMITS_HPP_
+#define IDOCP_JOINT_TORQUE_LOWER_LIMITS_HPP_
 
 #include "Eigen/Core"
 
@@ -8,15 +8,15 @@
 
 namespace idocp {
 
-class JointTorqueUpperLimits {
+class JointTorqueLowerLimits {
 public:
-  JointTorqueUpperLimits(const Robot& robot, const double barrier);
+  JointTorqueLowerLimits(const Robot& robot, const double barrier);
 
   // Use default copy constructor.
-  JointTorqueUpperLimits(const JointTorqueUpperLimits&) = default;
+  JointTorqueLowerLimits(const JointTorqueLowerLimits&) = default;
 
   // Use default copy operator.
-  JointTorqueUpperLimits& operator=(const JointTorqueUpperLimits&) = default;
+  JointTorqueLowerLimits& operator=(const JointTorqueLowerLimits&) = default;
 
   void setSlackAndDual(const Robot& robot, const double dtau, 
                        const Eigen::VectorXd& u);
@@ -24,7 +24,7 @@ public:
   void linearizeConstraint(const Robot& robot, const double dtau, 
                            const Eigen::VectorXd& u);
 
-  void updateSlackAndDual(const Robot& robot, const double dtau,
+  void updateSlackAndDual(const Robot& robot, const double dtau, 
                           const Eigen::MatrixXd& du_dq,
                           const Eigen::MatrixXd& du_dv,
                           const Eigen::MatrixXd& du_da,
@@ -32,7 +32,7 @@ public:
                           const Eigen::VectorXd& dv,
                           const Eigen::VectorXd& du); 
 
-  void condenseSlackAndDual(const Robot& robot, const double dtau,  
+  void condenseSlackAndDual(const Robot& robot, const double dtau, 
                             const Eigen::MatrixXd& du_dq,
                             const Eigen::MatrixXd& du_dv,
                             const Eigen::MatrixXd& du_da, Eigen::MatrixXd& Cqq, 
@@ -41,19 +41,23 @@ public:
                             Eigen::MatrixXd& Caa, Eigen::VectorXd& Cq,
                             Eigen::VectorXd& Cv, Eigen::VectorXd& Ca);
 
-  void augmentDualResidual(const Robot& robot, const double dtau,
+  void augmentLuAndLuu(const Robot& robot, const double dtau, 
+                       const Eigen::VectorXd& u, Eigen::VectorXd& lu, 
+                       Eigen::MatrixXd& luu);
+
+  void augmentDualResidual(const Robot& robot, const double dtau, 
                            const Eigen::MatrixXd& du_dq,
                            const Eigen::MatrixXd& du_dv, 
                            const Eigen::MatrixXd& du_da, Eigen::VectorXd& Cq,
                            Eigen::VectorXd& Cv, Eigen::VectorXd& Ca);
 
-  double squaredConstraintsResidualNrom(const Robot& robot, const double dtau,
+  double squaredConstraintsResidualNrom(const Robot& robot, const double dtau, 
                                         const Eigen::VectorXd& u);
 
 private:
   unsigned int dimq_, dimv_, dimc_;
   double barrier_;
-  Eigen::VectorXd umax_, slack_, dual_, residual_, FB_residual_, dslack_, 
+  Eigen::VectorXd umin_, slack_, dual_, residual_, FB_residual_, dslack_, 
                   ddual_, newton_residual_;
   Eigen::MatrixXd partial_du_;
 };
@@ -61,4 +65,4 @@ private:
 } // namespace idocp
 
 
-#endif // IDOCP_JOINT_TORQUE_UPPER_LIMITS_HPP_
+#endif // IDOCP_JOINT_TORQUE_LOWER_LIMITS_HPP_

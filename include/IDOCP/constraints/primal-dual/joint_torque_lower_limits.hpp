@@ -41,6 +41,10 @@ public:
                             Eigen::MatrixXd& Caa, Eigen::VectorXd& Cq,
                             Eigen::VectorXd& Cv, Eigen::VectorXd& Ca);
 
+  void augmentLuAndLuu(const Robot& robot, const double dtau, 
+                       const Eigen::VectorXd& u, Eigen::VectorXd& lu, 
+                       Eigen::MatrixXd& luu);
+
   void augmentDualResidual(const Robot& robot, const double dtau, 
                            const Eigen::MatrixXd& du_dq,
                            const Eigen::MatrixXd& du_dv, 

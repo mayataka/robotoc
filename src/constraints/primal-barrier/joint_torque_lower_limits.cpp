@@ -149,6 +149,25 @@ void JointTorqueLowerLimits::condenseSlackAndDual(const Robot& robot,
 }
 
 
+void JointTorqueLowerLimits::augmentLuAndLuu(const Robot& robot, 
+                                             const double dtau, 
+                                             const Eigen::VectorXd& u, 
+                                             Eigen::VectorXd& lu, 
+                                             Eigen::MatrixXd& luu) {
+  assert(dtau > 0);
+  assert(u.size() == robot.dimv());
+  assert(lu.size() == robot.dimv());
+  assert(luu.rows() == robot.dimv());
+  assert(luu.cols() == robot.dimv());
+  residual_ = dtau * (u-umin_);
+  assert(residual_.array() > 0);
+  lu.array() -= barrier_ / residual_.array();
+  for (int i=0; i<dimv_; ++i) {
+    luu.coeffRef(i, i) += barrier_ / (residual_.coeff(i)*residual_.coeff(i));
+  }
+}
+
+
 void JointTorqueLowerLimits::augmentDualResidual(const Robot& robot, 
                                                  const double dtau, 
                                                  const Eigen::MatrixXd& du_dq,
