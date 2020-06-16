@@ -1,6 +1,5 @@
 #include "constraints/pdipm/pdipm_func.hpp"
 
-#include <cmath>
 #include <assert.h>
 
 

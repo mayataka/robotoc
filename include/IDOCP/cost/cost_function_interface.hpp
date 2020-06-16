@@ -14,6 +14,13 @@ public:
 
   virtual ~CostFunctionInterface() {}
 
+  virtual double l(const Robot& robot, const double t, const double dtau,
+                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                   const Eigen::VectorXd& a, const Eigen::VectorXd& u) = 0;
+
+  virtual double phi(const Robot& robot, const double t, 
+                     const Eigen::VectorXd& q, const Eigen::VectorXd& v) = 0;
+
   virtual void lq(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                   const Eigen::VectorXd& a, Eigen::VectorXd& lq) = 0;

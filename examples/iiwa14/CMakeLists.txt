@@ -134,6 +134,7 @@ add_library(
     SHARED 
     ${IDOCP_SRC_DIR}/ocp/OCP.cpp
     ${IDOCP_SRC_DIR}/ocp/split_OCP.cpp
+    ${IDOCP_SRC_DIR}/ocp/line_search_filter.cpp
     ${IDOCP_SRC_DIR}/cost/joint_space_cost.cpp
 )
 target_include_directories(

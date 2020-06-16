@@ -7,17 +7,32 @@ namespace iiwa14 {
 CostFunction::CostFunction(const Robot& robot, const Eigen::VectorXd& q_ref)
   : CostFunctionInterface(),
     joint_space_cost_(
-        robot, 
-        q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
+        robot, q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
         Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 1), 
         Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.01), 
-        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0.0),
+        Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 0),
         q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
         Eigen::VectorXd::Zero(robot.dimv()), Eigen::VectorXd::Constant(robot.dimv(), 1)) {
 }
 
 
 CostFunction::~CostFunction() {
+}
+
+double CostFunction::l(const Robot& robot, const double t, const double dtau,
+                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                       const Eigen::VectorXd& a, const Eigen::VectorXd& u) {
+  double l = 0;
+  l += joint_space_cost_.l(robot, dtau, q, v, a, u);
+  return l;
+}
+
+
+double CostFunction::phi(const Robot& robot, const double t, 
+                         const Eigen::VectorXd& q, const Eigen::VectorXd& v) {
+  double phi = 0;
+  phi += joint_space_cost_.phi(robot, q, v);
+  return phi;
 }
 
 

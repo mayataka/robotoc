@@ -2,6 +2,7 @@
 #define IDOCP_SPLIT_OCP_HPP_
 
 #include <vector>
+#include <utility>
 
 #include "Eigen/Core"
 
@@ -73,6 +74,31 @@ public:
                             const Eigen::VectorXd& dv, 
                             const Eigen::VectorXd& da);
 
+  std::pair<double, double> computeCostAndConstraintsReisdual(
+      Robot& robot, const double t, const double dtau, const Eigen::VectorXd& q, 
+      const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+      const Eigen::VectorXd& u, const Eigen::VectorXd& q_next, 
+      const Eigen::VectorXd& v_next);
+
+  std::pair<double, double> computeCostAndConstraintsReisdual(
+      Robot& robot, const double step_size, const double t, const double dtau, 
+      const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+      const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
+      const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
+      const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
+      const Eigen::VectorXd& da, const Eigen::VectorXd& dq_next, 
+      const Eigen::VectorXd& dv_next);
+
+  double computeTerminalCost(Robot& robot, const double t, 
+                             const Eigen::VectorXd& q, 
+                             const Eigen::VectorXd& v);
+
+  double computeTerminalCost(Robot& robot, const double step_size, 
+                             const double t, const Eigen::VectorXd& q, 
+                             const Eigen::VectorXd& v, 
+                             const Eigen::VectorXd& dq, 
+                             const Eigen::VectorXd& dv);
+
   void updateOCP(Robot& robot, const double step_size, const double dtau, 
                  const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
                  const Eigen::VectorXd& da, const Eigen::MatrixXd& Pqq, 
@@ -135,6 +161,7 @@ private:
   Eigen::VectorXd q_res_, v_res_, a_res_, u_res_, du_;
   Eigen::MatrixXd luu_, du_dq_, du_dv_, du_da_, Qqq_, Qqv_, Qqa_, Qvq_, Qvv_, 
                   Qva_, Qaa_, Ginv_, Kq_, Kv_;
+  Eigen::VectorXd q_tmp_, v_tmp_, a_tmp_, u_tmp_;
 };
 
 } // namespace idocp

@@ -257,6 +257,82 @@ double SplitOCP::computeMaxStepSize(Robot& robot, const double dtau,
 }
 
 
+std::pair<double, double> SplitOCP::computeCostAndConstraintsReisdual(
+    Robot& robot, const double t, const double dtau, const Eigen::VectorXd& q, 
+    const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+    const Eigen::VectorXd& u, const Eigen::VectorXd& q_next, 
+    const Eigen::VectorXd& v_next) {
+  assert(dtau > 0);
+  assert(q.rows() == robot.dimq());
+  assert(v.rows() == robot.dimv());
+  assert(a.rows() == robot.dimv());
+  assert(u.rows() == robot.dimv());
+  assert(q_next.rows() == robot.dimq());
+  assert(v_next.rows() == robot.dimv());
+  const double cost = cost_->l(robot, t, dtau, q, v, a, u);
+  double constraints_residual = 0;
+  constraints_residual += (q+dtau*v-q_next).squaredNorm();
+  constraints_residual += (v+dtau*a-v_next).squaredNorm();
+  constraints_residual += dtau * u_res_.squaredNorm();
+  return std::make_pair(cost, constraints_residual);
+}
+
+
+std::pair<double, double> SplitOCP::computeCostAndConstraintsReisdual(
+    Robot& robot, const double step_size, const double t, const double dtau, 
+    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+    const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
+    const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
+    const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
+    const Eigen::VectorXd& da, const Eigen::VectorXd& dq_next, 
+    const Eigen::VectorXd& dv_next) {
+  assert(step_size > 0);
+  assert(step_size <= 1);
+  assert(dtau > 0);
+  assert(q.rows() == robot.dimq());
+  assert(v.rows() == robot.dimv());
+  assert(a.rows() == robot.dimv());
+  assert(u.rows() == robot.dimv());
+  assert(q_next.rows() == robot.dimq());
+  assert(v_next.rows() == robot.dimv());
+  assert(dq.size() == robot.dimv());
+  assert(dv.size() == robot.dimv());
+  assert(da.size() == robot.dimv());
+  assert(dq_next.size() == robot.dimv());
+  assert(dv_next.size() == robot.dimv());
+  q_tmp_ = q + step_size * dq;
+  v_tmp_ = v + step_size * dv;
+  a_tmp_ = a + step_size * da;
+  u_tmp_ = u + step_size * du_;
+  const double cost = cost_->l(robot, t, dtau, q_tmp_, v_tmp_, a_tmp_, u_tmp_);
+  double constraints_residual = 0;
+  constraints_residual += (q_tmp_+dtau*v_tmp_-q_next-step_size*dq_next).squaredNorm();
+  constraints_residual += (v_tmp_+dtau*a_tmp_-v_next-step_size*dv_next).squaredNorm();
+  robot.RNEA(q_tmp_, v_tmp_, a_tmp_, u_res_);
+  u_res_.noalias() -= u_tmp_;
+  constraints_residual += dtau * dtau * u_res_.squaredNorm();
+  return std::make_pair(cost, constraints_residual);
+}
+
+
+double SplitOCP::computeTerminalCost(Robot& robot, const double t, 
+                                     const Eigen::VectorXd& q, 
+                                     const Eigen::VectorXd& v) {
+  return cost_->phi(robot, t, q, v);
+}
+
+
+double SplitOCP::computeTerminalCost(Robot& robot, const double step_size, 
+                                     const double t, const Eigen::VectorXd& q, 
+                                     const Eigen::VectorXd& v, 
+                                     const Eigen::VectorXd& dq, 
+                                     const Eigen::VectorXd& dv) {
+  q_tmp_ = q + step_size * dq;
+  v_tmp_ = v + step_size * dv;
+  return cost_->phi(robot, t, q_tmp_, v_tmp_);
+}
+
+
 void SplitOCP::updateOCP(Robot& robot, const double step_size, 
                          const double dtau, const Eigen::VectorXd& dq, 
                          const Eigen::VectorXd& dv, const Eigen::VectorXd& da, 
@@ -332,77 +408,77 @@ void SplitOCP::updateOCP(Robot& robot, const double step_size,
 }
 
 
-void SplitOCP::updateOCP(Robot& robot, const double dtau,   
-                         const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-                         const Eigen::VectorXd& da, const Eigen::MatrixXd& Pqq, 
-                         const Eigen::MatrixXd& Pqv, const Eigen::MatrixXd& Pvq, 
-                         const Eigen::MatrixXd& Pvv, const Eigen::VectorXd& sq, 
-                         const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
-                         Eigen::VectorXd& v, Eigen::VectorXd& a, 
-                         Eigen::VectorXd& u, Eigen::VectorXd& beta, 
-                         Eigen::VectorXd& lmd, Eigen::VectorXd& gmm) {
-  assert(dtau > 0);
-  assert(dq.size() == robot.dimv());
-  assert(dv.size() == robot.dimv());
-  assert(da.size() == robot.dimv());
-  assert(Pqq.rows() == robot.dimv());
-  assert(Pqq.cols() == robot.dimv());
-  assert(Pqv.rows() == robot.dimv());
-  assert(Pqv.cols() == robot.dimv());
-  assert(Pvq.rows() == robot.dimv());
-  assert(Pvq.cols() == robot.dimv());
-  assert(Pvv.rows() == robot.dimv());
-  assert(Pvv.cols() == robot.dimv());
-  assert(sq.size() == robot.dimv());
-  assert(sv.size() == robot.dimv());
-  assert(q.rows() == robot.dimq());
-  assert(v.rows() == robot.dimv());
-  assert(a.rows() == robot.dimv());
-  assert(lmd.rows() == robot.dimv());
-  assert(gmm.rows() == robot.dimv());
-  q.noalias() += dq;
-  v.noalias() += dv;
-  a.noalias() += da;
-  du_ = u_res_;
-  du_.noalias() += du_dq_ * dq;
-  du_.noalias() += du_dv_ * dv;
-  du_.noalias() += du_da_ * da;
-  u.noalias() += du_;
-  beta.noalias() += lu_ / dtau;
-  beta.noalias() += luu_ * du_ / dtau;
-  lmd.noalias() += Pqq * dq + Pqv * dv - sq;
-  gmm.noalias() += Pvq * dq + Pvv * dv - sv;
-}
+// void SplitOCP::updateOCP(Robot& robot, const double dtau,   
+//                          const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
+//                          const Eigen::VectorXd& da, const Eigen::MatrixXd& Pqq, 
+//                          const Eigen::MatrixXd& Pqv, const Eigen::MatrixXd& Pvq, 
+//                          const Eigen::MatrixXd& Pvv, const Eigen::VectorXd& sq, 
+//                          const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
+//                          Eigen::VectorXd& v, Eigen::VectorXd& a, 
+//                          Eigen::VectorXd& u, Eigen::VectorXd& beta, 
+//                          Eigen::VectorXd& lmd, Eigen::VectorXd& gmm) {
+//   assert(dtau > 0);
+//   assert(dq.size() == robot.dimv());
+//   assert(dv.size() == robot.dimv());
+//   assert(da.size() == robot.dimv());
+//   assert(Pqq.rows() == robot.dimv());
+//   assert(Pqq.cols() == robot.dimv());
+//   assert(Pqv.rows() == robot.dimv());
+//   assert(Pqv.cols() == robot.dimv());
+//   assert(Pvq.rows() == robot.dimv());
+//   assert(Pvq.cols() == robot.dimv());
+//   assert(Pvv.rows() == robot.dimv());
+//   assert(Pvv.cols() == robot.dimv());
+//   assert(sq.size() == robot.dimv());
+//   assert(sv.size() == robot.dimv());
+//   assert(q.rows() == robot.dimq());
+//   assert(v.rows() == robot.dimv());
+//   assert(a.rows() == robot.dimv());
+//   assert(lmd.rows() == robot.dimv());
+//   assert(gmm.rows() == robot.dimv());
+//   q.noalias() += dq;
+//   v.noalias() += dv;
+//   a.noalias() += da;
+//   du_ = u_res_;
+//   du_.noalias() += du_dq_ * dq;
+//   du_.noalias() += du_dv_ * dv;
+//   du_.noalias() += du_da_ * da;
+//   u.noalias() += du_;
+//   beta.noalias() += lu_ / dtau;
+//   beta.noalias() += luu_ * du_ / dtau;
+//   lmd.noalias() += Pqq * dq + Pqv * dv - sq;
+//   gmm.noalias() += Pvq * dq + Pvv * dv - sv;
+// }
 
 
-void SplitOCP::updateOCP(Robot& robot, const Eigen::VectorXd& dq, 
-                         const Eigen::VectorXd& dv, const Eigen::MatrixXd& Pqq, 
-                         const Eigen::MatrixXd& Pqv, const Eigen::MatrixXd& Pvq, 
-                         const Eigen::MatrixXd& Pvv, const Eigen::VectorXd& sq, 
-                         const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
-                         Eigen::VectorXd& v, Eigen::VectorXd& lmd, 
-                         Eigen::VectorXd& gmm) const {
-  assert(dq.size() == robot.dimv());
-  assert(dv.size() == robot.dimv());
-  assert(Pqq.rows() == robot.dimv());
-  assert(Pqq.cols() == robot.dimv());
-  assert(Pqv.rows() == robot.dimv());
-  assert(Pqv.cols() == robot.dimv());
-  assert(Pvq.rows() == robot.dimv());
-  assert(Pvq.cols() == robot.dimv());
-  assert(Pvv.rows() == robot.dimv());
-  assert(Pvv.cols() == robot.dimv());
-  assert(sq.size() == robot.dimv());
-  assert(sv.size() == robot.dimv());
-  assert(q.rows() == robot.dimq());
-  assert(v.rows() == robot.dimv());
-  assert(lmd.rows() == robot.dimv());
-  assert(gmm.rows() == robot.dimv());
-  q.noalias() += dq;
-  v.noalias() += dv;
-  lmd.noalias() += Pqq * dq + Pqv * dv - sq;
-  gmm.noalias() += Pvq * dq + Pvv * dv - sv;
-}
+// void SplitOCP::updateOCP(Robot& robot, const Eigen::VectorXd& dq, 
+//                          const Eigen::VectorXd& dv, const Eigen::MatrixXd& Pqq, 
+//                          const Eigen::MatrixXd& Pqv, const Eigen::MatrixXd& Pvq, 
+//                          const Eigen::MatrixXd& Pvv, const Eigen::VectorXd& sq, 
+//                          const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
+//                          Eigen::VectorXd& v, Eigen::VectorXd& lmd, 
+//                          Eigen::VectorXd& gmm) const {
+//   assert(dq.size() == robot.dimv());
+//   assert(dv.size() == robot.dimv());
+//   assert(Pqq.rows() == robot.dimv());
+//   assert(Pqq.cols() == robot.dimv());
+//   assert(Pqv.rows() == robot.dimv());
+//   assert(Pqv.cols() == robot.dimv());
+//   assert(Pvq.rows() == robot.dimv());
+//   assert(Pvq.cols() == robot.dimv());
+//   assert(Pvv.rows() == robot.dimv());
+//   assert(Pvv.cols() == robot.dimv());
+//   assert(sq.size() == robot.dimv());
+//   assert(sv.size() == robot.dimv());
+//   assert(q.rows() == robot.dimq());
+//   assert(v.rows() == robot.dimv());
+//   assert(lmd.rows() == robot.dimv());
+//   assert(gmm.rows() == robot.dimv());
+//   q.noalias() += dq;
+//   v.noalias() += dv;
+//   lmd.noalias() += Pqq * dq + Pqv * dv - sq;
+//   gmm.noalias() += Pvq * dq + Pvv * dv - sv;
+// }
 
 
 double SplitOCP::squaredOCPErrorNorm(Robot& robot, const double t, 

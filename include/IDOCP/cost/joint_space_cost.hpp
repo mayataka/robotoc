@@ -26,6 +26,13 @@ public:
                  const Eigen::VectorXd& vf_ref, 
                  const Eigen::VectorXd& vf_weight);
 
+  double l(const Robot& robot, const double dtau, const Eigen::VectorXd& q, 
+           const Eigen::VectorXd& v, const Eigen::VectorXd& a,
+           const Eigen::VectorXd& u);
+
+  double phi(const Robot& robot, const Eigen::VectorXd& q, 
+             const Eigen::VectorXd& v);
+
   void lq(const Robot& robot, const double dtau, const Eigen::VectorXd& q, 
           Eigen::VectorXd& lq);
 

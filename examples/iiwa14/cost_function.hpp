@@ -17,6 +17,13 @@ public:
 
   ~CostFunction();
 
+  double l(const Robot& robot, const double t, const double dtau,
+           const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+           const Eigen::VectorXd& u, const Eigen::VectorXd& a) override; 
+
+  double phi(const Robot& robot, const double t, const Eigen::VectorXd& q, 
+             const Eigen::VectorXd& v) override;
+
   void lq(const Robot& robot, const double t, const double dtau,
           const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
           const Eigen::VectorXd& a, Eigen::VectorXd& lq) override;
