@@ -35,7 +35,7 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
     Pqv_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Pvq_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Pvv_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    step_length_(Eigen::VectorXd::Ones(N+1)) {
+    step_size_(Eigen::VectorXd::Ones(N)) {
   if (num_proc_ == 0) {
     num_proc_ = 1;
   }
@@ -99,26 +99,63 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
   #pragma omp parallel num_threads(num_proc_) 
   {
     #pragma omp for 
+    for (time_step=0; time_step<N_; ++time_step) {
+      step_size_[time_step] 
+          = split_OCPs_[time_step].computeMaxStepSize(
+              robots_[omp_get_thread_num()], dtau_, dq_[time_step], 
+              dv_[time_step], da_[time_step]);
+    }
+  }
+  const double step_size = step_size_.minCoeff();
+  // std::cout << "step size = " << step_size_.transpose() << std::endl;
+  // std::cout << "step size = " << step_size << std::endl;
+  #pragma omp parallel num_threads(num_proc_) 
+  {
+    #pragma omp for 
     for (time_step=0; time_step<=N_; ++time_step) {
       if (time_step < N_) {
         split_OCPs_[time_step].updateOCP(robots_[omp_get_thread_num()], 
-                                         dtau_, dq_[time_step], dv_[time_step], 
-                                         da_[time_step], Pqq_[time_step], 
-                                         Pqv_[time_step], Pvq_[time_step], 
-                                         Pvv_[time_step], sq_[time_step], 
-                                         sv_[time_step], q_[time_step], 
-                                         v_[time_step], a_[time_step], 
-                                         u_[time_step], beta_[time_step],
-                                         lmd_[time_step], gmm_[time_step]);
+                                         step_size, dtau_, dq_[time_step], 
+                                         dv_[time_step], da_[time_step], 
+                                         Pqq_[time_step], Pqv_[time_step], 
+                                         Pvq_[time_step], Pvv_[time_step], 
+                                         sq_[time_step], sv_[time_step], 
+                                         q_[time_step], v_[time_step], 
+                                         a_[time_step], u_[time_step], 
+                                         beta_[time_step], lmd_[time_step], 
+                                         gmm_[time_step]);
       }
       else {
-        split_OCPs_[N_].updateOCP(robots_[omp_get_thread_num()], dq_[N_], 
-                                  dv_[N_], Pqq_[N_], Pqv_[N_], Pvq_[N_], 
-                                  Pvv_[N_], sq_[N_], sv_[N_], q_[N_], v_[N_], 
-                                  lmd_[N_], gmm_[N_]);
+        split_OCPs_[N_].updateOCP(robots_[omp_get_thread_num()], step_size, 
+                                  dq_[N_], dv_[N_], Pqq_[N_], Pqv_[N_], 
+                                  Pvq_[N_], Pvv_[N_], sq_[N_], sv_[N_], 
+                                  q_[N_], v_[N_], lmd_[N_], gmm_[N_]);
       }
     }
   }
+  // #pragma omp parallel num_threads(num_proc_) 
+  // {
+  //   #pragma omp for 
+  //   for (time_step=0; time_step<=N_; ++time_step) {
+  //     if (time_step < N_) {
+  //       split_OCPs_[time_step].updateOCP(robots_[omp_get_thread_num()], 
+  //                                        dtau_, dq_[time_step], dv_[time_step], 
+  //                                        da_[time_step], Pqq_[time_step], 
+  //                                        Pqv_[time_step], Pvq_[time_step], 
+  //                                        Pvv_[time_step], sq_[time_step], 
+  //                                        sv_[time_step], q_[time_step], 
+  //                                        v_[time_step], a_[time_step], 
+  //                                        u_[time_step], beta_[time_step],
+  //                                        lmd_[time_step], gmm_[time_step]);
+  //     }
+  //     else {
+  //       split_OCPs_[N_].updateOCP(robots_[omp_get_thread_num()], dq_[N_], 
+  //                                 dv_[N_], Pqq_[N_], Pqv_[N_], Pvq_[N_], 
+  //                                 Pvv_[N_], sq_[N_], sv_[N_], q_[N_], v_[N_], 
+  //                                 lmd_[N_], gmm_[N_]);
+  //     }
+  //   }
+  // }
 }
 
 
@@ -175,7 +212,7 @@ void OCP::printSolution() {
     std::cout << "time step: " << i << std::endl;
     std::cout << "q: " << q_[i].transpose() << std::endl;
     std::cout << "v: " << v_[i].transpose() << std::endl;
-    std::cout << "a: " << a_[i].transpose() << std::endl;
+    // std::cout << "a: " << a_[i].transpose() << std::endl;
     std::cout << "u: " << u_[i].transpose() << std::endl;
   }
   std::cout << "time step: " << N_ << std::endl;
