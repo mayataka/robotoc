@@ -18,9 +18,9 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
     T_(T),
     dtau_(T/N),
     step_size_reduction_rate_(0.75),
+    min_step_size_(0.05),
     N_(N),
     num_proc_(num_proc),
-    max_line_search_itr_(50),
     q_(N+1, Eigen::VectorXd::Zero(robot.dimq())),
     v_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
     a_(N, Eigen::VectorXd::Zero(robot.dimv())),
@@ -40,6 +40,8 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
     Pvq_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Pvv_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     max_step_sizes_(Eigen::VectorXd::Zero(N)),
+    primal_step_sizes_(Eigen::VectorXd::Zero(N)),
+    dual_step_sizes_(Eigen::VectorXd::Zero(N)),
     cost_origin_(Eigen::VectorXd::Zero(N+1)), 
     cost_search_(Eigen::VectorXd::Zero(N+1)),
     constraints_residual_origin_(Eigen::VectorXd::Zero(N)), 
@@ -47,22 +49,24 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
   if (num_proc_ == 0) {
     num_proc_ = 1;
   }
-  int time_step;
-  #pragma omp parallel num_threads(num_proc_) 
-  {
-    #pragma omp for  
-    for (time_step=0; time_step<N_; ++time_step) {
-      split_OCPs_[time_step].initConstraints(robots_[omp_get_thread_num()], 
-                                             dtau_, q_[time_step], 
-                                             v_[time_step], a_[time_step], 
-                                             u_[time_step]);
+  for (int time_step=0; time_step<N_; ++time_step) {
+    const bool is_feasible = split_OCPs_[time_step].isFeasible(robots_[0], 
+                                                               q_[time_step], 
+                                                               v_[time_step], 
+                                                               a_[time_step], 
+                                                               u_[time_step]);
+    if (!is_feasible) {
+      std::cout << "INFEASIBLE at time step " << time_step << std::endl;
     }
+    split_OCPs_[time_step].initConstraints(robots_[0], dtau_, q_[time_step], 
+                                           v_[time_step], a_[time_step], 
+                                           u_[time_step]);
   }
 }
 
 
 void OCP::solveSQP(const double t, const Eigen::VectorXd& q, 
-                   const Eigen::VectorXd& v) {
+                   const Eigen::VectorXd& v, bool use_line_search) {
   int time_step;
   #pragma omp parallel num_threads(num_proc_) 
   {
@@ -108,102 +112,111 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
   {
     #pragma omp for 
     for (time_step=0; time_step<N_; ++time_step) {
-      max_step_sizes_[time_step] 
+      const std::pair<double, double> primal_dual_step_size
           = split_OCPs_[time_step].computeMaxStepSize(
               robots_[omp_get_thread_num()], dtau_, dq_[time_step], 
               dv_[time_step], da_[time_step]);
+      primal_step_sizes_[time_step] = primal_dual_step_size.first;
+      dual_step_sizes_[time_step] = primal_dual_step_size.second;
     }
   }
-  double step_size = max_step_sizes_.minCoeff();
-  // Ckeck if the step_size is acceptable
-  #pragma omp parallel num_threads(num_proc_) 
-  {
-    #pragma omp for 
-    for (time_step=0; time_step<=N_; ++time_step) {
-      if (time_step < N_) {
-        const std::pair<double, double> origin_pair
-            = split_OCPs_[time_step].computeCostAndConstraintsReisdual(
-                robots_[omp_get_thread_num()], t+time_step*dtau_, dtau_, 
-                q_[time_step], v_[time_step], a_[time_step], u_[time_step], 
-                q_[time_step+1], v_[time_step+1]);
-        cost_origin_.coeffRef(time_step) = origin_pair.first;
-        constraints_residual_origin_.coeffRef(time_step) = origin_pair.second;
-        const std::pair<double, double> search_pair
-            = split_OCPs_[time_step].computeCostAndConstraintsReisdual(
-                robots_[omp_get_thread_num()], step_size, t+time_step*dtau_, 
-                dtau_, q_[time_step], v_[time_step], a_[time_step], 
-                u_[time_step], q_[time_step+1], v_[time_step+1], dq_[time_step], 
-                dv_[time_step], da_[time_step], dq_[time_step+1], 
-                dv_[time_step+1]);
-        cost_search_.coeffRef(time_step) = search_pair.first;
-        constraints_residual_search_.coeffRef(time_step) = search_pair.second;
-      }
-      else {
-        cost_origin_.coeffRef(N_) 
-            = split_OCPs_[N_].computeTerminalCost(robots_[omp_get_thread_num()], 
-                                                  t+N_*dtau_, q_[N_], v_[N_]);
-        cost_search_.coeffRef(N_) 
-            = split_OCPs_[N_].computeTerminalCost(robots_[omp_get_thread_num()], 
-                                                  step_size, t+N_*dtau_, q_[N_], 
-                                                  v_[N_], dq_[N_], dv_[N_]);
-      }
-    }
-  }
-  filter_.append(cost_origin_.sum(), constraints_residual_origin_.sum());
-  int num_line_search_itr = 0;
-  while (!filter_.isAccepted(cost_search_.sum(), 
-                             constraints_residual_search_.sum())) {
-    step_size *= step_size_reduction_rate_;
+  double primal_step_size = primal_step_sizes_.minCoeff();
+  double dual_step_size = dual_step_sizes_.minCoeff();
+  if (use_line_search) {
     #pragma omp parallel num_threads(num_proc_) 
     {
       #pragma omp for 
       for (time_step=0; time_step<=N_; ++time_step) {
         if (time_step < N_) {
+          const std::pair<double, double> origin_pair
+              = split_OCPs_[time_step].computeCostAndConstraintsReisdual(
+                  robots_[omp_get_thread_num()], t+time_step*dtau_, dtau_, 
+                  q_[time_step], v_[time_step], a_[time_step], u_[time_step], 
+                  q_[time_step+1], v_[time_step+1]);
+          cost_origin_.coeffRef(time_step) = origin_pair.first;
+          constraints_residual_origin_.coeffRef(time_step) = origin_pair.second;
           const std::pair<double, double> search_pair
               = split_OCPs_[time_step].computeCostAndConstraintsReisdual(
-                  robots_[omp_get_thread_num()], step_size, t+time_step*dtau_, 
-                  dtau_, q_[time_step], v_[time_step], a_[time_step], 
-                  u_[time_step], q_[time_step+1], v_[time_step+1], 
-                  dq_[time_step], dv_[time_step], da_[time_step], 
-                  dq_[time_step+1], dv_[time_step+1]);
+                  robots_[omp_get_thread_num()], primal_step_size, 
+                  t+time_step*dtau_, dtau_, q_[time_step], v_[time_step], 
+                  a_[time_step], u_[time_step], q_[time_step+1], 
+                  v_[time_step+1], dq_[time_step], dv_[time_step], 
+                  da_[time_step], dq_[time_step+1], dv_[time_step+1]);
           cost_search_.coeffRef(time_step) = search_pair.first;
           constraints_residual_search_.coeffRef(time_step) = search_pair.second;
         }
         else {
-          cost_search_.coeffRef(N_) 
-              = split_OCPs_[N_].computeTerminalCost(
-                  robots_[omp_get_thread_num()], step_size, t+N_*dtau_, q_[N_], 
-                  v_[N_], dq_[N_], dv_[N_]);
+          cost_origin_.coeffRef(N_) = split_OCPs_[N_].computeTerminalCost(
+              robots_[omp_get_thread_num()], t+N_*dtau_, q_[N_], v_[N_]);
+          cost_search_.coeffRef(N_) = split_OCPs_[N_].computeTerminalCost(
+              robots_[omp_get_thread_num()], primal_step_size, t+N_*dtau_, q_[N_], 
+              v_[N_], dq_[N_], dv_[N_]);
         }
       }
     }
-    ++num_line_search_itr;
-    std::cout << "num_line_search_itr = " << num_line_search_itr << std::endl;
-    if(num_line_search_itr >= max_line_search_itr_) {
-      break;
+    if (filter_.isAccepted(cost_origin_.sum(), 
+                           constraints_residual_origin_.sum())) {
+      filter_.append(cost_origin_.sum(), constraints_residual_origin_.sum());
     }
+    int num_line_search_itr = 0;
+    std::cout << "cost = " << cost_origin_.sum() << ", constriants = " << constraints_residual_origin_.sum() << std::endl;
+    while (!filter_.isAccepted(cost_search_.sum(), 
+                               constraints_residual_search_.sum())) {
+      primal_step_size *= step_size_reduction_rate_;
+      if(primal_step_size <= min_step_size_) {
+        std::cout << "current iterate is infeasible!" << std::endl;
+        break;
+      }
+      #pragma omp parallel num_threads(num_proc_) 
+      {
+        #pragma omp for 
+        for (time_step=0; time_step<=N_; ++time_step) {
+          if (time_step < N_) {
+            const std::pair<double, double> search_pair
+                = split_OCPs_[time_step].computeCostAndConstraintsReisdual(
+                    robots_[omp_get_thread_num()], primal_step_size, 
+                    t+time_step*dtau_, dtau_, q_[time_step], v_[time_step], 
+                    a_[time_step], u_[time_step], q_[time_step+1], 
+                    v_[time_step+1], dq_[time_step], dv_[time_step], 
+                    da_[time_step], dq_[time_step+1], dv_[time_step+1]);
+            cost_search_.coeffRef(time_step) = search_pair.first;
+            constraints_residual_search_.coeffRef(time_step) = search_pair.second;
+          }
+          else {
+            cost_search_.coeffRef(N_) = split_OCPs_[N_].computeTerminalCost(
+                robots_[omp_get_thread_num()], primal_step_size, t+N_*dtau_, 
+                q_[N_], v_[N_], dq_[N_], dv_[N_]);
+          }
+        }
+      }
+      ++num_line_search_itr;
+      std::cout << "cost = " << cost_search_.sum() << ", constriants = " << constraints_residual_search_.sum() << std::endl;
+    }
+    std::cout << "num_line_search_itr = " << num_line_search_itr << std::endl;
   }
   #pragma omp parallel num_threads(num_proc_) 
   {
     #pragma omp for 
     for (time_step=0; time_step<=N_; ++time_step) {
       if (time_step < N_) {
-        split_OCPs_[time_step].updateOCP(robots_[omp_get_thread_num()], 
-                                         step_size, dtau_, dq_[time_step], 
-                                         dv_[time_step], da_[time_step], 
-                                         Pqq_[time_step], Pqv_[time_step], 
-                                         Pvq_[time_step], Pvv_[time_step], 
-                                         sq_[time_step], sv_[time_step], 
-                                         q_[time_step], v_[time_step], 
-                                         a_[time_step], u_[time_step], 
-                                         beta_[time_step], lmd_[time_step], 
-                                         gmm_[time_step]);
+        split_OCPs_[time_step].updateDual(dual_step_size);
+        split_OCPs_[time_step].updatePrimal(robots_[omp_get_thread_num()], 
+                                            primal_step_size, dtau_, 
+                                            dq_[time_step], dv_[time_step], 
+                                            da_[time_step], Pqq_[time_step], 
+                                            Pqv_[time_step], Pvq_[time_step], 
+                                            Pvv_[time_step], sq_[time_step], 
+                                            sv_[time_step], q_[time_step], 
+                                            v_[time_step], a_[time_step], 
+                                            u_[time_step], beta_[time_step], 
+                                            lmd_[time_step], gmm_[time_step]);
       }
       else {
-        split_OCPs_[N_].updateOCP(robots_[omp_get_thread_num()], step_size, 
-                                  dq_[N_], dv_[N_], Pqq_[N_], Pqv_[N_], 
-                                  Pvq_[N_], Pvv_[N_], sq_[N_], sv_[N_], 
-                                  q_[N_], v_[N_], lmd_[N_], gmm_[N_]);
+        split_OCPs_[N_].updatePrimal(robots_[omp_get_thread_num()], 
+                                     primal_step_size, dq_[N_], dv_[N_], 
+                                     Pqq_[N_], Pqv_[N_], Pvq_[N_], Pvv_[N_], 
+                                     sq_[N_], sv_[N_], q_[N_], v_[N_], lmd_[N_], 
+                                     gmm_[N_]);
       }
     }
   }
@@ -223,6 +236,19 @@ void OCP::setStateTrajectory(const Eigen::VectorXd& q,
   for (int i=0; i<=N_; ++i) {
     q_[i] = q;
   }
+  for (int time_step=0; time_step<N_; ++time_step) {
+    const bool is_feasible = split_OCPs_[time_step].isFeasible(robots_[0], 
+                                                               q_[time_step], 
+                                                               v_[time_step], 
+                                                               a_[time_step], 
+                                                               u_[time_step]);
+    if (!is_feasible) {
+      std::cout << "INFEASIBLE at time step " << time_step << std::endl;
+    }
+    split_OCPs_[time_step].initConstraints(robots_[0], dtau_, q_[time_step], 
+                                           v_[time_step], a_[time_step], 
+                                           u_[time_step]);
+  }
 }
 
 
@@ -237,6 +263,19 @@ void OCP::setStateTrajectory(const Eigen::VectorXd& q0,
   Eigen::VectorXd dq = (qN-q0) / N_;
   for (int i=0; i<=N_; ++i) {
     q_[i] = q0 + i * dq;
+  }
+  for (int time_step=0; time_step<N_; ++time_step) {
+    const bool is_feasible = split_OCPs_[time_step].isFeasible(robots_[0], 
+                                                               q_[time_step], 
+                                                               v_[time_step], 
+                                                               a_[time_step], 
+                                                               u_[time_step]);
+    if (!is_feasible) {
+      std::cout << "INFEASIBLE at time step " << time_step << std::endl;
+    }
+    split_OCPs_[time_step].initConstraints(robots_[0], dtau_, q_[time_step], 
+                                           v_[time_step], a_[time_step], 
+                                           u_[time_step]);
   }
 }
 

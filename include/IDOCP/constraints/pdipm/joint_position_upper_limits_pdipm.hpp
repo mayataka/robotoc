@@ -19,6 +19,8 @@ public:
   // Use default copy operator.
   JointPositionUpperLimits& operator=(const JointPositionUpperLimits&) = default;
 
+  bool isFeasible(const Robot& robot, const Eigen::VectorXd& q);
+
   void setSlackAndDual(const Robot& robot, const double dtau, 
                        const Eigen::VectorXd& q);
 
@@ -26,16 +28,26 @@ public:
                             const Eigen::VectorXd& q, Eigen::MatrixXd& Cqq, 
                             Eigen::VectorXd& Cq);
 
-  double computeDirectionAndMaxStepSize(const Robot& robot, const double dtau, 
-                                        const Eigen::VectorXd& dq);
+  std::pair<double, double> computeDirectionAndMaxStepSize(
+      const Robot& robot, const double fraction_to_boundary_rate, 
+      const double dtau, const Eigen::VectorXd& dq);
 
-  void updateSlackAndDual(const Robot& robot, const double step_size);
+  void updateSlack(const double step_size);
+
+  void updateDual(const double step_size);
+
+  double slackBarrier();
+
+  double slackBarrier(const double step_size);
 
   void augmentDualResidual(const Robot& robot, const double dtau, 
                            Eigen::VectorXd& Cq);
 
-  double squaredConstraintsResidualNrom(const Robot& robot, const double dtau, 
-                                        const Eigen::VectorXd& q);
+  double residualL1Nrom(const Robot& robot, const double dtau,
+                        const Eigen::VectorXd& q);
+
+  double residualSquaredNrom(const Robot& robot, const double dtau, 
+                             const Eigen::VectorXd& q);
 
 private:
   unsigned int dimq_, dimv_, dimc_;

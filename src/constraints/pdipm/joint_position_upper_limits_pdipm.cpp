@@ -24,6 +24,18 @@ JointPositionUpperLimits::JointPositionUpperLimits(const Robot& robot,
 }
 
 
+bool JointPositionUpperLimits::isFeasible(const Robot& robot, 
+                                          const Eigen::VectorXd& q) {
+  assert(q.size() == robot.dimq());
+  for (int i=0; i<dimc_; ++i) {
+    if (q.coeff(i) > qmax_.coeff(i)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 void JointPositionUpperLimits::setSlackAndDual(const Robot& robot, 
                                                const double dtau, 
                                                const Eigen::VectorXd& q) {
@@ -52,23 +64,40 @@ void JointPositionUpperLimits::condenseSlackAndDual(const Robot& robot,
 }
 
 
-double JointPositionUpperLimits::computeDirectionAndMaxStepSize(
-    const Robot& robot, const double dtau, const Eigen::VectorXd& dq) {
+std::pair<double, double> JointPositionUpperLimits
+    ::computeDirectionAndMaxStepSize(const Robot& robot, 
+                                     const double fraction_to_boundary_rate, 
+                                     const double dtau, 
+                                     const Eigen::VectorXd& dq) {
   dslack_ = - slack_ - dtau * dq - residual_;
   pdipmfunc::ComputeDualDirection(barrier_, dual_, slack_, dslack_, ddual_);
-  const double step_size_slack = pdipmfunc::FractionToBoundary(dimc_, slack_, 
-                                                               dslack_);
-  const double step_size_dual = pdipmfunc::FractionToBoundary(dimc_, dual_, 
-                                                              ddual_);
-  return std::min(step_size_slack, step_size_dual);
+  const double step_size_slack = pdipmfunc::FractionToBoundary(
+      dimc_, fraction_to_boundary_rate, slack_, dslack_);
+  const double step_size_dual = pdipmfunc::FractionToBoundary(
+      dimc_, fraction_to_boundary_rate, dual_, ddual_);
+  return std::make_pair(step_size_slack, step_size_dual);
 }
 
 
-void JointPositionUpperLimits::updateSlackAndDual(const Robot& robot, 
-                                                  const double step_size) {
+void JointPositionUpperLimits::updateSlack(const double step_size) {
   assert(step_size > 0);
   slack_.noalias() += step_size * dslack_;
+}
+
+
+void JointPositionUpperLimits::updateDual(const double step_size) {
+  assert(step_size > 0);
   dual_.noalias() += step_size * ddual_;
+}
+
+
+double JointPositionUpperLimits::slackBarrier() {
+  return pdipmfunc::SlackBarrierCost(dimc_, barrier_, slack_);
+}
+
+
+double JointPositionUpperLimits::slackBarrier(const double step_size) {
+  return pdipmfunc::SlackBarrierCost(dimc_, barrier_, slack_+step_size*dslack_);
 }
 
 
@@ -81,14 +110,25 @@ void JointPositionUpperLimits::augmentDualResidual(const Robot& robot,
 }
 
 
-double JointPositionUpperLimits::squaredConstraintsResidualNrom(
-    const Robot& robot, const double dtau, const Eigen::VectorXd& q) {
+double JointPositionUpperLimits::residualL1Nrom(const Robot& robot, 
+                                                const double dtau, 
+                                                const Eigen::VectorXd& q) {
+  assert(dtau > 0);
+  assert(q.size() == robot.dimq());
+  residual_ = dtau * (q-qmax_) + slack_;
+  return residual_.lpNorm<1>();
+}
+
+
+double JointPositionUpperLimits::residualSquaredNrom(const Robot& robot, 
+                                                     const double dtau, 
+                                                     const Eigen::VectorXd& q) {
   assert(dtau > 0);
   assert(q.size() == robot.dimq());
   residual_ = dtau * (q-qmax_) + slack_;
   double error = 0;
   error += residual_.squaredNorm();
-  residual_.array() = slack_.array() * dual_.array();
+  residual_.array() = slack_.array() * dual_.array() - barrier_;
   error += residual_.squaredNorm();
   return error;
 }

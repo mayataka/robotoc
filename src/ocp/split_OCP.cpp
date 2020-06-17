@@ -45,6 +45,17 @@ SplitOCP::~SplitOCP() {
 }
 
 
+bool SplitOCP::isFeasible(Robot& robot, const Eigen::VectorXd& q, 
+                          const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                          const Eigen::VectorXd& u) {
+  assert(q.size() == robot.dimq());
+  assert(v.size() == robot.dimv());
+  assert(a.size() == robot.dimv());
+  assert(u.size() == robot.dimv());
+  return joint_constraints_.isFeasible(robot, q, v, a, u);
+}
+
+
 void SplitOCP::initConstraints(Robot& robot, const double dtau, 
                                const Eigen::VectorXd& q, 
                                const Eigen::VectorXd& v, 
@@ -238,10 +249,9 @@ void SplitOCP::forwardRecursion(const double dtau, const Eigen::VectorXd& dq,
 }
 
 
-double SplitOCP::computeMaxStepSize(Robot& robot, const double dtau, 
-                                    const Eigen::VectorXd& dq, 
-                                    const Eigen::VectorXd& dv, 
-                                    const Eigen::VectorXd& da) {
+std::pair<double, double> SplitOCP::computeMaxStepSize(
+    Robot& robot, const double dtau, const Eigen::VectorXd& dq, 
+    const Eigen::VectorXd& dv, const Eigen::VectorXd& da) {
   assert(dtau > 0);
   assert(dq.size() == robot.dimv());
   assert(dv.size() == robot.dimv());
@@ -250,10 +260,10 @@ double SplitOCP::computeMaxStepSize(Robot& robot, const double dtau,
   du_.noalias() += du_dq_ * dq;
   du_.noalias() += du_dv_ * dv;
   du_.noalias() += du_da_ * da;
-  const double step_size 
+  const std::pair<double, double> primal_dual_step_size 
       = joint_constraints_.computeDirectionAndMaxStepSize(robot, dtau, dq, dv, 
                                                           da, du_);
-  return step_size;
+  return primal_dual_step_size;
 }
 
 
@@ -269,11 +279,17 @@ std::pair<double, double> SplitOCP::computeCostAndConstraintsReisdual(
   assert(u.rows() == robot.dimv());
   assert(q_next.rows() == robot.dimq());
   assert(v_next.rows() == robot.dimv());
-  const double cost = cost_->l(robot, t, dtau, q, v, a, u);
+  double cost = 0;
+  cost += cost_->l(robot, t, dtau, q, v, a, u);
+  cost += joint_constraints_.slackBarrier();
   double constraints_residual = 0;
-  constraints_residual += (q+dtau*v-q_next).squaredNorm();
-  constraints_residual += (v+dtau*a-v_next).squaredNorm();
-  constraints_residual += dtau * u_res_.squaredNorm();
+  q_res_ = q + dtau * v - q_next;
+  v_res_ = v + dtau * a - v_next;
+  constraints_residual += q_res_.lpNorm<1>();
+  constraints_residual += v_res_.lpNorm<1>();
+  constraints_residual += dtau * u_res_.lpNorm<1>();
+  constraints_residual += joint_constraints_.residualL1Nrom(robot, dtau, q, v, 
+                                                            a, u);
   return std::make_pair(cost, constraints_residual);
 }
 
@@ -304,13 +320,20 @@ std::pair<double, double> SplitOCP::computeCostAndConstraintsReisdual(
   v_tmp_ = v + step_size * dv;
   a_tmp_ = a + step_size * da;
   u_tmp_ = u + step_size * du_;
-  const double cost = cost_->l(robot, t, dtau, q_tmp_, v_tmp_, a_tmp_, u_tmp_);
+  double cost = 0;
+  cost += cost_->l(robot, t, dtau, q_tmp_, v_tmp_, a_tmp_, u_tmp_);
+  cost += joint_constraints_.slackBarrier(step_size);
   double constraints_residual = 0;
-  constraints_residual += (q_tmp_+dtau*v_tmp_-q_next-step_size*dq_next).squaredNorm();
-  constraints_residual += (v_tmp_+dtau*a_tmp_-v_next-step_size*dv_next).squaredNorm();
+  q_res_ = q_tmp_ + dtau * v_tmp_ - q_next - step_size * dq_next;
+  v_res_ = v_tmp_ + dtau * a_tmp_ - v_next - step_size * dv_next;
+  constraints_residual += q_res_.lpNorm<1>();
+  constraints_residual += v_res_.lpNorm<1>();
+  constraints_residual += joint_constraints_.residualL1Nrom(robot, dtau, q_tmp_, 
+                                                            v_tmp_, a_tmp_, 
+                                                            u_tmp_);
   robot.RNEA(q_tmp_, v_tmp_, a_tmp_, u_res_);
   u_res_.noalias() -= u_tmp_;
-  constraints_residual += dtau * dtau * u_res_.squaredNorm();
+  constraints_residual += dtau * u_res_.lpNorm<1>();
   return std::make_pair(cost, constraints_residual);
 }
 
@@ -333,16 +356,26 @@ double SplitOCP::computeTerminalCost(Robot& robot, const double step_size,
 }
 
 
-void SplitOCP::updateOCP(Robot& robot, const double step_size, 
-                         const double dtau, const Eigen::VectorXd& dq, 
-                         const Eigen::VectorXd& dv, const Eigen::VectorXd& da, 
-                         const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
-                         const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
-                         const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
-                         Eigen::VectorXd& q, Eigen::VectorXd& v, 
-                         Eigen::VectorXd& a, Eigen::VectorXd& u, 
-                         Eigen::VectorXd& beta, Eigen::VectorXd& lmd, 
-                         Eigen::VectorXd& gmm) {
+void SplitOCP::updateDual(const double step_size) {
+  assert(step_size > 0);
+  assert(step_size <= 1);
+  joint_constraints_.updateDual(step_size);
+}
+
+
+void SplitOCP::updatePrimal(Robot& robot, const double step_size, 
+                            const double dtau, const Eigen::VectorXd& dq, 
+                            const Eigen::VectorXd& dv, 
+                            const Eigen::VectorXd& da, 
+                            const Eigen::MatrixXd& Pqq, 
+                            const Eigen::MatrixXd& Pqv, 
+                            const Eigen::MatrixXd& Pvq, 
+                            const Eigen::MatrixXd& Pvv, 
+                            const Eigen::VectorXd& sq, 
+                            const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
+                            Eigen::VectorXd& v, Eigen::VectorXd& a, 
+                            Eigen::VectorXd& u, Eigen::VectorXd& beta, 
+                            Eigen::VectorXd& lmd, Eigen::VectorXd& gmm) {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dtau > 0);
@@ -372,17 +405,21 @@ void SplitOCP::updateOCP(Robot& robot, const double step_size,
   beta.noalias() += step_size * luu_ * du_ / dtau;
   lmd.noalias() += step_size * (Pqq * dq + Pqv * dv - sq);
   gmm.noalias() += step_size * (Pvq * dq + Pvv * dv - sv);
-  joint_constraints_.updateSlackAndDual(robot, step_size);
+  joint_constraints_.updateSlack(step_size);
 }
 
 
-void SplitOCP::updateOCP(Robot& robot, const double step_size, 
-                         const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-                         const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
-                         const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
-                         const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
-                         Eigen::VectorXd& q, Eigen::VectorXd& v, 
-                         Eigen::VectorXd& lmd, Eigen::VectorXd& gmm) const {
+void SplitOCP::updatePrimal(Robot& robot, const double step_size, 
+                            const Eigen::VectorXd& dq, 
+                            const Eigen::VectorXd& dv, 
+                            const Eigen::MatrixXd& Pqq, 
+                            const Eigen::MatrixXd& Pqv, 
+                            const Eigen::MatrixXd& Pvq, 
+                            const Eigen::MatrixXd& Pvv, 
+                            const Eigen::VectorXd& sq, 
+                            const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
+                            Eigen::VectorXd& v, Eigen::VectorXd& lmd, 
+                            Eigen::VectorXd& gmm) const {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dq.size() == robot.dimv());
@@ -530,6 +567,7 @@ double SplitOCP::squaredOCPErrorNorm(Robot& robot, const double t,
   // joint_constraints_.augmentLuAndLuu(robot, dtau, u, lu_, luu_);
   // If there are equality constraints, augment to lu_
   // If there are inequality constraints, augment to lu_
+  // std::cout << "dual error = " << lq_.squaredNorm() + lv_.squaredNorm() + la_.squaredNorm() + lu_.squaredNorm() << std::endl;
 
   joint_constraints_.augmentDualResidual(robot, dtau, lq_, lv_, la_, lu_);
   // joint_constraints_barrier_.augmentBarrierResidual(robot, dtau, q, v, a, u, 
@@ -549,8 +587,7 @@ double SplitOCP::squaredOCPErrorNorm(Robot& robot, const double t,
   error += q_res_.squaredNorm();
   error += v_res_.squaredNorm();
   error += u_res_.squaredNorm();
-  error += joint_constraints_.squaredConstraintsResidualNrom(robot, dtau, q, v, 
-                                                             a, u);
+  error += joint_constraints_.residualSquaredNrom(robot, dtau, q, v, a, u);
   return error;
 }
 

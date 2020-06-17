@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(invdynocp_test CXX)
+project(idocp_test CXX)
 set(CMAKE_CXX_STANDARD 11)
 
 # enable coverage
@@ -28,8 +28,8 @@ add_definitions(
 link_directories(${PINOCCHIO_LIBDIR})
 
 # set tested directories
-set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include/invdynocp)
+set(IDOCP_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src)
+set(IDOCP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include/IDOCP)
 
 # coverage options
 add_library(coverage_config INTERFACE)
@@ -46,4 +46,5 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   endif()
 endif()
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/robot)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/robot)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/constraints)

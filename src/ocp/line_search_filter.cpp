@@ -4,14 +4,18 @@
 namespace idocp {
 
 LineSearchFilter::LineSearchFilter() 
-  : filter_() {
+  : filter_(),
+    cost_reduction_rate_(0.005),
+    constraints_reduction_rate_(0.005) {
 }
 
 bool LineSearchFilter::isAccepted(const double cost, 
-                                  const double constraint_residual) {
-  for (auto pair : filter_) {
-    if (cost > pair.first && constraint_residual > pair.second) {
-      return false;
+                                  const double constraint_violation) {
+  if (!filter_.empty()) {
+    for (auto pair : filter_) {
+      if (cost > pair.first && constraint_violation > pair.second) {
+        return false;
+      }
     }
   }
   return true;
@@ -19,16 +23,21 @@ bool LineSearchFilter::isAccepted(const double cost,
 
 
 void LineSearchFilter::append(const double cost, 
-                              const double constraint_residual) {
-  std::vector<std::pair<double, double>>::iterator it = filter_.begin();
-  while (it != filter_.end()) {
-    if (cost <= it->first && constraint_residual <= it->second) {
-      it = filter_.erase(it);
-    }
-    else {
-      ++it;
+                              const double constraint_violation) {
+  if (!filter_.empty()) {
+    std::vector<std::pair<double, double>>::iterator it = filter_.begin();
+    while (it != filter_.end()) {
+      if (cost <= it->first && constraint_violation <= it->second) {
+        it = filter_.erase(it);
+      }
+      else {
+        ++it;
+      }
     }
   }
+  filter_.push_back(std::make_pair(
+      cost-cost_reduction_rate_*constraint_violation, 
+      (1-constraints_reduction_rate_)*constraint_violation));
 }
 
 

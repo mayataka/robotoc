@@ -27,6 +27,18 @@ JointVelocityLowerLimits::JointVelocityLowerLimits(const Robot& robot,
 }
 
 
+bool JointVelocityLowerLimits::isFeasible(const Robot& robot, 
+                                          const Eigen::VectorXd& v) {
+  assert(v.size() == robot.dimv());
+  for (int i=0; i<dimc_; ++i) {
+    if (v.coeff(i) < vmin_.coeff(i)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 void JointVelocityLowerLimits::setSlackAndDual(const Robot& robot, 
                                                const double dtau, 
                                                const Eigen::VectorXd& v) {
@@ -55,23 +67,40 @@ void JointVelocityLowerLimits::condenseSlackAndDual(const Robot& robot,
 }
 
 
-double JointVelocityLowerLimits::computeDirectionAndMaxStepSize(
-    const Robot& robot, const double dtau, const Eigen::VectorXd& dv) {
+std::pair<double, double> JointVelocityLowerLimits
+    ::computeDirectionAndMaxStepSize(const Robot& robot, 
+                                     const double fraction_to_boundary_rate, 
+                                     const double dtau, 
+                                     const Eigen::VectorXd& dv) {
   dslack_ = - slack_ + dtau * dv - residual_;
   pdipmfunc::ComputeDualDirection(barrier_, dual_, slack_, dslack_, ddual_);
-  const double step_size_slack = pdipmfunc::FractionToBoundary(dimc_, slack_, 
-                                                               dslack_);
-  const double step_size_dual = pdipmfunc::FractionToBoundary(dimc_, dual_, 
-                                                              ddual_);
-  return std::min(step_size_slack, step_size_dual);
+  const double step_size_slack = pdipmfunc::FractionToBoundary(
+      dimc_, fraction_to_boundary_rate, slack_, dslack_);
+  const double step_size_dual = pdipmfunc::FractionToBoundary(
+      dimc_, fraction_to_boundary_rate, dual_, ddual_);
+  return std::make_pair(step_size_slack, step_size_dual);
 }
 
 
-void JointVelocityLowerLimits::updateSlackAndDual(const Robot& robot, 
-                                                  const double step_size) {
+void JointVelocityLowerLimits::updateSlack(const double step_size) {
   assert(step_size > 0);
   slack_.noalias() += step_size * dslack_;
+}
+
+
+void JointVelocityLowerLimits::updateDual(const double step_size) {
+  assert(step_size > 0);
   dual_.noalias() += step_size * ddual_;
+}
+
+
+double JointVelocityLowerLimits::slackBarrier() {
+  return pdipmfunc::SlackBarrierCost(dimc_, barrier_, slack_);
+}
+
+
+double JointVelocityLowerLimits::slackBarrier(const double step_size) {
+  return pdipmfunc::SlackBarrierCost(dimc_, barrier_, slack_+step_size*dslack_);
 }
 
 
@@ -84,14 +113,25 @@ void JointVelocityLowerLimits::augmentDualResidual(const Robot& robot,
 }
 
 
-double JointVelocityLowerLimits::squaredConstraintsResidualNrom(
-    const Robot& robot, const double dtau, const Eigen::VectorXd& v) {
+double JointVelocityLowerLimits::residualL1Nrom(const Robot& robot, 
+                                                const double dtau, 
+                                                const Eigen::VectorXd& v) {
+  assert(dtau > 0);
+  assert(v.size() == robot.dimv());
+  residual_ = dtau * (vmin_-v) + slack_;
+  return residual_.lpNorm<1>();
+}
+
+
+double JointVelocityLowerLimits::residualSquaredNrom(const Robot& robot, 
+                                                     const double dtau, 
+                                                     const Eigen::VectorXd& v) {
   assert(dtau > 0);
   assert(v.size() == robot.dimv());
   residual_ = dtau * (vmin_-v) + slack_;
   double error = 0;
   error += residual_.squaredNorm();
-  residual_.array() = slack_.array() * dual_.array();
+  residual_.array() = slack_.array() * dual_.array() - barrier_;
   error += residual_.squaredNorm();
   return error;
 }

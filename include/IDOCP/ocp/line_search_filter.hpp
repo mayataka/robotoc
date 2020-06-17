@@ -11,14 +11,15 @@ class LineSearchFilter {
 public:
   LineSearchFilter();
 
-  bool isAccepted(const double cost, const double constraint_residual);
+  bool isAccepted(const double cost, const double constraint_violation);
 
-  void append(const double cost, const double constraint_residual);
+  void append(const double cost, const double constraint_violation);
 
   void clear();
  
 private:
   std::vector<std::pair<double, double>> filter_;
+  double cost_reduction_rate_, constraints_reduction_rate_;
 
 };
 

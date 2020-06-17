@@ -33,6 +33,10 @@ public:
   // Copy operator.
   SplitOCP& operator=(const SplitOCP& other) = default;
 
+  bool isFeasible(Robot& robot, const Eigen::VectorXd& q, 
+                  const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                  const Eigen::VectorXd& u);
+
   void initConstraints(Robot& robot, const double dtau,
                        const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                        const Eigen::VectorXd& a, const Eigen::VectorXd& u);
@@ -69,10 +73,10 @@ public:
                         Eigen::VectorXd& dq_next, 
                         Eigen::VectorXd& dv_next) const;
  
-  double computeMaxStepSize(Robot& robot, const double dtau, 
-                            const Eigen::VectorXd& dq, 
-                            const Eigen::VectorXd& dv, 
-                            const Eigen::VectorXd& da);
+  std::pair<double, double> computeMaxStepSize(Robot& robot, const double dtau, 
+                                               const Eigen::VectorXd& dq, 
+                                               const Eigen::VectorXd& dv, 
+                                               const Eigen::VectorXd& da);
 
   std::pair<double, double> computeCostAndConstraintsReisdual(
       Robot& robot, const double t, const double dtau, const Eigen::VectorXd& q, 
@@ -99,23 +103,25 @@ public:
                              const Eigen::VectorXd& dq, 
                              const Eigen::VectorXd& dv);
 
-  void updateOCP(Robot& robot, const double step_size, const double dtau, 
-                 const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-                 const Eigen::VectorXd& da, const Eigen::MatrixXd& Pqq, 
-                 const Eigen::MatrixXd& Pqv, const Eigen::MatrixXd& Pvq, 
-                 const Eigen::MatrixXd& Pvv, const Eigen::VectorXd& sq, 
-                 const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
-                 Eigen::VectorXd& v, Eigen::VectorXd& a, Eigen::VectorXd& u, 
-                 Eigen::VectorXd& beta, Eigen::VectorXd& lmd, 
-                 Eigen::VectorXd& gmm);
+  void updateDual(const double step_size);
 
-  void updateOCP(Robot& robot, const double step_size, 
-                 const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-                 const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
-                 const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
-                 const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
-                 Eigen::VectorXd& q, Eigen::VectorXd& v, Eigen::VectorXd& lmd, 
-                 Eigen::VectorXd& gmm) const;
+  void updatePrimal(Robot& robot, const double step_size, const double dtau, 
+                    const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
+                    const Eigen::VectorXd& da, const Eigen::MatrixXd& Pqq, 
+                    const Eigen::MatrixXd& Pqv, const Eigen::MatrixXd& Pvq, 
+                    const Eigen::MatrixXd& Pvv, const Eigen::VectorXd& sq, 
+                    const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
+                    Eigen::VectorXd& v, Eigen::VectorXd& a, Eigen::VectorXd& u, 
+                    Eigen::VectorXd& beta, Eigen::VectorXd& lmd, 
+                    Eigen::VectorXd& gmm);
+
+  void updatePrimal(Robot& robot, const double step_size, 
+                    const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
+                    const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
+                    const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
+                    const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
+                    Eigen::VectorXd& q, Eigen::VectorXd& v, 
+                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm) const;
 
   // void updateOCP(Robot& robot, const double dtau, const Eigen::VectorXd& dq, 
   //                const Eigen::VectorXd& dv, const Eigen::VectorXd& da, 

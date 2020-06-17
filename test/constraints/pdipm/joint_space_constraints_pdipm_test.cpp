@@ -8,7 +8,7 @@ namespace pdipm {
 
 JointSpaceConstraints::JointSpaceConstraints(const Robot& robot)
   : barrier_(1.0e-04),
-    fraction_to_boundary_rate_(0.995),
+    step_size_reduction_rate_(0.95),
     position_upper_limits_(robot, barrier_),
     position_lower_limits_(robot, barrier_),
     velocity_upper_limits_(robot, barrier_),
@@ -116,23 +116,17 @@ std::pair<double, double> JointSpaceConstraints::computeDirectionAndMaxStepSize(
   assert(da.size() == robot.dimv());
   assert(du.size() == robot.dimv());
   const std::pair<double, double> position_upper_step 
-      = position_upper_limits_.computeDirectionAndMaxStepSize(
-            robot, fraction_to_boundary_rate_, dtau, dq);
+      = position_upper_limits_.computeDirectionAndMaxStepSize(robot, dtau, dq);
   const std::pair<double, double> position_lower_step 
-      = position_lower_limits_.computeDirectionAndMaxStepSize(
-            robot, fraction_to_boundary_rate_, dtau, dq);
+      = position_lower_limits_.computeDirectionAndMaxStepSize(robot, dtau, dq);
   const std::pair<double, double> velocity_upper_step 
-      = velocity_upper_limits_.computeDirectionAndMaxStepSize(
-            robot, fraction_to_boundary_rate_, dtau, dv);
+      = velocity_upper_limits_.computeDirectionAndMaxStepSize(robot, dtau, dv);
   const std::pair<double, double> velocity_lower_step 
-      = velocity_lower_limits_.computeDirectionAndMaxStepSize(
-            robot, fraction_to_boundary_rate_, dtau, dv);
+      = velocity_lower_limits_.computeDirectionAndMaxStepSize(robot, dtau, dv);
   const std::pair<double, double> torque_upper_step 
-      = torque_upper_limits_.computeDirectionAndMaxStepSize(
-            robot, fraction_to_boundary_rate_, dtau, du);
+      = torque_upper_limits_.computeDirectionAndMaxStepSize(robot, dtau, du);
   const std::pair<double, double> torque_lower_step 
-      = torque_lower_limits_.computeDirectionAndMaxStepSize(
-            robot, fraction_to_boundary_rate_, dtau, du);
+      = torque_lower_limits_.computeDirectionAndMaxStepSize(robot, dtau, du);
   double max_slack_step_size = std::min({position_upper_step.first, 
                                          position_lower_step.first, 
                                          velocity_upper_step.first, 
@@ -145,6 +139,12 @@ std::pair<double, double> JointSpaceConstraints::computeDirectionAndMaxStepSize(
                                         velocity_lower_step.second, 
                                         torque_upper_step.second, 
                                         torque_lower_step.second});
+  if (max_slack_step_size < 1) {
+    max_slack_step_size *= step_size_reduction_rate_;
+  }
+  if (max_dual_step_size < 1) {
+    max_dual_step_size *= step_size_reduction_rate_;
+  }
   return std::make_pair(max_slack_step_size, max_dual_step_size);
 }
 

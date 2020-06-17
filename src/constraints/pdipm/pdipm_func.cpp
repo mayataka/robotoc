@@ -1,5 +1,6 @@
 #include "constraints/pdipm/pdipm_func.hpp"
 
+#include <cmath>
 #include <assert.h>
 
 
@@ -23,23 +24,26 @@ void SetSlackAndDualPositive(const unsigned int dim, const double barrier,
 }
 
 
-double FractionToBoundary(const unsigned int dim, const Eigen::VectorXd& vec, 
+double FractionToBoundary(const unsigned int dim, const double fraction_rate, 
+                          const Eigen::VectorXd& vec, 
                           const Eigen::VectorXd& dvec) {
   assert(dim > 0);
+  assert(fraction_rate > 0);
+  assert(fraction_rate <= 1);
   assert(vec.size() == dim);
   assert(dvec.size() == dim);
-  double max_fraction_to_boundary = 1;
+  double min_fraction_to_boundary = 1;
   for (int i=0; i<dim; ++i) {
-    const double fraction_to_boundary = (vec.coeff(i)/dvec.coeff(i));
-    if (fraction_to_boundary > 0) {
-      if (fraction_to_boundary < max_fraction_to_boundary) {
-        max_fraction_to_boundary = fraction_to_boundary;
+    double fraction_to_boundary = - 0.995 * (vec.coeff(i)/dvec.coeff(i));
+    if (fraction_to_boundary > 0 && fraction_to_boundary < 1) {
+      if (fraction_to_boundary < min_fraction_to_boundary) {
+        min_fraction_to_boundary = fraction_to_boundary;
       }
     }
   }
-  assert(max_fraction_to_boundary <= 1);
-  assert(max_fraction_to_boundary > 0);
-  return max_fraction_to_boundary;
+  assert(min_fraction_to_boundary > 0);
+  assert(min_fraction_to_boundary <= 1);
+  return min_fraction_to_boundary;
 }
 
 
@@ -56,6 +60,15 @@ void ComputeDualDirection(const double barrier, const Eigen::VectorXd& dual,
         / slack.array();
 }
 
+
+double SlackBarrierCost(const unsigned int dim, const double barrier, 
+                        const Eigen::VectorXd& slack) {
+  assert(dim > 0);
+  assert(barrier > 0);
+  assert(slack.size() == dim);
+  double cost = - barrier * slack.array().log().sum();
+  return cost;
+}
 
 } // namespace pdipmfunc
 } // namespace pdipm
