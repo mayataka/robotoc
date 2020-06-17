@@ -9,8 +9,6 @@
 #include "robot/robot.hpp"
 #include "cost/cost_function_interface.hpp"
 #include "constraints/constraints_interface.hpp"
-// #include "constraints/soft/joint_space_soft_constraints.hpp"
-// #include "constraints/barrier/joint_space_constraints_barrier.hpp"
 #include "constraints/pdipm/joint_space_constraints_pdipm.hpp"
 
 
@@ -121,24 +119,24 @@ public:
                     const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
                     const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
                     Eigen::VectorXd& q, Eigen::VectorXd& v, 
-                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm) const;
+                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
 
-  // void updateOCP(Robot& robot, const double dtau, const Eigen::VectorXd& dq, 
-  //                const Eigen::VectorXd& dv, const Eigen::VectorXd& da, 
-  //                const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
-  //                const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
-  //                const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
-  //                Eigen::VectorXd& q, Eigen::VectorXd& v, Eigen::VectorXd& a, 
-  //                Eigen::VectorXd& u, Eigen::VectorXd& beta, 
-  //                Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
+  void updatePrimal(Robot& robot, const double dtau, const Eigen::VectorXd& dq, 
+                    const Eigen::VectorXd& dv, const Eigen::VectorXd& da, 
+                    const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
+                    const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
+                    const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
+                    Eigen::VectorXd& q, Eigen::VectorXd& v, Eigen::VectorXd& a, 
+                    Eigen::VectorXd& u, Eigen::VectorXd& beta, 
+                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
 
-  // void updateOCP(Robot& robot, const Eigen::VectorXd& dq, 
-  //                const Eigen::VectorXd& dv, const Eigen::MatrixXd& Pqq, 
-  //                const Eigen::MatrixXd& Pqv, const Eigen::MatrixXd& Pvq, 
-  //                const Eigen::MatrixXd& Pvv, const Eigen::VectorXd& sq, 
-  //                const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
-  //                Eigen::VectorXd& v, Eigen::VectorXd& lmd, 
-  //                Eigen::VectorXd& gmm) const;
+  void updatePrimal(Robot& robot, const Eigen::VectorXd& dq, 
+                    const Eigen::VectorXd& dv, const Eigen::MatrixXd& Pqq, 
+                    const Eigen::MatrixXd& Pqv, const Eigen::MatrixXd& Pvq, 
+                    const Eigen::MatrixXd& Pvv, const Eigen::VectorXd& sq, 
+                    const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
+                    Eigen::VectorXd& v, Eigen::VectorXd& lmd, 
+                    Eigen::VectorXd& gmm);
 
   double squaredOCPErrorNorm(Robot& robot, const double t, const double dtau, 
                              const Eigen::VectorXd& lmd, 

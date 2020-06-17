@@ -9,6 +9,7 @@ LineSearchFilter::LineSearchFilter()
     constraints_reduction_rate_(0.005) {
 }
 
+
 bool LineSearchFilter::isAccepted(const double cost, 
                                   const double constraint_violation) {
   if (!filter_.empty()) {

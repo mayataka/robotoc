@@ -28,19 +28,19 @@ int main() {
   // q = 2 * Eigen::VectorXd::Random(robot.dimq());
   // v = 10 * Eigen::VectorXd::Random(robot.dimv());
   q.fill(-2);
-  v.fill(9);
+  v.fill(0);
 
   ocp_.setStateTrajectory(q, v);
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
-  const int num_iteration = 100;
+  const int num_iteration = 10;
   std::cout << ocp_.optimalityError(t, q, v) << std::endl;
   for (int i=0; i<num_iteration; ++i) {
     ocp_.solveSQP(t, q, v);
     std::cout << ocp_.optimalityError(t, q, v) << std::endl;
   }
   end_clock = std::chrono::system_clock::now();
-  ocp_.printSolution();
+  // ocp_.printSolution();
   // std::cout << "q0: " << q.transpose() << std::endl;
   // std::cout << "v0: " << v.transpose() << std::endl;
   std::cout << "total CPU time: " << 1e-03 * std::chrono::duration_cast<std::chrono::microseconds>(end_clock-start_clock).count() << "[ms]" << std::endl;

@@ -39,7 +39,6 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
     Pqv_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Pvq_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Pvv_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    max_step_sizes_(Eigen::VectorXd::Zero(N)),
     primal_step_sizes_(Eigen::VectorXd::Zero(N)),
     dual_step_sizes_(Eigen::VectorXd::Zero(N)),
     cost_origin_(Eigen::VectorXd::Zero(N+1)), 
@@ -159,12 +158,10 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
       filter_.append(cost_origin_.sum(), constraints_residual_origin_.sum());
     }
     int num_line_search_itr = 0;
-    std::cout << "cost = " << cost_origin_.sum() << ", constriants = " << constraints_residual_origin_.sum() << std::endl;
     while (!filter_.isAccepted(cost_search_.sum(), 
                                constraints_residual_search_.sum())) {
       primal_step_size *= step_size_reduction_rate_;
       if(primal_step_size <= min_step_size_) {
-        std::cout << "current iterate is infeasible!" << std::endl;
         break;
       }
       #pragma omp parallel num_threads(num_proc_) 
@@ -190,9 +187,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
         }
       }
       ++num_line_search_itr;
-      std::cout << "cost = " << cost_search_.sum() << ", constriants = " << constraints_residual_search_.sum() << std::endl;
     }
-    std::cout << "num_line_search_itr = " << num_line_search_itr << std::endl;
   }
   #pragma omp parallel num_threads(num_proc_) 
   {
