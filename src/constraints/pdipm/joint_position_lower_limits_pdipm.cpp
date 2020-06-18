@@ -58,9 +58,9 @@ void JointPositionLowerLimits::condenseSlackAndDual(const Robot& robot,
   for (int i=0; i<dimv_; ++i) {
     Cqq.coeffRef(i, i) += dtau * dtau * dual_.coeff(i) / slack_.coeff(i);
   }
-  residual_ = dtau * (qmin_-q);
-  Cq.array() -= dtau * (dual_.array()*residual_.array()+barrier_) 
-                / slack_.array();
+  residual_ = dtau * (qmin_-q) + slack_;
+  Cq.array() -= dtau * dual_.array() * residual_.array() / slack_.array();
+  Cq.array() += dtau * (slack_.array()*residual_.array()-barrier_) / slack_.array();
 }
 
 
@@ -69,7 +69,7 @@ std::pair<double, double> JointPositionLowerLimits
                                      const double fraction_to_boundary_rate, 
                                      const double dtau, 
                                      const Eigen::VectorXd& dq) {
-  dslack_ = - slack_ + dtau * dq - residual_;
+  dslack_ = dtau * dq - residual_;
   pdipmfunc::ComputeDualDirection(barrier_, dual_, slack_, dslack_, ddual_);
   const double step_size_slack = pdipmfunc::FractionToBoundary(
       dimc_, fraction_to_boundary_rate, slack_, dslack_);

@@ -64,9 +64,16 @@ TEST_F(PDIPMFuncTest, fractionToBoundary) {
 
 TEST_F(PDIPMFuncTest, computeDualDirection) {
   Eigen::VectorXd tmp = Eigen::VectorXd::Zero(dim_);
-  tmp.array() = (-dual_.array()*(slack_.array()+dslack_.array())+barrier_)
-                 / slack_.array();
   pdipmfunc::ComputeDualDirection(barrier_, dual_, slack_, dslack_, ddual_);
+  for (int i=0; i<dim_; ++i) {
+    tmp(i) = - ((dual_(i)*(slack_(i)+dslack_(i)))-barrier_) / slack_(i);
+    EXPECT_DOUBLE_EQ(tmp(i), ddual_(i));
+  }
+  EXPECT_TRUE(tmp.isApprox(ddual_));
+  for (int i=0; i<dim_; ++i) {
+    tmp(i) = - (dual_(i)*slack_(i)+dual_(i)*dslack_(i)-barrier_) / slack_(i);
+    EXPECT_DOUBLE_EQ(tmp(i), ddual_(i));
+  }
   EXPECT_TRUE(tmp.isApprox(ddual_));
 }
 

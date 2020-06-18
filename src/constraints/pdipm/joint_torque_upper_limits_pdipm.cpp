@@ -61,9 +61,9 @@ void JointTorqueUpperLimits::condenseSlackAndDual(const Robot& robot,
   for (int i=0; i<dimv_; ++i) {
     Cuu.coeffRef(i, i) += dtau * dtau * dual_.coeff(i) / slack_.coeff(i);
   }
-  residual_ = dtau * (u-umax_);
-  Cu.array() += dtau * (dual_.array()*residual_.array()+barrier_) 
-                / slack_.array();
+  residual_ = dtau * (u-umax_) + slack_;
+  Cu.array() += dtau * dual_.array() * residual_.array() / slack_.array();
+  Cu.array() -= dtau * (slack_.array()*residual_.array()-barrier_) / slack_.array();
 }
 
 
@@ -72,7 +72,7 @@ std::pair<double, double> JointTorqueUpperLimits
                                      const double fraction_to_boundary_rate, 
                                      const double dtau, 
                                      const Eigen::VectorXd& du) {
-  dslack_ = - slack_ - dtau * du - residual_;
+  dslack_ = - dtau * du - residual_;
   pdipmfunc::ComputeDualDirection(barrier_, dual_, slack_, dslack_, ddual_);
   const double step_size_slack = pdipmfunc::FractionToBoundary(
       dimc_, fraction_to_boundary_rate, slack_, dslack_);

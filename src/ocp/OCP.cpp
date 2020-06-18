@@ -120,7 +120,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
     }
   }
   double primal_step_size = primal_step_sizes_.minCoeff();
-  double dual_step_size = dual_step_sizes_.minCoeff();
+  const double dual_step_size = dual_step_sizes_.minCoeff();
   if (use_line_search) {
     #pragma omp parallel num_threads(num_proc_) 
     {
@@ -148,8 +148,8 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
           cost_origin_.coeffRef(N_) = split_OCPs_[N_].computeTerminalCost(
               robots_[omp_get_thread_num()], t+N_*dtau_, q_[N_], v_[N_]);
           cost_search_.coeffRef(N_) = split_OCPs_[N_].computeTerminalCost(
-              robots_[omp_get_thread_num()], primal_step_size, t+N_*dtau_, q_[N_], 
-              v_[N_], dq_[N_], dv_[N_]);
+              robots_[omp_get_thread_num()], primal_step_size, t+N_*dtau_, 
+              q_[N_], v_[N_], dq_[N_], dv_[N_]);
         }
       }
     }
@@ -157,7 +157,6 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
                            constraints_residual_origin_.sum())) {
       filter_.append(cost_origin_.sum(), constraints_residual_origin_.sum());
     }
-    int num_line_search_itr = 0;
     while (!filter_.isAccepted(cost_search_.sum(), 
                                constraints_residual_search_.sum())) {
       primal_step_size *= step_size_reduction_rate_;
@@ -186,7 +185,6 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
           }
         }
       }
-      ++num_line_search_itr;
     }
   }
   #pragma omp parallel num_threads(num_proc_) 
@@ -210,18 +208,18 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
         split_OCPs_[N_].updatePrimal(robots_[omp_get_thread_num()], 
                                      primal_step_size, dq_[N_], dv_[N_], 
                                      Pqq_[N_], Pqv_[N_], Pvq_[N_], Pvv_[N_], 
-                                     sq_[N_], sv_[N_], q_[N_], v_[N_], lmd_[N_], 
-                                     gmm_[N_]);
+                                     sq_[N_], sv_[N_], q_[N_], v_[N_], 
+                                     lmd_[N_], gmm_[N_]);
       }
     }
   }
-
 }
 
 
 void OCP::getInitialControlInput(Eigen::VectorXd& u) {
   u = u_[0];
 }
+
 
 void OCP::setStateTrajectory(const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v) {
@@ -230,34 +228,6 @@ void OCP::setStateTrajectory(const Eigen::VectorXd& q,
   }
   for (int i=0; i<=N_; ++i) {
     q_[i] = q;
-  }
-  for (int time_step=0; time_step<N_; ++time_step) {
-    const bool is_feasible = split_OCPs_[time_step].isFeasible(robots_[0], 
-                                                               q_[time_step], 
-                                                               v_[time_step], 
-                                                               a_[time_step], 
-                                                               u_[time_step]);
-    if (!is_feasible) {
-      std::cout << "INFEASIBLE at time step " << time_step << std::endl;
-    }
-    split_OCPs_[time_step].initConstraints(robots_[0], dtau_, q_[time_step], 
-                                           v_[time_step], a_[time_step], 
-                                           u_[time_step]);
-  }
-}
-
-
-void OCP::setStateTrajectory(const Eigen::VectorXd& q0, 
-                             const Eigen::VectorXd& v0, 
-                             const Eigen::VectorXd& qN, 
-                             const Eigen::VectorXd& vN) {
-  Eigen::VectorXd dv = (vN-v0) / N_;
-  for (int i=0; i<=N_; ++i) {
-    v_[i] = v0 + i * dv;
-  }
-  Eigen::VectorXd dq = (qN-q0) / N_;
-  for (int i=0; i<=N_; ++i) {
-    q_[i] = q0 + i * dq;
   }
   for (int time_step=0; time_step<N_; ++time_step) {
     const bool is_feasible = split_OCPs_[time_step].isFeasible(robots_[0], 
@@ -295,15 +265,12 @@ double OCP::optimalityError(const double t, const Eigen::VectorXd& q,
 
 void OCP::printSolution() {
   for (int i=0; i<N_; ++i) {
-    std::cout << "time step: " << i << std::endl;
-    std::cout << "q: " << q_[i].transpose() << std::endl;
-    std::cout << "v: " << v_[i].transpose() << std::endl;
-    // std::cout << "a: " << a_[i].transpose() << std::endl;
-    std::cout << "u: " << u_[i].transpose() << std::endl;
+    std::cout << "q[" << i << "] = " << q_[i].transpose() << std::endl;
+    std::cout << "v[" << i << "] = " << v_[i].transpose() << std::endl;
+    std::cout << "u[" << i << "] = " << u_[i].transpose() << std::endl;
   }
-  std::cout << "time step: " << N_ << std::endl;
-  std::cout << "q: " << q_[N_].transpose() << std::endl;
-  std::cout << "v: " << v_[N_].transpose() << std::endl;
+  std::cout << "q[" << N_ << "] = " << q_[N_].transpose() << std::endl;
+  std::cout << "v[" << N_ << "] = " << v_[N_].transpose() << std::endl;
 }
 
 } // namespace idocp

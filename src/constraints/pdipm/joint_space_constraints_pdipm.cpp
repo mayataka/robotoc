@@ -7,7 +7,7 @@ namespace idocp {
 namespace pdipm {
 
 JointSpaceConstraints::JointSpaceConstraints(const Robot& robot)
-  : barrier_(1.0e-04),
+  : barrier_(1.0e-02),
     fraction_to_boundary_rate_(0.995),
     position_upper_limits_(robot, barrier_),
     position_lower_limits_(robot, barrier_),

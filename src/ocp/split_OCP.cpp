@@ -91,7 +91,6 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   assert(gmm_next.size() == robot.dimv());
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
-  // joint_constraints_.linearizeConstraint(robot, dtau, q, v, a, u);
   robot.RNEADerivatives(q, v, a, du_dq_, du_dv_, du_da_);
   cost_->lq(robot, t, dtau, q, v, a, lq_);
   lq_.noalias() += lmd_next - lmd;
@@ -104,7 +103,6 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   la_.noalias() += dtau * du_da_ * beta;
   cost_->lu(robot, t, dtau, u, lu_);
   cost_->luu(robot, t, dtau, u, luu_);
-  // joint_constraints_barrier_.augmentBarrier(robot, dtau, u, luu_, lu_);
   joint_constraints_.condenseSlackAndDual(robot, dtau, u, luu_, lu_);
   lu_.noalias() -= dtau * beta;
   robot.RNEA(q, v, a, u_res_);
@@ -124,13 +122,9 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   Qaa_ = du_da_.transpose() * luu_ * du_da_;
   joint_constraints_.condenseSlackAndDual(robot, dtau, q, v, a, Qqq_, Qvv_, 
                                           Qaa_, lq_, lv_, la_);
-  // joint_constraints_barrier_.augmentBarrier(robot, dtau, q, v, a, Qqq_, Qvv_, 
-                                            // Qaa_, lq_, lv_, la_);
   cost_->lqq(robot, t, dtau, q, v, a, Qqq_);
   cost_->lvv(robot, t, dtau, q, v, a, Qvv_);
   cost_->laa(robot, t, dtau, q, v, a, Qaa_);
-  // joint_constraints_.condenseSlackAndDual(robot, dtau, Qqq_, Qvv_, Qaa_, lq_, 
-  //                                         lv_, la_);
   Qvq_ = Qqv_.transpose();
 }
 
@@ -570,8 +564,9 @@ double SplitOCP::squaredOCPErrorNorm(Robot& robot, const double t,
   lu_.noalias() -= dtau * beta;
   // If there are equality constraints, augment to lu_
 
+  // std::cout << "dual error before = " << lq_.squaredNorm() + lv_.squaredNorm() + la_.squaredNorm() + lu_.squaredNorm() << std::endl;
   joint_constraints_.augmentDualResidual(robot, dtau, lq_, lv_, la_, lu_);
-  // std::cout << "dual error = " << lq_.squaredNorm() + lv_.squaredNorm() + la_.squaredNorm() + lu_.squaredNorm() << std::endl;
+  // std::cout << "dual error after = " << lq_.squaredNorm() + lv_.squaredNorm() + la_.squaredNorm() + lu_.squaredNorm() << std::endl;
 
   q_res_ = q + dtau * v - q_next;
   v_res_ = v + dtau * a - v_next;

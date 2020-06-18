@@ -29,9 +29,6 @@ public:
 
   void setStateTrajectory(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
-  void setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0, 
-                          const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
-
   double optimalityError(const double t, const Eigen::VectorXd& q, 
                          const Eigen::VectorXd& v);
 
@@ -44,6 +41,7 @@ public:
   OCP& operator=(const OCP&) = delete;
 
 private:
+
   std::vector<SplitOCP> split_OCPs_;
   std::vector<Robot> robots_;
   LineSearchFilter filter_;

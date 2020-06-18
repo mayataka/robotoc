@@ -56,8 +56,8 @@ void ComputeDualDirection(const double barrier, const Eigen::VectorXd& dual,
   assert(dual.size() == slack_direction.size());
   assert(dual.size() == dual_direction.size());
   dual_direction.array() 
-      = (-dual.array()*(slack.array()+slack_direction.array())+barrier)
-        / slack.array();
+      = - (dual.array()*slack_direction.array()+(dual.array()*slack.array()-barrier))
+          / slack.array();
 }
 
 
