@@ -42,12 +42,12 @@ bool JointSpaceConstraints::isFeasible(const Robot& robot,
   if (!velocity_lower_limits_.isFeasible(robot, v)) {
     return false;
   }
-  // if (!torque_upper_limits_.isFeasible(robot, u)) {
-  //   return false;
-  // }
-  // if (!torque_lower_limits_.isFeasible(robot, u)) {
-  //   return false;
-  // }
+  if (!torque_upper_limits_.isFeasible(robot, u)) {
+    return false;
+  }
+  if (!torque_lower_limits_.isFeasible(robot, u)) {
+    return false;
+  }
   return true;
 }
 
@@ -67,8 +67,8 @@ void JointSpaceConstraints::setSlackAndDual(const Robot& robot,
   position_lower_limits_.setSlackAndDual(robot, dtau, q);
   velocity_upper_limits_.setSlackAndDual(robot, dtau, v);
   velocity_lower_limits_.setSlackAndDual(robot, dtau, v);
-  // torque_upper_limits_.setSlackAndDual(robot, dtau, u);
-  // torque_lower_limits_.setSlackAndDual(robot, dtau, u);
+  torque_upper_limits_.setSlackAndDual(robot, dtau, u);
+  torque_lower_limits_.setSlackAndDual(robot, dtau, u);
 }
 
 
@@ -77,8 +77,8 @@ void JointSpaceConstraints::augmentDualResidual(const Robot& robot,
                                                 Eigen::VectorXd& Cu) {
   assert(dtau > 0);
   assert(Cu.size() == robot.dimv());
-  // torque_upper_limits_.augmentDualResidual(robot, dtau, Cu);
-  // torque_lower_limits_.augmentDualResidual(robot, dtau, Cu);
+  torque_upper_limits_.augmentDualResidual(robot, dtau, Cu);
+  torque_lower_limits_.augmentDualResidual(robot, dtau, Cu);
 }
 
 
@@ -127,8 +127,8 @@ void JointSpaceConstraints::condenseSlackAndDual(const Robot& robot,
                                                  Eigen::VectorXd& Cu) {
   assert(dtau > 0);
   assert(u.size() == robot.dimq());
-  // torque_upper_limits_.condenseSlackAndDual(robot, dtau, u, Cuu, Cu);
-  // torque_lower_limits_.condenseSlackAndDual(robot, dtau, u, Cuu, Cu);
+  torque_upper_limits_.condenseSlackAndDual(robot, dtau, u, Cuu, Cu);
+  torque_lower_limits_.condenseSlackAndDual(robot, dtau, u, Cuu, Cu);
 }
 
 
@@ -145,8 +145,8 @@ void JointSpaceConstraints::computeSlackAndDualDirection(
   position_lower_limits_.computeSlackAndDualDirection(robot, dtau, dq);
   velocity_upper_limits_.computeSlackAndDualDirection(robot, dtau, dv);
   velocity_lower_limits_.computeSlackAndDualDirection(robot, dtau, dv);
-  // torque_upper_limits_.computeSlackAndDualDirection(robot, dtau, du);
-  // torque_lower_limits_.computeSlackAndDualDirection(robot, dtau, du);
+  torque_upper_limits_.computeSlackAndDualDirection(robot, dtau, du);
+  torque_lower_limits_.computeSlackAndDualDirection(robot, dtau, du);
 }
 
 
@@ -161,15 +161,13 @@ double JointSpaceConstraints::maxSlackStepSize() {
       = velocity_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
   const double size_velocity_lower_limit 
       = velocity_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-  // const double size_torque_upper_limit 
-  //     = torque_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-  // const double size_torque_lower_limit 
-  //     = torque_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-  // return std::min({size_position_upper_limit, size_position_lower_limit, 
-  //                  size_velocity_upper_limit, size_velocity_lower_limit,
-  //                  size_torque_upper_limit, size_torque_lower_limit});
+  const double size_torque_upper_limit 
+      = torque_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  const double size_torque_lower_limit 
+      = torque_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
   return std::min({size_position_upper_limit, size_position_lower_limit, 
-                   size_velocity_upper_limit, size_velocity_lower_limit});
+                   size_velocity_upper_limit, size_velocity_lower_limit,
+                   size_torque_upper_limit, size_torque_lower_limit});
 }
 
 
@@ -184,15 +182,13 @@ double JointSpaceConstraints::maxDualStepSize() {
       = velocity_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
   const double size_velocity_lower_limit 
       = velocity_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  const double size_torque_upper_limit 
+      = torque_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  const double size_torque_lower_limit 
+      = torque_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
   return std::min({size_position_upper_limit, size_position_lower_limit, 
-                   size_velocity_upper_limit, size_velocity_lower_limit});
-  // const double size_torque_upper_limit 
-  //     = torque_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-  // const double size_torque_lower_limit 
-  //     = torque_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-  // return std::min({size_position_upper_limit, size_position_lower_limit, 
-  //                  size_velocity_upper_limit, size_velocity_lower_limit,
-  //                  size_torque_upper_limit, size_torque_lower_limit});
+                   size_velocity_upper_limit, size_velocity_lower_limit,
+                   size_torque_upper_limit, size_torque_lower_limit});
 }
 
 
@@ -202,8 +198,8 @@ void JointSpaceConstraints::updateSlack(const double step_size) {
   position_lower_limits_.updateSlack(step_size);
   velocity_upper_limits_.updateSlack(step_size);
   velocity_lower_limits_.updateSlack(step_size);
-  // torque_upper_limits_.updateSlack(step_size);
-  // torque_lower_limits_.updateSlack(step_size);
+  torque_upper_limits_.updateSlack(step_size);
+  torque_lower_limits_.updateSlack(step_size);
 }
 
 
@@ -213,8 +209,8 @@ void JointSpaceConstraints::updateDual(const double step_size) {
   position_lower_limits_.updateDual(step_size);
   velocity_upper_limits_.updateDual(step_size);
   velocity_lower_limits_.updateDual(step_size);
-  // torque_upper_limits_.updateDual(step_size);
-  // torque_lower_limits_.updateDual(step_size);
+  torque_upper_limits_.updateDual(step_size);
+  torque_lower_limits_.updateDual(step_size);
 }
 
 
@@ -224,8 +220,8 @@ double JointSpaceConstraints::costSlackBarrier() {
   cost += position_lower_limits_.costSlackBarrier();
   cost += velocity_upper_limits_.costSlackBarrier();
   cost += velocity_lower_limits_.costSlackBarrier();
-  // cost += torque_upper_limits_.costSlackBarrier();
-  // cost += torque_lower_limits_.costSlackBarrier();
+  cost += torque_upper_limits_.costSlackBarrier();
+  cost += torque_lower_limits_.costSlackBarrier();
   return barrier_ * cost;
 }
 
@@ -236,8 +232,8 @@ double JointSpaceConstraints::costSlackBarrier(const double step_size) {
   cost += position_lower_limits_.costSlackBarrier(step_size);
   cost += velocity_upper_limits_.costSlackBarrier(step_size);
   cost += velocity_lower_limits_.costSlackBarrier(step_size);
-  // cost += torque_upper_limits_.costSlackBarrier(step_size);
-  // cost += torque_lower_limits_.costSlackBarrier(step_size);
+  cost += torque_upper_limits_.costSlackBarrier(step_size);
+  cost += torque_lower_limits_.costSlackBarrier(step_size);
   return barrier_ * cost;
 }
 
@@ -258,8 +254,8 @@ double JointSpaceConstraints::residualL1Nrom(const Robot& robot,
   norm += position_lower_limits_.residualL1Nrom(robot, dtau, q);
   norm += velocity_upper_limits_.residualL1Nrom(robot, dtau, v);
   norm += velocity_lower_limits_.residualL1Nrom(robot, dtau, v);
-  // norm += torque_upper_limits_.residualL1Nrom(robot, dtau, u);
-  // norm += torque_lower_limits_.residualL1Nrom(robot, dtau, u);
+  norm += torque_upper_limits_.residualL1Nrom(robot, dtau, u);
+  norm += torque_lower_limits_.residualL1Nrom(robot, dtau, u);
   return norm;
 }
 
@@ -280,8 +276,8 @@ double JointSpaceConstraints::residualSquaredNrom(const Robot& robot,
   norm += position_lower_limits_.residualSquaredNrom(robot, dtau, q);
   norm += velocity_upper_limits_.residualSquaredNrom(robot, dtau, v);
   norm += velocity_lower_limits_.residualSquaredNrom(robot, dtau, v);
-  // norm += torque_upper_limits_.residualSquaredNrom(robot, dtau, u);
-  // norm += torque_lower_limits_.residualSquaredNrom(robot, dtau, u);
+  norm += torque_upper_limits_.residualSquaredNrom(robot, dtau, u);
+  norm += torque_lower_limits_.residualSquaredNrom(robot, dtau, u);
   return norm;
 }
 

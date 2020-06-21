@@ -146,11 +146,6 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
         for (time_step=0; time_step<=N_; ++time_step) {
           if (time_step < N_) {
             const int robot_id = omp_get_thread_num();
-            cost_derivative_dot_direction_.coeffRef(time_step)
-                = split_OCPs_[time_step].stageCostDerivativeDotDirection(
-                    robots_[robot_id], t+time_step*dtau_, dtau_, q_[time_step], 
-                    v_[time_step], a_[time_step], u_[time_step], dq_[time_step], 
-                    dv_[time_step]);
             const std::pair<double, double> filter_pair
                 = split_OCPs_[time_step].stageCostAndConstraintsViolation(
                     robots_[robot_id], primal_step_size, t+time_step*dtau_, 
@@ -163,9 +158,6 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
           }
           else {
             const int robot_id = omp_get_thread_num();
-            cost_derivative_dot_direction_.coeffRef(N_)
-                = split_OCPs_[N_].terminalCostDerivativeDotDirection(
-                    robots_[robot_id], t+T_, q_[N_], v_[N_], dq_[N_], dv_[N_]);
             costs_.coeffRef(N_) = split_OCPs_[N_].terminalCost(
                 robots_[robot_id], primal_step_size, t+T_, q_[N_], v_[N_], 
                 dq_[N_], dv_[N_]);
@@ -174,18 +166,8 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
       } // #pragma omp parallel
       const double cost_sum = costs_.sum();
       const double constraints_violation_sum = constraints_violations_.sum();
-      std::cout << "cost = " << cost_sum << std::endl;
-      std::cout << "constraints_violation = " << constraints_violation_sum << std::endl;
       if (filter_.isAccepted(cost_sum, constraints_violation_sum)) {
-        const double grad_dot_direction = - cost_derivative_dot_direction_.sum();
-        if (grad_dot_direction > 0) {
-          if (primal_step_size*grad_dot_direction > constraints_violation_sum) {
-            std::cout << "switching condition holds!!" << std::endl;
-          }
-        }
-        else {
-          filter_.augment(cost_sum, constraints_violation_sum);
-        }
+        filter_.augment(cost_sum, constraints_violation_sum);
         break;
       }
       primal_step_size *= step_size_reduction_rate_;
@@ -216,7 +198,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
                                      q_[N_], v_[N_], lmd_[N_], gmm_[N_]);
       }
     }
-   } // #pragma omp parallel
+  } // #pragma omp parallel
 } 
 
 
