@@ -70,7 +70,7 @@ void JointVelocityLowerLimits::condenseSlackAndDual(const Robot& robot,
 std::pair<double, double> JointVelocityLowerLimits
     ::computeDirectionAndMaxStepSize(const Robot& robot, const double dtau, 
                                      const Eigen::VectorXd& dv) {
-  dslack_ = - slack_ + dtau * dv - residual_;
+  dslack_ = dtau * dv - residual_;
   pdipmfunc::ComputeDualDirection(barrier_, dual_, slack_, dslack_, ddual_);
   const double step_size_slack = pdipmfunc::FractionToBoundary(dimc_, slack_, 
                                                                dslack_);

@@ -1,8 +1,6 @@
 #ifndef IDOCP_JOINT_POSITION_LOWER_LIMITS_PDIPM_HPP_
 #define IDOCP_JOINT_POSITION_LOWER_LIMITS_PDIPM_HPP_
 
-#include <utility>
-
 #include "Eigen/Core"
 
 #include "robot/robot.hpp"
@@ -30,17 +28,20 @@ public:
                             const Eigen::VectorXd& q, Eigen::MatrixXd& Cqq, 
                             Eigen::VectorXd& Cq);
 
-  std::pair<double, double> computeDirectionAndMaxStepSize(
-      const Robot& robot, const double fraction_to_boundary_rate, 
-      const double dtau, const Eigen::VectorXd& dq);
+  void computeSlackAndDualDirection(const Robot& robot, const double dtau,
+                                    const Eigen::VectorXd& dq);
+
+  double maxSlackStepSize(const double margin_rate);
+
+  double maxDualStepSize(const double margin_rate);
 
   void updateSlack(const double step_size);
 
   void updateDual(const double step_size);
 
-  double slackBarrier();
+  double costSlackBarrier();
 
-  double slackBarrier(const double step_size);
+  double costSlackBarrier(const double step_size);
 
   void augmentDualResidual(const Robot& robot, const double dtau, 
                            Eigen::VectorXd& Cq);
@@ -54,7 +55,7 @@ public:
 private:
   unsigned int dimq_, dimv_, dimc_;
   double barrier_;
-  Eigen::VectorXd qmin_, slack_, dual_, residual_, dslack_, ddual_;
+  Eigen::VectorXd qmin_, slack_, dual_, residual_, duality_, dslack_, ddual_;
 };
 
 } // namespace pdipm

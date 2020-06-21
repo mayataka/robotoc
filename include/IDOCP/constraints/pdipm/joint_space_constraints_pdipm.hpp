@@ -35,6 +35,13 @@ public:
                        const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                        const Eigen::VectorXd& a, const Eigen::VectorXd& u);
 
+  void augmentDualResidual(const Robot& robot, const double dtau, 
+                           Eigen::VectorXd& Cu);
+
+  void augmentDualResidual(const Robot& robot, const double dtau, 
+                           Eigen::VectorXd& Cq, Eigen::VectorXd& Cv, 
+                           Eigen::VectorXd& Ca);
+
   void condenseSlackAndDual(const Robot& robot, const double dtau, 
                             const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                             const Eigen::VectorXd& a, Eigen::MatrixXd& Cqq, 
@@ -46,24 +53,23 @@ public:
                             const Eigen::VectorXd& u, Eigen::MatrixXd& Cuu, 
                             Eigen::VectorXd& Cu);
 
-  std::pair<double, double> computeDirectionAndMaxStepSize(
-      const Robot& robot, const double dtau, const Eigen::MatrixXd& dq, 
-      const Eigen::VectorXd& dv, const Eigen::MatrixXd& da, 
-      const Eigen::VectorXd& du);
+  void computeSlackAndDualDirection(const Robot& robot, const double dtau,
+                                    const Eigen::VectorXd& dq,
+                                    const Eigen::VectorXd& dv,
+                                    const Eigen::VectorXd& da,
+                                    const Eigen::VectorXd& du);
+
+  double maxSlackStepSize();
+
+  double maxDualStepSize();
 
   void updateSlack(const double step_size);
 
   void updateDual(const double step_size);
 
-  double slackBarrier();
+  double costSlackBarrier();
 
-  double slackBarrier(const double step_size);
-
-  void augmentDualResidual(const Robot& robot, const double dtau, 
-                           Eigen::VectorXd& Cq,
-                           Eigen::VectorXd& Cv, 
-                           Eigen::VectorXd& Ca, 
-                           Eigen::VectorXd& Cu);
+  double costSlackBarrier(const double step_size);
 
   double residualL1Nrom(const Robot& robot, const double dtau,
                         const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
@@ -74,7 +80,7 @@ public:
                              const Eigen::VectorXd& a, const Eigen::VectorXd& u);
 
 private:
-  double barrier_, fraction_to_boundary_rate_;
+  double barrier_, fraction_to_boundary_margin_;
   pdipm::JointPositionUpperLimits position_upper_limits_;
   pdipm::JointPositionLowerLimits position_lower_limits_;
   pdipm::JointVelocityUpperLimits velocity_upper_limits_;

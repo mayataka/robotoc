@@ -77,7 +77,6 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
                                             lmd_[time_step], gmm_[time_step],
                                             q_[time_step], v_[time_step], 
                                             a_[time_step], u_[time_step], 
-                                            beta_[time_step],
                                             lmd_[time_step+1], 
                                             gmm_[time_step+1], q_[time_step+1], 
                                             v_[time_step+1]);
@@ -111,12 +110,13 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
   {
     #pragma omp for 
     for (time_step=0; time_step<N_; ++time_step) {
-      const std::pair<double, double> primal_dual_step_size
-          = split_OCPs_[time_step].computeMaxStepSize(
-              robots_[omp_get_thread_num()], dtau_, dq_[time_step], 
-              dv_[time_step], da_[time_step]);
-      primal_step_sizes_[time_step] = primal_dual_step_size.first;
-      dual_step_sizes_[time_step] = primal_dual_step_size.second;
+      split_OCPs_[time_step].computeCondensedDirection(
+          robots_[omp_get_thread_num()], dtau_, dq_[time_step], dv_[time_step], 
+          da_[time_step]);
+      primal_step_sizes_.coeffRef(time_step) 
+          = split_OCPs_[time_step].maxPrimalStepSize();
+      dual_step_sizes_.coeffRef(time_step) 
+          = split_OCPs_[time_step].maxDualStepSize();
     }
   }
   double primal_step_size = primal_step_sizes_.minCoeff();
@@ -130,8 +130,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
           const std::pair<double, double> origin_pair
               = split_OCPs_[time_step].computeCostAndConstraintsReisdual(
                   robots_[omp_get_thread_num()], t+time_step*dtau_, dtau_, 
-                  q_[time_step], v_[time_step], a_[time_step], u_[time_step], 
-                  q_[time_step+1], v_[time_step+1]);
+                  q_[time_step], v_[time_step], a_[time_step], u_[time_step]);
           cost_origin_.coeffRef(time_step) = origin_pair.first;
           constraints_residual_origin_.coeffRef(time_step) = origin_pair.second;
           const std::pair<double, double> search_pair
@@ -157,10 +156,12 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
                            constraints_residual_origin_.sum())) {
       filter_.append(cost_origin_.sum(), constraints_residual_origin_.sum());
     }
+    bool infeasible = false;
     while (!filter_.isAccepted(cost_search_.sum(), 
                                constraints_residual_search_.sum())) {
       primal_step_size *= step_size_reduction_rate_;
       if(primal_step_size <= min_step_size_) {
+        infeasible = true;
         break;
       }
       #pragma omp parallel num_threads(num_proc_) 
@@ -186,7 +187,12 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
         }
       }
     }
-  }
+    if (infeasible) {
+
+    }
+  }  // if (use_line_search) 
+  std::cout << "primal step size = " << primal_step_size << std::endl;
+  std::cout << "dual step size = " << dual_step_size << std::endl;
   #pragma omp parallel num_threads(num_proc_) 
   {
     #pragma omp for 

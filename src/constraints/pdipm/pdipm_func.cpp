@@ -24,6 +24,16 @@ void SetSlackAndDualPositive(const unsigned int dim, const double barrier,
 }
 
 
+void ComputeDualityResidual(const double barrier, const Eigen::VectorXd& slack, 
+                            const Eigen::VectorXd& dual, 
+                            Eigen::VectorXd& duality_residual) {
+  assert(barrier > 0);
+  assert(slack.size() == dual.size());
+  assert(slack.size() == duality_residual.size());
+  duality_residual.array() = slack.array() * dual.array() - barrier;
+}
+
+
 double FractionToBoundary(const unsigned int dim, const double fraction_rate, 
                           const Eigen::VectorXd& vec, 
                           const Eigen::VectorXd& dvec) {
@@ -47,16 +57,17 @@ double FractionToBoundary(const unsigned int dim, const double fraction_rate,
 }
 
 
-void ComputeDualDirection(const double barrier, const Eigen::VectorXd& dual, 
+void ComputeDualDirection(const Eigen::VectorXd& dual, 
                           const Eigen::VectorXd& slack, 
                           const Eigen::VectorXd& slack_direction, 
+                          const Eigen::VectorXd& duality, 
                           Eigen::VectorXd& dual_direction) {
-  assert(barrier > 0);
   assert(dual.size() == slack.size());
   assert(dual.size() == slack_direction.size());
+  assert(dual.size() == duality.size());
   assert(dual.size() == dual_direction.size());
   dual_direction.array() 
-      = - (dual.array()*slack_direction.array()+(dual.array()*slack.array()-barrier))
+      = - (dual.array()*slack_direction.array()+duality.array())
           / slack.array();
 }
 

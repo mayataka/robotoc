@@ -95,7 +95,6 @@ double JointSpaceCost::l(const Robot& robot, const double dtau,
 
 double JointSpaceCost::phi(const Robot& robot, const Eigen::VectorXd& q, 
                            const Eigen::VectorXd& v) {
-  assert(dtau > 0);
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   double phi = 0;

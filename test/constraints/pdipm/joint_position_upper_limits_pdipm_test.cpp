@@ -67,7 +67,7 @@ void JointPositionUpperLimits::condenseSlackAndDual(const Robot& robot,
 std::pair<double, double> JointPositionUpperLimits
     ::computeDirectionAndMaxStepSize(const Robot& robot, const double dtau, 
                                      const Eigen::VectorXd& dq) {
-  dslack_ = - slack_ - dtau * dq - residual_;
+  dslack_ = - dtau * dq - residual_;
   pdipmfunc::ComputeDualDirection(barrier_, dual_, slack_, dslack_, ddual_);
   const double step_size_slack = pdipmfunc::FractionToBoundary(dimc_, slack_, 
                                                                dslack_);

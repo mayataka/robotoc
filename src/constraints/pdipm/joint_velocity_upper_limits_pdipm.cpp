@@ -18,12 +18,11 @@ JointVelocityUpperLimits::JointVelocityUpperLimits(const Robot& robot,
     slack_(vmax_-Eigen::VectorXd::Constant(vmax_.size(), barrier)),
     dual_(Eigen::VectorXd::Constant(vmax_.size(), barrier)),
     residual_(Eigen::VectorXd::Zero(vmax_.size())),
+    duality_(Eigen::VectorXd::Zero(vmax_.size())),
     dslack_(Eigen::VectorXd::Zero(vmax_.size())), 
     ddual_(Eigen::VectorXd::Zero(vmax_.size())) {
   assert(barrier_ > 0);
-  for (int i=0; i<vmax_.size(); ++i) {
-    assert(vmax_(i) >= 0);
-  }
+  assert(vmax_.minCoeff() > 0);
 }
 
 
@@ -62,23 +61,29 @@ void JointVelocityUpperLimits::condenseSlackAndDual(const Robot& robot,
     Cvv.coeffRef(i, i) += dtau * dtau * dual_.coeff(i) / slack_.coeff(i);
   }
   residual_ = dtau * (v-vmax_) + slack_;
-  Cv.array() += dtau * dual_.array() * residual_.array() / slack_.array();
-  Cv.array() -= dtau * (slack_.array()*residual_.array()-barrier_) / slack_.array();
+  pdipmfunc::ComputeDualityResidual(barrier_, slack_, dual_, duality_);
+  Cv.array() += dtau * (dual_.array()*residual_.array()-duality_.array()) / slack_.array();
 }
 
 
-std::pair<double, double> JointVelocityUpperLimits
-    ::computeDirectionAndMaxStepSize(const Robot& robot, 
-                                     const double fraction_to_boundary_rate, 
-                                     const double dtau, 
-                                     const Eigen::VectorXd& dv) {
+void JointVelocityUpperLimits::computeSlackAndDualDirection(
+    const Robot& robot, const double dtau, const Eigen::VectorXd& dv) {
+  assert(dtau > 0);
+  assert(dv.size() == robot.dimv());
   dslack_ = - dtau * dv - residual_;
-  pdipmfunc::ComputeDualDirection(barrier_, dual_, slack_, dslack_, ddual_);
-  const double step_size_slack = pdipmfunc::FractionToBoundary(
-      dimc_, fraction_to_boundary_rate, slack_, dslack_);
-  const double step_size_dual = pdipmfunc::FractionToBoundary(
-      dimc_, fraction_to_boundary_rate, dual_, ddual_);
-  return std::make_pair(step_size_slack, step_size_dual);
+  pdipmfunc::ComputeDualDirection(dual_, slack_, dslack_, duality_, ddual_);
+}
+
+
+double JointVelocityUpperLimits::maxSlackStepSize(const double margin_rate) {
+  assert(margin_rate > 0);
+  return pdipmfunc::FractionToBoundary(dimc_, margin_rate, slack_, dslack_);
+}
+
+
+double JointVelocityUpperLimits::maxDualStepSize(const double margin_rate) {
+  assert(margin_rate > 0);
+  return pdipmfunc::FractionToBoundary(dimc_, margin_rate, dual_, ddual_);
 }
 
 
@@ -94,12 +99,12 @@ void JointVelocityUpperLimits::updateDual(const double step_size) {
 }
 
 
-double JointVelocityUpperLimits::slackBarrier() {
+double JointVelocityUpperLimits::costSlackBarrier() {
   return pdipmfunc::SlackBarrierCost(dimc_, barrier_, slack_);
 }
 
 
-double JointVelocityUpperLimits::slackBarrier(const double step_size) {
+double JointVelocityUpperLimits::costSlackBarrier(const double step_size) {
   return pdipmfunc::SlackBarrierCost(dimc_, barrier_, slack_+step_size*dslack_);
 }
 
@@ -109,7 +114,7 @@ void JointVelocityUpperLimits::augmentDualResidual(const Robot& robot,
                                                    Eigen::VectorXd& Cv) {
   assert(dtau > 0);
   assert(Cv.size() == robot.dimv());
-  Cv.noalias() -= dtau * dual_;
+  Cv.noalias() += dtau * dual_;
 }
 
 

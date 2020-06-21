@@ -43,7 +43,6 @@ public:
                     const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
                     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                     const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                    const Eigen::VectorXd& beta, 
                     const Eigen::VectorXd& lmd_next, 
                     const Eigen::VectorXd& gmm_next, 
                     const Eigen::VectorXd& q_next,
@@ -70,17 +69,20 @@ public:
                         const Eigen::VectorXd& dv, Eigen::VectorXd& da, 
                         Eigen::VectorXd& dq_next, 
                         Eigen::VectorXd& dv_next) const;
+
+  void computeCondensedDirection(Robot& robot, const double dtau, 
+                                 const Eigen::VectorXd& dq, 
+                                 const Eigen::VectorXd& dv, 
+                                 const Eigen::VectorXd& da);
  
-  std::pair<double, double> computeMaxStepSize(Robot& robot, const double dtau, 
-                                               const Eigen::VectorXd& dq, 
-                                               const Eigen::VectorXd& dv, 
-                                               const Eigen::VectorXd& da);
+  double maxPrimalStepSize();
+
+  double maxDualStepSize();
 
   std::pair<double, double> computeCostAndConstraintsReisdual(
-      Robot& robot, const double t, const double dtau, const Eigen::VectorXd& q, 
-      const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-      const Eigen::VectorXd& u, const Eigen::VectorXd& q_next, 
-      const Eigen::VectorXd& v_next);
+      Robot& robot, const double t, const double dtau, 
+      const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+      const Eigen::VectorXd& a, const Eigen::VectorXd& u);
 
   std::pair<double, double> computeCostAndConstraintsReisdual(
       Robot& robot, const double step_size, const double t, const double dtau, 
@@ -121,23 +123,6 @@ public:
                     Eigen::VectorXd& q, Eigen::VectorXd& v, 
                     Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
 
-  void updatePrimal(Robot& robot, const double dtau, const Eigen::VectorXd& dq, 
-                    const Eigen::VectorXd& dv, const Eigen::VectorXd& da, 
-                    const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
-                    const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
-                    const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
-                    Eigen::VectorXd& q, Eigen::VectorXd& v, Eigen::VectorXd& a, 
-                    Eigen::VectorXd& u, Eigen::VectorXd& beta, 
-                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
-
-  void updatePrimal(Robot& robot, const Eigen::VectorXd& dq, 
-                    const Eigen::VectorXd& dv, const Eigen::MatrixXd& Pqq, 
-                    const Eigen::MatrixXd& Pqv, const Eigen::MatrixXd& Pvq, 
-                    const Eigen::MatrixXd& Pvv, const Eigen::VectorXd& sq, 
-                    const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
-                    Eigen::VectorXd& v, Eigen::VectorXd& lmd, 
-                    Eigen::VectorXd& gmm);
-
   double squaredOCPErrorNorm(Robot& robot, const double t, const double dtau, 
                              const Eigen::VectorXd& lmd, 
                              const Eigen::VectorXd& gmm, 
@@ -158,10 +143,9 @@ public:
 private:
   CostFunctionInterface *cost_;
   ConstraintsInterface *constraints_;
-  // JointSpaceConstraintsBarrier joint_constraints_barrier_;
   pdipm::JointSpaceConstraints joint_constraints_;
   unsigned int dimq_, dimv_;
-  Eigen::VectorXd lq_, lv_, la_, lu_, k_;
+  Eigen::VectorXd lq_, lv_, la_, lu_, lu_condensed_, ka_;
   Eigen::VectorXd q_res_, v_res_, a_res_, u_res_, du_;
   Eigen::MatrixXd luu_, du_dq_, du_dv_, du_da_, Qqq_, Qqv_, Qqa_, Qvq_, Qvv_, 
                   Qva_, Qaa_, Ginv_, Kq_, Kv_;

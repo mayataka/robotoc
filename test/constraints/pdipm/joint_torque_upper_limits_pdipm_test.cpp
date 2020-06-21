@@ -70,7 +70,7 @@ void JointTorqueUpperLimits::condenseSlackAndDual(const Robot& robot,
 std::pair<double, double> JointTorqueUpperLimits
     ::computeDirectionAndMaxStepSize(const Robot& robot, const double dtau, 
                                    const Eigen::VectorXd& du) {
-  dslack_ = - slack_ - dtau * du - residual_;
+  dslack_ = - dtau * du - residual_;
   pdipmfunc::ComputeDualDirection(barrier_, dual_, slack_, dslack_, ddual_);
   const double step_size_slack = pdipmfunc::FractionToBoundary(dimc_, slack_, 
                                                                dslack_);

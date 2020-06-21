@@ -28,17 +28,20 @@ public:
                             const Eigen::VectorXd& v, Eigen::MatrixXd& Cvv, 
                             Eigen::VectorXd& Cv);
 
-  std::pair<double, double> computeDirectionAndMaxStepSize(
-      const Robot& robot, const double fraction_to_boundary_rate, 
-      const double dtau, const Eigen::VectorXd& dq);
+  void computeSlackAndDualDirection(const Robot& robot, const double dtau,
+                                    const Eigen::VectorXd& dq);
+
+  double maxSlackStepSize(const double margin_rate);
+
+  double maxDualStepSize(const double margin_rate);
 
   void updateSlack(const double step_size);
 
   void updateDual(const double step_size);
 
-  double slackBarrier();
+  double costSlackBarrier();
 
-  double slackBarrier(const double step_size);
+  double costSlackBarrier(const double step_size);
 
   void augmentDualResidual(const Robot& robot, const double dtau,
                            Eigen::VectorXd& Cv);
@@ -52,7 +55,7 @@ public:
 private:
   unsigned int dimq_, dimv_, dimc_;
   double barrier_;
-  Eigen::VectorXd vmin_, slack_, dual_, residual_, dslack_, ddual_;
+  Eigen::VectorXd vmin_, slack_, dual_, residual_, duality_, dslack_, ddual_;
 };
 
 } // namespace pdipm
