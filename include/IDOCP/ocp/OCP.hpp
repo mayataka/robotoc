@@ -29,10 +29,13 @@ public:
 
   void setStateTrajectory(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
-  double optimalityError(const double t, const Eigen::VectorXd& q, 
-                         const Eigen::VectorXd& v);
+  void setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0,
+                          const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
 
-  void printSolution();
+  double KKTError(const double t, const Eigen::VectorXd& q, 
+                  const Eigen::VectorXd& v);
+
+  void printSolution() const;
 
   // Prohibits copy constructor.
   OCP(const OCP&) = delete;
@@ -41,6 +44,10 @@ public:
   OCP& operator=(const OCP&) = delete;
 
 private:
+
+  bool isCurrentSolutionFeasible();
+
+  void initConstraints();
 
   std::vector<SplitOCP> split_OCPs_;
   std::vector<Robot> robots_;
@@ -52,10 +59,8 @@ private:
   std::vector<Eigen::VectorXd> q_, v_, a_, u_, beta_, lmd_, gmm_, 
                                dq_, dv_, sq_, sv_;
   std::vector<Eigen::MatrixXd> Pqq_, Pqv_, Pvq_, Pvv_;
-  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, cost_origin_, 
-                  cost_search_, constraints_residual_origin_, 
-                  constraints_residual_search_;
-
+  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, 
+                  constraints_violations_, cost_derivative_dot_direction_;
 };
 
 } // namespace idocp 

@@ -79,12 +79,27 @@ public:
 
   double maxDualStepSize();
 
-  std::pair<double, double> computeStageCostAndConstraintsReisdual(
+  double stageCostDerivativeDotDirection(Robot& robot, const double t, 
+                                         const double dtau, 
+                                         const Eigen::VectorXd& q, 
+                                         const Eigen::VectorXd& v, 
+                                         const Eigen::VectorXd& a, 
+                                         const Eigen::VectorXd& u,
+                                         const Eigen::VectorXd& dq,
+                                         const Eigen::VectorXd& dv);
+
+  double terminalCostDerivativeDotDirection(Robot& robot, const double t, 
+                                            const Eigen::VectorXd& q, 
+                                            const Eigen::VectorXd& v, 
+                                            const Eigen::VectorXd& dq,
+                                            const Eigen::VectorXd& dv);
+
+  std::pair<double, double> stageCostAndConstraintsViolation(
       Robot& robot, const double t, const double dtau, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
       const Eigen::VectorXd& a, const Eigen::VectorXd& u);
 
-  std::pair<double, double> computeStageCostAndConstraintsReisdual(
+  std::pair<double, double> stageCostAndConstraintsViolation(
       Robot& robot, const double step_size, const double t, const double dtau, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
       const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
@@ -92,15 +107,12 @@ public:
       const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
       const Eigen::VectorXd& dq_next, const Eigen::VectorXd& dv_next);
 
-  double computeTerminalCost(Robot& robot, const double t, 
-                             const Eigen::VectorXd& q, 
-                             const Eigen::VectorXd& v);
+  double terminalCost(Robot& robot, const double t, const Eigen::VectorXd& q, 
+                      const Eigen::VectorXd& v);
 
-  double computeTerminalCost(Robot& robot, const double step_size, 
-                             const double t, const Eigen::VectorXd& q, 
-                             const Eigen::VectorXd& v, 
-                             const Eigen::VectorXd& dq, 
-                             const Eigen::VectorXd& dv);
+  double terminalCost(Robot& robot, const double step_size, const double t, 
+                      const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                      const Eigen::VectorXd& dq, const Eigen::VectorXd& dv);
 
   void updateDual(const double step_size);
 
@@ -121,7 +133,7 @@ public:
                     Eigen::VectorXd& q, Eigen::VectorXd& v, 
                     Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
 
-  double squaredOCPErrorNorm(Robot& robot, const double t, const double dtau, 
+  double squaredKKTErrorNorm(Robot& robot, const double t, const double dtau, 
                              const Eigen::VectorXd& lmd, 
                              const Eigen::VectorXd& gmm, 
                              const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
@@ -132,7 +144,7 @@ public:
                              const Eigen::VectorXd& q_next,
                              const Eigen::VectorXd& v_next);
 
-  double squaredOCPErrorNorm(Robot& robot, const double t, 
+  double squaredKKTErrorNorm(Robot& robot, const double t, 
                              const Eigen::VectorXd& lmd, 
                              const Eigen::VectorXd& gmm, 
                              const Eigen::VectorXd& q, 

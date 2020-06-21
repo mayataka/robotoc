@@ -13,9 +13,11 @@ public:
 
   bool isAccepted(const double cost, const double constraint_violation);
 
-  void append(const double cost, const double constraint_violation);
+  void augment(const double cost, const double constraint_violation);
 
   void clear();
+
+  bool isEmpty() const;
  
 private:
   std::vector<std::pair<double, double>> filter_;

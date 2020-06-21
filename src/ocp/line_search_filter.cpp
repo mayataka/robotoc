@@ -14,7 +14,7 @@ bool LineSearchFilter::isAccepted(const double cost,
                                   const double constraint_violation) {
   if (!filter_.empty()) {
     for (auto pair : filter_) {
-      if (cost > pair.first && constraint_violation > pair.second) {
+      if (cost >= pair.first && constraint_violation >= pair.second) {
         return false;
       }
     }
@@ -23,8 +23,8 @@ bool LineSearchFilter::isAccepted(const double cost,
 }
 
 
-void LineSearchFilter::append(const double cost, 
-                              const double constraint_violation) {
+void LineSearchFilter::augment(const double cost, 
+                               const double constraint_violation) {
   if (!filter_.empty()) {
     std::vector<std::pair<double, double>>::iterator it = filter_.begin();
     while (it != filter_.end()) {
@@ -44,6 +44,16 @@ void LineSearchFilter::append(const double cost,
 
 void LineSearchFilter::clear() {
   filter_.clear();
+}
+
+
+bool LineSearchFilter::isEmpty() const {
+  if (filter_.empty()) {
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 } // namespace idocp

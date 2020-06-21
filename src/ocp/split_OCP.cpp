@@ -94,7 +94,6 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   // Residual of the state equation
   q_res_ = q + dtau * v - q_next;
   v_res_ = v + dtau * a - v_next;
-
   // Condensing the the control input torques and the Lagrange multiplier with 
   // respect to inverse dynamics.
   // Partial derivatives of the cost function with respect to the control input
@@ -112,7 +111,6 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   u_res_.noalias() -= u;
   // Condensed Newton residual with respect to the control input torques.
   lu_condensed_ = lu_ + luu_ * u_res_;
-
   // Partial derivatives of the cost function with respect to the configuration,
   // velocity, and acceleration.
   cost_->lq(robot, t, dtau, q, v, a, lq_);
@@ -129,7 +127,6 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   lq_.noalias() += du_dq_.transpose() * lu_condensed_;
   lv_.noalias() += du_dv_.transpose() * lu_condensed_;
   la_.noalias() += du_da_.transpose() * lu_condensed_;
-
   // Augment the condensed Hessian of the contorl input torques. 
   Qqq_ = du_dq_.transpose() * luu_ * du_dq_;
   Qqv_ = du_dq_.transpose() * luu_ * du_dv_;
@@ -141,7 +138,7 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   // of the inequality constraints on the configuration, velocity, and 
   // acceleration.
   // joint_constraints_.condenseSlackAndDual(robot, dtau, q, v, a, Qqq_, Qvv_, 
-                                          // Qaa_, lq_, lv_, la_);
+  //                                         Qaa_, lq_, lv_, la_);
   // Augment the cost function Hessian. 
   cost_->lqq(robot, t, dtau, q, v, a, Qqq_);
   cost_->lvv(robot, t, dtau, q, v, a, Qvv_);
@@ -294,7 +291,54 @@ double SplitOCP::maxDualStepSize() {
 }
 
 
-std::pair<double, double> SplitOCP::computeStageCostAndConstraintsReisdual(
+double SplitOCP::stageCostDerivativeDotDirection(Robot& robot, const double t, 
+                                                 const double dtau, 
+                                                 const Eigen::VectorXd& q, 
+                                                 const Eigen::VectorXd& v, 
+                                                 const Eigen::VectorXd& a, 
+                                                 const Eigen::VectorXd& u, 
+                                                 const Eigen::VectorXd& dq, 
+                                                 const Eigen::VectorXd& dv) {
+  assert(dtau > 0);
+  assert(q.rows() == robot.dimq());
+  assert(v.rows() == robot.dimv());
+  assert(a.rows() == robot.dimv());
+  assert(u.rows() == robot.dimv());
+  assert(dq.rows() == robot.dimv());
+  assert(dv.rows() == robot.dimv());
+  cost_->lq(robot, t, dtau, q, v, a, lq_);
+  cost_->lv(robot, t, dtau, q, v, a, lv_);
+  cost_->la(robot, t, dtau, q, v, a, la_);
+  cost_->lu(robot, t, dtau, u, lu_);
+  double product = 0;
+  product += lq_.dot(dq);
+  product += lv_.dot(dv);
+  product += la_.dot(da_);
+  product += lu_.dot(du_);
+  return product;
+}
+
+
+double SplitOCP::terminalCostDerivativeDotDirection(Robot& robot, 
+                                                    const double t, 
+                                                    const Eigen::VectorXd& q, 
+                                                    const Eigen::VectorXd& v, 
+                                                    const Eigen::VectorXd& dq,
+                                                    const Eigen::VectorXd& dv) {
+  assert(q.rows() == robot.dimq());
+  assert(v.rows() == robot.dimv());
+  assert(dq.rows() == robot.dimv());
+  assert(dv.rows() == robot.dimv());
+  cost_->phiq(robot, t, q, v, lq_);
+  cost_->phiv(robot, t, q, v, lv_);
+  double product = 0;
+  product += lq_.dot(dq);
+  product += lv_.dot(dv);
+  return product;
+}
+
+
+std::pair<double, double> SplitOCP::stageCostAndConstraintsViolation(
     Robot& robot, const double t, const double dtau, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const Eigen::VectorXd& a, const Eigen::VectorXd& u) {
@@ -306,17 +350,17 @@ std::pair<double, double> SplitOCP::computeStageCostAndConstraintsReisdual(
   double cost = 0;
   cost += cost_->l(robot, t, dtau, q, v, a, u);
   // cost += joint_constraints_.costSlackBarrier();
-  double constraints_residual = 0;
-  constraints_residual += q_res_.lpNorm<1>();
-  constraints_residual += v_res_.lpNorm<1>();
-  constraints_residual += dtau * u_res_.lpNorm<1>();
+  double constraints_violation = 0;
+  constraints_violation += q_res_.lpNorm<1>();
+  constraints_violation += v_res_.lpNorm<1>();
+  constraints_violation += dtau * u_res_.lpNorm<1>();
   // constraints_residual += joint_constraints_.residualL1Nrom(robot, dtau, q, v, 
   //                                                           a, u);
-  return std::make_pair(cost, constraints_residual);
+  return std::make_pair(cost, constraints_violation);
 }
 
 
-std::pair<double, double> SplitOCP::computeStageCostAndConstraintsReisdual(
+std::pair<double, double> SplitOCP::stageCostAndConstraintsViolation(
     Robot& robot, const double step_size, const double t, const double dtau, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
@@ -347,31 +391,31 @@ std::pair<double, double> SplitOCP::computeStageCostAndConstraintsReisdual(
   v_res_ = v_tmp_ + dtau * a_tmp_ - v_next - step_size * dv_next;
   robot.RNEA(q_tmp_, v_tmp_, a_tmp_, u_res_);
   u_res_.noalias() -= u_tmp_;
-  double constraints_residual = 0;
-  constraints_residual += q_res_.lpNorm<1>();
-  constraints_residual += v_res_.lpNorm<1>();
-  // constraints_residual += joint_constraints_.residualL1Nrom(robot, dtau, q_tmp_, 
-  //                                                           v_tmp_, a_tmp_, 
-  //                                                           u_tmp_);
-  constraints_residual += dtau * u_res_.lpNorm<1>();
-  return std::make_pair(cost, constraints_residual);
+  double constraints_violation = 0;
+  constraints_violation += q_res_.lpNorm<1>();
+  constraints_violation += v_res_.lpNorm<1>();
+  // constraints_violation += joint_constraints_.residualL1Nrom(robot, dtau, 
+  //                                                            q_tmp_, v_tmp_, 
+  //                                                            a_tmp_, u_tmp_);
+  constraints_violation += dtau * u_res_.lpNorm<1>();
+  return std::make_pair(cost, constraints_violation);
 }
 
 
-double SplitOCP::computeTerminalCost(Robot& robot, const double t, 
-                                     const Eigen::VectorXd& q, 
-                                     const Eigen::VectorXd& v) {
+double SplitOCP::terminalCost(Robot& robot, const double t, 
+                              const Eigen::VectorXd& q, 
+                              const Eigen::VectorXd& v) {
   assert(q.size() == robot.dimq());
   assert(v.size() == robot.dimv());
   return cost_->phi(robot, t, q, v);
 }
 
 
-double SplitOCP::computeTerminalCost(Robot& robot, const double step_size, 
-                                     const double t, const Eigen::VectorXd& q, 
-                                     const Eigen::VectorXd& v, 
-                                     const Eigen::VectorXd& dq, 
-                                     const Eigen::VectorXd& dv) {
+double SplitOCP::terminalCost(Robot& robot, const double step_size, 
+                              const double t, const Eigen::VectorXd& q, 
+                              const Eigen::VectorXd& v, 
+                              const Eigen::VectorXd& dq, 
+                              const Eigen::VectorXd& dv) {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(q.size() == robot.dimq());
@@ -427,7 +471,7 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   v.noalias() += step_size * dv;
   a.noalias() += step_size * da_;
   u.noalias() += step_size * du_;
-  // modify lu_ so that it include beta.
+  // modify lu_ so that it includes beta.
   lu_.noalias() -= dtau * beta;
   beta.noalias() += step_size * lu_ / dtau;
   beta.noalias() += step_size * luu_ * du_ / dtau;
@@ -473,7 +517,7 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
 }
 
 
-double SplitOCP::squaredOCPErrorNorm(Robot& robot, const double t, 
+double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t, 
                                      const double dtau, 
                                      const Eigen::VectorXd& lmd, 
                                      const Eigen::VectorXd& gmm, 
@@ -541,7 +585,7 @@ double SplitOCP::squaredOCPErrorNorm(Robot& robot, const double t,
 }
 
 
-double SplitOCP::squaredOCPErrorNorm(Robot& robot, const double t, 
+double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t, 
                                      const Eigen::VectorXd& lmd, 
                                      const Eigen::VectorXd& gmm, 
                                      const Eigen::VectorXd& q, 
@@ -556,7 +600,9 @@ double SplitOCP::squaredOCPErrorNorm(Robot& robot, const double t,
   cost_->phiv(robot, t, q, v, lv_);
   lq_.noalias() -= lmd;
   lv_.noalias() -= gmm;
-  double error = lq_.squaredNorm() + lv_.squaredNorm();
+  double error = 0;
+  error += lq_.squaredNorm();
+  error += lv_.squaredNorm();
   return error;
 }
 
