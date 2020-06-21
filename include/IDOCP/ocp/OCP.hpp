@@ -50,7 +50,7 @@ private:
   double T_, dtau_, step_size_reduction_rate_, min_step_size_;
   unsigned int N_, num_proc_;
   std::vector<Eigen::VectorXd> q_, v_, a_, u_, beta_, lmd_, gmm_, 
-                               dq_, dv_, da_, dlmd_, dgmm_, sq_, sv_;
+                               dq_, dv_, sq_, sv_;
   std::vector<Eigen::MatrixXd> Pqq_, Pqv_, Pvq_, Pvv_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, cost_origin_, 
                   cost_search_, constraints_residual_origin_, 

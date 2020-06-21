@@ -55,43 +55,42 @@ public:
                     Eigen::MatrixXd& Qvv, Eigen::VectorXd& Qq, 
                     Eigen::VectorXd& Qv);
 
-  void backwardRecursion(const double dtau, const Eigen::MatrixXd& Pqq_next, 
-                         const Eigen::MatrixXd& Pqv_next, 
-                         const Eigen::MatrixXd& Pvq_next, 
-                         const Eigen::MatrixXd& Pvv_next, 
-                         const Eigen::VectorXd& sq_next, 
-                         const Eigen::VectorXd& sv_next, Eigen::MatrixXd& Pqq, 
-                         Eigen::MatrixXd& Pqv, Eigen::MatrixXd& Pvq, 
-                         Eigen::MatrixXd& Pvv, Eigen::VectorXd& sq, 
-                         Eigen::VectorXd& sv);
+  void backwardRiccatiRecursion(const double dtau, 
+                                const Eigen::MatrixXd& Pqq_next, 
+                                const Eigen::MatrixXd& Pqv_next, 
+                                const Eigen::MatrixXd& Pvq_next, 
+                                const Eigen::MatrixXd& Pvv_next, 
+                                const Eigen::VectorXd& sq_next, 
+                                const Eigen::VectorXd& sv_next, 
+                                Eigen::MatrixXd& Pqq, Eigen::MatrixXd& Pqv, 
+                                Eigen::MatrixXd& Pvq, Eigen::MatrixXd& Pvv, 
+                                Eigen::VectorXd& sq, Eigen::VectorXd& sv);
 
-  void forwardRecursion(const double dtau, const Eigen::VectorXd& dq,   
-                        const Eigen::VectorXd& dv, Eigen::VectorXd& da, 
-                        Eigen::VectorXd& dq_next, 
-                        Eigen::VectorXd& dv_next) const;
+  void forwardRiccatiRecursion(const double dtau, const Eigen::VectorXd& dq,   
+                               const Eigen::VectorXd& dv, 
+                               Eigen::VectorXd& dq_next, 
+                               Eigen::VectorXd& dv_next);
 
   void computeCondensedDirection(Robot& robot, const double dtau, 
                                  const Eigen::VectorXd& dq, 
-                                 const Eigen::VectorXd& dv, 
-                                 const Eigen::VectorXd& da);
+                                 const Eigen::VectorXd& dv);
  
   double maxPrimalStepSize();
 
   double maxDualStepSize();
 
-  std::pair<double, double> computeCostAndConstraintsReisdual(
+  std::pair<double, double> computeStageCostAndConstraintsReisdual(
       Robot& robot, const double t, const double dtau, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
       const Eigen::VectorXd& a, const Eigen::VectorXd& u);
 
-  std::pair<double, double> computeCostAndConstraintsReisdual(
+  std::pair<double, double> computeStageCostAndConstraintsReisdual(
       Robot& robot, const double step_size, const double t, const double dtau, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
       const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
       const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
       const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-      const Eigen::VectorXd& da, const Eigen::VectorXd& dq_next, 
-      const Eigen::VectorXd& dv_next);
+      const Eigen::VectorXd& dq_next, const Eigen::VectorXd& dv_next);
 
   double computeTerminalCost(Robot& robot, const double t, 
                              const Eigen::VectorXd& q, 
@@ -107,13 +106,12 @@ public:
 
   void updatePrimal(Robot& robot, const double step_size, const double dtau, 
                     const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-                    const Eigen::VectorXd& da, const Eigen::MatrixXd& Pqq, 
-                    const Eigen::MatrixXd& Pqv, const Eigen::MatrixXd& Pvq, 
-                    const Eigen::MatrixXd& Pvv, const Eigen::VectorXd& sq, 
-                    const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
-                    Eigen::VectorXd& v, Eigen::VectorXd& a, Eigen::VectorXd& u, 
-                    Eigen::VectorXd& beta, Eigen::VectorXd& lmd, 
-                    Eigen::VectorXd& gmm);
+                    const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
+                    const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
+                    const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
+                    Eigen::VectorXd& q, Eigen::VectorXd& v, Eigen::VectorXd& a, 
+                    Eigen::VectorXd& u, Eigen::VectorXd& beta, 
+                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
 
   void updatePrimal(Robot& robot, const double step_size, 
                     const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
@@ -145,7 +143,7 @@ private:
   ConstraintsInterface *constraints_;
   pdipm::JointSpaceConstraints joint_constraints_;
   unsigned int dimq_, dimv_;
-  Eigen::VectorXd lq_, lv_, la_, lu_, lu_condensed_, ka_;
+  Eigen::VectorXd lq_, lv_, la_, lu_, lu_condensed_, ka_, da_;
   Eigen::VectorXd q_res_, v_res_, a_res_, u_res_, du_;
   Eigen::MatrixXd luu_, du_dq_, du_dv_, du_da_, Qqq_, Qqv_, Qqa_, Qvq_, Qvv_, 
                   Qva_, Qaa_, Ginv_, Kq_, Kv_;

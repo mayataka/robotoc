@@ -19,6 +19,7 @@ SplitOCP::SplitOCP(const Robot& robot, const CostFunctionInterface* cost,
     lu_(Eigen::VectorXd::Zero(robot.dimv())),
     lu_condensed_(Eigen::VectorXd::Zero(robot.dimv())),
     ka_(Eigen::VectorXd::Zero(robot.dimv())),
+    da_(Eigen::VectorXd::Zero(robot.dimv())),
     q_res_(Eigen::VectorXd::Zero(robot.dimv())),
     v_res_(Eigen::VectorXd::Zero(robot.dimv())),
     a_res_(Eigen::VectorXd::Zero(robot.dimv())),
@@ -170,23 +171,26 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t,
   assert(Qv.cols() == robot.dimv());
   cost_->phiq(robot, t, q, v, lq_);
   cost_->phiv(robot, t, q, v, lv_);
-  Qq = lmd - lq_;
-  Qv = gmm - lv_;
+  Qq = - lq_ + lmd;
+  Qv = - lv_ + gmm;
   cost_->phiqq(robot, t, q, v, Qqq);
   cost_->phivv(robot, t, q, v, Qvv);
 }
 
 
-void SplitOCP::backwardRecursion(const double dtau, 
-                                 const Eigen::MatrixXd& Pqq_next, 
-                                 const Eigen::MatrixXd& Pqv_next, 
-                                 const Eigen::MatrixXd& Pvq_next, 
-                                 const Eigen::MatrixXd& Pvv_next, 
-                                 const Eigen::VectorXd& sq_next, 
-                                 const Eigen::VectorXd& sv_next, 
-                                 Eigen::MatrixXd& Pqq, Eigen::MatrixXd& Pqv, 
-                                 Eigen::MatrixXd& Pvq, Eigen::MatrixXd& Pvv, 
-                                 Eigen::VectorXd& sq, Eigen::VectorXd& sv) {
+void SplitOCP::backwardRiccatiRecursion(const double dtau, 
+                                        const Eigen::MatrixXd& Pqq_next, 
+                                        const Eigen::MatrixXd& Pqv_next, 
+                                        const Eigen::MatrixXd& Pvq_next, 
+                                        const Eigen::MatrixXd& Pvv_next, 
+                                        const Eigen::VectorXd& sq_next, 
+                                        const Eigen::VectorXd& sv_next, 
+                                        Eigen::MatrixXd& Pqq, 
+                                        Eigen::MatrixXd& Pqv, 
+                                        Eigen::MatrixXd& Pvq, 
+                                        Eigen::MatrixXd& Pvv, 
+                                        Eigen::VectorXd& sq, 
+                                        Eigen::VectorXd& sv) {
   assert(dtau > 0);
   assert(Pqq_next.rows() == Pqq_next.cols());
   assert(Pqv_next.rows() == Pqv_next.cols());
@@ -247,25 +251,25 @@ void SplitOCP::backwardRecursion(const double dtau,
 }
 
 
-void SplitOCP::forwardRecursion(const double dtau, const Eigen::VectorXd& dq,   
-                                const Eigen::VectorXd& dv, Eigen::VectorXd& da, 
-                                Eigen::VectorXd& dq_next, 
-                                Eigen::VectorXd& dv_next) const {
+void SplitOCP::forwardRiccatiRecursion(const double dtau, 
+                                       const Eigen::VectorXd& dq,   
+                                       const Eigen::VectorXd& dv, 
+                                       Eigen::VectorXd& dq_next,
+                                       Eigen::VectorXd& dv_next) {
   assert(dtau > 0);
   assert(dq.size() == dv.size());
   assert(dv.size() == da.size());
   assert(da.size() == dq_next.size());
   assert(dq_next.size() == dv_next.size());
-  da = ka_ + Kq_ * dq + Kv_ * dv;
+  da_ = ka_ + Kq_ * dq + Kv_ * dv;
   dq_next = dq + dtau * dv + q_res_;
-  dv_next = dv + dtau * da + v_res_;
+  dv_next = dv + dtau * da_ + v_res_;
 }
 
 
 void SplitOCP::computeCondensedDirection(Robot& robot, const double dtau, 
                                          const Eigen::VectorXd& dq, 
-                                         const Eigen::VectorXd& dv, 
-                                         const Eigen::VectorXd& da) {
+                                         const Eigen::VectorXd& dv) {
   assert(dtau > 0);
   assert(dq.size() == robot.dimv());
   assert(dv.size() == robot.dimv());
@@ -273,7 +277,7 @@ void SplitOCP::computeCondensedDirection(Robot& robot, const double dtau,
   du_ = u_res_;
   du_.noalias() += du_dq_ * dq;
   du_.noalias() += du_dv_ * dv;
-  du_.noalias() += du_da_ * da;
+  du_.noalias() += du_da_ * da_;
   // joint_constraints_.computeSlackAndDualDirection(robot, dtau, dq, dv, da, du_);
 }
 
@@ -290,7 +294,7 @@ double SplitOCP::maxDualStepSize() {
 }
 
 
-std::pair<double, double> SplitOCP::computeCostAndConstraintsReisdual(
+std::pair<double, double> SplitOCP::computeStageCostAndConstraintsReisdual(
     Robot& robot, const double t, const double dtau, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const Eigen::VectorXd& a, const Eigen::VectorXd& u) {
@@ -312,14 +316,13 @@ std::pair<double, double> SplitOCP::computeCostAndConstraintsReisdual(
 }
 
 
-std::pair<double, double> SplitOCP::computeCostAndConstraintsReisdual(
+std::pair<double, double> SplitOCP::computeStageCostAndConstraintsReisdual(
     Robot& robot, const double step_size, const double t, const double dtau, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
     const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
     const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-    const Eigen::VectorXd& da, const Eigen::VectorXd& dq_next, 
-    const Eigen::VectorXd& dv_next) {
+    const Eigen::VectorXd& dq_next, const Eigen::VectorXd& dv_next) {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dtau > 0);
@@ -331,12 +334,11 @@ std::pair<double, double> SplitOCP::computeCostAndConstraintsReisdual(
   assert(v_next.size() == robot.dimv());
   assert(dq.size() == robot.dimv());
   assert(dv.size() == robot.dimv());
-  assert(da.size() == robot.dimv());
   assert(dq_next.size() == robot.dimv());
   assert(dv_next.size() == robot.dimv());
   q_tmp_ = q + step_size * dq;
   v_tmp_ = v + step_size * dv;
-  a_tmp_ = a + step_size * da;
+  a_tmp_ = a + step_size * da_;
   u_tmp_ = u + step_size * du_;
   double cost = 0;
   cost += cost_->l(robot, t, dtau, q_tmp_, v_tmp_, a_tmp_, u_tmp_);
@@ -392,7 +394,6 @@ void SplitOCP::updateDual(const double step_size) {
 void SplitOCP::updatePrimal(Robot& robot, const double step_size, 
                             const double dtau, const Eigen::VectorXd& dq, 
                             const Eigen::VectorXd& dv, 
-                            const Eigen::VectorXd& da, 
                             const Eigen::MatrixXd& Pqq, 
                             const Eigen::MatrixXd& Pqv, 
                             const Eigen::MatrixXd& Pvq, 
@@ -407,7 +408,6 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   assert(dtau > 0);
   assert(dq.size() == robot.dimv());
   assert(dv.size() == robot.dimv());
-  assert(da.size() == robot.dimv());
   assert(Pqq.rows() == robot.dimv());
   assert(Pqq.cols() == robot.dimv());
   assert(Pqv.rows() == robot.dimv());
@@ -425,8 +425,10 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   assert(gmm.size() == robot.dimv());
   q.noalias() += step_size * dq;
   v.noalias() += step_size * dv;
-  a.noalias() += step_size * da;
+  a.noalias() += step_size * da_;
   u.noalias() += step_size * du_;
+  // modify lu_ so that it include beta.
+  lu_.noalias() -= dtau * beta;
   beta.noalias() += step_size * lu_ / dtau;
   beta.noalias() += step_size * luu_ * du_ / dtau;
   lmd.noalias() += step_size * (Pqq * dq + Pqv * dv - sq);

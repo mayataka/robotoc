@@ -30,9 +30,6 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
     gmm_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
     dq_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
     dv_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
-    da_(N, Eigen::VectorXd::Zero(robot.dimv())),
-    dlmd_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
-    dgmm_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
     sq_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
     sv_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
     Pqq_(N+1, Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
@@ -90,29 +87,33 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
     }
   }
   for (time_step=N_-1; time_step>=0; --time_step) {
-    split_OCPs_[time_step].backwardRecursion(dtau_, Pqq_[time_step+1], 
-                                             Pqv_[time_step+1], 
-                                             Pvq_[time_step+1], 
-                                             Pvv_[time_step+1], sq_[time_step+1], 
-                                             sv_[time_step+1], Pqq_[time_step], 
-                                             Pqv_[time_step], Pvq_[time_step], 
-                                             Pvv_[time_step], sq_[time_step], 
-                                             sv_[time_step]);
+    split_OCPs_[time_step].backwardRiccatiRecursion(dtau_, Pqq_[time_step+1], 
+                                                    Pqv_[time_step+1], 
+                                                    Pvq_[time_step+1], 
+                                                    Pvv_[time_step+1], 
+                                                    sq_[time_step+1], 
+                                                    sv_[time_step+1], 
+                                                    Pqq_[time_step], 
+                                                    Pqv_[time_step], 
+                                                    Pvq_[time_step], 
+                                                    Pvv_[time_step], 
+                                                    sq_[time_step], 
+                                                    sv_[time_step]);
   }
   dq_[0] = q - q_[0];
   dv_[0] = v - v_[0];
   for (time_step=0; time_step<N_; ++time_step) {
-    split_OCPs_[time_step].forwardRecursion(dtau_, dq_[time_step], 
-                                            dv_[time_step], da_[time_step],
-                                            dq_[time_step+1], dv_[time_step+1]);
+    split_OCPs_[time_step].forwardRiccatiRecursion(dtau_, dq_[time_step], 
+                                                   dv_[time_step], 
+                                                   dq_[time_step+1], 
+                                                   dv_[time_step+1]);
   }
   #pragma omp parallel num_threads(num_proc_) 
   {
     #pragma omp for 
     for (time_step=0; time_step<N_; ++time_step) {
       split_OCPs_[time_step].computeCondensedDirection(
-          robots_[omp_get_thread_num()], dtau_, dq_[time_step], dv_[time_step], 
-          da_[time_step]);
+          robots_[omp_get_thread_num()], dtau_, dq_[time_step], dv_[time_step]);
       primal_step_sizes_.coeffRef(time_step) 
           = split_OCPs_[time_step].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(time_step) 
@@ -128,18 +129,18 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
       for (time_step=0; time_step<=N_; ++time_step) {
         if (time_step < N_) {
           const std::pair<double, double> origin_pair
-              = split_OCPs_[time_step].computeCostAndConstraintsReisdual(
+              = split_OCPs_[time_step].computeStageCostAndConstraintsReisdual(
                   robots_[omp_get_thread_num()], t+time_step*dtau_, dtau_, 
                   q_[time_step], v_[time_step], a_[time_step], u_[time_step]);
           cost_origin_.coeffRef(time_step) = origin_pair.first;
           constraints_residual_origin_.coeffRef(time_step) = origin_pair.second;
           const std::pair<double, double> search_pair
-              = split_OCPs_[time_step].computeCostAndConstraintsReisdual(
+              = split_OCPs_[time_step].computeStageCostAndConstraintsReisdual(
                   robots_[omp_get_thread_num()], primal_step_size, 
                   t+time_step*dtau_, dtau_, q_[time_step], v_[time_step], 
                   a_[time_step], u_[time_step], q_[time_step+1], 
                   v_[time_step+1], dq_[time_step], dv_[time_step], 
-                  da_[time_step], dq_[time_step+1], dv_[time_step+1]);
+                  dq_[time_step+1], dv_[time_step+1]);
           cost_search_.coeffRef(time_step) = search_pair.first;
           constraints_residual_search_.coeffRef(time_step) = search_pair.second;
         }
@@ -170,12 +171,12 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
         for (time_step=0; time_step<=N_; ++time_step) {
           if (time_step < N_) {
             const std::pair<double, double> search_pair
-                = split_OCPs_[time_step].computeCostAndConstraintsReisdual(
+                = split_OCPs_[time_step].computeStageCostAndConstraintsReisdual(
                     robots_[omp_get_thread_num()], primal_step_size, 
                     t+time_step*dtau_, dtau_, q_[time_step], v_[time_step], 
                     a_[time_step], u_[time_step], q_[time_step+1], 
                     v_[time_step+1], dq_[time_step], dv_[time_step], 
-                    da_[time_step], dq_[time_step+1], dv_[time_step+1]);
+                    dq_[time_step+1], dv_[time_step+1]);
             cost_search_.coeffRef(time_step) = search_pair.first;
             constraints_residual_search_.coeffRef(time_step) = search_pair.second;
           }
@@ -202,13 +203,13 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
         split_OCPs_[time_step].updatePrimal(robots_[omp_get_thread_num()], 
                                             primal_step_size, dtau_, 
                                             dq_[time_step], dv_[time_step], 
-                                            da_[time_step], Pqq_[time_step], 
-                                            Pqv_[time_step], Pvq_[time_step], 
-                                            Pvv_[time_step], sq_[time_step], 
-                                            sv_[time_step], q_[time_step], 
-                                            v_[time_step], a_[time_step], 
-                                            u_[time_step], beta_[time_step], 
-                                            lmd_[time_step], gmm_[time_step]);
+                                            Pqq_[time_step], Pqv_[time_step], 
+                                            Pvq_[time_step], Pvv_[time_step], 
+                                            sq_[time_step], sv_[time_step], 
+                                            q_[time_step], v_[time_step], 
+                                            a_[time_step], u_[time_step], 
+                                            beta_[time_step], lmd_[time_step], 
+                                            gmm_[time_step]);
       }
       else {
         split_OCPs_[N_].updatePrimal(robots_[omp_get_thread_num()], 

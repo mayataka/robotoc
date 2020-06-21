@@ -25,14 +25,14 @@ int main() {
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  q = 10 * Eigen::VectorXd::Random(robot.dimq());
-  v = 10 * Eigen::VectorXd::Random(robot.dimv());
-  // q.fill(-2);
-  // v.fill(-3);
+  // q = 10 * Eigen::VectorXd::Random(robot.dimq());
+  // v = 10 * Eigen::VectorXd::Random(robot.dimv());
+  q.fill(-2);
+  v.fill(-5);
 
   ocp_.setStateTrajectory(q, v);
   std::cout << ocp_.optimalityError(t, q, v) << std::endl;
-  const int num_iteration = 100;
+  const int num_iteration = 50;
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
   for (int i=0; i<num_iteration; ++i) {
@@ -40,7 +40,7 @@ int main() {
     std::cout << ocp_.optimalityError(t, q, v) << std::endl;
   }
   end_clock = std::chrono::system_clock::now();
-  // ocp_.printSolution();
+  ocp_.printSolution();
   // std::cout << "q0: " << q.transpose() << std::endl;
   // std::cout << "v0: " << v.transpose() << std::endl;
   std::cout << "total CPU time: " << 1e-03 * std::chrono::duration_cast<std::chrono::microseconds>(end_clock-start_clock).count() << "[ms]" << std::endl;
