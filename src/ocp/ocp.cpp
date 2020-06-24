@@ -1,4 +1,4 @@
-#include "ocp/OCP.hpp"
+#include "ocp/ocp.hpp"
 
 #include <cmath>
 #include <assert.h>
@@ -41,6 +41,8 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
     costs_(Eigen::VectorXd::Zero(N+1)), 
     constraints_violations_(Eigen::VectorXd::Zero(N)),
     cost_derivative_dot_direction_(Eigen::VectorXd::Zero(N+1)) {
+  assert(T > 0);
+  assert(N > 0);
   if (num_proc_ == 0) {
     num_proc_ = 1;
   }
@@ -90,6 +92,8 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
                                                     sq_[time_step], 
                                                     sv_[time_step]);
   }
+  assert(q.size() == q_[0].size());
+  assert(v.size() == v_[0].size());
   dq_[0] = q - q_[0];
   dv_[0] = v - v_[0];
   for (time_step=0; time_step<N_; ++time_step) {
@@ -203,12 +207,15 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
 
 
 void OCP::getInitialControlInput(Eigen::VectorXd& u) {
+  assert(u.size() == u_[0].size());
   u = u_[0];
 }
 
 
 void OCP::setStateTrajectory(const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v) {
+  assert(q.size() == q_[0].size());
+  assert(v.size() == v_[0].size());
   for (int i=0; i<=N_; ++i) {
     v_[i] = v;
   }
@@ -224,6 +231,10 @@ void OCP::setStateTrajectory(const Eigen::VectorXd& q0,
                              const Eigen::VectorXd& v0, 
                              const Eigen::VectorXd& qN, 
                              const Eigen::VectorXd& vN) {
+  assert(q0.size() == q_[0].size());
+  assert(v0.size() == v_[0].size());
+  assert(qN.size() == q_[0].size());
+  assert(vN.size() == v_[0].size());
   const Eigen::VectorXd a = (vN-v0) / N_;
   const Eigen::VectorXd v = (qN-q0) / N_;
   for (int i=0; i<N_; ++i) {
@@ -242,6 +253,8 @@ void OCP::setStateTrajectory(const Eigen::VectorXd& q0,
 
 double OCP::KKTError(const double t, const Eigen::VectorXd& q, 
                      const Eigen::VectorXd& v) {
+  assert(q.size() == q_[0].size());
+  assert(v.size() == v_[0].size());
   double error = 0;
   error += (q-q_[0]).squaredNorm();
   error += (v-v_[0]).squaredNorm();
@@ -262,6 +275,7 @@ void OCP::printSolution() const {
   for (int i=0; i<N_; ++i) {
     std::cout << "q[" << i << "] = " << q_[i].transpose() << std::endl;
     std::cout << "v[" << i << "] = " << v_[i].transpose() << std::endl;
+    std::cout << "a[" << i << "] = " << a_[i].transpose() << std::endl;
     std::cout << "u[" << i << "] = " << u_[i].transpose() << std::endl;
   }
   std::cout << "q[" << N_ << "] = " << q_[N_].transpose() << std::endl;

@@ -40,6 +40,7 @@ public:
 
 private:
   std::vector<unsigned int> passive_torque_indices_;
+  unsigned int dimv_;
 };
 
 } // namespace idocp

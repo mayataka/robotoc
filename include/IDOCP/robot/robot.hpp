@@ -14,6 +14,7 @@
 #include "pinocchio/algorithm/crba.hpp"
 #include "pinocchio/algorithm/rnea.hpp"
 #include "pinocchio/algorithm/rnea-derivatives.hpp"
+#include "pinocchio/algorithm/aba.hpp"
 
 #include "robot/point_contact.hpp"
 #include "robot/passive_joints.hpp"
@@ -156,6 +157,10 @@ public:
   //   dRNEA_da_dot_vec: The array where the result is stored. The size is
   //      assumed to be dimv.
   void dRNEAPartialdFext(Eigen::MatrixXd& dRNEA_partial_dfext);
+
+  void stateEquation(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                     const Eigen::VectorXd& tau, Eigen::VectorXd& dq, 
+                     Eigen::VectorXd& dv);
 
   // Substitutes zero in the generalized torques tau corresponding to the 
   // passive joints.

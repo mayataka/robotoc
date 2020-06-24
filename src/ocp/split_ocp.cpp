@@ -1,4 +1,4 @@
-#include "ocp/split_OCP.hpp"
+#include "ocp/split_ocp.hpp"
 
 #include <assert.h>
 #include "Eigen/LU"
@@ -163,8 +163,8 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t,
   assert(Qvq.cols() == robot.dimv());
   assert(Qvv.rows() == robot.dimv());
   assert(Qvv.cols() == robot.dimv());
-  assert(Qq.rows() == robot.dimv());
-  assert(Qv.cols() == robot.dimv());
+  assert(Qq.size() == robot.dimv());
+  assert(Qv.size() == robot.dimv());
   cost_->phiq(robot, t, q, v, lq_);
   cost_->phiv(robot, t, q, v, lv_);
   Qq = - lq_ + lmd;
@@ -188,25 +188,26 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
                                         Eigen::VectorXd& sq, 
                                         Eigen::VectorXd& sv) {
   assert(dtau > 0);
-  assert(Pqq_next.rows() == Pqq_next.cols());
-  assert(Pqv_next.rows() == Pqv_next.cols());
-  assert(Pvq_next.rows() == Pvq_next.cols());
-  assert(Pvv_next.rows() == Pvv_next.cols());
-  assert(Pqq.rows() == Pqq.cols());
-  assert(Pqv.rows() == Pqv.cols());
-  assert(Pvq.rows() == Pvq.cols());
-  assert(Pvv.rows() == Pvv.cols());
-  assert(Pqq_next.rows() == Pqv_next.rows());
-  assert(Pqv_next.rows() == Pvq_next.rows());
-  assert(Pvq_next.rows() == Pvv_next.rows());
-  assert(Pvv_next.rows() == sq_next.size());
-  assert(sq_next.size() == sv_next.size());
-  assert(sv_next.size() == Pqq.rows());
-  assert(Pqq.rows() == Pqv.rows());
-  assert(Pqv.rows() == Pvq.rows());
-  assert(Pvq.rows() == Pvv.rows());
-  assert(Pvv.rows() == sq.size());
-  assert(sq.size() == sv.size());
+  assert(Pqq_next.rows() == dimv_);
+  assert(Pqq_next.cols() == dimv_);
+  assert(Pqv_next.rows() == dimv_);
+  assert(Pqv_next.cols() == dimv_);
+  assert(Pvq_next.rows() == dimv_);
+  assert(Pvq_next.cols() == dimv_);
+  assert(Pvv_next.rows() == dimv_);
+  assert(Pvv_next.cols() == dimv_);
+  assert(sq_next.size() == dimv_);
+  assert(sv_next.size() == dimv_);
+  assert(Pqq.rows() == dimv_);
+  assert(Pqq.cols() == dimv_);
+  assert(Pqv.rows() == dimv_);
+  assert(Pqv.cols() == dimv_);
+  assert(Pvq.rows() == dimv_);
+  assert(Pvq.cols() == dimv_);
+  assert(Pvv.rows() == dimv_);
+  assert(Pvv.cols() == dimv_);
+  assert(sq.size() == dimv_);
+  assert(sv.size() == dimv_);
   Qqq_.noalias() += Pqq_next;
   Qqv_.noalias() += dtau * Pqq_next;
   Qqv_.noalias() += Pqv_next;
@@ -253,10 +254,10 @@ void SplitOCP::forwardRiccatiRecursion(const double dtau,
                                        Eigen::VectorXd& dq_next,
                                        Eigen::VectorXd& dv_next) {
   assert(dtau > 0);
-  assert(dq.size() == dv.size());
-  assert(dv.size() == da.size());
-  assert(da.size() == dq_next.size());
-  assert(dq_next.size() == dv_next.size());
+  assert(dq.size() == dimv_);
+  assert(dv.size() == dimv_);
+  assert(dq_next.size() == dimv_);
+  assert(dv_next.size() == dimv_);
   da_ = ka_ + Kq_ * dq + Kv_ * dv;
   dq_next = dq + dtau * dv + q_res_;
   dv_next = dv + dtau * da_ + v_res_;
@@ -269,7 +270,6 @@ void SplitOCP::computeCondensedDirection(Robot& robot, const double dtau,
   assert(dtau > 0);
   assert(dq.size() == robot.dimv());
   assert(dv.size() == robot.dimv());
-  assert(da.size() == robot.dimv());
   du_ = u_res_;
   du_.noalias() += du_dq_ * dq;
   du_.noalias() += du_dv_ * dv;

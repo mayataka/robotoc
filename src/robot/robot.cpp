@@ -219,6 +219,19 @@ void Robot::dRNEAPartialdFext(Eigen::MatrixXd& dRNEA_partial_dfext) {
 }
 
 
+void Robot::stateEquation(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                          const Eigen::VectorXd& tau, Eigen::VectorXd& dq, 
+                          Eigen::VectorXd& dv) {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(tau.size() == dimv_);
+  assert(dq.size() == dimv_);
+  assert(dv.size() == dimv_);
+  dq = v;
+  dv = pinocchio::aba(model_, data_, q, v, tau);
+}
+
+
 void Robot::setPassiveTorques(Eigen::VectorXd& tau) const {
   passive_joints_.setPassiveTorques(tau);
 }

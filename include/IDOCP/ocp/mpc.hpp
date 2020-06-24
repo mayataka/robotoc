@@ -16,7 +16,7 @@ public:
   // Constructor. 
   MPC(const Robot& robot, const CostFunctionInterface* cost,
       const ConstraintsInterface* constraints, const double T, 
-      const unsigned int N, const unsigned int num_proc);
+      const unsigned int N, const unsigned int num_proc=1);
 
   void initializeSolution(const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v, 
@@ -27,8 +27,8 @@ public:
 
   void getControlInput(Eigen::VectorXd& u);
 
-  double optimalityError(const double t, const Eigen::VectorXd& q, 
-                         const Eigen::VectorXd& v);
+  double KKTError(const double t, const Eigen::VectorXd& q, 
+                  const Eigen::VectorXd& v);
 
   // Prohibits copy constructor.
   MPC(const MPC&) = delete;

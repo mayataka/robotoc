@@ -51,57 +51,6 @@ target_link_libraries(
 )
 
 
-# add_library(
-#     soft_constraints
-#     SHARED 
-#     ${IDOCP_SRC_DIR}/constraints/soft/joint_space_soft_constraints.cpp
-#     ${IDOCP_SRC_DIR}/constraints/soft/joint_position_upper_limits_soft.cpp
-#     ${IDOCP_SRC_DIR}/constraints/soft/joint_position_lower_limits_soft.cpp
-#     ${IDOCP_SRC_DIR}/constraints/soft/joint_velocity_upper_limits_soft.cpp
-#     ${IDOCP_SRC_DIR}/constraints/soft/joint_velocity_lower_limits_soft.cpp
-#     ${IDOCP_SRC_DIR}/constraints/soft/joint_torque_upper_limits_soft.cpp
-#     ${IDOCP_SRC_DIR}/constraints/soft/joint_torque_lower_limits_soft.cpp
-# )
-# target_include_directories(
-#     soft_constraints
-#     PRIVATE
-#     ${EIGEN3_INCLUDE_DIR}
-#     ${IDOCP_INCLUDE_DIR}
-#     ${Boost_INCLUDE_DIRS}
-#     ${PINOCCHIO_INCLUDEDIR}
-# )
-# target_link_libraries(
-#     soft_constraints
-#     PRIVATE
-#     robot
-# )
-
-# add_library(
-#     constraints_barrier
-#     SHARED 
-#     ${IDOCP_SRC_DIR}/constraints/barrier/joint_space_constraints_barrier.cpp
-#     ${IDOCP_SRC_DIR}/constraints/barrier/joint_position_upper_limits_barrier.cpp
-#     ${IDOCP_SRC_DIR}/constraints/barrier/joint_position_lower_limits_barrier.cpp
-#     ${IDOCP_SRC_DIR}/constraints/barrier/joint_velocity_upper_limits_barrier.cpp
-#     ${IDOCP_SRC_DIR}/constraints/barrier/joint_velocity_lower_limits_barrier.cpp
-#     ${IDOCP_SRC_DIR}/constraints/barrier/joint_torque_upper_limits_barrier.cpp
-#     ${IDOCP_SRC_DIR}/constraints/barrier/joint_torque_lower_limits_barrier.cpp
-# )
-# target_include_directories(
-#     constraints_barrier
-#     PRIVATE
-#     ${EIGEN3_INCLUDE_DIR}
-#     ${IDOCP_INCLUDE_DIR}
-#     ${Boost_INCLUDE_DIRS}
-#     ${PINOCCHIO_INCLUDEDIR}
-# )
-# target_link_libraries(
-#     constraints_barrier
-#     PRIVATE
-#     robot
-# )
-
-
 add_library(
     constraints_pdipm
     SHARED 
@@ -132,8 +81,8 @@ target_link_libraries(
 add_library(
     idocp
     SHARED 
-    ${IDOCP_SRC_DIR}/ocp/OCP.cpp
-    ${IDOCP_SRC_DIR}/ocp/split_OCP.cpp
+    ${IDOCP_SRC_DIR}/ocp/ocp.cpp
+    ${IDOCP_SRC_DIR}/ocp/split_ocp.cpp
     ${IDOCP_SRC_DIR}/ocp/line_search_filter.cpp
     ${IDOCP_SRC_DIR}/cost/joint_space_cost.cpp
 )
@@ -171,4 +120,79 @@ target_include_directories(
     ${IDOCP_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${PINOCCHIO_INCLUDEDIR}
+)
+
+add_library(
+    mpc
+    SHARED 
+    ${IDOCP_SRC_DIR}/ocp/mpc.cpp
+)
+target_include_directories(
+    mpc
+    PRIVATE
+    ${EIGEN3_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${PINOCCHIO_INCLUDEDIR}
+)
+target_link_libraries(
+    mpc
+    PRIVATE
+    idocp
+    robot
+    constraints_pdipm
+)
+
+set(IDOCP_SIMULATOR_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../../simulator/include)
+set(IDOCP_SIMULATOR_SRC_DIR ${PROJECT_SOURCE_DIR}/../../simulator/src)
+
+add_library(
+    mpc_simulator
+    SHARED 
+    ${IDOCP_SIMULATOR_SRC_DIR}/simulator.cpp
+    ${IDOCP_SIMULATOR_SRC_DIR}/runge_kutta.cpp
+    ${IDOCP_SIMULATOR_SRC_DIR}/simulation_data_saver.cpp
+)
+target_include_directories(
+    mpc_simulator
+    PRIVATE
+    ${EIGEN3_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${PINOCCHIO_INCLUDEDIR}
+    ${IDOCP_SIMULATOR_INCLUDE_DIR}
+)
+target_link_libraries( 
+    mpc_simulator
+    PRIVATE
+    mpc
+    idocp
+    robot
+    constraints_pdipm
+)
+
+
+add_executable(
+    sim_mpc.out 
+    sim_mpc.cpp
+    cost_function.cpp
+    constraints.cpp
+)
+target_link_libraries(
+    sim_mpc.out
+    PRIVATE
+    mpc_simulator
+    mpc
+    idocp
+    robot
+    constraints_pdipm
+)
+target_include_directories(
+    sim_mpc.out
+    PRIVATE
+    ${EIGEN3_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${PINOCCHIO_INCLUDEDIR}
+    ${IDOCP_SIMULATOR_INCLUDE_DIR}
 )

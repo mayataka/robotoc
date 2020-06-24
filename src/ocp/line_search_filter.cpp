@@ -1,5 +1,7 @@
 #include "ocp/line_search_filter.hpp"
 
+#include <assert.h>
+
 
 namespace idocp {
 
@@ -7,11 +9,15 @@ LineSearchFilter::LineSearchFilter()
   : filter_(),
     cost_reduction_rate_(0.005),
     constraints_reduction_rate_(0.005) {
+  assert(cost_reduction_rate_);
+  assert(constraints_reduction_rate_);
 }
 
 
 bool LineSearchFilter::isAccepted(const double cost, 
                                   const double constraint_violation) {
+  assert(cost >= 0);
+  assert(constraint_violation >= 0);
   if (!filter_.empty()) {
     for (auto pair : filter_) {
       if (cost >= pair.first && constraint_violation >= pair.second) {
@@ -25,6 +31,8 @@ bool LineSearchFilter::isAccepted(const double cost,
 
 void LineSearchFilter::augment(const double cost, 
                                const double constraint_violation) {
+  assert(cost >= 0);
+  assert(constraint_violation >= 0);
   if (!filter_.empty()) {
     std::vector<std::pair<double, double>>::iterator it = filter_.begin();
     while (it != filter_.end()) {

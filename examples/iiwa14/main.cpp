@@ -1,11 +1,10 @@
 #include <iostream>
 #include <string>
-#include <vector>
 #include <chrono>
 
 #include "Eigen/Core"
 
-#include "ocp/OCP.hpp"
+#include "ocp/ocp.hpp"
 #include "robot/robot.hpp"
 #include "cost_function.hpp"
 #include "constraints.hpp"
@@ -21,7 +20,7 @@ int main() {
   idocp::iiwa14::Constraints constraints(robot);
   const double T = 1;
   const unsigned int N = 50;
-  const unsigned int num_proc = 4;
+  const unsigned int num_proc = 1;
   idocp::OCP ocp_(robot, &cost, &constraints, T, N, num_proc);
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
@@ -34,7 +33,7 @@ int main() {
   // ocp_.setStateTrajectory(q, v);
   ocp_.setStateTrajectory(q, v, q_ref, v_ref);
   std::cout << ocp_.KKTError(t, q, v) << std::endl;
-  const int num_iteration = 100;
+  const int num_iteration = 10;
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
   for (int i=0; i<num_iteration; ++i) {

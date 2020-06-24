@@ -1,10 +1,13 @@
 #include "robot/passive_joints.hpp"
 
+#include <assert.h>
+
 
 namespace idocp {
 
 PassiveJoints::PassiveJoints(const pinocchio::Model& model) 
-  : passive_torque_indices_() {
+  : passive_torque_indices_(),
+    dimv_(model.nv) {
   int total_dim_torque = -1; // Note that joint 0 is always universe.
   for (const auto& joint : model.joints) {
     if (joint.shortname() == "JointModelFreeFlyer") {
@@ -33,6 +36,7 @@ PassiveJoints::~PassiveJoints() {
 
 
 void PassiveJoints::setPassiveTorques(Eigen::VectorXd& torques) const {
+  assert(torques.size() == dimv_);
   for (int i=0; i<passive_torque_indices_.size(); ++i) {
     torques.coeffRef(i) = 0.0;
   }
@@ -41,6 +45,8 @@ void PassiveJoints::setPassiveTorques(Eigen::VectorXd& torques) const {
 
 void PassiveJoints::computePassiveConstraintViolation(
     const Eigen::VectorXd& torques, Eigen::VectorXd& violation) const {
+  assert(torques.size() == dimv_);
+  assert(violation.size() == passive_torque_indices_.size());
   for (int i=0; i<passive_torque_indices_.size(); ++i) {
     violation.coeffRef(i) = torques.coeff(passive_torque_indices_[i]);
   }

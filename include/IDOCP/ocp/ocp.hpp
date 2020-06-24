@@ -7,7 +7,7 @@
 #include "Eigen/Core"
 
 #include "robot/robot.hpp"
-#include "ocp/split_OCP.hpp"
+#include "ocp/split_ocp.hpp"
 #include "ocp/line_search_filter.hpp"
 #include "cost/cost_function_interface.hpp"
 #include "constraints/constraints_interface.hpp"
