@@ -2,7 +2,7 @@
 
 
 namespace idocp {
-namespace iiwa14 {
+namespace cranex7 {
 
 Constraints::Constraints(const Robot& robot)
   : ConstraintsInterface() {
@@ -105,5 +105,5 @@ double Constraints::residualSquaredNrom(const Robot& robot, const double dtau,
                                         const Eigen::VectorXd& u) {
 }
 
-} // namespace iiwa14
+} // namespace cranex7
 } // namespace idocp

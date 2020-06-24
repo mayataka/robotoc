@@ -42,6 +42,8 @@ public:
   // Use default copy operator.
   Robot& operator=(const Robot& other) = default;
 
+  void printRobotModel();
+
   // Integrates the generalized velocity, integration_length * v. 
   // The generalized configuration q is then incremented.
   // Argments: 

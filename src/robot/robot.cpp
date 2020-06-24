@@ -71,6 +71,26 @@ Robot::~Robot() {
 }
 
 
+void Robot::printRobotModel() {
+  pinocchio::Model model;
+  pinocchio::urdf::buildModel(urdf_file_name_, model, true);
+  for (int i=0; i<model.njoints; ++i) {
+    std::cout << "info of joint " << i << std::endl;
+    std::cout << "name: " << model.names[i] << std::endl;
+    std::cout << model.joints[i] << std::endl;
+  }
+
+  std::cout << "effortLimit = [" << model.effortLimit.transpose() << "]" 
+            << std::endl;
+  std::cout << "velocityLimit = [" << model.velocityLimit.transpose() << "]"
+            << std::endl;
+  std::cout << "lowerPositionLimit = [" << model.lowerPositionLimit.transpose() 
+            << "]" << std::endl;
+  std::cout << "upperPositionLimit = [" << model.upperPositionLimit.transpose() 
+            << "]" << std::endl;
+}
+
+
 void Robot::integrateConfiguration(const Eigen::VectorXd& v, 
                                    const double integration_length, 
                                    Eigen::VectorXd& q) const {

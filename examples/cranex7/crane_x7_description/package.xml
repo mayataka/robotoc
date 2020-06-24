@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package>
+  <name>crane_x7_description</name>
+  <version>0.0.1</version>
+  <description>The CRANE-X7 description package</description>
+
+  <maintainer email="shop@rt-net.jp">RT Corporation</maintainer>
+  <author email="nomura@rt-net.jp">Hiroyuki Nomura</author>
+  <author email="geoffrey.biggs@aist.go.jp">Geoffrey Biggs</author>
+
+  <license>NON-COMMERCIAL LICENSE AGREEMENT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>joint_state_publisher_gui</run_depend>
+</package>

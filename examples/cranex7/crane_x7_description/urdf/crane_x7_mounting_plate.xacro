@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:property name="M_PI" value="3.14159"/>
+  <xacro:property name="SCALE_MM" value="0.001"/>
+  <xacro:property name="SCALE_CM" value="0.01"/>
+
+  <xacro:property name="MOUNTING_PLATE_THICKNESS" value="0.005"/>
+
+  <xacro:macro name="crane_x7_mounting_plate" params="parent name color *origin">
+    <joint name="${name}_joint" type="fixed">
+      <xacro:insert_block name="origin"/>
+      <parent link="${parent}"/>
+      <child link="${name}_link"/>
+    </joint>
+
+    <link name="${name}_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://crane_x7_description/meshes/visual/mounting_plate.stl"
+              scale="1 1 1"/>
+        </geometry>
+        <material name="${color}"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://crane_x7_description/meshes/collision/mounting_plate.stl"
+              scale="1 1 1"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- For gazebo simulation -->
+    <gazebo reference="${name}_link">
+      <material>Gazebo/Black</material>
+    </gazebo>
+  </xacro:macro>
+</robot>

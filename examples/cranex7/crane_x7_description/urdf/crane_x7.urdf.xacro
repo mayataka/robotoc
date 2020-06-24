@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<robot
+    name="crane_x7"
+    xmlns:xacro="http://ros.org/wiki/xacro"
+    xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+    xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+    xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface">
+
+  <!-- Include the Crane X7 generator macro -->
+  <xacro:include filename="$(find crane_x7_description)/urdf/crane_x7.xacro"/>
+
+  <!-- Link to provide the location reference for the arm -->
+  <link name="base_link"/>
+
+  <!-- Used for fixing robot to Gazebo 'base_link' -->
+  <link name="world"/>
+
+  <joint name="base_link_to_world_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+
+  <xacro:arg name="use_effort_gripper" default="false" />
+
+  <!-- Use the crane_x7 macro to configure a Crane X7 arm with desired joint
+       velocities limit and lower/upper limits for the first joint. This
+       allows accessing different operational areas, e.g. left-handed vs.
+       right-handed robots. -->
+  <crane_x7 parent="base_link"
+              base_color="red"
+              shoulder_color="white"
+              shoulder_joint_cover_color="red"
+              upper_arm_upper_color="white"
+              upper_arm_lower_color="white"
+              elbow_joint_cover_color="red"
+              lower_arm_upper_color="white"
+              lower_arm_lower_color="white"
+              wrist_color="white"
+              hand_color="red"
+              joints_vlimit="4.81710873"
+              shoulder_llimit="-2.97132"
+              shoulder_ulimit="2.97132"
+              logos_definition="crane_x7_rt_logos.xacro"
+              use_effort_gripper="$(arg use_effort_gripper)">
+    <origin xyz="0 0 0"/>
+  </crane_x7>
+</robot>

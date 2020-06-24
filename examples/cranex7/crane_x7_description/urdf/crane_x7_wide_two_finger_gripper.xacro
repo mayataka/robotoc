@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:property name="M_PI" value="3.14159"/>
+  <xacro:property name="SCALE_MM" value="0.001"/>
+  <xacro:property name="SCALE_CM" value="0.01"/>
+
+  <xacro:macro name="crane_x7_wide_two_finger_gripper"
+    params="name color vlimit use_effort_gripper:=false">
+    <link name="${name}_base_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://crane_x7_description/meshes/visual/wide_two_finger_gripper_actuator.stl"
+              scale="1 1 1"/>
+        </geometry>
+        <material name="${color}"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://crane_x7_description/meshes/collision/wide_two_finger_gripper_actuator.stl"
+              scale="1 1 1"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <mass value="0.121"/>
+        <origin xyz="1.08E-04 -1.03E-03 2.08E-02" rpy="0 0 0"/>
+        <inertia ixx="3.20E-05" ixy="-9.45E-08" ixz="2.61E-07"
+          iyy="4.14E-05" iyz="3.88E-07"
+          izz="4.29E-05"/>
+      </inertial>
+    </link>
+
+    <joint name="${name}_finger_a_joint" type="revolute">
+      <origin xyz="-0.012 0.0 0.024" rpy="0 0 0"/>
+      <axis xyz="0 -1 0"/>
+      <limit effort="4.0" velocity="${vlimit}" lower="0.0046" upper="1.62601"/>
+      <parent link="${name}_base_link"/>
+      <child link="${name}_finger_a_link"/>
+      <dynamics damping="1.0e-6" friction="8.0e-1"/>
+    </joint>
+
+    <!-- for gazebo -->
+    <transmission name="${name}_finger_a_joint_trans">
+      <provideFeedback>true</provideFeedback>
+      <implicitSpringDamper>0</implicitSpringDamper>
+      <motorTorqueConstant>0.418</motorTorqueConstant>
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${name}_finger_a_joint">
+        <xacro:if value="${use_effort_gripper}">
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </xacro:if>
+        <xacro:unless value="${use_effort_gripper}">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </xacro:unless>
+      </joint>
+      <actuator name="${name}_finger_a_joint_motor">
+        <xacro:if value="${use_effort_gripper}">
+          <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </xacro:if>
+        <xacro:unless value="${use_effort_gripper}">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </xacro:unless>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+
+    <link name="${name}_finger_a_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="${M_PI/2} 0 0"/>
+        <geometry>
+          <mesh filename="package://crane_x7_description/meshes/visual/wide_two_finger_gripper_finger_a.stl"
+              scale="1 1 1"/>
+        </geometry>
+        <material name="${color}"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="${M_PI/2} 0 0"/>
+        <geometry>
+          <mesh filename="package://crane_x7_description/meshes/collision/wide_two_finger_gripper_finger_a.stl"
+              scale="1 1 1"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <mass value="0.0158"/>
+        <origin xyz="-2.65E-03 3.54E-03 2.69E-02" rpy="${M_PI/2} 0 0"/>
+        <inertia ixx="1.01E-05" ixy="-1.97E-07" ixz="-9.89E-08"
+        iyy="4.95E-06" iyz="5.37E-07"
+        izz="6.24E-06"/>
+      </inertial>
+    </link>
+
+    <joint name="${name}_finger_b_joint" type="revolute">
+      <origin xyz="0.012 0.0 0.024" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="4.0" velocity="${vlimit}" lower="0.0046" upper="1.62601"/>
+      <parent link="${name}_base_link"/>
+      <child link="${name}_finger_b_link"/>
+      <mimic joint="${name}_finger_a_joint"/>
+      <dynamics damping="1.0e-6" friction="8.0e-1"/>
+    </joint>
+
+    <link name="${name}_finger_b_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="${M_PI/2} 0 0"/>
+        <geometry>
+          <mesh filename="package://crane_x7_description/meshes/visual/wide_two_finger_gripper_finger_b.stl"
+              scale="1 1 1"/>
+        </geometry>
+        <material name="${color}"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="${M_PI/2} 0 0"/>
+        <geometry>
+          <mesh filename="package://crane_x7_description/meshes/collision/wide_two_finger_gripper_finger_b.stl"
+              scale="1 1 1"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <mass value="0.0139"/>
+        <origin xyz="3.01E-03 2.85E-03 3.09E-02" rpy="${M_PI/2} 0 0"/>
+        <inertia ixx="7.48E-06" ixy="3.61E-07" ixz="6.34E-08"
+        iyy="4.09E-06" iyz="2.28E-07"
+        izz="4.37E-06"/>
+      </inertial>
+    </link>
+
+    <!-- For gazebo simulation -->
+    <gazebo>
+      <plugin name="crane_x7_gripper_mimic_joint" filename="libroboticsgroup_gazebo_mimic_joint_plugin.so">
+        <joint>${name}_finger_a_joint</joint>
+        <mimicJoint>${name}_finger_b_joint</mimicJoint>
+        <multiplier>1</multiplier>
+      </plugin>
+    </gazebo>
+
+    <gazebo reference="${name}_base_link">
+      <material>Gazebo/Red</material>
+    </gazebo>
+    <gazebo reference="${name}_finger_a_link">
+      <mu1>0.8</mu1>
+      <mu2>0.8</mu2>
+      <material>Gazebo/Red</material>
+    </gazebo>
+    <gazebo reference="${name}_finger_b_link">
+      <mu1>0.8</mu1>
+      <mu2>0.8</mu2>
+      <material>Gazebo/Red</material>
+    </gazebo>
+
+  </xacro:macro>
+</robot>

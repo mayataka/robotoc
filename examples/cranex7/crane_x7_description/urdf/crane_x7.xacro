@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find crane_x7_description)/urdf/crane_x7_mounting_plate.xacro"/>
+  <xacro:include filename="$(find crane_x7_description)/urdf/crane_x7_arm.xacro"/>
+  <xacro:include filename="$(find crane_x7_description)/urdf/crane_x7_wide_two_finger_gripper.xacro"/>
+
+  <material name="black">
+    <color rgba="0.2 0.2 0.2 1.0"/>
+  </material>
+  <material name="white">
+    <color rgba="0.95 0.95 0.95 1.0"/>
+  </material>
+  <material name="silver">
+    <color rgba="0.75 0.75 0.75 1.0"/>
+  </material>
+  <material name="red">
+    <color rgba="1.0 0.3 0.3 1.0"/>
+  </material>
+  <material name="green">
+    <color rgba="0.3 1.0 0.3 1.0"/>
+  </material>
+  <material name="blue">
+    <color rgba="0.3 0.3 1.0 1.0"/>
+  </material>
+
+  <xacro:macro name="crane_x7"
+      params="parent
+              base_color
+              shoulder_color
+              shoulder_joint_cover_color
+              upper_arm_upper_color
+              upper_arm_lower_color
+              elbow_joint_cover_color
+              lower_arm_upper_color
+              lower_arm_lower_color
+              wrist_color
+              hand_color
+              joints_vlimit
+              shoulder_llimit
+              shoulder_ulimit
+              logos_definition
+              use_effort_gripper
+              *origin">
+
+    <!-- Mounting plate
+         (Root of the manipulator's TF tree) -->
+    <crane_x7_mounting_plate
+        parent="${parent}"
+        name="crane_x7_mounting_plate"
+        color="silver">
+      <xacro:insert_block name="origin"/>
+    </crane_x7_mounting_plate>
+
+    <!-- Arm -->
+    <crane_x7_arm
+        parent="crane_x7_mounting_plate_link"
+        end_effector_base_link="crane_x7_gripper_base_link"
+        base_color="${base_color}"
+        shoulder_color="${shoulder_color}"
+        shoulder_joint_cover_color="${shoulder_joint_cover_color}"
+        upper_arm_upper_color="${upper_arm_lower_color}"
+        upper_arm_lower_color="${upper_arm_lower_color}"
+        elbow_joint_cover_color="${elbow_joint_cover_color}"
+        lower_arm_upper_color="${lower_arm_upper_color}"
+        lower_arm_lower_color="${lower_arm_lower_color}"
+        wrist_color="${wrist_color}"
+        joints_vlimit="${joints_vlimit}"
+        shoulder_llimit="${shoulder_llimit}"
+        shoulder_ulimit="${shoulder_ulimit}"
+        logos_definition="${logos_definition}">
+      <origin xyz="0 0 ${MOUNTING_PLATE_THICKNESS}" rpy="0 0 0"/>
+    </crane_x7_arm>
+
+    <!-- End effector -->
+    <crane_x7_wide_two_finger_gripper
+        name="crane_x7_gripper"
+        color="${hand_color}"
+        vlimit="${joints_vlimit}"
+        use_effort_gripper="${use_effort_gripper}"/>
+  </xacro:macro>
+</robot>
