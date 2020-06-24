@@ -11,27 +11,23 @@ namespace idocp {
 class JointSpaceCost {
 public:
   JointSpaceCost(const Robot& robot, const Eigen::VectorXd& q_weight,  
-                 const Eigen::VectorXd& v_wjight, 
+                 const Eigen::VectorXd& v_weight, 
                  const Eigen::VectorXd& a_weight,  
                  const Eigen::VectorXd& u_weight,
                  const Eigen::VectorXd& qf_weight,  
                  const Eigen::VectorXd& vf_weight);
 
-  JointSpaceCost(const Robot& robot, const Eigen::VectorXd& q_ref, 
-                 const Eigen::VectorXd& q_weight, const Eigen::VectorXd& v_ref, 
-                 const Eigen::VectorXd& v_weight, const Eigen::VectorXd& a_ref, 
-                 const Eigen::VectorXd& a_weight, const Eigen::VectorXd& u_ref, 
-                 const Eigen::VectorXd& u_weight, const Eigen::VectorXd& qf_ref, 
-                 const Eigen::VectorXd& qf_weight, 
-                 const Eigen::VectorXd& vf_ref, 
-                 const Eigen::VectorXd& vf_weight);
+  void set_qref(const Eigen::VectorXd& q_ref);
+
+  void set_vref(const Eigen::VectorXd& v_ref);
+
+  void set_aref(const Eigen::VectorXd& a_ref);
+ 
+  void set_uref(const Eigen::VectorXd& u_ref);
 
   double l(const Robot& robot, const double dtau, const Eigen::VectorXd& q, 
            const Eigen::VectorXd& v, const Eigen::VectorXd& a,
            const Eigen::VectorXd& u);
-
-  double phi(const Robot& robot, const Eigen::VectorXd& q, 
-             const Eigen::VectorXd& v);
 
   void lq(const Robot& robot, const double dtau, const Eigen::VectorXd& q, 
           Eigen::VectorXd& lq);
@@ -52,6 +48,9 @@ public:
   void laa(const Robot& robot, const double dtau, Eigen::MatrixXd& laa);
 
   void luu(const Robot& robot, const double dtau, Eigen::MatrixXd& luu);
+
+  double phi(const Robot& robot, const Eigen::VectorXd& q, 
+             const Eigen::VectorXd& v);
 
   void phiq(const Robot& robot, const Eigen::VectorXd& q, 
             Eigen::VectorXd& phiq);

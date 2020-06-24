@@ -1,8 +1,6 @@
 #ifndef IDOCP_JOINT_SPACE_CONSTRAINTS_PDIPM_HPP_
 #define IDOCP_JOINT_SPACE_CONSTRAINTS_PDIPM_HPP_
 
-#include <utility> 
-
 #include "Eigen/Core"
 
 #include "robot/robot.hpp"

@@ -135,7 +135,7 @@ double JointPositionUpperLimits::residualSquaredNrom(const Robot& robot,
   residual_ = dtau * (q-qmax_) + slack_;
   double error = 0;
   error += residual_.squaredNorm();
-  residual_.array() = slack_.array() * dual_.array() - barrier_;
+  pdipmfunc::ComputeDualityResidual(barrier_, slack_, dual_, residual_);
   error += residual_.squaredNorm();
   return error;
 }

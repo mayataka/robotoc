@@ -11,7 +11,8 @@ SimulationDataSaver::SimulationDataSaver(const std::string& save_dir_path,
   : q_file_(save_dir_path+"/"+save_file_name+"_q.dat"),
     v_file_(save_dir_path+"/"+save_file_name+"_v.dat"),
     tau_file_(save_dir_path+"/"+save_file_name+"_tau.dat"),
-    KKT_error_file_(save_dir_path+"/"+save_file_name+"_KKT_error.dat") {
+    KKT_error_file_(save_dir_path+"/"+save_file_name+"_KKT_error.dat"),
+    conditions_file_(save_dir_path+"/"+save_file_name+"conditions.dat") {
 }
 
 
@@ -20,7 +21,9 @@ SimulationDataSaver::~SimulationDataSaver() {
   v_file_.close();
   tau_file_.close();
   KKT_error_file_.close();
+  conditions_file_.close();
 }
+
 
 void SimulationDataSaver::save(const Eigen::VectorXd& q, 
                                const Eigen::VectorXd& v, 
@@ -40,6 +43,21 @@ void SimulationDataSaver::save(const Eigen::VectorXd& q,
   }
   tau_file_ << "\n";
   KKT_error_file_ << KKT_error << "\n";
+}
+
+
+void SimulationDataSaver::saveConditions(
+    const double simulation_time_in_sec, 
+    const double sampling_period_in_millisec, 
+    const double CPU_time_per_update_in_millisec) {
+  assert(simulation_time_in_sec > 0);
+  assert(sampling_period_in_millisec > 0);
+  assert(CPU_time_per_update_in_millisec > 0);
+  conditions_file_ << "simulation time: " << simulation_time_in_sec << "[s]\n";
+  conditions_file_ << "sampling time: " 
+                   << sampling_period_in_millisec << "[ms]\n";
+  conditions_file_ << "CPU time per update: " 
+                   << CPU_time_per_update_in_millisec << "[ms]\n";
 }
 
 } // namespace simulator

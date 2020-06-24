@@ -14,63 +14,68 @@ public:
 
   virtual ~ConstraintsInterface() {}
 
-  virtual void C(const Robot& robot, const double t, const double dtau, 
-                 const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                 const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                 Eigen::VectorXd& C) = 0;
+  virtual bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
+                          const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                          const Eigen::VectorXd& u) = 0;
 
-  virtual void Cq(const Robot& robot, const double t, const double dtau,
-                  const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                  Eigen::MatrixXd& Cq) = 0;
+  virtual void setSlackAndDual(const Robot& robot, const double dtau, 
+                               const Eigen::VectorXd& q, 
+                               const Eigen::VectorXd& v, 
+                               const Eigen::VectorXd& a, 
+                               const Eigen::VectorXd& u) = 0;
 
-  virtual void Cq(const Robot& robot, const double t, const double dtau,
-                  const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                  const Eigen::VectorXd& fext, Eigen::MatrixXd& Cq) = 0;
+  virtual void augmentDualResidual(const Robot& robot, const double dtau, 
+                                   Eigen::VectorXd& Cu) = 0;
 
-  virtual void Cv(const Robot& robot, const double t, const double dtau,
-                  const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                  Eigen::MatrixXd& Cv) = 0;
+  virtual void augmentDualResidual(const Robot& robot, const double dtau, 
+                                   Eigen::VectorXd& Cq, Eigen::VectorXd& Cv, 
+                                   Eigen::VectorXd& Ca) = 0;
 
-  virtual void Cv(const Robot& robot, const double t, const double dtau,
-                  const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                  const Eigen::VectorXd& fext, Eigen::MatrixXd& Cv) = 0;
+  virtual void condenseSlackAndDual(const Robot& robot, const double dtau, 
+                                    const Eigen::VectorXd& q, 
+                                    const Eigen::VectorXd& v, 
+                                    const Eigen::VectorXd& a, 
+                                    Eigen::MatrixXd& Cqq, Eigen::MatrixXd& Cqv, 
+                                    Eigen::MatrixXd& Cqa,  Eigen::MatrixXd& Cvv, 
+                                    Eigen::MatrixXd& Cva,  Eigen::MatrixXd& Caa,  
+                                    Eigen::VectorXd& Cq, Eigen::VectorXd& Cv, 
+                                    Eigen::VectorXd& Ca) = 0;
 
-  virtual void Ca(const Robot& robot, const double t, const double dtau,
-                  const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                  Eigen::MatrixXd& Ca) = 0;
+  virtual void condenseSlackAndDual(const Robot& robot, const double dtau, 
+                                    const Eigen::VectorXd& u, 
+                                    Eigen::MatrixXd& Cuu, 
+                                    Eigen::VectorXd& Cu) = 0;
 
-  virtual void Ca(const Robot& robot, const double t, const double dtau,
-                  const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                  const Eigen::VectorXd& fext, Eigen::MatrixXd& Ca) = 0;
+  virtual void computeSlackAndDualDirection(const Robot& robot, 
+                                            const double dtau,
+                                            const Eigen::VectorXd& dq,
+                                            const Eigen::VectorXd& dv,
+                                            const Eigen::VectorXd& da,
+                                            const Eigen::VectorXd& du) = 0;
 
-  virtual void Cu(const Robot& robot, const double t, const double dtau,
-                  const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                  Eigen::MatrixXd& Cu) = 0;
+  virtual double maxSlackStepSize() = 0;
 
-  virtual void Cu(const Robot& robot, const double t, const double dtau,
-                  const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                  const Eigen::VectorXd& fext, Eigen::MatrixXd& Cu) = 0;
+  virtual double maxDualStepSize() = 0;
 
-  virtual void Cfext(const Robot& robot, const double t, const double dtau,
-                     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                     const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                     const Eigen::VectorXd& fext, Eigen::MatrixXd& Cfext) = 0;
+  virtual void updateSlack(const double step_size) = 0;
 
-  virtual unsigned int dimc() const = 0;
+  virtual void updateDual(const double step_size) = 0;
 
-  // Prohibits copy constructor.
-  ConstraintsInterface(const ConstraintsInterface&) = delete;
+  virtual double costSlackBarrier() = 0;
 
-  // Prohibits copy operator.
-  ConstraintsInterface& operator=(const ConstraintsInterface&) = delete;
+  virtual double costSlackBarrier(const double step_size) = 0;
+
+  virtual double residualL1Nrom(const Robot& robot, const double dtau,
+                                const Eigen::VectorXd& q, 
+                                const Eigen::VectorXd& v, 
+                                const Eigen::VectorXd& a, 
+                                const Eigen::VectorXd& u) = 0;
+
+  virtual double residualSquaredNrom(const Robot& robot, const double dtau,
+                                     const Eigen::VectorXd& q, 
+                                     const Eigen::VectorXd& v, 
+                                     const Eigen::VectorXd& a, 
+                                     const Eigen::VectorXd& u) = 0;
 
 };
 

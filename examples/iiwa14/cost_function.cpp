@@ -6,18 +6,13 @@ namespace iiwa14 {
 
 CostFunction::CostFunction(const Robot& robot, const Eigen::VectorXd& q_ref)
   : CostFunctionInterface(),
-    joint_space_cost_(
-        robot, q_ref, Eigen::VectorXd::Constant(robot.dimq(), 10), 
-        Eigen::VectorXd::Zero(robot.dimv()), 
-        Eigen::VectorXd::Constant(robot.dimv(), 1), 
-        Eigen::VectorXd::Zero(robot.dimv()), 
-        Eigen::VectorXd::Constant(robot.dimv(), 0.01), 
-        Eigen::VectorXd::Zero(robot.dimv()), 
-        Eigen::VectorXd::Constant(robot.dimv(), 0.0), 
-        q_ref, 
-        Eigen::VectorXd::Constant(robot.dimq(), 10), 
-        Eigen::VectorXd::Zero(robot.dimv()), 
-        Eigen::VectorXd::Constant(robot.dimv(), 1)) {
+    joint_space_cost_(robot, Eigen::VectorXd::Constant(robot.dimq(), 10), 
+                      Eigen::VectorXd::Constant(robot.dimv(), 1), 
+                      Eigen::VectorXd::Constant(robot.dimv(), 0.01), 
+                      Eigen::VectorXd::Constant(robot.dimv(), 0.0), 
+                      Eigen::VectorXd::Constant(robot.dimq(), 10), 
+                      Eigen::VectorXd::Constant(robot.dimv(), 1)) {
+  joint_space_cost_.set_qref(q_ref);
 }
 
 

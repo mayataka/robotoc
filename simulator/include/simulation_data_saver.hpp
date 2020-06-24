@@ -21,8 +21,13 @@ public:
   void save(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
             const Eigen::VectorXd& tau, const double KKT_error);
 
+  void saveConditions(const double simulation_time_in_sec, 
+                      const double sampling_period_in_millisec, 
+                      const double CPU_time_per_update_in_millisec);
+
 private:
-  std::ofstream q_file_, v_file_, tau_file_, KKT_error_file_;
+  std::ofstream q_file_, v_file_, tau_file_, KKT_error_file_, 
+                conditions_file_;
 
 };
 

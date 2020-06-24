@@ -18,7 +18,7 @@ MPC::MPC(const Robot& robot, const CostFunctionInterface* cost,
 void MPC::initializeSolution(const double t, const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v, 
                              const unsigned int max_itr) {
-  assert(max_itr > 0);
+  assert(max_itr >= 0);
   ocp_.setStateTrajectory(q, v);
   for (int i=0; i<max_itr; ++i) {
     ocp_.solveSQP(t, q, v, true);

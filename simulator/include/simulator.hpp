@@ -20,9 +20,10 @@ public:
   Simulator(Robot& robot, const std::string& save_dir_path, 
             const std::string& save_file_name);
 
-  void runSimulation(MPC& mpc, const double t_sim, const double sampling_period,   
-                     const double t_ini, const Eigen::VectorXd& q_ini, 
-                     const Eigen::VectorXd& v_ini);
+  void run(MPC& mpc, const double simulation_time_in_sec, 
+           const double sampling_period_in_sec, 
+           const double simulation_start_time_in_sec, 
+           const Eigen::VectorXd& q_initial, const Eigen::VectorXd& v_initial);
 
 private:
   RungeKutta runge_kutta_;
