@@ -1,10 +1,12 @@
-#include "cost_function.hpp"
+#include "manipulator/cost_function.hpp"
+
+#include <assert.h>
 
 
 namespace idocp {
-namespace cranex7 {
+namespace manipulator {
 
-CostFunction::CostFunction(const Robot& robot, const Eigen::VectorXd& q_ref)
+CostFunction::CostFunction(const Robot& robot)
   : CostFunctionInterface(),
     joint_space_cost_(robot, Eigen::VectorXd::Constant(robot.dimq(), 10), 
                       Eigen::VectorXd::Constant(robot.dimv(), 1), 
@@ -12,16 +14,68 @@ CostFunction::CostFunction(const Robot& robot, const Eigen::VectorXd& q_ref)
                       Eigen::VectorXd::Constant(robot.dimv(), 0.0), 
                       Eigen::VectorXd::Constant(robot.dimq(), 10), 
                       Eigen::VectorXd::Constant(robot.dimv(), 1)) {
-  joint_space_cost_.set_qref(q_ref);
 }
 
 
 CostFunction::~CostFunction() {
 }
 
-double CostFunction::l(const Robot& robot, const double t, const double dtau,
-                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                       const Eigen::VectorXd& a, const Eigen::VectorXd& u) {
+
+void CostFunction::set_q_ref(const Eigen::VectorXd& q_ref) {
+  joint_space_cost_.set_q_ref(q_ref);
+}
+
+
+void CostFunction::set_v_ref(const Eigen::VectorXd& v_ref) {
+  joint_space_cost_.set_v_ref(v_ref);
+}
+
+
+void CostFunction::set_a_ref(const Eigen::VectorXd& a_ref) {
+  joint_space_cost_.set_a_ref(a_ref);
+}
+
+
+void CostFunction::set_u_ref(const Eigen::VectorXd& q_ref) {
+  joint_space_cost_.set_u_ref(q_ref);
+}
+
+
+void CostFunction::set_q_weight(const Eigen::VectorXd& q_weight) {
+  joint_space_cost_.set_q_weight(q_weight);
+}
+
+
+void CostFunction::set_v_weight(const Eigen::VectorXd& v_weight) {
+  joint_space_cost_.set_v_weight(v_weight);
+}
+
+
+void CostFunction::set_a_weight(const Eigen::VectorXd& a_weight) {
+  joint_space_cost_.set_a_weight(a_weight);
+}
+
+
+void CostFunction::set_u_weight(const Eigen::VectorXd& u_weight) {
+  joint_space_cost_.set_u_weight(u_weight);
+}
+
+
+void CostFunction::set_qf_weight(const Eigen::VectorXd& qf_weight) {
+  joint_space_cost_.set_qf_weight(qf_weight);
+}
+
+
+void CostFunction::set_vf_weight(const Eigen::VectorXd& vf_weight) {
+  joint_space_cost_.set_vf_weight(vf_weight);
+}
+
+
+double CostFunction::l(const Robot& robot, const double t, 
+                                  const double dtau, const Eigen::VectorXd& q, 
+                                  const Eigen::VectorXd& v, 
+                                  const Eigen::VectorXd& a, 
+                                  const Eigen::VectorXd& u) {
   double l = 0;
   l += joint_space_cost_.l(robot, dtau, q, v, a, u);
   return l;
@@ -117,5 +171,6 @@ void CostFunction::phivv(const Robot& robot, const double t,
   joint_space_cost_.phivv(robot, phivv);
 }
 
-} // namespace cranex7
+
+} // namespace manipulator
 } // namespace idocp

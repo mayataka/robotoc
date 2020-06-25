@@ -5,8 +5,8 @@
 
 #include "ocp/mpc.hpp"
 #include "robot/robot.hpp"
-#include "cost_function.hpp"
-#include "constraints.hpp"
+#include "manipulator/cost_function.hpp"
+#include "manipulator/constraints.hpp"
 
 #include "simulator.hpp"
 
@@ -15,19 +15,17 @@ int main() {
   srand((unsigned int) time(0));
   const std::string urdf_file_name = "../urdf/iiwa14.urdf";
   idocp::Robot robot(urdf_file_name);
-  const Eigen::VectorXd q_ref = Eigen::VectorXd::Constant(robot.dimq(), -2);
-  const Eigen::VectorXd v_ref = Eigen::VectorXd::Zero(robot.dimv());
-  idocp::iiwa14::CostFunction cost(robot, q_ref);
-  idocp::iiwa14::Constraints constraints(robot);
+  idocp::manipulator::CostFunction cost(robot);
+  idocp::manipulator::Constraints constraints(robot);
+  Eigen::VectorXd q_ref = 1.5 * Eigen::VectorXd::Random(robot.dimq());
+  cost.set_q_ref(q_ref);
   const double T = 1;
   const unsigned int N = 18;
   const unsigned int num_proc = 4;
   idocp::MPC mpc(robot, &cost, &constraints, T, N, num_proc);
   const double t = 0;
-  Eigen::VectorXd q0 = Eigen::VectorXd::Random(robot.dimq());
-  Eigen::VectorXd v0 = Eigen::VectorXd::Random(robot.dimv());
-  q0.fill(2);
-  v0.fill(0);
+  Eigen::VectorXd q0 = Eigen::VectorXd::Zero(robot.dimq());
+  Eigen::VectorXd v0 = Eigen::VectorXd::Zero(robot.dimv());
   mpc.initializeSolution(t, q0, v0, 0);
 
   const double t0 = 0;

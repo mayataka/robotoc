@@ -84,6 +84,8 @@ add_library(
     ${IDOCP_SRC_DIR}/ocp/split_ocp.cpp
     ${IDOCP_SRC_DIR}/ocp/line_search_filter.cpp
     ${IDOCP_SRC_DIR}/cost/joint_space_cost.cpp
+    ${IDOCP_SRC_DIR}/manipulator/cost_function.cpp
+    ${IDOCP_SRC_DIR}/manipulator/constraints.cpp
 )
 target_include_directories(
     idocp
@@ -100,20 +102,19 @@ target_link_libraries(
     constraints_pdipm
 )
 
+
 add_executable(
-    a.out 
-    main.cpp
-    cost_function.cpp
-    constraints.cpp
+    ocp_test
+    ocp_test.cpp
 )
 target_link_libraries(
-    a.out
+    ocp_test
     PRIVATE
     robot
     idocp
 )
 target_include_directories(
-    a.out 
+    ocp_test
     PRIVATE
     ${EIGEN3_INCLUDE_DIR}
     ${IDOCP_INCLUDE_DIR}
@@ -172,13 +173,11 @@ target_link_libraries(
 
 
 add_executable(
-    sim_mpc.out 
+    sim_mpc
     sim_mpc.cpp
-    cost_function.cpp
-    constraints.cpp
 )
 target_link_libraries(
-    sim_mpc.out
+    sim_mpc
     PRIVATE
     mpc_simulator
     mpc
@@ -187,7 +186,7 @@ target_link_libraries(
     constraints_pdipm
 )
 target_include_directories(
-    sim_mpc.out
+    sim_mpc
     PRIVATE
     ${EIGEN3_INCLUDE_DIR}
     ${IDOCP_INCLUDE_DIR}

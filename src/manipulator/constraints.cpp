@@ -1,8 +1,8 @@
-#include "constraints.hpp"
+#include "manipulator/constraints.hpp"
 
 
 namespace idocp {
-namespace cranex7 {
+namespace manipulator {
 
 Constraints::Constraints(const Robot& robot)
   : ConstraintsInterface() {
@@ -60,8 +60,8 @@ void Constraints::condenseSlackAndDual(const Robot& robot, const double dtau,
 void Constraints::computeSlackAndDualDirection(const Robot& robot, 
                                                const double dtau, 
                                                const Eigen::VectorXd& dq,
-                                               const Eigen::VectorXd& dv,
-                                               const Eigen::VectorXd& da,
+                                               const Eigen::VectorXd& dv, 
+                                               const Eigen::VectorXd& da, 
                                                const Eigen::VectorXd& du) {
 }
 
@@ -105,5 +105,5 @@ double Constraints::residualSquaredNrom(const Robot& robot, const double dtau,
                                         const Eigen::VectorXd& u) {
 }
 
-} // namespace cranex7
+} // namespace manipulator
 } // namespace idocp

@@ -1,5 +1,5 @@
-#ifndef IDOCP_IIWA14_CONSTRAINTS_HPP_
-#define IDOCP_IIWA14_CONSTRAINTS_HPP_
+#ifndef IDOCP_MANIPULATOR_CONSTRAINTS_HPP_
+#define IDOCP_MANIPULATOR_CONSTRAINTS_HPP_
 
 #include "Eigen/Core"
 
@@ -8,7 +8,7 @@
 
 
 namespace idocp {
-namespace iiwa14 {
+namespace manipulator {
 
 class Constraints final : public ConstraintsInterface {
 public:
@@ -75,7 +75,8 @@ private:
 
 };
 
-} // namespace iiwa14
+} // namespace manipulator
 } // namespace idocp
 
-#endif // IDOCP_IIWA14_CONSTRAINTS_HPP_
+
+#endif // IDOCP_MANIPULATOR_CONSTRAINTS_HPP_

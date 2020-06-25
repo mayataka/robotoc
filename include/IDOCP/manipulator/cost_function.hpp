@@ -1,5 +1,5 @@
-#ifndef IDOCP_IIWA14_COST_FUNCTION_HPP_
-#define IDOCP_IIWA14_COST_FUNCTION_HPP_
+#ifndef IDOCP_MANIPULATOR_COST_FUNCTION_HPP_
+#define IDOCP_MANIPULATOR_COST_FUNCTION_HPP_
 
 #include "Eigen/Core"
 
@@ -9,13 +9,33 @@
 
 
 namespace idocp {
-namespace iiwa14 {
+namespace manipulator {
 
 class CostFunction final : public CostFunctionInterface {
 public:
-  CostFunction(const Robot& robot, const Eigen::VectorXd& q_ref);
+  CostFunction(const Robot& robot);
 
   ~CostFunction();
+
+  void set_q_ref(const Eigen::VectorXd& q_ref);
+
+  void set_v_ref(const Eigen::VectorXd& v_ref);
+
+  void set_a_ref(const Eigen::VectorXd& a_ref);
+
+  void set_u_ref(const Eigen::VectorXd& u_ref);
+
+  void set_q_weight(const Eigen::VectorXd& q_weight);
+
+  void set_v_weight(const Eigen::VectorXd& v_weight);
+
+  void set_a_weight(const Eigen::VectorXd& a_weight);
+
+  void set_u_weight(const Eigen::VectorXd& u_weight);
+
+  void set_qf_weight(const Eigen::VectorXd& qf_weight);
+
+  void set_vf_weight(const Eigen::VectorXd& vf_weight);
 
   double l(const Robot& robot, const double t, const double dtau,
            const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
@@ -71,7 +91,7 @@ private:
 
 };
 
-} // namespace iiwa14
+} // namespace manipulator
 } // namespace idocp
 
-#endif // IDOCP_IIWA14_COST_FUNCTION_HPP_
+#endif // IDOCP_MANIPULATOR_COST_FUNCTION_HPP_

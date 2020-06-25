@@ -18,8 +18,6 @@ JointSpaceCost::JointSpaceCost(const Robot& robot,
     v_ref_(Eigen::VectorXd::Zero(robot.dimv())),
     a_ref_(Eigen::VectorXd::Zero(robot.dimv())),
     u_ref_(Eigen::VectorXd::Zero(robot.dimv())),
-    qf_ref_(Eigen::VectorXd::Zero(robot.dimq())),
-    vf_ref_(Eigen::VectorXd::Zero(robot.dimv())),
     q_weight_(q_weight),
     v_weight_(v_weight),
     a_weight_(a_weight),
@@ -35,27 +33,63 @@ JointSpaceCost::JointSpaceCost(const Robot& robot,
 }
 
 
-void JointSpaceCost::set_qref(const Eigen::VectorXd& q_ref) {
+void JointSpaceCost::set_q_ref(const Eigen::VectorXd& q_ref) {
   assert(q_ref.size() == dimq_);
   q_ref_ = q_ref;
 }
 
 
-void JointSpaceCost::set_vref(const Eigen::VectorXd& v_ref) {
+void JointSpaceCost::set_v_ref(const Eigen::VectorXd& v_ref) {
   assert(v_ref.size() == dimv_);
   v_ref_ = v_ref;
 }
 
 
-void JointSpaceCost::set_aref(const Eigen::VectorXd& a_ref) {
+void JointSpaceCost::set_a_ref(const Eigen::VectorXd& a_ref) {
   assert(a_ref.size() == dimv_);
   a_ref_ = a_ref;
 }
 
 
-void JointSpaceCost::set_uref(const Eigen::VectorXd& u_ref) {
+void JointSpaceCost::set_u_ref(const Eigen::VectorXd& u_ref) {
   assert(u_ref.size() == dimv_);
   u_ref_ = u_ref;
+}
+
+
+void JointSpaceCost::set_q_weight(const Eigen::VectorXd& q_weight) {
+  assert(q_weight.size() == dimq_);
+  q_weight_ = q_weight;
+}
+
+
+void JointSpaceCost::set_v_weight(const Eigen::VectorXd& v_weight) {
+  assert(v_weight.size() == dimv_);
+  v_weight_ = v_weight;
+}
+
+
+void JointSpaceCost::set_a_weight(const Eigen::VectorXd& a_weight) {
+  assert(a_weight.size() == dimv_);
+  a_weight_ = a_weight;
+}
+
+
+void JointSpaceCost::set_u_weight(const Eigen::VectorXd& u_weight) {
+  assert(u_weight.size() == dimv_);
+  u_weight_ = u_weight;
+}
+
+
+void JointSpaceCost::set_qf_weight(const Eigen::VectorXd& qf_weight) {
+  assert(qf_weight.size() == dimq_);
+  qf_weight_ = qf_weight;
+}
+
+
+void JointSpaceCost::set_vf_weight(const Eigen::VectorXd& vf_weight) {
+  assert(vf_weight.size() == dimv_);
+  vf_weight_ = vf_weight;
 }
 
 
@@ -161,8 +195,8 @@ double JointSpaceCost::phi(const Robot& robot, const Eigen::VectorXd& q,
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   double phi = 0;
-  phi += (q_weight_.array()* (q-q_ref_).array()*(q-q_ref_).array()).sum();
-  phi += (v_weight_.array()* (v-v_ref_).array()*(v-v_ref_).array()).sum();
+  phi += (qf_weight_.array()* (q-q_ref_).array()*(q-q_ref_).array()).sum();
+  phi += (vf_weight_.array()* (v-v_ref_).array()*(v-v_ref_).array()).sum();
   return 0.5 * phi;
 }
 
@@ -171,7 +205,7 @@ void JointSpaceCost::phiq(const Robot& robot, const Eigen::VectorXd& q,
                           Eigen::VectorXd& phiq) {
   assert(q.size() == dimq_);
   assert(phiq.size() == dimq_);
-  phiq.array() = qf_weight_.array() * (q.array()-qf_ref_.array());
+  phiq.array() = qf_weight_.array() * (q.array()-q_ref_.array());
 }
 
 
@@ -179,7 +213,7 @@ void JointSpaceCost::phiv(const Robot& robot, const Eigen::VectorXd& v,
                           Eigen::VectorXd& phiv) {
   assert(v.size() == dimv_);
   assert(phiv.size() == dimv_);
-  phiv.array() = vf_weight_.array() * (v.array()-vf_ref_.array());
+  phiv.array() = vf_weight_.array() * (v.array()-v_ref_.array());
 }
 
 
@@ -199,6 +233,5 @@ void JointSpaceCost::phivv(const Robot& robot, Eigen::MatrixXd& phivv) {
     phivv.coeffRef(i, i) = vf_weight_.coeff(i);
   }
 }
-
 
 } // namespace idocp

@@ -17,13 +17,25 @@ public:
                  const Eigen::VectorXd& qf_weight,  
                  const Eigen::VectorXd& vf_weight);
 
-  void set_qref(const Eigen::VectorXd& q_ref);
+  void set_q_ref(const Eigen::VectorXd& q_ref);
 
-  void set_vref(const Eigen::VectorXd& v_ref);
+  void set_v_ref(const Eigen::VectorXd& v_ref);
 
-  void set_aref(const Eigen::VectorXd& a_ref);
+  void set_a_ref(const Eigen::VectorXd& a_ref);
  
-  void set_uref(const Eigen::VectorXd& u_ref);
+  void set_u_ref(const Eigen::VectorXd& u_ref);
+
+  void set_q_weight(const Eigen::VectorXd& q_weight);
+
+  void set_v_weight(const Eigen::VectorXd& v_weight);
+
+  void set_a_weight(const Eigen::VectorXd& a_weight);
+
+  void set_u_weight(const Eigen::VectorXd& u_weight);
+
+  void set_qf_weight(const Eigen::VectorXd& qf_weight);
+
+  void set_vf_weight(const Eigen::VectorXd& vf_weight);
 
   double l(const Robot& robot, const double dtau, const Eigen::VectorXd& q, 
            const Eigen::VectorXd& v, const Eigen::VectorXd& a,
@@ -71,8 +83,7 @@ public:
 private:
   unsigned int dimq_, dimv_;
   Eigen::VectorXd q_ref_, v_ref_, a_ref_, u_ref_, q_weight_, v_weight_, 
-                  a_weight_, u_weight_;
-  Eigen::VectorXd qf_ref_, vf_ref_, qf_weight_, vf_weight_;
+                  a_weight_, u_weight_, qf_weight_, vf_weight_;
 
 };
 

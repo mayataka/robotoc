@@ -6,18 +6,18 @@
 
 #include "ocp/ocp.hpp"
 #include "robot/robot.hpp"
-#include "cost_function.hpp"
-#include "constraints.hpp"
+#include "manipulator/cost_function.hpp"
+#include "manipulator/constraints.hpp"
 
 
 int main() {
   srand((unsigned int) time(0));
   const std::string urdf_file_name = "../urdf/iiwa14.urdf";
   idocp::Robot robot(urdf_file_name);
-  const Eigen::VectorXd q_ref = Eigen::VectorXd::Constant(robot.dimq(), -2);
-  const Eigen::VectorXd v_ref = Eigen::VectorXd::Zero(robot.dimv());
-  idocp::iiwa14::CostFunction cost(robot, q_ref);
-  idocp::iiwa14::Constraints constraints(robot);
+  idocp::manipulator::CostFunction cost(robot);
+  idocp::manipulator::Constraints constraints(robot);
+  Eigen::VectorXd q_ref = 1.5 * Eigen::VectorXd::Random(robot.dimq());
+  cost.set_q_ref(q_ref);
   const double T = 1;
   const unsigned int N = 50;
   const unsigned int num_proc = 1;
@@ -25,13 +25,7 @@ int main() {
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  // q = 10 * Eigen::VectorXd::Random(robot.dimq());
-  // v = 10 * Eigen::VectorXd::Random(robot.dimv());
-  q.fill(2);
-  v.fill(0);
-
-  // ocp_.setStateTrajectory(q, v);
-  ocp_.setStateTrajectory(q, v, q_ref, v_ref);
+  ocp_.setStateTrajectory(q, v);
   std::cout << ocp_.KKTError(t, q, v) << std::endl;
   const int num_iteration = 10;
   std::chrono::system_clock::time_point start_clock, end_clock;
@@ -41,9 +35,10 @@ int main() {
     std::cout << ocp_.KKTError(t, q, v) << std::endl;
   }
   end_clock = std::chrono::system_clock::now();
-  ocp_.printSolution();
-  // std::cout << "q0: " << q.transpose() << std::endl;
-  // std::cout << "v0: " << v.transpose() << std::endl;
+  // ocp_.printSolution();
+  std::cout << "q = " << q.transpose() << std::endl;
+  std::cout << "v = " << v.transpose() << std::endl;
+  std::cout << "q_ref = " << q_ref.transpose() << std::endl;
   std::cout << "total CPU time: " << 1e-03 * std::chrono::duration_cast<std::chrono::microseconds>(end_clock-start_clock).count() << "[ms]" << std::endl;
   std::cout << "CPU time per update: " << 1e-03 * std::chrono::duration_cast<std::chrono::microseconds>(end_clock-start_clock).count() / num_iteration << "[ms]" << std::endl;
 
