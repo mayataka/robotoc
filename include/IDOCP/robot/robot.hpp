@@ -24,12 +24,12 @@ namespace idocp {
 
 class Robot {
 public:
-  Robot(const std::string& urdf_file_name);
+  Robot(const std::string& urdf_file_name, bool build_from_urdf=true);
 
   Robot(const std::string& urdf_file_name, 
         const std::vector<unsigned int>& contact_frames, 
         const double baumgarte_weight_on_position, 
-        const double baumgarte_weight_on_velocity);
+        const double baumgarte_weight_on_velocity, bool build_from_true=true);
 
   Robot();
 
@@ -41,8 +41,6 @@ public:
 
   // Use default copy operator.
   Robot& operator=(const Robot& other) = default;
-
-  void printRobotModel();
 
   // Integrates the generalized velocity, integration_length * v. 
   // The generalized configuration q is then incremented.
@@ -199,6 +197,8 @@ public:
 
   // Returns the maximum number of the point contacts.
   unsigned int max_point_contacts() const;
+
+  void printRobotModel();
 
 private:
   pinocchio::Model model_;

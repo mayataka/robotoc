@@ -5,7 +5,7 @@
 
 namespace idocp {
 
-Robot::Robot(const std::string& urdf_file_name)
+Robot::Robot(const std::string& urdf_file_name, bool build_from_urdf)
   : model_(),
     data_(model_),
     urdf_file_name_(urdf_file_name),
@@ -14,8 +14,13 @@ Robot::Robot(const std::string& urdf_file_name)
     fjoint_(),
     dimq_(0),
     dimv_(0) {
-  // Build Pinocchio model from URDF.
-  pinocchio::urdf::buildModel(urdf_file_name, model_);
+  if (build_from_urdf) {
+    // Build Pinocchio model from URDF.
+    pinocchio::urdf::buildModel(urdf_file_name, model_);
+  }
+  else {
+    pinocchio::urdf::buildModelFromXML(urdf_file_name, model_);
+  }
   data_ = pinocchio::Data(model_);
   passive_joints_ = PassiveJoints(model_);
   fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
@@ -28,7 +33,7 @@ Robot::Robot(const std::string& urdf_file_name)
 Robot::Robot(const std::string& urdf_file_name, 
              const std::vector<unsigned int>& contact_frames, 
              const double baumgarte_weight_on_position, 
-             const double baumgarte_weight_on_velocity) 
+             const double baumgarte_weight_on_velocity, bool build_from_urdf) 
   : model_(),
     data_(model_),
     urdf_file_name_(urdf_file_name),
@@ -39,8 +44,13 @@ Robot::Robot(const std::string& urdf_file_name,
     dimv_(0) {
   assert(baumgarte_weight_on_position >= 0);
   assert(baumgarte_weight_on_velocity >= 0);
-  // Build Pinocchio model from URDF.
-  pinocchio::urdf::buildModel(urdf_file_name, model_);
+  if (build_from_urdf) {
+    // Build Pinocchio model from URDF.
+    pinocchio::urdf::buildModel(urdf_file_name, model_);
+  }
+  else {
+    pinocchio::urdf::buildModelFromXML(urdf_file_name, model_);
+  }
   data_ = pinocchio::Data(model_);
   for (const auto& frame : contact_frames) {
     point_contacts_.push_back(PointContact(model_, frame, 
@@ -68,26 +78,6 @@ Robot::Robot()
 
 
 Robot::~Robot() {
-}
-
-
-void Robot::printRobotModel() {
-  pinocchio::Model model;
-  pinocchio::urdf::buildModel(urdf_file_name_, model, true);
-  for (int i=0; i<model.njoints; ++i) {
-    std::cout << "info of joint " << i << std::endl;
-    std::cout << "name: " << model.names[i] << std::endl;
-    std::cout << model.joints[i] << std::endl;
-  }
-
-  std::cout << "effortLimit = [" << model.effortLimit.transpose() << "]" 
-            << std::endl;
-  std::cout << "velocityLimit = [" << model.velocityLimit.transpose() << "]"
-            << std::endl;
-  std::cout << "lowerPositionLimit = [" << model.lowerPositionLimit.transpose() 
-            << "]" << std::endl;
-  std::cout << "upperPositionLimit = [" << model.upperPositionLimit.transpose() 
-            << "]" << std::endl;
 }
 
 
@@ -300,6 +290,24 @@ unsigned int Robot::dim_passive() const {
 
 unsigned int Robot::max_point_contacts() const {
   return point_contacts_.size();
+}
+
+
+void Robot::printRobotModel() {
+  for (int i=0; i<model_.njoints; ++i) {
+    std::cout << "info of joint " << i << std::endl;
+    std::cout << "name: " << model_.names[i] << std::endl;
+    std::cout << model_.joints[i] << std::endl;
+  }
+
+  std::cout << "effortLimit = [" << model_.effortLimit.transpose() << "]" 
+            << std::endl;
+  std::cout << "velocityLimit = [" << model_.velocityLimit.transpose() << "]"
+            << std::endl;
+  std::cout << "lowerPositionLimit = [" << model_.lowerPositionLimit.transpose() 
+            << "]" << std::endl;
+  std::cout << "upperPositionLimit = [" << model_.upperPositionLimit.transpose() 
+            << "]" << std::endl;
 }
 
 } // namespace idocp 
