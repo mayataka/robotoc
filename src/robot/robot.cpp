@@ -13,7 +13,9 @@ Robot::Robot(const std::string& urdf_file_name, bool build_from_urdf)
     passive_joints_(),
     fjoint_(),
     dimq_(0),
-    dimv_(0) {
+    dimv_(0),
+    joint_damping_coeff_(),
+    is_effective_joint_damping_(false) {
   if (build_from_urdf) {
     // Build Pinocchio model from URDF.
     pinocchio::urdf::buildModel(urdf_file_name, model_);
@@ -191,6 +193,9 @@ void Robot::RNEA(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
   else {
     tau = pinocchio::rnea(model_, data_, q, v, a, fjoint_);
   }
+  if (is_effective_joint_damping_) {
+    tau.array() += joint_damping_coeff_.array() * v.array();
+  }
 }
 
 
@@ -213,6 +218,11 @@ void Robot::RNEADerivatives(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
   }
   dRNEA_partial_da.triangularView<Eigen::StrictlyLower>() 
       = dRNEA_partial_da.transpose().triangularView<Eigen::StrictlyLower>();
+  if (is_effective_joint_damping_) {
+    for (int i=0; i<dimv_; ++i) {
+      dRNEA_partial_dv.coeffRef(i, i) += joint_damping_coeff_.coeff(i);
+    }
+  }
 }
 
 
@@ -238,7 +248,11 @@ void Robot::stateEquation(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
   assert(dq.size() == dimv_);
   assert(dv.size() == dimv_);
   dq = v;
-  dv = pinocchio::aba(model_, data_, q, v, tau);
+  Eigen::VectorXd u = tau;
+  if (is_effective_joint_damping_) {
+    u.array() -= joint_damping_coeff_.array() * v.array();
+  }
+  dv = pinocchio::aba(model_, data_, q, v, u);
 }
 
 
@@ -270,6 +284,14 @@ Eigen::VectorXd Robot::lowerJointPositionLimit() const {
 
 Eigen::VectorXd Robot::upperJointPositionLimit() const {
   return model_.upperPositionLimit;
+}
+
+
+void Robot::set_joint_damping(const Eigen::VectorXd& joint_damping_coeff) {
+  assert(joint_damping_coeff.size() == dimv_);
+  assert(joint_damping_coeff.minCoeff() >= 0);
+  joint_damping_coeff_ = joint_damping_coeff;
+  is_effective_joint_damping_ = true;
 }
 
 

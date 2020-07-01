@@ -17,9 +17,10 @@ int main() {
   idocp::manipulator::CostFunction cost(robot);
   idocp::manipulator::Constraints constraints(robot);
   Eigen::VectorXd q_ref = 1.5 * Eigen::VectorXd::Random(robot.dimq());
+  q_ref.fill(1);
   cost.set_q_ref(q_ref);
   const double T = 1;
-  const unsigned int N = 50;
+  const unsigned int N = 25;
   const unsigned int num_proc = 1;
   idocp::OCP ocp_(robot, &cost, &constraints, T, N, num_proc);
   const double t = 0;
@@ -27,7 +28,7 @@ int main() {
   Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
   ocp_.setStateTrajectory(q, v);
   std::cout << ocp_.KKTError(t, q, v) << std::endl;
-  const int num_iteration = 10;
+  const int num_iteration = 20;
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
   for (int i=0; i<num_iteration; ++i) {
@@ -39,6 +40,19 @@ int main() {
   std::cout << "q_ref = " << q_ref.transpose() << std::endl;
   std::cout << "total CPU time: " << 1e-03 * std::chrono::duration_cast<std::chrono::microseconds>(end_clock-start_clock).count() << "[ms]" << std::endl;
   std::cout << "CPU time per update: " << 1e-03 * std::chrono::duration_cast<std::chrono::microseconds>(end_clock-start_clock).count() / num_iteration << "[ms]" << std::endl;
+  Eigen::VectorXd u;
+  u.resize(robot.dimv());
+  ocp_.getInitialControlInput(u);
+  std::cout << "u = " << u.transpose() << std::endl;
+
+  
+  Eigen::VectorXd one = Eigen::VectorXd::Ones(robot.dimv());
+  Eigen::VectorXd tau = Eigen::VectorXd::Zero(robot.dimv());
+  robot.RNEA(one, one, one, tau);
+  std::cout << "tau = " << tau.transpose() << std::endl;
+  robot.set_joint_damping(Eigen::VectorXd::Constant(robot.dimv(), 100));
+  robot.RNEA(one, one, one, tau);
+  std::cout << "tau = " << tau.transpose() << std::endl;
 
   return 0;
 }

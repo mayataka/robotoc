@@ -185,6 +185,8 @@ public:
 
   Eigen::VectorXd upperJointPositionLimit() const;
 
+  void set_joint_damping(const Eigen::VectorXd& joint_damping);
+
   // Returns the dimensiton of the generalized configuration.
   unsigned int dimq() const;
 
@@ -208,6 +210,8 @@ private:
   PassiveJoints passive_joints_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
   unsigned int dimq_, dimv_;
+  Eigen::VectorXd joint_damping_coeff_;
+  bool is_effective_joint_damping_;
 };
 
 } // namespace idocp
