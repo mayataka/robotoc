@@ -33,6 +33,36 @@ Robot::Robot(const std::string& urdf_file_name, bool build_from_urdf)
 
 
 Robot::Robot(const std::string& urdf_file_name, 
+             const Eigen::VectorXd& joint_damping_coeff, 
+             bool build_from_urdf)
+  : model_(),
+    data_(model_),
+    urdf_file_name_(urdf_file_name),
+    point_contacts_(),
+    passive_joints_(),
+    fjoint_(),
+    dimq_(0),
+    dimv_(0),
+    joint_damping_coeff_(joint_damping_coeff),
+    is_effective_joint_damping_(true) {
+  if (build_from_urdf) {
+    // Build Pinocchio model from URDF.
+    pinocchio::urdf::buildModel(urdf_file_name, model_);
+  }
+  else {
+    pinocchio::urdf::buildModelFromXML(urdf_file_name, model_);
+  }
+  data_ = pinocchio::Data(model_);
+  passive_joints_ = PassiveJoints(model_);
+  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
+                 model_.joints.size(), pinocchio::Force::Zero());
+  dimq_ = model_.nq;
+  dimv_ = model_.nv;
+  assert(joint_damping_coeff.size() == dimv_);
+}
+
+
+Robot::Robot(const std::string& urdf_file_name, 
              const std::vector<unsigned int>& contact_frames, 
              const double baumgarte_weight_on_position, 
              const double baumgarte_weight_on_velocity, bool build_from_urdf) 
@@ -43,7 +73,9 @@ Robot::Robot(const std::string& urdf_file_name,
     passive_joints_(),
     fjoint_(),
     dimq_(0),
-    dimv_(0) {
+    dimv_(0),
+    joint_damping_coeff_(),
+    is_effective_joint_damping_(false) {
   assert(baumgarte_weight_on_position >= 0);
   assert(baumgarte_weight_on_velocity >= 0);
   if (build_from_urdf) {
@@ -67,6 +99,45 @@ Robot::Robot(const std::string& urdf_file_name,
 }
 
 
+Robot::Robot(const std::string& urdf_file_name, 
+             const std::vector<unsigned int>& contact_frames, 
+             const double baumgarte_weight_on_position, 
+             const double baumgarte_weight_on_velocity, 
+             const Eigen::VectorXd& joint_damping_coeff, bool build_from_urdf) 
+  : model_(),
+    data_(model_),
+    urdf_file_name_(urdf_file_name),
+    point_contacts_(),
+    passive_joints_(),
+    fjoint_(),
+    dimq_(0),
+    dimv_(0),
+    joint_damping_coeff_(joint_damping_coeff),
+    is_effective_joint_damping_(true) {
+  assert(baumgarte_weight_on_position >= 0);
+  assert(baumgarte_weight_on_velocity >= 0);
+  if (build_from_urdf) {
+    // Build Pinocchio model from URDF.
+    pinocchio::urdf::buildModel(urdf_file_name, model_);
+  }
+  else {
+    pinocchio::urdf::buildModelFromXML(urdf_file_name, model_);
+  }
+  data_ = pinocchio::Data(model_);
+  for (const auto& frame : contact_frames) {
+    point_contacts_.push_back(PointContact(model_, frame, 
+                                           baumgarte_weight_on_position, 
+                                           baumgarte_weight_on_velocity));
+  }
+  passive_joints_ = PassiveJoints(model_);
+  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
+                 model_.joints.size(), pinocchio::Force::Zero());
+  dimq_ = model_.nq;
+  dimv_ = model_.nv;
+  assert(joint_damping_coeff.size() == dimv_);
+}
+
+
 Robot::Robot()
   : model_(),
     data_(model_),
@@ -75,7 +146,9 @@ Robot::Robot()
     passive_joints_(),
     fjoint_(),
     dimq_(0),
-    dimv_(0) {
+    dimv_(0),
+    joint_damping_coeff_(),
+    is_effective_joint_damping_(false) {
 }
 
 

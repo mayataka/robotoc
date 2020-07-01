@@ -27,9 +27,18 @@ public:
   Robot(const std::string& urdf_file_name, bool build_from_urdf=true);
 
   Robot(const std::string& urdf_file_name, 
+        const Eigen::VectorXd& joint_damping_coeff, bool build_from_urdf=true);
+
+  Robot(const std::string& urdf_file_name, 
         const std::vector<unsigned int>& contact_frames, 
         const double baumgarte_weight_on_position, 
         const double baumgarte_weight_on_velocity, bool build_from_true=true);
+
+  Robot(const std::string& urdf_file_name, 
+        const std::vector<unsigned int>& contact_frames, 
+        const double baumgarte_weight_on_position, 
+        const double baumgarte_weight_on_velocity, 
+        const Eigen::VectorXd& joint_damping_coeff, bool build_from_true=true);
 
   Robot();
 
