@@ -38,8 +38,15 @@ SplitOCP::SplitOCP(const Robot& robot, const CostFunctionInterface* cost,
     Qaa_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Ginv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Kq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Kv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())) {
+    Kv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    // The following variables are only needed for line search
+    q_tmp_(Eigen::VectorXd::Zero(robot.dimq())), 
+    v_tmp_(Eigen::VectorXd::Zero(robot.dimv())), 
+    a_tmp_(Eigen::VectorXd::Zero(robot.dimv())), 
+    u_tmp_(Eigen::VectorXd::Zero(robot.dimv())), 
+    u_res_tmp_(Eigen::VectorXd::Zero(robot.dimv())) {
 }
+
 
 
 SplitOCP::~SplitOCP() {
@@ -297,12 +304,12 @@ double SplitOCP::stageCostDerivativeDotDirection(Robot& robot, const double t,
                                                  const Eigen::VectorXd& dq, 
                                                  const Eigen::VectorXd& dv) {
   assert(dtau > 0);
-  assert(q.rows() == robot.dimq());
-  assert(v.rows() == robot.dimv());
-  assert(a.rows() == robot.dimv());
-  assert(u.rows() == robot.dimv());
-  assert(dq.rows() == robot.dimv());
-  assert(dv.rows() == robot.dimv());
+  assert(q.size() == robot.dimq());
+  assert(v.size() == robot.dimv());
+  assert(a.size() == robot.dimv());
+  assert(u.size() == robot.dimv());
+  assert(dq.size() == robot.dimv());
+  assert(dv.size() == robot.dimv());
   cost_->lq(robot, t, dtau, q, v, a, lq_);
   cost_->lv(robot, t, dtau, q, v, a, lv_);
   cost_->la(robot, t, dtau, q, v, a, la_);
@@ -322,10 +329,10 @@ double SplitOCP::terminalCostDerivativeDotDirection(Robot& robot,
                                                     const Eigen::VectorXd& v, 
                                                     const Eigen::VectorXd& dq,
                                                     const Eigen::VectorXd& dv) {
-  assert(q.rows() == robot.dimq());
-  assert(v.rows() == robot.dimv());
-  assert(dq.rows() == robot.dimv());
-  assert(dv.rows() == robot.dimv());
+  assert(q.size() == robot.dimq());
+  assert(v.size() == robot.dimv());
+  assert(dq.size() == robot.dimv());
+  assert(dv.size() == robot.dimv());
   cost_->phiq(robot, t, q, v, lq_);
   cost_->phiv(robot, t, q, v, lv_);
   double product = 0;
@@ -340,10 +347,10 @@ std::pair<double, double> SplitOCP::stageCostAndConstraintsViolation(
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const Eigen::VectorXd& a, const Eigen::VectorXd& u) {
   assert(dtau > 0);
-  assert(q.rows() == robot.dimq());
-  assert(v.rows() == robot.dimv());
-  assert(a.rows() == robot.dimv());
-  assert(u.rows() == robot.dimv());
+  assert(q.size() == robot.dimq());
+  assert(v.size() == robot.dimv());
+  assert(a.size() == robot.dimv());
+  assert(u.size() == robot.dimv());
   double cost = 0;
   cost += cost_->l(robot, t, dtau, q, v, a, u);
   cost += joint_constraints_.costSlackBarrier();
@@ -386,15 +393,15 @@ std::pair<double, double> SplitOCP::stageCostAndConstraintsViolation(
   cost += joint_constraints_.costSlackBarrier(step_size);
   q_res_ = q_tmp_ + dtau * v_tmp_ - q_next - step_size * dq_next;
   v_res_ = v_tmp_ + dtau * a_tmp_ - v_next - step_size * dv_next;
-  robot.RNEA(q_tmp_, v_tmp_, a_tmp_, u_res_);
-  u_res_.noalias() -= u_tmp_;
+  robot.RNEA(q_tmp_, v_tmp_, a_tmp_, u_res_tmp_);
+  u_res_tmp_.noalias() -= u_tmp_;
   double constraints_violation = 0;
   constraints_violation += q_res_.lpNorm<1>();
   constraints_violation += v_res_.lpNorm<1>();
   constraints_violation += joint_constraints_.residualL1Nrom(robot, dtau, 
                                                              q_tmp_, v_tmp_, 
                                                              a_tmp_, u_tmp_);
-  constraints_violation += dtau * u_res_.lpNorm<1>();
+  constraints_violation += dtau * u_res_tmp_.lpNorm<1>();
   return std::make_pair(cost, constraints_violation);
 }
 
@@ -488,7 +495,7 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
                             const Eigen::VectorXd& sq, 
                             const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
                             Eigen::VectorXd& v, Eigen::VectorXd& lmd, 
-                            Eigen::VectorXd& gmm) {
+                            Eigen::VectorXd& gmm) const {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dq.size() == robot.dimv());
@@ -514,6 +521,17 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
 }
 
 
+void SplitOCP::getStateFeedbackGain(Eigen::MatrixXd& Kq, 
+                                    Eigen::MatrixXd& Kv) const {
+  assert(Kq.cols() == dimv_);
+  assert(Kq.rows() == dimv_);
+  assert(Kv.cols() == dimv_);
+  assert(Kv.rows() == dimv_);
+  Kq = du_dq_ + du_da_ * Kq_;
+  Kv = du_dv_ + du_da_ * Kv_;
+}
+
+
 double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t, 
                                      const double dtau, 
                                      const Eigen::VectorXd& lmd, 
@@ -528,17 +546,17 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
                                      const Eigen::VectorXd& q_next,
                                      const Eigen::VectorXd& v_next) {
   assert(dtau > 0);
-  assert(lmd.rows() == robot.dimv());
-  assert(gmm.rows() == robot.dimv());
-  assert(q.rows() == robot.dimq());
-  assert(v.rows() == robot.dimv());
-  assert(a.rows() == robot.dimv());
-  assert(u.rows() == robot.dimv());
-  assert(beta.rows() == robot.dimv());
-  assert(lmd_next.rows() == robot.dimv());
-  assert(gmm_next.rows() == robot.dimv());
-  assert(q_next.rows() == robot.dimq());
-  assert(v_next.rows() == robot.dimv());
+  assert(lmd.size() == robot.dimv());
+  assert(gmm.size() == robot.dimv());
+  assert(q.size() == robot.dimq());
+  assert(v.size() == robot.dimv());
+  assert(a.size() == robot.dimv());
+  assert(u.size() == robot.dimv());
+  assert(beta.size() == robot.dimv());
+  assert(lmd_next.size() == robot.dimv());
+  assert(gmm_next.size() == robot.dimv());
+  assert(q_next.size() == robot.dimq());
+  assert(v_next.size() == robot.dimv());
   // Compute the partial derivatives of the Lagrangian with respect to the 
   // configuration, velocity, acceleration, and the control input torques.
   // Partial derivatives of the cost function.
@@ -584,10 +602,10 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
                                      const Eigen::VectorXd& gmm, 
                                      const Eigen::VectorXd& q, 
                                      const Eigen::VectorXd& v) {
-  assert(lmd.rows() == robot.dimv());
-  assert(gmm.rows() == robot.dimv());
-  assert(q.rows() == robot.dimq());
-  assert(v.rows() == robot.dimv());
+  assert(lmd.size() == robot.dimv());
+  assert(gmm.size() == robot.dimv());
+  assert(q.size() == robot.dimq());
+  assert(v.size() == robot.dimv());
   // Compute the partial derivatives of the Lagrangian with respect to the 
   // terminal configuration and velocity.
   cost_->phiq(robot, t, q, v, lq_);

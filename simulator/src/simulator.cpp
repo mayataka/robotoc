@@ -22,7 +22,7 @@ void Simulator::run(MPC& mpc, const double simulation_time_in_sec,
                     const Eigen::VectorXd& v_initial) {
   assert(simulation_time_in_sec > 0);
   assert(sampling_period_in_sec > 0);
-  assert(simulation_start_time_in_sec > 0);
+  assert(simulation_start_time_in_sec >= 0);
   Eigen::VectorXd q = q_initial;
   Eigen::VectorXd q_next = q;
   Eigen::VectorXd v = v_initial;

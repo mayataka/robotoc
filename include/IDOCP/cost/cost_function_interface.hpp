@@ -14,6 +14,12 @@ public:
 
   virtual ~CostFunctionInterface() {}
 
+  // Use default copy constructor.
+  CostFunctionInterface(const CostFunctionInterface&) = default;
+
+  // Use default copy coperator.
+  CostFunctionInterface& operator=(const CostFunctionInterface&) = default;
+
   virtual double l(const Robot& robot, const double t, const double dtau,
                    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                    const Eigen::VectorXd& a, const Eigen::VectorXd& u) = 0;
@@ -66,12 +72,6 @@ public:
   virtual void phivv(const Robot& robot, const double t, 
                      const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                      Eigen::MatrixXd& phivv) = 0;
-
-  // Prohibits copy constructor.
-  CostFunctionInterface(const CostFunctionInterface&) = delete;
-
-  // Prohibits copy operator.
-  CostFunctionInterface& operator=(const CostFunctionInterface&) = delete;
 
 };
 

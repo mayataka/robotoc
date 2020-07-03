@@ -18,6 +18,14 @@ public:
       const ConstraintsInterface* constraints, const double T, 
       const unsigned int N, const unsigned int num_proc=1);
 
+  ~MPC();
+
+  // Use default copy constructor.
+  MPC(const MPC&) = default;
+
+  // Use default copy operator.
+  MPC& operator=(const MPC&) = default;
+
   void initializeSolution(const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v, 
                           const unsigned int max_itr=100);
@@ -27,14 +35,10 @@ public:
 
   void getControlInput(Eigen::VectorXd& u);
 
+  void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv);
+
   double KKTError(const double t, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v);
-
-  // Prohibits copy constructor.
-  MPC(const MPC&) = delete;
-
-  // Prohibits copy operator.
-  MPC& operator=(const MPC&) = delete;
 
 private:
   OCP ocp_;

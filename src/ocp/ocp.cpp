@@ -51,6 +51,10 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
 }
 
 
+OCP::~OCP() {
+}
+
+
 void OCP::solveSQP(const double t, const Eigen::VectorXd& q, 
                    const Eigen::VectorXd& v, bool use_line_search) {
   int time_step;
@@ -209,6 +213,13 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
 void OCP::getInitialControlInput(Eigen::VectorXd& u) {
   assert(u.size() == u_[0].size());
   u = u_[0];
+}
+
+
+void OCP::getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) {
+  assert(Kq.cols() == Kq.rows());
+  assert(Kv.cols() == Kv.rows());
+  split_OCPs_[0].getStateFeedbackGain(Kq, Kv);
 }
 
 

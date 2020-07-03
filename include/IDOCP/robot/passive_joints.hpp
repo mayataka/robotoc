@@ -17,6 +17,7 @@ public:
   //      must be initialized by pinocchio::buildModel().
   PassiveJoints(const pinocchio::Model& model);
 
+  // Default constructor. 
   PassiveJoints();
  
   // Destructor. 

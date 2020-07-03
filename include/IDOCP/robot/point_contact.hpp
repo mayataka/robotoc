@@ -36,7 +36,7 @@ public:
   // Use default copy constructor.
   PointContact(const PointContact& other) = default;
 
-  // Use default operator=.
+  // Use default assign operator.
   PointContact& operator=(const PointContact& other) = default;
 
   // Move constructor.

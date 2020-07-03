@@ -25,10 +25,10 @@ public:
 
   ~SplitOCP();
  
-  // Copy constructor.
+  // Use default copy constructor.
   SplitOCP(const SplitOCP& other) = default;
 
-  // Copy operator.
+  // Use default copy operator.
   SplitOCP& operator=(const SplitOCP& other) = default;
 
   bool isFeasible(Robot& robot, const Eigen::VectorXd& q, 
@@ -131,7 +131,9 @@ public:
                     const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
                     const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
                     Eigen::VectorXd& q, Eigen::VectorXd& v, 
-                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
+                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm) const;
+
+  void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
   double squaredKKTErrorNorm(Robot& robot, const double t, const double dtau, 
                              const Eigen::VectorXd& lmd, 
@@ -159,7 +161,7 @@ private:
   Eigen::VectorXd q_res_, v_res_, a_res_, u_res_, du_;
   Eigen::MatrixXd luu_, du_dq_, du_dv_, du_da_, Qqq_, Qqv_, Qqa_, Qvq_, Qvv_, 
                   Qva_, Qaa_, Ginv_, Kq_, Kv_;
-  Eigen::VectorXd q_tmp_, v_tmp_, a_tmp_, u_tmp_;
+  Eigen::VectorXd q_tmp_, v_tmp_, a_tmp_, u_tmp_, u_res_tmp_;
 };
 
 } // namespace idocp

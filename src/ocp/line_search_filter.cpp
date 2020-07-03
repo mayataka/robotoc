@@ -14,6 +14,10 @@ LineSearchFilter::LineSearchFilter()
 }
 
 
+LineSearchFilter::~LineSearchFilter() {
+}
+
+
 bool LineSearchFilter::isAccepted(const double cost, 
                                   const double constraint_violation) {
   assert(cost >= 0);

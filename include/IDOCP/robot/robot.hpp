@@ -27,18 +27,9 @@ public:
   Robot(const std::string& urdf_file_name, bool build_from_urdf=true);
 
   Robot(const std::string& urdf_file_name, 
-        const Eigen::VectorXd& joint_damping_coeff, bool build_from_urdf=true);
-
-  Robot(const std::string& urdf_file_name, 
         const std::vector<unsigned int>& contact_frames, 
         const double baumgarte_weight_on_position, 
         const double baumgarte_weight_on_velocity, bool build_from_true=true);
-
-  Robot(const std::string& urdf_file_name, 
-        const std::vector<unsigned int>& contact_frames, 
-        const double baumgarte_weight_on_position, 
-        const double baumgarte_weight_on_velocity, 
-        const Eigen::VectorXd& joint_damping_coeff, bool build_from_true=true);
 
   Robot();
 
@@ -194,7 +185,7 @@ public:
 
   Eigen::VectorXd upperJointPositionLimit() const;
 
-  void set_joint_damping(const Eigen::VectorXd& joint_damping);
+  void setJointDamping(const Eigen::VectorXd& joint_damping);
 
   // Returns the dimensiton of the generalized configuration.
   unsigned int dimq() const;
@@ -209,7 +200,7 @@ public:
   // Returns the maximum number of the point contacts.
   unsigned int max_point_contacts() const;
 
-  void printRobotModel();
+  void printRobotModel() const;
 
 private:
   pinocchio::Model model_;

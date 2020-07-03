@@ -15,7 +15,7 @@ int main() {
   srand((unsigned int) time(0));
   const std::string urdf_file_name = "../crane_x7_description/urdf/crane_x7.urdf";
   idocp::Robot robot(urdf_file_name);
-  robot.set_joint_damping(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-6));
+  robot.setJointDamping(Eigen::VectorXd::Constant(robot.dimv(), 1.0e-6));
   idocp::manipulator::CostFunction cost(robot);
   idocp::manipulator::Constraints constraints(robot);
   Eigen::VectorXd q_ref = 1.5 * Eigen::VectorXd::Random(robot.dimq());

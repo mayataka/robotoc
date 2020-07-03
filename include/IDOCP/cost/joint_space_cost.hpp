@@ -17,6 +17,12 @@ public:
                  const Eigen::VectorXd& qf_weight,  
                  const Eigen::VectorXd& vf_weight);
 
+  // Use defalut copy constructor.
+  JointSpaceCost(const JointSpaceCost&) = default;
+
+  // Use defalut copy operator.
+  JointSpaceCost& operator=(const JointSpaceCost&) = default;
+
   void set_q_ref(const Eigen::VectorXd& q_ref);
 
   void set_v_ref(const Eigen::VectorXd& v_ref);
@@ -73,12 +79,6 @@ public:
   void phiqq(const Robot& robot, Eigen::MatrixXd& phiqq);
 
   void phivv(const Robot& robot, Eigen::MatrixXd& phivv);
-
-  // Prohibits copy constructor.
-  JointSpaceCost(const JointSpaceCost&) = delete;
-
-  // Prohibits copy operator.
-  JointSpaceCost& operator=(const JointSpaceCost&) = delete;
 
 private:
   unsigned int dimq_, dimv_;

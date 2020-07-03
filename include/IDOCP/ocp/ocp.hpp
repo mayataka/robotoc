@@ -22,10 +22,20 @@ public:
       const ConstraintsInterface* constraints, const double T, 
       const unsigned int N, const unsigned int num_proc);
 
+  ~OCP();
+
+  // Use default copy constructor.
+  OCP(const OCP&) = default;
+
+  // Use default copy operator.
+  OCP& operator=(const OCP&) = default;
+
   void solveSQP(const double t, const Eigen::VectorXd& q, 
                 const Eigen::VectorXd& v, bool use_line_search=true);
 
   void getInitialControlInput(Eigen::VectorXd& u);
+
+  void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv);
 
   void setStateTrajectory(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
@@ -36,12 +46,6 @@ public:
                   const Eigen::VectorXd& v);
 
   void printSolution() const;
-
-  // Prohibits copy constructor.
-  OCP(const OCP&) = delete;
-
-  // Prohibits copy operator.
-  OCP& operator=(const OCP&) = delete;
 
 private:
 

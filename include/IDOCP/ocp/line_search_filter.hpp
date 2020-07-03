@@ -11,6 +11,14 @@ class LineSearchFilter {
 public:
   LineSearchFilter();
 
+  ~LineSearchFilter();
+
+  // Use default copy constructor.
+  LineSearchFilter(const LineSearchFilter&) = default;
+
+  // Use default copy operator.
+  LineSearchFilter& operator=(const LineSearchFilter&) = default;
+
   bool isAccepted(const double cost, const double constraint_violation);
 
   void augment(const double cost, const double constraint_violation);

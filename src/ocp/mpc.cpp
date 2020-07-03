@@ -15,6 +15,10 @@ MPC::MPC(const Robot& robot, const CostFunctionInterface* cost,
 }
 
 
+MPC::~MPC() {
+}
+
+
 void MPC::initializeSolution(const double t, const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v, 
                              const unsigned int max_itr) {
@@ -34,6 +38,11 @@ void MPC::updateSolution(const double t, const Eigen::VectorXd& q,
 
 void MPC::getControlInput(Eigen::VectorXd& u) {
   ocp_.getInitialControlInput(u);
+}
+
+
+void MPC::getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) {
+  ocp_.getStateFeedbackGain(Kq, Kv);
 }
 
 
