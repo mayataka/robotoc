@@ -1,5 +1,5 @@
-#ifndef IDOCP_CONSTRAINTS_PDIPM_JOINT_VELOCITY_UPPER_LIMITS_HPP_
-#define IDOCP_CONSTRAINTS_PDIPM_JOINT_VELOCITY_UPPER_LIMITS_HPP_
+#ifndef IDOCP_CONSTRAINTS_FB_JOINT_TORQUE_UPPER_LIMITS_HPP_
+#define IDOCP_CONSTRAINTS_FB_JOINT_TORQUE_UPPER_LIMITS_HPP_
 
 #include "Eigen/Core"
 
@@ -7,26 +7,26 @@
 
 
 namespace idocp {
-namespace pdipm {
+namespace fb {
 
-class JointVelocityUpperLimits {
+class JointTorqueUpperLimits {
 public:
-  JointVelocityUpperLimits(const Robot& robot, const double barrier);
+  JointTorqueUpperLimits(const Robot& robot, const double barrier);
 
   // Use default copy constructor.
-  JointVelocityUpperLimits(const JointVelocityUpperLimits&) = default;
+  JointTorqueUpperLimits(const JointTorqueUpperLimits&) = default;
 
   // Use default copy operator.
-  JointVelocityUpperLimits& operator=(const JointVelocityUpperLimits&) = default;
+  JointTorqueUpperLimits& operator=(const JointTorqueUpperLimits&) = default;
 
-  bool isFeasible(const Robot& robot, const Eigen::VectorXd& v);
+  bool isFeasible(const Robot& robot, const Eigen::VectorXd& u);
 
   void setSlackAndDual(const Robot& robot, const double dtau,
-                       const Eigen::VectorXd& v);
+                       const Eigen::VectorXd& u);
 
   void condenseSlackAndDual(const Robot& robot, const double dtau, 
-                            const Eigen::VectorXd& v, Eigen::MatrixXd& Cvv, 
-                            Eigen::VectorXd& Cv);
+                            const Eigen::VectorXd& u, Eigen::MatrixXd& Cuu, 
+                            Eigen::VectorXd& Cu);
 
   void computeSlackAndDualDirection(const Robot& robot, const double dtau,
                                     const Eigen::VectorXd& dq);
@@ -44,7 +44,7 @@ public:
   double costSlackBarrier(const double step_size);
 
   void augmentDualResidual(const Robot& robot, const double dtau,
-                           Eigen::VectorXd& Cv);
+                           Eigen::VectorXd& Cu);
 
   double residualL1Nrom(const Robot& robot, const double dtau,
                         const Eigen::VectorXd& u);
@@ -55,11 +55,12 @@ public:
 private:
   unsigned int dimq_, dimv_, dimc_;
   double barrier_;
-  Eigen::VectorXd vmax_, slack_, dual_, residual_, duality_, dslack_, ddual_;
+  Eigen::VectorXd umax_, slack_, dual_, residual_, dslack_, ddual_,
+                  fb_residual_, slack_tilde_, dual_tilde_;
 };
 
-} // namespace pdipm
+} // namespace fb
 } // namespace idocp
 
 
-#endif // IDOCP_CONSTRAINTS_PDIPM_JOINT_VELOCITY_UPPER_LIMITS_HPP_
+#endif // IDOCP_CONSTRAINTS_FB_JOINT_TORQUE_UPPER_LIMITS_HPP_

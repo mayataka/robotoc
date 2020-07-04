@@ -78,6 +78,33 @@ target_link_libraries(
 
 
 add_library(
+    constraints_fb
+    SHARED 
+    ${IDOCP_SRC_DIR}/constraints/fb/joint_space_constraints_fb.cpp
+    ${IDOCP_SRC_DIR}/constraints/fb/joint_position_upper_limits_fb.cpp
+    ${IDOCP_SRC_DIR}/constraints/fb/joint_position_lower_limits_fb.cpp
+    ${IDOCP_SRC_DIR}/constraints/fb/joint_velocity_upper_limits_fb.cpp
+    ${IDOCP_SRC_DIR}/constraints/fb/joint_velocity_lower_limits_fb.cpp
+    ${IDOCP_SRC_DIR}/constraints/fb/joint_torque_upper_limits_fb.cpp
+    ${IDOCP_SRC_DIR}/constraints/fb/joint_torque_lower_limits_fb.cpp
+    ${IDOCP_SRC_DIR}/constraints/fb/fb_func.cpp
+)
+target_include_directories(
+    constraints_fb
+    PRIVATE
+    ${EIGEN3_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${PINOCCHIO_INCLUDEDIR}
+)
+target_link_libraries(
+    constraints_fb
+    PRIVATE
+    robot
+)
+
+
+add_library(
     idocp
     SHARED 
     ${IDOCP_SRC_DIR}/ocp/ocp.cpp
@@ -100,6 +127,7 @@ target_link_libraries(
     PRIVATE
     robot
     constraints_pdipm
+    constraints_fb
 )
 
 
@@ -141,6 +169,7 @@ target_link_libraries(
     idocp
     robot
     constraints_pdipm
+    constraints_fb
 )
 
 set(IDOCP_SIMULATOR_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../../simulator/include)

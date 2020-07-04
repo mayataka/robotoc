@@ -1,5 +1,5 @@
-#ifndef IDOCP_CONSTRAINTS_PDIPM_JOINT_VELOCITY_UPPER_LIMITS_HPP_
-#define IDOCP_CONSTRAINTS_PDIPM_JOINT_VELOCITY_UPPER_LIMITS_HPP_
+#ifndef IDOCP_CONSTRAINTS_FB_JOINT_VELOCITY_LOWER_LIMITS_HPP_
+#define IDOCP_CONSTRAINTS_FB_JOINT_VELOCITY_LOWER_LIMITS_HPP_
 
 #include "Eigen/Core"
 
@@ -7,17 +7,17 @@
 
 
 namespace idocp {
-namespace pdipm {
+namespace fb {
 
-class JointVelocityUpperLimits {
+class JointVelocityLowerLimits {
 public:
-  JointVelocityUpperLimits(const Robot& robot, const double barrier);
+  JointVelocityLowerLimits(const Robot& robot, const double barrier);
 
   // Use default copy constructor.
-  JointVelocityUpperLimits(const JointVelocityUpperLimits&) = default;
+  JointVelocityLowerLimits(const JointVelocityLowerLimits&) = default;
 
   // Use default copy operator.
-  JointVelocityUpperLimits& operator=(const JointVelocityUpperLimits&) = default;
+  JointVelocityLowerLimits& operator=(const JointVelocityLowerLimits&) = default;
 
   bool isFeasible(const Robot& robot, const Eigen::VectorXd& v);
 
@@ -55,11 +55,12 @@ public:
 private:
   unsigned int dimq_, dimv_, dimc_;
   double barrier_;
-  Eigen::VectorXd vmax_, slack_, dual_, residual_, duality_, dslack_, ddual_;
+  Eigen::VectorXd vmin_, slack_, dual_, residual_, dslack_, ddual_,
+                  fb_residual_, slack_tilde_, dual_tilde_;
 };
 
-} // namespace pdipm
+} // namespace fb
 } // namespace idocp
 
 
-#endif // IDOCP_CONSTRAINTS_PDIPM_JOINT_VELOCITY_UPPER_LIMITS_HPP_
+#endif // IDOCP_CONSTRAINTS_FB_JOINT_VELOCITY_LOWER_LIMITS_HPP_

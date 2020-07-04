@@ -10,6 +10,7 @@
 #include "cost/cost_function_interface.hpp"
 #include "constraints/constraints_interface.hpp"
 #include "constraints/pdipm/joint_space_constraints_pdipm.hpp"
+#include "constraints/fb/joint_space_constraints_fb.hpp"
 
 
 namespace idocp {

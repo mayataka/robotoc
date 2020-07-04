@@ -1,5 +1,5 @@
-#ifndef IDOCP_PDIPM_FUNCS_HPP_
-#define IDOCP_PDIPM_FUNCS_HPP_
+#ifndef IDOCP_CONSTRAINTS_PDIPM_PDIPM_FUNC_HPP_
+#define IDOCP_CONSTRAINTS_PDIPM_PDIPM_FUNC_HPP_
 
 #include "Eigen/Core"
 
@@ -34,4 +34,4 @@ double SlackBarrierCost(const unsigned int dim, const double barrier,
 } // namespace idocp
 
 
-#endif // IDOCP_PDIPM_FUNCS_HPP_
+#endif // IDOCP_CONSTRAINTS_PDIPM_PDIPM_FUNC_HPP_

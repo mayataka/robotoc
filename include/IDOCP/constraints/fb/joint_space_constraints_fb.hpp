@@ -1,19 +1,19 @@
-#ifndef IDOCP_CONSTRAINTS_PDIPM_JOINT_SPACE_CONSTRAINTS_HPP_
-#define IDOCP_CONSTRAINTS_PDIPM_JOINT_SPACE_CONSTRAINTS_HPP_
+#ifndef IDOCP_CONSTRAINTS_FB_JOINT_SPACE_CONSTRAINTS_HPP_
+#define IDOCP_CONSTRAINTS_FB_JOINT_SPACE_CONSTRAINTS_HPP_
 
 #include "Eigen/Core"
 
 #include "robot/robot.hpp"
-#include "constraints/pdipm/joint_position_upper_limits_pdipm.hpp"
-#include "constraints/pdipm/joint_position_lower_limits_pdipm.hpp"
-#include "constraints/pdipm/joint_velocity_upper_limits_pdipm.hpp"
-#include "constraints/pdipm/joint_velocity_lower_limits_pdipm.hpp"
-#include "constraints/pdipm/joint_torque_upper_limits_pdipm.hpp"
-#include "constraints/pdipm/joint_torque_lower_limits_pdipm.hpp"
+#include "constraints/fb/joint_position_upper_limits_fb.hpp"
+#include "constraints/fb/joint_position_lower_limits_fb.hpp"
+#include "constraints/fb/joint_velocity_upper_limits_fb.hpp"
+#include "constraints/fb/joint_velocity_lower_limits_fb.hpp"
+#include "constraints/fb/joint_torque_upper_limits_fb.hpp"
+#include "constraints/fb/joint_torque_lower_limits_fb.hpp"
 
 
 namespace idocp {
-namespace pdipm {
+namespace fb {
 
 class JointSpaceConstraints {
 public:
@@ -79,16 +79,16 @@ public:
 
 private:
   double barrier_, fraction_to_boundary_margin_;
-  pdipm::JointPositionUpperLimits position_upper_limits_;
-  pdipm::JointPositionLowerLimits position_lower_limits_;
-  pdipm::JointVelocityUpperLimits velocity_upper_limits_;
-  pdipm::JointVelocityLowerLimits velocity_lower_limits_;
-  pdipm::JointTorqueUpperLimits torque_upper_limits_;
-  pdipm::JointTorqueLowerLimits torque_lower_limits_;
+  fb::JointPositionUpperLimits position_upper_limits_;
+  fb::JointPositionLowerLimits position_lower_limits_;
+  fb::JointVelocityUpperLimits velocity_upper_limits_;
+  fb::JointVelocityLowerLimits velocity_lower_limits_;
+  fb::JointTorqueUpperLimits torque_upper_limits_;
+  fb::JointTorqueLowerLimits torque_lower_limits_;
 };
 
-} // namespace pdipm
+} // namespace fb
 } // namespace idocp
 
 
-#endif // IDOCP_CONSTRAINTS_PDIPM_JOINT_SPACE_CONSTRAINTS_HPP_
+#endif // IDOCP_CONSTRAINTS_FB_JOINT_SPACE_CONSTRAINTS_HPP_

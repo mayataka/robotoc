@@ -27,14 +27,14 @@ int main() {
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  ocp_.setStateTrajectory(q, v);
-  std::cout << ocp_.KKTError(t, q, v) << std::endl;
-  const int num_iteration = 1000;
+  // ocp_.setStateTrajectory(q, v);
+  // std::cout << ocp_.KKTError(t, q, v) << std::endl;
+  const int num_iteration = 20;
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
   for (int i=0; i<num_iteration; ++i) {
     ocp_.solveSQP(t, q, v, false);
-    // std::cout << ocp_.KKTError(t, q, v) << std::endl;
+    std::cout << ocp_.KKTError(t, q, v) << std::endl;
   }
   end_clock = std::chrono::system_clock::now();
   // ocp_.printSolution();
