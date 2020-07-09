@@ -321,11 +321,10 @@ unsigned int Robot::max_point_contacts() const {
 
 void Robot::printRobotModel() const {
   for (int i=0; i<model_.njoints; ++i) {
-    std::cout << "info of joint " << i << std::endl;
+    std::cout << "Info of joint " << i << std::endl;
     std::cout << "name: " << model_.names[i] << std::endl;
     std::cout << model_.joints[i] << std::endl;
   }
-
   std::cout << "effortLimit = [" << model_.effortLimit.transpose() << "]" 
             << std::endl;
   std::cout << "velocityLimit = [" << model_.velocityLimit.transpose() << "]"

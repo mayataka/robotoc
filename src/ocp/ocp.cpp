@@ -312,9 +312,9 @@ bool OCP::isCurrentSolutionFeasible() {
 
 void OCP::initConstraints() {
   for (int time_step=0; time_step<N_; ++time_step) {
-    split_OCPs_[time_step].initConstraints(robots_[0], dtau_, q_[time_step], 
-                                           v_[time_step], a_[time_step], 
-                                           u_[time_step]);
+    split_OCPs_[time_step].initConstraints(robots_[0], time_step, dtau_, 
+                                           q_[time_step], v_[time_step], 
+                                           a_[time_step], u_[time_step]);
   }
 }
 

@@ -36,9 +36,10 @@ public:
                   const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
                   const Eigen::VectorXd& u);
 
-  void initConstraints(Robot& robot, const double dtau,
-                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                       const Eigen::VectorXd& a, const Eigen::VectorXd& u);
+  void initConstraints(Robot& robot, const unsigned int time_step, 
+                       const double dtau, const Eigen::VectorXd& q, 
+                       const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                       const Eigen::VectorXd& u);
 
   void linearizeOCP(Robot& robot, const double t, const double dtau, 
                     const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 

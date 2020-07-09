@@ -64,8 +64,8 @@ bool SplitOCP::isFeasible(Robot& robot, const Eigen::VectorXd& q,
 }
 
 
-void SplitOCP::initConstraints(Robot& robot, const double dtau, 
-                               const Eigen::VectorXd& q, 
+void SplitOCP::initConstraints(Robot& robot, const unsigned int time_step,
+                               const double dtau, const Eigen::VectorXd& q, 
                                const Eigen::VectorXd& v, 
                                const Eigen::VectorXd& a, 
                                const Eigen::VectorXd& u) {
@@ -73,6 +73,7 @@ void SplitOCP::initConstraints(Robot& robot, const double dtau,
   assert(v.size() == robot.dimv());
   assert(a.size() == robot.dimv());
   assert(u.size() == robot.dimv());
+  joint_constraints_.setTimeStep(time_step);
   joint_constraints_.setSlackAndDual(robot, dtau, q, v, a, u);
 }
 
