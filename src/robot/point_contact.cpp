@@ -6,7 +6,7 @@
 namespace idocp {
 
 PointContact::PointContact(const pinocchio::Model& model, 
-                           const unsigned int contact_frame_id, 
+                           const int contact_frame_id, 
                            const double baumgarte_alpha, 
                            const double baumgarte_beta) 
   : is_active_(false),
@@ -23,8 +23,9 @@ PointContact::PointContact(const pinocchio::Model& model,
     joint_a_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
     joint_a_partial_dv_(Eigen::MatrixXd::Zero(6, model.nv)),
     joint_a_partial_da_(Eigen::MatrixXd::Zero(6, model.nv)) {
-  assert(baumgarte_alpha > 0);
-  assert(baumgarte_beta > 0);
+  assert(contact_frame_id_ >= 0);
+  assert(baumgarte_alpha_ > 0);
+  assert(baumgarte_beta_ > 0);
 }
 
 
@@ -75,6 +76,8 @@ PointContact& PointContact::operator=(PointContact&& other) noexcept {
 
 void PointContact::resetBaugrarteParameters(const double alpha, 
                                             const double beta) {
+  assert(alpha > 0);
+  assert(beta > 0);
   baumgarte_alpha_ = alpha;
   baumgarte_beta_ = beta;
 }
@@ -97,6 +100,8 @@ void PointContact::computeJointForceFromContactForce(
 void PointContact::getContactJacobian(const pinocchio::Model& model, 
                                       pinocchio::Data& data, 
                                       Eigen::MatrixXd& J_contact) const {
+  assert(J_contact.cols() == dimv_);
+  assert(J_contact.rows() == 3);
   pinocchio::getFrameJacobian(model, data, contact_frame_id_, pinocchio::LOCAL, 
                               J_frame_);
   J_contact = J_frame_.topRows<3>(); 
@@ -105,12 +110,14 @@ void PointContact::getContactJacobian(const pinocchio::Model& model,
 
 void PointContact::getContactJacobian(const pinocchio::Model& model, 
                                       pinocchio::Data& data, 
-                                      const unsigned int result_mat_row_begin, 
-                                      const unsigned int result_mat_col_begin, 
+                                      const int block_rows_begin,
                                       Eigen::MatrixXd& J_contacts) const {
+  assert(block_rows_begin >= 0);
+  assert(J_contact.cols() == dimv_);
+  assert(J_contact.rows() >= 3);
   pinocchio::getFrameJacobian(model, data, contact_frame_id_, pinocchio::LOCAL, 
                               J_frame_);
-  J_contacts.block(result_mat_row_begin, result_mat_col_begin, 3, dimv_) 
+  J_contacts.block(0, block_rows_begin, 3, dimv_) 
       = J_frame_.topRows<3>(); 
 }
 
@@ -129,9 +136,10 @@ void PointContact::computeBaumgarteResidual(
 
 void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
-    const unsigned int result_vec_start_index, 
-    Eigen::VectorXd& baumgarte_residual) const {
-  baumgarte_residual.segment<3>(result_vec_start_index)
+    const int result_begin, Eigen::VectorXd& baumgarte_residual) const {
+  assert(result_begin >= 0);
+  assert(baumgarte_residual.size() >= 3);
+  baumgarte_residual.segment<3>(result_begin)
       = (data.oMi[parent_joint_id_].act(data.a[parent_joint_id_])).linear()
           + baumgarte_alpha_ 
               * (data.oMi[parent_joint_id_].act(data.v[parent_joint_id_])).linear()
@@ -145,6 +153,12 @@ void PointContact::computeBaumgarteDerivatives(
     Eigen::MatrixXd& baumgarte_partial_dq, 
     Eigen::MatrixXd& baumgarte_partial_dv, 
     Eigen::MatrixXd& baumgarte_partial_da) {
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_da.cols() == dimv_);
+  assert(baumgarte_partial_dq.rows() >= 3);
+  assert(baumgarte_partial_dv.rows() >= 3);
+  assert(baumgarte_partial_da.rows() >= 3);
  pinocchio::getJointAccelerationDerivatives(model, data, parent_joint_id_, 
                                             pinocchio::WORLD,
                                             joint_v_partial_dq_, 
@@ -167,11 +181,16 @@ void PointContact::computeBaumgarteDerivatives(
 
 void PointContact::computeBaumgarteDerivatives(
     const pinocchio::Model& model, pinocchio::Data& data, 
-    const unsigned int result_mat_row_begin, 
-    const unsigned int result_mat_col_begin,
-    Eigen::MatrixXd& baumgarte_partial_dq, 
+    const int block_rows_begin, Eigen::MatrixXd& baumgarte_partial_dq, 
     Eigen::MatrixXd& baumgarte_partial_dv, 
     Eigen::MatrixXd& baumgarte_partial_da) {
+  assert(block_rows_begin >= 0);
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_da.cols() == dimv_);
+  assert(baumgarte_partial_dq.rows() >= 3);
+  assert(baumgarte_partial_dv.rows() >= 3);
+  assert(baumgarte_partial_da.rows() >= 3);
   pinocchio::getJointAccelerationDerivatives(model, data, parent_joint_id_, 
                                              pinocchio::WORLD,
                                              joint_v_partial_dq_, 
@@ -180,17 +199,14 @@ void PointContact::computeBaumgarteDerivatives(
                                              joint_a_partial_da_);
   pinocchio::getFrameJacobian(model, data, contact_frame_id_, 
                               pinocchio::LOCAL_WORLD_ALIGNED, J_frame_);
-  baumgarte_partial_dq.block(result_mat_row_begin, result_mat_col_begin, 3, 
-                             dimv_) 
+  baumgarte_partial_dq.block(0, block_rows_begin, 3, dimv_) 
       = joint_a_partial_dq_.template topRows<3>()
           + baumgarte_alpha_ * joint_v_partial_dq_.template topRows<3>()
           + baumgarte_beta_ * J_frame_.template topRows<3>();
-  baumgarte_partial_dv.block(result_mat_row_begin, result_mat_col_begin, 3, 
-                             dimv_) 
+  baumgarte_partial_dv.block(0, block_rows_begin, 3, dimv_) 
       = joint_a_partial_dv_.template topRows<3>()
           + baumgarte_alpha_ * joint_a_partial_da_.template topRows<3>();
-  baumgarte_partial_da.block(result_mat_row_begin, result_mat_col_begin, 3, 
-                             dimv_) 
+  baumgarte_partial_da.block(0, block_rows_begin, 3, dimv_) 
       = joint_a_partial_da_.template topRows<3>();
 }
 
@@ -210,17 +226,17 @@ bool PointContact::isActive() const {
 }
 
 
-unsigned int PointContact::contact_frame_id() const {
+int PointContact::contact_frame_id() const {
   return contact_frame_id_;
 }
 
 
-unsigned int PointContact::parent_joint_id() const {
+int PointContact::parent_joint_id() const {
   return parent_joint_id_;
 }
 
 
-unsigned int PointContact::dimv() const {
+int PointContact::dimv() const {
   return dimv_;
 }
 

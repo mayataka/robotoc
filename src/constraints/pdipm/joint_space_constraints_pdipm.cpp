@@ -22,7 +22,8 @@ JointSpaceConstraints::JointSpaceConstraints(const Robot& robot)
 }
 
 
-void JointSpaceConstraints::setTimeStep(const unsigned int time_step) {
+void JointSpaceConstraints::setTimeStep(const int time_step) {
+  assert(time_step >= 0);
   time_step_ = time_step;
 }
 

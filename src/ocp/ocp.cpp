@@ -8,8 +8,8 @@
 namespace idocp {
 
 OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
-         const ConstraintsInterface* constraints, const double T, 
-         const unsigned int N, const unsigned int num_proc)
+         const ConstraintsInterface* constraints, const double T, const int N, 
+         const int num_proc)
   : split_OCPs_(N+1, SplitOCP(robot, cost, constraints)),
     robots_(num_proc, robot),
     filter_(),
@@ -40,14 +40,14 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
     dual_step_sizes_(Eigen::VectorXd::Zero(N)),
     costs_(Eigen::VectorXd::Zero(N+1)), 
     constraints_violations_(Eigen::VectorXd::Zero(N)),
-    cost_derivative_dot_direction_(Eigen::VectorXd::Zero(N+1)) {
+    cost_derivative_dot_direction_(Eigen::VectorXd::Zero(N+1)),
+    contact_sequence_(N, std::vector<bool>(robot.max_point_contacts(), false)) {
   assert(T > 0);
   assert(N > 0);
-  if (num_proc_ == 0) {
-    num_proc_ = 1;
-  }
+  assert(num_proc > 0);
   bool feasible = isCurrentSolutionFeasible();
   initConstraints();
+  activateAllContacts();
 }
 
 
@@ -56,7 +56,7 @@ OCP::~OCP() {
 
 
 void OCP::solveSQP(const double t, const Eigen::VectorXd& q, 
-                   const Eigen::VectorXd& v, bool use_line_search) {
+                   const Eigen::VectorXd& v, const bool use_line_search) {
   int time_step;
   #pragma omp parallel num_threads(num_proc_) 
   {
@@ -81,7 +81,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
                                      sq_[N_], sv_[N_]);
       }
     }
-  }
+  } // #pragma omp parallel num_threads(num_proc_)
   for (time_step=N_-1; time_step>=0; --time_step) {
     split_OCPs_[time_step].backwardRiccatiRecursion(dtau_, Pqq_[time_step+1], 
                                                     Pqv_[time_step+1], 
@@ -119,7 +119,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
       dual_step_sizes_.coeffRef(time_step) 
           = split_OCPs_[time_step].maxDualStepSize();
     }
-  }
+  } // #pragma omp parallel num_threads(num_proc_)
   double primal_step_size = primal_step_sizes_.minCoeff();
   const double dual_step_size = dual_step_sizes_.minCoeff();
   if (use_line_search) {
@@ -144,7 +144,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
                 robots_[robot_id], t+T_, q_[N_], v_[N_]);
           }
         }
-      } // #pragma omp parallel
+      } // #pragma omp parallel num_threads(num_proc_)
       filter_.augment(costs_.sum(), constraints_violations_.sum());
     }
     while (primal_step_size > min_step_size_) {
@@ -171,7 +171,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
                 dq_[N_], dv_[N_]);
           }
         }
-      } // #pragma omp parallel
+      } // #pragma omp parallel num_threads(num_proc_)
       const double cost_sum = costs_.sum();
       const double constraints_violation_sum = constraints_violations_.sum();
       if (filter_.isAccepted(cost_sum, constraints_violation_sum)) {
@@ -206,7 +206,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
                                      q_[N_], v_[N_], lmd_[N_], gmm_[N_]);
       }
     }
-  } // #pragma omp parallel
+  } // #pragma omp parallel num_threads(num_proc_)
 } 
 
 
@@ -315,6 +315,14 @@ void OCP::initConstraints() {
     split_OCPs_[time_step].initConstraints(robots_[0], time_step, dtau_, 
                                            q_[time_step], v_[time_step], 
                                            a_[time_step], u_[time_step]);
+  }
+}
+
+void OCP::activateAllContacts() {
+  for (int i=0; i<contact_sequence_.size(); ++i) {
+    for (int j=0; j<robots_[0].max_point_contacts(); ++j) {
+      contact_sequence_[i][j] = true;
+    }
   }
 }
 

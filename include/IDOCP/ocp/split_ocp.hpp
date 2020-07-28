@@ -10,20 +10,23 @@
 #include "cost/cost_function_interface.hpp"
 #include "constraints/constraints_interface.hpp"
 #include "constraints/pdipm/joint_space_constraints_pdipm.hpp"
-#include "constraints/fb/joint_space_constraints_fb.hpp"
 
 
 namespace idocp {
 
 class SplitOCP {
 public:
-  // Constructor. Does not allocate raw arrays.
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  // Constructor.
   // Argments:
-  //    model: The pinocchio model. Before call this function, pinocchio model
-  //      must be initialized by pinocchio::buildModel().
+  //    robot: The robot model that has been already initialized.
+  //    cost: The pointer to the cost function.
+  //    cost: The pointer to the constraints.
   SplitOCP(const Robot& robot, const CostFunctionInterface* cost,
            const ConstraintsInterface* constraints);
 
+  // Destructor.
   ~SplitOCP();
  
   // Use default copy constructor.
@@ -32,14 +35,27 @@ public:
   // Use default copy operator.
   SplitOCP& operator=(const SplitOCP& other) = default;
 
+  // Check whether the solution q, v, a, u, fext are feasible under inequality 
+  // constraints.
+  // Argments: 
+  //   q: Configuration. Size must be dimq.
+  //   v: Generalized velocity. Size must be dimv.
+  //   a: Generalized acceleration. Size must be dimv.
+  //   u: Generalized torque. Size must be dimv.
   bool isFeasible(Robot& robot, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
                   const Eigen::VectorXd& u);
 
-  void initConstraints(Robot& robot, const unsigned int time_step, 
-                       const double dtau, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-                       const Eigen::VectorXd& u);
+  // Initialize the constraints, i.e., set slack and dual variables under set 
+  //  q, v, a, u.
+  // Argments: 
+  //   q: Configuration. Size must be dimq.
+  //   v: Generalized velocity. Size must be dimv.
+  //   a: Generalized acceleration. Size must be dimv.
+  //   u: Generalized torque. Size must be dimv.
+  void initConstraints(Robot& robot, const int time_step, const double dtau, 
+                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                       const Eigen::VectorXd& a, const Eigen::VectorXd& u);
 
   void linearizeOCP(Robot& robot, const double t, const double dtau, 
                     const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
@@ -148,6 +164,19 @@ public:
                              const Eigen::VectorXd& q_next,
                              const Eigen::VectorXd& v_next);
 
+  double squaredKKTErrorNorm(Robot& robot, const double t, const double dtau, 
+                             const Eigen::VectorXd& lmd, 
+                             const Eigen::VectorXd& gmm, 
+                             const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                             const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
+                             const Eigen::VectorXd& beta, 
+                             const Eigen::VectorXd& f, 
+                             const Eigen::VectorXd& mu, 
+                             const Eigen::VectorXd& lmd_next, 
+                             const Eigen::VectorXd& gmm_next, 
+                             const Eigen::VectorXd& q_next,
+                             const Eigen::VectorXd& v_next);
+
   double squaredKKTErrorNorm(Robot& robot, const double t, 
                              const Eigen::VectorXd& lmd, 
                              const Eigen::VectorXd& gmm, 
@@ -158,12 +187,16 @@ private:
   CostFunctionInterface *cost_;
   ConstraintsInterface *constraints_;
   pdipm::JointSpaceConstraints joint_constraints_;
-  unsigned int dimq_, dimv_;
-  Eigen::VectorXd lq_, lv_, la_, lu_, lu_condensed_, ka_, da_;
-  Eigen::VectorXd q_res_, v_res_, a_res_, u_res_, du_;
-  Eigen::MatrixXd luu_, du_dq_, du_dv_, du_da_, Qqq_, Qqv_, Qqa_, Qvq_, Qvv_, 
-                  Qva_, Qaa_, Ginv_, Kq_, Kv_;
-  Eigen::VectorXd q_tmp_, v_tmp_, a_tmp_, u_tmp_, u_res_tmp_;
+  int dimq_, dimv_, dimf_, dim_passive_;
+  Eigen::VectorXd f_, mu_, lq_, lv_, la_, lf_, lu_, lu_condensed_, 
+                  ka_, kf_, kmu_, da_, df_, dmu_;
+  Eigen::VectorXd q_res_, v_res_, a_res_, f_res_, u_res_, du_, C_res_;
+  Eigen::MatrixXd luu_, du_dq_, du_dv_, du_da_, du_df_, Qqq_, Qqv_, Qqa_, Qqf_, 
+                  Qvq_, Qvv_, Qva_, Qvf_, Qaa_, Qaf_, Qff_, Cq_, Cv_, Ca_, Cf_, 
+                  Qff_inv_, Saa_, Saa_inv_, Saf_, D_hat_, D_hat_inv_,
+                  L_U_, L_L_, Kaq_, Kav_, Kfq_, Kfv_, Kmuq_, Kmuv_;
+  // The following variables are only needed for line search
+  Eigen::VectorXd q_tmp_, v_tmp_, a_tmp_, f_tmp_, u_tmp_, u_res_tmp_;
 };
 
 } // namespace idocp

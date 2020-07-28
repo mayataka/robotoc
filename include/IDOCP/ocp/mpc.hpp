@@ -16,7 +16,7 @@ public:
   // Constructor. 
   MPC(const Robot& robot, const CostFunctionInterface* cost,
       const ConstraintsInterface* constraints, const double T, 
-      const unsigned int N, const unsigned int num_proc=1);
+      const int N, const int num_proc=1);
 
   ~MPC();
 
@@ -28,7 +28,7 @@ public:
 
   void initializeSolution(const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v, 
-                          const unsigned int max_itr=100);
+                          const int max_itr=100);
 
   void updateSolution(const double t, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v);

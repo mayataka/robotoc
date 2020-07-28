@@ -29,7 +29,7 @@ add_library(
     robot
     SHARED 
     ${IDOCP_SRC_DIR}/robot/robot.cpp
-    ${IDOCP_SRC_DIR}/robot/passive_joints.cpp
+    ${IDOCP_SRC_DIR}/robot/floating_base.cpp
     ${IDOCP_SRC_DIR}/robot/point_contact.cpp
 )
 target_include_directories(

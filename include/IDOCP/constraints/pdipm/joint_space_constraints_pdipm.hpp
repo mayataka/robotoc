@@ -25,7 +25,7 @@ public:
   // Use default copy operator.
   JointSpaceConstraints& operator=(const JointSpaceConstraints&) = default;
 
-  void setTimeStep(const unsigned int time_step);
+  void setTimeStep(const int time_step);
 
   bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
@@ -80,7 +80,7 @@ public:
                              const Eigen::VectorXd& a, const Eigen::VectorXd& u);
 
 private:
-  unsigned int time_step_;
+  int time_step_;
   double barrier_, fraction_to_boundary_margin_;
   pdipm::JointPositionUpperLimits position_upper_limits_;
   pdipm::JointPositionLowerLimits position_lower_limits_;

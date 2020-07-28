@@ -9,7 +9,7 @@ namespace pdipm {
 namespace pdipmfunc {
 
 
-void SetSlackAndDualPositive(const unsigned int dim, const double barrier,
+void SetSlackAndDualPositive(const int dim, const double barrier,
                              Eigen::VectorXd& slack, 
                              Eigen::VectorXd& dual) {
   assert(dim > 0);
@@ -34,7 +34,7 @@ void ComputeDualityResidual(const double barrier, const Eigen::VectorXd& slack,
 }
 
 
-double FractionToBoundary(const unsigned int dim, const double fraction_rate, 
+double FractionToBoundary(const int dim, const double fraction_rate, 
                           const Eigen::VectorXd& vec, 
                           const Eigen::VectorXd& dvec) {
   assert(dim > 0);
@@ -72,7 +72,7 @@ void ComputeDualDirection(const Eigen::VectorXd& dual,
 }
 
 
-double SlackBarrierCost(const unsigned int dim, const double barrier, 
+double SlackBarrierCost(const int dim, const double barrier, 
                         const Eigen::VectorXd& slack) {
   assert(dim > 0);
   assert(barrier > 0);

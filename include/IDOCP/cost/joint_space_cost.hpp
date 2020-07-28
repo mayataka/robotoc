@@ -81,7 +81,7 @@ public:
   void phivv(const Robot& robot, Eigen::MatrixXd& phivv);
 
 private:
-  unsigned int dimq_, dimv_;
+  int dimq_, dimv_;
   Eigen::VectorXd q_ref_, v_ref_, a_ref_, u_ref_, q_weight_, v_weight_, 
                   a_weight_, u_weight_, qf_weight_, vf_weight_;
 

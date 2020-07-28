@@ -5,26 +5,22 @@
 
 namespace idocp {
 
-Robot::Robot(const std::string& urdf_file_name, bool build_from_urdf)
+Robot::Robot(const std::string& urdf_file_name)
   : model_(),
     data_(model_),
     urdf_file_name_(urdf_file_name),
     point_contacts_(),
-    passive_joints_(),
+    floating_base_(),
     fjoint_(),
     dimq_(0),
     dimv_(0),
+    dimf_(0),
+    is_each_contact_active_(),
     joint_damping_coeff_(),
     is_effective_joint_damping_(false) {
-  if (build_from_urdf) {
-    // Build Pinocchio model from URDF.
-    pinocchio::urdf::buildModel(urdf_file_name, model_);
-  }
-  else {
-    pinocchio::urdf::buildModelFromXML(urdf_file_name, model_);
-  }
+  pinocchio::urdf::buildModel(urdf_file_name, model_);
   data_ = pinocchio::Data(model_);
-  passive_joints_ = PassiveJoints(model_);
+  floating_base_ = FloatingBase(model_);
   fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
                  model_.joints.size(), pinocchio::Force::Zero());
   dimq_ = model_.nq;
@@ -33,35 +29,32 @@ Robot::Robot(const std::string& urdf_file_name, bool build_from_urdf)
 
 
 Robot::Robot(const std::string& urdf_file_name, 
-             const std::vector<unsigned int>& contact_frames, 
+             const std::vector<int>& contact_frames, 
              const double baumgarte_weight_on_position, 
-             const double baumgarte_weight_on_velocity, bool build_from_urdf) 
+             const double baumgarte_weight_on_velocity) 
   : model_(),
     data_(model_),
     urdf_file_name_(urdf_file_name),
     point_contacts_(),
-    passive_joints_(),
+    floating_base_(),
     fjoint_(),
     dimq_(0),
     dimv_(0),
+    dimf_(0),
+    is_each_contact_active_(),
     joint_damping_coeff_(),
     is_effective_joint_damping_(false) {
   assert(baumgarte_weight_on_position >= 0);
   assert(baumgarte_weight_on_velocity >= 0);
-  if (build_from_urdf) {
-    // Build Pinocchio model from URDF.
-    pinocchio::urdf::buildModel(urdf_file_name, model_);
-  }
-  else {
-    pinocchio::urdf::buildModelFromXML(urdf_file_name, model_);
-  }
+  pinocchio::urdf::buildModel(urdf_file_name, model_);
   data_ = pinocchio::Data(model_);
   for (const auto& frame : contact_frames) {
     point_contacts_.push_back(PointContact(model_, frame, 
                                            baumgarte_weight_on_position, 
                                            baumgarte_weight_on_velocity));
+    is_each_contact_active_.push_back(false);
   }
-  passive_joints_ = PassiveJoints(model_);
+  floating_base_ = FloatingBase(model_);
   fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
                  model_.joints.size(), pinocchio::Force::Zero());
   dimq_ = model_.nq;
@@ -74,10 +67,12 @@ Robot::Robot()
     data_(model_),
     urdf_file_name_(),
     point_contacts_(),
-    passive_joints_(),
+    floating_base_(),
     fjoint_(),
     dimq_(0),
     dimv_(0),
+    dimf_(0),
+    is_each_contact_active_(),
     joint_damping_coeff_(),
     is_effective_joint_damping_(false) {
 }
@@ -87,12 +82,46 @@ Robot::~Robot() {
 }
 
 
+void Robot::buildRobotModelFromXML(const std::string& xml) {
+  pinocchio::urdf::buildModelFromXML(xml, model_);
+  data_ = pinocchio::Data(model_);
+  floating_base_ = FloatingBase(model_);
+  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
+                 model_.joints.size(), pinocchio::Force::Zero());
+  dimq_ = model_.nq;
+  dimv_ = model_.nv;
+}
+
+
+void Robot::buildRobotModelFromXML(const std::string& xml,
+                                   const std::vector<int>& contact_frames, 
+                                   const double baumgarte_weight_on_position, 
+                                   const double baumgarte_weight_on_velocity) {
+  pinocchio::urdf::buildModelFromXML(xml, model_);
+  data_ = pinocchio::Data(model_);
+  point_contacts_.clear();
+  is_each_contact_active_.clear();
+  for (const auto& frame : contact_frames) {
+    point_contacts_.push_back(PointContact(model_, frame, 
+                                           baumgarte_weight_on_position, 
+                                           baumgarte_weight_on_velocity));
+    is_each_contact_active_.push_back(false);
+  }
+  floating_base_ = FloatingBase(model_);
+  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
+                 model_.joints.size(), pinocchio::Force::Zero());
+  dimq_ = model_.nq;
+  dimv_ = model_.nv;
+}
+
+
 void Robot::integrateConfiguration(const Eigen::VectorXd& v, 
                                    const double integration_length, 
                                    Eigen::VectorXd& q) const {
-  assert(q.size() == dimq_);
   assert(v.size() == dimv_);
-  q =  pinocchio::integrate(model_, q, integration_length*v);
+  assert(integration_length >= 0);
+  assert(q.size() == dimq_);
+  q = pinocchio::integrate(model_, q, integration_length*v);
 }
 
 
@@ -113,8 +142,15 @@ void Robot::dIntegrateConfiguration(const Eigen::VectorXd& q,
                                     Eigen::MatrixXd& dIntegrate_dv) const {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
-  pinocchio::dIntegrate(model_, q, v, dIntegrate_dq, pinocchio::ARG0);
-  pinocchio::dIntegrate(model_, q, v, dIntegrate_dv, pinocchio::ARG1);
+  assert(integration_length >= 0);
+  assert(dIntegrate_dq.rows() == dimv_);
+  assert(dIntegrate_dq.cols() == dimv_);
+  assert(dIntegrate_dv.rows() == dimv_);
+  assert(dIntegrate_dv.cols() == dimv_);
+  pinocchio::dIntegrate(model_, q, integration_length*v, dIntegrate_dq, 
+                        pinocchio::ARG0);
+  pinocchio::dIntegrate(model_, q, integration_length*v, dIntegrate_dv, 
+                        pinocchio::ARG1);
 }
 
 
@@ -124,8 +160,8 @@ void Robot::updateKinematics(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
   pinocchio::forwardKinematics(model_, data_, q, v, a);
-  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q, v, a);
   pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q, v, a);
   for (int i=0; i<point_contacts_.size(); ++i) {
     point_contacts_[i].resetContactPointByCurrentKinematics(data_);
   }
@@ -134,7 +170,7 @@ void Robot::updateKinematics(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 
 void Robot::computeBaumgarteResidual(
     Eigen::VectorXd& baumgarte_residual) const {
-  unsigned int num_active_contacts = 0;
+  int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteResidual(model_, data_, 
@@ -143,17 +179,20 @@ void Robot::computeBaumgarteResidual(
       ++num_active_contacts;
     }
   }
-  assert(3*num_active_contacts == baumgarte_residual.size());
+  assert(baumgarte_residual.size() >= 3*num_active_contacts);
 }
 
 
 void Robot::computeBaumgarteDerivatives(Eigen::MatrixXd& baumgarte_partial_dq, 
                                         Eigen::MatrixXd& baumgarte_partial_dv,
                                         Eigen::MatrixXd& baumgarte_partial_da) {
-  unsigned int num_active_contacts = 0;
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_da.cols() == dimv_);
+  int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
-      point_contacts_[i].computeBaumgarteDerivatives(model_, data_, 0, 
+      point_contacts_[i].computeBaumgarteDerivatives(model_, data_, 
                                                      3*num_active_contacts, 
                                                      baumgarte_partial_dq, 
                                                      baumgarte_partial_dv, 
@@ -161,22 +200,39 @@ void Robot::computeBaumgarteDerivatives(Eigen::MatrixXd& baumgarte_partial_dq,
       ++num_active_contacts;
     }
   }
+  assert(baumgarte_partial_dq.rows() >= 3*num_active_contacts);
+  assert(baumgarte_partial_dv.rows() >= 3*num_active_contacts);
+  assert(baumgarte_partial_da.rows() >= 3*num_active_contacts);
 }
 
 
-void Robot::setActiveContacts(const std::vector<bool>& is_each_contact_active, 
-                              const Eigen::VectorXd& fext) {
-  assert(is_each_contact_active.size() == point_contacts_.size());
-  unsigned int num_active_contacts = 0;
+void Robot::setActiveContacts(const std::vector<bool>& is_each_contact_active) {
+  assert(is_each_contact_active.size() == is_each_contact_active_.size());
+  int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if(is_each_contact_active[i]) {
+    is_each_contact_active_[i] = is_each_contact_active[i];
+    if (is_each_contact_active[i]) {
       point_contacts_[i].activate();
+      ++num_active_contacts;
+    }
+    else {
+      point_contacts_[i].deactivate();
+    }
+  }
+  dimf_ = 3*num_active_contacts;
+}
+
+
+void Robot::setContactForces(const Eigen::VectorXd& fext) {
+  assert(fext.size() <= 3*point_contacts_.size());
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeJointForceFromContactForce(
           fext.segment<3>(3*num_active_contacts), fjoint_);
       ++num_active_contacts;
     }
     else {
-      point_contacts_[i].deactivate();
       point_contacts_[i].computeJointForceFromContactForce(
           Eigen::Vector3d::Zero(), fjoint_);
     }
@@ -231,11 +287,11 @@ void Robot::RNEADerivatives(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 
 
 void Robot::dRNEAPartialdFext(Eigen::MatrixXd& dRNEA_partial_dfext) {
-  unsigned int num_active_contacts = 0;
+  int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].getContactJacobian(model_, data_,  
-                                            3*num_active_contacts, 0, 
+                                            3*num_active_contacts, 
                                             dRNEA_partial_dfext);
       ++num_active_contacts;
     }
@@ -260,14 +316,19 @@ void Robot::stateEquation(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 }
 
 
-void Robot::setPassiveTorques(Eigen::VectorXd& tau) const {
-  passive_joints_.setPassiveTorques(tau);
+void Robot::setPassiveTorques(Eigen::VectorXd& torques) const {
+  floating_base_.setPassiveTorques(torques);
 }
 
 
-void Robot::passiveConstraintViolation(const Eigen::VectorXd& tau, 
+void Robot::passiveConstraintViolation(const Eigen::VectorXd& torques, 
                                        Eigen::VectorXd& violation) const {
-  passive_joints_.computePassiveConstraintViolation(tau, violation);
+  floating_base_.computePassiveConstraintViolation(torques, violation);
+}
+
+
+bool Robot::hasFloatingBase() {
+  return floating_base_.has_floating_base();
 }
 
 
@@ -299,22 +360,32 @@ void Robot::setJointDamping(const Eigen::VectorXd& joint_damping_coeff) {
 }
 
 
-unsigned int Robot::dimq() const {
+int Robot::dimq() const {
   return dimq_;
 }
 
 
-unsigned int Robot::dimv() const {
+int Robot::dimv() const {
   return dimv_;
 }
 
 
-unsigned int Robot::dim_passive() const {
-  return passive_joints_.dim_passive();
+int Robot::dim_passive() const {
+  return floating_base_.dim_passive();
 }
 
 
-unsigned int Robot::max_point_contacts() const {
+int Robot::dimf() const {
+  return dimf_;
+}
+
+
+int Robot::max_dimf() const {
+  return 3*point_contacts_.size();
+}
+
+
+int Robot::max_point_contacts() const {
   return point_contacts_.size();
 }
 

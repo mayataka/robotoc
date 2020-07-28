@@ -19,8 +19,8 @@ class OCP {
 public:
   // Constructor. 
   OCP(const Robot& robot, const CostFunctionInterface* cost,
-      const ConstraintsInterface* constraints, const double T, 
-      const unsigned int N, const unsigned int num_proc);
+      const ConstraintsInterface* constraints, const double T, const int N, 
+      const int num_proc=1);
 
   ~OCP();
 
@@ -31,7 +31,7 @@ public:
   OCP& operator=(const OCP&) = default;
 
   void solveSQP(const double t, const Eigen::VectorXd& q, 
-                const Eigen::VectorXd& v, bool use_line_search=true);
+                const Eigen::VectorXd& v, const bool use_line_search=true);
 
   void getInitialControlInput(Eigen::VectorXd& u);
 
@@ -53,18 +53,21 @@ private:
 
   void initConstraints();
 
+  void activateAllContacts();
+
   std::vector<SplitOCP> split_OCPs_;
   std::vector<Robot> robots_;
   LineSearchFilter filter_;
   CostFunctionInterface* cost_;
   ConstraintsInterface* constraints_;
   double T_, dtau_, step_size_reduction_rate_, min_step_size_;
-  unsigned int N_, num_proc_;
+  int N_, num_proc_;
   std::vector<Eigen::VectorXd> q_, v_, a_, u_, beta_, lmd_, gmm_, 
                                dq_, dv_, sq_, sv_;
   std::vector<Eigen::MatrixXd> Pqq_, Pqv_, Pvq_, Pvv_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, 
                   constraints_violations_, cost_derivative_dot_direction_;
+  std::vector<std::vector<bool>> contact_sequence_;
 };
 
 } // namespace idocp 

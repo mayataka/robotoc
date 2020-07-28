@@ -53,7 +53,7 @@ public:
                              const Eigen::VectorXd& u);
 
 private:
-  unsigned int dimq_, dimv_, dimc_;
+  int dimq_, dimv_, dimc_;
   double barrier_;
   Eigen::VectorXd umax_, slack_, dual_, residual_, duality_, dslack_, ddual_;
 };
