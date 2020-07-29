@@ -42,6 +42,9 @@ public:
   virtual void lu(const Robot& robot, const double t, const double dtau,
                   const Eigen::VectorXd& u, Eigen::VectorXd& lu) = 0;
 
+  virtual void lf(const Robot& robot, const double t, const double dtau,
+                  const Eigen::VectorXd& f, Eigen::VectorXd& lf) = 0;
+
   virtual void lqq(const Robot& robot, const double t, const double dtau,
                    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                    const Eigen::VectorXd& a, Eigen::MatrixXd& lqq) = 0;
@@ -55,7 +58,10 @@ public:
                    const Eigen::VectorXd& a, Eigen::MatrixXd& laa) = 0;
 
   virtual void luu(const Robot& robot, const double t, const double dtau,
-                   const Eigen::VectorXd& u, Eigen::MatrixXd& laa) = 0;
+                   const Eigen::VectorXd& u, Eigen::MatrixXd& luu) = 0;
+
+  virtual void lff(const Robot& robot, const double t, const double dtau,
+                   const Eigen::VectorXd& f, Eigen::MatrixXd& lff) = 0;
 
   virtual void phiq(const Robot& robot, const double t, 
                     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 

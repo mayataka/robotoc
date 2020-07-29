@@ -84,6 +84,7 @@ add_library(
     ${IDOCP_SRC_DIR}/ocp/split_ocp.cpp
     ${IDOCP_SRC_DIR}/ocp/line_search_filter.cpp
     ${IDOCP_SRC_DIR}/cost/joint_space_cost.cpp
+    ${IDOCP_SRC_DIR}/cost/contact_cost.cpp
     ${IDOCP_SRC_DIR}/manipulator/cost_function.cpp
     ${IDOCP_SRC_DIR}/manipulator/constraints.cpp
 )

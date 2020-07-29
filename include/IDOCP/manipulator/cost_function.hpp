@@ -6,6 +6,7 @@
 #include "robot/robot.hpp"
 #include "cost/cost_function_interface.hpp"
 #include "cost/joint_space_cost.hpp"
+#include "cost/contact_cost.hpp"
 
 
 namespace idocp {
@@ -25,6 +26,8 @@ public:
 
   void set_u_ref(const Eigen::VectorXd& u_ref);
 
+  void set_f_ref(const Eigen::VectorXd& f_ref);
+
   void set_q_weight(const Eigen::VectorXd& q_weight);
 
   void set_v_weight(const Eigen::VectorXd& v_weight);
@@ -32,6 +35,8 @@ public:
   void set_a_weight(const Eigen::VectorXd& a_weight);
 
   void set_u_weight(const Eigen::VectorXd& u_weight);
+
+  void set_f_weight(const Eigen::VectorXd& f_weight);
 
   void set_qf_weight(const Eigen::VectorXd& qf_weight);
 
@@ -59,6 +64,9 @@ public:
   void lu(const Robot& robot, const double t, const double dtau,
           const Eigen::VectorXd& u, Eigen::VectorXd& lu) override;
 
+  void lf(const Robot& robot, const double t, const double dtau,
+          const Eigen::VectorXd& u, Eigen::VectorXd& lf) override;
+
   void lqq(const Robot& robot, const double t, const double dtau,
            const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
            const Eigen::VectorXd& a, Eigen::MatrixXd& lqq) override;
@@ -74,6 +82,9 @@ public:
   void luu(const Robot& robot, const double t, const double dtau,
            const Eigen::VectorXd& u, Eigen::MatrixXd& luu) override;
 
+  void lff(const Robot& robot, const double t, const double dtau,
+           const Eigen::VectorXd& f, Eigen::MatrixXd& lff) override;
+
   void phiq(const Robot& robot, const double t, const Eigen::VectorXd& q, 
             const Eigen::VectorXd& v, Eigen::VectorXd& phiq) override;
 
@@ -88,6 +99,7 @@ public:
 
 private:
   JointSpaceCost joint_space_cost_;  
+  ContactCost contact_cost_;
 
 };
 

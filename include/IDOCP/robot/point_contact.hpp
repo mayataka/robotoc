@@ -24,11 +24,15 @@ public:
   //      pinocchio::buildModelFromXML().
   //    contact_frame_id: The index of the contact frame. 
   //    baumgarte_alpha: The weight parameter of the Baumgrate's stabilization
-  //      method on the velocity error.
+  //      method on the velocity error. Must be positive.
   //    baumgarte_beta: The weight parameter of the Baumgrate's stabilization
-  //      method on the position error.
+  //      method on the position error. Must be positive.
   PointContact(const pinocchio::Model& model, const int contact_frame_id, 
-               const double baumgarte_alpha, const double baumgarte_beta);
+               const double baumgarte_weight_on_velocity, 
+               const double baumgarte_weight_on_position);
+
+  // Default constructor.
+  PointContact();
 
   // Destructor. 
   ~PointContact();
@@ -47,11 +51,12 @@ public:
 
   // Resets the parameters of the Baumgarte's stabilization method.
   // Argments:
-  //    alpha: The weight parameter of the Baumgrate's stabilization method on 
-  //      the velocity error.
-  //    beta: The weight parameter of the Baumgrate's stabilization method on 
-  //      the position error.
-  void resetBaugrarteParameters(const double alpha, const double beta);
+  //    baumgarte_weight_on_velocity : The weight parameter of the Baumgrate's 
+  //      stabilization method on the velocity error. Must be positive.
+  //    baumgarte_weight_on_position : The weight parameter of the Baumgrate's 
+  //      stabilization method on the position error. Must be positive.
+  void resetBaugrarteParameters(const double baumgarte_weight_on_velocity, 
+                                const double baumgarte_weight_on_position);
 
   // Resets the contact point by current kinematics of the robot. The kinematics
   // is passed through pinocchio::Data. Before calling this function, you have 
@@ -76,25 +81,37 @@ public:
   // Argments:
   //    model: Pinocchio model of the robot.
   //    data: Pinocchio data of the robot kinematics.
-  //    J_contact: Contact jacobian is stored in this variable. size must be 
-  //        3xdimv.
+  //    Jacobian: Jacobian of the contact frame is stored in this variable. 
+  //      If transpose=true, size must be dimvx3. 
+  //      If transpose=false, size must be 3xdimv. 
+  //    transpose: flag for transposing the Jacobian or not. If true, the 
+  //      Jacobian is transposed. If false, the Jacobian is not transposed, 
+  //      i.e., the original Jacobian is returned.
   void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
-                          Eigen::MatrixXd& J_contact) const;
+                          Eigen::MatrixXd& Jacobian, 
+                          const bool transpose=false);
 
   // Computes the 3xdimv contact Jacobian represented in the local coordinate 
   // of the contact frame. Before calling this function, you have to update the 
   // kinematics (with respect to the position, velocity, and acceleration) of 
   // the model in pinocchio::Data. The contact Jacobian is set in the block 
-  // part of J_contacts where the column_begin to column_begin+3 rows.
+  // part of Jacobian.
   // Argments:
   //    model: Pinocchio model of the robot.
   //    data: Pinocchio data of the robot kinematics.
-  //    column_begin: The index of .
-  //    J_contacts: Contact jacobian is stored in this variable. size must be 
-  //        at least 3xdimv.
+  //    block_begin_index: The initial index where the Jacobian is stored. 
+  //      If transpose=true, the left side column index of the block matrix.
+  //      If transpose=false, the top row index of the block matrix.
+  //    Jacobian: Jacobian of the contact frame is stored in this matrix. 
+  //      If transpose=true, rows must be dimv and cols must be at least 3. 
+  //      If transpose=false, rows must be at leaste 3 and cols must be dimv. 
+  //    transpose: flag for transposing the Jacobian or not. If true, the 
+  //      Jacobian is transposed. If false, the Jacobian is not transposed, 
+  //      i.e., the original Jacobian is returned.
   void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
-                          const int block_rows_begin,
-                          Eigen::MatrixXd& J_contacts) const;
+                          const int block_begin_index,
+                          Eigen::MatrixXd& Jacobian,
+                          const bool transpose=false);
 
   // Computes the residual of the contact constraints considered by the 
   // Baumgarte's stabilization method. Before calling this function, you have 
@@ -102,7 +119,7 @@ public:
   // Argments:
   //    model: pinocchio model of the robot.
   //    data: pinocchio data of the robot kinematics and dynamics.
-  //    baumgarte_residual: The double array that the result is stored in. 
+  //    baumgarte_residual: The vector result is stored in. Size must be 3.
   void computeBaumgarteResidual(const pinocchio::Model& model, 
                                 const pinocchio::Data& data, 
                                 Eigen::Vector3d& baumgarte_residual) const;
@@ -116,7 +133,8 @@ public:
   //    model: pinocchio model of the robot.
   //    data: pinocchio data of the robot kinematics and dynamics.
   //    result_begin: The start index of the result.
-  //    baumgarte_residual: The double array that the result is stored in. 
+  //    baumgarte_residual: The vector result is stored in. Size must be at 
+  //      least 3.
   void computeBaumgarteResidual(const pinocchio::Model& model, 
                                 const pinocchio::Data& data, 
                                 const int result_begin,
@@ -151,11 +169,14 @@ public:
   //    model: pinocchio model of the robot.
   //    data: pinocchio data of the robot kinematics and dynamics.
   //    baumgarte_partial_dq: Partial of contact constraints with respect to 
-  //      the generalized configuration. The size must be at least 3xdimv.
+  //      the generalized configuration. The rows must be at least 3 and the 
+  //      cols must be dimv.
   //    baumgarte_partial_dv: Partial of contact constraints with respect to 
-  //      the generalized velocity. The size must be at least 3xdimv.
+  //      the generalized velocity. The rows must be at least 3 and the cols
+  //      must be dimv.
   //    baumgarte_partial_da: Partial of contact constraints with respect to 
-  //      the generalized acceleration. The size must be at least 3xdimv.
+  //      the generalized acceleration. The rows must be at least 3 and the cols
+  //      must be dimv.
   void computeBaumgarteDerivatives(const pinocchio::Model& model, 
                                    pinocchio::Data& data, 
                                    const int block_rows_begin,
@@ -183,13 +204,13 @@ public:
   // Returns dimv, the dimensiton of the generalized velocity.
   int dimv() const;
 
-  // Returns baumgarte_alpha, the weight parameter on the contact velocity in 
-  // the Baumgarte's stabilization method.
-  double baumgarte_alpha() const;
+  // Returns baumgarte_weight_on_velocity_, the weight parameter on the 
+  // contact velocity in the Baumgarte's stabilization method.
+  double baumgarte_weight_on_velocity() const;
 
-  // Returns baumgarte_alpha, the weight parameter on the contact position in 
-  // the Baumgarte's stabilization method.
-  double baumgarte_beta() const;
+  // Returns baumgarte_weight_on_position, the weight parameter on the 
+  // contact position in the Baumgarte's stabilization method.
+  double baumgarte_weight_on_position() const;
   
   // Returns the contact point.
   Eigen::Vector3d contact_point() const;
@@ -200,7 +221,7 @@ public:
 private:
   bool is_active_;
   int contact_frame_id_, parent_joint_id_, dimv_;
-  double baumgarte_alpha_, baumgarte_beta_;
+  double baumgarte_weight_on_velocity_, baumgarte_weight_on_position_;
   Eigen::Vector3d contact_point_;
   pinocchio::SE3 jXf_;
   pinocchio::SE3::ActionMatrixType fXj_;

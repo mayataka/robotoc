@@ -31,8 +31,8 @@ public:
   // Baumgarte's stabilization parameters.
   Robot(const std::string& urdf_file_name, 
         const std::vector<int>& contact_frames, 
-        const double baumgarte_weight_on_position, 
-        const double baumgarte_weight_on_velocity);
+        const double baumgarte_weight_on_velocity, 
+        const double baumgarte_weight_on_position);
 
   // Default constructor. 
   Robot();
@@ -53,8 +53,8 @@ public:
   // stabilization parameters.
   void buildRobotModelFromXML(const std::string& xml,
                               const std::vector<int>& contact_frames, 
-                              const double baumgarte_weight_on_position, 
-                              const double baumgarte_weight_on_velocity);
+                              const double baumgarte_weight_on_velocity, 
+                              const double baumgarte_weight_on_position);
 
   // Integrates the generalized velocity, integration_length * v. 
   // The configuration q is then incremented.
@@ -201,9 +201,6 @@ public:
   void passiveConstraintViolation(const Eigen::VectorXd& tau, 
                                   Eigen::VectorXd& violation) const;
 
-  // Returns true if the robot has a floating base and false if not.
-  bool hasFloatingBase();
-
   // Returns the effort limit of each joints.
   Eigen::VectorXd jointEffortLimit() const;
 
@@ -216,27 +213,26 @@ public:
   // Returns the upper limit of the position of each joints.
   Eigen::VectorXd upperJointPositionLimit() const;
 
-  // Set the joint damping friciton.
-  // Argments:
-  //   joint_damping_coeff: The coefficients of the joint damping friction. 
-  //     The size must be dimv.
-  void setJointDamping(const Eigen::VectorXd& joint_damping_coeff);
-
   // Returns the dimensiton of the generalized configuration.
   int dimq() const;
 
   // Returns the dimensiton of the generalized velocity.
   int dimv() const;
 
-  // Returns the dimensiton of the generalized torques corresponding to the 
-  // passive joints.
-  int dim_passive() const;
-
   // Returns the dimension of the contacts.
   int dimf() const;
 
   // Returns the maximum dimension of the contacts.
   int max_dimf() const;
+
+  // Returns true if the robot has a floating base and false if not.
+  bool has_floating_base();
+
+  // Returns the dimensiton of the generalized torques corresponding to the 
+  // passive joints.
+  int dim_passive() const;
+
+  std::vector<int> passive_joint_indices() const;
 
   // Returns the maximum number of the contacts.
   int max_point_contacts() const;
@@ -251,10 +247,8 @@ private:
   std::vector<PointContact> point_contacts_;
   FloatingBase floating_base_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
-  int dimq_, dimv_, dimf_;
+  int dimq_, dimv_, dimf_, max_dimf_;
   std::vector<bool> is_each_contact_active_;
-  Eigen::VectorXd joint_damping_coeff_;
-  bool is_effective_joint_damping_;
 };
 
 } // namespace idocp

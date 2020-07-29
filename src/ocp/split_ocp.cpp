@@ -168,16 +168,13 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   lu_condensed_ = lu_ + luu_ * u_res_;
   // Partial derivatives of the cost function with respect to the configuration,
   // velocity, and acceleration.
+  cost_->lq(robot, t, dtau, q, v, a, lq_);
+  cost_->lv(robot, t, dtau, q, v, a, lv_);
+  cost_->la(robot, t, dtau, q, v, a, la_);
   if (dimf_ > 0) {
-    cost_->lq(robot, t, dtau, q, v, a, f_, lq_);
-    cost_->lv(robot, t, dtau, q, v, a, f_, lv_);
-    cost_->la(robot, t, dtau, q, v, a, f_, la_);
-    cost_->lf(robot, t, dtau, q, v, a, f_, lf_);
+    cost_->lf(robot, t, dtau, f_, lf_);
   }
   else {
-    cost_->lq(robot, t, dtau, q, v, a, lq_);
-    cost_->lv(robot, t, dtau, q, v, a, lv_);
-    cost_->la(robot, t, dtau, q, v, a, la_);
   }
   // Augmnet the partial derivatives of the state equation.
   lq_.noalias() += lmd_next - lmd;
@@ -224,18 +221,11 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   joint_constraints_.condenseSlackAndDual(robot, dtau, q, v, a, Qqq_, Qvv_, 
                                           Qaa_, lq_, lv_, la_);
   // Augment the cost function Hessian. 
+  cost_->lqq(robot, t, dtau, q, v, a, Qqq_);
+  cost_->lvv(robot, t, dtau, q, v, a, Qvv_);
+  cost_->laa(robot, t, dtau, q, v, a, Qaa_);
   if (dimf_ > 0) {
-    cost_->lqq(robot, t, dtau, q, v, a, f_, Qqq_);
-    cost_->lvv(robot, t, dtau, q, v, a, f_, Qvv_);
-    cost_->laa(robot, t, dtau, q, v, a, f_, Qaa_);
-    cost_->lff(robot, t, dtau, q, v, a, f_, Qff_);
-  }
-  else {
-    cost_->lqq(robot, t, dtau, q, v, a, Qqq_);
-    cost_->lvv(robot, t, dtau, q, v, a, Qvv_);
-    cost_->laa(robot, t, dtau, q, v, a, Qaa_);
-  }
-  if (dimf_ > 0) {
+    cost_->lff(robot, t, dtau, f_, Qff_);
     // Precompute some parts of the Riccati factorization.
     Qff_inv_.topLeftCorner(dimf_, dimf_) 
         = Qff_.topLeftCorner(dimf_, dimf_)
@@ -799,18 +789,12 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   // configuration, velocity, acceleration, and the control input torques.
   // Partial derivatives of the cost function.
   const int dimf = robot.dimf();
+  cost_->lq(robot, t, dtau, q, v, a, lq_);
+  cost_->lv(robot, t, dtau, q, v, a, lv_);
+  cost_->la(robot, t, dtau, q, v, a, la_);
+  cost_->lu(robot, t, dtau, u, lu_);
   if (dimf > 0) {
-    cost_->lq(robot, t, dtau, q, v, a, lq_);
-    cost_->lv(robot, t, dtau, q, v, a, lv_);
-    cost_->la(robot, t, dtau, q, v, a, la_);
-    cost_->lu(robot, t, dtau, u, lu_);
-  }
-  else {
-    cost_->lq(robot, t, dtau, q, v, a, f_, lq_);
-    cost_->lv(robot, t, dtau, q, v, a, f_, lv_);
-    cost_->la(robot, t, dtau, q, v, a, f_, la_);
-    cost_->lf(robot, t, dtau, q, v, a, f_, lf_);
-    cost_->lu(robot, t, dtau, u, lu_);
+    cost_->lf(robot, t, dtau, f_, lf_);
   }
   // Augment the partial derivatives of the state equation.
   lq_.noalias() += lmd_next - lmd;

@@ -13,7 +13,8 @@ CostFunction::CostFunction(const Robot& robot)
                       Eigen::VectorXd::Constant(robot.dimv(), 0.01), 
                       Eigen::VectorXd::Constant(robot.dimv(), 0.0), 
                       Eigen::VectorXd::Constant(robot.dimq(), 10), 
-                      Eigen::VectorXd::Constant(robot.dimv(), 1)) {
+                      Eigen::VectorXd::Constant(robot.dimv(), 1)),
+    contact_cost_(robot, Eigen::VectorXd::Constant(robot.max_dimf(), 0.01))   {
 }
 
 
@@ -41,6 +42,11 @@ void CostFunction::set_u_ref(const Eigen::VectorXd& q_ref) {
 }
 
 
+void CostFunction::set_f_ref(const Eigen::VectorXd& f_ref) {
+  contact_cost_.set_f_ref(f_ref);
+}
+
+
 void CostFunction::set_q_weight(const Eigen::VectorXd& q_weight) {
   joint_space_cost_.set_q_weight(q_weight);
 }
@@ -61,6 +67,11 @@ void CostFunction::set_u_weight(const Eigen::VectorXd& u_weight) {
 }
 
 
+void CostFunction::set_f_weight(const Eigen::VectorXd& f_weight) {
+  contact_cost_.set_f_weight(f_weight);
+}
+
+
 void CostFunction::set_qf_weight(const Eigen::VectorXd& qf_weight) {
   joint_space_cost_.set_qf_weight(qf_weight);
 }
@@ -72,10 +83,10 @@ void CostFunction::set_vf_weight(const Eigen::VectorXd& vf_weight) {
 
 
 double CostFunction::l(const Robot& robot, const double t, 
-                                  const double dtau, const Eigen::VectorXd& q, 
-                                  const Eigen::VectorXd& v, 
-                                  const Eigen::VectorXd& a, 
-                                  const Eigen::VectorXd& u) {
+                       const double dtau, const Eigen::VectorXd& q, 
+                       const Eigen::VectorXd& v, 
+                       const Eigen::VectorXd& a, 
+                       const Eigen::VectorXd& u) {
   double l = 0;
   l += joint_space_cost_.l(robot, dtau, q, v, a, u);
   return l;
@@ -117,6 +128,12 @@ void CostFunction::lu(const Robot& robot, const double t, const double dtau,
 }
 
 
+void CostFunction::lf(const Robot& robot, const double t, const double dtau,
+                      const Eigen::VectorXd& f, Eigen::VectorXd& lf) {
+  contact_cost_.lf(robot, dtau, f, lf);
+}
+
+
 void CostFunction::lqq(const Robot& robot, const double t, const double dtau, 
                        const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                        const Eigen::VectorXd& a, Eigen::MatrixXd& lqq) {
@@ -141,6 +158,12 @@ void CostFunction::laa(const Robot& robot, const double t, const double dtau,
 void CostFunction::luu(const Robot& robot, const double t, const double dtau, 
                        const Eigen::VectorXd& u, Eigen::MatrixXd& luu) {
   joint_space_cost_.luu(robot, dtau, luu);
+}
+
+
+void CostFunction::lff(const Robot& robot, const double t, const double dtau, 
+                       const Eigen::VectorXd& f, Eigen::MatrixXd& lff) {
+  contact_cost_.lff(robot, dtau, lff);
 }
 
 

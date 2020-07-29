@@ -64,6 +64,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
     for (time_step=0; time_step<=N_; ++time_step) {
       if (time_step < N_) {
         const int robot_id = omp_get_thread_num();
+        robots_[robot_id].setActiveContacts(contact_sequence_[time_step]);
         split_OCPs_[time_step].linearizeOCP(robots_[robot_id], 
                                             t+time_step*dtau_, dtau_, 
                                             lmd_[time_step], gmm_[time_step],

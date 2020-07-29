@@ -27,7 +27,7 @@ add_definitions(
 )
 link_directories(${PINOCCHIO_LIBDIR})
 
-# set tested directories
+# set IDOCP directories
 set(IDOCP_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src)
 set(IDOCP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include/IDOCP)
 
@@ -46,5 +46,5 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   endif()
 endif()
 
-# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/robot)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/constraints)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/robot)
+# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/constraints)

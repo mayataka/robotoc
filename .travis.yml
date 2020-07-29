@@ -1,0 +1,37 @@
+dist: 
+  - xenial
+  - focal
+
+sudo: required
+
+language: cpp
+
+compiler:
+  - gcc
+  - clang
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - cmake
+      - lcov
+
+install:
+  - source ci/travis/install_lcov.sh
+  - source ci/travis/install_pinocchio.sh
+  - sudo apt isntall libeigen3-dev
+
+script:
+  - cd test
+  - mkdir -p build  && cd build
+  - cmake -DCMAKE_BUILD_TYPE=Debug ..
+  - cmake --build . --config Debug -- -j $(nproc)
+  - ctest -j $(nproc) --output-on-failure
+
+after_success: 
+  - lcov --directory . --capture --output-file coverage.info
+  - lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' '*/googletest/*' '*/c++/*' '*.cpp' --output-file coverage.info
+  - lcov --list coverage.info
+  - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
