@@ -21,7 +21,7 @@ addons:
 install:
   - source ci/travis/install_lcov.sh
   - source ci/travis/install_pinocchio.sh
-  - sudo apt isntall libeigen3-dev
+  - sudo apt install libeigen3-dev
 
 script:
   - cd test

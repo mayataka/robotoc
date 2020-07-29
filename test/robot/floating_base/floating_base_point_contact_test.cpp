@@ -106,7 +106,7 @@ TEST_F(FloatingBasePointContactTest, constructor) {
 }
 
 
-TEST_F(FloatingBasePointContactTest, moveConstructor) {
+TEST_F(FloatingBasePointContactTest, copyConstructor) {
   PointContact contact_ref(model_, contact_frame_id_, 
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
@@ -134,7 +134,7 @@ TEST_F(FloatingBasePointContactTest, moveConstructor) {
 }
 
 
-TEST_F(FloatingBasePointContactTest, moveAssign) {
+TEST_F(FloatingBasePointContactTest, assign) {
   PointContact contact_ref(model_, contact_frame_id_, 
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
@@ -422,6 +422,27 @@ TEST_F(FloatingBasePointContactTest, baumgarteDerivativesBlock) {
   EXPECT_TRUE(baum_partial_dq_ref.isApprox(baum_partial_dq));
   EXPECT_TRUE(baum_partial_dv_ref.isApprox(baum_partial_dv));
   EXPECT_TRUE(baum_partial_da_ref.isApprox(baum_partial_da));
+
+  Eigen::MatrixXd baum_partial_dq_nonblock = Eigen::MatrixXd::Zero(3, dimv_);
+  Eigen::MatrixXd baum_partial_dv_nonblock = Eigen::MatrixXd::Zero(3, dimv_);
+  Eigen::MatrixXd baum_partial_da_nonblock = Eigen::MatrixXd::Zero(3, dimv_);
+  contact.computeBaumgarteDerivatives(model_, data_, baum_partial_dq_nonblock, 
+                                      baum_partial_dv_nonblock, 
+                                      baum_partial_da_nonblock);
+  EXPECT_TRUE(
+        baum_partial_dq_nonblock
+        .isApprox(baum_partial_dq.block(block_rows_begin, 0, 3, dimv_)));
+  EXPECT_TRUE(
+        baum_partial_dv_nonblock
+        .isApprox(baum_partial_dv.block(block_rows_begin, 0, 3, dimv_)));
+  EXPECT_TRUE(
+        baum_partial_da_nonblock
+        .isApprox(baum_partial_da.block(block_rows_begin, 0, 3, dimv_)));
+
+  std::cout << baum_partial_dq_nonblock << std::endl;
+  std::cout << std::endl;
+  std::cout << baum_partial_dq << std::endl;
+  std::cout << std::endl;
 }
 
 } // namespace idocp

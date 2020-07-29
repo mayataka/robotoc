@@ -104,7 +104,7 @@ TEST_F(FixedBasePointContactTest, constructor) {
 }
 
 
-TEST_F(FixedBasePointContactTest, moveConstructor) {
+TEST_F(FixedBasePointContactTest, copyConstructor) {
   PointContact contact_ref(model_, contact_frame_id_, 
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
@@ -131,7 +131,7 @@ TEST_F(FixedBasePointContactTest, moveConstructor) {
 }
 
 
-TEST_F(FixedBasePointContactTest, moveAssign) {
+TEST_F(FixedBasePointContactTest, assign) {
   PointContact contact_ref(model_, contact_frame_id_, 
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);

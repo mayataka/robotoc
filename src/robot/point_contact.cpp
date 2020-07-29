@@ -51,47 +51,6 @@ PointContact::~PointContact() {
 }
 
 
-PointContact::PointContact(PointContact&& other) noexcept
-  : is_active_(other.isActive()),
-    contact_frame_id_(other.contact_frame_id()),
-    parent_joint_id_(other.parent_joint_id()), 
-    dimv_(other.dimv()),
-    baumgarte_weight_on_velocity_(other.baumgarte_weight_on_velocity()),
-    baumgarte_weight_on_position_(other.baumgarte_weight_on_position()),
-    contact_point_(other.contact_point()),
-    jXf_(other.jXf()),
-    fXj_(other.jXf().inverse().toActionMatrix().transpose()),
-    J_frame_(),
-    joint_v_partial_dq_(),
-    joint_a_partial_dq_(),
-    joint_a_partial_dv_(),
-    joint_a_partial_da_() {
-  J_frame_.resize(6, dimv_); 
-  joint_v_partial_dq_.resize(6, dimv_); 
-  joint_a_partial_dq_.resize(6, dimv_); 
-  joint_a_partial_dv_.resize(6, dimv_); 
-  joint_a_partial_da_.resize(6, dimv_); 
-}
-
-
-PointContact& PointContact::operator=(PointContact&& other) noexcept {
-  is_active_ = other.isActive();
-  contact_frame_id_ = other.contact_frame_id();
-  parent_joint_id_ = other.parent_joint_id();
-  dimv_ = other.dimv();
-  baumgarte_weight_on_velocity_ = other.baumgarte_weight_on_velocity();
-  baumgarte_weight_on_position_ = other.baumgarte_weight_on_position();
-  contact_point_ = other.contact_point();
-  jXf_ = other.jXf();
-  fXj_ = other.jXf().inverse().toActionMatrix().transpose();
-  J_frame_.resize(6, dimv_); 
-  joint_v_partial_dq_.resize(6, dimv_); 
-  joint_a_partial_dq_.resize(6, dimv_); 
-  joint_a_partial_dv_.resize(6, dimv_); 
-  joint_a_partial_da_.resize(6, dimv_); 
-}
-
-
 void PointContact::resetBaugrarteParameters(
     const double baumgarte_weight_on_velocity, 
     const double baumgarte_weight_on_position) {

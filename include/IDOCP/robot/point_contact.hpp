@@ -43,12 +43,6 @@ public:
   // Use default assign operator.
   PointContact& operator=(const PointContact& other) = default;
 
-  // Move constructor.
-  PointContact(PointContact&& other) noexcept;
-
-  // Move assignment operator. 
-  PointContact& operator=(PointContact&& other) noexcept;
-
   // Resets the parameters of the Baumgarte's stabilization method.
   // Argments:
   //    baumgarte_weight_on_velocity : The weight parameter of the Baumgrate's 

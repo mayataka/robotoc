@@ -35,8 +35,6 @@ protected:
     a_ = Eigen::VectorXd::Random(dimv_);
     baumgarte_weight_on_velocity_ = std::abs(Eigen::VectorXd::Random(2)[0]);
     baumgarte_weight_on_position_ = std::abs(Eigen::VectorXd::Random(2)[0]);
-    baumgarte_weight_on_velocity_ = 0;
-    baumgarte_weight_on_position_ = 0;
   }
 
   virtual void TearDown() {
@@ -201,41 +199,17 @@ TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
       = Eigen::MatrixXd::Zero(robot.max_dimf(), dimv_);  
   Eigen::MatrixXd baumgarte_partial_a_ref 
       = Eigen::MatrixXd::Zero(robot.max_dimf(), dimv_);  
+  robot.computeBaumgarteDerivatives(baumgarte_partial_q, baumgarte_partial_v, 
+                                    baumgarte_partial_a);
   for (int i=0; i<contacts_ref.size(); ++i) {
     contacts_ref[i].computeBaumgarteDerivatives(model_, data_, 3*i,
                                                 baumgarte_partial_q_ref, 
                                                 baumgarte_partial_v_ref, 
                                                 baumgarte_partial_a_ref);
-    std::cout << baumgarte_partial_q_ref << std::endl;
-    std::cout << std::endl;
-    std::cout << baumgarte_partial_v_ref << std::endl;
-    std::cout << std::endl;
-    std::cout << baumgarte_partial_a_ref << std::endl;
-    std::cout << std::endl;
   }
-  robot.computeBaumgarteDerivatives(baumgarte_partial_q, baumgarte_partial_v, 
-                                    baumgarte_partial_a);
   EXPECT_TRUE(baumgarte_partial_q.isApprox(baumgarte_partial_q_ref));
   EXPECT_TRUE(baumgarte_partial_v.isApprox(baumgarte_partial_v_ref));
   EXPECT_TRUE(baumgarte_partial_a.isApprox(baumgarte_partial_a_ref));
-  std::cout << baumgarte_partial_q - baumgarte_partial_q_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << baumgarte_partial_v - baumgarte_partial_v_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << baumgarte_partial_a - baumgarte_partial_a_ref << std::endl;
-  std::cout << std::endl;
-  // std::cout << baumgarte_partial_q << std::endl;
-  // std::cout << std::endl;
-  // std::cout << baumgarte_partial_q_ref << std::endl;
-  // std::cout << std::endl;
-  // std::cout << baumgarte_partial_v << std::endl;
-  // std::cout << std::endl;
-  // std::cout << baumgarte_partial_v_ref << std::endl;
-  // std::cout << std::endl;
-  // std::cout << baumgarte_partial_a << std::endl;
-  // std::cout << std::endl;
-  // std::cout << baumgarte_partial_a_ref << std::endl;
-  // std::cout << std::endl;
 }
 
 
@@ -337,10 +311,9 @@ TEST_F(FloatingBaseRobotTest, RNEADerivativesWithContacts) {
   const bool transpose_jacobian = true;
   for (int i=0; i<contacts_ref.size(); ++i) {
     contacts_ref[i].getContactJacobian(model_, data_, 3*i, dRNEA_dfext_ref, 
-                                        transpose_jacobian);
+                                       transpose_jacobian);
   }
   EXPECT_TRUE(dRNEA_dfext.isApprox(dRNEA_dfext_ref));
-  std::cout << dRNEA_dfext - dRNEA_dfext_ref << std::endl;
 }
 
 
