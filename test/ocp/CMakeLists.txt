@@ -34,3 +34,41 @@ add_test(
     NAME riccati_matrix_factorizer_test
     COMMAND $<TARGET_FILE:riccati_matrix_factorizer_test>
 )
+
+
+add_executable(
+    riccati_matrix_inverter_test
+    riccati_matrix_inverter_test.cpp
+    ${IDOCP_SRC_DIR}/robot/robot.cpp
+    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
+    ${IDOCP_SRC_DIR}/robot/floating_base.cpp
+    ${IDOCP_SRC_DIR}/ocp/riccati_matrix_inverter.cpp
+)
+target_include_directories(
+    riccati_matrix_inverter_test
+    PRIVATE
+    ${GTEST_INCLUDE_PATH}
+    ${GMOCK_INCLUDE_PATH}
+    ${GTEST_LIBRARY_PATH}
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIR}
+    ${PINOCCHIO_INCLUDE_DIRS}
+)
+target_link_libraries(
+    riccati_matrix_inverter_test
+    PRIVATE
+    pthread
+    GTest::GTest
+    GTest::GMock
+    ${Boost_LIBRARIES}
+    ${PINOCCHIO_LIBRARIES}
+    urdfdom_model
+)
+add_dependencies(
+    riccati_matrix_inverter_test
+    googletest
+)
+add_test(
+    NAME riccati_matrix_inverter_test 
+    COMMAND $<TARGET_FILE:riccati_matrix_inverter_test>
+)

@@ -2,13 +2,6 @@
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
-#include "pinocchio/multibody/model.hpp"
-#include "pinocchio/multibody/data.hpp"
-#include "pinocchio/parsers/urdf.hpp"
-#include "pinocchio/algorithm/joint-configuration.hpp"
-#include "pinocchio/algorithm/crba.hpp"
-#include "pinocchio/algorithm/rnea.hpp"
-#include "pinocchio/algorithm/rnea-derivatives.hpp"
 
 #include "robot/robot.hpp"
 #include "ocp/riccati_matrix_factorizer.hpp"
@@ -16,7 +9,7 @@
 
 namespace idocp {
 
-class RiccatiMatrixFactorierTest : public ::testing::Test {
+class RiccatiMatrixFactorizerTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -37,7 +30,7 @@ protected:
 };
 
 
-TEST_F(RiccatiMatrixFactorierTest, fixed_base) {
+TEST_F(RiccatiMatrixFactorizerTest, fixed_base) {
   const int dimv = fixed_base_robot_.dimv();
   RiccatiMatrixFactorizer factorizer(fixed_base_robot_);
   Eigen::MatrixXd Pqq = Eigen::MatrixXd::Random(dimv, dimv);
@@ -95,7 +88,7 @@ TEST_F(RiccatiMatrixFactorierTest, fixed_base) {
 }
 
 
-TEST_F(RiccatiMatrixFactorierTest, floating_base) {
+TEST_F(RiccatiMatrixFactorizerTest, floating_base) {
   const int dimq = floating_base_robot_.dimq();
   const int dimv = floating_base_robot_.dimv();
   RiccatiMatrixFactorizer factorizer(floating_base_robot_);

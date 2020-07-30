@@ -3,7 +3,7 @@ project(idocp_test CXX)
 set(CMAKE_CXX_STANDARD 11)
 
 # enable coverage
-set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} --coverage")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --coverage")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 
 # enable google test

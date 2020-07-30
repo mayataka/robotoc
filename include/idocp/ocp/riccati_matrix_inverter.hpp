@@ -6,13 +6,13 @@
 
 #include "Eigen/Core"
 
+#include "robot/robot.hpp"
+
 
 namespace idocp {
 
 class RiccatiMatrixInverter {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   RiccatiMatrixInverter(const Robot& robot);
 
   // Destructor.
@@ -27,35 +27,45 @@ public:
 
   void setContactStatus(const Robot& robot);
 
-  void setPrecomputableMatrices(const Eigen::MatrixXd& Qff, 
-                                const Eigen::MatrixXd& Qaf);
+  void precompute(const Eigen::MatrixXd& Qff, const Eigen::MatrixXd& Qaf);
 
-  void computeSteteFeedbackGains(const Eigen::MatrixXd& Qaa, 
-                                 Eigen::MatrixXd& Kaq, 
-                                 Eigen::MatrixXd& Kav);
+  // Fixed base without contacts
+  void invert(const Eigen::MatrixXd& Qqa, const Eigen::MatrixXd& Qva, 
+              const Eigen::MatrixXd& Qaa, const Eigen::VectorXd& la,
+              Eigen::MatrixXd& Kaq, Eigen::MatrixXd& Kav, Eigen::VectorXd& ka);
 
-  void computeSteteFeedbackGains(const Eigen::MatrixXd& Qaa, 
-                                 Eigen::MatrixXd& Kaq, 
-                                 Eigen::MatrixXd& Kav, 
-                                 Eigen::MatrixXd& Kmuq, 
-                                 Eigen::MatrixXd& Kmuv);
+  // Fixed base with contacts
+  void invert(const Eigen::MatrixXd& Qqa, const Eigen::MatrixXd& Qva, 
+              const Eigen::MatrixXd& Qaa, const Eigen::MatrixXd& Qqf, 
+              const Eigen::MatrixXd& Qvf, const Eigen::MatrixXd& Cq, 
+              const Eigen::MatrixXd& Cv, const Eigen::MatrixXd& Ca, 
+              const Eigen::VectorXd& la, const Eigen::VectorXd& lf, 
+              const Eigen::VectorXd& C_res, Eigen::MatrixXd& Kaq, 
+              Eigen::MatrixXd& Kav, Eigen::MatrixXd& Kfq, Eigen::MatrixXd& Kfv, 
+              Eigen::MatrixXd& Kmuq, Eigen::MatrixXd& Kmuv, Eigen::VectorXd& ka, 
+              Eigen::VectorXd& kf, Eigen::VectorXd& kmu);
 
-  void computeSteteFeedbackGains(const Eigen::MatrixXd& Qaa, 
-                                 Eigen::MatrixXd& Kaq, 
-                                 Eigen::MatrixXd& Kav, 
-                                 Eigen::MatrixXd& Kfq, 
-                                 Eigen::MatrixXd& Kfv,
-                                 Eigen::MatrixXd& Kmuq, 
-                                 Eigen::MatrixXd& Kmuv);
+  // // Floating base without contacts
+  // void invert(const Eigen::MatrixXd& Qqa, const Eigen::MatrixXd& Qva, 
+  //             const Eigen::MatrixXd& Qaa, const Eigen::MatrixXd& Ca, 
+  //             const Eigen::VectorXd& la, const Eigen::VectorXd& C_res, 
+  //             Eigen::MatrixXd& Kaq, Eigen::MatrixXd& Kav, Eigen::MatrixXd& Kmuq, 
+  //             Eigen::MatrixXd& Kmuv, Eigen::VectorXd& ka, Eigen::VectorXd& kmu);
 
-  void computeFeedforwardTerms(const Eigen::MatrixXd& Qff, 
-                               const Eigen::MatrixXd& Qaf);
+  // // Floating base with contacts
+  // void invert(const Eigen::MatrixXd& Qqa, const Eigen::MatrixXd& Qva, 
+  //             const Eigen::MatrixXd& Qaa, const Eigen::MatrixXd& Qqf, 
+  //             const Eigen::MatrixXd& Qvf, const Eigen::MatrixXd& Ca, 
+  //             const Eigen::VectorXd& la, const Eigen::VectorXd& lf, 
+  //             const Eigen::VectorXd& C_res, Eigen::MatrixXd& Kaq, 
+  //             Eigen::MatrixXd& Kav, Eigen::MatrixXd& Kfq, Eigen::MatrixXd& Kfv, 
+  //             Eigen::MatrixXd& Kmuq, Eigen::MatrixXd& Kmuv, Eigen::VectorXd& ka, 
+  //             Eigen::VectorXd& kf, Eigen::VectorXd& kmu);
 
 private:
   bool has_floating_base_;
-  int dimv_, max_dimf_, dim_passive_;
-  Eigen::MatrixXd Qff_inv_, Saa_, Saa_inv_, Saf_, D_hat_, D_hat_inv_,
-                  L_U_, L_L_, Kaq_, Kav_, Kfq_, Kfv_, Kmuq_, Kmuv_;
+  int dimv_, max_dimf_, dimf_, dim_passive_;
+  Eigen::MatrixXd Sff_inv_, Saa_, Saa_inv_, Saf_, Sac_, Sfc_, Scc_, Scc_inv_;
 };
 
 } // namespace idocp

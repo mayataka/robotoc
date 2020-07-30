@@ -12,6 +12,7 @@ SplitOCP::SplitOCP(const Robot& robot, const CostFunctionInterface* cost,
     constraints_(const_cast<ConstraintsInterface*>(constraints)),
     joint_constraints_(robot),
     riccati_matrix_factorizer_(robot),
+    riccati_matrix_inverter_(robot),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
     dimf_(0),
@@ -227,16 +228,10 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   cost_->laa(robot, t, dtau, q, v, a, Qaa_);
   if (dimf_ > 0) {
     cost_->lff(robot, t, dtau, f_, Qff_);
-    // Precompute some parts of the Riccati factorization.
-    Qff_inv_.topLeftCorner(dimf_, dimf_) 
-        = Qff_.topLeftCorner(dimf_, dimf_)
-              .llt().solve(Eigen::MatrixXd::Identity(dimf_, dimf_));
-    Saa_ = - Qaf_.leftCols(dimf_) * Qff_inv_.topLeftCorner(dimf_, dimf_) 
-                                  * Qaf_.leftCols(dimf_).transpose();
-    Saf_.leftCols(dimf_) 
-        = Qaf_.leftCols(dimf_) * Qff_inv_.topLeftCorner(dimf_, dimf_);
+    riccati_matrix_inverter_.setContactStatus(robot);
+    riccati_matrix_inverter_.precompute(Qff_, Qaf_);
   }
-  factorizer.computeIntegrationSensitivities(robot, dtau, q, v);
+  riccati_matrix_factorizer_.computeIntegrationSensitivities(robot, dtau, q, v);
 }
 
 
@@ -309,12 +304,12 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
                                        Pvv_next, Qqq_, Qqv_, Qvq_, Qvv_);
   riccati_matrix_factorizer_.factorize(dtau,  Pqv_next, Pvv_next, Qqa_, Qva_);
   riccati_matrix_factorizer_.factorize(dtau,  Pvv_next, Qaa_);
+  la_.noalias() += dtau * Pvq_next * q_res_;
+  la_.noalias() += dtau * Pvv_next * v_res_;
+  la_.noalias() -= dtau * sv_next;
   if (dimf_ == 0) {
-    // Computes inversion of the coefficient matrix of the decision variables
-    Saa_inv_ = Qaa_.llt().solve(Eigen::MatrixXd::Identity(dimv_, dimv_));
-    // Computes the state feedback gain
-    Kaq_ = - Saa_inv_ * Qqa_.transpose();
-    Kav_ = - Saa_inv_ * Qva_.transpose();
+    // Computes the state feedback gain and feedforward term.
+    riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, la_, Kaq_, Kav_, ka_);
     // Computes the Riccati factorization matrices
     Pqq = Qqq_;
     Pqq.noalias() += Kaq_.transpose() * Qqa_.transpose();
@@ -324,11 +319,6 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
     Pvq.noalias() += Kav_.transpose() * Qqa_.transpose();
     Pvv = Qvv_;
     Pvv.noalias() += Kav_.transpose() * Qva_.transpose();
-    // Computes the feedforward terms
-    la_.noalias() += dtau * Pvq_next * q_res_;
-    la_.noalias() += dtau * Pvv_next * v_res_;
-    la_.noalias() -= dtau * sv_next;
-    ka_ = - Saa_inv_ * la_;
     // Computes the Riccati factorization vectors
     sq = sq_next - lq_;
     sq.noalias() -= Pqq_next * q_res_;
@@ -342,65 +332,8 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
     sv.noalias() -= Qva_ * ka_;
   }
   else if (dimf_ > 0) {
-    // Computes inversion of the coefficient matrix of the decision variables
-    Saa_.noalias() += Qaa_;
-    Saa_inv_ = Saa_.llt().solve(Eigen::MatrixXd::Identity(dimv_, dimv_));
-    Saf_.leftCols(dimf_) = Saa_inv_ * Saf_.leftCols(dimf_);
-    D_hat_.topLeftCorner(dimf_, dimf_) 
-        = - Ca_.topRows(dimf_) * Saa_inv_ * Ca_.topRows(dimf_).transpose();
-    D_hat_inv_.topLeftCorner(dimf_, dimf_) 
-        = D_hat_.topLeftCorner(dimf_, dimf_)
-                .llt().solve(Eigen::MatrixXd::Identity(dimf_, dimf_));
-    L_U_.leftCols(dimf_) 
-        = Saa_inv_ * Ca_.topRows(dimf_).transpose() 
-                   * D_hat_inv_.topLeftCorner(dimf_, dimf_);
-    L_L_.topLeftCorner(dimf_, dimf_) 
-        = - Saf_.leftCols(dimf_).transpose() 
-            * Ca_.topRows(dimf_).transpose() 
-            * D_hat_inv_.topLeftCorner(dimf_, dimf_);
-    Saa_inv_.noalias() 
-        += L_U_.leftCols(dimf_) * D_hat_.topLeftCorner(dimf_, dimf_)
-                                * L_U_.leftCols(dimf_).transpose();
-    Qff_inv_.noalias() 
-        += Saf_.leftCols(dimf_).transpose() * Saa_ * Saf_.leftCols(dimf_);
-    Qff_inv_.noalias() 
-        += L_L_.topLeftCorner(dimf_, dimf_) 
-            * D_hat_.topLeftCorner(dimf_, dimf_) 
-            * L_L_.topLeftCorner(dimf_, dimf_).transpose();
-    Saf_.leftCols(dimf_).noalias() 
-        -= L_U_.leftCols(dimf_) * D_hat_.topLeftCorner(dimf_, dimf_)
-                                * L_L_.topLeftCorner(dimf_, dimf_).transpose();
-    // Computes the state feedback gain
-    Kaq_ = - Saa_inv_ * Qqa_.transpose();
-    Kaq_.noalias() += Saf_.leftCols(dimf_) * Qqf_.leftCols(dimf_).transpose();
-    Kaq_.noalias() += L_U_.leftCols(dimf_) * Cq_.topRows(dimf_);
-    Kav_ = - Saa_inv_ * Qva_.transpose();
-    Kav_.noalias() += Saf_.leftCols(dimf_) * Qvf_.leftCols(dimf_).transpose();
-    Kav_.noalias() += L_U_.leftCols(dimf_) * Cv_.topRows(dimf_);
-    Kfq_.topRows(dimf_) = Saf_.leftCols(dimf_).transpose() * Qqa_.transpose();
-    Kfq_.topRows(dimf_).noalias() 
-        -= Qff_inv_.topLeftCorner(dimf_, dimf_) 
-            * Qqf_.leftCols(dimf_).transpose();
-    Kfq_.topRows(dimf_).noalias() 
-        += L_L_.topLeftCorner(dimf_, dimf_) * Cq_.topRows(dimf_);
-    Kfv_.topRows(dimf_) = Saf_.leftCols(dimf_).transpose() * Qva_.transpose();
-    Kfv_.topRows(dimf_).noalias() 
-        -= Qff_inv_.topLeftCorner(dimf_, dimf_) 
-            * Qvf_.leftCols(dimf_).transpose();
-    Kfv_.topRows(dimf_).noalias() 
-        += L_L_.topLeftCorner(dimf_, dimf_) * Cv_.topRows(dimf_);
-    Kmuq_.topRows(dimf_) = L_U_.leftCols(dimf_).transpose() * Qqa_.transpose();
-    Kmuq_.topRows(dimf_).noalias() 
-        += L_L_.topLeftCorner(dimf_, dimf_).transpose() 
-            * Qqf_.leftCols(dimf_).transpose();
-    Kmuq_.topRows(dimf_).noalias() 
-        -= D_hat_inv_.topLeftCorner(dimf_, dimf_) * Cq_.topRows(dimf_);
-    Kmuv_.topRows(dimf_) = L_U_.leftCols(dimf_).transpose() * Qva_.transpose();
-    Kmuv_.topRows(dimf_).noalias() 
-        += L_L_.topLeftCorner(dimf_, dimf_).transpose() 
-            * Qvf_.leftCols(dimf_).transpose();
-    Kmuv_.topRows(dimf_).noalias() 
-        -= D_hat_inv_.topLeftCorner(dimf_, dimf_) * Cv_.topRows(dimf_);
+    // Computes the state feedback gain and feedforward term.
+    riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, la_, Kaq_, Kav_, ka_);
     // Computes the Riccati factorization matrices
     Pqq = Qqq_;
     Pqq.noalias() += Kaq_.transpose() * Qqa_.transpose();
@@ -422,23 +355,6 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
     Pvv.noalias() += Kfv_.topRows(dimf_).transpose() 
                      * Qvf_.leftCols(dimf_).transpose();
     Pvv.noalias() += Kmuv_.topRows(dimf_).transpose() * Cv_.topRows(dimf_);
-    // Computes the feedforward terms
-    la_.noalias() += dtau * Pvq_next * q_res_;
-    la_.noalias() += dtau * Pvv_next * v_res_;
-    la_.noalias() -= dtau * sv_next;
-    ka_ = - Saa_inv_ * la_;
-    ka_.noalias() += Saf_.leftCols(dimf_) * lf_.head(dimf_);
-    ka_.noalias() += L_U_.leftCols(dimf_) * C_res_.head(dimf_);
-    kf_.head(dimf_) = Saf_.leftCols(dimf_).transpose() * la_;
-    kf_.head(dimf_).noalias() 
-        -= Qff_inv_.topLeftCorner(dimf_, dimf_) * lf_.head(dimf_);
-    kf_.head(dimf_).noalias() 
-        += L_L_.topLeftCorner(dimf_, dimf_) * C_res_.head(dimf_);
-    kmu_.head(dimf_) = L_U_.leftCols(dimf_).transpose() * la_;
-    kmu_.head(dimf_).noalias() 
-        += L_L_.topLeftCorner(dimf_, dimf_).transpose() * lf_.head(dimf_);
-    kmu_.head(dimf_).noalias() 
-        -= D_hat_inv_.topLeftCorner(dimf_, dimf_) * C_res_.head(dimf_);
     // Computes the Riccati factorization vectors
     sq = sq_next - lq_;
     sq.noalias() -= Pqq_next * q_res_;

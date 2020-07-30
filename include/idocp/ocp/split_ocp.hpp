@@ -11,6 +11,7 @@
 #include "constraints/constraints_interface.hpp"
 #include "constraints/joint_space_constraints/joint_space_constraints.hpp"
 #include "ocp/riccati_matrix_factorizer.hpp"
+#include "ocp/riccati_matrix_inverter.hpp"
 
 
 namespace idocp {
@@ -193,6 +194,7 @@ private:
   ConstraintsInterface *constraints_;
   pdipm::JointSpaceConstraints joint_constraints_;
   RiccatiMatrixFactorizer riccati_matrix_factorizer_;
+  RiccatiMatrixInverter riccati_matrix_inverter_;
   int dimq_, dimv_, dimf_, dim_passive_;
   Eigen::VectorXd f_, mu_, lq_, lv_, la_, lf_, lu_, lu_condensed_, 
                   ka_, kf_, kmu_, da_, df_, dmu_, q_res_, v_res_, a_res_, 
