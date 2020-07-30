@@ -1,15 +1,15 @@
-#ifndef IDOCP_CONSTRAINTS_PDIPM_JOINT_SPACE_CONSTRAINTS_HPP_
-#define IDOCP_CONSTRAINTS_PDIPM_JOINT_SPACE_CONSTRAINTS_HPP_
+#ifndef IDOCP_CONSTRAINTS_JOINT_SPACE_CONSTRAINTS_HPP_
+#define IDOCP_CONSTRAINTS_JOINT_SPACE_CONSTRAINTS_HPP_
 
 #include "Eigen/Core"
 
 #include "robot/robot.hpp"
-#include "constraints/pdipm/joint_position_upper_limits_pdipm.hpp"
-#include "constraints/pdipm/joint_position_lower_limits_pdipm.hpp"
-#include "constraints/pdipm/joint_velocity_upper_limits_pdipm.hpp"
-#include "constraints/pdipm/joint_velocity_lower_limits_pdipm.hpp"
-#include "constraints/pdipm/joint_torque_upper_limits_pdipm.hpp"
-#include "constraints/pdipm/joint_torque_lower_limits_pdipm.hpp"
+#include "constraints/joint_space_constraints/joint_position_upper_limits_pdipm.hpp"
+#include "constraints/joint_space_constraints/joint_position_lower_limits_pdipm.hpp"
+#include "constraints/joint_space_constraints/joint_velocity_upper_limits_pdipm.hpp"
+#include "constraints/joint_space_constraints/joint_velocity_lower_limits_pdipm.hpp"
+#include "constraints/joint_space_constraints/joint_torque_upper_limits_pdipm.hpp"
+#include "constraints/joint_space_constraints/joint_torque_lower_limits_pdipm.hpp"
 
 
 namespace idocp {
@@ -94,4 +94,4 @@ private:
 } // namespace idocp
 
 
-#endif // IDOCP_CONSTRAINTS_PDIPM_JOINT_SPACE_CONSTRAINTS_HPP_
+#endif // IDOCP_CONSTRAINTS_JOINT_SPACE_CONSTRAINTS_HPP_

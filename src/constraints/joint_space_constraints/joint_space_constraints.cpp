@@ -1,4 +1,4 @@
-#include "constraints/pdipm/joint_space_constraints_pdipm.hpp"
+#include "constraints/joint_space_constraints/joint_space_constraints.hpp"
 
 #include <assert.h>
 

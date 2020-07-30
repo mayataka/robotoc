@@ -29,7 +29,7 @@ link_directories(${PINOCCHIO_LIBDIR})
 
 # set IDOCP directories
 set(IDOCP_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-set(IDOCP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include/IDOCP)
+set(IDOCP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include/idocp)
 
 # coverage options
 add_library(coverage_config INTERFACE)

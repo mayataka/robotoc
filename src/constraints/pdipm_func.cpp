@@ -1,4 +1,4 @@
-#include "constraints/pdipm/pdipm_func.hpp"
+#include "constraints/pdipm_func.hpp"
 
 #include <cmath>
 #include <assert.h>

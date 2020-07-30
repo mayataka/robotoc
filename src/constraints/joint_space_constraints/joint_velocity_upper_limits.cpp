@@ -1,5 +1,5 @@
-#include "constraints/pdipm/joint_velocity_upper_limits_pdipm.hpp"
-#include "constraints/pdipm/pdipm_func.hpp"
+#include "constraints/joint_space_constraints/joint_velocity_upper_limits.hpp"
+#include "constraints/pdipm_func.hpp"
 
 #include <cmath>
 #include <assert.h>

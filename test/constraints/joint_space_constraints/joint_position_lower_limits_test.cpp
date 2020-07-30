@@ -6,8 +6,8 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "constraints/pdipm/joint_position_lower_limits_pdipm.hpp"
-#include "constraints/pdipm/pdipm_func.hpp"
+#include "constraints/joint_space_constraints/joint_position_lower_limits.hpp"
+#include "constraints/pdipm_func.hpp"
 #include "robot/robot.hpp"
 
 

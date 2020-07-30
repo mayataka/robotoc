@@ -9,7 +9,7 @@
 #include "robot/robot.hpp"
 #include "cost/cost_function_interface.hpp"
 #include "constraints/constraints_interface.hpp"
-#include "constraints/pdipm/joint_space_constraints_pdipm.hpp"
+#include "constraints/joint_space_constraints/joint_space_constraints.hpp"
 
 
 namespace idocp {
