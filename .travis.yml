@@ -6,9 +6,7 @@ sudo: required
 
 language: cpp
 
-compiler:
-  - gcc
-  - clang
+compiler: gcc
 
 addons:
   apt:
