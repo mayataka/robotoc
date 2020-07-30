@@ -4,12 +4,12 @@
 #include "Eigen/Core"
 
 #include "robot/robot.hpp"
-#include "constraints/joint_space_constraints/joint_position_upper_limits_pdipm.hpp"
-#include "constraints/joint_space_constraints/joint_position_lower_limits_pdipm.hpp"
-#include "constraints/joint_space_constraints/joint_velocity_upper_limits_pdipm.hpp"
-#include "constraints/joint_space_constraints/joint_velocity_lower_limits_pdipm.hpp"
-#include "constraints/joint_space_constraints/joint_torque_upper_limits_pdipm.hpp"
-#include "constraints/joint_space_constraints/joint_torque_lower_limits_pdipm.hpp"
+#include "constraints/joint_space_constraints/joint_position_upper_limits.hpp"
+#include "constraints/joint_space_constraints/joint_position_lower_limits.hpp"
+#include "constraints/joint_space_constraints/joint_velocity_upper_limits.hpp"
+#include "constraints/joint_space_constraints/joint_velocity_lower_limits.hpp"
+#include "constraints/joint_space_constraints/joint_torque_upper_limits.hpp"
+#include "constraints/joint_space_constraints/joint_torque_lower_limits.hpp"
 
 
 namespace idocp {

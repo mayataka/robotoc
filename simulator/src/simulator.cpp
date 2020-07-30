@@ -1,4 +1,4 @@
-#include "simulator.hpp"
+#include "mpc_simulator/simulator.hpp"
 
 #include <chrono>
 #include <iostream>

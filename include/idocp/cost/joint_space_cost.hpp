@@ -17,6 +17,15 @@ public:
                  const Eigen::VectorXd& qf_weight,  
                  const Eigen::VectorXd& vf_weight);
 
+  JointSpaceCost(const Robot& robot, const Eigen::VectorXd& q_ref,  
+                 const Eigen::VectorXd& v_ref, const Eigen::VectorXd& a_ref,  
+                 const Eigen::VectorXd& u_ref, const Eigen::VectorXd& q_weight,  
+                 const Eigen::VectorXd& v_weight, 
+                 const Eigen::VectorXd& a_weight,  
+                 const Eigen::VectorXd& u_weight,
+                 const Eigen::VectorXd& qf_weight,  
+                 const Eigen::VectorXd& vf_weight);
+
   // Use defalut copy constructor.
   JointSpaceCost(const JointSpaceCost&) = default;
 

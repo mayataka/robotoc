@@ -160,7 +160,6 @@ void Robot::dIntegrateConfiguration(const Eigen::VectorXd& q,
                         pinocchio::ARG0);
   pinocchio::dIntegrate(model_, q, integration_length*v, dIntegrate_dv, 
                         pinocchio::ARG1);
-  dIntegrate_dv.array() *= integration_length;
 }
 
 
@@ -343,6 +342,16 @@ void Robot::passiveConstraintViolation(const Eigen::VectorXd& torques,
 }
 
 
+void Robot::generateRandomConfiguration(const Eigen::VectorXd& q_min, 
+                                        const Eigen::VectorXd& q_max, 
+                                        Eigen::VectorXd& q) const {
+  assert(q_min.size() == dimq_);
+  assert(q_max.size() == dimq_);
+  assert(q.size() == dimq_);
+  q = pinocchio::randomConfiguration(model_, q_min, q_max);
+}
+
+
 Eigen::VectorXd Robot::jointEffortLimit() const {
   return model_.effortLimit;
 }
@@ -383,7 +392,7 @@ int Robot::max_dimf() const {
 }
 
 
-bool Robot::has_floating_base() {
+bool Robot::has_floating_base() const {
   return floating_base_.has_floating_base();
 }
 

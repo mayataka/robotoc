@@ -201,6 +201,15 @@ public:
   void passiveConstraintViolation(const Eigen::VectorXd& tau, 
                                   Eigen::VectorXd& violation) const;
 
+  // Generates random configuration
+  // Argments:
+  //   q: The min of the configuration vector. Size must be dimq.  
+  //   q: The max of the configuration vector. Size must be dimq.  
+  //   q: The generated configuration vector. Size must be dimq.  
+  void generateRandomConfiguration(const Eigen::VectorXd& q_min, 
+                                   const Eigen::VectorXd& q_max, 
+                                   Eigen::VectorXd& q) const;
+
   // Returns the effort limit of each joints.
   Eigen::VectorXd jointEffortLimit() const;
 
@@ -226,7 +235,7 @@ public:
   int max_dimf() const;
 
   // Returns true if the robot has a floating base and false if not.
-  bool has_floating_base();
+  bool has_floating_base() const;
 
   // Returns the dimensiton of the generalized torques corresponding to the 
   // passive joints.

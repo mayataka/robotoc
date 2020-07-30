@@ -8,8 +8,8 @@
 #include "robot/robot.hpp"
 #include "ocp/mpc.hpp"
 
-#include "runge_kutta.hpp"
-#include "simulation_data_saver.hpp"
+#include "mpc_simulator/runge_kutta.hpp"
+#include "mpc_simulator/simulation_data_saver.hpp"
 
 
 namespace idocp {

@@ -12,6 +12,9 @@ class ContactCost {
 public:
   ContactCost(const Robot& robot, const Eigen::VectorXd& f_weight);
 
+  ContactCost(const Robot& robot, const Eigen::VectorXd& f_ref, 
+              const Eigen::VectorXd& f_weight);
+
   // Use defalut copy constructor.
   ContactCost(const ContactCost&) = default;
 

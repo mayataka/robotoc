@@ -150,14 +150,19 @@ TEST_F(FloatingBaseRobotTest, dIntegrateConfiguration) {
   pinocchio::dIntegrate(model_, q_, integration_length*v_, dintegrate_dv_ref, 
                         pinocchio::ARG1);
   EXPECT_TRUE(dintegrate_dq.isApprox(dintegrate_dq_ref));
-  EXPECT_TRUE(dintegrate_dv.isApprox(integration_length*dintegrate_dv_ref));
+  EXPECT_TRUE(dintegrate_dv.isApprox(dintegrate_dv_ref));
   EXPECT_TRUE(
       dintegrate_dq.block(6, 6, dimv_-6, dimv_-6)
       .isApprox(Eigen::MatrixXd::Identity(dimv_-6, dimv_-6)));
   EXPECT_TRUE(
       dintegrate_dv.block(6, 6, dimv_-6, dimv_-6)
-      .isApprox(integration_length*Eigen::MatrixXd::Identity(dimv_-6,  
-                                                             dimv_-6)));
+      .isApprox(Eigen::MatrixXd::Identity(dimv_-6, dimv_-6)));
+  std::cout << "dintegrate_dq:" << std::endl;
+  std::cout << dintegrate_dq << std::endl;
+  std::cout << std::endl;
+  std::cout << "dintegrate_dv:" << std::endl;
+  std::cout << dintegrate_dv << std::endl;
+  std::cout << std::endl;
 }
 
 

@@ -10,6 +10,7 @@
 #include "cost/cost_function_interface.hpp"
 #include "constraints/constraints_interface.hpp"
 #include "constraints/joint_space_constraints/joint_space_constraints.hpp"
+#include "ocp/riccati_matrix_factorizer.hpp"
 
 
 namespace idocp {
@@ -38,6 +39,7 @@ public:
   // Check whether the solution q, v, a, u, fext are feasible under inequality 
   // constraints.
   // Argments: 
+  //   robot: The robot model that has been already initialized.
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
   //   a: Generalized acceleration. Size must be dimv.
@@ -49,6 +51,7 @@ public:
   // Initialize the constraints, i.e., set slack and dual variables under set 
   //  q, v, a, u.
   // Argments: 
+  //   robot: The robot model that has been already initialized.
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
   //   a: Generalized acceleration. Size must be dimv.
@@ -57,6 +60,26 @@ public:
                        const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                        const Eigen::VectorXd& a, const Eigen::VectorXd& u);
 
+  // Linearize the OCP for Newton's method around the current solution.
+  // Argments: 
+  //   robot: The robot model. The contact status of the current time step 
+  //      is included in this model.
+  //   t: Time of the current time step.
+  //   dtau: Discretization length of the OCP.
+  //   lmd: The Lagrange multiplier with respect to the transition of the 
+  //      configuration. Size must be dimv.
+  //   gmm: The Lagrange multiplier with respect to the transition of the 
+  //      generalized velocity. Size must be dimv.
+  //   q: Configuration. Size must be dimq.
+  //   v: Generalized velocity. Size must be dimv.
+  //   a: Generalized acceleration. Size must be dimv.
+  //   u: Generalized torque. Size must be dimv.
+  //   lmd_next: The Lagrange multiplier with respect to the transition of the 
+  //      configuration at the next time step. Size must be dimv.
+  //   gmm_next: The Lagrange multiplier with respect to the transition of the 
+  //      generalized velocity at the next time step. Size must be dimv.
+  //   q_next: Configuration at the next time step. Size must be dimq.
+  //   v_next: Generalized velocity at the next time step. Size must be dimv.
   void linearizeOCP(Robot& robot, const double t, const double dtau, 
                     const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
                     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
@@ -66,6 +89,29 @@ public:
                     const Eigen::VectorXd& q_next,
                     const Eigen::VectorXd& v_next);
 
+  // Linearize the OCP for Newton's method around the current solution at the 
+  // last time step of the horizon.
+  // Argments: 
+  //   robot: The robot model. The contact status of the current time step 
+  //      is included in this model.
+  //   t: Time of the current time step.
+  //   dtau: Discretization length of the OCP.
+  //   lmd: The Lagrange multiplier with respect to the transition of the 
+  //      configuration. Size must be dimv.
+  //   gmm: The Lagrange multiplier with respect to the transition of the 
+  //      generalized velocity. Size must be dimv.
+  //   q: Configuration. Size must be dimq.
+  //   v: Generalized velocity. Size must be dimv.
+  //   Qqq: The second partial derivative of the terminal cost with qq. Size 
+  //      must be dimv x dimv.
+  //   Qqv: The second partial derivative of the terminal cost with qv. Size
+  //      must be dimv x dimv.
+  //   Qvq: The second partial derivative of the terminal cost with vq. Size
+  //      must be dimv x dimv.
+  //   Qvv: The second partial derivative of the terminal cost with vv. Size
+  //      must be dimv x dimv.
+  //   Qq: The partial derivative of the terminal cost with q. Size must be dimv.
+  //   Qv: The partial derivative of the terminal cost with v. Size must be dimv. 
   void linearizeOCP(Robot& robot, const double t, const Eigen::VectorXd& lmd, 
                     const Eigen::VectorXd& gmm, const Eigen::VectorXd& q, 
                     const Eigen::VectorXd& v, Eigen::MatrixXd& Qqq, 
@@ -97,20 +143,13 @@ public:
 
   double maxDualStepSize();
 
-  double stageCostDerivativeDotDirection(Robot& robot, const double t, 
-                                         const double dtau, 
-                                         const Eigen::VectorXd& q, 
-                                         const Eigen::VectorXd& v, 
-                                         const Eigen::VectorXd& a, 
-                                         const Eigen::VectorXd& u,
-                                         const Eigen::VectorXd& dq,
-                                         const Eigen::VectorXd& dv);
-
-  double terminalCostDerivativeDotDirection(Robot& robot, const double t, 
-                                            const Eigen::VectorXd& q, 
-                                            const Eigen::VectorXd& v, 
-                                            const Eigen::VectorXd& dq,
-                                            const Eigen::VectorXd& dv);
+  double costDerivativeDotDirection(Robot& robot, const double t, 
+                                    const double dtau, const Eigen::VectorXd& q, 
+                                    const Eigen::VectorXd& v, 
+                                    const Eigen::VectorXd& a, 
+                                    const Eigen::VectorXd& u,
+                                    const Eigen::VectorXd& dq,
+                                    const Eigen::VectorXd& dv);
 
   std::pair<double, double> stageCostAndConstraintsViolation(
       Robot& robot, const double t, const double dtau, 
@@ -125,13 +164,6 @@ public:
       const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
       const Eigen::VectorXd& dq_next, const Eigen::VectorXd& dv_next);
 
-  double terminalCost(Robot& robot, const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v);
-
-  double terminalCost(Robot& robot, const double step_size, const double t, 
-                      const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                      const Eigen::VectorXd& dq, const Eigen::VectorXd& dv);
-
   void updateDual(const double step_size);
 
   void updatePrimal(Robot& robot, const double step_size, const double dtau, 
@@ -142,14 +174,6 @@ public:
                     Eigen::VectorXd& q, Eigen::VectorXd& v, Eigen::VectorXd& a, 
                     Eigen::VectorXd& u, Eigen::VectorXd& beta, 
                     Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
-
-  void updatePrimal(Robot& robot, const double step_size, 
-                    const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-                    const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
-                    const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
-                    const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
-                    Eigen::VectorXd& q, Eigen::VectorXd& v, 
-                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm) const;
 
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
@@ -164,33 +188,15 @@ public:
                              const Eigen::VectorXd& q_next,
                              const Eigen::VectorXd& v_next);
 
-  double squaredKKTErrorNorm(Robot& robot, const double t, const double dtau, 
-                             const Eigen::VectorXd& lmd, 
-                             const Eigen::VectorXd& gmm, 
-                             const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                             const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                             const Eigen::VectorXd& beta, 
-                             const Eigen::VectorXd& f, 
-                             const Eigen::VectorXd& mu, 
-                             const Eigen::VectorXd& lmd_next, 
-                             const Eigen::VectorXd& gmm_next, 
-                             const Eigen::VectorXd& q_next,
-                             const Eigen::VectorXd& v_next);
-
-  double squaredKKTErrorNorm(Robot& robot, const double t, 
-                             const Eigen::VectorXd& lmd, 
-                             const Eigen::VectorXd& gmm, 
-                             const Eigen::VectorXd& q, 
-                             const Eigen::VectorXd& v);
-
 private:
   CostFunctionInterface *cost_;
   ConstraintsInterface *constraints_;
   pdipm::JointSpaceConstraints joint_constraints_;
+  RiccatiMatrixFactorizer riccati_matrix_factorizer_;
   int dimq_, dimv_, dimf_, dim_passive_;
   Eigen::VectorXd f_, mu_, lq_, lv_, la_, lf_, lu_, lu_condensed_, 
-                  ka_, kf_, kmu_, da_, df_, dmu_;
-  Eigen::VectorXd q_res_, v_res_, a_res_, f_res_, u_res_, du_, C_res_;
+                  ka_, kf_, kmu_, da_, df_, dmu_, q_res_, v_res_, a_res_, 
+                  f_res_, u_res_, du_, C_res_;
   Eigen::MatrixXd luu_, du_dq_, du_dv_, du_da_, du_df_, Qqq_, Qqv_, Qqa_, Qqf_, 
                   Qvq_, Qvv_, Qva_, Qvf_, Qaa_, Qaf_, Qff_, Cq_, Cv_, Ca_, Cf_, 
                   Qff_inv_, Saa_, Saa_inv_, Saf_, D_hat_, D_hat_inv_,

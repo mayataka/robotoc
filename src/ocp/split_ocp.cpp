@@ -11,6 +11,7 @@ SplitOCP::SplitOCP(const Robot& robot, const CostFunctionInterface* cost,
   : cost_(const_cast<CostFunctionInterface*>(cost)),
     constraints_(const_cast<ConstraintsInterface*>(constraints)),
     joint_constraints_(robot),
+    riccati_matrix_factorizer_(robot),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
     dimf_(0),
@@ -235,6 +236,7 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
     Saf_.leftCols(dimf_) 
         = Qaf_.leftCols(dimf_) * Qff_inv_.topLeftCorner(dimf_, dimf_);
   }
+  factorizer.computeIntegrationSensitivities(robot, dtau, q, v);
 }
 
 
@@ -301,20 +303,12 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
   assert(sq.size() == dimv_);
   assert(sv.size() == dimv_);
   // Qqq_, Qqv_, Qvq_, Qvv_: representing Riccati factorizor F
-  Qqq_.noalias() += Pqq_next;
-  Qqv_.noalias() += dtau * Pqq_next;
-  Qqv_.noalias() += Pqv_next;
-  Qvq_.noalias() += dtau * Pqq_next;
-  Qvq_.noalias() += Pvq_next;
-  Qvv_.noalias() += (dtau*dtau) * Pqq_next;
-  Qvv_.noalias() += dtau * (Pqv_next + Pvq_next);
-  Qvv_.noalias() += Pvv_next;
   // Qqa_, Qqf_, Qva_, Qvf_ : representing Riccati factorizor H
-  Qqa_.noalias() += dtau * Pqv_next;
-  Qva_.noalias() += (dtau*dtau) * Pqv_next;
-  Qva_.noalias() += dtau * Pvv_next;
   // Qaa_, Qaf_, Qff_ : representing Riccati factorizor G
-  Qaa_.noalias() += (dtau*dtau) * Pvv_next;
+  riccati_matrix_factorizer_.factorize(dtau, Pqq_next, Pqv_next, Pvq_next, 
+                                       Pvv_next, Qqq_, Qqv_, Qvq_, Qvv_);
+  riccati_matrix_factorizer_.factorize(dtau,  Pqv_next, Pvv_next, Qqa_, Qva_);
+  riccati_matrix_factorizer_.factorize(dtau,  Pvv_next, Qaa_);
   if (dimf_ == 0) {
     // Computes inversion of the coefficient matrix of the decision variables
     Saa_inv_ = Qaa_.llt().solve(Eigen::MatrixXd::Identity(dimv_, dimv_));

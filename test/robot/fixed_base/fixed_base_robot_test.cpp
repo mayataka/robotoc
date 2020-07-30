@@ -131,9 +131,7 @@ TEST_F(FixedBaseRobotTest, dIntegrateConfiguration) {
   robot.dIntegrateConfiguration(q_, v_, integration_length, dintegrate_dq, 
                                 dintegrate_dv);
   EXPECT_TRUE(dintegrate_dq.isApprox(Eigen::MatrixXd::Identity(dimq_, dimq_)));
-  EXPECT_TRUE(
-      dintegrate_dv
-      .isApprox(integration_length*Eigen::MatrixXd::Identity(dimq_, dimq_)));
+  EXPECT_TRUE(dintegrate_dv.isApprox(Eigen::MatrixXd::Identity(dimq_, dimq_)));
 }
 
 

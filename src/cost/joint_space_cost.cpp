@@ -33,6 +33,41 @@ JointSpaceCost::JointSpaceCost(const Robot& robot,
 }
 
 
+JointSpaceCost::JointSpaceCost(const Robot& robot, const Eigen::VectorXd& q_ref,  
+                               const Eigen::VectorXd& v_ref, 
+                               const Eigen::VectorXd& a_ref,  
+                               const Eigen::VectorXd& u_ref, 
+                               const Eigen::VectorXd& q_weight,  
+                               const Eigen::VectorXd& v_weight, 
+                               const Eigen::VectorXd& a_weight,  
+                               const Eigen::VectorXd& u_weight,
+                               const Eigen::VectorXd& qf_weight,  
+                               const Eigen::VectorXd& vf_weight)
+  : dimq_(robot.dimq()),
+    dimv_(robot.dimv()),
+    q_ref_(q_ref),
+    v_ref_(v_ref),
+    a_ref_(a_ref),
+    u_ref_(u_ref),
+    q_weight_(q_weight),
+    v_weight_(v_weight),
+    a_weight_(a_weight),
+    u_weight_(u_weight),
+    qf_weight_(qf_weight),
+    vf_weight_(vf_weight) {
+  assert(q_ref.size() == dimq_);
+  assert(v_ref.size() == dimv_);
+  assert(a_ref.size() == dimv_);
+  assert(u_ref.size() == dimv_);
+  assert(q_weight.size() == dimq_);
+  assert(v_weight.size() == dimv_);
+  assert(a_weight.size() == dimv_);
+  assert(u_weight.size() == dimv_);
+  assert(qf_weight.size() == dimq_);
+  assert(vf_weight.size() == dimv_);
+}
+
+
 void JointSpaceCost::set_q_ref(const Eigen::VectorXd& q_ref) {
   assert(q_ref.size() == dimq_);
   q_ref_ = q_ref;
