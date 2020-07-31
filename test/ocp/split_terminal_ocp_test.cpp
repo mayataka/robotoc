@@ -5,7 +5,7 @@
 #include "Eigen/LU"
 
 #include "robot/robot.hpp"
-#include "ocp/riccati_matrix_inverter.hpp"
+#include "ocp/split_terminal_ocp.hpp"
 
 
 namespace idocp {
