@@ -134,7 +134,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
           if (time_step < N_) {
             const int robot_id = omp_get_thread_num();
             const std::pair<double, double> filter_pair
-                = split_OCPs_[time_step].stageCostAndConstraintsViolation(
+                = split_OCPs_[time_step].costAndConstraintsViolation(
                     robots_[robot_id], t+time_step*dtau_, dtau_, q_[time_step], 
                     v_[time_step], a_[time_step], u_[time_step]);
             costs_.coeffRef(time_step) = filter_pair.first;
@@ -157,7 +157,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
           if (time_step < N_) {
             const int robot_id = omp_get_thread_num();
             const std::pair<double, double> filter_pair
-                = split_OCPs_[time_step].stageCostAndConstraintsViolation(
+                = split_OCPs_[time_step].costAndConstraintsViolation(
                     robots_[robot_id], primal_step_size, t+time_step*dtau_, 
                     dtau_, q_[time_step], v_[time_step], a_[time_step], 
                     u_[time_step], q_[time_step+1], v_[time_step+1], 

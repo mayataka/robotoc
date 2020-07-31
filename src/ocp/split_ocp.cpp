@@ -164,8 +164,6 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   if (dimf_ > 0) {
     cost_->lf(robot, t, dtau, f_, lf_);
   }
-  else {
-  }
   // Augmnet the partial derivatives of the state equation.
   lq_.noalias() += lmd_next - lmd;
   lv_.noalias() += dtau * lmd_next + gmm_next - gmm;
@@ -321,7 +319,9 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
   }
   else if (dimf_ > 0) {
     // Computes the state feedback gain and feedforward term.
-    riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, la_, Kaq_, Kav_, ka_);
+    riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, Qqf_, Qvf_, Cq_, Cv_, Ca_, 
+                                    la_, lf_, C_res_, Kaq_, Kav_, Kfq_, Kfv_, 
+                                    Kmuq_, Kmuv_, ka_, kf_, kmu_);
     // Computes the Riccati factorization matrices
     Pqq = Qqq_;
     Pqq.noalias() += Kaq_.transpose() * Qqa_.transpose();
@@ -458,7 +458,7 @@ double SplitOCP::terminalCostDerivativeDotDirection(Robot& robot,
 }
 
 
-std::pair<double, double> SplitOCP::stageCostAndConstraintsViolation(
+std::pair<double, double> SplitOCP::costAndConstraintsViolation(
     Robot& robot, const double t, const double dtau, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const Eigen::VectorXd& a, const Eigen::VectorXd& u) {
@@ -480,7 +480,7 @@ std::pair<double, double> SplitOCP::stageCostAndConstraintsViolation(
 }
 
 
-std::pair<double, double> SplitOCP::stageCostAndConstraintsViolation(
+std::pair<double, double> SplitOCP::costAndConstraintsViolation(
     Robot& robot, const double step_size, const double t, const double dtau, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const Eigen::VectorXd& a, const Eigen::VectorXd& u, 

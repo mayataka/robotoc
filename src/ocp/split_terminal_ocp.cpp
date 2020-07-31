@@ -1,7 +1,6 @@
 #include "ocp/split_terminal_ocp.hpp"
 
 #include <assert.h>
-#include "Eigen/LU"
 
 
 namespace idocp {

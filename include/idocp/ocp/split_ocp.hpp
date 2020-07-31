@@ -152,12 +152,12 @@ public:
                                     const Eigen::VectorXd& dq,
                                     const Eigen::VectorXd& dv);
 
-  std::pair<double, double> stageCostAndConstraintsViolation(
+  std::pair<double, double> costAndConstraintsViolation(
       Robot& robot, const double t, const double dtau, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
       const Eigen::VectorXd& a, const Eigen::VectorXd& u);
 
-  std::pair<double, double> stageCostAndConstraintsViolation(
+  std::pair<double, double> costAndConstraintsViolation(
       Robot& robot, const double step_size, const double t, const double dtau, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
       const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
