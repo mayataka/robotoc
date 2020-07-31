@@ -92,6 +92,15 @@ public:
                                Eigen::MatrixXd& dIntegrate_dq,
                                Eigen::MatrixXd& dIntegrate_dv) const;
 
+  // Computes the Jacobian of the configuration computed at its tangent 
+  // velocity.
+  // Argments: 
+  //   q: Configuration. Size must be dimq().
+  //   Jacobian: The Jacobian of the configuration computed at its tangent 
+  // velocity.
+  void configurationJacobian(const Eigen::VectorXd& q, 
+                             Eigen::MatrixXd& Jacobian) const;
+
   // Updates the kinematics of the robot. The frame placements, frame velocity,
   // frame acceleration, and the relevant Jacobians are calculated. After that, 
   // the each contact residual is updated.

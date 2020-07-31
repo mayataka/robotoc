@@ -12,9 +12,11 @@ SplitOCP::SplitOCP(const Robot& robot, const CostFunctionInterface* cost,
     joint_constraints_(robot),
     riccati_matrix_factorizer_(robot),
     riccati_matrix_inverter_(robot),
+    has_floating_base_(robot.has_floating_base()),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
     dimf_(0),
+    dimc_(0),
     dim_passive_(robot.dim_passive()),
     f_(Eigen::VectorXd::Zero(robot.max_dimf())),
     mu_(Eigen::VectorXd::Zero(robot.max_dimf()+robot.dim_passive())),
@@ -147,6 +149,7 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   joint_constraints_.condenseSlackAndDual(robot, dtau, u, luu_, lu_);
   // Get the present dimension of the contacts
   dimf_ = robot.dimf();
+  dimc_ = robot.dimf() + robot.dim_passive();
   if (dimf_ > 0) {
     robot.setContactForces(f_);
   }
@@ -157,12 +160,12 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   lu_condensed_ = lu_ + luu_ * u_res_;
   // Partial derivatives of the cost function with respect to the configuration,
   // velocity, and acceleration.
+  if (has_floating_base_) {
+    cost_->setConfigurationJacobian(robot, q);
+  }
   cost_->lq(robot, t, dtau, q, v, a, lq_);
   cost_->lv(robot, t, dtau, q, v, a, lv_);
   cost_->la(robot, t, dtau, q, v, a, la_);
-  if (dimf_ > 0) {
-    cost_->lf(robot, t, dtau, f_, lf_);
-  }
   // Augmnet the partial derivatives of the state equation.
   lq_.noalias() += lmd_next - lmd;
   lv_.noalias() += dtau * lmd_next + gmm_next - gmm;
@@ -174,7 +177,18 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   lq_.noalias() += du_dq_.transpose() * lu_condensed_;
   lv_.noalias() += du_dv_.transpose() * lu_condensed_;
   la_.noalias() += du_da_.transpose() * lu_condensed_;
+  if (has_floating_base_) {
+    Cq_.topRows(robot.dim_passive()) = du_dq_.topRows(robot.dim_passive());
+    Cv_.topRows(robot.dim_passive()) = du_dv_.topRows(robot.dim_passive());
+    Ca_.topRows(robot.dim_passive()) = du_da_.topRows(robot.dim_passive());
+    if (dimf_ > 0) {
+      Cf_ = du_df_.topRows(robot.dim_passive());
+    }
+  }
   if (dimf_ > 0) {
+    // Partial derivatives of the cost function with respect to the contact 
+    // forces.
+    cost_->lf(robot, t, dtau, f_, lf_);
     // Condensing the input torque in the contact forces
     robot.updateKinematics(q, v, a);
     robot.dRNEAPartialdFext(du_df_);
@@ -187,13 +201,7 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
     lv_.noalias() += Cv_.topRows(dimf_).transpose() * mu_.head(dimf_);
     la_.noalias() += Ca_.topRows(dimf_).transpose() * mu_.head(dimf_);
   }
-  if (robot.has_floating_base()) {
-    Cq_.topRows(robot.dim_passive()) = du_dq_.topRows(robot.dim_passive());
-    Cv_.topRows(robot.dim_passive()) = du_dv_.topRows(robot.dim_passive());
-    Ca_.topRows(robot.dim_passive()) = du_da_.topRows(robot.dim_passive());
-    if (dimf_ > 0) {
-      Cf_ = du_df_.topRows(robot.dim_passive());
-    }
+  if (has_floating_base_) {
     riccati_matrix_factorizer_.computeIntegrationSensitivities(robot, dtau, 
                                                                q, v);
   }
@@ -291,9 +299,9 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
   assert(Pvv.cols() == dimv_);
   assert(sq.size() == dimv_);
   assert(sv.size() == dimv_);
-  // Qqq_, Qqv_, Qvq_, Qvv_: representing Riccati factorizor F
-  // Qqa_, Qqf_, Qva_, Qvf_ : representing Riccati factorizor H
-  // Qaa_, Qaf_, Qff_ : representing Riccati factorizor G
+  // Qqq_, Qqv_, Qvq_, Qvv_: representing Riccati factorization F
+  // Qqa_, Qqf_, Qva_, Qvf_ : representing Riccati factorization H
+  // Qaa_, Qaf_, Qff_ : representing Riccati factorization G
   riccati_matrix_factorizer_.factorize(dtau, Pqq_next, Pqv_next, Pvq_next, 
                                        Pvv_next, Qqq_, Qqv_, Qvq_, Qvv_);
   riccati_matrix_factorizer_.factorize(dtau,  Pqv_next, Pvv_next, Qqa_, Qva_);
@@ -301,71 +309,71 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
   la_.noalias() += dtau * Pvq_next * q_res_;
   la_.noalias() += dtau * Pvv_next * v_res_;
   la_.noalias() -= dtau * sv_next;
-  if (dimf_ == 0) {
-    // Computes the state feedback gain and feedforward term.
-    riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, la_, Kaq_, Kav_, ka_);
-    // Computes the Riccati factorization matrices
-    Pqq = Qqq_;
-    Pqq.noalias() += Kaq_.transpose() * Qqa_.transpose();
-    Pqv = Qqv_;
-    Pqv.noalias() += Kaq_.transpose() * Qva_.transpose();
-    Pvq = Qvq_;
-    Pvq.noalias() += Kav_.transpose() * Qqa_.transpose();
-    Pvv = Qvv_;
-    Pvv.noalias() += Kav_.transpose() * Qva_.transpose();
-    // Computes the Riccati factorization vectors
-    sq = sq_next - lq_;
-    sq.noalias() -= Pqq_next * q_res_;
-    sq.noalias() -= Pqv_next * v_res_;
-    sq.noalias() -= Qqa_ * ka_;
-    sv = dtau * sq_next + sv_next - lv_;
-    sv.noalias() -= dtau * Pqq_next * q_res_;
-    sv.noalias() -= Pvq_next * q_res_;
-    sv.noalias() -= dtau * Pqv_next * v_res_;
-    sv.noalias() -= Pvv_next * v_res_;
-    sv.noalias() -= Qva_ * ka_;
+  // Computes the state feedback gain and feedforward terms
+  if (has_floating_base_) {
+    if (dimf_ == 0) {
+      riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, Cq_, Cv_, Ca_, la_, 
+                                      C_res_, Kaq_, Kav_, Kmuq_, Kmuv_, ka_, 
+                                      kmu_);
+    }
+    else if (dimf_ > 0) {
+      riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, Qqf_, Qvf_, Cq_, Cv_, 
+                                      Ca_, Cf_, la_, lf_, C_res_, Kaq_, Kav_, 
+                                      Kfq_, Kfv_, Kmuq_, Kmuv_, ka_, kf_, kmu_);
+    }
+  } 
+  else {
+    if (dimf_ == 0) {
+      riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, la_, Kaq_, Kav_, ka_);
+    }
+    else if (dimf_ > 0) {
+      riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, Qqf_, Qvf_, Cq_, Cv_,  
+                                      Ca_, la_, lf_, C_res_, Kaq_, Kav_, Kfq_,  
+                                      Kfv_, Kmuq_, Kmuv_, ka_, kf_, kmu_);
+    }
   }
-  else if (dimf_ > 0) {
-    // Computes the state feedback gain and feedforward term.
-    riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, Qqf_, Qvf_, Cq_, Cv_, Ca_, 
-                                    la_, lf_, C_res_, Kaq_, Kav_, Kfq_, Kfv_, 
-                                    Kmuq_, Kmuv_, ka_, kf_, kmu_);
-    // Computes the Riccati factorization matrices
-    Pqq = Qqq_;
-    Pqq.noalias() += Kaq_.transpose() * Qqa_.transpose();
+  Pqq = Qqq_;
+  Pqq.noalias() += Kaq_.transpose() * Qqa_.transpose();
+  Pqv = Qqv_;
+  Pqv.noalias() += Kaq_.transpose() * Qva_.transpose();
+  Pvq = Qvq_;
+  Pvq.noalias() += Kav_.transpose() * Qqa_.transpose();
+  Pvv = Qvv_;
+  Pvv.noalias() += Kav_.transpose() * Qva_.transpose();
+  if (dimf_ > 0) {
     Pqq.noalias() += Kfq_.topRows(dimf_).transpose() 
-                     * Qqf_.leftCols(dimf_).transpose();
-    Pqq.noalias() += Kmuq_.topRows(dimf_).transpose() * Cq_.topRows(dimf_);
-    Pqv = Qqv_;
-    Pqv.noalias() += Kaq_.transpose() * Qva_.transpose();
+                    * Qqf_.leftCols(dimf_).transpose();
     Pqv.noalias() += Kfq_.topRows(dimf_).transpose() 
-                     * Qvf_.leftCols(dimf_).transpose();
-    Pqv.noalias() += Kmuq_.topRows(dimf_).transpose() * Cv_.topRows(dimf_);
-    Pvq = Qvq_;
-    Pvq.noalias() += Kav_.transpose() * Qqa_.transpose();
+                    * Qvf_.leftCols(dimf_).transpose();
     Pvq.noalias() += Kfv_.topRows(dimf_).transpose() 
-                     * Qqf_.leftCols(dimf_).transpose();
-    Pvq.noalias() += Kmuv_.topRows(dimf_).transpose() * Cq_.topRows(dimf_);
-    Pvv = Qvv_;
-    Pvv.noalias() += Kav_.transpose() * Qva_.transpose();
+                    * Qqf_.leftCols(dimf_).transpose();
     Pvv.noalias() += Kfv_.topRows(dimf_).transpose() 
-                     * Qvf_.leftCols(dimf_).transpose();
-    Pvv.noalias() += Kmuv_.topRows(dimf_).transpose() * Cv_.topRows(dimf_);
-    // Computes the Riccati factorization vectors
-    sq = sq_next - lq_;
-    sq.noalias() -= Pqq_next * q_res_;
-    sq.noalias() -= Pqv_next * v_res_;
-    sq.noalias() -= Qqa_ * ka_;
+                    * Qvf_.leftCols(dimf_).transpose();
+  } 
+  if (dimc_ > 0) {
+    Pqq.noalias() += Kmuq_.topRows(dimc_).transpose() * Cq_.topRows(dimc_);
+    Pqv.noalias() += Kmuq_.topRows(dimc_).transpose() * Cv_.topRows(dimc_);
+    Pvq.noalias() += Kmuv_.topRows(dimc_).transpose() * Cq_.topRows(dimc_);
+    Pvv.noalias() += Kmuv_.topRows(dimc_).transpose() * Cv_.topRows(dimc_);
+  }
+  // Computes the Riccati factorization vectors
+  sq = sq_next - lq_;
+  sq.noalias() -= Pqq_next * q_res_;
+  sq.noalias() -= Pqv_next * v_res_;
+  sq.noalias() -= Qqa_ * ka_;
+  sv = dtau * sq_next + sv_next - lv_;
+  sv.noalias() -= dtau * Pqq_next * q_res_;
+  sv.noalias() -= Pvq_next * q_res_;
+  sv.noalias() -= dtau * Pqv_next * v_res_;
+  sv.noalias() -= Pvv_next * v_res_;
+  sv.noalias() -= Qva_ * ka_;
+  if (dimf_ > 0) {
     sq.noalias() -= Qqf_.leftCols(dimf_) * kf_.head(dimf_);
-    sq.noalias() -= Cq_.topRows(dimf_).transpose() * kmu_.head(dimf_);
-    sv = dtau * sq_next + sv_next - lv_;
-    sv.noalias() -= dtau * Pqq_next * q_res_;
-    sv.noalias() -= Pvq_next * q_res_;
-    sv.noalias() -= dtau * Pqv_next * v_res_;
-    sv.noalias() -= Pvv_next * v_res_;
-    sv.noalias() -= Qva_ * ka_;
     sv.noalias() -= Qvf_.leftCols(dimf_) * kf_.head(dimf_);
-    sv.noalias() -= Cv_.topRows(dimf_).transpose() * kmu_.head(dimf_);
+  }
+  if (dimc_ > 0) {
+    sq.noalias() -= Cq_.topRows(dimc_).transpose() * kmu_.head(dimc_);
+    sv.noalias() -= Cv_.topRows(dimc_).transpose() * kmu_.head(dimc_);
   }
 }
 
@@ -405,7 +413,8 @@ void SplitOCP::computeCondensedDirection(Robot& robot, const double dtau,
   if (dimf_ > 0) {
     du_.noalias() += du_df_.leftCols(dimf_) * df_.head(dimf_);
   }
-  joint_constraints_.computeSlackAndDualDirection(robot, dtau, dq, dv, da_, du_);
+  joint_constraints_.computeSlackAndDualDirection(robot, dtau, dq, dv, da_, 
+                                                  du_);
 }
 
  

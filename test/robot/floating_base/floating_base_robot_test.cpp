@@ -145,10 +145,8 @@ TEST_F(FloatingBaseRobotTest, dIntegrateConfiguration) {
   const double integration_length = std::abs(Eigen::VectorXd::Random(2)[0]);
   robot.dIntegrateConfiguration(q_, v_, integration_length, dintegrate_dq, 
                                 dintegrate_dv);
-  pinocchio::dIntegrate(model_, q_, integration_length*v_, dintegrate_dq_ref, 
-                        pinocchio::ARG0);
-  pinocchio::dIntegrate(model_, q_, integration_length*v_, dintegrate_dv_ref, 
-                        pinocchio::ARG1);
+  pinocchio::dIntegrate(model_, q_, v_, dintegrate_dq_ref, pinocchio::ARG0);
+  pinocchio::dIntegrate(model_, q_, v_, dintegrate_dv_ref, pinocchio::ARG1);
   EXPECT_TRUE(dintegrate_dq.isApprox(dintegrate_dq_ref));
   EXPECT_TRUE(dintegrate_dv.isApprox(dintegrate_dv_ref));
   EXPECT_TRUE(
@@ -162,6 +160,19 @@ TEST_F(FloatingBaseRobotTest, dIntegrateConfiguration) {
   std::cout << std::endl;
   std::cout << "dintegrate_dv:" << std::endl;
   std::cout << dintegrate_dv << std::endl;
+  std::cout << std::endl;
+}
+
+
+TEST_F(FloatingBaseRobotTest, configurationJacobian) {
+  Robot robot(urdf_);
+  Eigen::MatrixXd Jacobian = Eigen::MatrixXd::Zero(dimq_, dimv_);
+  Eigen::MatrixXd Jacobian_ref = Eigen::MatrixXd::Zero(dimq_, dimv_);
+  robot.configurationJacobian(q_, Jacobian);
+  pinocchio::integrateCoeffWiseJacobian(model_, q_, Jacobian_ref);
+  EXPECT_TRUE(Jacobian.isApprox(Jacobian_ref));
+  std::cout << "configuration Jacobian:" << std::endl;
+  std::cout << Jacobian << std::endl;
   std::cout << std::endl;
 }
 

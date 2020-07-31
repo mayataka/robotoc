@@ -1,5 +1,5 @@
-#ifndef IDOCP_MANIPULATOR_COST_FUNCTION_HPP_
-#define IDOCP_MANIPULATOR_COST_FUNCTION_HPP_
+#ifndef IDOCP_QUADRUPED_COST_FUNCTION_HPP_
+#define IDOCP_QUADRUPED_COST_FUNCTION_HPP_
 
 #include "Eigen/Core"
 
@@ -10,7 +10,7 @@
 
 
 namespace idocp {
-namespace manipulator {
+namespace quadruped {
 
 class CostFunction final : public CostFunctionInterface {
 public:
@@ -124,7 +124,7 @@ private:
 
 };
 
-} // namespace manipulator
+} // namespace quadruped
 } // namespace idocp
 
-#endif // IDOCP_MANIPULATOR_COST_FUNCTION_HPP_
+#endif // IDOCP_QUADRUPED_COST_FUNCTION_HPP_

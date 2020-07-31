@@ -71,12 +71,15 @@ void SplitTerminalOCP::linearizeOCP(Robot& robot, const double t,
   assert(Qvv.cols() == robot.dimv());
   assert(Qq.size() == robot.dimv());
   assert(Qv.size() == robot.dimv());
-  cost_->phiq(robot, t, q, v, lq_);
-  cost_->phiv(robot, t, q, v, lv_);
+  if (robot.has_floating_base()) {
+    cost_->setConfigurationJacobian(robot, q);
+  }
+  cost_->phiq(t, q, v, lq_);
+  cost_->phiv(t, q, v, lv_);
   Qq = - lq_ + lmd;
   Qv = - lv_ + gmm;
-  cost_->phiqq(robot, t, q, v, Qqq);
-  cost_->phivv(robot, t, q, v, Qvv);
+  cost_->phiqq(t, q, v, Qqq);
+  cost_->phivv(t, q, v, Qvv);
 }
 
 
@@ -108,8 +111,11 @@ double SplitTerminalOCP::costDerivativeDotDirection(Robot& robot,
   assert(v.size() == robot.dimv());
   assert(dq.size() == robot.dimv());
   assert(dv.size() == robot.dimv());
-  cost_->phiq(robot, t, q, v, lq_);
-  cost_->phiv(robot, t, q, v, lv_);
+  if (robot.has_floating_base()) {
+    cost_->setConfigurationJacobian(robot, q);
+  }
+  cost_->phiq(t, q, v, lq_);
+  cost_->phiv(t, q, v, lv_);
   double product = 0;
   product += lq_.dot(dq);
   product += lv_.dot(dv);
@@ -122,7 +128,7 @@ double SplitTerminalOCP::terminalCost(Robot& robot, const double t,
                                       const Eigen::VectorXd& v) {
   assert(q.size() == robot.dimq());
   assert(v.size() == robot.dimv());
-  return cost_->phi(robot, t, q, v);
+  return cost_->phi(t, q, v);
 }
 
 
@@ -139,7 +145,7 @@ double SplitTerminalOCP::terminalCost(Robot& robot, const double step_size,
   assert(dv.size() == robot.dimv());
   q_tmp_ = q + step_size * dq;
   v_tmp_ = v + step_size * dv;
-  return cost_->phi(robot, t, q_tmp_, v_tmp_);
+  return cost_->phi(t, q_tmp_, v_tmp_);
 }
 
 
@@ -198,8 +204,11 @@ double SplitTerminalOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   assert(v.size() == robot.dimv());
   // Compute the partial derivatives of the Lagrangian with respect to the 
   // terminal configuration and velocity.
-  cost_->phiq(robot, t, q, v, lq_);
-  cost_->phiv(robot, t, q, v, lv_);
+  if (robot.has_floating_base()) {
+    cost_->setConfigurationJacobian(robot, q);
+  }
+  cost_->phiq(t, q, v, lq_);
+  cost_->phiv(t, q, v, lv_);
   lq_.noalias() -= lmd;
   lv_.noalias() -= gmm;
   double error = 0;

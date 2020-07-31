@@ -10,8 +10,7 @@ namespace idocp {
 
 class TaskSpaceCost {
 public:
-  TaskSpaceCost(const Robot& robot, 
-                const Eigen::VectorXd& q_weight,  
+  TaskSpaceCost(const Robot& robot, const Eigen::VectorXd& q_weight,  
                 const Eigen::VectorXd& v_weight, 
                 const Eigen::VectorXd& a_weight,  
                 const Eigen::VectorXd& u_weight,

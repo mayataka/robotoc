@@ -52,56 +52,57 @@ public:
 
   void set_vf_weight(const Eigen::VectorXd& vf_weight);
 
-  double l(const Robot& robot, const double dtau, const Eigen::VectorXd& q, 
+  void setConfigurationJacobian(const Robot& robot, const Eigen::VectorXd& q);
+
+  double l(const double dtau, const Eigen::VectorXd& q, 
            const Eigen::VectorXd& v, const Eigen::VectorXd& a,
-           const Eigen::VectorXd& u);
+           const Eigen::VectorXd& u) const;
 
-  void lq(const Robot& robot, const double dtau, const Eigen::VectorXd& q, 
-          Eigen::VectorXd& lq);
+  void lq(const double dtau, const Eigen::VectorXd& q, Eigen::VectorXd& lq);
 
-  void lv(const Robot& robot, const double dtau, const Eigen::VectorXd& v, 
-          Eigen::VectorXd& lv);
+  void lv(const double dtau, const Eigen::VectorXd& v, 
+          Eigen::VectorXd& lv) const;
 
-  void la(const Robot& robot, const double dtau, const Eigen::VectorXd& a, 
-          Eigen::VectorXd& la);
+  void la(const double dtau, const Eigen::VectorXd& q, 
+          Eigen::VectorXd& la) const;
 
-  void lu(const Robot& robot, const double dtau, const Eigen::VectorXd& u, 
-          Eigen::VectorXd& lu);
+  void lu(const double dtau, const Eigen::VectorXd& v, 
+          Eigen::VectorXd& lu) const;
 
-  void lqq(const Robot& robot, const double dtau, Eigen::MatrixXd& lqq);
+  void lqq(const double dtau, Eigen::MatrixXd& lqq) const;
 
-  void lvv(const Robot& robot, const double dtau, Eigen::MatrixXd& lvv);
+  void lvv(const double dtau, Eigen::MatrixXd& lvv) const;
 
-  void laa(const Robot& robot, const double dtau, Eigen::MatrixXd& laa);
+  void laa(const double dtau, Eigen::MatrixXd& laa) const;
 
-  void luu(const Robot& robot, const double dtau, Eigen::MatrixXd& luu);
+  void luu(const double dtau, Eigen::MatrixXd& luu) const;
 
-  void augment_lqq(const Robot& robot, const double dtau, Eigen::MatrixXd& lqq);
+  void augment_lqq(const double dtau, Eigen::MatrixXd& lqq) const;
 
-  void augment_lvv(const Robot& robot, const double dtau, Eigen::MatrixXd& lvv);
+  void augment_lvv(const double dtau, Eigen::MatrixXd& lvv) const;
 
-  void augment_laa(const Robot& robot, const double dtau, Eigen::MatrixXd& laa);
+  void augment_laa(const double dtau, Eigen::MatrixXd& laa) const;
 
-  void augment_luu(const Robot& robot, const double dtau, Eigen::MatrixXd& luu);
+  void augment_luu(const double dtau, Eigen::MatrixXd& luu) const;
 
-  double phi(const Robot& robot, const Eigen::VectorXd& q, 
-             const Eigen::VectorXd& v);
+  double phi(const Eigen::VectorXd& q, const Eigen::VectorXd& v) const;
 
-  void phiq(const Robot& robot, const Eigen::VectorXd& q, 
-            Eigen::VectorXd& phiq);
+  void phiq(const Eigen::VectorXd& q, Eigen::VectorXd& phiq);
 
-  void phiv(const Robot& robot, const Eigen::VectorXd& v, 
-            Eigen::VectorXd& phiv);
+  void phiv(const Eigen::VectorXd& v, Eigen::VectorXd& phiv) const;
 
-  void phiqq(const Robot& robot, Eigen::MatrixXd& phiqq);
+  void phiqq(Eigen::MatrixXd& phiqq) const;
 
-  void phivv(const Robot& robot, Eigen::MatrixXd& phivv);
+  void phivv(Eigen::MatrixXd& phivv) const;
 
 private:
+  bool has_floating_base_;
   int dimq_, dimv_;
   Eigen::VectorXd q_ref_, v_ref_, a_ref_, u_ref_, q_weight_, v_weight_, 
-                  a_weight_, u_weight_, qf_weight_, vf_weight_;
-
+                  a_weight_, u_weight_, qf_weight_, vf_weight_, 
+                  lq_configuration_;
+  Eigen::MatrixXd lqq_configuration_, phiqq_configuration_, 
+                  configuration_Jacobian_;
 };
 
 } // namespace idocp

@@ -1,10 +1,10 @@
-#include "manipulator/cost_function.hpp"
+#include "quadruped/cost_function.hpp"
 
 #include <assert.h>
 
 
 namespace idocp {
-namespace manipulator {
+namespace quadruped {
 
 CostFunction::CostFunction(const Robot& robot)
   : CostFunctionInterface(),
@@ -230,5 +230,5 @@ void CostFunction::phivv(const double t, const Eigen::VectorXd& q,
   joint_space_cost_.phivv(robot, phivv);
 }
 
-} // namespace manipulator
+} // namespace quadruped
 } // namespace idocp

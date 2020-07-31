@@ -156,10 +156,19 @@ void Robot::dIntegrateConfiguration(const Eigen::VectorXd& q,
   assert(dIntegrate_dq.cols() == dimv_);
   assert(dIntegrate_dv.rows() == dimv_);
   assert(dIntegrate_dv.cols() == dimv_);
-  pinocchio::dIntegrate(model_, q, integration_length*v, dIntegrate_dq, 
+  pinocchio::dIntegrate(model_, q, v, dIntegrate_dq, 
                         pinocchio::ARG0);
-  pinocchio::dIntegrate(model_, q, integration_length*v, dIntegrate_dv, 
+  pinocchio::dIntegrate(model_, q, v, dIntegrate_dv, 
                         pinocchio::ARG1);
+}
+
+
+void Robot::configurationJacobian(const Eigen::VectorXd& q, 
+                                  Eigen::MatrixXd& Jacobian) const { 
+  assert(q.size() == dimq_);
+  assert(Jacobian.rows() == dimq_);
+  assert(Jacobian.cols() == dimv_);
+  pinocchio::integrateCoeffWiseJacobian(model_, q, Jacobian);
 }
 
 

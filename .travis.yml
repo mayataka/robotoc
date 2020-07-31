@@ -26,7 +26,7 @@ script:
   - mkdir -p build  && cd build
   - cmake -DCMAKE_BUILD_TYPE=Debug ..
   - cmake --build . --config Debug -- -j $(nproc)
-  - ctest -j $(nproc) --output-on-failure
+  - travis_wait 30 ctest -j $(nproc) --output-on-failure
 
 after_success: 
   - lcov --directory . --capture --output-file coverage.info

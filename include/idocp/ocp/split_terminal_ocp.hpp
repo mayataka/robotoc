@@ -16,8 +16,6 @@ namespace idocp {
 
 class SplitTerminalOCP {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   // Constructor.
   // Argments:
   //    robot: The robot model that has been already initialized.
