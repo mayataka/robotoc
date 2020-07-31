@@ -8,6 +8,7 @@
 
 #include "robot/robot.hpp"
 #include "ocp/split_ocp.hpp"
+#include "ocp/split_terminal_ocp.hpp"
 #include "ocp/line_search_filter.hpp"
 #include "cost/cost_function_interface.hpp"
 #include "constraints/constraints_interface.hpp"
@@ -56,6 +57,7 @@ private:
   void activateAllContacts();
 
   std::vector<SplitOCP> split_OCPs_;
+  SplitTerminalOCP split_terminal_OCP_;
   std::vector<Robot> robots_;
   LineSearchFilter filter_;
   CostFunctionInterface* cost_;

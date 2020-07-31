@@ -10,7 +10,8 @@ namespace idocp {
 OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
          const ConstraintsInterface* constraints, const double T, const int N, 
          const int num_proc)
-  : split_OCPs_(N+1, SplitOCP(robot, cost, constraints)),
+  : split_OCPs_(N, SplitOCP(robot, cost, constraints)),
+    split_terminal_OCP_(robot, cost, constraints),
     robots_(num_proc, robot),
     filter_(),
     cost_(const_cast<CostFunctionInterface*>(cost)),
@@ -76,10 +77,10 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
       }
       else {
         const int robot_id = omp_get_thread_num();
-        split_OCPs_[N_].linearizeOCP(robots_[robot_id], t+T_, 
-                                     lmd_[N_], gmm_[N_], q_[N_], v_[N_], 
-                                     Pqq_[N_], Pqv_[N_], Pvq_[N_], Pvv_[N_], 
-                                     sq_[N_], sv_[N_]);
+        split_terminal_OCP_.linearizeOCP(robots_[robot_id], t+T_, lmd_[N_], 
+                                         gmm_[N_], q_[N_], v_[N_], Pqq_[N_], 
+                                         Pqv_[N_], Pvq_[N_], Pvv_[N_], sq_[N_], 
+                                         sv_[N_]);
       }
     }
   } // #pragma omp parallel num_threads(num_proc_)
@@ -141,7 +142,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
           }
           else {
             const int robot_id = omp_get_thread_num();
-            costs_.coeffRef(N_) = split_OCPs_[N_].terminalCost(
+            costs_.coeffRef(N_) = split_terminal_OCP_.terminalCost(
                 robots_[robot_id], t+T_, q_[N_], v_[N_]);
           }
         }
@@ -201,10 +202,10 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
       }
       else {
         const int robot_id = omp_get_thread_num();
-        split_OCPs_[N_].updatePrimal(robots_[robot_id], primal_step_size, 
-                                     dq_[N_], dv_[N_], Pqq_[N_], Pqv_[N_], 
-                                     Pvq_[N_], Pvv_[N_], sq_[N_], sv_[N_], 
-                                     q_[N_], v_[N_], lmd_[N_], gmm_[N_]);
+        split_terminal_OCP_.updatePrimal(robots_[robot_id], primal_step_size, 
+                                         dq_[N_], dv_[N_], Pqq_[N_], Pqv_[N_], 
+                                         Pvq_[N_], Pvv_[N_], sq_[N_], sv_[N_], 
+                                         q_[N_], v_[N_], lmd_[N_], gmm_[N_]);
       }
     }
   } // #pragma omp parallel num_threads(num_proc_)
@@ -277,8 +278,8 @@ double OCP::KKTError(const double t, const Eigen::VectorXd& q,
                                                 lmd_[i+1], gmm_[i+1], 
                                                 q_[i+1], v_[i+1]);
   }
-  error += split_OCPs_[N_].squaredKKTErrorNorm(robots_[0], t+T_, lmd_[N_], 
-                                               gmm_[N_], q_[N_], v_[N_]);
+  error += split_terminal_OCP_.squaredKKTErrorNorm(robots_[0], t+T_, lmd_[N_], 
+                                                   gmm_[N_], q_[N_], v_[N_]);
   return std::sqrt(error);
 }
 

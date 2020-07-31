@@ -27,7 +27,7 @@ public:
 
   void setContactStatus(const Robot& robot);
 
-  void precompute(const Eigen::MatrixXd& Qff, const Eigen::MatrixXd& Qaf);
+  void precompute(const Eigen::MatrixXd& Qaf, const Eigen::MatrixXd& Qff);
 
   // Fixed base without contacts
   void invert(const Eigen::MatrixXd& Qqa, const Eigen::MatrixXd& Qva, 

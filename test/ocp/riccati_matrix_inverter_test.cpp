@@ -110,24 +110,19 @@ TEST_F(RiccatiMatrixInverterTest, fixed_base_wit_contacts) {
   Eigen::VectorXd ka = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd kf = Eigen::VectorXd::Zero(dimf);
   Eigen::VectorXd kmu = Eigen::VectorXd::Zero(dimf);
-  RiccatiMatrixInverter inverter(fixed_base_robot_);
-  inverter.precompute(Qff, Qaf);
-  inverter.invert(Qqa, Qva, Qaa, Qqf, Qvf, Cq, Cv, Ca, la, lf, C_res, Kaq, Kav, 
-                  Kfq, Kfv, Kmuq, Kmuv, ka, kf, kmu);
   Eigen::MatrixXd M = Eigen::MatrixXd::Zero(dimv+2*dimf, dimv+2*dimf);
   M.block(0, 0, dimv+dimf, dimv+dimf) = pos_mat;
   M.block(0, dimv+dimf, dimv, dimf) = Ca.transpose();
-  M.block(dimv, dimv+dimf, dimf, dimf) = Eigen::MatrixXd::Zero(dimf, dimf);
-  M.block(dimv+dimf, dimv, dimf, dimf) = Eigen::MatrixXd::Zero(dimf, dimf);
-  M.block(dimv+dimf, dimv+dimf, dimf, dimf) = Eigen::MatrixXd::Zero(dimf, dimf);
-  M.triangularView<Eigen::StrictlyLower>() = M.transpose().triangularView<Eigen::StrictlyLower>();
-  Eigen::MatrixXd Minv = M.inverse();
-  // Eigen::MatrixXd Cder = Eigen::MatrixXd::Zero(dimv+dimf, dimf);
-  // Cder.topRows(dimv) = Ca.transpose();
-  // Eigen::MatrixXd pos_inv = pos_mat.inverse();
-  // Eigen::MatrixXd shur_mat = - Cder * pos_inv * Cder.transpose();
-  // Eigen::MatrixXd shur_inv = shur_mat.inverse();
-  // Eigen::MatrixXd Minv = Eigen::MatrixXd::Zero(Ainv, );
+  M.block(dimv+dimf, 0, dimf, dimv) = Ca;
+  M.triangularView<Eigen::StrictlyLower>() 
+      = M.transpose().triangularView<Eigen::StrictlyLower>();
+  const Eigen::MatrixXd Minv = M.inverse();
+
+  RiccatiMatrixInverter inverter(fixed_base_robot_);
+  inverter.setContactStatus(fixed_base_robot_);
+  inverter.precompute(Qaf, Qff);
+  inverter.invert(Qqa, Qva, Qaa, Qqf, Qvf, Cq, Cv, Ca, la, lf, C_res, Kaq, Kav, 
+                  Kfq, Kfv, Kmuq, Kmuv, ka, kf, kmu);
 
   const Eigen::MatrixXd Kaq_ref = - Minv.block(0, 0, dimv, dimv) * Qqa.transpose()
                                   - Minv.block(0, dimv, dimv, dimf) * Qqf.transpose()
@@ -165,34 +160,33 @@ TEST_F(RiccatiMatrixInverterTest, fixed_base_wit_contacts) {
   EXPECT_TRUE(ka.isApprox(ka_ref));
   EXPECT_TRUE(kf.isApprox(kf_ref));
   EXPECT_TRUE(kmu.isApprox(kmu_ref));
-  // std::cout << "Kaq error:" << std::endl;
-  // std::cout << Kaq - Kaq_ref << std::endl;
-  // std::cout << std::endl;
-  // std::cout << "Kav error:" << std::endl;
-  // std::cout << Kav - Kav_ref << std::endl;
-  // std::cout << std::endl;
-  // std::cout << "Kfq error:" << std::endl;
-  // std::cout << Kfq - Kfq_ref << std::endl;
-  // std::cout << std::endl;
-  // std::cout << "Kfv error:" << std::endl;
-  // std::cout << Kfv - Kfv_ref << std::endl;
-  // std::cout << std::endl;
-  // std::cout << "Kmuq error:" << std::endl;
-  // std::cout << Kmuq - Kmuq_ref << std::endl;
-  // std::cout << std::endl;
-  // std::cout << "Kmuv error:" << std::endl;
-  // std::cout << Kmuv - Kmuv_ref << std::endl;
-  // std::cout << std::endl;
-  // std::cout << "ka error:" << std::endl;
-  // std::cout << ka - ka_ref << std::endl;
-  // std::cout << std::endl;
-  // std::cout << "kf error:" << std::endl;
-  // std::cout << kf - kf_ref << std::endl;
-  // std::cout << std::endl;
-  // std::cout << "kmu error:" << std::endl;
-  // std::cout << kmu - kmu_ref << std::endl;
-  // std::cout << std::endl;
-  std::cout << Minv << std::endl;
+  std::cout << "Kaq error:" << std::endl;
+  std::cout << Kaq - Kaq_ref << std::endl;
+  std::cout << std::endl;
+  std::cout << "Kav error:" << std::endl;
+  std::cout << Kav - Kav_ref << std::endl;
+  std::cout << std::endl;
+  std::cout << "Kfq error:" << std::endl;
+  std::cout << Kfq - Kfq_ref << std::endl;
+  std::cout << std::endl;
+  std::cout << "Kfv error:" << std::endl;
+  std::cout << Kfv - Kfv_ref << std::endl;
+  std::cout << std::endl;
+  std::cout << "Kmuq error:" << std::endl;
+  std::cout << Kmuq - Kmuq_ref << std::endl;
+  std::cout << std::endl;
+  std::cout << "Kmuv error:" << std::endl;
+  std::cout << Kmuv - Kmuv_ref << std::endl;
+  std::cout << std::endl;
+  std::cout << "ka error:" << std::endl;
+  std::cout << ka - ka_ref << std::endl;
+  std::cout << std::endl;
+  std::cout << "kf error:" << std::endl;
+  std::cout << kf - kf_ref << std::endl;
+  std::cout << std::endl;
+  std::cout << "kmu error:" << std::endl;
+  std::cout << kmu - kmu_ref << std::endl;
+  std::cout << std::endl;
 }
 
 } // namespace idocp

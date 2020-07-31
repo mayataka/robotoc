@@ -39,12 +39,12 @@ void RiccatiMatrixInverter::setContactStatus(const Robot& robot) {
 }
 
 
-void RiccatiMatrixInverter::precompute(const Eigen::MatrixXd& Qff, 
-                                       const Eigen::MatrixXd& Qaf) {
-  assert(Qff.rows() == max_dimf_);
-  assert(Qff.cols() == max_dimf_);
+void RiccatiMatrixInverter::precompute(const Eigen::MatrixXd& Qaf, 
+                                       const Eigen::MatrixXd& Qff) {
   assert(Qaf.rows() == dimv_);
   assert(Qaf.cols() == max_dimf_);
+  assert(Qff.rows() == max_dimf_);
+  assert(Qff.cols() == max_dimf_);
   if (dimf_ > 0) {
     Sff_inv_.topLeftCorner(dimf_, dimf_) 
         = Qff.topLeftCorner(dimf_, dimf_)
@@ -78,28 +78,31 @@ void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa,
   assert(Kav.cols() == dimv_);
   assert(ka.size() == dimv_);
   assert(dimf_ == 0);
+  // Inverts the coefficient matrix of the acceleration 
   Saa_inv_ = Qaa.llt().solve(Eigen::MatrixXd::Identity(dimv_, dimv_));
+  // Computes the state feedforward gains.
   Kaq = - Saa_inv_ * Qqa.transpose();
   Kav = - Saa_inv_ * Qva.transpose();
+  // Computes the feedforward term.
   ka = - Saa_inv_ * la;
 }
 
 
 void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa, 
-                                   const Eigen::MatrixXd& Qva,
+                                   const Eigen::MatrixXd& Qva, 
                                    const Eigen::MatrixXd& Qaa, 
-                                   const Eigen::MatrixXd& Qqf,
+                                   const Eigen::MatrixXd& Qqf, 
                                    const Eigen::MatrixXd& Qvf, 
-                                   const Eigen::MatrixXd& Cq,
-                                   const Eigen::MatrixXd& Cv,
-                                   const Eigen::MatrixXd& Ca,
-                                   const Eigen::VectorXd& la,
+                                   const Eigen::MatrixXd& Cq, 
+                                   const Eigen::MatrixXd& Cv, 
+                                   const Eigen::MatrixXd& Ca, 
+                                   const Eigen::VectorXd& la, 
                                    const Eigen::VectorXd& lf, 
-                                   const Eigen::VectorXd& C_res,
+                                   const Eigen::VectorXd& C_res, 
                                    Eigen::MatrixXd& Kaq, Eigen::MatrixXd& Kav, 
                                    Eigen::MatrixXd& Kfq, Eigen::MatrixXd& Kfv, 
                                    Eigen::MatrixXd& Kmuq, Eigen::MatrixXd& Kmuv, 
-                                   Eigen::VectorXd& ka, Eigen::VectorXd& kf,
+                                   Eigen::VectorXd& ka, Eigen::VectorXd& kf, 
                                    Eigen::VectorXd& kmu) {
   assert(!has_floating_base_);
   assert(dim_passive_ == 0);
@@ -131,15 +134,19 @@ void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa,
   assert(ka.size() == dimv_);
   assert(kf.size() == max_dimf_);
   assert(kmu.size() == max_dimf_+dim_passive_);
-  // Inverts the coefficient matrix of the decision variables.
+  // Inverts the coefficient matrix of the acceleration and the contact forces 
   Saa_.noalias() += Qaa;
   Saa_inv_ = Saa_.llt().solve(Eigen::MatrixXd::Identity(dimv_, dimv_));
   Saf_.leftCols(dimf_) = Saa_inv_ * Sac_.leftCols(dimf_);
+  Sff_inv_.topLeftCorner(dimf_, dimf_).noalias() 
+      += Saf_.leftCols(dimf_).transpose() * Saa_ * Saf_.leftCols(dimf_);
+  // Inverts the coefficient matrix of the decision variables including the
+  // acceleration, the contact forces, and the equality constraints
   Scc_.topLeftCorner(dimf_, dimf_) 
-      = - Ca.topRows(dimf_) * Saa_inv_ * Ca.topRows(dimf_).transpose();
+      = Ca.topRows(dimf_) * Saa_inv_ * Ca.topRows(dimf_).transpose();
   Scc_inv_.topLeftCorner(dimf_, dimf_) 
-      = Scc_.topLeftCorner(dimf_, dimf_)
-            .llt().solve(Eigen::MatrixXd::Identity(dimf_, dimf_));
+      = - Scc_.topLeftCorner(dimf_, dimf_)
+              .llt().solve(Eigen::MatrixXd::Identity(dimf_, dimf_));
   Sac_.leftCols(dimf_) 
       = Saa_inv_ * Ca.topRows(dimf_).transpose() 
                  * Scc_inv_.topLeftCorner(dimf_, dimf_);
@@ -148,18 +155,16 @@ void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa,
           * Ca.topRows(dimf_).transpose() 
           * Scc_inv_.topLeftCorner(dimf_, dimf_);
   Saa_inv_.noalias() 
-      += Sac_.leftCols(dimf_) * Scc_.topLeftCorner(dimf_, dimf_)
+      -= Sac_.leftCols(dimf_) * Scc_.topLeftCorner(dimf_, dimf_)
                               * Sac_.leftCols(dimf_).transpose();
+  Saf_.leftCols(dimf_).noalias() 
+      += Sac_.leftCols(dimf_) * Scc_.topLeftCorner(dimf_, dimf_)
+                              * Sfc_.topLeftCorner(dimf_, dimf_).transpose();
   Sff_inv_.topLeftCorner(dimf_, dimf_).noalias() 
-      += Saf_.leftCols(dimf_).transpose() * Saa_ * Saf_.leftCols(dimf_);
-  Sff_inv_.topLeftCorner(dimf_, dimf_).noalias() 
-      += Sfc_.topLeftCorner(dimf_, dimf_) 
+      -= Sfc_.topLeftCorner(dimf_, dimf_) 
           * Scc_.topLeftCorner(dimf_, dimf_) 
           * Sfc_.topLeftCorner(dimf_, dimf_).transpose();
-  Saf_.leftCols(dimf_).noalias() 
-      -= Sac_.leftCols(dimf_) * Scc_.topLeftCorner(dimf_, dimf_)
-                              * Sfc_.topLeftCorner(dimf_, dimf_).transpose();
-  // Computes the state feedback gain.
+  // Computes the state feedforward gains.
   Kaq = - Saa_inv_ * Qqa.transpose();
   Kaq.noalias() += Saf_.leftCols(dimf_) * Qqf.leftCols(dimf_).transpose();
   Kaq.noalias() += Sac_.leftCols(dimf_) * Cq.topRows(dimf_);
@@ -183,14 +188,14 @@ void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa,
       += Sfc_.topLeftCorner(dimf_, dimf_).transpose() 
           * Qqf.leftCols(dimf_).transpose();
   Kmuq.topRows(dimf_).noalias() 
-      -= Scc_.topLeftCorner(dimf_, dimf_) * Cq.topRows(dimf_);
+      -= Scc_inv_.topLeftCorner(dimf_, dimf_) * Cq.topRows(dimf_);
   Kmuv.topRows(dimf_) = Sac_.leftCols(dimf_).transpose() * Qva.transpose();
   Kmuv.topRows(dimf_).noalias() 
       += Sfc_.topLeftCorner(dimf_, dimf_).transpose() 
           * Qvf.leftCols(dimf_).transpose();
   Kmuv.topRows(dimf_).noalias() 
-      -= Scc_.topLeftCorner(dimf_, dimf_) * Cv.topRows(dimf_);
-  // Computes the state feedforward terms.
+      -= Scc_inv_.topLeftCorner(dimf_, dimf_) * Cv.topRows(dimf_);
+  // Computes the feedforward terms.
   ka = - Saa_inv_ * la;
   ka.noalias() += Saf_.leftCols(dimf_) * lf.head(dimf_);
   ka.noalias() += Sac_.leftCols(dimf_) * C_res.head(dimf_);
@@ -203,7 +208,7 @@ void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa,
   kmu.topRows(dimf_).noalias() 
       += Sfc_.topLeftCorner(dimf_, dimf_).transpose() * lf.head(dimf_);
   kmu.topRows(dimf_).noalias() 
-      -= Scc_.topLeftCorner(dimf_, dimf_) * C_res.head(dimf_);
+      -= Scc_inv_.topLeftCorner(dimf_, dimf_) * C_res.head(dimf_);
 }
 
 } // namespace idocp

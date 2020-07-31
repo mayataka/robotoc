@@ -201,8 +201,7 @@ private:
                   f_res_, u_res_, du_, C_res_;
   Eigen::MatrixXd luu_, du_dq_, du_dv_, du_da_, du_df_, Qqq_, Qqv_, Qqa_, Qqf_, 
                   Qvq_, Qvv_, Qva_, Qvf_, Qaa_, Qaf_, Qff_, Cq_, Cv_, Ca_, Cf_, 
-                  Qff_inv_, Saa_, Saa_inv_, Saf_, D_hat_, D_hat_inv_,
-                  L_U_, L_L_, Kaq_, Kav_, Kfq_, Kfv_, Kmuq_, Kmuv_;
+                  Kaq_, Kav_, Kfq_, Kfv_, Kmuq_, Kmuv_;
   // The following variables are only needed for line search
   Eigen::VectorXd q_tmp_, v_tmp_, a_tmp_, f_tmp_, u_tmp_, u_res_tmp_;
 };
