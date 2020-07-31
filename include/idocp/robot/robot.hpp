@@ -123,7 +123,8 @@ public:
   //   dBaumgarte_partial_da: The matrix where the result is stored. The number 
   //     of columns must be dimv. The number of rows must be at least 3 and 
   //     at most 3*max_point_contacts().
-  void computeBaumgarteDerivatives(Eigen::MatrixXd& dBaumgarte_partial_dq, 
+  void computeBaumgarteDerivatives(const int block_rows_begin,
+                                   Eigen::MatrixXd& dBaumgarte_partial_dq, 
                                    Eigen::MatrixXd& dBaumgarte_partial_dv,
                                    Eigen::MatrixXd& dBaumgarte_partial_da);
 

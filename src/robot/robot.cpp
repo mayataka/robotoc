@@ -193,23 +193,22 @@ void Robot::computeBaumgarteResidual(
 }
 
 
-void Robot::computeBaumgarteDerivatives(Eigen::MatrixXd& baumgarte_partial_dq, 
+void Robot::computeBaumgarteDerivatives(const int block_rows_begin,
+                                        Eigen::MatrixXd& baumgarte_partial_dq, 
                                         Eigen::MatrixXd& baumgarte_partial_dv,
                                         Eigen::MatrixXd& baumgarte_partial_da) {
   assert(baumgarte_partial_dq.cols() == dimv_);
-  assert(baumgarte_partial_dq.rows() == max_dimf_);
+  assert(baumgarte_partial_dq.rows() == block_rows_begin+max_dimf_);
   assert(baumgarte_partial_dv.cols() == dimv_);
-  assert(baumgarte_partial_dv.rows() == max_dimf_);
+  assert(baumgarte_partial_dv.rows() == block_rows_begin+max_dimf_);
   assert(baumgarte_partial_da.cols() == dimv_);
-  assert(baumgarte_partial_da.rows() == max_dimf_);
+  assert(baumgarte_partial_da.rows() == block_rows_begin+max_dimf_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
-      point_contacts_[i].computeBaumgarteDerivatives(model_, data_, 
-                                                     3*num_active_contacts, 
-                                                     baumgarte_partial_dq, 
-                                                     baumgarte_partial_dv, 
-                                                     baumgarte_partial_da);
+      point_contacts_[i].computeBaumgarteDerivatives(
+          model_, data_, block_rows_begin+3*num_active_contacts, 
+          baumgarte_partial_dq, baumgarte_partial_dv, baumgarte_partial_da);
       ++num_active_contacts;
     }
   }

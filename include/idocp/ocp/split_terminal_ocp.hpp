@@ -126,7 +126,6 @@ private:
   pdipm::JointSpaceConstraints joint_constraints_;
   int dimq_, dimv_;
   Eigen::VectorXd lq_, lv_, q_res_, v_res_;
-  Eigen::MatrixXd Qqq_, Qqv_, Qvq_, Qvv_;
   // The following variables are only needed for line search
   Eigen::VectorXd q_tmp_, v_tmp_;
 };

@@ -85,6 +85,24 @@ public:
   void lff(const Robot& robot, const double t, const double dtau,
            const Eigen::VectorXd& f, Eigen::MatrixXd& lff) override;
 
+  void augment_lqq(const Robot& robot, const double t, const double dtau, 
+                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                   const Eigen::VectorXd& a, Eigen::MatrixXd& lqq) override;
+
+  void augment_lvv(const Robot& robot, const double t, const double dtau, 
+                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                   const Eigen::VectorXd& a, Eigen::MatrixXd& lvv) override;
+
+  void augment_laa(const Robot& robot, const double t, const double dtau, 
+                   const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                   const Eigen::VectorXd& a, Eigen::MatrixXd& laa) override;
+
+  void augment_luu(const Robot& robot, const double t, const double dtau, 
+                   const Eigen::VectorXd& u, Eigen::MatrixXd& luu) override;
+
+  void augment_lff(const Robot& robot, const double t, const double dtau, 
+                   const Eigen::VectorXd& f, Eigen::MatrixXd& lff) override;
+
   void phiq(const Robot& robot, const double t, const Eigen::VectorXd& q, 
             const Eigen::VectorXd& v, Eigen::VectorXd& phiq) override;
 

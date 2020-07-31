@@ -17,10 +17,6 @@ SplitTerminalOCP::SplitTerminalOCP(const Robot& robot,
     lv_(Eigen::VectorXd::Zero(robot.dimv())),
     q_res_(Eigen::VectorXd::Zero(robot.dimv())),
     v_res_(Eigen::VectorXd::Zero(robot.dimv())),
-    Qqq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Qqv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Qvq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Qvv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     // The following variables are only needed for line search
     q_tmp_(Eigen::VectorXd::Zero(robot.dimq())), 
     v_tmp_(Eigen::VectorXd::Zero(robot.dimv())) {

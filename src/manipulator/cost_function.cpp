@@ -167,6 +167,44 @@ void CostFunction::lff(const Robot& robot, const double t, const double dtau,
 }
 
 
+void CostFunction::augment_lqq(const Robot& robot, const double t, 
+                               const double dtau, const Eigen::VectorXd& q, 
+                               const Eigen::VectorXd& v, 
+                               const Eigen::VectorXd& a, Eigen::MatrixXd& lqq) {
+  joint_space_cost_.augment_lqq(robot, dtau, lqq);
+}
+
+
+void CostFunction::augment_lvv(const Robot& robot, const double t, 
+                               const double dtau, const Eigen::VectorXd& q, 
+                               const Eigen::VectorXd& v, 
+                               const Eigen::VectorXd& a, Eigen::MatrixXd& lvv) {
+  joint_space_cost_.augment_lvv(robot, dtau, lvv);
+}
+
+
+void CostFunction::augment_laa(const Robot& robot, const double t, 
+                               const double dtau, const Eigen::VectorXd& q, 
+                               const Eigen::VectorXd& v, 
+                               const Eigen::VectorXd& a, Eigen::MatrixXd& laa) {
+  joint_space_cost_.augment_laa(robot, dtau, laa);
+}
+
+
+void CostFunction::augment_luu(const Robot& robot, const double t, 
+                               const double dtau, const Eigen::VectorXd& u, 
+                               Eigen::MatrixXd& luu) {
+  joint_space_cost_.augment_luu(robot, dtau, luu);
+}
+
+
+void CostFunction::augment_lff(const Robot& robot, const double t, 
+                               const double dtau, const Eigen::VectorXd& f, 
+                               Eigen::MatrixXd& lff) {
+  contact_cost_.augment_lff(robot, dtau, lff);
+}
+
+
 void CostFunction::phiq(const Robot& robot, const double t, 
                         const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                         Eigen::VectorXd& phiq) {
@@ -193,7 +231,6 @@ void CostFunction::phivv(const Robot& robot, const double t,
                          Eigen::MatrixXd& phivv) {
   joint_space_cost_.phivv(robot, phivv);
 }
-
 
 } // namespace manipulator
 } // namespace idocp

@@ -63,6 +63,29 @@ public:
   virtual void lff(const Robot& robot, const double t, const double dtau,
                    const Eigen::VectorXd& f, Eigen::MatrixXd& lff) = 0;
 
+  virtual void augment_lqq(const Robot& robot, const double t, 
+                           const double dtau, const Eigen::VectorXd& q, 
+                           const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                           Eigen::MatrixXd& lqq) = 0;
+
+  virtual void augment_lvv(const Robot& robot, const double t, 
+                           const double dtau, const Eigen::VectorXd& q, 
+                           const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                           Eigen::MatrixXd& lvv) = 0;
+
+  virtual void augment_laa(const Robot& robot, const double t, 
+                           const double dtau, const Eigen::VectorXd& q, 
+                           const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                           Eigen::MatrixXd& laa) = 0;
+
+  virtual void augment_luu(const Robot& robot, const double t, 
+                           const double dtau, const Eigen::VectorXd& u, 
+                           Eigen::MatrixXd& luu) = 0;
+
+  virtual void augment_lff(const Robot& robot, const double t, 
+                           const double dtau, const Eigen::VectorXd& f, 
+                           Eigen::MatrixXd& lff) = 0;
+
   virtual void phiq(const Robot& robot, const double t, 
                     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                     Eigen::VectorXd& phiq) = 0;

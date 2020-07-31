@@ -187,7 +187,7 @@ void JointSpaceCost::lqq(const Robot& robot, const double dtau,
   assert(lqq.rows() == dimv_);
   assert(lqq.cols() == dimv_);
   for (int i=0; i<dimq_; ++i) {
-    lqq.coeffRef(i, i) += dtau * q_weight_.coeff(i);
+    lqq.coeffRef(i, i) = dtau * q_weight_.coeff(i);
   }
 }
 
@@ -198,7 +198,7 @@ void JointSpaceCost::lvv(const Robot& robot, const double dtau,
   assert(lvv.rows() == dimv_);
   assert(lvv.cols() == dimv_);
   for (int i=0; i<dimv_; ++i) {
-    lvv.coeffRef(i, i) += dtau * v_weight_.coeff(i);
+    lvv.coeffRef(i, i) = dtau * v_weight_.coeff(i);
   }
 }
 
@@ -209,7 +209,7 @@ void JointSpaceCost::laa(const Robot& robot, const double dtau,
   assert(laa.rows() == dimv_);
   assert(laa.cols() == dimv_);
   for (int i=0; i<dimv_; ++i) {
-    laa.coeffRef(i, i) += dtau * a_weight_.coeff(i);
+    laa.coeffRef(i, i) = dtau * a_weight_.coeff(i);
   }
 }
 
@@ -221,6 +221,50 @@ void JointSpaceCost::luu(const Robot& robot, const double dtau,
   assert(luu.cols() == dimv_);
   for (int i=0; i<dimv_; ++i) {
     luu.coeffRef(i, i) = dtau * u_weight_.coeff(i);
+  }
+}
+
+
+void JointSpaceCost::augment_lqq(const Robot& robot, const double dtau, 
+                                 Eigen::MatrixXd& lqq) {
+  assert(dtau > 0);
+  assert(lqq.rows() == dimv_);
+  assert(lqq.cols() == dimv_);
+  for (int i=0; i<dimq_; ++i) {
+    lqq.coeffRef(i, i) += dtau * q_weight_.coeff(i);
+  }
+}
+
+
+void JointSpaceCost::augment_lvv(const Robot& robot, const double dtau, 
+                                 Eigen::MatrixXd& lvv) {
+  assert(dtau > 0);
+  assert(lvv.rows() == dimv_);
+  assert(lvv.cols() == dimv_);
+  for (int i=0; i<dimv_; ++i) {
+    lvv.coeffRef(i, i) += dtau * v_weight_.coeff(i);
+  }
+}
+
+
+void JointSpaceCost::augment_laa(const Robot& robot, const double dtau, 
+                                 Eigen::MatrixXd& laa) {
+  assert(dtau > 0);
+  assert(laa.rows() == dimv_);
+  assert(laa.cols() == dimv_);
+  for (int i=0; i<dimv_; ++i) {
+    laa.coeffRef(i, i) += dtau * a_weight_.coeff(i);
+  }
+}
+
+
+void JointSpaceCost::augment_luu(const Robot& robot, const double dtau, 
+                                 Eigen::MatrixXd& luu) {
+  assert(dtau > 0);
+  assert(luu.rows() == dimv_);
+  assert(luu.cols() == dimv_);
+  for (int i=0; i<dimv_; ++i) {
+    luu.coeffRef(i, i) += dtau * u_weight_.coeff(i);
   }
 }
 

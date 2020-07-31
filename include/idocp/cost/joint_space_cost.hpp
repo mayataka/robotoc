@@ -76,6 +76,14 @@ public:
 
   void luu(const Robot& robot, const double dtau, Eigen::MatrixXd& luu);
 
+  void augment_lqq(const Robot& robot, const double dtau, Eigen::MatrixXd& lqq);
+
+  void augment_lvv(const Robot& robot, const double dtau, Eigen::MatrixXd& lvv);
+
+  void augment_laa(const Robot& robot, const double dtau, Eigen::MatrixXd& laa);
+
+  void augment_luu(const Robot& robot, const double dtau, Eigen::MatrixXd& luu);
+
   double phi(const Robot& robot, const Eigen::VectorXd& q, 
              const Eigen::VectorXd& v);
 

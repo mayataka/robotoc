@@ -154,24 +154,38 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   contact_ref.resetContactPointByCurrentKinematics(data_);
   contact_ref.computeBaumgarteResidual(model_, data_, 0, residual_ref);
   EXPECT_TRUE(residual.isApprox(residual_ref));
-  Eigen::MatrixXd baumgarte_partial_q = Eigen::MatrixXd::Zero(robot.max_dimf(), 
-                                                              dimq_);
-  Eigen::MatrixXd baumgarte_partial_v = Eigen::MatrixXd::Zero(robot.max_dimf(), 
-                                                              dimq_);
-  Eigen::MatrixXd baumgarte_partial_a = Eigen::MatrixXd::Zero(robot.max_dimf(), 
-                                                              dimq_);
-  Eigen::MatrixXd baumgarte_partial_q_ref = baumgarte_partial_q;
-  Eigen::MatrixXd baumgarte_partial_v_ref = baumgarte_partial_v;
-  Eigen::MatrixXd baumgarte_partial_a_ref = baumgarte_partial_a;
-  robot.computeBaumgarteDerivatives(baumgarte_partial_q, baumgarte_partial_v, 
-                                    baumgarte_partial_a);
+  std::random_device rnd;
+  const int block_rows_begin = rnd() % 10;
+  Eigen::MatrixXd baumgarte_partial_q 
+      = Eigen::MatrixXd::Zero(block_rows_begin+robot.max_dimf(), dimq_);
+  Eigen::MatrixXd baumgarte_partial_v 
+      = Eigen::MatrixXd::Zero(block_rows_begin+robot.max_dimf(), dimq_);
+  Eigen::MatrixXd baumgarte_partial_a 
+      = Eigen::MatrixXd::Zero(block_rows_begin+robot.max_dimf(), dimq_);
+  Eigen::MatrixXd baumgarte_partial_q_ref
+      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimq_);
+  Eigen::MatrixXd baumgarte_partial_v_ref 
+      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimq_);
+  Eigen::MatrixXd baumgarte_partial_a_ref 
+      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimq_);
+  robot.computeBaumgarteDerivatives(block_rows_begin, baumgarte_partial_q, 
+                                    baumgarte_partial_v, baumgarte_partial_a);
   contact_ref.computeBaumgarteDerivatives(model_, data_, 
                                           baumgarte_partial_q_ref, 
                                           baumgarte_partial_v_ref, 
                                           baumgarte_partial_a_ref);
-  EXPECT_TRUE(baumgarte_partial_q.isApprox(baumgarte_partial_q_ref));
-  EXPECT_TRUE(baumgarte_partial_v.isApprox(baumgarte_partial_v_ref));
-  EXPECT_TRUE(baumgarte_partial_a.isApprox(baumgarte_partial_a_ref));
+  EXPECT_TRUE(baumgarte_partial_q.topRows(block_rows_begin).isZero());
+  EXPECT_TRUE(baumgarte_partial_v.topRows(block_rows_begin).isZero());
+  EXPECT_TRUE(baumgarte_partial_a.topRows(block_rows_begin).isZero());
+  EXPECT_TRUE(
+      baumgarte_partial_q.bottomRows(robot.max_dimf())
+      .isApprox(baumgarte_partial_q_ref));
+  EXPECT_TRUE(
+      baumgarte_partial_v.bottomRows(robot.max_dimf())
+      .isApprox(baumgarte_partial_v_ref));
+  EXPECT_TRUE(
+      baumgarte_partial_a.bottomRows(robot.max_dimf())
+      .isApprox(baumgarte_partial_a_ref));
 }
 
 
@@ -183,7 +197,8 @@ TEST_F(FixedBaseRobotTest, RNEA) {
   Eigen::VectorXd tau_ref = pinocchio::rnea(model_, data_, q_, v_, a_);
   EXPECT_TRUE(tau_ref.isApprox(tau));
   std::vector<int> contact_frames = {contact_frame_id_};
-  Robot robot_contact(urdf_, contact_frames, baumgarte_weight_on_velocity_, baumgarte_weight_on_position_);
+  Robot robot_contact(urdf_, contact_frames, baumgarte_weight_on_velocity_, 
+                      baumgarte_weight_on_position_);
   tau = Eigen::VectorXd::Zero(dimq_);
   tau_ref = Eigen::VectorXd::Zero(dimq_);
   Eigen::VectorXd fext = Eigen::VectorXd::Random(robot_contact.max_dimf());
@@ -228,7 +243,8 @@ TEST_F(FixedBaseRobotTest, RNEADerivativesWithoutFext) {
 
 TEST_F(FixedBaseRobotTest, RNEADerivativesWithContacts) {
   std::vector<int> contact_frames = {contact_frame_id_};
-  Robot robot(urdf_, contact_frames, baumgarte_weight_on_velocity_, baumgarte_weight_on_position_);
+  Robot robot(urdf_, contact_frames, baumgarte_weight_on_velocity_, 
+              baumgarte_weight_on_position_);
   Eigen::VectorXd fext = Eigen::VectorXd::Random(robot.max_dimf());
   Eigen::MatrixXd dRNEA_dq = Eigen::MatrixXd::Zero(dimq_, dimq_);
   Eigen::MatrixXd dRNEA_dv = Eigen::MatrixXd::Zero(dimq_, dimq_);
@@ -246,7 +262,8 @@ TEST_F(FixedBaseRobotTest, RNEADerivativesWithContacts) {
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint 
       = pinocchio::container::aligned_vector<pinocchio::Force>(
                  model_.joints.size(), pinocchio::Force::Zero());
-  PointContact contact_ref(model_, contact_frame_id_, baumgarte_weight_on_velocity_, 
+  PointContact contact_ref(model_, contact_frame_id_, 
+                           baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
   contact_ref.computeJointForceFromContactForce(fext, fjoint);
   pinocchio::computeRNEADerivatives(model_, data_, q_, v_, a_, fjoint, 

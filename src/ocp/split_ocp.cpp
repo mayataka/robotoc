@@ -1,7 +1,6 @@
 #include "ocp/split_ocp.hpp"
 
 #include <assert.h>
-#include "Eigen/LU"
 
 
 namespace idocp {
@@ -60,8 +59,7 @@ SplitOCP::SplitOCP(const Robot& robot, const CostFunctionInterface* cost,
                               robot.dimv())),
     Ca_(Eigen::MatrixXd::Zero(robot.max_dimf()+robot.dim_passive(), 
                               robot.dimv())),
-    Cf_(Eigen::MatrixXd::Zero(robot.max_dimf()+robot.dim_passive(), 
-                              robot.max_dimf())),
+    Cf_(Eigen::MatrixXd::Zero(robot.dim_passive(), robot.max_dimf())),
     Kaq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Kav_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Kfq_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
@@ -132,7 +130,8 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
   // Residual of the state equation
-  q_res_ = q + dtau * v - q_next;
+  robot.differenceConfiguration(q, q_next, q_ref_);
+  q_res_.noalias() += dtau * v;
   v_res_ = v + dtau * a - v_next;
   // First, we condense the the control input torques and the Lagrange 
   // multiplier with respect to inverse dynamics.
@@ -182,11 +181,21 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
     lf_.noalias() += du_df_.leftCols(dimf_).transpose() * lu_condensed_;
     // Computes the contact constraints.
     robot.computeBaumgarteResidual(C_res_);
-    robot.computeBaumgarteDerivatives(Cq_, Cv_, Ca_);
+    robot.computeBaumgarteDerivatives(robot.dim_passive(), Cq_, Cv_, Ca_);
     // Augment the equality constraints 
     lq_.noalias() += Cq_.topRows(dimf_).transpose() * mu_.head(dimf_);
     lv_.noalias() += Cv_.topRows(dimf_).transpose() * mu_.head(dimf_);
     la_.noalias() += Ca_.topRows(dimf_).transpose() * mu_.head(dimf_);
+  }
+  if (robot.has_floating_base()) {
+    Cq_.topRows(robot.dim_passive()) = du_dq_.topRows(robot.dim_passive());
+    Cv_.topRows(robot.dim_passive()) = du_dv_.topRows(robot.dim_passive());
+    Ca_.topRows(robot.dim_passive()) = du_da_.topRows(robot.dim_passive());
+    if (dimf_ > 0) {
+      Cf_ = du_df_.topRows(robot.dim_passive());
+    }
+    riccati_matrix_factorizer_.computeIntegrationSensitivities(robot, dtau, 
+                                                               q, v);
   }
   // Augment the condensed Hessian of the contorl input torques. 
   Qqq_ = du_dq_.transpose() * luu_ * du_dq_;
@@ -209,15 +218,14 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   joint_constraints_.condenseSlackAndDual(robot, dtau, q, v, a, Qqq_, Qvv_, 
                                           Qaa_, lq_, lv_, la_);
   // Augment the cost function Hessian. 
-  cost_->lqq(robot, t, dtau, q, v, a, Qqq_);
-  cost_->lvv(robot, t, dtau, q, v, a, Qvv_);
-  cost_->laa(robot, t, dtau, q, v, a, Qaa_);
+  cost_->augment_lqq(robot, t, dtau, q, v, a, Qqq_);
+  cost_->augment_lvv(robot, t, dtau, q, v, a, Qvv_);
+  cost_->augment_laa(robot, t, dtau, q, v, a, Qaa_);
   if (dimf_ > 0) {
     cost_->lff(robot, t, dtau, f_, Qff_);
     riccati_matrix_inverter_.setContactStatus(robot);
     riccati_matrix_inverter_.precompute(Qff_, Qaf_);
   }
-  riccati_matrix_factorizer_.computeIntegrationSensitivities(robot, dtau, q, v);
 }
 
 

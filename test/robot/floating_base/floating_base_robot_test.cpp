@@ -192,29 +192,40 @@ TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
     contacts_ref[i].computeBaumgarteResidual(model_, data_, 3*i, residual_ref);
   }
   EXPECT_TRUE(residual.isApprox(residual_ref));
-  Eigen::MatrixXd baumgarte_partial_q = Eigen::MatrixXd::Zero(robot.max_dimf(), 
-                                                              dimv_);
-  Eigen::MatrixXd baumgarte_partial_v = Eigen::MatrixXd::Zero(robot.max_dimf(), 
-                                                              dimv_);
-  Eigen::MatrixXd baumgarte_partial_a = Eigen::MatrixXd::Zero(robot.max_dimf(), 
-                                                              dimv_);
+  std::random_device rnd;
+  const int block_rows_begin = rnd() % 10;
+  Eigen::MatrixXd baumgarte_partial_q 
+      = Eigen::MatrixXd::Zero(block_rows_begin+robot.max_dimf(), dimv_);
+  Eigen::MatrixXd baumgarte_partial_v 
+      = Eigen::MatrixXd::Zero(block_rows_begin+robot.max_dimf(), dimv_);
+  Eigen::MatrixXd baumgarte_partial_a 
+      = Eigen::MatrixXd::Zero(block_rows_begin+robot.max_dimf(), dimv_);
   Eigen::MatrixXd baumgarte_partial_q_ref
-      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimv_);  
-  Eigen::MatrixXd baumgarte_partial_v_ref  
-      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimv_);  
+      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimv_);
+  Eigen::MatrixXd baumgarte_partial_v_ref 
+      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimv_);
   Eigen::MatrixXd baumgarte_partial_a_ref 
-      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimv_);  
-  robot.computeBaumgarteDerivatives(baumgarte_partial_q, baumgarte_partial_v, 
-                                    baumgarte_partial_a);
+      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimv_);
+  robot.computeBaumgarteDerivatives(block_rows_begin, baumgarte_partial_q, 
+                                    baumgarte_partial_v, baumgarte_partial_a);
   for (int i=0; i<contacts_ref.size(); ++i) {
     contacts_ref[i].computeBaumgarteDerivatives(model_, data_, 3*i,
                                                 baumgarte_partial_q_ref, 
                                                 baumgarte_partial_v_ref, 
                                                 baumgarte_partial_a_ref);
   }
-  EXPECT_TRUE(baumgarte_partial_q.isApprox(baumgarte_partial_q_ref));
-  EXPECT_TRUE(baumgarte_partial_v.isApprox(baumgarte_partial_v_ref));
-  EXPECT_TRUE(baumgarte_partial_a.isApprox(baumgarte_partial_a_ref));
+  EXPECT_TRUE(baumgarte_partial_q.topRows(block_rows_begin).isZero());
+  EXPECT_TRUE(baumgarte_partial_v.topRows(block_rows_begin).isZero());
+  EXPECT_TRUE(baumgarte_partial_a.topRows(block_rows_begin).isZero());
+  EXPECT_TRUE(
+      baumgarte_partial_q.bottomRows(robot.max_dimf())
+      .isApprox(baumgarte_partial_q_ref));
+  EXPECT_TRUE(
+      baumgarte_partial_v.bottomRows(robot.max_dimf())
+      .isApprox(baumgarte_partial_v_ref));
+  EXPECT_TRUE(
+      baumgarte_partial_a.bottomRows(robot.max_dimf())
+      .isApprox(baumgarte_partial_a_ref));
 }
 
 
