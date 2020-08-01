@@ -98,6 +98,18 @@ TEST_F(FixedBaseRobotTest, constructor) {
       robot_contact.lowerJointPositionLimit().isApprox(lower_position_limit));
   EXPECT_TRUE(
       robot_contact.upperJointPositionLimit().isApprox(upper_position_limit));
+  effort_limit.setZero();
+  velocity_limit.setZero();
+  lower_position_limit.setZero();
+  upper_position_limit.setZero();
+  robot.setJointEffortLimit(effort_limit);
+  robot.setJointVelocityLimit(velocity_limit);
+  robot.setLowerJointPositionLimit(lower_position_limit);
+  robot.setUpperJointPositionLimit(upper_position_limit);
+  EXPECT_TRUE(robot.jointEffortLimit().isApprox(effort_limit));
+  EXPECT_TRUE(robot.jointVelocityLimit().isApprox(velocity_limit));
+  EXPECT_TRUE(robot.lowerJointPositionLimit().isApprox(lower_position_limit));
+  EXPECT_TRUE(robot.upperJointPositionLimit().isApprox(upper_position_limit));
 }
 
 

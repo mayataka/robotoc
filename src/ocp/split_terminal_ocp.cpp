@@ -44,8 +44,6 @@ void SplitTerminalOCP::initConstraints(Robot& robot, const int time_step,
   assert(dtau > 0);
   assert(q.size() == robot.dimq());
   assert(v.size() == robot.dimv());
-  assert(a.size() == robot.dimv());
-  assert(u.size() == robot.dimv());
   // joint_constraints_.setTimeStep(time_step);
   // joint_constraints_.setSlackAndDual(robot, dtau, q, v, a, u);
 }
@@ -87,7 +85,7 @@ void SplitTerminalOCP::computeCondensedDirection(Robot& robot,
                                                  const double dtau, 
                                                  const Eigen::VectorXd& dq, 
                                                  const Eigen::VectorXd& dv) {
-  joint_constraints_.computeSlackAndDualDirection(robot, dtau, dq, dv, da_, du_);
+  // joint_constraints_.computeSlackAndDualDirection(robot, dtau, dq, dv);
 }
 
  
@@ -101,12 +99,10 @@ double SplitTerminalOCP::maxDualStepSize() {
 }
 
 
-double SplitTerminalOCP::costDerivativeDotDirection(Robot& robot, 
-                                                    const double t, 
-                                                    const Eigen::VectorXd& q, 
-                                                    const Eigen::VectorXd& v, 
-                                                    const Eigen::VectorXd& dq,
-                                                    const Eigen::VectorXd& dv) {
+double SplitTerminalOCP::costDerivativesDotDirection(
+    Robot& robot, const double t, const Eigen::VectorXd& q, 
+    const Eigen::VectorXd& v, const Eigen::VectorXd& dq, 
+    const Eigen::VectorXd& dv) {
   assert(q.size() == robot.dimq());
   assert(v.size() == robot.dimv());
   assert(dq.size() == robot.dimv());

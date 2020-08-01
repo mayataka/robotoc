@@ -4,12 +4,8 @@
 #include "Eigen/Core"
 
 #include "robot/robot.hpp"
-#include "constraints/joint_space_constraints/joint_position_upper_limits.hpp"
-#include "constraints/joint_space_constraints/joint_position_lower_limits.hpp"
-#include "constraints/joint_space_constraints/joint_velocity_upper_limits.hpp"
-#include "constraints/joint_space_constraints/joint_velocity_lower_limits.hpp"
-#include "constraints/joint_space_constraints/joint_torque_upper_limits.hpp"
-#include "constraints/joint_space_constraints/joint_torque_lower_limits.hpp"
+#include "constraints/joint_space_constraints/joint_variables_upper_limits.hpp"
+#include "constraints/joint_space_constraints/joint_variables_lower_limits.hpp"
 
 
 namespace idocp {
@@ -27,33 +23,28 @@ public:
 
   void setTimeStep(const int time_step);
 
-  bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
-                  const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-                  const Eigen::VectorXd& u);
+  bool isFeasible(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                  const Eigen::VectorXd& a, const Eigen::VectorXd& u);
 
-  void setSlackAndDual(const Robot& robot, const double dtau, 
-                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                       const Eigen::VectorXd& a, const Eigen::VectorXd& u);
+  void setSlackAndDual(const double dtau, const Eigen::VectorXd& q, 
+                       const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                       const Eigen::VectorXd& u);
 
-  void augmentDualResidual(const Robot& robot, const double dtau, 
-                           Eigen::VectorXd& Cu);
+  void augmentDualResidual(const double dtau, Eigen::VectorXd& Cu);
 
-  void augmentDualResidual(const Robot& robot, const double dtau, 
-                           Eigen::VectorXd& Cq, Eigen::VectorXd& Cv, 
-                           Eigen::VectorXd& Ca);
+  void augmentDualResidual(const double dtau, Eigen::VectorXd& Cq, 
+                           Eigen::VectorXd& Cv, Eigen::VectorXd& Ca);
 
-  void condenseSlackAndDual(const Robot& robot, const double dtau, 
-                            const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                            const Eigen::VectorXd& a, Eigen::MatrixXd& Cqq, 
-                            Eigen::MatrixXd& Cvv, Eigen::MatrixXd& Caa,  
-                            Eigen::VectorXd& Cq, Eigen::VectorXd& Cv, 
-                            Eigen::VectorXd& Ca);
+  void condenseSlackAndDual(const double dtau, const Eigen::VectorXd& q, 
+                            const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                            Eigen::MatrixXd& Cqq, Eigen::MatrixXd& Cvv, 
+                            Eigen::MatrixXd& Caa,  Eigen::VectorXd& Cq, 
+                            Eigen::VectorXd& Cv, Eigen::VectorXd& Ca);
 
-  void condenseSlackAndDual(const Robot& robot, const double dtau, 
-                            const Eigen::VectorXd& u, Eigen::MatrixXd& Cuu, 
-                            Eigen::VectorXd& Cu);
+  void condenseSlackAndDual(const double dtau, const Eigen::VectorXd& u, 
+                            Eigen::MatrixXd& Cuu, Eigen::VectorXd& Cu);
 
-  void computeSlackAndDualDirection(const Robot& robot, const double dtau,
+  void computeSlackAndDualDirection(const double dtau,
                                     const Eigen::VectorXd& dq,
                                     const Eigen::VectorXd& dv,
                                     const Eigen::VectorXd& da,
@@ -71,23 +62,23 @@ public:
 
   double costSlackBarrier(const double step_size);
 
-  double residualL1Nrom(const Robot& robot, const double dtau,
-                        const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                        const Eigen::VectorXd& a, const Eigen::VectorXd& u);
+  double residualL1Nrom(const double dtau, const Eigen::VectorXd& q, 
+                        const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                        const Eigen::VectorXd& u);
 
-  double residualSquaredNrom(const Robot& robot, const double dtau,
-                             const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                             const Eigen::VectorXd& a, const Eigen::VectorXd& u);
+  double residualSquaredNrom(const double dtau, const Eigen::VectorXd& q, 
+                             const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                             const Eigen::VectorXd& u);
 
 private:
-  int time_step_;
+  int time_step_, dimq_, dimv_;
   double barrier_, fraction_to_boundary_margin_;
-  pdipm::JointPositionUpperLimits position_upper_limits_;
-  pdipm::JointPositionLowerLimits position_lower_limits_;
-  pdipm::JointVelocityUpperLimits velocity_upper_limits_;
-  pdipm::JointVelocityLowerLimits velocity_lower_limits_;
-  pdipm::JointTorqueUpperLimits torque_upper_limits_;
-  pdipm::JointTorqueLowerLimits torque_lower_limits_;
+  pdipm::JointVariablesUpperLimits position_upper_limits_, 
+                                   velocity_upper_limits_, 
+                                   torque_upper_limits_;
+  pdipm::JointVariablesLowerLimits position_lower_limits_, 
+                                   velocity_lower_limits_, 
+                                   torque_lower_limits_;
 };
 
 } // namespace pdipm

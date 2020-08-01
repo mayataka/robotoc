@@ -101,9 +101,7 @@ TEST_F(RiccatiMatrixFactorizerTest, floating_base) {
   Eigen::MatrixXd Qvq = Eigen::MatrixXd::Random(dimv, dimv);
   Eigen::MatrixXd Qvv = Eigen::MatrixXd::Random(dimv, dimv);
   Eigen::VectorXd q = Eigen::VectorXd::Zero(dimq);
-  floating_base_robot_.generateRandomConfiguration(-Eigen::VectorXd::Ones(dimq), 
-                                                   Eigen::VectorXd::Ones(dimq), 
-                                                   q);
+  floating_base_robot_.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(dimv);
   Eigen::MatrixXd dintagrate_dq = Eigen::MatrixXd::Zero(dimv, dimv);
   Eigen::MatrixXd dintagrate_dv = Eigen::MatrixXd::Zero(dimv, dimv);

@@ -92,27 +92,33 @@ TEST_F(FloatingBaseRobotTest, constructor) {
   velocity_limit = Eigen::VectorXd::Constant(dimv_-6, 15);
   lower_position_limit = Eigen::VectorXd::Constant(dimv_-6, -9.42);
   upper_position_limit = Eigen::VectorXd::Constant(dimv_-6, 9.42);
+  EXPECT_TRUE(robot.jointEffortLimit().isApprox(effort_limit));
+  EXPECT_TRUE(robot.jointVelocityLimit().isApprox(velocity_limit));
   EXPECT_TRUE(
-      robot.jointEffortLimit().tail(dimv_-6).isApprox(effort_limit));
-  EXPECT_TRUE(
-      robot.jointVelocityLimit().tail(dimv_-6).isApprox(velocity_limit));
-  EXPECT_TRUE(
-      robot.lowerJointPositionLimit().tail(dimv_-6)
+      robot.lowerJointPositionLimit()
       .isApprox(lower_position_limit));
   EXPECT_TRUE(
-      robot.upperJointPositionLimit().tail(dimv_-6)
+      robot.upperJointPositionLimit()
       .isApprox(upper_position_limit));
   EXPECT_TRUE(
-      robot_contact.jointEffortLimit().tail(dimv_-6).isApprox(effort_limit));
+      robot_contact.jointEffortLimit().isApprox(effort_limit));
   EXPECT_TRUE(
-      robot_contact.jointVelocityLimit().tail(dimv_-6)
+      robot_contact.jointVelocityLimit()
       .isApprox(velocity_limit));
   EXPECT_TRUE(
-      robot_contact.lowerJointPositionLimit().tail(dimv_-6)
+      robot_contact.lowerJointPositionLimit()
       .isApprox(lower_position_limit));
   EXPECT_TRUE(
-      robot_contact.upperJointPositionLimit().tail(dimv_-6)
+      robot_contact.upperJointPositionLimit()
       .isApprox(upper_position_limit));
+  robot.setJointEffortLimit(effort_limit);
+  robot.setJointVelocityLimit(velocity_limit);
+  robot.setLowerJointPositionLimit(lower_position_limit);
+  robot.setUpperJointPositionLimit(upper_position_limit);
+  EXPECT_TRUE(robot.jointEffortLimit().isApprox(effort_limit));
+  EXPECT_TRUE(robot.jointVelocityLimit().isApprox(velocity_limit));
+  EXPECT_TRUE(robot.lowerJointPositionLimit().isApprox(lower_position_limit));
+  EXPECT_TRUE(robot.upperJointPositionLimit().isApprox(upper_position_limit));
 }
 
 
