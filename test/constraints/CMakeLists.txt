@@ -1,7 +1,6 @@
 add_executable(
     pdipm_func_test
     pdipm_func_test.cpp
-    ${IDOCP_SRC_DIR}/constraints/pdipm_func.cpp
 )
 target_include_directories(
     pdipm_func_test
@@ -17,6 +16,7 @@ target_link_libraries(
     pthread
     GTest::GTest
     GTest::GMock
+    idocp_constraints
 )
 add_dependencies(
     pdipm_func_test
@@ -27,4 +27,4 @@ add_test(
     COMMAND $<TARGET_FILE:pdipm_func_test>
 )
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/pdipm)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/joint_space_constraints)

@@ -1,140 +1,145 @@
-#include <string>
-#include <random>
-#include <utility>
-#include <vector>
-
-#include <gtest/gtest.h>
-#include "Eigen/Core"
-
-#include "constraints/joint_space_constraints/joint_position_lower_limits.hpp"
+#include "constraints/joint_space_constraints/joint_variables_lower_limits.hpp"
 #include "constraints/pdipm_func.hpp"
-#include "robot/robot.hpp"
+
+#include <cmath>
+#include <assert.h>
 
 
 namespace idocp {
 namespace pdipm {
 
-
-class JointPositionLowerLimitTest : public ::testing::Test {
-protected:
-  virtual void SetUp() {
-    srand((unsigned int) time(0));
-    const std::string urdf_file_name = "../../../urdf/iiwa14/iiwa14.urdf";
-    robot_ = Robot(urdf_file_name);
-    dimq_ = robot_.dimq();
-    dimv_ = robot_.dimv();
-    barrier_ = 1.0e-04;
-    dtau_ = 0.1;
-    qmin_ = robot_.lowerJointPositionLimit();
-    slack_.array() = Eigen::VectorXd::Random(dimq_).array().abs();
-    dual_.array() = Eigen::VectorXd::Random(dimq_).array().abs();
-    dslack_.array() = Eigen::VectorXd::Random(dimq_);
-    ddual_.array() = Eigen::VectorXd::Random(dimq_);
-  }
-
-  virtual void TearDown() {
-  }
-
-  Robot robot_;
-  int dimq_, dimv_;
-  double barrier_, dtau_;
-  Eigen::VectorXd qmin_, slack_, dual_, dslack_, ddual_;
-};
-
-
-TEST_F(JointPositionLowerLimitTest, isFeasible) {
-  JointPositionLowerLimits limit_(robot_, barrier_);
-  Eigen::VectorXd q = qmin_;
-  const Eigen::VectorXd tmp = Eigen::VectorXd::Random(dimq_);
-  q += tmp;
-  if (tmp.minCoeff() < 0) {
-    EXPECT_FALSE(limit_.isFeasible(robot_, q));
-  }
-  else {
-    EXPECT_TRUE(limit_.isFeasible(robot_, q));
-  }
+JointVariablesLowerLimits::JointVariablesLowerLimits(const Robot& robot, 
+                                                     const Eigen::VectorXd& xmin, 
+                                                     const double barrier)
+  : dimv_(robot.dimv()),
+    dimc_(xmin.size()),
+    dim_passive_(robot.dim_passive()),
+    has_floating_base_(robot.has_floating_base()),
+    barrier_(barrier),
+    xmin_(xmin),
+    slack_(-xmin_-Eigen::VectorXd::Constant(dimc_, barrier)),
+    dual_(Eigen::VectorXd::Constant(dimc_, barrier)),
+    residual_(Eigen::VectorXd::Zero(dimc_)),
+    duality_(Eigen::VectorXd::Zero(dimc_)),
+    dslack_(Eigen::VectorXd::Zero(dimc_)), 
+    ddual_(Eigen::VectorXd::Zero(dimc_)) {
+  assert(barrier_ > 0);
+  assert(xmin_.maxCoeff() < 0);
 }
 
 
-TEST_F(JointPositionLowerLimitTest, setSlackAndDual) {
-  JointPositionLowerLimits limit_(robot_, barrier_);
-  Eigen::VectorXd tmp = Eigen::VectorXd::Random(dimq_);
-  const Eigen::VectorXd q = qmin_ + tmp;
-  limit_.setSlackAndDual(robot_, dtau_, q);
-  Eigen::VectorXd slack_ref = dtau_ * (q-qmin_);
-  Eigen::VectorXd dual_ref = Eigen::VectorXd::Zero(dimq_);
-  pdipmfunc::SetSlackAndDualPositive(dimq_, barrier_, slack_ref, dual_ref);
-  EXPECT_DOUBLE_EQ(limit_.slackBarrier(), 
-                   pdipmfunc::SlackBarrierCost(dimq_, barrier_, slack_ref));
-  Eigen::VectorXd dual = Eigen::VectorXd::Zero(dimq_);
-  limit_.augmentDualResidual(robot_, dtau_, dual);
-  dual_ref *= dtau_;
-  EXPECT_TRUE(dual.isApprox(dual_ref));
+bool JointVariablesLowerLimits::isFeasible(const Eigen::VectorXd& x) {
+  assert(x.size() >= dimv_);
+  for (int i=0; i<dimc_; ++i) {
+    if (x.tail(dimc_).coeff(i) < xmin_.coeff(i)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 
-TEST_F(JointPositionLowerLimitTest, condenseSlackAndDual) {
-  JointPositionLowerLimits limit_(robot_, barrier_);
-  Eigen::VectorXd q = Eigen::VectorXd::Random(dimq_);
-  Eigen::MatrixXd Cqq = Eigen::MatrixXd::Zero(dimq_, dimq_);
-  Eigen::VectorXd Cq = Eigen::VectorXd::Zero(dimq_);
-  limit_.setSlackAndDual(robot_, dtau_, q);
-  limit_.condenseSlackAndDual(robot_, dtau_, q, Cqq, Cq);
-  Eigen::VectorXd slack_ref = dtau_ * (q-qmin_);
-  Eigen::VectorXd dual_ref = Eigen::VectorXd::Zero(dimq_);
-  pdipmfunc::SetSlackAndDualPositive(dimq_, barrier_, slack_ref, dual_ref);
-  Eigen::MatrixXd Cqq_ref = Eigen::MatrixXd::Zero(dimq_, dimq_);
-  Eigen::VectorXd Cq_ref = Eigen::VectorXd::Zero(dimq_);
+void JointVariablesLowerLimits::setSlackAndDual(const double dtau, 
+                                                const Eigen::VectorXd& x) {
+  assert(dtau > 0);
+  assert(x.size() >= dimv_);
+  slack_ = dtau * (x.tail(dimc_)-xmin_);
+  pdipmfunc::SetSlackAndDualPositive(dimc_, barrier_, slack_, dual_);
+}
+
+
+void JointVariablesLowerLimits::condenseSlackAndDual(const double dtau, 
+                                                     const Eigen::VectorXd& x,
+                                                     Eigen::MatrixXd& Cxx, 
+                                                     Eigen::VectorXd& Cx) {
+  assert(dtau > 0);
+  assert(x.size() >= dimv_);
+  assert(Cxx.rows() == dimv_);
+  assert(Cxx.cols() == dimv_);
+  assert(Cx.size() == dimv_);
   for (int i=0; i<dimv_; ++i) {
-    Cqq_ref(i, i) = dtau_ * dtau_ * dual_ref(i) / slack_ref(i);
+    Cxx.coeffRef(dim_passive_+i, dim_passive_+i) 
+        += dtau * dtau * dual_.coeff(i) / slack_.coeff(i);
   }
-  Eigen::VectorXd residual = dtau_ * (qmin_-q) + slack_ref;
-  Eigen::VectorXd duality = Eigen::VectorXd::Zero(dimq_);
-  for (int i=0; i<dimq_; ++i) {
-    duality(i) = dual_ref(i) * slack_ref(i) - barrier_;
-  }
-  for (int i=0; i<dimq_; ++i) {
-    Cq_ref(i) = - dtau_ * (dual_ref(i)*residual(i)-duality(i)) / slack_ref(i);
-  }
-  EXPECT_TRUE(Cqq.isApprox(Cqq_ref));
-  EXPECT_TRUE(Cq.isApprox(Cq_ref));
+  residual_ = dtau * (xmin_-x.tail(dimc_)) + slack_;
+  pdipmfunc::ComputeDualityResidual(barrier_, slack_, dual_, duality_);
+  Cx.tail(dimc_).array() 
+      -= dtau * (dual_.array()*residual_.array()-duality_.array()) 
+              / slack_.array();
 }
 
 
-TEST_F(JointPositionLowerLimitTest, computeDirectionAndMaxStepSize) {
-  JointPositionLowerLimits limit_(robot_, barrier_);
-  Eigen::VectorXd q = Eigen::VectorXd::Random(dimq_);
-  Eigen::MatrixXd Cqq = Eigen::MatrixXd::Zero(dimq_, dimq_);
-  Eigen::VectorXd Cq = Eigen::VectorXd::Zero(dimq_);
-  limit_.setSlackAndDual(robot_, dtau_, q);
-  limit_.condenseSlackAndDual(robot_, dtau_, q, Cqq, Cq);
-  Eigen::VectorXd slack_ref = dtau_ * (q-qmin_);
-  Eigen::VectorXd dual_ref = Eigen::VectorXd::Zero(dimq_);
-  pdipmfunc::SetSlackAndDualPositive(dimq_, barrier_, slack_ref, dual_ref);
-  Eigen::MatrixXd Cqq_ref = Eigen::MatrixXd::Zero(dimq_, dimq_);
-  Eigen::VectorXd Cq_ref = Eigen::VectorXd::Zero(dimq_);
-  for (int i=0; i<dimv_; ++i) {
-    Cqq_ref(i, i) = dtau_ * dtau_ * dual_ref(i) / slack_ref(i);
-  }
-  Eigen::VectorXd residual = dtau_ * (qmin_-q) + slack_ref;
-  Eigen::VectorXd duality = Eigen::VectorXd::Zero(dimq_);
-  for (int i=0; i<dimq_; ++i) {
-    duality(i) = dual_ref(i) * slack_ref(i) - barrier_;
-  }
-  for (int i=0; i<dimq_; ++i) {
-    Cq_ref(i) = - dtau_ * (dual_ref(i)*residual(i)-duality(i)) / slack_ref(i);
-  }
-  EXPECT_TRUE(Cqq.isApprox(Cqq_ref));
-  EXPECT_TRUE(Cq.isApprox(Cq_ref));
+void JointVariablesLowerLimits::computeSlackAndDualDirection(
+    const double dtau, const Eigen::VectorXd& dx) {
+  assert(dtau > 0);
+  assert(dx.size() == dimv_);
+  dslack_ = dtau * dx.tail(dimc_) - residual_;
+  pdipmfunc::ComputeDualDirection(dual_, slack_, dslack_, duality_, ddual_);
 }
 
 
+double JointVariablesLowerLimits::maxSlackStepSize(const double margin_rate) {
+  assert(margin_rate > 0);
+  return pdipmfunc::FractionToBoundary(dimc_, margin_rate, slack_, dslack_);
+}
+
+
+double JointVariablesLowerLimits::maxDualStepSize(const double margin_rate) {
+  assert(margin_rate > 0);
+  return pdipmfunc::FractionToBoundary(dimc_, margin_rate, dual_, ddual_);
+}
+
+
+void JointVariablesLowerLimits::updateSlack(const double step_size) {
+  assert(step_size > 0);
+  slack_.noalias() += step_size * dslack_;
+}
+
+
+void JointVariablesLowerLimits::updateDual(const double step_size) {
+  assert(step_size > 0);
+  dual_.noalias() += step_size * ddual_;
+}
+
+
+double JointVariablesLowerLimits::costSlackBarrier() {
+  return pdipmfunc::SlackBarrierCost(dimc_, barrier_, slack_);
+}
+
+
+double JointVariablesLowerLimits::costSlackBarrier(const double step_size) {
+  return pdipmfunc::SlackBarrierCost(dimc_, barrier_, slack_+step_size*dslack_);
+}
+
+
+void JointVariablesLowerLimits::augmentDualResidual(const double dtau, 
+                                                    Eigen::VectorXd& Cx) {
+  assert(dtau > 0);
+  assert(Cx.size() == dimv_);
+  Cx.tail(dimc_).noalias() -= dtau * dual_;
+}
+
+
+double JointVariablesLowerLimits::residualL1Nrom(const double dtau, 
+                                                 const Eigen::VectorXd& x) {
+  assert(dtau > 0);
+  assert(x.size() >= dimv_);
+  residual_ = dtau * (xmin_-x.tail(dimc_)) + slack_;
+  return residual_.lpNorm<1>();
+}
+
+
+double JointVariablesLowerLimits::residualSquaredNrom(const double dtau, 
+                                                      const Eigen::VectorXd& x) {
+  assert(dtau > 0);
+  assert(x.size() >= dimv_);
+  residual_ = dtau * (xmin_-x.tail(dimc_)) + slack_;
+  double error = 0;
+  error += residual_.squaredNorm();
+  pdipmfunc::ComputeDualityResidual(barrier_, slack_, dual_, residual_);
+  error += residual_.squaredNorm();
+  return error;
+}
 
 } // namespace pdipm
-} // namespace invdynocp
-
-
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+} // namespace idocp
