@@ -14,7 +14,7 @@
 namespace idocp {
 namespace pdipm {
 
-class JointPositionLowerLimitsTest : public ::testing::Test {
+class JointVelocityLowerLimitsTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -39,146 +39,135 @@ protected:
 };
 
 
-TEST_F(JointPositionLowerLimitsTest, isFeasibleFixedBase) {
+TEST_F(JointVelocityLowerLimitsTest, isFeasibleFixedBase) {
   JointVariablesLowerLimits limit(fixed_base_robot_, 
-                                  fixed_base_robot_.lowerJointPositionLimit(), 
+                                  -fixed_base_robot_.jointVelocityLimit(), 
                                   barrier_);
-  Eigen::VectorXd q(fixed_base_robot_.dimq());
-  fixed_base_robot_.generateFeasibleConfiguration(q);
-  EXPECT_TRUE(limit.isFeasible(q));
-  q = 2*fixed_base_robot_.lowerJointPositionLimit();
-  EXPECT_FALSE(limit.isFeasible(q));
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(fixed_base_robot_.dimv());
+  EXPECT_TRUE(limit.isFeasible(v));
 }
 
 
-TEST_F(JointPositionLowerLimitsTest, isFeasibleFloatingBase) {
+TEST_F(JointVelocityLowerLimitsTest, isFeasibleFloatingBase) {
   JointVariablesLowerLimits limit(floating_base_robot_, 
-                                  floating_base_robot_.lowerJointPositionLimit(), 
+                                  -floating_base_robot_.jointVelocityLimit(), 
                                   barrier_);
-  Eigen::VectorXd q = Eigen::VectorXd::Zero(floating_base_robot_.dimq());
-  floating_base_robot_.generateFeasibleConfiguration(q);
-  EXPECT_TRUE(limit.isFeasible(q));
-  const int dimc = floating_base_robot_.lowerJointPositionLimit().size();
-  q.tail(dimc) = 2*floating_base_robot_.lowerJointPositionLimit();
-  ASSERT_EQ(q.size(), floating_base_robot_.dimq());
-  EXPECT_FALSE(limit.isFeasible(q));
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(floating_base_robot_.dimv());
+  EXPECT_TRUE(limit.isFeasible(v));
 }
 
 
-TEST_F(JointPositionLowerLimitsTest, setSlackAndDualFixedBase) {
+TEST_F(JointVelocityLowerLimitsTest, setSlackAndDualFixedBase) {
   JointVariablesLowerLimits limit(fixed_base_robot_, 
-                                  fixed_base_robot_.lowerJointPositionLimit(), 
+                                  -fixed_base_robot_.jointVelocityLimit(), 
                                   barrier_);
   const int dimq = fixed_base_robot_.dimq();
-  Eigen::VectorXd q(dimq);
-  Eigen::VectorXd qmin = fixed_base_robot_.lowerJointPositionLimit();
-  ASSERT_EQ(dimq, fixed_base_robot_.lowerJointPositionLimit().size());
-  fixed_base_robot_.generateFeasibleConfiguration(q);
-  limit.setSlackAndDual(dtau_, q);
-  Eigen::VectorXd Cq = Eigen::VectorXd::Zero(dimq);
-  limit.augmentDualResidual(dtau_, Cq);
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(fixed_base_robot_.dimv());
+  Eigen::VectorXd vmin = - fixed_base_robot_.jointVelocityLimit();
+  ASSERT_EQ(dimq, fixed_base_robot_.jointVelocityLimit().size());
+  limit.setSlackAndDual(dtau_, v);
+  Eigen::VectorXd Cv = Eigen::VectorXd::Zero(dimq);
+  limit.augmentDualResidual(dtau_, Cv);
   Eigen::VectorXd slack_ref = Eigen::VectorXd::Zero(dimq);
   Eigen::VectorXd dual_ref = Eigen::VectorXd::Zero(dimq);
-  slack_ref = dtau_ * (q-qmin);
-  Eigen::VectorXd Cq_ref = Eigen::VectorXd::Zero(dimq);
+  slack_ref = dtau_ * (v-vmin);
+  Eigen::VectorXd Cv_ref = Eigen::VectorXd::Zero(dimq);
   pdipmfunc::SetSlackAndDualPositive(dimq, barrier_, slack_ref, dual_ref);
-  Cq_ref = - dtau_ * dual_ref;
-  EXPECT_TRUE(Cq.isApprox(Cq_ref));
+  Cv_ref = - dtau_ * dual_ref;
+  EXPECT_TRUE(Cv.isApprox(Cv_ref));
   const double cost_slack_barrier = limit.costSlackBarrier();
   const double cost_slack_barrier_ref 
       = pdipmfunc::SlackBarrierCost(dimq, barrier_, slack_ref);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
-  const double l1residual = limit.residualL1Nrom(dtau_, q);
-  const double l1residual_ref = (dtau_*(qmin-q)+slack_ref).lpNorm<1>();
+  const double l1residual = limit.residualL1Nrom(dtau_, v);
+  const double l1residual_ref = (dtau_*(vmin-v)+slack_ref).lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1residual, l1residual_ref);
-  const double l2residual = limit.residualSquaredNrom(dtau_, q);
+  const double l2residual = limit.residualSquaredNrom(dtau_, v);
   Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dimq);
   pdipmfunc::ComputeDualityResidual(barrier_, slack_ref, dual_ref, duality_ref);
   const double l2residual_ref 
-      = (dtau_*(qmin-q)+slack_ref).squaredNorm() + duality_ref.squaredNorm();
+      = (dtau_*(vmin-v)+slack_ref).squaredNorm() + duality_ref.squaredNorm();
   EXPECT_DOUBLE_EQ(l2residual, l2residual_ref);
 }
 
 
-TEST_F(JointPositionLowerLimitsTest, setSlackAndDualFloatingBase) {
+TEST_F(JointVelocityLowerLimitsTest, setSlackAndDualFloatingBase) {
   JointVariablesLowerLimits limit(floating_base_robot_, 
-                                  floating_base_robot_.lowerJointPositionLimit(), 
+                                  -floating_base_robot_.jointVelocityLimit(), 
                                   barrier_);
   const int dimq = floating_base_robot_.dimq();
   const int dimv = floating_base_robot_.dimv();
-  Eigen::VectorXd q(dimq);
-  Eigen::VectorXd qmin = floating_base_robot_.lowerJointPositionLimit();
-  const int dimc = floating_base_robot_.lowerJointPositionLimit().size();
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(dimv);
+  Eigen::VectorXd vmin = - floating_base_robot_.jointVelocityLimit();
+  const int dimc = floating_base_robot_.jointVelocityLimit().size();
   ASSERT_EQ(dimc+6, dimv);
-  floating_base_robot_.generateFeasibleConfiguration(q);
-  limit.setSlackAndDual(dtau_, q);
-  Eigen::VectorXd Cq = Eigen::VectorXd::Zero(dimv);
-  limit.augmentDualResidual(dtau_, Cq);
+  limit.setSlackAndDual(dtau_, v);
+  Eigen::VectorXd Cv = Eigen::VectorXd::Zero(dimv);
+  limit.augmentDualResidual(dtau_, Cv);
   Eigen::VectorXd slack_ref = Eigen::VectorXd::Zero(dimc);
   Eigen::VectorXd dual_ref = Eigen::VectorXd::Zero(dimc);
-  slack_ref = dtau_ * (q.tail(dimc)-qmin);
-  Eigen::VectorXd Cq_ref = Eigen::VectorXd::Zero(dimv);
+  slack_ref = dtau_ * (v.tail(dimc)-vmin);
+  Eigen::VectorXd Cv_ref = Eigen::VectorXd::Zero(dimv);
   pdipmfunc::SetSlackAndDualPositive(dimc, barrier_, slack_ref, dual_ref);
-  Cq_ref.tail(dimc) = - dtau_ * dual_ref;
-  EXPECT_TRUE(Cq.isApprox(Cq_ref));
+  Cv_ref.tail(dimc) = - dtau_ * dual_ref;
+  EXPECT_TRUE(Cv.isApprox(Cv_ref));
   const double cost_slack_barrier = limit.costSlackBarrier();
   const double cost_slack_barrier_ref 
       = pdipmfunc::SlackBarrierCost(dimc, barrier_, slack_ref);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
-  const double l1residual = limit.residualL1Nrom(dtau_, q);
-  const double l1residual_ref = (dtau_*(qmin-q.tail(dimc))+slack_ref).lpNorm<1>();
+  const double l1residual = limit.residualL1Nrom(dtau_, v);
+  const double l1residual_ref = (dtau_*(vmin-v.tail(dimc))+slack_ref).lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1residual, l1residual_ref);
-  const double l2residual = limit.residualSquaredNrom(dtau_, q);
+  const double l2residual = limit.residualSquaredNrom(dtau_, v);
   Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dimc);
   pdipmfunc::ComputeDualityResidual(barrier_, slack_ref, dual_ref, duality_ref);
   const double l2residual_ref 
-      = (dtau_*(qmin-q.tail(dimc))+slack_ref).squaredNorm() + duality_ref.squaredNorm();
+      = (dtau_*(vmin-v.tail(dimc))+slack_ref).squaredNorm() + duality_ref.squaredNorm();
   EXPECT_DOUBLE_EQ(l2residual, l2residual_ref);
 }
 
 
-TEST_F(JointPositionLowerLimitsTest, condenseSlackAndDualFixedBase) {
+TEST_F(JointVelocityLowerLimitsTest, condenseSlackAndDualFixedBase) {
   JointVariablesLowerLimits limit(fixed_base_robot_, 
-                                  fixed_base_robot_.lowerJointPositionLimit(), 
+                                  -fixed_base_robot_.jointVelocityLimit(), 
                                   barrier_);
   const int dimq = fixed_base_robot_.dimq();
-  Eigen::VectorXd q(dimq);
-  Eigen::VectorXd qmin = fixed_base_robot_.lowerJointPositionLimit();
-  ASSERT_EQ(dimq, fixed_base_robot_.lowerJointPositionLimit().size());
-  fixed_base_robot_.generateFeasibleConfiguration(q);
-  limit.setSlackAndDual(dtau_, q);
-  Eigen::VectorXd Cq = Eigen::VectorXd::Zero(dimq);
-  limit.augmentDualResidual(dtau_, Cq);
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(fixed_base_robot_.dimv());
+  Eigen::VectorXd vmin = - fixed_base_robot_.jointVelocityLimit();
+  ASSERT_EQ(dimq, fixed_base_robot_.jointVelocityLimit().size());
+  limit.setSlackAndDual(dtau_, v);
+  Eigen::VectorXd Cv = Eigen::VectorXd::Zero(dimq);
+  limit.augmentDualResidual(dtau_, Cv);
   Eigen::VectorXd slack_ref = Eigen::VectorXd::Zero(dimq);
   Eigen::VectorXd dual_ref = Eigen::VectorXd::Zero(dimq);
-  slack_ref = dtau_ * (q-qmin);
-  Eigen::VectorXd Cq_ref = Eigen::VectorXd::Zero(dimq);
+  slack_ref = dtau_ * (v-vmin);
+  Eigen::VectorXd Cv_ref = Eigen::VectorXd::Zero(dimq);
   pdipmfunc::SetSlackAndDualPositive(dimq, barrier_, slack_ref, dual_ref);
-  Cq_ref = - dtau_ * dual_ref;
-  EXPECT_TRUE(Cq.isApprox(Cq_ref));
+  Cv_ref = - dtau_ * dual_ref;
+  EXPECT_TRUE(Cv.isApprox(Cv_ref));
   double cost_slack_barrier = limit.costSlackBarrier();
   double cost_slack_barrier_ref 
       = pdipmfunc::SlackBarrierCost(dimq, barrier_, slack_ref);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
-  Cq = Eigen::VectorXd::Ones(dimq);
-  Eigen::MatrixXd Cqq = Eigen::MatrixXd::Ones(dimq, dimq);
-  limit.condenseSlackAndDual(dtau_, q, Cqq, Cq);
-  Cq_ref = Eigen::VectorXd::Ones(dimq);
-  Eigen::MatrixXd Cqq_ref = Eigen::MatrixXd::Ones(dimq, dimq);
+  Cv = Eigen::VectorXd::Ones(dimq);
+  Eigen::MatrixXd Cvv = Eigen::MatrixXd::Ones(dimq, dimq);
+  limit.condenseSlackAndDual(dtau_, v, Cvv, Cv);
+  Cv_ref = Eigen::VectorXd::Ones(dimq);
+  Eigen::MatrixXd Cvv_ref = Eigen::MatrixXd::Ones(dimq, dimq);
   for (int i=0; i<dimq; ++i) {
-    Cqq_ref(i, i) += dtau_ * dtau_ * dual_ref.coeff(i) / slack_ref.coeff(i);
+    Cvv_ref(i, i) += dtau_ * dtau_ * dual_ref.coeff(i) / slack_ref.coeff(i);
   }
-  Eigen::VectorXd residual_ref = dtau_ * (qmin-q) + slack_ref;
+  Eigen::VectorXd residual_ref = dtau_ * (vmin-v) + slack_ref;
   Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dimq);
   pdipmfunc::ComputeDualityResidual(barrier_, slack_ref, dual_ref, duality_ref);
-  Cq_ref.array() 
+  Cv_ref.array() 
       -= dtau_ * (dual_ref.array()*residual_ref.array()-duality_ref.array()) 
                / slack_ref.array();
-  EXPECT_TRUE(Cq.isApprox(Cq_ref));
-  EXPECT_TRUE(Cqq.isApprox(Cqq_ref));
-  const Eigen::VectorXd dq = Eigen::VectorXd::Random(dimq);
-  limit.computeSlackAndDualDirection(dtau_, dq);
-  const Eigen::VectorXd dslack_ref = dtau_ * dq - residual_ref;
+  EXPECT_TRUE(Cv.isApprox(Cv_ref));
+  EXPECT_TRUE(Cvv.isApprox(Cvv_ref));
+  const Eigen::VectorXd dv = Eigen::VectorXd::Random(dimq);
+  limit.computeSlackAndDualDirection(dtau_, dv);
+  const Eigen::VectorXd dslack_ref = dtau_ * dv - residual_ref;
   Eigen::VectorXd ddual_ref = Eigen::VectorXd::Zero(dimq);
   pdipmfunc::ComputeDualDirection(dual_ref, slack_ref, dslack_ref, duality_ref, 
                                   ddual_ref);
@@ -205,58 +194,57 @@ TEST_F(JointPositionLowerLimitsTest, condenseSlackAndDualFixedBase) {
   cost_slack_barrier_ref 
       = pdipmfunc::SlackBarrierCost(dimq, barrier_, slack_ref);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
-  limit.augmentDualResidual(dtau_, Cq);
-  Cq_ref -= dtau_ * dual_ref;
-  EXPECT_TRUE(Cq.isApprox(Cq_ref));
+  limit.augmentDualResidual(dtau_, Cv);
+  Cv_ref -= dtau_ * dual_ref;
+  EXPECT_TRUE(Cv.isApprox(Cv_ref));
 }
 
 
-TEST_F(JointPositionLowerLimitsTest, condenseSlackAndDualFloatingBase) {
+TEST_F(JointVelocityLowerLimitsTest, condenseSlackAndDualFloatingBase) {
   JointVariablesLowerLimits limit(floating_base_robot_, 
-                                  floating_base_robot_.lowerJointPositionLimit(), 
+                                  -floating_base_robot_.jointVelocityLimit(), 
                                   barrier_);
   const int dimq = floating_base_robot_.dimq();
   const int dimv = floating_base_robot_.dimv();
   const int dim_passive = floating_base_robot_.dim_passive();
-  Eigen::VectorXd q(dimq);
-  Eigen::VectorXd qmin = floating_base_robot_.lowerJointPositionLimit();
-  const int dimc = floating_base_robot_.lowerJointPositionLimit().size();
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(dimv);
+  Eigen::VectorXd vmin = - floating_base_robot_.jointVelocityLimit();
+  const int dimc = floating_base_robot_.jointVelocityLimit().size();
   ASSERT_EQ(dimc+6, dimv);
-  floating_base_robot_.generateFeasibleConfiguration(q);
-  limit.setSlackAndDual(dtau_, q);
-  Eigen::VectorXd Cq = Eigen::VectorXd::Zero(dimv);
-  limit.augmentDualResidual(dtau_, Cq);
+  limit.setSlackAndDual(dtau_, v);
+  Eigen::VectorXd Cv = Eigen::VectorXd::Zero(dimv);
+  limit.augmentDualResidual(dtau_, Cv);
   Eigen::VectorXd slack_ref = Eigen::VectorXd::Zero(dimc);
   Eigen::VectorXd dual_ref = Eigen::VectorXd::Zero(dimc);
-  slack_ref = dtau_ * (q.tail(dimc)-qmin);
-  Eigen::VectorXd Cq_ref = Eigen::VectorXd::Zero(dimv);
+  slack_ref = dtau_ * (v.tail(dimc)-vmin);
+  Eigen::VectorXd Cv_ref = Eigen::VectorXd::Zero(dimv);
   pdipmfunc::SetSlackAndDualPositive(dimc, barrier_, slack_ref, dual_ref);
-  Cq_ref.tail(dimc) = - dtau_ * dual_ref;
-  EXPECT_TRUE(Cq.isApprox(Cq_ref));
+  Cv_ref.tail(dimc) = - dtau_ * dual_ref;
+  EXPECT_TRUE(Cv.isApprox(Cv_ref));
   double cost_slack_barrier = limit.costSlackBarrier();
   double cost_slack_barrier_ref 
       = pdipmfunc::SlackBarrierCost(dimc, barrier_, slack_ref);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
-  Cq = Eigen::VectorXd::Ones(dimv);
-  Eigen::MatrixXd Cqq = Eigen::MatrixXd::Ones(dimv, dimv);
-  limit.condenseSlackAndDual(dtau_, q, Cqq, Cq);
-  Cq_ref = Eigen::VectorXd::Ones(dimv);
-  Eigen::MatrixXd Cqq_ref = Eigen::MatrixXd::Ones(dimv, dimv);
+  Cv = Eigen::VectorXd::Ones(dimv);
+  Eigen::MatrixXd Cvv = Eigen::MatrixXd::Ones(dimv, dimv);
+  limit.condenseSlackAndDual(dtau_, v, Cvv, Cv);
+  Cv_ref = Eigen::VectorXd::Ones(dimv);
+  Eigen::MatrixXd Cvv_ref = Eigen::MatrixXd::Ones(dimv, dimv);
   for (int i=0; i<dimc; ++i) {
-    Cqq_ref(dim_passive+i, dim_passive+i) 
+    Cvv_ref(dim_passive+i, dim_passive+i) 
         += dtau_ * dtau_ * dual_ref.coeff(i) / slack_ref.coeff(i);
   }
-  Eigen::VectorXd residual_ref = dtau_ * (qmin-q.tail(dimc)) + slack_ref;
+  Eigen::VectorXd residual_ref = dtau_ * (vmin-v.tail(dimc)) + slack_ref;
   Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dimc);
   pdipmfunc::ComputeDualityResidual(barrier_, slack_ref, dual_ref, duality_ref);
-  Cq_ref.tail(dimc).array() 
+  Cv_ref.tail(dimc).array() 
       -= dtau_ * (dual_ref.array()*residual_ref.array()-duality_ref.array()) 
                / slack_ref.array();
-  EXPECT_TRUE(Cq.isApprox(Cq_ref));
-  EXPECT_TRUE(Cqq.isApprox(Cqq_ref));
-  const Eigen::VectorXd dq = Eigen::VectorXd::Random(dimv);
-  limit.computeSlackAndDualDirection(dtau_, dq);
-  const Eigen::VectorXd dslack_ref = dtau_ * dq.tail(dimc) - residual_ref;
+  EXPECT_TRUE(Cv.isApprox(Cv_ref));
+  EXPECT_TRUE(Cvv.isApprox(Cvv_ref));
+  const Eigen::VectorXd dv = Eigen::VectorXd::Random(dimv);
+  limit.computeSlackAndDualDirection(dtau_, dv);
+  const Eigen::VectorXd dslack_ref = dtau_ * dv.tail(dimc) - residual_ref;
   Eigen::VectorXd ddual_ref = Eigen::VectorXd::Zero(dimc);
   pdipmfunc::ComputeDualDirection(dual_ref, slack_ref, dslack_ref, duality_ref, 
                                   ddual_ref);
@@ -283,9 +271,9 @@ TEST_F(JointPositionLowerLimitsTest, condenseSlackAndDualFloatingBase) {
   cost_slack_barrier_ref 
       = pdipmfunc::SlackBarrierCost(dimc, barrier_, slack_ref);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
-  limit.augmentDualResidual(dtau_, Cq);
-  Cq_ref.tail(dimc) -= dtau_ * dual_ref;
-  EXPECT_TRUE(Cq.isApprox(Cq_ref));
+  limit.augmentDualResidual(dtau_, Cv);
+  Cv_ref.tail(dimc) -= dtau_ * dual_ref;
+  EXPECT_TRUE(Cv.isApprox(Cv_ref));
 }
 
 } // namespace pdipm
