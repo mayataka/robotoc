@@ -16,7 +16,11 @@ Robot::Robot(const std::string& urdf_file_name)
     dimv_(0),
     dimf_(0),
     max_dimf_(0),
-    is_each_contact_active_() {
+    is_each_contact_active_(),
+    joint_effort_limit_(),
+    joint_velocity_limit_(),
+    lower_joint_position_limit_(),
+    upper_joint_position_limit_() {
   pinocchio::urdf::buildModel(urdf_file_name, model_);
   data_ = pinocchio::Data(model_);
   fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
@@ -24,6 +28,17 @@ Robot::Robot(const std::string& urdf_file_name)
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
+  const int dim_joint = model_.nv - floating_base_.dim_passive();
+  joint_effort_limit_.resize(dim_joint);
+  joint_velocity_limit_.resize(dim_joint);
+  lower_joint_position_limit_.resize(dim_joint);
+  upper_joint_position_limit_.resize(dim_joint);
+  joint_effort_limit_.tail(dim_joint) = model_.effortLimit.tail(dim_joint);
+  joint_velocity_limit_.tail(dim_joint) = model_.velocityLimit.tail(dim_joint);
+  lower_joint_position_limit_.tail(dim_joint) 
+      = model_.lowerPositionLimit.tail(dim_joint);
+  upper_joint_position_limit_.tail(dim_joint) 
+      = model_.upperPositionLimit.tail(dim_joint);
 }
 
 
@@ -41,7 +56,11 @@ Robot::Robot(const std::string& urdf_file_name,
     dimv_(0),
     dimf_(0),
     max_dimf_(0),
-    is_each_contact_active_() {
+    is_each_contact_active_(),
+    joint_effort_limit_(),
+    joint_velocity_limit_(),
+    lower_joint_position_limit_(),
+    upper_joint_position_limit_() {
   assert(baumgarte_weight_on_velocity >= 0);
   assert(baumgarte_weight_on_position >= 0);
   pinocchio::urdf::buildModel(urdf_file_name, model_);
@@ -58,6 +77,17 @@ Robot::Robot(const std::string& urdf_file_name,
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
+  const int dim_joint = model_.nv - floating_base_.dim_passive();
+  joint_effort_limit_.resize(dim_joint);
+  joint_velocity_limit_.resize(dim_joint);
+  lower_joint_position_limit_.resize(dim_joint);
+  upper_joint_position_limit_.resize(dim_joint);
+  joint_effort_limit_.tail(dim_joint) = model_.effortLimit.tail(dim_joint);
+  joint_velocity_limit_.tail(dim_joint) = model_.velocityLimit.tail(dim_joint);
+  lower_joint_position_limit_.tail(dim_joint) 
+      = model_.lowerPositionLimit.tail(dim_joint);
+  upper_joint_position_limit_.tail(dim_joint) 
+      = model_.upperPositionLimit.tail(dim_joint);
 }
 
 
@@ -72,7 +102,11 @@ Robot::Robot()
     dimv_(0),
     dimf_(0),
     max_dimf_(0),
-    is_each_contact_active_() {
+    is_each_contact_active_(),
+    joint_effort_limit_(),
+    joint_velocity_limit_(),
+    lower_joint_position_limit_(),
+    upper_joint_position_limit_() {
 }
 
 
@@ -350,33 +384,62 @@ void Robot::passiveConstraintViolation(const Eigen::VectorXd& torques,
 }
 
 
-void Robot::generateRandomConfiguration(const Eigen::VectorXd& q_min, 
-                                        const Eigen::VectorXd& q_max, 
-                                        Eigen::VectorXd& q) const {
-  assert(q_min.size() == dimq_);
-  assert(q_max.size() == dimq_);
+void Robot::generateFeasibleConfiguration(Eigen::VectorXd& q) const {
   assert(q.size() == dimq_);
+  Eigen::VectorXd q_min = model_.lowerPositionLimit;
+  Eigen::VectorXd q_max = model_.upperPositionLimit;
+  if (floating_base_.has_floating_base()) {
+    q_min.head(6).array() = -1;
+    q_max.head(6).array() = 1;
+  }
   q = pinocchio::randomConfiguration(model_, q_min, q_max);
 }
 
 
 Eigen::VectorXd Robot::jointEffortLimit() const {
-  return model_.effortLimit;
+  return joint_effort_limit_;
 }
 
 
 Eigen::VectorXd Robot::jointVelocityLimit() const {
-  return model_.velocityLimit;
+  return joint_velocity_limit_;
 }
 
-
 Eigen::VectorXd Robot::lowerJointPositionLimit() const {
-  return model_.lowerPositionLimit;
+  return lower_joint_position_limit_;
 }
 
 
 Eigen::VectorXd Robot::upperJointPositionLimit() const {
-  return model_.upperPositionLimit;
+  return upper_joint_position_limit_;
+}
+
+
+void Robot::setJointEffortLimit(const Eigen::VectorXd& joint_effort_limit) {
+  assert(joint_effort_limit_.size() == joint_effort_limit.size());
+  joint_effort_limit_ = joint_effort_limit;
+}
+
+
+void Robot::setJointVelocityLimit(const Eigen::VectorXd& joint_velocity_limit) {
+  assert(joint_velocity_limit_.size() == joint_velocity_limit.size());
+  joint_velocity_limit_ = joint_velocity_limit;
+}
+
+
+void Robot::setLowerJointPositionLimit(
+    const Eigen::VectorXd& lower_joint_position_limit) {
+  assert(
+      lower_joint_position_limit_.size() == lower_joint_position_limit.size());
+  lower_joint_position_limit_ = lower_joint_position_limit;
+}
+
+
+void Robot::setUpperJointPositionLimit(
+    const Eigen::VectorXd& upper_joint_position_limit) {
+  assert(
+      upper_joint_position_limit_.size() == upper_joint_position_limit.size());
+  upper_joint_position_limit_ = upper_joint_position_limit;
 }
 
 

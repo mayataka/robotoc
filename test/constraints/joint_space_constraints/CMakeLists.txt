@@ -1,36 +1,9 @@
-
-add_library(
-    robot_for_pdipm_test
-    ${IDOCP_SRC_DIR}/robot/robot.cpp
-    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
-    ${IDOCP_SRC_DIR}/robot/passive_joints.cpp
-)
-target_include_directories(
-    robot_for_pdipm_test
-    PRIVATE
-    ${IDOCP_INCLUDE_DIR}
-    ${EIGEN3_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIR}
-    ${PINOCCHIO_INCLUDE_DIRS}
-)
-target_link_libraries(
-    robot_for_pdipm_test
-    PRIVATE
-    pthread
-    ${Boost_LIBRARIES}
-    urdfdom_model
-    ${PINOCCHIO_LIBRARIES}
-)
-
-
 add_executable(
-    joint_position_lower_limits_pdipm_test
-    joint_position_lower_limits_pdipm_test.cpp
-    ${IDOCP_SRC_DIR}/constraints/pdipm/joint_position_lower_limits_pdipm.cpp
-    ${IDOCP_SRC_DIR}/constraints/pdipm/pdipm_func.cpp
+    joint_position_lower_limits_test
+    joint_position_lower_limits_test.cpp
 )
 target_include_directories(
-    joint_position_lower_limits_pdipm_test
+    joint_position_lower_limits_test
     PRIVATE
     ${GTEST_INCLUDE_PATH}
     ${GMOCK_INCLUDE_PATH}
@@ -41,18 +14,118 @@ target_include_directories(
     ${PINOCCHIO_INCLUDEDIR}
 )
 target_link_libraries(
-    joint_position_lower_limits_pdipm_test
+    joint_position_lower_limits_test
     PRIVATE
     pthread
     GTest::GTest
     GTest::GMock
-    robot_for_pdipm_test
+    idocp_constraints
+    idocp_robot
 )
 add_dependencies(
-    joint_position_lower_limits_pdipm_test
+    joint_position_lower_limits_test
     googletest
 )
 add_test(
-    NAME joint_position_lower_limits_pdipm_test
-    COMMAND $<TARGET_FILE:joint_position_lower_limits_pdipm_test>
+    NAME joint_position_lower_limits_test
+    COMMAND $<TARGET_FILE:joint_position_lower_limits_test>
+)
+
+add_executable(
+    joint_position_upper_limits_test
+    joint_position_upper_limits_test.cpp
+)
+target_include_directories(
+    joint_position_upper_limits_test
+    PRIVATE
+    ${GTEST_INCLUDE_PATH}
+    ${GMOCK_INCLUDE_PATH}
+    ${GTEST_LIBRARY_PATH}
+    ${EIGEN3_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${PINOCCHIO_INCLUDEDIR}
+)
+target_link_libraries(
+    joint_position_upper_limits_test
+    PRIVATE
+    pthread
+    GTest::GTest
+    GTest::GMock
+    idocp_constraints
+    idocp_robot
+)
+add_dependencies(
+    joint_position_upper_limits_test
+    googletest
+)
+add_test(
+    NAME joint_position_upper_limits_test
+    COMMAND $<TARGET_FILE:joint_position_upper_limits_test>
+)
+
+add_executable(
+    joint_velocity_lower_limits_test
+    joint_velocity_lower_limits_test.cpp
+)
+target_include_directories(
+    joint_velocity_lower_limits_test
+    PRIVATE
+    ${GTEST_INCLUDE_PATH}
+    ${GMOCK_INCLUDE_PATH}
+    ${GTEST_LIBRARY_PATH}
+    ${EIGEN3_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${PINOCCHIO_INCLUDEDIR}
+)
+target_link_libraries(
+    joint_velocity_lower_limits_test
+    PRIVATE
+    pthread
+    GTest::GTest
+    GTest::GMock
+    idocp_constraints
+    idocp_robot
+)
+add_dependencies(
+    joint_velocity_lower_limits_test
+    googletest
+)
+add_test(
+    NAME joint_velocity_lower_limits_test
+    COMMAND $<TARGET_FILE:joint_velocity_lower_limits_test>
+)
+
+add_executable(
+    joint_velocity_upper_limits_test
+    joint_velocity_upper_limits_test.cpp
+)
+target_include_directories(
+    joint_velocity_upper_limits_test
+    PRIVATE
+    ${GTEST_INCLUDE_PATH}
+    ${GMOCK_INCLUDE_PATH}
+    ${GTEST_LIBRARY_PATH}
+    ${EIGEN3_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${PINOCCHIO_INCLUDEDIR}
+)
+target_link_libraries(
+    joint_velocity_upper_limits_test
+    PRIVATE
+    pthread
+    GTest::GTest
+    GTest::GMock
+    idocp_constraints
+    idocp_robot
+)
+add_dependencies(
+    joint_velocity_upper_limits_test
+    googletest
+)
+add_test(
+    NAME joint_velocity_upper_limits_test
+    COMMAND $<TARGET_FILE:joint_velocity_upper_limits_test>
 )

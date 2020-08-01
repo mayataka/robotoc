@@ -211,14 +211,10 @@ public:
   void passiveConstraintViolation(const Eigen::VectorXd& tau, 
                                   Eigen::VectorXd& violation) const;
 
-  // Generates random configuration
+  // Generates feasible configuration randomly.
   // Argments:
-  //   q: The min of the configuration vector. Size must be dimq.  
-  //   q: The max of the configuration vector. Size must be dimq.  
   //   q: The generated configuration vector. Size must be dimq.  
-  void generateRandomConfiguration(const Eigen::VectorXd& q_min, 
-                                   const Eigen::VectorXd& q_max, 
-                                   Eigen::VectorXd& q) const;
+  void generateFeasibleConfiguration(Eigen::VectorXd& q) const;
 
   // Returns the effort limit of each joints.
   Eigen::VectorXd jointEffortLimit() const;
@@ -231,6 +227,20 @@ public:
 
   // Returns the upper limit of the position of each joints.
   Eigen::VectorXd upperJointPositionLimit() const;
+
+  // Sets the effort limit of each joints.
+  void setJointEffortLimit(const Eigen::VectorXd& joint_effort_limit);
+
+  // Sets the joint velocity limit of each joints.
+  void setJointVelocityLimit(const Eigen::VectorXd& joint_velocity_limit);
+
+  // Sets the lower limit of the position of each joints.
+  void setLowerJointPositionLimit(
+      const Eigen::VectorXd& lower_joint_position_limit);
+
+  // Sets the upper limit of the position of each joints.
+  void setUpperJointPositionLimit(
+      const Eigen::VectorXd& upper_joint_position_limit);
 
   // Returns the dimensiton of the generalized configuration.
   int dimq() const;
@@ -272,6 +282,8 @@ private:
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
   int dimq_, dimv_, dimf_, max_dimf_;
   std::vector<bool> is_each_contact_active_;
+  Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,
+                  lower_joint_position_limit_, upper_joint_position_limit_;
 };
 
 } // namespace idocp

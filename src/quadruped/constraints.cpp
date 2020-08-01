@@ -1,8 +1,8 @@
-#include "manipulator/constraints.hpp"
+#include "quadruped/constraints.hpp"
 
 
 namespace idocp {
-namespace manipulator {
+namespace quadruped {
 
 Constraints::Constraints(const Robot& robot)
   : ConstraintsInterface() {
@@ -105,5 +105,5 @@ double Constraints::residualSquaredNrom(const Robot& robot, const double dtau,
                                         const Eigen::VectorXd& u) {
 }
 
-} // namespace manipulator
+} // namespace quadruped 
 } // namespace idocp

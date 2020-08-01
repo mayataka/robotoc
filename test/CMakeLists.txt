@@ -78,12 +78,8 @@ add_library(
     idocp_constraints
     ${IDOCP_SRC_DIR}/constraints/pdipm_func.cpp
     ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_space_constraints.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_position_upper_limits.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_position_lower_limits.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_velocity_upper_limits.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_velocity_lower_limits.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_torque_upper_limits.cpp
-    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_torque_lower_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_variables_upper_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_variables_lower_limits.cpp
 )
 target_include_directories(
     idocp_constraints
@@ -145,7 +141,7 @@ add_library(
     idocp_ocp
     ${IDOCP_SRC_DIR}/ocp/riccati_matrix_factorizer.cpp
     ${IDOCP_SRC_DIR}/ocp/riccati_matrix_inverter.cpp
-    # ${IDOCP_SRC_DIR}/ocp/split_terminal_ocp.cpp
+    ${IDOCP_SRC_DIR}/ocp/split_terminal_ocp.cpp
     # ${IDOCP_SRC_DIR}/ocp/split_ocp.cpp
 )
 target_include_directories(
@@ -181,6 +177,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/robot)
-# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/constraints)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/constraints)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cost)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ocp)

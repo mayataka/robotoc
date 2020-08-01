@@ -43,12 +43,12 @@ public:
                   const Eigen::VectorXd& v);
 
   // Initialize the constraints, i.e., set slack and dual variables under set 
-  //  q, v, a, u.
+  //  q, v.
   // Argments: 
   //   robot: The robot model that has been already initialized.
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
-  void initConstraints(Robot& robot, const double dtau,
+  void initConstraints(Robot& robot, const int time_step, const double dtau,
                        const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
   // Linearize the OCP for Newton's method around the current solution at the 
