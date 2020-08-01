@@ -46,8 +46,8 @@ public:
                                 const Eigen::VectorXd& q) override;
 
   double l(const double t, const double dtau, const Eigen::VectorXd& q, 
-           const Eigen::VectorXd& v, const Eigen::VectorXd& u, 
-           const Eigen::VectorXd& a) override; 
+           const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+           const Eigen::VectorXd& u) override; 
 
   double phi(const double t, const Eigen::VectorXd& q, 
              const Eigen::VectorXd& v) override;

@@ -420,6 +420,13 @@ int Robot::max_point_contacts() const {
 }
 
 
+bool Robot::is_contact_active(const int contact_index) const {
+  assert(contact_index >= 0);
+  assert(contact_index < point_contacts_.size());
+  return point_contacts_[contact_index].isActive();
+}
+
+
 void Robot::printRobotModel() const {
   for (int i=0; i<model_.njoints; ++i) {
     std::cout << "Info of joint " << i << std::endl;

@@ -75,6 +75,7 @@ TEST_F(FixedBaseRobotTest, constructor) {
   EXPECT_EQ(robot_contact.max_dimf(), 3);
   EXPECT_EQ(robot_contact.dim_passive(), 0);
   EXPECT_EQ(robot_contact.max_point_contacts(), 1);
+  EXPECT_EQ(robot_contact.is_contact_active(0), false);
   EXPECT_FALSE(robot_contact.has_floating_base());
   robot_contact.printRobotModel();
   Eigen::VectorXd effort_limit(dimq_), velocity_limit(dimq_), 
@@ -157,6 +158,8 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(robot.max_dimf());
   std::vector<bool> is_each_contacts_active = {true};
   robot.setActiveContacts(is_each_contacts_active);
+  EXPECT_EQ(robot.dimf(), robot.max_dimf());
+  EXPECT_EQ(robot.is_contact_active(0), true);
   robot.updateKinematics(q_, v_, a_);
   robot.computeBaumgarteResidual(residual);
   PointContact contact_ref(model_, contact_frame_id_, 

@@ -256,6 +256,10 @@ public:
   // Returns the maximum number of the contacts.
   int max_point_contacts() const;
 
+  // Returns true if contact[contact_index] is active. Returns false if 
+  // contact[contact_index] is not active.
+  bool is_contact_active(const int contact_index) const;
+
   // Prints the robot model.
   void printRobotModel() const;
 

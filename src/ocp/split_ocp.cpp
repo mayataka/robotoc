@@ -152,6 +152,7 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   dimc_ = robot.dimf() + robot.dim_passive();
   if (dimf_ > 0) {
     robot.setContactForces(f_);
+    cost->setContactStatus(robot);
   }
   // Residual of the inverse dynamics constraint.
   robot.RNEA(q, v, a, u_res_);
@@ -230,7 +231,7 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   cost_->augment_lvv(robot, t, dtau, q, v, a, Qvv_);
   cost_->augment_laa(robot, t, dtau, q, v, a, Qaa_);
   if (dimf_ > 0) {
-    cost_->lff(robot, t, dtau, f_, Qff_);
+    cost_->augment_lff(robot, t, dtau, f_, Qff_);
     riccati_matrix_inverter_.setContactStatus(robot);
     riccati_matrix_inverter_.precompute(Qff_, Qaf_);
   }
@@ -428,14 +429,14 @@ double SplitOCP::maxDualStepSize() {
 }
 
 
-double SplitOCP::stageCostDerivativeDotDirection(Robot& robot, const double t, 
-                                                 const double dtau, 
-                                                 const Eigen::VectorXd& q, 
-                                                 const Eigen::VectorXd& v, 
-                                                 const Eigen::VectorXd& a, 
-                                                 const Eigen::VectorXd& u, 
-                                                 const Eigen::VectorXd& dq, 
-                                                 const Eigen::VectorXd& dv) {
+double SplitOCP::costDerivativeDotDirection(Robot& robot, const double t, 
+                                            const double dtau, 
+                                            const Eigen::VectorXd& q, 
+                                            const Eigen::VectorXd& v, 
+                                            const Eigen::VectorXd& a, 
+                                            const Eigen::VectorXd& u, 
+                                            const Eigen::VectorXd& dq, 
+                                            const Eigen::VectorXd& dv) {
   assert(dtau > 0);
   assert(q.size() == robot.dimq());
   assert(v.size() == robot.dimv());
@@ -453,47 +454,6 @@ double SplitOCP::stageCostDerivativeDotDirection(Robot& robot, const double t,
   product += la_.dot(da_);
   product += lu_.dot(du_);
   return product;
-}
-
-
-double SplitOCP::terminalCostDerivativeDotDirection(Robot& robot, 
-                                                    const double t, 
-                                                    const Eigen::VectorXd& q, 
-                                                    const Eigen::VectorXd& v, 
-                                                    const Eigen::VectorXd& dq,
-                                                    const Eigen::VectorXd& dv) {
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
-  assert(dq.size() == robot.dimv());
-  assert(dv.size() == robot.dimv());
-  cost_->phiq(robot, t, q, v, lq_);
-  cost_->phiv(robot, t, q, v, lv_);
-  double product = 0;
-  product += lq_.dot(dq);
-  product += lv_.dot(dv);
-  return product;
-}
-
-
-std::pair<double, double> SplitOCP::costAndConstraintsViolation(
-    Robot& robot, const double t, const double dtau, 
-    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-    const Eigen::VectorXd& a, const Eigen::VectorXd& u) {
-  assert(dtau > 0);
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
-  assert(a.size() == robot.dimv());
-  assert(u.size() == robot.dimv());
-  double cost = 0;
-  cost += cost_->l(robot, t, dtau, q, v, a, u);
-  cost += joint_constraints_.costSlackBarrier();
-  double constraints_violation = 0;
-  constraints_violation += q_res_.lpNorm<1>();
-  constraints_violation += v_res_.lpNorm<1>();
-  constraints_violation += dtau * u_res_.lpNorm<1>();
-  constraints_violation += joint_constraints_.residualL1Nrom(robot, dtau, q, v, 
-                                                             a, u);
-  return std::make_pair(cost, constraints_violation);
 }
 
 
@@ -536,32 +496,6 @@ std::pair<double, double> SplitOCP::costAndConstraintsViolation(
                                                              a_tmp_, u_tmp_);
   constraints_violation += dtau * u_res_tmp_.lpNorm<1>();
   return std::make_pair(cost, constraints_violation);
-}
-
-
-double SplitOCP::terminalCost(Robot& robot, const double t, 
-                              const Eigen::VectorXd& q, 
-                              const Eigen::VectorXd& v) {
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
-  return cost_->phi(robot, t, q, v);
-}
-
-
-double SplitOCP::terminalCost(Robot& robot, const double step_size, 
-                              const double t, const Eigen::VectorXd& q, 
-                              const Eigen::VectorXd& v, 
-                              const Eigen::VectorXd& dq, 
-                              const Eigen::VectorXd& dv) {
-  assert(step_size > 0);
-  assert(step_size <= 1);
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
-  assert(dq.size() == robot.dimv());
-  assert(dv.size() == robot.dimv());
-  q_tmp_ = q + step_size * dq;
-  v_tmp_ = v + step_size * dv;
-  return cost_->phi(robot, t, q_tmp_, v_tmp_);
 }
 
 
@@ -759,28 +693,6 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
     error += lf_.head(dimf).squaredNorm();
     error += C_res_.head(dimf).squaredNorm();
   }
-  return error;
-}
-
-
-double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t, 
-                                     const Eigen::VectorXd& lmd, 
-                                     const Eigen::VectorXd& gmm, 
-                                     const Eigen::VectorXd& q, 
-                                     const Eigen::VectorXd& v) {
-  assert(lmd.size() == robot.dimv());
-  assert(gmm.size() == robot.dimv());
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
-  // Compute the partial derivatives of the Lagrangian with respect to the 
-  // terminal configuration and velocity.
-  cost_->phiq(robot, t, q, v, lq_);
-  cost_->phiv(robot, t, q, v, lv_);
-  lq_.noalias() -= lmd;
-  lv_.noalias() -= gmm;
-  double error = 0;
-  error += lq_.squaredNorm();
-  error += lv_.squaredNorm();
   return error;
 }
 

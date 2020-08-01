@@ -37,15 +37,19 @@ JointSpaceCost::JointSpaceCost(const Robot& robot,
   assert(vf_weight.size() == dimv_);
   if (robot.has_floating_base()) {
     lq_configuration_.resize(robot.dimq());
+    lq_configuration_.setZero();
     lqq_configuration_.resize(robot.dimq(), robot.dimq());
+    lqq_configuration_.setZero();
     for (int i=0; i<robot.dimq(); ++i) {
-      lqq_configuration_.coeffRef(i) = q_weight(i);
+      lqq_configuration_.coeffRef(i, i) = q_weight.coeff(i);
     }
     phiqq_configuration_.resize(robot.dimq(), robot.dimq());
+    phiqq_configuration_.setZero();
     for (int i=0; i<robot.dimq(); ++i) {
-      phiqq_configuration_.coeffRef(i) = qf_weight(i);
+      phiqq_configuration_.coeffRef(i, i) = qf_weight.coeff(i);
     }
     configuration_Jacobian_.resize(robot.dimq(), robot.dimv());
+    configuration_Jacobian_.setZero();
   }
 }
 
@@ -77,10 +81,6 @@ JointSpaceCost::JointSpaceCost(const Robot& robot, const Eigen::VectorXd& q_ref,
     lqq_configuration_(),
     phiqq_configuration_(),
     configuration_Jacobian_() {
-  assert(q_ref.size() == dimq_);
-  assert(v_ref.size() == dimv_);
-  assert(a_ref.size() == dimv_);
-  assert(u_ref.size() == dimv_);
   assert(q_weight.size() == dimq_);
   assert(v_weight.size() == dimv_);
   assert(a_weight.size() == dimv_);
@@ -89,15 +89,19 @@ JointSpaceCost::JointSpaceCost(const Robot& robot, const Eigen::VectorXd& q_ref,
   assert(vf_weight.size() == dimv_);
   if (robot.has_floating_base()) {
     lq_configuration_.resize(robot.dimq());
+    lq_configuration_.setZero();
     lqq_configuration_.resize(robot.dimq(), robot.dimq());
+    lqq_configuration_.setZero();
     for (int i=0; i<robot.dimq(); ++i) {
-      lqq_configuration_.coeffRef(i) = q_weight(i);
+      lqq_configuration_.coeffRef(i, i) = q_weight.coeff(i);
     }
     phiqq_configuration_.resize(robot.dimq(), robot.dimq());
+    phiqq_configuration_.setZero();
     for (int i=0; i<robot.dimq(); ++i) {
-      phiqq_configuration_.coeffRef(i) = qf_weight(i);
+      phiqq_configuration_.coeffRef(i, i) = qf_weight.coeff(i);
     }
-    configuration_Jacobian_().resize(robot.dimq(), robot.dimv());
+    configuration_Jacobian_.resize(robot.dimq(), robot.dimv());
+    configuration_Jacobian_.setZero();
   }
 }
 
@@ -129,6 +133,13 @@ void JointSpaceCost::set_u_ref(const Eigen::VectorXd& u_ref) {
 void JointSpaceCost::set_q_weight(const Eigen::VectorXd& q_weight) {
   assert(q_weight.size() == dimq_);
   q_weight_ = q_weight;
+  if (has_floating_base_) {
+    lq_configuration_.resize(dimq_);
+    lqq_configuration_.resize(dimq_, dimq_);
+    for (int i=0; i<dimq_; ++i) {
+      lqq_configuration_.coeffRef(i, i) = q_weight.coeff(i);
+    }
+  }
 }
 
 
@@ -153,6 +164,13 @@ void JointSpaceCost::set_u_weight(const Eigen::VectorXd& u_weight) {
 void JointSpaceCost::set_qf_weight(const Eigen::VectorXd& qf_weight) {
   assert(qf_weight.size() == dimq_);
   qf_weight_ = qf_weight;
+  if (has_floating_base_) {
+    lq_configuration_.resize(dimq_);
+    phiqq_configuration_.resize(dimq_, dimq_);
+    for (int i=0; i<dimq_; ++i) {
+      phiqq_configuration_.coeffRef(i, i) = qf_weight.coeff(i);
+    }
+  }
 }
 
 
@@ -171,7 +189,7 @@ void JointSpaceCost::setConfigurationJacobian(const Robot& robot,
 
 double JointSpaceCost::l(const double dtau, const Eigen::VectorXd& q, 
                          const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-                         const Eigen::VectorXd& u) {
+                         const Eigen::VectorXd& u) const {
   assert(dtau > 0);
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
@@ -234,8 +252,8 @@ void JointSpaceCost::lqq(const double dtau, Eigen::MatrixXd& lqq) const {
   assert(lqq.rows() == dimv_);
   assert(lqq.cols() == dimv_);
   if (has_floating_base_) {
-    lqq = configuration_Jacobian_.transpose() * lqq_configuration_ 
-                                              * configuration_Jacobian_;
+    lqq = dtau * configuration_Jacobian_.transpose() * lqq_configuration_ 
+                                                     * configuration_Jacobian_;
   }
   else {
     for (int i=0; i<dimq_; ++i) {
@@ -282,8 +300,8 @@ void JointSpaceCost::augment_lqq(const double dtau,
   assert(lqq.cols() == dimv_);
   if (has_floating_base_) {
     lqq.noalias() 
-        += configuration_Jacobian_.transpose() * lqq_configuration_ 
-                                               * configuration_Jacobian_;
+        += dtau * configuration_Jacobian_.transpose() * lqq_configuration_ 
+                                                      * configuration_Jacobian_;
   }
   else {
     for (int i=0; i<dimq_; ++i) {
@@ -338,16 +356,14 @@ double JointSpaceCost::phi(const Eigen::VectorXd& q,
 
 
 void JointSpaceCost::phiq(const Eigen::VectorXd& q, Eigen::VectorXd& phiq) {
-  assert(dtau > 0);
   assert(q.size() == dimq_);
   assert(phiq.size() == dimv_);
   if (has_floating_base_) {
-    lq_configuration_.array() = dtau * qf_weight_.array() 
-                                     * (q.array()-q_ref_.array());
+    lq_configuration_.array() = qf_weight_.array() * (q.array()-q_ref_.array());
     phiq = configuration_Jacobian_.transpose() * lq_configuration_;
   }
   else {
-    phiq.array() = dtau * qf_weight_.array() * (q.array()-q_ref_.array());
+    phiq.array() = qf_weight_.array() * (q.array()-q_ref_.array());
   }
 }
 
@@ -361,7 +377,6 @@ void JointSpaceCost::phiv(const Eigen::VectorXd& v,
 
 
 void JointSpaceCost::phiqq(Eigen::MatrixXd& phiqq) const {
-  assert(dtau > 0);
   assert(phiqq.rows() == dimv_);
   assert(phiqq.cols() == dimv_);
   if (has_floating_base_) {

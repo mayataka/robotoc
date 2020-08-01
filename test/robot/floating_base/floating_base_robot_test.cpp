@@ -79,6 +79,9 @@ TEST_F(FloatingBaseRobotTest, constructor) {
   EXPECT_EQ(robot_contact.dimf(), 0);
   EXPECT_EQ(robot_contact.max_dimf(), 3*contact_frames_.size());
   EXPECT_EQ(robot_contact.dim_passive(), 6);
+  for (int i=0; i<robot_contact.max_point_contacts(); ++i) {
+    EXPECT_EQ(robot_contact.is_contact_active(i), false);
+  }
   EXPECT_EQ(robot_contact.max_point_contacts(), contact_frames_.size());
   EXPECT_TRUE(robot_contact.has_floating_base());
   EXPECT_FALSE(robot_contact.passive_joint_indices().empty());
@@ -191,6 +194,9 @@ TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
   std::vector<bool> is_each_contacts_active(contacts_ref.size(), true);
   robot.setActiveContacts(is_each_contacts_active);
   EXPECT_EQ(robot.dimf(), robot.max_dimf());
+  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    EXPECT_EQ(robot.is_contact_active(i), true);
+  }
   robot.updateKinematics(q_, v_, a_);
   robot.computeBaumgarteResidual(residual);
   pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
