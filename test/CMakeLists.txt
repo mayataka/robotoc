@@ -70,7 +70,74 @@ target_include_directories(
 target_link_libraries(
     idocp_cost
     PUBLIC
-    robot
+    idocp_robot
+)
+
+# build idocp constraints
+add_library(
+    idocp_constraints
+    ${IDOCP_SRC_DIR}/constraints/pdipm_func.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_space_constraints.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_position_upper_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_position_lower_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_velocity_upper_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_velocity_lower_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_torque_upper_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_torque_lower_limits.cpp
+)
+target_include_directories(
+    idocp_constraints
+    PUBLIC
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIR}
+    ${PINOCCHIO_INCLUDE_DIRS}
+)
+target_link_libraries(
+    idocp_constraints
+    PUBLIC
+    idocp_robot
+)
+
+# build idocp manipulator
+add_library(
+    idocp_manipulator
+    ${IDOCP_SRC_DIR}/manipulator/cost_function.cpp
+    ${IDOCP_SRC_DIR}/manipulator/constraints.cpp
+)
+target_include_directories(
+    idocp_manipulator
+    PUBLIC
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIR}
+    ${PINOCCHIO_INCLUDE_DIRS}
+)
+target_link_libraries(
+    idocp_manipulator
+    PUBLIC
+    idocp_cost
+    idocp_robot
+    idocp_constraints
+)
+
+# build idocp quadruped
+add_library(
+    idocp_quadruped
+    ${IDOCP_SRC_DIR}/quadruped/cost_function.cpp
+    ${IDOCP_SRC_DIR}/quadruped/constraints.cpp
+)
+target_include_directories(
+    idocp_quadruped
+    PUBLIC
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIR}
+    ${PINOCCHIO_INCLUDE_DIRS}
+)
+target_link_libraries(
+    idocp_quadruped
+    PUBLIC
+    idocp_cost
+    idocp_robot
+    idocp_constraints
 )
 
 # build idocp ocp
@@ -78,6 +145,8 @@ add_library(
     idocp_ocp
     ${IDOCP_SRC_DIR}/ocp/riccati_matrix_factorizer.cpp
     ${IDOCP_SRC_DIR}/ocp/riccati_matrix_inverter.cpp
+    # ${IDOCP_SRC_DIR}/ocp/split_terminal_ocp.cpp
+    # ${IDOCP_SRC_DIR}/ocp/split_ocp.cpp
 )
 target_include_directories(
     idocp_ocp
@@ -89,8 +158,11 @@ target_include_directories(
 target_link_libraries(
     idocp_ocp
     PUBLIC
-    cost
-    robot
+    idocp_cost
+    idocp_robot
+    idocp_constraints
+    idocp_manipulator
+    idocp_quadruped
 )
 
 # coverage options

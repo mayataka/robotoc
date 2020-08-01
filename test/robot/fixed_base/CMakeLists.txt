@@ -9,6 +9,7 @@ target_include_directories(
     ${GMOCK_INCLUDE_PATH}
     ${GTEST_LIBRARY_PATH}
     ${IDOCP_INCLUDE_DIR}
+    ${PINOCCHIO_INCLUDE_DIRS}
 )
 target_link_libraries(
     fixed_base_point_contact_test
@@ -38,6 +39,7 @@ target_include_directories(
     ${GMOCK_INCLUDE_PATH}
     ${GTEST_LIBRARY_PATH}
     ${IDOCP_INCLUDE_DIR}
+    ${PINOCCHIO_INCLUDE_DIRS}
 )
 target_link_libraries(
     fixed_base_floating_base_test
@@ -67,6 +69,7 @@ target_include_directories(
     ${GMOCK_INCLUDE_PATH}
     ${GTEST_LIBRARY_PATH}
     ${IDOCP_INCLUDE_DIR}
+    ${PINOCCHIO_INCLUDE_DIRS}
 )
 target_link_libraries(
     fixed_base_robot_test 
