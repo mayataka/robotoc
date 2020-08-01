@@ -7,7 +7,7 @@ namespace idocp {
 
 MPC::MPC(const Robot& robot, const CostFunctionInterface* cost,
          const ConstraintsInterface* constraints, const double T, 
-         const unsigned int N, const unsigned int num_proc) 
+         const int N, const int num_proc) 
   : ocp_(robot, cost, constraints, T, N, num_proc) {
   assert(T > 0);
   assert(N > 0);
@@ -21,7 +21,7 @@ MPC::~MPC() {
 
 void MPC::initializeSolution(const double t, const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v, 
-                             const unsigned int max_itr) {
+                             const int max_itr) {
   assert(max_itr >= 0);
   ocp_.setStateTrajectory(q, v);
   for (int i=0; i<max_itr; ++i) {

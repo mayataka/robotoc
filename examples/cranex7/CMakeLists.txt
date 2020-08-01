@@ -4,7 +4,7 @@ project(cranex7 CXX)
 set(CMAKE_CXX_STANDARD 11)
 
 
-set(IDOCP_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../../include/IDOCP)
+set(IDOCP_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../../include/idocp)
 set(IDOCP_SRC_DIR ${PROJECT_SOURCE_DIR}/../../src)
 
 find_package(Eigen3 REQUIRED)
@@ -29,7 +29,7 @@ add_library(
     robot
     SHARED 
     ${IDOCP_SRC_DIR}/robot/robot.cpp
-    ${IDOCP_SRC_DIR}/robot/passive_joints.cpp
+    ${IDOCP_SRC_DIR}/robot/floating_base.cpp
     ${IDOCP_SRC_DIR}/robot/point_contact.cpp
 )
 target_include_directories(
@@ -51,19 +51,19 @@ target_link_libraries(
 
 
 add_library(
-    constraints_pdipm
+    constraints
     SHARED 
-    ${IDOCP_SRC_DIR}/constraints/pdipm/joint_space_constraints_pdipm.cpp
-    ${IDOCP_SRC_DIR}/constraints/pdipm/joint_position_upper_limits_pdipm.cpp
-    ${IDOCP_SRC_DIR}/constraints/pdipm/joint_position_lower_limits_pdipm.cpp
-    ${IDOCP_SRC_DIR}/constraints/pdipm/joint_velocity_upper_limits_pdipm.cpp
-    ${IDOCP_SRC_DIR}/constraints/pdipm/joint_velocity_lower_limits_pdipm.cpp
-    ${IDOCP_SRC_DIR}/constraints/pdipm/joint_torque_upper_limits_pdipm.cpp
-    ${IDOCP_SRC_DIR}/constraints/pdipm/joint_torque_lower_limits_pdipm.cpp
-    ${IDOCP_SRC_DIR}/constraints/pdipm/pdipm_func.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_space_constraints.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_position_upper_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_position_lower_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_velocity_upper_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_velocity_lower_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_torque_upper_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/joint_space_constraints/joint_torque_lower_limits.cpp
+    ${IDOCP_SRC_DIR}/constraints/pdipm_func.cpp
 )
 target_include_directories(
-    constraints_pdipm
+    constraints
     PRIVATE
     ${EIGEN3_INCLUDE_DIR}
     ${IDOCP_INCLUDE_DIR}
@@ -71,34 +71,7 @@ target_include_directories(
     ${PINOCCHIO_INCLUDEDIR}
 )
 target_link_libraries(
-    constraints_pdipm
-    PRIVATE
-    robot
-)
-
-
-add_library(
-    constraints_fb
-    SHARED 
-    ${IDOCP_SRC_DIR}/constraints/fb/joint_space_constraints_fb.cpp
-    ${IDOCP_SRC_DIR}/constraints/fb/joint_position_upper_limits_fb.cpp
-    ${IDOCP_SRC_DIR}/constraints/fb/joint_position_lower_limits_fb.cpp
-    ${IDOCP_SRC_DIR}/constraints/fb/joint_velocity_upper_limits_fb.cpp
-    ${IDOCP_SRC_DIR}/constraints/fb/joint_velocity_lower_limits_fb.cpp
-    ${IDOCP_SRC_DIR}/constraints/fb/joint_torque_upper_limits_fb.cpp
-    ${IDOCP_SRC_DIR}/constraints/fb/joint_torque_lower_limits_fb.cpp
-    ${IDOCP_SRC_DIR}/constraints/fb/fb_func.cpp
-)
-target_include_directories(
-    constraints_fb
-    PRIVATE
-    ${EIGEN3_INCLUDE_DIR}
-    ${IDOCP_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIRS}
-    ${PINOCCHIO_INCLUDEDIR}
-)
-target_link_libraries(
-    constraints_fb
+    constraints
     PRIVATE
     robot
 )
@@ -111,6 +84,7 @@ add_library(
     ${IDOCP_SRC_DIR}/ocp/split_ocp.cpp
     ${IDOCP_SRC_DIR}/ocp/line_search_filter.cpp
     ${IDOCP_SRC_DIR}/cost/joint_space_cost.cpp
+    ${IDOCP_SRC_DIR}/cost/contact_cost.cpp
     ${IDOCP_SRC_DIR}/manipulator/cost_function.cpp
     ${IDOCP_SRC_DIR}/manipulator/constraints.cpp
 )
@@ -126,8 +100,7 @@ target_link_libraries(
     idocp
     PRIVATE
     robot
-    constraints_pdipm
-    constraints_fb
+    constraints
 )
 
 
@@ -168,8 +141,7 @@ target_link_libraries(
     PRIVATE
     idocp
     robot
-    constraints_pdipm
-    constraints_fb
+    constraints
 )
 
 set(IDOCP_SIMULATOR_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../../simulator/include)
@@ -197,7 +169,7 @@ target_link_libraries(
     mpc
     idocp
     robot
-    constraints_pdipm
+    constraints
 )
 
 
@@ -212,7 +184,7 @@ target_link_libraries(
     mpc
     idocp
     robot
-    constraints_pdipm
+    constraints
 )
 target_include_directories(
     sim_mpc

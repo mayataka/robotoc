@@ -6,15 +6,15 @@
 namespace idocp {
 
 PointContact::PointContact(const pinocchio::Model& model, 
-                           const unsigned int contact_frame_id, 
-                           const double baumgarte_alpha, 
-                           const double baumgarte_beta) 
+                           const int contact_frame_id, 
+                           const double baumgarte_weight_on_velocity, 
+                           const double baumgarte_weight_on_position)
   : is_active_(false),
     contact_frame_id_(contact_frame_id),
     parent_joint_id_(model.frames[contact_frame_id_].parent), 
     dimv_(model.nv),
-    baumgarte_alpha_(baumgarte_alpha),
-    baumgarte_beta_(baumgarte_beta),
+    baumgarte_weight_on_velocity_(baumgarte_weight_on_velocity),
+    baumgarte_weight_on_position_(baumgarte_weight_on_position),
     contact_point_(Eigen::Vector3d::Zero()),
     jXf_(model.frames[contact_frame_id_].placement),
     fXj_(jXf_.inverse().toActionMatrix().transpose()),
@@ -23,8 +23,27 @@ PointContact::PointContact(const pinocchio::Model& model,
     joint_a_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
     joint_a_partial_dv_(Eigen::MatrixXd::Zero(6, model.nv)),
     joint_a_partial_da_(Eigen::MatrixXd::Zero(6, model.nv)) {
-  assert(baumgarte_alpha > 0);
-  assert(baumgarte_beta > 0);
+  assert(contact_frame_id_ >= 0);
+  assert(baumgarte_weight_on_velocity_ >= 0);
+  assert(baumgarte_weight_on_position_ >= 0);
+}
+
+
+PointContact::PointContact() 
+  : is_active_(false),
+    contact_frame_id_(0),
+    parent_joint_id_(0), 
+    dimv_(0),
+    baumgarte_weight_on_velocity_(0),
+    baumgarte_weight_on_position_(0),
+    contact_point_(Eigen::Vector3d::Zero()),
+    jXf_(),
+    fXj_(),
+    J_frame_(),
+    joint_v_partial_dq_(),
+    joint_a_partial_dq_(),
+    joint_a_partial_dv_(),
+    joint_a_partial_da_() {
 }
 
 
@@ -32,51 +51,13 @@ PointContact::~PointContact() {
 }
 
 
-PointContact::PointContact(PointContact&& other) noexcept
-  : is_active_(other.isActive()),
-    contact_frame_id_(other.contact_frame_id()),
-    parent_joint_id_(other.parent_joint_id()), 
-    dimv_(other.dimv()),
-    baumgarte_alpha_(other.baumgarte_alpha()),
-    baumgarte_beta_(other.baumgarte_beta()),
-    contact_point_(other.contact_point()),
-    jXf_(other.jXf()),
-    fXj_(other.jXf().inverse().toActionMatrix().transpose()),
-    J_frame_(),
-    joint_v_partial_dq_(),
-    joint_a_partial_dq_(),
-    joint_a_partial_dv_(),
-    joint_a_partial_da_() {
-  J_frame_.resize(6, dimv_); 
-  joint_v_partial_dq_.resize(6, dimv_); 
-  joint_a_partial_dq_.resize(6, dimv_); 
-  joint_a_partial_dv_.resize(6, dimv_); 
-  joint_a_partial_da_.resize(6, dimv_); 
-}
-
-
-PointContact& PointContact::operator=(PointContact&& other) noexcept {
-  is_active_ = other.isActive();
-  contact_frame_id_ = other.contact_frame_id();
-  parent_joint_id_ = other.parent_joint_id();
-  dimv_ = other.dimv();
-  baumgarte_alpha_ = other.baumgarte_alpha();
-  baumgarte_beta_ = other.baumgarte_beta();
-  contact_point_ = other.contact_point();
-  jXf_ = other.jXf();
-  fXj_ = other.jXf().inverse().toActionMatrix().transpose();
-  J_frame_.resize(6, dimv_); 
-  joint_v_partial_dq_.resize(6, dimv_); 
-  joint_a_partial_dq_.resize(6, dimv_); 
-  joint_a_partial_dv_.resize(6, dimv_); 
-  joint_a_partial_da_.resize(6, dimv_); 
-}
-
-
-void PointContact::resetBaugrarteParameters(const double alpha, 
-                                            const double beta) {
-  baumgarte_alpha_ = alpha;
-  baumgarte_beta_ = beta;
+void PointContact::resetBaugrarteParameters(
+    const double baumgarte_weight_on_velocity, 
+    const double baumgarte_weight_on_position) {
+  assert(baumgarte_weight_on_velocity >= 0);
+  assert(baumgarte_weight_on_position >= 0);
+  baumgarte_weight_on_velocity_ = baumgarte_weight_on_velocity;
+  baumgarte_weight_on_position_ = baumgarte_weight_on_position;
 }
 
 
@@ -96,46 +77,68 @@ void PointContact::computeJointForceFromContactForce(
 
 void PointContact::getContactJacobian(const pinocchio::Model& model, 
                                       pinocchio::Data& data, 
-                                      Eigen::MatrixXd& J_contact) const {
+                                      Eigen::MatrixXd& Jacobian, 
+                                      const bool transpose) {
   pinocchio::getFrameJacobian(model, data, contact_frame_id_, pinocchio::LOCAL, 
                               J_frame_);
-  J_contact = J_frame_.topRows<3>(); 
+  if (transpose) {
+    assert(Jacobian.rows() == dimv_);
+    assert(Jacobian.cols() == 3);
+    Jacobian = J_frame_.topRows<3>().transpose(); 
+  }
+  else {
+    assert(Jacobian.rows() == 3);
+    assert(Jacobian.cols() == dimv_);
+    Jacobian = J_frame_.topRows<3>(); 
+  }
 }
 
 
 void PointContact::getContactJacobian(const pinocchio::Model& model, 
                                       pinocchio::Data& data, 
-                                      const unsigned int result_mat_row_begin, 
-                                      const unsigned int result_mat_col_begin, 
-                                      Eigen::MatrixXd& J_contacts) const {
+                                      const int block_begin_index,
+                                      Eigen::MatrixXd& Jacobian,
+                                      const bool transpose) {
+  assert(block_begin_index >= 0);
   pinocchio::getFrameJacobian(model, data, contact_frame_id_, pinocchio::LOCAL, 
                               J_frame_);
-  J_contacts.block(result_mat_row_begin, result_mat_col_begin, 3, dimv_) 
-      = J_frame_.topRows<3>(); 
+  if (transpose) {
+    assert(Jacobian.rows() == dimv_);
+    assert(Jacobian.cols() >= 3);
+    Jacobian.block(0, block_begin_index, dimv_, 3) 
+        = J_frame_.topRows<3>().transpose(); 
+  }
+  else {
+    assert(Jacobian.rows() >= 3);
+    assert(Jacobian.cols() == dimv_);
+    Jacobian.block(block_begin_index, 0, 3, dimv_) = J_frame_.topRows<3>(); 
+  }
 }
 
 
 void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
     Eigen::Vector3d& baumgarte_residual) const {
+  assert(baumgarte_residual.size() == 3);
   baumgarte_residual
       = (data.oMi[parent_joint_id_].act(data.a[parent_joint_id_])).linear()
-          + baumgarte_alpha_ 
+          + baumgarte_weight_on_velocity_
               * (data.oMi[parent_joint_id_].act(data.v[parent_joint_id_])).linear()
-          + baumgarte_beta_  
+          + baumgarte_weight_on_position_
               * (data.oMf[contact_frame_id_].translation()-contact_point_);
 }
 
 
 void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
-    const unsigned int result_vec_start_index, 
-    Eigen::VectorXd& baumgarte_residual) const {
-  baumgarte_residual.segment<3>(result_vec_start_index)
+    const int result_begin, Eigen::VectorXd& baumgarte_residual) const {
+  assert(result_begin >= 0);
+  assert(baumgarte_residual.size() >= 3);
+  baumgarte_residual.segment<3>(result_begin)
       = (data.oMi[parent_joint_id_].act(data.a[parent_joint_id_])).linear()
-          + baumgarte_alpha_ 
+          + baumgarte_weight_on_velocity_
               * (data.oMi[parent_joint_id_].act(data.v[parent_joint_id_])).linear()
-          + baumgarte_beta_  
+          + baumgarte_weight_on_position_
               * (data.oMf[contact_frame_id_].translation()-contact_point_);
 }
 
@@ -145,6 +148,12 @@ void PointContact::computeBaumgarteDerivatives(
     Eigen::MatrixXd& baumgarte_partial_dq, 
     Eigen::MatrixXd& baumgarte_partial_dv, 
     Eigen::MatrixXd& baumgarte_partial_da) {
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_da.cols() == dimv_);
+  assert(baumgarte_partial_dq.rows() == 3);
+  assert(baumgarte_partial_dv.rows() == 3);
+  assert(baumgarte_partial_da.rows() == 3);
  pinocchio::getJointAccelerationDerivatives(model, data, parent_joint_id_, 
                                             pinocchio::WORLD,
                                             joint_v_partial_dq_, 
@@ -155,11 +164,14 @@ void PointContact::computeBaumgarteDerivatives(
                               pinocchio::LOCAL_WORLD_ALIGNED, J_frame_);
   baumgarte_partial_dq
       = joint_a_partial_dq_.template topRows<3>()
-          + baumgarte_alpha_ * joint_v_partial_dq_.template topRows<3>()
-          + baumgarte_beta_ * J_frame_.template topRows<3>();
+          + baumgarte_weight_on_velocity_ 
+              * joint_v_partial_dq_.template topRows<3>()
+          + baumgarte_weight_on_position_ 
+              * J_frame_.template topRows<3>();
   baumgarte_partial_dv 
       = joint_a_partial_dv_.template topRows<3>()
-          + baumgarte_alpha_ * joint_a_partial_da_.template topRows<3>();
+          + baumgarte_weight_on_velocity_ 
+              * joint_a_partial_da_.template topRows<3>();
   baumgarte_partial_da 
       = joint_a_partial_da_.template topRows<3>();
 }
@@ -167,11 +179,16 @@ void PointContact::computeBaumgarteDerivatives(
 
 void PointContact::computeBaumgarteDerivatives(
     const pinocchio::Model& model, pinocchio::Data& data, 
-    const unsigned int result_mat_row_begin, 
-    const unsigned int result_mat_col_begin,
-    Eigen::MatrixXd& baumgarte_partial_dq, 
+    const int block_rows_begin, Eigen::MatrixXd& baumgarte_partial_dq, 
     Eigen::MatrixXd& baumgarte_partial_dv, 
     Eigen::MatrixXd& baumgarte_partial_da) {
+  assert(block_rows_begin >= 0);
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_da.cols() == dimv_);
+  assert(baumgarte_partial_dq.rows() >= 3);
+  assert(baumgarte_partial_dv.rows() >= 3);
+  assert(baumgarte_partial_da.rows() >= 3);
   pinocchio::getJointAccelerationDerivatives(model, data, parent_joint_id_, 
                                              pinocchio::WORLD,
                                              joint_v_partial_dq_, 
@@ -180,17 +197,17 @@ void PointContact::computeBaumgarteDerivatives(
                                              joint_a_partial_da_);
   pinocchio::getFrameJacobian(model, data, contact_frame_id_, 
                               pinocchio::LOCAL_WORLD_ALIGNED, J_frame_);
-  baumgarte_partial_dq.block(result_mat_row_begin, result_mat_col_begin, 3, 
-                             dimv_) 
+  baumgarte_partial_dq.block(block_rows_begin, 0, 3, dimv_) 
       = joint_a_partial_dq_.template topRows<3>()
-          + baumgarte_alpha_ * joint_v_partial_dq_.template topRows<3>()
-          + baumgarte_beta_ * J_frame_.template topRows<3>();
-  baumgarte_partial_dv.block(result_mat_row_begin, result_mat_col_begin, 3, 
-                             dimv_) 
+          + baumgarte_weight_on_velocity_ 
+              * joint_v_partial_dq_.template topRows<3>()
+          + baumgarte_weight_on_position_ 
+              * J_frame_.template topRows<3>();
+  baumgarte_partial_dv.block(block_rows_begin, 0, 3, dimv_) 
       = joint_a_partial_dv_.template topRows<3>()
-          + baumgarte_alpha_ * joint_a_partial_da_.template topRows<3>();
-  baumgarte_partial_da.block(result_mat_row_begin, result_mat_col_begin, 3, 
-                             dimv_) 
+          + baumgarte_weight_on_velocity_ 
+              * joint_a_partial_da_.template topRows<3>();
+  baumgarte_partial_da.block(block_rows_begin, 0, 3, dimv_) 
       = joint_a_partial_da_.template topRows<3>();
 }
 
@@ -210,28 +227,28 @@ bool PointContact::isActive() const {
 }
 
 
-unsigned int PointContact::contact_frame_id() const {
+int PointContact::contact_frame_id() const {
   return contact_frame_id_;
 }
 
 
-unsigned int PointContact::parent_joint_id() const {
+int PointContact::parent_joint_id() const {
   return parent_joint_id_;
 }
 
 
-unsigned int PointContact::dimv() const {
+int PointContact::dimv() const {
   return dimv_;
 }
 
 
-double PointContact::baumgarte_alpha() const {
-  return baumgarte_alpha_;
+double PointContact::baumgarte_weight_on_velocity() const {
+  return baumgarte_weight_on_velocity_;
 }
 
 
-double PointContact::baumgarte_beta() const {
-  return baumgarte_beta_;
+double PointContact::baumgarte_weight_on_position() const {
+  return baumgarte_weight_on_position_;
 }
 
 

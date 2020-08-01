@@ -8,7 +8,7 @@
 #include "manipulator/cost_function.hpp"
 #include "manipulator/constraints.hpp"
 
-#include "simulator.hpp"
+#include "mpc_simulator/simulator.hpp"
 
 
 int main() {

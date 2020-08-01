@@ -1,0 +1,58 @@
+
+add_library(
+    robot_for_pdipm_test
+    ${IDOCP_SRC_DIR}/robot/robot.cpp
+    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
+    ${IDOCP_SRC_DIR}/robot/passive_joints.cpp
+)
+target_include_directories(
+    robot_for_pdipm_test
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+    ${EIGEN3_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIR}
+    ${PINOCCHIO_INCLUDE_DIRS}
+)
+target_link_libraries(
+    robot_for_pdipm_test
+    PRIVATE
+    pthread
+    ${Boost_LIBRARIES}
+    urdfdom_model
+    ${PINOCCHIO_LIBRARIES}
+)
+
+
+add_executable(
+    joint_position_lower_limits_pdipm_test
+    joint_position_lower_limits_pdipm_test.cpp
+    ${IDOCP_SRC_DIR}/constraints/pdipm/joint_position_lower_limits_pdipm.cpp
+    ${IDOCP_SRC_DIR}/constraints/pdipm/pdipm_func.cpp
+)
+target_include_directories(
+    joint_position_lower_limits_pdipm_test
+    PRIVATE
+    ${GTEST_INCLUDE_PATH}
+    ${GMOCK_INCLUDE_PATH}
+    ${GTEST_LIBRARY_PATH}
+    ${EIGEN3_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${PINOCCHIO_INCLUDEDIR}
+)
+target_link_libraries(
+    joint_position_lower_limits_pdipm_test
+    PRIVATE
+    pthread
+    GTest::GTest
+    GTest::GMock
+    robot_for_pdipm_test
+)
+add_dependencies(
+    joint_position_lower_limits_pdipm_test
+    googletest
+)
+add_test(
+    NAME joint_position_lower_limits_pdipm_test
+    COMMAND $<TARGET_FILE:joint_position_lower_limits_pdipm_test>
+)

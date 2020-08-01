@@ -12,8 +12,14 @@
 
 int main() {
   srand((unsigned int) time(0));
+  std::vector<int> contact_frames(1);
+  contact_frames = {18};
+  const double baumgarte_weight_on_velocity = 10;
+  const double baumgarte_weight_on_position = 100;
   const std::string urdf_file_name = "../urdf/iiwa14.urdf";
-  idocp::Robot robot(urdf_file_name);
+  idocp::Robot robot(urdf_file_name, contact_frames, 
+                     baumgarte_weight_on_velocity, 
+                     baumgarte_weight_on_position);
   idocp::manipulator::CostFunction cost(robot);
   idocp::manipulator::Constraints constraints(robot);
   Eigen::VectorXd q_ref = 1.5 * Eigen::VectorXd::Random(robot.dimq());

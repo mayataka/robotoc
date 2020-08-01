@@ -1,0 +1,59 @@
+add_executable(
+    riccati_matrix_factorizer_test
+    riccati_matrix_factorizer_test.cpp
+)
+target_include_directories(
+    riccati_matrix_factorizer_test
+    PRIVATE
+    ${GTEST_INCLUDE_PATH}
+    ${GMOCK_INCLUDE_PATH}
+    ${GTEST_LIBRARY_PATH}
+    ${IDOCP_INCLUDE_DIR}
+)
+target_link_libraries(
+    riccati_matrix_factorizer_test
+    PRIVATE
+    pthread
+    GTest::GTest
+    GTest::GMock
+    idocp_robot 
+    idocp_ocp
+)
+add_dependencies(
+    riccati_matrix_factorizer_test
+    googletest
+)
+add_test(
+    NAME riccati_matrix_factorizer_test
+    COMMAND $<TARGET_FILE:riccati_matrix_factorizer_test>
+)
+
+add_executable(
+    riccati_matrix_inverter_test
+    riccati_matrix_inverter_test.cpp
+)
+target_include_directories(
+    riccati_matrix_inverter_test
+    PRIVATE
+    ${GTEST_INCLUDE_PATH}
+    ${GMOCK_INCLUDE_PATH}
+    ${GTEST_LIBRARY_PATH}
+    ${IDOCP_INCLUDE_DIR}
+)
+target_link_libraries(
+    riccati_matrix_inverter_test
+    PRIVATE
+    pthread
+    GTest::GTest
+    GTest::GMock
+    idocp_robot 
+    idocp_ocp
+)
+add_dependencies(
+    riccati_matrix_inverter_test
+    googletest
+)
+add_test(
+    NAME riccati_matrix_inverter_test 
+    COMMAND $<TARGET_FILE:riccati_matrix_inverter_test>
+)
