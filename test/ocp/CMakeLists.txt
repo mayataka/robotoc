@@ -1,10 +1,6 @@
 add_executable(
     riccati_matrix_factorizer_test
     riccati_matrix_factorizer_test.cpp
-    ${IDOCP_SRC_DIR}/robot/robot.cpp
-    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
-    ${IDOCP_SRC_DIR}/robot/floating_base.cpp
-    ${IDOCP_SRC_DIR}/ocp/riccati_matrix_factorizer.cpp
 )
 target_include_directories(
     riccati_matrix_factorizer_test
@@ -13,8 +9,6 @@ target_include_directories(
     ${GMOCK_INCLUDE_PATH}
     ${GTEST_LIBRARY_PATH}
     ${IDOCP_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIR}
-    ${PINOCCHIO_INCLUDE_DIRS}
 )
 target_link_libraries(
     riccati_matrix_factorizer_test
@@ -22,9 +16,8 @@ target_link_libraries(
     pthread
     GTest::GTest
     GTest::GMock
-    ${Boost_LIBRARIES}
-    ${PINOCCHIO_LIBRARIES}
-    urdfdom_model
+    idocp_robot 
+    idocp_ocp
 )
 add_dependencies(
     riccati_matrix_factorizer_test
@@ -35,14 +28,9 @@ add_test(
     COMMAND $<TARGET_FILE:riccati_matrix_factorizer_test>
 )
 
-
 add_executable(
     riccati_matrix_inverter_test
     riccati_matrix_inverter_test.cpp
-    ${IDOCP_SRC_DIR}/robot/robot.cpp
-    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
-    ${IDOCP_SRC_DIR}/robot/floating_base.cpp
-    ${IDOCP_SRC_DIR}/ocp/riccati_matrix_inverter.cpp
 )
 target_include_directories(
     riccati_matrix_inverter_test
@@ -51,8 +39,6 @@ target_include_directories(
     ${GMOCK_INCLUDE_PATH}
     ${GTEST_LIBRARY_PATH}
     ${IDOCP_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIR}
-    ${PINOCCHIO_INCLUDE_DIRS}
 )
 target_link_libraries(
     riccati_matrix_inverter_test
@@ -60,9 +46,8 @@ target_link_libraries(
     pthread
     GTest::GTest
     GTest::GMock
-    ${Boost_LIBRARIES}
-    ${PINOCCHIO_LIBRARIES}
-    urdfdom_model
+    idocp_robot 
+    idocp_ocp
 )
 add_dependencies(
     riccati_matrix_inverter_test

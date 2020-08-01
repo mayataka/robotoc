@@ -1,7 +1,6 @@
 add_executable(
     fixed_base_point_contact_test
     fixed_base_point_contact_test.cpp
-    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
 )
 target_include_directories(
     fixed_base_point_contact_test
@@ -10,8 +9,6 @@ target_include_directories(
     ${GMOCK_INCLUDE_PATH}
     ${GTEST_LIBRARY_PATH}
     ${IDOCP_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIR}
-    ${PINOCCHIO_INCLUDE_DIRS}
 )
 target_link_libraries(
     fixed_base_point_contact_test
@@ -19,9 +16,7 @@ target_link_libraries(
     pthread
     GTest::GTest
     GTest::GMock
-    ${Boost_LIBRARIES}
-    ${PINOCCHIO_LIBRARIES}
-    urdfdom_model
+    idocp_robot
 )
 add_dependencies(
     fixed_base_point_contact_test
@@ -35,7 +30,6 @@ add_test(
 add_executable(
     fixed_base_floating_base_test
     fixed_base_floating_base_test.cpp
-    ${IDOCP_SRC_DIR}/robot/floating_base.cpp
 )
 target_include_directories(
     fixed_base_floating_base_test
@@ -44,8 +38,6 @@ target_include_directories(
     ${GMOCK_INCLUDE_PATH}
     ${GTEST_LIBRARY_PATH}
     ${IDOCP_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIR}
-    ${PINOCCHIO_INCLUDE_DIRS}
 )
 target_link_libraries(
     fixed_base_floating_base_test
@@ -53,9 +45,7 @@ target_link_libraries(
     pthread
     GTest::GTest
     GTest::GMock
-    ${Boost_LIBRARIES}
-    ${PINOCCHIO_LIBRARIES}
-    urdfdom_model
+    idocp_robot
 )
 add_dependencies(
     fixed_base_floating_base_test
@@ -66,13 +56,9 @@ add_test(
     COMMAND $<TARGET_FILE:fixed_base_floating_base_test>
 )
 
-
 add_executable(
     fixed_base_robot_test 
     fixed_base_robot_test.cpp
-    ${IDOCP_SRC_DIR}/robot/robot.cpp
-    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
-    ${IDOCP_SRC_DIR}/robot/floating_base.cpp
 )
 target_include_directories(
     fixed_base_robot_test 
@@ -81,8 +67,6 @@ target_include_directories(
     ${GMOCK_INCLUDE_PATH}
     ${GTEST_LIBRARY_PATH}
     ${IDOCP_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIR}
-    ${PINOCCHIO_INCLUDE_DIRS}
 )
 target_link_libraries(
     fixed_base_robot_test 
@@ -90,9 +74,7 @@ target_link_libraries(
     pthread
     GTest::GTest
     GTest::GMock
-    ${Boost_LIBRARIES}
-    ${PINOCCHIO_LIBRARIES}
-    urdfdom_model
+    idocp_robot
 )
 add_dependencies(
     fixed_base_robot_test 

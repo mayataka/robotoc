@@ -88,6 +88,11 @@ void CostFunction::setConfigurationJacobian(const Robot& robot,
 }
 
 
+void CostFunction::setContactStatus(const Robot& robot) {
+  contact_cost_.setContactStatus(robot);
+}
+
+
 double CostFunction::l(const double t, const double dtau, 
                        const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                        const Eigen::VectorXd& a, const Eigen::VectorXd& u) {

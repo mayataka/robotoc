@@ -23,6 +23,8 @@ public:
   virtual void setConfigurationJacobian(const Robot& robot, 
                                         const Eigen::VectorXd& q) = 0;
 
+  virtual void setContactStatus(const Robot& robot) = 0;
+
   virtual double l(const double t, const double dtau, const Eigen::VectorXd& q, 
                    const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
                    const Eigen::VectorXd& u) = 0;

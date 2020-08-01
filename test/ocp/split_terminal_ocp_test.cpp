@@ -32,7 +32,9 @@ protected:
 
 
 TEST_F(SplitTerminalOCPTest, isFeasible) {
-  EXPECT_TRUE()
+  SplitTerminalOCP split_terminal_ocp(fixed_base_robot_);
+
+  EXPECT_TRUE(split_terminal_ocp.isFeasible(fixed_base_robot_, ), );
 }
 
 

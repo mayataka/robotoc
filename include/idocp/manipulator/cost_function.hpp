@@ -45,6 +45,8 @@ public:
   void setConfigurationJacobian(const Robot& robot, 
                                 const Eigen::VectorXd& q) override;
 
+  void setContactStatus(const Robot& robot) override;
+
   double l(const double t, const double dtau, const Eigen::VectorXd& q, 
            const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
            const Eigen::VectorXd& u) override; 

@@ -27,9 +27,71 @@ add_definitions(
 )
 link_directories(${PINOCCHIO_LIBDIR})
 
-# set IDOCP directories
+# set idocp directories
 set(IDOCP_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src)
 set(IDOCP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include/idocp)
+
+# build idocp robot
+add_library(
+    idocp_robot
+    ${IDOCP_SRC_DIR}/robot/robot.cpp
+    ${IDOCP_SRC_DIR}/robot/floating_base.cpp
+    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
+)
+target_include_directories(
+    idocp_robot
+    PUBLIC
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIR}
+    ${PINOCCHIO_INCLUDE_DIRS}
+)
+target_link_libraries(
+    idocp_robot
+    PUBLIC
+    pthread
+    ${Boost_LIBRARIES}
+    ${PINOCCHIO_LIBRARIES}
+    urdfdom_model
+)
+
+# build idocp cost
+add_library(
+    idocp_cost
+    ${IDOCP_SRC_DIR}/cost/joint_space_cost.cpp
+    ${IDOCP_SRC_DIR}/cost/contact_cost.cpp
+)
+target_include_directories(
+    idocp_cost
+    PUBLIC
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIR}
+    ${PINOCCHIO_INCLUDE_DIRS}
+)
+target_link_libraries(
+    idocp_cost
+    PUBLIC
+    robot
+)
+
+# build idocp ocp
+add_library(
+    idocp_ocp
+    ${IDOCP_SRC_DIR}/ocp/riccati_matrix_factorizer.cpp
+    ${IDOCP_SRC_DIR}/ocp/riccati_matrix_inverter.cpp
+)
+target_include_directories(
+    idocp_ocp
+    PUBLIC
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIR}
+    ${PINOCCHIO_INCLUDE_DIRS}
+)
+target_link_libraries(
+    idocp_ocp
+    PUBLIC
+    cost
+    robot
+)
 
 # coverage options
 add_library(coverage_config INTERFACE)

@@ -1,10 +1,6 @@
 add_executable(
     fixed_base_joint_space_cost_test
     fixed_base_joint_space_cost_test.cpp
-    ${IDOCP_SRC_DIR}/robot/robot.cpp
-    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
-    ${IDOCP_SRC_DIR}/robot/floating_base.cpp
-    ${IDOCP_SRC_DIR}/cost/joint_space_cost.cpp
 )
 target_include_directories(
     fixed_base_joint_space_cost_test
@@ -13,8 +9,6 @@ target_include_directories(
     ${GMOCK_INCLUDE_PATH}
     ${GTEST_LIBRARY_PATH}
     ${IDOCP_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIR}
-    ${PINOCCHIO_INCLUDE_DIRS}
 )
 target_link_libraries(
     fixed_base_joint_space_cost_test
@@ -22,9 +16,8 @@ target_link_libraries(
     pthread
     GTest::GTest
     GTest::GMock
-    ${Boost_LIBRARIES}
-    ${PINOCCHIO_LIBRARIES}
-    urdfdom_model
+    idocp_robot
+    idocp_cost
 )
 add_dependencies(
     fixed_base_joint_space_cost_test
@@ -35,14 +28,9 @@ add_test(
     COMMAND $<TARGET_FILE:fixed_base_joint_space_cost_test>
 )
 
-
 add_executable(
     floating_base_joint_space_cost_test
     floating_base_joint_space_cost_test.cpp
-    ${IDOCP_SRC_DIR}/robot/robot.cpp
-    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
-    ${IDOCP_SRC_DIR}/robot/floating_base.cpp
-    ${IDOCP_SRC_DIR}/cost/joint_space_cost.cpp
 )
 target_include_directories(
     floating_base_joint_space_cost_test
@@ -51,8 +39,6 @@ target_include_directories(
     ${GMOCK_INCLUDE_PATH}
     ${GTEST_LIBRARY_PATH}
     ${IDOCP_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIR}
-    ${PINOCCHIO_INCLUDE_DIRS}
 )
 target_link_libraries(
     floating_base_joint_space_cost_test
@@ -60,9 +46,8 @@ target_link_libraries(
     pthread
     GTest::GTest
     GTest::GMock
-    ${Boost_LIBRARIES}
-    ${PINOCCHIO_LIBRARIES}
-    urdfdom_model
+    idocp_robot 
+    idocp_cost
 )
 add_dependencies(
     floating_base_joint_space_cost_test
@@ -73,14 +58,9 @@ add_test(
     COMMAND $<TARGET_FILE:floating_base_joint_space_cost_test>
 )
 
-
 add_executable(
     fixed_base_contact_cost_test
     fixed_base_contact_cost_test.cpp
-    ${IDOCP_SRC_DIR}/robot/robot.cpp
-    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
-    ${IDOCP_SRC_DIR}/robot/floating_base.cpp
-    ${IDOCP_SRC_DIR}/cost/contact_cost.cpp
 )
 target_include_directories(
     fixed_base_contact_cost_test
@@ -89,8 +69,6 @@ target_include_directories(
     ${GMOCK_INCLUDE_PATH}
     ${GTEST_LIBRARY_PATH}
     ${IDOCP_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIR}
-    ${PINOCCHIO_INCLUDE_DIRS}
 )
 target_link_libraries(
     fixed_base_contact_cost_test
@@ -98,9 +76,8 @@ target_link_libraries(
     pthread
     GTest::GTest
     GTest::GMock
-    ${Boost_LIBRARIES}
-    ${PINOCCHIO_LIBRARIES}
-    urdfdom_model
+    idocp_robot 
+    idocp_cost
 )
 add_dependencies(
     fixed_base_contact_cost_test
@@ -111,14 +88,9 @@ add_test(
     COMMAND $<TARGET_FILE:fixed_base_contact_cost_test>
 )
 
-
 add_executable(
     floating_base_contact_cost_test
     floating_base_contact_cost_test.cpp
-    ${IDOCP_SRC_DIR}/robot/robot.cpp
-    ${IDOCP_SRC_DIR}/robot/point_contact.cpp
-    ${IDOCP_SRC_DIR}/robot/floating_base.cpp
-    ${IDOCP_SRC_DIR}/cost/contact_cost.cpp
 )
 target_include_directories(
     floating_base_contact_cost_test
@@ -127,8 +99,6 @@ target_include_directories(
     ${GMOCK_INCLUDE_PATH}
     ${GTEST_LIBRARY_PATH}
     ${IDOCP_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIR}
-    ${PINOCCHIO_INCLUDE_DIRS}
 )
 target_link_libraries(
     floating_base_contact_cost_test
@@ -136,9 +106,8 @@ target_link_libraries(
     pthread
     GTest::GTest
     GTest::GMock
-    ${Boost_LIBRARIES}
-    ${PINOCCHIO_LIBRARIES}
-    urdfdom_model
+    idocp_robot 
+    idocp_cost
 )
 add_dependencies(
     floating_base_contact_cost_test
