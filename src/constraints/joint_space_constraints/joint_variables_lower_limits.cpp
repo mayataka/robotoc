@@ -57,7 +57,7 @@ void JointVariablesLowerLimits::condenseSlackAndDual(const double dtau,
   assert(Cxx.rows() == dimv_);
   assert(Cxx.cols() == dimv_);
   assert(Cx.size() == dimv_);
-  for (int i=0; i<dimv_; ++i) {
+  for (int i=0; i<dimc_; ++i) {
     Cxx.coeffRef(dim_passive_+i, dim_passive_+i) 
         += dtau * dtau * dual_.coeff(i) / slack_.coeff(i);
   }

@@ -176,6 +176,10 @@ TEST_F(JointPositionLowerLimitsTest, condenseSlackAndDualFixedBase) {
                / slack_ref.array();
   EXPECT_TRUE(Cq.isApprox(Cq_ref));
   EXPECT_TRUE(Cqq.isApprox(Cqq_ref));
+  std::cout << "Cqq " << std::endl;
+  std::cout << Cqq << "\n" << std::endl;
+  std::cout << "Cqq_ref " << std::endl;
+  std::cout << Cqq_ref << "\n" << std::endl;
   const Eigen::VectorXd dq = Eigen::VectorXd::Random(dimq);
   limit.computeSlackAndDualDirection(dtau_, dq);
   const Eigen::VectorXd dslack_ref = dtau_ * dq - residual_ref;
@@ -254,6 +258,10 @@ TEST_F(JointPositionLowerLimitsTest, condenseSlackAndDualFloatingBase) {
                / slack_ref.array();
   EXPECT_TRUE(Cq.isApprox(Cq_ref));
   EXPECT_TRUE(Cqq.isApprox(Cqq_ref));
+  std::cout << "Cqq " << std::endl;
+  std::cout << Cqq << "\n" << std::endl;
+  std::cout << "Cqq_ref " << std::endl;
+  std::cout << Cqq_ref << "\n" << std::endl;
   const Eigen::VectorXd dq = Eigen::VectorXd::Random(dimv);
   limit.computeSlackAndDualDirection(dtau_, dq);
   const Eigen::VectorXd dslack_ref = dtau_ * dq.tail(dimc) - residual_ref;

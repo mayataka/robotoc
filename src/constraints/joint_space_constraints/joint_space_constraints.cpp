@@ -303,7 +303,7 @@ double JointSpaceConstraints::costSlackBarrier() {
   }
   cost += torque_upper_limits_.costSlackBarrier();
   cost += torque_lower_limits_.costSlackBarrier();
-  return barrier_ * cost;
+  return cost;
 }
 
 
@@ -319,7 +319,7 @@ double JointSpaceConstraints::costSlackBarrier(const double step_size) {
   }
   cost += torque_upper_limits_.costSlackBarrier(step_size);
   cost += torque_lower_limits_.costSlackBarrier(step_size);
-  return barrier_ * cost;
+  return cost;
 }
 
 
