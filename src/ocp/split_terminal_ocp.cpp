@@ -23,6 +23,21 @@ SplitTerminalOCP::SplitTerminalOCP(const Robot& robot,
 }
 
 
+SplitTerminalOCP::SplitTerminalOCP() 
+  : cost_(),
+    constraints_(),
+    joint_constraints_(),
+    dimq_(0),
+    dimv_(0),
+    lq_(),
+    lv_(),
+    q_res_(),
+    v_res_(),
+    q_tmp_(), 
+    v_tmp_() {
+}
+
+
 SplitTerminalOCP::~SplitTerminalOCP() {
 }
 
@@ -37,24 +52,23 @@ void SplitTerminalOCP::setConstraints(const ConstraintsInterface* constraints) {
 }
 
 
-bool SplitTerminalOCP::isFeasible(Robot& robot, const Eigen::VectorXd& q, 
+bool SplitTerminalOCP::isFeasible(const Eigen::VectorXd& q, 
                                   const Eigen::VectorXd& v) {
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
   // TODO: add inequality constraints at the terminal OCP.
   // return joint_constraints_.isFeasible(robot, q, v, a, u);
   return true;
 }
 
 
-void SplitTerminalOCP::initConstraints(Robot& robot, const int time_step,
-                                       const double dtau, 
+void SplitTerminalOCP::initConstraints(const int time_step, const double dtau, 
                                        const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v) {
   assert(time_step >= 0);
   assert(dtau > 0);
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
   // TODO: add inequality constraints at the terminal OCP.
   // joint_constraints_.setTimeStep(time_step);
   // joint_constraints_.setSlackAndDual(robot, dtau, q, v, a, u);
@@ -69,18 +83,18 @@ void SplitTerminalOCP::linearizeOCP(Robot& robot, const double t,
                                     Eigen::MatrixXd& Qqq, Eigen::MatrixXd& Qqv, 
                                     Eigen::MatrixXd& Qvq, Eigen::MatrixXd& Qvv, 
                                     Eigen::VectorXd& Qq, Eigen::VectorXd& Qv) {
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
-  assert(Qqq.rows() == robot.dimv());
-  assert(Qqq.cols() == robot.dimv());
-  assert(Qqv.rows() == robot.dimv());
-  assert(Qqv.cols() == robot.dimv());
-  assert(Qvq.rows() == robot.dimv());
-  assert(Qvq.cols() == robot.dimv());
-  assert(Qvv.rows() == robot.dimv());
-  assert(Qvv.cols() == robot.dimv());
-  assert(Qq.size() == robot.dimv());
-  assert(Qv.size() == robot.dimv());
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(Qqq.rows() == dimv_);
+  assert(Qqq.cols() == dimv_);
+  assert(Qqv.rows() == dimv_);
+  assert(Qqv.cols() == dimv_);
+  assert(Qvq.rows() == dimv_);
+  assert(Qvq.cols() == dimv_);
+  assert(Qvv.rows() == dimv_);
+  assert(Qvv.cols() == dimv_);
+  assert(Qq.size() == dimv_);
+  assert(Qv.size() == dimv_);
   if (robot.has_floating_base()) {
     cost_->setConfigurationJacobian(robot, q);
   }
@@ -113,27 +127,6 @@ double SplitTerminalOCP::maxDualStepSize() {
   return 1;
   // TODO: add inequality constraints at the terminal OCP.
   // return joint_constraints_.maxDualStepSize();
-}
-
-
-double SplitTerminalOCP::costGradientDotDirection(Robot& robot, const double t, 
-                                                  const Eigen::VectorXd& q, 
-                                                  const Eigen::VectorXd& v, 
-                                                  const Eigen::VectorXd& dq, 
-                                                  const Eigen::VectorXd& dv) {
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
-  assert(dq.size() == robot.dimv());
-  assert(dv.size() == robot.dimv());
-  if (robot.has_floating_base()) {
-    cost_->setConfigurationJacobian(robot, q);
-  }
-  cost_->phiq(t, q, v, lq_);
-  cost_->phiv(t, q, v, lv_);
-  double product = 0;
-  product += lq_.dot(dq);
-  product += lv_.dot(dv);
-  return product;
 }
 
 
@@ -190,22 +183,22 @@ void SplitTerminalOCP::updatePrimal(Robot& robot, const double step_size,
                                     Eigen::VectorXd& v) const {
   assert(step_size > 0);
   assert(step_size <= 1);
-  assert(Pqq.rows() == robot.dimv());
-  assert(Pqq.cols() == robot.dimv());
-  assert(Pqv.rows() == robot.dimv());
-  assert(Pqv.cols() == robot.dimv());
-  assert(Pvq.rows() == robot.dimv());
-  assert(Pvq.cols() == robot.dimv());
-  assert(Pvv.rows() == robot.dimv());
-  assert(Pvv.cols() == robot.dimv());
-  assert(sq.size() == robot.dimv());
-  assert(sv.size() == robot.dimv());
-  assert(dq.size() == robot.dimv());
-  assert(dv.size() == robot.dimv());
-  assert(lmd.rows() == robot.dimv());
-  assert(gmm.rows() == robot.dimv());
-  assert(q.rows() == robot.dimq());
-  assert(v.rows() == robot.dimv());
+  assert(Pqq.rows() == dimv_);
+  assert(Pqq.cols() == dimv_);
+  assert(Pqv.rows() == dimv_);
+  assert(Pqv.cols() == dimv_);
+  assert(Pvq.rows() == dimv_);
+  assert(Pvq.cols() == dimv_);
+  assert(Pvv.rows() == dimv_);
+  assert(Pvv.cols() == dimv_);
+  assert(sq.size() == dimv_);
+  assert(sv.size() == dimv_);
+  assert(dq.size() == dimv_);
+  assert(dv.size() == dimv_);
+  assert(lmd.rows() == dimv_);
+  assert(gmm.rows() == dimv_);
+  assert(q.rows() == dimq_);
+  assert(v.rows() == dimv_);
   lmd.noalias() += step_size * (Pqq * dq + Pqv * dv - sq);
   gmm.noalias() += step_size * (Pvq * dq + Pvv * dv - sv);
   if (robot.has_floating_base()) {
@@ -223,10 +216,10 @@ double SplitTerminalOCP::squaredKKTErrorNorm(Robot& robot, const double t,
                                              const Eigen::VectorXd& gmm, 
                                              const Eigen::VectorXd& q, 
                                              const Eigen::VectorXd& v) {
-  assert(lmd.size() == robot.dimv());
-  assert(gmm.size() == robot.dimv());
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
+  assert(lmd.size() == dimv_);
+  assert(gmm.size() == dimv_);
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
   // Compute the partial derivatives of the Lagrangian with respect to the 
   // terminal configuration and velocity.
   if (robot.has_floating_base()) {

@@ -14,6 +14,10 @@ public:
   JointVariablesUpperLimits(const Robot& robot, const Eigen::VectorXd& xmax, 
                             const double barrier);
 
+  JointVariablesUpperLimits();
+
+  ~JointVariablesUpperLimits();
+
   // Use default copy constructor.
   JointVariablesUpperLimits(const JointVariablesUpperLimits&) = default;
 

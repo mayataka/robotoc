@@ -14,6 +14,8 @@ class Constraints final : public ConstraintsInterface {
 public:
   Constraints(const Robot& robot);
 
+  Constraints();
+
   bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
                   const Eigen::VectorXd& u) override;

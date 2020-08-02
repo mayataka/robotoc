@@ -221,14 +221,13 @@ void Robot::updateKinematics(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 
 
 void Robot::computeBaumgarteResidual(
-    Eigen::VectorXd& baumgarte_residual) const {
-  assert(baumgarte_residual.size() == max_dimf_);
+    const int block_begin, Eigen::VectorXd& baumgarte_residual) const {
+  assert(baumgarte_residual.size() >= max_dimf_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
-      point_contacts_[i].computeBaumgarteResidual(model_, data_, 
-                                                  3*num_active_contacts, 
-                                                  baumgarte_residual);
+      point_contacts_[i].computeBaumgarteResidual(
+          model_, data_, block_begin+3*num_active_contacts, baumgarte_residual);
       ++num_active_contacts;
     }
   }

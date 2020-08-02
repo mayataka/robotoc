@@ -26,6 +26,8 @@ public:
                  const Eigen::VectorXd& qf_weight,  
                  const Eigen::VectorXd& vf_weight);
 
+  JointSpaceCost();
+
   // Use defalut copy constructor.
   JointSpaceCost(const JointSpaceCost&) = default;
 

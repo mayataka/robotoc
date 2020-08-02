@@ -17,11 +17,19 @@ RiccatiMatrixFactorizer::RiccatiMatrixFactorizer(const Robot& robot)
 }
 
 
+RiccatiMatrixFactorizer::RiccatiMatrixFactorizer() 
+  : has_floating_base_(false),
+    dimv_(0),
+    dintegrate_dq_(),
+    dintegrate_dv_() {
+}
+
+
 RiccatiMatrixFactorizer::~RiccatiMatrixFactorizer() {
 }
 
 
-void RiccatiMatrixFactorizer::computeIntegrationSensitivities(
+void RiccatiMatrixFactorizer::setIntegrationSensitivities(
     const Robot& robot, const double dtau, const Eigen::VectorXd& q,
     const Eigen::VectorXd& v) {
   assert(dtau > 0);

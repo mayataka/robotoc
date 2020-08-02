@@ -24,6 +24,25 @@ JointSpaceConstraints::JointSpaceConstraints(const Robot& robot)
 }
 
 
+JointSpaceConstraints::JointSpaceConstraints()
+  : time_step_(0),
+    dimq_(0),
+    dimv_(0),
+    barrier_(0),
+    fraction_to_boundary_margin_(0),
+    position_upper_limits_(),
+    velocity_upper_limits_(),
+    torque_upper_limits_(),
+    position_lower_limits_(),
+    velocity_lower_limits_(),
+    torque_lower_limits_() {
+}
+
+
+JointSpaceConstraints::~JointSpaceConstraints() {
+}
+
+
 void JointSpaceConstraints::setTimeStep(const int time_step) {
   assert(time_step >= 0);
   time_step_ = time_step;

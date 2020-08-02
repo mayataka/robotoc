@@ -42,10 +42,10 @@ TEST_F(SplitTerminalOCPTest, isFeasible) {
   SplitTerminalOCP ocp(manipulator_, &cost, &constraints);
   const Eigen::VectorXd q = Eigen::VectorXd::Random(manipulator_.dimq());
   const Eigen::VectorXd v = Eigen::VectorXd::Random(manipulator_.dimv());
-  EXPECT_TRUE(ocp.isFeasible(manipulator_, q, v));
+  EXPECT_TRUE(ocp.isFeasible(q, v));
   std::random_device rnd;
-  ocp.initConstraints(manipulator_, rnd()%50, dtau_, q, v);
-  EXPECT_TRUE(ocp.isFeasible(manipulator_, q, v));
+  ocp.initConstraints(rnd()%50, dtau_, q, v);
+  EXPECT_TRUE(ocp.isFeasible(q, v));
 }
 
 
@@ -66,8 +66,8 @@ TEST_F(SplitTerminalOCPTest, linearizeOCPFixedBase) {
   Eigen::VectorXd Qq = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd Qv = Eigen::VectorXd::Zero(dimv);
   std::random_device rnd;
-  ocp.initConstraints(manipulator_, rnd()%50, dtau_, q, v);
-  EXPECT_TRUE(ocp.isFeasible(manipulator_, q, v));
+  ocp.initConstraints(rnd()%50, dtau_, q, v);
+  EXPECT_TRUE(ocp.isFeasible(q, v));
   ocp.linearizeOCP(manipulator_, t_, lmd, gmm, q, v, Qqq, Qqv, Qvq, Qvv, Qq, Qv);
   Eigen::MatrixXd Qqq_ref = Eigen::MatrixXd::Zero(dimv, dimv);
   Eigen::MatrixXd Qqv_ref = Eigen::MatrixXd::Zero(dimv, dimv);
@@ -110,8 +110,8 @@ TEST_F(SplitTerminalOCPTest, linearizeOCPFloatingBase) {
   Eigen::VectorXd Qq = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd Qv = Eigen::VectorXd::Zero(dimv);
   std::random_device rnd;
-  ocp.initConstraints(quadruped_, rnd()%50, dtau_, q, v);
-  EXPECT_TRUE(ocp.isFeasible(quadruped_, q, v));
+  ocp.initConstraints(rnd()%50, dtau_, q, v);
+  EXPECT_TRUE(ocp.isFeasible(q, v));
   ocp.linearizeOCP(quadruped_, t_, lmd, gmm, q, v, Qqq, Qqv, Qvq, Qvv, Qq, Qv);
   cost.setConfigurationJacobian(quadruped_, q);
   Eigen::MatrixXd Qqq_ref = Eigen::MatrixXd::Zero(dimv, dimv);
@@ -135,59 +135,6 @@ TEST_F(SplitTerminalOCPTest, linearizeOCPFloatingBase) {
 }
 
 
-TEST_F(SplitTerminalOCPTest, constGradientDotDirectionFixedBase) {
-  manipulator::CostFunction cost(manipulator_);
-  manipulator::Constraints constraints(manipulator_);
-  SplitTerminalOCP ocp(manipulator_, &cost, &constraints);
-  const int dimq = manipulator_.dimq();
-  const int dimv = manipulator_.dimv();
-  const Eigen::VectorXd q = Eigen::VectorXd::Random(dimq);
-  const Eigen::VectorXd v = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd lmd = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd gmm = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd dq = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd dv = Eigen::VectorXd::Random(dimv);
-  std::random_device rnd;
-  ocp.initConstraints(manipulator_, rnd()%50, dtau_, q, v);
-  EXPECT_TRUE(ocp.isFeasible(manipulator_, q, v));
-  const double result 
-      = ocp.costGradientDotDirection(manipulator_, t_, q, v, dq, dv);
-  Eigen::VectorXd lq_ref = Eigen::VectorXd::Zero(dimv);
-  Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
-  cost.phiq(t_, q, v, lq_ref);
-  cost.phiv(t_, q, v, lv_ref);
-  const double result_ref = lq_ref.dot(dq) + lv_ref.dot(dv);
-  EXPECT_DOUBLE_EQ(result, result_ref);
-}
-
-
-TEST_F(SplitTerminalOCPTest, constGradientDotDirectionFloatingBase) {
-  manipulator::CostFunction cost(quadruped_);
-  manipulator::Constraints constraints(quadruped_);
-  SplitTerminalOCP ocp(quadruped_, &cost, &constraints);
-  const int dimq = quadruped_.dimq();
-  const int dimv = quadruped_.dimv();
-  Eigen::VectorXd q = Eigen::VectorXd::Zero(dimq);
-  quadruped_.generateFeasibleConfiguration(q);
-  const Eigen::VectorXd v = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd lmd = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd gmm = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd dq = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd dv = Eigen::VectorXd::Random(dimv);
-  std::random_device rnd;
-  ocp.initConstraints(quadruped_, rnd()%50, dtau_, q, v);
-  EXPECT_TRUE(ocp.isFeasible(quadruped_, q, v));
-  const double result 
-      = ocp.costGradientDotDirection(quadruped_, t_, q, v, dq, dv);
-  Eigen::VectorXd lq_ref = Eigen::VectorXd::Zero(dimv);
-  Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
-  cost.phiq(t_, q, v, lq_ref);
-  cost.phiv(t_, q, v, lv_ref);
-  const double result_ref = lq_ref.dot(dq) + lv_ref.dot(dv);
-  EXPECT_DOUBLE_EQ(result, result_ref);
-}
-
-
 TEST_F(SplitTerminalOCPTest, terminalCostFixedBase) {
   manipulator::CostFunction cost(manipulator_);
   manipulator::Constraints constraints(manipulator_);
@@ -203,8 +150,8 @@ TEST_F(SplitTerminalOCPTest, terminalCostFixedBase) {
   while (step_size > 1) {
     step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
-  ocp.initConstraints(manipulator_, rnd()%50, dtau_, q, v);
-  EXPECT_TRUE(ocp.isFeasible(manipulator_, q, v));
+  ocp.initConstraints(rnd()%50, dtau_, q, v);
+  EXPECT_TRUE(ocp.isFeasible(q, v));
   const double terminal_cost
       = ocp.terminalCost(t_, q, v);
   const double terminal_cost_with_step
@@ -233,8 +180,8 @@ TEST_F(SplitTerminalOCPTest, terminalCostFloatingBase) {
   while (step_size > 1) {
     step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
-  ocp.initConstraints(quadruped_, rnd()%50, dtau_, q, v);
-  EXPECT_TRUE(ocp.isFeasible(quadruped_, q, v));
+  ocp.initConstraints(rnd()%50, dtau_, q, v);
+  EXPECT_TRUE(ocp.isFeasible(q, v));
   const double terminal_cost
       = ocp.terminalCost(t_, q, v);
   const double terminal_cost_with_step
@@ -264,8 +211,8 @@ TEST_F(SplitTerminalOCPTest, updateFixedBase) {
   Eigen::VectorXd lmd_ref = lmd;
   Eigen::VectorXd gmm_ref = gmm;
   std::random_device rnd;
-  ocp.initConstraints(manipulator_, rnd()%50, dtau_, q, v);
-  EXPECT_TRUE(ocp.isFeasible(manipulator_, q, v));
+  ocp.initConstraints(rnd()%50, dtau_, q, v);
+  EXPECT_TRUE(ocp.isFeasible(q, v));
   const Eigen::MatrixXd Pqq = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Pqv = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Pvq = Eigen::MatrixXd::Random(dimv, dimv);
@@ -308,8 +255,8 @@ TEST_F(SplitTerminalOCPTest, updateFloatingdBase) {
   Eigen::VectorXd lmd_ref = lmd;
   Eigen::VectorXd gmm_ref = gmm;
   std::random_device rnd;
-  ocp.initConstraints(quadruped_, rnd()%50, dtau_, q, v);
-  EXPECT_TRUE(ocp.isFeasible(quadruped_, q, v));
+  ocp.initConstraints(rnd()%50, dtau_, q, v);
+  EXPECT_TRUE(ocp.isFeasible(q, v));
   const Eigen::MatrixXd Pqq = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Pqv = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Pvq = Eigen::MatrixXd::Random(dimv, dimv);
@@ -347,8 +294,8 @@ TEST_F(SplitTerminalOCPTest, squaredKKTErrorNormFixedBase) {
   const Eigen::VectorXd lmd = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd gmm = Eigen::VectorXd::Random(dimv);
   std::random_device rnd;
-  ocp.initConstraints(manipulator_, rnd()%50, dtau_, q, v);
-  EXPECT_TRUE(ocp.isFeasible(manipulator_, q, v));
+  ocp.initConstraints(rnd()%50, dtau_, q, v);
+  EXPECT_TRUE(ocp.isFeasible(q, v));
   const double result 
       = ocp.squaredKKTErrorNorm(manipulator_, t_, lmd, gmm, q, v);
   Eigen::VectorXd lq_ref = Eigen::VectorXd::Zero(dimv);
@@ -374,8 +321,8 @@ TEST_F(SplitTerminalOCPTest, squaredKKTErrorNormFloatingBase) {
   const Eigen::VectorXd lmd = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd gmm = Eigen::VectorXd::Random(dimv);
   std::random_device rnd;
-  ocp.initConstraints(quadruped_, rnd()%50, dtau_, q, v);
-  EXPECT_TRUE(ocp.isFeasible(quadruped_, q, v));
+  ocp.initConstraints(rnd()%50, dtau_, q, v);
+  EXPECT_TRUE(ocp.isFeasible(q, v));
   const double result 
       = ocp.squaredKKTErrorNorm(quadruped_, t_, lmd, gmm, q, v);
   Eigen::VectorXd lq_ref = Eigen::VectorXd::Zero(dimv);

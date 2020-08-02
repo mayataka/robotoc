@@ -16,6 +16,8 @@ class CostFunction final : public CostFunctionInterface {
 public:
   CostFunction(const Robot& robot);
 
+  CostFunction();
+
   ~CostFunction();
 
   void set_q_ref(const Eigen::VectorXd& q_ref);
@@ -49,7 +51,7 @@ public:
 
   double l(const double t, const double dtau, const Eigen::VectorXd& q, 
            const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-           const Eigen::VectorXd& u) override; 
+           const Eigen::VectorXd& u, const Eigen::VectorXd& f) override; 
 
   double phi(const double t, const Eigen::VectorXd& q, 
              const Eigen::VectorXd& v) override;

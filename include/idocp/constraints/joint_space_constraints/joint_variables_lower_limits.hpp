@@ -14,6 +14,10 @@ public:
   JointVariablesLowerLimits(const Robot& robot, const Eigen::VectorXd& xmin, 
                             const double barrier);
 
+  JointVariablesLowerLimits();
+
+  ~JointVariablesLowerLimits();
+
   // Use default copy constructor.
   JointVariablesLowerLimits(const JointVariablesLowerLimits&) = default;
 

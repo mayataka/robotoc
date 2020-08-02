@@ -15,6 +15,10 @@ class JointSpaceConstraints {
 public:
   JointSpaceConstraints(const Robot& robot);
 
+  JointSpaceConstraints();
+
+  ~JointSpaceConstraints();
+
   // Use default copy constructor.
   JointSpaceConstraints(const JointSpaceConstraints&) = default;
 

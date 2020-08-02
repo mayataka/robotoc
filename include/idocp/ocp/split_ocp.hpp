@@ -18,15 +18,16 @@ namespace idocp {
 
 class SplitOCP {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-  // Constructor.
+  // Constructor. Sets the robot, cost function, and constraints.
   // Argments:
   //    robot: The robot model that has been already initialized.
   //    cost: The pointer to the cost function.
-  //    cost: The pointer to the constraints.
+  //    constraints: The pointer to the constraints.
   SplitOCP(const Robot& robot, const CostFunctionInterface* cost,
            const ConstraintsInterface* constraints);
+
+  // Default constructor.
+  SplitOCP();
 
   // Destructor.
   ~SplitOCP();
@@ -37,27 +38,38 @@ public:
   // Use default copy operator.
   SplitOCP& operator=(const SplitOCP& other) = default;
 
-  // Check whether the solution q, v, a, u, fext are feasible under inequality 
+  // Sets the cost function.
+  // Argments:
+  //    cost: The pointer to the cost function.
+  void setCostFunction(const CostFunctionInterface* cost);
+
+  // Sets the constraints.
+  // Argments:
+  //    constraints: The pointer to the constraints.
+  void setConstraints(const ConstraintsInterface* constraints);
+
+  void set_f(const Eigen::VectorXd& f);
+
+  void set_mu(const Eigen::VectorXd& mu);
+
+  // Check whether the solution q, v, a, u are feasible under inequality 
   // constraints.
   // Argments: 
-  //   robot: The robot model that has been already initialized.
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
   //   a: Generalized acceleration. Size must be dimv.
   //   u: Generalized torque. Size must be dimv.
-  bool isFeasible(Robot& robot, const Eigen::VectorXd& q, 
-                  const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-                  const Eigen::VectorXd& u);
+  bool isFeasible(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                  const Eigen::VectorXd& a, const Eigen::VectorXd& u);
 
   // Initialize the constraints, i.e., set slack and dual variables under set 
   //  q, v, a, u.
   // Argments: 
-  //   robot: The robot model that has been already initialized.
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
   //   a: Generalized acceleration. Size must be dimv.
   //   u: Generalized torque. Size must be dimv.
-  void initConstraints(Robot& robot, const int time_step, const double dtau, 
+  void initConstraints(const int time_step, const double dtau, 
                        const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                        const Eigen::VectorXd& a, const Eigen::VectorXd& u);
 
@@ -90,36 +102,6 @@ public:
                     const Eigen::VectorXd& q_next,
                     const Eigen::VectorXd& v_next);
 
-  // Linearize the OCP for Newton's method around the current solution at the 
-  // last time step of the horizon.
-  // Argments: 
-  //   robot: The robot model. The contact status of the current time step 
-  //      is included in this model.
-  //   t: Time of the current time step.
-  //   dtau: Discretization length of the OCP.
-  //   lmd: The Lagrange multiplier with respect to the transition of the 
-  //      configuration. Size must be dimv.
-  //   gmm: The Lagrange multiplier with respect to the transition of the 
-  //      generalized velocity. Size must be dimv.
-  //   q: Configuration. Size must be dimq.
-  //   v: Generalized velocity. Size must be dimv.
-  //   Qqq: The second partial derivative of the terminal cost with qq. Size 
-  //      must be dimv x dimv.
-  //   Qqv: The second partial derivative of the terminal cost with qv. Size
-  //      must be dimv x dimv.
-  //   Qvq: The second partial derivative of the terminal cost with vq. Size
-  //      must be dimv x dimv.
-  //   Qvv: The second partial derivative of the terminal cost with vv. Size
-  //      must be dimv x dimv.
-  //   Qq: The partial derivative of the terminal cost with q. Size must be dimv.
-  //   Qv: The partial derivative of the terminal cost with v. Size must be dimv. 
-  void linearizeOCP(Robot& robot, const double t, const Eigen::VectorXd& lmd, 
-                    const Eigen::VectorXd& gmm, const Eigen::VectorXd& q, 
-                    const Eigen::VectorXd& v, Eigen::MatrixXd& Qqq, 
-                    Eigen::MatrixXd& Qqv, Eigen::MatrixXd& Qvq, 
-                    Eigen::MatrixXd& Qvv, Eigen::VectorXd& Qq, 
-                    Eigen::VectorXd& Qv);
-
   void backwardRiccatiRecursion(const double dtau, 
                                 const Eigen::MatrixXd& Pqq_next, 
                                 const Eigen::MatrixXd& Pqv_next, 
@@ -136,21 +118,12 @@ public:
                                Eigen::VectorXd& dq_next, 
                                Eigen::VectorXd& dv_next);
 
-  void computeCondensedDirection(Robot& robot, const double dtau, 
-                                 const Eigen::VectorXd& dq, 
+  void computeCondensedDirection(const double dtau, const Eigen::VectorXd& dq, 
                                  const Eigen::VectorXd& dv);
  
   double maxPrimalStepSize();
 
   double maxDualStepSize();
-
-  double costDerivativeDotDirection(Robot& robot, const double t, 
-                                    const double dtau, const Eigen::VectorXd& q, 
-                                    const Eigen::VectorXd& v, 
-                                    const Eigen::VectorXd& a, 
-                                    const Eigen::VectorXd& u,
-                                    const Eigen::VectorXd& dq,
-                                    const Eigen::VectorXd& dv);
 
   std::pair<double, double> costAndConstraintsViolation(
       Robot& robot, const double step_size, const double t, const double dtau, 
@@ -191,10 +164,9 @@ private:
   RiccatiMatrixFactorizer riccati_matrix_factorizer_;
   RiccatiMatrixInverter riccati_matrix_inverter_;
   bool has_floating_base_;
-  int dimq_, dimv_, dimf_, dimc_, dim_passive_;
-  Eigen::VectorXd f_, mu_, lq_, lv_, la_, lf_, lu_, lu_condensed_, 
-                  ka_, kf_, kmu_, da_, df_, dmu_, q_res_, v_res_, a_res_, 
-                  f_res_, u_res_, du_, C_res_;
+  int dimq_, dimv_, dimf_, max_dimf_, dimc_, dim_passive_;
+  Eigen::VectorXd f_, mu_, lq_, lv_, la_, lf_, lu_, lu_condensed_, ka_, kf_,  
+                  kmu_, da_, df_, dmu_, q_res_, v_res_, u_res_, du_, C_res_;
   Eigen::MatrixXd luu_, du_dq_, du_dv_, du_da_, du_df_, Qqq_, Qqv_, Qqa_, Qqf_, 
                   Qvq_, Qvv_, Qva_, Qvf_, Qaa_, Qaf_, Qff_, Cq_, Cv_, Ca_, Cf_, 
                   Kaq_, Kav_, Kfq_, Kfv_, Kmuq_, Kmuv_;

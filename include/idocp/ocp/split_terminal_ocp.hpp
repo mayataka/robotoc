@@ -24,6 +24,9 @@ public:
   SplitTerminalOCP(const Robot& robot, const CostFunctionInterface* cost,
                    const ConstraintsInterface* constraints);
 
+  // Default constructor. 
+  SplitTerminalOCP();
+
   // Destructor.
   ~SplitTerminalOCP();
  
@@ -44,24 +47,21 @@ public:
   //    constraints: The pointer to the constraints.
   void setConstraints(const ConstraintsInterface* constraints);
 
-  // Check whether the solution q, v, a, u, fext are feasible under inequality 
+  // Check whether the solution q, v are feasible under inequality 
   // constraints.
   // Argments: 
-  //   robot: The robot model that has been already initialized.
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
-  bool isFeasible(Robot& robot, const Eigen::VectorXd& q, 
-                  const Eigen::VectorXd& v);
+  bool isFeasible(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
   // Initialize the constraints, i.e., set slack and dual variables under set 
   //  q, v.
   // Argments: 
-  //   robot: The robot model that has been already initialized.
   //   time_step: The time step of the split OCP.
   //   dtau: Discretization interval of the horizon.
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
-  void initConstraints(Robot& robot, const int time_step, const double dtau,
+  void initConstraints(const int time_step, const double dtau,
                        const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
   // Linearize the OCP for Newton's method around the current solution at the 
@@ -102,7 +102,7 @@ public:
   void computeCondensedDirection(Robot& robot, const double dtau, 
                                  const Eigen::VectorXd& dq, 
                                  const Eigen::VectorXd& dv);
- 
+
   // Returns the maximum step size of the primal variables of the inequality 
   // constraints.
   double maxPrimalStepSize();
@@ -110,22 +110,6 @@ public:
   // Returns the maximum step size of the dual variables of the inequality 
   // constraints.
   double maxDualStepSize();
-
-  // Returns the dot product of the gradient of the cost function and the 
-  // direction.
-  // Argments: 
-  //   robot: The robot model. The contact status of the current time step 
-  //      is included in this model.
-  //   t: Time of the current time step.
-  //   q: Configuration. Size must be dimq.
-  //   v: Generalized velocity. Size must be dimv.
-  //   dq: Direction of the configuration. Size must be dimv.
-  //   dv: Direction of the generalized velocity. Size must be dimv.
-  double costGradientDotDirection(Robot& robot, const double t, 
-                                  const Eigen::VectorXd& q, 
-                                  const Eigen::VectorXd& v, 
-                                  const Eigen::VectorXd& dq,
-                                  const Eigen::VectorXd& dv);
 
   // Returns the terminal cost.
   // Argments: 

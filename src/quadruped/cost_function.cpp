@@ -95,9 +95,11 @@ void CostFunction::setContactStatus(const Robot& robot) {
 
 double CostFunction::l(const double t, const double dtau, 
                        const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                       const Eigen::VectorXd& a, const Eigen::VectorXd& u) {
+                       const Eigen::VectorXd& a, const Eigen::VectorXd& u,
+                       const Eigen::VectorXd& f) {
   double l = 0;
   l += joint_space_cost_.l(dtau, q, v, a, u);
+  l += contact_cost_.l(dtau, f);
   return l;
 }
 

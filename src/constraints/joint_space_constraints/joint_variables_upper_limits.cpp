@@ -28,6 +28,26 @@ JointVariablesUpperLimits::JointVariablesUpperLimits(const Robot& robot,
 }
 
 
+JointVariablesUpperLimits::JointVariablesUpperLimits()
+  : dimv_(0),
+    dimc_(0),
+    dim_passive_(0),
+    has_floating_base_(false),
+    barrier_(0),
+    xmax_(),
+    slack_(),
+    dual_(),
+    residual_(),
+    duality_(),
+    dslack_(), 
+    ddual_() {
+}
+
+
+JointVariablesUpperLimits::~JointVariablesUpperLimits() {
+}
+
+
 bool JointVariablesUpperLimits::isFeasible(const Eigen::VectorXd& x) {
   assert(x.size() >= dimv_);
   for (int i=0; i<dimc_; ++i) {

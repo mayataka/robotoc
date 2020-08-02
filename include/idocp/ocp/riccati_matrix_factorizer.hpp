@@ -18,6 +18,9 @@ public:
   //    robot: The robot model that has been already initialized.
   RiccatiMatrixFactorizer(const Robot& robot);
 
+  // Default constructor.
+  RiccatiMatrixFactorizer();
+
   // Destructor.
   ~RiccatiMatrixFactorizer();
  
@@ -28,9 +31,9 @@ public:
   RiccatiMatrixFactorizer& operator=(const RiccatiMatrixFactorizer& other) 
       = default;
 
-  void computeIntegrationSensitivities(const Robot& robot, const double dtau,
-                                       const Eigen::VectorXd& q,
-                                       const Eigen::VectorXd& v);
+  void setIntegrationSensitivities(const Robot& robot, const double dtau,
+                                   const Eigen::VectorXd& q,
+                                   const Eigen::VectorXd& v);
 
   void factorize(const double dtau, const Eigen::MatrixXd& Pqq_next, 
                  const Eigen::MatrixXd& Pqv_next, 

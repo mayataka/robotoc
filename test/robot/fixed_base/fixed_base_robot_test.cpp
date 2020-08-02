@@ -166,14 +166,18 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   std::vector<int> contact_frames = {contact_frame_id_};
   Robot robot(urdf_, contact_frames, baumgarte_weight_on_velocity_, 
               baumgarte_weight_on_position_);
-  Eigen::VectorXd residual = Eigen::VectorXd::Zero(robot.max_dimf());
-  Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(robot.max_dimf());
+  std::random_device rnd;
+  const int block_begin = rnd() % 10;
+  Eigen::VectorXd residual 
+      = Eigen::VectorXd::Zero(block_begin+robot.max_dimf());
+  Eigen::VectorXd residual_ref 
+      = Eigen::VectorXd::Zero(block_begin+robot.max_dimf());
   std::vector<bool> is_each_contacts_active = {true};
   robot.setActiveContacts(is_each_contacts_active);
   EXPECT_EQ(robot.dimf(), robot.max_dimf());
   EXPECT_EQ(robot.is_contact_active(0), true);
   robot.updateKinematics(q_, v_, a_);
-  robot.computeBaumgarteResidual(residual);
+  robot.computeBaumgarteResidual(block_begin, residual);
   PointContact contact_ref(model_, contact_frame_id_, 
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
@@ -181,9 +185,8 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   pinocchio::updateFramePlacements(model_, data_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
   contact_ref.resetContactPointByCurrentKinematics(data_);
-  contact_ref.computeBaumgarteResidual(model_, data_, 0, residual_ref);
+  contact_ref.computeBaumgarteResidual(model_, data_, block_begin, residual_ref);
   EXPECT_TRUE(residual.isApprox(residual_ref));
-  std::random_device rnd;
   const int block_rows_begin = rnd() % 10;
   Eigen::MatrixXd baumgarte_partial_q 
       = Eigen::MatrixXd::Zero(block_rows_begin+robot.max_dimf(), dimq_);
