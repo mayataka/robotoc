@@ -19,8 +19,8 @@ namespace idocp {
 class OCP {
 public:
   // Constructor. 
-  OCP(const Robot& robot, const CostFunctionInterface* cost,
-      const ConstraintsInterface* constraints, const double T, const int N, 
+  OCP(const Robot& robot, const CostFunctionInterface& cost,
+      const ConstraintsInterface& constraints, const double T, const int N, 
       const int num_proc=1);
 
   ~OCP();

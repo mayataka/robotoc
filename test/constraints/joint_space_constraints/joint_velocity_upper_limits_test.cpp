@@ -165,6 +165,10 @@ TEST_F(JointVelocityUpperLimitsTest, condenseSlackAndDualFixedBase) {
                / slack_ref.array();
   EXPECT_TRUE(Cv.isApprox(Cv_ref));
   EXPECT_TRUE(Cvv.isApprox(Cvv_ref));
+  std::cout << "Cvv " << std::endl;
+  std::cout << Cvv << "\n" << std::endl;
+  std::cout << "Cvv_ref " << std::endl;
+  std::cout << Cvv_ref << "\n" << std::endl;
   const Eigen::VectorXd dv = Eigen::VectorXd::Random(dimq);
   limit.computeSlackAndDualDirection(dtau_, dv);
   const Eigen::VectorXd dslack_ref = - dtau_ * dv - residual_ref;
@@ -242,6 +246,10 @@ TEST_F(JointVelocityUpperLimitsTest, condenseSlackAndDualFloatingBase) {
                / slack_ref.array();
   EXPECT_TRUE(Cv.isApprox(Cv_ref));
   EXPECT_TRUE(Cvv.isApprox(Cvv_ref));
+  std::cout << "Cvv " << std::endl;
+  std::cout << Cvv << "\n" << std::endl;
+  std::cout << "Cvv_ref " << std::endl;
+  std::cout << Cvv_ref << "\n" << std::endl;
   const Eigen::VectorXd dv = Eigen::VectorXd::Random(dimv);
   limit.computeSlackAndDualDirection(dtau_, dv);
   const Eigen::VectorXd dslack_ref = - dtau_ * dv.tail(dimc) - residual_ref;

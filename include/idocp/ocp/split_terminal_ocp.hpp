@@ -16,13 +16,16 @@ namespace idocp {
 
 class SplitTerminalOCP {
 public:
-  // Constructor.
+  // Constructor. Sets the robot, cost function, and constraints.
   // Argments:
   //    robot: The robot model that has been already initialized.
   //    cost: The pointer to the cost function.
-  //    cost: The pointer to the constraints.
+  //    constraints: The pointer to the constraints.
   SplitTerminalOCP(const Robot& robot, const CostFunctionInterface* cost,
                    const ConstraintsInterface* constraints);
+
+  // Default constructor. 
+  SplitTerminalOCP();
 
   // Destructor.
   ~SplitTerminalOCP();
@@ -33,22 +36,32 @@ public:
   // Use default copy operator.
   SplitTerminalOCP& operator=(const SplitTerminalOCP& other) = default;
 
-  // Check whether the solution q, v, a, u, fext are feasible under inequality 
+  // Sets the cost function.
+  // Argments:
+  //    cost: The pointer to the cost function.
+  void setCostFunction(const CostFunctionInterface* cost);
+
+  // Sets the constraints.
+  // Argments:
+  //    robot: The robot model that has been already initialized.
+  //    constraints: The pointer to the constraints.
+  void setConstraints(const ConstraintsInterface* constraints);
+
+  // Check whether the solution q, v are feasible under inequality 
   // constraints.
   // Argments: 
-  //   robot: The robot model that has been already initialized.
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
-  bool isFeasible(Robot& robot, const Eigen::VectorXd& q, 
-                  const Eigen::VectorXd& v);
+  bool isFeasible(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
   // Initialize the constraints, i.e., set slack and dual variables under set 
   //  q, v.
   // Argments: 
-  //   robot: The robot model that has been already initialized.
+  //   time_step: The time step of the split OCP.
+  //   dtau: Discretization interval of the horizon.
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
-  void initConstraints(Robot& robot, const int time_step, const double dtau,
+  void initConstraints(const int time_step, const double dtau,
                        const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
   // Linearize the OCP for Newton's method around the current solution at the 
@@ -57,7 +70,7 @@ public:
   //   robot: The robot model. The contact status of the current time step 
   //      is included in this model.
   //   t: Time of the current time step.
-  //   dtau: Discretization length of the OCP.
+  //   dtau: Discretization interval of the horizon.
   //   lmd: The Lagrange multiplier with respect to the transition of the 
   //      configuration. Size must be dimv.
   //   gmm: The Lagrange multiplier with respect to the transition of the 
@@ -81,37 +94,87 @@ public:
                     Eigen::MatrixXd& Qvv, Eigen::VectorXd& Qq, 
                     Eigen::VectorXd& Qv);
 
+  // Computes the direction of the condensed veriables.
+  // Argments: 
+  //   dtau: Discretization interval of the horizon.
+  //   dq: Direction of the configuration. Size must be dimv.
+  //   dv: Direction of the generalized velocity. Size must be dimv.
   void computeCondensedDirection(Robot& robot, const double dtau, 
                                  const Eigen::VectorXd& dq, 
                                  const Eigen::VectorXd& dv);
- 
+
+  // Returns the maximum step size of the primal variables of the inequality 
+  // constraints.
   double maxPrimalStepSize();
 
+  // Returns the maximum step size of the dual variables of the inequality 
+  // constraints.
   double maxDualStepSize();
 
-  double costDerivativesDotDirection(Robot& robot, const double t, 
-                                     const Eigen::VectorXd& q, 
-                                     const Eigen::VectorXd& v, 
-                                     const Eigen::VectorXd& dq,
-                                     const Eigen::VectorXd& dv);
-
-  double terminalCost(Robot& robot, const double t, const Eigen::VectorXd& q, 
+  // Returns the terminal cost.
+  // Argments: 
+  //   t: Time of the current time step.
+  //   q: Configuration. Size must be dimq.
+  //   v: Generalized velocity. Size must be dimv.
+  double terminalCost(const double t, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v);
 
+  // Returns the terminal cost with step_size.
+  // Argments: 
+  //   robot: The robot model. 
+  //   step_size: The step size.
+  //   t: Time of the current time step.
+  //   q: Configuration. Size must be dimq.
+  //   v: Generalized velocity. Size must be dimv.
+  //   dq: Direction of the configuration. Size must be dimv.
+  //   dv: Direction of the generalized velocity. Size must be dimv.
   double terminalCost(Robot& robot, const double step_size, const double t, 
                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                       const Eigen::VectorXd& dq, const Eigen::VectorXd& dv);
 
+  // Updates the dual variables of the inequality constraints.
+  // Argments: 
+  //   step_size: The step size.
   void updateDual(const double step_size);
 
+  // Updates the primal variables.
+  // Argments: 
+  //   robot: The robot model. The contact status of the current time step 
+  //      is included in this model.
+  //   step_size: The step size.
+  //   Pqq: The Riccati factorization matrix. The size must be dimv x dimv.
+  //   Pqv: The Riccati factorization matrix. The size must be dimv x dimv.
+  //   Pvq: The Riccati factorization matrix. The size must be dimv x dimv.
+  //   Pvv: The Riccati factorization matrix. The size must be dimv x dimv.
+  //   sq: The Riccati factorization vector. The size must be dimv.
+  //   sv: The Riccati factorization vector. The size must be dimv.
+  //   dq: Direction of the configuration. Size must be dimv.
+  //   dv: Direction of the generalized velocity. Size must be dimv.
+  //   lmd: The Lagrange multiplier with respect to the transition of the 
+  //      configuration. Size must be dimv.
+  //   gmm: The Lagrange multiplier with respect to the transition of the 
+  //      generalized velocity. Size must be dimv.
+  //   q: Configuration. Size must be dimq.
+  //   v: Generalized velocity. Size must be dimv.
   void updatePrimal(Robot& robot, const double step_size, 
-                    const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
                     const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
                     const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
                     const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
-                    Eigen::VectorXd& q, Eigen::VectorXd& v, 
-                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm) const;
+                    const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
+                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm, 
+                    Eigen::VectorXd& q, Eigen::VectorXd& v) const;
 
+  // Returns the squared KKT error norm.
+  // Argments: 
+  //   robot: The robot model. The contact status of the current time step 
+  //      is included in this model.
+  //   t: Time of the current time step.
+  //   lmd: The Lagrange multiplier with respect to the transition of the 
+  //      configuration. Size must be dimv.
+  //   gmm: The Lagrange multiplier with respect to the transition of the 
+  //      generalized velocity. Size must be dimv.
+  //   q: Configuration. Size must be dimq.
+  //   v: Generalized velocity. Size must be dimv.
   double squaredKKTErrorNorm(Robot& robot, const double t, 
                              const Eigen::VectorXd& lmd, 
                              const Eigen::VectorXd& gmm, 
@@ -119,8 +182,8 @@ public:
                              const Eigen::VectorXd& v);
 
 private:
-  CostFunctionInterface *cost_;
-  ConstraintsInterface *constraints_;
+  CostFunctionInterface* cost_;
+  ConstraintsInterface* constraints_;
   pdipm::JointSpaceConstraints joint_constraints_;
   int dimq_, dimv_;
   Eigen::VectorXd lq_, lv_, q_res_, v_res_;

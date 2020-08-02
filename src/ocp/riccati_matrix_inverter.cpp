@@ -30,6 +30,23 @@ RiccatiMatrixInverter::RiccatiMatrixInverter(const Robot& robot)
 }
 
 
+RiccatiMatrixInverter::RiccatiMatrixInverter() 
+  : has_floating_base_(false),
+    dimv_(0),
+    max_dimf_(0),
+    dimf_(0),
+    dim_passive_(0),
+    Sff_inv_(),
+    Saa_(),
+    Saa_inv_(),
+    Saf_(),
+    Sac_(),
+    Sfc_(),
+    Scc_(),
+    Scc_inv_() {
+}
+
+
 RiccatiMatrixInverter::~RiccatiMatrixInverter() {
 }
 

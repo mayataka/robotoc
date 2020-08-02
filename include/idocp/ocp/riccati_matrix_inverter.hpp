@@ -13,7 +13,13 @@ namespace idocp {
 
 class RiccatiMatrixInverter {
 public:
+  // Constructor.
+  // Argments:
+  //    robot: The robot model that has been already initialized.
   RiccatiMatrixInverter(const Robot& robot);
+
+  // Default constructor.
+  RiccatiMatrixInverter();
 
   // Destructor.
   ~RiccatiMatrixInverter();

@@ -119,7 +119,7 @@ TEST_F(RiccatiMatrixFactorizerTest, floating_base) {
       = Qvv + (dtau_*dtau_) * dintagrate_dv.transpose() * Pqq * dintagrate_dv
             + dtau_ * Pvq * dintagrate_dv 
             + dtau_ * dintagrate_dv.transpose() * Pqv + Pvv;
-  factorizer.computeIntegrationSensitivities(floating_base_robot_, dtau_, q, v);
+  factorizer.setIntegrationSensitivities(floating_base_robot_, dtau_, q, v);
   factorizer.factorize(dtau_, Pqq, Pqv, Pvq, Pvv, Qqq, Qqv, Qvq, Qvv);
   EXPECT_TRUE(Qqq.isApprox(Qqq_ref));
   EXPECT_TRUE(Qqv.isApprox(Qqv_ref));

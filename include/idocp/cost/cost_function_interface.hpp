@@ -27,7 +27,7 @@ public:
 
   virtual double l(const double t, const double dtau, const Eigen::VectorXd& q, 
                    const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-                   const Eigen::VectorXd& u) = 0;
+                   const Eigen::VectorXd& u, const Eigen::VectorXd& f) = 0;
 
   virtual double phi(const double t, const Eigen::VectorXd& q, 
                      const Eigen::VectorXd& v) = 0;

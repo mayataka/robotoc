@@ -117,7 +117,8 @@ public:
   // Argments: 
   //   residual: Vector where the result is stored. Size must be at least 3 and
   //     at most 3*max_point_contacts().
-  void computeBaumgarteResidual(Eigen::VectorXd& baumgarte_residual) const;
+  void computeBaumgarteResidual(const int block_begin, 
+                                Eigen::VectorXd& baumgarte_residual) const;
 
   // Computes the product of a vector and the derivatives of the contact 
   // constriants represented by Baumgarte's stabilization method. 

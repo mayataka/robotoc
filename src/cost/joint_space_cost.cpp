@@ -106,6 +106,27 @@ JointSpaceCost::JointSpaceCost(const Robot& robot, const Eigen::VectorXd& q_ref,
 }
 
 
+JointSpaceCost::JointSpaceCost()
+  : has_floating_base_(false),
+    dimq_(0),
+    dimv_(0),
+    q_ref_(),
+    v_ref_(),
+    a_ref_(),
+    u_ref_(),
+    q_weight_(),
+    v_weight_(),
+    a_weight_(),
+    u_weight_(),
+    qf_weight_(),
+    vf_weight_(),
+    lq_configuration_(),
+    lqq_configuration_(),
+    phiqq_configuration_(),
+    configuration_Jacobian_() {
+}
+
+
 void JointSpaceCost::set_q_ref(const Eigen::VectorXd& q_ref) {
   assert(q_ref.size() == dimq_);
   q_ref_ = q_ref;

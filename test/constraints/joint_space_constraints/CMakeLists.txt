@@ -129,3 +129,37 @@ add_test(
     NAME joint_velocity_upper_limits_test
     COMMAND $<TARGET_FILE:joint_velocity_upper_limits_test>
 )
+
+
+add_executable(
+    joint_space_constraints_test
+    joint_space_constraints_test.cpp
+)
+target_include_directories(
+    joint_space_constraints_test
+    PRIVATE
+    ${GTEST_INCLUDE_PATH}
+    ${GMOCK_INCLUDE_PATH}
+    ${GTEST_LIBRARY_PATH}
+    ${EIGEN3_INCLUDE_DIR}
+    ${IDOCP_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${PINOCCHIO_INCLUDEDIR}
+)
+target_link_libraries(
+    joint_space_constraints_test
+    PRIVATE
+    pthread
+    GTest::GTest
+    GTest::GMock
+    idocp_constraints
+    idocp_robot
+)
+add_dependencies(
+    joint_space_constraints_test
+    googletest
+)
+add_test(
+    NAME joint_space_constraints_test 
+    COMMAND $<TARGET_FILE:joint_space_constraints_test>
+)

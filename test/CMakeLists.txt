@@ -142,7 +142,7 @@ add_library(
     ${IDOCP_SRC_DIR}/ocp/riccati_matrix_factorizer.cpp
     ${IDOCP_SRC_DIR}/ocp/riccati_matrix_inverter.cpp
     ${IDOCP_SRC_DIR}/ocp/split_terminal_ocp.cpp
-    # ${IDOCP_SRC_DIR}/ocp/split_ocp.cpp
+    ${IDOCP_SRC_DIR}/ocp/split_ocp.cpp
 )
 target_include_directories(
     idocp_ocp

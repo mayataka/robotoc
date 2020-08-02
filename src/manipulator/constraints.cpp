@@ -8,6 +8,10 @@ Constraints::Constraints(const Robot& robot)
   : ConstraintsInterface() {
 }
 
+Constraints::Constraints()
+  : ConstraintsInterface() {
+}
+
 
 bool Constraints::isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v, const Eigen::VectorXd& a, 

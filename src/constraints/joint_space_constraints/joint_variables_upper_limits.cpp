@@ -28,6 +28,26 @@ JointVariablesUpperLimits::JointVariablesUpperLimits(const Robot& robot,
 }
 
 
+JointVariablesUpperLimits::JointVariablesUpperLimits()
+  : dimv_(0),
+    dimc_(0),
+    dim_passive_(0),
+    has_floating_base_(false),
+    barrier_(0),
+    xmax_(),
+    slack_(),
+    dual_(),
+    residual_(),
+    duality_(),
+    dslack_(), 
+    ddual_() {
+}
+
+
+JointVariablesUpperLimits::~JointVariablesUpperLimits() {
+}
+
+
 bool JointVariablesUpperLimits::isFeasible(const Eigen::VectorXd& x) {
   assert(x.size() >= dimv_);
   for (int i=0; i<dimc_; ++i) {
@@ -57,7 +77,7 @@ void JointVariablesUpperLimits::condenseSlackAndDual(const double dtau,
   assert(Cxx.rows() == dimv_);
   assert(Cxx.cols() == dimv_);
   assert(Cx.size() == dimv_);
-  for (int i=0; i<dimv_; ++i) {
+  for (int i=0; i<dimc_; ++i) {
     Cxx.coeffRef(dim_passive_+i, dim_passive_+i) 
         += dtau * dtau * dual_.coeff(i) / slack_.coeff(i);
   }

@@ -27,6 +27,15 @@ ContactCost::ContactCost(const Robot& robot, const Eigen::VectorXd& f_ref,
 }
 
 
+ContactCost::ContactCost()
+  : contact_status_(),
+    max_point_contacts_(0),
+    max_dimf_(0),
+    f_ref_(),
+    f_weight_() {
+}
+
+
 void ContactCost::set_f_ref(const Eigen::VectorXd& f_ref) {
   assert(f_ref_.size()==max_dimf_);
   f_ref_ = f_ref;
