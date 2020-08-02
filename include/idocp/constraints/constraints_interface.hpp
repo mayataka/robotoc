@@ -14,6 +14,12 @@ public:
 
   virtual ~ConstraintsInterface() {}
 
+  // Use default copy constructor.
+  ConstraintsInterface(const ConstraintsInterface&) = default;
+
+  // Use default copy coperator.
+  ConstraintsInterface& operator=(const ConstraintsInterface&) = default;
+
   virtual bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
                           const Eigen::VectorXd& u) = 0;

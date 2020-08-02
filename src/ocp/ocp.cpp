@@ -7,15 +7,15 @@
 
 namespace idocp {
 
-OCP::OCP(const Robot& robot, const CostFunctionInterface* cost,
-         const ConstraintsInterface* constraints, const double T, const int N, 
+OCP::OCP(const Robot& robot, const CostFunctionInterface& cost,
+         const ConstraintsInterface& constraints, const double T, const int N, 
          const int num_proc)
   : split_OCPs_(N, SplitOCP(robot, cost, constraints)),
     split_terminal_OCP_(robot, cost, constraints),
     robots_(num_proc, robot),
     filter_(),
-    cost_(const_cast<CostFunctionInterface*>(cost)),
-    constraints_(const_cast<ConstraintsInterface*>(constraints)),
+    cost_(cost),
+    constraints_(cost),
     T_(T),
     dtau_(T/N),
     step_size_reduction_rate_(0.75),
