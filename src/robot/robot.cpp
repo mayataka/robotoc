@@ -1,4 +1,4 @@
-#include "robot/robot.hpp"
+#include "idocp/robot/robot.hpp"
 
 #include <assert.h>
 

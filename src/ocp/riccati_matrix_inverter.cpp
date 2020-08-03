@@ -1,4 +1,4 @@
-#include "ocp/riccati_matrix_inverter.hpp"
+#include "idocp/ocp/riccati_matrix_inverter.hpp"
 
 #include <assert.h>
 #include "Eigen/LU"

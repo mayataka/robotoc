@@ -4,8 +4,8 @@
 #include "Eigen/Core"
 #include "Eigen/LU"
 
-#include "robot/robot.hpp"
-#include "ocp/riccati_matrix_inverter.hpp"
+#include "idocp/robot/robot.hpp"
+#include "idocp/ocp/riccati_matrix_inverter.hpp"
 
 
 namespace idocp {
@@ -15,8 +15,8 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    fixed_base_urdf_ = "../../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf_ = "../../urdf/anymal/anymal.urdf";
+    fixed_base_urdf_ = "../urdf/iiwa14/iiwa14.urdf";
+    floating_base_urdf_ = "../urdf/anymal/anymal.urdf";
     fixed_base_robot_ = Robot(fixed_base_urdf_);
     floating_base_robot_ = Robot(floating_base_urdf_);
     dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);

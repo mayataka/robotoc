@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "constraints/pdipm_func.hpp"
+#include "idocp/constraints/pdipm_func.hpp"
 
 
 namespace idocp {

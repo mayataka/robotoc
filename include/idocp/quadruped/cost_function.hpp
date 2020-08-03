@@ -3,10 +3,10 @@
 
 #include "Eigen/Core"
 
-#include "robot/robot.hpp"
-#include "cost/cost_function_interface.hpp"
-#include "cost/joint_space_cost.hpp"
-#include "cost/contact_cost.hpp"
+#include "idocp/robot/robot.hpp"
+#include "idocp/cost/cost_function_interface.hpp"
+#include "idocp/cost/joint_space_cost.hpp"
+#include "idocp/cost/contact_cost.hpp"
 
 
 namespace idocp {

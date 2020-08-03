@@ -1,4 +1,4 @@
-#include "cost/contact_cost.hpp"
+#include "idocp/cost/contact_cost.hpp"
 
 #include <assert.h>
 

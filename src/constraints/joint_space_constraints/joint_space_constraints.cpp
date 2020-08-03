@@ -1,4 +1,4 @@
-#include "constraints/joint_space_constraints/joint_space_constraints.hpp"
+#include "idocp/constraints/joint_space_constraints/joint_space_constraints.hpp"
 
 #include <assert.h>
 

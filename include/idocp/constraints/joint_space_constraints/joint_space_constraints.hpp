@@ -3,9 +3,9 @@
 
 #include "Eigen/Core"
 
-#include "robot/robot.hpp"
-#include "constraints/joint_space_constraints/joint_variables_upper_limits.hpp"
-#include "constraints/joint_space_constraints/joint_variables_lower_limits.hpp"
+#include "idocp/robot/robot.hpp"
+#include "idocp/constraints/joint_space_constraints/joint_variables_upper_limits.hpp"
+#include "idocp/constraints/joint_space_constraints/joint_variables_lower_limits.hpp"
 
 
 namespace idocp {

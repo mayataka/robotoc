@@ -1,4 +1,4 @@
-#include "robot/point_contact.hpp"
+#include "idocp/robot/point_contact.hpp"
 
 #include <assert.h>
 

@@ -1,4 +1,4 @@
-#include "quadruped/constraints.hpp"
+#include "idocp/quadruped/constraints.hpp"
 
 
 namespace idocp {

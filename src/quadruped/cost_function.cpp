@@ -1,4 +1,4 @@
-#include "quadruped/cost_function.hpp"
+#include "idocp/quadruped/cost_function.hpp"
 
 #include <assert.h>
 

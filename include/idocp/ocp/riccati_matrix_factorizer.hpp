@@ -6,7 +6,7 @@
 
 #include "Eigen/Core"
 
-#include "robot/robot.hpp"
+#include "idocp/robot/robot.hpp"
 
 
 namespace idocp {

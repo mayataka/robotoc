@@ -3,8 +3,8 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "robot/robot.hpp"
-#include "cost/contact_cost.hpp"
+#include "idocp/robot/robot.hpp"
+#include "idocp/cost/contact_cost.hpp"
 
 
 namespace idocp {
@@ -14,7 +14,7 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    urdf_ = "../../urdf/iiwa14/iiwa14.urdf";
+    urdf_ = "../urdf/iiwa14/iiwa14.urdf";
     contact_frames_ = {18};
     robot_ = Robot(urdf_, contact_frames_, 0, 0);
     dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);

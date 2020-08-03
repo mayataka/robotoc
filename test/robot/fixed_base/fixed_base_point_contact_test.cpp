@@ -13,7 +13,7 @@
 #include "pinocchio/algorithm/rnea.hpp"
 #include "pinocchio/algorithm/rnea-derivatives.hpp"
 
-#include "robot/point_contact.hpp"
+#include "idocp/robot/point_contact.hpp"
 
 
 namespace idocp {
@@ -23,7 +23,7 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    urdf_ = "../../../urdf/iiwa14/iiwa14.urdf";
+    urdf_ = "../../urdf/iiwa14/iiwa14.urdf";
     pinocchio::urdf::buildModel(urdf_, model_);
     data_ = pinocchio::Data(model_);
     dimq_ = model_.nq;

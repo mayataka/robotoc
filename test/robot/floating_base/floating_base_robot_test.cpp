@@ -12,8 +12,8 @@
 #include "pinocchio/algorithm/rnea.hpp"
 #include "pinocchio/algorithm/rnea-derivatives.hpp"
 
-#include "robot/point_contact.hpp"
-#include "robot/robot.hpp"
+#include "idocp/robot/point_contact.hpp"
+#include "idocp/robot/robot.hpp"
 
 
 namespace idocp {
@@ -22,7 +22,7 @@ class FloatingBaseRobotTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    urdf_ = "../../../urdf/anymal/anymal.urdf";
+    urdf_ = "../../urdf/anymal/anymal.urdf";
     pinocchio::urdf::buildModel(urdf_, model_);
     data_ = pinocchio::Data(model_);
     dimq_ = model_.nq;

@@ -4,13 +4,13 @@
 #include "Eigen/Core"
 #include "Eigen/LU"
 
-#include "robot/robot.hpp"
-#include "ocp/split_ocp.hpp"
-#include "ocp/riccati_matrix_factorizer.hpp"
-#include "ocp/riccati_matrix_inverter.hpp"
-#include "constraints/joint_space_constraints/joint_space_constraints.hpp"
-#include "manipulator/cost_function.hpp"
-#include "manipulator/constraints.hpp"
+#include "idocp/robot/robot.hpp"
+#include "idocp/ocp/split_ocp.hpp"
+#include "idocp/ocp/riccati_matrix_factorizer.hpp"
+#include "idocp/ocp/riccati_matrix_inverter.hpp"
+#include "idocp/constraints/joint_space_constraints/joint_space_constraints.hpp"
+#include "idocp/manipulator/cost_function.hpp"
+#include "idocp/manipulator/constraints.hpp"
 
 
 namespace idocp {
@@ -20,7 +20,7 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    urdf_ = "../../urdf/iiwa14/iiwa14.urdf";
+    urdf_ = "../urdf/iiwa14/iiwa14.urdf";
     robot_ = Robot(urdf_);
     cost_ = manipulator::CostFunction(robot_);
     constraints_ = manipulator::Constraints(robot_);

@@ -3,8 +3,8 @@
 
 #include "Eigen/Core"
 
-#include "robot/robot.hpp"
-#include "constraints/constraints_interface.hpp"
+#include "idocp/robot/robot.hpp"
+#include "idocp/constraints/constraints_interface.hpp"
 
 
 namespace idocp {

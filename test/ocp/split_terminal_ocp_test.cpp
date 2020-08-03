@@ -4,12 +4,12 @@
 #include "Eigen/Core"
 #include "Eigen/LU"
 
-#include "robot/robot.hpp"
-#include "ocp/split_terminal_ocp.hpp"
-#include "manipulator/cost_function.hpp"
-#include "manipulator/constraints.hpp"
-#include "quadruped/cost_function.hpp"
-#include "quadruped/constraints.hpp"
+#include "idocp/robot/robot.hpp"
+#include "idocp/ocp/split_terminal_ocp.hpp"
+#include "idocp/manipulator/cost_function.hpp"
+#include "idocp/manipulator/constraints.hpp"
+#include "idocp/quadruped/cost_function.hpp"
+#include "idocp/quadruped/constraints.hpp"
 
 
 namespace idocp {
@@ -19,8 +19,8 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    manipulator_urdf_ = "../../urdf/iiwa14/iiwa14.urdf";
-    quadruped_urdf_ = "../../urdf/anymal/anymal.urdf";
+    manipulator_urdf_ = "../urdf/iiwa14/iiwa14.urdf";
+    quadruped_urdf_ = "../urdf/anymal/anymal.urdf";
     manipulator_ = Robot(manipulator_urdf_);
     quadruped_ = Robot(quadruped_urdf_);
     t_ = std::abs(Eigen::VectorXd::Random(1)[0]);

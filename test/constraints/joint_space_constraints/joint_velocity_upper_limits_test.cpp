@@ -6,9 +6,9 @@
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
-#include "robot/robot.hpp"
-#include "constraints/pdipm_func.hpp"
-#include "constraints/joint_space_constraints/joint_variables_upper_limits.hpp"
+#include "idocp/robot/robot.hpp"
+#include "idocp/constraints/pdipm_func.hpp"
+#include "idocp/constraints/joint_space_constraints/joint_variables_upper_limits.hpp"
 
 
 namespace idocp {
@@ -18,8 +18,8 @@ class JointVelocityUpperLimitsTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    fixed_base_urdf_ = "../../../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf_ = "../../../urdf/anymal/anymal.urdf";
+    fixed_base_urdf_ = "../../urdf/iiwa14/iiwa14.urdf";
+    floating_base_urdf_ = "../../urdf/anymal/anymal.urdf";
     fixed_base_robot_ = Robot(fixed_base_urdf_);
     floating_base_robot_ = Robot(floating_base_urdf_);
     barrier_ = std::abs(Eigen::VectorXd::Random(1)[0]);

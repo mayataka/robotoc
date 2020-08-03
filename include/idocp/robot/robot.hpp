@@ -16,8 +16,8 @@
 #include "pinocchio/algorithm/rnea-derivatives.hpp"
 #include "pinocchio/algorithm/aba.hpp"
 
-#include "robot/point_contact.hpp"
-#include "robot/floating_base.hpp"
+#include "idocp/robot/point_contact.hpp"
+#include "idocp/robot/floating_base.hpp"
 
 
 namespace idocp {
