@@ -667,40 +667,10 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   // configuration, velocity, acceleration, and the control input torques.
   // Partial derivatives of the cost function.
   const int dimf = robot.dimf();
-  cost_->lq(t, dtau, q, v, a, lq_);
-  cost_->lv(t, dtau, q, v, a, lv_);
-  cost_->la(t, dtau, q, v, a, la_);
-  cost_->lu(t, dtau, u, lu_);
-  if (dimf > 0) {
-    cost_->lf(t, dtau, f_, lf_);
-  }
-  // Augment the partial derivatives of the state equation.
-  lq_.noalias() += lmd_next - lmd;
-  lv_.noalias() += dtau * lmd_next + gmm_next - gmm;
-  la_.noalias() += dtau * gmm_next;
-  // Augment the partial derivatives of the inverse dynamics constraint.
-  robot.RNEADerivatives(q, v, a, du_dq_, du_dv_, du_da_);
-  lq_.noalias() += dtau * du_dq_.transpose() * beta;
-  lv_.noalias() += dtau * du_dv_.transpose() * beta;
-  la_.noalias() += dtau * du_da_.transpose() * beta;
-  lu_.noalias() -= dtau * beta;
-  if (dimf > 0) {
-    robot.updateKinematics(q, v, a);
-    robot.dRNEAPartialdFext(du_df_);
-    lf_.noalias() += du_df_.leftCols(dimf_).transpose() * beta;
-    // Computes the contact constraints.
-    robot.computeBaumgarteResidual(dim_passive_, C_res_);
-    robot.computeBaumgarteDerivatives(dim_passive_, Cq_, Cv_, Ca_);
-    // Augment the equality constraints 
-    lq_.noalias() += Cq_.topRows(dimf_).transpose() * mu_.head(dimf_);
-    lv_.noalias() += Cv_.topRows(dimf_).transpose() * mu_.head(dimf_);
-    la_.noalias() += Ca_.topRows(dimf_).transpose() * mu_.head(dimf_);
-  }
-  // Augment the partial derivatives of the inequality constraint.
-  joint_constraints_.augmentDualResidual(dtau, lq_, lv_, la_);
-  joint_constraints_.augmentDualResidual(dtau, lu_);
-  // Compute the residual of the state eqation.
-  q_res_ = q + dtau * v - q_next;
+  const int dimc = robot.dimf() + robot.dim_passive();
+  // Residual of the state eqation
+  robot.differenceConfiguration(q, q_next, q_res_);
+  q_res_.noalias() += dtau * v;
   v_res_ = v + dtau * a - v_next;
   // Compute the residual of the inverse dynamics constraint.
   if (dimf > 0) {
@@ -709,18 +679,70 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   robot.RNEA(q, v, a, u_res_);
   u_res_.noalias() -= u;
   u_res_.array() *= dtau;
+  cost_->lq(t, dtau, q, v, a, lq_);
+  cost_->lv(t, dtau, q, v, a, lv_);
+  cost_->la(t, dtau, q, v, a, la_);
+  cost_->lu(t, dtau, u, lu_);
+  if (dimf > 0) {
+    cost_->setContactStatus(robot);
+    cost_->lf(t, dtau, f_, lf_);
+  }
+  // Augment the partial derivatives of the state equation.
+  lq_.noalias() += lmd_next - lmd;
+  lv_.noalias() += dtau * lmd_next + gmm_next - gmm;
+  la_.noalias() += dtau * gmm_next;
+  // Augment the partial derivatives of the inequality constraints.
+  joint_constraints_.augmentDualResidual(dtau, lq_, lv_, la_);
+  joint_constraints_.augmentDualResidual(dtau, lu_);
+  // Augment the partial derivatives of the inverse dynamics constraint.
+  if (dimf > 0) {
+    robot.setContactForces(f_);
+  }
+  robot.RNEADerivatives(q, v, a, du_dq_, du_dv_, du_da_);
+  lq_.noalias() += dtau * du_dq_.transpose() * beta;
+  lv_.noalias() += dtau * du_dv_.transpose() * beta;
+  la_.noalias() += dtau * du_da_.transpose() * beta;
+  lu_.noalias() -= dtau * beta;
+  if (dimf > 0) {
+    robot.updateKinematics(q, v, a);
+    robot.dRNEAPartialdFext(du_df_);
+    lf_.noalias() += dtau * du_df_.leftCols(dimf).transpose() * beta;
+  }
+  if (has_floating_base_) {
+    // The equality constraints of the floating base.
+    Cq_.topRows(dim_passive_) = du_dq_.topRows(dim_passive_);
+    Cv_.topRows(dim_passive_) = du_dv_.topRows(dim_passive_);
+    Ca_.topRows(dim_passive_) = du_da_.topRows(dim_passive_);
+    if (dimf > 0) {
+      Cf_ = du_df_.topRows(dim_passive_);
+    }
+    C_res_.head(dim_passive_) = u.head(dim_passive_);
+  }
+  if (dimf > 0) {
+    // Computes the contact constraints.
+    robot.computeBaumgarteResidual(dim_passive_, C_res_);
+    robot.computeBaumgarteDerivatives(dim_passive_, Cq_, Cv_, Ca_);
+    // Augment the equality constraints 
+  }
+  if (dimc > 0) {
+    lq_.noalias() += Cq_.topRows(dimc).transpose() * mu_.head(dimc);
+    lv_.noalias() += Cv_.topRows(dimc).transpose() * mu_.head(dimc);
+    la_.noalias() += Ca_.topRows(dimc).transpose() * mu_.head(dimc);
+  }
   double error = 0;
+  error += q_res_.squaredNorm();
+  error += v_res_.squaredNorm();
+  error += u_res_.squaredNorm();
   error += lq_.squaredNorm();
   error += lv_.squaredNorm();
   error += la_.squaredNorm();
   error += lu_.squaredNorm();
-  error += q_res_.squaredNorm();
-  error += v_res_.squaredNorm();
-  error += u_res_.squaredNorm();
   error += joint_constraints_.residualSquaredNrom(dtau, q, v, a, u);
   if (dimf > 0) {
     error += lf_.head(dimf).squaredNorm();
-    error += C_res_.head(dimf).squaredNorm();
+  }
+  if (dimc > 0) {
+    error += C_res_.head(dimc).squaredNorm();
   }
   return error;
 }

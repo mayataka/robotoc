@@ -78,8 +78,6 @@ TEST_F(FixedBaseSplitOCPTest, isFeasible) {
 
 
 TEST_F(FixedBaseSplitOCPTest, withoutContacts) {
-  ocp_.set_f(f_);
-  ocp_.set_mu(mu_);
   ASSERT_FALSE(robot_.has_floating_base());
   ASSERT_TRUE(robot_.max_dimf() == 0);
   ASSERT_TRUE(robot_.dim_passive() == 0);
@@ -686,6 +684,66 @@ TEST_F(FixedBaseSplitOCPTest, withActiveContacts) {
   EXPECT_TRUE(gmm_.isApprox(gmm_ref));
 }
 
+
+TEST_F(FixedBaseSplitOCPTest, KKTErrorWithoutActiveContacts) {
+  ASSERT_FALSE(robot_.has_floating_base());
+  ASSERT_TRUE(robot_.max_dimf() == 0);
+  ASSERT_TRUE(robot_.dim_passive() == 0);
+  pdipm::JointSpaceConstraints joint_space_constraints_ref(robot_);
+  robot_.generateFeasibleConfiguration(q_);
+  while (!ocp_.isFeasible(q_, v_, a_, u_)) {
+    v_ = Eigen::VectorXd::Random(dimv_);
+    u_ = Eigen::VectorXd::Random(dimv_);
+  }
+  ASSERT_TRUE(ocp_.isFeasible(q_, v_, a_, u_));
+  ocp_.initConstraints(time_step_, dtau_, q_, v_, a_, u_);
+  joint_space_constraints_ref.setTimeStep(time_step_);
+  joint_space_constraints_ref.setSlackAndDual(dtau_, q_, v_, a_, u_);
+  const Eigen::VectorXd beta = Eigen::VectorXd::Random(dimv_);
+  const double KKT_error 
+      = ocp_.squaredKKTErrorNorm(robot_, t_, dtau_, lmd_, gmm_, q_, v_, a_, u_, 
+                                 beta, lmd_next_, gmm_next_, q_next_, v_next_);
+  Eigen::VectorXd q_res = Eigen::VectorXd::Zero(dimv_);
+  robot_.differenceConfiguration(q_, q_next_, q_res);
+  q_res.noalias() += dtau_ * v_;
+  Eigen::VectorXd v_res = v_ + dtau_ * a_ - v_next_;
+  Eigen::VectorXd u_res = Eigen::VectorXd::Zero(dimv_);
+  robot_.RNEA(q_, v_, a_, u_res);
+  u_res -= u_;
+  u_res = dtau_ * u_res;
+  Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimq_);
+  Eigen::VectorXd lv = Eigen::VectorXd::Zero(dimv_);
+  Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv_);
+  Eigen::VectorXd lu = Eigen::VectorXd::Zero(dimv_);
+  cost_.lq(t_, dtau_, q_, v_, a_, lq);
+  cost_.lv(t_, dtau_, q_, v_, a_, lv);
+  cost_.la(t_, dtau_, q_, v_, a_, la);
+  cost_.lu(t_, dtau_, u_, lu);
+  joint_space_constraints_ref.augmentDualResidual(dtau_, lu);
+  joint_space_constraints_ref.augmentDualResidual(dtau_, lq, lv, la);
+  lq += lmd_next_ - lmd_;
+  lv += dtau_ * lmd_next_ + gmm_next_ - gmm_;
+  la += dtau_ * gmm_next_;
+  Eigen::MatrixXd du_dq = Eigen::MatrixXd::Zero(dimv_, dimv_);
+  Eigen::MatrixXd du_dv = Eigen::MatrixXd::Zero(dimv_, dimv_);
+  Eigen::MatrixXd du_da = Eigen::MatrixXd::Zero(dimv_, dimv_);
+  robot_.RNEADerivatives(q_, v_, a_, du_dq, du_dv, du_da);
+  lq += dtau_ * du_dq.transpose() * beta;
+  lv += dtau_ * du_dv.transpose() * beta;
+  la += dtau_ * du_da.transpose() * beta;
+  lu -= dtau_ * beta;
+  double KKT_error_ref = 0;
+  KKT_error_ref += q_res.squaredNorm();
+  KKT_error_ref += v_res.squaredNorm();
+  KKT_error_ref += u_res.squaredNorm();
+  KKT_error_ref += lq.squaredNorm();
+  KKT_error_ref += lv.squaredNorm();
+  KKT_error_ref += la.squaredNorm();
+  KKT_error_ref += lu.squaredNorm();
+  KKT_error_ref 
+      += joint_space_constraints_ref.residualSquaredNrom(dtau_, q_, v_, a_, u_);
+  EXPECT_FLOAT_EQ(KKT_error_ref, KKT_error);
+}
 
 } // namespace idocp
 
