@@ -279,22 +279,23 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   la_.noalias() += du_da_.transpose() * lu_condensed_;
   if (dimf_ > 0) {
     // Condensing the input torque in the contact forces
-    lf_.noalias() += du_df_.leftCols(dimf_).transpose() * lu_condensed_;
+    lf_.head(dimf_).noalias() += du_df_.leftCols(dimf_).transpose() * lu_condensed_;
   }
   if (has_floating_base_) {
     // The equality constraints of the floating base.
-    Cq_.topRows(dim_passive_) = du_dq_.topRows(dim_passive_);
-    Cv_.topRows(dim_passive_) = du_dv_.topRows(dim_passive_);
-    Ca_.topRows(dim_passive_) = du_da_.topRows(dim_passive_);
+    Cq_.topRows(dim_passive_) = dtau * du_dq_.topRows(dim_passive_);
+    Cv_.topRows(dim_passive_) = dtau * du_dv_.topRows(dim_passive_);
+    Ca_.topRows(dim_passive_) = dtau * du_da_.topRows(dim_passive_);
     if (dimf_ > 0) {
-      Cf_ = du_df_.topRows(dim_passive_);
+      Cf_.leftCols(dimf_) = dtau * du_df_.topLeftCorner(dim_passive_, dimf_);
     }
-    C_res_.head(dim_passive_) = u.head(dim_passive_);
+    C_res_.head(dim_passive_) = dtau * u.head(dim_passive_);
+    C_res_.head(dim_passive_).noalias() += dtau * u_res_.head(dim_passive_);
   }
   if (dimf_ > 0) {
     // The equality constraints of the contact constraints.
-    robot.computeBaumgarteResidual(dim_passive_, C_res_);
-    robot.computeBaumgarteDerivatives(dim_passive_, Cq_, Cv_, Ca_);
+    robot.computeBaumgarteResidual(dim_passive_, dtau, C_res_);
+    robot.computeBaumgarteDerivatives(dim_passive_, dtau, Cq_, Cv_, Ca_);
   }
   if (dimc_ > 0) {
     // Augment the equality constraints 
@@ -302,8 +303,8 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
     lv_.noalias() += Cv_.topRows(dimc_).transpose() * mu_.head(dimc_);
     la_.noalias() += Ca_.topRows(dimc_).transpose() * mu_.head(dimc_);
     if (dimf_ > 0 && dim_passive_ > 0) {
-      lf_.noalias() += Cf_.topRows(dim_passive_).transpose() 
-                        * mu_.head(dim_passive_);
+      lf_.head(dimf_).noalias() += Cf_.leftCols(dimf_).transpose() 
+          * mu_.head(dim_passive_);
     }
   }
   if (has_floating_base_) {
@@ -525,9 +526,9 @@ std::pair<double, double> SplitOCP::costAndConstraintsViolation(
   assert(dq_next.size() == dimv_);
   assert(dv_next.size() == dimv_);
   if (has_floating_base_) {
-    cost_->setConfigurationJacobian(robot, q);
     q_tmp_ = q;
     robot.integrateConfiguration(dq, step_size, q_tmp_);
+    cost_->setConfigurationJacobian(robot, q_tmp_);
   }
   else {
     q_tmp_ = q + step_size * dq;
@@ -536,7 +537,7 @@ std::pair<double, double> SplitOCP::costAndConstraintsViolation(
   a_tmp_ = a + step_size * da_;
   u_tmp_ = u + step_size * du_;
   if (dimf_ > 0) {
-    f_tmp_ = f_ + step_size * df_;
+    f_tmp_.head(dimf_) = f_.head(dimf_) + step_size * df_.head(dimf_);
     robot.setContactForces(f_tmp_);
   }
   double cost = 0;
@@ -555,10 +556,10 @@ std::pair<double, double> SplitOCP::costAndConstraintsViolation(
                                                              u_tmp_);
   constraints_violation += dtau * u_res_tmp_.lpNorm<1>();
   if (dimc_ > 0) {
-    C_res_.head(dim_passive_) = u_tmp_.head(dim_passive_);
+    C_res_.head(dim_passive_) = dtau * u_tmp_.head(dim_passive_);
     robot.updateKinematics(q_tmp_, v_tmp_, a_tmp_);
-    robot.computeBaumgarteResidual(dim_passive_, C_res_);
-    constraints_violation += C_res_.lpNorm<1>();
+    robot.computeBaumgarteResidual(dim_passive_, dtau, C_res_);
+    constraints_violation += C_res_.head(dimc_).lpNorm<1>();
   }
   return std::make_pair(cost, constraints_violation);
 }
@@ -603,13 +604,13 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   assert(a.size() == dimv_);
   assert(lmd.size() == dimv_);
   assert(gmm.size() == dimv_);
-  q.noalias() += step_size * dq;
+  robot.integrateConfiguration(dq, step_size, q);
   v.noalias() += step_size * dv;
   a.noalias() += step_size * da_;
   u.noalias() += step_size * du_;
   if (dimf_ > 0) {
-    f_.head(dimf_).noalias() += step_size * df_;
-    mu_.head(dimf_).noalias() += step_size * dmu_;
+    f_.head(dimf_).noalias() += step_size * df_.head(dimf_);
+    mu_.head(dimc_).noalias() += step_size * dmu_.head(dimc_);
   }
   // modify lu_ so that it includes beta.
   lu_.noalias() -= dtau * beta;
@@ -695,9 +696,6 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   joint_constraints_.augmentDualResidual(dtau, lq_, lv_, la_);
   joint_constraints_.augmentDualResidual(dtau, lu_);
   // Augment the partial derivatives of the inverse dynamics constraint.
-  if (dimf > 0) {
-    robot.setContactForces(f_);
-  }
   robot.RNEADerivatives(q, v, a, du_dq_, du_dv_, du_da_);
   lq_.noalias() += dtau * du_dq_.transpose() * beta;
   lv_.noalias() += dtau * du_dv_.transpose() * beta;
@@ -710,18 +708,18 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   }
   if (has_floating_base_) {
     // The equality constraints of the floating base.
-    Cq_.topRows(dim_passive_) = du_dq_.topRows(dim_passive_);
-    Cv_.topRows(dim_passive_) = du_dv_.topRows(dim_passive_);
-    Ca_.topRows(dim_passive_) = du_da_.topRows(dim_passive_);
+    Cq_.topRows(dim_passive_) = dtau * du_dq_.topRows(dim_passive_);
+    Cv_.topRows(dim_passive_) = dtau * du_dv_.topRows(dim_passive_);
+    Ca_.topRows(dim_passive_) = dtau * du_da_.topRows(dim_passive_);
     if (dimf > 0) {
-      Cf_ = du_df_.topRows(dim_passive_);
+      Cf_ = dtau * du_df_.topRows(dim_passive_);
     }
-    C_res_.head(dim_passive_) = u.head(dim_passive_);
+    C_res_.head(dim_passive_) = dtau * u.head(dim_passive_);
   }
   if (dimf > 0) {
     // Computes the contact constraints.
-    robot.computeBaumgarteResidual(dim_passive_, C_res_);
-    robot.computeBaumgarteDerivatives(dim_passive_, Cq_, Cv_, Ca_);
+    robot.computeBaumgarteResidual(dim_passive_, dtau, C_res_);
+    robot.computeBaumgarteDerivatives(dim_passive_, dtau, Cq_, Cv_, Ca_);
     // Augment the equality constraints 
   }
   if (dimc > 0) {

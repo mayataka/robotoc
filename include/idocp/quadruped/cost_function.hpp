@@ -16,6 +16,8 @@ class CostFunction final : public CostFunctionInterface {
 public:
   CostFunction(const Robot& robot);
 
+  CostFunction();
+
   ~CostFunction();
 
   void set_q_ref(const Eigen::VectorXd& q_ref);

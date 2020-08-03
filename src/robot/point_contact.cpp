@@ -143,6 +143,21 @@ void PointContact::computeBaumgarteResidual(
 }
 
 
+void PointContact::computeBaumgarteResidual(
+    const pinocchio::Model& model, const pinocchio::Data& data, 
+    const int result_begin, const double coeff,
+    Eigen::VectorXd& baumgarte_residual) const {
+  assert(result_begin >= 0);
+  assert(baumgarte_residual.size() >= 3);
+  baumgarte_residual.segment<3>(result_begin)
+      = coeff * (data.oMi[parent_joint_id_].act(data.a[parent_joint_id_])).linear()
+          + coeff * baumgarte_weight_on_velocity_
+              * (data.oMi[parent_joint_id_].act(data.v[parent_joint_id_])).linear()
+          + coeff * baumgarte_weight_on_position_
+              * (data.oMf[contact_frame_id_].translation()-contact_point_);
+}
+
+
 void PointContact::computeBaumgarteDerivatives(
     const pinocchio::Model& model, pinocchio::Data& data, 
     Eigen::MatrixXd& baumgarte_partial_dq, 
@@ -209,6 +224,42 @@ void PointContact::computeBaumgarteDerivatives(
               * joint_a_partial_da_.template topRows<3>();
   baumgarte_partial_da.block(block_rows_begin, 0, 3, dimv_) 
       = joint_a_partial_da_.template topRows<3>();
+}
+
+
+void PointContact::computeBaumgarteDerivatives(
+    const pinocchio::Model& model, pinocchio::Data& data, 
+    const int block_rows_begin, const double coeff, 
+    Eigen::MatrixXd& baumgarte_partial_dq, 
+    Eigen::MatrixXd& baumgarte_partial_dv, 
+    Eigen::MatrixXd& baumgarte_partial_da) {
+  assert(block_rows_begin >= 0);
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_da.cols() == dimv_);
+  assert(baumgarte_partial_dq.rows() >= 3);
+  assert(baumgarte_partial_dv.rows() >= 3);
+  assert(baumgarte_partial_da.rows() >= 3);
+  pinocchio::getJointAccelerationDerivatives(model, data, parent_joint_id_, 
+                                             pinocchio::WORLD,
+                                             joint_v_partial_dq_, 
+                                             joint_a_partial_dq_, 
+                                             joint_a_partial_dv_, 
+                                             joint_a_partial_da_);
+  pinocchio::getFrameJacobian(model, data, contact_frame_id_, 
+                              pinocchio::LOCAL_WORLD_ALIGNED, J_frame_);
+  baumgarte_partial_dq.block(block_rows_begin, 0, 3, dimv_) 
+      = coeff * joint_a_partial_dq_.template topRows<3>()
+          + coeff * baumgarte_weight_on_velocity_ 
+              * joint_v_partial_dq_.template topRows<3>()
+          + coeff * baumgarte_weight_on_position_ 
+              * J_frame_.template topRows<3>();
+  baumgarte_partial_dv.block(block_rows_begin, 0, 3, dimv_) 
+      = coeff * joint_a_partial_dv_.template topRows<3>()
+          + coeff * baumgarte_weight_on_velocity_ 
+              * joint_a_partial_da_.template topRows<3>();
+  baumgarte_partial_da.block(block_rows_begin, 0, 3, dimv_) 
+      = coeff * joint_a_partial_da_.template topRows<3>();
 }
 
 

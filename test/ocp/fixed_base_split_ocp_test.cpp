@@ -50,6 +50,7 @@ protected:
     v_next_ = Eigen::VectorXd::Random(dimv_);
     lmd_next_ = Eigen::VectorXd::Random(dimv_);
     gmm_next_ = Eigen::VectorXd::Random(dimv_);
+    TEST_NEAR_TOL = 1.0e-12;
   }
 
   virtual void TearDown() {
@@ -67,6 +68,7 @@ protected:
   std::vector<int> contact_frames_;
   Eigen::VectorXd q_, v_, a_, u_, f_, lmd_, gmm_, mu_, q_next_, v_next_, 
                   lmd_next_, gmm_next_;
+  double TEST_NEAR_TOL;
 };
 
 
@@ -265,8 +267,8 @@ TEST_F(FixedBaseSplitOCPTest, withoutContacts) {
       = q_res_tmp.lpNorm<1>() + v_res_tmp.lpNorm<1>() 
           + dtau_ * u_res_tmp.lpNorm<1>() 
           + joint_space_constraints_ref.residualL1Nrom(dtau_, q_tmp, v_tmp, a_tmp, u_tmp);
-  EXPECT_DOUBLE_EQ(cost_and_violation.first, cost_ref);
-  EXPECT_DOUBLE_EQ(cost_and_violation.second, violation_ref);
+  EXPECT_NEAR(cost_and_violation.first, cost_ref, TEST_NEAR_TOL);
+  EXPECT_NEAR(cost_and_violation.second, violation_ref, TEST_NEAR_TOL);
   ocp_.updateDual(max_dual_step_size);
   joint_space_constraints_ref.updateDual(max_dual_step_size);
   Eigen::VectorXd beta = Eigen::VectorXd::Random(dimv_);
@@ -391,12 +393,12 @@ TEST_F(FixedBaseSplitOCPTest, withoutActiveContacts) {
       = ocp_.costAndConstraintsViolation(robot_, primal_step_size, t_, 
                                          dtau_, q_, v_, a_, u_, q_next_, 
                                          v_next_, dq, dv, dq_next, dv_next);
-  EXPECT_DOUBLE_EQ(cost_and_violation.first, cost_and_violation_ref.first);
-  EXPECT_DOUBLE_EQ(cost_and_violation.second, cost_and_violation_ref.second);
+  EXPECT_NEAR(cost_and_violation.first, cost_and_violation_ref.first, TEST_NEAR_TOL);
+  EXPECT_NEAR(cost_and_violation.second, cost_and_violation_ref.second, TEST_NEAR_TOL);
   const double KKT_error_ref
       = ocp_.squaredKKTErrorNorm(robot_, t_, dtau_, lmd_, gmm_, q_, v_, a_, u_,
                                  beta, lmd_next_, gmm_next_, q_next_, v_next_);
-  EXPECT_DOUBLE_EQ(KKT_error, KKT_error_ref);
+  EXPECT_NEAR(KKT_error, KKT_error_ref, TEST_NEAR_TOL);
 }
 
 
@@ -474,8 +476,8 @@ TEST_F(FixedBaseSplitOCPTest, withActiveContacts) {
   Eigen::MatrixXd Cq = Eigen::MatrixXd::Zero(dimf_, dimv_);
   Eigen::MatrixXd Cv = Eigen::MatrixXd::Zero(dimf_, dimv_);
   Eigen::MatrixXd Ca = Eigen::MatrixXd::Zero(dimf_, dimv_);
-  robot_.computeBaumgarteResidual(0, C_res);
-  robot_.computeBaumgarteDerivatives(0, Cq, Cv, Ca);
+  robot_.computeBaumgarteResidual(0, dtau_, C_res);
+  robot_.computeBaumgarteDerivatives(0, dtau_, Cq, Cv, Ca);
   lq += Cq.transpose() * mu_;
   lv += Cv.transpose() * mu_;
   la += Ca.transpose() * mu_;
@@ -497,12 +499,7 @@ TEST_F(FixedBaseSplitOCPTest, withActiveContacts) {
   Eigen::MatrixXd Qvq = Qqv.transpose();
   cost_.augment_lff(t_, dtau_, f_, Qff);
   inverter_.setContactStatus(robot_);
-    std::cout << "before precompute in test" << std::endl;
-  std::cout << Qaf << std::endl;
-  std::cout << Qff << std::endl;
   inverter_.precompute(Qaf, Qff);
-    std::cout << "after precompute in test" << std::endl;
-
   Eigen::MatrixXd gen_mat = Eigen::MatrixXd::Random(dimv_, dimv_);
   const Eigen::MatrixXd Pqq_next = gen_mat * gen_mat.transpose();
   const Eigen::MatrixXd Pqv_next = Eigen::MatrixXd::Random(dimv_, dimv_);
@@ -645,14 +642,14 @@ TEST_F(FixedBaseSplitOCPTest, withActiveContacts) {
   robot_.RNEA(q_tmp, v_tmp, a_tmp, u_res_tmp);
   u_res_tmp -= u_tmp;
   robot_.updateKinematics(q_tmp, v_tmp, a_tmp);
-  robot_.computeBaumgarteResidual(0, C_res);
+  robot_.computeBaumgarteResidual(0, dtau_, C_res);
   const double violation_ref
       = q_res_tmp.lpNorm<1>() + v_res_tmp.lpNorm<1>() 
           + dtau_ * u_res_tmp.lpNorm<1>() 
           + joint_space_constraints_ref.residualL1Nrom(dtau_, q_tmp, v_tmp, a_tmp, u_tmp)
           + C_res.lpNorm<1>();
-  EXPECT_DOUBLE_EQ(cost_and_violation.first, cost_ref);
-  EXPECT_DOUBLE_EQ(cost_and_violation.second, violation_ref);
+  EXPECT_NEAR(cost_and_violation.first, cost_ref, TEST_NEAR_TOL);
+  EXPECT_NEAR(cost_and_violation.second, violation_ref, TEST_NEAR_TOL);
   ocp_.updateDual(max_dual_step_size);
   joint_space_constraints_ref.updateDual(max_dual_step_size);
   Eigen::VectorXd beta = Eigen::VectorXd::Random(dimv_);
@@ -685,7 +682,7 @@ TEST_F(FixedBaseSplitOCPTest, withActiveContacts) {
 }
 
 
-TEST_F(FixedBaseSplitOCPTest, KKTErrorWithoutActiveContacts) {
+TEST_F(FixedBaseSplitOCPTest, KKTErrorWithoutContacts) {
   ASSERT_FALSE(robot_.has_floating_base());
   ASSERT_TRUE(robot_.max_dimf() == 0);
   ASSERT_TRUE(robot_.dim_passive() == 0);
@@ -742,8 +739,103 @@ TEST_F(FixedBaseSplitOCPTest, KKTErrorWithoutActiveContacts) {
   KKT_error_ref += lu.squaredNorm();
   KKT_error_ref 
       += joint_space_constraints_ref.residualSquaredNrom(dtau_, q_, v_, a_, u_);
-  EXPECT_FLOAT_EQ(KKT_error_ref, KKT_error);
+  EXPECT_NEAR(KKT_error_ref, KKT_error, TEST_NEAR_TOL);
 }
+
+
+TEST_F(FixedBaseSplitOCPTest, KKTErrorWitContacts) {
+  robot_ = Robot(urdf_, contact_frames_, baum_on_velocity_, baum_on_position_);
+  std::vector<bool> active_constacts = {true};
+  robot_.setActiveContacts(active_constacts);
+  ASSERT_FALSE(robot_.has_floating_base());
+  ASSERT_EQ(robot_.max_dimf(), 3);
+  ASSERT_EQ(robot_.dimf(), 3);
+  dimf_ = robot_.dimf();
+  f_ = Eigen::VectorXd::Random(robot_.max_dimf());
+  mu_ = Eigen::VectorXd::Random(robot_.max_dimf());
+  cost_ = manipulator::CostFunction(robot_);
+  constraints_ = manipulator::Constraints(robot_);
+  factorizer_ = RiccatiMatrixFactorizer(robot_);
+  inverter_ = RiccatiMatrixInverter(robot_);
+  ocp_ = SplitOCP(robot_, &cost_, &constraints_);
+  ocp_.set_f(f_);
+  ocp_.set_mu(mu_);
+  pdipm::JointSpaceConstraints joint_space_constraints_ref(robot_);
+  robot_.generateFeasibleConfiguration(q_);
+  while (!ocp_.isFeasible(q_, v_, a_, u_)) {
+    v_ = Eigen::VectorXd::Random(dimv_);
+    u_ = Eigen::VectorXd::Random(dimv_);
+  }
+  ASSERT_TRUE(ocp_.isFeasible(q_, v_, a_, u_));
+  ocp_.initConstraints(time_step_, dtau_, q_, v_, a_, u_);
+  joint_space_constraints_ref.setTimeStep(time_step_);
+  joint_space_constraints_ref.setSlackAndDual(dtau_, q_, v_, a_, u_);
+  const Eigen::VectorXd beta = Eigen::VectorXd::Random(dimv_);
+  robot_.setContactForces(Eigen::VectorXd::Zero(dimf_));
+  const double KKT_error 
+      = ocp_.squaredKKTErrorNorm(robot_, t_, dtau_, lmd_, gmm_, q_, v_, a_, u_, 
+                                 beta, lmd_next_, gmm_next_, q_next_, v_next_);
+  Eigen::VectorXd q_res = Eigen::VectorXd::Zero(dimv_);
+  robot_.differenceConfiguration(q_, q_next_, q_res);
+  q_res.noalias() += dtau_ * v_;
+  Eigen::VectorXd v_res = v_ + dtau_ * a_ - v_next_;
+  Eigen::VectorXd u_res = Eigen::VectorXd::Zero(dimv_);
+  robot_.setContactForces(f_);
+  robot_.RNEA(q_, v_, a_, u_res);
+  u_res -= u_;
+  u_res = dtau_ * u_res;
+  Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimq_);
+  Eigen::VectorXd lv = Eigen::VectorXd::Zero(dimv_);
+  Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv_);
+  Eigen::VectorXd lu = Eigen::VectorXd::Zero(dimv_);
+  Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf_);
+  cost_.lq(t_, dtau_, q_, v_, a_, lq);
+  cost_.lv(t_, dtau_, q_, v_, a_, lv);
+  cost_.la(t_, dtau_, q_, v_, a_, la);
+  cost_.lu(t_, dtau_, u_, lu);
+  cost_.setContactStatus(robot_);
+  cost_.lf(t_, dtau_, f_, lf);
+  joint_space_constraints_ref.augmentDualResidual(dtau_, lu);
+  joint_space_constraints_ref.augmentDualResidual(dtau_, lq, lv, la);
+  lq += lmd_next_ - lmd_;
+  lv += dtau_ * lmd_next_ + gmm_next_ - gmm_;
+  la += dtau_ * gmm_next_;
+  Eigen::MatrixXd du_dq = Eigen::MatrixXd::Zero(dimv_, dimv_);
+  Eigen::MatrixXd du_dv = Eigen::MatrixXd::Zero(dimv_, dimv_);
+  Eigen::MatrixXd du_da = Eigen::MatrixXd::Zero(dimv_, dimv_);
+  robot_.RNEADerivatives(q_, v_, a_, du_dq, du_dv, du_da);
+  robot_.updateKinematics(q_, v_, a_);
+  Eigen::MatrixXd du_df = Eigen::MatrixXd::Zero(dimv_, dimf_);
+  robot_.dRNEAPartialdFext(du_df);
+  lq += dtau_ * du_dq.transpose() * beta;
+  lv += dtau_ * du_dv.transpose() * beta;
+  la += dtau_ * du_da.transpose() * beta;
+  lu -= dtau_ * beta;
+  lf += dtau_ * du_df.transpose() * beta;
+  Eigen::VectorXd C_res = Eigen::VectorXd::Zero(dimf_);
+  Eigen::MatrixXd Cq = Eigen::MatrixXd::Zero(dimf_, dimv_);
+  Eigen::MatrixXd Cv = Eigen::MatrixXd::Zero(dimf_, dimv_);
+  Eigen::MatrixXd Ca = Eigen::MatrixXd::Zero(dimf_, dimv_);
+  robot_.computeBaumgarteResidual(0, dtau_, C_res);
+  robot_.computeBaumgarteDerivatives(0, dtau_, Cq, Cv, Ca);
+  lq += Cq.transpose() * mu_;
+  lv += Cv.transpose() * mu_;
+  la += Ca.transpose() * mu_;
+  double KKT_error_ref = 0;
+  KKT_error_ref += q_res.squaredNorm();
+  KKT_error_ref += v_res.squaredNorm();
+  KKT_error_ref += u_res.squaredNorm();
+  KKT_error_ref += lq.squaredNorm();
+  KKT_error_ref += lv.squaredNorm();
+  KKT_error_ref += la.squaredNorm();
+  KKT_error_ref += lu.squaredNorm();
+  KKT_error_ref += lf.squaredNorm();
+  KKT_error_ref += C_res.squaredNorm();
+  KKT_error_ref 
+      += joint_space_constraints_ref.residualSquaredNrom(dtau_, q_, v_, a_, u_);
+  EXPECT_NEAR(KKT_error_ref, KKT_error, TEST_NEAR_TOL);
+}
+
 
 } // namespace idocp
 

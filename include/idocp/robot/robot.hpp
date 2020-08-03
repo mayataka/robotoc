@@ -120,6 +120,15 @@ public:
   void computeBaumgarteResidual(const int block_begin, 
                                 Eigen::VectorXd& baumgarte_residual) const;
 
+  // Computes the residual of the contact constriants represented by 
+  // Baumgarte's stabilization method. Before calling this function, 
+  // updateKinematics() must be called.
+  // Argments: 
+  //   residual: Vector where the result is stored. Size must be at least 3 and
+  //     at most 3*max_point_contacts().
+  void computeBaumgarteResidual(const int block_begin, const double coeff, 
+                                Eigen::VectorXd& baumgarte_residual) const;
+
   // Computes the product of a vector and the derivatives of the contact 
   // constriants represented by Baumgarte's stabilization method. 
   // Before calling this function, updateKinematics() must be called. 
@@ -134,6 +143,25 @@ public:
   //     of columns must be dimv. The number of rows must be at least 3 and 
   //     at most 3*max_point_contacts().
   void computeBaumgarteDerivatives(const int block_rows_begin,
+                                   Eigen::MatrixXd& dBaumgarte_partial_dq, 
+                                   Eigen::MatrixXd& dBaumgarte_partial_dv,
+                                   Eigen::MatrixXd& dBaumgarte_partial_da);
+
+  // Computes the product of a vector and the derivatives of the contact 
+  // constriants represented by Baumgarte's stabilization method. 
+  // Before calling this function, updateKinematics() must be called. 
+  // Argments: 
+  //   dBaumgarte_partial_dq: The matrix where the result is stored. The number 
+  //     of columns must be dimv. The number of rows must be at least 3 and 
+  //     at most 3*max_point_contacts().
+  //   dBaumgarte_partial_dv: The matrix where the result is stored. The number 
+  //     of columns must be dimv. The number of rows must be at least 3 and 
+  //     at most 3*max_point_contacts().
+  //   dBaumgarte_partial_da: The matrix where the result is stored. The number 
+  //     of columns must be dimv. The number of rows must be at least 3 and 
+  //     at most 3*max_point_contacts().
+  void computeBaumgarteDerivatives(const int block_rows_begin, 
+                                   const double coeff,
                                    Eigen::MatrixXd& dBaumgarte_partial_dq, 
                                    Eigen::MatrixXd& dBaumgarte_partial_dv,
                                    Eigen::MatrixXd& dBaumgarte_partial_da);
