@@ -1,4 +1,4 @@
-#include "robot/floating_base.hpp"
+#include "idocp/robot/floating_base.hpp"
 
 #include <assert.h>
 
@@ -43,16 +43,6 @@ void FloatingBase::setPassiveTorques(Eigen::VectorXd& torques) const {
   assert(torques.size() == dimv_);
   for (int i=0; i<passive_joint_indices_.size(); ++i) {
     torques.coeffRef(passive_joint_indices_[i]) = 0.0;
-  }
-}
-
-
-void FloatingBase::computePassiveConstraintViolation(
-    const Eigen::VectorXd& torques, Eigen::VectorXd& violation) const {
-  assert(torques.size() == dimv_);
-  assert(violation.size() == passive_joint_indices_.size());
-  for (int i=0; i<passive_joint_indices_.size(); ++i) {
-    violation.coeffRef(i) = torques.coeff(passive_joint_indices_[i]);
   }
 }
 

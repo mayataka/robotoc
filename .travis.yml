@@ -22,10 +22,10 @@ install:
   - sudo apt install libeigen3-dev
 
 script:
-  - cd test
   - mkdir -p build  && cd build
-  - cmake -DCMAKE_BUILD_TYPE=Debug ..
+  - cmake .. -DCMAKE_BUILD_TYPE=Debug -DTESTING=True
   - travis_wait 30 cmake --build . --config Debug -- -j $(nproc)
+  - cd test
   - ctest -j $(nproc) --output-on-failure
 
 after_success: 

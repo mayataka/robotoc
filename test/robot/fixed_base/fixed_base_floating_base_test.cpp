@@ -13,7 +13,7 @@
 #include "pinocchio/algorithm/rnea.hpp"
 #include "pinocchio/algorithm/rnea-derivatives.hpp"
 
-#include "robot/floating_base.hpp"
+#include "idocp/robot/floating_base.hpp"
 
 
 namespace idocp {
@@ -23,7 +23,7 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    urdf_ = "../../../urdf/iiwa14/iiwa14.urdf";
+    urdf_ = "../../urdf/iiwa14/iiwa14.urdf";
     pinocchio::urdf::buildModel(urdf_, model_);
     data_ = pinocchio::Data(model_);
     dimq_ = model_.nq;
@@ -56,14 +56,6 @@ TEST_F(FixedBaseFloatingBaseTest, setPassiveTorques) {
   floating_base.setPassiveTorques(u_);
   EXPECT_TRUE(u_.isApprox(u_));
 }
-
-
-TEST_F(FixedBaseFloatingBaseTest, computePassiveConstraintViolation) {
-  FloatingBase floating_base(model_);
-  Eigen::VectorXd violation = Eigen::VectorXd::Zero(0);
-  floating_base.computePassiveConstraintViolation(u_, violation);
-}
-
 
 } // namespace idocp
 

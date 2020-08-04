@@ -1,10 +1,15 @@
-#include "quadruped/constraints.hpp"
+#include "idocp/quadruped/constraints.hpp"
 
 
 namespace idocp {
 namespace quadruped {
 
 Constraints::Constraints(const Robot& robot)
+  : ConstraintsInterface() {
+}
+
+
+Constraints::Constraints()
   : ConstraintsInterface() {
 }
 

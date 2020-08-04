@@ -1,4 +1,4 @@
-#include "robot/robot.hpp"
+#include "idocp/robot/robot.hpp"
 
 #include <assert.h>
 
@@ -235,6 +235,23 @@ void Robot::computeBaumgarteResidual(
 }
 
 
+void Robot::computeBaumgarteResidual(
+    const int block_begin, const double coeff, 
+    Eigen::VectorXd& baumgarte_residual) const {
+  assert(baumgarte_residual.size() >= max_dimf_);
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeBaumgarteResidual(
+          model_, data_, block_begin+3*num_active_contacts, coeff, 
+          baumgarte_residual);
+      ++num_active_contacts;
+    }
+  }
+  assert(baumgarte_residual.size() >= 3*num_active_contacts);
+}
+
+
 void Robot::computeBaumgarteDerivatives(const int block_rows_begin,
                                         Eigen::MatrixXd& baumgarte_partial_dq, 
                                         Eigen::MatrixXd& baumgarte_partial_dv,
@@ -250,6 +267,29 @@ void Robot::computeBaumgarteDerivatives(const int block_rows_begin,
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteDerivatives(
           model_, data_, block_rows_begin+3*num_active_contacts, 
+          baumgarte_partial_dq, baumgarte_partial_dv, baumgarte_partial_da);
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+void Robot::computeBaumgarteDerivatives(const int block_rows_begin, 
+                                        const double coeff,
+                                        Eigen::MatrixXd& baumgarte_partial_dq, 
+                                        Eigen::MatrixXd& baumgarte_partial_dv,
+                                        Eigen::MatrixXd& baumgarte_partial_da) {
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dq.rows() == block_rows_begin+max_dimf_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_dv.rows() == block_rows_begin+max_dimf_);
+  assert(baumgarte_partial_da.cols() == dimv_);
+  assert(baumgarte_partial_da.rows() == block_rows_begin+max_dimf_);
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeBaumgarteDerivatives(
+          model_, data_, block_rows_begin+3*num_active_contacts, coeff,
           baumgarte_partial_dq, baumgarte_partial_dv, baumgarte_partial_da);
       ++num_active_contacts;
     }
@@ -372,14 +412,6 @@ void Robot::stateEquation(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 void Robot::setPassiveTorques(Eigen::VectorXd& torques) const {
   assert(torques.size() == dimv_);
   floating_base_.setPassiveTorques(torques);
-}
-
-
-void Robot::passiveConstraintViolation(const Eigen::VectorXd& torques, 
-                                       Eigen::VectorXd& violation) const {
-  assert(torques.size() == dimv_);
-  assert(violation.size() == floating_base_.dim_passive());
-  floating_base_.computePassiveConstraintViolation(torques, violation);
 }
 
 

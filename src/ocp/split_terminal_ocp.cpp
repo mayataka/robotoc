@@ -1,4 +1,4 @@
-#include "ocp/split_terminal_ocp.hpp"
+#include "idocp/ocp/split_terminal_ocp.hpp"
 
 #include <assert.h>
 

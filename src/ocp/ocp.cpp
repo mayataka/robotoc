@@ -1,4 +1,4 @@
-#include "ocp/ocp.hpp"
+#include "idocp/ocp/ocp.hpp"
 
 #include <cmath>
 #include <assert.h>

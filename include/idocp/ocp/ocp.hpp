@@ -6,12 +6,12 @@
 
 #include "Eigen/Core"
 
-#include "robot/robot.hpp"
-#include "ocp/split_ocp.hpp"
-#include "ocp/split_terminal_ocp.hpp"
-#include "ocp/line_search_filter.hpp"
-#include "cost/cost_function_interface.hpp"
-#include "constraints/constraints_interface.hpp"
+#include "idocp/robot/robot.hpp"
+#include "idocp/ocp/split_ocp.hpp"
+#include "idocp/ocp/split_terminal_ocp.hpp"
+#include "idocp/ocp/line_search_filter.hpp"
+#include "idocp/cost/cost_function_interface.hpp"
+#include "idocp/constraints/constraints_interface.hpp"
 
 
 namespace idocp {

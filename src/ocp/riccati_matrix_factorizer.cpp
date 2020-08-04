@@ -1,4 +1,4 @@
-#include "ocp/riccati_matrix_factorizer.hpp"
+#include "idocp/ocp/riccati_matrix_factorizer.hpp"
 
 #include <assert.h>
 

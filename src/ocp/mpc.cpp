@@ -1,4 +1,4 @@
-#include "ocp/mpc.hpp"
+#include "idocp/ocp/mpc.hpp"
 
 #include <assert.h>
 

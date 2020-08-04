@@ -6,12 +6,12 @@
 
 #include "Eigen/Core"
 
-#include "robot/robot.hpp"
-#include "cost/cost_function_interface.hpp"
-#include "constraints/constraints_interface.hpp"
-#include "constraints/joint_space_constraints/joint_space_constraints.hpp"
-#include "ocp/riccati_matrix_factorizer.hpp"
-#include "ocp/riccati_matrix_inverter.hpp"
+#include "idocp/robot/robot.hpp"
+#include "idocp/cost/cost_function_interface.hpp"
+#include "idocp/constraints/constraints_interface.hpp"
+#include "idocp/constraints/joint_space_constraints/joint_space_constraints.hpp"
+#include "idocp/ocp/riccati_matrix_factorizer.hpp"
+#include "idocp/ocp/riccati_matrix_inverter.hpp"
 
 
 namespace idocp {

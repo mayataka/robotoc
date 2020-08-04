@@ -1,4 +1,4 @@
-#include "ocp/riccati_matrix_inverter.hpp"
+#include "idocp/ocp/riccati_matrix_inverter.hpp"
 
 #include <assert.h>
 #include "Eigen/LU"
@@ -123,7 +123,7 @@ void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa,
                                    Eigen::VectorXd& kmu) {
   assert(!has_floating_base_);
   assert(dim_passive_ == 0);
-  assert(dimf_ > 0);
+  assert(dimf_ >= 0);
   assert(Qqa.rows() == dimv_);
   assert(Qqa.cols() == dimv_);
   assert(Qva.rows() == dimv_);
@@ -327,7 +327,7 @@ void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa,
                                    Eigen::VectorXd& kmu) {
   assert(has_floating_base_);
   assert(dim_passive_ == 6);
-  assert(dimf_ > 0);
+  assert(dimf_ >= 0);
   assert(Qqa.rows() == dimv_);
   assert(Qqa.cols() == dimv_);
   assert(Qva.rows() == dimv_);
@@ -392,7 +392,7 @@ void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa,
       = Saa_inv_ * Ca.topRows(dimc).transpose() 
                  * Scc_inv_.topLeftCorner(dimc, dimc);
   Sac_.leftCols(dimc).noalias()
-      -= Saf_.leftCols(dimf_) * Cf.transpose() 
+      -= Saf_.leftCols(dimf_) * Cf.leftCols(dimf_).transpose() 
                               * Scc_inv_.topLeftCorner(dim_passive_, dimc);
   Sfc_.topLeftCorner(dimf_, dimc) 
       = - Saf_.leftCols(dimf_).transpose() 
@@ -400,7 +400,7 @@ void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa,
           * Scc_inv_.topLeftCorner(dimc, dimc);
   Sfc_.topLeftCorner(dimf_, dimc).noalias() 
       += Sff_inv_.topLeftCorner(dimf_, dimf_)
-          * Cf.transpose() 
+          * Cf.leftCols(dimf_).transpose() 
           * Scc_inv_.topLeftCorner(dim_passive_, dimc);
   Saa_inv_.noalias() 
       -= Sac_.leftCols(dimc) * Scc_.topLeftCorner(dimc, dimc)

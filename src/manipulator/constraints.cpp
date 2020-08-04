@@ -1,4 +1,4 @@
-#include "manipulator/constraints.hpp"
+#include "idocp/manipulator/constraints.hpp"
 
 
 namespace idocp {

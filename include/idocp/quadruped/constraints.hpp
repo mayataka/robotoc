@@ -3,8 +3,8 @@
 
 #include "Eigen/Core"
 
-#include "robot/robot.hpp"
-#include "constraints/constraints_interface.hpp"
+#include "idocp/robot/robot.hpp"
+#include "idocp/constraints/constraints_interface.hpp"
 
 
 namespace idocp {
@@ -13,6 +13,8 @@ namespace quadruped {
 class Constraints final : public ConstraintsInterface {
 public:
   Constraints(const Robot& robot);
+
+  Constraints();
 
   bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v, const Eigen::VectorXd& a, 

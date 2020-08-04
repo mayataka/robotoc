@@ -1,4 +1,4 @@
-#include "quadruped/cost_function.hpp"
+#include "idocp/quadruped/cost_function.hpp"
 
 #include <assert.h>
 
@@ -14,7 +14,14 @@ CostFunction::CostFunction(const Robot& robot)
                       Eigen::VectorXd::Constant(robot.dimv(), 0.0), 
                       Eigen::VectorXd::Constant(robot.dimq(), 10), 
                       Eigen::VectorXd::Constant(robot.dimv(), 1)),
-    contact_cost_(robot, Eigen::VectorXd::Constant(robot.max_dimf(), 0.01))   {
+    contact_cost_(robot, Eigen::VectorXd::Constant(robot.max_dimf(), 0.01)) {
+}
+
+
+CostFunction::CostFunction()
+  : CostFunctionInterface(),
+    joint_space_cost_(),
+    contact_cost_() {
 }
 
 

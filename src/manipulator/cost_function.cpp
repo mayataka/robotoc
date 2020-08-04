@@ -1,4 +1,4 @@
-#include "manipulator/cost_function.hpp"
+#include "idocp/manipulator/cost_function.hpp"
 
 #include <assert.h>
 

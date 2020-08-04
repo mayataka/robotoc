@@ -1,4 +1,4 @@
-#include "cost/joint_space_cost.hpp"
+#include "idocp/cost/joint_space_cost.hpp"
 
 #include <assert.h>
 

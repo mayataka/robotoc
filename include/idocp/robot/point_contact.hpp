@@ -134,6 +134,22 @@ public:
                                 const int result_begin,
                                 Eigen::VectorXd& baumgarte_residual) const;
 
+  // Computes the residual of the contact constraints considered by the 
+  // Baumgarte's stabilization method. Before calling this function, you have 
+  // to update the kinematics of the model in pinocchio::Data. The result is 
+  // stored in baumgarte_residual with indices from result_begin until
+  // result_begin+3.
+  // Argments:
+  //    model: pinocchio model of the robot.
+  //    data: pinocchio data of the robot kinematics and dynamics.
+  //    result_begin: The start index of the result.
+  //    baumgarte_residual: The vector result is stored in. Size must be at 
+  //      least 3.
+  void computeBaumgarteResidual(const pinocchio::Model& model, 
+                                const pinocchio::Data& data, 
+                                const int result_begin, const double coeff,
+                                Eigen::VectorXd& baumgarte_residual) const;
+
   // Computes the the partial derivatives of the contact constraints
   // considered by the Baumgarte's stabilization method. Before calling this 
   // function, you have to update the kinematics of the model in 
@@ -174,6 +190,32 @@ public:
   void computeBaumgarteDerivatives(const pinocchio::Model& model, 
                                    pinocchio::Data& data, 
                                    const int block_rows_begin,
+                                   Eigen::MatrixXd& baumgarte_partial_dq, 
+                                   Eigen::MatrixXd& baumgarte_partial_dv, 
+                                   Eigen::MatrixXd& baumgarte_partial_da);
+ 
+  // Computes the the partial derivatives of the contact constraints
+  // considered by the Baumgarte's stabilization method. Before calling this 
+  // function, you have to update the kinematics of the model in 
+  // pinocchio::Data. The derivatives are set in the block rows 
+  // baumgarte_partial_dq, baumgarte_partial_dv, and baumgarte_partial_da, with 
+  // the indices of rows start with block_rows_begin.
+  // Argments:
+  //    model: pinocchio model of the robot.
+  //    data: pinocchio data of the robot kinematics and dynamics.
+  //    baumgarte_partial_dq: Partial of contact constraints with respect to 
+  //      the generalized configuration. The rows must be at least 3 and the 
+  //      cols must be dimv.
+  //    baumgarte_partial_dv: Partial of contact constraints with respect to 
+  //      the generalized velocity. The rows must be at least 3 and the cols
+  //      must be dimv.
+  //    baumgarte_partial_da: Partial of contact constraints with respect to 
+  //      the generalized acceleration. The rows must be at least 3 and the cols
+  //      must be dimv.
+  void computeBaumgarteDerivatives(const pinocchio::Model& model, 
+                                   pinocchio::Data& data, 
+                                   const int block_rows_begin,
+                                   const double coeff,
                                    Eigen::MatrixXd& baumgarte_partial_dq, 
                                    Eigen::MatrixXd& baumgarte_partial_dv, 
                                    Eigen::MatrixXd& baumgarte_partial_da);
