@@ -70,13 +70,14 @@ TEST_F(FloatingBaseJointSpaceCostTest, zeroRefernceConstructor) {
   const Eigen::VectorXd u = Eigen::VectorXd::Random(dimv);
   robot_.configurationJacobian(q, configuration_Jacobian);
   cost.setConfigurationJacobian(robot_, q);
-  const double l_ref = 0.5 * dtau_ * (q_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-                        + 0.5 * dtau_ * (v_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum()
-                        + 0.5 * dtau_ * (a_weight.array()* (a-a_ref).array()*(a-a_ref).array()).sum()
-                        + 0.5 * dtau_ * (u_weight.array()* (u-u_ref).array()*(u-u_ref).array()).sum();
+  const double l_ref = 0.5 * dtau_ 
+                        * ((q_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
+                            + (v_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum()
+                            + (a_weight.array()* (a-a_ref).array()*(a-a_ref).array()).sum()
+                            + (u_weight.array()* (u-u_ref).array()*(u-u_ref).array()).sum());
   EXPECT_DOUBLE_EQ(cost.l(dtau_, q, v, a, u), l_ref);
-  const double phi_ref = 0.5 * (qf_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-                        + 0.5 * (vf_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum();
+  const double phi_ref = 0.5 * ((qf_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
+                                + (vf_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum());
   EXPECT_DOUBLE_EQ(cost.phi(q, v), phi_ref);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lv = Eigen::VectorXd::Zero(dimv);
@@ -182,13 +183,14 @@ TEST_F(FloatingBaseJointSpaceCostTest, withRefernceConstructor) {
   const Eigen::VectorXd u = Eigen::VectorXd::Random(dimv);
   robot_.configurationJacobian(q, configuration_Jacobian);
   cost.setConfigurationJacobian(robot_, q);
-  const double l_ref = 0.5 * dtau_ * (q_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-                        + 0.5 * dtau_ * (v_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum()
-                        + 0.5 * dtau_ * (a_weight.array()* (a-a_ref).array()*(a-a_ref).array()).sum()
-                        + 0.5 * dtau_ * (u_weight.array()* (u-u_ref).array()*(u-u_ref).array()).sum();
+  const double l_ref = 0.5 * dtau_ 
+                        * ((q_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
+                            + (v_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum()
+                            + (a_weight.array()* (a-a_ref).array()*(a-a_ref).array()).sum()
+                            + (u_weight.array()* (u-u_ref).array()*(u-u_ref).array()).sum());
   EXPECT_DOUBLE_EQ(cost.l(dtau_, q, v, a, u), l_ref);
-  const double phi_ref = 0.5 * (qf_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-                        + 0.5 * (vf_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum();
+  const double phi_ref = 0.5 * ((qf_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
+                                + (vf_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum());
   EXPECT_DOUBLE_EQ(cost.phi(q, v), phi_ref);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lv = Eigen::VectorXd::Zero(dimv);
@@ -298,13 +300,14 @@ TEST_F(FloatingBaseJointSpaceCostTest, setReference) {
   const Eigen::VectorXd u = Eigen::VectorXd::Random(dimv);
   robot_.configurationJacobian(q, configuration_Jacobian);
   cost.setConfigurationJacobian(robot_, q);
-  const double l_ref = 0.5 * dtau_ * (q_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-                        + 0.5 * dtau_ * (v_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum()
-                        + 0.5 * dtau_ * (a_weight.array()* (a-a_ref).array()*(a-a_ref).array()).sum()
-                        + 0.5 * dtau_ * (u_weight.array()* (u-u_ref).array()*(u-u_ref).array()).sum();
+  const double l_ref = 0.5 * dtau_ 
+                        * ((q_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
+                            + (v_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum()
+                            + (a_weight.array()* (a-a_ref).array()*(a-a_ref).array()).sum()
+                            + (u_weight.array()* (u-u_ref).array()*(u-u_ref).array()).sum());
   EXPECT_DOUBLE_EQ(cost.l(dtau_, q, v, a, u), l_ref);
-  const double phi_ref = 0.5 * (qf_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-                        + 0.5 * (vf_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum();
+  const double phi_ref = 0.5 * ((qf_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
+                                + (vf_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum());
   EXPECT_DOUBLE_EQ(cost.phi(q, v), phi_ref);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lv = Eigen::VectorXd::Zero(dimv);
@@ -422,13 +425,14 @@ TEST_F(FloatingBaseJointSpaceCostTest, setWeights) {
   const Eigen::VectorXd u = Eigen::VectorXd::Random(dimv);
   robot_.configurationJacobian(q, configuration_Jacobian);
   cost.setConfigurationJacobian(robot_, q);
-  const double l_ref = 0.5 * dtau_ * (q_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-                        + 0.5 * dtau_ * (v_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum()
-                        + 0.5 * dtau_ * (a_weight.array()* (a-a_ref).array()*(a-a_ref).array()).sum()
-                        + 0.5 * dtau_ * (u_weight.array()* (u-u_ref).array()*(u-u_ref).array()).sum();
+  const double l_ref = 0.5 * dtau_ 
+                        * ((q_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
+                            + (v_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum()
+                            + (a_weight.array()* (a-a_ref).array()*(a-a_ref).array()).sum()
+                            + (u_weight.array()* (u-u_ref).array()*(u-u_ref).array()).sum());
   EXPECT_DOUBLE_EQ(cost.l(dtau_, q, v, a, u), l_ref);
-  const double phi_ref = 0.5 * (qf_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-                        + 0.5 * (vf_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum();
+  const double phi_ref = 0.5 * ((qf_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
+                                + (vf_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum());
   EXPECT_DOUBLE_EQ(cost.phi(q, v), phi_ref);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lv = Eigen::VectorXd::Zero(dimv);

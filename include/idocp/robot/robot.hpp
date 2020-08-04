@@ -230,16 +230,6 @@ public:
   //     must be dimv.
   void setPassiveTorques(Eigen::VectorXd& torques) const;
 
-  // Calculates the violation of torques corresponding to the passive joints 
-  // under given generalized torques.
-  // Argments:
-  //   torques: The generalized torque for fully actuated system. The size must   
-  //     be dimv.
-  //   violation: The residual of the constraints of the zero torques. The size
-  //      must be dim_passive.
-  void passiveConstraintViolation(const Eigen::VectorXd& tau, 
-                                  Eigen::VectorXd& violation) const;
-
   // Generates feasible configuration randomly.
   // Argments:
   //   q: The generated configuration vector. Size must be dimq.  

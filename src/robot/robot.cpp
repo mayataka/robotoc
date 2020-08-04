@@ -415,14 +415,6 @@ void Robot::setPassiveTorques(Eigen::VectorXd& torques) const {
 }
 
 
-void Robot::passiveConstraintViolation(const Eigen::VectorXd& torques, 
-                                       Eigen::VectorXd& violation) const {
-  assert(torques.size() == dimv_);
-  assert(violation.size() == floating_base_.dim_passive());
-  floating_base_.computePassiveConstraintViolation(torques, violation);
-}
-
-
 void Robot::generateFeasibleConfiguration(Eigen::VectorXd& q) const {
   assert(q.size() == dimq_);
   Eigen::VectorXd q_min = model_.lowerPositionLimit;

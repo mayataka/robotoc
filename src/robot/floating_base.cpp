@@ -47,16 +47,6 @@ void FloatingBase::setPassiveTorques(Eigen::VectorXd& torques) const {
 }
 
 
-void FloatingBase::computePassiveConstraintViolation(
-    const Eigen::VectorXd& torques, Eigen::VectorXd& violation) const {
-  assert(torques.size() == dimv_);
-  assert(violation.size() == passive_joint_indices_.size());
-  for (int i=0; i<passive_joint_indices_.size(); ++i) {
-    violation.coeffRef(i) = torques.coeff(passive_joint_indices_[i]);
-  }
-}
-
-
 int FloatingBase::dim_passive() const {
   return passive_joint_indices_.size();
 }

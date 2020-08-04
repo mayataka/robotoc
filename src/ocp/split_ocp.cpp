@@ -676,10 +676,14 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   // Compute the residual of the inverse dynamics constraint.
   if (dimf > 0) {
     robot.setContactForces(f_);
+    cost_->setContactStatus(robot);
   }
   robot.RNEA(q, v, a, u_res_);
   u_res_.noalias() -= u;
   u_res_.array() *= dtau;
+  if (has_floating_base_) {
+    cost_->setConfigurationJacobian(robot, q);
+  }
   cost_->lq(t, dtau, q, v, a, lq_);
   cost_->lv(t, dtau, q, v, a, lv_);
   cost_->la(t, dtau, q, v, a, la_);
@@ -704,7 +708,7 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   if (dimf > 0) {
     robot.updateKinematics(q, v, a);
     robot.dRNEAPartialdFext(du_df_);
-    lf_.noalias() += dtau * du_df_.leftCols(dimf).transpose() * beta;
+    lf_.head(dimf).noalias() += dtau * du_df_.leftCols(dimf).transpose() * beta;
   }
   if (has_floating_base_) {
     // The equality constraints of the floating base.
@@ -712,7 +716,7 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
     Cv_.topRows(dim_passive_) = dtau * du_dv_.topRows(dim_passive_);
     Ca_.topRows(dim_passive_) = dtau * du_da_.topRows(dim_passive_);
     if (dimf > 0) {
-      Cf_ = dtau * du_df_.topRows(dim_passive_);
+      Cf_.leftCols(dimf) = dtau * du_df_.topLeftCorner(dim_passive_, dimf);
     }
     C_res_.head(dim_passive_) = dtau * u.head(dim_passive_);
   }
@@ -720,12 +724,16 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
     // Computes the contact constraints.
     robot.computeBaumgarteResidual(dim_passive_, dtau, C_res_);
     robot.computeBaumgarteDerivatives(dim_passive_, dtau, Cq_, Cv_, Ca_);
-    // Augment the equality constraints 
   }
   if (dimc > 0) {
+    // Augment the equality constraints 
     lq_.noalias() += Cq_.topRows(dimc).transpose() * mu_.head(dimc);
     lv_.noalias() += Cv_.topRows(dimc).transpose() * mu_.head(dimc);
     la_.noalias() += Ca_.topRows(dimc).transpose() * mu_.head(dimc);
+    if (dimf > 0) {
+      lf_.head(dimf).noalias() 
+          += Cf_.leftCols(dimf).transpose() * mu_.head(dim_passive_);
+    }
   }
   double error = 0;
   error += q_res_.squaredNorm();

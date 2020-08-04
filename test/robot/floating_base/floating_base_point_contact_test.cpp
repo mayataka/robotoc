@@ -323,6 +323,12 @@ TEST_F(FloatingBasePointContactTest, baumgarteResidual) {
   EXPECT_TRUE(residuals.head(5).isZero());
   EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
   EXPECT_TRUE(residuals.tail(2).isZero());
+  const double coeff = Eigen::VectorXd::Random(1)[0];
+  residuals.setZero();
+  contact.computeBaumgarteResidual(model_, data_, 5, coeff, residuals);
+  EXPECT_TRUE(residuals.head(5).isZero());
+  EXPECT_TRUE(residuals.segment<3>(5).isApprox(coeff*residual_ref));
+  EXPECT_TRUE(residuals.tail(2).isZero());
 }
 
 
@@ -419,9 +425,9 @@ TEST_F(FloatingBasePointContactTest, baumgarteDerivativesBlock) {
               * joint_a_partial_da.template topRows<3>();
   baum_partial_da_ref.block(block_rows_begin, 0, 3, dimv_)
       = joint_a_partial_da.template topRows<3>();
-  EXPECT_TRUE(baum_partial_dq_ref.isApprox(baum_partial_dq));
-  EXPECT_TRUE(baum_partial_dv_ref.isApprox(baum_partial_dv));
-  EXPECT_TRUE(baum_partial_da_ref.isApprox(baum_partial_da));
+  EXPECT_TRUE(baum_partial_dq.isApprox(baum_partial_dq_ref));
+  EXPECT_TRUE(baum_partial_dv.isApprox(baum_partial_dv_ref));
+  EXPECT_TRUE(baum_partial_da.isApprox(baum_partial_da_ref));
 
   Eigen::MatrixXd baum_partial_dq_nonblock = Eigen::MatrixXd::Zero(3, dimv_);
   Eigen::MatrixXd baum_partial_dv_nonblock = Eigen::MatrixXd::Zero(3, dimv_);
@@ -443,6 +449,17 @@ TEST_F(FloatingBasePointContactTest, baumgarteDerivativesBlock) {
   std::cout << std::endl;
   std::cout << baum_partial_dq << std::endl;
   std::cout << std::endl;
+
+  const double coeff = Eigen::VectorXd::Random(1)[0];
+  baum_partial_dq.setZero();
+  baum_partial_dv.setZero();
+  baum_partial_da.setZero();
+  contact.computeBaumgarteDerivatives(model_, data_, block_rows_begin, coeff,
+                                      baum_partial_dq, baum_partial_dv, 
+                                      baum_partial_da);
+  EXPECT_TRUE(baum_partial_dq.isApprox(coeff*baum_partial_dq_ref));
+  EXPECT_TRUE(baum_partial_dv.isApprox(coeff*baum_partial_dv_ref));
+  EXPECT_TRUE(baum_partial_da.isApprox(coeff*baum_partial_da_ref));
 }
 
 } // namespace idocp

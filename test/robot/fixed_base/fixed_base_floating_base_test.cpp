@@ -57,14 +57,6 @@ TEST_F(FixedBaseFloatingBaseTest, setPassiveTorques) {
   EXPECT_TRUE(u_.isApprox(u_));
 }
 
-
-TEST_F(FixedBaseFloatingBaseTest, computePassiveConstraintViolation) {
-  FloatingBase floating_base(model_);
-  Eigen::VectorXd violation = Eigen::VectorXd::Zero(0);
-  floating_base.computePassiveConstraintViolation(u_, violation);
-}
-
-
 } // namespace idocp
 
 

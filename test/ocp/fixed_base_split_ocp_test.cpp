@@ -50,7 +50,6 @@ protected:
     v_next_ = Eigen::VectorXd::Random(dimv_);
     lmd_next_ = Eigen::VectorXd::Random(dimv_);
     gmm_next_ = Eigen::VectorXd::Random(dimv_);
-    TEST_NEAR_TOL = 1.0e-12;
   }
 
   virtual void TearDown() {
@@ -68,7 +67,6 @@ protected:
   std::vector<int> contact_frames_;
   Eigen::VectorXd q_, v_, a_, u_, f_, lmd_, gmm_, mu_, q_next_, v_next_, 
                   lmd_next_, gmm_next_;
-  double TEST_NEAR_TOL;
 };
 
 
@@ -267,8 +265,8 @@ TEST_F(FixedBaseSplitOCPTest, withoutContacts) {
       = q_res_tmp.lpNorm<1>() + v_res_tmp.lpNorm<1>() 
           + dtau_ * u_res_tmp.lpNorm<1>() 
           + joint_space_constraints_ref.residualL1Nrom(dtau_, q_tmp, v_tmp, a_tmp, u_tmp);
-  EXPECT_NEAR(cost_and_violation.first, cost_ref, TEST_NEAR_TOL);
-  EXPECT_NEAR(cost_and_violation.second, violation_ref, TEST_NEAR_TOL);
+  EXPECT_DOUBLE_EQ(cost_and_violation.first, cost_ref);
+  EXPECT_DOUBLE_EQ(cost_and_violation.second, violation_ref);
   ocp_.updateDual(max_dual_step_size);
   joint_space_constraints_ref.updateDual(max_dual_step_size);
   Eigen::VectorXd beta = Eigen::VectorXd::Random(dimv_);
@@ -393,12 +391,12 @@ TEST_F(FixedBaseSplitOCPTest, withoutActiveContacts) {
       = ocp_.costAndConstraintsViolation(robot_, primal_step_size, t_, 
                                          dtau_, q_, v_, a_, u_, q_next_, 
                                          v_next_, dq, dv, dq_next, dv_next);
-  EXPECT_NEAR(cost_and_violation.first, cost_and_violation_ref.first, TEST_NEAR_TOL);
-  EXPECT_NEAR(cost_and_violation.second, cost_and_violation_ref.second, TEST_NEAR_TOL);
+  EXPECT_DOUBLE_EQ(cost_and_violation.first, cost_and_violation_ref.first);
+  EXPECT_DOUBLE_EQ(cost_and_violation.second, cost_and_violation_ref.second);
   const double KKT_error_ref
       = ocp_.squaredKKTErrorNorm(robot_, t_, dtau_, lmd_, gmm_, q_, v_, a_, u_,
                                  beta, lmd_next_, gmm_next_, q_next_, v_next_);
-  EXPECT_NEAR(KKT_error, KKT_error_ref, TEST_NEAR_TOL);
+  EXPECT_DOUBLE_EQ(KKT_error, KKT_error_ref);
 }
 
 
@@ -648,8 +646,8 @@ TEST_F(FixedBaseSplitOCPTest, withActiveContacts) {
           + dtau_ * u_res_tmp.lpNorm<1>() 
           + joint_space_constraints_ref.residualL1Nrom(dtau_, q_tmp, v_tmp, a_tmp, u_tmp)
           + C_res.lpNorm<1>();
-  EXPECT_NEAR(cost_and_violation.first, cost_ref, TEST_NEAR_TOL);
-  EXPECT_NEAR(cost_and_violation.second, violation_ref, TEST_NEAR_TOL);
+  EXPECT_DOUBLE_EQ(cost_and_violation.first, cost_ref);
+  EXPECT_DOUBLE_EQ(cost_and_violation.second, violation_ref);
   ocp_.updateDual(max_dual_step_size);
   joint_space_constraints_ref.updateDual(max_dual_step_size);
   Eigen::VectorXd beta = Eigen::VectorXd::Random(dimv_);
@@ -739,7 +737,7 @@ TEST_F(FixedBaseSplitOCPTest, KKTErrorWithoutContacts) {
   KKT_error_ref += lu.squaredNorm();
   KKT_error_ref 
       += joint_space_constraints_ref.residualSquaredNrom(dtau_, q_, v_, a_, u_);
-  EXPECT_NEAR(KKT_error_ref, KKT_error, TEST_NEAR_TOL);
+  EXPECT_DOUBLE_EQ(KKT_error_ref, KKT_error);
 }
 
 
@@ -833,7 +831,7 @@ TEST_F(FixedBaseSplitOCPTest, KKTErrorWitContacts) {
   KKT_error_ref += C_res.squaredNorm();
   KKT_error_ref 
       += joint_space_constraints_ref.residualSquaredNrom(dtau_, q_, v_, a_, u_);
-  EXPECT_NEAR(KKT_error_ref, KKT_error, TEST_NEAR_TOL);
+  EXPECT_DOUBLE_EQ(KKT_error_ref, KKT_error);
 }
 
 

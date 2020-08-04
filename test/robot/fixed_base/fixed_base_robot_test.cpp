@@ -187,6 +187,9 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   contact_ref.resetContactPointByCurrentKinematics(data_);
   contact_ref.computeBaumgarteResidual(model_, data_, block_begin, residual_ref);
   EXPECT_TRUE(residual.isApprox(residual_ref));
+  const double coeff = Eigen::VectorXd::Random(1)[0];
+  robot.computeBaumgarteResidual(block_begin, coeff, residual);
+  EXPECT_TRUE(residual.isApprox(coeff*residual_ref));
   const int block_rows_begin = rnd() % 10;
   Eigen::MatrixXd baumgarte_partial_q 
       = Eigen::MatrixXd::Zero(block_rows_begin+robot.max_dimf(), dimq_);
@@ -218,6 +221,23 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   EXPECT_TRUE(
       baumgarte_partial_a.bottomRows(robot.max_dimf())
       .isApprox(baumgarte_partial_a_ref));
+  baumgarte_partial_q.setZero();
+  baumgarte_partial_v.setZero();
+  baumgarte_partial_a.setZero();
+  robot.computeBaumgarteDerivatives(block_rows_begin, coeff, baumgarte_partial_q, 
+                                    baumgarte_partial_v, baumgarte_partial_a);
+  EXPECT_TRUE(baumgarte_partial_q.topRows(block_rows_begin).isZero());
+  EXPECT_TRUE(baumgarte_partial_v.topRows(block_rows_begin).isZero());
+  EXPECT_TRUE(baumgarte_partial_a.topRows(block_rows_begin).isZero());
+  EXPECT_TRUE(
+      baumgarte_partial_q.bottomRows(robot.max_dimf())
+      .isApprox(coeff*baumgarte_partial_q_ref));
+  EXPECT_TRUE(
+      baumgarte_partial_v.bottomRows(robot.max_dimf())
+      .isApprox(coeff*baumgarte_partial_v_ref));
+  EXPECT_TRUE(
+      baumgarte_partial_a.bottomRows(robot.max_dimf())
+      .isApprox(coeff*baumgarte_partial_a_ref));
 }
 
 
