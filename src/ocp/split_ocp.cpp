@@ -454,12 +454,10 @@ void SplitOCP::computeCondensedDirection(const double dtau,
   assert(dtau > 0);
   assert(dq.size() == dimv_);
   assert(dv.size() == dimv_);
-  if (dimf_ > 0) {
-    df_.head(dimf_) = kf_.head(dimf_) + Kfq_.topRows(dimf_) * dq 
-                                      + Kfv_.topRows(dimf_) * dv;
-    dmu_.head(dimf_) = kmu_.head(dimf_) + Kmuq_.topRows(dimf_) * dq 
-                                        + Kmuv_.topRows(dimf_) * dv;
-  }
+  df_.head(dimf_) = kf_.head(dimf_) + Kfq_.topRows(dimf_) * dq 
+                                    + Kfv_.topRows(dimf_) * dv;
+  dmu_.head(dimc_) = kmu_.head(dimc_) + Kmuq_.topRows(dimc_) * dq 
+                                      + Kmuv_.topRows(dimc_) * dv;
   du_ = u_res_;
   du_.noalias() += du_dq_ * dq;
   du_.noalias() += du_dv_ * dv;
