@@ -1,8 +1,8 @@
 #ifndef IDOCP_SPLIT_OCP_HPP_
 #define IDOCP_SPLIT_OCP_HPP_
 
-#include <vector>
 #include <utility>
+#include <memory>
 
 #include "Eigen/Core"
 
@@ -23,8 +23,8 @@ public:
   //    robot: The robot model that has been already initialized.
   //    cost: The pointer to the cost function.
   //    constraints: The pointer to the constraints.
-  SplitOCP(const Robot& robot, const CostFunctionInterface* cost,
-           const ConstraintsInterface* constraints);
+  SplitOCP(const Robot& robot, std::unique_ptr<CostFunctionInterface>& cost,
+           std::unique_ptr<ConstraintsInterface>& constraints);
 
   // Default constructor.
   SplitOCP();
@@ -38,20 +38,6 @@ public:
   // Use default copy operator.
   SplitOCP& operator=(const SplitOCP& other) = default;
 
-  // Sets the cost function.
-  // Argments:
-  //    cost: The pointer to the cost function.
-  void setCostFunction(const CostFunctionInterface* cost);
-
-  // Sets the constraints.
-  // Argments:
-  //    constraints: The pointer to the constraints.
-  void setConstraints(const ConstraintsInterface* constraints);
-
-  void set_f(const Eigen::VectorXd& f);
-
-  void set_mu(const Eigen::VectorXd& mu);
-
   // Check whether the solution q, v, a, u are feasible under inequality 
   // constraints.
   // Argments: 
@@ -59,8 +45,9 @@ public:
   //   v: Generalized velocity. Size must be dimv.
   //   a: Generalized acceleration. Size must be dimv.
   //   u: Generalized torque. Size must be dimv.
-  bool isFeasible(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                  const Eigen::VectorXd& a, const Eigen::VectorXd& u);
+  bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
+                  const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                  const Eigen::VectorXd& u);
 
   // Initialize the constraints, i.e., set slack and dual variables under set 
   //  q, v, a, u.
@@ -69,9 +56,10 @@ public:
   //   v: Generalized velocity. Size must be dimv.
   //   a: Generalized acceleration. Size must be dimv.
   //   u: Generalized torque. Size must be dimv.
-  void initConstraints(const int time_step, const double dtau, 
-                       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                       const Eigen::VectorXd& a, const Eigen::VectorXd& u);
+  void initConstraints(const Robot& robot, const int time_step, 
+                       const double dtau, const Eigen::VectorXd& q, 
+                       const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+                       const Eigen::VectorXd& u);
 
   // Linearize the OCP for Newton's method around the current solution.
   // Argments: 
@@ -97,6 +85,7 @@ public:
                     const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
                     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                     const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
+                    const Eigen::VectorXd& f, const Eigen::VectorXd& mu,
                     const Eigen::VectorXd& lmd_next, 
                     const Eigen::VectorXd& gmm_next, 
                     const Eigen::VectorXd& q_next,
@@ -129,9 +118,10 @@ public:
       Robot& robot, const double step_size, const double t, const double dtau, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
       const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-      const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
-      const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-      const Eigen::VectorXd& dq_next, const Eigen::VectorXd& dv_next);
+      const Eigen::VectorXd& f, const Eigen::VectorXd& q_next, 
+      const Eigen::VectorXd& v_next, const Eigen::VectorXd& dq, 
+      const Eigen::VectorXd& dv, const Eigen::VectorXd& dq_next, 
+      const Eigen::VectorXd& dv_next);
 
   void updateDual(const double step_size);
 
@@ -142,6 +132,7 @@ public:
                     const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
                     Eigen::VectorXd& q, Eigen::VectorXd& v, Eigen::VectorXd& a, 
                     Eigen::VectorXd& u, Eigen::VectorXd& beta, 
+                    Eigen::VectorXd& f, Eigen::VectorXd& mu, 
                     Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
 
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
@@ -152,21 +143,22 @@ public:
                              const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                              const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
                              const Eigen::VectorXd& beta, 
+                             const Eigen::VectorXd& f, const Eigen::VectorXd& mu, 
                              const Eigen::VectorXd& lmd_next, 
                              const Eigen::VectorXd& gmm_next, 
-                             const Eigen::VectorXd& q_next,
+                             const Eigen::VectorXd& q_next, 
                              const Eigen::VectorXd& v_next);
 
 private:
-  CostFunctionInterface *cost_;
-  ConstraintsInterface *constraints_;
+  std::unique_ptr<CostFunctionInterface> cost_;
+  std::unique_ptr<ConstraintsInterface> constraints_;
   pdipm::JointSpaceConstraints joint_constraints_;
   RiccatiMatrixFactorizer riccati_matrix_factorizer_;
   RiccatiMatrixInverter riccati_matrix_inverter_;
   bool has_floating_base_;
-  int dimq_, dimv_, dimf_, max_dimf_, dimc_, dim_passive_;
-  Eigen::VectorXd f_, mu_, lq_, lv_, la_, lf_, lu_, lu_condensed_, ka_, kf_,  
-                  kmu_, da_, df_, dmu_, q_res_, v_res_, u_res_, du_, C_res_;
+  int dimq_, dimv_, dim_passive_, max_dimf_, max_dimc_, dimf_, dimc_;
+  Eigen::VectorXd lq_, lv_, la_, lf_, lu_, lu_condensed_, ka_, kf_,  kmu_, 
+                  da_, df_, dmu_, q_res_, v_res_, u_res_, du_, C_res_;
   Eigen::MatrixXd luu_, du_dq_, du_dv_, du_da_, du_df_, Qqq_, Qqv_, Qqa_, Qqf_, 
                   Qvq_, Qvv_, Qva_, Qvf_, Qaa_, Qaf_, Qff_, Cq_, Cv_, Ca_, Cf_, 
                   Kaq_, Kav_, Kfq_, Kfv_, Kmuq_, Kmuv_;

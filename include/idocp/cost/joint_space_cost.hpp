@@ -54,13 +54,12 @@ public:
 
   void set_vf_weight(const Eigen::VectorXd& vf_weight);
 
-  void setConfigurationJacobian(const Robot& robot, const Eigen::VectorXd& q);
-
   double l(const double dtau, const Eigen::VectorXd& q, 
            const Eigen::VectorXd& v, const Eigen::VectorXd& a,
            const Eigen::VectorXd& u) const;
 
-  void lq(const double dtau, const Eigen::VectorXd& q, Eigen::VectorXd& lq);
+  void lq(const Robot& robot, const double dtau, const Eigen::VectorXd& q, 
+          Eigen::VectorXd& lq);
 
   void lv(const double dtau, const Eigen::VectorXd& v, 
           Eigen::VectorXd& lv) const;
@@ -71,7 +70,7 @@ public:
   void lu(const double dtau, const Eigen::VectorXd& v, 
           Eigen::VectorXd& lu) const;
 
-  void lqq(const double dtau, Eigen::MatrixXd& lqq) const;
+  void lqq(const Robot& robot, const double dtau, Eigen::MatrixXd& lqq) const;
 
   void lvv(const double dtau, Eigen::MatrixXd& lvv) const;
 
@@ -79,7 +78,8 @@ public:
 
   void luu(const double dtau, Eigen::MatrixXd& luu) const;
 
-  void augment_lqq(const double dtau, Eigen::MatrixXd& lqq) const;
+  void augment_lqq(const Robot& robot, const double dtau, 
+                  Eigen::MatrixXd& lqq) const;
 
   void augment_lvv(const double dtau, Eigen::MatrixXd& lvv) const;
 
@@ -89,11 +89,11 @@ public:
 
   double phi(const Eigen::VectorXd& q, const Eigen::VectorXd& v) const;
 
-  void phiq(const Eigen::VectorXd& q, Eigen::VectorXd& phiq);
+  void phiq(const Robot& robot, const Eigen::VectorXd& q, Eigen::VectorXd& phiq);
 
   void phiv(const Eigen::VectorXd& v, Eigen::VectorXd& phiv) const;
 
-  void phiqq(Eigen::MatrixXd& phiqq) const;
+  void phiqq(const Robot& robot, Eigen::MatrixXd& phiqq) const;
 
   void phivv(Eigen::MatrixXd& phivv) const;
 
@@ -103,8 +103,7 @@ private:
   Eigen::VectorXd q_ref_, v_ref_, a_ref_, u_ref_, q_weight_, v_weight_, 
                   a_weight_, u_weight_, qf_weight_, vf_weight_, 
                   lq_configuration_;
-  Eigen::MatrixXd lqq_configuration_, phiqq_configuration_, 
-                  configuration_Jacobian_;
+  Eigen::MatrixXd lqq_configuration_, phiqq_configuration_;
 };
 
 } // namespace idocp

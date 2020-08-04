@@ -1,5 +1,6 @@
 add_test_macro(riccati_matrix_factorizer_test)
 add_test_macro(riccati_matrix_inverter_test)
-add_test_macro(split_terminal_ocp_test)
+add_test_macro(fixed_base_split_terminal_ocp_test)
+add_test_macro(floating_base_split_terminal_ocp_test)
 add_test_macro(fixed_base_split_ocp_test)
-add_test_macro(floating_base_split_ocp_test)
+# add_test_macro(floating_base_split_ocp_test)

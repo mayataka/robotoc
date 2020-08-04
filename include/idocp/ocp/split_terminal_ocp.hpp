@@ -1,8 +1,8 @@
 #ifndef IDOCP_SPLIT_TERMINAL_OCP_HPP_
 #define IDOCP_SPLIT_TERMINAL_OCP_HPP_
 
-#include <vector>
 #include <utility>
+#include <memory>
 
 #include "Eigen/Core"
 
@@ -21,8 +21,9 @@ public:
   //    robot: The robot model that has been already initialized.
   //    cost: The pointer to the cost function.
   //    constraints: The pointer to the constraints.
-  SplitTerminalOCP(const Robot& robot, const CostFunctionInterface* cost,
-                   const ConstraintsInterface* constraints);
+  SplitTerminalOCP(const Robot& robot, 
+                   std::unique_ptr<CostFunctionInterface>& cost,
+                   std::unique_ptr<ConstraintsInterface>& constraints);
 
   // Default constructor. 
   SplitTerminalOCP();
@@ -36,23 +37,13 @@ public:
   // Use default copy operator.
   SplitTerminalOCP& operator=(const SplitTerminalOCP& other) = default;
 
-  // Sets the cost function.
-  // Argments:
-  //    cost: The pointer to the cost function.
-  void setCostFunction(const CostFunctionInterface* cost);
-
-  // Sets the constraints.
-  // Argments:
-  //    robot: The robot model that has been already initialized.
-  //    constraints: The pointer to the constraints.
-  void setConstraints(const ConstraintsInterface* constraints);
-
   // Check whether the solution q, v are feasible under inequality 
   // constraints.
   // Argments: 
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
-  bool isFeasible(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
+  bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
+                  const Eigen::VectorXd& v);
 
   // Initialize the constraints, i.e., set slack and dual variables under set 
   //  q, v.
@@ -61,8 +52,9 @@ public:
   //   dtau: Discretization interval of the horizon.
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
-  void initConstraints(const int time_step, const double dtau,
-                       const Eigen::VectorXd& q, const Eigen::VectorXd& v);
+  void initConstraints(const Robot& robot, const int time_step, 
+                       const double dtau, const Eigen::VectorXd& q, 
+                       const Eigen::VectorXd& v);
 
   // Linearize the OCP for Newton's method around the current solution at the 
   // last time step of the horizon.
@@ -116,7 +108,7 @@ public:
   //   t: Time of the current time step.
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
-  double terminalCost(const double t, const Eigen::VectorXd& q, 
+  double terminalCost(Robot& robot, const double t, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v);
 
   // Returns the terminal cost with step_size.
@@ -182,8 +174,8 @@ public:
                              const Eigen::VectorXd& v);
 
 private:
-  CostFunctionInterface* cost_;
-  ConstraintsInterface* constraints_;
+  std::unique_ptr<CostFunctionInterface> cost_;
+  std::unique_ptr<ConstraintsInterface> constraints_;
   pdipm::JointSpaceConstraints joint_constraints_;
   int dimq_, dimv_;
   Eigen::VectorXd lq_, lv_, q_res_, v_res_;

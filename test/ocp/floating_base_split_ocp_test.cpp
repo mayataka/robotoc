@@ -27,7 +27,7 @@ protected:
     robot_ = Robot(urdf_, contact_frames_, baum_on_velocity_, baum_on_position_);
     cost_ = quadruped::CostFunction(robot_);
     constraints_ = quadruped::Constraints(robot_);
-    ocp_ = SplitOCP(robot_, &cost_, &constraints_);
+    ocp_ = SplitOCP(robot_, cost_, constraints_);
     factorizer_ = RiccatiMatrixFactorizer(robot_);
     inverter_ = RiccatiMatrixInverter(robot_);
     t_ = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -374,7 +374,7 @@ TEST_F(FloatingBaseSplitOCPTest, withoutContacts) {
   ASSERT_EQ(robot_.dimf(), 0);
   cost_ = quadruped::CostFunction(robot_);
   constraints_ = quadruped::Constraints(robot_);
-  ocp_ = SplitOCP(robot_, &cost_, &constraints_);
+  ocp_ = SplitOCP(robot_, cost_, constraints_);
   ocp_.set_f(f_.head(robot_.dimf()));
   ocp_.set_mu(mu_.head(robot_.dim_passive()));
   ASSERT_TRUE(ocp_.isFeasible(q_, v_, a_, u_));

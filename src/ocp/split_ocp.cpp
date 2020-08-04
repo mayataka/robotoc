@@ -5,22 +5,22 @@
 
 namespace idocp {
 
-SplitOCP::SplitOCP(const Robot& robot, const CostFunctionInterface* cost, 
-                   const ConstraintsInterface* constraints) 
-  : cost_(const_cast<CostFunctionInterface*>(cost)),
-    constraints_(const_cast<ConstraintsInterface*>(constraints)),
+SplitOCP::SplitOCP(const Robot& robot, 
+                   std::unique_ptr<CostFunctionInterface>& cost,
+                   std::unique_ptr<ConstraintsInterface>& constraints) 
+  : cost_(std::move(cost)),
+    constraints_(std::move(constraints)),
     joint_constraints_(robot),
     riccati_matrix_factorizer_(robot),
     riccati_matrix_inverter_(robot),
     has_floating_base_(robot.has_floating_base()),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
-    dimf_(0),
-    max_dimf_(robot.max_dimf()),
-    dimc_(0),
     dim_passive_(robot.dim_passive()),
-    f_(Eigen::VectorXd::Zero(robot.max_dimf())),
-    mu_(Eigen::VectorXd::Zero(robot.max_dimf()+robot.dim_passive())),
+    max_dimf_(robot.max_dimf()),
+    max_dimc_(robot.dim_passive()+robot.max_dimf()),
+    dimf_(0),
+    dimc_(0),
     lq_(Eigen::VectorXd::Zero(robot.dimv())),
     lv_(Eigen::VectorXd::Zero(robot.dimv())),
     la_(Eigen::VectorXd::Zero(robot.dimv())),
@@ -85,15 +85,13 @@ SplitOCP::SplitOCP()
     joint_constraints_(),
     riccati_matrix_factorizer_(),
     riccati_matrix_inverter_(),
-    has_floating_base_(),
+    has_floating_base_(false),
     dimq_(0),
     dimv_(0),
     dimf_(0),
     max_dimf_(0),
     dimc_(0),
     dim_passive_(0),
-    f_(),
-    mu_(),
     lq_(),
     lv_(),
     la_(),
@@ -150,29 +148,8 @@ SplitOCP::~SplitOCP() {
 }
 
 
-void SplitOCP::setCostFunction(const CostFunctionInterface* cost) {
-  cost_ = const_cast<CostFunctionInterface*>(cost);
-}
-
-
-void SplitOCP::setConstraints(const ConstraintsInterface* constraints) {
-  constraints_ = const_cast<ConstraintsInterface*>(constraints);
-}
-
-
-void SplitOCP::set_f(const Eigen::VectorXd& f) {
-  assert(f.size() == max_dimf_);
-  f_ = f;
-}
-
-
-void SplitOCP::set_mu(const Eigen::VectorXd& mu) {
-  assert(mu.size() == max_dimf_+dim_passive_);
-  mu_ = mu;
-}
-
-
-bool SplitOCP::isFeasible(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+bool SplitOCP::isFeasible(const Robot& robot, 
+                          const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                           const Eigen::VectorXd& a, const Eigen::VectorXd& u) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
@@ -182,8 +159,8 @@ bool SplitOCP::isFeasible(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 }
 
 
-void SplitOCP::initConstraints(const int time_step, const double dtau, 
-                               const Eigen::VectorXd& q, 
+void SplitOCP::initConstraints(const Robot& robot, const int time_step, 
+                               const double dtau, const Eigen::VectorXd& q, 
                                const Eigen::VectorXd& v, 
                                const Eigen::VectorXd& a, 
                                const Eigen::VectorXd& u) {
@@ -203,9 +180,10 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
                             const Eigen::VectorXd& gmm, 
                             const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                             const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
+                            const Eigen::VectorXd& f, const Eigen::VectorXd& mu,
                             const Eigen::VectorXd& lmd_next, 
                             const Eigen::VectorXd& gmm_next, 
-                            const Eigen::VectorXd& q_next,
+                            const Eigen::VectorXd& q_next, 
                             const Eigen::VectorXd& v_next) {
   assert(dtau > 0);
   assert(lmd.size() == dimv_);
@@ -214,34 +192,32 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
   assert(u.size() == dimv_);
+  assert(f.size() == max_dimf_);
+  assert(mu.size() == max_dimc_);
   assert(lmd_next.size() == dimv_);
   assert(gmm_next.size() == dimv_);
   assert(q_next.size() == dimq_);
   assert(v_next.size() == dimv_);
   // Residual of the state equation
-  robot.differenceConfiguration(q, q_next, q_res_);
+  robot.subtractConfiguration(q, q_next, q_res_);
   q_res_.noalias() += dtau * v;
   v_res_ = v + dtau * a - v_next;
   // First, we condense the the control input torques and the Lagrange 
   // multiplier with respect to inverse dynamics.
   // Partial derivatives of the cost function with respect to the input torques.
-  cost_->lu(t, dtau, u, lu_);
+  cost_->lu(robot, t, dtau, u, lu_);
   // Augment the partial derivatives of the inequality constraint.
   joint_constraints_.augmentDualResidual(dtau, lu_);
   // Hessian of the cost function.
-  cost_->luu(t, dtau, u, luu_);
+  cost_->luu(robot, t, dtau, u, luu_);
   // Modify the Hessian and residual by condensing the slack and dual variables 
   // of the inequality constraints on the control input.
   joint_constraints_.condenseSlackAndDual(dtau, u, luu_, lu_);
   // Get the present dimension of the contacts
   dimf_ = robot.dimf();
   dimc_ = robot.dimf() + robot.dim_passive();
-  // Set the contact forces to the robot model and contact status to the cost.
-  if (dimf_ > 0) {
-    robot.setContactForces(f_);
-    cost_->setContactStatus(robot);
-  }
   // Residual of the inverse dynamics constraint.
+  robot.setContactForces(f); // Set the contact forces
   robot.RNEA(q, v, a, u_res_);
   u_res_.noalias() -= u;
   // Compute condensed Newton residual with respect to the input torques.
@@ -250,15 +226,15 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   // velocity, and acceleration.
   // If the robot has a floating base, set the configuration Jacobian into cost.
   if (has_floating_base_) {
-    cost_->setConfigurationJacobian(robot, q);
+    robot.computeConfigurationJacobian(q);
   }
-  cost_->lq(t, dtau, q, v, a, lq_);
-  cost_->lv(t, dtau, q, v, a, lv_);
-  cost_->la(t, dtau, q, v, a, la_);
+  cost_->lq(robot, t, dtau, q, v, a, lq_);
+  cost_->lv(robot, t, dtau, q, v, a, lv_);
+  cost_->la(robot, t, dtau, q, v, a, la_);
   if (dimf_ > 0) {
     // Partial derivatives of the cost function with respect to the contact 
     // forces.
-    cost_->lf(t, dtau, f_, lf_);
+    cost_->lf(robot, t, dtau, f, lf_);
   }
   // Augmnet the partial derivatives of the state equation.
   lq_.noalias() += lmd_next - lmd;
@@ -299,12 +275,12 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   }
   if (dimc_ > 0) {
     // Augment the equality constraints 
-    lq_.noalias() += Cq_.topRows(dimc_).transpose() * mu_.head(dimc_);
-    lv_.noalias() += Cv_.topRows(dimc_).transpose() * mu_.head(dimc_);
-    la_.noalias() += Ca_.topRows(dimc_).transpose() * mu_.head(dimc_);
+    lq_.noalias() += Cq_.topRows(dimc_).transpose() * mu.head(dimc_);
+    lv_.noalias() += Cv_.topRows(dimc_).transpose() * mu.head(dimc_);
+    la_.noalias() += Ca_.topRows(dimc_).transpose() * mu.head(dimc_);
     if (dimf_ > 0 && dim_passive_ > 0) {
       lf_.head(dimf_).noalias() += Cf_.leftCols(dimf_).transpose() 
-          * mu_.head(dim_passive_);
+          * mu.head(dim_passive_);
     }
   }
   if (has_floating_base_) {
@@ -331,11 +307,11 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   joint_constraints_.condenseSlackAndDual(dtau, q, v, a, Qqq_, Qvv_, Qaa_, 
                                           lq_, lv_, la_);
   // Augment the cost function Hessian. 
-  cost_->augment_lqq(t, dtau, q, v, a, Qqq_);
-  cost_->augment_lvv(t, dtau, q, v, a, Qvv_);
-  cost_->augment_laa(t, dtau, q, v, a, Qaa_);
+  cost_->augment_lqq(robot, t, dtau, q, v, a, Qqq_);
+  cost_->augment_lvv(robot, t, dtau, q, v, a, Qvv_);
+  cost_->augment_laa(robot, t, dtau, q, v, a, Qaa_);
   if (dimf_ > 0) {
-    cost_->augment_lff(t, dtau, f_, Qff_);
+    cost_->augment_lff(robot, t, dtau, f, Qff_);
     riccati_matrix_inverter_.setContactStatus(robot);
     riccati_matrix_inverter_.precompute(Qaf_, Qff_);
   }
@@ -509,9 +485,10 @@ std::pair<double, double> SplitOCP::costAndConstraintsViolation(
     Robot& robot, const double step_size, const double t, const double dtau, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-    const Eigen::VectorXd& q_next, const Eigen::VectorXd& v_next, 
-    const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-    const Eigen::VectorXd& dq_next, const Eigen::VectorXd& dv_next) {
+    const Eigen::VectorXd& f, const Eigen::VectorXd& q_next, 
+    const Eigen::VectorXd& v_next, const Eigen::VectorXd& dq, 
+    const Eigen::VectorXd& dv, const Eigen::VectorXd& dq_next, 
+    const Eigen::VectorXd& dv_next) {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dtau > 0);
@@ -519,6 +496,7 @@ std::pair<double, double> SplitOCP::costAndConstraintsViolation(
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
   assert(u.size() == dimv_);
+  assert(f.size() == max_dimf_);
   assert(q_next.size() == dimq_);
   assert(v_next.size() == dimv_);
   assert(dq.size() == dimv_);
@@ -528,7 +506,7 @@ std::pair<double, double> SplitOCP::costAndConstraintsViolation(
   if (has_floating_base_) {
     q_tmp_ = q;
     robot.integrateConfiguration(dq, step_size, q_tmp_);
-    cost_->setConfigurationJacobian(robot, q_tmp_);
+    robot.computeConfigurationJacobian(q_tmp_);
   }
   else {
     q_tmp_ = q + step_size * dq;
@@ -536,14 +514,12 @@ std::pair<double, double> SplitOCP::costAndConstraintsViolation(
   v_tmp_ = v + step_size * dv;
   a_tmp_ = a + step_size * da_;
   u_tmp_ = u + step_size * du_;
-  if (dimf_ > 0) {
-    f_tmp_.head(dimf_) = f_.head(dimf_) + step_size * df_.head(dimf_);
-    robot.setContactForces(f_tmp_);
-  }
+  f_tmp_.head(dimf_) = f.head(dimf_) + step_size * df_.head(dimf_);
+  robot.setContactForces(f_tmp_);
   double cost = 0;
-  cost += cost_->l(t, dtau, q_tmp_, v_tmp_, a_tmp_, u_tmp_, f_tmp_);
+  cost += cost_->l(robot, t, dtau, q_tmp_, v_tmp_, a_tmp_, u_tmp_, f_tmp_);
   cost += joint_constraints_.costSlackBarrier(step_size);
-  robot.differenceConfiguration(q_tmp_, q_next, q_res_);
+  robot.subtractConfiguration(q_tmp_, q_next, q_res_);
   q_res_.noalias() += dtau * v_tmp_ - step_size * dq_next;
   v_res_ = v_tmp_ + dtau * a_tmp_ - v_next - step_size * dv_next;
   robot.RNEA(q_tmp_, v_tmp_, a_tmp_, u_res_tmp_);
@@ -583,6 +559,7 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
                             const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
                             Eigen::VectorXd& v, Eigen::VectorXd& a, 
                             Eigen::VectorXd& u, Eigen::VectorXd& beta, 
+                            Eigen::VectorXd& f, Eigen::VectorXd& mu, 
                             Eigen::VectorXd& lmd, Eigen::VectorXd& gmm) {
   assert(step_size > 0);
   assert(step_size <= 1);
@@ -602,15 +579,18 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
-  assert(lmd.size() == dimv_);
+  assert(u.size() == dimv_);
+  assert(beta.size() == dimv_);
+  assert(f.size() == max_dimf_);
+  assert(mu.size() == max_dimc_);
   assert(gmm.size() == dimv_);
   robot.integrateConfiguration(dq, step_size, q);
   v.noalias() += step_size * dv;
   a.noalias() += step_size * da_;
   u.noalias() += step_size * du_;
   if (dimf_ > 0) {
-    f_.head(dimf_).noalias() += step_size * df_.head(dimf_);
-    mu_.head(dimc_).noalias() += step_size * dmu_.head(dimc_);
+    f.head(dimf_).noalias() += step_size * df_.head(dimf_);
+    mu.head(dimc_).noalias() += step_size * dmu_.head(dimc_);
   }
   // modify lu_ so that it includes beta.
   lu_.noalias() -= dtau * beta;
@@ -648,6 +628,8 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
                                      const Eigen::VectorXd& a, 
                                      const Eigen::VectorXd& u, 
                                      const Eigen::VectorXd& beta, 
+                                     const Eigen::VectorXd& f, 
+                                     const Eigen::VectorXd& mu, 
                                      const Eigen::VectorXd& lmd_next, 
                                      const Eigen::VectorXd& gmm_next, 
                                      const Eigen::VectorXd& q_next,
@@ -660,6 +642,8 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   assert(a.size() == dimv_);
   assert(u.size() == dimv_);
   assert(beta.size() == dimv_);
+  assert(f.size() == max_dimf_);
+  assert(mu.size() == max_dimc_);
   assert(lmd_next.size() == dimv_);
   assert(gmm_next.size() == dimv_);
   assert(q_next.size() == dimq_);
@@ -670,28 +654,22 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   const int dimf = robot.dimf();
   const int dimc = robot.dimf() + robot.dim_passive();
   // Residual of the state eqation
-  robot.differenceConfiguration(q, q_next, q_res_);
+  robot.subtractConfiguration(q, q_next, q_res_);
   q_res_.noalias() += dtau * v;
   v_res_ = v + dtau * a - v_next;
   // Compute the residual of the inverse dynamics constraint.
-  if (dimf > 0) {
-    robot.setContactForces(f_);
-    cost_->setContactStatus(robot);
-  }
+  robot.setContactForces(f);
   robot.RNEA(q, v, a, u_res_);
   u_res_.noalias() -= u;
   u_res_.array() *= dtau;
   if (has_floating_base_) {
-    cost_->setConfigurationJacobian(robot, q);
+    robot.computeConfigurationJacobian(q);
   }
-  cost_->lq(t, dtau, q, v, a, lq_);
-  cost_->lv(t, dtau, q, v, a, lv_);
-  cost_->la(t, dtau, q, v, a, la_);
-  cost_->lu(t, dtau, u, lu_);
-  if (dimf > 0) {
-    cost_->setContactStatus(robot);
-    cost_->lf(t, dtau, f_, lf_);
-  }
+  cost_->lq(robot, t, dtau, q, v, a, lq_);
+  cost_->lv(robot, t, dtau, q, v, a, lv_);
+  cost_->la(robot, t, dtau, q, v, a, la_);
+  cost_->lu(robot, t, dtau, u, lu_);
+  cost_->lf(robot, t, dtau, f, lf_);
   // Augment the partial derivatives of the state equation.
   lq_.noalias() += lmd_next - lmd;
   lv_.noalias() += dtau * lmd_next + gmm_next - gmm;
@@ -727,13 +705,11 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   }
   if (dimc > 0) {
     // Augment the equality constraints 
-    lq_.noalias() += Cq_.topRows(dimc).transpose() * mu_.head(dimc);
-    lv_.noalias() += Cv_.topRows(dimc).transpose() * mu_.head(dimc);
-    la_.noalias() += Ca_.topRows(dimc).transpose() * mu_.head(dimc);
-    if (dimf > 0) {
-      lf_.head(dimf).noalias() 
-          += Cf_.leftCols(dimf).transpose() * mu_.head(dim_passive_);
-    }
+    lq_.noalias() += Cq_.topRows(dimc).transpose() * mu.head(dimc);
+    lv_.noalias() += Cv_.topRows(dimc).transpose() * mu.head(dimc);
+    la_.noalias() += Ca_.topRows(dimc).transpose() * mu.head(dimc);
+    lf_.head(dimf).noalias() 
+        += Cf_.leftCols(dimf).transpose() * mu.head(dim_passive_);
   }
   double error = 0;
   error += q_res_.squaredNorm();

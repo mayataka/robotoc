@@ -27,19 +27,18 @@ public:
 
   void set_f_weight(const Eigen::VectorXd& f_weight);
 
-  void setContactStatus(const Robot& robot);
+  double l(const Robot& robot, const double dtau, 
+           const Eigen::VectorXd& f) const;
 
-  double l(const double dtau, const Eigen::VectorXd& f) const;
-
-  void lf(const double dtau, const Eigen::VectorXd& f, 
+  void lf(const Robot& robot, const double dtau, const Eigen::VectorXd& f, 
           Eigen::VectorXd& lf) const;
 
-  void lff(const double dtau, Eigen::MatrixXd& lff) const;
+  void lff(const Robot& robot, const double dtau, Eigen::MatrixXd& lff) const;
 
-  void augment_lff(const double dtau, Eigen::MatrixXd& lff) const;
+  void augment_lff(const Robot& robot, const double dtau, 
+                   Eigen::MatrixXd& lff) const;
 
 private:
-  std::vector<bool> contact_status_;
   int max_point_contacts_, max_dimf_;
   Eigen::VectorXd f_ref_, f_weight_;
 
