@@ -34,6 +34,12 @@ public:
   // Use defalut copy operator.
   JointSpaceCost& operator=(const JointSpaceCost&) = default;
 
+  // Use defalut move constructor.
+  JointSpaceCost(JointSpaceCost&&) noexcept = default;
+
+  // Use defalut move assign operator.
+  JointSpaceCost& operator=(JointSpaceCost&&) noexcept = default;
+
   void set_q_ref(const Eigen::VectorXd& q_ref);
 
   void set_v_ref(const Eigen::VectorXd& v_ref);

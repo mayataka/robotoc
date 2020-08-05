@@ -18,8 +18,6 @@ public:
 
   CostFunction();
 
-  ~CostFunction();
-
   void set_q_ref(const Eigen::VectorXd& q_ref);
 
   void set_v_ref(const Eigen::VectorXd& v_ref);

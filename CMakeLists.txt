@@ -47,6 +47,7 @@ add_library(
   src/quadruped/constraints.cpp
   src/ocp/riccati_matrix_factorizer.cpp
   src/ocp/riccati_matrix_inverter.cpp
+  src/ocp/ocp_linearizer.cpp
   src/ocp/split_terminal_ocp.cpp
   src/ocp/split_ocp.cpp
 )

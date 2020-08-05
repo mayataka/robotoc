@@ -23,6 +23,12 @@ public:
   // Use defalut copy operator.
   ContactCost& operator=(const ContactCost&) = default;
 
+  // Use defalut move constructor.
+  ContactCost(ContactCost&&) noexcept = default;
+
+  // Use defalut move assign operator.
+  ContactCost& operator=(ContactCost&&) noexcept = default;
+
   void set_f_ref(const Eigen::VectorXd& f_ref);
 
   void set_f_weight(const Eigen::VectorXd& f_weight);

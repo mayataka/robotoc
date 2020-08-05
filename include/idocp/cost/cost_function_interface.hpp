@@ -20,6 +20,12 @@ public:
   // Use default copy coperator.
   CostFunctionInterface& operator=(const CostFunctionInterface&) = default;
 
+  // Use default move constructor.
+  CostFunctionInterface(CostFunctionInterface&&) noexcept = default;
+
+  // Use default move assign coperator.
+  CostFunctionInterface& operator=(CostFunctionInterface&&) noexcept = default;
+
   virtual double l(const Robot& robot, const double t, const double dtau, 
                    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                    const Eigen::VectorXd& a, const Eigen::VectorXd& u, 

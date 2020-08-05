@@ -31,13 +31,19 @@ public:
 
   // Destructor.
   ~SplitOCP();
+
+  // Progibits copy constructor.
+  SplitOCP(const SplitOCP& other) = delete;
+
+  // Progibits copy operator.
+  SplitOCP& operator=(const SplitOCP& other) = delete;
+
+  // Use default move constructor.
+  SplitOCP(SplitOCP&& other) noexcept = default;
+
+  // Use default move assign operator.
+  SplitOCP& operator=(SplitOCP&& other) noexcept = default;
  
-  // Use default copy constructor.
-  SplitOCP(const SplitOCP& other) = default;
-
-  // Use default copy operator.
-  SplitOCP& operator=(const SplitOCP& other) = default;
-
   // Check whether the solution q, v, a, u are feasible under inequality 
   // constraints.
   // Argments: 

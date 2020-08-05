@@ -20,6 +20,12 @@ public:
   // Use default copy coperator.
   ConstraintsInterface& operator=(const ConstraintsInterface&) = default;
 
+  // Use default move constructor.
+  ConstraintsInterface(ConstraintsInterface&&) noexcept = default;
+
+  // Use default move assign coperator.
+  ConstraintsInterface& operator=(ConstraintsInterface&) noexcept = default;
+
   virtual bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
                           const Eigen::VectorXd& u) = 0;

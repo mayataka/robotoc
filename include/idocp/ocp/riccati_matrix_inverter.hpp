@@ -31,6 +31,13 @@ public:
   RiccatiMatrixInverter& operator=(const RiccatiMatrixInverter& other) 
       = default;
 
+  // Use default move constructor.
+  RiccatiMatrixInverter(RiccatiMatrixInverter&& other) noexcept = default;
+
+  // Use default move assign operator.
+  RiccatiMatrixInverter& operator=(RiccatiMatrixInverter&& other) noexcept
+      = default;
+
   void setContactStatus(const Robot& robot);
 
   void precompute(const Eigen::MatrixXd& Qaf, const Eigen::MatrixXd& Qff);

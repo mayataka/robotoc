@@ -31,6 +31,13 @@ public:
   RiccatiMatrixFactorizer& operator=(const RiccatiMatrixFactorizer& other) 
       = default;
 
+  // Use default move constructor.
+  RiccatiMatrixFactorizer(RiccatiMatrixFactorizer&& other) noexcept = default;
+
+  // Use default move assign operator.
+  RiccatiMatrixFactorizer& operator=(RiccatiMatrixFactorizer&& other) noexcept
+      = default;
+
   void setIntegrationSensitivities(const Robot& robot, const double dtau,
                                    const Eigen::VectorXd& q,
                                    const Eigen::VectorXd& v);
