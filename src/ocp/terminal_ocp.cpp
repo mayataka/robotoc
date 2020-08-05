@@ -1,15 +1,15 @@
-#include "idocp/ocp/split_terminal_ocp.hpp"
+#include "idocp/ocp/terminal_ocp.hpp"
 
 #include <assert.h>
 
 
 namespace idocp {
 
-SplitTerminalOCP::SplitTerminalOCP(
-    const Robot& robot, std::unique_ptr<CostFunctionInterface>&& cost, 
-    std::unique_ptr<ConstraintsInterface>&& constraints)
-  : cost_(std::move(cost)),
-    constraints_(std::move(constraints)),
+TerminalOCP::TerminalOCP(
+    const Robot& robot, const std::shared_ptr<CostFunctionInterface>& cost, 
+    const std::shared_ptr<ConstraintsInterface>& constraints)
+  : cost_(cost),
+    constraints_(constraints),
     joint_constraints_(robot),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
@@ -23,7 +23,7 @@ SplitTerminalOCP::SplitTerminalOCP(
 }
 
 
-SplitTerminalOCP::SplitTerminalOCP() 
+TerminalOCP::TerminalOCP() 
   : cost_(),
     constraints_(),
     joint_constraints_(),
@@ -38,12 +38,12 @@ SplitTerminalOCP::SplitTerminalOCP()
 }
 
 
-SplitTerminalOCP::~SplitTerminalOCP() {
+TerminalOCP::~TerminalOCP() {
 }
 
 
-bool SplitTerminalOCP::isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
-                                  const Eigen::VectorXd& v) {
+bool TerminalOCP::isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
+                             const Eigen::VectorXd& v) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   // TODO: add inequality constraints at the terminal OCP.
@@ -52,10 +52,9 @@ bool SplitTerminalOCP::isFeasible(const Robot& robot, const Eigen::VectorXd& q,
 }
 
 
-void SplitTerminalOCP::initConstraints(const Robot& robot, const int time_step, 
-                                       const double dtau, 
-                                       const Eigen::VectorXd& q, 
-                                       const Eigen::VectorXd& v) {
+void TerminalOCP::initConstraints(const Robot& robot, const int time_step, 
+                                  const double dtau, const Eigen::VectorXd& q, 
+                                  const Eigen::VectorXd& v) {
   assert(time_step >= 0);
   assert(dtau > 0);
   assert(q.size() == dimq_);
@@ -66,14 +65,14 @@ void SplitTerminalOCP::initConstraints(const Robot& robot, const int time_step,
 }
 
 
-void SplitTerminalOCP::linearizeOCP(Robot& robot, const double t, 
-                                    const Eigen::VectorXd& lmd, 
-                                    const Eigen::VectorXd& gmm, 
-                                    const Eigen::VectorXd& q, 
-                                    const Eigen::VectorXd& v, 
-                                    Eigen::MatrixXd& Qqq, Eigen::MatrixXd& Qqv, 
-                                    Eigen::MatrixXd& Qvq, Eigen::MatrixXd& Qvv, 
-                                    Eigen::VectorXd& Qq, Eigen::VectorXd& Qv) {
+void TerminalOCP::linearizeOCP(Robot& robot, const double t, 
+                               const Eigen::VectorXd& lmd, 
+                               const Eigen::VectorXd& gmm, 
+                               const Eigen::VectorXd& q, 
+                               const Eigen::VectorXd& v, Eigen::MatrixXd& Qqq, 
+                               Eigen::MatrixXd& Qqv, Eigen::MatrixXd& Qvq, 
+                               Eigen::MatrixXd& Qvv, Eigen::VectorXd& Qq, 
+                               Eigen::VectorXd& Qv) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(Qqq.rows() == dimv_);
@@ -98,43 +97,42 @@ void SplitTerminalOCP::linearizeOCP(Robot& robot, const double t,
 }
 
 
-void SplitTerminalOCP::computeCondensedDirection(Robot& robot, 
-                                                 const double dtau, 
-                                                 const Eigen::VectorXd& dq, 
-                                                 const Eigen::VectorXd& dv) {
+void TerminalOCP::computeCondensedDirection(Robot& robot, const double dtau, 
+                                            const Eigen::VectorXd& dq, 
+                                            const Eigen::VectorXd& dv) {
   // TODO: add inequality constraints at the terminal OCP.
   // joint_constraints_.computeSlackAndDualDirection(robot, dtau, dq, dv);
 }
 
  
-double SplitTerminalOCP::maxPrimalStepSize() {
+double TerminalOCP::maxPrimalStepSize() {
   return 1;
   // TODO: add inequality constraints at the terminal OCP.
   // return joint_constraints_.maxSlackStepSize();
 }
 
 
-double SplitTerminalOCP::maxDualStepSize() {
+double TerminalOCP::maxDualStepSize() {
   return 1;
   // TODO: add inequality constraints at the terminal OCP.
   // return joint_constraints_.maxDualStepSize();
 }
 
 
-double SplitTerminalOCP::terminalCost(Robot& robot, const double t, 
-                                      const Eigen::VectorXd& q, 
-                                      const Eigen::VectorXd& v) {
+double TerminalOCP::terminalCost(Robot& robot, const double t, 
+                                 const Eigen::VectorXd& q, 
+                                 const Eigen::VectorXd& v) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   return cost_->phi(robot, t, q, v);
 }
 
 
-double SplitTerminalOCP::terminalCost(Robot& robot, const double step_size, 
-                                      const double t, const Eigen::VectorXd& q, 
-                                      const Eigen::VectorXd& v, 
-                                      const Eigen::VectorXd& dq, 
-                                      const Eigen::VectorXd& dv) {
+double TerminalOCP::terminalCost(Robot& robot, const double step_size, 
+                                 const double t, const Eigen::VectorXd& q, 
+                                 const Eigen::VectorXd& v, 
+                                 const Eigen::VectorXd& dq, 
+                                 const Eigen::VectorXd& dv) {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(q.size() == dimq_);
@@ -153,7 +151,7 @@ double SplitTerminalOCP::terminalCost(Robot& robot, const double step_size,
 }
 
 
-void SplitTerminalOCP::updateDual(const double step_size) {
+void TerminalOCP::updateDual(const double step_size) {
   assert(step_size > 0);
   assert(step_size <= 1);
   // TODO: add inequality constraints at the terminal OCP.
@@ -161,18 +159,17 @@ void SplitTerminalOCP::updateDual(const double step_size) {
 }
 
 
-void SplitTerminalOCP::updatePrimal(Robot& robot, const double step_size, 
-                                    const Eigen::MatrixXd& Pqq, 
-                                    const Eigen::MatrixXd& Pqv, 
-                                    const Eigen::MatrixXd& Pvq, 
-                                    const Eigen::MatrixXd& Pvv, 
-                                    const Eigen::VectorXd& sq, 
-                                    const Eigen::VectorXd& sv, 
-                                    const Eigen::VectorXd& dq, 
-                                    const Eigen::VectorXd& dv, 
-                                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm,
-                                    Eigen::VectorXd& q, 
-                                    Eigen::VectorXd& v) const {
+void TerminalOCP::updatePrimal(Robot& robot, const double step_size, 
+                               const Eigen::MatrixXd& Pqq, 
+                               const Eigen::MatrixXd& Pqv, 
+                               const Eigen::MatrixXd& Pvq, 
+                               const Eigen::MatrixXd& Pvv, 
+                               const Eigen::VectorXd& sq, 
+                               const Eigen::VectorXd& sv, 
+                               const Eigen::VectorXd& dq, 
+                               const Eigen::VectorXd& dv, Eigen::VectorXd& lmd, 
+                               Eigen::VectorXd& gmm, Eigen::VectorXd& q, 
+                               Eigen::VectorXd& v) const {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(Pqq.rows() == dimv_);
@@ -198,11 +195,11 @@ void SplitTerminalOCP::updatePrimal(Robot& robot, const double step_size,
 }
 
 
-double SplitTerminalOCP::squaredKKTErrorNorm(Robot& robot, const double t, 
-                                             const Eigen::VectorXd& lmd, 
-                                             const Eigen::VectorXd& gmm, 
-                                             const Eigen::VectorXd& q, 
-                                             const Eigen::VectorXd& v) {
+double TerminalOCP::squaredKKTErrorNorm(Robot& robot, const double t, 
+                                        const Eigen::VectorXd& lmd, 
+                                        const Eigen::VectorXd& gmm, 
+                                        const Eigen::VectorXd& q, 
+                                        const Eigen::VectorXd& v) {
   assert(lmd.size() == dimv_);
   assert(gmm.size() == dimv_);
   assert(q.size() == dimq_);

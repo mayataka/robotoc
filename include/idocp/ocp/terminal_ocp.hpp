@@ -1,5 +1,5 @@
-#ifndef IDOCP_SPLIT_TERMINAL_OCP_HPP_
-#define IDOCP_SPLIT_TERMINAL_OCP_HPP_
+#ifndef IDOCP_TERMINAL_OCP_HPP_
+#define IDOCP_TERMINAL_OCP_HPP_
 
 #include <memory>
 
@@ -13,7 +13,7 @@
 
 namespace idocp {
 
-class SplitTerminalOCP {
+class TerminalOCP {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -22,27 +22,27 @@ public:
   //    robot: The robot model that has been already initialized.
   //    cost: The pointer to the cost function.
   //    constraints: The pointer to the constraints.
-  SplitTerminalOCP(const Robot& robot, 
-                   std::unique_ptr<CostFunctionInterface>&& cost,
-                   std::unique_ptr<ConstraintsInterface>&& constraints);
+  TerminalOCP(const Robot& robot, 
+              const std::shared_ptr<CostFunctionInterface>& cost,
+              const std::shared_ptr<ConstraintsInterface>& constraints);
 
   // Default constructor.
-  SplitTerminalOCP();
+  TerminalOCP();
   
   // Destructor.
-  ~SplitTerminalOCP();
+  ~TerminalOCP();
 
-  // Progibits copy constructor due to unique_ptr.
-  SplitTerminalOCP(const SplitTerminalOCP&) = delete;
+  // Use default copy constructor.
+  TerminalOCP(const TerminalOCP&) = default;
 
-  // Progibits copy operator due to unique_ptr.
-  SplitTerminalOCP& operator=(const SplitTerminalOCP&) = delete;
+  // Use default copy assign operator.
+  TerminalOCP& operator=(const TerminalOCP&) = default;
 
   // Use default move constructor.
-  SplitTerminalOCP(SplitTerminalOCP&&) = default;
+  TerminalOCP(TerminalOCP&&) noexcept = default;
 
   // Use default move assign operator.
-  SplitTerminalOCP& operator=(SplitTerminalOCP&&) = default;
+  TerminalOCP& operator=(TerminalOCP&&) noexcept = default;
 
   // Check whether the solution q, v are feasible under inequality 
   // constraints.
@@ -181,8 +181,8 @@ public:
                              const Eigen::VectorXd& v);
 
 private:
-  std::unique_ptr<CostFunctionInterface> cost_;
-  std::unique_ptr<ConstraintsInterface> constraints_;
+  std::shared_ptr<CostFunctionInterface> cost_;
+  std::shared_ptr<ConstraintsInterface> constraints_;
   pdipm::JointSpaceConstraints joint_constraints_;
   int dimq_, dimv_;
   Eigen::VectorXd lq_, lv_, q_res_, v_res_;
@@ -193,4 +193,4 @@ private:
 } // namespace idocp
 
 
-#endif // IDOCP_SPLIT_TERMINAL_OCP_HPP_
+#endif // IDOCPT_TERMINAL_OCP_HPP_

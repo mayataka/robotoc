@@ -6,24 +6,23 @@
 #include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/split_terminal_ocp.hpp"
-#include "idocp/quadruped/cost_function.hpp"
-#include "idocp/quadruped/constraints.hpp"
+#include "idocp/ocp/terminal_ocp.hpp"
+#include "idocp/manipulator/cost_function.hpp"
+#include "idocp/manipulator/constraints.hpp"
 
 
 namespace idocp {
 
-class FloatingBaseSplitTerminalOCPTest : public ::testing::Test {
+class FixedBaseTerminalOCPTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    urdf_ = "../urdf/anymal/anymal.urdf";
+    urdf_ = "../urdf/iiwa14/iiwa14.urdf";
     robot_ = Robot(urdf_);
     t_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     q_ = Eigen::VectorXd::Random(robot_.dimq());
-    robot_.generateFeasibleConfiguration(q_);
     v_ = Eigen::VectorXd::Random(robot_.dimv());
     lmd_ = Eigen::VectorXd::Random(robot_.dimv());
     gmm_ = Eigen::VectorXd::Random(robot_.dimv());
@@ -39,24 +38,25 @@ protected:
 };
 
 
-TEST_F(FloatingBaseSplitTerminalOCPTest, isFeasible) {
-  std::unique_ptr<CostFunctionInterface> cost 
-      = std::make_unique<quadruped::CostFunction>(robot_);
-  std::unique_ptr<ConstraintsInterface> constraints 
-      = std::make_unique<quadruped::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
+TEST_F(FixedBaseTerminalOCPTest, isFeasible) {
+  std::shared_ptr<CostFunctionInterface> cost 
+      = std::make_shared<manipulator::CostFunction>(robot_);
+  std::shared_ptr<ConstraintsInterface> constraints 
+      = std::make_shared<manipulator::Constraints>(robot_);
+  TerminalOCP ocp(robot_, cost, constraints);
   EXPECT_TRUE(ocp.isFeasible(robot_, q_, v_));
 }
 
 
-TEST_F(FloatingBaseSplitTerminalOCPTest, linearizeOCP) {
-  std::unique_ptr<CostFunctionInterface> cost 
-      = std::make_unique<quadruped::CostFunction>(robot_);
-  std::unique_ptr<ConstraintsInterface> constraints 
-      = std::make_unique<quadruped::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
-  quadruped::CostFunction cost_ref(robot_);
-  quadruped::Constraints constraints_ref(robot_);
+TEST_F(FixedBaseTerminalOCPTest, linearizeOCP) {
+  std::shared_ptr<CostFunctionInterface> cost 
+      = std::make_shared<manipulator::CostFunction>(robot_);
+  std::shared_ptr<ConstraintsInterface> constraints 
+      = std::make_shared<manipulator::Constraints>(robot_);
+  TerminalOCP ocp(robot_, cost, constraints);
+  manipulator::CostFunction cost_ref(robot_);
+  manipulator::Constraints constraintsref(robot_);
+  robot_.generateFeasibleConfiguration(q_);
   std::random_device rnd;
   ocp.initConstraints(robot_, rnd()%50, dtau_, q_, v_);
   EXPECT_TRUE(ocp.isFeasible(robot_, q_, v_));
@@ -76,7 +76,6 @@ TEST_F(FloatingBaseSplitTerminalOCPTest, linearizeOCP) {
   Eigen::MatrixXd Qvv_ref = Eigen::MatrixXd::Zero(dimv, dimv);
   Eigen::VectorXd Qq_ref = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd Qv_ref = Eigen::VectorXd::Zero(dimv);
-  robot_.computeConfigurationJacobian(q_);
   cost_ref.phiq(robot_, t_, q_, v_, Qq_ref);
   cost_ref.phiv(robot_, t_, q_, v_, Qv_ref);
   Qq_ref = - Qq_ref + lmd_;
@@ -89,19 +88,18 @@ TEST_F(FloatingBaseSplitTerminalOCPTest, linearizeOCP) {
   EXPECT_TRUE(Qvv.isApprox(Qvv_ref));
   EXPECT_TRUE(Qq.isApprox(Qq_ref));
   EXPECT_TRUE(Qv.isApprox(Qv_ref));
-  std::cout << Qqq - Qqq_ref << std::endl;
-  std::cout << Qq - Qq_ref << std::endl;
 }
 
 
-TEST_F(FloatingBaseSplitTerminalOCPTest, terminalCost) {
-  std::unique_ptr<CostFunctionInterface> cost 
-      = std::make_unique<quadruped::CostFunction>(robot_);
-  std::unique_ptr<ConstraintsInterface> constraints 
-      = std::make_unique<quadruped::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
-  quadruped::CostFunction cost_ref(robot_);
-  quadruped::Constraints constraints_ref(robot_);
+TEST_F(FixedBaseTerminalOCPTest, terminalCost) {
+  std::shared_ptr<CostFunctionInterface> cost 
+      = std::make_shared<manipulator::CostFunction>(robot_);
+  std::shared_ptr<ConstraintsInterface> constraints 
+      = std::make_shared<manipulator::Constraints>(robot_);
+  TerminalOCP ocp(robot_, cost, constraints);
+  manipulator::CostFunction cost_ref(robot_);
+  manipulator::Constraints constraintsref(robot_);
+  robot_.generateFeasibleConfiguration(q_);
   std::random_device rnd;
   ocp.initConstraints(robot_, rnd()%50, dtau_, q_, v_);
   EXPECT_TRUE(ocp.isFeasible(robot_, q_, v_));
@@ -120,23 +118,22 @@ TEST_F(FloatingBaseSplitTerminalOCPTest, terminalCost) {
   const double terminal_cost_with_step
       = ocp.terminalCost(robot_, step_size, t_, q_, v_, dq, dv);
   const double terminal_cost_ref = cost_ref.phi(robot_, t_, q_, v_);
-  Eigen::VectorXd q_tmp = q_;
-  robot_.integrateConfiguration(dq, step_size, q_tmp);
   const double terminal_cost_with_step_ref 
-      = cost_ref.phi(robot_, t_, q_tmp, v_+step_size*dv);
+      = cost_ref.phi(robot_, t_, q_+step_size*dq, v_+step_size*dv);
   EXPECT_DOUBLE_EQ(terminal_cost, terminal_cost_ref);
   EXPECT_DOUBLE_EQ(terminal_cost_with_step, terminal_cost_with_step_ref);
 }
 
 
-TEST_F(FloatingBaseSplitTerminalOCPTest, updatePrimalAndDual) {
-  std::unique_ptr<CostFunctionInterface> cost 
-      = std::make_unique<quadruped::CostFunction>(robot_);
-  std::unique_ptr<ConstraintsInterface> constraints 
-      = std::make_unique<quadruped::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
-  quadruped::CostFunction cost_ref(robot_);
-  quadruped::Constraints constraints_ref(robot_);
+TEST_F(FixedBaseTerminalOCPTest, updatePrimalAndDual) {
+  std::shared_ptr<CostFunctionInterface> cost 
+      = std::make_shared<manipulator::CostFunction>(robot_);
+  std::shared_ptr<ConstraintsInterface> constraints 
+      = std::make_shared<manipulator::Constraints>(robot_);
+  TerminalOCP ocp(robot_, cost, constraints);
+  manipulator::CostFunction cost_ref(robot_);
+  manipulator::Constraints constraintsref(robot_);
+  robot_.generateFeasibleConfiguration(q_);
   std::random_device rnd;
   ocp.initConstraints(robot_, rnd()%50, dtau_, q_, v_);
   EXPECT_TRUE(ocp.isFeasible(robot_, q_, v_));
@@ -163,7 +160,7 @@ TEST_F(FloatingBaseSplitTerminalOCPTest, updatePrimalAndDual) {
                    lmd_, gmm_, q_, v_);
   lmd_ref += step_size * (Pqq * dq + Pqv * dv - sq);
   gmm_ref += step_size * (Pvq * dq + Pvv * dv - sv);
-  robot_.integrateConfiguration(dq, step_size, q_ref);
+  q_ref += step_size * dq;
   v_ref += step_size * dv;
   EXPECT_TRUE(lmd_.isApprox(lmd_ref));
   EXPECT_TRUE(gmm_.isApprox(gmm_ref));
@@ -172,29 +169,30 @@ TEST_F(FloatingBaseSplitTerminalOCPTest, updatePrimalAndDual) {
 }
 
 
-TEST_F(FloatingBaseSplitTerminalOCPTest, squaredKKTError) {
-  std::unique_ptr<CostFunctionInterface> cost 
-      = std::make_unique<quadruped::CostFunction>(robot_);
-  std::unique_ptr<ConstraintsInterface> constraints 
-      = std::make_unique<quadruped::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
-  quadruped::CostFunction cost_ref(robot_);
-  quadruped::Constraints constraints_ref(robot_);
+TEST_F(FixedBaseTerminalOCPTest, squaredKKTError) {
+  std::shared_ptr<CostFunctionInterface> cost 
+      = std::make_shared<manipulator::CostFunction>(robot_);
+  std::shared_ptr<ConstraintsInterface> constraints 
+      = std::make_shared<manipulator::Constraints>(robot_);
+  TerminalOCP ocp(robot_, cost, constraints);
+  manipulator::CostFunction cost_ref(robot_);
+  manipulator::Constraints constraintsref(robot_);
+  robot_.generateFeasibleConfiguration(q_);
   std::random_device rnd;
   ocp.initConstraints(robot_, rnd()%50, dtau_, q_, v_);
   EXPECT_TRUE(ocp.isFeasible(robot_, q_, v_));
   const int dimq = robot_.dimq();
   const int dimv = robot_.dimv();
-  Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);
-  Eigen::VectorXd lv = Eigen::VectorXd::Zero(dimv);
-  const double error = ocp.squaredKKTErrorNorm(robot_, t_, lmd_, gmm_, q_, v_);
-  robot_.computeConfigurationJacobian(q_);
-  cost_ref.phiq(robot_, t_, q_, v_, lq);
-  cost_ref.phiv(robot_, t_, q_, v_, lv);
-  lq -= lmd_;
-  lv -= gmm_;
-  const double error_ref = lq.squaredNorm() + lv.squaredNorm();
-  EXPECT_DOUBLE_EQ(error, error_ref);
+  const double result 
+      = ocp.squaredKKTErrorNorm(robot_, t_, lmd_, gmm_, q_, v_);
+  Eigen::VectorXd lq_ref = Eigen::VectorXd::Zero(dimv);
+  Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
+  cost_ref.phiq(robot_, t_, q_, v_, lq_ref);
+  cost_ref.phiv(robot_, t_, q_, v_, lv_ref);
+  lq_ref -= lmd_;
+  lv_ref -= gmm_;
+  const double result_ref = lq_ref.squaredNorm() + lv_ref.squaredNorm();
+  EXPECT_DOUBLE_EQ(result, result_ref);
 }
 
 } // namespace idocp

@@ -26,8 +26,8 @@ public:
   //    cost: The pointer to the cost function.
   //    constraints: The pointer to the constraints.
   SplitOCP(const Robot& robot, 
-           std::unique_ptr<CostFunctionInterface>&& cost,
-           std::unique_ptr<ConstraintsInterface>&& constraints);
+           const std::shared_ptr<CostFunctionInterface>& cost,
+           const std::shared_ptr<ConstraintsInterface>& constraints);
 
   // Default constructor.
   SplitOCP();
@@ -35,17 +35,17 @@ public:
   // Destructor.
   ~SplitOCP();
 
-  // Progibits copy constructor due to unique_ptr.
-  SplitOCP(const SplitOCP&) = delete;
+  // Use default copy constructor.
+  SplitOCP(const SplitOCP&) = default;
 
-  // Progibits copy operator due to unique_ptr.
-  SplitOCP& operator=(const SplitOCP&) = delete;
+  // Use default copy assign operator.
+  SplitOCP& operator=(const SplitOCP&) = default;
 
   // Use default move constructor.
-  SplitOCP(SplitOCP&&) = default;
+  SplitOCP(SplitOCP&&) noexcept = default;
 
   // Use default move assign operator.
-  SplitOCP& operator=(SplitOCP&&) = default;
+  SplitOCP& operator=(SplitOCP&&) noexcept = default;
  
   // Check whether the solution q, v, a, u are feasible under inequality 
   // constraints.
@@ -124,6 +124,11 @@ public:
   double maxDualStepSize();
 
   std::pair<double, double> costAndConstraintsViolation(
+      Robot& robot, const double t, const double dtau, const Eigen::VectorXd& q, 
+      const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+      const Eigen::VectorXd& u, const Eigen::VectorXd& f);
+
+  std::pair<double, double> costAndConstraintsViolation(
       Robot& robot, const double step_size, const double t, const double dtau, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
       const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
@@ -135,10 +140,10 @@ public:
   void updateDual(const double step_size);
 
   void updatePrimal(Robot& robot, const double step_size, const double dtau, 
-                    const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
                     const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
                     const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
                     const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
+                    const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
                     Eigen::VectorXd& q, Eigen::VectorXd& v, Eigen::VectorXd& a, 
                     Eigen::VectorXd& u, Eigen::VectorXd& beta, 
                     Eigen::VectorXd& f, Eigen::VectorXd& mu, 
@@ -159,8 +164,8 @@ public:
                              const Eigen::VectorXd& v_next);
 
 private:
-  std::unique_ptr<CostFunctionInterface> cost_;
-  std::unique_ptr<ConstraintsInterface> constraints_;
+  std::shared_ptr<CostFunctionInterface> cost_;
+  std::shared_ptr<ConstraintsInterface> constraints_;
   pdipm::JointSpaceConstraints joint_constraints_;
   RiccatiMatrixFactorizer riccati_matrix_factorizer_;
   RiccatiMatrixInverter riccati_matrix_inverter_;

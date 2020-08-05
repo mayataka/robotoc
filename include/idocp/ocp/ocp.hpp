@@ -8,10 +8,10 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_ocp.hpp"
-#include "idocp/ocp/split_terminal_ocp.hpp"
+#include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/line_search_filter.hpp"
-#include "idocp/cost/cost_function_factory_interface.hpp"
-#include "idocp/constraints/constraints_factory_interface.hpp"
+#include "idocp/cost/cost_function_interface.hpp"
+#include "idocp/constraints/constraints_interface.hpp"
 
 
 namespace idocp {
@@ -19,10 +19,9 @@ namespace idocp {
 class OCP {
 public:
   // Constructor. 
-  OCP(const Robot& robot, 
-      std::unique_ptr<CostFunctionFactoryInterface>&& cost_factory,
-      std::unique_ptr<ConstraintsFactoryInterface>&& constraints_factory,
-      const double T, const int N, const int num_proc=1);
+  OCP(const Robot& robot, const std::shared_ptr<CostFunctionInterface>& cost,
+      const std::shared_ptr<ConstraintsInterface>& constraints, const double T, 
+      const int N, const int num_proc=1);
 
   ~OCP();
 
@@ -63,11 +62,9 @@ private:
 
   void activateAllContacts();
 
-  std::unique_ptr<CostFunctionFactoryInterface> cost_factory_;
-  std::unique_ptr<ConstraintsFactoryInterface> constraints_factory_;
   std::vector<SplitOCP> split_ocps_;
+  TerminalOCP terminal_ocp_;
   std::vector<Robot> robots_;
-  SplitTerminalOCP terminal_ocp_;
   LineSearchFilter filter_;
   double T_, dtau_, step_size_reduction_rate_, min_step_size_;
   int N_, num_proc_;

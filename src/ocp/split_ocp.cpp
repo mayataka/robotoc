@@ -7,10 +7,10 @@
 namespace idocp {
 
 SplitOCP::SplitOCP(const Robot& robot, 
-                   std::unique_ptr<CostFunctionInterface>&& cost,
-                   std::unique_ptr<ConstraintsInterface>&& constraints) 
-  : cost_(std::move(cost)),
-    constraints_(std::move(constraints)),
+                   const std::shared_ptr<CostFunctionInterface>& cost,
+                   const std::shared_ptr<ConstraintsInterface>& constraints) 
+  : cost_(cost),
+    constraints_(constraints),
     joint_constraints_(robot),
     riccati_matrix_factorizer_(robot),
     riccati_matrix_inverter_(robot),
@@ -420,6 +420,29 @@ double SplitOCP::maxDualStepSize() {
 
 
 std::pair<double, double> SplitOCP::costAndConstraintsViolation(
+    Robot& robot, const double t, const double dtau, const Eigen::VectorXd& q, 
+    const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
+    const Eigen::VectorXd& u, const Eigen::VectorXd& f) {
+  assert(dtau > 0);
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(a.size() == dimv_);
+  assert(u.size() == dimv_);
+  assert(f.size() == max_dimf_);
+  double cost = 0;
+  cost += cost_->l(robot, t, dtau, q, v, a, u, f);
+  cost += joint_constraints_.costSlackBarrier();
+  double constraints_violation = 0;
+  constraints_violation += q_res_.lpNorm<1>();
+  constraints_violation += v_res_.lpNorm<1>();
+  constraints_violation += dtau * u_res_.lpNorm<1>();
+  constraints_violation += joint_constraints_.residualL1Nrom(dtau, q, v, a, u);
+  constraints_violation += C_res_.head(dimc_).lpNorm<1>();
+  return std::make_pair(cost, constraints_violation);
+}
+
+
+std::pair<double, double> SplitOCP::costAndConstraintsViolation(
     Robot& robot, const double step_size, const double t, const double dtau, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
@@ -481,14 +504,14 @@ void SplitOCP::updateDual(const double step_size) {
 
 
 void SplitOCP::updatePrimal(Robot& robot, const double step_size, 
-                            const double dtau, const Eigen::VectorXd& dq, 
-                            const Eigen::VectorXd& dv, 
-                            const Eigen::MatrixXd& Pqq, 
+                            const double dtau, const Eigen::MatrixXd& Pqq, 
                             const Eigen::MatrixXd& Pqv, 
                             const Eigen::MatrixXd& Pvq, 
                             const Eigen::MatrixXd& Pvv, 
                             const Eigen::VectorXd& sq, 
-                            const Eigen::VectorXd& sv, Eigen::VectorXd& q, 
+                            const Eigen::VectorXd& sv, 
+                            const Eigen::VectorXd& dq, 
+                            const Eigen::VectorXd& dv, Eigen::VectorXd& q, 
                             Eigen::VectorXd& v, Eigen::VectorXd& a, 
                             Eigen::VectorXd& u, Eigen::VectorXd& beta, 
                             Eigen::VectorXd& f, Eigen::VectorXd& mu, 
@@ -496,8 +519,6 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dtau > 0);
-  assert(dq.size() == dimv_);
-  assert(dv.size() == dimv_);
   assert(Pqq.rows() == dimv_);
   assert(Pqq.cols() == dimv_);
   assert(Pqv.rows() == dimv_);
@@ -508,6 +529,8 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   assert(Pvv.cols() == dimv_);
   assert(sq.size() == dimv_);
   assert(sv.size() == dimv_);
+  assert(dq.size() == dimv_);
+  assert(dv.size() == dimv_);
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);

@@ -8,16 +8,11 @@
 
 namespace idocp {
 
-OCP::OCP(const Robot& robot, 
-         std::unique_ptr<CostFunctionFactoryInterface>&& cost_factory,
-         std::unique_ptr<ConstraintsFactoryInterface>&& constraints_factory,
+OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunctionInterface>& cost,
+         const std::shared_ptr<ConstraintsInterface>& constraints, 
          const double T, const int N, const int num_proc)
-  : cost_factory_(std::move(cost_factory)),
-    constraints_factory_(std::move(constraints_factory)),
-    split_ocps_(N-1, SplitOCP(robot, cost_factory_.create(robot), 
-                              constraints_factory_.create(robot))),
-    terminal_ocp_(robot, cost_factory_.create(robot), 
-                  constraints_factory_.create(robot)),
+  : split_ocps_(N-1, SplitOCP(robot, cost, constraints)),
+    terminal_ocp_(robot, cost, constraints),
     robots_(num_proc_, robot),
     filter_(),
     T_(T),

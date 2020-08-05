@@ -14,7 +14,7 @@ namespace idocp {
 namespace ocplinearizer {
 
 inline void linearizeStageCost(Robot& robot, 
-                              std::unique_ptr<CostFunctionInterface>& cost, 
+                              std::shared_ptr<CostFunctionInterface>& cost, 
                               const double t, const double dtau, 
                               const Eigen::VectorXd& q, 
                               const Eigen::VectorXd& v, 

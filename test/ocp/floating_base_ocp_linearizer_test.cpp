@@ -30,8 +30,8 @@ protected:
       contact_status.push_back(rnd()%2==0);
     }
     robot_.setContactStatus(contact_status);
-    cost_ = std::make_unique<quadruped::CostFunction>(robot_);
-    constraints_ = std::make_unique<quadruped::Constraints>(robot_);
+    cost_ = std::make_shared<quadruped::CostFunction>(robot_);
+    constraints_ = std::make_shared<quadruped::Constraints>(robot_);
     t_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     time_step_ = rnd()%10;
@@ -63,8 +63,8 @@ protected:
 
   std::string urdf_;
   Robot robot_;
-  std::unique_ptr<CostFunctionInterface> cost_;
-  std::unique_ptr<ConstraintsInterface> constraints_;
+  std::shared_ptr<CostFunctionInterface> cost_;
+  std::shared_ptr<ConstraintsInterface> constraints_;
   double t_, dtau_, baum_on_velocity_, baum_on_position_;
   int time_step_, dimq_, dimv_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_;
   std::vector<int> contact_frames_;

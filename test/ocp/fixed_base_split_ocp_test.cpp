@@ -41,10 +41,10 @@ protected:
     else {
       robot_ = Robot(urdf_);
     }
-    cost_ = std::make_unique<manipulator::CostFunction>(robot_);
-    cost_ref_ = std::make_unique<manipulator::CostFunction>(robot_);
-    constraints_ = std::make_unique<manipulator::Constraints>(robot_);
-    constraints_ref_ = std::make_unique<manipulator::Constraints>(robot_);
+    cost_ = std::make_shared<manipulator::CostFunction>(robot_);
+    cost_ref_ = std::make_shared<manipulator::CostFunction>(robot_);
+    constraints_ = std::make_shared<manipulator::Constraints>(robot_);
+    constraints_ref_ = std::make_shared<manipulator::Constraints>(robot_);
     joint_space_constraints_ref_ = pdipm::JointSpaceConstraints(robot_);
     factorizer_ = RiccatiMatrixFactorizer(robot_);
     inverter_ = RiccatiMatrixInverter(robot_);
@@ -81,10 +81,10 @@ protected:
   Robot robot_;
   RiccatiMatrixFactorizer factorizer_;
   RiccatiMatrixInverter inverter_;
-  std::unique_ptr<CostFunctionInterface> cost_;
-  std::unique_ptr<ConstraintsInterface> constraints_;
-  std::unique_ptr<CostFunctionInterface> cost_ref_;
-  std::unique_ptr<ConstraintsInterface> constraints_ref_;
+  std::shared_ptr<CostFunctionInterface> cost_;
+  std::shared_ptr<ConstraintsInterface> constraints_;
+  std::shared_ptr<CostFunctionInterface> cost_ref_;
+  std::shared_ptr<ConstraintsInterface> constraints_ref_;
   pdipm::JointSpaceConstraints joint_space_constraints_ref_;
   double t_, dtau_, baum_on_velocity_, baum_on_position_;
   int time_step_, dimq_, dimv_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_;
@@ -95,14 +95,14 @@ protected:
 
 
 TEST_F(FixedBaseSplitOCPTest, isFeasible) {
-  SplitOCP ocp(robot_, std::move(cost_), std::move(constraints_));
+  SplitOCP ocp(robot_, cost_, constraints_);
   EXPECT_EQ(ocp.isFeasible(robot_, q_, v_, a_, u_), 
             joint_space_constraints_ref_.isFeasible(q_, v_, a_, u_));
 }
 
 
 TEST_F(FixedBaseSplitOCPTest, moveConstructor) {
-  SplitOCP ocp(robot_, std::move(cost_), std::move(constraints_));
+  SplitOCP ocp(robot_, cost_, constraints_);
   Eigen::VectorXd beta = Eigen::VectorXd::Random(dimv_);
   const double KKT_error 
       = ocp.squaredKKTErrorNorm(robot_, t_, dtau_, lmd_, gmm_, q_, v_, a_, u_, 
@@ -118,7 +118,7 @@ TEST_F(FixedBaseSplitOCPTest, moveConstructor) {
 
 
 TEST_F(FixedBaseSplitOCPTest, moveAssignOperator) {
-  SplitOCP ocp(robot_, std::move(cost_), std::move(constraints_));
+  SplitOCP ocp(robot_, cost_, constraints_);
   Eigen::VectorXd beta = Eigen::VectorXd::Random(dimv_);
   const double KKT_error 
       = ocp.squaredKKTErrorNorm(robot_, t_, dtau_, lmd_, gmm_, q_, v_, a_, u_, 
@@ -135,7 +135,7 @@ TEST_F(FixedBaseSplitOCPTest, moveAssignOperator) {
 
 
 TEST_F(FixedBaseSplitOCPTest, solveOCP) {
-  SplitOCP ocp(robot_, std::move(cost_), std::move(constraints_));
+  SplitOCP ocp(robot_, cost_, constraints_);
   ASSERT_FALSE(robot_.has_floating_base());
   ASSERT_TRUE(robot_.dim_passive() == 0);
   while (!ocp.isFeasible(robot_, q_, v_, a_, u_)) {
@@ -385,8 +385,8 @@ TEST_F(FixedBaseSplitOCPTest, solveOCP) {
   Eigen::VectorXd mu_ref = mu_;
   Eigen::VectorXd lmd_ref = lmd_;
   Eigen::VectorXd gmm_ref = gmm_;
-  ocp.updatePrimal(robot_, max_primal_step_size, dtau_, dq, dv, Pqq, Pqv, Pvq, 
-                   Pvv, sq, sv, q_, v_, a_, u_, beta, f_, mu_, lmd_, gmm_);
+  ocp.updatePrimal(robot_, max_primal_step_size, dtau_, Pqq, Pqv, Pvq, Pvv, 
+                   sq, sv, dq, dv, q_, v_, a_, u_, beta, f_, mu_, lmd_, gmm_);
   robot_.integrateConfiguration(dq, max_primal_step_size, q_ref);
   v_ref += max_primal_step_size * dv;
   a_ref += max_primal_step_size * da;
