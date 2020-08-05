@@ -24,6 +24,8 @@ namespace idocp {
 
 class Robot {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   // Constructor. Build the pinocchio model from urdf.
   Robot(const std::string& urdf_file_name);
 

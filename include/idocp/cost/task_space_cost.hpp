@@ -10,6 +10,8 @@ namespace idocp {
 
 class TaskSpaceCost {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   TaskSpaceCost(const Robot& robot, const Eigen::VectorXd& q_weight,  
                 const Eigen::VectorXd& v_weight, 
                 const Eigen::VectorXd& a_weight,  

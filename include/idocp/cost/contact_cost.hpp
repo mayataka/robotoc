@@ -10,6 +10,8 @@ namespace idocp {
 
 class ContactCost {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   ContactCost(const Robot& robot, const Eigen::VectorXd& f_weight);
 
   ContactCost(const Robot& robot, const Eigen::VectorXd& f_ref, 

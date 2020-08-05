@@ -18,12 +18,15 @@ namespace idocp {
 
 class SplitOCP {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   // Constructor. Sets the robot, cost function, and constraints.
   // Argments:
   //    robot: The robot model that has been already initialized.
   //    cost: The pointer to the cost function.
   //    constraints: The pointer to the constraints.
-  SplitOCP(const Robot& robot, std::unique_ptr<CostFunctionInterface>& cost,
+  SplitOCP(const Robot& robot, 
+           std::unique_ptr<CostFunctionInterface>& cost,
            std::unique_ptr<ConstraintsInterface>& constraints);
 
   // Default constructor.

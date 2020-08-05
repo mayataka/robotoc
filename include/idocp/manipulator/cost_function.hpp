@@ -14,6 +14,8 @@ namespace manipulator {
 
 class CostFunction final : public CostFunctionInterface {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   CostFunction(const Robot& robot);
 
   CostFunction();
