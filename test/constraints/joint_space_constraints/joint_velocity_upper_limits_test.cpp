@@ -91,6 +91,76 @@ TEST_F(JointVelocityUpperLimitsTest, setSlackAndDualFixedBase) {
 }
 
 
+TEST_F(JointVelocityUpperLimitsTest, copyConstructor) {
+  JointVariablesUpperLimits limit(fixed_base_robot_, 
+                                  fixed_base_robot_.jointVelocityLimit(), 
+                                  barrier_);
+  const int dimq = fixed_base_robot_.dimq();
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(fixed_base_robot_.dimv());
+  limit.setSlackAndDual(dtau_, v);
+  JointVariablesUpperLimits limit_ref = limit;
+  Eigen::VectorXd Cv = Eigen::VectorXd::Zero(dimq);
+  limit.augmentDualResidual(dtau_, Cv);
+  Eigen::VectorXd Cv_ref = Eigen::VectorXd::Zero(dimq);
+  limit_ref.augmentDualResidual(dtau_, Cv_ref);
+  EXPECT_TRUE(Cv_ref.isApprox(Cv));
+  EXPECT_DOUBLE_EQ(limit_ref.costSlackBarrier(), limit.costSlackBarrier());
+}
+
+
+TEST_F(JointVelocityUpperLimitsTest, copyAssign) {
+  JointVariablesUpperLimits limit(fixed_base_robot_, 
+                                  fixed_base_robot_.jointVelocityLimit(), 
+                                  barrier_);
+  const int dimq = fixed_base_robot_.dimq();
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(fixed_base_robot_.dimv());
+  limit.setSlackAndDual(dtau_, v);
+  JointVariablesUpperLimits limit_ref(limit);
+  Eigen::VectorXd Cv = Eigen::VectorXd::Zero(dimq);
+  limit.augmentDualResidual(dtau_, Cv);
+  Eigen::VectorXd Cv_ref = Eigen::VectorXd::Zero(dimq);
+  limit_ref.augmentDualResidual(dtau_, Cv_ref);
+  EXPECT_TRUE(Cv_ref.isApprox(Cv));
+  EXPECT_DOUBLE_EQ(limit_ref.costSlackBarrier(), limit.costSlackBarrier());
+}
+
+
+TEST_F(JointVelocityUpperLimitsTest, moveAssign) {
+  JointVariablesUpperLimits limit(fixed_base_robot_, 
+                                  fixed_base_robot_.jointVelocityLimit(), 
+                                  barrier_);
+  const int dimq = fixed_base_robot_.dimq();
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(fixed_base_robot_.dimv());
+  limit.setSlackAndDual(dtau_, v);
+  JointVariablesUpperLimits limit_empty(limit);
+  JointVariablesUpperLimits limit_ref = std::move(limit_empty);
+  Eigen::VectorXd Cv = Eigen::VectorXd::Zero(dimq);
+  limit.augmentDualResidual(dtau_, Cv);
+  Eigen::VectorXd Cv_ref = Eigen::VectorXd::Zero(dimq);
+  limit_ref.augmentDualResidual(dtau_, Cv_ref);
+  EXPECT_TRUE(Cv_ref.isApprox(Cv));
+  EXPECT_DOUBLE_EQ(limit_ref.costSlackBarrier(), limit.costSlackBarrier());
+}
+
+
+TEST_F(JointVelocityUpperLimitsTest, moveConstructor) {
+  JointVariablesUpperLimits limit(fixed_base_robot_, 
+                                  fixed_base_robot_.jointVelocityLimit(), 
+                                  barrier_);
+  const int dimq = fixed_base_robot_.dimq();
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(fixed_base_robot_.dimv());
+  limit.setSlackAndDual(dtau_, v);
+  JointVariablesUpperLimits limit_empty(limit);
+  JointVariablesUpperLimits limit_ref(std::move(limit_empty));
+  Eigen::VectorXd Cv = Eigen::VectorXd::Zero(dimq);
+  limit.augmentDualResidual(dtau_, Cv);
+  Eigen::VectorXd Cv_ref = Eigen::VectorXd::Zero(dimq);
+  limit_ref.augmentDualResidual(dtau_, Cv_ref);
+  EXPECT_TRUE(Cv_ref.isApprox(Cv));
+  EXPECT_DOUBLE_EQ(limit_ref.costSlackBarrier(), limit.costSlackBarrier());
+}
+
+
 TEST_F(JointVelocityUpperLimitsTest, setSlackAndDualFloatingBase) {
   JointVariablesUpperLimits limit(floating_base_robot_, 
                                   floating_base_robot_.jointVelocityLimit(), 

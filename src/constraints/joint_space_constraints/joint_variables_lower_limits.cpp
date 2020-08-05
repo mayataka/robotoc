@@ -23,8 +23,8 @@ JointVariablesLowerLimits::JointVariablesLowerLimits(const Robot& robot,
     duality_(Eigen::VectorXd::Zero(dimc_)),
     dslack_(Eigen::VectorXd::Zero(dimc_)), 
     ddual_(Eigen::VectorXd::Zero(dimc_)) {
-  // assert(barrier_ > 0);
-  // assert(xmin_.maxCoeff() < 0);
+  assert(barrier_ > 0);
+  assert(xmin_.maxCoeff() < 0);
 }
 
 

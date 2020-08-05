@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <random>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -110,6 +111,116 @@ TEST_F(FixedBaseRobotTest, constructor) {
   EXPECT_TRUE(robot.jointVelocityLimit().isApprox(velocity_limit));
   EXPECT_TRUE(robot.lowerJointPositionLimit().isApprox(lower_position_limit));
   EXPECT_TRUE(robot.upperJointPositionLimit().isApprox(upper_position_limit));
+}
+
+
+TEST_F(FixedBaseRobotTest, moveAssign) {
+  // Default constructor
+  Robot robot_empty;
+  EXPECT_EQ(robot_empty.dimq(), 0);
+  EXPECT_EQ(robot_empty.dimv(), 0);
+  EXPECT_EQ(robot_empty.dimf(), 0);
+  EXPECT_EQ(robot_empty.max_dimf(), 0);
+  EXPECT_EQ(robot_empty.dim_passive(), 0);
+  EXPECT_EQ(robot_empty.max_point_contacts(), 0);
+  EXPECT_FALSE(robot_empty.has_floating_base());
+  std::vector<int> contacts = {contact_frame_id_};
+  Robot robot_contact(urdf_, contacts, baumgarte_weight_on_velocity_, 
+                      baumgarte_weight_on_position_);
+  EXPECT_EQ(robot_contact.dimq(), dimq_);
+  EXPECT_EQ(robot_contact.dimv(), dimq_);
+  EXPECT_EQ(robot_contact.dimf(), 0);
+  EXPECT_EQ(robot_contact.max_dimf(), 3);
+  EXPECT_EQ(robot_contact.dim_passive(), 0);
+  EXPECT_EQ(robot_contact.max_point_contacts(), 1);
+  EXPECT_EQ(robot_contact.is_contact_active(0), false);
+  EXPECT_FALSE(robot_contact.has_floating_base());
+  robot_contact.printRobotModel();
+  Eigen::VectorXd effort_limit(dimq_), velocity_limit(dimq_), 
+                  lower_position_limit(dimq_), upper_position_limit(dimq_);
+  effort_limit << 300, 300, 300, 300, 300, 300, 300;
+  velocity_limit << 10, 10, 10, 10, 10, 10, 10;
+  lower_position_limit << -2.96705972839, -2.09439510239, -2.96705972839, 
+                          -2.09439510239, -2.96705972839, -2.09439510239, 
+                          -3.05432619099;
+  upper_position_limit << 2.96705972839, 2.09439510239, 2.96705972839, 
+                          2.09439510239, 2.96705972839, 2.09439510239, 
+                          3.05432619099;
+  EXPECT_TRUE(robot_contact.jointEffortLimit().isApprox(effort_limit));
+  EXPECT_TRUE(robot_contact.jointVelocityLimit().isApprox(velocity_limit));
+  EXPECT_TRUE(
+      robot_contact.lowerJointPositionLimit().isApprox(lower_position_limit));
+  EXPECT_TRUE(
+      robot_contact.upperJointPositionLimit().isApprox(upper_position_limit));
+  Robot robot_ref = robot_contact; 
+  robot_empty = std::move(robot_ref);
+  EXPECT_EQ(robot_contact.dimq(), robot_empty.dimq());
+  EXPECT_EQ(robot_contact.dimv(), robot_empty.dimv());
+  EXPECT_EQ(robot_contact.dimf(), robot_empty.dimf());
+  EXPECT_EQ(robot_contact.max_dimf(), robot_empty.max_dimf());
+  EXPECT_EQ(robot_contact.dim_passive(), robot_empty.dim_passive());
+  EXPECT_EQ(robot_contact.max_point_contacts(), robot_empty.max_point_contacts());
+  EXPECT_TRUE(
+      robot_contact.jointEffortLimit().isApprox(robot_empty.jointEffortLimit()));
+  EXPECT_TRUE(
+      robot_contact.jointEffortLimit().isApprox(robot_empty.jointEffortLimit()));
+  EXPECT_TRUE(
+      robot_contact.jointVelocityLimit().isApprox(robot_empty.jointVelocityLimit()));
+  EXPECT_TRUE(
+      robot_contact.lowerJointPositionLimit().isApprox(robot_empty.lowerJointPositionLimit()));
+  EXPECT_TRUE(
+      robot_contact.upperJointPositionLimit().isApprox(robot_empty.upperJointPositionLimit()));
+}
+
+
+TEST_F(FixedBaseRobotTest, moveConstructor) {
+  // Default constructor
+  std::vector<int> contacts = {contact_frame_id_};
+  Robot robot_contact(urdf_, contacts, baumgarte_weight_on_velocity_, 
+                      baumgarte_weight_on_position_);
+  EXPECT_EQ(robot_contact.dimq(), dimq_);
+  EXPECT_EQ(robot_contact.dimv(), dimq_);
+  EXPECT_EQ(robot_contact.dimf(), 0);
+  EXPECT_EQ(robot_contact.max_dimf(), 3);
+  EXPECT_EQ(robot_contact.dim_passive(), 0);
+  EXPECT_EQ(robot_contact.max_point_contacts(), 1);
+  EXPECT_EQ(robot_contact.is_contact_active(0), false);
+  EXPECT_FALSE(robot_contact.has_floating_base());
+  robot_contact.printRobotModel();
+  Eigen::VectorXd effort_limit(dimq_), velocity_limit(dimq_), 
+                  lower_position_limit(dimq_), upper_position_limit(dimq_);
+  effort_limit << 300, 300, 300, 300, 300, 300, 300;
+  velocity_limit << 10, 10, 10, 10, 10, 10, 10;
+  lower_position_limit << -2.96705972839, -2.09439510239, -2.96705972839, 
+                          -2.09439510239, -2.96705972839, -2.09439510239, 
+                          -3.05432619099;
+  upper_position_limit << 2.96705972839, 2.09439510239, 2.96705972839, 
+                          2.09439510239, 2.96705972839, 2.09439510239, 
+                          3.05432619099;
+  EXPECT_TRUE(robot_contact.jointEffortLimit().isApprox(effort_limit));
+  EXPECT_TRUE(robot_contact.jointVelocityLimit().isApprox(velocity_limit));
+  EXPECT_TRUE(
+      robot_contact.lowerJointPositionLimit().isApprox(lower_position_limit));
+  EXPECT_TRUE(
+      robot_contact.upperJointPositionLimit().isApprox(upper_position_limit));
+  Robot robot_ref = robot_contact; 
+  Robot robot_empty(std::move(robot_ref));
+  EXPECT_EQ(robot_contact.dimq(), robot_empty.dimq());
+  EXPECT_EQ(robot_contact.dimv(), robot_empty.dimv());
+  EXPECT_EQ(robot_contact.dimf(), robot_empty.dimf());
+  EXPECT_EQ(robot_contact.max_dimf(), robot_empty.max_dimf());
+  EXPECT_EQ(robot_contact.dim_passive(), robot_empty.dim_passive());
+  EXPECT_EQ(robot_contact.max_point_contacts(), robot_empty.max_point_contacts());
+  EXPECT_TRUE(
+      robot_contact.jointEffortLimit().isApprox(robot_empty.jointEffortLimit()));
+  EXPECT_TRUE(
+      robot_contact.jointEffortLimit().isApprox(robot_empty.jointEffortLimit()));
+  EXPECT_TRUE(
+      robot_contact.jointVelocityLimit().isApprox(robot_empty.jointVelocityLimit()));
+  EXPECT_TRUE(
+      robot_contact.lowerJointPositionLimit().isApprox(robot_empty.lowerJointPositionLimit()));
+  EXPECT_TRUE(
+      robot_contact.upperJointPositionLimit().isApprox(robot_empty.upperJointPositionLimit()));
 }
 
 

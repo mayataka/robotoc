@@ -2,6 +2,7 @@
 #include <random>
 #include <utility>
 #include <vector>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -141,6 +142,63 @@ TEST_F(FixedBasePointContactTest, assign) {
   contact_ref.resetContactPointByCurrentKinematics(data_);
   PointContact contact;
   contact = contact_ref;
+  // Check the constructor works well.
+  EXPECT_TRUE(contact.isActive());
+  EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
+  EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
+  EXPECT_EQ(contact.dimv(), model_.nv);
+  EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(),  
+                   baumgarte_weight_on_velocity_);
+  EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
+                   baumgarte_weight_on_position_);
+  EXPECT_TRUE(contact.contact_point().isApprox(contact_ref.contact_point()));
+  EXPECT_TRUE(
+      contact.jXf().isApprox(model_.frames[contact_frame_id_].placement));
+  EXPECT_TRUE(
+      contact.contact_point().isApprox(
+          data_.oMf[contact_frame_id_].translation()));
+}
+
+
+TEST_F(FixedBasePointContactTest, moveAssign) {
+  PointContact contact_ref(model_, contact_frame_id_, 
+                           baumgarte_weight_on_velocity_, 
+                           baumgarte_weight_on_position_);
+  contact_ref.activate();
+  pinocchio::forwardKinematics(model_, data_, q_);
+  pinocchio::updateFramePlacement(model_, data_, contact_frame_id_);
+  contact_ref.resetContactPointByCurrentKinematics(data_);
+  PointContact contact_empty = contact_ref;
+  PointContact contact;
+  contact = std::move(contact_empty);
+  // Check the constructor works well.
+  EXPECT_TRUE(contact.isActive());
+  EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
+  EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
+  EXPECT_EQ(contact.dimv(), model_.nv);
+  EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(),  
+                   baumgarte_weight_on_velocity_);
+  EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
+                   baumgarte_weight_on_position_);
+  EXPECT_TRUE(contact.contact_point().isApprox(contact_ref.contact_point()));
+  EXPECT_TRUE(
+      contact.jXf().isApprox(model_.frames[contact_frame_id_].placement));
+  EXPECT_TRUE(
+      contact.contact_point().isApprox(
+          data_.oMf[contact_frame_id_].translation()));
+}
+
+
+TEST_F(FixedBasePointContactTest, moveConstructor) {
+  PointContact contact_ref(model_, contact_frame_id_, 
+                           baumgarte_weight_on_velocity_, 
+                           baumgarte_weight_on_position_);
+  contact_ref.activate();
+  pinocchio::forwardKinematics(model_, data_, q_);
+  pinocchio::updateFramePlacement(model_, data_, contact_frame_id_);
+  contact_ref.resetContactPointByCurrentKinematics(data_);
+  PointContact contact_empty = contact_ref;
+  PointContact contact(std::move(contact_empty));
   // Check the constructor works well.
   EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);

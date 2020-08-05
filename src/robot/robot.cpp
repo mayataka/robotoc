@@ -63,8 +63,8 @@ Robot::Robot(const std::string& urdf_file_name,
     lower_joint_position_limit_(),
     upper_joint_position_limit_(),
     configuration_jacobian_() {
-  // assert(baumgarte_weight_on_velocity >= 0);
-  // assert(baumgarte_weight_on_position >= 0);
+  assert(baumgarte_weight_on_velocity >= 0);
+  assert(baumgarte_weight_on_position >= 0);
   pinocchio::urdf::buildModel(urdf_file_name, model_);
   data_ = pinocchio::Data(model_);
   for (const auto& frame : contact_frames) {

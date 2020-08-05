@@ -24,7 +24,7 @@ public:
   ConstraintsInterface(ConstraintsInterface&&) noexcept = default;
 
   // Use default move assign coperator.
-  ConstraintsInterface& operator=(ConstraintsInterface&) noexcept = default;
+  ConstraintsInterface& operator=(ConstraintsInterface&&) noexcept = default;
 
   virtual bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v, const Eigen::VectorXd& a, 

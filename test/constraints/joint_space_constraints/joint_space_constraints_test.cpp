@@ -2,6 +2,7 @@
 #include <random>
 #include <utility>
 #include <vector>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -114,6 +115,152 @@ TEST_F(JointSpaceConstraintsTest, isFeasibleFloatingBase) {
   else {
     EXPECT_TRUE(constraints.isFeasible(q, v, a, u));
   }
+}
+
+
+TEST_F(JointSpaceConstraintsTest, copyConstructor) {
+  Robot robot = fixed_base_robot_;
+  JointSpaceConstraints constraints(robot);
+  Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
+  robot.generateFeasibleConfiguration(q);
+  Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  Eigen::VectorXd a = Eigen::VectorXd::Random(robot.dimv());
+  Eigen::VectorXd u = Eigen::VectorXd::Random(robot.dimv());
+  while (!constraints.isFeasible(q, v, a, u)) {
+    v = Eigen::VectorXd::Random(robot.dimv());
+    a = Eigen::VectorXd::Random(robot.dimv());
+    u = Eigen::VectorXd::Random(robot.dimv());
+  }
+  constraints.setSlackAndDual(dtau_, q, v, a, u);
+  Eigen::VectorXd Cq = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cv = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cu = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Ca = Eigen::VectorXd::Zero(robot.dimv());
+  constraints.augmentDualResidual(dtau_, Cu);
+  constraints.augmentDualResidual(dtau_, Cq, Cv, Ca);
+  JointSpaceConstraints constraints_ref(constraints);
+  Eigen::VectorXd Cq_ref = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cv_ref = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cu_ref = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Ca_ref = Eigen::VectorXd::Zero(robot.dimv());
+  constraints_ref.augmentDualResidual(dtau_, Cu_ref);
+  constraints_ref.augmentDualResidual(dtau_, Cq_ref, Cv_ref, Ca_ref);
+  EXPECT_TRUE(Cq_ref.isApprox(Cq));
+  EXPECT_TRUE(Cv_ref.isApprox(Cv));
+  EXPECT_TRUE(Ca_ref.isApprox(Ca));
+  EXPECT_TRUE(Cu_ref.isApprox(Cu));
+  EXPECT_DOUBLE_EQ(constraints.costSlackBarrier(), 
+                   constraints_ref.costSlackBarrier());
+}
+
+
+TEST_F(JointSpaceConstraintsTest, copyAssign) {
+  Robot robot = fixed_base_robot_;
+  JointSpaceConstraints constraints(robot);
+  Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
+  robot.generateFeasibleConfiguration(q);
+  Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  Eigen::VectorXd a = Eigen::VectorXd::Random(robot.dimv());
+  Eigen::VectorXd u = Eigen::VectorXd::Random(robot.dimv());
+  while (!constraints.isFeasible(q, v, a, u)) {
+    v = Eigen::VectorXd::Random(robot.dimv());
+    a = Eigen::VectorXd::Random(robot.dimv());
+    u = Eigen::VectorXd::Random(robot.dimv());
+  }
+  constraints.setSlackAndDual(dtau_, q, v, a, u);
+  Eigen::VectorXd Cq = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cv = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cu = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Ca = Eigen::VectorXd::Zero(robot.dimv());
+  constraints.augmentDualResidual(dtau_, Cu);
+  constraints.augmentDualResidual(dtau_, Cq, Cv, Ca);
+  JointSpaceConstraints constraints_ref = constraints;
+  Eigen::VectorXd Cq_ref = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cv_ref = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cu_ref = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Ca_ref = Eigen::VectorXd::Zero(robot.dimv());
+  constraints_ref.augmentDualResidual(dtau_, Cu_ref);
+  constraints_ref.augmentDualResidual(dtau_, Cq_ref, Cv_ref, Ca_ref);
+  EXPECT_TRUE(Cq_ref.isApprox(Cq));
+  EXPECT_TRUE(Cv_ref.isApprox(Cv));
+  EXPECT_TRUE(Ca_ref.isApprox(Ca));
+  EXPECT_TRUE(Cu_ref.isApprox(Cu));
+  EXPECT_DOUBLE_EQ(constraints.costSlackBarrier(), 
+                   constraints_ref.costSlackBarrier());
+}
+
+
+TEST_F(JointSpaceConstraintsTest, moveConstructor) {
+  Robot robot = fixed_base_robot_;
+  JointSpaceConstraints constraints(robot);
+  Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
+  robot.generateFeasibleConfiguration(q);
+  Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  Eigen::VectorXd a = Eigen::VectorXd::Random(robot.dimv());
+  Eigen::VectorXd u = Eigen::VectorXd::Random(robot.dimv());
+  while (!constraints.isFeasible(q, v, a, u)) {
+    v = Eigen::VectorXd::Random(robot.dimv());
+    a = Eigen::VectorXd::Random(robot.dimv());
+    u = Eigen::VectorXd::Random(robot.dimv());
+  }
+  constraints.setSlackAndDual(dtau_, q, v, a, u);
+  Eigen::VectorXd Cq = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cv = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cu = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Ca = Eigen::VectorXd::Zero(robot.dimv());
+  constraints.augmentDualResidual(dtau_, Cu);
+  constraints.augmentDualResidual(dtau_, Cq, Cv, Ca);
+  JointSpaceConstraints constraints_empty = constraints;
+  JointSpaceConstraints constraints_ref(std::move(constraints_empty));
+  Eigen::VectorXd Cq_ref = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cv_ref = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cu_ref = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Ca_ref = Eigen::VectorXd::Zero(robot.dimv());
+  constraints_ref.augmentDualResidual(dtau_, Cu_ref);
+  constraints_ref.augmentDualResidual(dtau_, Cq_ref, Cv_ref, Ca_ref);
+  EXPECT_TRUE(Cq_ref.isApprox(Cq));
+  EXPECT_TRUE(Cv_ref.isApprox(Cv));
+  EXPECT_TRUE(Ca_ref.isApprox(Ca));
+  EXPECT_TRUE(Cu_ref.isApprox(Cu));
+  EXPECT_DOUBLE_EQ(constraints.costSlackBarrier(), 
+                   constraints_ref.costSlackBarrier());
+}
+
+
+TEST_F(JointSpaceConstraintsTest, moveAssign) {
+  Robot robot = fixed_base_robot_;
+  JointSpaceConstraints constraints(robot);
+  Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
+  robot.generateFeasibleConfiguration(q);
+  Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  Eigen::VectorXd a = Eigen::VectorXd::Random(robot.dimv());
+  Eigen::VectorXd u = Eigen::VectorXd::Random(robot.dimv());
+  while (!constraints.isFeasible(q, v, a, u)) {
+    v = Eigen::VectorXd::Random(robot.dimv());
+    a = Eigen::VectorXd::Random(robot.dimv());
+    u = Eigen::VectorXd::Random(robot.dimv());
+  }
+  constraints.setSlackAndDual(dtau_, q, v, a, u);
+  Eigen::VectorXd Cq = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cv = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cu = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Ca = Eigen::VectorXd::Zero(robot.dimv());
+  constraints.augmentDualResidual(dtau_, Cu);
+  constraints.augmentDualResidual(dtau_, Cq, Cv, Ca);
+  JointSpaceConstraints constraints_empty = constraints;
+  JointSpaceConstraints constraints_ref(std::move(constraints_empty));
+  Eigen::VectorXd Cq_ref = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cv_ref = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Cu_ref = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd Ca_ref = Eigen::VectorXd::Zero(robot.dimv());
+  constraints_ref.augmentDualResidual(dtau_, Cu_ref);
+  constraints_ref.augmentDualResidual(dtau_, Cq_ref, Cv_ref, Ca_ref);
+  EXPECT_TRUE(Cq_ref.isApprox(Cq));
+  EXPECT_TRUE(Cv_ref.isApprox(Cv));
+  EXPECT_TRUE(Ca_ref.isApprox(Ca));
+  EXPECT_TRUE(Cu_ref.isApprox(Cu));
+  EXPECT_DOUBLE_EQ(constraints.costSlackBarrier(), 
+                   constraints_ref.costSlackBarrier());
 }
 
 

@@ -23,9 +23,9 @@ PointContact::PointContact(const pinocchio::Model& model,
     joint_a_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
     joint_a_partial_dv_(Eigen::MatrixXd::Zero(6, model.nv)),
     joint_a_partial_da_(Eigen::MatrixXd::Zero(6, model.nv)) {
-  // assert(contact_frame_id_ >= 0);
-  // assert(baumgarte_weight_on_velocity_ >= 0);
-  // assert(baumgarte_weight_on_position_ >= 0);
+  assert(contact_frame_id_ >= 0);
+  assert(baumgarte_weight_on_velocity_ >= 0);
+  assert(baumgarte_weight_on_position_ >= 0);
 }
 
 
