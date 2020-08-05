@@ -30,6 +30,12 @@ public:
   // Use dafule copy operator.
   FloatingBase& operator=(const FloatingBase&) = default;
 
+  // Use dafault move constructor.
+  FloatingBase(FloatingBase&&) noexcept = default;
+
+  // Use dafule move assign operator.
+  FloatingBase& operator=(FloatingBase&&) noexcept = default;
+
   // Substitutes zero in the generalized torques tau corresponding to the 
   // passive joints.
   // Argments:

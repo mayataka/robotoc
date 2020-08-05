@@ -25,17 +25,23 @@ public:
                    std::unique_ptr<CostFunctionInterface>& cost,
                    std::unique_ptr<ConstraintsInterface>& constraints);
 
-  // Default constructor. 
+  // Default constructor.
   SplitTerminalOCP();
-
+  
   // Destructor.
   ~SplitTerminalOCP();
- 
-  // Use default copy constructor.
-  SplitTerminalOCP(const SplitTerminalOCP& other) = default;
 
-  // Use default copy operator.
-  SplitTerminalOCP& operator=(const SplitTerminalOCP& other) = default;
+  // Progibits copy constructor due to unique_ptr.
+  SplitTerminalOCP(const SplitTerminalOCP&) = delete;
+
+  // Progibits copy operator due to unique_ptr.
+  SplitTerminalOCP& operator=(const SplitTerminalOCP&) = delete;
+
+  // Use default move constructor.
+  SplitTerminalOCP(SplitTerminalOCP&&) noexcept = default;
+
+  // Use default move assign operator.
+  SplitTerminalOCP& operator=(SplitTerminalOCP&& other) noexcept = default;
 
   // Check whether the solution q, v are feasible under inequality 
   // constraints.

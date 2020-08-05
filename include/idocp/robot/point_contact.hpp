@@ -38,10 +38,16 @@ public:
   ~PointContact();
 
   // Use default copy constructor.
-  PointContact(const PointContact& other) = default;
+  PointContact(const PointContact&) = default;
 
   // Use default assign operator.
-  PointContact& operator=(const PointContact& other) = default;
+  PointContact& operator=(const PointContact&) = default;
+
+  // Use default mvoe constructor.
+  PointContact(PointContact&&) noexcept = default;
+
+  // Use default move assign operator.
+  PointContact& operator=(PointContact&&) noexcept = default;
 
   // Resets the parameters of the Baumgarte's stabilization method.
   // Argments:

@@ -41,10 +41,16 @@ public:
   ~Robot();
 
   // Use default copy constructor.
-  Robot(const Robot& other) = default;
+  Robot(const Robot&) = default;
 
   // Use default copy operator.
-  Robot& operator=(const Robot& other) = default;
+  Robot& operator=(const Robot&) = default;
+
+  // Use default move constructor.
+  Robot(Robot&&) noexcept = default;
+
+  // Use default move assign operator.
+  Robot& operator=(Robot&&) noexcept = default;
 
   // Build the pinocchio model from xml.
   void buildRobotModelFromXML(const std::string& xml);
