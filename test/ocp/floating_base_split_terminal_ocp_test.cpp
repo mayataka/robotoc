@@ -44,7 +44,7 @@ TEST_F(FloatingBaseSplitTerminalOCPTest, isFeasible) {
       = std::make_unique<quadruped::CostFunction>(robot_);
   std::unique_ptr<ConstraintsInterface> constraints 
       = std::make_unique<quadruped::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, cost, constraints);
+  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
   EXPECT_TRUE(ocp.isFeasible(robot_, q_, v_));
 }
 
@@ -54,7 +54,7 @@ TEST_F(FloatingBaseSplitTerminalOCPTest, linearizeOCP) {
       = std::make_unique<quadruped::CostFunction>(robot_);
   std::unique_ptr<ConstraintsInterface> constraints 
       = std::make_unique<quadruped::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, cost, constraints);
+  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
   quadruped::CostFunction cost_ref(robot_);
   quadruped::Constraints constraints_ref(robot_);
   std::random_device rnd;
@@ -99,7 +99,7 @@ TEST_F(FloatingBaseSplitTerminalOCPTest, terminalCost) {
       = std::make_unique<quadruped::CostFunction>(robot_);
   std::unique_ptr<ConstraintsInterface> constraints 
       = std::make_unique<quadruped::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, cost, constraints);
+  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
   quadruped::CostFunction cost_ref(robot_);
   quadruped::Constraints constraints_ref(robot_);
   std::random_device rnd;
@@ -134,7 +134,7 @@ TEST_F(FloatingBaseSplitTerminalOCPTest, updatePrimalAndDual) {
       = std::make_unique<quadruped::CostFunction>(robot_);
   std::unique_ptr<ConstraintsInterface> constraints 
       = std::make_unique<quadruped::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, cost, constraints);
+  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
   quadruped::CostFunction cost_ref(robot_);
   quadruped::Constraints constraints_ref(robot_);
   std::random_device rnd;
@@ -177,7 +177,7 @@ TEST_F(FloatingBaseSplitTerminalOCPTest, squaredKKTError) {
       = std::make_unique<quadruped::CostFunction>(robot_);
   std::unique_ptr<ConstraintsInterface> constraints 
       = std::make_unique<quadruped::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, cost, constraints);
+  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
   quadruped::CostFunction cost_ref(robot_);
   quadruped::Constraints constraints_ref(robot_);
   std::random_device rnd;

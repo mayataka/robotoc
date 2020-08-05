@@ -24,8 +24,8 @@ public:
   //    cost: The pointer to the cost function.
   //    constraints: The pointer to the constraints.
   SplitTerminalOCP(const Robot& robot, 
-                   std::unique_ptr<CostFunctionInterface>& cost,
-                   std::unique_ptr<ConstraintsInterface>& constraints);
+                   std::unique_ptr<CostFunctionInterface> cost,
+                   std::unique_ptr<ConstraintsInterface> constraints);
 
   // Default constructor.
   SplitTerminalOCP();

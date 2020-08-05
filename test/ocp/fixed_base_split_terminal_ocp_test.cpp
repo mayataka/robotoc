@@ -43,7 +43,7 @@ TEST_F(FixedBaseSplitTerminalOCPTest, isFeasible) {
       = std::make_unique<manipulator::CostFunction>(robot_);
   std::unique_ptr<ConstraintsInterface> constraints 
       = std::make_unique<manipulator::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, cost, constraints);
+  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
   EXPECT_TRUE(ocp.isFeasible(robot_, q_, v_));
 }
 
@@ -53,7 +53,7 @@ TEST_F(FixedBaseSplitTerminalOCPTest, linearizeOCP) {
       = std::make_unique<manipulator::CostFunction>(robot_);
   std::unique_ptr<ConstraintsInterface> constraints 
       = std::make_unique<manipulator::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, cost, constraints);
+  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
   manipulator::CostFunction cost_ref(robot_);
   manipulator::Constraints constraintsref(robot_);
   robot_.generateFeasibleConfiguration(q_);
@@ -96,7 +96,7 @@ TEST_F(FixedBaseSplitTerminalOCPTest, terminalCost) {
       = std::make_unique<manipulator::CostFunction>(robot_);
   std::unique_ptr<ConstraintsInterface> constraints 
       = std::make_unique<manipulator::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, cost, constraints);
+  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
   manipulator::CostFunction cost_ref(robot_);
   manipulator::Constraints constraintsref(robot_);
   robot_.generateFeasibleConfiguration(q_);
@@ -130,7 +130,7 @@ TEST_F(FixedBaseSplitTerminalOCPTest, updatePrimalAndDual) {
       = std::make_unique<manipulator::CostFunction>(robot_);
   std::unique_ptr<ConstraintsInterface> constraints 
       = std::make_unique<manipulator::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, cost, constraints);
+  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
   manipulator::CostFunction cost_ref(robot_);
   manipulator::Constraints constraintsref(robot_);
   robot_.generateFeasibleConfiguration(q_);
@@ -174,7 +174,7 @@ TEST_F(FixedBaseSplitTerminalOCPTest, squaredKKTError) {
       = std::make_unique<manipulator::CostFunction>(robot_);
   std::unique_ptr<ConstraintsInterface> constraints 
       = std::make_unique<manipulator::Constraints>(robot_);
-  SplitTerminalOCP ocp(robot_, cost, constraints);
+  SplitTerminalOCP ocp(robot_, std::move(cost), std::move(constraints));
   manipulator::CostFunction cost_ref(robot_);
   manipulator::Constraints constraintsref(robot_);
   robot_.generateFeasibleConfiguration(q_);

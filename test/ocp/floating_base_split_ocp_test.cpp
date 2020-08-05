@@ -85,14 +85,14 @@ protected:
 
 
 TEST_F(FloatingBaseSplitOCPTest, isFeasible) {
-  SplitOCP ocp(robot_, cost_, constraints_);
+  SplitOCP ocp(robot_, std::move(cost_), std::move(constraints_));
   EXPECT_EQ(ocp.isFeasible(robot_, q_, v_, a_, u_), 
             joint_space_constraints_ref_.isFeasible(q_, v_, a_, u_));
 }
 
 
 TEST_F(FloatingBaseSplitOCPTest, moveConstructor) {
-  SplitOCP ocp(robot_, cost_, constraints_);
+  SplitOCP ocp(robot_, std::move(cost_), std::move(constraints_));
   Eigen::VectorXd beta = Eigen::VectorXd::Random(dimv_);
   const double KKT_error 
       = ocp.squaredKKTErrorNorm(robot_, t_, dtau_, lmd_, gmm_, q_, v_, a_, u_, 
@@ -108,7 +108,7 @@ TEST_F(FloatingBaseSplitOCPTest, moveConstructor) {
 
 
 TEST_F(FloatingBaseSplitOCPTest, moveAssignOperator) {
-  SplitOCP ocp(robot_, cost_, constraints_);
+  SplitOCP ocp(robot_, std::move(cost_), std::move(constraints_));
   Eigen::VectorXd beta = Eigen::VectorXd::Random(dimv_);
   const double KKT_error 
       = ocp.squaredKKTErrorNorm(robot_, t_, dtau_, lmd_, gmm_, q_, v_, a_, u_, 
@@ -125,7 +125,7 @@ TEST_F(FloatingBaseSplitOCPTest, moveAssignOperator) {
 
 
 TEST_F(FloatingBaseSplitOCPTest, solveOCP) {
-  SplitOCP ocp(robot_, cost_, constraints_);
+  SplitOCP ocp(robot_, std::move(cost_), std::move(constraints_));
   ASSERT_TRUE(robot_.has_floating_base());
   ASSERT_TRUE(robot_.dim_passive() == 6);
   while (!ocp.isFeasible(robot_, q_, v_, a_, u_)) {
