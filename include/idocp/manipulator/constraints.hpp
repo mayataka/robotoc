@@ -16,6 +16,16 @@ public:
 
   Constraints();
 
+  ~Constraints();
+
+  Constraints(const Constraints&) = default;
+
+  Constraints& operator=(const Constraints&) = default;
+
+  Constraints(Constraints&&) noexcept = default;
+
+  Constraints& operator=(Constraints&&) noexcept = default;
+
   bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
                   const Eigen::VectorXd& u) override;

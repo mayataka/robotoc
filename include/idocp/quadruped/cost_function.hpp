@@ -18,6 +18,16 @@ public:
 
   CostFunction();
 
+  ~CostFunction();
+
+  CostFunction(const CostFunction&) = default;
+
+  CostFunction& operator=(const CostFunction&) = default;
+
+  CostFunction(CostFunction&&) noexcept = default;
+
+  CostFunction& operator=(CostFunction&&) noexcept = default;
+
   void set_q_ref(const Eigen::VectorXd& q_ref);
 
   void set_v_ref(const Eigen::VectorXd& v_ref);

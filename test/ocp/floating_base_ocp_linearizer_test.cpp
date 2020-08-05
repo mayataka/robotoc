@@ -43,6 +43,7 @@ protected:
     max_dimc_ = robot_.dim_passive() + robot_.max_dimf();
     dimc_ = robot_.dim_passive() + robot_.dimf();
     q_ = Eigen::VectorXd::Random(dimq_);
+    robot_.generateFeasibleConfiguration(q_);
     v_ = Eigen::VectorXd::Random(dimv_);
     a_ = Eigen::VectorXd::Random(dimv_);
     u_ = Eigen::VectorXd::Random(dimv_);
@@ -51,6 +52,7 @@ protected:
     gmm_ = Eigen::VectorXd::Random(dimv_);
     mu_ = Eigen::VectorXd::Random(max_dimf_);
     q_next_ = Eigen::VectorXd::Random(dimq_);
+    robot_.generateFeasibleConfiguration(q_next_);
     v_next_ = Eigen::VectorXd::Random(dimv_);
     lmd_next_ = Eigen::VectorXd::Random(dimv_);
     gmm_next_ = Eigen::VectorXd::Random(dimv_);

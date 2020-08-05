@@ -339,7 +339,7 @@ TEST_F(FloatingBaseSplitOCPTest, solveOCP) {
   const Eigen::VectorXd a_tmp = a_ + max_primal_step_size * da;
   const Eigen::VectorXd u_tmp = u_ + max_primal_step_size * du;
   Eigen::VectorXd f_tmp = f_;
-  f_tmp.head(dimf_) += max_primal_step_size * df;
+  f_tmp.head(dimf_) += max_primal_step_size * df.head(dimf_);
   robot_.setContactForces(f_tmp);
   double cost_ref = 0;
   cost_ref += cost_ref_->l(robot_, t_, dtau_, q_tmp, v_tmp, a_tmp, u_tmp, f_tmp);

@@ -24,6 +24,10 @@ CostFunction::CostFunction()
 }
 
 
+CostFunction::~CostFunction() {
+}
+
+
 void CostFunction::set_q_ref(const Eigen::VectorXd& q_ref) {
   joint_space_cost_.set_q_ref(q_ref);
 }
