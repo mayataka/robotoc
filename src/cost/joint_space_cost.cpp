@@ -28,12 +28,12 @@ JointSpaceCost::JointSpaceCost(const Robot& robot,
     lq_configuration_(),
     lqq_configuration_(),
     phiqq_configuration_() {
-  assert(q_weight.size() == dimq_);
-  assert(v_weight.size() == dimv_);
-  assert(a_weight.size() == dimv_);
-  assert(u_weight.size() == dimv_);
-  assert(qf_weight.size() == dimq_);
-  assert(vf_weight.size() == dimv_);
+  // assert(q_weight.size() == dimq_);
+  // assert(v_weight.size() == dimv_);
+  // assert(a_weight.size() == dimv_);
+  // assert(u_weight.size() == dimv_);
+  // assert(qf_weight.size() == dimq_);
+  // assert(vf_weight.size() == dimv_);
   if (robot.has_floating_base()) {
     lq_configuration_.resize(robot.dimq());
     lq_configuration_.setZero();
@@ -77,12 +77,12 @@ JointSpaceCost::JointSpaceCost(const Robot& robot, const Eigen::VectorXd& q_ref,
     lq_configuration_(),
     lqq_configuration_(),
     phiqq_configuration_() {
-  assert(q_weight.size() == dimq_);
-  assert(v_weight.size() == dimv_);
-  assert(a_weight.size() == dimv_);
-  assert(u_weight.size() == dimv_);
-  assert(qf_weight.size() == dimq_);
-  assert(vf_weight.size() == dimv_);
+  // assert(q_weight.size() == dimq_);
+  // assert(v_weight.size() == dimv_);
+  // assert(a_weight.size() == dimv_);
+  // assert(u_weight.size() == dimv_);
+  // assert(qf_weight.size() == dimq_);
+  // assert(vf_weight.size() == dimv_);
   if (robot.has_floating_base()) {
     lq_configuration_.resize(robot.dimq());
     lq_configuration_.setZero();

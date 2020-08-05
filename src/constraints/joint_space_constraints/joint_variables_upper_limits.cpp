@@ -23,8 +23,8 @@ JointVariablesUpperLimits::JointVariablesUpperLimits(const Robot& robot,
     duality_(Eigen::VectorXd::Zero(dimc_)),
     dslack_(Eigen::VectorXd::Zero(dimc_)), 
     ddual_(Eigen::VectorXd::Zero(dimc_)) {
-  assert(barrier_ > 0);
-  assert(xmax_.minCoeff() > 0);
+  // assert(barrier_ > 0);
+  // assert(xmax_.minCoeff() > 0);
 }
 
 

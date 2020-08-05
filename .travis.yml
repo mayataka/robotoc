@@ -23,7 +23,7 @@ install:
 
 script:
   - mkdir -p build  && cd build
-  - cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=True
+  - cmake .. -DCMAKE_BUILD_TYPE=Debug -DTESTING=True
   - travis_wait 30 cmake --build . --config Debug -- -j $(nproc)
   - ctest -j $(nproc) --output-on-failure
 

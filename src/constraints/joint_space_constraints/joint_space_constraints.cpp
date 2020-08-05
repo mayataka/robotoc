@@ -18,9 +18,9 @@ JointSpaceConstraints::JointSpaceConstraints(const Robot& robot)
     position_lower_limits_(robot, robot.lowerJointPositionLimit(), barrier_),
     velocity_lower_limits_(robot, -robot.jointVelocityLimit(), barrier_),
     torque_lower_limits_(robot, -robot.jointEffortLimit(), barrier_) {
-  assert(barrier_ > 0);
-  assert(fraction_to_boundary_margin_ <= 1);
-  assert(fraction_to_boundary_margin_ > 0);
+  // assert(barrier_ > 0);
+  // assert(fraction_to_boundary_margin_ <= 1);
+  // assert(fraction_to_boundary_margin_ > 0);
 }
 
 
