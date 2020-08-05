@@ -1,5 +1,6 @@
 #include <string>
 #include <memory>
+#include <vector>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"

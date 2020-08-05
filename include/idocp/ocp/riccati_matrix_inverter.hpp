@@ -1,8 +1,5 @@
-#ifndef IDOCP_BLOCK_MATRIX_INVERTER_HPP_
-#define IDOCP_BLOCK_MATRIX_INVERTER_HPP_
-
-#include <vector>
-#include <utility>
+#ifndef IDOCP_RICCATI_MATRIX_INVERTER_HPP_
+#define IDOCP_RICCATI_MATRIX_INVERTER_HPP_
 
 #include "Eigen/Core"
 
@@ -89,4 +86,4 @@ private:
 } // namespace idocp
 
 
-#endif // IDOCP_BLOCK_MATRIX_INVERTER_HPP_
+#endif // IDOCP_RICCATI_MATRIX_INVERTER_HPP_ 

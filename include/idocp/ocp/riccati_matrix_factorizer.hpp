@@ -1,9 +1,6 @@
 #ifndef IDOCP_RICCATI_MATRIX_FACTORIZER_HPP_
 #define IDOCP_RICCATI_MATRIX_FACTORIZER_HPP_
 
-#include <vector>
-#include <utility>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"

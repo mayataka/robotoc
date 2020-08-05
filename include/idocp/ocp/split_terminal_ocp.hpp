@@ -1,7 +1,6 @@
 #ifndef IDOCP_SPLIT_TERMINAL_OCP_HPP_
 #define IDOCP_SPLIT_TERMINAL_OCP_HPP_
 
-#include <utility>
 #include <memory>
 
 #include "Eigen/Core"
@@ -40,10 +39,10 @@ public:
   SplitTerminalOCP& operator=(const SplitTerminalOCP&) = delete;
 
   // Use default move constructor.
-  SplitTerminalOCP(SplitTerminalOCP&&) noexcept = default;
+  SplitTerminalOCP(SplitTerminalOCP&&) = default;
 
   // Use default move assign operator.
-  SplitTerminalOCP& operator=(SplitTerminalOCP&&) noexcept = default;
+  SplitTerminalOCP& operator=(SplitTerminalOCP&&) = default;
 
   // Check whether the solution q, v are feasible under inequality 
   // constraints.

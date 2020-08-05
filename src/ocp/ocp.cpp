@@ -1,21 +1,25 @@
 #include "idocp/ocp/ocp.hpp"
 
+#include <utility>
 #include <cmath>
-#include <assert.h>
 #include <omp.h>
+#include <assert.h>
 
 
 namespace idocp {
 
-OCP::OCP(const Robot& robot, const CostFunctionInterface& cost,
-         const ConstraintsInterface& constraints, const double T, const int N, 
-         const int num_proc)
-  : split_OCPs_(N, SplitOCP(robot, cost, constraints)),
-    split_terminal_OCP_(robot, cost, constraints),
-    robots_(num_proc, robot),
+OCP::OCP(const Robot& robot, 
+         std::unique_ptr<CostFunctionFactoryInterface>&& cost_factory,
+         std::unique_ptr<ConstraintsFactoryInterface>&& constraints_factory,
+         const double T, const int N, const int num_proc)
+  : cost_factory_(std::move(cost_factory)),
+    constraints_factory_(std::move(constraints_factory)),
+    split_ocps_(N-1, SplitOCP(robot, cost_factory_.create(robot), 
+                              constraints_factory_.create(robot))),
+    terminal_ocp_(robot, cost_factory_.create(robot), 
+                  constraints_factory_.create(robot)),
+    robots_(num_proc_, robot),
     filter_(),
-    cost_(cost),
-    constraints_(cost),
     T_(T),
     dtau_(T/N),
     step_size_reduction_rate_(0.75),
@@ -27,6 +31,8 @@ OCP::OCP(const Robot& robot, const CostFunctionInterface& cost,
     a_(N, Eigen::VectorXd::Zero(robot.dimv())),
     u_(N, Eigen::VectorXd::Zero(robot.dimv())),
     beta_(N, Eigen::VectorXd::Zero(robot.dimv())),
+    f_(N, Eigen::VectorXd::Zero(robot.max_dimf())),
+    mu_(N, Eigen::VectorXd::Zero(robot.dim_passive()+robot.max_dimf())),
     lmd_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
     gmm_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
     dq_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
@@ -56,7 +62,7 @@ OCP::~OCP() {
 }
 
 
-void OCP::solveSQP(const double t, const Eigen::VectorXd& q, 
+void OCP::solveLQR(const double t, const Eigen::VectorXd& q, 
                    const Eigen::VectorXd& v, const bool use_line_search) {
   int time_step;
   #pragma omp parallel num_threads(num_proc_) 
@@ -66,26 +72,26 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
       if (time_step < N_) {
         const int robot_id = omp_get_thread_num();
         robots_[robot_id].setActiveContacts(contact_sequence_[time_step]);
-        split_OCPs_[time_step].linearizeOCP(robots_[robot_id], 
+        split_ocps_[time_step].linearizeOCP(robots_[robot_id], 
                                             t+time_step*dtau_, dtau_, 
                                             lmd_[time_step], gmm_[time_step],
                                             q_[time_step], v_[time_step], 
                                             a_[time_step], u_[time_step], 
+                                            f_[time_step], mu_[time_step],
                                             lmd_[time_step+1], 
                                             gmm_[time_step+1], q_[time_step+1], 
                                             v_[time_step+1]);
       }
       else {
         const int robot_id = omp_get_thread_num();
-        split_terminal_OCP_.linearizeOCP(robots_[robot_id], t+T_, lmd_[N_], 
-                                         gmm_[N_], q_[N_], v_[N_], Pqq_[N_], 
-                                         Pqv_[N_], Pvq_[N_], Pvv_[N_], sq_[N_], 
-                                         sv_[N_]);
+        terminal_ocp_.linearizeOCP(robots_[robot_id], t+T_, lmd_[N_], gmm_[N_], 
+                                   q_[N_], v_[N_], Pqq_[N_], Pqv_[N_], Pvq_[N_], 
+                                   Pvv_[N_], sq_[N_], sv_[N_]);
       }
     }
   } // #pragma omp parallel num_threads(num_proc_)
   for (time_step=N_-1; time_step>=0; --time_step) {
-    split_OCPs_[time_step].backwardRiccatiRecursion(dtau_, Pqq_[time_step+1], 
+    split_ocps_[time_step].backwardRiccatiRecursion(dtau_, Pqq_[time_step+1], 
                                                     Pqv_[time_step+1], 
                                                     Pvq_[time_step+1], 
                                                     Pvv_[time_step+1], 
@@ -103,7 +109,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
   dq_[0] = q - q_[0];
   dv_[0] = v - v_[0];
   for (time_step=0; time_step<N_; ++time_step) {
-    split_OCPs_[time_step].forwardRiccatiRecursion(dtau_, dq_[time_step], 
+    split_ocps_[time_step].forwardRiccatiRecursion(dtau_, dq_[time_step], 
                                                    dv_[time_step], 
                                                    dq_[time_step+1], 
                                                    dv_[time_step+1]);
@@ -113,13 +119,13 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
     #pragma omp for 
     for (time_step=0; time_step<N_; ++time_step) {
       const int robot_id = omp_get_thread_num();
-      split_OCPs_[time_step].computeCondensedDirection(robots_[robot_id], 
+      split_ocps_[time_step].computeCondensedDirection(robots_[robot_id], 
                                                        dtau_, dq_[time_step], 
                                                        dv_[time_step]);
       primal_step_sizes_.coeffRef(time_step) 
-          = split_OCPs_[time_step].maxPrimalStepSize();
+          = split_ocps_[time_step].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(time_step) 
-          = split_OCPs_[time_step].maxDualStepSize();
+          = split_ocps_[time_step].maxDualStepSize();
     }
   } // #pragma omp parallel num_threads(num_proc_)
   double primal_step_size = primal_step_sizes_.minCoeff();
@@ -134,7 +140,7 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
           if (time_step < N_) {
             const int robot_id = omp_get_thread_num();
             const std::pair<double, double> filter_pair
-                = split_OCPs_[time_step].costAndConstraintsViolation(
+                = split_ocps_[time_step].costAndConstraintsViolation(
                     robots_[robot_id], t+time_step*dtau_, dtau_, q_[time_step], 
                     v_[time_step], a_[time_step], u_[time_step]);
             costs_.coeffRef(time_step) = filter_pair.first;
@@ -142,8 +148,9 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
           }
           else {
             const int robot_id = omp_get_thread_num();
-            costs_.coeffRef(N_) = split_terminal_OCP_.terminalCost(
-                robots_[robot_id], t+T_, q_[N_], v_[N_]);
+            costs_.coeffRef(N_) = terminal_ocp_.terminalCost(robots_[robot_id], 
+                                                             t+T_, q_[N_], 
+                                                             v_[N_]);
           }
         }
       } // #pragma omp parallel num_threads(num_proc_)
@@ -157,20 +164,21 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
           if (time_step < N_) {
             const int robot_id = omp_get_thread_num();
             const std::pair<double, double> filter_pair
-                = split_OCPs_[time_step].costAndConstraintsViolation(
+                = split_ocps_[time_step].costAndConstraintsViolation(
                     robots_[robot_id], primal_step_size, t+time_step*dtau_, 
                     dtau_, q_[time_step], v_[time_step], a_[time_step], 
-                    u_[time_step], q_[time_step+1], v_[time_step+1], 
-                    dq_[time_step], dv_[time_step], dq_[time_step+1], 
-                    dv_[time_step+1]);
+                    u_[time_step], f_[time_step], q_[time_step+1], 
+                    v_[time_step+1], dq_[time_step], dv_[time_step], 
+                    dq_[time_step+1], dv_[time_step+1]);
             costs_.coeffRef(time_step) = filter_pair.first;
             constraints_violations_.coeffRef(time_step) = filter_pair.second;
           }
           else {
             const int robot_id = omp_get_thread_num();
-            costs_.coeffRef(N_) = split_OCPs_[N_].terminalCost(
-                robots_[robot_id], primal_step_size, t+T_, q_[N_], v_[N_], 
-                dq_[N_], dv_[N_]);
+            costs_.coeffRef(N_) = terminal_ocp_.terminalCost(robots_[robot_id], 
+                                                             primal_step_size, 
+                                                             t+T_, q_[N_], v_[N_], 
+                                                             dq_[N_], dv_[N_]);
           }
         }
       } // #pragma omp parallel num_threads(num_proc_)
@@ -189,8 +197,8 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
     for (time_step=0; time_step<=N_; ++time_step) {
       if (time_step < N_) {
         const int robot_id = omp_get_thread_num();
-        split_OCPs_[time_step].updateDual(dual_step_size);
-        split_OCPs_[time_step].updatePrimal(robots_[robot_id], primal_step_size, 
+        split_ocps_[time_step].updateDual(dual_step_size);
+        split_ocps_[time_step].updatePrimal(robots_[robot_id], primal_step_size, 
                                             dtau_, dq_[time_step], 
                                             dv_[time_step], Pqq_[time_step], 
                                             Pqv_[time_step], Pvq_[time_step], 
@@ -198,14 +206,15 @@ void OCP::solveSQP(const double t, const Eigen::VectorXd& q,
                                             sv_[time_step], q_[time_step], 
                                             v_[time_step], a_[time_step], 
                                             u_[time_step], beta_[time_step], 
+                                            f_[time_step], mu_[time_step], 
                                             lmd_[time_step], gmm_[time_step]);
       }
       else {
         const int robot_id = omp_get_thread_num();
-        split_terminal_OCP_.updatePrimal(robots_[robot_id], primal_step_size, 
-                                         dq_[N_], dv_[N_], Pqq_[N_], Pqv_[N_], 
-                                         Pvq_[N_], Pvv_[N_], sq_[N_], sv_[N_], 
-                                         q_[N_], v_[N_], lmd_[N_], gmm_[N_]);
+        terminal_ocp_.updatePrimal(robots_[robot_id], primal_step_size, 
+                                   dq_[N_], dv_[N_], Pqq_[N_], Pqv_[N_], 
+                                   Pvq_[N_], Pvv_[N_], sq_[N_], sv_[N_], 
+                                   q_[N_], v_[N_], lmd_[N_], gmm_[N_]);
       }
     }
   } // #pragma omp parallel num_threads(num_proc_)

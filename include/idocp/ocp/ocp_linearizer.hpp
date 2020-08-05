@@ -1,9 +1,6 @@
 #ifndef IDOCP_OCP_LINEARIZER_HPP_
 #define IDOCP_OCP_LINEARIZER_HPP_
 
-#include <vector>
-#include <utility>
-#include <memory>
 #include <assert.h>
 
 #include "Eigen/Core"

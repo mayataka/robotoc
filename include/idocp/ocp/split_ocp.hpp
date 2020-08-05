@@ -42,10 +42,10 @@ public:
   SplitOCP& operator=(const SplitOCP&) = delete;
 
   // Use default move constructor.
-  SplitOCP(SplitOCP&&) noexcept = default;
+  SplitOCP(SplitOCP&&) = default;
 
   // Use default move assign operator.
-  SplitOCP& operator=(SplitOCP&&) noexcept = default;
+  SplitOCP& operator=(SplitOCP&&) = default;
  
   // Check whether the solution q, v, a, u are feasible under inequality 
   // constraints.
