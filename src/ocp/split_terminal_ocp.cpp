@@ -6,8 +6,8 @@
 namespace idocp {
 
 SplitTerminalOCP::SplitTerminalOCP(
-    const Robot& robot, std::unique_ptr<CostFunctionInterface> cost, 
-    std::unique_ptr<ConstraintsInterface> constraints)
+    const Robot& robot, std::unique_ptr<CostFunctionInterface>&& cost, 
+    std::unique_ptr<ConstraintsInterface>&& constraints)
   : cost_(std::move(cost)),
     constraints_(std::move(constraints)),
     joint_constraints_(robot),
