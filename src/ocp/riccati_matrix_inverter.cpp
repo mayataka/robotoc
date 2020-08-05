@@ -123,7 +123,6 @@ void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa,
                                    Eigen::VectorXd& kmu) {
   assert(!has_floating_base_);
   assert(dim_passive_ == 0);
-  assert(dimf_ >= 0);
   assert(Qqa.rows() == dimv_);
   assert(Qqa.cols() == dimv_);
   assert(Qva.rows() == dimv_);
@@ -249,8 +248,6 @@ void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa,
                                    Eigen::MatrixXd& Kaq, Eigen::MatrixXd& Kav, 
                                    Eigen::MatrixXd& Kmuq, Eigen::MatrixXd& Kmuv, 
                                    Eigen::VectorXd& ka, Eigen::VectorXd& kmu) {
-  assert(has_floating_base_);
-  assert(dim_passive_ == 6);
   assert(dimf_ == 0);
   assert(Qqa.rows() == dimv_);
   assert(Qqa.cols() == dimv_);
@@ -325,9 +322,6 @@ void RiccatiMatrixInverter::invert(const Eigen::MatrixXd& Qqa,
                                    Eigen::MatrixXd& Kmuq, Eigen::MatrixXd& Kmuv, 
                                    Eigen::VectorXd& ka, Eigen::VectorXd& kf, 
                                    Eigen::VectorXd& kmu) {
-  assert(has_floating_base_);
-  assert(dim_passive_ == 6);
-  assert(dimf_ >= 0);
   assert(Qqa.rows() == dimv_);
   assert(Qqa.cols() == dimv_);
   assert(Qva.rows() == dimv_);

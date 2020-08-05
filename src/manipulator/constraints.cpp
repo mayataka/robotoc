@@ -8,8 +8,13 @@ Constraints::Constraints(const Robot& robot)
   : ConstraintsInterface() {
 }
 
+
 Constraints::Constraints()
   : ConstraintsInterface() {
+}
+
+
+Constraints::~Constraints() {
 }
 
 

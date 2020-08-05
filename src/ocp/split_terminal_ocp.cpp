@@ -5,11 +5,11 @@
 
 namespace idocp {
 
-SplitTerminalOCP::SplitTerminalOCP(const Robot& robot, 
-                                   const CostFunctionInterface* cost, 
-                                   const ConstraintsInterface* constraints) 
-  : cost_(const_cast<CostFunctionInterface*>(cost)),
-    constraints_(const_cast<ConstraintsInterface*>(constraints)),
+SplitTerminalOCP::SplitTerminalOCP(
+    const Robot& robot, std::unique_ptr<CostFunctionInterface>&& cost, 
+    std::unique_ptr<ConstraintsInterface>&& constraints)
+  : cost_(std::move(cost)),
+    constraints_(std::move(constraints)),
     joint_constraints_(robot),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
@@ -42,17 +42,7 @@ SplitTerminalOCP::~SplitTerminalOCP() {
 }
 
 
-void SplitTerminalOCP::setCostFunction(const CostFunctionInterface* cost) {
-  cost_ = const_cast<CostFunctionInterface*>(cost);
-}
-
-
-void SplitTerminalOCP::setConstraints(const ConstraintsInterface* constraints) {
-  constraints_ = const_cast<ConstraintsInterface*>(constraints);
-}
-
-
-bool SplitTerminalOCP::isFeasible(const Eigen::VectorXd& q, 
+bool SplitTerminalOCP::isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
                                   const Eigen::VectorXd& v) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
@@ -62,7 +52,8 @@ bool SplitTerminalOCP::isFeasible(const Eigen::VectorXd& q,
 }
 
 
-void SplitTerminalOCP::initConstraints(const int time_step, const double dtau, 
+void SplitTerminalOCP::initConstraints(const Robot& robot, const int time_step, 
+                                       const double dtau, 
                                        const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v) {
   assert(time_step >= 0);
@@ -96,14 +87,14 @@ void SplitTerminalOCP::linearizeOCP(Robot& robot, const double t,
   assert(Qq.size() == dimv_);
   assert(Qv.size() == dimv_);
   if (robot.has_floating_base()) {
-    cost_->setConfigurationJacobian(robot, q);
+    robot.computeConfigurationJacobian(q);
   }
-  cost_->phiq(t, q, v, lq_);
-  cost_->phiv(t, q, v, lv_);
+  cost_->phiq(robot, t, q, v, lq_);
+  cost_->phiv(robot, t, q, v, lv_);
   Qq = - lq_ + lmd;
   Qv = - lv_ + gmm;
-  cost_->phiqq(t, q, v, Qqq);
-  cost_->phivv(t, q, v, Qvv);
+  cost_->phiqq(robot, t, q, v, Qqq);
+  cost_->phivv(robot, t, q, v, Qvv);
 }
 
 
@@ -130,11 +121,12 @@ double SplitTerminalOCP::maxDualStepSize() {
 }
 
 
-double SplitTerminalOCP::terminalCost(const double t, const Eigen::VectorXd& q, 
+double SplitTerminalOCP::terminalCost(Robot& robot, const double t, 
+                                      const Eigen::VectorXd& q, 
                                       const Eigen::VectorXd& v) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
-  return cost_->phi(t, q, v);
+  return cost_->phi(robot, t, q, v);
 }
 
 
@@ -157,7 +149,7 @@ double SplitTerminalOCP::terminalCost(Robot& robot, const double step_size,
     q_tmp_ = q + step_size * dq;
   }
   v_tmp_ = v + step_size * dv;
-  return cost_->phi(t, q_tmp_, v_tmp_);
+  return cost_->phi(robot, t, q_tmp_, v_tmp_);
 }
 
 
@@ -201,12 +193,7 @@ void SplitTerminalOCP::updatePrimal(Robot& robot, const double step_size,
   assert(v.rows() == dimv_);
   lmd.noalias() += step_size * (Pqq * dq + Pqv * dv - sq);
   gmm.noalias() += step_size * (Pvq * dq + Pvv * dv - sv);
-  if (robot.has_floating_base()) {
-    robot.integrateConfiguration(dq, step_size, q);
-  }
-  else {
-    q.noalias() += step_size * dq;
-  }
+  robot.integrateConfiguration(dq, step_size, q);
   v.noalias() += step_size * dv;
 }
 
@@ -223,10 +210,12 @@ double SplitTerminalOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   // Compute the partial derivatives of the Lagrangian with respect to the 
   // terminal configuration and velocity.
   if (robot.has_floating_base()) {
-    cost_->setConfigurationJacobian(robot, q);
+    robot.computeConfigurationJacobian(q);
   }
-  cost_->phiq(t, q, v, lq_);
-  cost_->phiv(t, q, v, lv_);
+  cost_->phiq(robot, t, q, v, lq_);
+  cost_->phiv(robot, t, q, v, lv_);
+  cost_->phiq(robot, t, q, v, lq_);
+  cost_->phiv(robot, t, q, v, lv_);
   lq_.noalias() -= lmd;
   lv_.noalias() -= gmm;
   double error = 0;

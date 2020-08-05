@@ -1,8 +1,5 @@
-#ifndef IDOCP_BLOCK_MATRIX_INVERTER_HPP_
-#define IDOCP_BLOCK_MATRIX_INVERTER_HPP_
-
-#include <vector>
-#include <utility>
+#ifndef IDOCP_RICCATI_MATRIX_INVERTER_HPP_
+#define IDOCP_RICCATI_MATRIX_INVERTER_HPP_
 
 #include "Eigen/Core"
 
@@ -13,6 +10,8 @@ namespace idocp {
 
 class RiccatiMatrixInverter {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   // Constructor.
   // Argments:
   //    robot: The robot model that has been already initialized.
@@ -25,11 +24,16 @@ public:
   ~RiccatiMatrixInverter();
  
   // Use default copy constructor.
-  RiccatiMatrixInverter(const RiccatiMatrixInverter& other) = default;
+  RiccatiMatrixInverter(const RiccatiMatrixInverter&) = default;
 
   // Use default copy operator.
-  RiccatiMatrixInverter& operator=(const RiccatiMatrixInverter& other) 
-      = default;
+  RiccatiMatrixInverter& operator=(const RiccatiMatrixInverter&) = default;
+
+  // Use default move constructor.
+  RiccatiMatrixInverter(RiccatiMatrixInverter&&) noexcept = default;
+
+  // Use default move assign operator.
+  RiccatiMatrixInverter& operator=(RiccatiMatrixInverter&&) noexcept = default;
 
   void setContactStatus(const Robot& robot);
 
@@ -82,4 +86,4 @@ private:
 } // namespace idocp
 
 
-#endif // IDOCP_BLOCK_MATRIX_INVERTER_HPP_
+#endif // IDOCP_RICCATI_MATRIX_INVERTER_HPP_ 

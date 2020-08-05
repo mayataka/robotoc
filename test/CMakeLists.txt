@@ -1,5 +1,4 @@
 # enable google test
-enable_testing()
 include(cmake/gtest.cmake)
 # coverage options
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --coverage")
@@ -62,6 +61,7 @@ configure_file(
   COPYONLY
 )
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/robot)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/constraints)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cost)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/constraints)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/manipulator)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ocp)

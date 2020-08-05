@@ -38,10 +38,16 @@ public:
   ~PointContact();
 
   // Use default copy constructor.
-  PointContact(const PointContact& other) = default;
+  PointContact(const PointContact&) = default;
 
   // Use default assign operator.
-  PointContact& operator=(const PointContact& other) = default;
+  PointContact& operator=(const PointContact&) = default;
+
+  // Use default mvoe constructor.
+  PointContact(PointContact&&) noexcept = default;
+
+  // Use default move assign operator.
+  PointContact& operator=(PointContact&&) noexcept = default;
 
   // Resets the parameters of the Baumgarte's stabilization method.
   // Argments:
@@ -143,6 +149,7 @@ public:
   //    model: pinocchio model of the robot.
   //    data: pinocchio data of the robot kinematics and dynamics.
   //    result_begin: The start index of the result.
+  //    coeff: The coefficient of the result.
   //    baumgarte_residual: The vector result is stored in. Size must be at 
   //      least 3.
   void computeBaumgarteResidual(const pinocchio::Model& model, 
@@ -178,6 +185,7 @@ public:
   // Argments:
   //    model: pinocchio model of the robot.
   //    data: pinocchio data of the robot kinematics and dynamics.
+  //    block_rows_begin: The start index of the block rows where result stored.
   //    baumgarte_partial_dq: Partial of contact constraints with respect to 
   //      the generalized configuration. The rows must be at least 3 and the 
   //      cols must be dimv.
@@ -203,6 +211,8 @@ public:
   // Argments:
   //    model: pinocchio model of the robot.
   //    data: pinocchio data of the robot kinematics and dynamics.
+  //    block_rows_begin: The start index of the block rows where result stored.
+  //    coeff: The coefficient of the result.
   //    baumgarte_partial_dq: Partial of contact constraints with respect to 
   //      the generalized configuration. The rows must be at least 3 and the 
   //      cols must be dimv.

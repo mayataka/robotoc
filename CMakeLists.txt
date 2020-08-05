@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 project(idocp CXX)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 ###########
 ## Build ##
@@ -47,6 +47,7 @@ add_library(
   src/quadruped/constraints.cpp
   src/ocp/riccati_matrix_factorizer.cpp
   src/ocp/riccati_matrix_inverter.cpp
+  src/ocp/ocp_linearizer.cpp
   src/ocp/split_terminal_ocp.cpp
   src/ocp/split_ocp.cpp
 )
@@ -72,6 +73,7 @@ target_include_directories(
 ## Testing ##
 #############
 # Add testing directory
+enable_testing()
 if (TESTING)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
 endif()

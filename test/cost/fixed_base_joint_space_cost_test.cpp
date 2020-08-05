@@ -77,7 +77,7 @@ TEST_F(FixedBaseJointSpaceCostTest, zeroRefernceConstructor) {
   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimq);
   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimq);
   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimq);
-  cost.lq(dtau_, q, lq);
+  cost.lq(robot_, dtau_, q, lq);
   lq_ref.array() = dtau_ * q_weight_mat * (q-q_ref);
   EXPECT_TRUE(lq.isApprox(lq_ref));
   cost.lv(dtau_, v, lv);
@@ -89,7 +89,7 @@ TEST_F(FixedBaseJointSpaceCostTest, zeroRefernceConstructor) {
   cost.lu(dtau_, u, lu);
   lu_ref.array() = dtau_ * u_weight_mat * (u-u_ref);
   EXPECT_TRUE(lu.isApprox(lu_ref));
-  cost.phiq(q, lq);
+  cost.phiq(robot_, q, lq);
   lq_ref.array() = qf_weight_mat * (q-q_ref);
   EXPECT_TRUE(lq.isApprox(lq_ref));
   cost.phiv(v, lv);
@@ -99,7 +99,7 @@ TEST_F(FixedBaseJointSpaceCostTest, zeroRefernceConstructor) {
   Eigen::MatrixXd lvv = Eigen::MatrixXd::Zero(dimq, dimq);
   Eigen::MatrixXd laa = Eigen::MatrixXd::Zero(dimq, dimq);
   Eigen::MatrixXd luu = Eigen::MatrixXd::Zero(dimq, dimq);
-  cost.lqq(dtau_, lqq);
+  cost.lqq(robot_, dtau_, lqq);
   EXPECT_TRUE(lqq.isApprox(dtau_*q_weight_mat));
   cost.lvv(dtau_, lvv);
   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
@@ -111,7 +111,7 @@ TEST_F(FixedBaseJointSpaceCostTest, zeroRefernceConstructor) {
   lvv.setZero();
   laa.setZero();
   luu.setZero();
-  cost.augment_lqq(dtau_, lqq);
+  cost.augment_lqq(robot_, dtau_, lqq);
   EXPECT_TRUE(lqq.isApprox(dtau_*q_weight_mat));
   cost.augment_lvv(dtau_, lvv);
   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
@@ -121,7 +121,7 @@ TEST_F(FixedBaseJointSpaceCostTest, zeroRefernceConstructor) {
   EXPECT_TRUE(luu.isApprox(dtau_*u_weight_mat));
   lqq.setZero();
   lvv.setZero();
-  cost.phiqq(lqq);
+  cost.phiqq(robot_, lqq);
   EXPECT_TRUE(lqq.isApprox(qf_weight_mat));
   cost.phivv(lvv);
   EXPECT_TRUE(lvv.isApprox(vf_weight_mat));
@@ -177,7 +177,7 @@ TEST_F(FixedBaseJointSpaceCostTest, withRefernceConstructor) {
   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimq);
   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimq);
   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimq);
-  cost.lq(dtau_, q, lq);
+  cost.lq(robot_, dtau_, q, lq);
   lq_ref.array() = dtau_ * q_weight_mat * (q-q_ref);
   EXPECT_TRUE(lq.isApprox(lq_ref));
   cost.lv(dtau_, v, lv);
@@ -189,7 +189,7 @@ TEST_F(FixedBaseJointSpaceCostTest, withRefernceConstructor) {
   cost.lu(dtau_, u, lu);
   lu_ref.array() = dtau_ * u_weight_mat * (u-u_ref);
   EXPECT_TRUE(lu.isApprox(lu_ref));
-  cost.phiq(q, lq);
+  cost.phiq(robot_, q, lq);
   lq_ref.array() = qf_weight_mat * (q-q_ref);
   EXPECT_TRUE(lq.isApprox(lq_ref));
   cost.phiv(v, lv);
@@ -199,7 +199,7 @@ TEST_F(FixedBaseJointSpaceCostTest, withRefernceConstructor) {
   Eigen::MatrixXd lvv = Eigen::MatrixXd::Zero(dimq, dimq);
   Eigen::MatrixXd laa = Eigen::MatrixXd::Zero(dimq, dimq);
   Eigen::MatrixXd luu = Eigen::MatrixXd::Zero(dimq, dimq);
-  cost.lqq(dtau_, lqq);
+  cost.lqq(robot_, dtau_, lqq);
   EXPECT_TRUE(lqq.isApprox(dtau_*q_weight_mat));
   cost.lvv(dtau_, lvv);
   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
@@ -211,7 +211,7 @@ TEST_F(FixedBaseJointSpaceCostTest, withRefernceConstructor) {
   lvv.setZero();
   laa.setZero();
   luu.setZero();
-  cost.augment_lqq(dtau_, lqq);
+  cost.augment_lqq(robot_, dtau_, lqq);
   EXPECT_TRUE(lqq.isApprox(dtau_*q_weight_mat));
   cost.augment_lvv(dtau_, lvv);
   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
@@ -221,7 +221,7 @@ TEST_F(FixedBaseJointSpaceCostTest, withRefernceConstructor) {
   EXPECT_TRUE(luu.isApprox(dtau_*u_weight_mat));
   lqq.setZero();
   lvv.setZero();
-  cost.phiqq(lqq);
+  cost.phiqq(robot_, lqq);
   EXPECT_TRUE(lqq.isApprox(qf_weight_mat));
   cost.phivv(lvv);
   EXPECT_TRUE(lvv.isApprox(vf_weight_mat));
@@ -281,7 +281,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setReference) {
   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimq);
   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimq);
   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimq);
-  cost.lq(dtau_, q, lq);
+  cost.lq(robot_, dtau_, q, lq);
   lq_ref.array() = dtau_ * q_weight_mat * (q-q_ref);
   EXPECT_TRUE(lq.isApprox(lq_ref));
   cost.lv(dtau_, v, lv);
@@ -293,7 +293,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setReference) {
   cost.lu(dtau_, u, lu);
   lu_ref.array() = dtau_ * u_weight_mat * (u-u_ref);
   EXPECT_TRUE(lu.isApprox(lu_ref));
-  cost.phiq(q, lq);
+  cost.phiq(robot_, q, lq);
   lq_ref.array() = qf_weight_mat * (q-q_ref);
   EXPECT_TRUE(lq.isApprox(lq_ref));
   cost.phiv(v, lv);
@@ -303,7 +303,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setReference) {
   Eigen::MatrixXd lvv = Eigen::MatrixXd::Zero(dimq, dimq);
   Eigen::MatrixXd laa = Eigen::MatrixXd::Zero(dimq, dimq);
   Eigen::MatrixXd luu = Eigen::MatrixXd::Zero(dimq, dimq);
-  cost.lqq(dtau_, lqq);
+  cost.lqq(robot_, dtau_, lqq);
   EXPECT_TRUE(lqq.isApprox(dtau_*q_weight_mat));
   cost.lvv(dtau_, lvv);
   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
@@ -315,7 +315,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setReference) {
   lvv.setZero();
   laa.setZero();
   luu.setZero();
-  cost.augment_lqq(dtau_, lqq);
+  cost.augment_lqq(robot_, dtau_, lqq);
   EXPECT_TRUE(lqq.isApprox(dtau_*q_weight_mat));
   cost.augment_lvv(dtau_, lvv);
   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
@@ -325,7 +325,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setReference) {
   EXPECT_TRUE(luu.isApprox(dtau_*u_weight_mat));
   lqq.setZero();
   lvv.setZero();
-  cost.phiqq(lqq);
+  cost.phiqq(robot_, lqq);
   EXPECT_TRUE(lqq.isApprox(qf_weight_mat));
   cost.phivv(lvv);
   EXPECT_TRUE(lvv.isApprox(vf_weight_mat));
@@ -393,7 +393,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimq);
   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimq);
   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimq);
-  cost.lq(dtau_, q, lq);
+  cost.lq(robot_, dtau_, q, lq);
   lq_ref.array() = dtau_ * q_weight_mat * (q-q_ref);
   EXPECT_TRUE(lq.isApprox(lq_ref));
   cost.lv(dtau_, v, lv);
@@ -405,7 +405,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   cost.lu(dtau_, u, lu);
   lu_ref.array() = dtau_ * u_weight_mat * (u-u_ref);
   EXPECT_TRUE(lu.isApprox(lu_ref));
-  cost.phiq(q, lq);
+  cost.phiq(robot_, q, lq);
   lq_ref.array() = qf_weight_mat * (q-q_ref);
   EXPECT_TRUE(lq.isApprox(lq_ref));
   cost.phiv(v, lv);
@@ -415,7 +415,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   Eigen::MatrixXd lvv = Eigen::MatrixXd::Zero(dimq, dimq);
   Eigen::MatrixXd laa = Eigen::MatrixXd::Zero(dimq, dimq);
   Eigen::MatrixXd luu = Eigen::MatrixXd::Zero(dimq, dimq);
-  cost.lqq(dtau_, lqq);
+  cost.lqq(robot_, dtau_, lqq);
   EXPECT_TRUE(lqq.isApprox(dtau_*q_weight_mat));
   cost.lvv(dtau_, lvv);
   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
@@ -427,7 +427,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   lvv.setZero();
   laa.setZero();
   luu.setZero();
-  cost.augment_lqq(dtau_, lqq);
+  cost.augment_lqq(robot_, dtau_, lqq);
   EXPECT_TRUE(lqq.isApprox(dtau_*q_weight_mat));
   cost.augment_lvv(dtau_, lvv);
   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
@@ -437,7 +437,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   EXPECT_TRUE(luu.isApprox(dtau_*u_weight_mat));
   lqq.setZero();
   lvv.setZero();
-  cost.phiqq(lqq);
+  cost.phiqq(robot_, lqq);
   EXPECT_TRUE(lqq.isApprox(qf_weight_mat));
   cost.phivv(lvv);
   EXPECT_TRUE(lvv.isApprox(vf_weight_mat));

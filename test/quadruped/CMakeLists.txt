@@ -1,0 +1,2 @@
+add_test_macro(quadruped_cost_function_test)
+add_test_macro(quadruped_constraints_test)

@@ -25,6 +25,12 @@ public:
   // Use default copy operator.
   JointSpaceConstraints& operator=(const JointSpaceConstraints&) = default;
 
+  // Use default move constructor.
+  JointSpaceConstraints(JointSpaceConstraints&&) noexcept = default;
+
+  // Use default move assign operator.
+  JointSpaceConstraints& operator=(JointSpaceConstraints&&) noexcept = default;
+
   void setTimeStep(const int time_step);
 
   bool isFeasible(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
@@ -39,14 +45,14 @@ public:
   void augmentDualResidual(const double dtau, Eigen::VectorXd& Cq, 
                            Eigen::VectorXd& Cv, Eigen::VectorXd& Ca);
 
+  void condenseSlackAndDual(const double dtau, const Eigen::VectorXd& u, 
+                            Eigen::MatrixXd& Cuu, Eigen::VectorXd& Cu);
+
   void condenseSlackAndDual(const double dtau, const Eigen::VectorXd& q, 
                             const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
                             Eigen::MatrixXd& Cqq, Eigen::MatrixXd& Cvv, 
                             Eigen::MatrixXd& Caa,  Eigen::VectorXd& Cq, 
                             Eigen::VectorXd& Cv, Eigen::VectorXd& Ca);
-
-  void condenseSlackAndDual(const double dtau, const Eigen::VectorXd& u, 
-                            Eigen::MatrixXd& Cuu, Eigen::VectorXd& Cu);
 
   void computeSlackAndDualDirection(const double dtau,
                                     const Eigen::VectorXd& dq,

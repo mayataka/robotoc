@@ -22,7 +22,15 @@ public:
   JointVariablesLowerLimits(const JointVariablesLowerLimits&) = default;
 
   // Use default copy operator.
-  JointVariablesLowerLimits& operator=(const JointVariablesLowerLimits&) = default;
+  JointVariablesLowerLimits& operator=(const JointVariablesLowerLimits&) 
+      = default;
+
+  // Use default move constructor.
+  JointVariablesLowerLimits(JointVariablesLowerLimits&&) noexcept = default;
+
+  // Use default move assign operator.
+  JointVariablesLowerLimits& operator=(JointVariablesLowerLimits&&) noexcept 
+      = default;
 
   bool isFeasible(const Eigen::VectorXd& v);
 

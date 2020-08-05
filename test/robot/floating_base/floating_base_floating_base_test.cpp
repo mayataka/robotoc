@@ -2,6 +2,7 @@
 #include <random>
 #include <utility>
 #include <vector>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -50,6 +51,18 @@ TEST_F(FloatingBaseFloatingBaseTest, constructor) {
     EXPECT_EQ(floating_base.passive_joint_indices()[i], i);
   }
   EXPECT_TRUE(floating_base.has_floating_base());
+}
+
+
+TEST_F(FloatingBaseFloatingBaseTest, moveAssign) {
+  FloatingBase floating_base(model_);
+  FloatingBase floating_base_ref = std::move(floating_base);
+  EXPECT_EQ(floating_base_ref.dim_passive(), 6);
+  EXPECT_FALSE(floating_base_ref.passive_joint_indices().empty());
+  for (int i=0; i<floating_base_ref.dim_passive(); ++i) {
+    EXPECT_EQ(floating_base_ref.passive_joint_indices()[i], i);
+  }
+  EXPECT_TRUE(floating_base_ref.has_floating_base());
 }
 
 
