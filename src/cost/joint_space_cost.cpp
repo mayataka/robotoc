@@ -120,6 +120,10 @@ JointSpaceCost::JointSpaceCost()
 }
 
 
+JointSpaceCost::~JointSpaceCost() {
+}
+
+
 void JointSpaceCost::set_q_ref(const Eigen::VectorXd& q_ref) {
   assert(q_ref.size() == dimq_);
   q_ref_ = q_ref;

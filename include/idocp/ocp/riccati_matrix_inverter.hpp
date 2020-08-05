@@ -25,18 +25,16 @@ public:
   ~RiccatiMatrixInverter();
  
   // Use default copy constructor.
-  RiccatiMatrixInverter(const RiccatiMatrixInverter& other) = default;
+  RiccatiMatrixInverter(const RiccatiMatrixInverter&) = default;
 
   // Use default copy operator.
-  RiccatiMatrixInverter& operator=(const RiccatiMatrixInverter& other) 
-      = default;
+  RiccatiMatrixInverter& operator=(const RiccatiMatrixInverter&) = default;
 
   // Use default move constructor.
-  RiccatiMatrixInverter(RiccatiMatrixInverter&& other) noexcept = default;
+  RiccatiMatrixInverter(RiccatiMatrixInverter&&) noexcept = default;
 
   // Use default move assign operator.
-  RiccatiMatrixInverter& operator=(RiccatiMatrixInverter&& other) noexcept
-      = default;
+  RiccatiMatrixInverter& operator=(RiccatiMatrixInverter&&) noexcept = default;
 
   void setContactStatus(const Robot& robot);
 

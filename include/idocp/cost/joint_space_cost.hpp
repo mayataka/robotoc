@@ -28,6 +28,8 @@ public:
 
   JointSpaceCost();
 
+  ~JointSpaceCost();
+
   // Use defalut copy constructor.
   JointSpaceCost(const JointSpaceCost&) = default;
 

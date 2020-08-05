@@ -17,6 +17,8 @@ public:
 
   ContactCost();
 
+  ~ContactCost();
+
   // Use defalut copy constructor.
   ContactCost(const ContactCost&) = default;
 

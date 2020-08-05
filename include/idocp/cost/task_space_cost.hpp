@@ -17,11 +17,21 @@ public:
                 const Eigen::VectorXd& qf_weight,  
                 const Eigen::VectorXd& vf_weight);
 
+  TaskSpaceCost();
+
+  ~TaskSpaceCost();
+
   // Use defalut copy constructor.
   TaskSpaceCost(const TaskSpaceCost&) = default;
 
   // Use defalut copy operator.
   TaskSpaceCost& operator=(const TaskSpaceCost&) = default;
+
+  // Use defalut move constructor.
+  TaskSpaceCost(TaskSpaceCost&&) noexcept = default;
+
+  // Use defalut copy operator.
+  TaskSpaceCost& operator=(TaskSpaceCost&&) noexcept = default;
 
   void set_q_ref(const Eigen::VectorXd& q_ref);
 

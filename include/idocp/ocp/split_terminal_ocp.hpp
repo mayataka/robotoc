@@ -41,7 +41,7 @@ public:
   SplitTerminalOCP(SplitTerminalOCP&&) noexcept = default;
 
   // Use default move assign operator.
-  SplitTerminalOCP& operator=(SplitTerminalOCP&& other) noexcept = default;
+  SplitTerminalOCP& operator=(SplitTerminalOCP&&) noexcept = default;
 
   // Check whether the solution q, v are feasible under inequality 
   // constraints.

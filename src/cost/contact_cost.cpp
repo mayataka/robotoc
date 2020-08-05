@@ -33,6 +33,10 @@ ContactCost::ContactCost()
 }
 
 
+ContactCost::~ContactCost() {
+}
+
+
 void ContactCost::set_f_ref(const Eigen::VectorXd& f_ref) {
   assert(f_ref_.size() == max_dimf_);
   f_ref_ = f_ref;
