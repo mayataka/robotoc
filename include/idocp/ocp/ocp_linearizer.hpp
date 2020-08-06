@@ -15,16 +15,16 @@ namespace idocp {
 namespace ocplinearizer {
 
 inline void linearizeStageCost(Robot& robot, 
-                              std::shared_ptr<CostFunctionInterface>& cost, 
-                              CostFunctionData& cost_data,
-                              const double t, const double dtau, 
-                              const Eigen::VectorXd& q, 
-                              const Eigen::VectorXd& v, 
-                              const Eigen::VectorXd& a, 
-                              const Eigen::VectorXd& u, 
-                              const Eigen::VectorXd& f, Eigen::VectorXd& lq, 
-                              Eigen::VectorXd& lv, Eigen::VectorXd& la, 
-                              Eigen::VectorXd& lu, Eigen::VectorXd& lf) {
+                               std::shared_ptr<CostFunctionInterface>& cost, 
+                               CostFunctionData& cost_data,
+                               const double t, const double dtau, 
+                               const Eigen::VectorXd& q, 
+                               const Eigen::VectorXd& v, 
+                               const Eigen::VectorXd& a, 
+                               const Eigen::VectorXd& u, 
+                               const Eigen::VectorXd& f, Eigen::VectorXd& lq, 
+                               Eigen::VectorXd& lv, Eigen::VectorXd& la, 
+                               Eigen::VectorXd& lu, Eigen::VectorXd& lf) {
   assert(dtau > 0);
   assert(q.size() == robot.dimq());
   assert(v.size() == robot.dimv());
