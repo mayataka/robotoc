@@ -23,6 +23,12 @@ add_definitions(
   -DPINOCCHIO_WITH_URDFDOM
 )
 link_directories(${PINOCCHIO_LIBDIR})
+# find OpenMP
+find_package(OpenMP REQUIRED)
+if(OpenMP_FOUND)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 
 # set idocp directories
 set(IDOCP_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -35,6 +41,7 @@ add_library(
   src/robot/robot.cpp
   src/robot/floating_base.cpp
   src/robot/point_contact.cpp
+  src/cost/cost_function_data.cpp
   src/cost/joint_space_cost.cpp
   src/cost/contact_cost.cpp
   src/constraints/pdipm_func.cpp
@@ -48,8 +55,10 @@ add_library(
   src/ocp/riccati_matrix_factorizer.cpp
   src/ocp/riccati_matrix_inverter.cpp
   src/ocp/ocp_linearizer.cpp
-  src/ocp/split_terminal_ocp.cpp
+  src/ocp/terminal_ocp.cpp
   src/ocp/split_ocp.cpp
+  src/ocp/line_search_filter.cpp
+  src/ocp/ocp.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 
@@ -73,8 +82,24 @@ target_include_directories(
 ## Testing ##
 #############
 # Add testing directory
-enable_testing()
 if (TESTING)
+  enable_testing()
+  # coverage options
+  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --coverage")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+  add_library(coverage_config INTERFACE)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(coverage_config INTERFACE
+      -O0        
+      -g         
+      --coverage 
+    )
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+      target_link_options(coverage_config INTERFACE --coverage)
+    else()
+      target_link_libraries(coverage_config INTERFACE --coverage)
+    endif()
+  endif()
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
 endif()
 

@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/cost/cost_function_data.hpp"
 
 
 namespace idocp {
@@ -68,8 +69,8 @@ public:
            const Eigen::VectorXd& v, const Eigen::VectorXd& a,
            const Eigen::VectorXd& u) const;
 
-  void lq(const Robot& robot, const double dtau, const Eigen::VectorXd& q, 
-          Eigen::VectorXd& lq);
+  void lq(const Robot& robot, CostFunctionData& data, const double dtau, 
+          const Eigen::VectorXd& q, Eigen::VectorXd& lq) const;
 
   void lv(const double dtau, const Eigen::VectorXd& v, 
           Eigen::VectorXd& lv) const;
@@ -99,7 +100,8 @@ public:
 
   double phi(const Eigen::VectorXd& q, const Eigen::VectorXd& v) const;
 
-  void phiq(const Robot& robot, const Eigen::VectorXd& q, Eigen::VectorXd& phiq);
+  void phiq(const Robot& robot, CostFunctionData& data, 
+            const Eigen::VectorXd& q, Eigen::VectorXd& phiq) const;
 
   void phiv(const Eigen::VectorXd& v, Eigen::VectorXd& phiv) const;
 
@@ -111,9 +113,8 @@ private:
   bool has_floating_base_;
   int dimq_, dimv_;
   Eigen::VectorXd q_ref_, v_ref_, a_ref_, u_ref_, q_weight_, v_weight_, 
-                  a_weight_, u_weight_, qf_weight_, vf_weight_, 
-                  lq_configuration_;
-  Eigen::MatrixXd lqq_configuration_, phiqq_configuration_;
+                  a_weight_, u_weight_, qf_weight_, vf_weight_;
+  Eigen::MatrixXd q_weight_diag_mat_, qf_weight_diag_mat_;
 };
 
 } // namespace idocp

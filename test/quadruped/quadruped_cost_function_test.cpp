@@ -6,6 +6,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function_interface.hpp"
+#include "idocp/cost/cost_function_data.hpp"
 #include "idocp/quadruped/cost_function.hpp"
 
 
@@ -31,6 +32,7 @@ protected:
     a_ = Eigen::VectorXd::Random(robot_.dimv());
     u_ = Eigen::VectorXd::Random(robot_.dimv());
     f_ = Eigen::VectorXd::Random(robot_.max_dimf());
+    data_ = CostFunctionData(robot_);
   }
 
   virtual void TearDown() {
@@ -40,6 +42,7 @@ protected:
   std::vector<int> contact_frames_;
   std::string urdf_;
   Robot robot_;
+  CostFunctionData data_;
   Eigen::VectorXd q_, v_, a_, u_, f_;
 };
 
@@ -48,9 +51,9 @@ TEST_F(QuadrupedCostFunctionTest, moveAssign) {
   std::unique_ptr<CostFunctionInterface> cost 
       = std::make_unique<quadruped::CostFunction>(robot_);
   std::unique_ptr<CostFunctionInterface> cost_ref;
-  const double l = cost->l(robot_, 0, dtau_, q_, v_, a_, u_, f_);
+  const double l = cost->l(robot_, data_, 0, dtau_, q_, v_, a_, u_, f_);
   cost_ref = std::move(cost);
-  const double l_ref = cost_ref->l(robot_, 0, dtau_, q_, v_, a_, u_, f_);
+  const double l_ref = cost_ref->l(robot_, data_, 0, dtau_, q_, v_, a_, u_, f_);
   EXPECT_DOUBLE_EQ(l, l_ref);
 }
 
@@ -58,9 +61,9 @@ TEST_F(QuadrupedCostFunctionTest, moveAssign) {
 TEST_F(QuadrupedCostFunctionTest, moveConstructor) {
   std::unique_ptr<CostFunctionInterface> cost 
       = std::make_unique<quadruped::CostFunction>(robot_);
-  const double l = cost->l(robot_, 0, dtau_, q_, v_, a_, u_, f_);
+  const double l = cost->l(robot_, data_, 0, dtau_, q_, v_, a_, u_, f_);
   std::unique_ptr<CostFunctionInterface> cost_ref(std::move(cost));
-  const double l_ref = cost_ref->l(robot_, 0, dtau_, q_, v_, a_, u_, f_);
+  const double l_ref = cost_ref->l(robot_, data_, 0, dtau_, q_, v_, a_, u_, f_);
   EXPECT_DOUBLE_EQ(l, l_ref);
 }
 

@@ -8,16 +8,11 @@
 
 namespace idocp {
 
-OCP::OCP(const Robot& robot, 
-         std::unique_ptr<CostFunctionFactoryInterface>&& cost_factory,
-         std::unique_ptr<ConstraintsFactoryInterface>&& constraints_factory,
+OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunctionInterface>& cost,
+         const std::shared_ptr<ConstraintsInterface>& constraints, 
          const double T, const int N, const int num_proc)
-  : cost_factory_(std::move(cost_factory)),
-    constraints_factory_(std::move(constraints_factory)),
-    split_ocps_(N-1, SplitOCP(robot, cost_factory_.create(robot), 
-                              constraints_factory_.create(robot))),
-    terminal_ocp_(robot, cost_factory_.create(robot), 
-                  constraints_factory_.create(robot)),
+  : split_ocps_(N-1, SplitOCP(robot, cost, constraints)),
+    terminal_ocp_(robot, cost, constraints),
     robots_(num_proc_, robot),
     filter_(),
     T_(T),
@@ -71,7 +66,7 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
     for (time_step=0; time_step<=N_; ++time_step) {
       if (time_step < N_) {
         const int robot_id = omp_get_thread_num();
-        robots_[robot_id].setActiveContacts(contact_sequence_[time_step]);
+        robots_[robot_id].setContactStatus(contact_sequence_[time_step]);
         split_ocps_[time_step].linearizeOCP(robots_[robot_id], 
                                             t+time_step*dtau_, dtau_, 
                                             lmd_[time_step], gmm_[time_step],
@@ -118,9 +113,7 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
   {
     #pragma omp for 
     for (time_step=0; time_step<N_; ++time_step) {
-      const int robot_id = omp_get_thread_num();
-      split_ocps_[time_step].computeCondensedDirection(robots_[robot_id], 
-                                                       dtau_, dq_[time_step], 
+      split_ocps_[time_step].computeCondensedDirection(dtau_, dq_[time_step], 
                                                        dv_[time_step]);
       primal_step_sizes_.coeffRef(time_step) 
           = split_ocps_[time_step].maxPrimalStepSize();
@@ -142,7 +135,7 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
             const std::pair<double, double> filter_pair
                 = split_ocps_[time_step].costAndConstraintsViolation(
                     robots_[robot_id], t+time_step*dtau_, dtau_, q_[time_step], 
-                    v_[time_step], a_[time_step], u_[time_step]);
+                    v_[time_step], a_[time_step], u_[time_step], f_[time_step]);
             costs_.coeffRef(time_step) = filter_pair.first;
             constraints_violations_.coeffRef(time_step) = filter_pair.second;
           }
@@ -230,7 +223,7 @@ void OCP::getInitialControlInput(Eigen::VectorXd& u) {
 void OCP::getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) {
   assert(Kq.cols() == Kq.rows());
   assert(Kv.cols() == Kv.rows());
-  split_OCPs_[0].getStateFeedbackGain(Kq, Kv);
+  split_ocps_[0].getStateFeedbackGain(Kq, Kv);
 }
 
 
@@ -281,14 +274,14 @@ double OCP::KKTError(const double t, const Eigen::VectorXd& q,
   error += (q-q_[0]).squaredNorm();
   error += (v-v_[0]).squaredNorm();
   for (int i=0; i<N_; ++i) {
-    error += split_OCPs_[i].squaredKKTErrorNorm(robots_[0], t+i*dtau_, dtau_, 
+    error += split_ocps_[i].squaredKKTErrorNorm(robots_[0], t+i*dtau_, dtau_, 
                                                 lmd_[i], gmm_[i], q_[i], v_[i], 
-                                                a_[i], u_[i], beta_[i], 
-                                                lmd_[i+1], gmm_[i+1], 
+                                                a_[i], u_[i], beta_[i], f_[i], 
+                                                mu_[i], lmd_[i+1], gmm_[i+1], 
                                                 q_[i+1], v_[i+1]);
   }
-  error += split_terminal_OCP_.squaredKKTErrorNorm(robots_[0], t+T_, lmd_[N_], 
-                                                   gmm_[N_], q_[N_], v_[N_]);
+  error += terminal_ocp_.squaredKKTErrorNorm(robots_[0], t+T_, 
+                                             lmd_[N_], gmm_[N_], q_[N_], v_[N_]);
   return std::sqrt(error);
 }
 
@@ -307,7 +300,7 @@ void OCP::printSolution() const {
 
 bool OCP::isCurrentSolutionFeasible() {
   for (int time_step=0; time_step<N_; ++time_step) {
-    const bool feasible = split_OCPs_[time_step].isFeasible(robots_[0], 
+    const bool feasible = split_ocps_[time_step].isFeasible(robots_[0], 
                                                             q_[time_step], 
                                                             v_[time_step], 
                                                             a_[time_step], 
@@ -323,7 +316,7 @@ bool OCP::isCurrentSolutionFeasible() {
 
 void OCP::initConstraints() {
   for (int time_step=0; time_step<N_; ++time_step) {
-    split_OCPs_[time_step].initConstraints(robots_[0], time_step, dtau_, 
+    split_ocps_[time_step].initConstraints(robots_[0], time_step, dtau_, 
                                            q_[time_step], v_[time_step], 
                                            a_[time_step], u_[time_step]);
   }

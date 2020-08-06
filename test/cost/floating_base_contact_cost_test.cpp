@@ -5,6 +5,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/contact_cost.hpp"
+#include "idocp/cost/cost_function_data.hpp"
 
 
 namespace idocp {
@@ -18,6 +19,7 @@ protected:
     contact_frames_ = {14, 24, 34, 44};
     robot_ = Robot(urdf_, contact_frames_, 0, 0);
     dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
+    data_ = CostFunctionData(robot_);
   }
 
   virtual void TearDown() {
@@ -27,6 +29,7 @@ protected:
   std::vector<int> contact_frames_;
   std::string urdf_;
   Robot robot_;
+  CostFunctionData data_;
 };
 
 
