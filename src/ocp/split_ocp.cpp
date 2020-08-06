@@ -547,11 +547,11 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   v.noalias() += step_size * dv;
   a.noalias() += step_size * da_;
   u.noalias() += step_size * du_;
-  f.head(dimf_).noalias() += step_size * df_.head(dimf_);
-  mu.head(dimc_).noalias() += step_size * dmu_.head(dimc_);
   lu_.noalias() -= dtau * beta;
   beta.noalias() += step_size * lu_ / dtau;
   beta.noalias() += step_size * luu_ * du_ / dtau;
+  f.head(dimf_).noalias() += step_size * df_.head(dimf_);
+  mu.head(dimc_).noalias() += step_size * dmu_.head(dimc_);
   joint_constraints_.updateSlack(step_size);
 }
 

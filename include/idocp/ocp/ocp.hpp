@@ -51,7 +51,8 @@ public:
   bool setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0,
                           const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
                           
-  void setContactSequence(const std::vector<std::vector<bool>>& contact_sequence);
+  void setContactSequence(
+      const std::vector<std::vector<bool>>& contact_sequence);
 
   void resetContactPoint();
 

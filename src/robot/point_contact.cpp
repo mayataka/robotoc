@@ -121,6 +121,30 @@ void PointContact::getContactJacobian(const pinocchio::Model& model,
 }
 
 
+void PointContact::getContactJacobian(const pinocchio::Model& model, 
+                                      pinocchio::Data& data, 
+                                      const int block_begin_index, 
+                                      const double coeff,
+                                      Eigen::MatrixXd& Jacobian,
+                                      const bool transpose) {
+  assert(block_begin_index >= 0);
+  pinocchio::getFrameJacobian(model, data, contact_frame_id_, pinocchio::LOCAL, 
+                              J_frame_);
+  if (transpose) {
+    assert(Jacobian.rows() == dimv_);
+    assert(Jacobian.cols() >= 3);
+    Jacobian.block(0, block_begin_index, dimv_, 3) 
+        = coeff * J_frame_.topRows<3>().transpose(); 
+  }
+  else {
+    assert(Jacobian.rows() >= 3);
+    assert(Jacobian.cols() == dimv_);
+    Jacobian.block(block_begin_index, 0, 3, dimv_) 
+        = coeff * J_frame_.topRows<3>(); 
+  }
+}
+
+
 void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
     Eigen::Vector3d& baumgarte_residual) const {

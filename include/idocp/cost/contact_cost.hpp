@@ -51,7 +51,6 @@ public:
                    Eigen::MatrixXd& lff) const;
 
 private:
-  int max_point_contacts_, max_dimf_;
   Eigen::VectorXd f_ref_, f_weight_;
 
 };

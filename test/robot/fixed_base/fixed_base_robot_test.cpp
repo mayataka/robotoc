@@ -464,7 +464,7 @@ TEST_F(FixedBaseRobotTest, RNEADerivativesWithContacts) {
   EXPECT_TRUE(dRNEA_da.isApprox(dRNEA_da_ref));
   const bool transpose_jacobian = true;
   robot.dRNEAPartialdFext(dRNEA_dfext);
-  contact_ref.getContactJacobian(model_, data_, dRNEA_dfext_ref, 
+  contact_ref.getContactJacobian(model_, data_, 0, -1, dRNEA_dfext_ref,
                                  transpose_jacobian);
   EXPECT_TRUE(dRNEA_dfext.isApprox(dRNEA_dfext_ref));
 }
@@ -472,7 +472,7 @@ TEST_F(FixedBaseRobotTest, RNEADerivativesWithContacts) {
 
 TEST_F(FixedBaseRobotTest, floating_base) {
   Robot robot(urdf_);
-  Eigen::VectorXd tau = Eigen::VectorXd::Ones(robot.dimv());
+  Eigen::VectorXd tau = Eigen::VectorXd::Ones(robot.dimv());-1, 
   robot.setPassiveTorques(tau);
   EXPECT_TRUE(tau.isApprox(Eigen::VectorXd::Ones(robot.dimv())));
 }

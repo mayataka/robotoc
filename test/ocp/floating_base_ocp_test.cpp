@@ -24,8 +24,8 @@ protected:
     std::random_device rnd;
     urdf_ = "../urdf/anymal/anymal.urdf";
     contact_frames_ = {14, 24, 34, 44};
-    baum_on_velocity_ = std::abs(Eigen::VectorXd::Random(1)[0]);
-    baum_on_position_ = std::abs(Eigen::VectorXd::Random(1)[0]);
+    baum_on_velocity_ = 20;
+    baum_on_position_ = 400;
     robot_ = Robot(urdf_, contact_frames_, baum_on_velocity_, baum_on_position_);
     for (int i=0; i<contact_frames_.size(); ++i) {
       contact_status_.push_back(rnd()%2==0);

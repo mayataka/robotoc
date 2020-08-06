@@ -448,7 +448,7 @@ void Robot::dRNEAPartialdFext(Eigen::MatrixXd& dRNEA_partial_dfext) {
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].getContactJacobian(model_, data_,  
-                                            3*num_active_contacts, 
+                                            3*num_active_contacts, -1,
                                             dRNEA_partial_dfext, true);
       ++num_active_contacts;
     }
