@@ -382,6 +382,7 @@ TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
     EXPECT_EQ(robot.is_contact_active(i), true);
   }
   robot.updateKinematics(q_, v_, a_);
+  robot.setContactPointsByCurrentKinematics();
   robot.computeBaumgarteResidual(block_begin, residual);
   pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
   pinocchio::updateFramePlacements(model_, data_);

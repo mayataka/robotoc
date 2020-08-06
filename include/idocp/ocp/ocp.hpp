@@ -23,19 +23,21 @@ public:
       const std::shared_ptr<ConstraintsInterface>& constraints, const double T, 
       const int N, const int num_proc=1);
 
+  OCP();
+
   ~OCP();
 
-  // Prohibit default copy constructor due to unique_ptr.
-  OCP(const OCP&) = delete;
+  // Use default copy constructor.
+  OCP(const OCP&) = default;
 
-  // Prohibit default copy operator due to unique_ptr.
-  OCP& operator=(const OCP&) = delete;
+  // Use default copy assign operator.
+  OCP& operator=(const OCP&) = default;
 
   // Use default move constructor.
-  OCP(OCP&&) = default;
+  OCP(OCP&&) noexcept = default;
 
   // Use default move operator.
-  OCP& operator=(OCP&&) = default;
+  OCP& operator=(OCP&&) noexcept = default;
 
   void solveLQR(const double t, const Eigen::VectorXd& q, 
                 const Eigen::VectorXd& v, const bool use_line_search=true);
@@ -44,10 +46,14 @@ public:
 
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv);
 
-  void setStateTrajectory(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
+  bool setStateTrajectory(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
-  void setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0,
+  bool setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0,
                           const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
+                          
+  void setContactSequence(const std::vector<std::vector<bool>>& contact_sequence);
+
+  void resetContactPoint();
 
   double KKTError(const double t, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v);
@@ -59,8 +65,6 @@ private:
   bool isCurrentSolutionFeasible();
 
   void initConstraints();
-
-  void activateAllContacts();
 
   std::vector<SplitOCP> split_ocps_;
   TerminalOCP terminal_ocp_;

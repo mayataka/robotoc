@@ -61,6 +61,11 @@ void PointContact::resetBaugrarteParameters(
 }
 
 
+void PointContact::resetContactPoint(const Eigen::Vector3d& contact_point) {
+  contact_point_ = contact_point;
+}
+
+
 void PointContact::resetContactPointByCurrentKinematics(
     const pinocchio::Data& data) {
   contact_point_ = data.oMf[contact_frame_id_].translation();

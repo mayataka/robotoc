@@ -512,11 +512,11 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
                             const Eigen::VectorXd& sq, 
                             const Eigen::VectorXd& sv, 
                             const Eigen::VectorXd& dq, 
-                            const Eigen::VectorXd& dv, Eigen::VectorXd& q, 
+                            const Eigen::VectorXd& dv, Eigen::VectorXd& lmd, 
+                            Eigen::VectorXd& gmm, Eigen::VectorXd& q, 
                             Eigen::VectorXd& v, Eigen::VectorXd& a, 
                             Eigen::VectorXd& u, Eigen::VectorXd& beta, 
-                            Eigen::VectorXd& f, Eigen::VectorXd& mu, 
-                            Eigen::VectorXd& lmd, Eigen::VectorXd& gmm) {
+                            Eigen::VectorXd& f, Eigen::VectorXd& mu) {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dtau > 0);
@@ -532,6 +532,8 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   assert(sv.size() == dimv_);
   assert(dq.size() == dimv_);
   assert(dv.size() == dimv_);
+  assert(lmd.size() == dimv_);
+  assert(gmm.size() == dimv_);
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
@@ -539,7 +541,8 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   assert(beta.size() == dimv_);
   assert(f.size() == max_dimf_);
   assert(mu.size() == max_dimc_);
-  assert(gmm.size() == dimv_);
+  lmd.noalias() += step_size * (Pqq * dq + Pqv * dv - sq);
+  gmm.noalias() += step_size * (Pvq * dq + Pvv * dv - sv);
   robot.integrateConfiguration(dq, step_size, q);
   v.noalias() += step_size * dv;
   a.noalias() += step_size * da_;
@@ -549,8 +552,6 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   lu_.noalias() -= dtau * beta;
   beta.noalias() += step_size * lu_ / dtau;
   beta.noalias() += step_size * luu_ * du_ / dtau;
-  lmd.noalias() += step_size * (Pqq * dq + Pqv * dv - sq);
-  gmm.noalias() += step_size * (Pvq * dq + Pvv * dv - sv);
   joint_constraints_.updateSlack(step_size);
 }
 

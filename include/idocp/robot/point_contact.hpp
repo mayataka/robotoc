@@ -58,6 +58,11 @@ public:
   void resetBaugrarteParameters(const double baumgarte_weight_on_velocity, 
                                 const double baumgarte_weight_on_position);
 
+  // Resets the contact point.
+  // Argments:
+  //    contact_point: The contact point.
+  void resetContactPoint(const Eigen::Vector3d& contact_point);
+
   // Resets the contact point by current kinematics of the robot. The kinematics
   // is passed through pinocchio::Data. Before calling this function, you have 
   // to update the kinematics (only with respect to the position) in 

@@ -393,7 +393,7 @@ TEST_F(FloatingBaseSplitOCPTest, solveOCP) {
   Eigen::VectorXd lmd_ref = lmd_;
   Eigen::VectorXd gmm_ref = gmm_;
   ocp.updatePrimal(robot_, max_primal_step_size, dtau_, Pqq, Pqv, Pvq, Pvv, 
-                   sq, sv, dq, dv, q_, v_, a_, u_, beta, f_, mu_, lmd_, gmm_);
+                   sq, sv, dq, dv, lmd_, gmm_, q_, v_, a_, u_, beta, f_, mu_);
   robot_.integrateConfiguration(dq, max_primal_step_size, q_ref);
   v_ref += max_primal_step_size * dv;
   a_ref += max_primal_step_size * da;

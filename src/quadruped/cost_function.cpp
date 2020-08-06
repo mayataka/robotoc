@@ -14,7 +14,15 @@ CostFunction::CostFunction(const Robot& robot)
                       Eigen::VectorXd::Constant(robot.dimv(), 0.0), 
                       Eigen::VectorXd::Constant(robot.dimq(), 10), 
                       Eigen::VectorXd::Constant(robot.dimv(), 1)),
-    contact_cost_(robot, Eigen::VectorXd::Constant(robot.max_dimf(), 0.01))   {
+    contact_cost_(robot, Eigen::VectorXd::Constant(robot.max_dimf(), 0.0))   {
+  Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(robot.dimq());
+  q_ref << 0, 0, 4.8, 0, 0, 0, 1, 
+           0.0315, 0.4, -0.8, 
+           0.0315, -0.4, 0.8, 
+           -0.0315, 0.4, -0.8,
+           -0.0315, -0.4, 0.8;
+  robot.normalizeConfiguration(q_ref);
+  joint_space_cost_.set_q_ref(q_ref);
 }
 
 CostFunction::CostFunction()

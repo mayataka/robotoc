@@ -1,13 +1,14 @@
 #include <iostream>
 #include <string>
+#include <memory>
 #include <chrono>
 
 #include "Eigen/Core"
 
-#include "ocp/ocp.hpp"
-#include "robot/robot.hpp"
-#include "manipulator/cost_function.hpp"
-#include "manipulator/constraints.hpp"
+#include "idocp/ocp/ocp.hpp"
+#include "idocp/robot/robot.hpp"
+#include "idocp/manipulator/cost_function.hpp"
+#include "idocp/manipulator/constraints.hpp"
 
 
 int main() {
@@ -20,14 +21,15 @@ int main() {
   idocp::Robot robot(urdf_file_name, contact_frames, 
                      baumgarte_weight_on_velocity, 
                      baumgarte_weight_on_position);
-  idocp::manipulator::CostFunction cost(robot);
-  idocp::manipulator::Constraints constraints(robot);
+  std::shared_ptr<idocp::CostFunctionInterface> cost 
+      = std::make_shared<idocp::manipulator::CostFunction>(robot);
+  std::shared_ptr<idocp::ConstraintsInterface> constraints
+      = std::make_shared<idocp::manipulator::Constraints>(robot);
   Eigen::VectorXd q_ref = 1.5 * Eigen::VectorXd::Random(robot.dimq());
-  cost.set_q_ref(q_ref);
   const double T = 1;
   const unsigned int N = 50;
   const unsigned int num_proc = 1;
-  idocp::OCP ocp_(robot, &cost, &constraints, T, N, num_proc);
+  idocp::OCP ocp_(robot, cost, constraints, T, N, num_proc);
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
@@ -37,7 +39,7 @@ int main() {
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
   for (int i=0; i<num_iteration; ++i) {
-    ocp_.solveSQP(t, q, v, false);
+    ocp_.solveLQR(t, q, v, false);
     std::cout << ocp_.KKTError(t, q, v) << std::endl;
   }
   end_clock = std::chrono::system_clock::now();

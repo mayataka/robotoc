@@ -313,6 +313,7 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   EXPECT_EQ(robot.dimf(), robot.max_dimf());
   EXPECT_EQ(robot.is_contact_active(0), true);
   robot.updateKinematics(q_, v_, a_);
+  robot.setContactPointsByCurrentKinematics();
   robot.computeBaumgarteResidual(block_begin, residual);
   PointContact contact_ref(model_, contact_frame_id_, 
                            baumgarte_weight_on_velocity_, 

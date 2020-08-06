@@ -145,10 +145,10 @@ public:
                     const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
                     const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
                     const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
+                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm, 
                     Eigen::VectorXd& q, Eigen::VectorXd& v, Eigen::VectorXd& a, 
                     Eigen::VectorXd& u, Eigen::VectorXd& beta, 
-                    Eigen::VectorXd& f, Eigen::VectorXd& mu, 
-                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm);
+                    Eigen::VectorXd& f, Eigen::VectorXd& mu);
 
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
