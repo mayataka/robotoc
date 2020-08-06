@@ -35,8 +35,9 @@ protected:
     cost_ = std::make_shared<manipulator::CostFunction>(robot_);
     constraints_ = std::make_shared<manipulator::Constraints>(robot_);
     t_ = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
+    T_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     N_ = 10;
+    dtau_ = T_/N_;
     if (rnd()%2==0) {
       contact_sequence_ = std::vector<std::vector<bool>>(N_, {true});
     }
@@ -46,11 +47,11 @@ protected:
     q_ = Eigen::VectorXd::Zero(robot_.dimq());
     robot_.generateFeasibleConfiguration(q_);
     v_ = Eigen::VectorXd::Random(robot_.dimv());
-    T_ = N_ * dtau_;
     if (robot_.max_point_contacts() > 0) {
       robot_.updateKinematics(q_, v_, Eigen::VectorXd::Zero(robot_.dimv()));
       robot_.setContactPointsByCurrentKinematics();
     }
+    std::cout << "T = " << T_ << std::endl;
     ocp_ = OCP(robot_, cost_, constraints_, T_, N_);
   }
 
@@ -105,6 +106,7 @@ TEST_F(FixedBaseOCPTest, KKTError) {
     std::cout << "not active" << std::endl;
   }
   std::cout << "KKT error = " << ocp_.KKTError(t_, q_, v_) << std::endl;
+  ocp_.setStateTrajectory(q_, v_);
   const int max_itr = 10;
   bool use_line_search = false;
   for (int i=0; i<max_itr; ++i) {

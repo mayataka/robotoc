@@ -28,25 +28,28 @@ protected:
     baum_on_position_ = 400;
     robot_ = Robot(urdf_, contact_frames_, baum_on_velocity_, baum_on_position_);
     for (int i=0; i<contact_frames_.size(); ++i) {
-      contact_status_.push_back(rnd()%2==0);
+      // contact_status_.push_back(rnd()%2==0);
+      contact_status_.push_back(true);
     }
+    contact_sequence_ = std::vector<std::vector<bool>>(N_, contact_status_);
     robot_.setContactStatus(contact_status_);
     cost_ = std::make_shared<quadruped::CostFunction>(robot_);
     constraints_ = std::make_shared<quadruped::Constraints>(robot_);
     t_ = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
+    T_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     N_ = 10;
+    dtau_ = T_/N_;
     q_ = Eigen::VectorXd::Zero(robot_.dimq());
     q_ << 0, 0, 4.8, 0, 0, 0, 1, 
           0.0315, 0.4, -0.8, 
           0.0315, -0.4, 0.8, 
           -0.0315, 0.4, -0.8,
           -0.0315, -0.4, 0.8;
-    v_ = Eigen::VectorXd::Zero(robot_.dimv());
+    v_ = Eigen::VectorXd::Random(robot_.dimv());
     robot_.normalizeConfiguration(q_);
     robot_.updateKinematics(q_, v_, Eigen::VectorXd::Zero(robot_.dimv()));
     robot_.setContactPointsByCurrentKinematics();
-    T_ = N_ * dtau_;
+    std::cout << "T = " << T_ << std::endl;
     ocp_ = OCP(robot_, cost_, constraints_, T_, N_);
   }
 
@@ -93,6 +96,8 @@ TEST_F(FloatingBaseOCPTest, KKTError) {
   for (int i=0; i<contact_status_.size(); ++i) {
     std::cout << contact_status_[i] << ", ";
   }
+  bool feasible = ocp_.setStateTrajectory(q_, v_);
+  ocp_.setContactSequence(contact_sequence_);
   std::cout << "]" << std::endl;;
   std::cout << "KKT error = " << ocp_.KKTError(t_, q_, v_) << std::endl;
   const int max_itr = 10;
