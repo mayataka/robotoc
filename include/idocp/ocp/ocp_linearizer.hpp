@@ -7,6 +7,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function_interface.hpp"
+#include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints_interface.hpp"
 
 
@@ -15,6 +16,7 @@ namespace ocplinearizer {
 
 inline void linearizeStageCost(Robot& robot, 
                               std::shared_ptr<CostFunctionInterface>& cost, 
+                              CostFunctionData& cost_data,
                               const double t, const double dtau, 
                               const Eigen::VectorXd& q, 
                               const Eigen::VectorXd& v, 
@@ -37,11 +39,11 @@ inline void linearizeStageCost(Robot& robot,
   if (robot.has_floating_base()) {
     robot.computeConfigurationJacobian(q);
   }
-  cost->lq(robot, t, dtau, q, v, a, lq);
-  cost->lv(robot, t, dtau, q, v, a, lv);
-  cost->la(robot, t, dtau, q, v, a, la);
-  cost->lu(robot, t, dtau, u, lu);
-  cost->lf(robot, t, dtau, f, lf);
+  cost->lq(robot, cost_data, t, dtau, q, v, a, lq);
+  cost->lv(robot, cost_data, t, dtau, q, v, a, lv);
+  cost->la(robot, cost_data, t, dtau, q, v, a, la);
+  cost->lu(robot, cost_data, t, dtau, u, lu);
+  cost->lf(robot, cost_data, t, dtau, f, lf);
 }
 
 

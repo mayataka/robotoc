@@ -8,6 +8,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
+#include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/joint_space_constraints/joint_space_constraints.hpp"
 #include "idocp/quadruped/cost_function.hpp"
 #include "idocp/quadruped/constraints.hpp"
@@ -32,6 +33,7 @@ protected:
     robot_.setContactStatus(contact_status);
     cost_ = std::make_shared<quadruped::CostFunction>(robot_);
     constraints_ = std::make_shared<quadruped::Constraints>(robot_);
+    data_ = CostFunctionData(robot_);
     t_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     time_step_ = rnd()%10;
@@ -65,6 +67,7 @@ protected:
   Robot robot_;
   std::shared_ptr<CostFunctionInterface> cost_;
   std::shared_ptr<ConstraintsInterface> constraints_;
+  CostFunctionData data_;
   double t_, dtau_, baum_on_velocity_, baum_on_position_;
   int time_step_, dimq_, dimv_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_;
   std::vector<int> contact_frames_;
@@ -79,18 +82,18 @@ TEST_F(FloatingBaseOCPLinearizerTest, linearizeStageCost) {
   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv_);
   Eigen::VectorXd lu = Eigen::VectorXd::Zero(dimv_);
   Eigen::VectorXd lf = Eigen::VectorXd::Zero(max_dimf_);
-  ocplinearizer::linearizeStageCost(robot_, cost_, t_, dtau_, q_, v_, a_, u_, f_,
+  ocplinearizer::linearizeStageCost(robot_, cost_, data_, t_, dtau_, q_, v_, a_, u_, f_,
                                     lq, lv, la, lu, lf);
   Eigen::VectorXd lq_ref = Eigen::VectorXd::Zero(dimv_);
   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv_);
   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimv_);
   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimv_);
   Eigen::VectorXd lf_ref = Eigen::VectorXd::Zero(max_dimf_);
-  cost_->lq(robot_, t_, dtau_, q_, v_, a_, lq_ref);
-  cost_->lv(robot_, t_, dtau_, q_, v_, a_, lv_ref);
-  cost_->la(robot_, t_, dtau_, q_, v_, a_, la_ref);
-  cost_->lu(robot_, t_, dtau_, u_, lu_ref);
-  cost_->lf(robot_, t_, dtau_, f_, lf_ref);
+  cost_->lq(robot_, data_, t_, dtau_, q_, v_, a_, lq_ref);
+  cost_->lv(robot_, data_, t_, dtau_, q_, v_, a_, lv_ref);
+  cost_->la(robot_, data_, t_, dtau_, q_, v_, a_, la_ref);
+  cost_->lu(robot_, data_, t_, dtau_, u_, lu_ref);
+  cost_->lf(robot_, data_, t_, dtau_, f_, lf_ref);
   EXPECT_TRUE(lq.isApprox(lq_ref));
   EXPECT_TRUE(lv.isApprox(lv_ref));
   EXPECT_TRUE(la.isApprox(la_ref));

@@ -8,6 +8,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_ocp.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
+#include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/riccati_matrix_factorizer.hpp"
 #include "idocp/ocp/riccati_matrix_inverter.hpp"
 #include "idocp/constraints/joint_space_constraints/joint_space_constraints.hpp"
@@ -35,6 +36,7 @@ protected:
     cost_ref_ = std::make_shared<quadruped::CostFunction>(robot_);
     constraints_ = std::make_shared<quadruped::Constraints>(robot_);
     constraints_ref_ = std::make_shared<quadruped::Constraints>(robot_);
+    data_ = CostFunctionData(robot_);
     joint_space_constraints_ref_ = pdipm::JointSpaceConstraints(robot_);
     factorizer_ = RiccatiMatrixFactorizer(robot_);
     inverter_ = RiccatiMatrixInverter(robot_);
@@ -75,6 +77,7 @@ protected:
   std::shared_ptr<ConstraintsInterface> constraints_;
   std::shared_ptr<CostFunctionInterface> cost_ref_;
   std::shared_ptr<ConstraintsInterface> constraints_ref_;
+  CostFunctionData data_;
   pdipm::JointSpaceConstraints joint_space_constraints_ref_;
   double t_, dtau_, baum_on_velocity_, baum_on_position_;
   int time_step_, dimq_, dimv_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_;
@@ -146,7 +149,7 @@ TEST_F(FloatingBaseSplitOCPTest, solveOCP) {
   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv_);
   Eigen::VectorXd lu = Eigen::VectorXd::Zero(dimv_);
   Eigen::VectorXd lf = Eigen::VectorXd::Zero(max_dimf_);
-  ocplinearizer::linearizeStageCost(robot_, cost_ref_, t_, dtau_, 
+  ocplinearizer::linearizeStageCost(robot_, cost_ref_, data_, t_, dtau_, 
                                     q_, v_, a_, u_, f_, 
                                     lq, lv, la, lu, lf);
   Eigen::VectorXd q_res = Eigen::VectorXd::Zero(dimv_);
@@ -169,7 +172,7 @@ TEST_F(FloatingBaseSplitOCPTest, solveOCP) {
                                       C_res, Cq, Cv, Ca, Cf);
   joint_space_constraints_ref_.augmentDualResidual(dtau_, lu);
   Eigen::MatrixXd luu = Eigen::MatrixXd::Zero(dimv_, dimv_);
-  cost_ref_->luu(robot_, t_, dtau_, u_, luu);
+  cost_ref_->luu(robot_, data_, t_, dtau_, u_, luu);
   joint_space_constraints_ref_.condenseSlackAndDual(dtau_, u_, luu, lu);
   Eigen::VectorXd lu_condensed = lu + luu * u_res;
   lq += du_dq.transpose() * lu_condensed;
@@ -201,10 +204,10 @@ TEST_F(FloatingBaseSplitOCPTest, solveOCP) {
   Qff = du_df.transpose() * luu * du_df;
   joint_space_constraints_ref_.condenseSlackAndDual(dtau_, q_, v_, a_, Qqq, Qvv, 
                                                     Qaa, lq, lv, la);
-  cost_ref_->augment_lqq(robot_, t_, dtau_, q_, v_, a_, Qqq);
-  cost_ref_->augment_lvv(robot_, t_, dtau_, q_, v_, a_, Qvv);
-  cost_ref_->augment_laa(robot_, t_, dtau_, q_, v_, a_, Qaa);
-  cost_ref_->augment_lff(robot_, t_, dtau_, f_, Qff);
+  cost_ref_->augment_lqq(robot_, data_, t_, dtau_, q_, v_, a_, Qqq);
+  cost_ref_->augment_lvv(robot_, data_, t_, dtau_, q_, v_, a_, Qvv);
+  cost_ref_->augment_laa(robot_, data_, t_, dtau_, q_, v_, a_, Qaa);
+  cost_ref_->augment_lff(robot_, data_, t_, dtau_, f_, Qff);
   factorizer_.setIntegrationSensitivities(robot_, dtau_, q_, v_);
   inverter_.setContactStatus(robot_);
   inverter_.precompute(Qaf, Qff);
@@ -329,6 +332,19 @@ TEST_F(FloatingBaseSplitOCPTest, solveOCP) {
       = joint_space_constraints_ref_.maxDualStepSize();
   EXPECT_DOUBLE_EQ(max_primal_step_size, max_primal_step_size_ref);
   EXPECT_DOUBLE_EQ(max_dual_step_size, max_dual_step_size_ref);
+  const std::pair<double, double> cost_and_violation_init
+      = ocp.costAndConstraintsViolation(robot_, t_, dtau_, q_, v_, a_, u_, f_);
+  double cost_init_ref = 0;
+  cost_init_ref += cost_ref_->l(robot_, data_, t_, dtau_, q_, v_, a_, u_, f_);
+  cost_init_ref += joint_space_constraints_ref_.costSlackBarrier();
+  double violation_init_ref = 0;
+  violation_init_ref += q_res.lpNorm<1>();
+  violation_init_ref += v_res.lpNorm<1>();
+  violation_init_ref += dtau_ * u_res.lpNorm<1>();
+  violation_init_ref += joint_space_constraints_ref_.residualL1Nrom(dtau_, q_, v_, a_, u_);
+  violation_init_ref += C_res.head(dimc_).lpNorm<1>();
+  EXPECT_DOUBLE_EQ(cost_and_violation_init.first, cost_init_ref);
+  EXPECT_DOUBLE_EQ(cost_and_violation_init.second, violation_init_ref);
   const std::pair<double, double> cost_and_violation 
       = ocp.costAndConstraintsViolation(robot_, max_primal_step_size, t_, 
                                         dtau_, q_, v_, a_, u_, f_, q_next_, 
@@ -342,7 +358,7 @@ TEST_F(FloatingBaseSplitOCPTest, solveOCP) {
   f_tmp.head(dimf_) += max_primal_step_size * df.head(dimf_);
   robot_.setContactForces(f_tmp);
   double cost_ref = 0;
-  cost_ref += cost_ref_->l(robot_, t_, dtau_, q_tmp, v_tmp, a_tmp, u_tmp, f_tmp);
+  cost_ref += cost_ref_->l(robot_, data_, t_, dtau_, q_tmp, v_tmp, a_tmp, u_tmp, f_tmp);
   cost_ref += joint_space_constraints_ref_.costSlackBarrier(max_primal_step_size);
   robot_.subtractConfiguration(q_tmp, q_next_, q_res);
   q_res.noalias() += dtau_ * v_tmp - max_primal_step_size * dq_next;
@@ -406,7 +422,7 @@ TEST_F(FloatingBaseSplitOCPTest, solveOCP) {
   if (dimf_ > 0) {
     robot_.updateKinematics(q_, v_, a_);
   }
-  ocplinearizer::linearizeStageCost(robot_, cost_ref_, t_, dtau_, 
+  ocplinearizer::linearizeStageCost(robot_, cost_ref_, data_, t_, dtau_, 
                                     q_, v_, a_, u_, f_, 
                                     lq, lv, la, lu, lf);
   ocplinearizer::linearizeDynamics(robot_, dtau_, q_, v_, a_, u_, f_, 

@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/cost/cost_function_data.hpp"
 
 
 namespace idocp {
@@ -43,7 +44,8 @@ public:
   void lf(const Robot& robot, const double dtau, const Eigen::VectorXd& f, 
           Eigen::VectorXd& lf) const;
 
-  void lff(const Robot& robot, const double dtau, Eigen::MatrixXd& lff) const;
+  void lff(const Robot& robot, const double dtau, 
+           Eigen::MatrixXd& lff) const;
 
   void augment_lff(const Robot& robot, const double dtau, 
                    Eigen::MatrixXd& lff) const;

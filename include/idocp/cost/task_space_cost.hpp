@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/cost/cost_function_data.hpp"
 
 
 namespace idocp {
@@ -55,42 +56,46 @@ public:
 
   void set_vf_weight(const Eigen::VectorXd& vf_weight);
 
-  double l(const Robot& robot, const double dtau, const Eigen::VectorXd& q, 
+  double l(const Robot& robot, CostFunctionData& data, const double t,
+           const double dtau, const Eigen::VectorXd& q, 
            const Eigen::VectorXd& v, const Eigen::VectorXd& a,
-           const Eigen::VectorXd& u);
+           const Eigen::VectorXd& u) const;
 
-  void lq(const Robot& robot, const double dtau, const Eigen::VectorXd& q, 
-          Eigen::VectorXd& lq);
+  void lq(const Robot& robot, CostFunctionData& data, const double t, 
+          const double dtau, const Eigen::VectorXd& q, 
+          Eigen::VectorXd& lq) const;
 
-  void lv(const Robot& robot, const double dtau, const Eigen::VectorXd& v, 
-          Eigen::VectorXd& lv);
+  void lv(const Robot& robot, CostFunctionData& data, const double t, 
+          const double dtau, const Eigen::VectorXd& v, 
+          Eigen::VectorXd& lv) const;
 
-  void la(const Robot& robot, const double dtau, const Eigen::VectorXd& a, 
-          Eigen::VectorXd& la);
+  void la(const Robot& robot, CostFunctionData& data, const double t, 
+          const double dtau, const Eigen::VectorXd& a, 
+          Eigen::VectorXd& la) const;
 
-  void lu(const Robot& robot, const double dtau, const Eigen::VectorXd& u, 
-          Eigen::VectorXd& lu);
+  void lqq(const Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, Eigen::MatrixXd& lqq) const;
 
-  void lqq(const Robot& robot, const double dtau, Eigen::MatrixXd& lqq);
+  void lvv(const Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, Eigen::MatrixXd& lvv) const;
 
-  void lvv(const Robot& robot, const double dtau, Eigen::MatrixXd& lvv);
+  void laa(const Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, Eigen::MatrixXd& laa) const;
 
-  void laa(const Robot& robot, const double dtau, Eigen::MatrixXd& laa);
+  double phi(const Robot& robot, CostFunctionData& data, const double t, 
+             const Eigen::VectorXd& q, const Eigen::VectorXd& v) const;
 
-  void luu(const Robot& robot, const double dtau, Eigen::MatrixXd& luu);
+  void phiq(const Robot& robot, CostFunctionData& data, const double t, 
+            const Eigen::VectorXd& q, Eigen::VectorXd& phiq) const;
 
-  double phi(const Robot& robot, const Eigen::VectorXd& q, 
-             const Eigen::VectorXd& v);
+  void phiv(const Robot& robot, CostFunctionData& data, const double t, 
+            const Eigen::VectorXd& v, Eigen::VectorXd& phiv) const;
 
-  void phiq(const Robot& robot, const Eigen::VectorXd& q, 
-            Eigen::VectorXd& phiq);
+  void phiqq(const Robot& robot, CostFunctionData& data, const double t, 
+             Eigen::MatrixXd& phiqq) const;
 
-  void phiv(const Robot& robot, const Eigen::VectorXd& v, 
-            Eigen::VectorXd& phiv);
-
-  void phiqq(const Robot& robot, Eigen::MatrixXd& phiqq);
-
-  void phivv(const Robot& robot, Eigen::MatrixXd& phivv);
+  void phivv(const Robot& robot, CostFunctionData& data, const double t, 
+             Eigen::MatrixXd& phivv) const;
 
 private:
   int dimq_, dimv_;

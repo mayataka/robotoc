@@ -5,6 +5,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
+#include "idocp/cost/cost_function_data.hpp"
 
 
 namespace idocp {
@@ -17,6 +18,7 @@ protected:
     urdf_ = "../urdf/anymal/anymal.urdf";
     robot_ = Robot(urdf_);
     dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
+    data_ = CostFunctionData(robot_);
   }
 
   virtual void TearDown() {
@@ -25,6 +27,7 @@ protected:
   double dtau_;
   std::string urdf_;
   Robot robot_;
+  CostFunctionData data_;
 };
 
 
@@ -86,7 +89,7 @@ TEST_F(FloatingBaseJointSpaceCostTest, zeroRefernceConstructor) {
   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimv);
-  cost.lq(robot_, dtau_, q, lq);
+  cost.lq(robot_, data_, dtau_, q, lq);
   lq_ref_config.array() = dtau_ * q_weight_mat * (q-q_ref);
   robot_.computeTangentGradient(lq_ref_config, lq_ref);
   EXPECT_TRUE(lq.isApprox(lq_ref));
@@ -99,7 +102,7 @@ TEST_F(FloatingBaseJointSpaceCostTest, zeroRefernceConstructor) {
   cost.lu(dtau_, u, lu);
   lu_ref.array() = dtau_ * u_weight_mat * (u-u_ref);
   EXPECT_TRUE(lu.isApprox(lu_ref));
-  cost.phiq(robot_, q, lq);
+  cost.phiq(robot_, data_, q, lq);
   lq_ref_config.array() = qf_weight_mat * (q-q_ref);
   robot_.computeTangentGradient(lq_ref_config, lq_ref);
   EXPECT_TRUE(lq.isApprox(lq_ref));
@@ -203,7 +206,7 @@ TEST_F(FloatingBaseJointSpaceCostTest, zeroRefernceConstructor) {
 //   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
 //   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimv);
 //   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimv);
-//   cost.lq(robot_, dtau_, q, lq);
+//   cost.lq(robot_, data_, dtau_, q, lq);
 //   lq_ref_config.array() = dtau_ * q_weight_mat * (q-q_ref);
 //   lq_ref = configuration_Jacobian.transpose() * lq_ref_config;
 //   EXPECT_TRUE(lq.isApprox(lq_ref));
@@ -216,7 +219,7 @@ TEST_F(FloatingBaseJointSpaceCostTest, zeroRefernceConstructor) {
 //   cost.lu(dtau_, u, lu);
 //   lu_ref.array() = dtau_ * u_weight_mat * (u-u_ref);
 //   EXPECT_TRUE(lu.isApprox(lu_ref));
-//   cost.phiq(robot_, q, lq);
+//   cost.phiq(robot_, data_, q, lq);
 //   lq_ref_config.array() = qf_weight_mat * (q-q_ref);
 //   lq_ref = configuration_Jacobian.transpose() * lq_ref_config;
 //   EXPECT_TRUE(lq.isApprox(lq_ref));
@@ -318,7 +321,7 @@ TEST_F(FloatingBaseJointSpaceCostTest, zeroRefernceConstructor) {
 //   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
 //   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimv);
 //   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimv);
-//   cost.lq(robot_, dtau_, q, lq);
+//   cost.lq(robot_, data_, dtau_, q, lq);
 //   lq_ref_config.array() = dtau_ * q_weight_mat * (q-q_ref);
 //   lq_ref = configuration_Jacobian.transpose() * lq_ref_config;
 //   EXPECT_TRUE(lq.isApprox(lq_ref));
@@ -331,7 +334,7 @@ TEST_F(FloatingBaseJointSpaceCostTest, zeroRefernceConstructor) {
 //   cost.lu(dtau_, u, lu);
 //   lu_ref.array() = dtau_ * u_weight_mat * (u-u_ref);
 //   EXPECT_TRUE(lu.isApprox(lu_ref));
-//   cost.phiq(robot_, q, lq);
+//   cost.phiq(robot_, data_, q, lq);
 //   lq_ref_config.array() = qf_weight_mat * (q-q_ref);
 //   lq_ref = configuration_Jacobian.transpose() * lq_ref_config;
 //   EXPECT_TRUE(lq.isApprox(lq_ref));
@@ -441,7 +444,7 @@ TEST_F(FloatingBaseJointSpaceCostTest, zeroRefernceConstructor) {
 //   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
 //   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimv);
 //   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimv);
-//   cost.lq(robot_, dtau_, q, lq);
+//   cost.lq(robot_, data_, dtau_, q, lq);
 //   lq_ref_config.array() = dtau_ * q_weight_mat * (q-q_ref);
 //   lq_ref = configuration_Jacobian.transpose() * lq_ref_config;
 //   EXPECT_TRUE(lq.isApprox(lq_ref));
@@ -454,7 +457,7 @@ TEST_F(FloatingBaseJointSpaceCostTest, zeroRefernceConstructor) {
 //   cost.lu(dtau_, u, lu);
 //   lu_ref.array() = dtau_ * u_weight_mat * (u-u_ref);
 //   EXPECT_TRUE(lu.isApprox(lu_ref));
-//   cost.phiq(robot_, q, lq);
+//   cost.phiq(robot_, data_, q, lq);
 //   lq_ref_config.array() = qf_weight_mat * (q-q_ref);
 //   lq_ref = configuration_Jacobian.transpose() * lq_ref_config;
 //   EXPECT_TRUE(lq.isApprox(lq_ref));

@@ -11,6 +11,7 @@ SplitOCP::SplitOCP(const Robot& robot,
                    const std::shared_ptr<ConstraintsInterface>& constraints) 
   : cost_(cost),
     constraints_(constraints),
+    cost_data_(robot),
     joint_constraints_(robot),
     riccati_matrix_factorizer_(robot),
     riccati_matrix_inverter_(robot),
@@ -204,8 +205,8 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   if (dimf_ > 0) {
     robot.updateKinematics(q, v, a);
   }
-  ocplinearizer::linearizeStageCost(robot, cost_, t, dtau, q, v, a, u, f, 
-                                    lq_, lv_, la_, lu_, lf_);
+  ocplinearizer::linearizeStageCost(robot, cost_, cost_data_, t, dtau, 
+                                    q, v, a, u, f, lq_, lv_, la_, lu_, lf_);
   ocplinearizer::linearizeDynamics(robot, dtau, q, v, a, u, f, q_next, v_next, 
                                    q_res_, v_res_, u_res_, du_dq_, du_dv_, 
                                    du_da_, du_df_);
@@ -215,7 +216,7 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   // Condense the control input torques and the Lagrange multiplier with 
   // respect to inverse dynamics.
   joint_constraints_.augmentDualResidual(dtau, lu_);
-  cost_->luu(robot, t, dtau, u, luu_);
+  cost_->luu(robot, cost_data_, t, dtau, u, luu_);
   joint_constraints_.condenseSlackAndDual(dtau, u, luu_, lu_);
   lu_condensed_ = lu_ + luu_ * u_res_;
   // Augment the condensed Newton residual of the contorl input torques. 
@@ -254,10 +255,10 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   joint_constraints_.condenseSlackAndDual(dtau, q, v, a, Qqq_, Qvv_, Qaa_, 
                                           lq_, lv_, la_);
   // Augment the cost function Hessian. 
-  cost_->augment_lqq(robot, t, dtau, q, v, a, Qqq_);
-  cost_->augment_lvv(robot, t, dtau, q, v, a, Qvv_);
-  cost_->augment_laa(robot, t, dtau, q, v, a, Qaa_);
-  cost_->augment_lff(robot, t, dtau, f, Qff_);
+  cost_->augment_lqq(robot, cost_data_, t, dtau, q, v, a, Qqq_);
+  cost_->augment_lvv(robot, cost_data_, t, dtau, q, v, a, Qvv_);
+  cost_->augment_laa(robot, cost_data_, t, dtau, q, v, a, Qaa_);
+  cost_->augment_lff(robot, cost_data_, t, dtau, f, Qff_);
   if (robot.has_floating_base()) {
     riccati_matrix_factorizer_.setIntegrationSensitivities(robot, dtau, q, v);
   }
@@ -430,7 +431,7 @@ std::pair<double, double> SplitOCP::costAndConstraintsViolation(
   assert(u.size() == dimv_);
   assert(f.size() == max_dimf_);
   double cost = 0;
-  cost += cost_->l(robot, t, dtau, q, v, a, u, f);
+  cost += cost_->l(robot, cost_data_, t, dtau, q, v, a, u, f);
   cost += joint_constraints_.costSlackBarrier();
   double constraints_violation = 0;
   constraints_violation += q_res_.lpNorm<1>();
@@ -472,7 +473,7 @@ std::pair<double, double> SplitOCP::costAndConstraintsViolation(
   f_tmp_.head(dimf_) = f.head(dimf_) + step_size * df_.head(dimf_);
   robot.setContactForces(f_tmp_);
   double cost = 0;
-  cost += cost_->l(robot, t, dtau, q_tmp_, v_tmp_, a_tmp_, u_tmp_, f_tmp_);
+  cost += cost_->l(robot, cost_data_, t, dtau, q_tmp_, v_tmp_, a_tmp_, u_tmp_, f_tmp_);
   cost += joint_constraints_.costSlackBarrier(step_size);
   robot.subtractConfiguration(q_tmp_, q_next, q_res_);
   q_res_.noalias() += dtau * v_tmp_ - step_size * dq_next;
@@ -599,8 +600,8 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   if (dimf > 0) {
     robot.updateKinematics(q, v, a);
   }
-  ocplinearizer::linearizeStageCost(robot, cost_, t, dtau, q, v, a, u, f, 
-                                    lq_, lv_, la_, lu_, lf_);
+  ocplinearizer::linearizeStageCost(robot, cost_, cost_data_, t, dtau, 
+                                    q, v, a, u, f, lq_, lv_, la_, lu_, lf_);
   ocplinearizer::linearizeDynamics(robot, dtau, q, v, a, u, f, q_next, v_next, 
                                    q_res_, v_res_, u_res_, du_dq_, du_dv_, 
                                    du_da_, du_df_);

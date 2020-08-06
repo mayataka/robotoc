@@ -9,6 +9,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function_interface.hpp"
 #include "idocp/constraints/constraints_interface.hpp"
+#include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/joint_space_constraints/joint_space_constraints.hpp"
 #include "idocp/ocp/riccati_matrix_factorizer.hpp"
 #include "idocp/ocp/riccati_matrix_inverter.hpp"
@@ -166,6 +167,7 @@ public:
 private:
   std::shared_ptr<CostFunctionInterface> cost_;
   std::shared_ptr<ConstraintsInterface> constraints_;
+  CostFunctionData cost_data_;
   pdipm::JointSpaceConstraints joint_constraints_;
   RiccatiMatrixFactorizer riccati_matrix_factorizer_;
   RiccatiMatrixInverter riccati_matrix_inverter_;

@@ -10,6 +10,7 @@ TerminalOCP::TerminalOCP(
     const std::shared_ptr<ConstraintsInterface>& constraints)
   : cost_(cost),
     constraints_(constraints),
+    cost_data_(robot),
     joint_constraints_(robot),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
@@ -88,12 +89,12 @@ void TerminalOCP::linearizeOCP(Robot& robot, const double t,
   if (robot.has_floating_base()) {
     robot.computeConfigurationJacobian(q);
   }
-  cost_->phiq(robot, t, q, v, lq_);
-  cost_->phiv(robot, t, q, v, lv_);
+  cost_->phiq(robot, cost_data_, t, q, v, lq_);
+  cost_->phiv(robot, cost_data_, t, q, v, lv_);
   Qq = - lq_ + lmd;
   Qv = - lv_ + gmm;
-  cost_->phiqq(robot, t, q, v, Qqq);
-  cost_->phivv(robot, t, q, v, Qvv);
+  cost_->phiqq(robot, cost_data_, t, q, v, Qqq);
+  cost_->phivv(robot, cost_data_, t, q, v, Qvv);
 }
 
 
@@ -124,7 +125,7 @@ double TerminalOCP::terminalCost(Robot& robot, const double t,
                                  const Eigen::VectorXd& v) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
-  return cost_->phi(robot, t, q, v);
+  return cost_->phi(robot, cost_data_, t, q, v);
 }
 
 
@@ -147,7 +148,7 @@ double TerminalOCP::terminalCost(Robot& robot, const double step_size,
     q_tmp_ = q + step_size * dq;
   }
   v_tmp_ = v + step_size * dv;
-  return cost_->phi(robot, t, q_tmp_, v_tmp_);
+  return cost_->phi(robot, cost_data_, t, q_tmp_, v_tmp_);
 }
 
 
@@ -209,10 +210,10 @@ double TerminalOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   if (robot.has_floating_base()) {
     robot.computeConfigurationJacobian(q);
   }
-  cost_->phiq(robot, t, q, v, lq_);
-  cost_->phiv(robot, t, q, v, lv_);
-  cost_->phiq(robot, t, q, v, lq_);
-  cost_->phiv(robot, t, q, v, lv_);
+  cost_->phiq(robot, cost_data_, t, q, v, lq_);
+  cost_->phiv(robot, cost_data_, t, q, v, lv_);
+  cost_->phiq(robot, cost_data_, t, q, v, lq_);
+  cost_->phiv(robot, cost_data_, t, q, v, lv_);
   lq_.noalias() -= lmd;
   lv_.noalias() -= gmm;
   double error = 0;
