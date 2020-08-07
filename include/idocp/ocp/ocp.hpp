@@ -55,6 +55,8 @@ public:
       const std::vector<std::vector<bool>>& contact_sequence);
 
   void resetContactPoint();
+  
+  void resetLineSearchFilter();
 
   double KKTError(const double t, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v);

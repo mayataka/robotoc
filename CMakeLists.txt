@@ -75,6 +75,11 @@ target_include_directories(
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
+set_target_properties(
+  ${PROJECT_NAME} 
+  PROPERTIES
+  INTERFACE_LINK_DIRECTORIES $<INSTALL_INTERFACE:${PINOCCHIO_LIBDIR}>
+)
 
 #############
 ## Testing ##
@@ -99,7 +104,7 @@ if (TESTING)
     endif()
   endif()
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
-endif()
+endif() # end if (TESTING)
 
 #############
 ## Install ##

@@ -85,7 +85,9 @@ inline void linearizeDynamics(Robot& robot, const double dtau,
   robot.RNEA(q, v, a, u_res);
   u_res.noalias() -= u;
   robot.RNEADerivatives(q, v, a, du_dq, du_dv, du_da);
-  robot.dRNEAPartialdFext(du_df);
+  if (robot.dimf() > 0) {
+    robot.dRNEAPartialdFext(du_df);
+  }
 }
 
 
@@ -126,14 +128,18 @@ inline void linearizeConstraints(Robot& robot, const double dtau,
   assert(Cf.rows() == robot.dim_passive());
   assert(Cf.cols() == robot.max_dimf());
   const int dim_passive = robot.dim_passive();
-  C_res.head(dim_passive) = dtau * (u.head(dim_passive)+u_res.head(dim_passive));
-  Cq.topRows(dim_passive) = dtau * du_dq.topRows(dim_passive);
-  Cv.topRows(dim_passive) = dtau * du_dv.topRows(dim_passive);
-  Ca.topRows(dim_passive) = dtau * du_da.topRows(dim_passive);
   const int dimf = robot.dimf();
-  Cf.leftCols(dimf) = dtau * du_df.topLeftCorner(dim_passive, dimf);
-  robot.computeBaumgarteResidual(dim_passive, dtau, C_res);
-  robot.computeBaumgarteDerivatives(dim_passive, dtau, Cq, Cv, Ca);
+  if (dim_passive > 0) {
+    C_res.head(dim_passive) = dtau * (u.head(dim_passive)+u_res.head(dim_passive));
+    Cq.topRows(dim_passive) = dtau * du_dq.topRows(dim_passive);
+    Cv.topRows(dim_passive) = dtau * du_dv.topRows(dim_passive);
+    Ca.topRows(dim_passive) = dtau * du_da.topRows(dim_passive);
+    Cf.leftCols(dimf) = dtau * du_df.topLeftCorner(dim_passive, dimf);
+  }
+  if (dimf > 0) {
+    robot.computeBaumgarteResidual(dim_passive, dtau, C_res);
+    robot.computeBaumgarteDerivatives(dim_passive, dtau, Cq, Cv, Ca);
+  }
 }
 
 } // namespace ocplinearizer

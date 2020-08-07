@@ -4,7 +4,6 @@
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
-#include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/ocp.hpp"
@@ -27,7 +26,8 @@ protected:
     baum_on_velocity_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     baum_on_position_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     if (rnd()%2==0) {
-      robot_ = Robot(urdf_, contact_frames_, baum_on_velocity_, baum_on_position_);
+      robot_ = Robot(urdf_, contact_frames_, baum_on_velocity_, 
+                     baum_on_position_);
     }
     else {
       robot_ = Robot(urdf_);
@@ -63,12 +63,12 @@ protected:
   std::shared_ptr<CostFunctionInterface> cost_;
   std::shared_ptr<ConstraintsInterface> constraints_;
   OCP ocp_;
-  double t_, T_, dtau_, baum_on_velocity_, baum_on_position_;
-  int N_, dimq_, dimv_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_;
-  Eigen::VectorXd q_, v_;
   std::vector<int> contact_frames_;
   std::vector<bool> contact_status_;
   std::vector<std::vector<bool>> contact_sequence_;
+  double t_, T_, dtau_, baum_on_velocity_, baum_on_position_;
+  int N_, dimq_, dimv_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_;
+  Eigen::VectorXd q_, v_;
 };
 
 
@@ -85,6 +85,18 @@ TEST_F(FixedBaseOCPTest, setStateTrajectory) {
 
 
 TEST_F(FixedBaseOCPTest, solveLQR) {
+  std::cout << "contact is ";
+  if (robot_.max_dimf() == 0) {
+    std::cout << "not set in the model" << std::endl;
+  }
+  else if (contact_sequence_[0][0]) {
+    ocp_.setContactSequence(contact_sequence_);
+    std::cout << "active" << std::endl;
+  }
+  else {
+    ocp_.setContactSequence(contact_sequence_);
+    std::cout << "not active" << std::endl;
+  }
   bool use_line_search = false;
   ocp_.solveLQR(t_, q_, v_, use_line_search);
   use_line_search = true;
@@ -106,14 +118,8 @@ TEST_F(FixedBaseOCPTest, KKTError) {
     std::cout << "not active" << std::endl;
   }
   std::cout << "KKT error = " << ocp_.KKTError(t_, q_, v_) << std::endl;
-  ocp_.setStateTrajectory(q_, v_);
-  const int max_itr = 10;
-  bool use_line_search = false;
-  for (int i=0; i<max_itr; ++i) {
-    ocp_.solveLQR(t_, q_, v_, use_line_search);
-    std::cout << "KKT error = " << ocp_.KKTError(t_, q_, v_) << std::endl;
-  }
-  ocp_.printSolution();
+  ocp_.solveLQR(t_, q_, v_);
+  std::cout << "KKT error = " << ocp_.KKTError(t_, q_, v_) << std::endl;
 }
 
 } // namespace idocp

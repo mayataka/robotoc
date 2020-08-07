@@ -4,7 +4,6 @@
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
-#include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/ocp.hpp"
@@ -24,12 +23,11 @@ protected:
     std::random_device rnd;
     urdf_ = "../urdf/anymal/anymal.urdf";
     contact_frames_ = {14, 24, 34, 44};
-    baum_on_velocity_ = 20;
-    baum_on_position_ = 400;
+    baum_on_velocity_ = std::abs(Eigen::VectorXd::Random(1)[0]);
+    baum_on_position_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     robot_ = Robot(urdf_, contact_frames_, baum_on_velocity_, baum_on_position_);
     for (int i=0; i<contact_frames_.size(); ++i) {
-      // contact_status_.push_back(rnd()%2==0);
-      contact_status_.push_back(true);
+      contact_status_.push_back(rnd()%2==0);
     }
     contact_sequence_ = std::vector<std::vector<bool>>(N_, contact_status_);
     robot_.setContactStatus(contact_status_);
@@ -45,8 +43,8 @@ protected:
           0.0315, -0.4, 0.8, 
           -0.0315, 0.4, -0.8,
           -0.0315, -0.4, 0.8;
-    v_ = Eigen::VectorXd::Random(robot_.dimv());
     robot_.normalizeConfiguration(q_);
+    v_ = Eigen::VectorXd::Random(robot_.dimv());
     robot_.updateKinematics(q_, v_, Eigen::VectorXd::Zero(robot_.dimv()));
     robot_.setContactPointsByCurrentKinematics();
     std::cout << "T = " << T_ << std::endl;
@@ -61,12 +59,12 @@ protected:
   std::shared_ptr<CostFunctionInterface> cost_;
   std::shared_ptr<ConstraintsInterface> constraints_;
   OCP ocp_;
-  double t_, T_, dtau_, baum_on_velocity_, baum_on_position_;
-  int N_, dimq_, dimv_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_;
-  Eigen::VectorXd q_, v_;
   std::vector<int> contact_frames_;
   std::vector<bool> contact_status_;
   std::vector<std::vector<bool>> contact_sequence_;
+  double t_, T_, dtau_, baum_on_velocity_, baum_on_position_;
+  int N_, dimq_, dimv_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_;
+  Eigen::VectorXd q_, v_;
 };
 
 
@@ -83,6 +81,13 @@ TEST_F(FloatingBaseOCPTest, setStateTrajectory) {
 
 
 TEST_F(FloatingBaseOCPTest, solveLQR) {
+  std::cout << "contact status = [";
+  for (int i=0; i<contact_status_.size(); ++i) {
+    std::cout << contact_status_[i] << ", ";
+  }
+  std::cout << "]" << std::endl;;
+  ocp_.setContactSequence(contact_sequence_);
+  bool feasible = ocp_.setStateTrajectory(q_, v_);
   bool use_line_search = false;
   ocp_.solveLQR(t_, q_, v_, use_line_search);
   use_line_search = true;
@@ -91,21 +96,14 @@ TEST_F(FloatingBaseOCPTest, solveLQR) {
 
 
 TEST_F(FloatingBaseOCPTest, KKTError) {
-  bool use_line_search = false;
   std::cout << "contact status = [";
   for (int i=0; i<contact_status_.size(); ++i) {
     std::cout << contact_status_[i] << ", ";
   }
-  bool feasible = ocp_.setStateTrajectory(q_, v_);
-  ocp_.setContactSequence(contact_sequence_);
   std::cout << "]" << std::endl;;
   std::cout << "KKT error = " << ocp_.KKTError(t_, q_, v_) << std::endl;
-  const int max_itr = 10;
-  for (int i=0; i<max_itr; ++i) {
-    ocp_.solveLQR(t_, q_, v_, use_line_search);
-    std::cout << "KKT error = " << ocp_.KKTError(t_, q_, v_) << std::endl;
-  }
-  ocp_.printSolution();
+  ocp_.solveLQR(t_, q_, v_);
+  std::cout << "KKT error = " << ocp_.KKTError(t_, q_, v_) << std::endl;
 }
 
 } // namespace idocp

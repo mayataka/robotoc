@@ -229,7 +229,6 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
     for (time_step=0; time_step<=N_; ++time_step) {
       if (time_step < N_) {
         const int robot_id = omp_get_thread_num();
-        split_ocps_[time_step].updateDual(dual_step_size);
         split_ocps_[time_step].updatePrimal(robots_[robot_id], primal_step_size, 
                                             dtau_, Pqq_[time_step], 
                                             Pqv_[time_step], Pvq_[time_step], 
@@ -240,6 +239,7 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
                                             v_[time_step], a_[time_step], 
                                             u_[time_step], beta_[time_step], 
                                             f_[time_step], mu_[time_step]);
+        split_ocps_[time_step].updateDual(dual_step_size);
       }
       else {
         const int robot_id = omp_get_thread_num();
@@ -247,6 +247,7 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
                                    Pqq_[N_], Pqv_[N_], Pvq_[N_], Pvv_[N_], 
                                    sq_[N_], sv_[N_], dq_[N_], dv_[N_], 
                                    lmd_[N_], gmm_[N_], q_[N_], v_[N_]);
+        terminal_ocp_.updateDual(dual_step_size);
       }
     }
   } // #pragma omp parallel num_threads(num_proc_)
@@ -325,6 +326,11 @@ void OCP::setContactSequence(
     assert(contact_sequence[i].size() == robots_[0].max_point_contacts());
   }
   contact_sequence_ = contact_sequence;
+}
+
+
+void OCP::resetLineSearchFilter() {
+  filter_.clear();
 }
 
 
