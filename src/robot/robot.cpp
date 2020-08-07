@@ -275,7 +275,7 @@ void Robot::updateKinematics(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 
 
 void Robot::computeBaumgarteResidual(const int block_begin, 
-                                     Eigen::VectorXd& baumgarte_residual) const {
+                                     Eigen::VectorXd& baumgarte_residual) {
   assert(baumgarte_residual.size() >= max_dimf_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
@@ -289,7 +289,7 @@ void Robot::computeBaumgarteResidual(const int block_begin,
 
 
 void Robot::computeBaumgarteResidual(const int block_begin, const double coeff, 
-                                     Eigen::VectorXd& baumgarte_residual) const {
+                                     Eigen::VectorXd& baumgarte_residual) {
   assert(baumgarte_residual.size() >= max_dimf_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {

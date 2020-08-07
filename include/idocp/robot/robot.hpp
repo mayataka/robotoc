@@ -158,7 +158,7 @@ public:
   //   residual: Vector where the result is stored. Size must be at least 3 and
   //     at most 3*max_point_contacts().
   void computeBaumgarteResidual(const int block_begin, 
-                                Eigen::VectorXd& baumgarte_residual) const;
+                                Eigen::VectorXd& baumgarte_residual);
 
   // Computes the residual of the contact constriants represented by 
   // Baumgarte's stabilization method. Before calling this function, 
@@ -169,7 +169,7 @@ public:
   //   residual: Vector where the result is stored. Size must be at least 3 and
   //     at most 3*max_point_contacts().
   void computeBaumgarteResidual(const int block_begin, const double coeff, 
-                                Eigen::VectorXd& baumgarte_residual) const;
+                                Eigen::VectorXd& baumgarte_residual);
 
   // Computes the product of a vector and the derivatives of the contact 
   // constriants represented by Baumgarte's stabilization method. 
@@ -261,6 +261,9 @@ public:
   //   dRNEA_partial_dfext: The matrix where the result is stored. The size must 
   //      be at least 3*max_point_contacts() times dimv.
   void dRNEAPartialdFext(Eigen::MatrixXd& dRNEA_partial_dfext);
+
+  // void impulse(const Eigen::VectorXd& q, const Eigen::VectorXd& v_before,
+  //              const Eigen::MatrixXd& J_contacts, Eigen::VectorXd& v_after);
 
   // Computes the state equation, i.e., the corresponding generalized velocity 
   // and the generalized acceleration under given q, v, tau.

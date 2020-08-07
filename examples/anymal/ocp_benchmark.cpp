@@ -68,8 +68,8 @@ void CPUTime_with_contacts() {
 void KKTError_with_contacts() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  const double baumgarte_weight_on_velocity = 1/50;
-  const double baumgarte_weight_on_position = 2/(50*50);
+  const double baumgarte_weight_on_velocity = 0;
+  const double baumgarte_weight_on_position = 0;
   const std::string urdf_file_name = "../anymal/anymal.urdf";
   idocp::Robot robot(urdf_file_name, contact_frames, 
                      baumgarte_weight_on_velocity, 
@@ -107,7 +107,7 @@ void KKTError_with_contacts() {
   std::cout << "Initial KKT error = " << ocp_.KKTError(t, q, v) << std::endl;
   const int num_iteration = 10;
   for (int i=0; i<num_iteration; ++i) {
-    ocp_.solveLQR(t, q, v, false);
+    ocp_.solveLQR(t, q, v, true);
     std::cout << "KKT error at iteration " << i << " = " << ocp_.KKTError(t, q, v) << std::endl;
   }
   std::cout << "-----------------------------------" << std::endl;
