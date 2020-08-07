@@ -29,7 +29,6 @@ protected:
     for (int i=0; i<contact_frames_.size(); ++i) {
       contact_status_.push_back(rnd()%2==0);
     }
-    contact_sequence_ = std::vector<std::vector<bool>>(N_, contact_status_);
     robot_.setContactStatus(contact_status_);
     cost_ = std::make_shared<quadruped::CostFunction>(robot_);
     constraints_ = std::make_shared<quadruped::Constraints>(robot_);
@@ -47,6 +46,7 @@ protected:
     v_ = Eigen::VectorXd::Random(robot_.dimv());
     robot_.updateKinematics(q_, v_, Eigen::VectorXd::Zero(robot_.dimv()));
     robot_.setContactPointsByCurrentKinematics();
+    contact_sequence_ = std::vector<std::vector<bool>>(N_, contact_status_);
     std::cout << "T = " << T_ << std::endl;
     ocp_ = OCP(robot_, cost_, constraints_, T_, N_);
   }
@@ -69,13 +69,12 @@ protected:
 
 
 TEST_F(FloatingBaseOCPTest, setStateTrajectory) {
-  OCP ocp(robot_, cost_, constraints_, T_, N_);
-  bool feasible = ocp.setStateTrajectory(q_, v_);
+  bool feasible = ocp_.setStateTrajectory(q_, v_);
   EXPECT_TRUE(feasible);
   Eigen::VectorXd qN = Eigen::VectorXd::Zero(robot_.dimq());
   robot_.generateFeasibleConfiguration(qN);
   Eigen::VectorXd vN = Eigen::VectorXd::Zero(robot_.dimv());
-  feasible = ocp.setStateTrajectory(q_, v_, qN, vN);
+  feasible = ocp_.setStateTrajectory(q_, v_, qN, vN);
   EXPECT_TRUE(feasible);
 }
 
@@ -101,6 +100,7 @@ TEST_F(FloatingBaseOCPTest, KKTError) {
     std::cout << contact_status_[i] << ", ";
   }
   std::cout << "]" << std::endl;;
+  ocp_.setContactSequence(contact_sequence_);
   std::cout << "KKT error = " << ocp_.KKTError(t_, q_, v_) << std::endl;
   ocp_.solveLQR(t_, q_, v_);
   std::cout << "KKT error = " << ocp_.KKTError(t_, q_, v_) << std::endl;
