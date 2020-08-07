@@ -1,5 +1,6 @@
 #include "idocp/robot/robot.hpp"
 
+#include <limits>
 #include <assert.h>
 
 
@@ -270,9 +271,6 @@ void Robot::updateKinematics(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
   pinocchio::forwardKinematics(model_, data_, q, v, a);
   pinocchio::updateFramePlacements(model_, data_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q, v, a);
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    point_contacts_[i].resetContactPointByCurrentKinematics(data_);
-  }
 }
 
 
@@ -350,6 +348,21 @@ void Robot::computeBaumgarteDerivatives(const int block_rows_begin,
 }
 
 
+void Robot::setContactPoints(
+    const std::vector<Eigen::Vector3d>& contact_points) {
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    point_contacts_[i].resetContactPoint(contact_points[i]);
+  }
+}
+
+
+void Robot::setContactPointsByCurrentKinematics() {
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    point_contacts_[i].resetContactPointByCurrentKinematics(data_);
+  }
+}
+
+
 void Robot::setContactStatus(const std::vector<bool>& is_each_contact_active) {
   assert(is_each_contact_active.size() == is_each_contact_active_.size());
   int num_active_contacts = 0;
@@ -363,7 +376,7 @@ void Robot::setContactStatus(const std::vector<bool>& is_each_contact_active) {
       point_contacts_[i].deactivate();
     }
   }
-  dimf_ = 3*num_active_contacts;
+  dimf_ = 3 * num_active_contacts;
 }
 
 
@@ -435,7 +448,7 @@ void Robot::dRNEAPartialdFext(Eigen::MatrixXd& dRNEA_partial_dfext) {
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].getContactJacobian(model_, data_,  
-                                            3*num_active_contacts, 
+                                            3*num_active_contacts, -1,
                                             dRNEA_partial_dfext, true);
       ++num_active_contacts;
     }
@@ -482,7 +495,13 @@ void Robot::generateFeasibleConfiguration(Eigen::VectorXd& q) const {
 
 void Robot::normalizeConfiguration(Eigen::VectorXd& q) const {
   assert(q.size() == dimq_);
-  pinocchio::normalize(model_, q);
+  if (floating_base_.has_floating_base()) {
+    if (q.segment<4>(3).squaredNorm() 
+          <= std::numeric_limits<double>::epsilon()) {
+      q.coeffRef(6) = 1;
+    }
+    pinocchio::normalize(model_, q);
+  }
 }
 
 

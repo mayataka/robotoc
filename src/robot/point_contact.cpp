@@ -61,6 +61,11 @@ void PointContact::resetBaugrarteParameters(
 }
 
 
+void PointContact::resetContactPoint(const Eigen::Vector3d& contact_point) {
+  contact_point_ = contact_point;
+}
+
+
 void PointContact::resetContactPointByCurrentKinematics(
     const pinocchio::Data& data) {
   contact_point_ = data.oMf[contact_frame_id_].translation();
@@ -112,6 +117,30 @@ void PointContact::getContactJacobian(const pinocchio::Model& model,
     assert(Jacobian.rows() >= 3);
     assert(Jacobian.cols() == dimv_);
     Jacobian.block(block_begin_index, 0, 3, dimv_) = J_frame_.topRows<3>(); 
+  }
+}
+
+
+void PointContact::getContactJacobian(const pinocchio::Model& model, 
+                                      pinocchio::Data& data, 
+                                      const int block_begin_index, 
+                                      const double coeff,
+                                      Eigen::MatrixXd& Jacobian,
+                                      const bool transpose) {
+  assert(block_begin_index >= 0);
+  pinocchio::getFrameJacobian(model, data, contact_frame_id_, pinocchio::LOCAL, 
+                              J_frame_);
+  if (transpose) {
+    assert(Jacobian.rows() == dimv_);
+    assert(Jacobian.cols() >= 3);
+    Jacobian.block(0, block_begin_index, dimv_, 3) 
+        = coeff * J_frame_.topRows<3>().transpose(); 
+  }
+  else {
+    assert(Jacobian.rows() >= 3);
+    assert(Jacobian.cols() == dimv_);
+    Jacobian.block(block_begin_index, 0, 3, dimv_) 
+        = coeff * J_frame_.topRows<3>(); 
   }
 }
 

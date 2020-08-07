@@ -58,6 +58,11 @@ public:
   void resetBaugrarteParameters(const double baumgarte_weight_on_velocity, 
                                 const double baumgarte_weight_on_position);
 
+  // Resets the contact point.
+  // Argments:
+  //    contact_point: The contact point.
+  void resetContactPoint(const Eigen::Vector3d& contact_point);
+
   // Resets the contact point by current kinematics of the robot. The kinematics
   // is passed through pinocchio::Data. Before calling this function, you have 
   // to update the kinematics (only with respect to the position) in 
@@ -110,6 +115,28 @@ public:
   //      i.e., the original Jacobian is returned.
   void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
                           const int block_begin_index,
+                          Eigen::MatrixXd& Jacobian,
+                          const bool transpose=false);
+
+  // Computes the 3xdimv contact Jacobian represented in the local coordinate 
+  // of the contact frame. Before calling this function, you have to update the 
+  // kinematics (with respect to the position, velocity, and acceleration) of 
+  // the model in pinocchio::Data. The contact Jacobian is set in the block 
+  // part of Jacobian.
+  // Argments:
+  //    model: Pinocchio model of the robot.
+  //    data: Pinocchio data of the robot kinematics.
+  //    block_begin_index: The initial index where the Jacobian is stored. 
+  //      If transpose=true, the left side column index of the block matrix.
+  //      If transpose=false, the top row index of the block matrix.
+  //    Jacobian: Jacobian of the contact frame is stored in this matrix. 
+  //      If transpose=true, rows must be dimv and cols must be at least 3. 
+  //      If transpose=false, rows must be at leaste 3 and cols must be dimv. 
+  //    transpose: flag for transposing the Jacobian or not. If true, the 
+  //      Jacobian is transposed. If false, the Jacobian is not transposed, 
+  //      i.e., the original Jacobian is returned.
+  void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
+                          const int block_begin_index, const double coeff,
                           Eigen::MatrixXd& Jacobian,
                           const bool transpose=false);
 

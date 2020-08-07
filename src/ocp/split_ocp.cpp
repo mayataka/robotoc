@@ -223,8 +223,10 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   lq_.noalias() += du_dq_.transpose() * lu_condensed_;
   lv_.noalias() += du_dv_.transpose() * lu_condensed_;
   la_.noalias() += du_da_.transpose() * lu_condensed_;
-  lf_.head(dimf_).noalias() 
-                += du_df_.leftCols(dimf_).transpose() * lu_condensed_;
+  if (dimf_ > 0) {
+    lf_.head(dimf_).noalias() 
+                  += du_df_.leftCols(dimf_).transpose() * lu_condensed_;
+  }
   // Augmnet the partial derivatives of the state equation.
   lq_.noalias() += lmd_next - lmd;
   lv_.noalias() += dtau * lmd_next + gmm_next - gmm;
@@ -235,8 +237,10 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   lq_.noalias() += Cq_.topRows(dimc_).transpose() * mu.head(dimc_);
   lv_.noalias() += Cv_.topRows(dimc_).transpose() * mu.head(dimc_);
   la_.noalias() += Ca_.topRows(dimc_).transpose() * mu.head(dimc_);
-  lf_.head(dimf_).noalias() += Cf_.leftCols(dimf_).transpose() 
-      * mu.head(dim_passive_);
+  if (dimf_ > 0) {
+    lf_.head(dimf_).noalias() += Cf_.leftCols(dimf_).transpose() 
+        * mu.head(dim_passive_);
+  }
   // Augment the condensed Hessian of the contorl input torques. 
   Qqq_ = du_dq_.transpose() * luu_ * du_dq_;
   Qqv_ = du_dq_.transpose() * luu_ * du_dv_;
@@ -245,11 +249,13 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   Qva_ = du_dv_.transpose() * luu_ * du_da_;
   Qaa_ = du_da_.transpose() * luu_ * du_da_;
   Qvq_ = Qqv_.transpose();
-  Qqf_.leftCols(dimf_) = du_dq_.transpose() * luu_ * du_df_.leftCols(dimf_);
-  Qvf_.leftCols(dimf_) = du_dv_.transpose() * luu_ * du_df_.leftCols(dimf_);
-  Qaf_.leftCols(dimf_) = du_da_.transpose() * luu_ * du_df_.leftCols(dimf_);
-  Qff_.topLeftCorner(dimf_, dimf_) 
-      = du_df_.leftCols(dimf_).transpose() * luu_ * du_df_.leftCols(dimf_);
+  if (dimf_ > 0) {
+    Qqf_.leftCols(dimf_) = du_dq_.transpose() * luu_ * du_df_.leftCols(dimf_);
+    Qvf_.leftCols(dimf_) = du_dv_.transpose() * luu_ * du_df_.leftCols(dimf_);
+    Qaf_.leftCols(dimf_) = du_da_.transpose() * luu_ * du_df_.leftCols(dimf_);
+    Qff_.topLeftCorner(dimf_, dimf_) 
+        = du_df_.leftCols(dimf_).transpose() * luu_ * du_df_.leftCols(dimf_);
+  }
   // Condense the slack and dual variables of the inequality constraints on 
   // the configuration, velocity, and acceleration.
   joint_constraints_.condenseSlackAndDual(dtau, q, v, a, Qqq_, Qvv_, Qaa_, 
@@ -258,7 +264,9 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   cost_->augment_lqq(robot, cost_data_, t, dtau, q, v, a, Qqq_);
   cost_->augment_lvv(robot, cost_data_, t, dtau, q, v, a, Qvv_);
   cost_->augment_laa(robot, cost_data_, t, dtau, q, v, a, Qaa_);
-  cost_->augment_lff(robot, cost_data_, t, dtau, f, Qff_);
+  if (dimf_ > 0) {
+    cost_->augment_lff(robot, cost_data_, t, dtau, f, Qff_);
+  }
   if (robot.has_floating_base()) {
     riccati_matrix_factorizer_.setIntegrationSensitivities(robot, dtau, q, v);
   }
@@ -315,25 +323,25 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
   la_.noalias() -= dtau * sv_next;
   // Computes the state feedback gain and feedforward terms
   if (has_floating_base_) {
-    if (dimf_ == 0) {
-      riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, Cq_, Cv_, Ca_, la_, 
-                                      C_res_, Kaq_, Kav_, Kmuq_, Kmuv_, ka_, 
-                                      kmu_);
-    }
-    else if (dimf_ > 0) {
+    if (dimf_ > 0) {
       riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, Qqf_, Qvf_, Cq_, Cv_, 
                                       Ca_, Cf_, la_, lf_, C_res_, Kaq_, Kav_, 
                                       Kfq_, Kfv_, Kmuq_, Kmuv_, ka_, kf_, kmu_);
     }
+    else {
+      riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, Cq_, Cv_, Ca_, la_, 
+                                      C_res_, Kaq_, Kav_, Kmuq_, Kmuv_, ka_, 
+                                      kmu_);
+    }
   } 
   else {
-    if (dimf_ == 0) {
-      riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, la_, Kaq_, Kav_, ka_);
-    }
-    else if (dimf_ > 0) {
+    if (dimf_ > 0) {
       riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, Qqf_, Qvf_, Cq_, Cv_,  
                                       Ca_, la_, lf_, C_res_, Kaq_, Kav_, Kfq_,  
                                       Kfv_, Kmuq_, Kmuv_, ka_, kf_, kmu_);
+    }
+    else {
+      riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, la_, Kaq_, Kav_, ka_);
     }
   }
   // Computes the Riccati factorization matrices
@@ -345,18 +353,6 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
   Pvq.noalias() += Kav_.transpose() * Qqa_.transpose();
   Pvv = Qvv_;
   Pvv.noalias() += Kav_.transpose() * Qva_.transpose();
-  Pqq.noalias() += Kfq_.topRows(dimf_).transpose() 
-                  * Qqf_.leftCols(dimf_).transpose();
-  Pqv.noalias() += Kfq_.topRows(dimf_).transpose() 
-                  * Qvf_.leftCols(dimf_).transpose();
-  Pvq.noalias() += Kfv_.topRows(dimf_).transpose() 
-                  * Qqf_.leftCols(dimf_).transpose();
-  Pvv.noalias() += Kfv_.topRows(dimf_).transpose() 
-                  * Qvf_.leftCols(dimf_).transpose();
-  Pqq.noalias() += Kmuq_.topRows(dimc_).transpose() * Cq_.topRows(dimc_);
-  Pqv.noalias() += Kmuq_.topRows(dimc_).transpose() * Cv_.topRows(dimc_);
-  Pvq.noalias() += Kmuv_.topRows(dimc_).transpose() * Cq_.topRows(dimc_);
-  Pvv.noalias() += Kmuv_.topRows(dimc_).transpose() * Cv_.topRows(dimc_);
   // Computes the Riccati factorization vectors
   sq = sq_next - lq_;
   sq.noalias() -= Pqq_next * q_res_;
@@ -368,10 +364,26 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
   sv.noalias() -= dtau * Pqv_next * v_res_;
   sv.noalias() -= Pvv_next * v_res_;
   sv.noalias() -= Qva_ * ka_;
-  sq.noalias() -= Qqf_.leftCols(dimf_) * kf_.head(dimf_);
-  sv.noalias() -= Qvf_.leftCols(dimf_) * kf_.head(dimf_);
-  sq.noalias() -= Cq_.topRows(dimc_).transpose() * kmu_.head(dimc_);
-  sv.noalias() -= Cv_.topRows(dimc_).transpose() * kmu_.head(dimc_);
+  if (dimf_ > 0) {
+    Pqq.noalias() += Kfq_.topRows(dimf_).transpose() 
+                    * Qqf_.leftCols(dimf_).transpose();
+    Pqv.noalias() += Kfq_.topRows(dimf_).transpose() 
+                    * Qvf_.leftCols(dimf_).transpose();
+    Pvq.noalias() += Kfv_.topRows(dimf_).transpose() 
+                    * Qqf_.leftCols(dimf_).transpose();
+    Pvv.noalias() += Kfv_.topRows(dimf_).transpose() 
+                    * Qvf_.leftCols(dimf_).transpose();
+    sq.noalias() -= Qqf_.leftCols(dimf_) * kf_.head(dimf_);
+    sv.noalias() -= Qvf_.leftCols(dimf_) * kf_.head(dimf_);
+  }
+  if (dimc_ > 0) {
+    Pqq.noalias() += Kmuq_.topRows(dimc_).transpose() * Cq_.topRows(dimc_);
+    Pqv.noalias() += Kmuq_.topRows(dimc_).transpose() * Cv_.topRows(dimc_);
+    Pvq.noalias() += Kmuv_.topRows(dimc_).transpose() * Cq_.topRows(dimc_);
+    Pvv.noalias() += Kmuv_.topRows(dimc_).transpose() * Cv_.topRows(dimc_);
+    sq.noalias() -= Cq_.topRows(dimc_).transpose() * kmu_.head(dimc_);
+    sv.noalias() -= Cv_.topRows(dimc_).transpose() * kmu_.head(dimc_);
+  }
 }
 
 
@@ -397,15 +409,21 @@ void SplitOCP::computeCondensedDirection(const double dtau,
   assert(dtau > 0);
   assert(dq.size() == dimv_);
   assert(dv.size() == dimv_);
-  df_.head(dimf_) = kf_.head(dimf_) + Kfq_.topRows(dimf_) * dq 
-                                    + Kfv_.topRows(dimf_) * dv;
-  dmu_.head(dimc_) = kmu_.head(dimc_) + Kmuq_.topRows(dimc_) * dq 
-                                      + Kmuv_.topRows(dimc_) * dv;
+  if (dimf_ > 0) {
+    df_.head(dimf_) = kf_.head(dimf_) + Kfq_.topRows(dimf_) * dq 
+                                      + Kfv_.topRows(dimf_) * dv;
+  }
+  if (dimc_ > 0) {
+    dmu_.head(dimc_) = kmu_.head(dimc_) + Kmuq_.topRows(dimc_) * dq 
+                                        + Kmuv_.topRows(dimc_) * dv;
+  }
   du_ = u_res_;
   du_.noalias() += du_dq_ * dq;
   du_.noalias() += du_dv_ * dv;
   du_.noalias() += du_da_ * da_;
-  du_.noalias() += du_df_.leftCols(dimf_) * df_.head(dimf_);
+  if (dimf_ > 0) {
+    du_.noalias() += du_df_.leftCols(dimf_) * df_.head(dimf_);
+  }
   joint_constraints_.computeSlackAndDualDirection(dtau, dq, dv, da_, du_);
 }
 
@@ -470,8 +488,10 @@ std::pair<double, double> SplitOCP::costAndConstraintsViolation(
   v_tmp_ = v + step_size * dv;
   a_tmp_ = a + step_size * da_;
   u_tmp_ = u + step_size * du_;
-  f_tmp_.head(dimf_) = f.head(dimf_) + step_size * df_.head(dimf_);
-  robot.setContactForces(f_tmp_);
+  if (dimf_ > 0) {
+    f_tmp_.head(dimf_) = f.head(dimf_) + step_size * df_.head(dimf_);
+    robot.setContactForces(f_tmp_);
+  }
   double cost = 0;
   cost += cost_->l(robot, cost_data_, t, dtau, q_tmp_, v_tmp_, a_tmp_, u_tmp_, f_tmp_);
   cost += joint_constraints_.costSlackBarrier(step_size);
@@ -512,11 +532,11 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
                             const Eigen::VectorXd& sq, 
                             const Eigen::VectorXd& sv, 
                             const Eigen::VectorXd& dq, 
-                            const Eigen::VectorXd& dv, Eigen::VectorXd& q, 
+                            const Eigen::VectorXd& dv, Eigen::VectorXd& lmd, 
+                            Eigen::VectorXd& gmm, Eigen::VectorXd& q, 
                             Eigen::VectorXd& v, Eigen::VectorXd& a, 
                             Eigen::VectorXd& u, Eigen::VectorXd& beta, 
-                            Eigen::VectorXd& f, Eigen::VectorXd& mu, 
-                            Eigen::VectorXd& lmd, Eigen::VectorXd& gmm) {
+                            Eigen::VectorXd& f, Eigen::VectorXd& mu) {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dtau > 0);
@@ -532,6 +552,8 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   assert(sv.size() == dimv_);
   assert(dq.size() == dimv_);
   assert(dv.size() == dimv_);
+  assert(lmd.size() == dimv_);
+  assert(gmm.size() == dimv_);
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
@@ -539,18 +561,21 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   assert(beta.size() == dimv_);
   assert(f.size() == max_dimf_);
   assert(mu.size() == max_dimc_);
-  assert(gmm.size() == dimv_);
+  lmd.noalias() += step_size * (Pqq * dq + Pqv * dv - sq);
+  gmm.noalias() += step_size * (Pvq * dq + Pvv * dv - sv);
   robot.integrateConfiguration(dq, step_size, q);
   v.noalias() += step_size * dv;
   a.noalias() += step_size * da_;
   u.noalias() += step_size * du_;
-  f.head(dimf_).noalias() += step_size * df_.head(dimf_);
-  mu.head(dimc_).noalias() += step_size * dmu_.head(dimc_);
   lu_.noalias() -= dtau * beta;
   beta.noalias() += step_size * lu_ / dtau;
   beta.noalias() += step_size * luu_ * du_ / dtau;
-  lmd.noalias() += step_size * (Pqq * dq + Pqv * dv - sq);
-  gmm.noalias() += step_size * (Pvq * dq + Pvv * dv - sv);
+  if (dimf_ > 0) {
+    f.head(dimf_).noalias() += step_size * df_.head(dimf_);
+  }
+  if (dimc_ > 0) {
+    mu.head(dimc_).noalias() += step_size * dmu_.head(dimc_);
+  }
   joint_constraints_.updateSlack(step_size);
 }
 
@@ -617,7 +642,9 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   lv_.noalias() += dtau * du_dv_.transpose() * beta;
   la_.noalias() += dtau * du_da_.transpose() * beta;
   lu_.noalias() -= dtau * beta;
-  lf_.head(dimf).noalias() += dtau * du_df_.leftCols(dimf).transpose() * beta;
+  if (dimf > 0) {
+    lf_.head(dimf).noalias() += dtau * du_df_.leftCols(dimf).transpose() * beta;
+  }
   // Augmnet the partial derivatives of the inequality constriants.
   joint_constraints_.augmentDualResidual(dtau, lu_);
   joint_constraints_.augmentDualResidual(dtau, lq_, lv_, la_);
@@ -625,8 +652,10 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
   lq_.noalias() += Cq_.topRows(dimc).transpose() * mu.head(dimc);
   lv_.noalias() += Cv_.topRows(dimc).transpose() * mu.head(dimc);
   la_.noalias() += Ca_.topRows(dimc).transpose() * mu.head(dimc);
-  lf_.head(dimf).noalias() += Cf_.leftCols(dimf).transpose() 
-                                * mu.head(robot.dim_passive());
+  if (dimf > 0) {
+    lf_.head(dimf).noalias() += Cf_.leftCols(dimf).transpose() 
+                                  * mu.head(robot.dim_passive());
+  } 
   double error = 0;
   error += q_res_.squaredNorm();
   error += v_res_.squaredNorm();

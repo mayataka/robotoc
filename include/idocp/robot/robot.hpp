@@ -210,6 +210,12 @@ public:
                                    Eigen::MatrixXd& dBaumgarte_partial_dv,
                                    Eigen::MatrixXd& dBaumgarte_partial_da);
 
+  // Sets the contact points.
+  void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
+
+  // Sets all the contact points by using current kinematics.
+  void setContactPointsByCurrentKinematics();
+
   // Activate and deactivate the each contact.
   //   is_each_contact_active: containts the bool variables representing 
   //     wheather each contact is active or not.

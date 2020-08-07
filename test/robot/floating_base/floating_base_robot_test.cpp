@@ -382,6 +382,7 @@ TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
     EXPECT_EQ(robot.is_contact_active(i), true);
   }
   robot.updateKinematics(q_, v_, a_);
+  robot.setContactPointsByCurrentKinematics();
   robot.computeBaumgarteResidual(block_begin, residual);
   pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
   pinocchio::updateFramePlacements(model_, data_);
@@ -547,7 +548,7 @@ TEST_F(FloatingBaseRobotTest, RNEADerivativesWithContacts) {
   robot.dRNEAPartialdFext(dRNEA_dfext);
   const bool transpose_jacobian = true;
   for (int i=0; i<contacts_ref.size(); ++i) {
-    contacts_ref[i].getContactJacobian(model_, data_, 3*i, dRNEA_dfext_ref, 
+    contacts_ref[i].getContactJacobian(model_, data_, 3*i, -1, dRNEA_dfext_ref,
                                        transpose_jacobian);
   }
   EXPECT_TRUE(dRNEA_dfext.isApprox(dRNEA_dfext_ref));

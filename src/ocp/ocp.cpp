@@ -11,9 +11,9 @@ namespace idocp {
 OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunctionInterface>& cost,
          const std::shared_ptr<ConstraintsInterface>& constraints, 
          const double T, const int N, const int num_proc)
-  : split_ocps_(N-1, SplitOCP(robot, cost, constraints)),
+  : split_ocps_(N, SplitOCP(robot, cost, constraints)),
     terminal_ocp_(robot, cost, constraints),
-    robots_(num_proc_, robot),
+    robots_(num_proc, robot),
     filter_(),
     T_(T),
     dtau_(T/N),
@@ -47,9 +47,48 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunctionInterface>& cost,
   assert(T > 0);
   assert(N > 0);
   assert(num_proc > 0);
+  for (int i=0; i<=N; ++i) {
+    robot.normalizeConfiguration(q_[i]);
+  }
   bool feasible = isCurrentSolutionFeasible();
   initConstraints();
-  activateAllContacts();
+}
+
+
+OCP::OCP()
+  : split_ocps_(),
+    terminal_ocp_(),
+    robots_(),
+    filter_(),
+    T_(0),
+    dtau_(0),
+    step_size_reduction_rate_(0),
+    min_step_size_(0),
+    N_(0),
+    num_proc_(0),
+    q_(),
+    v_(),
+    a_(),
+    u_(),
+    beta_(),
+    f_(),
+    mu_(),
+    lmd_(),
+    gmm_(),
+    dq_(),
+    dv_(),
+    sq_(),
+    sv_(),
+    Pqq_(),
+    Pqv_(),
+    Pvq_(),
+    Pvv_(),
+    primal_step_sizes_(),
+    dual_step_sizes_(),
+    costs_(), 
+    constraints_violations_(),
+    cost_derivative_dot_direction_(),
+    contact_sequence_() {
 }
 
 
@@ -99,9 +138,9 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
                                                     sq_[time_step], 
                                                     sv_[time_step]);
   }
-  assert(q.size() == q_[0].size());
-  assert(v.size() == v_[0].size());
-  dq_[0] = q - q_[0];
+  assert(q.size() == robots_[0].dimq());
+  assert(v.size() == robots_[0].dimv());
+  robots_[0].subtractConfiguration(q, q_[0], dq_[0]);
   dv_[0] = v - v_[0];
   for (time_step=0; time_step<N_; ++time_step) {
     split_ocps_[time_step].forwardRiccatiRecursion(dtau_, dq_[time_step], 
@@ -190,24 +229,25 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
     for (time_step=0; time_step<=N_; ++time_step) {
       if (time_step < N_) {
         const int robot_id = omp_get_thread_num();
-        split_ocps_[time_step].updateDual(dual_step_size);
         split_ocps_[time_step].updatePrimal(robots_[robot_id], primal_step_size, 
-                                            dtau_, dq_[time_step], 
-                                            dv_[time_step], Pqq_[time_step], 
+                                            dtau_, Pqq_[time_step], 
                                             Pqv_[time_step], Pvq_[time_step], 
                                             Pvv_[time_step], sq_[time_step], 
-                                            sv_[time_step], q_[time_step], 
+                                            sv_[time_step], dq_[time_step], 
+                                            dv_[time_step], lmd_[time_step], 
+                                            gmm_[time_step], q_[time_step], 
                                             v_[time_step], a_[time_step], 
                                             u_[time_step], beta_[time_step], 
-                                            f_[time_step], mu_[time_step], 
-                                            lmd_[time_step], gmm_[time_step]);
+                                            f_[time_step], mu_[time_step]);
+        split_ocps_[time_step].updateDual(dual_step_size);
       }
       else {
         const int robot_id = omp_get_thread_num();
         terminal_ocp_.updatePrimal(robots_[robot_id], primal_step_size, 
-                                   dq_[N_], dv_[N_], Pqq_[N_], Pqv_[N_], 
-                                   Pvq_[N_], Pvv_[N_], sq_[N_], sv_[N_], 
-                                   q_[N_], v_[N_], lmd_[N_], gmm_[N_]);
+                                   Pqq_[N_], Pqv_[N_], Pvq_[N_], Pvv_[N_], 
+                                   sq_[N_], sv_[N_], dq_[N_], dv_[N_], 
+                                   lmd_[N_], gmm_[N_], q_[N_], v_[N_]);
+        terminal_ocp_.updateDual(dual_step_size);
       }
     }
   } // #pragma omp parallel num_threads(num_proc_)
@@ -215,43 +255,51 @@ void OCP::solveLQR(const double t, const Eigen::VectorXd& q,
 
 
 void OCP::getInitialControlInput(Eigen::VectorXd& u) {
-  assert(u.size() == u_[0].size());
+  assert(u.size() == robots_[0].dimv());
   u = u_[0];
 }
 
 
 void OCP::getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) {
-  assert(Kq.cols() == Kq.rows());
-  assert(Kv.cols() == Kv.rows());
+  assert(Kq.rows() == robots_[0].dimv());
+  assert(Kq.cols() == robots_[0].dimv());
+  assert(Kv.rows() == robots_[0].dimv());
+  assert(Kv.cols() == robots_[0].dimv());
   split_ocps_[0].getStateFeedbackGain(Kq, Kv);
 }
 
 
-void OCP::setStateTrajectory(const Eigen::VectorXd& q, 
+bool OCP::setStateTrajectory(const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v) {
-  assert(q.size() == q_[0].size());
-  assert(v.size() == v_[0].size());
+  assert(q.size() == robots_[0].dimq());
+  assert(v.size() == robots_[0].dimv());
   for (int i=0; i<=N_; ++i) {
     v_[i] = v;
   }
   for (int i=0; i<=N_; ++i) {
     q_[i] = q;
+    robots_[0].normalizeConfiguration(q_[i]);
   }
   bool feasible = isCurrentSolutionFeasible();
-  initConstraints();
+  if (feasible) {
+    initConstraints();
+  }
+  return feasible;
 }
 
 
-void OCP::setStateTrajectory(const Eigen::VectorXd& q0, 
+bool OCP::setStateTrajectory(const Eigen::VectorXd& q0, 
                              const Eigen::VectorXd& v0, 
                              const Eigen::VectorXd& qN, 
                              const Eigen::VectorXd& vN) {
-  assert(q0.size() == q_[0].size());
-  assert(v0.size() == v_[0].size());
-  assert(qN.size() == q_[0].size());
-  assert(vN.size() == v_[0].size());
+  assert(q0.size() == robots_[0].dimq());
+  assert(v0.size() == robots_[0].dimv());
+  assert(qN.size() == robots_[0].dimq());
+  assert(vN.size() == robots_[0].dimv());
   const Eigen::VectorXd a = (vN-v0) / N_;
-  const Eigen::VectorXd v = (qN-q0) / N_;
+  Eigen::VectorXd dqN = Eigen::VectorXd::Zero(robots_[0].dimv());
+  robots_[0].subtractConfiguration(qN, q0, dqN);
+  const Eigen::VectorXd v = dqN / N_;
   for (int i=0; i<N_; ++i) {
     a_[i] = a;
   }
@@ -259,10 +307,30 @@ void OCP::setStateTrajectory(const Eigen::VectorXd& q0,
     v_[i] = v0 + i * a;
   }
   for (int i=0; i<=N_; ++i) {
-    q_[i] = q0 + i * v;
+    q_[i] = q0;
+    robots_[0].integrateConfiguration(v, (double)i, q_[i]);
+    robots_[0].normalizeConfiguration(q_[i]);
   }
   bool feasible = isCurrentSolutionFeasible();
-  initConstraints();
+  if (feasible) {
+    initConstraints();
+  }
+  return feasible;
+}
+
+
+void OCP::setContactSequence(
+    const std::vector<std::vector<bool>>& contact_sequence) {
+  assert(contact_sequence.size() == N_);
+  for (int i=0; i<N_; ++i) {
+    assert(contact_sequence[i].size() == robots_[0].max_point_contacts());
+  }
+  contact_sequence_ = contact_sequence;
+}
+
+
+void OCP::resetLineSearchFilter() {
+  filter_.clear();
 }
 
 
@@ -292,6 +360,8 @@ void OCP::printSolution() const {
     std::cout << "v[" << i << "] = " << v_[i].transpose() << std::endl;
     std::cout << "a[" << i << "] = " << a_[i].transpose() << std::endl;
     std::cout << "u[" << i << "] = " << u_[i].transpose() << std::endl;
+    std::cout << "f[" << i << "] = " << f_[i].transpose() << std::endl;
+    std::cout << "mu[" << i << "] = " << mu_[i].transpose() << std::endl;
   }
   std::cout << "q[" << N_ << "] = " << q_[N_].transpose() << std::endl;
   std::cout << "v[" << N_ << "] = " << v_[N_].transpose() << std::endl;
@@ -319,14 +389,6 @@ void OCP::initConstraints() {
     split_ocps_[time_step].initConstraints(robots_[0], time_step, dtau_, 
                                            q_[time_step], v_[time_step], 
                                            a_[time_step], u_[time_step]);
-  }
-}
-
-void OCP::activateAllContacts() {
-  for (int i=0; i<contact_sequence_.size(); ++i) {
-    for (int j=0; j<robots_[0].max_point_contacts(); ++j) {
-      contact_sequence_[i][j] = true;
-    }
   }
 }
 

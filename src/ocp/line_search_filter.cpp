@@ -20,8 +20,6 @@ LineSearchFilter::~LineSearchFilter() {
 
 bool LineSearchFilter::isAccepted(const double cost, 
                                   const double constraint_violation) {
-  assert(cost >= 0);
-  assert(constraint_violation >= 0);
   if (!filter_.empty()) {
     for (auto pair : filter_) {
       if (cost >= pair.first && constraint_violation >= pair.second) {
@@ -35,8 +33,6 @@ bool LineSearchFilter::isAccepted(const double cost,
 
 void LineSearchFilter::augment(const double cost, 
                                const double constraint_violation) {
-  assert(cost >= 0);
-  assert(constraint_violation >= 0);
   if (!filter_.empty()) {
     std::vector<std::pair<double, double>>::iterator it = filter_.begin();
     while (it != filter_.end()) {
