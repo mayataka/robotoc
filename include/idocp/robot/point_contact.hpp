@@ -7,6 +7,7 @@
 #include "pinocchio/algorithm/joint-configuration.hpp"
 #include "pinocchio/algorithm/frames.hpp"
 #include "pinocchio/algorithm/kinematics-derivatives.hpp"
+#include "pinocchio/algorithm/frames-derivatives.hpp"
 #include "pinocchio/container/aligned-vector.hpp"
 #include "pinocchio/spatial/force.hpp"
 
@@ -288,8 +289,6 @@ public:
   // Returns the contact point.
   Eigen::Vector3d contact_point() const;
 
-  // Returns SE(3) translation from the parent joint to the contact frame.
-  pinocchio::SE3 jXf() const;
 
 private:
   bool is_active_;
@@ -298,8 +297,10 @@ private:
   Eigen::Vector3d contact_point_;
   pinocchio::SE3 jXf_;
   pinocchio::SE3::ActionMatrixType fXj_;
-  Eigen::MatrixXd J_frame_, joint_v_partial_dq_, joint_a_partial_dq_, 
-                  joint_a_partial_dv_, joint_a_partial_da_;
+  pinocchio::Motion v_frame_;
+  Eigen::Matrix3d v_linear_skew_, v_angular_skew_;
+  Eigen::MatrixXd J_frame_, frame_v_partial_dq_, frame_a_partial_dq_, 
+                  frame_a_partial_dv_, frame_a_partial_da_;
 };
 
 } // namespace idocp

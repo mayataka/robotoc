@@ -475,12 +475,6 @@ void Robot::stateEquation(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 }
 
 
-void Robot::setPassiveTorques(Eigen::VectorXd& torques) const {
-  assert(torques.size() == dimv_);
-  floating_base_.setPassiveTorques(torques);
-}
-
-
 void Robot::generateFeasibleConfiguration(Eigen::VectorXd& q) const {
   assert(q.size() == dimq_);
   Eigen::VectorXd q_min = model_.lowerPositionLimit;

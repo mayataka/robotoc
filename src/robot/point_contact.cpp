@@ -17,15 +17,18 @@ PointContact::PointContact(const pinocchio::Model& model,
     baumgarte_weight_on_position_(baumgarte_weight_on_position),
     contact_point_(Eigen::Vector3d::Zero()),
     jXf_(model.frames[contact_frame_id_].placement),
-    fXj_(jXf_.inverse().toActionMatrix().transpose()),
+    fXj_(jXf_.inverse().toActionMatrix()),
     J_frame_(Eigen::MatrixXd::Zero(6, model.nv)),
-    joint_v_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
-    joint_a_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
-    joint_a_partial_dv_(Eigen::MatrixXd::Zero(6, model.nv)),
-    joint_a_partial_da_(Eigen::MatrixXd::Zero(6, model.nv)) {
+    frame_v_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
+    frame_a_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
+    frame_a_partial_dv_(Eigen::MatrixXd::Zero(6, model.nv)),
+    frame_a_partial_da_(Eigen::MatrixXd::Zero(6, model.nv)) {
   assert(contact_frame_id_ >= 0);
   assert(baumgarte_weight_on_velocity_ >= 0);
   assert(baumgarte_weight_on_position_ >= 0);
+  v_frame_.setZero();
+  v_linear_skew_.setZero();
+  v_angular_skew_.setZero();
 }
 
 
@@ -40,10 +43,13 @@ PointContact::PointContact()
     jXf_(),
     fXj_(),
     J_frame_(),
-    joint_v_partial_dq_(),
-    joint_a_partial_dq_(),
-    joint_a_partial_dv_(),
-    joint_a_partial_da_() {
+    frame_v_partial_dq_(),
+    frame_a_partial_dq_(),
+    frame_a_partial_dv_(),
+    frame_a_partial_da_() {
+  v_frame_.setZero();
+  v_linear_skew_.setZero();
+  v_angular_skew_.setZero();
 }
 
 
@@ -150,11 +156,19 @@ void PointContact::computeBaumgarteResidual(
     Eigen::Vector3d& baumgarte_residual) const {
   assert(baumgarte_residual.size() == 3);
   baumgarte_residual
-      = (data.oMi[parent_joint_id_].act(data.a[parent_joint_id_])).linear()
-          + baumgarte_weight_on_velocity_
-              * (data.oMi[parent_joint_id_].act(data.v[parent_joint_id_])).linear()
-          + baumgarte_weight_on_position_
+      = pinocchio::getFrameClassicalAcceleration(model, data, contact_frame_id_, 
+                                                 pinocchio::LOCAL).linear();
+  if (baumgarte_weight_on_velocity_ != 0.) {
+    baumgarte_residual.noalias()
+        += baumgarte_weight_on_velocity_ 
+              * pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
+                                            pinocchio::LOCAL).linear();
+  }
+  if (baumgarte_weight_on_position_ != 0.) {
+    baumgarte_residual.noalias()
+        += baumgarte_weight_on_position_
               * (data.oMf[contact_frame_id_].translation()-contact_point_);
+  }
 }
 
 
@@ -164,11 +178,19 @@ void PointContact::computeBaumgarteResidual(
   assert(result_begin >= 0);
   assert(baumgarte_residual.size() >= 3);
   baumgarte_residual.segment<3>(result_begin)
-      = (data.oMi[parent_joint_id_].act(data.a[parent_joint_id_])).linear()
-          + baumgarte_weight_on_velocity_
-              * (data.oMi[parent_joint_id_].act(data.v[parent_joint_id_])).linear()
-          + baumgarte_weight_on_position_
+      = pinocchio::getFrameClassicalAcceleration(model, data, contact_frame_id_, 
+                                                 pinocchio::LOCAL).linear();
+  if (baumgarte_weight_on_velocity_ != 0.) {
+    baumgarte_residual.segment<3>(result_begin).noalias()
+        += baumgarte_weight_on_velocity_ 
+              * pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
+                                            pinocchio::LOCAL).linear();
+  }
+  if (baumgarte_weight_on_position_ != 0.) {
+    baumgarte_residual.segment<3>(result_begin).noalias()
+        += baumgarte_weight_on_position_
               * (data.oMf[contact_frame_id_].translation()-contact_point_);
+  }
 }
 
 
@@ -179,11 +201,19 @@ void PointContact::computeBaumgarteResidual(
   assert(result_begin >= 0);
   assert(baumgarte_residual.size() >= 3);
   baumgarte_residual.segment<3>(result_begin)
-      = coeff * (data.oMi[parent_joint_id_].act(data.a[parent_joint_id_])).linear()
-          + coeff * baumgarte_weight_on_velocity_
-              * (data.oMi[parent_joint_id_].act(data.v[parent_joint_id_])).linear()
-          + coeff * baumgarte_weight_on_position_
+      = coeff * pinocchio::getFrameClassicalAcceleration(
+                    model, data, contact_frame_id_, pinocchio::LOCAL).linear();
+  if (baumgarte_weight_on_velocity_ != 0.) {
+    baumgarte_residual.segment<3>(result_begin).noalias()
+        += coeff * baumgarte_weight_on_velocity_ 
+              * pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
+                                            pinocchio::LOCAL).linear();
+  }
+  if (baumgarte_weight_on_position_ != 0.) {
+    baumgarte_residual.segment<3>(result_begin).noalias()
+        += coeff * baumgarte_weight_on_position_
               * (data.oMf[contact_frame_id_].translation()-contact_point_);
+  }
 }
 
 
@@ -198,26 +228,45 @@ void PointContact::computeBaumgarteDerivatives(
   assert(baumgarte_partial_dq.rows() == 3);
   assert(baumgarte_partial_dv.rows() == 3);
   assert(baumgarte_partial_da.rows() == 3);
- pinocchio::getJointAccelerationDerivatives(model, data, parent_joint_id_, 
-                                            pinocchio::WORLD,
-                                            joint_v_partial_dq_, 
-                                            joint_a_partial_dq_, 
-                                            joint_a_partial_dv_, 
-                                            joint_a_partial_da_);
-  pinocchio::getFrameJacobian(model, data, contact_frame_id_, 
-                              pinocchio::LOCAL_WORLD_ALIGNED, J_frame_);
+ pinocchio::getFrameAccelerationDerivatives(model, data, contact_frame_id_, 
+                                            pinocchio::LOCAL,
+                                            frame_v_partial_dq_, 
+                                            frame_a_partial_dq_, 
+                                            frame_a_partial_dv_, 
+                                            frame_a_partial_da_);
+  // Skew matrices and LOCAL frame Jacobian are needed to convert the 
+  // frame acceleration derivatives into the "classical" acceleration 
+  // derivatives.
+  pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
+                              pinocchio::LOCAL, J_frame_);
+  v_frame_ = pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
+                                         pinocchio::LOCAL);
+  pinocchio::skew(v_frame_.linear(), v_linear_skew_);
+  pinocchio::skew(v_frame_.angular(), v_angular_skew_);
   baumgarte_partial_dq
-      = joint_a_partial_dq_.template topRows<3>()
-          + baumgarte_weight_on_velocity_ 
-              * joint_v_partial_dq_.template topRows<3>()
-          + baumgarte_weight_on_position_ 
-              * J_frame_.template topRows<3>();
+      = frame_a_partial_dq_.template topRows<3>()
+          + v_angular_skew_ * frame_v_partial_dq_.template topRows<3>()
+          + v_linear_skew_ * frame_v_partial_dq_.template bottomRows<3>();
   baumgarte_partial_dv 
-      = joint_a_partial_dv_.template topRows<3>()
-          + baumgarte_weight_on_velocity_ 
-              * joint_a_partial_da_.template topRows<3>();
+      = frame_a_partial_dv_.template topRows<3>()
+          + v_angular_skew_ * J_frame_.template topRows<3>()
+          + v_linear_skew_ * J_frame_.template bottomRows<3>();
   baumgarte_partial_da 
-      = joint_a_partial_da_.template topRows<3>();
+      = frame_a_partial_da_.template topRows<3>();
+  if (baumgarte_weight_on_velocity_ != 0.) {
+    baumgarte_partial_dq.noalias()
+        += baumgarte_weight_on_velocity_ 
+            * frame_v_partial_dq_.template topRows<3>();
+    baumgarte_partial_dv.noalias() 
+        += baumgarte_weight_on_velocity_ 
+            * frame_a_partial_da_.template topRows<3>();
+  }
+  if (baumgarte_weight_on_position_ != 0.) {
+    baumgarte_partial_dq.noalias()
+        += baumgarte_weight_on_position_ 
+            * data.oMf[contact_frame_id_].rotation()
+            * J_frame_.template topRows<3>();
+  }
 }
 
 
@@ -233,26 +282,45 @@ void PointContact::computeBaumgarteDerivatives(
   assert(baumgarte_partial_dq.rows() >= 3);
   assert(baumgarte_partial_dv.rows() >= 3);
   assert(baumgarte_partial_da.rows() >= 3);
-  pinocchio::getJointAccelerationDerivatives(model, data, parent_joint_id_, 
-                                             pinocchio::WORLD,
-                                             joint_v_partial_dq_, 
-                                             joint_a_partial_dq_, 
-                                             joint_a_partial_dv_, 
-                                             joint_a_partial_da_);
-  pinocchio::getFrameJacobian(model, data, contact_frame_id_, 
-                              pinocchio::LOCAL_WORLD_ALIGNED, J_frame_);
-  baumgarte_partial_dq.block(block_rows_begin, 0, 3, dimv_) 
-      = joint_a_partial_dq_.template topRows<3>()
-          + baumgarte_weight_on_velocity_ 
-              * joint_v_partial_dq_.template topRows<3>()
-          + baumgarte_weight_on_position_ 
-              * J_frame_.template topRows<3>();
+ pinocchio::getFrameAccelerationDerivatives(model, data, contact_frame_id_, 
+                                            pinocchio::LOCAL,
+                                            frame_v_partial_dq_, 
+                                            frame_a_partial_dq_, 
+                                            frame_a_partial_dv_, 
+                                            frame_a_partial_da_);
+  pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
+                              pinocchio::LOCAL, J_frame_);
+  // Skew matrices and LOCAL frame Jacobian are needed to convert the 
+  // frame acceleration derivatives into the "classical" acceleration 
+  // derivatives.
+  v_frame_ = pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
+                                         pinocchio::LOCAL);
+  pinocchio::skew(v_frame_.linear(), v_linear_skew_);
+  pinocchio::skew(v_frame_.angular(), v_angular_skew_);
+  baumgarte_partial_dq.block(block_rows_begin, 0, 3, dimv_)
+      = frame_a_partial_dq_.template topRows<3>()
+          + v_angular_skew_ * frame_v_partial_dq_.template topRows<3>()
+          + v_linear_skew_ * frame_v_partial_dq_.template bottomRows<3>();
   baumgarte_partial_dv.block(block_rows_begin, 0, 3, dimv_) 
-      = joint_a_partial_dv_.template topRows<3>()
-          + baumgarte_weight_on_velocity_ 
-              * joint_a_partial_da_.template topRows<3>();
+      = frame_a_partial_dv_.template topRows<3>()
+          + v_angular_skew_ * J_frame_.template topRows<3>()
+          + v_linear_skew_ * J_frame_.template bottomRows<3>();
   baumgarte_partial_da.block(block_rows_begin, 0, 3, dimv_) 
-      = joint_a_partial_da_.template topRows<3>();
+      = frame_a_partial_da_.template topRows<3>();
+  if (baumgarte_weight_on_velocity_ != 0.) {
+    baumgarte_partial_dq.block(block_rows_begin, 0, 3, dimv_).noalias()
+        += baumgarte_weight_on_velocity_ 
+            * frame_v_partial_dq_.template topRows<3>();
+    baumgarte_partial_dv.block(block_rows_begin, 0, 3, dimv_).noalias() 
+        += baumgarte_weight_on_velocity_ 
+            * frame_a_partial_da_.template topRows<3>();
+  }
+  if (baumgarte_weight_on_position_ != 0.) {
+    baumgarte_partial_dq.block(block_rows_begin, 0, 3, dimv_).noalias()
+        += baumgarte_weight_on_position_ 
+            * data.oMf[contact_frame_id_].rotation()
+            * J_frame_.template topRows<3>();
+  }
 }
 
 
@@ -269,26 +337,45 @@ void PointContact::computeBaumgarteDerivatives(
   assert(baumgarte_partial_dq.rows() >= 3);
   assert(baumgarte_partial_dv.rows() >= 3);
   assert(baumgarte_partial_da.rows() >= 3);
-  pinocchio::getJointAccelerationDerivatives(model, data, parent_joint_id_, 
-                                             pinocchio::WORLD,
-                                             joint_v_partial_dq_, 
-                                             joint_a_partial_dq_, 
-                                             joint_a_partial_dv_, 
-                                             joint_a_partial_da_);
-  pinocchio::getFrameJacobian(model, data, contact_frame_id_, 
-                              pinocchio::LOCAL_WORLD_ALIGNED, J_frame_);
-  baumgarte_partial_dq.block(block_rows_begin, 0, 3, dimv_) 
-      = coeff * joint_a_partial_dq_.template topRows<3>()
-          + coeff * baumgarte_weight_on_velocity_ 
-              * joint_v_partial_dq_.template topRows<3>()
-          + coeff * baumgarte_weight_on_position_ 
-              * J_frame_.template topRows<3>();
+ pinocchio::getFrameAccelerationDerivatives(model, data, contact_frame_id_, 
+                                            pinocchio::LOCAL,
+                                            frame_v_partial_dq_, 
+                                            frame_a_partial_dq_, 
+                                            frame_a_partial_dv_, 
+                                            frame_a_partial_da_);
+  // Skew matrices and LOCAL frame Jacobian are needed to convert the 
+  // frame acceleration derivatives into the "classical" acceleration 
+  // derivatives.
+  pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
+                              pinocchio::LOCAL, J_frame_);
+  v_frame_ = pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
+                                         pinocchio::LOCAL);
+  pinocchio::skew(v_frame_.linear(), v_linear_skew_);
+  pinocchio::skew(v_frame_.angular(), v_angular_skew_);
+  baumgarte_partial_dq.block(block_rows_begin, 0, 3, dimv_)
+      = coeff * frame_a_partial_dq_.template topRows<3>()
+          + coeff * v_angular_skew_ * frame_v_partial_dq_.template topRows<3>()
+          + coeff * v_linear_skew_ * frame_v_partial_dq_.template bottomRows<3>();
   baumgarte_partial_dv.block(block_rows_begin, 0, 3, dimv_) 
-      = coeff * joint_a_partial_dv_.template topRows<3>()
-          + coeff * baumgarte_weight_on_velocity_ 
-              * joint_a_partial_da_.template topRows<3>();
+      = coeff * frame_a_partial_dv_.template topRows<3>()
+          + coeff * v_angular_skew_ * J_frame_.template topRows<3>()
+          + coeff * v_linear_skew_ * J_frame_.template bottomRows<3>();
   baumgarte_partial_da.block(block_rows_begin, 0, 3, dimv_) 
-      = coeff * joint_a_partial_da_.template topRows<3>();
+      = coeff * frame_a_partial_da_.template topRows<3>();
+  if (baumgarte_weight_on_velocity_ != 0.) {
+    baumgarte_partial_dq.block(block_rows_begin, 0, 3, dimv_).noalias()
+        += coeff * baumgarte_weight_on_velocity_ 
+            * frame_v_partial_dq_.template topRows<3>();
+    baumgarte_partial_dv.block(block_rows_begin, 0, 3, dimv_).noalias() 
+        += coeff * baumgarte_weight_on_velocity_ 
+            * frame_a_partial_da_.template topRows<3>();
+  }
+  if (baumgarte_weight_on_position_ != 0.) {
+    baumgarte_partial_dq.block(block_rows_begin, 0, 3, dimv_).noalias()
+        += coeff * baumgarte_weight_on_position_ 
+            * data.oMf[contact_frame_id_].rotation()
+            * J_frame_.template topRows<3>();
+  }
 }
 
 
@@ -334,11 +421,6 @@ double PointContact::baumgarte_weight_on_position() const {
 
 Eigen::Vector3d PointContact::contact_point() const {
   return contact_point_;
-}
-
-
-pinocchio::SE3 PointContact::jXf() const {
-  return jXf_;
 }
 
 } // namespace idocp

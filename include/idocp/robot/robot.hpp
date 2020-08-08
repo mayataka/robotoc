@@ -262,6 +262,9 @@ public:
   //      be at least 3*max_point_contacts() times dimv.
   void dRNEAPartialdFext(Eigen::MatrixXd& dRNEA_partial_dfext);
 
+  // void impulse(const Eigen::VectorXd& q, const Eigen::VectorXd& v_before,
+  //              const Eigen::MatrixXd& J_contacts, Eigen::VectorXd& v_after);
+
   // Computes the state equation, i.e., the corresponding generalized velocity 
   // and the generalized acceleration under given q, v, tau.
   // Argments: 
@@ -273,13 +276,6 @@ public:
   void stateEquation(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                      const Eigen::VectorXd& tau, Eigen::VectorXd& dq, 
                      Eigen::VectorXd& dv);
-
-  // Substitutes zero in the generalized torques tau corresponding to the 
-  // passive joints.
-  // Argments:
-  //   torques: The generalized torques for fully actuated system. The size 
-  //     must be dimv.
-  void setPassiveTorques(Eigen::VectorXd& torques) const;
 
   // Generates feasible configuration randomly.
   // Argments:

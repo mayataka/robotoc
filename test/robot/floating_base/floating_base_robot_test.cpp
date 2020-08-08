@@ -555,15 +555,6 @@ TEST_F(FloatingBaseRobotTest, RNEADerivativesWithContacts) {
 }
 
 
-TEST_F(FloatingBaseRobotTest, floating_base) {
-  Robot robot(urdf_);
-  Eigen::VectorXd tau = Eigen::VectorXd::Ones(robot.dimv());
-  robot.setPassiveTorques(tau);
-  EXPECT_TRUE(tau.head(6).isApprox(Eigen::VectorXd::Zero(6)));
-  EXPECT_TRUE(tau.tail(dimv_-6).isApprox(Eigen::VectorXd::Ones(dimv_-6)));
-}
-
-
 TEST_F(FloatingBaseRobotTest, generateFeasibleConfiguration) {
   Robot robot(urdf_);
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
