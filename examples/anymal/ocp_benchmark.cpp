@@ -18,7 +18,7 @@ void CPUTime_with_contacts() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
   const double baumgarte_weight_on_velocity = 10;
-  const double baumgarte_weight_on_position = 100;
+  const double baumgarte_weight_on_position = 10;
   const std::string urdf_file_name = "../anymal/anymal.urdf";
   idocp::Robot robot(urdf_file_name, contact_frames, 
                      baumgarte_weight_on_velocity, 
@@ -43,7 +43,7 @@ void CPUTime_with_contacts() {
   std::vector<bool> contact_status = {true, true, true, true};
   std::vector<std::vector<bool>> contact_sequence = {N, contact_status};
   ocp_.setContactSequence(contact_sequence);
-  const int num_iteration = 20;
+  const int num_iteration = 50;
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
   for (int i=0; i<num_iteration; ++i) {
@@ -68,8 +68,8 @@ void CPUTime_with_contacts() {
 void KKTError_with_contacts() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  const double baumgarte_weight_on_velocity = 0;
-  const double baumgarte_weight_on_position = 0;
+  const double baumgarte_weight_on_velocity = 10;
+  const double baumgarte_weight_on_position = 10;
   const std::string urdf_file_name = "../anymal/anymal.urdf";
   idocp::Robot robot(urdf_file_name, contact_frames, 
                      baumgarte_weight_on_velocity, 
@@ -105,7 +105,7 @@ void KKTError_with_contacts() {
   std::cout << "q = " << q.transpose() << std::endl;
   std::cout << "v = " << v.transpose() << std::endl;
   std::cout << "Initial KKT error = " << ocp_.KKTError(t, q, v) << std::endl;
-  const int num_iteration = 10;
+  const int num_iteration = 50;
   for (int i=0; i<num_iteration; ++i) {
     ocp_.solveLQR(t, q, v, true);
     std::cout << "KKT error at iteration " << i << " = " << ocp_.KKTError(t, q, v) << std::endl;

@@ -7,6 +7,7 @@
 #include "pinocchio/algorithm/joint-configuration.hpp"
 #include "pinocchio/algorithm/frames.hpp"
 #include "pinocchio/algorithm/kinematics-derivatives.hpp"
+#include "pinocchio/algorithm/frames-derivatives.hpp"
 #include "pinocchio/container/aligned-vector.hpp"
 #include "pinocchio/spatial/force.hpp"
 
@@ -149,7 +150,7 @@ public:
   //    baumgarte_residual: The vector result is stored in. Size must be 3.
   void computeBaumgarteResidual(const pinocchio::Model& model, 
                                 const pinocchio::Data& data, 
-                                Eigen::Vector3d& baumgarte_residual);
+                                Eigen::Vector3d& baumgarte_residual) const;
 
   // Computes the residual of the contact constraints considered by the 
   // Baumgarte's stabilization method. Before calling this function, you have 
@@ -165,7 +166,7 @@ public:
   void computeBaumgarteResidual(const pinocchio::Model& model, 
                                 const pinocchio::Data& data, 
                                 const int result_begin,
-                                Eigen::VectorXd& baumgarte_residual);
+                                Eigen::VectorXd& baumgarte_residual) const;
 
   // Computes the residual of the contact constraints considered by the 
   // Baumgarte's stabilization method. Before calling this function, you have 
@@ -182,7 +183,7 @@ public:
   void computeBaumgarteResidual(const pinocchio::Model& model, 
                                 const pinocchio::Data& data, 
                                 const int result_begin, const double coeff,
-                                Eigen::VectorXd& baumgarte_residual);
+                                Eigen::VectorXd& baumgarte_residual) const;
 
   // Computes the the partial derivatives of the contact constraints
   // considered by the Baumgarte's stabilization method. Before calling this 
@@ -297,10 +298,9 @@ private:
   pinocchio::SE3 jXf_;
   pinocchio::SE3::ActionMatrixType fXj_;
   pinocchio::Motion v_frame_;
-  Eigen::Matrix3d vv_skew_, vw_skew_;
-  Eigen::MatrixXd J_frame_, joint_v_partial_dq_, joint_a_partial_dq_, 
-                  joint_a_partial_dv_, joint_a_partial_da_, frame_v_partial_dq_, 
-                  frame_a_partial_dq_, frame_a_partial_dv_, frame_a_partial_da_;
+  Eigen::Matrix3d v_linear_skew_, v_angular_skew_;
+  Eigen::MatrixXd J_frame_, frame_v_partial_dq_, frame_a_partial_dq_, 
+                  frame_a_partial_dv_, frame_a_partial_da_;
 };
 
 } // namespace idocp

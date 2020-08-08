@@ -158,7 +158,7 @@ public:
   //   residual: Vector where the result is stored. Size must be at least 3 and
   //     at most 3*max_point_contacts().
   void computeBaumgarteResidual(const int block_begin, 
-                                Eigen::VectorXd& baumgarte_residual);
+                                Eigen::VectorXd& baumgarte_residual) const;
 
   // Computes the residual of the contact constriants represented by 
   // Baumgarte's stabilization method. Before calling this function, 
@@ -169,7 +169,7 @@ public:
   //   residual: Vector where the result is stored. Size must be at least 3 and
   //     at most 3*max_point_contacts().
   void computeBaumgarteResidual(const int block_begin, const double coeff, 
-                                Eigen::VectorXd& baumgarte_residual);
+                                Eigen::VectorXd& baumgarte_residual) const;
 
   // Computes the product of a vector and the derivatives of the contact 
   // constriants represented by Baumgarte's stabilization method. 
@@ -276,13 +276,6 @@ public:
   void stateEquation(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                      const Eigen::VectorXd& tau, Eigen::VectorXd& dq, 
                      Eigen::VectorXd& dv);
-
-  // Substitutes zero in the generalized torques tau corresponding to the 
-  // passive joints.
-  // Argments:
-  //   torques: The generalized torques for fully actuated system. The size 
-  //     must be dimv.
-  void setPassiveTorques(Eigen::VectorXd& torques) const;
 
   // Generates feasible configuration randomly.
   // Argments:
