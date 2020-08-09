@@ -29,12 +29,12 @@ SplitParNMPC::SplitParNMPC(
     lu_condensed_(Eigen::VectorXd::Zero(robot.dimv())),
     u_res_(Eigen::VectorXd::Zero(robot.dimv())),
     du_(Eigen::VectorXd::Zero(robot.dimv())),
-    J_(Eigen::MatrixXd::Zero(
-          5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive(), 
-          5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
-    J_inv_(Eigen::MatrixXd::Zero(
-              5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive(), 
-              5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
+    kkt_mat_(Eigen::MatrixXd::Zero(
+                 5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive(), 
+                 5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
+    kkt_mat_inv_(Eigen::MatrixXd::Zero(
+                     5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive(), 
+                     5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
     Lmd_(Eigen::MatrixXd::Zero(2*robot.dimv() 2*robot.dimv())),
     luu_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     du_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
@@ -71,8 +71,8 @@ SplitParNMPC::SplitParNMPC()
     lu_condensed_(),
     u_res_(),
     du_(),
-    J_(),
-    J_inv_(),
+    kkt_mat_(),
+    kkt_mat_inv_(),
     Lmd_(),
     luu_(),
     du_dq_(),
@@ -120,47 +120,45 @@ void SplitParNMPC::initConstraints(const Robot& robot, const int time_step,
 
 
 void SplitParNMPC::linearizeOCP(Robot& robot, const double t, const double dtau, 
+                                const Eigen::VectorXd& q_prev, 
+                                const Eigen::VectorXd& v_prev,
                                 const Eigen::VectorXd& lmd, 
                                 const Eigen::VectorXd& gmm, 
+                                const Eigen::VectorXd& mu, 
+                                const Eigen::VectorXd& a,
+                                const Eigen::VectorXd& f, 
                                 const Eigen::VectorXd& q, 
                                 const Eigen::VectorXd& v, 
-                                const Eigen::VectorXd& a, 
                                 const Eigen::VectorXd& u, 
-                                const Eigen::VectorXd& f, 
-                                const Eigen::VectorXd& mu,
-                                const Eigen::VectorXd& lmd_next, 
-                                const Eigen::VectorXd& gmm_next, 
-                                const Eigen::VectorXd& q_next, 
-                                const Eigen::VectorXd& v_next) {
+                                const Eigen::VectorXd& lmd_next,
+                                const Eigen::VectorXd& gmm_next) {
   assert(dtau > 0);
+  assert(q_prev.size() == dimq_);
+  assert(v_prev.size() == dimv_);
   assert(lmd.size() == dimv_);
   assert(gmm.size() == dimv_);
+  assert(mu.size() == max_dimc_);
+  assert(a.size() == dimv_);
+  assert(f.size() == max_dimf_);
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
-  assert(a.size() == dimv_);
   assert(u.size() == dimv_);
-  assert(f.size() == max_dimf_);
-  assert(mu.size() == max_dimc_);
   assert(lmd_next.size() == dimv_);
   assert(gmm_next.size() == dimv_);
-  assert(q_next.size() == dimq_);
-  assert(v_next.size() == dimv_);
   dimf_ = robot.dimf();
   dimc_ = robot.dim_passive() + robot.dimf();
   if (dimf_ > 0) {
     robot.updateKinematics(q, v, a);
   }
-  parnmpclinearizer::linearizeStageCost(
-      robot, cost_, cost_data_, t, dtau, q, v, a, f, u, 
-      kkt_res_.segment(2*dimv_+dimf_+dim_passive_), 
-      kkt_res_.segment(2*dimv_+dimf_+dim_passive_+dimv_), 
-      kkt_res_.segment(2*dimv_+dimf_+dim_passive_+dimv_+dimf_), lu_);
-  parnmpclinearizer::linearizeDynamics(
-      robot, dtau, q, v, a, u, f, q_next, v_next, q_res_, v_res_, u_res_, 
-      du_dq_, du_dv_, du_da_, du_df_);
+  parnmpclinearizer::linearizeStageCost(robot, cost_, cost_data_, t, dtau, 
+                                        q, v, a, f, u, kkt_res_, 
+                                        lq_, lv_, la_, lf_, lu_);
+  parnmpclinearizer::linearizeDynamics(robot, dtau, q, v, a, f, u,  
+                                       q_prev, v_prev, kkt_res_, u_res_, 
+                                       du_dq_, du_dv_, du_da_, du_df_);
   parnmpclinearizer::linearizeConstraints(robot, dtau, q, v, a, u, u_res_,  
                                           du_dq_, du_dv_, du_da_, du_df_, 
-                                          C_res_, Cq_, Cv_, Ca_, Cf_);
+                                          kkt_res_, kkt_mat_, Cq_, Cv_, Ca_, Cf_);
   // Condense the control input torques and the Lagrange multiplier with 
   // respect to inverse dynamics.
   joint_constraints_.augmentDualResidual(dtau, lu_);

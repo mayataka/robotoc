@@ -92,14 +92,14 @@ public:
   //   q_next: Configuration at the next time step. Size must be dimq.
   //   v_next: Generalized velocity at the next time step. Size must be dimv.
   void linearizeOCP(Robot& robot, const double t, const double dtau, 
+                    const Eigen::VectorXd& q_prev, 
+                    const Eigen::VectorXd& v_prev,
                     const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
-                    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                    const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                    const Eigen::VectorXd& f, const Eigen::VectorXd& mu,
-                    const Eigen::VectorXd& lmd_next, 
-                    const Eigen::VectorXd& gmm_next, 
-                    const Eigen::VectorXd& q_next,
-                    const Eigen::VectorXd& v_next);
+                    const Eigen::VectorXd& mu, const Eigen::VectorXd& a,
+                    const Eigen::VectorXd& f, const Eigen::VectorXd& q, 
+                    const Eigen::VectorXd& v, const Eigen::VectorXd& u, 
+                    const Eigen::VectorXd& lmd_next,
+                    const Eigen::VectorXd& gmm_next);
 
   void backwardCollection(const double dtau, const Eigen::MatrixXd& Pqq_next, 
                           const Eigen::MatrixXd& Pqv_next, 
@@ -172,7 +172,7 @@ private:
   bool has_floating_base_;
   int dimq_, dimv_, dim_passive_, max_dimf_, max_dimc_, dimf_, dimc_;
   Eigen::VectorXd kkt_res_, lu_, lu_condensed_, u_res_, du_;
-  Eigen::MatrixXd J_, J_inv_, Lmd_, luu_, du_dq_, du_dv_, du_da_, du_df_;
+  Eigen::MatrixXd kkt_mat_, kkt_mat_inv_, Lmd_, luu_, du_dq_, du_dv_, du_da_, du_df_;
   // The following variables are only needed for line search
   Eigen::VectorXd q_tmp_, v_tmp_, a_tmp_, f_tmp_, u_tmp_, u_res_tmp_;
 };

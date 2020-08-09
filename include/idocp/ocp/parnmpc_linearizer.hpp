@@ -37,7 +37,7 @@ inline void linearizeStageCost(Robot& robot,
   assert(lu.size() == robot.dimv());
   assert(lf.size() == robot.max_dimf());
   if (robot.has_floating_base()) {
-    robot.computeConfigurationJacobian(q);
+    robot.computeConfigurationJacobian(q, cost_data.configuration_jacobian);
   }
   cost->lq(robot, cost_data, t, dtau, q, v, a, lq);
   cost->lv(robot, cost_data, t, dtau, q, v, a, lv);
@@ -51,11 +51,10 @@ inline void linearizeDynamics(Robot& robot, const double dtau,
                               const Eigen::VectorXd& q, 
                               const Eigen::VectorXd& v, 
                               const Eigen::VectorXd& a, 
-                              const Eigen::VectorXd& u, 
                               const Eigen::VectorXd& f, 
+                              const Eigen::VectorXd& u, 
                               const Eigen::VectorXd& q_prev, 
                               const Eigen::VectorXd& v_prev, 
-                              // Eigen::VectorXd& q_res,
                               Eigen::VectorXd& kkt_res, Eigen::VectorXd& u_res, 
                               Eigen::MatrixXd& du_dq, Eigen::MatrixXd& du_dv, 
                               Eigen::MatrixXd& du_da, Eigen::MatrixXd& du_df) {
@@ -104,6 +103,7 @@ inline void linearizeConstraints(Robot& robot, const double dtau,
                                  const Eigen::MatrixXd& du_da, 
                                  const Eigen::MatrixXd& du_df, 
                                  Eigen::VectorXd& kkt_res, 
+                                 Eigen::MatrixXd& kkt_mat, 
                                  Eigen::MatrixXd& Cq, Eigen::MatrixXd& Cv, 
                                  Eigen::MatrixXd& Ca, Eigen::MatrixXd& Cf) {
   assert(dtau > 0);
@@ -131,18 +131,102 @@ inline void linearizeConstraints(Robot& robot, const double dtau,
   assert(Cf.cols() == robot.max_dimf());
   const int dim_passive = robot.dim_passive();
   const int dimf = robot.dimf();
-  if (dim_passive > 0) {
-    kkt_res.segment(2*robot.dimv()+robot.dimf(), robot.dim_passive()) = dtau * (u.head(dim_passive)+u_res.head(dim_passive));
-    Cq.topRows(dim_passive) = dtau * du_dq.topRows(dim_passive);
-    Cv.topRows(dim_passive) = dtau * du_dv.topRows(dim_passive);
-    Ca.topRows(dim_passive) = dtau * du_da.topRows(dim_passive);
-    Cf.leftCols(dimf) = dtau * du_df.topLeftCorner(dim_passive, dimf);
-  }
+  const int dimv = robot.dimv();
+  const int constraint_block_rows_begin = 2*dimv;
+  const int constraint_block_cols_begin = 2*dimv + dimf + dim_passive;
   if (dimf > 0) {
-    robot.computeBaumgarteResidual(2*robot.dimv(), dtau, kkt_res);
+    robot.computeBaumgarteResidual(constraint_block_rows_begin, dtau, kkt_res);
     robot.computeBaumgarteDerivatives(dim_passive, dtau, Cq, Cv, Ca);
+    kkt_mat.block(constraint_block_rows_begin, constraint_block_cols_begin, 
+                  dimf, dimv) = Ca.topRows(dimf);
+    kkt_mat.block(constraint_block_rows_begin, 
+                  constraint_block_cols_begin+dimv+dimf, 
+                  dimf, dimv) = Cq.topRows(dimf);
+    kkt_mat.block(constraint_block_rows_begin, 
+                  constraint_block_cols_begin+2*dimv+dimf, 
+                  dimf, dimv) = Cv.topRows(dimf);
+  }
+  if (dim_passive > 0) {
+    kkt_res.segment(constraint_block_rows_begin+dimf, dim_passive) 
+        = dtau * (u.head(dim_passive)+u_res.head(dim_passive));
+    kkt_mat.block(constraint_block_rows_begin+dimf, constraint_block_cols_begin, 
+                  dim_passive, dimv) = dtau * du_dq.topRows(dim_passive);
+    kkt_mat.block(constraint_block_rows_begin+dimf, 
+                  constraint_block_cols_begin+dimv, 
+                  dim_passive, dimf) = dtau * du_df.topLeftCorner(dim_passive, 
+                                                                  dimf);
+    kkt_mat.block(constraint_block_rows_begin+dimf, 
+                  constraint_block_cols_begin+dimv+dimf, 
+                  dim_passive, dimv) = dtau * du_dq.topLeftCorner(dim_passive, 
+                                                                  dimv);
+    kkt_mat.block(constraint_block_rows_begin+dimf, 
+                  constraint_block_cols_begin+2*dimv+dimf, 
+                  dim_passive, dimv) = dtau * du_dv.topLeftCorner(dim_passive, 
+                                                                  dimv);
   }
 }
+
+
+inline void factorizeKKTResidual(const Eigen::VectorXd& q_res, 
+                                 const Eigen::VectorXd& v_res,
+                                 const Eigen::VectorXd& C_res,
+                                 const Eigen::VectorXd& lq, 
+                                 const Eigen::VectorXd& lv, 
+                                 const Eigen::VectorXd& la, 
+                                 const Eigen::VectorXd& lf, 
+                                 Eigen::VectorXd& kkt_res) {
+  const int dimv = robot.dimv();
+  const int dimf = robot.dimf();
+  const int dimc = robot.dimf() + robot.dim_passive();
+  kkt_res.segment(0, dimv) = q_res;
+  kkt_res.segment(dimv, dimv) = v_res;
+  kkt_res.segment(2*dimv, dimc) = C_res;
+  kkt_res.segment(2*dimv+dimc, dimv) = la;
+  kkt_res.segment(3*dimv+dimc, dimf) = lf.head(dimf);
+  kkt_res.segment(3*dimv+dimc+dimf, dimv) = lq;
+  kkt_res.segment(4*dimv+dimc+dimf, dimv) = lv;
+}
+
+
+inline void factorizeKKTMatrix(const Eigen::MatrixXd& lqq, 
+                               const Eigen::MatrixXd& lvv, 
+                               const Eigen::MatrixXd& laa, 
+                               const Eigen::MatrixXd& lff, 
+                               Eigen::MatrixXd& kkt_mat) {
+  const int constraint_block_rows_begin = 2*dimv;
+  const int constraint_block_cols_begin = 2*dimv + dimf + dim_passive;
+  if (dimf > 0) {
+    robot.computeBaumgarteResidual(constraint_block_rows_begin, dtau, kkt_res);
+    robot.computeBaumgarteDerivatives(dim_passive, dtau, Cq, Cv, Ca);
+    kkt_mat.block(constraint_block_rows_begin, constraint_block_cols_begin, 
+                  dimf, dimv) = Ca.topRows(dimf);
+    kkt_mat.block(constraint_block_rows_begin, 
+                  constraint_block_cols_begin+dimv+dimf, 
+                  dimf, dimv) = Cq.topRows(dimf);
+    kkt_mat.block(constraint_block_rows_begin, 
+                  constraint_block_cols_begin+2*dimv+dimf, 
+                  dimf, dimv) = Cv.topRows(dimf);
+  }
+  if (dim_passive > 0) {
+    kkt_res.segment(constraint_block_rows_begin+dimf, dim_passive) 
+        = dtau * (u.head(dim_passive)+u_res.head(dim_passive));
+    kkt_mat.block(constraint_block_rows_begin+dimf, constraint_block_cols_begin, 
+                  dim_passive, dimv) = dtau * du_dq.topRows(dim_passive);
+    kkt_mat.block(constraint_block_rows_begin+dimf, 
+                  constraint_block_cols_begin+dimv, 
+                  dim_passive, dimf) = dtau * du_df.topLeftCorner(dim_passive, 
+                                                                  dimf);
+    kkt_mat.block(constraint_block_rows_begin+dimf, 
+                  constraint_block_cols_begin+dimv+dimf, 
+                  dim_passive, dimv) = dtau * du_dq.topLeftCorner(dim_passive, 
+                                                                  dimv);
+    kkt_mat.block(constraint_block_rows_begin+dimf, 
+                  constraint_block_cols_begin+2*dimv+dimf, 
+                  dim_passive, dimv) = dtau * du_dv.topLeftCorner(dim_passive, 
+                                                                  dimv);
+  }
+}
+
 
 } // namespace parnmpclinearizer
 } // namespace idocp 

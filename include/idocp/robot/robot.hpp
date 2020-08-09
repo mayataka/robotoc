@@ -82,7 +82,7 @@ public:
   //   difference: The resultant tangent vector of the configuration.
   void subtractConfiguration(const Eigen::VectorXd& q_plus, 
                              const Eigen::VectorXd& q_minus,
-                             Eigen::VectorXd& difference) const;
+                             Eigen::Ref<Eigen::VectorXd> difference) const;
 
   // Computes the difference of the two configurations at the its tangent 
   // velocity.
@@ -94,7 +94,7 @@ public:
   void subtractConfiguration(const Eigen::VectorXd& q_plus, 
                              const Eigen::VectorXd& q_minus,
                              const int segment_begin,
-                             Eigen::VectorXd& result) const;
+                             Eigen::Ref<Eigen::VectorXd> result) const;
 
   // Differntiate the function of integration the generalized velocity, 
   // integration_length * v, with respect to q and v.
@@ -109,8 +109,8 @@ public:
   void dIntegrateConfiguration(const Eigen::VectorXd& q, 
                                const Eigen::VectorXd& v,
                                const double integration_length,
-                               Eigen::MatrixXd& dIntegrate_dq,
-                               Eigen::MatrixXd& dIntegrate_dv) const;
+                               Eigen::Ref<Eigen::MatrixXd> dIntegrate_dq,
+                               Eigen::Ref<Eigen::MatrixXd> dIntegrate_dv) const;
 
   // Differntiate the function of the subtraction of the configuration.
   // Argments: 
@@ -118,9 +118,9 @@ public:
   //   q_minus: Configuration. Size must be dimq().
   //   dSubtract_dqplus: The partial derivative of the subtraction 
   //     q_plus - p_minus with respect to the q_plus.
-  void dSubtractdConfigurationPlus(const Eigen::VectorXd& q_plus, 
-                                   const Eigen::VectorXd& q_minus,
-                                   Eigen::MatrixXd& dSubtract_dqplus) const;
+  void dSubtractdConfigurationPlus(
+      const Eigen::VectorXd& q_plus, const Eigen::VectorXd& q_minus,
+      Eigen::Ref<Eigen::MatrixXd> dSubtract_dqplus) const;
 
   // Differntiate the function of the subtraction of the configuration.
   // Argments: 
@@ -128,9 +128,9 @@ public:
   //   q_minus: Configuration. Size must be dimq().
   //   dSubtract_dqplus: The partial derivative of the subtraction 
   //     q_plus - p_minus with respect to the q_minus.
-  void dSubtractdConfigurationMinus(const Eigen::VectorXd& q_plus, 
-                                    const Eigen::VectorXd& q_minus,
-                                    Eigen::MatrixXd& dSubtract_dqminus) const;
+  void dSubtractdConfigurationMinus(
+      const Eigen::VectorXd& q_plus, const Eigen::VectorXd& q_minus,
+      Eigen::Ref<Eigen::MatrixXd> dSubtract_dqminus) const;
 
   // Computes the configuration with respect to its tangent vector.
   // Argments: 
@@ -155,8 +155,8 @@ public:
   // Argments: 
   //   residual: Vector where the result is stored. Size must be at least 3 and
   //     at most 3*max_point_contacts().
-  void computeBaumgarteResidual(const int segment_begin, 
-                                Eigen::VectorXd& baumgarte_residual) const;
+  void computeBaumgarteResidual(
+      Eigen::Ref<Eigen::VectorXd> baumgarte_residual) const;
 
   // Computes the residual of the contact constriants represented by 
   // Baumgarte's stabilization method. Before calling this function, 
@@ -166,8 +166,8 @@ public:
   //   coeff: The coefficient of the result.
   //   residual: Vector where the result is stored. Size must be at least 3 and
   //     at most 3*max_point_contacts().
-  void computeBaumgarteResidual(const int segment_begin, const double coeff, 
-                                Eigen::VectorXd& baumgarte_residual) const;
+  void computeBaumgarteResidual(
+      const double coeff, Eigen::Ref<Eigen::VectorXd> baumgarte_residual) const;
 
   // Computes the product of a vector and the derivatives of the contact 
   // constriants represented by Baumgarte's stabilization method. 
@@ -182,11 +182,10 @@ public:
   //   dBaumgarte_partial_da: The matrix where the result is stored. The number 
   //     of columns must be dimv. The number of rows must be at least 3 and 
   //     at most 3*max_point_contacts().
-  void computeBaumgarteDerivatives(const int block_rows_begin, 
-                                   const int block_cols_begin,
-                                   Eigen::MatrixXd& dBaumgarte_partial_dq, 
-                                   Eigen::MatrixXd& dBaumgarte_partial_dv,
-                                   Eigen::MatrixXd& dBaumgarte_partial_da);
+  void computeBaumgarteDerivatives(
+      Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dq, 
+      Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dv, 
+      Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_da);
 
   // Computes the product of a vector and the derivatives of the contact 
   // constriants represented by Baumgarte's stabilization method. 
@@ -201,12 +200,10 @@ public:
   //   dBaumgarte_partial_da: The matrix where the result is stored. The number 
   //     of columns must be dimv. The number of rows must be at least 3 and 
   //     at most 3*max_point_contacts().
-  void computeBaumgarteDerivatives(const int block_rows_begin, 
-                                   const int block_cols_begin,
-                                   const double coeff,
-                                   Eigen::MatrixXd& dBaumgarte_partial_dq, 
-                                   Eigen::MatrixXd& dBaumgarte_partial_dv,
-                                   Eigen::MatrixXd& dBaumgarte_partial_da);
+  void computeBaumgarteDerivatives(
+      const double coeff, Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dq, 
+      Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dv, 
+      Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_da);
 
   // Sets the contact points.
   void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);

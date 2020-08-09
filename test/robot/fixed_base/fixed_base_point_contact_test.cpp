@@ -314,38 +314,23 @@ TEST_F(FixedBasePointContactTest, getContactJacobian) {
   const bool transpose = true;
   contact.getContactJacobian(model_, data_, J_trans, transpose);
   EXPECT_TRUE(J_trans.isApprox(J_ref.topRows(3).transpose()));
-}
-
-
-TEST_F(FixedBasePointContactTest, getContactJacobianBlock) {
-  PointContact contact(model_, contact_frame_id_, baumgarte_weight_on_velocity_, 
-                       baumgarte_weight_on_position_);
-  pinocchio::forwardKinematics(model_, data_, q_);
-  pinocchio::computeJointJacobians(model_, data_, q_);
-  Eigen::MatrixXd J_ref = Eigen::MatrixXd::Zero(3, dimv_);
-  contact.getContactJacobian(model_, data_, J_ref);
   const int block_rows_begin = rand() % 5;
   const int block_cols_begin = rand() % 5;
-  Eigen::MatrixXd J = Eigen::MatrixXd::Zero(3+2*block_rows_begin, 
-                                            dimv_+2*block_cols_begin);
-  contact.getContactJacobian(model_, data_, block_rows_begin, block_cols_begin, J);
-  EXPECT_TRUE(J.block(block_rows_begin, block_cols_begin, 3, dimv_).isApprox(J_ref));
-  std::cout << "J" << std::endl;
-  std::cout << J << std::endl;
-  std::cout << std::endl;
-  const bool transpose = true;
-  Eigen::MatrixXd J_trans = Eigen::MatrixXd::Zero(dimv_+2*block_cols_begin,   
-                                                  3+2*block_rows_begin);
-  contact.getContactJacobian(model_, data_, block_cols_begin, block_rows_begin, 
-                             J_trans, transpose);
-  EXPECT_TRUE(
-      J_trans.block(block_cols_begin, block_rows_begin, dimv_, 3)
-      .isApprox(J_ref.transpose()));
-  EXPECT_TRUE(J_trans.isApprox(J.transpose()));
-  J.block(block_rows_begin, block_cols_begin, 3, dimv_) -= J_ref;
-  EXPECT_TRUE(J.isZero());
-  J_trans.block(block_cols_begin, block_rows_begin, dimv_, 3) -= J_ref.transpose();
-  EXPECT_TRUE(J_trans.isZero());
+  Eigen::MatrixXd J_block 
+      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_+2*block_cols_begin);
+  contact.getContactJacobian(model_, data_, J_block.block(block_rows_begin, 
+                                                          block_cols_begin,
+                                                          3, dimv_));
+  EXPECT_TRUE(J_block.block(block_rows_begin, block_cols_begin, 3, dimv_).
+              isApprox(J));
+  Eigen::MatrixXd J_trans_block 
+      = Eigen::MatrixXd::Zero(dimv_+2*block_cols_begin, 3+2*block_rows_begin);
+  contact.getContactJacobian(model_, data_, J_trans_block.block(block_cols_begin, 
+                                                                block_rows_begin,
+                                                                dimv_, 3), true);
+  EXPECT_TRUE(J_block.isApprox(J_trans_block.transpose()));
+  J_block.block(block_rows_begin, block_cols_begin, 3, dimv_) -= J;
+  EXPECT_TRUE(J_block.isZero());
 }
 
 
@@ -372,6 +357,11 @@ TEST_F(FixedBasePointContactTest, baumgarteResidual) {
                  -contact.contact_point());
   EXPECT_TRUE(residual.isApprox(residual_ref));
   Eigen::VectorXd residuals = Eigen::VectorXd::Zero(10);
+  contact.computeBaumgarteResidual(model_, data_, residuals.segment<3>(5));
+  EXPECT_TRUE(residuals.head(5).isZero());
+  EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
+  EXPECT_TRUE(residuals.tail(2).isZero());
+  residuals.setZero();
   contact.computeBaumgarteResidual(model_, data_, 5, residuals);
   EXPECT_TRUE(residuals.head(5).isZero());
   EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
