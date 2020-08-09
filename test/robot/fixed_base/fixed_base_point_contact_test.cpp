@@ -61,7 +61,6 @@ TEST_F(FixedBasePointContactTest, defaultConstructor) {
   EXPECT_FALSE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), 0);
   EXPECT_EQ(contact.parent_joint_id(), 0);
-  EXPECT_EQ(contact.dimv(), 0);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(), 0);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 0);
   EXPECT_TRUE(contact.contact_point().isApprox(Eigen::Vector3d::Zero()));
@@ -75,7 +74,6 @@ TEST_F(FixedBasePointContactTest, constructor) {
   EXPECT_FALSE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
-  EXPECT_EQ(contact.dimv(), model_.nv);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(), 
                    baumgarte_weight_on_velocity_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
@@ -120,7 +118,6 @@ TEST_F(FixedBasePointContactTest, copyConstructor) {
   EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
-  EXPECT_EQ(contact.dimv(), model_.nv);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(), 
                    baumgarte_weight_on_velocity_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
@@ -146,7 +143,6 @@ TEST_F(FixedBasePointContactTest, assign) {
   EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
-  EXPECT_EQ(contact.dimv(), model_.nv);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(),  
                    baumgarte_weight_on_velocity_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
@@ -173,7 +169,6 @@ TEST_F(FixedBasePointContactTest, moveAssign) {
   EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
-  EXPECT_EQ(contact.dimv(), model_.nv);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(),  
                    baumgarte_weight_on_velocity_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
@@ -199,7 +194,6 @@ TEST_F(FixedBasePointContactTest, moveConstructor) {
   EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
-  EXPECT_EQ(contact.dimv(), model_.nv);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(),  
                    baumgarte_weight_on_velocity_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
@@ -330,19 +324,28 @@ TEST_F(FixedBasePointContactTest, getContactJacobianBlock) {
   pinocchio::computeJointJacobians(model_, data_, q_);
   Eigen::MatrixXd J_ref = Eigen::MatrixXd::Zero(3, dimv_);
   contact.getContactJacobian(model_, data_, J_ref);
-  const int block_begin_index = rand() % 6;
-  Eigen::MatrixXd J = Eigen::MatrixXd::Zero(3+block_begin_index, dimv_);
-  contact.getContactJacobian(model_, data_, block_begin_index, J);
-  EXPECT_TRUE(J.block(block_begin_index, 0, 3, dimv_).isApprox(J_ref));
-  EXPECT_TRUE(J.block(0, 0, block_begin_index, dimv_).isZero());
+  const int block_rows_begin = rand() % 5;
+  const int block_cols_begin = rand() % 5;
+  Eigen::MatrixXd J = Eigen::MatrixXd::Zero(3+2*block_rows_begin, 
+                                            dimv_+2*block_cols_begin);
+  contact.getContactJacobian(model_, data_, block_rows_begin, block_cols_begin, J);
+  EXPECT_TRUE(J.block(block_rows_begin, block_cols_begin, 3, dimv_).isApprox(J_ref));
+  std::cout << "J" << std::endl;
+  std::cout << J << std::endl;
+  std::cout << std::endl;
   const bool transpose = true;
-  Eigen::MatrixXd J_trans = Eigen::MatrixXd::Zero(dimv_, 3+block_begin_index);
-  contact.getContactJacobian(model_, data_, block_begin_index, J_trans, 
-                             transpose);
+  Eigen::MatrixXd J_trans = Eigen::MatrixXd::Zero(dimv_+2*block_cols_begin,   
+                                                  3+2*block_rows_begin);
+  contact.getContactJacobian(model_, data_, block_cols_begin, block_rows_begin, 
+                             J_trans, transpose);
   EXPECT_TRUE(
-      J_trans.block(0, block_begin_index, dimv_, 3)
+      J_trans.block(block_cols_begin, block_rows_begin, dimv_, 3)
       .isApprox(J_ref.transpose()));
   EXPECT_TRUE(J_trans.isApprox(J.transpose()));
+  J.block(block_rows_begin, block_cols_begin, 3, dimv_) -= J_ref;
+  EXPECT_TRUE(J.isZero());
+  J_trans.block(block_cols_begin, block_rows_begin, dimv_, 3) -= J_ref.transpose();
+  EXPECT_TRUE(J_trans.isZero());
 }
 
 
@@ -438,118 +441,68 @@ TEST_F(FixedBasePointContactTest, baumgarteDerivatives) {
   EXPECT_TRUE(baum_partial_dq_ref.isApprox(baum_partial_dq));
   EXPECT_TRUE(baum_partial_dv_ref.isApprox(baum_partial_dv));
   EXPECT_TRUE(baum_partial_da_ref.isApprox(baum_partial_da));
+  std::cout << "baum_partial_dq:" << std::endl;
+  std::cout << baum_partial_dq << std::endl;
+  std::cout << std::endl;
+  std::cout << "baum_partial_dv:" << std::endl;
+  std::cout << baum_partial_dv << std::endl;
+  std::cout << std::endl;
+  std::cout << "baum_partial_da:" << std::endl;
+  std::cout << baum_partial_da << std::endl;
+  std::cout << std::endl;
 }
 
 
 TEST_F(FixedBasePointContactTest, baumgarteDerivativesBlock) {
   PointContact contact(model_, contact_frame_id_, baumgarte_weight_on_velocity_, 
                        baumgarte_weight_on_position_);
-  pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
-  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
-  pinocchio::updateFramePlacement(model_, data_, contact_frame_id_);
-  const int parent_joint_id = contact.parent_joint_id();
-  const int block_rows_begin = rand() % 3;
+  Eigen::MatrixXd baum_partial_dq_ref = Eigen::MatrixXd::Zero(3, dimv_);
+  Eigen::MatrixXd baum_partial_dv_ref = Eigen::MatrixXd::Zero(3, dimv_);
+  Eigen::MatrixXd baum_partial_da_ref = Eigen::MatrixXd::Zero(3, dimv_);
+  contact.computeBaumgarteDerivatives(model_, data_, baum_partial_dq_ref, 
+                                      baum_partial_dv_ref, baum_partial_da_ref);
+  const int block_rows_begin = rand() % 5;
+  const int block_cols_begin = rand() % 5;
   Eigen::MatrixXd baum_partial_dq 
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_);
+      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_+2*block_cols_begin);
   Eigen::MatrixXd baum_partial_dv 
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_);
+      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_+2*block_cols_begin);
   Eigen::MatrixXd baum_partial_da 
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_);
-  contact.computeBaumgarteDerivatives(model_, data_, block_rows_begin,
-                                      baum_partial_dq, baum_partial_dv, 
-                                      baum_partial_da);
-  Eigen::MatrixXd baum_partial_dq_ref 
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_);
-  Eigen::MatrixXd baum_partial_dv_ref 
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_);
-  Eigen::MatrixXd baum_partial_da_ref 
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_);
-  Eigen::MatrixXd frame_v_partial_dq = Eigen::MatrixXd::Zero(6, dimv_);
-  Eigen::MatrixXd frame_a_partial_dq = Eigen::MatrixXd::Zero(6, dimv_);
-  Eigen::MatrixXd frame_a_partial_dv = Eigen::MatrixXd::Zero(6, dimv_);
-  Eigen::MatrixXd frame_a_partial_da = Eigen::MatrixXd::Zero(6, dimv_);
-  pinocchio::getFrameAccelerationDerivatives(model_, data_, contact_frame_id_, 
-                                             pinocchio::LOCAL,
-                                             frame_v_partial_dq, 
-                                             frame_a_partial_dq, 
-                                             frame_a_partial_dv, 
-                                             frame_a_partial_da);
-  Eigen::MatrixXd J_frame = Eigen::MatrixXd::Zero(6, dimv_);
-  pinocchio::getFrameJacobian(model_, data_, contact_frame_id_, 
-                              pinocchio::LOCAL, J_frame);
-  pinocchio::Motion v_frame = pinocchio::getFrameVelocity(model_, data_, 
-                                                          contact_frame_id_, 
-                                                          pinocchio::LOCAL);
-  Eigen::Matrix3d v_linear_skew, v_angular_skew;
-  v_linear_skew.setZero();
-  v_angular_skew.setZero();
-  pinocchio::skew(v_frame.linear(), v_linear_skew);
-  pinocchio::skew(v_frame.angular(), v_angular_skew);
-  baum_partial_dq_ref.block(block_rows_begin, 0, 3, dimv_) 
-      = frame_a_partial_dq.template topRows<3>()
-          + v_angular_skew * frame_v_partial_dq.template topRows<3>()
-          + v_linear_skew * frame_v_partial_dq.template bottomRows<3>()
-          + baumgarte_weight_on_velocity_ 
-              * frame_v_partial_dq.template topRows<3>()
-          + baumgarte_weight_on_position_ 
-              * data_.oMf[contact_frame_id_].rotation()
-              * J_frame.template topRows<3>();
-  baum_partial_dv_ref.block(block_rows_begin, 0, 3, dimv_) 
-      = frame_a_partial_dv.template topRows<3>()
-          + v_angular_skew * J_frame.template topRows<3>()
-          + v_linear_skew * J_frame.template bottomRows<3>()
-          + baumgarte_weight_on_velocity_
-              * frame_a_partial_da.template topRows<3>();
-  baum_partial_da_ref.block(block_rows_begin, 0, 3, dimv_) 
-      = frame_a_partial_da.template topRows<3>();
-  EXPECT_TRUE(baum_partial_dq.isApprox(baum_partial_dq_ref));
-  EXPECT_TRUE(baum_partial_dv.isApprox(baum_partial_dv_ref));
-  EXPECT_TRUE(baum_partial_da.isApprox(baum_partial_da_ref));
-  const double coeff = Eigen::VectorXd::Random(1)[0];
-  baum_partial_dq.setZero();
-  baum_partial_dv.setZero();
-  baum_partial_da.setZero();
-  contact.computeBaumgarteDerivatives(model_, data_, block_rows_begin,
-                                      baum_partial_dq, baum_partial_dv, 
-                                      baum_partial_da);
-  EXPECT_TRUE(baum_partial_dq.isApprox(baum_partial_dq_ref));
-  EXPECT_TRUE(baum_partial_dv.isApprox(baum_partial_dv_ref));
-  EXPECT_TRUE(baum_partial_da.isApprox(baum_partial_da_ref));
-
-  Eigen::MatrixXd baum_partial_dq_nonblock = Eigen::MatrixXd::Zero(3, dimv_);
-  Eigen::MatrixXd baum_partial_dv_nonblock = Eigen::MatrixXd::Zero(3, dimv_);
-  Eigen::MatrixXd baum_partial_da_nonblock = Eigen::MatrixXd::Zero(3, dimv_);
-  contact.computeBaumgarteDerivatives(model_, data_, baum_partial_dq_nonblock, 
-                                      baum_partial_dv_nonblock, 
-                                      baum_partial_da_nonblock);
+      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_+2*block_cols_begin);
+  contact.computeBaumgarteDerivatives(model_, data_, block_rows_begin, 
+                                      block_cols_begin, baum_partial_dq, 
+                                      baum_partial_dv, baum_partial_da);
   EXPECT_TRUE(
-        baum_partial_dq_nonblock
-        .isApprox(baum_partial_dq.block(block_rows_begin, 0, 3, dimv_)));
+        baum_partial_dq.block(block_rows_begin, block_cols_begin, 3, dimv_)
+        .isApprox(baum_partial_dq_ref));
   EXPECT_TRUE(
-        baum_partial_dv_nonblock
-        .isApprox(baum_partial_dv.block(block_rows_begin, 0, 3, dimv_)));
+        baum_partial_dv.block(block_rows_begin, block_cols_begin, 3, dimv_)
+        .isApprox(baum_partial_dv_ref));
   EXPECT_TRUE(
-        baum_partial_da_nonblock
-        .isApprox(baum_partial_da.block(block_rows_begin, 0, 3, dimv_)));
-
-  std::cout << baum_partial_dq_nonblock << std::endl;
-  std::cout << std::endl;
-  std::cout << baum_partial_dq << std::endl;
-  std::cout << std::endl;
-
+        baum_partial_da.block(block_rows_begin, block_cols_begin, 3, dimv_)
+        .isApprox(baum_partial_da_ref));
   Eigen::MatrixXd baum_partial_dq_coeff
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_);
+      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_+2*block_cols_begin);
   Eigen::MatrixXd baum_partial_dv_coeff
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_);
+      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_+2*block_cols_begin);
   Eigen::MatrixXd baum_partial_da_coeff
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_);
-  contact.computeBaumgarteDerivatives(model_, data_, block_rows_begin, coeff,
-                                      baum_partial_dq_coeff, 
-                                      baum_partial_dv_coeff, 
-                                      baum_partial_da_coeff);
+      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_+2*block_cols_begin);
+  const double coeff = Eigen::VectorXd::Random(1)[0];
+  contact.computeBaumgarteDerivatives(model_, data_, block_rows_begin, 
+                                      block_cols_begin, coeff, baum_partial_dq, 
+                                      baum_partial_dv, baum_partial_da);
   EXPECT_TRUE(baum_partial_dq_coeff.isApprox(coeff*baum_partial_dq));
   EXPECT_TRUE(baum_partial_dv_coeff.isApprox(coeff*baum_partial_dv));
   EXPECT_TRUE(baum_partial_da_coeff.isApprox(coeff*baum_partial_da));
+  baum_partial_dq.block(block_rows_begin, block_cols_begin, 3, dimv_) 
+      -= baum_partial_dq_ref;
+  baum_partial_dv.block(block_rows_begin, block_cols_begin, 3, dimv_) 
+      -= baum_partial_dv_ref;
+  baum_partial_da.block(block_rows_begin, block_cols_begin, 3, dimv_) 
+      -= baum_partial_da_ref;
+  EXPECT_TRUE(baum_partial_dq.isZero());
+  EXPECT_TRUE(baum_partial_dv.isZero());
+  EXPECT_TRUE(baum_partial_da.isZero());
 }
 
 } // namespace idocp

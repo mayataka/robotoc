@@ -39,24 +39,25 @@ add_library(
   src/robot/robot.cpp
   src/robot/floating_base.cpp
   src/robot/point_contact.cpp
-  src/cost/cost_function_data.cpp
-  src/cost/joint_space_cost.cpp
-  src/cost/contact_cost.cpp
-  src/constraints/pdipm_func.cpp
-  src/constraints/joint_space_constraints/joint_space_constraints.cpp
-  src/constraints/joint_space_constraints/joint_variables_upper_limits.cpp
-  src/constraints/joint_space_constraints/joint_variables_lower_limits.cpp
-  src/manipulator/cost_function.cpp
-  src/manipulator/constraints.cpp
-  src/quadruped/cost_function.cpp
-  src/quadruped/constraints.cpp
-  src/ocp/riccati_matrix_factorizer.cpp
-  src/ocp/riccati_matrix_inverter.cpp
-  src/ocp/ocp_linearizer.cpp
-  src/ocp/terminal_ocp.cpp
-  src/ocp/split_ocp.cpp
-  src/ocp/line_search_filter.cpp
-  src/ocp/ocp.cpp
+  # src/cost/cost_function_data.cpp
+  # src/cost/joint_space_cost.cpp
+  # src/cost/contact_cost.cpp
+  # src/constraints/pdipm_func.cpp
+  # src/constraints/joint_space_constraints/joint_space_constraints.cpp
+  # src/constraints/joint_space_constraints/joint_variables_upper_limits.cpp
+  # src/constraints/joint_space_constraints/joint_variables_lower_limits.cpp
+  # src/manipulator/cost_function.cpp
+  # src/manipulator/constraints.cpp
+  # src/quadruped/cost_function.cpp
+  # src/quadruped/constraints.cpp
+  # src/ocp/riccati_matrix_factorizer.cpp
+  # src/ocp/riccati_matrix_inverter.cpp
+  # src/ocp/ocp_linearizer.cpp
+  # src/ocp/terminal_ocp.cpp
+  # src/ocp/split_ocp.cpp
+  # src/ocp/line_search_filter.cpp
+  # src/ocp/ocp.cpp
+  # src/ocp/parnmpc_linearizer.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

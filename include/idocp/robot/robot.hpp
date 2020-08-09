@@ -84,6 +84,18 @@ public:
                              const Eigen::VectorXd& q_minus,
                              Eigen::VectorXd& difference) const;
 
+  // Computes the difference of the two configurations at the its tangent 
+  // velocity.
+  // Argments: 
+  //   q_plus: Configuration. Size must be dimq().
+  //   q_minus: Configuration. Size must be dimq().
+  //   segment_begin: The start index of the segment.
+  //   result: The resultant tangent vector of the configuration.
+  void subtractConfiguration(const Eigen::VectorXd& q_plus, 
+                             const Eigen::VectorXd& q_minus,
+                             const int segment_begin,
+                             Eigen::VectorXd& result) const;
+
   // Differntiate the function of integration the generalized velocity, 
   // integration_length * v, with respect to q and v.
   // Argments: 
@@ -100,46 +112,32 @@ public:
                                Eigen::MatrixXd& dIntegrate_dq,
                                Eigen::MatrixXd& dIntegrate_dv) const;
 
-  // Computes the Jacobian of the configuration computed at its tangent 
-  // velocity.
+  // Differntiate the function of the subtraction of the configuration.
   // Argments: 
-  //   q: Configuration. Size must be dimq().
-  void computeConfigurationJacobian(const Eigen::VectorXd& q);
+  //   q_plus: Configuration. Size must be dimq().
+  //   q_minus: Configuration. Size must be dimq().
+  //   dSubtract_dqplus: The partial derivative of the subtraction 
+  //     q_plus - p_minus with respect to the q_plus.
+  void dSubtractdConfigurationPlus(const Eigen::VectorXd& q_plus, 
+                                   const Eigen::VectorXd& q_minus,
+                                   Eigen::MatrixXd& dSubtract_dqplus) const;
 
-  // Transforms the gradient evaluated at the configuration space into that 
-  // evaluated at its tangent space. Before calling this function, 
-  // computeConfigurationJacobian() must be called. 
+  // Differntiate the function of the subtraction of the configuration.
   // Argments: 
-  //   gradient_at_configuration: The gradient evaluated at the configuration 
-  //     space. Size must be dimq().
-  //   gradient_at_configuration: The gradient evaluated at the tangent
-  //     space. Size must be dimv().
-  void computeTangentGradient(const Eigen::VectorXd& gradient_at_configuration, 
-                              Eigen::VectorXd& gradient_at_tangent) const;
+  //   q_plus: Configuration. Size must be dimq().
+  //   q_minus: Configuration. Size must be dimq().
+  //   dSubtract_dqplus: The partial derivative of the subtraction 
+  //     q_plus - p_minus with respect to the q_minus.
+  void dSubtractdConfigurationMinus(const Eigen::VectorXd& q_plus, 
+                                    const Eigen::VectorXd& q_minus,
+                                    Eigen::MatrixXd& dSubtract_dqminus) const;
 
-  // Transforms the Hessian evaluated at the configuration space into that 
-  // evaluated at its tangent space. Before calling this function,
-  // computeConfigurationJacobian() must be called. 
+  // Computes the configuration with respect to its tangent vector.
   // Argments: 
-  //   hessian_at_configuration: The Hessian evaluated at the configuration 
-  //     space. Size must be dimq() x dimq().
-  //   hessian_at_tangent: The Hessian evaluated at the tangent
-  //     space. Size must be dimv() x dimv().
-  void computeTangentHessian(const Eigen::MatrixXd& hessian_at_configuration, 
-                             Eigen::MatrixXd& hessian_at_tangent) const;
-
-  // Transforms the Hessian evaluated at the configuration space into that 
-  // evaluated at its tangent space and add into another Hessian. Before 
-  // calling this function, computeConfigurationJacobian() must be called. 
-  // Argments: 
-  //   hessian_at_configuration: The Hessian evaluated at the configuration 
-  //     space. Size must be dimq() x dimq().
-  //   coeff: The coefficient at augmenting the hessian.
-  //   augmented_hessian_at_tangent: The augmented Hessian the transformed
-  //    hessian_at_configuration is added. Size must be dimv() x dimv().
-  void augmentTangentHessian(const Eigen::MatrixXd& hessian_at_configuration, 
-                             const double coeff,
-                             Eigen::MatrixXd& augmented_hessian_at_tangent) const;
+  //   q: Configuration. Size must be dimq.
+  //   J: Jacobian. Size must be dimq x dimv.
+  void computeConfigurationJacobian(const Eigen::VectorXd& q, 
+                                    Eigen::MatrixXd& J) const;
 
   // Updates the kinematics of the robot. The frame placements, frame velocity,
   // frame acceleration, and the relevant Jacobians are calculated. After that, 
@@ -157,7 +155,7 @@ public:
   // Argments: 
   //   residual: Vector where the result is stored. Size must be at least 3 and
   //     at most 3*max_point_contacts().
-  void computeBaumgarteResidual(const int block_begin, 
+  void computeBaumgarteResidual(const int segment_begin, 
                                 Eigen::VectorXd& baumgarte_residual) const;
 
   // Computes the residual of the contact constriants represented by 
@@ -168,7 +166,7 @@ public:
   //   coeff: The coefficient of the result.
   //   residual: Vector where the result is stored. Size must be at least 3 and
   //     at most 3*max_point_contacts().
-  void computeBaumgarteResidual(const int block_begin, const double coeff, 
+  void computeBaumgarteResidual(const int segment_begin, const double coeff, 
                                 Eigen::VectorXd& baumgarte_residual) const;
 
   // Computes the product of a vector and the derivatives of the contact 
@@ -184,7 +182,8 @@ public:
   //   dBaumgarte_partial_da: The matrix where the result is stored. The number 
   //     of columns must be dimv. The number of rows must be at least 3 and 
   //     at most 3*max_point_contacts().
-  void computeBaumgarteDerivatives(const int block_rows_begin,
+  void computeBaumgarteDerivatives(const int block_rows_begin, 
+                                   const int block_cols_begin,
                                    Eigen::MatrixXd& dBaumgarte_partial_dq, 
                                    Eigen::MatrixXd& dBaumgarte_partial_dv,
                                    Eigen::MatrixXd& dBaumgarte_partial_da);
@@ -193,8 +192,6 @@ public:
   // constriants represented by Baumgarte's stabilization method. 
   // Before calling this function, updateKinematics() must be called. 
   // Argments: 
-  //   block_rows_begin: The start index of the block rows where result stored.
-  //   coeff: The coefficient of the result.
   //   dBaumgarte_partial_dq: The matrix where the result is stored. The number 
   //     of columns must be dimv. The number of rows must be at least 3 and 
   //     at most 3*max_point_contacts().
@@ -205,6 +202,7 @@ public:
   //     of columns must be dimv. The number of rows must be at least 3 and 
   //     at most 3*max_point_contacts().
   void computeBaumgarteDerivatives(const int block_rows_begin, 
+                                   const int block_cols_begin,
                                    const double coeff,
                                    Eigen::MatrixXd& dBaumgarte_partial_dq, 
                                    Eigen::MatrixXd& dBaumgarte_partial_dv,
@@ -319,23 +317,24 @@ public:
   // Returns the dimensiton of the generalized velocity.
   int dimv() const;
 
-  // Returns the dimension of the contacts.
-  int dimf() const;
-
   // Returns the maximum dimension of the contacts.
   int max_dimf() const;
 
-  // Returns true if the robot has a floating base and false if not.
-  bool has_floating_base() const;
+  // Returns the dimension of the contacts.
+  int dimf() const;
 
   // Returns the dimensiton of the generalized torques corresponding to the 
   // passive joints.
   int dim_passive() const;
 
-  std::vector<int> passive_joint_indices() const;
+  // Returns true if the robot has a floating base and false if not.
+  bool has_floating_base() const;
 
   // Returns the maximum number of the contacts.
   int max_point_contacts() const;
+
+  // Returns the number of the active point contacts.
+  int num_active_point_contacts() const;
 
   // Returns true if contact[contact_index] is active. Returns false if 
   // contact[contact_index] is not active.
@@ -345,17 +344,19 @@ public:
   void printRobotModel() const;
 
 private:
+
+  void initializeJointLimits();
+
   pinocchio::Model model_;
   pinocchio::Data data_;
   std::string urdf_file_name_;
   std::vector<PointContact> point_contacts_;
   FloatingBase floating_base_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
-  int dimq_, dimv_, dimf_, max_dimf_;
+  int dimq_, dimv_, max_dimf_, dimf_, num_active_contacts_;
   std::vector<bool> is_each_contact_active_;
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,
                   lower_joint_position_limit_, upper_joint_position_limit_;
-  Eigen::MatrixXd configuration_jacobian_;
 };
 
 } // namespace idocp

@@ -65,19 +65,6 @@ TEST_F(FloatingBaseFloatingBaseTest, moveAssign) {
   EXPECT_TRUE(floating_base_ref.has_floating_base());
 }
 
-
-TEST_F(FloatingBaseFloatingBaseTest, setPassiveTorques) {
-  FloatingBase floating_base(model_);
-  Eigen::VectorXd u_ref = u_;
-  floating_base.setPassiveTorques(u_);
-  EXPECT_TRUE(
-      u_.head(floating_base.dim_passive())
-      .isApprox(Eigen::VectorXd::Zero(floating_base.dim_passive())));
-  EXPECT_TRUE(
-      u_.tail(dimv_-floating_base.dim_passive())
-      .isApprox(u_ref.tail(dimv_-floating_base.dim_passive())));
-}
-
 } // namespace idocp
 
 

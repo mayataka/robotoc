@@ -15,14 +15,14 @@ Robot::Robot(const std::string& urdf_file_name)
     fjoint_(),
     dimq_(0),
     dimv_(0),
-    dimf_(0),
     max_dimf_(0),
+    dimf_(0),
+    num_active_contacts_(0),
     is_each_contact_active_(),
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
-    upper_joint_position_limit_(),
-    configuration_jacobian_() {
+    upper_joint_position_limit_() {
   pinocchio::urdf::buildModel(urdf_file_name, model_);
   data_ = pinocchio::Data(model_);
   fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
@@ -30,17 +30,7 @@ Robot::Robot(const std::string& urdf_file_name)
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
-  const int dim_joint = model_.nv - floating_base_.dim_passive();
-  joint_effort_limit_.resize(dim_joint);
-  joint_velocity_limit_.resize(dim_joint);
-  lower_joint_position_limit_.resize(dim_joint);
-  upper_joint_position_limit_.resize(dim_joint);
-  joint_effort_limit_ = model_.effortLimit.tail(dim_joint);
-  joint_velocity_limit_ = model_.velocityLimit.tail(dim_joint);
-  lower_joint_position_limit_ = model_.lowerPositionLimit.tail(dim_joint);
-  upper_joint_position_limit_ = model_.upperPositionLimit.tail(dim_joint);
-  configuration_jacobian_.resize(model_.nq, model_.nv);
-  configuration_jacobian_.fill(0);
+  initializeJointLimits();
 }
 
 
@@ -56,14 +46,14 @@ Robot::Robot(const std::string& urdf_file_name,
     fjoint_(),
     dimq_(0),
     dimv_(0),
-    dimf_(0),
     max_dimf_(0),
+    dimf_(0),
+    num_active_contacts_(0),
     is_each_contact_active_(),
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
-    upper_joint_position_limit_(),
-    configuration_jacobian_() {
+    upper_joint_position_limit_() {
   assert(baumgarte_weight_on_velocity >= 0);
   assert(baumgarte_weight_on_position >= 0);
   pinocchio::urdf::buildModel(urdf_file_name, model_);
@@ -80,17 +70,7 @@ Robot::Robot(const std::string& urdf_file_name,
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
-  const int dim_joint = model_.nv - floating_base_.dim_passive();
-  joint_effort_limit_.resize(dim_joint);
-  joint_velocity_limit_.resize(dim_joint);
-  lower_joint_position_limit_.resize(dim_joint);
-  upper_joint_position_limit_.resize(dim_joint);
-  joint_effort_limit_ = model_.effortLimit.tail(dim_joint);
-  joint_velocity_limit_ = model_.velocityLimit.tail(dim_joint);
-  lower_joint_position_limit_ = model_.lowerPositionLimit.tail(dim_joint);
-  upper_joint_position_limit_ = model_.upperPositionLimit.tail(dim_joint);
-  configuration_jacobian_.resize(model_.nq, model_.nv);
-  configuration_jacobian_.fill(0);
+  initializeJointLimits();
 }
 
 
@@ -103,14 +83,14 @@ Robot::Robot()
     fjoint_(),
     dimq_(0),
     dimv_(0),
-    dimf_(0),
     max_dimf_(0),
+    dimf_(0),
+    num_active_contacts_(0),
     is_each_contact_active_(),
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
-    upper_joint_position_limit_(),
-    configuration_jacobian_() {
+    upper_joint_position_limit_() {
 }
 
 
@@ -126,17 +106,7 @@ void Robot::buildRobotModelFromXML(const std::string& xml) {
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
-  const int dim_joint = model_.nv - floating_base_.dim_passive();
-  joint_effort_limit_.resize(dim_joint);
-  joint_velocity_limit_.resize(dim_joint);
-  lower_joint_position_limit_.resize(dim_joint);
-  upper_joint_position_limit_.resize(dim_joint);
-  joint_effort_limit_ = model_.effortLimit.tail(dim_joint);
-  joint_velocity_limit_ = model_.velocityLimit.tail(dim_joint);
-  lower_joint_position_limit_ = model_.lowerPositionLimit.tail(dim_joint);
-  upper_joint_position_limit_ = model_.upperPositionLimit.tail(dim_joint);
-  configuration_jacobian_.resize(model_.nq, model_.nv);
-  configuration_jacobian_.fill(0);
+  initializeJointLimits();
 }
 
 
@@ -158,17 +128,7 @@ void Robot::buildRobotModelFromXML(const std::string& xml,
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
-  const int dim_joint = model_.nv - floating_base_.dim_passive();
-  joint_effort_limit_.resize(dim_joint);
-  joint_velocity_limit_.resize(dim_joint);
-  lower_joint_position_limit_.resize(dim_joint);
-  upper_joint_position_limit_.resize(dim_joint);
-  joint_effort_limit_ = model_.effortLimit.tail(dim_joint);
-  joint_velocity_limit_ = model_.velocityLimit.tail(dim_joint);
-  lower_joint_position_limit_ = model_.lowerPositionLimit.tail(dim_joint);
-  upper_joint_position_limit_ = model_.upperPositionLimit.tail(dim_joint);
-  configuration_jacobian_.resize(model_.nq, model_.nv);
-  configuration_jacobian_.fill(0);
+  initializeJointLimits();
 }
 
 
@@ -194,10 +154,28 @@ void Robot::subtractConfiguration(const Eigen::VectorXd& q_plus,
   assert(q_minus.size() == dimq_);
   assert(difference.size() == dimv_);
   if (floating_base_.has_floating_base()) {
-    pinocchio::difference(model_, q_minus, q_plus, difference);
+    difference = pinocchio::difference(model_, q_minus, q_plus);
   }
   else {
     difference = q_plus - q_minus;
+  }
+}
+
+
+void Robot::subtractConfiguration(const Eigen::VectorXd& q_plus, 
+                                  const Eigen::VectorXd& q_minus,
+                                  const int segment_begin,
+                                  Eigen::VectorXd& result) const {
+  assert(q_plus.size() == dimq_);
+  assert(q_minus.size() == dimq_);
+  assert(segment_begin >= 0);
+  assert(difference.size() >= segment_begin+dimv_);
+  if (floating_base_.has_floating_base()) {
+    result.segment(segment_begin, dimv_) 
+        = pinocchio::difference(model_, q_minus, q_plus);
+  }
+  else {
+    result.segment(segment_begin, dimv_) = q_plus - q_minus;
   }
 }
 
@@ -214,52 +192,41 @@ void Robot::dIntegrateConfiguration(const Eigen::VectorXd& q,
   assert(dIntegrate_dq.cols() == dimv_);
   assert(dIntegrate_dv.rows() == dimv_);
   assert(dIntegrate_dv.cols() == dimv_);
-  pinocchio::dIntegrate(model_, q, v, dIntegrate_dq, 
-                        pinocchio::ARG0);
-  pinocchio::dIntegrate(model_, q, v, dIntegrate_dv, 
-                        pinocchio::ARG1);
+  pinocchio::dIntegrate(model_, q, v, dIntegrate_dq, pinocchio::ARG0);
+  pinocchio::dIntegrate(model_, q, v, dIntegrate_dv, pinocchio::ARG1);
 }
 
 
-void Robot::computeConfigurationJacobian(const Eigen::VectorXd& q) {
+void Robot::dSubtractdConfigurationPlus(const Eigen::VectorXd& q_plus, 
+                                        const Eigen::VectorXd& q_minus,
+                                        Eigen::MatrixXd& dSubtract_dqplus) const {
+  assert(q_plus.size() == dimq_);
+  assert(q_minus.size() == dimv_);
+  assert(dSubtract_dq.rows() == dimv_);
+  assert(dSubtract_dq.cols() == dimv_);
+  pinocchio::dDifference(model_, q_minus, q_plus, dSubtract_dqplus, 
+                         pinocchio::ARG1);
+}
+
+
+void Robot::dSubtractdConfigurationMinus(const Eigen::VectorXd& q_plus, 
+                                         const Eigen::VectorXd& q_minus,
+                                         Eigen::MatrixXd& dSubtract_dqminus) const {
+  assert(q_plus.size() == dimq_);
+  assert(q_minus.size() == dimv_);
+  assert(dSubtract_dq.rows() == dimv_);
+  assert(dSubtract_dq.cols() == dimv_);
+  pinocchio::dDifference(model_, q_minus, q_plus, dSubtract_dqminus, 
+                         pinocchio::ARG0);
+}
+
+
+void Robot::computeConfigurationJacobian(const Eigen::VectorXd& q, 
+                                        Eigen::MatrixXd& J) const {
   assert(q.size() == dimq_);
-  pinocchio::integrateCoeffWiseJacobian(model_, q, configuration_jacobian_);
-}
-
-
-void Robot::computeTangentGradient(
-    const Eigen::VectorXd& gradient_at_configuration, 
-    Eigen::VectorXd& gradient_at_tangent) const {
-  assert(gradient_at_configuration.size() == dimq_);
-  assert(gradient_at_tangent.size() == dimv_);
-  gradient_at_tangent 
-      = configuration_jacobian_.transpose() * gradient_at_configuration;
-}
-
-
-void Robot::computeTangentHessian(
-    const Eigen::MatrixXd& hessian_at_configuration, 
-    Eigen::MatrixXd& hessian_at_tangent) const {
-  assert(hessian_at_configuration.rows() == dimq_);
-  assert(hessian_at_configuration.cols() == dimq_);
-  assert(hessian_at_tangent.rows() == dimv_);
-  assert(hessian_at_tangent.cols() == dimv_);
-  hessian_at_tangent 
-      = configuration_jacobian_.transpose() * hessian_at_configuration
-                                            * configuration_jacobian_;
-}
-
-
-void Robot::augmentTangentHessian(
-    const Eigen::MatrixXd& hessian_at_configuration, const double coeff,
-    Eigen::MatrixXd& augmented_hessian_at_tangent) const {
-  assert(hessian_at_configuration.rows() == dimq_);
-  assert(hessian_at_configuration.cols() == dimq_);
-  assert(augmented_hessian_at_tangent.rows() == dimv_);
-  assert(augmented_hessian_at_tangent.cols() == dimv_);
-  augmented_hessian_at_tangent.noalias()
-      += coeff * configuration_jacobian_.transpose() * hessian_at_configuration
-                                                     * configuration_jacobian_;
+  assert(J.rows() == dimq_);
+  assert(J.cols() == dimv_);
+  pinocchio::integrateCoeffWiseJacobian(model_, q, J);
 }
 
 
@@ -274,28 +241,14 @@ void Robot::updateKinematics(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 }
 
 
-void Robot::computeBaumgarteResidual(const int block_begin, 
+void Robot::computeBaumgarteResidual(const int segment_begin, 
                                      Eigen::VectorXd& baumgarte_residual) const {
   assert(baumgarte_residual.size() >= max_dimf_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, block_begin+3*num_active_contacts, baumgarte_residual);
-      ++num_active_contacts;
-    }
-  }
-}
-
-
-void Robot::computeBaumgarteResidual(const int block_begin, const double coeff, 
-                                     Eigen::VectorXd& baumgarte_residual) const {
-  assert(baumgarte_residual.size() >= max_dimf_);
-  int num_active_contacts = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (point_contacts_[i].isActive()) {
-      point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, block_begin+3*num_active_contacts, coeff, 
+          model_, data_, segment_begin+3*num_active_contacts, 
           baumgarte_residual);
       ++num_active_contacts;
     }
@@ -303,22 +256,15 @@ void Robot::computeBaumgarteResidual(const int block_begin, const double coeff,
 }
 
 
-void Robot::computeBaumgarteDerivatives(const int block_rows_begin,
-                                        Eigen::MatrixXd& baumgarte_partial_dq, 
-                                        Eigen::MatrixXd& baumgarte_partial_dv,
-                                        Eigen::MatrixXd& baumgarte_partial_da) {
-  assert(baumgarte_partial_dq.cols() == dimv_);
-  assert(baumgarte_partial_dq.rows() == block_rows_begin+max_dimf_);
-  assert(baumgarte_partial_dv.cols() == dimv_);
-  assert(baumgarte_partial_dv.rows() == block_rows_begin+max_dimf_);
-  assert(baumgarte_partial_da.cols() == dimv_);
-  assert(baumgarte_partial_da.rows() == block_rows_begin+max_dimf_);
+void Robot::computeBaumgarteResidual(const int segment_begin, const double coeff, 
+                                     Eigen::VectorXd& baumgarte_residual) const {
+  assert(baumgarte_residual.size() >= max_dimf_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
-      point_contacts_[i].computeBaumgarteDerivatives(
-          model_, data_, block_rows_begin+3*num_active_contacts, 
-          baumgarte_partial_dq, baumgarte_partial_dv, baumgarte_partial_da);
+      point_contacts_[i].computeBaumgarteResidual(
+          model_, data_, segment_begin+3*num_active_contacts, coeff, 
+          baumgarte_residual);
       ++num_active_contacts;
     }
   }
@@ -326,22 +272,48 @@ void Robot::computeBaumgarteDerivatives(const int block_rows_begin,
 
 
 void Robot::computeBaumgarteDerivatives(const int block_rows_begin, 
-                                        const double coeff,
+                                        const int block_cols_begin,
                                         Eigen::MatrixXd& baumgarte_partial_dq, 
                                         Eigen::MatrixXd& baumgarte_partial_dv,
                                         Eigen::MatrixXd& baumgarte_partial_da) {
-  assert(baumgarte_partial_dq.cols() == dimv_);
-  assert(baumgarte_partial_dq.rows() == block_rows_begin+max_dimf_);
-  assert(baumgarte_partial_dv.cols() == dimv_);
-  assert(baumgarte_partial_dv.rows() == block_rows_begin+max_dimf_);
-  assert(baumgarte_partial_da.cols() == dimv_);
-  assert(baumgarte_partial_da.rows() == block_rows_begin+max_dimf_);
+  assert(baumgarte_partial_dq.rows() >= block_rows_begin+max_dimf_);
+  assert(baumgarte_partial_dq.cols() >= block_cols_begin+dimv_);
+  assert(baumgarte_partial_dv.rows() >= block_rows_begin+max_dimf_);
+  assert(baumgarte_partial_dv.cols() >= block_cols_begin+dimv_);
+  assert(baumgarte_partial_da.rows() >= block_rows_begin+max_dimf_);
+  assert(baumgarte_partial_da.cols() >= block_cols_begin+dimv_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteDerivatives(
-          model_, data_, block_rows_begin+3*num_active_contacts, coeff,
-          baumgarte_partial_dq, baumgarte_partial_dv, baumgarte_partial_da);
+          model_, data_, block_rows_begin+3*num_active_contacts, 
+          block_cols_begin, baumgarte_partial_dq, baumgarte_partial_dv, 
+          baumgarte_partial_da);
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+void Robot::computeBaumgarteDerivatives(const int block_rows_begin, 
+                                        const int block_cols_begin,
+                                        const double coeff,
+                                        Eigen::MatrixXd& baumgarte_partial_dq, 
+                                        Eigen::MatrixXd& baumgarte_partial_dv,
+                                        Eigen::MatrixXd& baumgarte_partial_da) {
+  assert(baumgarte_partial_dq.rows() >= block_rows_begin+max_dimf_);
+  assert(baumgarte_partial_dq.cols() >= block_cols_begin+dimv_);
+  assert(baumgarte_partial_dv.rows() >= block_rows_begin+max_dimf_);
+  assert(baumgarte_partial_dv.cols() >= block_cols_begin+dimv_);
+  assert(baumgarte_partial_da.rows() >= block_rows_begin+max_dimf_);
+  assert(baumgarte_partial_da.cols() >= block_cols_begin+dimv_);
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeBaumgarteDerivatives(
+          model_, data_, block_rows_begin+3*num_active_contacts, 
+          block_cols_begin, coeff, baumgarte_partial_dq, baumgarte_partial_dv, 
+          baumgarte_partial_da);
       ++num_active_contacts;
     }
   }
@@ -376,6 +348,7 @@ void Robot::setContactStatus(const std::vector<bool>& is_each_contact_active) {
       point_contacts_[i].deactivate();
     }
   }
+  num_active_contacts_ = num_active_contacts;
   dimf_ = 3 * num_active_contacts;
 }
 
@@ -442,13 +415,13 @@ void Robot::RNEADerivatives(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 
 
 void Robot::dRNEAPartialdFext(Eigen::MatrixXd& dRNEA_partial_dfext) {
-  assert(dRNEA_partial_dfext.cols() == max_dimf_);
   assert(dRNEA_partial_dfext.rows() == dimv_);
+  assert(dRNEA_partial_dfext.cols() >= max_dimf_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].getContactJacobian(model_, data_,  
-                                            3*num_active_contacts, -1,
+                                            0, 3*num_active_contacts, -1,
                                             dRNEA_partial_dfext, true);
       ++num_active_contacts;
     }
@@ -556,18 +529,13 @@ int Robot::dimv() const {
 }
 
 
-int Robot::dimf() const {
-  return dimf_;
-}
-
-
 int Robot::max_dimf() const {
   return max_dimf_;
 }
 
 
-bool Robot::has_floating_base() const {
-  return floating_base_.has_floating_base();
+int Robot::dimf() const {
+  return dimf_;
 }
 
 
@@ -576,13 +544,18 @@ int Robot::dim_passive() const {
 }
 
 
-std::vector<int> Robot::passive_joint_indices() const {
-  return floating_base_.passive_joint_indices();
+bool Robot::has_floating_base() const {
+  return floating_base_.has_floating_base();
 }
 
 
 int Robot::max_point_contacts() const {
   return point_contacts_.size();
+}
+
+
+int Robot::num_active_point_contacts() const {
+  return num_active_contacts_;
 }
 
 
@@ -607,6 +580,19 @@ void Robot::printRobotModel() const {
             << "]" << std::endl;
   std::cout << "upperPositionLimit = [" << model_.upperPositionLimit.transpose() 
             << "]" << std::endl;
+}
+
+
+void Robot::initializeJointLimits() {
+  const int dim_joint = model_.nv - floating_base_.dim_passive();
+  joint_effort_limit_.resize(dim_joint);
+  joint_velocity_limit_.resize(dim_joint);
+  lower_joint_position_limit_.resize(dim_joint);
+  upper_joint_position_limit_.resize(dim_joint);
+  joint_effort_limit_ = model_.effortLimit.tail(dim_joint);
+  joint_velocity_limit_ = model_.velocityLimit.tail(dim_joint);
+  lower_joint_position_limit_ = model_.lowerPositionLimit.tail(dim_joint);
+  upper_joint_position_limit_ = model_.upperPositionLimit.tail(dim_joint);
 }
 
 } // namespace idocp 

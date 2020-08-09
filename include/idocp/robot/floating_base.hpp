@@ -36,13 +36,6 @@ public:
   // Use dafule move assign operator.
   FloatingBase& operator=(FloatingBase&&) noexcept = default;
 
-  // Substitutes zero in the generalized torques tau corresponding to the 
-  // passive joints.
-  // Argments:
-  //   torques: The generalized torques for fully actuated system. The size 
-  //     must be dimv.
-  void setPassiveTorques(Eigen::VectorXd& torques) const;
-
   // Returns the dimension of the torques correspoinding to the passive joints.
   int dim_passive() const;
 

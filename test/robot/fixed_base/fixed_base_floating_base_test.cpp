@@ -69,14 +69,6 @@ TEST_F(FixedBaseFloatingBaseTest, moveConstructor) {
   EXPECT_FALSE(floating_base_ref.has_floating_base());
 }
 
-
-TEST_F(FixedBaseFloatingBaseTest, setPassiveTorques) {
-  FloatingBase floating_base(model_);
-  Eigen::VectorXd u_ref = u_;
-  floating_base.setPassiveTorques(u_);
-  EXPECT_TRUE(u_.isApprox(u_));
-}
-
 } // namespace idocp
 
 

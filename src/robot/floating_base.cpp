@@ -39,14 +39,6 @@ FloatingBase::~FloatingBase() {
 }
 
 
-void FloatingBase::setPassiveTorques(Eigen::VectorXd& torques) const {
-  assert(torques.size() == dimv_);
-  for (int i=0; i<passive_joint_indices_.size(); ++i) {
-    torques.coeffRef(passive_joint_indices_[i]) = 0.0;
-  }
-}
-
-
 int FloatingBase::dim_passive() const {
   return passive_joint_indices_.size();
 }
