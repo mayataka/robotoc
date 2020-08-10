@@ -21,11 +21,11 @@ inline void linearizeStageCost(Robot& robot,
                                std::shared_ptr<CostFunction>& cost, 
                                CostFunctionData& cost_data,
                                const double t, const double dtau, 
-                               const Eigen::Ref<const Eigen::VectorXd> q, 
-                               const Eigen::Ref<const Eigen::VectorXd> v, 
-                               const Eigen::Ref<const Eigen::VectorXd> a, 
-                               const Eigen::Ref<const Eigen::VectorXd> f, 
-                               const Eigen::Ref<const Eigen::VectorXd> u, 
+                               const Eigen::Ref<const Eigen::VectorXd>& q, 
+                               const Eigen::Ref<const Eigen::VectorXd>& v, 
+                               const Eigen::Ref<const Eigen::VectorXd>& a, 
+                               const Eigen::Ref<const Eigen::VectorXd>& f, 
+                               const Eigen::Ref<const Eigen::VectorXd>& u, 
                                KKTResidual& kkt_residual,
                                Eigen::Ref<Eigen::VectorXd> lu) {
   assert(dtau > 0);
@@ -35,9 +35,6 @@ inline void linearizeStageCost(Robot& robot,
   assert(f.size() == robot.max_dimf());
   assert(u.size() == robot.dimv());
   assert(lu.size() == robot.dimv());
-  if (robot.has_floating_base()) {
-    robot.computeConfigurationJacobian(q, cost_data.configuration_jacobian);
-  }
   cost->lq(robot, cost_data, t, dtau, q, v, a, kkt_residual.lq());
   cost->lv(robot, cost_data, t, dtau, q, v, a, kkt_residual.lv());
   cost->la(robot, cost_data, t, dtau, q, v, a, kkt_residual.la());
@@ -47,13 +44,13 @@ inline void linearizeStageCost(Robot& robot,
 
 
 inline void linearizeDynamics(Robot& robot, const double dtau,
-                              const Eigen::Ref<const Eigen::VectorXd> q, 
-                              const Eigen::Ref<const Eigen::VectorXd> v, 
-                              const Eigen::Ref<const Eigen::VectorXd> a, 
-                              const Eigen::Ref<const Eigen::VectorXd> f, 
-                              const Eigen::Ref<const Eigen::VectorXd> u, 
-                              const Eigen::Ref<const Eigen::VectorXd> q_prev, 
-                              const Eigen::Ref<const Eigen::VectorXd> v_prev, 
+                              const Eigen::Ref<const Eigen::VectorXd>& q, 
+                              const Eigen::Ref<const Eigen::VectorXd>& v, 
+                              const Eigen::Ref<const Eigen::VectorXd>& a, 
+                              const Eigen::Ref<const Eigen::VectorXd>& f, 
+                              const Eigen::Ref<const Eigen::VectorXd>& u, 
+                              const Eigen::Ref<const Eigen::VectorXd>& q_prev, 
+                              const Eigen::Ref<const Eigen::VectorXd>& v_prev, 
                               KKTResidual& kkt_residual,
                               Eigen::Ref<Eigen::VectorXd> u_res,
                               Eigen::Ref<Eigen::MatrixXd> du_dq,
@@ -93,12 +90,12 @@ inline void linearizeDynamics(Robot& robot, const double dtau,
 
 
 inline void linearizeConstraints(Robot& robot, const double dtau,
-                                 const Eigen::Ref<const Eigen::VectorXd> u, 
-                                 const Eigen::Ref<const Eigen::VectorXd> u_res, 
-                                 const Eigen::Ref<const Eigen::MatrixXd> du_dq, 
-                                 const Eigen::Ref<const Eigen::MatrixXd> du_dv, 
-                                 const Eigen::Ref<const Eigen::MatrixXd> du_da, 
-                                 const Eigen::Ref<const Eigen::MatrixXd> du_df, 
+                                 const Eigen::Ref<const Eigen::VectorXd>& u, 
+                                 const Eigen::Ref<const Eigen::VectorXd>& u_res, 
+                                 const Eigen::Ref<const Eigen::MatrixXd>& du_dq, 
+                                 const Eigen::Ref<const Eigen::MatrixXd>& du_dv, 
+                                 const Eigen::Ref<const Eigen::MatrixXd>& du_da, 
+                                 const Eigen::Ref<const Eigen::MatrixXd>& du_df, 
                                  KKTResidual& kkt_residual,
                                  KKTMatrix& kkt_matrix) {
   assert(dtau > 0);

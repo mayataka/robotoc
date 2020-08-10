@@ -139,7 +139,7 @@ void Robot::buildRobotModelFromXML(const std::string& xml,
 }
 
 
-void Robot::integrateConfiguration(const Eigen::Ref<const Eigen::VectorXd> v, 
+void Robot::integrateConfiguration(const Eigen::Ref<const Eigen::VectorXd>& v, 
                                    const double integration_length, 
                                    Eigen::Ref<Eigen::VectorXd> q) const {
   assert(v.size() == dimv_);
@@ -155,8 +155,8 @@ void Robot::integrateConfiguration(const Eigen::Ref<const Eigen::VectorXd> v,
 
 
 void Robot::subtractConfiguration(
-    const Eigen::Ref<const Eigen::VectorXd> q_plus, 
-    const Eigen::Ref<const Eigen::VectorXd> q_minus, 
+    const Eigen::Ref<const Eigen::VectorXd>& q_plus, 
+    const Eigen::Ref<const Eigen::VectorXd>& q_minus, 
     Eigen::Ref<Eigen::VectorXd> difference) const {
   assert(q_plus.size() == dimq_);
   assert(q_minus.size() == dimq_);
@@ -171,8 +171,8 @@ void Robot::subtractConfiguration(
 
 
 void Robot::dIntegrateConfiguration(
-    const Eigen::Ref<const Eigen::VectorXd> q, 
-    const Eigen::Ref<const Eigen::VectorXd> v, const double integration_length,
+    const Eigen::Ref<const Eigen::VectorXd>& q, 
+    const Eigen::Ref<const Eigen::VectorXd>& v, const double integration_length,
     Eigen::Ref<Eigen::MatrixXd> dIntegrate_dq, 
     Eigen::Ref<Eigen::MatrixXd> dIntegrate_dv) const {
   assert(q.size() == dimq_);
@@ -188,8 +188,8 @@ void Robot::dIntegrateConfiguration(
 
 
 void Robot::dSubtractdConfigurationPlus(
-      const Eigen::Ref<const Eigen::VectorXd> q_plus,
-      const Eigen::Ref<const Eigen::VectorXd> q_minus,
+      const Eigen::Ref<const Eigen::VectorXd>& q_plus,
+      const Eigen::Ref<const Eigen::VectorXd>& q_minus,
       Eigen::Ref<Eigen::MatrixXd> dSubtract_dqplus) const {
   assert(q_plus.size() == dimq_);
   assert(q_minus.size() == dimv_);
@@ -201,8 +201,8 @@ void Robot::dSubtractdConfigurationPlus(
 
 
 void Robot::dSubtractdConfigurationMinus(
-      const Eigen::Ref<const Eigen::VectorXd> q_plus,
-      const Eigen::Ref<const Eigen::VectorXd> q_minus,
+      const Eigen::Ref<const Eigen::VectorXd>& q_plus,
+      const Eigen::Ref<const Eigen::VectorXd>& q_minus,
       Eigen::Ref<Eigen::MatrixXd> dSubtract_dqminus) const {
   assert(q_plus.size() == dimq_);
   assert(q_minus.size() == dimv_);
@@ -214,7 +214,7 @@ void Robot::dSubtractdConfigurationMinus(
 
 
 void Robot::computeConfigurationJacobian(
-    const Eigen::Ref<const Eigen::VectorXd> q, 
+    const Eigen::Ref<const Eigen::VectorXd>& q, 
     Eigen::Ref<Eigen::MatrixXd> J) const {
   assert(q.size() == dimq_);
   assert(J.rows() == dimq_);
@@ -223,9 +223,9 @@ void Robot::computeConfigurationJacobian(
 }
 
 
-void Robot::updateKinematics(const Eigen::Ref<const Eigen::VectorXd> q, 
-                             const Eigen::Ref<const Eigen::VectorXd> v, 
-                             const Eigen::Ref<const Eigen::VectorXd> a) {
+void Robot::updateKinematics(const Eigen::Ref<const Eigen::VectorXd>& q, 
+                             const Eigen::Ref<const Eigen::VectorXd>& v, 
+                             const Eigen::Ref<const Eigen::VectorXd>& a) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
@@ -337,7 +337,7 @@ void Robot::setContactStatus(const std::vector<bool>& is_each_contact_active) {
 }
 
 
-void Robot::setContactForces(const Eigen::Ref<const Eigen::VectorXd> f) {
+void Robot::setContactForces(const Eigen::Ref<const Eigen::VectorXd>& f) {
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
@@ -353,9 +353,9 @@ void Robot::setContactForces(const Eigen::Ref<const Eigen::VectorXd> f) {
 }
 
 
-void Robot::RNEA(const Eigen::Ref<const Eigen::VectorXd> q, 
-                 const Eigen::Ref<const Eigen::VectorXd> v, 
-                 const Eigen::Ref<const Eigen::VectorXd> a, 
+void Robot::RNEA(const Eigen::Ref<const Eigen::VectorXd>& q, 
+                 const Eigen::Ref<const Eigen::VectorXd>& v, 
+                 const Eigen::Ref<const Eigen::VectorXd>& a, 
                  Eigen::Ref<Eigen::VectorXd> tau) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
@@ -371,9 +371,9 @@ void Robot::RNEA(const Eigen::Ref<const Eigen::VectorXd> q,
 }
 
 
-void Robot::RNEADerivatives(const Eigen::Ref<const Eigen::VectorXd> q, 
-                            const Eigen::Ref<const Eigen::VectorXd> v, 
-                            const Eigen::Ref<const Eigen::VectorXd> a,
+void Robot::RNEADerivatives(const Eigen::Ref<const Eigen::VectorXd>& q, 
+                            const Eigen::Ref<const Eigen::VectorXd>& v, 
+                            const Eigen::Ref<const Eigen::VectorXd>& a,
                             Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dq, 
                             Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dv, 
                             Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_da) {
@@ -414,9 +414,9 @@ void Robot::dRNEAPartialdFext(Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dfext) {
 }
 
 
-void Robot::stateEquation(const Eigen::Ref<const Eigen::VectorXd> q, 
-                          const Eigen::Ref<const Eigen::VectorXd> v, 
-                          const Eigen::Ref<const Eigen::VectorXd> tau, 
+void Robot::stateEquation(const Eigen::Ref<const Eigen::VectorXd>& q, 
+                          const Eigen::Ref<const Eigen::VectorXd>& v, 
+                          const Eigen::Ref<const Eigen::VectorXd>& tau, 
                           Eigen::Ref<Eigen::VectorXd> dq,
                           Eigen::Ref<Eigen::VectorXd> dv) {
   assert(q.size() == dimq_);

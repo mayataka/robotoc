@@ -36,11 +36,11 @@ void ContactCost::set_f_weight(const Eigen::VectorXd& f_weight) {
 
 double ContactCost::l(const Robot& robot, CostFunctionData& data, 
                       const double t, const double dtau, 
-                      const Eigen::Ref<const Eigen::VectorXd> q, 
-                      const Eigen::Ref<const Eigen::VectorXd> v, 
-                      const Eigen::Ref<const Eigen::VectorXd> a, 
-                      const Eigen::Ref<const Eigen::VectorXd> f, 
-                      const Eigen::Ref<const Eigen::VectorXd> u) const {
+                      const Eigen::Ref<const Eigen::VectorXd>& q, 
+                      const Eigen::Ref<const Eigen::VectorXd>& v, 
+                      const Eigen::Ref<const Eigen::VectorXd>& a, 
+                      const Eigen::Ref<const Eigen::VectorXd>& f, 
+                      const Eigen::Ref<const Eigen::VectorXd>& u) const {
   double l = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (robot.is_contact_active(i)) {
@@ -56,7 +56,7 @@ double ContactCost::l(const Robot& robot, CostFunctionData& data,
 
 void ContactCost::lf(const Robot& robot, CostFunctionData& data, const double t, 
                      const double dtau, 
-                     const Eigen::Ref<const Eigen::VectorXd> f, 
+                     const Eigen::Ref<const Eigen::VectorXd>& f, 
                      Eigen::Ref<Eigen::VectorXd> lf) const {
   int dimf = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
@@ -73,7 +73,7 @@ void ContactCost::lf(const Robot& robot, CostFunctionData& data, const double t,
 
 void ContactCost::lff(const Robot& robot, CostFunctionData& data, 
                       const double t, const double dtau, 
-                      const Eigen::Ref<const Eigen::VectorXd> f, 
+                      const Eigen::Ref<const Eigen::VectorXd>& f, 
                       Eigen::Ref<Eigen::MatrixXd> lff) const {
   assert(dtau > 0);
   assert(lff.rows() == robot.max_dimf());
@@ -92,7 +92,7 @@ void ContactCost::lff(const Robot& robot, CostFunctionData& data,
 
 void ContactCost::augment_lff(const Robot& robot, CostFunctionData& data, 
                               const double t, const double dtau, 
-                              const Eigen::Ref<const Eigen::VectorXd> f, 
+                              const Eigen::Ref<const Eigen::VectorXd>& f, 
                               Eigen::Ref<Eigen::MatrixXd> lff) const {
   assert(dtau > 0);
   assert(lff.rows() == robot.max_dimf());

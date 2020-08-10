@@ -41,11 +41,11 @@ public:
   }
 
   double l(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
-           const Eigen::Ref<const Eigen::VectorXd> v, 
-           const Eigen::Ref<const Eigen::VectorXd> a, 
-           const Eigen::Ref<const Eigen::VectorXd> f, 
-           const Eigen::Ref<const Eigen::VectorXd> u) const {
+           const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+           const Eigen::Ref<const Eigen::VectorXd>& v, 
+           const Eigen::Ref<const Eigen::VectorXd>& a, 
+           const Eigen::Ref<const Eigen::VectorXd>& f, 
+           const Eigen::Ref<const Eigen::VectorXd>& u) const {
     assert(dtau > 0);
     assert(q.size() == robot.dimq());
     assert(v.size() == robot.dimv());
@@ -60,8 +60,8 @@ public:
   }
 
   double phi(const Robot& robot, CostFunctionData& data, const double t, 
-             const Eigen::Ref<const Eigen::VectorXd> q, 
-             const Eigen::Ref<const Eigen::VectorXd> v) const {
+             const Eigen::Ref<const Eigen::VectorXd>& q, 
+             const Eigen::Ref<const Eigen::VectorXd>& v) const {
     assert(q.size() == robot.dimq());
     assert(v.size() == robot.dimv());
     double phi = 0;
@@ -72,9 +72,9 @@ public:
   }
 
   void lq(const Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
-          const Eigen::Ref<const Eigen::VectorXd> v, 
-          const Eigen::Ref<const Eigen::VectorXd> a, 
+          const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+          const Eigen::Ref<const Eigen::VectorXd>& v, 
+          const Eigen::Ref<const Eigen::VectorXd>& a, 
           Eigen::Ref<Eigen::VectorXd> lq) const {
     assert(dtau > 0);
     assert(q.size() == robot.dimq());
@@ -87,9 +87,9 @@ public:
   }
 
   void lv(const Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
-          const Eigen::Ref<const Eigen::VectorXd> v, 
-          const Eigen::Ref<const Eigen::VectorXd> a, 
+          const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+          const Eigen::Ref<const Eigen::VectorXd>& v, 
+          const Eigen::Ref<const Eigen::VectorXd>& a, 
           Eigen::Ref<Eigen::VectorXd> lv) const {
     assert(dtau > 0);
     assert(q.size() == robot.dimq());
@@ -102,9 +102,9 @@ public:
   }
 
   void la(const Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
-          const Eigen::Ref<const Eigen::VectorXd> v, 
-          const Eigen::Ref<const Eigen::VectorXd> a, 
+          const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+          const Eigen::Ref<const Eigen::VectorXd>& v, 
+          const Eigen::Ref<const Eigen::VectorXd>& a, 
           Eigen::Ref<Eigen::VectorXd> la) const {
     assert(dtau > 0);
     assert(q.size() == robot.dimq());
@@ -117,7 +117,7 @@ public:
   }
 
   void lf(const Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const Eigen::Ref<const Eigen::VectorXd> f, 
+          const double dtau, const Eigen::Ref<const Eigen::VectorXd>& f, 
           Eigen::Ref<Eigen::VectorXd> lf) const {
     assert(dtau > 0);
     assert(f.size() >= robot.dimf());
@@ -128,7 +128,7 @@ public:
   }
 
   void lu(const Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const Eigen::Ref<const Eigen::VectorXd> u, 
+          const double dtau, const Eigen::Ref<const Eigen::VectorXd>& u, 
           Eigen::Ref<Eigen::VectorXd> lu) const {
     assert(dtau > 0);
     assert(u.size() == robot.dimv());
@@ -139,9 +139,9 @@ public:
   }
 
   void lqq(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
-           const Eigen::Ref<const Eigen::VectorXd> v, 
-           const Eigen::Ref<const Eigen::VectorXd> a, 
+           const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+           const Eigen::Ref<const Eigen::VectorXd>& v, 
+           const Eigen::Ref<const Eigen::VectorXd>& a, 
            Eigen::Ref<Eigen::MatrixXd> lqq) const {
     assert(dtau > 0);
     assert(q.size() == robot.dimq());
@@ -155,9 +155,9 @@ public:
   }
 
   void lvv(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
-           const Eigen::Ref<const Eigen::VectorXd> v, 
-           const Eigen::Ref<const Eigen::VectorXd> a, 
+           const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+           const Eigen::Ref<const Eigen::VectorXd>& v, 
+           const Eigen::Ref<const Eigen::VectorXd>& a, 
            Eigen::Ref<Eigen::MatrixXd> lvv) const {
     assert(dtau > 0);
     assert(q.size() == robot.dimq());
@@ -171,9 +171,9 @@ public:
   }
 
   void laa(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
-           const Eigen::Ref<const Eigen::VectorXd> v, 
-           const Eigen::Ref<const Eigen::VectorXd> a, 
+           const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+           const Eigen::Ref<const Eigen::VectorXd>& v, 
+           const Eigen::Ref<const Eigen::VectorXd>& a, 
            Eigen::Ref<Eigen::MatrixXd> laa) const {
     assert(dtau > 0);
     assert(q.size() == robot.dimq());
@@ -187,7 +187,7 @@ public:
   }
 
   void lff(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::Ref<const Eigen::VectorXd> f, 
+           const double dtau, const Eigen::Ref<const Eigen::VectorXd>& f, 
            Eigen::Ref<Eigen::MatrixXd> lff) const {
     assert(dtau > 0);
     assert(f.size() >= robot.dimf());
@@ -199,7 +199,7 @@ public:
   }
 
   void luu(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::Ref<const Eigen::VectorXd> u, 
+           const double dtau, const Eigen::Ref<const Eigen::VectorXd>& u, 
            Eigen::Ref<Eigen::MatrixXd> luu) const {
     assert(dtau > 0);
     assert(u.size() == robot.dimv());
@@ -212,9 +212,9 @@ public:
 
   void augment_lqq(const Robot& robot, CostFunctionData& data, 
                    const double t, const double dtau, 
-                   const Eigen::Ref<const Eigen::VectorXd> q, 
-                   const Eigen::Ref<const Eigen::VectorXd> v, 
-                   const Eigen::Ref<const Eigen::VectorXd> a, 
+                   const Eigen::Ref<const Eigen::VectorXd>& q, 
+                   const Eigen::Ref<const Eigen::VectorXd>& v, 
+                   const Eigen::Ref<const Eigen::VectorXd>& a, 
                    Eigen::Ref<Eigen::MatrixXd> lqq) const {
     assert(dtau > 0);
     assert(q.size() == robot.dimq());
@@ -229,9 +229,9 @@ public:
 
   void augment_lvv(const Robot& robot, CostFunctionData& data, 
                    const double t, const double dtau, 
-                   const Eigen::Ref<const Eigen::VectorXd> q, 
-                   const Eigen::Ref<const Eigen::VectorXd> v, 
-                   const Eigen::Ref<const Eigen::VectorXd> a, 
+                   const Eigen::Ref<const Eigen::VectorXd>& q, 
+                   const Eigen::Ref<const Eigen::VectorXd>& v, 
+                   const Eigen::Ref<const Eigen::VectorXd>& a, 
                    Eigen::Ref<Eigen::MatrixXd> lvv) const {
     assert(dtau > 0);
     assert(q.size() == robot.dimq());
@@ -246,9 +246,9 @@ public:
 
   void augment_laa(const Robot& robot, CostFunctionData& data, 
                    const double t, const double dtau, 
-                   const Eigen::Ref<const Eigen::VectorXd> q, 
-                   const Eigen::Ref<const Eigen::VectorXd> v, 
-                   const Eigen::Ref<const Eigen::VectorXd> a, 
+                   const Eigen::Ref<const Eigen::VectorXd>& q, 
+                   const Eigen::Ref<const Eigen::VectorXd>& v, 
+                   const Eigen::Ref<const Eigen::VectorXd>& a, 
                    Eigen::Ref<Eigen::MatrixXd> laa) const {
     assert(dtau > 0);
     assert(q.size() == robot.dimq());
@@ -263,7 +263,7 @@ public:
 
   void augment_lff(const Robot& robot, CostFunctionData& data, 
                    const double t, const double dtau, 
-                   const Eigen::Ref<const Eigen::VectorXd> f, 
+                   const Eigen::Ref<const Eigen::VectorXd>& f, 
                    Eigen::Ref<Eigen::MatrixXd> lff) const {
     assert(dtau > 0);
     assert(f.size() >= robot.dimf());
@@ -276,7 +276,7 @@ public:
 
   void augment_luu(const Robot& robot, CostFunctionData& data, 
                    const double t, const double dtau, 
-                   const Eigen::Ref<const Eigen::VectorXd> u, 
+                   const Eigen::Ref<const Eigen::VectorXd>& u, 
                    Eigen::Ref<Eigen::MatrixXd> luu) const {
     assert(dtau > 0);
     assert(u.size() == robot.dimv());
@@ -288,8 +288,8 @@ public:
   }
 
   void phiq(const Robot& robot, CostFunctionData& data, const double t, 
-            const Eigen::Ref<const Eigen::VectorXd> q, 
-            const Eigen::Ref<const Eigen::VectorXd> v, 
+            const Eigen::Ref<const Eigen::VectorXd>& q, 
+            const Eigen::Ref<const Eigen::VectorXd>& v, 
             Eigen::Ref<Eigen::VectorXd> phiq) const {
     assert(q.size() == robot.dimq());
     assert(v.size() == robot.dimv());
@@ -300,8 +300,8 @@ public:
   }
 
   void phiv(const Robot& robot, CostFunctionData& data, const double t, 
-            const Eigen::Ref<const Eigen::VectorXd> q, 
-            const Eigen::Ref<const Eigen::VectorXd> v, 
+            const Eigen::Ref<const Eigen::VectorXd>& q, 
+            const Eigen::Ref<const Eigen::VectorXd>& v, 
             Eigen::Ref<Eigen::VectorXd> phiv) const {
     assert(q.size() == robot.dimq());
     assert(v.size() == robot.dimv());
@@ -312,8 +312,8 @@ public:
   }
 
   void phiqq(const Robot& robot, CostFunctionData& data, const double t, 
-             const Eigen::Ref<const Eigen::VectorXd> q, 
-             const Eigen::Ref<const Eigen::VectorXd> v, 
+             const Eigen::Ref<const Eigen::VectorXd>& q, 
+             const Eigen::Ref<const Eigen::VectorXd>& v, 
              Eigen::Ref<Eigen::MatrixXd> phiqq) const {
     assert(q.size() == robot.dimq());
     assert(v.size() == robot.dimv());
@@ -325,8 +325,8 @@ public:
   }
 
   void phivv(const Robot& robot, CostFunctionData& data, const double t, 
-             const Eigen::Ref<const Eigen::VectorXd> q, 
-             const Eigen::Ref<const Eigen::VectorXd> v, 
+             const Eigen::Ref<const Eigen::VectorXd>& q, 
+             const Eigen::Ref<const Eigen::VectorXd>& v, 
              Eigen::Ref<Eigen::MatrixXd> phivv) const {
     assert(q.size() == robot.dimq());
     assert(v.size() == robot.dimv());

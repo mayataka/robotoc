@@ -158,11 +158,11 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   // Extract active blocks for matrices with associated with contacts.
   const Eigen::Ref<const Eigen::MatrixXd> du_df_active 
       = du_df_.leftCols(robot.dimf());
-  const Eigen::Ref<const Eigen::VectorXd> mu_active 
+  const Eigen::Ref<const Eigen::VectorXd>& mu_active 
       = mu.head(robot.dim_passive()+robot.dimf());
-  const Eigen::Ref<const Eigen::VectorXd> mu_passive 
+  const Eigen::Ref<const Eigen::VectorXd>& mu_passive 
       = mu.head(robot.dim_passive());
-  const Eigen::Ref<const Eigen::VectorXd> f_active = f.head(robot.dimf());
+  const Eigen::Ref<const Eigen::VectorXd>& f_active = f.head(robot.dimf());
   Eigen::Ref<Eigen::VectorXd> mu_tmp_acitve = mu_tmp_.head(robot.dim_passive());
   Eigen::Ref<Eigen::VectorXd> f_tmp_active = f_tmp_.head(robot.dimf());
   // Compute KKT residual and KKT matrix.
@@ -581,11 +581,11 @@ double SplitParNMPC::squaredKKTErrorNorm(Robot& robot, const double t,
   // Extract active blocks for matrices with associated with contacts.
   const Eigen::Ref<const Eigen::MatrixXd> du_df_active 
       = du_df_.leftCols(robot.dimf());
-  const Eigen::Ref<const Eigen::VectorXd> mu_active 
+  const Eigen::Ref<const Eigen::VectorXd>& mu_active 
       = mu.head(robot.dim_passive()+robot.dimf());
-  const Eigen::Ref<const Eigen::VectorXd> mu_passive 
+  const Eigen::Ref<const Eigen::VectorXd>& mu_passive 
       = mu.head(robot.dim_passive());
-  const Eigen::Ref<const Eigen::VectorXd> f_active = f.head(robot.dimf());
+  const Eigen::Ref<const Eigen::VectorXd>& f_active = f.head(robot.dimf());
   Eigen::Ref<Eigen::VectorXd> mu_tmp_acitve = mu_tmp_.head(robot.dim_passive());
   Eigen::Ref<Eigen::VectorXd> f_tmp_active = f_tmp_.head(robot.dimf());
   // Compute KKT residual and KKT matrix.
