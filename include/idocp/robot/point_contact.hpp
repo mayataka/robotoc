@@ -97,7 +97,8 @@ public:
   //      Jacobian is transposed. If false, the Jacobian is not transposed, 
   //      i.e., the original Jacobian is returned.
   void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
-                          Eigen::Ref<Matrix3Xd> Jacobian);
+                          Eigen::Ref<Eigen::MatrixXd> Jacobian,
+                          const bool transpose=false);
 
   // Computes the 3xdimv contact Jacobian represented in the local coordinate 
   // of the contact frame. Before calling this function, you have to update the 
@@ -113,7 +114,9 @@ public:
   //      Jacobian is transposed. If false, the Jacobian is not transposed, 
   //      i.e., the original Jacobian is returned.
   void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
-                          Eigen::Ref<Matrix3Xd> Jacobian, const double coeff);
+                          const double coeff, 
+                          Eigen::Ref<Eigen::MatrixXd> Jacobian,
+                          const bool transpose=false);
 
   // Computes the residual of the contact constraints considered by the 
   // Baumgarte's stabilization method. Before calling this function, you have 

@@ -6,9 +6,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/cost/cost_function_interface.hpp"
-#include "idocp/cost/cost_function_data.hpp"
-#include "idocp/constraints/constraints_interface.hpp"
+#include "idocp/ocp/kkt_composition.hpp"
 
 
 namespace idocp {
@@ -18,25 +16,14 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   KKTMatrix(const Robot& robot) 
-    : kkt_matrix_(Eigen::MatrixXd::Zero(
-          5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive(),
-          5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
-      identity_matrix_(Eigen::MatrixXd::Identity(
-          5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive(),
-          5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive()))
-      dimv_(robot.dimv()),
-      dim_passive_(robot.dim_passive()),
-      dimf_(robot.dimf()),
-      dimc_(robot.dim_passive()+robot.dimf()) {
+    : kkt_composition_(robot),
+      kkt_matrix_(Eigen::MatrixXd::Zero(kkt_composition_.max_dimKKT(), 
+                                        kkt_composition_.max_dimKKT())) {
   }
 
   KKTMatrix() 
-    : kkt_matrix_(),
-      identity_matrix_(),
-      dimv_(0),
-      dim_passive_(0),
-      dimf_(0),
-      dimc_(0) {
+    : kkt_composition_(),
+      kkt_matrix_() {
   }
 
   ~KKTMatrix() {
@@ -51,143 +38,212 @@ public:
   KKTMatrix& operator=(KKTMatrix&&) noexcept = default;
 
   void setContactStatus(const Robot& robot) {
-    assert(robot.dim_passive() == dim_passive_);
-    dimf_ = robot.dimf();
-    dimc_ = robot.dim_passive() + robot.dimf();
+    kkt_composition_.set(robot);
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> KKTMatrix {
-    const int size = 5 * dimv_ + dimc_ + dimf_;
-    return kkt_matrix_.block(0, 0, size, size);
+  inline Eigen::Ref<Eigen::MatrixXd> KKT_matrix() {
+    return kkt_matrix_.topLeftCorner(kkt_composition_.dimKKT(), 
+                                     kkt_composition_.dimKKT());
   }
 
   inline Eigen::Ref<Eigen::MatrixXd> Fqq() {
-    return kkt_matrix_.block(Fq_begin_, Qq_begin_, dimv_, dimv_);
+    return kkt_matrix_.block(kkt_composition_.Fq_begin(), 
+                             kkt_composition_.Qq_begin(), 
+                             kkt_composition_.Fq_size(), 
+                             kkt_composition_.Qq_size());
   }
 
   inline Eigen::Ref<Eigen::MatrixXd> Fqv() {
-    return kkt_matrix_.block(Fq_begin_, Qv_begin_, dimv_, dimv_);
+    return kkt_matrix_.block(kkt_composition_.Fq_begin(), 
+                             kkt_composition_.Qv_begin(), 
+                             kkt_composition_.Fq_size(), 
+                             kkt_composition_.Qv_size());
   }
 
   inline Eigen::Ref<Eigen::MatrixXd> Fvq() {
-    return kkt_matrix_.block(Fv_begin_, Qq_begin_, dimv_, dimv_);
+    return kkt_matrix_.block(kkt_composition_.Fv_begin(), 
+                             kkt_composition_.Qq_begin(), 
+                             kkt_composition_.Fv_size(), 
+                             kkt_composition_.Qq_size());
   }
 
   inline Eigen::Ref<Eigen::MatrixXd> Fvv() {
-    return kkt_matrix_.block(Fv_begin_, Qv_begin_, dimv_, dimv_);
+    return kkt_matrix_.block(kkt_composition_.Fv_begin(), 
+                             kkt_composition_.Qv_begin(), 
+                             kkt_composition_.Fv_size(), 
+                             kkt_composition_.Qv_size());
   }
 
   inline Eigen::Ref<Eigen::MatrixXd> Cq() {
-    return kkt_matrix_.block(C_begin_, Qq_begin_, dimc_, dimv_);
+    return kkt_matrix_.block(kkt_composition_.C_begin(), 
+                             kkt_composition_.Qq_begin(), 
+                             kkt_composition_.C_size(), 
+                             kkt_composition_.Qq_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Cv {
-    return kkt_matrix_.block(C_begin_, Qv_begin_, dimc_, dimv_);
+  inline Eigen::Ref<Eigen::MatrixXd> Cv() {
+    return kkt_matrix_.block(kkt_composition_.C_begin(), 
+                             kkt_composition_.Qv_begin(), 
+                             kkt_composition_.C_size(), 
+                             kkt_composition_.Qv_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Ca {
-    return kkt_matrix_.block(C_begin_, Qa_begin_, dimc_, dimv_);
+  inline Eigen::Ref<Eigen::MatrixXd> Ca() {
+    return kkt_matrix_.block(kkt_composition_.C_begin(), 
+                             kkt_composition_.Qa_begin(), 
+                             kkt_composition_.C_size(), 
+                             kkt_composition_.Qa_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Cf {
-    return kkt_matrix_.block(C_begin_+dimf_, Qf_begin_, dim_passive_, dimf_);
+  inline Eigen::Ref<Eigen::MatrixXd> Cf() {
+    return kkt_matrix_.block(kkt_composition_.C_begin(), 
+                             kkt_composition_.Qf_begin(), 
+                             kkt_composition_.C_size(), 
+                             kkt_composition_.Qf_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qaa {
-    return kkt_matrix_.block(Qa_begin_, Qa_begin_, dimv_, dimv_);
+  inline Eigen::Ref<Eigen::MatrixXd> Qaa() {
+    return kkt_matrix_.block(kkt_composition_.Qa_begin(), 
+                             kkt_composition_.Qa_begin(), 
+                             kkt_composition_.Qa_size(), 
+                             kkt_composition_.Qa_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qaf {
-    return kkt_matrix_.block(Qa_begin_, Qf_begin_, dimv_, dimf_);
+  inline Eigen::Ref<Eigen::MatrixXd> Qaf() {
+    return kkt_matrix_.block(kkt_composition_.Qa_begin(), 
+                             kkt_composition_.Qf_begin(), 
+                             kkt_composition_.Qa_size(), 
+                             kkt_composition_.Qf_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qaq {
-    return kkt_matrix_.block(Qa_begin_, Qq_begin_, dimv_, dimv_);
+  inline Eigen::Ref<Eigen::MatrixXd> Qaq() {
+    return kkt_matrix_.block(kkt_composition_.Qa_begin(), 
+                             kkt_composition_.Qq_begin(), 
+                             kkt_composition_.Qa_size(), 
+                             kkt_composition_.Qq_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qav {
-    return kkt_matrix_.block(Qa_begin_, Qv_begin_, dimv_, dimv_);
+  inline Eigen::Ref<Eigen::MatrixXd> Qav() {
+    return kkt_matrix_.block(kkt_composition_.Qa_begin(), 
+                             kkt_composition_.Qv_begin(), 
+                             kkt_composition_.Qa_size(), 
+                             kkt_composition_.Qv_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qfa {
-    return Qaf().transpose();
+  inline Eigen::Ref<Eigen::MatrixXd> Qfa() {
+    return kkt_matrix_.block(kkt_composition_.Qf_begin(), 
+                             kkt_composition_.Qa_begin(), 
+                             kkt_composition_.Qf_size(), 
+                             kkt_composition_.Qa_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qff {
-    return kkt_matrix_.block(Qf_begin_, Qf_begin_, dimf_, dimf_);
+  inline Eigen::Ref<Eigen::MatrixXd> Qff() {
+    return kkt_matrix_.block(kkt_composition_.Qf_begin(), 
+                             kkt_composition_.Qf_begin(), 
+                             kkt_composition_.Qf_size(), 
+                             kkt_composition_.Qf_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qfq {
-    return kkt_matrix_.block(Qf_begin_, Qq_begin_, dimf_, dimv_);
+  inline Eigen::Ref<Eigen::MatrixXd> Qfq() {
+    return kkt_matrix_.block(kkt_composition_.Qf_begin(), 
+                             kkt_composition_.Qq_begin(), 
+                             kkt_composition_.Qf_size(), 
+                             kkt_composition_.Qq_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qfq {
-    return kkt_matrix_.block(Qf_begin_, Qq_begin_, dimf_, dimv_);
+  inline Eigen::Ref<Eigen::MatrixXd> Qfv() {
+    return kkt_matrix_.block(kkt_composition_.Qf_begin(), 
+                             kkt_composition_.Qv_begin(), 
+                             kkt_composition_.Qf_size(), 
+                             kkt_composition_.Qv_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qfv {
-    return kkt_matrix_.block(Qf_begin_, Qv_begin_, dimf_, dimv_);
+  inline Eigen::Ref<Eigen::MatrixXd> Qqa() {
+    return kkt_matrix_.block(kkt_composition_.Qq_begin(), 
+                             kkt_composition_.Qa_begin(), 
+                             kkt_composition_.Qq_size(), 
+                             kkt_composition_.Qa_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qqa {
-    return Qaq().transpose();
+  inline Eigen::Ref<Eigen::MatrixXd> Qqf() {
+    return kkt_matrix_.block(kkt_composition_.Qq_begin(), 
+                             kkt_composition_.Qf_begin(), 
+                             kkt_composition_.Qq_size(), 
+                             kkt_composition_.Qv_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qqf {
-    return Qfq().transpose();
+  inline Eigen::Ref<Eigen::MatrixXd> Qqq() {
+    return kkt_matrix_.block(kkt_composition_.Qq_begin(), 
+                             kkt_composition_.Qq_begin(), 
+                             kkt_composition_.Qq_size(), 
+                             kkt_composition_.Qq_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qqq {
-    return kkt_matrix_.block(Qq_begin_, Qq_begin_, dimv_, dimv_);
+  inline Eigen::Ref<Eigen::MatrixXd> Qqv() {
+    return kkt_matrix_.block(kkt_composition_.Qq_begin(), 
+                             kkt_composition_.Qv_begin(), 
+                             kkt_composition_.Qq_size(), 
+                             kkt_composition_.Qv_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qqv {
-    return kkt_matrix_.block(Qq_begin_, Qv_begin_, dimv_, dimv_);
+  inline Eigen::Ref<Eigen::MatrixXd> Qva() {
+    return kkt_matrix_.block(kkt_composition_.Qv_begin(), 
+                             kkt_composition_.Qa_begin(), 
+                             kkt_composition_.Qv_size(), 
+                             kkt_composition_.Qa_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qva {
-    return Qav().transpose();
+  inline Eigen::Ref<Eigen::MatrixXd> Qvf() {
+    return kkt_matrix_.block(kkt_composition_.Qv_begin(), 
+                             kkt_composition_.Qf_begin(), 
+                             kkt_composition_.Qv_size(), 
+                             kkt_composition_.Qf_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qvf {
-    return Qfv().transpose();
+  inline Eigen::Ref<Eigen::MatrixXd> Qvq() {
+    return kkt_matrix_.block(kkt_composition_.Qv_begin(), 
+                             kkt_composition_.Qq_begin(), 
+                             kkt_composition_.Qv_size(), 
+                             kkt_composition_.Qq_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qvq {
-    return Qqv().transpose();
+  inline Eigen::Ref<Eigen::MatrixXd> Qvv() {
+    return kkt_matrix_.block(kkt_composition_.Qv_begin(), 
+                             kkt_composition_.Qv_begin(), 
+                             kkt_composition_.Qv_size(), 
+                             kkt_composition_.Qv_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> Qvv {
-    return kkt_matrix_.block(Qv_begin_, Qv_begin_, dimv_, dimv_);
-  }
-
-  void symmetrize() {
-    const int size = 5 * dimv_ + dimc_ + dimf_;
+  inline void symmetrize() {
+    const int size = kkt_composition_.dimKKT();
     kkt_matrix_.topLeftCorner(size, size)
                .triangularView<Eigen::StrictlyLower>() 
         = kkt_matrix_.topLeftCorner(size, size).transpose()
                      .triangularView<Eigen::StrictlyLower>();
   }
 
-  void invert(Eigen::Ref<Eigen::MatrixXd> kkt_matrix_inverse) {
-    const int size = 5 * dimv_ + dimc_ + dimf_;
+  inline void invert(Eigen::Ref<Eigen::MatrixXd> kkt_matrix_inverse) {
+    const int size = kkt_composition_.dimKKT();
     kkt_matrix_inverse 
         = kkt_matrix_.topLeftCorner(size, size)
-                     .llt().solve(identity_matrix_.topLeftCorner(size, size));
+                     .llt().solve(Eigen::MatrixXd::Identity(size, size));
   }
 
-  void setZero() {
+  inline void setZero() {
     kkt_matrix_.setZero();
   }
 
-  int size() const {
-    return kkt_matrix_.rows();
+  inline int dimKKT() const {
+    return kkt_composition_.dimKKT();
+  }
+
+  inline int max_dimKKT() const {
+    return kkt_composition_.max_dimKKT();
   }
 
 private:
-  Eigen::MatrixXd kkt_matrix_, identity_matrix_;
-  int dimv_, dim_passive_, dimf_, dimc_, size_, max_size_,
-      Fq_begin_, Fv_begin_, C_begin_, Qa_begin_, Qf_begin_, Qq_begin_, Qv_begin_;
+  KKTComposition kkt_composition_;
+  Eigen::MatrixXd kkt_matrix_;
 
 };
 

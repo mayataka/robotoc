@@ -316,7 +316,7 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   EXPECT_EQ(robot.is_contact_active(0), true);
   robot.updateKinematics(q_, v_, a_);
   robot.setContactPointsByCurrentKinematics();
-  robot.computeBaumgarteResidual(segment_begin, residual);
+  robot.computeBaumgarteResidual(residual.segment<3>(segment_begin));
   PointContact contact_ref(model_, contact_frame_id_, 
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
@@ -324,10 +324,10 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   pinocchio::updateFramePlacements(model_, data_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
   contact_ref.resetContactPointByCurrentKinematics(data_);
-  contact_ref.computeBaumgarteResidual(model_, data_, segment_begin, residual_ref);
+  contact_ref.computeBaumgarteResidual(model_, data_, residual_ref.segment<3>(segment_begin));
   EXPECT_TRUE(residual.isApprox(residual_ref));
   const double coeff = Eigen::VectorXd::Random(1)[0];
-  robot.computeBaumgarteResidual(segment_begin, coeff, residual);
+  robot.computeBaumgarteResidual(coeff, residual.segment<3>(segment_begin));
   EXPECT_TRUE(residual.isApprox(coeff*residual_ref));
 
   Eigen::MatrixXd baumgarte_partial_q_ref
@@ -348,8 +348,13 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
       = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
   Eigen::MatrixXd baumgarte_partial_a 
       = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
-  robot.computeBaumgarteDerivatives(block_rows_begin, block_cols_begin, baumgarte_partial_q, 
-                                    baumgarte_partial_v, baumgarte_partial_a);
+  robot.computeBaumgarteDerivatives(
+      baumgarte_partial_q.block(block_rows_begin, block_cols_begin, 
+                                robot.max_dimf(), robot.dimv()), 
+      baumgarte_partial_v.block(block_rows_begin, block_cols_begin, 
+                                robot.max_dimf(), robot.dimv()), 
+      baumgarte_partial_a.block(block_rows_begin, block_cols_begin, 
+                                robot.max_dimf(), robot.dimv()));
   EXPECT_TRUE(
       baumgarte_partial_q.block(block_rows_begin, block_cols_begin, 
                                 robot.max_dimf(), robot.dimv())
@@ -369,10 +374,14 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   Eigen::MatrixXd baumgarte_partial_a_coeff 
       = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
 
-  robot.computeBaumgarteDerivatives(block_rows_begin, block_cols_begin, coeff,  
-                                    baumgarte_partial_q_coeff, 
-                                    baumgarte_partial_v_coeff, 
-                                    baumgarte_partial_a_coeff);
+  robot.computeBaumgarteDerivatives(
+      coeff, 
+      baumgarte_partial_q_coeff.block(block_rows_begin, block_cols_begin, 
+                                      robot.max_dimf(), robot.dimv()), 
+      baumgarte_partial_v_coeff.block(block_rows_begin, block_cols_begin, 
+                                      robot.max_dimf(), robot.dimv()), 
+      baumgarte_partial_a_coeff.block(block_rows_begin, block_cols_begin, 
+                                      robot.max_dimf(), robot.dimv()));
   EXPECT_TRUE(baumgarte_partial_q_coeff.isApprox(coeff*baumgarte_partial_q));
   EXPECT_TRUE(baumgarte_partial_v_coeff.isApprox(coeff*baumgarte_partial_v));
   EXPECT_TRUE(baumgarte_partial_a_coeff.isApprox(coeff*baumgarte_partial_a));
@@ -471,7 +480,7 @@ TEST_F(FixedBaseRobotTest, RNEADerivativesWithContacts) {
   EXPECT_TRUE(dRNEA_da.isApprox(dRNEA_da_ref));
   const bool transpose_jacobian = true;
   robot.dRNEAPartialdFext(dRNEA_dfext);
-  contact_ref.getContactJacobian(model_, data_, 0, 0, -1, dRNEA_dfext_ref,
+  contact_ref.getContactJacobian(model_, data_, -1, dRNEA_dfext_ref,
                                  transpose_jacobian);
   std::cout << dRNEA_dfext_ref << std::endl;
   std::cout << dRNEA_dfext << std::endl;

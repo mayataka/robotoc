@@ -127,7 +127,7 @@ public:
   //   q: Configuration. Size must be dimq.
   //   J: Jacobian. Size must be dimq x dimv.
   void computeConfigurationJacobian(const Eigen::Ref<const Eigen::VectorXd> q, 
-                                    Eigen::Ref<Eigen::MatrixXd>& J) const;
+                                    Eigen::Ref<Eigen::MatrixXd> J) const;
 
   // Updates the kinematics of the robot. The frame placements, frame velocity,
   // frame acceleration, and the relevant Jacobians are calculated. After that, 
@@ -174,9 +174,9 @@ public:
   //     of columns must be dimv. The number of rows must be at least 3 and 
   //     at most 3*max_point_contacts().
   void computeBaumgarteDerivatives(
-      Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dq, 
-      Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dv, 
-      Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_da);
+      Eigen::Ref<Eigen::MatrixXd> baumgarte_partial_dq, 
+      Eigen::Ref<Eigen::MatrixXd> baumgarte_partial_dv, 
+      Eigen::Ref<Eigen::MatrixXd> baumgarte_partial_da);
 
   // Computes the product of a vector and the derivatives of the contact 
   // constriants represented by Baumgarte's stabilization method. 
@@ -192,9 +192,9 @@ public:
   //     of columns must be dimv. The number of rows must be at least 3 and 
   //     at most 3*max_point_contacts().
   void computeBaumgarteDerivatives(
-      const double coeff, Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dq, 
-      Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dv, 
-      Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_da);
+      const double coeff, Eigen::Ref<Eigen::MatrixXd> baumgarte_partial_dq, 
+      Eigen::Ref<Eigen::MatrixXd> baumgarte_partial_dv, 
+      Eigen::Ref<Eigen::MatrixXd> baumgarte_partial_da);
 
   // Sets the contact points.
   void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
@@ -265,7 +265,7 @@ public:
   void stateEquation(const Eigen::Ref<const Eigen::VectorXd> q, 
                      const Eigen::Ref<const Eigen::VectorXd> v, 
                      const Eigen::Ref<const Eigen::VectorXd> tau, 
-                     Eigen::Ref<Eigen::VectorXd> dq
+                     Eigen::Ref<Eigen::VectorXd> dq,
                      Eigen::Ref<Eigen::VectorXd> dv);
 
   // Generates feasible configuration randomly.

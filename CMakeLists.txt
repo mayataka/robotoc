@@ -57,7 +57,10 @@ add_library(
   # src/ocp/split_ocp.cpp
   # src/ocp/line_search_filter.cpp
   # src/ocp/ocp.cpp
-  # src/ocp/parnmpc_linearizer.cpp
+  src/ocp/kkt_composition.cpp
+  src/ocp/kkt_residual.cpp
+  src/ocp/kkt_matrix.cpp
+  src/ocp/parnmpc_linearizer.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

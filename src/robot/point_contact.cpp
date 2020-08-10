@@ -22,7 +22,6 @@ PointContact::PointContact(const pinocchio::Model& model,
     frame_a_partial_dq_(Eigen::MatrixXd::Zero(6, model.nv)),
     frame_a_partial_dv_(Eigen::MatrixXd::Zero(6, model.nv)),
     frame_a_partial_da_(Eigen::MatrixXd::Zero(6, model.nv)) {
-  assert(model.check());
   assert(contact_frame_id_ >= 0);
   assert(baumgarte_weight_on_velocity_ >= 0);
   assert(baumgarte_weight_on_position_ >= 0);
@@ -87,21 +86,41 @@ void PointContact::computeJointForceFromContactForce(
 
 void PointContact::getContactJacobian(const pinocchio::Model& model, 
                                       pinocchio::Data& data, 
-                                      Eigen::Ref<Matrix3Xd> Jacobian) {
+                                      Eigen::Ref<Eigen::MatrixXd> Jacobian,
+                                      const bool transpose) {
   pinocchio::getFrameJacobian(model, data, contact_frame_id_, pinocchio::LOCAL, 
                               J_frame_);
-  assert(Jacobian.cols() == dimv_);
-  Jacobian = J_frame_.topRows<3>(); 
+  if (transpose) {
+    assert(Jacobian.rows() == dimv_);
+    assert(Jacobian.cols() == 3);
+    Jacobian = J_frame_.topRows<3>().transpose(); 
+  } 
+  else {
+    assert(Jacobian.rows() == 3);
+    assert(Jacobian.cols() == dimv_);
+    Jacobian = J_frame_.topRows<3>(); 
+  }
 }
 
 
 void PointContact::getContactJacobian(const pinocchio::Model& model, 
                                       pinocchio::Data& data, const double coeff,
-                                      Eigen::Ref<Matrix3Xd> Jacobian) {
+                                      Eigen::Ref<Eigen::MatrixXd> Jacobian,
+                                      const bool transpose) {
   pinocchio::getFrameJacobian(model, data, contact_frame_id_, pinocchio::LOCAL, 
                               J_frame_);
-  assert(Jacobian.cols() == dimv_);
-  Jacobian = coeff * J_frame_.topRows<3>(); 
+  pinocchio::getFrameJacobian(model, data, contact_frame_id_, pinocchio::LOCAL, 
+                              J_frame_);
+  if (transpose) {
+    assert(Jacobian.rows() == dimv_);
+    assert(Jacobian.cols() == 3);
+    Jacobian = coeff * J_frame_.topRows<3>().transpose(); 
+  } 
+  else {
+    assert(Jacobian.rows() == 3);
+    assert(Jacobian.cols() == dimv_);
+    Jacobian = coeff * J_frame_.topRows<3>(); 
+  }
 }
 
 

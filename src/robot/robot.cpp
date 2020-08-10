@@ -186,8 +186,8 @@ void Robot::dSubtractdConfigurationPlus(
       Eigen::Ref<Eigen::MatrixXd> dSubtract_dqplus) const {
   assert(q_plus.size() == dimq_);
   assert(q_minus.size() == dimv_);
-  assert(dSubtract_dq.rows() == dimv_);
-  assert(dSubtract_dq.cols() == dimv_);
+  assert(dSubtract_dqplus.rows() == dimv_);
+  assert(dSubtract_dqplus.cols() == dimv_);
   pinocchio::dDifference(model_, q_minus, q_plus, dSubtract_dqplus, 
                          pinocchio::ARG1);
 }
@@ -199,8 +199,8 @@ void Robot::dSubtractdConfigurationMinus(
       Eigen::Ref<Eigen::MatrixXd> dSubtract_dqminus) const {
   assert(q_plus.size() == dimq_);
   assert(q_minus.size() == dimv_);
-  assert(dSubtract_dq.rows() == dimv_);
-  assert(dSubtract_dq.cols() == dimv_);
+  assert(dSubtract_dqminus.rows() == dimv_);
+  assert(dSubtract_dqminus.cols() == dimv_);
   pinocchio::dDifference(model_, q_minus, q_plus, dSubtract_dqminus, 
                          pinocchio::ARG0);
 }
@@ -208,7 +208,7 @@ void Robot::dSubtractdConfigurationMinus(
 
 void Robot::computeConfigurationJacobian(
     const Eigen::Ref<const Eigen::VectorXd> q, 
-    Eigen::Ref<Eigen::MatrixXd>& J) const {
+    Eigen::Ref<Eigen::MatrixXd> J) const {
   assert(q.size() == dimq_);
   assert(J.rows() == dimq_);
   assert(J.cols() == dimv_);
@@ -234,8 +234,7 @@ void Robot::computeBaumgarteResidual(
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, segment_begin+3*num_active_contacts, 
-          baumgarte_residual);
+          model_, data_, baumgarte_residual.segment<3>(3*num_active_contacts));
       ++num_active_contacts;
     }
   }
@@ -248,8 +247,8 @@ void Robot::computeBaumgarteResidual(
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, segment_begin+3*num_active_contacts, coeff, 
-          baumgarte_residual);
+          model_, data_, coeff, 
+          baumgarte_residual.segment<3>(3*num_active_contacts));
       ++num_active_contacts;
     }
   }
@@ -257,9 +256,9 @@ void Robot::computeBaumgarteResidual(
 
 
 void Robot::computeBaumgarteDerivatives(
-    Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dq, 
-    Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dv, 
-    Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_da) {
+    Eigen::Ref<Eigen::MatrixXd> baumgarte_partial_dq, 
+    Eigen::Ref<Eigen::MatrixXd> baumgarte_partial_dv, 
+    Eigen::Ref<Eigen::MatrixXd> baumgarte_partial_da) {
   assert(baumgarte_partial_dq.cols() == dimv_);
   assert(baumgarte_partial_dv.cols() == dimv_);
   assert(baumgarte_partial_da.cols() == dimv_);
@@ -268,8 +267,8 @@ void Robot::computeBaumgarteDerivatives(
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteDerivatives(
           model_, data_, 
-          baumgarte_partial_dq.block(3*num_active_contacts, 0, 3, dimv_)
-          baumgarte_partial_dv.block(3*num_active_contacts, 0, 3, dimv_)
+          baumgarte_partial_dq.block(3*num_active_contacts, 0, 3, dimv_),
+          baumgarte_partial_dv.block(3*num_active_contacts, 0, 3, dimv_),
           baumgarte_partial_da.block(3*num_active_contacts, 0, 3, dimv_));
       ++num_active_contacts;
     }
@@ -278,9 +277,9 @@ void Robot::computeBaumgarteDerivatives(
 
 
 void Robot::computeBaumgarteDerivatives(
-    const double coeff, Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dq, 
-    Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dv, 
-    Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_da) {
+    const double coeff, Eigen::Ref<Eigen::MatrixXd> baumgarte_partial_dq, 
+    Eigen::Ref<Eigen::MatrixXd> baumgarte_partial_dv, 
+    Eigen::Ref<Eigen::MatrixXd> baumgarte_partial_da) {
   assert(baumgarte_partial_dq.cols() == dimv_);
   assert(baumgarte_partial_dv.cols() == dimv_);
   assert(baumgarte_partial_da.cols() == dimv_);
@@ -289,8 +288,8 @@ void Robot::computeBaumgarteDerivatives(
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteDerivatives(
           model_, data_, coeff,
-          baumgarte_partial_dq.block(3*num_active_contacts, 0, 3, dimv_)
-          baumgarte_partial_dv.block(3*num_active_contacts, 0, 3, dimv_)
+          baumgarte_partial_dq.block(3*num_active_contacts, 0, 3, dimv_),
+          baumgarte_partial_dv.block(3*num_active_contacts, 0, 3, dimv_),
           baumgarte_partial_da.block(3*num_active_contacts, 0, 3, dimv_));
       ++num_active_contacts;
     }
@@ -332,12 +331,11 @@ void Robot::setContactStatus(const std::vector<bool>& is_each_contact_active) {
 
 
 void Robot::setContactForces(const Eigen::Ref<const Eigen::VectorXd> f) {
-  assert(fext.size() == max_dimf_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeJointForceFromContactForce(
-          fext.segment<3>(3*num_active_contacts), fjoint_);
+          f.segment<3>(3*num_active_contacts), fjoint_);
       ++num_active_contacts;
     }
     else {
@@ -402,7 +400,7 @@ void Robot::dRNEAPartialdFext(Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dfext) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].getContactJacobian(
           model_, data_,  -1, 
-          dRNEA_partial_dfext.block(0, 3*num_active_contacts, dimv_, 3).transpose());
+          dRNEA_partial_dfext.block(0, 3*num_active_contacts, dimv_, 3), true);
       ++num_active_contacts;
     }
   }
@@ -412,7 +410,7 @@ void Robot::dRNEAPartialdFext(Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dfext) {
 void Robot::stateEquation(const Eigen::Ref<const Eigen::VectorXd> q, 
                           const Eigen::Ref<const Eigen::VectorXd> v, 
                           const Eigen::Ref<const Eigen::VectorXd> tau, 
-                          Eigen::Ref<Eigen::VectorXd> dq
+                          Eigen::Ref<Eigen::VectorXd> dq,
                           Eigen::Ref<Eigen::VectorXd> dv) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
