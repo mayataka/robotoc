@@ -253,7 +253,6 @@ void PointContact::computeBaumgarteDerivatives(
 }
 
 
-
 void PointContact::activate() {
   is_active_ = true;
 }

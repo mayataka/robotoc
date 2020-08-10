@@ -70,9 +70,9 @@ public:
   //   q: Configuration. Size must be dimq().
   //   v: Generalized velocity. Size must be dimv().
   //   integration_length: The length of the integration.
-  void integrateConfiguration(const Eigen::VectorXd& v, 
+  void integrateConfiguration(const Eigen::Ref<const Eigen::VectorXd> v, 
                               const double integration_length, 
-                              Eigen::VectorXd& q) const;
+                              Eigen::Ref<Eigen::VectorXd> q) const;
 
   // Computes the difference of the two configurations at the its tangent 
   // velocity.
@@ -80,21 +80,9 @@ public:
   //   q_plus: Configuration. Size must be dimq().
   //   q_minus: Configuration. Size must be dimq().
   //   difference: The resultant tangent vector of the configuration.
-  void subtractConfiguration(const Eigen::VectorXd& q_plus, 
-                             const Eigen::VectorXd& q_minus,
+  void subtractConfiguration(const Eigen::Ref<const Eigen::VectorXd> q_plus, 
+                             const Eigen::Ref<const Eigen::VectorXd> q_minus,
                              Eigen::Ref<Eigen::VectorXd> difference) const;
-
-  // Computes the difference of the two configurations at the its tangent 
-  // velocity.
-  // Argments: 
-  //   q_plus: Configuration. Size must be dimq().
-  //   q_minus: Configuration. Size must be dimq().
-  //   segment_begin: The start index of the segment.
-  //   result: The resultant tangent vector of the configuration.
-  void subtractConfiguration(const Eigen::VectorXd& q_plus, 
-                             const Eigen::VectorXd& q_minus,
-                             const int segment_begin,
-                             Eigen::Ref<Eigen::VectorXd> result) const;
 
   // Differntiate the function of integration the generalized velocity, 
   // integration_length * v, with respect to q and v.
@@ -106,8 +94,8 @@ public:
   //     the configuratioh q.
   //   dIntegrate_dv: The partial derivative of the integration with respect to
   //     the generalized velocity v.
-  void dIntegrateConfiguration(const Eigen::VectorXd& q, 
-                               const Eigen::VectorXd& v,
+  void dIntegrateConfiguration(const Eigen::Ref<const Eigen::VectorXd> q, 
+                               const Eigen::Ref<const Eigen::VectorXd> v,
                                const double integration_length,
                                Eigen::Ref<Eigen::MatrixXd> dIntegrate_dq,
                                Eigen::Ref<Eigen::MatrixXd> dIntegrate_dv) const;
@@ -119,7 +107,8 @@ public:
   //   dSubtract_dqplus: The partial derivative of the subtraction 
   //     q_plus - p_minus with respect to the q_plus.
   void dSubtractdConfigurationPlus(
-      const Eigen::VectorXd& q_plus, const Eigen::VectorXd& q_minus,
+      const Eigen::Ref<const Eigen::VectorXd> q_plus,
+      const Eigen::Ref<const Eigen::VectorXd> q_minus,
       Eigen::Ref<Eigen::MatrixXd> dSubtract_dqplus) const;
 
   // Differntiate the function of the subtraction of the configuration.
@@ -129,15 +118,16 @@ public:
   //   dSubtract_dqplus: The partial derivative of the subtraction 
   //     q_plus - p_minus with respect to the q_minus.
   void dSubtractdConfigurationMinus(
-      const Eigen::VectorXd& q_plus, const Eigen::VectorXd& q_minus,
+      const Eigen::Ref<const Eigen::VectorXd> q_plus,
+      const Eigen::Ref<const Eigen::VectorXd> q_minus,
       Eigen::Ref<Eigen::MatrixXd> dSubtract_dqminus) const;
 
   // Computes the configuration with respect to its tangent vector.
   // Argments: 
   //   q: Configuration. Size must be dimq.
   //   J: Jacobian. Size must be dimq x dimv.
-  void computeConfigurationJacobian(const Eigen::VectorXd& q, 
-                                    Eigen::MatrixXd& J) const;
+  void computeConfigurationJacobian(const Eigen::Ref<const Eigen::VectorXd> q, 
+                                    Eigen::Ref<Eigen::MatrixXd>& J) const;
 
   // Updates the kinematics of the robot. The frame placements, frame velocity,
   // frame acceleration, and the relevant Jacobians are calculated. After that, 
@@ -146,8 +136,9 @@ public:
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
   //   a: Generalized acceleration. Size must be dimv.
-  void updateKinematics(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                        const Eigen::VectorXd& a);
+  void updateKinematics(const Eigen::Ref<const Eigen::VectorXd> q, 
+                        const Eigen::Ref<const Eigen::VectorXd> v, 
+                        const Eigen::Ref<const Eigen::VectorXd> a);
 
   // Computes the residual of the contact constriants represented by 
   // Baumgarte's stabilization method. Before calling this function, 
@@ -220,7 +211,7 @@ public:
   // setContactStatus().
   //   fext: The stack of the contact forces represented in the local frame.
   //      The size must be at most max_dimf().
-  void setContactForces(const Eigen::VectorXd& fext);
+  void setContactForces(const Eigen::Ref<const Eigen::VectorXd> f);
 
   // Computes generalized torques tau corresponding to given q, v, and a.
   // Argments: 
@@ -228,8 +219,10 @@ public:
   //   v: Generalized velocity. Size must be dimv.
   //   a: Generalized acceleration. Size must be dimv.
   //   tau: Generalized torques for fully actuated system. Size must be dimv.
-  void RNEA(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-            const Eigen::VectorXd& a, Eigen::VectorXd& tau);
+  void RNEA(const Eigen::Ref<const Eigen::VectorXd> q, 
+            const Eigen::Ref<const Eigen::VectorXd> v, 
+            const Eigen::Ref<const Eigen::VectorXd> a, 
+            Eigen::Ref<Eigen::VectorXd> tau);
 
   // Computes the partial dervatives of the function of inverse dynamics with 
   // respect to q, v, and a.
@@ -243,11 +236,12 @@ public:
   //      be dimv times dimv.
   //   dRNEA_partial_da: The matrix where the result is stored. The size must 
   //      be dimv times dimv.
-  void RNEADerivatives(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                       const Eigen::VectorXd& a, 
-                       Eigen::MatrixXd& dRNEA_partial_dq, 
-                       Eigen::MatrixXd& dRNEA_partial_dv, 
-                       Eigen::MatrixXd& dRNEA_partial_da);
+  void RNEADerivatives(const Eigen::Ref<const Eigen::VectorXd> q, 
+                       const Eigen::Ref<const Eigen::VectorXd> v, 
+                       const Eigen::Ref<const Eigen::VectorXd> a,
+                       Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dq, 
+                       Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dv, 
+                       Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_da);
 
   // Computes the partial dervatives of the function of inverse dynamics with 
   // respect to fext. This functin has to be called after calling 
@@ -255,7 +249,7 @@ public:
   // Argments: 
   //   dRNEA_partial_dfext: The matrix where the result is stored. The size must 
   //      be at least 3*max_point_contacts() times dimv.
-  void dRNEAPartialdFext(Eigen::MatrixXd& dRNEA_partial_dfext);
+  void dRNEAPartialdFext(Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dfext);
 
   // void impulse(const Eigen::VectorXd& q, const Eigen::VectorXd& v_before,
   //              const Eigen::MatrixXd& J_contacts, Eigen::VectorXd& v_after);
@@ -268,19 +262,21 @@ public:
   //   tau: Generalized torques for fully actuated system. Size must be dimv.
   //   dq: Returned generalized velocity. Size must be dimv.
   //   dv: Returned generalized acceleration. Size must be dimv.
-  void stateEquation(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                     const Eigen::VectorXd& tau, Eigen::VectorXd& dq, 
-                     Eigen::VectorXd& dv);
+  void stateEquation(const Eigen::Ref<const Eigen::VectorXd> q, 
+                     const Eigen::Ref<const Eigen::VectorXd> v, 
+                     const Eigen::Ref<const Eigen::VectorXd> tau, 
+                     Eigen::Ref<Eigen::VectorXd> dq
+                     Eigen::Ref<Eigen::VectorXd> dv);
 
   // Generates feasible configuration randomly.
   // Argments:
   //   q: The generated configuration vector. Size must be dimq.  
-  void generateFeasibleConfiguration(Eigen::VectorXd& q) const;
+  void generateFeasibleConfiguration(Eigen::Ref<Eigen::VectorXd> q) const;
 
   // Normalizes a configuration vector.
   // Argments:
   //   q: The normalized configuration vector. Size must be dimq.  
-  void normalizeConfiguration(Eigen::VectorXd& q) const;
+  void normalizeConfiguration(Eigen::Ref<Eigen::VectorXd> q) const;
 
   // Returns the effort limit of each joints.
   Eigen::VectorXd jointEffortLimit() const;

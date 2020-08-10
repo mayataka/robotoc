@@ -132,9 +132,9 @@ void Robot::buildRobotModelFromXML(const std::string& xml,
 }
 
 
-void Robot::integrateConfiguration(const Eigen::VectorXd& v, 
+void Robot::integrateConfiguration(const Eigen::Ref<const Eigen::VectorXd> v, 
                                    const double integration_length, 
-                                   Eigen::VectorXd& q) const {
+                                   Eigen::Ref<Eigen::VectorXd> q) const {
   assert(v.size() == dimv_);
   assert(integration_length >= 0);
   assert(q.size() == dimq_);
@@ -147,9 +147,10 @@ void Robot::integrateConfiguration(const Eigen::VectorXd& v,
 }
 
 
-void Robot::subtractConfiguration(const Eigen::VectorXd& q_plus, 
-                                  const Eigen::VectorXd& q_minus,
-                                  Eigen::VectorXd& difference) const {
+void Robot::subtractConfiguration(
+    const Eigen::Ref<const Eigen::VectorXd> q_plus, 
+    const Eigen::Ref<const Eigen::VectorXd> q_minus, 
+    Eigen::Ref<Eigen::VectorXd> difference) const {
   assert(q_plus.size() == dimq_);
   assert(q_minus.size() == dimq_);
   assert(difference.size() == dimv_);
@@ -162,29 +163,11 @@ void Robot::subtractConfiguration(const Eigen::VectorXd& q_plus,
 }
 
 
-void Robot::subtractConfiguration(const Eigen::VectorXd& q_plus, 
-                                  const Eigen::VectorXd& q_minus,
-                                  const int segment_begin,
-                                  Eigen::VectorXd& result) const {
-  assert(q_plus.size() == dimq_);
-  assert(q_minus.size() == dimq_);
-  assert(segment_begin >= 0);
-  assert(difference.size() >= segment_begin+dimv_);
-  if (floating_base_.has_floating_base()) {
-    result.segment(segment_begin, dimv_) 
-        = pinocchio::difference(model_, q_minus, q_plus);
-  }
-  else {
-    result.segment(segment_begin, dimv_) = q_plus - q_minus;
-  }
-}
-
-
-void Robot::dIntegrateConfiguration(const Eigen::VectorXd& q, 
-                                    const Eigen::VectorXd& v,
-                                    const double integration_length,
-                                    Eigen::MatrixXd& dIntegrate_dq,
-                                    Eigen::MatrixXd& dIntegrate_dv) const {
+void Robot::dIntegrateConfiguration(
+    const Eigen::Ref<const Eigen::VectorXd> q, 
+    const Eigen::Ref<const Eigen::VectorXd> v, const double integration_length,
+    Eigen::Ref<Eigen::MatrixXd> dIntegrate_dq, 
+    Eigen::Ref<Eigen::MatrixXd> dIntegrate_dv) const {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(integration_length >= 0);
@@ -197,9 +180,10 @@ void Robot::dIntegrateConfiguration(const Eigen::VectorXd& q,
 }
 
 
-void Robot::dSubtractdConfigurationPlus(const Eigen::VectorXd& q_plus, 
-                                        const Eigen::VectorXd& q_minus,
-                                        Eigen::MatrixXd& dSubtract_dqplus) const {
+void Robot::dSubtractdConfigurationPlus(
+      const Eigen::Ref<const Eigen::VectorXd> q_plus,
+      const Eigen::Ref<const Eigen::VectorXd> q_minus,
+      Eigen::Ref<Eigen::MatrixXd> dSubtract_dqplus) const {
   assert(q_plus.size() == dimq_);
   assert(q_minus.size() == dimv_);
   assert(dSubtract_dq.rows() == dimv_);
@@ -209,9 +193,10 @@ void Robot::dSubtractdConfigurationPlus(const Eigen::VectorXd& q_plus,
 }
 
 
-void Robot::dSubtractdConfigurationMinus(const Eigen::VectorXd& q_plus, 
-                                         const Eigen::VectorXd& q_minus,
-                                         Eigen::MatrixXd& dSubtract_dqminus) const {
+void Robot::dSubtractdConfigurationMinus(
+      const Eigen::Ref<const Eigen::VectorXd> q_plus,
+      const Eigen::Ref<const Eigen::VectorXd> q_minus,
+      Eigen::Ref<Eigen::MatrixXd> dSubtract_dqminus) const {
   assert(q_plus.size() == dimq_);
   assert(q_minus.size() == dimv_);
   assert(dSubtract_dq.rows() == dimv_);
@@ -221,8 +206,9 @@ void Robot::dSubtractdConfigurationMinus(const Eigen::VectorXd& q_plus,
 }
 
 
-void Robot::computeConfigurationJacobian(const Eigen::VectorXd& q, 
-                                        Eigen::MatrixXd& J) const {
+void Robot::computeConfigurationJacobian(
+    const Eigen::Ref<const Eigen::VectorXd> q, 
+    Eigen::Ref<Eigen::MatrixXd>& J) const {
   assert(q.size() == dimq_);
   assert(J.rows() == dimq_);
   assert(J.cols() == dimv_);
@@ -230,8 +216,9 @@ void Robot::computeConfigurationJacobian(const Eigen::VectorXd& q,
 }
 
 
-void Robot::updateKinematics(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
-                             const Eigen::VectorXd& a) {
+void Robot::updateKinematics(const Eigen::Ref<const Eigen::VectorXd> q, 
+                             const Eigen::Ref<const Eigen::VectorXd> v, 
+                             const Eigen::Ref<const Eigen::VectorXd> a) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
@@ -241,9 +228,8 @@ void Robot::updateKinematics(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 }
 
 
-void Robot::computeBaumgarteResidual(const int segment_begin, 
-                                     Eigen::VectorXd& baumgarte_residual) const {
-  assert(baumgarte_residual.size() >= max_dimf_);
+void Robot::computeBaumgarteResidual(
+    Eigen::Ref<Eigen::VectorXd> baumgarte_residual) const {
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
@@ -256,9 +242,8 @@ void Robot::computeBaumgarteResidual(const int segment_begin,
 }
 
 
-void Robot::computeBaumgarteResidual(const int segment_begin, const double coeff, 
-                                     Eigen::VectorXd& baumgarte_residual) const {
-  assert(baumgarte_residual.size() >= max_dimf_);
+void Robot::computeBaumgarteResidual(
+    const double coeff, Eigen::Ref<Eigen::VectorXd> baumgarte_residual) const {
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
@@ -271,49 +256,42 @@ void Robot::computeBaumgarteResidual(const int segment_begin, const double coeff
 }
 
 
-void Robot::computeBaumgarteDerivatives(const int block_rows_begin, 
-                                        const int block_cols_begin,
-                                        Eigen::MatrixXd& baumgarte_partial_dq, 
-                                        Eigen::MatrixXd& baumgarte_partial_dv,
-                                        Eigen::MatrixXd& baumgarte_partial_da) {
-  assert(baumgarte_partial_dq.rows() >= block_rows_begin+max_dimf_);
-  assert(baumgarte_partial_dq.cols() >= block_cols_begin+dimv_);
-  assert(baumgarte_partial_dv.rows() >= block_rows_begin+max_dimf_);
-  assert(baumgarte_partial_dv.cols() >= block_cols_begin+dimv_);
-  assert(baumgarte_partial_da.rows() >= block_rows_begin+max_dimf_);
-  assert(baumgarte_partial_da.cols() >= block_cols_begin+dimv_);
+void Robot::computeBaumgarteDerivatives(
+    Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dq, 
+    Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dv, 
+    Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_da) {
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_da.cols() == dimv_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteDerivatives(
-          model_, data_, block_rows_begin+3*num_active_contacts, 
-          block_cols_begin, baumgarte_partial_dq, baumgarte_partial_dv, 
-          baumgarte_partial_da);
+          model_, data_, 
+          baumgarte_partial_dq.block(3*num_active_contacts, 0, 3, dimv_)
+          baumgarte_partial_dv.block(3*num_active_contacts, 0, 3, dimv_)
+          baumgarte_partial_da.block(3*num_active_contacts, 0, 3, dimv_));
       ++num_active_contacts;
     }
   }
 }
 
 
-void Robot::computeBaumgarteDerivatives(const int block_rows_begin, 
-                                        const int block_cols_begin,
-                                        const double coeff,
-                                        Eigen::MatrixXd& baumgarte_partial_dq, 
-                                        Eigen::MatrixXd& baumgarte_partial_dv,
-                                        Eigen::MatrixXd& baumgarte_partial_da) {
-  assert(baumgarte_partial_dq.rows() >= block_rows_begin+max_dimf_);
-  assert(baumgarte_partial_dq.cols() >= block_cols_begin+dimv_);
-  assert(baumgarte_partial_dv.rows() >= block_rows_begin+max_dimf_);
-  assert(baumgarte_partial_dv.cols() >= block_cols_begin+dimv_);
-  assert(baumgarte_partial_da.rows() >= block_rows_begin+max_dimf_);
-  assert(baumgarte_partial_da.cols() >= block_cols_begin+dimv_);
+void Robot::computeBaumgarteDerivatives(
+    const double coeff, Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dq, 
+    Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_dv, 
+    Eigen::Ref<Eigen::MatrixXd> dBaumgarte_partial_da) {
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_da.cols() == dimv_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteDerivatives(
-          model_, data_, block_rows_begin+3*num_active_contacts, 
-          block_cols_begin, coeff, baumgarte_partial_dq, baumgarte_partial_dv, 
-          baumgarte_partial_da);
+          model_, data_, coeff,
+          baumgarte_partial_dq.block(3*num_active_contacts, 0, 3, dimv_)
+          baumgarte_partial_dv.block(3*num_active_contacts, 0, 3, dimv_)
+          baumgarte_partial_da.block(3*num_active_contacts, 0, 3, dimv_));
       ++num_active_contacts;
     }
   }
@@ -353,7 +331,7 @@ void Robot::setContactStatus(const std::vector<bool>& is_each_contact_active) {
 }
 
 
-void Robot::setContactForces(const Eigen::VectorXd& fext) {
+void Robot::setContactForces(const Eigen::Ref<const Eigen::VectorXd> f) {
   assert(fext.size() == max_dimf_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
@@ -370,8 +348,10 @@ void Robot::setContactForces(const Eigen::VectorXd& fext) {
 }
 
 
-void Robot::RNEA(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                 const Eigen::VectorXd& a, Eigen::VectorXd& tau) {
+void Robot::RNEA(const Eigen::Ref<const Eigen::VectorXd> q, 
+                 const Eigen::Ref<const Eigen::VectorXd> v, 
+                 const Eigen::Ref<const Eigen::VectorXd> a, 
+                 Eigen::Ref<Eigen::VectorXd> tau) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
@@ -386,11 +366,12 @@ void Robot::RNEA(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 }
 
 
-void Robot::RNEADerivatives(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                            const Eigen::VectorXd& a, 
-                            Eigen::MatrixXd& dRNEA_partial_dq, 
-                            Eigen::MatrixXd& dRNEA_partial_dv, 
-                            Eigen::MatrixXd& dRNEA_partial_da) {
+void Robot::RNEADerivatives(const Eigen::Ref<const Eigen::VectorXd> q, 
+                            const Eigen::Ref<const Eigen::VectorXd> v, 
+                            const Eigen::Ref<const Eigen::VectorXd> a,
+                            Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dq, 
+                            Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dv, 
+                            Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_da) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
@@ -414,41 +395,41 @@ void Robot::RNEADerivatives(const Eigen::VectorXd& q, const Eigen::VectorXd& v,
 }
 
 
-void Robot::dRNEAPartialdFext(Eigen::MatrixXd& dRNEA_partial_dfext) {
+void Robot::dRNEAPartialdFext(Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dfext) {
   assert(dRNEA_partial_dfext.rows() == dimv_);
-  assert(dRNEA_partial_dfext.cols() >= max_dimf_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
-      point_contacts_[i].getContactJacobian(model_, data_,  
-                                            0, 3*num_active_contacts, -1,
-                                            dRNEA_partial_dfext, true);
+      point_contacts_[i].getContactJacobian(
+          model_, data_,  -1, 
+          dRNEA_partial_dfext.block(0, 3*num_active_contacts, dimv_, 3).transpose());
       ++num_active_contacts;
     }
   }
 }
 
 
-void Robot::stateEquation(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                          const Eigen::VectorXd& tau, Eigen::VectorXd& dq, 
-                          Eigen::VectorXd& dv) {
+void Robot::stateEquation(const Eigen::Ref<const Eigen::VectorXd> q, 
+                          const Eigen::Ref<const Eigen::VectorXd> v, 
+                          const Eigen::Ref<const Eigen::VectorXd> tau, 
+                          Eigen::Ref<Eigen::VectorXd> dq
+                          Eigen::Ref<Eigen::VectorXd> dv) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(tau.size() == dimv_);
   assert(dq.size() == dimv_);
   assert(dv.size() == dimv_);
   dq = v;
-  Eigen::VectorXd u = tau;
   if (point_contacts_.empty()) {
-    dv = pinocchio::aba(model_, data_, q, v, u);
+    dv = pinocchio::aba(model_, data_, q, v, tau);
   }
   else {
-    dv = pinocchio::aba(model_, data_, q, v, u, fjoint_);
+    dv = pinocchio::aba(model_, data_, q, v, tau, fjoint_);
   }
 }
 
 
-void Robot::generateFeasibleConfiguration(Eigen::VectorXd& q) const {
+void Robot::generateFeasibleConfiguration(Eigen::Ref<Eigen::VectorXd> q) const {
   assert(q.size() == dimq_);
   Eigen::VectorXd q_min = model_.lowerPositionLimit;
   Eigen::VectorXd q_max = model_.upperPositionLimit;
@@ -460,7 +441,7 @@ void Robot::generateFeasibleConfiguration(Eigen::VectorXd& q) const {
 }
 
 
-void Robot::normalizeConfiguration(Eigen::VectorXd& q) const {
+void Robot::normalizeConfiguration(Eigen::Ref<Eigen::VectorXd> q) const {
   assert(q.size() == dimq_);
   if (floating_base_.has_floating_base()) {
     if (q.segment<4>(3).squaredNorm() 

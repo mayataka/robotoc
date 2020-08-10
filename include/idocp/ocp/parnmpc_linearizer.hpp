@@ -22,9 +22,12 @@ inline void linearizeStageCost(Robot& robot,
                                const Eigen::VectorXd& v, 
                                const Eigen::VectorXd& a, 
                                const Eigen::VectorXd& f, 
-                               const Eigen::VectorXd& u, Eigen::VectorXd& lq, 
-                               Eigen::VectorXd& lv, Eigen::VectorXd& la, 
-                               Eigen::VectorXd& lf, Eigen::VectorXd& lu) {
+                               const Eigen::VectorXd& u, 
+                               Eigen::Ref<Eigen::VectorXd> lq, 
+                               Eigen::Ref<Eigen::VectorXd> lv, 
+                               Eigen::Ref<Eigen::VectorXd> la, 
+                               Eigen::Ref<Eigen::VectorXd> lf, 
+                               Eigen::Ref<Eigen::VectorXd> lu) {
   assert(dtau > 0);
   assert(q.size() == robot.dimq());
   assert(v.size() == robot.dimv());
