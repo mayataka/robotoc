@@ -7,40 +7,35 @@
 namespace idocp {
 
 SplitParNMPC::SplitParNMPC(
-    const Robot& robot, const std::shared_ptr<CostFunctionInterface>& cost,
+    const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     const std::shared_ptr<ConstraintsInterface>& constraints) 
   : cost_(cost),
     constraints_(constraints),
     cost_data_(robot),
     joint_constraints_(robot),
-    riccati_matrix_factorizer_(robot),
-    riccati_matrix_inverter_(robot),
+    kkt_residual_(robot),
+    kkt_matrix_(robot),
+    kkt_composition_(robot),
     has_floating_base_(robot.has_floating_base()),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
     dim_passive_(robot.dim_passive()),
     max_dimf_(robot.max_dimf()),
     max_dimc_(robot.dim_passive()+robot.max_dimf()),
-    dimf_(0),
-    dimc_(0),
-    kkt_res_(Eigen::VectorXd::Zero(
-                 5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
     lu_(Eigen::VectorXd::Zero(robot.dimv())),
     lu_condensed_(Eigen::VectorXd::Zero(robot.dimv())),
     u_res_(Eigen::VectorXd::Zero(robot.dimv())),
     du_(Eigen::VectorXd::Zero(robot.dimv())),
-    kkt_mat_(Eigen::MatrixXd::Zero(
-                 5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive(), 
-                 5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
-    kkt_mat_inv_(Eigen::MatrixXd::Zero(
-                     5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive(), 
-                     5*robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
-    Lmd_(Eigen::MatrixXd::Zero(2*robot.dimv() 2*robot.dimv())),
+    dq_res_(Eigen::VectorXd::Zero(robot.dimv())),
+    dv_res_(Eigen::VectorXd::Zero(robot.dimv())),
+    kkt_matrix_inverse_(kkt_matrix_.max_dimKKT(), kkt_matrix_.max_dimKKT()),
     luu_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     du_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     du_dv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     du_da_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     du_df_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
+    dsubtract_dqminus_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    dsubtract_dqplus_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     // The following variables are only needed for line search
     q_tmp_(Eigen::VectorXd::Zero(robot.dimq())), 
     v_tmp_(Eigen::VectorXd::Zero(robot.dimv())), 
@@ -56,29 +51,29 @@ SplitParNMPC::SplitParNMPC()
     constraints_(),
     cost_data_(),
     joint_constraints_(),
-    riccati_matrix_factorizer_(),
-    riccati_matrix_inverter_(),
+    kkt_residual_(),
+    kkt_matrix_(),
+    kkt_composition_(),
     has_floating_base_(false),
     dimq_(0),
     dimv_(0),
     dim_passive_(0),
     max_dimf_(0),
     max_dimc_(0),
-    dimf_(0),
-    dimc_(0),
-    kkt_res_(),
     lu_(),
     lu_condensed_(),
     u_res_(),
     du_(),
-    kkt_mat_(),
-    kkt_mat_inv_(),
-    Lmd_(),
+    dq_res_(),
+    dv_res_(),
     luu_(),
+    kkt_matrix_inverse_(),
     du_dq_(),
     du_dv_(),
     du_da_(),
-    du_df_(),
+    du_df_(), 
+    dsubtract_dqminus_(),
+    dsubtract_dqplus_(),
     q_tmp_(), 
     v_tmp_(), 
     a_tmp_(), 
@@ -119,7 +114,7 @@ void SplitParNMPC::initConstraints(const Robot& robot, const int time_step,
 }
 
 
-void SplitParNMPC::linearizeOCP(Robot& robot, const double t, const double dtau, 
+void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau, 
                                 const Eigen::VectorXd& q_prev, 
                                 const Eigen::VectorXd& v_prev,
                                 const Eigen::VectorXd& lmd, 
@@ -131,7 +126,11 @@ void SplitParNMPC::linearizeOCP(Robot& robot, const double t, const double dtau,
                                 const Eigen::VectorXd& v, 
                                 const Eigen::VectorXd& u, 
                                 const Eigen::VectorXd& lmd_next,
-                                const Eigen::VectorXd& gmm_next) {
+                                const Eigen::VectorXd& gmm_next,
+                                const Eigen::VectorXd& q_next,
+                                const Eigen::VectorXd& v_next,
+                                const Eigen::MatrixXd& aux_mat_next_old,
+                                Eigen::MatrixXd& aux_mat) {
   assert(dtau > 0);
   assert(q_prev.size() == dimq_);
   assert(v_prev.size() == dimv_);
@@ -145,20 +144,39 @@ void SplitParNMPC::linearizeOCP(Robot& robot, const double t, const double dtau,
   assert(u.size() == dimv_);
   assert(lmd_next.size() == dimv_);
   assert(gmm_next.size() == dimv_);
-  dimf_ = robot.dimf();
-  dimc_ = robot.dim_passive() + robot.dimf();
-  if (dimf_ > 0) {
+  assert(q_next.size() == dimq_);
+  assert(v_next.size() == dimv_);
+  assert(aux_mat_next_old.rows() == 2*dimv_);
+  assert(aux_mat_next_old.cols() == 2*dimv_);
+  assert(aux_mat.rows() == 2*dimv_);
+  assert(aux_mat.cols() == 2*dimv_);
+  // Reset the KKT matrix and KKT residual.
+  kkt_matrix_.setZero();
+  kkt_matrix_.setContactStatus(robot);
+  kkt_residual_.setZero();
+  kkt_residual_.setContactStatus(robot);
+  // Extract active blocks for matrices with associated with contacts.
+  const Eigen::Ref<const Eigen::MatrixXd> du_df_active 
+      = du_df_.leftCols(robot.dimf());
+  const Eigen::Ref<const Eigen::VectorXd> mu_active 
+      = mu.head(robot.dim_passive()+robot.dimf());
+  const Eigen::Ref<const Eigen::VectorXd> mu_passive 
+      = mu.head(robot.dim_passive());
+  const Eigen::Ref<const Eigen::VectorXd> f_active = f.head(robot.dimf());
+  Eigen::Ref<Eigen::VectorXd> mu_tmp_acitve = mu_tmp_.head(robot.dim_passive());
+  Eigen::Ref<Eigen::VectorXd> f_tmp_active = f_tmp_.head(robot.dimf());
+  // Compute KKT residual and KKT matrix.
+  if (robot.dimf() > 0) {
     robot.updateKinematics(q, v, a);
   }
   parnmpclinearizer::linearizeStageCost(robot, cost_, cost_data_, t, dtau, 
-                                        q, v, a, f, u, kkt_res_, 
-                                        lq_, lv_, la_, lf_, lu_);
+                                        q, v, a, f, u, kkt_residual_, lu_);
   parnmpclinearizer::linearizeDynamics(robot, dtau, q, v, a, f, u,  
-                                       q_prev, v_prev, kkt_res_, u_res_, 
+                                       q_prev, v_prev, kkt_residual_, u_res_, 
                                        du_dq_, du_dv_, du_da_, du_df_);
-  parnmpclinearizer::linearizeConstraints(robot, dtau, q, v, a, u, u_res_,  
+  parnmpclinearizer::linearizeConstraints(robot, dtau, u, u_res_,  
                                           du_dq_, du_dv_, du_da_, du_df_, 
-                                          kkt_res_, kkt_mat_, Cq_, Cv_, Ca_, Cf_);
+                                          kkt_residual_, kkt_matrix_);
   // Condense the control input torques and the Lagrange multiplier with 
   // respect to inverse dynamics.
   joint_constraints_.augmentDualResidual(dtau, lu_);
@@ -166,209 +184,196 @@ void SplitParNMPC::linearizeOCP(Robot& robot, const double t, const double dtau,
   joint_constraints_.condenseSlackAndDual(dtau, u, luu_, lu_);
   lu_condensed_ = lu_ + luu_ * u_res_;
   // Augment the condensed Newton residual of the contorl input torques. 
-  lq_.noalias() += du_dq_.transpose() * lu_condensed_;
-  lv_.noalias() += du_dv_.transpose() * lu_condensed_;
-  la_.noalias() += du_da_.transpose() * lu_condensed_;
-  if (dimf_ > 0) {
-    lf_.head(dimf_).noalias() 
-                  += du_df_.leftCols(dimf_).transpose() * lu_condensed_;
+  kkt_residual_.lq().noalias() += du_dq_.transpose() * lu_condensed_;
+  kkt_residual_.lv().noalias() += du_dv_.transpose() * lu_condensed_;
+  kkt_residual_.la().noalias() += du_da_.transpose() * lu_condensed_;
+  if (robot.dimf() > 0) {
+    kkt_residual_.lf().noalias() += du_df_active.transpose() * lu_condensed_;
   }
   // Augmnet the partial derivatives of the state equation.
-  lq_.noalias() += lmd_next - lmd;
-  lv_.noalias() += dtau * lmd_next + gmm_next - gmm;
-  la_.noalias() += dtau * gmm_next;
+  if (robot.has_floating_base()) {
+    robot.dSubtractdConfigurationMinus(q_prev, q, dsubtract_dqminus_);
+    robot.dSubtractdConfigurationPlus(q, q_next, dsubtract_dqplus_);
+    kkt_residual_.lq().noalias() 
+        += dsubtract_dqplus_.transpose() * lmd_next
+            + dsubtract_dqminus_.transpose() * lmd;
+    kkt_residual_.lv().noalias() += dtau * lmd - gmm + gmm_next;
+    kkt_residual_.la().noalias() += dtau * gmm;
+  }
+  else {
+    kkt_residual_.lq().noalias() += lmd_next - lmd;
+    kkt_residual_.lv().noalias() += dtau * lmd - gmm + gmm_next;
+    kkt_residual_.la().noalias() += dtau * gmm;
+  }
   // Augmnet the partial derivatives of the inequality constriants.
-  joint_constraints_.augmentDualResidual(dtau, lq_, lv_, la_);
+  joint_constraints_.augmentDualResidual(dtau, kkt_residual_.lq(), 
+                                         kkt_residual_.lv(), 
+                                         kkt_residual_.la());
   // Augment the equality constraints 
-  lq_.noalias() += Cq_.topRows(dimc_).transpose() * mu.head(dimc_);
-  lv_.noalias() += Cv_.topRows(dimc_).transpose() * mu.head(dimc_);
-  la_.noalias() += Ca_.topRows(dimc_).transpose() * mu.head(dimc_);
+  kkt_residual_.lq().noalias() += kkt_matrix_.Cq().transpose() * mu_active;
+  kkt_residual_.lv().noalias() += kkt_matrix_.Cv().transpose() * mu_active;
+  kkt_residual_.la().noalias() += kkt_matrix_.Ca().transpose() * mu_active;
   if (dimf_ > 0) {
-    lf_.head(dimf_).noalias() += Cf_.leftCols(dimf_).transpose() 
-        * mu.head(dim_passive_);
+    kkt_residual_.lf().noalias() += kkt_matrix_.Cf().transpose() * mu_passive;
   }
   // Augment the condensed Hessian of the contorl input torques. 
-  Qqq_ = du_dq_.transpose() * luu_ * du_dq_;
-  Qqv_ = du_dq_.transpose() * luu_ * du_dv_;
-  Qqa_ = du_dq_.transpose() * luu_ * du_da_;
-  Qvv_ = du_dv_.transpose() * luu_ * du_dv_;
-  Qva_ = du_dv_.transpose() * luu_ * du_da_;
-  Qaa_ = du_da_.transpose() * luu_ * du_da_;
-  Qvq_ = Qqv_.transpose();
-  if (dimf_ > 0) {
-    Qqf_.leftCols(dimf_) = du_dq_.transpose() * luu_ * du_df_.leftCols(dimf_);
-    Qvf_.leftCols(dimf_) = du_dv_.transpose() * luu_ * du_df_.leftCols(dimf_);
-    Qaf_.leftCols(dimf_) = du_da_.transpose() * luu_ * du_df_.leftCols(dimf_);
-    Qff_.topLeftCorner(dimf_, dimf_) 
-        = du_df_.leftCols(dimf_).transpose() * luu_ * du_df_.leftCols(dimf_);
+  kkt_matrix_.Qaa() = du_da_.transpose() * luu_ * du_da_;
+  if (robot.dimf() > 0) {
+    kkt_matrix_.Qaf() = du_da_.transpose() * luu_ * du_df_active; 
   }
+  kkt_matrix_.Qaq() = du_da_.transpose() * luu_ * du_dq_;
+  kkt_matrix_.Qav() = du_da_.transpose() * luu_ * du_dv_;
+  if (robot.dimf() > 0) {
+    kkt_matrix_.Qff() = du_df_active.transpose() * luu_ * du_df_active;
+    kkt_matrix_.Qfq() = du_df_active.transpose() * luu_ * du_dq_;
+    kkt_matrix_.Qfv() = du_df_active.transpose() * luu_ * du_dv_;
+    kkt_matrix_.Qff() = du_df_active.transpose() * luu_ * du_df_active;
+  }
+  kkt_matrix_.Qqq() = du_dq_.transpose() * luu_ * du_dq_;
+  kkt_matrix_.Qqv() = du_dq_.transpose() * luu_ * du_dv_;
+  kkt_matrix_.Qvv() = du_dv_.transpose() * luu_ * du_dv_;
   // Condense the slack and dual variables of the inequality constraints on 
   // the configuration, velocity, and acceleration.
-  joint_constraints_.condenseSlackAndDual(dtau, q, v, a, Qqq_, Qvv_, Qaa_, 
+  joint_constraints_.condenseSlackAndDual(dtau, q, v, a, kkt_matrix_.Qqq(),  
+                                          kkt_matrix_.Qvv(), kkt_matrix_.Qaa(), 
                                           lq_, lv_, la_);
   // Augment the cost function Hessian. 
-  cost_->augment_lqq(robot, cost_data_, t, dtau, q, v, a, Qqq_);
-  cost_->augment_lvv(robot, cost_data_, t, dtau, q, v, a, Qvv_);
-  cost_->augment_laa(robot, cost_data_, t, dtau, q, v, a, Qaa_);
-  if (dimf_ > 0) {
-    cost_->augment_lff(robot, cost_data_, t, dtau, f, Qff_);
+  cost_->augment_lqq(robot, cost_data_, t, dtau, q, v, a, kkt_matrix_.Qqq());
+  cost_->augment_lvv(robot, cost_data_, t, dtau, q, v, a, kkt_matrix_.Qvv());
+  cost_->augment_laa(robot, cost_data_, t, dtau, q, v, a, kkt_matrix_.Qaa());
+  if (robot.dimf() > 0) {
+    cost_->augment_lff(robot, cost_data_, t, dtau, f, kkt_matrix_.Qff());
   }
-  if (robot.has_floating_base()) {
-    riccati_matrix_factorizer_.setIntegrationSensitivities(robot, dtau, q, v);
-  }
-  if (dimf_ > 0) {
-    riccati_matrix_inverter_.setContactStatus(robot);
-    riccati_matrix_inverter_.precompute(Qaf_, Qff_);
-  }
+  kkt_matrix_.symmetrize();
+  kkt_matrix_.Qxx().noalias() += aux_mat_next_old;
+  const int dim_kkt = kkt_matrix_.dimKKT();
+  kkt_matrix_.invert(kkt_matrix_inverse_.topLeftCorner(dim_kkt, dim_kkt));
+  aux_mat = - kkt_matrix_inverse_.topLeftCorner(2*robot.dimv(), 2*robot.dimv());
+  // coarse update of the solution
+  kkt_composition_.set(robot);
+  dkkt_.topLeftCorner(dim_kkt, dim_kkt) 
+      = kkt_matrix_inverse_.topLeftCorner(dim_kkt, dim_kkt) 
+          * kkt_residual.KKT_residual();
+  lmd_tmp_ = lmd - dkkt_.segment(kkt_composition_.Fq_begin(), 
+                                 kkt_composition_.Fq_size());
+  gmm_tmp_ = gmm - dkkt_.segment(kkt_composition_.Fv_begin(), 
+                                 kkt_composition_.Fv_size());
+  mu_tmp_active = mu_active - dkkt_.segment(kkt_composition_.C_begin(), 
+                                            kkt_composition_.C_size());
+  a_tmp_ = a - dkkt_.segment(kkt_composition_.Qa_begin(), 
+                             kkt_composition_.Qa_size());
+  f_tmp_active = f_active - dkkt_.segment(kkt_composition_.Qf_begin(), 
+                                          kkt_composition_.Qf_size());
+  q_tmp_ = q;
+  robot.integrateConfiguration(
+      dkkt_.segment(kkt_composition_.Qq_begin(), kkt_composition_.Qq_size()), 
+      -1, q_tmp_);
+  v_tmp_ = v - dkkt_.segment(kkt_composition_.Qv_begin(), 
+                             kkt_composition_.Qv_size());
 }
 
 
-void SplitParNMPC::backwardRiccatiRecursion(const double dtau, 
-                                            const Eigen::MatrixXd& Pqq_next, 
-                                            const Eigen::MatrixXd& Pqv_next, 
-                                            const Eigen::MatrixXd& Pvq_next, 
-                                            const Eigen::MatrixXd& Pvv_next, 
-                                            const Eigen::VectorXd& sq_next, 
-                                            const Eigen::VectorXd& sv_next, 
-                                            Eigen::MatrixXd& Pqq, 
-                                            Eigen::MatrixXd& Pqv, 
-                                            Eigen::MatrixXd& Pvq, 
-                                            Eigen::MatrixXd& Pvv, 
-                                            Eigen::VectorXd& sq, 
-                                            Eigen::VectorXd& sv) {
-  assert(dtau > 0);
-  assert(Pqq_next.rows() == dimv_);
-  assert(Pqq_next.cols() == dimv_);
-  assert(Pqv_next.rows() == dimv_);
-  assert(Pqv_next.cols() == dimv_);
-  assert(Pvq_next.rows() == dimv_);
-  assert(Pvq_next.cols() == dimv_);
-  assert(Pvv_next.rows() == dimv_);
-  assert(Pvv_next.cols() == dimv_);
-  assert(sq_next.size() == dimv_);
-  assert(sv_next.size() == dimv_);
-  assert(Pqq.rows() == dimv_);
-  assert(Pqq.cols() == dimv_);
-  assert(Pqv.rows() == dimv_);
-  assert(Pqv.cols() == dimv_);
-  assert(Pvq.rows() == dimv_);
-  assert(Pvq.cols() == dimv_);
-  assert(Pvv.rows() == dimv_);
-  assert(Pvv.cols() == dimv_);
-  assert(sq.size() == dimv_);
-  assert(sv.size() == dimv_);
-  // Qqq_, Qqv_, Qvq_, Qvv_: representing Riccati factorization F
-  // Qqa_, Qqf_, Qva_, Qvf_ : representing Riccati factorization H
-  // Qaa_, Qaf_, Qff_ : representing Riccati factorization G
-  riccati_matrix_factorizer_.factorize(dtau, Pqq_next, Pqv_next, Pvq_next, 
-                                       Pvv_next, Qqq_, Qqv_, Qvq_, Qvv_);
-  riccati_matrix_factorizer_.factorize(dtau, Pqv_next, Pvv_next, Qqa_, Qva_);
-  riccati_matrix_factorizer_.factorize(dtau, Pvv_next, Qaa_);
-  la_.noalias() += dtau * Pvq_next * q_res_;
-  la_.noalias() += dtau * Pvv_next * v_res_;
-  la_.noalias() -= dtau * sv_next;
-  // Computes the state feedback gain and feedforward terms
-  if (has_floating_base_) {
-    if (dimf_ > 0) {
-      riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, Qqf_, Qvf_, Cq_, Cv_, 
-                                      Ca_, Cf_, la_, lf_, C_res_, Kaq_, Kav_, 
-                                      Kfq_, Kfv_, Kmuq_, Kmuv_, ka_, kf_, kmu_);
-    }
-    else {
-      riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, Cq_, Cv_, Ca_, la_, 
-                                      C_res_, Kaq_, Kav_, Kmuq_, Kmuv_, ka_, 
-                                      kmu_);
-    }
-  } 
-  else {
-    if (dimf_ > 0) {
-      riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, Qqf_, Qvf_, Cq_, Cv_,  
-                                      Ca_, la_, lf_, C_res_, Kaq_, Kav_, Kfq_,  
-                                      Kfv_, Kmuq_, Kmuv_, ka_, kf_, kmu_);
-    }
-    else {
-      riccati_matrix_inverter_.invert(Qqa_, Qva_, Qaa_, la_, Kaq_, Kav_, ka_);
-    }
-  }
-  // Computes the Riccati factorization matrices
-  Pqq = Qqq_;
-  Pqq.noalias() += Kaq_.transpose() * Qqa_.transpose();
-  Pqv = Qqv_;
-  Pqv.noalias() += Kaq_.transpose() * Qva_.transpose();
-  Pvq = Qvq_;
-  Pvq.noalias() += Kav_.transpose() * Qqa_.transpose();
-  Pvv = Qvv_;
-  Pvv.noalias() += Kav_.transpose() * Qva_.transpose();
-  // Computes the Riccati factorization vectors
-  sq = sq_next - lq_;
-  sq.noalias() -= Pqq_next * q_res_;
-  sq.noalias() -= Pqv_next * v_res_;
-  sq.noalias() -= Qqa_ * ka_;
-  sv = dtau * sq_next + sv_next - lv_;
-  sv.noalias() -= dtau * Pqq_next * q_res_;
-  sv.noalias() -= Pvq_next * q_res_;
-  sv.noalias() -= dtau * Pqv_next * v_res_;
-  sv.noalias() -= Pvv_next * v_res_;
-  sv.noalias() -= Qva_ * ka_;
-  if (dimf_ > 0) {
-    Pqq.noalias() += Kfq_.topRows(dimf_).transpose() 
-                    * Qqf_.leftCols(dimf_).transpose();
-    Pqv.noalias() += Kfq_.topRows(dimf_).transpose() 
-                    * Qvf_.leftCols(dimf_).transpose();
-    Pvq.noalias() += Kfv_.topRows(dimf_).transpose() 
-                    * Qqf_.leftCols(dimf_).transpose();
-    Pvv.noalias() += Kfv_.topRows(dimf_).transpose() 
-                    * Qvf_.leftCols(dimf_).transpose();
-    sq.noalias() -= Qqf_.leftCols(dimf_) * kf_.head(dimf_);
-    sv.noalias() -= Qvf_.leftCols(dimf_) * kf_.head(dimf_);
-  }
-  if (dimc_ > 0) {
-    Pqq.noalias() += Kmuq_.topRows(dimc_).transpose() * Cq_.topRows(dimc_);
-    Pqv.noalias() += Kmuq_.topRows(dimc_).transpose() * Cv_.topRows(dimc_);
-    Pvq.noalias() += Kmuv_.topRows(dimc_).transpose() * Cq_.topRows(dimc_);
-    Pvv.noalias() += Kmuv_.topRows(dimc_).transpose() * Cv_.topRows(dimc_);
-    sq.noalias() -= Cq_.topRows(dimc_).transpose() * kmu_.head(dimc_);
-    sv.noalias() -= Cv_.topRows(dimc_).transpose() * kmu_.head(dimc_);
-  }
+void SplitParNMPC::backwardCollectionSerial(const Eigen::VectorXd& lmd_next_old, 
+                                            const Eigen::VectorXd& gmm_next_old, 
+                                            const Eigen::VectorXd& lmd_next, 
+                                            const Eigen::VectorXd& gmm_next,
+                                            Eigen::VectorXd& lmd, 
+                                            Eigen::VectorXd& gmm) {
+  x_res_.head(dimv_) = lmd_next - lmd_next_old;
+  x_res_.tail(dimv_) = gmm_next - gmm_next_old;
+  dx_ = kkt_matrix_inverse_.block(kkt_composition_.Fx_begin(), 
+                                  kkt_composition_.Qx_begin(), 
+                                  kkt_composition_.Fx_size(), 
+                                  kkt_composition_.Qx_size()) * x_res_;
+  lmd.noalias() -= dx_.head(dimv_);
+  gmm.noalias() -= dx_.tail(dimv_);
 }
 
 
-void SplitParNMPC::forwardRiccatiRecursion(const double dtau, 
-                                           const Eigen::VectorXd& dq,   
-                                           const Eigen::VectorXd& dv, 
-                                           Eigen::VectorXd& dq_next,
-                                           Eigen::VectorXd& dv_next) {
-  assert(dtau > 0);
-  assert(dq.size() == dimv_);
-  assert(dv.size() == dimv_);
-  assert(dq_next.size() == dimv_);
-  assert(dv_next.size() == dimv_);
-  da_ = ka_ + Kaq_ * dq + Kav_ * dv;
-  dq_next = dq + dtau * dv + q_res_;
-  dv_next = dv + dtau * da_ + v_res_;
+void SplitParNMPC::backwardCollectionParallel(const Robot& robot) {
+  const int dim_kkt = kkt_matrix_.dimKKT();
+  const int dimx = 2*robot.dimv();
+  dkkt_.segment(dimv_, dim_kkt-dimv_) 
+      = kkt_matrix_inverse_.block(dimx, dim_kkt-dimx, dim_kkt-dimx, dimx) 
+          * x_res_;
+  mu_tmp_active.noalias() -= dkkt_.segment(kkt_composition_.C_begin(), 
+                                           kkt_composition_.C_size());
+  a_tmp_.noalias() -= dkkt_.segment(kkt_composition_.Qa_begin(), 
+                                    kkt_composition_.Qa_size());
+  f_tmp_active.noalias() -= dkkt_.segment(kkt_composition_.Qf_begin(), 
+                                          kkt_composition_.Qf_size());
+  robot.integrateConfiguration(
+      dkkt_.segment(kkt_composition_.Qq_begin(), kkt_composition_.Qq_size()), 
+      -1, q_tmp_);
+  v_tmp_.noalias() -= dkkt_.segment(kkt_composition_.Qv_begin(), 
+                                    kkt_composition_.Qv_size());
 }
 
 
-void SplitParNMPC::computeCondensedDirection(const double dtau, 
-                                             const Eigen::VectorXd& dq, 
-                                             const Eigen::VectorXd& dv) {
-  assert(dtau > 0);
-  assert(dq.size() == dimv_);
-  assert(dv.size() == dimv_);
-  if (dimf_ > 0) {
-    df_.head(dimf_) = kf_.head(dimf_) + Kfq_.topRows(dimf_) * dq 
-                                      + Kfv_.topRows(dimf_) * dv;
-  }
-  if (dimc_ > 0) {
-    dmu_.head(dimc_) = kmu_.head(dimc_) + Kmuq_.topRows(dimc_) * dq 
-                                        + Kmuv_.topRows(dimc_) * dv;
-  }
+void SplitParNMPC::forwardCollectionSerial(const Robot& robot,
+                                           const Eigen::VectorXd& q_prev_old,   
+                                           const Eigen::VectorXd& v_prev_old, 
+                                           const Eigen::VectorXd& q_prev, 
+                                           const Eigen::VectorXd& v_prev,
+                                           Eigen::VectorXd& q, 
+                                           Eigen::VectorXd& v) {
+  robot.subtractConfiguration(q_prev, q_prev_old, x_res_.head(robot.dimv()));
+  x_res_.tail(robot.dimv()) = v_prev - v_prev_old;
+  dx_ = kkt_matrix_inverse_.block(kkt_composition_.Qx_begin(), 
+                                  kkt_composition_.Fx_begin(), 
+                                  kkt_composition_.Qx_size(), 
+                                  kkt_composition_.Fx_size()) * x_res_;
+  robot.integrateConfiguration(dx_.head(robot.dimv()), -1, q);
+  v.noalias() -= dx_.tail(robot.dimv());
+}
+
+
+void SplitParNMPC::forwardCollectionParallel(const Robot& robot) {
+  const int dim_kkt = kkt_matrix_.dimKKT();
+  const int dimx = 2*robot.dimv();
+  dkkt_.head(dim_kkt) 
+      = kkt_matrix_inverse_.block(0, dim_kkt-dimx, dim_kkt, dimx) * x_res_;
+  lmd_tmp_.noalias() -= dkkt_.segment(kkt_composition_.Fq_begin(), 
+                                      kkt_composition_.Fq_size());
+  gmm_tmp_.noalias() -= dkkt_.segment(kkt_composition_.Fv_begin(), 
+                                      kkt_composition_.Fv_size());
+  mu_tmp_active.noalias() -= dkkt_.segment(kkt_composition_.C_begin(), 
+                                           kkt_composition_.C_size());
+  a_tmp_.noalias() -= dkkt_.segment(kkt_composition_.Qa_begin(), 
+                                    kkt_composition_.Qa_size());
+  f_tmp_active.noalias() -= dkkt_.segment(kkt_composition_.Qf_begin(), 
+                                          kkt_composition_.Qf_size());
+  robot.integrateConfiguration(
+      dkkt_.segment(kkt_composition_.Qq_begin(), kkt_composition_.Qq_size()), 
+      -1, q_tmp_);
+  v_tmp_.noalias() -= dkkt_.segment(kkt_composition_.Qv_begin(), 
+                                    kkt_composition_.Qv_size());
+}
+
+
+void SplitParNMPC::computeDirection(const Robot& robot, 
+                                    const Eigen::VectorXd& lmd, 
+                                    const Eigen::VectorXd& gmm, 
+                                    const Eigen::VectorXd& mu, 
+                                    const Eigen::VectorXd& a,
+                                    const Eigen::VectorXd& f, 
+                                    const Eigen::VectorXd& q, 
+                                    const Eigen::VectorXd& v, 
+                                    const Eigen::VectorXd& u) {
+  dlmd_ = lmd_tmp_ - lmd;
+  dgmm_ = gmm_tmp_ - gmm;
+  const int dimc = robot.dim_passive() + robot.dimf();
+  dmu_.head(dimc) = mu_tmp_.head(dimc) - mu.head(dimc);
+  da_ = a_tmp_ - a;
+  df_.head(robot.dimf()) = f_tmp_.head(robot.dimf()) - f.head(robot.dimf());
+  robot.subtractConfiguration(q_tmp_, q, dq_);
+  dv_ = v_tmp_ - v;
   du_ = u_res_;
   du_.noalias() += du_dq_ * dq;
   du_.noalias() += du_dv_ * dv;
   du_.noalias() += du_da_ * da_;
-  if (dimf_ > 0) {
-    du_.noalias() += du_df_.leftCols(dimf_) * df_.head(dimf_);
+  if (robot.dimf() > 0) {
+    du_.noalias() += du_df_.leftCols(robot.dimf()) * df_.head(robot.dimf());
   }
   joint_constraints_.computeSlackAndDualDirection(dtau, dq, dv, da_, du_);
 }
@@ -387,7 +392,7 @@ double SplitParNMPC::maxDualStepSize() {
 std::pair<double, double> SplitParNMPC::costAndConstraintsViolation(
     Robot& robot, const double t, const double dtau, const Eigen::VectorXd& q, 
     const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-    const Eigen::VectorXd& u, const Eigen::VectorXd& f) {
+    const Eigen::VectorXd& f, const Eigen::VectorXd& u) {
   assert(dtau > 0);
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
@@ -395,7 +400,7 @@ std::pair<double, double> SplitParNMPC::costAndConstraintsViolation(
   assert(u.size() == dimv_);
   assert(f.size() == max_dimf_);
   double cost = 0;
-  cost += cost_->l(robot, cost_data_, t, dtau, q, v, a, u, f);
+  cost += cost_->l(robot, cost_data_, t, dtau, q, v, a, f, u);
   cost += joint_constraints_.costSlackBarrier();
   double constraints_violation = 0;
   constraints_violation += q_res_.lpNorm<1>();
@@ -410,8 +415,8 @@ std::pair<double, double> SplitParNMPC::costAndConstraintsViolation(
 std::pair<double, double> SplitParNMPC::costAndConstraintsViolation(
     Robot& robot, const double step_size, const double t, const double dtau, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-    const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-    const Eigen::VectorXd& f, const Eigen::VectorXd& q_next, 
+    const Eigen::VectorXd& a, const Eigen::VectorXd& f, 
+    const Eigen::VectorXd& u, const Eigen::VectorXd& q_next, 
     const Eigen::VectorXd& v_next, const Eigen::VectorXd& dq, 
     const Eigen::VectorXd& dv, const Eigen::VectorXd& dq_next, 
     const Eigen::VectorXd& dv_next) {
@@ -421,8 +426,8 @@ std::pair<double, double> SplitParNMPC::costAndConstraintsViolation(
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
-  assert(u.size() == dimv_);
   assert(f.size() == max_dimf_);
+  assert(u.size() == dimv_);
   assert(q_next.size() == dimq_);
   assert(v_next.size() == dimv_);
   assert(dq.size() == dimv_);
@@ -539,80 +544,93 @@ void SplitParNMPC::getStateFeedbackGain(Eigen::MatrixXd& Kq,
 
 double SplitParNMPC::squaredKKTErrorNorm(Robot& robot, const double t, 
                                          const double dtau, 
+                                         const Eigen::VectorXd& q_prev, 
+                                         const Eigen::VectorXd& v_prev, 
                                          const Eigen::VectorXd& lmd, 
                                          const Eigen::VectorXd& gmm, 
+                                         const Eigen::VectorXd& mu, 
+                                         const Eigen::VectorXd& a, 
+                                         const Eigen::VectorXd& f, 
                                          const Eigen::VectorXd& q, 
                                          const Eigen::VectorXd& v, 
-                                         const Eigen::VectorXd& a, 
                                          const Eigen::VectorXd& u, 
-                                         const Eigen::VectorXd& beta, 
-                                         const Eigen::VectorXd& f, 
-                                         const Eigen::VectorXd& mu, 
-                                         const Eigen::VectorXd& lmd_next, 
-                                         const Eigen::VectorXd& gmm_next, 
+                                         const Eigen::VectorXd& lmd_next,
+                                         const Eigen::VectorXd& gmm_next,
                                          const Eigen::VectorXd& q_next,
                                          const Eigen::VectorXd& v_next) {
   assert(dtau > 0);
+  assert(q_prev.size() == dimq_);
+  assert(v_prev.size() == dimv_);
   assert(lmd.size() == dimv_);
   assert(gmm.size() == dimv_);
+  assert(mu.size() == max_dimc_);
+  assert(a.size() == dimv_);
+  assert(f.size() == max_dimf_);
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
-  assert(a.size() == dimv_);
   assert(u.size() == dimv_);
-  assert(beta.size() == dimv_);
-  assert(f.size() == max_dimf_);
-  assert(mu.size() == max_dimc_);
   assert(lmd_next.size() == dimv_);
   assert(gmm_next.size() == dimv_);
   assert(q_next.size() == dimq_);
   assert(v_next.size() == dimv_);
-  const int dimf = robot.dimf();
-  const int dimc = robot.dimf() + robot.dim_passive();
-  if (dimf > 0) {
+  // Reset the KKT matrix and KKT residual.
+  kkt_matrix_.setZero();
+  kkt_matrix_.setContactStatus(robot);
+  kkt_residual_.setZero();
+  kkt_residual_.setContactStatus(robot);
+  // Extract active blocks for matrices with associated with contacts.
+  const Eigen::Ref<const Eigen::MatrixXd> du_df_active 
+      = du_df_.leftCols(robot.dimf());
+  const Eigen::Ref<const Eigen::VectorXd> mu_active 
+      = mu.head(robot.dim_passive()+robot.dimf());
+  const Eigen::Ref<const Eigen::VectorXd> mu_passive 
+      = mu.head(robot.dim_passive());
+  const Eigen::Ref<const Eigen::VectorXd> f_active = f.head(robot.dimf());
+  Eigen::Ref<Eigen::VectorXd> mu_tmp_acitve = mu_tmp_.head(robot.dim_passive());
+  Eigen::Ref<Eigen::VectorXd> f_tmp_active = f_tmp_.head(robot.dimf());
+  // Compute KKT residual and KKT matrix.
+  if (robot.dimf() > 0) {
     robot.updateKinematics(q, v, a);
   }
-  ocplinearizer::linearizeStageCost(robot, cost_, cost_data_, t, dtau, 
-                                    q, v, a, u, f, lq_, lv_, la_, lu_, lf_);
-  ocplinearizer::linearizeDynamics(robot, dtau, q, v, a, u, f, q_next, v_next, 
-                                   q_res_, v_res_, u_res_, du_dq_, du_dv_, 
-                                   du_da_, du_df_);
-  ocplinearizer::linearizeConstraints(robot, dtau, q, v, a, u, u_res_,  
-                                      du_dq_, du_dv_, du_da_, du_df_, 
-                                      C_res_, Cq_, Cv_, Ca_, Cf_);
-  // Augment the dynamics constraints. 
-  lq_.noalias() += lmd_next - lmd;
-  lv_.noalias() += dtau * lmd_next + gmm_next - gmm;
-  la_.noalias() += dtau * gmm_next;
-  // Augment the partial derivatives of the inverse dynamics constraint. 
-  lq_.noalias() += dtau * du_dq_.transpose() * beta;
-  lv_.noalias() += dtau * du_dv_.transpose() * beta;
-  la_.noalias() += dtau * du_da_.transpose() * beta;
-  lu_.noalias() -= dtau * beta;
-  if (dimf > 0) {
-    lf_.head(dimf).noalias() += dtau * du_df_.leftCols(dimf).transpose() * beta;
+  parnmpclinearizer::linearizeStageCost(robot, cost_, cost_data_, t, dtau, 
+                                        q, v, a, f, u, kkt_residual_, lu_);
+  parnmpclinearizer::linearizeDynamics(robot, dtau, q, v, a, f, u,  
+                                       q_prev, v_prev, kkt_residual_, u_res_, 
+                                       du_dq_, du_dv_, du_da_, du_df_);
+  parnmpclinearizer::linearizeConstraints(robot, dtau, u, u_res_,  
+                                          du_dq_, du_dv_, du_da_, du_df_, 
+                                          kkt_residual_, kkt_matrix_);
+  // Augmnet the partial derivatives of the state equation.
+  if (robot.has_floating_base()) {
+    robot.dSubtractdConfigurationMinus(q_prev, q, dsubtract_dqminus_);
+    robot.dSubtractdConfigurationPlus(q, q_next, dsubtract_dqplus_);
+    kkt_residual_.lq().noalias() 
+        += dsubtract_dqplus_.transpose() * lmd_next
+            + dsubtract_dqminus_.transpose() * lmd;
+    kkt_residual_.lv().noalias() += dtau * lmd - gmm + gmm_next;
+    kkt_residual_.la().noalias() += dtau * gmm;
+  }
+  else {
+    kkt_residual_.lq().noalias() += lmd_next - lmd;
+    kkt_residual_.lv().noalias() += dtau * lmd - gmm + gmm_next;
+    kkt_residual_.la().noalias() += dtau * gmm;
   }
   // Augmnet the partial derivatives of the inequality constriants.
+  joint_constraints_.augmentDualResidual(dtau, kkt_residual_.lq(), 
+                                         kkt_residual_.lv(), 
+                                         kkt_residual_.la());
   joint_constraints_.augmentDualResidual(dtau, lu_);
-  joint_constraints_.augmentDualResidual(dtau, lq_, lv_, la_);
   // Augment the equality constraints 
-  lq_.noalias() += Cq_.topRows(dimc).transpose() * mu.head(dimc);
-  lv_.noalias() += Cv_.topRows(dimc).transpose() * mu.head(dimc);
-  la_.noalias() += Ca_.topRows(dimc).transpose() * mu.head(dimc);
-  if (dimf > 0) {
-    lf_.head(dimf).noalias() += Cf_.leftCols(dimf).transpose() 
-                                  * mu.head(robot.dim_passive());
-  } 
+  kkt_residual_.lq().noalias() += kkt_matrix_.Cq().transpose() * mu_active;
+  kkt_residual_.lv().noalias() += kkt_matrix_.Cv().transpose() * mu_active;
+  kkt_residual_.la().noalias() += kkt_matrix_.Ca().transpose() * mu_active;
+  if (dimf_ > 0) {
+    kkt_residual_.lf().noalias() += kkt_matrix_.Cf().transpose() * mu_passive;
+  }
   double error = 0;
-  error += q_res_.squaredNorm();
-  error += v_res_.squaredNorm();
-  error += u_res_.squaredNorm();
-  error += lq_.squaredNorm();
-  error += lv_.squaredNorm();
-  error += la_.squaredNorm();
+  error += kkt_residual_.KKT_residual().squaredNorm();
   error += lu_.squaredNorm();
-  error += lf_.head(dimf).squaredNorm();
   error += joint_constraints_.residualSquaredNrom(dtau, q, v, a, u);
-  error += C_res_.head(dimc).squaredNorm();
   return error;
 }
 

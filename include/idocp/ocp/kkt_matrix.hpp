@@ -214,6 +214,13 @@ public:
                              kkt_composition_.Qv_size());
   }
 
+  inline Eigen::Ref<Eigen::MatrixXd> Qxx() {
+    return kkt_matrix_.block(kkt_composition_.Qx_begin(), 
+                             kkt_composition_.Qx_begin(), 
+                             kkt_composition_.Qx_size(), 
+                             kkt_composition_.Qx_size());
+  }
+
   inline void symmetrize() {
     const int size = kkt_composition_.dimKKT();
     kkt_matrix_.topLeftCorner(size, size)

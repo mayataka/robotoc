@@ -15,6 +15,7 @@ Robot::Robot(const std::string& urdf_file_name)
     fjoint_(),
     dimq_(0),
     dimv_(0),
+    dimJ_(0),
     max_dimf_(0),
     dimf_(0),
     num_active_contacts_(0),
@@ -30,6 +31,7 @@ Robot::Robot(const std::string& urdf_file_name)
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
+  dimJ_ = model_.joints.size();
   initializeJointLimits();
 }
 
@@ -46,6 +48,7 @@ Robot::Robot(const std::string& urdf_file_name,
     fjoint_(),
     dimq_(0),
     dimv_(0),
+    dimJ_(0),
     max_dimf_(0),
     dimf_(0),
     num_active_contacts_(0),
@@ -70,6 +73,7 @@ Robot::Robot(const std::string& urdf_file_name,
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
+  dimJ_ = model_.joints.size();
   initializeJointLimits();
 }
 
@@ -83,6 +87,7 @@ Robot::Robot()
     fjoint_(),
     dimq_(0),
     dimv_(0),
+    dimJ_(0),
     max_dimf_(0),
     dimf_(0),
     num_active_contacts_(0),
@@ -106,6 +111,7 @@ void Robot::buildRobotModelFromXML(const std::string& xml) {
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
+  dimJ_ = model_.joints.size();
   initializeJointLimits();
 }
 
@@ -128,6 +134,7 @@ void Robot::buildRobotModelFromXML(const std::string& xml,
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
+  dimJ_ = model_.joints.size();
   initializeJointLimits();
 }
 
@@ -505,6 +512,11 @@ int Robot::dimq() const {
 
 int Robot::dimv() const {
   return dimv_;
+}
+
+
+int Robot::dimJ() const {
+  return dimJ_;
 }
 
 

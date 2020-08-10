@@ -6,18 +6,19 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/cost/cost_function_interface.hpp"
+#include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints_interface.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_ocp_solution.hpp"
 
 
 namespace idocp {
 namespace parnmpclinearizer {
 
 inline void linearizeStageCost(Robot& robot, 
-                               std::shared_ptr<CostFunctionInterface>& cost, 
+                               std::shared_ptr<CostFunction>& cost, 
                                CostFunctionData& cost_data,
                                const double t, const double dtau, 
                                const Eigen::Ref<const Eigen::VectorXd> q, 
@@ -26,21 +27,22 @@ inline void linearizeStageCost(Robot& robot,
                                const Eigen::Ref<const Eigen::VectorXd> f, 
                                const Eigen::Ref<const Eigen::VectorXd> u, 
                                KKTResidual& kkt_residual,
-                               Eigen::Ref<Eigen::VectorXd> Qu) {
+                               Eigen::Ref<Eigen::VectorXd> lu) {
   assert(dtau > 0);
   assert(q.size() == robot.dimq());
   assert(v.size() == robot.dimv());
   assert(a.size() == robot.dimv());
   assert(f.size() == robot.max_dimf());
   assert(u.size() == robot.dimv());
+  assert(lu.size() == robot.dimv());
   if (robot.has_floating_base()) {
     robot.computeConfigurationJacobian(q, cost_data.configuration_jacobian);
   }
-  cost->lq(robot, cost_data, t, dtau, q, v, a, kkt_residual.Qq());
-  cost->lv(robot, cost_data, t, dtau, q, v, a, kkt_residual.Qv());
-  cost->la(robot, cost_data, t, dtau, q, v, a, kkt_residual.Qa());
-  cost->lf(robot, cost_data, t, dtau, f, kkt_residual.Qf());
-  cost->lu(robot, cost_data, t, dtau, u, Qu);
+  cost->lq(robot, cost_data, t, dtau, q, v, a, kkt_residual.lq());
+  cost->lv(robot, cost_data, t, dtau, q, v, a, kkt_residual.lv());
+  cost->la(robot, cost_data, t, dtau, q, v, a, kkt_residual.la());
+  cost->lf(robot, cost_data, t, dtau, f, kkt_residual.lf());
+  cost->lu(robot, cost_data, t, dtau, u, lu);
 }
 
 

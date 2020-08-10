@@ -47,7 +47,8 @@ public:
       Qv_begin_(0) {
   }
 
-  ~KKTComposition();
+  ~KKTComposition() {
+  }
 
   KKTComposition(const KKTComposition&) = default;
 
@@ -139,10 +140,26 @@ public:
     return dimv_;
   }
 
+  inline int Fx_begin() const {
+    return Fq_begin_;
+  }
+
+  inline int Fx_size() const {
+    return 2*dimv_;
+  }
+
+  inline int Qx_begin() const {
+    return Qq_begin_;
+  }
+
+  inline int Qx_size() const {
+    return 2*dimv_;
+  }
+
 private:
   int dimv_, max_dimf_, dimf_, dim_passive_, max_dimc_, dimc_,  
       max_dimKKT_, dimKKT_, Fq_begin_, Fv_begin_, C_begin_, 
-      Qa_begin_, Qf_begin_, Qq_begin_, Qv_begin_;
+      Qa_begin_, Qf_begin_, Qq_begin_, Qv_begin_, Qx_begin_;
 
 };
 

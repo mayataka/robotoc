@@ -310,6 +310,9 @@ public:
   // Returns the dimensiton of the generalized velocity.
   int dimv() const;
 
+  // Returns the dimensiton of joints.
+  int dimJ() const;
+
   // Returns the maximum dimension of the contacts.
   int max_dimf() const;
 
@@ -346,7 +349,7 @@ private:
   std::vector<PointContact> point_contacts_;
   FloatingBase floating_base_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
-  int dimq_, dimv_, max_dimf_, dimf_, num_active_contacts_;
+  int dimq_, dimv_, dimJ_, max_dimf_, dimf_, num_active_contacts_;
   std::vector<bool> is_each_contact_active_;
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,
                   lower_joint_position_limit_, upper_joint_position_limit_;

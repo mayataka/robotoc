@@ -4,30 +4,17 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/cost/cost_function_component_base.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 
 
 namespace idocp {
 
-class JointSpaceCost {
+class JointSpaceCost final : public CostFunctionComponentBase {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  JointSpaceCost(const Robot& robot, const Eigen::VectorXd& q_weight,  
-                 const Eigen::VectorXd& v_weight, 
-                 const Eigen::VectorXd& a_weight,  
-                 const Eigen::VectorXd& u_weight,
-                 const Eigen::VectorXd& qf_weight,  
-                 const Eigen::VectorXd& vf_weight);
-
-  JointSpaceCost(const Robot& robot, const Eigen::VectorXd& q_ref,  
-                 const Eigen::VectorXd& v_ref, const Eigen::VectorXd& a_ref,  
-                 const Eigen::VectorXd& u_ref, const Eigen::VectorXd& q_weight,  
-                 const Eigen::VectorXd& v_weight, 
-                 const Eigen::VectorXd& a_weight,  
-                 const Eigen::VectorXd& u_weight,
-                 const Eigen::VectorXd& qf_weight,  
-                 const Eigen::VectorXd& vf_weight);
+  JointSpaceCost(const Robot& robot);
 
   JointSpaceCost();
 
@@ -65,56 +52,125 @@ public:
 
   void set_vf_weight(const Eigen::VectorXd& vf_weight);
 
-  double l(const double dtau, const Eigen::VectorXd& q, 
-           const Eigen::VectorXd& v, const Eigen::VectorXd& a,
-           const Eigen::VectorXd& u) const;
+  double l(const Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
+           const Eigen::Ref<const Eigen::VectorXd> v, 
+           const Eigen::Ref<const Eigen::VectorXd> a, 
+           const Eigen::Ref<const Eigen::VectorXd> f, 
+           const Eigen::Ref<const Eigen::VectorXd> u) const override;
 
-  void lq(const Robot& robot, CostFunctionData& data, const double dtau, 
-          const Eigen::VectorXd& q, Eigen::VectorXd& lq) const;
+  double phi(const Robot& robot, CostFunctionData& data, const double t, 
+             const Eigen::Ref<const Eigen::VectorXd> q, 
+             const Eigen::Ref<const Eigen::VectorXd> v) const override;
 
-  void lv(const double dtau, const Eigen::VectorXd& v, 
-          Eigen::VectorXd& lv) const;
+  void lq(const Robot& robot, CostFunctionData& data, const double t, 
+          const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
+          const Eigen::Ref<const Eigen::VectorXd> v, 
+          const Eigen::Ref<const Eigen::VectorXd> a, 
+          Eigen::Ref<Eigen::VectorXd> lq) const override;
 
-  void la(const double dtau, const Eigen::VectorXd& q, 
-          Eigen::VectorXd& la) const;
+  void lv(const Robot& robot, CostFunctionData& data, const double t, 
+          const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
+          const Eigen::Ref<const Eigen::VectorXd> v, 
+          const Eigen::Ref<const Eigen::VectorXd> a, 
+          Eigen::Ref<Eigen::VectorXd> lv) const override;
 
-  void lu(const double dtau, const Eigen::VectorXd& v, 
-          Eigen::VectorXd& lu) const;
+  void la(const Robot& robot, CostFunctionData& data, const double t, 
+          const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
+          const Eigen::Ref<const Eigen::VectorXd> v, 
+          const Eigen::Ref<const Eigen::VectorXd> a, 
+          Eigen::Ref<Eigen::VectorXd> la) const override;
 
-  void lqq(const Robot& robot, const double dtau, Eigen::MatrixXd& lqq) const;
+  void lu(const Robot& robot, CostFunctionData& data, const double t, 
+          const double dtau, const Eigen::Ref<const Eigen::VectorXd> u, 
+          Eigen::Ref<Eigen::VectorXd> lu) const override;
 
-  void lvv(const double dtau, Eigen::MatrixXd& lvv) const;
+  void lqq(const Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
+           const Eigen::Ref<const Eigen::VectorXd> v, 
+           const Eigen::Ref<const Eigen::VectorXd> a, 
+           Eigen::Ref<Eigen::MatrixXd> lqq) const override;
 
-  void laa(const double dtau, Eigen::MatrixXd& laa) const;
+  void lvv(const Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
+           const Eigen::Ref<const Eigen::VectorXd> v, 
+           const Eigen::Ref<const Eigen::VectorXd> a, 
+           Eigen::Ref<Eigen::MatrixXd> lvv) const override;
 
-  void luu(const double dtau, Eigen::MatrixXd& luu) const;
+  void laa(const Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
+           const Eigen::Ref<const Eigen::VectorXd> v, 
+           const Eigen::Ref<const Eigen::VectorXd> a, 
+           Eigen::Ref<Eigen::MatrixXd> laa) const override;
 
-  void augment_lqq(const Robot& robot, const double dtau, 
-                  Eigen::MatrixXd& lqq) const;
+  void luu(const Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, const Eigen::Ref<const Eigen::VectorXd> u, 
+           Eigen::Ref<Eigen::MatrixXd> luu) const override;
 
-  void augment_lvv(const double dtau, Eigen::MatrixXd& lvv) const;
+  void augment_lqq(const Robot& robot, CostFunctionData& data, 
+                   const double t, const double dtau, 
+                   const Eigen::Ref<const Eigen::VectorXd> q, 
+                   const Eigen::Ref<const Eigen::VectorXd> v, 
+                   const Eigen::Ref<const Eigen::VectorXd> a, 
+                   Eigen::Ref<Eigen::MatrixXd> lqq) const override;
 
-  void augment_laa(const double dtau, Eigen::MatrixXd& laa) const;
+  void augment_lvv(const Robot& robot, CostFunctionData& data, 
+                   const double t, const double dtau, 
+                   const Eigen::Ref<const Eigen::VectorXd> q, 
+                   const Eigen::Ref<const Eigen::VectorXd> v, 
+                   const Eigen::Ref<const Eigen::VectorXd> a, 
+                   Eigen::Ref<Eigen::MatrixXd> lvv) const override;
 
-  void augment_luu(const double dtau, Eigen::MatrixXd& luu) const;
+  void augment_laa(const Robot& robot, CostFunctionData& data, 
+                   const double t, const double dtau, 
+                   const Eigen::Ref<const Eigen::VectorXd> q, 
+                   const Eigen::Ref<const Eigen::VectorXd> v, 
+                   const Eigen::Ref<const Eigen::VectorXd> a, 
+                   Eigen::Ref<Eigen::MatrixXd> laa) const override;
 
-  double phi(const Eigen::VectorXd& q, const Eigen::VectorXd& v) const;
+  void augment_luu(const Robot& robot, CostFunctionData& data, 
+                   const double t, const double dtau, 
+                   const Eigen::Ref<const Eigen::VectorXd> u, 
+                   Eigen::Ref<Eigen::MatrixXd> luu) const override;
 
-  void phiq(const Robot& robot, CostFunctionData& data, 
-            const Eigen::VectorXd& q, Eigen::VectorXd& phiq) const;
+  void phiq(const Robot& robot, CostFunctionData& data, const double t, 
+            const Eigen::Ref<const Eigen::VectorXd> q, 
+            const Eigen::Ref<const Eigen::VectorXd> v, 
+            Eigen::Ref<Eigen::VectorXd> phiq) const override;
 
-  void phiv(const Eigen::VectorXd& v, Eigen::VectorXd& phiv) const;
+  void phiv(const Robot& robot, CostFunctionData& data, const double t, 
+            const Eigen::Ref<const Eigen::VectorXd> q, 
+            const Eigen::Ref<const Eigen::VectorXd> v, 
+            Eigen::Ref<Eigen::VectorXd> phiv) const override;
 
-  void phiqq(const Robot& robot, Eigen::MatrixXd& phiqq) const;
+  void phiqq(const Robot& robot, CostFunctionData& data, const double t, 
+             const Eigen::Ref<const Eigen::VectorXd> q, 
+             const Eigen::Ref<const Eigen::VectorXd> v, 
+             Eigen::Ref<Eigen::MatrixXd> phiqq) const override;
 
-  void phivv(Eigen::MatrixXd& phivv) const;
+  void phivv(const Robot& robot, CostFunctionData& data, const double t, 
+             const Eigen::Ref<const Eigen::VectorXd> q, 
+             const Eigen::Ref<const Eigen::VectorXd> v, 
+             Eigen::Ref<Eigen::MatrixXd> phivv) const override;
 
+
+  // The following functions do nothig, just for dynamic polymorphism.
+  void lf(const Robot& robot, CostFunctionData& data, const double t, 
+          const double dtau, const Eigen::Ref<const Eigen::VectorXd> f, 
+          Eigen::Ref<Eigen::VectorXd> lf) const override {}
+
+  void lff(const Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, const Eigen::Ref<const Eigen::VectorXd> f, 
+           Eigen::Ref<Eigen::MatrixXd> lff) const override {}
+
+  void augment_lff(const Robot& robot, CostFunctionData& data, 
+                   const double t, const double dtau, 
+                   const Eigen::Ref<const Eigen::VectorXd> f, 
+                   Eigen::Ref<Eigen::MatrixXd> lff) const override {}
 private:
-  bool has_floating_base_;
-  int dimq_, dimv_;
+  int dimq_, dimv_, dimJ_;
   Eigen::VectorXd q_ref_, v_ref_, a_ref_, u_ref_, q_weight_, v_weight_, 
                   a_weight_, u_weight_, qf_weight_, vf_weight_;
-  Eigen::MatrixXd q_weight_diag_mat_, qf_weight_diag_mat_;
 };
 
 } // namespace idocp

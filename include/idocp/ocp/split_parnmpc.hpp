@@ -7,12 +7,13 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/cost/cost_function_interface.hpp"
+#include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints_interface.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/joint_space_constraints/joint_space_constraints.hpp"
-#include "idocp/ocp/riccati_matrix_factorizer.hpp"
-#include "idocp/ocp/riccati_matrix_inverter.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/kkt_composition.hpp"
 
 
 namespace idocp {
@@ -26,8 +27,7 @@ public:
   //    robot: The robot model that has been already initialized.
   //    cost: The pointer to the cost function.
   //    constraints: The pointer to the constraints.
-  SplitParNMPC(const Robot& robot, 
-               const std::shared_ptr<CostFunctionInterface>& cost,
+  SplitParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
                const std::shared_ptr<ConstraintsInterface>& constraints);
 
   // Default constructor.
@@ -91,7 +91,7 @@ public:
   //      generalized velocity at the next time step. Size must be dimv.
   //   q_next: Configuration at the next time step. Size must be dimq.
   //   v_next: Generalized velocity at the next time step. Size must be dimv.
-  void linearizeOCP(Robot& robot, const double t, const double dtau, 
+  void coarseUpdate(Robot& robot, const double t, const double dtau, 
                     const Eigen::VectorXd& q_prev, 
                     const Eigen::VectorXd& v_prev,
                     const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
@@ -99,25 +99,35 @@ public:
                     const Eigen::VectorXd& f, const Eigen::VectorXd& q, 
                     const Eigen::VectorXd& v, const Eigen::VectorXd& u, 
                     const Eigen::VectorXd& lmd_next,
-                    const Eigen::VectorXd& gmm_next);
+                    const Eigen::VectorXd& gmm_next,
+                    const Eigen::VectorXd& q_next,
+                    const Eigen::VectorXd& v_next,
+                    const Eigen::MatrixXd& aux_mat_next_old,
+                    Eigen::MatrixXd& aux_mat);
 
-  void backwardCollection(const double dtau, const Eigen::MatrixXd& Pqq_next, 
-                          const Eigen::MatrixXd& Pqv_next, 
-                          const Eigen::MatrixXd& Pvq_next, 
-                          const Eigen::MatrixXd& Pvv_next, 
-                          const Eigen::VectorXd& sq_next, 
-                          const Eigen::VectorXd& sv_next, 
-                          Eigen::MatrixXd& Pqq, Eigen::MatrixXd& Pqv, 
-                          Eigen::MatrixXd& Pvq, Eigen::MatrixXd& Pvv, 
-                          Eigen::VectorXd& sq, Eigen::VectorXd& sv);
+  void backwardCollectionSerial(const Eigen::VectorXd& lmd_next_old, 
+                                const Eigen::VectorXd& gmm_next_old, 
+                                const Eigen::VectorXd& lmd_next, 
+                                const Eigen::VectorXd& gmm_next,
+                                Eigen::VectorXd& lmd, 
+                                Eigen::VectorXd& gmm);
 
-  void forwardCollection(const double dtau, const Eigen::VectorXd& dq,   
-                         const Eigen::VectorXd& dv, Eigen::VectorXd& dq_next, 
-                         Eigen::VectorXd& dv_next);
+  void backwardCollectionParallel(const Robot& robot);
 
-  void computeCondensedDirection(const double dtau, const Eigen::VectorXd& dq, 
-                                 const Eigen::VectorXd& dv);
- 
+  void forwardCollectionSerial(const Robot& robot, const Eigen::VectorXd& q_prev_old,   
+                               const Eigen::VectorXd& v_prev_old, 
+                               const Eigen::VectorXd& q_prev, 
+                               const Eigen::VectorXd& v_prev,
+                               Eigen::VectorXd& q, Eigen::VectorXd& v);
+
+  void forwardCollectionParallel(const Robot& robot);
+
+  void computeDirection(const Robot& robot, 
+                        const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
+                        const Eigen::VectorXd& mu, const Eigen::VectorXd& a,
+                        const Eigen::VectorXd& f, const Eigen::VectorXd& q, 
+                        const Eigen::VectorXd& v, const Eigen::VectorXd& u);
+
   double maxPrimalStepSize();
 
   double maxDualStepSize();
@@ -125,13 +135,13 @@ public:
   std::pair<double, double> costAndConstraintsViolation(
       Robot& robot, const double t, const double dtau, const Eigen::VectorXd& q, 
       const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-      const Eigen::VectorXd& u, const Eigen::VectorXd& f);
+      const Eigen::VectorXd& f, const Eigen::VectorXd& u);
 
   std::pair<double, double> costAndConstraintsViolation(
       Robot& robot, const double step_size, const double t, const double dtau, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-      const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-      const Eigen::VectorXd& f, const Eigen::VectorXd& q_next, 
+      const Eigen::VectorXd& a, const Eigen::VectorXd& f, 
+      const Eigen::VectorXd& u, const Eigen::VectorXd& q_next, 
       const Eigen::VectorXd& v_next, const Eigen::VectorXd& dq, 
       const Eigen::VectorXd& dv, const Eigen::VectorXd& dq_next, 
       const Eigen::VectorXd& dv_next);
@@ -151,30 +161,32 @@ public:
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
   double squaredKKTErrorNorm(Robot& robot, const double t, const double dtau, 
-                             const Eigen::VectorXd& lmd, 
-                             const Eigen::VectorXd& gmm, 
-                             const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                             const Eigen::VectorXd& a, const Eigen::VectorXd& u, 
-                             const Eigen::VectorXd& beta, 
-                             const Eigen::VectorXd& f, const Eigen::VectorXd& mu, 
-                             const Eigen::VectorXd& lmd_next, 
-                             const Eigen::VectorXd& gmm_next, 
-                             const Eigen::VectorXd& q_next, 
+                             const Eigen::VectorXd& q_prev, 
+                             const Eigen::VectorXd& v_prev,
+                             const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
+                             const Eigen::VectorXd& mu, const Eigen::VectorXd& a,
+                             const Eigen::VectorXd& f, const Eigen::VectorXd& q, 
+                             const Eigen::VectorXd& v, const Eigen::VectorXd& u, 
+                             const Eigen::VectorXd& lmd_next,
+                             const Eigen::VectorXd& gmm_next,
+                             const Eigen::VectorXd& q_next,
                              const Eigen::VectorXd& v_next);
 
 private:
-  std::shared_ptr<CostFunctionInterface> cost_;
+  std::shared_ptr<CostFunction> cost_;
   std::shared_ptr<ConstraintsInterface> constraints_;
   CostFunctionData cost_data_;
   pdipm::JointSpaceConstraints joint_constraints_;
-  RiccatiMatrixFactorizer riccati_matrix_factorizer_;
-  RiccatiMatrixInverter riccati_matrix_inverter_;
+  KKTResidual kkt_residual_;
+  KKTMatrix kkt_matrix_;
+  KKTComposition kkt_composition_;
   bool has_floating_base_;
-  int dimq_, dimv_, dim_passive_, max_dimf_, max_dimc_, dimf_, dimc_;
-  Eigen::VectorXd kkt_res_, lu_, lu_condensed_, u_res_, du_;
-  Eigen::MatrixXd kkt_mat_, kkt_mat_inv_, Lmd_, luu_, du_dq_, du_dv_, du_da_, du_df_;
-  // The following variables are only needed for line search
-  Eigen::VectorXd q_tmp_, v_tmp_, a_tmp_, f_tmp_, u_tmp_, u_res_tmp_;
+  int dimq_, dimv_, dim_passive_, max_dimf_, max_dimc_;
+  Eigen::VectorXd lu_, lu_condensed_, u_res_, du_, x_res_, dx_, 
+                  dkkt_, dlmd_, dgmm_, dmu_, da_, df_, dq_, dv_, du_, dbeta_;
+  Eigen::MatrixXd luu_, kkt_matrix_inverse_, du_dq_, du_dv_, du_da_, du_df_,
+                  dsubtract_dqminus_, dsubtract_dqplus_;
+  Eigen::VectorXd  lmd_tmp_, gmm_tmp_, q_tmp_, v_tmp_, a_tmp_, f_tmp_, u_tmp_, u_res_tmp_;
 };
 
 } // namespace idocp

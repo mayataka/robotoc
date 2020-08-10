@@ -1,5 +1,5 @@
-#ifndef IDOCP_COST_FUNCTION_INTERFACE_HPP_
-#define IDOCP_COST_FUNCTION_INTERFACE_HPP_
+#ifndef IDOCP_COST_FUNCTION_COMPONENT_BASE_HPP_
+#define IDOCP_COST_FUNCTION_COMPONENT_BASE_HPP_
 
 #include "Eigen/Core"
 
@@ -9,30 +9,32 @@
 
 namespace idocp {
 
-class CostFunctionInterface {
+class CostFunctionComponentBase {
 public:
-  CostFunctionInterface() {}
+  CostFunctionComponentBase() {}
 
-  virtual ~CostFunctionInterface() {}
+  virtual ~CostFunctionComponentBase() {}
 
   // Use default copy constructor.
-  CostFunctionInterface(const CostFunctionInterface&) = default;
+  CostFunctionComponentBase(const CostFunctionComponentBase&) = default;
 
   // Use default copy coperator.
-  CostFunctionInterface& operator=(const CostFunctionInterface&) = default;
+  CostFunctionComponentBase& operator=(const CostFunctionComponentBase&) 
+      = default;
 
   // Use default move constructor.
-  CostFunctionInterface(CostFunctionInterface&&) noexcept = default;
+  CostFunctionComponentBase(CostFunctionComponentBase&&) noexcept = default;
 
   // Use default move assign coperator.
-  CostFunctionInterface& operator=(CostFunctionInterface&&) noexcept = default;
+  CostFunctionComponentBase& operator=(CostFunctionComponentBase&&) noexcept 
+      = default;
 
   virtual double l(const Robot& robot, CostFunctionData& data, const double t, 
                    const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
                    const Eigen::Ref<const Eigen::VectorXd> v, 
                    const Eigen::Ref<const Eigen::VectorXd> a, 
-                   const Eigen::Ref<const Eigen::VectorXd> u, 
-                   const Eigen::Ref<const Eigen::VectorXd> f) const = 0;
+                   const Eigen::Ref<const Eigen::VectorXd> f, 
+                   const Eigen::Ref<const Eigen::VectorXd> u) const = 0;
 
   virtual double phi(const Robot& robot, CostFunctionData& data, const double t, 
                      const Eigen::Ref<const Eigen::VectorXd> q, 
@@ -56,13 +58,13 @@ public:
                   const Eigen::Ref<const Eigen::VectorXd> a, 
                   Eigen::Ref<Eigen::VectorXd> la) const = 0;
 
+  virtual void lf(const Robot& robot, CostFunctionData& data, const double t, 
+                  const double dtau, const Eigen::Ref<const Eigen::VectorXd> f, 
+                  Eigen::Ref<Eigen::VectorXd> lf) const = 0;
+
   virtual void lu(const Robot& robot, CostFunctionData& data, const double t, 
                   const double dtau, const Eigen::Ref<const Eigen::VectorXd> u, 
-                  Eigen::Ref<Eigen::VectorXd> la) const = 0;
-
-  virtual void lf(const Robot& robot, CostFunctionData& data, const double t, 
-                  const double dtau, const Eigen::Ref<const Eigen::VectorXd> u, 
-                  Eigen::Ref<Eigen::VectorXd> la) const = 0;
+                  Eigen::Ref<Eigen::VectorXd> lu) const = 0;
 
   virtual void lqq(const Robot& robot, CostFunctionData& data, const double t, 
                    const double dtau, const Eigen::Ref<const Eigen::VectorXd> q, 
@@ -82,13 +84,13 @@ public:
                    const Eigen::Ref<const Eigen::VectorXd> a, 
                    Eigen::Ref<Eigen::MatrixXd> laa) const = 0;
 
-  virtual void luu(const Robot& robot, CostFunctionData& data, const double t, 
-                   const double dtau, const Eigen::Ref<const Eigen::VectorXd> u, 
-                   Eigen::Ref<Eigen::MatrixXd> luu) const = 0;
-
   virtual void lff(const Robot& robot, CostFunctionData& data, const double t, 
                    const double dtau, const Eigen::Ref<const Eigen::VectorXd> f, 
                    Eigen::Ref<Eigen::MatrixXd> lff) const = 0;
+
+  virtual void luu(const Robot& robot, CostFunctionData& data, const double t, 
+                   const double dtau, const Eigen::Ref<const Eigen::VectorXd> u, 
+                   Eigen::Ref<Eigen::MatrixXd> luu) const = 0;
 
   virtual void augment_lqq(const Robot& robot, CostFunctionData& data, 
                            const double t, const double dtau, 
@@ -104,6 +106,7 @@ public:
                            const Eigen::Ref<const Eigen::VectorXd> a, 
                            Eigen::Ref<Eigen::MatrixXd> lvv) const = 0;
 
+
   virtual void augment_laa(const Robot& robot, CostFunctionData& data, 
                            const double t, const double dtau, 
                            const Eigen::Ref<const Eigen::VectorXd> q, 
@@ -111,38 +114,38 @@ public:
                            const Eigen::Ref<const Eigen::VectorXd> a, 
                            Eigen::Ref<Eigen::MatrixXd> laa) const = 0;
 
-  virtual void augment_luu(const Robot& robot, CostFunctionData& data, 
-                           const double t, const double dtau, 
-                           const Eigen::Ref<const Eigen::VectorXd> u, 
-                           Eigen::Ref<Eigen::MatrixXd> luu) const = 0;
-
   virtual void augment_lff(const Robot& robot, CostFunctionData& data, 
                            const double t, const double dtau, 
                            const Eigen::Ref<const Eigen::VectorXd> f, 
                            Eigen::Ref<Eigen::MatrixXd> lff) const = 0;
 
+  virtual void augment_luu(const Robot& robot, CostFunctionData& data, 
+                           const double t, const double dtau, 
+                           const Eigen::Ref<const Eigen::VectorXd> u, 
+                           Eigen::Ref<Eigen::MatrixXd> luu) const = 0;
+
   virtual void phiq(const Robot& robot, CostFunctionData& data, const double t, 
                     const Eigen::Ref<const Eigen::VectorXd> q, 
                     const Eigen::Ref<const Eigen::VectorXd> v, 
-                    Eigen::VectorXd& phiq) const = 0;
+                    Eigen::Ref<Eigen::VectorXd> phiq) const = 0;
 
   virtual void phiv(const Robot& robot, CostFunctionData& data, const double t, 
                     const Eigen::Ref<const Eigen::VectorXd> q, 
                     const Eigen::Ref<const Eigen::VectorXd> v, 
-                    Eigen::VectorXd& phiv) const = 0;
+                    Eigen::Ref<Eigen::VectorXd> phiv) const = 0;
 
   virtual void phiqq(const Robot& robot, CostFunctionData& data, const double t, 
                      const Eigen::Ref<const Eigen::VectorXd> q, 
                      const Eigen::Ref<const Eigen::VectorXd> v, 
-                     Eigen::MatrixXd& phiqq) const = 0;
+                     Eigen::Ref<Eigen::MatrixXd> phiqq) const = 0;
 
   virtual void phivv(const Robot& robot, CostFunctionData& data, const double t, 
                      const Eigen::Ref<const Eigen::VectorXd> q, 
                      const Eigen::Ref<const Eigen::VectorXd> v, 
-                     Eigen::MatrixXd& phivv) const = 0;
+                     Eigen::Ref<Eigen::MatrixXd> phivv) const = 0;
 
 };
 
 } // namespace idocp
 
-#endif // IDOCP_COST_FUNCTION_INTERFACE_HPP_
+#endif // IDOCP_COST_FUNCTION_COMPONENT_BASE_HPP_

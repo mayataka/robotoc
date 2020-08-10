@@ -59,24 +59,29 @@ public:
                                  kkt_composition_.C_size());
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> Qa() {
+  inline Eigen::Ref<Eigen::VectorXd> la() {
     return kkt_residual_.segment(kkt_composition_.Qa_begin(), 
                                  kkt_composition_.Qa_size());
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> Qf() {
+  inline Eigen::Ref<Eigen::VectorXd> lf() {
     return kkt_residual_.segment(kkt_composition_.Qf_begin(), 
                                  kkt_composition_.Qf_size());
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> Qq() {
+  inline Eigen::Ref<Eigen::VectorXd> lq() {
     return kkt_residual_.segment(kkt_composition_.Qq_begin(), 
                                  kkt_composition_.Qq_size());
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> Qv() {
+  inline Eigen::Ref<Eigen::VectorXd> lv() {
     return kkt_residual_.segment(kkt_composition_.Qv_begin(), 
                                  kkt_composition_.Qv_size());
+  }
+
+  inline Eigen::Ref<Eigen::VectorXd> lx() {
+    return kkt_residual_.segment(kkt_composition_.Qx_begin(), 
+                                 kkt_composition_.Qx_size());
   }
 
   inline void setZero() {
