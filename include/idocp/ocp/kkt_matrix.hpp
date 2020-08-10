@@ -169,7 +169,7 @@ public:
     return kkt_matrix_.block(kkt_composition_.Qq_begin(), 
                              kkt_composition_.Qf_begin(), 
                              kkt_composition_.Qq_size(), 
-                             kkt_composition_.Qv_size());
+                             kkt_composition_.Qf_size());
   }
 
   inline Eigen::Ref<Eigen::MatrixXd> Qqq() {
