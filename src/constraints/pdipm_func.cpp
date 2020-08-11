@@ -1,6 +1,5 @@
 #include "idocp/constraints/pdipm_func.hpp"
 
-#include <cmath>
 #include <assert.h>
 
 
@@ -8,10 +7,9 @@ namespace idocp {
 namespace pdipm {
 namespace pdipmfunc {
 
-
 void SetSlackAndDualPositive(const int dim, const double barrier,
-                             Eigen::VectorXd& slack, 
-                             Eigen::VectorXd& dual) {
+                             Eigen::Ref<Eigen::VectorXd> slack, 
+                             Eigen::Ref<Eigen::VectorXd> dual) {
   assert(dim > 0);
   assert(slack.size() == dim);
   assert(dual.size() == dim);
@@ -24,9 +22,10 @@ void SetSlackAndDualPositive(const int dim, const double barrier,
 }
 
 
-void ComputeDualityResidual(const double barrier, const Eigen::VectorXd& slack, 
-                            const Eigen::VectorXd& dual, 
-                            Eigen::VectorXd& duality_residual) {
+void ComputeDualityResidual(const double barrier, 
+                            const Eigen::Ref<const Eigen::VectorXd>& slack, 
+                            const Eigen::Ref<const Eigen::VectorXd>& dual, 
+                            Eigen::Ref<Eigen::VectorXd> duality_residual) {
   assert(barrier > 0);
   assert(slack.size() == dual.size());
   assert(slack.size() == duality_residual.size());
@@ -35,8 +34,8 @@ void ComputeDualityResidual(const double barrier, const Eigen::VectorXd& slack,
 
 
 double FractionToBoundary(const int dim, const double fraction_rate, 
-                          const Eigen::VectorXd& vec, 
-                          const Eigen::VectorXd& dvec) {
+                          const Eigen::Ref<const Eigen::VectorXd>& vec,
+                          const Eigen::Ref<const Eigen::VectorXd>& dvec) {
   assert(dim > 0);
   assert(fraction_rate > 0);
   assert(fraction_rate <= 1);
@@ -57,11 +56,12 @@ double FractionToBoundary(const int dim, const double fraction_rate,
 }
 
 
-void ComputeDualDirection(const Eigen::VectorXd& dual, 
-                          const Eigen::VectorXd& slack, 
-                          const Eigen::VectorXd& slack_direction, 
-                          const Eigen::VectorXd& duality, 
-                          Eigen::VectorXd& dual_direction) {
+void ComputeDualDirection(
+    const Eigen::Ref<const Eigen::VectorXd>& dual, 
+    const Eigen::Ref<const Eigen::VectorXd>& slack, 
+    const Eigen::Ref<const Eigen::VectorXd>& slack_direction, 
+    const Eigen::Ref<const Eigen::VectorXd>& duality, 
+    Eigen::Ref<Eigen::VectorXd> dual_direction) {
   assert(dual.size() == slack.size());
   assert(dual.size() == slack_direction.size());
   assert(dual.size() == duality.size());
@@ -73,11 +73,11 @@ void ComputeDualDirection(const Eigen::VectorXd& dual,
 
 
 double SlackBarrierCost(const int dim, const double barrier, 
-                        const Eigen::VectorXd& slack) {
+                        const Eigen::Ref<const Eigen::VectorXd>& slack) {
   assert(dim > 0);
   assert(barrier > 0);
   assert(slack.size() == dim);
-  double cost = - barrier * slack.array().log().sum();
+  const double cost = - barrier * slack.array().log().sum();
   return cost;
 }
 

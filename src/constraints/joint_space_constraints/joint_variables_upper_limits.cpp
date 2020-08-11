@@ -8,9 +8,9 @@
 namespace idocp {
 namespace pdipm {
 
-JointVariablesUpperLimits::JointVariablesUpperLimits(const Robot& robot, 
-                                                     const Eigen::VectorXd& xmax, 
-                                                     const double barrier)
+JointVariablesUpperLimits::JointVariablesUpperLimits(
+    const Robot& robot, const Eigen::Ref<const Eigen::VectorXd>& xmax, 
+    const double barrier)
   : dimv_(robot.dimv()),
     dimc_(xmax.size()),
     dim_passive_(robot.dim_passive()),
@@ -48,7 +48,8 @@ JointVariablesUpperLimits::~JointVariablesUpperLimits() {
 }
 
 
-bool JointVariablesUpperLimits::isFeasible(const Eigen::VectorXd& x) {
+bool JointVariablesUpperLimits::isFeasible(
+    const Eigen::Ref<const Eigen::VectorXd>& x) {
   assert(x.size() >= dimv_);
   for (int i=0; i<dimc_; ++i) {
     if (x.tail(dimc_).coeff(i) > xmax_.coeff(i)) {
@@ -59,8 +60,8 @@ bool JointVariablesUpperLimits::isFeasible(const Eigen::VectorXd& x) {
 }
 
 
-void JointVariablesUpperLimits::setSlackAndDual(const double dtau, 
-                                                const Eigen::VectorXd& x) {
+void JointVariablesUpperLimits::setSlackAndDual(
+    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& x) {
   assert(dtau > 0);
   assert(x.size() >= dimv_);
   slack_ = dtau * (xmax_-x.tail(dimc_));
@@ -68,10 +69,9 @@ void JointVariablesUpperLimits::setSlackAndDual(const double dtau,
 }
 
 
-void JointVariablesUpperLimits::condenseSlackAndDual(const double dtau, 
-                                                     const Eigen::VectorXd& x,
-                                                     Eigen::MatrixXd& Cxx, 
-                                                     Eigen::VectorXd& Cx) {
+void JointVariablesUpperLimits::condenseSlackAndDual(
+    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& x, 
+    Eigen::Ref<Eigen::MatrixXd> Cxx, Eigen::Ref<Eigen::VectorXd> Cx) {
   assert(dtau > 0);
   assert(x.size() >= dimv_);
   assert(Cxx.rows() == dimv_);
@@ -90,7 +90,7 @@ void JointVariablesUpperLimits::condenseSlackAndDual(const double dtau,
 
 
 void JointVariablesUpperLimits::computeSlackAndDualDirection(
-    const double dtau, const Eigen::VectorXd& dx) {
+    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& dx) {
   assert(dtau > 0);
   assert(dx.size() == dimv_);
   dslack_ = - dtau * dx.tail(dimc_) - residual_;
@@ -132,16 +132,16 @@ double JointVariablesUpperLimits::costSlackBarrier(const double step_size) {
 }
 
 
-void JointVariablesUpperLimits::augmentDualResidual(const double dtau, 
-                                                    Eigen::VectorXd& Cx) {
+void JointVariablesUpperLimits::augmentDualResidual(
+    const double dtau, Eigen::Ref<Eigen::VectorXd> Cx) {
   assert(dtau > 0);
   assert(Cx.size() == dimv_);
   Cx.tail(dimc_).noalias() += dtau * dual_;
 }
 
 
-double JointVariablesUpperLimits::residualL1Nrom(const double dtau, 
-                                                 const Eigen::VectorXd& x) {
+double JointVariablesUpperLimits::residualL1Nrom(
+    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& x) {
   assert(dtau > 0);
   assert(x.size() >= dimv_);
   residual_ = dtau * (x.tail(dimc_)-xmax_) + slack_;
@@ -149,8 +149,8 @@ double JointVariablesUpperLimits::residualL1Nrom(const double dtau,
 }
 
 
-double JointVariablesUpperLimits::residualSquaredNrom(const double dtau, 
-                                                      const Eigen::VectorXd& x) {
+double JointVariablesUpperLimits::residualSquaredNrom(
+    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& x) {
   assert(dtau > 0);
   assert(x.size() >= dimv_);
   residual_ = dtau * (x.tail(dimc_)-xmax_) + slack_;

@@ -44,13 +44,13 @@ inline void linearizeStageCost(Robot& robot,
 
 
 inline void linearizeDynamics(Robot& robot, const double dtau,
+                              const Eigen::Ref<const Eigen::VectorXd>& q_prev, 
+                              const Eigen::Ref<const Eigen::VectorXd>& v_prev, 
                               const Eigen::Ref<const Eigen::VectorXd>& q, 
                               const Eigen::Ref<const Eigen::VectorXd>& v, 
                               const Eigen::Ref<const Eigen::VectorXd>& a, 
                               const Eigen::Ref<const Eigen::VectorXd>& f, 
                               const Eigen::Ref<const Eigen::VectorXd>& u, 
-                              const Eigen::Ref<const Eigen::VectorXd>& q_prev, 
-                              const Eigen::Ref<const Eigen::VectorXd>& v_prev, 
                               KKTResidual& kkt_residual,
                               Eigen::Ref<Eigen::VectorXd> u_res,
                               Eigen::Ref<Eigen::MatrixXd> du_dq,
@@ -58,13 +58,13 @@ inline void linearizeDynamics(Robot& robot, const double dtau,
                               Eigen::Ref<Eigen::MatrixXd> du_da,
                               Eigen::Ref<Eigen::MatrixXd> du_df) {
   assert(dtau > 0);
+  assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
   assert(q.size() == robot.dimq());
   assert(v.size() == robot.dimv());
   assert(a.size() == robot.dimv());
   assert(f.size() == robot.max_dimf());
   assert(u.size() == robot.dimv());
-  assert(q_prev.size() == robot.dimq());
-  assert(v_prev.size() == robot.dimv());
   assert(u_res.size() == robot.dimv());
   assert(du_dq.rows() == robot.dimv());
   assert(du_dq.cols() == robot.dimv());
@@ -75,7 +75,7 @@ inline void linearizeDynamics(Robot& robot, const double dtau,
   assert(du_df.rows() == robot.dimv());
   assert(du_df.cols() == robot.max_dimf());
   robot.subtractConfiguration(q_prev, q, kkt_residual.Fq());
-  kkt_residual.Fq().head(robot.dimv()).noalias() += dtau * v;
+  kkt_residual.Fq().noalias() += dtau * v;
   kkt_residual.Fv() = v_prev - v + dtau * a;
   if (robot.dimf() > 0) {
     robot.setContactForces(f);

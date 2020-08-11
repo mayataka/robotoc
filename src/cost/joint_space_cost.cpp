@@ -108,8 +108,8 @@ double JointSpaceCost::l(const Robot& robot, CostFunctionData& data,
                          const Eigen::Ref<const Eigen::VectorXd>& q, 
                          const Eigen::Ref<const Eigen::VectorXd>& v, 
                          const Eigen::Ref<const Eigen::VectorXd>& a, 
-                         const Eigen::Ref<const Eigen::VectorXd>& u, 
-                         const Eigen::Ref<const Eigen::VectorXd>& f) const {
+                         const Eigen::Ref<const Eigen::VectorXd>& f, 
+                         const Eigen::Ref<const Eigen::VectorXd>& u) const {
   double l = 0;
   if (robot.has_floating_base()) {
     robot.subtractConfiguration(q, q_ref_, data.q_diff);
@@ -151,7 +151,7 @@ void JointSpaceCost::lq(const Robot& robot, CostFunctionData& data,
   if (robot.has_floating_base()) {
     robot.subtractConfiguration(q, q_ref_, data.q_diff);
     robot.dSubtractdConfigurationPlus(q, q_ref_, data.Jq_diff);
-    lq = dtau * q_weight_ * data.Jq_diff.transpose() * data.q_diff;
+    lq = dtau * data.Jq_diff.transpose() * q_weight_.asDiagonal() * data.q_diff;
   }
   else {
     lq.array() = dtau * q_weight_.array() * (q.array()-q_ref_.array());
@@ -301,7 +301,7 @@ void JointSpaceCost::phiq(const Robot& robot, CostFunctionData& data,
   if (robot.has_floating_base()) {
     robot.subtractConfiguration(q, q_ref_, data.q_diff);
     robot.dSubtractdConfigurationPlus(q, q_ref_, data.Jq_diff);
-    phiq = qf_weight_ * data.Jq_diff.transpose() * data.q_diff;
+    phiq = data.Jq_diff.transpose() * qf_weight_.asDiagonal() * data.q_diff;
   }
   else {
     phiq.array() = qf_weight_.array() * (q.array()-q_ref_.array());
@@ -314,7 +314,7 @@ void JointSpaceCost::phiv(const Robot& robot, CostFunctionData& data,
                           const Eigen::Ref<const Eigen::VectorXd>& q, 
                           const Eigen::Ref<const Eigen::VectorXd>& v, 
                           Eigen::Ref<Eigen::VectorXd> phiv) const {
-  phiv.array() = v_weight_.array() * (v.array()-v_ref_.array());
+  phiv.array() = vf_weight_.array() * (v.array()-v_ref_.array());
 }
 
 

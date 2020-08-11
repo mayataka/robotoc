@@ -192,7 +192,7 @@ void Robot::dSubtractdConfigurationPlus(
       const Eigen::Ref<const Eigen::VectorXd>& q_minus,
       Eigen::Ref<Eigen::MatrixXd> dSubtract_dqplus) const {
   assert(q_plus.size() == dimq_);
-  assert(q_minus.size() == dimv_);
+  assert(q_minus.size() == dimq_);
   assert(dSubtract_dqplus.rows() == dimv_);
   assert(dSubtract_dqplus.cols() == dimv_);
   pinocchio::dDifference(model_, q_minus, q_plus, dSubtract_dqplus, 
@@ -205,7 +205,7 @@ void Robot::dSubtractdConfigurationMinus(
       const Eigen::Ref<const Eigen::VectorXd>& q_minus,
       Eigen::Ref<Eigen::MatrixXd> dSubtract_dqminus) const {
   assert(q_plus.size() == dimq_);
-  assert(q_minus.size() == dimv_);
+  assert(q_minus.size() == dimq_);
   assert(dSubtract_dqminus.rows() == dimv_);
   assert(dSubtract_dqminus.cols() == dimv_);
   pinocchio::dDifference(model_, q_minus, q_plus, dSubtract_dqminus, 

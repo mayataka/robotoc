@@ -11,7 +11,8 @@ namespace pdipm {
 
 class JointVariablesUpperLimits {
 public:
-  JointVariablesUpperLimits(const Robot& robot, const Eigen::VectorXd& xmax, 
+  JointVariablesUpperLimits(const Robot& robot, 
+                            const Eigen::Ref<const Eigen::VectorXd>& xmax, 
                             const double barrier);
 
   JointVariablesUpperLimits();
@@ -32,15 +33,18 @@ public:
   JointVariablesUpperLimits& operator=(JointVariablesUpperLimits&&) noexcept
       = default;
 
-  bool isFeasible(const Eigen::VectorXd& v);
+  bool isFeasible(const Eigen::Ref<const Eigen::VectorXd>& v);
 
-  void setSlackAndDual(const double dtau, const Eigen::VectorXd& x);
+  void setSlackAndDual(const double dtau, 
+                       const Eigen::Ref<const Eigen::VectorXd>& x);
 
-  void condenseSlackAndDual(const double dtau, const Eigen::VectorXd& x, 
-                            Eigen::MatrixXd& Cxx, Eigen::VectorXd& Cx);
+  void condenseSlackAndDual(const double dtau, 
+                            const Eigen::Ref<const Eigen::VectorXd>& x, 
+                            Eigen::Ref<Eigen::MatrixXd> Cxx, 
+                            Eigen::Ref<Eigen::VectorXd> Cx);
 
-  void computeSlackAndDualDirection(const double dtau,
-                                    const Eigen::VectorXd& dx);
+  void computeSlackAndDualDirection(
+      const double dtau, const Eigen::Ref<const Eigen::VectorXd>& dx);
 
   double maxSlackStepSize(const double margin_rate);
 
@@ -54,11 +58,13 @@ public:
 
   double costSlackBarrier(const double step_size);
 
-  void augmentDualResidual(const double dtau, Eigen::VectorXd& Cx);
+  void augmentDualResidual(const double dtau, Eigen::Ref<Eigen::VectorXd> Cx);
 
-  double residualL1Nrom(const double dtau, const Eigen::VectorXd& x);
+  double residualL1Nrom(const double dtau, 
+                        const Eigen::Ref<const Eigen::VectorXd>& x);
 
-  double residualSquaredNrom(const double dtau, const Eigen::VectorXd& x);
+  double residualSquaredNrom(const double dtau, 
+                             const Eigen::Ref<const Eigen::VectorXd>& x);
 
 private:
   int dimv_, dimc_, dim_passive_;

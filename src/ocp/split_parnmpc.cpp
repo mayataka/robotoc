@@ -161,7 +161,7 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   const Eigen::Ref<const Eigen::VectorXd>& mu_active 
       = mu.head(robot.dim_passive()+robot.dimf());
   const Eigen::Ref<const Eigen::VectorXd>& mu_passive 
-      = mu.head(robot.dim_passive());
+      = mu_active.tail(robot.dim_passive());
   const Eigen::Ref<const Eigen::VectorXd>& f_active = f.head(robot.dimf());
   Eigen::Ref<Eigen::VectorXd> mu_tmp_acitve = mu_tmp_.head(robot.dim_passive());
   Eigen::Ref<Eigen::VectorXd> f_tmp_active = f_tmp_.head(robot.dimf());
@@ -195,16 +195,14 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
     robot.dSubtractdConfigurationMinus(q_prev, q, dsubtract_dqminus_);
     robot.dSubtractdConfigurationPlus(q, q_next, dsubtract_dqplus_);
     kkt_residual_.lq().noalias() 
-        += dsubtract_dqplus_.transpose() * lmd_next
-            + dsubtract_dqminus_.transpose() * lmd;
-    kkt_residual_.lv().noalias() += dtau * lmd - gmm + gmm_next;
-    kkt_residual_.la().noalias() += dtau * gmm;
+        += + dsubtract_dqminus_.transpose() * lmd 
+              + dsubtract_dqplus_.transpose() * lmd_next;
   }
   else {
     kkt_residual_.lq().noalias() += lmd_next - lmd;
-    kkt_residual_.lv().noalias() += dtau * lmd - gmm + gmm_next;
-    kkt_residual_.la().noalias() += dtau * gmm;
   }
+  kkt_residual_.lv().noalias() += dtau * lmd - gmm + gmm_next;
+  kkt_residual_.la().noalias() += dtau * gmm;
   // Augmnet the partial derivatives of the inequality constriants.
   joint_constraints_.augmentDualResidual(dtau, kkt_residual_.lq(), 
                                          kkt_residual_.lv(), 
@@ -250,10 +248,10 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   kkt_matrix_.invert(kkt_matrix_inverse_.topLeftCorner(dim_kkt, dim_kkt));
   aux_mat = - kkt_matrix_inverse_.topLeftCorner(2*robot.dimv(), 2*robot.dimv());
   // coarse update of the solution
-  kkt_composition_.set(robot);
   dkkt_.topLeftCorner(dim_kkt, dim_kkt) 
       = kkt_matrix_inverse_.topLeftCorner(dim_kkt, dim_kkt) 
           * kkt_residual.KKT_residual();
+  kkt_composition_.set(robot);
   lmd_tmp_ = lmd - dkkt_.segment(kkt_composition_.Fq_begin(), 
                                  kkt_composition_.Fq_size());
   gmm_tmp_ = gmm - dkkt_.segment(kkt_composition_.Fv_begin(), 

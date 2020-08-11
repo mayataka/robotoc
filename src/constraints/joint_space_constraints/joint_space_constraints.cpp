@@ -49,10 +49,11 @@ void JointSpaceConstraints::setTimeStep(const int time_step) {
 }
 
 
-bool JointSpaceConstraints::isFeasible(const Eigen::VectorXd& q, 
-                                       const Eigen::VectorXd& v, 
-                                       const Eigen::VectorXd& a, 
-                                       const Eigen::VectorXd& u) {
+bool JointSpaceConstraints::isFeasible(
+    const Eigen::Ref<const Eigen::VectorXd>& q, 
+    const Eigen::Ref<const Eigen::VectorXd>& v, 
+    const Eigen::Ref<const Eigen::VectorXd>& a, 
+    const Eigen::Ref<const Eigen::VectorXd>& u) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
@@ -83,11 +84,11 @@ bool JointSpaceConstraints::isFeasible(const Eigen::VectorXd& q,
 }
 
 
-void JointSpaceConstraints::setSlackAndDual(const double dtau, 
-                                            const Eigen::VectorXd& q, 
-                                            const Eigen::VectorXd& v, 
-                                            const Eigen::VectorXd& a, 
-                                            const Eigen::VectorXd& u) {
+void JointSpaceConstraints::setSlackAndDual(
+    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+    const Eigen::Ref<const Eigen::VectorXd>& v, 
+    const Eigen::Ref<const Eigen::VectorXd>& a, 
+    const Eigen::Ref<const Eigen::VectorXd>& u) {
   assert(dtau > 0);
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
@@ -106,8 +107,8 @@ void JointSpaceConstraints::setSlackAndDual(const double dtau,
 }
 
 
-void JointSpaceConstraints::augmentDualResidual(const double dtau, 
-                                                Eigen::VectorXd& Cu) {
+void JointSpaceConstraints::augmentDualResidual(
+    const double dtau, Eigen::Ref<Eigen::VectorXd> Cu) {
   assert(dtau > 0);
   assert(Cu.size() == dimv_);
   torque_upper_limits_.augmentDualResidual(dtau, Cu);
@@ -115,10 +116,9 @@ void JointSpaceConstraints::augmentDualResidual(const double dtau,
 }
 
 
-void JointSpaceConstraints::augmentDualResidual(const double dtau, 
-                                                Eigen::VectorXd& Cq,
-                                                Eigen::VectorXd& Cv, 
-                                                Eigen::VectorXd& Ca) {
+void JointSpaceConstraints::augmentDualResidual(
+    const double dtau, Eigen::Ref<Eigen::VectorXd> Cq, 
+    Eigen::Ref<Eigen::VectorXd> Cv, Eigen::Ref<Eigen::VectorXd> Ca) {
   assert(dtau > 0);
   assert(Cq.size() == dimv_);
   assert(Cv.size() == dimv_);
@@ -134,16 +134,13 @@ void JointSpaceConstraints::augmentDualResidual(const double dtau,
 }
 
 
-void JointSpaceConstraints::condenseSlackAndDual(const double dtau, 
-                                                 const Eigen::VectorXd& q, 
-                                                 const Eigen::VectorXd& v, 
-                                                 const Eigen::VectorXd& a, 
-                                                 Eigen::MatrixXd& Cqq, 
-                                                 Eigen::MatrixXd& Cvv, 
-                                                 Eigen::MatrixXd& Caa,  
-                                                 Eigen::VectorXd& Cq, 
-                                                 Eigen::VectorXd& Cv, 
-                                                 Eigen::VectorXd& Ca) {
+void JointSpaceConstraints::condenseSlackAndDual(
+    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+    const Eigen::Ref<const Eigen::VectorXd>& v, 
+    const Eigen::Ref<const Eigen::VectorXd>& a, 
+    Eigen::Ref<Eigen::MatrixXd> Cqq, Eigen::Ref<Eigen::MatrixXd> Cvv, 
+    Eigen::Ref<Eigen::MatrixXd> Caa,  Eigen::Ref<Eigen::VectorXd> Cq, 
+    Eigen::Ref<Eigen::VectorXd> Cv, Eigen::Ref<Eigen::VectorXd> Ca) {
   assert(dtau > 0);
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
@@ -168,10 +165,9 @@ void JointSpaceConstraints::condenseSlackAndDual(const double dtau,
 }
 
 
-void JointSpaceConstraints::condenseSlackAndDual(const double dtau, 
-                                                 const Eigen::VectorXd& u, 
-                                                 Eigen::MatrixXd& Cuu, 
-                                                 Eigen::VectorXd& Cu) {
+void JointSpaceConstraints::condenseSlackAndDual(
+    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& u, 
+    Eigen::Ref<Eigen::MatrixXd> Cuu, Eigen::Ref<Eigen::VectorXd> Cu) {
   assert(dtau > 0);
   assert(u.size() == dimv_);
   torque_upper_limits_.condenseSlackAndDual(dtau, u, Cuu, Cu);
@@ -180,8 +176,10 @@ void JointSpaceConstraints::condenseSlackAndDual(const double dtau,
 
 
 void JointSpaceConstraints::computeSlackAndDualDirection(
-    const double dtau, const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-    const Eigen::VectorXd& da, const Eigen::VectorXd& du) {
+    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& dq, 
+    const Eigen::Ref<const Eigen::VectorXd>& dv, 
+    const Eigen::Ref<const Eigen::VectorXd>& da, 
+    const Eigen::Ref<const Eigen::VectorXd>& du) {
   assert(dtau > 0);
   assert(dq.size() == dimv_);
   assert(dv.size() == dimv_);
@@ -342,11 +340,11 @@ double JointSpaceConstraints::costSlackBarrier(const double step_size) {
 }
 
 
-double JointSpaceConstraints::residualL1Nrom(const double dtau, 
-                                             const Eigen::VectorXd& q, 
-                                             const Eigen::VectorXd& v, 
-                                             const Eigen::VectorXd& a, 
-                                             const Eigen::VectorXd& u) {
+double JointSpaceConstraints::residualL1Nrom(
+    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+    const Eigen::Ref<const Eigen::VectorXd>& v, 
+    const Eigen::Ref<const Eigen::VectorXd>& a, 
+    const Eigen::Ref<const Eigen::VectorXd>& u) {
   assert(dtau > 0);
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
@@ -367,11 +365,11 @@ double JointSpaceConstraints::residualL1Nrom(const double dtau,
 }
 
 
-double JointSpaceConstraints::residualSquaredNrom(const double dtau, 
-                                                  const Eigen::VectorXd& q, 
-                                                  const Eigen::VectorXd& v, 
-                                                  const Eigen::VectorXd& a, 
-                                                  const Eigen::VectorXd& u) {
+double JointSpaceConstraints::residualSquaredNrom(
+    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+    const Eigen::Ref<const Eigen::VectorXd>& v, 
+    const Eigen::Ref<const Eigen::VectorXd>& a, 
+    const Eigen::Ref<const Eigen::VectorXd>& u) {
   assert(dtau > 0);
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);

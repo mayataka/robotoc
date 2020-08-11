@@ -43,10 +43,10 @@ add_library(
   src/cost/cost_function_data.cpp
   src/cost/joint_space_cost.cpp
   src/cost/contact_cost.cpp
-  # src/constraints/pdipm_func.cpp
-  # src/constraints/joint_space_constraints/joint_space_constraints.cpp
-  # src/constraints/joint_space_constraints/joint_variables_upper_limits.cpp
-  # src/constraints/joint_space_constraints/joint_variables_lower_limits.cpp
+  src/constraints/pdipm_func.cpp
+  src/constraints/joint_space_constraints/joint_space_constraints.cpp
+  src/constraints/joint_space_constraints/joint_variables_upper_limits.cpp
+  src/constraints/joint_space_constraints/joint_variables_lower_limits.cpp
   # src/manipulator/cost_function.cpp
   # src/manipulator/constraints.cpp
   # src/quadruped/cost_function.cpp
@@ -58,6 +58,7 @@ add_library(
   # src/ocp/split_ocp.cpp
   # src/ocp/line_search_filter.cpp
   # src/ocp/ocp.cpp
+  # src/ocp/parnmpc_linearizer.cpp
   src/ocp/kkt_composition.cpp
   src/ocp/kkt_residual.cpp
   src/ocp/kkt_matrix.cpp
