@@ -345,4 +345,32 @@ void JointSpaceCost::phivv(const Robot& robot, CostFunctionData& data,
   }
 }
 
+void JointSpaceCost::augment_phiqq(const Robot& robot, CostFunctionData& data, 
+                                   const double t, 
+                                   const Eigen::Ref<const Eigen::VectorXd>& q, 
+                                   const Eigen::Ref<const Eigen::VectorXd>& v, 
+                                   Eigen::Ref<Eigen::MatrixXd> phiqq) const {
+  if (robot.has_floating_base()) {
+    robot.dSubtractdConfigurationPlus(q, q_ref_, data.Jq_diff);
+    phiqq.noalias() += data.Jq_diff.transpose() * qf_weight_.asDiagonal() * data.Jq_diff;
+  }
+  else {
+    for (int i=0; i<robot.dimv(); ++i) {
+      phiqq.coeffRef(i, i) += qf_weight_.coeff(i);
+    }
+  }
+}
+
+
+void JointSpaceCost::augment_phivv(const Robot& robot, CostFunctionData& data, 
+                                   const double t, 
+                                   const Eigen::Ref<const Eigen::VectorXd>& q, 
+                                   const Eigen::Ref<const Eigen::VectorXd>& v, 
+                                   Eigen::Ref<Eigen::MatrixXd> phivv) const {
+  for (int i=0; i<robot.dimv(); ++i) {
+    phivv.coeffRef(i, i) += vf_weight_.coeff(i);
+  }
+}
+
+
 } // namespace idocp

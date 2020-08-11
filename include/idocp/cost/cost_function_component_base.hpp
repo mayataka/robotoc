@@ -150,6 +150,18 @@ public:
                      const Eigen::Ref<const Eigen::VectorXd>& v, 
                      Eigen::Ref<Eigen::MatrixXd> phivv) const = 0;
 
+  virtual void augment_phiqq(const Robot& robot, CostFunctionData& data, 
+                             const double t, 
+                             const Eigen::Ref<const Eigen::VectorXd>& q, 
+                             const Eigen::Ref<const Eigen::VectorXd>& v, 
+                             Eigen::Ref<Eigen::MatrixXd> phiqq) const = 0;
+
+  virtual void augment_phivv(const Robot& robot, CostFunctionData& data, 
+                             const double t, 
+                             const Eigen::Ref<const Eigen::VectorXd>& q, 
+                             const Eigen::Ref<const Eigen::VectorXd>& v, 
+                             Eigen::Ref<Eigen::MatrixXd> phivv) const = 0;
+
 };
 
 } // namespace idocp

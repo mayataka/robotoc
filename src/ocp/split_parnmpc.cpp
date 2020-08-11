@@ -105,18 +105,16 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t,
                                 const Eigen::VectorXd& lmd_next,
                                 const Eigen::VectorXd& gmm_next,
                                 const Eigen::VectorXd& q_next,
-                                const Eigen::VectorXd& v_next,
                                 const Eigen::MatrixXd& aux_mat_next_old,
                                 Eigen::MatrixXd& aux_mat, 
-                                SplitSolution& s_new_coarse,
-                                const bool is_terminal_ocp) {
+                                SplitSolution& s_new_coarse, 
+                                const bool is_terminal) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   assert(lmd_next.size() == robot.dimv());
   assert(gmm_next.size() == robot.dimv());
   assert(q_next.size() == robot.dimq());
-  assert(v_next.size() == robot.dimv());
   assert(aux_mat_next_old.rows() == 2*robot.dimv());
   assert(aux_mat_next_old.cols() == 2*robot.dimv());
   assert(aux_mat.rows() == 2*robot.dimv());
@@ -160,8 +158,8 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t,
     kkt_residual_.lf().noalias() += du_df_active.transpose() * lu_condensed_;
   }
   // Augmnet the partial derivatives of the state equation.
-  if (robot.has_floating_base()) {
-    if (!is_terminal_ocp) {
+  if (!is_terminal) {
+    if (robot.has_floating_base()) {
       robot.dSubtractdConfigurationMinus(q_prev, s.q, dsubtract_dqminus_);
       robot.dSubtractdConfigurationPlus(s.q, q_next, dsubtract_dqplus_);
       kkt_residual_.lq().noalias() 
@@ -169,16 +167,25 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t,
               + dsubtract_dqplus_.transpose() * lmd_next;
     }
     else {
-      robot.dSubtractdConfigurationMinus(q_prev, s.q, dsubtract_dqminus_);
-      kkt_residual_.lq().noalias() 
-          += dsubtract_dqminus_.transpose() * s.lmd + lmd_next;
+      kkt_residual_.lq().noalias() += lmd_next - s.lmd;
     }
+    kkt_residual_.lv().noalias() += dtau * s.lmd - s.gmm + gmm_next;
+    kkt_residual_.la().noalias() += dtau * s.gmm;
   }
   else {
-    kkt_residual_.lq().noalias() += lmd_next - s.lmd;
+    cost_->phiq(robot, cost_data_, t, s.q, s.v, dx_.head(robot.dimv()));
+    cost_->phiv(robot, cost_data_, t, s.q, s.v, dx_.tail(robot.dimv()));
+    if (robot.has_floating_base()) {
+      robot.dSubtractdConfigurationMinus(q_prev, s.q, dsubtract_dqminus_);
+      kkt_residual_.lq().noalias() 
+          += dsubtract_dqminus_.transpose() * s.lmd + dx_.head(robot.dimv());
+    }
+    else {
+      kkt_residual_.lq().noalias() += dx_.head(robot.dimv()) - s.lmd;
+    }
+    kkt_residual_.lv().noalias() += dtau * s.lmd - s.gmm + dx_.tail(robot.dimv());
+    kkt_residual_.la().noalias() += dtau * s.gmm;
   }
-  kkt_residual_.lv().noalias() += dtau * s.lmd - s.gmm + gmm_next;
-  kkt_residual_.la().noalias() += dtau * s.gmm;
   // Augmnet the partial derivatives of the inequality constriants.
   joint_constraints_.augmentDualResidual(dtau, kkt_residual_.lq(), 
                                          kkt_residual_.lv(), 
@@ -222,8 +229,12 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t,
   if (robot.dimf() > 0) {
     cost_->augment_lff(robot, cost_data_, t, dtau, s.f, kkt_matrix_.Qff());
   }
+  if (is_terminal) {
+    cost_->augment_phiqq(robot, cost_data_, t, s.q, s.v, kkt_matrix_.Qqq());
+    cost_->augment_phivv(robot, cost_data_, t, s.q, s.v, kkt_matrix_.Qvv());
+  }
   kkt_matrix_.symmetrize();
-  if (!is_terminal_ocp) {
+  if (!is_terminal) {
     kkt_matrix_.Qxx().noalias() += aux_mat_next_old;
   }
   const int dim_kkt = kkt_matrix_.dimKKT();
@@ -244,16 +255,6 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t,
   s_new_coarse.q = s.q;
   robot.integrateConfiguration(kkt_direction_.dq(), -1, s_new_coarse.q);
   s_new_coarse.v = s.v - kkt_direction_.dv();
-}
-
-
-void SplitParNMPC::computeTerminalCostDerivatives(const Robot& robot, 
-                                                  const double t, 
-                                                  const SplitSolution& s,
-                                                  Eigen::VectorXd& phiq, 
-                                                  Eigen::VectorXd& phiv) {
-  cost_->phiq(robot, cost_data_, t, s.q, s.v, phiq);
-  cost_->phiv(robot, cost_data_, t, s.q, s.v, phiv);
 }
 
 

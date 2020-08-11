@@ -20,15 +20,13 @@ ParNMPC::ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     min_step_size_(0.05),
     N_(N),
     num_proc_(num_proc),
-    s_(N, SplitSolution(robot)),
+    s_(N+1, SplitSolution(robot)),
     s_new_(N, SplitSolution(robot)),
     s_old_(N, SplitSolution(robot)),
     aux_mat_(N, Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
     aux_mat_old_(N+1, Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
     phiq_(Eigen::VectorXd::Zero(robot.dimv())),
     phiv_(Eigen::VectorXd::Zero(robot.dimv())),
-    q_terminal_(Eigen::VectorXd::Zero(robot.dimq())),
-    v_terminal_(Eigen::VectorXd::Zero(robot.dimv())),
     primal_step_sizes_(Eigen::VectorXd::Zero(N)),
     dual_step_sizes_(Eigen::VectorXd::Zero(N)),
     costs_(Eigen::VectorXd::Zero(N)), 
@@ -65,8 +63,6 @@ ParNMPC::ParNMPC()
     aux_mat_old_(),
     phiq_(),
     phiv_(),
-    q_terminal_(),
-    v_terminal_(),
     primal_step_sizes_(),
     dual_step_sizes_(),
     costs_(), 
@@ -91,24 +87,22 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
     if (time_step == 0) {
       split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
                                   q, v, s_[i], s_[i+1].lmd, s_[i+1].gmm, 
-                                  s_[i+1].q, s_[i+1].v, aux_mat_old_[i+1], 
-                                  aux_mat_[i], s_new_[i], false);
+                                  s_[i+1].q, aux_mat_old_[i+1], aux_mat_[i], 
+                                  s_new_[i], false);
     }
     else if (i < N_-1) {
       split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
                                   s_[i-1].q, s_[i-1].v, s_[i], 
-                                  s_[i+1].lmd, s_[i+1].gmm, s_[i+1].q, s_[i+1].v, 
+                                  s_[i+1].lmd, s_[i+1].gmm, s_[i+1].q, 
                                   aux_mat_old_[i+1], aux_mat_[time_step], 
                                   s_new_[time_step], false);
     }
     else {
-      split_ocps_[i].computeTerminalCostDerivatives(robots_[robot_id], 
-                                                    t+(i+1)*dtau_, s_[i], 
-                                                    phiq_, phiv_);
       split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
-                                  s_[i-1].q, s_[i-1].v, s_[i], phiq_, phiv_,
-                                  q_terminal_, v_terminal_, aux_mat_old_[i+1], 
-                                  aux_mat_[i], s_new_[i], true);
+                                  s_[i-1].q, s_[i-1].v, s_[i], 
+                                  s_[i+1].lmd, s_[i+1].gmm, s_[i+1].q, 
+                                  aux_mat_old_[i+1], aux_mat_[time_step], 
+                                  s_new_[time_step], true);
     }
   }
   for (int i=N_-2; i>=0; --i) {
@@ -331,15 +325,6 @@ double ParNMPC::KKTError(const double t, const Eigen::VectorXd& q,
                                                     s_[i-1].q, s_[i-1].v, s_[i], 
                                                     s_[i+1].lmd, s_[i+1].gmm, 
                                                     s_[i+1].q, s_[i+1].v);
-    }
-    else {
-      split_ocps_[i].computeTerminalCostDerivatives(robots_[robot_id], t, 
-                                                    s_[i], phiq_, phiv_);
-      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
-                                                    t+i*dtau_, dtau_, s_[i-1].q, 
-                                                    s_[i-1].v, s_[i], phiq_, 
-                                                    phiv_, q_terminal_, 
-                                                    v_terminal_);
     }
   }
   return std::sqrt(error.sum());

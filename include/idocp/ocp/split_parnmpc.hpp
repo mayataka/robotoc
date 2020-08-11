@@ -98,16 +98,9 @@ public:
                     const Eigen::VectorXd& lmd_next,
                     const Eigen::VectorXd& gmm_next,
                     const Eigen::VectorXd& q_next,
-                    const Eigen::VectorXd& v_next,
                     const Eigen::MatrixXd& aux_mat_next_old,
-                    Eigen::MatrixXd& aux_mat, SplitSolution& s_new_coarse, 
-                    const bool is_terminal_ocp=false);
-
-  void computeTerminalCostDerivatives(const Robot& robot, const double t, 
-                                      const SplitSolution& s,
-                                      Eigen::VectorXd& phiq, 
-                                      Eigen::VectorXd& phiv);
-
+                    Eigen::MatrixXd& aux_mat, SplitSolution& s_new_coarse,
+                    const bool is_terminal=false);
 
   void backwardCollectionSerial(const SplitSolution& s_old_next,
                                 const SplitSolution& s_new_next,

@@ -153,6 +153,16 @@ public:
              const Eigen::Ref<const Eigen::VectorXd>& v, 
              Eigen::Ref<Eigen::MatrixXd> phivv) const override;
 
+  void augment_phiqq(const Robot& robot, CostFunctionData& data, const double t, 
+                     const Eigen::Ref<const Eigen::VectorXd>& q, 
+                     const Eigen::Ref<const Eigen::VectorXd>& v, 
+                     Eigen::Ref<Eigen::MatrixXd> phiqq) const override;
+
+  void augment_phivv(const Robot& robot, CostFunctionData& data, const double t, 
+                     const Eigen::Ref<const Eigen::VectorXd>& q, 
+                     const Eigen::Ref<const Eigen::VectorXd>& v, 
+                     Eigen::Ref<Eigen::MatrixXd> phivv) const override;
+
 
   // The following functions do nothig, just for dynamic polymorphism.
   void lf(const Robot& robot, CostFunctionData& data, const double t, 

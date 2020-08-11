@@ -1,9 +1,6 @@
 #ifndef IDOCP_SPLIT_SOLUTION_HPP_
 #define IDOCP_SPLIT_SOLUTION_HPP_
 
-
-#include <assert.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
