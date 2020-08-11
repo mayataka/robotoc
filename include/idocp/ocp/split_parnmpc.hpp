@@ -16,6 +16,7 @@
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/kkt_direction.hpp"
 #include "idocp/ocp/kkt_composition.hpp"
+#include "idocp/ocp/split_solution.hpp"
 
 
 namespace idocp {
@@ -59,9 +60,7 @@ public:
   //   v: Generalized velocity. Size must be dimv.
   //   a: Generalized acceleration. Size must be dimv.
   //   u: Generalized torque. Size must be dimv.
-  bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
-                  const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-                  const Eigen::VectorXd& f, const Eigen::VectorXd& u);
+  bool isFeasible(const Robot& robot, const SplitSolution& s);
 
   // Initialize the constraints, i.e., set slack and dual variables under set 
   //  q, v, a, u.
@@ -71,9 +70,7 @@ public:
   //   a: Generalized acceleration. Size must be dimv.
   //   u: Generalized torque. Size must be dimv.
   void initConstraints(const Robot& robot, const int time_step, 
-                       const double dtau, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-                       const Eigen::VectorXd& f, const Eigen::VectorXd& u);
+                       const double dtau, const SplitSolution& s);
 
   // Linearize the ParNMPC for Newton's method around the current solution.
   // Argments: 
@@ -97,83 +94,57 @@ public:
   //   v_next: Generalized velocity at the next time step. Size must be dimv.
   void coarseUpdate(Robot& robot, const double t, const double dtau, 
                     const Eigen::VectorXd& q_prev, 
-                    const Eigen::VectorXd& v_prev,
-                    const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
-                    const Eigen::VectorXd& mu, const Eigen::VectorXd& a,
-                    const Eigen::VectorXd& f, const Eigen::VectorXd& q, 
-                    const Eigen::VectorXd& v, const Eigen::VectorXd& u, 
+                    const Eigen::VectorXd& v_prev, const SplitSolution& s, 
                     const Eigen::VectorXd& lmd_next,
                     const Eigen::VectorXd& gmm_next,
                     const Eigen::VectorXd& q_next,
                     const Eigen::VectorXd& v_next,
                     const Eigen::MatrixXd& aux_mat_next_old,
-                    Eigen::MatrixXd& aux_mat, const bool is_terminal_ocp=false);
+                    Eigen::MatrixXd& aux_mat, SplitSolution& s_new_coarse, 
+                    const bool is_terminal_ocp=false);
 
   void computeTerminalCostDerivatives(const Robot& robot, const double t, 
-                                      const Eigen::VectorXd& q, 
-                                      const Eigen::VectorXd& v, 
+                                      const SplitSolution& s,
                                       Eigen::VectorXd& phiq, 
                                       Eigen::VectorXd& phiv);
 
 
-  void backwardCollectionSerial(const Eigen::VectorXd& lmd_next_old, 
-                                const Eigen::VectorXd& gmm_next_old, 
-                                const Eigen::VectorXd& lmd_next, 
-                                const Eigen::VectorXd& gmm_next,
-                                Eigen::VectorXd& lmd, 
-                                Eigen::VectorXd& gmm);
+  void backwardCollectionSerial(const SplitSolution& s_old_next,
+                                const SplitSolution& s_new_next,
+                                SplitSolution& s_new);
 
-  void backwardCollectionParallel(const Robot& robot);
+  void backwardCollectionParallel(const Robot& robot, SplitSolution& s_new);
 
-  void forwardCollectionSerial(const Robot& robot,   
-                               const Eigen::VectorXd& q_prev_old, 
-                               const Eigen::VectorXd& v_prev_old, 
-                               const Eigen::VectorXd& q_prev, 
-                               const Eigen::VectorXd& v_prev,
-                               Eigen::VectorXd& q, Eigen::VectorXd& v);
+  void forwardCollectionSerial(const Robot& robot, 
+                               const SplitSolution& s_old_prev,
+                               const SplitSolution& s_new_prev, 
+                               SplitSolution& s_new);
 
-  void forwardCollectionParallel(const Robot& robot);
+  void forwardCollectionParallel(const Robot& robot, SplitSolution& s_new);
 
   void computePrimalAndDualDirection(const Robot& robot, const double dtau,
-                                     const Eigen::VectorXd& lmd, 
-                                     const Eigen::VectorXd& gmm, 
-                                     const Eigen::VectorXd& mu, 
-                                     const Eigen::VectorXd& a,
-                                     const Eigen::VectorXd& f, 
-                                     const Eigen::VectorXd& q, 
-                                     const Eigen::VectorXd& v, 
-                                     const Eigen::VectorXd& u);
-  
+                                     const SplitSolution& s,
+                                     const SplitSolution& s_new);
+
   double maxPrimalStepSize();
 
   double maxDualStepSize();
 
-  std::pair<double, double> stageCostAndConstraintsViolation(
-      Robot& robot, const double t, const double dtau, const Eigen::VectorXd& q, 
-      const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-      const Eigen::VectorXd& f, const Eigen::VectorXd& u);
+  // std::pair<double, double> stageCostAndConstraintsViolation(
+  //     Robot& robot, const double t, const double dtau, const SplitSolution& s);
 
-  std::pair<double, double> stageCostAndConstraintsViolation(
-      Robot& robot, const double step_size, const double t, const double dtau, 
-      const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
-      const Eigen::VectorXd& dq_prev, const Eigen::VectorXd& dv_prev, 
-      const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-      const Eigen::VectorXd& a, const Eigen::VectorXd& f, 
-      const Eigen::VectorXd& u);
+  // std::pair<double, double> stageCostAndConstraintsViolation(
+  //     Robot& robot, const double step_size, const double t, const double dtau, 
+  //     const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
+  //     const Eigen::VectorXd& dq_prev, const Eigen::VectorXd& dv_prev, 
+  //     const SplitSolution& s, SplitSolution& s_tmp);
 
-  double terminalCost(Robot& robot, const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v);
-
-  double terminalCost(Robot& robot, const double step_size, const double t, 
-                      const Eigen::VectorXd& q, const Eigen::VectorXd& v);
-
-  void updateDual(const double step_size);
+  // double terminalCost(Robot& robot, const double t, const SplitSolution& s);
 
   void updatePrimal(Robot& robot, const double step_size, const double dtau, 
-                    Eigen::VectorXd& lmd, Eigen::VectorXd& gmm, 
-                    Eigen::VectorXd& a, Eigen::VectorXd& f, Eigen::VectorXd& mu, 
-                    Eigen::VectorXd& q, Eigen::VectorXd& v, 
-                    Eigen::VectorXd& u, Eigen::VectorXd& beta);
+                    SplitSolution& s);
+
+  void updateDual(const double step_size);
 
   void getStateDirection(Eigen::VectorXd& dq, Eigen::VectorXd& dv);
 
@@ -182,15 +153,7 @@ public:
   double squaredKKTErrorNorm(Robot& robot, const double t, const double dtau, 
                              const Eigen::VectorXd& q_prev, 
                              const Eigen::VectorXd& v_prev, 
-                             const Eigen::VectorXd& lmd, 
-                             const Eigen::VectorXd& gmm, 
-                             const Eigen::VectorXd& mu, 
-                             const Eigen::VectorXd& a, 
-                             const Eigen::VectorXd& f, 
-                             const Eigen::VectorXd& q, 
-                             const Eigen::VectorXd& v, 
-                             const Eigen::VectorXd& u, 
-                             const Eigen::VectorXd& beta, 
+                             const SplitSolution& s,
                              const Eigen::VectorXd& lmd_next,
                              const Eigen::VectorXd& gmm_next,
                              const Eigen::VectorXd& q_next,
@@ -208,7 +171,6 @@ private:
   KKTDirection kkt_direction_;
   KKTComposition kkt_composition_;
   Eigen::VectorXd lu_, lu_condensed_, u_res_, du_, dbeta_, x_res_, dx_,
-                  lmd_tmp_, gmm_tmp_, mu_tmp_, q_tmp_, v_tmp_, a_tmp_, f_tmp_, 
                   u_tmp_, u_res_tmp_;
   Eigen::MatrixXd luu_, kkt_matrix_inverse_, du_dq_, du_dv_, du_da_, du_df_,
                   dsubtract_dqminus_, dsubtract_dqplus_;

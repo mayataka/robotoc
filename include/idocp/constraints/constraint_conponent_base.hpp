@@ -35,13 +35,13 @@ public:
                           const Eigen::Ref<const Eigen::VectorXd>& v, 
                           const Eigen::Ref<const Eigen::VectorXd>& u) const = 0;
 
-  virtual void setSlackAndDual(const Robot& robot, 
-                               ConstraintComponentData& data, const double dtau, 
-                               const Eigen::Ref<const Eigen::VectorXd>& a, 
-                               const Eigen::Ref<const Eigen::VectorXd>& f, 
-                               const Eigen::Ref<const Eigen::VectorXd>& q, 
-                               const Eigen::Ref<const Eigen::VectorXd>& v, 
-                               const Eigen::Ref<const Eigen::VectorXd>& u) const = 0;
+  virtual void setSlackAndDual(
+      const Robot& robot, ConstraintComponentData& data, const double dtau, 
+      const Eigen::Ref<const Eigen::VectorXd>& a, 
+      const Eigen::Ref<const Eigen::VectorXd>& f, 
+      const Eigen::Ref<const Eigen::VectorXd>& q, 
+      const Eigen::Ref<const Eigen::VectorXd>& v, 
+      const Eigen::Ref<const Eigen::VectorXd>& u) const = 0;
 
   virtual void augmentDualResidual(const Robot& robot, 
                                    ConstraintComponentData& data, 
@@ -79,14 +79,13 @@ public:
                                     Eigen::Ref<Eigen::MatrixXd> Cuu, 
                                     Eigen::Ref<Eigen::VectorXd> Cu) const = 0;
 
-  virtual void computeSlackAndDualDirection(const Robot& robot, 
-                                            ConstraintComponentData& data, 
-                                            const double dtau,
-                                            const Eigen::Ref<const Eigen::VectorXd>& da,
-                                            const Eigen::Ref<const Eigen::VectorXd>& df,
-                                            const Eigen::Ref<const Eigen::VectorXd>& dq,
-                                            const Eigen::Ref<const Eigen::VectorXd>& dv,
-                                            const Eigen::Ref<const Eigen::VectorXd>& du) const = 0;
+  virtual void computeSlackAndDualDirection(
+      const Robot& robot, ConstraintComponentData& data, const double dtau, 
+      const Eigen::Ref<const Eigen::VectorXd>& da, 
+      const Eigen::Ref<const Eigen::VectorXd>& df, 
+      const Eigen::Ref<const Eigen::VectorXd>& dq, 
+      const Eigen::Ref<const Eigen::VectorXd>& dv, 
+      const Eigen::Ref<const Eigen::VectorXd>& du) const = 0;
 
   virtual double maxSlackStepSize(const ConstraintComponentData& data) const = 0;
 
@@ -103,23 +102,21 @@ public:
   virtual double costSlackBarrier(const ConstraintComponentData& data, 
                                   const double step_size) const = 0;
 
-  virtual double residualL1Nrom(const Robot& robot, 
-                                ConstraintComponentData& data, 
-                                const double dtau, 
-                                const Eigen::Ref<const Eigen::VectorXd>& a, 
-                                const Eigen::Ref<const Eigen::VectorXd>& f, 
-                                const Eigen::Ref<const Eigen::VectorXd>& q, 
-                                const Eigen::Ref<const Eigen::VectorXd>& v, 
-                                const Eigen::Ref<const Eigen::VectorXd>& u) const = 0;
+  virtual double residualL1Nrom(
+      const Robot& robot, ConstraintComponentData& data, 
+      const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
+      const Eigen::Ref<const Eigen::VectorXd>& f, 
+      const Eigen::Ref<const Eigen::VectorXd>& q, 
+      const Eigen::Ref<const Eigen::VectorXd>& v, 
+      const Eigen::Ref<const Eigen::VectorXd>& u) const = 0;
 
-  virtual double residualSquaredNrom(const Robot& robot, 
-                                     ConstraintComponentData& data, 
-                                     const double dtau,
-                                     const Eigen::Ref<const Eigen::VectorXd>& a, 
-                                     const Eigen::Ref<const Eigen::VectorXd>& f, 
-                                     const Eigen::Ref<const Eigen::VectorXd>& q, 
-                                     const Eigen::Ref<const Eigen::VectorXd>& v, 
-                                     const Eigen::Ref<const Eigen::VectorXd>& u) const = 0;
+  virtual double residualSquaredNrom(
+      const Robot& robot, ConstraintComponentData& data, 
+      const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
+      const Eigen::Ref<const Eigen::VectorXd>& f, 
+      const Eigen::Ref<const Eigen::VectorXd>& q, 
+      const Eigen::Ref<const Eigen::VectorXd>& v, 
+      const Eigen::Ref<const Eigen::VectorXd>& u) const = 0;
   
   virtual int dim() const = 0;
 

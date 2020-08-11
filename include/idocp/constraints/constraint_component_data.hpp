@@ -28,7 +28,8 @@ public:
       ddual() {
   }
 
-  ~ConstraintComponentData();
+  ~ConstraintComponentData() {
+  }
 
   // Use default copy constructor.
   ConstraintComponentData(const ConstraintComponentData&) = default;

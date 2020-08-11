@@ -10,9 +10,12 @@ namespace idocp {
 
 class ConstraintsData {
 public:
-  ConstraintsData();
+  ConstraintsData() 
+    : data() {
+  }
 
-  ~ConstraintsData();
+  ~ConstraintsData() {
+  }
 
   // Use default copy constructor.
   ConstraintsData(const ConstraintsData&) = default;

@@ -8,6 +8,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_parnmpc.hpp"
+#include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/line_search_filter.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -73,9 +74,9 @@ private:
   LineSearchFilter filter_;
   double T_, dtau_, step_size_reduction_rate_, min_step_size_;
   int N_, num_proc_;
-  std::vector<Eigen::VectorXd> lmd_, gmm_, mu_, a_, f_, q_, v_, u_, beta_,
-                               lmd_old_, gmm_old_, q_old_, v_old_, dq_, dv_;
+  std::vector<SplitSolution> s_, s_new_, s_old_;
   std::vector<Eigen::MatrixXd> aux_mat_, aux_mat_old_;
+  Eigen::VectorXd phiq_, phiv_, q_terminal_, v_terminal_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, 
                   constraints_violations_;
   std::vector<std::vector<bool>> contact_sequence_;

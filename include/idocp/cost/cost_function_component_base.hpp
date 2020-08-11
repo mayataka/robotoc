@@ -30,7 +30,8 @@ public:
       = default;
 
   virtual double l(const Robot& robot, CostFunctionData& data, const double t, 
-                   const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+                   const double dtau, 
+                   const Eigen::Ref<const Eigen::VectorXd>& q, 
                    const Eigen::Ref<const Eigen::VectorXd>& v, 
                    const Eigen::Ref<const Eigen::VectorXd>& a, 
                    const Eigen::Ref<const Eigen::VectorXd>& f, 
@@ -67,29 +68,34 @@ public:
                   Eigen::Ref<Eigen::VectorXd> lu) const = 0;
 
   virtual void lqq(const Robot& robot, CostFunctionData& data, const double t, 
-                   const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+                   const double dtau, 
+                   const Eigen::Ref<const Eigen::VectorXd>& q, 
                    const Eigen::Ref<const Eigen::VectorXd>& v, 
                    const Eigen::Ref<const Eigen::VectorXd>& a, 
                    Eigen::Ref<Eigen::MatrixXd> lqq) const = 0;
 
   virtual void lvv(const Robot& robot, CostFunctionData& data, const double t, 
-                   const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+                   const double dtau, 
+                   const Eigen::Ref<const Eigen::VectorXd>& q, 
                    const Eigen::Ref<const Eigen::VectorXd>& v, 
                    const Eigen::Ref<const Eigen::VectorXd>& a, 
                    Eigen::Ref<Eigen::MatrixXd> lvv) const = 0;
 
   virtual void laa(const Robot& robot, CostFunctionData& data, const double t, 
-                   const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
+                   const double dtau, 
+                   const Eigen::Ref<const Eigen::VectorXd>& q, 
                    const Eigen::Ref<const Eigen::VectorXd>& v, 
                    const Eigen::Ref<const Eigen::VectorXd>& a, 
                    Eigen::Ref<Eigen::MatrixXd> laa) const = 0;
 
   virtual void lff(const Robot& robot, CostFunctionData& data, const double t, 
-                   const double dtau, const Eigen::Ref<const Eigen::VectorXd>& f, 
+                   const double dtau, 
+                   const Eigen::Ref<const Eigen::VectorXd>& f, 
                    Eigen::Ref<Eigen::MatrixXd> lff) const = 0;
 
   virtual void luu(const Robot& robot, CostFunctionData& data, const double t, 
-                   const double dtau, const Eigen::Ref<const Eigen::VectorXd>& u, 
+                   const double dtau, 
+                   const Eigen::Ref<const Eigen::VectorXd>& u, 
                    Eigen::Ref<Eigen::MatrixXd> luu) const = 0;
 
   virtual void augment_lqq(const Robot& robot, CostFunctionData& data, 

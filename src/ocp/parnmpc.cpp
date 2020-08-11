@@ -20,23 +20,15 @@ ParNMPC::ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     min_step_size_(0.05),
     N_(N),
     num_proc_(num_proc),
-    lmd_(N, Eigen::VectorXd::Zero(robot.dimv())),
-    gmm_(N, Eigen::VectorXd::Zero(robot.dimv())),
-    mu_(N, Eigen::VectorXd::Zero(robot.dim_passive()+robot.max_dimf())),
-    a_(N, Eigen::VectorXd::Zero(robot.dimv())),
-    f_(N, Eigen::VectorXd::Zero(robot.max_dimf())),
-    q_(N+1, Eigen::VectorXd::Zero(robot.dimq())),
-    v_(N+1, Eigen::VectorXd::Zero(robot.dimv())),
-    u_(N, Eigen::VectorXd::Zero(robot.dimv())),
-    beta_(N, Eigen::VectorXd::Zero(robot.dimv())),
-    lmd_old_(N, Eigen::VectorXd::Zero(robot.dimv())),
-    gmm_old_(N, Eigen::VectorXd::Zero(robot.dimv())),
-    q_old_(N, Eigen::VectorXd::Zero(robot.dimq())),
-    v_old_(N, Eigen::VectorXd::Zero(robot.dimv())),
-    dq_(N, Eigen::VectorXd::Zero(robot.dimv())),
-    dv_(N, Eigen::VectorXd::Zero(robot.dimv())),
+    s_(N, SplitSolution(robot)),
+    s_new_(N, SplitSolution(robot)),
+    s_old_(N, SplitSolution(robot)),
     aux_mat_(N, Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
     aux_mat_old_(N+1, Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
+    phiq_(Eigen::VectorXd::Zero(robot.dimv())),
+    phiv_(Eigen::VectorXd::Zero(robot.dimv())),
+    q_terminal_(Eigen::VectorXd::Zero(robot.dimq())),
+    v_terminal_(Eigen::VectorXd::Zero(robot.dimv())),
     primal_step_sizes_(Eigen::VectorXd::Zero(N)),
     dual_step_sizes_(Eigen::VectorXd::Zero(N)),
     costs_(Eigen::VectorXd::Zero(N)), 
@@ -45,9 +37,11 @@ ParNMPC::ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
   assert(T > 0);
   assert(N > 0);
   assert(num_proc > 0);
-  for (int i=0; i<=N; ++i) {
-    robot.normalizeConfiguration(q_[i]);
-    robot.normalizeConfiguration(q_old_[i]);
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<N; ++i) {
+    robot.normalizeConfiguration(s_[i].q);
+    robot.normalizeConfiguration(s_new_[i].q);
+    robot.normalizeConfiguration(s_old_[i].q);
   }
   bool feasible = isCurrentSolutionFeasible();
   initConstraints();
@@ -64,23 +58,15 @@ ParNMPC::ParNMPC()
     min_step_size_(0),
     N_(0),
     num_proc_(0),
-    lmd_(),
-    gmm_(),
-    mu_(),
-    a_(),
-    f_(),
-    q_(),
-    v_(),
-    u_(),
-    beta_(),
-    lmd_old_(),
-    gmm_old_(),
-    q_old_(),
-    v_old_(),
-    dq_(),
-    dv_(),
+    s_(),
+    s_new_(),
+    s_old_(),
     aux_mat_(),
     aux_mat_old_(),
+    phiq_(),
+    phiv_(),
+    q_terminal_(),
+    v_terminal_(),
     primal_step_sizes_(),
     dual_step_sizes_(),
     costs_(), 
@@ -97,204 +83,145 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
                              const Eigen::VectorXd& v, 
                              const bool use_line_search) {
   int time_step;
-  #pragma omp parallel num_threads(num_proc_) 
-  {
-    #pragma omp for  
-    for (time_step=0; time_step<N_; ++time_step) {
-      const int robot_id = omp_get_thread_num();
-      robots_[robot_id].setContactStatus(contact_sequence_[time_step]);
-      bool is_terminal_ocp;
-      if (time_step == 0) {
-        split_ocps_[time_step].coarseUpdate(robots_[robot_id], 
-                                            t+time_step*dtau_, dtau_, q, v, 
-                                            lmd_[time_step], gmm_[time_step],
-                                            mu_[time_step], a_[time_step], 
-                                            f_[time_step], q_[time_step], 
-                                            v_[time_step], u_[time_step],
-                                            lmd_[time_step+1], 
-                                            gmm_[time_step+1], q_[time_step+1], 
-                                            v_[time_step+1], 
-                                            aux_mat_old_[time_step+1], 
-                                            aux_mat_[time_step], false);
-      }
-      else if (time_step < N_-1) {
-        split_ocps_[time_step].coarseUpdate(robots_[robot_id], 
-                                            t+time_step*dtau_, dtau_, 
-                                            q_[time_step-1], v_[time_step-1], 
-                                            lmd_[time_step], gmm_[time_step],
-                                            mu_[time_step], a_[time_step], 
-                                            f_[time_step], q_[time_step], 
-                                            v_[time_step], u_[time_step],
-                                            lmd_[time_step+1], 
-                                            gmm_[time_step+1], q_[time_step+1], 
-                                            v_[time_step+1], 
-                                            aux_mat_old_[time_step+1], 
-                                            aux_mat_[time_step], false);
-      }
-      else {
-        split_ocps_[time_step].computeTerminalCostDerivatives(
-            robots_[robot_id], t+T_, q_[N_-1], v_[N_-1], lmd_[N_], gmm_[N_]);
-        split_ocps_[time_step].coarseUpdate(robots_[robot_id], 
-                                            t+time_step*dtau_, dtau_, 
-                                            q_[time_step-1], v_[time_step-1], 
-                                            lmd_[time_step], gmm_[time_step],
-                                            mu_[time_step], a_[time_step], 
-                                            f_[time_step], q_[time_step], 
-                                            v_[time_step], u_[time_step],
-                                            lmd_[time_step+1], 
-                                            gmm_[time_step+1], q_[time_step+1], 
-                                            v_[time_step+1], 
-                                            aux_mat_old_[time_step+1], 
-                                            aux_mat_[time_step], true);
-      }
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<N_; ++i) {
+    const int robot_id = omp_get_thread_num();
+    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    bool is_terminal_ocp;
+    if (time_step == 0) {
+      split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
+                                  q, v, s_[i], s_[i+1].lmd, s_[i+1].gmm, 
+                                  s_[i+1].q, s_[i+1].v, aux_mat_old_[i+1], 
+                                  aux_mat_[i], s_new_[i], false);
     }
-  } // #pragma omp parallel num_threads(num_proc_)
-  for (time_step=N_-1; time_step>=0; --time_step) {
-    split_ocps_[time_step].backwardCollectionSerial(lmd_old_[time_step+1], 
-                                                    gmm_old_[time_step+1],
-                                                    lmd_[time_step+1], 
-                                                    gmm_[time_step+1],
-                                                    lmd_[time_step], 
-                                                    gmm_[time_step]);
+    else if (i < N_-1) {
+      split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
+                                  s_[i-1].q, s_[i-1].v, s_[i], 
+                                  s_[i+1].lmd, s_[i+1].gmm, s_[i+1].q, s_[i+1].v, 
+                                  aux_mat_old_[i+1], aux_mat_[time_step], 
+                                  s_new_[time_step], false);
+    }
+    else {
+      split_ocps_[i].computeTerminalCostDerivatives(robots_[robot_id], 
+                                                    t+(i+1)*dtau_, s_[i], 
+                                                    phiq_, phiv_);
+      split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
+                                  s_[i-1].q, s_[i-1].v, s_[i], phiq_, phiv_,
+                                  q_terminal_, v_terminal_, aux_mat_old_[i+1], 
+                                  aux_mat_[i], s_new_[i], true);
+    }
   }
-  #pragma omp parallel num_threads(num_proc_) 
-  {
-    #pragma omp for  
-    for (time_step=0; time_step<N_; ++time_step) {
-      const int robot_id = omp_get_thread_num();
-      robots_[robot_id].setContactStatus(contact_sequence_[time_step]);
-      split_ocps_[time_step].backwardCollectionParallel(robots_[robot_id]);
-    }
-  } // #pragma omp parallel num_threads(num_proc_)
-  split_ocps_[0].forwardCollectionSerial(robots_[0], q, v, q, v, q_[0], v_[0]);
-  for (time_step=1; time_step<N_; ++time_step) {
-    split_ocps_[time_step].forwardCollectionSerial(robots_[0], 
-                                                   q_old_[time_step-1], 
-                                                   v_old_[time_step-1], 
-                                                   q_[time_step-1], 
-                                                   v_[time_step-1], 
-                                                   q_[time_step], 
-                                                   v_[time_step]);
+  for (int i=N_-2; i>=0; --i) {
+    split_ocps_[i].backwardCollectionSerial(s_old_[i+1], s_new_[i+1], s_new_[i]);
   }
-  #pragma omp parallel num_threads(num_proc_) 
-  {
-    #pragma omp for 
-    for (time_step=0; time_step<N_; ++time_step) {
-      const int robot_id = omp_get_thread_num();
-      robots_[robot_id].setContactStatus(contact_sequence_[time_step]);
-      split_ocps_[time_step].forwardCollectionParallel(robots_[robot_id]);
-      split_ocps_[time_step].computePrimalAndDualDirection(robots_[robot_id], 
-                                                           dtau_, 
-                                                           lmd_[time_step],
-                                                           gmm_[time_step],
-                                                           mu_[time_step],
-                                                           a_[time_step],
-                                                           f_[time_step],
-                                                           q_[time_step],
-                                                           v_[time_step],
-                                                           u_[time_step]);
-      primal_step_sizes_.coeffRef(time_step) 
-          = split_ocps_[time_step].maxPrimalStepSize();
-      dual_step_sizes_.coeffRef(time_step) 
-          = split_ocps_[time_step].maxDualStepSize();
-    }
-  } // #pragma omp parallel num_threads(num_proc_)
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<N_; ++i) {
+    const int robot_id = omp_get_thread_num();
+    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    split_ocps_[i].backwardCollectionParallel(robots_[robot_id], s_new_[i]);
+  }
+  for (int i=1; i<N_; ++i) {
+    split_ocps_[i].forwardCollectionSerial(robots_[0], s_old_[i-1], s_new_[i-1], 
+                                           s_new_[i]);
+  }
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<N_; ++i) {
+    const int robot_id = omp_get_thread_num();
+    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    split_ocps_[i].forwardCollectionParallel(robots_[robot_id], s_new_[i]);
+    split_ocps_[i].computePrimalAndDualDirection(robots_[robot_id], dtau_, 
+                                                  s_[i], s_new_[i]);
+    primal_step_sizes_.coeffRef(i) = split_ocps_[i].maxPrimalStepSize();
+    dual_step_sizes_.coeffRef(i) = split_ocps_[i].maxDualStepSize();
+  }
   double primal_step_size = primal_step_sizes_.minCoeff();
   const double dual_step_size = dual_step_sizes_.minCoeff();
-  if (use_line_search) {
-    // If filter is empty, augment the current solution to the filter.
-    if (filter_.isEmpty()) {
-      #pragma omp parallel num_threads(num_proc_) 
-      {
-        #pragma omp for 
-        for (time_step=0; time_step<=N_; ++time_step) {
-          const int robot_id = omp_get_thread_num();
-          const std::pair<double, double> filter_pair
-              = split_ocps_[time_step].stageCostAndConstraintsViolation(
-                  robots_[robot_id], t+time_step*dtau_, dtau_, q_[time_step], 
-                  v_[time_step], a_[time_step], f_[time_step], u_[time_step]);
-          costs_.coeffRef(time_step) = filter_pair.first;
-          constraints_violations_.coeffRef(time_step) = filter_pair.second;
-          split_ocps_[time_step].getStateDirection(dq_[time_step], 
-                                                   dv_[time_step]);
-          if (time_step == N_-1) {
-            costs_.coeffRef(time_step) 
-                += split_ocps_[time_step].terminalCost(robots_[robot_id], 
-                                                       t+T_, q_[N_-1], v_[N_-1]);
-          }
-        }
-      } // #pragma omp parallel num_threads(num_proc_)
-      filter_.augment(costs_.sum(), constraints_violations_.sum());
-    }
-    while (primal_step_size > min_step_size_) {
-      #pragma omp parallel num_threads(num_proc_) 
-      {
-        #pragma omp for 
-        for (time_step=0; time_step<=N_; ++time_step) {
-          const int robot_id = omp_get_thread_num();
-          if (time_step == 0) {
-            const std::pair<double, double> filter_pair
-                = split_ocps_[0].stageCostAndConstraintsViolation(
-                    robots_[robot_id], primal_step_size, t+time_step*dtau_, 
-                    dtau_, q, v, 
-                    Eigen::VectorXd::Zero(robots_[robot_id].dimv()), 
-                    Eigen::VectorXd::Zero(robots_[robot_id].dimv()),
-                    q_[0], v_[0], a_[0], f_[0], u_[0]);
-            costs_.coeffRef(0) = filter_pair.first;
-            constraints_violations_.coeffRef(0) = filter_pair.second;
-          }
-          else {
-            const std::pair<double, double> filter_pair
-                = split_ocps_[time_step].stageCostAndConstraintsViolation(
-                    robots_[robot_id], primal_step_size, t+time_step*dtau_, 
-                    dtau_, q_[time_step-1], v_[time_step-1], dq_[time_step-1], 
-                    dv_[time_step-1], q_[time_step], v_[time_step], 
-                    a_[time_step], f_[time_step], u_[time_step]);
-            costs_.coeffRef(time_step) = filter_pair.first;
-            constraints_violations_.coeffRef(time_step) = filter_pair.second;
-          }
-          if (time_step == N_-1) {
-            costs_.coeffRef(time_step) 
-                += split_ocps_[time_step].terminalCost(robots_[robot_id], 
-                                                       primal_step_size, t+T_, 
-                                                       q_[N_-1], v_[N_-1]);
-          }
-        }
-      } // #pragma omp parallel num_threads(num_proc_)
-      const double cost_sum = costs_.sum();
-      const double constraints_violation_sum = constraints_violations_.sum();
-      if (filter_.isAccepted(cost_sum, constraints_violation_sum)) {
-        filter_.augment(cost_sum, constraints_violation_sum);
-        break;
-      }
-      primal_step_size *= step_size_reduction_rate_;
-    }
-  }  // end if (use_line_search) 
-  #pragma omp parallel num_threads(num_proc_) 
-  {
-    #pragma omp for 
-    for (time_step=0; time_step<N_; ++time_step) {
-      const int robot_id = omp_get_thread_num();
-      split_ocps_[time_step].updatePrimal(robots_[robot_id], primal_step_size, 
-                                          dtau_, lmd_[time_step], 
-                                          gmm_[time_step], a_[time_step], 
-                                          f_[time_step], mu_[time_step], 
-                                          q_[time_step], v_[time_step], 
-                                          u_[time_step], beta_[time_step]);
-      split_ocps_[time_step].updateDual(dual_step_size);
-      lmd_old_[time_step] = lmd_[time_step];
-      gmm_old_[time_step] = gmm_[time_step];
-      q_old_[time_step] = q_[time_step];
-      v_old_[time_step] = v_[time_step];
-      aux_mat_old_[time_step] = aux_mat_[time_step];
-    }
-  } // #pragma omp parallel num_threads(num_proc_)
+  // if (use_line_search) {
+  //   // If filter is empty, augment the current solution to the filter.
+  //   if (filter_.isEmpty()) {
+  //     #pragma omp parallel num_threads(num_proc_) 
+  //     {
+  //       #pragma omp for 
+  //       for (time_step=0; time_step<=N_; ++time_step) {
+  //         const int robot_id = omp_get_thread_num();
+  //         const std::pair<double, double> filter_pair
+  //             = split_ocps_[time_step].stageCostAndConstraintsViolation(
+  //                 robots_[robot_id], t+time_step*dtau_, dtau_, q_[time_step], 
+  //                 v_[time_step], a_[time_step], f_[time_step], u_[time_step]);
+  //         costs_.coeffRef(time_step) = filter_pair.first;
+  //         constraints_violations_.coeffRef(time_step) = filter_pair.second;
+  //         split_ocps_[time_step].getStateDirection(dq_[time_step], 
+  //                                                  dv_[time_step]);
+  //         if (time_step == N_-1) {
+  //           costs_.coeffRef(time_step) 
+  //               += split_ocps_[time_step].terminalCost(robots_[robot_id], 
+  //                                                      t+T_, q_[N_-1], v_[N_-1]);
+  //         }
+  //       }
+  //     } // #pragma omp parallel num_threads(num_proc_)
+  //     filter_.augment(costs_.sum(), constraints_violations_.sum());
+  //   }
+  //   while (primal_step_size > min_step_size_) {
+  //     #pragma omp parallel num_threads(num_proc_) 
+  //     {
+  //       #pragma omp for 
+  //       for (time_step=0; time_step<=N_; ++time_step) {
+  //         const int robot_id = omp_get_thread_num();
+  //         if (time_step == 0) {
+  //           const std::pair<double, double> filter_pair
+  //               = split_ocps_[0].stageCostAndConstraintsViolation(
+  //                   robots_[robot_id], primal_step_size, t+time_step*dtau_, 
+  //                   dtau_, q, v, 
+  //                   Eigen::VectorXd::Zero(robots_[robot_id].dimv()), 
+  //                   Eigen::VectorXd::Zero(robots_[robot_id].dimv()),
+  //                   q_[0], v_[0], a_[0], f_[0], u_[0]);
+  //           costs_.coeffRef(0) = filter_pair.first;
+  //           constraints_violations_.coeffRef(0) = filter_pair.second;
+  //         }
+  //         else {
+  //           const std::pair<double, double> filter_pair
+  //               = split_ocps_[time_step].stageCostAndConstraintsViolation(
+  //                   robots_[robot_id], primal_step_size, t+time_step*dtau_, 
+  //                   dtau_, q_[time_step-1], v_[time_step-1], dq_[time_step-1], 
+  //                   dv_[time_step-1], q_[time_step], v_[time_step], 
+  //                   a_[time_step], f_[time_step], u_[time_step]);
+  //           costs_.coeffRef(time_step) = filter_pair.first;
+  //           constraints_violations_.coeffRef(time_step) = filter_pair.second;
+  //         }
+  //         if (time_step == N_-1) {
+  //           costs_.coeffRef(time_step) 
+  //               += split_ocps_[time_step].terminalCost(robots_[robot_id], 
+  //                                                      primal_step_size, t+T_, 
+  //                                                      q_[N_-1], v_[N_-1]);
+  //         }
+  //       }
+  //     } // #pragma omp parallel num_threads(num_proc_)
+  //     const double cost_sum = costs_.sum();
+  //     const double constraints_violation_sum = constraints_violations_.sum();
+  //     if (filter_.isAccepted(cost_sum, constraints_violation_sum)) {
+  //       filter_.augment(cost_sum, constraints_violation_sum);
+  //       break;
+  //     }
+  //     primal_step_size *= step_size_reduction_rate_;
+  //   }
+  // }  // end if (use_line_search) 
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<N_; ++i) {
+    const int robot_id = omp_get_thread_num();
+    split_ocps_[i].updatePrimal(robots_[robot_id], primal_step_size, dtau_, s_[i]);
+    split_ocps_[i].updateDual(dual_step_size);
+    s_old_[i].lmd = s_[i].lmd;
+    s_old_[i].gmm = s_[i].gmm;
+    s_old_[i].q = s_[i].q;
+    s_old_[i].v = s_[i].v;
+    aux_mat_old_[i] = aux_mat_[i];
+  }
 } 
 
 
 void ParNMPC::getInitialControlInput(Eigen::VectorXd& u) {
   assert(u.size() == robots_[0].dimv());
-  u = u_[0];
+  u = s_[0].u;
 }
 
 
@@ -311,14 +238,16 @@ bool ParNMPC::setStateTrajectory(const Eigen::VectorXd& q,
                                  const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
+  Eigen::VectorXd q_normalized = q;
+  robots_[0].normalizeConfiguration(q_normalized);
+  #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<=N_; ++i) {
-    v_[i] = v;
-    v_old_[i] = v;
-  }
-  for (int i=0; i<=N_; ++i) {
-    q_[i] = q;
-    robots_[0].normalizeConfiguration(q_[i]);
-    q_old_[i] = q_[i];
+    s_[i].v = v;
+    s_new_[i].v = v;
+    s_old_[i].v = v;
+    s_[i].q = q_normalized;
+    s_new_[i].q = q_normalized;
+    s_old_[i].q = q_normalized;
   }
   bool feasible = isCurrentSolutionFeasible();
   if (feasible) {
@@ -329,29 +258,33 @@ bool ParNMPC::setStateTrajectory(const Eigen::VectorXd& q,
 
 
 bool ParNMPC::setStateTrajectory(const Eigen::VectorXd& q0, 
-                             const Eigen::VectorXd& v0, 
-                             const Eigen::VectorXd& qN, 
-                             const Eigen::VectorXd& vN) {
+                                 const Eigen::VectorXd& v0, 
+                                 const Eigen::VectorXd& qN, 
+                                 const Eigen::VectorXd& vN) {
   assert(q0.size() == robots_[0].dimq());
   assert(v0.size() == robots_[0].dimv());
   assert(qN.size() == robots_[0].dimq());
   assert(vN.size() == robots_[0].dimv());
+  Eigen::VectorXd q0_normalized = q0;
+  robots_[0].normalizeConfiguration(q0_normalized);
+  Eigen::VectorXd qN_normalized = qN;
+  robots_[0].normalizeConfiguration(qN_normalized);
   const Eigen::VectorXd a = (vN-v0) / N_;
   Eigen::VectorXd dqN = Eigen::VectorXd::Zero(robots_[0].dimv());
   robots_[0].subtractConfiguration(qN, q0, dqN);
   const Eigen::VectorXd v = dqN / N_;
+  #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
-    a_[i] = a;
-  }
-  for (int i=0; i<=N_; ++i) {
-    v_[i] = v0 + i * a;
-    v_old_[i] = v0 + i * a;
-  }
-  for (int i=0; i<=N_; ++i) {
-    q_[i] = q0;
-    robots_[0].integrateConfiguration(v, (double)i, q_[i]);
-    robots_[0].normalizeConfiguration(q_[i]);
-    q_old_[i] = q_[i];
+    s_[i].a = a;
+    s_new_[i].a = a;
+    s_old_[i].a = a;
+    s_[i].v = v0 + i * a;
+    s_new_[i].v = s_[i].v;
+    s_old_[i].v = s_[i].v;
+    s_[i].q = q0;
+    robots_[0].integrateConfiguration(v, (double)i, s_[i].q);
+    s_new_[i].q = s_[i].q;
+    s_old_[i].q = s_[i].q;
   }
   bool feasible = isCurrentSolutionFeasible();
   if (feasible) {
@@ -378,50 +311,58 @@ void ParNMPC::resetLineSearchFilter() {
 
 double ParNMPC::KKTError(const double t, const Eigen::VectorXd& q, 
                          const Eigen::VectorXd& v) {
-  assert(q.size() == q_[0].size());
-  assert(v.size() == v_[0].size());
-  double error = 0;
-  error += (q-q_[0]).squaredNorm();
-  error += (v-v_[0]).squaredNorm();
+  assert(q.size() == robots_[0].dimq());
+  assert(v.size() == robots_[0].dimv());
+  Eigen::VectorXd error = Eigen::VectorXd::Zero(N_);
+  #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
-    if (i == N_-1) {
-      split_ocps_[i].computeTerminalCostDerivatives(robots_[0], t+T_, q_[i], 
-                                                    v_[i], lmd_[i+1], gmm_[i+1]);
+  const int robot_id = omp_get_thread_num();
+  robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    if (i == 0) {
+      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
+                                                    t+i*dtau_, dtau_, q, v, 
+                                                    s_[i], s_[i+1].lmd, 
+                                                    s_[i+1].gmm, s_[i+1].q,
+                                                    s_[i+1].v);
     }
-    error += split_ocps_[i].squaredKKTErrorNorm(robots_[0], t+i*dtau_, dtau_, 
-                                                lmd_[i], gmm_[i], q_[i], v_[i], 
-                                                a_[i], u_[i], beta_[i], f_[i], 
-                                                mu_[i], lmd_[i+1], gmm_[i+1], 
-                                                q_[i+1], v_[i+1]);
+    else if (i<N_-1) {
+      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
+                                                    t+i*dtau_, dtau_, 
+                                                    s_[i-1].q, s_[i-1].v, s_[i], 
+                                                    s_[i+1].lmd, s_[i+1].gmm, 
+                                                    s_[i+1].q, s_[i+1].v);
+    }
+    else {
+      split_ocps_[i].computeTerminalCostDerivatives(robots_[robot_id], t, 
+                                                    s_[i], phiq_, phiv_);
+      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
+                                                    t+i*dtau_, dtau_, s_[i-1].q, 
+                                                    s_[i-1].v, s_[i], phiq_, 
+                                                    phiv_, q_terminal_, 
+                                                    v_terminal_);
+    }
   }
-  return std::sqrt(error);
+  return std::sqrt(error.sum());
 }
 
 
 void ParNMPC::printSolution() const {
   for (int i=0; i<N_; ++i) {
-    std::cout << "q[" << i << "] = " << q_[i].transpose() << std::endl;
-    std::cout << "v[" << i << "] = " << v_[i].transpose() << std::endl;
-    std::cout << "a[" << i << "] = " << a_[i].transpose() << std::endl;
-    std::cout << "u[" << i << "] = " << u_[i].transpose() << std::endl;
-    std::cout << "f[" << i << "] = " << f_[i].transpose() << std::endl;
-    std::cout << "mu[" << i << "] = " << mu_[i].transpose() << std::endl;
+    std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
+    std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
+    std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
+    std::cout << "f[" << i << "] = " << s_[i].f.transpose() << std::endl;
+    std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
+    std::cout << "mu[" << i << "] = " << s_[i].mu.transpose() << std::endl;
   }
-  std::cout << "q[" << N_ << "] = " << q_[N_].transpose() << std::endl;
-  std::cout << "v[" << N_ << "] = " << v_[N_].transpose() << std::endl;
 }
 
 
 bool ParNMPC::isCurrentSolutionFeasible() {
-  for (int time_step=0; time_step<N_; ++time_step) {
-    const bool feasible = split_ocps_[time_step].isFeasible(robots_[0], 
-                                                            q_[time_step], 
-                                                            v_[time_step], 
-                                                            a_[time_step], 
-                                                            f_[time_step], 
-                                                            u_[time_step]);
+  for (int i=0; i<N_; ++i) {
+    const bool feasible = split_ocps_[i].isFeasible(robots_[0], s_[i]);
     if (!feasible) {
-      std::cout << "INFEASIBLE at time step " << time_step << std::endl;
+      std::cout << "INFEASIBLE at time step " << i << std::endl;
       return false;
     }
   }
@@ -430,11 +371,8 @@ bool ParNMPC::isCurrentSolutionFeasible() {
 
 
 void ParNMPC::initConstraints() {
-  for (int time_step=0; time_step<N_; ++time_step) {
-    split_ocps_[time_step].initConstraints(robots_[0], time_step, dtau_, 
-                                           q_[time_step], v_[time_step], 
-                                           a_[time_step], f_[time_step], 
-                                           u_[time_step]);
+  for (int i=0; i<N_; ++i) {
+    split_ocps_[i].initConstraints(robots_[0], i, dtau_, s_[i]);
   }
 }
 
