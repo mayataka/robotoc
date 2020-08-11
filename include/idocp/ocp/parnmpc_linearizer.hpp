@@ -11,7 +11,6 @@
 #include "idocp/constraints/constraints_interface.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/split_ocp_solution.hpp"
 
 
 namespace idocp {

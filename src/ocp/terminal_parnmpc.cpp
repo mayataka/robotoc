@@ -6,36 +6,22 @@
 namespace idocp {
 
 TerminalParNMPC::TerminalParNMPC(
-    const Robot& robot, const std::shared_ptr<CostFunctionInterface>& cost, 
-    const std::shared_ptr<ConstraintsInterface>& constraints)
+    const Robot& robot, const std::shared_ptr<CostFunction>& cost)
   : cost_(cost),
-    constraints_(constraints),
     cost_data_(robot),
-    joint_constraints_(robot),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
     lq_(Eigen::VectorXd::Zero(robot.dimv())),
-    lv_(Eigen::VectorXd::Zero(robot.dimv())),
-    q_res_(Eigen::VectorXd::Zero(robot.dimv())),
-    v_res_(Eigen::VectorXd::Zero(robot.dimv())),
-    // The following variables are only needed for line search
-    q_tmp_(Eigen::VectorXd::Zero(robot.dimq())), 
-    v_tmp_(Eigen::VectorXd::Zero(robot.dimv())) {
+    lv_(Eigen::VectorXd::Zero(robot.dimv())) {
 }
 
 
 TerminalParNMPC::TerminalParNMPC() 
   : cost_(),
-    constraints_(),
-    joint_constraints_(),
     dimq_(0),
     dimv_(0),
     lq_(),
-    lv_(),
-    q_res_(),
-    v_res_(),
-    q_tmp_(), 
-    v_tmp_() {
+    lv_() {
 }
 
 
@@ -43,81 +29,17 @@ TerminalParNMPC::~TerminalParNMPC() {
 }
 
 
-bool TerminalParNMPC::isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
-                                 const Eigen::VectorXd& v) {
-  assert(q.size() == dimq_);
-  assert(v.size() == dimv_);
-  // TODO: add inequality constraints at the terminal OCP.
-  // return joint_constraints_.isFeasible(robot, q, v, a, u);
-  return true;
-}
-
-
-void TerminalParNMPC::initConstraints(const Robot& robot, const int time_step, 
-                                      const double dtau, const Eigen::VectorXd& q, 
-                                      const Eigen::VectorXd& v) {
-  assert(time_step >= 0);
-  assert(dtau > 0);
-  assert(q.size() == dimq_);
-  assert(v.size() == dimv_);
-  // TODO: add inequality constraints at the terminal OCP.
-  // joint_constraints_.setTimeStep(time_step);
-  // joint_constraints_.setSlackAndDual(robot, dtau, q, v, a, u);
-}
-
-
 void TerminalParNMPC::linearizeOCP(Robot& robot, const double t, 
-                                   const Eigen::VectorXd& lmd, 
-                                   const Eigen::VectorXd& gmm, 
                                    const Eigen::VectorXd& q, 
                                    const Eigen::VectorXd& v, 
-                                   Eigen::MatrixXd& Qqq, 
-                                   Eigen::MatrixXd& Qqv, Eigen::MatrixXd& Qvq, 
-                                   Eigen::MatrixXd& Qvv, Eigen::VectorXd& Qq, 
-                                   Eigen::VectorXd& Qv) {
+                                   Eigen::VectorXd& phiq, 
+                                   Eigen::VectorXd& phiv) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
-  assert(Qqq.rows() == dimv_);
-  assert(Qqq.cols() == dimv_);
-  assert(Qqv.rows() == dimv_);
-  assert(Qqv.cols() == dimv_);
-  assert(Qvq.rows() == dimv_);
-  assert(Qvq.cols() == dimv_);
-  assert(Qvv.rows() == dimv_);
-  assert(Qvv.cols() == dimv_);
-  assert(Qq.size() == dimv_);
-  assert(Qv.size() == dimv_);
-  if (robot.has_floating_base()) {
-    robot.computeConfigurationJacobian(q);
-  }
-  cost_->phiq(robot, cost_data_, t, q, v, lq_);
-  cost_->phiv(robot, cost_data_, t, q, v, lv_);
-  Qq = - lq_ + lmd;
-  Qv = - lv_ + gmm;
-  cost_->phiqq(robot, cost_data_, t, q, v, Qqq);
-  cost_->phivv(robot, cost_data_, t, q, v, Qvv);
-}
-
-
-void TerminalParNMPC::computeCondensedDirection(Robot& robot, const double dtau, 
-                                                const Eigen::VectorXd& dq, 
-                                                const Eigen::VectorXd& dv) {
-  // TODO: add inequality constraints at the terminal OCP.
-  // joint_constraints_.computeSlackAndDualDirection(robot, dtau, dq, dv);
-}
-
- 
-double TerminalParNMPC::maxPrimalStepSize() {
-  return 1;
-  // TODO: add inequality constraints at the terminal OCP.
-  // return joint_constraints_.maxSlackStepSize();
-}
-
-
-double TerminalParNMPC::maxDualStepSize() {
-  return 1;
-  // TODO: add inequality constraints at the terminal OCP.
-  // return joint_constraints_.maxDualStepSize();
+  assert(lmd.size() == dimv_);
+  assert(gmm.size() == dimv_);
+  cost_->phiq(robot, cost_data_, t, q, v, phiq);
+  cost_->phiv(robot, cost_data_, t, q, v, phiv);
 }
 
 

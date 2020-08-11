@@ -8,11 +8,13 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function.hpp"
-#include "idocp/constraints/constraints_interface.hpp"
 #include "idocp/cost/cost_function_data.hpp"
+#include "idocp/constraints/constraints.hpp"
+#include "idocp/constraints/constraints_data.hpp"
 #include "idocp/constraints/joint_space_constraints/joint_space_constraints.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/kkt_direction.hpp"
 #include "idocp/ocp/kkt_composition.hpp"
 
 
@@ -22,13 +24,15 @@ class SplitParNMPC {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  //
   // Constructor. Sets the robot, cost function, and constraints.
   // Argments:
   //    robot: The robot model that has been already initialized.
   //    cost: The pointer to the cost function.
   //    constraints: The pointer to the constraints.
+  //
   SplitParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-               const std::shared_ptr<ConstraintsInterface>& constraints);
+               const std::shared_ptr<Constraints>& constraints);
 
   // Default constructor.
   SplitParNMPC();
@@ -37,16 +41,16 @@ public:
   ~SplitParNMPC();
 
   // Use default copy constructor.
-  SplitParNMPC(const SplitOCP&) = default;
+  SplitParNMPC(const SplitParNMPC&) = default;
 
   // Use default copy assign operator.
-  SplitParNMPC& operator=(const SplitOCP&) = default;
+  SplitParNMPC& operator=(const SplitParNMPC&) = default;
 
   // Use default move constructor.
-  SplitParNMPC(SplitOCP&&) noexcept = default;
+  SplitParNMPC(SplitParNMPC&&) noexcept = default;
 
   // Use default move assign operator.
-  SplitParNMPC& operator=(SplitOCP&&) noexcept = default;
+  SplitParNMPC& operator=(SplitParNMPC&&) noexcept = default;
  
   // Check whether the solution q, v, a, u are feasible under inequality 
   // constraints.
@@ -57,7 +61,7 @@ public:
   //   u: Generalized torque. Size must be dimv.
   bool isFeasible(const Robot& robot, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-                  const Eigen::VectorXd& u);
+                  const Eigen::VectorXd& f, const Eigen::VectorXd& u);
 
   // Initialize the constraints, i.e., set slack and dual variables under set 
   //  q, v, a, u.
@@ -69,7 +73,7 @@ public:
   void initConstraints(const Robot& robot, const int time_step, 
                        const double dtau, const Eigen::VectorXd& q, 
                        const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
-                       const Eigen::VectorXd& u);
+                       const Eigen::VectorXd& f, const Eigen::VectorXd& u);
 
   // Linearize the ParNMPC for Newton's method around the current solution.
   // Argments: 
@@ -103,7 +107,14 @@ public:
                     const Eigen::VectorXd& q_next,
                     const Eigen::VectorXd& v_next,
                     const Eigen::MatrixXd& aux_mat_next_old,
-                    Eigen::MatrixXd& aux_mat);
+                    Eigen::MatrixXd& aux_mat, const bool is_terminal_ocp=false);
+
+  void computeTerminalCostDerivatives(const Robot& robot, const double t, 
+                                      const Eigen::VectorXd& q, 
+                                      const Eigen::VectorXd& v, 
+                                      Eigen::VectorXd& phiq, 
+                                      Eigen::VectorXd& phiv);
+
 
   void backwardCollectionSerial(const Eigen::VectorXd& lmd_next_old, 
                                 const Eigen::VectorXd& gmm_next_old, 
@@ -114,7 +125,8 @@ public:
 
   void backwardCollectionParallel(const Robot& robot);
 
-  void forwardCollectionSerial(const Robot& robot, const Eigen::VectorXd& q_prev_old,   
+  void forwardCollectionSerial(const Robot& robot,   
+                               const Eigen::VectorXd& q_prev_old, 
                                const Eigen::VectorXd& v_prev_old, 
                                const Eigen::VectorXd& q_prev, 
                                const Eigen::VectorXd& v_prev,
@@ -122,71 +134,84 @@ public:
 
   void forwardCollectionParallel(const Robot& robot);
 
-  void computeDirection(const Robot& robot, 
-                        const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
-                        const Eigen::VectorXd& mu, const Eigen::VectorXd& a,
-                        const Eigen::VectorXd& f, const Eigen::VectorXd& q, 
-                        const Eigen::VectorXd& v, const Eigen::VectorXd& u);
-
+  void computePrimalAndDualDirection(const Robot& robot, const double dtau,
+                                     const Eigen::VectorXd& lmd, 
+                                     const Eigen::VectorXd& gmm, 
+                                     const Eigen::VectorXd& mu, 
+                                     const Eigen::VectorXd& a,
+                                     const Eigen::VectorXd& f, 
+                                     const Eigen::VectorXd& q, 
+                                     const Eigen::VectorXd& v, 
+                                     const Eigen::VectorXd& u);
+  
   double maxPrimalStepSize();
 
   double maxDualStepSize();
 
-  std::pair<double, double> costAndConstraintsViolation(
+  std::pair<double, double> stageCostAndConstraintsViolation(
       Robot& robot, const double t, const double dtau, const Eigen::VectorXd& q, 
       const Eigen::VectorXd& v, const Eigen::VectorXd& a, 
       const Eigen::VectorXd& f, const Eigen::VectorXd& u);
 
-  std::pair<double, double> costAndConstraintsViolation(
+  std::pair<double, double> stageCostAndConstraintsViolation(
       Robot& robot, const double step_size, const double t, const double dtau, 
+      const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
+      const Eigen::VectorXd& dq_prev, const Eigen::VectorXd& dv_prev, 
       const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
       const Eigen::VectorXd& a, const Eigen::VectorXd& f, 
-      const Eigen::VectorXd& u, const Eigen::VectorXd& q_next, 
-      const Eigen::VectorXd& v_next, const Eigen::VectorXd& dq, 
-      const Eigen::VectorXd& dv, const Eigen::VectorXd& dq_next, 
-      const Eigen::VectorXd& dv_next);
+      const Eigen::VectorXd& u);
+
+  double terminalCost(Robot& robot, const double t, const Eigen::VectorXd& q, 
+                      const Eigen::VectorXd& v);
+
+  double terminalCost(Robot& robot, const double step_size, const double t, 
+                      const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
   void updateDual(const double step_size);
 
   void updatePrimal(Robot& robot, const double step_size, const double dtau, 
-                    const Eigen::MatrixXd& Pqq, const Eigen::MatrixXd& Pqv, 
-                    const Eigen::MatrixXd& Pvq, const Eigen::MatrixXd& Pvv, 
-                    const Eigen::VectorXd& sq, const Eigen::VectorXd& sv, 
-                    const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
                     Eigen::VectorXd& lmd, Eigen::VectorXd& gmm, 
-                    Eigen::VectorXd& q, Eigen::VectorXd& v, Eigen::VectorXd& a, 
-                    Eigen::VectorXd& u, Eigen::VectorXd& beta, 
-                    Eigen::VectorXd& f, Eigen::VectorXd& mu);
+                    Eigen::VectorXd& a, Eigen::VectorXd& f, Eigen::VectorXd& mu, 
+                    Eigen::VectorXd& q, Eigen::VectorXd& v, 
+                    Eigen::VectorXd& u, Eigen::VectorXd& beta);
+
+  void getStateDirection(Eigen::VectorXd& dq, Eigen::VectorXd& dv);
 
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
   double squaredKKTErrorNorm(Robot& robot, const double t, const double dtau, 
                              const Eigen::VectorXd& q_prev, 
-                             const Eigen::VectorXd& v_prev,
-                             const Eigen::VectorXd& lmd, const Eigen::VectorXd& gmm, 
-                             const Eigen::VectorXd& mu, const Eigen::VectorXd& a,
-                             const Eigen::VectorXd& f, const Eigen::VectorXd& q, 
-                             const Eigen::VectorXd& v, const Eigen::VectorXd& u, 
+                             const Eigen::VectorXd& v_prev, 
+                             const Eigen::VectorXd& lmd, 
+                             const Eigen::VectorXd& gmm, 
+                             const Eigen::VectorXd& mu, 
+                             const Eigen::VectorXd& a, 
+                             const Eigen::VectorXd& f, 
+                             const Eigen::VectorXd& q, 
+                             const Eigen::VectorXd& v, 
+                             const Eigen::VectorXd& u, 
+                             const Eigen::VectorXd& beta, 
                              const Eigen::VectorXd& lmd_next,
                              const Eigen::VectorXd& gmm_next,
                              const Eigen::VectorXd& q_next,
                              const Eigen::VectorXd& v_next);
+  
 
 private:
   std::shared_ptr<CostFunction> cost_;
-  std::shared_ptr<ConstraintsInterface> constraints_;
   CostFunctionData cost_data_;
+  std::shared_ptr<Constraints> constraints_;
+  ConstraintsData constraints_data_;
   pdipm::JointSpaceConstraints joint_constraints_;
-  KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
+  KKTResidual kkt_residual_;
+  KKTDirection kkt_direction_;
   KKTComposition kkt_composition_;
-  bool has_floating_base_;
-  int dimq_, dimv_, dim_passive_, max_dimf_, max_dimc_;
-  Eigen::VectorXd lu_, lu_condensed_, u_res_, du_, x_res_, dx_, 
-                  dkkt_, dlmd_, dgmm_, dmu_, da_, df_, dq_, dv_, du_, dbeta_;
+  Eigen::VectorXd lu_, lu_condensed_, u_res_, du_, dbeta_, x_res_, dx_,
+                  lmd_tmp_, gmm_tmp_, mu_tmp_, q_tmp_, v_tmp_, a_tmp_, f_tmp_, 
+                  u_tmp_, u_res_tmp_;
   Eigen::MatrixXd luu_, kkt_matrix_inverse_, du_dq_, du_dv_, du_da_, du_df_,
                   dsubtract_dqminus_, dsubtract_dqplus_;
-  Eigen::VectorXd  lmd_tmp_, gmm_tmp_, q_tmp_, v_tmp_, a_tmp_, f_tmp_, u_tmp_, u_res_tmp_;
 };
 
 } // namespace idocp
