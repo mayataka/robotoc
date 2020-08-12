@@ -23,6 +23,7 @@ ParNMPC::ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     s_(N+1, SplitSolution(robot)),
     s_new_(N, SplitSolution(robot)),
     s_old_(N, SplitSolution(robot)),
+    d_(N, SplitDirection(robot)),
     aux_mat_(N, Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
     aux_mat_old_(N+1, Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
     phiq_(Eigen::VectorXd::Zero(robot.dimv())),
@@ -59,6 +60,7 @@ ParNMPC::ParNMPC()
     s_(),
     s_new_(),
     s_old_(),
+    d_(),
     aux_mat_(),
     aux_mat_old_(),
     phiq_(),
@@ -87,21 +89,21 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
     if (time_step == 0) {
       split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
                                   q, v, s_[i], s_[i+1].lmd, s_[i+1].gmm, 
-                                  s_[i+1].q, aux_mat_old_[i+1], aux_mat_[i], 
+                                  s_[i+1].q, aux_mat_old_[i+1], d_[i], 
                                   s_new_[i], false);
     }
     else if (i < N_-1) {
       split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
                                   s_[i-1].q, s_[i-1].v, s_[i], 
                                   s_[i+1].lmd, s_[i+1].gmm, s_[i+1].q, 
-                                  aux_mat_old_[i+1], aux_mat_[time_step], 
+                                  aux_mat_old_[i+1], d_[time_step], 
                                   s_new_[time_step], false);
     }
     else {
       split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
                                   s_[i-1].q, s_[i-1].v, s_[i], 
                                   s_[i+1].lmd, s_[i+1].gmm, s_[i+1].q, 
-                                  aux_mat_old_[i+1], aux_mat_[time_step], 
+                                  aux_mat_old_[i+1], d_[time_step], 
                                   s_new_[time_step], true);
     }
   }
@@ -111,8 +113,7 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
-    robots_[robot_id].setContactStatus(contact_sequence_[i]);
-    split_ocps_[i].backwardCollectionParallel(robots_[robot_id], s_new_[i]);
+    split_ocps_[i].backwardCollectionParallel(robots_[robot_id], d_[i], s_new_[i]);
   }
   for (int i=1; i<N_; ++i) {
     split_ocps_[i].forwardCollectionSerial(robots_[0], s_old_[i-1], s_new_[i-1], 
@@ -121,10 +122,9 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
-    robots_[robot_id].setContactStatus(contact_sequence_[i]);
-    split_ocps_[i].forwardCollectionParallel(robots_[robot_id], s_new_[i]);
+    split_ocps_[i].forwardCollectionParallel(robots_[robot_id], d_[i], s_new_[i]);
     split_ocps_[i].computePrimalAndDualDirection(robots_[robot_id], dtau_, 
-                                                  s_[i], s_new_[i]);
+                                                 s_[i], s_new_[i], d_[i]);
     primal_step_sizes_.coeffRef(i) = split_ocps_[i].maxPrimalStepSize();
     dual_step_sizes_.coeffRef(i) = split_ocps_[i].maxDualStepSize();
   }
@@ -202,13 +202,13 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
-    split_ocps_[i].updatePrimal(robots_[robot_id], primal_step_size, dtau_, s_[i]);
+    split_ocps_[i].updatePrimal(robots_[robot_id], primal_step_size, dtau_, d_[i], s_[i]);
     split_ocps_[i].updateDual(dual_step_size);
+    split_ocps_[i].getAuxMat(aux_mat_old_[i]);
     s_old_[i].lmd = s_[i].lmd;
     s_old_[i].gmm = s_[i].gmm;
     s_old_[i].q = s_[i].q;
     s_old_[i].v = s_[i].v;
-    aux_mat_old_[i] = aux_mat_[i];
   }
 } 
 

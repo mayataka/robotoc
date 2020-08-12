@@ -127,6 +127,7 @@ inline void linearizeConstraints(Robot& robot, const double dtau,
   }
 }
 
+
 } // namespace parnmpclinearizer
 } // namespace idocp 
 

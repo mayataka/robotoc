@@ -16,7 +16,6 @@ SplitParNMPC::SplitParNMPC(const Robot& robot,
     joint_constraints_(robot),
     kkt_matrix_(robot),
     kkt_residual_(robot),
-    kkt_direction_(robot),
     kkt_composition_(robot),
     lu_(Eigen::VectorXd::Zero(robot.dimv())),
     lu_condensed_(Eigen::VectorXd::Zero(robot.dimv())),
@@ -53,7 +52,6 @@ SplitParNMPC::SplitParNMPC()
     joint_constraints_(),
     kkt_matrix_(),
     kkt_residual_(),
-    kkt_direction_(),
     kkt_composition_(),
     lu_(),
     lu_condensed_(),
@@ -106,8 +104,7 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t,
                                 const Eigen::VectorXd& gmm_next,
                                 const Eigen::VectorXd& q_next,
                                 const Eigen::MatrixXd& aux_mat_next_old,
-                                Eigen::MatrixXd& aux_mat, 
-                                SplitSolution& s_new_coarse, 
+                                SplitDirection& d, SplitSolution& s_new_coarse, 
                                 const bool is_terminal) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
@@ -117,15 +114,11 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t,
   assert(q_next.size() == robot.dimq());
   assert(aux_mat_next_old.rows() == 2*robot.dimv());
   assert(aux_mat_next_old.cols() == 2*robot.dimv());
-  assert(aux_mat.rows() == 2*robot.dimv());
-  assert(aux_mat.cols() == 2*robot.dimv());
   // Reset the KKT matrix and KKT residual.
   kkt_matrix_.setZero();
   kkt_matrix_.setContactStatus(robot);
   kkt_residual_.setZero();
   kkt_residual_.setContactStatus(robot);
-  kkt_direction_.setZero();
-  kkt_direction_.setContactStatus(robot);
   // Extract active blocks for matrices with associated with contacts.
   const Eigen::Ref<const Eigen::VectorXd>& mu_active 
       = s.mu.head(robot.dim_passive()+robot.dimf());
@@ -239,22 +232,29 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t,
   }
   const int dim_kkt = kkt_matrix_.dimKKT();
   kkt_matrix_.invert(kkt_matrix_inverse_.topLeftCorner(dim_kkt, dim_kkt));
-  aux_mat = - kkt_matrix_inverse_.topLeftCorner(2*robot.dimv(), 2*robot.dimv());
   // coarse update of the solution
-  kkt_direction_.KKT_direction()
+  d.setZero();
+  d.setContactStatus(robot);
+  d.split_direction()
       = kkt_matrix_inverse_.topLeftCorner(dim_kkt, dim_kkt) 
           * kkt_residual_.KKT_residual();
   kkt_composition_.set(robot);
-  s_new_coarse.lmd = s.lmd - kkt_direction_.dlmd();
-  s_new_coarse.gmm = s.gmm - kkt_direction_.dgmm();
+  s_new_coarse.lmd = s.lmd - d.dlmd();
+  s_new_coarse.gmm = s.gmm - d.dgmm();
   s_new_coarse.mu.head(kkt_composition_.C_size()) 
-      = s.mu.head(kkt_composition_.C_size()) - kkt_direction_.dmu();
-  s_new_coarse.a = s.a - kkt_direction_.da();
+      = s.mu.head(kkt_composition_.C_size()) - d.dmu();
+  s_new_coarse.a = s.a - d.da();
   s_new_coarse.f .head(kkt_composition_.Qf_size()) 
-      = s.f.head(kkt_composition_.Qf_size()) - kkt_direction_.df();
+      = s.f.head(kkt_composition_.Qf_size()) - d.df();
   s_new_coarse.q = s.q;
-  robot.integrateConfiguration(kkt_direction_.dq(), -1, s_new_coarse.q);
-  s_new_coarse.v = s.v - kkt_direction_.dv();
+  robot.integrateConfiguration(d.dq(), -1, s_new_coarse.q);
+  s_new_coarse.v = s.v - d.dv();
+}
+
+
+void SplitParNMPC::getAuxMat(Eigen::MatrixXd& aux_mat) {
+  aux_mat = - kkt_matrix_inverse_.topLeftCorner(kkt_composition_.Fx_size(), 
+                                                kkt_composition_.Fx_size());
 }
 
 
@@ -272,17 +272,17 @@ void SplitParNMPC::backwardCollectionSerial(const SplitSolution& s_old_next,
 }
 
 
-void SplitParNMPC::backwardCollectionParallel(const Robot& robot,
+void SplitParNMPC::backwardCollectionParallel(const Robot& robot, 
+                                              SplitDirection& d,
                                               SplitSolution& s_new) {
   const int dim_kkt = kkt_composition_.dimKKT();
   const int dimx = 2*robot.dimv();
-  kkt_direction_.KKT_direction().segment(dimx, dim_kkt-dimx) 
-      = kkt_matrix_inverse_.block(dimx, dim_kkt-dimx, dim_kkt-dimx, dimx) * x_res_;
-  s_new.mu.head(kkt_composition_.C_size()).noalias() -= kkt_direction_.dmu();
-  s_new.a.noalias() -= kkt_direction_.da();
-  s_new.f.head(kkt_composition_.Qf_size()).noalias() -= kkt_direction_.df();
-  robot.integrateConfiguration(kkt_direction_.dq(), -1, s_new.q);
-  s_new.v.noalias() -= kkt_direction_.dv();
+  d.split_direction().segment(dimx, dim_kkt-dimx) = kkt_matrix_inverse_.block(dimx, dim_kkt-dimx, dim_kkt-dimx, dimx) * x_res_;
+  s_new.mu.head(kkt_composition_.C_size()).noalias() -= d.dmu();
+  s_new.a.noalias() -= d.da();
+  s_new.f.head(kkt_composition_.Qf_size()).noalias() -= d.df();
+  robot.integrateConfiguration(d.dq(), -1, s_new.q);
+  s_new.v.noalias() -= d.dv();
 }
 
 
@@ -302,40 +302,39 @@ void SplitParNMPC::forwardCollectionSerial(const Robot& robot,
 
 
 void SplitParNMPC::forwardCollectionParallel(const Robot& robot,
+                                             SplitDirection& d,
                                              SplitSolution& s_new) {
   const int dim_kkt = kkt_composition_.dimKKT();
   const int dimx = 2*robot.dimv();
-  kkt_direction_.KKT_direction().segment(0, dim_kkt-dimx)
-      = kkt_matrix_inverse_.block(0, dim_kkt-dimx, dim_kkt-dimx, dimx) * x_res_;
-  s_new.lmd.noalias() -= kkt_direction_.dlmd();
-  s_new.gmm.noalias() -= kkt_direction_.dgmm();
-  s_new.mu.head(kkt_composition_.C_size()).noalias() -= kkt_direction_.dmu();
-  s_new.a.noalias() -= kkt_direction_.da();
-  s_new.f.head(kkt_composition_.Qf_size()).noalias() -= kkt_direction_.df();
+  d.split_direction().segment(0, dim_kkt-dimx) = kkt_matrix_inverse_.block(0, dim_kkt-dimx, dim_kkt-dimx, dimx) * x_res_;
+  s_new.lmd.noalias() -= d.dlmd();
+  s_new.gmm.noalias() -= d.dgmm();
+  s_new.mu.head(kkt_composition_.C_size()).noalias() -= d.dmu();
+  s_new.a.noalias() -= d.da();
+  s_new.f.head(kkt_composition_.Qf_size()).noalias() -= d.df();
 }
 
 
 void SplitParNMPC::computePrimalAndDualDirection(const Robot& robot, 
                                                  const double dtau, 
                                                  const SplitSolution& s, 
-                                                 const SplitSolution& s_new) {
-  kkt_direction_.dlmd() = s_new.lmd - s.lmd;
-  kkt_direction_.dgmm() = s_new.gmm - s.gmm;
-  kkt_direction_.dmu() = s_new.mu.head(kkt_composition_.C_size()) - s.mu.head(kkt_composition_.C_size());
-  kkt_direction_.da() = s_new.a - s.a;
-  kkt_direction_.df() = s_new.f.head(kkt_composition_.Qf_size()) - s.f.head(kkt_composition_.Qf_size());
-  robot.subtractConfiguration(s_new.q, s.q, kkt_direction_.dq());
-  kkt_direction_.dv() = s_new.v - s.v;
+                                                 const SplitSolution& s_new,
+                                                 SplitDirection& d) {
+  d.dlmd() = s_new.lmd - s.lmd;
+  d.dgmm() = s_new.gmm - s.gmm;
+  d.dmu() = s_new.mu.head(kkt_composition_.C_size()) - s.mu.head(kkt_composition_.C_size());
+  d.da() = s_new.a - s.a;
+  d.df() = s_new.f.head(kkt_composition_.Qf_size()) - s.f.head(kkt_composition_.Qf_size());
+  robot.subtractConfiguration(s_new.q, s.q, d.dq());
+  d.dv() = s_new.v - s.v;
   du_ = u_res_;
-  du_.noalias() += du_dq_ * kkt_direction_.dq();
-  du_.noalias() += du_dv_ * kkt_direction_.dv();
-  du_.noalias() += du_da_ * kkt_direction_.da();
+  du_.noalias() += du_dq_ * d.dq();
+  du_.noalias() += du_dv_ * d.dv();
+  du_.noalias() += du_da_ * d.da();
   if (robot.dimf() > 0) {
-    du_.noalias() += du_df_.leftCols(kkt_composition_.Qf_size()) * kkt_direction_.df();
+    du_.noalias() += du_df_.leftCols(kkt_composition_.Qf_size()) * d.df();
   }
-  joint_constraints_.computeSlackAndDualDirection(dtau, kkt_direction_.dq(), 
-                                                  kkt_direction_.dv(), 
-                                                  kkt_direction_.da(), du_);
+  joint_constraints_.computeSlackAndDualDirection(dtau, d.dq(), d.dv(), d.da(), du_);
 }
 
  
@@ -349,21 +348,21 @@ double SplitParNMPC::maxDualStepSize() {
 }
 
 
-// std::pair<double, double> SplitParNMPC::stageCostAndConstraintsViolation(
-//     Robot& robot, const double t, const double dtau, const SplitSolution& s) {
-//   assert(dtau > 0);
-//   double cost = 0;
-//   cost += cost_->l(robot, cost_data_, t, dtau, s.q, s.v, s.a, s.f, s.u);
-//   cost += joint_constraints_.costSlackBarrier();
-//   double constraints_violation = 0;
-//   constraints_violation += kkt_residual_.Fq().lpNorm<1>();
-//   constraints_violation += kkt_residual_.Fv().lpNorm<1>();
-//   constraints_violation += dtau * u_res_.lpNorm<1>();
-//   constraints_violation += joint_constraints_.residualL1Nrom(dtau, s.q, s.v, 
-//                                                              s.a, s.u);
-//   constraints_violation += kkt_residual_.C().lpNorm<1>();
-//   return std::make_pair(cost, constraints_violation);
-// }
+std::pair<double, double> SplitParNMPC::stageCostAndConstraintsViolation(
+    Robot& robot, const double t, const double dtau, const SplitSolution& s) {
+  assert(dtau > 0);
+  double cost = 0;
+  cost += cost_->l(robot, cost_data_, t, dtau, s.q, s.v, s.a, s.f, s.u);
+  cost += joint_constraints_.costSlackBarrier();
+  double constraints_violation = 0;
+  constraints_violation += kkt_residual_.Fq().lpNorm<1>();
+  constraints_violation += kkt_residual_.Fv().lpNorm<1>();
+  constraints_violation += dtau * u_res_.lpNorm<1>();
+  constraints_violation += joint_constraints_.residualL1Nrom(dtau, s.q, s.v, 
+                                                             s.a, s.u);
+  constraints_violation += kkt_residual_.C().lpNorm<1>();
+  return std::make_pair(cost, constraints_violation);
+}
 
 
 // std::pair<double, double> SplitParNMPC::stageCostAndConstraintsViolation(
@@ -430,29 +429,24 @@ void SplitParNMPC::updateDual(const double step_size) {
 
 
 void SplitParNMPC::updatePrimal(Robot& robot, const double step_size, 
-                                const double dtau, SplitSolution& s) {
+                                const double dtau, SplitDirection& d, 
+                                SplitSolution& s) {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dtau > 0);
-  s.lmd.noalias() += step_size * kkt_direction_.dlmd();
-  s.gmm.noalias() += step_size * kkt_direction_.dgmm();
-  s.mu.head(kkt_composition_.C_size()).noalias() += step_size * kkt_direction_.dmu();
-  s.a.noalias() += step_size * kkt_direction_.da();
-  s.f.head(kkt_composition_.Qf_size()).noalias() += step_size * kkt_direction_.df();
-  robot.integrateConfiguration(kkt_direction_.dq(), step_size, s.q);
-  s.v.noalias() += step_size * kkt_direction_.dv();
+  s.lmd.noalias() += step_size * d.dlmd();
+  s.gmm.noalias() += step_size * d.dgmm();
+  s.mu.head(kkt_composition_.C_size()).noalias() += step_size * d.dmu();
+  s.a.noalias() += step_size * d.da();
+  s.f.head(kkt_composition_.Qf_size()).noalias() += step_size * d.df();
+  robot.integrateConfiguration(d.dq(), step_size, s.q);
+  s.v.noalias() += step_size * d.dv();
   // Update condensed variables
   s.u.noalias() += step_size * du_;
   lu_.noalias() -= dtau * s.beta;
   s.beta.noalias() += step_size * lu_ / dtau;
   s.beta.noalias() += step_size * luu_ * du_ / dtau;
   joint_constraints_.updateSlack(step_size);
-}
-
-
-void SplitParNMPC::getStateDirection(Eigen::VectorXd& dq, Eigen::VectorXd& dv) {
-  dq = kkt_direction_.dq();
-  dv = kkt_direction_.dv();
 }
 
 

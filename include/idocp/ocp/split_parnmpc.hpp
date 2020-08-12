@@ -14,9 +14,9 @@
 #include "idocp/constraints/joint_space_constraints/joint_space_constraints.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_direction.hpp"
 #include "idocp/ocp/kkt_composition.hpp"
 #include "idocp/ocp/split_solution.hpp"
+#include "idocp/ocp/split_direction.hpp"
 
 
 namespace idocp {
@@ -99,32 +99,37 @@ public:
                     const Eigen::VectorXd& gmm_next,
                     const Eigen::VectorXd& q_next,
                     const Eigen::MatrixXd& aux_mat_next_old,
-                    Eigen::MatrixXd& aux_mat, SplitSolution& s_new_coarse,
+                    SplitDirection& d, SplitSolution& s_new_coarse,
                     const bool is_terminal=false);
+  
+  void getAuxMat(Eigen::MatrixXd& aux_mat);
 
   void backwardCollectionSerial(const SplitSolution& s_old_next,
                                 const SplitSolution& s_new_next,
                                 SplitSolution& s_new);
 
-  void backwardCollectionParallel(const Robot& robot, SplitSolution& s_new);
+  void backwardCollectionParallel(const Robot& robot, SplitDirection& d,
+                                  SplitSolution& s_new);
 
   void forwardCollectionSerial(const Robot& robot, 
                                const SplitSolution& s_old_prev,
                                const SplitSolution& s_new_prev, 
                                SplitSolution& s_new);
 
-  void forwardCollectionParallel(const Robot& robot, SplitSolution& s_new);
+  void forwardCollectionParallel(const Robot& robot, SplitDirection& d, 
+                                 SplitSolution& s_new);
 
   void computePrimalAndDualDirection(const Robot& robot, const double dtau,
                                      const SplitSolution& s,
-                                     const SplitSolution& s_new);
+                                     const SplitSolution& s_new,
+                                     SplitDirection& d);
 
   double maxPrimalStepSize();
 
   double maxDualStepSize();
 
-  // std::pair<double, double> stageCostAndConstraintsViolation(
-  //     Robot& robot, const double t, const double dtau, const SplitSolution& s);
+  std::pair<double, double> stageCostAndConstraintsViolation(
+      Robot& robot, const double t, const double dtau, const SplitSolution& s);
 
   // std::pair<double, double> stageCostAndConstraintsViolation(
   //     Robot& robot, const double step_size, const double t, const double dtau, 
@@ -135,11 +140,9 @@ public:
   // double terminalCost(Robot& robot, const double t, const SplitSolution& s);
 
   void updatePrimal(Robot& robot, const double step_size, const double dtau, 
-                    SplitSolution& s);
+                    SplitDirection& d, SplitSolution& s);
 
   void updateDual(const double step_size);
-
-  void getStateDirection(Eigen::VectorXd& dq, Eigen::VectorXd& dv);
 
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
@@ -161,7 +164,6 @@ private:
   pdipm::JointSpaceConstraints joint_constraints_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
-  KKTDirection kkt_direction_;
   KKTComposition kkt_composition_;
   Eigen::VectorXd lu_, lu_condensed_, u_res_, du_, dbeta_, x_res_, dx_,
                   u_tmp_, u_res_tmp_;

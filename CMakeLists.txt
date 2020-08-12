@@ -64,8 +64,8 @@ add_library(
   src/ocp/kkt_composition.cpp
   src/ocp/kkt_matrix.cpp
   src/ocp/kkt_residual.cpp
-  src/ocp/kkt_direction.cpp
   src/ocp/split_solution.cpp
+  src/ocp/split_direction.cpp
   src/ocp/parnmpc_linearizer.cpp
   src/ocp/split_parnmpc.cpp
   src/ocp/parnmpc.cpp
