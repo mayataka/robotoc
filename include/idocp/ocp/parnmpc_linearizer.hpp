@@ -9,6 +9,7 @@
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
+#include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 
@@ -16,41 +17,25 @@
 namespace idocp {
 namespace parnmpclinearizer {
 
-inline void linearizeStageCost(Robot& robot, 
-                               std::shared_ptr<CostFunction>& cost, 
-                               CostFunctionData& cost_data,
-                               const double t, const double dtau, 
-                               const Eigen::Ref<const Eigen::VectorXd>& q, 
-                               const Eigen::Ref<const Eigen::VectorXd>& v, 
-                               const Eigen::Ref<const Eigen::VectorXd>& a, 
-                               const Eigen::Ref<const Eigen::VectorXd>& f, 
-                               const Eigen::Ref<const Eigen::VectorXd>& u, 
+inline void linearizeStageCost(Robot& robot, std::shared_ptr<CostFunction>& cost, 
+                               CostFunctionData& cost_data, const double t, 
+                               const double dtau, const SplitSolution& s,
                                KKTResidual& kkt_residual,
                                Eigen::Ref<Eigen::VectorXd> lu) {
   assert(dtau > 0);
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
-  assert(a.size() == robot.dimv());
-  assert(f.size() == robot.max_dimf());
-  assert(u.size() == robot.dimv());
   assert(lu.size() == robot.dimv());
-  cost->lq(robot, cost_data, t, dtau, q, v, a, kkt_residual.lq());
-  cost->lv(robot, cost_data, t, dtau, q, v, a, kkt_residual.lv());
-  cost->la(robot, cost_data, t, dtau, q, v, a, kkt_residual.la());
-  cost->lf(robot, cost_data, t, dtau, f, kkt_residual.lf());
-  cost->lu(robot, cost_data, t, dtau, u, lu);
+  cost->lq(robot, cost_data, t, dtau, s.q, s.v, s.a, kkt_residual.lq());
+  cost->lv(robot, cost_data, t, dtau, s.q, s.v, s.a, kkt_residual.lv());
+  cost->la(robot, cost_data, t, dtau, s.q, s.v, s.a, kkt_residual.la());
+  cost->lf(robot, cost_data, t, dtau, s.f, kkt_residual.lf());
+  cost->lu(robot, cost_data, t, dtau, s.u, lu);
 }
 
 
 inline void linearizeDynamics(Robot& robot, const double dtau,
                               const Eigen::Ref<const Eigen::VectorXd>& q_prev, 
                               const Eigen::Ref<const Eigen::VectorXd>& v_prev, 
-                              const Eigen::Ref<const Eigen::VectorXd>& q, 
-                              const Eigen::Ref<const Eigen::VectorXd>& v, 
-                              const Eigen::Ref<const Eigen::VectorXd>& a, 
-                              const Eigen::Ref<const Eigen::VectorXd>& f, 
-                              const Eigen::Ref<const Eigen::VectorXd>& u, 
-                              KKTResidual& kkt_residual,
+                              const SplitSolution& s, KKTResidual& kkt_residual,
                               Eigen::Ref<Eigen::VectorXd> u_res,
                               Eigen::Ref<Eigen::MatrixXd> du_dq,
                               Eigen::Ref<Eigen::MatrixXd> du_dv,
@@ -59,11 +44,6 @@ inline void linearizeDynamics(Robot& robot, const double dtau,
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
-  assert(a.size() == robot.dimv());
-  assert(f.size() == robot.max_dimf());
-  assert(u.size() == robot.dimv());
   assert(u_res.size() == robot.dimv());
   assert(du_dq.rows() == robot.dimv());
   assert(du_dq.cols() == robot.dimv());
@@ -73,15 +53,15 @@ inline void linearizeDynamics(Robot& robot, const double dtau,
   assert(du_da.cols() == robot.dimv());
   assert(du_df.rows() == robot.dimv());
   assert(du_df.cols() == robot.max_dimf());
-  robot.subtractConfiguration(q_prev, q, kkt_residual.Fq());
-  kkt_residual.Fq().noalias() += dtau * v;
-  kkt_residual.Fv() = v_prev - v + dtau * a;
+  robot.subtractConfiguration(q_prev, s.q, kkt_residual.Fq());
+  kkt_residual.Fq().noalias() += dtau * s.v;
+  kkt_residual.Fv() = v_prev - s.v + dtau * s.a;
   if (robot.dimf() > 0) {
-    robot.setContactForces(f);
+    robot.setContactForces(s.f);
   }
-  robot.RNEA(q, v, a, u_res);
-  u_res.noalias() -= u;
-  robot.RNEADerivatives(q, v, a, du_dq, du_dv, du_da);
+  robot.RNEA(s.q, s.v, s.a, u_res);
+  u_res.noalias() -= s.u;
+  robot.RNEADerivatives(s.q, s.v, s.a, du_dq, du_dv, du_da);
   if (robot.dimf() > 0) {
     robot.dRNEAPartialdFext(du_df);
   }
@@ -89,7 +69,7 @@ inline void linearizeDynamics(Robot& robot, const double dtau,
 
 
 inline void linearizeConstraints(Robot& robot, const double dtau,
-                                 const Eigen::Ref<const Eigen::VectorXd>& u, 
+                                 const SplitSolution& s,
                                  const Eigen::Ref<const Eigen::VectorXd>& u_res, 
                                  const Eigen::Ref<const Eigen::MatrixXd>& du_dq, 
                                  const Eigen::Ref<const Eigen::MatrixXd>& du_dv, 
@@ -98,7 +78,6 @@ inline void linearizeConstraints(Robot& robot, const double dtau,
                                  KKTResidual& kkt_residual,
                                  KKTMatrix& kkt_matrix) {
   assert(dtau > 0);
-  assert(u.size() == robot.dimv());
   assert(u_res.size() == robot.dimv());
   assert(du_dq.rows() == robot.dimv());
   assert(du_dq.cols() == robot.dimv());
@@ -115,7 +94,7 @@ inline void linearizeConstraints(Robot& robot, const double dtau,
   }
   if (robot.dim_passive() > 0) {
     kkt_residual.C().tail(robot.dim_passive())
-        = dtau * (u.head(robot.dim_passive())+u_res.head(robot.dim_passive()));
+        = dtau * (s.u.head(robot.dim_passive())+u_res.head(robot.dim_passive()));
     kkt_matrix.Cq().bottomRows(robot.dim_passive()) 
         = dtau * du_dq.topRows(robot.dim_passive());
     kkt_matrix.Cv().bottomRows(robot.dim_passive()) 
@@ -126,7 +105,6 @@ inline void linearizeConstraints(Robot& robot, const double dtau,
         = dtau * du_df.topRows(robot.dim_passive());
   }
 }
-
 
 } // namespace parnmpclinearizer
 } // namespace idocp 

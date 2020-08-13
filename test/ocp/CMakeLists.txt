@@ -1,6 +1,7 @@
 add_test_macro(kkt_composition_test)
 add_test_macro(kkt_residual_test)
 add_test_macro(kkt_matrix_test)
+add_test_macro(parnmpc_linearizer_test)
 # add_test_macro(riccati_matrix_factorizer_test)
 # add_test_macro(riccati_matrix_inverter_test)
 # add_test_macro(fixed_base_ocp_linearizer_test)

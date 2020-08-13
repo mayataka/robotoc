@@ -77,8 +77,7 @@ private:
   int N_, num_proc_;
   std::vector<SplitSolution> s_, s_new_, s_old_;
   std::vector<SplitDirection> d_;
-  std::vector<Eigen::MatrixXd> aux_mat_, aux_mat_old_;
-  Eigen::VectorXd phiq_, phiv_;
+  std::vector<Eigen::MatrixXd> aux_mat_old_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, 
                   constraints_violations_;
   std::vector<std::vector<bool>> contact_sequence_;

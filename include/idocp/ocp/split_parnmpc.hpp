@@ -98,9 +98,8 @@ public:
                     const Eigen::VectorXd& lmd_next,
                     const Eigen::VectorXd& gmm_next,
                     const Eigen::VectorXd& q_next,
-                    const Eigen::MatrixXd& aux_mat_next_old,
-                    SplitDirection& d, SplitSolution& s_new_coarse,
-                    const bool is_terminal=false);
+                    const Eigen::MatrixXd& aux_mat_next_old, SplitDirection& d, 
+                    SplitSolution& s_new_coarse, const bool is_terminal=false);
   
   void getAuxMat(Eigen::MatrixXd& aux_mat);
 
@@ -129,18 +128,23 @@ public:
   double maxDualStepSize();
 
   std::pair<double, double> stageCostAndConstraintsViolation(
-      Robot& robot, const double t, const double dtau, const SplitSolution& s);
+      Robot& robot, const double t, const double dtau, const SplitSolution& s,
+      const bool is_terminal=false);
 
-  // std::pair<double, double> stageCostAndConstraintsViolation(
-  //     Robot& robot, const double step_size, const double t, const double dtau, 
-  //     const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
-  //     const Eigen::VectorXd& dq_prev, const Eigen::VectorXd& dv_prev, 
-  //     const SplitSolution& s, SplitSolution& s_tmp);
+  std::pair<double, double> stageCostAndConstraintsViolation(
+      Robot& robot, const double step_size, const double t, const double dtau, 
+      const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
+      const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp);
 
-  // double terminalCost(Robot& robot, const double t, const SplitSolution& s);
+  std::pair<double, double> stageCostAndConstraintsViolation(
+      Robot& robot, const double step_size, const double t, const double dtau, 
+      const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
+      const Eigen::VectorXd& dq_prev, const Eigen::VectorXd& dv_prev, 
+      const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp,
+      const bool is_terminal=false);
 
   void updatePrimal(Robot& robot, const double step_size, const double dtau, 
-                    SplitDirection& d, SplitSolution& s);
+                    const SplitDirection& d, SplitSolution& s);
 
   void updateDual(const double step_size);
 
@@ -152,8 +156,8 @@ public:
                              const SplitSolution& s,
                              const Eigen::VectorXd& lmd_next,
                              const Eigen::VectorXd& gmm_next,
-                             const Eigen::VectorXd& q_next,
-                             const Eigen::VectorXd& v_next);
+                             const Eigen::VectorXd& q_next, 
+                             const bool is_terminal=false);
   
 
 private:
@@ -169,6 +173,7 @@ private:
                   u_tmp_, u_res_tmp_;
   Eigen::MatrixXd luu_, kkt_matrix_inverse_, du_dq_, du_dv_, du_da_, du_df_,
                   dsubtract_dqminus_, dsubtract_dqplus_;
+
 };
 
 } // namespace idocp

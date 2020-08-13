@@ -76,8 +76,6 @@ void ContactCost::lff(const Robot& robot, CostFunctionData& data,
                       const Eigen::Ref<const Eigen::VectorXd>& f, 
                       Eigen::Ref<Eigen::MatrixXd> lff) const {
   assert(dtau > 0);
-  assert(lff.rows() == robot.max_dimf());
-  assert(lff.cols() == robot.max_dimf());
   int dimf = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (robot.is_contact_active(i)) {
@@ -95,8 +93,6 @@ void ContactCost::augment_lff(const Robot& robot, CostFunctionData& data,
                               const Eigen::Ref<const Eigen::VectorXd>& f, 
                               Eigen::Ref<Eigen::MatrixXd> lff) const {
   assert(dtau > 0);
-  assert(lff.rows() == robot.max_dimf());
-  assert(lff.cols() == robot.max_dimf());
   int dimf = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (robot.is_contact_active(i)) {

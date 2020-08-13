@@ -21,10 +21,10 @@ public:
       v(Eigen::VectorXd::Zero(robot.dimv())),
       u(Eigen::VectorXd::Zero(robot.dimv())),
       beta(Eigen::VectorXd::Zero(robot.dimv())),
-      mu_(Eigen::VectorXd::Zero(robot.dim_passive()+robot.max_dimf())),
-      f_(Eigen::VectorXd::Zero(robot.max_dimf())),
-      mu(mu_.head(robot.dim_passive()+robot.dimf())),
-      f(f_.head(robot.dimf())) {
+      mu(Eigen::VectorXd::Zero(robot.dim_passive()+robot.max_dimf())),
+      f(Eigen::VectorXd::Zero(robot.max_dimf())),
+      dimc_(robot.dim_passive()+robot.dimf()),
+      dimf_(robot.dimf()) {
     robot.normalizeConfiguration(q);
   }
 
@@ -36,10 +36,10 @@ public:
       v(),
       u(),
       beta(),
-      mu_(),
-      f_(),
-      mu(mu_),
-      f(f_) {
+      mu(),
+      f(),
+      dimc_(0),
+      dimf_(0) {
   }
 
   ~SplitSolution() {
@@ -53,16 +53,39 @@ public:
 
   SplitSolution& operator=(SplitSolution&&) noexcept = default;
 
-  inline void setContactStatus(const Robot& robot) {
-    mu = mu_.head(robot.dim_passive()+robot.dimf());
-    f = f_.head(robot.dimf());
+  inline void set(const Robot& robot) {
+    dimc_ = robot.dim_passive() + robot.dimf();
+    dimf_ = robot.dimf();
   }
 
-  Eigen::VectorXd lmd, gmm, a, q, v, u, beta;
-  Eigen::Ref<Eigen::VectorXd> mu, f;
+  inline Eigen::Ref<Eigen::VectorXd> f_active() {
+    return f.head(dimf_);
+  }
+
+  inline Eigen::Ref<Eigen::VectorXd> mu_active() {
+    return mu.head(dimc_);
+  }
+
+  inline Eigen::Ref<const Eigen::VectorXd> f_active() const {
+    return f.head(dimf_);
+  }
+
+  inline Eigen::Ref<const Eigen::VectorXd> mu_active() const {
+    return mu.head(dimc_);
+  }
+
+  int dimc() const {
+    return dimc_;
+  }
+
+  int dimf() const {
+    return dimf_;
+  }
+
+  Eigen::VectorXd lmd, gmm, a, f, mu, q, v, u, beta;
 
 private:
-  Eigen::VectorXd mu_, f_;
+  int dimc_, dimf_;
 
 };
 

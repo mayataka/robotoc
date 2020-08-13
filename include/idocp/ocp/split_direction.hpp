@@ -17,12 +17,16 @@ public:
 
   SplitDirection(const Robot& robot) 
     : kkt_composition_(robot),
-      split_direction_(Eigen::VectorXd::Zero(kkt_composition_.max_dimKKT())) {
+      split_direction_(Eigen::VectorXd::Zero(kkt_composition_.max_dimKKT())),
+      dimc_(robot.dim_passive()+robot.dimf()),
+      dimf_(robot.dimf()) {
   }
 
   SplitDirection() 
     : kkt_composition_(),
-      split_direction_() {
+      split_direction_(),
+      dimc_(0),
+      dimf_(0) {
   }
 
   ~SplitDirection() {
@@ -36,7 +40,7 @@ public:
 
   SplitDirection& operator=(SplitDirection&&) noexcept = default;
 
-  inline void setContactStatus(const Robot& robot) {
+  inline void set(const Robot& robot) {
     kkt_composition_.set(robot);
   }
 
@@ -84,6 +88,50 @@ public:
                                     kkt_composition_.Qx_size());
   }
 
+  inline Eigen::Ref<const Eigen::VectorXd> split_direction() const {
+    return split_direction_.head(kkt_composition_.dimKKT());
+  }
+
+  inline Eigen::Ref<const Eigen::VectorXd> dlmd() const {
+    return split_direction_.segment(kkt_composition_.Fq_begin(), 
+                                    kkt_composition_.Fq_size());
+  }
+
+  inline Eigen::Ref<const Eigen::VectorXd> dgmm() const {
+    return split_direction_.segment(kkt_composition_.Fv_begin(), 
+                                    kkt_composition_.Fv_size());
+  }
+
+  inline Eigen::Ref<const Eigen::VectorXd> dmu() const {
+    return split_direction_.segment(kkt_composition_.C_begin(), 
+                                    kkt_composition_.C_size());
+  }
+
+  inline Eigen::Ref<const Eigen::VectorXd> da() const {
+    return split_direction_.segment(kkt_composition_.Qa_begin(), 
+                                    kkt_composition_.Qa_size());
+  }
+
+  inline Eigen::Ref<const Eigen::VectorXd> df() const {
+    return split_direction_.segment(kkt_composition_.Qf_begin(), 
+                                    kkt_composition_.Qf_size());
+  }
+
+  inline Eigen::Ref<const Eigen::VectorXd> dq() const {
+    return split_direction_.segment(kkt_composition_.Qq_begin(), 
+                                    kkt_composition_.Qq_size());
+  }
+
+  inline Eigen::Ref<const Eigen::VectorXd> dv() const {
+    return split_direction_.segment(kkt_composition_.Qv_begin(), 
+                                    kkt_composition_.Qv_size());
+  }
+
+  inline Eigen::Ref<const Eigen::VectorXd> dx() const {
+    return split_direction_.segment(kkt_composition_.Qx_begin(), 
+                                    kkt_composition_.Qx_size());
+  }
+
   inline void setZero() {
     split_direction_.setZero();
   }
@@ -96,9 +144,18 @@ public:
     return kkt_composition_.max_dimKKT();
   }
 
+  int dimc() const {
+    return dimc_;
+  }
+
+  int dimf() const {
+    return dimf_;
+  }
+
 private:
   KKTComposition kkt_composition_;
   Eigen::VectorXd split_direction_;
+  int dimc_, dimf_;
 
 };
 
