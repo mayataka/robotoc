@@ -16,13 +16,13 @@ public:
   SplitSolution(const Robot& robot) 
     : lmd(Eigen::VectorXd::Zero(robot.dimv())),
       gmm(Eigen::VectorXd::Zero(robot.dimv())),
+      mu(Eigen::VectorXd::Zero(robot.dim_passive()+robot.max_dimf())),
       a(Eigen::VectorXd::Zero(robot.dimv())),
+      f(Eigen::VectorXd::Zero(robot.max_dimf())),
       q(Eigen::VectorXd::Zero(robot.dimq())),
       v(Eigen::VectorXd::Zero(robot.dimv())),
       u(Eigen::VectorXd::Zero(robot.dimv())),
       beta(Eigen::VectorXd::Zero(robot.dimv())),
-      mu(Eigen::VectorXd::Zero(robot.dim_passive()+robot.max_dimf())),
-      f(Eigen::VectorXd::Zero(robot.max_dimf())),
       dimc_(robot.dim_passive()+robot.dimf()),
       dimf_(robot.dimf()) {
     robot.normalizeConfiguration(q);
@@ -31,13 +31,13 @@ public:
   SplitSolution() 
     : lmd(),
       gmm(),
+      mu(),
       a(),
+      f(),
       q(),
       v(),
       u(),
       beta(),
-      mu(),
-      f(),
       dimc_(0),
       dimf_(0) {
   }
@@ -82,7 +82,7 @@ public:
     return dimf_;
   }
 
-  Eigen::VectorXd lmd, gmm, a, f, mu, q, v, u, beta;
+  Eigen::VectorXd lmd, gmm, mu, a, f, q, v, u, beta;
 
 private:
   int dimc_, dimf_;

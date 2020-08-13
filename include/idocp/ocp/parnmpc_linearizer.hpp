@@ -93,16 +93,11 @@ inline void linearizeConstraints(Robot& robot, const double dtau,
                                       kkt_matrix.Ca());
   }
   if (robot.dim_passive() > 0) {
-    kkt_residual.C().tail(robot.dim_passive())
-        = dtau * (s.u.head(robot.dim_passive())+u_res.head(robot.dim_passive()));
-    kkt_matrix.Cq().bottomRows(robot.dim_passive()) 
-        = dtau * du_dq.topRows(robot.dim_passive());
-    kkt_matrix.Cv().bottomRows(robot.dim_passive()) 
-        = dtau * du_dv.topRows(robot.dim_passive());
-    kkt_matrix.Ca().bottomRows(robot.dim_passive()) 
-        = dtau * du_da.topRows(robot.dim_passive());
-    kkt_matrix.Cf().bottomRows(robot.dim_passive()) 
-        = dtau * du_df.topRows(robot.dim_passive());
+    kkt_residual.C().tail(robot.dim_passive()) = dtau * (s.u.head(robot.dim_passive())+u_res.head(robot.dim_passive()));
+    kkt_matrix.Cq().bottomRows(robot.dim_passive()) = dtau * du_dq.topRows(robot.dim_passive());
+    kkt_matrix.Cv().bottomRows(robot.dim_passive()) = dtau * du_dv.topRows(robot.dim_passive());
+    kkt_matrix.Ca().bottomRows(robot.dim_passive()) = dtau * du_da.topRows(robot.dim_passive());
+    kkt_matrix.Cf().bottomRows(robot.dim_passive()) = dtau * du_df.topLeftCorner(robot.dim_passive(), robot.dimf());
   }
 }
 
