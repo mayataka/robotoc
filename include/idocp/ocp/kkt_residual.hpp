@@ -128,7 +128,7 @@ public:
                                  kkt_composition_.Qx_size());
   }
 
-  inline double squaredErrorNorm() const {
+  inline double squaredKKTErrorNorm() const {
     return kkt_residual_.head(kkt_composition_.dimKKT()).squaredNorm();
   }
 

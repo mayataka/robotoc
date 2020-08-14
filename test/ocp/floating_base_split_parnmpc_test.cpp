@@ -17,17 +17,20 @@
 
 namespace idocp {
 
-class FixedBaseSplitParNMPCTest : public ::testing::Test {
+class FloatingBaseSplitParNMPCTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    urdf = "../urdf/iiwa14/iiwa14.urdf";
-    std::vector<int> contact_frames = {18};
+    urdf = "../urdf/anymal/anymal.urdf";
+    std::vector<int> contact_frames = {14, 24, 34, 44};
     const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
     const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
     robot = Robot(urdf, contact_frames, baum_a, baum_b);
     std::random_device rnd;
-    std::vector<bool> contact_status = {rnd()%2==0};
+    std::vector<bool> contact_status;
+    for (const auto frame : contact_frames) {
+      contact_status.push_back(rnd()%2==0);
+    }
     robot.setContactStatus(contact_status);
     s = SplitSolution(robot);
     s.set(robot);
@@ -98,7 +101,7 @@ protected:
 };
 
 
-TEST_F(FixedBaseSplitParNMPCTest, initconstraints) {
+TEST_F(FloatingBaseSplitParNMPCTest, initconstraints) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   if (parnmpc.isFeasible(robot, s)) {
     parnmpc.initConstraints(robot, 2, dtau, s);
@@ -106,7 +109,7 @@ TEST_F(FixedBaseSplitParNMPCTest, initconstraints) {
   }
 }
 
-TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNorm) {
+TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNorm) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
@@ -146,7 +149,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNorm) {
 }
 
 
-TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormTerminal) {
+TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormTerminal) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
@@ -185,7 +188,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormTerminal) {
 }
 
 
-TEST_F(FixedBaseSplitParNMPCTest, coarseUpdate) {
+TEST_F(FloatingBaseSplitParNMPCTest, coarseUpdate) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   Eigen::MatrixXd aux_mat_seed = Eigen::MatrixXd::Random(2*robot.dimv(), 2*robot.dimv());
@@ -260,7 +263,7 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdate) {
 }
 
 
-TEST_F(FixedBaseSplitParNMPCTest, coarseUpdateTerminal) {
+TEST_F(FloatingBaseSplitParNMPCTest, coarseUpdateTerminal) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   Eigen::MatrixXd aux_mat_seed = Eigen::MatrixXd::Random(2*robot.dimv(), 2*robot.dimv());
