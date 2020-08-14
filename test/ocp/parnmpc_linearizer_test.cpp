@@ -8,7 +8,8 @@
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
 #include "idocp/cost/contact_cost.hpp"
-#include "idocp/ocp/kkt_composition.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/parnmpc_linearizer.hpp"
 

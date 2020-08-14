@@ -28,6 +28,7 @@ public:
       du_dv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       du_da_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       du_df_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
+      has_floating_base_(robot.has_floating_base()),
       dim_passive_(robot.dim_passive()),
       dimf_(robot.dimf()) {
   }
@@ -41,6 +42,7 @@ public:
       du_dv_(),
       du_da_(),
       du_df_(),
+      has_floating_base_(false),
       dim_passive_(0),
       dimf_(0) {
   }
@@ -73,11 +75,15 @@ public:
     const double t, const double dtau, const SplitSolution& s) {
       constraints.augmentDualResidual(dtau, lu_);
       constraints.condenseSlackAndDual(dtau, s.u, luu_, lu_);
-      lu_condensed_ = lu_ + luu_ * u_res_;
   }
 
-  inline void linearizeInverseDynamics(Robot& robot, const SplitSolution& s) {
-    if (robot.dimf() > 0) {
+  inline void linearizeInverseDynamics(Robot& robot, const double dtau, 
+                                       const SplitSolution& s) {
+    lu_.noalias() -= dtau * s.beta;
+    if (has_floating_base_) {
+      lu_.head(dim_passive_).noalias() += dtau * s.mu_active().tail(dim_passive_);
+    }
+    if (dimf_ > 0) {
       robot.setContactForces(s.f);
     }
     robot.RNEA(s.q, s.v, s.a, u_res_);
@@ -106,8 +112,9 @@ public:
   }
 
   inline void condenseInverseDynamics(KKTResidual& kkt_residual,
-                                      KKTMatrix& kkt_matrix) const {
+                                      KKTMatrix& kkt_matrix) {
     // condense Newton residual
+    lu_condensed_ = lu_ + luu_ * u_res_;
     kkt_residual.lq().noalias() += du_dq_.transpose() * lu_condensed_;
     kkt_residual.lv().noalias() += du_dv_.transpose() * lu_condensed_;
     kkt_residual.la().noalias() += du_da_.transpose() * lu_condensed_;
@@ -133,7 +140,7 @@ public:
 
   inline void computeCondensedDirection(const SplitSolution& s, 
                                         const double dtau,
-                                        SplitDirection& d) const {
+                                        SplitDirection& d) {
     assert(dtau > 0);
     d.du = u_res_;
     d.du.noalias() += du_dq_ * d.dq();
@@ -142,15 +149,85 @@ public:
     if (dimf_ > 0) {
       d.du.noalias() += du_df_active_() * d.df();
     }
-    d.dbeta = (lu_  + luu_ * d.du) / dtau - s.beta;
-    if (dim_passive_ > 0) {
-      d.dbeta.head(dim_passive_).noalias() += d.dmu().head(dim_passive_) / dtau;
+    d.dbeta = (lu_  + luu_ * d.du) / dtau;
+    if (has_floating_base_) {
+      d.dbeta.head(dim_passive_).noalias() += d.dmu().tail(dim_passive_) / dtau;
     }
+  }
+
+  inline double inverseDynamicsConstraintViolation(const double dtau) {
+    return dtau * u_res_.lpNorm<1>();
+  }
+
+  inline double inverseDynamicsConstraintViolation(Robot& robot, 
+                                                   const double dtau,
+                                                   const SplitSolution& s) {
+    if (dimf_ > 0) {
+      robot.setContactForces(s.f);
+    }
+    robot.RNEA(s.q, s.v, s.a, u_res_);
+    u_res_.noalias() -= s.u;
+    return dtau * u_res_.lpNorm<1>();
+  }
+
+  inline void augmentInverseDynamicsDerivatives(Robot& robot, const double dtau, 
+                                                const SplitSolution& s,
+                                                KKTResidual& kkt_residual) {
+    if (dimf_ > 0) {
+      robot.setContactForces(s.f);
+    }
+    robot.RNEADerivatives(s.q, s.v, s.a, du_dq_, du_dv_, du_da_);
+    if (robot.dimf() > 0) {
+      robot.dRNEAPartialdFext(du_df_);
+    }
+    kkt_residual.lq().noalias() += dtau * du_dq_.transpose() * s.beta;
+    kkt_residual.lv().noalias() += dtau * du_dv_.transpose() * s.beta;
+    kkt_residual.la().noalias() += dtau * du_da_.transpose() * s.beta;
+    if (dimf_ > 0) {
+      kkt_residual.lf().noalias() += dtau * du_df_active_().transpose() * s.beta;
+    }
+  }
+
+  inline void augmentFloatingBaseConstraint(const double dtau,
+                                            const SplitSolution& s,
+                                            KKTResidual& kkt_residual,
+                                            KKTMatrix& kkt_matrix) const {
+    assert(dtau > 0);
+    kkt_residual.C().tail(dim_passive_) = dtau * s.u.head(dim_passive_);
+    kkt_matrix.Cq().bottomRows(dim_passive_) 
+        = dtau * du_dq_.topRows(dim_passive_);
+    kkt_matrix.Cv().bottomRows(dim_passive_) 
+        = dtau * du_dv_.topRows(dim_passive_);
+    kkt_matrix.Ca().bottomRows(dim_passive_) 
+        = dtau * du_da_.topRows(dim_passive_);
+    kkt_matrix.Cf().bottomRows(dim_passive_) 
+        = dtau * du_df_active_().topRows(dim_passive_);
+  }
+
+  inline double squaredKKTErrorNorm(Robot& robot, 
+                                    const std::shared_ptr<CostFunction>& cost, 
+                                    CostFunctionData& cost_data, 
+                                    pdipm::JointSpaceConstraints& constraints,
+                                    const double t, const double dtau, 
+                                    const SplitSolution& s) {
+    cost->lu(robot, cost_data, t, dtau, s.u, lu_);
+    constraints.augmentDualResidual(dtau, lu_);
+    lu_.noalias() -= dtau * s.beta;
+    if (has_floating_base_) {
+      lu_.head(dim_passive_).noalias() += dtau * s.mu_active().tail(dim_passive_);
+    }
+    if (dimf_ > 0) {
+      robot.setContactForces(s.f);
+    }
+    robot.RNEA(s.q, s.v, s.a, u_res_);
+    u_res_.noalias() -= s.u;
+    return lu_.squaredNorm() + u_res_.squaredNorm();
   }
 
 private:
   Eigen::VectorXd u_res_, lu_, lu_condensed_;
   Eigen::MatrixXd luu_, du_dq_, du_dv_, du_da_, du_df_;
+  bool has_floating_base_;
   int dim_passive_, dimf_;
 
   inline Eigen::Ref<const Eigen::MatrixXd> du_df_active_() const {
