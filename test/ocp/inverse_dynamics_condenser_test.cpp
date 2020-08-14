@@ -10,12 +10,12 @@
 #include "idocp/cost/contact_cost.hpp"
 #include "idocp/ocp/kkt_composition.hpp"
 #include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/parnmpc_linearizer.hpp"
+#include "idocp/ocp/inverse_dynamics_condenser.hpp"
 
 
 namespace idocp {
 
-class ParNMPCLinearizerTest : public ::testing::Test {
+class InverseDynamicsCondenserTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -34,7 +34,7 @@ protected:
 };
 
 
-TEST_F(ParNMPCLinearizerTest, fixed_base) {
+TEST_F(InverseDynamicsCondenserTest, fixed_base) {
   std::vector<int> contact_frames = {18};
   const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -63,8 +63,6 @@ TEST_F(ParNMPCLinearizerTest, fixed_base) {
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd f_weight = Eigen::VectorXd::Random(robot.max_dimf());
   const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(robot.max_dimf());
   joint_cost->set_q_weight(q_weight);
@@ -75,8 +73,6 @@ TEST_F(ParNMPCLinearizerTest, fixed_base) {
   joint_cost->set_a_ref(a_ref);
   joint_cost->set_u_weight(u_weight);
   joint_cost->set_u_ref(u_ref);
-  joint_cost->set_qf_weight(qf_weight);
-  joint_cost->set_vf_weight(vf_weight);
   contact_cost->set_f_weight(f_weight);
   contact_cost->set_f_ref(f_ref);
   cost->push_back(joint_cost);
@@ -84,10 +80,9 @@ TEST_F(ParNMPCLinearizerTest, fixed_base) {
   CostFunctionData data(robot);
   KKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(robot);
-  KKTMatrix kkt_matrix(robot);
-  kkt_matrix.setContactStatus(robot);
+  Eigen::VectorXd lu = Eigen::VectorXd::Zero(robot.dimv());
   robot.updateKinematics(s.q, s.v, s.a);
-  ParNMPCLinearizer linearizer(robot);
+  InverseDynamicsCondenser linearizer(robot);
   linearizer.linearizeStageCost(robot, cost, data, t_, dtau_, s, kkt_residual);
   EXPECT_TRUE(kkt_residual.lq().isApprox(dtau_*q_weight.asDiagonal()*(s.q-q_ref)));
   EXPECT_TRUE(kkt_residual.lv().isApprox(dtau_*v_weight.asDiagonal()*(s.v-v_ref)));
@@ -96,65 +91,48 @@ TEST_F(ParNMPCLinearizerTest, fixed_base) {
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const Eigen::VectorXd v_prev = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd lmd_next = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd gmm_next = Eigen::VectorXd::Random(robot.dimv());
-  Eigen::VectorXd q_next = Eigen::VectorXd::Random(robot.dimq());
-  robot.normalizeConfiguration(q_next);
-  kkt_residual.setZero();
-  linearizer.linearizeStateEquation(robot, dtau_, q_prev, v_prev, s, lmd_next, 
-                                    gmm_next, q_next, kkt_residual, kkt_matrix);
+  Eigen::VectorXd u_res = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::MatrixXd du_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd du_dv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd du_da = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd du_df = Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf());  
+  parnmpclinearizer::linearizeDynamics(robot, dtau_, q_prev, v_prev, s, kkt_residual, u_res, du_dq, du_dv, du_da, du_df);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((q_prev-s.q+dtau_*s.v)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((v_prev-s.v+dtau_*s.a)));
-  EXPECT_TRUE(kkt_residual.lq().isApprox((lmd_next-s.lmd)));
-  EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm+gmm_next)));
-  EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq()
-              .isApprox(Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fqv()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fvv()
-              .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fva()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  kkt_residual.setZero();
-  kkt_matrix.setZero();
-  linearizer.linearizeTerminalCost(robot, cost, data, t_, s);
-  linearizer.linearizeStateEquation(robot, dtau_, q_prev, v_prev, s, 
-                                    kkt_residual, kkt_matrix);
-  Eigen::VectorXd phiq = qf_weight.asDiagonal()*(s.q-q_ref);
-  Eigen::VectorXd phiv = vf_weight.asDiagonal()*(s.v-v_ref);
-  EXPECT_TRUE(kkt_residual.Fq().isApprox((q_prev-s.q+dtau_*s.v)));
-  EXPECT_TRUE(kkt_residual.Fv().isApprox((v_prev-s.v+dtau_*s.a)));
-  EXPECT_TRUE(kkt_residual.lq().isApprox((phiq-s.lmd)));
-  EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm+phiv)));
-  EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq()
-              .isApprox(Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fqv()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fvv()
-              .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fva()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  robot.updateKinematics(s.q, s.v, s.a);
-  linearizer.linearizeContactConstraints(robot, dtau_, kkt_residual, kkt_matrix);
+  Eigen::VectorXd u_res_ref = Eigen::VectorXd::Zero(robot.dimv());
+  robot.setContactForces(s.f);
+  robot.RNEA(s.q, s.v, s.a, u_res_ref);
+  u_res_ref -= s.u;
+  EXPECT_TRUE(u_res_ref.isApprox(u_res));
+  Eigen::MatrixXd du_dq_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd du_dv_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd du_da_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd du_df_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf());
+  robot.RNEADerivatives(s.q, s.v, s.a, du_dq_ref, du_dv_ref, du_da_ref);
+  robot.dRNEAPartialdFext(du_df_ref);
+  EXPECT_TRUE(du_dq_ref.isApprox(du_dq));
+  EXPECT_TRUE(du_dv_ref.isApprox(du_dv));
+  EXPECT_TRUE(du_da_ref.isApprox(du_da));
+  EXPECT_TRUE(du_df_ref.isApprox(du_df));
+  KKTMatrix kkt_matrix(robot);
+  kkt_matrix.setContactStatus(robot);
+  parnmpclinearizer::linearizeConstraints(robot, dtau_, s, u_res, du_dq, du_dv, du_da, du_df, kkt_residual, kkt_matrix);
   Eigen::VectorXd C_ref = Eigen::VectorXd::Zero(robot.dim_passive()+robot.max_dimf());
   robot.computeBaumgarteResidual(dtau_, C_ref);
   EXPECT_TRUE(C_ref.head(robot.dim_passive()+robot.dimf()).isApprox(kkt_residual.C()));
-  Eigen::MatrixXd Cq_ref 
-      = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.dimv());
-  Eigen::MatrixXd Cv_ref 
-      = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.dimv());
-  Eigen::MatrixXd Ca_ref 
-      = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.dimv());
+  Eigen::MatrixXd Cq_ref = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.dimv());
+  Eigen::MatrixXd Cv_ref = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.dimv());
+  Eigen::MatrixXd Ca_ref = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.dimv());
+  Eigen::MatrixXd Cf_ref = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.max_dimf());
   robot.computeBaumgarteDerivatives(dtau_, Cq_ref, Cv_ref, Ca_ref);
   EXPECT_TRUE(Cq_ref.topRows(robot.dim_passive()+robot.dimf()).isApprox(kkt_matrix.Cq()));
   EXPECT_TRUE(Cv_ref.topRows(robot.dim_passive()+robot.dimf()).isApprox(kkt_matrix.Cv()));
   EXPECT_TRUE(Ca_ref.topRows(robot.dim_passive()+robot.dimf()).isApprox(kkt_matrix.Ca()));
+  EXPECT_TRUE(Cf_ref.topLeftCorner(robot.dim_passive()+robot.dimf(), robot.dimf()).isApprox(kkt_matrix.Cf()));
 }
 
 
-TEST_F(ParNMPCLinearizerTest, floating_base) {
+TEST_F(InverseDynamicsCondenserTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -186,8 +164,6 @@ TEST_F(ParNMPCLinearizerTest, floating_base) {
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd f_weight = Eigen::VectorXd::Random(robot.max_dimf());
   const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(robot.max_dimf());
   joint_cost->set_q_weight(q_weight);
@@ -198,8 +174,6 @@ TEST_F(ParNMPCLinearizerTest, floating_base) {
   joint_cost->set_a_ref(a_ref);
   joint_cost->set_u_weight(u_weight);
   joint_cost->set_u_ref(u_ref);
-  joint_cost->set_qf_weight(qf_weight);
-  joint_cost->set_vf_weight(vf_weight);
   contact_cost->set_f_weight(f_weight);
   contact_cost->set_f_ref(f_ref);
   cost->push_back(joint_cost);
@@ -207,84 +181,64 @@ TEST_F(ParNMPCLinearizerTest, floating_base) {
   CostFunctionData data(robot);
   KKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(robot);
-  KKTMatrix kkt_matrix(robot);
-  kkt_matrix.setContactStatus(robot);
-  robot.updateKinematics(s.q, s.v, s.a);
+  Eigen::VectorXd lu = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(robot.dimv());
   robot.subtractConfiguration(s.q, q_ref, q_diff);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   robot.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
-  ParNMPCLinearizer linearizer(robot);
-  linearizer.linearizeStageCost(robot, cost, data, t_, dtau_, s, kkt_residual);
+  parnmpclinearizer::linearizeStageCost(robot, cost, data, t_, dtau_, s, kkt_residual, lu);
   EXPECT_TRUE(kkt_residual.lq().isApprox(dtau_*Jq_diff.transpose()*q_weight.asDiagonal()*q_diff));
   EXPECT_TRUE(kkt_residual.lv().isApprox(dtau_*v_weight.asDiagonal()*(s.v-v_ref)));
   EXPECT_TRUE(kkt_residual.la().isApprox(dtau_*a_weight.asDiagonal()*(s.a-a_ref)));
+  EXPECT_TRUE(lu.isApprox(dtau_*u_weight.asDiagonal()*(s.u-u_ref)));
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const Eigen::VectorXd v_prev = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd lmd_next = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd gmm_next = Eigen::VectorXd::Random(robot.dimv());
-  Eigen::VectorXd q_next = Eigen::VectorXd::Random(robot.dimq());
-  robot.normalizeConfiguration(q_next);
-  kkt_residual.setZero();
-  linearizer.linearizeStateEquation(robot, dtau_, q_prev, v_prev, s, lmd_next, 
-                                    gmm_next, q_next, kkt_residual, kkt_matrix);
-  Eigen::MatrixXd Jsub_minus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  Eigen::MatrixXd Jsub_plus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  robot.subtractConfiguration(q_prev, s.q, q_diff);
-  robot.dSubtractdConfigurationMinus(q_prev, s.q, Jsub_minus);
-  robot.dSubtractdConfigurationPlus(s.q, q_next, Jsub_plus);
-  EXPECT_TRUE(kkt_residual.Fq().isApprox((q_diff+dtau_*s.v)));
-  EXPECT_TRUE(kkt_residual.Fv().isApprox((v_prev-s.v+dtau_*s.a)));
-  EXPECT_TRUE(kkt_residual.lq()
-              .isApprox((Jsub_minus.transpose()*s.lmd+Jsub_plus.transpose()*lmd_next)));
-  EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm+gmm_next)));
-  EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq().isApprox(Jsub_minus));
-  EXPECT_TRUE(kkt_matrix.Fqv()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fvv()
-              .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fva()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  kkt_residual.setZero();
-  kkt_matrix.setZero();
-  linearizer.linearizeTerminalCost(robot, cost, data, t_, s);
-  linearizer.linearizeStateEquation(robot, dtau_, q_prev, v_prev, s, 
-                                    kkt_residual, kkt_matrix);
+  Eigen::VectorXd u_res = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::MatrixXd du_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd du_dv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd du_da = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd du_df = Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf());
+  parnmpclinearizer::linearizeDynamics(robot, dtau_, q_prev, v_prev, s, kkt_residual, u_res, du_dq, du_dv, du_da, du_df);
   robot.subtractConfiguration(q_prev, s.q, q_diff);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((q_diff+dtau_*s.v)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((v_prev-s.v+dtau_*s.a)));
-  robot.subtractConfiguration(s.q, q_ref, q_diff);
-  robot.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
-  Eigen::VectorXd phiq = Jq_diff.transpose()*qf_weight.asDiagonal()*q_diff;
-  Eigen::VectorXd phiv = vf_weight.asDiagonal()*(s.v-v_ref);
-  robot.dSubtractdConfigurationMinus(q_prev, s.q, Jsub_minus);
-  EXPECT_TRUE(kkt_residual.lq().isApprox((phiq+Jsub_minus.transpose()*s.lmd)));
-  EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm+phiv)));
-  EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq().isApprox(Jsub_minus));
-  EXPECT_TRUE(kkt_matrix.Fqv()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fvv()
-              .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fva()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  robot.updateKinematics(s.q, s.v, s.a);
-  linearizer.linearizeContactConstraints(robot, dtau_, kkt_residual, kkt_matrix);
+  Eigen::VectorXd u_res_ref = Eigen::VectorXd::Zero(robot.dimv());
+  robot.setContactForces(s.f);
+  robot.RNEA(s.q, s.v, s.a, u_res_ref);
+  u_res_ref -= s.u;
+  EXPECT_TRUE(u_res_ref.isApprox(u_res));
+  Eigen::MatrixXd du_dq_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd du_dv_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd du_da_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd du_df_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf());
+  robot.RNEADerivatives(s.q, s.v, s.a, du_dq_ref, du_dv_ref, du_da_ref);
+  robot.dRNEAPartialdFext(du_df_ref);
+  EXPECT_TRUE(du_dq_ref.isApprox(du_dq));
+  EXPECT_TRUE(du_dv_ref.isApprox(du_dv));
+  EXPECT_TRUE(du_da_ref.isApprox(du_da));
+  EXPECT_TRUE(du_df_ref.isApprox(du_df));
+  EXPECT_TRUE(lu.isApprox(-dtau_*u_weight.asDiagonal()*u_ref));
+  KKTMatrix kkt_matrix(robot);
+  kkt_matrix.setContactStatus(robot);
+  parnmpclinearizer::linearizeConstraints(robot, dtau_, s, u_res, du_dq, du_dv, du_da, du_df, kkt_residual, kkt_matrix);
   Eigen::VectorXd C_ref = Eigen::VectorXd::Zero(robot.dim_passive()+robot.max_dimf());
   robot.computeBaumgarteResidual(dtau_, C_ref);
+  C_ref.head(robot.dim_passive()+robot.dimf()).tail(robot.dim_passive()) = dtau_ * (s.u.head(robot.dim_passive())+u_res.head(robot.dim_passive()));
   EXPECT_TRUE(C_ref.head(robot.dim_passive()+robot.dimf()).isApprox(kkt_residual.C()));
-  Eigen::MatrixXd Cq_ref 
-      = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.dimv());
-  Eigen::MatrixXd Cv_ref 
-      = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.dimv());
-  Eigen::MatrixXd Ca_ref 
-      = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.dimv());
-  robot.computeBaumgarteDerivatives(dtau_, Cq_ref, Cv_ref, Ca_ref);
+  Eigen::MatrixXd Cq_ref = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.dimv());
+  Eigen::MatrixXd Cv_ref = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.dimv());
+  Eigen::MatrixXd Ca_ref = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.dimv());
+  Eigen::MatrixXd Cf_ref = Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), robot.max_dimf());
+  robot.computeBaumgarteDerivatives(dtau_, Cq_ref.topRows(robot.dimf()), Cv_ref.topRows(robot.dimf()), Ca_ref.topRows(robot.dimf()));
+  Cq_ref.topRows(robot.dim_passive()+robot.dimf()).bottomRows(robot.dim_passive()) = dtau_ * du_dq.topRows(robot.dim_passive());
+  Cv_ref.topRows(robot.dim_passive()+robot.dimf()).bottomRows(robot.dim_passive()) = dtau_ * du_dv.topRows(robot.dim_passive());
+  Ca_ref.topRows(robot.dim_passive()+robot.dimf()).bottomRows(robot.dim_passive()) = dtau_ * du_da.topRows(robot.dim_passive());
+  Cf_ref.topLeftCorner(robot.dim_passive()+robot.dimf(), robot.dimf()).bottomRows(robot.dim_passive()) = dtau_ * du_df.topLeftCorner(robot.dim_passive()+robot.dimf(), robot.dimf()).topRows(robot.dim_passive());
   EXPECT_TRUE(Cq_ref.topRows(robot.dim_passive()+robot.dimf()).isApprox(kkt_matrix.Cq()));
   EXPECT_TRUE(Cv_ref.topRows(robot.dim_passive()+robot.dimf()).isApprox(kkt_matrix.Cv()));
   EXPECT_TRUE(Ca_ref.topRows(robot.dim_passive()+robot.dimf()).isApprox(kkt_matrix.Ca()));
+  EXPECT_TRUE(Cf_ref.topLeftCorner(robot.dim_passive()+robot.dimf(), robot.dimf()).isApprox(kkt_matrix.Cf()));
 }
 
 } // namespace idocp

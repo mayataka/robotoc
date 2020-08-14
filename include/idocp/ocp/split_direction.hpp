@@ -18,6 +18,8 @@ public:
   SplitDirection(const Robot& robot) 
     : kkt_composition_(robot),
       split_direction_(Eigen::VectorXd::Zero(kkt_composition_.max_dimKKT())),
+      du(robot.dimv()),
+      dbeta(robot.dimv()),
       dimc_(robot.dim_passive()+robot.dimf()),
       dimf_(robot.dimf()) {
   }
@@ -25,6 +27,8 @@ public:
   SplitDirection() 
     : kkt_composition_(),
       split_direction_(),
+      du(),
+      dbeta(),
       dimc_(0),
       dimf_(0) {
   }
@@ -151,6 +155,9 @@ public:
   int dimf() const {
     return dimf_;
   }
+
+  // condensed directions
+  Eigen::VectorXd du, dbeta;
 
 private:
   KKTComposition kkt_composition_;

@@ -267,11 +267,14 @@ TEST_F(FloatingBaseRobotTest, moveConstructor) {
 
 TEST_F(FloatingBaseRobotTest, integrateConfiguration) {
   Robot robot(urdf_);
-  Eigen::VectorXd q = q_;
   Eigen::VectorXd q_ref = q_;
-  const double integration_length = std::abs(Eigen::VectorXd::Random(2)[0]);
+  Eigen::VectorXd q_integrated = q_;
+  const double integration_length = Eigen::VectorXd::Random(2)[0];
+  robot.integrateConfiguration(q_, v_, integration_length, q_integrated);
+  pinocchio::integrate(model_, q_, integration_length*v_, q_ref);
+  EXPECT_TRUE(q_integrated.isApprox(q_ref));
+  Eigen::VectorXd q = q_;
   robot.integrateConfiguration(v_, integration_length, q);
-  q_ref = pinocchio::integrate(model_, q_, integration_length*v_);
   EXPECT_TRUE(q.isApprox(q_ref));
 }
 

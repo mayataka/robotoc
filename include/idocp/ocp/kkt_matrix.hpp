@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "Eigen/Core"
+#include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/kkt_composition.hpp"
@@ -72,6 +73,20 @@ public:
                              kkt_composition_.Qv_begin(), 
                              kkt_composition_.Fv_size(), 
                              kkt_composition_.Qv_size());
+  }
+
+  inline Eigen::Ref<Eigen::MatrixXd> Fva() {
+    return kkt_matrix_.block(kkt_composition_.Fv_begin(), 
+                             kkt_composition_.Qa_begin(), 
+                             kkt_composition_.Fv_size(), 
+                             kkt_composition_.Qa_size());
+  }
+
+  inline Eigen::Ref<Eigen::MatrixXd> CC() {
+    return kkt_matrix_.block(kkt_composition_.C_begin(), 
+                             kkt_composition_.C_begin(), 
+                             kkt_composition_.C_size(), 
+                             kkt_composition_.C_size());
   }
 
   inline Eigen::Ref<Eigen::MatrixXd> Cq() {
@@ -254,6 +269,20 @@ public:
                              kkt_composition_.Qv_size());
   }
 
+  inline Eigen::Ref<const Eigen::MatrixXd> Fva() const {
+    return kkt_matrix_.block(kkt_composition_.Fv_begin(), 
+                             kkt_composition_.Qa_begin(), 
+                             kkt_composition_.Fv_size(), 
+                             kkt_composition_.Qa_size());
+  }
+
+  inline Eigen::Ref<const Eigen::MatrixXd> CC() const {
+    return kkt_matrix_.block(kkt_composition_.C_begin(), 
+                             kkt_composition_.C_begin(), 
+                             kkt_composition_.C_size(), 
+                             kkt_composition_.C_size());
+  }
+
   inline Eigen::Ref<const Eigen::MatrixXd> Cq() const {
     return kkt_matrix_.block(kkt_composition_.C_begin(), 
                              kkt_composition_.Qq_begin(), 
@@ -413,7 +442,7 @@ public:
     const int size = kkt_composition_.dimKKT();
     kkt_matrix_inverse 
         = kkt_matrix_.topLeftCorner(size, size)
-                     .llt().solve(Eigen::MatrixXd::Identity(size, size));
+                     .ldlt().solve(Eigen::MatrixXd::Identity(size, size));
   }
 
   inline void setZero() {

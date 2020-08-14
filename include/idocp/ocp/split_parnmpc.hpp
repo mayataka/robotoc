@@ -15,6 +15,7 @@
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/kkt_composition.hpp"
+#include "inverse_dynamics_condenser.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 
@@ -99,11 +100,17 @@ public:
                     const Eigen::VectorXd& gmm_next,
                     const Eigen::VectorXd& q_next,
                     const Eigen::MatrixXd& aux_mat_next_old, SplitDirection& d, 
-                    SplitSolution& s_new_coarse, const bool is_terminal=false);
-  
-  void getAuxMat(Eigen::MatrixXd& aux_mat);
+                    SplitSolution& s_new_coarse);
 
-  void backwardCollectionSerial(const SplitSolution& s_old_next,
+  void coarseUpdate(Robot& robot, const double t, const double dtau, 
+                    const Eigen::VectorXd& q_prev, 
+                    const Eigen::VectorXd& v_prev, const SplitSolution& s, 
+                    SplitDirection& d, SplitSolution& s_new_coarse);
+  
+  void getAuxiliaryMatrix(Eigen::MatrixXd& auxiliary_matrix);
+
+  void backwardCollectionSerial(const Robot& robot,
+                                const SplitSolution& s_old_next,
                                 const SplitSolution& s_new_next,
                                 SplitSolution& s_new);
 
@@ -169,10 +176,11 @@ private:
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
   KKTComposition kkt_composition_;
-  Eigen::VectorXd lu_, lu_condensed_, u_res_, du_, dbeta_, x_res_, dx_,
-                  u_tmp_, u_res_tmp_;
-  Eigen::MatrixXd luu_, kkt_matrix_inverse_, du_dq_, du_dv_, du_da_, du_df_,
-                  dsubtract_dqminus_, dsubtract_dqplus_;
+  ParNMPCLinearizer linearizer_;
+  InverseDynamicsCondenser id_condenser_;
+  Eigen::VectorXd du_, dbeta_, x_res_, dx_, u_tmp_, u_res_tmp_;
+  Eigen::MatrixXd kkt_matrix_inverse_;
+
 
 };
 

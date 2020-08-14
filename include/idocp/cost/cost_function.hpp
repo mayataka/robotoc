@@ -16,7 +16,9 @@ namespace idocp {
 
 class CostFunction {
 public:
-  CostFunction() {}
+  CostFunction() 
+    : costs_() {
+  }
 
   ~CostFunction() {}
 
@@ -38,6 +40,10 @@ public:
 
   void clear() {
     costs_.clear();
+  }
+
+  bool isEmpty() {
+    return costs_.empty();
   }
 
   double l(const Robot& robot, CostFunctionData& data, const double t, 

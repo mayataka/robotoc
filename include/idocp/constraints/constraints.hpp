@@ -15,7 +15,9 @@ namespace idocp {
 
 class Constraints {
 public:
-  Constraints() {}
+  Constraints() 
+    : constraints_() {
+  }
 
   ~Constraints() {}
 
@@ -39,6 +41,10 @@ public:
     constraints_.clear();
   }
 
+  bool isEmpty() {
+    return constraints_.empty();
+  }
+
   ConstraintsData&& createConstraintsData(const Robot& robot) const {
     ConstraintsData datas;
     for (int i=0; i<constraints_.size(); ++i) {
@@ -53,6 +59,8 @@ public:
                   const Eigen::Ref<const Eigen::VectorXd>& q, 
                   const Eigen::Ref<const Eigen::VectorXd>& v, 
                   const Eigen::Ref<const Eigen::VectorXd>& u) const {
+    std::cout << "size of const = " << constraints_.size() << std::endl;
+    std::cout << "bb" << std::endl;
     for (int i=0; i<constraints_.size(); ++i) {
       bool feasible = constraints_[i]->isFeasible(robot, datas.data[i], 
                                                   a, f, q, v, u);
@@ -60,6 +68,7 @@ public:
         return false;
       }
     }
+    std::cout << "bb" << std::endl;
     return true;
   }
 

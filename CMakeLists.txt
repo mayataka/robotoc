@@ -67,8 +67,9 @@ add_library(
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/parnmpc_linearizer.cpp
-  src/ocp/split_parnmpc.cpp
-  src/ocp/parnmpc.cpp
+  src/ocp/inverse_dynamics_condenser.cpp
+  # src/ocp/split_parnmpc.cpp
+  # src/ocp/parnmpc.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

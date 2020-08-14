@@ -1,0 +1,1 @@
+#include "idocp/ocp/inverse_dynamics_condenser.hpp"

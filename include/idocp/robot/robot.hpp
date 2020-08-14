@@ -74,6 +74,11 @@ public:
                               const double integration_length, 
                               Eigen::Ref<Eigen::VectorXd> q) const;
 
+  void integrateConfiguration(const Eigen::Ref<const Eigen::VectorXd>& q, 
+                              const Eigen::Ref<const Eigen::VectorXd>& v, 
+                              const double integration_length, 
+                              Eigen::Ref<Eigen::VectorXd> q_integrated) const;
+
   // Computes the difference of the two configurations at the its tangent 
   // velocity.
   // Argments: 

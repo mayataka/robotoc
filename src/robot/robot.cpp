@@ -143,13 +143,29 @@ void Robot::integrateConfiguration(const Eigen::Ref<const Eigen::VectorXd>& v,
                                    const double integration_length, 
                                    Eigen::Ref<Eigen::VectorXd> q) const {
   assert(v.size() == dimv_);
-  assert(integration_length >= 0);
   assert(q.size() == dimq_);
   if (floating_base_.has_floating_base()) {
-    q = pinocchio::integrate(model_, q, integration_length*v);
+    const Eigen::VectorXd q_tmp = q;
+    pinocchio::integrate(model_, q_tmp, integration_length*v, q);
   }
   else {
     q.noalias() += integration_length * v;
+  }
+}
+
+
+void Robot::integrateConfiguration(
+    const Eigen::Ref<const Eigen::VectorXd>& q, 
+    const Eigen::Ref<const Eigen::VectorXd>& v, const double integration_length, 
+    Eigen::Ref<Eigen::VectorXd> q_integrated) const {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(q_integrated.size() == dimq_);
+  if (floating_base_.has_floating_base()) {
+    pinocchio::integrate(model_, q, integration_length*v, q_integrated);
+  }
+  else {
+    q_integrated = q + integration_length * v;
   }
 }
 
@@ -162,7 +178,7 @@ void Robot::subtractConfiguration(
   assert(q_minus.size() == dimq_);
   assert(difference.size() == dimv_);
   if (floating_base_.has_floating_base()) {
-    difference = pinocchio::difference(model_, q_minus, q_plus);
+    pinocchio::difference(model_, q_minus, q_plus, difference);
   }
   else {
     difference = q_plus - q_minus;
@@ -451,7 +467,7 @@ void Robot::normalizeConfiguration(Eigen::Ref<Eigen::VectorXd> q) const {
   if (floating_base_.has_floating_base()) {
     if (q.segment<4>(3).squaredNorm() 
           <= std::numeric_limits<double>::epsilon()) {
-      q.coeffRef(6) = 1;
+      q.coeffRef(3) = 1;
     }
     pinocchio::normalize(model_, q);
   }
