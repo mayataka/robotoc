@@ -337,7 +337,7 @@ double SplitParNMPC::maxDualStepSize() {
 }
 
 
-std::pair<double, double> SplitParNMPC::stageCostAndConstraintsViolation(
+std::pair<double, double> SplitParNMPC::costAndConstraintsViolation(
     Robot& robot, const double t, const double dtau, const SplitSolution& s,
     const bool is_terminal) {
   assert(dtau > 0);
@@ -347,6 +347,10 @@ std::pair<double, double> SplitParNMPC::stageCostAndConstraintsViolation(
     cost += cost_->phi(robot, cost_data_, t, s.q, s.v);
   }
   cost += joint_constraints_.costSlackBarrier();
+  if (robot.has_floating_base()) {
+    kkt_residual_.C().tail(robot.dim_passive()) 
+        = dtau * s.u.head(robot.dim_passive());
+  }
   double constraints_violation = 0;
   constraints_violation += kkt_residual_.Fq().lpNorm<1>();
   constraints_violation += kkt_residual_.Fv().lpNorm<1>();
@@ -358,7 +362,7 @@ std::pair<double, double> SplitParNMPC::stageCostAndConstraintsViolation(
 }
 
 
-std::pair<double, double> SplitParNMPC::stageCostAndConstraintsViolation(
+std::pair<double, double> SplitParNMPC::costAndConstraintsViolation(
     Robot& robot, const double step_size, const double t, const double dtau, 
     const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
     const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp) {
@@ -367,19 +371,17 @@ std::pair<double, double> SplitParNMPC::stageCostAndConstraintsViolation(
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
-  s_tmp.q = s.q;
-  robot.integrateConfiguration(d.dq(), step_size, s_tmp.q);
+  robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
   s_tmp.v = s.v + step_size * d.dv();
   s_tmp.a = s.a + step_size * d.da();
   s_tmp.u = s.u + step_size * d.du;
   if (robot.dimf() > 0) {
-    s_tmp.f.head(kkt_composition_.Qf_size()) 
-        = s.f.head(kkt_composition_.Qf_size()) + step_size * d.df();
+    s_tmp.f_active() = s.f_active() + step_size * d.df();
     robot.setContactForces(s_tmp.f);
   }
   double cost = 0;
-  cost += cost_->l(robot, cost_data_, t, dtau, s_tmp.a, s_tmp.f,  
-                   s_tmp.q, s_tmp.v, s_tmp.u);
+  cost += cost_->l(robot, cost_data_, t, dtau, s_tmp.q, s_tmp.v,  
+                   s_tmp.a, s_tmp.f, s_tmp.u);
   cost += joint_constraints_.costSlackBarrier(step_size);
   robot.subtractConfiguration(q_prev, s_tmp.q, kkt_residual_.Fq());
   kkt_residual_.Fq().noalias() += dtau * s_tmp.v;
@@ -396,15 +398,15 @@ std::pair<double, double> SplitParNMPC::stageCostAndConstraintsViolation(
   constraints_violation += kkt_residual_.Fq().lpNorm<1>();
   constraints_violation += kkt_residual_.Fv().lpNorm<1>();
   constraints_violation += id_condenser_.inverseDynamicsConstraintViolation(robot, dtau, s);
+  constraints_violation += kkt_residual_.C().lpNorm<1>();
   constraints_violation += joint_constraints_.residualL1Nrom(dtau, s_tmp.q, 
                                                              s_tmp.v, s_tmp.a, 
                                                              s_tmp.u);
-  constraints_violation += kkt_residual_.C().lpNorm<1>();
   return std::make_pair(cost, constraints_violation);
 }
 
 
-std::pair<double, double> SplitParNMPC::stageCostAndConstraintsViolation(
+std::pair<double, double> SplitParNMPC::costAndConstraintsViolation(
     Robot& robot, const double step_size, const double t, const double dtau, 
     const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
     const Eigen::VectorXd& dq_prev, const Eigen::VectorXd& dv_prev, 
@@ -417,19 +419,20 @@ std::pair<double, double> SplitParNMPC::stageCostAndConstraintsViolation(
   assert(v_prev.size() == robot.dimv());
   assert(dq_prev.size() == robot.dimv());
   assert(dv_prev.size() == robot.dimv());
-  s_tmp.q = s.q;
-  robot.integrateConfiguration(d.dq(), step_size, s_tmp.q);
+  robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
   s_tmp.v = s.v + step_size * d.dv();
   s_tmp.a = s.a + step_size * d.da();
   s_tmp.u = s.u + step_size * d.du;
   if (robot.dimf() > 0) {
-    s_tmp.f.head(kkt_composition_.Qf_size()) 
-        = s.f.head(kkt_composition_.Qf_size()) + step_size * d.df();
+    s_tmp.f_active() = s.f_active() + step_size * d.df();
     robot.setContactForces(s_tmp.f);
   }
   double cost = 0;
-  cost += cost_->l(robot, cost_data_, t, dtau, s_tmp.a, s_tmp.f,  
-                   s_tmp.q, s_tmp.v, s_tmp.u);
+  cost += cost_->l(robot, cost_data_, t, dtau, s_tmp.q, s_tmp.v,  
+                   s_tmp.a, s_tmp.f, s_tmp.u);
+  if (is_terminal) {
+    cost += cost_->phi(robot, cost_data_, t, s_tmp.q, s_tmp.v);
+  }
   cost += joint_constraints_.costSlackBarrier(step_size);
   robot.subtractConfiguration(q_prev, s_tmp.q, kkt_residual_.Fq());
   kkt_residual_.Fq().noalias() += dtau * s_tmp.v + step_size * dq_prev;
@@ -446,10 +449,10 @@ std::pair<double, double> SplitParNMPC::stageCostAndConstraintsViolation(
   constraints_violation += kkt_residual_.Fq().lpNorm<1>();
   constraints_violation += kkt_residual_.Fv().lpNorm<1>();
   constraints_violation += id_condenser_.inverseDynamicsConstraintViolation(robot, dtau, s);
+  constraints_violation += kkt_residual_.C().lpNorm<1>();
   constraints_violation += joint_constraints_.residualL1Nrom(dtau, s_tmp.q, 
                                                              s_tmp.v, s_tmp.a, 
                                                              s_tmp.u);
-  constraints_violation += kkt_residual_.C().lpNorm<1>();
   return std::make_pair(cost, constraints_violation);
 }
 

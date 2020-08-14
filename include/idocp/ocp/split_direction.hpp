@@ -46,6 +46,8 @@ public:
 
   inline void set(const Robot& robot) {
     kkt_composition_.set(robot);
+    dimc_ = robot.dim_passive() + robot.dimf();
+    dimf_ = robot.dimf();
   }
 
   inline Eigen::Ref<Eigen::VectorXd> split_direction() {
