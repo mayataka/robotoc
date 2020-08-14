@@ -15,7 +15,8 @@
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/kkt_composition.hpp"
-#include "inverse_dynamics_condenser.hpp"
+#include "idocp/ocp/parnmpc_linearizer.hpp"
+#include "idocp/ocp/inverse_dynamics_condenser.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 
@@ -163,9 +164,12 @@ public:
                              const SplitSolution& s,
                              const Eigen::VectorXd& lmd_next,
                              const Eigen::VectorXd& gmm_next,
-                             const Eigen::VectorXd& q_next, 
-                             const bool is_terminal=false);
-  
+                             const Eigen::VectorXd& q_next);
+
+  double squaredKKTErrorNorm(Robot& robot, const double t, const double dtau, 
+                             const Eigen::VectorXd& q_prev, 
+                             const Eigen::VectorXd& v_prev, 
+                             const SplitSolution& s);
 
 private:
   std::shared_ptr<CostFunction> cost_;
@@ -178,9 +182,8 @@ private:
   KKTComposition kkt_composition_;
   ParNMPCLinearizer linearizer_;
   InverseDynamicsCondenser id_condenser_;
-  Eigen::VectorXd du_, dbeta_, x_res_, dx_, u_tmp_, u_res_tmp_;
+  Eigen::VectorXd x_res_, dx_;
   Eigen::MatrixXd kkt_matrix_inverse_;
-
 
 };
 

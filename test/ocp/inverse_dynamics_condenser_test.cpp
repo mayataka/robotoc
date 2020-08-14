@@ -68,7 +68,9 @@ TEST_F(InverseDynamicsCondenserTest, fixed_base) {
   id_condenser.setContactStatus(robot);
   id_condenser.linearizeStageCost(robot, cost, data, t_, dtau_, s);
   id_condenser.linearizeInequalityConstraints(robot, constraints, t_, dtau_, s);
+  id_condenser.condenseInequalityConstraints(robot, constraints, t_, dtau_, s);
   id_condenser.linearizeInverseDynamics(robot, dtau_, s);
+  id_condenser.linearizeFloatingBaseConstraint(dtau_, s);
   KKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(robot);
   KKTMatrix kkt_matrix(robot);
@@ -84,7 +86,6 @@ TEST_F(InverseDynamicsCondenserTest, fixed_base) {
   Eigen::MatrixXd luu = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   cost->lu(robot, data, t_, dtau_, s.u, lu);
   cost->luu(robot, data, t_, dtau_, s.u, luu);
-  lu -= dtau_ * s.beta;
   constraints.augmentDualResidual(dtau_, lu);
   constraints.condenseSlackAndDual(dtau_, s.u, luu, lu);
   Eigen::VectorXd u_res = Eigen::VectorXd::Zero(robot.dimv());
@@ -138,6 +139,7 @@ TEST_F(InverseDynamicsCondenserTest, fixed_base) {
                    dtau_*u_res.lpNorm<1>());
   kkt_residual.setZero();
   kkt_matrix.setZero();
+  id_condenser.linearizeInverseDynamics(robot, dtau_, s);
   id_condenser.augmentInverseDynamicsDerivatives(robot, dtau_, s, kkt_residual);
   robot.RNEADerivatives(s.q, s.v, s.a, du_dq, du_dv, du_da);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -146,18 +148,18 @@ TEST_F(InverseDynamicsCondenserTest, fixed_base) {
   EXPECT_TRUE(kkt_residual.lv().isApprox(dtau_*du_dv.transpose()*s.beta));
   EXPECT_TRUE(kkt_residual.la().isApprox(dtau_*du_da.transpose()*s.beta));
   EXPECT_TRUE(kkt_residual.lf().isApprox(dtau_*du_df.leftCols(robot.dimf()).transpose()*s.beta));
-  id_condenser.augmentFloatingBaseConstraint(dtau_, s, kkt_residual, kkt_matrix);
+  id_condenser.augmentFloatingBaseConstraint(dtau_, s, kkt_residual);
   EXPECT_TRUE(kkt_residual.C().isZero());
-  EXPECT_TRUE(kkt_matrix.Cq().isZero());
-  EXPECT_TRUE(kkt_matrix.Cv().isZero());
-  EXPECT_TRUE(kkt_matrix.Ca().isZero());
-  EXPECT_TRUE(kkt_matrix.Cf().isZero());
   cost->lu(robot, data, t_, dtau_, s.u, lu);
   constraints.augmentDualResidual(dtau_, lu);
   lu -= dtau_ * s.beta;
+  id_condenser.linearizeStageCost(robot, cost, data, t_, dtau_, s);
+  id_condenser.linearizeInequalityConstraints(robot, constraints, t_, dtau_, s);
+  id_condenser.linearizeInverseDynamics(robot, dtau_, s);
+  id_condenser.augmentInverseDynamicsDerivatives(dtau_, s);
+  id_condenser.linearizeFloatingBaseConstraint(dtau_, s);
   EXPECT_DOUBLE_EQ(lu.squaredNorm()+u_res.squaredNorm(), 
-                   id_condenser.squaredKKTErrorNorm(robot, cost, data, 
-                                                    constraints, t_, dtau_, s));
+                   id_condenser.squaredKKTErrorNorm());
 }
 
 
@@ -197,7 +199,9 @@ TEST_F(InverseDynamicsCondenserTest, floating_base) {
   id_condenser.setContactStatus(robot);
   id_condenser.linearizeStageCost(robot, cost, data, t_, dtau_, s);
   id_condenser.linearizeInequalityConstraints(robot, constraints, t_, dtau_, s);
+  id_condenser.condenseInequalityConstraints(robot, constraints, t_, dtau_, s);
   id_condenser.linearizeInverseDynamics(robot, dtau_, s);
+  id_condenser.linearizeFloatingBaseConstraint(dtau_, s);
   KKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(robot);
   KKTMatrix kkt_matrix(robot);
@@ -208,7 +212,6 @@ TEST_F(InverseDynamicsCondenserTest, floating_base) {
   Eigen::MatrixXd luu = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   cost->lu(robot, data, t_, dtau_, s.u, lu);
   cost->luu(robot, data, t_, dtau_, s.u, luu);
-  lu -= dtau_ * s.beta;
   lu.head(robot.dim_passive()) += dtau_ * s.mu_active().tail(robot.dim_passive());
   constraints.augmentDualResidual(dtau_, lu);
   constraints.condenseSlackAndDual(dtau_, s.u, luu, lu);
@@ -279,6 +282,7 @@ TEST_F(InverseDynamicsCondenserTest, floating_base) {
                    dtau_*u_res.lpNorm<1>());
   kkt_residual.setZero();
   kkt_matrix.setZero();
+  id_condenser.linearizeInverseDynamics(robot, dtau_, s);
   id_condenser.augmentInverseDynamicsDerivatives(robot, dtau_, s, kkt_residual);
   robot.RNEADerivatives(s.q, s.v, s.a, du_dq, du_dv, du_da);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -287,29 +291,21 @@ TEST_F(InverseDynamicsCondenserTest, floating_base) {
   EXPECT_TRUE(kkt_residual.lv().isApprox(dtau_*du_dv.transpose()*s.beta));
   EXPECT_TRUE(kkt_residual.la().isApprox(dtau_*du_da.transpose()*s.beta));
   EXPECT_TRUE(kkt_residual.lf().isApprox(dtau_*du_df.leftCols(robot.dimf()).transpose()*s.beta));
-  id_condenser.augmentFloatingBaseConstraint(dtau_, s, kkt_residual, kkt_matrix);
+  id_condenser.augmentFloatingBaseConstraint(dtau_, s, kkt_residual);
   C.setZero();
-  Cq.setZero();
-  Cv.setZero();
-  Ca.setZero();
-  Cf.setZero();
   C.tail(robot.dim_passive()) = dtau_ * s.u.head(robot.dim_passive());
-  Cq.bottomRows(robot.dim_passive()) = dtau_ * du_dq.topRows(robot.dim_passive());
-  Cv.bottomRows(robot.dim_passive()) = dtau_ * du_dv.topRows(robot.dim_passive());
-  Ca.bottomRows(robot.dim_passive()) = dtau_ * du_da.topRows(robot.dim_passive());
-  Cf.bottomRows(robot.dim_passive()) = dtau_ * du_df.topLeftCorner(robot.dim_passive(), robot.dimf());
   EXPECT_TRUE(kkt_residual.C().isApprox(C));
-  EXPECT_TRUE(kkt_matrix.Cq().isApprox(Cq));
-  EXPECT_TRUE(kkt_matrix.Cv().isApprox(Cv));
-  EXPECT_TRUE(kkt_matrix.Ca().isApprox(Ca));
-  EXPECT_TRUE(kkt_matrix.Cf().isApprox(Cf));
   cost->lu(robot, data, t_, dtau_, s.u, lu);
   constraints.augmentDualResidual(dtau_, lu);
   lu.head(robot.dim_passive()) += dtau_ * s.mu_active().tail(robot.dim_passive());
   lu -= dtau_ * s.beta;
+  id_condenser.linearizeStageCost(robot, cost, data, t_, dtau_, s);
+  id_condenser.linearizeInequalityConstraints(robot, constraints, t_, dtau_, s);
+  id_condenser.linearizeInverseDynamics(robot, dtau_, s);
+  id_condenser.augmentInverseDynamicsDerivatives(dtau_, s);
+  id_condenser.linearizeFloatingBaseConstraint(dtau_, s);
   EXPECT_DOUBLE_EQ(lu.squaredNorm()+u_res.squaredNorm(), 
-                   id_condenser.squaredKKTErrorNorm(robot, cost, data, 
-                                                    constraints, t_, dtau_, s));
+                   id_condenser.squaredKKTErrorNorm());
 }
 
 } // namespace idocp
