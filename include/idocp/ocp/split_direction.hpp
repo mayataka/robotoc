@@ -45,7 +45,7 @@ public:
   SplitDirection& operator=(SplitDirection&&) noexcept = default;
 
   inline void set(const Robot& robot) {
-    kkt_composition_.set(robot);
+    kkt_composition_.setContactStatus(robot);
     dimc_ = robot.dim_passive() + robot.dimf();
     dimf_ = robot.dimf();
   }

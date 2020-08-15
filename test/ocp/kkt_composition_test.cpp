@@ -31,7 +31,7 @@ TEST_F(KKTCompositionTest, fixed_base) {
   std::random_device rnd;
   std::vector<bool> contact_status = {rnd()%2==0};
   KKTComposition composition(robot);
-  composition.set(robot);
+  composition.setContactStatus(robot);
   EXPECT_EQ(composition.Fq_begin(), 0);
   EXPECT_EQ(composition.Fq_size(), robot.dimv());
   EXPECT_EQ(composition.Fv_begin(), composition.Fq_begin()+composition.Fq_size());
@@ -63,7 +63,7 @@ TEST_F(KKTCompositionTest, floating_base) {
   }
   robot.setContactStatus(contact_status);
   KKTComposition composition(robot);
-  composition.set(robot);
+  composition.setContactStatus(robot);
   EXPECT_EQ(composition.Fq_begin(), 0);
   EXPECT_EQ(composition.Fq_size(), robot.dimv());
   EXPECT_EQ(composition.Fv_begin(), composition.Fq_begin()+composition.Fq_size());

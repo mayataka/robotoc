@@ -43,11 +43,12 @@ TEST_F(ParNMPCTest, updateSolutionFixedBase) {
   std::vector<int> contact_frames = {18};
   const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
-  Robot robot(fixed_base_urdf_, contact_frames, baum_a, baum_b);
+  // Robot robot(fixed_base_urdf_, contact_frames, baum_a, baum_b);
+  Robot robot(fixed_base_urdf_);
   std::random_device rnd;
   std::vector<bool> contact_status = {rnd()%2==0};
-  robot.setContactStatus(contact_status);
-  std::vector<std::vector<bool>> contact_sequence = std::vector<std::vector<bool>>(N_, contact_status);
+  // robot.setContactStatus(contact_status);
+  // std::vector<std::vector<bool>> contact_sequence = std::vector<std::vector<bool>>(N_, contact_status);
   std::shared_ptr<CostFunction> cost = std::make_shared<CostFunction>();
   std::shared_ptr<JointSpaceCost> joint_cost = std::make_shared<JointSpaceCost>(robot);
   std::shared_ptr<ContactCost> contact_cost = std::make_shared<ContactCost>(robot);
@@ -61,7 +62,7 @@ TEST_F(ParNMPCTest, updateSolutionFixedBase) {
   const Eigen::VectorXd a_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.1);
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Zero(robot.dimv());
-  const Eigen::VectorXd u_ref = Eigen::VectorXd::Constant(robot.dimv(), 0.1);
+  const Eigen::VectorXd u_ref = Eigen::VectorXd::Zero(robot.dimv());
   const Eigen::VectorXd f_weight = Eigen::VectorXd::Constant(robot.max_dimf(), 0.01);
   const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(robot.max_dimf());
   joint_cost->set_q_weight(q_weight);
@@ -80,14 +81,14 @@ TEST_F(ParNMPCTest, updateSolutionFixedBase) {
   cost->push_back(contact_cost);
   std::shared_ptr<Constraints> constraints = std::make_shared<Constraints>();
   ParNMPC parnmpc(robot, cost, constraints, T_, N_, num_proc_);
-  parnmpc.setContactSequence(contact_sequence);
+  // parnmpc.setContactSequence(contact_sequence);
   Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   std::cout << "initial KKT error = " << parnmpc.KKTError(t_, q, v) << std::endl;
   const int num_itr = 10;
   for (int i=0; i<num_itr; ++i) {
-    parnmpc.updateSolution(t_, q, v, true);
+    parnmpc.updateSolution(t_, q, v, false);
     std::cout << "KKT error after " << (i+1) << "iteration = " << parnmpc.KKTError(t_, q, v) << std::endl;
   }
 }

@@ -58,18 +58,10 @@ public:
 
   KKTComposition& operator=(KKTComposition&&) noexcept = default;
 
-  inline void set(const Robot& robot) {
-    dimv_ = robot.dimv();
-    max_dimf_ = robot.max_dimf();
+  inline void setContactStatus(const Robot& robot) {
     dimf_ = robot.dimf();
-    dim_passive_ = robot.dim_passive();
-    max_dimc_ = robot.max_dimf()+robot.dim_passive();
-    dimc_ = robot.dimf()+robot.dim_passive();
-    max_dimKKT_ = 5*robot.dimv() + 2*robot.max_dimf() + robot.dim_passive();
+    dimc_ = robot.dimf() + robot.dim_passive();
     dimKKT_ = 5*robot.dimv() + 2*robot.dimf() + robot.dim_passive();
-    Fq_begin_ = 0;
-    Fv_begin_ = robot.dimv();
-    C_begin_ = 2*robot.dimv();
     Qa_begin_ = 2*robot.dimv() + robot.dimf() + robot.dim_passive();
     Qf_begin_ = 3*robot.dimv() + robot.dimf() + robot.dim_passive();
     Qq_begin_ = 3*robot.dimv() + 2*robot.dimf() + robot.dim_passive();

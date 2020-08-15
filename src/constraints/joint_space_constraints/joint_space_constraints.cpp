@@ -58,28 +58,28 @@ bool JointSpaceConstraints::isFeasible(
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
   assert(u.size() == dimv_);
-  if (time_step_ >= 2) {
-    if (!position_upper_limits_.isFeasible(q)) {
-      return false;
-    }
-    if (!position_lower_limits_.isFeasible(q)) {
-      return false;
-    }
-  }
-  if (time_step_ >= 1) {
-    if (!velocity_upper_limits_.isFeasible(v)) {
-      return false;
-    }
-    if (!velocity_lower_limits_.isFeasible(v)) {
-      return false;
-    }
-  }
-  if (!torque_upper_limits_.isFeasible(u)) {
-    return false;
-  }
-  if (!torque_lower_limits_.isFeasible(u)) {
-    return false;
-  }
+  // if (time_step_ >= 2) {
+  //   if (!position_upper_limits_.isFeasible(q)) {
+  //     return false;
+  //   }
+  //   if (!position_lower_limits_.isFeasible(q)) {
+  //     return false;
+  //   }
+  // }
+  // if (time_step_ >= 1) {
+  //   if (!velocity_upper_limits_.isFeasible(v)) {
+  //     return false;
+  //   }
+  //   if (!velocity_lower_limits_.isFeasible(v)) {
+  //     return false;
+  //   }
+  // }
+  // if (!torque_upper_limits_.isFeasible(u)) {
+  //   return false;
+  // }
+  // if (!torque_lower_limits_.isFeasible(u)) {
+  //   return false;
+  // }
   return true;
 }
 
@@ -94,16 +94,16 @@ void JointSpaceConstraints::setSlackAndDual(
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
   assert(u.size() == dimv_);
-  if (time_step_ >= 2) {
-    position_upper_limits_.setSlackAndDual(dtau, q);
-    position_lower_limits_.setSlackAndDual(dtau, q);
-  }
-  if (time_step_ >= 1) {
-    velocity_upper_limits_.setSlackAndDual(dtau, v);
-    velocity_lower_limits_.setSlackAndDual(dtau, v);
-  }
-  torque_upper_limits_.setSlackAndDual(dtau, u);
-  torque_lower_limits_.setSlackAndDual(dtau, u);
+  // if (time_step_ >= 2) {
+  //   position_upper_limits_.setSlackAndDual(dtau, q);
+  //   position_lower_limits_.setSlackAndDual(dtau, q);
+  // }
+  // if (time_step_ >= 1) {
+  //   velocity_upper_limits_.setSlackAndDual(dtau, v);
+  //   velocity_lower_limits_.setSlackAndDual(dtau, v);
+  // }
+  // torque_upper_limits_.setSlackAndDual(dtau, u);
+  // torque_lower_limits_.setSlackAndDual(dtau, u);
 }
 
 
@@ -111,8 +111,8 @@ void JointSpaceConstraints::augmentDualResidual(
     const double dtau, Eigen::Ref<Eigen::VectorXd> Cu) {
   assert(dtau > 0);
   assert(Cu.size() == dimv_);
-  torque_upper_limits_.augmentDualResidual(dtau, Cu);
-  torque_lower_limits_.augmentDualResidual(dtau, Cu);
+  // torque_upper_limits_.augmentDualResidual(dtau, Cu);
+  // torque_lower_limits_.augmentDualResidual(dtau, Cu);
 }
 
 
@@ -123,14 +123,14 @@ void JointSpaceConstraints::augmentDualResidual(
   assert(Cq.size() == dimv_);
   assert(Cv.size() == dimv_);
   assert(Ca.size() == dimv_);
-  if (time_step_ >= 2) {
-    position_upper_limits_.augmentDualResidual(dtau, Cq);
-    position_lower_limits_.augmentDualResidual(dtau, Cq);
-  }
-  if (time_step_ >= 1) {
-    velocity_upper_limits_.augmentDualResidual(dtau, Cv);
-    velocity_lower_limits_.augmentDualResidual(dtau, Cv);
-  }
+  // if (time_step_ >= 2) {
+  //   position_upper_limits_.augmentDualResidual(dtau, Cq);
+  //   position_lower_limits_.augmentDualResidual(dtau, Cq);
+  // }
+  // if (time_step_ >= 1) {
+  //   velocity_upper_limits_.augmentDualResidual(dtau, Cv);
+  //   velocity_lower_limits_.augmentDualResidual(dtau, Cv);
+  // }
 }
 
 
@@ -154,14 +154,14 @@ void JointSpaceConstraints::condenseSlackAndDual(
   assert(Cq.size() == dimv_);
   assert(Cv.size() == dimv_);
   assert(Ca.size() == dimv_);
-  if (time_step_ >= 2) {
-    position_upper_limits_.condenseSlackAndDual(dtau, q, Cqq, Cq);
-    position_lower_limits_.condenseSlackAndDual(dtau, q, Cqq, Cq);
-  }
-  if (time_step_ >= 1) {
-    velocity_upper_limits_.condenseSlackAndDual(dtau, v, Cvv, Cv);
-    velocity_lower_limits_.condenseSlackAndDual(dtau, v, Cvv, Cv);
-  }
+  // if (time_step_ >= 2) {
+  //   position_upper_limits_.condenseSlackAndDual(dtau, q, Cqq, Cq);
+  //   position_lower_limits_.condenseSlackAndDual(dtau, q, Cqq, Cq);
+  // }
+  // if (time_step_ >= 1) {
+  //   velocity_upper_limits_.condenseSlackAndDual(dtau, v, Cvv, Cv);
+  //   velocity_lower_limits_.condenseSlackAndDual(dtau, v, Cvv, Cv);
+  // }
 }
 
 
@@ -170,8 +170,8 @@ void JointSpaceConstraints::condenseSlackAndDual(
     Eigen::Ref<Eigen::MatrixXd> Cuu, Eigen::Ref<Eigen::VectorXd> Cu) {
   assert(dtau > 0);
   assert(u.size() == dimv_);
-  torque_upper_limits_.condenseSlackAndDual(dtau, u, Cuu, Cu);
-  torque_lower_limits_.condenseSlackAndDual(dtau, u, Cuu, Cu);
+  // torque_upper_limits_.condenseSlackAndDual(dtau, u, Cuu, Cu);
+  // torque_lower_limits_.condenseSlackAndDual(dtau, u, Cuu, Cu);
 }
 
 
@@ -185,158 +185,162 @@ void JointSpaceConstraints::computeSlackAndDualDirection(
   assert(dv.size() == dimv_);
   assert(da.size() == dimv_);
   assert(du.size() == dimv_);
-  if (time_step_ >= 2) {
-    position_upper_limits_.computeSlackAndDualDirection(dtau, dq);
-    position_lower_limits_.computeSlackAndDualDirection(dtau, dq);
-  }
-  if (time_step_ >= 1) {
-    velocity_upper_limits_.computeSlackAndDualDirection(dtau, dv);
-    velocity_lower_limits_.computeSlackAndDualDirection(dtau, dv);
-  }
-  torque_upper_limits_.computeSlackAndDualDirection(dtau, du);
-  torque_lower_limits_.computeSlackAndDualDirection(dtau, du);
+  // if (time_step_ >= 2) {
+  //   position_upper_limits_.computeSlackAndDualDirection(dtau, dq);
+  //   position_lower_limits_.computeSlackAndDualDirection(dtau, dq);
+  // }
+  // if (time_step_ >= 1) {
+  //   velocity_upper_limits_.computeSlackAndDualDirection(dtau, dv);
+  //   velocity_lower_limits_.computeSlackAndDualDirection(dtau, dv);
+  // }
+  // torque_upper_limits_.computeSlackAndDualDirection(dtau, du);
+  // torque_lower_limits_.computeSlackAndDualDirection(dtau, du);
 }
 
 
 double JointSpaceConstraints::maxSlackStepSize() {
   assert(fraction_to_boundary_margin_ > 0);
   assert(fraction_to_boundary_margin_ <= 1);
-  if (time_step_ >= 2) {
-    const double size_position_upper_limit 
-        = position_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-    const double size_position_lower_limit 
-        = position_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-    const double size_velocity_upper_limit 
-        = velocity_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-    const double size_velocity_lower_limit 
-        = velocity_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-    const double size_torque_upper_limit 
-        = torque_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-    const double size_torque_lower_limit 
-        = torque_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-    return std::min({size_position_upper_limit, size_position_lower_limit, 
-                     size_velocity_upper_limit, size_velocity_lower_limit,
-                     size_torque_upper_limit, size_torque_lower_limit});
-  }
-  else if (time_step_ >= 1) {
-    const double size_velocity_upper_limit 
-        = velocity_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-    const double size_velocity_lower_limit 
-        = velocity_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-    const double size_torque_upper_limit 
-        = torque_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-    const double size_torque_lower_limit 
-        = torque_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-    return std::min({size_velocity_upper_limit, size_velocity_lower_limit,
-                     size_torque_upper_limit, size_torque_lower_limit});
-  }
-  const double size_torque_upper_limit 
-      = torque_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-  const double size_torque_lower_limit 
-      = torque_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
-  return std::min({size_torque_upper_limit, size_torque_lower_limit});
+  // if (time_step_ >= 2) {
+  //   const double size_position_upper_limit 
+  //       = position_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  //   const double size_position_lower_limit 
+  //       = position_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  //   const double size_velocity_upper_limit 
+  //       = velocity_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  //   const double size_velocity_lower_limit 
+  //       = velocity_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  //   const double size_torque_upper_limit 
+  //       = torque_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  //   const double size_torque_lower_limit 
+  //       = torque_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  //   return std::min({size_position_upper_limit, size_position_lower_limit, 
+  //                    size_velocity_upper_limit, size_velocity_lower_limit,
+  //                    size_torque_upper_limit, size_torque_lower_limit});
+  // }
+  // else if (time_step_ >= 1) {
+  //   const double size_velocity_upper_limit 
+  //       = velocity_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  //   const double size_velocity_lower_limit 
+  //       = velocity_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  //   const double size_torque_upper_limit 
+  //       = torque_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  //   const double size_torque_lower_limit 
+  //       = torque_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  //   return std::min({size_velocity_upper_limit, size_velocity_lower_limit,
+  //                    size_torque_upper_limit, size_torque_lower_limit});
+  // }
+  // const double size_torque_upper_limit 
+  //     = torque_upper_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  // const double size_torque_lower_limit 
+  //     = torque_lower_limits_.maxSlackStepSize(fraction_to_boundary_margin_);
+  // return std::min({size_torque_upper_limit, size_torque_lower_limit});
+  return 1;
 }
 
 
 double JointSpaceConstraints::maxDualStepSize() {
   assert(fraction_to_boundary_margin_ > 0);
   assert(fraction_to_boundary_margin_ <= 1);
-  if (time_step_ >= 2) {
-    const double size_position_upper_limit 
-        = position_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-    const double size_position_lower_limit 
-        = position_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-    const double size_velocity_upper_limit 
-        = velocity_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-    const double size_velocity_lower_limit 
-        = velocity_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-    const double size_torque_upper_limit 
-        = torque_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-    const double size_torque_lower_limit 
-        = torque_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-    return std::min({size_position_upper_limit, size_position_lower_limit, 
-                     size_velocity_upper_limit, size_velocity_lower_limit,
-                     size_torque_upper_limit, size_torque_lower_limit});
-  }
-  else if (time_step_ >= 1) {
-    const double size_velocity_upper_limit 
-        = velocity_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-    const double size_velocity_lower_limit 
-        = velocity_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-    const double size_torque_upper_limit 
-        = torque_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-    const double size_torque_lower_limit 
-        = torque_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-    return std::min({size_velocity_upper_limit, size_velocity_lower_limit,
-                     size_torque_upper_limit, size_torque_lower_limit});
-  }
-  const double size_torque_upper_limit 
-      = torque_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-  const double size_torque_lower_limit 
-      = torque_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
-  return std::min({size_torque_upper_limit, size_torque_lower_limit});
+  // if (time_step_ >= 2) {
+  //   const double size_position_upper_limit 
+  //       = position_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  //   const double size_position_lower_limit 
+  //       = position_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  //   const double size_velocity_upper_limit 
+  //       = velocity_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  //   const double size_velocity_lower_limit 
+  //       = velocity_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  //   const double size_torque_upper_limit 
+  //       = torque_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  //   const double size_torque_lower_limit 
+  //       = torque_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  //   return std::min({size_position_upper_limit, size_position_lower_limit, 
+  //                    size_velocity_upper_limit, size_velocity_lower_limit,
+  //                    size_torque_upper_limit, size_torque_lower_limit});
+  // }
+  // else if (time_step_ >= 1) {
+  //   const double size_velocity_upper_limit 
+  //       = velocity_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  //   const double size_velocity_lower_limit 
+  //       = velocity_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  //   const double size_torque_upper_limit 
+  //       = torque_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  //   const double size_torque_lower_limit 
+  //       = torque_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  //   return std::min({size_velocity_upper_limit, size_velocity_lower_limit,
+  //                    size_torque_upper_limit, size_torque_lower_limit});
+  // }
+  // const double size_torque_upper_limit 
+  //     = torque_upper_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  // const double size_torque_lower_limit 
+  //     = torque_lower_limits_.maxDualStepSize(fraction_to_boundary_margin_);
+  // return std::min({size_torque_upper_limit, size_torque_lower_limit});
+  return 1;
 }
 
 
 void JointSpaceConstraints::updateSlack(const double step_size) {
-  assert(step_size > 0);
-  if (time_step_ >= 2) {
-    position_upper_limits_.updateSlack(step_size);
-    position_lower_limits_.updateSlack(step_size);
-  }
-  if (time_step_ >= 1) {
-    velocity_upper_limits_.updateSlack(step_size);
-    velocity_lower_limits_.updateSlack(step_size);
-  }
-  torque_upper_limits_.updateSlack(step_size);
-  torque_lower_limits_.updateSlack(step_size);
+  // assert(step_size > 0);
+  // if (time_step_ >= 2) {
+  //   position_upper_limits_.updateSlack(step_size);
+  //   position_lower_limits_.updateSlack(step_size);
+  // }
+  // if (time_step_ >= 1) {
+  //   velocity_upper_limits_.updateSlack(step_size);
+  //   velocity_lower_limits_.updateSlack(step_size);
+  // }
+  // torque_upper_limits_.updateSlack(step_size);
+  // torque_lower_limits_.updateSlack(step_size);
 }
 
 
 void JointSpaceConstraints::updateDual(const double step_size) {
-  assert(step_size > 0);
-  if (time_step_ >= 2) {
-    position_upper_limits_.updateDual(step_size);
-    position_lower_limits_.updateDual(step_size);
-  }
-  if (time_step_ >= 1) {
-    velocity_upper_limits_.updateDual(step_size);
-    velocity_lower_limits_.updateDual(step_size);
-  }
-  torque_upper_limits_.updateDual(step_size);
-  torque_lower_limits_.updateDual(step_size);
+  // assert(step_size > 0);
+  // if (time_step_ >= 2) {
+  //   position_upper_limits_.updateDual(step_size);
+  //   position_lower_limits_.updateDual(step_size);
+  // }
+  // if (time_step_ >= 1) {
+  //   velocity_upper_limits_.updateDual(step_size);
+  //   velocity_lower_limits_.updateDual(step_size);
+  // }
+  // torque_upper_limits_.updateDual(step_size);
+  // torque_lower_limits_.updateDual(step_size);
 }
 
 
 double JointSpaceConstraints::costSlackBarrier() {
-  double cost = 0;
-  if (time_step_ >= 2) {
-    cost += position_upper_limits_.costSlackBarrier();
-    cost += position_lower_limits_.costSlackBarrier();
-  }
-  if (time_step_ >= 1) {
-    cost += velocity_upper_limits_.costSlackBarrier();
-    cost += velocity_lower_limits_.costSlackBarrier();
-  }
-  cost += torque_upper_limits_.costSlackBarrier();
-  cost += torque_lower_limits_.costSlackBarrier();
-  return cost;
+  return 0;
+  // double cost = 0;
+  // if (time_step_ >= 2) {
+  //   cost += position_upper_limits_.costSlackBarrier();
+  //   cost += position_lower_limits_.costSlackBarrier();
+  // }
+  // if (time_step_ >= 1) {
+  //   cost += velocity_upper_limits_.costSlackBarrier();
+  //   cost += velocity_lower_limits_.costSlackBarrier();
+  // }
+  // cost += torque_upper_limits_.costSlackBarrier();
+  // cost += torque_lower_limits_.costSlackBarrier();
+  // return cost;
 }
 
 
 double JointSpaceConstraints::costSlackBarrier(const double step_size) {
-  double cost = 0;
-  if (time_step_ >= 2) {
-    cost += position_upper_limits_.costSlackBarrier(step_size);
-    cost += position_lower_limits_.costSlackBarrier(step_size);
-  }
-  if (time_step_ >= 1) {
-    cost += velocity_upper_limits_.costSlackBarrier(step_size);
-    cost += velocity_lower_limits_.costSlackBarrier(step_size);
-  }
-  cost += torque_upper_limits_.costSlackBarrier(step_size);
-  cost += torque_lower_limits_.costSlackBarrier(step_size);
-  return cost;
+  return 0;
+  // double cost = 0;
+  // if (time_step_ >= 2) {
+  //   cost += position_upper_limits_.costSlackBarrier(step_size);
+  //   cost += position_lower_limits_.costSlackBarrier(step_size);
+  // }
+  // if (time_step_ >= 1) {
+  //   cost += velocity_upper_limits_.costSlackBarrier(step_size);
+  //   cost += velocity_lower_limits_.costSlackBarrier(step_size);
+  // }
+  // cost += torque_upper_limits_.costSlackBarrier(step_size);
+  // cost += torque_lower_limits_.costSlackBarrier(step_size);
+  // return cost;
 }
 
 
@@ -351,16 +355,16 @@ double JointSpaceConstraints::residualL1Nrom(
   assert(a.size() == dimv_);
   assert(u.size() == dimv_);
   double norm = 0;
-  if (time_step_ >= 2) {
-    norm += position_upper_limits_.residualL1Nrom(dtau, q);
-    norm += position_lower_limits_.residualL1Nrom(dtau, q);
-  }
-  if (time_step_ >= 1) {
-    norm += velocity_upper_limits_.residualL1Nrom(dtau, v);
-    norm += velocity_lower_limits_.residualL1Nrom(dtau, v);
-  }
-  norm += torque_upper_limits_.residualL1Nrom(dtau, u);
-  norm += torque_lower_limits_.residualL1Nrom(dtau, u);
+  // if (time_step_ >= 2) {
+  //   norm += position_upper_limits_.residualL1Nrom(dtau, q);
+  //   norm += position_lower_limits_.residualL1Nrom(dtau, q);
+  // }
+  // if (time_step_ >= 1) {
+  //   norm += velocity_upper_limits_.residualL1Nrom(dtau, v);
+  //   norm += velocity_lower_limits_.residualL1Nrom(dtau, v);
+  // }
+  // norm += torque_upper_limits_.residualL1Nrom(dtau, u);
+  // norm += torque_lower_limits_.residualL1Nrom(dtau, u);
   return norm;
 }
 
@@ -376,16 +380,16 @@ double JointSpaceConstraints::residualSquaredNrom(
   assert(a.size() == dimv_);
   assert(u.size() == dimv_);
   double norm = 0;
-  if (time_step_ >= 2) {
-    norm += position_upper_limits_.residualSquaredNrom(dtau, q);
-    norm += position_lower_limits_.residualSquaredNrom(dtau, q);
-  }
-  if (time_step_ >= 1) {
-    norm += velocity_upper_limits_.residualSquaredNrom(dtau, v);
-    norm += velocity_lower_limits_.residualSquaredNrom(dtau, v);
-  }
-  norm += torque_upper_limits_.residualSquaredNrom(dtau, u);
-  norm += torque_lower_limits_.residualSquaredNrom(dtau, u);
+  // if (time_step_ >= 2) {
+  //   norm += position_upper_limits_.residualSquaredNrom(dtau, q);
+  //   norm += position_lower_limits_.residualSquaredNrom(dtau, q);
+  // }
+  // if (time_step_ >= 1) {
+  //   norm += velocity_upper_limits_.residualSquaredNrom(dtau, v);
+  //   norm += velocity_lower_limits_.residualSquaredNrom(dtau, v);
+  // }
+  // norm += torque_upper_limits_.residualSquaredNrom(dtau, u);
+  // norm += torque_lower_limits_.residualSquaredNrom(dtau, u);
   return norm;
 }
 

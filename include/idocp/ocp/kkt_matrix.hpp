@@ -39,7 +39,7 @@ public:
   KKTMatrix& operator=(KKTMatrix&&) noexcept = default;
 
   void setContactStatus(const Robot& robot) {
-    kkt_composition_.set(robot);
+    kkt_composition_.setContactStatus(robot);
   }
 
   inline Eigen::Ref<Eigen::MatrixXd> KKT_matrix() {

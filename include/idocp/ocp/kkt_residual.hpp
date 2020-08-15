@@ -37,7 +37,7 @@ public:
   KKTResidual& operator=(KKTResidual&&) noexcept = default;
 
   inline void setContactStatus(const Robot& robot) {
-    kkt_composition_.set(robot);
+    kkt_composition_.setContactStatus(robot);
   }
 
   inline Eigen::Ref<Eigen::VectorXd> KKT_residual() {

@@ -7,18 +7,16 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/ocp/split_solution.hpp"
+#include "idocp/ocp/split_direction.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/parnmpc_linearizer.hpp"
+#include "idocp/ocp/inverse_dynamics_condenser.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
-#include "idocp/constraints/joint_space_constraints/joint_space_constraints.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_composition.hpp"
-#include "idocp/ocp/parnmpc_linearizer.hpp"
-#include "idocp/ocp/inverse_dynamics_condenser.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_direction.hpp"
 
 
 namespace idocp {
@@ -108,7 +106,7 @@ public:
                     const Eigen::VectorXd& v_prev, const SplitSolution& s, 
                     SplitDirection& d, SplitSolution& s_new_coarse);
   
-  void getAuxiliaryMatrix(Eigen::MatrixXd& auxiliary_matrix);
+  void getAuxiliaryMatrix(Eigen::MatrixXd& auxiliary_matrix) const;
 
   void backwardCollectionSerial(const Robot& robot,
                                 const SplitSolution& s_old_next,
@@ -176,16 +174,12 @@ private:
   CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
-  pdipm::JointSpaceConstraints joint_constraints_;
-  KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
-  KKTComposition kkt_composition_;
+  KKTMatrix kkt_matrix_;
   ParNMPCLinearizer linearizer_;
   InverseDynamicsCondenser id_condenser_;
-  int dimx_, dimKKT_;
   Eigen::VectorXd x_res_, dx_;
   Eigen::MatrixXd kkt_matrix_inverse_;
-
 };
 
 } // namespace idocp

@@ -7,7 +7,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/constraints/constraint_conponent_base.hpp"
+#include "idocp/constraints/constraint_component_base.hpp"
 #include "idocp/constraints/constraints_data.hpp"
 
 
@@ -45,12 +45,12 @@ public:
     return constraints_.empty();
   }
 
-  ConstraintsData&& createConstraintsData(const Robot& robot) const {
+  ConstraintsData createConstraintsData(const Robot& robot) const {
     ConstraintsData datas;
     for (int i=0; i<constraints_.size(); ++i) {
-      datas.data.push_back(ConstraintComponentData(constraints_[i]->dim()));
+      datas.data.push_back(ConstraintComponentData(constraints_[i]->dimc()));
     }
-    return std::move(datas);
+    return datas;
   }
 
   bool isFeasible(const Robot& robot, ConstraintsData& datas, 
@@ -59,8 +59,6 @@ public:
                   const Eigen::Ref<const Eigen::VectorXd>& q, 
                   const Eigen::Ref<const Eigen::VectorXd>& v, 
                   const Eigen::Ref<const Eigen::VectorXd>& u) const {
-    std::cout << "size of const = " << constraints_.size() << std::endl;
-    std::cout << "bb" << std::endl;
     for (int i=0; i<constraints_.size(); ++i) {
       bool feasible = constraints_[i]->isFeasible(robot, datas.data[i], 
                                                   a, f, q, v, u);
@@ -68,7 +66,6 @@ public:
         return false;
       }
     }
-    std::cout << "bb" << std::endl;
     return true;
   }
 
@@ -86,13 +83,6 @@ public:
   }
 
   void augmentDualResidual(const Robot& robot, ConstraintsData& datas,
-                           const double dtau,Eigen::Ref<Eigen::VectorXd> lu) const {
-    for (int i=0; i<constraints_.size(); ++i) {
-      constraints_[i]->augmentDualResidual(robot, datas.data[i], dtau, lu);
-    }
-  }
-
-  void augmentDualResidual(const Robot& robot, ConstraintsData& datas,
                            const double dtau,
                            Eigen::Ref<Eigen::VectorXd> la, 
                            Eigen::Ref<Eigen::VectorXd> lf,
@@ -103,6 +93,15 @@ public:
                                            la, lf, lq, lv);
     }
   }
+
+  void augmentDualResidual(const Robot& robot, ConstraintsData& datas,
+                           const double dtau,
+                           Eigen::Ref<Eigen::VectorXd> lu) const {
+    for (int i=0; i<constraints_.size(); ++i) {
+      constraints_[i]->augmentDualResidual(robot, datas.data[i], dtau, lu);
+    }
+  }
+
 
   void condenseSlackAndDual(const Robot& robot, ConstraintsData& datas,
                             const double dtau, 
@@ -150,24 +149,34 @@ public:
   }
 
   double maxSlackStepSize(const ConstraintsData& datas) const {
+    double min_step_size = 1;
     for (int i=0; i<constraints_.size(); ++i) {
-      constraints_[i]->maxSlackStepSize(datas.data[i]);
+      const double step_size = constraints_[i]->maxSlackStepSize(datas.data[i]);
+      if (step_size < min_step_size) {
+        min_step_size = step_size;
+      }
     }
+    return min_step_size;
   }
 
   double maxDualStepSize(const ConstraintsData& datas) const {
+    double min_step_size = 1;
     for (int i=0; i<constraints_.size(); ++i) {
-      constraints_[i]->maxDualStepSize(datas.data[i]);
+      const double step_size = constraints_[i]->maxDualStepSize(datas.data[i]);
+      if (step_size < min_step_size) {
+        min_step_size = step_size;
+      }
     }
+    return min_step_size;
   }
 
-  void updateSlack(const double step_size, ConstraintsData& datas) const {
+  void updateSlack(ConstraintsData& datas, const double step_size) const {
     for (int i=0; i<constraints_.size(); ++i) {
       constraints_[i]->updateSlack(datas.data[i], step_size);
     }
   }
 
-  void updateDual(const double step_size, ConstraintsData& datas) const {
+  void updateDual(ConstraintsData& datas, const double step_size) const {
     for (int i=0; i<constraints_.size(); ++i) {
       constraints_[i]->updateDual(datas.data[i], step_size);
     }
@@ -181,8 +190,8 @@ public:
     return cost;
   }
 
-  double costSlackBarrier(const double step_size, 
-                          ConstraintsData& datas) const {
+  double costSlackBarrier(const ConstraintsData& datas, 
+                          const double step_size) const {
     double cost = 0;
     for (int i=0; i<constraints_.size(); ++i) {
       cost += constraints_[i]->costSlackBarrier(datas.data[i], step_size);

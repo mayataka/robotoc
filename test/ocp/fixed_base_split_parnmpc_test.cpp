@@ -13,6 +13,8 @@
 #include "idocp/ocp/parnmpc_linearizer.hpp"
 #include "idocp/ocp/inverse_dynamics_condenser.hpp"
 #include "idocp/ocp/split_parnmpc.hpp"
+#include "idocp/constraints/joint_position_lower_limit.hpp"
+#include "idocp/constraints/joint_position_upper_limit.hpp"
 
 
 namespace idocp {
@@ -99,6 +101,12 @@ protected:
     cost->push_back(contact_cost);
     cost_data = CostFunctionData(robot);
     constraints = std::make_shared<Constraints>();
+    std::shared_ptr<JointPositionLowerLimit> joint_lower_limit 
+        = std::make_shared<JointPositionLowerLimit>(robot);
+    std::shared_ptr<JointPositionUpperLimit> joint_upper_limit 
+        = std::make_shared<JointPositionUpperLimit>(robot);
+    constraints->push_back(joint_upper_limit);
+    constraints->push_back(joint_lower_limit);
   }
 
   virtual void TearDown() {

@@ -34,7 +34,7 @@ TEST_F(KKTResidualTest, fixed_base) {
   std::random_device rnd;
   std::vector<bool> contact_status = {rnd()%2==0};
   KKTComposition composition(robot);
-  composition.set(robot);
+  composition.setContactStatus(robot);
   KKTResidual residual(robot);
   residual.setContactStatus(robot);
   const Eigen::VectorXd Fq_res = Eigen::VectorXd::Random(composition.Fq_size());
@@ -77,7 +77,7 @@ TEST_F(KKTResidualTest, floating_base) {
   }
   robot.setContactStatus(contact_status);
   KKTComposition composition(robot);
-  composition.set(robot);
+  composition.setContactStatus(robot);
   KKTResidual residual(robot);
   residual.setContactStatus(robot);
   const Eigen::VectorXd Fq_res = Eigen::VectorXd::Random(composition.Fq_size());
@@ -107,6 +107,58 @@ TEST_F(KKTResidualTest, floating_base) {
   EXPECT_TRUE(residual.KKT_residual().isZero());
   EXPECT_EQ(residual.dimKKT(), composition.dimKKT());
   EXPECT_EQ(residual.max_dimKKT(), composition.max_dimKKT());
+}
+
+
+TEST_F(KKTResidualTest, constRef) {
+  std::vector<int> contact_frames = {14, 24, 34, 44};
+  Robot robot(fixed_base_urdf_, contact_frames, 0, 0);
+  std::random_device rnd;
+  std::vector<bool> contact_status;
+  for (const auto frame : contact_frames) {
+    contact_status.push_back(rnd()%2==0);
+  }
+  robot.setContactStatus(contact_status);
+  KKTComposition composition(robot);
+  composition.setContactStatus(robot);
+  KKTResidual residual(robot);
+  residual.setContactStatus(robot);
+  const Eigen::VectorXd Fq_res = Eigen::VectorXd::Random(composition.Fq_size());
+  const Eigen::VectorXd Fv_res = Eigen::VectorXd::Random(composition.Fv_size());
+  const Eigen::VectorXd C_res = Eigen::VectorXd::Random(composition.C_size());
+  const Eigen::VectorXd Qa_res = Eigen::VectorXd::Random(composition.Qa_size());
+  const Eigen::VectorXd Qf_res = Eigen::VectorXd::Random(composition.Qf_size());
+  const Eigen::VectorXd Qq_res = Eigen::VectorXd::Random(composition.Qq_size());
+  const Eigen::VectorXd Qv_res = Eigen::VectorXd::Random(composition.Qv_size());
+  const Eigen::Ref<const Eigen::VectorXd> Fq_ref = residual.Fq();
+  const Eigen::Ref<const Eigen::VectorXd> Fv_ref = residual.Fv();
+  const Eigen::Ref<const Eigen::VectorXd> C_ref = residual.C();
+  const Eigen::Ref<const Eigen::VectorXd> Qa_ref = residual.la();
+  const Eigen::Ref<const Eigen::VectorXd> Qf_ref = residual.lf();
+  const Eigen::Ref<const Eigen::VectorXd> Qq_ref = residual.lq();
+  const Eigen::Ref<const Eigen::VectorXd> Qv_ref = residual.lv();
+  EXPECT_TRUE(Fq_ref.isZero());
+  EXPECT_TRUE(Fv_ref.isZero());
+  EXPECT_TRUE(C_ref.isZero());
+  EXPECT_TRUE(Qa_ref.isZero());
+  EXPECT_TRUE(Qf_ref.isZero());
+  EXPECT_TRUE(Qq_ref.isZero());
+  EXPECT_TRUE(Qv_ref.isZero());
+  residual.Fq() = Fq_res;
+  residual.Fv() = Fv_res;
+  residual.C() = C_res;
+  residual.la() = Qa_res;
+  residual.lf() = Qf_res;
+  residual.lq() = Qq_res;
+  residual.lv() = Qv_res;
+  const KKTResidual& residual_ref = residual;
+  EXPECT_TRUE(residual_ref.Fq().isApprox(Fq_res));
+  EXPECT_TRUE(residual_ref.Fv().isApprox(Fv_res));
+  EXPECT_TRUE(residual_ref.C().isApprox(C_res));
+  EXPECT_TRUE(residual_ref.la().isApprox(Qa_res));
+  EXPECT_TRUE(residual_ref.lf().isApprox(Qf_res));
+  EXPECT_TRUE(residual_ref.lq().isApprox(Qq_res));
+  EXPECT_TRUE(residual_ref.lv().isApprox(Qv_res));
 }
 
 

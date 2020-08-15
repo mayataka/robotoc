@@ -75,7 +75,7 @@ private:
   LineSearchFilter filter_;
   double T_, dtau_, step_size_reduction_rate_, min_step_size_;
   int N_, num_proc_;
-  std::vector<SplitSolution> s_, s_new_, s_old_;
+  std::vector<SplitSolution> s_, s_new_;
   std::vector<SplitDirection> d_;
   std::vector<Eigen::MatrixXd> aux_mat_old_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, 

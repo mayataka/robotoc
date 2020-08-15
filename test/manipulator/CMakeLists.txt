@@ -1,2 +1,0 @@
-add_test_macro(manipulator_cost_function_test)
-add_test_macro(manipulator_constraints_test)

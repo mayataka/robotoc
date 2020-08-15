@@ -44,12 +44,18 @@ add_library(
   src/cost/joint_space_cost.cpp
   src/cost/contact_cost.cpp
   src/constraints/pdipm_func.cpp
-  src/constraints/joint_space_constraints/joint_space_constraints.cpp
-  src/constraints/joint_space_constraints/joint_variables_upper_limits.cpp
-  src/constraints/joint_space_constraints/joint_variables_lower_limits.cpp
   src/constraints/constraints.cpp
   src/constraints/constraints_data.cpp
+  src/constraints/constraint_component_base.cpp
   src/constraints/constraint_component_data.cpp
+  src/constraints/joint_position_upper_limit.cpp
+  src/constraints/joint_position_lower_limit.cpp
+  src/constraints/joint_velocity_upper_limit.cpp
+  src/constraints/joint_velocity_lower_limit.cpp
+  src/constraints/joint_acceleration_upper_limit.cpp
+  src/constraints/joint_acceleration_lower_limit.cpp
+  src/constraints/joint_torques_upper_limit.cpp
+  src/constraints/joint_torques_lower_limit.cpp
   # src/ocp/riccati_matrix_factorizer.cpp
   # src/ocp/riccati_matrix_inverter.cpp
   # src/ocp/ocp_linearizer.cpp
@@ -64,8 +70,8 @@ add_library(
   src/ocp/split_direction.cpp
   src/ocp/parnmpc_linearizer.cpp
   src/ocp/inverse_dynamics_condenser.cpp
-  src/ocp/split_parnmpc.cpp
-  src/ocp/parnmpc.cpp
+  # src/ocp/split_parnmpc.cpp
+  # src/ocp/parnmpc.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

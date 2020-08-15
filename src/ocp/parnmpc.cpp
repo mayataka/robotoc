@@ -22,7 +22,6 @@ ParNMPC::ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     num_proc_(num_proc),
     s_(N, SplitSolution(robot)),
     s_new_(N, SplitSolution(robot)),
-    s_old_(N, SplitSolution(robot)),
     d_(N, SplitDirection(robot)),
     aux_mat_old_(N, Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
     primal_step_sizes_(Eigen::VectorXd::Zero(N)),
@@ -37,7 +36,6 @@ ParNMPC::ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
   for (int i=0; i<N; ++i) {
     robot.normalizeConfiguration(s_[i].q);
     robot.normalizeConfiguration(s_new_[i].q);
-    robot.normalizeConfiguration(s_old_[i].q);
   }
   bool feasible = isCurrentSolutionFeasible();
   initConstraints();
@@ -56,7 +54,6 @@ ParNMPC::ParNMPC()
     num_proc_(0),
     s_(),
     s_new_(),
-    s_old_(),
     d_(),
     aux_mat_old_(),
     primal_step_sizes_(),
@@ -80,7 +77,6 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
     robots_[robot_id].setContactStatus(contact_sequence_[i]);
     s_[i].set(robots_[robot_id]);
     s_new_[i].set(robots_[robot_id]);
-    s_old_[i].set(robots_[robot_id]);
     d_[i].set(robots_[robot_id]);
     if (i == 0) {
       split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, q, v, 
@@ -99,7 +95,7 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
     }
   }
   for (int i=N_-2; i>=0; --i) {
-    split_ocps_[i].backwardCollectionSerial(robots_[0], s_old_[i+1], s_new_[i+1], s_new_[i]);
+    split_ocps_[i].backwardCollectionSerial(robots_[0], s_[i+1], s_new_[i+1], s_new_[i]);
   }
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=N_-2; i>=0; --i) {
@@ -107,7 +103,7 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
     split_ocps_[i].backwardCollectionParallel(robots_[robot_id], d_[i], s_new_[i]);
   }
   for (int i=1; i<N_; ++i) {
-    split_ocps_[i].forwardCollectionSerial(robots_[0], s_old_[i-1], s_new_[i-1], s_new_[i]);
+    split_ocps_[i].forwardCollectionSerial(robots_[0], s_[i-1], s_new_[i-1], s_new_[i]);
   }
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=1; i<N_; ++i) {
@@ -117,7 +113,6 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
-    robots_[robot_id].setContactStatus(contact_sequence_[i]);
     split_ocps_[i].computePrimalAndDualDirection(robots_[robot_id], dtau_, 
                                                  s_[i], s_new_[i], d_[i]);
     primal_step_sizes_.coeffRef(i) = split_ocps_[i].maxPrimalStepSize();
@@ -184,10 +179,6 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
                                 d_[i], s_[i]);
     split_ocps_[i].updateDual(dual_step_size);
     split_ocps_[i].getAuxiliaryMatrix(aux_mat_old_[i]);
-    s_old_[i].lmd = s_[i].lmd;
-    s_old_[i].gmm = s_[i].gmm;
-    s_old_[i].q = s_[i].q;
-    s_old_[i].v = s_[i].v;
   }
 } 
 
@@ -217,10 +208,8 @@ bool ParNMPC::setStateTrajectory(const Eigen::VectorXd& q,
   for (int i=0; i<=N_; ++i) {
     s_[i].v = v;
     s_new_[i].v = v;
-    s_old_[i].v = v;
     s_[i].q = q_normalized;
     s_new_[i].q = q_normalized;
-    s_old_[i].q = q_normalized;
   }
   bool feasible = isCurrentSolutionFeasible();
   if (feasible) {
@@ -250,14 +239,11 @@ bool ParNMPC::setStateTrajectory(const Eigen::VectorXd& q0,
   for (int i=0; i<N_; ++i) {
     s_[i].a = a;
     s_new_[i].a = a;
-    s_old_[i].a = a;
     s_[i].v = v0 + i * a;
     s_new_[i].v = s_[i].v;
-    s_old_[i].v = s_[i].v;
     s_[i].q = q0;
     robots_[0].integrateConfiguration(v, (double)i, s_[i].q);
     s_new_[i].q = s_[i].q;
-    s_old_[i].q = s_[i].q;
   }
   bool feasible = isCurrentSolutionFeasible();
   if (feasible) {

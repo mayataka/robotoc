@@ -4,13 +4,14 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/cost/cost_function.hpp"
-#include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/constraints/joint_space_constraints/joint_space_constraints.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/cost/cost_function.hpp"
+#include "idocp/cost/cost_function_data.hpp"
+#include "idocp/constraints/constraints.hpp"
+#include "idocp/constraints/constraints_data.hpp"
 
 
 namespace idocp {
@@ -62,28 +63,23 @@ public:
     dimf_ = robot.dimf();
   }
 
-  inline void linearizeStageCost(
-    const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    CostFunctionData& cost_data, const double t, const double dtau, 
-    const SplitSolution& s) {
-      cost->lu(robot, cost_data, t, dtau, s.u, lu_);
-      cost->luu(robot, cost_data, t, dtau, s.u, luu_);
+  inline void linearizeCostAndConstraints(
+      const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
+      CostFunctionData& cost_data, 
+      const std::shared_ptr<Constraints>& constraints, 
+      ConstraintsData& constraints_data, const double t, const double dtau, 
+      const SplitSolution& s) {
+    cost->lu(robot, cost_data, t, dtau, s.u, lu_); 
+    cost->luu(robot, cost_data, t, dtau, s.u, luu_); 
+    constraints->augmentDualResidual(robot, constraints_data, dtau, lu_); 
+    if (has_floating_base_) {
+      lu_.head(dim_passive_).noalias() 
+          += dtau * s.mu_active().tail(dim_passive_); 
+    }
+    lu_.noalias() -= dtau * s.beta; 
   }
 
-  inline void linearizeInequalityConstraints(
-    const Robot& robot, pdipm::JointSpaceConstraints& constraints, 
-    const double t, const double dtau, const SplitSolution& s) {
-      constraints.augmentDualResidual(dtau, lu_);
-  }
-
-  inline void condenseInequalityConstraints(
-    const Robot& robot, pdipm::JointSpaceConstraints& constraints, 
-    const double t, const double dtau, const SplitSolution& s) {
-      constraints.condenseSlackAndDual(dtau, s.u, luu_, lu_);
-  }
-
-  inline void linearizeInverseDynamics(Robot& robot, const double dtau, 
-                                       const SplitSolution& s) {
+  inline void linearizeInverseDynamics(Robot& robot, const SplitSolution& s) {
     if (dimf_ > 0) {
       robot.setContactForces(s.f);
     }
@@ -95,11 +91,30 @@ public:
     }
   }
 
-  inline void linearizeFloatingBaseConstraint(const double dtau, 
-                                              const SplitSolution& s) {
-    if (has_floating_base_) {
-      lu_.head(dim_passive_).noalias() += dtau * s.mu_active().tail(dim_passive_);
+  inline void getFloatingBaseConstraint(const double dtau,
+                                        const SplitSolution& s,
+                                        KKTResidual& kkt_residual) const {
+    assert(dtau > 0);
+    kkt_residual.C().tail(dim_passive_) = dtau * s.u.head(dim_passive_);
+  }
+
+  inline void augmentInverseDynamicsDerivatives(
+      const double dtau, const SplitSolution& s, 
+      KKTResidual& kkt_residual) const {
+    kkt_residual.lq().noalias() += dtau * du_dq_.transpose() * s.beta;
+    kkt_residual.lv().noalias() += dtau * du_dv_.transpose() * s.beta;
+    kkt_residual.la().noalias() += dtau * du_da_.transpose() * s.beta;
+    if (dimf_ > 0) {
+      kkt_residual.lf().noalias() += dtau * du_df_active_().transpose() * s.beta;
     }
+  }
+
+  inline void condenseInequalityConstraints(
+      const Robot& robot, const std::shared_ptr<Constraints>& constraints, 
+      ConstraintsData& constraints_data, const double t, const double dtau, 
+      const SplitSolution& s) {
+    constraints->condenseSlackAndDual(robot, constraints_data, dtau, s.u, 
+                                      luu_, lu_);
   }
 
   inline void condenseFloatingBaseConstraint(const double dtau,
@@ -146,9 +161,7 @@ public:
     kkt_matrix.Qvv() = du_dv_.transpose() * luu_ * du_dv_;
   }
 
-  inline void computeCondensedDirection(const SplitSolution& s, 
-                                        const double dtau,
-                                        SplitDirection& d) {
+  inline void computeCondensedDirection(const double dtau, SplitDirection& d) {
     assert(dtau > 0);
     d.du = u_res_;
     d.du.noalias() += du_dq_ * d.dq();
@@ -159,17 +172,16 @@ public:
     }
     d.dbeta = (lu_  + luu_ * d.du) / dtau;
     if (has_floating_base_) {
-      d.dbeta.head(dim_passive_).noalias() += d.dmu().tail(dim_passive_) / dtau;
+      d.dbeta.head(dim_passive_).noalias() += d.dmu().tail(dim_passive_);
     }
   }
 
-  inline double inverseDynamicsConstraintViolation(const double dtau) {
+  inline double inverseDynamicsResidualL1Norm(const double dtau) const {
     return dtau * u_res_.lpNorm<1>();
   }
 
-  inline double inverseDynamicsConstraintViolation(Robot& robot, 
-                                                   const double dtau,
-                                                   const SplitSolution& s) {
+  inline double inverseDynamicsResidualL1Norm(Robot& robot, const double dtau,
+                                              const SplitSolution& s) {
     if (dimf_ > 0) {
       robot.setContactForces(s.f);
     }
@@ -178,31 +190,8 @@ public:
     return dtau * u_res_.lpNorm<1>();
   }
 
-  inline void augmentInverseDynamicsDerivatives(Robot& robot, const double dtau, 
-                                                const SplitSolution& s,
-                                                KKTResidual& kkt_residual) const {
-    kkt_residual.lq().noalias() += dtau * du_dq_.transpose() * s.beta;
-    kkt_residual.lv().noalias() += dtau * du_dv_.transpose() * s.beta;
-    kkt_residual.la().noalias() += dtau * du_da_.transpose() * s.beta;
-    if (dimf_ > 0) {
-      kkt_residual.lf().noalias() += dtau * du_df_active_().transpose() * s.beta;
-    }
-  }
-
-  inline void augmentInverseDynamicsDerivatives(const double dtau, 
-                                                const SplitSolution& s) {
-    lu_.noalias() -= dtau * s.beta;
-  }
-
-  inline void augmentFloatingBaseConstraint(const double dtau,
-                                            const SplitSolution& s,
-                                            KKTResidual& kkt_residual) const {
-    assert(dtau > 0);
-    kkt_residual.C().tail(dim_passive_) = dtau * s.u.head(dim_passive_);
-  }
-
-  inline double squaredKKTErrorNorm() const {
-    return lu_.squaredNorm() + u_res_.squaredNorm();
+  inline double squaredKKTErrorNorm(const double dtau) const {
+    return lu_.squaredNorm() + dtau * dtau * u_res_.squaredNorm();
   }
 
 private:
