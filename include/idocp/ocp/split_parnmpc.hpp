@@ -145,8 +145,7 @@ public:
 
   std::pair<double, double> costAndConstraintsViolation(
       Robot& robot, const double step_size, const double t, const double dtau, 
-      const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
-      const Eigen::VectorXd& dq_prev, const Eigen::VectorXd& dv_prev, 
+      const SplitSolution& s_prev, const SplitDirection& d_prev,
       const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp,
       const bool is_terminal=false);
 

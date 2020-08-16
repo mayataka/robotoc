@@ -125,7 +125,7 @@ double JointTorquesLowerLimit::residualL1Nrom(
 }
 
 
-double JointTorquesLowerLimit::residualSquaredNrom(
+double JointTorquesLowerLimit::squaredKKTErrorNorm(
     const Robot& robot, ConstraintComponentData& data, 
     const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
     const Eigen::Ref<const Eigen::VectorXd>& f, 

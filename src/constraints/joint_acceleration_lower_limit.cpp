@@ -125,7 +125,7 @@ double JointAccelerationLowerLimit::residualL1Nrom(
 }
 
 
-double JointAccelerationLowerLimit::residualSquaredNrom(
+double JointAccelerationLowerLimit::squaredKKTErrorNorm(
     const Robot& robot, ConstraintComponentData& data, 
     const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
     const Eigen::Ref<const Eigen::VectorXd>& f, 

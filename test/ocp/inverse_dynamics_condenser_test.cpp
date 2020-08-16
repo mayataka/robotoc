@@ -47,7 +47,7 @@ TEST_F(InverseDynamicsCondenserTest, fixed_base) {
   std::vector<bool> contact_status = {rnd()%2==0};
   robot.setContactStatus(contact_status);
   SplitSolution s(robot);
-  s.set(robot);
+  s.setContactStatus(robot);
   robot.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.a = Eigen::VectorXd::Random(robot.dimv());
@@ -81,15 +81,15 @@ TEST_F(InverseDynamicsCondenserTest, fixed_base) {
   cost->lu(robot, cost_data, t_, dtau_, s.u, lu);
   cost->luu(robot, cost_data, t_, dtau_, s.u, luu);
   constraints->augmentDualResidual(robot, constraints_data, dtau_, lu);
+  EXPECT_DOUBLE_EQ(lu.squaredNorm(), id_condenser.squaredKKTErrorNorm(dtau_));
   lu.head(robot.dim_passive()) += dtau_ * s.mu_active().tail(robot.dim_passive());
   lu -= dtau_ * s.beta;
-  EXPECT_DOUBLE_EQ(lu.squaredNorm(), id_condenser.squaredKKTErrorNorm(dtau_));
-  id_condenser.linearizeInverseDynamics(robot, s);
   KKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(robot);
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
-  id_condenser.getFloatingBaseConstraint(dtau_, s, kkt_residual);
+  id_condenser.linearizeInverseDynamics(robot, dtau_, s);
+  id_condenser.linearizeFloatingBaseConstraint(dtau_, s, kkt_residual);
   EXPECT_TRUE(kkt_residual.C().isZero());
   id_condenser.augmentInverseDynamicsDerivatives(dtau_, s, kkt_residual);
   Eigen::VectorXd u_res = Eigen::VectorXd::Zero(robot.dimv());
@@ -114,7 +114,7 @@ TEST_F(InverseDynamicsCondenserTest, fixed_base) {
   constraints->condenseSlackAndDual(robot, constraints_data, dtau_, s.u, luu, lu);
   EXPECT_DOUBLE_EQ(lu.squaredNorm()+dtau_*dtau_*u_res.squaredNorm(), 
                    id_condenser.squaredKKTErrorNorm(dtau_));
-  id_condenser.condenseFloatingBaseConstraint(dtau_, s, kkt_residual, kkt_matrix);
+  id_condenser.condenseFloatingBaseConstraint(dtau_, kkt_residual, kkt_matrix);
   EXPECT_TRUE(kkt_residual.C().isZero());
   EXPECT_TRUE(kkt_matrix.Cq().isZero());
   EXPECT_TRUE(kkt_matrix.Cv().isZero());
@@ -181,7 +181,7 @@ TEST_F(InverseDynamicsCondenserTest, floating_base) {
   }
   robot.setContactStatus(contact_status);
   SplitSolution s(robot);
-  s.set(robot);
+  s.setContactStatus(robot);
   robot.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.a = Eigen::VectorXd::Random(robot.dimv());
@@ -215,15 +215,15 @@ TEST_F(InverseDynamicsCondenserTest, floating_base) {
   cost->lu(robot, cost_data, t_, dtau_, s.u, lu);
   cost->luu(robot, cost_data, t_, dtau_, s.u, luu);
   constraints->augmentDualResidual(robot, constraints_data, dtau_, lu);
-  lu.head(robot.dim_passive()) += dtau_ * s.mu_active().tail(robot.dim_passive());
-  lu -= dtau_ * s.beta;
   EXPECT_DOUBLE_EQ(lu.squaredNorm(), id_condenser.squaredKKTErrorNorm(dtau_));
-  id_condenser.linearizeInverseDynamics(robot, s);
+  id_condenser.linearizeInverseDynamics(robot, dtau_, s);
   KKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(robot);
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
-  id_condenser.getFloatingBaseConstraint(dtau_, s, kkt_residual);
+  id_condenser.linearizeFloatingBaseConstraint(dtau_, s, kkt_residual);
+  lu.head(robot.dim_passive()) += dtau_ * s.mu_active().tail(robot.dim_passive());
+  lu -= dtau_ * s.beta;
   const int dimc = robot.dim_passive() + robot.dimf();
   Eigen::VectorXd C = Eigen::VectorXd::Zero(dimc);
   C.tail(robot.dim_passive()) = dtau_ * s.u.head(robot.dim_passive());
@@ -251,7 +251,7 @@ TEST_F(InverseDynamicsCondenserTest, floating_base) {
   constraints->condenseSlackAndDual(robot, constraints_data, dtau_, s.u, luu, lu);
   EXPECT_DOUBLE_EQ(lu.squaredNorm()+dtau_*dtau_*u_res.squaredNorm(), 
                    id_condenser.squaredKKTErrorNorm(dtau_));
-  id_condenser.condenseFloatingBaseConstraint(dtau_, s, kkt_residual, kkt_matrix);
+  id_condenser.condenseFloatingBaseConstraint(dtau_, kkt_residual, kkt_matrix);
   C.tail(robot.dim_passive()) 
       = dtau_ * (s.u.head(robot.dim_passive())+u_res.head(robot.dim_passive()));
   Eigen::MatrixXd Cq = Eigen::MatrixXd::Zero(dimc, robot.dimv());

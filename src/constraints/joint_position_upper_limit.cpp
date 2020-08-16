@@ -125,7 +125,7 @@ double JointPositionUpperLimit::residualL1Nrom(
 }
 
 
-double JointPositionUpperLimit::residualSquaredNrom(
+double JointPositionUpperLimit::squaredKKTErrorNorm(
     const Robot& robot, ConstraintComponentData& data, 
     const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
     const Eigen::Ref<const Eigen::VectorXd>& f, 

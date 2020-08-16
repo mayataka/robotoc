@@ -1,5 +1,0 @@
-add_test_macro(joint_position_lower_limits_test)
-add_test_macro(joint_position_upper_limits_test)
-add_test_macro(joint_velocity_lower_limits_test)
-add_test_macro(joint_velocity_upper_limits_test)
-add_test_macro(joint_space_constraints_test)

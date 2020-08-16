@@ -72,14 +72,10 @@ public:
     cost->lu(robot, cost_data, t, dtau, s.u, lu_); 
     cost->luu(robot, cost_data, t, dtau, s.u, luu_); 
     constraints->augmentDualResidual(robot, constraints_data, dtau, lu_); 
-    if (has_floating_base_) {
-      lu_.head(dim_passive_).noalias() 
-          += dtau * s.mu_active().tail(dim_passive_); 
-    }
-    lu_.noalias() -= dtau * s.beta; 
   }
 
-  inline void linearizeInverseDynamics(Robot& robot, const SplitSolution& s) {
+  inline void linearizeInverseDynamics(Robot& robot, const double dtau, 
+                                       const SplitSolution& s) {
     if (dimf_ > 0) {
       robot.setContactForces(s.f);
     }
@@ -89,13 +85,18 @@ public:
     if (robot.dimf() > 0) {
       robot.dRNEAPartialdFext(du_df_);
     }
+    lu_.noalias() -= dtau * s.beta; 
   }
 
-  inline void getFloatingBaseConstraint(const double dtau,
-                                        const SplitSolution& s,
-                                        KKTResidual& kkt_residual) const {
+  inline void linearizeFloatingBaseConstraint(const double dtau,
+                                              const SplitSolution& s,
+                                              KKTResidual& kkt_residual) {
     assert(dtau > 0);
-    kkt_residual.C().tail(dim_passive_) = dtau * s.u.head(dim_passive_);
+    if (has_floating_base_) {
+      lu_.head(dim_passive_).noalias() 
+          += dtau * s.mu_active().tail(dim_passive_); 
+      kkt_residual.C().tail(dim_passive_) = dtau * s.u.head(dim_passive_);
+    }
   }
 
   inline void augmentInverseDynamicsDerivatives(
@@ -118,20 +119,21 @@ public:
   }
 
   inline void condenseFloatingBaseConstraint(const double dtau,
-                                             const SplitSolution& s,
                                              KKTResidual& kkt_residual,
                                              KKTMatrix& kkt_matrix) const {
     assert(dtau > 0);
-    kkt_residual.C().tail(dim_passive_) 
-        = dtau * (s.u.head(dim_passive_)+u_res_.head(dim_passive_));
-    kkt_matrix.Cq().bottomRows(dim_passive_) 
-        = dtau * du_dq_.topRows(dim_passive_);
-    kkt_matrix.Cv().bottomRows(dim_passive_) 
-        = dtau * du_dv_.topRows(dim_passive_);
-    kkt_matrix.Ca().bottomRows(dim_passive_) 
-        = dtau * du_da_.topRows(dim_passive_);
-    kkt_matrix.Cf().bottomRows(dim_passive_) 
-        = dtau * du_df_active_().topRows(dim_passive_);
+    if (has_floating_base_) {
+      kkt_residual.C().tail(dim_passive_).noalias()
+          += dtau * u_res_.head(dim_passive_);
+      kkt_matrix.Cq().bottomRows(dim_passive_) 
+          = dtau * du_dq_.topRows(dim_passive_);
+      kkt_matrix.Cv().bottomRows(dim_passive_) 
+          = dtau * du_dv_.topRows(dim_passive_);
+      kkt_matrix.Ca().bottomRows(dim_passive_) 
+          = dtau * du_da_.topRows(dim_passive_);
+      kkt_matrix.Cf().bottomRows(dim_passive_) 
+          = dtau * du_df_active_().topRows(dim_passive_);
+    }
   }
 
   inline void condenseInverseDynamics(KKTResidual& kkt_residual,

@@ -51,7 +51,7 @@ TEST_F(ParNMPCLinearizerTest, fixed_base) {
   std::vector<bool> contact_status = {rnd()%2==0};
   robot.setContactStatus(contact_status);
   SplitSolution s(robot);
-  s.set(robot);
+  s.setContactStatus(robot);
   robot.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.a = Eigen::VectorXd::Random(robot.dimv());
@@ -162,7 +162,8 @@ TEST_F(ParNMPCLinearizerTest, fixed_base) {
   EXPECT_TRUE(kkt_matrix.Fva()
               .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
   robot.updateKinematics(s.q, s.v, s.a);
-  linearizer.linearizeContactConstraints(robot, dtau_, kkt_residual, kkt_matrix);
+  kkt_residual.setZero();
+  linearizer.linearizeContactConstraints(robot, dtau_, s, kkt_residual, kkt_matrix);
   Eigen::VectorXd C_ref = Eigen::VectorXd::Zero(robot.dim_passive()+robot.max_dimf());
   robot.computeBaumgarteResidual(dtau_, C_ref);
   EXPECT_TRUE(C_ref.head(robot.dim_passive()+robot.dimf()).isApprox(kkt_residual.C()));
@@ -176,6 +177,10 @@ TEST_F(ParNMPCLinearizerTest, fixed_base) {
   EXPECT_TRUE(Cq_ref.topRows(robot.dim_passive()+robot.dimf()).isApprox(kkt_matrix.Cq()));
   EXPECT_TRUE(Cv_ref.topRows(robot.dim_passive()+robot.dimf()).isApprox(kkt_matrix.Cv()));
   EXPECT_TRUE(Ca_ref.topRows(robot.dim_passive()+robot.dimf()).isApprox(kkt_matrix.Ca()));
+  EXPECT_TRUE(kkt_residual.lq().isApprox(kkt_matrix.Cq().transpose()*s.mu_active()));
+  EXPECT_TRUE(kkt_residual.lv().isApprox(kkt_matrix.Cv().transpose()*s.mu_active()));
+  EXPECT_TRUE(kkt_residual.la().isApprox(kkt_matrix.Ca().transpose()*s.mu_active()));
+  EXPECT_TRUE(kkt_residual.lf().isApprox(kkt_matrix.Cf().transpose()*s.mu_active()));
 }
 
 
@@ -188,7 +193,7 @@ TEST_F(ParNMPCLinearizerTest, fixed_base_KKT_error) {
   std::vector<bool> contact_status = {rnd()%2==0};
   robot.setContactStatus(contact_status);
   SplitSolution s(robot);
-  s.set(robot);
+  s.setContactStatus(robot);
   robot.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.a = Eigen::VectorXd::Random(robot.dimv());
@@ -254,7 +259,7 @@ TEST_F(ParNMPCLinearizerTest, fixed_base_KKT_error) {
   Eigen::VectorXd q_next = Eigen::VectorXd::Random(robot.dimq());
   linearizer.linearizeStateEquation(robot, dtau_, q_prev, v_prev, s, lmd_next, 
                                     gmm_next, q_next, kkt_residual, kkt_matrix);
-  linearizer.linearizeContactConstraints(robot, dtau_, kkt_residual, kkt_matrix);
+  linearizer.linearizeContactConstraints(robot, dtau_, s, kkt_residual, kkt_matrix);
   KKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(robot);
   kkt_residual_ref.lq() = dtau_*q_weight.asDiagonal()*(s.q-q_ref);
@@ -269,6 +274,9 @@ TEST_F(ParNMPCLinearizerTest, fixed_base_KKT_error) {
   kkt_residual_ref.lq() += lmd_next - s.lmd;
   kkt_residual_ref.lv() += dtau_ * s.lmd - s.gmm + gmm_next;
   kkt_residual_ref.la() += dtau_ * s.gmm;
+  kkt_residual_ref.lq() += kkt_matrix.Cq().transpose() * s.mu_active();
+  kkt_residual_ref.lv() += kkt_matrix.Cv().transpose() * s.mu_active();
+  kkt_residual_ref.la() += kkt_matrix.Ca().transpose() * s.mu_active();
   EXPECT_TRUE(kkt_residual.lq().isApprox(kkt_residual_ref.lq()));
   EXPECT_TRUE(kkt_residual.lv().isApprox(kkt_residual_ref.lv()));
   EXPECT_TRUE(kkt_residual.la().isApprox(kkt_residual_ref.la()));
@@ -283,7 +291,7 @@ TEST_F(ParNMPCLinearizerTest, fixed_base_KKT_error) {
   linearizer.linearizeTerminalCost(robot, cost, data, t_, s);
   linearizer.linearizeStateEquation(robot, dtau_, q_prev, v_prev, s, 
                                     kkt_residual, kkt_matrix);
-  linearizer.linearizeContactConstraints(robot, dtau_, kkt_residual, kkt_matrix);
+  linearizer.linearizeContactConstraints(robot, dtau_, s, kkt_residual, kkt_matrix);
   Eigen::VectorXd phiq = qf_weight.asDiagonal()*(s.q-q_ref);
   Eigen::VectorXd phiv = vf_weight.asDiagonal()*(s.v-v_ref);
   kkt_residual_ref.lq() = dtau_*q_weight.asDiagonal()*(s.q-q_ref);
@@ -298,6 +306,10 @@ TEST_F(ParNMPCLinearizerTest, fixed_base_KKT_error) {
   kkt_residual_ref.lq() += phiq - s.lmd;
   kkt_residual_ref.lv() += dtau_ * s.lmd - s.gmm + phiv;
   kkt_residual_ref.la() += dtau_ * s.gmm;
+  kkt_residual_ref.lq() += kkt_matrix.Cq().transpose() * s.mu_active();
+  kkt_residual_ref.lv() += kkt_matrix.Cv().transpose() * s.mu_active();
+  kkt_residual_ref.la() += kkt_matrix.Ca().transpose() * s.mu_active();
+  kkt_residual_ref.lf() += kkt_matrix.Cf().transpose() * s.mu_active();
   EXPECT_TRUE(kkt_residual.lq().isApprox(kkt_residual_ref.lq()));
   EXPECT_TRUE(kkt_residual.lv().isApprox(kkt_residual_ref.lv()));
   EXPECT_TRUE(kkt_residual.la().isApprox(kkt_residual_ref.la()));
@@ -321,7 +333,7 @@ TEST_F(ParNMPCLinearizerTest, floating_base) {
   }
   robot.setContactStatus(contact_status);
   SplitSolution s(robot);
-  s.set(robot);
+  s.setContactStatus(robot);
   robot.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.a = Eigen::VectorXd::Random(robot.dimv());
@@ -443,7 +455,8 @@ TEST_F(ParNMPCLinearizerTest, floating_base) {
   EXPECT_TRUE(kkt_matrix.Fva()
               .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
   robot.updateKinematics(s.q, s.v, s.a);
-  linearizer.linearizeContactConstraints(robot, dtau_, kkt_residual, kkt_matrix);
+  kkt_residual.setZero();
+  linearizer.linearizeContactConstraints(robot, dtau_, s, kkt_residual, kkt_matrix);
   Eigen::VectorXd C_ref = Eigen::VectorXd::Zero(robot.dim_passive()+robot.max_dimf());
   robot.computeBaumgarteResidual(dtau_, C_ref);
   EXPECT_TRUE(C_ref.head(robot.dim_passive()+robot.dimf()).isApprox(kkt_residual.C()));
@@ -457,6 +470,10 @@ TEST_F(ParNMPCLinearizerTest, floating_base) {
   EXPECT_TRUE(Cq_ref.topRows(robot.dim_passive()+robot.dimf()).isApprox(kkt_matrix.Cq()));
   EXPECT_TRUE(Cv_ref.topRows(robot.dim_passive()+robot.dimf()).isApprox(kkt_matrix.Cv()));
   EXPECT_TRUE(Ca_ref.topRows(robot.dim_passive()+robot.dimf()).isApprox(kkt_matrix.Ca()));
+  EXPECT_TRUE(kkt_residual.lq().isApprox(kkt_matrix.Cq().transpose()*s.mu_active()));
+  EXPECT_TRUE(kkt_residual.lv().isApprox(kkt_matrix.Cv().transpose()*s.mu_active()));
+  EXPECT_TRUE(kkt_residual.la().isApprox(kkt_matrix.Ca().transpose()*s.mu_active()));
+  EXPECT_TRUE(kkt_residual.lf().isApprox(kkt_matrix.Cf().transpose()*s.mu_active()));
 }
 
 
@@ -472,7 +489,7 @@ TEST_F(ParNMPCLinearizerTest, floating_base_KKT_error) {
   }
   robot.setContactStatus(contact_status);
   SplitSolution s(robot);
-  s.set(robot);
+  s.setContactStatus(robot);
   robot.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.a = Eigen::VectorXd::Random(robot.dimv());
@@ -539,7 +556,7 @@ TEST_F(ParNMPCLinearizerTest, floating_base_KKT_error) {
   robot.normalizeConfiguration(q_next);
   linearizer.linearizeStateEquation(robot, dtau_, q_prev, v_prev, s, lmd_next, 
                                     gmm_next, q_next, kkt_residual, kkt_matrix);
-  linearizer.linearizeContactConstraints(robot, dtau_, kkt_residual, kkt_matrix);
+  linearizer.linearizeContactConstraints(robot, dtau_, s, kkt_residual, kkt_matrix);
   KKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(robot);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(robot.dimv());
@@ -562,6 +579,9 @@ TEST_F(ParNMPCLinearizerTest, floating_base_KKT_error) {
   kkt_residual_ref.lq() += Jsub_minus.transpose() * s.lmd + Jsub_plus.transpose() * lmd_next;
   kkt_residual_ref.lv() += dtau_ * s.lmd - s.gmm + gmm_next;
   kkt_residual_ref.la() += dtau_ * s.gmm;
+  kkt_residual_ref.lq() += kkt_matrix.Cq().transpose() * s.mu_active();
+  kkt_residual_ref.lv() += kkt_matrix.Cv().transpose() * s.mu_active();
+  kkt_residual_ref.la() += kkt_matrix.Ca().transpose() * s.mu_active();
   EXPECT_TRUE(kkt_residual.lq().isApprox(kkt_residual_ref.lq()));
   EXPECT_TRUE(kkt_residual.lv().isApprox(kkt_residual_ref.lv()));
   EXPECT_TRUE(kkt_residual.la().isApprox(kkt_residual_ref.la()));
@@ -575,7 +595,7 @@ TEST_F(ParNMPCLinearizerTest, floating_base_KKT_error) {
   linearizer.linearizeTerminalCost(robot, cost, data, t_, s);
   linearizer.linearizeStateEquation(robot, dtau_, q_prev, v_prev, s, 
                                     kkt_residual, kkt_matrix);
-  linearizer.linearizeContactConstraints(robot, dtau_, kkt_residual, kkt_matrix);
+  linearizer.linearizeContactConstraints(robot, dtau_, s, kkt_residual, kkt_matrix);
   robot.subtractConfiguration(s.q, q_ref, q_diff);
   robot.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
   const Eigen::VectorXd phiq = Jq_diff.transpose()*qf_weight.asDiagonal()*q_diff;
@@ -595,6 +615,9 @@ TEST_F(ParNMPCLinearizerTest, floating_base_KKT_error) {
   kkt_residual_ref.lq() += Jsub_minus.transpose() * s.lmd + phiq;
   kkt_residual_ref.lv() += dtau_ * s.lmd - s.gmm + phiv;
   kkt_residual_ref.la() += dtau_ * s.gmm;
+  kkt_residual_ref.lq() += kkt_matrix.Cq().transpose() * s.mu_active();
+  kkt_residual_ref.lv() += kkt_matrix.Cv().transpose() * s.mu_active();
+  kkt_residual_ref.la() += kkt_matrix.Ca().transpose() * s.mu_active();
   EXPECT_TRUE(kkt_residual.lq().isApprox(kkt_residual_ref.lq()));
   EXPECT_TRUE(kkt_residual.lv().isApprox(kkt_residual_ref.lv()));
   EXPECT_TRUE(kkt_residual.la().isApprox(kkt_residual_ref.la()));

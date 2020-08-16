@@ -101,7 +101,7 @@ public:
       const Eigen::Ref<const Eigen::VectorXd>& v, 
       const Eigen::Ref<const Eigen::VectorXd>& u) const = 0;
 
-  virtual double residualSquaredNrom(
+  virtual double squaredKKTErrorNorm(
       const Robot& robot, ConstraintComponentData& data, 
       const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
       const Eigen::Ref<const Eigen::VectorXd>& f, 

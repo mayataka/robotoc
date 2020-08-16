@@ -33,6 +33,7 @@ TEST_F(KKTResidualTest, fixed_base) {
   Robot robot(fixed_base_urdf_, contact_frames, 0, 0);
   std::random_device rnd;
   std::vector<bool> contact_status = {rnd()%2==0};
+  robot.setContactStatus(contact_status);
   KKTComposition composition(robot);
   composition.setContactStatus(robot);
   KKTResidual residual(robot);

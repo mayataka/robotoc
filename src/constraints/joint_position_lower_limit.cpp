@@ -125,7 +125,7 @@ double JointPositionLowerLimit::residualL1Nrom(
 }
 
 
-double JointPositionLowerLimit::residualSquaredNrom(
+double JointPositionLowerLimit::squaredKKTErrorNorm(
     const Robot& robot, ConstraintComponentData& data, 
     const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
     const Eigen::Ref<const Eigen::VectorXd>& f, 

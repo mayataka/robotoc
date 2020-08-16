@@ -214,7 +214,7 @@ public:
     return l1_norm;
   }
 
-  double residualSquaredNrom(const Robot& robot, ConstraintsData& datas, 
+  double squaredKKTErrorNorm(const Robot& robot, ConstraintsData& datas, 
                              const double dtau, 
                              const Eigen::Ref<const Eigen::VectorXd>& a, 
                              const Eigen::Ref<const Eigen::VectorXd>& f, 
@@ -223,7 +223,7 @@ public:
                              const Eigen::Ref<const Eigen::VectorXd>& u) const {
     double squared_norm = 0;
     for (int i=0; i<constraints_.size(); ++i) {
-      squared_norm += constraints_[i]->residualSquaredNrom(robot, datas.data[i],
+      squared_norm += constraints_[i]->squaredKKTErrorNorm(robot, datas.data[i],
                                                            dtau, a, f, q, v, u);
     }
     return squared_norm;

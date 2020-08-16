@@ -69,6 +69,19 @@ public:
                                      kkt_residual.lq(), kkt_residual.lv());
   }
 
+  inline void condenseInequalityConstraints(
+      Robot& robot, const std::shared_ptr<Constraints>& constraints, 
+      ConstraintsData& constraints_data, const double t, const double dtau, 
+      const SplitSolution& s, KKTResidual& kkt_residual, 
+      KKTMatrix& kkt_matrix) const {
+    constraints->condenseSlackAndDual(robot, constraints_data, dtau, 
+                                      s.a, s.f, s.q, s.v, kkt_matrix.Qaa(),
+                                      kkt_matrix.Qff(), kkt_matrix.Qqq(),
+                                      kkt_matrix.Qvv(), kkt_residual.la(), 
+                                      kkt_residual.lf(), kkt_residual.lq(), 
+                                      kkt_residual.lv());
+  }
+
   inline void linearizeStateEquation(
       Robot& robot, const double dtau, 
       const Eigen::Ref<const Eigen::VectorXd>& q_prev, 
@@ -151,12 +164,27 @@ public:
   }
 
   inline void linearizeContactConstraints(Robot& robot, const double dtau,
+                                          const SplitSolution& s,
                                           KKTResidual& kkt_residual,
                                           KKTMatrix& kkt_matrix) const {
     assert(dtau > 0);
-    robot.computeBaumgarteResidual(dtau, kkt_residual.C());
-    robot.computeBaumgarteDerivatives(dtau, kkt_matrix.Cq(), kkt_matrix.Cv(), 
-                                      kkt_matrix.Ca());
+    if (robot.dimf() > 0) {
+      robot.computeBaumgarteResidual(dtau, kkt_residual.C());
+      robot.computeBaumgarteDerivatives(dtau, kkt_matrix.Cq(), kkt_matrix.Cv(), 
+                                        kkt_matrix.Ca());
+      kkt_residual.la().noalias() 
+          += kkt_matrix.Ca().topRows(robot.dimf()).transpose() 
+              * s.mu.topRows(robot.dimf());
+      kkt_residual.lf().noalias() 
+          += kkt_matrix.Cf().topRows(robot.dimf()).transpose() 
+              * s.mu.topRows(robot.dimf());
+      kkt_residual.lq().noalias() 
+          += kkt_matrix.Cq().topRows(robot.dimf()).transpose() 
+              * s.mu.topRows(robot.dimf());
+      kkt_residual.lv().noalias() 
+          += kkt_matrix.Cv().topRows(robot.dimf()).transpose() 
+              * s.mu.topRows(robot.dimf());
+    }
   }
 
 private:

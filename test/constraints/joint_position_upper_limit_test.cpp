@@ -109,7 +109,7 @@ TEST_F(JointPositionUpperLimitTest, setSlackAndDualFixedBase) {
   const double l1residual = limit.residualL1Nrom(fixed_base_robot_, data, dtau_, a, f, q, v, u);
   const double l1residual_ref = (dtau_*(q-qmax)+slack_ref).lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1residual, l1residual_ref);
-  const double l2residual = limit.residualSquaredNrom(fixed_base_robot_, data, dtau_, a, f, q, v, u);
+  const double l2residual = limit.squaredKKTErrorNorm(fixed_base_robot_, data, dtau_, a, f, q, v, u);
   Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dimq);
   pdipm::pdipmfunc::ComputeDualityResidual(barrier_, slack_ref, dual_ref, duality_ref);
   const double l2residual_ref 
@@ -159,7 +159,7 @@ TEST_F(JointPositionUpperLimitTest, setSlackAndDualFloatingBase) {
   const double l1residual = limit.residualL1Nrom(fixed_base_robot_, data, dtau_, a, f, q, v, u);
   const double l1residual_ref = (dtau_*(q.tail(dimc)-qmax)+slack_ref).lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1residual, l1residual_ref);
-  const double l2residual = limit.residualSquaredNrom(fixed_base_robot_, data, dtau_, a, f, q, v, u);
+  const double l2residual = limit.squaredKKTErrorNorm(fixed_base_robot_, data, dtau_, a, f, q, v, u);
   Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dimc);
   pdipm::pdipmfunc::ComputeDualityResidual(barrier_, slack_ref, dual_ref, duality_ref);
   const double l2residual_ref 

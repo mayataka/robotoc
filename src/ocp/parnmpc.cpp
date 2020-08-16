@@ -75,9 +75,9 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
     robots_[robot_id].setContactStatus(contact_sequence_[i]);
-    s_[i].set(robots_[robot_id]);
-    s_new_[i].set(robots_[robot_id]);
-    d_[i].set(robots_[robot_id]);
+    s_[i].setContactStatus(robots_[robot_id]);
+    s_new_[i].setContactStatus(robots_[robot_id]);
+    d_[i].setContactStatus(robots_[robot_id]);
     if (i == 0) {
       split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, q, v, 
                                   s_[i], s_[i+1].lmd, s_[i+1].gmm, s_[i+1].q, 
@@ -156,8 +156,7 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
           const std::pair<double, double> filter_pair
               = split_ocps_[i].costAndConstraintsViolation(
                     robots_[robot_id], primal_step_size, t+(i+1)*dtau_, dtau_, 
-                    s_[i-1].q, s_[i-1].v, d_[i-1].dq(), d_[i-1].dv(), s_[i], 
-                    d_[i], s_new_[i], is_terminal);
+                    s_[i-1], d_[i-1], s_[i], d_[i], s_new_[i], is_terminal);
           costs_.coeffRef(i) = filter_pair.first;
           constraints_violations_.coeffRef(i) = filter_pair.second;
         }

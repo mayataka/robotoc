@@ -145,7 +145,7 @@ TEST_F(ParNMPCTest, floating_base) {
   std::cout << "initial KKT error = " << parnmpc.KKTError(t_, q, v) << std::endl;
   const int num_itr = 10;
   for (int i=0; i<num_itr; ++i) {
-    parnmpc.updateSolution(t_, q, v, true);
+    parnmpc.updateSolution(t_, q, v, false);
     std::cout << "KKT error after " << (i+1) << "iteration = " << parnmpc.KKTError(t_, q, v) << std::endl;
   }
 }

@@ -44,7 +44,7 @@ public:
 
   SplitDirection& operator=(SplitDirection&&) noexcept = default;
 
-  inline void set(const Robot& robot) {
+  inline void setContactStatus(const Robot& robot) {
     kkt_composition_.setContactStatus(robot);
     dimc_ = robot.dim_passive() + robot.dimf();
     dimf_ = robot.dimf();
@@ -94,6 +94,17 @@ public:
                                     kkt_composition_.Qx_size());
   }
 
+  inline Eigen::Ref<Eigen::VectorXd> backwardCorrectionParallelDirection() {
+    return split_direction_.segment(
+        kkt_composition_.C_begin(), 
+        kkt_composition_.dimKKT()-kkt_composition_.Qx_size());
+  }
+
+  inline Eigen::Ref<Eigen::VectorXd> forwardCorrectionParallelDirection() {
+    return split_direction_.head(
+        kkt_composition_.dimKKT()-kkt_composition_.Qx_size());
+  }
+
   inline Eigen::Ref<const Eigen::VectorXd> split_direction() const {
     return split_direction_.head(kkt_composition_.dimKKT());
   }
@@ -136,6 +147,17 @@ public:
   inline Eigen::Ref<const Eigen::VectorXd> dx() const {
     return split_direction_.segment(kkt_composition_.Qx_begin(), 
                                     kkt_composition_.Qx_size());
+  }
+
+  inline Eigen::Ref<const Eigen::VectorXd> backwardCorrectionParallelDirection() const {
+    return split_direction_.segment(
+        kkt_composition_.C_begin(), 
+        kkt_composition_.dimKKT()-kkt_composition_.Qx_size());
+  }
+
+  inline Eigen::Ref<const Eigen::VectorXd> forwardCorrectionParallelDirection() const {
+    return split_direction_.head(
+        kkt_composition_.dimKKT()-kkt_composition_.Qx_size());
   }
 
   inline void setZero() {

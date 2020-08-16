@@ -53,7 +53,7 @@ public:
 
   SplitSolution& operator=(SplitSolution&&) noexcept = default;
 
-  inline void set(const Robot& robot) {
+  inline void setContactStatus(const Robot& robot) {
     dimc_ = robot.dim_passive() + robot.dimf();
     dimf_ = robot.dimf();
   }
