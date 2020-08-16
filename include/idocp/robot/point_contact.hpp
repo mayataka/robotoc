@@ -18,9 +18,6 @@ class PointContact {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  typedef Eigen::Matrix<double, 3, Eigen::Dynamic> Matrix3Xd;
-  typedef Eigen::Matrix<double, Eigen::Dynamic, 3> MatrixX3d;
-
   // Constructor. Allocate matrices and vectors.
   // Argments:
   //    model: The pinocchio model. Before call this function, pinocchio model
@@ -96,8 +93,9 @@ public:
   //    transpose: flag for transposing the Jacobian or not. If true, the 
   //      Jacobian is transposed. If false, the Jacobian is not transposed, 
   //      i.e., the original Jacobian is returned.
+  template <typename MatrixType>
   void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
-                          Eigen::Ref<Eigen::MatrixXd> Jacobian,
+                          const Eigen::MatrixBase<MatrixType>& Jacobian,
                           const bool transpose=false);
 
   // Computes the 3xdimv contact Jacobian represented in the local coordinate 
@@ -113,9 +111,10 @@ public:
   //    transpose: flag for transposing the Jacobian or not. If true, the 
   //      Jacobian is transposed. If false, the Jacobian is not transposed, 
   //      i.e., the original Jacobian is returned.
+  template <typename MatrixType>
   void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
                           const double coeff, 
-                          Eigen::Ref<Eigen::MatrixXd> Jacobian,
+                          const Eigen::MatrixBase<MatrixType>& Jacobian,
                           const bool transpose=false);
 
   // Computes the residual of the contact constraints considered by the 
@@ -125,9 +124,10 @@ public:
   //    model: pinocchio model of the robot.
   //    data: pinocchio data of the robot kinematics and dynamics.
   //    baumgarte_residual: The vector result is stored in. Size must be 3.
+  template <typename VectorType>
   void computeBaumgarteResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
-      Eigen::Ref<Eigen::Vector3d> baumgarte_residual) const;
+      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   // Computes the residual of the contact constraints considered by the 
   // Baumgarte's stabilization method. Before calling this function, you have 
@@ -136,9 +136,11 @@ public:
   //    model: pinocchio model of the robot.
   //    data: pinocchio data of the robot kinematics and dynamics.
   //    baumgarte_residual: The vector result is stored in. Size must be 3.
+  template <typename VectorType>
   void computeBaumgarteResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
-      const double coeff, Eigen::Ref<Eigen::Vector3d> baumgarte_residual) const;
+      const double coeff, 
+      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   // Computes the the partial derivatives of the contact constraints
   // considered by the Baumgarte's stabilization method. Before calling this 
@@ -153,11 +155,12 @@ public:
   //      the generalized velocity. size must be 3xdimv.
   //    baumgarte_partial_da: Partial of contact constraints with respect to 
   //      the generalized acceleration. size must be 3xdimv.
+  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
       const pinocchio::Model& model, pinocchio::Data& data, 
-      Eigen::Ref<Matrix3Xd> baumgarte_partial_dq, 
-      Eigen::Ref<Matrix3Xd> baumgarte_partial_dv, 
-      Eigen::Ref<Matrix3Xd> baumgarte_partial_da);
+      const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
+      const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
+      const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
 
   // Computes the the partial derivatives of the contact constraints
   // considered by the Baumgarte's stabilization method. Before calling this 
@@ -172,12 +175,12 @@ public:
   //      the generalized velocity. size must be 3xdimv.
   //    baumgarte_partial_da: Partial of contact constraints with respect to 
   //      the generalized acceleration. size must be 3xdimv.
+  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
       const pinocchio::Model& model, pinocchio::Data& data, const double coeff,
-      Eigen::Ref<Matrix3Xd> baumgarte_partial_dq, 
-      Eigen::Ref<Matrix3Xd> baumgarte_partial_dv, 
-      Eigen::Ref<Matrix3Xd> baumgarte_partial_da);
-
+      const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
+      const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
+      const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
 
   // Activate the contact.
   void activate();
@@ -224,5 +227,6 @@ private:
 
 } // namespace idocp
 
+#include "idocp/robot/point_contact.hxx"
 
-#endif // IDOCP_POINT_CONTACT_HPP_ 
+#endif // IDOCP_POINT_CONTACT_HPP_

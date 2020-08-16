@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <random>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -315,19 +316,6 @@ TEST_F(FloatingBaseRobotTest, dIntegrateConfiguration) {
   std::cout << std::endl;
   std::cout << "dintegrate_dv:" << std::endl;
   std::cout << dintegrate_dv << std::endl;
-  std::cout << std::endl;
-}
-
-
-TEST_F(FloatingBaseRobotTest, computeConfigurationJacobian) {
-  Robot robot(urdf_);
-  Eigen::MatrixXd Jacobian_ref = Eigen::MatrixXd::Zero(dimq_, dimv_);
-  pinocchio::integrateCoeffWiseJacobian(model_, q_, Jacobian_ref);
-  Eigen::MatrixXd Jacobian = Eigen::MatrixXd::Zero(dimq_, dimv_);
-  robot.computeConfigurationJacobian(q_, Jacobian);
-  EXPECT_TRUE(Jacobian.isApprox(Jacobian_ref));
-  std::cout << "configuration Jacobian:" << std::endl;
-  std::cout << Jacobian << std::endl;
   std::cout << std::endl;
 }
 

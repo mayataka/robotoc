@@ -1,0 +1,378 @@
+#include "idocp/robot/point_contact.hpp"
+
+#include "assert.h"
+
+
+namespace idocp {
+
+template <typename TangentVectorType, typename ConfigVectorType>
+void Robot::integrateConfiguration(
+    const Eigen::MatrixBase<TangentVectorType>& v, 
+    const double integration_length, 
+    const Eigen::MatrixBase<ConfigVectorType>& q) const {
+  assert(v.size() == dimv_);
+  assert(q.size() == dimq_);
+  if (floating_base_.has_floating_base()) {
+    const Eigen::VectorXd q_tmp = q;
+    pinocchio::integrate(model_, q_tmp, integration_length*v, 
+                         const_cast<Eigen::MatrixBase<ConfigVectorType>&>(q));
+  }
+  else {
+    (const_cast<Eigen::MatrixBase<ConfigVectorType>&>(q)).noalias() 
+        += integration_length * v;
+  }
+}
+
+
+template <typename ConfigVectorType1, typename TangentVectorType,  
+          typename ConfigVectorType2>
+void Robot::integrateConfiguration(
+    const Eigen::MatrixBase<ConfigVectorType1>& q, 
+    const Eigen::MatrixBase<TangentVectorType>& v, 
+    const double integration_length, 
+    const Eigen::MatrixBase<ConfigVectorType2>& q_integrated) const {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(q_integrated.size() == dimq_);
+  if (floating_base_.has_floating_base()) {
+    pinocchio::integrate(
+        model_, q, integration_length*v, 
+        const_cast<Eigen::MatrixBase<ConfigVectorType2>&>(q_integrated));
+  }
+  else {
+    (const_cast<Eigen::MatrixBase<ConfigVectorType2>&>(q_integrated)).noalias() 
+        = q + integration_length * v;
+  }
+}
+
+
+template <typename ConfigVectorType1, typename ConfigVectorType2, 
+          typename TangentVectorType>
+void Robot::subtractConfiguration(
+    const Eigen::MatrixBase<ConfigVectorType1>& q_plus, 
+    const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
+    const Eigen::MatrixBase<TangentVectorType>& difference) const {
+  assert(q_plus.size() == dimq_);
+  assert(q_minus.size() == dimq_);
+  assert(difference.size() == dimv_);
+  if (floating_base_.has_floating_base()) {
+    pinocchio::difference(
+        model_, q_minus, q_plus, 
+        const_cast<Eigen::MatrixBase<TangentVectorType>&>(difference));
+  }
+  else {
+    const_cast<Eigen::MatrixBase<TangentVectorType>&>(difference) 
+        = q_plus - q_minus;
+  }
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType,  
+          typename MatrixType1, typename MatrixType2>
+void Robot::dIntegrateConfiguration(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType>& v, 
+    const double integration_length, 
+    const Eigen::MatrixBase<MatrixType1>& dIntegrate_dq,
+    const Eigen::MatrixBase<MatrixType2>& dIntegrate_dv) const {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(integration_length >= 0);
+  assert(dIntegrate_dq.rows() == dimv_);
+  assert(dIntegrate_dq.cols() == dimv_);
+  assert(dIntegrate_dv.rows() == dimv_);
+  assert(dIntegrate_dv.cols() == dimv_);
+  pinocchio::dIntegrate(
+      model_, q, v, 
+      const_cast<Eigen::MatrixBase<MatrixType1>&>(dIntegrate_dq),
+      pinocchio::ARG0);
+  pinocchio::dIntegrate(
+      model_, q, v, 
+      const_cast<Eigen::MatrixBase<MatrixType2>&>(dIntegrate_dv),
+      pinocchio::ARG1);
+}
+
+
+template <typename ConfigVectorType1, typename ConfigVectorType2, 
+          typename MatrixType>
+void Robot::dSubtractdConfigurationPlus(
+    const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
+    const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
+    const Eigen::MatrixBase<MatrixType>& dSubtract_dqplus) const {
+  assert(q_plus.size() == dimq_);
+  assert(q_minus.size() == dimq_);
+  assert(dSubtract_dqplus.rows() == dimv_);
+  assert(dSubtract_dqplus.cols() == dimv_);
+  pinocchio::dDifference(
+      model_, q_minus, q_plus, 
+      const_cast<Eigen::MatrixBase<MatrixType>&>(dSubtract_dqplus),
+      pinocchio::ARG1);
+}
+
+
+template <typename ConfigVectorType1, typename ConfigVectorType2, 
+          typename MatrixType>
+void Robot::dSubtractdConfigurationMinus(
+    const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
+    const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
+    const Eigen::MatrixBase<MatrixType>& dSubtract_dqminus) const {
+  assert(q_plus.size() == dimq_);
+  assert(q_minus.size() == dimq_);
+  assert(dSubtract_dqminus.rows() == dimv_);
+  assert(dSubtract_dqminus.cols() == dimv_);
+  pinocchio::dDifference(
+      model_, q_minus, q_plus, 
+      const_cast<Eigen::MatrixBase<MatrixType>&>(dSubtract_dqminus),
+      pinocchio::ARG0);
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType1, 
+          typename TangentVectorType2>
+void Robot::updateKinematics(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                             const Eigen::MatrixBase<TangentVectorType1>& v, 
+                             const Eigen::MatrixBase<TangentVectorType2>& a) {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(a.size() == dimv_);
+  pinocchio::forwardKinematics(model_, data_, q, v, a);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q, v, a);
+}
+
+
+template <typename VectorType>
+void Robot::computeBaumgarteResidual(
+    const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeBaumgarteResidual(
+          model_, data_, 
+          (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
+              .template segment<3>(3*num_active_contacts));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename VectorType>
+void Robot::computeBaumgarteResidual(
+    const double coeff, 
+    const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeBaumgarteResidual(
+          model_, data_, coeff, 
+          (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
+              .template segment<3>(3*num_active_contacts));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
+void Robot::computeBaumgarteDerivatives(
+    const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
+    const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
+    const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da) {
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_da.cols() == dimv_);
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeBaumgarteDerivatives(
+          model_, data_, 
+          (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
+              .block(3*num_active_contacts, 0, 3, dimv_),
+          (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))
+              .block(3*num_active_contacts, 0, 3, dimv_),
+          (const_cast<Eigen::MatrixBase<MatrixType3>&>(baumgarte_partial_da))
+              .block(3*num_active_contacts, 0, 3, dimv_));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
+void Robot::computeBaumgarteDerivatives(
+    const double coeff, 
+    const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
+    const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
+    const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da) {
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_da.cols() == dimv_);
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeBaumgarteDerivatives(
+          model_, data_, coeff,
+          (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
+              .block(3*num_active_contacts, 0, 3, dimv_),
+          (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))
+              .block(3*num_active_contacts, 0, 3, dimv_),
+          (const_cast<Eigen::MatrixBase<MatrixType3>&>(baumgarte_partial_da))
+              .block(3*num_active_contacts, 0, 3, dimv_));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename VectorType>
+void Robot::setContactForces(const Eigen::MatrixBase<VectorType>& f) {
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeJointForceFromContactForce(
+          f.template segment<3>(3*num_active_contacts), fjoint_);
+      ++num_active_contacts;
+    }
+    else {
+      point_contacts_[i].computeJointForceFromContactForce(
+          Eigen::Vector3d::Zero(), fjoint_);
+    }
+  }
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType1, 
+          typename TangentVectorType2, typename TangentVectorType3>
+void Robot::RNEA(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                 const Eigen::MatrixBase<TangentVectorType1>& v, 
+                 const Eigen::MatrixBase<TangentVectorType2>& a, 
+                 const Eigen::MatrixBase<TangentVectorType3>& tau) {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(a.size() == dimv_);
+  assert(tau.size() == dimv_);
+  if (point_contacts_.empty()) {
+    const_cast<Eigen::MatrixBase<TangentVectorType3>&>(tau)
+        = pinocchio::rnea(model_, data_, q, v, a);
+  }
+  else {
+    const_cast<Eigen::MatrixBase<TangentVectorType3>&>(tau)
+        = pinocchio::rnea(model_, data_, q, v, a, fjoint_);
+  }
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType1, 
+          typename TangentVectorType2, typename MatrixType1, 
+          typename MatrixType2, typename MatrixType3>
+void Robot::RNEADerivatives(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType1>& v, 
+    const Eigen::MatrixBase<TangentVectorType2>& a, 
+    const Eigen::MatrixBase<MatrixType1>& dRNEA_partial_dq, 
+    const Eigen::MatrixBase<MatrixType2>& dRNEA_partial_dv, 
+    const Eigen::MatrixBase<MatrixType3>& dRNEA_partial_da) {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(a.size() == dimv_);
+  assert(dRNEA_partial_dq.cols() == dimv_);
+  assert(dRNEA_partial_dq.rows() == dimv_);
+  assert(dRNEA_partial_dv.cols() == dimv_);
+  assert(dRNEA_partial_dv.rows() == dimv_);
+  assert(dRNEA_partial_da.cols() == dimv_);
+  assert(dRNEA_partial_da.rows() == dimv_);
+  if (point_contacts_.empty()) {
+      pinocchio::computeRNEADerivatives(
+          model_, data_, q, v, a, 
+          const_cast<Eigen::MatrixBase<MatrixType1>&>(dRNEA_partial_dq),
+          const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_dv),
+          const_cast<Eigen::MatrixBase<MatrixType3>&>(dRNEA_partial_da));
+  }
+  else {
+      pinocchio::computeRNEADerivatives(
+          model_, data_, q, v, a, fjoint_,
+          const_cast<Eigen::MatrixBase<MatrixType1>&>(dRNEA_partial_dq),
+          const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_dv),
+          const_cast<Eigen::MatrixBase<MatrixType3>&>(dRNEA_partial_da));
+  }
+  (const_cast<Eigen::MatrixBase<MatrixType3>&>(dRNEA_partial_da)) 
+      .template triangularView<Eigen::StrictlyLower>() 
+      = (const_cast<Eigen::MatrixBase<MatrixType3>&>(dRNEA_partial_da)).transpose()
+          .template triangularView<Eigen::StrictlyLower>();
+}
+
+
+template <typename MatrixType>
+void Robot::dRNEAPartialdFext(
+    const Eigen::MatrixBase<MatrixType>& dRNEA_partial_dfext) {
+  assert(dRNEA_partial_dfext.rows() == dimv_);
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].getContactJacobian(
+          model_, data_,  -1, 
+          (const_cast<Eigen::MatrixBase<MatrixType>&>(dRNEA_partial_dfext))
+              .block(0, 3*num_active_contacts, dimv_, 3), true);
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType1, 
+          typename TangentVectorType2, typename TangentVectorType3,
+          typename TangentVectorType4>
+void Robot::stateEquation(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                          const Eigen::MatrixBase<TangentVectorType1>& v, 
+                          const Eigen::MatrixBase<TangentVectorType2>& tau, 
+                          const Eigen::MatrixBase<TangentVectorType3>& dq,
+                          const Eigen::MatrixBase<TangentVectorType4>& dv) {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(tau.size() == dimv_);
+  assert(dq.size() == dimv_);
+  assert(dv.size() == dimv_);
+  const_cast<Eigen::MatrixBase<TangentVectorType3>&> (dq) = v;
+  if (point_contacts_.empty()) {
+    const_cast<Eigen::MatrixBase<TangentVectorType3>&> (dv)
+        = pinocchio::aba(model_, data_, q, v, tau);
+  }
+  else {
+    const_cast<Eigen::MatrixBase<TangentVectorType3>&> (dv)
+        = pinocchio::aba(model_, data_, q, v, tau, fjoint_);
+  }
+}
+
+
+template <typename ConfigVectorType>
+void Robot::generateFeasibleConfiguration(
+    const Eigen::MatrixBase<ConfigVectorType>& q) const {
+  assert(q.size() == dimq_);
+  Eigen::VectorXd q_min = model_.lowerPositionLimit;
+  Eigen::VectorXd q_max = model_.upperPositionLimit;
+  if (floating_base_.has_floating_base()) {
+    q_min.head(7) = - Eigen::VectorXd::Ones(7);
+    q_max.head(7) = Eigen::VectorXd::Ones(7);
+  }
+  const_cast<Eigen::MatrixBase<ConfigVectorType>&> (q) 
+      = pinocchio::randomConfiguration(model_, q_min, q_max);
+}
+
+
+template <typename ConfigVectorType>
+void Robot::normalizeConfiguration(
+    const Eigen::MatrixBase<ConfigVectorType>& q) const {
+  assert(q.size() == dimq_);
+  if (floating_base_.has_floating_base()) {
+    if (q.template segment<4>(3).squaredNorm() 
+          <= std::numeric_limits<double>::epsilon()) {
+      (const_cast<Eigen::MatrixBase<ConfigVectorType>&> (q)).coeffRef(3) = 1;
+    }
+    pinocchio::normalize(model_, 
+                         const_cast<Eigen::MatrixBase<ConfigVectorType>&>(q));
+  }
+}
+
+
+} // namespace idocp

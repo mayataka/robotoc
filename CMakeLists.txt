@@ -39,34 +39,34 @@ add_library(
   src/robot/robot.cpp
   src/robot/floating_base.cpp
   src/robot/point_contact.cpp
-  src/cost/cost_function.cpp
-  src/cost/cost_function_data.cpp
-  src/cost/joint_space_cost.cpp
-  src/cost/contact_cost.cpp
-  src/constraints/pdipm_func.cpp
-  src/constraints/constraints.cpp
-  src/constraints/constraints_data.cpp
-  src/constraints/constraint_component_base.cpp
-  src/constraints/constraint_component_data.cpp
-  src/constraints/joint_position_upper_limit.cpp
-  src/constraints/joint_position_lower_limit.cpp
-  src/constraints/joint_velocity_upper_limit.cpp
-  src/constraints/joint_velocity_lower_limit.cpp
-  src/constraints/joint_acceleration_upper_limit.cpp
-  src/constraints/joint_acceleration_lower_limit.cpp
-  src/constraints/joint_torques_upper_limit.cpp
-  src/constraints/joint_torques_lower_limit.cpp
-  src/ocp/line_search_filter.cpp
-  src/ocp/kkt_composition.cpp
-  src/ocp/kkt_residual.cpp
-  src/ocp/kkt_matrix.cpp
-  src/ocp/kkt_matrix_inverse.cpp
-  src/ocp/split_solution.cpp
-  src/ocp/split_direction.cpp
-  src/ocp/parnmpc_linearizer.cpp
-  src/ocp/inverse_dynamics_condenser.cpp
-  src/ocp/split_parnmpc.cpp
-  src/ocp/parnmpc.cpp
+  # src/cost/cost_function.cpp
+  # src/cost/cost_function_data.cpp
+  # src/cost/joint_space_cost.cpp
+  # src/cost/contact_cost.cpp
+  # src/constraints/pdipm_func.cpp
+  # src/constraints/constraints.cpp
+  # src/constraints/constraints_data.cpp
+  # src/constraints/constraint_component_base.cpp
+  # src/constraints/constraint_component_data.cpp
+  # src/constraints/joint_position_upper_limit.cpp
+  # src/constraints/joint_position_lower_limit.cpp
+  # src/constraints/joint_velocity_upper_limit.cpp
+  # src/constraints/joint_velocity_lower_limit.cpp
+  # src/constraints/joint_acceleration_upper_limit.cpp
+  # src/constraints/joint_acceleration_lower_limit.cpp
+  # src/constraints/joint_torques_upper_limit.cpp
+  # src/constraints/joint_torques_lower_limit.cpp
+  # src/ocp/line_search_filter.cpp
+  # src/ocp/kkt_composition.cpp
+  # src/ocp/kkt_residual.cpp
+  # src/ocp/kkt_matrix.cpp
+  # src/ocp/kkt_matrix_inverse.cpp
+  # src/ocp/split_solution.cpp
+  # src/ocp/split_direction.cpp
+  # src/ocp/parnmpc_linearizer.cpp
+  # src/ocp/inverse_dynamics_condenser.cpp
+  # src/ocp/split_parnmpc.cpp
+  # src/ocp/parnmpc.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

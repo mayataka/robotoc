@@ -54,10 +54,17 @@ public:
                                  kkt_composition_.Fv_size());
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> C() {
+  template <typename Derived>
+  inline Eigen::MatrixBase<Derived>& C() {
     return kkt_residual_.segment(kkt_composition_.C_begin(), 
                                  kkt_composition_.C_size());
   }
+
+
+  // inline Eigen::Ref<Eigen::VectorXd> C() {
+  //   return kkt_residual_.segment(kkt_composition_.C_begin(), 
+  //                                kkt_composition_.C_size());
+  // }
 
   inline Eigen::Ref<Eigen::VectorXd> la() {
     return kkt_residual_.segment(kkt_composition_.Qa_begin(), 
@@ -98,10 +105,10 @@ public:
                                  kkt_composition_.Fv_size());
   }
 
-  inline Eigen::Ref<const Eigen::VectorXd> C() const {
-    return kkt_residual_.segment(kkt_composition_.C_begin(), 
-                                 kkt_composition_.C_size());
-  }
+  // inline Eigen::Ref<const Eigen::VectorXd> C() const {
+  //   return kkt_residual_.segment(kkt_composition_.C_begin(), 
+  //                                kkt_composition_.C_size());
+  // }
 
   inline Eigen::Ref<const Eigen::VectorXd> la() const {
     return kkt_residual_.segment(kkt_composition_.Qa_begin(), 

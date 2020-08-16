@@ -290,19 +290,6 @@ TEST_F(FixedBaseRobotTest, dSubtractdConfigurationPlus) {
 }
 
 
-TEST_F(FixedBaseRobotTest, computeConfigurationJacobian) {
-  Robot robot(urdf_);
-  Eigen::MatrixXd Jacobian_ref = Eigen::MatrixXd::Zero(dimq_, dimq_);
-  pinocchio::integrateCoeffWiseJacobian(model_, q_, Jacobian_ref);
-  Eigen::MatrixXd Jacobian = Eigen::MatrixXd::Zero(dimq_, dimq_);
-  robot.computeConfigurationJacobian(q_, Jacobian);
-  EXPECT_TRUE(Jacobian.isApprox(Jacobian_ref));
-  std::cout << "configuration Jacobian:" << std::endl;
-  std::cout << Jacobian << std::endl;
-  std::cout << std::endl;
-}
-
-
 TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   std::vector<int> contact_frames = {contact_frame_id_};
   Robot robot(urdf_, contact_frames, baumgarte_weight_on_velocity_, 
