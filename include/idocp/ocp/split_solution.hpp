@@ -58,19 +58,19 @@ public:
     dimf_ = robot.dimf();
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> f_active() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> f_active() {
     return f.head(dimf_);
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> mu_active() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> mu_active() {
     return mu.head(dimc_);
   }
 
-  inline Eigen::Ref<const Eigen::VectorXd> f_active() const {
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> f_active() const {
     return f.head(dimf_);
   }
 
-  inline Eigen::Ref<const Eigen::VectorXd> mu_active() const {
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> mu_active() const {
     return mu.head(dimc_);
   }
 

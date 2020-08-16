@@ -40,97 +40,90 @@ public:
     kkt_composition_.setContactStatus(robot);
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> KKT_residual() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> KKT_residual() {
     return kkt_residual_.head(kkt_composition_.dimKKT());
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> Fq() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> Fq() {
     return kkt_residual_.segment(kkt_composition_.Fq_begin(), 
                                  kkt_composition_.Fq_size());
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> Fv() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> Fv() {
     return kkt_residual_.segment(kkt_composition_.Fv_begin(), 
                                  kkt_composition_.Fv_size());
   }
 
-  template <typename Derived>
-  inline Eigen::MatrixBase<Derived>& C() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> C() {
     return kkt_residual_.segment(kkt_composition_.C_begin(), 
                                  kkt_composition_.C_size());
   }
 
-
-  // inline Eigen::Ref<Eigen::VectorXd> C() {
-  //   return kkt_residual_.segment(kkt_composition_.C_begin(), 
-  //                                kkt_composition_.C_size());
-  // }
-
-  inline Eigen::Ref<Eigen::VectorXd> la() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> la() {
     return kkt_residual_.segment(kkt_composition_.Qa_begin(), 
                                  kkt_composition_.Qa_size());
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> lf() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> lf() {
     return kkt_residual_.segment(kkt_composition_.Qf_begin(), 
                                  kkt_composition_.Qf_size());
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> lq() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> lq() {
     return kkt_residual_.segment(kkt_composition_.Qq_begin(), 
                                  kkt_composition_.Qq_size());
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> lv() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> lv() {
     return kkt_residual_.segment(kkt_composition_.Qv_begin(), 
                                  kkt_composition_.Qv_size());
   }
 
-  inline Eigen::Ref<Eigen::VectorXd> lx() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> lx() {
     return kkt_residual_.segment(kkt_composition_.Qx_begin(), 
                                  kkt_composition_.Qx_size());
   }
 
-  inline Eigen::Ref<const Eigen::VectorXd> KKT_residual() const {
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> KKT_residual() const {
     return kkt_residual_.head(kkt_composition_.dimKKT());
   }
 
-  inline Eigen::Ref<const Eigen::VectorXd> Fq() const {
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> Fq() const {
     return kkt_residual_.segment(kkt_composition_.Fq_begin(), 
                                  kkt_composition_.Fq_size());
   }
 
-  inline Eigen::Ref<const Eigen::VectorXd> Fv() const {
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> Fv() const {
     return kkt_residual_.segment(kkt_composition_.Fv_begin(), 
                                  kkt_composition_.Fv_size());
   }
 
-  // inline Eigen::Ref<const Eigen::VectorXd> C() const {
-  //   return kkt_residual_.segment(kkt_composition_.C_begin(), 
-  //                                kkt_composition_.C_size());
-  // }
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> C() const {
+    return kkt_residual_.segment(kkt_composition_.C_begin(), 
+                                 kkt_composition_.C_size());
+  }
 
-  inline Eigen::Ref<const Eigen::VectorXd> la() const {
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> la() const {
     return kkt_residual_.segment(kkt_composition_.Qa_begin(), 
                                  kkt_composition_.Qa_size());
   }
 
-  inline Eigen::Ref<const Eigen::VectorXd> lf() const {
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> lf() const {
     return kkt_residual_.segment(kkt_composition_.Qf_begin(), 
                                  kkt_composition_.Qf_size());
   }
 
-  inline Eigen::Ref<const Eigen::VectorXd> lq() const {
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> lq() const {
     return kkt_residual_.segment(kkt_composition_.Qq_begin(), 
                                  kkt_composition_.Qq_size());
   }
 
-  inline Eigen::Ref<const Eigen::VectorXd> lv() const {
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> lv() const {
     return kkt_residual_.segment(kkt_composition_.Qv_begin(), 
                                  kkt_composition_.Qv_size());
   }
 
-  inline Eigen::Ref<const Eigen::VectorXd> lx() const {
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> lx() const {
     return kkt_residual_.segment(kkt_composition_.Qx_begin(), 
                                  kkt_composition_.Qx_size());
   }

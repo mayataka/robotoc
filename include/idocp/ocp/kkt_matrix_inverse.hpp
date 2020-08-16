@@ -42,74 +42,74 @@ public:
     kkt_composition_.setContactStatus(robot);
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> KKT_matrix_inverse() {
+  inline Eigen::Block<Eigen::MatrixXd> KKT_matrix_inverse() {
     return kkt_matrix_inverse_.topLeftCorner(kkt_composition_.dimKKT(), 
                                              kkt_composition_.dimKKT());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> auxiliaryMatrix() {
+  inline Eigen::Block<Eigen::MatrixXd> auxiliaryMatrix() {
     return kkt_matrix_inverse_.topLeftCorner(kkt_composition_.Fx_size(), 
                                              kkt_composition_.Fx_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> backwardCorrectionSerialCoeff() {
+  inline Eigen::Block<Eigen::MatrixXd> backwardCorrectionSerialCoeff() {
     return kkt_matrix_inverse_.block(kkt_composition_.Fx_begin(), 
                                      kkt_composition_.Qx_begin(), 
                                      kkt_composition_.Fx_size(), 
                                      kkt_composition_.Qx_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> backwardCorrectionParallelCoeff() {
+  inline Eigen::Block<Eigen::MatrixXd> backwardCorrectionParallelCoeff() {
     return kkt_matrix_inverse_.block(kkt_composition_.C_begin(), 
                                      kkt_composition_.Qx_begin(), 
                                      kkt_composition_.dimKKT()-kkt_composition_.Fx_size(), 
                                      kkt_composition_.Qx_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> forwardCorrectionSerialCoeff() {
+  inline Eigen::Block<Eigen::MatrixXd> forwardCorrectionSerialCoeff() {
     return kkt_matrix_inverse_.block(kkt_composition_.Qx_begin(), 
                                      kkt_composition_.Fx_begin(), 
                                      kkt_composition_.Qx_size(), 
                                      kkt_composition_.Fx_size());
   }
 
-  inline Eigen::Ref<Eigen::MatrixXd> forwardCorrectionParallelCoeff() {
+  inline Eigen::Block<Eigen::MatrixXd> forwardCorrectionParallelCoeff() {
     return kkt_matrix_inverse_.topLeftCorner(kkt_composition_.dimKKT()-kkt_composition_.Fx_size(), 
                                              kkt_composition_.Qx_size());
   }
 
-  inline Eigen::Ref<const Eigen::MatrixXd> KKT_matrix_inverse() const {
+  inline const Eigen::Block<const Eigen::MatrixXd> KKT_matrix_inverse() const {
     return kkt_matrix_inverse_.topLeftCorner(kkt_composition_.dimKKT(), 
                                              kkt_composition_.dimKKT());
   }
 
-  inline Eigen::Ref<const Eigen::MatrixXd> auxiliaryMatrix() const {
+  inline const Eigen::Block<const Eigen::MatrixXd> auxiliaryMatrix() const {
     return kkt_matrix_inverse_.topLeftCorner(kkt_composition_.Fx_size(), 
                                              kkt_composition_.Fx_size());
   }
 
-  inline Eigen::Ref<const Eigen::MatrixXd> backwardCorrectionSerialCoeff() const {
+  inline const Eigen::Block<const Eigen::MatrixXd> backwardCorrectionSerialCoeff() const {
     return kkt_matrix_inverse_.block(kkt_composition_.Fx_begin(), 
                                      kkt_composition_.Qx_begin(), 
                                      kkt_composition_.Fx_size(), 
                                      kkt_composition_.Qx_size());
   }
 
-  inline Eigen::Ref<const Eigen::MatrixXd> backwardCorrectionParallelCoeff() const {
+  inline const Eigen::Block<const Eigen::MatrixXd> backwardCorrectionParallelCoeff() const {
     return kkt_matrix_inverse_.block(kkt_composition_.C_begin(), 
                                      kkt_composition_.Qx_begin(), 
                                      kkt_composition_.dimKKT()-kkt_composition_.Fx_size(), 
                                      kkt_composition_.Qx_size());
   }
 
-  inline Eigen::Ref<const Eigen::MatrixXd> forwardCorrectionSerialCoeff() const {
+  inline const Eigen::Block<const Eigen::MatrixXd> forwardCorrectionSerialCoeff() const {
     return kkt_matrix_inverse_.block(kkt_composition_.Qx_begin(), 
                                      kkt_composition_.Fx_begin(), 
                                      kkt_composition_.Qx_size(), 
                                      kkt_composition_.Fx_size());
   }
 
-  inline Eigen::Ref<const Eigen::MatrixXd> forwardCorrectionParallelCoeff() const {
+  inline const Eigen::Block<const Eigen::MatrixXd> forwardCorrectionParallelCoeff() const {
     return kkt_matrix_inverse_.topLeftCorner(kkt_composition_.dimKKT()-kkt_composition_.Fx_size(), 
                                              kkt_composition_.Qx_size());
   }

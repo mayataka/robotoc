@@ -26,11 +26,11 @@ link_directories(
   ${PINOCCHIO_LIBDIR}
 )
 # find OpenMP
-find_package(OpenMP REQUIRED)
-if(OpenMP_FOUND)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()
+# find_package(OpenMP REQUIRED)
+# if(OpenMP_FOUND)
+#     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+# endif()
 
 # build library
 add_library(
@@ -57,12 +57,12 @@ add_library(
   # src/constraints/joint_torques_upper_limit.cpp
   # src/constraints/joint_torques_lower_limit.cpp
   # src/ocp/line_search_filter.cpp
-  # src/ocp/kkt_composition.cpp
-  # src/ocp/kkt_residual.cpp
-  # src/ocp/kkt_matrix.cpp
-  # src/ocp/kkt_matrix_inverse.cpp
-  # src/ocp/split_solution.cpp
-  # src/ocp/split_direction.cpp
+  src/ocp/kkt_composition.cpp
+  src/ocp/kkt_residual.cpp
+  src/ocp/kkt_matrix.cpp
+  src/ocp/kkt_matrix_inverse.cpp
+  src/ocp/split_solution.cpp
+  src/ocp/split_direction.cpp
   # src/ocp/parnmpc_linearizer.cpp
   # src/ocp/inverse_dynamics_condenser.cpp
   # src/ocp/split_parnmpc.cpp
