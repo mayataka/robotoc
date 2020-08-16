@@ -1,6 +1,7 @@
 add_test_macro(kkt_composition_test)
 add_test_macro(kkt_residual_test)
 add_test_macro(kkt_matrix_test)
+add_test_macro(kkt_matrix_inverse_test)
 add_test_macro(parnmpc_linearizer_test)
 add_test_macro(inverse_dynamics_condenser_test)
 # add_test_macro(fixed_base_split_parnmpc_test)

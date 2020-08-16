@@ -11,6 +11,8 @@
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
+#include "idocp/constraints/constraints.hpp"
+#include "idocp/constraints/constraints_data.hpp"
 
 
 namespace idocp {
@@ -51,16 +53,20 @@ public:
 
   ParNMPCLinearizer& operator=(ParNMPCLinearizer&&) noexcept = default;
 
-  inline void linearizeStageCost(Robot& robot, 
-                                 const std::shared_ptr<CostFunction>& cost, 
-                                 CostFunctionData& cost_data, const double t, 
-                                 const double dtau, const SplitSolution& s,
-                                 KKTResidual& kkt_residual) const {
+  inline void linearizeCostAndConstraints(
+      Robot& robot, const std::shared_ptr<CostFunction>& cost, 
+      CostFunctionData& cost_data, 
+      const std::shared_ptr<Constraints>& constraints, 
+      ConstraintsData& constraints_data, const double t, const double dtau, 
+      const SplitSolution& s, KKTResidual& kkt_residual) const {
     assert(dtau > 0);
     cost->lq(robot, cost_data, t, dtau, s.q, s.v, s.a, kkt_residual.lq());
     cost->lv(robot, cost_data, t, dtau, s.q, s.v, s.a, kkt_residual.lv());
     cost->la(robot, cost_data, t, dtau, s.q, s.v, s.a, kkt_residual.la());
     cost->lf(robot, cost_data, t, dtau, s.f, kkt_residual.lf());
+    constraints->augmentDualResidual(robot, constraints_data, dtau, 
+                                     kkt_residual.la(), kkt_residual.lf(), 
+                                     kkt_residual.lq(), kkt_residual.lv());
   }
 
   inline void linearizeStateEquation(

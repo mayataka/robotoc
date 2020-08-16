@@ -283,7 +283,7 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdate) {
   Eigen::MatrixXd aux_mat_ref = Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv());
   parnmpc.getAuxiliaryMatrix(aux_mat_ref);
   EXPECT_TRUE(aux_mat_ref.isApprox(-1*kkt_matrix_inverse.topLeftCorner(2*robot.dimv(), 2*robot.dimv())));
-  parnmpc.backwardCollectionSerial(robot, s_old, s_new, s_new_coarse);
+  parnmpc.backwardCorrectionSerial(robot, s_old, s_new, s_new_coarse);
   Eigen::VectorXd x_res = Eigen::VectorXd::Zero(2*robot.dimv());
   x_res.head(robot.dimv()) = s_new.lmd - s_old.lmd;
   x_res.tail(robot.dimv()) = s_new.gmm - s_old.gmm;
@@ -292,7 +292,7 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdate) {
   s_new_coarse_ref.gmm -= dx.tail(robot.dimv());
   EXPECT_TRUE(s_new_coarse.lmd.isApprox(s_new_coarse_ref.lmd));
   EXPECT_TRUE(s_new_coarse.gmm.isApprox(s_new_coarse_ref.gmm));
-  parnmpc.backwardCollectionParallel(robot, d, s_new_coarse);
+  parnmpc.backwardCorrectionParallel(robot, d, s_new_coarse);
   const int dimx = 2*robot.dimv();
   d.split_direction().segment(dimx, dim_kkt-dimx) 
       = kkt_matrix_inverse.bottomRightCorner(dim_kkt-dimx, dimx) * x_res;
@@ -306,7 +306,7 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdate) {
   EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
-  parnmpc.forwardCollectionSerial(robot, s_old, s_new, s_new_coarse);
+  parnmpc.forwardCorrectionSerial(robot, s_old, s_new, s_new_coarse);
   robot.subtractConfiguration(s_new.q, s_old.q, x_res.head(robot.dimv()));
   x_res.tail(robot.dimv()) = s_new.v - s_old.v;
   dx = kkt_matrix_inverse.bottomLeftCorner(2*robot.dimv(), 2*robot.dimv()) * x_res;
@@ -314,7 +314,7 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdate) {
   s_new_coarse_ref.v -= dx.tail(robot.dimv());
   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
-  parnmpc.forwardCollectionParallel(robot, d, s_new_coarse);
+  parnmpc.forwardCorrectionParallel(robot, d, s_new_coarse);
   d.split_direction().segment(0, dim_kkt-dimx) 
       = kkt_matrix_inverse.topLeftCorner(dim_kkt-dimx, dimx) * x_res;
   s_new_coarse_ref.lmd -= d.dlmd();
@@ -403,7 +403,7 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdateTerminal) {
   Eigen::MatrixXd aux_mat_ref = Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv());
   parnmpc.getAuxiliaryMatrix(aux_mat_ref);
   EXPECT_TRUE(aux_mat_ref.isApprox(-1*kkt_matrix_inverse.topLeftCorner(2*robot.dimv(), 2*robot.dimv())));
-  parnmpc.backwardCollectionSerial(robot, s_old, s_new, s_new_coarse);
+  parnmpc.backwardCorrectionSerial(robot, s_old, s_new, s_new_coarse);
   Eigen::VectorXd x_res = Eigen::VectorXd::Zero(2*robot.dimv());
   x_res.head(robot.dimv()) = s_new.lmd - s_old.lmd;
   x_res.tail(robot.dimv()) = s_new.gmm - s_old.gmm;
@@ -412,7 +412,7 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdateTerminal) {
   s_new_coarse_ref.gmm -= dx.tail(robot.dimv());
   EXPECT_TRUE(s_new_coarse.lmd.isApprox(s_new_coarse_ref.lmd));
   EXPECT_TRUE(s_new_coarse.gmm.isApprox(s_new_coarse_ref.gmm));
-  parnmpc.backwardCollectionParallel(robot, d, s_new_coarse);
+  parnmpc.backwardCorrectionParallel(robot, d, s_new_coarse);
   const int dimx = 2*robot.dimv();
   d.split_direction().segment(dimx, dim_kkt-dimx) 
       = kkt_matrix_inverse.bottomRightCorner(dim_kkt-dimx, dimx) * x_res;
@@ -426,7 +426,7 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdateTerminal) {
   EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
-  parnmpc.forwardCollectionSerial(robot, s_old, s_new, s_new_coarse);
+  parnmpc.forwardCorrectionSerial(robot, s_old, s_new, s_new_coarse);
   robot.subtractConfiguration(s_new.q, s_old.q, x_res.head(robot.dimv()));
   x_res.tail(robot.dimv()) = s_new.v - s_old.v;
   dx = kkt_matrix_inverse.bottomLeftCorner(2*robot.dimv(), 2*robot.dimv()) * x_res;
@@ -434,7 +434,7 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdateTerminal) {
   s_new_coarse_ref.v -= dx.tail(robot.dimv());
   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
-  parnmpc.forwardCollectionParallel(robot, d, s_new_coarse);
+  parnmpc.forwardCorrectionParallel(robot, d, s_new_coarse);
   d.split_direction().segment(0, dim_kkt-dimx) 
       = kkt_matrix_inverse.topLeftCorner(dim_kkt-dimx, dimx) * x_res;
   s_new_coarse_ref.lmd -= d.dlmd();

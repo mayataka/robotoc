@@ -95,20 +95,20 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
     }
   }
   for (int i=N_-2; i>=0; --i) {
-    split_ocps_[i].backwardCollectionSerial(robots_[0], s_[i+1], s_new_[i+1], s_new_[i]);
+    split_ocps_[i].backwardCorrectionSerial(robots_[0], s_[i+1], s_new_[i+1], s_new_[i]);
   }
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=N_-2; i>=0; --i) {
     const int robot_id = omp_get_thread_num();
-    split_ocps_[i].backwardCollectionParallel(robots_[robot_id], d_[i], s_new_[i]);
+    split_ocps_[i].backwardCorrectionParallel(robots_[robot_id], d_[i], s_new_[i]);
   }
   for (int i=1; i<N_; ++i) {
-    split_ocps_[i].forwardCollectionSerial(robots_[0], s_[i-1], s_new_[i-1], s_new_[i]);
+    split_ocps_[i].forwardCorrectionSerial(robots_[0], s_[i-1], s_new_[i-1], s_new_[i]);
   }
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=1; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
-    split_ocps_[i].forwardCollectionParallel(robots_[robot_id], d_[i], s_new_[i]);
+    split_ocps_[i].forwardCorrectionParallel(robots_[robot_id], d_[i], s_new_[i]);
   }
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {

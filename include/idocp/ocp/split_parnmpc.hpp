@@ -11,6 +11,7 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/kkt_matrix_inverse.hpp"
 #include "idocp/ocp/parnmpc_linearizer.hpp"
 #include "idocp/ocp/inverse_dynamics_condenser.hpp"
 #include "idocp/cost/cost_function.hpp"
@@ -108,20 +109,20 @@ public:
   
   void getAuxiliaryMatrix(Eigen::MatrixXd& auxiliary_matrix) const;
 
-  void backwardCollectionSerial(const Robot& robot,
+  void backwardCorrectionSerial(const Robot& robot,
                                 const SplitSolution& s_old_next,
                                 const SplitSolution& s_new_next,
                                 SplitSolution& s_new);
 
-  void backwardCollectionParallel(const Robot& robot, SplitDirection& d,
+  void backwardCorrectionParallel(const Robot& robot, SplitDirection& d,
                                   SplitSolution& s_new);
 
-  void forwardCollectionSerial(const Robot& robot, 
+  void forwardCorrectionSerial(const Robot& robot, 
                                const SplitSolution& s_old_prev,
                                const SplitSolution& s_new_prev, 
                                SplitSolution& s_new);
 
-  void forwardCollectionParallel(const Robot& robot, SplitDirection& d, 
+  void forwardCorrectionParallel(const Robot& robot, SplitDirection& d, 
                                  SplitSolution& s_new);
 
   void computePrimalAndDualDirection(const Robot& robot, const double dtau,
@@ -176,10 +177,10 @@ private:
   ConstraintsData constraints_data_;
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
+  KKTMatrixInverse kkt_matrix_inverse_;
   ParNMPCLinearizer linearizer_;
   InverseDynamicsCondenser id_condenser_;
   Eigen::VectorXd x_res_, dx_;
-  Eigen::MatrixXd kkt_matrix_inverse_;
 };
 
 } // namespace idocp

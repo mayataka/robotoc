@@ -8,6 +8,13 @@
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
 #include "idocp/cost/contact_cost.hpp"
+#include "idocp/cost/cost_function_data.hpp"
+#include "idocp/constraints/constraints.hpp"
+#include "idocp/constraints/constraints_data.hpp"
+#include "idocp/constraints/joint_position_lower_limit.hpp"
+#include "idocp/constraints/joint_position_upper_limit.hpp"
+#include "idocp/constraints/joint_velocity_lower_limit.hpp"
+#include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/split_solution.hpp"
@@ -83,17 +90,34 @@ TEST_F(ParNMPCLinearizerTest, fixed_base) {
   cost->push_back(joint_cost);
   cost->push_back(contact_cost);
   CostFunctionData data(robot);
+  auto constraints = std::make_shared<Constraints>();
+  auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
+  auto joint_lower_limit = std::make_shared<JointPositionLowerLimit>(robot);
+  auto velocity_upper_limit = std::make_shared<JointVelocityUpperLimit>(robot);
+  auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
+  constraints->push_back(joint_upper_limit);
+  constraints->push_back(joint_lower_limit);
+  constraints->push_back(velocity_upper_limit);
+  constraints->push_back(velocity_lower_limit);
+  ConstraintsData constraints_data(constraints->createConstraintsData(robot));
+  constraints->setSlackAndDual(robot, constraints_data, dtau_, s.a, s.f, s.q, s.v, s.u);
   KKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(robot);
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   ParNMPCLinearizer linearizer(robot);
-  linearizer.linearizeStageCost(robot, cost, data, t_, dtau_, s, kkt_residual);
-  EXPECT_TRUE(kkt_residual.lq().isApprox(dtau_*q_weight.asDiagonal()*(s.q-q_ref)));
-  EXPECT_TRUE(kkt_residual.lv().isApprox(dtau_*v_weight.asDiagonal()*(s.v-v_ref)));
-  EXPECT_TRUE(kkt_residual.la().isApprox(dtau_*a_weight.asDiagonal()*(s.a-a_ref)));
-  EXPECT_TRUE(kkt_residual.lf().isApprox((dtau_*f_weight.asDiagonal()*(s.f-f_ref)).head(robot.dimf())));
+  linearizer.linearizeCostAndConstraints(robot, cost, data, constraints, 
+                                         constraints_data, t_, dtau_, s, kkt_residual);
+  Eigen::VectorXd lq = dtau_*q_weight.asDiagonal()*(s.q-q_ref);
+  Eigen::VectorXd lv = dtau_*v_weight.asDiagonal()*(s.v-v_ref);
+  Eigen::VectorXd la = dtau_*a_weight.asDiagonal()*(s.a-a_ref);
+  Eigen::VectorXd lf = dtau_*f_weight.asDiagonal()*(s.f-f_ref);
+  constraints->augmentDualResidual(robot, constraints_data, dtau_, la, lf, lq, lv);
+  EXPECT_TRUE(kkt_residual.lq().isApprox(lq));
+  EXPECT_TRUE(kkt_residual.lv().isApprox(lv));
+  EXPECT_TRUE(kkt_residual.la().isApprox(la));
+  EXPECT_TRUE(kkt_residual.lf().isApprox(lf.head(robot.dimf())));
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const Eigen::VectorXd v_prev = Eigen::VectorXd::Random(robot.dimv());
@@ -203,13 +227,25 @@ TEST_F(ParNMPCLinearizerTest, fixed_base_KKT_error) {
   cost->push_back(joint_cost);
   cost->push_back(contact_cost);
   CostFunctionData data(robot);
+  auto constraints = std::make_shared<Constraints>();
+  auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
+  auto joint_lower_limit = std::make_shared<JointPositionLowerLimit>(robot);
+  auto velocity_upper_limit = std::make_shared<JointVelocityUpperLimit>(robot);
+  auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
+  constraints->push_back(joint_upper_limit);
+  constraints->push_back(joint_lower_limit);
+  constraints->push_back(velocity_upper_limit);
+  constraints->push_back(velocity_lower_limit);
+  ConstraintsData constraints_data(constraints->createConstraintsData(robot));
+  constraints->setSlackAndDual(robot, constraints_data, dtau_, s.a, s.f, s.q, s.v, s.u);
   KKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(robot);
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   ParNMPCLinearizer linearizer(robot);
-  linearizer.linearizeStageCost(robot, cost, data, t_, dtau_, s, kkt_residual);
+  linearizer.linearizeCostAndConstraints(robot, cost, data, constraints, 
+                                         constraints_data, t_, dtau_, s, kkt_residual);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const Eigen::VectorXd v_prev = Eigen::VectorXd::Random(robot.dimv());
@@ -225,6 +261,9 @@ TEST_F(ParNMPCLinearizerTest, fixed_base_KKT_error) {
   kkt_residual_ref.lv() = dtau_*v_weight.asDiagonal()*(s.v-v_ref);
   kkt_residual_ref.la() = dtau_*a_weight.asDiagonal()*(s.a-a_ref);
   kkt_residual_ref.lf() = (dtau_*f_weight.asDiagonal()*(s.f-f_ref)).head(robot.dimf());
+  constraints->augmentDualResidual(robot, constraints_data, dtau_, 
+                                   kkt_residual_ref.la(), kkt_residual_ref.lf(), 
+                                   kkt_residual_ref.lq(), kkt_residual_ref.lv());
   kkt_residual_ref.Fq() = q_prev - s.q + dtau_ * s.v;
   kkt_residual_ref.Fv() = v_prev - s.v + dtau_ * s.a;
   kkt_residual_ref.lq() += lmd_next - s.lmd;
@@ -239,7 +278,8 @@ TEST_F(ParNMPCLinearizerTest, fixed_base_KKT_error) {
   kkt_residual.setZero();
   kkt_matrix.setZero();
   kkt_residual_ref.setZero();
-  linearizer.linearizeStageCost(robot, cost, data, t_, dtau_, s, kkt_residual);
+  linearizer.linearizeCostAndConstraints(robot, cost, data, constraints, 
+                                         constraints_data, t_, dtau_, s, kkt_residual);
   linearizer.linearizeTerminalCost(robot, cost, data, t_, s);
   linearizer.linearizeStateEquation(robot, dtau_, q_prev, v_prev, s, 
                                     kkt_residual, kkt_matrix);
@@ -250,6 +290,9 @@ TEST_F(ParNMPCLinearizerTest, fixed_base_KKT_error) {
   kkt_residual_ref.lv() = dtau_*v_weight.asDiagonal()*(s.v-v_ref);
   kkt_residual_ref.la() = dtau_*a_weight.asDiagonal()*(s.a-a_ref);
   kkt_residual_ref.lf() = (dtau_*f_weight.asDiagonal()*(s.f-f_ref)).head(robot.dimf());
+  constraints->augmentDualResidual(robot, constraints_data, dtau_, 
+                                   kkt_residual_ref.la(), kkt_residual_ref.lf(), 
+                                   kkt_residual_ref.lq(), kkt_residual_ref.lv());
   kkt_residual_ref.Fq() = q_prev - s.q + dtau_ * s.v;
   kkt_residual_ref.Fv() = v_prev - s.v + dtau_ * s.a;
   kkt_residual_ref.lq() += phiq - s.lmd;
@@ -317,6 +360,17 @@ TEST_F(ParNMPCLinearizerTest, floating_base) {
   cost->push_back(joint_cost);
   cost->push_back(contact_cost);
   CostFunctionData data(robot);
+  auto constraints = std::make_shared<Constraints>();
+  auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
+  auto joint_lower_limit = std::make_shared<JointPositionLowerLimit>(robot);
+  auto velocity_upper_limit = std::make_shared<JointVelocityUpperLimit>(robot);
+  auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
+  constraints->push_back(joint_upper_limit);
+  constraints->push_back(joint_lower_limit);
+  constraints->push_back(velocity_upper_limit);
+  constraints->push_back(velocity_lower_limit);
+  ConstraintsData constraints_data(constraints->createConstraintsData(robot));
+  constraints->setSlackAndDual(robot, constraints_data, dtau_, s.a, s.f, s.q, s.v, s.u);
   KKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(robot);
   KKTMatrix kkt_matrix(robot);
@@ -327,10 +381,16 @@ TEST_F(ParNMPCLinearizerTest, floating_base) {
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   robot.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
   ParNMPCLinearizer linearizer(robot);
-  linearizer.linearizeStageCost(robot, cost, data, t_, dtau_, s, kkt_residual);
-  EXPECT_TRUE(kkt_residual.lq().isApprox(dtau_*Jq_diff.transpose()*q_weight.asDiagonal()*q_diff));
-  EXPECT_TRUE(kkt_residual.lv().isApprox(dtau_*v_weight.asDiagonal()*(s.v-v_ref)));
-  EXPECT_TRUE(kkt_residual.la().isApprox(dtau_*a_weight.asDiagonal()*(s.a-a_ref)));
+  linearizer.linearizeCostAndConstraints(robot, cost, data, constraints, 
+                                         constraints_data, t_, dtau_, s, kkt_residual);
+  Eigen::VectorXd lq = dtau_*Jq_diff.transpose()*q_weight.asDiagonal()*q_diff;
+  Eigen::VectorXd lv = dtau_*v_weight.asDiagonal()*(s.v-v_ref);
+  Eigen::VectorXd la = dtau_*a_weight.asDiagonal()*(s.a-a_ref);
+  Eigen::VectorXd lf = dtau_*f_weight.asDiagonal()*(s.f-f_ref);
+  constraints->augmentDualResidual(robot, constraints_data, dtau_, la, lf, lq, lv);
+  EXPECT_TRUE(kkt_residual.lq().isApprox(lq));
+  EXPECT_TRUE(kkt_residual.lv().isApprox(lv));
+  EXPECT_TRUE(kkt_residual.la().isApprox(la));
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const Eigen::VectorXd v_prev = Eigen::VectorXd::Random(robot.dimv());
@@ -451,13 +511,25 @@ TEST_F(ParNMPCLinearizerTest, floating_base_KKT_error) {
   cost->push_back(joint_cost);
   cost->push_back(contact_cost);
   CostFunctionData data(robot);
+  auto constraints = std::make_shared<Constraints>();
+  auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
+  auto joint_lower_limit = std::make_shared<JointPositionLowerLimit>(robot);
+  auto velocity_upper_limit = std::make_shared<JointVelocityUpperLimit>(robot);
+  auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
+  constraints->push_back(joint_upper_limit);
+  constraints->push_back(joint_lower_limit);
+  constraints->push_back(velocity_upper_limit);
+  constraints->push_back(velocity_lower_limit);
+  ConstraintsData constraints_data(constraints->createConstraintsData(robot));
+  constraints->setSlackAndDual(robot, constraints_data, dtau_, s.a, s.f, s.q, s.v, s.u);
   KKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(robot);
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   ParNMPCLinearizer linearizer(robot);
-  linearizer.linearizeStageCost(robot, cost, data, t_, dtau_, s, kkt_residual);
+  linearizer.linearizeCostAndConstraints(robot, cost, data, constraints, 
+                                         constraints_data, t_, dtau_, s, kkt_residual);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const Eigen::VectorXd v_prev = Eigen::VectorXd::Random(robot.dimv());
@@ -477,6 +549,9 @@ TEST_F(ParNMPCLinearizerTest, floating_base_KKT_error) {
   kkt_residual_ref.lq() = dtau_*Jq_diff.transpose()*q_weight.asDiagonal()*q_diff;
   kkt_residual_ref.lv() = dtau_*v_weight.asDiagonal()*(s.v-v_ref);
   kkt_residual_ref.la() = dtau_*a_weight.asDiagonal()*(s.a-a_ref);
+  constraints->augmentDualResidual(robot, constraints_data, dtau_, 
+                                   kkt_residual_ref.la(), kkt_residual_ref.lf(), 
+                                   kkt_residual_ref.lq(), kkt_residual_ref.lv());
   Eigen::MatrixXd Jsub_minus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd Jsub_plus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   robot.subtractConfiguration(q_prev, s.q, q_diff);
@@ -495,18 +570,24 @@ TEST_F(ParNMPCLinearizerTest, floating_base_KKT_error) {
   kkt_residual.setZero();
   kkt_matrix.setZero();
   kkt_residual_ref.setZero();
-  linearizer.linearizeStageCost(robot, cost, data, t_, dtau_, s, kkt_residual);
+  linearizer.linearizeCostAndConstraints(robot, cost, data, constraints, 
+                                         constraints_data, t_, dtau_, s, kkt_residual);
   linearizer.linearizeTerminalCost(robot, cost, data, t_, s);
   linearizer.linearizeStateEquation(robot, dtau_, q_prev, v_prev, s, 
                                     kkt_residual, kkt_matrix);
   linearizer.linearizeContactConstraints(robot, dtau_, kkt_residual, kkt_matrix);
   robot.subtractConfiguration(s.q, q_ref, q_diff);
   robot.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
-  Eigen::VectorXd phiq = Jq_diff.transpose()*qf_weight.asDiagonal()*q_diff;
-  Eigen::VectorXd phiv = vf_weight.asDiagonal()*(s.v-v_ref);
+  const Eigen::VectorXd phiq = Jq_diff.transpose()*qf_weight.asDiagonal()*q_diff;
+  const Eigen::VectorXd phiv = vf_weight.asDiagonal()*(s.v-v_ref);
+  robot.subtractConfiguration(s.q, q_ref, q_diff);
+  robot.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
   kkt_residual_ref.lq() = dtau_*Jq_diff.transpose()*q_weight.asDiagonal()*q_diff;
   kkt_residual_ref.lv() = dtau_*v_weight.asDiagonal()*(s.v-v_ref);
   kkt_residual_ref.la() = dtau_*a_weight.asDiagonal()*(s.a-a_ref);
+  constraints->augmentDualResidual(robot, constraints_data, dtau_, 
+                                   kkt_residual_ref.la(), kkt_residual_ref.lf(), 
+                                   kkt_residual_ref.lq(), kkt_residual_ref.lv());
   robot.subtractConfiguration(q_prev, s.q, q_diff);
   robot.dSubtractdConfigurationMinus(q_prev, s.q, Jsub_minus);
   kkt_residual_ref.Fq() = q_diff + dtau_ * s.v;
@@ -522,6 +603,7 @@ TEST_F(ParNMPCLinearizerTest, floating_base_KKT_error) {
   cost->lf(robot, data, t_, dtau_, s.f, kkt_residual_ref.lf());
   EXPECT_TRUE(kkt_residual.lf().isApprox(kkt_residual_ref.lf()));
 }
+
 
 
 } // namespace idocp
