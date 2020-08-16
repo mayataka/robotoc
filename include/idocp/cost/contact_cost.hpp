@@ -14,11 +14,19 @@ class ContactCost final : public CostFunctionComponentBase {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  ContactCost(const Robot& robot);
+  ContactCost(const Robot& robot)
+    : CostFunctionComponentBase(),
+      f_ref_(Eigen::VectorXd::Zero(robot.max_dimf())),
+      f_weight_(Eigen::VectorXd::Zero(robot.max_dimf())) {
+  }
 
-  ContactCost();
+  ContactCost()
+    : f_ref_(),
+      f_weight_() {
+  }
 
-  ~ContactCost();
+  ~ContactCost() {
+  }
 
   // Use defalut copy constructor.
   ContactCost(const ContactCost&) = default;
@@ -37,134 +45,200 @@ public:
   void set_f_weight(const Eigen::VectorXd& f_weight);
 
   double l(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
-           const Eigen::Ref<const Eigen::VectorXd>& v, 
-           const Eigen::Ref<const Eigen::VectorXd>& a, 
-           const Eigen::Ref<const Eigen::VectorXd>& f, 
-           const Eigen::Ref<const Eigen::VectorXd>& u) const override;
+           const double dtau, const SplitSolution& s) const override {
+    double l = 0;
+    for (int i=0; i<robot.max_point_contacts(); ++i) {
+      if (robot.is_contact_active(i)) {
+        for (int j=0; j<3; ++j) {
+          l += f_weight_.coeff(3*i+j) * (s.f.coeff(3*i+j)-f_ref_.coeff(3*i+j)) 
+                                      * (s.f.coeff(3*i+j)-f_ref_.coeff(3*i+j));
+        }
+      }
+    }
+    return 0.5 * dtau * l;
+  }
 
-  void lf(const Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const Eigen::Ref<const Eigen::VectorXd>& f, 
-          Eigen::Ref<Eigen::VectorXd> lf) const override;
-
-  void lff(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::Ref<const Eigen::VectorXd>& f, 
-           Eigen::Ref<Eigen::MatrixXd> lff) const override;
-
-  void augment_lff(const Robot& robot, CostFunctionData& data, 
-                   const double t, const double dtau, 
-                   const Eigen::Ref<const Eigen::VectorXd>& f, 
-                   Eigen::Ref<Eigen::MatrixXd> lff) const override;
-
-
-  // The following functions do nothig, just for dynamic polymorphism.
   double phi(const Robot& robot, CostFunctionData& data, const double t, 
-             const Eigen::Ref<const Eigen::VectorXd>& q, 
-             const Eigen::Ref<const Eigen::VectorXd>& v) const override {
+             const SplitSolution& s) const override {
     return 0;
   }
 
+  template <typename VectorType>
   void lq(const Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
-          const Eigen::Ref<const Eigen::VectorXd>& v, 
-          const Eigen::Ref<const Eigen::VectorXd>& a, 
-          Eigen::Ref<Eigen::VectorXd> lq) const override {}
+           const double dtau, const SplitSolution& s, 
+           const Eigen::MatrixBase<VectorType>& lq) const override {
+    // do nothing
+  }
 
+  template <typename VectorType>
   void lv(const Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
-          const Eigen::Ref<const Eigen::VectorXd>& v, 
-          const Eigen::Ref<const Eigen::VectorXd>& a, 
-          Eigen::Ref<Eigen::VectorXd> lv) const override {}
+           const double dtau, const SplitSolution& s, 
+           const Eigen::MatrixBase<VectorType>& lv) const override {
+    // do nothing
+  }
 
+  template <typename VectorType>
   void la(const Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
-          const Eigen::Ref<const Eigen::VectorXd>& v, 
-          const Eigen::Ref<const Eigen::VectorXd>& a, 
-          Eigen::Ref<Eigen::VectorXd> la) const override {}
+           const double dtau, const SplitSolution& s, 
+           const Eigen::MatrixBase<VectorType>& la) const override {
+    // do nothing
+  }
 
+  template <typename VectorType>
+  void lf(const Robot& robot, CostFunctionData& data, const double t, 
+          const double dtau, const SplitSolution& s, 
+          const Eigen::MatrixBase<VectorType>& lf) const override {
+    int dimf = 0;
+    for (int i=0; i<robot.max_point_contacts(); ++i) {
+      if (robot.is_contact_active(i)) {
+        for (int j=0; j<3; ++j) {
+          const_cast<Eigen::MatrixBase<VectorType>&>(lf).coeffRef(dimf+j) 
+              = dtau * f_weight_.coeff(3*i+j) * (s.f.coeff(3*i+j)-f_ref_.coeff(3*i+j));
+        }
+        dimf += 3;
+      }
+    }
+  }
+
+  template <typename VectorType>
   void lu(const Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const Eigen::Ref<const Eigen::VectorXd>& u, 
-          Eigen::Ref<Eigen::VectorXd> lu) const override {}
+           const double dtau, const SplitSolution& s, 
+           const Eigen::MatrixBase<VectorType>& lu) const override {
+    // do nothing
+  }
 
+  template <typename MatrixType>
   void lqq(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
-           const Eigen::Ref<const Eigen::VectorXd>& v, 
-           const Eigen::Ref<const Eigen::VectorXd>& a, 
-           Eigen::Ref<Eigen::MatrixXd> lqq) const override {}
+           const double dtau, const SplitSolution& s, 
+           const Eigen::MatrixBase<MatrixType>& lqq) const override {
+    // do nothing
+  }
 
+  template <typename MatrixType>
   void lvv(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
-           const Eigen::Ref<const Eigen::VectorXd>& v, 
-           const Eigen::Ref<const Eigen::VectorXd>& a, 
-           Eigen::Ref<Eigen::MatrixXd> lvv) const override {}
+           const double dtau, const SplitSolution& s, 
+           const Eigen::MatrixBase<MatrixType>& lvv) const override {
+    // do nothing
+  }
 
+  template <typename MatrixType>
   void laa(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::Ref<const Eigen::VectorXd>& q, 
-           const Eigen::Ref<const Eigen::VectorXd>& v, 
-           const Eigen::Ref<const Eigen::VectorXd>& a, 
-           Eigen::Ref<Eigen::MatrixXd> laa) const override {}
+           const double dtau, const SplitSolution& s, 
+           const Eigen::MatrixBase<MatrixType>& laa) const override {
+    // do nothing
+  }
 
+  template <typename MatrixType>
+  void lff(const Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, const SplitSolution& s, 
+           const Eigen::MatrixBase<MatrixType>& lff) const override {
+    int dimf = 0;
+    for (int i=0; i<robot.max_point_contacts(); ++i) {
+      if (robot.is_contact_active(i)) {
+        for (int j=0; j<3; ++j) {
+          const_cast<Eigen::MatrixBase<MatrixType>&>(lff).coeffRef(dimf+j, dimf+j) 
+              = dtau * f_weight_.coeff(3*i+j);
+        }
+        dimf += 3;
+      }
+    }
+  }
+
+  template <typename MatrixType>
   void luu(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::Ref<const Eigen::VectorXd>& u, 
-           Eigen::Ref<Eigen::MatrixXd> luu) const override {}
+           const double dtau, const SplitSolution& s, 
+           const Eigen::MatrixBase<MatrixType>& luu) const override {
+    // do nothing
+  }
 
+  template <typename MatrixType>
   void augment_lqq(const Robot& robot, CostFunctionData& data, 
-                   const double t, const double dtau, 
-                   const Eigen::Ref<const Eigen::VectorXd>& q, 
-                   const Eigen::Ref<const Eigen::VectorXd>& v, 
-                   const Eigen::Ref<const Eigen::VectorXd>& a, 
-                   Eigen::Ref<Eigen::MatrixXd> lqq) const override {}
+                   const double t, const double dtau, const SplitSolution& s,
+                   const Eigen::MatrixBase<MatrixType>& lqq) const override {
+    // do nothing
+  }
 
+  template <typename MatrixType>
   void augment_lvv(const Robot& robot, CostFunctionData& data, 
-                   const double t, const double dtau, 
-                   const Eigen::Ref<const Eigen::VectorXd>& q, 
-                   const Eigen::Ref<const Eigen::VectorXd>& v, 
-                   const Eigen::Ref<const Eigen::VectorXd>& a, 
-                   Eigen::Ref<Eigen::MatrixXd> lvv) const override {}
+                   const double t, const double dtau, const SplitSolution& s,
+                   const Eigen::MatrixBase<MatrixType>& lvv) const override {
+    // do nothing
+  }
 
+  template <typename MatrixType>
   void augment_laa(const Robot& robot, CostFunctionData& data, 
-                   const double t, const double dtau, 
-                   const Eigen::Ref<const Eigen::VectorXd>& q, 
-                   const Eigen::Ref<const Eigen::VectorXd>& v, 
-                   const Eigen::Ref<const Eigen::VectorXd>& a, 
-                   Eigen::Ref<Eigen::MatrixXd> laa) const override {}
+                   const double t, const double dtau, const SplitSolution& s,
+                   const Eigen::MatrixBase<MatrixType>& laa) const override {
+    // do nothing
+  }
 
+  template <typename MatrixType>
+  void augment_lff(const Robot& robot, CostFunctionData& data, const double t, 
+                   const double dtau, const SplitSolution& s, 
+                   const Eigen::MatrixBase<MatrixType>& lff) const override {
+    int dimf = 0;
+    for (int i=0; i<robot.max_point_contacts(); ++i) {
+      if (robot.is_contact_active(i)) {
+        for (int j=0; j<3; ++j) {
+          const_cast<Eigen::MatrixBase<MatrixType>&>(lff).coeffRef(dimf+j, dimf+j) 
+              += dtau * f_weight_.coeff(3*i+j);
+        }
+        dimf += 3;
+      }
+    }
+  }
+
+  template <typename MatrixType>
   void augment_luu(const Robot& robot, CostFunctionData& data, 
-                   const double t, const double dtau, 
-                   const Eigen::Ref<const Eigen::VectorXd>& u, 
-                   Eigen::Ref<Eigen::MatrixXd> luu) const override {}
+                   const double t, const double dtau, const SplitSolution& s,
+                   const Eigen::MatrixBase<MatrixType>& luu) const override {
+    // do nothing
+  }
 
+  template <typename VectorType>
   void phiq(const Robot& robot, CostFunctionData& data, const double t, 
-            const Eigen::Ref<const Eigen::VectorXd>& q, 
-            const Eigen::Ref<const Eigen::VectorXd>& v, 
-            Eigen::Ref<Eigen::VectorXd> phiq) const override {}
+            const SplitSolution& s,
+            const Eigen::MatrixBase<VectorType>& phiq) const override {
+    // do nothing
+  }
 
+  template <typename VectorType>
   void phiv(const Robot& robot, CostFunctionData& data, const double t, 
-            const Eigen::Ref<const Eigen::VectorXd>& q, 
-            const Eigen::Ref<const Eigen::VectorXd>& v, 
-            Eigen::Ref<Eigen::VectorXd> phiv) const override {}
+            const SplitSolution& s,
+            const Eigen::MatrixBase<VectorType>& phiv) const override {
+    // do nothing
+  }
 
+  template <typename MatrixType>
   void phiqq(const Robot& robot, CostFunctionData& data, const double t, 
-             const Eigen::Ref<const Eigen::VectorXd>& q, 
-             const Eigen::Ref<const Eigen::VectorXd>& v, 
-             Eigen::Ref<Eigen::MatrixXd> phiqq) const override {}
+             const SplitSolution& s,
+             const Eigen::MatrixBase<MatrixType>& phiqq) const override {
+    // do nothing
+  }
 
+  template <typename MatrixType>
   void phivv(const Robot& robot, CostFunctionData& data, const double t, 
-             const Eigen::Ref<const Eigen::VectorXd>& q, 
-             const Eigen::Ref<const Eigen::VectorXd>& v, 
-             Eigen::Ref<Eigen::MatrixXd> phivv) const override {}
+             const SplitSolution& s,
+             const Eigen::MatrixBase<MatrixType>& phivv) const override {
+    // do nothing
+  }
 
+  template <typename MatrixType>
   void augment_phiqq(const Robot& robot, CostFunctionData& data, const double t, 
-                     const Eigen::Ref<const Eigen::VectorXd>& q, 
-                     const Eigen::Ref<const Eigen::VectorXd>& v, 
-                     Eigen::Ref<Eigen::MatrixXd> phiqq) const override {}
+                     const SplitSolution& s, 
+                     const Eigen::MatrixBase<MatrixType>& phiqq) const override {
+    // do nothing
+  } 
 
+  template <typename MatrixType>
   void augment_phivv(const Robot& robot, CostFunctionData& data, const double t, 
-                     const Eigen::Ref<const Eigen::VectorXd>& q, 
-                     const Eigen::Ref<const Eigen::VectorXd>& v, 
-                     Eigen::Ref<Eigen::MatrixXd> phivv) const override {}
+                     const SplitSolution& s, 
+                     const Eigen::MatrixBase<MatrixType>& phivv) const override {
+    // do nothing
+  } 
 
 private:
+  int max_dimf_;
   Eigen::VectorXd f_ref_, f_weight_;
 
 };
