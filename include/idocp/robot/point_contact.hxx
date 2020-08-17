@@ -5,8 +5,28 @@
 
 namespace idocp {
 
+inline void PointContact::resetContactPoint(
+    const Eigen::Vector3d& contact_point) {
+  contact_point_ = contact_point;
+}
+
+
+inline void PointContact::resetContactPointByCurrentKinematics(
+    const pinocchio::Data& data) {
+  contact_point_ = data.oMf[contact_frame_id_].translation();
+}
+
+
+inline void PointContact::computeJointForceFromContactForce(
+    const Eigen::Vector3d& contact_force, 
+    pinocchio::container::aligned_vector<pinocchio::Force>& joint_forces) const {
+  joint_forces[parent_joint_id_] 
+      = jXf_.act(pinocchio::Force(contact_force, Eigen::Vector3d::Zero()));
+}
+
+
 template <typename MatrixType>
-void PointContact::getContactJacobian(
+inline void PointContact::getContactJacobian(
     const pinocchio::Model& model, pinocchio::Data& data, 
     const Eigen::MatrixBase<MatrixType>& Jacobian, const bool transpose) {
   pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
@@ -27,7 +47,7 @@ void PointContact::getContactJacobian(
 
 
 template <typename MatrixType>
-void PointContact::getContactJacobian(
+inline void PointContact::getContactJacobian(
     const pinocchio::Model& model, pinocchio::Data& data, 
     const double coeff, const Eigen::MatrixBase<MatrixType>& Jacobian, 
     const bool transpose) {
@@ -51,7 +71,7 @@ void PointContact::getContactJacobian(
 
 
 template <typename VectorType>
-void PointContact::computeBaumgarteResidual(
+inline void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
   assert(baumgarte_residual.size() == 3);
@@ -74,7 +94,7 @@ void PointContact::computeBaumgarteResidual(
 
 
 template <typename VectorType>
-void PointContact::computeBaumgarteResidual(
+inline void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
     const double coeff, 
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
@@ -97,7 +117,7 @@ void PointContact::computeBaumgarteResidual(
 
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-void PointContact::computeBaumgarteDerivatives(
+inline void PointContact::computeBaumgarteDerivatives(
     const pinocchio::Model& model, pinocchio::Data& data, 
     const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
@@ -145,7 +165,7 @@ void PointContact::computeBaumgarteDerivatives(
 
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-void PointContact::computeBaumgarteDerivatives(
+inline void PointContact::computeBaumgarteDerivatives(
     const pinocchio::Model& model, pinocchio::Data& data, const double coeff,
     const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
@@ -196,5 +216,46 @@ void PointContact::computeBaumgarteDerivatives(
             * J_frame_.template topRows<3>();
   }
 }
+
+
+inline void PointContact::activate() {
+  is_active_ = true;
+}
+
+
+inline void PointContact::deactivate() {
+  is_active_ = false;
+}
+
+
+inline bool PointContact::isActive() const {
+  return is_active_;
+}
+
+
+inline int PointContact::contact_frame_id() const {
+  return contact_frame_id_;
+}
+
+
+inline int PointContact::parent_joint_id() const {
+  return parent_joint_id_;
+}
+
+
+inline double PointContact::baumgarte_weight_on_velocity() const {
+  return baumgarte_weight_on_velocity_;
+}
+
+
+inline double PointContact::baumgarte_weight_on_position() const {
+  return baumgarte_weight_on_position_;
+}
+
+
+inline Eigen::Vector3d PointContact::contact_point() const {
+  return contact_point_;
+}
+
 
 } // namespace idocp

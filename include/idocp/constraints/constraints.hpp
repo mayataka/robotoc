@@ -41,8 +41,8 @@ public:
 
   ConstraintsData createConstraintsData(const Robot& robot) const;
 
-  bool isFeasible(const Robot& robot, ConstraintsData& datas, 
-                  const SplitSolution& s) const; 
+  bool isFeasible(const Robot& robot, ConstraintsData& datas,
+                  const SplitSolution& s) const;
 
   void setSlackAndDual(const Robot& robot, ConstraintsData& datas, 
                        const double dtau, const SplitSolution& s) const;
@@ -85,5 +85,6 @@ private:
 
 } // namespace idocp
 
+#include "idocp/constraints/constraints.hxx"
 
 #endif // IDOCP_CONSTRAINTS_HPP_

@@ -8,7 +8,8 @@ namespace idocp {
 FloatingBase::FloatingBase(const pinocchio::Model& model) 
   : has_floating_base_(false),
     passive_joint_indices_(),
-    dimv_(model.nv) {
+    dimv_(model.nv),
+    dim_passive_(0) {
   int total_dim_torque = -1; // Note that joint 0 is always universe.
   for (const auto& joint : model.joints) {
     if (joint.shortname() == "JointModelFreeFlyer") {
@@ -25,32 +26,21 @@ FloatingBase::FloatingBase(const pinocchio::Model& model)
       total_dim_torque += 1;
     }
   }
+  if (has_floating_base_) {
+    dim_passive_ = 6;
+  }
 }
 
 
 FloatingBase::FloatingBase() 
   : has_floating_base_(false),
     passive_joint_indices_(),
-    dimv_(0) {
+    dimv_(0),
+    dim_passive_(0) {
 }
 
 
 FloatingBase::~FloatingBase() {
-}
-
-
-int FloatingBase::dim_passive() const {
-  return passive_joint_indices_.size();
-}
-
-
-std::vector<int> FloatingBase::passive_joint_indices() const {
-  return passive_joint_indices_;
-}
-
-
-bool FloatingBase::has_floating_base() const {
-  return has_floating_base_;
 }
 
 } // namespace idocp

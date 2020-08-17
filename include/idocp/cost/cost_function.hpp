@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <memory>
-#include <assert.h>
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function_component_base.hpp"
@@ -17,11 +16,9 @@ namespace idocp {
 
 class CostFunction {
 public:
-  CostFunction() 
-    : costs_() {
-  }
+  CostFunction();
 
-  ~CostFunction() {}
+  ~CostFunction();
 
   // Use default copy constructor.
   CostFunction(const CostFunction&) = default;
@@ -35,156 +32,89 @@ public:
   // Use default move assign coperator.
   CostFunction& operator=(CostFunction&&) noexcept = default;
 
-  void push_back(const std::shared_ptr<CostFunctionComponentBase>& cost) {
-    costs_.push_back(cost);
-  }
+  void push_back(const std::shared_ptr<CostFunctionComponentBase>& cost);
 
-  void clear() {
-    costs_.clear();
-  }
+  void clear();
 
-  bool isEmpty() {
-    return costs_.empty();
-  }
+  bool isEmpty() const;
 
   double l(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s) const {
-    assert(dtau > 0);
-    double l = 0;
-    for (const auto cost : costs_) {
-      l += cost->l(robot, data, t, dtau, s);
-    }
-    return l;
-  }
+           const double dtau, const SplitSolution& s) const;
 
   double phi(const Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s) const {
-    double phi = 0;
-    for (const auto cost : costs_) {
-      phi += cost->phi(robot, data, t, s);
-    }
-    return phi;
-  }
+             const SplitSolution& s) const;
+
+  void computeStageCostDerivatives(const Robot& robot, CostFunctionData& data, 
+                                   const double t, const double dtau, 
+                                   const SplitSolution& s, 
+                                   KKTResidual& kkt_residual) const;
+
+  void computeStageCostHessian(const Robot& robot, CostFunctionData& data, 
+                               const double t, const double dtau, 
+                               const SplitSolution& s, 
+                               KKTMatrix& kkt_matrix) const;
+
+  void computeTerminalCostDerivatives(const Robot& robot, CostFunctionData& data, 
+                                      const double t, const SplitSolution& s, 
+                                      KKTResidual& kkt_residual) const;
+
+  void computeTerminalCostHessian(const Robot& robot, CostFunctionData& data, 
+                                  const double t, const SplitSolution& s, 
+                                  KKTMatrix& kkt_matrix) const;
 
   void lq(const Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const {
-    assert(dtau > 0);
-    for (const auto cost : costs_) {
-      cost->lq(robot, data, t, dtau, s, kkt_residual);
-    }
-  }
+          KKTResidual& kkt_residual) const;
 
   void lv(const Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const {
-    assert(dtau > 0);
-    for (const auto cost : costs_) {
-      cost->lv(robot, data, t, dtau, s, kkt_residual);
-    }
-  }
+          KKTResidual& kkt_residual) const;
 
   void la(const Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const {
-    assert(dtau > 0);
-    for (const auto cost : costs_) {
-      cost->la(robot, data, t, dtau, s, kkt_residual);
-    }
-  }
+          KKTResidual& kkt_residual) const;
 
   void lf(const Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const {
-    assert(dtau > 0);
-    for (const auto cost : costs_) {
-      cost->lf(robot, data, t, dtau, s, kkt_residual);
-    }
-  }
+          KKTResidual& kkt_residual) const;
 
   void lu(const Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const {
-    assert(dtau > 0);
-    for (const auto cost : costs_) {
-      cost->lu(robot, data, t, dtau, s, kkt_residual);
-    }
-  }
+          KKTResidual& kkt_residual) const;
 
   void lqq(const Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const {
-    assert(dtau > 0);
-    for (const auto cost : costs_) {
-      cost->lqq(robot, data, t, dtau, s, kkt_matrix);
-    }
-  }
+           KKTMatrix& kkt_matrix) const;
 
   void lvv(const Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const {
-    assert(dtau > 0);
-    for (const auto cost : costs_) {
-      cost->lvv(robot, data, t, dtau, s, kkt_matrix);
-    }
-  }
+           KKTMatrix& kkt_matrix) const;
 
   void laa(const Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const {
-    assert(dtau > 0);
-    for (const auto cost : costs_) {
-      cost->laa(robot, data, t, dtau, s, kkt_matrix);
-    }
-  }
+           KKTMatrix& kkt_matrix) const;
 
   void lff(const Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const {
-    assert(dtau > 0);
-    for (const auto cost : costs_) {
-      cost->lff(robot, data, t, dtau, s, kkt_matrix);
-    }
-  }
+           KKTMatrix& kkt_matrix) const;
 
   void luu(const Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const {
-    assert(dtau > 0);
-    for (const auto cost : costs_) {
-      cost->luu(robot, data, t, dtau, s, kkt_matrix);
-    }
-  }
+           KKTMatrix& kkt_matrix) const;
 
   void phiq(const Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, KKTResidual& kkt_residual) const {
-    for (const auto cost : costs_) {
-      cost->phiq(robot, data, t, s, kkt_residual);
-    }
-  }
+            const SplitSolution& s, KKTResidual& kkt_residual) const;
 
   void phiv(const Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, KKTResidual& kkt_residual) const {
-    for (const auto cost : costs_) {
-      cost->phiv(robot, data, t, s, kkt_residual);
-    }
-  }
+            const SplitSolution& s, KKTResidual& kkt_residual) const;
 
   void phiqq(const Robot& robot, CostFunctionData& data, const double t, 
              const double dtau, const SplitSolution& s, 
-             KKTMatrix& kkt_matrix) const {
-    for (const auto cost : costs_) {
-      cost->phiqq(robot, data, t, s, kkt_matrix);
-    }
-  }
+             KKTMatrix& kkt_matrix) const;
 
   void phivv(const Robot& robot, CostFunctionData& data, const double t, 
              const double dtau, const SplitSolution& s, 
-             KKTMatrix& kkt_matrix) const {
-    for (const auto cost : costs_) {
-      cost->phivv(robot, data, t, s, kkt_matrix);
-    }
-  }
+             KKTMatrix& kkt_matrix) const;
 
 private:
   std::vector<std::shared_ptr<CostFunctionComponentBase>> costs_;
@@ -193,5 +123,6 @@ private:
 
 } // namespace idocp
 
+#include "idocp/cost/cost_function.hxx"
 
 #endif // IDOCP_COST_FUNCTION_HPP_

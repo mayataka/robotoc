@@ -95,13 +95,13 @@ protected:
   virtual void setSlackAndDualPositive(Eigen::VectorXd& slack, 
                                        Eigen::VectorXd& dual) const final;
 
-  virtual void computeDualityResidual(const Eigen::VectorXd& slack, 
-                                      const Eigen::VectorXd& dual, 
-                                      Eigen::VectorXd& duality) const final;
+  virtual void computeDuality(const Eigen::VectorXd& slack, 
+                              const Eigen::VectorXd& dual, 
+                              Eigen::VectorXd& duality) const final;
 
   virtual void computeDualDirection(const Eigen::VectorXd& slack, 
-                                    const Eigen::VectorXd& dslack, 
                                     const Eigen::VectorXd& dual, 
+                                    const Eigen::VectorXd& dslack, 
                                     const Eigen::VectorXd& duality, 
                                     Eigen::VectorXd& ddual) const final;
 
@@ -115,5 +115,6 @@ private:
 
 } // namespace idocp
 
+#include "idocp/constraints/constraint_component_base.hxx"
 
 #endif // IDOCP_CONSTRAINT_COMPONENT_BASE_HPP_

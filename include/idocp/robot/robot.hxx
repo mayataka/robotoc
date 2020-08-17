@@ -6,7 +6,7 @@
 namespace idocp {
 
 template <typename TangentVectorType, typename ConfigVectorType>
-void Robot::integrateConfiguration(
+inline void Robot::integrateConfiguration(
     const Eigen::MatrixBase<TangentVectorType>& v, 
     const double integration_length, 
     const Eigen::MatrixBase<ConfigVectorType>& q) const {
@@ -26,7 +26,7 @@ void Robot::integrateConfiguration(
 
 template <typename ConfigVectorType1, typename TangentVectorType,  
           typename ConfigVectorType2>
-void Robot::integrateConfiguration(
+inline void Robot::integrateConfiguration(
     const Eigen::MatrixBase<ConfigVectorType1>& q, 
     const Eigen::MatrixBase<TangentVectorType>& v, 
     const double integration_length, 
@@ -48,7 +48,7 @@ void Robot::integrateConfiguration(
 
 template <typename ConfigVectorType1, typename ConfigVectorType2, 
           typename TangentVectorType>
-void Robot::subtractConfiguration(
+inline void Robot::subtractConfiguration(
     const Eigen::MatrixBase<ConfigVectorType1>& q_plus, 
     const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
     const Eigen::MatrixBase<TangentVectorType>& difference) const {
@@ -69,7 +69,7 @@ void Robot::subtractConfiguration(
 
 template <typename ConfigVectorType, typename TangentVectorType,  
           typename MatrixType1, typename MatrixType2>
-void Robot::dIntegrateConfiguration(
+inline void Robot::dIntegrateConfiguration(
     const Eigen::MatrixBase<ConfigVectorType>& q, 
     const Eigen::MatrixBase<TangentVectorType>& v, 
     const double integration_length, 
@@ -95,7 +95,7 @@ void Robot::dIntegrateConfiguration(
 
 template <typename ConfigVectorType1, typename ConfigVectorType2, 
           typename MatrixType>
-void Robot::dSubtractdConfigurationPlus(
+inline void Robot::dSubtractdConfigurationPlus(
     const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
     const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
     const Eigen::MatrixBase<MatrixType>& dSubtract_dqplus) const {
@@ -112,7 +112,7 @@ void Robot::dSubtractdConfigurationPlus(
 
 template <typename ConfigVectorType1, typename ConfigVectorType2, 
           typename MatrixType>
-void Robot::dSubtractdConfigurationMinus(
+inline void Robot::dSubtractdConfigurationMinus(
     const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
     const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
     const Eigen::MatrixBase<MatrixType>& dSubtract_dqminus) const {
@@ -129,9 +129,10 @@ void Robot::dSubtractdConfigurationMinus(
 
 template <typename ConfigVectorType, typename TangentVectorType1, 
           typename TangentVectorType2>
-void Robot::updateKinematics(const Eigen::MatrixBase<ConfigVectorType>& q, 
-                             const Eigen::MatrixBase<TangentVectorType1>& v, 
-                             const Eigen::MatrixBase<TangentVectorType2>& a) {
+inline void Robot::updateKinematics(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType1>& v, 
+    const Eigen::MatrixBase<TangentVectorType2>& a) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
@@ -142,7 +143,7 @@ void Robot::updateKinematics(const Eigen::MatrixBase<ConfigVectorType>& q,
 
 
 template <typename VectorType>
-void Robot::computeBaumgarteResidual(
+inline void Robot::computeBaumgarteResidual(
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
@@ -158,7 +159,7 @@ void Robot::computeBaumgarteResidual(
 
 
 template <typename VectorType>
-void Robot::computeBaumgarteResidual(
+inline void Robot::computeBaumgarteResidual(
     const double coeff, 
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
   int num_active_contacts = 0;
@@ -175,7 +176,7 @@ void Robot::computeBaumgarteResidual(
 
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-void Robot::computeBaumgarteDerivatives(
+inline void Robot::computeBaumgarteDerivatives(
     const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
     const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da) {
@@ -200,7 +201,7 @@ void Robot::computeBaumgarteDerivatives(
 
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-void Robot::computeBaumgarteDerivatives(
+inline void Robot::computeBaumgarteDerivatives(
     const double coeff, 
     const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
@@ -225,8 +226,42 @@ void Robot::computeBaumgarteDerivatives(
 }
 
 
+inline void Robot::setContactPoints(
+    const std::vector<Eigen::Vector3d>& contact_points) {
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    point_contacts_[i].resetContactPoint(contact_points[i]);
+  }
+}
+
+
+inline void Robot::setContactPointsByCurrentKinematics() {
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    point_contacts_[i].resetContactPointByCurrentKinematics(data_);
+  }
+}
+
+
+inline void Robot::setContactStatus(
+    const std::vector<bool>& is_each_contact_active) {
+  assert(is_each_contact_active.size() == is_each_contact_active_.size());
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    is_each_contact_active_[i] = is_each_contact_active[i];
+    if (is_each_contact_active[i]) {
+      point_contacts_[i].activate();
+      ++num_active_contacts;
+    }
+    else {
+      point_contacts_[i].deactivate();
+    }
+  }
+  num_active_contacts_ = num_active_contacts;
+  dimf_ = 3 * num_active_contacts;
+}
+
+
 template <typename VectorType>
-void Robot::setContactForces(const Eigen::MatrixBase<VectorType>& f) {
+inline void Robot::setContactForces(const Eigen::MatrixBase<VectorType>& f) {
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
@@ -244,10 +279,10 @@ void Robot::setContactForces(const Eigen::MatrixBase<VectorType>& f) {
 
 template <typename ConfigVectorType, typename TangentVectorType1, 
           typename TangentVectorType2, typename TangentVectorType3>
-void Robot::RNEA(const Eigen::MatrixBase<ConfigVectorType>& q, 
-                 const Eigen::MatrixBase<TangentVectorType1>& v, 
-                 const Eigen::MatrixBase<TangentVectorType2>& a, 
-                 const Eigen::MatrixBase<TangentVectorType3>& tau) {
+inline void Robot::RNEA(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                        const Eigen::MatrixBase<TangentVectorType1>& v, 
+                        const Eigen::MatrixBase<TangentVectorType2>& a, 
+                        const Eigen::MatrixBase<TangentVectorType3>& tau) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(a.size() == dimv_);
@@ -266,7 +301,7 @@ void Robot::RNEA(const Eigen::MatrixBase<ConfigVectorType>& q,
 template <typename ConfigVectorType, typename TangentVectorType1, 
           typename TangentVectorType2, typename MatrixType1, 
           typename MatrixType2, typename MatrixType3>
-void Robot::RNEADerivatives(
+inline void Robot::RNEADerivatives(
     const Eigen::MatrixBase<ConfigVectorType>& q, 
     const Eigen::MatrixBase<TangentVectorType1>& v, 
     const Eigen::MatrixBase<TangentVectorType2>& a, 
@@ -304,7 +339,7 @@ void Robot::RNEADerivatives(
 
 
 template <typename MatrixType>
-void Robot::dRNEAPartialdFext(
+inline void Robot::dRNEAPartialdFext(
     const Eigen::MatrixBase<MatrixType>& dRNEA_partial_dfext) {
   assert(dRNEA_partial_dfext.rows() == dimv_);
   int num_active_contacts = 0;
@@ -323,11 +358,12 @@ void Robot::dRNEAPartialdFext(
 template <typename ConfigVectorType, typename TangentVectorType1, 
           typename TangentVectorType2, typename TangentVectorType3,
           typename TangentVectorType4>
-void Robot::stateEquation(const Eigen::MatrixBase<ConfigVectorType>& q, 
-                          const Eigen::MatrixBase<TangentVectorType1>& v, 
-                          const Eigen::MatrixBase<TangentVectorType2>& tau, 
-                          const Eigen::MatrixBase<TangentVectorType3>& dq,
-                          const Eigen::MatrixBase<TangentVectorType4>& dv) {
+inline void Robot::stateEquation(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType1>& v, 
+    const Eigen::MatrixBase<TangentVectorType2>& tau, 
+    const Eigen::MatrixBase<TangentVectorType3>& dq, 
+    const Eigen::MatrixBase<TangentVectorType4>& dv) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(tau.size() == dimv_);
@@ -346,7 +382,7 @@ void Robot::stateEquation(const Eigen::MatrixBase<ConfigVectorType>& q,
 
 
 template <typename ConfigVectorType>
-void Robot::generateFeasibleConfiguration(
+inline void Robot::generateFeasibleConfiguration(
     const Eigen::MatrixBase<ConfigVectorType>& q) const {
   assert(q.size() == dimq_);
   Eigen::VectorXd q_min = model_.lowerPositionLimit;
@@ -361,7 +397,7 @@ void Robot::generateFeasibleConfiguration(
 
 
 template <typename ConfigVectorType>
-void Robot::normalizeConfiguration(
+inline void Robot::normalizeConfiguration(
     const Eigen::MatrixBase<ConfigVectorType>& q) const {
   assert(q.size() == dimq_);
   if (floating_base_.has_floating_base()) {
@@ -374,5 +410,89 @@ void Robot::normalizeConfiguration(
   }
 }
 
+
+inline Eigen::VectorXd Robot::jointEffortLimit() const {
+  return joint_effort_limit_;
+}
+
+
+inline Eigen::VectorXd Robot::jointVelocityLimit() const {
+  return joint_velocity_limit_;
+}
+
+
+inline Eigen::VectorXd Robot::lowerJointPositionLimit() const {
+  return lower_joint_position_limit_;
+}
+
+
+inline Eigen::VectorXd Robot::upperJointPositionLimit() const {
+  return upper_joint_position_limit_;
+}
+
+
+inline int Robot::dimq() const {
+  return dimq_;
+}
+
+
+inline int Robot::dimv() const {
+  return dimv_;
+}
+
+
+inline int Robot::dimJ() const {
+  return dimJ_;
+}
+
+
+inline int Robot::max_dimf() const {
+  return max_dimf_;
+}
+
+
+inline int Robot::dimf() const {
+  return dimf_;
+}
+
+
+inline int Robot::dim_passive() const {
+  return floating_base_.dim_passive();
+}
+
+
+inline bool Robot::has_floating_base() const {
+  return floating_base_.has_floating_base();
+}
+
+
+inline int Robot::max_point_contacts() const {
+  return point_contacts_.size();
+}
+
+
+inline int Robot::num_active_point_contacts() const {
+  return num_active_contacts_;
+}
+
+
+inline bool Robot::is_contact_active(const int contact_index) const {
+  assert(contact_index >= 0);
+  assert(contact_index < point_contacts_.size());
+  return point_contacts_[contact_index].isActive();
+}
+
+
+inline void Robot::initializeJointLimits() {
+  const int dim_joint = model_.nv - floating_base_.dim_passive();
+  joint_effort_limit_.resize(dim_joint);
+  joint_velocity_limit_.resize(dim_joint);
+  lower_joint_position_limit_.resize(dim_joint);
+  upper_joint_position_limit_.resize(dim_joint);
+  joint_effort_limit_ = model_.effortLimit.tail(dim_joint);
+  joint_velocity_limit_ = model_.velocityLimit.tail(dim_joint);
+  lower_joint_position_limit_ = model_.lowerPositionLimit.tail(dim_joint);
+  upper_joint_position_limit_ = model_.upperPositionLimit.tail(dim_joint);
+}
 
 } // namespace idocp

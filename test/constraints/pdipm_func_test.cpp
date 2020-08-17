@@ -10,8 +10,6 @@
 
 
 namespace idocp {
-namespace pdipm {
-
 
 class PDIPMFuncTest : public ::testing::Test {
 protected:
@@ -39,7 +37,7 @@ TEST_F(PDIPMFuncTest, SetSlackAndDualPositive) {
   dual_ = Eigen::VectorXd::Random(dim_);
   Eigen::VectorXd slack_tmp = slack_;
   Eigen::VectorXd dual_tmp = dual_;
-  pdipmfunc::SetSlackAndDualPositive(dim_, barrier_, slack_, dual_);
+  pdipmfunc::SetSlackAndDualPositive(barrier_, slack_, dual_);
   for (int i=0; i<dim_; ++i) {
     EXPECT_TRUE(slack_(i) >= barrier_);
     EXPECT_TRUE(dual_(i) >= barrier_);
@@ -47,16 +45,16 @@ TEST_F(PDIPMFuncTest, SetSlackAndDualPositive) {
 }
 
 
-TEST_F(PDIPMFuncTest, ComputeDualityResidual) {
+TEST_F(PDIPMFuncTest, ComputeDuality) {
   EXPECT_TRUE(slack_.minCoeff() >= 0);
   EXPECT_TRUE(dual_.minCoeff() >= 0);
-  Eigen::VectorXd dual_residual = Eigen::VectorXd::Zero(dim_);
-  pdipmfunc::ComputeDualityResidual(barrier_, slack_, dual_, dual_residual);
-  Eigen::VectorXd dual_residual_ref = Eigen::VectorXd::Zero(dim_);
+  Eigen::VectorXd duality = Eigen::VectorXd::Zero(dim_);
+  pdipmfunc::ComputeDuality(barrier_, slack_, dual_, duality);
+  Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dim_);
   for (int i=0; i<dim_; ++i) {
-    dual_residual_ref(i) = slack_(i) * dual_(i) - barrier_;
+    duality_ref(i) = slack_(i) * dual_(i) - barrier_;
   }
-  EXPECT_TRUE(dual_residual.isApprox(dual_residual_ref));
+  EXPECT_TRUE(duality.isApprox(duality_ref));
 }
 
 
@@ -78,7 +76,7 @@ TEST_F(PDIPMFuncTest, FractionToBoundary) {
 TEST_F(PDIPMFuncTest, ComputeDualDirection) {
   Eigen::VectorXd duality = Eigen::VectorXd::Zero(dim_);
   duality.array() = dual_.array() * slack_.array() - barrier_;
-  pdipmfunc::ComputeDualDirection(dual_, slack_, dslack_, duality, ddual_);
+  pdipmfunc::ComputeDualDirection(slack_, dual_, dslack_, duality, ddual_);
   Eigen::VectorXd ddual_ref = Eigen::VectorXd::Zero(dim_);
   for (int i=0; i<dim_; ++i) {
     ddual_ref(i) = - (dual_(i) * dslack_(i) + duality(i)) / slack_(i);
@@ -87,14 +85,13 @@ TEST_F(PDIPMFuncTest, ComputeDualDirection) {
 }
 
 
-TEST_F(PDIPMFuncTest, SlackBarrierCost) {
+TEST_F(PDIPMFuncTest, CostSlackBarrier) {
   const double cost_ref = - barrier_ * (slack_.array().log()).sum();
-  const double cost = pdipmfunc::SlackBarrierCost(dim_, barrier_, slack_);
+  const double cost = pdipmfunc::CostSlackBarrier(barrier_, slack_);
   EXPECT_DOUBLE_EQ(cost_ref, cost);
 }
 
-} // namespace pdipm
-} // namespace invdynocp
+} // namespace idocp
 
 
 int main(int argc, char** argv) {

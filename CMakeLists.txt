@@ -56,7 +56,6 @@ add_library(
   src/constraints/joint_acceleration_lower_limit.cpp
   src/constraints/joint_torques_upper_limit.cpp
   src/constraints/joint_torques_lower_limit.cpp
-  # src/ocp/line_search_filter.cpp
   src/ocp/kkt_composition.cpp
   src/ocp/kkt_residual.cpp
   src/ocp/kkt_matrix.cpp
@@ -66,6 +65,7 @@ add_library(
   # src/ocp/parnmpc_linearizer.cpp
   # src/ocp/inverse_dynamics_condenser.cpp
   # src/ocp/split_parnmpc.cpp
+  src/ocp/line_search_filter.cpp
   # src/ocp/parnmpc.cpp
 )
 target_link_libraries(

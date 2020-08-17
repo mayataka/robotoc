@@ -399,7 +399,6 @@ private:
 
 } // namespace idocp
 
-
 #include "idocp/robot/robot.hxx"
 
 #endif // IDOCP_ROBOT_HPP_ 

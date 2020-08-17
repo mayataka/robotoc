@@ -1,5 +1,5 @@
-#ifndef IDOCP_INVERSE_DYNAMICS_CONDENSER_HPP_
-#define IDOCP_INVERSE_DYNAMICS_CONDENSER_HPP_
+#ifndef IDOCP_INVERSE_DYNAMICS_HPP_
+#define IDOCP_INVERSE_DYNAMICS_HPP_
 
 #include "Eigen/Core"
 
@@ -16,11 +16,11 @@
 
 namespace idocp {
 
-class InverseDynamicsCondenser {
+class InverseDynamics {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  InverseDynamicsCondenser(const Robot& robot) 
+  InverseDynamics(const Robot& robot) 
     : u_res_(Eigen::VectorXd::Zero(robot.dimv())),
       lu_(Eigen::VectorXd::Zero(robot.dimv())),
       lu_condensed_(Eigen::VectorXd::Zero(robot.dimv())),
@@ -34,7 +34,7 @@ public:
       dimf_(robot.dimf()) {
   }
 
-  InverseDynamicsCondenser() 
+  InverseDynamics() 
     : u_res_(),
       lu_(),
       lu_condensed_(),
@@ -48,30 +48,19 @@ public:
       dimf_(0) {
   }
 
-  ~InverseDynamicsCondenser() {
+  ~InverseDynamics() {
   }
 
-  InverseDynamicsCondenser(const InverseDynamicsCondenser&) = default;
+  InverseDynamics(const InverseDynamics&) = default;
 
-  InverseDynamicsCondenser& operator=(const InverseDynamicsCondenser&) = default;
+  InverseDynamics& operator=(const InverseDynamics&) = default;
  
-  InverseDynamicsCondenser(InverseDynamicsCondenser&&) noexcept = default;
+  InverseDynamics(InverseDynamics&&) noexcept = default;
 
-  InverseDynamicsCondenser& operator=(InverseDynamicsCondenser&&) noexcept = default;
+  InverseDynamics& operator=(InverseDynamics&&) noexcept = default;
 
   inline void setContactStatus(const Robot& robot) {
     dimf_ = robot.dimf();
-  }
-
-  inline void linearizeCostAndConstraints(
-      const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-      CostFunctionData& cost_data, 
-      const std::shared_ptr<Constraints>& constraints, 
-      ConstraintsData& constraints_data, const double t, const double dtau, 
-      const SplitSolution& s) {
-    cost->lu(robot, cost_data, t, dtau, s.u, lu_); 
-    cost->luu(robot, cost_data, t, dtau, s.u, luu_); 
-    constraints->augmentDualResidual(robot, constraints_data, dtau, lu_); 
   }
 
   inline void linearizeInverseDynamics(Robot& robot, const double dtau, 
@@ -108,14 +97,6 @@ public:
     if (dimf_ > 0) {
       kkt_residual.lf().noalias() += dtau * du_df_active_().transpose() * s.beta;
     }
-  }
-
-  inline void condenseInequalityConstraints(
-      const Robot& robot, const std::shared_ptr<Constraints>& constraints, 
-      ConstraintsData& constraints_data, const double t, const double dtau, 
-      const SplitSolution& s) {
-    constraints->condenseSlackAndDual(robot, constraints_data, dtau, s.u, 
-                                      luu_, lu_);
   }
 
   inline void condenseFloatingBaseConstraint(const double dtau,
@@ -211,4 +192,4 @@ private:
 } // namespace idocp 
 
 
-#endif // IDOCP_INVERSE_DYNAMICS_CONDENSER_HPP_ 
+#endif // IDOCP_INVERSE_DYNAMICS_HPP_ 

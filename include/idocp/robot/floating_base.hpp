@@ -49,10 +49,11 @@ public:
 private:
   bool has_floating_base_;
   std::vector<int> passive_joint_indices_;
-  int dimv_;
+  int dimv_, dim_passive_;
 };
 
 } // namespace idocp
 
+#include "idocp/robot/floating_base.hxx"
 
 #endif // IDOCP_FLOATING_BASE_HPP_

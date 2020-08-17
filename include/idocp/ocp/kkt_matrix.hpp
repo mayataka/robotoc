@@ -464,7 +464,7 @@ public:
     return kkt_composition_.max_dimKKT();
   }
 
-  Eigen::MatrixXd luu, du_dq, du_dv, du_da, du_df;
+  Eigen::MatrixXd luu, dsubtract_dq, du_dq, du_dv, du_da, du_df;
 
 private:
   KKTComposition kkt_composition_;

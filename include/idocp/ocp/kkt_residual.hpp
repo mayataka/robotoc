@@ -137,7 +137,10 @@ public:
   }
 
   inline double squaredKKTErrorNorm() const {
-    return kkt_residual_.head(kkt_composition_.dimKKT()).squaredNorm();
+    double error = kkt_residual_.head(kkt_composition_.dimKKT()).squaredNorm();
+    error += lu.squaredNorm();
+    error += u_res.squaredNorm();
+    return error;
   }
 
   inline void setZero() {
