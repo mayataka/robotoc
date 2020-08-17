@@ -15,7 +15,7 @@ ContactCost::ContactCost(const Robot& robot)
 
 ContactCost::ContactCost()
   : CostFunctionComponentBase(),
-    max_dimf_(robot.max_dimf()),
+    max_dimf_(0),
     f_ref_(),
     f_weight_() {
 }
@@ -44,6 +44,144 @@ void ContactCost::set_f_weight(const Eigen::VectorXd& f_weight) {
     std::cout << "invalid argment in set_f_weight(): size of f_weight must be " 
               << max_dimf_ << std::endl;
   }
+}
+
+
+double ContactCost::l(const Robot& robot, CostFunctionData& data, 
+                      const double t, const double dtau, 
+                      const SplitSolution& s) const {
+  double l = 0;
+  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    if (robot.is_contact_active(i)) {
+      for (int j=0; j<3; ++j) {
+        l += f_weight_.coeff(3*i+j) * (s.f.coeff(3*i+j)-f_ref_.coeff(3*i+j)) 
+                                    * (s.f.coeff(3*i+j)-f_ref_.coeff(3*i+j));
+      }
+    }
+  }
+  return 0.5 * dtau * l;
+}
+
+
+double ContactCost::phi(const Robot& robot, CostFunctionData& data, 
+                        const double t, const SplitSolution& s) const {
+  return 0;
+}
+
+
+void ContactCost::lq(const Robot& robot, CostFunctionData& data, 
+                     const double t, const double dtau, const SplitSolution& s, 
+                     KKTResidual& kkt_residual) const {
+  // do nothing
+}
+
+
+void ContactCost::lv(const Robot& robot, CostFunctionData& data, 
+                     const double t, const double dtau, const SplitSolution& s, 
+                     KKTResidual& kkt_residual) const {
+  // do nothing
+}
+
+
+void ContactCost::la(const Robot& robot, CostFunctionData& data, 
+                     const double t, const double dtau, const SplitSolution& s, 
+                     KKTResidual& kkt_residual) const {
+  // do nothing
+}
+
+
+void ContactCost::lf(const Robot& robot, CostFunctionData& data, 
+                        const double t, const double dtau, 
+                        const SplitSolution& s, 
+                        KKTResidual& kkt_residual) const {
+  int dimf = 0;
+  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    if (robot.is_contact_active(i)) {
+      for (int j=0; j<3; ++j) {
+        kkt_residual.lf().coeffRef(dimf+j) 
+            += dtau * f_weight_.coeff(3*i+j) * (s.f.coeff(dimf+j)-f_ref_.coeff(3*i+j));
+      }
+      dimf += 3;
+    }
+  }
+}
+
+
+void ContactCost::lu(const Robot& robot, CostFunctionData& data, 
+                     const double t, const double dtau, const SplitSolution& s, 
+                     KKTResidual& kkt_residual) const {
+  // do nothing
+}
+
+
+void ContactCost::lqq(const Robot& robot, CostFunctionData& data, 
+                      const double t, const double dtau, 
+                      const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+  // do nothing
+}
+
+
+void ContactCost::lvv(const Robot& robot, CostFunctionData& data, 
+                      const double t, const double dtau, 
+                      const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+  // do nothing
+}
+
+
+void ContactCost::laa(const Robot& robot, CostFunctionData& data, 
+                      const double t, const double dtau, 
+                      const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+  // do nothing
+}
+
+
+void ContactCost::lff(const Robot& robot, CostFunctionData& data, 
+                      const double t, const double dtau, 
+                      const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+  int dimf = 0;
+  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    if (robot.is_contact_active(i)) {
+      for (int j=0; j<3; ++j) {
+        kkt_matrix.Qff().coeffRef(dimf+j, dimf+j) += dtau * f_weight_.coeff(3*i+j);
+      }
+      dimf += 3;
+    }
+  }
+}
+
+
+void ContactCost::luu(const Robot& robot, CostFunctionData& data, 
+                      const double t, const double dtau, 
+                      const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+  // do nothing
+}
+
+
+void ContactCost::phiq(const Robot& robot, CostFunctionData& data, 
+                       const double t, const SplitSolution& s,
+                       KKTResidual& kkt_residual) const {
+  // do nothing
+}
+
+
+void ContactCost::phiv(const Robot& robot, CostFunctionData& data, 
+                       const double t, const SplitSolution& s,
+                       KKTResidual& kkt_residual) const {
+  // do nothing
+}
+
+
+void ContactCost::phiqq(const Robot& robot, CostFunctionData& data, 
+                        const double t, const SplitSolution& s,
+                        KKTMatrix& kkt_matrix) const {
+  // do nothing
+}
+
+
+void ContactCost::phivv(const Robot& robot, CostFunctionData& data, 
+                        const double t, const SplitSolution& s,
+                        KKTMatrix& kkt_matrix) const {
+  // do nothing
 }
 
 } // namespace idocp

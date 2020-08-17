@@ -27,15 +27,11 @@ JointVelocityLowerLimit::~JointVelocityLowerLimit() {
 }
 
 
-bool JointVelocityLowerLimit::isFeasible(
-    const Robot& robot, ConstraintComponentData& data, 
-    const Eigen::Ref<const Eigen::VectorXd>& a, 
-    const Eigen::Ref<const Eigen::VectorXd>& f, 
-    const Eigen::Ref<const Eigen::VectorXd>& q, 
-    const Eigen::Ref<const Eigen::VectorXd>& v, 
-    const Eigen::Ref<const Eigen::VectorXd>& u) const {
+bool JointVelocityLowerLimit::isFeasible(const Robot& robot, 
+                                         ConstraintComponentData& data, 
+                                         const SplitSolution& s) const {
   for (int i=0; i<dimc_; ++i) {
-    if (v.tail(dimc_).coeff(i) < vmin_.coeff(i)) {
+    if (s.v.tail(dimc_).coeff(i) < vmin_.coeff(i)) {
       return false;
     }
   }
@@ -45,94 +41,57 @@ bool JointVelocityLowerLimit::isFeasible(
 
 void JointVelocityLowerLimit::setSlackAndDual(
     const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const Eigen::Ref<const Eigen::VectorXd>& a, 
-    const Eigen::Ref<const Eigen::VectorXd>& f, 
-    const Eigen::Ref<const Eigen::VectorXd>& q, 
-    const Eigen::Ref<const Eigen::VectorXd>& v, 
-    const Eigen::Ref<const Eigen::VectorXd>& u) const {
+    const SplitSolution& s) const {
   assert(dtau > 0);
-  data.slack = dtau * (v.tail(dimc_)-vmin_);
+  data.slack = dtau * (s.v.tail(dimc_)-vmin_);
   setSlackAndDualPositive(data.slack, data.dual);
 }
 
 
 void JointVelocityLowerLimit::augmentDualResidual(
     const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    Eigen::Ref<Eigen::VectorXd> la, Eigen::Ref<Eigen::VectorXd> lf, 
-    Eigen::Ref<Eigen::VectorXd> lq,  Eigen::Ref<Eigen::VectorXd> lv) const {
-  lv.tail(dimc_).noalias() -= dtau * data.dual;
-}
-
-
-void JointVelocityLowerLimit::augmentDualResidual(
-    const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    Eigen::Ref<Eigen::VectorXd> lu) const {
-  // do nothing
+    KKTResidual& kkt_residual) const {
+  kkt_residual.lv().tail(dimc_).noalias() -= dtau * data.dual;
 }
 
 
 void JointVelocityLowerLimit::condenseSlackAndDual(
     const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const Eigen::Ref<const Eigen::VectorXd>& a, 
-    const Eigen::Ref<const Eigen::VectorXd>& f, 
-    const Eigen::Ref<const Eigen::VectorXd>& q, 
-    const Eigen::Ref<const Eigen::VectorXd>& v, Eigen::Ref<Eigen::MatrixXd> Caa,
-    Eigen::Ref<Eigen::MatrixXd> Cff, Eigen::Ref<Eigen::MatrixXd> Cqq,  
-    Eigen::Ref<Eigen::MatrixXd> Cvv, Eigen::Ref<Eigen::VectorXd> la,
-    Eigen::Ref<Eigen::VectorXd> lf, Eigen::Ref<Eigen::VectorXd> lq, 
-    Eigen::Ref<Eigen::VectorXd> lv) const {
+    const SplitSolution& s, KKTMatrix& kkt_matrix, 
+    KKTResidual& kkt_residual) const {
   for (int i=0; i<dimc_; ++i) {
-    Cvv.coeffRef(dim_passive_+i, dim_passive_+i) 
+    kkt_matrix.Qvv().coeffRef(dim_passive_+i, dim_passive_+i) 
         += dtau * dtau * data.dual.coeff(i) / data.slack.coeff(i);
   }
-  data.residual = dtau * (vmin_-v.tail(dimc_)) + data.slack;
+  data.residual = dtau * (vmin_-s.v.tail(dimc_)) + data.slack;
   computeDualityResidual(data.slack, data.dual, data.duality);
-  lv.tail(dimc_).array() 
+  kkt_residual.lv().tail(dimc_).array() 
       -= dtau * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
 }
 
 
-void JointVelocityLowerLimit::condenseSlackAndDual(
-    const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const Eigen::Ref<const Eigen::VectorXd>& u, Eigen::Ref<Eigen::MatrixXd> Cuu, 
-    Eigen::Ref<Eigen::VectorXd> Cu) const {
-  // do nothing
-}
-
-
 void JointVelocityLowerLimit::computeSlackAndDualDirection(
     const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const Eigen::Ref<const Eigen::VectorXd>& da, 
-    const Eigen::Ref<const Eigen::VectorXd>& df, 
-    const Eigen::Ref<const Eigen::VectorXd>& dq, 
-    const Eigen::Ref<const Eigen::VectorXd>& dv, 
-    const Eigen::Ref<const Eigen::VectorXd>& du) const {
-  data.dslack = dtau * dv.tail(dimc_) - data.residual;
+    const SplitDirection& d) const {
+  data.dslack = dtau * d.dv().tail(dimc_) - data.residual;
   computeDualDirection(data.slack, data.dslack, data.dual, data.duality, 
                        data.ddual);
 }
 
+
 double JointVelocityLowerLimit::residualL1Nrom(
     const Robot& robot, ConstraintComponentData& data, 
-    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
-    const Eigen::Ref<const Eigen::VectorXd>& f, 
-    const Eigen::Ref<const Eigen::VectorXd>& q, 
-    const Eigen::Ref<const Eigen::VectorXd>& v, 
-    const Eigen::Ref<const Eigen::VectorXd>& u) const {
-  data.residual = dtau * (vmin_-v.tail(dimc_)) + data.slack;
+    const double dtau, const SplitSolution& s) const {
+  data.residual = dtau * (vmin_-s.v.tail(dimc_)) + data.slack;
   return data.residual.lpNorm<1>();
 }
 
 
 double JointVelocityLowerLimit::squaredKKTErrorNorm(
     const Robot& robot, ConstraintComponentData& data, 
-    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
-    const Eigen::Ref<const Eigen::VectorXd>& f, 
-    const Eigen::Ref<const Eigen::VectorXd>& q, 
-    const Eigen::Ref<const Eigen::VectorXd>& v, 
-    const Eigen::Ref<const Eigen::VectorXd>& u) const {
-  data.residual = dtau * (vmin_-v.tail(dimc_)) + data.slack;
+    const double dtau, const SplitSolution& s) const {
+  data.residual = dtau * (vmin_-s.v.tail(dimc_)) + data.slack;
   computeDualityResidual(data.slack, data.dual, data.duality);
   double error = 0;
   error += data.residual.squaredNorm();

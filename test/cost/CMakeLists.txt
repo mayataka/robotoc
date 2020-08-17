@@ -1,4 +1,4 @@
-add_test_macro(fixed_base_joint_space_cost_test)
-add_test_macro(floating_base_joint_space_cost_test)
+# add_test_macro(fixed_base_joint_space_cost_test)
+# add_test_macro(floating_base_joint_space_cost_test)
 add_test_macro(fixed_base_contact_cost_test)
 add_test_macro(floating_base_contact_cost_test)

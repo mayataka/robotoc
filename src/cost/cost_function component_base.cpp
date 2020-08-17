@@ -1,0 +1,1 @@
+#include "idocp/cost/cost_function_component_base.hpp"

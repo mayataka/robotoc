@@ -1,6 +1,7 @@
 #include "idocp/robot/robot.hpp"
 
 #include <limits>
+#include <stdexcept>
 #include <assert.h>
 
 
@@ -57,8 +58,6 @@ Robot::Robot(const std::string& urdf_file_name,
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
     upper_joint_position_limit_() {
-  assert(baumgarte_weight_on_velocity >= 0);
-  assert(baumgarte_weight_on_position >= 0);
   pinocchio::urdf::buildModel(urdf_file_name, model_);
   data_ = pinocchio::Data(model_);
   for (const auto& frame : contact_frames) {
@@ -192,29 +191,59 @@ Eigen::VectorXd Robot::upperJointPositionLimit() const {
 
 
 void Robot::setJointEffortLimit(const Eigen::VectorXd& joint_effort_limit) {
-  assert(joint_effort_limit_.size() == joint_effort_limit.size());
+  try {
+    if (joint_effort_limit_.size() != joint_effort_limit.size()) {
+      throw std::out_of_range("invalid size of joint_effort_limit");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   joint_effort_limit_ = joint_effort_limit;
 }
 
 
 void Robot::setJointVelocityLimit(const Eigen::VectorXd& joint_velocity_limit) {
-  assert(joint_velocity_limit_.size() == joint_velocity_limit.size());
+  try {
+    if (joint_velocity_limit_.size() != joint_velocity_limit.size()) {
+      throw std::out_of_range("invalid size of joint_velocity_limit");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   joint_velocity_limit_ = joint_velocity_limit;
 }
 
 
 void Robot::setLowerJointPositionLimit(
     const Eigen::VectorXd& lower_joint_position_limit) {
-  assert(
-      lower_joint_position_limit_.size() == lower_joint_position_limit.size());
+  try {
+    if (lower_joint_position_limit_.size() != lower_joint_position_limit.size()) {
+      throw std::out_of_range("invalid size of lower_joint_position_limit");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   lower_joint_position_limit_ = lower_joint_position_limit;
 }
 
 
 void Robot::setUpperJointPositionLimit(
     const Eigen::VectorXd& upper_joint_position_limit) {
-  assert(
-      upper_joint_position_limit_.size() == upper_joint_position_limit.size());
+  try {
+    if (upper_joint_position_limit_.size() != upper_joint_position_limit.size()) {
+      throw std::out_of_range("invalid size of upper_joint_position_limit");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   upper_joint_position_limit_ = upper_joint_position_limit;
 }
 

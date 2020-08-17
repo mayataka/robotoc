@@ -19,7 +19,11 @@ public:
   KKTMatrix(const Robot& robot) 
     : kkt_composition_(robot),
       kkt_matrix_(Eigen::MatrixXd::Zero(kkt_composition_.max_dimKKT(), 
-                                        kkt_composition_.max_dimKKT())) {
+                                        kkt_composition_.max_dimKKT())),
+      luu(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+      du_dq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+      du_dv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+      du_da(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())) {
   }
 
   KKTMatrix() 
@@ -459,6 +463,8 @@ public:
   inline int max_dimKKT() const {
     return kkt_composition_.max_dimKKT();
   }
+
+  Eigen::MatrixXd luu, du_dq, du_dv, du_da, du_df;
 
 private:
   KKTComposition kkt_composition_;

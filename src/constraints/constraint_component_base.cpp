@@ -69,7 +69,7 @@ double ConstraintComponentBase::costSlackBarrier(
 
 
 void ConstraintComponentBase::setSlackAndDualPositive(
-    Eigen::Ref<Eigen::VectorXd> slack, Eigen::Ref<Eigen::VectorXd> dual) const {
+    Eigen::VectorXd& slack, Eigen::VectorXd& dual) const {
   for (int i=0; i<dimc(); ++i) {
     while (slack.coeff(i) < barrier_) {
       slack.coeffRef(i) += barrier_;
@@ -80,26 +80,22 @@ void ConstraintComponentBase::setSlackAndDualPositive(
 
 
 void ConstraintComponentBase::computeDualityResidual(
-    const Eigen::Ref<const Eigen::VectorXd>& slack, 
-    const Eigen::Ref<const Eigen::VectorXd>& dual, 
-    Eigen::Ref<Eigen::VectorXd> duality) const {
+    const Eigen::VectorXd& slack, const Eigen::VectorXd& dual, 
+    Eigen::VectorXd& duality) const {
   duality.array() = slack.array() * dual.array() - barrier_;
 }
 
 
 void ConstraintComponentBase::computeDualDirection(
-    const Eigen::Ref<const Eigen::VectorXd>& slack, 
-    const Eigen::Ref<const Eigen::VectorXd>& dslack,
-    const Eigen::Ref<const Eigen::VectorXd>& dual, 
-    const Eigen::Ref<const Eigen::VectorXd>& duality, 
-    Eigen::Ref<Eigen::VectorXd> ddual) const {
+    const Eigen::VectorXd& slack, const Eigen::VectorXd& dslack, 
+    const Eigen::VectorXd& dual, const Eigen::VectorXd& duality, 
+    Eigen::VectorXd& ddual) const {
   ddual.array() = - (dual.array()*dslack.array()+duality.array())/slack.array();
 }
 
 
 double ConstraintComponentBase::fractionToBoundary(
-    const Eigen::Ref<const Eigen::VectorXd>& vec, 
-    const Eigen::Ref<const Eigen::VectorXd>& dvec) const {
+    const Eigen::VectorXd& vec, const Eigen::VectorXd& dvec) const {
   double min_fraction_to_boundary = 1;
   for (int i=0; i<dimc(); ++i) {
     const double fraction_to_boundary 

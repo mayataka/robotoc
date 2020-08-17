@@ -94,13 +94,15 @@ public:
                                     kkt_composition_.Qx_size());
   }
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> backwardCorrectionParallelDirection() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> 
+  backwardCorrectionParallelDirection() {
     return split_direction_.segment(
         kkt_composition_.C_begin(), 
         kkt_composition_.dimKKT()-kkt_composition_.Qx_size());
   }
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> forwardCorrectionParallelDirection() {
+  inline Eigen::VectorBlock<Eigen::VectorXd> 
+  forwardCorrectionParallelDirection() {
     return split_direction_.head(
         kkt_composition_.dimKKT()-kkt_composition_.Qx_size());
   }
@@ -149,13 +151,15 @@ public:
                                     kkt_composition_.Qx_size());
   }
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> backwardCorrectionParallelDirection() const {
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+  backwardCorrectionParallelDirection() const {
     return split_direction_.segment(
         kkt_composition_.C_begin(), 
         kkt_composition_.dimKKT()-kkt_composition_.Qx_size());
   }
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> forwardCorrectionParallelDirection() const {
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+  forwardCorrectionParallelDirection() const {
     return split_direction_.head(
         kkt_composition_.dimKKT()-kkt_composition_.Qx_size());
   }

@@ -17,12 +17,20 @@ public:
 
   KKTResidual(const Robot& robot) 
     : kkt_composition_(robot),
-      kkt_residual_(Eigen::VectorXd::Zero(kkt_composition_.max_dimKKT())) {
+      kkt_residual_(Eigen::VectorXd::Zero(kkt_composition_.max_dimKKT())),
+      lu(Eigen::VectorXd::Zero(robot.dimv())),
+      u_res(Eigen::VectorXd::Zero(robot.dimv())),
+      phiq(Eigen::VectorXd::Zero(robot.dimv())),
+      phiv(Eigen::VectorXd::Zero(robot.dimv())) {
   }
 
   KKTResidual() 
     : kkt_composition_(),
-      kkt_residual_() {
+      kkt_residual_(),
+      lu(),
+      u_res(),
+      phiq(),
+      phiv() {
   }
 
   ~KKTResidual() {
@@ -143,6 +151,8 @@ public:
   inline int max_dimKKT() const {
     return kkt_composition_.max_dimKKT();
   }
+
+  Eigen::VectorXd lu, u_res, phiq, phiv;
 
 private:
   KKTComposition kkt_composition_;

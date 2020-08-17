@@ -7,6 +7,8 @@
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/constraints/constraint_component_data.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -34,80 +36,34 @@ public:
       = default;
 
   virtual bool isFeasible(const Robot& robot, ConstraintComponentData& data, 
-                          const Eigen::Ref<const Eigen::VectorXd>& a, 
-                          const Eigen::Ref<const Eigen::VectorXd>& f, 
-                          const Eigen::Ref<const Eigen::VectorXd>& q, 
-                          const Eigen::Ref<const Eigen::VectorXd>& v,
-                          const Eigen::Ref<const Eigen::VectorXd>& u) const = 0;
+                          const SplitSolution& s) const = 0;
 
   virtual void setSlackAndDual(const Robot& robot, 
-                               ConstraintComponentData& data, 
-                               const double dtau, 
-                               const Eigen::Ref<const Eigen::VectorXd>& a, 
-                               const Eigen::Ref<const Eigen::VectorXd>& f, 
-                               const Eigen::Ref<const Eigen::VectorXd>& q, 
-                               const Eigen::Ref<const Eigen::VectorXd>& v,
-                               const Eigen::Ref<const Eigen::VectorXd>& u) const = 0;
+                               ConstraintComponentData& data, const double dtau, 
+                               const SplitSolution& s) const = 0;
 
   virtual void augmentDualResidual(const Robot& robot, 
-                                   ConstraintComponentData& datas,
-                                   const double dtau,
-                                   Eigen::Ref<Eigen::VectorXd> la, 
-                                   Eigen::Ref<Eigen::VectorXd> lf,
-                                   Eigen::Ref<Eigen::VectorXd> lq, 
-                                   Eigen::Ref<Eigen::VectorXd> lv) const = 0;
-
-  virtual void augmentDualResidual(const Robot& robot,
-                                   ConstraintComponentData& datas,
-                                   const double dtau,
-                                   Eigen::Ref<Eigen::VectorXd> lu) const = 0;
+                                   ConstraintComponentData& data,
+                                   const double dtau, 
+                                   KKTResidual& kkt_residual) const = 0;
 
   virtual void condenseSlackAndDual(const Robot& robot, 
-                                    ConstraintComponentData& datas,
-                                    const double dtau, 
-                                    const Eigen::Ref<const Eigen::VectorXd>& a, 
-                                    const Eigen::Ref<const Eigen::VectorXd>& f, 
-                                    const Eigen::Ref<const Eigen::VectorXd>& q, 
-                                    const Eigen::Ref<const Eigen::VectorXd>& v,
-                                    Eigen::Ref<Eigen::MatrixXd> Qaa, 
-                                    Eigen::Ref<Eigen::MatrixXd> Qff,
-                                    Eigen::Ref<Eigen::MatrixXd> Qqq, 
-                                    Eigen::Ref<Eigen::MatrixXd> Qvv,
-                                    Eigen::Ref<Eigen::VectorXd> la, 
-                                    Eigen::Ref<Eigen::VectorXd> lf,
-                                    Eigen::Ref<Eigen::VectorXd> lq, 
-                                    Eigen::Ref<Eigen::VectorXd> lv) const = 0;
-
-  virtual void condenseSlackAndDual(const Robot& robot, 
-                                    ConstraintComponentData& data, 
-                                    const double dtau, 
-                                    const Eigen::Ref<const Eigen::VectorXd>& u, 
-                                    Eigen::Ref<Eigen::MatrixXd> Quu,
-                                    Eigen::Ref<Eigen::VectorXd> lu) const = 0;
+                                    ConstraintComponentData& data,
+                                    const double dtau, const SplitSolution& s,
+                                    KKTMatrix& kkt_matrix, 
+                                    KKTResidual& kkt_residual) const = 0;
 
   virtual void computeSlackAndDualDirection(
       const Robot& robot, ConstraintComponentData& data, const double dtau, 
-      const Eigen::Ref<const Eigen::VectorXd>& da, 
-      const Eigen::Ref<const Eigen::VectorXd>& df, 
-      const Eigen::Ref<const Eigen::VectorXd>& dq, 
-      const Eigen::Ref<const Eigen::VectorXd>& dv, 
-      const Eigen::Ref<const Eigen::VectorXd>& du) const = 0;
+      const SplitDirection& d) const = 0;
 
   virtual double residualL1Nrom(
       const Robot& robot, ConstraintComponentData& data, 
-      const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
-      const Eigen::Ref<const Eigen::VectorXd>& f, 
-      const Eigen::Ref<const Eigen::VectorXd>& q, 
-      const Eigen::Ref<const Eigen::VectorXd>& v, 
-      const Eigen::Ref<const Eigen::VectorXd>& u) const = 0;
+      const double dtau, const SplitSolution& s) const = 0;
 
   virtual double squaredKKTErrorNorm(
       const Robot& robot, ConstraintComponentData& data, 
-      const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
-      const Eigen::Ref<const Eigen::VectorXd>& f, 
-      const Eigen::Ref<const Eigen::VectorXd>& q, 
-      const Eigen::Ref<const Eigen::VectorXd>& v, 
-      const Eigen::Ref<const Eigen::VectorXd>& u) const = 0;
+      const double dtau, const SplitSolution& s) const = 0;
   
   virtual int dimc() const = 0;
 
@@ -136,25 +92,21 @@ public:
       const double fraction_to_boundary_rate) final;
 
 protected:
-  virtual void setSlackAndDualPositive(
-      Eigen::Ref<Eigen::VectorXd> slack, 
-      Eigen::Ref<Eigen::VectorXd> dual) const final;
+  virtual void setSlackAndDualPositive(Eigen::VectorXd& slack, 
+                                       Eigen::VectorXd& dual) const final;
 
-  virtual void computeDualityResidual(
-      const Eigen::Ref<const Eigen::VectorXd>& slack, 
-      const Eigen::Ref<const Eigen::VectorXd>& dual, 
-      Eigen::Ref<Eigen::VectorXd> duality) const final;
+  virtual void computeDualityResidual(const Eigen::VectorXd& slack, 
+                                      const Eigen::VectorXd& dual, 
+                                      Eigen::VectorXd& duality) const final;
 
-  virtual void computeDualDirection(
-      const Eigen::Ref<const Eigen::VectorXd>& slack, 
-      const Eigen::Ref<const Eigen::VectorXd>& dslack, 
-      const Eigen::Ref<const Eigen::VectorXd>& dual, 
-      const Eigen::Ref<const Eigen::VectorXd>& duality, 
-      Eigen::Ref<Eigen::VectorXd> ddual) const final;
+  virtual void computeDualDirection(const Eigen::VectorXd& slack, 
+                                    const Eigen::VectorXd& dslack, 
+                                    const Eigen::VectorXd& dual, 
+                                    const Eigen::VectorXd& duality, 
+                                    Eigen::VectorXd& ddual) const final;
 
-  virtual double fractionToBoundary(
-      const Eigen::Ref<const Eigen::VectorXd>& vec, 
-      const Eigen::Ref<const Eigen::VectorXd>& dvec) const final;
+  virtual double fractionToBoundary(const Eigen::VectorXd& vec, 
+                                    const Eigen::VectorXd& dvec) const final;
 
 private:
   double barrier_, fraction_to_boundary_rate_;

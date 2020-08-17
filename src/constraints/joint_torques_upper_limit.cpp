@@ -27,15 +27,11 @@ JointTorquesUpperLimit::~JointTorquesUpperLimit() {
 }
 
 
-bool JointTorquesUpperLimit::isFeasible(
-    const Robot& robot, ConstraintComponentData& data, 
-    const Eigen::Ref<const Eigen::VectorXd>& a, 
-    const Eigen::Ref<const Eigen::VectorXd>& f, 
-    const Eigen::Ref<const Eigen::VectorXd>& q, 
-    const Eigen::Ref<const Eigen::VectorXd>& v, 
-    const Eigen::Ref<const Eigen::VectorXd>& u) const {
+bool JointTorquesUpperLimit::isFeasible(const Robot& robot, 
+                                        ConstraintComponentData& data, 
+                                        const SplitSolution& s) const {
   for (int i=0; i<dimc_; ++i) {
-    if (u.tail(dimc_).coeff(i) > umax_.coeff(i)) {
+    if (s.u.tail(dimc_).coeff(i) > umax_.coeff(i)) {
       return false;
     }
   }
@@ -45,57 +41,31 @@ bool JointTorquesUpperLimit::isFeasible(
 
 void JointTorquesUpperLimit::setSlackAndDual(
     const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const Eigen::Ref<const Eigen::VectorXd>& a, 
-    const Eigen::Ref<const Eigen::VectorXd>& f, 
-    const Eigen::Ref<const Eigen::VectorXd>& q, 
-    const Eigen::Ref<const Eigen::VectorXd>& v, 
-    const Eigen::Ref<const Eigen::VectorXd>& u) const {
+    const SplitSolution& s) const {
   assert(dtau > 0);
-  data.slack = dtau * (umax_-u.tail(dimc_));
+  data.slack = dtau * (umax_-s.u.tail(dimc_));
   setSlackAndDualPositive(data.slack, data.dual);
 }
 
 
 void JointTorquesUpperLimit::augmentDualResidual(
     const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    Eigen::Ref<Eigen::VectorXd> la, Eigen::Ref<Eigen::VectorXd> lf, 
-    Eigen::Ref<Eigen::VectorXd> lq,  Eigen::Ref<Eigen::VectorXd> lv) const {
-  // do nothing
-}
-
-
-void JointTorquesUpperLimit::augmentDualResidual(
-    const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    Eigen::Ref<Eigen::VectorXd> lu) const {
-  lu.tail(dimc_).noalias() += dtau * data.dual;
+    KKTResidual& kkt_residual) const {
+  kkt_residual.lu.tail(dimc_).noalias() += dtau * data.dual;
 }
 
 
 void JointTorquesUpperLimit::condenseSlackAndDual(
     const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const Eigen::Ref<const Eigen::VectorXd>& a, 
-    const Eigen::Ref<const Eigen::VectorXd>& f, 
-    const Eigen::Ref<const Eigen::VectorXd>& q, 
-    const Eigen::Ref<const Eigen::VectorXd>& v, Eigen::Ref<Eigen::MatrixXd> Caa,
-    Eigen::Ref<Eigen::MatrixXd> Cff, Eigen::Ref<Eigen::MatrixXd> Cqq,  
-    Eigen::Ref<Eigen::MatrixXd> Cvv, Eigen::Ref<Eigen::VectorXd> la,
-    Eigen::Ref<Eigen::VectorXd> lf, Eigen::Ref<Eigen::VectorXd> lq, 
-    Eigen::Ref<Eigen::VectorXd> lv) const {
-  // do nothing
-}
-
-
-void JointTorquesUpperLimit::condenseSlackAndDual(
-    const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const Eigen::Ref<const Eigen::VectorXd>& u, Eigen::Ref<Eigen::MatrixXd> Cuu, 
-    Eigen::Ref<Eigen::VectorXd> lu) const {
+    const SplitSolution& s, KKTMatrix& kkt_matrix, 
+    KKTResidual& kkt_residual) const {
   for (int i=0; i<dimc_; ++i) {
-    Cuu.coeffRef(dim_passive_+i, dim_passive_+i) 
+    kkt_matrix.luu.coeffRef(dim_passive_+i, dim_passive_+i) 
         += dtau * dtau * data.dual.coeff(i) / data.slack.coeff(i);
   }
-  data.residual = dtau * (u.tail(dimc_)-umax_) + data.slack;
+  data.residual = dtau * (s.u.tail(dimc_)-umax_) + data.slack;
   computeDualityResidual(data.slack, data.dual, data.duality);
-  lu.tail(dimc_).array() 
+  kkt_residual.lu.tail(dimc_).array() 
       += dtau * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
 }
@@ -103,36 +73,25 @@ void JointTorquesUpperLimit::condenseSlackAndDual(
 
 void JointTorquesUpperLimit::computeSlackAndDualDirection(
     const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const Eigen::Ref<const Eigen::VectorXd>& da, 
-    const Eigen::Ref<const Eigen::VectorXd>& df, 
-    const Eigen::Ref<const Eigen::VectorXd>& dq, 
-    const Eigen::Ref<const Eigen::VectorXd>& dv, 
-    const Eigen::Ref<const Eigen::VectorXd>& du) const {
-  data.dslack = - dtau * du.tail(dimc_) - data.residual;
+    const SplitDirection& d) const {
+  data.dslack = - dtau * d.du.tail(dimc_) - data.residual;
   computeDualDirection(data.slack, data.dslack, data.dual, data.duality, 
                        data.ddual);
 }
 
+
 double JointTorquesUpperLimit::residualL1Nrom(
     const Robot& robot, ConstraintComponentData& data, 
-    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
-    const Eigen::Ref<const Eigen::VectorXd>& f, 
-    const Eigen::Ref<const Eigen::VectorXd>& q, 
-    const Eigen::Ref<const Eigen::VectorXd>& v, 
-    const Eigen::Ref<const Eigen::VectorXd>& u) const {
-  data.residual = dtau * (u.tail(dimc_)-umax_) + data.slack;
+    const double dtau, const SplitSolution& s) const {
+  data.residual = dtau * (s.u.tail(dimc_)-umax_) + data.slack;
   return data.residual.lpNorm<1>();
 }
 
 
 double JointTorquesUpperLimit::squaredKKTErrorNorm(
     const Robot& robot, ConstraintComponentData& data, 
-    const double dtau, const Eigen::Ref<const Eigen::VectorXd>& a, 
-    const Eigen::Ref<const Eigen::VectorXd>& f, 
-    const Eigen::Ref<const Eigen::VectorXd>& q, 
-    const Eigen::Ref<const Eigen::VectorXd>& v, 
-    const Eigen::Ref<const Eigen::VectorXd>& u) const {
-  data.residual = dtau * (u.tail(dimc_)-umax_) + data.slack;
+    const double dtau, const SplitSolution& s) const {
+  data.residual = dtau * (s.u.tail(dimc_)-umax_) + data.slack;
   computeDualityResidual(data.slack, data.dual, data.duality);
   double error = 0;
   error += data.residual.squaredNorm();
