@@ -88,6 +88,11 @@ public:
                                  kkt_composition_.Qx_size());
   }
 
+  inline Eigen::VectorBlock<Eigen::VectorXd> lafqv() {
+    return kkt_residual_.segment(kkt_composition_.Q_begin(), 
+                                 kkt_composition_.Q_size());
+  }
+
   inline const Eigen::VectorBlock<const Eigen::VectorXd> KKT_residual() const {
     return kkt_residual_.head(kkt_composition_.dimKKT());
   }

@@ -56,7 +56,7 @@ private:
   Eigen::VectorXd lu_condensed_;
   Eigen::MatrixXd du_dq_, du_dv_, du_da_, du_df_;
   bool has_floating_base_, has_active_contacts_;
-  int dim_passive_, dimf_;
+  int dimv_, dim_passive_, dimf_;
 
   void setContactStatus(const Robot& robot);
 

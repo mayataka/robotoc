@@ -237,6 +237,13 @@ public:
                              kkt_composition_.Qx_size());
   }
 
+  inline Eigen::Block<Eigen::MatrixXd> Qafqv() {
+    return kkt_matrix_.block(kkt_composition_.Q_begin(), 
+                             kkt_composition_.Q_begin(), 
+                             kkt_composition_.Q_size(), 
+                             kkt_composition_.Q_size());
+  }
+
   inline const Eigen::Block<const Eigen::MatrixXd> KKT_matrix() const {
     return kkt_matrix_.topLeftCorner(kkt_composition_.dimKKT(), 
                                      kkt_composition_.dimKKT());

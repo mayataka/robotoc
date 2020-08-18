@@ -43,12 +43,12 @@ void CPUTime_without_contacts() {
   constraints->push_back(joint_velocity_upper);
   const double T = 1;
   const unsigned int N = 20;
-  const unsigned int num_proc = 1;
+  const unsigned int num_proc = 2;
   idocp::ParNMPC parnmpc(robot, cost, constraints, T, N, num_proc);
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  const int num_iteration = 10;
+  const int num_iteration = 10000;
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
   for (int i=0; i<num_iteration; ++i) {

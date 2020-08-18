@@ -11,6 +11,7 @@ inline InverseDynamics::InverseDynamics(const Robot& robot)
     du_df_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
     has_active_contacts_(robot.has_active_contacts()),
+    dimv_(robot.dimv()),
     dim_passive_(robot.dim_passive()),
     dimf_(robot.dimf()) {
 }
@@ -24,6 +25,7 @@ inline InverseDynamics::InverseDynamics()
     du_df_(),
     has_floating_base_(false),
     has_active_contacts_(false),
+    dimv_(0),
     dim_passive_(0),
     dimf_(0) {
 }

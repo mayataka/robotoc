@@ -90,8 +90,9 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
                                   d_[i], s_new_[i]);
     }
     else {
-      split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
-                                  s_[i-1].q, s_[i-1].v, s_[i], d_[i], s_new_[i]);
+      split_ocps_[i].coarseUpdateTerminal(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
+                                          s_[i-1].q, s_[i-1].v, s_[i], d_[i], 
+                                          s_new_[i]);
     }
   }
   for (int i=N_-2; i>=0; --i) {
@@ -293,9 +294,8 @@ double ParNMPC::KKTError(const double t, const Eigen::VectorXd& q,
                                                     s_[i+1].gmm, s_[i+1].q);
     }
     else {
-      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
-                                                    t+(i+1)*dtau_, dtau_, 
-                                                    s_[i-1].q, s_[i-1].v, s_[i]);
+      error(i) = split_ocps_[i].squaredKKTErrorNormTerminal(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i-1].q, s_[i-1].v, s_[i]);
     }
   }
   return std::sqrt(error.sum());

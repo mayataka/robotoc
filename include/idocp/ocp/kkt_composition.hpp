@@ -148,6 +148,14 @@ public:
     return 2*dimv_;
   }
 
+  inline int Q_begin() const {
+    return Qq_begin_;
+  }
+
+  inline int Q_size() const {
+    return 3*dimv_+dimf_;
+  }
+
 private:
   int dimv_, max_dimf_, dimf_, dim_passive_, max_dimc_, dimc_,  
       max_dimKKT_, dimKKT_, Fq_begin_, Fv_begin_, C_begin_, 
