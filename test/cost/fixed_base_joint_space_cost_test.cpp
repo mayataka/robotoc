@@ -98,11 +98,11 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   cost.lu(robot_, data_, t_, dtau_, s, kkt_res);
   EXPECT_TRUE(kkt_res.lu.isApprox(lu_ref));
   cost.phiq(robot_, data_, t_, s, kkt_res);
-  lq_ref = qf_weight.asDiagonal() * (s.q-q_ref);
-  EXPECT_TRUE(kkt_res.phiq.isApprox(lq_ref));
+  lq_ref += qf_weight.asDiagonal() * (s.q-q_ref);
+  EXPECT_TRUE(kkt_res.lq().isApprox(lq_ref));
   cost.phiv(robot_, data_, t_, s, kkt_res);
-  lv_ref = vf_weight.asDiagonal() * (s.v-v_ref);
-  EXPECT_TRUE(kkt_res.phiv.isApprox(lv_ref));
+  lv_ref += vf_weight.asDiagonal() * (s.v-v_ref);
+  EXPECT_TRUE(kkt_res.lv().isApprox(lv_ref));
   EXPECT_TRUE(kkt_res.lf().isZero());
   Eigen::MatrixXd lqq_ref = Eigen::MatrixXd::Zero(dimv, dimv);
   Eigen::MatrixXd lvv_ref = Eigen::MatrixXd::Zero(dimv, dimv);
@@ -120,7 +120,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   EXPECT_TRUE(kkt_mat.Qaa().isApprox(laa_ref));
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   cost.luu(robot_, data_, t_, dtau_, s, kkt_mat);
-  EXPECT_TRUE(kkt_mat.luu.isApprox(luu_ref));
+  EXPECT_TRUE(kkt_mat.Quu.isApprox(luu_ref));
   cost.phiqq(robot_, data_, t_, s, kkt_mat);
   lqq_ref += qf_weight.asDiagonal();
   EXPECT_TRUE(kkt_mat.Qqq().isApprox(lqq_ref));

@@ -1,14 +1,14 @@
-#include "idocp/constraints/constraints.hpp"
-
+#ifndef IDOCP_CONSTRAINTS_HXX_
+#define IDOCP_CONSTRAINTS_HXX_
 
 namespace idocp {
 
-Constraints::Constraints() 
+inline Constraints::Constraints() 
   : constraints_() {
 }
 
 
-Constraints::~Constraints() {
+inline Constraints::~Constraints() {
 }
 
 
@@ -177,3 +177,5 @@ inline double Constraints::squaredKKTErrorNorm(const Robot& robot,
 }
 
 } // namespace idocp
+
+#endif // IDOCP_CONSTRAINTS_HXX_

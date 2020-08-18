@@ -58,6 +58,7 @@ TEST_F(FixedBaseRobotTest, constructor) {
   EXPECT_EQ(robot_empty.dim_passive(), 0);
   EXPECT_EQ(robot_empty.max_point_contacts(), 0);
   EXPECT_EQ(robot_empty.num_active_point_contacts(), 0);
+  EXPECT_FALSE(robot_empty.has_active_contacts());
   EXPECT_FALSE(robot_empty.has_floating_base());
   Robot robot(urdf_);
   EXPECT_EQ(robot.dimq(), dimq_);
@@ -67,6 +68,7 @@ TEST_F(FixedBaseRobotTest, constructor) {
   EXPECT_EQ(robot.dim_passive(), 0);
   EXPECT_EQ(robot.max_point_contacts(), 0);
   EXPECT_EQ(robot.num_active_point_contacts(), 0);
+  EXPECT_FALSE(robot.has_active_contacts());
   EXPECT_FALSE(robot.has_floating_base());
   robot.printRobotModel();
   std::vector<int> contacts = {contact_frame_id_};
@@ -80,6 +82,7 @@ TEST_F(FixedBaseRobotTest, constructor) {
   EXPECT_EQ(robot_contact.max_point_contacts(), 1);
   EXPECT_EQ(robot_contact.num_active_point_contacts(), 0);
   EXPECT_EQ(robot_contact.is_contact_active(0), false);
+  EXPECT_FALSE(robot_contact.has_active_contacts());
   EXPECT_FALSE(robot_contact.has_floating_base());
   robot_contact.printRobotModel();
   Eigen::VectorXd effort_limit(dimq_), velocity_limit(dimq_), 

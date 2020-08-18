@@ -60,7 +60,7 @@ void JointTorquesUpperLimit::condenseSlackAndDual(
     const SplitSolution& s, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) const {
   for (int i=0; i<dimc_; ++i) {
-    kkt_matrix.luu.coeffRef(dim_passive_+i, dim_passive_+i) 
+    kkt_matrix.Quu.coeffRef(dim_passive_+i, dim_passive_+i) 
         += dtau * dtau * data.dual.coeff(i) / data.slack.coeff(i);
   }
   data.residual = dtau * (s.u.tail(dimc_)-umax_) + data.slack;

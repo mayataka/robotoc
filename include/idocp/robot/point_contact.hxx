@@ -1,4 +1,5 @@
-#include "idocp/robot/point_contact.hpp"
+#ifndef IDOCP_POINT_CONTACT_HXX_
+#define IDOCP_POINT_CONTACT_HXX_
 
 #include "assert.h"
 
@@ -257,5 +258,6 @@ inline Eigen::Vector3d PointContact::contact_point() const {
   return contact_point_;
 }
 
-
 } // namespace idocp
+
+#endif // IDOCP_POINT_CONTACT_HXX_

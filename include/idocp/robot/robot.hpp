@@ -371,9 +371,11 @@ public:
   // Returns the maximum number of the contacts.
   int max_point_contacts() const;
 
+  bool has_active_contacts() const;
+
   // Returns the number of the active point contacts.
   int num_active_point_contacts() const;
-
+  
   // Returns true if contact[contact_index] is active. Returns false if 
   // contact[contact_index] is not active.
   bool is_contact_active(const int contact_index) const;
@@ -392,6 +394,7 @@ private:
   FloatingBase floating_base_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
   int dimq_, dimv_, dimJ_, max_dimf_, dimf_, num_active_contacts_;
+  bool has_active_contacts_;
   std::vector<bool> is_each_contact_active_;
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,
                   lower_joint_position_limit_, upper_joint_position_limit_;

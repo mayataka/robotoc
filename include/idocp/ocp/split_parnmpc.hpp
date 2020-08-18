@@ -12,12 +12,13 @@
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/kkt_matrix_inverse.hpp"
-#include "idocp/ocp/parnmpc_linearizer.hpp"
-#include "idocp/ocp/inverse_dynamics_condenser.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
+#include "idocp/ocp/state_equation.hpp"
+#include "idocp/ocp/inverse_dynamics.hpp"
+#include "idocp/ocp/equality_constraints.hpp"
 
 
 namespace idocp {
@@ -102,10 +103,11 @@ public:
                     const Eigen::MatrixXd& aux_mat_next_old, SplitDirection& d, 
                     SplitSolution& s_new_coarse);
 
-  void coarseUpdate(Robot& robot, const double t, const double dtau, 
-                    const Eigen::VectorXd& q_prev, 
-                    const Eigen::VectorXd& v_prev, const SplitSolution& s, 
-                    SplitDirection& d, SplitSolution& s_new_coarse);
+  void coarseUpdateTerminal(Robot& robot, const double t, const double dtau, 
+                            const Eigen::VectorXd& q_prev, 
+                            const Eigen::VectorXd& v_prev, 
+                            const SplitSolution& s, SplitDirection& d, 
+                            SplitSolution& s_new_coarse);
   
   void getAuxiliaryMatrix(Eigen::MatrixXd& auxiliary_matrix) const;
 
@@ -135,10 +137,12 @@ public:
   double maxDualStepSize();
 
   std::pair<double, double> costAndConstraintsViolation(
-      Robot& robot, const double t, const double dtau, const SplitSolution& s,
-      const bool is_terminal=false);
+      Robot& robot, const double t, const double dtau, const SplitSolution& s);
 
-  std::pair<double, double> costAndConstraintsViolation(
+  std::pair<double, double> costAndConstraintsViolationTerminal(
+      Robot& robot, const double t, const double dtau, const SplitSolution& s);
+
+  std::pair<double, double> costAndConstraintsViolationInitial(
       Robot& robot, const double step_size, const double t, const double dtau, 
       const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
       const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp);
@@ -146,8 +150,12 @@ public:
   std::pair<double, double> costAndConstraintsViolation(
       Robot& robot, const double step_size, const double t, const double dtau, 
       const SplitSolution& s_prev, const SplitDirection& d_prev,
-      const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp,
-      const bool is_terminal=false);
+      const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp);
+
+  std::pair<double, double> costAndConstraintsViolationTerminal(
+      Robot& robot, const double step_size, const double t, const double dtau, 
+      const SplitSolution& s_prev, const SplitDirection& d_prev,
+      const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp);
 
   void updatePrimal(Robot& robot, const double step_size, const double dtau, 
                     const SplitDirection& d, SplitSolution& s);
@@ -164,10 +172,11 @@ public:
                              const Eigen::VectorXd& gmm_next,
                              const Eigen::VectorXd& q_next);
 
-  double squaredKKTErrorNorm(Robot& robot, const double t, const double dtau, 
-                             const Eigen::VectorXd& q_prev, 
-                             const Eigen::VectorXd& v_prev, 
-                             const SplitSolution& s);
+  double squaredKKTErrorNormTerminal(Robot& robot, const double t, 
+                                     const double dtau, 
+                                     const Eigen::VectorXd& q_prev, 
+                                     const Eigen::VectorXd& v_prev, 
+                                     const SplitSolution& s);
 
 private:
   std::shared_ptr<CostFunction> cost_;
@@ -177,9 +186,24 @@ private:
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
   KKTMatrixInverse kkt_matrix_inverse_;
-  ParNMPCLinearizer linearizer_;
-  InverseDynamicsCondenser id_condenser_;
+  StateEquation state_equation_;
+  InverseDynamics inverse_dynamics_;
   Eigen::VectorXd x_res_, dx_;
+
+  void computeKKTResidual(Robot& robot, const double t, const double dtau, 
+                          const Eigen::VectorXd& q_prev, 
+                          const Eigen::VectorXd& v_prev, 
+                          const SplitSolution& s,
+                          const Eigen::VectorXd& lmd_next,
+                          const Eigen::VectorXd& gmm_next,
+                          const Eigen::VectorXd& q_next);
+
+  void computeKKTResidualTerminal(Robot& robot, const double t, 
+                                  const double dtau, 
+                                  const Eigen::VectorXd& q_prev, 
+                                  const Eigen::VectorXd& v_prev, 
+                                  const SplitSolution& s);
+
 };
 
 } // namespace idocp

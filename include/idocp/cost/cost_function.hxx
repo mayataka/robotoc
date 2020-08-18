@@ -1,14 +1,14 @@
-#include "idocp/cost/cost_function.hpp"
-
+#ifndef IDOCP_COST_FUNCTION_HXX_
+#define IDOCP_COST_FUNCTION_HXX_
 
 namespace idocp {
 
-CostFunction::CostFunction()
+inline CostFunction::CostFunction()
   : costs_() {
 }
 
 
-CostFunction::~CostFunction() {
+inline CostFunction::~CostFunction() {
 }
 
 
@@ -59,7 +59,7 @@ inline void CostFunction::computeStageCostDerivatives(
     cost->lq(robot, data, t, dtau, s, kkt_residual);
     cost->lv(robot, data, t, dtau, s, kkt_residual);
     cost->la(robot, data, t, dtau, s, kkt_residual);
-    if (robot.dimf() > 0) {
+    if (robot.has_active_contacts() > 0) {
       cost->lf(robot, data, t, dtau, s, kkt_residual);
     }
     cost->lu(robot, data, t, dtau, s, kkt_residual);
@@ -75,7 +75,7 @@ inline void CostFunction::computeStageCostHessian(
     cost->lqq(robot, data, t, dtau, s, kkt_matrix);
     cost->lvv(robot, data, t, dtau, s, kkt_matrix);
     cost->laa(robot, data, t, dtau, s, kkt_matrix);
-    if (robot.dimf() > 0) {
+    if (robot.has_active_contacts() > 0) {
       cost->lff(robot, data, t, dtau, s, kkt_matrix);
     }
     cost->luu(robot, data, t, dtau, s, kkt_matrix);
@@ -251,3 +251,5 @@ inline void CostFunction::phivv(const Robot& robot, CostFunctionData& data,
 }
 
 } // namespace idocp
+
+#endif // IDOCP_COST_FUNCTION_HXX_

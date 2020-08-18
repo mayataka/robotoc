@@ -20,10 +20,7 @@ public:
     : kkt_composition_(robot),
       kkt_matrix_(Eigen::MatrixXd::Zero(kkt_composition_.max_dimKKT(), 
                                         kkt_composition_.max_dimKKT())),
-      luu(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-      du_dq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-      du_dv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-      du_da(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())) {
+      Quu(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())) {
   }
 
   KKTMatrix() 
@@ -443,16 +440,17 @@ public:
   }
 
   template <typename MatrixType>
-  inline void invert(Eigen::MatrixBase<MatrixType>& kkt_matrix_inverse) {
+  inline void invert(const Eigen::MatrixBase<MatrixType>& kkt_matrix_inverse) {
     const int size = kkt_composition_.dimKKT();
     assert(kkt_matrix_inverse.rows() == size);
     assert(kkt_matrix_inverse.cols() == size);
-    kkt_matrix_inverse 
+    const_cast<Eigen::MatrixBase<MatrixType>&>(kkt_matrix_inverse)
         = kkt_matrix_.topLeftCorner(size, size)
                      .ldlt().solve(Eigen::MatrixXd::Identity(size, size));
   }
 
   inline void setZero() {
+    Quu.setZero();
     kkt_matrix_.setZero();
   }
 
@@ -464,7 +462,7 @@ public:
     return kkt_composition_.max_dimKKT();
   }
 
-  Eigen::MatrixXd luu, dsubtract_dq, du_dq, du_dv, du_da, du_df;
+  Eigen::MatrixXd Quu;
 
 private:
   KKTComposition kkt_composition_;

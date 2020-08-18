@@ -62,9 +62,10 @@ add_library(
   src/ocp/kkt_matrix_inverse.cpp
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
-  # src/ocp/parnmpc_linearizer.cpp
-  # src/ocp/inverse_dynamics_condenser.cpp
-  # src/ocp/split_parnmpc.cpp
+  src/ocp/state_equation.cpp
+  src/ocp/equality_constraints.cpp
+  src/ocp/inverse_dynamics.cpp
+  src/ocp/split_parnmpc.cpp
   src/ocp/line_search_filter.cpp
   # src/ocp/parnmpc.cpp
 )

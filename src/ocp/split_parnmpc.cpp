@@ -16,8 +16,8 @@ SplitParNMPC::SplitParNMPC(const Robot& robot,
     kkt_residual_(robot),
     kkt_matrix_(robot),
     kkt_matrix_inverse_(robot),
-    linearizer_(robot),
-    id_condenser_(robot),
+    state_equation_(robot),
+    inverse_dynamics_(robot),
     x_res_(Eigen::VectorXd::Zero(2*robot.dimv())),
     dx_(Eigen::VectorXd::Zero(2*robot.dimv())) {
 }
@@ -31,8 +31,8 @@ SplitParNMPC::SplitParNMPC()
     kkt_residual_(),
     kkt_matrix_(),
     kkt_matrix_inverse_(),
-    linearizer_(),
-    id_condenser_(),
+    state_equation_(),
+    inverse_dynamics_(),
     x_res_(),
     dx_() {
 }
@@ -43,8 +43,7 @@ SplitParNMPC::~SplitParNMPC() {
 
 
 bool SplitParNMPC::isFeasible(const Robot& robot, const SplitSolution& s) {
-  return constraints_->isFeasible(robot, constraints_data_, 
-                                  s.a, s.f, s.q, s.v, s.u);
+  return constraints_->isFeasible(robot, constraints_data_, s);
 }
 
 
@@ -52,8 +51,7 @@ void SplitParNMPC::initConstraints(const Robot& robot, const int time_step,
                                    const double dtau, const SplitSolution& s) {
   assert(time_step >= 0);
   assert(dtau > 0);
-  constraints_->setSlackAndDual(robot, constraints_data_, dtau, 
-                                s.a, s.f, s.q, s.v, s.u);
+  constraints_->setSlackAndDual(robot, constraints_data_, dtau, s);
 }
 
 
@@ -87,41 +85,15 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   kkt_matrix_.setContactStatus(robot);
   kkt_matrix_inverse_.setZero();
   kkt_matrix_inverse_.setContactStatus(robot);
-  if (robot.dimf() > 0) {
+  if (robot.has_active_contacts()) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
-  // Forms the Newton residual by linearizing cost, dynamics, and constraints. 
-  linearizer_.linearizeCostAndConstraints(robot, cost_, cost_data_, 
-                                          constraints_, constraints_data_, 
-                                          t, dtau, s, kkt_residual_);
-  linearizer_.linearizeStateEquation(robot, dtau, q_prev, v_prev, s, lmd_next, 
-                                     gmm_next, q_next, kkt_residual_, 
-                                     kkt_matrix_);
-  linearizer_.linearizeContactConstraints(robot, dtau, s, kkt_residual_, 
-                                          kkt_matrix_);  
-  id_condenser_.setContactStatus(robot);
-  id_condenser_.linearizeCostAndConstraints(robot, cost_, cost_data_, 
-                                            constraints_, constraints_data_, 
-                                            t, dtau, s);
-  id_condenser_.linearizeInverseDynamics(robot, dtau, s);
-  id_condenser_.linearizeFloatingBaseConstraint(dtau, s, kkt_residual_);
-  id_condenser_.augmentInverseDynamicsDerivatives(dtau, s, kkt_residual_);
-  // Condense inverse dynamics 
-  id_condenser_.condenseInequalityConstraints(robot, constraints_, 
-                                              constraints_data_, t, dtau, s);
-  id_condenser_.condenseInverseDynamics(kkt_residual_, kkt_matrix_);
-  id_condenser_.condenseFloatingBaseConstraint(dtau, kkt_residual_, kkt_matrix_);
-  // Condense inequality constraints
-  linearizer_.condenseInequalityConstraints(robot, constraints_, 
-                                            constraints_data_, t, dtau, s,
-                                            kkt_residual_, kkt_matrix_);
-  // Augment the cost function Hessian. 
-  cost_->augment_laa(robot, cost_data_, t, dtau, s.q, s.v, s.a, kkt_matrix_.Qaa());
-  if (robot.dimf() > 0) {
-    cost_->augment_lff(robot, cost_data_, t, dtau, s.f, kkt_matrix_.Qff());
-  }
-  cost_->augment_lqq(robot, cost_data_, t, dtau, s.q, s.v, s.a, kkt_matrix_.Qqq());
-  cost_->augment_lvv(robot, cost_data_, t, dtau, s.q, s.v, s.a, kkt_matrix_.Qvv());
+  computeKKTResidual(robot, t, dtau, q_prev, v_prev, s, lmd_next, gmm_next, q_next);
+  cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix_);
+  constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
+                                     kkt_matrix_, kkt_residual_);
+  inverse_dynamics_.condenseInverseDynamics(kkt_matrix_, kkt_residual_);
+  inverse_dynamics_.condenseEqualityConstraint(dtau, kkt_matrix_, kkt_residual_);
   // coarse update of the solution
   kkt_matrix_.Qxx().noalias() += aux_mat_next_old;
   kkt_matrix_.symmetrize();
@@ -138,11 +110,13 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
 }
 
 
-void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau, 
-                                const Eigen::VectorXd& q_prev, 
-                                const Eigen::VectorXd& v_prev,
-                                const SplitSolution& s, SplitDirection& d, 
-                                SplitSolution& s_new_coarse) {
+void SplitParNMPC::coarseUpdateTerminal(Robot& robot, const double t, 
+                                        const double dtau, 
+                                        const Eigen::VectorXd& q_prev, 
+                                        const Eigen::VectorXd& v_prev,
+                                        const SplitSolution& s, 
+                                        SplitDirection& d, 
+                                        SplitSolution& s_new_coarse) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -158,42 +132,16 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   kkt_matrix_.setContactStatus(robot);
   kkt_matrix_inverse_.setZero();
   kkt_matrix_inverse_.setContactStatus(robot);
-  if (robot.dimf() > 0) {
+  if (robot.has_active_contacts()) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
-  // Forms the Newton residual by linearizing cost, dynamics, and constraints. 
-  linearizer_.linearizeCostAndConstraints(robot, cost_, cost_data_, 
-                                          constraints_, constraints_data_, 
-                                          t, dtau, s, kkt_residual_);
-  linearizer_.linearizeStateEquation(robot, dtau, q_prev, v_prev, s, 
-                                     kkt_residual_, kkt_matrix_);
-  linearizer_.linearizeContactConstraints(robot, dtau, s, kkt_residual_, 
-                                          kkt_matrix_);  
-  id_condenser_.setContactStatus(robot);
-  id_condenser_.linearizeCostAndConstraints(robot, cost_, cost_data_, 
-                                            constraints_, constraints_data_, 
-                                            t, dtau, s);
-  id_condenser_.linearizeInverseDynamics(robot, dtau, s);
-  id_condenser_.linearizeFloatingBaseConstraint(dtau, s, kkt_residual_);
-  id_condenser_.augmentInverseDynamicsDerivatives(dtau, s, kkt_residual_);
-  // Condense inverse dynamics 
-  id_condenser_.condenseInequalityConstraints(robot, constraints_, 
-                                              constraints_data_, t, dtau, s);
-  id_condenser_.condenseInverseDynamics(kkt_residual_, kkt_matrix_);
-  id_condenser_.condenseFloatingBaseConstraint(dtau, kkt_residual_, kkt_matrix_);
-  // Condense inequality constraints
-  linearizer_.condenseInequalityConstraints(robot, constraints_, 
-                                            constraints_data_, t, dtau, s,
-                                            kkt_residual_, kkt_matrix_);
-  // Augment the cost function Hessian. 
-  cost_->augment_laa(robot, cost_data_, t, dtau, s.q, s.v, s.a, kkt_matrix_.Qaa());
-  if (robot.dimf() > 0) {
-    cost_->augment_lff(robot, cost_data_, t, dtau, s.f, kkt_matrix_.Qff());
-  }
-  cost_->augment_lqq(robot, cost_data_, t, dtau, s.q, s.v, s.a, kkt_matrix_.Qqq());
-  cost_->augment_lvv(robot, cost_data_, t, dtau, s.q, s.v, s.a, kkt_matrix_.Qvv());
-  cost_->augment_phiqq(robot, cost_data_, t, s.q, s.v, kkt_matrix_.Qqq());
-  cost_->augment_phivv(robot, cost_data_, t, s.q, s.v, kkt_matrix_.Qvv());
+  computeKKTResidualTerminal(robot, t, dtau, q_prev, v_prev, s);
+  cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix_);
+  cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
+  constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
+                                     kkt_matrix_, kkt_residual_);
+  inverse_dynamics_.condenseInverseDynamics(kkt_matrix_, kkt_residual_);
+  inverse_dynamics_.condenseEqualityConstraint(dtau, kkt_matrix_, kkt_residual_);
   // coarse update of the solution
   kkt_matrix_.symmetrize();
   kkt_matrix_.invert(kkt_matrix_inverse_.KKT_matrix_inverse());
@@ -277,10 +225,8 @@ void SplitParNMPC::computePrimalAndDualDirection(const Robot& robot,
   d.df() = s_new.f_active() - s.f_active();
   robot.subtractConfiguration(s_new.q, s.q, d.dq());
   d.dv() = s_new.v - s.v;
-  id_condenser_.computeCondensedDirection(dtau, d);
-  constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, 
-                                             d.da(), d.df(), d.dq(), d.dv(), 
-                                             d.du);
+  inverse_dynamics_.computeCondensedDirection(dtau, kkt_matrix_, kkt_residual_, d);
+  constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, d);
 }
 
  
@@ -295,29 +241,37 @@ double SplitParNMPC::maxDualStepSize() {
 
 
 std::pair<double, double> SplitParNMPC::costAndConstraintsViolation(
-    Robot& robot, const double t, const double dtau, const SplitSolution& s,
-    const bool is_terminal) {
+    Robot& robot, const double t, const double dtau, const SplitSolution& s) {
   assert(dtau > 0);
   double cost = 0;
-  cost += cost_->l(robot, cost_data_, t, dtau, s.q, s.v, s.a, s.f, s.u);
-  if (is_terminal) {
-    cost += cost_->phi(robot, cost_data_, t, s.q, s.v);
-  }
+  cost += cost_->l(robot, cost_data_, t, dtau, s);
   cost += constraints_->costSlackBarrier(constraints_data_);
-  id_condenser_.linearizeFloatingBaseConstraint(dtau, s, kkt_residual_);
-  double constraints_violation = 0;
-  constraints_violation += kkt_residual_.Fq().lpNorm<1>();
-  constraints_violation += kkt_residual_.Fv().lpNorm<1>();
-  constraints_violation += kkt_residual_.C().lpNorm<1>();
-  constraints_violation += id_condenser_.inverseDynamicsResidualL1Norm(dtau);
-  constraints_violation 
-      += constraints_->residualL1Nrom(robot, constraints_data_, dtau, 
-                                      s.a, s.f, s.q, s.v, s.u);
-  return std::make_pair(cost, constraints_violation);
+  double violation = 0;
+  violation += state_equation_.violationL1Norm(kkt_residual_);
+  violation += inverse_dynamics_.violationL1Norm(dtau, kkt_residual_);
+  violation += equalityconstraints::ViolationL1Norm(kkt_residual_);
+  violation += constraints_->residualL1Nrom(robot, constraints_data_, dtau, s);
+  return std::make_pair(cost, violation);
 }
 
 
-std::pair<double, double> SplitParNMPC::costAndConstraintsViolation(
+std::pair<double, double> SplitParNMPC::costAndConstraintsViolationTerminal(
+    Robot& robot, const double t, const double dtau, const SplitSolution& s) {
+  assert(dtau > 0);
+  double cost = 0;
+  cost += cost_->l(robot, cost_data_, t, dtau, s);
+  cost += cost_->phi(robot, cost_data_, t, s);
+  cost += constraints_->costSlackBarrier(constraints_data_);
+  double violation = 0;
+  violation += state_equation_.violationL1Norm(kkt_residual_);
+  violation += inverse_dynamics_.violationL1Norm(dtau, kkt_residual_);
+  violation += equalityconstraints::ViolationL1Norm(kkt_residual_);
+  violation += constraints_->residualL1Nrom(robot, constraints_data_, dtau, s);
+  return std::make_pair(cost, violation);
+}
+
+
+std::pair<double, double> SplitParNMPC::costAndConstraintsViolationInitial(
     Robot& robot, const double step_size, const double t, const double dtau, 
     const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
     const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp) {
@@ -329,83 +283,89 @@ std::pair<double, double> SplitParNMPC::costAndConstraintsViolation(
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
   s_tmp.v = s.v + step_size * d.dv();
   s_tmp.a = s.a + step_size * d.da();
-  if (robot.dimf() > 0) {
+  if (robot.has_active_contacts()) {
     s_tmp.f_active() = s.f_active() + step_size * d.df();
     robot.setContactForces(s_tmp.f);
   }
   s_tmp.u = s.u + step_size * d.du;
-  double cost = 0;
-  cost += cost_->l(robot, cost_data_, t, dtau, s_tmp.q, s_tmp.v,  s_tmp.a, 
-                   s_tmp.f, s_tmp.u);
-  cost += constraints_->costSlackBarrier(constraints_data_, step_size);
-  robot.subtractConfiguration(q_prev, s_tmp.q, kkt_residual_.Fq());
-  kkt_residual_.Fq().noalias() += dtau * s_tmp.v;
-  kkt_residual_.Fv() = v_prev - s_tmp.v + dtau * s_tmp.a;
-  if (robot.dimf() > 0) {
+  if (robot.has_active_contacts()) {
     robot.updateKinematics(s_tmp.q, s_tmp.v, s_tmp.a);
-    robot.computeBaumgarteResidual(dtau, kkt_residual_.C());
   }
-  if (robot.has_floating_base()) {
-    id_condenser_.linearizeFloatingBaseConstraint(dtau, s, kkt_residual_);
-  }
-  double constraints_violation = 0;
-  constraints_violation += kkt_residual_.Fq().lpNorm<1>();
-  constraints_violation += kkt_residual_.Fv().lpNorm<1>();
-  constraints_violation += kkt_residual_.C().lpNorm<1>();
-  constraints_violation += id_condenser_.inverseDynamicsResidualL1Norm(robot, 
-                                                                       dtau, 
-                                                                       s_tmp);
-  constraints_violation 
-      += constraints_->residualL1Nrom(robot, constraints_data_, dtau, s_tmp.a, 
-                                      s_tmp.f, s_tmp.q, s_tmp.v, s_tmp.u);
-  return std::make_pair(cost, constraints_violation);
+  double cost = 0;
+  cost += cost_->l(robot, cost_data_, t, dtau, s_tmp);
+  cost += constraints_->costSlackBarrier(constraints_data_, step_size);
+  double violation = 0;
+  violation += state_equation_.violationL1Norm(robot, dtau, q_prev, v_prev, s, 
+                                               kkt_residual_);
+  violation += inverse_dynamics_.violationL1Norm(robot, dtau, s, kkt_residual_);
+  violation += equalityconstraints::ViolationL1Norm(robot, dtau, s, kkt_residual_);
+  violation += constraints_->residualL1Nrom(robot, constraints_data_, dtau, s);
+  return std::make_pair(cost, violation);
 }
 
 
 std::pair<double, double> SplitParNMPC::costAndConstraintsViolation(
     Robot& robot, const double step_size, const double t, const double dtau, 
     const SplitSolution& s_prev, const SplitDirection& d_prev,
-    const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp, 
-    const bool is_terminal) {
+    const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp) {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dtau > 0);
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
   s_tmp.v = s.v + step_size * d.dv();
   s_tmp.a = s.a + step_size * d.da();
-  s_tmp.u = s.u + step_size * d.du;
-  if (robot.dimf() > 0) {
+  if (robot.has_active_contacts()) {
     s_tmp.f_active() = s.f_active() + step_size * d.df();
     robot.setContactForces(s_tmp.f);
   }
-  double cost = 0;
-  cost += cost_->l(robot, cost_data_, t, dtau, s_tmp.q, s_tmp.v,  
-                   s_tmp.a, s_tmp.f, s_tmp.u);
-  if (is_terminal) {
-    cost += cost_->phi(robot, cost_data_, t, s_tmp.q, s_tmp.v);
-  }
-  cost += constraints_->costSlackBarrier(constraints_data_, step_size);
-  robot.subtractConfiguration(s_prev.q, s_tmp.q, kkt_residual_.Fq());
-  kkt_residual_.Fq().noalias() += dtau * s_tmp.v + step_size * d_prev.dq();
-  kkt_residual_.Fv() = s_prev.v - s_tmp.v + dtau * s_tmp.a + step_size * d_prev.dv();
-  if (robot.dimf() > 0) {
+  s_tmp.u = s.u + step_size * d.du;
+  if (robot.has_active_contacts()) {
     robot.updateKinematics(s_tmp.q, s_tmp.v, s_tmp.a);
-    robot.computeBaumgarteResidual(dtau, kkt_residual_.C());
   }
-  if (robot.has_floating_base()) {
-    id_condenser_.linearizeFloatingBaseConstraint(dtau, s, kkt_residual_);
+  double cost = 0;
+  cost += cost_->l(robot, cost_data_, t, dtau, s_tmp);
+  cost += constraints_->costSlackBarrier(constraints_data_, step_size);
+  double violation = 0;
+  violation += state_equation_.violationL1Norm(robot, step_size, dtau, s_prev.q, 
+                                               s_prev.v, d_prev.dq(), d_prev.dv(),
+                                               s, kkt_residual_);
+  violation += inverse_dynamics_.violationL1Norm(robot, dtau, s, kkt_residual_);
+  violation += equalityconstraints::ViolationL1Norm(robot, dtau, s, kkt_residual_);
+  violation += constraints_->residualL1Nrom(robot, constraints_data_, dtau, s);
+  return std::make_pair(cost, violation);
+}
+
+
+std::pair<double, double> SplitParNMPC::costAndConstraintsViolationTerminal(
+    Robot& robot, const double step_size, const double t, const double dtau, 
+    const SplitSolution& s_prev, const SplitDirection& d_prev,
+    const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp) {
+  assert(step_size > 0);
+  assert(step_size <= 1);
+  assert(dtau > 0);
+  robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
+  s_tmp.v = s.v + step_size * d.dv();
+  s_tmp.a = s.a + step_size * d.da();
+  if (robot.has_active_contacts()) {
+    s_tmp.f_active() = s.f_active() + step_size * d.df();
+    robot.setContactForces(s_tmp.f);
   }
-  double constraints_violation = 0;
-  constraints_violation += kkt_residual_.Fq().lpNorm<1>();
-  constraints_violation += kkt_residual_.Fv().lpNorm<1>();
-  constraints_violation += kkt_residual_.C().lpNorm<1>();
-  constraints_violation += id_condenser_.inverseDynamicsResidualL1Norm(robot, 
-                                                                       dtau, 
-                                                                       s_tmp);
-  constraints_violation 
-      += constraints_->residualL1Nrom(robot, constraints_data_, dtau, s_tmp.a, 
-                                      s_tmp.f, s_tmp.q, s_tmp.v, s_tmp.u);
-  return std::make_pair(cost, constraints_violation);
+  s_tmp.u = s.u + step_size * d.du;
+  if (robot.has_active_contacts()) {
+    robot.updateKinematics(s_tmp.q, s_tmp.v, s_tmp.a);
+  }
+  double cost = 0;
+  cost += cost_->l(robot, cost_data_, t, dtau, s_tmp);
+  cost += cost_->phi(robot, cost_data_, t, s_tmp);
+  cost += constraints_->costSlackBarrier(constraints_data_, step_size);
+  double violation = 0;
+  violation += state_equation_.violationL1Norm(robot, step_size, dtau, s_prev.q, 
+                                               s_prev.v, d_prev.dq(), d_prev.dv(),
+                                               s, kkt_residual_);
+  violation += inverse_dynamics_.violationL1Norm(robot, dtau, s, kkt_residual_);
+  violation += equalityconstraints::ViolationL1Norm(robot, dtau, s, kkt_residual_);
+  violation += constraints_->residualL1Nrom(robot, constraints_data_, dtau, s);
+  return std::make_pair(cost, violation);
 }
 
 
@@ -456,73 +416,90 @@ double SplitParNMPC::squaredKKTErrorNorm(Robot& robot, const double t,
   assert(lmd_next.size() == robot.dimv());
   assert(gmm_next.size() == robot.dimv());
   assert(q_next.size() == robot.dimq());
-  // Clear the KKT matrix and KKT residual.
   kkt_matrix_.setZero();
   kkt_matrix_.setContactStatus(robot);
   kkt_residual_.setZero();
   kkt_residual_.setContactStatus(robot);
-  if (robot.dimf() > 0) {
+  if (robot.has_active_contacts()) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
-  linearizer_.linearizeCostAndConstraints(robot, cost_, cost_data_, 
-                                          constraints_, constraints_data_, 
-                                          t, dtau, s, kkt_residual_);
-  linearizer_.linearizeStateEquation(robot, dtau, q_prev, v_prev, s, lmd_next, 
-                                     gmm_next, q_next, kkt_residual_, 
-                                     kkt_matrix_);
-  linearizer_.linearizeContactConstraints(robot, dtau, s, kkt_residual_, 
-                                          kkt_matrix_);  
-  id_condenser_.setContactStatus(robot);
-  id_condenser_.linearizeCostAndConstraints(robot, cost_, cost_data_, 
-                                            constraints_, constraints_data_, 
-                                            t, dtau, s);
-  id_condenser_.linearizeInverseDynamics(robot, dtau, s);
-  id_condenser_.linearizeFloatingBaseConstraint(dtau, s, kkt_residual_);
-  id_condenser_.augmentInverseDynamicsDerivatives(dtau, s, kkt_residual_);
-
+  computeKKTResidual(robot, t, dtau, q_prev, v_prev, s, lmd_next, gmm_next, 
+                     q_next);
   double error = kkt_residual_.squaredKKTErrorNorm();
-  error += id_condenser_.squaredKKTErrorNorm(dtau);
-  error += constraints_->squaredKKTErrorNorm(robot, constraints_data_, dtau, 
-                                             s.a, s.f, s.q, s.v, s.u);
+  error += constraints_->squaredKKTErrorNorm(robot, constraints_data_, dtau, s);
   return error;
 }
 
 
-double SplitParNMPC::squaredKKTErrorNorm(Robot& robot, const double t, 
-                                         const double dtau, 
-                                         const Eigen::VectorXd& q_prev, 
-                                         const Eigen::VectorXd& v_prev, 
-                                         const SplitSolution& s) {
+double SplitParNMPC::squaredKKTErrorNormTerminal(Robot& robot, const double t, 
+                                                 const double dtau, 
+                                                 const Eigen::VectorXd& q_prev, 
+                                                 const Eigen::VectorXd& v_prev, 
+                                                 const SplitSolution& s) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
-  // Clear the KKT matrix and KKT residual.
   kkt_matrix_.setZero();
   kkt_matrix_.setContactStatus(robot);
   kkt_residual_.setZero();
   kkt_residual_.setContactStatus(robot);
-  if (robot.dimf() > 0) {
+  if (robot.has_active_contacts()) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
-  linearizer_.linearizeCostAndConstraints(robot, cost_, cost_data_, 
-                                          constraints_, constraints_data_, 
-                                          t, dtau, s, kkt_residual_);
-  linearizer_.linearizeStateEquation(robot, dtau, q_prev, v_prev, s, 
-                                     kkt_residual_, kkt_matrix_);
-  linearizer_.linearizeContactConstraints(robot, dtau, s, kkt_residual_, 
-                                          kkt_matrix_);  
-  id_condenser_.setContactStatus(robot);
-  id_condenser_.linearizeCostAndConstraints(robot, cost_, cost_data_, 
-                                            constraints_, constraints_data_, 
-                                            t, dtau, s);
-  id_condenser_.linearizeInverseDynamics(robot, dtau, s);
-  id_condenser_.linearizeFloatingBaseConstraint(dtau, s, kkt_residual_);
-  id_condenser_.augmentInverseDynamicsDerivatives(dtau, s, kkt_residual_);
+  computeKKTResidualTerminal(robot, t, dtau, q_prev, v_prev, s);
   double error = kkt_residual_.squaredKKTErrorNorm();
-  error += id_condenser_.squaredKKTErrorNorm(dtau);
-  error += constraints_->squaredKKTErrorNorm(robot, constraints_data_, dtau, 
-                                             s.a, s.f, s.q, s.v, s.u);
+  error += constraints_->squaredKKTErrorNorm(robot, constraints_data_, dtau, s);
   return error;
 }
+
+
+void SplitParNMPC::computeKKTResidual(Robot& robot, const double t, 
+                                      const double dtau, 
+                                      const Eigen::VectorXd& q_prev, 
+                                      const Eigen::VectorXd& v_prev, 
+                                      const SplitSolution& s,
+                                      const Eigen::VectorXd& lmd_next, 
+                                      const Eigen::VectorXd& gmm_next, 
+                                      const Eigen::VectorXd& q_next) {
+  assert(dtau > 0);
+  assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
+  assert(lmd_next.size() == robot.dimv());
+  assert(gmm_next.size() == robot.dimv());
+  assert(q_next.size() == robot.dimq());
+  cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
+                                     kkt_residual_);
+  constraints_->augmentDualResidual(robot, constraints_data_, dtau, 
+                                    kkt_residual_);
+  state_equation_.linearizeStateEquation(robot, dtau, q_prev, v_prev, s, 
+                                         lmd_next, gmm_next, q_next, 
+                                         kkt_matrix_, kkt_residual_);
+  equalityconstraints::LinearizeEqualityConstraints(robot, dtau, s, 
+                                                    kkt_matrix_, kkt_residual_);
+  inverse_dynamics_.linearizeInverseDynamics(robot, dtau, s, kkt_residual_);
+}
+
+
+void SplitParNMPC::computeKKTResidualTerminal(Robot& robot, const double t, 
+                                              const double dtau, 
+                                              const Eigen::VectorXd& q_prev, 
+                                              const Eigen::VectorXd& v_prev, 
+                                              const SplitSolution& s) {
+  assert(dtau > 0);
+  assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
+  cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
+                                     kkt_residual_);
+  cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, 
+                                        kkt_residual_);
+  constraints_->augmentDualResidual(robot, constraints_data_, dtau, 
+                                    kkt_residual_);
+  state_equation_.linearizeStateEquationTerminal(robot, dtau, q_prev, v_prev, s, 
+                                                 kkt_matrix_, kkt_residual_);
+  equalityconstraints::LinearizeEqualityConstraints(robot, dtau, s, 
+                                                    kkt_matrix_, kkt_residual_);
+  inverse_dynamics_.linearizeInverseDynamics(robot, dtau, s, kkt_residual_);
+}
+
 
 } // namespace idocp

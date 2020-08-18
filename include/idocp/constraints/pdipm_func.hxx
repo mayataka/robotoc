@@ -1,4 +1,5 @@
-#include "idocp/constraints/pdipm_func.hpp"
+#ifndef IDOCP_CONSTRAINTS_PDIPM_FUNC_HXX_
+#define IDOCP_CONSTRAINTS_PDIPM_FUNC_HXX_
 
 #include <assert.h>
 
@@ -77,3 +78,5 @@ inline double CostSlackBarrier(const double barrier,
 
 } // namespace pdipm
 } // namespace idocp
+
+#endif // IDOCP_CONSTRAINTS_PDIPM_FUNC_HXX_

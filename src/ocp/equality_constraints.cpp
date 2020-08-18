@@ -1,0 +1,1 @@
+#include "idocp/ocp/equality_constraints.hpp"

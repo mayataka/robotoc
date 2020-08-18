@@ -1,3 +1,6 @@
+#ifndef IDOCP_FLOATING_BASE_HXX_
+#define IDOCP_FLOATING_BASE_HXX_
+
 #include "idocp/robot/floating_base.hpp"
 
 
@@ -18,3 +21,5 @@ inline bool FloatingBase::has_floating_base() const {
 }
 
 } // namespace idocp
+
+#endif // IDOCP_FLOATING_BASE_HXX_

@@ -61,6 +61,7 @@ TEST_F(FloatingBaseRobotTest, constructor) {
   EXPECT_EQ(robot_empty.dim_passive(), 0);
   EXPECT_EQ(robot_empty.max_point_contacts(), 0);
   EXPECT_EQ(robot_empty.num_active_point_contacts(), 0);
+  EXPECT_FALSE(robot_empty.has_active_contacts());
   EXPECT_FALSE(robot_empty.has_floating_base());
   Robot robot(urdf_);
   EXPECT_EQ(robot.dimq(), dimq_);
@@ -70,6 +71,7 @@ TEST_F(FloatingBaseRobotTest, constructor) {
   EXPECT_EQ(robot.dim_passive(), 6);
   EXPECT_EQ(robot.max_point_contacts(), 0);
   EXPECT_EQ(robot.num_active_point_contacts(), 0);
+  EXPECT_FALSE(robot.has_active_contacts());
   EXPECT_TRUE(robot.has_floating_base());
   robot.printRobotModel();
   Robot robot_contact(urdf_, contact_frames_, 
@@ -85,6 +87,7 @@ TEST_F(FloatingBaseRobotTest, constructor) {
   }
   EXPECT_EQ(robot_contact.max_point_contacts(), contact_frames_.size());
   EXPECT_EQ(robot_contact.num_active_point_contacts(), 0);
+  EXPECT_FALSE(robot_contact.has_active_contacts());
   EXPECT_TRUE(robot_contact.has_floating_base());
   robot_contact.printRobotModel();
   Eigen::VectorXd effort_limit, velocity_limit, lower_position_limit, 
@@ -450,6 +453,7 @@ TEST_F(FloatingBaseRobotTest, RNEA) {
   }
   std::vector<bool> is_each_contacts_active(contacts_ref.size(), true);
   robot_contact.setContactStatus(is_each_contacts_active);
+  EXPECT_TRUE(robot_contact.has_active_contacts());
   robot_contact.setContactForces(fext);
   robot_contact.RNEA(q_, v_, a_, tau);
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint 
@@ -504,6 +508,7 @@ TEST_F(FloatingBaseRobotTest, RNEADerivativesWithContacts) {
   }
   std::vector<bool> is_each_contacts_active(contacts_ref.size(), true);
   robot.setContactStatus(is_each_contacts_active);
+  EXPECT_TRUE(robot.has_active_contacts());
   robot.setContactForces(fext);
   robot.RNEADerivatives(q_, v_, a_, dRNEA_dq, dRNEA_dv, dRNEA_da);
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint 

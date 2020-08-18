@@ -1,4 +1,5 @@
-#include "idocp/constraints/constraint_component_base.hpp"
+#ifndef IDOCP_CONSTRAINT_COMPONENT_BASE_HXX_
+#define IDOCP_CONSTRAINT_COMPONENT_BASE_HXX_
 
 #include "idocp/constraints/pdipm_func.hpp"
 #include <assert.h>
@@ -88,3 +89,5 @@ inline double ConstraintComponentBase::fractionToBoundary(
 }
 
 } // namespace idocp
+
+#endif // IDOCP_CONSTRAINT_COMPONENT_BASE_HXX_

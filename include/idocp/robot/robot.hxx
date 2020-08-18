@@ -1,7 +1,7 @@
-#include "idocp/robot/point_contact.hpp"
+#ifndef IDOCP_ROBOT_HXX_
+#define IDOCP_ROBOT_HXX_
 
-#include "assert.h"
-
+#include <assert.h>
 
 namespace idocp {
 
@@ -257,6 +257,12 @@ inline void Robot::setContactStatus(
   }
   num_active_contacts_ = num_active_contacts;
   dimf_ = 3 * num_active_contacts;
+  if (num_active_contacts_ > 0) {
+    has_active_contacts_ = true;
+  }
+  else {
+    has_active_contacts_ = false;
+  }
 }
 
 
@@ -471,6 +477,11 @@ inline int Robot::max_point_contacts() const {
 }
 
 
+inline bool Robot::has_active_contacts() const {
+  return has_active_contacts_;
+}
+
+
 inline int Robot::num_active_point_contacts() const {
   return num_active_contacts_;
 }
@@ -496,3 +507,5 @@ inline void Robot::initializeJointLimits() {
 }
 
 } // namespace idocp
+
+#endif // IDOCP_ROBOT_HXX_ 
