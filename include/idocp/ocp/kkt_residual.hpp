@@ -137,10 +137,10 @@ public:
                                  kkt_composition_.Qx_size());
   }
 
-  inline double squaredKKTErrorNorm() const {
+  inline double squaredKKTErrorNorm(const double dtau) const {
     double error = kkt_residual_.head(kkt_composition_.dimKKT()).squaredNorm();
     error += lu.squaredNorm();
-    error += u_res.squaredNorm();
+    error += dtau * dtau * u_res.squaredNorm();
     return error;
   }
 

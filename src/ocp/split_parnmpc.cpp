@@ -425,7 +425,7 @@ double SplitParNMPC::squaredKKTErrorNorm(Robot& robot, const double t,
   }
   computeKKTResidual(robot, t, dtau, q_prev, v_prev, s, lmd_next, gmm_next, 
                      q_next);
-  double error = kkt_residual_.squaredKKTErrorNorm();
+  double error = kkt_residual_.squaredKKTErrorNorm(dtau);
   error += constraints_->squaredKKTErrorNorm(robot, constraints_data_, dtau, s);
   return error;
 }
@@ -447,7 +447,7 @@ double SplitParNMPC::squaredKKTErrorNormTerminal(Robot& robot, const double t,
     robot.updateKinematics(s.q, s.v, s.a);
   }
   computeKKTResidualTerminal(robot, t, dtau, q_prev, v_prev, s);
-  double error = kkt_residual_.squaredKKTErrorNorm();
+  double error = kkt_residual_.squaredKKTErrorNorm(dtau);
   error += constraints_->squaredKKTErrorNorm(robot, constraints_data_, dtau, s);
   return error;
 }
