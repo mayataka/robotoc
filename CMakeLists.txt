@@ -66,7 +66,6 @@ add_library(
   src/ocp/equality_constraints.cpp
   src/ocp/inverse_dynamics.cpp
   src/ocp/split_parnmpc.cpp
-  src/ocp/terminal_parnmpc.cpp
   src/ocp/line_search_filter.cpp
   src/ocp/parnmpc.cpp
 )

@@ -11,7 +11,7 @@ namespace idocp {
 ParNMPC::ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
                  const std::shared_ptr<Constraints>& constraints, 
                  const double T, const int N, const int num_proc)
-  : split_ocps_(N, SplitParNMPC(robot, cost, constraints)),
+  : split_ocps_(N-1, SplitParNMPC(robot, cost, constraints)),
     robots_(num_proc, robot),
     filter_(),
     T_(T),
@@ -80,19 +80,16 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
     d_[i].setContactStatus(robots_[robot_id]);
     if (i == 0) {
       split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, q, v, 
-                                  s_[i], s_[i+1].lmd, s_[i+1].gmm, s_[i+1].q, 
-                                  aux_mat_old_[i+1], d_[i], s_new_[i]);
+                                  s_[i], s_[i+1], aux_mat_old_[i+1], d_[i], s_new_[i]);
     }
     else if (i < N_-1) {
       split_ocps_[i].coarseUpdate(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
-                                  s_[i-1].q, s_[i-1].v, s_[i], s_[i+1].lmd, 
-                                  s_[i+1].gmm, s_[i+1].q, aux_mat_old_[i+1], 
-                                  d_[i], s_new_[i]);
+                                  s_[i-1].q, s_[i-1].v, s_[i], s_[i+1], 
+                                  aux_mat_old_[i+1], d_[i], s_new_[i]);
     }
     else {
       split_ocps_[i].coarseUpdateTerminal(robots_[robot_id], t+(i+1)*dtau_, dtau_, 
-                                          s_[i-1].q, s_[i-1].v, s_[i], d_[i], 
-                                          s_new_[i]);
+                                          s_[i-1].q, s_[i-1].v, s_[i], d_[i], s_new_[i]);
     }
   }
   for (int i=N_-2; i>=0; --i) {
@@ -283,15 +280,13 @@ double ParNMPC::KKTError(const double t, const Eigen::VectorXd& q,
     if (i == 0) {
       error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
                                                     t+(i+1)*dtau_, dtau_, q, v, 
-                                                    s_[i], s_[i+1].lmd, 
-                                                    s_[i+1].gmm, s_[i+1].q);
+                                                    s_[i], s_[i+1]);
     }
     else if (i<N_-1) {
       error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
                                                     t+(i+1)*dtau_, dtau_, 
                                                     s_[i-1].q, s_[i-1].v, 
-                                                    s_[i], s_[i+1].lmd, 
-                                                    s_[i+1].gmm, s_[i+1].q);
+                                                    s_[i], s_[i+1]);
     }
     else {
       error(i) = split_ocps_[i].squaredKKTErrorNormTerminal(

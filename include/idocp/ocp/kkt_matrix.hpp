@@ -456,6 +456,12 @@ public:
                      .ldlt().solve(Eigen::MatrixXd::Identity(size, size));
   }
 
+  inline void setZeroMinimum() {
+    Quu.setZero();
+    const int size = kkt_composition_.dimKKT();
+    kkt_matrix_.topLeftCorner(size, size).triangularView<Eigen::Upper>().setZero();
+  }
+
   inline void setZero() {
     Quu.setZero();
     kkt_matrix_.setZero();

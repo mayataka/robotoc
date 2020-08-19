@@ -97,9 +97,7 @@ inline void StateEquation::linearizeStateEquationTerminal(
 
 inline double StateEquation::violationL1Norm(
     const KKTResidual& kkt_residual) const {
-  double violation = kkt_residual.Fq().lpNorm<1>();
-  violation += kkt_residual.Fv().lpNorm<1>();
-  return violation;
+  return kkt_residual.Fx().lpNorm<1>();
 }
 
 
@@ -115,9 +113,7 @@ inline double StateEquation::violationL1Norm(
   robot.subtractConfiguration(q_prev, s.q, kkt_residual.Fq());
   kkt_residual.Fq().noalias() += dtau * s.v;
   kkt_residual.Fv() = v_prev - s.v + dtau * s.a;
-  double violation = kkt_residual.Fq().lpNorm<1>();
-  violation += kkt_residual.Fv().lpNorm<1>();
-  return violation;
+  return kkt_residual.Fx().lpNorm<1>();
 }
 
 
@@ -138,9 +134,7 @@ inline double StateEquation::violationL1Norm(
   robot.subtractConfiguration(q_prev, s.q, kkt_residual.Fq());
   kkt_residual.Fq().noalias() += dtau * s.v + step_size * dq_prev;
   kkt_residual.Fv() = v_prev - s.v + dtau * s.a + step_size * dv_prev;
-  double violation = kkt_residual.Fq().lpNorm<1>();
-  violation += kkt_residual.Fv().lpNorm<1>();
-  return violation;
+  return kkt_residual.Fx().lpNorm<1>();
 }
 
 } // namespace idocp 

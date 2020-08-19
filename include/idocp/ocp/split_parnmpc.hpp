@@ -11,7 +11,6 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_matrix_inverse.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -97,9 +96,7 @@ public:
   void coarseUpdate(Robot& robot, const double t, const double dtau, 
                     const Eigen::VectorXd& q_prev, 
                     const Eigen::VectorXd& v_prev, const SplitSolution& s, 
-                    const Eigen::VectorXd& lmd_next,
-                    const Eigen::VectorXd& gmm_next,
-                    const Eigen::VectorXd& q_next,
+                    const SplitSolution& s_next, 
                     const Eigen::MatrixXd& aux_mat_next_old, SplitDirection& d, 
                     SplitSolution& s_new_coarse);
 
@@ -108,19 +105,17 @@ public:
                             const Eigen::VectorXd& v_prev, 
                             const SplitSolution& s, SplitDirection& d, 
                             SplitSolution& s_new_coarse);
-  
+
   void getAuxiliaryMatrix(Eigen::MatrixXd& auxiliary_matrix) const;
 
-  void backwardCorrectionSerial(const Robot& robot,
-                                const SplitSolution& s_old_next,
+  void backwardCorrectionSerial(const Robot& robot, const SplitSolution& s_next,
                                 const SplitSolution& s_new_next,
                                 SplitSolution& s_new);
 
   void backwardCorrectionParallel(const Robot& robot, SplitDirection& d,
                                   SplitSolution& s_new);
 
-  void forwardCorrectionSerial(const Robot& robot, 
-                               const SplitSolution& s_old_prev,
+  void forwardCorrectionSerial(const Robot& robot, const SplitSolution& s_prev,
                                const SplitSolution& s_new_prev, 
                                SplitSolution& s_new);
 
@@ -139,10 +134,7 @@ public:
   std::pair<double, double> costAndConstraintsViolation(
       Robot& robot, const double t, const double dtau, const SplitSolution& s);
 
-  std::pair<double, double> costAndConstraintsViolationTerminal(
-      Robot& robot, const double t, const double dtau, const SplitSolution& s);
-
-  std::pair<double, double> costAndConstraintsViolationInitial(
+  std::pair<double, double> costAndConstraintsViolation(
       Robot& robot, const double step_size, const double t, const double dtau, 
       const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
       const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp);
@@ -151,6 +143,9 @@ public:
       Robot& robot, const double step_size, const double t, const double dtau, 
       const SplitSolution& s_prev, const SplitDirection& d_prev,
       const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp);
+
+  std::pair<double, double> costAndConstraintsViolationTerminal(
+      Robot& robot, const double t, const double dtau, const SplitSolution& s);
 
   std::pair<double, double> costAndConstraintsViolationTerminal(
       Robot& robot, const double step_size, const double t, const double dtau, 
@@ -168,15 +163,15 @@ public:
                              const Eigen::VectorXd& q_prev, 
                              const Eigen::VectorXd& v_prev, 
                              const SplitSolution& s,
-                             const Eigen::VectorXd& lmd_next,
-                             const Eigen::VectorXd& gmm_next,
-                             const Eigen::VectorXd& q_next);
+                             const SplitSolution& s_next);
 
   double squaredKKTErrorNormTerminal(Robot& robot, const double t, 
                                      const double dtau, 
                                      const Eigen::VectorXd& q_prev, 
                                      const Eigen::VectorXd& v_prev, 
                                      const SplitSolution& s);
+
+  void setRegularization(const double regularization);
 
 private:
   std::shared_ptr<CostFunction> cost_;
@@ -185,18 +180,19 @@ private:
   ConstraintsData constraints_data_;
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
-  KKTMatrixInverse kkt_matrix_inverse_;
   StateEquation state_equation_;
   InverseDynamics inverse_dynamics_;
+  bool use_regularization_;
+  double regularization_;
+  int dimx_, dimKKT_;
+  Eigen::MatrixXd kkt_matrix_inverse_;
   Eigen::VectorXd x_res_, dx_;
 
   void computeKKTResidual(Robot& robot, const double t, const double dtau, 
                           const Eigen::VectorXd& q_prev, 
                           const Eigen::VectorXd& v_prev, 
                           const SplitSolution& s,
-                          const Eigen::VectorXd& lmd_next,
-                          const Eigen::VectorXd& gmm_next,
-                          const Eigen::VectorXd& q_next);
+                          const SplitSolution& s_next);
 
   void computeKKTResidualTerminal(Robot& robot, const double t, 
                                   const double dtau, 

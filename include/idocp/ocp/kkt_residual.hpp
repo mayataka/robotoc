@@ -83,6 +83,11 @@ public:
                                  kkt_composition_.Qv_size());
   }
 
+  inline Eigen::VectorBlock<Eigen::VectorXd> Fx() {
+    return kkt_residual_.segment(kkt_composition_.Fx_begin(), 
+                                 kkt_composition_.Fx_size());
+  }
+
   inline Eigen::VectorBlock<Eigen::VectorXd> lx() {
     return kkt_residual_.segment(kkt_composition_.Qx_begin(), 
                                  kkt_composition_.Qx_size());
@@ -130,6 +135,11 @@ public:
   inline const Eigen::VectorBlock<const Eigen::VectorXd> lv() const {
     return kkt_residual_.segment(kkt_composition_.Qv_begin(), 
                                  kkt_composition_.Qv_size());
+  }
+
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> Fx() const {
+    return kkt_residual_.segment(kkt_composition_.Fx_begin(), 
+                                 kkt_composition_.Fx_size());
   }
 
   inline const Eigen::VectorBlock<const Eigen::VectorXd> lx() const {
