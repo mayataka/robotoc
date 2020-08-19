@@ -11,7 +11,7 @@ namespace idocp {
 ParNMPC::ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
                  const std::shared_ptr<Constraints>& constraints, 
                  const double T, const int N, const int num_proc)
-  : split_ocps_(N-1, SplitParNMPC(robot, cost, constraints)),
+  : split_ocps_(N, SplitParNMPC(robot, cost, constraints)),
     robots_(num_proc, robot),
     filter_(),
     T_(T),
@@ -34,6 +34,9 @@ ParNMPC::ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
   assert(num_proc > 0);
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N; ++i) {
+    const int robot_id = omp_get_thread_num();
+    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    s_[i].setContactStatus(robots_[robot_id]);
     robot.normalizeConfiguration(s_[i].q);
     robot.normalizeConfiguration(s_new_[i].q);
   }
@@ -104,13 +107,11 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
     split_ocps_[i].forwardCorrectionSerial(robots_[0], s_[i-1], s_new_[i-1], s_new_[i]);
   }
   #pragma omp parallel for num_threads(num_proc_)
-  for (int i=1; i<N_; ++i) {
-    const int robot_id = omp_get_thread_num();
-    split_ocps_[i].forwardCorrectionParallel(robots_[robot_id], d_[i], s_new_[i]);
-  }
-  #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
+    if (i > 0) {
+      split_ocps_[i].forwardCorrectionParallel(robots_[robot_id], d_[i], s_new_[i]);
+    }
     split_ocps_[i].computePrimalAndDualDirection(robots_[robot_id], dtau_, 
                                                  s_[i], s_new_[i], d_[i]);
     primal_step_sizes_.coeffRef(i) = split_ocps_[i].maxPrimalStepSize();
@@ -118,56 +119,68 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
   }
   double primal_step_size = primal_step_sizes_.minCoeff();
   const double dual_step_size = dual_step_sizes_.minCoeff();
-  // if (use_line_search) {
-  //   if (filter_.isEmpty()) {
-  //     #pragma omp parallel for num_threads(num_proc_)
-  //     for (int i=0; i<N_; ++i) {
-  //       const int robot_id = omp_get_thread_num();
-  //       robots_[robot_id].setContactStatus(contact_sequence_[i]);
-  //       bool is_terminal = false;
-  //       if (i == N_-1) is_terminal = true;
-  //       const std::pair<double, double> filter_pair
-  //           = split_ocps_[i].costAndConstraintsViolation(robots_[robot_id], 
-  //                                                        t+(i+1)*dtau_, dtau_, 
-  //                                                        s_[i], is_terminal);
-  //       costs_.coeffRef(i) = filter_pair.first;
-  //       constraints_violations_.coeffRef(i) = filter_pair.second;
-  //     } 
-  //     filter_.augment(costs_.sum(), constraints_violations_.sum());
-  //   }
-  //   while (primal_step_size > min_step_size_) {
-  //     #pragma omp parallel for num_threads(num_proc_)
-  //     for (int i=0; i<N_; ++i) {
-  //       const int robot_id = omp_get_thread_num();
-  //       robots_[robot_id].setContactStatus(contact_sequence_[i]);
-  //       if (i == 0) {
-  //         const std::pair<double, double> filter_pair
-  //             = split_ocps_[i].costAndConstraintsViolation(
-  //                   robots_[robot_id], primal_step_size, t+(i+1)*dtau_, dtau_, 
-  //                   q, v, s_[i], d_[i], s_new_[i]);
-  //         costs_.coeffRef(i) = filter_pair.first;
-  //         constraints_violations_.coeffRef(i) = filter_pair.second;
-  //       }
-  //       else {
-  //         bool is_terminal = false;
-  //         if (i == N_-1) is_terminal = true;
-  //         const std::pair<double, double> filter_pair
-  //             = split_ocps_[i].costAndConstraintsViolation(
-  //                   robots_[robot_id], primal_step_size, t+(i+1)*dtau_, dtau_, 
-  //                   s_[i-1], d_[i-1], s_[i], d_[i], s_new_[i], is_terminal);
-  //         costs_.coeffRef(i) = filter_pair.first;
-  //         constraints_violations_.coeffRef(i) = filter_pair.second;
-  //       }
-  //     }
-  //     const double cost_sum = costs_.sum();
-  //     const double constraints_violation_sum = constraints_violations_.sum();
-  //     if (filter_.isAccepted(cost_sum, constraints_violation_sum)) {
-  //       filter_.augment(cost_sum, constraints_violation_sum);
-  //       break;
-  //     }
-  //     primal_step_size *= step_size_reduction_rate_;
-  //   }
-  // }  // end if (use_line_search) 
+  if (use_line_search) {
+    if (filter_.isEmpty()) {
+      #pragma omp parallel for num_threads(num_proc_)
+      for (int i=0; i<N_; ++i) {
+        const int robot_id = omp_get_thread_num();
+        robots_[robot_id].setContactStatus(contact_sequence_[i]);
+        if (i < N_-1) {
+          const std::pair<double, double> filter_pair
+              = split_ocps_[i].costAndConstraintsViolation(
+                  robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i]);
+          costs_.coeffRef(i) = filter_pair.first;
+          constraints_violations_.coeffRef(i) = filter_pair.second;
+        }
+        else {
+          const std::pair<double, double> filter_pair
+              = split_ocps_[i].costAndConstraintsViolationTerminal(
+                  robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i]);
+          costs_.coeffRef(i) = filter_pair.first;
+          constraints_violations_.coeffRef(i) = filter_pair.second;
+        }
+      } 
+      filter_.augment(costs_.sum(), constraints_violations_.sum());
+    }
+    while (primal_step_size > min_step_size_) {
+      #pragma omp parallel for num_threads(num_proc_)
+      for (int i=0; i<N_; ++i) {
+        const int robot_id = omp_get_thread_num();
+        robots_[robot_id].setContactStatus(contact_sequence_[i]);
+        if (i == 0) {
+          const std::pair<double, double> filter_pair
+              = split_ocps_[i].costAndConstraintsViolation(
+                    robots_[robot_id], primal_step_size, t+(i+1)*dtau_, dtau_, 
+                    q, v, s_[i], d_[i], s_new_[i]);
+          costs_.coeffRef(i) = filter_pair.first;
+          constraints_violations_.coeffRef(i) = filter_pair.second;
+        }
+        else if (i < N_-1) {
+          const std::pair<double, double> filter_pair
+              = split_ocps_[i].costAndConstraintsViolation(
+                    robots_[robot_id], primal_step_size, t+(i+1)*dtau_, dtau_, 
+                    s_[i-1], d_[i-1], s_[i], d_[i], s_new_[i]);
+          costs_.coeffRef(i) = filter_pair.first;
+          constraints_violations_.coeffRef(i) = filter_pair.second;
+        }
+        else {
+          const std::pair<double, double> filter_pair
+              = split_ocps_[i].costAndConstraintsViolationTerminal(
+                    robots_[robot_id], primal_step_size, t+(i+1)*dtau_, dtau_, 
+                    s_[i-1], d_[i-1], s_[i], d_[i], s_new_[i]);
+          costs_.coeffRef(i) = filter_pair.first;
+          constraints_violations_.coeffRef(i) = filter_pair.second;
+        }
+      }
+      const double cost_sum = costs_.sum();
+      const double constraints_violation_sum = constraints_violations_.sum();
+      if (filter_.isAccepted(cost_sum, constraints_violation_sum)) {
+        filter_.augment(cost_sum, constraints_violation_sum);
+        break;
+      }
+      primal_step_size *= step_size_reduction_rate_;
+    }
+  }  // end if (use_line_search) 
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
@@ -252,14 +265,25 @@ bool ParNMPC::setStateTrajectory(const Eigen::VectorXd& q0,
 void ParNMPC::setContactSequence(
     const std::vector<std::vector<bool>>& contact_sequence) {
   if (contact_sequence.size() != N_) {
+    std::cout << "invalid number of the contact sequence: it must be " 
+              << N_ << std::endl;
     return;
   }
   for (int i=0; i<N_; ++i) {
     if (contact_sequence[i].size() != robots_[0].max_point_contacts()) {
+      std::cout << "invalid dimension of the contact sequence at time step" 
+                << i << ": it must be " << robots_[0].max_point_contacts() 
+                << std::endl;
       return;
     }
   }
   contact_sequence_ = contact_sequence;
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<N_; ++i) {
+    const int robot_id = omp_get_thread_num();
+    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    s_[i].setContactStatus(robots_[robot_id]);
+  }
 }
 
 
@@ -278,15 +302,13 @@ double ParNMPC::KKTError(const double t, const Eigen::VectorXd& q,
     const int robot_id = omp_get_thread_num();
     robots_[robot_id].setContactStatus(contact_sequence_[i]);
     if (i == 0) {
-      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
-                                                    t+(i+1)*dtau_, dtau_, q, v, 
-                                                    s_[i], s_[i+1]);
+      error(i) = split_ocps_[i].squaredKKTErrorNorm(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, q, v, s_[i], s_[i+1]);
     }
     else if (i<N_-1) {
-      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
-                                                    t+(i+1)*dtau_, dtau_, 
-                                                    s_[i-1].q, s_[i-1].v, 
-                                                    s_[i], s_[i+1]);
+      error(i) = split_ocps_[i].squaredKKTErrorNorm(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i-1].q, s_[i-1].v, 
+          s_[i], s_[i+1]);
     }
     else {
       error(i) = split_ocps_[i].squaredKKTErrorNormTerminal(

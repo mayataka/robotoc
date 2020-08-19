@@ -10,7 +10,6 @@
 #include "idocp/ocp/split_parnmpc.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_matrix_inverse.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
@@ -95,7 +94,7 @@ protected:
     const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
     const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(robot.dimv());
     const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-    const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(robot.dimv());
+    const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
     const Eigen::VectorXd f_weight = Eigen::VectorXd::Random(robot.max_dimf()).array().abs();
     const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(robot.max_dimf());
     joint_cost->set_q_weight(q_weight);
@@ -403,6 +402,8 @@ TEST_F(FloatingBaseSplitParNMPCTest, coarseUpdate) {
   inverse_dynamics.condenseEqualityConstraint(dtau, kkt_matrix, kkt_residual);
   kkt_matrix.Qxx().noalias() += aux_mat_next;
   kkt_matrix.symmetrize();
+  std::cout << "KKT matrix is " << std::endl;
+  std::cout << kkt_matrix.KKT_matrix() << std::endl;
   const int dimKKT = kkt_matrix.dimKKT();
   const int dimx = 2*robot.dimv();
   Eigen::MatrixXd kkt_matrix_inverse(Eigen::MatrixXd::Zero(dimKKT, dimKKT));

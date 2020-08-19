@@ -50,7 +50,7 @@ inline void StateEquation::linearizeStateEquation(
             + kkt_matrix.Fqq().transpose() * s.lmd;
   }
   else {
-    kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
+    kkt_matrix.Fqq() = - Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
     kkt_residual.lq().noalias() += lmd_next - s.lmd;
   }
   kkt_residual.lv().noalias() += dtau * s.lmd - s.gmm + gmm_next;
@@ -82,8 +82,8 @@ inline void StateEquation::linearizeStateEquationTerminal(
         += kkt_matrix.Fqq().transpose() * s.lmd;
   }
   else {
-    kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
-    kkt_residual.lq().noalias() += - s.lmd;
+    kkt_matrix.Fqq() = - Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
+    kkt_residual.lq().noalias() -= s.lmd;
   }
   kkt_residual.lv().noalias() += dtau * s.lmd - s.gmm;
   kkt_residual.la().noalias() += dtau * s.gmm;

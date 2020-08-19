@@ -171,7 +171,7 @@ public:
                                      const Eigen::VectorXd& v_prev, 
                                      const SplitSolution& s);
 
-  void setRegularization(const double regularization);
+  void setRegularization(const double regularization=1e-09);
 
 private:
   std::shared_ptr<CostFunction> cost_;

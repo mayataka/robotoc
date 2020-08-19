@@ -69,7 +69,7 @@ TEST_F(StateEquationTest, fixed_base) {
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm+gmm_next)));
   EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq()
-              .isApprox(Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
+              .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
   EXPECT_TRUE(kkt_matrix.Fqv()
               .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
   EXPECT_TRUE(kkt_matrix.Fvv()
@@ -86,7 +86,7 @@ TEST_F(StateEquationTest, fixed_base) {
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm)));
   EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq()
-              .isApprox(Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
+              .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
   EXPECT_TRUE(kkt_matrix.Fqv()
               .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
   EXPECT_TRUE(kkt_matrix.Fvv()
@@ -161,6 +161,8 @@ TEST_F(StateEquationTest, floating_base) {
               .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
   EXPECT_TRUE(kkt_matrix.Fva()
               .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
+  std::cout << "kkt_matrix.Fqq()" << std::endl;
+  std::cout << kkt_matrix.Fqq() << std::endl;
 }
 
 

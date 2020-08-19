@@ -77,8 +77,6 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   assert(v_prev.size() == robot.dimv());
   assert(s.dimf() == robot.dimf());
   assert(s.dimc() == robot.dim_passive()+robot.dimf());
-  assert(s_next.dimf() == robot.dimf());
-  assert(s_next.dimc() == robot.dim_passive()+robot.dimf());
   assert(aux_mat_next_old.rows() == 2*robot.dimv());
   assert(aux_mat_next_old.cols() == 2*robot.dimv());
   assert(d.dimf() == robot.dimf());
@@ -86,7 +84,7 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   assert(s_new_coarse.dimf() == robot.dimf());
   assert(s_new_coarse.dimc() == robot.dim_passive()+robot.dimf());
   kkt_residual_.setContactStatus(robot);
-  kkt_residual_.setZero();
+  kkt_residual_.setZeroMinimum();
   kkt_matrix_.setContactStatus(robot);
   kkt_matrix_.setZeroMinimum();
   if (robot.has_active_contacts()) {
@@ -100,7 +98,7 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   inverse_dynamics_.condenseEqualityConstraint(dtau, kkt_matrix_, kkt_residual_);
   // coarse update of the solution
   kkt_matrix_.Qxx().noalias() += aux_mat_next_old;
-  kkt_matrix_.symmetrize();
+  kkt_matrix_.symmetrize(); // TODO : reduce the computational time in symmetrize using sparsity
   dimKKT_ = kkt_matrix_.dimKKT();
   kkt_matrix_.invert(kkt_matrix_inverse_.topLeftCorner(dimKKT_, dimKKT_));
   d.split_direction() = kkt_matrix_inverse_.topLeftCorner(dimKKT_, dimKKT_)
@@ -132,7 +130,7 @@ void SplitParNMPC::coarseUpdateTerminal(Robot& robot, const double t,
   assert(s_new_coarse.dimf() == robot.dimf());
   assert(s_new_coarse.dimc() == robot.dim_passive()+robot.dimf());
   kkt_residual_.setContactStatus(robot);
-  kkt_residual_.setZero();
+  kkt_residual_.setZeroMinimum();
   kkt_matrix_.setContactStatus(robot);
   kkt_matrix_.setZeroMinimum();
   if (robot.has_active_contacts()) {
@@ -162,6 +160,8 @@ void SplitParNMPC::coarseUpdateTerminal(Robot& robot, const double t,
 
 
 void SplitParNMPC::getAuxiliaryMatrix(Eigen::MatrixXd& aux_mat) const {
+  assert(aux_mat.rows() == dimx_);
+  assert(aux_mat.cols() == dimx_);
   aux_mat = - kkt_matrix_inverse_.topLeftCorner(dimx_, dimx_);
 }
 
@@ -454,8 +454,14 @@ double SplitParNMPC::squaredKKTErrorNormTerminal(Robot& robot, const double t,
 
 
 void SplitParNMPC::setRegularization(const double regularization) {
-  use_regularization_ = true;
-  regularization_ = regularization;
+  if (regularization > 0) {
+    use_regularization_ = true;
+    regularization_ = regularization;
+  }
+  else {
+    use_regularization_ = false;
+    regularization_ = 0;
+  }
 }
 
 

@@ -154,6 +154,12 @@ public:
     return error;
   }
 
+  inline void setZeroMinimum() {
+    lu.setZero();
+    u_res.setZero();
+    kkt_residual_.head(kkt_composition_.dimKKT()).setZero();
+  }
+
   inline void setZero() {
     lu.setZero();
     u_res.setZero();

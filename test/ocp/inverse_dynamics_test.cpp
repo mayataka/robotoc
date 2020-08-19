@@ -124,6 +124,14 @@ TEST_F(InverseDynamicsTest, fixed_base) {
   EXPECT_TRUE(du_ref.isApprox(d.du));
   Eigen::VectorXd dbeta_ref = (lu_ref + Quu_ref * du_ref) / dtau_;
   EXPECT_TRUE(dbeta_ref.isApprox(d.dbeta));
+  std::cout << "du_dq" << std::endl;
+  std::cout << du_dq << std::endl;
+  std::cout << "du_dv" << std::endl;
+  std::cout << du_dv << std::endl;
+  std::cout << "du_da" << std::endl;
+  std::cout << du_da << std::endl;
+  std::cout << "du_df" << std::endl;
+  std::cout << du_df << std::endl;
 }
 
 

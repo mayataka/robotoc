@@ -121,12 +121,15 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   cost.luu(robot_, data_, t_, dtau_, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.Quu.isApprox(luu_ref));
+  std::cout << kkt_mat.KKT_matrix() << std::endl;
+  std::cout << kkt_mat.Quu << std::endl;
   cost.phiqq(robot_, data_, t_, s, kkt_mat);
   lqq_ref += qf_weight.asDiagonal();
   EXPECT_TRUE(kkt_mat.Qqq().isApprox(lqq_ref));
   cost.phivv(robot_, data_, t_, s, kkt_mat);
   lvv_ref += vf_weight.asDiagonal();
   EXPECT_TRUE(kkt_mat.Qvv().isApprox(lvv_ref));
+  std::cout << kkt_mat.KKT_matrix() << std::endl;
 }
 
 
