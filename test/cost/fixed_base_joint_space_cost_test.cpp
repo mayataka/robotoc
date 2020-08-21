@@ -95,7 +95,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   cost.la(robot_, data_, t_, dtau_, s, kkt_res);
   EXPECT_TRUE(kkt_res.la().isApprox(la_ref));
   lu_ref = dtau_ * u_weight.asDiagonal() * (s.u-u_ref);
-  cost.lu(robot_, data_, t_, dtau_, s, kkt_res);
+  cost.lu(robot_, data_, t_, dtau_, s.u, kkt_res.lu);
   EXPECT_TRUE(kkt_res.lu.isApprox(lu_ref));
   cost.phiq(robot_, data_, t_, s, kkt_res);
   lq_ref += qf_weight.asDiagonal() * (s.q-q_ref);
@@ -119,9 +119,9 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   cost.laa(robot_, data_, t_, dtau_, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.Qaa().isApprox(laa_ref));
   EXPECT_TRUE(kkt_mat.Qff().isZero());
-  cost.luu(robot_, data_, t_, dtau_, s, kkt_mat);
+  cost.luu(robot_, data_, t_, dtau_, s.u, kkt_mat.Quu);
   EXPECT_TRUE(kkt_mat.Quu.isApprox(luu_ref));
-  std::cout << kkt_mat.KKT_matrix() << std::endl;
+  std::cout << kkt_mat.costHessian() << std::endl;
   std::cout << kkt_mat.Quu << std::endl;
   cost.phiqq(robot_, data_, t_, s, kkt_mat);
   lqq_ref += qf_weight.asDiagonal();
@@ -129,7 +129,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   cost.phivv(robot_, data_, t_, s, kkt_mat);
   lvv_ref += vf_weight.asDiagonal();
   EXPECT_TRUE(kkt_mat.Qvv().isApprox(lvv_ref));
-  std::cout << kkt_mat.KKT_matrix() << std::endl;
+  std::cout << kkt_mat.costHessian() << std::endl;
 }
 
 

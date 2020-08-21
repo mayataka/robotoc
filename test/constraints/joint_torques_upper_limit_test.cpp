@@ -46,9 +46,9 @@ TEST_F(JointTorquesUpperLimitTest, isFeasibleFixedBase) {
   Eigen::VectorXd f = Eigen::VectorXd::Zero(fixed_base_robot_.dimf());
   Eigen::VectorXd u = Eigen::VectorXd::Zero(fixed_base_robot_.dimv());
   fixed_base_robot_.generateFeasibleConfiguration(q);
-  EXPECT_TRUE(limit.isFeasible(fixed_base_robot_, data, a, f, q, v, u));
+  EXPECT_TRUE(limit.isFeasible(fixed_base_robot_, data, s));
   u = 2*fixed_base_robot_.jointEffortLimit();
-  EXPECT_FALSE(limit.isFeasible(fixed_base_robot_, data, a, f, q, v, u));
+  EXPECT_FALSE(limit.isFeasible(fixed_base_robot_, data, s));
 }
 
 
@@ -61,10 +61,10 @@ TEST_F(JointTorquesUpperLimitTest, isFeasibleFloatingBase) {
   Eigen::VectorXd f = Eigen::VectorXd::Zero(floating_base_robot_.dimf());
   Eigen::VectorXd u = Eigen::VectorXd::Zero(floating_base_robot_.dimv());
   floating_base_robot_.generateFeasibleConfiguration(q);
-  EXPECT_TRUE(limit.isFeasible(floating_base_robot_, data, a, f, q, v, u));
+  EXPECT_TRUE(limit.isFeasible(floating_base_robot_, data, s));
   const int dimc = floating_base_robot_.jointEffortLimit().size();
   u.tail(dimc) = 2*floating_base_robot_.jointEffortLimit();
-  EXPECT_FALSE(limit.isFeasible(floating_base_robot_, data, a, f, q, v, u));
+  EXPECT_FALSE(limit.isFeasible(floating_base_robot_, data, s));
 }
 
 
@@ -82,7 +82,7 @@ TEST_F(JointTorquesUpperLimitTest, setSlackAndDualFixedBase) {
   Eigen::VectorXd umax = fixed_base_robot_.jointEffortLimit();
   ASSERT_EQ(dimq, fixed_base_robot_.jointEffortLimit().size());
   fixed_base_robot_.generateFeasibleConfiguration(q);
-  limit.setSlackAndDual(fixed_base_robot_, data, dtau_, a, f, q, v, u);
+  limit.setSlackAndDual(fixed_base_robot_, data, dtau_, s);
   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimq);
@@ -105,10 +105,10 @@ TEST_F(JointTorquesUpperLimitTest, setSlackAndDualFixedBase) {
   const double cost_slack_barrier_ref 
       = pdipm::pdipmfunc::SlackBarrierCost(dimq, barrier_, slack_ref);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
-  const double l1residual = limit.residualL1Nrom(fixed_base_robot_, data, dtau_, a, f, q, v, u);
+  const double l1residual = limit.residualL1Nrom(fixed_base_robot_, data, dtau_, s);
   const double l1residual_ref = (dtau_*(u-umax)+slack_ref).lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1residual, l1residual_ref);
-  const double l2residual = limit.squaredKKTErrorNorm(fixed_base_robot_, data, dtau_, a, f, q, v, u);
+  const double l2residual = limit.squaredKKTErrorNorm(fixed_base_robot_, data, dtau_, s);
   Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dimv);
   pdipm::pdipmfunc::ComputeDualityResidual(barrier_, slack_ref, dual_ref, duality_ref);
   const double l2residual_ref 
@@ -132,7 +132,7 @@ TEST_F(JointTorquesUpperLimitTest, setSlackAndDualFloatingBase) {
   const int dimc = floating_base_robot_.jointEffortLimit().size();
   ASSERT_EQ(dimc+6, dimv);
   floating_base_robot_.generateFeasibleConfiguration(q);
-  limit.setSlackAndDual(floating_base_robot_, data, dtau_, a, f, q, v, u);
+  limit.setSlackAndDual(floating_base_robot_, data, dtau_, s);
   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);
@@ -155,10 +155,10 @@ TEST_F(JointTorquesUpperLimitTest, setSlackAndDualFloatingBase) {
   const double cost_slack_barrier_ref 
       = pdipm::pdipmfunc::SlackBarrierCost(dimc, barrier_, slack_ref);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
-  const double l1residual = limit.residualL1Nrom(floating_base_robot_, data, dtau_, a, f, q, v, u);
+  const double l1residual = limit.residualL1Nrom(floating_base_robot_, data, dtau_, s);
   const double l1residual_ref = (dtau_*(u.tail(dimc)-umax)+slack_ref).lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1residual, l1residual_ref);
-  const double l2residual = limit.squaredKKTErrorNorm(floating_base_robot_, data, dtau_, a, f, q, v, u);
+  const double l2residual = limit.squaredKKTErrorNorm(floating_base_robot_, data, dtau_, s);
   Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dimc);
   pdipm::pdipmfunc::ComputeDualityResidual(barrier_, slack_ref, dual_ref, duality_ref);
   const double l2residual_ref 
@@ -181,7 +181,7 @@ TEST_F(JointTorquesUpperLimitTest, condenseSlackAndDualFixedBase) {
   Eigen::VectorXd umax = fixed_base_robot_.jointEffortLimit();
   ASSERT_EQ(dimq, fixed_base_robot_.jointEffortLimit().size());
   fixed_base_robot_.generateFeasibleConfiguration(q);
-  limit.setSlackAndDual(fixed_base_robot_, data, dtau_, a, f, q, v, u);
+  limit.setSlackAndDual(fixed_base_robot_, data, dtau_, s);
   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimq);
@@ -281,7 +281,7 @@ TEST_F(JointTorquesUpperLimitTest, condenseSlackAndDualFloatingBase) {
   Eigen::VectorXd umax = floating_base_robot_.jointEffortLimit();
   const int dimc = floating_base_robot_.jointEffortLimit().size();
   floating_base_robot_.generateFeasibleConfiguration(q);
-  limit.setSlackAndDual(floating_base_robot_, data, dtau_, a, f, q, v, u);
+  limit.setSlackAndDual(floating_base_robot_, data, dtau_, s);
   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);

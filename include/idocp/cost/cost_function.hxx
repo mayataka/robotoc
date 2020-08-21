@@ -62,7 +62,6 @@ inline void CostFunction::computeStageCostDerivatives(
     if (robot.has_active_contacts() > 0) {
       cost->lf(robot, data, t, dtau, s, kkt_residual);
     }
-    cost->lu(robot, data, t, dtau, s, kkt_residual);
   }
 }
 
@@ -78,7 +77,6 @@ inline void CostFunction::computeStageCostHessian(
     if (robot.has_active_contacts() > 0) {
       cost->lff(robot, data, t, dtau, s, kkt_matrix);
     }
-    cost->luu(robot, data, t, dtau, s, kkt_matrix);
   }
 }
 
@@ -147,17 +145,6 @@ inline void CostFunction::lf(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::lu(const Robot& robot, CostFunctionData& data, 
-                             const double t, const double dtau, 
-                             const SplitSolution& s, 
-                             KKTResidual& kkt_residual) const {
-  assert(dtau > 0);
-  for (const auto cost : costs_) {
-    cost->lu(robot, data, t, dtau, s, kkt_residual);
-  }
-}
-
-
 inline void CostFunction::lqq(const Robot& robot, CostFunctionData& data, 
                               const double t, const double dtau, 
                               const SplitSolution& s, 
@@ -202,17 +189,6 @@ inline void CostFunction::lff(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::luu(const Robot& robot, CostFunctionData& data, 
-                              const double t, const double dtau, 
-                              const SplitSolution& s, 
-                              KKTMatrix& kkt_matrix) const {
-  assert(dtau > 0);
-  for (const auto cost : costs_) {
-    cost->luu(robot, data, t, dtau, s, kkt_matrix);
-  }
-}
-
-
 inline void CostFunction::phiq(const Robot& robot, CostFunctionData& data, 
                                const double t, const SplitSolution& s, 
                                KKTResidual& kkt_residual) const {
@@ -247,6 +223,33 @@ inline void CostFunction::phivv(const Robot& robot, CostFunctionData& data,
                                 KKTMatrix& kkt_matrix) const {
   for (const auto cost : costs_) {
     cost->phivv(robot, data, t, s, kkt_matrix);
+  }
+}
+
+
+inline void CostFunction::lu(const Robot& robot, CostFunctionData& data, 
+                             const double t, const double dtau, 
+                             const Eigen::VectorXd& u, 
+                             Eigen::VectorXd& lu) const {
+  assert(dtau > 0);
+  assert(u.size() == robot.dimv());
+  assert(lu.size() == robot.dimv());
+  for (const auto cost : costs_) {
+    cost->lu(robot, data, t, dtau, u, lu);
+  }
+}
+
+
+inline void CostFunction::luu(const Robot& robot, CostFunctionData& data, 
+                              const double t, const double dtau, 
+                              const Eigen::VectorXd& u, 
+                              Eigen::MatrixXd& Quu) const {
+  assert(dtau > 0);
+  assert(u.size() == robot.dimv());
+  assert(Quu.rows() == robot.dimv());
+  assert(Quu.cols() == robot.dimv());
+  for (const auto cost : costs_) {
+    cost->luu(robot, data, t, dtau, u, Quu);
   }
 }
 

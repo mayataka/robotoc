@@ -30,15 +30,18 @@ public:
 
   InverseDynamics& operator=(InverseDynamics&&) noexcept = default;
 
-  void linearizeInverseDynamics(Robot& robot, const double dtau, 
-                                const SplitSolution& s,
-                                KKTResidual& kkt_residual);
+  void augmentInverseDynamics(Robot& robot, const double dtau, 
+                              const SplitSolution& s,
+                              KKTResidual& kkt_residual);
 
-  void condenseInverseDynamics(KKTMatrix& kkt_matrix, 
+  void condenseInverseDynamics(Robot& robot, const double dtau, 
+                               const SplitSolution& s, KKTMatrix& kkt_matrix, 
                                KKTResidual& kkt_residual);
 
-  void condenseEqualityConstraint(const double dtau, KKTMatrix& kkt_matrix,
-                                  KKTResidual& kkt_residual) const;
+  void condenseFloatingBaseConstraint(Robot& robot, const double dtau, 
+                                      const SplitSolution& s, 
+                                      KKTMatrix& kkt_matrix, 
+                                      KKTResidual& kkt_residual);
 
   void computeCondensedDirection(const double dtau, 
                                  const KKTMatrix& kkt_matrix, 
@@ -48,9 +51,9 @@ public:
   double violationL1Norm(const double dtau, 
                          const KKTResidual& kkt_residual) const;
 
-  double violationL1Norm(Robot& robot, const double dtau, 
-                         const SplitSolution& s, 
-                         KKTResidual& kkt_residual) const;
+  double computeViolationL1Norm(Robot& robot, const double dtau, 
+                                const SplitSolution& s, 
+                                KKTResidual& kkt_residual) const;
 
 private:
   Eigen::VectorXd lu_condensed_;

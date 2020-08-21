@@ -5,7 +5,6 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/kkt_composition.hpp"
 #include "idocp/ocp/split_direction.hpp"
 
 
@@ -17,7 +16,7 @@ protected:
     srand((unsigned int) time(0));
     std::random_device rnd;
     fixed_base_urdf_ = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf_ = "../urdf/iiwa14/iiwa14.urdf";
+    floating_base_urdf_ = "../urdf/anymal/anymal.urdf";
   }
 
   virtual void TearDown() {
@@ -34,8 +33,6 @@ TEST_F(SplitDirectionTest, fixed_base) {
   std::random_device rnd;
   std::vector<bool> contact_status = {rnd()%2==0};
   robot.setContactStatus(contact_status);
-  KKTComposition composition(robot);
-  composition.setContactStatus(robot);
   SplitDirection d(robot);
   d.setContactStatus(robot);
   const Eigen::VectorXd split_direction = Eigen::VectorXd::Random(d.dimKKT());
@@ -54,10 +51,6 @@ TEST_F(SplitDirectionTest, fixed_base) {
       = split_direction.segment(4*robot.dimv()+dimc+robot.dimf(), robot.dimv());
   const Eigen::VectorXd dx 
       = split_direction.segment(3*robot.dimv()+dimc+robot.dimf(), 2*robot.dimv());
-  const Eigen::VectorXd backwardParallelDirection 
-      = split_direction.segment(2*robot.dimv(), d.dimKKT()-2*robot.dimv());
-  const Eigen::VectorXd forwardParallelDirection 
-      = split_direction.head(d.dimKKT()-2*robot.dimv());
   EXPECT_TRUE(dlmd.isApprox(d.dlmd()));
   EXPECT_TRUE(dgmm.isApprox(d.dgmm()));
   EXPECT_TRUE(dmu.isApprox(d.dmu()));
@@ -66,12 +59,10 @@ TEST_F(SplitDirectionTest, fixed_base) {
   EXPECT_TRUE(dq.isApprox(d.dq()));
   EXPECT_TRUE(dv.isApprox(d.dv()));
   EXPECT_TRUE(dx.isApprox(d.dx()));
-  EXPECT_TRUE(backwardParallelDirection.isApprox(d.backwardCorrectionParallelDirection()));
-  EXPECT_TRUE(forwardParallelDirection.isApprox(d.forwardCorrectionParallelDirection()));
   d.setZero();
   EXPECT_TRUE(d.split_direction().isZero());
-  EXPECT_EQ(d.dimKKT(), composition.dimKKT());
-  EXPECT_EQ(d.max_dimKKT(), composition.max_dimKKT());
+  EXPECT_EQ(d.dimKKT(), 5*robot.dimv()+robot.dim_passive()+2*robot.dimf());
+  EXPECT_EQ(d.max_dimKKT(), 5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf());
 }
 
 
@@ -84,8 +75,6 @@ TEST_F(SplitDirectionTest, floating_base) {
     contact_status.push_back(rnd()%2==0);
   }
   robot.setContactStatus(contact_status);
-  KKTComposition composition(robot);
-  composition.setContactStatus(robot);
   SplitDirection d(robot);
   d.setContactStatus(robot);
   const Eigen::VectorXd split_direction = Eigen::VectorXd::Random(d.dimKKT());
@@ -104,10 +93,6 @@ TEST_F(SplitDirectionTest, floating_base) {
       = split_direction.segment(4*robot.dimv()+dimc+robot.dimf(), robot.dimv());
   const Eigen::VectorXd dx 
       = split_direction.segment(3*robot.dimv()+dimc+robot.dimf(), 2*robot.dimv());
-  const Eigen::VectorXd backwardParallelDirection 
-      = split_direction.segment(2*robot.dimv(), d.dimKKT()-2*robot.dimv());
-  const Eigen::VectorXd forwardParallelDirection 
-      = split_direction.head(d.dimKKT()-2*robot.dimv());
   EXPECT_TRUE(dlmd.isApprox(d.dlmd()));
   EXPECT_TRUE(dgmm.isApprox(d.dgmm()));
   EXPECT_TRUE(dmu.isApprox(d.dmu()));
@@ -116,12 +101,10 @@ TEST_F(SplitDirectionTest, floating_base) {
   EXPECT_TRUE(dq.isApprox(d.dq()));
   EXPECT_TRUE(dv.isApprox(d.dv()));
   EXPECT_TRUE(dx.isApprox(d.dx()));
-  EXPECT_TRUE(backwardParallelDirection.isApprox(d.backwardCorrectionParallelDirection()));
-  EXPECT_TRUE(forwardParallelDirection.isApprox(d.forwardCorrectionParallelDirection()));
   d.setZero();
   EXPECT_TRUE(d.split_direction().isZero());
-  EXPECT_EQ(d.dimKKT(), composition.dimKKT());
-  EXPECT_EQ(d.max_dimKKT(), composition.max_dimKKT());
+  EXPECT_EQ(d.dimKKT(), 5*robot.dimv()+robot.dim_passive()+2*robot.dimf());
+  EXPECT_EQ(d.max_dimKKT(), 5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf());
 }
 
 

@@ -16,7 +16,7 @@ protected:
     srand((unsigned int) time(0));
     std::random_device rnd;
     fixed_base_urdf_ = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf_ = "../urdf/iiwa14/iiwa14.urdf";
+    floating_base_urdf_ = "../urdf/anymal/anymal.urdf";
   }
 
   virtual void TearDown() {

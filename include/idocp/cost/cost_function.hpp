@@ -4,6 +4,8 @@
 #include <vector>
 #include <memory>
 
+#include "Eigen/Core"
+
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function_component_base.hpp"
 #include "idocp/cost/cost_function_data.hpp"
@@ -78,10 +80,6 @@ public:
           const double dtau, const SplitSolution& s, 
           KKTResidual& kkt_residual) const;
 
-  void lu(const Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const;
-
   void lqq(const Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
            KKTMatrix& kkt_matrix) const;
@@ -98,10 +96,6 @@ public:
            const double dtau, const SplitSolution& s, 
            KKTMatrix& kkt_matrix) const;
 
-  void luu(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const;
-
   void phiq(const Robot& robot, CostFunctionData& data, const double t, 
             const SplitSolution& s, KKTResidual& kkt_residual) const;
 
@@ -115,6 +109,14 @@ public:
   void phivv(const Robot& robot, CostFunctionData& data, const double t, 
              const double dtau, const SplitSolution& s, 
              KKTMatrix& kkt_matrix) const;
+
+  void lu(const Robot& robot, CostFunctionData& data, const double t, 
+          const double dtau, const Eigen::VectorXd& u, 
+          Eigen::VectorXd& lu) const;
+
+  void luu(const Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, const Eigen::VectorXd& u, 
+           Eigen::MatrixXd& Quu) const;
 
 private:
   std::vector<std::shared_ptr<CostFunctionComponentBase>> costs_;

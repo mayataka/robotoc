@@ -1,5 +1,5 @@
-#ifndef IDOCP_JOINT_POSITION_UPPER_LIMIT_HPP_
-#define IDOCP_JOINT_POSITION_UPPER_LIMIT_HPP_
+#ifndef IDOCP_JOINT_TORQUES_UPPER_LIMIT_HPP_
+#define IDOCP_JOINT_TORQUES_UPPER_LIMIT_HPP_
 
 #include "Eigen/Core"
 
@@ -44,12 +44,21 @@ public:
 
   void augmentDualResidual(const Robot& robot, ConstraintComponentData& data, 
                            const double dtau, 
-                           KKTResidual& kkt_residual) const override;
+                           KKTResidual& kkt_residual) const override {}
+
+  void augmentDualResidual(const Robot& robot, ConstraintComponentData& data, 
+                           const double dtau, 
+                           Eigen::VectorXd& lu) const override;
 
   void condenseSlackAndDual(const Robot& robot, ConstraintComponentData& data, 
                             const double dtau, const SplitSolution& s,
                             KKTMatrix& kkt_matrix,
-                            KKTResidual& kkt_residual) const override;
+                            KKTResidual& kkt_residual) const override {}
+
+  void condenseSlackAndDual(const Robot& robot, ConstraintComponentData& data, 
+                            const double dtau, const Eigen::VectorXd& u,
+                            Eigen::MatrixXd& Quu, 
+                            Eigen::VectorXd& lu) const override;
 
   void computeSlackAndDualDirection(const Robot& robot, 
                                     ConstraintComponentData& data, 
@@ -74,4 +83,4 @@ private:
 
 } // namespace idocp
 
-#endif // IDOCP_JOINT_POSITION_UPPER_LIMIT_HPP_
+#endif // IDOCP_JOINT_TORQUES_UPPER_LIMIT_HPP_

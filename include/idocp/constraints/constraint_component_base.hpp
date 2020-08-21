@@ -47,11 +47,22 @@ public:
                                    const double dtau, 
                                    KKTResidual& kkt_residual) const = 0;
 
+  virtual void augmentDualResidual(const Robot& robot, 
+                                   ConstraintComponentData& data,
+                                   const double dtau, 
+                                   Eigen::VectorXd& lu) const = 0;
+
   virtual void condenseSlackAndDual(const Robot& robot, 
                                     ConstraintComponentData& data,
-                                    const double dtau, const SplitSolution& s,
-                                    KKTMatrix& kkt_matrix, 
+                                    const double dtau, const SplitSolution& s, 
+                                    KKTMatrix& kkt_matrix,
                                     KKTResidual& kkt_residual) const = 0;
+
+  virtual void condenseSlackAndDual(const Robot& robot, 
+                                    ConstraintComponentData& data,
+                                    const double dtau, const Eigen::VectorXd& u,
+                                    Eigen::MatrixXd& Quu, 
+                                    Eigen::VectorXd& lu) const = 0;
 
   virtual void computeSlackAndDualDirection(
       const Robot& robot, ConstraintComponentData& data, const double dtau, 

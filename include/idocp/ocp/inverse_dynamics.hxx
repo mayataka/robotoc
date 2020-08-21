@@ -10,7 +10,6 @@ inline InverseDynamics::InverseDynamics(const Robot& robot)
     du_da_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     du_df_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
-    has_active_contacts_(robot.has_active_contacts()),
     dimv_(robot.dimv()),
     dim_passive_(robot.dim_passive()),
     dimf_(robot.dimf()) {
@@ -24,33 +23,34 @@ inline InverseDynamics::InverseDynamics()
     du_da_(),
     du_df_(),
     has_floating_base_(false),
-    has_active_contacts_(false),
     dimv_(0),
     dim_passive_(0),
     dimf_(0) {
 }
 
+
 inline InverseDynamics::~InverseDynamics() {
 }
 
 
-inline void InverseDynamics::linearizeInverseDynamics(
-    Robot& robot, const double dtau, const SplitSolution& s,
-    KKTResidual& kkt_residual) {
+inline void InverseDynamics::augmentInverseDynamics(Robot& robot, 
+                                                    const double dtau, 
+                                                    const SplitSolution& s, 
+                                                    KKTResidual& kkt_residual) {
   setContactStatus(robot);
-  if (has_active_contacts_) {
+  if (robot.has_active_contacts()) {
     robot.setContactForces(s.f);
   }
   robot.RNEA(s.q, s.v, s.a, kkt_residual.u_res);
   kkt_residual.u_res.noalias() -= s.u;
   robot.RNEADerivatives(s.q, s.v, s.a, du_dq_, du_dv_, du_da_);
-  if (has_active_contacts_) {
+  if (robot.has_active_contacts()) {
     robot.dRNEAPartialdFext(du_df_);
   }
   kkt_residual.lq().noalias() += dtau * du_dq_.transpose() * s.beta;
   kkt_residual.lv().noalias() += dtau * du_dv_.transpose() * s.beta;
   kkt_residual.la().noalias() += dtau * du_da_.transpose() * s.beta;
-  if (has_active_contacts_) {
+  if (robot.has_active_contacts()) {
     kkt_residual.lf().noalias() += dtau * du_df_active_().transpose() * s.beta;
   }
   kkt_residual.lu.noalias() -= dtau * s.beta; 
@@ -58,38 +58,49 @@ inline void InverseDynamics::linearizeInverseDynamics(
 
 
 inline void InverseDynamics::condenseInverseDynamics(
+    Robot& robot, const double dtau, const SplitSolution& s, 
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
-  // condense Newton residual
+  setContactStatus(robot);
+  if (robot.has_active_contacts()) {
+    robot.setContactForces(s.f);
+  }
+  robot.RNEA(s.q, s.v, s.a, kkt_residual.u_res);
+  kkt_residual.u_res.noalias() -= s.u;
+  robot.RNEADerivatives(s.q, s.v, s.a, du_dq_, du_dv_, du_da_);
+  if (robot.has_active_contacts()) {
+    robot.dRNEAPartialdFext(du_df_);
+  }
+  if (robot.has_floating_base()) {
+    kkt_residual.C().tail(robot.dim_passive()) 
+        = dtau * s.u.head(robot.dim_passive());
+    kkt_residual.lu.head(robot.dim_passive()).noalias()
+        += dtau * s.mu_active().tail(robot.dim_passive());
+  }
   lu_condensed_ = kkt_residual.lu + kkt_matrix.Quu * kkt_residual.u_res;
-  kkt_residual.lq().noalias() += du_dq_.transpose() * lu_condensed_;
-  kkt_residual.lv().noalias() += du_dv_.transpose() * lu_condensed_;
-  kkt_residual.la().noalias() += du_da_.transpose() * lu_condensed_;
-  if (has_active_contacts_) {
-    kkt_residual.lf().noalias() += du_df_active_().transpose() * lu_condensed_;
+  // condense Newton residual
+  kkt_residual.lu.noalias() -= dtau * s.beta;   
+  kkt_residual.lq() = du_dq_.transpose() * lu_condensed_;
+  kkt_residual.lv() = du_dv_.transpose() * lu_condensed_;
+  kkt_residual.la() = du_da_.transpose() * lu_condensed_;
+  if (robot.has_active_contacts()) {
+    kkt_residual.lf() = du_df_active_().transpose() * lu_condensed_;
   }
-  // condense Hessian
-  kkt_matrix.Qaa().noalias() += du_da_.transpose() * kkt_matrix.Quu * du_da_;
-  if (has_active_contacts_) {
-    kkt_matrix.Qaf().noalias() += du_da_.transpose() * kkt_matrix.Quu * du_df_active_(); 
+  kkt_matrix.Qaa() = du_da_.transpose() * kkt_matrix.Quu * du_da_;
+  if (robot.has_active_contacts()) {
+    kkt_matrix.Qaf() = du_da_.transpose() * kkt_matrix.Quu * du_df_active_(); 
   }
-  kkt_matrix.Qaq().noalias() += du_da_.transpose() * kkt_matrix.Quu * du_dq_;
-  kkt_matrix.Qav().noalias() += du_da_.transpose() * kkt_matrix.Quu * du_dv_;
-  if (has_active_contacts_) {
-    kkt_matrix.Qff().noalias() += du_df_active_().transpose() * kkt_matrix.Quu * du_df_active_();
-    kkt_matrix.Qfq().noalias() += du_df_active_().transpose() * kkt_matrix.Quu * du_dq_;
-    kkt_matrix.Qfv().noalias() += du_df_active_().transpose() * kkt_matrix.Quu * du_dv_;
+  kkt_matrix.Qaq() = du_da_.transpose() * kkt_matrix.Quu * du_dq_;
+  kkt_matrix.Qav() = du_da_.transpose() * kkt_matrix.Quu * du_dv_;
+  if (robot.has_active_contacts()) {
+    kkt_matrix.Qff() 
+        = du_df_active_().transpose() * kkt_matrix.Quu * du_df_active_();
+    kkt_matrix.Qfq() = du_df_active_().transpose() * kkt_matrix.Quu * du_dq_;
+    kkt_matrix.Qfv() = du_df_active_().transpose() * kkt_matrix.Quu * du_dv_;
   }
-  kkt_matrix.Qqq().noalias() += du_dq_.transpose() * kkt_matrix.Quu * du_dq_;
-  kkt_matrix.Qqv().noalias() += du_dq_.transpose() * kkt_matrix.Quu * du_dv_;
-  kkt_matrix.Qvv().noalias() += du_dv_.transpose() * kkt_matrix.Quu * du_dv_;
-}
-
-
-inline void InverseDynamics::condenseEqualityConstraint(
-    const double dtau, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
-  assert(dtau > 0);
-  if (has_floating_base_) {
+  kkt_matrix.Qqq() = du_dq_.transpose() * kkt_matrix.Quu * du_dq_;
+  kkt_matrix.Qqv() = du_dq_.transpose() * kkt_matrix.Quu * du_dv_;
+  kkt_matrix.Qvv() = du_dv_.transpose() * kkt_matrix.Quu * du_dv_;
+  if (robot.has_floating_base()) {
     kkt_residual.C().tail(dim_passive_).noalias()
         += dtau * kkt_residual.u_res.head(dim_passive_);
     kkt_matrix.Cq().bottomRows(dim_passive_) 
@@ -128,7 +139,7 @@ inline double InverseDynamics::violationL1Norm(
 }
 
 
-inline double InverseDynamics::violationL1Norm(
+inline double InverseDynamics::computeViolationL1Norm(
     Robot& robot, const double dtau, const SplitSolution& s, 
     KKTResidual& kkt_residual) const {
   if (robot.has_active_contacts()) {
@@ -152,7 +163,8 @@ InverseDynamics::du_df_active_() {
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
+inline const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, 
+                          Eigen::Dynamic, true> 
 InverseDynamics::du_df_active_() const {
   return du_df_.leftCols(dimf_);
 }

@@ -21,10 +21,23 @@ inline StateEquation::~StateEquation() {
 }
 
 
+inline void StateEquation::linearizeForwardEuler(
+    Robot& robot, const double dtau, const SplitSolution& s, 
+    const SplitSolution& s_next, KKTResidual& kkt_residual) const {
+  assert(dtau > 0);
+  robot.subtractConfiguration(s.q, s_next.q, kkt_residual.Fq());
+  kkt_residual.Fq().noalias() += dtau * s.v;
+  kkt_residual.Fv() = s.v + dtau * s.a - s_next.v;
+  kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
+  kkt_residual.lv().noalias() += dtau * s_next.lmd + s_next.gmm - s.gmm;
+  kkt_residual.la().noalias() += dtau * s_next.gmm;
+}
+
+
 template <typename ConfigVectorType1, typename TangentVectorType1, 
           typename TangentVectorType2, typename TangentVectorType3, 
           typename ConfigVectorType2>
-inline void StateEquation::linearizeStateEquation(
+inline void StateEquation::linearizeBackwardEuler(
     Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType1>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType1>& v_prev, 
@@ -43,28 +56,22 @@ inline void StateEquation::linearizeStateEquation(
   kkt_residual.Fq().noalias() += dtau * s.v;
   kkt_residual.Fv() = v_prev - s.v + dtau * s.a;
   if (robot.has_floating_base()) {
-    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq());
+    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq);
     robot.dSubtractdConfigurationPlus(s.q, q_next, dsubtract_dq_);
     kkt_residual.lq().noalias() 
         += dsubtract_dq_.transpose() * lmd_next
-            + kkt_matrix.Fqq().transpose() * s.lmd;
+            + kkt_matrix.Fqq.transpose() * s.lmd;
   }
   else {
-    kkt_matrix.Fqq() = - Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
     kkt_residual.lq().noalias() += lmd_next - s.lmd;
   }
   kkt_residual.lv().noalias() += dtau * s.lmd - s.gmm + gmm_next;
   kkt_residual.la().noalias() += dtau * s.gmm;
-  kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(robot.dimv(), 
-                                                      robot.dimv());
-  kkt_matrix.Fvv() = - Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
-  kkt_matrix.Fva() = dtau * Eigen::MatrixXd::Identity(robot.dimv(), 
-                                                      robot.dimv());
 }
 
 
 template <typename ConfigVectorType, typename TangentVectorType>
-inline void StateEquation::linearizeStateEquationTerminal(
+inline void StateEquation::linearizeBackwardEulerTerminal(
     Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
@@ -77,21 +84,15 @@ inline void StateEquation::linearizeStateEquationTerminal(
   kkt_residual.Fq().noalias() += dtau * s.v;
   kkt_residual.Fv() = v_prev - s.v + dtau * s.a;
   if (robot.has_floating_base()) {
-    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq());
+    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq);
     kkt_residual.lq().noalias() 
-        += kkt_matrix.Fqq().transpose() * s.lmd;
+        += kkt_matrix.Fqq.transpose() * s.lmd;
   }
   else {
-    kkt_matrix.Fqq() = - Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
     kkt_residual.lq().noalias() -= s.lmd;
   }
   kkt_residual.lv().noalias() += dtau * s.lmd - s.gmm;
   kkt_residual.la().noalias() += dtau * s.gmm;
-  kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(robot.dimv(), 
-                                                      robot.dimv());
-  kkt_matrix.Fvv() = - Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
-  kkt_matrix.Fva() = dtau * Eigen::MatrixXd::Identity(robot.dimv(), 
-                                                      robot.dimv());
 }
 
 
@@ -101,8 +102,29 @@ inline double StateEquation::violationL1Norm(
 }
 
 
+template <typename ConfigVectorType, typename TangentVectorType1, 
+          typename TangentVectorType2, typename TangentVectorType3>
+inline double StateEquation::computeForwardEulerViolationL1Norm(
+    Robot& robot, const double step_size, const double dtau, 
+    const SplitSolution& s, const Eigen::MatrixBase<ConfigVectorType>& q_next, 
+    const Eigen::MatrixBase<TangentVectorType1>& v_next, 
+    const Eigen::MatrixBase<TangentVectorType2>& dq_next, 
+    const Eigen::MatrixBase<TangentVectorType3>& dv_next, 
+    KKTResidual& kkt_residual) const {
+  assert(dtau > 0);
+  assert(q_next.size() == robot.dimq());
+  assert(v_next.size() == robot.dimv());
+  assert(dq_next.size() == robot.dimv());
+  assert(dv_next.size() == robot.dimv());
+  robot.subtractConfiguration(s.q, q_next, kkt_residual.Fq());
+  kkt_residual.Fq().noalias() += dtau * s.v - step_size * dq_next;
+  kkt_residual.Fv() = s.v + dtau * s.a - v_next - step_size * dv_next;
+  return kkt_residual.Fx().lpNorm<1>();
+}
+
+
 template <typename ConfigVectorType, typename TangentVectorType>
-inline double StateEquation::violationL1Norm(
+inline double StateEquation::computeBackwardEulerViolationL1Norm(
     Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, const SplitSolution& s, 
@@ -119,7 +141,7 @@ inline double StateEquation::violationL1Norm(
 
 template <typename ConfigVectorType, typename TangentVectorType1, 
           typename TangentVectorType2, typename TangentVectorType3>
-inline double StateEquation::violationL1Norm(
+inline double StateEquation::computeBackwardEulerViolationL1Norm(
     Robot& robot, const double step_size, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType1>& v_prev, 

@@ -59,10 +59,8 @@ void JointPositionLowerLimit::condenseSlackAndDual(
     const Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) const {
-  for (int i=0; i<dimc_; ++i) {
-    kkt_matrix.Qqq().coeffRef(dim_passive_+i, dim_passive_+i) 
-        += dtau * dtau * data.dual.coeff(i) / data.slack.coeff(i);
-  }
+  kkt_matrix.Qqq().diagonal().tail(dimc_).array()
+      += dtau * dtau * data.dual.array() / data.slack.array();
   data.residual = dtau * (qmin_-s.q.tail(dimc_)) + data.slack;
   computeDuality(data.slack, data.dual, data.duality);
   kkt_residual.lq().tail(dimc_).array() 

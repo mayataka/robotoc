@@ -285,7 +285,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormEmptyCost) {
   kkt_matrix.setContactStatus(robot);
   s.setContactStatus(robot);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
-  state_equation.linearizeStateEquation(robot, dtau, q_prev, v_prev, s, 
+  state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
                                         s_next.lmd, s_next.gmm, s_next.q, 
                                         kkt_matrix, kkt_residual);
   equalityconstraints::LinearizeEqualityConstraints(robot, dtau, s, 
@@ -307,7 +307,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormEmptyConstraints) {
   kkt_matrix.setContactStatus(robot);
   s.setContactStatus(robot);
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
-  state_equation.linearizeStateEquation(robot, dtau, q_prev, v_prev, s, 
+  state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
                                         s_next.lmd, s_next.gmm, s_next.q, 
                                         kkt_matrix, kkt_residual);
   equalityconstraints::LinearizeEqualityConstraints(robot, dtau, s, 
@@ -330,7 +330,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNorm) {
   robot.updateKinematics(s.q, s.v, s.a);
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
-  state_equation.linearizeStateEquation(robot, dtau, q_prev, v_prev, s, 
+  state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
                                         s_next.lmd, s_next.gmm, s_next.q, 
                                         kkt_matrix, kkt_residual);
   equalityconstraints::LinearizeEqualityConstraints(robot, dtau, s, 
@@ -358,7 +358,7 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdate) {
   robot.updateKinematics(s.q, s.v, s.a);
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
-  state_equation.linearizeStateEquation(robot, dtau, q_prev, v_prev, s, 
+  state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
                                         s_next.lmd, s_next.gmm, s_next.q, 
                                         kkt_matrix, kkt_residual);
   equalityconstraints::LinearizeEqualityConstraints(robot, dtau, s, 
@@ -371,17 +371,13 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdate) {
   inverse_dynamics.condenseEqualityConstraint(dtau, kkt_matrix, kkt_residual);
   kkt_matrix.Qxx().noalias() += aux_mat_next;
   kkt_matrix.symmetrize();
-  std::cout << "KKT matrix is " << std::endl;
-  std::cout << kkt_matrix.KKT_matrix() << std::endl;
-  const int dimKKT = kkt_matrix.dimKKT();
+  const int dimKKT = kkt_residual.dimKKT();
   const int dimx = 2*robot.dimv();
   Eigen::MatrixXd kkt_matrix_inverse(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
-  kkt_matrix.invert(kkt_matrix_inverse);
+  kkt_matrix.invert(dtau, kkt_matrix_inverse);
   SplitDirection d_ref(robot);
   d_ref.setContactStatus(robot);
   d_ref.split_direction() = kkt_matrix_inverse * kkt_residual.KKT_residual();
-  EXPECT_TRUE((kkt_matrix.KKT_matrix()*kkt_matrix_inverse)
-              .isApprox(Eigen::MatrixXd::Identity(dimKKT, dimKKT)));
   EXPECT_TRUE(d_ref.split_direction().isApprox(d.split_direction()));
   SplitSolution s_new_coarse_ref(robot);
   s_new_coarse_ref.setContactStatus(robot);

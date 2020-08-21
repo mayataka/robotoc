@@ -52,10 +52,6 @@ public:
                   const double dtau, const SplitSolution& s, 
                   KKTResidual& kkt_residual) const = 0;
 
-  virtual void lu(const Robot& robot, CostFunctionData& data, const double t, 
-                  const double dtau, const SplitSolution& s, 
-                  KKTResidual& kkt_residual) const = 0;
-
   virtual void lqq(const Robot& robot, CostFunctionData& data, const double t, 
                    const double dtau, const SplitSolution& s, 
                    KKTMatrix& kkt_matrix) const = 0;
@@ -69,10 +65,6 @@ public:
                    KKTMatrix& kkt_matrix) const = 0;
 
   virtual void lff(const Robot& robot, CostFunctionData& data, const double t, 
-                   const double dtau, const SplitSolution& s, 
-                   KKTMatrix& kkt_matrix) const = 0;
-
-  virtual void luu(const Robot& robot, CostFunctionData& data, const double t, 
                    const double dtau, const SplitSolution& s, 
                    KKTMatrix& kkt_matrix) const = 0;
 
@@ -91,6 +83,14 @@ public:
   virtual void phivv(const Robot& robot, CostFunctionData& data,  
                      const double t, const SplitSolution& s,
                      KKTMatrix& kkt_matrix) const = 0;
+
+  virtual void lu(const Robot& robot, CostFunctionData& data, const double t, 
+                  const double dtau, const Eigen::VectorXd& u, 
+                  Eigen::VectorXd& lu) const = 0;
+
+  virtual void luu(const Robot& robot, CostFunctionData& data, const double t, 
+                   const double dtau, const Eigen::VectorXd& u, 
+                   Eigen::MatrixXd& Quu) const  = 0;
 
 };
 

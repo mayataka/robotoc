@@ -55,14 +55,14 @@ TEST_F(EqualityConstraintsTest, fixed_base) {
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
   robot.updateKinematics(s.q, s.v, s.a);
-  equalityconstraints::LinearizeEqualityConstraints(robot, dtau_, s, 
+  eqconstraints::LinearizeEqualityConstraints(robot, dtau_, s, 
                                                     kkt_matrix, kkt_residual);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::VectorXd lv = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::VectorXd la = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::VectorXd C = Eigen::VectorXd::Zero(robot.dimf()+robot.dim_passive());
   Eigen::MatrixXd Cq = Eigen::MatrixXd::Zero(robot.dimf()+robot.dim_passive(), robot.dimv());
-  Eigen::MatrixXd Cv = Eigen::MatrixXd::Zero(robot.dimf()+robot.dim_passive(), robot.dimv());
+  Eigen::MatrixXd Cv = Eigen::MatrixXd::Zero(robot.dimf()+robot.dim_passive(), robot.dimv()); 
   Eigen::MatrixXd Ca = Eigen::MatrixXd::Zero(robot.dimf()+robot.dim_passive(), robot.dimv());
   Eigen::MatrixXd Cf = Eigen::MatrixXd::Zero(robot.dimf()+robot.dim_passive(), robot.dimf());
   robot.computeBaumgarteResidual(dtau_, C);
@@ -108,7 +108,7 @@ TEST_F(EqualityConstraintsTest, floating_base) {
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
   robot.updateKinematics(s.q, s.v, s.a);
-  equalityconstraints::LinearizeEqualityConstraints(robot, dtau_, s, 
+  eqconstraints::LinearizeEqualityConstraints(robot, dtau_, s, 
                                                     kkt_matrix, kkt_residual);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::VectorXd lv = Eigen::VectorXd::Zero(robot.dimv());

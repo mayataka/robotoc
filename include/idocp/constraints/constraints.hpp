@@ -4,6 +4,8 @@
 #include <vector>
 #include <memory>
 
+#include "Eigen/Core"
+
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
@@ -50,10 +52,17 @@ public:
   void augmentDualResidual(const Robot& robot, ConstraintsData& datas,
                            const double dtau, KKTResidual& kkt_residual) const;
 
+  void augmentDualResidual(const Robot& robot, ConstraintsData& datas,
+                           const double dtau, Eigen::VectorXd& lu) const;
+
   void condenseSlackAndDual(const Robot& robot, ConstraintsData& datas,
                             const double dtau, const SplitSolution& s,
                             KKTMatrix& kkt_matrix, 
                             KKTResidual& kkt_residual) const;
+
+  void condenseSlackAndDual(const Robot& robot, ConstraintsData& datas,
+                            const double dtau, const Eigen::VectorXd& u,
+                            Eigen::MatrixXd& Quu, Eigen::VectorXd& lu) const;
 
   void computeSlackAndDualDirection(const Robot& robot, ConstraintsData& datas, 
                                     const double dtau, 

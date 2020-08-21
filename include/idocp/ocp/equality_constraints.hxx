@@ -1,22 +1,16 @@
 #ifndef IDOCP_EQUALITY_CONSTRAINTS_HXX_
 #define IDOCP_EQUALITY_CONSTRAINTS_HXX_
 
+#include <assert.h>
+
 namespace idocp {
-namespace equalityconstraints {
-
-inline void LinearizeEqualityConstraints(Robot& robot, const double dtau,
-                                         const SplitSolution& s, 
-                                         KKTMatrix& kkt_matrix, 
-                                         KKTResidual& kkt_residual) {
-  LinearizeContactConstraints(robot, dtau, s, kkt_matrix, kkt_residual);
-  LinearizeFloatingBaseConstraints(robot, dtau, s, kkt_residual);
-}
-
+namespace eqconstraints {
 
 inline void LinearizeContactConstraints(Robot& robot, const double dtau,
                                         const SplitSolution& s, 
                                         KKTMatrix& kkt_matrix, 
                                         KKTResidual& kkt_residual) {
+  assert(dtau > 0);
   if (robot.has_active_contacts()) {
     robot.computeBaumgarteResidual(dtau, kkt_residual.C());
     robot.computeBaumgarteDerivatives(dtau, kkt_matrix.Cq(), kkt_matrix.Cv(), 
@@ -38,6 +32,7 @@ inline void LinearizeFloatingBaseConstraints(const Robot& robot,
                                              const double dtau,
                                              const SplitSolution& s, 
                                              KKTResidual& kkt_residual) {
+  assert(dtau > 0);
   if (robot.has_floating_base()) {
     kkt_residual.C().tail(robot.dim_passive()) 
         = dtau * s.u.head(robot.dim_passive());
@@ -52,9 +47,9 @@ inline double ViolationL1Norm(const KKTResidual& kkt_residual) {
 }
 
 
-inline double ViolationL1Norm(Robot& robot, const double dtau, 
-                              const SplitSolution& s, 
-                              KKTResidual& kkt_residual) {
+inline double ComputeViolationL1Norm(Robot& robot, const double dtau, 
+                                     const SplitSolution& s, 
+                                     KKTResidual& kkt_residual) {
   assert(dtau > 0);
   if (robot.has_active_contacts()) {
     robot.computeBaumgarteResidual(dtau, kkt_residual.C());
@@ -66,7 +61,7 @@ inline double ViolationL1Norm(Robot& robot, const double dtau,
   return kkt_residual.C().lpNorm<1>();
 }
 
-} // namespace equalityconstraints 
+} // namespace eqconstraints 
 } // namespace idocp 
 
 #endif // IDOCP_EQUALITY_CONSTRAINTS_HXX_

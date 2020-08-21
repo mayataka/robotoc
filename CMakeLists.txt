@@ -56,10 +56,8 @@ add_library(
   src/constraints/joint_acceleration_lower_limit.cpp
   src/constraints/joint_torques_upper_limit.cpp
   src/constraints/joint_torques_lower_limit.cpp
-  src/ocp/kkt_composition.cpp
   src/ocp/kkt_residual.cpp
   src/ocp/kkt_matrix.cpp
-  src/ocp/kkt_matrix_inverse.cpp
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
@@ -68,6 +66,10 @@ add_library(
   src/ocp/split_parnmpc.cpp
   src/ocp/line_search_filter.cpp
   src/ocp/parnmpc.cpp
+  src/ocp/riccati_factorization.cpp
+  src/ocp/riccati_matrix_factorizer.cpp
+  src/ocp/riccati_matrix_inverter.cpp
+  src/ocp/terminal_ocp.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

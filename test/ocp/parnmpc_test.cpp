@@ -58,7 +58,7 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithoutContact) {
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd a_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.1);
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd u_weight = Eigen::VectorXd::Zero(robot.dimv());
+  const Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Zero(robot.dimv());
   const Eigen::VectorXd f_weight = Eigen::VectorXd::Constant(robot.max_dimf(), 0.01);
   const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(robot.max_dimf());
@@ -81,13 +81,13 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithoutContact) {
   auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
   auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
   auto velocity_upper_limit = std::make_shared<JointVelocityUpperLimit>(robot);
-  // constraints->push_back(joint_upper_limit); 
-  // constraints->push_back(joint_lower_limit);
-  // constraints->push_back(velocity_lower_limit); 
-  // constraints->push_back(velocity_upper_limit);
+  constraints->push_back(joint_upper_limit); 
+  constraints->push_back(joint_lower_limit);
+  constraints->push_back(velocity_lower_limit); 
+  constraints->push_back(velocity_upper_limit);
   ParNMPC parnmpc(robot, cost, constraints, T_, N_, num_proc_);
-  Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
-  robot.normalizeConfiguration(q);
+  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
+  robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   std::cout << "initial KKT error = " << parnmpc.KKTError(t_, q, v) << std::endl;
   const int num_itr = 10;
@@ -142,14 +142,14 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithContact) {
   auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
   auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
   auto velocity_upper_limit = std::make_shared<JointVelocityUpperLimit>(robot);
-  // constraints->push_back(joint_upper_limit); 
-  // constraints->push_back(joint_lower_limit);
-  // constraints->push_back(velocity_lower_limit); 
-  // constraints->push_back(velocity_upper_limit);
+  constraints->push_back(joint_upper_limit); 
+  constraints->push_back(joint_lower_limit);
+  constraints->push_back(velocity_lower_limit); 
+  constraints->push_back(velocity_upper_limit);
   ParNMPC parnmpc(robot, cost, constraints, T_, N_, num_proc_);
-  // parnmpc.setContactSequence(contact_sequence);
-  Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
-  robot.normalizeConfiguration(q);
+  parnmpc.setContactSequence(contact_sequence);
+  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
+  robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   std::cout << "initial KKT error = " << parnmpc.KKTError(t_, q, v) << std::endl;
   const int num_itr = 10;
@@ -206,13 +206,13 @@ TEST_F(ParNMPCTest, floating_base) {
   std::shared_ptr<Constraints> constraints = std::make_shared<Constraints>();
   ParNMPC parnmpc(robot, cost, constraints, T_, N_, num_proc_);
   parnmpc.setContactSequence(contact_sequence);
-  Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
-  robot.normalizeConfiguration(q);
+  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
+  robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   std::cout << "initial KKT error = " << parnmpc.KKTError(t_, q, v) << std::endl;
   const int num_itr = 10;
   for (int i=0; i<num_itr; ++i) {
-    parnmpc.updateSolution(t_, q, v, false);
+    parnmpc.updateSolution(t_, q, v, true);
     std::cout << "KKT error after " << (i+1) << "iteration = " << parnmpc.KKTError(t_, q, v) << std::endl;
   }
 }

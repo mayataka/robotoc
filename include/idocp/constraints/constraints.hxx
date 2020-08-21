@@ -1,6 +1,8 @@
 #ifndef IDOCP_CONSTRAINTS_HXX_
 #define IDOCP_CONSTRAINTS_HXX_
 
+#include <assert.h>
+
 namespace idocp {
 
 inline Constraints::Constraints() 
@@ -71,6 +73,17 @@ inline void Constraints::augmentDualResidual(const Robot& robot,
 }
 
 
+inline void Constraints::augmentDualResidual(const Robot& robot, 
+                                             ConstraintsData& datas, 
+                                             const double dtau, 
+                                             Eigen::VectorXd& lu) const {
+  assert(lu.size() == robot.dimv());
+  for (int i=0; i<constraints_.size(); ++i) {
+    constraints_[i]->augmentDualResidual(robot, datas.data[i], dtau, lu);
+  }
+}
+
+
 inline void Constraints::condenseSlackAndDual(const Robot& robot,
                                               ConstraintsData& datas, 
                                               const double dtau, 
@@ -80,6 +93,22 @@ inline void Constraints::condenseSlackAndDual(const Robot& robot,
   for (int i=0; i<constraints_.size(); ++i) {
     constraints_[i]->condenseSlackAndDual(robot, datas.data[i], dtau, s,
                                           kkt_matrix, kkt_residual);
+  }
+}
+
+
+inline void Constraints::condenseSlackAndDual(const Robot& robot,
+                                              ConstraintsData& datas, 
+                                              const double dtau, 
+                                              const Eigen::VectorXd& u,
+                                              Eigen::MatrixXd& Quu, 
+                                              Eigen::VectorXd& lu) const {
+  assert(u.size() == robot.dimv());
+  assert(Quu.rows() == robot.dimv());
+  assert(Quu.cols() == robot.dimv());
+  assert(lu.size() == robot.dimv());
+  for (int i=0; i<constraints_.size(); ++i) {
+    constraints_[i]->condenseSlackAndDual(robot, datas.data[i], dtau, u, Quu, lu);
   }
 }
 

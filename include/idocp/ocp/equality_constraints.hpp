@@ -10,11 +10,7 @@
 
 
 namespace idocp {
-namespace equalityconstraints {
-
-void LinearizeEqualityConstraints(Robot& robot, const double dtau,
-                                  const SplitSolution& s, KKTMatrix& kkt_matrix, 
-                                  KKTResidual& kkt_residual);
+namespace eqconstraints {
 
 void LinearizeContactConstraints(Robot& robot, const double dtau,
                                  const SplitSolution& s, KKTMatrix& kkt_matrix, 
@@ -26,10 +22,11 @@ void LinearizeFloatingBaseConstraints(const Robot& robot, const double dtau,
 
 double ViolationL1Norm(const KKTResidual& kkt_residual);
 
-double ViolationL1Norm(Robot& robot, const double dtau, const SplitSolution& s, 
-                       KKTResidual& kkt_residual);
+double ComputeViolationL1Norm(Robot& robot, const double dtau, 
+                              const SplitSolution& s, 
+                              KKTResidual& kkt_residual);
 
-} // namespace equalityconstraints 
+} // namespace eqconstraints 
 } // namespace idocp 
 
 #include "idocp/ocp/equality_constraints.hxx"

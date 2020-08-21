@@ -46,9 +46,9 @@ TEST_F(JointPositionLowerLimitTest, isFeasibleFixedBase) {
   Eigen::VectorXd f = Eigen::VectorXd::Zero(fixed_base_robot_.dimf());
   Eigen::VectorXd u = Eigen::VectorXd::Zero(fixed_base_robot_.dimv());
   fixed_base_robot_.generateFeasibleConfiguration(q);
-  EXPECT_TRUE(limit.isFeasible(fixed_base_robot_, data, a, f, q, v, u));
+  EXPECT_TRUE(limit.isFeasible(fixed_base_robot_, data, s));
   q = 2*fixed_base_robot_.lowerJointPositionLimit();
-  EXPECT_FALSE(limit.isFeasible(fixed_base_robot_, data, a, f, q, v, u));
+  EXPECT_FALSE(limit.isFeasible(fixed_base_robot_, data, s));
 }
 
 
@@ -61,11 +61,11 @@ TEST_F(JointPositionLowerLimitTest, isFeasibleFloatingBase) {
   Eigen::VectorXd f = Eigen::VectorXd::Zero(floating_base_robot_.dimf());
   Eigen::VectorXd u = Eigen::VectorXd::Zero(floating_base_robot_.dimv());
   floating_base_robot_.generateFeasibleConfiguration(q);
-  EXPECT_TRUE(limit.isFeasible(floating_base_robot_, data, a, f, q, v, u));
+  EXPECT_TRUE(limit.isFeasible(floating_base_robot_, data, s));
   const int dimc = floating_base_robot_.lowerJointPositionLimit().size();
   q.tail(dimc) = 2*floating_base_robot_.lowerJointPositionLimit();
   ASSERT_EQ(q.size(), floating_base_robot_.dimq());
-  EXPECT_FALSE(limit.isFeasible(floating_base_robot_, data, a, f, q, v, u));
+  EXPECT_FALSE(limit.isFeasible(floating_base_robot_, data, s));
 }
 
 
@@ -83,7 +83,7 @@ TEST_F(JointPositionLowerLimitTest, setSlackAndDualFixedBase) {
   Eigen::VectorXd qmin = fixed_base_robot_.lowerJointPositionLimit();
   ASSERT_EQ(dimq, fixed_base_robot_.lowerJointPositionLimit().size());
   fixed_base_robot_.generateFeasibleConfiguration(q);
-  limit.setSlackAndDual(fixed_base_robot_, data, dtau_, a, f, q, v, u);
+  limit.setSlackAndDual(fixed_base_robot_, data, dtau_, s);
   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimq);
@@ -106,10 +106,10 @@ TEST_F(JointPositionLowerLimitTest, setSlackAndDualFixedBase) {
   const double cost_slack_barrier_ref 
       = pdipm::pdipmfunc::SlackBarrierCost(dimq, barrier_, slack_ref);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
-  const double l1residual = limit.residualL1Nrom(fixed_base_robot_, data, dtau_, a, f, q, v, u);
+  const double l1residual = limit.residualL1Nrom(fixed_base_robot_, data, dtau_, s);
   const double l1residual_ref = (dtau_*(qmin-q)+slack_ref).lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1residual, l1residual_ref);
-  const double l2residual = limit.squaredKKTErrorNorm(fixed_base_robot_, data, dtau_, a, f, q, v, u);
+  const double l2residual = limit.squaredKKTErrorNorm(fixed_base_robot_, data, dtau_, s);
   Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dimq);
   pdipm::pdipmfunc::ComputeDualityResidual(barrier_, slack_ref, dual_ref, duality_ref);
   const double l2residual_ref 
@@ -133,7 +133,7 @@ TEST_F(JointPositionLowerLimitTest, setSlackAndDualFloatingBase) {
   const int dimc = floating_base_robot_.lowerJointPositionLimit().size();
   ASSERT_EQ(dimc+6, dimv);
   floating_base_robot_.generateFeasibleConfiguration(q);
-  limit.setSlackAndDual(floating_base_robot_, data, dtau_, a, f, q, v, u);
+  limit.setSlackAndDual(floating_base_robot_, data, dtau_, s);
   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);
@@ -156,10 +156,10 @@ TEST_F(JointPositionLowerLimitTest, setSlackAndDualFloatingBase) {
   const double cost_slack_barrier_ref 
       = pdipm::pdipmfunc::SlackBarrierCost(dimc, barrier_, slack_ref);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
-  const double l1residual = limit.residualL1Nrom(fixed_base_robot_, data, dtau_, a, f, q, v, u);
+  const double l1residual = limit.residualL1Nrom(fixed_base_robot_, data, dtau_, s);
   const double l1residual_ref = (dtau_*(qmin-q.tail(dimc))+slack_ref).lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1residual, l1residual_ref);
-  const double l2residual = limit.squaredKKTErrorNorm(fixed_base_robot_, data, dtau_, a, f, q, v, u);
+  const double l2residual = limit.squaredKKTErrorNorm(fixed_base_robot_, data, dtau_, s);
   Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dimc);
   pdipm::pdipmfunc::ComputeDualityResidual(barrier_, slack_ref, dual_ref, duality_ref);
   const double l2residual_ref 
@@ -182,7 +182,7 @@ TEST_F(JointPositionLowerLimitTest, condenseSlackAndDualFixedBase) {
   Eigen::VectorXd qmin = fixed_base_robot_.lowerJointPositionLimit();
   ASSERT_EQ(dimq, fixed_base_robot_.lowerJointPositionLimit().size());
   fixed_base_robot_.generateFeasibleConfiguration(q);
-  limit.setSlackAndDual(fixed_base_robot_, data, dtau_, a, f, q, v, u);
+  limit.setSlackAndDual(fixed_base_robot_, data, dtau_, s);
   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimq);
@@ -282,7 +282,7 @@ TEST_F(JointPositionLowerLimitTest, condenseSlackAndDualFloatingBase) {
   Eigen::VectorXd qmin = floating_base_robot_.lowerJointPositionLimit();
   const int dimc = floating_base_robot_.lowerJointPositionLimit().size();
   floating_base_robot_.generateFeasibleConfiguration(q);
-  limit.setSlackAndDual(floating_base_robot_, data, dtau_, a, f, q, v, u);
+  limit.setSlackAndDual(floating_base_robot_, data, dtau_, s);
   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);

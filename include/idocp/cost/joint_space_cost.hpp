@@ -75,11 +75,7 @@ public:
 
   void lf(const Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const override;
-
-  void lu(const Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const override;
+          KKTResidual& kkt_residual) const override {}
 
   void lqq(const Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
@@ -95,11 +91,7 @@ public:
 
   void lff(const Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override;
-
-  void luu(const Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override;
+           KKTMatrix& kkt_matrix) const override {}
 
   void phiq(const Robot& robot, CostFunctionData& data, const double t, 
             const SplitSolution& s, KKTResidual& kkt_residual) const override;
@@ -112,6 +104,14 @@ public:
 
   void phivv(const Robot& robot, CostFunctionData& data, const double t, 
              const SplitSolution& s, KKTMatrix& kkt_matrix) const override;
+
+  void lu(const Robot& robot, CostFunctionData& data, const double t, 
+          const double dtau, const Eigen::VectorXd& u, 
+          Eigen::VectorXd& lu) const override;
+
+  void luu(const Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, const Eigen::VectorXd& u, 
+           Eigen::MatrixXd& Quu) const override;
 
 private:
   int dimq_, dimv_;

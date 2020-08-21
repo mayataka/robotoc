@@ -14,6 +14,8 @@
 #include "idocp/constraints/joint_position_upper_limit.hpp"
 #include "idocp/constraints/joint_velocity_lower_limit.hpp"
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
+#include "idocp/constraints/joint_torques_lower_limit.hpp"
+#include "idocp/constraints/joint_torques_upper_limit.hpp"
 
 
 namespace ocpbenchmark {
@@ -37,13 +39,17 @@ void CPUTime_without_contacts() {
   auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
   auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
   auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
   constraints->push_back(joint_velocity_upper);
+  constraints->push_back(joint_torques_lower);
+  constraints->push_back(joint_torques_upper);
   const double T = 1;
-  const unsigned int N = 20;
-  const unsigned int num_proc = 2;
+  const int N = 20;
+  const int num_proc = 4;
   idocp::ParNMPC parnmpc(robot, cost, constraints, T, N, num_proc);
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
@@ -55,6 +61,7 @@ void CPUTime_without_contacts() {
     parnmpc.updateSolution(t, q, v, false);
   }
   end_clock = std::chrono::system_clock::now();
+  std::cout << "Initial KKT error = " << parnmpc.KKTError(t, q, v) << std::endl;
   std::cout << "---------- OCP benchmark ----------" << std::endl;
   std::cout << "model: iiwa14" << std::endl;
   std::cout << "dimq = " << robot.dimq() << std::endl;
@@ -98,8 +105,8 @@ void CPUTime_with_contacts() {
   constraints->push_back(joint_velocity_lower);
   constraints->push_back(joint_velocity_upper);
   const double T = 1;
-  const unsigned int N = 50;
-  const unsigned int num_proc = 4;
+  const int N = 50;
+  const int num_proc = 4;
   idocp::ParNMPC parnmpc(robot, cost, constraints, T, N, num_proc);
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
@@ -108,7 +115,7 @@ void CPUTime_with_contacts() {
   std::vector<bool> contact_status = {true};
   std::vector<std::vector<bool>> contact_sequence = {N, contact_status};
   parnmpc.setContactSequence(contact_sequence);
-  const int num_iteration = 10;
+  const int num_iteration = 1000;
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
   for (int i=0; i<num_iteration; ++i) {
@@ -137,11 +144,11 @@ void KKTError_without_contacts() {
   auto cost = std::make_shared<idocp::CostFunction>();
   auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
   joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
-  joint_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
-  joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
+  joint_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
+  joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   cost->push_back(joint_cost);
   auto constraints = std::make_shared<idocp::Constraints>();
   auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
@@ -153,13 +160,14 @@ void KKTError_without_contacts() {
   constraints->push_back(joint_velocity_lower);
   constraints->push_back(joint_velocity_upper);
   const double T = 1;
-  const unsigned int N = 50;
-  const unsigned int num_proc = 4;
-  const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
+  const int N = 20;
+  const int num_proc = 4;
+  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
+  robot.generateFeasibleConfiguration(q);
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   idocp::ParNMPC parnmpc(robot, cost, constraints, T, N, num_proc);
   const double t = 0;
-  parnmpc.setStateTrajectory(q, v);
+  // parnmpc.setStateTrajectory(q, v);
   std::cout << "---------- OCP benchmark ----------" << std::endl;
   std::cout << "model: iiwa14" << std::endl;
   std::cout << "dimq = " << robot.dimq() << std::endl;
@@ -168,7 +176,7 @@ void KKTError_without_contacts() {
   std::cout << "q = " << q.transpose() << std::endl;
   std::cout << "v = " << v.transpose() << std::endl;
   std::cout << "Initial KKT error = " << parnmpc.KKTError(t, q, v) << std::endl;
-  const int num_iteration = 10;
+  const int num_iteration = 20;
   for (int i=0; i<num_iteration; ++i) {
     parnmpc.updateSolution(t, q, v, false);
     std::cout << "KKT error at iteration " << i << " = " << parnmpc.KKTError(t, q, v) << std::endl;
@@ -206,8 +214,8 @@ void KKTError_with_contacts() {
   constraints->push_back(joint_velocity_lower);
   constraints->push_back(joint_velocity_upper);
   const double T = 1;
-  const unsigned int N = 50;
-  const unsigned int num_proc = 4;
+  const int N = 20;
+  const int num_proc = 4;
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
@@ -226,13 +234,13 @@ void KKTError_with_contacts() {
   std::cout << "q = " << q.transpose() << std::endl;
   std::cout << "v = " << v.transpose() << std::endl;
   std::cout << "Initial KKT error = " << parnmpc.KKTError(t, q, v) << std::endl;
-  const int num_iteration = 10;
+  const int num_iteration = 20;
   for (int i=0; i<num_iteration; ++i) {
-    parnmpc.updateSolution(t, q, v, false);
+    parnmpc.updateSolution(t, q, v, true);
     std::cout << "KKT error at iteration " << i << " = " << parnmpc.KKTError(t, q, v) << std::endl;
   }
   std::cout << "-----------------------------------" << std::endl;
-  std::cout << std::endl;
+  // std::cout << std::endl;
 }
 
 } // namespace iiwa14

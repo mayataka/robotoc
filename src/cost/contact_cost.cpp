@@ -69,27 +69,6 @@ double ContactCost::phi(const Robot& robot, CostFunctionData& data,
 }
 
 
-void ContactCost::lq(const Robot& robot, CostFunctionData& data, 
-                     const double t, const double dtau, const SplitSolution& s, 
-                     KKTResidual& kkt_residual) const {
-  // do nothing
-}
-
-
-void ContactCost::lv(const Robot& robot, CostFunctionData& data, 
-                     const double t, const double dtau, const SplitSolution& s, 
-                     KKTResidual& kkt_residual) const {
-  // do nothing
-}
-
-
-void ContactCost::la(const Robot& robot, CostFunctionData& data, 
-                     const double t, const double dtau, const SplitSolution& s, 
-                     KKTResidual& kkt_residual) const {
-  // do nothing
-}
-
-
 void ContactCost::lf(const Robot& robot, CostFunctionData& data, 
                         const double t, const double dtau, 
                         const SplitSolution& s, 
@@ -107,34 +86,6 @@ void ContactCost::lf(const Robot& robot, CostFunctionData& data,
 }
 
 
-void ContactCost::lu(const Robot& robot, CostFunctionData& data, 
-                     const double t, const double dtau, const SplitSolution& s, 
-                     KKTResidual& kkt_residual) const {
-  // do nothing
-}
-
-
-void ContactCost::lqq(const Robot& robot, CostFunctionData& data, 
-                      const double t, const double dtau, 
-                      const SplitSolution& s, KKTMatrix& kkt_matrix) const {
-  // do nothing
-}
-
-
-void ContactCost::lvv(const Robot& robot, CostFunctionData& data, 
-                      const double t, const double dtau, 
-                      const SplitSolution& s, KKTMatrix& kkt_matrix) const {
-  // do nothing
-}
-
-
-void ContactCost::laa(const Robot& robot, CostFunctionData& data, 
-                      const double t, const double dtau, 
-                      const SplitSolution& s, KKTMatrix& kkt_matrix) const {
-  // do nothing
-}
-
-
 void ContactCost::lff(const Robot& robot, CostFunctionData& data, 
                       const double t, const double dtau, 
                       const SplitSolution& s, KKTMatrix& kkt_matrix) const {
@@ -147,41 +98,6 @@ void ContactCost::lff(const Robot& robot, CostFunctionData& data,
       dimf += 3;
     }
   }
-}
-
-
-void ContactCost::luu(const Robot& robot, CostFunctionData& data, 
-                      const double t, const double dtau, 
-                      const SplitSolution& s, KKTMatrix& kkt_matrix) const {
-  // do nothing
-}
-
-
-void ContactCost::phiq(const Robot& robot, CostFunctionData& data, 
-                       const double t, const SplitSolution& s,
-                       KKTResidual& kkt_residual) const {
-  // do nothing
-}
-
-
-void ContactCost::phiv(const Robot& robot, CostFunctionData& data, 
-                       const double t, const SplitSolution& s,
-                       KKTResidual& kkt_residual) const {
-  // do nothing
-}
-
-
-void ContactCost::phiqq(const Robot& robot, CostFunctionData& data, 
-                        const double t, const SplitSolution& s,
-                        KKTMatrix& kkt_matrix) const {
-  // do nothing
-}
-
-
-void ContactCost::phivv(const Robot& robot, CostFunctionData& data, 
-                        const double t, const SplitSolution& s,
-                        KKTMatrix& kkt_matrix) const {
-  // do nothing
 }
 
 } // namespace idocp

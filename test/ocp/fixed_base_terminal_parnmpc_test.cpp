@@ -284,7 +284,7 @@ TEST_F(FixedBaseTerminalParNMPCTest, KKTErrorNormEmptyCost) {
   kkt_matrix.setContactStatus(robot);
   s.setContactStatus(robot);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
-  state_equation.linearizeStateEquationTerminal(robot, dtau, q_prev, v_prev, s, 
+  state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
   equalityconstraints::LinearizeEqualityConstraints(robot, dtau, s, 
                                                     kkt_matrix, kkt_residual);
@@ -306,7 +306,7 @@ TEST_F(FixedBaseTerminalParNMPCTest, KKTErrorNormEmptyConstraints) {
   s.setContactStatus(robot);
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
-  state_equation.linearizeStateEquationTerminal(robot, dtau, q_prev, v_prev, s, 
+  state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
   equalityconstraints::LinearizeEqualityConstraints(robot, dtau, s, 
                                                     kkt_matrix, kkt_residual);
@@ -329,7 +329,7 @@ TEST_F(FixedBaseTerminalParNMPCTest, KKTErrorNorm) {
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
-  state_equation.linearizeStateEquationTerminal(robot, dtau, q_prev, v_prev, s, 
+  state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
   equalityconstraints::LinearizeEqualityConstraints(robot, dtau, s, 
                                                     kkt_matrix, kkt_residual);
@@ -356,7 +356,7 @@ TEST_F(FixedBaseTerminalParNMPCTest, coarseUpdate) {
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
   cost->computeTerminalCostDerivatives(robot, cost_data, t,  s, kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
-  state_equation.linearizeStateEquationTerminal(robot, dtau, q_prev, v_prev, s, 
+  state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
   equalityconstraints::LinearizeEqualityConstraints(robot, dtau, s, 
                                                     kkt_matrix, kkt_residual);
@@ -368,17 +368,13 @@ TEST_F(FixedBaseTerminalParNMPCTest, coarseUpdate) {
   inverse_dynamics.condenseInverseDynamics(kkt_matrix, kkt_residual);
   inverse_dynamics.condenseEqualityConstraint(dtau, kkt_matrix, kkt_residual);
   kkt_matrix.symmetrize();
-  std::cout << "KKT matrix is " << std::endl;
-  std::cout << kkt_matrix.KKT_matrix() << std::endl;
-  const int dimKKT = kkt_matrix.dimKKT();
+  const int dimKKT = kkt_residual.dimKKT();
   const int dimx = 2*robot.dimv();
   Eigen::MatrixXd kkt_matrix_inverse(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
-  kkt_matrix.invert(kkt_matrix_inverse);
+  kkt_matrix.invert(dtau, kkt_matrix_inverse);
   SplitDirection d_ref(robot);
   d_ref.setContactStatus(robot);
   d_ref.split_direction() = kkt_matrix_inverse * kkt_residual.KKT_residual();
-  EXPECT_TRUE((kkt_matrix.KKT_matrix()*kkt_matrix_inverse)
-              .isApprox(Eigen::MatrixXd::Identity(dimKKT, dimKKT)));
   EXPECT_TRUE(d_ref.split_direction().isApprox(d.split_direction()));
   SplitSolution s_new_coarse_ref(robot);
   s_new_coarse_ref.setContactStatus(robot);

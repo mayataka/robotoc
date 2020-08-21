@@ -6,7 +6,6 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/kkt_composition.hpp"
 
 
 namespace idocp {
@@ -16,21 +15,34 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   SplitDirection(const Robot& robot) 
-    : kkt_composition_(robot),
-      split_direction_(Eigen::VectorXd::Zero(kkt_composition_.max_dimKKT())),
-      du(robot.dimv()),
+    : du(robot.dimv()),
       dbeta(robot.dimv()),
+      split_direction_(Eigen::VectorXd::Zero(
+          5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf())),
+      dimv_(robot.dimv()), 
+      dimx_(2*robot.dimv()), 
+      dim_passive_(robot.dim_passive()), 
+      max_dimf_(robot.max_dimf()), 
+      dimf_(robot.dimf()), 
+      max_dimc_(robot.dim_passive()+robot.max_dimf()), 
       dimc_(robot.dim_passive()+robot.dimf()),
-      dimf_(robot.dimf()) {
+      max_dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf()),
+      dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.dimf()) {
   }
 
   SplitDirection() 
-    : kkt_composition_(),
-      split_direction_(),
-      du(),
+    : du(),
       dbeta(),
+      split_direction_(),
+      dimv_(0), 
+      dimx_(0), 
+      dim_passive_(0), 
+      max_dimf_(0), 
+      dimf_(0), 
+      max_dimc_(0), 
       dimc_(0),
-      dimf_(0) {
+      max_dimKKT_(0),
+      dimKKT_(0) {
   }
 
   ~SplitDirection() {
@@ -45,123 +57,82 @@ public:
   SplitDirection& operator=(SplitDirection&&) noexcept = default;
 
   inline void setContactStatus(const Robot& robot) {
-    kkt_composition_.setContactStatus(robot);
-    dimc_ = robot.dim_passive() + robot.dimf();
     dimf_ = robot.dimf();
+    dimc_ = dim_passive_ + robot.dimf();
+    dimKKT_ = 5*dimv_ + dim_passive_ + 2*robot.dimf();
   }
 
   inline Eigen::VectorBlock<Eigen::VectorXd> split_direction() {
-    return split_direction_.head(kkt_composition_.dimKKT());
+    return split_direction_.head(dimKKT_);
   }
 
   inline Eigen::VectorBlock<Eigen::VectorXd> dlmd() {
-    return split_direction_.segment(kkt_composition_.Fq_begin(), 
-                                    kkt_composition_.Fq_size());
+    return split_direction_.head(dimv_);
   }
 
   inline Eigen::VectorBlock<Eigen::VectorXd> dgmm() {
-    return split_direction_.segment(kkt_composition_.Fv_begin(), 
-                                    kkt_composition_.Fv_size());
+    return split_direction_.segment(dimv_, dimv_);
   }
 
   inline Eigen::VectorBlock<Eigen::VectorXd> dmu() {
-    return split_direction_.segment(kkt_composition_.C_begin(), 
-                                    kkt_composition_.C_size());
+    return split_direction_.segment(dimx_, dimc_);
   }
 
   inline Eigen::VectorBlock<Eigen::VectorXd> da() {
-    return split_direction_.segment(kkt_composition_.Qa_begin(), 
-                                    kkt_composition_.Qa_size());
+    return split_direction_.segment(dimx_+dimc_, dimv_);
   }
 
   inline Eigen::VectorBlock<Eigen::VectorXd> df() {
-    return split_direction_.segment(kkt_composition_.Qf_begin(), 
-                                    kkt_composition_.Qf_size());
+    return split_direction_.segment(dimx_+dimc_+dimv_, dimf_);
   }
 
   inline Eigen::VectorBlock<Eigen::VectorXd> dq() {
-    return split_direction_.segment(kkt_composition_.Qq_begin(), 
-                                    kkt_composition_.Qq_size());
+    return split_direction_.segment(dimx_+dimc_+dimv_+dimf_, dimv_);
   }
 
   inline Eigen::VectorBlock<Eigen::VectorXd> dv() {
-    return split_direction_.segment(kkt_composition_.Qv_begin(), 
-                                    kkt_composition_.Qv_size());
+    return split_direction_.segment(dimx_+dimc_+2*dimv_+dimf_, dimv_);
   }
 
   inline Eigen::VectorBlock<Eigen::VectorXd> dx() {
-    return split_direction_.segment(kkt_composition_.Qx_begin(), 
-                                    kkt_composition_.Qx_size());
+    return split_direction_.segment(dimx_+dimc_+dimv_+dimf_, dimx_);
   }
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> 
-  backwardCorrectionParallelDirection() {
-    return split_direction_.segment(
-        kkt_composition_.C_begin(), 
-        kkt_composition_.dimKKT()-kkt_composition_.Qx_size());
-  }
-
-  inline Eigen::VectorBlock<Eigen::VectorXd> 
-  forwardCorrectionParallelDirection() {
-    return split_direction_.head(
-        kkt_composition_.dimKKT()-kkt_composition_.Qx_size());
-  }
-
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> split_direction() const {
-    return split_direction_.head(kkt_composition_.dimKKT());
+  inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+  split_direction() const {
+    return split_direction_.head(dimKKT_);
   }
 
   inline const Eigen::VectorBlock<const Eigen::VectorXd> dlmd() const {
-    return split_direction_.segment(kkt_composition_.Fq_begin(), 
-                                    kkt_composition_.Fq_size());
+    return split_direction_.head(dimv_);
   }
 
   inline const Eigen::VectorBlock<const Eigen::VectorXd> dgmm() const {
-    return split_direction_.segment(kkt_composition_.Fv_begin(), 
-                                    kkt_composition_.Fv_size());
+    return split_direction_.segment(dimv_, dimv_);
   }
 
   inline const Eigen::VectorBlock<const Eigen::VectorXd> dmu() const {
-    return split_direction_.segment(kkt_composition_.C_begin(), 
-                                    kkt_composition_.C_size());
+    return split_direction_.segment(dimx_, dimc_);
   }
 
   inline const Eigen::VectorBlock<const Eigen::VectorXd> da() const {
-    return split_direction_.segment(kkt_composition_.Qa_begin(), 
-                                    kkt_composition_.Qa_size());
+    return split_direction_.segment(dimx_+dimc_, dimv_);
   }
 
   inline const Eigen::VectorBlock<const Eigen::VectorXd> df() const {
-    return split_direction_.segment(kkt_composition_.Qf_begin(), 
-                                    kkt_composition_.Qf_size());
+    return split_direction_.segment(dimx_+dimc_+dimv_, dimf_);
   }
 
   inline const Eigen::VectorBlock<const Eigen::VectorXd> dq() const {
-    return split_direction_.segment(kkt_composition_.Qq_begin(), 
-                                    kkt_composition_.Qq_size());
+    return split_direction_.segment(dimx_+dimc_+dimv_+dimf_, dimv_);
   }
 
   inline const Eigen::VectorBlock<const Eigen::VectorXd> dv() const {
-    return split_direction_.segment(kkt_composition_.Qv_begin(), 
-                                    kkt_composition_.Qv_size());
+    return split_direction_.segment(dimx_+dimc_+2*dimv_+dimf_, dimv_);
   }
 
   inline const Eigen::VectorBlock<const Eigen::VectorXd> dx() const {
-    return split_direction_.segment(kkt_composition_.Qx_begin(), 
-                                    kkt_composition_.Qx_size());
-  }
-
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-  backwardCorrectionParallelDirection() const {
-    return split_direction_.segment(
-        kkt_composition_.C_begin(), 
-        kkt_composition_.dimKKT()-kkt_composition_.Qx_size());
-  }
-
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-  forwardCorrectionParallelDirection() const {
-    return split_direction_.head(
-        kkt_composition_.dimKKT()-kkt_composition_.Qx_size());
+    return split_direction_.segment(dimx_+dimc_+dimv_+dimf_, dimx_);
   }
 
   inline void setZero() {
@@ -169,18 +140,18 @@ public:
   }
 
   inline int dimKKT() const {
-    return kkt_composition_.dimKKT();
+    return dimKKT_;
   }
 
   inline int max_dimKKT() const {
-    return kkt_composition_.max_dimKKT();
+    return max_dimKKT_;
   }
 
-  int dimc() const {
+  inline int dimc() const {
     return dimc_;
   }
 
-  int dimf() const {
+  inline int dimf() const {
     return dimf_;
   }
 
@@ -188,9 +159,9 @@ public:
   Eigen::VectorXd du, dbeta;
 
 private:
-  KKTComposition kkt_composition_;
   Eigen::VectorXd split_direction_;
-  int dimc_, dimf_;
+  int dimv_, dimx_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_, dimKKT_, 
+      max_dimKKT_;
 
 };
 

@@ -32,7 +32,89 @@ protected:
 };
 
 
-TEST_F(StateEquationTest, fixed_base) {
+TEST_F(StateEquationTest, forwardEuler_fixed_base) {
+  std::vector<int> contact_frames = {18};
+  const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
+  Robot robot(fixed_base_urdf_, contact_frames, baum_a, baum_b);
+  std::random_device rnd;
+  std::vector<bool> contact_status = {rnd()%2==0};
+  robot.setContactStatus(contact_status);
+  SplitSolution s(robot);
+  s.setContactStatus(robot);
+  robot.generateFeasibleConfiguration(s.q);
+  s.v = Eigen::VectorXd::Random(robot.dimv());
+  s.a = Eigen::VectorXd::Random(robot.dimv());
+  s.f = Eigen::VectorXd::Random(robot.max_dimf());
+  s.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
+  s.lmd = Eigen::VectorXd::Random(robot.dimv());
+  s.gmm = Eigen::VectorXd::Random(robot.dimv());
+  SplitSolution s_next(robot);
+  s_next.setContactStatus(robot);
+  robot.generateFeasibleConfiguration(s_next.q);
+  s_next.v = Eigen::VectorXd::Random(robot.dimv());
+  s_next.a = Eigen::VectorXd::Random(robot.dimv());
+  s_next.f = Eigen::VectorXd::Random(robot.max_dimf());
+  s_next.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
+  s_next.lmd = Eigen::VectorXd::Random(robot.dimv());
+  s_next.gmm = Eigen::VectorXd::Random(robot.dimv());
+  KKTResidual kkt_residual(robot);
+  kkt_residual.setContactStatus(robot);
+  KKTMatrix kkt_matrix(robot);
+  kkt_matrix.setContactStatus(robot);
+  StateEquation state_equation(robot);
+  state_equation.linearizeForwardEuler(robot, dtau_, s, s_next, kkt_residual);
+  EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q+dtau_*s.v-s_next.q)));
+  EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+dtau_*s.a-s_next.v)));
+  EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
+  EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s_next.lmd+s_next.gmm-s.gmm)));
+  EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s_next.gmm)));
+}
+
+
+TEST_F(StateEquationTest, forwardEuler_floating_base) {
+  std::vector<int> contact_frames = {14, 24, 34, 44};
+  const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
+  Robot robot(floating_base_urdf_, contact_frames, baum_a, baum_b);
+  std::random_device rnd;
+  std::vector<bool> contact_status = {rnd()%2==0, rnd()%2==0, rnd()%2==0, rnd()%2==0};
+  robot.setContactStatus(contact_status);
+  SplitSolution s(robot);
+  s.setContactStatus(robot);
+  robot.generateFeasibleConfiguration(s.q);
+  s.v = Eigen::VectorXd::Random(robot.dimv());
+  s.a = Eigen::VectorXd::Random(robot.dimv());
+  s.f = Eigen::VectorXd::Random(robot.max_dimf());
+  s.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
+  s.lmd = Eigen::VectorXd::Random(robot.dimv());
+  s.gmm = Eigen::VectorXd::Random(robot.dimv());
+  SplitSolution s_next(robot);
+  s_next.setContactStatus(robot);
+  robot.generateFeasibleConfiguration(s_next.q);
+  s_next.v = Eigen::VectorXd::Random(robot.dimv());
+  s_next.a = Eigen::VectorXd::Random(robot.dimv());
+  s_next.f = Eigen::VectorXd::Random(robot.max_dimf());
+  s_next.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
+  s_next.lmd = Eigen::VectorXd::Random(robot.dimv());
+  s_next.gmm = Eigen::VectorXd::Random(robot.dimv());
+  KKTResidual kkt_residual(robot);
+  kkt_residual.setContactStatus(robot);
+  KKTMatrix kkt_matrix(robot);
+  kkt_matrix.setContactStatus(robot);
+  StateEquation state_equation(robot);
+  state_equation.linearizeForwardEuler(robot, dtau_, s, s_next, kkt_residual);
+  Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
+  robot.subtractConfiguration(s.q, s_next.q, qdiff);
+  EXPECT_TRUE(kkt_residual.Fq().isApprox((qdiff+dtau_*s.v)));
+  EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+dtau_*s.a-s_next.v)));
+  EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
+  EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s_next.lmd+s_next.gmm-s.gmm)));
+  EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s_next.gmm)));
+}
+
+
+TEST_F(StateEquationTest, backwardEuler_fixed_base) {
   std::vector<int> contact_frames = {18};
   const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -61,42 +143,29 @@ TEST_F(StateEquationTest, fixed_base) {
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
   StateEquation state_equation(robot);
-  state_equation.linearizeStateEquation(robot, dtau_, q_prev, v_prev, s, lmd_next, 
-                                        gmm_next, q_next, kkt_matrix,  kkt_residual);
+  state_equation.linearizeBackwardEuler(robot, dtau_, q_prev, v_prev, s, 
+                                        lmd_next, gmm_next, q_next, 
+                                        kkt_matrix,  kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((q_prev-s.q+dtau_*s.v)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((v_prev-s.v+dtau_*s.a)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((lmd_next-s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm+gmm_next)));
   EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq()
-              .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fqv()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fvv()
-              .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fva()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
+  EXPECT_TRUE(kkt_matrix.Fqq.isZero());
   kkt_residual.setZero();
   kkt_matrix.setZero();
-  state_equation.linearizeStateEquationTerminal(robot, dtau_, q_prev, v_prev, s, 
-                                                kkt_matrix, kkt_residual);
+  state_equation.linearizeBackwardEulerTerminal(robot, dtau_, q_prev, v_prev, 
+                                                s, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((q_prev-s.q+dtau_*s.v)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((v_prev-s.v+dtau_*s.a)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((-1*s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm)));
   EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq()
-              .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fqv()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fvv()
-              .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fva()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
+  EXPECT_TRUE(kkt_matrix.Fqq.isZero());
 }
 
 
-TEST_F(StateEquationTest, floating_base) {
+TEST_F(StateEquationTest, backwardEuler_floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -125,8 +194,9 @@ TEST_F(StateEquationTest, floating_base) {
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
   StateEquation state_equation(robot);
-  state_equation.linearizeStateEquation(robot, dtau_, q_prev, v_prev, s, lmd_next, 
-                                        gmm_next, q_next, kkt_matrix,  kkt_residual);
+  state_equation.linearizeBackwardEuler(robot, dtau_, q_prev, v_prev, s, 
+                                        lmd_next, gmm_next, q_next, 
+                                        kkt_matrix,  kkt_residual);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   robot.subtractConfiguration(q_prev, s.q, qdiff);
   Eigen::MatrixXd dsubtract_dqminus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
@@ -138,31 +208,19 @@ TEST_F(StateEquationTest, floating_base) {
   EXPECT_TRUE(kkt_residual.lq().isApprox((dsubtract_dqplus.transpose()*lmd_next+dsubtract_dqminus.transpose()*s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm+gmm_next)));
   EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dqminus));
-  EXPECT_TRUE(kkt_matrix.Fqv()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fvv()
-              .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fva()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
+  EXPECT_TRUE(kkt_matrix.Fqq.isApprox(dsubtract_dqminus));
   kkt_residual.setZero();
   kkt_matrix.setZero();
-  state_equation.linearizeStateEquationTerminal(robot, dtau_, q_prev, v_prev, s, 
-                                                kkt_matrix, kkt_residual);
+  state_equation.linearizeBackwardEulerTerminal(robot, dtau_, q_prev, v_prev, 
+                                                s, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((qdiff+dtau_*s.v)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((v_prev-s.v+dtau_*s.a)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((dsubtract_dqminus.transpose()*s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm)));
   EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dqminus));
-  EXPECT_TRUE(kkt_matrix.Fqv()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fvv()
-              .isApprox(-1*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fva()
-              .isApprox(dtau_*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  std::cout << "kkt_matrix.Fqq()" << std::endl;
-  std::cout << kkt_matrix.Fqq() << std::endl;
+  EXPECT_TRUE(kkt_matrix.Fqq.isApprox(dsubtract_dqminus));
+  std::cout << "kkt_matrix.Fqq" << std::endl;
+  std::cout << kkt_matrix.Fqq << std::endl;
 }
 
 
