@@ -85,16 +85,18 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithoutContact) {
   constraints->push_back(joint_lower_limit);
   constraints->push_back(velocity_lower_limit); 
   constraints->push_back(velocity_upper_limit);
-  ParNMPC parnmpc(robot, cost, constraints, T_, N_, num_proc_);
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  std::cout << "initial KKT error = " << parnmpc.KKTError(t_, q, v) << std::endl;
-  const int num_itr = 10;
-  for (int i=0; i<num_itr; ++i) {
-    parnmpc.updateSolution(t_, q, v, false);
-    std::cout << "KKT error after " << (i+1) << "iteration = " << parnmpc.KKTError(t_, q, v) << std::endl;
-  }
+  ParNMPC parnmpc(robot, cost, constraints, T_, N_, 1);
+  ParNMPC parnmpc_ref(robot, cost, constraints, T_, N_, 2);
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  parnmpc.updateSolution(t_, q, v, false);
+  parnmpc_ref.updateSolution(t_, q, v, false);
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  parnmpc.updateSolution(t_, q, v, true);
+  parnmpc_ref.updateSolution(t_, q, v, true);
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
 }
 
 
@@ -146,17 +148,20 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithContact) {
   constraints->push_back(joint_lower_limit);
   constraints->push_back(velocity_lower_limit); 
   constraints->push_back(velocity_upper_limit);
-  ParNMPC parnmpc(robot, cost, constraints, T_, N_, num_proc_);
-  parnmpc.setContactSequence(contact_sequence);
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  std::cout << "initial KKT error = " << parnmpc.KKTError(t_, q, v) << std::endl;
-  const int num_itr = 10;
-  for (int i=0; i<num_itr; ++i) {
-    parnmpc.updateSolution(t_, q, v, false);
-    std::cout << "KKT error after " << (i+1) << "iteration = " << parnmpc.KKTError(t_, q, v) << std::endl;
-  }
+  ParNMPC parnmpc(robot, cost, constraints, T_, N_, 1);
+  parnmpc.setContactSequence(contact_sequence);
+  ParNMPC parnmpc_ref(robot, cost, constraints, T_, N_, 2);
+  parnmpc_ref.setContactSequence(contact_sequence);
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  parnmpc.updateSolution(t_, q, v, false);
+  parnmpc_ref.updateSolution(t_, q, v, false);
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  parnmpc.updateSolution(t_, q, v, true);
+  parnmpc_ref.updateSolution(t_, q, v, true);
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
 }
 
 
@@ -203,18 +208,29 @@ TEST_F(ParNMPCTest, floating_base) {
   contact_cost->set_f_ref(f_ref);
   cost->push_back(joint_cost);
   cost->push_back(contact_cost);
-  std::shared_ptr<Constraints> constraints = std::make_shared<Constraints>();
-  ParNMPC parnmpc(robot, cost, constraints, T_, N_, num_proc_);
-  parnmpc.setContactSequence(contact_sequence);
+  auto constraints = std::make_shared<Constraints>();
+  auto joint_lower_limit = std::make_shared<JointPositionLowerLimit>(robot);
+  auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
+  auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
+  auto velocity_upper_limit = std::make_shared<JointVelocityUpperLimit>(robot);
+  constraints->push_back(joint_upper_limit); 
+  constraints->push_back(joint_lower_limit);
+  constraints->push_back(velocity_lower_limit); 
+  constraints->push_back(velocity_upper_limit);
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  std::cout << "initial KKT error = " << parnmpc.KKTError(t_, q, v) << std::endl;
-  const int num_itr = 10;
-  for (int i=0; i<num_itr; ++i) {
-    parnmpc.updateSolution(t_, q, v, true);
-    std::cout << "KKT error after " << (i+1) << "iteration = " << parnmpc.KKTError(t_, q, v) << std::endl;
-  }
+  ParNMPC parnmpc(robot, cost, constraints, T_, N_, 1);
+  parnmpc.setContactSequence(contact_sequence);
+  ParNMPC parnmpc_ref(robot, cost, constraints, T_, N_, 2);
+  parnmpc_ref.setContactSequence(contact_sequence);
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  parnmpc.updateSolution(t_, q, v, false);
+  parnmpc_ref.updateSolution(t_, q, v, false);
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  parnmpc.updateSolution(t_, q, v, true);
+  parnmpc_ref.updateSolution(t_, q, v, true);
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
 }
 
 } // namespace idocp

@@ -76,11 +76,18 @@ protected:
     s_new.lmd = Eigen::VectorXd::Random(robot.dimv());
     s_new.gmm = Eigen::VectorXd::Random(robot.dimv());
     d = SplitDirection(robot);
+    d.dq() = Eigen::VectorXd::Random(robot.dimv());
+    d.dv() = Eigen::VectorXd::Random(robot.dimv());
+    d.da() = Eigen::VectorXd::Random(robot.dimv());
+    d.df() = Eigen::VectorXd::Random(robot.dimf());
+    d.du = Eigen::VectorXd::Random(robot.dimv());
     dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     q_prev = Eigen::VectorXd::Random(robot.dimq());
     robot.normalizeConfiguration(q_prev);
     v_prev = Eigen::VectorXd::Random(robot.dimv());
+    dq_prev = Eigen::VectorXd::Random(robot.dimv());
+    dv_prev = Eigen::VectorXd::Random(robot.dimv());
     std::shared_ptr<JointSpaceCost> joint_cost = std::make_shared<JointSpaceCost>(robot);
     std::shared_ptr<ContactCost> contact_cost = std::make_shared<ContactCost>(robot);
     const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
@@ -145,7 +152,7 @@ protected:
   KKTResidual kkt_residual;
   StateEquation state_equation;
   InverseDynamics inverse_dynamics;
-  Eigen::VectorXd q_prev, v_prev;
+  Eigen::VectorXd q_prev, v_prev, dq_prev, dv_prev;
 };
 
 
@@ -188,6 +195,8 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormOnlyStateEquation) {
                          + kkt_residual.la().squaredNorm()
                          + dtau*dtau*s.u.head(6).squaredNorm();
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
+  auto pair = parnmpc.costAndViolation(robot, t, dtau, s);
+  EXPECT_DOUBLE_EQ(pair.first, 0);
 }
 
 
@@ -236,6 +245,8 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndInverseDynam
                          + dtau*dtau*kkt_residual.u_res.squaredNorm()
                          + dtau*dtau*s.u.head(6).squaredNorm();
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
+  auto pair = parnmpc.costAndViolation(robot, t, dtau, s);
+  EXPECT_DOUBLE_EQ(pair.first, 0);
 }
 
 
@@ -295,6 +306,8 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndInverseDynam
                          + dtau*dtau*kkt_residual.u_res.squaredNorm()
                          + kkt_residual.C().squaredNorm();
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
+  auto pair = parnmpc.costAndViolation(robot, t, dtau, s);
+  EXPECT_DOUBLE_EQ(pair.first, 0);
 }
 
 
@@ -366,107 +379,114 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNorm) {
 }
 
 
-// TEST_F(FloatingBaseTerminalParNMPCTest, coarseUpdate) {
-//   s.setContactStatus(robot);
-//   SplitParNMPC parnmpc(robot, cost, constraints);
-//   parnmpc.initConstraints(robot, 2, dtau, s);
-//   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-//   Eigen::MatrixXd aux_mat_seed = Eigen::MatrixXd::Random(2*robot.dimv(), 2*robot.dimv());
-//   const Eigen::MatrixXd aux_mat_next = aux_mat_seed.transpose() * aux_mat_seed;
-//   SplitSolution s_new_coarse(robot);
-//   s_new_coarse.setContactStatus(robot);
-//   parnmpc.coarseUpdateTerminal(robot, t, dtau, q_prev, v_prev, s, d, s_new_coarse);
-//   kkt_residual.setContactStatus(robot);
-//   kkt_matrix.setContactStatus(robot);
-//   robot.updateKinematics(s.q, s.v, s.a);
-//   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
-//   cost->computeTerminalCostDerivatives(robot, cost_data, t,  s, kkt_residual);
-//   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
-//   state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
-//                                                 kkt_matrix, kkt_residual);
-//   eqconstraints::LinearizeEqualityConstraints(robot, dtau, s, 
-//                                                     kkt_matrix, kkt_residual);
-//   inverse_dynamics.linearizeInverseDynamics(robot, dtau, s, kkt_residual);
-//   cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix);
-//   cost->computeTerminalCostHessian(robot, cost_data, t, s, kkt_matrix);
-//   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s, 
-//                                      kkt_matrix, kkt_residual);
-//   inverse_dynamics.condenseInverseDynamics(kkt_matrix, kkt_residual);
-//   inverse_dynamics.condenseEqualityConstraint(dtau, kkt_matrix, kkt_residual);
-//   kkt_matrix.symmetrize();
-//   const int dimKKT = kkt_residual.dimKKT();
-//   const int dimx = 2*robot.dimv();
-//   Eigen::MatrixXd kkt_matrix_inverse(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
-//   kkt_matrix.invert(dtau, kkt_matrix_inverse);
-//   SplitDirection d_ref(robot);
-//   d_ref.setContactStatus(robot);
-//   d_ref.split_direction() = kkt_matrix_inverse * kkt_residual.KKT_residual();
-//   EXPECT_TRUE(d_ref.split_direction().isApprox(d.split_direction()));
-//   SplitSolution s_new_coarse_ref(robot);
-//   s_new_coarse_ref.setContactStatus(robot);
-//   s_new_coarse_ref.lmd = s.lmd - d_ref.dlmd();
-//   s_new_coarse_ref.gmm = s.gmm - d_ref.dgmm();
-//   s_new_coarse_ref.mu_active() = s.mu_active() - d_ref.dmu();
-//   s_new_coarse_ref.a = s.a - d_ref.da();
-//   s_new_coarse_ref.f_active() = s.f_active() - d_ref.df();
-//   robot.integrateConfiguration(s.q, d_ref.dq(), -1, s_new_coarse_ref.q);
-//   s_new_coarse_ref.v = s.v - d_ref.dv();
-//   EXPECT_TRUE(s_new_coarse.lmd.isApprox(s_new_coarse_ref.lmd));
-//   EXPECT_TRUE(s_new_coarse.gmm.isApprox(s_new_coarse_ref.gmm));
-//   EXPECT_TRUE(s_new_coarse.mu.isApprox(s_new_coarse_ref.mu));
-//   EXPECT_TRUE(s_new_coarse.a.isApprox(s_new_coarse_ref.a));
-//   EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
-//   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
-//   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
-//   Eigen::MatrixXd aux_mat = Eigen::MatrixXd::Zero(dimx, dimx);
-//   parnmpc.getAuxiliaryMatrix(aux_mat);
-//   Eigen::MatrixXd aux_mat_ref = - kkt_matrix_inverse.topLeftCorner(dimx, dimx);
-//   EXPECT_TRUE(aux_mat.isApprox(aux_mat_ref));
-//   parnmpc.backwardCorrectionSerial(robot, s_old, s_new, s_new_coarse);
-//   Eigen::VectorXd x_res = Eigen::VectorXd::Zero(dimx);
-//   x_res.head(robot.dimv()) = s_new.lmd - s_old.lmd;
-//   x_res.tail(robot.dimv()) = s_new.gmm - s_old.gmm;
-//   Eigen::VectorXd dx = kkt_matrix_inverse.topRightCorner(dimx, dimx) * x_res;
-//   s_new_coarse_ref.lmd -= dx.head(robot.dimv());
-//   s_new_coarse_ref.gmm -= dx.tail(robot.dimv());
-//   EXPECT_TRUE(s_new_coarse.lmd.isApprox(s_new_coarse_ref.lmd));
-//   EXPECT_TRUE(s_new_coarse.gmm.isApprox(s_new_coarse_ref.gmm));
-//   parnmpc.backwardCorrectionParallel(robot, d, s_new_coarse);
-//   d_ref.split_direction().tail(dimKKT-dimx)
-//       = kkt_matrix_inverse.bottomRightCorner(dimKKT-dimx, dimx) * x_res;
-//   s_new_coarse_ref.mu_active().noalias() -= d_ref.dmu();
-//   s_new_coarse_ref.a.noalias() -= d_ref.da();
-//   s_new_coarse_ref.f_active().noalias() -= d_ref.df();
-//   robot.integrateConfiguration(d_ref.dq(), -1, s_new_coarse_ref.q);
-//   s_new_coarse_ref.v.noalias() -= d_ref.dv();
-//   EXPECT_TRUE(s_new_coarse.mu.isApprox(s_new_coarse_ref.mu));
-//   EXPECT_TRUE(s_new_coarse.a.isApprox(s_new_coarse_ref.a));
-//   EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
-//   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
-//   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
-//   parnmpc.forwardCorrectionSerial(robot, s_old, s_new, s_new_coarse);
-//   robot.subtractConfiguration(s_new.q, s_old.q, x_res.head(robot.dimv()));
-//   x_res.tail(robot.dimv()) = s_new.v - s_old.v;
-//   dx = kkt_matrix_inverse.bottomLeftCorner(dimx, dimx) * x_res;
-//   robot.integrateConfiguration(dx.head(robot.dimv()), -1, s_new_coarse_ref.q);
-//   s_new_coarse_ref.v -= dx.tail(robot.dimv());
-//   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
-//   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
-//   parnmpc.forwardCorrectionParallel(robot, d, s_new_coarse);
-//   d_ref.split_direction().head(dimKKT-dimx) = kkt_matrix_inverse.topLeftCorner(dimKKT-dimx, dimx) * x_res;
-//   s_new_coarse_ref.lmd -= d_ref.dlmd();
-//   s_new_coarse_ref.gmm -= d_ref.dgmm();
-//   s_new_coarse_ref.mu_active() -= d_ref.dmu();
-//   s_new_coarse_ref.a -= d_ref.da();
-//   s_new_coarse_ref.f_active() -= d_ref.df();
-//   EXPECT_TRUE(s_new_coarse.lmd.isApprox(s_new_coarse_ref.lmd));
-//   EXPECT_TRUE(s_new_coarse.gmm.isApprox(s_new_coarse_ref.gmm));
-//   EXPECT_TRUE(s_new_coarse.mu.isApprox(s_new_coarse_ref.mu));
-//   EXPECT_TRUE(s_new_coarse.a.isApprox(s_new_coarse_ref.a));
-//   EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
-//   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
-//   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
-// }
+TEST_F(FloatingBaseTerminalParNMPCTest, coarseUpdate) {
+  s.setContactStatus(robot);
+  SplitParNMPC parnmpc(robot, cost, constraints);
+  parnmpc.initConstraints(robot, 2, dtau, s);
+  constraints->setSlackAndDual(robot, constraints_data, dtau, s);
+  Eigen::MatrixXd aux_mat_seed = Eigen::MatrixXd::Random(2*robot.dimv(), 
+                                                         2*robot.dimv());
+  const Eigen::MatrixXd aux_mat_next = aux_mat_seed.transpose() * aux_mat_seed;
+  SplitSolution s_new_coarse(robot);
+  s_new_coarse.setContactStatus(robot);
+  parnmpc.coarseUpdateTerminal(robot, t, dtau, q_prev, v_prev, s, d, s_new_coarse);
+  // coarse update ref
+  kkt_residual.lu.setZero();
+  kkt_matrix.Quu.setZero();
+  cost->lu(robot, cost_data, t, dtau, s.u, kkt_residual.lu);
+  constraints->augmentDualResidual(robot, constraints_data, dtau, 
+                                    kkt_residual.lu);
+  cost->luu(robot, cost_data, t, dtau, s.u, kkt_matrix.Quu);
+  constraints->condenseSlackAndDual(robot, constraints_data, dtau, s.u, 
+                                     kkt_matrix.Quu, kkt_residual.lu);
+  inverse_dynamics.condenseInverseDynamics(robot, dtau, s, kkt_matrix, 
+                                           kkt_residual);
+  cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, 
+                                     kkt_residual);
+  cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
+  constraints->augmentDualResidual(robot, constraints_data, dtau, 
+                                   kkt_residual);
+  state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
+                                                kkt_matrix, kkt_residual);
+  eqconstraints::AugmentCondensedEqualityConstraints(robot, dtau, s, 
+                                                     kkt_matrix, kkt_residual);
+  cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix);
+  cost->computeTerminalCostHessian(robot, cost_data, t, s, kkt_matrix);
+  constraints->condenseSlackAndDual(robot, constraints_data, dtau, s, 
+                                     kkt_matrix, kkt_residual);
+  kkt_matrix.symmetrize(); 
+  const int dimKKT = kkt_residual.dimKKT();
+  Eigen::MatrixXd kkt_matrix_inverse = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
+  kkt_matrix.invert(dtau, kkt_matrix_inverse.topLeftCorner(dimKKT, dimKKT));
+  SplitDirection d_ref(robot);
+  d_ref.split_direction() = kkt_matrix_inverse.topLeftCorner(dimKKT, dimKKT)
+                              * kkt_residual.KKT_residual();
+  SplitSolution s_new_coarse_ref(robot);
+  s_new_coarse_ref.setContactStatus(robot);
+  s_new_coarse_ref.lmd = s.lmd - d_ref.dlmd();
+  s_new_coarse_ref.gmm = s.gmm - d_ref.dgmm();
+  s_new_coarse_ref.mu_active() = s.mu_active() - d_ref.dmu();
+  s_new_coarse_ref.a = s.a - d_ref.da();
+  s_new_coarse_ref.f_active() = s.f_active() - d_ref.df();
+  robot.integrateConfiguration(s.q, d_ref.dq(), -1, s_new_coarse_ref.q);
+  s_new_coarse_ref.v = s.v - d_ref.dv();
+  EXPECT_TRUE(s_new_coarse.lmd.isApprox(s_new_coarse_ref.lmd));
+  EXPECT_TRUE(s_new_coarse.gmm.isApprox(s_new_coarse_ref.gmm));
+  EXPECT_TRUE(s_new_coarse.mu.isApprox(s_new_coarse_ref.mu));
+  EXPECT_TRUE(s_new_coarse.a.isApprox(s_new_coarse_ref.a));
+  EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
+  EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
+  EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
+  const int dimx = 2*robot.dimv();
+  Eigen::MatrixXd aux_mat = Eigen::MatrixXd::Zero(dimx, dimx);
+  parnmpc.getAuxiliaryMatrix(aux_mat);
+  Eigen::MatrixXd aux_mat_ref = - kkt_matrix_inverse.topLeftCorner(dimx, dimx);
+  EXPECT_TRUE(aux_mat.isApprox(aux_mat_ref));
+  parnmpc.backwardCorrectionSerial(robot, s_old, s_new, s_new_coarse);
+  Eigen::VectorXd x_res = Eigen::VectorXd::Zero(dimx);
+  x_res.head(robot.dimv()) = s_new.lmd - s_old.lmd;
+  x_res.tail(robot.dimv()) = s_new.gmm - s_old.gmm;
+  Eigen::VectorXd dx = kkt_matrix_inverse.topRightCorner(dimx, dimx) * x_res;
+  s_new_coarse_ref.lmd -= dx.head(robot.dimv());
+  s_new_coarse_ref.gmm -= dx.tail(robot.dimv());
+  EXPECT_TRUE(s_new_coarse.lmd.isApprox(s_new_coarse_ref.lmd));
+  EXPECT_TRUE(s_new_coarse.gmm.isApprox(s_new_coarse_ref.gmm));
+  parnmpc.backwardCorrectionParallel(robot, d, s_new_coarse);
+  d_ref.split_direction().tail(dimKKT-dimx)
+      = kkt_matrix_inverse.bottomRightCorner(dimKKT-dimx, dimx) * x_res;
+  s_new_coarse_ref.mu_active().noalias() -= d_ref.dmu();
+  s_new_coarse_ref.a.noalias() -= d_ref.da();
+  s_new_coarse_ref.f_active().noalias() -= d_ref.df();
+  robot.integrateConfiguration(d_ref.dq(), -1, s_new_coarse_ref.q);
+  s_new_coarse_ref.v.noalias() -= d_ref.dv();
+  EXPECT_TRUE(s_new_coarse.mu.isApprox(s_new_coarse_ref.mu));
+  EXPECT_TRUE(s_new_coarse.a.isApprox(s_new_coarse_ref.a));
+  EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
+  EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
+  EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
+  parnmpc.forwardCorrectionSerial(robot, s_old, s_new, s_new_coarse);
+  robot.subtractConfiguration(s_new.q, s_old.q, x_res.head(robot.dimv()));
+  x_res.tail(robot.dimv()) = s_new.v - s_old.v;
+  dx = kkt_matrix_inverse.bottomLeftCorner(dimx, dimx) * x_res;
+  robot.integrateConfiguration(dx.head(robot.dimv()), -1, s_new_coarse_ref.q);
+  s_new_coarse_ref.v -= dx.tail(robot.dimv());
+  EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
+  EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
+  parnmpc.forwardCorrectionParallel(robot, d, s_new_coarse);
+  d_ref.split_direction().head(dimKKT-dimx) = kkt_matrix_inverse.topLeftCorner(dimKKT-dimx, dimx) * x_res;
+  s_new_coarse_ref.lmd -= d_ref.dlmd();
+  s_new_coarse_ref.gmm -= d_ref.dgmm();
+  s_new_coarse_ref.mu_active() -= d_ref.dmu();
+  s_new_coarse_ref.a -= d_ref.da();
+  s_new_coarse_ref.f_active() -= d_ref.df();
+  EXPECT_TRUE(s_new_coarse.lmd.isApprox(s_new_coarse_ref.lmd));
+  EXPECT_TRUE(s_new_coarse.gmm.isApprox(s_new_coarse_ref.gmm));
+  EXPECT_TRUE(s_new_coarse.mu.isApprox(s_new_coarse_ref.mu));
+  EXPECT_TRUE(s_new_coarse.a.isApprox(s_new_coarse_ref.a));
+  EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
+  EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
+  EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
+}
 
 
 TEST_F(FloatingBaseTerminalParNMPCTest, computePrimalDualDirection) {

@@ -161,7 +161,7 @@ void KKTError_with_contacts() {
   std::cout << "Initial KKT error = " << parnmpc.KKTError(t, q, v) << std::endl;
   const int num_iteration = 50;
   for (int i=0; i<num_iteration; ++i) {
-    parnmpc.updateSolution(t, q, v, false);
+    parnmpc.updateSolution(t, q, v, true);
     std::cout << "KKT error at iteration " << i << " = " << parnmpc.KKTError(t, q, v) << std::endl;
   }
   std::cout << "-----------------------------------" << std::endl;

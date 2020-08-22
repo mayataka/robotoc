@@ -155,10 +155,14 @@ void KKTError_without_contacts() {
   auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
   auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
   auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
   constraints->push_back(joint_velocity_upper);
+  constraints->push_back(joint_torques_lower);
+  constraints->push_back(joint_torques_upper);
   const double T = 1;
   const int N = 20;
   const int num_proc = 4;
@@ -167,7 +171,8 @@ void KKTError_without_contacts() {
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   idocp::ParNMPC parnmpc(robot, cost, constraints, T, N, num_proc);
   const double t = 0;
-  // parnmpc.setStateTrajectory(q, v);
+  parnmpc.setStateTrajectory(q, v);
+  parnmpc.setAuxiliaryMatrix(t);
   std::cout << "---------- OCP benchmark ----------" << std::endl;
   std::cout << "model: iiwa14" << std::endl;
   std::cout << "dimq = " << robot.dimq() << std::endl;
@@ -248,8 +253,8 @@ void KKTError_with_contacts() {
 
 
 int main() {
-  ocpbenchmark::iiwa14::CPUTime_without_contacts();
-  ocpbenchmark::iiwa14::CPUTime_with_contacts();
+  // ocpbenchmark::iiwa14::CPUTime_without_contacts();
+  // ocpbenchmark::iiwa14::CPUTime_with_contacts();
   ocpbenchmark::iiwa14::KKTError_without_contacts();
   ocpbenchmark::iiwa14::KKTError_with_contacts();
   return 0;

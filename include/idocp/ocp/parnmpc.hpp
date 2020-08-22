@@ -41,7 +41,8 @@ public:
   ParNMPC& operator=(ParNMPC&&) noexcept = default;
 
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v, const bool use_line_search=true);
+                      const Eigen::VectorXd& v, 
+                      const bool use_line_search=true);
 
   void getInitialControlInput(Eigen::VectorXd& u);
 
@@ -51,13 +52,15 @@ public:
 
   bool setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0,
                           const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
+
+  void setAuxiliaryMatrixGuessByTerminalCost(const double t);
                           
   void setContactSequence(
       const std::vector<std::vector<bool>>& contact_sequence);
 
-  void resetContactPoint();
+  void setContactPoint(const std::vector<Eigen::Vector3d>& contact_points);
   
-  void resetLineSearchFilter();
+  void clearLineSearchFilter();
 
   double KKTError(const double t, const Eigen::VectorXd& q, 
                   const Eigen::VectorXd& v);
@@ -78,8 +81,7 @@ private:
   std::vector<SplitSolution> s_, s_new_;
   std::vector<SplitDirection> d_;
   std::vector<Eigen::MatrixXd> aux_mat_old_;
-  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, 
-                  constraints_violations_;
+  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_;
   std::vector<std::vector<bool>> contact_sequence_;
 };
 
