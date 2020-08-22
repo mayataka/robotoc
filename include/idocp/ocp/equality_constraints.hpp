@@ -12,13 +12,14 @@
 namespace idocp {
 namespace eqconstraints {
 
-void LinearizeContactConstraints(Robot& robot, const double dtau,
-                                 const SplitSolution& s, KKTMatrix& kkt_matrix, 
-                                 KKTResidual& kkt_residual);
+void AugmentEqualityConstraints(Robot& robot, const double dtau, 
+                                const SplitSolution& s, KKTMatrix& kkt_matrix, 
+                                KKTResidual& kkt_residual);
 
-void LinearizeFloatingBaseConstraints(const Robot& robot, const double dtau,
-                                      const SplitSolution& s, 
-                                      KKTResidual& kkt_residual);
+void AugmentCondensedEqualityConstraints(Robot& robot, const double dtau,
+                                         const SplitSolution& s, 
+                                         KKTMatrix& kkt_matrix, 
+                                         KKTResidual& kkt_residual);
 
 double ViolationL1Norm(const KKTResidual& kkt_residual);
 

@@ -1,6 +1,8 @@
 #ifndef IDOCP_INVERSE_DYNAMICS_HXX_
 #define IDOCP_INVERSE_DYNAMICS_HXX_
 
+#include <assert.h>
+
 namespace idocp {
 
 inline InverseDynamics::InverseDynamics(const Robot& robot) 

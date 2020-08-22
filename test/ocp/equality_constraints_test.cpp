@@ -55,8 +55,7 @@ TEST_F(EqualityConstraintsTest, fixed_base) {
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
   robot.updateKinematics(s.q, s.v, s.a);
-  eqconstraints::LinearizeEqualityConstraints(robot, dtau_, s, 
-                                                    kkt_matrix, kkt_residual);
+  eqconstraints::AugmentEqualityConstraints(robot, dtau_, s, kkt_matrix, kkt_residual);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::VectorXd lv = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::VectorXd la = Eigen::VectorXd::Zero(robot.dimv());
@@ -108,8 +107,7 @@ TEST_F(EqualityConstraintsTest, floating_base) {
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
   robot.updateKinematics(s.q, s.v, s.a);
-  eqconstraints::LinearizeEqualityConstraints(robot, dtau_, s, 
-                                                    kkt_matrix, kkt_residual);
+  eqconstraints::AugmentEqualityConstraints(robot, dtau_, s, kkt_matrix, kkt_residual);
   Eigen::VectorXd lq = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::VectorXd lv = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::VectorXd la = Eigen::VectorXd::Zero(robot.dimv());

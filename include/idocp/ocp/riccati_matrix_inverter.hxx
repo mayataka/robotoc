@@ -62,7 +62,6 @@ inline void RiccatiMatrixInverter::invert(
   assert(Caf.cols() == dimaf_);
   assert(G_inv.rows() == dimaf_+dimc_);
   assert(G_inv.cols() == dimaf_+dimc_);
-  // Inverts the coefficient matrix of the acceleration 
   if (dimc_ > 0) {
     const_cast<Eigen::MatrixBase<MatrixType3>&> (G_inv)
         .topLeftCorner(dimaf_, dimaf_)
@@ -101,7 +100,6 @@ inline void RiccatiMatrixInverter::invert(
   assert(G.cols() == dimaf_);
   assert(Caf.rows() == dimc_);
   assert(Caf.cols() == dimaf_);
-  // Inverts the coefficient matrix of the acceleration 
   if (dimc_ > 0) {
     G_inv_.topLeftCorner(dimaf_, dimaf_)
         = G.llt().solve(Eigen::MatrixXd::Identity(dimaf_, dimaf_));

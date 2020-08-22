@@ -4,7 +4,6 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/kkt_composition.hpp"
 
 
 namespace idocp {

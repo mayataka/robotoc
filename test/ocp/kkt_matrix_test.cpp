@@ -298,7 +298,7 @@ TEST_F(KKTMatrixTest, invert_floating_base) {
   const Eigen::MatrixXd kkt_mat_inv_ref = kkt_mat_ref.inverse();
   Eigen::MatrixXd kkt_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
   matrix.invert(dtau, kkt_mat_inv);
-  EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-04));
+  EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-06));
   std::cout << kkt_mat_inv - kkt_mat_inv_ref << std::endl;
 }
 

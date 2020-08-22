@@ -149,8 +149,6 @@ public:
                                      const Eigen::VectorXd& v_prev, 
                                      const SplitSolution& s);
 
-  void setRegularization(const double regularization=1e-09);
-
 private:
   std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;
@@ -160,8 +158,6 @@ private:
   KKTMatrix kkt_matrix_;
   StateEquation state_equation_;
   InverseDynamics inverse_dynamics_;
-  bool use_regularization_;
-  double regularization_;
   int dimx_, dimKKT_;
   Eigen::MatrixXd kkt_matrix_inverse_;
   Eigen::VectorXd x_res_, dx_;

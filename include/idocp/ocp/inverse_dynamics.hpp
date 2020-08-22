@@ -38,11 +38,6 @@ public:
                                const SplitSolution& s, KKTMatrix& kkt_matrix, 
                                KKTResidual& kkt_residual);
 
-  void condenseFloatingBaseConstraint(Robot& robot, const double dtau, 
-                                      const SplitSolution& s, 
-                                      KKTMatrix& kkt_matrix, 
-                                      KKTResidual& kkt_residual);
-
   void computeCondensedDirection(const double dtau, 
                                  const KKTMatrix& kkt_matrix, 
                                  const KKTResidual& kkt_residual, 

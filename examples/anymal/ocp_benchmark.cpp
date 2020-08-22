@@ -101,7 +101,7 @@ void KKTError_with_contacts() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
   const double baumgarte_weight_on_velocity = 10;
-  const double baumgarte_weight_on_position = 10;
+  const double baumgarte_weight_on_position = 100;
   const std::string urdf_file_name = "../anymal/anymal.urdf";
   idocp::Robot robot(urdf_file_name, contact_frames, 
                      baumgarte_weight_on_velocity, 
@@ -161,7 +161,7 @@ void KKTError_with_contacts() {
   std::cout << "Initial KKT error = " << parnmpc.KKTError(t, q, v) << std::endl;
   const int num_iteration = 50;
   for (int i=0; i<num_iteration; ++i) {
-    parnmpc.updateSolution(t, q, v, true);
+    parnmpc.updateSolution(t, q, v, false);
     std::cout << "KKT error at iteration " << i << " = " << parnmpc.KKTError(t, q, v) << std::endl;
   }
   std::cout << "-----------------------------------" << std::endl;
