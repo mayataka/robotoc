@@ -6,6 +6,9 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
 #include "idocp/cost/cost_function_data.hpp"
+#include "idocp/ocp/split_solution.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -18,483 +21,117 @@ protected:
     urdf_ = "../urdf/anymal/anymal.urdf";
     robot_ = Robot(urdf_);
     dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
+    t_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     data_ = CostFunctionData(robot_);
+    s = SplitSolution(robot_);
+    kkt_res = KKTResidual(robot_);
+    kkt_mat = KKTMatrix(robot_);
   }
 
   virtual void TearDown() {
   }
 
-  double dtau_;
+  double dtau_, t_;
   std::string urdf_;
   Robot robot_;
   CostFunctionData data_;
+  SplitSolution s;
+  KKTResidual kkt_res;
+  KKTMatrix kkt_mat;
 };
 
 
-TEST_F(FloatingBaseJointSpaceCostTest, zeroRefernceConstructor) {
+TEST_F(FloatingBaseJointSpaceCostTest, setWeights) {
   const int dimq = robot_.dimq();
   const int dimv = robot_.dimv();
-  const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(dimq);
+  const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd v_weight = Eigen::VectorXd::Random(dimv); 
   const Eigen::VectorXd a_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(dimq);
+  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
-  const Eigen::VectorXd v_ref = Eigen::VectorXd::Zero(dimv); 
-  const Eigen::VectorXd a_ref = Eigen::VectorXd::Zero(dimv);
-  const Eigen::VectorXd u_ref = Eigen::VectorXd::Zero(dimv);
-  JointSpaceCost cost(robot_, q_weight, v_weight, a_weight, u_weight, qf_weight, 
-                      vf_weight);
-  Eigen::MatrixXd q_weight_mat = Eigen::MatrixXd::Zero(dimq, dimq);
-  Eigen::MatrixXd v_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv); 
-  Eigen::MatrixXd a_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd u_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd qf_weight_mat = Eigen::MatrixXd::Zero(dimq, dimq);
-  Eigen::MatrixXd vf_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv);
-  for (int i=0; i<dimq; ++i) {
-    q_weight_mat(i, i) = q_weight(i);
-    qf_weight_mat(i, i) = qf_weight(i);
-  }
-  for (int i=0; i<dimv; ++i) {
-    v_weight_mat(i, i) = v_weight(i);
-    a_weight_mat(i, i) = a_weight(i);
-    u_weight_mat(i, i) = u_weight(i);
-    vf_weight_mat(i, i) = vf_weight(i);
-  }
-  pinocchio::Model model;
-  pinocchio::urdf::buildModel(urdf_, model);
-  const Eigen::VectorXd q 
-      = pinocchio::randomConfiguration(model, -Eigen::VectorXd::Ones(dimq), 
-                                       Eigen::VectorXd::Ones(dimq));
-  const Eigen::VectorXd v = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd a = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd u = Eigen::VectorXd::Random(dimv);
-  robot_.computeConfigurationJacobian(q);
+  Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
+  robot_.generateFeasibleConfiguration(q_ref);
+  const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
+  const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(dimv);
+  const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(dimv);
+  JointSpaceCost cost(robot_);
+  cost.set_q_weight(q_weight);
+  cost.set_v_weight(v_weight);
+  cost.set_a_weight(a_weight);
+  cost.set_u_weight(u_weight);
+  cost.set_qf_weight(qf_weight);
+  cost.set_vf_weight(vf_weight);
+  cost.set_q_ref(q_ref);
+  cost.set_v_ref(v_ref);
+  cost.set_a_ref(a_ref);
+  cost.set_u_ref(u_ref);
+  robot_.generateFeasibleConfiguration(s.q);
+  s.v = Eigen::VectorXd::Random(dimv);
+  s.a = Eigen::VectorXd::Random(dimv);
+  s.f = Eigen::VectorXd::Random(robot_.max_dimf());
+  s.u = Eigen::VectorXd::Random(dimv);
+  Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
+  robot_.subtractConfiguration(s.q, q_ref, q_diff);
   const double l_ref = 0.5 * dtau_ 
-                        * ((q_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-                            + (v_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum()
-                            + (a_weight.array()* (a-a_ref).array()*(a-a_ref).array()).sum()
-                            + (u_weight.array()* (u-u_ref).array()*(u-u_ref).array()).sum());
-  EXPECT_DOUBLE_EQ(cost.l(dtau_, q, v, a, u), l_ref);
-  const double phi_ref = 0.5 * ((qf_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-                                + (vf_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum());
-  EXPECT_DOUBLE_EQ(cost.phi(q, v), phi_ref);
-  Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);
-  Eigen::VectorXd lv = Eigen::VectorXd::Zero(dimv);
-  Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv);
-  Eigen::VectorXd lu = Eigen::VectorXd::Zero(dimv);
-  Eigen::VectorXd lq_ref_config = Eigen::VectorXd::Zero(dimq);
+                           * ((q_weight.array()*q_diff.array()*q_diff.array()).sum()
+                            + (v_weight.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum()
+                            + (a_weight.array()* (s.a-a_ref).array()*(s.a-a_ref).array()).sum()
+                            + (u_weight.array()* (s.u-u_ref).array()*(s.u-u_ref).array()).sum());
+  EXPECT_DOUBLE_EQ(cost.l(robot_, data_, t_, dtau_, s), l_ref);
+  const double phi_ref = 0.5 * ((qf_weight.array()* q_diff.array()*q_diff.array()).sum()
+                                + (vf_weight.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum());
+  EXPECT_DOUBLE_EQ(cost.phi(robot_, data_, t_, s), phi_ref);
   Eigen::VectorXd lq_ref = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimv);
-  cost.lq(robot_, data_, dtau_, q, lq);
-  lq_ref_config.array() = dtau_ * q_weight_mat * (q-q_ref);
-  robot_.computeTangentGradient(lq_ref_config, lq_ref);
-  EXPECT_TRUE(lq.isApprox(lq_ref));
-  cost.lv(dtau_, v, lv);
-  lv_ref.array() = dtau_ * v_weight_mat * (v-v_ref);
-  EXPECT_TRUE(lv.isApprox(lv_ref));
-  cost.la(dtau_, a, la);
-  la_ref.array() = dtau_ * a_weight_mat * (a-a_ref);
-  EXPECT_TRUE(la.isApprox(la_ref));
-  cost.lu(dtau_, u, lu);
-  lu_ref.array() = dtau_ * u_weight_mat * (u-u_ref);
-  EXPECT_TRUE(lu.isApprox(lu_ref));
-  cost.phiq(robot_, data_, q, lq);
-  lq_ref_config.array() = qf_weight_mat * (q-q_ref);
-  robot_.computeTangentGradient(lq_ref_config, lq_ref);
-  EXPECT_TRUE(lq.isApprox(lq_ref));
-  std::cout << lq.transpose() << std::endl;
-  std::cout << lq_ref.transpose() << std::endl;
-  cost.phiv(v, lv);
-  lv_ref.array() = vf_weight_mat * (v-v_ref);
-  EXPECT_TRUE(lv.isApprox(lv_ref));
-  Eigen::MatrixXd lqq = Eigen::MatrixXd::Zero(dimv, dimv);
+  cost.lq(robot_, data_, t_, dtau_, s, kkt_res);
+  Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
+  robot_.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
+  lq_ref = dtau_ * Jq_diff.transpose() * q_weight.asDiagonal() * q_diff;
+  EXPECT_TRUE(kkt_res.lq().isApprox(lq_ref));
+  cost.lv(robot_, data_, t_, dtau_, s, kkt_res);
+  lv_ref = dtau_ * v_weight.asDiagonal() * (s.v-v_ref);
+  EXPECT_TRUE(kkt_res.lv().isApprox(lv_ref));
+  cost.la(robot_, data_, t_, dtau_, s, kkt_res);
+  la_ref = dtau_ * a_weight.asDiagonal() * (s.a-a_ref);
+  EXPECT_TRUE(kkt_res.la().isApprox(la_ref));
+  cost.lu(robot_, data_, t_, dtau_, s.u, kkt_res.lu);
+  lu_ref = dtau_ * u_weight.asDiagonal() * (s.u-u_ref);
+  EXPECT_TRUE(kkt_res.lu.isApprox(lu_ref));
+  cost.phiq(robot_, data_, t_, s, kkt_res);
+  lq_ref += Jq_diff.transpose() * qf_weight.asDiagonal() * q_diff;
+  EXPECT_TRUE(kkt_res.lq().isApprox(lq_ref));
+  cost.phiv(robot_, data_, t_, s, kkt_res);
+  lv_ref += vf_weight.asDiagonal() * (s.v-v_ref);
+  EXPECT_TRUE(kkt_res.lv().isApprox(lv_ref));
   Eigen::MatrixXd lqq_ref = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd lvv = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd laa = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd luu = Eigen::MatrixXd::Zero(dimv, dimv);
-  cost.lqq(robot_, dtau_, lqq);
-  robot_.computeTangentHessian(q_weight_mat, lqq_ref);
-  EXPECT_TRUE(lqq.isApprox(dtau_*lqq_ref));
-  cost.lvv(dtau_, lvv);
-  EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
-  cost.laa(dtau_, laa);
-  EXPECT_TRUE(laa.isApprox(dtau_*a_weight_mat));
-  cost.luu(dtau_, luu);
-  EXPECT_TRUE(luu.isApprox(dtau_*u_weight_mat));
-  lqq.setZero();
-  lvv.setZero();
-  laa.setZero();
-  luu.setZero();
-  cost.augment_lqq(robot_, dtau_, lqq);
-  robot_.computeTangentHessian(q_weight_mat, lqq_ref);
-  EXPECT_TRUE(lqq.isApprox(dtau_*lqq_ref));
-  cost.augment_lvv(dtau_, lvv);
-  EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
-  cost.augment_laa(dtau_, laa);
-  EXPECT_TRUE(laa.isApprox(dtau_*a_weight_mat));
-  cost.augment_luu(dtau_, luu);
-  EXPECT_TRUE(luu.isApprox(dtau_*u_weight_mat));
-  lqq.setZero();
-  lvv.setZero();
-  cost.phiqq(robot_, lqq);
-  robot_.computeTangentHessian(qf_weight_mat, lqq_ref);
-  EXPECT_TRUE(lqq.isApprox(lqq_ref));
-  cost.phivv(lvv);
-  EXPECT_TRUE(lvv.isApprox(vf_weight_mat));
+  Eigen::MatrixXd lvv_ref = Eigen::MatrixXd::Zero(dimv, dimv);
+  Eigen::MatrixXd laa_ref = Eigen::MatrixXd::Zero(dimv, dimv);
+  Eigen::MatrixXd luu_ref = Eigen::MatrixXd::Zero(dimv, dimv);
+  lqq_ref = dtau_ * Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
+  lvv_ref = dtau_ * v_weight.asDiagonal();
+  laa_ref = dtau_ * a_weight.asDiagonal();
+  luu_ref = dtau_ * u_weight.asDiagonal();
+  cost.lqq(robot_, data_, t_, dtau_, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.Qqq().isApprox(lqq_ref));
+  cost.lvv(robot_, data_, t_, dtau_, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.Qvv().isApprox(lvv_ref));
+  cost.laa(robot_, data_, t_, dtau_, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.Qaa().isApprox(laa_ref));
+  cost.luu(robot_, data_, t_, dtau_, s.u, kkt_mat.Quu);
+  EXPECT_TRUE(kkt_mat.Quu.isApprox(luu_ref));
+  std::cout << kkt_mat.costHessian() << std::endl;
+  std::cout << kkt_mat.Quu << std::endl;
+  lqq_ref += Jq_diff.transpose() * qf_weight.asDiagonal() * Jq_diff;
+  lvv_ref += vf_weight.asDiagonal();
+  cost.phiqq(robot_, data_, t_, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.Qqq().isApprox(lqq_ref));
+  cost.phivv(robot_, data_, t_, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.Qvv().isApprox(lvv_ref));
+  std::cout << kkt_mat.costHessian() << std::endl;
 }
-
-
-// TEST_F(FloatingBaseJointSpaceCostTest, withRefernceConstructor) {
-//   const int dimq = robot_.dimq();
-//   const int dimv = robot_.dimv();
-//   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(dimq);
-//   const Eigen::VectorXd v_weight = Eigen::VectorXd::Random(dimv); 
-//   const Eigen::VectorXd a_weight = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(dimq);
-//   const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd q_ref = Eigen::VectorXd::Random(dimq);
-//   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
-//   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(dimv);
-//   JointSpaceCost cost(robot_, q_ref, v_ref, a_ref, u_ref, q_weight, v_weight, 
-//                       a_weight, u_weight, qf_weight, vf_weight);
-//   Eigen::MatrixXd q_weight_mat = Eigen::MatrixXd::Zero(dimq, dimq);
-//   Eigen::MatrixXd v_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv); 
-//   Eigen::MatrixXd a_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd u_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd qf_weight_mat = Eigen::MatrixXd::Zero(dimq, dimq);
-//   Eigen::MatrixXd vf_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv);
-//   for (int i=0; i<dimq; ++i) {
-//     q_weight_mat(i, i) = q_weight(i);
-//     qf_weight_mat(i, i) = qf_weight(i);
-//   }
-//   for (int i=0; i<dimv; ++i) {
-//     v_weight_mat(i, i) = v_weight(i);
-//     a_weight_mat(i, i) = a_weight(i);
-//     u_weight_mat(i, i) = u_weight(i);
-//     vf_weight_mat(i, i) = vf_weight(i);
-//   }
-//   pinocchio::Model model;
-//   pinocchio::urdf::buildModel(urdf_, model);
-//   const Eigen::VectorXd q 
-//       = pinocchio::randomConfiguration(model, -Eigen::VectorXd::Ones(dimq), 
-//                                        Eigen::VectorXd::Ones(dimq));
-//   const Eigen::VectorXd v = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd a = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd u = Eigen::VectorXd::Random(dimv);
-//   robot_.computeConfigurationJacobian(q);
-//   const double l_ref = 0.5 * dtau_ 
-//                         * ((q_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-//                             + (v_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum()
-//                             + (a_weight.array()* (a-a_ref).array()*(a-a_ref).array()).sum()
-//                             + (u_weight.array()* (u-u_ref).array()*(u-u_ref).array()).sum());
-//   EXPECT_DOUBLE_EQ(cost.l(dtau_, q, v, a, u), l_ref);
-//   const double phi_ref = 0.5 * ((qf_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-//                                 + (vf_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum());
-//   EXPECT_DOUBLE_EQ(cost.phi(q, v), phi_ref);
-//   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lv = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lu = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lq_ref_config = Eigen::VectorXd::Zero(dimq);
-//   Eigen::VectorXd lq_ref = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimv);
-//   cost.lq(robot_, data_, dtau_, q, lq);
-//   lq_ref_config.array() = dtau_ * q_weight_mat * (q-q_ref);
-//   lq_ref = configuration_Jacobian.transpose() * lq_ref_config;
-//   EXPECT_TRUE(lq.isApprox(lq_ref));
-//   cost.lv(dtau_, v, lv);
-//   lv_ref.array() = dtau_ * v_weight_mat * (v-v_ref);
-//   EXPECT_TRUE(lv.isApprox(lv_ref));
-//   cost.la(dtau_, a, la);
-//   la_ref.array() = dtau_ * a_weight_mat * (a-a_ref);
-//   EXPECT_TRUE(la.isApprox(la_ref));
-//   cost.lu(dtau_, u, lu);
-//   lu_ref.array() = dtau_ * u_weight_mat * (u-u_ref);
-//   EXPECT_TRUE(lu.isApprox(lu_ref));
-//   cost.phiq(robot_, data_, q, lq);
-//   lq_ref_config.array() = qf_weight_mat * (q-q_ref);
-//   lq_ref = configuration_Jacobian.transpose() * lq_ref_config;
-//   EXPECT_TRUE(lq.isApprox(lq_ref));
-//   cost.phiv(v, lv);
-//   lv_ref.array() = vf_weight_mat * (v-v_ref);
-//   EXPECT_TRUE(lv.isApprox(lv_ref));
-//   Eigen::MatrixXd lqq = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd lvv = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd laa = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd luu = Eigen::MatrixXd::Zero(dimv, dimv);
-//   cost.lqq(robot_, dtau_, lqq);
-//   EXPECT_TRUE(lqq.isApprox(dtau_*configuration_Jacobian.transpose()*q_weight_mat*configuration_Jacobian));
-//   cost.lvv(dtau_, lvv);
-//   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
-//   cost.laa(dtau_, laa);
-//   EXPECT_TRUE(laa.isApprox(dtau_*a_weight_mat));
-//   cost.luu(dtau_, luu);
-//   EXPECT_TRUE(luu.isApprox(dtau_*u_weight_mat));
-//   lqq.setZero();
-//   lvv.setZero();
-//   laa.setZero();
-//   luu.setZero();
-//   cost.augment_lqq(robot_, dtau_, lqq);
-//   EXPECT_TRUE(lqq.isApprox(dtau_*configuration_Jacobian.transpose()*q_weight_mat*configuration_Jacobian));
-//   cost.augment_lvv(dtau_, lvv);
-//   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
-//   cost.augment_laa(dtau_, laa);
-//   EXPECT_TRUE(laa.isApprox(dtau_*a_weight_mat));
-//   cost.augment_luu(dtau_, luu);
-//   EXPECT_TRUE(luu.isApprox(dtau_*u_weight_mat));
-//   lqq.setZero();
-//   lvv.setZero();
-//   cost.phiqq(robot_, lqq);
-//   EXPECT_TRUE(lqq.isApprox(configuration_Jacobian.transpose()*qf_weight_mat*configuration_Jacobian));
-//   cost.phivv(lvv);
-//   EXPECT_TRUE(lvv.isApprox(vf_weight_mat));
-// }
-
-
-// TEST_F(FloatingBaseJointSpaceCostTest, setReference) {
-//   const int dimq = robot_.dimq();
-//   const int dimv = robot_.dimv();
-//   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(dimq);
-//   const Eigen::VectorXd v_weight = Eigen::VectorXd::Random(dimv); 
-//   const Eigen::VectorXd a_weight = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(dimq);
-//   const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd q_ref = Eigen::VectorXd::Random(dimq);
-//   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
-//   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(dimv);
-//   JointSpaceCost cost(robot_, q_weight, v_weight, a_weight, u_weight, qf_weight, 
-//                       vf_weight);
-//   cost.set_q_ref(q_ref);
-//   cost.set_v_ref(v_ref);
-//   cost.set_a_ref(a_ref);
-//   cost.set_u_ref(u_ref);
-//   Eigen::MatrixXd q_weight_mat = Eigen::MatrixXd::Zero(dimq, dimq);
-//   Eigen::MatrixXd v_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv); 
-//   Eigen::MatrixXd a_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd u_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd qf_weight_mat = Eigen::MatrixXd::Zero(dimq, dimq);
-//   Eigen::MatrixXd vf_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv);
-//   for (int i=0; i<dimq; ++i) {
-//     q_weight_mat(i, i) = q_weight(i);
-//     qf_weight_mat(i, i) = qf_weight(i);
-//   }
-//   for (int i=0; i<dimv; ++i) {
-//     v_weight_mat(i, i) = v_weight(i);
-//     a_weight_mat(i, i) = a_weight(i);
-//     u_weight_mat(i, i) = u_weight(i);
-//     vf_weight_mat(i, i) = vf_weight(i);
-//   }
-//   pinocchio::Model model;
-//   pinocchio::urdf::buildModel(urdf_, model);
-//   const Eigen::VectorXd q 
-//       = pinocchio::randomConfiguration(model, -Eigen::VectorXd::Ones(dimq), 
-//                                        Eigen::VectorXd::Ones(dimq));
-//   const Eigen::VectorXd v = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd a = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd u = Eigen::VectorXd::Random(dimv);
-//   robot_.computeConfigurationJacobian(q);
-//   const double l_ref = 0.5 * dtau_ 
-//                         * ((q_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-//                             + (v_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum()
-//                             + (a_weight.array()* (a-a_ref).array()*(a-a_ref).array()).sum()
-//                             + (u_weight.array()* (u-u_ref).array()*(u-u_ref).array()).sum());
-//   EXPECT_DOUBLE_EQ(cost.l(dtau_, q, v, a, u), l_ref);
-//   const double phi_ref = 0.5 * ((qf_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-//                                 + (vf_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum());
-//   EXPECT_DOUBLE_EQ(cost.phi(q, v), phi_ref);
-//   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lv = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lu = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lq_ref_config = Eigen::VectorXd::Zero(dimq);
-//   Eigen::VectorXd lq_ref = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimv);
-//   cost.lq(robot_, data_, dtau_, q, lq);
-//   lq_ref_config.array() = dtau_ * q_weight_mat * (q-q_ref);
-//   lq_ref = configuration_Jacobian.transpose() * lq_ref_config;
-//   EXPECT_TRUE(lq.isApprox(lq_ref));
-//   cost.lv(dtau_, v, lv);
-//   lv_ref.array() = dtau_ * v_weight_mat * (v-v_ref);
-//   EXPECT_TRUE(lv.isApprox(lv_ref));
-//   cost.la(dtau_, a, la);
-//   la_ref.array() = dtau_ * a_weight_mat * (a-a_ref);
-//   EXPECT_TRUE(la.isApprox(la_ref));
-//   cost.lu(dtau_, u, lu);
-//   lu_ref.array() = dtau_ * u_weight_mat * (u-u_ref);
-//   EXPECT_TRUE(lu.isApprox(lu_ref));
-//   cost.phiq(robot_, data_, q, lq);
-//   lq_ref_config.array() = qf_weight_mat * (q-q_ref);
-//   lq_ref = configuration_Jacobian.transpose() * lq_ref_config;
-//   EXPECT_TRUE(lq.isApprox(lq_ref));
-//   cost.phiv(v, lv);
-//   lv_ref.array() = vf_weight_mat * (v-v_ref);
-//   EXPECT_TRUE(lv.isApprox(lv_ref));
-//   Eigen::MatrixXd lqq = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd lvv = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd laa = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd luu = Eigen::MatrixXd::Zero(dimv, dimv);
-//   cost.lqq(robot_, dtau_, lqq);
-//   EXPECT_TRUE(lqq.isApprox(dtau_*configuration_Jacobian.transpose()*q_weight_mat*configuration_Jacobian));
-//   cost.lvv(dtau_, lvv);
-//   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
-//   cost.laa(dtau_, laa);
-//   EXPECT_TRUE(laa.isApprox(dtau_*a_weight_mat));
-//   cost.luu(dtau_, luu);
-//   EXPECT_TRUE(luu.isApprox(dtau_*u_weight_mat));
-//   lqq.setZero();
-//   lvv.setZero();
-//   laa.setZero();
-//   luu.setZero();
-//   cost.augment_lqq(robot_, dtau_, lqq);
-//   EXPECT_TRUE(lqq.isApprox(dtau_*configuration_Jacobian.transpose()*q_weight_mat*configuration_Jacobian));
-//   cost.augment_lvv(dtau_, lvv);
-//   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
-//   cost.augment_laa(dtau_, laa);
-//   EXPECT_TRUE(laa.isApprox(dtau_*a_weight_mat));
-//   cost.augment_luu(dtau_, luu);
-//   EXPECT_TRUE(luu.isApprox(dtau_*u_weight_mat));
-//   lqq.setZero();
-//   lvv.setZero();
-//   cost.phiqq(robot_, lqq);
-//   EXPECT_TRUE(lqq.isApprox(configuration_Jacobian.transpose()*qf_weight_mat*configuration_Jacobian));
-//   cost.phivv(lvv);
-//   EXPECT_TRUE(lvv.isApprox(vf_weight_mat));
-// }
-
-
-// TEST_F(FloatingBaseJointSpaceCostTest, setWeights) {
-//   const int dimq = robot_.dimq();
-//   const int dimv = robot_.dimv();
-//   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(dimq);
-//   const Eigen::VectorXd v_weight = Eigen::VectorXd::Random(dimv); 
-//   const Eigen::VectorXd a_weight = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(dimq);
-//   const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd q_ref = Eigen::VectorXd::Random(dimq);
-//   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
-//   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(dimv);
-//   JointSpaceCost cost(robot_, Eigen::VectorXd::Zero(dimq), 
-//                       Eigen::VectorXd::Zero(dimv), Eigen::VectorXd::Zero(dimv), 
-//                       Eigen::VectorXd::Zero(dimv), Eigen::VectorXd::Zero(dimq), 
-//                       Eigen::VectorXd::Zero(dimv));
-//   cost.set_q_weight(q_weight);
-//   cost.set_v_weight(v_weight);
-//   cost.set_a_weight(a_weight);
-//   cost.set_u_weight(u_weight);
-//   cost.set_qf_weight(qf_weight);
-//   cost.set_vf_weight(vf_weight);
-//   cost.set_q_ref(q_ref);
-//   cost.set_v_ref(v_ref);
-//   cost.set_a_ref(a_ref);
-//   cost.set_u_ref(u_ref);
-//   Eigen::MatrixXd q_weight_mat = Eigen::MatrixXd::Zero(dimq, dimq);
-//   Eigen::MatrixXd v_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv); 
-//   Eigen::MatrixXd a_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd u_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd qf_weight_mat = Eigen::MatrixXd::Zero(dimq, dimq);
-//   Eigen::MatrixXd vf_weight_mat = Eigen::MatrixXd::Zero(dimv, dimv);
-//   for (int i=0; i<dimq; ++i) {
-//     q_weight_mat(i, i) = q_weight(i);
-//     qf_weight_mat(i, i) = qf_weight(i);
-//   }
-//   for (int i=0; i<dimv; ++i) {
-//     v_weight_mat(i, i) = v_weight(i);
-//     a_weight_mat(i, i) = a_weight(i);
-//     u_weight_mat(i, i) = u_weight(i);
-//     vf_weight_mat(i, i) = vf_weight(i);
-//   }
-//   pinocchio::Model model;
-//   pinocchio::urdf::buildModel(urdf_, model);
-//   const Eigen::VectorXd q 
-//       = pinocchio::randomConfiguration(model, -Eigen::VectorXd::Ones(dimq), 
-//                                        Eigen::VectorXd::Ones(dimq));
-//   const Eigen::VectorXd v = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd a = Eigen::VectorXd::Random(dimv);
-//   const Eigen::VectorXd u = Eigen::VectorXd::Random(dimv);
-//   robot_.computeConfigurationJacobian(q);
-//   const double l_ref = 0.5 * dtau_ 
-//                         * ((q_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-//                             + (v_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum()
-//                             + (a_weight.array()* (a-a_ref).array()*(a-a_ref).array()).sum()
-//                             + (u_weight.array()* (u-u_ref).array()*(u-u_ref).array()).sum());
-//   EXPECT_DOUBLE_EQ(cost.l(dtau_, q, v, a, u), l_ref);
-//   const double phi_ref = 0.5 * ((qf_weight.array()* (q-q_ref).array()*(q-q_ref).array()).sum()
-//                                 + (vf_weight.array()* (v-v_ref).array()*(v-v_ref).array()).sum());
-//   EXPECT_DOUBLE_EQ(cost.phi(q, v), phi_ref);
-//   Eigen::VectorXd lq = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lv = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd la = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lu = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lq_ref_config = Eigen::VectorXd::Zero(dimq);
-//   Eigen::VectorXd lq_ref = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimv);
-//   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimv);
-//   cost.lq(robot_, data_, dtau_, q, lq);
-//   lq_ref_config.array() = dtau_ * q_weight_mat * (q-q_ref);
-//   lq_ref = configuration_Jacobian.transpose() * lq_ref_config;
-//   EXPECT_TRUE(lq.isApprox(lq_ref));
-//   cost.lv(dtau_, v, lv);
-//   lv_ref.array() = dtau_ * v_weight_mat * (v-v_ref);
-//   EXPECT_TRUE(lv.isApprox(lv_ref));
-//   cost.la(dtau_, a, la);
-//   la_ref.array() = dtau_ * a_weight_mat * (a-a_ref);
-//   EXPECT_TRUE(la.isApprox(la_ref));
-//   cost.lu(dtau_, u, lu);
-//   lu_ref.array() = dtau_ * u_weight_mat * (u-u_ref);
-//   EXPECT_TRUE(lu.isApprox(lu_ref));
-//   cost.phiq(robot_, data_, q, lq);
-//   lq_ref_config.array() = qf_weight_mat * (q-q_ref);
-//   lq_ref = configuration_Jacobian.transpose() * lq_ref_config;
-//   EXPECT_TRUE(lq.isApprox(lq_ref));
-//   cost.phiv(v, lv);
-//   lv_ref.array() = vf_weight_mat * (v-v_ref);
-//   EXPECT_TRUE(lv.isApprox(lv_ref));
-//   Eigen::MatrixXd lqq = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd lvv = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd laa = Eigen::MatrixXd::Zero(dimv, dimv);
-//   Eigen::MatrixXd luu = Eigen::MatrixXd::Zero(dimv, dimv);
-//   cost.lqq(robot_, dtau_, lqq);
-//   EXPECT_TRUE(lqq.isApprox(dtau_*configuration_Jacobian.transpose()*q_weight_mat*configuration_Jacobian));
-//   cost.lvv(dtau_, lvv);
-//   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
-//   cost.laa(dtau_, laa);
-//   EXPECT_TRUE(laa.isApprox(dtau_*a_weight_mat));
-//   cost.luu(dtau_, luu);
-//   EXPECT_TRUE(luu.isApprox(dtau_*u_weight_mat));
-//   lqq.setZero();
-//   lvv.setZero();
-//   laa.setZero();
-//   luu.setZero();
-//   cost.augment_lqq(robot_, dtau_, lqq);
-//   EXPECT_TRUE(lqq.isApprox(dtau_*configuration_Jacobian.transpose()*q_weight_mat*configuration_Jacobian));
-//   cost.augment_lvv(dtau_, lvv);
-//   EXPECT_TRUE(lvv.isApprox(dtau_*v_weight_mat));
-//   cost.augment_laa(dtau_, laa);
-//   EXPECT_TRUE(laa.isApprox(dtau_*a_weight_mat));
-//   cost.augment_luu(dtau_, luu);
-//   EXPECT_TRUE(luu.isApprox(dtau_*u_weight_mat));
-//   lqq.setZero();
-//   lvv.setZero();
-//   cost.phiqq(robot_, lqq);
-//   EXPECT_TRUE(lqq.isApprox(configuration_Jacobian.transpose()*qf_weight_mat*configuration_Jacobian));
-//   cost.phivv(lvv);
-//   EXPECT_TRUE(lvv.isApprox(vf_weight_mat));
-// }
 
 
 } // namespace idocp

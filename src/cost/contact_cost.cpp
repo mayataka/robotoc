@@ -1,28 +1,22 @@
 #include "idocp/cost/contact_cost.hpp"
 
-#include <assert.h>
+#include <iostream>
 
 
 namespace idocp {
 
-ContactCost::ContactCost(const Robot& robot, const Eigen::VectorXd& f_weight)
-  : f_ref_(Eigen::VectorXd::Zero(robot.max_dimf())),
-    f_weight_(f_weight) {
-  assert(f_weight.size() == robot.max_dimf());
-}
-
-
-ContactCost::ContactCost(const Robot& robot, const Eigen::VectorXd& f_ref, 
-                         const Eigen::VectorXd& f_weight)
-  : f_ref_(f_ref),
-    f_weight_(f_weight) {
-  assert(f_ref.size() == robot.max_dimf());
-  assert(f_weight.size() == robot.max_dimf());
+ContactCost::ContactCost(const Robot& robot)
+  : CostFunctionComponentBase(),
+    max_dimf_(robot.max_dimf()),
+    f_ref_(Eigen::VectorXd::Zero(robot.max_dimf())),
+    f_weight_(Eigen::VectorXd::Zero(robot.max_dimf())) {
 }
 
 
 ContactCost::ContactCost()
-  : f_ref_(),
+  : CostFunctionComponentBase(),
+    max_dimf_(0),
+    f_ref_(),
     f_weight_() {
 }
 
@@ -32,27 +26,36 @@ ContactCost::~ContactCost() {
 
 
 void ContactCost::set_f_ref(const Eigen::VectorXd& f_ref) {
-  assert(f_ref.size() == f_ref_.size());
-  f_ref_ = f_ref;
+  if (f_ref.size() == max_dimf_) {
+    f_ref_ = f_ref;
+  }
+  else {
+    std::cout << "invalid argment in set_f_ref(): size of f_ref must be " 
+              << max_dimf_ << std::endl;
+  }
 }
 
 
 void ContactCost::set_f_weight(const Eigen::VectorXd& f_weight) {
-  assert(f_weight.size() == f_weight_.size());
-  f_weight_ = f_weight;
+  if (f_weight.size() == max_dimf_) {
+    f_weight_ = f_weight;
+  }
+  else {
+    std::cout << "invalid argment in set_f_weight(): size of f_weight must be " 
+              << max_dimf_ << std::endl;
+  }
 }
 
 
-double ContactCost::l(const Robot& robot, const double dtau, 
-                      const Eigen::VectorXd& f) const {
-  assert(dtau > 0);
-  assert(f.size() == robot.max_dimf());
+double ContactCost::l(const Robot& robot, CostFunctionData& data, 
+                      const double t, const double dtau, 
+                      const SplitSolution& s) const {
   double l = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (robot.is_contact_active(i)) {
       for (int j=0; j<3; ++j) {
-        l += f_weight_.coeff(3*i+j) * (f.coeff(3*i+j)-f_ref_.coeff(3*i+j)) 
-                                    * (f.coeff(3*i+j)-f_ref_.coeff(3*i+j));
+        l += f_weight_.coeff(3*i+j) * (s.f.coeff(3*i+j)-f_ref_.coeff(3*i+j)) 
+                                    * (s.f.coeff(3*i+j)-f_ref_.coeff(3*i+j));
       }
     }
   }
@@ -60,17 +63,22 @@ double ContactCost::l(const Robot& robot, const double dtau,
 }
 
 
-void ContactCost::lf(const Robot& robot, const double dtau, 
-                     const Eigen::VectorXd& f, Eigen::VectorXd& lf) const {
-  assert(dtau > 0);
-  assert(f.size() == robot.max_dimf());
-  assert(lf.size() == robot.max_dimf());
+double ContactCost::phi(const Robot& robot, CostFunctionData& data, 
+                        const double t, const SplitSolution& s) const {
+  return 0;
+}
+
+
+void ContactCost::lf(const Robot& robot, CostFunctionData& data, 
+                        const double t, const double dtau, 
+                        const SplitSolution& s, 
+                        KKTResidual& kkt_residual) const {
   int dimf = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (robot.is_contact_active(i)) {
       for (int j=0; j<3; ++j) {
-        lf.coeffRef(dimf+j) = dtau * f_weight_.coeff(3*i+j) 
-                                   * (f.coeff(3*i+j)-f_ref_.coeff(3*i+j));
+        kkt_residual.lf().coeffRef(dimf+j) 
+            += dtau * f_weight_.coeff(3*i+j) * (s.f.coeff(dimf+j)-f_ref_.coeff(3*i+j));
       }
       dimf += 3;
     }
@@ -78,33 +86,14 @@ void ContactCost::lf(const Robot& robot, const double dtau,
 }
 
 
-void ContactCost::lff(const Robot& robot, const double dtau, 
-                      Eigen::MatrixXd& lff) const {
-  assert(dtau > 0);
-  assert(lff.rows() == robot.max_dimf());
-  assert(lff.cols() == robot.max_dimf());
+void ContactCost::lff(const Robot& robot, CostFunctionData& data, 
+                      const double t, const double dtau, 
+                      const SplitSolution& s, KKTMatrix& kkt_matrix) const {
   int dimf = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (robot.is_contact_active(i)) {
       for (int j=0; j<3; ++j) {
-        lff.coeffRef(dimf+j, dimf+j) = dtau * f_weight_.coeff(3*i+j);
-      }
-      dimf += 3;
-    }
-  }
-}
-
-
-void ContactCost::augment_lff(const Robot& robot, const double dtau, 
-                              Eigen::MatrixXd& lff) const {
-  assert(dtau > 0);
-  assert(lff.rows() == robot.max_dimf());
-  assert(lff.cols() == robot.max_dimf());
-  int dimf = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
-    if (robot.is_contact_active(i)) {
-      for (int j=0; j<3; ++j) {
-        lff.coeffRef(dimf+j, dimf+j) += dtau * f_weight_.coeff(3*i+j);
+        kkt_matrix.Qff().coeffRef(dimf+j, dimf+j) += dtau * f_weight_.coeff(3*i+j);
       }
       dimf += 3;
     }

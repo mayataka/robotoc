@@ -6,6 +6,9 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/contact_cost.hpp"
 #include "idocp/cost/cost_function_data.hpp"
+#include "idocp/ocp/split_solution.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -19,272 +22,97 @@ protected:
     contact_frames_ = {14, 24, 34, 44};
     robot_ = Robot(urdf_, contact_frames_, 0, 0);
     dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
+    t_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     data_ = CostFunctionData(robot_);
+    s = SplitSolution(robot_);
+    kkt_res = KKTResidual(robot_);
+    kkt_mat = KKTMatrix(robot_);
   }
 
   virtual void TearDown() {
   }
 
-  double dtau_;
+  double dtau_, t_;
   std::vector<int> contact_frames_;
   std::string urdf_;
   Robot robot_;
   CostFunctionData data_;
+  SplitSolution s;
+  KKTResidual kkt_res;
+  KKTMatrix kkt_mat;
 };
 
 
-TEST_F(FloatingBaseContactCostTest, zeroRefernceConstructor) {
-  const int dimf = robot_.max_dimf();
-  const Eigen::VectorXd f_weight = Eigen::VectorXd::Random(dimf);
-  const Eigen::VectorXd f_ref = Eigen::VectorXd::Zero(dimf);
-  ContactCost cost(robot_, f_weight);
-  Eigen::MatrixXd f_weight_mat = Eigen::MatrixXd::Zero(dimf, dimf);
-  for (int i=0; i<dimf; ++i) {
-    f_weight_mat(i, i) = f_weight(i);
-  }
-  const Eigen::VectorXd f = Eigen::VectorXd::Random(dimf);
-  ASSERT_EQ(robot_.dimf(), 0);
-  EXPECT_FLOAT_EQ(cost.l(robot_, dtau_, f), 0);
-  Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf);
-  cost.lf(robot_, dtau_, f, lf);
-  EXPECT_TRUE(lf.isZero());
-  Eigen::MatrixXd lff = Eigen::MatrixXd::Zero(dimf, dimf);
-  cost.lff(robot_, dtau_, lff);
-  EXPECT_TRUE(lff.isZero());
-  std::vector<bool> active_contacts;
-  std::random_device rnd;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    active_contacts.push_back(rnd()%2==0);
-  }
-  robot_.setContactStatus(active_contacts);
-  double l_ref = 0;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    if (active_contacts[i]) {
-      for (int j=0; j<3; ++j) {
-        l_ref += 0.5 * dtau_ * (f_weight(3*i+j) * (f(3*i+j)-f_ref(3*i+j)) * (f(3*i+j)-f_ref(3*i+j)));
-      }
-    }
-  }
-  EXPECT_FLOAT_EQ(cost.l(robot_, dtau_, f), l_ref);
-  cost.lf(robot_, dtau_, f, lf);
-  Eigen::VectorXd lf_ref = Eigen::VectorXd::Zero(dimf);
-  int dimf_tmp = 0;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    if (active_contacts[i]) {
-      for (int j=0; j<3; ++j) {
-        lf_ref(dimf_tmp+j) = dtau_ * f_weight(3*i+j) * (f(3*i+j)-f_ref(3*i+j));
-      }
-      dimf_tmp += 3;
-    }
-  }
-  EXPECT_TRUE(lf_ref.isApprox(lf));
-  cost.lff(robot_, dtau_, lff);
-  Eigen::MatrixXd lff_ref = Eigen::MatrixXd::Zero(dimf, dimf);
-  dimf_tmp = 0;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    if (active_contacts[i]) {
-      for (int j=0; j<3; ++j) {
-        lff_ref(dimf_tmp+j, dimf_tmp+j) = dtau_ * f_weight(3*i+j);
-      }
-      dimf_tmp += 3;
-    }
-  }
-  EXPECT_TRUE(lff_ref.isApprox(lff));
-  lff.setZero();
-  cost.augment_lff(robot_, dtau_, lff);
-  EXPECT_TRUE(lf_ref.isApprox(lf));
-}
-
-
-TEST_F(FloatingBaseContactCostTest, withRefernceConstructor) {
-  const int dimf = robot_.max_dimf();
-  const Eigen::VectorXd f_weight = Eigen::VectorXd::Random(dimf);
-  const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(dimf);
-  ContactCost cost(robot_, f_ref, f_weight);
-  Eigen::MatrixXd f_weight_mat = Eigen::MatrixXd::Zero(dimf, dimf);
-  for (int i=0; i<dimf; ++i) {
-    f_weight_mat(i, i) = f_weight(i);
-  }
-  const Eigen::VectorXd f = Eigen::VectorXd::Random(dimf);
-  ASSERT_EQ(robot_.dimf(), 0);
-  EXPECT_FLOAT_EQ(cost.l(robot_, dtau_, f), 0);
-  Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf);
-  cost.lf(robot_, dtau_, f, lf);
-  EXPECT_TRUE(lf.isZero());
-  Eigen::MatrixXd lff = Eigen::MatrixXd::Zero(dimf, dimf);
-  cost.lff(robot_, dtau_, lff);
-  EXPECT_TRUE(lff.isZero());
-  std::vector<bool> active_contacts;
-  std::random_device rnd;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    active_contacts.push_back(rnd()%2==0);
-  }
-  robot_.setContactStatus(active_contacts);
-  double l_ref = 0;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    if (active_contacts[i]) {
-      for (int j=0; j<3; ++j) {
-        l_ref += 0.5 * dtau_ * (f_weight(3*i+j) * (f(3*i+j)-f_ref(3*i+j)) * (f(3*i+j)-f_ref(3*i+j)));
-      }
-    }
-  }
-  EXPECT_FLOAT_EQ(cost.l(robot_, dtau_, f), l_ref);
-  cost.lf(robot_, dtau_, f, lf);
-  Eigen::VectorXd lf_ref = Eigen::VectorXd::Zero(dimf);
-  int dimf_tmp = 0;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    if (active_contacts[i]) {
-      for (int j=0; j<3; ++j) {
-        lf_ref(dimf_tmp+j) = dtau_ * f_weight(3*i+j) * (f(3*i+j)-f_ref(3*i+j));
-      }
-      dimf_tmp += 3;
-    }
-  }
-  EXPECT_TRUE(lf_ref.isApprox(lf));
-  cost.lff(robot_, dtau_, lff);
-  Eigen::MatrixXd lff_ref = Eigen::MatrixXd::Zero(dimf, dimf);
-  dimf_tmp = 0;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    if (active_contacts[i]) {
-      for (int j=0; j<3; ++j) {
-        lff_ref(dimf_tmp+j, dimf_tmp+j) = dtau_ * f_weight(3*i+j);
-      }
-      dimf_tmp += 3;
-    }
-  }
-  EXPECT_TRUE(lff_ref.isApprox(lff));
-  lff.setZero();
-  cost.augment_lff(robot_, dtau_, lff);
-  EXPECT_TRUE(lf_ref.isApprox(lf));
-}
-
-
-TEST_F(FloatingBaseContactCostTest, setReference) {
-  const int dimf = robot_.max_dimf();
-  const Eigen::VectorXd f_weight = Eigen::VectorXd::Random(dimf);
-  const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(dimf);
-  ContactCost cost(robot_, Eigen::VectorXd::Zero(dimf), f_weight);
-  cost.set_f_ref(f_ref);
-  Eigen::MatrixXd f_weight_mat = Eigen::MatrixXd::Zero(dimf, dimf);
-  for (int i=0; i<dimf; ++i) {
-    f_weight_mat(i, i) = f_weight(i);
-  }
-  const Eigen::VectorXd f = Eigen::VectorXd::Random(dimf);
-  ASSERT_EQ(robot_.dimf(), 0);
-  EXPECT_FLOAT_EQ(cost.l(robot_, dtau_, f), 0);
-  Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf);
-  cost.lf(robot_, dtau_, f, lf);
-  EXPECT_TRUE(lf.isZero());
-  Eigen::MatrixXd lff = Eigen::MatrixXd::Zero(dimf, dimf);
-  cost.lff(robot_, dtau_, lff);
-  EXPECT_TRUE(lff.isZero());
-  std::vector<bool> active_contacts;
-  std::random_device rnd;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    active_contacts.push_back(rnd()%2==0);
-  }
-  robot_.setContactStatus(active_contacts);
-  double l_ref = 0;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    if (active_contacts[i]) {
-      for (int j=0; j<3; ++j) {
-        l_ref += 0.5 * dtau_ * (f_weight(3*i+j) * (f(3*i+j)-f_ref(3*i+j)) * (f(3*i+j)-f_ref(3*i+j)));
-      }
-    }
-  }
-  EXPECT_FLOAT_EQ(cost.l(robot_, dtau_, f), l_ref);
-  cost.lf(robot_, dtau_, f, lf);
-  Eigen::VectorXd lf_ref = Eigen::VectorXd::Zero(dimf);
-  int dimf_tmp = 0;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    if (active_contacts[i]) {
-      for (int j=0; j<3; ++j) {
-        lf_ref(dimf_tmp+j) = dtau_ * f_weight(3*i+j) * (f(3*i+j)-f_ref(3*i+j));
-      }
-      dimf_tmp += 3;
-    }
-  }
-  EXPECT_TRUE(lf_ref.isApprox(lf));
-  cost.lff(robot_, dtau_, lff);
-  Eigen::MatrixXd lff_ref = Eigen::MatrixXd::Zero(dimf, dimf);
-  dimf_tmp = 0;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    if (active_contacts[i]) {
-      for (int j=0; j<3; ++j) {
-        lff_ref(dimf_tmp+j, dimf_tmp+j) = dtau_ * f_weight(3*i+j);
-      }
-      dimf_tmp += 3;
-    }
-  }
-  EXPECT_TRUE(lff_ref.isApprox(lff));
-  lff.setZero();
-  cost.augment_lff(robot_, dtau_, lff);
-  EXPECT_TRUE(lf_ref.isApprox(lf));
-}
-
-
 TEST_F(FloatingBaseContactCostTest, setWeights) {
-  const int dimf = robot_.max_dimf();
-  const Eigen::VectorXd f_weight = Eigen::VectorXd::Random(dimf);
-  const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(dimf);
-  ContactCost cost(robot_, Eigen::VectorXd::Zero(dimf), Eigen::VectorXd::Zero(dimf));
+  const int dimq = robot_.dimq();
+  const int dimv = robot_.dimv();
+  const Eigen::VectorXd f_weight = Eigen::VectorXd::Random(robot_.max_dimf());
+  const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(robot_.max_dimf());
+  ContactCost cost(robot_);
   cost.set_f_weight(f_weight);
   cost.set_f_ref(f_ref);
-  Eigen::MatrixXd f_weight_mat = Eigen::MatrixXd::Zero(dimf, dimf);
-  for (int i=0; i<dimf; ++i) {
-    f_weight_mat(i, i) = f_weight(i);
-  }
-  const Eigen::VectorXd f = Eigen::VectorXd::Random(dimf);
+  const Eigen::VectorXd q = Eigen::VectorXd::Random(dimq);
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(dimv);
+  const Eigen::VectorXd a = Eigen::VectorXd::Random(dimv);
+  const Eigen::VectorXd f = Eigen::VectorXd::Random(robot_.max_dimf());
+  const Eigen::VectorXd u = Eigen::VectorXd::Random(dimv);
   ASSERT_EQ(robot_.dimf(), 0);
-  EXPECT_FLOAT_EQ(cost.l(robot_, dtau_, f), 0);
-  Eigen::VectorXd lf = Eigen::VectorXd::Zero(dimf);
-  cost.lf(robot_, dtau_, f, lf);
-  EXPECT_TRUE(lf.isZero());
-  Eigen::MatrixXd lff = Eigen::MatrixXd::Zero(dimf, dimf);
-  cost.lff(robot_, dtau_, lff);
-  EXPECT_TRUE(lff.isZero());
-  std::vector<bool> active_contacts;
+  kkt_res.setContactStatus(robot_);
+  kkt_mat.setContactStatus(robot_);
+  EXPECT_DOUBLE_EQ(cost.l(robot_, data_, t_, dtau_, s), 0);
+  Eigen::VectorXd lf = Eigen::VectorXd::Zero(robot_.max_dimf());
+  cost.lf(robot_, data_, t_, dtau_, s, kkt_res);
+  EXPECT_TRUE(kkt_res.lf().isZero());
+  Eigen::MatrixXd lff = Eigen::MatrixXd::Zero(robot_.max_dimf(), robot_.max_dimf());
+  cost.lff(robot_, data_, t_, dtau_, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.Qff().isZero());
   std::random_device rnd;
-  for (int i=0; i<robot_.max_point_contacts(); ++i) {
+  std::vector<bool> active_contacts;
+  for (int i=0; i<contact_frames_.size(); ++i) {
     active_contacts.push_back(rnd()%2==0);
   }
   robot_.setContactStatus(active_contacts);
+  kkt_res.setContactStatus(robot_);
+  kkt_mat.setContactStatus(robot_);
   double l_ref = 0;
   for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    if (active_contacts[i]) {
+    if (robot_.is_contact_active(i)) {
       for (int j=0; j<3; ++j) {
-        l_ref += 0.5 * dtau_ * (f_weight(3*i+j) * (f(3*i+j)-f_ref(3*i+j)) * (f(3*i+j)-f_ref(3*i+j)));
+        l_ref += f_weight.coeff(3*i+j) * (s.f.coeff(3*i+j)-f_ref.coeff(3*i+j)) 
+                                       * (s.f.coeff(3*i+j)-f_ref.coeff(3*i+j));
       }
     }
   }
-  EXPECT_FLOAT_EQ(cost.l(robot_, dtau_, f), l_ref);
-  cost.lf(robot_, dtau_, f, lf);
-  Eigen::VectorXd lf_ref = Eigen::VectorXd::Zero(dimf);
-  int dimf_tmp = 0;
+  EXPECT_DOUBLE_EQ(cost.l(robot_, data_, t_, dtau_, s), 0.5*dtau_*l_ref);
+  Eigen::VectorXd lf_ref = Eigen::VectorXd::Zero(robot_.dimf());
+  int dimf = 0;
   for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    if (active_contacts[i]) {
+    if (robot_.is_contact_active(i)) {
       for (int j=0; j<3; ++j) {
-        lf_ref(dimf_tmp+j) = dtau_ * f_weight(3*i+j) * (f(3*i+j)-f_ref(3*i+j));
+        lf_ref.coeffRef(dimf+j) = dtau_ * f_weight.coeff(3*i+j) 
+                                        * (s.f.coeff(dimf+j)-f_ref.coeff(3*i+j));
       }
-      dimf_tmp += 3;
+      dimf += 3;
     }
   }
-  EXPECT_TRUE(lf_ref.isApprox(lf));
-  cost.lff(robot_, dtau_, lff);
-  Eigen::MatrixXd lff_ref = Eigen::MatrixXd::Zero(dimf, dimf);
-  dimf_tmp = 0;
+  cost.lf(robot_, data_, t_, dtau_, s, kkt_res);
+  EXPECT_TRUE(kkt_res.lf().isApprox(lf_ref));
+  cost.lf(robot_, data_, t_, dtau_, s, kkt_res);
+  EXPECT_TRUE(kkt_res.lf().isApprox(2*lf_ref));
+  Eigen::MatrixXd lff_ref = Eigen::MatrixXd::Zero(robot_.dimf(), robot_.dimf());
+  dimf = 0;
   for (int i=0; i<robot_.max_point_contacts(); ++i) {
-    if (active_contacts[i]) {
+    if (robot_.is_contact_active(i)) {
       for (int j=0; j<3; ++j) {
-        lff_ref(dimf_tmp+j, dimf_tmp+j) = dtau_ * f_weight(3*i+j);
+        lff_ref.coeffRef(dimf+j, dimf+j) = dtau_ * f_weight.coeff(3*i+j);
       }
-      dimf_tmp += 3;
+      dimf += 3;
     }
   }
-  EXPECT_TRUE(lff_ref.isApprox(lff));
-  lff.setZero();
-  cost.augment_lff(robot_, dtau_, lff);
-  EXPECT_TRUE(lf_ref.isApprox(lf));
+  cost.lff(robot_, data_, t_, dtau_, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.Qff().isApprox(lff_ref));
+  cost.lff(robot_, data_, t_, dtau_, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.Qff().isApprox(2*lff_ref));
 }
 
 } // namespace idocp

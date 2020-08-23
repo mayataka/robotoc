@@ -1,0 +1,1 @@
+#include "idocp/ocp/split_solution.hpp"

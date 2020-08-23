@@ -70,9 +70,19 @@ public:
   //   q: Configuration. Size must be dimq().
   //   v: Generalized velocity. Size must be dimv().
   //   integration_length: The length of the integration.
-  void integrateConfiguration(const Eigen::VectorXd& v, 
-                              const double integration_length, 
-                              Eigen::VectorXd& q) const;
+  template <typename TangentVectorType, typename ConfigVectorType>
+  void integrateConfiguration(
+      const Eigen::MatrixBase<TangentVectorType>& v, 
+      const double integration_length, 
+      const Eigen::MatrixBase<ConfigVectorType>& q) const;
+
+  template <typename ConfigVectorType1, typename TangentVectorType,  
+            typename ConfigVectorType2>
+  void integrateConfiguration(
+      const Eigen::MatrixBase<ConfigVectorType1>& q, 
+      const Eigen::MatrixBase<TangentVectorType>& v, 
+      const double integration_length, 
+      const Eigen::MatrixBase<ConfigVectorType2>& q_integrated) const;
 
   // Computes the difference of the two configurations at the its tangent 
   // velocity.
@@ -80,9 +90,12 @@ public:
   //   q_plus: Configuration. Size must be dimq().
   //   q_minus: Configuration. Size must be dimq().
   //   difference: The resultant tangent vector of the configuration.
-  void subtractConfiguration(const Eigen::VectorXd& q_plus, 
-                             const Eigen::VectorXd& q_minus,
-                             Eigen::VectorXd& difference) const;
+  template <typename ConfigVectorType1, typename ConfigVectorType2, 
+            typename TangentVectorType>
+  void subtractConfiguration(
+      const Eigen::MatrixBase<ConfigVectorType1>& q_plus, 
+      const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
+      const Eigen::MatrixBase<TangentVectorType>& difference) const;
 
   // Differntiate the function of integration the generalized velocity, 
   // integration_length * v, with respect to q and v.
@@ -94,52 +107,40 @@ public:
   //     the configuratioh q.
   //   dIntegrate_dv: The partial derivative of the integration with respect to
   //     the generalized velocity v.
-  void dIntegrateConfiguration(const Eigen::VectorXd& q, 
-                               const Eigen::VectorXd& v,
-                               const double integration_length,
-                               Eigen::MatrixXd& dIntegrate_dq,
-                               Eigen::MatrixXd& dIntegrate_dv) const;
+  template <typename ConfigVectorType, typename TangentVectorType,  
+            typename MatrixType1, typename MatrixType2>
+  void dIntegrateConfiguration(
+      const Eigen::MatrixBase<ConfigVectorType>& q, 
+      const Eigen::MatrixBase<TangentVectorType>& v, 
+      const double integration_length, 
+      const Eigen::MatrixBase<MatrixType1>& dIntegrate_dq,
+      const Eigen::MatrixBase<MatrixType2>& dIntegrate_dv) const;
 
-  // Computes the Jacobian of the configuration computed at its tangent 
-  // velocity.
+  // Differntiate the function of the subtraction of the configuration.
   // Argments: 
-  //   q: Configuration. Size must be dimq().
-  void computeConfigurationJacobian(const Eigen::VectorXd& q);
+  //   q_plus: Configuration. Size must be dimq().
+  //   q_minus: Configuration. Size must be dimq().
+  //   dSubtract_dqplus: The partial derivative of the subtraction 
+  //     q_plus - p_minus with respect to the q_plus.
+  template <typename ConfigVectorType1, typename ConfigVectorType2, 
+            typename MatrixType>
+  void dSubtractdConfigurationPlus(
+      const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
+      const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
+      const Eigen::MatrixBase<MatrixType>& dSubtract_dqplus) const;
 
-  // Transforms the gradient evaluated at the configuration space into that 
-  // evaluated at its tangent space. Before calling this function, 
-  // computeConfigurationJacobian() must be called. 
+  // Differntiate the function of the subtraction of the configuration.
   // Argments: 
-  //   gradient_at_configuration: The gradient evaluated at the configuration 
-  //     space. Size must be dimq().
-  //   gradient_at_configuration: The gradient evaluated at the tangent
-  //     space. Size must be dimv().
-  void computeTangentGradient(const Eigen::VectorXd& gradient_at_configuration, 
-                              Eigen::VectorXd& gradient_at_tangent) const;
-
-  // Transforms the Hessian evaluated at the configuration space into that 
-  // evaluated at its tangent space. Before calling this function,
-  // computeConfigurationJacobian() must be called. 
-  // Argments: 
-  //   hessian_at_configuration: The Hessian evaluated at the configuration 
-  //     space. Size must be dimq() x dimq().
-  //   hessian_at_tangent: The Hessian evaluated at the tangent
-  //     space. Size must be dimv() x dimv().
-  void computeTangentHessian(const Eigen::MatrixXd& hessian_at_configuration, 
-                             Eigen::MatrixXd& hessian_at_tangent) const;
-
-  // Transforms the Hessian evaluated at the configuration space into that 
-  // evaluated at its tangent space and add into another Hessian. Before 
-  // calling this function, computeConfigurationJacobian() must be called. 
-  // Argments: 
-  //   hessian_at_configuration: The Hessian evaluated at the configuration 
-  //     space. Size must be dimq() x dimq().
-  //   coeff: The coefficient at augmenting the hessian.
-  //   augmented_hessian_at_tangent: The augmented Hessian the transformed
-  //    hessian_at_configuration is added. Size must be dimv() x dimv().
-  void augmentTangentHessian(const Eigen::MatrixXd& hessian_at_configuration, 
-                             const double coeff,
-                             Eigen::MatrixXd& augmented_hessian_at_tangent) const;
+  //   q_plus: Configuration. Size must be dimq().
+  //   q_minus: Configuration. Size must be dimq().
+  //   dSubtract_dqplus: The partial derivative of the subtraction 
+  //     q_plus - p_minus with respect to the q_minus.
+  template <typename ConfigVectorType1, typename ConfigVectorType2, 
+            typename MatrixType>
+  void dSubtractdConfigurationMinus(
+      const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
+      const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
+      const Eigen::MatrixBase<MatrixType>& dSubtract_dminus) const;
 
   // Updates the kinematics of the robot. The frame placements, frame velocity,
   // frame acceleration, and the relevant Jacobians are calculated. After that, 
@@ -148,8 +149,11 @@ public:
   //   q: Configuration. Size must be dimq.
   //   v: Generalized velocity. Size must be dimv.
   //   a: Generalized acceleration. Size must be dimv.
-  void updateKinematics(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                        const Eigen::VectorXd& a);
+  template <typename ConfigVectorType, typename TangentVectorType1, 
+            typename TangentVectorType2>
+  void updateKinematics(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                        const Eigen::MatrixBase<TangentVectorType1>& v, 
+                        const Eigen::MatrixBase<TangentVectorType2>& a);
 
   // Computes the residual of the contact constriants represented by 
   // Baumgarte's stabilization method. Before calling this function, 
@@ -157,8 +161,9 @@ public:
   // Argments: 
   //   residual: Vector where the result is stored. Size must be at least 3 and
   //     at most 3*max_point_contacts().
-  void computeBaumgarteResidual(const int block_begin, 
-                                Eigen::VectorXd& baumgarte_residual) const;
+  template <typename VectorType>
+  void computeBaumgarteResidual(
+      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   // Computes the residual of the contact constriants represented by 
   // Baumgarte's stabilization method. Before calling this function, 
@@ -168,8 +173,10 @@ public:
   //   coeff: The coefficient of the result.
   //   residual: Vector where the result is stored. Size must be at least 3 and
   //     at most 3*max_point_contacts().
-  void computeBaumgarteResidual(const int block_begin, const double coeff, 
-                                Eigen::VectorXd& baumgarte_residual) const;
+  template <typename VectorType>
+  void computeBaumgarteResidual(
+      const double coeff, 
+      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   // Computes the product of a vector and the derivatives of the contact 
   // constriants represented by Baumgarte's stabilization method. 
@@ -184,17 +191,16 @@ public:
   //   dBaumgarte_partial_da: The matrix where the result is stored. The number 
   //     of columns must be dimv. The number of rows must be at least 3 and 
   //     at most 3*max_point_contacts().
-  void computeBaumgarteDerivatives(const int block_rows_begin,
-                                   Eigen::MatrixXd& dBaumgarte_partial_dq, 
-                                   Eigen::MatrixXd& dBaumgarte_partial_dv,
-                                   Eigen::MatrixXd& dBaumgarte_partial_da);
+  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
+  void computeBaumgarteDerivatives(
+      const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
+      const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
+      const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
 
   // Computes the product of a vector and the derivatives of the contact 
   // constriants represented by Baumgarte's stabilization method. 
   // Before calling this function, updateKinematics() must be called. 
   // Argments: 
-  //   block_rows_begin: The start index of the block rows where result stored.
-  //   coeff: The coefficient of the result.
   //   dBaumgarte_partial_dq: The matrix where the result is stored. The number 
   //     of columns must be dimv. The number of rows must be at least 3 and 
   //     at most 3*max_point_contacts().
@@ -204,12 +210,13 @@ public:
   //   dBaumgarte_partial_da: The matrix where the result is stored. The number 
   //     of columns must be dimv. The number of rows must be at least 3 and 
   //     at most 3*max_point_contacts().
-  void computeBaumgarteDerivatives(const int block_rows_begin, 
-                                   const double coeff,
-                                   Eigen::MatrixXd& dBaumgarte_partial_dq, 
-                                   Eigen::MatrixXd& dBaumgarte_partial_dv,
-                                   Eigen::MatrixXd& dBaumgarte_partial_da);
-
+  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
+  void computeBaumgarteDerivatives(
+      const double coeff, 
+      const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
+      const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
+      const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
+        
   // Sets the contact points.
   void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
 
@@ -225,7 +232,8 @@ public:
   // setContactStatus().
   //   fext: The stack of the contact forces represented in the local frame.
   //      The size must be at most max_dimf().
-  void setContactForces(const Eigen::VectorXd& fext);
+  template <typename VectorType>
+  void setContactForces(const Eigen::MatrixBase<VectorType>& f);
 
   // Computes generalized torques tau corresponding to given q, v, and a.
   // Argments: 
@@ -233,8 +241,12 @@ public:
   //   v: Generalized velocity. Size must be dimv.
   //   a: Generalized acceleration. Size must be dimv.
   //   tau: Generalized torques for fully actuated system. Size must be dimv.
-  void RNEA(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-            const Eigen::VectorXd& a, Eigen::VectorXd& tau);
+  template <typename ConfigVectorType, typename TangentVectorType1, 
+            typename TangentVectorType2, typename TangentVectorType3>
+  void RNEA(const Eigen::MatrixBase<ConfigVectorType>& q, 
+            const Eigen::MatrixBase<TangentVectorType1>& v, 
+            const Eigen::MatrixBase<TangentVectorType2>& a, 
+            const Eigen::MatrixBase<TangentVectorType3>& tau);
 
   // Computes the partial dervatives of the function of inverse dynamics with 
   // respect to q, v, and a.
@@ -248,11 +260,21 @@ public:
   //      be dimv times dimv.
   //   dRNEA_partial_da: The matrix where the result is stored. The size must 
   //      be dimv times dimv.
-  void RNEADerivatives(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                       const Eigen::VectorXd& a, 
-                       Eigen::MatrixXd& dRNEA_partial_dq, 
-                       Eigen::MatrixXd& dRNEA_partial_dv, 
-                       Eigen::MatrixXd& dRNEA_partial_da);
+//   void RNEADerivatives(const Eigen::Ref<const Eigen::VectorXd>& q, 
+//                        const Eigen::Ref<const Eigen::VectorXd>& v, 
+//                        const Eigen::Ref<const Eigen::VectorXd>& a,
+//                        Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dq, 
+//                        Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_dv, 
+//                        Eigen::Ref<Eigen::MatrixXd> dRNEA_partial_da);
+  template <typename ConfigVectorType, typename TangentVectorType1, 
+            typename TangentVectorType2, typename MatrixType1, 
+            typename MatrixType2, typename MatrixType3>
+  void RNEADerivatives(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                       const Eigen::MatrixBase<TangentVectorType1>& v, 
+                       const Eigen::MatrixBase<TangentVectorType2>& a,
+                       const Eigen::MatrixBase<MatrixType1>& dRNEA_partial_dq, 
+                       const Eigen::MatrixBase<MatrixType2>& dRNEA_partial_dv, 
+                       const Eigen::MatrixBase<MatrixType3>& dRNEA_partial_da);
 
   // Computes the partial dervatives of the function of inverse dynamics with 
   // respect to fext. This functin has to be called after calling 
@@ -260,7 +282,9 @@ public:
   // Argments: 
   //   dRNEA_partial_dfext: The matrix where the result is stored. The size must 
   //      be at least 3*max_point_contacts() times dimv.
-  void dRNEAPartialdFext(Eigen::MatrixXd& dRNEA_partial_dfext);
+  template <typename MatrixType>
+  void dRNEAPartialdFext(
+      const Eigen::MatrixBase<MatrixType>& dRNEA_partial_dfext);
 
   // void impulse(const Eigen::VectorXd& q, const Eigen::VectorXd& v_before,
   //              const Eigen::MatrixXd& J_contacts, Eigen::VectorXd& v_after);
@@ -273,19 +297,28 @@ public:
   //   tau: Generalized torques for fully actuated system. Size must be dimv.
   //   dq: Returned generalized velocity. Size must be dimv.
   //   dv: Returned generalized acceleration. Size must be dimv.
-  void stateEquation(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                     const Eigen::VectorXd& tau, Eigen::VectorXd& dq, 
-                     Eigen::VectorXd& dv);
+  template <typename ConfigVectorType, typename TangentVectorType1, 
+            typename TangentVectorType2, typename TangentVectorType3,
+            typename TangentVectorType4>
+  void stateEquation(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                     const Eigen::MatrixBase<TangentVectorType1>& v, 
+                     const Eigen::MatrixBase<TangentVectorType2>& tau, 
+                     const Eigen::MatrixBase<TangentVectorType3>& dq,
+                     const Eigen::MatrixBase<TangentVectorType4>& dv);
 
   // Generates feasible configuration randomly.
   // Argments:
   //   q: The generated configuration vector. Size must be dimq.  
-  void generateFeasibleConfiguration(Eigen::VectorXd& q) const;
+  template <typename ConfigVectorType>
+  void generateFeasibleConfiguration(
+      const Eigen::MatrixBase<ConfigVectorType>& q) const;
 
   // Normalizes a configuration vector.
   // Argments:
   //   q: The normalized configuration vector. Size must be dimq.  
-  void normalizeConfiguration(Eigen::VectorXd& q) const;
+  template <typename ConfigVectorType>
+  void normalizeConfiguration(
+      const Eigen::MatrixBase<ConfigVectorType>& q) const;
 
   // Returns the effort limit of each joints.
   Eigen::VectorXd jointEffortLimit() const;
@@ -319,24 +352,30 @@ public:
   // Returns the dimensiton of the generalized velocity.
   int dimv() const;
 
-  // Returns the dimension of the contacts.
-  int dimf() const;
+  // Returns the dimensiton of joints.
+  int dimJ() const;
 
   // Returns the maximum dimension of the contacts.
   int max_dimf() const;
 
-  // Returns true if the robot has a floating base and false if not.
-  bool has_floating_base() const;
+  // Returns the dimension of the contacts.
+  int dimf() const;
 
   // Returns the dimensiton of the generalized torques corresponding to the 
   // passive joints.
   int dim_passive() const;
 
-  std::vector<int> passive_joint_indices() const;
+  // Returns true if the robot has a floating base and false if not.
+  bool has_floating_base() const;
 
   // Returns the maximum number of the contacts.
   int max_point_contacts() const;
 
+  bool has_active_contacts() const;
+
+  // Returns the number of the active point contacts.
+  int num_active_point_contacts() const;
+  
   // Returns true if contact[contact_index] is active. Returns false if 
   // contact[contact_index] is not active.
   bool is_contact_active(const int contact_index) const;
@@ -345,20 +384,24 @@ public:
   void printRobotModel() const;
 
 private:
+
+  void initializeJointLimits();
+
   pinocchio::Model model_;
   pinocchio::Data data_;
   std::string urdf_file_name_;
   std::vector<PointContact> point_contacts_;
   FloatingBase floating_base_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
-  int dimq_, dimv_, dimf_, max_dimf_;
+  int dimq_, dimv_, dimJ_, max_dimf_, dimf_, num_active_contacts_;
+  bool has_active_contacts_;
   std::vector<bool> is_each_contact_active_;
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,
                   lower_joint_position_limit_, upper_joint_position_limit_;
-  Eigen::MatrixXd configuration_jacobian_;
 };
 
 } // namespace idocp
 
+#include "idocp/robot/robot.hxx"
 
 #endif // IDOCP_ROBOT_HPP_ 

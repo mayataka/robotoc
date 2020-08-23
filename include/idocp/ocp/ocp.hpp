@@ -10,17 +10,19 @@
 #include "idocp/ocp/split_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/line_search_filter.hpp"
-#include "idocp/cost/cost_function_interface.hpp"
-#include "idocp/constraints/constraints_interface.hpp"
+#include "idocp/cost/cost_function.hpp"
+#include "idocp/constraints/constraints.hpp"
 
 
 namespace idocp {
 
 class OCP {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   // Constructor. 
-  OCP(const Robot& robot, const std::shared_ptr<CostFunctionInterface>& cost,
-      const std::shared_ptr<ConstraintsInterface>& constraints, const double T, 
+  OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+      const std::shared_ptr<Constraints>& constraints, const double T, 
       const int N, const int num_proc=1);
 
   OCP();
@@ -39,8 +41,8 @@ public:
   // Use default move operator.
   OCP& operator=(OCP&&) noexcept = default;
 
-  void solveLQR(const double t, const Eigen::VectorXd& q, 
-                const Eigen::VectorXd& v, const bool use_line_search=true);
+  void updateSolution(const double t, const Eigen::VectorXd& q, 
+                      const Eigen::VectorXd& v, const bool use_line_search=true);
 
   void getInitialControlInput(Eigen::VectorXd& u);
 
