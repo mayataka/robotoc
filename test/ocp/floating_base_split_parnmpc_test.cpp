@@ -139,7 +139,7 @@ protected:
     kkt_matrix = KKTMatrix(robot);
     kkt_residual = KKTResidual(robot);
     state_equation = StateEquation(robot);
-    inverse_dynamics = InverseDynamics(robot);
+    robot_dynamics = RobotDynamics(robot);
   }
 
   virtual void TearDown() {
@@ -158,7 +158,7 @@ protected:
   KKTMatrix kkt_matrix;
   KKTResidual kkt_residual;
   StateEquation state_equation;
-  InverseDynamics inverse_dynamics;
+  RobotDynamics robot_dynamics;
   Eigen::VectorXd q_prev, v_prev, dq_prev, dv_prev;
 };
 
@@ -261,7 +261,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormStateEquationAndInverseDynamics
 }
 
 
-TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormStateEquationAndInverseDynamicsAndConstraints) {
+TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormStateEquationAndRobotDynamics) {
   auto empty_cost = std::make_shared<CostFunction>();
   auto empty_constraints = std::make_shared<Constraints>();
   robot.setContactStatus(contact_status);
@@ -343,8 +343,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormEmptyCost) {
   state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
                                         s_next.lmd, s_next.gmm, s_next.q, 
                                         kkt_matrix, kkt_residual);
-  eqconstraints::AugmentEqualityConstraints(robot, dtau, s, kkt_matrix, kkt_residual);
-  inverse_dynamics.augmentInverseDynamics(robot, dtau, s, kkt_residual);
+  robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
 }
@@ -365,8 +364,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormEmptyConstraints) {
   state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
                                         s_next.lmd, s_next.gmm, s_next.q, 
                                         kkt_matrix, kkt_residual);
-  eqconstraints::AugmentEqualityConstraints(robot, dtau, s, kkt_matrix, kkt_residual);
-  inverse_dynamics.augmentInverseDynamics(robot, dtau, s, kkt_residual);
+  robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
 }
@@ -389,8 +387,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNorm) {
   state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
                                         s_next.lmd, s_next.gmm, s_next.q, 
                                         kkt_matrix, kkt_residual);
-  eqconstraints::AugmentEqualityConstraints(robot, dtau, s, kkt_matrix, kkt_residual);
-  inverse_dynamics.augmentInverseDynamics(robot, dtau, s, kkt_residual);
+  robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
   kkt_error_ref += constraints->squaredKKTErrorNorm(robot, constraints_data, dtau, s);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
@@ -421,7 +418,8 @@ TEST_F(FloatingBaseSplitParNMPCTest, costAndViolation) {
       = kkt_residual.Fq().lpNorm<1>() + kkt_residual.Fv().lpNorm<1>() 
           + dtau * kkt_residual.u_res.lpNorm<1>() 
           + kkt_residual.C().head(robot.dimf()).lpNorm<1>()
-          + dtau * s.u.head(6).lpNorm<1>();
+          + dtau * s.u.head(6).lpNorm<1>()
+          + constraints->residualL1Nrom(robot, constraints_data, dtau, s);
   EXPECT_DOUBLE_EQ(pair.second, violation_ref);
 }
 
@@ -430,8 +428,6 @@ TEST_F(FloatingBaseSplitParNMPCTest, costAndViolationWithStepSizeInitial) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
-                                                       v_prev, s, s_next);
   const double step_size = 0.3;
   const auto pair = parnmpc.costAndViolation(robot, step_size, t, dtau, q_prev, 
                                              v_prev, s, d, s_new); 
@@ -457,8 +453,8 @@ TEST_F(FloatingBaseSplitParNMPCTest, costAndViolationWithStepSizeInitial) {
       = kkt_residual.Fq().lpNorm<1>() + kkt_residual.Fv().lpNorm<1>() 
           + dtau * kkt_residual.u_res.lpNorm<1>() 
           + kkt_residual.C().head(robot.dimf()).lpNorm<1>()
-          + constraints->residualL1Nrom(robot, constraints_data, dtau, s_new)
-          + dtau * s_new.u.head(6).lpNorm<1>();
+          + dtau * s_new.u.head(6).lpNorm<1>()
+          + constraints->residualL1Nrom(robot, constraints_data, dtau, s_new);
   EXPECT_DOUBLE_EQ(pair.second, violation_ref);
 }
 
@@ -467,8 +463,6 @@ TEST_F(FloatingBaseSplitParNMPCTest, costAndViolationWithStepSize) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
-                                                       v_prev, s, s_next);
   const double step_size = 0.3;
   const auto pair = parnmpc.costAndViolation(robot, step_size, t, dtau, s_old, 
                                              d_prev, s, d, s_new); 
@@ -482,9 +476,9 @@ TEST_F(FloatingBaseSplitParNMPCTest, costAndViolationWithStepSize) {
           + constraints->costSlackBarrier(constraints_data, step_size);
   EXPECT_DOUBLE_EQ(pair.first, cost_ref);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
-  robot.subtractConfiguration(q_prev, s_new.q, qdiff);
+  robot.subtractConfiguration(s_old.q, s_new.q, qdiff);
   kkt_residual.Fq() = qdiff + dtau * s_new.v + step_size * d_prev.dq();
-  kkt_residual.Fv() = v_prev - s_new.v + dtau * s_new.a + step_size * d_prev.dv();
+  kkt_residual.Fv() = s_old.v - s_new.v + dtau * s_new.a + step_size * d_prev.dv();
   robot.setContactForces(s_new.f);
   robot.RNEA(s_new.q, s_new.v, s_new.a, kkt_residual.u_res);
   kkt_residual.u_res -= s_new.u;
@@ -494,8 +488,8 @@ TEST_F(FloatingBaseSplitParNMPCTest, costAndViolationWithStepSize) {
       = kkt_residual.Fq().lpNorm<1>() + kkt_residual.Fv().lpNorm<1>() 
           + dtau * kkt_residual.u_res.lpNorm<1>() 
           + kkt_residual.C().head(robot.dimf()).lpNorm<1>()
-          + constraints->residualL1Nrom(robot, constraints_data, dtau, s_new)
-          + dtau * s_new.u.head(6).lpNorm<1>();
+          + dtau * s_new.u.head(6).lpNorm<1>()
+          + constraints->residualL1Nrom(robot, constraints_data, dtau, s_new);
   EXPECT_DOUBLE_EQ(pair.second, violation_ref);
 }
 
@@ -521,8 +515,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, coarseUpdate) {
   cost->luu(robot, cost_data, t, dtau, s.u, kkt_matrix.Quu);
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s.u, 
                                      kkt_matrix.Quu, kkt_residual.lu);
-  inverse_dynamics.condenseInverseDynamics(robot, dtau, s, kkt_matrix, 
-                                           kkt_residual);
+  robot_dynamics.condenseRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, 
                                      kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, 
@@ -530,8 +523,6 @@ TEST_F(FloatingBaseSplitParNMPCTest, coarseUpdate) {
   state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
                                         s_next.lmd, s_next.gmm, s_next.q, 
                                         kkt_matrix, kkt_residual);
-  eqconstraints::AugmentCondensedEqualityConstraints(robot, dtau, s, 
-                                                     kkt_matrix, kkt_residual);
   cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix);
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s, 
                                      kkt_matrix, kkt_residual);

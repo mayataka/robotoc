@@ -1,7 +1,6 @@
 #ifndef IDOCP_ROBOT_DYNAMICS_HXX_
 #define IDOCP_ROBOT_DYNAMICS_HXX_
 
-
 namespace idocp {
 
 inline RobotDynamics::RobotDynamics(const Robot& robot) 
@@ -161,12 +160,13 @@ inline void RobotDynamics::computeCondensedDirection(
 inline double RobotDynamics::violationL1Norm(
     Robot& robot, const double dtau, const SplitSolution& s, 
     KKTResidual& kkt_residual) const {
-  if (robot.has_floating_base()) {
-    kkt_residual.C().tail(robot.dim_passive()) 
-        = dtau * s.u.head(robot.dim_passive());
-  }
   double violation = dtau * kkt_residual.u_res.lpNorm<1>();
-  violation += kkt_residual.C().lpNorm<1>();
+  if (has_floating_base_) {
+    violation += dtau * s.u.head(robot.dim_passive()).lpNorm<1>();
+  }
+  if (has_active_contacts_) {
+    violation += kkt_residual.C().head(dimf_).lpNorm<1>();
+  }
   return violation;
 }
 
@@ -179,15 +179,14 @@ inline double RobotDynamics::computeViolationL1Norm(
   }
   robot.RNEA(s.q, s.v, s.a, kkt_residual.u_res);
   kkt_residual.u_res.noalias() -= s.u;
+  double violation = dtau * kkt_residual.u_res.lpNorm<1>();
   if (robot.has_floating_base()) {
-    kkt_residual.C().tail(robot.dim_passive()) 
-        = dtau * s.u.head(robot.dim_passive());
+    violation += dtau * s.u.head(robot.dim_passive()).lpNorm<1>();
   }
   if (robot.has_active_contacts()) {
     robot.computeBaumgarteResidual(dtau, kkt_residual.C());
+    violation += kkt_residual.C().head(robot.dimf()).lpNorm<1>();
   }
-  double violation = dtau * kkt_residual.u_res.lpNorm<1>();
-  violation += kkt_residual.C().lpNorm<1>();
   return violation;
 }
 

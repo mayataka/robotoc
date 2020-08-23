@@ -136,7 +136,7 @@ protected:
     kkt_matrix = KKTMatrix(robot);
     kkt_residual = KKTResidual(robot);
     state_equation = StateEquation(robot);
-    inverse_dynamics = InverseDynamics(robot);
+    robot_dynamics = RobotDynamics(robot);
   }
 
   virtual void TearDown() {
@@ -155,7 +155,7 @@ protected:
   KKTMatrix kkt_matrix;
   KKTResidual kkt_residual;
   StateEquation state_equation;
-  InverseDynamics inverse_dynamics;
+  RobotDynamics robot_dynamics;
   Eigen::VectorXd q_prev, v_prev, dq_prev, dv_prev;
 };
 
@@ -238,7 +238,7 @@ TEST_F(FixedBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndInverseDynamics
 }
 
 
-TEST_F(FixedBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndInverseDynamicsAndConstraints) {
+TEST_F(FixedBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndRobotDynamics) {
   auto empty_cost = std::make_shared<CostFunction>();
   auto empty_constraints = std::make_shared<Constraints>();
   robot.setContactStatus(std::vector<bool>({true}));
@@ -310,8 +310,7 @@ TEST_F(FixedBaseTerminalParNMPCTest, KKTErrorNormEmptyCost) {
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual.lu);
   state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
-  eqconstraints::AugmentEqualityConstraints(robot, dtau, s, kkt_matrix, kkt_residual);
-  inverse_dynamics.augmentInverseDynamics(robot, dtau, s, kkt_residual);
+  robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
 }
@@ -332,8 +331,7 @@ TEST_F(FixedBaseTerminalParNMPCTest, KKTErrorNormEmptyConstraints) {
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
   state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
-  eqconstraints::AugmentEqualityConstraints(robot, dtau, s, kkt_matrix, kkt_residual);
-  inverse_dynamics.augmentInverseDynamics(robot, dtau, s, kkt_residual);
+  robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
 }
@@ -356,8 +354,7 @@ TEST_F(FixedBaseTerminalParNMPCTest, KKTErrorNorm) {
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual.lu);
   state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
-  eqconstraints::AugmentEqualityConstraints(robot, dtau, s, kkt_matrix, kkt_residual);
-  inverse_dynamics.augmentInverseDynamics(robot, dtau, s, kkt_residual);
+  robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
   kkt_error_ref += constraints->squaredKKTErrorNorm(robot, constraints_data, dtau, s);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
@@ -388,7 +385,8 @@ TEST_F(FixedBaseTerminalParNMPCTest, costAndViolation) {
   const double violation_ref 
       = kkt_residual.Fq().lpNorm<1>() + kkt_residual.Fv().lpNorm<1>() 
           + dtau * kkt_residual.u_res.lpNorm<1>() 
-          + kkt_residual.C().head(robot.dimf()).lpNorm<1>();
+          + kkt_residual.C().head(robot.dimf()).lpNorm<1>()
+          + constraints->residualL1Nrom(robot, constraints_data, dtau, s);
   EXPECT_DOUBLE_EQ(pair.second, violation_ref);
 }
 
@@ -448,8 +446,7 @@ TEST_F(FixedBaseTerminalParNMPCTest, coarseUpdate) {
   cost->luu(robot, cost_data, t, dtau, s.u, kkt_matrix.Quu);
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s.u, 
                                      kkt_matrix.Quu, kkt_residual.lu);
-  inverse_dynamics.condenseInverseDynamics(robot, dtau, s, kkt_matrix, 
-                                           kkt_residual);
+  robot_dynamics.condenseRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, 
                                      kkt_residual);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
@@ -457,8 +454,6 @@ TEST_F(FixedBaseTerminalParNMPCTest, coarseUpdate) {
                                    kkt_residual);
   state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
-  eqconstraints::AugmentCondensedEqualityConstraints(robot, dtau, s, 
-                                                     kkt_matrix, kkt_residual);
   cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix);
   cost->computeTerminalCostHessian(robot, cost_data, t, s, kkt_matrix);
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s, 

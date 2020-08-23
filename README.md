@@ -36,7 +36,7 @@ cd idocp
 ```
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=False
 make -j8
 sudo make install
 ```
