@@ -24,7 +24,7 @@
 
 namespace idocp {
 
-class FixedBaseTerminalOCPTest : public ::testing::Test {
+class FloatingBaseTerminalOCPTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -128,7 +128,7 @@ protected:
 };
 
 
-TEST_F(FixedBaseTerminalOCPTest, linearizeOCP) {
+TEST_F(FloatingBaseTerminalOCPTest, linearizeOCP) {
   s.setContactStatus(robot);
   TerminalOCP ocp(robot, cost, constraints);
   ocp.linearizeOCP(robot, t, s, riccati);
@@ -141,14 +141,14 @@ TEST_F(FixedBaseTerminalOCPTest, linearizeOCP) {
 }
 
 
-TEST_F(FixedBaseTerminalOCPTest, terminalCost) {
+TEST_F(FloatingBaseTerminalOCPTest, terminalCost) {
   TerminalOCP ocp(robot, cost, constraints);
   EXPECT_DOUBLE_EQ(ocp.terminalCost(robot, t, s), 
                    cost->phi(robot, cost_data, t, s));
 }
 
 
-TEST_F(FixedBaseTerminalOCPTest, terminalCostWithStepSize) {
+TEST_F(FloatingBaseTerminalOCPTest, terminalCostWithStepSize) {
   TerminalOCP ocp(robot, cost, constraints);
   const double step_size = 0.3;
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
@@ -159,7 +159,31 @@ TEST_F(FixedBaseTerminalOCPTest, terminalCostWithStepSize) {
 }
 
 
-TEST_F(FixedBaseTerminalOCPTest, squaredKKTErrorNorm) {
+
+TEST_F(FloatingBaseTerminalOCPTest, updatePrimal) {
+  TerminalOCP ocp(robot, cost, constraints);
+  const double step_size = 0.3;
+  riccati.Pqq = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  riccati.Pqv = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  riccati.Pvq = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  riccati.Pvv = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  riccati.sq = Eigen::VectorXd::Random(robot.dimv());
+  riccati.sv = Eigen::VectorXd::Random(robot.dimv());
+  d.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
+  d.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
+  s_tmp.lmd = s.lmd + step_size * d.dlmd();
+  s_tmp.gmm = s.gmm + step_size * d.dgmm();
+  robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
+  s_tmp.v = s.v + step_size * d.dv();
+  ocp.updatePrimal(robot, step_size, riccati, d, s);
+  EXPECT_TRUE(s.lmd.isApprox(s_tmp.lmd));
+  EXPECT_TRUE(s.gmm.isApprox(s_tmp.gmm));
+  EXPECT_TRUE(s.q.isApprox(s_tmp.q));
+  EXPECT_TRUE(s.v.isApprox(s_tmp.v));
+}
+
+
+TEST_F(FloatingBaseTerminalOCPTest, squaredKKTErrorNorm) {
   s.setContactStatus(robot);
   TerminalOCP ocp(robot, cost, constraints);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);

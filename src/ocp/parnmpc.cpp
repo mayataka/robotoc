@@ -263,8 +263,7 @@ bool ParNMPC::setStateTrajectory(const Eigen::VectorXd& q0,
     s_new_[i].a = a;
     s_[i].v = v0 + i * a;
     s_new_[i].v = s_[i].v;
-    s_[i].q = q0;
-    robots_[0].integrateConfiguration(v, (double)i, s_[i].q);
+    robots_[0].integrateConfiguration(q0, v, (double)i, s_[i].q);
     s_new_[i].q = s_[i].q;
   }
   bool feasible = isCurrentSolutionFeasible();

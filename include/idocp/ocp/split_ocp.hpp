@@ -78,7 +78,8 @@ public:
   void forwardRiccatiRecursion(const double dtau, SplitDirection& d,   
                                SplitDirection& d_next);
 
-  void computeCondensedDirection(const double dtau, SplitDirection& d);
+  void computeCondensedDirection(const Robot& robot, const double dtau, 
+                                 SplitDirection& d);
  
   double maxPrimalStepSize();
 
@@ -92,6 +93,7 @@ public:
                                              const double step_size, 
                                              const double t, const double dtau, 
                                              const SplitSolution& s, 
+                                             const SplitDirection& d,
                                              const SplitSolution& s_next, 
                                              const SplitDirection& d_next);
 
@@ -115,7 +117,8 @@ private:
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
   StateEquation state_equation_;
-  InverseDynamics inverse_dynamics_;
+  RobotDynamics robot_dynamics_;
+  RiccatiGain riccati_gain_;
   RiccatiMatrixFactorizer riccati_factorizer_;
   RiccatiMatrixInverter riccati_inverter_;
   Eigen::MatrixXd Ginv_;
@@ -125,6 +128,10 @@ private:
   inline void setContactStatus(const Robot& robot) {
     dimf_ = robot.dimf();
     dimc_ = robot.dim_passive() + robot.dimf();
+  }
+
+  inline Eigen::Block<Eigen::MatrixXd> Ginv_active() {
+    return Ginv_.topLeftCorner(dimv_+dimf_+dimc_, dimv_+dimf_+dimc_);
   }
 
 };

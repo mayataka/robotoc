@@ -102,6 +102,14 @@ public:
     return C_.block(0, v_begin_, dimc_, dimv_);
   }
 
+  inline Eigen::Block<Eigen::MatrixXd> Caf() {
+    return C_.block(0, a_begin_, dimc_, dimv_+dimf_);
+  }
+
+  inline Eigen::Block<Eigen::MatrixXd> Cqv() {
+    return C_.block(0, q_begin_, dimc_, dimx_);
+  }
+
   inline Eigen::Block<Eigen::MatrixXd> Qaa() {
     return Q_.block(a_begin_, a_begin_, dimv_, dimv_);
   }
@@ -168,6 +176,14 @@ public:
 
   inline Eigen::Block<Eigen::MatrixXd> Qxx() {
     return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
+  }
+
+  inline Eigen::Block<Eigen::MatrixXd> Qafaf() {
+    return Q_.block(a_begin_, a_begin_, dimv_+dimf_, dimv_+dimf_);
+  }
+
+  inline Eigen::Block<Eigen::MatrixXd> Qafqv() {
+    return Q_.block(a_begin_, q_begin_, dimv_+dimf_, 2*dimv_);
   }
 
   inline Eigen::Block<Eigen::MatrixXd> costHessian() {

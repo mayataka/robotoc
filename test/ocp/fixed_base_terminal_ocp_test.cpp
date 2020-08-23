@@ -157,6 +157,29 @@ TEST_F(FixedBaseTerminalOCPTest, terminalCostWithStepSize) {
 }
 
 
+TEST_F(FixedBaseTerminalOCPTest, updatePrimal) {
+  TerminalOCP ocp(robot, cost, constraints);
+  const double step_size = 0.3;
+  riccati.Pqq = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  riccati.Pqv = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  riccati.Pvq = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  riccati.Pvv = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  riccati.sq = Eigen::VectorXd::Random(robot.dimv());
+  riccati.sv = Eigen::VectorXd::Random(robot.dimv());
+  d.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
+  d.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
+  s_tmp.lmd = s.lmd + step_size * d.dlmd();
+  s_tmp.gmm = s.gmm + step_size * d.dgmm();
+  s_tmp.q = s.q + step_size * d.dq();
+  s_tmp.v = s.v + step_size * d.dv();
+  ocp.updatePrimal(robot, step_size, riccati, d, s);
+  EXPECT_TRUE(s.lmd.isApprox(s_tmp.lmd));
+  EXPECT_TRUE(s.gmm.isApprox(s_tmp.gmm));
+  EXPECT_TRUE(s.q.isApprox(s_tmp.q));
+  EXPECT_TRUE(s.v.isApprox(s_tmp.v));
+}
+
+
 TEST_F(FixedBaseTerminalOCPTest, squaredKKTErrorNorm) {
   s.setContactStatus(robot);
   TerminalOCP ocp(robot, cost, constraints);
