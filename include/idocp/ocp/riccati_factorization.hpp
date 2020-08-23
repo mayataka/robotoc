@@ -46,6 +46,7 @@ public:
   Eigen::MatrixXd Pqq, Pqv, Pvq, Pvv;
   Eigen::VectorXd sq, sv;
 
+  int dimf_, dimc_;
 };
 
 } // namespace idocp 

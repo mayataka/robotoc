@@ -18,6 +18,7 @@
 #include "idocp/ocp/state_equation.hpp"
 #include "idocp/ocp/robot_dynamics.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/riccati_gain.hpp"
 #include "idocp/ocp/riccati_matrix_factorizer.hpp"
 #include "idocp/ocp/riccati_matrix_inverter.hpp"
 
@@ -74,36 +75,31 @@ public:
                                 const RiccatiFactorization& riccati_next,
                                 RiccatiFactorization& riccati);
 
-  void forwardRiccatiRecursion(const double dtau, const Eigen::VectorXd& dq,   
-                               const Eigen::VectorXd& dv, 
-                               Eigen::VectorXd& dq_next, 
-                               Eigen::VectorXd& dv_next);
+  void forwardRiccatiRecursion(const double dtau, SplitDirection& d,   
+                               SplitDirection& d_next);
 
-  void computeCondensedDirection(const double dtau, const Eigen::VectorXd& dq, 
-                                 const Eigen::VectorXd& dv);
+  void computeCondensedDirection(const double dtau, SplitDirection& d);
  
   double maxPrimalStepSize();
 
   double maxDualStepSize();
 
-  std::pair<double, double> costAndConstraintsViolation(Robot& robot, 
-                                                        const double t, 
-                                                        const double dtau, 
-                                                        const SplitSolution& s);
+  std::pair<double, double> costAndViolation(Robot& robot, const double t, 
+                                             const double dtau, 
+                                             const SplitSolution& s);
 
-  std::pair<double, double> costAndConstraintsViolation(
-      Robot& robot, const double step_size, const double t, const double dtau, 
-      const SplitSolution& s, const  Eigen::VectorXd& q_next, 
-      const Eigen::VectorXd& v_next, const Eigen::VectorXd& dq, 
-      const Eigen::VectorXd& dv, const Eigen::VectorXd& dq_next, 
-      const Eigen::VectorXd& dv_next);
+  std::pair<double, double> costAndViolation(Robot& robot, 
+                                             const double step_size, 
+                                             const double t, const double dtau, 
+                                             const SplitSolution& s, 
+                                             const SplitSolution& s_next, 
+                                             const SplitDirection& d_next);
 
   void updateDual(const double step_size);
 
   void updatePrimal(Robot& robot, const double step_size, const double dtau, 
                     const RiccatiFactorization& riccati, 
-                    const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-                    SplitSolution& s);
+                    const SplitDirection& d, SplitSolution& s);
 
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
@@ -122,32 +118,13 @@ private:
   InverseDynamics inverse_dynamics_;
   RiccatiMatrixFactorizer riccati_factorizer_;
   RiccatiMatrixInverter riccati_inverter_;
+  Eigen::MatrixXd Ginv_;
   SplitSolution s_tmp_;
-  Eigen::VectorXd ka_, kf_,  kmu_;
-  Eigen::MatrixXd Kaq_, Kav_, Kfq_, Kfv_, Kmuq_, Kmuv_;
+  int dimv_, dimf_, dimc_;
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> kf_active() {
-    return kf_.head(dimf_);
-  }
-
-  inline Eigen::VectorBlock<Eigen::VectorXd> kmu_active() {
-    return kmu_.head(dimc_);
-  }
-
-  inline Eigen::Block<Eigen::MatrixXd> Kfq_active() {
-    return Kfq_.topRows(dimf_);
-  }
-
-  inline Eigen::Block<Eigen::MatrixXd> Kfv_active() {
-    return Kfv_.topRows(dimf_);
-  }
-
-  inline Eigen::Block<Eigen::MatrixXd> Kmuq_active() {
-    return Kmuq_.topRows(dimc_);
-  }
-
-  inline Eigen::Block<Eigen::MatrixXd> Kmuv_active() {
-    return Kmuv_.topRows(dimc_);
+  inline void setContactStatus(const Robot& robot) {
+    dimf_ = robot.dimf();
+    dimc_ = robot.dim_passive() + robot.dimf();
   }
 
 };

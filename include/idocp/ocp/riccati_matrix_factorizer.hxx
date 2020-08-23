@@ -1,6 +1,8 @@
 #ifndef IDOCP_RICCATI_MATRIX_FACTORIZER_HXX_
 #define IDOCP_RICCATI_MATRIX_FACTORIZER_HXX_
 
+#include <assert.h>
+
 namespace idocp {
 
 inline RiccatiMatrixFactorizer::RiccatiMatrixFactorizer(const Robot& robot) 
@@ -27,16 +29,19 @@ inline RiccatiMatrixFactorizer::~RiccatiMatrixFactorizer() {
 }
 
 
-template <typename ConfigVectorType, typename TangentVectorType>
+template <typename MatrixType1, typename MatrixType2>
 inline void RiccatiMatrixFactorizer::setIntegrationSensitivities(
-    const Robot& robot, const double dtau, 
-    const Eigen::MatrixBase<ConfigVectorType>& q,
-    const Eigen::MatrixBase<TangentVectorType>& v) {
-  assert(dtau > 0);
-  assert(q.size() == robot.dimq());
-  assert(v.size() == robot.dimv());
+    const Eigen::MatrixBase<MatrixType1>& dintegrate_dq, 
+    const Eigen::MatrixBase<MatrixType2>& dintegrate_dv) {
+  assert(dintegrate_dq.rows() >= 6);
+  assert(dintegrate_dq.cols() >= 6);
+  assert(dintegrate_dv.rows() >= 6);
+  assert(dintegrate_dv.cols() >= 6);
   if (has_floating_base_) {
-    robot.dIntegrateConfiguration(q, v, dtau, dintegrate_dq_, dintegrate_dv_);
+    dintegrate_dq_.template topLeftCorner<6, 6>() 
+            = dintegrate_dq.template topLeftCorner<6, 6>();
+    dintegrate_dv_.template topLeftCorner<6, 6>() 
+            = dintegrate_dv.template topLeftCorner<6, 6>();
   }
 }
 

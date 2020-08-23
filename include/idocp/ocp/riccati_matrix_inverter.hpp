@@ -53,7 +53,7 @@ public:
   void firstOrderCorrection(const double dtau, 
                             const Eigen::MatrixBase<MatrixType>& dPvv,
                             const Eigen::MatrixBase<MatrixType>& G_inv);
-
+ 
 private:
   bool has_floating_base_, has_active_contacts_;
   int dimv_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_, dimaf_;

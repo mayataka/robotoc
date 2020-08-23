@@ -7,13 +7,13 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
+#include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
-#include "idocp/ocp/state_equation.hpp"
 #include "riccati_factorization.hpp"
 
 
@@ -72,8 +72,7 @@ public:
   //   dq: Direction of the configuration. Size must be dimv.
   //   dv: Direction of the generalized velocity. Size must be dimv.
   void computeCondensedDirection(Robot& robot, const double dtau, 
-                                 const Eigen::VectorXd& dq, 
-                                 const Eigen::VectorXd& dv);
+                                 SplitDirection& d);
 
   // Returns the maximum step size of the primal variables of the inequality 
   // constraints.
@@ -96,8 +95,7 @@ public:
   //   dq: Direction of the configuration. Size must be dimv.
   //   dv: Direction of the generalized velocity. Size must be dimv.
   double terminalCost(Robot& robot, const double step_size, const double t, 
-                      const SplitSolution& s, const Eigen::VectorXd& dq, 
-                      const Eigen::VectorXd& dv);
+                      const SplitSolution& s, const SplitDirection& d);
 
   // Updates the dual variables of the inequality constraints.
   // Argments: 
@@ -113,8 +111,7 @@ public:
   //   dv: Direction of the generalized velocity. Size must be dimv.
   void updatePrimal(Robot& robot, const double step_size, 
                     const RiccatiFactorization& riccati,
-                    const Eigen::VectorXd& dq, const Eigen::VectorXd& dv, 
-                    SplitSolution& s) const;
+                    const SplitDirection& d, SplitSolution& s) const;
 
   // Returns the squared KKT error norm.
   // Argments: 
@@ -131,7 +128,6 @@ private:
   ConstraintsData constraints_data_;
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
-  StateEquation state_equation_;
   SplitSolution s_tmp_;
 
 };

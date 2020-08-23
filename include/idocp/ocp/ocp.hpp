@@ -10,6 +10,7 @@
 #include "idocp/ocp/split_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/line_search_filter.hpp"
+#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 
@@ -77,11 +78,10 @@ private:
   LineSearchFilter filter_;
   double T_, dtau_, step_size_reduction_rate_, min_step_size_;
   int N_, num_proc_;
-  std::vector<Eigen::VectorXd> q_, v_, a_, u_, beta_, f_, mu_, lmd_, gmm_, 
-                               dq_, dv_, sq_, sv_;
-  std::vector<Eigen::MatrixXd> Pqq_, Pqv_, Pvq_, Pvv_;
-  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, 
-                  constraints_violations_, cost_derivative_dot_direction_;
+  std::vector<SplitSolution> s_;
+  std::vector<SplitDirection> d_;
+  std::vector<RiccatiFactorization> riccati_;
+  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_;
   std::vector<std::vector<bool>> contact_sequence_;
 };
 

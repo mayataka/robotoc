@@ -36,11 +36,10 @@ public:
   // Use default move assign operator.
   RiccatiMatrixFactorizer& operator=(RiccatiMatrixFactorizer&&) noexcept = default;
 
-  template <typename ConfigVectorType, typename TangentVectorType>
+  template <typename MatrixType1, typename MatrixType2>
   void setIntegrationSensitivities(
-      const Robot& robot, const double dtau, 
-      const Eigen::MatrixBase<ConfigVectorType>& q, 
-      const Eigen::MatrixBase<TangentVectorType>& v);
+      const Eigen::MatrixBase<MatrixType1>& dintegrate_dq, 
+      const Eigen::MatrixBase<MatrixType2>& dintegrate_dv);
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4, typename MatrixType5, typename MatrixType6, 

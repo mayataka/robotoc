@@ -18,6 +18,7 @@ public:
   KKTMatrix(const Robot& robot) 
     : Quu(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Fqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+      Fqv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       C_(Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), 
                                3*robot.dimv()+robot.max_dimf())),
       Q_(Eigen::MatrixXd::Zero(3*robot.dimv()+robot.max_dimf(), 
@@ -45,6 +46,7 @@ public:
   KKTMatrix() 
     : Quu(),
       Fqq(),
+      Fqv(),
       C_(), 
       Q_(), 
       Sc_(), 
@@ -269,8 +271,7 @@ public:
     Q_.setZero();
   }
 
-  Eigen::MatrixXd Quu, Fqq;
-
+  Eigen::MatrixXd Quu, Fqq, Fqv;
 
 private:
   Eigen::MatrixXd C_, Q_, Sc_, Sx_, FMinv_;

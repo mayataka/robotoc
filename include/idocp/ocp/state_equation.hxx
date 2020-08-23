@@ -23,7 +23,8 @@ inline StateEquation::~StateEquation() {
 
 inline void StateEquation::linearizeForwardEuler(
     Robot& robot, const double dtau, const SplitSolution& s, 
-    const SplitSolution& s_next, KKTResidual& kkt_residual) const {
+    const SplitSolution& s_next, KKTMatrix& kkt_matrix, 
+    KKTResidual& kkt_residual) const {
   assert(dtau > 0);
   robot.subtractConfiguration(s.q, s_next.q, kkt_residual.Fq());
   kkt_residual.Fq().noalias() += dtau * s.v;
@@ -31,6 +32,7 @@ inline void StateEquation::linearizeForwardEuler(
   kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
   kkt_residual.lv().noalias() += dtau * s_next.lmd + s_next.gmm - s.gmm;
   kkt_residual.la().noalias() += dtau * s_next.gmm;
+  robot.dIntegrateConfiguration(s.q, s.v, dtau, kkt_matrix.Fqq, kkt_matrix.Fqv);
 }
 
 
@@ -105,7 +107,7 @@ inline double StateEquation::violationL1Norm(
 template <typename ConfigVectorType, typename TangentVectorType1, 
           typename TangentVectorType2, typename TangentVectorType3>
 inline double StateEquation::computeForwardEulerViolationL1Norm(
-    Robot& robot, const double step_size, const double dtau, 
+    const Robot& robot, const double step_size, const double dtau, 
     const SplitSolution& s, const Eigen::MatrixBase<ConfigVectorType>& q_next, 
     const Eigen::MatrixBase<TangentVectorType1>& v_next, 
     const Eigen::MatrixBase<TangentVectorType2>& dq_next, 
@@ -125,7 +127,7 @@ inline double StateEquation::computeForwardEulerViolationL1Norm(
 
 template <typename ConfigVectorType, typename TangentVectorType>
 inline double StateEquation::computeBackwardEulerViolationL1Norm(
-    Robot& robot, const double dtau, 
+    const Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, const SplitSolution& s, 
     KKTResidual& kkt_residual) const {
@@ -142,7 +144,7 @@ inline double StateEquation::computeBackwardEulerViolationL1Norm(
 template <typename ConfigVectorType, typename TangentVectorType1, 
           typename TangentVectorType2, typename TangentVectorType3>
 inline double StateEquation::computeBackwardEulerViolationL1Norm(
-    Robot& robot, const double step_size, const double dtau, 
+    const Robot& robot, const double step_size, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType1>& v_prev, 
     const Eigen::MatrixBase<TangentVectorType2>& dq_prev, 

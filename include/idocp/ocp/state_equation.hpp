@@ -34,6 +34,7 @@ public:
   void linearizeForwardEuler(Robot& robot, const double dtau, 
                              const SplitSolution& s, 
                              const SplitSolution& s_next, 
+                             KKTMatrix& kkt_matrix, 
                              KKTResidual& kkt_residual) const;
 
   template <typename ConfigVectorType1, typename TangentVectorType1, 
@@ -62,7 +63,7 @@ public:
   template <typename ConfigVectorType, typename TangentVectorType1, 
             typename TangentVectorType2, typename TangentVectorType3>
   double computeForwardEulerViolationL1Norm(
-      Robot& robot, const double step_size, const double dtau, 
+      const Robot& robot, const double step_size, const double dtau, 
       const SplitSolution& s, const Eigen::MatrixBase<ConfigVectorType>& q_next, 
       const Eigen::MatrixBase<TangentVectorType1>& v_next, 
       const Eigen::MatrixBase<TangentVectorType2>& dq_next, 
@@ -71,7 +72,7 @@ public:
 
   template <typename ConfigVectorType, typename TangentVectorType>
   double computeBackwardEulerViolationL1Norm(
-      Robot& robot, const double dtau, 
+      const Robot& robot, const double dtau, 
       const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
       const Eigen::MatrixBase<TangentVectorType>& v_prev, 
       const SplitSolution& s, KKTResidual& kkt_residual) const;
@@ -79,7 +80,7 @@ public:
   template <typename ConfigVectorType, typename TangentVectorType1, 
             typename TangentVectorType2, typename TangentVectorType3>
   double computeBackwardEulerViolationL1Norm(
-      Robot& robot, const double step_size, const double dtau, 
+      const Robot& robot, const double step_size, const double dtau, 
       const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
       const Eigen::MatrixBase<TangentVectorType1>& v_prev, 
       const Eigen::MatrixBase<TangentVectorType2>& dq_prev, 
