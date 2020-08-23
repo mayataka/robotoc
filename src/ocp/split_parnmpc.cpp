@@ -15,7 +15,7 @@ SplitParNMPC::SplitParNMPC(const Robot& robot,
     kkt_residual_(robot),
     kkt_matrix_(robot),
     state_equation_(robot),
-    inverse_dynamics_(robot),
+    robot_dynamics_(robot),
     dimx_(2*robot.dimv()),
     dimKKT_(kkt_residual_.dimKKT()),
     kkt_matrix_inverse_(Eigen::MatrixXd::Zero(kkt_residual_.max_dimKKT(), 
@@ -33,7 +33,7 @@ SplitParNMPC::SplitParNMPC()
     kkt_residual_(),
     kkt_matrix_(),
     state_equation_(),
-    inverse_dynamics_(),
+    robot_dynamics_(),
     dimx_(0),
     dimKKT_(0),
     kkt_matrix_inverse_(),
@@ -92,8 +92,8 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   cost_->luu(robot, cost_data_, t, dtau, s.u, kkt_matrix_.Quu);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s.u, 
                                      kkt_matrix_.Quu, kkt_residual_.lu);
-  inverse_dynamics_.condenseInverseDynamics(robot, dtau, s, kkt_matrix_, 
-                                            kkt_residual_);
+  robot_dynamics_.condenseRobotDynamics(robot, dtau, s, kkt_matrix_, 
+                                        kkt_residual_);
   // forms the KKT matrix and KKT residual
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
                                      kkt_residual_);
@@ -102,8 +102,6 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   state_equation_.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
                                          s_next.lmd, s_next.gmm, s_next.q, 
                                          kkt_matrix_, kkt_residual_);
-  eqconstraints::AugmentCondensedEqualityConstraints(robot, dtau, s, 
-                                                     kkt_matrix_, kkt_residual_);
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix_);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
                                      kkt_matrix_, kkt_residual_);
@@ -154,8 +152,8 @@ void SplitParNMPC::coarseUpdateTerminal(Robot& robot, const double t,
   cost_->luu(robot, cost_data_, t, dtau, s.u, kkt_matrix_.Quu);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s.u, 
                                      kkt_matrix_.Quu, kkt_residual_.lu);
-  inverse_dynamics_.condenseInverseDynamics(robot, dtau, s, kkt_matrix_, 
-                                            kkt_residual_);
+  robot_dynamics_.condenseRobotDynamics(robot, dtau, s, kkt_matrix_, 
+                                        kkt_residual_);
   // forms the KKT matrix and KKT residual
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
                                      kkt_residual_);
@@ -164,8 +162,6 @@ void SplitParNMPC::coarseUpdateTerminal(Robot& robot, const double t,
                                     kkt_residual_);
   state_equation_.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                  kkt_matrix_, kkt_residual_);
-  eqconstraints::AugmentCondensedEqualityConstraints(robot, dtau, s, 
-                                                     kkt_matrix_, kkt_residual_);
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix_);
   cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
@@ -271,8 +267,7 @@ void SplitParNMPC::computePrimalAndDualDirection(const Robot& robot,
   d.df() = s_new.f_active() - s.f_active();
   robot.subtractConfiguration(s_new.q, s.q, d.dq());
   d.dv() = s_new.v - s.v;
-  inverse_dynamics_.computeCondensedDirection(dtau, kkt_matrix_, 
-                                              kkt_residual_, d);
+  robot_dynamics_.computeCondensedDirection(dtau, kkt_matrix_, kkt_residual_, d);
   constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, d);
 }
 
@@ -295,8 +290,7 @@ std::pair<double, double> SplitParNMPC::costAndViolation(
   cost += constraints_->costSlackBarrier(constraints_data_);
   double violation = 0;
   violation += state_equation_.violationL1Norm(kkt_residual_);
-  violation += eqconstraints::ViolationL1Norm(kkt_residual_);
-  violation += inverse_dynamics_.violationL1Norm(dtau, kkt_residual_);
+  violation += robot_dynamics_.violationL1Norm(robot, dtau, s, kkt_residual_);
   violation += constraints_->residualL1Nrom(robot, constraints_data_, dtau, s);
   return std::make_pair(cost, violation);
 }
@@ -328,10 +322,8 @@ std::pair<double, double> SplitParNMPC::costAndViolation(
   double violation = 0;
   violation += state_equation_.computeBackwardEulerViolationL1Norm(
       robot, dtau, q_prev, v_prev, s_tmp, kkt_residual_);
-  violation += eqconstraints::ComputeViolationL1Norm(robot, dtau, s_tmp, 
-                                                     kkt_residual_);
-  violation += inverse_dynamics_.computeViolationL1Norm(robot, dtau, s_tmp, 
-                                                        kkt_residual_);
+  violation += robot_dynamics_.computeViolationL1Norm(robot, dtau, s_tmp, 
+                                                      kkt_residual_);
   violation += constraints_->residualL1Nrom(robot, constraints_data_, dtau, 
                                             s_tmp);
   return std::make_pair(cost, violation);
@@ -363,10 +355,8 @@ std::pair<double, double> SplitParNMPC::costAndViolation(
   violation += state_equation_.computeBackwardEulerViolationL1Norm(
       robot, step_size, dtau, s_prev.q, s_prev.v, d_prev.dq(), d_prev.dv(), 
       s_tmp, kkt_residual_);
-  violation += eqconstraints::ComputeViolationL1Norm(robot, dtau, s_tmp, 
-                                                     kkt_residual_);
-  violation += inverse_dynamics_.computeViolationL1Norm(robot, dtau, s_tmp, 
-                                                        kkt_residual_);
+  violation += robot_dynamics_.computeViolationL1Norm(robot, dtau, s_tmp, 
+                                                      kkt_residual_);
   violation += constraints_->residualL1Nrom(robot, constraints_data_, dtau, 
                                             s_tmp);
   return std::make_pair(cost, violation);
@@ -382,8 +372,7 @@ std::pair<double, double> SplitParNMPC::costAndViolationTerminal(
   cost += constraints_->costSlackBarrier(constraints_data_);
   double violation = 0;
   violation += state_equation_.violationL1Norm(kkt_residual_);
-  violation += eqconstraints::ViolationL1Norm(kkt_residual_);
-  violation += inverse_dynamics_.violationL1Norm(dtau, kkt_residual_);
+  violation += robot_dynamics_.violationL1Norm(robot, dtau, s, kkt_residual_);
   violation += constraints_->residualL1Nrom(robot, constraints_data_, dtau, s);
   return std::make_pair(cost, violation);
 }
@@ -415,10 +404,8 @@ std::pair<double, double> SplitParNMPC::costAndViolationTerminal(
   violation += state_equation_.computeBackwardEulerViolationL1Norm(
       robot, step_size, dtau, s_prev.q, s_prev.v, d_prev.dq(), d_prev.dv(), 
       s_tmp, kkt_residual_);
-  violation += eqconstraints::ComputeViolationL1Norm(robot, dtau, s_tmp, 
-                                                     kkt_residual_);
-  violation += inverse_dynamics_.computeViolationL1Norm(robot, dtau, s_tmp, 
-                                                        kkt_residual_);
+  violation += robot_dynamics_.computeViolationL1Norm(robot, dtau, s_tmp, 
+                                                      kkt_residual_);
   violation += constraints_->residualL1Nrom(robot, constraints_data_, dtau, 
                                             s_tmp);
   return std::make_pair(cost, violation);
@@ -483,9 +470,8 @@ double SplitParNMPC::squaredKKTErrorNorm(Robot& robot, const double t,
   state_equation_.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
                                          s_next.lmd, s_next.gmm, s_next.q, 
                                          kkt_matrix_, kkt_residual_);
-  eqconstraints::AugmentEqualityConstraints(robot, dtau, s, kkt_matrix_, 
-                                            kkt_residual_);
-  inverse_dynamics_.augmentInverseDynamics(robot, dtau, s, kkt_residual_);
+  robot_dynamics_.augmentRobotDynamics(robot, dtau, s, kkt_matrix_, 
+                                       kkt_residual_);
   double error = kkt_residual_.squaredKKTErrorNorm(dtau);
   error += constraints_->squaredKKTErrorNorm(robot, constraints_data_, dtau, s);
   return error;
@@ -516,9 +502,8 @@ double SplitParNMPC::squaredKKTErrorNormTerminal(Robot& robot, const double t,
                                     kkt_residual_.lu);
   state_equation_.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                  kkt_matrix_, kkt_residual_);
-  eqconstraints::AugmentEqualityConstraints(robot, dtau, s, kkt_matrix_, 
-                                            kkt_residual_);
-  inverse_dynamics_.augmentInverseDynamics(robot, dtau, s, kkt_residual_);
+  robot_dynamics_.augmentRobotDynamics(robot, dtau, s, kkt_matrix_, 
+                                       kkt_residual_);
   double error = kkt_residual_.squaredKKTErrorNorm(dtau);
   error += constraints_->squaredKKTErrorNorm(robot, constraints_data_, dtau, s);
   return error;

@@ -1,5 +1,5 @@
-#ifndef IDParNMPC_SPLIT_PARNMPC_HPP_
-#define IDParNMPC_SPLIT_PARNMPC_HPP_
+#ifndef IDOCP_SPLIT_PARNMPC_HPP_ 
+#define IDOCP_SPLIT_PARNMPC_HPP_
 
 #include <utility>
 #include <memory>
@@ -16,8 +16,7 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/ocp/state_equation.hpp"
-#include "idocp/ocp/inverse_dynamics.hpp"
-#include "idocp/ocp/equality_constraints.hpp"
+#include "idocp/ocp/robot_dynamics.hpp"
 
 
 namespace idocp {
@@ -333,7 +332,7 @@ private:
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
   StateEquation state_equation_;
-  InverseDynamics inverse_dynamics_;
+  RobotDynamics robot_dynamics_;
   int dimx_, dimKKT_;
   Eigen::MatrixXd kkt_matrix_inverse_;
   Eigen::VectorXd x_res_, dx_;
@@ -343,4 +342,4 @@ private:
 } // namespace idocp
 
 
-#endif // IDParNMPC_SPLIT_PARNMPC_HPP_
+#endif // IDOCP_SPLIT_PARNMPC_HPP_

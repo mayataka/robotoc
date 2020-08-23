@@ -19,6 +19,8 @@ namespace idocp {
 
 class ParNMPC {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   // Constructor. 
   ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
           const std::shared_ptr<Constraints>& constraints, 

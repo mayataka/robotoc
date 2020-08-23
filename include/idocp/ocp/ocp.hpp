@@ -18,6 +18,8 @@ namespace idocp {
 
 class OCP {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   // Constructor. 
   OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
       const std::shared_ptr<Constraints>& constraints, const double T, 

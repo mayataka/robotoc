@@ -79,8 +79,13 @@ protected:
     d.da() = Eigen::VectorXd::Random(robot.dimv());
     d.df() = Eigen::VectorXd::Random(robot.dimf());
     d.du = Eigen::VectorXd::Random(robot.dimv());
+    d_prev = SplitDirection(robot);
+    d_prev.dq() = Eigen::VectorXd::Random(robot.dimv());
+    d_prev.dv() = Eigen::VectorXd::Random(robot.dimv());
+    d_prev.da() = Eigen::VectorXd::Random(robot.dimv());
+    d_prev.df() = Eigen::VectorXd::Random(robot.dimf());
+    d_prev.du = Eigen::VectorXd::Random(robot.dimv());
     dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
-    d.dq() = Eigen::VectorXd::Random(robot.dimv());
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     q_prev = Eigen::VectorXd::Random(robot.dimq());
     robot.normalizeConfiguration(q_prev);
@@ -285,6 +290,10 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormStateEquationAndInverseDynamicsAnd
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
   auto pair = parnmpc.costAndViolation(robot, t, dtau, s);
   EXPECT_DOUBLE_EQ(pair.first, 0);
+  const double violation_ref = kkt_residual.Fx().lpNorm<1>() 
+                                + dtau * kkt_residual.u_res.lpNorm<1>()
+                                + kkt_residual.C().lpNorm<1>();
+  EXPECT_DOUBLE_EQ(pair.second, violation_ref);
 }
 
 
@@ -355,6 +364,100 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNorm) {
   kkt_error_ref += constraints->squaredKKTErrorNorm(robot, constraints_data, dtau, s);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
   Eigen::MatrixXd aux_mat = Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv());
+}
+
+
+TEST_F(FixedBaseSplitParNMPCTest, costAndViolation) {
+  SplitParNMPC parnmpc(robot, cost, constraints);
+  parnmpc.initConstraints(robot, 2, dtau, s);
+  constraints->setSlackAndDual(robot, constraints_data, dtau, s);
+  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+                                                       v_prev, s, s_next);
+  const auto pair = parnmpc.costAndViolation(robot, t, dtau, s); 
+  const double cost_ref 
+      = cost->l(robot, cost_data, t, dtau, s) 
+          + constraints->costSlackBarrier(constraints_data);
+  EXPECT_DOUBLE_EQ(pair.first, cost_ref);
+  kkt_residual.Fq() = q_prev - s.q + dtau * s.v;
+  kkt_residual.Fv() = v_prev - s.v + dtau * s.a;
+  robot.setContactForces(s.f);
+  robot.RNEA(s.q, s.v, s.a, kkt_residual.u_res);
+  kkt_residual.u_res -= s.u;
+  robot.updateKinematics(s.q, s.v, s.a);
+  robot.computeBaumgarteResidual(dtau, kkt_residual.C());
+  const double violation_ref 
+      = kkt_residual.Fq().lpNorm<1>() + kkt_residual.Fv().lpNorm<1>() 
+          + dtau * kkt_residual.u_res.lpNorm<1>() 
+          + kkt_residual.C().head(robot.dimf()).lpNorm<1>();
+  EXPECT_DOUBLE_EQ(pair.second, violation_ref);
+}
+
+
+TEST_F(FixedBaseSplitParNMPCTest, costAndViolationWithStepSizeInitial) {
+  SplitParNMPC parnmpc(robot, cost, constraints);
+  parnmpc.initConstraints(robot, 2, dtau, s);
+  constraints->setSlackAndDual(robot, constraints_data, dtau, s);
+  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+                                                       v_prev, s, s_next);
+  const double step_size = 0.3;
+  const auto pair = parnmpc.costAndViolation(robot, step_size, t, dtau, q_prev, 
+                                             v_prev, s, d, s_new); 
+  s_new.q = s.q + step_size * d.dq();
+  s_new.v = s.v + step_size * d.dv();
+  s_new.a = s.a + step_size * d.da();
+  s_new.f_active() = s.f_active() + step_size * d.df();
+  s_new.u = s.u + step_size * d.du;
+  const double cost_ref 
+      = cost->l(robot, cost_data, t, dtau, s_new) 
+          + constraints->costSlackBarrier(constraints_data, step_size);
+  EXPECT_DOUBLE_EQ(pair.first, cost_ref);
+  kkt_residual.Fq() = q_prev - s_new.q + dtau * s_new.v;
+  kkt_residual.Fv() = v_prev - s_new.v + dtau * s_new.a;
+  robot.setContactForces(s_new.f);
+  robot.RNEA(s_new.q, s_new.v, s_new.a, kkt_residual.u_res);
+  kkt_residual.u_res -= s_new.u;
+  robot.updateKinematics(s_new.q, s_new.v, s_new.a);
+  robot.computeBaumgarteResidual(dtau, kkt_residual.C());
+  const double violation_ref 
+      = kkt_residual.Fq().lpNorm<1>() + kkt_residual.Fv().lpNorm<1>() 
+          + dtau * kkt_residual.u_res.lpNorm<1>() 
+          + kkt_residual.C().head(robot.dimf()).lpNorm<1>()
+          + constraints->residualL1Nrom(robot, constraints_data, dtau, s_new);
+  EXPECT_DOUBLE_EQ(pair.second, violation_ref);
+}
+
+
+TEST_F(FixedBaseSplitParNMPCTest, costAndViolationWithStepSize) {
+  SplitParNMPC parnmpc(robot, cost, constraints);
+  parnmpc.initConstraints(robot, 2, dtau, s);
+  constraints->setSlackAndDual(robot, constraints_data, dtau, s);
+  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+                                                       v_prev, s, s_next);
+  const double step_size = 0.3;
+  const auto pair = parnmpc.costAndViolation(robot, step_size, t, dtau, s_old, 
+                                             d_prev, s, d, s_new); 
+  s_new.q = s.q + step_size * d.dq();
+  s_new.v = s.v + step_size * d.dv();
+  s_new.a = s.a + step_size * d.da();
+  s_new.f_active() = s.f_active() + step_size * d.df();
+  s_new.u = s.u + step_size * d.du;
+  const double cost_ref 
+      = cost->l(robot, cost_data, t, dtau, s_new) 
+          + constraints->costSlackBarrier(constraints_data, step_size);
+  EXPECT_DOUBLE_EQ(pair.first, cost_ref);
+  kkt_residual.Fq() = s_old.q + step_size * d_prev.dq() - s_new.q + dtau * s_new.v;
+  kkt_residual.Fv() = s_old.v + step_size * d_prev.dv() - s_new.v + dtau * s_new.a;
+  robot.setContactForces(s_new.f);
+  robot.RNEA(s_new.q, s_new.v, s_new.a, kkt_residual.u_res);
+  kkt_residual.u_res -= s_new.u;
+  robot.updateKinematics(s_new.q, s_new.v, s_new.a);
+  robot.computeBaumgarteResidual(dtau, kkt_residual.C());
+  const double violation_ref 
+      = kkt_residual.Fq().lpNorm<1>() + kkt_residual.Fv().lpNorm<1>() 
+          + dtau * kkt_residual.u_res.lpNorm<1>() 
+          + kkt_residual.C().head(robot.dimf()).lpNorm<1>()
+          + constraints->residualL1Nrom(robot, constraints_data, dtau, s_new);
+  EXPECT_DOUBLE_EQ(pair.second, violation_ref);
 }
 
 

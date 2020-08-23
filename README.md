@@ -5,7 +5,7 @@
 
 ## Features for efficient optimal control 
 - Solves the optimal control problem for rigid body systems based on inverse dynamics.
-- Sparsity-exploiting Riccati recursion for computing the Newton's direction.
+- Parallel Newton's method and sparsity-exploiting Riccati recursion.
 - Primal-dual interior point method for inequality constraints.
 - Filter line-search method.
 - Very fast computation of rigid body dynamics and its sensitivities thanks to [pinocchio](https://github.com/stack-of-tasks/pinocchio).
@@ -17,11 +17,20 @@
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  
 
 ## Installation 
-1. Install Eigen3 by `sudo apt install libeigen3-dev`.
+1. Install Eigen3 by 
 
-2. Install pinocchio by following the [instruction](https://stack-of-tasks.github.io/pinocchio/download.html).
-3. Clone this repository.
-4. Change current directory by `cd idocp`.
+```
+sudo apt install libeigen3-dev
+```
+
+2. Install pinocchio by following the [instruction](https://stack-of-tasks.github.io/pinocchio/download.html)
+3. Clone this repository and change directory as
+
+```
+git clone https://github.com/mayataka/idocp
+cd idocp
+```
+
 5. Build and install idocp as
 
 ```
@@ -32,6 +41,28 @@ make -j8
 sudo make install
 ```
 
+Then you can link the `idocp` library by writing `CMakeLists.txt` as
+```
+find_package(idocp REQUIRED)
+find_package(PkgConfig)
+pkg_check_modules(PINOCCHIO REQUIRED pinocchio)
+link_directories(${PINOCCHIO_LIBDIR})
+
+add_executable(
+    YOUR_EXECTABLE
+    YOUR_EXECTABLE.cpp
+)
+target_link_libraries(
+    YOUR_EXECTABLE
+    PRIVATE
+    idocp::idocp
+)
+target_include_directories(
+    YOUR_EXECTABLE
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+)
+```
 
 ## Related publications
 
