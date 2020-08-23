@@ -54,41 +54,6 @@ public:
                             const Eigen::MatrixBase<MatrixType>& dPvv,
                             const Eigen::MatrixBase<MatrixType>& G_inv);
 
-//   // Fixed base with contacts
-//   void invert(const Eigen::MatrixXd& Qqa, const Eigen::MatrixXd& Qva, 
-//               const Eigen::MatrixXd& Qaa, const Eigen::MatrixXd& Qqf, 
-//               const Eigen::MatrixXd& Qvf, const Eigen::MatrixXd& Cq, 
-//               const Eigen::MatrixXd& Cv, const Eigen::MatrixXd& Ca, 
-//               const Eigen::VectorXd& la, const Eigen::VectorXd& lf, 
-//               const Eigen::VectorXd& C_res, Eigen::MatrixXd& Kaq, 
-//               Eigen::MatrixXd& Kav, Eigen::MatrixXd& Kfq, Eigen::MatrixXd& Kfv, 
-//               Eigen::MatrixXd& Kmuq, Eigen::MatrixXd& Kmuv, Eigen::VectorXd& ka, 
-//               Eigen::VectorXd& kf, Eigen::VectorXd& kmu);
-
-//   // Floating base without contacts
-//   void invert(const Eigen::MatrixXd& Qqa, const Eigen::MatrixXd& Qva, 
-//               const Eigen::MatrixXd& Qaa, 
-//               const Eigen::MatrixXd& Cq, 
-//               const Eigen::MatrixXd& Cv, 
-//               const Eigen::MatrixXd& Ca, 
-//               const Eigen::VectorXd& la, const Eigen::VectorXd& C_res, 
-//               Eigen::MatrixXd& Kaq, Eigen::MatrixXd& Kav, Eigen::MatrixXd& Kmuq, 
-//               Eigen::MatrixXd& Kmuv, Eigen::VectorXd& ka, Eigen::VectorXd& kmu);
-
-//   // Floating base with contacts
-//   void invert(const Eigen::MatrixXd& Qqa, const Eigen::MatrixXd& Qva, 
-//               const Eigen::MatrixXd& Qaa, const Eigen::MatrixXd& Qqf, 
-//               const Eigen::MatrixXd& Qvf, const Eigen::MatrixXd& Cq, 
-//               const Eigen::MatrixXd& Cv, const Eigen::MatrixXd& Ca, 
-//               const Eigen::MatrixXd& Cf, const Eigen::VectorXd& la, 
-//               const Eigen::VectorXd& lf, const Eigen::VectorXd& C_res, 
-//               Eigen::MatrixXd& Kaq, Eigen::MatrixXd& Kav, Eigen::MatrixXd& Kfq, 
-//               Eigen::MatrixXd& Kfv, Eigen::MatrixXd& Kmuq, 
-//               Eigen::MatrixXd& Kmuv, Eigen::VectorXd& ka, Eigen::VectorXd& kf, 
-//               Eigen::VectorXd& kmu);
-
-//  void correctInversion()
-
 private:
   bool has_floating_base_, has_active_contacts_;
   int dimv_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_, dimaf_;

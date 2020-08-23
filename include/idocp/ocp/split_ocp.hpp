@@ -16,9 +16,8 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/ocp/state_equation.hpp"
-#include "idocp/ocp/inverse_dynamics.hpp"
-#include "idocp/ocp/equality_constraints.hpp"
-#include "riccati_factorization.hpp"
+#include "idocp/ocp/robot_dynamics.hpp"
+#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/riccati_matrix_factorizer.hpp"
 #include "idocp/ocp/riccati_matrix_inverter.hpp"
 

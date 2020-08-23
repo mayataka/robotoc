@@ -172,7 +172,7 @@ void KKTError_without_contacts() {
   idocp::ParNMPC parnmpc(robot, cost, constraints, T, N, num_proc);
   const double t = 0;
   parnmpc.setStateTrajectory(q, v);
-  parnmpc.setAuxiliaryMatrix(t);
+  parnmpc.setAuxiliaryMatrixGuessByTerminalCost(t);
   std::cout << "---------- OCP benchmark ----------" << std::endl;
   std::cout << "model: iiwa14" << std::endl;
   std::cout << "dimq = " << robot.dimq() << std::endl;
@@ -231,6 +231,7 @@ void KKTError_with_contacts() {
   std::vector<std::vector<bool>> contact_sequence = {N, contact_status};
   parnmpc.setContactSequence(contact_sequence);
   parnmpc.setStateTrajectory(q, v);
+  parnmpc.setAuxiliaryMatrixGuessByTerminalCost(t);
   std::cout << "---------- OCP benchmark ----------" << std::endl;
   std::cout << "model: iiwa14" << std::endl;
   std::cout << "dimq = " << robot.dimq() << std::endl;
@@ -253,8 +254,8 @@ void KKTError_with_contacts() {
 
 
 int main() {
-  // ocpbenchmark::iiwa14::CPUTime_without_contacts();
-  // ocpbenchmark::iiwa14::CPUTime_with_contacts();
+  ocpbenchmark::iiwa14::CPUTime_without_contacts();
+  ocpbenchmark::iiwa14::CPUTime_with_contacts();
   ocpbenchmark::iiwa14::KKTError_without_contacts();
   ocpbenchmark::iiwa14::KKTError_with_contacts();
   return 0;

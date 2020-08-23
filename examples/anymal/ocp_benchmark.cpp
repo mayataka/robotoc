@@ -148,6 +148,7 @@ void KKTError_with_contacts() {
        -0.0315, -0.4, 0.8;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
   parnmpc.setStateTrajectory(q, v);
+  parnmpc.setAuxiliaryMatrixGuessByTerminalCost(t);
   std::vector<bool> contact_status = {true, true, true, true};
   std::vector<std::vector<bool>> contact_sequence = {N, contact_status};
   parnmpc.setContactSequence(contact_sequence);
@@ -159,7 +160,7 @@ void KKTError_with_contacts() {
   std::cout << "q = " << q.transpose() << std::endl;
   std::cout << "v = " << v.transpose() << std::endl;
   std::cout << "Initial KKT error = " << parnmpc.KKTError(t, q, v) << std::endl;
-  const int num_iteration = 50;
+  const int num_iteration = 100;
   for (int i=0; i<num_iteration; ++i) {
     parnmpc.updateSolution(t, q, v, true);
     std::cout << "KKT error at iteration " << i << " = " << parnmpc.KKTError(t, q, v) << std::endl;
