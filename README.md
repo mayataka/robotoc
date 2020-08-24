@@ -4,8 +4,8 @@
 [![codecov](https://codecov.io/gh/mayataka/IDOCP/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/IDOCP)
 
 ## Features for efficient optimal control 
-- Solves the optimal control problem for rigid body systems based on inverse dynamics.
-- Parallel Newton's method/Sparsity-exploiting Riccati recursion.
+- Solves the optimal control problem for rigid body systems based on inverse dynamics, which is faster than forward dynamics and provides sparsity in the optimal control.
+- Parallel Newton's method (ParNMPC) / Sparsity-exploiting Riccati recursion for computing the Newton direction.
 - Primal-dual interior point method for inequality constraints.
 - Filter line-search method.
 - Very fast computation of rigid body dynamics and its sensitivities thanks to [pinocchio](https://github.com/stack-of-tasks/pinocchio).
@@ -65,4 +65,3 @@ target_include_directories(
 ```
 
 ## Related publications
-
