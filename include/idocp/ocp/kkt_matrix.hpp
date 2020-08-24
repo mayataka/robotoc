@@ -18,6 +18,7 @@ public:
   KKTMatrix(const Robot& robot) 
     : Quu(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Fqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+      Fqv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       C_(Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), 
                                3*robot.dimv()+robot.max_dimf())),
       Q_(Eigen::MatrixXd::Zero(3*robot.dimv()+robot.max_dimf(), 
@@ -45,6 +46,7 @@ public:
   KKTMatrix() 
     : Quu(),
       Fqq(),
+      Fqv(),
       C_(), 
       Q_(), 
       Sc_(), 
@@ -98,6 +100,14 @@ public:
 
   inline Eigen::Block<Eigen::MatrixXd> Cv() {
     return C_.block(0, v_begin_, dimc_, dimv_);
+  }
+
+  inline Eigen::Block<Eigen::MatrixXd> Caf() {
+    return C_.block(0, a_begin_, dimc_, dimv_+dimf_);
+  }
+
+  inline Eigen::Block<Eigen::MatrixXd> Cqv() {
+    return C_.block(0, q_begin_, dimc_, dimx_);
   }
 
   inline Eigen::Block<Eigen::MatrixXd> Qaa() {
@@ -166,6 +176,14 @@ public:
 
   inline Eigen::Block<Eigen::MatrixXd> Qxx() {
     return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
+  }
+
+  inline Eigen::Block<Eigen::MatrixXd> Qafaf() {
+    return Q_.block(a_begin_, a_begin_, dimv_+dimf_, dimv_+dimf_);
+  }
+
+  inline Eigen::Block<Eigen::MatrixXd> Qafqv() {
+    return Q_.block(a_begin_, q_begin_, dimv_+dimf_, 2*dimv_);
   }
 
   inline Eigen::Block<Eigen::MatrixXd> costHessian() {
@@ -269,8 +287,7 @@ public:
     Q_.setZero();
   }
 
-  Eigen::MatrixXd Quu, Fqq;
-
+  Eigen::MatrixXd Quu, Fqq, Fqv;
 
 private:
   Eigen::MatrixXd C_, Q_, Sc_, Sx_, FMinv_;

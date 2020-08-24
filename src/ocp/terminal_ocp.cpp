@@ -65,8 +65,7 @@ void TerminalOCP::linearizeOCP(Robot& robot, const double t,
 
 
 void TerminalOCP::computeCondensedDirection(Robot& robot, const double dtau, 
-                                            const Eigen::VectorXd& dq, 
-                                            const Eigen::VectorXd& dv) {
+                                            SplitDirection& d) {
   // TODO: add inequality constraints at the terminal OCP.
 }
 
@@ -91,19 +90,16 @@ double TerminalOCP::terminalCost(Robot& robot, const double t,
 
 double TerminalOCP::terminalCost(Robot& robot, const double step_size, 
                                  const double t, const SplitSolution& s, 
-                                 const Eigen::VectorXd& dq, 
-                                 const Eigen::VectorXd& dv) {
+                                 const SplitDirection& d) {
   assert(step_size > 0);
   assert(step_size <= 1);
-  assert(dq.size() == robot.dimv());
-  assert(dv.size() == robot.dimv());
   if (robot.has_floating_base()) {
-    robot.integrateConfiguration(s.q, dq, step_size, s_tmp_.q);
+    robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp_.q);
   }
   else {
-    s_tmp_.q = s.q + step_size * dq;
+    s_tmp_.q = s.q + step_size * d.dq();
   }
-  s_tmp_.v = s.v + step_size * dv;
+  s_tmp_.v = s.v + step_size * d.dv();
   return cost_->phi(robot, cost_data_, t, s_tmp_);
 }
 
@@ -117,19 +113,16 @@ void TerminalOCP::updateDual(const double step_size) {
 
 void TerminalOCP::updatePrimal(Robot& robot, const double step_size, 
                                const RiccatiFactorization& riccati,
-                               const Eigen::VectorXd& dq, 
-                               const Eigen::VectorXd& dv, 
+                               const SplitDirection& d,
                                SplitSolution& s) const {
   assert(step_size > 0);
   assert(step_size <= 1);
-  assert(dq.size() == robot.dimv());
-  assert(dv.size() == robot.dimv());
   s.lmd.noalias() 
-      += step_size * (riccati.Pqq * dq + riccati.Pqv * dv - riccati.sq);
+      += step_size * (riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq);
   s.gmm.noalias() 
-      += step_size * (riccati.Pvq * dq + riccati.Pvv * dv - riccati.sv);
-  robot.integrateConfiguration(dq, step_size, s.q);
-  s.v.noalias() += step_size * dv;
+      += step_size * (riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv);
+  robot.integrateConfiguration(d.dq(), step_size, s.q);
+  s.v.noalias() += step_size * d.dv();
 }
 
 

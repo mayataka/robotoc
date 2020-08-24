@@ -66,9 +66,13 @@ add_library(
   src/ocp/line_search_filter.cpp
   src/ocp/parnmpc.cpp
   src/ocp/riccati_factorization.cpp
+  src/ocp/riccati_gain.cpp
   src/ocp/riccati_matrix_factorizer.cpp
   src/ocp/riccati_matrix_inverter.cpp
   src/ocp/terminal_ocp.cpp
+  src/ocp/split_ocp.cpp
+  src/ocp/ocp.cpp
+  src/ocp/mpc.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

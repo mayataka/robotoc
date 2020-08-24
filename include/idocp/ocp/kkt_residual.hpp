@@ -102,6 +102,10 @@ public:
     return kkt_residual_.segment(dimx_+dimc_+dimv_+dimf_, dimx_);
   }
 
+  inline Eigen::VectorBlock<Eigen::VectorXd> laf() {
+    return kkt_residual_.segment(dimx_+dimc_, dimv_+dimf_);
+  }
+
   inline const Eigen::VectorBlock<const Eigen::VectorXd> KKT_residual() const {
     return kkt_residual_.head(dimKKT_);
   }
