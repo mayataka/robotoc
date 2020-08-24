@@ -4,8 +4,6 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/ocp.hpp"
-#include "idocp/ocp/parnmpc.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 
@@ -15,14 +13,12 @@ namespace idocp {
 template <typename OCPType>
 class MPC {
 public:
-  // Constructor. 
+
   MPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
       const std::shared_ptr<Constraints>& constraints, const double T, 
-      const int N, const int num_proc=1)
-    : ocp(robot, cost, constraints, T, N, num_proc) {
-  }
+      const int N, const int num_proc=1);
 
-  ~MPC() {}
+  ~MPC();
 
   // Use default copy constructor.
   MPC(const MPC&) = default;
@@ -38,34 +34,25 @@ public:
 
   void initializeSolution(const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v, 
-                          const int max_itr=100) {
-    ocp_.setStateTrajectory(q, v,);
-    for (int i=0; i<max_itr; ++i) {
-      ocp_.updateSolution(t, q, v, true);
-    }
-  }
+                          const int max_itr=100);
 
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v) {
-    ocp_.updateSolution(t, q, v, false);
-  }
+                      const Eigen::VectorXd& v);
 
-  void getControlInput(Eigen::VectorXd& u) {
-    ocp_.getControlInput(u);
-  }
+  void getControlInput(Eigen::VectorXd& u);
 
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv);
 
   double KKTError(const double t, const Eigen::VectorXd& q, 
-                  const Eigen::VectorXd& v) {
-    return ocp_.KKTError(t, q, v);
-  }
+                  const Eigen::VectorXd& v);
 
 private:
-  OCPType ocp;
+  OCPType ocp_;
+
 };
 
 } // namespace idocp 
 
+#include "idocp/ocp/mpc.hxx"
 
 #endif // IDOCP_MPC_HPP_

@@ -385,13 +385,13 @@ std::pair<double, double> SplitParNMPC::costAndViolationTerminal(
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dtau > 0);
-  robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
-  s_tmp.v = s.v + step_size * d.dv();
   s_tmp.a = s.a + step_size * d.da();
   if (robot.has_active_contacts()) {
     s_tmp.f_active() = s.f_active() + step_size * d.df();
     robot.setContactForces(s_tmp.f);
   }
+  robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
+  s_tmp.v = s.v + step_size * d.dv();
   s_tmp.u = s.u + step_size * d.du;
   if (robot.has_active_contacts()) {
     robot.updateKinematics(s_tmp.q, s_tmp.v, s_tmp.a);

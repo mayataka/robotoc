@@ -429,8 +429,6 @@ TEST_F(FixedBaseSplitParNMPCTest, costAndViolationWithStepSize) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
-                                                       v_prev, s, s_next);
   const double step_size = 0.3;
   const auto pair = parnmpc.costAndViolation(robot, step_size, t, dtau, s_old, 
                                              d_prev, s, d, s_new); 

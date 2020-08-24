@@ -72,6 +72,7 @@ add_library(
   src/ocp/terminal_ocp.cpp
   src/ocp/split_ocp.cpp
   src/ocp/ocp.cpp
+  src/ocp/mpc.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 
