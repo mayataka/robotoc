@@ -1,6 +1,8 @@
 #ifndef IDOCP_MPC_HPP_
 #define IDOCP_MPC_HPP_ 
 
+#include <memory>
+
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
