@@ -1,10 +1,10 @@
 ## idocp - Inverse Dynamics based Optimal Control Problem solver for rigid body systems 
 
-[![Build Status](https://travis-ci.com/mayataka/IDOCP.svg?token=fusqwLK1c8Q529AAxFz6&branch=master)](https://travis-ci.com/mayataka/IDOCP)
-[![codecov](https://codecov.io/gh/mayataka/IDOCP/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/IDOCP)
+[![Build Status](https://travis-ci.com/mayataka/idocp.svg?token=fusqwLK1c8Q529AAxFz6&branch=master)](https://travis-ci.com/mayataka/idocp)
+[![codecov](https://codecov.io/gh/mayataka/idocp/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/idocp)
 
 ## Features for efficient optimal control 
-- Solves the optimal control problem for rigid body systems based on inverse dynamics, which is faster than forward dynamics and provides sparsity in the optimal control.
+- Solves the optimal control problem for rigid body systems based on inverse dynamics.
 - Parallel Newton's method (ParNMPC) / Sparsity-exploiting Riccati recursion for computing the Newton direction.
 - Primal-dual interior point method for inequality constraints.
 - Filter line-search method.
@@ -31,7 +31,7 @@ git clone https://github.com/mayataka/idocp
 cd idocp
 ```
 
-5. Build and install idocp as
+5. Build and install `idocp` as
 
 ```
 mkdir build
@@ -41,7 +41,7 @@ make -j8
 sudo make install
 ```
 
-Then you can link the `idocp` library by writing `CMakeLists.txt` as
+You can then link exectables to `idocp` by writing `CMakeLists.txt` as
 ```
 find_package(idocp REQUIRED)
 find_package(PkgConfig)

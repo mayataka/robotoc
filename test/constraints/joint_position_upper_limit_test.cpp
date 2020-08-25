@@ -26,7 +26,7 @@ protected:
     floating_base_urdf_ = "../urdf/anymal/anymal.urdf";
     fixed_base_robot_ = Robot(fixed_base_urdf_);
     floating_base_robot_ = Robot(floating_base_urdf_);
-    barrier_ = 1.0e-08;
+    barrier_ = 1.0e-04;
     dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 

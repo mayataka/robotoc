@@ -96,7 +96,7 @@ inline JointSpaceConstraints::JointSpaceConstraints(const Robot& robot)
   : time_step_(10),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
-    barrier_(1.0e-08),
+    barrier_(1.0e-04),
     fraction_to_boundary_margin_(0.995),
     position_upper_limits_(robot, robot.upperJointPositionLimit(), barrier_),
     velocity_upper_limits_(robot, robot.jointVelocityLimit(), barrier_),

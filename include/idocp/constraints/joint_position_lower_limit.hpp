@@ -16,7 +16,7 @@ namespace idocp {
 
 class JointPositionLowerLimit final : public ConstraintComponentBase {
 public:
-  JointPositionLowerLimit(const Robot& robot, const double barrier=1.0e-08,
+  JointPositionLowerLimit(const Robot& robot, const double barrier=1.0e-04,
                           const double fraction_to_boundary_rate=0.995);
 
   JointPositionLowerLimit();
