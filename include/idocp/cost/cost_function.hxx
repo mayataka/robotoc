@@ -1,6 +1,8 @@
 #ifndef IDOCP_COST_FUNCTION_HXX_
 #define IDOCP_COST_FUNCTION_HXX_
 
+#include <assert.h>
+
 namespace idocp {
 
 inline CostFunction::CostFunction()

@@ -505,7 +505,6 @@ TEST_F(FloatingBaseSplitOCPTest, riccatiRecursion) {
   kkt_matrix.Qvv() = du_dv.transpose() * kkt_matrix.Quu * du_dv;
   kkt_matrix.Qva() = du_dv.transpose() * kkt_matrix.Quu * du_da;
   kkt_matrix.Qaa() = du_da.transpose() * kkt_matrix.Quu * du_da;
-  kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   kkt_matrix.Qqf() = du_dq.transpose() * kkt_matrix.Quu * du_df;
   kkt_matrix.Qvf() = du_dv.transpose() * kkt_matrix.Quu * du_df;
   kkt_matrix.Qaf() = du_da.transpose() * kkt_matrix.Quu * du_df;
@@ -516,18 +515,31 @@ TEST_F(FloatingBaseSplitOCPTest, riccatiRecursion) {
   factorizer.setIntegrationSensitivities(kkt_matrix.Fqq, kkt_matrix.Fqv);
   inverter.setContactStatus(robot);
   gain.setContactStatus(robot);
+  kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
+  kkt_matrix.Qaq() = kkt_matrix.Qqa().transpose();
+  kkt_matrix.Qav() = kkt_matrix.Qva().transpose();
+  kkt_matrix.Qfq() = kkt_matrix.Qqf().transpose();
+  kkt_matrix.Qfv() = kkt_matrix.Qvf().transpose();
+  kkt_matrix.Qfa() = kkt_matrix.Qaf().transpose();
   factorizer.factorizeF(dtau, riccati_next.Pqq, riccati_next.Pqv, 
-                       riccati_next.Pvq, riccati_next.Pvv, 
-                       kkt_matrix.Qqq(), kkt_matrix.Qqv(), 
-                       kkt_matrix.Qvq(), kkt_matrix.Qvv());
+                        riccati_next.Pvq, riccati_next.Pvv, 
+                        kkt_matrix.Qqq(), kkt_matrix.Qqv(), 
+                        kkt_matrix.Qvq(), kkt_matrix.Qvv());
   factorizer.factorizeH(dtau, riccati_next.Pqv, riccati_next.Pvv, 
-                       kkt_matrix.Qqa(), kkt_matrix.Qva());
+                        kkt_matrix.Qqa(), kkt_matrix.Qva());
   factorizer.factorizeG(dtau, riccati_next.Pvv, kkt_matrix.Qaa());
+  kkt_matrix.Qaq() = kkt_matrix.Qqa().transpose();
+  kkt_matrix.Qav() = kkt_matrix.Qva().transpose();
   kkt_residual.la() += dtau * riccati_next.Pvq * kkt_residual.Fq();
   kkt_residual.la() += dtau * riccati_next.Pvv * kkt_residual.Fv();
   kkt_residual.la() -= dtau * riccati_next.sv;
-  Eigen::MatrixXd Ginv = Eigen::MatrixXd::Zero(dimv+dimf+dimc, dimv+dimf+dimc);
-  inverter.invert(kkt_matrix.Qafaf(), kkt_matrix.Caf(), Ginv);
+  Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf+dimc, dimv+dimf+dimc);
+  G.topLeftCorner(dimv+dimf, dimv+dimf) = kkt_matrix.Qafaf();
+  G.topRightCorner(dimv+dimf, dimc) = kkt_matrix.Caf().transpose();
+  G.bottomLeftCorner(dimc, dimv+dimf) = kkt_matrix.Caf();
+  const Eigen::MatrixXd Ginv = G.inverse();
+  // Eigen::MatrixXd Ginv = Eigen::MatrixXd::Zero(dimv+dimf+dimc, dimv+dimf+dimc);
+  // inverter.invert(kkt_matrix.Qafaf(), kkt_matrix.Caf(), Ginv);
   Eigen::MatrixXd Qqvaf = Eigen::MatrixXd::Zero(2*dimv, dimv+dimf);
   Qqvaf.topLeftCorner(dimv, dimv) = kkt_matrix.Qqa();
   Qqvaf.topRightCorner(dimv, dimf) = kkt_matrix.Qqf();
@@ -582,6 +594,36 @@ TEST_F(FloatingBaseSplitOCPTest, riccatiRecursion) {
   const Eigen::VectorXd dv_next_ref = d.dv() + dtau * d.da() + kkt_residual.Fv();
   EXPECT_TRUE(d_next.dq().isApprox(dq_next_ref));
   EXPECT_TRUE(d_next.dv().isApprox(dv_next_ref));
+  std::cout << "C" << std::endl;
+  std::cout << kkt_residual.C().transpose() << std::endl;
+  std::cout << "dtau * u.head<6>" << std::endl;
+  std::cout << dtau * s.u.head(6).transpose() << std::endl;
+  std::cout << "baumgarte" << std::endl;
+  kkt_residual.C().setZero();
+  robot.computeBaumgarteResidual(dtau, kkt_residual.C());
+  std::cout << kkt_residual.C().head(robot.dimf()).transpose() << std::endl;
+  std::cout << dtau * s.u.head(6).transpose() << std::endl;
+  std::cout << "Cq" << std::endl;
+  std::cout << kkt_matrix.Cq().transpose() << std::endl;
+  std::cout << "Cv" << std::endl;
+  std::cout << kkt_matrix.Cv().transpose() << std::endl;
+  std::cout << "Cqv" << std::endl;
+  std::cout << kkt_matrix.Cqv().transpose() << std::endl;
+  std::cout << "Ca" << std::endl;
+  std::cout << kkt_matrix.Ca().transpose() << std::endl;
+  std::cout << "Cf" << std::endl;
+  std::cout << kkt_matrix.Cf().transpose() << std::endl;
+  std::cout << "Caf" << std::endl;
+  std::cout << kkt_matrix.Caf().transpose() << std::endl;
+
+  ocp.computeCondensedDirection(robot, dtau, d);
+  EXPECT_TRUE(d.df().isApprox(gain.kf()+gain.Kfq()*d.dq()+gain.Kfv()*d.dv()));
+  EXPECT_TRUE(d.dmu().isApprox(gain.kmu()+gain.Kmuq()*d.dq()+gain.Kmuv()*d.dv()));
+
+  std::cout << "Qafaf" << std::endl;
+  std::cout << kkt_matrix.Qafaf() << std::endl;
+  std::cout << "Qafqv" << std::endl;
+  std::cout << kkt_matrix.Qafqv() << std::endl;
 }
 
 } // namespace idocp

@@ -10,24 +10,20 @@
 #include "idocp/ocp/ocp.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
+#include "idocp/cost/contact_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/constraints/joint_position_lower_limit.hpp"
-#include "idocp/constraints/joint_position_upper_limit.hpp"
-#include "idocp/constraints/joint_velocity_lower_limit.hpp"
-#include "idocp/constraints/joint_velocity_upper_limit.hpp"
-#include "idocp/constraints/joint_torques_lower_limit.hpp"
-#include "idocp/constraints/joint_torques_upper_limit.hpp"
 
-#include "../ocp_benchmarker.hpp"
+#include "../utils/joint_constraints_factory.hpp"
+#include "../utils/ocp_benchmarker.hpp"
 
 namespace ocpbenchmark {
 namespace anymal {
 
-void Benchmark() {
+void BenchmarkWithContacts() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  const double baumgarte_weight_on_velocity = 50;
-  const double baumgarte_weight_on_position = 2500;
+  const double baumgarte_weight_on_velocity = 10;
+  const double baumgarte_weight_on_position = 100;
   const std::string urdf_file_name = "../anymal/anymal.urdf";
   idocp::Robot robot(urdf_file_name, contact_frames, 
                      baumgarte_weight_on_velocity, 
@@ -47,20 +43,12 @@ void Benchmark() {
   joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  auto contact_cost = std::make_shared<idocp::ContactCost>(robot);
+  contact_cost->set_f_weight(Eigen::VectorXd::Constant(robot.max_dimf(), 0.01));
   cost->push_back(joint_cost);
-  auto constraints = std::make_shared<idocp::Constraints>();
-  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
-  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
-  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
-  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
-  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
-  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
-  constraints->push_back(joint_position_lower);
-  constraints->push_back(joint_position_upper);
-  constraints->push_back(joint_velocity_lower);
-  constraints->push_back(joint_velocity_upper);
-  constraints->push_back(joint_torques_lower);
-  constraints->push_back(joint_torques_upper);
+  cost->push_back(contact_cost);
+  idocp::JointConstraintsFactory constraints_factory(robot);
+  auto constraints = constraints_factory.create();
   const double T = 1;
   const int N = 50;
   const int num_proc = 4;
@@ -71,24 +59,23 @@ void Benchmark() {
        0.0315, -0.4, 0.8, 
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
-  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
   const std::vector<bool> contact_status = {true, true, true, true};
   robot.setContactStatus(contact_status);
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
-  idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for ANYmal with contacts",
+  idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for anymal with contacts",
                                                     robot, cost, constraints, T, N, num_proc);
-  // ocp_benchmarker.setInitialGuessSolution(t, q, v);
+  ocp_benchmarker.setInitialGuessSolution(t, q, v);
   ocp_benchmarker.setContactStatus(contact_status);
-  ocp_benchmarker.testConvergence(t, q, v, 50, false);
-  // ocp_benchmarker.testCPUTime(t, q, v);
-  idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for ANYmal with contacts",
+  ocp_benchmarker.testConvergence(t, q, v, 20, true);
+  ocp_benchmarker.testCPUTime(t, q, v);
+  idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
                                                             robot, cost, constraints, T, N, num_proc);
   parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
   parnmpc_benchmarker.setContactStatus(contact_status);
-  parnmpc_benchmarker.testConvergence(t, q, v, 50, true);
-  // parnmpc_benchmarker.printSolution();
-  // parnmpc_benchmarker.testCPUTime(t, q, v);
+  parnmpc_benchmarker.testConvergence(t, q, v, 20, true);
+  parnmpc_benchmarker.testCPUTime(t, q, v);
 }
 
 } // namespace anymal
@@ -96,6 +83,6 @@ void Benchmark() {
 
 
 int main() {
-  ocpbenchmark::anymal::Benchmark();
+  ocpbenchmark::anymal::BenchmarkWithContacts();
   return 0;
 }

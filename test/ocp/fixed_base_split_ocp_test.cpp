@@ -486,7 +486,6 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   kkt_matrix.Qvv() = du_dv.transpose() * kkt_matrix.Quu * du_dv;
   kkt_matrix.Qva() = du_dv.transpose() * kkt_matrix.Quu * du_da;
   kkt_matrix.Qaa() = du_da.transpose() * kkt_matrix.Quu * du_da;
-  kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   kkt_matrix.Qqf() = du_dq.transpose() * kkt_matrix.Quu * du_df;
   kkt_matrix.Qvf() = du_dv.transpose() * kkt_matrix.Quu * du_df;
   kkt_matrix.Qaf() = du_da.transpose() * kkt_matrix.Quu * du_df;
@@ -497,18 +496,31 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   factorizer.setIntegrationSensitivities(kkt_matrix.Fqq, kkt_matrix.Fqv);
   inverter.setContactStatus(robot);
   gain.setContactStatus(robot);
+  kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
+  kkt_matrix.Qaq() = kkt_matrix.Qqa().transpose();
+  kkt_matrix.Qav() = kkt_matrix.Qva().transpose();
+  if (dimf > 0) {
+    kkt_matrix.Qfq() = kkt_matrix.Qqf().transpose();
+    kkt_matrix.Qfv() = kkt_matrix.Qvf().transpose();
+    kkt_matrix.Qfa() = kkt_matrix.Qaf().transpose();
+  }
   factorizer.factorizeF(dtau, riccati_next.Pqq, riccati_next.Pqv, 
-                       riccati_next.Pvq, riccati_next.Pvv, 
-                       kkt_matrix.Qqq(), kkt_matrix.Qqv(), 
-                       kkt_matrix.Qvq(), kkt_matrix.Qvv());
+                        riccati_next.Pvq, riccati_next.Pvv, 
+                        kkt_matrix.Qqq(), kkt_matrix.Qqv(), 
+                        kkt_matrix.Qvq(), kkt_matrix.Qvv());
   factorizer.factorizeH(dtau, riccati_next.Pqv, riccati_next.Pvv, 
-                       kkt_matrix.Qqa(), kkt_matrix.Qva());
+                        kkt_matrix.Qqa(), kkt_matrix.Qva());
   factorizer.factorizeG(dtau, riccati_next.Pvv, kkt_matrix.Qaa());
+  kkt_matrix.Qaq() = kkt_matrix.Qqa().transpose();
+  kkt_matrix.Qav() = kkt_matrix.Qva().transpose();
   kkt_residual.la() += dtau * riccati_next.Pvq * kkt_residual.Fq();
   kkt_residual.la() += dtau * riccati_next.Pvv * kkt_residual.Fv();
   kkt_residual.la() -= dtau * riccati_next.sv;
-  Eigen::MatrixXd Ginv = Eigen::MatrixXd::Zero(dimv+dimf+dimc, dimv+dimf+dimc);
-  inverter.invert(kkt_matrix.Qafaf(), kkt_matrix.Caf(), Ginv);
+  Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf+dimc, dimv+dimf+dimc);
+  G.topLeftCorner(dimv+dimf, dimv+dimf) = kkt_matrix.Qafaf();
+  G.topRightCorner(dimv+dimf, dimc) = kkt_matrix.Caf().transpose();
+  G.bottomLeftCorner(dimc, dimv+dimf) = kkt_matrix.Caf();
+  const Eigen::MatrixXd Ginv = G.inverse();
   Eigen::MatrixXd Qqvaf = Eigen::MatrixXd::Zero(2*dimv, dimv+dimf);
   Qqvaf.topLeftCorner(dimv, dimv) = kkt_matrix.Qqa();
   Qqvaf.topRightCorner(dimv, dimf) = kkt_matrix.Qqf();
@@ -563,6 +575,34 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   const Eigen::VectorXd dv_next_ref = d.dv() + dtau * d.da() + kkt_residual.Fv();
   EXPECT_TRUE(d_next.dq().isApprox(dq_next_ref));
   EXPECT_TRUE(d_next.dv().isApprox(dv_next_ref));
+
+  ocp.computeCondensedDirection(robot, dtau, d);
+  EXPECT_TRUE(d.df().isApprox(gain.kf()+gain.Kfq()*d.dq()+gain.Kfv()*d.dv()));
+  EXPECT_TRUE(d.dmu().isApprox(gain.kmu()+gain.Kmuq()*d.dq()+gain.Kmuv()*d.dv()));
+
+  const double step_size = 0.3;
+  const Eigen::VectorXd lmd_ref 
+      = s.lmd + step_size * (riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq);
+  const Eigen::VectorXd gmm_ref 
+      = s.gmm + step_size * (riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv);
+  Eigen::VectorXd q_ref = s.q;
+  robot.integrateConfiguration(d.dq(), step_size, q_ref);
+  const Eigen::VectorXd v_ref = s.v + step_size * d.dv();
+  const Eigen::VectorXd a_ref = s.a + step_size * d.da();
+  const Eigen::VectorXd f_ref = s.f_active() + step_size * d.df();
+  const Eigen::VectorXd mu_ref = s.mu_active() + step_size * d.dmu();
+  const Eigen::VectorXd u_ref = s.u + step_size * d.du;
+  const Eigen::VectorXd beta_ref = s.beta + step_size * d.dbeta;
+  ocp.updatePrimal(robot, step_size, dtau, riccati, d, s);
+  EXPECT_TRUE(lmd_ref.isApprox(s.lmd));
+  EXPECT_TRUE(gmm_ref.isApprox(s.gmm));
+  EXPECT_TRUE(q_ref.isApprox(s.q));
+  EXPECT_TRUE(v_ref.isApprox(s.v));
+  EXPECT_TRUE(a_ref.isApprox(s.a));
+  EXPECT_TRUE(f_ref.isApprox(s.f_active()));
+  EXPECT_TRUE(mu_ref.isApprox(s.mu_active()));
+  EXPECT_TRUE(u_ref.isApprox(s.u));
+  EXPECT_TRUE(beta_ref.isApprox(s.beta));
 }
 
 } // namespace idocp

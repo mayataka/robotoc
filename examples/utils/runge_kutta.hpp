@@ -1,9 +1,8 @@
-#ifndef IDOCP_SIMULATOR_RUNGE_KUTTA_HPP_
-#define IDOCP_SIMULATOR_RUNGE_KUTTA_HPP_
+#ifndef IDOCP_UTILS_RUNGE_KUTTA_HPP_
+#define IDOCP_UTILS_RUNGE_KUTTA_HPP_
 
 #include "Eigen/Core"
-#include "robot/robot.hpp"
-
+#include "idocp/robot/robot.hpp"
 
 namespace idocp {
 namespace simulator {
@@ -12,14 +11,8 @@ class RungeKutta {
 public:
   RungeKutta(const Robot& robot);
 
-  // Prohibit copy constructor.
-  RungeKutta(const RungeKutta& other) = delete;
-
-  // Prohibit copy operator.
-  RungeKutta& operator=(const RungeKutta& other) = delete;
-
   void integrate(const double integration_length, const Eigen::VectorXd& q, 
-                 const Eigen::VectorXd& v, const Eigen::VectorXd& tau,
+                 const Eigen::VectorXd& v, const Eigen::VectorXd& tau, 
                  Eigen::VectorXd& q_next, Eigen::VectorXd& v_next);
 
 private:
@@ -31,5 +24,6 @@ private:
 } // namespace simulator
 } // namespace idocp
 
+#include "runge_kutta.hxx"
 
-#endif // IDOCP_SIMULATOR_RUNGE_KUTTA_HPP_ 
+#endif // IDOCP_UTILS_RUNGE_KUTTA_HPP_

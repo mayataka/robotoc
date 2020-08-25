@@ -1,8 +1,6 @@
 #ifndef IDOCP_KKT_RESIDUAL_HPP_
 #define IDOCP_KKT_RESIDUAL_HPP_
 
-#include <assert.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
