@@ -55,7 +55,7 @@ inline void MPC<OCPType>::updateSolution(const double t,
 
 template <typename OCPType>
 inline void MPC<OCPType>::getControlInput(Eigen::VectorXd& u) {
-  ocp_.getControlInput(u);
+  ocp_.getInitialControlInput(u);
 }
 
 

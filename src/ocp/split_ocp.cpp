@@ -102,6 +102,9 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   riccati_gain_.setContactStatus(robot);
   riccati_inverter_.setContactStatus(robot);
   kkt_matrix_.Qvq() = kkt_matrix_.Qqv().transpose();
+  if (robot.has_active_contacts()) {
+    kkt_matrix_.Qfa() = kkt_matrix_.Qaf().transpose();
+  }
 }
 
 
@@ -129,7 +132,7 @@ void SplitOCP::backwardRiccatiRecursion(
   riccati_gain_.computeFeedforward(Ginv_active(), kkt_residual_.laf(), 
                                    kkt_residual_.C());
   // Computes the Riccati factorization matrices
-  // Qaq.transpose() means Qqa()
+  // Qaq() means Qqa().transpose(). This holds for Qav(), Qfq(), Qfv().
   riccati.Pqq = kkt_matrix_.Qqq();
   riccati.Pqq.noalias() += riccati_gain_.Kaq().transpose() * kkt_matrix_.Qaq();
   riccati.Pqv = kkt_matrix_.Qqv();

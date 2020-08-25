@@ -1,6 +1,8 @@
 #ifndef IDOCP_ROBOT_DYNAMICS_HXX_
 #define IDOCP_ROBOT_DYNAMICS_HXX_
 
+#include <assert.h>
+
 namespace idocp {
 
 inline RobotDynamics::RobotDynamics(const Robot& robot) 

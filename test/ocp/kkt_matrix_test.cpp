@@ -109,6 +109,31 @@ TEST_F(KKTMatrixTest, fixed_base) {
   EXPECT_TRUE(matrix.Qxx().block(0, dimv, dimv, dimv).isApprox(Qqv));
   EXPECT_TRUE(matrix.Qxx().block(dimv, 0, dimv, dimv).isApprox(Qvq));
   EXPECT_TRUE(matrix.Qxx().block(dimv, dimv, dimv, dimv).isApprox(Qvv));
+  EXPECT_EQ(matrix.Qxx().rows(), 2*dimv);
+  EXPECT_EQ(matrix.Qxx().cols(), 2*dimv);
+
+  EXPECT_TRUE(matrix.Qafaf().block(0, 0, dimv, dimv).isApprox(Qaa));
+  EXPECT_TRUE(matrix.Qafaf().block(0, dimv, dimv, dimf).isApprox(Qaf));
+  EXPECT_TRUE(matrix.Qafaf().block(dimv, 0, dimf, dimv).isApprox(Qfa));
+  EXPECT_TRUE(matrix.Qafaf().block(dimv, dimv, dimf, dimf).isApprox(Qff));
+  EXPECT_EQ(matrix.Qafaf().rows(), dimv+dimf);
+  EXPECT_EQ(matrix.Qafaf().cols(), dimv+dimf);
+
+  EXPECT_TRUE(matrix.Qafqv().block(0, 0, dimv, dimv).isApprox(Qaq));
+  EXPECT_TRUE(matrix.Qafqv().block(0, dimv, dimv, dimv).isApprox(Qav));
+  EXPECT_TRUE(matrix.Qafqv().block(dimv, 0, dimf, dimv).isApprox(Qfq));
+  EXPECT_TRUE(matrix.Qafqv().block(dimv, dimv, dimf, dimv).isApprox(Qfv));
+  EXPECT_EQ(matrix.Qafqv().rows(), dimv+dimf);
+  EXPECT_EQ(matrix.Qafqv().cols(), 2*dimv);
+
+  EXPECT_TRUE(matrix.Cqv().block(0, 0, dimc, dimv).isApprox(Cq));
+  EXPECT_TRUE(matrix.Cqv().block(0, dimv, dimc, dimv).isApprox(Cv));
+  EXPECT_EQ(matrix.Cqv().rows(), dimc);
+  EXPECT_EQ(matrix.Cqv().cols(), 2*dimv);
+  EXPECT_TRUE(matrix.Caf().block(0, 0, dimc, dimv).isApprox(Ca));
+  EXPECT_TRUE(matrix.Caf().block(0, dimv, dimc, dimf).isApprox(Cf));
+  EXPECT_EQ(matrix.Caf().rows(), dimc);
+  EXPECT_EQ(matrix.Caf().cols(), dimv+dimf);
 
   matrix.setZero();
   EXPECT_TRUE(matrix.costHessian().isZero());
@@ -244,6 +269,36 @@ TEST_F(KKTMatrixTest, floating_base) {
   EXPECT_TRUE(matrix.Qxx().block(0, dimv, dimv, dimv).isApprox(Qqv));
   EXPECT_TRUE(matrix.Qxx().block(dimv, 0, dimv, dimv).isApprox(Qvq));
   EXPECT_TRUE(matrix.Qxx().block(dimv, dimv, dimv, dimv).isApprox(Qvv));
+
+  EXPECT_TRUE(matrix.Qxx().block(0, 0, dimv, dimv).isApprox(Qqq));
+  EXPECT_TRUE(matrix.Qxx().block(0, dimv, dimv, dimv).isApprox(Qqv));
+  EXPECT_TRUE(matrix.Qxx().block(dimv, 0, dimv, dimv).isApprox(Qvq));
+  EXPECT_TRUE(matrix.Qxx().block(dimv, dimv, dimv, dimv).isApprox(Qvv));
+  EXPECT_EQ(matrix.Qxx().rows(), 2*dimv);
+  EXPECT_EQ(matrix.Qxx().cols(), 2*dimv);
+
+  EXPECT_TRUE(matrix.Qafaf().block(0, 0, dimv, dimv).isApprox(Qaa));
+  EXPECT_TRUE(matrix.Qafaf().block(0, dimv, dimv, dimf).isApprox(Qaf));
+  EXPECT_TRUE(matrix.Qafaf().block(dimv, 0, dimf, dimv).isApprox(Qfa));
+  EXPECT_TRUE(matrix.Qafaf().block(dimv, dimv, dimf, dimf).isApprox(Qff));
+  EXPECT_EQ(matrix.Qafaf().rows(), dimv+dimf);
+  EXPECT_EQ(matrix.Qafaf().cols(), dimv+dimf);
+
+  EXPECT_TRUE(matrix.Qafqv().block(0, 0, dimv, dimv).isApprox(Qaq));
+  EXPECT_TRUE(matrix.Qafqv().block(0, dimv, dimv, dimv).isApprox(Qav));
+  EXPECT_TRUE(matrix.Qafqv().block(dimv, 0, dimf, dimv).isApprox(Qfq));
+  EXPECT_TRUE(matrix.Qafqv().block(dimv, dimv, dimf, dimv).isApprox(Qfv));
+  EXPECT_EQ(matrix.Qafqv().rows(), dimv+dimf);
+  EXPECT_EQ(matrix.Qafqv().cols(), 2*dimv);
+
+  EXPECT_TRUE(matrix.Cqv().block(0, 0, dimc, dimv).isApprox(Cq));
+  EXPECT_TRUE(matrix.Cqv().block(0, dimv, dimc, dimv).isApprox(Cv));
+  EXPECT_EQ(matrix.Cqv().rows(), dimc);
+  EXPECT_EQ(matrix.Cqv().cols(), 2*dimv);
+  EXPECT_TRUE(matrix.Caf().block(0, 0, dimc, dimv).isApprox(Ca));
+  EXPECT_TRUE(matrix.Caf().block(0, dimv, dimc, dimf).isApprox(Cf));
+  EXPECT_EQ(matrix.Caf().rows(), dimc);
+  EXPECT_EQ(matrix.Caf().cols(), dimv+dimf);
 
   matrix.setZero();
   EXPECT_TRUE(matrix.costHessian().isZero());

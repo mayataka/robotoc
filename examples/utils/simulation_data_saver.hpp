@@ -1,12 +1,12 @@
-#ifndef IDOCP_SIMULATOR_SIMULATION_DATA_SAVER_HPP_
-#define IDOCP_SIMULATOR_SIMULATION_DATA_SAVER_HPP_
+#ifndef IDOCP_UTILS_SIMULATION_DATA_SAVER_HPP_
+#define IDOCP_UTILS_SIMULATION_DATA_SAVER_HPP_
 
 #include <string>
 #include <fstream>
 
 #include "Eigen/Core"
-#include "robot/robot.hpp"
 
+#include "idocp/robot/robot.hpp"
 
 namespace idocp {
 namespace simulator {
@@ -15,8 +15,6 @@ class SimulationDataSaver {
 public:
   SimulationDataSaver(const std::string& save_dir_path, 
                       const std::string& save_file_name);
-
-  ~SimulationDataSaver();
 
   void save(const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
             const Eigen::VectorXd& tau, const double KKT_error);
@@ -34,5 +32,6 @@ private:
 } // namespace simulator
 } // namespace idocp
 
+#include "simulation_data_saver.hxx"
 
-#endif // IDOCP_SIMULATOR_SIMULATION_DATA_SAVER_HPP_
+#endif // IDOCP_UTILS_SIMULATION_DATA_SAVER_HPP_

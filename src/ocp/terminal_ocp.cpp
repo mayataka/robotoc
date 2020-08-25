@@ -93,12 +93,7 @@ double TerminalOCP::terminalCost(Robot& robot, const double step_size,
                                  const SplitDirection& d) {
   assert(step_size > 0);
   assert(step_size <= 1);
-  if (robot.has_floating_base()) {
-    robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp_.q);
-  }
-  else {
-    s_tmp_.q = s.q + step_size * d.dq();
-  }
+  robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp_.q);
   s_tmp_.v = s.v + step_size * d.dv();
   return cost_->phi(robot, cost_data_, t, s_tmp_);
 }

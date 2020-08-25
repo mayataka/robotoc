@@ -1,8 +1,6 @@
 #ifndef IDOCP_STATE_EQUATION_HPP_
 #define IDOCP_STATE_EQUATION_HPP_
 
-#include <assert.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"

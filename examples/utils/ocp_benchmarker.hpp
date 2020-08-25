@@ -1,5 +1,5 @@
-#ifndef IDOCP_OCP_BENCHMARKER_HPP_
-#define IDOCP_OCP_BENCHMARKER_HPP_
+#ifndef IDOCP_UTILS_OCP_BENCHMARKER_HPP_
+#define IDOCP_UTILS_OCP_BENCHMARKER_HPP_ 
 
 #include <memory>
 #include <string>
@@ -18,7 +18,6 @@ namespace idocp {
 template <typename OCPType>
 class OCPBenchmarker {
 public:
-
   OCPBenchmarker(const std::string& benchmark_name, const Robot& robot, 
                  const std::shared_ptr<CostFunction>& cost,
                  const std::shared_ptr<Constraints>& constraints, 
@@ -67,4 +66,4 @@ private:
 
 #include "ocp_benchmarker.hxx"
 
-#endif // IDOCP_OCP_BENCHMARKER_HPP_ 
+#endif // IDOCP_UTILS_OCP_BENCHMARKER_HPP_

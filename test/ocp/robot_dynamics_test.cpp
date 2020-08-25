@@ -192,6 +192,14 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFixedBaseWithoutContacts) {
   std::cout << du_dv << std::endl;
   std::cout << "du_da" << std::endl;
   std::cout << du_da << std::endl;
+  std::cout << "Cq" << std::endl;
+  std::cout << kkt_matrix.Cq() << std::endl;
+  std::cout << "Cv" << std::endl;
+  std::cout << kkt_matrix.Cv() << std::endl;
+  std::cout << "Ca" << std::endl;
+  std::cout << kkt_matrix.Ca() << std::endl;
+  std::cout << "Cf" << std::endl;
+  std::cout << kkt_matrix.Cf() << std::endl;
   const double violation_ref = dtau_ * kkt_residual_ref.u_res.lpNorm<1>();
   EXPECT_DOUBLE_EQ(rd.violationL1Norm(robot, dtau_, s, kkt_residual), violation_ref);
 }
@@ -421,6 +429,14 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFixedBaseWithContact) {
   std::cout << du_da << std::endl;
   std::cout << "du_df" << std::endl;
   std::cout << du_df << std::endl;
+  std::cout << "Cq" << std::endl;
+  std::cout << kkt_matrix.Cq() << std::endl;
+  std::cout << "Cv" << std::endl;
+  std::cout << kkt_matrix.Cv() << std::endl;
+  std::cout << "Ca" << std::endl;
+  std::cout << kkt_matrix.Ca() << std::endl;
+  std::cout << "Cf" << std::endl;
+  std::cout << kkt_matrix.Cf() << std::endl;
   const double violation_ref = kkt_residual_ref.C().lpNorm<1>() 
                                 + dtau_ * kkt_residual_ref.u_res.lpNorm<1>();
   EXPECT_DOUBLE_EQ(rd.violationL1Norm(robot, dtau_, s, kkt_residual), violation_ref);
@@ -647,6 +663,14 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithoutContacts) {
   std::cout << du_da << std::endl;
   std::cout << "du_df" << std::endl;
   std::cout << du_df << std::endl;
+  std::cout << "Cq" << std::endl;
+  std::cout << kkt_matrix.Cq() << std::endl;
+  std::cout << "Cv" << std::endl;
+  std::cout << kkt_matrix.Cv() << std::endl;
+  std::cout << "Ca" << std::endl;
+  std::cout << kkt_matrix.Ca() << std::endl;
+  std::cout << "Cf" << std::endl;
+  std::cout << kkt_matrix.Cf() << std::endl;
   const double violation_ref = dtau_ * s.u.head(6).lpNorm<1>()
                                 + dtau_ * kkt_residual_ref.u_res.lpNorm<1>();
   EXPECT_DOUBLE_EQ(rd.violationL1Norm(robot, dtau_, s, kkt_residual), violation_ref);
@@ -905,6 +929,14 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithContacts) {
   std::cout << du_da << std::endl;
   std::cout << "du_df" << std::endl;
   std::cout << du_df << std::endl;
+  std::cout << "Cq" << std::endl;
+  std::cout << kkt_matrix.Cq() << std::endl;
+  std::cout << "Cv" << std::endl;
+  std::cout << kkt_matrix.Cv() << std::endl;
+  std::cout << "Ca" << std::endl;
+  std::cout << kkt_matrix.Ca() << std::endl;
+  std::cout << "Cf" << std::endl;
+  std::cout << kkt_matrix.Cf() << std::endl;
   std::cout << "Cu" << std::endl;
   std::cout << Cu << std::endl;
   std::cout << "Cu.transpose()" << std::endl;

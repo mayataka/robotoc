@@ -9,8 +9,10 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
-#include "idocp/ocp/line_search_filter.hpp"
+#include "idocp/ocp/split_solution.hpp"
+#include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/line_search_filter.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 

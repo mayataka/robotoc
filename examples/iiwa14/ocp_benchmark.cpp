@@ -10,15 +10,11 @@
 #include "idocp/ocp/ocp.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
+#include "idocp/cost/contact_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/constraints/joint_position_lower_limit.hpp"
-#include "idocp/constraints/joint_position_upper_limit.hpp"
-#include "idocp/constraints/joint_velocity_lower_limit.hpp"
-#include "idocp/constraints/joint_velocity_upper_limit.hpp"
-#include "idocp/constraints/joint_torques_lower_limit.hpp"
-#include "idocp/constraints/joint_torques_upper_limit.hpp"
 
-#include "../ocp_benchmarker.hpp"
+#include "../utils/joint_constraints_factory.hpp"
+#include "../utils/ocp_benchmarker.hpp"
 
 namespace ocpbenchmark {
 namespace iiwa14 {
@@ -34,51 +30,35 @@ void BenchmarkWithoutContacts() {
   joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
-  const Eigen::VectorXd q_ref = Eigen::VectorXd::Constant(robot.dimv(), 5);
-  joint_cost->set_q_ref(q_ref);
+  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   cost->push_back(joint_cost);
-  auto constraints = std::make_shared<idocp::Constraints>();
-  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot, 1.0e-04);
-  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot, 1.0e-04);
-  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot, 1.0e-04);
-  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot, 1.0e-04);
-  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot, 1.0e-04);
-  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot, 1.0e-04);
-  constraints->push_back(joint_position_lower);
-  constraints->push_back(joint_position_upper);
-  constraints->push_back(joint_velocity_lower);
-  constraints->push_back(joint_velocity_upper);
-  constraints->push_back(joint_torques_lower);
-  constraints->push_back(joint_torques_upper);
+  idocp::JointConstraintsFactory constraints_factory(robot);
+  auto constraints = constraints_factory.create();
   const double T = 1;
-  const int N = 50;
+  const int N = 20;
   const int num_proc = 4;
   const double t = 0;
-  // const Eigen::VectorXd q = -1 * Eigen::VectorXd::Ones(robot.dimq());
-  // const Eigen::VectorXd v = -8 * Eigen::VectorXd::Ones(robot.dimv());
-  const Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
-  const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for iiwa 14 without contacts",
+  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
+  robot.generateFeasibleConfiguration(q);
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for iiwa14 without contacts",
                                                     robot, cost, constraints, T, N, num_proc);
-  // ocp_benchmarker.setInitialGuessSolution(t, q, v);
-  ocp_benchmarker.testConvergence(t, q, v, 50, false);
-  // ocp_benchmarker.testCPUTime(t, q, v);
-  ocp_benchmarker.printSolution();
-  // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa 14 without contacts",
-  //                                                           robot, cost, constraints, T, N, num_proc);
-  // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
-  // parnmpc_benchmarker.testConvergence(t, q, v, 20, false);
-  // parnmpc_benchmarker.testCPUTime(t, q, v, 10000);
-  // parnmpc_benchmarker.printSolution();
+  ocp_benchmarker.setInitialGuessSolution(t, q, v);
+  ocp_benchmarker.testConvergence(t, q, v, 20, false);
+  ocp_benchmarker.testCPUTime(t, q, v, 1000);
+  idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa14 without contacts",
+                                                            robot, cost, constraints, T, N, num_proc);
+  parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
+  parnmpc_benchmarker.testConvergence(t, q, v, 20, false);
+  parnmpc_benchmarker.testCPUTime(t, q, v, 1000);
 }
 
 
 void BenchmarkWithContacts() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {18};
-  const double baumgarte_weight_on_velocity = 50;
-  const double baumgarte_weight_on_position = 2500;
+  const double baumgarte_weight_on_velocity = 10;
+  const double baumgarte_weight_on_position = 100;
   const std::string urdf_file_name = "../urdf/iiwa14.urdf";
   idocp::Robot robot(urdf_file_name, contact_frames, 
                      baumgarte_weight_on_velocity, 
@@ -91,32 +71,29 @@ void BenchmarkWithContacts() {
   joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  auto contact_cost = std::make_shared<idocp::ContactCost>(robot);
+  contact_cost->set_f_weight(Eigen::VectorXd::Constant(robot.max_dimf(), 0.01));
   cost->push_back(joint_cost);
-  auto constraints = std::make_shared<idocp::Constraints>();
-  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
-  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
-  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
-  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
-  constraints->push_back(joint_position_lower);
-  constraints->push_back(joint_position_upper);
-  constraints->push_back(joint_velocity_lower);
-  constraints->push_back(joint_velocity_upper);
+  cost->push_back(contact_cost);
+  idocp::JointConstraintsFactory constraints_factory(robot);
+  auto constraints = constraints_factory.create();
   const double T = 1;
-  const int N = 20;
+  const int N = 50;
   const int num_proc = 4;
   const double t = 0;
-  const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
+  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
+  robot.generateFeasibleConfiguration(q);
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   robot.setContactStatus(std::vector<bool>({true}));
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
-  idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for iiwa 14 with contacts",
+  idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for iiwa14 with contacts",
                                                     robot, cost, constraints, T, N, num_proc);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   ocp_benchmarker.setContactStatus(std::vector<bool>({true}));
   ocp_benchmarker.testConvergence(t, q, v, 20);
   ocp_benchmarker.testCPUTime(t, q, v);
-  idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa 14 with contacts",
+  idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa14 with contacts",
                                                             robot, cost, constraints, T, N, num_proc);
   parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
   parnmpc_benchmarker.setContactStatus(std::vector<bool>({true}));
@@ -130,6 +107,6 @@ void BenchmarkWithContacts() {
 
 int main() {
   ocpbenchmark::iiwa14::BenchmarkWithoutContacts();
-  // ocpbenchmark::iiwa14::BenchmarkWithContacts();
+  ocpbenchmark::iiwa14::BenchmarkWithContacts();
   return 0;
 }

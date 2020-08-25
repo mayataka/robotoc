@@ -1,10 +1,9 @@
 #ifndef IDOCP_RICCATI_MATRIX_INVERTER_HXX_
 #define IDOCP_RICCATI_MATRIX_INVERTER_HXX_
 
-#include "Eigen/Core"
+#include "Eigen/LU"
 
-#include "idocp/robot/robot.hpp"
-
+#include <assert.h>
 
 namespace idocp {
 

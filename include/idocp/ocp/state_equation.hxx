@@ -1,6 +1,8 @@
 #ifndef IDOCP_STATE_EQUATION_HXX_
 #define IDOCP_STATE_EQUATION_HXX_
 
+#include <assert.h>
+
 namespace idocp {
   
 inline StateEquation::StateEquation(const Robot& robot) 

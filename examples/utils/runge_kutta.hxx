@@ -1,12 +1,12 @@
-#include "mpc_simulator/runge_kutta.hpp"
+#ifndef IDOCP_UTILS_RUNGE_KUTTA_HXX_
+#define IDOCP_UTILS_RUNGE_KUTTA_HXX_
 
 #include <assert.h>
-
 
 namespace idocp {
 namespace simulator {
 
-RungeKutta::RungeKutta(const Robot& robot) 
+inline RungeKutta::RungeKutta(const Robot& robot)
   : robot_(robot),
     dq_(Eigen::VectorXd::Zero(robot.dimv())),
     dv_(Eigen::VectorXd::Zero(robot.dimv())),
@@ -21,10 +21,12 @@ RungeKutta::RungeKutta(const Robot& robot)
 }
 
 
-void RungeKutta::integrate(const double integration_length, 
-                           const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                           const Eigen::VectorXd& tau, Eigen::VectorXd& q_next, 
-                           Eigen::VectorXd& v_next) {
+inline void RungeKutta::integrate(const double integration_length, 
+                                  const Eigen::VectorXd& q, 
+                                  const Eigen::VectorXd& v, 
+                                  const Eigen::VectorXd& tau, 
+                                  Eigen::VectorXd& q_next, 
+                                  Eigen::VectorXd& v_next) {
   assert(integration_length > 0);
   assert(q.size() == robot_.dimq());
   assert(v.size() == robot_.dimv());
@@ -49,3 +51,5 @@ void RungeKutta::integrate(const double integration_length,
 
 } // namespace simulator
 } // namespace idocp
+
+#endif // IDOCP_UTILS_RUNGE_KUTTA_HXX_

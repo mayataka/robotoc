@@ -1,5 +1,5 @@
-#ifndef IDOCP_OCP_BENCHMARKER_HXX_
-#define IDOCP_OCP_BENCHMARKER_HXX_ 
+#ifndef IDOCP_UTILS_OCP_BENCHMARKER_HXX_
+#define IDOCP_UTILS_OCP_BENCHMARKER_HXX_ 
 
 #include <iostream>
 #include <chrono>
@@ -145,4 +145,4 @@ inline void OCPBenchmarker<OCPType>::printSolution() {
 
 } // namespace idocp 
 
-#endif // IDOCP_OCP_BENCHMARKER_HXX_
+#endif // IDOCP_UTILS_OCP_BENCHMARKER_HXX_

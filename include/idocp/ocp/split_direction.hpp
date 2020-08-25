@@ -1,8 +1,6 @@
 #ifndef IDOCP_SPLIT_DIRECTION_HPP_
 #define IDOCP_SPLIT_DIRECTION_HPP_
 
-#include <assert.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"

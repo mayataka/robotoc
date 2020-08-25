@@ -79,6 +79,7 @@ TEST_F(RiccatiMatrixInverterTest, fixed_base_with_contacts) {
   G_mat.topLeftCorner(dimaf, dimaf) = Qaa;
   G_mat.topRightCorner(dimaf, dimc) = Caf.transpose();
   G_mat.bottomLeftCorner(dimc, dimaf) = Caf;
+  std::cout << G_mat << std::endl;
   Eigen::MatrixXd G_inv_ref = G_mat.inverse();
   Eigen::MatrixXd G_inv = Eigen::MatrixXd::Zero(dimaf+dimc, dimaf+dimc);
   inverter.getInverseMatrix(G_inv);
@@ -110,6 +111,7 @@ TEST_F(RiccatiMatrixInverterTest, floating_base_without_contacts) {
   G_mat.topLeftCorner(dimaf, dimaf) = Qaa;
   G_mat.topRightCorner(dimaf, dimc) = Caf.transpose();
   G_mat.bottomLeftCorner(dimc, dimaf) = Caf;
+  std::cout << G_mat << std::endl;
   Eigen::MatrixXd G_inv_ref = G_mat.inverse();
   Eigen::MatrixXd G_inv = Eigen::MatrixXd::Zero(dimaf+dimc, dimaf+dimc);
   inverter.getInverseMatrix(G_inv);
@@ -150,6 +152,7 @@ TEST_F(RiccatiMatrixInverterTest, floating_base_with_contacts) {
   G_mat.topLeftCorner(dimaf, dimaf) = Qaa;
   G_mat.topRightCorner(dimaf, dimc) = Caf.transpose();
   G_mat.bottomLeftCorner(dimc, dimaf) = Caf;
+  std::cout << G_mat << std::endl;
   Eigen::MatrixXd G_inv_ref = G_mat.inverse();
   Eigen::MatrixXd G_inv = Eigen::MatrixXd::Zero(dimaf+dimc, dimaf+dimc);
   inverter.getInverseMatrix(G_inv);

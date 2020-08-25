@@ -1,8 +1,6 @@
 #ifndef IDOCP_RICCATI_FACTORIZATION_HPP_
 #define IDOCP_RICCATI_FACTORIZATION_HPP_
 
-#include <assert.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
