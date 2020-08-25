@@ -20,6 +20,7 @@
 
 namespace idocp {
 
+// tests the equivalence between the paralle and serial implementation.
 class ParNMPCTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
