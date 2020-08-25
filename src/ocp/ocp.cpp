@@ -27,7 +27,7 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     primal_step_sizes_(Eigen::VectorXd::Zero(N)),
     dual_step_sizes_(Eigen::VectorXd::Zero(N)),
     costs_(Eigen::VectorXd::Zero(N+1)), 
-    violations_(Eigen::VectorXd::Zero(N+1)),
+    violations_(Eigen::VectorXd::Zero(N)),
     contact_sequence_(N, std::vector<bool>(robot.max_point_contacts(), false)) {
   assert(T > 0);
   assert(N > 0);

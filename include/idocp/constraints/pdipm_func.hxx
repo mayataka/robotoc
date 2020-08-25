@@ -41,7 +41,8 @@ inline double FractionToBoundary(const int dim, const double fraction_rate,
   assert(dvec.size() == dim);
   double min_fraction_to_boundary = 1;
   for (int i=0; i<dim; ++i) {
-    double fraction_to_boundary = - fraction_rate * (vec.coeff(i)/dvec.coeff(i));
+    const double fraction_to_boundary 
+        = - fraction_rate * (vec.coeff(i)/dvec.coeff(i));
     if (fraction_to_boundary > 0 && fraction_to_boundary < 1) {
       if (fraction_to_boundary < min_fraction_to_boundary) {
         min_fraction_to_boundary = fraction_to_boundary;

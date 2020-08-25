@@ -17,7 +17,7 @@ namespace idocp {
 class JointAccelerationUpperLimit final : public ConstraintComponentBase {
 public:
   JointAccelerationUpperLimit(const Robot& robot, const Eigen::VectorXd& amax,
-                              const double barrier=1.0e-08,
+                              const double barrier=1.0e-04,
                               const double fraction_to_boundary_rate=0.995);
 
   JointAccelerationUpperLimit();

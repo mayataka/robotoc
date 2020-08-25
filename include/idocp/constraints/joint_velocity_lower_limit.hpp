@@ -16,7 +16,7 @@ namespace idocp {
 
 class JointVelocityLowerLimit final : public ConstraintComponentBase {
 public:
-  JointVelocityLowerLimit(const Robot& robot, const double barrier=1.0e-08,
+  JointVelocityLowerLimit(const Robot& robot, const double barrier=1.0e-04,
                           const double fraction_to_boundary_rate=0.995);
 
   JointVelocityLowerLimit();

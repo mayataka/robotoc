@@ -34,15 +34,17 @@ void BenchmarkWithoutContacts() {
   joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
+  const Eigen::VectorXd q_ref = Eigen::VectorXd::Constant(robot.dimv(), 5);
+  joint_cost->set_q_ref(q_ref);
   cost->push_back(joint_cost);
   auto constraints = std::make_shared<idocp::Constraints>();
-  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
-  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
-  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
-  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
-  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
-  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot, 1.0e-04);
+  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot, 1.0e-04);
+  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot, 1.0e-04);
+  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot, 1.0e-04);
+  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot, 1.0e-04);
+  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot, 1.0e-04);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -50,21 +52,25 @@ void BenchmarkWithoutContacts() {
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
   const double T = 1;
-  const int N = 20;
+  const int N = 50;
   const int num_proc = 4;
   const double t = 0;
-  const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
-  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  // const Eigen::VectorXd q = -1 * Eigen::VectorXd::Ones(robot.dimq());
+  // const Eigen::VectorXd v = -8 * Eigen::VectorXd::Ones(robot.dimv());
+  const Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
+  const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
   idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for iiwa 14 without contacts",
                                                     robot, cost, constraints, T, N, num_proc);
-  ocp_benchmarker.setInitialGuessSolution(t, q, v);
-  ocp_benchmarker.testConvergence(t, q, v, 20);
-  ocp_benchmarker.testCPUTime(t, q, v);
-  idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa 14 without contacts",
-                                                            robot, cost, constraints, T, N, num_proc);
-  parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
-  parnmpc_benchmarker.testConvergence(t, q, v, 20);
-  parnmpc_benchmarker.testCPUTime(t, q, v);
+  // ocp_benchmarker.setInitialGuessSolution(t, q, v);
+  ocp_benchmarker.testConvergence(t, q, v, 50, false);
+  // ocp_benchmarker.testCPUTime(t, q, v);
+  ocp_benchmarker.printSolution();
+  // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa 14 without contacts",
+  //                                                           robot, cost, constraints, T, N, num_proc);
+  // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
+  // parnmpc_benchmarker.testConvergence(t, q, v, 20, false);
+  // parnmpc_benchmarker.testCPUTime(t, q, v, 10000);
+  // parnmpc_benchmarker.printSolution();
 }
 
 
@@ -124,6 +130,6 @@ void BenchmarkWithContacts() {
 
 int main() {
   ocpbenchmark::iiwa14::BenchmarkWithoutContacts();
-  ocpbenchmark::iiwa14::BenchmarkWithContacts();
+  // ocpbenchmark::iiwa14::BenchmarkWithContacts();
   return 0;
 }

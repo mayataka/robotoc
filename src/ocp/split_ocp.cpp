@@ -129,40 +129,33 @@ void SplitOCP::backwardRiccatiRecursion(
   riccati_gain_.computeFeedforward(Ginv_active(), kkt_residual_.laf(), 
                                    kkt_residual_.C());
   // Computes the Riccati factorization matrices
+  // Qaq.transpose() means Qqa()
   riccati.Pqq = kkt_matrix_.Qqq();
-  riccati.Pqq.noalias() 
-      += riccati_gain_.Kaq().transpose() * kkt_matrix_.Qqa().transpose();
+  riccati.Pqq.noalias() += riccati_gain_.Kaq().transpose() * kkt_matrix_.Qaq();
   riccati.Pqv = kkt_matrix_.Qqv();
-  riccati.Pqv.noalias() 
-      += riccati_gain_.Kaq().transpose() * kkt_matrix_.Qva().transpose();
+  riccati.Pqv.noalias() += riccati_gain_.Kaq().transpose() * kkt_matrix_.Qav();
   riccati.Pvq = kkt_matrix_.Qvq();
-  riccati.Pvq.noalias() 
-      += riccati_gain_.Kav().transpose() * kkt_matrix_.Qqa().transpose();
+  riccati.Pvq.noalias() += riccati_gain_.Kav().transpose() * kkt_matrix_.Qaq();
   riccati.Pvv = kkt_matrix_.Qvv();
-  riccati.Pvv.noalias() 
-      += riccati_gain_.Kav().transpose() * kkt_matrix_.Qva().transpose();
+  riccati.Pvv.noalias() += riccati_gain_.Kav().transpose() * kkt_matrix_.Qav();
   // Computes the Riccati factorization vectors
   riccati.sq = riccati_next.sq - kkt_residual_.lq();
   riccati.sq.noalias() -= riccati_next.Pqq * kkt_residual_.Fq();
   riccati.sq.noalias() -= riccati_next.Pqv * kkt_residual_.Fv();
-  riccati.sq.noalias() -= kkt_matrix_.Qqa() * riccati_gain_.ka();
+  riccati.sq.noalias() -= kkt_matrix_.Qaq().transpose() * riccati_gain_.ka();
   riccati.sv = dtau * riccati_next.sq + riccati_next.sv - kkt_residual_.lv();
   riccati.sv.noalias() -= dtau * riccati_next.Pqq * kkt_residual_.Fq();
   riccati.sv.noalias() -= riccati_next.Pvq * kkt_residual_.Fq();
   riccati.sv.noalias() -= dtau * riccati_next.Pqv * kkt_residual_.Fv();
   riccati.sv.noalias() -= riccati_next.Pvv * kkt_residual_.Fv();
-  riccati.sv.noalias() -= kkt_matrix_.Qva() * riccati_gain_.ka();
+  riccati.sv.noalias() -= kkt_matrix_.Qav().transpose() * riccati_gain_.ka();
   if (dimf_ > 0) {
-    riccati.Pqq.noalias() 
-        += riccati_gain_.Kfq().transpose() * kkt_matrix_.Qqf().transpose();
-    riccati.Pqv.noalias() 
-        += riccati_gain_.Kfq().transpose() * kkt_matrix_.Qvf().transpose();
-    riccati.Pvq.noalias() 
-        += riccati_gain_.Kfv().transpose() * kkt_matrix_.Qqf().transpose();
-    riccati.Pvv.noalias() 
-        += riccati_gain_.Kfv().transpose() * kkt_matrix_.Qvf().transpose();
-    riccati.sq.noalias() -= kkt_matrix_.Qqf() * riccati_gain_.kf();
-    riccati.sv.noalias() -= kkt_matrix_.Qvf() * riccati_gain_.kf();
+    riccati.Pqq.noalias() += riccati_gain_.Kfq().transpose() * kkt_matrix_.Qfq();
+    riccati.Pqv.noalias() += riccati_gain_.Kfq().transpose() * kkt_matrix_.Qfv();
+    riccati.Pvq.noalias() += riccati_gain_.Kfv().transpose() * kkt_matrix_.Qfq();
+    riccati.Pvv.noalias() += riccati_gain_.Kfv().transpose() * kkt_matrix_.Qfv();
+    riccati.sq.noalias() -= kkt_matrix_.Qfq().transpose() * riccati_gain_.kf();
+    riccati.sv.noalias() -= kkt_matrix_.Qfv().transpose() * riccati_gain_.kf();
   }
   if (dimc_ > 0) {
     riccati.Pqq.noalias() += riccati_gain_.Kmuq().transpose() * kkt_matrix_.Cq();
