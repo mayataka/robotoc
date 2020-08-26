@@ -63,20 +63,20 @@ inline void RiccatiMatrixInverter::invert(
   assert(G_inv.cols() == dimaf_+dimc_);
   if (dimc_ > 0) {
     const_cast<Eigen::MatrixBase<MatrixType3>&> (G_inv)
-        .topLeftCorner(dimaf_, dimaf_)
+        .topLeftCorner(dimaf_, dimaf_).noalias()
         = G.llt().solve(Eigen::MatrixXd::Identity(dimaf_, dimaf_));
-    Sc_.topLeftCorner(dimc_, dimc_) 
+    Sc_.topLeftCorner(dimc_, dimc_) .noalias()
         = Caf * G_inv.topLeftCorner(dimaf_, dimaf_) * Caf.transpose();
     const_cast<Eigen::MatrixBase<MatrixType3>&> (G_inv)
-        .block(dimaf_, dimaf_, dimc_, dimc_) 
+        .block(dimaf_, dimaf_, dimc_, dimc_).noalias() 
         = - Sc_.topLeftCorner(dimc_, dimc_)
                .llt().solve(Eigen::MatrixXd::Identity(dimc_, dimc_));
     const_cast<Eigen::MatrixBase<MatrixType3>&> (G_inv)
-        .block(0, dimaf_, dimaf_, dimc_) 
+        .block(0, dimaf_, dimaf_, dimc_).noalias() 
         = - G_inv.topLeftCorner(dimaf_, dimaf_) 
             * Caf.transpose() * G_inv.block(dimaf_, dimaf_, dimc_, dimc_);
     const_cast<Eigen::MatrixBase<MatrixType3>&> (G_inv)
-        .block(dimaf_, 0, dimc_, dimaf_) 
+        .block(dimaf_, 0, dimc_, dimaf_).noalias() 
         = G_inv.block(0, dimaf_, dimaf_, dimc_).transpose();
     const_cast<Eigen::MatrixBase<MatrixType3>&> (G_inv)
         .topLeftCorner(dimaf_, dimaf_).noalias()
@@ -85,7 +85,7 @@ inline void RiccatiMatrixInverter::invert(
             * G_inv.block(0, dimaf_, dimaf_, dimc_).transpose();
   }
   else {
-    const_cast<Eigen::MatrixBase<MatrixType3>&> (G_inv)
+    const_cast<Eigen::MatrixBase<MatrixType3>&> (G_inv).noalias()
         = G.llt().solve(Eigen::MatrixXd::Identity(dimaf_, dimaf_));
   }
 }
@@ -100,17 +100,17 @@ inline void RiccatiMatrixInverter::invert(
   assert(Caf.rows() == dimc_);
   assert(Caf.cols() == dimaf_);
   if (dimc_ > 0) {
-    G_inv_.topLeftCorner(dimaf_, dimaf_)
+    G_inv_.topLeftCorner(dimaf_, dimaf_).noalias()
         = G.llt().solve(Eigen::MatrixXd::Identity(dimaf_, dimaf_));
-    Sc_.topLeftCorner(dimc_, dimc_) 
+    Sc_.topLeftCorner(dimc_, dimc_).noalias() 
         = Caf * G_inv_.topLeftCorner(dimaf_, dimaf_) * Caf.transpose();
-    G_inv_.block(dimaf_, dimaf_, dimc_, dimc_) 
+    G_inv_.block(dimaf_, dimaf_, dimc_, dimc_).noalias() 
         = - Sc_.topLeftCorner(dimc_, dimc_)
                .llt().solve(Eigen::MatrixXd::Identity(dimc_, dimc_));
-    G_inv_.block(0, dimaf_, dimaf_, dimc_) 
+    G_inv_.block(0, dimaf_, dimaf_, dimc_).noalias() 
         = - G_inv_.topLeftCorner(dimaf_, dimaf_) 
             * Caf.transpose() * G_inv_.block(dimaf_, dimaf_, dimc_, dimc_);
-    G_inv_.block(dimaf_, 0, dimc_, dimaf_) 
+    G_inv_.block(dimaf_, 0, dimc_, dimaf_).noalias() 
         = G_inv_.block(0, dimaf_, dimaf_, dimc_).transpose();
     G_inv_.topLeftCorner(dimaf_, dimaf_).noalias()
         -= G_inv_.block(0, dimaf_, dimaf_, dimc_) 
@@ -118,7 +118,7 @@ inline void RiccatiMatrixInverter::invert(
             * G_inv_.block(0, dimaf_, dimaf_, dimc_).transpose();
   }
   else {
-    G_inv_.topLeftCorner(dimaf_, dimaf_)
+    G_inv_.topLeftCorner(dimaf_, dimaf_).noalias()
         = G.llt().solve(Eigen::MatrixXd::Identity(dimaf_, dimaf_));
   }
 }
@@ -129,7 +129,7 @@ void RiccatiMatrixInverter::getInverseMatrix(
     const Eigen::MatrixBase<MatrixType>& G_inv) {
   assert(G_inv.rows() == dimaf_+dimc_);
   assert(G_inv.cols() == dimaf_+dimc_);
-  const_cast<Eigen::MatrixBase<MatrixType>&> (G_inv)
+  const_cast<Eigen::MatrixBase<MatrixType>&> (G_inv).noalias()
       = G_inv_.topLeftCorner(dimaf_+dimc_, dimaf_+dimc_);
 }
 

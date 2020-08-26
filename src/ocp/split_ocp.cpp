@@ -174,8 +174,9 @@ void SplitOCP::backwardRiccatiRecursion(
 void SplitOCP::forwardRiccatiRecursion(const double dtau, SplitDirection& d,   
                                        SplitDirection& d_next) {
   assert(dtau > 0);
-  d.da() = riccati_gain_.ka() + riccati_gain_.Kaq() * d.dq() 
-                              + riccati_gain_.Kav() * d.dv();
+  d.da() = riccati_gain_.ka();
+  d.da().noalias() += riccati_gain_.Kaq() * d.dq();
+  d.da().noalias() += riccati_gain_.Kav() * d.dv();
   d_next.dq() = d.dq() + dtau * d.dv() + kkt_residual_.Fq();
   d_next.dv() = d.dv() + dtau * d.da() + kkt_residual_.Fv();
 }
@@ -185,12 +186,14 @@ void SplitOCP::computeCondensedDirection(const Robot& robot, const double dtau,
                                          SplitDirection& d) {
   assert(dtau > 0);
   if (dimf_ > 0) {
-    d.df() = riccati_gain_.kf() + riccati_gain_.Kfq() * d.dq() 
-                                + riccati_gain_.Kfv() * d.dv();
+    d.df() = riccati_gain_.kf();
+    d.df().noalias() += riccati_gain_.Kfq() * d.dq();
+    d.df().noalias() += riccati_gain_.Kfv() * d.dv();
   }
   if (dimc_ > 0) {
-    d.dmu() = riccati_gain_.kmu() + riccati_gain_.Kmuq() * d.dq() 
-                                  + riccati_gain_.Kmuv() * d.dv();
+    d.dmu() = riccati_gain_.kmu();
+    d.dmu().noalias() += riccati_gain_.Kmuq() * d.dq();
+    d.dmu().noalias() += riccati_gain_.Kmuv() * d.dv();
   }
   robot_dynamics_.computeCondensedDirection(dtau, kkt_matrix_, kkt_residual_, d);
   constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, d);

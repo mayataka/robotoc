@@ -208,7 +208,8 @@ void SplitParNMPC::backwardCorrectionSerial(const Robot& robot,
                                             SplitSolution& s_new) {
   x_res_.head(robot.dimv()) = s_new_next.lmd - s_next.lmd;
   x_res_.tail(robot.dimv()) = s_new_next.gmm - s_next.gmm;
-  dx_ = kkt_matrix_inverse_.block(0, dimKKT_-dimx_, dimx_, dimx_) * x_res_;
+  dx_.noalias() 
+      = kkt_matrix_inverse_.block(0, dimKKT_-dimx_, dimx_, dimx_) * x_res_;
   s_new.lmd.noalias() -= dx_.head(robot.dimv());
   s_new.gmm.noalias() -= dx_.tail(robot.dimv());
 }
@@ -217,7 +218,7 @@ void SplitParNMPC::backwardCorrectionSerial(const Robot& robot,
 void SplitParNMPC::backwardCorrectionParallel(const Robot& robot, 
                                               SplitDirection& d,
                                               SplitSolution& s_new) {
-  d.split_direction().tail(dimKKT_-dimx_)
+  d.split_direction().tail(dimKKT_-dimx_).noalias()
       = kkt_matrix_inverse_.block(dimx_, dimKKT_-dimx_, dimKKT_-dimx_, dimx_) 
           * x_res_;
   s_new.mu_active().noalias() -= d.dmu();
@@ -235,8 +236,8 @@ void SplitParNMPC::forwardCorrectionSerial(const Robot& robot,
   robot.subtractConfiguration(s_new_prev.q, s_prev.q, 
                               x_res_.head(robot.dimv()));
   x_res_.tail(robot.dimv()) = s_new_prev.v - s_prev.v;
-  dx_ = kkt_matrix_inverse_.block(dimKKT_-dimx_, 0, dimx_, dimx_) 
-          * x_res_;
+  dx_.noalias() = kkt_matrix_inverse_.block(dimKKT_-dimx_, 0, dimx_, dimx_) 
+                    * x_res_;
   robot.integrateConfiguration(dx_.head(robot.dimv()), -1, s_new.q);
   s_new.v.noalias() -= dx_.tail(robot.dimv());
 }
@@ -245,7 +246,7 @@ void SplitParNMPC::forwardCorrectionSerial(const Robot& robot,
 void SplitParNMPC::forwardCorrectionParallel(const Robot& robot,
                                              SplitDirection& d,
                                              SplitSolution& s_new) {
-  d.split_direction().head(dimKKT_-dimx_)
+  d.split_direction().head(dimKKT_-dimx_).noalias()
       = kkt_matrix_inverse_.topLeftCorner(dimKKT_-dimx_, dimx_) * x_res_;
   s_new.lmd.noalias() -= d.dlmd();
   s_new.gmm.noalias() -= d.dgmm();
