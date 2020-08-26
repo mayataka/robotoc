@@ -41,7 +41,7 @@ public:
   void invert(const Eigen::MatrixBase<MatrixType1>& G,
               const Eigen::MatrixBase<MatrixType2>& Caf,
               const Eigen::MatrixBase<MatrixType3>& G_inv);
-  // Fixed base without contacts
+
   template <typename MatrixType1, typename MatrixType2>
   void invert(const Eigen::MatrixBase<MatrixType1>& G,
               const Eigen::MatrixBase<MatrixType2>& Caf);

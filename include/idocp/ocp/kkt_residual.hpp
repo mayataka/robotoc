@@ -12,39 +12,11 @@ class KKTResidual {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  KKTResidual(const Robot& robot) 
-    : lu(Eigen::VectorXd::Zero(robot.dimv())),
-      u_res(Eigen::VectorXd::Zero(robot.dimv())),
-      kkt_residual_(Eigen::VectorXd::Zero(
-          5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf())),
-      dimv_(robot.dimv()), 
-      dimx_(2*robot.dimv()), 
-      dim_passive_(robot.dim_passive()), 
-      max_dimf_(robot.max_dimf()), 
-      dimf_(robot.dimf()), 
-      max_dimc_(robot.dim_passive()+robot.max_dimf()), 
-      dimc_(robot.dim_passive()+robot.dimf()),
-      max_dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf()),
-      dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.dimf()) {
-  }
+  KKTResidual(const Robot& robot);
 
-  KKTResidual() 
-    : lu(),
-      u_res(),
-      kkt_residual_(), 
-      dimv_(0), 
-      dimx_(0), 
-      dim_passive_(0), 
-      max_dimf_(0), 
-      dimf_(0), 
-      max_dimc_(0), 
-      dimc_(0),
-      max_dimKKT_(0),
-      dimKKT_(0) {
-  }
+  KKTResidual();
 
-  ~KKTResidual() {
-  }
+  ~KKTResidual();
 
   KKTResidual(const KKTResidual&) = default;
 
@@ -54,129 +26,65 @@ public:
 
   KKTResidual& operator=(KKTResidual&&) noexcept = default;
 
-  inline void setContactStatus(const Robot& robot) {
-    dimf_ = robot.dimf();
-    dimc_ = dim_passive_ + robot.dimf();
-    dimKKT_ = 5*dimv_ + dim_passive_ + 2*robot.dimf();
-  }
+  void setContactStatus(const Robot& robot);
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> KKT_residual() {
-    return kkt_residual_.head(dimKKT_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> KKT_residual();
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> Fq() {
-    return kkt_residual_.head(dimv_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> Fq();
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> Fv() {
-    return kkt_residual_.segment(dimv_, dimv_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> Fv();
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> Fx() {
-    return kkt_residual_.segment(0, dimx_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> Fx();
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> C() {
-    return kkt_residual_.segment(dimx_, dimc_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> C();
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> la() {
-    return kkt_residual_.segment(dimx_+dimc_, dimv_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> la();
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> lf() {
-    return kkt_residual_.segment(dimx_+dimc_+dimv_, dimf_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> lf();
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> lq() {
-    return kkt_residual_.segment(dimx_+dimc_+dimv_+dimf_, dimv_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> lq();
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> lv() {
-    return kkt_residual_.segment(dimx_+dimc_+2*dimv_+dimf_, dimv_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> lv();
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> lx() {
-    return kkt_residual_.segment(dimx_+dimc_+dimv_+dimf_, dimx_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> lx();
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> laf() {
-    return kkt_residual_.segment(dimx_+dimc_, dimv_+dimf_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> laf();
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> KKT_residual() const {
-    return kkt_residual_.head(dimKKT_);
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> KKT_residual() const;
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> Fq() const {
-    return kkt_residual_.head(dimv_);
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> Fq() const;
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> Fv() const {
-    return kkt_residual_.segment(dimv_, dimv_);
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> Fv() const;
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> Fx() const {
-    return kkt_residual_.segment(0, dimx_);
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> Fx() const;
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> C() const {
-    return kkt_residual_.segment(dimx_, dimc_);
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> C() const;
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> la() const {
-    return kkt_residual_.segment(dimx_+dimc_, dimv_);
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> la() const;
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> lf() const {
-    return kkt_residual_.segment(dimx_+dimc_+dimv_, dimf_);
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> lq() const {
-    return kkt_residual_.segment(dimx_+dimc_+dimv_+dimf_, dimv_);
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> lq() const;
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> lv() const {
-    return kkt_residual_.segment(dimx_+dimc_+2*dimv_+dimf_, dimv_);
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> lv() const;
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> lx() const {
-    return kkt_residual_.segment(dimx_+dimc_+dimv_+dimf_, dimx_);
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> lx() const;
 
-  inline double squaredKKTErrorNorm(const double dtau) const {
-    double error = kkt_residual_.head(dimKKT_).squaredNorm();
-    error += lu.squaredNorm();
-    error += dtau * dtau * u_res.squaredNorm();
-    return error;
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> laf() const;
 
-  inline void setZeroMinimum() {
-    lu.setZero();
-    kkt_residual_.segment(dimx_+dimc_, 3*dimv_+dimf_).setZero();
-  }
+  double squaredKKTErrorNorm(const double dtau) const;
 
-  inline void setZero() {
-    lu.setZero();
-    u_res.setZero();
-    kkt_residual_.setZero();
-  }
+  void setZeroMinimum();
 
-  inline int dimKKT() const {
-    return dimKKT_;
-  }
+  void setZero();
 
-  inline int max_dimKKT() const {
-    return max_dimKKT_;
-  }
+  int dimKKT() const;
 
-  inline int dimc() const {
-    return dimc_;
-  }
+  int max_dimKKT() const;
 
-  inline int dimf() const {
-    return dimf_;
-  }
+  int dimc() const;
+
+  int dimf() const;
 
   Eigen::VectorXd lu, u_res;
 
@@ -189,5 +97,6 @@ private:
 
 } // namespace idocp 
 
+#include "idocp/ocp/kkt_residual.hxx"
 
 #endif // IDOCP_KKT_RESIDUAL_HPP_

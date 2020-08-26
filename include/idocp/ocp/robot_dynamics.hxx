@@ -84,7 +84,8 @@ inline void RobotDynamics::condenseRobotDynamics(Robot& robot,
     kkt_residual.lu.template head<kDimFloatingBase>().noalias()
         += dtau * s.mu_active().template tail<kDimFloatingBase>();
   }
-  lu_condensed_ = kkt_residual.lu + kkt_matrix.Quu * kkt_residual.u_res;
+  lu_condensed_.noalias() 
+      = kkt_residual.lu + kkt_matrix.Quu * kkt_residual.u_res;
   // condense Newton residual
   kkt_residual.la().noalias() = du_da_.transpose() * lu_condensed_;
   if (robot.has_active_contacts()) {
@@ -105,7 +106,8 @@ inline void RobotDynamics::condenseRobotDynamics(Robot& robot,
   kkt_matrix.Qaq().noalias() = du_da_.transpose() * Quu_du_dq_;
   kkt_matrix.Qav().noalias() = du_da_.transpose() * Quu_du_dv_;
   if (robot.has_active_contacts()) {
-    kkt_matrix.Qff().noalias() = du_df_active_().transpose() * Quu_du_df_active_();
+    kkt_matrix.Qff().noalias() 
+        = du_df_active_().transpose() * Quu_du_df_active_();
     kkt_matrix.Qfq().noalias() = du_df_active_().transpose() * Quu_du_dq_;
     kkt_matrix.Qfv().noalias() = du_df_active_().transpose() * Quu_du_dv_;
   }

@@ -12,37 +12,11 @@ class SplitSolution {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  SplitSolution(const Robot& robot) 
-    : lmd(Eigen::VectorXd::Zero(robot.dimv())),
-      gmm(Eigen::VectorXd::Zero(robot.dimv())),
-      mu(Eigen::VectorXd::Zero(robot.dim_passive()+robot.max_dimf())),
-      a(Eigen::VectorXd::Zero(robot.dimv())),
-      f(Eigen::VectorXd::Zero(robot.max_dimf())),
-      q(Eigen::VectorXd::Zero(robot.dimq())),
-      v(Eigen::VectorXd::Zero(robot.dimv())),
-      u(Eigen::VectorXd::Zero(robot.dimv())),
-      beta(Eigen::VectorXd::Zero(robot.dimv())),
-      dimc_(robot.dim_passive()+robot.dimf()),
-      dimf_(robot.dimf()) {
-    robot.normalizeConfiguration(q);
-  }
+  SplitSolution(const Robot& robot);
 
-  SplitSolution() 
-    : lmd(),
-      gmm(),
-      mu(),
-      a(),
-      f(),
-      q(),
-      v(),
-      u(),
-      beta(),
-      dimc_(0),
-      dimf_(0) {
-  }
+  SplitSolution();
 
-  ~SplitSolution() {
-  }
+  ~SplitSolution();
 
   SplitSolution(const SplitSolution&) = default;
 
@@ -52,34 +26,19 @@ public:
 
   SplitSolution& operator=(SplitSolution&&) noexcept = default;
 
-  inline void setContactStatus(const Robot& robot) {
-    dimc_ = robot.dim_passive() + robot.dimf();
-    dimf_ = robot.dimf();
-  }
+  void setContactStatus(const Robot& robot);
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> f_active() {
-    return f.head(dimf_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> f_active();
 
-  inline Eigen::VectorBlock<Eigen::VectorXd> mu_active() {
-    return mu.head(dimc_);
-  }
+  Eigen::VectorBlock<Eigen::VectorXd> mu_active();
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> f_active() const {
-    return f.head(dimf_);
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> f_active() const;
 
-  inline const Eigen::VectorBlock<const Eigen::VectorXd> mu_active() const {
-    return mu.head(dimc_);
-  }
+  const Eigen::VectorBlock<const Eigen::VectorXd> mu_active() const;
 
-  int dimc() const {
-    return dimc_;
-  }
+  int dimc() const;
 
-  int dimf() const {
-    return dimf_;
-  }
+  int dimf() const;
 
   Eigen::VectorXd lmd, gmm, mu, a, f, q, v, u, beta;
 
@@ -90,5 +49,6 @@ private:
 
 } // namespace idocp 
 
+#include "idocp/ocp/split_solution.hxx"
 
 #endif // IDOCP_SPLIT_SOLUTION_HPP_
