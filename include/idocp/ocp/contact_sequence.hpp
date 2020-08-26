@@ -16,6 +16,10 @@ private:
   }
 
   ~ContactSequence();
+
+public:
+  std::vector<bool> contact_sequence_;
+
 };
 
 } // namespace idocp 

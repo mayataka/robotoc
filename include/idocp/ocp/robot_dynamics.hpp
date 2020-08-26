@@ -55,9 +55,11 @@ public:
 
 private:
   Eigen::VectorXd lu_condensed_;
-  Eigen::MatrixXd du_dq_, du_dv_, du_da_, du_df_;
+  Eigen::MatrixXd du_dq_, du_dv_, du_da_, du_df_, 
+                  Quu_du_dq_, Quu_du_dv_, Quu_du_da_, Quu_du_df_;
   bool has_floating_base_, has_active_contacts_;
-  int dim_passive_, dimf_;
+  int dimf_;
+  static constexpr int kDimFloatingBase = 6;
 
   void linearizeInverseDynamics(Robot& robot, const SplitSolution& s, 
                                 KKTResidual& kkt_residual);
@@ -73,9 +75,14 @@ private:
   Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
   du_df_active_();
 
-  const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, 
-                     true> 
+  const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
   du_df_active_() const;
+
+  Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
+  Quu_du_df_active_();
+
+  const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
+  Quu_du_df_active_() const;
 
 };
 

@@ -518,9 +518,11 @@ TEST_F(FloatingBaseSplitOCPTest, riccatiRecursion) {
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   kkt_matrix.Qaq() = kkt_matrix.Qqa().transpose();
   kkt_matrix.Qav() = kkt_matrix.Qva().transpose();
-  kkt_matrix.Qfq() = kkt_matrix.Qqf().transpose();
-  kkt_matrix.Qfv() = kkt_matrix.Qvf().transpose();
-  kkt_matrix.Qfa() = kkt_matrix.Qaf().transpose();
+  if (robot.dimf() > 0) {
+    kkt_matrix.Qfq() = kkt_matrix.Qqf().transpose();
+    kkt_matrix.Qfv() = kkt_matrix.Qvf().transpose();
+    kkt_matrix.Qfa() = kkt_matrix.Qaf().transpose();
+  }
   factorizer.factorizeF(dtau, riccati_next.Pqq, riccati_next.Pqv, 
                         riccati_next.Pvq, riccati_next.Pvv, 
                         kkt_matrix.Qqq(), kkt_matrix.Qqv(), 

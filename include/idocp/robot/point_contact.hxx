@@ -76,7 +76,7 @@ inline void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
   assert(baumgarte_residual.size() == 3);
-  const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)
+  const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual).noalias()
       = pinocchio::getFrameClassicalAcceleration(model, data, 
                                                   contact_frame_id_, 
                                                   pinocchio::LOCAL).linear();
@@ -100,7 +100,7 @@ inline void PointContact::computeBaumgarteResidual(
     const double coeff, 
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
   assert(baumgarte_residual.size() == 3);
-  const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)
+  const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual).noalias()
       = coeff * pinocchio::getFrameClassicalAcceleration(
                     model, data, contact_frame_id_, pinocchio::LOCAL).linear();
   if (baumgarte_weight_on_velocity_ != 0.) {
@@ -139,13 +139,17 @@ inline void PointContact::computeBaumgarteDerivatives(
   pinocchio::skew(v_frame_.linear(), v_linear_skew_);
   pinocchio::skew(v_frame_.angular(), v_angular_skew_);
   const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)
-      = frame_a_partial_dq_.template topRows<3>()
-          + v_angular_skew_ * frame_v_partial_dq_.template topRows<3>()
-          + v_linear_skew_ * frame_v_partial_dq_.template bottomRows<3>();
+      = frame_a_partial_dq_.template topRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq).noalias()
+      += v_angular_skew_ * frame_v_partial_dq_.template topRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq).noalias()
+      += v_linear_skew_ * frame_v_partial_dq_.template bottomRows<3>();
   const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv)
-      = frame_a_partial_dv_.template topRows<3>()
-          + v_angular_skew_ * J_frame_.template topRows<3>()
-          + v_linear_skew_ * J_frame_.template bottomRows<3>();
+      = frame_a_partial_dv_.template topRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv).noalias()
+      += v_angular_skew_ * J_frame_.template topRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv).noalias()
+      += v_linear_skew_ * J_frame_.template bottomRows<3>();
   const_cast<Eigen::MatrixBase<MatrixType3>&> (baumgarte_partial_da)
       = frame_a_partial_da_.template topRows<3>();
   if (baumgarte_weight_on_velocity_ != 0.) {
@@ -193,13 +197,17 @@ inline void PointContact::computeBaumgarteDerivatives(
   pinocchio::skew(v_frame_.linear(), v_linear_skew_);
   pinocchio::skew(v_frame_.angular(), v_angular_skew_);
   const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)
-      = coeff * frame_a_partial_dq_.template topRows<3>()
-          + coeff * v_angular_skew_ * frame_v_partial_dq_.template topRows<3>()
-          + coeff * v_linear_skew_ * frame_v_partial_dq_.template bottomRows<3>();
-  const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv) 
-      = coeff * frame_a_partial_dv_.template topRows<3>()
-          + coeff * v_angular_skew_ * J_frame_.template topRows<3>()
-          + coeff * v_linear_skew_ * J_frame_.template bottomRows<3>();
+      = coeff * frame_a_partial_dq_.template topRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq).noalias()
+      += coeff * v_angular_skew_ * frame_v_partial_dq_.template topRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq).noalias()
+      += coeff * v_linear_skew_ * frame_v_partial_dq_.template bottomRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv)
+      = coeff * frame_a_partial_dv_.template topRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv).noalias()
+      += coeff * v_angular_skew_ * J_frame_.template topRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv).noalias()
+      += coeff * v_linear_skew_ * J_frame_.template bottomRows<3>();
   const_cast<Eigen::MatrixBase<MatrixType3>&> (baumgarte_partial_da)
       = coeff * frame_a_partial_da_.template topRows<3>();
   if (baumgarte_weight_on_velocity_ != 0.) {
