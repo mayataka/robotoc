@@ -14,7 +14,7 @@ inline RobotDynamics::RobotDynamics(const Robot& robot)
     Quu_du_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Quu_du_dv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Quu_du_da_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Quu_du_df_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimf())),
+    Quu_du_df_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
     has_active_contacts_(robot.has_active_contacts()),
     dimf_(robot.dimf()) {
@@ -97,15 +97,15 @@ inline void RobotDynamics::condenseRobotDynamics(Robot& robot,
   Quu_du_da_.noalias() = kkt_matrix.Quu * du_da_;
   kkt_matrix.Qaa().noalias() = du_da_.transpose() * Quu_du_da_;
   if (robot.has_active_contacts()) {
-    Quu_du_df_.noalias() = kkt_matrix.Quu * du_df_active_();
-    kkt_matrix.Qaf().noalias() = du_da_.transpose() * Quu_du_df_; 
+    Quu_du_df_active_().noalias() = kkt_matrix.Quu * du_df_active_();
+    kkt_matrix.Qaf().noalias() = du_da_.transpose() * Quu_du_df_active_(); 
   }
   Quu_du_dq_.noalias() = kkt_matrix.Quu * du_dq_;
   Quu_du_dv_.noalias() = kkt_matrix.Quu * du_dv_;
   kkt_matrix.Qaq().noalias() = du_da_.transpose() * Quu_du_dq_;
   kkt_matrix.Qav().noalias() = du_da_.transpose() * Quu_du_dv_;
   if (robot.has_active_contacts()) {
-    kkt_matrix.Qff().noalias() = du_df_active_().transpose() * Quu_du_df_;
+    kkt_matrix.Qff().noalias() = du_df_active_().transpose() * Quu_du_df_active_();
     kkt_matrix.Qfq().noalias() = du_df_active_().transpose() * Quu_du_dq_;
     kkt_matrix.Qfv().noalias() = du_df_active_().transpose() * Quu_du_dv_;
   }
@@ -248,11 +248,23 @@ RobotDynamics::du_df_active_() {
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, 
-                          Eigen::Dynamic, true> 
+inline const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
 RobotDynamics::du_df_active_() const {
   return du_df_.leftCols(dimf_);
 }
+
+
+inline Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
+RobotDynamics::Quu_du_df_active_() {
+  return Quu_du_df_.leftCols(dimf_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
+RobotDynamics::Quu_du_df_active_() const {
+  return Quu_du_df_.leftCols(dimf_);
+}
+
 
 } // namespace idocp 
 
