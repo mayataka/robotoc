@@ -13,8 +13,7 @@ inline RobotDynamics::RobotDynamics(const Robot& robot)
     du_df_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
     has_active_contacts_(robot.has_active_contacts()),
-    dimf_(robot.dimf()),
-    dim_passive_(robot.dim_passive()) {
+    dimf_(robot.dimf()) {
 }
 
 
@@ -26,8 +25,7 @@ inline RobotDynamics::RobotDynamics()
     du_df_(),
     has_floating_base_(false),
     has_active_contacts_(false),
-    dimf_(0),
-    dim_passive_(0) {
+    dimf_(0) {
 }
 
 
@@ -50,11 +48,7 @@ inline void RobotDynamics::augmentRobotDynamics(Robot& robot, const double dtau,
   kkt_residual.lv().noalias() += dtau * du_dv_.transpose() * s.beta;
   kkt_residual.lu.noalias() -= dtau * s.beta; 
   // augment floating base constraint
-  if (robot.has_floating_base()) {
-    linearizeFloatingBaseConstraint(robot, dtau, s, kkt_residual);
-    kkt_residual.lu.head(robot.dim_passive()) 
-          += dtau * s.mu_active().tail(robot.dim_passive());
-  }
+  linearizeFloatingBaseConstraint(robot, dtau, s, kkt_residual);
   // augment contact constraint
   if (robot.has_active_contacts()) {
     linearizeContactConstraint(robot, dtau, kkt_matrix, kkt_residual);
@@ -79,8 +73,8 @@ inline void RobotDynamics::condenseRobotDynamics(Robot& robot,
   setContactStatus(robot);
   linearizeInverseDynamics(robot, s, kkt_residual);
   if (robot.has_floating_base()) {
-    kkt_residual.lu.head(robot.dim_passive()).noalias()
-        += dtau * s.mu_active().tail(robot.dim_passive());
+    kkt_residual.lu.template head<kDimFloatingBase>().noalias()
+        += dtau * s.mu_active().template tail<kDimFloatingBase>();
   }
   lu_condensed_ = kkt_residual.lu + kkt_matrix.Quu * kkt_residual.u_res;
   // condense Newton residual
@@ -109,19 +103,19 @@ inline void RobotDynamics::condenseRobotDynamics(Robot& robot,
   kkt_matrix.Qvv() = du_dv_.transpose() * kkt_matrix.Quu * du_dv_;
   // condense floating base constraint
   if (robot.has_floating_base()) {
-    kkt_residual.C().tail(robot.dim_passive()) 
-        = dtau * (kkt_residual.u_res.head(robot.dim_passive())
-                  + s.u.head(robot.dim_passive()));
-    kkt_matrix.Ca().bottomRows(robot.dim_passive()) 
-        = dtau * du_da_.topRows(robot.dim_passive());
+    kkt_residual.C().template tail<kDimFloatingBase>() 
+        = dtau * (kkt_residual.u_res.template head<kDimFloatingBase>()
+                  + s.u.template head<kDimFloatingBase>());
+    kkt_matrix.Ca().template bottomRows<kDimFloatingBase>() 
+        = dtau * du_da_.template topRows<kDimFloatingBase>();
     if (robot.has_active_contacts()) {
-      kkt_matrix.Cf().bottomRows(robot.dim_passive()) 
-          = dtau * du_df_active_().topRows(robot.dim_passive());
+      kkt_matrix.Cf().template bottomRows<kDimFloatingBase>() 
+          = dtau * du_df_active_().template topRows<kDimFloatingBase>();
     }
-    kkt_matrix.Cq().bottomRows(robot.dim_passive()) 
-        = dtau * du_dq_.topRows(robot.dim_passive());
-    kkt_matrix.Cv().bottomRows(robot.dim_passive()) 
-        = dtau * du_dv_.topRows(robot.dim_passive());
+    kkt_matrix.Cq().template bottomRows<kDimFloatingBase>() 
+        = dtau * du_dq_.template topRows<kDimFloatingBase>();
+    kkt_matrix.Cv().template bottomRows<kDimFloatingBase>() 
+        = dtau * du_dv_.template topRows<kDimFloatingBase>();
   }
   if (robot.has_active_contacts()) {
     linearizeContactConstraint(robot, dtau, kkt_matrix, kkt_residual);
@@ -129,10 +123,10 @@ inline void RobotDynamics::condenseRobotDynamics(Robot& robot,
   // augment floating base constraint and contact constraint together
   if (robot.has_floating_base() || robot.has_active_contacts()) {
     kkt_residual.la().noalias() += kkt_matrix.Ca().transpose() * s.mu_active();
-    if (robot.has_active_contacts()) {
+    if (robot.has_floating_base()) {
       kkt_residual.lf().noalias() 
-          += kkt_matrix.Cf().bottomRows(robot.dim_passive()).transpose() 
-              * s.mu_active().tail(robot.dim_passive());
+          += kkt_matrix.Cf().template bottomRows<kDimFloatingBase>().transpose() 
+              * s.mu_active().template tail<kDimFloatingBase>();
     }
     kkt_residual.lq().noalias() += kkt_matrix.Cq().transpose() * s.mu_active();
     kkt_residual.lv().noalias() += kkt_matrix.Cv().transpose() * s.mu_active();
@@ -153,8 +147,8 @@ inline void RobotDynamics::computeCondensedDirection(
   }
   d.dbeta = (kkt_residual.lu  + kkt_matrix.Quu * d.du) / dtau;
   if (has_floating_base_) {
-    d.dbeta.head(dim_passive_).noalias() 
-        += dtau * d.dmu().tail(dim_passive_);
+    d.dbeta.template head<kDimFloatingBase>().noalias() 
+        += d.dmu().template tail<kDimFloatingBase>();
   }
 }
 
@@ -164,7 +158,7 @@ inline double RobotDynamics::violationL1Norm(
     KKTResidual& kkt_residual) const {
   double violation = dtau * kkt_residual.u_res.lpNorm<1>();
   if (has_floating_base_) {
-    violation += dtau * s.u.head(robot.dim_passive()).lpNorm<1>();
+    violation += dtau * s.u.template head<kDimFloatingBase>().lpNorm<1>();
   }
   if (has_active_contacts_) {
     violation += kkt_residual.C().head(dimf_).lpNorm<1>();
@@ -183,7 +177,7 @@ inline double RobotDynamics::computeViolationL1Norm(
   kkt_residual.u_res.noalias() -= s.u;
   double violation = dtau * kkt_residual.u_res.lpNorm<1>();
   if (robot.has_floating_base()) {
-    violation += dtau * s.u.head(robot.dim_passive()).lpNorm<1>();
+    violation += dtau * s.u.template head<kDimFloatingBase>().lpNorm<1>();
   }
   if (robot.has_active_contacts()) {
     robot.computeBaumgarteResidual(dtau, kkt_residual.C());
@@ -228,8 +222,12 @@ inline void RobotDynamics::linearizeFloatingBaseConstraint(
     const Robot& robot, const double dtau, const SplitSolution& s, 
     KKTResidual& kkt_residual) const {
   assert(dtau > 0);
-  kkt_residual.C().tail(robot.dim_passive()) 
-      = dtau * s.u.head(robot.dim_passive());
+  if (robot.has_floating_base()) {
+    kkt_residual.C().template tail<kDimFloatingBase>() 
+        = dtau * s.u.template head<kDimFloatingBase>();
+    kkt_residual.lu.template head<kDimFloatingBase>().noalias()
+          += dtau * s.mu_active().template tail<kDimFloatingBase>();
+  }
 }
 
 

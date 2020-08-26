@@ -653,7 +653,7 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithoutContacts) {
   du_ref += du_da * d.da();
   EXPECT_TRUE(du_ref.isApprox(d.du));
   Eigen::VectorXd dbeta_ref = (kkt_residual_ref.lu + Quu_ref * du_ref) / dtau_;
-  dbeta_ref += Cu.transpose() * d.dmu();
+  dbeta_ref += Cu.transpose() * d.dmu() / dtau_;
   EXPECT_TRUE(dbeta_ref.isApprox(d.dbeta));
   std::cout << "du_dq" << std::endl;
   std::cout << du_dq << std::endl;
@@ -919,7 +919,7 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithContacts) {
   }
   EXPECT_TRUE(du_ref.isApprox(d.du));
   Eigen::VectorXd dbeta_ref = (kkt_residual_ref.lu + Quu_ref * du_ref) / dtau_;
-  dbeta_ref += Cu.transpose() * d.dmu();
+  dbeta_ref += Cu.transpose() * d.dmu() / dtau_;
   EXPECT_TRUE(dbeta_ref.isApprox(d.dbeta));
   std::cout << "du_dq" << std::endl;
   std::cout << du_dq << std::endl;
