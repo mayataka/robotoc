@@ -55,7 +55,8 @@ public:
 
 private:
   Eigen::VectorXd lu_condensed_;
-  Eigen::MatrixXd du_dq_, du_dv_, du_da_, du_df_;
+  Eigen::MatrixXd du_dq_, du_dv_, du_da_, du_df_, 
+                  Quu_du_dq_, Quu_du_dv_, Quu_du_da_, Quu_du_df_;
   bool has_floating_base_, has_active_contacts_;
   int dimf_;
   static constexpr int kDimFloatingBase = 6;

@@ -11,6 +11,10 @@ inline RobotDynamics::RobotDynamics(const Robot& robot)
     du_dv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     du_da_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     du_df_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
+    Quu_du_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Quu_du_dv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Quu_du_da_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Quu_du_df_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimf())),
     has_floating_base_(robot.has_floating_base()),
     has_active_contacts_(robot.has_active_contacts()),
     dimf_(robot.dimf()) {
@@ -23,6 +27,10 @@ inline RobotDynamics::RobotDynamics()
     du_dv_(),
     du_da_(),
     du_df_(),
+    Quu_du_dq_(),
+    Quu_du_dv_(),
+    Quu_du_da_(),
+    Quu_du_df_(),
     has_floating_base_(false),
     has_active_contacts_(false),
     dimf_(0) {
@@ -86,21 +94,24 @@ inline void RobotDynamics::condenseRobotDynamics(Robot& robot,
   kkt_residual.lv().noalias() = du_dv_.transpose() * lu_condensed_;
   kkt_residual.lu.noalias() -= dtau * s.beta;   
   // condense Hessian
-  kkt_matrix.Qaa().noalias() = du_da_.transpose() * kkt_matrix.Quu * du_da_;
+  Quu_du_da_.noalias() = kkt_matrix.Quu * du_da_;
+  kkt_matrix.Qaa().noalias() = du_da_.transpose() * Quu_du_da_;
   if (robot.has_active_contacts()) {
-    kkt_matrix.Qaf().noalias() = du_da_.transpose() * kkt_matrix.Quu * du_df_active_(); 
+    Quu_du_df_.noalias() = kkt_matrix.Quu * du_df_active_();
+    kkt_matrix.Qaf().noalias() = du_da_.transpose() * Quu_du_df_; 
   }
-  kkt_matrix.Qaq().noalias() = du_da_.transpose() * kkt_matrix.Quu * du_dq_;
-  kkt_matrix.Qav().noalias() = du_da_.transpose() * kkt_matrix.Quu * du_dv_;
+  Quu_du_dq_.noalias() = kkt_matrix.Quu * du_dq_;
+  Quu_du_dv_.noalias() = kkt_matrix.Quu * du_dv_;
+  kkt_matrix.Qaq().noalias() = du_da_.transpose() * Quu_du_dq_;
+  kkt_matrix.Qav().noalias() = du_da_.transpose() * Quu_du_dv_;
   if (robot.has_active_contacts()) {
-    kkt_matrix.Qff().noalias() 
-        = du_df_active_().transpose() * kkt_matrix.Quu * du_df_active_();
-    kkt_matrix.Qfq().noalias() = du_df_active_().transpose() * kkt_matrix.Quu * du_dq_;
-    kkt_matrix.Qfv().noalias() = du_df_active_().transpose() * kkt_matrix.Quu * du_dv_;
+    kkt_matrix.Qff().noalias() = du_df_active_().transpose() * Quu_du_df_;
+    kkt_matrix.Qfq().noalias() = du_df_active_().transpose() * Quu_du_dq_;
+    kkt_matrix.Qfv().noalias() = du_df_active_().transpose() * Quu_du_dv_;
   }
-  kkt_matrix.Qqq().noalias() = du_dq_.transpose() * kkt_matrix.Quu * du_dq_;
-  kkt_matrix.Qqv().noalias() = du_dq_.transpose() * kkt_matrix.Quu * du_dv_;
-  kkt_matrix.Qvv().noalias() = du_dv_.transpose() * kkt_matrix.Quu * du_dv_;
+  kkt_matrix.Qqq().noalias() = du_dq_.transpose() * Quu_du_dq_;
+  kkt_matrix.Qqv().noalias() = du_dq_.transpose() * Quu_du_dv_;
+  kkt_matrix.Qvv().noalias() = du_dv_.transpose() * Quu_du_dv_;
   // condense floating base constraint
   if (robot.has_floating_base()) {
     kkt_residual.C().template tail<kDimFloatingBase>() 

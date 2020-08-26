@@ -60,7 +60,8 @@ void BenchmarkWithContacts() {
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  const std::vector<bool> contact_status = {true, true, true, true};
+  // const std::vector<bool> contact_status = {true, true, true, true};
+  const std::vector<bool> contact_status = {false, false, false, false};
   robot.setContactStatus(contact_status);
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();

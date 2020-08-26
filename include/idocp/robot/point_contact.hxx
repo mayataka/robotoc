@@ -197,7 +197,7 @@ inline void PointContact::computeBaumgarteDerivatives(
   pinocchio::skew(v_frame_.linear(), v_linear_skew_);
   pinocchio::skew(v_frame_.angular(), v_angular_skew_);
   const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)
-      = coeff *frame_a_partial_dq_.template topRows<3>();
+      = coeff * frame_a_partial_dq_.template topRows<3>();
   const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq).noalias()
       += coeff * v_angular_skew_ * frame_v_partial_dq_.template topRows<3>();
   const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq).noalias()
