@@ -604,21 +604,23 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithoutContacts) {
   robot.RNEADerivatives(s.q, s.v, s.a, du_dq, du_dv, du_da);
   kkt_residual_ref.C().tail(robot.dim_passive()) 
       = dtau_ * s.u.head(robot.dim_passive());
-  kkt_residual_ref.lu += - dtau_ * s.beta + Cu.transpose() * s.mu_active();
+  kkt_residual_ref.lu -= dtau_ * s.beta;
+  kkt_residual_ref.lu += Cu.transpose() * s.mu_active();
   Eigen::VectorXd lu_condensed = kkt_residual_ref.lu + kkt_matrix_ref.Quu * kkt_residual_ref.u_res; 
+  kkt_residual_ref.lq() = dtau_ * du_dq.transpose() * s.beta 
+                          + du_dq.transpose() * lu_condensed
+                          + kkt_matrix_ref.Cq().transpose() * s.mu_active();
+  kkt_residual_ref.lv() = dtau_ * du_dv.transpose() * s.beta 
+                          + du_dv.transpose() * lu_condensed
+                          + kkt_matrix_ref.Cq().transpose() * s.mu_active();
+  kkt_residual_ref.la() = dtau_ * du_da.transpose() * s.beta 
+                          + du_da.transpose() * lu_condensed
+                          + kkt_matrix_ref.Cq().transpose() * s.mu_active();
   kkt_residual_ref.C() += Cu * kkt_residual_ref.u_res;
   kkt_matrix_ref.Cq() += Cu * du_dq;
   kkt_matrix_ref.Cv() += Cu * du_dv;
   kkt_matrix_ref.Ca() += Cu * du_da;
-  kkt_residual_ref.lq() = dtau_ * du_dq.transpose() * s.beta 
-                          + du_dq.transpose() * lu_condensed 
-                          + kkt_matrix_ref.Cq().transpose() * s.mu_active();
-  kkt_residual_ref.lv() = dtau_ * du_dv.transpose() * s.beta 
-                          + du_dv.transpose() * lu_condensed 
-                          + kkt_matrix_ref.Cv().transpose() * s.mu_active();
-  kkt_residual_ref.la() = dtau_ * du_da.transpose() * s.beta 
-                          + du_da.transpose() * lu_condensed 
-                          + kkt_matrix_ref.Ca().transpose() * s.mu_active();
+  kkt_matrix_ref.Cf() += Cu * du_df;
   EXPECT_TRUE(kkt_residual.u_res.isApprox(kkt_residual_ref.u_res));
   EXPECT_TRUE(kkt_residual.lq().isApprox(kkt_residual_ref.lq()));
   EXPECT_TRUE(kkt_residual.lv().isApprox(kkt_residual_ref.lv()));
@@ -863,13 +865,9 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithContacts) {
       = dtau_ * s.u.head(robot.dim_passive());
   robot.computeBaumgarteDerivatives(dtau_, kkt_matrix_ref.Cq(), 
                                     kkt_matrix_ref.Cv(), kkt_matrix_ref.Ca());
-  kkt_residual_ref.lu += - dtau_ * s.beta + Cu.transpose() * s.mu_active();
+  kkt_residual_ref.lu -= dtau_ * s.beta;
+  kkt_residual_ref.lu += Cu.transpose() * s.mu_active();
   Eigen::VectorXd lu_condensed = kkt_residual_ref.lu + kkt_matrix_ref.Quu * kkt_residual_ref.u_res; 
-  kkt_residual_ref.C() += Cu * kkt_residual_ref.u_res;
-  kkt_matrix_ref.Cq() += Cu * du_dq;
-  kkt_matrix_ref.Cv() += Cu * du_dv;
-  kkt_matrix_ref.Ca() += Cu * du_da;
-  kkt_matrix_ref.Cf() += Cu * du_df;
   kkt_residual_ref.lq() = dtau_ * du_dq.transpose() * s.beta 
                           + du_dq.transpose() * lu_condensed 
                           + kkt_matrix_ref.Cq().transpose() * s.mu_active();
@@ -882,6 +880,11 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithContacts) {
   kkt_residual_ref.lf() = dtau_ * du_df.transpose() * s.beta 
                           + du_df.transpose() * lu_condensed 
                           + kkt_matrix_ref.Cf().transpose() * s.mu_active();
+  kkt_residual_ref.C() += Cu * kkt_residual_ref.u_res;
+  kkt_matrix_ref.Cq() += Cu * du_dq;
+  kkt_matrix_ref.Cv() += Cu * du_dv;
+  kkt_matrix_ref.Ca() += Cu * du_da;
+  kkt_matrix_ref.Cf() += Cu * du_df;
   EXPECT_TRUE(kkt_residual.u_res.isApprox(kkt_residual_ref.u_res));
   EXPECT_TRUE(kkt_residual.lq().isApprox(kkt_residual_ref.lq()));
   EXPECT_TRUE(kkt_residual.lv().isApprox(kkt_residual_ref.lv()));

@@ -60,8 +60,8 @@ void BenchmarkWithContacts() {
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  // const std::vector<bool> contact_status = {true, true, true, true};
-  const std::vector<bool> contact_status = {false, false, false, false};
+  const std::vector<bool> contact_status = {true, true, true, true};
+  // const std::vector<bool> contact_status = {false, false, false, false};
   robot.setContactStatus(contact_status);
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
@@ -69,14 +69,15 @@ void BenchmarkWithContacts() {
                                                     robot, cost, constraints, T, N, num_proc);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   ocp_benchmarker.setContactStatus(contact_status);
-  ocp_benchmarker.testConvergence(t, q, v, 20, true);
+  ocp_benchmarker.testConvergence(t, q, v, 30, true);
   ocp_benchmarker.testCPUTime(t, q, v);
   idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
                                                             robot, cost, constraints, T, N, num_proc);
   parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
   parnmpc_benchmarker.setContactStatus(contact_status);
-  parnmpc_benchmarker.testConvergence(t, q, v, 20, true);
+  parnmpc_benchmarker.testConvergence(t, q, v, 30, true);
   parnmpc_benchmarker.testCPUTime(t, q, v);
+  parnmpc_benchmarker.printSolution();
 }
 
 } // namespace anymal

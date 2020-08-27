@@ -478,7 +478,6 @@ TEST_F(FloatingBaseSplitOCPTest, riccatiRecursion) {
   Eigen::MatrixXd Cu = Eigen::MatrixXd::Zero(dimc, dimv);
   Cu.bottomLeftCorner(dim_passive, dim_passive) 
       = dtau * Eigen::MatrixXd::Identity(dim_passive, dim_passive);
-  kkt_residual.lu += Cu.transpose() * s.mu_active();
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
   constraints->augmentDualResidual(robot, constraints_data, dtau, 
                                     kkt_residual.lu);
@@ -499,6 +498,8 @@ TEST_F(FloatingBaseSplitOCPTest, riccatiRecursion) {
   kkt_residual.lv() += kkt_matrix.Cv().transpose() * s.mu.head(dimc);
   kkt_residual.la() += kkt_matrix.Ca().transpose() * s.mu.head(dimc);
   kkt_residual.lf() += kkt_matrix.Cf().transpose() * s.mu.head(dimc);
+  kkt_residual.lu -= dtau * s.beta;
+  kkt_residual.lu += Cu.transpose() * s.mu_active();
   kkt_matrix.Qqq() = du_dq.transpose() * kkt_matrix.Quu * du_dq;
   kkt_matrix.Qqv() = du_dq.transpose() * kkt_matrix.Quu * du_dv;
   kkt_matrix.Qqa() = du_dq.transpose() * kkt_matrix.Quu * du_da;
