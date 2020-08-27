@@ -8,13 +8,8 @@
 namespace idocp {
 
 inline RiccatiMatrixInverter::RiccatiMatrixInverter(const Robot& robot) 
-  : has_floating_base_(robot.has_floating_base()),
-    has_active_contacts_(robot.has_active_contacts()),
-    dimv_(robot.dimv()),
-    dim_passive_(robot.dim_passive()),
-    max_dimf_(robot.max_dimf()),
-    dimf_(0),
-    max_dimc_(robot.dim_passive()+robot.max_dimf()),
+  : dimv_(robot.dimv()),
+    dimf_(robot.dimf()),
     dimc_(robot.dim_passive()+robot.dimf()),
     dimaf_(robot.dimv()+robot.dimf()),
     G_inv_(Eigen::MatrixXd::Zero(robot.dimv()+2*robot.max_dimf()+robot.dim_passive(), 
@@ -25,13 +20,8 @@ inline RiccatiMatrixInverter::RiccatiMatrixInverter(const Robot& robot)
 
 
 inline RiccatiMatrixInverter::RiccatiMatrixInverter() 
-  : has_floating_base_(false),
-    has_active_contacts_(false),
-    dimv_(0),
-    dim_passive_(0),
-    max_dimf_(0),
+  : dimv_(0),
     dimf_(0),
-    max_dimc_(0),
     dimc_(0),
     dimaf_(0),
     G_inv_(),

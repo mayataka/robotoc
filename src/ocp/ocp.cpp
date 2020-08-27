@@ -191,7 +191,7 @@ bool OCP::setStateTrajectory(const Eigen::VectorXd& q,
   Eigen::VectorXd q_normalized = q;
   robots_[0].normalizeConfiguration(q_normalized);
   #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<N_; ++i) {
+  for (int i=0; i<=N_; ++i) {
     s_[i].v = v;
     s_[i].q = q_normalized;
   }
@@ -220,7 +220,7 @@ bool OCP::setStateTrajectory(const Eigen::VectorXd& q0,
   robots_[0].subtractConfiguration(qN, q0, dqN);
   const Eigen::VectorXd v = dqN / N_;
   #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<N_; ++i) {
+  for (int i=0; i<=N_; ++i) {
     s_[i].a = a;
     s_[i].v = v0 + i * a;
     robots_[0].integrateConfiguration(q0, v, (double)i, s_[i].q);

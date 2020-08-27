@@ -41,7 +41,7 @@ public:
   void invert(const Eigen::MatrixBase<MatrixType1>& G,
               const Eigen::MatrixBase<MatrixType2>& Caf,
               const Eigen::MatrixBase<MatrixType3>& G_inv);
-  // Fixed base without contacts
+
   template <typename MatrixType1, typename MatrixType2>
   void invert(const Eigen::MatrixBase<MatrixType1>& G,
               const Eigen::MatrixBase<MatrixType2>& Caf);
@@ -55,8 +55,7 @@ public:
                             const Eigen::MatrixBase<MatrixType>& G_inv);
   
 private:
-  bool has_floating_base_, has_active_contacts_;
-  int dimv_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_, dimaf_;
+  int dimv_, dimf_, dimc_, dimaf_;
   Eigen::MatrixXd G_inv_, Sc_;
 };
 
