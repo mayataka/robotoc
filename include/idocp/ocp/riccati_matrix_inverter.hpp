@@ -55,8 +55,7 @@ public:
                             const Eigen::MatrixBase<MatrixType>& G_inv);
   
 private:
-  bool has_floating_base_, has_active_contacts_;
-  int dimv_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_, dimaf_;
+  int dimv_, dimf_, dimc_, dimaf_;
   Eigen::MatrixXd G_inv_, Sc_;
 };
 

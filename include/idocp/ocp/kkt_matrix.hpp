@@ -97,8 +97,7 @@ public:
 private:
   Eigen::MatrixXd C_, Q_, Sc_, Sx_, FMinv_;
   bool has_floating_base_;
-  int dimv_, dimx_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_, 
-      a_begin_, f_begin_, q_begin_, v_begin_, dimQ_;
+  int dimv_, dimx_, dimf_, dimc_, a_begin_, f_begin_, q_begin_, v_begin_, dimQ_;
 
   template <typename MatrixType>
   void invertConstrainedHessian(

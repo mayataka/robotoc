@@ -90,8 +90,7 @@ public:
 
 private:
   Eigen::VectorXd kkt_residual_;
-  int dimv_, dimx_, dim_passive_, max_dimf_, dimf_, max_dimc_, dimc_, dimKKT_, 
-      max_dimKKT_;
+  int dimv_, dimx_, dimf_, dimc_, dimKKT_, max_dimKKT_;
 
 };
 
