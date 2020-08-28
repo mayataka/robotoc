@@ -205,18 +205,24 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
 } 
 
 
-void ParNMPC::getInitialControlInput(Eigen::VectorXd& u) {
+
+void ParNMPC::getControlInput(const int stage, Eigen::VectorXd& u) const {
+  assert(stage >= 0);
+  assert(stage < N_);
   assert(u.size() == robots_[0].dimv());
-  u = s_[0].u;
+  u = s_[stage].u;
 }
 
 
-void ParNMPC::getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) {
-  // assert(Kq.rows() == robots_[0].dimv());
-  // assert(Kq.cols() == robots_[0].dimv());
-  // assert(Kv.rows() == robots_[0].dimv());
-  // assert(Kv.cols() == robots_[0].dimv());
-  // split_ocps_[0].getStateFeedbackGain(Kq, Kv);
+void ParNMPC::getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq, 
+                                   Eigen::MatrixXd& Kv) const {
+  assert(stage >= 0);
+  assert(stage < N_);
+  assert(Kq.rows() == robots_[0].dimv());
+  assert(Kq.cols() == robots_[0].dimv());
+  assert(Kv.rows() == robots_[0].dimv());
+  assert(Kv.cols() == robots_[0].dimv());
+  split_ocps_[stage].getStateFeedbackGain(Kq, Kv);
 }
 
 

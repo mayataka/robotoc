@@ -562,6 +562,32 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdate) {
   EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
+
+  Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  parnmpc.getStateFeedbackGain(Kuq, Kuv);
+  std::cout << "Kuq" << std::endl;
+  std::cout << Kuq << std::endl;
+  std::cout << "Kuv" << std::endl;
+  std::cout << Kuv << std::endl;
+  const int dimv = robot.dimv();
+  const int dimf = robot.dimf();
+  const int dimc = robot.dim_passive()+robot.dimf();
+  const Eigen::MatrixXd da_dq = kkt_matrix_inverse.block(dimx+dimc, dimx+dimc+dimv+dimf, dimv, dimv);
+  const Eigen::MatrixXd da_dv = kkt_matrix_inverse.block(dimx+dimc, dimx+dimc+dimv+dimf+dimv, dimv, dimv);
+  const Eigen::MatrixXd df_dq = kkt_matrix_inverse.block(dimx+dimc+dimv, dimx+dimc+dimv+dimf, dimf, dimv);
+  const Eigen::MatrixXd df_dv = kkt_matrix_inverse.block(dimx+dimc+dimv, dimx+dimc+dimv+dimf+dimv, dimf, dimv);
+  Eigen::MatrixXd Kuq_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd Kuv_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  robot_dynamics.getControlInputTorquesSensitivitiesWithRespectToState(
+    da_dq, da_dv, df_dq, df_dv, Kuq_ref, Kuv_ref);
+  EXPECT_TRUE(Kuq.isApprox(Kuq_ref));
+  EXPECT_TRUE(Kuv.isApprox(Kuv_ref));
+  std::cout << "Kuq_ref" << std::endl;
+  std::cout << Kuq_ref << std::endl;
+  std::cout << "Kuv_ref" << std::endl;
+  std::cout << Kuv_ref << std::endl;
+
 }
 
 

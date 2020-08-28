@@ -11,7 +11,7 @@
 - Very fast computation of rigid body dynamics and its sensitivities thanks to [pinocchio](https://github.com/stack-of-tasks/pinocchio).
 
 ## Requirements
-- Ubuntu 18.04 
+- Ubuntu 
 - gcc
 - [pinocchio](https://github.com/stack-of-tasks/pinocchio) (instruction for installation is found [here](https://stack-of-tasks.github.io/pinocchio/download.html))
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  

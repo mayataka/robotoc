@@ -55,14 +55,16 @@ inline void MPC<OCPType>::updateSolution(const double t,
 
 template <typename OCPType>
 inline void MPC<OCPType>::getControlInput(Eigen::VectorXd& u) {
-  ocp_.getInitialControlInput(u);
+  constexpr int initial_stage = 0;
+  ocp_.getControlInput(initial_stage, u);
 }
 
 
 template <typename OCPType>
 inline void MPC<OCPType>::getStateFeedbackGain(Eigen::MatrixXd& Kq, 
                                                Eigen::MatrixXd& Kv) {
-  ocp_.getStateFeedbackGain(Kq, Kv);
+  constexpr int initial_stage = 0;
+  ocp_.getStateFeedbackGain(initial_stage, Kq, Kv);
 }
 
 

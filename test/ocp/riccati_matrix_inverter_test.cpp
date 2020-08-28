@@ -48,15 +48,16 @@ TEST_F(RiccatiMatrixInverterTest, fixed_base_without_contacts) {
   Eigen::MatrixXd G_inv = Eigen::MatrixXd::Zero(dimaf, dimaf);
   inverter.getInverseMatrix(G_inv);
   Eigen::MatrixXd G_inv_ref = Qaa.inverse();
-  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-07));
-  EXPECT_TRUE((G_inv*Qaa).isApprox(Eigen::MatrixXd::Identity(dimaf+dimc, dimaf+dimc), 1.0e-07));
+  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-06));
+  EXPECT_TRUE((G_inv*Qaa).isApprox(Eigen::MatrixXd::Identity(dimaf+dimc, dimaf+dimc), 1.0e-06));
   const Eigen::MatrixXd dPvv = Eigen::MatrixXd::Random(dimv, dimv);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
   Eigen::MatrixXd dP_ref = Eigen::MatrixXd::Zero(dimaf+dimc, dimaf+dimc);
   dP_ref.topLeftCorner(dimv, dimv) = dtau * dtau * dPvv;
   G_inv_ref += G_inv_ref * dP_ref * G_inv_ref;
   inverter.firstOrderCorrection(dtau, dPvv, G_inv);
-  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-07));
+  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-06));
+  std::cout << "error l2 norm = " << (G_inv_ref - G_inv).lpNorm<2>() << std::endl;
 }
 
 
@@ -83,16 +84,16 @@ TEST_F(RiccatiMatrixInverterTest, fixed_base_with_contacts) {
   Eigen::MatrixXd G_inv_ref = G_mat.inverse();
   Eigen::MatrixXd G_inv = Eigen::MatrixXd::Zero(dimaf+dimc, dimaf+dimc);
   inverter.getInverseMatrix(G_inv);
-  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-07));
-  EXPECT_TRUE((G_inv*G_mat).isApprox(Eigen::MatrixXd::Identity(dimaf+dimc, dimaf+dimc), 1.0e-07));
+  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-06));
+  EXPECT_TRUE((G_inv*G_mat).isApprox(Eigen::MatrixXd::Identity(dimaf+dimc, dimaf+dimc), 1.0e-06));
   const Eigen::MatrixXd dPvv = Eigen::MatrixXd::Random(dimv, dimv);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
   Eigen::MatrixXd dP_ref = Eigen::MatrixXd::Zero(dimaf+dimc, dimaf+dimc);
   dP_ref.topLeftCorner(dimv, dimv) = dtau * dtau * dPvv;
   G_inv_ref += G_inv_ref * dP_ref * G_inv_ref;
   inverter.firstOrderCorrection(dtau, dPvv, G_inv);
-  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-07));
-  std::cout << G_inv_ref - G_inv << std::endl;
+  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-06));
+  std::cout << "error l2 norm = " << (G_inv_ref - G_inv).lpNorm<2>() << std::endl;
 }
 
 
@@ -115,8 +116,8 @@ TEST_F(RiccatiMatrixInverterTest, floating_base_without_contacts) {
   Eigen::MatrixXd G_inv_ref = G_mat.inverse();
   Eigen::MatrixXd G_inv = Eigen::MatrixXd::Zero(dimaf+dimc, dimaf+dimc);
   inverter.getInverseMatrix(G_inv);
-  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-07));
-  EXPECT_TRUE((G_inv*G_mat).isApprox(Eigen::MatrixXd::Identity(dimaf+dimc, dimaf+dimc), 1.0e-07));
+  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-06));
+  EXPECT_TRUE((G_inv*G_mat).isApprox(Eigen::MatrixXd::Identity(dimaf+dimc, dimaf+dimc), 1.0e-06));
   std::cout << G_inv_ref - G_inv << std::endl;
   const Eigen::MatrixXd dPvv = Eigen::MatrixXd::Random(dimv, dimv);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -124,8 +125,8 @@ TEST_F(RiccatiMatrixInverterTest, floating_base_without_contacts) {
   dP_ref.topLeftCorner(dimv, dimv) = dtau * dtau * dPvv;
   G_inv_ref += G_inv_ref * dP_ref * G_inv_ref;
   inverter.firstOrderCorrection(dtau, dPvv, G_inv);
-  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-07));
-  std::cout << G_inv_ref - G_inv << std::endl;
+  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-06));
+  std::cout << "error l2 norm = " << (G_inv_ref - G_inv).lpNorm<2>() << std::endl;
 }
 
 
@@ -156,8 +157,8 @@ TEST_F(RiccatiMatrixInverterTest, floating_base_with_contacts) {
   Eigen::MatrixXd G_inv_ref = G_mat.inverse();
   Eigen::MatrixXd G_inv = Eigen::MatrixXd::Zero(dimaf+dimc, dimaf+dimc);
   inverter.getInverseMatrix(G_inv);
-  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-07));
-  EXPECT_TRUE((G_inv*G_mat).isApprox(Eigen::MatrixXd::Identity(dimaf+dimc, dimaf+dimc), 1.0e-07));
+  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-06));
+  EXPECT_TRUE((G_inv*G_mat).isApprox(Eigen::MatrixXd::Identity(dimaf+dimc, dimaf+dimc), 1.0e-06));
   std::cout << G_inv_ref - G_inv << std::endl;
   const Eigen::MatrixXd dPvv = Eigen::MatrixXd::Random(dimv, dimv);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -165,8 +166,8 @@ TEST_F(RiccatiMatrixInverterTest, floating_base_with_contacts) {
   dP_ref.topLeftCorner(dimv, dimv) = dtau * dtau * dPvv;
   G_inv_ref += G_inv_ref * dP_ref * G_inv_ref;
   inverter.firstOrderCorrection(dtau, dPvv, G_inv);
-  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-07));
-  std::cout << G_inv_ref - G_inv << std::endl;
+  EXPECT_TRUE(G_inv_ref.isApprox(G_inv, 1.0e-06));
+  std::cout << "error l2 norm = " << (G_inv_ref - G_inv).lpNorm<2>() << std::endl;
   std::cout << "dimf = " << dimf << std::endl;
 }
 

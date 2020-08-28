@@ -202,6 +202,16 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFixedBaseWithoutContacts) {
   std::cout << kkt_matrix.Cf() << std::endl;
   const double violation_ref = dtau_ * kkt_residual_ref.u_res.lpNorm<1>();
   EXPECT_DOUBLE_EQ(rd.violationL1Norm(robot, dtau_, s, kkt_residual), violation_ref);
+  const Eigen::MatrixXd da_dq = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  const Eigen::MatrixXd da_dv = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  const Eigen::MatrixXd df_dq = Eigen::MatrixXd::Random(robot.dimf(), robot.dimv());
+  const Eigen::MatrixXd df_dv = Eigen::MatrixXd::Random(robot.dimf(), robot.dimv());
+  Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimq(), robot.dimv());
+  Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimq(), robot.dimv());
+  rd.getControlInputTorquesSensitivitiesWithRespectToState(da_dq, da_dv, df_dq, 
+                                                           df_dv, Kuq, Kuv);
+  EXPECT_TRUE(Kuq.isApprox(du_dq+du_da*da_dq));
+  EXPECT_TRUE(Kuv.isApprox(du_dv+du_da*da_dv));
 }
 
 
@@ -440,6 +450,16 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFixedBaseWithContact) {
   const double violation_ref = kkt_residual_ref.C().lpNorm<1>() 
                                 + dtau_ * kkt_residual_ref.u_res.lpNorm<1>();
   EXPECT_DOUBLE_EQ(rd.violationL1Norm(robot, dtau_, s, kkt_residual), violation_ref);
+  const Eigen::MatrixXd da_dq = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  const Eigen::MatrixXd da_dv = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  const Eigen::MatrixXd df_dq = Eigen::MatrixXd::Random(robot.dimf(), robot.dimv());
+  const Eigen::MatrixXd df_dv = Eigen::MatrixXd::Random(robot.dimf(), robot.dimv());
+  Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  rd.getControlInputTorquesSensitivitiesWithRespectToState(da_dq, da_dv, df_dq, 
+                                                           df_dv, Kuq, Kuv);
+  EXPECT_TRUE(Kuq.isApprox(du_dq+du_da*da_dq+du_df*df_dq));
+  EXPECT_TRUE(Kuv.isApprox(du_dv+du_da*da_dv+du_df*df_dv));
 }
 
 
@@ -676,6 +696,16 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithoutContacts) {
   const double violation_ref = dtau_ * s.u.head(6).lpNorm<1>()
                                 + dtau_ * kkt_residual_ref.u_res.lpNorm<1>();
   EXPECT_DOUBLE_EQ(rd.violationL1Norm(robot, dtau_, s, kkt_residual), violation_ref);
+  const Eigen::MatrixXd da_dq = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  const Eigen::MatrixXd da_dv = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  const Eigen::MatrixXd df_dq = Eigen::MatrixXd::Random(robot.dimf(), robot.dimv());
+  const Eigen::MatrixXd df_dv = Eigen::MatrixXd::Random(robot.dimf(), robot.dimv());
+  Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  rd.getControlInputTorquesSensitivitiesWithRespectToState(da_dq, da_dv, df_dq, 
+                                                           df_dv, Kuq, Kuv);
+  EXPECT_TRUE(Kuq.isApprox(du_dq+du_da*da_dq));
+  EXPECT_TRUE(Kuv.isApprox(du_dv+du_da*da_dv));
 }
 
 
@@ -948,6 +978,16 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithContacts) {
                                 + dtau_ * s.u.head(6).lpNorm<1>()
                                 + dtau_ * kkt_residual_ref.u_res.lpNorm<1>();
   EXPECT_DOUBLE_EQ(rd.violationL1Norm(robot, dtau_, s, kkt_residual), violation_ref);
+  const Eigen::MatrixXd da_dq = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  const Eigen::MatrixXd da_dv = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
+  const Eigen::MatrixXd df_dq = Eigen::MatrixXd::Random(robot.dimf(), robot.dimv());
+  const Eigen::MatrixXd df_dv = Eigen::MatrixXd::Random(robot.dimf(), robot.dimv());
+  Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  rd.getControlInputTorquesSensitivitiesWithRespectToState(da_dq, da_dv, df_dq, 
+                                                           df_dv, Kuq, Kuv);
+  EXPECT_TRUE(Kuq.isApprox(du_dq+du_da*da_dq+du_df*df_dq));
+  EXPECT_TRUE(Kuv.isApprox(du_dv+du_da*da_dv+du_df*df_dv));
 }
 
 

@@ -35,8 +35,7 @@ public:
   MPC& operator=(MPC&&) noexcept = default;
 
   void initializeSolution(const double t, const Eigen::VectorXd& q, 
-                          const Eigen::VectorXd& v, 
-                          const int max_itr=100);
+                          const Eigen::VectorXd& v, const int max_itr=0);
 
   void updateSolution(const double t, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v);

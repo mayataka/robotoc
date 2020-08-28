@@ -640,6 +640,20 @@ TEST_F(FloatingBaseSplitOCPTest, riccatiRecursion) {
   std::cout << kkt_matrix.Qafaf() << std::endl;
   std::cout << "Qafqv" << std::endl;
   std::cout << kkt_matrix.Qafqv() << std::endl;
+
+  Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  ocp.getStateFeedbackGain(Kuq, Kuv);
+  Eigen::MatrixXd Kuq_ref = du_dq + du_da * gain.Kaq();
+  if (dimf > 0) {
+    Kuq_ref += du_df * gain.Kfq();
+  }
+  Eigen::MatrixXd Kuv_ref = du_dv + du_da * gain.Kav();
+  if (dimf > 0) {
+    Kuv_ref += du_df * gain.Kfv();
+  }
+  EXPECT_TRUE(Kuq.isApprox(Kuq_ref));
+  EXPECT_TRUE(Kuv.isApprox(Kuv_ref));
 }
 
 } // namespace idocp

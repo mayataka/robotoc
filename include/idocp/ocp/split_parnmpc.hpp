@@ -333,7 +333,7 @@ private:
   KKTMatrix kkt_matrix_;
   StateEquation state_equation_;
   RobotDynamics robot_dynamics_;
-  int dimx_, dimKKT_;
+  int dimv_, dimx_, dimKKT_;
   Eigen::MatrixXd kkt_matrix_inverse_;
   Eigen::VectorXd x_res_, dx_;
 

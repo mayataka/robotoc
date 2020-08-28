@@ -46,9 +46,10 @@ public:
                       const Eigen::VectorXd& v, 
                       const bool use_line_search=true);
 
-  void getInitialControlInput(Eigen::VectorXd& u);
+  void getControlInput(const int stage, Eigen::VectorXd& u) const;
 
-  void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv);
+  void getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq, 
+                            Eigen::MatrixXd& Kv) const;
 
   bool setStateTrajectory(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 

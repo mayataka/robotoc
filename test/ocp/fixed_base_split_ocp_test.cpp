@@ -604,6 +604,20 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   EXPECT_TRUE(mu_ref.isApprox(s.mu_active()));
   EXPECT_TRUE(u_ref.isApprox(s.u));
   EXPECT_TRUE(beta_ref.isApprox(s.beta));
+
+  Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  ocp.getStateFeedbackGain(Kuq, Kuv);
+  Eigen::MatrixXd Kuq_ref = du_dq + du_da * gain.Kaq();
+  if (dimf > 0) {
+    Kuq_ref += du_df * gain.Kfq();
+  }
+  Eigen::MatrixXd Kuv_ref = du_dv + du_da * gain.Kav();
+  if (dimf > 0) {
+    Kuv_ref += du_df * gain.Kfv();
+  }
+  EXPECT_TRUE(Kuq.isApprox(Kuq_ref));
+  EXPECT_TRUE(Kuv.isApprox(Kuv_ref));
 }
 
 } // namespace idocp
