@@ -92,7 +92,7 @@ inline void RiccatiGain::computeFeedbackGain(
   assert(Qafqv.cols() == 2*dimv_);
   assert(Cqv.rows() == dimc_);
   assert(Cqv.cols() == 2*dimv_);
-  K_.topRows(dimaf+dimc_) = - Ginv.leftCols(dimaf) * Qafqv;
+  K_.topRows(dimaf+dimc_).noalias() = - Ginv.leftCols(dimaf) * Qafqv;
   K_.topRows(dimaf+dimc_).noalias() -= Ginv.rightCols(dimc_) * Cqv;
 }
 
@@ -107,7 +107,7 @@ inline void RiccatiGain::computeFeedforward(
   assert(Ginv.cols() == dimaf+dimc_);
   assert(laf.size() == dimaf);
   assert(C.size() == dimc_);
-  k_.head(dimaf+dimc_) = - Ginv.leftCols(dimaf) * laf;
+  k_.head(dimaf+dimc_).noalias() = - Ginv.leftCols(dimaf) * laf;
   k_.head(dimaf+dimc_).noalias() -= Ginv.rightCols(dimc_) * C;
 }
 

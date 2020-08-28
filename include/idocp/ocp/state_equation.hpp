@@ -29,7 +29,9 @@ public:
 
   StateEquation& operator=(StateEquation&&) noexcept = default;
 
-  void linearizeForwardEuler(Robot& robot, const double dtau, 
+  template <typename ConfigVectorType>
+  void linearizeForwardEuler(const Robot& robot, const double dtau, 
+                             const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
                              const SplitSolution& s, 
                              const SplitSolution& s_next, 
                              KKTMatrix& kkt_matrix, 
@@ -39,7 +41,7 @@ public:
             typename TangentVectorType2, typename TangentVectorType3, 
             typename ConfigVectorType2>
   void linearizeBackwardEuler(
-      Robot& robot, const double dtau, 
+      const Robot& robot, const double dtau, 
       const Eigen::MatrixBase<ConfigVectorType1>& q_prev, 
       const Eigen::MatrixBase<TangentVectorType1>& v_prev, 
       const SplitSolution& s, 
@@ -50,7 +52,7 @@ public:
 
   template <typename ConfigVectorType, typename TangentVectorType>
   void linearizeBackwardEulerTerminal(
-      Robot& robot, const double dtau, 
+      const Robot& robot, const double dtau, 
       const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
       const Eigen::MatrixBase<TangentVectorType>& v_prev, 
       const SplitSolution& s, 

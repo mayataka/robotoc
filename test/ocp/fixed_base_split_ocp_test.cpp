@@ -41,6 +41,8 @@ protected:
     std::random_device rnd;
     contact_status.push_back(rnd()%2==0);
     robot.setContactStatus(contact_status);
+    q_prev = Eigen::VectorXd::Zero(robot.dimq());
+    robot.generateFeasibleConfiguration(q_prev);
     s = SplitSolution(robot);
     s.setContactStatus(robot);
     robot.generateFeasibleConfiguration(s.q);
@@ -143,6 +145,7 @@ protected:
   CostFunctionData cost_data;
   std::shared_ptr<Constraints> constraints;
   ConstraintsData constraints_data;
+  Eigen::VectorXd q_prev;
   SplitSolution s, s_next, s_tmp;
   SplitDirection d, d_next;
   KKTMatrix kkt_matrix;
@@ -175,7 +178,7 @@ TEST_F(FixedBaseSplitOCPTest, KKTErrorNormOnlyStateEquation) {
   s.beta.setZero();
   ocp.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, s, s_next);
+  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   kkt_residual.Fq() = s.q + dtau * s.v - s_next.q;
   kkt_residual.Fv() = s.v + dtau * s.a - s_next.v;
   kkt_residual.lq() = s_next.lmd - s.lmd;
@@ -202,7 +205,7 @@ TEST_F(FixedBaseSplitOCPTest, KKTErrorNormStateEquationAndInverseDynamics) {
   SplitOCP ocp(robot, empty_cost, empty_constraints);
   ocp.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, s, s_next);
+  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   kkt_residual.Fq() = s.q + dtau * s.v - s_next.q;
   kkt_residual.Fv() = s.v + dtau * s.a - s_next.v;
   kkt_residual.lq() = s_next.lmd - s.lmd;
@@ -242,7 +245,7 @@ TEST_F(FixedBaseSplitOCPTest, KKTErrorNormStateEquationAndRobotDynamics) {
   SplitOCP ocp(robot, empty_cost, empty_constraints);
   ocp.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, s, s_next);
+  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   kkt_residual.Fq() = s.q + dtau * s.v - s_next.q;
   kkt_residual.Fv() = s.v + dtau * s.a - s_next.v;
   kkt_residual.lq() = s_next.lmd - s.lmd;
@@ -294,13 +297,13 @@ TEST_F(FixedBaseSplitOCPTest, KKTErrorNormEmptyCost) {
   SplitOCP ocp(robot, empty_cost, constraints);
   ocp.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, s, s_next);
+  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   kkt_residual.setContactStatus(robot);
   kkt_matrix.setContactStatus(robot);
   s.setContactStatus(robot);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual.lu);
-  state_equation.linearizeForwardEuler(robot, dtau, s, s_next, kkt_matrix, kkt_residual);
+  state_equation.linearizeForwardEuler(robot, dtau, q_prev, s, s_next, kkt_matrix, kkt_residual);
   robotdynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
@@ -312,13 +315,13 @@ TEST_F(FixedBaseSplitOCPTest, KKTErrorNormEmptyConstraints) {
   SplitOCP ocp(robot, cost, empty_constraints);
   ocp.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, s, s_next);
+  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   kkt_residual.setContactStatus(robot);
   kkt_matrix.setContactStatus(robot);
   s.setContactStatus(robot);
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
   cost->lu(robot, cost_data, t, dtau, s.u, kkt_residual.lu);
-  state_equation.linearizeForwardEuler(robot, dtau, s, s_next, kkt_matrix, kkt_residual);
+  state_equation.linearizeForwardEuler(robot, dtau, q_prev, s, s_next, kkt_matrix, kkt_residual);
   robotdynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
@@ -329,7 +332,7 @@ TEST_F(FixedBaseSplitOCPTest, KKTErrorNorm) {
   SplitOCP ocp(robot, cost, constraints);
   ocp.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, s, s_next);
+  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   kkt_matrix.setContactStatus(robot);
   kkt_residual.setContactStatus(robot);
   kkt_residual.setZeroMinimum();
@@ -341,7 +344,7 @@ TEST_F(FixedBaseSplitOCPTest, KKTErrorNorm) {
   cost->lu(robot, cost_data, t, dtau, s.u, kkt_residual.lu);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual.lu);
-  state_equation.linearizeForwardEuler(robot, dtau, s, s_next, kkt_matrix, kkt_residual);
+  state_equation.linearizeForwardEuler(robot, dtau, q_prev, s, s_next, kkt_matrix, kkt_residual);
   robotdynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
   kkt_error_ref += constraints->squaredKKTErrorNorm(robot, constraints_data, dtau, s);
@@ -353,7 +356,7 @@ TEST_F(FixedBaseSplitOCPTest, costAndViolation) {
   SplitOCP ocp(robot, cost, constraints);
   ocp.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, s, s_next);
+  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   const auto pair = ocp.costAndViolation(robot, t, dtau, s); 
   const double cost_ref 
       = cost->l(robot, cost_data, t, dtau, s) 
@@ -422,7 +425,7 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   }
   ASSERT_TRUE(ocp.isFeasible(robot, s));
   ocp.initConstraints(robot, 5, dtau, s);
-  ocp.linearizeOCP(robot, t, dtau, s, s_next);
+  ocp.linearizeOCP(robot, t, dtau, q_prev, s, s_next);
   RiccatiFactorization riccati_next(robot);
   Eigen::MatrixXd seed_mat = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
   riccati_next.Pqq = seed_mat * seed_mat.transpose();
@@ -452,7 +455,6 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   robot.subtractConfiguration(s.q, s_next.q, kkt_residual.Fq());
   kkt_residual.Fq() += dtau * s.v;
   kkt_residual.Fv() = s.v + dtau * s.a - s_next.v;
-  robot.dIntegrateConfiguration(s.q, s.v, dtau, kkt_matrix.Fqq, kkt_matrix.Fqv);
   robot.setContactForces(s.f);
   robot.RNEA(s.q, s.v, s.a, kkt_residual.u_res);
   kkt_residual.u_res.noalias() -= s.u;
@@ -493,7 +495,6 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s, 
                                     kkt_matrix, kkt_residual);
   cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix);
-  factorizer.setIntegrationSensitivities(kkt_matrix.Fqq, kkt_matrix.Fqv);
   inverter.setContactStatus(robot);
   gain.setContactStatus(robot);
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();

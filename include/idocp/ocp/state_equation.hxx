@@ -23,18 +23,27 @@ inline StateEquation::~StateEquation() {
 }
 
 
+template <typename ConfigVectorType>
 inline void StateEquation::linearizeForwardEuler(
-    Robot& robot, const double dtau, const SplitSolution& s, 
+    const Robot& robot, const double dtau, 
+    const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
     const SplitSolution& s_next, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) const {
   assert(dtau > 0);
   robot.subtractConfiguration(s.q, s_next.q, kkt_residual.Fq());
   kkt_residual.Fq().noalias() += dtau * s.v;
   kkt_residual.Fv() = s.v + dtau * s.a - s_next.v;
-  kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
+  if (robot.has_floating_base()) {
+    robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq);
+    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
+    kkt_residual.lq().noalias() += kkt_matrix.Fqq.transpose() * s_next.lmd 
+                                    + kkt_matrix.Fqq_prev.transpose() * s.lmd;
+  }
+  else {
+    kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
+  }
   kkt_residual.lv().noalias() += dtau * s_next.lmd + s_next.gmm - s.gmm;
   kkt_residual.la().noalias() += dtau * s_next.gmm;
-  robot.dIntegrateConfiguration(s.q, s.v, dtau, kkt_matrix.Fqq, kkt_matrix.Fqv);
 }
 
 
@@ -42,7 +51,7 @@ template <typename ConfigVectorType1, typename TangentVectorType1,
           typename TangentVectorType2, typename TangentVectorType3, 
           typename ConfigVectorType2>
 inline void StateEquation::linearizeBackwardEuler(
-    Robot& robot, const double dtau, 
+    const Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType1>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType1>& v_prev, 
     const SplitSolution& s, 
@@ -76,7 +85,7 @@ inline void StateEquation::linearizeBackwardEuler(
 
 template <typename ConfigVectorType, typename TangentVectorType>
 inline void StateEquation::linearizeBackwardEulerTerminal(
-    Robot& robot, const double dtau, 
+    const Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
     const SplitSolution& s, KKTMatrix& kkt_matrix, 

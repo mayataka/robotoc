@@ -40,6 +40,7 @@ TEST_F(StateEquationTest, forwardEuler_fixed_base) {
   std::random_device rnd;
   std::vector<bool> contact_status = {rnd()%2==0};
   robot.setContactStatus(contact_status);
+  Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   SplitSolution s(robot);
   s.setContactStatus(robot);
   robot.generateFeasibleConfiguration(s.q);
@@ -63,15 +64,13 @@ TEST_F(StateEquationTest, forwardEuler_fixed_base) {
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
   StateEquation state_equation(robot);
-  state_equation.linearizeForwardEuler(robot, dtau_, s, s_next, kkt_matrix, 
-                                       kkt_residual);
+  state_equation.linearizeForwardEuler(robot, dtau_, q_prev, s, s_next, 
+                                       kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q+dtau_*s.v-s_next.q)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+dtau_*s.a-s_next.v)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s_next.lmd+s_next.gmm-s.gmm)));
   EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s_next.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq.isApprox(Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_TRUE(kkt_matrix.Fqv.isApprox(Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
                    state_equation.violationL1Norm(kkt_residual));
 }
@@ -85,6 +84,8 @@ TEST_F(StateEquationTest, forwardEuler_floating_base) {
   std::random_device rnd;
   std::vector<bool> contact_status = {rnd()%2==0, rnd()%2==0, rnd()%2==0, rnd()%2==0};
   robot.setContactStatus(contact_status);
+  Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
+  robot.normalizeConfiguration(q_prev);
   SplitSolution s(robot);
   s.setContactStatus(robot);
   robot.generateFeasibleConfiguration(s.q);
@@ -108,22 +109,27 @@ TEST_F(StateEquationTest, forwardEuler_floating_base) {
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(robot);
   StateEquation state_equation(robot);
-  state_equation.linearizeForwardEuler(robot, dtau_, s, s_next, kkt_matrix, 
-                                       kkt_residual);
+  state_equation.linearizeForwardEuler(robot, dtau_, q_prev, s, s_next, 
+                                       kkt_matrix, kkt_residual);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   robot.subtractConfiguration(s.q, s_next.q, qdiff);
-  Eigen::MatrixXd dintegrate_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  Eigen::MatrixXd dintegrate_dv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  robot.dIntegrateConfiguration(s.q, s.v, dtau_, dintegrate_dq, dintegrate_dv);
+  Eigen::MatrixXd dsubtract_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd dsubtract_dq_prev = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  robot.dSubtractdConfigurationPlus(s.q, s_next.q, dsubtract_dq);
+  robot.dSubtractdConfigurationMinus(q_prev, s.q, dsubtract_dq_prev);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((qdiff+dtau_*s.v)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+dtau_*s.a-s_next.v)));
-  EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
+  EXPECT_TRUE(kkt_residual.lq().isApprox((dsubtract_dq.transpose()*s_next.lmd+dsubtract_dq_prev.transpose()*s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s_next.lmd+s_next.gmm-s.gmm)));
   EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s_next.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq.isApprox(dintegrate_dq));
-  EXPECT_TRUE(kkt_matrix.Fqv.isApprox(dintegrate_dv));
+  EXPECT_TRUE(kkt_matrix.Fqq.isApprox(dsubtract_dq));
+  EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
                    state_equation.violationL1Norm(kkt_residual));
+  std::cout << "kkt_matrix.Fqq" << std::endl;
+  std::cout << kkt_matrix.Fqq << std::endl;
+  std::cout << "kkt_matrix.Fqq_prev" << std::endl;
+  std::cout << kkt_matrix.Fqq_prev << std::endl;
 }
 
 

@@ -72,11 +72,17 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(v.size() == robots_[0].dimv());
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<=N_; ++i) {
-    if (i < N_) {
+    if (i == 0) {
+      const int robot_id = omp_get_thread_num();
+      robots_[robot_id].setContactStatus(contact_sequence_[i]);
+      split_ocps_[i].linearizeOCP(robots_[robot_id], t+i*dtau_, dtau_, q,
+                                  s_[i], s_[i+1]);
+    }
+    else if (i < N_) {
       const int robot_id = omp_get_thread_num();
       robots_[robot_id].setContactStatus(contact_sequence_[i]);
       split_ocps_[i].linearizeOCP(robots_[robot_id], t+i*dtau_, dtau_, 
-                                  s_[i], s_[i+1]);
+                                  s_[i-1].q, s_[i], s_[i+1]);
     }
     else {
       const int robot_id = omp_get_thread_num();
@@ -281,11 +287,17 @@ double OCP::KKTError(const double t, const Eigen::VectorXd& q,
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<=N_; ++i) {
     const int robot_id = omp_get_thread_num();
-    if (i < N_) {
+    if (i == 0) {
       robots_[robot_id].setContactStatus(contact_sequence_[i]);
       error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
                                                     t+(i+1)*dtau_, dtau_, 
-                                                    s_[i], s_[i+1]);
+                                                    q, s_[i], s_[i+1]);
+    }
+    else if (i < N_) {
+      robots_[robot_id].setContactStatus(contact_sequence_[i]);
+      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
+                                                    t+(i+1)*dtau_, dtau_, 
+                                                    s_[i-1].q, s_[i], s_[i+1]);
     }
     else {
       error(N_) = terminal_ocp_.squaredKKTErrorNorm(robots_[robot_id], t+T_, 

@@ -10,7 +10,7 @@ namespace idocp {
 inline KKTMatrix::KKTMatrix(const Robot& robot) 
   : Quu(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Fqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Fqv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     C_(Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), 
                              3*robot.dimv()+robot.max_dimf())),
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv()+robot.max_dimf(), 
@@ -20,6 +20,8 @@ inline KKTMatrix::KKTMatrix(const Robot& robot)
     Sx_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
     FMinv_(Eigen::MatrixXd::Zero(2*robot.dimv(), 
                                  3*robot.dimv()+robot.dim_passive()+2*robot.max_dimf())),
+    C_H_inv_(Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), 
+                                   3*robot.dimv()+robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
@@ -36,12 +38,13 @@ inline KKTMatrix::KKTMatrix(const Robot& robot)
 inline KKTMatrix::KKTMatrix() 
   : Quu(),
     Fqq(),
-    Fqv(),
+    Fqq_prev(),
     C_(), 
     Q_(), 
     Sc_(), 
     Sx_(), 
     FMinv_(),
+    C_H_inv_(),
     has_floating_base_(false),
     dimv_(0), 
     dimx_(0), 
@@ -240,14 +243,14 @@ inline void KKTMatrix::invert(
         - kkt_matrix_inverse.block(dimx_+dimc_+v_begin_, dimx_, dimv_, dimcQ);
   if (has_floating_base_) {
     Sx_.topLeftCorner(dimv_, dimv_) 
-        =  dtau * FMinv_.block(0, dimc_+v_begin_, dimv_, dimv_);
+        = dtau * FMinv_.block(0, dimc_+v_begin_, dimv_, dimv_);
     Sx_.topLeftCorner(dimv_, dimv_).template leftCols<6>().noalias()
         += FMinv_.block(0, dimc_+q_begin_, dimv_, dimv_).template leftCols<6>() 
             * Fqq.template topLeftCorner<6, 6>().transpose();
     Sx_.topLeftCorner(dimv_, dimv_).rightCols(dimv_-6).noalias()
         -= FMinv_.block(0, dimc_+q_begin_, dimv_, dimv_).rightCols(dimv_-6);
     Sx_.bottomLeftCorner(dimv_, dimv_) 
-        =  dtau * FMinv_.block(dimv_, dimc_+v_begin_, dimv_, dimv_);
+        = dtau * FMinv_.block(dimv_, dimc_+v_begin_, dimv_, dimv_);
     Sx_.bottomLeftCorner(dimv_, dimv_).template leftCols<6>().noalias() 
         += FMinv_.block(dimv_, dimc_+q_begin_, dimv_, dimv_).template leftCols<6>() 
             * Fqq.template topLeftCorner<6, 6>().transpose();
@@ -256,10 +259,10 @@ inline void KKTMatrix::invert(
   }
   else {
     Sx_.topLeftCorner(dimv_, dimv_).noalias() 
-        =  dtau * FMinv_.block(0, dimc_+v_begin_, dimv_, dimv_) 
+        = dtau * FMinv_.block(0, dimc_+v_begin_, dimv_, dimv_) 
             - FMinv_.block(0, dimc_+q_begin_, dimv_, dimv_);
     Sx_.bottomLeftCorner(dimv_, dimv_).noalias() 
-        =  dtau * FMinv_.block(dimv_, dimc_+v_begin_, dimv_, dimv_) 
+        = dtau * FMinv_.block(dimv_, dimc_+v_begin_, dimv_, dimv_) 
             - FMinv_.block(dimv_, dimc_+q_begin_, dimv_, dimv_);
   }
   Sx_.topRightCorner(dimv_, dimv_).noalias() 
@@ -303,38 +306,38 @@ inline void KKTMatrix::setZero() {
 
 template <typename MatrixType>
 inline void KKTMatrix::invertConstrainedHessian( 
-    const Eigen::MatrixBase<MatrixType>& hessian_inverse) {
-  assert(hessian_inverse.rows() == dimQ_+dimc_);
-  assert(hessian_inverse.cols() == dimQ_+dimc_);
+    const Eigen::MatrixBase<MatrixType>& H_inv) {
+  assert(H_inv.rows() == dimQ_+dimc_);
+  assert(H_inv.cols() == dimQ_+dimc_);
   if (dimc_ > 0) {
-    const_cast<Eigen::MatrixBase<MatrixType>&>(hessian_inverse)
+    const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
         .bottomRightCorner(dimQ_, dimQ_).noalias()
         = Q_.topLeftCorner(dimQ_, dimQ_)
             .llt().solve(Eigen::MatrixXd::Identity(dimQ_, dimQ_));
+    C_H_inv_.topLeftCorner(dimc_, dimQ_).noalias()
+        = C_.topLeftCorner(dimc_, dimQ_) * H_inv.bottomRightCorner(dimQ_, dimQ_);
     Sc_.topLeftCorner(dimc_, dimc_).noalias() 
-        = C_.topLeftCorner(dimc_, dimQ_) 
-            * hessian_inverse.bottomRightCorner(dimQ_, dimQ_)
+        = C_H_inv_.topLeftCorner(dimc_, dimQ_)
             * C_.topLeftCorner(dimc_, dimQ_).transpose();
-    const_cast<Eigen::MatrixBase<MatrixType>&>(hessian_inverse)
+    const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
         .topLeftCorner(dimc_, dimc_).noalias()
         = - Sc_.topLeftCorner(dimc_, dimc_)
                 .llt().solve(Eigen::MatrixXd::Identity(dimc_, dimc_));
-    const_cast<Eigen::MatrixBase<MatrixType>&>(hessian_inverse)
+    const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
         .topRightCorner(dimc_, dimQ_).noalias()
-        = - hessian_inverse.topLeftCorner(dimc_, dimc_) 
-            * C_.topLeftCorner(dimc_, dimQ_) 
-            * hessian_inverse.bottomRightCorner(dimQ_, dimQ_);
-    const_cast<Eigen::MatrixBase<MatrixType>&>(hessian_inverse)
+        = - H_inv.topLeftCorner(dimc_, dimc_) 
+            * C_H_inv_.topLeftCorner(dimc_, dimQ_);
+    const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
         .bottomLeftCorner(dimQ_, dimc_)
-        = hessian_inverse.topRightCorner(dimc_, dimQ_).transpose();
-    const_cast<Eigen::MatrixBase<MatrixType>&>(hessian_inverse)
+        = H_inv.topRightCorner(dimc_, dimQ_).transpose();
+    const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
         .bottomRightCorner(dimQ_, dimQ_).noalias()
-        -= hessian_inverse.topRightCorner(dimc_, dimQ_).transpose()
+        -= H_inv.topRightCorner(dimc_, dimQ_).transpose()
               * Sc_.topLeftCorner(dimc_, dimc_)
-              * hessian_inverse.topRightCorner(dimc_, dimQ_);
+              * H_inv.topRightCorner(dimc_, dimQ_);
   }
   else {
-    const_cast<Eigen::MatrixBase<MatrixType>&>(hessian_inverse).noalias()
+    const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv).noalias()
         = Q_.topLeftCorner(dimQ_, dimQ_)
             .llt().solve(Eigen::MatrixXd::Identity(dimQ_, dimQ_));
   }
