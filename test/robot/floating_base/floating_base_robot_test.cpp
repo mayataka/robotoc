@@ -295,34 +295,6 @@ TEST_F(FloatingBaseRobotTest, subtractConfiguration) {
 }
 
 
-TEST_F(FloatingBaseRobotTest, dIntegrateConfiguration) {
-  Robot robot(urdf_);
-  Eigen::MatrixXd dintegrate_dq = Eigen::MatrixXd::Zero(dimv_, dimv_);
-  Eigen::MatrixXd dintegrate_dv = Eigen::MatrixXd::Zero(dimv_, dimv_);
-  Eigen::MatrixXd dintegrate_dq_ref = dintegrate_dq;
-  Eigen::MatrixXd dintegrate_dv_ref = dintegrate_dv;
-  const double integration_length = std::abs(Eigen::VectorXd::Random(2)[0]);
-  robot.dIntegrateConfiguration(q_, v_, integration_length, dintegrate_dq, 
-                                dintegrate_dv);
-  pinocchio::dIntegrate(model_, q_, v_, dintegrate_dq_ref, pinocchio::ARG0);
-  pinocchio::dIntegrate(model_, q_, v_, dintegrate_dv_ref, pinocchio::ARG1);
-  EXPECT_TRUE(dintegrate_dq.isApprox(dintegrate_dq_ref));
-  EXPECT_TRUE(dintegrate_dv.isApprox(dintegrate_dv_ref));
-  EXPECT_TRUE(
-      dintegrate_dq.block(6, 6, dimv_-6, dimv_-6)
-      .isApprox(Eigen::MatrixXd::Identity(dimv_-6, dimv_-6)));
-  EXPECT_TRUE(
-      dintegrate_dv.block(6, 6, dimv_-6, dimv_-6)
-      .isApprox(Eigen::MatrixXd::Identity(dimv_-6, dimv_-6)));
-  std::cout << "dintegrate_dq:" << std::endl;
-  std::cout << dintegrate_dq << std::endl;
-  std::cout << std::endl;
-  std::cout << "dintegrate_dv:" << std::endl;
-  std::cout << dintegrate_dv << std::endl;
-  std::cout << std::endl;
-}
-
-
 TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
   std::vector<PointContact> contacts_ref; 
   for (const auto& frame : contact_frames_) {

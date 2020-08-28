@@ -8,6 +8,10 @@
 
 namespace idocp {
 
+///
+/// @class KKTMatrix
+/// @brief The KKT matrix of a time stage.
+///
 class KKTMatrix {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

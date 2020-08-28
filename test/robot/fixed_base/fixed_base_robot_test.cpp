@@ -256,18 +256,6 @@ TEST_F(FixedBaseRobotTest, subtractConfiguration) {
 }
 
 
-TEST_F(FixedBaseRobotTest, dIntegrateConfiguration) {
-  Robot robot(urdf_);
-  Eigen::MatrixXd dintegrate_dq = Eigen::MatrixXd::Zero(dimq_, dimq_);
-  Eigen::MatrixXd dintegrate_dv = Eigen::MatrixXd::Zero(dimq_, dimq_);
-  const double integration_length = std::abs(Eigen::VectorXd::Random(2)[0]);
-  robot.dIntegrateConfiguration(q_, v_, integration_length, dintegrate_dq, 
-                                dintegrate_dv);
-  EXPECT_TRUE(dintegrate_dq.isApprox(Eigen::MatrixXd::Identity(dimq_, dimq_)));
-  EXPECT_TRUE(dintegrate_dv.isApprox(Eigen::MatrixXd::Identity(dimq_, dimq_)));
-}
-
-
 TEST_F(FixedBaseRobotTest, dSubtractdConfigurationPlus) {
   Robot robot(urdf_);
   Eigen::VectorXd q_plus = q_;
