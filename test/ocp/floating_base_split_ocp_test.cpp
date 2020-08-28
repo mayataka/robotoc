@@ -523,7 +523,8 @@ TEST_F(FloatingBaseSplitOCPTest, riccatiRecursion) {
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s, 
                                     kkt_matrix, kkt_residual);
   cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix);
-  factorizer.setStateEquationDerivatives(kkt_matrix.Fqq, kkt_matrix.Fqq_prev);
+  factorizer.setStateEquationDerivative(kkt_matrix.Fqq);
+  // factorizer.setStateEquationDerivativeInverse(kkt_matrix.Fqq_prev);
   inverter.setContactStatus(robot);
   gain.setContactStatus(robot);
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
@@ -596,8 +597,8 @@ TEST_F(FloatingBaseSplitOCPTest, riccatiRecursion) {
   sv_ref -= kkt_matrix.Qvf() * gain.kf();
   sq_ref -= kkt_matrix.Cq().transpose() * gain.kmu();
   sv_ref -= kkt_matrix.Cv().transpose() * gain.kmu();
-  factorizer.correctP(Pqq_ref, Pqv_ref);
-  factorizer.correct_s(sq_ref);
+  // factorizer.correctP(Pqq_ref, Pqv_ref);
+  // factorizer.correct_s(sq_ref);
   EXPECT_TRUE(riccati.Pqq.isApprox(Pqq_ref));
   EXPECT_TRUE(riccati.Pqv.isApprox(Pqv_ref));
   EXPECT_TRUE(riccati.Pvq.isApprox(Pvq_ref));;

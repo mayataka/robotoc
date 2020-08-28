@@ -135,7 +135,8 @@ TEST_F(RiccatiMatrixFactorizerTest, floating_base) {
   const Eigen::MatrixXd Qvq_ref = Qvq + (dtau_ * Pqq + Pvq) * Fqq;
   const Eigen::MatrixXd Qvv_ref = Qvv + (dtau_*dtau_) * Pqq 
                                       + dtau_ * (Pvq + Pqv) + Pvv;
-  factorizer.setStateEquationDerivatives(Fqq, Fqq_prev);
+  factorizer.setStateEquationDerivative(Fqq);
+  factorizer.setStateEquationDerivativeInverse(Fqq_prev);
   factorizer.factorizeF(dtau_, Pqq, Pqv, Pvq, Pvv, Qqq, Qqv, Qvq, Qvv);
   EXPECT_TRUE(Qqq.isApprox(Qqq_ref));
   EXPECT_TRUE(Qqv.isApprox(Qqv_ref));

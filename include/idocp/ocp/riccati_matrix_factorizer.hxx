@@ -33,17 +33,24 @@ inline RiccatiMatrixFactorizer::~RiccatiMatrixFactorizer() {
 }
 
 
-template <typename MatrixType1, typename MatrixType2>
-inline void RiccatiMatrixFactorizer::setStateEquationDerivatives(
-    const Eigen::MatrixBase<MatrixType1>& dsubtract_dq, 
-    const Eigen::MatrixBase<MatrixType2>& dsubtract_dq_prev) {
+template <typename MatrixType>
+inline void RiccatiMatrixFactorizer::setStateEquationDerivative(
+    const Eigen::MatrixBase<MatrixType>& dsubtract_dq) {
   assert(dsubtract_dq.rows() >= kDimFloatingBase);
   assert(dsubtract_dq.cols() >= kDimFloatingBase);
-  assert(dsubtract_dq_prev.rows() >= kDimFloatingBase);
-  assert(dsubtract_dq_prev.cols() >= kDimFloatingBase);
   if (has_floating_base_) {
     dsubtract_dq_ 
         = dsubtract_dq.template topLeftCorner<kDimFloatingBase, kDimFloatingBase>();
+  }
+}
+
+
+template <typename MatrixType>
+inline void RiccatiMatrixFactorizer::setStateEquationDerivativeInverse(
+    const Eigen::MatrixBase<MatrixType>& dsubtract_dq_prev) {
+  assert(dsubtract_dq_prev.rows() >= kDimFloatingBase);
+  assert(dsubtract_dq_prev.cols() >= kDimFloatingBase);
+  if (has_floating_base_) {
     dsubtract_dq_prev_inv_ 
             = - dsubtract_dq_prev.template topLeftCorner<kDimFloatingBase, kDimFloatingBase>().inverse();
   }

@@ -98,8 +98,8 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix_);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
                                      kkt_matrix_, kkt_residual_);
-  riccati_factorizer_.setStateEquationDerivatives(kkt_matrix_.Fqq, 
-                                                  kkt_matrix_.Fqq_prev);
+  riccati_factorizer_.setStateEquationDerivative(kkt_matrix_.Fqq);
+  // riccati_factorizer_.setStateEquationDerivativeInverse(kkt_matrix_.Fqq_prev);
   riccati_gain_.setContactStatus(robot);
   riccati_inverter_.setContactStatus(robot);
   kkt_matrix_.Qvq() = kkt_matrix_.Qqv().transpose();
@@ -169,8 +169,8 @@ void SplitOCP::backwardRiccatiRecursion(
     riccati.sq.noalias() -= kkt_matrix_.Cq().transpose() * riccati_gain_.kmu();
     riccati.sv.noalias() -= kkt_matrix_.Cv().transpose() * riccati_gain_.kmu();
   }
-  riccati_factorizer_.correctP(riccati.Pqq, riccati.Pqv);
-  riccati_factorizer_.correct_s(riccati.sq);
+  // riccati_factorizer_.correctP(riccati.Pqq, riccati.Pqv);
+  // riccati_factorizer_.correct_s(riccati.sq);
 }
 
 

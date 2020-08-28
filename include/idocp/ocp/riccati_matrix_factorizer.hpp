@@ -35,10 +35,13 @@ public:
   // Use default move assign operator.
   RiccatiMatrixFactorizer& operator=(RiccatiMatrixFactorizer&&) noexcept = default;
 
-  template <typename MatrixType1, typename MatrixType2>
-  void setStateEquationDerivatives(
-      const Eigen::MatrixBase<MatrixType1>& dsubtract_dq, 
-      const Eigen::MatrixBase<MatrixType2>& dsubtract_dq_prev);
+  template <typename MatrixType>
+  void setStateEquationDerivative(
+      const Eigen::MatrixBase<MatrixType>& dsubtract_dq);
+
+  template <typename MatrixType>
+  void setStateEquationDerivativeInverse(
+      const Eigen::MatrixBase<MatrixType>& dsubtract_dq_prev);
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4, typename MatrixType5, typename MatrixType6, 
