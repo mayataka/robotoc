@@ -10,7 +10,7 @@ namespace idocp {
 inline KKTMatrix::KKTMatrix(const Robot& robot) 
   : Quu(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Fqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Fqv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     C_(Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), 
                              3*robot.dimv()+robot.max_dimf())),
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv()+robot.max_dimf(), 
@@ -36,7 +36,7 @@ inline KKTMatrix::KKTMatrix(const Robot& robot)
 inline KKTMatrix::KKTMatrix() 
   : Quu(),
     Fqq(),
-    Fqv(),
+    Fqq_prev(),
     C_(), 
     Q_(), 
     Sc_(), 

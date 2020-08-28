@@ -42,9 +42,9 @@ void BenchmarkWithContacts() {
   joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
   auto contact_cost = std::make_shared<idocp::ContactCost>(robot);
-  contact_cost->set_f_weight(Eigen::VectorXd::Constant(robot.max_dimf(), 0.01));
+  contact_cost->set_f_weight(Eigen::VectorXd::Constant(robot.max_dimf(), 0.0));
   cost->push_back(joint_cost);
   cost->push_back(contact_cost);
   idocp::JointConstraintsFactory constraints_factory(robot);
@@ -59,7 +59,7 @@ void BenchmarkWithContacts() {
        0.0315, -0.4, 0.8, 
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
-  const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   const std::vector<bool> contact_status = {true, true, true, true};
   robot.setContactStatus(contact_status);
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));

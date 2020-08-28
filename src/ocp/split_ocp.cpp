@@ -67,6 +67,7 @@ void SplitOCP::initConstraints(const Robot& robot, const int time_step,
 
 
 void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau, 
+                            const Eigen::VectorXd& q_prev, 
                             const SplitSolution& s, 
                             const SplitSolution& s_next) {
   assert(dtau > 0);
@@ -92,13 +93,13 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
                                      kkt_residual_);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, 
                                     kkt_residual_);
-  state_equation_.linearizeForwardEuler(robot, dtau, s, s_next, kkt_matrix_, 
-                                        kkt_residual_);
+  state_equation_.linearizeForwardEuler(robot, dtau, q_prev, s, s_next, 
+                                        kkt_matrix_, kkt_residual_);
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix_);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
                                      kkt_matrix_, kkt_residual_);
-  riccati_factorizer_.setIntegrationSensitivities(kkt_matrix_.Fqq, 
-                                                  kkt_matrix_.Fqv);
+  riccati_factorizer_.setStateEquationDerivatives(kkt_matrix_.Fqq, 
+                                                  kkt_matrix_.Fqq_prev);
   riccati_gain_.setContactStatus(robot);
   riccati_inverter_.setContactStatus(robot);
   kkt_matrix_.Qvq() = kkt_matrix_.Qqv().transpose();
@@ -120,9 +121,9 @@ void SplitOCP::backwardRiccatiRecursion(
                                  kkt_matrix_.Qaq().transpose(), 
                                  kkt_matrix_.Qav().transpose());
   riccati_factorizer_.factorizeG(dtau, riccati_next.Pvv, kkt_matrix_.Qaa());
-  kkt_residual_.la().noalias() += dtau * riccati_next.Pvq * kkt_residual_.Fq(); 
-  kkt_residual_.la().noalias() += dtau * riccati_next.Pvv * kkt_residual_.Fv();
-  kkt_residual_.la().noalias() -= dtau * riccati_next.sv;
+  riccati_factorizer_.factorize_la(dtau, riccati_next.Pvq, riccati_next.Pvv, 
+                                   kkt_residual_.Fq(), kkt_residual_.Fv(), 
+                                   riccati_next.sv, kkt_residual_.la());
   // Computes the matrix inversion
   riccati_inverter_.invert(kkt_matrix_.Qafaf(), kkt_matrix_.Caf(), 
                            Ginv_active());
@@ -168,6 +169,8 @@ void SplitOCP::backwardRiccatiRecursion(
     riccati.sq.noalias() -= kkt_matrix_.Cq().transpose() * riccati_gain_.kmu();
     riccati.sv.noalias() -= kkt_matrix_.Cv().transpose() * riccati_gain_.kmu();
   }
+  riccati_factorizer_.correctP(riccati.Pqq, riccati.Pqv);
+  riccati_factorizer_.correct_s(riccati.sq);
 }
 
 
@@ -300,7 +303,9 @@ void SplitOCP::getStateFeedbackGain(Eigen::MatrixXd& Kq,
 
 
 double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t, 
-                                     const double dtau, const SplitSolution& s,
+                                     const double dtau, 
+                                     const Eigen::VectorXd& q_prev, 
+                                     const SplitSolution& s,
                                      const SplitSolution& s_next) {
   assert(dtau > 0);
   kkt_matrix_.setContactStatus(robot);
@@ -316,8 +321,8 @@ double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t,
                                     kkt_residual_);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, 
                                     kkt_residual_.lu);
-  state_equation_.linearizeForwardEuler(robot, dtau, s, s_next, kkt_matrix_, 
-                                        kkt_residual_);
+  state_equation_.linearizeForwardEuler(robot, dtau, q_prev, s, s_next, 
+                                        kkt_matrix_, kkt_residual_);
   robot_dynamics_.augmentRobotDynamics(robot, dtau, s, kkt_matrix_, 
                                        kkt_residual_);
   double error = kkt_residual_.squaredKKTErrorNorm(dtau);

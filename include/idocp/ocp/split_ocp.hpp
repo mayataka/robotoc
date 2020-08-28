@@ -69,7 +69,8 @@ public:
   //   t: Time of the current time step.
   //   dtau: Discretization length of the OCP.
   void linearizeOCP(Robot& robot, const double t, const double dtau, 
-                    const SplitSolution& s, const SplitSolution& s_next);
+                    const Eigen::VectorXd& q_prev, const SplitSolution& s, 
+                    const SplitSolution& s_next);
 
   void backwardRiccatiRecursion(const double dtau, 
                                 const RiccatiFactorization& riccati_next,
@@ -106,6 +107,7 @@ public:
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
   double squaredKKTErrorNorm(Robot& robot, const double t, const double dtau, 
+                             const Eigen::VectorXd& q_prev, 
                              const SplitSolution& s,
                              const SplitSolution& s_next);
 

@@ -92,7 +92,7 @@ public:
 
   void setZero();
 
-  Eigen::MatrixXd Quu, Fqq, Fqv;
+  Eigen::MatrixXd Quu, Fqq, Fqq_prev;
 
 private:
   Eigen::MatrixXd C_, Q_, Sc_, Sx_, FMinv_;

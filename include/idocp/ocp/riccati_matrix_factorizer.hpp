@@ -36,9 +36,9 @@ public:
   RiccatiMatrixFactorizer& operator=(RiccatiMatrixFactorizer&&) noexcept = default;
 
   template <typename MatrixType1, typename MatrixType2>
-  void setIntegrationSensitivities(
-      const Eigen::MatrixBase<MatrixType1>& dintegrate_dq, 
-      const Eigen::MatrixBase<MatrixType2>& dintegrate_dv);
+  void setStateEquationDerivatives(
+      const Eigen::MatrixBase<MatrixType1>& dsubtract_dq, 
+      const Eigen::MatrixBase<MatrixType2>& dsubtract_dq_prev);
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4, typename MatrixType5, typename MatrixType6, 
@@ -51,7 +51,7 @@ public:
                   const Eigen::MatrixBase<MatrixType5>& Qqq,
                   const Eigen::MatrixBase<MatrixType6>& Qqv,
                   const Eigen::MatrixBase<MatrixType7>& Qvq,
-                  const Eigen::MatrixBase<MatrixType8>& Qvv);
+                  const Eigen::MatrixBase<MatrixType8>& Qvv) const;
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4>
@@ -59,17 +59,35 @@ public:
                   const Eigen::MatrixBase<MatrixType1>& Pqv_next,
                   const Eigen::MatrixBase<MatrixType2>& Pvv_next,
                   const Eigen::MatrixBase<MatrixType3>& Qqa,
-                  const Eigen::MatrixBase<MatrixType4>& Qva);
+                  const Eigen::MatrixBase<MatrixType4>& Qva) const;
 
   template <typename MatrixType1, typename MatrixType2>
   void factorizeG(const double dtau, 
                   const Eigen::MatrixBase<MatrixType1>& Pvv_next,
-                  const Eigen::MatrixBase<MatrixType2>& Qaa);
+                  const Eigen::MatrixBase<MatrixType2>& Qaa) const;
+
+  template <typename MatrixType1, typename MatrixType2, typename VectorType1,
+            typename VectorType2, typename VectorType3, typename VectorType4>
+  void factorize_la(const double dtau, 
+                    const Eigen::MatrixBase<MatrixType1>& Pvq_next,
+                    const Eigen::MatrixBase<MatrixType2>& Pvv_next,
+                    const Eigen::MatrixBase<VectorType1>& Fq,
+                    const Eigen::MatrixBase<VectorType2>& Fv,
+                    const Eigen::MatrixBase<VectorType3>& sv_next,
+                    const Eigen::MatrixBase<VectorType4>& la) const;
+
+  template <typename MatrixType1, typename MatrixType2>
+  void correctP(const Eigen::MatrixBase<MatrixType1>& Pqq,
+                const Eigen::MatrixBase<MatrixType2>& Pqv) const;
+
+  template <typename VectorType>
+  void correct_s(const Eigen::MatrixBase<VectorType>& sq) const;
 
 private:
   bool has_floating_base_;
   int dimv_;
-  Eigen::MatrixXd dintegrate_dq_, dintegrate_dv_;
+  static constexpr int kDimFloatingBase = 6;
+  Eigen::MatrixXd dsubtract_dq_, dsubtract_dq_prev_inv_;
 
 };
 
