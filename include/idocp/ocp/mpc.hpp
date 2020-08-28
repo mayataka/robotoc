@@ -20,6 +20,8 @@ public:
       const std::shared_ptr<Constraints>& constraints, const double T, 
       const int N, const int num_proc=1);
 
+  MPC();
+
   ~MPC();
 
   // Use default copy constructor.

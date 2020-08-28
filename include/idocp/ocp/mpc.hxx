@@ -16,6 +16,12 @@ inline MPC<OCPType>::MPC(const Robot& robot,
 
 
 template <typename OCPType>
+inline MPC<OCPType>::MPC() 
+  : ocp_() {
+}
+
+
+template <typename OCPType>
 inline MPC<OCPType>::~MPC() {
 }
 
