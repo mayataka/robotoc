@@ -15,7 +15,9 @@ inline RiccatiMatrixInverter::RiccatiMatrixInverter(const Robot& robot)
     G_inv_(Eigen::MatrixXd::Zero(robot.dimv()+2*robot.max_dimf()+robot.dim_passive(), 
                                  robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
     Sc_(Eigen::MatrixXd::Zero(robot.max_dimf()+robot.dim_passive(), 
-                              robot.max_dimf()+robot.dim_passive())) {
+                              robot.max_dimf()+robot.dim_passive())),
+    G_inv_Caf_trans_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
+                                           robot.max_dimf()+robot.dim_passive())) {
 }
 
 
@@ -25,7 +27,8 @@ inline RiccatiMatrixInverter::RiccatiMatrixInverter()
     dimc_(0),
     dimaf_(0),
     G_inv_(),
-    Sc_() {
+    Sc_(),
+    G_inv_Caf_trans_() {
 }
 
 
@@ -55,16 +58,18 @@ inline void RiccatiMatrixInverter::invert(
     const_cast<Eigen::MatrixBase<MatrixType3>&> (G_inv)
         .topLeftCorner(dimaf_, dimaf_).noalias()
         = G.llt().solve(Eigen::MatrixXd::Identity(dimaf_, dimaf_));
-    Sc_.topLeftCorner(dimc_, dimc_) .noalias()
-        = Caf * G_inv.topLeftCorner(dimaf_, dimaf_) * Caf.transpose();
+    G_inv_Caf_trans_.topLeftCorner(dimaf_, dimc_).noalias() 
+        = G_inv.topLeftCorner(dimaf_, dimaf_) * Caf.transpose();
+    Sc_.topLeftCorner(dimc_, dimc_).noalias()
+        = Caf * G_inv_Caf_trans_.topLeftCorner(dimaf_, dimc_);
     const_cast<Eigen::MatrixBase<MatrixType3>&> (G_inv)
         .block(dimaf_, dimaf_, dimc_, dimc_).noalias() 
         = - Sc_.topLeftCorner(dimc_, dimc_)
                .llt().solve(Eigen::MatrixXd::Identity(dimc_, dimc_));
     const_cast<Eigen::MatrixBase<MatrixType3>&> (G_inv)
         .block(0, dimaf_, dimaf_, dimc_).noalias() 
-        = - G_inv.topLeftCorner(dimaf_, dimaf_) 
-            * Caf.transpose() * G_inv.block(dimaf_, dimaf_, dimc_, dimc_);
+        = - G_inv_Caf_trans_.topLeftCorner(dimaf_, dimc_)
+            * G_inv.block(dimaf_, dimaf_, dimc_, dimc_);
     const_cast<Eigen::MatrixBase<MatrixType3>&> (G_inv)
         .block(dimaf_, 0, dimc_, dimaf_).noalias() 
         = G_inv.block(0, dimaf_, dimaf_, dimc_).transpose();
@@ -92,14 +97,16 @@ inline void RiccatiMatrixInverter::invert(
   if (dimc_ > 0) {
     G_inv_.topLeftCorner(dimaf_, dimaf_).noalias()
         = G.llt().solve(Eigen::MatrixXd::Identity(dimaf_, dimaf_));
+    G_inv_Caf_trans_.topLeftCorner(dimaf_, dimc_).noalias() 
+        = G_inv_.topLeftCorner(dimaf_, dimaf_) * Caf.transpose();
     Sc_.topLeftCorner(dimc_, dimc_).noalias() 
-        = Caf * G_inv_.topLeftCorner(dimaf_, dimaf_) * Caf.transpose();
+        = Caf * G_inv_Caf_trans_.topLeftCorner(dimaf_, dimc_);
     G_inv_.block(dimaf_, dimaf_, dimc_, dimc_).noalias() 
         = - Sc_.topLeftCorner(dimc_, dimc_)
                .llt().solve(Eigen::MatrixXd::Identity(dimc_, dimc_));
     G_inv_.block(0, dimaf_, dimaf_, dimc_).noalias() 
-        = - G_inv_.topLeftCorner(dimaf_, dimaf_) 
-            * Caf.transpose() * G_inv_.block(dimaf_, dimaf_, dimc_, dimc_);
+        = - G_inv_Caf_trans_.topLeftCorner(dimaf_, dimc_)
+              * G_inv_.block(dimaf_, dimaf_, dimc_, dimc_);
     G_inv_.block(dimaf_, 0, dimc_, dimaf_).noalias() 
         = G_inv_.block(0, dimaf_, dimaf_, dimc_).transpose();
     G_inv_.topLeftCorner(dimaf_, dimaf_).noalias()

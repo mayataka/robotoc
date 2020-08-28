@@ -56,7 +56,7 @@ public:
   
 private:
   int dimv_, dimf_, dimc_, dimaf_;
-  Eigen::MatrixXd G_inv_, Sc_;
+  Eigen::MatrixXd G_inv_, Sc_, G_inv_Caf_trans_;
 };
 
 } // namespace idocp
