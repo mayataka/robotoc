@@ -297,16 +297,27 @@ void SplitOCP::getStateFeedbackGain(Eigen::MatrixXd& Kq,
   assert(Kq.rows() == dimv_);
   assert(Kv.cols() == dimv_);
   assert(Kv.rows() == dimv_);
-  // Kq = du_dq_ + du_da_ * Kaq_ + du_df_.leftCols(dimf_) * Kfq_.topRows(dimf_);
-  // Kv = du_dv_ + du_da_ * Kav_ + du_df_.leftCols(dimf_) * Kfv_.topRows(dimf_);
+  robot_dynamics_.getControlInputTorquesSensitivitiesWithRespectToState(
+    riccati_gain_.Kaq(), riccati_gain_.Kav(), riccati_gain_.Kfq(), 
+    riccati_gain_.Kfv(), Kq, Kv);
 }
 
 
-double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t, 
-                                     const double dtau, 
-                                     const Eigen::VectorXd& q_prev, 
-                                     const SplitSolution& s,
-                                     const SplitSolution& s_next) {
+double SplitOCP::condensedSquaredKKTErrorNorm(Robot& robot, const double t, 
+                                              const double dtau, 
+                                              const SplitSolution& s) {
+  assert(dtau > 0);
+  double error = kkt_residual_.KKT_residual().squaredNorm();
+  error += constraints_->squaredKKTErrorNorm(robot, constraints_data_, dtau, s);
+  return error;
+}
+
+
+double SplitOCP::computeSquaredKKTErrorNorm(Robot& robot, const double t, 
+                                            const double dtau, 
+                                            const Eigen::VectorXd& q_prev, 
+                                            const SplitSolution& s,
+                                            const SplitSolution& s_next) {
   assert(dtau > 0);
   kkt_matrix_.setContactStatus(robot);
   kkt_residual_.setContactStatus(robot);

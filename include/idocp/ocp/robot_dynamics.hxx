@@ -204,6 +204,41 @@ inline void RobotDynamics::setContactStatus(const Robot& robot) {
 }
 
 
+template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
+          typename MatrixType4, typename MatrixType5, typename MatrixType6>
+inline void RobotDynamics::getControlInputTorquesSensitivitiesWithRespectToState(
+    const Eigen::MatrixBase<MatrixType1>& da_dq,
+    const Eigen::MatrixBase<MatrixType2>& da_dv,
+    const Eigen::MatrixBase<MatrixType3>& df_dq,
+    const Eigen::MatrixBase<MatrixType4>& df_dv,
+    const Eigen::MatrixBase<MatrixType5>& Kuq,
+    const Eigen::MatrixBase<MatrixType6>& Kuv) const {
+  assert(da_dq.rows() == da_dq.cols());
+  assert(da_dv.rows() == da_dv.cols());
+  assert(df_dq.rows() == dimf_);
+  assert(df_dv.rows() == dimf_);
+  assert(Kuq.rows() == Kuq.cols());
+  assert(Kuv.rows() == Kuv.cols());
+  assert(da_dq.rows() == da_dv.rows());
+  assert(da_dq.rows() == df_dq.cols());
+  assert(da_dq.rows() == df_dv.cols());
+  assert(da_dq.rows() == Kuq.rows());
+  assert(da_dq.rows() == Kuv.rows());
+  const_cast<Eigen::MatrixBase<MatrixType5>&>(Kuq) = du_dq_;
+  const_cast<Eigen::MatrixBase<MatrixType5>&>(Kuq).noalias() += du_da_ * da_dq;
+  if (has_active_contacts_) {
+    const_cast<Eigen::MatrixBase<MatrixType5>&>(Kuq).noalias() 
+        += du_df_active_() * df_dq;
+  }
+  const_cast<Eigen::MatrixBase<MatrixType6>&>(Kuv) = du_dv_;
+  const_cast<Eigen::MatrixBase<MatrixType6>&>(Kuv).noalias() += du_da_ * da_dv;
+  if (has_active_contacts_) {
+    const_cast<Eigen::MatrixBase<MatrixType6>&>(Kuv).noalias() 
+        += du_df_active_() * df_dv;
+  }
+}
+
+
 inline void RobotDynamics::linearizeInverseDynamics(Robot& robot, 
                                                     const SplitSolution& s, 
                                                     KKTResidual& kkt_residual) {

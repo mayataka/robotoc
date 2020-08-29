@@ -182,7 +182,7 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormOnlyStateEquation) {
   s.mu.setZero();
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNormTerminal(robot, t, dtau, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNormTerminal(robot, t, dtau, 
                                                                q_prev, v_prev, s);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::MatrixXd Jdiffminus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
@@ -217,7 +217,7 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndInverseDynam
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
   s.mu.setZero();
-  const double kkt_error = parnmpc.squaredKKTErrorNormTerminal(robot, t, dtau, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNormTerminal(robot, t, dtau, 
                                                                q_prev, v_prev, s);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::MatrixXd Jdiffminus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
@@ -266,7 +266,7 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndRobotDynamic
   SplitParNMPC parnmpc(robot, empty_cost, empty_constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNormTerminal(robot, t, dtau, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNormTerminal(robot, t, dtau, 
                                                                q_prev, v_prev, s);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::MatrixXd Jdiffminus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
@@ -326,7 +326,7 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormEmptyCost) {
   SplitParNMPC parnmpc(robot, empty_cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNormTerminal(robot, t, dtau, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNormTerminal(robot, t, dtau, 
                                                                q_prev, v_prev, s);
   kkt_residual.setContactStatus(robot);
   kkt_matrix.setContactStatus(robot);
@@ -346,7 +346,7 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormEmptyConstraints) {
   SplitParNMPC parnmpc(robot, cost, empty_constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNormTerminal(robot, t, dtau, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNormTerminal(robot, t, dtau, 
                                                                q_prev, v_prev, s);
   kkt_residual.setContactStatus(robot);
   kkt_matrix.setContactStatus(robot);
@@ -366,7 +366,7 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNorm) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNormTerminal(robot, t, dtau, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNormTerminal(robot, t, dtau, 
                                                                q_prev, v_prev, s);
   kkt_residual.setContactStatus(robot);
   kkt_matrix.setContactStatus(robot);
@@ -390,7 +390,7 @@ TEST_F(FloatingBaseTerminalParNMPCTest, costAndViolation) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
                                                        v_prev, s, s_next);
   const auto pair = parnmpc.costAndViolationTerminal(robot, t, dtau, s); 
   const double cost_ref 
@@ -421,7 +421,7 @@ TEST_F(FloatingBaseTerminalParNMPCTest, costAndViolationWithStepSize) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
                                                        v_prev, s, s_next);
   const double step_size = 0.3;
   const auto pair = parnmpc.costAndViolationTerminal(robot, step_size, t, dtau, s_old, 
@@ -559,6 +559,27 @@ TEST_F(FloatingBaseTerminalParNMPCTest, coarseUpdate) {
   EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
+
+  double condensed_KKT_ref = kkt_residual.KKT_residual().squaredNorm();
+  condensed_KKT_ref += constraints->squaredKKTErrorNorm(robot, constraints_data, dtau, s);
+  EXPECT_DOUBLE_EQ(condensed_KKT_ref, parnmpc.condensedSquaredKKTErrorNorm(robot, t, dtau, s));
+
+  Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  parnmpc.getStateFeedbackGain(Kuq, Kuv);
+  const int dimv = robot.dimv();
+  const int dimf = robot.dimf();
+  const int dimc = robot.dim_passive()+robot.dimf();
+  const Eigen::MatrixXd da_dq = kkt_matrix_inverse.block(dimx+dimc, dimx+dimc+dimv+dimf, dimv, dimv);
+  const Eigen::MatrixXd da_dv = kkt_matrix_inverse.block(dimx+dimc, dimx+dimc+dimv+dimf+dimv, dimv, dimv);
+  const Eigen::MatrixXd df_dq = kkt_matrix_inverse.block(dimx+dimc+dimv, dimx+dimc+dimv+dimf, dimf, dimv);
+  const Eigen::MatrixXd df_dv = kkt_matrix_inverse.block(dimx+dimc+dimv, dimx+dimc+dimv+dimf+dimv, dimf, dimv);
+  Eigen::MatrixXd Kuq_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd Kuv_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  robot_dynamics.getControlInputTorquesSensitivitiesWithRespectToState(
+    da_dq, da_dv, df_dq, df_dv, Kuq_ref, Kuv_ref);
+  EXPECT_TRUE(Kuq.isApprox(Kuq_ref));
+  EXPECT_TRUE(Kuv.isApprox(Kuv_ref));
 }
 
 

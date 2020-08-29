@@ -205,18 +205,24 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
 } 
 
 
-void ParNMPC::getInitialControlInput(Eigen::VectorXd& u) {
+
+void ParNMPC::getControlInput(const int stage, Eigen::VectorXd& u) const {
+  assert(stage >= 0);
+  assert(stage < N_);
   assert(u.size() == robots_[0].dimv());
-  u = s_[0].u;
+  u = s_[stage].u;
 }
 
 
-void ParNMPC::getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) {
-  // assert(Kq.rows() == robots_[0].dimv());
-  // assert(Kq.cols() == robots_[0].dimv());
-  // assert(Kv.rows() == robots_[0].dimv());
-  // assert(Kv.cols() == robots_[0].dimv());
-  // split_ocps_[0].getStateFeedbackGain(Kq, Kv);
+void ParNMPC::getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq, 
+                                   Eigen::MatrixXd& Kv) const {
+  assert(stage >= 0);
+  assert(stage < N_);
+  assert(Kq.rows() == robots_[0].dimv());
+  assert(Kq.cols() == robots_[0].dimv());
+  assert(Kv.rows() == robots_[0].dimv());
+  assert(Kv.cols() == robots_[0].dimv());
+  split_ocps_[stage].getStateFeedbackGain(Kq, Kv);
 }
 
 
@@ -324,8 +330,27 @@ void ParNMPC::clearLineSearchFilter() {
 }
 
 
-double ParNMPC::KKTError(const double t, const Eigen::VectorXd& q, 
-                         const Eigen::VectorXd& v) {
+double ParNMPC::KKTError(const double t) {
+  Eigen::VectorXd error = Eigen::VectorXd::Zero(N_);
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<N_; ++i) {
+    const int robot_id = omp_get_thread_num();
+    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    if (i < N_-1) {
+      error(i) = split_ocps_[i].condensedSquaredKKTErrorNorm(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i]);
+    }
+    else {
+      error(i) = split_ocps_[i].condensedSquaredKKTErrorNormTerminal(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i]);
+    }
+  }
+  return std::sqrt(error.sum());
+}
+
+
+double ParNMPC::computeKKTError(const double t, const Eigen::VectorXd& q, 
+                                const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   Eigen::VectorXd error = Eigen::VectorXd::Zero(N_);
@@ -334,21 +359,17 @@ double ParNMPC::KKTError(const double t, const Eigen::VectorXd& q,
     const int robot_id = omp_get_thread_num();
     robots_[robot_id].setContactStatus(contact_sequence_[i]);
     if (i == 0) {
-      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
-                                                    t+(i+1)*dtau_, dtau_, q, v, 
-                                                    s_[i], s_[i+1]);
+      error(i) = split_ocps_[i].computeSquaredKKTErrorNorm(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, q, v, s_[i], s_[i+1]);
     }
     else if (i<N_-1) {
-      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
-                                                    t+(i+1)*dtau_, dtau_, 
-                                                    s_[i-1].q, s_[i-1].v, 
-                                                    s_[i], s_[i+1]);
+      error(i) = split_ocps_[i].computeSquaredKKTErrorNorm(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i-1].q, s_[i-1].v, s_[i], 
+          s_[i+1]);
     }
     else {
-      error(i) = split_ocps_[i].squaredKKTErrorNormTerminal(robots_[robot_id], 
-                                                            t+(i+1)*dtau_, 
-                                                            dtau_, s_[i-1].q, 
-                                                            s_[i-1].v, s_[i]);
+      error(i) = split_ocps_[i].computeSquaredKKTErrorNormTerminal(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i-1].q, s_[i-1].v, s_[i]);
     }
   }
   return std::sqrt(error.sum());

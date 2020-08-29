@@ -8,6 +8,10 @@
 
 namespace idocp {
 
+///
+/// @class KKTMatrix
+/// @brief The KKT matrix of a time stage.
+///
 class KKTMatrix {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -98,6 +102,7 @@ private:
   Eigen::MatrixXd C_, Q_, Sc_, Sx_, FMinv_, C_H_inv_;
   bool has_floating_base_;
   int dimv_, dimx_, dimf_, dimc_, a_begin_, f_begin_, q_begin_, v_begin_, dimQ_;
+  static constexpr int kDimFloatingBase = 6;
 
   template <typename MatrixType>
   void invertConstrainedHessian(

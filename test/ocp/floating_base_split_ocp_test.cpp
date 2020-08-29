@@ -179,7 +179,7 @@ TEST_F(FloatingBaseSplitOCPTest, KKTErrorNormOnlyStateEquation) {
   robot.RNEA(s.q, s.v, s.a, s.u);
   s.beta.setZero();
   s.mu.setZero();
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
+  const double kkt_error = ocp.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   robot.subtractConfiguration(s.q, s_next.q, kkt_residual.Fq());
   robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq);
   robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
@@ -209,7 +209,7 @@ TEST_F(FloatingBaseSplitOCPTest, KKTErrorNormStateEquationAndInverseDynamics) {
   s.setContactStatus(robot);
   s.mu.setZero();
   SplitOCP ocp(robot, empty_cost, empty_constraints);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
+  const double kkt_error = ocp.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   robot.subtractConfiguration(s.q, s_next.q, kkt_residual.Fq());
   robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq);
   robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
@@ -250,7 +250,7 @@ TEST_F(FloatingBaseSplitOCPTest, KKTErrorNormStateEquationAndRobotDynamics) {
   kkt_matrix.setContactStatus(robot);
   s.setContactStatus(robot);
   SplitOCP ocp(robot, empty_cost, empty_constraints);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
+  const double kkt_error = ocp.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   robot.subtractConfiguration(s.q, s_next.q, kkt_residual.Fq());
   robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq);
   robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
@@ -307,7 +307,7 @@ TEST_F(FloatingBaseSplitOCPTest, KKTErrorNormEmptyCost) {
   SplitOCP ocp(robot, empty_cost, constraints);
   ocp.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
+  const double kkt_error = ocp.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   kkt_residual.setContactStatus(robot);
   kkt_matrix.setContactStatus(robot);
   s.setContactStatus(robot);
@@ -325,7 +325,7 @@ TEST_F(FloatingBaseSplitOCPTest, KKTErrorNormEmptyConstraints) {
   SplitOCP ocp(robot, cost, empty_constraints);
   ocp.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
+  const double kkt_error = ocp.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   kkt_residual.setContactStatus(robot);
   kkt_matrix.setContactStatus(robot);
   s.setContactStatus(robot);
@@ -342,7 +342,7 @@ TEST_F(FloatingBaseSplitOCPTest, KKTErrorNorm) {
   SplitOCP ocp(robot, cost, constraints);
   ocp.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
+  const double kkt_error = ocp.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   kkt_matrix.setContactStatus(robot);
   kkt_residual.setContactStatus(robot);
   kkt_residual.setZeroMinimum();
@@ -366,7 +366,7 @@ TEST_F(FloatingBaseSplitOCPTest, costAndViolation) {
   SplitOCP ocp(robot, cost, constraints);
   ocp.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = ocp.squaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
+  const double kkt_error = ocp.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, s, s_next);
   const auto pair = ocp.costAndViolation(robot, t, dtau, s); 
   const double cost_ref 
       = cost->l(robot, cost_data, t, dtau, s) 
@@ -610,36 +610,28 @@ TEST_F(FloatingBaseSplitOCPTest, riccatiRecursion) {
   const Eigen::VectorXd dv_next_ref = d.dv() + dtau * d.da() + kkt_residual.Fv();
   EXPECT_TRUE(d_next.dq().isApprox(dq_next_ref));
   EXPECT_TRUE(d_next.dv().isApprox(dv_next_ref));
-  std::cout << "C" << std::endl;
-  std::cout << kkt_residual.C().transpose() << std::endl;
-  std::cout << "dtau * u.head<6>" << std::endl;
-  std::cout << dtau * s.u.head(6).transpose() << std::endl;
-  std::cout << "baumgarte" << std::endl;
-  kkt_residual.C().setZero();
-  robot.computeBaumgarteResidual(dtau, kkt_residual.C());
-  std::cout << kkt_residual.C().head(robot.dimf()).transpose() << std::endl;
-  std::cout << dtau * s.u.head(6).transpose() << std::endl;
-  std::cout << "Cq" << std::endl;
-  std::cout << kkt_matrix.Cq().transpose() << std::endl;
-  std::cout << "Cv" << std::endl;
-  std::cout << kkt_matrix.Cv().transpose() << std::endl;
-  std::cout << "Cqv" << std::endl;
-  std::cout << kkt_matrix.Cqv().transpose() << std::endl;
-  std::cout << "Ca" << std::endl;
-  std::cout << kkt_matrix.Ca().transpose() << std::endl;
-  std::cout << "Cf" << std::endl;
-  std::cout << kkt_matrix.Cf().transpose() << std::endl;
-  std::cout << "Caf" << std::endl;
-  std::cout << kkt_matrix.Caf().transpose() << std::endl;
+
+  double condensed_KKT_ref = kkt_residual.KKT_residual().squaredNorm();
+  condensed_KKT_ref += constraints->squaredKKTErrorNorm(robot, constraints_data, dtau, s);
+  EXPECT_DOUBLE_EQ(condensed_KKT_ref, ocp.condensedSquaredKKTErrorNorm(robot, t, dtau, s));
 
   ocp.computeCondensedDirection(robot, dtau, d);
   EXPECT_TRUE(d.df().isApprox(gain.kf()+gain.Kfq()*d.dq()+gain.Kfv()*d.dv()));
   EXPECT_TRUE(d.dmu().isApprox(gain.kmu()+gain.Kmuq()*d.dq()+gain.Kmuv()*d.dv()));
 
-  std::cout << "Qafaf" << std::endl;
-  std::cout << kkt_matrix.Qafaf() << std::endl;
-  std::cout << "Qafqv" << std::endl;
-  std::cout << kkt_matrix.Qafqv() << std::endl;
+  Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  ocp.getStateFeedbackGain(Kuq, Kuv);
+  Eigen::MatrixXd Kuq_ref = du_dq + du_da * gain.Kaq();
+  if (dimf > 0) {
+    Kuq_ref += du_df * gain.Kfq();
+  }
+  Eigen::MatrixXd Kuv_ref = du_dv + du_da * gain.Kav();
+  if (dimf > 0) {
+    Kuv_ref += du_df * gain.Kfv();
+  }
+  EXPECT_TRUE(Kuq.isApprox(Kuq_ref));
+  EXPECT_TRUE(Kuv.isApprox(Kuv_ref));
 }
 
 } // namespace idocp

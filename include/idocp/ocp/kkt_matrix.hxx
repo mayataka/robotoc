@@ -227,11 +227,11 @@ inline void KKTMatrix::invert(
   if (has_floating_base_) {
     FMinv_.topLeftCorner(dimv_, dimcQ) 
         = dtau * kkt_matrix_inverse.block(dimx_+dimc_+v_begin_, dimx_, dimv_, dimcQ);
-    FMinv_.topLeftCorner(dimv_, dimcQ).template topRows<6>().noalias()
-        += Fqq.template topLeftCorner<6, 6>() 
-            * kkt_matrix_inverse.block(dimx_+dimc_+q_begin_, dimx_, 6, dimcQ);
-    FMinv_.topLeftCorner(dimv_, dimcQ).bottomRows(dimv_-6).noalias()
-        -= kkt_matrix_inverse.block(dimx_+dimc_+q_begin_+6, dimx_, dimv_-6, dimcQ);
+    FMinv_.topLeftCorner(dimv_, dimcQ).template topRows<kDimFloatingBase>().noalias()
+        += Fqq.template topLeftCorner<kDimFloatingBase, kDimFloatingBase>() 
+            * kkt_matrix_inverse.block(dimx_+dimc_+q_begin_, dimx_, kDimFloatingBase, dimcQ);
+    FMinv_.topLeftCorner(dimv_, dimcQ).bottomRows(dimv_-kDimFloatingBase).noalias()
+        -= kkt_matrix_inverse.block(dimx_+dimc_+q_begin_+kDimFloatingBase, dimx_, dimv_-kDimFloatingBase, dimcQ);
   }
   else {
     FMinv_.topLeftCorner(dimv_, dimcQ).noalias() 
@@ -244,18 +244,18 @@ inline void KKTMatrix::invert(
   if (has_floating_base_) {
     Sx_.topLeftCorner(dimv_, dimv_) 
         = dtau * FMinv_.block(0, dimc_+v_begin_, dimv_, dimv_);
-    Sx_.topLeftCorner(dimv_, dimv_).template leftCols<6>().noalias()
-        += FMinv_.block(0, dimc_+q_begin_, dimv_, dimv_).template leftCols<6>() 
-            * Fqq.template topLeftCorner<6, 6>().transpose();
-    Sx_.topLeftCorner(dimv_, dimv_).rightCols(dimv_-6).noalias()
-        -= FMinv_.block(0, dimc_+q_begin_, dimv_, dimv_).rightCols(dimv_-6);
+    Sx_.topLeftCorner(dimv_, dimv_).template leftCols<kDimFloatingBase>().noalias()
+        += FMinv_.block(0, dimc_+q_begin_, dimv_, dimv_).template leftCols<kDimFloatingBase>() 
+            * Fqq.template topLeftCorner<kDimFloatingBase, kDimFloatingBase>().transpose();
+    Sx_.topLeftCorner(dimv_, dimv_).rightCols(dimv_-kDimFloatingBase).noalias()
+        -= FMinv_.block(0, dimc_+q_begin_, dimv_, dimv_).rightCols(dimv_-kDimFloatingBase);
     Sx_.bottomLeftCorner(dimv_, dimv_) 
         = dtau * FMinv_.block(dimv_, dimc_+v_begin_, dimv_, dimv_);
-    Sx_.bottomLeftCorner(dimv_, dimv_).template leftCols<6>().noalias() 
-        += FMinv_.block(dimv_, dimc_+q_begin_, dimv_, dimv_).template leftCols<6>() 
-            * Fqq.template topLeftCorner<6, 6>().transpose();
-    Sx_.bottomLeftCorner(dimv_, dimv_).rightCols(dimv_-6).noalias() 
-        -= FMinv_.block(dimv_, dimc_+q_begin_, dimv_, dimv_).rightCols(dimv_-6);
+    Sx_.bottomLeftCorner(dimv_, dimv_).template leftCols<kDimFloatingBase>().noalias() 
+        += FMinv_.block(dimv_, dimc_+q_begin_, dimv_, dimv_).template leftCols<kDimFloatingBase>() 
+            * Fqq.template topLeftCorner<kDimFloatingBase, kDimFloatingBase>().transpose();
+    Sx_.bottomLeftCorner(dimv_, dimv_).rightCols(dimv_-kDimFloatingBase).noalias() 
+        -= FMinv_.block(dimv_, dimc_+q_begin_, dimv_, dimv_).rightCols(dimv_-kDimFloatingBase);
   }
   else {
     Sx_.topLeftCorner(dimv_, dimv_).noalias() 
@@ -290,7 +290,7 @@ inline void KKTMatrix::invert(
 
 inline void KKTMatrix::setZeroMinimum() {
   Quu.setZero();
-  Fqq.topLeftCorner<6, 6>().setZero();
+  Fqq.topLeftCorner<kDimFloatingBase, kDimFloatingBase>().setZero();
   C_.topLeftCorner(dimc_, dimQ_).setZero();
   Q_.topLeftCorner(dimQ_, dimQ_).triangularView<Eigen::Upper>().setZero();
 }

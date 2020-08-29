@@ -122,7 +122,16 @@ void TerminalOCP::updatePrimal(Robot& robot, const double step_size,
 
 
 double TerminalOCP::squaredKKTErrorNorm(Robot& robot, const double t, 
-                                        const SplitSolution& s) {
+                                        const SplitSolution& s) const {
+  double error = 0;
+  error += (kkt_residual_.lq()-s.lmd).squaredNorm();
+  error += (kkt_residual_.lv()-s.gmm).squaredNorm();
+  return error;
+}
+
+
+double TerminalOCP::computeSquaredKKTErrorNorm(Robot& robot, const double t, 
+                                               const SplitSolution& s) {
   kkt_residual_.lq().setZero();
   kkt_residual_.lv().setZero();
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, 

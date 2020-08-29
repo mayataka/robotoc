@@ -53,6 +53,16 @@ public:
 
   void setContactStatus(const Robot& robot);
 
+  template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
+            typename MatrixType4, typename MatrixType5, typename MatrixType6>
+  void getControlInputTorquesSensitivitiesWithRespectToState(
+      const Eigen::MatrixBase<MatrixType1>& da_dq,
+      const Eigen::MatrixBase<MatrixType2>& da_dv,
+      const Eigen::MatrixBase<MatrixType3>& df_dq,
+      const Eigen::MatrixBase<MatrixType4>& df_dv,
+      const Eigen::MatrixBase<MatrixType5>& Kuq,
+      const Eigen::MatrixBase<MatrixType6>& Kuv) const;
+
 private:
   Eigen::VectorXd lu_condensed_;
   Eigen::MatrixXd du_dq_, du_dv_, du_da_, du_df_, 

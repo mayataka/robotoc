@@ -19,107 +19,163 @@
 
 namespace idocp {
 
+///
+/// @class TerminalOCP
+/// @brief Split OCP for terminal stage. 
+///
 class TerminalOCP {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  // Constructor. Sets the robot, cost function, and constraints.
-  // Argments:
-  //    robot: The robot model that has been already initialized.
-  //    cost: The pointer to the cost function.
-  //    constraints: The pointer to the constraints.
+  ///
+  /// @brief Construct a terminal OCP.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] cost Shared ptr of the cost function.
+  /// @param[in] cost Shared ptr of the constraints.
+  ///
   TerminalOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
               const std::shared_ptr<Constraints>& constraints);
 
-  // Default constructor.
+  ///
+  /// @brief Default constructor. Does not construct any datas. 
+  ///
   TerminalOCP();
   
-  // Destructor.
+  ///
+  /// @brief Destructor. 
+  ///
   ~TerminalOCP();
 
-  // Use default copy constructor.
+  ///
+  /// @brief Use default copy constructor. 
+  ///
   TerminalOCP(const TerminalOCP&) = default;
 
-  // Use default copy assign operator.
+  ///
+  /// @brief Use default copy assign operator. 
+  ///
   TerminalOCP& operator=(const TerminalOCP&) = default;
 
-  // Use default move constructor.
+  ///
+  /// @brief Use default move constructor. 
+  ///
   TerminalOCP(TerminalOCP&&) noexcept = default;
 
-  // Use default move assign operator.
+  ///
+  /// @brief Use default move assign operator. 
+  ///
   TerminalOCP& operator=(TerminalOCP&&) noexcept = default;
 
-  // Check whether the solution s is feasible under inequality constraints.
+  ///
+  /// @brief Check whether the solution is feasible under inequality constraints.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] s Split solution of this stage.
+  ///
   bool isFeasible(const Robot& robot, const SplitSolution& s);
 
-  // Initialize the constraints, i.e., set slack and dual variables.
+  ///
+  /// @brief Initialize the constraints, i.e., set slack and dual variables. 
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] time_step Time step of this stage.
+  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] s Split solution of this stage.
+  ///
   void initConstraints(const Robot& robot, const int time_step, 
                        const double dtau, const SplitSolution& s);
 
-  // Linearize the OCP for Newton's method around the current solution at the 
-  // last time step of the horizon.
-  // Argments: 
-  //   robot: The robot model. The contact status of the current time step 
-  //      is included in this model.
-  //   t: Time of the current time step.
-  //   dtau: Discretization interval of the horizon.
+  ///
+  /// @brief Linearize the terminal OCP for Newton's method around the current 
+  /// solution.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] s Split solution of this stage.
+  /// @param[out] riccati Riccati factorization of this stage.
+  ///
   void linearizeOCP(Robot& robot, const double t, const SplitSolution& s, 
                     RiccatiFactorization& riccati);
 
-  // Computes the direction of the condensed veriables.
-  // Argments: 
-  //   dtau: Discretization interval of the horizon.
-  //   dq: Direction of the configuration. Size must be dimv.
-  //   dv: Direction of the generalized velocity. Size must be dimv.
+  ///
+  /// @brief Computes the Newton direction of the condensed variables of this 
+  /// stage.
+  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] d Split direction of this stage.
+  /// 
   void computeCondensedDirection(Robot& robot, const double dtau, 
                                  SplitDirection& d);
 
-  // Returns the maximum step size of the primal variables of the inequality 
-  // constraints.
+  ///
+  /// @brief Returns maximum stap size of the primal variables that satisfies 
+  /// the inequality constraints.
+  /// @return Maximum stap size of the primal variables that satisfies 
+  /// the inequality constraints.
+  ///
   double maxPrimalStepSize();
 
-  // Returns the maximum step size of the dual variables of the inequality 
-  // constraints.
+  ///
+  /// @brief Returns maximum stap size of the dual variables that satisfies 
+  /// the inequality constraints.
+  /// @return Maximum stap size of the dual variables that satisfies 
+  /// the inequality constraints.
+  ///
   double maxDualStepSize();
 
-  // Returns the terminal cost.
-  // Argments: 
-  //   t: Time of the current time step.
+  ///
+  /// @brief Returns the terminal cost.
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] s Split solution of this stage.
+  ///
   double terminalCost(Robot& robot, const double t, const SplitSolution& s);
 
-  // Returns the terminal cost with step_size.
-  // Argments: 
-  //   robot: The robot model. 
-  //   step_size: The step size.
-  //   t: Time of the current time step.
-  //   dq: Direction of the configuration. Size must be dimv.
-  //   dv: Direction of the generalized velocity. Size must be dimv.
+  ///
+  /// @brief Returns the terminal cost under step_size. The split solution of 
+  /// this stage and is computed by step_size temporary. 
+  /// @param[in] step_size Step size for the primal variables. 
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] s Split solution of this stage.
+  /// @param[in] d Split direction of this stage.
+  ///
   double terminalCost(Robot& robot, const double step_size, const double t, 
                       const SplitSolution& s, const SplitDirection& d);
 
-  // Updates the dual variables of the inequality constraints.
-  // Argments: 
-  //   step_size: The step size.
+  ///
+  /// @brief Updates dual variables of the inequality constraints.
+  /// @param[in] step_size Dula step size of the OCP. 
+  ///
   void updateDual(const double step_size);
 
-  // Updates the primal variables.
-  // Argments: 
-  //   robot: The robot model. The contact status of the current time step 
-  //      is included in this model.
-  //   step_size: The step size.
-  //   dq: Direction of the configuration. Size must be dimv.
-  //   dv: Direction of the generalized velocity. Size must be dimv.
+  ///
+  /// @brief Updates primal variables of this stage.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] step_size Primal step size of the OCP. 
+  /// @param[in] riccati Riccati factorization of this stage.
+  /// @param[in] d Split direction of this stage.
+  /// @param[in, out] s Split solution of this stage.
+  ///
   void updatePrimal(Robot& robot, const double step_size, 
                     const RiccatiFactorization& riccati,
                     const SplitDirection& d, SplitSolution& s) const;
 
-  // Returns the squared KKT error norm.
-  // Argments: 
-  //   robot: The robot model. The contact status of the current time step 
-  //      is included in this model.
-  //   t: Time of the current time step.
+  ///
+  /// @brief Returns the squared KKT error norm by using previously computed 
+  /// KKT residual computed by linearizeOCP().
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] s Split solution of this stage.
+  /// @return The squared norm of the KKT residual.
+  ///
   double squaredKKTErrorNorm(Robot& robot, const double t, 
-                             const SplitSolution& s);
+                             const SplitSolution& s) const;
+
+  ///
+  /// @brief Computes and returns the squared KKT error norm by using  
+  /// previously computed KKT residual computed by linearizeOCP().
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] s Split solution of this stage.
+  /// @return The squared norm of the KKT residual.
+  ///
+  double computeSquaredKKTErrorNorm(Robot& robot, const double t, 
+                                    const SplitSolution& s);
 
 private:
   std::shared_ptr<CostFunction> cost_;
@@ -128,7 +184,7 @@ private:
   ConstraintsData constraints_data_;
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
-  SplitSolution s_tmp_;
+  SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
 
 };
 

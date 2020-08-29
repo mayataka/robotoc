@@ -67,32 +67,6 @@ inline void Robot::subtractConfiguration(
 }
 
 
-template <typename ConfigVectorType, typename TangentVectorType,  
-          typename MatrixType1, typename MatrixType2>
-inline void Robot::dIntegrateConfiguration(
-    const Eigen::MatrixBase<ConfigVectorType>& q, 
-    const Eigen::MatrixBase<TangentVectorType>& v, 
-    const double integration_length, 
-    const Eigen::MatrixBase<MatrixType1>& dIntegrate_dq,
-    const Eigen::MatrixBase<MatrixType2>& dIntegrate_dv) const {
-  assert(q.size() == dimq_);
-  assert(v.size() == dimv_);
-  assert(integration_length >= 0);
-  assert(dIntegrate_dq.rows() == dimv_);
-  assert(dIntegrate_dq.cols() == dimv_);
-  assert(dIntegrate_dv.rows() == dimv_);
-  assert(dIntegrate_dv.cols() == dimv_);
-  pinocchio::dIntegrate(
-      model_, q, v, 
-      const_cast<Eigen::MatrixBase<MatrixType1>&>(dIntegrate_dq),
-      pinocchio::ARG0);
-  pinocchio::dIntegrate(
-      model_, q, v, 
-      const_cast<Eigen::MatrixBase<MatrixType2>&>(dIntegrate_dv),
-      pinocchio::ARG1);
-}
-
-
 template <typename ConfigVectorType1, typename ConfigVectorType2, 
           typename MatrixType>
 inline void Robot::dSubtractdConfigurationPlus(
