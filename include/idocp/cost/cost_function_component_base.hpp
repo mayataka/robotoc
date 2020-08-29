@@ -30,65 +30,65 @@ public:
   CostFunctionComponentBase& operator=(CostFunctionComponentBase&&) noexcept 
       = default;
 
-  virtual double l(const Robot& robot, CostFunctionData& data, const double t, 
+  virtual double l(Robot& robot, CostFunctionData& data, const double t, 
                    const double dtau, const SplitSolution& s) const = 0;
 
-  virtual double phi(const Robot& robot, CostFunctionData& data, const double t, 
+  virtual double phi(Robot& robot, CostFunctionData& data, const double t, 
                      const SplitSolution& s) const = 0;
 
-  virtual void lq(const Robot& robot, CostFunctionData& data, const double t, 
+  virtual void lq(Robot& robot, CostFunctionData& data, const double t, 
                   const double dtau, const SplitSolution& s, 
                   KKTResidual& kkt_residual) const = 0;
 
-  virtual void lv(const Robot& robot, CostFunctionData& data, const double t, 
+  virtual void lv(Robot& robot, CostFunctionData& data, const double t, 
                   const double dtau, const SplitSolution& s, 
                   KKTResidual& kkt_residual) const = 0;
 
-  virtual void la(const Robot& robot, CostFunctionData& data, const double t, 
+  virtual void la(Robot& robot, CostFunctionData& data, const double t, 
                   const double dtau, const SplitSolution& s, 
                   KKTResidual& kkt_residual) const = 0;
 
-  virtual void lf(const Robot& robot, CostFunctionData& data, const double t, 
+  virtual void lf(Robot& robot, CostFunctionData& data, const double t, 
                   const double dtau, const SplitSolution& s, 
                   KKTResidual& kkt_residual) const = 0;
 
-  virtual void lqq(const Robot& robot, CostFunctionData& data, const double t, 
+  virtual void lqq(Robot& robot, CostFunctionData& data, const double t, 
                    const double dtau, const SplitSolution& s, 
                    KKTMatrix& kkt_matrix) const = 0;
 
-  virtual void lvv(const Robot& robot, CostFunctionData& data, const double t, 
+  virtual void lvv(Robot& robot, CostFunctionData& data, const double t, 
                    const double dtau, const SplitSolution& s, 
                    KKTMatrix& kkt_matrix) const = 0;
 
-  virtual void laa(const Robot& robot, CostFunctionData& data, const double t, 
+  virtual void laa(Robot& robot, CostFunctionData& data, const double t, 
                    const double dtau, const SplitSolution& s, 
                    KKTMatrix& kkt_matrix) const = 0;
 
-  virtual void lff(const Robot& robot, CostFunctionData& data, const double t, 
+  virtual void lff(Robot& robot, CostFunctionData& data, const double t, 
                    const double dtau, const SplitSolution& s, 
                    KKTMatrix& kkt_matrix) const = 0;
 
-  virtual void phiq(const Robot& robot, CostFunctionData& data,  
+  virtual void phiq(Robot& robot, CostFunctionData& data,  
                     const double t, const SplitSolution& s, 
                     KKTResidual& kkt_residual) const = 0;
 
-  virtual void phiv(const Robot& robot, CostFunctionData& data,  
+  virtual void phiv(Robot& robot, CostFunctionData& data,  
                     const double t, const SplitSolution& s, 
                     KKTResidual& kkt_residual) const = 0;
 
-  virtual void phiqq(const Robot& robot, CostFunctionData& data,  
+  virtual void phiqq(Robot& robot, CostFunctionData& data,  
                      const double t, const SplitSolution& s,
                      KKTMatrix& kkt_matrix) const = 0;
 
-  virtual void phivv(const Robot& robot, CostFunctionData& data,  
+  virtual void phivv(Robot& robot, CostFunctionData& data,  
                      const double t, const SplitSolution& s,
                      KKTMatrix& kkt_matrix) const = 0;
 
-  virtual void lu(const Robot& robot, CostFunctionData& data, const double t, 
+  virtual void lu(Robot& robot, CostFunctionData& data, const double t, 
                   const double dtau, const Eigen::VectorXd& u, 
                   Eigen::VectorXd& lu) const = 0;
 
-  virtual void luu(const Robot& robot, CostFunctionData& data, const double t, 
+  virtual void luu(Robot& robot, CostFunctionData& data, const double t, 
                    const double dtau, const Eigen::VectorXd& u, 
                    Eigen::MatrixXd& Quu) const  = 0;
 

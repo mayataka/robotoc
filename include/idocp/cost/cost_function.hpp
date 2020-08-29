@@ -40,81 +40,81 @@ public:
 
   bool isEmpty() const;
 
-  double l(const Robot& robot, CostFunctionData& data, const double t, 
+  double l(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s) const;
 
-  double phi(const Robot& robot, CostFunctionData& data, const double t, 
+  double phi(Robot& robot, CostFunctionData& data, const double t, 
              const SplitSolution& s) const;
 
-  void computeStageCostDerivatives(const Robot& robot, CostFunctionData& data, 
+  void computeStageCostDerivatives(Robot& robot, CostFunctionData& data, 
                                    const double t, const double dtau, 
                                    const SplitSolution& s, 
                                    KKTResidual& kkt_residual) const;
 
-  void computeStageCostHessian(const Robot& robot, CostFunctionData& data, 
+  void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
                                const double t, const double dtau, 
                                const SplitSolution& s, 
                                KKTMatrix& kkt_matrix) const;
 
-  void computeTerminalCostDerivatives(const Robot& robot, CostFunctionData& data, 
+  void computeTerminalCostDerivatives(Robot& robot, CostFunctionData& data, 
                                       const double t, const SplitSolution& s, 
                                       KKTResidual& kkt_residual) const;
 
-  void computeTerminalCostHessian(const Robot& robot, CostFunctionData& data, 
+  void computeTerminalCostHessian(Robot& robot, CostFunctionData& data, 
                                   const double t, const SplitSolution& s, 
                                   KKTMatrix& kkt_matrix) const;
 
-  void lq(const Robot& robot, CostFunctionData& data, const double t, 
+  void lq(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
           KKTResidual& kkt_residual) const;
 
-  void lv(const Robot& robot, CostFunctionData& data, const double t, 
+  void lv(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
           KKTResidual& kkt_residual) const;
 
-  void la(const Robot& robot, CostFunctionData& data, const double t, 
+  void la(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
           KKTResidual& kkt_residual) const;
 
-  void lf(const Robot& robot, CostFunctionData& data, const double t, 
+  void lf(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
           KKTResidual& kkt_residual) const;
 
-  void lqq(const Robot& robot, CostFunctionData& data, const double t, 
+  void lqq(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
            KKTMatrix& kkt_matrix) const;
 
-  void lvv(const Robot& robot, CostFunctionData& data, const double t, 
+  void lvv(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
            KKTMatrix& kkt_matrix) const;
 
-  void laa(const Robot& robot, CostFunctionData& data, const double t, 
+  void laa(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
            KKTMatrix& kkt_matrix) const;
 
-  void lff(const Robot& robot, CostFunctionData& data, const double t, 
+  void lff(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
            KKTMatrix& kkt_matrix) const;
 
-  void phiq(const Robot& robot, CostFunctionData& data, const double t, 
+  void phiq(Robot& robot, CostFunctionData& data, const double t, 
             const SplitSolution& s, KKTResidual& kkt_residual) const;
 
-  void phiv(const Robot& robot, CostFunctionData& data, const double t, 
+  void phiv(Robot& robot, CostFunctionData& data, const double t, 
             const SplitSolution& s, KKTResidual& kkt_residual) const;
 
-  void phiqq(const Robot& robot, CostFunctionData& data, const double t, 
+  void phiqq(Robot& robot, CostFunctionData& data, const double t, 
              const double dtau, const SplitSolution& s, 
              KKTMatrix& kkt_matrix) const;
 
-  void phivv(const Robot& robot, CostFunctionData& data, const double t, 
+  void phivv(Robot& robot, CostFunctionData& data, const double t, 
              const double dtau, const SplitSolution& s, 
              KKTMatrix& kkt_matrix) const;
 
-  void lu(const Robot& robot, CostFunctionData& data, const double t, 
+  void lu(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const Eigen::VectorXd& u, 
           Eigen::VectorXd& lu) const;
 
-  void luu(const Robot& robot, CostFunctionData& data, const double t, 
+  void luu(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const Eigen::VectorXd& u, 
            Eigen::MatrixXd& Quu) const;
 

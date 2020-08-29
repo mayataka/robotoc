@@ -312,7 +312,7 @@ TEST_F(FloatingBaseRobotTest, frameRotation) {
   Robot robot(urdf_);
   const int contact_frame_id = contact_frames_[0];
   robot.updateKinematics(q_, v_, a_);
-  auto frame_rotation = robot.frameRotation(contact_frame_id_);
+  auto frame_rotation = robot.frameRotation(contact_frame_id);
   pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
   pinocchio::updateFramePlacements(model_, data_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);

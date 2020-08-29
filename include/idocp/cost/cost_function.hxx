@@ -30,7 +30,7 @@ inline bool CostFunction::isEmpty() const {
 }
 
 
-inline double CostFunction::l(const Robot& robot, CostFunctionData& data, 
+inline double CostFunction::l(Robot& robot, CostFunctionData& data, 
                               const double t, const double dtau, 
                               const SplitSolution& s) const {
   assert(dtau > 0);
@@ -42,7 +42,7 @@ inline double CostFunction::l(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline double CostFunction::phi(const Robot& robot, CostFunctionData& data, 
+inline double CostFunction::phi(Robot& robot, CostFunctionData& data, 
                                 const double t, const SplitSolution& s) const {
   double phi = 0;
   for (const auto cost : costs_) {
@@ -53,7 +53,7 @@ inline double CostFunction::phi(const Robot& robot, CostFunctionData& data,
 
 
 inline void CostFunction::computeStageCostDerivatives(
-    const Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const double t, 
     const double dtau, const SplitSolution& s, 
     KKTResidual& kkt_residual) const {
   assert(dtau > 0);
@@ -69,7 +69,7 @@ inline void CostFunction::computeStageCostDerivatives(
 
 
 inline void CostFunction::computeStageCostHessian(
-    const Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const double t, 
     const double dtau, const SplitSolution& s, KKTMatrix& kkt_matrix) const {
   assert(dtau > 0);
   for (const auto cost : costs_) {
@@ -84,7 +84,7 @@ inline void CostFunction::computeStageCostHessian(
 
 
 inline void CostFunction::computeTerminalCostDerivatives(
-    const Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, KKTResidual& kkt_residual) const {
   for (const auto cost : costs_) {
     cost->phiq(robot, data, t, s, kkt_residual);
@@ -94,7 +94,7 @@ inline void CostFunction::computeTerminalCostDerivatives(
 
 
 inline void CostFunction::computeTerminalCostHessian(
-    const Robot& robot, CostFunctionData& data, const double t, 
+    Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, KKTMatrix& kkt_matrix) const {
   for (const auto cost : costs_) {
     cost->phiqq(robot, data, t, s, kkt_matrix);
@@ -103,7 +103,7 @@ inline void CostFunction::computeTerminalCostHessian(
 }
 
 
-inline void CostFunction::lq(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::lq(Robot& robot, CostFunctionData& data, 
                              const double t, const double dtau, 
                              const SplitSolution& s, 
                              KKTResidual& kkt_residual) const {
@@ -114,7 +114,7 @@ inline void CostFunction::lq(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::lv(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::lv(Robot& robot, CostFunctionData& data, 
                              const double t, const double dtau, 
                              const SplitSolution& s, 
                              KKTResidual& kkt_residual) const {
@@ -125,7 +125,7 @@ inline void CostFunction::lv(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::la(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::la(Robot& robot, CostFunctionData& data, 
                              const double t, const double dtau, 
                              const SplitSolution& s, 
                              KKTResidual& kkt_residual) const {
@@ -136,7 +136,7 @@ inline void CostFunction::la(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::lf(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::lf(Robot& robot, CostFunctionData& data, 
                              const double t, const double dtau, 
                              const SplitSolution& s, 
                              KKTResidual& kkt_residual) const {
@@ -147,7 +147,7 @@ inline void CostFunction::lf(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::lqq(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::lqq(Robot& robot, CostFunctionData& data, 
                               const double t, const double dtau, 
                               const SplitSolution& s, 
                               KKTMatrix& kkt_matrix) const {
@@ -158,7 +158,7 @@ inline void CostFunction::lqq(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::lvv(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::lvv(Robot& robot, CostFunctionData& data, 
                               const double t, const double dtau, 
                               const SplitSolution& s, 
                               KKTMatrix& kkt_matrix) const {
@@ -169,7 +169,7 @@ inline void CostFunction::lvv(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::laa(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::laa(Robot& robot, CostFunctionData& data, 
                               const double t, const double dtau, 
                               const SplitSolution& s, 
                               KKTMatrix& kkt_matrix) const {
@@ -180,7 +180,7 @@ inline void CostFunction::laa(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::lff(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::lff(Robot& robot, CostFunctionData& data, 
                               const double t, const double dtau, 
                               const SplitSolution& s, 
                               KKTMatrix& kkt_matrix) const {
@@ -191,7 +191,7 @@ inline void CostFunction::lff(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::phiq(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::phiq(Robot& robot, CostFunctionData& data, 
                                const double t, const SplitSolution& s, 
                                KKTResidual& kkt_residual) const {
   for (const auto cost : costs_) {
@@ -200,7 +200,7 @@ inline void CostFunction::phiq(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::phiv(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::phiv(Robot& robot, CostFunctionData& data, 
                                const double t, const SplitSolution& s, 
                                KKTResidual& kkt_residual) const {
   for (const auto cost : costs_) {
@@ -209,7 +209,7 @@ inline void CostFunction::phiv(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::phiqq(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::phiqq(Robot& robot, CostFunctionData& data, 
                                 const double t, const double dtau, 
                                 const SplitSolution& s, 
                                 KKTMatrix& kkt_matrix) const {
@@ -219,7 +219,7 @@ inline void CostFunction::phiqq(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::phivv(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::phivv(Robot& robot, CostFunctionData& data, 
                                 const double t, const double dtau, 
                                 const SplitSolution& s, 
                                 KKTMatrix& kkt_matrix) const {
@@ -229,7 +229,7 @@ inline void CostFunction::phivv(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::lu(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::lu(Robot& robot, CostFunctionData& data, 
                              const double t, const double dtau, 
                              const Eigen::VectorXd& u, 
                              Eigen::VectorXd& lu) const {
@@ -242,7 +242,7 @@ inline void CostFunction::lu(const Robot& robot, CostFunctionData& data,
 }
 
 
-inline void CostFunction::luu(const Robot& robot, CostFunctionData& data, 
+inline void CostFunction::luu(Robot& robot, CostFunctionData& data, 
                               const double t, const double dtau, 
                               const Eigen::VectorXd& u, 
                               Eigen::MatrixXd& Quu) const {

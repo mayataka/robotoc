@@ -9,9 +9,9 @@ TaskSpace3DCost::TaskSpace3DCost(const Robot& robot,
                                  const int frame_id)
   : CostFunctionComponentBase(),
     frame_id_(frame_id),
-    q_ref_(Eigen::Vector3d::Zero(robot.dimq())),
-    q_weight_(Eigen::Vector3d::Zero(robot.dimv())),
-    qf_weight_(Eigen::Vector3d::Zero(robot.dimv())) {
+    q_ref_(Eigen::Vector3d::Zero()),
+    q_weight_(Eigen::Vector3d::Zero()),
+    qf_weight_(Eigen::Vector3d::Zero()) {
 }
 
 
@@ -43,29 +43,29 @@ void TaskSpace3DCost::set_qf_weight(const Eigen::Vector3d& qf_weight) {
 }
 
 
-double TaskSpace3DCost::l(const Robot& robot, CostFunctionData& data, 
-                         const double t, const double dtau, 
-                         const SplitSolution& s) const {
+double TaskSpace3DCost::l(Robot& robot, CostFunctionData& data, 
+                          const double t, const double dtau, 
+                          const SplitSolution& s) const {
   double l = 0;
   data.qdiff_3d = robot.framePosition(frame_id_) - q_ref_;
-  l += (q_weight_.array()*data.qdiff_3d.array()*data.qdiff_3d.array.array()).sum();
+  l += (q_weight_.array()*data.qdiff_3d.array()*data.qdiff_3d.array()).sum();
   return 0.5 * dtau * l;
 }
 
 
-double TaskSpace3DCost::phi(const Robot& robot, CostFunctionData& data, 
-                           const double t, const SplitSolution& s) const {
+double TaskSpace3DCost::phi(Robot& robot, CostFunctionData& data, 
+                            const double t, const SplitSolution& s) const {
   double phi = 0;
   data.qdiff_3d = robot.framePosition(frame_id_) - q_ref_;
-  phi += (qf_weight_.array()*data.qdiff_3d.array()*data.qdiff_3d.array.array()).sum();
+  phi += (qf_weight_.array()*data.qdiff_3d.array()*data.qdiff_3d.array()).sum();
   return 0.5 * phi;
 }
 
 
-void TaskSpace3DCost::lq(const Robot& robot, CostFunctionData& data, 
-                        const double t, const double dtau, 
-                        const SplitSolution& s, 
-                        KKTResidual& kkt_residual) const {
+void TaskSpace3DCost::lq(Robot& robot, CostFunctionData& data, 
+                         const double t, const double dtau, 
+                         const SplitSolution& s, 
+                         KKTResidual& kkt_residual) const {
   data.qdiff_3d = robot.framePosition(frame_id_) - q_ref_;
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
@@ -75,9 +75,9 @@ void TaskSpace3DCost::lq(const Robot& robot, CostFunctionData& data,
 }
 
 
-void TaskSpace3DCost::lqq(const Robot& robot, CostFunctionData& data, 
-                         const double t, const double dtau, 
-                         const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+void TaskSpace3DCost::lqq(Robot& robot, CostFunctionData& data, 
+                          const double t, const double dtau, 
+                          const SplitSolution& s, KKTMatrix& kkt_matrix) const {
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
       = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
@@ -86,9 +86,9 @@ void TaskSpace3DCost::lqq(const Robot& robot, CostFunctionData& data,
 }
 
 
-void TaskSpace3DCost::phiq(const Robot& robot, CostFunctionData& data, 
-                          const double t, const SplitSolution& s,
-                          KKTResidual& kkt_residual) const {
+void TaskSpace3DCost::phiq(Robot& robot, CostFunctionData& data, 
+                           const double t, const SplitSolution& s,
+                           KKTResidual& kkt_residual) const {
   data.qdiff_3d = robot.framePosition(frame_id_) - q_ref_;
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
@@ -98,9 +98,9 @@ void TaskSpace3DCost::phiq(const Robot& robot, CostFunctionData& data,
 }
 
 
-void TaskSpace3DCost::phiqq(const Robot& robot, CostFunctionData& data, 
-                           const double t, const SplitSolution& s,
-                           KKTMatrix& kkt_matrix) const {
+void TaskSpace3DCost::phiqq(Robot& robot, CostFunctionData& data, 
+                            const double t, const SplitSolution& s,
+                            KKTMatrix& kkt_matrix) const {
     robot.getFrameJacobian(frame_id_, data.J_6d);
     data.J_3d.noalias() 
         = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();

@@ -13,17 +13,15 @@ public:
   CostFunctionData(const Robot& robot) 
     : qdiff(),
       J_qdiff(),
-      qdiff_3d(),
-      J_6d(),
-      J_3d() {
+      qdiff_3d(Eigen::Vector3d::Zero()),
+      J_6d(Eigen::MatrixXd::Zero(6, robot.dimv())),
+      J_3d(Eigen::MatrixXd::Zero(3, robot.dimv())) {
     if (robot.has_floating_base()) {
       qdiff.resize(robot.dimv());
       qdiff.setZero();
       J_qdiff.resize(robot.dimv(), robot.dimv());
       J_qdiff.setZero();
     }
-    J_6d.setZero();
-    J_3d.setZero();
     qdiff_3d.setZero();
   }
 
@@ -53,8 +51,7 @@ public:
   Eigen::VectorXd qdiff;
   Eigen::MatrixXd J_qdiff;
   Eigen::Vector3d qdiff_3d;
-  Eigen::Matrix<double, 6, Eigen::Dynamic> J_6d;
-  Eigen::Matrix<double, 3, Eigen::Dynamic> J_3d;
+  Eigen::MatrixXd J_6d, J_3d;
 
 private:
 
