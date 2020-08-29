@@ -91,13 +91,17 @@ TEST_F(OCPTest, updateSolutionFixedBaseWithoutContact) {
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T_, N_, 1);
   OCP ocp_ref(robot, cost, constraints, T_, N_, 2);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_, q, v), ocp_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
   ocp.updateSolution(t_, q, v, false);
   ocp_ref.updateSolution(t_, q, v, false);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_, q, v), ocp_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
   ocp.updateSolution(t_, q, v, true);
   ocp_ref.updateSolution(t_, q, v, true);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_, q, v), ocp_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
 }
 
 
@@ -156,13 +160,17 @@ TEST_F(OCPTest, updateSolutionFixedBaseWithContact) {
   ocp.setContactSequence(contact_sequence);
   OCP ocp_ref(robot, cost, constraints, T_, N_, 2);
   ocp_ref.setContactSequence(contact_sequence);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_, q, v), ocp_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
   ocp.updateSolution(t_, q, v, false);
   ocp_ref.updateSolution(t_, q, v, false);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_, q, v), ocp_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
   ocp.updateSolution(t_, q, v, true);
   ocp_ref.updateSolution(t_, q, v, true);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_, q, v), ocp_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
 }
 
 
@@ -225,13 +233,17 @@ TEST_F(OCPTest, floating_base) {
   ocp.setContactSequence(contact_sequence);
   OCP ocp_ref(robot, cost, constraints, T_, N_, 2);
   ocp_ref.setContactSequence(contact_sequence);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_, q, v), ocp_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
   ocp.updateSolution(t_, q, v, false);
   ocp_ref.updateSolution(t_, q, v, false);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_, q, v), ocp_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
   ocp.updateSolution(t_, q, v, true);
   ocp_ref.updateSolution(t_, q, v, true);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_, q, v), ocp_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
 }
 
 } // namespace idocp

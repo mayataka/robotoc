@@ -461,12 +461,29 @@ void SplitParNMPC::getStateFeedbackGain(Eigen::MatrixXd& Kq,
 }
 
 
-double SplitParNMPC::squaredKKTErrorNorm(Robot& robot, const double t, 
-                                         const double dtau, 
-                                         const Eigen::VectorXd& q_prev, 
-                                         const Eigen::VectorXd& v_prev, 
-                                         const SplitSolution& s,
-                                         const SplitSolution& s_next) {
+double SplitParNMPC::condensedSquaredKKTErrorNorm(Robot& robot, const double t, 
+                                                  const double dtau, 
+                                                  const SplitSolution& s) {
+  assert(dtau > 0);
+  double error = kkt_residual_.KKT_residual().squaredNorm();
+  error += constraints_->squaredKKTErrorNorm(robot, constraints_data_, dtau, s);
+  return error;
+}
+
+
+double SplitParNMPC::condensedSquaredKKTErrorNormTerminal(
+    Robot& robot, const double t, const double dtau, const SplitSolution& s) {
+  assert(dtau > 0);
+  return condensedSquaredKKTErrorNorm(robot, t, dtau, s);
+}
+
+
+double SplitParNMPC::computeSquaredKKTErrorNorm(Robot& robot, const double t, 
+                                                const double dtau, 
+                                                const Eigen::VectorXd& q_prev, 
+                                                const Eigen::VectorXd& v_prev, 
+                                                const SplitSolution& s,
+                                                const SplitSolution& s_next) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -494,11 +511,10 @@ double SplitParNMPC::squaredKKTErrorNorm(Robot& robot, const double t,
 }
 
 
-double SplitParNMPC::squaredKKTErrorNormTerminal(Robot& robot, const double t, 
-                                                 const double dtau, 
-                                                 const Eigen::VectorXd& q_prev, 
-                                                 const Eigen::VectorXd& v_prev, 
-                                                 const SplitSolution& s) {
+double SplitParNMPC::computeSquaredKKTErrorNormTerminal(
+    Robot& robot, const double t, const double dtau, 
+    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
+    const SplitSolution& s) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());

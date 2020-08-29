@@ -127,11 +127,12 @@ inline void OCPBenchmarker<OCPType>::testConvergence(const double t,
   else {
     std::cout << "Line search is disable" << std::endl;
   }
-  std::cout << "Initial KKT error = " << ocp_.KKTError(t, q, v) << std::endl;
+  std::cout << "Initial KKT error = " << ocp_.computeKKTError(t, q, v) 
+            << std::endl;
   for (int i=0; i<num_iteration; ++i) {
     ocp_.updateSolution(t, q, v, line_search);
     std::cout << "KKT error at iteration " << i << " = " 
-              << ocp_.KKTError(t, q, v) << std::endl;
+              << ocp_.computeKKTError(t, q, v) << std::endl;
   }
   std::cout << "-----------------------------------" << std::endl;
   std::cout << std::endl;

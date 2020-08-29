@@ -303,11 +303,21 @@ void SplitOCP::getStateFeedbackGain(Eigen::MatrixXd& Kq,
 }
 
 
-double SplitOCP::squaredKKTErrorNorm(Robot& robot, const double t, 
-                                     const double dtau, 
-                                     const Eigen::VectorXd& q_prev, 
-                                     const SplitSolution& s,
-                                     const SplitSolution& s_next) {
+double SplitOCP::condensedSquaredKKTErrorNorm(Robot& robot, const double t, 
+                                              const double dtau, 
+                                              const SplitSolution& s) {
+  assert(dtau > 0);
+  double error = kkt_residual_.KKT_residual().squaredNorm();
+  error += constraints_->squaredKKTErrorNorm(robot, constraints_data_, dtau, s);
+  return error;
+}
+
+
+double SplitOCP::computeSquaredKKTErrorNorm(Robot& robot, const double t, 
+                                            const double dtau, 
+                                            const Eigen::VectorXd& q_prev, 
+                                            const SplitSolution& s,
+                                            const SplitSolution& s_next) {
   assert(dtau > 0);
   kkt_matrix_.setContactStatus(robot);
   kkt_residual_.setContactStatus(robot);

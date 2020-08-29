@@ -180,7 +180,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormOnlyStateEquation) {
   s.beta.setZero();
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
                                                        v_prev, s, s_next);
   kkt_residual.Fq() = q_prev - s.q + dtau * s.v;
   kkt_residual.Fv() = v_prev - s.v + dtau * s.a;
@@ -208,7 +208,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormStateEquationAndInverseDynamics) {
   SplitParNMPC parnmpc(robot, empty_cost, empty_constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
                                                        v_prev, s, s_next);
   kkt_residual.Fq() = q_prev - s.q + dtau * s.v;
   kkt_residual.Fv() = v_prev - s.v + dtau * s.a;
@@ -249,7 +249,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormStateEquationAndRobotDynamics) {
   SplitParNMPC parnmpc(robot, empty_cost, empty_constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
                                                        v_prev, s, s_next);
   kkt_residual.Fq() = q_prev - s.q + dtau * s.v;
   kkt_residual.Fv() = v_prev - s.v + dtau * s.a;
@@ -302,7 +302,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormEmptyCost) {
   SplitParNMPC parnmpc(robot, empty_cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
                                                        v_prev, s, s_next);
   kkt_residual.setContactStatus(robot);
   kkt_matrix.setContactStatus(robot);
@@ -323,7 +323,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormEmptyConstraints) {
   SplitParNMPC parnmpc(robot, cost, empty_constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
                                                        v_prev, s, s_next);
   kkt_residual.setContactStatus(robot);
   kkt_matrix.setContactStatus(robot);
@@ -343,7 +343,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNorm) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
                                                        v_prev, s, s_next);
   kkt_residual.setContactStatus(robot);
   kkt_matrix.setContactStatus(robot);
@@ -368,7 +368,7 @@ TEST_F(FixedBaseSplitParNMPCTest, costAndViolation) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
                                                        v_prev, s, s_next);
   const auto pair = parnmpc.costAndViolation(robot, t, dtau, s); 
   const double cost_ref 
@@ -395,7 +395,7 @@ TEST_F(FixedBaseSplitParNMPCTest, costAndViolationWithStepSizeInitial) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.squaredKKTErrorNorm(robot, t, dtau, q_prev, 
+  const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
                                                        v_prev, s, s_next);
   const double step_size = 0.3;
   const auto pair = parnmpc.costAndViolation(robot, step_size, t, dtau, q_prev, 
@@ -562,6 +562,10 @@ TEST_F(FixedBaseSplitParNMPCTest, coarseUpdate) {
   EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
+
+  double condensed_KKT_ref = kkt_residual.KKT_residual().squaredNorm();
+  condensed_KKT_ref += constraints->squaredKKTErrorNorm(robot, constraints_data, dtau, s);
+  EXPECT_DOUBLE_EQ(condensed_KKT_ref, parnmpc.condensedSquaredKKTErrorNorm(robot, t, dtau, s));
 
   Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());

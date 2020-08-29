@@ -91,13 +91,17 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithoutContact) {
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   ParNMPC parnmpc(robot, cost, constraints, T_, N_, 1);
   ParNMPC parnmpc_ref(robot, cost, constraints, T_, N_, 2);
-  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_), parnmpc_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(parnmpc.computeKKTError(t_, q, v), parnmpc_ref.computeKKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_), parnmpc_ref.KKTError(t_));
   parnmpc.updateSolution(t_, q, v, false);
   parnmpc_ref.updateSolution(t_, q, v, false);
-  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_), parnmpc_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(parnmpc.computeKKTError(t_, q, v), parnmpc_ref.computeKKTError(t_, q, v));
   parnmpc.updateSolution(t_, q, v, true);
   parnmpc_ref.updateSolution(t_, q, v, true);
-  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_), parnmpc_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(parnmpc.computeKKTError(t_, q, v), parnmpc_ref.computeKKTError(t_, q, v));
 }
 
 
@@ -156,13 +160,17 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithContact) {
   parnmpc.setContactSequence(contact_sequence);
   ParNMPC parnmpc_ref(robot, cost, constraints, T_, N_, 2);
   parnmpc_ref.setContactSequence(contact_sequence);
-  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_), parnmpc_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(parnmpc.computeKKTError(t_, q, v), parnmpc_ref.computeKKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_), parnmpc_ref.KKTError(t_));
   parnmpc.updateSolution(t_, q, v, false);
   parnmpc_ref.updateSolution(t_, q, v, false);
-  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_), parnmpc_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(parnmpc.computeKKTError(t_, q, v), parnmpc_ref.computeKKTError(t_, q, v));
   parnmpc.updateSolution(t_, q, v, true);
   parnmpc_ref.updateSolution(t_, q, v, true);
-  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_), parnmpc_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(parnmpc.computeKKTError(t_, q, v), parnmpc_ref.computeKKTError(t_, q, v));
 }
 
 
@@ -225,13 +233,17 @@ TEST_F(ParNMPCTest, floating_base) {
   parnmpc.setContactSequence(contact_sequence);
   ParNMPC parnmpc_ref(robot, cost, constraints, T_, N_, 2);
   parnmpc_ref.setContactSequence(contact_sequence);
-  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_), parnmpc_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(parnmpc.computeKKTError(t_, q, v), parnmpc_ref.computeKKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_), parnmpc_ref.KKTError(t_));
   parnmpc.updateSolution(t_, q, v, false);
   parnmpc_ref.updateSolution(t_, q, v, false);
-  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_), parnmpc_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(parnmpc.computeKKTError(t_, q, v), parnmpc_ref.computeKKTError(t_, q, v));
   parnmpc.updateSolution(t_, q, v, true);
   parnmpc_ref.updateSolution(t_, q, v, true);
-  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_, q, v), parnmpc_ref.KKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(parnmpc.KKTError(t_), parnmpc_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(parnmpc.computeKKTError(t_, q, v), parnmpc_ref.computeKKTError(t_, q, v));
 }
 
 } // namespace idocp

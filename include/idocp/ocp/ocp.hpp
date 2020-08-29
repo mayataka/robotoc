@@ -64,8 +64,10 @@ public:
   
   void clearLineSearchFilter();
 
-  double KKTError(const double t, const Eigen::VectorXd& q, 
-                  const Eigen::VectorXd& v);
+  double KKTError(const double t);
+
+  double computeKKTError(const double t, const Eigen::VectorXd& q, 
+                         const Eigen::VectorXd& v);
 
   void printSolution() const;
 

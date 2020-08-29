@@ -119,7 +119,15 @@ public:
   //      is included in this model.
   //   t: Time of the current time step.
   double squaredKKTErrorNorm(Robot& robot, const double t, 
-                             const SplitSolution& s);
+                             const SplitSolution& s) const;
+
+  // Returns the squared KKT error norm.
+  // Argments: 
+  //   robot: The robot model. The contact status of the current time step 
+  //      is included in this model.
+  //   t: Time of the current time step.
+  double computeSquaredKKTErrorNorm(Robot& robot, const double t, 
+                                    const SplitSolution& s);
 
 private:
   std::shared_ptr<CostFunction> cost_;

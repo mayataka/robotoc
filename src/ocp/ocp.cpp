@@ -284,8 +284,27 @@ void OCP::clearLineSearchFilter() {
 }
 
 
-double OCP::KKTError(const double t, const Eigen::VectorXd& q, 
-                     const Eigen::VectorXd& v) {
+double OCP::KKTError(const double t) {
+  Eigen::VectorXd error = Eigen::VectorXd::Zero(N_+1);
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<=N_; ++i) {
+    const int robot_id = omp_get_thread_num();
+    if (i < N_-1) {
+      robots_[robot_id].setContactStatus(contact_sequence_[i]);
+      error(i) = split_ocps_[i].condensedSquaredKKTErrorNorm(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i]);
+    }
+    else {
+      error(N_) = terminal_ocp_.squaredKKTErrorNorm(
+          robots_[robot_id], t+T_, s_[N_]);
+    }
+  }
+  return std::sqrt(error.sum());
+}
+
+
+double OCP::computeKKTError(const double t, const Eigen::VectorXd& q, 
+                            const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   Eigen::VectorXd error = Eigen::VectorXd::Zero(N_+1);
@@ -294,19 +313,17 @@ double OCP::KKTError(const double t, const Eigen::VectorXd& q,
     const int robot_id = omp_get_thread_num();
     if (i == 0) {
       robots_[robot_id].setContactStatus(contact_sequence_[i]);
-      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
-                                                    t+(i+1)*dtau_, dtau_, 
-                                                    q, s_[i], s_[i+1]);
+      error(i) = split_ocps_[i].computeSquaredKKTErrorNorm(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, q, s_[i], s_[i+1]);
     }
     else if (i < N_) {
       robots_[robot_id].setContactStatus(contact_sequence_[i]);
-      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
-                                                    t+(i+1)*dtau_, dtau_, 
-                                                    s_[i-1].q, s_[i], s_[i+1]);
+      error(i) = split_ocps_[i].computeSquaredKKTErrorNorm(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
     }
     else {
-      error(N_) = terminal_ocp_.squaredKKTErrorNorm(robots_[robot_id], t+T_, 
-                                                    s_[N_]);
+      error(N_) = terminal_ocp_.computeSquaredKKTErrorNorm(
+          robots_[robot_id], t+T_, s_[N_]);
     }
   }
   return std::sqrt(error.sum());

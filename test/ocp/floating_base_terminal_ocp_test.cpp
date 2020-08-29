@@ -138,6 +138,11 @@ TEST_F(FloatingBaseTerminalOCPTest, linearizeOCP) {
   cost->computeTerminalCostHessian(robot, cost_data, t, s, kkt_matrix);
   EXPECT_TRUE(riccati.Pqq.isApprox(kkt_matrix.Qqq()));
   EXPECT_TRUE(riccati.Pvv.isApprox(kkt_matrix.Qvv()));
+
+  double KKT_ref = 0;
+  KKT_ref += (-1*kkt_residual.lq()+s.lmd).squaredNorm();
+  KKT_ref += (-1*kkt_residual.lv()+s.gmm).squaredNorm();
+  EXPECT_DOUBLE_EQ(KKT_ref, ocp.squaredKKTErrorNorm(robot, t, s));
 }
 
 
@@ -183,7 +188,7 @@ TEST_F(FloatingBaseTerminalOCPTest, updatePrimal) {
 }
 
 
-TEST_F(FloatingBaseTerminalOCPTest, squaredKKTErrorNorm) {
+TEST_F(FloatingBaseTerminalOCPTest, computeSquaredKKTErrorNorm) {
   s.setContactStatus(robot);
   TerminalOCP ocp(robot, cost, constraints);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
@@ -191,7 +196,7 @@ TEST_F(FloatingBaseTerminalOCPTest, squaredKKTErrorNorm) {
   kkt_residual.lv() -= s.gmm;
   const double kkt_error_ref = kkt_residual.lq().squaredNorm() 
                                 + kkt_residual.lv().squaredNorm();
-  EXPECT_DOUBLE_EQ(kkt_error_ref, ocp.squaredKKTErrorNorm(robot, t, s));
+  EXPECT_DOUBLE_EQ(kkt_error_ref, ocp.computeSquaredKKTErrorNorm(robot, t, s));
 }
 
 

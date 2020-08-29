@@ -31,7 +31,7 @@ inline void Simulator::run(MPC<OCPTypeDerived>& mpc,
     std::chrono::system_clock::time_point start_clock, end_clock;
     double CPU_time_total_in_sec = 0;
     for (double t=0; t<simulation_time_in_sec; t+=sampling_period_in_sec) {
-      data_saver_.save(q, v, u, mpc.KKTError(t, q, v));
+      data_saver_.save(q, v, u, mpc.computeKKTError(t, q, v));
       runge_kutta_.integrate(sampling_period_in_sec, q, v, u, q_next, v_next);
       start_clock = std::chrono::system_clock::now();
       mpc.updateSolution(t, q, v);

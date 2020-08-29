@@ -330,8 +330,27 @@ void ParNMPC::clearLineSearchFilter() {
 }
 
 
-double ParNMPC::KKTError(const double t, const Eigen::VectorXd& q, 
-                         const Eigen::VectorXd& v) {
+double ParNMPC::KKTError(const double t) {
+  Eigen::VectorXd error = Eigen::VectorXd::Zero(N_);
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<N_; ++i) {
+    const int robot_id = omp_get_thread_num();
+    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    if (i < N_-1) {
+      error(i) = split_ocps_[i].condensedSquaredKKTErrorNorm(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i]);
+    }
+    else {
+      error(i) = split_ocps_[i].condensedSquaredKKTErrorNormTerminal(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i]);
+    }
+  }
+  return std::sqrt(error.sum());
+}
+
+
+double ParNMPC::computeKKTError(const double t, const Eigen::VectorXd& q, 
+                                const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   Eigen::VectorXd error = Eigen::VectorXd::Zero(N_);
@@ -340,21 +359,17 @@ double ParNMPC::KKTError(const double t, const Eigen::VectorXd& q,
     const int robot_id = omp_get_thread_num();
     robots_[robot_id].setContactStatus(contact_sequence_[i]);
     if (i == 0) {
-      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
-                                                    t+(i+1)*dtau_, dtau_, q, v, 
-                                                    s_[i], s_[i+1]);
+      error(i) = split_ocps_[i].computeSquaredKKTErrorNorm(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, q, v, s_[i], s_[i+1]);
     }
     else if (i<N_-1) {
-      error(i) = split_ocps_[i].squaredKKTErrorNorm(robots_[robot_id], 
-                                                    t+(i+1)*dtau_, dtau_, 
-                                                    s_[i-1].q, s_[i-1].v, 
-                                                    s_[i], s_[i+1]);
+      error(i) = split_ocps_[i].computeSquaredKKTErrorNorm(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i-1].q, s_[i-1].v, s_[i], 
+          s_[i+1]);
     }
     else {
-      error(i) = split_ocps_[i].squaredKKTErrorNormTerminal(robots_[robot_id], 
-                                                            t+(i+1)*dtau_, 
-                                                            dtau_, s_[i-1].q, 
-                                                            s_[i-1].v, s_[i]);
+      error(i) = split_ocps_[i].computeSquaredKKTErrorNormTerminal(
+          robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i-1].q, s_[i-1].v, s_[i]);
     }
   }
   return std::sqrt(error.sum());

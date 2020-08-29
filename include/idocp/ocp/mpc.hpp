@@ -46,8 +46,10 @@ public:
 
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv);
 
-  double KKTError(const double t, const Eigen::VectorXd& q, 
-                  const Eigen::VectorXd& v);
+  double KKTError(const double t);
+
+  double computeKKTError(const double t, const Eigen::VectorXd& q, 
+                         const Eigen::VectorXd& v);
 
 private:
   OCPType ocp_;
