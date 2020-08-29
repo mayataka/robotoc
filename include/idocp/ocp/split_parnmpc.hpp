@@ -91,12 +91,14 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] q_prev Configuration of the previous stage. Size must be dimq().
-  /// @param[in] v_prev Velocity of the previous stage. Size must be dimv().
+  /// @param[in] q_prev Configuration of the previous stage. Size must be 
+  /// Robot::dimq().
+  /// @param[in] v_prev Velocity of the previous stage. Size must be 
+  /// Robot::dimv().
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
   /// @param[in] aux_mat_next_old Guess of the auxiliary matrix of the next 
-  /// stage. Size must be 2*dimv() x 2*dimv().
+  /// stage. Size must be 2*Robot::dimv() x 2*Robot::dimv().
   /// @param[out] d Split direction of this stage.
   /// @param[out] s_new_coarse Coarse updated split splition of this stage.
   ///
@@ -113,8 +115,10 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] q_prev Configuration of the previous stage. Size must be dimq().
-  /// @param[in] v_prev Velocity of the previous stage. Size must be dimv().
+  /// @param[in] q_prev Configuration of the previous stage. Size must be 
+  /// Robot::dimq().
+  /// @param[in] v_prev Velocity of the previous stage. Size must be 
+  /// Robot::dimv().
   /// @param[in] s Split solution of this stage.
   /// @param[out] d Split direction of this stage.
   /// @param[out] s_new_coarse Coarse updated split splition of this stage.
@@ -128,7 +132,7 @@ public:
   ///
   /// @brief Gets the auxiliary matrix of this stage.
   /// @param[out] aux_mat The auxiliary matrix of this stage. Size must be 
-  /// 2*dimv() x 2*dimv().
+  /// 2*Robot::dimv() x 2*Robot::dimv().
   ///
   void getAuxiliaryMatrix(Eigen::MatrixXd& aux_mat) const;
 
@@ -139,7 +143,7 @@ public:
   /// @param[in] t Current time of this stage. 
   /// @param[in] s Split solution of this stage.
   /// @param[out] phixx The hessian of the terminal cost. The size must be 
-  /// 2*robot.dimv() x 2*robot.dimv().
+  /// 2*Robot::dimv() x 2*Robot::dimv().
   ///
   void getTerminalCostHessian(Robot& robot, const double t, 
                               const SplitSolution& s, Eigen::MatrixXd& phixx);
@@ -358,9 +362,9 @@ public:
   ///
   /// @brief Gets the state-feedback gain for the control input torques.
   /// @param[out] Kq Gain with respec to the configuration. Size must be 
-  /// dimv() x dimv().
+  /// Robot::dimv() x Robot::dimv().
   /// @param[out] Kv Gain with respec to the velocity. Size must be
-  /// dimv() x dimv().
+  /// Robot::dimv() x Robot::dimv().
   ///
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
@@ -402,8 +406,10 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] q_prev Configuration of the previous stage. Size must be dimq().
-  /// @param[in] v_prev Velocity of the previous stage. Size must be dimv().
+  /// @param[in] q_prev Configuration of the previous stage. Size must be 
+  /// Robot::dimq().
+  /// @param[in] v_prev Velocity of the previous stage. Size must be 
+  /// Robot::dimv().
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
   /// @return The squared norm of the kKT residual.
@@ -421,8 +427,10 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] q_prev Configuration of the previous stage. Size must be dimq().
-  /// @param[in] v_prev Velocity of the previous stage. Size must be dimv().
+  /// @param[in] q_prev Configuration of the previous stage. Size must be 
+  /// Robot::dimq().
+  /// @param[in] v_prev Velocity of the previous stage. Size must be 
+  /// Robot::dimv().
   /// @param[in] s Split solution of this stage.
   /// @return The squared norm of the kKT residual at the terminal stage.
   ///
@@ -443,7 +451,8 @@ private:
   RobotDynamics robot_dynamics_;
   int dimv_, dimx_, dimKKT_;
   Eigen::MatrixXd kkt_matrix_inverse_;
-  Eigen::VectorXd x_res_, dx_;
+  Eigen::VectorXd x_res_; /// @brief Residual of state and costate used in the forward and backward correction.
+  Eigen::VectorXd dx_; /// @brief Correction term of state and costate used in the forward and backward correction.
 
 };
 

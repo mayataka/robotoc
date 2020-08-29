@@ -45,9 +45,11 @@ public:
   /// @param[in] contact_frames Collection of the frames that can have contacts 
   /// with the environments.
   /// @param[in] baumgarte_weight_on_velocity The weight parameter on the 
-  /// velocity error in the Baumgarte's stabilization method.
+  /// velocity error in the Baumgarte's stabilization method. Must be 
+  /// nonnegative.
   /// @param[in] baumgarte_weight_on_position The weight parameter on the 
-  /// position error in the Baumgarte's stabilization method.
+  /// position error in the Baumgarte's stabilization method. Must be
+  /// nonnegative.
   ///
   Robot(const std::string& urdf_file_name, 
         const std::vector<int>& contact_frames, 
@@ -84,33 +86,12 @@ public:
   ///
   Robot& operator=(Robot&&) noexcept = default;
 
-  ///
-  /// @brief Build the robot model from xml.
-  /// @param[in] xml String of XML.
-  ///
-  void buildRobotModelFromXML(const std::string& xml);
-
-  ///
-  /// @brief Build the robot model from xml. The model is assumed to have no 
-  /// contacts with the environment.
-  /// @param[in] xml String of XML.
-  /// @param[in] contact_frames Collection of the frames that can have contacts 
-  /// with the environments.
-  /// @param[in] baumgarte_weight_on_velocity The weight parameter on the 
-  /// velocity error in the Baumgarte's stabilization method.
-  /// @param[in] baumgarte_weight_on_position The weight parameter on the 
-  /// position error in the Baumgarte's stabilization method.
-  ///
-  void buildRobotModelFromXML(const std::string& xml,
-                              const std::vector<int>& contact_frames, 
-                              const double baumgarte_weight_on_velocity, 
-                              const double baumgarte_weight_on_position);
 
   ///
   /// @brief Integrates the generalized velocity, integration_length * v. 
   // The configuration q is then incremented.
-  /// @param[in, out] q Configuration. Size must be dimq().
-  /// @param[in] v Generalized velocity. Size must be dimv().
+  /// @param[in, out] q Configuration. Size must be Robot::dimq().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
   /// @param[in] integration_length The length of the integration.
   ///
   template <typename TangentVectorType, typename ConfigVectorType>
@@ -121,10 +102,11 @@ public:
 
   ///
   /// @brief Integrates the generalized velocity, integration_length * v. 
-  /// @param[in] q Configuration. Size must be dimq().
-  /// @param[in] v Generalized velocity. Size must be dimv().
+  /// @param[in] q Configuration. Size must be dRobot::imq().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
   /// @param[in] integration_length The length of the integration.
-  /// @param[out] q_integrated Resultant configuration. Size must be dimq().
+  /// @param[out] q_integrated Resultant configuration. Size must be 
+  /// Robot::dimq().
   ///
   template <typename ConfigVectorType1, typename TangentVectorType,  
             typename ConfigVectorType2>
@@ -136,9 +118,9 @@ public:
 
   ///
   /// @brief Computes q_plus - q_minus at the tangent space. 
-  /// @param[in] q_plus Configuration. Size must be dimq().
-  /// @param[in] q_minus Configuration. Size must be dimq().
-  /// @param[out] difference Result. Size must be dimv().
+  /// @param[in] q_plus Configuration. Size must be Robot::dimq().
+  /// @param[in] q_minus Configuration. Size must be Robot::dimq().
+  /// @param[out] difference Result. Size must be Robot::dimv().
   ///
   template <typename ConfigVectorType1, typename ConfigVectorType2, 
             typename TangentVectorType>
@@ -150,10 +132,10 @@ public:
   ///
   /// @brief Computes the partial derivative of the function of q_plus - q_minus 
   /// with respect to q_plus at the tangent space. 
-  /// @param[in] q_plus Configuration. Size must be dimq().
-  /// @param[in] q_minus Configuration. Size must be dimq().
+  /// @param[in] q_plus Configuration. Size must be Robot::dimq().
+  /// @param[in] q_minus Configuration. Size must be Robot::dimq().
   /// @param[out] dSubtract_dqplus The resultant partial derivative. 
-  /// Size must be dimv() x dimv().
+  /// Size must be Robot::dimv() x Robot::dimv().
   ///
   template <typename ConfigVectorType1, typename ConfigVectorType2, 
             typename MatrixType>
@@ -165,10 +147,10 @@ public:
   ///
   /// @brief Computes the partial derivative of the function of q_plus - q_minus 
   /// with respect to q_minus at the tangent space. 
-  /// @param[in] q_plus Configuration. Size must be dimq().
-  /// @param[in] q_minus Configuration. Size must be dimq().
+  /// @param[in] q_plus Configuration. Size must be Robot::dimq().
+  /// @param[in] q_minus Configuration. Size must be Robot::dimq().
   /// @param[out] dSubtract_dqminus The resultant partial derivative. 
-  /// Size must be dimv() x dimv().
+  /// Size must be Robot::dimv() x Robot::dimv().
   ///
   template <typename ConfigVectorType1, typename ConfigVectorType2, 
             typename MatrixType>
@@ -181,9 +163,9 @@ public:
   /// @brief Updates the kinematics of the robot. The frame placements, frame 
   /// velocity, frame acceleration, and the relevant Jacobians are calculated. 
   /// After that, the each contact residual is updated.
-  /// @param[in] q Configuration. Size must be dimq().
-  /// @param[in] v Generalized velocity. Size must be dimv().
-  /// @param[in] a Generalized acceleration. Size must be dimv().
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
+  /// @param[in] a Generalized acceleration. Size must be Robot::dimv().
   ///
   template <typename ConfigVectorType, typename TangentVectorType1, 
             typename TangentVectorType2>
@@ -221,13 +203,13 @@ public:
   /// Before calling this function, updateKinematics() must be called. 
   /// @param[out] baumgarte_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
-  /// be dimv().
+  /// be Robot::dimv().
   /// @param[out] baumgarte_partial_dv The result of the partial derivative  
   /// with respect to the velocity. Rows must be at least 3. Cols must 
-  /// be dimv().
+  /// be Robot::dimv().
   /// @param[out] baumgarte_partial_da The result of the partial derivative  
   /// with respect to the acceleration. Rows must be at least 3. Cols must 
-  /// be dimv().
+  /// be Robot::dimv().
   ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
@@ -244,13 +226,13 @@ public:
   /// Jacobians.
   /// @param[out] baumgarte_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
-  /// be dimv().
+  /// be Robot::dimv().
   /// @param[out] baumgarte_partial_dv The result of the partial derivative  
   /// with respect to the velocity. Rows must be at least 3. Cols must 
-  /// be dimv().
+  /// be Robot::dimv().
   /// @param[out] baumgarte_partial_da The result of the partial derivative  
   /// with respect to the acceleration. Rows must be at least 3. Cols must 
-  /// be dimv().
+  /// be Robot::dimv().
   ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
@@ -291,11 +273,11 @@ public:
   /// to the given configuration, velocity, acceleration, and contact forces. 
   /// If the robot has contacts, update contact forces by calling 
   /// setContactForces().
-  /// @param[in] q Configuration. Size must be dimq().
-  /// @param[in] v Generalized velocity. Size must be dimv().
-  /// @param[in] a Generalized acceleration. Size must be dimv().
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
+  /// @param[in] a Generalized acceleration. Size must be Robot::dimv().
   /// @param[out] tau Generalized torques for fully actuated system. Size must 
-  /// be dimv().
+  /// be Robot::dimv().
   ///
   template <typename ConfigVectorType, typename TangentVectorType1, 
             typename TangentVectorType2, typename TangentVectorType3>
@@ -309,15 +291,18 @@ public:
   /// inverse dynamics with respect to the given configuration, velocity, and
   /// acceleration. If the robot has contacts, update contact forces by 
   /// calling setContactForces().
-  /// @param[in] q Configuration. Size must be dimq().
-  /// @param[in] v Generalized velocity. Size must be dimv().
-  /// @param[in] a Generalized acceleration. Size must be dimv().
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
+  /// @param[in] a Generalized acceleration. Size must be Robot::dimv().
   /// @param[out] dRNEA_partial_dq The partial derivative of inverse dynamics 
-  /// with respect to the configuration. The size must be dimv() x dimv().
+  /// with respect to the configuration. The size must be 
+  /// Robot::dimv() x Robot::dimv().
   /// @param[out] dRNEA_partial_dv The partial derivative of inverse dynamics 
-  /// with respect to the velocity. The size must be dimv() x dimv().
+  /// with respect to the velocity. The size must be 
+  /// Robot::dimv() x Robot::dimv().
   /// @param[out] dRNEA_partial_da The partial derivative of inverse dynamics 
-  /// with respect to the acceleration. The size must be dimv() x dimv().
+  /// with respect to the acceleration. The size must be 
+  /// Robot::dimv() x Robot::dimv().
   ///   
   template <typename ConfigVectorType, typename TangentVectorType1, 
             typename TangentVectorType2, typename MatrixType1, 
@@ -334,8 +319,8 @@ public:
   /// with respect to the contact forces. Before calling this function, call 
   /// updateKinematics().
   /// @param[out] dRNEA_partial_dfext The partial derivative of inverse dynamics 
-  /// with respect to the contact forces. Rows must be at least dimf(). 
-  /// Cols must be dimv().
+  /// with respect to the contact forces. Rows must be at least Robot::dimf(). 
+  /// Cols must be Robot::dimv().
   ///   
   template <typename MatrixType>
   void dRNEAPartialdFext(
@@ -344,11 +329,13 @@ public:
   ///
   /// @brief Computes the state equation, i.e., the velocity and forward 
   /// dynamics.
-  /// @param[in] q Configuration. Size must be dimq().
-  /// @param[in] v Generalized velocity. Size must be dimv().
-  /// @param[in] tau Generalized acceleration. Size must be dimv().
-  /// @param[out] dq The resultant generalized velocity. Size must be dimv().
-  /// @param[out] dv The resultant generalized acceleration. Size must be dimv().
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
+  /// @param[in] tau Generalized acceleration. Size must be Robot::dimv().
+  /// @param[out] dq The resultant generalized velocity. Size must be 
+  /// Robot::dimv().
+  /// @param[out] dv The resultant generalized acceleration. Size must be 
+  /// Robot::dimv().
   ///
   template <typename ConfigVectorType, typename TangentVectorType1, 
             typename TangentVectorType2, typename TangentVectorType3,
@@ -361,7 +348,7 @@ public:
 
   ///
   /// @brief Generates feasible configuration randomly.
-  /// @param[out] q The random configuration. Size must be dimq().
+  /// @param[out] q The random configuration. Size must be Robot::dimq().
   ///
   template <typename ConfigVectorType>
   void generateFeasibleConfiguration(
@@ -369,7 +356,7 @@ public:
 
   ///
   /// @brief Normalizes a configuration vector.
-  /// @param[in, out] q The normalized configuration. Size must be dimq().
+  /// @param[in, out] q The normalized configuration. Size must be Robot::dimq().
   ///
   template <typename ConfigVectorType>
   void normalizeConfiguration(

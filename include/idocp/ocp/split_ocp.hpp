@@ -34,7 +34,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   ///
-  /// @brief Construct SplitOCP.
+  /// @brief Construct a split OCP.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] cost Shared ptr of the cost function.
   /// @param[in] cost Shared ptr of the constraints.
@@ -107,7 +107,7 @@ public:
   /// factorization of the previous stage.
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] riccati_next Riccati factorization of the next stage.
-  /// @param[in] riccati Riccati factorization of this stage.
+  /// @param[out] riccati Riccati factorization of this stage.
   /// 
   void backwardRiccatiRecursion(const double dtau, 
                                 const RiccatiFactorization& riccati_next,
@@ -209,16 +209,16 @@ public:
   ///
   /// @brief Gets the state-feedback gain for the control input torques.
   /// @param[out] Kq Gain with respec to the configuration. Size must be 
-  /// dimv() x dimv().
+  /// Robot::dimv() x Robot::dimv().
   /// @param[out] Kv Gain with respec to the velocity. Size must be
-  /// dimv() x dimv().
+  /// Robot::dimv() x Robot::dimv().
   ///
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
   ///
   /// @brief Returns the squared KKT error norm by using previously computed 
-  /// residual computed by linearizeOCP(). The result is not exactly the same 
-  /// as the squared KKT error norm of the original OCP. The result is the
+  /// KKT residual computed by linearizeOCP(). The result is not exactly the 
+  /// same as the squared KKT error norm of the original OCP. The result is the
   /// squared norm of the condensed residual. However, this variables is 
   /// sufficiently close to the original KKT error norm.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.

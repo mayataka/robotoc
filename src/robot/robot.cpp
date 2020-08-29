@@ -105,42 +105,6 @@ Robot::~Robot() {
 }
 
 
-void Robot::buildRobotModelFromXML(const std::string& xml) {
-  pinocchio::urdf::buildModelFromXML(xml, model_);
-  data_ = pinocchio::Data(model_);
-  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
-                 model_.joints.size(), pinocchio::Force::Zero());
-  floating_base_ = FloatingBase(model_);
-  dimq_ = model_.nq;
-  dimv_ = model_.nv;
-  dimJ_ = model_.joints.size();
-  initializeJointLimits();
-}
-
-
-void Robot::buildRobotModelFromXML(const std::string& xml,
-                                   const std::vector<int>& contact_frames, 
-                                   const double baumgarte_weight_on_velocity, 
-                                   const double baumgarte_weight_on_position) {
-  pinocchio::urdf::buildModelFromXML(xml, model_);
-  data_ = pinocchio::Data(model_);
-  for (const auto& frame : contact_frames) {
-    point_contacts_.push_back(PointContact(model_, frame, 
-                                           baumgarte_weight_on_velocity,
-                                           baumgarte_weight_on_position));
-    is_each_contact_active_.push_back(false);
-  }
-  max_dimf_ = 3 * point_contacts_.size();
-  fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
-                 model_.joints.size(), pinocchio::Force::Zero());
-  floating_base_ = FloatingBase(model_);
-  dimq_ = model_.nq;
-  dimv_ = model_.nv;
-  dimJ_ = model_.joints.size();
-  initializeJointLimits();
-}
-
-
 void Robot::setJointEffortLimit(const Eigen::VectorXd& joint_effort_limit) {
   try {
     if (joint_effort_limit_.size() != joint_effort_limit.size()) {
