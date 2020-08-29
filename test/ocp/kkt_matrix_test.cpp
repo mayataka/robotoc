@@ -156,7 +156,7 @@ TEST_F(KKTMatrixTest, invert_fixed_base) {
   const int dimc = robot.dim_passive() + robot.dimf();
   const int dimQ = 3*robot.dimv() + robot.dimf();
   const Eigen::MatrixXd Q_seed_mat = Eigen::MatrixXd::Random(dimQ, dimQ);
-  const Eigen::MatrixXd Q_mat = Q_seed_mat * Q_seed_mat.transpose();
+  const Eigen::MatrixXd Q_mat = Q_seed_mat * Q_seed_mat.transpose() + Eigen::MatrixXd::Identity(dimQ, dimQ);
   const Eigen::MatrixXd Jc_mat = Eigen::MatrixXd::Random(dimc, dimQ);
   matrix.costHessian() = Q_mat;
   matrix.constraintsJacobian() = Jc_mat;
@@ -176,10 +176,11 @@ TEST_F(KKTMatrixTest, invert_fixed_base) {
   kkt_mat_ref.triangularView<Eigen::StrictlyLower>() 
       = kkt_mat_ref.transpose().triangularView<Eigen::StrictlyLower>();
   std::cout << kkt_mat_ref << std::endl;
-  const Eigen::MatrixXd kkt_mat_inv_ref = kkt_mat_ref.inverse();
+  // const Eigen::MatrixXd kkt_mat_inv_ref = kkt_mat_ref.inverse();
+  const Eigen::MatrixXd kkt_mat_inv_ref = kkt_mat_ref.ldlt().solve(Eigen::MatrixXd::Identity(dimKKT, dimKKT));
   Eigen::MatrixXd kkt_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
   matrix.invert(dtau, kkt_mat_inv);
-  EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-06));
+  EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-08));
   std::cout << "error l2 norm = " << (kkt_mat_inv - kkt_mat_inv_ref).lpNorm<2>() << std::endl;
 }
 
@@ -324,7 +325,7 @@ TEST_F(KKTMatrixTest, invert_floating_base) {
   const int dimc = robot.dim_passive() + robot.dimf();
   const int dimQ = 3*robot.dimv() + robot.dimf();
   const Eigen::MatrixXd Q_seed_mat = Eigen::MatrixXd::Random(dimQ, dimQ);
-  const Eigen::MatrixXd Q_mat = Q_seed_mat * Q_seed_mat.transpose();
+  const Eigen::MatrixXd Q_mat = Q_seed_mat * Q_seed_mat.transpose() + Eigen::MatrixXd::Identity(dimQ, dimQ);
   const Eigen::MatrixXd Jc_mat = Eigen::MatrixXd::Random(dimc, dimQ);
   matrix.costHessian() = Q_mat;
   matrix.constraintsJacobian() = Jc_mat;
@@ -353,7 +354,7 @@ TEST_F(KKTMatrixTest, invert_floating_base) {
   const Eigen::MatrixXd kkt_mat_inv_ref = kkt_mat_ref.inverse();
   Eigen::MatrixXd kkt_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
   matrix.invert(dtau, kkt_mat_inv);
-  EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-06));
+  EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-08));
   std::cout << "error l2 norm = " << (kkt_mat_inv - kkt_mat_inv_ref).lpNorm<2>() << std::endl;
 }
 
