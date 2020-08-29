@@ -101,6 +101,26 @@ inline void Robot::dSubtractdConfigurationMinus(
 }
 
 
+inline const Eigen::Vector3d& Robot::framePosition(const int frame_id) const {
+  return data_.oMf[frame_id].translation();
+}
+
+
+inline const Eigen::Matrix3d& Robot::frameRotation(const int frame_id) const {
+  return data_.oMf[frame_id].rotation();
+}
+
+
+template <typename MatrixType>
+inline void Robot::getFrameJacobian(const int frame_id, 
+                                    const Eigen::MatrixBase<MatrixType>& J) {
+  assert(J.rows() == 6);
+  assert(J.cols() == dimv_);
+  pinocchio::getFrameJacobian(model_, data_, frame_id, pinocchio::LOCAL, 
+                              const_cast<Eigen::MatrixBase<MatrixType>&>(J));
+}
+
+
 template <typename ConfigVectorType, typename TangentVectorType1, 
           typename TangentVectorType2>
 inline void Robot::updateKinematics(

@@ -158,8 +158,8 @@ double JointSpaceCost::l(const Robot& robot, CostFunctionData& data,
                          const SplitSolution& s) const {
   double l = 0;
   if (robot.has_floating_base()) {
-    robot.subtractConfiguration(s.q, q_ref_, data.q_diff);
-    l += (q_weight_.array()*(data.q_diff).array()*(data.q_diff).array()).sum();
+    robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
+    l += (q_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
   }
   else {
     l += (q_weight_.array()*(s.q-q_ref_).array()*(s.q-q_ref_).array()).sum();
@@ -175,8 +175,8 @@ double JointSpaceCost::phi(const Robot& robot, CostFunctionData& data,
                            const double t, const SplitSolution& s) const {
   double phi = 0;
   if (robot.has_floating_base()) {
-    robot.subtractConfiguration(s.q, q_ref_, data.q_diff);
-    phi += (qf_weight_.array()*(data.q_diff).array()*(data.q_diff).array()).sum();
+    robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
+    phi += (qf_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
   }
   else {
     phi += (qf_weight_.array()*(s.q-q_ref_).array()*(s.q-q_ref_).array()).sum();
@@ -191,10 +191,10 @@ void JointSpaceCost::lq(const Robot& robot, CostFunctionData& data,
                         const SplitSolution& s, 
                         KKTResidual& kkt_residual) const {
   if (robot.has_floating_base()) {
-    robot.subtractConfiguration(s.q, q_ref_, data.q_diff);
-    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.Jq_diff);
+    robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
+    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
-        += dtau * data.Jq_diff.transpose() * q_weight_.asDiagonal() * data.q_diff;
+        += dtau * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.qdiff;
   }
   else {
     kkt_residual.lq().array()
@@ -225,9 +225,9 @@ void JointSpaceCost::lqq(const Robot& robot, CostFunctionData& data,
                          const double t, const double dtau, 
                          const SplitSolution& s, KKTMatrix& kkt_matrix) const {
   if (robot.has_floating_base()) {
-    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.Jq_diff);
+    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_matrix.Qqq().noalias()
-        += dtau * data.Jq_diff.transpose() * q_weight_.asDiagonal() * data.Jq_diff;
+        += dtau * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
   }
   else {
     // kkt_matrix.Qqq() += dtau * q_weight_.asDiagonal();
@@ -256,10 +256,10 @@ void JointSpaceCost::phiq(const Robot& robot, CostFunctionData& data,
                           const double t, const SplitSolution& s,
                           KKTResidual& kkt_residual) const {
   if (robot.has_floating_base()) {
-    robot.subtractConfiguration(s.q, q_ref_, data.q_diff);
-    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.Jq_diff);
+    robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
+    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
-        += data.Jq_diff.transpose() * qf_weight_.asDiagonal() * data.q_diff;
+        += data.J_qdiff.transpose() * qf_weight_.asDiagonal() * data.qdiff;
   }
   else {
     kkt_residual.lq().array()
@@ -280,9 +280,9 @@ void JointSpaceCost::phiqq(const Robot& robot, CostFunctionData& data,
                            const double t, const SplitSolution& s,
                            KKTMatrix& kkt_matrix) const {
     if (robot.has_floating_base()) {
-      robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.Jq_diff);
+      robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
       kkt_matrix.Qqq().noalias()
-          += data.Jq_diff.transpose() * qf_weight_.asDiagonal() * data.Jq_diff;
+          += data.J_qdiff.transpose() * qf_weight_.asDiagonal() * data.J_qdiff;
     }
     else {
       // kkt_matrix.Qqq() += qf_weight_.asDiagonal();

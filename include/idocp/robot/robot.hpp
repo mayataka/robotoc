@@ -11,6 +11,8 @@
 #include "pinocchio/parsers/urdf.hpp"
 #include "pinocchio/algorithm/joint-configuration.hpp"
 #include "pinocchio/algorithm/kinematics-derivatives.hpp"
+#include "pinocchio/algorithm/frames.hpp"
+#include "pinocchio/algorithm/frames-derivatives.hpp"
 #include "pinocchio/algorithm/crba.hpp"
 #include "pinocchio/algorithm/rnea.hpp"
 #include "pinocchio/algorithm/rnea-derivatives.hpp"
@@ -172,6 +174,32 @@ public:
   void updateKinematics(const Eigen::MatrixBase<ConfigVectorType>& q, 
                         const Eigen::MatrixBase<TangentVectorType1>& v, 
                         const Eigen::MatrixBase<TangentVectorType2>& a);
+
+  ///
+  /// @brief Returns the position of the frame. Before calling this function, 
+  /// updateKinematics() must be called.
+  /// @param[in] frame_id Index of the frame.
+  /// @return Const reference to the position of the frame.
+  ///
+  const Eigen::Vector3d& framePosition(const int frame_id) const;
+
+  ///
+  /// @brief Returns the rotation matrix of the frame. Before calling this  
+  /// function, updateKinematics() must be called.
+  /// @param[in] frame_id Index of the frame.
+  /// @return Const reference to the rotation matrix of the frame.
+  ///
+  const Eigen::Matrix3d& frameRotation(const int frame_id) const;
+
+  ///
+  /// @brief Computes the frame Jacobian of the position. Before calling this  
+  /// function, updateKinematics() must be called.
+  /// @param[in] frame_id Index of the frame.
+  /// @param[out] J Jacobian. Size must be 6 x Robot::dimv().
+  ///
+  template <typename MatrixType>
+  void getFrameJacobian(const int frame_id, 
+                        const Eigen::MatrixBase<MatrixType>& J);
 
   ///
   /// @brief Computes the residual of the contact constriants represented by 
