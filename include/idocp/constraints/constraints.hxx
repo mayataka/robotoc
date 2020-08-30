@@ -30,6 +30,16 @@ inline bool Constraints::isEmpty() const {
 }
 
 
+inline bool Constraints::useKinematics() const {
+  for (const auto constraint : constraints_) {
+    if (constraint->useKinematics()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
 inline ConstraintsData Constraints::createConstraintsData(
     const Robot& robot) const {
   ConstraintsData datas;

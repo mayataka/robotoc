@@ -55,6 +55,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(dimv);
   JointSpaceCost cost(robot_);
+  EXPECT_FALSE(cost.useKinematics());
   cost.set_q_weight(q_weight);
   cost.set_v_weight(v_weight);
   cost.set_a_weight(a_weight);

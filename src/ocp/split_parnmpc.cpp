@@ -22,7 +22,12 @@ SplitParNMPC::SplitParNMPC(const Robot& robot,
     kkt_matrix_inverse_(Eigen::MatrixXd::Zero(kkt_residual_.max_dimKKT(), 
                                               kkt_residual_.max_dimKKT())),
     x_res_(Eigen::VectorXd::Zero(2*robot.dimv())),
-    dx_(Eigen::VectorXd::Zero(2*robot.dimv())) {
+    dx_(Eigen::VectorXd::Zero(2*robot.dimv())),
+    use_kinematics_(false) {
+  if (cost_->useKinematics() || constraints_->useKinematics() 
+                             || robot.max_dimf() > 0) {
+    use_kinematics_ = true;
+  }
 }
 
 
@@ -40,7 +45,8 @@ SplitParNMPC::SplitParNMPC()
     dimKKT_(0),
     kkt_matrix_inverse_(),
     x_res_(),
-    dx_() {
+    dx_(),
+    use_kinematics_(false) {
 }
 
 
@@ -82,7 +88,7 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   assert(s_new_coarse.dimc() == robot.dim_passive()+robot.dimf());
   kkt_residual_.setContactStatus(robot);
   kkt_matrix_.setContactStatus(robot);
-  if (robot.has_active_contacts()) {
+  if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
   // condensing the inverse dynamics
@@ -142,7 +148,7 @@ void SplitParNMPC::coarseUpdateTerminal(Robot& robot, const double t,
   assert(s_new_coarse.dimc() == robot.dim_passive()+robot.dimf());
   kkt_residual_.setContactStatus(robot);
   kkt_matrix_.setContactStatus(robot);
-  if (robot.has_active_contacts()) {
+  if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
   // condensing the inverse dynamics
@@ -316,7 +322,7 @@ std::pair<double, double> SplitParNMPC::costAndViolation(
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
   s_tmp.v = s.v + step_size * d.dv();
   s_tmp.u = s.u + step_size * d.du;
-  if (robot.has_active_contacts()) {
+  if (use_kinematics_) {
     robot.updateKinematics(s_tmp.q, s_tmp.v, s_tmp.a);
   }
   double cost = 0;
@@ -348,7 +354,7 @@ std::pair<double, double> SplitParNMPC::costAndViolation(
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
   s_tmp.v = s.v + step_size * d.dv();
   s_tmp.u = s.u + step_size * d.du;
-  if (robot.has_active_contacts()) {
+  if (use_kinematics_) {
     robot.updateKinematics(s_tmp.q, s_tmp.v, s_tmp.a);
   }
   double cost = 0;
@@ -396,7 +402,7 @@ std::pair<double, double> SplitParNMPC::costAndViolationTerminal(
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
   s_tmp.v = s.v + step_size * d.dv();
   s_tmp.u = s.u + step_size * d.du;
-  if (robot.has_active_contacts()) {
+  if (use_kinematics_) {
     robot.updateKinematics(s_tmp.q, s_tmp.v, s_tmp.a);
   }
   double cost = 0;
@@ -490,7 +496,7 @@ double SplitParNMPC::computeSquaredKKTErrorNorm(Robot& robot, const double t,
   kkt_matrix_.setContactStatus(robot);
   kkt_residual_.setContactStatus(robot);
   kkt_residual_.setZeroMinimum();
-  if (robot.has_active_contacts()) {
+  if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
@@ -521,7 +527,7 @@ double SplitParNMPC::computeSquaredKKTErrorNormTerminal(
   kkt_matrix_.setContactStatus(robot);
   kkt_residual_.setContactStatus(robot);
   kkt_residual_.setZeroMinimum();
-  if (robot.has_active_contacts()) {
+  if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 

@@ -41,6 +41,8 @@ public:
 
   bool isEmpty() const;
 
+  bool useKinematics() const;
+
   ConstraintsData createConstraintsData(const Robot& robot) const;
 
   bool isFeasible(const Robot& robot, ConstraintsData& datas,

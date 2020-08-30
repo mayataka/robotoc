@@ -11,19 +11,26 @@ namespace idocp {
 class CostFunctionData {
 public:
   CostFunctionData(const Robot& robot) 
-    : q_diff(),
-      Jq_diff() {
+    : qdiff(),
+      J_qdiff(),
+      qdiff_3d(Eigen::Vector3d::Zero()),
+      J_6d(Eigen::MatrixXd::Zero(6, robot.dimv())),
+      J_3d(Eigen::MatrixXd::Zero(3, robot.dimv())) {
     if (robot.has_floating_base()) {
-      q_diff.resize(robot.dimv());
-      q_diff.setZero();
-      Jq_diff.resize(robot.dimv(), robot.dimv());
-      Jq_diff.setZero();
+      qdiff.resize(robot.dimv());
+      qdiff.setZero();
+      J_qdiff.resize(robot.dimv(), robot.dimv());
+      J_qdiff.setZero();
     }
+    qdiff_3d.setZero();
   }
 
   CostFunctionData() 
-    : q_diff(),
-      Jq_diff() {
+    : qdiff(),
+      J_qdiff(),
+      qdiff_3d(),
+      J_6d(),
+      J_3d() {
   }
 
   ~CostFunctionData() {
@@ -41,8 +48,10 @@ public:
   // Use default move assign coperator.
   CostFunctionData& operator=(CostFunctionData&&) noexcept = default;
 
-  Eigen::VectorXd q_diff;
-  Eigen::MatrixXd Jq_diff;
+  Eigen::VectorXd qdiff;
+  Eigen::MatrixXd J_qdiff;
+  Eigen::Vector3d qdiff_3d;
+  Eigen::MatrixXd J_6d, J_3d;
 
 private:
 

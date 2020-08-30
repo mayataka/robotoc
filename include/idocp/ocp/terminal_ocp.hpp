@@ -185,6 +185,7 @@ private:
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
   SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
+  bool use_kinematics_;
 
 };
 

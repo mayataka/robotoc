@@ -35,6 +35,8 @@ public:
   // Use defalut move assign operator.
   JointSpaceCost& operator=(JointSpaceCost&&) noexcept = default;
 
+  bool useKinematics() const override;
+
   void set_q_ref(const Eigen::VectorXd& q_ref);
 
   void set_v_ref(const Eigen::VectorXd& v_ref);
@@ -55,61 +57,61 @@ public:
 
   void set_vf_weight(const Eigen::VectorXd& vf_weight);
 
-  double l(const Robot& robot, CostFunctionData& data, const double t, 
+  double l(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s) const override;
 
-  double phi(const Robot& robot, CostFunctionData& data, const double t, 
+  double phi(Robot& robot, CostFunctionData& data, const double t, 
              const SplitSolution& s) const override; 
 
-  void lq(const Robot& robot, CostFunctionData& data, const double t, 
+  void lq(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
           KKTResidual& kkt_residual) const override;
 
-  void lv(const Robot& robot, CostFunctionData& data, const double t, 
+  void lv(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
           KKTResidual& kkt_residual) const override;
 
-  void la(const Robot& robot, CostFunctionData& data, const double t, 
+  void la(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s,
           KKTResidual& kkt_residual) const override;
 
-  void lf(const Robot& robot, CostFunctionData& data, const double t, 
+  void lf(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
           KKTResidual& kkt_residual) const override {}
 
-  void lqq(const Robot& robot, CostFunctionData& data, const double t, 
+  void lqq(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
            KKTMatrix& kkt_matrix) const override;
 
-  void lvv(const Robot& robot, CostFunctionData& data, const double t, 
+  void lvv(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
            KKTMatrix& kkt_matrix) const override;
 
-  void laa(const Robot& robot, CostFunctionData& data, const double t, 
+  void laa(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
            KKTMatrix& kkt_matrix) const override;
 
-  void lff(const Robot& robot, CostFunctionData& data, const double t, 
+  void lff(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
            KKTMatrix& kkt_matrix) const override {}
 
-  void phiq(const Robot& robot, CostFunctionData& data, const double t, 
+  void phiq(Robot& robot, CostFunctionData& data, const double t, 
             const SplitSolution& s, KKTResidual& kkt_residual) const override;
 
-  void phiv(const Robot& robot, CostFunctionData& data, const double t, 
+  void phiv(Robot& robot, CostFunctionData& data, const double t, 
             const SplitSolution& s, KKTResidual& kkt_residual) const override;
 
-  void phiqq(const Robot& robot, CostFunctionData& data, const double t, 
+  void phiqq(Robot& robot, CostFunctionData& data, const double t, 
              const SplitSolution& s, KKTMatrix& kkt_matrix) const override;
 
-  void phivv(const Robot& robot, CostFunctionData& data, const double t, 
+  void phivv(Robot& robot, CostFunctionData& data, const double t, 
              const SplitSolution& s, KKTMatrix& kkt_matrix) const override;
 
-  void lu(const Robot& robot, CostFunctionData& data, const double t, 
+  void lu(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const Eigen::VectorXd& u, 
           Eigen::VectorXd& lu) const override;
 
-  void luu(const Robot& robot, CostFunctionData& data, const double t, 
+  void luu(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const Eigen::VectorXd& u, 
            Eigen::MatrixXd& Quu) const override;
 

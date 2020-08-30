@@ -14,7 +14,11 @@ TerminalOCP::TerminalOCP(
     constraints_data_(constraints->createConstraintsData(robot)),
     kkt_residual_(robot),
     kkt_matrix_(robot),
-    s_tmp_(robot) {
+    s_tmp_(robot),
+    use_kinematics_(false) {
+  if (cost_->useKinematics() || constraints_->useKinematics()) {
+    use_kinematics_ = true;
+  }
 }
 
 
@@ -25,7 +29,8 @@ TerminalOCP::TerminalOCP()
     constraints_data_(),
     kkt_residual_(),
     kkt_matrix_(),
-    s_tmp_() {
+    s_tmp_(),
+    use_kinematics_(false) {
 }
 
 
@@ -52,6 +57,9 @@ void TerminalOCP::linearizeOCP(Robot& robot, const double t,
                                RiccatiFactorization& riccati) {
   kkt_residual_.lq().setZero();
   kkt_residual_.lv().setZero();
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q, s.v, s.a);
+  }
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, 
                                         kkt_residual_);
   riccati.sq = - kkt_residual_.lq() + s.lmd;
@@ -134,6 +142,9 @@ double TerminalOCP::computeSquaredKKTErrorNorm(Robot& robot, const double t,
                                                const SplitSolution& s) {
   kkt_residual_.lq().setZero();
   kkt_residual_.lv().setZero();
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q, s.v, s.a);
+  }
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, 
                                         kkt_residual_);
   kkt_residual_.lq().noalias() -= s.lmd;

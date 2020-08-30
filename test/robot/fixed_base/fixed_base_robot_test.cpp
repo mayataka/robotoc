@@ -281,6 +281,44 @@ TEST_F(FixedBaseRobotTest, dSubtractdConfigurationPlus) {
 }
 
 
+TEST_F(FixedBaseRobotTest, framePosition) {
+  Robot robot(urdf_);
+  robot.updateKinematics(q_, v_, a_);
+  auto frame_position = robot.framePosition(contact_frame_id_);
+  pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
+  auto frame_position_ref = data_.oMf[contact_frame_id_].translation();
+  EXPECT_TRUE(frame_position.isApprox(frame_position_ref));
+}
+
+
+TEST_F(FixedBaseRobotTest, frameRotation) {
+  Robot robot(urdf_);
+  robot.updateKinematics(q_, v_, a_);
+  auto frame_rotation = robot.frameRotation(contact_frame_id_);
+  pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
+  auto frame_rotation_ref = data_.oMf[contact_frame_id_].rotation();
+  EXPECT_TRUE(frame_rotation.isApprox(frame_rotation_ref));
+}
+
+
+TEST_F(FixedBaseRobotTest, frameJacobian) {
+  Robot robot(urdf_);
+  robot.updateKinematics(q_, v_, a_);
+  Eigen::MatrixXd J = Eigen::MatrixXd::Zero(6, robot.dimv());
+  robot.getFrameJacobian(contact_frame_id_, J);
+  pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
+  Eigen::MatrixXd J_ref = Eigen::MatrixXd::Zero(6, robot.dimv());
+  pinocchio::getFrameJacobian(model_, data_, contact_frame_id_, pinocchio::LOCAL, J_ref);
+  EXPECT_TRUE(J.isApprox(J_ref));
+}
+
+
 TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   std::vector<int> contact_frames = {contact_frame_id_};
   Robot robot(urdf_, contact_frames, baumgarte_weight_on_velocity_, 

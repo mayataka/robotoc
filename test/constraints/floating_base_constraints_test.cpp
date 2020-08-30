@@ -18,7 +18,7 @@
 
 namespace idocp {
 
-class FixedBaseConstraintsTest : public ::testing::Test {
+class FloatingBaseConstraintsTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -96,7 +96,12 @@ protected:
 };
 
 
-TEST_F(FixedBaseConstraintsTest, isFeasible) {
+TEST_F(FloatingBaseConstraintsTest, useKinematics) {
+  EXPECT_FALSE(constraints->useKinematics());
+}
+
+
+TEST_F(FloatingBaseConstraintsTest, isFeasible) {
   ASSERT_EQ(data.data.size(), 6);
   for (int i=0; i<6; ++i) {
     ASSERT_EQ(data.data[i].slack.size(), robot.dimv()-6);
@@ -117,7 +122,7 @@ TEST_F(FixedBaseConstraintsTest, isFeasible) {
 }
 
 
-TEST_F(FixedBaseConstraintsTest, augmentDualResidual) {
+TEST_F(FloatingBaseConstraintsTest, augmentDualResidual) {
   constraints->setSlackAndDual(robot, data, dtau, s);
   constraints_ref.setSlackAndDual(dtau, s.q, s.v, s.a, s.u);
   constraints->augmentDualResidual(robot, data, dtau, kkt_residual.lu);
@@ -136,7 +141,7 @@ TEST_F(FixedBaseConstraintsTest, augmentDualResidual) {
 }
 
 
-TEST_F(FixedBaseConstraintsTest, condenseSlackAndDual) {
+TEST_F(FloatingBaseConstraintsTest, condenseSlackAndDual) {
   constraints->setSlackAndDual(robot, data, dtau, s);
   constraints_ref.setSlackAndDual(dtau, s.q, s.v, s.a, s.u);
   constraints->condenseSlackAndDual(robot, data, dtau, s.u, kkt_matrix.Quu, 
@@ -159,7 +164,7 @@ TEST_F(FixedBaseConstraintsTest, condenseSlackAndDual) {
 }
 
 
-TEST_F(FixedBaseConstraintsTest, updateSlackAndDualDirection) {
+TEST_F(FloatingBaseConstraintsTest, updateSlackAndDualDirection) {
   constraints->setSlackAndDual(robot, data, dtau, s);
   constraints_ref.setSlackAndDual(dtau, s.q, s.v, s.a, s.u);
   constraints->computeSlackAndDualDirection(robot, data, dtau, d);

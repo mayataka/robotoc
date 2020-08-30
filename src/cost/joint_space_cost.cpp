@@ -43,6 +43,11 @@ JointSpaceCost::~JointSpaceCost() {
 }
 
 
+bool JointSpaceCost::useKinematics() const {
+  return false;
+}
+
+
 void JointSpaceCost::set_q_ref(const Eigen::VectorXd& q_ref) {
   if (q_ref.size() == dimq_) {
     q_ref_ = q_ref;
@@ -153,13 +158,12 @@ void JointSpaceCost::set_vf_weight(const Eigen::VectorXd& vf_weight) {
 }
 
 
-double JointSpaceCost::l(const Robot& robot, CostFunctionData& data, 
-                         const double t, const double dtau, 
-                         const SplitSolution& s) const {
+double JointSpaceCost::l(Robot& robot, CostFunctionData& data, const double t, 
+                         const double dtau, const SplitSolution& s) const {
   double l = 0;
   if (robot.has_floating_base()) {
-    robot.subtractConfiguration(s.q, q_ref_, data.q_diff);
-    l += (q_weight_.array()*(data.q_diff).array()*(data.q_diff).array()).sum();
+    robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
+    l += (q_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
   }
   else {
     l += (q_weight_.array()*(s.q-q_ref_).array()*(s.q-q_ref_).array()).sum();
@@ -171,12 +175,12 @@ double JointSpaceCost::l(const Robot& robot, CostFunctionData& data,
 }
 
 
-double JointSpaceCost::phi(const Robot& robot, CostFunctionData& data, 
+double JointSpaceCost::phi(Robot& robot, CostFunctionData& data, 
                            const double t, const SplitSolution& s) const {
   double phi = 0;
   if (robot.has_floating_base()) {
-    robot.subtractConfiguration(s.q, q_ref_, data.q_diff);
-    phi += (qf_weight_.array()*(data.q_diff).array()*(data.q_diff).array()).sum();
+    robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
+    phi += (qf_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
   }
   else {
     phi += (qf_weight_.array()*(s.q-q_ref_).array()*(s.q-q_ref_).array()).sum();
@@ -186,15 +190,14 @@ double JointSpaceCost::phi(const Robot& robot, CostFunctionData& data,
 }
 
 
-void JointSpaceCost::lq(const Robot& robot, CostFunctionData& data, 
-                        const double t, const double dtau, 
-                        const SplitSolution& s, 
+void JointSpaceCost::lq(Robot& robot, CostFunctionData& data, const double t, 
+                        const double dtau, const SplitSolution& s, 
                         KKTResidual& kkt_residual) const {
   if (robot.has_floating_base()) {
-    robot.subtractConfiguration(s.q, q_ref_, data.q_diff);
-    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.Jq_diff);
+    robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
+    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
-        += dtau * data.Jq_diff.transpose() * q_weight_.asDiagonal() * data.q_diff;
+        += dtau * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.qdiff;
   }
   else {
     kkt_residual.lq().array()
@@ -203,31 +206,29 @@ void JointSpaceCost::lq(const Robot& robot, CostFunctionData& data,
 }
 
 
-void JointSpaceCost::lv(const Robot& robot, CostFunctionData& data, 
-                        const double t, const double dtau, 
-                        const SplitSolution& s, 
+void JointSpaceCost::lv(Robot& robot, CostFunctionData& data, const double t, 
+                        const double dtau, const SplitSolution& s, 
                         KKTResidual& kkt_residual) const {
   kkt_residual.lv().array()
       += dtau * v_weight_.array() * (s.v.array()-v_ref_.array());
 }
 
 
-void JointSpaceCost::la(const Robot& robot, CostFunctionData& data, 
-                        const double t, const double dtau, 
-                        const SplitSolution& s, 
+void JointSpaceCost::la(Robot& robot, CostFunctionData& data, const double t, 
+                        const double dtau, const SplitSolution& s, 
                         KKTResidual& kkt_residual) const {
   kkt_residual.la().array()
       += dtau * a_weight_.array() * (s.a.array()-a_ref_.array());
 }
 
 
-void JointSpaceCost::lqq(const Robot& robot, CostFunctionData& data, 
-                         const double t, const double dtau, 
-                         const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+void JointSpaceCost::lqq(Robot& robot, CostFunctionData& data, const double t, 
+                         const double dtau, const SplitSolution& s, 
+                         KKTMatrix& kkt_matrix) const {
   if (robot.has_floating_base()) {
-    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.Jq_diff);
+    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_matrix.Qqq().noalias()
-        += dtau * data.Jq_diff.transpose() * q_weight_.asDiagonal() * data.Jq_diff;
+        += dtau * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
   }
   else {
     // kkt_matrix.Qqq() += dtau * q_weight_.asDiagonal();
@@ -236,30 +237,30 @@ void JointSpaceCost::lqq(const Robot& robot, CostFunctionData& data,
 }
 
 
-void JointSpaceCost::lvv(const Robot& robot, CostFunctionData& data, 
-                         const double t, const double dtau, 
-                         const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+void JointSpaceCost::lvv(Robot& robot, CostFunctionData& data, const double t, 
+                         const double dtau, const SplitSolution& s, 
+                         KKTMatrix& kkt_matrix) const {
   // kkt_matrix.Qvv() += dtau * v_weight_.asDiagonal();
   kkt_matrix.Qvv().diagonal().noalias() += dtau * v_weight_;
 }
 
 
-void JointSpaceCost::laa(const Robot& robot, CostFunctionData& data, 
-                         const double t, const double dtau, 
-                         const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+void JointSpaceCost::laa(Robot& robot, CostFunctionData& data, const double t, 
+                         const double dtau, const SplitSolution& s, 
+                         KKTMatrix& kkt_matrix) const {
   // kkt_matrix.Qaa() += dtau * a_weight_.asDiagonal();
   kkt_matrix.Qaa().diagonal().noalias() += dtau * a_weight_;
 }
 
 
-void JointSpaceCost::phiq(const Robot& robot, CostFunctionData& data, 
-                          const double t, const SplitSolution& s,
+void JointSpaceCost::phiq(Robot& robot, CostFunctionData& data, const double t, 
+                          const SplitSolution& s,
                           KKTResidual& kkt_residual) const {
   if (robot.has_floating_base()) {
-    robot.subtractConfiguration(s.q, q_ref_, data.q_diff);
-    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.Jq_diff);
+    robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
+    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
-        += data.Jq_diff.transpose() * qf_weight_.asDiagonal() * data.q_diff;
+        += data.J_qdiff.transpose() * qf_weight_.asDiagonal() * data.qdiff;
   }
   else {
     kkt_residual.lq().array()
@@ -268,21 +269,21 @@ void JointSpaceCost::phiq(const Robot& robot, CostFunctionData& data,
 }
 
 
-void JointSpaceCost::phiv(const Robot& robot, CostFunctionData& data, 
-                          const double t, const SplitSolution& s,
+void JointSpaceCost::phiv(Robot& robot, CostFunctionData& data, const double t, 
+                          const SplitSolution& s,
                           KKTResidual& kkt_residual) const {
     kkt_residual.lv().array()
         += vf_weight_.array() * (s.v.array()-v_ref_.array());
 }
 
 
-void JointSpaceCost::phiqq(const Robot& robot, CostFunctionData& data, 
-                           const double t, const SplitSolution& s,
+void JointSpaceCost::phiqq(Robot& robot, CostFunctionData& data, const double t, 
+                           const SplitSolution& s, 
                            KKTMatrix& kkt_matrix) const {
     if (robot.has_floating_base()) {
-      robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.Jq_diff);
+      robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
       kkt_matrix.Qqq().noalias()
-          += data.Jq_diff.transpose() * qf_weight_.asDiagonal() * data.Jq_diff;
+          += data.J_qdiff.transpose() * qf_weight_.asDiagonal() * data.J_qdiff;
     }
     else {
       // kkt_matrix.Qqq() += qf_weight_.asDiagonal();
@@ -291,25 +292,25 @@ void JointSpaceCost::phiqq(const Robot& robot, CostFunctionData& data,
 }
 
 
-void JointSpaceCost::phivv(const Robot& robot, CostFunctionData& data, 
-                          const double t, const SplitSolution& s,
-                          KKTMatrix& kkt_matrix) const {
+void JointSpaceCost::phivv(Robot& robot, CostFunctionData& data, const double t, 
+                           const SplitSolution& s, 
+                           KKTMatrix& kkt_matrix) const {
 
     // kkt_matrix.Qvv() += vf_weight_.asDiagonal();
     kkt_matrix.Qvv().diagonal().noalias() += vf_weight_;
 }
 
 
-void JointSpaceCost::lu(const Robot& robot, CostFunctionData& data, 
-                        const double t, const double dtau, 
-                        const Eigen::VectorXd& u, Eigen::VectorXd& lu) const {
+void JointSpaceCost::lu(Robot& robot, CostFunctionData& data, const double t, 
+                        const double dtau, const Eigen::VectorXd& u, 
+                        Eigen::VectorXd& lu) const {
   lu.array() += dtau * u_weight_.array() * (u.array()-u_ref_.array());
 }
 
 
-void JointSpaceCost::luu(const Robot& robot, CostFunctionData& data, 
-                         const double t, const double dtau, 
-                         const Eigen::VectorXd& u, Eigen::MatrixXd& Quu) const {
+void JointSpaceCost::luu(Robot& robot, CostFunctionData& data, const double t, 
+                         const double dtau, const Eigen::VectorXd& u, 
+                         Eigen::MatrixXd& Quu) const {
   Quu.diagonal().noalias() += dtau * u_weight_;
 }
 

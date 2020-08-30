@@ -40,6 +40,18 @@ protected:
 };
 
 
+TEST_F(JointTorquesUpperLimitTest, useKinematicsFixedBase) {
+  JointTorquesUpperLimit limit(fixed_base_robot_); 
+  EXPECT_FALSE(limit.useKinematics());
+}
+
+
+TEST_F(JointTorquesUpperLimitTest, useKinematicsFloatingBase) {
+  JointTorquesUpperLimit limit(floating_base_robot_); 
+  EXPECT_FALSE(limit.useKinematics());
+}
+
+
 TEST_F(JointTorquesUpperLimitTest, isFeasibleFixedBase) {
   JointTorquesUpperLimit limit(fixed_base_robot_); 
   ConstraintComponentData data(limit.dimc());

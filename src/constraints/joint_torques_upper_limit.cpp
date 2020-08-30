@@ -27,6 +27,11 @@ JointTorquesUpperLimit::~JointTorquesUpperLimit() {
 }
 
 
+bool JointTorquesUpperLimit::useKinematics() const {
+  return false;
+}
+
+
 bool JointTorquesUpperLimit::isFeasible(const Robot& robot, 
                                         ConstraintComponentData& data, 
                                         const SplitSolution& s) const {

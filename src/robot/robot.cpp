@@ -164,6 +164,14 @@ void Robot::setUpperJointPositionLimit(
 
 
 void Robot::printRobotModel() const {
+  std::cout << "---------- Print robot model ---------- " << std::endl;
+  for (int i=0; i<model_.nframes; ++i) {
+    std::cout << "Info of frame " << i << std::endl;
+    std::cout << "name: " << model_.frames[i].name << std::endl;
+    std::cout << "parent joint id: " << model_.frames[i].parent << "\n" 
+              << std::endl;
+  }
+  std::cout << std::endl;
   for (int i=0; i<model_.njoints; ++i) {
     std::cout << "Info of joint " << i << std::endl;
     std::cout << "name: " << model_.names[i] << std::endl;
@@ -177,6 +185,7 @@ void Robot::printRobotModel() const {
             << "]" << std::endl;
   std::cout << "upperPositionLimit = [" << model_.upperPositionLimit.transpose() 
             << "]" << std::endl;
+  std::cout << "--------------------------------------- " << std::endl;
 }
 
 } // namespace idocp 

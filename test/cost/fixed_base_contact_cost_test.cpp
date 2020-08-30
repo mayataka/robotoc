@@ -49,6 +49,7 @@ TEST_F(FixedBaseContactCostTest, setWeights) {
   const Eigen::VectorXd f_weight = Eigen::VectorXd::Random(robot_.max_dimf());
   const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(robot_.max_dimf());
   ContactCost cost(robot_);
+  EXPECT_FALSE(cost.useKinematics());
   cost.set_f_weight(f_weight);
   cost.set_f_ref(f_ref);
   s.q = Eigen::VectorXd::Random(dimq);

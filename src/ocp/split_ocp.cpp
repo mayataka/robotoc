@@ -25,7 +25,12 @@ SplitOCP::SplitOCP(const Robot& robot,
     s_tmp_(robot),
     dimv_(robot.dimv()),
     dimf_(robot.dimf()),
-    dimc_(robot.dim_passive()+robot.dimf()) {
+    dimc_(robot.dim_passive()+robot.dimf()),
+    use_kinematics_(false) {
+  if (cost_->useKinematics() || constraints_->useKinematics() 
+                             || robot.max_dimf() > 0) {
+    use_kinematics_ = true;
+  }
 }
 
 
@@ -45,7 +50,8 @@ SplitOCP::SplitOCP()
     s_tmp_(),
     dimv_(0),
     dimf_(0),
-    dimc_(0) {
+    dimc_(0),
+    use_kinematics_(false) {
 }
 
 
@@ -74,7 +80,7 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   setContactStatus(robot);
   kkt_residual_.setContactStatus(robot);
   kkt_matrix_.setContactStatus(robot);
-  if (robot.has_active_contacts()) {
+  if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
   // condensing the inverse dynamics
@@ -244,7 +250,7 @@ std::pair<double, double> SplitOCP::costAndViolation(
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp_.q);
   s_tmp_.v = s.v + step_size * d.dv();
   s_tmp_.u = s.u + step_size * d.du;
-  if (robot.has_active_contacts()) {
+  if (use_kinematics_) {
     robot.updateKinematics(s_tmp_.q, s_tmp_.v, s_tmp_.a);
   }
   double cost = 0;
@@ -322,7 +328,7 @@ double SplitOCP::computeSquaredKKTErrorNorm(Robot& robot, const double t,
   kkt_matrix_.setContactStatus(robot);
   kkt_residual_.setContactStatus(robot);
   kkt_residual_.setZeroMinimum();
-  if (robot.has_active_contacts()) {
+  if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 

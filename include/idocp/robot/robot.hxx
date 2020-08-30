@@ -1,6 +1,8 @@
 #ifndef IDOCP_ROBOT_HXX_
 #define IDOCP_ROBOT_HXX_
 
+#include "idocp/robot/robot.hpp"
+
 #include <assert.h>
 
 namespace idocp {
@@ -98,6 +100,26 @@ inline void Robot::dSubtractdConfigurationMinus(
       model_, q_minus, q_plus, 
       const_cast<Eigen::MatrixBase<MatrixType>&>(dSubtract_dqminus),
       pinocchio::ARG0);
+}
+
+
+inline const Eigen::Vector3d& Robot::framePosition(const int frame_id) const {
+  return data_.oMf[frame_id].translation();
+}
+
+
+inline const Eigen::Matrix3d& Robot::frameRotation(const int frame_id) const {
+  return data_.oMf[frame_id].rotation();
+}
+
+
+template <typename MatrixType>
+inline void Robot::getFrameJacobian(const int frame_id, 
+                                    const Eigen::MatrixBase<MatrixType>& J) {
+  assert(J.rows() == 6);
+  assert(J.cols() == dimv_);
+  pinocchio::getFrameJacobian(model_, data_, frame_id, pinocchio::LOCAL, 
+                              const_cast<Eigen::MatrixBase<MatrixType>&>(J));
 }
 
 

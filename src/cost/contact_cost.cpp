@@ -25,6 +25,11 @@ ContactCost::~ContactCost() {
 }
 
 
+bool ContactCost::useKinematics() const {
+  return false;
+}
+
+
 void ContactCost::set_f_ref(const Eigen::VectorXd& f_ref) {
   if (f_ref.size() == max_dimf_) {
     f_ref_ = f_ref;
@@ -47,9 +52,8 @@ void ContactCost::set_f_weight(const Eigen::VectorXd& f_weight) {
 }
 
 
-double ContactCost::l(const Robot& robot, CostFunctionData& data, 
-                      const double t, const double dtau, 
-                      const SplitSolution& s) const {
+double ContactCost::l(Robot& robot, CostFunctionData& data, const double t, 
+                      const double dtau, const SplitSolution& s) const {
   double l = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (robot.is_contact_active(i)) {
@@ -63,16 +67,15 @@ double ContactCost::l(const Robot& robot, CostFunctionData& data,
 }
 
 
-double ContactCost::phi(const Robot& robot, CostFunctionData& data, 
+double ContactCost::phi(Robot& robot, CostFunctionData& data, 
                         const double t, const SplitSolution& s) const {
   return 0;
 }
 
 
-void ContactCost::lf(const Robot& robot, CostFunctionData& data, 
-                        const double t, const double dtau, 
-                        const SplitSolution& s, 
-                        KKTResidual& kkt_residual) const {
+void ContactCost::lf(Robot& robot, CostFunctionData& data, const double t, 
+                     const double dtau, const SplitSolution& s, 
+                     KKTResidual& kkt_residual) const {
   int dimf = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (robot.is_contact_active(i)) {
@@ -86,9 +89,9 @@ void ContactCost::lf(const Robot& robot, CostFunctionData& data,
 }
 
 
-void ContactCost::lff(const Robot& robot, CostFunctionData& data, 
-                      const double t, const double dtau, 
-                      const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+void ContactCost::lff(Robot& robot, CostFunctionData& data, const double t, 
+                      const double dtau, const SplitSolution& s, 
+                      KKTMatrix& kkt_matrix) const {
   int dimf = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (robot.is_contact_active(i)) {

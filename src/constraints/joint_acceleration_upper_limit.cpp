@@ -27,6 +27,11 @@ JointAccelerationUpperLimit::~JointAccelerationUpperLimit() {
 }
 
 
+bool JointAccelerationUpperLimit::useKinematics() const {
+  return false;
+}
+
+
 bool JointAccelerationUpperLimit::isFeasible(const Robot& robot, 
                                              ConstraintComponentData& data, 
                                              const SplitSolution& s) const {
