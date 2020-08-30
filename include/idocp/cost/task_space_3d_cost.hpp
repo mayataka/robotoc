@@ -37,11 +37,11 @@ public:
 
   bool useKinematics() const override;
 
-  void set_q_ref(const Eigen::Vector3d& q_ref);
+  void set_q_3d_ref(const Eigen::Vector3d& q_3d_ref);
 
-  void set_q_weight(const Eigen::Vector3d& q_weight);
+  void set_q_3d_weight(const Eigen::Vector3d& q_3d_weight);
 
-  void set_qf_weight(const Eigen::Vector3d& qf_weight);
+  void set_qf_3d_weight(const Eigen::Vector3d& qf_3d_weight);
 
   double l(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s) const override;
@@ -103,7 +103,7 @@ public:
 
 private:
   int frame_id_;
-  Eigen::Vector3d q_ref_, q_weight_, qf_weight_;
+  Eigen::Vector3d q_3d_ref_, q_3d_weight_, qf_3d_weight_;
 
 };
 

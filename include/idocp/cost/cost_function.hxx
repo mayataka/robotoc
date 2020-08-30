@@ -40,6 +40,13 @@ inline bool CostFunction::useKinematics() const {
 }
 
 
+inline CostFunctionData CostFunction::createCostFunctionData(
+    const Robot& robot) const {
+  auto data = CostFunctionData(robot);
+  return data;
+}
+
+
 inline double CostFunction::l(Robot& robot, CostFunctionData& data, 
                               const double t, const double dtau, 
                               const SplitSolution& s) const {

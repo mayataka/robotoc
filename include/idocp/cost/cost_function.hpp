@@ -42,6 +42,8 @@ public:
 
   bool useKinematics() const;
 
+  CostFunctionData createCostFunctionData(const Robot& robot) const;
+
   double l(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s) const;
 
