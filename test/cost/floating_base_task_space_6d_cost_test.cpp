@@ -101,8 +101,8 @@ TEST_F(FloatingBaseTaskSpace6DCostTest, setRefBySE3) {
   const Eigen::Matrix3d rotation_ref = ref_placement.rotation();
   TaskSpace6DCost cost(robot_, frame_id);
   EXPECT_TRUE(cost.useKinematics());
-  cost.set_q_6d_weight(q_weight.tail(3), q_weight.head(3));
-  cost.set_qf_6d_weight(qf_weight.tail(3), qf_weight.head(3));
+  cost.set_q_6d_weight(q_weight);
+  cost.set_qf_6d_weight(qf_weight);
   cost.set_q_6d_ref(ref_placement);
   s.q = Eigen::VectorXd::Random(dimq);
   s.v = Eigen::VectorXd::Random(dimv);

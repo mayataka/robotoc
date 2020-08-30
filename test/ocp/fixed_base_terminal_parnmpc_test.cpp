@@ -161,6 +161,7 @@ protected:
 
 TEST_F(FixedBaseTerminalParNMPCTest, isFeasible) {
   SplitParNMPC parnmpc(robot, cost, constraints);
+  std::cout << constraints_data.size() << std::endl;
   EXPECT_EQ(parnmpc.isFeasible(robot, s), 
             constraints->isFeasible(robot, constraints_data, s));
 }

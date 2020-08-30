@@ -164,6 +164,7 @@ protected:
 
 TEST_F(FloatingBaseSplitParNMPCTest, isFeasible) {
   SplitParNMPC parnmpc(robot, cost, constraints);
+  std::cout << constraints_data.size() << std::endl;
   EXPECT_EQ(parnmpc.isFeasible(robot, s), 
             constraints->isFeasible(robot, constraints_data, s));
 }

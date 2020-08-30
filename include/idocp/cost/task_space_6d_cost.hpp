@@ -18,6 +18,8 @@ class TaskSpace6DCost final : public CostFunctionComponentBase {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  typedef Eigen::Matrix<double, 6, 1> Vector6d;
+
   TaskSpace6DCost(const Robot& robot, const int frame_id);
 
   TaskSpace6DCost();
@@ -46,8 +48,12 @@ public:
   void set_q_6d_weight(const Eigen::Vector3d& position_weight, 
                        const Eigen::Vector3d& rotation_weight);
 
+  void set_q_6d_weight(const Vector6d& q_6d_weight);
+
   void set_qf_6d_weight(const Eigen::Vector3d& position_weight, 
                         const Eigen::Vector3d& rotation_weight);
+
+  void set_qf_6d_weight(const Vector6d& q_6d_weight);
 
   double l(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s) const override;

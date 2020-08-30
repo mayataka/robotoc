@@ -56,10 +56,20 @@ void TaskSpace6DCost::set_q_6d_weight(const Eigen::Vector3d& position_weight,
 }
 
 
+void TaskSpace6DCost::set_q_6d_weight(const Vector6d& q_6d_weight) {
+  q_6d_weight_ = q_6d_weight;
+}
+
+
 void TaskSpace6DCost::set_qf_6d_weight(const Eigen::Vector3d& position_weight, 
                                        const Eigen::Vector3d& rotation_weight) {
   qf_6d_weight_.template head<3>() = rotation_weight;
   qf_6d_weight_.template tail<3>() = position_weight;
+}
+
+
+void TaskSpace6DCost::set_qf_6d_weight(const Vector6d& qf_6d_weight) {
+  qf_6d_weight_ = qf_6d_weight;
 }
 
 
@@ -92,9 +102,10 @@ void TaskSpace6DCost::lq(Robot& robot, CostFunctionData& data,
   data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
   pinocchio::Jlog6(data.diff_SE3, data.J_66);
   robot.getFrameJacobian(frame_id_, data.J_6d);
-  data.J_6d = data.J_66 * data.J_6d;
+  data.JJ_6d.noalias() = data.J_66 * data.J_6d;
   kkt_residual.lq().noalias() 
-      += dtau * data.J_6d.transpose() * q_6d_weight_.asDiagonal() * data.diff_6d;
+      += dtau * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() 
+                                       * data.diff_6d;
 }
 
 
@@ -104,9 +115,9 @@ void TaskSpace6DCost::lqq(Robot& robot, CostFunctionData& data,
   data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
   pinocchio::Jlog6(data.diff_SE3, data.J_66);
   robot.getFrameJacobian(frame_id_, data.J_6d);
-  data.J_6d = data.J_66 * data.J_6d;
+  data.JJ_6d.noalias() = data.J_66 * data.J_6d;
   kkt_matrix.Qqq().noalias()
-      += dtau * data.J_6d.transpose() * q_6d_weight_.asDiagonal() * data.J_6d;
+      += dtau * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() * data.JJ_6d;
 }
 
 
@@ -117,9 +128,9 @@ void TaskSpace6DCost::phiq(Robot& robot, CostFunctionData& data,
   data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
   pinocchio::Jlog6(data.diff_SE3, data.J_66);
   robot.getFrameJacobian(frame_id_, data.J_6d);
-  data.J_6d = data.J_66 * data.J_6d;
+  data.JJ_6d.noalias() = data.J_66 * data.J_6d;
   kkt_residual.lq().noalias() 
-      += data.J_6d.transpose() * qf_6d_weight_.asDiagonal() * data.diff_6d;
+      += data.JJ_6d.transpose() * qf_6d_weight_.asDiagonal() * data.diff_6d;
 }
 
 
@@ -129,9 +140,9 @@ void TaskSpace6DCost::phiqq(Robot& robot, CostFunctionData& data,
   data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
   pinocchio::Jlog6(data.diff_SE3, data.J_66);
   robot.getFrameJacobian(frame_id_, data.J_6d);
-  data.J_6d = data.J_66 * data.J_6d;
+  data.JJ_6d.noalias() = data.J_66 * data.J_6d;
   kkt_matrix.Qqq().noalias()
-      += data.J_6d.transpose() * qf_6d_weight_.asDiagonal() * data.J_6d;
+      += data.JJ_6d.transpose() * qf_6d_weight_.asDiagonal() * data.JJ_6d;
 }
 
 } // namespace idocp
