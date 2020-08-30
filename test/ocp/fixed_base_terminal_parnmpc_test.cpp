@@ -15,7 +15,6 @@
 #include "idocp/cost/joint_space_cost.hpp"
 #include "idocp/cost/contact_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/constraints/constraints_data.hpp"
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 #include "idocp/constraints/joint_position_upper_limit.hpp"
 #include "idocp/constraints/joint_velocity_lower_limit.hpp"

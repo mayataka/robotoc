@@ -113,6 +113,11 @@ inline const Eigen::Matrix3d& Robot::frameRotation(const int frame_id) const {
 }
 
 
+inline const pinocchio::SE3& Robot::framePlacement(const int frame_id) const {
+  return data_.oMf[frame_id];
+}
+
+
 template <typename MatrixType>
 inline void Robot::getFrameJacobian(const int frame_id, 
                                     const Eigen::MatrixBase<MatrixType>& J) {

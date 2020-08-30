@@ -42,18 +42,18 @@ inline bool Constraints::useKinematics() const {
 
 inline ConstraintsData Constraints::createConstraintsData(
     const Robot& robot) const {
-  ConstraintsData datas;
+  ConstraintsData data;
   for (int i=0; i<constraints_.size(); ++i) {
-    datas.data.push_back(ConstraintComponentData(constraints_[i]->dimc()));
+    data.push_back(ConstraintComponentData(constraints_[i]->dimc()));
   }
-  return datas;
+  return data;
 }
 
 
-inline bool Constraints::isFeasible(const Robot& robot, ConstraintsData& datas, 
+inline bool Constraints::isFeasible(const Robot& robot, ConstraintsData& data, 
                                     const SplitSolution& s) const {
   for (int i=0; i<constraints_.size(); ++i) {
-    bool feasible = constraints_[i]->isFeasible(robot, datas.data[i], s);
+    bool feasible = constraints_[i]->isFeasible(robot, data[i], s);
     if (!feasible) {
       return false;
     }
@@ -63,52 +63,51 @@ inline bool Constraints::isFeasible(const Robot& robot, ConstraintsData& datas,
 
 
 inline void Constraints::setSlackAndDual(const Robot& robot, 
-                                         ConstraintsData& datas, 
+                                         ConstraintsData& data, 
                                          const double dtau, 
                                          const SplitSolution& s) const {
   for (int i=0; i<constraints_.size(); ++i) {
-    constraints_[i]->setSlackAndDual(robot, datas.data[i], dtau, s);
+    constraints_[i]->setSlackAndDual(robot, data[i], dtau, s);
   }
 }
 
 
 inline void Constraints::augmentDualResidual(const Robot& robot, 
-                                             ConstraintsData& datas, 
+                                             ConstraintsData& data, 
                                              const double dtau, 
                                              KKTResidual& kkt_residual) const {
   for (int i=0; i<constraints_.size(); ++i) {
-    constraints_[i]->augmentDualResidual(robot, datas.data[i], dtau, 
-                                          kkt_residual);
+    constraints_[i]->augmentDualResidual(robot, data[i], dtau, kkt_residual);
   }
 }
 
 
 inline void Constraints::augmentDualResidual(const Robot& robot, 
-                                             ConstraintsData& datas, 
+                                             ConstraintsData& data, 
                                              const double dtau, 
                                              Eigen::VectorXd& lu) const {
   assert(lu.size() == robot.dimv());
   for (int i=0; i<constraints_.size(); ++i) {
-    constraints_[i]->augmentDualResidual(robot, datas.data[i], dtau, lu);
+    constraints_[i]->augmentDualResidual(robot, data[i], dtau, lu);
   }
 }
 
 
 inline void Constraints::condenseSlackAndDual(const Robot& robot,
-                                              ConstraintsData& datas, 
+                                              ConstraintsData& data, 
                                               const double dtau, 
                                               const SplitSolution& s,
                                               KKTMatrix& kkt_matrix, 
                                               KKTResidual& kkt_residual) const {
   for (int i=0; i<constraints_.size(); ++i) {
-    constraints_[i]->condenseSlackAndDual(robot, datas.data[i], dtau, s,
-                                          kkt_matrix, kkt_residual);
+    constraints_[i]->condenseSlackAndDual(robot, data[i], dtau, s, kkt_matrix, 
+                                          kkt_residual);
   }
 }
 
 
 inline void Constraints::condenseSlackAndDual(const Robot& robot,
-                                              ConstraintsData& datas, 
+                                              ConstraintsData& data, 
                                               const double dtau, 
                                               const Eigen::VectorXd& u,
                                               Eigen::MatrixXd& Quu, 
@@ -118,24 +117,24 @@ inline void Constraints::condenseSlackAndDual(const Robot& robot,
   assert(Quu.cols() == robot.dimv());
   assert(lu.size() == robot.dimv());
   for (int i=0; i<constraints_.size(); ++i) {
-    constraints_[i]->condenseSlackAndDual(robot, datas.data[i], dtau, u, Quu, lu);
+    constraints_[i]->condenseSlackAndDual(robot, data[i], dtau, u, Quu, lu);
   }
 }
 
 
 inline void Constraints::computeSlackAndDualDirection(
-    const Robot& robot, ConstraintsData& datas, const double dtau, 
+    const Robot& robot, ConstraintsData& data, const double dtau, 
     const SplitDirection& d) const {
   for (int i=0; i<constraints_.size(); ++i) {
-    constraints_[i]->computeSlackAndDualDirection(robot, datas.data[i], dtau, d);
+    constraints_[i]->computeSlackAndDualDirection(robot, data[i], dtau, d);
   }
 }
 
 
-inline double Constraints::maxSlackStepSize(const ConstraintsData& datas) const {
+inline double Constraints::maxSlackStepSize(const ConstraintsData& data) const {
   double min_step_size = 1;
   for (int i=0; i<constraints_.size(); ++i) {
-    const double step_size = constraints_[i]->maxSlackStepSize(datas.data[i]);
+    const double step_size = constraints_[i]->maxSlackStepSize(data[i]);
     if (step_size < min_step_size) {
       min_step_size = step_size;
     }
@@ -144,10 +143,10 @@ inline double Constraints::maxSlackStepSize(const ConstraintsData& datas) const 
 }
 
 
-inline double Constraints::maxDualStepSize(const ConstraintsData& datas) const {
+inline double Constraints::maxDualStepSize(const ConstraintsData& data) const {
   double min_step_size = 1;
   for (int i=0; i<constraints_.size(); ++i) {
-    const double step_size = constraints_[i]->maxDualStepSize(datas.data[i]);
+    const double step_size = constraints_[i]->maxDualStepSize(data[i]);
     if (step_size < min_step_size) {
       min_step_size = step_size;
     }
@@ -156,61 +155,60 @@ inline double Constraints::maxDualStepSize(const ConstraintsData& datas) const {
 }
 
 
-inline void Constraints::updateSlack(ConstraintsData& datas, 
+inline void Constraints::updateSlack(ConstraintsData& data, 
                                      const double step_size) const {
   for (int i=0; i<constraints_.size(); ++i) {
-    constraints_[i]->updateSlack(datas.data[i], step_size);
+    constraints_[i]->updateSlack(data[i], step_size);
   }
 }
 
 
-inline void Constraints::updateDual(ConstraintsData& datas, 
+inline void Constraints::updateDual(ConstraintsData& data, 
                                     const double step_size) const {
   for (int i=0; i<constraints_.size(); ++i) {
-    constraints_[i]->updateDual(datas.data[i], step_size);
+    constraints_[i]->updateDual(data[i], step_size);
   }
 }
 
 
-inline double Constraints::costSlackBarrier(const ConstraintsData& datas) const {
+inline double Constraints::costSlackBarrier(const ConstraintsData& data) const {
   double cost = 0;
   for (int i=0; i<constraints_.size(); ++i) {
-    cost += constraints_[i]->costSlackBarrier(datas.data[i]);
+    cost += constraints_[i]->costSlackBarrier(data[i]);
   }
   return cost;
 }
 
 
-inline double Constraints::costSlackBarrier(const ConstraintsData& datas, 
+inline double Constraints::costSlackBarrier(const ConstraintsData& data, 
                                             const double step_size) const {
   double cost = 0;
   for (int i=0; i<constraints_.size(); ++i) {
-    cost += constraints_[i]->costSlackBarrier(datas.data[i], step_size);
+    cost += constraints_[i]->costSlackBarrier(data[i], step_size);
   }
   return cost;
 }
 
 
 inline double Constraints::residualL1Nrom(const Robot& robot, 
-                                          ConstraintsData& datas, 
+                                          ConstraintsData& data, 
                                           const double dtau, 
                                           const SplitSolution& s) const {
   double l1_norm = 0;
   for (int i=0; i<constraints_.size(); ++i) {
-    l1_norm += constraints_[i]->residualL1Nrom(robot, datas.data[i], dtau, s);
+    l1_norm += constraints_[i]->residualL1Nrom(robot, data[i], dtau, s);
   }
   return l1_norm;
 }
 
 
 inline double Constraints::squaredKKTErrorNorm(const Robot& robot, 
-                                               ConstraintsData& datas, 
+                                               ConstraintsData& data, 
                                                const double dtau, 
                                                const SplitSolution& s) const {
   double squared_norm = 0;
   for (int i=0; i<constraints_.size(); ++i) {
-    squared_norm += constraints_[i]->squaredKKTErrorNorm(robot, datas.data[i],
-                                                          dtau, s);
+    squared_norm += constraints_[i]->squaredKKTErrorNorm(robot, data[i], dtau, s);
   }
   return squared_norm;
 }

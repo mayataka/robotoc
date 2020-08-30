@@ -305,6 +305,18 @@ TEST_F(FixedBaseRobotTest, frameRotation) {
 }
 
 
+TEST_F(FixedBaseRobotTest, framePlacement) {
+  Robot robot(urdf_);
+  robot.updateKinematics(q_, v_, a_);
+  auto frame_placement = robot.framePlacement(contact_frame_id_);
+  pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
+  auto frame_placement_ref = data_.oMf[contact_frame_id_];
+  EXPECT_TRUE(frame_placement.isApprox(frame_placement_ref));
+}
+
+
 TEST_F(FixedBaseRobotTest, frameJacobian) {
   Robot robot(urdf_);
   robot.updateKinematics(q_, v_, a_);
