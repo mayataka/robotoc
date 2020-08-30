@@ -453,6 +453,7 @@ private:
   Eigen::MatrixXd kkt_matrix_inverse_;
   Eigen::VectorXd x_res_; /// @brief Residual of state and costate used in the forward and backward correction.
   Eigen::VectorXd dx_; /// @brief Correction term of state and costate used in the forward and backward correction.
+  bool use_kinematics_;
 
 };
 

@@ -264,6 +264,7 @@ private:
   Eigen::MatrixXd Ginv_; /// @brief Inverse of the Riccati matrix G.
   SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
   int dimv_, dimf_, dimc_;
+  bool use_kinematics_;
 
   ///
   /// @brief Set contact status from robot model, i.e., set dimension of the 
