@@ -36,6 +36,12 @@ bool TaskSpace6DCost::useKinematics() const {
 }
 
 
+void TaskSpace6DCost::set_q_6d_ref(const pinocchio::SE3& SE3_ref) {
+  SE3_ref_ = SE3_ref;
+  SE3_ref_inv_ = SE3_ref_.inverse();
+}
+
+
 void TaskSpace6DCost::set_q_6d_ref(const Eigen::Vector3d& position_ref, 
                                    const Eigen::Matrix3d& rotation_mat_ref) {
   SE3_ref_ = pinocchio::SE3(rotation_mat_ref, position_ref);
@@ -125,7 +131,7 @@ void TaskSpace6DCost::phiqq(Robot& robot, CostFunctionData& data,
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_6d = data.J_66 * data.J_6d;
   kkt_matrix.Qqq().noalias()
-      += data.J_6d.transpose() * q_6d_weight_.asDiagonal() * data.J_6d;
+      += data.J_6d.transpose() * qf_6d_weight_.asDiagonal() * data.J_6d;
 }
 
 } // namespace idocp

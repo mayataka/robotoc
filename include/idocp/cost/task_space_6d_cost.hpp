@@ -38,6 +38,8 @@ public:
 
   bool useKinematics() const override;
 
+  void set_q_6d_ref(const pinocchio::SE3& SE3_ref);
+
   void set_q_6d_ref(const Eigen::Vector3d& position_ref, 
                     const Eigen::Matrix3d& rotation_mat_ref);
 
