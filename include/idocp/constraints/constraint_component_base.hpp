@@ -35,6 +35,8 @@ public:
   ConstraintComponentBase& operator=(ConstraintComponentBase&&) noexcept 
       = default;
 
+  virtual bool useKinematics() const = 0;
+
   virtual bool isFeasible(const Robot& robot, ConstraintComponentData& data, 
                           const SplitSolution& s) const = 0;
 

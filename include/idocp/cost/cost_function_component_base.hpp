@@ -30,6 +30,8 @@ public:
   CostFunctionComponentBase& operator=(CostFunctionComponentBase&&) noexcept 
       = default;
 
+  virtual bool useKinematics() const = 0;
+
   virtual double l(Robot& robot, CostFunctionData& data, const double t, 
                    const double dtau, const SplitSolution& s) const = 0;
 

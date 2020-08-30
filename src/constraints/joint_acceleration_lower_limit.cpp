@@ -27,6 +27,11 @@ JointAccelerationLowerLimit::~JointAccelerationLowerLimit() {
 }
 
 
+bool JointAccelerationLowerLimit::useKinematics() const {
+  return false;
+}
+
+
 bool JointAccelerationLowerLimit::isFeasible(const Robot& robot, 
                                              ConstraintComponentData& data, 
                                              const SplitSolution& s) const {

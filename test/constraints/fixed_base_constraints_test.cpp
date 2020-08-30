@@ -94,6 +94,11 @@ protected:
 };
 
 
+TEST_F(FixedBaseConstraintsTest, useKinematics) {
+  EXPECT_FALSE(constraints->useKinematics());
+}
+
+
 TEST_F(FixedBaseConstraintsTest, isFeasible) {
   ASSERT_EQ(data.data.size(), 6);
   for (int i=0; i<6; ++i) {

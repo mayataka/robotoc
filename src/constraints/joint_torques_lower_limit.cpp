@@ -27,6 +27,11 @@ JointTorquesLowerLimit::~JointTorquesLowerLimit() {
 }
 
 
+bool JointTorquesLowerLimit::useKinematics() const {
+  return false;
+}
+
+
 bool JointTorquesLowerLimit::isFeasible(const Robot& robot, 
                                         ConstraintComponentData& data, 
                                         const SplitSolution& s) const {

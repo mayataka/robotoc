@@ -30,6 +30,16 @@ inline bool CostFunction::isEmpty() const {
 }
 
 
+inline bool CostFunction::useKinematics() const {
+  for (const auto cost : costs_) {
+    if (cost->useKinematics()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
 inline double CostFunction::l(Robot& robot, CostFunctionData& data, 
                               const double t, const double dtau, 
                               const SplitSolution& s) const {

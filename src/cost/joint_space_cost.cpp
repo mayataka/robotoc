@@ -43,6 +43,11 @@ JointSpaceCost::~JointSpaceCost() {
 }
 
 
+bool JointSpaceCost::useKinematics() const {
+  return false;
+}
+
+
 void JointSpaceCost::set_q_ref(const Eigen::VectorXd& q_ref) {
   if (q_ref.size() == dimq_) {
     q_ref_ = q_ref;

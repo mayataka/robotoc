@@ -37,7 +37,7 @@ cd idocp
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=False
-make -j8
+make -j$(nproc)
 sudo make install
 ```
 

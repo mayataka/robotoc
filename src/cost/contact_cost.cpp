@@ -25,6 +25,11 @@ ContactCost::~ContactCost() {
 }
 
 
+bool ContactCost::useKinematics() const {
+  return false;
+}
+
+
 void ContactCost::set_f_ref(const Eigen::VectorXd& f_ref) {
   if (f_ref.size() == max_dimf_) {
     f_ref_ = f_ref;

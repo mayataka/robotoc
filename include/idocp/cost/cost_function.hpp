@@ -40,6 +40,8 @@ public:
 
   bool isEmpty() const;
 
+  bool useKinematics() const;
+
   double l(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s) const;
 

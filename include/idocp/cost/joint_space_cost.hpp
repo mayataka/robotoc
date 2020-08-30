@@ -35,6 +35,8 @@ public:
   // Use defalut move assign operator.
   JointSpaceCost& operator=(JointSpaceCost&&) noexcept = default;
 
+  bool useKinematics() const override;
+
   void set_q_ref(const Eigen::VectorXd& q_ref);
 
   void set_v_ref(const Eigen::VectorXd& v_ref);

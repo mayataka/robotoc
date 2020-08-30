@@ -50,6 +50,7 @@ TEST_F(FixedBaseTaskSpace3DCostTest, setWeights) {
   const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random();
   const Eigen::Vector3d q_ref = Eigen::Vector3d::Random();
   TaskSpace3DCost cost(robot_, frame_id);
+  EXPECT_TRUE(cost.useKinematics());
   cost.set_q_weight(q_weight);
   cost.set_qf_weight(qf_weight);
   cost.set_q_ref(q_ref);

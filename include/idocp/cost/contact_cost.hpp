@@ -35,6 +35,8 @@ public:
   // Use defalut move assign operator.
   ContactCost& operator=(ContactCost&&) noexcept = default;
 
+  bool useKinematics() const override;
+
   void set_f_ref(const Eigen::VectorXd& f_ref);
 
   void set_f_weight(const Eigen::VectorXd& f_weight);

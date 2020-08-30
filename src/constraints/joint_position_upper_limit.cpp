@@ -27,6 +27,11 @@ JointPositionUpperLimit::~JointPositionUpperLimit() {
 }
 
 
+bool JointPositionUpperLimit::useKinematics() const {
+  return false;
+}
+
+
 bool JointPositionUpperLimit::isFeasible(const Robot& robot, 
                                          ConstraintComponentData& data, 
                                          const SplitSolution& s) const {

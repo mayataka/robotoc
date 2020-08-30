@@ -35,6 +35,8 @@ public:
   // Use defalut copy operator.
   TaskSpace3DCost& operator=(TaskSpace3DCost&&) noexcept = default;
 
+  bool useKinematics() const override;
+
   void set_q_ref(const Eigen::Vector3d& q_ref);
 
   void set_q_weight(const Eigen::Vector3d& q_weight);

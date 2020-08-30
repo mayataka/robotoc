@@ -28,6 +28,11 @@ TaskSpace3DCost::~TaskSpace3DCost() {
 }
 
 
+bool TaskSpace3DCost::useKinematics() const {
+  return true;
+}
+
+
 void TaskSpace3DCost::set_q_ref(const Eigen::Vector3d& q_ref) {
   q_ref_ = q_ref;
 }

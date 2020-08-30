@@ -1,6 +1,8 @@
 #ifndef IDOCP_ROBOT_HXX_
 #define IDOCP_ROBOT_HXX_
 
+#include "idocp/robot/robot.hpp"
+
 #include <assert.h>
 
 namespace idocp {

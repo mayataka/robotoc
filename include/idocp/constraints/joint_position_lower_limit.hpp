@@ -36,6 +36,8 @@ public:
   JointPositionLowerLimit& operator=(JointPositionLowerLimit&&) noexcept 
       = default;
 
+  bool useKinematics() const override;
+
   bool isFeasible(const Robot& robot, ConstraintComponentData& data, 
                   const SplitSolution& s) const override;
 
