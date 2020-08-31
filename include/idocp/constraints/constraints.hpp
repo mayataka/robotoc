@@ -47,48 +47,48 @@ public:
 
   ConstraintsData createConstraintsData(const Robot& robot) const;
 
-  bool isFeasible(const Robot& robot, ConstraintsData& datas,
+  bool isFeasible(const Robot& robot, ConstraintsData& data,
                   const SplitSolution& s) const;
 
-  void setSlackAndDual(const Robot& robot, ConstraintsData& datas, 
+  void setSlackAndDual(const Robot& robot, ConstraintsData& data, 
                        const double dtau, const SplitSolution& s) const;
 
-  void augmentDualResidual(const Robot& robot, ConstraintsData& datas,
+  void augmentDualResidual(const Robot& robot, ConstraintsData& data,
                            const double dtau, KKTResidual& kkt_residual) const;
 
-  void augmentDualResidual(const Robot& robot, ConstraintsData& datas,
+  void augmentDualResidual(const Robot& robot, ConstraintsData& data,
                            const double dtau, Eigen::VectorXd& lu) const;
 
-  void condenseSlackAndDual(const Robot& robot, ConstraintsData& datas,
+  void condenseSlackAndDual(const Robot& robot, ConstraintsData& data,
                             const double dtau, const SplitSolution& s,
                             KKTMatrix& kkt_matrix, 
                             KKTResidual& kkt_residual) const;
 
-  void condenseSlackAndDual(const Robot& robot, ConstraintsData& datas,
+  void condenseSlackAndDual(const Robot& robot, ConstraintsData& data,
                             const double dtau, const Eigen::VectorXd& u,
                             Eigen::MatrixXd& Quu, Eigen::VectorXd& lu) const;
 
-  void computeSlackAndDualDirection(const Robot& robot, ConstraintsData& datas, 
+  void computeSlackAndDualDirection(const Robot& robot, ConstraintsData& data, 
                                     const double dtau, 
                                     const SplitDirection& d) const;
 
-  double maxSlackStepSize(const ConstraintsData& datas) const;
+  double maxSlackStepSize(const ConstraintsData& data) const;
 
-  double maxDualStepSize(const ConstraintsData& datas) const;
+  double maxDualStepSize(const ConstraintsData& data) const;
 
-  void updateSlack(ConstraintsData& datas, const double step_size) const;
+  void updateSlack(ConstraintsData& data, const double step_size) const;
 
-  void updateDual(ConstraintsData& datas, const double step_size) const;
+  void updateDual(ConstraintsData& data, const double step_size) const;
 
-  double costSlackBarrier(const ConstraintsData& datas) const;
+  double costSlackBarrier(const ConstraintsData& data) const;
 
-  double costSlackBarrier(const ConstraintsData& datas, 
+  double costSlackBarrier(const ConstraintsData& data, 
                           const double step_size) const;
 
-  double residualL1Nrom(const Robot& robot, ConstraintsData& datas, 
+  double residualL1Nrom(const Robot& robot, ConstraintsData& data, 
                         const double dtau, const SplitSolution& s) const;
 
-  double squaredKKTErrorNorm(const Robot& robot, ConstraintsData& datas, 
+  double squaredKKTErrorNorm(const Robot& robot, ConstraintsData& data, 
                              const double dtau, const SplitSolution& s) const;
 
 private:

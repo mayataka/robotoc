@@ -46,8 +46,8 @@ protected:
 TEST_F(FixedBaseTaskSpace6DCostTest, setRefByVectorAndMatrix) {
   const int dimq = robot_.dimq();
   const int dimv = robot_.dimv();
-  const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6);
-  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6);
+  const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6).array().abs();
+  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6).array().abs();
   const pinocchio::SE3 ref_placement = pinocchio::SE3::Random();
   const Eigen::Vector3d position_ref = ref_placement.translation();
   const Eigen::Matrix3d rotation_ref = ref_placement.rotation();
@@ -67,7 +67,7 @@ TEST_F(FixedBaseTaskSpace6DCostTest, setRefByVectorAndMatrix) {
   const Eigen::VectorXd diff_6d = pinocchio::log6(diff_SE3).toVector();
   const double l_ref = dtau_ * 0.5 * diff_6d.transpose() * q_weight.asDiagonal() * diff_6d;
   EXPECT_DOUBLE_EQ(cost.l(robot_, data_, t_, dtau_, s), l_ref);
-  const double phi_ref = 0.5 * diff_6d.transpose() * q_weight.asDiagonal() * diff_6d;
+  const double phi_ref = 0.5 * diff_6d.transpose() * qf_weight.asDiagonal() * diff_6d;
   EXPECT_DOUBLE_EQ(cost.phi(robot_, data_, t_, s), phi_ref);
 
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
@@ -94,8 +94,8 @@ TEST_F(FixedBaseTaskSpace6DCostTest, setRefByVectorAndMatrix) {
 TEST_F(FixedBaseTaskSpace6DCostTest, setRefBySE3) {
   const int dimq = robot_.dimq();
   const int dimv = robot_.dimv();
-  const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6);
-  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6);
+  const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6).array().abs();
+  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6).array().abs();
   const pinocchio::SE3 ref_placement = pinocchio::SE3::Random();
   const Eigen::Vector3d position_ref = ref_placement.translation();
   const Eigen::Matrix3d rotation_ref = ref_placement.rotation();
@@ -115,7 +115,7 @@ TEST_F(FixedBaseTaskSpace6DCostTest, setRefBySE3) {
   const Eigen::VectorXd diff_6d = pinocchio::log6(diff_SE3).toVector();
   const double l_ref = dtau_ * 0.5 * diff_6d.transpose() * q_weight.asDiagonal() * diff_6d;
   EXPECT_DOUBLE_EQ(cost.l(robot_, data_, t_, dtau_, s), l_ref);
-  const double phi_ref = 0.5 * diff_6d.transpose() * q_weight.asDiagonal() * diff_6d;
+  const double phi_ref = 0.5 * diff_6d.transpose() * qf_weight.asDiagonal() * diff_6d;
   EXPECT_DOUBLE_EQ(cost.phi(robot_, data_, t_, s), phi_ref);
 
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);

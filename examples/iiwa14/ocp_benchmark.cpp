@@ -82,6 +82,7 @@ void BenchmarkWithContacts() {
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  joint_cost->set_q_ref(q);
   robot.setContactStatus(std::vector<bool>({true}));
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
