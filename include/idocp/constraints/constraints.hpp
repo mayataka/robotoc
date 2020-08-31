@@ -10,12 +10,14 @@
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/constraints/constraint_component_base.hpp"
-#include "idocp/constraints/constraints_data.hpp"
+#include "idocp/constraints/constraint_component_data.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 
 
 namespace idocp {
+
+typedef std::vector<ConstraintComponentData> ConstraintsData;
 
 class Constraints {
 public:

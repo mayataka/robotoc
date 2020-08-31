@@ -15,7 +15,6 @@
 #include "idocp/cost/joint_space_cost.hpp"
 #include "idocp/cost/contact_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/constraints/constraints_data.hpp"
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 #include "idocp/constraints/joint_position_upper_limit.hpp"
 #include "idocp/constraints/joint_velocity_lower_limit.hpp"
@@ -164,6 +163,7 @@ protected:
 
 TEST_F(FloatingBaseTerminalParNMPCTest, isFeasible) {
   SplitParNMPC parnmpc(robot, cost, constraints);
+  std::cout << constraints_data.size() << std::endl;
   EXPECT_EQ(parnmpc.isFeasible(robot, s), 
             constraints->isFeasible(robot, constraints_data, s));
 }

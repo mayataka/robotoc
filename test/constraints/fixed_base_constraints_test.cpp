@@ -6,7 +6,6 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/constraints/constraints_data.hpp"
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 #include "idocp/constraints/joint_position_upper_limit.hpp"
 #include "idocp/constraints/joint_velocity_lower_limit.hpp"
@@ -100,20 +99,20 @@ TEST_F(FixedBaseConstraintsTest, useKinematics) {
 
 
 TEST_F(FixedBaseConstraintsTest, isFeasible) {
-  ASSERT_EQ(data.data.size(), 6);
+  ASSERT_EQ(data.size(), 6);
   for (int i=0; i<6; ++i) {
-    ASSERT_EQ(data.data[i].slack.size(), robot.dimv());
-    ASSERT_EQ(data.data[i].dual.size(), robot.dimv());
-    ASSERT_EQ(data.data[i].residual.size(), robot.dimv());
-    ASSERT_EQ(data.data[i].duality.size(), robot.dimv());
-    ASSERT_EQ(data.data[i].dslack.size(), robot.dimv());
-    ASSERT_EQ(data.data[i].ddual.size(), robot.dimv());
-    ASSERT_TRUE(data.data[i].slack.isZero());
-    ASSERT_TRUE(data.data[i].dual.isZero());
-    ASSERT_TRUE(data.data[i].residual.isZero());
-    ASSERT_TRUE(data.data[i].duality.isZero());
-    ASSERT_TRUE(data.data[i].dslack.isZero());
-    ASSERT_TRUE(data.data[i].ddual.isZero());
+    ASSERT_EQ(data[i].slack.size(), robot.dimv());
+    ASSERT_EQ(data[i].dual.size(), robot.dimv());
+    ASSERT_EQ(data[i].residual.size(), robot.dimv());
+    ASSERT_EQ(data[i].duality.size(), robot.dimv());
+    ASSERT_EQ(data[i].dslack.size(), robot.dimv());
+    ASSERT_EQ(data[i].ddual.size(), robot.dimv());
+    ASSERT_TRUE(data[i].slack.isZero());
+    ASSERT_TRUE(data[i].dual.isZero());
+    ASSERT_TRUE(data[i].residual.isZero());
+    ASSERT_TRUE(data[i].duality.isZero());
+    ASSERT_TRUE(data[i].dslack.isZero());
+    ASSERT_TRUE(data[i].ddual.isZero());
   }
   EXPECT_EQ(constraints->isFeasible(robot, data, s),
             constraints_ref.isFeasible(s.q, s.v, s.a, s.u));

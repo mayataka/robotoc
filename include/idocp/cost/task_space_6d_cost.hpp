@@ -2,6 +2,7 @@
 #define IDOCP_TASK_SPACE_6D_COST_HPP_
 
 #include "Eigen/Core"
+#include "pinocchio/spatial/se3.hpp"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function_component_base.hpp"
@@ -17,7 +18,9 @@ class TaskSpace6DCost final : public CostFunctionComponentBase {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  TaskSpace6DCost(const Robot& robot, const int end_effector_frame_id);
+  typedef Eigen::Matrix<double, 6, 1> Vector6d;
+
+  TaskSpace6DCost(const Robot& robot, const int frame_id);
 
   TaskSpace6DCost();
 
@@ -37,21 +40,20 @@ public:
 
   bool useKinematics() const override;
 
-  void set_q_ref(const Eigen::Vector3d& q_ref);
+  void set_q_6d_ref(const pinocchio::SE3& SE3_ref);
 
-  void set_v_ref(const Eigen::Vector3d& v_ref);
+  void set_q_6d_ref(const Eigen::Vector3d& position_ref, 
+                    const Eigen::Matrix3d& rotation_mat_ref);
 
-  void set_a_ref(const Eigen::Vector3d& a_ref);
- 
-  void set_q_weight(const Eigen::Vector3d& q_weight);
+  void set_q_6d_weight(const Eigen::Vector3d& position_weight, 
+                       const Eigen::Vector3d& rotation_weight);
 
-  void set_v_weight(const Eigen::Vector3d& v_weight);
+  void set_q_6d_weight(const Vector6d& q_6d_weight);
 
-  void set_a_weight(const Eigen::Vector3d& a_weight);
+  void set_qf_6d_weight(const Eigen::Vector3d& position_weight, 
+                        const Eigen::Vector3d& rotation_weight);
 
-  void set_qf_weight(const Eigen::Vector3d& qf_weight);
-
-  void set_vf_weight(const Eigen::Vector3d& vf_weight);
+  void set_qf_6d_weight(const Vector6d& q_6d_weight);
 
   double l(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s) const override;
@@ -65,11 +67,11 @@ public:
 
   void lv(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const override;
+          KKTResidual& kkt_residual) const override {}
 
   void la(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s,
-          KKTResidual& kkt_residual) const override;
+          KKTResidual& kkt_residual) const override {}
 
   void lf(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
@@ -81,11 +83,11 @@ public:
 
   void lvv(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override;
+           KKTMatrix& kkt_matrix) const override {}
 
   void laa(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override;
+           KKTMatrix& kkt_matrix) const override {}
 
   void lff(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
@@ -95,13 +97,13 @@ public:
             const SplitSolution& s, KKTResidual& kkt_residual) const override;
 
   void phiv(Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, KKTResidual& kkt_residual) const override;
+            const SplitSolution& s, KKTResidual& kkt_residual) const override {}
 
   void phiqq(Robot& robot, CostFunctionData& data, const double t, 
              const SplitSolution& s, KKTMatrix& kkt_matrix) const override;
 
-  void phivv(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s, KKTMatrix& kkt_matrix) const override;
+  void phivv(Robot& robot, CostFunctionData& data, const double t,
+             const SplitSolution& s, KKTMatrix& kkt_matrix) const override {}
 
   void lu(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const Eigen::VectorXd& u, 
@@ -112,9 +114,9 @@ public:
            Eigen::MatrixXd& Quu) const override {}
 
 private:
-  int dimq_, dimv_;
-  Eigen::Matrix<double, 6, 1> q_ref_, v_ref_, a_ref_, q_weight_, v_weight_, 
-                              a_weight_, qf_weight_, vf_weight_;
+  int frame_id_;
+  pinocchio::SE3 SE3_ref_, SE3_ref_inv_;
+  Eigen::VectorXd q_6d_weight_, qf_6d_weight_;
 
 };
 

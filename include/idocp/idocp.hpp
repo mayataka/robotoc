@@ -9,6 +9,8 @@
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
 #include "idocp/cost/contact_cost.hpp"
+#include "idocp/cost/task_space_3d_cost.hpp"
+#include "idocp/cost/task_space_6d_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/constraints/joint_acceleration_lower_limit.hpp"
