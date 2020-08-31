@@ -89,7 +89,7 @@ double TaskSpace6DCost::phi(Robot& robot, CostFunctionData& data,
   double phi = 0;
   data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
   data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
-  phi += (q_6d_weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
+  phi += (qf_6d_weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
   return 0.5 * phi;
 }
 

@@ -46,8 +46,8 @@ protected:
 TEST_F(FixedBaseTaskSpace3DCostTest, setWeights) {
   const int dimq = robot_.dimq();
   const int dimv = robot_.dimv();
-  const Eigen::Vector3d q_weight = Eigen::Vector3d::Random();
-  const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random();
+  const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
+  const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d q_ref = Eigen::Vector3d::Random();
   TaskSpace3DCost cost(robot_, frame_id);
   EXPECT_TRUE(cost.useKinematics());
