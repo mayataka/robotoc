@@ -8,8 +8,8 @@
 #include "idocp/ocp/mpc.hpp"
 #include "idocp/robot/robot.hpp"
 
-#include "runge_kutta.hpp"
-#include "simulation_data_saver.hpp"
+#include "idocp/utils/runge_kutta.hpp"
+#include "idocp/utils/simulation_data_saver.hpp"
 
 
 namespace idocp {
@@ -27,8 +27,8 @@ void run(MPC<OCPTypeDerived>& mpc, const double simulation_time_in_sec,
          const Eigen::VectorXd& q_initial, const Eigen::VectorXd& v_initial);
 
 private:
-  simulator::RungeKutta runge_kutta_;
-  simulator::SimulationDataSaver data_saver_;
+  RungeKutta runge_kutta_;
+  SimulationDataSaver data_saver_;
 
 };
 

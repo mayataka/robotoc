@@ -5,7 +5,6 @@
 #include "idocp/robot/robot.hpp"
 
 namespace idocp {
-namespace simulator {
 
 class RungeKutta {
 public:
@@ -21,9 +20,6 @@ private:
 
 };
 
-} // namespace simulator
 } // namespace idocp
-
-#include "runge_kutta.hxx"
 
 #endif // IDOCP_UTILS_RUNGE_KUTTA_HPP_

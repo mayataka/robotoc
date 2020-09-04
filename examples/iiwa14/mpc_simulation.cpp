@@ -18,8 +18,8 @@
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
 
-#include "../utils/joint_constraints_factory.hpp"
-#include "../utils/simulator.hpp"
+#include "idocp/utils/joint_constraints_factory.hpp"
+#include "idocp/utils/simulator.hpp"
 
 namespace mpcsimulation {
 namespace iiwa14 {
