@@ -1,13 +1,11 @@
-#ifndef IDOCP_UTILS_SIMULATION_DATA_SAVER_HXX_
-#define IDOCP_UTILS_SIMULATION_DATA_SAVER_HXX_
+#include "idocp/utils/simulation_data_saver.hpp"
 
 #include <assert.h>
 
 namespace idocp {
-namespace simulator {
 
-inline SimulationDataSaver::SimulationDataSaver(
-  const std::string& save_dir_path, const std::string& save_file_name) 
+SimulationDataSaver::SimulationDataSaver(const std::string& save_dir_path, 
+                                         const std::string& save_file_name) 
   : q_file_(save_dir_path+"/"+save_file_name+"_q.dat"),
     v_file_(save_dir_path+"/"+save_file_name+"_v.dat"),
     tau_file_(save_dir_path+"/"+save_file_name+"_tau.dat"),
@@ -16,10 +14,19 @@ inline SimulationDataSaver::SimulationDataSaver(
 }
 
 
-inline void SimulationDataSaver::save(const Eigen::VectorXd& q, 
-                                      const Eigen::VectorXd& v, 
-                                      const Eigen::VectorXd& tau, 
-                                      const double KKT_error) {
+SimulationDataSaver::~SimulationDataSaver() {
+  q_file_.close();
+  v_file_.close();
+  tau_file_.close();
+  KKT_error_file_.close();
+  conditions_file_.close();
+}
+
+
+void SimulationDataSaver::save(const Eigen::VectorXd& q, 
+                               const Eigen::VectorXd& v, 
+                               const Eigen::VectorXd& tau, 
+                               const double KKT_error) {
   assert(KKT_error >= 0);
   for (int i=0; i<q.size(); ++i) {
     q_file_ << q[i] << " ";
@@ -37,10 +44,10 @@ inline void SimulationDataSaver::save(const Eigen::VectorXd& q,
 }
 
 
-inline void SimulationDataSaver::saveConditions(
-      const double simulation_time_in_sec, 
-      const double sampling_period_in_millisec, 
-      const double CPU_time_per_update_in_millisec) {
+void SimulationDataSaver::saveConditions(
+    const double simulation_time_in_sec, 
+    const double sampling_period_in_millisec, 
+    const double CPU_time_per_update_in_millisec) {
   assert(simulation_time_in_sec > 0);
   assert(sampling_period_in_millisec > 0);
   assert(CPU_time_per_update_in_millisec > 0);
@@ -51,7 +58,4 @@ inline void SimulationDataSaver::saveConditions(
                   << CPU_time_per_update_in_millisec << "[ms]\n";
 }
 
-} // namespace simulator
 } // namespace idocp
-
-#endif // IDOCP_UTILS_SIMULATION_DATA_SAVER_HXX_

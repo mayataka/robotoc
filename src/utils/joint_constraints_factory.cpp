@@ -1,5 +1,4 @@
-#ifndef IDOCP_UTILS_JOINT_CONSTRAINTS_FACTORY_HXX_
-#define IDOCP_UTILS_JOINT_CONSTRAINTS_FACTORY_HXX_
+#include "idocp/utils/joint_constraints_factory.hpp"
 
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 #include "idocp/constraints/joint_position_upper_limit.hpp"
@@ -8,14 +7,19 @@
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
 
+
 namespace idocp {
 
-inline JointConstraintsFactory::JointConstraintsFactory(const Robot& robot) 
+JointConstraintsFactory::JointConstraintsFactory(const Robot& robot) 
   : robot_(robot) {
 }
 
 
-inline std::shared_ptr<idocp::Constraints> JointConstraintsFactory::create() const {
+JointConstraintsFactory::~JointConstraintsFactory() {
+}
+
+
+std::shared_ptr<idocp::Constraints> JointConstraintsFactory::create() const {
   auto constraints = std::make_shared<idocp::Constraints>();
   auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot_);
   auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot_);
@@ -33,5 +37,3 @@ inline std::shared_ptr<idocp::Constraints> JointConstraintsFactory::create() con
 }
 
 } // namespace idocp
-
-#endif // IDOCP_UTILS_JOINT_CONSTRAINTS_FACTORY_HXX_

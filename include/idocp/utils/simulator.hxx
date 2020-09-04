@@ -1,6 +1,7 @@
 #ifndef IDOCP_UTILS_SIMULATOR_HXX_
 #define IDOCP_UTILS_SIMULATOR_HXX_
 
+#include <chrono>
 #include <assert.h>
 
 namespace idocp {

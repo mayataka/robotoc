@@ -5,7 +5,7 @@
 
 ## Features for efficient optimal control 
 - Solves the optimal control problem for rigid body systems based on inverse dynamics.
-- Parallel Newton's method (ParNMPC) / Sparsity-exploiting Riccati recursion for computing the Newton direction.
+- Sparsity-exploiting Riccati recursion / Parallel Newton's method (ParNMPC)  for computing the Newton direction.
 - Primal-dual interior point method for inequality constraints.
 - Filter line-search method.
 - Very fast computation of rigid body dynamics and its sensitivities thanks to [pinocchio](https://github.com/stack-of-tasks/pinocchio).

@@ -13,8 +13,8 @@
 #include "idocp/cost/contact_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
 
-#include "../utils/joint_constraints_factory.hpp"
-#include "../utils/ocp_benchmarker.hpp"
+#include "idocp/utils/joint_constraints_factory.hpp"
+#include "idocp/utils/ocp_benchmarker.hpp"
 
 namespace ocpbenchmark {
 namespace iiwa14 {
