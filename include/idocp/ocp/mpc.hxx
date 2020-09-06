@@ -52,6 +52,27 @@ inline void MPC<ParNMPC>::initializeSolution(const double t,
 
 
 template <typename OCPType>
+inline void MPC<OCPType>::setContactSequence(
+    const std::vector<std::vector<bool>>& contact_sequence) {
+  ocp_.setContactSequence(contact_sequence);
+}
+
+
+template <typename OCPType>
+inline void MPC<OCPType>::setContactPoint(
+    const std::vector<Eigen::Vector3d>& contact_points) {
+  ocp_.setContactSequence(contact_points);
+}
+
+
+template <typename OCPType>
+inline void MPC<OCPType>::setContactPointByKinematics(
+    const Eigen::VectorXd& q) {
+  ocp_.setContactPointByKinematics(q);
+}
+
+
+template <typename OCPType>
 inline void MPC<OCPType>::updateSolution(const double t, 
                                          const Eigen::VectorXd& q, 
                                          const Eigen::VectorXd& v) {

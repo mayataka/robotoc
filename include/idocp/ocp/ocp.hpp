@@ -134,6 +134,12 @@ public:
   /// @param[in] contact_points Contact points over the horizon.
   ///
   void setContactPoint(const std::vector<Eigen::Vector3d>& contact_points);
+
+  ///
+  /// @brief Sets the contact points over the horizon by the configuration. 
+  /// @param[in] q configuration. Size must be Robot::dimq().
+  ///
+  void setContactPointByKinematics(const Eigen::VectorXd& q);
   
   ///
   /// @brief Clear the line search filter. 
