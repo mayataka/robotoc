@@ -75,6 +75,27 @@ public:
                           const Eigen::VectorXd& v, const int max_itr=0);
 
   ///
+  /// @brief Sets the contact status over the horizon. 
+  /// @param[in] contact_sequence Sequence of the bool variables that represents
+  /// whether the contacts is active or not.
+  ///
+  void setContactSequence(
+      const std::vector<std::vector<bool>>& contact_sequence);
+
+  ///
+  /// @brief Sets the contact points over the horizon. 
+  /// @param[in] contact_points Contact points over the horizon.
+  ///
+  void setContactPoint(const std::vector<Eigen::Vector3d>& contact_points);
+
+
+  ///
+  /// @brief Sets the contact points over the horizon by the configuration. 
+  /// @param[in] q configuration. Size must be Robot::dimq().
+  ///
+  void setContactPointByKinematics(const Eigen::VectorXd& q);
+
+  ///
   /// @brief Updates solution by computing the primal-dual Newon direction.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time. 

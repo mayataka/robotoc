@@ -319,8 +319,20 @@ void ParNMPC::setContactPoint(
     const std::vector<Eigen::Vector3d>& contact_points) {
   assert(contact_points.size() == robots_[0].max_point_contacts());
   #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<contact_points.size(); ++i) {
+  for (int i=0; i<robots_.size(); ++i) {
     robots_[i].setContactPoints(contact_points);
+  }
+}
+
+
+void ParNMPC::setContactPointByKinematics(const Eigen::VectorXd& q) {
+  assert(q.size() == robots_[0].dimq());
+  const int dimv = robots_[0].dimv();
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<robots_.size(); ++i) {
+    robots_[i].updateKinematics(q, Eigen::VectorXd::Zero(dimv), 
+                                Eigen::VectorXd::Zero(dimv));
+    robots_[i].setContactPointsByCurrentKinematics();
   }
 }
 

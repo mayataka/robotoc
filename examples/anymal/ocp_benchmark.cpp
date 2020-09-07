@@ -22,14 +22,14 @@ namespace anymal {
 void BenchmarkWithContacts() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  const double baumgarte_weight_on_velocity = 10;
-  const double baumgarte_weight_on_position = 100;
+  const double baumgarte_weight_on_velocity = 100;
+  const double baumgarte_weight_on_position = 2500;
   const std::string urdf_file_name = "../anymal/anymal.urdf";
   idocp::Robot robot(urdf_file_name, contact_frames, 
                      baumgarte_weight_on_velocity, 
                      baumgarte_weight_on_position);
   Eigen::VectorXd q_ref(robot.dimq());
-  q_ref << 0, 0, 4.8, 0, 0, 0, 1, 
+  q_ref << 0, 0, 0.48, 0, 0, 0, 1, 
            0.0315, 0.4, -0.8, 
            0.0315, -0.4, 0.8, 
            -0.0315, 0.4, -0.8,
@@ -54,7 +54,7 @@ void BenchmarkWithContacts() {
   const int num_proc = 4;
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
-  q << 0, 0, 4.8, 0, 0, 0, 1, 
+  q << 0, 0, 0.48, 0, 0, 0, 1, 
        0.0315, 0.4, -0.8, 
        0.0315, -0.4, 0.8, 
        -0.0315, 0.4, -0.8,
@@ -68,7 +68,7 @@ void BenchmarkWithContacts() {
                                                     robot, cost, constraints, T, N, num_proc);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   ocp_benchmarker.setContactStatus(contact_status);
-  ocp_benchmarker.testConvergence(t, q, v, 30, false);
+  ocp_benchmarker.testConvergence(t, q, v, 30, true);
   ocp_benchmarker.testCPUTime(t, q, v);
   idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
                                                             robot, cost, constraints, T, N, num_proc);

@@ -23,3 +23,26 @@ target_include_directories(
     PRIVATE
     ${IDOCP_INCLUDE_DIR}
 )
+
+option(SIM_MPC "Performs MPC simulation using RaiSim" OFF) 
+set(SIM_MPC OFF)
+if (SIM_MPC)
+  find_package(raisim CONFIG REQUIRED)
+  find_package(raisimOgre CONFIG REQUIRED)
+  add_executable(
+    mpc_simulation
+    mpc_simulation.cpp
+  )
+  target_link_libraries(
+    mpc_simulation
+    PRIVATE
+    idocp::idocp
+    raisim::raisim
+    raisim::raisimOgre
+  )
+  target_include_directories(
+    mpc_simulation
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+  )
+endif()
