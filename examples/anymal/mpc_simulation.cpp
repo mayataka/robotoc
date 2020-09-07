@@ -37,11 +37,17 @@ void SimulateWithContactsByOCP() {
   auto cost = std::make_shared<idocp::CostFunction>();
   auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
   Eigen::VectorXd q_ref(robot.dimq());
-  q_ref << 0, 0, 0.48, 0, 0, 0, 1, 
+  // q_ref << 0, 0, 0.48, 0, 0, 0, 1, 
+  q_ref << 0, 0, 0.48, 0, -50, 0, 1, 
+  // q_ref << 0, 0, 0.48, 0, 50, 0, 1, 
+  // q_ref << 0, 0, 0.48, -1, 0, 1, 0.5, 
+  // q_ref << 0, 0, 0.48, 1, 0, -1, 0.5, 
            0.0315, 0.4, -0.8, 
            0.0315, -0.4, 0.8, 
            -0.0315, 0.4, -0.8,
            -0.0315, -0.4, 0.8;
+  robot.normalizeConfiguration(q_ref);
+  std::cout << q_ref.transpose() << std::endl;
   joint_cost->set_q_ref(q_ref);
   Eigen::VectorXd q_weight(robot.dimv());
   joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
@@ -77,8 +83,8 @@ void SimulateWithContactsByOCP() {
   mpc.setContactPointByKinematics(q);
   mpc.initializeSolution(t, q, v, 100);
   const std::string urdf_for_raisim_file_name = "../anymal/anymal_for_raisim.urdf";
-  idocp::QuadrupedSimulator simulator(urdf_for_raisim_file_name, "../sim_result", "anymal_ocp");
-  simulator.viz(mpc, 5, 0.0025, 0, q, v);
+  idocp::QuadrupedSimulator simulator(urdf_for_raisim_file_name, "../sim_result", "forward");
+  simulator.viz(mpc, 5, 0.0025, 0, q, v, false);
 }
 
 } // namespace anymal 

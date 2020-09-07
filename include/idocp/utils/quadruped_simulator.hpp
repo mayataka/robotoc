@@ -18,18 +18,6 @@
 
 namespace idocp {
 
-namespace raisimwrapper {
-void pino2rai(const Eigen::VectorXd& q_pino, const Eigen::VectorXd& v_pino, 
-              Eigen::VectorXd& q_raisim, Eigen::VectorXd& v_raisim);
-
-void pino2rai(const Eigen::VectorXd& u_pino, Eigen::VectorXd& u_rai);
-
-void rai2pino(const Eigen::VectorXd& q_raisim, const Eigen::VectorXd& v_raisim, 
-              Eigen::VectorXd& q_pinocchio, Eigen::VectorXd& v_pinocchio);
-
-void SetupCallback();
-}
-
 class QuadrupedSimulator {
 public:
 QuadrupedSimulator(const std::string& path_to_urdf_for_raisim, 
@@ -46,13 +34,17 @@ template<typename OCPTypeDerived>
 void viz(MPC<OCPTypeDerived>& mpc, const double simulation_time_in_sec, 
          const double sampling_period_in_sec, 
          const double simulation_start_time_in_sec, 
-         const Eigen::VectorXd& q_initial, const Eigen::VectorXd& v_initial);
+         const Eigen::VectorXd& q_initial, const Eigen::VectorXd& v_initial,
+         const bool recording=false);
+
+static void SetupCallback();
 
 private:
   SimulationDataSaver data_saver_;
   raisim::World raisim_world_;
   raisim::ArticulatedSystem* raisim_robot_;
   raisim::Ground* raisim_ground_;
+  std::string save_dir_path_, save_file_name_;
 };
 
 } // namespace idocp

@@ -19,6 +19,9 @@ JointSpaceCost::JointSpaceCost(const Robot& robot)
     u_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     qf_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     vf_weight_(Eigen::VectorXd::Zero(robot.dimv())) {
+  if (robot.has_floating_base()) {
+    robot.normalizeConfiguration(q_ref_);
+  }
 }
 
 

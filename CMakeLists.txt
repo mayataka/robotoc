@@ -31,8 +31,7 @@ if(OpenMP_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
-
-# build library
+# build idocp 
 add_library(
   ${PROJECT_NAME} 
   SHARED
@@ -79,6 +78,7 @@ add_library(
   src/utils/runge_kutta.cpp
   src/utils/simulation_data_saver.cpp
   src/utils/simulator.cpp
+  src/utils/raisim_wrapper.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

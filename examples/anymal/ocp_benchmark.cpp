@@ -22,8 +22,8 @@ namespace anymal {
 void BenchmarkWithContacts() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  const double baumgarte_weight_on_velocity = 0;
-  const double baumgarte_weight_on_position = 0;
+  const double baumgarte_weight_on_velocity = 100;
+  const double baumgarte_weight_on_position = 2500;
   const std::string urdf_file_name = "../anymal/anymal.urdf";
   idocp::Robot robot(urdf_file_name, contact_frames, 
                      baumgarte_weight_on_velocity, 
@@ -59,7 +59,7 @@ void BenchmarkWithContacts() {
        0.0315, -0.4, 0.8, 
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
-  const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   const std::vector<bool> contact_status = {true, true, true, true};
   robot.setContactStatus(contact_status);
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
