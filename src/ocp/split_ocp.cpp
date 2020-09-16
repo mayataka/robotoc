@@ -59,12 +59,12 @@ SplitOCP::~SplitOCP() {
 }
 
 
-bool SplitOCP::isFeasible(const Robot& robot, const SplitSolution& s) {
+bool SplitOCP::isFeasible(Robot& robot, const SplitSolution& s) {
   return constraints_->isFeasible(robot, constraints_data_, s);
 }
 
 
-void SplitOCP::initConstraints(const Robot& robot, const int time_step, 
+void SplitOCP::initConstraints(Robot& robot, const int time_step, 
                                const double dtau, const SplitSolution& s) { 
   assert(time_step >= 0);
   assert(dtau > 0);
@@ -191,7 +191,7 @@ void SplitOCP::forwardRiccatiRecursion(const double dtau, SplitDirection& d,
 }
 
 
-void SplitOCP::computeCondensedDirection(const Robot& robot, const double dtau, 
+void SplitOCP::computeCondensedDirection(Robot& robot, const double dtau, 
                                          SplitDirection& d) {
   assert(dtau > 0);
   if (dimf_ > 0) {

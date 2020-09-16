@@ -32,7 +32,7 @@ bool JointPositionLowerLimit::useKinematics() const {
 }
 
 
-bool JointPositionLowerLimit::isFeasible(const Robot& robot, 
+bool JointPositionLowerLimit::isFeasible(Robot& robot, 
                                          ConstraintComponentData& data, 
                                          const SplitSolution& s) const {
   for (int i=0; i<dimc_; ++i) {
@@ -45,7 +45,7 @@ bool JointPositionLowerLimit::isFeasible(const Robot& robot,
 
 
 void JointPositionLowerLimit::setSlackAndDual(
-    const Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
   assert(dtau > 0);
   data.slack = dtau * (s.q.tail(dimc_)-qmin_);
@@ -54,14 +54,14 @@ void JointPositionLowerLimit::setSlackAndDual(
 
 
 void JointPositionLowerLimit::augmentDualResidual(
-    const Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dtau, 
     KKTResidual& kkt_residual) const {
   kkt_residual.lq().tail(dimc_).noalias() -= dtau * data.dual;
 }
 
 
 void JointPositionLowerLimit::condenseSlackAndDual(
-    const Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) const {
   kkt_matrix.Qqq().diagonal().tail(dimc_).array()
@@ -75,7 +75,7 @@ void JointPositionLowerLimit::condenseSlackAndDual(
 
 
 void JointPositionLowerLimit::computeSlackAndDualDirection(
-    const Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitDirection& d) const {
   data.dslack = dtau * d.dq().tail(dimc_) - data.residual;
   computeDualDirection(data.slack, data.dual, data.dslack, data.duality, 
@@ -84,16 +84,16 @@ void JointPositionLowerLimit::computeSlackAndDualDirection(
 
 
 double JointPositionLowerLimit::residualL1Nrom(
-    const Robot& robot, ConstraintComponentData& data, 
-    const double dtau, const SplitSolution& s) const {
+    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    const SplitSolution& s) const {
   data.residual = dtau * (qmin_-s.q.tail(dimc_)) + data.slack;
   return data.residual.lpNorm<1>();
 }
 
 
 double JointPositionLowerLimit::squaredKKTErrorNorm(
-    const Robot& robot, ConstraintComponentData& data, 
-    const double dtau, const SplitSolution& s) const {
+    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    const SplitSolution& s) const {
   data.residual = dtau * (qmin_-s.q.tail(dimc_)) + data.slack;
   computeDuality(data.slack, data.dual, data.duality);
   double error = 0;

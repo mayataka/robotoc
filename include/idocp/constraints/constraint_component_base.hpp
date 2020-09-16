@@ -37,15 +37,14 @@ public:
 
   virtual bool useKinematics() const = 0;
 
-  virtual bool isFeasible(const Robot& robot, ConstraintComponentData& data, 
+  virtual bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                           const SplitSolution& s) const = 0;
 
-  virtual void setSlackAndDual(const Robot& robot, 
-                               ConstraintComponentData& data, const double dtau, 
+  virtual void setSlackAndDual(Robot& robot, ConstraintComponentData& data, 
+                               const double dtau, 
                                const SplitSolution& s) const = 0;
 
-  virtual void augmentDualResidual(const Robot& robot, 
-                                   ConstraintComponentData& data,
+  virtual void augmentDualResidual(Robot& robot, ConstraintComponentData& data,
                                    const double dtau, 
                                    KKTResidual& kkt_residual) const = 0;
 
@@ -54,8 +53,7 @@ public:
                                    const double dtau, 
                                    Eigen::VectorXd& lu) const = 0;
 
-  virtual void condenseSlackAndDual(const Robot& robot, 
-                                    ConstraintComponentData& data,
+  virtual void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data,
                                     const double dtau, const SplitSolution& s, 
                                     KKTMatrix& kkt_matrix,
                                     KKTResidual& kkt_residual) const = 0;
@@ -67,15 +65,15 @@ public:
                                     Eigen::VectorXd& lu) const = 0;
 
   virtual void computeSlackAndDualDirection(
-      const Robot& robot, ConstraintComponentData& data, const double dtau, 
+      Robot& robot, ConstraintComponentData& data, const double dtau, 
       const SplitDirection& d) const = 0;
 
   virtual double residualL1Nrom(
-      const Robot& robot, ConstraintComponentData& data, 
+      Robot& robot, ConstraintComponentData& data, 
       const double dtau, const SplitSolution& s) const = 0;
 
   virtual double squaredKKTErrorNorm(
-      const Robot& robot, ConstraintComponentData& data, 
+      Robot& robot, ConstraintComponentData& data, 
       const double dtau, const SplitSolution& s) const = 0;
   
   virtual int dimc() const = 0;

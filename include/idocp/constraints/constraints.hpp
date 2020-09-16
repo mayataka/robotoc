@@ -47,19 +47,19 @@ public:
 
   ConstraintsData createConstraintsData(const Robot& robot) const;
 
-  bool isFeasible(const Robot& robot, ConstraintsData& data,
+  bool isFeasible(Robot& robot, ConstraintsData& data,
                   const SplitSolution& s) const;
 
-  void setSlackAndDual(const Robot& robot, ConstraintsData& data, 
+  void setSlackAndDual(Robot& robot, ConstraintsData& data, 
                        const double dtau, const SplitSolution& s) const;
 
-  void augmentDualResidual(const Robot& robot, ConstraintsData& data,
+  void augmentDualResidual(Robot& robot, ConstraintsData& data,
                            const double dtau, KKTResidual& kkt_residual) const;
 
   void augmentDualResidual(const Robot& robot, ConstraintsData& data,
                            const double dtau, Eigen::VectorXd& lu) const;
 
-  void condenseSlackAndDual(const Robot& robot, ConstraintsData& data,
+  void condenseSlackAndDual(Robot& robot, ConstraintsData& data,
                             const double dtau, const SplitSolution& s,
                             KKTMatrix& kkt_matrix, 
                             KKTResidual& kkt_residual) const;
@@ -68,7 +68,7 @@ public:
                             const double dtau, const Eigen::VectorXd& u,
                             Eigen::MatrixXd& Quu, Eigen::VectorXd& lu) const;
 
-  void computeSlackAndDualDirection(const Robot& robot, ConstraintsData& data, 
+  void computeSlackAndDualDirection(Robot& robot, ConstraintsData& data, 
                                     const double dtau, 
                                     const SplitDirection& d) const;
 
@@ -85,10 +85,10 @@ public:
   double costSlackBarrier(const ConstraintsData& data, 
                           const double step_size) const;
 
-  double residualL1Nrom(const Robot& robot, ConstraintsData& data, 
+  double residualL1Nrom(Robot& robot, ConstraintsData& data, 
                         const double dtau, const SplitSolution& s) const;
 
-  double squaredKKTErrorNorm(const Robot& robot, ConstraintsData& data, 
+  double squaredKKTErrorNorm(Robot& robot, ConstraintsData& data, 
                              const double dtau, const SplitSolution& s) const;
 
 private:

@@ -1,6 +1,7 @@
 #ifndef IDOCP_SPLIT_DIRECTION_HXX_
 #define IDOCP_SPLIT_DIRECTION_HXX_
 
+#include "idocp/ocp/split_direction.hpp"
 namespace idocp {
 
 inline SplitDirection::SplitDirection(const Robot& robot) 

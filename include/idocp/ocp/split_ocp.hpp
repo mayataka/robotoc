@@ -76,7 +76,7 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] s Split solution of this stage.
   ///
-  bool isFeasible(const Robot& robot, const SplitSolution& s);
+  bool isFeasible(Robot& robot, const SplitSolution& s);
 
   ///
   /// @brief Initialize the constraints, i.e., set slack and dual variables. 
@@ -85,8 +85,8 @@ public:
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   ///
-  void initConstraints(const Robot& robot, const int time_step, 
-                       const double dtau, const SplitSolution& s);
+  void initConstraints(Robot& robot, const int time_step, const double dtau, 
+                       const SplitSolution& s);
 
   ///
   /// @brief Linearize the OCP for Newton's method around the current solution.
@@ -128,7 +128,7 @@ public:
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] d Split direction of this stage.
   /// 
-  void computeCondensedDirection(const Robot& robot, const double dtau, 
+  void computeCondensedDirection(Robot& robot, const double dtau, 
                                  SplitDirection& d);
 
   ///

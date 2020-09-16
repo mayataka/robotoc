@@ -1,8 +1,6 @@
 #ifndef IDOCP_CONSTRAINT_COMPONENT_DATA_HPP_
 #define IDOCP_CONSTRAINT_COMPONENT_DATA_HPP_
 
-#include <vector>
-
 #include "Eigen/Core"
 
 
@@ -10,26 +8,11 @@ namespace idocp {
 
 class ConstraintComponentData {
 public:
-  ConstraintComponentData(const int dimc)
-    : slack(Eigen::VectorXd::Zero(dimc)),
-      dual(Eigen::VectorXd::Zero(dimc)),
-      residual(Eigen::VectorXd::Zero(dimc)),
-      duality(Eigen::VectorXd::Zero(dimc)),
-      dslack(Eigen::VectorXd::Zero(dimc)),
-      ddual(Eigen::VectorXd::Zero(dimc)) {
-  }
+  ConstraintComponentData(const int dimc);
 
-  ConstraintComponentData()
-    : slack(),
-      dual(),
-      residual(),
-      duality(),
-      dslack(),
-      ddual() {
-  }
+  ConstraintComponentData();
 
-  ~ConstraintComponentData() {
-  }
+  ~ConstraintComponentData();
 
   // Use default copy constructor.
   ConstraintComponentData(const ConstraintComponentData&) = default;
@@ -46,9 +29,17 @@ public:
 
   Eigen::VectorXd slack, dual, residual, duality, dslack, ddual;
 
+  int dimc() const;
+
+  bool checkDimensionsOfVectors() const;
+
+private:
+  int dimc_;
+
 };
 
 } // namespace idocp
 
+#include "idocp/constraints/constraint_component_data.hxx"
 
 #endif // IDOCP_CONSTRAINT_COMPONENT_DATA_HPP_
