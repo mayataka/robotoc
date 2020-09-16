@@ -19,7 +19,7 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
     dim_passive_(robot.dim_passive()),
-    is_each_contact_active_(robot.max_point_contacts(), false),
+    is_each_contact_active_(robot.is_each_contact_active()),
     dimf_(robot.dimf()),
     dimc_(robot.dim_passive()+robot.dimf()) {
   robot.normalizeConfiguration(q);
@@ -90,6 +90,17 @@ SplitSolution::mu_contacts() const {
 }
 
 
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitSolution::f_stack() {
+  return f_stack_.head(dimf_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitSolution::f_stack() const {
+  return f_stack_.head(dimf_);
+}
+
+
 inline void SplitSolution::set_mu_stack() {
   int contact_index = 0;
   int segment_start = dim_passive_;
@@ -103,7 +114,7 @@ inline void SplitSolution::set_mu_stack() {
 }
 
 
-inline void SplitSolution::set_mu_contacts() {
+inline void SplitSolution::set_mu_contact() {
   int contact_index = 0;
   int segment_start = dim_passive_;
   for (const auto is_contact_active : is_each_contact_active_) {
@@ -118,7 +129,7 @@ inline void SplitSolution::set_mu_contacts() {
 
 inline void SplitSolution::set_f_stack() {
   int contact_index = 0;
-  int segment_start = dim_passive_;
+  int segment_start = 0;
   for (const auto is_contact_active : is_each_contact_active_) {
     if (is_contact_active) {
       f_stack_.template segment<3>(segment_start) = f[contact_index];
@@ -131,7 +142,7 @@ inline void SplitSolution::set_f_stack() {
 
 inline void SplitSolution::set_f() {
   int contact_index = 0;
-  int segment_start = dim_passive_;
+  int segment_start = 0;
   for (const auto is_contact_active : is_each_contact_active_) {
     if (is_contact_active) {
       f[contact_index] = f_stack_.template segment<3>(segment_start);

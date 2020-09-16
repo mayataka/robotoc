@@ -351,7 +351,7 @@ inline void KKTMatrix::setZero() {
 
 
 inline int KKTMatrix::dimKKT() const {
-  return dimQ_+dimc_;
+  return 5*dimv_+dim_passive_+2*dimf_;
 }
 
 

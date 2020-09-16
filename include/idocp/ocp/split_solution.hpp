@@ -118,7 +118,7 @@ public:
   /// @brief Set the Lagrange multiplier with respect to active contact 
   /// constraints from mu_stack.
   ///
-  void set_mu_contacts();
+  void set_mu_contact();
 
   ///
   /// @brief Stack of active contact forces.
