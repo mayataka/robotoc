@@ -77,17 +77,42 @@ public:
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> mu_stack() const;
 
+
+  ///
+  /// @brief Lagrange multiplier with respect to floating base constraints.
+  /// @return Reference to Lagrange multiplier with respect to floating base 
+  /// constraints.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> mu_floating_base();
+
+  ///
+  /// @brief Lagrange multiplier with respect to floating base constraints.
+  /// @return Reference to Lagrange multiplier with respect to floating base 
+  /// constraints.
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> mu_floating_base() const;
+
+  ///
+  /// @brief Stack of Lagrange multiplier with respect to active contact 
+  /// constraints.
+  /// @return Reference to the stack of Lagrange multiplier with respect to 
+  /// active contact constraints.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> mu_contacts();
+
+  ///
+  /// @brief Stack of Lagrange multiplier with respect to active contact 
+  /// constraints.
+  /// @return Const reference to the stack of Lagrange multiplier with respect 
+  /// to active contact constraints.
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> mu_contacts() const;
+
   ///
   /// @brief Set the stack of the Lagrange multiplier with respect to active 
   /// equality constraint from mu_floating_base and mu_contacts.
   ///
   void set_mu_stack();
-
-  ///
-  /// @brief Set the Lagrange multiplier with respect to floating base
-  /// from mu_stack.
-  ///
-  void set_mu_floating_base();
 
   ///
   /// @brief Set the Lagrange multiplier with respect to active contact 
@@ -143,9 +168,6 @@ public:
   /// @brief Lagrange multiplier with respect to transition of v. 
   Eigen::VectorXd gmm;
 
-  /// @brief Lagrange multiplier with respect to floating base constraint. 
-  Eigen::Matrix<double, 6, 1> mu_floating_base;
-
   /// @brief Lagrange multiplier with respect to contact constraint. 
   std::vector<Eigen::Vector3d> mu_contact;
 
@@ -168,9 +190,6 @@ public:
   Eigen::VectorXd beta;
 
 private:
-  /// @brief Dimension of floating base constraint. 
-  static constexpr int kDimFloatingBase = 6;
-
   /// @brief Stack of Lagrange multiplier with respect to equality constraints. 
   Eigen::VectorXd mu_stack_;
 

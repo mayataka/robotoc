@@ -94,6 +94,20 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> C();
 
   ///
+  /// @brief Residual of the floating base constraint.
+  /// @return Reference to the residual of the floating base constraint. Size is 
+  /// Robot::dim_passive().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> C_floating_base();
+
+  ///
+  /// @brief Residual of the active contact constraints.
+  /// @return Reference to the residual of the active contact constraints.  
+  /// Size is KKTResidual::dimf().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> C_contacts();
+
+  ///
   /// @brief Residual with respect to acceleration a.
   /// @return Reference to the residual with respect to acceleration a. Size is
   /// Robot::dimv().
@@ -170,6 +184,20 @@ public:
   /// Size is KKTResidual::dimc().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> C() const;
+
+  ///
+  /// @brief Residual of the floating base constraint.
+  /// @return Const reference to the residual of the floating base constraint.  
+  /// Size is Robot::dim_passive().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> C_floating_base() const; 
+
+  ///
+  /// @brief Residual of the active contact constraints.
+  /// @return Const reference to the residual of the active contact constraints.  
+  /// Size is KKTResidual::dimf().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> C_contacts() const;
 
   ///
   /// @brief Residual with respect to acceleration a.
@@ -260,7 +288,7 @@ public:
 
 private:
   Eigen::VectorXd kkt_residual_;
-  int dimv_, dimx_, dimf_, dimc_, dimKKT_, max_dimKKT_;
+  int dimv_, dimx_, dim_passive_, dimf_, dimc_, dimKKT_, max_dimKKT_;
 
 };
 

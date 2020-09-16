@@ -12,6 +12,7 @@ inline KKTResidual::KKTResidual(const Robot& robot)
         5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
+    dim_passive_(robot.dim_passive()),
     dimf_(robot.dimf()), 
     dimc_(robot.dim_passive()+robot.dimf()),
     max_dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf()),
@@ -25,6 +26,7 @@ inline KKTResidual::KKTResidual()
     kkt_residual_(), 
     dimv_(0), 
     dimx_(0), 
+    dim_passive_(0),
     dimf_(0), 
     dimc_(0),
     max_dimKKT_(0),
@@ -65,6 +67,16 @@ inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::Fx() {
 
 inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::C() {
   return kkt_residual_.segment(dimx_, dimc_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::C_floating_base() {
+  return kkt_residual_.segment(dimx_, dim_passive_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::C_contacts() {
+  return kkt_residual_.segment(dimx_+dim_passive_, dimf_);
 }
 
 
@@ -125,6 +137,18 @@ KKTResidual::Fx() const {
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 KKTResidual::C() const {
   return kkt_residual_.segment(dimx_, dimc_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+KKTResidual::C_floating_base() const {
+  return kkt_residual_.segment(dimx_, dim_passive_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+KKTResidual::C_contacts() const {
+  return kkt_residual_.segment(dimx_+dim_passive_, dimf_);
 }
 
 

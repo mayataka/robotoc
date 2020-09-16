@@ -16,8 +16,8 @@ namespace idocp {
 
 class FrictionCone final : public ConstraintComponentBase {
 public:
-  FrictionCone(const Robot& robot, const int contact_index,
-               const double mu, const double barrier=1.0e-04, 
+  FrictionCone(const Robot& robot, const double mu, 
+               const double barrier=1.0e-04, 
                const double fraction_to_boundary_rate=0.995);
 
   FrictionCone();
@@ -77,7 +77,7 @@ public:
   int dimc() const override;
 
 private:
-  int contact_index_, dimc_;
+  int dimc_;
   double mu_;
 
 };

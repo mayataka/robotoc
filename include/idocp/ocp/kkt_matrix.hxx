@@ -27,6 +27,7 @@ inline KKTMatrix::KKTMatrix(const Robot& robot)
     has_floating_base_(robot.has_floating_base()),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
+    dim_passive_(robot.dim_passive()),
     dimf_(robot.dimf()), 
     dimc_(robot.dim_passive()+robot.dimf()),
     a_begin_(0),
@@ -51,6 +52,7 @@ inline KKTMatrix::KKTMatrix()
     has_floating_base_(false),
     dimv_(0), 
     dimx_(0), 
+    dim_passive_(0),
     dimf_(0), 
     dimc_(0),
     a_begin_(0),
@@ -92,6 +94,46 @@ inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Cq() {
 
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Cv() {
   return C_.block(0, v_begin_, dimc_, dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Ca_floating_base() {
+  return C_.block(0, a_begin_, dim_passive_, dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Cf_floating_base() {
+  return C_.block(0, f_begin_, dim_passive_, dimf_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Cq_floating_base() {
+  return C_.block(0, q_begin_, dim_passive_, dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Cv_floating_base() {
+  return C_.block(0, v_begin_, dim_passive_, dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Ca_contacts() {
+  return C_.block(dim_passive_, a_begin_, dimf_, dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Cf_contacts() {
+  return C_.block(dim_passive_, f_begin_, dimf_, dimf_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Cq_contacts() {
+  return C_.block(dim_passive_, q_begin_, dimf_, dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Cv_contacts() {
+  return C_.block(dim_passive_, v_begin_, dimf_, dimv_);
 }
 
 

@@ -89,6 +89,66 @@ public:
   Eigen::Block<Eigen::MatrixXd> Cv();
 
   ///
+  /// @brief Jacobian of the floating base constraint with respect to 
+  /// acceleration a.
+  /// @return Reference to the Jacobian. Size is 
+  /// Robot::dim_passive() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Ca_floating_base();
+
+  ///
+  /// @brief Jacobian of the floating base constraint with respect to the  
+  /// stack of contact forces f.
+  /// @return Reference to the Jacobian. Size is 
+  /// Robot::dim_passive() x KKTResidual::dimf().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Cf_floating_base();
+
+  ///
+  /// @brief Jacobian of the floating base constraint with respect to 
+  /// configuration q.
+  /// @return Reference to the Jacobian. Size is 
+  /// Robot::dim_passive() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Cq_floating_base();
+
+  ///
+  /// @brief Jacobian of the floating base constraint with respect to velocity v.
+  /// @return Reference to the Jacobian. Size is 
+  /// Robot::dim_passive() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Cv_floating_base();
+
+  ///
+  /// @brief Jacobian of the contact constraint with respect to acceleration a.
+  /// @return Reference to the Jacobian. Size is 
+  /// KKTMatrix::dimf() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Ca_contacts();
+
+  ///
+  /// @brief Jacobian of the contact constraint with respect to the stack of 
+  /// contact forces f.
+  /// @return Reference to the Jacobian. Size is 
+  /// KKTMatrix::dimf() x KKTResidual::dimf().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Cf_contacts();
+
+  ///
+  /// @brief Jacobian of the contact constraint with respect to configuration q.
+  /// @return Reference to the Jacobian. Size is 
+  /// KKTMatrix::dimf() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Cq_contacts();
+
+  ///
+  /// @brief Jacobian of the contact constraint with respect to velocity v.
+  /// @return Reference to the Jacobian. Size is 
+  /// KKTMatrix::dimf() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Cv_contacts();
+
+  ///
   /// @brief Jacobian of the equality constraint with respect to acceleration 
   /// and the stack of contact force, a and f.
   /// @return Reference to the Jacobian. Size is 
@@ -313,8 +373,8 @@ public:
 private:
   Eigen::MatrixXd C_, Q_, Sc_, Sx_, FMinv_, C_H_inv_;
   bool has_floating_base_;
-  int dimv_, dimx_, dimf_, dimc_, a_begin_, f_begin_, q_begin_, v_begin_, dimQ_,
-      max_dimKKT_;
+  int dimv_, dimx_, dim_passive_, dimf_, dimc_, a_begin_, f_begin_, q_begin_, 
+      v_begin_, dimQ_, max_dimKKT_;
   static constexpr int kDimFloatingBase = 6;
 
   template <typename MatrixType>

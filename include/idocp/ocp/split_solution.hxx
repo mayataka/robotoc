@@ -8,7 +8,6 @@ namespace idocp {
 inline SplitSolution::SplitSolution(const Robot& robot) 
   : lmd(Eigen::VectorXd::Zero(robot.dimv())),
     gmm(Eigen::VectorXd::Zero(robot.dimv())),
-    mu_floating_base(Eigen::VectorXd::Zero(kDimFloatingBase)),
     mu_contact(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
     a(Eigen::VectorXd::Zero(robot.dimv())),
     f(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
@@ -30,7 +29,6 @@ inline SplitSolution::SplitSolution(const Robot& robot)
 inline SplitSolution::SplitSolution() 
   : lmd(),
     gmm(),
-    mu_floating_base(),
     mu_contact(),
     a(),
     f(),
@@ -70,10 +68,29 @@ SplitSolution::mu_stack() const {
 }
 
 
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitSolution::mu_floating_base() {
+  return mu_stack_.head(dim_passive_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitSolution::mu_floating_base() const {
+  return mu_stack_.head(dim_passive_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitSolution::mu_contacts() {
+  return mu_stack_.segment(dim_passive_, dimf_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitSolution::mu_contacts() const {
+  return mu_stack_.segment(dim_passive_, dimf_);
+}
+
+
 inline void SplitSolution::set_mu_stack() {
-  if (has_floating_base_) {
-    mu_stack_.template head<kDimFloatingBase>() = mu_floating_base;
-  }
   int contact_index = 0;
   int segment_start = dim_passive_;
   for (const auto is_contact_active : is_each_contact_active_) {
@@ -82,13 +99,6 @@ inline void SplitSolution::set_mu_stack() {
       segment_start += 3;
     }
     ++contact_index;
-  }
-}
-
-
-inline void SplitSolution::set_mu_floating_base() {
-  if (has_floating_base_) {
-    mu_floating_base = mu_stack_.template head<kDimFloatingBase>();
   }
 }
 

@@ -1,5 +1,5 @@
-#ifndef IDOCP_NORMAL_FORCE_HPP_
-#define IDOCP_NORMAL_FORCE_HPP_
+#ifndef IDOCP_NORMAL_CONTACT_FORCE_HPP_
+#define IDOCP_NORMAL_CONTACT_FORCE_HPP_
 
 #include "Eigen/Core"
 
@@ -14,27 +14,26 @@
 
 namespace idocp {
 
-class NormalForce final : public ConstraintComponentBase {
+class NormalContactForce final : public ConstraintComponentBase {
 public:
-  NormalForce(const Robot& robot, const int contact_index, 
-              const double barrier=1.0e-04, 
-              const double fraction_to_boundary_rate=0.995);
+  NormalContactForce(const Robot& robot, const double barrier=1.0e-04, 
+                     const double fraction_to_boundary_rate=0.995);
 
-  NormalForce();
+  NormalContactForce();
 
-  ~NormalForce();
+  ~NormalContactForce();
 
   // Use default copy constructor.
-  NormalForce(const NormalForce&) = default;
+  NormalContactForce(const NormalContactForce&) = default;
 
   // Use default copy coperator.
-  NormalForce& operator=(const NormalForce&) = default;
+  NormalContactForce& operator=(const NormalContactForce&) = default;
 
   // Use default move constructor.
-  NormalForce(NormalForce&&) noexcept = default;
+  NormalContactForce(NormalContactForce&&) noexcept = default;
 
   // Use default move assign coperator.
-  NormalForce& operator=(NormalForce&&) noexcept = default;
+  NormalContactForce& operator=(NormalContactForce&&) noexcept = default;
 
   bool useKinematics() const override;
 
@@ -83,4 +82,4 @@ private:
 
 } // namespace idocp
 
-#endif // IDOCP_NORMAL_FORCE_HPP_ 
+#endif // IDOCP_NORMAL_CONTACT_FORCE_HPP_

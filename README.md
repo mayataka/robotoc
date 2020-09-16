@@ -64,4 +64,8 @@ target_include_directories(
 )
 ```
 
+### Simulation of Contact Dynamics 
+You can simulate contact dynamics utilizing RaiSim.
+Note that RaiSim currently supports only for academic use.
+
 ## Related publications
