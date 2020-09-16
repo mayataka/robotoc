@@ -58,7 +58,6 @@ TEST_F(FloatingBaseTaskSpace3DCostTest, setWeights) {
   robot_.normalizeConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(dimv);
   s.a = Eigen::VectorXd::Random(dimv);
-  s.f = Eigen::VectorXd::Random(robot_.max_dimf());
   s.u = Eigen::VectorXd::Random(dimv);
   robot_.updateKinematics(s.q, s.v, s.a);
   const Eigen::Vector3d q_task = robot_.framePosition(frame_id);

@@ -12,9 +12,7 @@ inline SplitDirection::SplitDirection(const Robot& robot)
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dim_passive_(robot.dim_passive()), 
-    max_dimf_(robot.max_dimf()), 
     dimf_(robot.dimf()), 
-    max_dimc_(robot.dim_passive()+robot.max_dimf()), 
     dimc_(robot.dim_passive()+robot.dimf()),
     max_dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf()),
     dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.dimf()) {
@@ -28,9 +26,7 @@ inline SplitDirection::SplitDirection()
     dimv_(0), 
     dimx_(0), 
     dim_passive_(0), 
-    max_dimf_(0), 
     dimf_(0), 
-    max_dimc_(0), 
     dimc_(0),
     max_dimKKT_(0),
     dimKKT_(0) {
@@ -43,8 +39,8 @@ inline SplitDirection::~SplitDirection() {
 
 inline void SplitDirection::setContactStatus(const Robot& robot) {
   dimf_ = robot.dimf();
-  dimc_ = dim_passive_ + robot.dimf();
-  dimKKT_ = 5*dimv_ + dim_passive_ + 2*robot.dimf();
+  dimc_ = robot.dim_passive() + robot.dimf();
+  dimKKT_ = 5*robot.dimv() + robot.dim_passive() + 2*robot.dimf();
 }
 
 

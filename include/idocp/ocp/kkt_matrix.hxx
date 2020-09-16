@@ -1,6 +1,8 @@
 #ifndef IDOCP_KKT_MATRIX_HXX_
 #define IDOCP_KKT_MATRIX_HXX_
 
+#include "idocp/ocp/kkt_matrix.hpp"
+
 #include <assert.h>
 
 #include "Eigen/LU"
@@ -31,7 +33,8 @@ inline KKTMatrix::KKTMatrix(const Robot& robot)
     f_begin_(robot.dimv()),
     q_begin_(robot.dimv()+robot.dimf()),
     v_begin_(2*robot.dimv()+robot.dimf()),
-    dimQ_(3*robot.dimv()+robot.dimf()) {
+    dimQ_(3*robot.dimv()+robot.dimf()),
+    max_dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf()) {
 }
 
 
@@ -54,7 +57,8 @@ inline KKTMatrix::KKTMatrix()
     f_begin_(0),
     q_begin_(0),
     v_begin_(0),
-    dimQ_(0) {
+    dimQ_(0),
+    max_dimKKT_(0) {
 }
 
 
@@ -301,6 +305,26 @@ inline void KKTMatrix::setZero() {
   Fqq.setZero();
   C_.setZero();
   Q_.setZero();
+}
+
+
+inline int KKTMatrix::dimKKT() const {
+  return dimQ_+dimc_;
+}
+
+
+inline int KKTMatrix::max_dimKKT() const {
+  return max_dimKKT_;
+}
+
+
+inline int KKTMatrix::dimc() const {
+  return dimc_;
+}
+
+
+inline int KKTMatrix::dimf() const {
+  return dimf_;
 }
 
 

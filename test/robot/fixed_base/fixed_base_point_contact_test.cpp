@@ -79,12 +79,12 @@ TEST_F(FixedBasePointContactTest, constructor) {
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
                    baumgarte_weight_on_position_);
   EXPECT_TRUE(contact.contact_point().isApprox(Eigen::Vector3d::Zero()));
-  // Check reset parameters set appropriately.
+  // Check set parameters set appropriately.
   double baumgarte_weight_on_velocity_tmp = std::abs(Eigen::VectorXd::Random(2)[1]);
   double baumgarte_weight_on_position_tmp = std::abs(Eigen::VectorXd::Random(2)[1]);
   Eigen::Vector3d contact_point = Eigen::Vector3d::Random();
-  contact.resetBaugrarteParameters(baumgarte_weight_on_velocity_tmp, 
-                                   baumgarte_weight_on_position_tmp);
+  contact.setBaugrarteParameters(baumgarte_weight_on_velocity_tmp, 
+                                 baumgarte_weight_on_position_tmp);
   EXPECT_DOUBLE_EQ(baumgarte_weight_on_velocity_tmp, 
                    contact.baumgarte_weight_on_velocity());
   EXPECT_DOUBLE_EQ(baumgarte_weight_on_position_tmp, 
@@ -97,7 +97,7 @@ TEST_F(FixedBasePointContactTest, constructor) {
   // Check the contact point assignment by kinematics.
   pinocchio::forwardKinematics(model_, data_, q_);
   pinocchio::updateFramePlacement(model_, data_, contact_frame_id_);
-  contact.resetContactPointByCurrentKinematics(data_);
+  contact.setContactPointByCurrentKinematics(data_);
   EXPECT_TRUE(
       contact.contact_point().isApprox(
           data_.oMf[contact_frame_id_].translation()));
@@ -111,7 +111,7 @@ TEST_F(FixedBasePointContactTest, copyConstructor) {
   contact_ref.activate();
   pinocchio::forwardKinematics(model_, data_, q_);
   pinocchio::updateFramePlacement(model_, data_, contact_frame_id_);
-  contact_ref.resetContactPointByCurrentKinematics(data_);
+  contact_ref.setContactPointByCurrentKinematics(data_);
   Eigen::Vector3d contact_point_ref = contact_ref.contact_point();
   PointContact contact(contact_ref);
   // Check the constructor works well.
@@ -136,7 +136,7 @@ TEST_F(FixedBasePointContactTest, assign) {
   contact_ref.activate();
   pinocchio::forwardKinematics(model_, data_, q_);
   pinocchio::updateFramePlacement(model_, data_, contact_frame_id_);
-  contact_ref.resetContactPointByCurrentKinematics(data_);
+  contact_ref.setContactPointByCurrentKinematics(data_);
   PointContact contact;
   contact = contact_ref;
   // Check the constructor works well.
@@ -161,7 +161,7 @@ TEST_F(FixedBasePointContactTest, moveAssign) {
   contact_ref.activate();
   pinocchio::forwardKinematics(model_, data_, q_);
   pinocchio::updateFramePlacement(model_, data_, contact_frame_id_);
-  contact_ref.resetContactPointByCurrentKinematics(data_);
+  contact_ref.setContactPointByCurrentKinematics(data_);
   PointContact contact_empty = contact_ref;
   PointContact contact;
   contact = std::move(contact_empty);
@@ -187,7 +187,7 @@ TEST_F(FixedBasePointContactTest, moveConstructor) {
   contact_ref.activate();
   pinocchio::forwardKinematics(model_, data_, q_);
   pinocchio::updateFramePlacement(model_, data_, contact_frame_id_);
-  contact_ref.resetContactPointByCurrentKinematics(data_);
+  contact_ref.setContactPointByCurrentKinematics(data_);
   PointContact contact_empty = contact_ref;
   PointContact contact(std::move(contact_empty));
   // Check the constructor works well.
@@ -344,7 +344,7 @@ TEST_F(FixedBasePointContactTest, baumgarteResidual) {
   Eigen::Vector3d residual, residual_ref;
   residual.setZero();
   residual_ref.setZero();
-  contact.resetContactPointByCurrentKinematics(data_);
+  contact.setContactPointByCurrentKinematics(data_);
   contact.computeBaumgarteResidual(model_, data_, residual);
   residual_ref 
       = pinocchio::getFrameClassicalAcceleration(model_, data_, contact_frame_id_, 

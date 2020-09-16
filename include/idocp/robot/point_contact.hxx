@@ -1,18 +1,19 @@
 #ifndef IDOCP_POINT_CONTACT_HXX_
 #define IDOCP_POINT_CONTACT_HXX_
 
-#include "assert.h"
+#include "idocp/robot/point_contact.hpp"
+#include <assert.h>
 
 
 namespace idocp {
 
-inline void PointContact::resetContactPoint(
+inline void PointContact::setContactPoint(
     const Eigen::Vector3d& contact_point) {
   contact_point_ = contact_point;
 }
 
 
-inline void PointContact::resetContactPointByCurrentKinematics(
+inline void PointContact::setContactPointByCurrentKinematics(
     const pinocchio::Data& data) {
   contact_point_ = data.oMf[contact_frame_id_].translation();
 }

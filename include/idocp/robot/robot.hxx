@@ -230,14 +230,14 @@ inline void Robot::computeBaumgarteDerivatives(
 inline void Robot::setContactPoints(
     const std::vector<Eigen::Vector3d>& contact_points) {
   for (int i=0; i<point_contacts_.size(); ++i) {
-    point_contacts_[i].resetContactPoint(contact_points[i]);
+    point_contacts_[i].setContactPoint(contact_points[i]);
   }
 }
 
 
 inline void Robot::setContactPointsByCurrentKinematics() {
   for (int i=0; i<point_contacts_.size(); ++i) {
-    point_contacts_[i].resetContactPointByCurrentKinematics(data_);
+    point_contacts_[i].setContactPointByCurrentKinematics(data_);
   }
 }
 
@@ -267,13 +267,12 @@ inline void Robot::setContactStatus(
 }
 
 
-template <typename VectorType>
-inline void Robot::setContactForces(const Eigen::MatrixBase<VectorType>& f) {
+inline void Robot::setContactForces(const std::vector<Eigen::Vector3d>& f) {
+  assert(f.size() == point_contacts_.size());
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
-      point_contacts_[i].computeJointForceFromContactForce(
-          f.template segment<3>(3*num_active_contacts), fjoint_);
+      point_contacts_[i].computeJointForceFromContactForce(f[i], fjoint_);
       ++num_active_contacts;
     }
     else {
@@ -448,11 +447,6 @@ inline int Robot::dimv() const {
 }
 
 
-inline int Robot::dimJ() const {
-  return dimJ_;
-}
-
-
 inline int Robot::max_dimf() const {
   return max_dimf_;
 }
@@ -485,6 +479,11 @@ inline bool Robot::has_active_contacts() const {
 
 inline int Robot::num_active_point_contacts() const {
   return num_active_contacts_;
+}
+
+
+inline std::vector<bool> Robot::is_each_contact_active() const {
+  return is_each_contact_active_;
 }
 
 

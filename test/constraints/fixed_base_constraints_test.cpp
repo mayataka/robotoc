@@ -35,8 +35,6 @@ protected:
     s.v = Eigen::VectorXd::Random(robot.dimv());
     s.a = Eigen::VectorXd::Random(robot.dimv());
     s.u = Eigen::VectorXd::Random(robot.dimv());
-    s.f = Eigen::VectorXd::Random(robot.max_dimf());
-    s.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
     s.lmd = Eigen::VectorXd::Random(robot.dimv());
     s.gmm = Eigen::VectorXd::Random(robot.dimv());
     d = SplitDirection(robot);

@@ -1,6 +1,8 @@
 #ifndef IDOCP_KKT_RESIDUAL_HXX_
 #define IDOCP_KKT_RESIDUAL_HXX_
 
+#include "idocp/ocp/kkt_residual.hpp"
+
 namespace idocp {
 
 inline KKTResidual::KKTResidual(const Robot& robot) 
@@ -120,42 +122,50 @@ KKTResidual::Fx() const {
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::C() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+KKTResidual::C() const {
   return kkt_residual_.segment(dimx_, dimc_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::la() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+KKTResidual::la() const {
   return kkt_residual_.segment(dimx_+dimc_, dimv_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::lf() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+KKTResidual::lf() const {
   return kkt_residual_.segment(dimx_+dimc_+dimv_, dimf_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::lq() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+KKTResidual::lq() const {
   return kkt_residual_.segment(dimx_+dimc_+dimv_+dimf_, dimv_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::lv() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+KKTResidual::lv() const {
   return kkt_residual_.segment(dimx_+dimc_+2*dimv_+dimf_, dimv_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::lx() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+KKTResidual::lx() const {
   return kkt_residual_.segment(dimx_+dimc_+dimv_+dimf_, dimx_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::laf() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+KKTResidual::laf() const {
   return kkt_residual_.segment(dimx_+dimc_, dimv_+dimf_);
 }
 
 
 inline double KKTResidual::squaredKKTErrorNorm(const double dtau) const {
+  assert(dtau > 0);
   double error = kkt_residual_.head(dimKKT_).squaredNorm();
   error += lu.squaredNorm();
   error += dtau * dtau * u_res.squaredNorm();

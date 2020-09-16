@@ -70,7 +70,6 @@ TEST_F(FloatingBaseJointSpaceCostTest, setWeights) {
   robot_.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(dimv);
   s.a = Eigen::VectorXd::Random(dimv);
-  s.f = Eigen::VectorXd::Random(robot_.max_dimf());
   s.u = Eigen::VectorXd::Random(dimv);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   robot_.subtractConfiguration(s.q, q_ref, q_diff);

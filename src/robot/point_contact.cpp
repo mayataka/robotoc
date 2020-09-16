@@ -24,7 +24,8 @@ PointContact::PointContact(const pinocchio::Model& model,
     frame_a_partial_da_(Eigen::MatrixXd::Zero(6, model.nv)) {
   try {
     if (contact_frame_id_ < 0) {
-      throw std::out_of_range("invalid argument: contct frame index must be nonnegative!");
+      throw std::out_of_range(
+          "invalid argument: contct frame index must be nonnegative!");
     }
   }
   catch(const std::exception& e) {
@@ -33,7 +34,8 @@ PointContact::PointContact(const pinocchio::Model& model,
   }
   try {
     if (baumgarte_weight_on_velocity < 0) {
-      throw std::out_of_range("invalid argument: weight on Baumgarte's stabilization must be nonnegative!");
+      throw std::out_of_range(
+          "invalid argument: weight on Baumgarte's stabilization must be nonnegative!");
     }
   }
   catch(const std::exception& e) {
@@ -42,7 +44,8 @@ PointContact::PointContact(const pinocchio::Model& model,
   }
   try {
     if (baumgarte_weight_on_position < 0) {
-      throw std::out_of_range("invalid argument: weight on Baumgarte's stabilization must be nonnegative!");
+      throw std::out_of_range(
+          "invalid argument: weight on Baumgarte's stabilization must be nonnegative!");
     }
   }
   catch(const std::exception& e) {
@@ -79,12 +82,13 @@ PointContact::~PointContact() {
 }
 
 
-void PointContact::resetBaugrarteParameters(
+void PointContact::setBaugrarteParameters(
     const double baumgarte_weight_on_velocity, 
     const double baumgarte_weight_on_position) {
   try {
     if (baumgarte_weight_on_velocity < 0) {
-      throw std::out_of_range("invalid argument: weight on Baumgarte's stabilization must be nonnegative!");
+      throw std::out_of_range(
+          "invalid argument: weight on Baumgarte's stabilization must be nonnegative!");
     }
   }
   catch(const std::exception& e) {
@@ -93,7 +97,8 @@ void PointContact::resetBaugrarteParameters(
   }
   try {
     if (baumgarte_weight_on_position < 0) {
-      throw std::out_of_range("invalid argument: weight on Baumgarte's stabilization must be nonnegative!");
+      throw std::out_of_range(
+          "invalid argument: weight on Baumgarte's stabilization must be nonnegative!");
     }
   }
   catch(const std::exception& e) {

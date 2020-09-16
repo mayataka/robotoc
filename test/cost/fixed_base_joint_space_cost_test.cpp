@@ -71,7 +71,6 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   s.q = Eigen::VectorXd::Random(dimq);
   s.v = Eigen::VectorXd::Random(dimv);
   s.a = Eigen::VectorXd::Random(dimv);
-  s.f = Eigen::VectorXd::Random(robot_.dimf());
   s.u = Eigen::VectorXd::Random(dimv);
   const double l_ref = 0.5 * dtau_ 
                            * ((q_weight.array()* (s.q-q_ref).array()*(s.q-q_ref).array()).sum()

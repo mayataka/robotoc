@@ -17,7 +17,7 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc)
     dslack(Eigen::VectorXd::Zero(dimc)),
     ddual(Eigen::VectorXd::Zero(dimc)),
     dimc_(dimc) {
-      try {
+  try {
     if (dimc < 0) {
       throw std::out_of_range("invalid argment: dimc must not be negative");
     }
