@@ -46,8 +46,6 @@ TEST_F(StateEquationTest, forwardEuler_fixed_base) {
   robot.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.a = Eigen::VectorXd::Random(robot.dimv());
-  s.f = Eigen::VectorXd::Random(robot.max_dimf());
-  s.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
   s.lmd = Eigen::VectorXd::Random(robot.dimv());
   s.gmm = Eigen::VectorXd::Random(robot.dimv());
   SplitSolution s_next(robot);
@@ -55,8 +53,6 @@ TEST_F(StateEquationTest, forwardEuler_fixed_base) {
   robot.generateFeasibleConfiguration(s_next.q);
   s_next.v = Eigen::VectorXd::Random(robot.dimv());
   s_next.a = Eigen::VectorXd::Random(robot.dimv());
-  s_next.f = Eigen::VectorXd::Random(robot.max_dimf());
-  s_next.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
   s_next.lmd = Eigen::VectorXd::Random(robot.dimv());
   s_next.gmm = Eigen::VectorXd::Random(robot.dimv());
   KKTResidual kkt_residual(robot);
@@ -91,8 +87,6 @@ TEST_F(StateEquationTest, forwardEuler_floating_base) {
   robot.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.a = Eigen::VectorXd::Random(robot.dimv());
-  s.f = Eigen::VectorXd::Random(robot.max_dimf());
-  s.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
   s.lmd = Eigen::VectorXd::Random(robot.dimv());
   s.gmm = Eigen::VectorXd::Random(robot.dimv());
   SplitSolution s_next(robot);
@@ -100,8 +94,6 @@ TEST_F(StateEquationTest, forwardEuler_floating_base) {
   robot.generateFeasibleConfiguration(s_next.q);
   s_next.v = Eigen::VectorXd::Random(robot.dimv());
   s_next.a = Eigen::VectorXd::Random(robot.dimv());
-  s_next.f = Eigen::VectorXd::Random(robot.max_dimf());
-  s_next.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
   s_next.lmd = Eigen::VectorXd::Random(robot.dimv());
   s_next.gmm = Eigen::VectorXd::Random(robot.dimv());
   KKTResidual kkt_residual(robot);
@@ -146,8 +138,6 @@ TEST_F(StateEquationTest, backwardEuler_fixed_base) {
   robot.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.a = Eigen::VectorXd::Random(robot.dimv());
-  s.f = Eigen::VectorXd::Random(robot.max_dimf());
-  s.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
   s.lmd = Eigen::VectorXd::Random(robot.dimv());
   s.gmm = Eigen::VectorXd::Random(robot.dimv());
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
@@ -199,8 +189,6 @@ TEST_F(StateEquationTest, backwardEuler_floating_base) {
   robot.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.a = Eigen::VectorXd::Random(robot.dimv());
-  s.f = Eigen::VectorXd::Random(robot.max_dimf());
-  s.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
   s.lmd = Eigen::VectorXd::Random(robot.dimv());
   s.gmm = Eigen::VectorXd::Random(robot.dimv());
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
@@ -260,8 +248,6 @@ TEST_F(StateEquationTest, violationFixedBase) {
   robot.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.a = Eigen::VectorXd::Random(robot.dimv());
-  s.f = Eigen::VectorXd::Random(robot.max_dimf());
-  s.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
   s.lmd = Eigen::VectorXd::Random(robot.dimv());
   s.gmm = Eigen::VectorXd::Random(robot.dimv());
   SplitSolution s_next(robot);
@@ -269,8 +255,6 @@ TEST_F(StateEquationTest, violationFixedBase) {
   robot.generateFeasibleConfiguration(s_next.q);
   s_next.v = Eigen::VectorXd::Random(robot.dimv());
   s_next.a = Eigen::VectorXd::Random(robot.dimv());
-  s_next.f = Eigen::VectorXd::Random(robot.max_dimf());
-  s_next.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
   s_next.lmd = Eigen::VectorXd::Random(robot.dimv());
   s_next.gmm = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd dq_next = Eigen::VectorXd::Random(robot.dimv());
@@ -323,8 +307,6 @@ TEST_F(StateEquationTest, violationFloatingBase) {
   robot.generateFeasibleConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.a = Eigen::VectorXd::Random(robot.dimv());
-  s.f = Eigen::VectorXd::Random(robot.max_dimf());
-  s.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
   s.lmd = Eigen::VectorXd::Random(robot.dimv());
   s.gmm = Eigen::VectorXd::Random(robot.dimv());
   SplitSolution s_next(robot);
@@ -332,8 +314,6 @@ TEST_F(StateEquationTest, violationFloatingBase) {
   robot.generateFeasibleConfiguration(s_next.q);
   s_next.v = Eigen::VectorXd::Random(robot.dimv());
   s_next.a = Eigen::VectorXd::Random(robot.dimv());
-  s_next.f = Eigen::VectorXd::Random(robot.max_dimf());
-  s_next.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
   s_next.lmd = Eigen::VectorXd::Random(robot.dimv());
   s_next.gmm = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd dq_next = Eigen::VectorXd::Random(robot.dimv());

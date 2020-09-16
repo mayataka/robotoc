@@ -1,6 +1,8 @@
 #ifndef IDOCP_ROBOT_DYNAMICS_HXX_
 #define IDOCP_ROBOT_DYNAMICS_HXX_
 
+#include "idocp/ocp/robot_dynamics.hpp"
+
 #include <assert.h>
 
 namespace idocp {
@@ -41,10 +43,17 @@ inline RobotDynamics::~RobotDynamics() {
 }
 
 
+inline void RobotDynamics::setContactStatus(const Robot& robot) {
+  dimf_ = robot.dimf();
+  has_active_contacts_ = robot.has_active_contacts();
+}
+
+
 inline void RobotDynamics::augmentRobotDynamics(Robot& robot, const double dtau, 
                                                 const SplitSolution& s, 
                                                 KKTMatrix& kkt_matrix, 
                                                 KKTResidual& kkt_residual) {
+  assert(dtau > 0);
   setContactStatus(robot);
   linearizeInverseDynamics(robot, s, kkt_residual);
   // augment inverse dynamics
@@ -56,7 +65,12 @@ inline void RobotDynamics::augmentRobotDynamics(Robot& robot, const double dtau,
   kkt_residual.lv().noalias() += dtau * du_dv_.transpose() * s.beta;
   kkt_residual.lu.noalias() -= dtau * s.beta; 
   // augment floating base constraint
-  linearizeFloatingBaseConstraint(robot, dtau, s, kkt_residual);
+  if (robot.has_floating_base()) {
+    kkt_residual.C_floating_base() 
+        = dtau * s.u.template head<kDimFloatingBase>();
+    kkt_residual.lu.template head<kDimFloatingBase>().noalias() 
+        += dtau * s.mu_floating_base();
+  }
   // augment contact constraint
   if (robot.has_active_contacts()) {
     linearizeContactConstraint(robot, dtau, kkt_matrix, kkt_residual);
@@ -114,10 +128,13 @@ inline void RobotDynamics::condenseRobotDynamics(Robot& robot,
     kkt_matrix.Ca_floating_base()
         = dtau * du_da_.template topRows<kDimFloatingBase>();
     if (robot.has_active_contacts()) {
-      kkt_matrix.Cf_floating_base() = dtau * du_df_().template topRows<kDimFloatingBase>();
+      kkt_matrix.Cf_floating_base() 
+          = dtau * du_df_().template topRows<kDimFloatingBase>();
     }
-    kkt_matrix.Cq_floating_base() = dtau * du_dq_.template topRows<kDimFloatingBase>();
-    kkt_matrix.Cv_floating_base() = dtau * du_dv_.template topRows<kDimFloatingBase>();
+    kkt_matrix.Cq_floating_base() 
+        = dtau * du_dq_.template topRows<kDimFloatingBase>();
+    kkt_matrix.Cv_floating_base() 
+        = dtau * du_dv_.template topRows<kDimFloatingBase>();
   }
   if (robot.has_active_contacts()) {
     linearizeContactConstraint(robot, dtau, kkt_matrix, kkt_residual);
@@ -190,12 +207,6 @@ inline double RobotDynamics::computeViolationL1Norm(
 }
 
 
-inline void RobotDynamics::setContactStatus(const Robot& robot) {
-  dimf_ = robot.dimf();
-  has_active_contacts_ = robot.has_active_contacts();
-}
-
-
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
           typename MatrixType4, typename MatrixType5, typename MatrixType6>
 inline void RobotDynamics::getStateFeedbackGain(
@@ -254,19 +265,6 @@ inline void RobotDynamics::linearizeContactConstraint(
   robot.computeBaumgarteDerivatives(dtau, kkt_matrix.Cq_contacts(), 
                                     kkt_matrix.Cv_contacts(), 
                                     kkt_matrix.Ca_contacts());
-}
-
-
-inline void RobotDynamics::linearizeFloatingBaseConstraint(
-    const Robot& robot, const double dtau, const SplitSolution& s, 
-    KKTResidual& kkt_residual) const {
-  assert(dtau > 0);
-  if (robot.has_floating_base()) {
-    kkt_residual.C_floating_base() 
-        = dtau * s.u.template head<kDimFloatingBase>();
-    kkt_residual.lu.template head<kDimFloatingBase>().noalias() 
-        += dtau * s.mu_floating_base();
-  }
 }
 
 

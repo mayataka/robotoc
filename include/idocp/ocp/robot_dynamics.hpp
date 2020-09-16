@@ -30,6 +30,8 @@ public:
 
   RobotDynamics& operator=(RobotDynamics&&) noexcept = default;
 
+  void setContactStatus(const Robot& robot);
+
   void augmentRobotDynamics(Robot& robot, const double dtau, 
                             const SplitSolution& s, KKTMatrix& kkt_matrix, 
                             KKTResidual& kkt_residual);
@@ -43,10 +45,6 @@ public:
                                  const KKTResidual& kkt_residual, 
                                  SplitDirection& d);
 
-  void computeResidual(Robot& robot, const double dtau,
-                       const SplitSolution& s, KKTMatrix& kkt_matrix, 
-                       KKTResidual& kkt_residual);
-
   double violationL1Norm(Robot& robot, const double dtau, 
                          const SplitSolution& s, 
                          KKTResidual& kkt_residual) const;
@@ -54,8 +52,6 @@ public:
   double computeViolationL1Norm(Robot& robot, const double dtau, 
                                 const SplitSolution& s, 
                                 KKTResidual& kkt_residual) const;
-
-  void setContactStatus(const Robot& robot);
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4, typename MatrixType5, typename MatrixType6>
@@ -80,10 +76,6 @@ private:
   void linearizeContactConstraint(Robot& robot, const double dtau,
                                   KKTMatrix& kkt_matrix, 
                                   KKTResidual& kkt_residual) const;
-
-  void linearizeFloatingBaseConstraint(const Robot& robot, const double dtau,
-                                       const SplitSolution& s, 
-                                       KKTResidual& kkt_residual) const;
 
   Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
   du_df_();

@@ -148,33 +148,33 @@ TEST_F(RiccatiTest, fixed_base_with_contacts) {
   M.triangularView<Eigen::StrictlyLower>() 
       = M.transpose().triangularView<Eigen::StrictlyLower>();
   const Eigen::MatrixXd Minv = M.inverse();
-  const Eigen::MatrixXd Kaq_ref = - Minv.block(0, 0, dimv, dimv) * Qqa.transpose()
-                                  - Minv.block(0, dimv, dimv, dimf) * Qqf.transpose()
-                                  - Minv.block(0, dimv+dimf, dimv, dimf) * Cq;
-  const Eigen::MatrixXd Kav_ref = - Minv.block(0, 0, dimv, dimv) * Qva.transpose()
-                                  - Minv.block(0, dimv, dimv, dimf) * Qvf.transpose()
-                                  - Minv.block(0, dimv+dimf, dimv, dimf) * Cv;
-  const Eigen::MatrixXd Kfq_ref = - Minv.block(dimv, 0, dimf, dimv) * Qqa.transpose()
-                                  - Minv.block(dimv, dimv, dimf, dimf) * Qqf.transpose()
-                                  - Minv.block(dimv, dimv+dimf, dimf, dimf) * Cq;
-  const Eigen::MatrixXd Kfv_ref = - Minv.block(dimv, 0, dimf, dimv) * Qva.transpose()
-                                  - Minv.block(dimv, dimv, dimf, dimf) * Qvf.transpose()
-                                  - Minv.block(dimv, dimv+dimf, dimf, dimf) * Cv;
-  const Eigen::MatrixXd Kmuq_ref = - Minv.block(dimv+dimf, 0, dimf, dimv) * Qqa.transpose()
-                                   - Minv.block(dimv+dimf, dimv, dimf, dimf) * Qqf.transpose()
-                                   - Minv.block(dimv+dimf, dimv+dimf, dimf, dimf) * Cq;
-  const Eigen::MatrixXd Kmuv_ref = - Minv.block(dimv+dimf, 0, dimf, dimv) * Qva.transpose()
-                                   - Minv.block(dimv+dimf, dimv, dimf, dimf) * Qvf.transpose()
-                                   - Minv.block(dimv+dimf, dimv+dimf, dimf, dimf) * Cv;
-  const Eigen::VectorXd ka_ref = - Minv.block(0, 0, dimv, dimv) * la
-                                 - Minv.block(0, dimv, dimv, dimf) * lf
-                                 - Minv.block(0, dimv+dimf, dimv, dimf) * C_res;
-  const Eigen::VectorXd kf_ref = - Minv.block(dimv, 0, dimf, dimv) * la
-                                 - Minv.block(dimv, dimv, dimf, dimf) * lf
-                                 - Minv.block(dimv, dimv+dimf, dimf, dimf) * C_res;
-  const Eigen::VectorXd kmu_ref = - Minv.block(dimv+dimf, 0, dimf, dimv) * la
-                                  - Minv.block(dimv+dimf, dimv, dimf, dimf) * lf
-                                  - Minv.block(dimv+dimf, dimv+dimf, dimf, dimf) * C_res;
+  const Eigen::MatrixXd Kaq_ref =  - Minv.block(        0,         0, dimv, dimv) * Qqa.transpose()
+                                   - Minv.block(        0,      dimv, dimv, dimf) * Qqf.leftCols(dimf).transpose()
+                                   - Minv.block(        0, dimv+dimf, dimv, dimc) * Cq.topRows(dimc);
+  const Eigen::MatrixXd Kav_ref =  - Minv.block(        0,         0, dimv, dimv) * Qva.transpose()
+                                   - Minv.block(        0,      dimv, dimv, dimf) * Qvf.leftCols(dimf).transpose()
+                                   - Minv.block(        0, dimv+dimf, dimv, dimc) * Cv.topRows(dimc);
+  const Eigen::MatrixXd Kfq_ref =  - Minv.block(     dimv,         0, dimf, dimv) * Qqa.transpose()
+                                   - Minv.block(     dimv,      dimv, dimf, dimf) * Qqf.leftCols(dimf).transpose()
+                                   - Minv.block(     dimv, dimv+dimf, dimf, dimc) * Cq.topRows(dimc);
+  const Eigen::MatrixXd Kfv_ref =  - Minv.block(     dimv,         0, dimf, dimv) * Qva.transpose()
+                                   - Minv.block(     dimv,      dimv, dimf, dimf) * Qvf.leftCols(dimf).transpose()
+                                   - Minv.block(     dimv, dimv+dimf, dimf, dimc) * Cv.topRows(dimc);
+  const Eigen::MatrixXd Kmuq_ref = - Minv.block(dimv+dimf,         0, dimc, dimv) * Qqa.transpose()
+                                   - Minv.block(dimv+dimf,      dimv, dimc, dimf) * Qqf.leftCols(dimf).transpose()
+                                   - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * Cq.topRows(dimc);
+  const Eigen::MatrixXd Kmuv_ref = - Minv.block(dimv+dimf,         0, dimc, dimv) * Qva.transpose()
+                                   - Minv.block(dimv+dimf,      dimv, dimc, dimf) * Qvf.leftCols(dimf).transpose()
+                                   - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * Cv.topRows(dimc);
+  const Eigen::VectorXd ka_ref =   - Minv.block(        0,         0, dimv, dimv) * la
+                                   - Minv.block(        0,      dimv, dimv, dimf) * lf.head(dimf)
+                                   - Minv.block(        0, dimv+dimf, dimv, dimc) * C_res.head(dimc);
+  const Eigen::VectorXd kf_ref =   - Minv.block(     dimv,         0, dimf, dimv) * la
+                                   - Minv.block(     dimv,      dimv, dimf, dimf) * lf.head(dimf)
+                                   - Minv.block(     dimv, dimv+dimf, dimf, dimc) * C_res.head(dimc);
+  const Eigen::VectorXd kmu_ref =  - Minv.block(dimv+dimf,         0, dimc, dimv) * la
+                                   - Minv.block(dimv+dimf,      dimv, dimc, dimf) * lf.head(dimf)
+                                   - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * C_res.head(dimc);
   RiccatiMatrixInverter inverter(fixed_base_robot_);
   Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
   G = M.topLeftCorner(dimv+dimf, dimv+dimf);
@@ -277,18 +277,18 @@ TEST_F(RiccatiTest, floating_base_without_contacts) {
   M.triangularView<Eigen::StrictlyLower>() 
       = M.transpose().triangularView<Eigen::StrictlyLower>();
   const Eigen::MatrixXd Minv = M.inverse();
-  const Eigen::MatrixXd Kaq_ref = - Minv.block(0, 0, dimv, dimv) * Qqa.transpose()
-                                  - Minv.block(0, dimv, dimv, dimc) * Cq;
-  const Eigen::MatrixXd Kav_ref = - Minv.block(0, 0, dimv, dimv) * Qva.transpose()
-                                  - Minv.block(0, dimv, dimv, dimc) * Cv;
-  const Eigen::MatrixXd Kmuq_ref = - Minv.block(dimv, 0, dimc, dimv) * Qqa.transpose()
+  const Eigen::MatrixXd Kaq_ref =  - Minv.block(   0,    0, dimv, dimv) * Qqa.transpose()
+                                   - Minv.block(   0, dimv, dimv, dimc) * Cq;
+  const Eigen::MatrixXd Kav_ref =  - Minv.block(   0,    0, dimv, dimv) * Qva.transpose()
+                                   - Minv.block(   0, dimv, dimv, dimc) * Cv;
+  const Eigen::MatrixXd Kmuq_ref = - Minv.block(dimv,    0, dimc, dimv) * Qqa.transpose()
                                    - Minv.block(dimv, dimv, dimc, dimc) * Cq;
-  const Eigen::MatrixXd Kmuv_ref = - Minv.block(dimv, 0, dimc, dimv) * Qva.transpose()
+  const Eigen::MatrixXd Kmuv_ref = - Minv.block(dimv,    0, dimc, dimv) * Qva.transpose()
                                    - Minv.block(dimv, dimv, dimc, dimc) * Cv;
-  const Eigen::VectorXd ka_ref = - Minv.block(0, 0, dimv, dimv) * la
-                                 - Minv.block(0, dimv, dimv, dimc) * C_res;
-  const Eigen::VectorXd kmu_ref = - Minv.block(dimv, 0, dimc, dimv) * la
-                                  - Minv.block(dimv, dimv, dimc, dimc) * C_res;
+  const Eigen::VectorXd ka_ref =   - Minv.block(   0,    0, dimv, dimv) * la
+                                   - Minv.block(   0, dimv, dimv, dimc) * C_res;
+  const Eigen::VectorXd kmu_ref =  - Minv.block(dimv,    0, dimc, dimv) * la
+                                   - Minv.block(dimv, dimv, dimc, dimc) * C_res;
   RiccatiMatrixInverter inverter(floating_base_robot_);
   Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
   G = M.topLeftCorner(dimv+dimf, dimv+dimf);
@@ -396,33 +396,33 @@ TEST_F(RiccatiTest, floating_base_with_contacts) {
   M.triangularView<Eigen::StrictlyLower>() 
       = M.transpose().triangularView<Eigen::StrictlyLower>();
   const Eigen::MatrixXd Minv = M.inverse();
-  const Eigen::MatrixXd Kaq_ref = - Minv.block(0, 0, dimv, dimv) * Qqa.transpose()
-                                  - Minv.block(0, dimv, dimv, dimf) * Qqf.leftCols(dimf).transpose()
-                                  - Minv.block(0, dimv+dimf, dimv, dimc) * Cq.topRows(dimc);
-  const Eigen::MatrixXd Kav_ref = - Minv.block(0, 0, dimv, dimv) * Qva.transpose()
-                                  - Minv.block(0, dimv, dimv, dimf) * Qvf.leftCols(dimf).transpose()
-                                  - Minv.block(0, dimv+dimf, dimv, dimc) * Cv.topRows(dimc);
-  const Eigen::MatrixXd Kfq_ref = - Minv.block(dimv, 0, dimf, dimv) * Qqa.transpose()
-                                  - Minv.block(dimv, dimv, dimf, dimf) * Qqf.leftCols(dimf).transpose()
-                                  - Minv.block(dimv, dimv+dimf, dimf, dimc) * Cq.topRows(dimc);
-  const Eigen::MatrixXd Kfv_ref = - Minv.block(dimv, 0, dimf, dimv) * Qva.transpose()
-                                  - Minv.block(dimv, dimv, dimf, dimf) * Qvf.leftCols(dimf).transpose()
-                                  - Minv.block(dimv, dimv+dimf, dimf, dimc) * Cv.topRows(dimc);
-  const Eigen::MatrixXd Kmuq_ref = - Minv.block(dimv+dimf, 0, dimc, dimv) * Qqa.transpose()
-                                   - Minv.block(dimv+dimf, dimv, dimc, dimf) * Qqf.leftCols(dimf).transpose()
+  const Eigen::MatrixXd Kaq_ref =  - Minv.block(        0,         0, dimv, dimv) * Qqa.transpose()
+                                   - Minv.block(        0,      dimv, dimv, dimf) * Qqf.leftCols(dimf).transpose()
+                                   - Minv.block(        0, dimv+dimf, dimv, dimc) * Cq.topRows(dimc);
+  const Eigen::MatrixXd Kav_ref =  - Minv.block(        0,         0, dimv, dimv) * Qva.transpose()
+                                   - Minv.block(        0,      dimv, dimv, dimf) * Qvf.leftCols(dimf).transpose()
+                                   - Minv.block(        0, dimv+dimf, dimv, dimc) * Cv.topRows(dimc);
+  const Eigen::MatrixXd Kfq_ref =  - Minv.block(     dimv,         0, dimf, dimv) * Qqa.transpose()
+                                   - Minv.block(     dimv,      dimv, dimf, dimf) * Qqf.leftCols(dimf).transpose()
+                                   - Minv.block(     dimv, dimv+dimf, dimf, dimc) * Cq.topRows(dimc);
+  const Eigen::MatrixXd Kfv_ref =  - Minv.block(     dimv,         0, dimf, dimv) * Qva.transpose()
+                                   - Minv.block(     dimv,      dimv, dimf, dimf) * Qvf.leftCols(dimf).transpose()
+                                   - Minv.block(     dimv, dimv+dimf, dimf, dimc) * Cv.topRows(dimc);
+  const Eigen::MatrixXd Kmuq_ref = - Minv.block(dimv+dimf,         0, dimc, dimv) * Qqa.transpose()
+                                   - Minv.block(dimv+dimf,      dimv, dimc, dimf) * Qqf.leftCols(dimf).transpose()
                                    - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * Cq.topRows(dimc);
-  const Eigen::MatrixXd Kmuv_ref = - Minv.block(dimv+dimf, 0, dimc, dimv) * Qva.transpose()
-                                   - Minv.block(dimv+dimf, dimv, dimc, dimf) * Qvf.leftCols(dimf).transpose()
+  const Eigen::MatrixXd Kmuv_ref = - Minv.block(dimv+dimf,         0, dimc, dimv) * Qva.transpose()
+                                   - Minv.block(dimv+dimf,      dimv, dimc, dimf) * Qvf.leftCols(dimf).transpose()
                                    - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * Cv.topRows(dimc);
-  const Eigen::VectorXd ka_ref = - Minv.block(0, 0, dimv, dimv) * la
-                                 - Minv.block(0, dimv, dimv, dimf) * lf.head(dimf)
-                                 - Minv.block(0, dimv+dimf, dimv, dimc) * C_res.head(dimc);
-  const Eigen::VectorXd kf_ref = - Minv.block(dimv, 0, dimf, dimv) * la
-                                 - Minv.block(dimv, dimv, dimf, dimf) * lf.head(dimf)
-                                 - Minv.block(dimv, dimv+dimf, dimf, dimc) * C_res.head(dimc);
-  const Eigen::VectorXd kmu_ref = - Minv.block(dimv+dimf, 0, dimc, dimv) * la
-                                  - Minv.block(dimv+dimf, dimv, dimc, dimf) * lf.head(dimf)
-                                  - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * C_res.head(dimc);
+  const Eigen::VectorXd ka_ref =   - Minv.block(        0,         0, dimv, dimv) * la
+                                   - Minv.block(        0,      dimv, dimv, dimf) * lf.head(dimf)
+                                   - Minv.block(        0, dimv+dimf, dimv, dimc) * C_res.head(dimc);
+  const Eigen::VectorXd kf_ref =   - Minv.block(     dimv,         0, dimf, dimv) * la
+                                   - Minv.block(     dimv,      dimv, dimf, dimf) * lf.head(dimf)
+                                   - Minv.block(     dimv, dimv+dimf, dimf, dimc) * C_res.head(dimc);
+  const Eigen::VectorXd kmu_ref =  - Minv.block(dimv+dimf,         0, dimc, dimv) * la
+                                   - Minv.block(dimv+dimf,      dimv, dimc, dimf) * lf.head(dimf)
+                                   - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * C_res.head(dimc);
   RiccatiMatrixInverter inverter(floating_base_robot_);
   Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
   G = M.topLeftCorner(dimv+dimf, dimv+dimf);
