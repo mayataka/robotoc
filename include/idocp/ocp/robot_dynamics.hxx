@@ -252,7 +252,7 @@ inline void RobotDynamics::linearizeInverseDynamics(Robot& robot,
   kkt_residual.u_res.noalias() -= s.u;
   robot.RNEADerivatives(s.q, s.v, s.a, du_dq_, du_dv_, du_da_);
   if (robot.has_active_contacts()) {
-    robot.dRNEAPartialdFext(du_df_());
+    robot.dRNEAPartialdFext(du_df_full_);
   }
 }
 

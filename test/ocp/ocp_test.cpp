@@ -61,8 +61,11 @@ TEST_F(OCPTest, updateSolutionFixedBaseWithoutContact) {
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Zero(robot.dimv());
-  const Eigen::VectorXd f_weight = Eigen::VectorXd::Constant(robot.max_dimf(), 0.01);
-  const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(robot.max_dimf());
+  std::vector<Eigen::Vector3d> f_weight, f_ref;
+  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    f_weight.push_back(Eigen::Vector3d::Constant(0.01));
+    f_ref.push_back(Eigen::Vector3d::Zero());
+  }
   joint_cost->set_q_weight(q_weight);
   joint_cost->set_qf_weight(qf_weight);
   joint_cost->set_q_ref(q_ref);
@@ -128,8 +131,11 @@ TEST_F(OCPTest, updateSolutionFixedBaseWithContact) {
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Zero(robot.dimv());
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Zero(robot.dimv());
-  const Eigen::VectorXd f_weight = Eigen::VectorXd::Constant(robot.max_dimf(), 0.01);
-  const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(robot.max_dimf());
+  std::vector<Eigen::Vector3d> f_weight, f_ref;
+  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    f_weight.push_back(Eigen::Vector3d::Constant(0.01));
+    f_ref.push_back(Eigen::Vector3d::Zero());
+  }
   joint_cost->set_q_weight(q_weight);
   joint_cost->set_qf_weight(qf_weight);
   joint_cost->set_q_ref(q_ref);
@@ -201,8 +207,11 @@ TEST_F(OCPTest, floating_base) {
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Zero(robot.dimv());
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Constant(robot.dimv(), 0.1);
-  const Eigen::VectorXd f_weight = Eigen::VectorXd::Constant(robot.max_dimf(), 0.01);
-  const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(robot.max_dimf());
+  std::vector<Eigen::Vector3d> f_weight, f_ref;
+  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    f_weight.push_back(Eigen::Vector3d::Constant(0.01));
+    f_ref.push_back(Eigen::Vector3d::Zero());
+  }
   joint_cost->set_q_weight(q_weight);
   joint_cost->set_qf_weight(qf_weight);
   joint_cost->set_q_ref(q_ref);

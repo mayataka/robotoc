@@ -347,9 +347,13 @@ void OCP::printSolution() const {
     std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
     std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
     std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
-    std::cout << "f[" << i << "] = " << s_[i].f.transpose() << std::endl;
+    std::cout << "f[" << i << "] = ";
+    for (int j=0; i<s_[i].f.size(); ++j) {
+      std::cout << s_[i].f[j].transpose() << "; ";
+    }
+    std::cout << std::endl;
     std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
-    std::cout << "mu[" << i << "] = " << s_[i].mu.transpose() << std::endl;
+    std::cout << "mu[" << i << "] = " << s_[i].mu_stack().transpose() << std::endl;
   }
   std::cout << "q[" << N_ << "] = " << s_[N_].q.transpose() << std::endl;
   std::cout << "v[" << N_ << "] = " << s_[N_].v.transpose() << std::endl;
