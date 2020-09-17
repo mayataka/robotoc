@@ -1,1 +1,1 @@
-#include "idocp/robot/contact_surface.hpp
+#include "idocp/robot/contact_surface.hpp"

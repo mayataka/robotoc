@@ -49,9 +49,9 @@ public:
                          const SplitSolution& s, 
                          KKTResidual& kkt_residual) const;
 
-  double computeViolationL1Norm(Robot& robot, const double dtau, 
-                                const SplitSolution& s, 
-                                KKTResidual& kkt_residual) const;
+  static double computeViolationL1Norm(Robot& robot, const double dtau, 
+                                       const SplitSolution& s, 
+                                       KKTResidual& kkt_residual);
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4, typename MatrixType5, typename MatrixType6>
@@ -73,9 +73,9 @@ private:
   void linearizeInverseDynamics(Robot& robot, const SplitSolution& s, 
                                 KKTResidual& kkt_residual);
 
-  void linearizeContactConstraint(Robot& robot, const double dtau,
-                                  KKTMatrix& kkt_matrix, 
-                                  KKTResidual& kkt_residual) const;
+  static void linearizeContactConstraint(Robot& robot, const double dtau,
+                                         KKTMatrix& kkt_matrix, 
+                                         KKTResidual& kkt_residual);
 
   Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
   du_df_();

@@ -20,8 +20,8 @@ inline KKTMatrix::KKTMatrix(const Robot& robot)
     Sc_(Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), 
                               robot.dim_passive()+robot.max_dimf())),
     Sx_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
-    FMinv_(Eigen::MatrixXd::Zero(2*robot.dimv(), 
-                                 3*robot.dimv()+robot.dim_passive()+2*robot.max_dimf())),
+    FMinv_(Eigen::MatrixXd::Zero(
+        2*robot.dimv(), 3*robot.dimv()+robot.dim_passive()+2*robot.max_dimf())),
     C_H_inv_(Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), 
                                    3*robot.dimv()+robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
@@ -275,33 +275,41 @@ inline void KKTMatrix::invert(
         = dtau * kkt_matrix_inverse.block(dimx_+dimc_+v_begin_, dimx_, dimv_, dimcQ);
     FMinv_.topLeftCorner(dimv_, dimcQ).template topRows<kDimFloatingBase>().noalias()
         += Fqq.template topLeftCorner<kDimFloatingBase, kDimFloatingBase>() 
-            * kkt_matrix_inverse.block(dimx_+dimc_+q_begin_, dimx_, kDimFloatingBase, dimcQ);
+            * kkt_matrix_inverse.block(dimx_+dimc_+q_begin_, dimx_, 
+                                       kDimFloatingBase, dimcQ);
     FMinv_.topLeftCorner(dimv_, dimcQ).bottomRows(dimv_-kDimFloatingBase).noalias()
-        -= kkt_matrix_inverse.block(dimx_+dimc_+q_begin_+kDimFloatingBase, dimx_, dimv_-kDimFloatingBase, dimcQ);
+        -= kkt_matrix_inverse.block(dimx_+dimc_+q_begin_+kDimFloatingBase, 
+                                    dimx_, dimv_-kDimFloatingBase, dimcQ);
   }
   else {
     FMinv_.topLeftCorner(dimv_, dimcQ).noalias() 
-        = dtau * kkt_matrix_inverse.block(dimx_+dimc_+v_begin_, dimx_, dimv_, dimcQ)
+        = dtau * kkt_matrix_inverse.block(dimx_+dimc_+v_begin_, dimx_, 
+                                          dimv_, dimcQ)
           - kkt_matrix_inverse.block(dimx_+dimc_+q_begin_, dimx_, dimv_, dimcQ);
   }
   FMinv_.bottomLeftCorner(dimv_, dimcQ).noalias() 
-      = dtau * kkt_matrix_inverse.block(dimx_+dimc_+a_begin_, dimx_, dimv_, dimcQ)
+      = dtau * kkt_matrix_inverse.block(dimx_+dimc_+a_begin_, dimx_, 
+                                        dimv_, dimcQ)
         - kkt_matrix_inverse.block(dimx_+dimc_+v_begin_, dimx_, dimv_, dimcQ);
   if (has_floating_base_) {
     Sx_.topLeftCorner(dimv_, dimv_) 
         = dtau * FMinv_.block(0, dimc_+v_begin_, dimv_, dimv_);
     Sx_.topLeftCorner(dimv_, dimv_).template leftCols<kDimFloatingBase>().noalias()
-        += FMinv_.block(0, dimc_+q_begin_, dimv_, dimv_).template leftCols<kDimFloatingBase>() 
+        += FMinv_.block(0, dimc_+q_begin_, 
+                        dimv_, dimv_).template leftCols<kDimFloatingBase>() 
             * Fqq.template topLeftCorner<kDimFloatingBase, kDimFloatingBase>().transpose();
     Sx_.topLeftCorner(dimv_, dimv_).rightCols(dimv_-kDimFloatingBase).noalias()
-        -= FMinv_.block(0, dimc_+q_begin_, dimv_, dimv_).rightCols(dimv_-kDimFloatingBase);
+        -= FMinv_.block(0, dimc_+q_begin_, 
+                        dimv_, dimv_).rightCols(dimv_-kDimFloatingBase);
     Sx_.bottomLeftCorner(dimv_, dimv_) 
         = dtau * FMinv_.block(dimv_, dimc_+v_begin_, dimv_, dimv_);
     Sx_.bottomLeftCorner(dimv_, dimv_).template leftCols<kDimFloatingBase>().noalias() 
-        += FMinv_.block(dimv_, dimc_+q_begin_, dimv_, dimv_).template leftCols<kDimFloatingBase>() 
+        += FMinv_.block(dimv_, dimc_+q_begin_, 
+                        dimv_, dimv_).template leftCols<kDimFloatingBase>() 
             * Fqq.template topLeftCorner<kDimFloatingBase, kDimFloatingBase>().transpose();
     Sx_.bottomLeftCorner(dimv_, dimv_).rightCols(dimv_-kDimFloatingBase).noalias() 
-        -= FMinv_.block(dimv_, dimc_+q_begin_, dimv_, dimv_).rightCols(dimv_-kDimFloatingBase);
+        -= FMinv_.block(dimv_, dimc_+q_begin_, 
+                        dimv_, dimv_).rightCols(dimv_-kDimFloatingBase);
   }
   else {
     Sx_.topLeftCorner(dimv_, dimv_).noalias() 

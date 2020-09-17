@@ -189,7 +189,7 @@ inline double RobotDynamics::violationL1Norm(
 
 inline double RobotDynamics::computeViolationL1Norm(
     Robot& robot, const double dtau, const SplitSolution& s, 
-    KKTResidual& kkt_residual) const {
+    KKTResidual& kkt_residual) {
   if (robot.has_active_contacts()) {
     robot.setContactForces(s.f);
   }
@@ -259,7 +259,7 @@ inline void RobotDynamics::linearizeInverseDynamics(Robot& robot,
 
 inline void RobotDynamics::linearizeContactConstraint(
     Robot& robot, const double dtau, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
+    KKTResidual& kkt_residual) {
   assert(dtau > 0);
   robot.computeBaumgarteResidual(dtau, kkt_residual.C_contacts());
   robot.computeBaumgarteDerivatives(dtau, kkt_matrix.Cq_contacts(), 

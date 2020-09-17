@@ -24,7 +24,11 @@ public:
 
   bool doesPenetrate(const Eigen::Vector3d& coordinate) const;
 
-  const Eigen::Vector3d& 
+  double normalContactForce(const Eigen::Vector3d& f) const;
+
+  void setOrigin(const Eigen::Vector3d& origin);
+
+  void setNormalVector(const Eigen::Vector3d& normal_vector);
 
 private:
   Eigen::Vector3d origin_, normal_vector_;

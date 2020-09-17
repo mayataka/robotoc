@@ -38,6 +38,7 @@ add_library(
   src/robot/robot.cpp
   src/robot/floating_base.cpp
   src/robot/point_contact.cpp
+  src/robot/contact_surface.cpp
   src/cost/cost_function.cpp
   src/cost/cost_function_data.cpp
   src/cost/joint_space_cost.cpp

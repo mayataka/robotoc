@@ -368,7 +368,17 @@ public:
   ///
   int dimf() const;
 
-  Eigen::MatrixXd Quu, Fqq, Fqq_prev;
+  /// @brief Hessian of the Lagrangian with respect to the control input 
+  //// torques u.
+  Eigen::MatrixXd Quu;
+
+  /// @brief Derivative of the state equation with respect to the 
+  /// configuration q.
+  Eigen::MatrixXd Fqq;
+
+  /// @brief Derivative of the state equation with respect to the 
+  /// configuration of the previous time step q_prev.
+  Eigen::MatrixXd Fqq_prev;
 
 private:
   Eigen::MatrixXd C_, Q_, Sc_, Sx_, FMinv_, C_H_inv_;
@@ -377,6 +387,10 @@ private:
       v_begin_, dimQ_, max_dimKKT_;
   static constexpr int kDimFloatingBase = 6;
 
+  ///
+  /// @brief Invert the cost Hessian matrix. 
+  /// @param[out] hessian_inverse Inverse of the Hessian matrix.
+  ///
   template <typename MatrixType>
   void invertConstrainedHessian(
       const Eigen::MatrixBase<MatrixType>& hessian_inverse);

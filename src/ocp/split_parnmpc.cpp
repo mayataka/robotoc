@@ -101,8 +101,7 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
                                      kkt_residual_);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, 
                                     kkt_residual_);
-  state_equation_.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
-                                         s_next.lmd, s_next.gmm, s_next.q, 
+  state_equation_.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
                                          kkt_matrix_, kkt_residual_);
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix_);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
@@ -505,8 +504,7 @@ double SplitParNMPC::computeSquaredKKTErrorNorm(Robot& robot, const double t,
                                     kkt_residual_);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, 
                                     kkt_residual_.lu);
-  state_equation_.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
-                                         s_next.lmd, s_next.gmm, s_next.q, 
+  state_equation_.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next,
                                          kkt_matrix_, kkt_residual_);
   robot_dynamics_.augmentRobotDynamics(robot, dtau, s, kkt_matrix_, 
                                        kkt_residual_);

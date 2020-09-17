@@ -3,8 +3,6 @@
 
 #include <vector>
 
-#include "Eigen/Core"
-
 #include "idocp/robot/robot.hpp"
 
 

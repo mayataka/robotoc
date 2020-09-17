@@ -15,6 +15,7 @@
 - gcc
 - [pinocchio](https://github.com/stack-of-tasks/pinocchio) (instruction for installation is found [here](https://stack-of-tasks.github.io/pinocchio/download.html))
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  
+- (Option) [RaiSim](https://github.com/leggedrobotics/raisimLib) : used for simulation of quadrupeds.
 
 ## Installation 
 1. Install Eigen3 by 
