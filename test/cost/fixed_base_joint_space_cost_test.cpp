@@ -68,11 +68,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   cost.set_u_ref(u_ref);
   pinocchio::Model model;
   pinocchio::urdf::buildModel(urdf_, model);
-  s.q = Eigen::VectorXd::Random(dimq);
-  s.v = Eigen::VectorXd::Random(dimv);
-  s.a = Eigen::VectorXd::Random(dimv);
-  s.f = Eigen::VectorXd::Random(robot_.dimf());
-  s.u = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(robot_);
   const double l_ref = 0.5 * dtau_ 
                            * ((q_weight.array()* (s.q-q_ref).array()*(s.q-q_ref).array()).sum()
                             + (v_weight.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum()

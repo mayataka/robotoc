@@ -1,6 +1,8 @@
 #ifndef IDOCP_CONTACT_COST_HPP_
 #define IDOCP_CONTACT_COST_HPP_
 
+#include <vector>
+
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -37,9 +39,9 @@ public:
 
   bool useKinematics() const override;
 
-  void set_f_ref(const Eigen::VectorXd& f_ref);
+  void set_f_ref(const std::vector<Eigen::Vector3d>& f_ref);
 
-  void set_f_weight(const Eigen::VectorXd& f_weight);
+  void set_f_weight(const std::vector<Eigen::Vector3d>& f_weight);
 
   double l(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s) const override;
@@ -101,7 +103,7 @@ public:
 
 private:
   int max_dimf_;
-  Eigen::VectorXd f_ref_, f_weight_;
+  std::vector<Eigen::Vector3d> f_ref_, f_weight_;
 
 };
 

@@ -276,7 +276,7 @@ public:
       const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
-        
+
   ///
   /// @brief Sets the contact points.
   /// @param[in] contact_points Collection of contact points.
@@ -301,8 +301,7 @@ public:
   /// @param[in] fext The stack of the contact forces represented in the local 
   /// coordinate of the contact frame. 
   /// 
-  template <typename VectorType>
-  void setContactForces(const Eigen::MatrixBase<VectorType>& f);
+  void setContactForces(const std::vector<Eigen::Vector3d>& f);
 
   ///
   /// @brief Computes inverse dynamics, i.e., generalized torques corresponding 
@@ -424,26 +423,29 @@ public:
 
   ///
   /// @brief Sets the effort limit of each joints.
-  /// @param[in] The effort limit of each joints.
+  /// @param[in] joint_effort_limit The effort limit of each joints.
   /// 
   void setJointEffortLimit(const Eigen::VectorXd& joint_effort_limit);
 
   ///
   /// @brief Sets the joint velocity limit of each joints.
-  /// @param[in] Sets the joint velocity limit of each joints.
+  /// @param[in] joint_velocity_limit Sets the joint velocity limit of each 
+  /// joints.
   ///
   void setJointVelocityLimit(const Eigen::VectorXd& joint_velocity_limit);
 
   ///
   /// @brief Sets the lower limit of the position of each joints.
-  /// @param[in] The lower limit of the position of each joints.
+  /// @param[in] lower_joint_position_limit The lower limit of the position of 
+  /// each joints.
   /// 
   void setLowerJointPositionLimit(
       const Eigen::VectorXd& lower_joint_position_limit);
 
   ///
   /// @brief Sets the upper limit of the position of each joints.
-  /// @param[in] The upper limit of the position of each joints.
+  /// @param[in] upper_joint_position_limit The upper limit of the position of 
+  /// each joints.
   ///
   void setUpperJointPositionLimit(
       const Eigen::VectorXd& upper_joint_position_limit);
@@ -459,12 +461,6 @@ public:
   /// @return The dimensiton of the velocity, i.e, tangent space.
   /// 
   int dimv() const;
-
-  ///
-  /// @brief Returns the number of joints.
-  /// @return The number of joints.
-  /// 
-  int dimJ() const;
 
   ///
   /// @brief Returns the maximum dimension of the contacts.
@@ -509,11 +505,18 @@ public:
   /// @brief The number of the active contacts.
   /// 
   int num_active_point_contacts() const;
-  
+
+  ///
+  /// @brief Returns contact status.
+  /// @return Vector of bool representing contact status.
+  /// 
+  std::vector<bool> is_each_contact_active() const;
+
   ///
   /// @brief Returns true if contact[contact_index] is active. Returns false if 
   // contact[contact_index] is not active.
   /// @param[in] contact_index The contact index of interested.
+  /// @return true if the contact is active. false if not.
   /// 
   bool is_contact_active(const int contact_index) const;
 
@@ -522,14 +525,13 @@ public:
   ///
   void printRobotModel() const;
 
-private:
-
   ///
   /// @brief Initializes joint_effort_limit_, joint_velocity_limit_, 
   /// lower_joint_position_limit_, upper_joint_position_limit_, by the URDF.
   /// 
   void initializeJointLimits();
 
+private:
   pinocchio::Model model_;
   pinocchio::Data data_;
   std::string urdf_file_name_;

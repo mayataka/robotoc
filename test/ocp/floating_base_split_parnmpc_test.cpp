@@ -37,55 +37,13 @@ protected:
       contact_status.push_back(rnd()%2==0);
     }
     robot.setContactStatus(contact_status);
-    s = SplitSolution(robot);
-    s.setContactStatus(robot);
-    robot.generateFeasibleConfiguration(s.q);
-    s.v = Eigen::VectorXd::Random(robot.dimv());
-    s.a = Eigen::VectorXd::Random(robot.dimv());
-    s.f = Eigen::VectorXd::Random(robot.max_dimf());
-    s.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
-    s.lmd = Eigen::VectorXd::Random(robot.dimv());
-    s.gmm = Eigen::VectorXd::Random(robot.dimv());
-    s_next = SplitSolution(robot);
-    s_next.setContactStatus(robot);
-    robot.generateFeasibleConfiguration(s_next.q);
-    s_next.v = Eigen::VectorXd::Random(robot.dimv());
-    s_next.a = Eigen::VectorXd::Random(robot.dimv());
-    s_next.f = Eigen::VectorXd::Random(robot.max_dimf());
-    s_next.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
-    s_next.lmd = Eigen::VectorXd::Random(robot.dimv());
-    s_next.gmm = Eigen::VectorXd::Random(robot.dimv());
-    s_tmp = SplitSolution(robot);
-    s_old = SplitSolution(robot);
-    s_old.setContactStatus(robot);
-    robot.generateFeasibleConfiguration(s_old.q);
-    s_old.v = Eigen::VectorXd::Random(robot.dimv());
-    s_old.a = Eigen::VectorXd::Random(robot.dimv());
-    s_old.f = Eigen::VectorXd::Random(robot.max_dimf());
-    s_old.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
-    s_old.lmd = Eigen::VectorXd::Random(robot.dimv());
-    s_old.gmm = Eigen::VectorXd::Random(robot.dimv());
-    s_new = SplitSolution(robot);
-    s_new.setContactStatus(robot);
-    robot.generateFeasibleConfiguration(s_new.q);
-    s_new.v = Eigen::VectorXd::Random(robot.dimv());
-    s_new.a = Eigen::VectorXd::Random(robot.dimv());
-    s_new.f = Eigen::VectorXd::Random(robot.max_dimf());
-    s_new.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
-    s_new.lmd = Eigen::VectorXd::Random(robot.dimv());
-    s_new.gmm = Eigen::VectorXd::Random(robot.dimv());
-    d = SplitDirection(robot);
-    d.dq() = Eigen::VectorXd::Random(robot.dimv());
-    d.dv() = Eigen::VectorXd::Random(robot.dimv());
-    d.da() = Eigen::VectorXd::Random(robot.dimv());
-    d.df() = Eigen::VectorXd::Random(robot.dimf());
-    d.du = Eigen::VectorXd::Random(robot.dimv());
-    d_prev = SplitDirection(robot);
-    d_prev.dq() = Eigen::VectorXd::Random(robot.dimv());
-    d_prev.dv() = Eigen::VectorXd::Random(robot.dimv());
-    d_prev.da() = Eigen::VectorXd::Random(robot.dimv());
-    d_prev.df() = Eigen::VectorXd::Random(robot.dimf());
-    d_prev.du = Eigen::VectorXd::Random(robot.dimv());
+    s = SplitSolution::Random(robot);
+    s_next = SplitSolution::Random(robot);
+    s_tmp = SplitSolution::Random(robot);
+    s_old = SplitSolution::Random(robot);
+    s_new = SplitSolution::Random(robot);
+    d = SplitDirection::Random(robot);
+    d_prev = SplitDirection::Random(robot);
     dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     q_prev = Eigen::VectorXd::Random(robot.dimq());
@@ -107,8 +65,11 @@ protected:
     const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(robot.dimv());
     const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
     const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-    const Eigen::VectorXd f_weight = Eigen::VectorXd::Random(robot.max_dimf()).array().abs();
-    const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(robot.max_dimf());
+    std::vector<Eigen::Vector3d> f_weight, f_ref;
+    for (int i=0; i<robot.max_point_contacts(); ++i) {
+      f_weight.push_back(Eigen::Vector3d::Random());
+      f_ref.push_back(Eigen::Vector3d::Random());
+    }
     joint_cost->set_q_weight(q_weight);
     joint_cost->set_q_ref(q_ref);
     joint_cost->set_v_weight(v_weight);
@@ -180,7 +141,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormOnlyStateEquation) {
   SplitParNMPC parnmpc(robot, empty_cost, empty_constraints);
   robot.RNEA(s.q, s.v, s.a, s.u);
   s.beta.setZero();
-  s.mu.setZero();
+  s.mu_stack().setZero();
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
   const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
@@ -219,7 +180,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormStateEquationAndInverseDynamics
   SplitParNMPC parnmpc(robot, empty_cost, empty_constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  s.mu.setZero();
+  s.mu_stack().setZero();
   const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
                                                        v_prev, s, s_next);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
@@ -301,14 +262,15 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormStateEquationAndRobotDynamics) 
   kkt_residual.la() += dtau * du_da.transpose() * s.beta;
   kkt_residual.lf() += dtau * du_df.transpose() * s.beta;
   kkt_residual.lu -= dtau * s.beta;
-  robot.computeBaumgarteResidual(dtau, kkt_residual.C());
-  robot.computeBaumgarteDerivatives(dtau, kkt_matrix.Cq(), kkt_matrix.Cv(), 
-                                    kkt_matrix.Ca());
-  kkt_residual.lq() += kkt_matrix.Cq().transpose() * s.mu_active();
-  kkt_residual.lv() += kkt_matrix.Cv().transpose() * s.mu_active();
-  kkt_residual.la() += kkt_matrix.Ca().transpose() * s.mu_active();
-  kkt_residual.lu.head(6) += dtau * s.mu_active().tail(6);
-  kkt_residual.C().tail(6) = dtau * s.u.head(6);
+  robot.computeBaumgarteResidual(dtau, kkt_residual.C().tail(robot.dimf()));
+  robot.computeBaumgarteDerivatives(dtau, kkt_matrix.Cq().bottomRows(robot.dimf()), 
+                                    kkt_matrix.Cv().bottomRows(robot.dimf()), 
+                                    kkt_matrix.Ca().bottomRows(robot.dimf()));
+  kkt_residual.lq() += kkt_matrix.Cq().transpose() * s.mu_stack();
+  kkt_residual.lv() += kkt_matrix.Cv().transpose() * s.mu_stack();
+  kkt_residual.la() += kkt_matrix.Ca().transpose() * s.mu_stack();
+  kkt_residual.lu.head(6) += dtau * s.mu_stack().head(6);
+  kkt_residual.C().head(6) = dtau * s.u.head(6);
   double kkt_error_ref = kkt_residual.Fq().squaredNorm()
                          + kkt_residual.Fv().squaredNorm()
                          + kkt_residual.lq().squaredNorm()
@@ -434,7 +396,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, costAndViolationWithStepSizeInitial) {
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_new.q);
   s_new.v = s.v + step_size * d.dv();
   s_new.a = s.a + step_size * d.da();
-  s_new.f_active() = s.f_active() + step_size * d.df();
+  s_new.f_stack() = s.f_stack() + step_size * d.df();
   s_new.u = s.u + step_size * d.du;
   const double cost_ref 
       = cost->l(robot, cost_data, t, dtau, s_new) 
@@ -469,7 +431,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, costAndViolationWithStepSize) {
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_new.q);
   s_new.v = s.v + step_size * d.dv();
   s_new.a = s.a + step_size * d.da();
-  s_new.f_active() = s.f_active() + step_size * d.df();
+  s_new.f_stack() = s.f_stack() + step_size * d.df();
   s_new.u = s.u + step_size * d.du;
   const double cost_ref 
       = cost->l(robot, cost_data, t, dtau, s_new) 
@@ -538,16 +500,16 @@ TEST_F(FloatingBaseSplitParNMPCTest, coarseUpdate) {
   s_new_coarse_ref.setContactStatus(robot);
   s_new_coarse_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_coarse_ref.gmm = s.gmm - d_ref.dgmm();
-  s_new_coarse_ref.mu_active() = s.mu_active() - d_ref.dmu();
+  s_new_coarse_ref.mu_stack() = s.mu_stack() - d_ref.dmu();
   s_new_coarse_ref.a = s.a - d_ref.da();
-  s_new_coarse_ref.f_active() = s.f_active() - d_ref.df();
+  s_new_coarse_ref.f_stack() = s.f_stack() - d_ref.df();
   robot.integrateConfiguration(s.q, d_ref.dq(), -1, s_new_coarse_ref.q);
   s_new_coarse_ref.v = s.v - d_ref.dv();
   EXPECT_TRUE(s_new_coarse.lmd.isApprox(s_new_coarse_ref.lmd));
   EXPECT_TRUE(s_new_coarse.gmm.isApprox(s_new_coarse_ref.gmm));
-  EXPECT_TRUE(s_new_coarse.mu.isApprox(s_new_coarse_ref.mu));
+  EXPECT_TRUE(s_new_coarse.mu_stack().isApprox(s_new_coarse_ref.mu_stack()));
   EXPECT_TRUE(s_new_coarse.a.isApprox(s_new_coarse_ref.a));
-  EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
+  EXPECT_TRUE(s_new_coarse.f_stack().isApprox(s_new_coarse_ref.f_stack()));
   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
   const int dimx = 2*robot.dimv();
@@ -567,14 +529,14 @@ TEST_F(FloatingBaseSplitParNMPCTest, coarseUpdate) {
   parnmpc.backwardCorrectionParallel(robot, d, s_new_coarse);
   d_ref.split_direction().tail(dimKKT-dimx)
       = kkt_matrix_inverse.bottomRightCorner(dimKKT-dimx, dimx) * x_res;
-  s_new_coarse_ref.mu_active().noalias() -= d_ref.dmu();
+  s_new_coarse_ref.mu_stack().noalias() -= d_ref.dmu();
   s_new_coarse_ref.a.noalias() -= d_ref.da();
-  s_new_coarse_ref.f_active().noalias() -= d_ref.df();
+  s_new_coarse_ref.f_stack().noalias() -= d_ref.df();
   robot.integrateConfiguration(d_ref.dq(), -1, s_new_coarse_ref.q);
   s_new_coarse_ref.v.noalias() -= d_ref.dv();
-  EXPECT_TRUE(s_new_coarse.mu.isApprox(s_new_coarse_ref.mu));
+  EXPECT_TRUE(s_new_coarse.mu_stack().isApprox(s_new_coarse_ref.mu_stack()));
   EXPECT_TRUE(s_new_coarse.a.isApprox(s_new_coarse_ref.a));
-  EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
+  EXPECT_TRUE(s_new_coarse.f_stack().isApprox(s_new_coarse_ref.f_stack()));
   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
   parnmpc.forwardCorrectionSerial(robot, s_old, s_new, s_new_coarse);
@@ -589,14 +551,14 @@ TEST_F(FloatingBaseSplitParNMPCTest, coarseUpdate) {
   d_ref.split_direction().head(dimKKT-dimx) = kkt_matrix_inverse.topLeftCorner(dimKKT-dimx, dimx) * x_res;
   s_new_coarse_ref.lmd -= d_ref.dlmd();
   s_new_coarse_ref.gmm -= d_ref.dgmm();
-  s_new_coarse_ref.mu_active() -= d_ref.dmu();
+  s_new_coarse_ref.mu_stack() -= d_ref.dmu();
   s_new_coarse_ref.a -= d_ref.da();
-  s_new_coarse_ref.f_active() -= d_ref.df();
+  s_new_coarse_ref.f_stack() -= d_ref.df();
   EXPECT_TRUE(s_new_coarse.lmd.isApprox(s_new_coarse_ref.lmd));
   EXPECT_TRUE(s_new_coarse.gmm.isApprox(s_new_coarse_ref.gmm));
-  EXPECT_TRUE(s_new_coarse.mu.isApprox(s_new_coarse_ref.mu));
+  EXPECT_TRUE(s_new_coarse.mu_stack().isApprox(s_new_coarse_ref.mu_stack()));
   EXPECT_TRUE(s_new_coarse.a.isApprox(s_new_coarse_ref.a));
-  EXPECT_TRUE(s_new_coarse.f.isApprox(s_new_coarse_ref.f));
+  EXPECT_TRUE(s_new_coarse.f_stack().isApprox(s_new_coarse_ref.f_stack()));
   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
 
@@ -616,8 +578,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, coarseUpdate) {
   const Eigen::MatrixXd df_dv = kkt_matrix_inverse.block(dimx+dimc+dimv, dimx+dimc+dimv+dimf+dimv, dimf, dimv);
   Eigen::MatrixXd Kuq_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd Kuv_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  robot_dynamics.getControlInputTorquesSensitivitiesWithRespectToState(
-    da_dq, da_dv, df_dq, df_dv, Kuq_ref, Kuv_ref);
+  robot_dynamics.getStateFeedbackGain(da_dq, da_dv, df_dq, df_dv, Kuq_ref, Kuv_ref);
   EXPECT_TRUE(Kuq.isApprox(Kuq_ref));
   EXPECT_TRUE(Kuv.isApprox(Kuv_ref));
 }
@@ -629,9 +590,9 @@ TEST_F(FloatingBaseSplitParNMPCTest, computePrimalDualDirection) {
   parnmpc.computePrimalAndDualDirection(robot, dtau, s, s_new, d);
   EXPECT_TRUE(d.dlmd().isApprox(s_new.lmd-s.lmd));
   EXPECT_TRUE(d.dgmm().isApprox(s_new.gmm-s.gmm));
-  EXPECT_TRUE(d.dmu().isApprox(s_new.mu_active()-s.mu_active()));
+  EXPECT_TRUE(d.dmu().isApprox(s_new.mu_stack()-s.mu_stack()));
   EXPECT_TRUE(d.da().isApprox(s_new.a-s.a));
-  EXPECT_TRUE(d.df().isApprox(s_new.f_active()-s.f_active()));
+  EXPECT_TRUE(d.df().isApprox(s_new.f_stack()-s.f_stack()));
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   robot.subtractConfiguration(s_new.q, s.q, qdiff);
   EXPECT_TRUE(d.dq().isApprox(qdiff));

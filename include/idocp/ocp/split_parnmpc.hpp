@@ -72,7 +72,7 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] s Split solution of this stage.
   ///
-  bool isFeasible(const Robot& robot, const SplitSolution& s);
+  bool isFeasible(Robot& robot, const SplitSolution& s);
 
   ///
   /// @brief Initialize the constraints, i.e., set slack and dual variables. 
@@ -81,8 +81,8 @@ public:
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   ///
-  void initConstraints(const Robot& robot, const int time_step, 
-                       const double dtau, const SplitSolution& s);
+  void initConstraints(Robot& robot, const int time_step, const double dtau, 
+                       const SplitSolution& s);
 
   ///
   /// @brief Updates the solution of the split OCP approximately. If this stage
@@ -213,7 +213,7 @@ public:
   /// @param[in] s_new Corrected split solution of the current stage.
   /// @param[out] d Split direction of this stage.
   /// 
-  void computePrimalAndDualDirection(const Robot& robot, const double dtau,
+  void computePrimalAndDualDirection(Robot& robot, const double dtau,
                                      const SplitSolution& s,
                                      const SplitSolution& s_new,
                                      SplitDirection& d);

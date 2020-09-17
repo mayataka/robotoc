@@ -57,9 +57,10 @@ void SimulateWithContactsByOCP() {
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
   cost->push_back(joint_cost);
-  // auto contact_cost = std::make_shared<idocp::ContactCost>(robot);
-  // contact_cost->set_f_weight(Eigen::VectorXd::Constant(robot.max_dimf(), 0.0));
-  // cost->push_back(contact_cost);
+  // std::vector<Eigen::Vector3d> f_weight;
+  // for (int i=0; i<contact_frames.size(); ++i) {
+  //   f_weight.push_back(Eigen::Vector3d::Constant(0.0));
+  // }
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
   const double T = 1;

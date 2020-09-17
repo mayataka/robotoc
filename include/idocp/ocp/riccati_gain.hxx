@@ -65,17 +65,20 @@ inline const Eigen::Block<const Eigen::MatrixXd> RiccatiGain::Kmuv() const {
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> RiccatiGain::ka() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+RiccatiGain::ka() const {
   return k_.head(dimv_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> RiccatiGain::kf() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+RiccatiGain::kf() const {
   return k_.segment(dimv_, dimf_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> RiccatiGain::kmu() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+RiccatiGain::kmu() const {
   return k_.segment(dimv_+dimf_, dimc_);
 }
 

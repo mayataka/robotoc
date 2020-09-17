@@ -39,13 +39,13 @@ public:
 
   bool useKinematics() const override;
 
-  bool isFeasible(const Robot& robot, ConstraintComponentData& data, 
+  bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                   const SplitSolution& s) const override;
 
-  void setSlackAndDual(const Robot& robot, ConstraintComponentData& data, 
+  void setSlackAndDual(Robot& robot, ConstraintComponentData& data, 
                        const double dtau, const SplitSolution& s) const override;
 
-  void augmentDualResidual(const Robot& robot, ConstraintComponentData& data, 
+  void augmentDualResidual(Robot& robot, ConstraintComponentData& data, 
                            const double dtau, 
                            KKTResidual& kkt_residual) const override;
 
@@ -53,7 +53,7 @@ public:
                            const double dtau, 
                            Eigen::VectorXd& lu) const override {}
 
-  void condenseSlackAndDual(const Robot& robot, ConstraintComponentData& data, 
+  void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data, 
                             const double dtau, const SplitSolution& s,
                             KKTMatrix& kkt_matrix,
                             KKTResidual& kkt_residual) const override;
@@ -63,16 +63,15 @@ public:
                             Eigen::MatrixXd& Quu, 
                             Eigen::VectorXd& lu) const override {}
 
-  void computeSlackAndDualDirection(const Robot& robot, 
-                                    ConstraintComponentData& data, 
+  void computeSlackAndDualDirection(Robot& robot, ConstraintComponentData& data, 
                                     const double dtau, 
                                     const SplitDirection& d) const override; 
 
-  double residualL1Nrom(const Robot& robot, ConstraintComponentData& data, 
+  double residualL1Nrom(Robot& robot, ConstraintComponentData& data, 
                         const double dtau, 
                         const SplitSolution& s) const override;
 
-  double squaredKKTErrorNorm(const Robot& robot, ConstraintComponentData& data, 
+  double squaredKKTErrorNorm(Robot& robot, ConstraintComponentData& data, 
                              const double dtau, 
                              const SplitSolution& s) const override;
   

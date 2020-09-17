@@ -56,11 +56,7 @@ TEST_F(FixedBaseTaskSpace6DCostTest, setRefByVectorAndMatrix) {
   cost.set_q_6d_weight(q_weight.tail(3), q_weight.head(3));
   cost.set_qf_6d_weight(qf_weight.tail(3), qf_weight.head(3));
   cost.set_q_6d_ref(position_ref, rotation_ref);
-  s.q = Eigen::VectorXd::Random(dimq);
-  s.v = Eigen::VectorXd::Random(dimv);
-  s.a = Eigen::VectorXd::Random(dimv);
-  s.f = Eigen::VectorXd::Random(robot_.max_dimf());
-  s.u = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(robot_);
   robot_.updateKinematics(s.q, s.v, s.a);
   const pinocchio::SE3 placement = robot_.framePlacement(frame_id);
   const pinocchio::SE3 diff_SE3 = ref_placement.inverse() * placement;
@@ -104,11 +100,7 @@ TEST_F(FixedBaseTaskSpace6DCostTest, setRefBySE3) {
   cost.set_q_6d_weight(q_weight);
   cost.set_qf_6d_weight(qf_weight);
   cost.set_q_6d_ref(ref_placement);
-  s.q = Eigen::VectorXd::Random(dimq);
-  s.v = Eigen::VectorXd::Random(dimv);
-  s.a = Eigen::VectorXd::Random(dimv);
-  s.f = Eigen::VectorXd::Random(robot_.max_dimf());
-  s.u = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(robot_);
   robot_.updateKinematics(s.q, s.v, s.a);
   const pinocchio::SE3 placement = robot_.framePlacement(frame_id);
   const pinocchio::SE3 diff_SE3 = ref_placement.inverse() * placement;

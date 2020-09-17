@@ -38,6 +38,7 @@ add_library(
   src/robot/robot.cpp
   src/robot/floating_base.cpp
   src/robot/point_contact.cpp
+  src/robot/contact_surface.cpp
   src/cost/cost_function.cpp
   src/cost/cost_function_data.cpp
   src/cost/joint_space_cost.cpp
@@ -62,9 +63,7 @@ add_library(
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
   src/ocp/robot_dynamics.cpp
-  src/ocp/split_parnmpc.cpp
   src/ocp/line_search_filter.cpp
-  src/ocp/parnmpc.cpp
   src/ocp/riccati_factorization.cpp
   src/ocp/riccati_gain.cpp
   src/ocp/riccati_matrix_factorizer.cpp
@@ -72,6 +71,8 @@ add_library(
   src/ocp/terminal_ocp.cpp
   src/ocp/split_ocp.cpp
   src/ocp/ocp.cpp
+  src/ocp/split_parnmpc.cpp
+  src/ocp/parnmpc.cpp
   src/ocp/mpc.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp

@@ -83,7 +83,7 @@ TEST_F(JointVelocityUpperLimitTest, setSlackAndDualFixedBase) {
   SplitSolution s(fixed_base_robot_);
   Eigen::VectorXd vmax = fixed_base_robot_.jointVelocityLimit();
   ASSERT_EQ(dimq, fixed_base_robot_.jointVelocityLimit().size());
-  s.v = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(fixed_base_robot_);
   limit.setSlackAndDual(fixed_base_robot_, data, dtau_, s);
   KKTMatrix kkt_matrix(fixed_base_robot_);
   KKTResidual kkt_residual(fixed_base_robot_);
@@ -123,7 +123,7 @@ TEST_F(JointVelocityUpperLimitTest, setSlackAndDualFixedBase2) {
   const int dimf = fixed_base_robot_.dimf();
   SplitSolution s(fixed_base_robot_);
   ASSERT_EQ(dimq, fixed_base_robot_.jointVelocityLimit().size());
-  s.v = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(fixed_base_robot_);
   limit.setSlackAndDual(fixed_base_robot_, data, dtau_, s);
   KKTMatrix kkt_matrix(fixed_base_robot_);
   KKTResidual kkt_residual(fixed_base_robot_);
@@ -160,7 +160,7 @@ TEST_F(JointVelocityUpperLimitTest, setSlackAndDualFloatingBase) {
   Eigen::VectorXd vmax = floating_base_robot_.jointVelocityLimit();
   const int dimc = floating_base_robot_.jointVelocityLimit().size();
   ASSERT_EQ(dimc+6, dimv);
-  s.v = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(floating_base_robot_);
   limit.setSlackAndDual(floating_base_robot_, data, dtau_, s);
   KKTMatrix kkt_matrix(floating_base_robot_);
   KKTResidual kkt_residual(floating_base_robot_);
@@ -202,7 +202,7 @@ TEST_F(JointVelocityUpperLimitTest, setSlackAndDualFloatingBase2) {
   SplitSolution s(floating_base_robot_);
   const int dimc = floating_base_robot_.jointVelocityLimit().size();
   ASSERT_EQ(dimc+6, dimv);
-  s.v = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(floating_base_robot_);
   limit.setSlackAndDual(floating_base_robot_, data, dtau_, s);
   KKTMatrix kkt_matrix(floating_base_robot_);
   KKTResidual kkt_residual(floating_base_robot_);
@@ -238,7 +238,7 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFixedBase) {
   SplitSolution s(fixed_base_robot_);
   Eigen::VectorXd vmax = fixed_base_robot_.jointVelocityLimit();
   ASSERT_EQ(dimq, fixed_base_robot_.jointVelocityLimit().size());
-  s.v = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(fixed_base_robot_);
   KKTMatrix kkt_matrix(fixed_base_robot_);
   KKTResidual kkt_residual(fixed_base_robot_);
   limit.setSlackAndDual(fixed_base_robot_, data, dtau_, s);
@@ -269,12 +269,7 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFixedBase) {
   EXPECT_TRUE(kkt_matrix.Qaa().isZero());
   EXPECT_TRUE(kkt_matrix.Qff().isZero());
   EXPECT_TRUE(kkt_matrix.Quu.isZero());
-  SplitDirection d(fixed_base_robot_);
-  d.dq() = Eigen::VectorXd::Random(dimv);
-  d.dv() = Eigen::VectorXd::Random(dimv);
-  d.da() = Eigen::VectorXd::Random(dimv);
-  d.df() = Eigen::VectorXd::Random(dimf);
-  d.du = Eigen::VectorXd::Random(dimv);
+  SplitDirection d = SplitDirection::Random(fixed_base_robot_);
   limit.computeSlackAndDualDirection(fixed_base_robot_, data, dtau_, d);
   const Eigen::VectorXd dslack_ref = - dtau_ * d.dv() - residual_ref;
   Eigen::VectorXd ddual_ref = Eigen::VectorXd::Zero(dimq);
@@ -323,7 +318,7 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFixedBase2) {
   const int dimf = fixed_base_robot_.dimf();
   SplitSolution s(fixed_base_robot_);
   ASSERT_EQ(dimq, fixed_base_robot_.jointVelocityLimit().size());
-  s.v = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(fixed_base_robot_);
   KKTMatrix kkt_matrix(fixed_base_robot_);
   KKTResidual kkt_residual(fixed_base_robot_);
   limit.setSlackAndDual(fixed_base_robot_, data, dtau_, s);
@@ -344,12 +339,7 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFixedBase2) {
   EXPECT_TRUE(kkt_matrix.Qaa().isZero());
   EXPECT_TRUE(kkt_matrix.Qff().isZero());
   EXPECT_TRUE(kkt_matrix.Quu.isZero());
-  SplitDirection d(fixed_base_robot_);
-  d.dq() = Eigen::VectorXd::Random(dimv);
-  d.dv() = Eigen::VectorXd::Random(dimv);
-  d.da() = Eigen::VectorXd::Random(dimv);
-  d.df() = Eigen::VectorXd::Random(dimf);
-  d.du = Eigen::VectorXd::Random(dimv);
+  SplitDirection d = SplitDirection::Random(fixed_base_robot_);
   limit.computeSlackAndDualDirection(fixed_base_robot_, data, dtau_, d);
   limit_ref.computeSlackAndDualDirection(dtau_, d.dv());
   const double margin_rate = 0.995;
@@ -392,7 +382,7 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFloatingBase) {
   SplitSolution s(floating_base_robot_);
   Eigen::VectorXd vmax = floating_base_robot_.jointVelocityLimit();
   const int dimc = floating_base_robot_.jointVelocityLimit().size();
-  s.v = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(floating_base_robot_);
   KKTMatrix kkt_matrix(floating_base_robot_);
   KKTResidual kkt_residual(floating_base_robot_);
   limit.setSlackAndDual(floating_base_robot_, data, dtau_, s);
@@ -423,12 +413,7 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFloatingBase) {
   EXPECT_TRUE(kkt_matrix.Qaa().isZero());
   EXPECT_TRUE(kkt_matrix.Qff().isZero());
   EXPECT_TRUE(kkt_matrix.Quu.isZero());
-  SplitDirection d(floating_base_robot_);
-  d.dq() = Eigen::VectorXd::Random(dimv);
-  d.dv() = Eigen::VectorXd::Random(dimv);
-  d.da() = Eigen::VectorXd::Random(dimv);
-  d.df() = Eigen::VectorXd::Random(dimf);
-  d.du = Eigen::VectorXd::Random(dimv);
+  SplitDirection d = SplitDirection::Random(floating_base_robot_);
   limit.computeSlackAndDualDirection(floating_base_robot_, data, dtau_, d);
   const Eigen::VectorXd dslack_ref = - dtau_ * d.dv().tail(dimc) - residual_ref;
   Eigen::VectorXd ddual_ref = Eigen::VectorXd::Zero(dimc);
@@ -477,7 +462,7 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFloatingBase2) {
   const int dimf = floating_base_robot_.dimf();
   SplitSolution s(floating_base_robot_);
   const int dimc = floating_base_robot_.jointVelocityLimit().size();
-  s.v = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(floating_base_robot_);
   KKTMatrix kkt_matrix(floating_base_robot_);
   KKTResidual kkt_residual(floating_base_robot_);
   limit.setSlackAndDual(floating_base_robot_, data, dtau_, s);
@@ -498,12 +483,7 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFloatingBase2) {
   EXPECT_TRUE(kkt_matrix.Qaa().isZero());
   EXPECT_TRUE(kkt_matrix.Qff().isZero());
   EXPECT_TRUE(kkt_matrix.Quu.isZero());
-  SplitDirection d(floating_base_robot_);
-  d.dq() = Eigen::VectorXd::Random(dimv);
-  d.dv() = Eigen::VectorXd::Random(dimv);
-  d.da() = Eigen::VectorXd::Random(dimv);
-  d.df() = Eigen::VectorXd::Random(dimf);
-  d.du = Eigen::VectorXd::Random(dimv);
+  SplitDirection d = SplitDirection::Random(floating_base_robot_);
   limit.computeSlackAndDualDirection(floating_base_robot_, data, dtau_, d);
   limit_ref.computeSlackAndDualDirection(dtau_, d.dv());
   const double margin_rate = 0.995;

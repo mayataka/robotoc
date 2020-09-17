@@ -3,22 +3,25 @@
 
 #include <vector>
 
-#include "Eigen/Core"
-
 #include "idocp/robot/robot.hpp"
 
 
 namespace idocp {
 class ContactSequence {
 private:
-  ContactSequence(const Robot& robot, const int N) {
-
+  ContactSequence(const Robot& robot, const int N)
+    : contact_sequence_(N, robot.is_each_contact_active()) {
   }
 
-  ~ContactSequence();
+  ~ContactSequence() {
+  }
+
+  const std::vector<bool>& contact_status(const int i) const {
+    return contact_sequence_[i];
+  }
 
 public:
-  std::vector<bool> contact_sequence_;
+  std::vector<std::vector<bool>> contact_sequence_;
 
 };
 

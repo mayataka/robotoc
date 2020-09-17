@@ -32,7 +32,7 @@ bool JointTorquesUpperLimit::useKinematics() const {
 }
 
 
-bool JointTorquesUpperLimit::isFeasible(const Robot& robot, 
+bool JointTorquesUpperLimit::isFeasible(Robot& robot, 
                                         ConstraintComponentData& data, 
                                         const SplitSolution& s) const {
   for (int i=0; i<dimc_; ++i) {
@@ -45,7 +45,7 @@ bool JointTorquesUpperLimit::isFeasible(const Robot& robot,
 
 
 void JointTorquesUpperLimit::setSlackAndDual(
-    const Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
   assert(dtau > 0);
   data.slack = dtau * (umax_-s.u.tail(dimc_));
@@ -74,7 +74,7 @@ void JointTorquesUpperLimit::condenseSlackAndDual(
 
 
 void JointTorquesUpperLimit::computeSlackAndDualDirection(
-    const Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitDirection& d) const {
   data.dslack = - dtau * d.du.tail(dimc_) - data.residual;
   computeDualDirection(data.slack, data.dual, data.dslack, data.duality, 
@@ -83,16 +83,16 @@ void JointTorquesUpperLimit::computeSlackAndDualDirection(
 
 
 double JointTorquesUpperLimit::residualL1Nrom(
-    const Robot& robot, ConstraintComponentData& data, 
-    const double dtau, const SplitSolution& s) const {
+    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    const SplitSolution& s) const {
   data.residual = dtau * (s.u.tail(dimc_)-umax_) + data.slack;
   return data.residual.lpNorm<1>();
 }
 
 
 double JointTorquesUpperLimit::squaredKKTErrorNorm(
-    const Robot& robot, ConstraintComponentData& data, 
-    const double dtau, const SplitSolution& s) const {
+    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    const SplitSolution& s) const {
   data.residual = dtau * (s.u.tail(dimc_)-umax_) + data.slack;
   computeDuality(data.slack, data.dual, data.duality);
   double error = 0;

@@ -46,17 +46,14 @@ protected:
 TEST_F(FixedBaseContactCostTest, setWeights) {
   const int dimq = robot_.dimq();
   const int dimv = robot_.dimv();
-  const Eigen::VectorXd f_weight = Eigen::VectorXd::Random(robot_.max_dimf());
-  const Eigen::VectorXd f_ref = Eigen::VectorXd::Random(robot_.max_dimf());
+  std::vector<Eigen::Vector3d> f_weight, f_ref;
+  f_weight.push_back(Eigen::Vector3d::Random());
+  f_ref.push_back(Eigen::Vector3d::Random());
   ContactCost cost(robot_);
   EXPECT_FALSE(cost.useKinematics());
   cost.set_f_weight(f_weight);
   cost.set_f_ref(f_ref);
-  s.q = Eigen::VectorXd::Random(dimq);
-  s.v = Eigen::VectorXd::Random(dimv);
-  s.a = Eigen::VectorXd::Random(dimv);
-  s.f = Eigen::VectorXd::Random(robot_.max_dimf());
-  s.u = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(robot_);
   ASSERT_EQ(robot_.dimf(), 0);
   kkt_res.setContactStatus(robot_);
   kkt_mat.setContactStatus(robot_);
@@ -73,15 +70,15 @@ TEST_F(FixedBaseContactCostTest, setWeights) {
   ASSERT_EQ(robot_.dimf(), 3);
   kkt_res.setContactStatus(robot_);
   kkt_mat.setContactStatus(robot_);
-  const double l_ref = 0.5 * dtau_ * (f_weight.array()* (s.f-f_ref).array()*(s.f-f_ref).array()).sum();
+  const double l_ref = 0.5 * dtau_ * (f_weight[0].array()* (s.f[0]-f_ref[0]).array()*(s.f[0]-f_ref[0]).array()).sum();
   EXPECT_DOUBLE_EQ(cost.l(robot_, data_, t_, dtau_, s), l_ref);
   cost.lf(robot_, data_, t_, dtau_, s, kkt_res);
   Eigen::VectorXd lf_ref = Eigen::VectorXd::Zero(robot_.max_dimf());
-  lf_ref.array() = dtau_ * f_weight.asDiagonal() * (s.f-f_ref);
+  lf_ref = dtau_ * f_weight[0].asDiagonal() * (s.f[0]-f_ref[0]);
   EXPECT_TRUE(kkt_res.lf().isApprox(lf_ref));
   cost.lff(robot_, data_, t_, dtau_, s, kkt_mat);
   Eigen::MatrixXd lff_ref = Eigen::MatrixXd::Zero(robot_.max_dimf(), robot_.max_dimf());
-  lff_ref = dtau_*f_weight.asDiagonal();
+  lff_ref = dtau_*f_weight[0].asDiagonal();
   EXPECT_TRUE(kkt_mat.Qff().isApprox(lff_ref));
 }
 

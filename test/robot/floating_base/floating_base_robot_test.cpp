@@ -377,7 +377,7 @@ TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
   pinocchio::updateFramePlacements(model_, data_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
   for (int i=0; i<contacts_ref.size(); ++i) {
-    contacts_ref[i].resetContactPointByCurrentKinematics(data_);
+    contacts_ref[i].setContactPointByCurrentKinematics(data_);
   }
   for (int i=0; i<contacts_ref.size(); ++i) {
     contacts_ref[i].computeBaumgarteResidual(
@@ -466,7 +466,10 @@ TEST_F(FloatingBaseRobotTest, RNEA) {
                       baumgarte_weight_on_position_);
   tau = Eigen::VectorXd::Zero(dimv_);
   tau_ref = Eigen::VectorXd::Zero(dimv_);
-  Eigen::VectorXd fext = Eigen::VectorXd::Random(robot_contact.max_dimf());
+  std::vector<Eigen::Vector3d> fext;
+  for (int i=0; i<contact_frames_.size(); ++i) {
+    fext.push_back(Eigen::Vector3d::Random());
+  }
   robot_contact.RNEA(q_, v_, a_, tau);
   tau_ref = pinocchio::rnea(model_, data_, q_, v_, a_);
   EXPECT_TRUE(tau_ref.isApprox(tau));
@@ -486,8 +489,7 @@ TEST_F(FloatingBaseRobotTest, RNEA) {
       = pinocchio::container::aligned_vector<pinocchio::Force>(
                  model_.joints.size(), pinocchio::Force::Zero());
   for (int i=0; i<contacts_ref.size(); ++i) {
-    contacts_ref[i].computeJointForceFromContactForce(fext.segment<3>(3*i), 
-                                                      fjoint);
+    contacts_ref[i].computeJointForceFromContactForce(fext[i], fjoint);
   }
   tau_ref = pinocchio::rnea(model_, data_, q_, v_, a_, fjoint);
   EXPECT_TRUE(tau_ref.isApprox(tau));
@@ -516,7 +518,10 @@ TEST_F(FloatingBaseRobotTest, RNEADerivativesWithoutFext) {
 TEST_F(FloatingBaseRobotTest, RNEADerivativesWithContacts) {
   Robot robot(urdf_, contact_frames_, baumgarte_weight_on_velocity_, 
               baumgarte_weight_on_position_);
-  Eigen::VectorXd fext = Eigen::VectorXd::Random(robot.max_dimf());
+  std::vector<Eigen::Vector3d> fext;
+  for (int i=0; i<contact_frames_.size(); ++i) {
+    fext.push_back(Eigen::Vector3d::Random());
+  }
   Eigen::MatrixXd dRNEA_dq = Eigen::MatrixXd::Zero(dimv_, dimv_);
   Eigen::MatrixXd dRNEA_dv = Eigen::MatrixXd::Zero(dimv_, dimv_);
   Eigen::MatrixXd dRNEA_da = Eigen::MatrixXd::Zero(dimv_, dimv_);
@@ -541,8 +546,7 @@ TEST_F(FloatingBaseRobotTest, RNEADerivativesWithContacts) {
       = pinocchio::container::aligned_vector<pinocchio::Force>(
                  model_.joints.size(), pinocchio::Force::Zero());
   for (int i=0; i<contacts_ref.size(); ++i) {
-    contacts_ref[i].computeJointForceFromContactForce(fext.segment<3>(3*i), 
-                                                       fjoint);
+    contacts_ref[i].computeJointForceFromContactForce(fext[i], fjoint);
   }
   pinocchio::computeRNEADerivatives(model_, data_, q_, v_, a_, fjoint, 
                                     dRNEA_dq_ref, dRNEA_dv_ref, dRNEA_da_ref);

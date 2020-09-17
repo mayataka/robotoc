@@ -69,7 +69,7 @@ public:
   PointContact& operator=(PointContact&&) noexcept = default;
 
   ///
-  /// @brief Resets the parameters of the Baumgarte's stabilization method.
+  /// @brief Sets the parameters of the Baumgarte's stabilization method.
   /// @param[in] baumgarte_weight_on_velocity The weight parameter on the 
   /// velocity error in the Baumgarte's stabilization method. Must be 
   /// nonnegative.
@@ -77,24 +77,24 @@ public:
   /// position error in the Baumgarte's stabilization method. Must be
   /// nonnegative.
   ///
-  void resetBaugrarteParameters(const double baumgarte_weight_on_velocity, 
-                                const double baumgarte_weight_on_position);
+  void setBaugrarteParameters(const double baumgarte_weight_on_velocity, 
+                              const double baumgarte_weight_on_position);
 
   ///
-  /// @brief Resets the contact points.
+  /// @brief Sets the contact points.
   /// @param[in] contact_point The contact points, i.e., (x,y,z) position of 
   /// the end-effector frame having the contact.
   /// 
-  void resetContactPoint(const Eigen::Vector3d& contact_point);
+  void setContactPoint(const Eigen::Vector3d& contact_point);
 
   ///
-  /// @brief Resets the contact points by current kinematics of the robot. 
+  /// @brief Sets the contact points by current kinematics of the robot. 
   /// The kinematics is passed through pinocchio::Data. Before calling this 
   /// function, you have to update the kinematics (only with respect to the 
   /// position) in pinocchio::Data.
   /// @param[in] data The data including kinematics of the robot.
   ///
-  void resetContactPointByCurrentKinematics(const pinocchio::Data& data);
+  void setContactPointByCurrentKinematics(const pinocchio::Data& data);
 
   ///
   /// @brief Converts the contact forces to the corresponding joint forces.
@@ -264,13 +264,12 @@ public:
   /// @return baumgarte weight on velocity.
   ///
   double baumgarte_weight_on_position() const;
-  
+
   ///
   /// @brief Returns the contact point.
   /// @return contact point.
   ///
   Eigen::Vector3d contact_point() const;
-
 
 private:
   bool is_active_;

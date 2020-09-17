@@ -76,7 +76,7 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] s Split solution of this stage.
   ///
-  bool isFeasible(const Robot& robot, const SplitSolution& s);
+  bool isFeasible(Robot& robot, const SplitSolution& s);
 
   ///
   /// @brief Initialize the constraints, i.e., set slack and dual variables. 
@@ -85,8 +85,8 @@ public:
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   ///
-  void initConstraints(const Robot& robot, const int time_step, 
-                       const double dtau, const SplitSolution& s);
+  void initConstraints(Robot& robot, const int time_step, const double dtau, 
+                       const SplitSolution& s);
 
   ///
   /// @brief Linearize the OCP for Newton's method around the current solution.
@@ -128,7 +128,7 @@ public:
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] d Split direction of this stage.
   /// 
-  void computeCondensedDirection(const Robot& robot, const double dtau, 
+  void computeCondensedDirection(Robot& robot, const double dtau, 
                                  SplitDirection& d);
 
   ///
@@ -260,7 +260,7 @@ private:
   RiccatiGain riccati_gain_;
   RiccatiMatrixFactorizer riccati_factorizer_;
   RiccatiMatrixInverter riccati_inverter_;
-  Eigen::MatrixXd Ginv_; /// @brief Inverse of the Riccati matrix G.
+  Eigen::MatrixXd Ginv_full_; /// @brief Inverse of the Riccati matrix G.
   SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
   int dimv_, dimf_, dimc_;
   bool use_kinematics_;
@@ -280,8 +280,8 @@ private:
   /// this function, call setContactStatus() to update contact dimensions.
   /// @return Block matrix of Ginv wth appropriate size.
   ///
-  inline Eigen::Block<Eigen::MatrixXd> Ginv_active() {
-    return Ginv_.topLeftCorner(dimv_+dimf_+dimc_, dimv_+dimf_+dimc_);
+  inline Eigen::Block<Eigen::MatrixXd> Ginv_() {
+    return Ginv_full_.topLeftCorner(dimv_+dimf_+dimc_, dimv_+dimf_+dimc_);
   }
 
 };

@@ -28,7 +28,7 @@ inline void StateEquation::linearizeForwardEuler(
     const Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
     const SplitSolution& s_next, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
+    KKTResidual& kkt_residual) {
   assert(dtau > 0);
   robot.subtractConfiguration(s.q, s_next.q, kkt_residual.Fq());
   kkt_residual.Fq().noalias() += dtau * s.v;
@@ -47,38 +47,30 @@ inline void StateEquation::linearizeForwardEuler(
 }
 
 
-template <typename ConfigVectorType1, typename TangentVectorType1, 
-          typename TangentVectorType2, typename TangentVectorType3, 
-          typename ConfigVectorType2>
+template <typename ConfigVectorType, typename TangentVectorType>
 inline void StateEquation::linearizeBackwardEuler(
     const Robot& robot, const double dtau, 
-    const Eigen::MatrixBase<ConfigVectorType1>& q_prev, 
-    const Eigen::MatrixBase<TangentVectorType1>& v_prev, 
-    const SplitSolution& s, 
-    const Eigen::MatrixBase<TangentVectorType2>& lmd_next, 
-    const Eigen::MatrixBase<TangentVectorType3>& gmm_next, 
-    const Eigen::MatrixBase<ConfigVectorType2>& q_next, 
+    const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
+    const Eigen::MatrixBase<TangentVectorType>& v_prev, 
+    const SplitSolution& s, const SplitSolution& s_next,
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
-  assert(lmd_next.size() == robot.dimv());
-  assert(gmm_next.size() == robot.dimv());
-  assert(q_next.size() == robot.dimq());
   robot.subtractConfiguration(q_prev, s.q, kkt_residual.Fq());
   kkt_residual.Fq().noalias() += dtau * s.v;
   kkt_residual.Fv() = v_prev - s.v + dtau * s.a;
   if (robot.has_floating_base()) {
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq);
-    robot.dSubtractdConfigurationPlus(s.q, q_next, dsubtract_dq_);
+    robot.dSubtractdConfigurationPlus(s.q, s_next.q, dsubtract_dq_);
     kkt_residual.lq().noalias() 
-        += dsubtract_dq_.transpose() * lmd_next
+        += dsubtract_dq_.transpose() * s_next.lmd
             + kkt_matrix.Fqq.transpose() * s.lmd;
   }
   else {
-    kkt_residual.lq().noalias() += lmd_next - s.lmd;
+    kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
   }
-  kkt_residual.lv().noalias() += dtau * s.lmd - s.gmm + gmm_next;
+  kkt_residual.lv().noalias() += dtau * s.lmd - s.gmm + s_next.gmm;
   kkt_residual.la().noalias() += dtau * s.gmm;
 }
 
@@ -89,7 +81,7 @@ inline void StateEquation::linearizeBackwardEulerTerminal(
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
     const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
+    KKTResidual& kkt_residual) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -109,8 +101,7 @@ inline void StateEquation::linearizeBackwardEulerTerminal(
 }
 
 
-inline double StateEquation::violationL1Norm(
-    const KKTResidual& kkt_residual) const {
+inline double StateEquation::violationL1Norm(const KKTResidual& kkt_residual) {
   return kkt_residual.Fx().lpNorm<1>();
 }
 
@@ -123,7 +114,7 @@ inline double StateEquation::computeForwardEulerViolationL1Norm(
     const Eigen::MatrixBase<TangentVectorType1>& v_next, 
     const Eigen::MatrixBase<TangentVectorType2>& dq_next, 
     const Eigen::MatrixBase<TangentVectorType3>& dv_next, 
-    KKTResidual& kkt_residual) const {
+    KKTResidual& kkt_residual) {
   assert(dtau > 0);
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
@@ -141,7 +132,7 @@ inline double StateEquation::computeBackwardEulerViolationL1Norm(
     const Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, const SplitSolution& s, 
-    KKTResidual& kkt_residual) const {
+    KKTResidual& kkt_residual) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -160,7 +151,7 @@ inline double StateEquation::computeBackwardEulerViolationL1Norm(
     const Eigen::MatrixBase<TangentVectorType1>& v_prev, 
     const Eigen::MatrixBase<TangentVectorType2>& dq_prev, 
     const Eigen::MatrixBase<TangentVectorType3>& dv_prev, 
-    const SplitSolution& s, KKTResidual& kkt_residual) const {
+    const SplitSolution& s, KKTResidual& kkt_residual) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());

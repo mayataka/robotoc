@@ -32,7 +32,7 @@ bool JointTorquesLowerLimit::useKinematics() const {
 }
 
 
-bool JointTorquesLowerLimit::isFeasible(const Robot& robot, 
+bool JointTorquesLowerLimit::isFeasible(Robot& robot, 
                                         ConstraintComponentData& data, 
                                         const SplitSolution& s) const {
   for (int i=0; i<dimc_; ++i) {
@@ -45,7 +45,7 @@ bool JointTorquesLowerLimit::isFeasible(const Robot& robot,
 
 
 void JointTorquesLowerLimit::setSlackAndDual(
-    const Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
   assert(dtau > 0);
   data.slack = dtau * (s.u.tail(dimc_)-umin_);
@@ -74,7 +74,7 @@ void JointTorquesLowerLimit::condenseSlackAndDual(
 
 
 void JointTorquesLowerLimit::computeSlackAndDualDirection(
-    const Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitDirection& d) const {
   data.dslack = dtau * d.du.tail(dimc_) - data.residual;
   computeDualDirection(data.slack, data.dual, data.dslack, data.duality, 
@@ -83,7 +83,7 @@ void JointTorquesLowerLimit::computeSlackAndDualDirection(
 
 
 double JointTorquesLowerLimit::residualL1Nrom(
-    const Robot& robot, ConstraintComponentData& data, 
+    Robot& robot, ConstraintComponentData& data, 
     const double dtau, const SplitSolution& s) const {
   data.residual = dtau * (umin_-s.u.tail(dimc_)) + data.slack;
   return data.residual.lpNorm<1>();
@@ -91,7 +91,7 @@ double JointTorquesLowerLimit::residualL1Nrom(
 
 
 double JointTorquesLowerLimit::squaredKKTErrorNorm(
-    const Robot& robot, ConstraintComponentData& data, 
+    Robot& robot, ConstraintComponentData& data, 
     const double dtau, const SplitSolution& s) const {
   data.residual = dtau * (umin_-s.u.tail(dimc_)) + data.slack;
   computeDuality(data.slack, data.dual, data.duality);

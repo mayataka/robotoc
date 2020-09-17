@@ -1,6 +1,7 @@
 #include "idocp/constraints/constraint_component_base.hpp"
 
-#include <assert.h>
+#include <exception>
+#include <iostream>
 
 
 namespace idocp {
@@ -9,8 +10,24 @@ ConstraintComponentBase::ConstraintComponentBase(
     const double barrier, const double fraction_to_boundary_rate) 
   : barrier_(barrier),
     fraction_to_boundary_rate_(fraction_to_boundary_rate) {
-  assert(barrier > 0);
-  assert(fraction_to_boundary_rate > 0);
+    try {
+    if (barrier <= 0) {
+      throw std::out_of_range(
+          "invalid argment: barrirer must be positive");
+    }
+    if (fraction_to_boundary_rate <= 0) {
+      throw std::out_of_range(
+          "invalid argment: fraction_to_boundary_rate must be positive");
+    }
+    if (fraction_to_boundary_rate >= 1) {
+      throw std::out_of_range(
+          "invalid argment: fraction_to_boundary_rate must be less than 1");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
