@@ -284,7 +284,11 @@ public:
   ///
   int dimf() const;
 
-  Eigen::VectorXd lu, u_res;
+  /// @brief Residual with respect to control input torques u.
+  Eigen::VectorXd lu;
+
+  /// @brief Residual of inverse dynamics constraint.
+  Eigen::VectorXd u_res;
 
 private:
   Eigen::VectorXd kkt_residual_;

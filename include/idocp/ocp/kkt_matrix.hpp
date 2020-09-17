@@ -23,7 +23,7 @@ public:
   KKTMatrix(const Robot& robot);
 
   ///
-  /// @brief Default constructor. Does not construct any datas. 
+  /// @brief Default constructor. 
   ///
   KKTMatrix();
 
@@ -33,22 +33,22 @@ public:
   ~KKTMatrix();
 
   ///
-  /// @brief Use default copy constructor. 
+  /// @brief Default copy constructor. 
   ///
   KKTMatrix(const KKTMatrix&) = default;
 
   ///
-  /// @brief Use default copy assign operator. 
+  /// @brief Default copy operator. 
   ///
   KKTMatrix& operator=(const KKTMatrix&) = default;
  
   ///
-  /// @brief Use default move constructor. 
+  /// @brief Default move constructor. 
   ///
   KKTMatrix(KKTMatrix&&) noexcept = default;
 
   ///
-  /// @brief Use default move assign operator. 
+  /// @brief Default move assign operator. 
   ///
   KKTMatrix& operator=(KKTMatrix&&) noexcept = default;
 

@@ -11,22 +11,12 @@ NormalCotactForce::NormalCotactForce(const Robot& robot, const double barrier,
                                      const double fraction_to_boundary_rate)
   : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
     dimc_(robot.num_point_contacts()) {
-  try {
-    if (mu <= 0) {
-      throw std::out_of_range("invalid argment: mu must be positive");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
 }
 
 
 NormalCotactForce::NormalCotactForce()
   : ConstraintComponentBase(),
-    dimc_(0),
-    mu_(0) {
+    dimc_(0) {
 }
 
 
@@ -112,8 +102,8 @@ void NormalCotactForce::condenseSlackAndDual(
           = 2 * dtau * s.f[i].coeff(1) * data.dual.coeff(i);
       kkt_residual.lf().coeffRef(dimf_stack+2) 
           = - 2 * dtau * mu_ * mu_ * s.f[i].coeff(2) * data.dual.coeff(i);
-      dimf_stack += 3;
       ++num_contact_stack;
+      dimf_stack += 3;
     }
   }
 
@@ -140,20 +130,29 @@ void NormalCotactForce::computeSlackAndDualDirection(
 double NormalCotactForce::residualL1Nrom(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
-  data.residual = dtau * (s.v.tail(dimc_)-vmax_) + data.slack;
-  return data.residual.lpNorm<1>();
+  double norm = 0;
+  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    if (robot.is_contact_active(i)) {
+      norm += std::abs(slack.coeff(i) - dtau * s.f[i].coeff(2));
+      norm += std::abs(slack.coeff(i) * dual.coeff(i) - barrier_);
+    }
+  }
+  return norm;
 }
 
 
 double NormalCotactForce::squaredKKTErrorNorm(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
-  data.residual = dtau * (s.v.tail(dimc_)-vmax_) + data.slack;
-  computeDuality(data.slack, data.dual, data.duality);
-  double error = 0;
-  error += data.residual.squaredNorm();
-  error += data.duality.squaredNorm();
-  return error;
+  double norm = 0;
+  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    if (robot.is_contact_active(i)) {
+      const double residual = slack.coeff(i) - dtau * s.f[i].coeff(2);
+      const double duality = slack.coeff(i) * dual.coeff(i) - barrier_;
+      norm += residual * residual + duality * duality;
+    }
+  }
+  return norm;
 }
 
 

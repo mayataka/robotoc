@@ -525,14 +525,13 @@ public:
   ///
   void printRobotModel() const;
 
-private:
-
   ///
   /// @brief Initializes joint_effort_limit_, joint_velocity_limit_, 
   /// lower_joint_position_limit_, upper_joint_position_limit_, by the URDF.
   /// 
   void initializeJointLimits();
 
+private:
   pinocchio::Model model_;
   pinocchio::Data data_;
   std::string urdf_file_name_;

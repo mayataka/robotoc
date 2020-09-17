@@ -16,32 +16,72 @@
 
 namespace idocp {
 
+///
+/// @class CostFunction
+/// @brief Cost function.
+///
 class CostFunction {
 public:
+
+  ///
+  /// @brief Default constructor. 
+  ///
   CostFunction();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~CostFunction();
 
-  // Use default copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   CostFunction(const CostFunction&) = default;
 
-  // Use default copy coperator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   CostFunction& operator=(const CostFunction&) = default;
 
-  // Use default move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   CostFunction(CostFunction&&) noexcept = default;
 
-  // Use default move assign coperator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   CostFunction& operator=(CostFunction&&) noexcept = default;
 
+  ///
+  /// @brief Append a cost function component to the cost function.
+  /// @param[in] cost Cost function component appended to the cost.
+  ///
   void push_back(const std::shared_ptr<CostFunctionComponentBase>& cost);
 
+  ///
+  /// @brief Clear cost function by removing all components.
+  ///
   void clear();
 
+  ///
+  /// @brief Check whether the cost function is empty or not.
+  /// @return true if the cost function is empty. false if not.
+  ///
   bool isEmpty() const;
 
+  ///
+  /// @brief Return true if the cost function component requres kinematics of 
+  /// robot model. Return false if not.
+  /// @return true if the cost function component requres kinematics of 
+  /// robot model. false if not.
+  ///
   bool useKinematics() const;
 
+  ///
+  /// @brief Creates CostFunctionData. 
+  /// @return Cost function data.
+  ///
   CostFunctionData createCostFunctionData(const Robot& robot) const;
 
   double l(Robot& robot, CostFunctionData& data, const double t, 

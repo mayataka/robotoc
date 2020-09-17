@@ -10,26 +10,51 @@
 
 namespace idocp {
 
+///
+/// @class CostFunctionComponentBase
+/// @brief Base class of components of cost function.
+///
 class CostFunctionComponentBase {
 public:
+
+  ///
+  /// @brief Default constructor. 
+  ///
   CostFunctionComponentBase() {}
 
+  ///
+  /// @brief Destructor. 
+  ///
   virtual ~CostFunctionComponentBase() {}
 
-  // Use default copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   CostFunctionComponentBase(const CostFunctionComponentBase&) = default;
 
-  // Use default copy coperator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   CostFunctionComponentBase& operator=(const CostFunctionComponentBase&) 
       = default;
 
-  // Use default move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   CostFunctionComponentBase(CostFunctionComponentBase&&) noexcept = default;
 
-  // Use default move assign coperator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   CostFunctionComponentBase& operator=(CostFunctionComponentBase&&) noexcept 
       = default;
 
+  ///
+  /// @brief Return true if the cost function component requres kinematics of 
+  /// robot model. Return false if not.
+  /// @return true if the cost function component requres kinematics of 
+  /// robot model. false if not.
+  ///
   virtual bool useKinematics() const = 0;
 
   virtual double l(Robot& robot, CostFunctionData& data, const double t, 
