@@ -54,10 +54,7 @@ TEST_F(FixedBaseTaskSpace3DCostTest, setWeights) {
   cost.set_q_3d_weight(q_weight);
   cost.set_qf_3d_weight(qf_weight);
   cost.set_q_3d_ref(q_ref);
-  s.q = Eigen::VectorXd::Random(dimq);
-  s.v = Eigen::VectorXd::Random(dimv);
-  s.a = Eigen::VectorXd::Random(dimv);
-  s.u = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(robot_);
   robot_.updateKinematics(s.q, s.v, s.a);
   const Eigen::Vector3d q_task = robot_.framePosition(frame_id);
   const Eigen::Vector3d q_diff = q_task - q_ref;

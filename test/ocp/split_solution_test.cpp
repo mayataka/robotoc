@@ -62,6 +62,27 @@ TEST_F(SplitSolutionTest, fixed_base) {
   EXPECT_TRUE(s.v.isApprox(v));
   EXPECT_EQ(s.dimf(), 0);
   EXPECT_EQ(s.dimc(), 0);
+  SplitSolution s_random = SplitSolution::Random(robot);
+  EXPECT_TRUE(s_random.lmd.size() == robot.dimv());
+  EXPECT_TRUE(s_random.gmm.size() == robot.dimv());
+  EXPECT_TRUE(s_random.mu_contact.size() == 0);
+  EXPECT_TRUE(s_random.mu_stack().size() == 0);
+  EXPECT_TRUE(s_random.a.size() == robot.dimv());
+  EXPECT_TRUE(s_random.f.size() == 0);
+  EXPECT_TRUE(s_random.f_stack().size() == 0);
+  EXPECT_TRUE(s_random.q.size() == robot.dimv());
+  EXPECT_TRUE(s_random.v.size() == robot.dimv());
+  EXPECT_TRUE(s_random.u.size() == robot.dimv());
+  EXPECT_TRUE(s_random.beta.size() == robot.dimv());
+  EXPECT_FALSE(s_random.lmd.isZero());
+  EXPECT_FALSE(s_random.gmm.isZero());
+  EXPECT_FALSE(s_random.a.isZero());
+  EXPECT_FALSE(s_random.q.isZero());
+  EXPECT_FALSE(s_random.v.isZero());
+  EXPECT_FALSE(s_random.u.isZero());
+  EXPECT_FALSE(s_random.beta.isZero());
+  EXPECT_EQ(s_random.dimf(), 0);
+  EXPECT_EQ(s_random.dimc(), 0);
 }
 
 
@@ -128,6 +149,34 @@ TEST_F(SplitSolutionTest, fixed_base_contact) {
   EXPECT_TRUE(s.f[0].isZero());
   EXPECT_EQ(s.dimf(), 3);
   EXPECT_EQ(s.dimc(), 3);
+  SplitSolution s_random = SplitSolution::Random(robot);
+  EXPECT_TRUE(s_random.lmd.size() == robot.dimv());
+  EXPECT_TRUE(s_random.gmm.size() == robot.dimv());
+  EXPECT_TRUE(s_random.mu_contact.size() == 1);
+  EXPECT_TRUE(s_random.mu_contact[0].size() == 3);
+  EXPECT_TRUE(s_random.mu_stack().size() == 3);
+  EXPECT_TRUE(s_random.mu_floating_base().size() == 0);
+  EXPECT_TRUE(s_random.a.size() == robot.dimv());
+  EXPECT_TRUE(s_random.f.size() == 1);
+  EXPECT_TRUE(s_random.f[0].size() == 3);
+  EXPECT_TRUE(s_random.f_stack().size() == 3);
+  EXPECT_TRUE(s_random.q.size() == robot.dimv());
+  EXPECT_TRUE(s_random.v.size() == robot.dimv());
+  EXPECT_TRUE(s_random.u.size() == robot.dimv());
+  EXPECT_TRUE(s_random.beta.size() == robot.dimv());
+  EXPECT_FALSE(s_random.lmd.isZero());
+  EXPECT_FALSE(s_random.gmm.isZero());
+  EXPECT_FALSE(s_random.mu_stack().isZero());
+  EXPECT_FALSE(s_random.mu_contact[0].isZero());
+  EXPECT_FALSE(s_random.a.isZero());
+  EXPECT_FALSE(s_random.f[0].isZero());
+  EXPECT_FALSE(s_random.f_stack().isZero());
+  EXPECT_FALSE(s_random.q.isZero());
+  EXPECT_FALSE(s_random.v.isZero());
+  EXPECT_FALSE(s_random.u.isZero());
+  EXPECT_FALSE(s_random.beta.isZero());
+  EXPECT_EQ(s_random.dimf(), 3);
+  EXPECT_EQ(s_random.dimc(), 3);
 }
 
 
@@ -171,8 +220,30 @@ TEST_F(SplitSolutionTest, floating_base) {
   EXPECT_TRUE(s.mu_floating_base().isZero());
   EXPECT_EQ(s.dimf(), 0);
   EXPECT_EQ(s.dimc(), 6);
+  SplitSolution s_random = SplitSolution::Random(robot);
+  EXPECT_TRUE(s_random.lmd.size() == robot.dimv());
+  EXPECT_TRUE(s_random.gmm.size() == robot.dimv());
+  EXPECT_TRUE(s_random.mu_contact.size() == 0);
+  EXPECT_TRUE(s_random.mu_stack().size() == 6);
+  EXPECT_TRUE(s_random.mu_floating_base().size() == 6);
+  EXPECT_TRUE(s_random.a.size() == robot.dimv());
+  EXPECT_TRUE(s_random.f.size() == 0);
+  EXPECT_TRUE(s_random.q.size() == robot.dimq());
+  EXPECT_TRUE(s_random.v.size() == robot.dimv());
+  EXPECT_TRUE(s_random.u.size() == robot.dimv());
+  EXPECT_TRUE(s_random.beta.size() == robot.dimv());
+  EXPECT_FALSE(s_random.lmd.isZero());
+  EXPECT_FALSE(s_random.gmm.isZero());
+  EXPECT_FALSE(s_random.mu_stack().isZero());
+  EXPECT_FALSE(s_random.mu_floating_base().isZero());
+  EXPECT_FALSE(s_random.a.isZero());
+  EXPECT_FALSE(s_random.q.isZero());
+  EXPECT_FALSE(s_random.v.isZero());
+  EXPECT_FALSE(s_random.u.isZero());
+  EXPECT_FALSE(s_random.beta.isZero());
+  EXPECT_EQ(s_random.dimf(), 0);
+  EXPECT_EQ(s_random.dimc(), 6);
 }
-
 
 
 TEST_F(SplitSolutionTest, floating_base_contacts) {
@@ -274,6 +345,41 @@ TEST_F(SplitSolutionTest, floating_base_contacts) {
   }
   EXPECT_EQ(s.dimf(), robot.dimf());
   EXPECT_EQ(s.dimc(), 6+robot.dimf());
+  SplitSolution s_random = SplitSolution::Random(robot);
+  EXPECT_TRUE(s_random.lmd.size() == robot.dimv());
+  EXPECT_TRUE(s_random.gmm.size() == robot.dimv());
+  EXPECT_TRUE(s_random.mu_contact.size() == 4);
+  EXPECT_TRUE(s_random.mu_contact[0].size() == 3);
+  EXPECT_TRUE(s_random.mu_contact[1].size() == 3);
+  EXPECT_TRUE(s_random.mu_contact[2].size() == 3);
+  EXPECT_TRUE(s_random.mu_contact[3].size() == 3);
+  EXPECT_TRUE(s_random.mu_stack().size() == s.dimc());
+  EXPECT_TRUE(s_random.mu_floating_base().size() == 6);
+  EXPECT_TRUE(s_random.a.size() == robot.dimv());
+  EXPECT_TRUE(s_random.f.size() == 4);
+  EXPECT_TRUE(s_random.f[0].size() == 3);
+  EXPECT_TRUE(s_random.f[1].size() == 3);
+  EXPECT_TRUE(s_random.f[2].size() == 3);
+  EXPECT_TRUE(s_random.f[3].size() == 3);
+  EXPECT_TRUE(s_random.f_stack().size() == s.dimf());
+  EXPECT_TRUE(s_random.q.size() == robot.dimq());
+  EXPECT_TRUE(s_random.v.size() == robot.dimv());
+  EXPECT_TRUE(s_random.u.size() == robot.dimv());
+  EXPECT_TRUE(s_random.beta.size() == robot.dimv());
+  EXPECT_FALSE(s_random.lmd.isZero());
+  EXPECT_FALSE(s_random.gmm.isZero());
+  EXPECT_FALSE(s_random.mu_stack().isZero());
+  EXPECT_FALSE(s_random.mu_floating_base().isZero());
+  EXPECT_FALSE(s_random.a.isZero());
+  if (s_random.dimf() > 0) {
+    EXPECT_FALSE(s_random.f_stack().isZero());
+  }
+  EXPECT_FALSE(s_random.q.isZero());
+  EXPECT_FALSE(s_random.v.isZero());
+  EXPECT_FALSE(s_random.u.isZero());
+  EXPECT_FALSE(s_random.beta.isZero());
+  EXPECT_EQ(s_random.dimf(), s.dimf());
+  EXPECT_EQ(s_random.dimc(), s.dimc());
 }
 
 } // namespace idocp

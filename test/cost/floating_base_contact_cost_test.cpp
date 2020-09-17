@@ -55,14 +55,7 @@ TEST_F(FloatingBaseContactCostTest, setWeights) {
   EXPECT_FALSE(cost.useKinematics());
   cost.set_f_weight(f_weight);
   cost.set_f_ref(f_ref);
-  const Eigen::VectorXd q = Eigen::VectorXd::Random(dimq);
-  const Eigen::VectorXd v = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd a = Eigen::VectorXd::Random(dimv);
-  std::vector<Eigen::Vector3d> f;
-  for (int i=0; i<contact_frames_.size(); ++i) {
-    f.push_back(Eigen::Vector3d::Random());
-  }
-  const Eigen::VectorXd u = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(robot_);
   ASSERT_EQ(robot_.dimf(), 0);
   kkt_res.setContactStatus(robot_);
   kkt_mat.setContactStatus(robot_);

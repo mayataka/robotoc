@@ -189,6 +189,12 @@ public:
   /// @brief Lagrange multiplier with respect to inverse dynamics. 
   Eigen::VectorXd beta;
 
+  ///
+  /// @brief Generates split solution filled randomly.
+  /// @return Split solution filled randomly.
+  ///
+  static SplitSolution Random(const Robot& robot);
+
 private:
   /// @brief Stack of Lagrange multiplier with respect to equality constraints. 
   Eigen::VectorXd mu_stack_;

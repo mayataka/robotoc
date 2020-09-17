@@ -78,14 +78,8 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
-  assert(s.dimf() == robot.dimf());
-  assert(s.dimc() == robot.dim_passive()+robot.dimf());
   assert(aux_mat_next_old.rows() == 2*robot.dimv());
   assert(aux_mat_next_old.cols() == 2*robot.dimv());
-  assert(d.dimf() == robot.dimf());
-  assert(d.dimc() == robot.dim_passive()+robot.dimf());
-  assert(s_new_coarse.dimf() == robot.dimf());
-  assert(s_new_coarse.dimc() == robot.dim_passive()+robot.dimf());
   kkt_residual_.setContactStatus(robot);
   kkt_matrix_.setContactStatus(robot);
   if (use_kinematics_) {
@@ -122,9 +116,9 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
                           * kkt_residual_.KKT_residual();
   s_new_coarse.lmd = s.lmd - d.dlmd();
   s_new_coarse.gmm = s.gmm - d.dgmm();
-  s_new_coarse.mu_active() = s.mu_active() - d.dmu();
+  s_new_coarse.mu_stack() = s.mu_stack() - d.dmu();
   s_new_coarse.a = s.a - d.da();
-  s_new_coarse.f_active() = s.f_active() - d.df();
+  s_new_coarse.f_stack() = s.f_stack() - d.df();
   robot.integrateConfiguration(s.q, d.dq(), -1, s_new_coarse.q);
   s_new_coarse.v = s.v - d.dv();
 }
@@ -183,9 +177,9 @@ void SplitParNMPC::coarseUpdateTerminal(Robot& robot, const double t,
                           * kkt_residual_.KKT_residual();
   s_new_coarse.lmd = s.lmd - d.dlmd();
   s_new_coarse.gmm = s.gmm - d.dgmm();
-  s_new_coarse.mu_active() = s.mu_active() - d.dmu();
+  s_new_coarse.mu_stack() = s.mu_stack() - d.dmu();
   s_new_coarse.a = s.a - d.da();
-  s_new_coarse.f_active() = s.f_active() - d.df();
+  s_new_coarse.f_stack() = s.f_stack() - d.df();
   robot.integrateConfiguration(s.q, d.dq(), -1, s_new_coarse.q);
   s_new_coarse.v = s.v - d.dv();
 }
@@ -229,9 +223,9 @@ void SplitParNMPC::backwardCorrectionParallel(const Robot& robot,
   d.split_direction().tail(dimKKT_-dimx_).noalias()
       = kkt_matrix_inverse_.block(dimx_, dimKKT_-dimx_, dimKKT_-dimx_, dimx_) 
           * x_res_;
-  s_new.mu_active().noalias() -= d.dmu();
+  s_new.mu_stack().noalias() -= d.dmu();
   s_new.a.noalias() -= d.da();
-  s_new.f_active().noalias() -= d.df();
+  s_new.f_stack().noalias() -= d.df();
   robot.integrateConfiguration(d.dq(), -1, s_new.q);
   s_new.v.noalias() -= d.dv();
 }
@@ -258,9 +252,9 @@ void SplitParNMPC::forwardCorrectionParallel(const Robot& robot,
       = kkt_matrix_inverse_.topLeftCorner(dimKKT_-dimx_, dimx_) * x_res_;
   s_new.lmd.noalias() -= d.dlmd();
   s_new.gmm.noalias() -= d.dgmm();
-  s_new.mu_active().noalias() -= d.dmu();
+  s_new.mu_stack().noalias() -= d.dmu();
   s_new.a.noalias() -= d.da();
-  s_new.f_active().noalias() -= d.df();
+  s_new.f_stack().noalias() -= d.df();
 }
 
 
@@ -271,9 +265,9 @@ void SplitParNMPC::computePrimalAndDualDirection(Robot& robot,
                                                  SplitDirection& d) {
   d.dlmd() = s_new.lmd - s.lmd;
   d.dgmm() = s_new.gmm - s.gmm;
-  d.dmu() = s_new.mu_active() - s.mu_active();
+  d.dmu() = s_new.mu_stack() - s.mu_stack();
   d.da() = s_new.a - s.a;
-  d.df() = s_new.f_active() - s.f_active();
+  d.df() = s_new.f_stack() - s.f_stack();
   robot.subtractConfiguration(s_new.q, s.q, d.dq());
   d.dv() = s_new.v - s.v;
   robot_dynamics_.computeCondensedDirection(dtau, kkt_matrix_, kkt_residual_, d);
@@ -316,7 +310,8 @@ std::pair<double, double> SplitParNMPC::costAndViolation(
   assert(v_prev.size() == robot.dimv());
   s_tmp.a = s.a + step_size * d.da();
   if (robot.has_active_contacts()) {
-    s_tmp.f_active() = s.f_active() + step_size * d.df();
+    s_tmp.f_stack() = s.f_stack() + step_size * d.df();
+    s_tmp.set_f();
     robot.setContactForces(s_tmp.f);
   }
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
@@ -348,7 +343,8 @@ std::pair<double, double> SplitParNMPC::costAndViolation(
   assert(dtau > 0);
   s_tmp.a = s.a + step_size * d.da();
   if (robot.has_active_contacts()) {
-    s_tmp.f_active() = s.f_active() + step_size * d.df();
+    s_tmp.f_stack() = s.f_stack() + step_size * d.df();
+    s_tmp.set_f();
     robot.setContactForces(s_tmp.f);
   }
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
@@ -396,7 +392,8 @@ std::pair<double, double> SplitParNMPC::costAndViolationTerminal(
   assert(dtau > 0);
   s_tmp.a = s.a + step_size * d.da();
   if (robot.has_active_contacts()) {
-    s_tmp.f_active() = s.f_active() + step_size * d.df();
+    s_tmp.f_stack() = s.f_stack() + step_size * d.df();
+    s_tmp.set_f();
     robot.setContactForces(s_tmp.f);
   }
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
@@ -436,9 +433,11 @@ void SplitParNMPC::updatePrimal(Robot& robot, const double step_size,
   assert(dtau > 0);
   s.lmd.noalias() += step_size * d.dlmd();
   s.gmm.noalias() += step_size * d.dgmm();
-  s.mu_active().noalias() += step_size * d.dmu();
+  s.mu_stack().noalias() += step_size * d.dmu();
+  s.set_mu_contact();
   s.a.noalias() += step_size * d.da();
-  s.f_active().noalias() += step_size * d.df();
+  s.f_stack().noalias() += step_size * d.df();
+  s.set_f();
   robot.integrateConfiguration(d.dq(), step_size, s.q);
   s.v.noalias() += step_size * d.dv();
   s.u.noalias() += step_size * d.du;
@@ -459,7 +458,7 @@ void SplitParNMPC::getStateFeedbackGain(Eigen::MatrixXd& Kq,
   const int f_begin = a_begin + dimv_;
   const int q_begin = f_begin + dimf;
   const int v_begin = q_begin + dimv_;
-  robot_dynamics_.getControlInputTorquesSensitivitiesWithRespectToState(
+  robot_dynamics_.getStateFeedbackGain(
       kkt_matrix_inverse_.block(a_begin, q_begin, dimv_, dimv_),
       kkt_matrix_inverse_.block(a_begin, v_begin, dimv_, dimv_),
       kkt_matrix_inverse_.block(f_begin, q_begin, dimf, dimv_),

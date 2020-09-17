@@ -204,6 +204,12 @@ public:
   /// @brief Newton direction of beta.
   Eigen::VectorXd dbeta;
 
+  ///
+  /// @brief Generates split direction filled randomly.
+  /// @return Split direction filled randomly.
+  ///
+  static SplitDirection Random(const Robot& robot);
+
 private:
   /// @brief Stack of the Newton directions.
   Eigen::VectorXd split_direction_;

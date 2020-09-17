@@ -162,6 +162,24 @@ inline int SplitSolution::dimf() const {
   return dimf_;
 }
 
+
+inline SplitSolution SplitSolution::Random(const Robot& robot) {
+  SplitSolution s(robot);
+  s.lmd = Eigen::VectorXd::Random(robot.dimv());
+  s.gmm = Eigen::VectorXd::Random(robot.dimv());
+  s.mu_stack() = Eigen::VectorXd::Random(robot.dim_passive()+robot.dimf());
+  s.set_mu_contact();
+  s.a = Eigen::VectorXd::Random(robot.dimv());
+  s.f_stack() = Eigen::VectorXd::Random(robot.dimf());
+  s.set_f();
+  s.q = Eigen::VectorXd::Random(robot.dimq());
+  robot.normalizeConfiguration(s.q);
+  s.v = Eigen::VectorXd::Random(robot.dimv());
+  s.u = Eigen::VectorXd::Random(robot.dimv());
+  s.beta = Eigen::VectorXd::Random(robot.dimv());
+  return s;
+}
+
 } // namespace idocp 
 
 #endif // IDOCP_SPLIT_SOLUTION_HXX_

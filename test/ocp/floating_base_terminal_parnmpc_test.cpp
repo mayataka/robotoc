@@ -42,8 +42,9 @@ protected:
     robot.generateFeasibleConfiguration(s.q);
     s.v = Eigen::VectorXd::Random(robot.dimv());
     s.a = Eigen::VectorXd::Random(robot.dimv());
-    s.f = Eigen::VectorXd::Random(robot.max_dimf());
-    s.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
+    s.f_stack() = Eigen::VectorXd::Random(robot.dimf());
+    s.set_f();
+    s.mu_stack() = Eigen::VectorXd::Random(robot.dim_passive()+robot.dimf());
     s.lmd = Eigen::VectorXd::Random(robot.dimv());
     s.gmm = Eigen::VectorXd::Random(robot.dimv());
     s_next = SplitSolution(robot);
@@ -51,8 +52,9 @@ protected:
     robot.generateFeasibleConfiguration(s_next.q);
     s_next.v = Eigen::VectorXd::Random(robot.dimv());
     s_next.a = Eigen::VectorXd::Random(robot.dimv());
-    s_next.f = Eigen::VectorXd::Random(robot.max_dimf());
-    s_next.mu = Eigen::VectorXd::Random(robot.dim_passive()+robot.max_dimf());
+    s_next.f_stack() = Eigen::VectorXd::Random(robot.dimf());
+    s_next.set_f();
+    s_next.mu_stack() = Eigen::VectorXd::Random(robot.dim_passive()+robot.dimf());
     s_next.lmd = Eigen::VectorXd::Random(robot.dimv());
     s_next.gmm = Eigen::VectorXd::Random(robot.dimv());
     s_tmp = SplitSolution(robot);

@@ -53,11 +53,7 @@ TEST_F(FixedBaseContactCostTest, setWeights) {
   EXPECT_FALSE(cost.useKinematics());
   cost.set_f_weight(f_weight);
   cost.set_f_ref(f_ref);
-  s.q = Eigen::VectorXd::Random(dimq);
-  s.v = Eigen::VectorXd::Random(dimv);
-  s.a = Eigen::VectorXd::Random(dimv);
-  s.f[0] = Eigen::Vector3d::Random();
-  s.u = Eigen::VectorXd::Random(dimv);
+  s = SplitSolution::Random(robot_);
   ASSERT_EQ(robot_.dimf(), 0);
   kkt_res.setContactStatus(robot_);
   kkt_mat.setContactStatus(robot_);

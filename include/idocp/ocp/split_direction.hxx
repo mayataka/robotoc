@@ -167,6 +167,21 @@ inline int SplitDirection::dimf() const {
   return dimf_;
 }
 
+
+inline SplitDirection SplitDirection::Random(const Robot& robot) {
+  SplitDirection d(robot);
+  d.dlmd() = Eigen::VectorXd::Random(robot.dimv());
+  d.dgmm() = Eigen::VectorXd::Random(robot.dimv());
+  d.dmu() = Eigen::VectorXd::Random(robot.dim_passive()+robot.dimf());
+  d.da() = Eigen::VectorXd::Random(robot.dimv());
+  d.df() = Eigen::VectorXd::Random(robot.dimf());
+  d.dq() = Eigen::VectorXd::Random(robot.dimv());
+  d.dv() = Eigen::VectorXd::Random(robot.dimv());
+  d.du = Eigen::VectorXd::Random(robot.dimv());
+  d.dbeta = Eigen::VectorXd::Random(robot.dimv());
+  return d;
+}
+
 } // namespace idocp 
 
 #endif // IDOCP_SPLIT_OCP_DIRECTION_HXX_

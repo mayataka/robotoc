@@ -260,7 +260,7 @@ private:
   RiccatiGain riccati_gain_;
   RiccatiMatrixFactorizer riccati_factorizer_;
   RiccatiMatrixInverter riccati_inverter_;
-  Eigen::MatrixXd Ginv_; /// @brief Inverse of the Riccati matrix G.
+  Eigen::MatrixXd Ginv_full_; /// @brief Inverse of the Riccati matrix G.
   SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
   int dimv_, dimf_, dimc_;
   bool use_kinematics_;
@@ -280,8 +280,8 @@ private:
   /// this function, call setContactStatus() to update contact dimensions.
   /// @return Block matrix of Ginv wth appropriate size.
   ///
-  inline Eigen::Block<Eigen::MatrixXd> Ginv_active() {
-    return Ginv_.topLeftCorner(dimv_+dimf_+dimc_, dimv_+dimf_+dimc_);
+  inline Eigen::Block<Eigen::MatrixXd> Ginv_() {
+    return Ginv_full_.topLeftCorner(dimv_+dimf_+dimc_, dimv_+dimf_+dimc_);
   }
 
 };

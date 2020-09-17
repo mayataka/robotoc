@@ -19,7 +19,7 @@ SplitOCP::SplitOCP(const Robot& robot,
     riccati_gain_(robot),
     riccati_factorizer_(robot),
     riccati_inverter_(robot),
-    Ginv_(Eigen::MatrixXd::Zero(
+    Ginv_full_(Eigen::MatrixXd::Zero(
         robot.dimv()+2*robot.max_dimf()+robot.dim_passive(), 
         robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
     s_tmp_(robot),
@@ -46,7 +46,7 @@ SplitOCP::SplitOCP()
     riccati_gain_(),
     riccati_factorizer_(),
     riccati_inverter_(),
-    Ginv_(),
+    Ginv_full_(),
     s_tmp_(),
     dimv_(0),
     dimf_(0),
@@ -131,12 +131,11 @@ void SplitOCP::backwardRiccatiRecursion(
                                    kkt_residual_.Fq(), kkt_residual_.Fv(), 
                                    riccati_next.sv, kkt_residual_.la());
   // Computes the matrix inversion
-  riccati_inverter_.invert(kkt_matrix_.Qafaf(), kkt_matrix_.Caf(), 
-                           Ginv_active());
+  riccati_inverter_.invert(kkt_matrix_.Qafaf(), kkt_matrix_.Caf(), Ginv_());
   // Computes the state feedback gain and feedforward terms
-  riccati_gain_.computeFeedbackGain(Ginv_active(), kkt_matrix_.Qafqv(), 
+  riccati_gain_.computeFeedbackGain(Ginv_(), kkt_matrix_.Qafqv(), 
                                     kkt_matrix_.Cqv());
-  riccati_gain_.computeFeedforward(Ginv_active(), kkt_residual_.laf(), 
+  riccati_gain_.computeFeedforward(Ginv_(), kkt_residual_.laf(), 
                                    kkt_residual_.C());
   // Computes the Riccati factorization matrices
   // Qaq() means Qqa().transpose(). This holds for Qav(), Qfq(), Qfv().
@@ -244,7 +243,8 @@ std::pair<double, double> SplitOCP::costAndViolation(
   assert(dtau > 0);
   s_tmp_.a = s.a + step_size * d.da();
   if (robot.has_active_contacts()) {
-    s_tmp_.f_active() = s.f_active() + step_size * d.df();
+    s_tmp_.f_stack() = s.f_stack() + + step_size * d.df();
+    s_tmp_.set_f();
     robot.setContactForces(s_tmp_.f);
   }
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp_.q);
@@ -289,10 +289,12 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   robot.integrateConfiguration(d.dq(), step_size, s.q);
   s.v.noalias() += step_size * d.dv();
   s.a.noalias() += step_size * d.da();
-  s.f_active().noalias() += step_size * d.df();
+  s.f_stack().noalias() += step_size * d.df();
+  s.set_f();
   s.u.noalias() += step_size * d.du;
   s.beta.noalias() += step_size * d.dbeta;
-  s.mu_active().noalias() += step_size * d.dmu();
+  s.mu_stack().noalias() += step_size * d.dmu();
+  s.set_mu_contact();
   constraints_->updateSlack(constraints_data_, step_size);
 }
 
@@ -303,9 +305,9 @@ void SplitOCP::getStateFeedbackGain(Eigen::MatrixXd& Kq,
   assert(Kq.rows() == dimv_);
   assert(Kv.cols() == dimv_);
   assert(Kv.rows() == dimv_);
-  robot_dynamics_.getControlInputTorquesSensitivitiesWithRespectToState(
-    riccati_gain_.Kaq(), riccati_gain_.Kav(), riccati_gain_.Kfq(), 
-    riccati_gain_.Kfv(), Kq, Kv);
+  robot_dynamics_.getStateFeedbackGain(riccati_gain_.Kaq(), riccati_gain_.Kav(), 
+                                       riccati_gain_.Kfq(), riccati_gain_.Kfv(), 
+                                       Kq, Kv);
 }
 
 
