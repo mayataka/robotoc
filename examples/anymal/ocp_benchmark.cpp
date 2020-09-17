@@ -44,7 +44,11 @@ void BenchmarkWithContacts() {
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
   auto contact_cost = std::make_shared<idocp::ContactCost>(robot);
-  contact_cost->set_f_weight(Eigen::VectorXd::Constant(robot.max_dimf(), 0.0));
+  std::vector<Eigen::Vector3d> f_weight;
+  for (int i=0; i<contact_frames.size(); ++i) {
+    f_weight.push_back(Eigen::Vector3d::Constant(0.0));
+  }
+  contact_cost->set_f_weight(f_weight);
   cost->push_back(joint_cost);
   cost->push_back(contact_cost);
   idocp::JointConstraintsFactory constraints_factory(robot);
@@ -68,7 +72,7 @@ void BenchmarkWithContacts() {
                                                     robot, cost, constraints, T, N, num_proc);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   ocp_benchmarker.setContactStatus(contact_status);
-  ocp_benchmarker.testConvergence(t, q, v, 30, true);
+  ocp_benchmarker.testConvergence(t, q, v, 30, false);
   ocp_benchmarker.testCPUTime(t, q, v);
   idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
                                                             robot, cost, constraints, T, N, num_proc);

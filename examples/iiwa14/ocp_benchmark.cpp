@@ -71,7 +71,9 @@ void BenchmarkWithContacts() {
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
   auto contact_cost = std::make_shared<idocp::ContactCost>(robot);
-  contact_cost->set_f_weight(Eigen::VectorXd::Constant(robot.max_dimf(), 0.0));
+  std::vector<Eigen::Vector3d> f_weight;
+  f_weight.push_back(Eigen::VectorXd::Constant(robot.max_dimf(), 0.0));
+  contact_cost->set_f_weight(f_weight);
   cost->push_back(joint_cost);
   cost->push_back(contact_cost);
   idocp::JointConstraintsFactory constraints_factory(robot);
