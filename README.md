@@ -12,19 +12,19 @@
 
 ## Requirements
 - Ubuntu 
-- gcc
-- [pinocchio](https://github.com/stack-of-tasks/pinocchio) (instruction for installation is found [here](https://stack-of-tasks.github.io/pinocchio/download.html))
+- gcc, CMake, pkg-config
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  
-- (Option) [RaiSim](https://github.com/leggedrobotics/raisimLib) : used for simulation of quadrupeds.
+- [pinocchio](https://github.com/stack-of-tasks/pinocchio) (instruction for installation is found [here](https://stack-of-tasks.github.io/pinocchio/download.html))
+- (Optional to simulate MPC for quadrupeds) [RaiSim](https://github.com/leggedrobotics/raisimLib), [RaiSimOgre](https://github.com/leggedrobotics/raisimOgre).
 
 ## Installation 
-1. Install Eigen3 by 
+1. Install latest stable version of Eigen3 by 
 
 ```
 sudo apt install libeigen3-dev
 ```
 
-2. Install pinocchio by following the [instruction](https://stack-of-tasks.github.io/pinocchio/download.html)
+2. Install latest stable version of pinocchio by following the [instruction](https://stack-of-tasks.github.io/pinocchio/download.html)
 3. Clone this repository and change directory as
 
 ```
@@ -42,7 +42,8 @@ make -j$(nproc)
 sudo make install
 ```
 
-You can then link exectables to `idocp` by writing `CMakeLists.txt` as
+## Usage
+You can link your exectables to `idocp` by writing `CMakeLists.txt` as
 ```
 find_package(idocp REQUIRED)
 find_package(PkgConfig)
@@ -65,8 +66,42 @@ target_include_directories(
 )
 ```
 
-### Simulation of Contact Dynamics 
-You can simulate contact dynamics utilizing RaiSim.
+## Simulation of Contact Dynamics 
+
+Class `idocp::QuadrupedSimulator` provides quadruped simulation utilizing RaiSim.
 Note that RaiSim currently supports only for academic use.
+First, install [RaiSimLib](https://github.com/leggedrobotics/raisimLib) and [RaiSimOgre](https://github.com/leggedrobotics/raisimOgre) into $RAISIM_LOCAL_BUILD_DIR.
+Then you can build the simulation by writing `CMakeLists.txt` as
+```
+find_package(idocp REQUIRED)
+find_package(PkgConfig)
+find_package(raisim CONFIG REQUIRED)
+find_package(raisimOgre CONFIG REQUIRED)
+pkg_check_modules(PINOCCHIO REQUIRED pinocchio)
+link_directories(${PINOCCHIO_LIBDIR})
+
+add_executable(
+    YOUR_EXECTABLE
+    YOUR_EXECTABLE.cpp
+)
+target_link_libraries(
+    YOUR_EXECTABLE
+    PRIVATE
+    idocp::idocp
+    raisim::raisim
+    raisim::raisimOgre
+)
+target_include_directories(
+    YOUR_EXECTABLE
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+)
+```
+And build exectables as
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$RAISIM_LOCAL_BUILD_DIR
+make
+```
+
 
 ## Related publications

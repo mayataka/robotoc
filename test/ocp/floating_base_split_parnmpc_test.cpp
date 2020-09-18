@@ -302,8 +302,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormEmptyCost) {
   s.setContactStatus(robot);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual.lu);
-  state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
-                                        s_next.lmd, s_next.gmm, s_next.q, 
+  state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);
   robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
@@ -323,8 +322,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormEmptyConstraints) {
   s.setContactStatus(robot);
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
   cost->lu(robot, cost_data, t, dtau, s.u, kkt_residual.lu);
-  state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
-                                        s_next.lmd, s_next.gmm, s_next.q, 
+  state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);
   robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
@@ -346,8 +344,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNorm) {
   cost->lu(robot, cost_data, t, dtau, s.u, kkt_residual.lu);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual.lu);
-  state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
-                                        s_next.lmd, s_next.gmm, s_next.q, 
+  state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);
   robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
@@ -482,8 +479,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, coarseUpdate) {
                                      kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, 
                                    kkt_residual);
-  state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, 
-                                        s_next.lmd, s_next.gmm, s_next.q, 
+  state_equation.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);
   cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix);
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s, 
