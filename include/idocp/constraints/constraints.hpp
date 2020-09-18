@@ -17,6 +17,11 @@
 
 namespace idocp {
 
+///
+/// @typedef ConstraintsData
+/// @brief Data for constraints. Composed of ConstraintComponentData 
+/// corrensponding to the components of Constraints.
+///
 typedef std::vector<ConstraintComponentData> ConstraintsData;
 
 class Constraints {
