@@ -18,8 +18,8 @@ namespace idocp {
 
 ///
 /// @class CostFunction
-/// @brief Cost function. Composed by cost function components that inherits
-/// CostFunctionComponentBase.
+/// @brief Stack of the cost function. Composed by cost function components 
+/// that inherits CostFunctionComponentBase.
 ///
 class CostFunction {
 public:

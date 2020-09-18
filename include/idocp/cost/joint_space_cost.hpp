@@ -15,8 +15,6 @@ namespace idocp {
 
 class JointSpaceCost final : public CostFunctionComponentBase {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   JointSpaceCost(const Robot& robot);
 
   JointSpaceCost();
@@ -114,6 +112,8 @@ public:
   void luu(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const Eigen::VectorXd& u, 
            Eigen::MatrixXd& Quu) const override;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int dimq_, dimv_;

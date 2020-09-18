@@ -26,8 +26,6 @@ namespace idocp {
 ///
 class SplitParNMPC {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   ///
   /// @brief Construct SplitParNMPC.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -438,6 +436,8 @@ public:
                                             const Eigen::VectorXd& q_prev, 
                                             const Eigen::VectorXd& v_prev, 
                                             const SplitSolution& s);
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   std::shared_ptr<CostFunction> cost_;

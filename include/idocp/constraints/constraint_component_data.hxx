@@ -49,7 +49,7 @@ inline int ConstraintComponentData::dimc() const {
 }
 
 
-inline bool ConstraintComponentData::checkDimensionsOfVectors() const {
+inline bool ConstraintComponentData::checkDimensionnalConsistency() const {
   if (slack.size() != dimc_) {
     return false;
   }

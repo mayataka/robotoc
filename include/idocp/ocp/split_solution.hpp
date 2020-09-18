@@ -16,8 +16,6 @@ namespace idocp {
 ///
 class SplitSolution {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   ///
   /// @brief Construct a split solution.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -194,6 +192,8 @@ public:
   /// @return Split solution filled randomly.
   ///
   static SplitSolution Random(const Robot& robot);
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   /// @brief Stack of Lagrange multiplier with respect to equality constraints. 

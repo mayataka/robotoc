@@ -14,8 +14,6 @@ namespace idocp {
 
 class RobotDynamics {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   RobotDynamics(const Robot& robot);
 
   RobotDynamics();
@@ -61,6 +59,8 @@ public:
                             const Eigen::MatrixBase<MatrixType4>& df_dv,
                             const Eigen::MatrixBase<MatrixType5>& Kuq,
                             const Eigen::MatrixBase<MatrixType6>& Kuv) const;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   Eigen::VectorXd lu_condensed_;

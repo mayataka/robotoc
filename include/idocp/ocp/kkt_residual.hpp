@@ -14,8 +14,6 @@ namespace idocp {
 ///
 class KKTResidual {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   ///
   /// @brief Construct a KKT residual.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -289,6 +287,8 @@ public:
 
   /// @brief Residual of inverse dynamics constraint.
   Eigen::VectorXd u_res;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   Eigen::VectorXd kkt_residual_;

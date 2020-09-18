@@ -16,8 +16,6 @@ namespace idocp {
 
 class TaskSpace6DCost final : public CostFunctionComponentBase {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   typedef Eigen::Matrix<double, 6, 1> Vector6d;
 
   TaskSpace6DCost(const Robot& robot, const int frame_id);
@@ -112,6 +110,8 @@ public:
   void luu(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const Eigen::VectorXd& u, 
            Eigen::MatrixXd& Quu) const override {}
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int frame_id_;

@@ -14,8 +14,6 @@ namespace idocp {
 ///
 class KKTMatrix {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   ///
   /// @brief Construct a KKT matrix.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -379,6 +377,8 @@ public:
   /// @brief Derivative of the state equation with respect to the 
   /// configuration of the previous time step q_prev.
   Eigen::MatrixXd Fqq_prev;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   Eigen::MatrixXd C_, Q_, Sc_, Sx_, FMinv_, C_H_inv_;

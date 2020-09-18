@@ -10,8 +10,6 @@ namespace idocp {
 
 class RiccatiMatrixFactorizer {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   // Constructor.
   // Argments:
   //    robot: The robot model that has been already initialized.
@@ -85,6 +83,8 @@ public:
 
   template <typename VectorType>
   void correct_s(const Eigen::MatrixBase<VectorType>& sq) const;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   bool has_floating_base_;

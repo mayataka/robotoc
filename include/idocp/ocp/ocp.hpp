@@ -25,8 +25,6 @@ namespace idocp {
 ///
 class OCP {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   ///
   /// @brief Construct OCP solver.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -171,6 +169,8 @@ public:
   /// @brief Prints the solution into console. 
   ///
   void printSolution() const;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
 

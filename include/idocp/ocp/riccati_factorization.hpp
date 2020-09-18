@@ -10,8 +10,6 @@ namespace idocp {
 
 class RiccatiFactorization {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   RiccatiFactorization(const Robot& robot) 
     : Pqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Pqv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
@@ -43,6 +41,9 @@ public:
 
   Eigen::MatrixXd Pqq, Pqv, Pvq, Pvv;
   Eigen::VectorXd sq, sv;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 };
 
 } // namespace idocp 

@@ -31,8 +31,6 @@ namespace idocp {
 ///
 class Robot {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   ///
   /// @brief Build the robot model and data from URDF. The model is assumed to
   /// have no contacts with the environment.
@@ -530,6 +528,8 @@ public:
   /// lower_joint_position_limit_, upper_joint_position_limit_, by the URDF.
   /// 
   void initializeJointLimits();
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   pinocchio::Model model_;
