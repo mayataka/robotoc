@@ -10,8 +10,6 @@ namespace idocp {
 
 class RiccatiMatrixInverter {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   // Constructor.
   // Argments:
   //    robot: The robot model that has been already initialized.
@@ -53,7 +51,9 @@ public:
   void firstOrderCorrection(const double dtau, 
                             const Eigen::MatrixBase<MatrixType>& dPvv,
                             const Eigen::MatrixBase<MatrixType>& G_inv);
-  
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 private:
   int dimv_, dimf_, dimc_, dimaf_;
   Eigen::MatrixXd G_inv_, Sc_, G_inv_Caf_trans_;

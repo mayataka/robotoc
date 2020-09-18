@@ -15,8 +15,6 @@ namespace idocp {
 
 class TaskSpace3DCost final : public CostFunctionComponentBase {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   TaskSpace3DCost(const Robot& robot, const int frame_id);
 
   TaskSpace3DCost();
@@ -100,6 +98,8 @@ public:
   void luu(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const Eigen::VectorXd& u, 
            Eigen::MatrixXd& Quu) const override {}
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int frame_id_;

@@ -15,8 +15,6 @@ namespace idocp {
 ///
 class CostFunctionData {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
-
   ///
   /// @brief Constructor. 
   /// @param[in] robot Robot model. 
@@ -117,6 +115,8 @@ public:
   /// CostFunction has TaskSpace6DCost. Size is 6 x Robot::dimv().
   ///
   Eigen::MatrixXd JJ_6d;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
 };
 
 } // namespace idocp

@@ -24,8 +24,6 @@ namespace idocp {
 ///
 class TerminalOCP {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   ///
   /// @brief Construct a terminal OCP.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -175,6 +173,8 @@ public:
   ///
   double computeSquaredKKTErrorNorm(Robot& robot, const double t, 
                                     const SplitSolution& s);
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   std::shared_ptr<CostFunction> cost_;

@@ -14,8 +14,6 @@ namespace idocp {
 ///
 class SplitDirection {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   ///
   /// @brief Construct a split solution.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -209,6 +207,8 @@ public:
   /// @return Split direction filled randomly.
   ///
   static SplitDirection Random(const Robot& robot);
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   /// @brief Stack of the Newton directions.

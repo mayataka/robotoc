@@ -12,8 +12,6 @@ namespace idocp {
 
 class RiccatiGain {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   RiccatiGain(const Robot& robot);
 
   RiccatiGain();
@@ -57,6 +55,8 @@ public:
                           const Eigen::MatrixBase<VectorType2>& C);
 
   void setContactStatus(const Robot& robot);
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int dimv_, dimf_, dimc_;

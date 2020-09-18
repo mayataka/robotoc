@@ -20,8 +20,6 @@ namespace idocp {
 ///
 class PointContact {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   ///
   /// @brief Constructor.
   /// @param[in] model The pinocchio model. Before call this constructor, 
@@ -270,6 +268,8 @@ public:
   /// @return contact point.
   ///
   Eigen::Vector3d contact_point() const;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   bool is_active_;

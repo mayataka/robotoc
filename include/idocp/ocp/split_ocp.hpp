@@ -30,8 +30,6 @@ namespace idocp {
 ///
 class SplitOCP {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   ///
   /// @brief Construct a split OCP.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -247,6 +245,8 @@ public:
                                     const Eigen::VectorXd& q_prev, 
                                     const SplitSolution& s, 
                                     const SplitSolution& s_next);
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   std::shared_ptr<CostFunction> cost_;

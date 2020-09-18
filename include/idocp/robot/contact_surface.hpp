@@ -30,6 +30,8 @@ public:
 
   void setNormalVector(const Eigen::Vector3d& normal_vector);
 
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 private:
   Eigen::Vector3d origin_, normal_vector_;
 

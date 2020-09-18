@@ -13,8 +13,6 @@ namespace idocp {
 
 class StateEquation {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  
   StateEquation(const Robot& robot);
 
   StateEquation();
@@ -80,6 +78,8 @@ public:
       const Eigen::MatrixBase<TangentVectorType3>& dv_prev, 
       const SplitSolution& s, KKTResidual& kkt_residual);
 
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  
 private:
   Eigen::MatrixXd dsubtract_dq_;
 

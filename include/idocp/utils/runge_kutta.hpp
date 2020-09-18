@@ -14,6 +14,8 @@ public:
                  const Eigen::VectorXd& v, const Eigen::VectorXd& tau, 
                  Eigen::VectorXd& q_next, Eigen::VectorXd& v_next);
 
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 private:
   Robot robot_;
   Eigen::VectorXd dq_, dv_, kq1_, kq2_, kq3_, kq4_, kv1_, kv2_, kv3_, kv4_;

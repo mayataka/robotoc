@@ -17,8 +17,6 @@ namespace idocp {
 
 class ContactCost final : public CostFunctionComponentBase {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
   ContactCost(const Robot& robot);
 
   ContactCost();
@@ -100,6 +98,8 @@ public:
   void luu(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const Eigen::VectorXd& u, 
            Eigen::MatrixXd& Quu) const override {}
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int max_dimf_;
