@@ -227,8 +227,7 @@ inline void CostFunction::phiv(Robot& robot, CostFunctionData& data,
 
 
 inline void CostFunction::phiqq(Robot& robot, CostFunctionData& data, 
-                                const double t, const double dtau, 
-                                const SplitSolution& s, 
+                                const double t, const SplitSolution& s, 
                                 KKTMatrix& kkt_matrix) const {
   for (const auto cost : costs_) {
     cost->phiqq(robot, data, t, s, kkt_matrix);
@@ -237,8 +236,7 @@ inline void CostFunction::phiqq(Robot& robot, CostFunctionData& data,
 
 
 inline void CostFunction::phivv(Robot& robot, CostFunctionData& data, 
-                                const double t, const double dtau, 
-                                const SplitSolution& s, 
+                                const double t, const SplitSolution& s, 
                                 KKTMatrix& kkt_matrix) const {
   for (const auto cost : costs_) {
     cost->phivv(robot, data, t, s, kkt_matrix);
