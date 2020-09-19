@@ -25,7 +25,6 @@ target_include_directories(
 )
 
 option(SIM_MPC "Performs MPC simulation using RaiSim" OFF) 
-set(SIM_MPC OFF)
 if (SIM_MPC)
   find_package(raisim CONFIG REQUIRED)
   find_package(raisimOgre CONFIG REQUIRED)

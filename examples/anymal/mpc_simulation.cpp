@@ -39,8 +39,8 @@ void SimulateWithContactsByOCP() {
   auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
   Eigen::VectorXd q_ref(robot.dimq());
   // q_ref << 0, 0, 0.48, 0, 0, 0, 1, 
-  q_ref << 0, 0, 0.48, 0, -50, 0, 1, 
-  // q_ref << 0, 0, 0.48, 0, 50, 0, 1, 
+  // q_ref << 0, 0, 0.48, 0, -50, 0, 1, 
+  q_ref << 0, 0, 0.48, 0, 50, 0, 1, 
   // q_ref << 0, 0, 0.48, -1, 0, 1, 0.5, 
   // q_ref << 0, 0, 0.48, 1, 0, -1, 0.5, 
            0.0315, 0.4, -0.8, 

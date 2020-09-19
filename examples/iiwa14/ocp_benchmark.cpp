@@ -32,9 +32,9 @@ void BenchmarkWithoutContacts() {
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
   cost->push_back(joint_cost);
-  // idocp::JointConstraintsFactory constraints_factory(robot);
-  // auto constraints = constraints_factory.create();
-  auto constraints = std::make_shared<idocp::Constraints>();
+  idocp::JointConstraintsFactory constraints_factory(robot);
+  auto constraints = constraints_factory.create();
+  // auto constraints = std::make_shared<idocp::Constraints>();
   const double T = 1;
   const int N = 20;
   const int num_proc = 4;
@@ -44,13 +44,13 @@ void BenchmarkWithoutContacts() {
   idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for iiwa14 without contacts",
                                                     robot, cost, constraints, T, N, num_proc);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
-  // ocp_benchmarker.testConvergence(t, q, v, 20, false);
+  ocp_benchmarker.testConvergence(t, q, v, 20, false);
   ocp_benchmarker.testCPUTime(t, q, v, 10000);
-  // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa14 without contacts",
-  //                                                           robot, cost, constraints, T, N, num_proc);
-  // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
-  // parnmpc_benchmarker.testConvergence(t, q, v, 20, false);
-  // parnmpc_benchmarker.testCPUTime(t, q, v, 10000);
+  idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa14 without contacts",
+                                                            robot, cost, constraints, T, N, num_proc);
+  parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
+  parnmpc_benchmarker.testConvergence(t, q, v, 20, false);
+  parnmpc_benchmarker.testCPUTime(t, q, v, 10000);
 }
 
 
