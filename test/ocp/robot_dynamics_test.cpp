@@ -109,8 +109,7 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFixedBaseWithoutContacts) {
   kkt_residual_ref.setContactStatus(robot);
   KKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(robot);
-  const Eigen::MatrixXd Quu_ref = Eigen::MatrixXd::Random(robot.dimv(), 
-                                                          robot.dimv());
+  const Eigen::MatrixXd Quu_ref = Eigen::VectorXd::Random(robot.dimv()).asDiagonal();
   kkt_matrix.Quu = Quu_ref;
   kkt_matrix_ref.Quu = Quu_ref;
   kkt_residual.lq() = Eigen::VectorXd::Random(robot.dimv());
@@ -315,8 +314,7 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFixedBaseWithContact) {
   kkt_residual_ref.setContactStatus(robot);
   KKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(robot);
-  const Eigen::MatrixXd Quu_ref = Eigen::MatrixXd::Random(robot.dimv(), 
-                                                          robot.dimv());
+  const Eigen::MatrixXd Quu_ref = Eigen::VectorXd::Random(robot.dimv()).asDiagonal();
   kkt_matrix.Quu = Quu_ref;
   kkt_matrix_ref.Quu = Quu_ref;
   kkt_residual.lq() = Eigen::VectorXd::Random(robot.dimv());
@@ -537,8 +535,7 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithoutContacts) {
   kkt_residual_ref.setContactStatus(robot);
   KKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(robot);
-  const Eigen::MatrixXd Quu_ref = Eigen::MatrixXd::Random(robot.dimv(), 
-                                                          robot.dimv());
+  const Eigen::MatrixXd Quu_ref = Eigen::VectorXd::Random(robot.dimv()).asDiagonal();
   kkt_matrix.Quu = Quu_ref;
   kkt_matrix_ref.Quu = Quu_ref;
   kkt_residual.lq() = Eigen::VectorXd::Random(robot.dimv());
@@ -777,8 +774,7 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithContacts) {
   kkt_residual_ref.setContactStatus(robot);
   KKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(robot);
-  const Eigen::MatrixXd Quu_ref = Eigen::MatrixXd::Random(robot.dimv(), 
-                                                          robot.dimv());
+  const Eigen::MatrixXd Quu_ref = Eigen::VectorXd::Random(robot.dimv()).asDiagonal();
   kkt_matrix.Quu = Quu_ref;
   kkt_matrix_ref.Quu = Quu_ref;
   kkt_residual.lq() = Eigen::VectorXd::Random(robot.dimv());

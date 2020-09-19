@@ -103,10 +103,13 @@ inline void RobotDynamics::condenseRobotDynamics(Robot& robot,
   kkt_residual.lv().noalias() = du_dv_.transpose() * lu_condensed_;
   kkt_residual.lu.noalias() -= dtau * s.beta;   
   // condense Hessian
+  // Assume that Quu has only diagonal elements, hence we write as 
+  // kkt_matrix.Quu.dianobal().asDiagonal() for efficiency.
+  // Otherwise, simply use kkt_matrix.Quu instead.
   Quu_du_da_.noalias() = kkt_matrix.Quu.diagonal().asDiagonal() * du_da_;
   kkt_matrix.Qaa().noalias() = du_da_.transpose() * Quu_du_da_;
   if (robot.has_active_contacts()) {
-    Quu_du_df_().noalias() = kkt_matrix.Quu.diagonal().asDiagonal() * du_df_();
+    Quu_du_df_().noalias() = kkt_matrix.Quu.diagonal().asDiagonal() * du_df_(); 
     kkt_matrix.Qaf().noalias() = du_da_.transpose() * Quu_du_df_(); 
   }
   Quu_du_dq_.noalias() = kkt_matrix.Quu.diagonal().asDiagonal() * du_dq_;
