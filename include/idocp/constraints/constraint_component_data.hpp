@@ -98,7 +98,7 @@ public:
   /// dslack, ddual are ConstraintComponentData::dimc(). 
   /// @return Dimension of the constraint. 
   ///
-  bool checkDimensionnalConsistency() const;
+  bool checkDimensionalConsistency() const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
 

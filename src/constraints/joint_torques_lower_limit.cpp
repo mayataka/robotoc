@@ -55,7 +55,7 @@ void JointTorquesLowerLimit::setSlackAndDual(
 
 void JointTorquesLowerLimit::augmentDualResidual(
     const Robot& robot, ConstraintComponentData& data, const double dtau, 
-    Eigen::VectorXd& lu) const {
+    const Eigen::VectorXd& u, Eigen::VectorXd& lu) const {
   lu.tail(dimc_).noalias() -= dtau * data.dual;
 }
 
@@ -75,7 +75,7 @@ void JointTorquesLowerLimit::condenseSlackAndDual(
 
 void JointTorquesLowerLimit::computeSlackAndDualDirection(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitDirection& d) const {
+    const SplitSolution& s, const SplitDirection& d) const {
   data.dslack = dtau * d.du.tail(dimc_) - data.residual;
   computeDualDirection(data.slack, data.dual, data.dslack, data.duality, 
                        data.ddual);

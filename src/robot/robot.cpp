@@ -7,10 +7,9 @@
 
 namespace idocp {
 
-Robot::Robot(const std::string& urdf_file_name)
+Robot::Robot(const std::string& path_to_urdf)
   : model_(),
     data_(model_),
-    urdf_file_name_(urdf_file_name),
     point_contacts_(),
     floating_base_(),
     fjoint_(),
@@ -26,7 +25,7 @@ Robot::Robot(const std::string& urdf_file_name)
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
     upper_joint_position_limit_() {
-  pinocchio::urdf::buildModel(urdf_file_name, model_);
+  pinocchio::urdf::buildModel(path_to_urdf, model_);
   data_ = pinocchio::Data(model_);
   fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
                  model_.joints.size(), pinocchio::Force::Zero());
@@ -38,13 +37,13 @@ Robot::Robot(const std::string& urdf_file_name)
 }
 
 
-Robot::Robot(const std::string& urdf_file_name, 
+Robot::Robot(const std::string& path_to_urdf, 
              const std::vector<int>& contact_frames, 
+             const std::vector<double>& mu,
              const double baumgarte_weight_on_velocity, 
              const double baumgarte_weight_on_position) 
   : model_(),
     data_(model_),
-    urdf_file_name_(urdf_file_name),
     point_contacts_(),
     floating_base_(),
     fjoint_(),
@@ -60,10 +59,10 @@ Robot::Robot(const std::string& urdf_file_name,
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
     upper_joint_position_limit_() {
-  pinocchio::urdf::buildModel(urdf_file_name, model_);
+  pinocchio::urdf::buildModel(path_to_urdf, model_);
   data_ = pinocchio::Data(model_);
-  for (const auto& frame : contact_frames) {
-    point_contacts_.push_back(PointContact(model_, frame, 
+  for (int i=0; i<contact_frames.size(); ++i) {
+    point_contacts_.push_back(PointContact(model_, contact_frames[i], mu[i],
                                            baumgarte_weight_on_velocity,
                                            baumgarte_weight_on_position));
     is_each_contact_active_.push_back(false);
@@ -82,7 +81,6 @@ Robot::Robot(const std::string& urdf_file_name,
 Robot::Robot()
   : model_(),
     data_(model_),
-    urdf_file_name_(),
     point_contacts_(),
     floating_base_(),
     fjoint_(),

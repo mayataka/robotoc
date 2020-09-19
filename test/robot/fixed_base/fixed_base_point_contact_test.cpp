@@ -39,6 +39,7 @@ protected:
                                         Eigen::VectorXd::Ones(dimq_));
     v_ = Eigen::VectorXd::Random(dimv_);
     a_ = Eigen::VectorXd::Random(dimv_);
+    mu_ = std::abs(Eigen::VectorXd::Random(2)[1]);
     baumgarte_weight_on_velocity_ = std::abs(Eigen::VectorXd::Random(2)[1]);
     baumgarte_weight_on_position_ = std::abs(Eigen::VectorXd::Random(2)[1]);
   }
@@ -50,7 +51,7 @@ protected:
   pinocchio::Model model_;
   pinocchio::Data data_;
   int dimq_, dimv_, njoints_, contact_frame_id_;
-  double baumgarte_weight_on_velocity_, baumgarte_weight_on_position_;
+  double mu_, baumgarte_weight_on_velocity_, baumgarte_weight_on_position_;
   Eigen::VectorXd q_, v_, a_;
 };
 
@@ -61,6 +62,7 @@ TEST_F(FixedBasePointContactTest, defaultConstructor) {
   EXPECT_FALSE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), 0);
   EXPECT_EQ(contact.parent_joint_id(), 0);
+  EXPECT_DOUBLE_EQ(contact.mu(), 0);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(), 0);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 0);
   EXPECT_TRUE(contact.contact_point().isApprox(Eigen::Vector3d::Zero()));
@@ -68,23 +70,28 @@ TEST_F(FixedBasePointContactTest, defaultConstructor) {
 
 
 TEST_F(FixedBasePointContactTest, constructor) {
-  PointContact contact(model_, contact_frame_id_, baumgarte_weight_on_velocity_, 
+  PointContact contact(model_, contact_frame_id_, mu_,  
+                       baumgarte_weight_on_velocity_, 
                        baumgarte_weight_on_position_);
   // Check the constructor works well.
   EXPECT_FALSE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
+  EXPECT_DOUBLE_EQ(contact.mu(), mu_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(), 
                    baumgarte_weight_on_velocity_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
                    baumgarte_weight_on_position_);
   EXPECT_TRUE(contact.contact_point().isApprox(Eigen::Vector3d::Zero()));
   // Check set parameters set appropriately.
+  double mu_tmp = std::abs(Eigen::VectorXd::Random(2)[1]);
   double baumgarte_weight_on_velocity_tmp = std::abs(Eigen::VectorXd::Random(2)[1]);
   double baumgarte_weight_on_position_tmp = std::abs(Eigen::VectorXd::Random(2)[1]);
   Eigen::Vector3d contact_point = Eigen::Vector3d::Random();
+  contact.setFrictionCoefficient(mu_tmp);
   contact.setBaugrarteParameters(baumgarte_weight_on_velocity_tmp, 
                                  baumgarte_weight_on_position_tmp);
+  EXPECT_DOUBLE_EQ(mu_tmp, contact.mu());
   EXPECT_DOUBLE_EQ(baumgarte_weight_on_velocity_tmp, 
                    contact.baumgarte_weight_on_velocity());
   EXPECT_DOUBLE_EQ(baumgarte_weight_on_position_tmp, 
@@ -105,7 +112,7 @@ TEST_F(FixedBasePointContactTest, constructor) {
 
 
 TEST_F(FixedBasePointContactTest, copyConstructor) {
-  PointContact contact_ref(model_, contact_frame_id_, 
+  PointContact contact_ref(model_, contact_frame_id_, mu_,
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
   contact_ref.activate();
@@ -118,6 +125,7 @@ TEST_F(FixedBasePointContactTest, copyConstructor) {
   EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
+  EXPECT_DOUBLE_EQ(contact.mu(), mu_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(), 
                    baumgarte_weight_on_velocity_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
@@ -130,7 +138,7 @@ TEST_F(FixedBasePointContactTest, copyConstructor) {
 
 
 TEST_F(FixedBasePointContactTest, assign) {
-  PointContact contact_ref(model_, contact_frame_id_, 
+  PointContact contact_ref(model_, contact_frame_id_, mu_,
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
   contact_ref.activate();
@@ -143,6 +151,7 @@ TEST_F(FixedBasePointContactTest, assign) {
   EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
+  EXPECT_DOUBLE_EQ(contact.mu(), mu_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(),  
                    baumgarte_weight_on_velocity_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
@@ -155,7 +164,7 @@ TEST_F(FixedBasePointContactTest, assign) {
 
 
 TEST_F(FixedBasePointContactTest, moveAssign) {
-  PointContact contact_ref(model_, contact_frame_id_, 
+  PointContact contact_ref(model_, contact_frame_id_, mu_,
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
   contact_ref.activate();
@@ -169,6 +178,7 @@ TEST_F(FixedBasePointContactTest, moveAssign) {
   EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
+  EXPECT_DOUBLE_EQ(contact.mu(), mu_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(),  
                    baumgarte_weight_on_velocity_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
@@ -181,7 +191,7 @@ TEST_F(FixedBasePointContactTest, moveAssign) {
 
 
 TEST_F(FixedBasePointContactTest, moveConstructor) {
-  PointContact contact_ref(model_, contact_frame_id_, 
+  PointContact contact_ref(model_, contact_frame_id_, mu_,
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
   contact_ref.activate();
@@ -194,6 +204,7 @@ TEST_F(FixedBasePointContactTest, moveConstructor) {
   EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
+  EXPECT_DOUBLE_EQ(contact.mu(), mu_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_velocity(),  
                    baumgarte_weight_on_velocity_);
   EXPECT_DOUBLE_EQ(contact.baumgarte_weight_on_position(), 
@@ -210,13 +221,13 @@ TEST_F(FixedBasePointContactTest, stdvector) {
   // Check the size at default.
   EXPECT_TRUE(contacts.empty());
   EXPECT_EQ(contacts.size(), 0);
-  contacts.push_back(PointContact(model_, contact_frame_id_, 
+  contacts.push_back(PointContact(model_, contact_frame_id_, mu_,
                                   baumgarte_weight_on_velocity_, 
                                   baumgarte_weight_on_position_));
   // Check the size when an element is appended.
   EXPECT_FALSE(contacts.empty());
   EXPECT_EQ(contacts.size(), 1);
-  contacts.push_back(PointContact(model_, (int)(contact_frame_id_/2), 
+  contacts.push_back(PointContact(model_, (int)(contact_frame_id_/2), mu_,
                                   0.5*baumgarte_weight_on_velocity_, 
                                   0.5*baumgarte_weight_on_position_));
   // Check each contact's parameters.
@@ -241,7 +252,7 @@ TEST_F(FixedBasePointContactTest, stdvector) {
             0.5*baumgarte_weight_on_velocity_);
   EXPECT_EQ(contacts[0].baumgarte_weight_on_position(), 
             0.5*baumgarte_weight_on_position_);
-  contacts.push_back(PointContact(model_, contact_frame_id_, 
+  contacts.push_back(PointContact(model_, contact_frame_id_, mu_,
                                   baumgarte_weight_on_velocity_, 
                                   baumgarte_weight_on_position_));
   EXPECT_EQ(contacts.size(), 2);
@@ -265,10 +276,10 @@ TEST_F(FixedBasePointContactTest, stdvector) {
             0.5*baumgarte_weight_on_velocity_);
   EXPECT_EQ(contacts[0].baumgarte_weight_on_position(), 
             0.5*baumgarte_weight_on_position_);
-  contacts.push_back(PointContact(model_, contact_frame_id_, 
+  contacts.push_back(PointContact(model_, contact_frame_id_, mu_,
                                   baumgarte_weight_on_velocity_, 
                                   baumgarte_weight_on_position_));
-  contacts.push_back(PointContact(model_, contact_frame_id_, 
+  contacts.push_back(PointContact(model_, contact_frame_id_, mu_,
                                   baumgarte_weight_on_velocity_, 
                                   baumgarte_weight_on_position_));
   // Check whether erase works correctly.
@@ -281,7 +292,8 @@ TEST_F(FixedBasePointContactTest, stdvector) {
 
 
 TEST_F(FixedBasePointContactTest, computeJointForceFromContactForce) {
-  PointContact contact(model_, contact_frame_id_, baumgarte_weight_on_velocity_, 
+  PointContact contact(model_, contact_frame_id_, mu_,
+                       baumgarte_weight_on_velocity_, 
                        baumgarte_weight_on_position_);
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint
       = pinocchio::container::aligned_vector<pinocchio::Force>(
@@ -300,7 +312,8 @@ TEST_F(FixedBasePointContactTest, computeJointForceFromContactForce) {
 
 
 TEST_F(FixedBasePointContactTest, getContactJacobian) {
-  PointContact contact(model_, contact_frame_id_, baumgarte_weight_on_velocity_, 
+  PointContact contact(model_, contact_frame_id_, mu_,
+                       baumgarte_weight_on_velocity_, 
                        baumgarte_weight_on_position_);
   pinocchio::forwardKinematics(model_, data_, q_);
   pinocchio::computeJointJacobians(model_, data_, q_);
@@ -335,7 +348,8 @@ TEST_F(FixedBasePointContactTest, getContactJacobian) {
 
 
 TEST_F(FixedBasePointContactTest, baumgarteResidual) {
-  PointContact contact(model_, contact_frame_id_, baumgarte_weight_on_velocity_, 
+  PointContact contact(model_, contact_frame_id_, mu_,
+                       baumgarte_weight_on_velocity_, 
                        baumgarte_weight_on_position_);
   pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
@@ -365,7 +379,8 @@ TEST_F(FixedBasePointContactTest, baumgarteResidual) {
 
 
 TEST_F(FixedBasePointContactTest, baumgarteDerivatives) {
-  PointContact contact(model_, contact_frame_id_, baumgarte_weight_on_velocity_, 
+  PointContact contact(model_, contact_frame_id_, mu_,
+                       baumgarte_weight_on_velocity_, 
                        baumgarte_weight_on_position_);
   pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
@@ -433,7 +448,8 @@ TEST_F(FixedBasePointContactTest, baumgarteDerivatives) {
 
 
 TEST_F(FixedBasePointContactTest, baumgarteDerivativesBlock) {
-  PointContact contact(model_, contact_frame_id_, baumgarte_weight_on_velocity_, 
+  PointContact contact(model_, contact_frame_id_, mu_,
+                       baumgarte_weight_on_velocity_, 
                        baumgarte_weight_on_position_);
   Eigen::MatrixXd baum_partial_dq_ref = Eigen::MatrixXd::Zero(3, dimv_);
   Eigen::MatrixXd baum_partial_dv_ref = Eigen::MatrixXd::Zero(3, dimv_);

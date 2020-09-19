@@ -83,7 +83,11 @@ TEST_F(SplitDirectionTest, fixed_base) {
 
 TEST_F(SplitDirectionTest, fixed_base_contact) {
   std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf_, contact_frames, 0, 0);
+  std::vector<double> mu;
+  for (int i=0; i<contact_frames.size(); ++i) {
+    mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
+  }
+  Robot robot(fixed_base_urdf_, contact_frames, mu, 0, 0);
   std::random_device rnd;
   std::vector<bool> contact_status = {true};
   robot.setContactStatus(contact_status);
@@ -142,7 +146,11 @@ TEST_F(SplitDirectionTest, fixed_base_contact) {
 
 TEST_F(SplitDirectionTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf_, contact_frames, 0, 0);
+  std::vector<double> mu;
+  for (int i=0; i<contact_frames.size(); ++i) {
+    mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
+  }
+  Robot robot(floating_base_urdf_, contact_frames, mu, 0, 0);
   std::random_device rnd;
   std::vector<bool> contact_status;
   for (const auto frame : contact_frames) {

@@ -29,9 +29,13 @@ protected:
     srand((unsigned int) time(0));
     urdf = "../urdf/iiwa14/iiwa14.urdf";
     std::vector<int> contact_frames = {18};
+    std::vector<double> mu;
+    for (int i=0; i<contact_frames.size(); ++i) {
+      mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
+    }
     const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
     const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
-    robot = Robot(urdf, contact_frames, baum_a, baum_b);
+    robot = Robot(urdf, contact_frames, mu, baum_a, baum_b);
     std::random_device rnd;
     contact_status.push_back(rnd()%2==0);
     robot.setContactStatus(contact_status);
@@ -267,8 +271,8 @@ TEST_F(FixedBaseTerminalParNMPCTest, KKTErrorNormEmptyCost) {
   kkt_residual.setContactStatus(robot);
   kkt_matrix.setContactStatus(robot);
   s.setContactStatus(robot);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual.lu);
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual);
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s.u, kkt_residual.lu);
   state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
   robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
@@ -311,8 +315,8 @@ TEST_F(FixedBaseTerminalParNMPCTest, KKTErrorNorm) {
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
   cost->lu(robot, cost_data, t, dtau, s.u, kkt_residual.lu);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual.lu);
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual);
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s.u, kkt_residual.lu);
   state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
   robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
@@ -402,7 +406,7 @@ TEST_F(FixedBaseTerminalParNMPCTest, coarseUpdate) {
   kkt_residual.lu.setZero();
   kkt_matrix.Quu.setZero();
   cost->lu(robot, cost_data, t, dtau, s.u, kkt_residual.lu);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, 
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s.u,
                                     kkt_residual.lu);
   cost->luu(robot, cost_data, t, dtau, s.u, kkt_matrix.Quu);
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s.u, 
@@ -411,7 +415,7 @@ TEST_F(FixedBaseTerminalParNMPCTest, coarseUpdate) {
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, 
                                      kkt_residual);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, 
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s,
                                    kkt_residual);
   state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);

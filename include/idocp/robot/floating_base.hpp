@@ -9,41 +9,67 @@
 
 namespace idocp {
 
+///
+/// @class FloatingBase
+/// @brief Floating base model.
+///
 class FloatingBase {
 public:
-  // Constructor. Does not allocate raw arrays.
-  // Argments:
-  //    model: The pinocchio model. Before call this function, pinocchio model
-  //      must be initialized, e.g., by pinocchio::buildModel() or 
-  //      pinocchio::buildModelFromXML().
+  ///
+  /// @brief Construct floating base model.
+  /// @param[in] model The pinocchio model. Before call this constructor, 
+  /// pinocchio model must be initialized, e.g., by pinocchio::buildModel().
+  ///
   FloatingBase(const pinocchio::Model& model);
 
-  // Default constructor. 
+  ///
+  /// @brief Default constructor. 
+  ///
   FloatingBase();
- 
-  // Destructor. 
+
+  ///
+  /// @brief Destructor. 
+  ///
   ~FloatingBase();
 
-  // Use dafault copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   FloatingBase(const FloatingBase&) = default;
 
-  // Use dafule copy operator.
+  ///
+  /// @brief Default copy assign operator. 
+  ///
   FloatingBase& operator=(const FloatingBase&) = default;
 
-  // Use dafault move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   FloatingBase(FloatingBase&&) noexcept = default;
 
-  // Use dafule move assign operator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   FloatingBase& operator=(FloatingBase&&) noexcept = default;
 
-  // Returns the dimension of the torques correspoinding to the passive joints.
+  ///
+  /// @brief Returns the dimensiton of the generalized torques corresponding to 
+  /// the passive joints.
+  /// @return The dimensiton of the generalized torques corresponding to the 
+  //// passive joints.
+  /// 
   int dim_passive() const;
 
-  // Returns the indices of the virtual passive joints corresponding to the 
-  // floating base.
+  ///
+  /// @brief Returns joint indices of the passive joints.
+  /// @return Joitn indices of the passive joints.
+  /// 
   std::vector<int> passive_joint_indices() const;
 
-  // Returns true if the robot has a floating base and false if not.
+  ///
+  /// @brief Returns true if the robot has a floating base and false if not.
+  /// @returns true if the robot has a floating base and false if not.
+  /// 
   bool has_floating_base() const;
 
 private:

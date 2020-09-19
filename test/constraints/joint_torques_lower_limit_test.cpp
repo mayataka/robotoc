@@ -87,8 +87,8 @@ TEST_F(JointTorquesLowerLimitTest, setSlackAndDualFixedBase) {
   limit.setSlackAndDual(fixed_base_robot_, data, dtau_, s);
   KKTMatrix kkt_matrix(fixed_base_robot_);
   KKTResidual kkt_residual(fixed_base_robot_);
-  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, kkt_residual);
-  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, kkt_residual.lu);
+  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, s, kkt_residual);
+  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   Eigen::VectorXd slack_ref = Eigen::VectorXd::Zero(dimq);
   Eigen::VectorXd dual_ref = Eigen::VectorXd::Zero(dimq);
   slack_ref = dtau_ * (s.u-umin);
@@ -127,8 +127,8 @@ TEST_F(JointTorquesLowerLimitTest, setSlackAndDualFixedBase2) {
   limit.setSlackAndDual(fixed_base_robot_, data, dtau_, s);
   KKTMatrix kkt_matrix(fixed_base_robot_);
   KKTResidual kkt_residual(fixed_base_robot_);
-  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, kkt_residual);
-  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, kkt_residual.lu);
+  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, s, kkt_residual);
+  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   pdipmtest::JointVariablesLowerLimits limit_ref(fixed_base_robot_, -fixed_base_robot_.jointEffortLimit(), barrier_);
   limit_ref.setSlackAndDual(dtau_, s.u);
   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimv);
@@ -164,8 +164,8 @@ TEST_F(JointTorquesLowerLimitTest, setSlackAndDualFloatingBase) {
   limit.setSlackAndDual(floating_base_robot_, data, dtau_, s);
   KKTMatrix kkt_matrix(floating_base_robot_);
   KKTResidual kkt_residual(floating_base_robot_);
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, kkt_residual);
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, kkt_residual.lu);
+  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s, kkt_residual);
+  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   Eigen::VectorXd slack_ref = Eigen::VectorXd::Zero(dimc);
   Eigen::VectorXd dual_ref = Eigen::VectorXd::Zero(dimc);
   slack_ref = dtau_ * (s.u.tail(dimc)-umin);
@@ -206,8 +206,8 @@ TEST_F(JointTorquesLowerLimitTest, setSlackAndDualFloatingBase2) {
   limit.setSlackAndDual(floating_base_robot_, data, dtau_, s);
   KKTMatrix kkt_matrix(floating_base_robot_);
   KKTResidual kkt_residual(floating_base_robot_);
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, kkt_residual);
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, kkt_residual.lu);
+  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s, kkt_residual);
+  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   pdipmtest::JointVariablesLowerLimits limit_ref(floating_base_robot_, -floating_base_robot_.jointEffortLimit(), barrier_);
   limit_ref.setSlackAndDual(dtau_, s.u);
   Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimv);
@@ -270,7 +270,7 @@ TEST_F(JointTorquesLowerLimitTest, condenseSlackAndDualFixedBase) {
   EXPECT_TRUE(kkt_matrix.Qff().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isZero());
   SplitDirection d = SplitDirection::Random(fixed_base_robot_);
-  limit.computeSlackAndDualDirection(fixed_base_robot_, data, dtau_, d);
+  limit.computeSlackAndDualDirection(fixed_base_robot_, data, dtau_, s, d);
   const Eigen::VectorXd dslack_ref = dtau_ * d.du - residual_ref;
   Eigen::VectorXd ddual_ref = Eigen::VectorXd::Zero(dimq);
   pdipmfunc::ComputeDualDirection(slack_ref, dual_ref, dslack_ref, duality_ref, 
@@ -299,8 +299,8 @@ TEST_F(JointTorquesLowerLimitTest, condenseSlackAndDualFixedBase) {
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
   kkt_residual.lu.setZero();
   lu_ref.setZero();
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, kkt_residual);
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, kkt_residual.lu);
+  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s, kkt_residual);
+  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   lu_ref = - dtau_ * dual_ref;
   EXPECT_TRUE(kkt_residual.lu.isApprox(lu_ref));
   EXPECT_TRUE(kkt_residual.lq().isZero());
@@ -340,7 +340,7 @@ TEST_F(JointTorquesLowerLimitTest, condenseSlackAndDualFixedBase2) {
   EXPECT_TRUE(kkt_matrix.Qff().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isZero());
   SplitDirection d = SplitDirection::Random(fixed_base_robot_);
-  limit.computeSlackAndDualDirection(fixed_base_robot_, data, dtau_, d);
+  limit.computeSlackAndDualDirection(fixed_base_robot_, data, dtau_, s, d);
   limit_ref.computeSlackAndDualDirection(dtau_, d.du);
   const double margin_rate = 0.995;
   const double slack_step_size = limit.maxSlackStepSize(data);
@@ -362,8 +362,8 @@ TEST_F(JointTorquesLowerLimitTest, condenseSlackAndDualFixedBase2) {
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
   kkt_residual.lu.setZero();
   lu_ref.setZero();
-  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, kkt_residual);
-  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, kkt_residual.lu);
+  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, s, kkt_residual);
+  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   limit_ref.augmentDualResidual(dtau_, lu_ref);
   EXPECT_TRUE(kkt_residual.lu.isApprox(lu_ref));
   EXPECT_TRUE(kkt_residual.lq().isZero());
@@ -414,7 +414,7 @@ TEST_F(JointTorquesLowerLimitTest, condenseSlackAndDualFloatingBase) {
   EXPECT_TRUE(kkt_matrix.Qff().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isZero());
   SplitDirection d = SplitDirection::Random(floating_base_robot_);
-  limit.computeSlackAndDualDirection(floating_base_robot_, data, dtau_, d);
+  limit.computeSlackAndDualDirection(floating_base_robot_, data, dtau_, s, d);
   const Eigen::VectorXd dslack_ref = dtau_ * d.du.tail(dimc) - residual_ref;
   Eigen::VectorXd ddual_ref = Eigen::VectorXd::Zero(dimc);
   pdipmfunc::ComputeDualDirection(slack_ref, dual_ref, dslack_ref, duality_ref, 
@@ -443,8 +443,8 @@ TEST_F(JointTorquesLowerLimitTest, condenseSlackAndDualFloatingBase) {
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
   kkt_residual.lu.setZero();
   lu_ref.setZero();
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, kkt_residual);
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, kkt_residual.lu);
+  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s, kkt_residual);
+  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   lu_ref.tail(dimc) = - dtau_ * dual_ref;
   EXPECT_TRUE(kkt_residual.lu.isApprox(lu_ref));
   EXPECT_TRUE(kkt_residual.lq().isZero());
@@ -484,7 +484,7 @@ TEST_F(JointTorquesLowerLimitTest, condenseSlackAndDualFloatingBase2) {
   EXPECT_TRUE(kkt_matrix.Qff().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isZero());
   SplitDirection d = SplitDirection::Random(floating_base_robot_);
-  limit.computeSlackAndDualDirection(floating_base_robot_, data, dtau_, d);
+  limit.computeSlackAndDualDirection(floating_base_robot_, data, dtau_, s, d);
   limit_ref.computeSlackAndDualDirection(dtau_, d.du);
   const double margin_rate = 0.995;
   const double slack_step_size = limit.maxSlackStepSize(data);
@@ -506,8 +506,8 @@ TEST_F(JointTorquesLowerLimitTest, condenseSlackAndDualFloatingBase2) {
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
   kkt_residual.lu.setZero();
   lu_ref.setZero();
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, kkt_residual);
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, kkt_residual.lu);
+  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s, kkt_residual);
+  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   limit_ref.augmentDualResidual(dtau_, lu_ref);
   EXPECT_TRUE(kkt_residual.lu.isApprox(lu_ref));
   EXPECT_TRUE(kkt_residual.lq().isZero());

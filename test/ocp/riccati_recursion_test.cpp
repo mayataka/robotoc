@@ -97,7 +97,11 @@ TEST_F(RiccatiTest, fixed_base_without_contacts) {
 TEST_F(RiccatiTest, fixed_base_with_contacts) {
   const int contact_frame = 18;
   const std::vector<int> contact_frames = {contact_frame};
-  fixed_base_robot_ = Robot(fixed_base_urdf_, contact_frames, 0, 0);
+  std::vector<double> mu;
+  for (int i=0; i<contact_frames.size(); ++i) {
+    mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
+  }
+  fixed_base_robot_ = Robot(fixed_base_urdf_, contact_frames, mu, 0, 0);
   const std::vector<bool> active_contacts = {true};
   fixed_base_robot_.setContactStatus(active_contacts);
   const int dimv = fixed_base_robot_.dimv();
@@ -337,7 +341,11 @@ TEST_F(RiccatiTest, floating_base_without_contacts) {
 
 TEST_F(RiccatiTest, floating_base_with_contacts) {
   const std::vector<int> contact_frames = {14, 24, 34, 44};
-  floating_base_robot_ = Robot(floating_base_urdf_, contact_frames, 0, 0);
+  std::vector<double> mu;
+  for (int i=0; i<contact_frames.size(); ++i) {
+    mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
+  }
+  floating_base_robot_ = Robot(floating_base_urdf_, contact_frames, mu, 0, 0);
   std::vector<bool> active_contacts;
   std::random_device rnd;
   for (int i=0; i<contact_frames.size(); ++i) {
@@ -483,7 +491,6 @@ TEST_F(RiccatiTest, floating_base_with_contacts) {
   std::cout << gain.kmu() - kmu_ref << std::endl;
   std::cout << std::endl;
 }
-
 
 } // namespace idocp
 
