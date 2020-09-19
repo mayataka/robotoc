@@ -29,7 +29,8 @@ protected:
 
 TEST_F(KKTMatrixTest, fixed_base) {
   std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf_, contact_frames, 0, 0);
+  const std::vector<double> mu = {std::abs(Eigen::VectorXd::Random(1)[0])};
+  Robot robot(fixed_base_urdf_, contact_frames, mu, 0, 0);
   std::random_device rnd;
   std::vector<bool> contact_status = {rnd()%2==0};
   robot.setContactStatus(contact_status);
@@ -148,7 +149,8 @@ TEST_F(KKTMatrixTest, fixed_base) {
 
 TEST_F(KKTMatrixTest, invert_fixed_base) {
   std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf_, contact_frames, 0, 0);
+  const std::vector<double> mu = {std::abs(Eigen::VectorXd::Random(1)[0])};
+  Robot robot(fixed_base_urdf_, contact_frames, mu, 0, 0);
   std::random_device rnd;
   std::vector<bool> contact_status = {rnd()%2==0};
   robot.setContactStatus(contact_status);
@@ -191,7 +193,11 @@ TEST_F(KKTMatrixTest, invert_fixed_base) {
 
 TEST_F(KKTMatrixTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf_, contact_frames, 0, 0);
+  std::vector<double> mu;
+  for (int i=0; i<contact_frames.size(); ++i) {
+    mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
+  }
+  Robot robot(floating_base_urdf_, contact_frames, mu, 0, 0);
   std::random_device rnd;
   std::vector<bool> contact_status;
   for (const auto frame : contact_frames) {
@@ -313,7 +319,11 @@ TEST_F(KKTMatrixTest, floating_base) {
 
 TEST_F(KKTMatrixTest, invert_floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf_, contact_frames, 0, 0);
+  std::vector<double> mu;
+  for (int i=0; i<contact_frames.size(); ++i) {
+    mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
+  }
+  Robot robot(floating_base_urdf_, contact_frames, mu, 0, 0);
   std::random_device rnd;
   std::vector<bool> contact_status;
   for (const auto frame : contact_frames) {

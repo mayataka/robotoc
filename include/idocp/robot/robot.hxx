@@ -229,6 +229,7 @@ inline void Robot::computeBaumgarteDerivatives(
 
 inline void Robot::setContactPoints(
     const std::vector<Eigen::Vector3d>& contact_points) {
+  assert(contact_points.size() == point_contacts_.size());
   for (int i=0; i<point_contacts_.size(); ++i) {
     point_contacts_[i].setContactPoint(contact_points[i]);
   }
@@ -239,6 +240,20 @@ inline void Robot::setContactPointsByCurrentKinematics() {
   for (int i=0; i<point_contacts_.size(); ++i) {
     point_contacts_[i].setContactPointByCurrentKinematics(data_);
   }
+}
+
+
+inline void Robot::setFrictionCoefficient(const std::vector<double>& mu) {
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    point_contacts_[i].setFrictionCoefficient(mu[i]);
+  }
+}
+
+
+inline double Robot::mu(const int contact_index) const {
+  assert(contact_index >= 0);
+  assert(contact_index < point_contacts_.size());
+  return point_contacts_[contact_index].mu();
 }
 
 

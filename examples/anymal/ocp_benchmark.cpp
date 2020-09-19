@@ -22,10 +22,11 @@ namespace anymal {
 void BenchmarkWithContacts() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
+  std::vector<double> mu = {1, 1, 1, 1};
   const double baumgarte_weight_on_velocity = 100;
   const double baumgarte_weight_on_position = 2500;
   const std::string urdf_file_name = "../anymal/anymal.urdf";
-  idocp::Robot robot(urdf_file_name, contact_frames, 
+  idocp::Robot robot(urdf_file_name, contact_frames, mu,
                      baumgarte_weight_on_velocity, 
                      baumgarte_weight_on_position);
   Eigen::VectorXd q_ref(robot.dimq());

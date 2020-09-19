@@ -55,7 +55,7 @@ inline bool Constraints::isFeasible(Robot& robot, ConstraintsData& data,
   assert(data.size() == constraints_.size());
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
+    assert(data[i].checkDimensionalConsistency());
     bool feasible = constraints_[i]->isFeasible(robot, data[i], s);
     if (!feasible) {
       return false;
@@ -71,7 +71,7 @@ inline void Constraints::setSlackAndDual(Robot& robot, ConstraintsData& data,
   assert(data.size() == constraints_.size());
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
+    assert(data[i].checkDimensionalConsistency());
     constraints_[i]->setSlackAndDual(robot, data[i], dtau, s);
   }
 }
@@ -80,12 +80,13 @@ inline void Constraints::setSlackAndDual(Robot& robot, ConstraintsData& data,
 inline void Constraints::augmentDualResidual(Robot& robot, 
                                              ConstraintsData& data, 
                                              const double dtau, 
+                                             const SplitSolution& s,
                                              KKTResidual& kkt_residual) const {
   assert(data.size() == constraints_.size());
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
-    constraints_[i]->augmentDualResidual(robot, data[i], dtau, kkt_residual);
+    assert(data[i].checkDimensionalConsistency());
+    constraints_[i]->augmentDualResidual(robot, data[i], dtau, s, kkt_residual);
   }
 }
 
@@ -93,13 +94,15 @@ inline void Constraints::augmentDualResidual(Robot& robot,
 inline void Constraints::augmentDualResidual(const Robot& robot, 
                                              ConstraintsData& data, 
                                              const double dtau, 
+                                             const Eigen::VectorXd& u,
                                              Eigen::VectorXd& lu) const {
   assert(data.size() == constraints_.size());
+  assert(u.size() == robot.dimv());
   assert(lu.size() == robot.dimv());
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
-    constraints_[i]->augmentDualResidual(robot, data[i], dtau, lu);
+    assert(data[i].checkDimensionalConsistency());
+    constraints_[i]->augmentDualResidual(robot, data[i], dtau, u, lu);
   }
 }
 
@@ -113,7 +116,7 @@ inline void Constraints::condenseSlackAndDual(Robot& robot,
   assert(data.size() == constraints_.size());
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
+    assert(data[i].checkDimensionalConsistency());
     constraints_[i]->condenseSlackAndDual(robot, data[i], dtau, s, kkt_matrix, 
                                           kkt_residual);
   }
@@ -133,7 +136,7 @@ inline void Constraints::condenseSlackAndDual(const Robot& robot,
   assert(lu.size() == robot.dimv());
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
+    assert(data[i].checkDimensionalConsistency());
     constraints_[i]->condenseSlackAndDual(robot, data[i], dtau, u, Quu, lu);
   }
 }
@@ -141,12 +144,12 @@ inline void Constraints::condenseSlackAndDual(const Robot& robot,
 
 inline void Constraints::computeSlackAndDualDirection(
     Robot& robot, ConstraintsData& data, const double dtau, 
-    const SplitDirection& d) const {
+    const SplitSolution& s, const SplitDirection& d) const {
   assert(data.size() == constraints_.size());
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
-    constraints_[i]->computeSlackAndDualDirection(robot, data[i], dtau, d);
+    assert(data[i].checkDimensionalConsistency());
+    constraints_[i]->computeSlackAndDualDirection(robot, data[i], dtau, s, d);
   }
 }
 
@@ -156,7 +159,7 @@ inline double Constraints::maxSlackStepSize(const ConstraintsData& data) const {
   double min_step_size = 1;
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
+    assert(data[i].checkDimensionalConsistency());
     const double step_size = constraints_[i]->maxSlackStepSize(data[i]);
     if (step_size < min_step_size) {
       min_step_size = step_size;
@@ -171,7 +174,7 @@ inline double Constraints::maxDualStepSize(const ConstraintsData& data) const {
   double min_step_size = 1;
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
+    assert(data[i].checkDimensionalConsistency());
     const double step_size = constraints_[i]->maxDualStepSize(data[i]);
     if (step_size < min_step_size) {
       min_step_size = step_size;
@@ -186,7 +189,7 @@ inline void Constraints::updateSlack(ConstraintsData& data,
   assert(data.size() == constraints_.size());
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
+    assert(data[i].checkDimensionalConsistency());
     constraints_[i]->updateSlack(data[i], step_size);
   }
 }
@@ -197,7 +200,7 @@ inline void Constraints::updateDual(ConstraintsData& data,
   assert(data.size() == constraints_.size());
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
+    assert(data[i].checkDimensionalConsistency());
     constraints_[i]->updateDual(data[i], step_size);
   }
 }
@@ -208,7 +211,7 @@ inline double Constraints::costSlackBarrier(const ConstraintsData& data) const {
   double cost = 0;
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
+    assert(data[i].checkDimensionalConsistency());
     cost += constraints_[i]->costSlackBarrier(data[i]);
   }
   return cost;
@@ -221,7 +224,7 @@ inline double Constraints::costSlackBarrier(const ConstraintsData& data,
   double cost = 0;
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
+    assert(data[i].checkDimensionalConsistency());
     cost += constraints_[i]->costSlackBarrier(data[i], step_size);
   }
   return cost;
@@ -235,7 +238,7 @@ inline double Constraints::residualL1Nrom(Robot& robot, ConstraintsData& data,
   double l1_norm = 0;
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
+    assert(data[i].checkDimensionalConsistency());
     l1_norm += constraints_[i]->residualL1Nrom(robot, data[i], dtau, s);
   }
   return l1_norm;
@@ -250,7 +253,7 @@ inline double Constraints::squaredKKTErrorNorm(Robot& robot,
   double squared_norm = 0;
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
-    assert(data[i].checkDimensionnalConsistency());
+    assert(data[i].checkDimensionalConsistency());
     squared_norm += constraints_[i]->squaredKKTErrorNorm(robot, data[i], dtau, s);
   }
   return squared_norm;

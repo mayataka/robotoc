@@ -87,7 +87,7 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   kkt_residual_.lu.setZero();
   kkt_matrix_.Quu.setZero();
   cost_->lu(robot, cost_data_, t, dtau, s.u, kkt_residual_.lu);
-  constraints_->augmentDualResidual(robot, constraints_data_, dtau, 
+  constraints_->augmentDualResidual(robot, constraints_data_, dtau, s.u,
                                     kkt_residual_.lu);
   cost_->luu(robot, cost_data_, t, dtau, s.u, kkt_matrix_.Quu);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s.u, 
@@ -97,7 +97,7 @@ void SplitOCP::linearizeOCP(Robot& robot, const double t, const double dtau,
   // forms the KKT matrix and KKT residual
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
                                      kkt_residual_);
-  constraints_->augmentDualResidual(robot, constraints_data_, dtau, 
+  constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual_);
   state_equation_.linearizeForwardEuler(robot, dtau, q_prev, s, s_next, 
                                         kkt_matrix_, kkt_residual_);
@@ -191,6 +191,7 @@ void SplitOCP::forwardRiccatiRecursion(const double dtau, SplitDirection& d,
 
 
 void SplitOCP::computeCondensedDirection(Robot& robot, const double dtau, 
+                                         const SplitSolution& s, 
                                          SplitDirection& d) {
   assert(dtau > 0);
   if (dimf_ > 0) {
@@ -204,7 +205,8 @@ void SplitOCP::computeCondensedDirection(Robot& robot, const double dtau,
     d.dmu().noalias() += riccati_gain_.Kmuv() * d.dv();
   }
   robot_dynamics_.computeCondensedDirection(dtau, kkt_matrix_, kkt_residual_, d);
-  constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, d);
+  constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, 
+                                             s, d);
 }
 
  
@@ -336,9 +338,9 @@ double SplitOCP::computeSquaredKKTErrorNorm(Robot& robot, const double t,
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
                                      kkt_residual_);
   cost_->lu(robot, cost_data_, t, dtau, s.u, kkt_residual_.lu);
-  constraints_->augmentDualResidual(robot, constraints_data_, dtau, 
+  constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual_);
-  constraints_->augmentDualResidual(robot, constraints_data_, dtau, 
+  constraints_->augmentDualResidual(robot, constraints_data_, dtau, s.u,
                                     kkt_residual_.lu);
   state_equation_.linearizeForwardEuler(robot, dtau, q_prev, s, s_next, 
                                         kkt_matrix_, kkt_residual_);

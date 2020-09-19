@@ -92,7 +92,8 @@ inline void RobotDynamics::condenseRobotDynamics(Robot& robot,
   setContactStatus(robot);
   linearizeInverseDynamics(robot, s, kkt_residual);
   lu_condensed_.noalias() 
-      = kkt_residual.lu + kkt_matrix.Quu * kkt_residual.u_res;
+      = kkt_residual.lu 
+          + kkt_matrix.Quu.diagonal().asDiagonal() * kkt_residual.u_res;
   // condense Newton residual
   kkt_residual.la().noalias() = du_da_.transpose() * lu_condensed_;
   if (robot.has_active_contacts()) {
@@ -102,14 +103,17 @@ inline void RobotDynamics::condenseRobotDynamics(Robot& robot,
   kkt_residual.lv().noalias() = du_dv_.transpose() * lu_condensed_;
   kkt_residual.lu.noalias() -= dtau * s.beta;   
   // condense Hessian
-  Quu_du_da_.noalias() = kkt_matrix.Quu * du_da_;
+  // Assume that Quu has only diagonal elements, hence we write as 
+  // kkt_matrix.Quu.dianobal().asDiagonal() for efficiency.
+  // Otherwise, simply use kkt_matrix.Quu instead.
+  Quu_du_da_.noalias() = kkt_matrix.Quu.diagonal().asDiagonal() * du_da_;
   kkt_matrix.Qaa().noalias() = du_da_.transpose() * Quu_du_da_;
   if (robot.has_active_contacts()) {
-    Quu_du_df_().noalias() = kkt_matrix.Quu * du_df_();
+    Quu_du_df_().noalias() = kkt_matrix.Quu.diagonal().asDiagonal() * du_df_(); 
     kkt_matrix.Qaf().noalias() = du_da_.transpose() * Quu_du_df_(); 
   }
-  Quu_du_dq_.noalias() = kkt_matrix.Quu * du_dq_;
-  Quu_du_dv_.noalias() = kkt_matrix.Quu * du_dv_;
+  Quu_du_dq_.noalias() = kkt_matrix.Quu.diagonal().asDiagonal() * du_dq_;
+  Quu_du_dv_.noalias() = kkt_matrix.Quu.diagonal().asDiagonal() * du_dv_;
   kkt_matrix.Qaq().noalias() = du_da_.transpose() * Quu_du_dq_;
   kkt_matrix.Qav().noalias() = du_da_.transpose() * Quu_du_dv_;
   if (robot.has_active_contacts()) {

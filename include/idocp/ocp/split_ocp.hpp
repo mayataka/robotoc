@@ -124,10 +124,11 @@ public:
   /// @brief Computes the Newton direction of the condensed variables of this 
   /// stage.
   /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] s Split solution of this stage.
   /// @param[in] d Split direction of this stage.
   /// 
   void computeCondensedDirection(Robot& robot, const double dtau, 
-                                 SplitDirection& d);
+                                 const SplitSolution& s, SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 

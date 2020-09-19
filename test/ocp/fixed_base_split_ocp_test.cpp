@@ -34,9 +34,13 @@ protected:
     srand((unsigned int) time(0));
     urdf = "../urdf/iiwa14/iiwa14.urdf";
     std::vector<int> contact_frames = {18};
+    std::vector<double> mu;
+    for (int i=0; i<contact_frames.size(); ++i) {
+      mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
+    }
     const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
     const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
-    robot = Robot(urdf, contact_frames, baum_a, baum_b);
+    robot = Robot(urdf, contact_frames, mu, baum_a, baum_b);
     std::random_device rnd;
     contact_status.push_back(rnd()%2==0);
     robot.setContactStatus(contact_status);
@@ -270,8 +274,8 @@ TEST_F(FixedBaseSplitOCPTest, KKTErrorNormEmptyCost) {
   kkt_residual.setContactStatus(robot);
   kkt_matrix.setContactStatus(robot);
   s.setContactStatus(robot);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual.lu);
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual);
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s.u, kkt_residual.lu);
   state_equation.linearizeForwardEuler(robot, dtau, q_prev, s, s_next, kkt_matrix, kkt_residual);
   robotdynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
@@ -311,8 +315,8 @@ TEST_F(FixedBaseSplitOCPTest, KKTErrorNorm) {
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, 
                                      kkt_residual);
   cost->lu(robot, cost_data, t, dtau, s.u, kkt_residual.lu);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, kkt_residual.lu);
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual);
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s.u, kkt_residual.lu);
   state_equation.linearizeForwardEuler(robot, dtau, q_prev, s, s_next, kkt_matrix, kkt_residual);
   robotdynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
   double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
@@ -435,7 +439,7 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   robot.computeBaumgarteDerivatives(dtau, kkt_matrix.Cq(), kkt_matrix.Cv(), 
                                     kkt_matrix.Ca());
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, 
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s.u,
                                    kkt_residual.lu);
   cost->luu(robot, cost_data, t, dtau, s.u, kkt_matrix.Quu);
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s.u, 
@@ -448,7 +452,7 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   kkt_residual.lq() += s_next.lmd - s.lmd;
   kkt_residual.lv() += dtau * s_next.lmd + s_next.gmm - s.gmm;
   kkt_residual.la() += dtau * s_next.gmm;
-  constraints->augmentDualResidual(robot, constraints_data, dtau, 
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s,
                                    kkt_residual);
   kkt_residual.lq() += kkt_matrix.Cq().transpose() * s.mu_stack();
   kkt_residual.lv() += kkt_matrix.Cv().transpose() * s.mu_stack();
@@ -555,7 +559,7 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   condensed_KKT_ref += constraints->squaredKKTErrorNorm(robot, constraints_data, dtau, s);
   EXPECT_DOUBLE_EQ(condensed_KKT_ref, ocp.condensedSquaredKKTErrorNorm(robot, t, dtau, s));
 
-  ocp.computeCondensedDirection(robot, dtau, d);
+  ocp.computeCondensedDirection(robot, dtau, s, d);
   EXPECT_TRUE(d.df().isApprox(gain.kf()+gain.Kfq()*d.dq()+gain.Kfv()*d.dv()));
   EXPECT_TRUE(d.dmu().isApprox(gain.kmu()+gain.Kmuq()*d.dq()+gain.Kmuv()*d.dv()));
 

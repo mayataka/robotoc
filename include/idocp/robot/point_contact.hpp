@@ -21,10 +21,11 @@ namespace idocp {
 class PointContact {
 public:
   ///
-  /// @brief Constructor.
+  /// @brief Construct point contact model.
   /// @param[in] model The pinocchio model. Before call this constructor, 
   /// pinocchio model must be initialized, e.g., by pinocchio::buildModel().
   /// @param[in] contact_frame_id The index of the contact frame. 
+  /// @param[in] mu Friction coefficient. Must be positive.
   /// @param[in] baumgarte_weight_on_velocity The weight parameter on the 
   /// velocity error in the Baumgarte's stabilization method. Must be 
   /// nonnegative.
@@ -33,11 +34,11 @@ public:
   /// nonnegative.
   ///
   PointContact(const pinocchio::Model& model, const int contact_frame_id, 
-               const double baumgarte_weight_on_velocity, 
+               const double mu, const double baumgarte_weight_on_velocity, 
                const double baumgarte_weight_on_position);
 
   ///
-  /// @brief Default constructor. Does not construct any models and datas. 
+  /// @brief Default constructor. 
   ///
   PointContact();
 
@@ -47,27 +48,33 @@ public:
   ~PointContact();
 
   ///
-  /// @brief Use default copy constructor. 
+  /// @brief Default copy constructor. 
   ///
   PointContact(const PointContact&) = default;
 
   ///
-  /// @brief Use default copy assign operator. 
+  /// @brief Default copy assign operator. 
   ///
   PointContact& operator=(const PointContact&) = default;
 
   ///
-  /// @brief Use default move constructor. 
+  /// @brief Default move constructor. 
   ///
   PointContact(PointContact&&) noexcept = default;
 
   ///
-  /// @brief Use default move assign operator. 
+  /// @brief Default move assign operator. 
   ///
   PointContact& operator=(PointContact&&) noexcept = default;
 
   ///
-  /// @brief Sets the parameters of the Baumgarte's stabilization method.
+  /// @brief Sets the friction coefficient.
+  /// @param[in] mu Friction coefficient. Must be nonnegative.
+  ///
+  void setFrictionCoefficient(const double mu);
+
+  ///
+  /// @brief Sets the weight parameters of the Baumgarte's stabilization method.
   /// @param[in] baumgarte_weight_on_velocity The weight parameter on the 
   /// velocity error in the Baumgarte's stabilization method. Must be 
   /// nonnegative.
@@ -88,8 +95,8 @@ public:
   ///
   /// @brief Sets the contact points by current kinematics of the robot. 
   /// The kinematics is passed through pinocchio::Data. Before calling this 
-  /// function, you have to update the kinematics (only with respect to the 
-  /// position) in pinocchio::Data.
+  /// function, kinematics (only with respect to the position) in 
+  /// pinocchio::Data must be updated.
   /// @param[in] data The data including kinematics of the robot.
   ///
   void setContactPointByCurrentKinematics(const pinocchio::Data& data);
@@ -97,7 +104,7 @@ public:
   ///
   /// @brief Converts the contact forces to the corresponding joint forces.
   /// @param[in] contact_force The contact forces in the local frame.
-  /// @param[out] joint_force: The corresponding joint forces of the robot 
+  /// @param[out] joint_forces: The corresponding joint forces of the robot 
   /// model. 
   ///
   void computeJointForceFromContactForce(
@@ -114,7 +121,7 @@ public:
   /// @param[out] Jacobian Jacobian of the contact frame is stored in this 
   /// variable. If transpose=true, size must be Robot::dimv() x 3. 
   /// If transpose=false, size must be 3 x Robot::dimv() 
-  /// @param[in] transpose flag for transposing the Jacobian or not. If true, 
+  /// @param[in] transpose A flag for transposing the Jacobian or not. If true, 
   /// the Jacobian is transposed. If false, the Jacobian is not transposed, 
   /// i.e., the original Jacobian is returned. Default is false.
   ///
@@ -135,7 +142,7 @@ public:
   /// @param[out] Jacobian Jacobian of the contact frame is stored in this 
   /// variable. If transpose=true, size must be Robot::dimv() x 3. 
   /// If transpose=false, size must be 3 x Robot::dimv() 
-  /// @param[in] transpose flag for transposing the Jacobian or not. If true, 
+  /// @param[in] transpose A flag for transposing the Jacobian or not. If true, 
   /// the Jacobian is transposed. If false, the Jacobian is not transposed, 
   /// i.e., the original Jacobian is returned. Default is false.
   ///
@@ -151,8 +158,7 @@ public:
   /// to update the kinematics of the model in pinocchio::Data.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[out] baumgarte_residual Resultant residual of the Bamgarte's 
-  /// constraint.
+  /// @param[out] baumgarte_residual Residual of the Bamgarte's constraint.
   /// 
   template <typename VectorType>
   void computeBaumgarteResidual(
@@ -167,8 +173,7 @@ public:
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
   /// @param[in] coeff Coefficient multiplied to the resultant Jacobian.
-  /// @param[out] baumgarte_residual Resultant residual of the Bamgarte's 
-  /// constraint.
+  /// @param[out] baumgarte_residual Residual of the Bamgarte's constraint.
   /// 
   template <typename VectorType>
   void computeBaumgarteResidual(
@@ -238,43 +243,49 @@ public:
 
   ///
   /// @brief Returns contact frame id, the index of the contact frame.
-  /// @return contact frame id.
+  /// @return Contact frame id.
   /// 
   int contact_frame_id() const;
 
   ///
   /// @brief Returns parent joint id, the index of the parent joint of the 
   /// contact frame.
-  /// @return parent joint id.
+  /// @return Parent joint id.
   /// 
   int parent_joint_id() const;
 
   ///
+  /// @brief Returns friction coefficient mu.
+  /// @return Friction coefficient mu.
+  ///
+  double mu() const;
+
+  ///
   /// @brief Returns baumgarte weight on velocity, the weight parameter on the 
   /// contact velocity in the Baumgarte's stabilization method.
-  /// @return baumgarte weight on velocity.
+  /// @return Weight on velocity error.
   ///
   double baumgarte_weight_on_velocity() const;
 
   ///
   /// @brief Returns baumgarte weight on position, the weight parameter on the 
   /// contact position in the Baumgarte's stabilization method.
-  /// @return baumgarte weight on velocity.
+  /// @return Weight on position error.
   ///
   double baumgarte_weight_on_position() const;
 
   ///
   /// @brief Returns the contact point.
-  /// @return contact point.
+  /// @return Const reference to the contact point.
   ///
-  Eigen::Vector3d contact_point() const;
+  const Eigen::Vector3d& contact_point() const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   bool is_active_;
   int contact_frame_id_, parent_joint_id_, dimv_;
-  double baumgarte_weight_on_velocity_, baumgarte_weight_on_position_;
+  double mu_, baumgarte_weight_on_velocity_, baumgarte_weight_on_position_;
   Eigen::Vector3d contact_point_;
   pinocchio::SE3 jXf_;
   pinocchio::Motion v_frame_;

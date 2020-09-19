@@ -23,9 +23,13 @@ protected:
     srand((unsigned int) time(0));
     urdf = "../urdf/anymal/anymal.urdf";
     std::vector<int> contact_frames = {14, 24, 34, 44};
+    std::vector<double> mu;
+    for (int i=0; i<contact_frames.size(); ++i) {
+      mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
+    }
     const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
     const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
-    robot = Robot(urdf, contact_frames, baum_a, baum_b);
+    robot = Robot(urdf, contact_frames, mu, baum_a, baum_b);
     std::random_device rnd;
     for (int i=0; i<contact_frames.size(); ++i) {
       contact_status.push_back(rnd()%2==0);
@@ -110,10 +114,10 @@ TEST_F(FloatingBaseConstraintsTest, isFeasible) {
 TEST_F(FloatingBaseConstraintsTest, augmentDualResidual) {
   constraints->setSlackAndDual(robot, data, dtau, s);
   constraints_ref.setSlackAndDual(dtau, s.q, s.v, s.a, s.u);
-  constraints->augmentDualResidual(robot, data, dtau, kkt_residual.lu);
+  constraints->augmentDualResidual(robot, data, dtau, s.u, kkt_residual.lu);
   constraints_ref.augmentDualResidual(dtau, lu_ref);
   EXPECT_TRUE(kkt_residual.lu.isApprox(lu_ref));
-  constraints->augmentDualResidual(robot, data, dtau, kkt_residual);
+  constraints->augmentDualResidual(robot, data, dtau, s, kkt_residual);
   constraints_ref.augmentDualResidual(dtau, lq_ref, lv_ref, la_ref);
   EXPECT_TRUE(kkt_residual.lq().isApprox(lq_ref));
   EXPECT_TRUE(kkt_residual.lv().isApprox(lv_ref));
@@ -152,7 +156,7 @@ TEST_F(FloatingBaseConstraintsTest, condenseSlackAndDual) {
 TEST_F(FloatingBaseConstraintsTest, updateSlackAndDualDirection) {
   constraints->setSlackAndDual(robot, data, dtau, s);
   constraints_ref.setSlackAndDual(dtau, s.q, s.v, s.a, s.u);
-  constraints->computeSlackAndDualDirection(robot, data, dtau, d);
+  constraints->computeSlackAndDualDirection(robot, data, dtau, s, d);
   constraints_ref.computeSlackAndDualDirection(dtau, d.dq(), d.dv(), d.da(), d.du);
   EXPECT_DOUBLE_EQ(constraints->maxSlackStepSize(data), 
                    constraints_ref.maxSlackStepSize());
@@ -168,10 +172,10 @@ TEST_F(FloatingBaseConstraintsTest, updateSlackAndDualDirection) {
   constraints_ref.updateSlack(slack_step_size);
   constraints->updateDual(data, dual_step_size);
   constraints_ref.updateDual(dual_step_size);
-  constraints->augmentDualResidual(robot, data, dtau, kkt_residual.lu);
+  constraints->augmentDualResidual(robot, data, dtau, s.u, kkt_residual.lu);
   constraints_ref.augmentDualResidual(dtau, lu_ref);
   EXPECT_TRUE(kkt_residual.lu.isApprox(lu_ref));
-  constraints->augmentDualResidual(robot, data, dtau, kkt_residual);
+  constraints->augmentDualResidual(robot, data, dtau, s, kkt_residual);
   constraints_ref.augmentDualResidual(dtau, lq_ref, lv_ref, la_ref);
   EXPECT_TRUE(kkt_residual.lq().isApprox(lq_ref));
   EXPECT_TRUE(kkt_residual.lv().isApprox(lv_ref));

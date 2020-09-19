@@ -135,7 +135,7 @@ public:
   /// @param[in] t Time.
   /// @param[in] dtau Time step.
   /// @param[in] s Split solution.
-  /// @param[out] kkT_matrix The KKT matrix. The Hessians are added to this 
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
   /// data.
   ///
   void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
@@ -164,7 +164,7 @@ public:
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] s Split solution.
-  /// @param[out] kkT_matrix The KKT matrix. The Hessians are added to this 
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
   /// data.
   ///
   void computeTerminalCostHessian(Robot& robot, CostFunctionData& data, 
@@ -239,7 +239,7 @@ public:
   /// @param[in] t Time.
   /// @param[in] dtau Time step.
   /// @param[in] s Split solution.
-  /// @param[out] kkT_matrix The KKT matrix. The Hessians are added to this 
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
   /// data.
   ///
   void lqq(Robot& robot, CostFunctionData& data, const double t, 
@@ -254,7 +254,7 @@ public:
   /// @param[in] t Time.
   /// @param[in] dtau Time step.
   /// @param[in] s Split solution.
-  /// @param[out] kkT_matrix The KKT matrix. The Hessians are added to this 
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
   /// data.
   ///
   void lvv(Robot& robot, CostFunctionData& data, const double t, 
@@ -269,7 +269,7 @@ public:
   /// @param[in] t Time.
   /// @param[in] dtau Time step.
   /// @param[in] s Split solution.
-  /// @param[out] kkT_matrix The KKT matrix. The Hessians are added to this 
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
   /// data.
   ///
   void laa(Robot& robot, CostFunctionData& data, const double t, 
@@ -284,7 +284,7 @@ public:
   /// @param[in] t Time.
   /// @param[in] dtau Time step.
   /// @param[in] s Split solution.
-  /// @param[out] kkT_matrix The KKT matrix. The Hessians are added to this 
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
   /// data.
   ///
   void lff(Robot& robot, CostFunctionData& data, const double t, 
@@ -324,7 +324,7 @@ public:
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] s Split solution.
-  /// @param[out] kkT_matrix The KKT matrix. The Hessians are added to this 
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
   /// data.
   ///
   void phiqq(Robot& robot, CostFunctionData& data, const double t, 
@@ -337,7 +337,7 @@ public:
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] s Split solution.
-  /// @param[out] kkT_matrix The KKT matrix. The Hessians are added to this 
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
   /// data.
   ///
   void phivv(Robot& robot, CostFunctionData& data, const double t, 

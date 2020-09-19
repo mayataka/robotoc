@@ -32,6 +32,7 @@ protected:
                                         Eigen::VectorXd::Ones(dimq_));
     v_ = Eigen::VectorXd::Random(dimq_);
     a_ = Eigen::VectorXd::Random(dimq_);
+    mu_.push_back(std::abs(Eigen::VectorXd::Random(2)[0]));
     baumgarte_weight_on_velocity_ = std::abs(Eigen::VectorXd::Random(2)[0]);
     baumgarte_weight_on_position_ = std::abs(Eigen::VectorXd::Random(2)[0]);
   }
@@ -44,6 +45,7 @@ protected:
   pinocchio::Data data_;
   int dimq_, contact_frame_id_;
   Eigen::VectorXd q_, v_, a_;
+  std::vector<double> mu_;
   double baumgarte_weight_on_velocity_, baumgarte_weight_on_position_;
 };
 
@@ -72,7 +74,7 @@ TEST_F(FixedBaseRobotTest, constructor) {
   EXPECT_FALSE(robot.has_floating_base());
   robot.printRobotModel();
   std::vector<int> contacts = {contact_frame_id_};
-  Robot robot_contact(urdf_, contacts, baumgarte_weight_on_velocity_, 
+  Robot robot_contact(urdf_, contacts, mu_, baumgarte_weight_on_velocity_, 
                       baumgarte_weight_on_position_);
   EXPECT_EQ(robot_contact.dimq(), dimq_);
   EXPECT_EQ(robot_contact.dimv(), dimq_);
@@ -84,6 +86,10 @@ TEST_F(FixedBaseRobotTest, constructor) {
   EXPECT_EQ(robot_contact.is_contact_active(0), false);
   EXPECT_FALSE(robot_contact.has_active_contacts());
   EXPECT_FALSE(robot_contact.has_floating_base());
+  EXPECT_DOUBLE_EQ(robot_contact.mu(0), mu_[0]);
+  std::vector<double> mu_tmp = {std::abs(Eigen::VectorXd::Random(2)[0])};
+  robot_contact.setFrictionCoefficient(mu_tmp);
+  EXPECT_DOUBLE_EQ(robot_contact.mu(0), mu_tmp[0]);
   robot_contact.printRobotModel();
   Eigen::VectorXd effort_limit(dimq_), velocity_limit(dimq_), 
                   lower_position_limit(dimq_), upper_position_limit(dimq_);
@@ -131,7 +137,7 @@ TEST_F(FixedBaseRobotTest, moveAssign) {
   EXPECT_EQ(robot_empty.max_point_contacts(), 0);
   EXPECT_FALSE(robot_empty.has_floating_base());
   std::vector<int> contacts = {contact_frame_id_};
-  Robot robot_contact(urdf_, contacts, baumgarte_weight_on_velocity_, 
+  Robot robot_contact(urdf_, contacts, mu_, baumgarte_weight_on_velocity_, 
                       baumgarte_weight_on_position_);
   EXPECT_EQ(robot_contact.dimq(), dimq_);
   EXPECT_EQ(robot_contact.dimv(), dimq_);
@@ -182,7 +188,7 @@ TEST_F(FixedBaseRobotTest, moveAssign) {
 TEST_F(FixedBaseRobotTest, moveConstructor) {
   // Default constructor
   std::vector<int> contacts = {contact_frame_id_};
-  Robot robot_contact(urdf_, contacts, baumgarte_weight_on_velocity_, 
+  Robot robot_contact(urdf_, contacts, mu_, baumgarte_weight_on_velocity_, 
                       baumgarte_weight_on_position_);
   EXPECT_EQ(robot_contact.dimq(), dimq_);
   EXPECT_EQ(robot_contact.dimv(), dimq_);
@@ -333,7 +339,7 @@ TEST_F(FixedBaseRobotTest, frameJacobian) {
 
 TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   std::vector<int> contact_frames = {contact_frame_id_};
-  Robot robot(urdf_, contact_frames, baumgarte_weight_on_velocity_, 
+  Robot robot(urdf_, contact_frames, mu_, baumgarte_weight_on_velocity_, 
               baumgarte_weight_on_position_);
   std::random_device rnd;
   const int segment_begin = rnd() % 5;
@@ -348,7 +354,7 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   robot.updateKinematics(q_, v_, a_);
   robot.setContactPointsByCurrentKinematics();
   robot.computeBaumgarteResidual(residual.segment<3>(segment_begin));
-  PointContact contact_ref(model_, contact_frame_id_, 
+  PointContact contact_ref(model_, contact_frame_id_, mu_[0],
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
   pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
@@ -433,7 +439,8 @@ TEST_F(FixedBaseRobotTest, RNEA) {
   Eigen::VectorXd tau_ref = pinocchio::rnea(model_, data_, q_, v_, a_);
   EXPECT_TRUE(tau_ref.isApprox(tau));
   std::vector<int> contact_frames = {contact_frame_id_};
-  Robot robot_contact(urdf_, contact_frames, baumgarte_weight_on_velocity_, 
+  Robot robot_contact(urdf_, contact_frames, mu_, 
+                      baumgarte_weight_on_velocity_, 
                       baumgarte_weight_on_position_);
   tau = Eigen::VectorXd::Zero(dimq_);
   tau_ref = Eigen::VectorXd::Zero(dimq_);
@@ -450,7 +457,7 @@ TEST_F(FixedBaseRobotTest, RNEA) {
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint 
       = pinocchio::container::aligned_vector<pinocchio::Force>(
                  model_.joints.size(), pinocchio::Force::Zero());
-  PointContact contact_ref(model_, contact_frame_id_, 
+  PointContact contact_ref(model_, contact_frame_id_, mu_[0],
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
   contact_ref.computeJointForceFromContactForce(fext[0], fjoint);
@@ -480,7 +487,7 @@ TEST_F(FixedBaseRobotTest, RNEADerivativesWithoutFext) {
 
 TEST_F(FixedBaseRobotTest, RNEADerivativesWithContacts) {
   std::vector<int> contact_frames = {contact_frame_id_};
-  Robot robot(urdf_, contact_frames, baumgarte_weight_on_velocity_, 
+  Robot robot(urdf_, contact_frames, mu_, baumgarte_weight_on_velocity_, 
               baumgarte_weight_on_position_);
   std::vector<Eigen::Vector3d> fext;
   fext.push_back(Eigen::Vector3d::Random());
@@ -500,7 +507,7 @@ TEST_F(FixedBaseRobotTest, RNEADerivativesWithContacts) {
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint 
       = pinocchio::container::aligned_vector<pinocchio::Force>(
                  model_.joints.size(), pinocchio::Force::Zero());
-  PointContact contact_ref(model_, contact_frame_id_, 
+  PointContact contact_ref(model_, contact_frame_id_, mu_[0],
                            baumgarte_weight_on_velocity_, 
                            baumgarte_weight_on_position_);
   contact_ref.computeJointForceFromContactForce(fext[0], fjoint);

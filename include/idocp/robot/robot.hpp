@@ -27,23 +27,25 @@ namespace idocp {
 ///
 /// @class Robot
 /// @brief Dynamics and kinematics model of robots. Wraps pinocchio::Model and 
-/// pinocchio::Data.
+/// pinocchio::Data. Includes point contacts.
 ///
 class Robot {
 public:
   ///
   /// @brief Build the robot model and data from URDF. The model is assumed to
   /// have no contacts with the environment.
-  /// @param[in] urdf_file_name Path to the URDF file.
+  /// @param[in] path_to_urdf Path to the URDF file.
   ///
-  Robot(const std::string& urdf_file_name);
+  Robot(const std::string& path_to_urdf);
 
   ///
   /// @brief Build the robot model and data from URDF. The model is assumed to
   /// have no contacts with the environment.
-  /// @param[in] urdf_file_name Path to the URDF file.
+  /// @param[in] path_to_urdf Path to the URDF file.
   /// @param[in] contact_frames Collection of the frames that can have contacts 
   /// with the environments.
+  /// @param[in] mu Friction coefficient of each contact. Size must be 
+  /// contact_frames.size(). Each element must be positive.
   /// @param[in] baumgarte_weight_on_velocity The weight parameter on the 
   /// velocity error in the Baumgarte's stabilization method. Must be 
   /// nonnegative.
@@ -51,13 +53,14 @@ public:
   /// position error in the Baumgarte's stabilization method. Must be
   /// nonnegative.
   ///
-  Robot(const std::string& urdf_file_name, 
+  Robot(const std::string& path_to_urdf, 
         const std::vector<int>& contact_frames, 
+        const std::vector<double>& mu,
         const double baumgarte_weight_on_velocity, 
         const double baumgarte_weight_on_position);
 
   ///
-  /// @brief Default constructor. Does not construct any models and datas. 
+  /// @brief Default constructor. 
   ///
   Robot();
 
@@ -86,9 +89,8 @@ public:
   ///
   Robot& operator=(Robot&&) noexcept = default;
 
-
   ///
-  /// @brief Integrates the generalized velocity, integration_length * v. 
+  /// @brief Integrates the generalized velocity by integration_length * v. 
   // The configuration q is then incremented.
   /// @param[in, out] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Generalized velocity. Size must be Robot::dimv().
@@ -101,8 +103,8 @@ public:
       const Eigen::MatrixBase<ConfigVectorType>& q) const;
 
   ///
-  /// @brief Integrates the generalized velocity, integration_length * v. 
-  /// @param[in] q Configuration. Size must be dRobot::imq().
+  /// @brief Integrates the generalized velocity by integration_length * v. 
+  /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Generalized velocity. Size must be Robot::dimv().
   /// @param[in] integration_length The length of the integration.
   /// @param[out] q_integrated Resultant configuration. Size must be 
@@ -162,7 +164,6 @@ public:
   ///
   /// @brief Updates the kinematics of the robot. The frame placements, frame 
   /// velocity, frame acceleration, and the relevant Jacobians are calculated. 
-  /// After that, the each contact residual is updated.
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Generalized velocity. Size must be Robot::dimv().
   /// @param[in] a Generalized acceleration. Size must be Robot::dimv().
@@ -277,7 +278,8 @@ public:
 
   ///
   /// @brief Sets the contact points.
-  /// @param[in] contact_points Collection of contact points.
+  /// @param[in] contact_points Collection of contact points. Size must be 
+  /// Robot::max_point_contacts().
   /// 
   void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
 
@@ -287,17 +289,32 @@ public:
   void setContactPointsByCurrentKinematics();
 
   ///
+  /// @brief Sets the friction coefficient.
+  /// @param[in] mu Friction coefficient of each contact. Size must be 
+  /// Robot::max_point_contacts(). Each element must be positive.
+  /// 
+  void setFrictionCoefficient(const std::vector<double>& mu);
+
+  ///
+  /// @brief Returns the friction coefficient of a contact.
+  /// @param[in] contact_index Index of the contact. Must be nonnegative.
+  /// Must be less than Robot::max_point_contacts().
+  /// @return Friction coefficient of the contact.
+  /// 
+  double mu(const int contact_index) const;
+
+  ///
   /// @brief Activate and deactivate the each contact.
   /// @param[in] is_each_contact_active Bool variables representing wheather 
-  /// each contact is active or not.
+  /// each contact is active or not. Size must be Robot::max_point_contacts().
   /// 
   void setContactStatus(const std::vector<bool>& is_each_contact_active);
 
   ///
   /// @brief Set contact forces for each active contacts. Before calling this 
   /// function, update contact status by calling setContactStatus().
-  /// @param[in] fext The stack of the contact forces represented in the local 
-  /// coordinate of the contact frame. 
+  /// @param[in] f The stack of the contact forces represented in the local 
+  /// coordinate of the contact frame. Size must be Robot::max_point_contacts(). 
   /// 
   void setContactForces(const std::vector<Eigen::Vector3d>& f);
 
@@ -534,7 +551,6 @@ public:
 private:
   pinocchio::Model model_;
   pinocchio::Data data_;
-  std::string urdf_file_name_;
   std::vector<PointContact> point_contacts_;
   FloatingBase floating_base_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;

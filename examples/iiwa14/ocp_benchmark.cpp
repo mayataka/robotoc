@@ -34,6 +34,7 @@ void BenchmarkWithoutContacts() {
   cost->push_back(joint_cost);
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
+  // auto constraints = std::make_shared<idocp::Constraints>();
   const double T = 1;
   const int N = 20;
   const int num_proc = 4;
@@ -56,10 +57,11 @@ void BenchmarkWithoutContacts() {
 void BenchmarkWithContacts() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {18};
+  std::vector<double> mu = {1};
   const double baumgarte_weight_on_velocity = 10;
   const double baumgarte_weight_on_position = 100;
   const std::string urdf_file_name = "../urdf/iiwa14.urdf";
-  idocp::Robot robot(urdf_file_name, contact_frames, 
+  idocp::Robot robot(urdf_file_name, contact_frames, mu,
                      baumgarte_weight_on_velocity, 
                      baumgarte_weight_on_position);
   auto cost = std::make_shared<idocp::CostFunction>();
@@ -108,6 +110,6 @@ void BenchmarkWithContacts() {
 
 int main() {
   ocpbenchmark::iiwa14::BenchmarkWithoutContacts();
-  ocpbenchmark::iiwa14::BenchmarkWithContacts();
+  // ocpbenchmark::iiwa14::BenchmarkWithContacts();
   return 0;
 }

@@ -253,6 +253,11 @@ inline int PointContact::parent_joint_id() const {
 }
 
 
+inline double PointContact::mu() const {
+  return mu_;
+}
+
+
 inline double PointContact::baumgarte_weight_on_velocity() const {
   return baumgarte_weight_on_velocity_;
 }
@@ -263,7 +268,7 @@ inline double PointContact::baumgarte_weight_on_position() const {
 }
 
 
-inline Eigen::Vector3d PointContact::contact_point() const {
+inline const Eigen::Vector3d& PointContact::contact_point() const {
   return contact_point_;
 }
 

@@ -29,9 +29,13 @@ protected:
     srand((unsigned int) time(0));
     urdf = "../urdf/iiwa14/iiwa14.urdf";
     std::vector<int> contact_frames = {18};
+    std::vector<double> mu;
+    for (int i=0; i<contact_frames.size(); ++i) {
+      mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
+    }
     const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
     const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
-    robot = Robot(urdf, contact_frames, baum_a, baum_b);
+    robot = Robot(urdf, contact_frames, mu, baum_a, baum_b);
     std::random_device rnd;
     contact_status.push_back(rnd()%2==0);
     robot.setContactStatus(contact_status);

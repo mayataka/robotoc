@@ -28,18 +28,19 @@ namespace anymal {
 void SimulateWithContactsByOCP() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
+  std::vector<double> mu = {1, 1, 1, 1};
   const double baumgarte_weight_on_velocity = 40;
   const double baumgarte_weight_on_position = 400;
   const std::string urdf_file_name = "../anymal/anymal.urdf";
-  idocp::Robot robot(urdf_file_name, contact_frames, 
+  idocp::Robot robot(urdf_file_name, contact_frames, mu,
                      baumgarte_weight_on_velocity, 
                      baumgarte_weight_on_position);
   auto cost = std::make_shared<idocp::CostFunction>();
   auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
   Eigen::VectorXd q_ref(robot.dimq());
   // q_ref << 0, 0, 0.48, 0, 0, 0, 1, 
-  q_ref << 0, 0, 0.48, 0, -50, 0, 1, 
-  // q_ref << 0, 0, 0.48, 0, 50, 0, 1, 
+  // q_ref << 0, 0, 0.48, 0, -50, 0, 1, 
+  q_ref << 0, 0, 0.48, 0, 50, 0, 1, 
   // q_ref << 0, 0, 0.48, -1, 0, 1, 0.5, 
   // q_ref << 0, 0, 0.48, 1, 0, -1, 0.5, 
            0.0315, 0.4, -0.8, 

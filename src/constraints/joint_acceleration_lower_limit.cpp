@@ -55,7 +55,7 @@ void JointAccelerationLowerLimit::setSlackAndDual(
 
 void JointAccelerationLowerLimit::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    KKTResidual& kkt_residual) const {
+    const SplitSolution& s, KKTResidual& kkt_residual) const {
   kkt_residual.la().tail(dimc_).noalias() -= dtau * data.dual;
 }
 
@@ -76,7 +76,7 @@ void JointAccelerationLowerLimit::condenseSlackAndDual(
 
 void JointAccelerationLowerLimit::computeSlackAndDualDirection(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitDirection& d) const {
+    const SplitSolution& s, const SplitDirection& d) const {
   data.dslack = dtau * d.da().tail(dimc_) - data.residual;
   computeDualDirection(data.slack, data.dual, data.dslack, data.duality, 
                        data.ddual);
