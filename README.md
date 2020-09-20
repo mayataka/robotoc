@@ -5,6 +5,7 @@
 
 ## Features for efficient optimal control 
 - Solves the optimal control problem for rigid body systems based on inverse dynamics.
+- Baumgarte-like relaxation and hybrid optimal control formulation for contact complementarity problem. 
 - Sparsity-exploiting Riccati recursion / Parallel Newton's method (ParNMPC)  for computing the Newton direction.
 - Primal-dual interior point method for inequality constraints.
 - Filter line-search method.
@@ -68,7 +69,7 @@ target_include_directories(
 
 ## Simulation of Contact Dynamics 
 
-Class `idocp::QuadrupedSimulator` provides quadruped simulation utilizing RaiSim.
+Class `idocp::QuadrupedSimulator` provides quadruped simulation for MPC utilizing RaiSim.
 Note that RaiSim currently supports only for academic use.
 First, install [RaiSimLib](https://github.com/leggedrobotics/raisimLib) and [RaiSimOgre](https://github.com/leggedrobotics/raisimOgre) into ${RAISIM_LOCAL_BUILD_DIR} (arbitrary directory).
 Then you can build the simulation by writing `CMakeLists.txt` as

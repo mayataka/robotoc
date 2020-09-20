@@ -75,12 +75,44 @@ public:
                           const Eigen::VectorXd& v, const int max_itr=0);
 
   ///
-  /// @brief Sets the contact status over the horizon. 
-  /// @param[in] contact_sequence Sequence of the bool variables that represents
-  /// whether the contacts is active or not.
+  /// @brief Activate a contact over specified time steps 
+  /// (from time_stage_begin until time_stage_end). 
+  /// @param[in] contact_index Index of a contact of interedted. 
+  /// @param[in] time_stage_begin Beginning of time stages to activate. 
+  /// @param[in] time_stage_end End of time stages to activate. 
   ///
-  void setContactSequence(
-      const std::vector<std::vector<bool>>& contact_sequence);
+  void activateContact(const int contact_index, const int time_stage_begin, 
+                       const int time_stage_end);
+
+  ///
+  /// @brief Deactivate a contact over specified time steps 
+  /// (from time_stage_begin until time_stage_end). 
+  /// @param[in] contact_index Index of a contact of interedted. 
+  /// @param[in] time_stage_begin Beginning of time stages to deactivate. 
+  /// @param[in] time_stage_end End of time stages to deactivate. 
+  ///
+  void deactivateContact(const int contact_index, const int time_stage_begin, 
+                         const int time_stage_end);
+
+  ///
+  /// @brief Activate contacts over specified time steps 
+  /// (from time_stage_begin until time_stage_end). 
+  /// @param[in] contact_indices Indices of contacts of interedted. 
+  /// @param[in] time_stage_begin Beginning of time stages to activate. 
+  /// @param[in] time_stage_end End of time stages to activate. 
+  ///
+  void activateContacts(const std::vector<int>& contact_indices, 
+                        const int time_stage_begin, const int time_stage_end);
+
+  ///
+  /// @brief Deactivate contacts over specified time steps 
+  /// (from time_stage_begin until time_stage_end). 
+  /// @param[in] contact_indices Indices of contacts of interedted. 
+  /// @param[in] time_stage_begin Beginning of time stages to deactivate. 
+  /// @param[in] time_stage_end End of time stages to deactivate. 
+  ///
+  void deactivateContacts(const std::vector<int>& contact_indices, 
+                          const int time_stage_begin, const int time_stage_end);
 
   ///
   /// @brief Sets the contact points over the horizon. 

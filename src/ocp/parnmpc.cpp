@@ -13,6 +13,7 @@ ParNMPC::ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
                  const double T, const int N, const int num_proc)
   : split_ocps_(N, SplitParNMPC(robot, cost, constraints)),
     robots_(num_proc, robot),
+    contact_sequence_(robot, N),
     filter_(),
     T_(T),
     dtau_(T/N),
@@ -27,15 +28,14 @@ ParNMPC::ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     primal_step_sizes_(Eigen::VectorXd::Zero(N)),
     dual_step_sizes_(Eigen::VectorXd::Zero(N)),
     costs_(Eigen::VectorXd::Zero(N)), 
-    violations_(Eigen::VectorXd::Zero(N)),
-    contact_sequence_(N, std::vector<bool>(robot.max_point_contacts(), false)) {
+    violations_(Eigen::VectorXd::Zero(N)) {
   assert(T > 0);
   assert(N > 0);
   assert(num_proc > 0);
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N; ++i) {
     const int robot_id = omp_get_thread_num();
-    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    robots_[robot_id].setContactStatus(contact_sequence_.contactStatus(i));
     s_[i].setContactStatus(robots_[robot_id]);
     robot.normalizeConfiguration(s_[i].q);
     robot.normalizeConfiguration(s_new_[i].q);
@@ -79,7 +79,7 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
-    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    robots_[robot_id].setContactStatus(contact_sequence_.contactStatus(i));
     s_[i].setContactStatus(robots_[robot_id]);
     s_new_[i].setContactStatus(robots_[robot_id]);
     d_[i].setContactStatus(robots_[robot_id]);
@@ -132,7 +132,7 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
       #pragma omp parallel for num_threads(num_proc_)
       for (int i=0; i<N_; ++i) {
         const int robot_id = omp_get_thread_num();
-        robots_[robot_id].setContactStatus(contact_sequence_[i]);
+        robots_[robot_id].setContactStatus(contact_sequence_.contactStatus(i));
         if (i < N_-1) {
           const std::pair<double, double> filter_pair
               = split_ocps_[i].costAndViolation(robots_[robot_id], 
@@ -155,7 +155,7 @@ void ParNMPC::updateSolution(const double t, const Eigen::VectorXd& q,
       #pragma omp parallel for num_threads(num_proc_)
       for (int i=0; i<N_; ++i) {
         const int robot_id = omp_get_thread_num();
-        robots_[robot_id].setContactStatus(contact_sequence_[i]);
+        robots_[robot_id].setContactStatus(contact_sequence_.contactStatus(i));
         if (i == 0) {
           const std::pair<double, double> filter_pair
               = split_ocps_[i].costAndViolation(robots_[robot_id], 
@@ -290,26 +290,57 @@ void ParNMPC::setAuxiliaryMatrixGuessByTerminalCost(const double t) {
 }
 
 
-void ParNMPC::setContactSequence(
-    const std::vector<std::vector<bool>>& contact_sequence) {
-  if (contact_sequence.size() != N_) {
-    std::cout << "invalid number of the contact sequence: it must be " 
-              << N_ << std::endl;
-    return;
-  }
-  for (int i=0; i<N_; ++i) {
-    if (contact_sequence[i].size() != robots_[0].max_point_contacts()) {
-      std::cout << "invalid dimension of the contact sequence at time step" 
-                << i << ": it must be " << robots_[0].max_point_contacts() 
-                << std::endl;
-      return;
-    }
-  }
-  contact_sequence_ = contact_sequence;
+void ParNMPC::activateContact(const int contact_index, 
+                              const int time_stage_begin, 
+                              const int time_stage_end) {
+  contact_sequence_.activateContact(contact_index, time_stage_begin, 
+                                    time_stage_end);
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
-    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    robots_[robot_id].setContactStatus(contact_sequence_.contactStatus(i));
+    s_[i].setContactStatus(robots_[robot_id]);
+  }
+}
+
+
+void ParNMPC::deactivateContact(const int contact_index, 
+                                const int time_stage_begin, 
+                                const int time_stage_end) {
+  contact_sequence_.deactivateContact(contact_index, time_stage_begin, 
+                                      time_stage_end);
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<N_; ++i) {
+    const int robot_id = omp_get_thread_num();
+    robots_[robot_id].setContactStatus(contact_sequence_.contactStatus(i));
+    s_[i].setContactStatus(robots_[robot_id]);
+  }
+}
+
+
+void ParNMPC::activateContacts(const std::vector<int>& contact_indices, 
+                               const int time_stage_begin, 
+                               const int time_stage_end) {
+  contact_sequence_.activateContacts(contact_indices, time_stage_begin, 
+                                     time_stage_end);
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<N_; ++i) {
+    const int robot_id = omp_get_thread_num();
+    robots_[robot_id].setContactStatus(contact_sequence_.contactStatus(i));
+    s_[i].setContactStatus(robots_[robot_id]);
+  }
+}
+
+
+void ParNMPC::deactivateContacts(const std::vector<int>& contact_indices, 
+                                 const int time_stage_begin, 
+                                 const int time_stage_end) {
+  contact_sequence_.deactivateContacts(contact_indices, time_stage_begin, 
+                                       time_stage_end);
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<N_; ++i) {
+    const int robot_id = omp_get_thread_num();
+    robots_[robot_id].setContactStatus(contact_sequence_.contactStatus(i));
     s_[i].setContactStatus(robots_[robot_id]);
   }
 }
@@ -347,7 +378,7 @@ double ParNMPC::KKTError(const double t) {
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
-    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    robots_[robot_id].setContactStatus(contact_sequence_.contactStatus(i));
     if (i < N_-1) {
       error(i) = split_ocps_[i].condensedSquaredKKTErrorNorm(
           robots_[robot_id], t+(i+1)*dtau_, dtau_, s_[i]);
@@ -369,7 +400,7 @@ double ParNMPC::computeKKTError(const double t, const Eigen::VectorXd& q,
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
-    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    robots_[robot_id].setContactStatus(contact_sequence_.contactStatus(i));
     if (i == 0) {
       error(i) = split_ocps_[i].computeSquaredKKTErrorNorm(
           robots_[robot_id], t+(i+1)*dtau_, dtau_, q, v, s_[i], s_[i+1]);
@@ -419,7 +450,7 @@ void ParNMPC::initConstraints() {
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
-    robots_[robot_id].setContactStatus(contact_sequence_[i]);
+    robots_[robot_id].setContactStatus(contact_sequence_.contactStatus(i));
     split_ocps_[i].initConstraints(robots_[robot_id], i, dtau_, s_[i]);
   }
 }

@@ -94,7 +94,6 @@ void BenchmarkTaskSpace6DControl() {
                                                     robot, cost, constraints, T, N, num_proc);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   ocp_benchmarker.testConvergence(t, q, v, 30, false);
-  ocp_benchmarker.printSolution();
   ocp_benchmarker.testCPUTime(t, q, v, 1000);
   idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for task-space control of cranex7",
                                                             robot, cost, constraints, T, N, num_proc);

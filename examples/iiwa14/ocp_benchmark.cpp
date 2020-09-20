@@ -82,19 +82,19 @@ void BenchmarkWithContacts() {
   const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   joint_cost->set_q_ref(q);
-  robot.setContactStatus(std::vector<bool>({true}));
+  robot.setContactStatus({true});
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
   idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for iiwa14 with contacts",
                                                     robot, cost, constraints, T, N, num_proc);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
-  ocp_benchmarker.setContactStatus(std::vector<bool>({true}));
+  ocp_benchmarker.activateContacts({0}, 0, N);
   ocp_benchmarker.testConvergence(t, q, v, 30, true);
   ocp_benchmarker.testCPUTime(t, q, v);
   idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa14 with contacts",
                                                             robot, cost, constraints, T, N, num_proc);
   parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
-  parnmpc_benchmarker.setContactStatus(std::vector<bool>({true}));
+  parnmpc_benchmarker.activateContacts({0}, 0, N);
   parnmpc_benchmarker.testConvergence(t, q, v, 30, true);
   parnmpc_benchmarker.testCPUTime(t, q, v);
 }

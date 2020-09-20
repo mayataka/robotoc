@@ -61,7 +61,8 @@ public:
 
   ///
   /// @brief Stack of Lagrange multiplier with respect to equality constraints 
-  /// that is active at the current contact status.
+  /// that is active at the current contact status. Size is 
+  /// Robot::dim_passive() + Robot::dimf().
   /// @return Reference to the stack of Lagrange multiplier with respect to 
   /// equality constraints.
   ///
@@ -69,7 +70,8 @@ public:
 
   ///
   /// @brief Stack of Lagrange multiplier with respect to equality constraint 
-  /// that is active at the current contact status.
+  /// that is active at the current contact status. Size is 
+  /// Robot::dim_passive() + Robot::dimf().
   /// @return Const reference to the stack of Lagrange multiplier with respect 
   /// to equality constraints.
   ///
@@ -78,6 +80,7 @@ public:
 
   ///
   /// @brief Lagrange multiplier with respect to floating base constraints.
+  /// Size is Robot::dim_passive().
   /// @return Reference to Lagrange multiplier with respect to floating base 
   /// constraints.
   ///
@@ -85,6 +88,7 @@ public:
 
   ///
   /// @brief Lagrange multiplier with respect to floating base constraints.
+  /// Size is Robot::dim_passive().
   /// @return Reference to Lagrange multiplier with respect to floating base 
   /// constraints.
   ///
@@ -92,7 +96,7 @@ public:
 
   ///
   /// @brief Stack of Lagrange multiplier with respect to active contact 
-  /// constraints.
+  /// constraints. Size is Robot::dimf().
   /// @return Reference to the stack of Lagrange multiplier with respect to 
   /// active contact constraints.
   ///
@@ -100,7 +104,7 @@ public:
 
   ///
   /// @brief Stack of Lagrange multiplier with respect to active contact 
-  /// constraints.
+  /// constraints. Size is Robot::dimf().
   /// @return Const reference to the stack of Lagrange multiplier with respect 
   /// to active contact constraints.
   ///
@@ -119,13 +123,13 @@ public:
   void set_mu_contact();
 
   ///
-  /// @brief Stack of active contact forces.
+  /// @brief Stack of active contact forces. Size is Robot::dimf().
   /// @return Reference to the stack of active contact forces.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> f_stack();
 
   ///
-  /// @brief Stack of active contact forces.
+  /// @brief Stack of active contact forces. Size is Robot::dimf().
   /// @return Const reference to the stack of active contact forces.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> f_stack() const;
@@ -160,31 +164,55 @@ public:
   ///
   int dimf() const;
 
+  ///
   /// @brief Lagrange multiplier with respect to transition of q. 
+  /// Size is Robot::dimv().
+  ///
   Eigen::VectorXd lmd;
 
+  ///
   /// @brief Lagrange multiplier with respect to transition of v. 
+  /// Size is Robot::dimv().
+  ///
   Eigen::VectorXd gmm;
 
+  ///
   /// @brief Lagrange multiplier with respect to contact constraint. 
+  /// Size is Robot::max_point_contacts().
+  ///
   std::vector<Eigen::Vector3d> mu_contact;
 
+  ///
   /// @brief Generalized acceleration. 
+  /// Size is Robot::dimv().
+  ///
   Eigen::VectorXd a;
 
+  ///
   /// @brief Contact forces. 
+  /// Size is Robot::max_point_contacts().
+  ///
   std::vector<Eigen::Vector3d> f;
 
-  /// @brief Configuration. 
+  ///
+  /// @brief Configuration. Size is Robot::dimq().
+  ///
   Eigen::VectorXd q;
 
-  /// @brief Generalized velocity. 
+  ///
+  /// @brief Generalized velocity. Size is Robot::dimv().
+  ///
   Eigen::VectorXd v;
 
-  /// @brief Control input torques. 
+  ///
+  /// @brief Control input torques. Size is Robot::dimv().
+  ///
   Eigen::VectorXd u;
 
-  /// @brief Lagrange multiplier with respect to inverse dynamics. 
+  ///
+  /// @brief Lagrange multiplier with respect to inverse dynamics. Size is 
+  /// Robot::dimv().
+  ///
   Eigen::VectorXd beta;
 
   ///

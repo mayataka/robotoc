@@ -16,7 +16,7 @@ namespace idocp {
 
 class TaskSpace6DCost final : public CostFunctionComponentBase {
 public:
-  typedef Eigen::Matrix<double, 6, 1> Vector6d;
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
 
   TaskSpace6DCost(const Robot& robot, const int frame_id);
 

@@ -52,9 +52,34 @@ inline void MPC<ParNMPC>::initializeSolution(const double t,
 
 
 template <typename OCPType>
-inline void MPC<OCPType>::setContactSequence(
-    const std::vector<std::vector<bool>>& contact_sequence) {
-  ocp_.setContactSequence(contact_sequence);
+inline void MPC<OCPType>::activateContact(const int contact_index, 
+                                          const int time_stage_begin, 
+                                          const int time_stage_end) {
+  ocp_.activateContact(contact_index, time_stage_begin, time_stage_end);
+}
+
+
+template <typename OCPType>
+inline void MPC<OCPType>::deactivateContact(const int contact_index, 
+                                            const int time_stage_begin, 
+                                            const int time_stage_end) {
+  ocp_.deactivateContact(contact_index, time_stage_begin, time_stage_end);
+}
+
+
+template <typename OCPType>
+inline void MPC<OCPType>::activateContacts(
+    const std::vector<int>& contact_indices, const int time_stage_begin, 
+    const int time_stage_end) {
+  ocp_.activateContacts(contact_indices, time_stage_begin, time_stage_end);
+}
+
+
+template <typename OCPType>
+inline void MPC<OCPType>::deactivateContacts(
+    const std::vector<int>& contact_indices, const int time_stage_begin, 
+    const int time_stage_end) {
+  ocp_.deactivateContacts(contact_indices, time_stage_begin, time_stage_end);
 }
 
 

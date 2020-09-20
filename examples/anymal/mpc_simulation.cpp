@@ -70,13 +70,11 @@ void SimulateWithContactsByOCP() {
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  const std::vector<bool> contact_status = {true, true, true, true};
-  robot.setContactStatus(contact_status);
+  robot.setContactStatus({true, true, true, true});
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
   idocp::MPC<idocp::OCP> mpc(robot, cost, constraints, T, N, num_proc);
-  const auto contact_sequence = std::vector<std::vector<bool>>(N, contact_status);
-  mpc.setContactSequence(contact_sequence);
+  mpc.activateContacts({0, 1, 2, 3}, 0, N);
   mpc.setContactPointByKinematics(q);
   mpc.initializeSolution(t, q, v, 100);
   const std::string urdf_for_raisim_file_name = "../anymal/anymal_for_raisim.urdf";

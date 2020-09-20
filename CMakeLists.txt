@@ -62,6 +62,7 @@ add_library(
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
   src/ocp/robot_dynamics.cpp
+  src/ocp/contact_sequence.cpp
   src/ocp/line_search_filter.cpp
   src/ocp/riccati_factorization.cpp
   src/ocp/riccati_gain.cpp

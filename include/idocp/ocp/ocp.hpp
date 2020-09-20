@@ -7,6 +7,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/ocp/contact_sequence.hpp"
 #include "idocp/ocp/split_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
@@ -50,22 +51,22 @@ public:
   ~OCP();
 
   ///
-  /// @brief Use default copy constructor. 
+  /// @brief Default copy constructor. 
   ///
   OCP(const OCP&) = default;
 
   ///
-  /// @brief Use default copy assign operator. 
+  /// @brief Default copy assign operator. 
   ///
   OCP& operator=(const OCP&) = default;
 
   ///
-  /// @brief Use default move constructor. 
+  /// @brief Default move constructor. 
   ///
   OCP(OCP&&) noexcept = default;
 
   ///
-  /// @brief Use default move assign operator. 
+  /// @brief Default move assign operator. 
   ///
   OCP& operator=(OCP&&) noexcept = default;
 
@@ -118,14 +119,46 @@ public:
   ///
   bool setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0,
                           const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
-                          
+
   ///
-  /// @brief Sets the contact status over the horizon. 
-  /// @param[in] contact_sequence Sequence of the bool variables that represents
-  /// whether the contacts is active or not.
+  /// @brief Activate a contact over specified time steps 
+  /// (from time_stage_begin until time_stage_end). 
+  /// @param[in] contact_index Index of a contact of interedted. 
+  /// @param[in] time_stage_begin Beginning of time stages to activate. 
+  /// @param[in] time_stage_end End of time stages to activate. 
   ///
-  void setContactSequence(
-      const std::vector<std::vector<bool>>& contact_sequence);
+  void activateContact(const int contact_index, const int time_stage_begin, 
+                       const int time_stage_end);
+
+  ///
+  /// @brief Deactivate a contact over specified time steps 
+  /// (from time_stage_begin until time_stage_end). 
+  /// @param[in] contact_index Index of a contact of interedted. 
+  /// @param[in] time_stage_begin Beginning of time stages to deactivate. 
+  /// @param[in] time_stage_end End of time stages to deactivate. 
+  ///
+  void deactivateContact(const int contact_index, const int time_stage_begin, 
+                         const int time_stage_end);
+
+  ///
+  /// @brief Activate contacts over specified time steps 
+  /// (from time_stage_begin until time_stage_end). 
+  /// @param[in] contact_indices Indices of contacts of interedted. 
+  /// @param[in] time_stage_begin Beginning of time stages to activate. 
+  /// @param[in] time_stage_end End of time stages to activate. 
+  ///
+  void activateContacts(const std::vector<int>& contact_indices, 
+                        const int time_stage_begin, const int time_stage_end);
+
+  ///
+  /// @brief Deactivate contacts over specified time steps 
+  /// (from time_stage_begin until time_stage_end). 
+  /// @param[in] contact_indices Indices of contacts of interedted. 
+  /// @param[in] time_stage_begin Beginning of time stages to deactivate. 
+  /// @param[in] time_stage_end End of time stages to deactivate. 
+  ///
+  void deactivateContacts(const std::vector<int>& contact_indices, 
+                          const int time_stage_begin, const int time_stage_end);
 
   ///
   /// @brief Sets the contact points over the horizon. 
@@ -154,6 +187,7 @@ public:
   /// @return The squared norm of the condensed KKT residual.
   ///
   double KKTError(const double t);
+
 
   ///
   /// @brief Computes and returns the squared KKT error norm of the OCP. 
@@ -192,6 +226,7 @@ private:
   std::vector<SplitOCP> split_ocps_;
   TerminalOCP terminal_ocp_;
   std::vector<Robot> robots_;
+  ContactSequence contact_sequence_;
   LineSearchFilter filter_;
   double T_, dtau_, step_size_reduction_rate_, min_step_size_;
   int N_, num_proc_;
@@ -199,7 +234,7 @@ private:
   std::vector<SplitDirection> d_;
   std::vector<RiccatiFactorization> riccati_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_;
-  std::vector<std::vector<bool>> contact_sequence_;
+  // std::vector<std::vector<bool>> contact_sequence_;
 };
 
 } // namespace idocp 
