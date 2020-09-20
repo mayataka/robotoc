@@ -7,18 +7,6 @@
 
 namespace idocp {
 
-inline void PointContact::setContactPoint(
-    const Eigen::Vector3d& contact_point) {
-  contact_point_ = contact_point;
-}
-
-
-inline void PointContact::setContactPointByCurrentKinematics(
-    const pinocchio::Data& data) {
-  contact_point_ = data.oMf[contact_frame_id_].translation();
-}
-
-
 inline void PointContact::computeJointForceFromContactForce(
     const Eigen::Vector3d& contact_force, 
     pinocchio::container::aligned_vector<pinocchio::Force>& joint_forces) const {
@@ -75,55 +63,62 @@ inline void PointContact::getContactJacobian(
 template <typename VectorType>
 inline void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
+    const double time_step, 
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
+  assert(time_step > 0);
   assert(baumgarte_residual.size() == 3);
   const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual).noalias()
       = pinocchio::getFrameClassicalAcceleration(model, data, 
                                                   contact_frame_id_, 
                                                   pinocchio::LOCAL).linear();
-  if (baumgarte_weight_on_velocity_ != 0.) {
-    (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
-        += baumgarte_weight_on_velocity_ 
-              * pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
-                                            pinocchio::LOCAL).linear();
-  }
-  if (baumgarte_weight_on_position_ != 0.) {
-    (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
-        += baumgarte_weight_on_position_
-              * (data.oMf[contact_frame_id_].translation()-contact_point_);
-  }
+  const double baumgarte_weight_on_velocity = (2-restitution_coefficient_) / time_step;
+  (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
+      += baumgarte_weight_on_velocity 
+            * pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
+                                          pinocchio::LOCAL).linear();
+  const double baumgarte_weight_on_position = 1 / (time_step*time_step);
+  (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
+      += baumgarte_weight_on_position
+            * (data.oMf[contact_frame_id_].translation()-contact_point_);
 }
 
 
 template <typename VectorType>
 inline void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
-    const double coeff, 
+    const double coeff, const double time_step, 
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
+  assert(time_step > 0);
   assert(baumgarte_residual.size() == 3);
   const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual).noalias()
       = coeff * pinocchio::getFrameClassicalAcceleration(
                     model, data, contact_frame_id_, pinocchio::LOCAL).linear();
-  if (baumgarte_weight_on_velocity_ != 0.) {
-    (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
-        += coeff * baumgarte_weight_on_velocity_ 
-                 * pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
-                                               pinocchio::LOCAL).linear();
-  }
-  if (baumgarte_weight_on_position_ != 0.) {
-    (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
-        += coeff * baumgarte_weight_on_position_
-                 * (data.oMf[contact_frame_id_].translation()-contact_point_);
-  }
+  const double baumgarte_weight_on_velocity = (2-restitution_coefficient_) / time_step;
+  (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
+      += coeff * baumgarte_weight_on_velocity 
+                * pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
+                                              pinocchio::LOCAL).linear();
+  const double baumgarte_weight_on_position = 1 / (time_step*time_step);
+  (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
+      += coeff * baumgarte_weight_on_position
+                * (data.oMf[contact_frame_id_].translation()-contact_point_);
 }
 
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void PointContact::computeBaumgarteDerivatives(
     const pinocchio::Model& model, pinocchio::Data& data, 
+    const double time_step, 
     const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
     const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da) {
+  assert(time_step > 0);
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_da.cols() == dimv_);
+  assert(baumgarte_partial_dq.rows() == 3);
+  assert(baumgarte_partial_dv.rows() == 3);
+  assert(baumgarte_partial_da.rows() == 3);
   pinocchio::getFrameAccelerationDerivatives(model, data, contact_frame_id_, 
                                               pinocchio::LOCAL,
                                               frame_v_partial_dq_, 
@@ -153,29 +148,29 @@ inline void PointContact::computeBaumgarteDerivatives(
       += v_linear_skew_ * J_frame_.template bottomRows<3>();
   const_cast<Eigen::MatrixBase<MatrixType3>&> (baumgarte_partial_da)
       = frame_a_partial_da_.template topRows<3>();
-  if (baumgarte_weight_on_velocity_ != 0.) {
-    (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
-        += baumgarte_weight_on_velocity_ 
-            * frame_v_partial_dq_.template topRows<3>();
-    (const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv)).noalias() 
-        += baumgarte_weight_on_velocity_ 
-            * frame_a_partial_da_.template topRows<3>();
-  }
-  if (baumgarte_weight_on_position_ != 0.) {
-    (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
-        += baumgarte_weight_on_position_ 
-            * data.oMf[contact_frame_id_].rotation()
-            * J_frame_.template topRows<3>();
-  }
+  const double baumgarte_weight_on_velocity = (2-restitution_coefficient_) / time_step;
+  (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
+      += baumgarte_weight_on_velocity 
+          * frame_v_partial_dq_.template topRows<3>();
+  (const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv)).noalias() 
+      += baumgarte_weight_on_velocity 
+          * frame_a_partial_da_.template topRows<3>();
+  const double baumgarte_weight_on_position = 1 / (time_step*time_step);
+  (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
+      += baumgarte_weight_on_position 
+          * data.oMf[contact_frame_id_].rotation()
+          * J_frame_.template topRows<3>();
 }
 
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void PointContact::computeBaumgarteDerivatives(
     const pinocchio::Model& model, pinocchio::Data& data, const double coeff,
+    const double time_step, 
     const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
     const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da) {
+  assert(time_step > 0);
   assert(baumgarte_partial_dq.cols() == dimv_);
   assert(baumgarte_partial_dv.cols() == dimv_);
   assert(baumgarte_partial_da.cols() == dimv_);
@@ -211,20 +206,18 @@ inline void PointContact::computeBaumgarteDerivatives(
       += coeff * v_linear_skew_ * J_frame_.template bottomRows<3>();
   const_cast<Eigen::MatrixBase<MatrixType3>&> (baumgarte_partial_da)
       = coeff * frame_a_partial_da_.template topRows<3>();
-  if (baumgarte_weight_on_velocity_ != 0.) {
-    (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
-        += coeff * baumgarte_weight_on_velocity_ 
-            * frame_v_partial_dq_.template topRows<3>();
-    (const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv)).noalias() 
-        += coeff * baumgarte_weight_on_velocity_ 
-            * frame_a_partial_da_.template topRows<3>();
-  }
-  if (baumgarte_weight_on_position_ != 0.) {
-    (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
-        += coeff * baumgarte_weight_on_position_ 
-            * data.oMf[contact_frame_id_].rotation()
-            * J_frame_.template topRows<3>();
-  }
+  const double baumgarte_weight_on_velocity = (2-restitution_coefficient_) / time_step;
+  (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
+      += coeff * baumgarte_weight_on_velocity 
+          * frame_v_partial_dq_.template topRows<3>();
+  (const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv)).noalias() 
+      += coeff * baumgarte_weight_on_velocity 
+          * frame_a_partial_da_.template topRows<3>();
+  const double baumgarte_weight_on_position = 1 / (time_step*time_step);
+  (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
+      += coeff * baumgarte_weight_on_position 
+          * data.oMf[contact_frame_id_].rotation()
+          * J_frame_.template topRows<3>();
 }
 
 
@@ -243,6 +236,33 @@ inline bool PointContact::isActive() const {
 }
 
 
+inline void PointContact::setContactPoint(
+    const Eigen::Vector3d& contact_point) {
+  contact_point_ = contact_point;
+}
+
+
+inline void PointContact::setContactPointByCurrentKinematics(
+    const pinocchio::Data& data) {
+  contact_point_ = data.oMf[contact_frame_id_].translation();
+}
+
+
+inline const Eigen::Vector3d& PointContact::contactPoint() const {
+  return contact_point_;
+}
+
+
+inline double PointContact::frictionCoefficient() const {
+  return friction_coefficient_;
+}
+
+
+inline double PointContact::restitutionCoefficient() const {
+  return restitution_coefficient_;
+}
+
+
 inline int PointContact::contact_frame_id() const {
   return contact_frame_id_;
 }
@@ -250,26 +270,6 @@ inline int PointContact::contact_frame_id() const {
 
 inline int PointContact::parent_joint_id() const {
   return parent_joint_id_;
-}
-
-
-inline double PointContact::mu() const {
-  return mu_;
-}
-
-
-inline double PointContact::baumgarte_weight_on_velocity() const {
-  return baumgarte_weight_on_velocity_;
-}
-
-
-inline double PointContact::baumgarte_weight_on_position() const {
-  return baumgarte_weight_on_position_;
-}
-
-
-inline const Eigen::Vector3d& PointContact::contact_point() const {
-  return contact_point_;
 }
 
 } // namespace idocp

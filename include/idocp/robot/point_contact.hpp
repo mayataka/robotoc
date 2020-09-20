@@ -25,17 +25,15 @@ public:
   /// @param[in] model The pinocchio model. Before call this constructor, 
   /// pinocchio model must be initialized, e.g., by pinocchio::buildModel().
   /// @param[in] contact_frame_id The index of the contact frame. 
-  /// @param[in] mu Friction coefficient. Must be positive.
-  /// @param[in] baumgarte_weight_on_velocity The weight parameter on the 
-  /// velocity error in the Baumgarte's stabilization method. Must be 
-  /// nonnegative.
-  /// @param[in] baumgarte_weight_on_position The weight parameter on the 
-  /// position error in the Baumgarte's stabilization method. Must be
-  /// nonnegative.
+  /// @param[in] friction_coefficient Friction coefficient. Must be positive.
+  /// Defalut is 0.8.
+  /// @param[in] restitution_coefficient Coefficient of the restitution. Must 
+  /// be nonnegative. Must not be more than 1. Default is 0 
+  /// (complete inelastic).
   ///
   PointContact(const pinocchio::Model& model, const int contact_frame_id, 
-               const double mu, const double baumgarte_weight_on_velocity, 
-               const double baumgarte_weight_on_position);
+               const double friction_coefficient=0.8, 
+               const double restitution_coefficient=0);
 
   ///
   /// @brief Default constructor. 
@@ -66,40 +64,6 @@ public:
   /// @brief Default move assign operator. 
   ///
   PointContact& operator=(PointContact&&) noexcept = default;
-
-  ///
-  /// @brief Sets the friction coefficient.
-  /// @param[in] mu Friction coefficient. Must be nonnegative.
-  ///
-  void setFrictionCoefficient(const double mu);
-
-  ///
-  /// @brief Sets the weight parameters of the Baumgarte's stabilization method.
-  /// @param[in] baumgarte_weight_on_velocity The weight parameter on the 
-  /// velocity error in the Baumgarte's stabilization method. Must be 
-  /// nonnegative.
-  /// @param[in] baumgarte_weight_on_position The weight parameter on the 
-  /// position error in the Baumgarte's stabilization method. Must be
-  /// nonnegative.
-  ///
-  void setBaugrarteParameters(const double baumgarte_weight_on_velocity, 
-                              const double baumgarte_weight_on_position);
-
-  ///
-  /// @brief Sets the contact points.
-  /// @param[in] contact_point The contact points, i.e., (x,y,z) position of 
-  /// the end-effector frame having the contact.
-  /// 
-  void setContactPoint(const Eigen::Vector3d& contact_point);
-
-  ///
-  /// @brief Sets the contact points by current kinematics of the robot. 
-  /// The kinematics is passed through pinocchio::Data. Before calling this 
-  /// function, kinematics (only with respect to the position) in 
-  /// pinocchio::Data must be updated.
-  /// @param[in] data The data including kinematics of the robot.
-  ///
-  void setContactPointByCurrentKinematics(const pinocchio::Data& data);
 
   ///
   /// @brief Converts the contact forces to the corresponding joint forces.
@@ -158,11 +122,13 @@ public:
   /// to update the kinematics of the model in pinocchio::Data.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
+  /// @param[in] time_step Time step of the discretization. Must be positive.
   /// @param[out] baumgarte_residual Residual of the Bamgarte's constraint.
   /// 
   template <typename VectorType>
   void computeBaumgarteResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
+      const double time_step,
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
@@ -173,12 +139,13 @@ public:
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
   /// @param[in] coeff Coefficient multiplied to the resultant Jacobian.
+  /// @param[in] time_step Time step of the discretization. Must be positive.
   /// @param[out] baumgarte_residual Residual of the Bamgarte's constraint.
   /// 
   template <typename VectorType>
   void computeBaumgarteResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
-      const double coeff, 
+      const double coeff, const double time_step,
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
@@ -188,6 +155,7 @@ public:
   /// pinocchio::Data.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
+  /// @param[in] time_step Time step of the discretization. Must be positive.
   /// @param[out] baumgarte_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Size must be 3 x Robot::dimv().
   /// @param[out] baumgarte_partial_dv The result of the partial derivative  
@@ -198,6 +166,7 @@ public:
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
       const pinocchio::Model& model, pinocchio::Data& data, 
+      const double time_step,
       const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
@@ -210,6 +179,7 @@ public:
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
   /// @param[in] coeff Coefficient multiplied to the resultant Jacobian.
+  /// @param[in] time_step Time step of the discretization. Must be positive.
   /// @param[out] baumgarte_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Size must be 3 x Robot::dimv().
   /// @param[out] baumgarte_partial_dv The result of the partial derivative  
@@ -220,6 +190,7 @@ public:
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
       const pinocchio::Model& model, pinocchio::Data& data, const double coeff,
+      const double time_step,
       const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
@@ -242,6 +213,54 @@ public:
   bool isActive() const;
 
   ///
+  /// @brief Sets the contact points.
+  /// @param[in] contact_point The contact points, i.e., (x,y,z) position of 
+  /// the end-effector frame having the contact.
+  /// 
+  void setContactPoint(const Eigen::Vector3d& contact_point);
+
+  ///
+  /// @brief Sets the contact points by current kinematics of the robot. 
+  /// The kinematics is passed through pinocchio::Data. Before calling this 
+  /// function, kinematics (only with respect to the position) in 
+  /// pinocchio::Data must be updated.
+  /// @param[in] data The data including kinematics of the robot.
+  ///
+  void setContactPointByCurrentKinematics(const pinocchio::Data& data);
+
+  ///
+  /// @brief Sets the friction coefficient.
+  /// @param[in] friction_coefficient Friction coefficient. Must be positive.
+  ///
+  void setFrictionCoefficient(const double friction_coefficient);
+
+  ///
+  /// @brief Sets the coefficient of the resititution.
+  /// @param[in] restitution_coefficient Coefficient of the restitution. Must 
+  /// be nonnegative. Must not be more than 1. Default is 0 
+  /// (complete inelastic).
+  ///
+  void setRestitutionCoefficient(const double restitution_coefficient);
+
+  ///
+  /// @brief Returns the contact point.
+  /// @return Const reference to the contact point.
+  ///
+  const Eigen::Vector3d& contactPoint() const;
+
+  ///
+  /// @brief Returns friction coefficient.
+  /// @return Friction coefficient.
+  ///
+  double frictionCoefficient() const;
+
+  ///
+  /// @brief Returns coefficient of restitution of Newton's impact law.
+  /// @return Coefficient of restitution.
+  ///
+  double restitutionCoefficient() const;
+
+  ///
   /// @brief Returns contact frame id, the index of the contact frame.
   /// @return Contact frame id.
   /// 
@@ -254,38 +273,12 @@ public:
   /// 
   int parent_joint_id() const;
 
-  ///
-  /// @brief Returns friction coefficient mu.
-  /// @return Friction coefficient mu.
-  ///
-  double mu() const;
-
-  ///
-  /// @brief Returns baumgarte weight on velocity, the weight parameter on the 
-  /// contact velocity in the Baumgarte's stabilization method.
-  /// @return Weight on velocity error.
-  ///
-  double baumgarte_weight_on_velocity() const;
-
-  ///
-  /// @brief Returns baumgarte weight on position, the weight parameter on the 
-  /// contact position in the Baumgarte's stabilization method.
-  /// @return Weight on position error.
-  ///
-  double baumgarte_weight_on_position() const;
-
-  ///
-  /// @brief Returns the contact point.
-  /// @return Const reference to the contact point.
-  ///
-  const Eigen::Vector3d& contact_point() const;
-
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   bool is_active_;
   int contact_frame_id_, parent_joint_id_, dimv_;
-  double mu_, baumgarte_weight_on_velocity_, baumgarte_weight_on_position_;
+  double friction_coefficient_, restitution_coefficient_;
   Eigen::Vector3d contact_point_;
   pinocchio::SE3 jXf_;
   pinocchio::Motion v_frame_;

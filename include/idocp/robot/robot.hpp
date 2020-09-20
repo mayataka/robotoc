@@ -44,20 +44,9 @@ public:
   /// @param[in] path_to_urdf Path to the URDF file.
   /// @param[in] contact_frames Collection of the frames that can have contacts 
   /// with the environments.
-  /// @param[in] mu Friction coefficient of each contact. Size must be 
-  /// contact_frames.size(). Each element must be positive.
-  /// @param[in] baumgarte_weight_on_velocity The weight parameter on the 
-  /// velocity error in the Baumgarte's stabilization method. Must be 
-  /// nonnegative.
-  /// @param[in] baumgarte_weight_on_position The weight parameter on the 
-  /// position error in the Baumgarte's stabilization method. Must be
-  /// nonnegative.
   ///
   Robot(const std::string& path_to_urdf, 
-        const std::vector<int>& contact_frames, 
-        const std::vector<double>& mu,
-        const double baumgarte_weight_on_velocity, 
-        const double baumgarte_weight_on_position);
+        const std::vector<int>& contact_frames);
 
   ///
   /// @brief Default constructor. 
@@ -212,11 +201,14 @@ public:
   /// @brief Computes the residual of the contact constriants represented by 
   /// Baumgarte's stabilization method. Before calling this function, 
   /// updateKinematics() must be called.
+  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
+  /// Must be positive.
   /// @param[out] baumgarte_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
   void computeBaumgarteResidual(
+      const double time_step,
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
@@ -224,18 +216,22 @@ public:
   /// Baumgarte's stabilization method multiplied by coeff. Before calling this 
   /// function, updateKinematics() must be called.
   /// @param[in] coeff The coefficient that is multiplied to the result.
+  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
+  /// Must be positive.
   /// @param[out] baumgarte_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
   void computeBaumgarteResidual(
-      const double coeff, 
+      const double coeff, const double time_step,
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
   /// @brief Computes the partial derivatives of the contact constriants 
   /// represented by the Baumgarte's stabilization method. 
   /// Before calling this function, updateKinematics() must be called. 
+  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
+  /// Must be positive.
   /// @param[out] baumgarte_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
@@ -248,6 +244,7 @@ public:
   ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
+      const double time_step,
       const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
@@ -259,6 +256,8 @@ public:
   /// must be called. 
   /// @param[in] coeff The coefficient that is multiplied to the resultant 
   /// Jacobians.
+  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
+  /// Must be positive.
   /// @param[out] baumgarte_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
@@ -271,7 +270,7 @@ public:
   ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
-      const double coeff, 
+      const double coeff, const double time_step,
       const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
@@ -290,18 +289,35 @@ public:
 
   ///
   /// @brief Sets the friction coefficient.
-  /// @param[in] mu Friction coefficient of each contact. Size must be 
-  /// Robot::max_point_contacts(). Each element must be positive.
+  /// @param[in] friction_coefficient Friction coefficient of each contact.  
+  /// Size must be Robot::max_point_contacts(). Each element must be positive.
   /// 
-  void setFrictionCoefficient(const std::vector<double>& mu);
+  void setFrictionCoefficient(const std::vector<double>& friction_coefficient);
 
   ///
   /// @brief Returns the friction coefficient of a contact.
   /// @param[in] contact_index Index of the contact. Must be nonnegative.
   /// Must be less than Robot::max_point_contacts().
-  /// @return Friction coefficient of the contact.
+  /// @return Friction coefficient of the contact of contact_index.
   /// 
-  double mu(const int contact_index) const;
+  double frictionCoefficient(const int contact_index) const;
+
+  ///
+  /// @brief Sets the coefficient of the restitution of each contact.
+  /// @param[in] restitution_coefficient Coefficient of the restitution of 
+  /// each contact. Size must be Robot::max_point_contacts(). 
+  /// Each element must be positive.
+  /// 
+  void setRestitutionCoefficient(
+      const std::vector<double>& restitution_coefficient);
+
+  ///
+  /// @brief Returns the coefficient of the restitution of each contact.
+  /// @param[in] contact_index Index of the contact. Must be nonnegative.
+  /// Must be less than Robot::max_point_contacts().
+  /// @return Coefficient of the restitution of the contact of contact_index.
+  /// 
+  double restitutionCoefficient(const int contact_index) const;
 
   ///
   /// @brief Activate and deactivate the each contact.
@@ -473,7 +489,8 @@ public:
 
   ///
   /// @brief Returns the dimensiton of the velocity, i.e, tangent space.
-  /// @return The dimensiton of the velocity, i.e, tangent space.
+  /// @return The dimensiton of the velocity, i.e, the dimension of the tangent 
+  /// space of the configuration space.
   /// 
   int dimv() const;
 
@@ -505,7 +522,7 @@ public:
 
   ///
   /// @brief Returns the maximum number of the contacts.
-  /// @brief The maximum number of the contacts.
+  /// @return The maximum number of the contacts.
   /// 
   int max_point_contacts() const;
 
@@ -517,9 +534,9 @@ public:
 
   ///
   /// @brief Returns the number of the active contacts.
-  /// @brief The number of the active contacts.
+  /// @return The number of the active contacts.
   /// 
-  int num_active_point_contacts() const;
+  int num_active_contacts() const;
 
   ///
   /// @brief Returns contact status.
@@ -551,10 +568,10 @@ public:
 private:
   pinocchio::Model model_;
   pinocchio::Data data_;
-  std::vector<PointContact> point_contacts_;
   FloatingBase floating_base_;
+  std::vector<PointContact> point_contacts_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
-  int dimq_, dimv_, dimJ_, max_dimf_, dimf_, num_active_contacts_;
+  int dimq_, dimv_, max_dimf_, dimf_, num_active_contacts_;
   bool has_active_contacts_;
   std::vector<bool> is_each_contact_active_;
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,

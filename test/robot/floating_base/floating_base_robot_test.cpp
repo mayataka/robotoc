@@ -34,11 +34,6 @@ protected:
                                         Eigen::VectorXd::Ones(dimq_));
     v_ = Eigen::VectorXd::Random(dimv_);
     a_ = Eigen::VectorXd::Random(dimv_);
-    for (int i=0; i<4; ++i) {
-      mu_.push_back(std::abs(Eigen::VectorXd::Random(2)[0]));
-    }
-    baumgarte_weight_on_velocity_ = std::abs(Eigen::VectorXd::Random(2)[0]);
-    baumgarte_weight_on_position_ = std::abs(Eigen::VectorXd::Random(2)[0]);
   }
 
   virtual void TearDown() {
@@ -50,8 +45,6 @@ protected:
   int dimq_, dimv_, max_dimf_;
   std::vector<int> contact_frames_;
   Eigen::VectorXd q_, v_, a_;
-  std::vector<double> mu_;
-  double baumgarte_weight_on_velocity_, baumgarte_weight_on_position_;
 };
 
 
@@ -64,7 +57,7 @@ TEST_F(FloatingBaseRobotTest, constructor) {
   EXPECT_EQ(robot_empty.max_dimf(), 0);
   EXPECT_EQ(robot_empty.dim_passive(), 0);
   EXPECT_EQ(robot_empty.max_point_contacts(), 0);
-  EXPECT_EQ(robot_empty.num_active_point_contacts(), 0);
+  EXPECT_EQ(robot_empty.num_active_contacts(), 0);
   EXPECT_FALSE(robot_empty.has_active_contacts());
   EXPECT_FALSE(robot_empty.has_floating_base());
   Robot robot(urdf_);
@@ -74,35 +67,38 @@ TEST_F(FloatingBaseRobotTest, constructor) {
   EXPECT_EQ(robot.max_dimf(), 0);
   EXPECT_EQ(robot.dim_passive(), 6);
   EXPECT_EQ(robot.max_point_contacts(), 0);
-  EXPECT_EQ(robot.num_active_point_contacts(), 0);
+  EXPECT_EQ(robot.num_active_contacts(), 0);
   EXPECT_FALSE(robot.has_active_contacts());
   EXPECT_TRUE(robot.has_floating_base());
   robot.printRobotModel();
-  Robot robot_contact(urdf_, contact_frames_, mu_,
-                      baumgarte_weight_on_velocity_, 
-                      baumgarte_weight_on_position_);
+  Robot robot_contact(urdf_, contact_frames_);
   EXPECT_EQ(robot_contact.dimq(), dimq_);
   EXPECT_EQ(robot_contact.dimv(), dimv_);
   EXPECT_EQ(robot_contact.dimf(), 0);
-  EXPECT_EQ(robot_contact.max_dimf(), 3*contact_frames_.size());
+  EXPECT_EQ(robot_contact.max_dimf(), 12);
   EXPECT_EQ(robot_contact.dim_passive(), 6);
-  for (int i=0; i<robot_contact.max_point_contacts(); ++i) {
-    EXPECT_FALSE(robot_contact.is_contact_active(i));
-  }
-  EXPECT_EQ(robot_contact.max_point_contacts(), contact_frames_.size());
-  EXPECT_EQ(robot_contact.num_active_point_contacts(), 0);
+  EXPECT_EQ(robot_contact.max_point_contacts(), 4);
+  EXPECT_EQ(robot_contact.num_active_contacts(), 0);
+  EXPECT_EQ(robot_contact.is_contact_active(0), false);
   EXPECT_FALSE(robot_contact.has_active_contacts());
   EXPECT_TRUE(robot_contact.has_floating_base());
-  for (int i=0; i<robot_contact.max_point_contacts(); ++i) {
-    EXPECT_DOUBLE_EQ(robot_contact.mu(i), mu_[i]);
-  }
+  EXPECT_DOUBLE_EQ(robot_contact.frictionCoefficient(0), 0.8);
+  EXPECT_DOUBLE_EQ(robot_contact.restitutionCoefficient(0), 0);
   std::vector<double> mu_tmp;
   for (int i=0; i<robot_contact.max_point_contacts(); ++i) {
     mu_tmp.push_back(std::abs(Eigen::VectorXd::Random(2)[0]));
   }
   robot_contact.setFrictionCoefficient(mu_tmp);
   for (int i=0; i<robot_contact.max_point_contacts(); ++i) {
-    EXPECT_DOUBLE_EQ(robot_contact.mu(i), mu_tmp[i]);
+    EXPECT_DOUBLE_EQ(robot_contact.frictionCoefficient(i), mu_tmp[i]);
+  }
+  std::vector<double> rest_tmp;
+  for (int i=0; i<robot_contact.max_point_contacts(); ++i) {
+    rest_tmp.push_back(std::abs(Eigen::VectorXd::Random(2)[0]));
+  }
+  robot_contact.setRestitutionCoefficient(rest_tmp);
+  for (int i=0; i<robot_contact.max_point_contacts(); ++i) {
+    EXPECT_DOUBLE_EQ(robot_contact.restitutionCoefficient(i), rest_tmp[i]);
   }
   robot_contact.printRobotModel();
   Eigen::VectorXd effort_limit, velocity_limit, lower_position_limit, 
@@ -159,10 +155,7 @@ TEST_F(FloatingBaseRobotTest, moveAssign) {
   EXPECT_EQ(robot.dim_passive(), 6);
   EXPECT_EQ(robot.max_point_contacts(), 0);
   EXPECT_TRUE(robot.has_floating_base());
-  robot.printRobotModel();
-  Robot robot_contact(urdf_, contact_frames_, mu_, 
-                      baumgarte_weight_on_velocity_, 
-                      baumgarte_weight_on_position_);
+  Robot robot_contact(urdf_, contact_frames_);
   EXPECT_EQ(robot_contact.dimq(), dimq_);
   EXPECT_EQ(robot_contact.dimv(), dimv_);
   EXPECT_EQ(robot_contact.dimf(), 0);
@@ -173,7 +166,6 @@ TEST_F(FloatingBaseRobotTest, moveAssign) {
   }
   EXPECT_EQ(robot_contact.max_point_contacts(), contact_frames_.size());
   EXPECT_TRUE(robot_contact.has_floating_base());
-  robot_contact.printRobotModel();
   Eigen::VectorXd effort_limit, velocity_limit, lower_position_limit, 
                   upper_position_limit;
   effort_limit = Eigen::VectorXd::Constant(dimv_-6, 80);
@@ -223,9 +215,7 @@ TEST_F(FloatingBaseRobotTest, moveAssign) {
 
 TEST_F(FloatingBaseRobotTest, moveConstructor) {
   // Default constructor
-  Robot robot_contact(urdf_, contact_frames_, mu_, 
-                      baumgarte_weight_on_velocity_, 
-                      baumgarte_weight_on_position_);
+  Robot robot_contact(urdf_, contact_frames_);
   EXPECT_EQ(robot_contact.dimq(), dimq_);
   EXPECT_EQ(robot_contact.dimv(), dimv_);
   EXPECT_EQ(robot_contact.dimf(), 0);
@@ -236,7 +226,6 @@ TEST_F(FloatingBaseRobotTest, moveConstructor) {
   }
   EXPECT_EQ(robot_contact.max_point_contacts(), contact_frames_.size());
   EXPECT_TRUE(robot_contact.has_floating_base());
-  robot_contact.printRobotModel();
   Eigen::VectorXd effort_limit, velocity_limit, lower_position_limit, 
                   upper_position_limit;
   effort_limit = Eigen::VectorXd::Constant(dimv_-6, 80);
@@ -367,12 +356,9 @@ TEST_F(FloatingBaseRobotTest, frameJacobian) {
 TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<contact_frames_.size(); ++i) {
-    contacts_ref.push_back(PointContact(model_, contact_frames_[i], mu_[i], 
-                                        baumgarte_weight_on_velocity_,
-                                        baumgarte_weight_on_position_));
+    contacts_ref.push_back(PointContact(model_, contact_frames_[i]));
   }
-  Robot robot(urdf_, contact_frames_, mu_, baumgarte_weight_on_velocity_, 
-              baumgarte_weight_on_position_);
+  Robot robot(urdf_, contact_frames_);
   std::random_device rnd;
   const int segment_begin = rnd() % 5;
   Eigen::VectorXd residual 
@@ -385,9 +371,10 @@ TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     EXPECT_EQ(robot.is_contact_active(i), true);
   }
+  const double time_step = std::abs(Eigen::Vector2d::Random(2)[0]);
   robot.updateKinematics(q_, v_, a_);
   robot.setContactPointsByCurrentKinematics();
-  robot.computeBaumgarteResidual(residual.segment(segment_begin, robot.max_dimf()));
+  robot.computeBaumgarteResidual(time_step, residual.segment(segment_begin, robot.max_dimf()));
   pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
   pinocchio::updateFramePlacements(model_, data_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
@@ -396,13 +383,12 @@ TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
   }
   for (int i=0; i<contacts_ref.size(); ++i) {
     contacts_ref[i].computeBaumgarteResidual(
-        model_, data_, residual_ref.segment<3>(segment_begin+3*i));
+        model_, data_, time_step, residual_ref.segment<3>(segment_begin+3*i));
   }
   EXPECT_TRUE(residual.isApprox(residual_ref));
   const double coeff = Eigen::VectorXd::Random(1)[0];
-  robot.computeBaumgarteResidual(coeff, residual.segment(segment_begin, robot.max_dimf()));
+  robot.computeBaumgarteResidual(coeff, time_step, residual.segment(segment_begin, robot.max_dimf()));
   EXPECT_TRUE(residual.isApprox(coeff*residual_ref));
-
   Eigen::MatrixXd baumgarte_partial_q_ref
       = Eigen::MatrixXd::Zero(robot.max_dimf(), dimv_);
   Eigen::MatrixXd baumgarte_partial_v_ref 
@@ -411,7 +397,7 @@ TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
       = Eigen::MatrixXd::Zero(robot.max_dimf(), dimv_);
   for (int i=0; i<contacts_ref.size(); ++i) {
     contacts_ref[i].computeBaumgarteDerivatives(
-        model_, data_, 
+        model_, data_, time_step,
         baumgarte_partial_q_ref.block(3*i, 0, 3, dimv_), 
         baumgarte_partial_v_ref.block(3*i, 0, 3, dimv_), 
         baumgarte_partial_a_ref.block(3*i, 0, 3, dimv_));
@@ -425,6 +411,7 @@ TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
   Eigen::MatrixXd baumgarte_partial_a 
       = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
   robot.computeBaumgarteDerivatives(
+      time_step,
       baumgarte_partial_q.block(block_rows_begin, block_cols_begin, 
                                 robot.max_dimf(), robot.dimv()), 
       baumgarte_partial_v.block(block_rows_begin, block_cols_begin, 
@@ -449,9 +436,8 @@ TEST_F(FloatingBaseRobotTest, baumgarteResidualAndDerivatives) {
       = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
   Eigen::MatrixXd baumgarte_partial_a_coeff 
       = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
-
   robot.computeBaumgarteDerivatives(
-      coeff, 
+      coeff, time_step, 
       baumgarte_partial_q_coeff.block(block_rows_begin, block_cols_begin, 
                                       robot.max_dimf(), robot.dimv()), 
       baumgarte_partial_v_coeff.block(block_rows_begin, block_cols_begin, 
@@ -477,9 +463,7 @@ TEST_F(FloatingBaseRobotTest, RNEA) {
   robot.RNEA(q_, v_, a_, tau);
   Eigen::VectorXd tau_ref = pinocchio::rnea(model_, data_, q_, v_, a_);
   EXPECT_TRUE(tau_ref.isApprox(tau));
-  Robot robot_contact(urdf_, contact_frames_, mu_, 
-                      baumgarte_weight_on_velocity_, 
-                      baumgarte_weight_on_position_);
+  Robot robot_contact(urdf_, contact_frames_);
   tau = Eigen::VectorXd::Zero(dimv_);
   tau_ref = Eigen::VectorXd::Zero(dimv_);
   std::vector<Eigen::Vector3d> fext;
@@ -492,9 +476,7 @@ TEST_F(FloatingBaseRobotTest, RNEA) {
   // with contact
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<contact_frames_.size(); ++i) {
-    contacts_ref.push_back(PointContact(model_, contact_frames_[i], mu_[i], 
-                                        baumgarte_weight_on_velocity_,
-                                        baumgarte_weight_on_position_));
+    contacts_ref.push_back(PointContact(model_, contact_frames_[i]));
   }
   std::vector<bool> is_each_contacts_active(contacts_ref.size(), true);
   robot_contact.setContactStatus(is_each_contacts_active);
@@ -532,8 +514,7 @@ TEST_F(FloatingBaseRobotTest, RNEADerivativesWithoutFext) {
 
 
 TEST_F(FloatingBaseRobotTest, RNEADerivativesWithContacts) {
-  Robot robot(urdf_, contact_frames_, mu_, baumgarte_weight_on_velocity_, 
-              baumgarte_weight_on_position_);
+  Robot robot(urdf_, contact_frames_);
   std::vector<Eigen::Vector3d> fext;
   for (int i=0; i<contact_frames_.size(); ++i) {
     fext.push_back(Eigen::Vector3d::Random());
@@ -549,9 +530,7 @@ TEST_F(FloatingBaseRobotTest, RNEADerivativesWithContacts) {
       = Eigen::MatrixXd::Zero(dimv_, robot.max_dimf());
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<contact_frames_.size(); ++i) {
-    contacts_ref.push_back(PointContact(model_, contact_frames_[i], mu_[i], 
-                                        baumgarte_weight_on_velocity_,
-                                        baumgarte_weight_on_position_));
+    contacts_ref.push_back(PointContact(model_, contact_frames_[i]));
   }
   std::vector<bool> is_each_contacts_active(contacts_ref.size(), true);
   robot.setContactStatus(is_each_contacts_active);

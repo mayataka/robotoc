@@ -15,7 +15,6 @@ Robot::Robot(const std::string& path_to_urdf)
     fjoint_(),
     dimq_(0),
     dimv_(0),
-    dimJ_(0),
     max_dimf_(0),
     dimf_(0),
     num_active_contacts_(0),
@@ -32,16 +31,12 @@ Robot::Robot(const std::string& path_to_urdf)
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
-  dimJ_ = model_.joints.size();
   initializeJointLimits();
 }
 
 
 Robot::Robot(const std::string& path_to_urdf, 
-             const std::vector<int>& contact_frames, 
-             const std::vector<double>& mu,
-             const double baumgarte_weight_on_velocity, 
-             const double baumgarte_weight_on_position) 
+             const std::vector<int>& contact_frames)
   : model_(),
     data_(model_),
     point_contacts_(),
@@ -49,7 +44,6 @@ Robot::Robot(const std::string& path_to_urdf,
     fjoint_(),
     dimq_(0),
     dimv_(0),
-    dimJ_(0),
     max_dimf_(0),
     dimf_(0),
     num_active_contacts_(0),
@@ -62,9 +56,7 @@ Robot::Robot(const std::string& path_to_urdf,
   pinocchio::urdf::buildModel(path_to_urdf, model_);
   data_ = pinocchio::Data(model_);
   for (int i=0; i<contact_frames.size(); ++i) {
-    point_contacts_.push_back(PointContact(model_, contact_frames[i], mu[i],
-                                           baumgarte_weight_on_velocity,
-                                           baumgarte_weight_on_position));
+    point_contacts_.push_back(PointContact(model_, contact_frames[i]));
     is_each_contact_active_.push_back(false);
   }
   max_dimf_ = 3 * point_contacts_.size();
@@ -73,7 +65,6 @@ Robot::Robot(const std::string& path_to_urdf,
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
-  dimJ_ = model_.joints.size();
   initializeJointLimits();
 }
 
@@ -86,7 +77,6 @@ Robot::Robot()
     fjoint_(),
     dimq_(0),
     dimv_(0),
-    dimJ_(0),
     max_dimf_(0),
     dimf_(0),
     num_active_contacts_(0),

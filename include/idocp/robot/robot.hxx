@@ -3,6 +3,7 @@
 
 #include "idocp/robot/robot.hpp"
 
+#include <stdexcept>
 #include <assert.h>
 
 namespace idocp {
@@ -145,12 +146,14 @@ inline void Robot::updateKinematics(
 
 template <typename VectorType>
 inline void Robot::computeBaumgarteResidual(
+    const double time_step,
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
+  assert(time_step > 0);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, 
+          model_, data_, time_step,
           (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
               .template segment<3>(3*num_active_contacts));
       ++num_active_contacts;
@@ -161,13 +164,13 @@ inline void Robot::computeBaumgarteResidual(
 
 template <typename VectorType>
 inline void Robot::computeBaumgarteResidual(
-    const double coeff, 
+    const double coeff, const double time_step,
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, coeff, 
+          model_, data_, coeff, time_step,
           (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
               .template segment<3>(3*num_active_contacts));
       ++num_active_contacts;
@@ -178,6 +181,7 @@ inline void Robot::computeBaumgarteResidual(
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void Robot::computeBaumgarteDerivatives(
+    const double time_step,
     const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
     const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da) {
@@ -188,7 +192,7 @@ inline void Robot::computeBaumgarteDerivatives(
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteDerivatives(
-          model_, data_, 
+          model_, data_, time_step,
           (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
               .block(3*num_active_contacts, 0, 3, dimv_),
           (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))
@@ -203,7 +207,7 @@ inline void Robot::computeBaumgarteDerivatives(
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void Robot::computeBaumgarteDerivatives(
-    const double coeff, 
+    const double coeff, const double time_step,
     const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
     const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da) {
@@ -214,7 +218,7 @@ inline void Robot::computeBaumgarteDerivatives(
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
       point_contacts_[i].computeBaumgarteDerivatives(
-          model_, data_, coeff,
+          model_, data_, coeff, time_step,
           (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
               .block(3*num_active_contacts, 0, 3, dimv_),
           (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))
@@ -243,17 +247,53 @@ inline void Robot::setContactPointsByCurrentKinematics() {
 }
 
 
-inline void Robot::setFrictionCoefficient(const std::vector<double>& mu) {
+inline void Robot::setFrictionCoefficient(
+    const std::vector<double>& friction_coefficient) {
   for (int i=0; i<point_contacts_.size(); ++i) {
-    point_contacts_[i].setFrictionCoefficient(mu[i]);
+    point_contacts_[i].setFrictionCoefficient(friction_coefficient[i]);
   }
 }
 
 
-inline double Robot::mu(const int contact_index) const {
+inline double Robot::frictionCoefficient(const int contact_index) const {
   assert(contact_index >= 0);
   assert(contact_index < point_contacts_.size());
-  return point_contacts_[contact_index].mu();
+  try {
+    if (point_contacts_.empty()) {
+      throw std::runtime_error(
+          "invalid function call: robot has no point contacts!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  return point_contacts_[contact_index].frictionCoefficient();
+}
+
+
+inline void Robot::setRestitutionCoefficient(
+    const std::vector<double>& restitution_coefficient) {
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    point_contacts_[i].setRestitutionCoefficient(restitution_coefficient[i]);
+  }
+}
+
+
+inline double Robot::restitutionCoefficient(const int contact_index) const {
+  assert(contact_index >= 0);
+  assert(contact_index < point_contacts_.size());
+  try {
+    if (point_contacts_.empty()) {
+      throw std::runtime_error(
+          "invalid function call: robot has no point contacts!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  return point_contacts_[contact_index].restitutionCoefficient();
 }
 
 
@@ -492,7 +532,7 @@ inline bool Robot::has_active_contacts() const {
 }
 
 
-inline int Robot::num_active_point_contacts() const {
+inline int Robot::num_active_contacts() const {
   return num_active_contacts_;
 }
 
