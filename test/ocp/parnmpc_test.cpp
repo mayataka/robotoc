@@ -110,13 +110,7 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithoutContact) {
 
 TEST_F(ParNMPCTest, updateSolutionFixedBaseWithContact) {
   std::vector<int> contact_frames = {18};
-  std::vector<double> mu;
-  for (int i=0; i<contact_frames.size(); ++i) {
-    mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
-  }
-  const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
-  Robot robot(fixed_base_urdf_, contact_frames, mu, baum_a, baum_b);
+  Robot robot(fixed_base_urdf_, contact_frames);
   std::random_device rnd;
   std::vector<bool> contact_status = {rnd()%2==0};
   robot.setContactStatus(contact_status);
@@ -187,13 +181,7 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithContact) {
 
 TEST_F(ParNMPCTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  std::vector<double> mu;
-  for (int i=0; i<contact_frames.size(); ++i) {
-    mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
-  }
-  const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
-  Robot robot(floating_base_urdf_, contact_frames, mu, baum_a, baum_b);
+  Robot robot(floating_base_urdf_, contact_frames);
   std::random_device rnd;
   std::vector<bool> contact_status;
   for (int i=0; i<contact_frames.size(); ++i) {

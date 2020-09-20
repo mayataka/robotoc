@@ -29,13 +29,7 @@ protected:
     srand((unsigned int) time(0));
     urdf = "../urdf/anymal/anymal.urdf";
     std::vector<int> contact_frames = {14, 24, 34, 44};
-    std::vector<double> mu;
-    for (int i=0; i<contact_frames.size(); ++i) {
-      mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
-    }
-    const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
-    const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
-    robot = Robot(urdf, contact_frames, mu, baum_a, baum_b);
+    robot = Robot(urdf, contact_frames);
     std::random_device rnd;
     for (const auto frame : contact_frames) {
       contact_status.push_back(rnd()%2==0);
@@ -266,8 +260,8 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormStateEquationAndRobotDynamics) 
   kkt_residual.la() += dtau * du_da.transpose() * s.beta;
   kkt_residual.lf() += dtau * du_df.transpose() * s.beta;
   kkt_residual.lu -= dtau * s.beta;
-  robot.computeBaumgarteResidual(dtau, kkt_residual.C().tail(robot.dimf()));
-  robot.computeBaumgarteDerivatives(dtau, kkt_matrix.Cq().bottomRows(robot.dimf()), 
+  robot.computeBaumgarteResidual(dtau, dtau, kkt_residual.C().tail(robot.dimf()));
+  robot.computeBaumgarteDerivatives(dtau, dtau, kkt_matrix.Cq().bottomRows(robot.dimf()), 
                                     kkt_matrix.Cv().bottomRows(robot.dimf()), 
                                     kkt_matrix.Ca().bottomRows(robot.dimf()));
   kkt_residual.lq() += kkt_matrix.Cq().transpose() * s.mu_stack();
@@ -376,7 +370,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, costAndViolation) {
   robot.RNEA(s.q, s.v, s.a, kkt_residual.u_res);
   kkt_residual.u_res -= s.u;
   robot.updateKinematics(s.q, s.v, s.a);
-  robot.computeBaumgarteResidual(dtau, kkt_residual.C());
+  robot.computeBaumgarteResidual(dtau, dtau, kkt_residual.C());
   const double violation_ref 
       = kkt_residual.Fq().lpNorm<1>() + kkt_residual.Fv().lpNorm<1>() 
           + dtau * kkt_residual.u_res.lpNorm<1>() 
@@ -411,7 +405,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, costAndViolationWithStepSizeInitial) {
   robot.RNEA(s_new.q, s_new.v, s_new.a, kkt_residual.u_res);
   kkt_residual.u_res -= s_new.u;
   robot.updateKinematics(s_new.q, s_new.v, s_new.a);
-  robot.computeBaumgarteResidual(dtau, kkt_residual.C());
+  robot.computeBaumgarteResidual(dtau, dtau, kkt_residual.C());
   const double violation_ref 
       = kkt_residual.Fq().lpNorm<1>() + kkt_residual.Fv().lpNorm<1>() 
           + dtau * kkt_residual.u_res.lpNorm<1>() 
@@ -446,7 +440,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, costAndViolationWithStepSize) {
   robot.RNEA(s_new.q, s_new.v, s_new.a, kkt_residual.u_res);
   kkt_residual.u_res -= s_new.u;
   robot.updateKinematics(s_new.q, s_new.v, s_new.a);
-  robot.computeBaumgarteResidual(dtau, kkt_residual.C());
+  robot.computeBaumgarteResidual(dtau, dtau, kkt_residual.C());
   const double violation_ref 
       = kkt_residual.Fq().lpNorm<1>() + kkt_residual.Fv().lpNorm<1>() 
           + dtau * kkt_residual.u_res.lpNorm<1>() 

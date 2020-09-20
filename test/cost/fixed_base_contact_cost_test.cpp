@@ -20,10 +20,7 @@ protected:
     std::random_device rnd;
     urdf_ = "../urdf/iiwa14/iiwa14.urdf";
     contact_frames_ = {18};
-    for (int i=0; i<contact_frames_.size(); ++i) {
-      mu_.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
-    }
-    robot_ = Robot(urdf_, contact_frames_, mu_, 0, 0);
+    robot_ = Robot(urdf_, contact_frames_);
     dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     t_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     data_ = CostFunctionData(robot_);
@@ -37,7 +34,6 @@ protected:
 
   double dtau_, t_;
   std::vector<int> contact_frames_;
-  std::vector<double> mu_;
   std::string urdf_;
   Robot robot_;
   CostFunctionData data_;

@@ -47,6 +47,6 @@ configure_file(
 
 # add tests
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/robot)
-# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cost)
-# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/constraints)
-# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ocp)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/cost)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/constraints)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ocp)

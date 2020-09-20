@@ -29,11 +29,7 @@ protected:
 
 TEST_F(KKTResidualTest, fixed_base) {
   std::vector<int> contact_frames = {18};
-  std::vector<double> mu;
-  for (int i=0; i<contact_frames.size(); ++i) {
-    mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
-  }
-  Robot robot(fixed_base_urdf_, contact_frames, mu, 0, 0);
+  Robot robot(fixed_base_urdf_, contact_frames);
   std::random_device rnd;
   std::vector<bool> contact_status = {rnd()%2==0};
   robot.setContactStatus(contact_status);
@@ -83,11 +79,7 @@ TEST_F(KKTResidualTest, fixed_base) {
 
 TEST_F(KKTResidualTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  std::vector<double> mu;
-  for (int i=0; i<contact_frames.size(); ++i) {
-    mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
-  }
-  Robot robot(fixed_base_urdf_, contact_frames, mu, 0, 0);
+  Robot robot(fixed_base_urdf_, contact_frames);
   std::random_device rnd;
   std::vector<bool> contact_status;
   for (const auto frame : contact_frames) {

@@ -70,7 +70,7 @@ target_include_directories(
 
 Class `idocp::QuadrupedSimulator` provides quadruped simulation utilizing RaiSim.
 Note that RaiSim currently supports only for academic use.
-First, install [RaiSimLib](https://github.com/leggedrobotics/raisimLib) and [RaiSimOgre](https://github.com/leggedrobotics/raisimOgre) into $RAISIM_LOCAL_BUILD_DIR.
+First, install [RaiSimLib](https://github.com/leggedrobotics/raisimLib) and [RaiSimOgre](https://github.com/leggedrobotics/raisimOgre) into ${RAISIM_LOCAL_BUILD_DIR} (arbitrary directory).
 Then you can build the simulation by writing `CMakeLists.txt` as
 ```
 find_package(idocp REQUIRED)
@@ -97,9 +97,9 @@ target_include_directories(
     ${IDOCP_INCLUDE_DIR}
 )
 ```
-And build exectables as
+And build exectables as (assume ${RAISIM_LOCAL_BUILD_DIR} is ~/raisim_build)
 ```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$RAISIM_LOCAL_BUILD_DIR
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=~/raisim_build
 make
 ```
 
