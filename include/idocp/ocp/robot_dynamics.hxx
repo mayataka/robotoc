@@ -204,7 +204,7 @@ inline double RobotDynamics::computeViolationL1Norm(
     violation += dtau * s.u.template head<kDimFloatingBase>().lpNorm<1>();
   }
   if (robot.has_active_contacts()) {
-    robot.computeBaumgarteResidual(dtau, kkt_residual.C_contacts());
+    robot.computeBaumgarteResidual(dtau, dtau, kkt_residual.C_contacts());
     violation += kkt_residual.C_contacts().lpNorm<1>();
   }
   return violation;
@@ -265,8 +265,8 @@ inline void RobotDynamics::linearizeContactConstraint(
     Robot& robot, const double dtau, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
   assert(dtau > 0);
-  robot.computeBaumgarteResidual(dtau, kkt_residual.C_contacts());
-  robot.computeBaumgarteDerivatives(dtau, kkt_matrix.Cq_contacts(), 
+  robot.computeBaumgarteResidual(dtau, dtau, kkt_residual.C_contacts());
+  robot.computeBaumgarteDerivatives(dtau, dtau, kkt_matrix.Cq_contacts(), 
                                     kkt_matrix.Cv_contacts(), 
                                     kkt_matrix.Ca_contacts());
 }

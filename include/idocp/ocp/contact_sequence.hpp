@@ -7,24 +7,103 @@
 
 
 namespace idocp {
+
 class ContactSequence {
-private:
-  ContactSequence(const Robot& robot, const int N)
-    : contact_sequence_(N, robot.is_each_contact_active()) {
-  }
-
-  ~ContactSequence() {
-  }
-
-  const std::vector<bool>& contact_status(const int i) const {
-    return contact_sequence_[i];
-  }
-
 public:
+  ///
+  /// @brief Constructor. 
+  ///
+  ContactSequence(const Robot& robot, const int N);
+
+  ///
+  /// @brief Default constructor. 
+  ///
+  ContactSequence();
+
+  ///
+  /// @brief Destructor. 
+  ///
+  ~ContactSequence();
+
+  ///
+  /// @brief Default copy constructor. 
+  ///
+  ContactSequence(const ContactSequence&) = default;
+
+  ///
+  /// @brief Default copy assign operator. 
+  ///
+  ContactSequence& operator=(const ContactSequence&) = default;
+
+  ///
+  /// @brief Default move constructor. 
+  ///
+  ContactSequence(ContactSequence&&) noexcept = default;
+
+  ///
+  /// @brief Default move assign operator. 
+  ///
+  ContactSequence& operator=(ContactSequence&&) noexcept = default;
+
+  ///
+  /// @brief Activate a contact over specified time steps 
+  /// (from time_stage_begin to time_stage_end). 
+  /// @param[in] contact_index Index of a contact of interedted. 
+  /// @param[in] time_stage_begin Start time stage. 
+  /// @param[in] time_stage_end Last time stage. 
+  ///
+  void activateContact(const int contact_index, const int time_stage_begin, 
+                       const int time_stage_end);
+
+  ///
+  /// @brief Deactivate a contact over specified time steps 
+  /// (from time_stage_begin to time_stage_end). 
+  /// @param[in] contact_index Index of a contact of interedted. 
+  /// @param[in] time_stage_begin Start time stage. 
+  /// @param[in] time_stage_end Last time stage. 
+  ///
+  void deactivateContact(const int contact_index, const int time_stage_begin, 
+                         const int time_stage_end);
+
+  ///
+  /// @brief Activate contacts over specified time steps 
+  /// (from time_stage_begin to time_stage_end). 
+  /// @param[in] contact_indices Indices of contacts of interedted. 
+  /// @param[in] time_stage_begin Start time stage. 
+  /// @param[in] time_stage_end Last time stage. 
+  ///
+  void activateContacts(const std::vector<int>& contact_indices, 
+                        const int time_stage_begin, const int time_stage_end);
+
+  ///
+  /// @brief Deactivate contacts over specified time steps 
+  /// (from time_stage_begin to time_stage_end). 
+  /// @param[in] contact_indices Indices of contacts of interedted. 
+  /// @param[in] time_stage_begin Start time stage. 
+  /// @param[in] time_stage_end Last time stage. 
+  ///
+  void deactivateContacts(const std::vector<int>& contact_indices, 
+                          const int time_stage_begin, 
+                          const int time_stage_end);
+
+
+  ///
+  /// @brief Deactivate contacts over specified time steps 
+  /// (from time_stage_begin to time_stage_end). 
+  /// @param[in] contact_indices Indices of contacts of interedted. 
+  /// @param[in] time_stage_begin Start time stage. 
+  /// @param[in] time_stage_end Last time stage. 
+  ///
+  const std::vector<bool>& contactStatus(const int time_stage) const;
+
+private:
+  int max_point_contacts_, N_;
   std::vector<std::vector<bool>> contact_sequence_;
 
 };
 
 } // namespace idocp 
+
+#include "idocp/ocp/contact_sequence.hxx"
 
 #endif // IDOCP_CONTACT_SEQUENCE_HPP_

@@ -110,17 +110,10 @@ TEST_F(OCPTest, updateSolutionFixedBaseWithoutContact) {
 
 TEST_F(OCPTest, updateSolutionFixedBaseWithContact) {
   std::vector<int> contact_frames = {18};
-  std::vector<double> mu;
-  for (int i=0; i<contact_frames.size(); ++i) {
-    mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
-  }
-  const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
-  Robot robot(fixed_base_urdf_, contact_frames, mu, baum_a, baum_b);
+  Robot robot(fixed_base_urdf_, contact_frames);
   std::random_device rnd;
   std::vector<bool> contact_status = {rnd()%2==0};
   robot.setContactStatus(contact_status);
-  std::vector<std::vector<bool>> contact_sequence = std::vector<std::vector<bool>>(N_, contact_status);
   auto cost = std::make_shared<CostFunction>();
   auto joint_cost = std::make_shared<JointSpaceCost>(robot);
   auto contact_cost = std::make_shared<ContactCost>(robot);
@@ -167,9 +160,13 @@ TEST_F(OCPTest, updateSolutionFixedBaseWithContact) {
   robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T_, N_, 1);
-  ocp.setContactSequence(contact_sequence);
+  if (contact_status[0]) {
+    ocp.activateContact(0, 0, N_);
+  }
   OCP ocp_ref(robot, cost, constraints, T_, N_, 2);
-  ocp_ref.setContactSequence(contact_sequence);
+  if (contact_status[0]) {
+    ocp_ref.activateContact(0, 0, N_);
+  }
   EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
   EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
   EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
@@ -187,20 +184,13 @@ TEST_F(OCPTest, updateSolutionFixedBaseWithContact) {
 
 TEST_F(OCPTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  std::vector<double> mu;
-  for (int i=0; i<contact_frames.size(); ++i) {
-    mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
-  }
-  const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
-  Robot robot(floating_base_urdf_, contact_frames, mu, baum_a, baum_b);
+  Robot robot(floating_base_urdf_, contact_frames);
   std::random_device rnd;
   std::vector<bool> contact_status;
   for (int i=0; i<contact_frames.size(); ++i) {
     contact_status.push_back(rnd()%2==0);
   }
   robot.setContactStatus(contact_status);
-  std::vector<std::vector<bool>> contact_sequence = std::vector<std::vector<bool>>(N_, contact_status);
   std::shared_ptr<CostFunction> cost = std::make_shared<CostFunction>();
   std::shared_ptr<JointSpaceCost> joint_cost = std::make_shared<JointSpaceCost>(robot);
   std::shared_ptr<ContactCost> contact_cost = std::make_shared<ContactCost>(robot);
@@ -247,9 +237,17 @@ TEST_F(OCPTest, floating_base) {
   robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T_, N_, 1);
-  ocp.setContactSequence(contact_sequence);
+  for (int i=0; i<contact_status.size(); ++i) {
+    if (contact_status[i]) {
+      ocp.activateContact(i, 0, N_);
+    }
+  }
   OCP ocp_ref(robot, cost, constraints, T_, N_, 2);
-  ocp_ref.setContactSequence(contact_sequence);
+  for (int i=0; i<contact_status.size(); ++i) {
+    if (contact_status[i]) {
+      ocp_ref.activateContact(i, 0, N_);
+    }
+  }
   EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
   EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
   EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));

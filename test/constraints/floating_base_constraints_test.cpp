@@ -23,13 +23,7 @@ protected:
     srand((unsigned int) time(0));
     urdf = "../urdf/anymal/anymal.urdf";
     std::vector<int> contact_frames = {14, 24, 34, 44};
-    std::vector<double> mu;
-    for (int i=0; i<contact_frames.size(); ++i) {
-      mu.push_back(std::abs(Eigen::VectorXd::Random(1)[0]));
-    }
-    const double baum_a = std::abs(Eigen::VectorXd::Random(1)[0]);
-    const double baum_b = std::abs(Eigen::VectorXd::Random(1)[0]);
-    robot = Robot(urdf, contact_frames, mu, baum_a, baum_b);
+    robot = Robot(urdf, contact_frames);
     std::random_device rnd;
     for (int i=0; i<contact_frames.size(); ++i) {
       contact_status.push_back(rnd()%2==0);

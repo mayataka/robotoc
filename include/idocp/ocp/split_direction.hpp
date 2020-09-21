@@ -58,109 +58,113 @@ public:
   void setContactStatus(const Robot& robot);
 
   ///
-  /// @brief Returns the stack of Newton directions.
+  /// @brief Returns the stack of Newton directions. Size is 
+  /// SplitDirection::dimKKT().
   /// @return Reference to the stack of Newton directions.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> split_direction();
 
   ///
-  /// @brief Returns the Newton direction of lmd.
+  /// @brief Returns the Newton direction of lmd. Size is Robot::dimv().
   /// @return Reference to the Newton direction of lmd.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dlmd();
 
   ///
-  /// @brief Returns the Newton direction of gmm.
+  /// @brief Returns the Newton direction of gmm. Size is Robot::dimv().
   /// @return Reference to the Newton direction of gmm.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dgmm();
 
   ///
-  /// @brief Returns the Newton direction of mu_stack.
+  /// @brief Returns the Newton direction of mu_stack. Size is 
+  /// Robot::dim_passive() + Robot::dimf().
   /// @return Reference to the Newton direction of mu_stack.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dmu();
 
   ///
-  /// @brief Returns the Newton direction of a.
+  /// @brief Returns the Newton direction of a. Size is Robot::dimv().
   /// @return Reference to the Newton direction of a.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> da();
 
   ///
-  /// @brief Returns the Newton direction of f_stack.
+  /// @brief Returns the Newton direction of f_stack. Size is Robot::dimf().
   /// @return Reference to the Newton direction of f_stack.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> df();
 
   ///
-  /// @brief Returns the Newton direction of q.
+  /// @brief Returns the Newton direction of q. Size is Robot::dimv().
   /// @return Reference to the Newton direction of q.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dq();
 
   ///
-  /// @brief Returns the Newton direction of v.
+  /// @brief Returns the Newton direction of v. Size is Robot::dimv().
   /// @return Reference to the Newton direction of v.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dv();
 
   ///
-  /// @brief Returns the Newton direction of q and v.
+  /// @brief Returns the Newton direction of q and v. Size is 2 * Robot::dimv().
   /// @return Reference to the Newton direction of q and v.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dx();
 
   ///
-  /// @brief Returns the stack of Newton directions.
+  /// @brief Returns the stack of Newton directions. Size is 
+  /// SplitDirection::dimKKT().
   /// @return Const reference to the stack of Newton directions.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> split_direction() const;
 
   ///
-  /// @brief Returns the Newton direction of lmd.
+  /// @brief Returns the Newton direction of lmd. Size is Robot::dimv().
   /// @return Const reference to the Newton direction of lmd.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dlmd() const;
 
   ///
-  /// @brief Returns the Newton direction of gmm.
+  /// @brief Returns the Newton direction of gmm. Size is Robot::dimv().
   /// @return Const reference to the Newton direction of gmm.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dgmm() const;
 
   ///
-  /// @brief Returns the Newton direction of mu_stack.
+  /// @brief Returns the Newton direction of mu_stack. Size is 
+  /// Robot::dim_passive() + Robot::dimf().
   /// @return Const reference to the Newton direction of mu_stack.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dmu() const;
 
   ///
-  /// @brief Returns the Newton direction of a.
+  /// @brief Returns the Newton direction of a. Size is Robot::dimv().
   /// @return Const reference to the Newton direction of a.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> da() const;
 
   ///
-  /// @brief Returns the Newton direction of f_stack.
+  /// @brief Returns the Newton direction of f_stack. Size is Robot::dimf().
   /// @return Const reference to the Newton direction of f_stack.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> df() const;
 
   ///
-  /// @brief Returns the Newton direction of q.
+  /// @brief Returns the Newton direction of q. Size is Robot::dimv().
   /// @return Const reference to the Newton direction of q.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dq() const;
 
   ///
-  /// @brief Returns the Newton direction of v.
+  /// @brief Returns the Newton direction of v. Size is Robot::dimv().
   /// @return Const reference to the Newton direction of v.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dv() const;
 
   ///
-  /// @brief Returns the Newton direction of q and v.
+  /// @brief Returns the Newton direction of q and v. Size is 2 * Robot::dimv().
   /// @return Const reference to the Newton direction of q and v.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dx() const;

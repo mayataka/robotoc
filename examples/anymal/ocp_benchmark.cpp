@@ -22,13 +22,8 @@ namespace anymal {
 void BenchmarkWithContacts() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  std::vector<double> mu = {1, 1, 1, 1};
-  const double baumgarte_weight_on_velocity = 100;
-  const double baumgarte_weight_on_position = 2500;
   const std::string urdf_file_name = "../anymal/anymal.urdf";
-  idocp::Robot robot(urdf_file_name, contact_frames, mu,
-                     baumgarte_weight_on_velocity, 
-                     baumgarte_weight_on_position);
+  idocp::Robot robot(urdf_file_name, contact_frames);
   Eigen::VectorXd q_ref(robot.dimq());
   q_ref << 0, 0, 0.48, 0, 0, 0, 1, 
            0.0315, 0.4, -0.8, 
@@ -65,21 +60,26 @@ void BenchmarkWithContacts() {
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  const std::vector<bool> contact_status = {true, true, true, true};
-  robot.setContactStatus(contact_status);
+  robot.setContactStatus({true, true, true, true});
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
+
   idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for anymal with contacts",
                                                     robot, cost, constraints, T, N, num_proc);
+  q << 0, 0, 0.5, 0, 0, 0, 1, 
+       0.0315, 0.4, -0.8, 
+       0.0315, -0.4, 0.8, 
+       -0.0315, 0.4, -0.8,
+       -0.0315, -0.4, 0.8;
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
-  ocp_benchmarker.setContactStatus(contact_status);
-  ocp_benchmarker.testConvergence(t, q, v, 30, false);
+  ocp_benchmarker.activateContacts({0, 1, 2, 3}, 0, N);
+  ocp_benchmarker.testConvergence(t, q, v, 20, false);
   ocp_benchmarker.testCPUTime(t, q, v);
   idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
                                                             robot, cost, constraints, T, N, num_proc);
   parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
-  parnmpc_benchmarker.setContactStatus(contact_status);
-  parnmpc_benchmarker.testConvergence(t, q, v, 30, false);
+  parnmpc_benchmarker.activateContacts({0, 1, 2, 3}, 0, N);
+  parnmpc_benchmarker.testConvergence(t, q, v, 20, false);
   parnmpc_benchmarker.testCPUTime(t, q, v);
 }
 

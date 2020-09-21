@@ -28,20 +28,15 @@ namespace anymal {
 void SimulateWithContactsByOCP() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  std::vector<double> mu = {1, 1, 1, 1};
-  const double baumgarte_weight_on_velocity = 40;
-  const double baumgarte_weight_on_position = 400;
   const std::string urdf_file_name = "../anymal/anymal.urdf";
-  idocp::Robot robot(urdf_file_name, contact_frames, mu,
-                     baumgarte_weight_on_velocity, 
-                     baumgarte_weight_on_position);
+  idocp::Robot robot(urdf_file_name, contact_frames);
   auto cost = std::make_shared<idocp::CostFunction>();
   auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
   Eigen::VectorXd q_ref(robot.dimq());
   // q_ref << 0, 0, 0.48, 0, 0, 0, 1, 
   // q_ref << 0, 0, 0.48, 0, -50, 0, 1, 
-  q_ref << 0, 0, 0.48, 0, 50, 0, 1, 
-  // q_ref << 0, 0, 0.48, -1, 0, 1, 0.5, 
+  // q_ref << 0, 0, 0.48, 0, 50, 0, 1, 
+  q_ref << 0, 0, 0.48, -1, 0, 1, 0.5, 
   // q_ref << 0, 0, 0.48, 1, 0, -1, 0.5, 
            0.0315, 0.4, -0.8, 
            0.0315, -0.4, 0.8, 
@@ -75,13 +70,11 @@ void SimulateWithContactsByOCP() {
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  const std::vector<bool> contact_status = {true, true, true, true};
-  robot.setContactStatus(contact_status);
+  robot.setContactStatus({true, true, true, true});
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
   idocp::MPC<idocp::OCP> mpc(robot, cost, constraints, T, N, num_proc);
-  const auto contact_sequence = std::vector<std::vector<bool>>(N, contact_status);
-  mpc.setContactSequence(contact_sequence);
+  mpc.activateContacts({0, 1, 2, 3}, 0, N);
   mpc.setContactPointByKinematics(q);
   mpc.initializeSolution(t, q, v, 100);
   const std::string urdf_for_raisim_file_name = "../anymal/anymal_for_raisim.urdf";

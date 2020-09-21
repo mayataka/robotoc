@@ -57,13 +57,8 @@ void BenchmarkWithoutContacts() {
 void BenchmarkWithContacts() {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {18};
-  std::vector<double> mu = {1};
-  const double baumgarte_weight_on_velocity = 10;
-  const double baumgarte_weight_on_position = 100;
   const std::string urdf_file_name = "../urdf/iiwa14.urdf";
-  idocp::Robot robot(urdf_file_name, contact_frames, mu,
-                     baumgarte_weight_on_velocity, 
-                     baumgarte_weight_on_position);
+  idocp::Robot robot(urdf_file_name, contact_frames);
   auto cost = std::make_shared<idocp::CostFunction>();
   auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
   joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
@@ -87,19 +82,19 @@ void BenchmarkWithContacts() {
   const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   joint_cost->set_q_ref(q);
-  robot.setContactStatus(std::vector<bool>({true}));
+  robot.setContactStatus({true});
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
   idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for iiwa14 with contacts",
                                                     robot, cost, constraints, T, N, num_proc);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
-  ocp_benchmarker.setContactStatus(std::vector<bool>({true}));
+  ocp_benchmarker.activateContacts({0}, 0, N);
   ocp_benchmarker.testConvergence(t, q, v, 30, true);
   ocp_benchmarker.testCPUTime(t, q, v);
   idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa14 with contacts",
                                                             robot, cost, constraints, T, N, num_proc);
   parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
-  parnmpc_benchmarker.setContactStatus(std::vector<bool>({true}));
+  parnmpc_benchmarker.activateContacts({0}, 0, N);
   parnmpc_benchmarker.testConvergence(t, q, v, 30, true);
   parnmpc_benchmarker.testCPUTime(t, q, v);
 }
@@ -110,6 +105,6 @@ void BenchmarkWithContacts() {
 
 int main() {
   ocpbenchmark::iiwa14::BenchmarkWithoutContacts();
-  // ocpbenchmark::iiwa14::BenchmarkWithContacts();
+  ocpbenchmark::iiwa14::BenchmarkWithContacts();
   return 0;
 }

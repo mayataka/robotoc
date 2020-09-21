@@ -62,10 +62,34 @@ inline void OCPBenchmarker<ParNMPC>::setInitialGuessSolution(
 
 
 template <typename OCPType>
-inline void OCPBenchmarker<OCPType>::setContactStatus(
-    const std::vector<bool>& contact_status) {
-  const auto contact_sequence = std::vector<std::vector<bool>>(N_, contact_status);
-  ocp_.setContactSequence(contact_sequence);
+inline void OCPBenchmarker<OCPType>::activateContact(
+    const int contact_index, const int start_time_stage, 
+    const int last_time_stage) {
+  ocp_.activateContact(contact_index, start_time_stage, last_time_stage);
+}
+
+
+template <typename OCPType>
+inline void OCPBenchmarker<OCPType>::deactivateContact(
+    const int contact_index, const int start_time_stage, 
+    const int last_time_stage) {
+  ocp_.deactivateContact(contact_index, start_time_stage, last_time_stage);
+}
+
+
+template <typename OCPType>
+inline void OCPBenchmarker<OCPType>::activateContacts(
+    const std::vector<int>& contact_indices, const int start_time_stage, 
+    const int last_time_stage) {
+  ocp_.activateContacts(contact_indices, start_time_stage, last_time_stage);
+}
+
+
+template <typename OCPType>
+inline void OCPBenchmarker<OCPType>::deactivateContacts(
+    const std::vector<int>& contact_indices, const int start_time_stage, 
+    const int last_time_stage) {
+  ocp_.deactivateContacts(contact_indices, start_time_stage, last_time_stage);
 }
 
 
