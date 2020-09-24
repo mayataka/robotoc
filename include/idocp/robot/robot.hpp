@@ -276,6 +276,61 @@ public:
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
 
   ///
+  /// @brief Computes the residual of the impulse constriants represented by 
+  /// Baumgarte's stabilization method. Before calling this function, 
+  /// updateKinematics() must be called.
+  /// @param[out] baumgarte_residual 3-dimensional vector where the result is 
+  /// stored. Size must be at least 3.
+  ///
+  template <typename VectorType>
+  void computeBaumgarteImpulseResidual(
+      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
+
+  ///
+  /// @brief Computes the partial derivatives of the impulse constriants 
+  /// represented by the Baumgarte's stabilization method. 
+  /// Before calling this function, updateKinematics() must be called. 
+  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
+  /// Must be positive.
+  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
+  /// with respect to the configuaration. Rows must be at least 3. Cols must 
+  /// be Robot::dimv().
+  /// @param[out] baumgarte_partial_dv The result of the partial derivative  
+  /// with respect to the velocity. Rows must be at least 3. Cols must 
+  /// be Robot::dimv().
+  /// @param[out] baumgarte_partial_ddv The result of the partial derivative  
+  /// with respect to the change in velocity. Rows must be at least 3. Cols must 
+  /// be Robot::dimv().
+  ///
+  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
+  void computeBaumgarteImpulseDerivatives(
+      const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
+      const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
+      const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_ddv);
+
+  ///
+  /// @brief Computes the residual of the contact position constriants.
+  /// Before calling this function, updateKinematics() must be called.
+  /// @param[out] contact_residual 3-dimensional vector where the result is 
+  /// stored. Size must be at least 3.
+  ///
+  template <typename VectorType>
+  void computeContactResidual(
+      const Eigen::MatrixBase<VectorType>& contact_residual) const;
+
+  ///
+  /// @brief Computes the partial derivatives of the contact position 
+  /// constriants with respect to the configuration. 
+  /// Before calling this function, updateKinematics() must be called. 
+  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
+  /// with respect to the configuaration. Rows must be at least 3. Cols must 
+  /// be Robot::dimv().
+  ///
+  template <typename MatrixType>
+  void computeContactDerivative(
+      const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
+
+  ///
   /// @brief Sets the contact points.
   /// @param[in] contact_points Collection of contact points. Size must be 
   /// Robot::max_point_contacts().
@@ -379,6 +434,43 @@ public:
                        const Eigen::MatrixBase<MatrixType1>& dRNEA_partial_dq, 
                        const Eigen::MatrixBase<MatrixType2>& dRNEA_partial_dv, 
                        const Eigen::MatrixBase<MatrixType3>& dRNEA_partial_da);
+
+  ///
+  /// @brief Computes the residual of the impulse dynamics for the given 
+  /// configuration and the change in the generalized velocity, and contact 
+  /// forces by using RNEA. Before call this function,   
+  /// update contact forces by calling setContactForces().
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  /// @param[in] dv Change in velocity. Size must be Robot::dimv().
+  /// @param[out] res Residual of impulse dynamics constraint. Size must be
+  /// Robot::dimv(). 
+  ///
+  template <typename ConfigVectorType, typename TangentVectorType1, 
+            typename TangentVectorType2>
+  void RNEAImpulse(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                   const Eigen::MatrixBase<TangentVectorType1>& dv,
+                   const Eigen::MatrixBase<TangentVectorType2>& res);
+
+  ///
+  /// @brief Computes the partial dervatives of the impuse dynamics constraint 
+  /// with respect to configuration and changes in velocity. Before calling
+  /// this function, update contact forces by calling setContactForces().
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  /// @param[in] dv Change in velocity. Size must be Robot::dimv().
+  /// @param[out] dRNEA_partial_dq The partial derivative of impulse dynamics 
+  /// with respect to the configuration. The size must be 
+  /// Robot::dimv() x Robot::dimv().
+  /// @param[out] dRNEA_partial_ddv The partial derivative of impulse dynamics 
+  /// with respect to the change in velocity. The size must be 
+  /// Robot::dimv() x Robot::dimv().
+  ///   
+  template <typename ConfigVectorType, typename TangentVectorType, 
+            typename MatrixType1, typename MatrixType2>
+  void RNEAImpulseDerivatives(
+      const Eigen::MatrixBase<ConfigVectorType>& q, 
+      const Eigen::MatrixBase<TangentVectorType>& dv, 
+      const Eigen::MatrixBase<MatrixType1>& dRNEA_partial_dq, 
+      const Eigen::MatrixBase<MatrixType2>& dRNEA_partial_ddv);
 
   ///
   /// @brief Computes the partial dervative of the function of inverse dynamics 
@@ -574,6 +666,7 @@ private:
   int dimq_, dimv_, max_dimf_, dimf_, num_active_contacts_;
   bool has_active_contacts_;
   std::vector<bool> is_each_contact_active_;
+  Eigen::MatrixXd dimpulse_dv_; /// @brief used in RNEAImpulseDerivatives
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,
                   lower_joint_position_limit_, upper_joint_position_limit_;
 };

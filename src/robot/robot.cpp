@@ -20,6 +20,7 @@ Robot::Robot(const std::string& path_to_urdf)
     num_active_contacts_(0),
     has_active_contacts_(false),
     is_each_contact_active_(),
+    dimpulse_dv_(),
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
@@ -31,6 +32,8 @@ Robot::Robot(const std::string& path_to_urdf)
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
+  dimpulse_dv_.resize(dimv_, dimv_);
+  dimpulse_dv_.setZero();
   initializeJointLimits();
 }
 
@@ -49,6 +52,7 @@ Robot::Robot(const std::string& path_to_urdf,
     num_active_contacts_(0),
     has_active_contacts_(false),
     is_each_contact_active_(),
+    dimpulse_dv_(),
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
@@ -65,6 +69,8 @@ Robot::Robot(const std::string& path_to_urdf,
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
+  dimpulse_dv_.resize(dimv_, dimv_);
+  dimpulse_dv_.setZero();
   initializeJointLimits();
 }
 
@@ -82,6 +88,7 @@ Robot::Robot()
     num_active_contacts_(0),
     has_active_contacts_(false),
     is_each_contact_active_(),
+    dimpulse_dv_(),
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),

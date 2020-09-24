@@ -231,6 +231,80 @@ inline void Robot::computeBaumgarteDerivatives(
 }
 
 
+template <typename VectorType>
+inline void Robot::computeBaumgarteImpulseResidual(
+    const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeBaumgarteImpulseResidual(
+          model_, data_,
+          (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
+              .template segment<3>(3*num_active_contacts));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
+inline void Robot::computeBaumgarteImpulseDerivatives(
+    const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
+    const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
+    const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_ddv) {
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_ddv.cols() == dimv_);
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeBaumgarteImpulseDerivatives(
+          model_, data_, 
+          (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
+              .block(3*num_active_contacts, 0, 3, dimv_),
+          (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))
+              .block(3*num_active_contacts, 0, 3, dimv_),
+          (const_cast<Eigen::MatrixBase<MatrixType3>&>(baumgarte_partial_ddv))
+              .block(3*num_active_contacts, 0, 3, dimv_));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename VectorType>
+inline void Robot::computeContactResidual(
+    const Eigen::MatrixBase<VectorType>& contact_residual) const {
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeContactResidual(
+          model_, data_,
+          (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
+              .template segment<3>(3*num_active_contacts));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename MatrixType>
+inline void Robot::computeContactDerivative(
+    const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
+  assert(contact_partial_dq.cols() == dimv_);
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeContactDerivative(
+          model_, data_, 
+          (const_cast<Eigen::MatrixBase<MatrixType>&>(contact_partial_dq))
+              .block(3*num_active_contacts, 0, 3, dimv_));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
 inline void Robot::setContactPoints(
     const std::vector<Eigen::Vector3d>& contact_points) {
   assert(contact_points.size() == point_contacts_.size());
@@ -396,6 +470,50 @@ inline void Robot::RNEADerivatives(
       .template triangularView<Eigen::StrictlyLower>() 
       = (const_cast<Eigen::MatrixBase<MatrixType3>&>(dRNEA_partial_da)).transpose()
           .template triangularView<Eigen::StrictlyLower>();
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType1, 
+          typename TangentVectorType2>
+inline void Robot::RNEAImpulse(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType1>& dv,
+    const Eigen::MatrixBase<TangentVectorType2>& res) {
+  assert(q.size() == dimq_);
+  assert(dv.size() == dimv_);
+  assert(res.size() == dimv_);
+  model_.gravity.linear().setZero();
+  const_cast<Eigen::MatrixBase<TangentVectorType2>&>(res)
+      = pinocchio::rnea(model_, data_, q, Eigen::VectorXd::Zero(dimv_), dv, 
+                        fjoint_);
+  model_.gravity.linear() = model_.gravity981;
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType, 
+          typename MatrixType1, typename MatrixType2>
+inline void Robot::RNEAImpulseDerivatives(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType>& dv, 
+    const Eigen::MatrixBase<MatrixType1>& dRNEA_partial_dq, 
+    const Eigen::MatrixBase<MatrixType2>& dRNEA_partial_ddv) {
+  assert(q.size() == dimq_);
+  assert(dv.size() == dimv_);
+  assert(dRNEA_partial_dq.cols() == dimv_);
+  assert(dRNEA_partial_dq.rows() == dimv_);
+  assert(dRNEA_partial_ddv.cols() == dimv_);
+  assert(dRNEA_partial_ddv.rows() == dimv_);
+  model_.gravity.linear().setZero();
+  pinocchio::computeRNEADerivatives(
+      model_, data_, q, Eigen::VectorXd::Zero(dimv_), dv, fjoint_,
+      const_cast<Eigen::MatrixBase<MatrixType1>&>(dRNEA_partial_dq),
+      dimpulse_dv_,
+      const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_ddv));
+  (const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_ddv)) 
+      .template triangularView<Eigen::StrictlyLower>() 
+      = (const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_ddv)).transpose()
+          .template triangularView<Eigen::StrictlyLower>();
+  model_.gravity.linear() = model_.gravity981;
 }
 
 

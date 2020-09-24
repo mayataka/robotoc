@@ -120,18 +120,18 @@ inline void PointContact::computeBaumgarteDerivatives(
   assert(baumgarte_partial_dv.rows() == 3);
   assert(baumgarte_partial_da.rows() == 3);
   pinocchio::getFrameAccelerationDerivatives(model, data, contact_frame_id_, 
-                                              pinocchio::LOCAL,
-                                              frame_v_partial_dq_, 
-                                              frame_a_partial_dq_, 
-                                              frame_a_partial_dv_, 
-                                              frame_a_partial_da_);
+                                             pinocchio::LOCAL,
+                                             frame_v_partial_dq_, 
+                                             frame_a_partial_dq_, 
+                                             frame_a_partial_dv_, 
+                                             frame_a_partial_da_);
   // Skew matrices and LOCAL frame Jacobian are needed to convert the 
   // frame acceleration derivatives into the "classical" acceleration 
   // derivatives.
   pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
                               pinocchio::LOCAL, J_frame_);
   v_frame_ = pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
-                                        pinocchio::LOCAL);
+                                         pinocchio::LOCAL);
   pinocchio::skew(v_frame_.linear(), v_linear_skew_);
   pinocchio::skew(v_frame_.angular(), v_angular_skew_);
   const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)
@@ -178,18 +178,18 @@ inline void PointContact::computeBaumgarteDerivatives(
   assert(baumgarte_partial_dv.rows() == 3);
   assert(baumgarte_partial_da.rows() == 3);
   pinocchio::getFrameAccelerationDerivatives(model, data, contact_frame_id_, 
-                                              pinocchio::LOCAL,
-                                              frame_v_partial_dq_, 
-                                              frame_a_partial_dq_, 
-                                              frame_a_partial_dv_, 
-                                              frame_a_partial_da_);
+                                             pinocchio::LOCAL,
+                                             frame_v_partial_dq_, 
+                                             frame_a_partial_dq_, 
+                                             frame_a_partial_dv_, 
+                                             frame_a_partial_da_);
   // Skew matrices and LOCAL frame Jacobian are needed to convert the 
   // frame acceleration derivatives into the "classical" acceleration 
   // derivatives.
   pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
                               pinocchio::LOCAL, J_frame_);
   v_frame_ = pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
-                                        pinocchio::LOCAL);
+                                         pinocchio::LOCAL);
   pinocchio::skew(v_frame_.linear(), v_linear_skew_);
   pinocchio::skew(v_frame_.angular(), v_angular_skew_);
   const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)
@@ -218,6 +218,95 @@ inline void PointContact::computeBaumgarteDerivatives(
       += coeff * baumgarte_weight_on_position 
           * data.oMf[contact_frame_id_].rotation()
           * J_frame_.template topRows<3>();
+}
+
+
+template <typename VectorType>
+inline void PointContact::computeBaumgarteImpulseResidual(
+    const pinocchio::Model& model, const pinocchio::Data& data, 
+    const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
+  assert(baumgarte_residual.size() == 3);
+  const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual).noalias()
+      = pinocchio::getFrameClassicalAcceleration(model, data, 
+                                                 contact_frame_id_, 
+                                                 pinocchio::LOCAL).linear();
+  (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
+      += pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
+                                     pinocchio::LOCAL).linear();
+}
+
+
+template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
+inline void PointContact::computeBaumgarteImpulseDerivatives(
+    const pinocchio::Model& model, pinocchio::Data& data,
+    const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
+    const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
+    const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_ddv) {
+  assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_ddv.cols() == dimv_);
+  assert(baumgarte_partial_dq.rows() == 3);
+  assert(baumgarte_partial_dv.rows() == 3);
+  assert(baumgarte_partial_ddv.rows() == 3);
+  pinocchio::getFrameAccelerationDerivatives(model, data, contact_frame_id_, 
+                                             pinocchio::LOCAL,
+                                             frame_v_partial_dq_, 
+                                             frame_a_partial_dq_, 
+                                             frame_a_partial_dv_, 
+                                             frame_a_partial_da_);
+  // Skew matrices and LOCAL frame Jacobian are needed to convert the 
+  // frame acceleration derivatives into the "classical" acceleration 
+  // derivatives.
+  pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
+                              pinocchio::LOCAL, J_frame_);
+  v_frame_ = pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
+                                         pinocchio::LOCAL);
+  pinocchio::skew(v_frame_.linear(), v_linear_skew_);
+  pinocchio::skew(v_frame_.angular(), v_angular_skew_);
+  const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)
+      = frame_a_partial_dq_.template topRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq).noalias()
+      += v_angular_skew_ * frame_v_partial_dq_.template topRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq).noalias()
+      += v_linear_skew_ * frame_v_partial_dq_.template bottomRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv)
+      = frame_a_partial_dv_.template topRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv).noalias()
+      += v_angular_skew_ * J_frame_.template topRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv).noalias()
+      += v_linear_skew_ * J_frame_.template bottomRows<3>();
+  const_cast<Eigen::MatrixBase<MatrixType3>&> (baumgarte_partial_ddv)
+      = frame_a_partial_da_.template topRows<3>();
+  (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
+      += frame_v_partial_dq_.template topRows<3>();
+  (const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv)).noalias() 
+      += frame_a_partial_da_.template topRows<3>();
+}
+
+
+template <typename VectorType>
+inline void PointContact::computeContactResidual(
+    const pinocchio::Model& model, const pinocchio::Data& data, 
+    const Eigen::MatrixBase<VectorType>& contact_residual) const {
+  assert(contact_residual.size() == 3);
+  (const_cast<Eigen::MatrixBase<VectorType>&> (contact_residual))
+      = (data.oMf[contact_frame_id_].translation()-contact_point_);
+}
+
+
+template <typename MatrixType>
+inline void PointContact::computeContactDerivative(
+    const pinocchio::Model& model, pinocchio::Data& data, 
+    const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
+  assert(contact_partial_dq.cols() == dimv_);
+  assert(contact_partial_dq.rows() == 3);
+  // Skew matrices and LOCAL frame Jacobian are needed to convert the 
+  // frame acceleration derivatives into the "classical" acceleration 
+  // derivatives.
+  pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
+                              pinocchio::LOCAL, J_frame_);
+  (const_cast<Eigen::MatrixBase<MatrixType>&> (contact_partial_dq)).noalias()
+      = data.oMf[contact_frame_id_].rotation() * J_frame_.template topRows<3>();
 }
 
 

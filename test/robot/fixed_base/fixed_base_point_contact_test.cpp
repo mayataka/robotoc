@@ -426,6 +426,137 @@ TEST_F(FixedBasePointContactTest, baumgarteDerivativesBlock) {
   EXPECT_TRUE(baum_partial_da.isZero());
 }
 
+
+TEST_F(FixedBasePointContactTest, computeBaumgarteImpulseResidual) {
+  PointContact contact(model_, contact_frame_id_, friction_coeff_, restitution_coeff_);
+  pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
+  pinocchio::updateFramePlacements(model_, data_);
+  const int parent_joint_id = contact.parent_joint_id();
+  Eigen::Vector3d residual, residual_ref;
+  residual.setZero();
+  residual_ref.setZero();
+  contact.setContactPointByCurrentKinematics(data_);
+  const double time_step = 0.5;
+  contact.computeBaumgarteImpulseResidual(model_, data_, residual);
+  residual_ref 
+      = pinocchio::getFrameClassicalAcceleration(model_, data_, contact_frame_id_, 
+                                                 pinocchio::LOCAL).linear()
+        + pinocchio::getFrameVelocity(model_, data_, contact_frame_id_, 
+                                      pinocchio::LOCAL).linear();
+  EXPECT_TRUE(residual.isApprox(residual_ref));
+  Eigen::VectorXd residuals = Eigen::VectorXd::Zero(10);
+  contact.computeBaumgarteImpulseResidual(model_, data_, residuals.segment<3>(5));
+  EXPECT_TRUE(residuals.head(5).isZero());
+  EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
+  EXPECT_TRUE(residuals.tail(2).isZero());
+  const double coeff = Eigen::Vector2d::Random()[0];
+  contact.computeBaumgarteImpulseResidual(model_, data_, residuals.segment<3>(5));
+}
+
+
+TEST_F(FixedBasePointContactTest, baumgarteImpulseDerivatives) {
+  PointContact contact(model_, contact_frame_id_, friction_coeff_, restitution_coeff_);
+  pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
+  pinocchio::updateFramePlacement(model_, data_, contact_frame_id_);
+  const int parent_joint_id = contact.parent_joint_id();
+  Eigen::MatrixXd baum_partial_dq = Eigen::MatrixXd::Zero(3, dimv_);
+  Eigen::MatrixXd baum_partial_dv = Eigen::MatrixXd::Zero(3, dimv_);
+  Eigen::MatrixXd baum_partial_ddv = Eigen::MatrixXd::Zero(3, dimv_);
+  contact.computeBaumgarteImpulseDerivatives(model_, data_, 
+                                             baum_partial_dq, baum_partial_dv, 
+                                             baum_partial_ddv);
+  Eigen::MatrixXd baum_partial_dq_ref = Eigen::MatrixXd::Zero(3, dimv_);
+  Eigen::MatrixXd baum_partial_dv_ref = Eigen::MatrixXd::Zero(3, dimv_);
+  Eigen::MatrixXd baum_partial_ddv_ref = Eigen::MatrixXd::Zero(3, dimv_);
+  Eigen::MatrixXd frame_v_partial_dq = Eigen::MatrixXd::Zero(6, dimv_);
+  Eigen::MatrixXd frame_a_partial_dq = Eigen::MatrixXd::Zero(6, dimv_);
+  Eigen::MatrixXd frame_a_partial_dv = Eigen::MatrixXd::Zero(6, dimv_);
+  Eigen::MatrixXd frame_a_partial_da = Eigen::MatrixXd::Zero(6, dimv_);
+  pinocchio::getFrameAccelerationDerivatives(model_, data_, contact_frame_id_, 
+                                             pinocchio::LOCAL,
+                                             frame_v_partial_dq, 
+                                             frame_a_partial_dq, 
+                                             frame_a_partial_dv, 
+                                             frame_a_partial_da);
+  Eigen::MatrixXd J_frame = Eigen::MatrixXd::Zero(6, dimv_);
+  pinocchio::getFrameJacobian(model_, data_, contact_frame_id_, 
+                              pinocchio::LOCAL, J_frame);
+  pinocchio::Motion v_frame = pinocchio::getFrameVelocity(model_, data_, 
+                                                          contact_frame_id_, 
+                                                          pinocchio::LOCAL);
+  Eigen::Matrix3d v_linear_skew, v_angular_skew;
+  v_linear_skew.setZero();
+  v_angular_skew.setZero();
+  pinocchio::skew(v_frame.linear(), v_linear_skew);
+  pinocchio::skew(v_frame.angular(), v_angular_skew);
+  baum_partial_dq_ref 
+      = frame_a_partial_dq.template topRows<3>()
+          + v_angular_skew * frame_v_partial_dq.template topRows<3>()
+          + v_linear_skew * frame_v_partial_dq.template bottomRows<3>()
+          + frame_v_partial_dq.template topRows<3>();
+  baum_partial_dv_ref 
+      = frame_a_partial_dv.template topRows<3>()
+          + v_angular_skew * J_frame.template topRows<3>()
+          + v_linear_skew * J_frame.template bottomRows<3>()
+          + frame_a_partial_da.template topRows<3>();
+  baum_partial_ddv_ref 
+      = frame_a_partial_da.template topRows<3>();
+  EXPECT_TRUE(baum_partial_dq_ref.isApprox(baum_partial_dq));
+  EXPECT_TRUE(baum_partial_dv_ref.isApprox(baum_partial_dv));
+  EXPECT_TRUE(baum_partial_ddv_ref.isApprox(baum_partial_ddv));
+  std::cout << "baum_partial_dq:" << std::endl;
+  std::cout << baum_partial_dq << std::endl;
+  std::cout << std::endl;
+  std::cout << "baum_partial_dv:" << std::endl;
+  std::cout << baum_partial_dv << std::endl;
+  std::cout << std::endl;
+  std::cout << "baum_partial_ddv:" << std::endl;
+  std::cout << baum_partial_ddv << std::endl;
+  std::cout << std::endl;
+}
+
+
+TEST_F(FixedBasePointContactTest, computeContactResidual) {
+  PointContact contact(model_, contact_frame_id_, friction_coeff_, restitution_coeff_);
+  pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
+  pinocchio::updateFramePlacements(model_, data_);
+  const int parent_joint_id = contact.parent_joint_id();
+  Eigen::Vector3d residual, residual_ref;
+  residual.setZero();
+  residual_ref.setZero();
+  contact.setContactPointByCurrentKinematics(data_);
+  const double time_step = 0.5;
+  contact.computeContactResidual(model_, data_, residual);
+  residual_ref = (data_.oMf[contact_frame_id_].translation()-contact.contactPoint());
+  EXPECT_TRUE(residual.isApprox(residual_ref));
+  Eigen::VectorXd residuals = Eigen::VectorXd::Zero(10);
+  contact.computeContactResidual(model_, data_, residuals.segment<3>(5));
+  EXPECT_TRUE(residuals.head(5).isZero());
+  EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
+  EXPECT_TRUE(residuals.tail(2).isZero());
+}
+
+
+TEST_F(FixedBasePointContactTest, computeContactDerivative) {
+  PointContact contact(model_, contact_frame_id_, friction_coeff_, restitution_coeff_);
+  pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
+  pinocchio::updateFramePlacement(model_, data_, contact_frame_id_);
+  const int parent_joint_id = contact.parent_joint_id();
+  Eigen::MatrixXd contact_partial_dq = Eigen::MatrixXd::Zero(3, dimv_);
+  contact.computeContactDerivative(model_, data_, contact_partial_dq);
+  Eigen::MatrixXd contact_partial_dq_ref = Eigen::MatrixXd::Zero(3, dimv_);
+  Eigen::MatrixXd J_frame = Eigen::MatrixXd::Zero(6, dimv_);
+  pinocchio::getFrameJacobian(model_, data_, contact_frame_id_, 
+                              pinocchio::LOCAL, J_frame);
+  contact_partial_dq_ref 
+      = data_.oMf[contact_frame_id_].rotation() * J_frame.template topRows<3>();
+  EXPECT_TRUE(contact_partial_dq_ref.isApprox(contact_partial_dq));
+}
+
 } // namespace idocp
 
 

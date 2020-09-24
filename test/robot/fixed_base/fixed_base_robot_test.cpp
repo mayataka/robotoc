@@ -420,6 +420,108 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
 }
 
 
+TEST_F(FixedBaseRobotTest, baumgarteImpulseResidualAndDerivatives) {
+  PointContact contact_ref(model_, contact_frames_[0]);
+  Robot robot(urdf_, contact_frames_);
+  std::random_device rnd;
+  const int segment_begin = rnd() % 5;
+  Eigen::VectorXd residual 
+      = Eigen::VectorXd::Zero(segment_begin+robot.max_dimf());
+  Eigen::VectorXd residual_ref 
+      = Eigen::VectorXd::Zero(segment_begin+robot.max_dimf());
+  std::vector<bool> is_each_contacts_active = {true};
+  robot.setContactStatus(is_each_contacts_active);
+  EXPECT_EQ(robot.dimf(), robot.max_dimf());
+  EXPECT_EQ(robot.is_contact_active(0), true);
+  robot.updateKinematics(q_, v_, a_);
+  robot.setContactPointsByCurrentKinematics();
+  robot.computeBaumgarteImpulseResidual(residual.segment<3>(segment_begin));
+  pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
+  contact_ref.setContactPointByCurrentKinematics(data_);
+  contact_ref.computeBaumgarteImpulseResidual(model_, data_, residual_ref.segment<3>(segment_begin));
+  EXPECT_TRUE(residual.isApprox(residual_ref));
+  Eigen::MatrixXd baumgarte_partial_q_ref
+      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimq_);
+  Eigen::MatrixXd baumgarte_partial_v_ref 
+      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimq_);
+  Eigen::MatrixXd baumgarte_partial_a_ref 
+      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimq_);
+  contact_ref.computeBaumgarteImpulseDerivatives(model_, data_,
+                                                 baumgarte_partial_q_ref, 
+                                                 baumgarte_partial_v_ref, 
+                                                 baumgarte_partial_a_ref);
+  const int block_rows_begin = rnd() % 5;
+  const int block_cols_begin = rnd() % 5;
+  Eigen::MatrixXd baumgarte_partial_q 
+      = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
+  Eigen::MatrixXd baumgarte_partial_v 
+      = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
+  Eigen::MatrixXd baumgarte_partial_a 
+      = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
+  robot.computeBaumgarteImpulseDerivatives(
+      baumgarte_partial_q.block(block_rows_begin, block_cols_begin, 
+                                robot.max_dimf(), robot.dimv()), 
+      baumgarte_partial_v.block(block_rows_begin, block_cols_begin, 
+                                robot.max_dimf(), robot.dimv()), 
+      baumgarte_partial_a.block(block_rows_begin, block_cols_begin, 
+                                robot.max_dimf(), robot.dimv()));
+  EXPECT_TRUE(
+      baumgarte_partial_q.block(block_rows_begin, block_cols_begin, 
+                                robot.max_dimf(), robot.dimv())
+      .isApprox(baumgarte_partial_q_ref));
+  EXPECT_TRUE(
+      baumgarte_partial_v.block(block_rows_begin, block_cols_begin, 
+                                robot.max_dimf(), robot.dimv())
+      .isApprox(baumgarte_partial_v_ref));
+  EXPECT_TRUE(
+      baumgarte_partial_a.block(block_rows_begin, block_cols_begin, 
+                                robot.max_dimf(), robot.dimv())
+      .isApprox(baumgarte_partial_a_ref));
+}
+
+
+TEST_F(FixedBaseRobotTest, contactResidualAndDerivatives) {
+  PointContact contact_ref(model_, contact_frames_[0]);
+  Robot robot(urdf_, contact_frames_);
+  std::random_device rnd;
+  const int segment_begin = rnd() % 5;
+  Eigen::VectorXd residual 
+      = Eigen::VectorXd::Zero(segment_begin+robot.max_dimf());
+  Eigen::VectorXd residual_ref 
+      = Eigen::VectorXd::Zero(segment_begin+robot.max_dimf());
+  std::vector<bool> is_each_contacts_active = {true};
+  robot.setContactStatus(is_each_contacts_active);
+  EXPECT_EQ(robot.dimf(), robot.max_dimf());
+  EXPECT_EQ(robot.is_contact_active(0), true);
+  robot.updateKinematics(q_, v_, a_);
+  robot.setContactPointsByCurrentKinematics();
+  robot.computeContactResidual(residual.segment<3>(segment_begin));
+  pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
+  contact_ref.setContactPointByCurrentKinematics(data_);
+  contact_ref.computeContactResidual(model_, data_, residual_ref.segment<3>(segment_begin));
+  EXPECT_TRUE(residual.isApprox(residual_ref));
+  Eigen::MatrixXd contact_partial_q_ref
+      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimq_);
+  contact_ref.computeContactDerivative(model_, data_,
+                                       contact_partial_q_ref);
+  const int block_rows_begin = rnd() % 5;
+  const int block_cols_begin = rnd() % 5;
+  Eigen::MatrixXd contact_partial_q 
+      = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
+  robot.computeContactDerivative(
+      contact_partial_q.block(block_rows_begin, block_cols_begin, 
+                              robot.max_dimf(), robot.dimv()));
+  EXPECT_TRUE(
+      contact_partial_q.block(block_rows_begin, block_cols_begin, 
+                              robot.max_dimf(), robot.dimv())
+      .isApprox(contact_partial_q_ref));
+}
+
+
 TEST_F(FixedBaseRobotTest, RNEA) {
   // without contact
   Robot robot(urdf_);
@@ -499,6 +601,70 @@ TEST_F(FixedBaseRobotTest, RNEADerivativesWithContacts) {
   EXPECT_TRUE(dRNEA_dq.isApprox(dRNEA_dq_ref));
   EXPECT_TRUE(dRNEA_dv.isApprox(dRNEA_dv_ref));
   EXPECT_TRUE(dRNEA_da.isApprox(dRNEA_da_ref));
+  const bool transpose_jacobian = true;
+  robot.dRNEAPartialdFext(dRNEA_dfext);
+  contact_ref.getContactJacobian(model_, data_, -1, dRNEA_dfext_ref,
+                                 transpose_jacobian);
+  std::cout << dRNEA_dfext_ref << std::endl;
+  std::cout << dRNEA_dfext << std::endl;
+  EXPECT_TRUE(dRNEA_dfext.isApprox(dRNEA_dfext_ref));
+}
+
+
+TEST_F(FixedBaseRobotTest, RNEAImpulse) {
+  Robot robot(urdf_, contact_frames_);
+  std::vector<Eigen::Vector3d> fext;
+  std::vector<bool> is_each_contacts_active;
+  for (int i=0; i<contact_frames_.size(); ++i) {
+    fext.push_back(Eigen::Vector3d::Random());
+    is_each_contacts_active.push_back(true);
+  }
+  Eigen::VectorXd tau = Eigen::VectorXd::Zero(dimq_);
+  Eigen::VectorXd tau_ref = Eigen::VectorXd::Zero(dimq_);
+  robot.setContactStatus(is_each_contacts_active);
+  robot.setContactForces(fext);
+  robot.RNEAImpulse(q_, a_, tau);
+  pinocchio::container::aligned_vector<pinocchio::Force> fjoint 
+      = pinocchio::container::aligned_vector<pinocchio::Force>(
+                 model_.joints.size(), pinocchio::Force::Zero());
+  PointContact contact_ref(model_, contact_frame_id_);
+  contact_ref.computeJointForceFromContactForce(fext[0], fjoint);
+  model_.gravity.setZero();
+  tau_ref = pinocchio::rnea(model_, data_, q_, Eigen::VectorXd::Zero(robot.dimv()), a_, fjoint);
+  EXPECT_TRUE(tau_ref.isApprox(tau));
+}
+
+
+TEST_F(FixedBaseRobotTest, RNEAImpulseDerivatives) {
+  Robot robot(urdf_, contact_frames_);
+  robot.setContactStatus({true});
+  std::vector<Eigen::Vector3d> fext;
+  fext.push_back(Eigen::Vector3d::Random());
+  Eigen::MatrixXd dRNEA_dq = Eigen::MatrixXd::Zero(dimq_, dimq_);
+  Eigen::MatrixXd dRNEA_ddv = Eigen::MatrixXd::Zero(dimq_, dimq_);
+  Eigen::MatrixXd dRNEA_dfext = Eigen::MatrixXd::Zero(dimq_, robot.max_dimf());
+  Eigen::MatrixXd dRNEA_dq_ref = dRNEA_dq;
+  Eigen::MatrixXd dRNEA_dv_ref = dRNEA_dq;
+  Eigen::MatrixXd dRNEA_ddv_ref = Eigen::MatrixXd::Zero(dimq_, dimq_);
+  Eigen::MatrixXd dRNEA_dfext_ref 
+      = Eigen::MatrixXd::Zero(dimq_, robot.max_dimf());
+  std::vector<bool> is_each_contacts_active = {true};
+  robot.setContactStatus(is_each_contacts_active);
+  robot.setContactForces(fext);
+  robot.RNEAImpulseDerivatives(q_, a_, dRNEA_dq, dRNEA_ddv);
+  pinocchio::container::aligned_vector<pinocchio::Force> fjoint 
+      = pinocchio::container::aligned_vector<pinocchio::Force>(
+                 model_.joints.size(), pinocchio::Force::Zero());
+  PointContact contact_ref(model_, contact_frame_id_);
+  contact_ref.computeJointForceFromContactForce(fext[0], fjoint);
+  model_.gravity.setZero();
+  pinocchio::computeRNEADerivatives(model_, data_, q_, 
+                                    Eigen::VectorXd::Zero(robot.dimv()), a_, 
+                                    fjoint, dRNEA_dq_ref, dRNEA_dv_ref, dRNEA_ddv_ref);
+  dRNEA_ddv_ref.triangularView<Eigen::StrictlyLower>() 
+      = dRNEA_ddv_ref.transpose().triangularView<Eigen::StrictlyLower>();
+  EXPECT_TRUE(dRNEA_dq.isApprox(dRNEA_dq_ref));
+  EXPECT_TRUE(dRNEA_ddv.isApprox(dRNEA_ddv_ref));
   const bool transpose_jacobian = true;
   robot.dRNEAPartialdFext(dRNEA_dfext);
   contact_ref.getContactJacobian(model_, data_, -1, dRNEA_dfext_ref,
