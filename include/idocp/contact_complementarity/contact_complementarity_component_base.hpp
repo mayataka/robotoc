@@ -102,7 +102,7 @@ public:
   ///
   void augmentDualResidual(Robot& robot, ConstraintComponentData& data, 
                            const double dtau, const SplitSolution& s, 
-                           KKTResidual& kkt_residual) const;
+                           KKTResidual& kkt_residual);
 
   ///
   /// @brief Consense slack and dual of the constraints and factorize condensed

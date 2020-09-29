@@ -197,10 +197,17 @@ TEST_F(ContactNormalForceTest, maxStepSize) {
     dslack_active.coeffRef(i) = data.dslack.coeff(active_contact_indices[i]);
     ddual_active.coeffRef(i) = data.ddual.coeff(active_contact_indices[i]);
   }
-  const double max_slack_step_size = pdipmfunc::FractionToBoundary(
-      active_contact_indices.size(), fraction_to_boundary_rate, slack_active, dslack_active);
-  const double max_dual_step_size = pdipmfunc::FractionToBoundary(
-      active_contact_indices.size(), fraction_to_boundary_rate, dual_active, ddual_active);
+  double max_slack_step_size, max_dual_step_size;
+  if (robot.dimf() > 0) {
+    max_slack_step_size = pdipmfunc::FractionToBoundary(
+        active_contact_indices.size(), fraction_to_boundary_rate, slack_active, dslack_active);
+    max_dual_step_size = pdipmfunc::FractionToBoundary(
+        active_contact_indices.size(), fraction_to_boundary_rate, dual_active, ddual_active);
+  }
+  else {
+    max_slack_step_size = 1;
+    max_dual_step_size = 1;
+  }
   EXPECT_DOUBLE_EQ(max_slack_step_size, constraint.maxSlackStepSize(data, is_contact_active));
   EXPECT_DOUBLE_EQ(max_dual_step_size, constraint.maxDualStepSize(data, is_contact_active));
 }

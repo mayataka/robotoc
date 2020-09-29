@@ -45,7 +45,7 @@ public:
 
   void augmentDualResidual_impl(Robot& robot, ConstraintComponentData& data, 
                                 const double dtau, const SplitSolution& s,
-                                KKTResidual& kkt_residual) const;
+                                KKTResidual& kkt_residual);
 
   void condenseSlackAndDual_impl(Robot& robot, ConstraintComponentData& data, 
                                  const double dtau, const SplitSolution& s,
@@ -66,8 +66,6 @@ public:
                                   const SplitSolution& s) const;
 
   int dimc_impl() const;
-
-  void setContactStatus(const Robot& robot);
 
   double maxSlackStepSize_impl(
       const ConstraintComponentData& data, 
@@ -91,9 +89,17 @@ public:
   double costSlackBarrier_impl(const ConstraintComponentData& data, 
                                const std::vector<bool>& is_contact_active,
                                const double step_size) const;
+ 
+  void setFrictionCoefficient(const Robot& robot);
+
+  static double frictionConeResidual(const double mu, const Eigen::Vector3d& f);
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int dimc_;
+  std::vector<double> mu_;
+  std::vector<Eigen::Vector3d> friction_cone_derivative_;
 
 };
 

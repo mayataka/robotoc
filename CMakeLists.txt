@@ -59,7 +59,7 @@ add_library(
   src/contact_complementarity/contact_complementarity_component_base.cpp
   # src/contact_complementarity/distance_to_contact_surface.cpp
   src/contact_complementarity/contact_normal_force.cpp
-  # src/contact_complementarity/friction_cone.cpp
+  src/contact_complementarity/friction_cone.cpp
   # src/contact_complementarity/contact_complementarity.cpp
   src/ocp/kkt_residual.cpp
   src/ocp/kkt_matrix.cpp

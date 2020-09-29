@@ -67,8 +67,6 @@ public:
 
   int dimc_impl() const;
 
-  void setContactStatus(const Robot& robot);
-
   double maxSlackStepSize_impl(
       const ConstraintComponentData& data, 
       const std::vector<bool>& is_contact_active) const;

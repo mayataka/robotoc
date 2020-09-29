@@ -19,7 +19,7 @@ namespace idocp {
 class DistanceToContactSurface final : public ContactComplementarityComponentBase<DistanceToContactSurface> {
 public:
   DistanceToContactSurface(const Robot& robot, const double barrier=1.0e-04, 
-                     const double fraction_to_boundary_rate=0.995);
+                           const double fraction_to_boundary_rate=0.995);
 
   DistanceToContactSurface();
 
@@ -91,6 +91,8 @@ public:
   double costSlackBarrier_impl(const ConstraintComponentData& data, 
                                const std::vector<bool>& is_contact_active,
                                const double step_size) const;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int dimc_;

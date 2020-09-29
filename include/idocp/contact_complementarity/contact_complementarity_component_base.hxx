@@ -70,9 +70,9 @@ inline void ContactComplementarityComponentBase<Derived>::setSlackAndDual(
 template <typename Derived>
 inline void ContactComplementarityComponentBase<Derived>::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTResidual& kkt_residual) const {
-  static_cast<const Derived*>(this)->augmentDualResidual_impl(robot, data, dtau,  
-                                                              s, kkt_residual);
+    const SplitSolution& s, KKTResidual& kkt_residual) {
+  static_cast<Derived*>(this)->augmentDualResidual_impl(robot, data, dtau,  
+                                                        s, kkt_residual);
 }
 
 

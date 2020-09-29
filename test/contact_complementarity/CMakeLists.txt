@@ -1,1 +1,2 @@
+add_test_macro(friction_cone_test)
 add_test_macro(contact_normal_force_test)
