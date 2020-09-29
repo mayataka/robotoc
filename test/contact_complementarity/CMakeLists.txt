@@ -1,0 +1,1 @@
+add_test_macro(contact_normal_force_test)

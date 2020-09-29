@@ -57,8 +57,13 @@ void SimulateWithContactsByOCP() {
   // for (int i=0; i<contact_frames.size(); ++i) {
   //   f_weight.push_back(Eigen::Vector3d::Constant(0.0));
   // }
-  idocp::JointConstraintsFactory constraints_factory(robot);
-  auto constraints = constraints_factory.create();
+  auto constraints = std::make_shared<idocp::Constraints>();
+  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
+  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
+  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
+  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
   const double T = 1;
   const int N = 20;
   const int num_proc = 4;

@@ -1,6 +1,7 @@
 #ifndef IDOCP_CONSTRAINTS_PDIPM_FUNC_HXX_
 #define IDOCP_CONSTRAINTS_PDIPM_FUNC_HXX_
 
+#include <cmath>
 #include <assert.h>
 
 
@@ -75,6 +76,40 @@ inline double CostSlackBarrier(const double barrier,
   assert(barrier > 0);
   const double cost = - barrier * slack.array().log().sum();
   return cost;
+}
+
+
+inline double ComputeDuality(const double barrier, const double slack, 
+                             const double dual) {
+  assert(barrier > 0);
+  assert(slack > 0);
+  assert(dual > 0);
+  return (slack*dual - barrier);
+}
+
+
+inline double FractionToBoundary(const double fraction_rate, const double var,
+                                 const double dvar) {
+  assert(fraction_rate > 0);
+  assert(fraction_rate <= 1);
+  assert(var > 0);
+  return - fraction_rate * (var/dvar);
+}
+
+
+inline double ComputeDualDirection(const double slack, const double dual, 
+                                   const double slack_direction, 
+                                   const double duality) {
+  assert(slack > 0);
+  assert(dual > 0);
+  return (-(dual*slack_direction+duality)/slack);
+}
+
+
+inline double CostSlackBarrier(const double barrier, const double slack) {
+  assert(barrier > 0);
+  assert(slack > 0);
+  return - barrier * std::log(slack);
 }
 
 } // namespace pdipm

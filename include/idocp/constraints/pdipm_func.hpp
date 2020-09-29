@@ -25,6 +25,16 @@ void ComputeDualDirection(const Eigen::VectorXd& slack,
 
 double CostSlackBarrier(const double barrier, const Eigen::VectorXd& slack);
 
+double ComputeDuality(const double barrier, const double slack, const double dual);
+
+double FractionToBoundary(const double fraction_rate, const double var,
+                          const double dvar);
+
+double ComputeDualDirection(const double slack, const double dual, 
+                            const double slack_direction, const double duality);
+
+double CostSlackBarrier(const double barrier, const double slack);
+
 } // namespace pdipm
 } // namespace idocp
 

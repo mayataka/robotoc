@@ -1,0 +1,1 @@
+#include "idocp/contact_complementarity/contact_normal_force.hpp"
