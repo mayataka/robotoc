@@ -47,7 +47,7 @@ inline void ContactNormalForce::setSlackAndDual_impl(
     const SplitSolution& s) const {
   assert(dtau > 0);
   for (int i=0; i<robot.max_point_contacts(); ++i) {
-    data.slack.coeffRef(i) = s.f[i].coeff(2);
+    data.slack.coeffRef(i) = dtau * s.f[i].coeff(2);
   }
   setSlackAndDualPositive(data.slack, data.dual);
 }

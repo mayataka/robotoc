@@ -497,7 +497,7 @@ TEST_F(FixedBaseRobotTest, contactResidualAndDerivatives) {
   EXPECT_EQ(robot.is_contact_active(0), true);
   robot.updateKinematics(q_, v_, a_);
   robot.setContactPointsByCurrentKinematics();
-  robot.computeContactResidual(residual.segment<3>(segment_begin));
+  robot.computeContactResidual(0, residual.segment<3>(segment_begin));
   pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
   pinocchio::updateFramePlacements(model_, data_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
@@ -513,8 +513,8 @@ TEST_F(FixedBaseRobotTest, contactResidualAndDerivatives) {
   Eigen::MatrixXd contact_partial_q 
       = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
   robot.computeContactDerivative(
-      contact_partial_q.block(block_rows_begin, block_cols_begin, 
-                              robot.max_dimf(), robot.dimv()));
+      0, contact_partial_q.block(block_rows_begin, block_cols_begin, 
+                                 robot.max_dimf(), robot.dimv()));
   EXPECT_TRUE(
       contact_partial_q.block(block_rows_begin, block_cols_begin, 
                               robot.max_dimf(), robot.dimv())

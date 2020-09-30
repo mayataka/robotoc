@@ -83,7 +83,7 @@ TEST_F(ContactNormalForceTest, setSlackAndDual) {
   EXPECT_TRUE(constraint.isFeasible(robot, data, s));
   constraint.setSlackAndDual(robot, data, dtau, s);
   for (int i=0; i<contact_frames.size(); ++i) {
-    EXPECT_DOUBLE_EQ(data.slack.coeff(i), s.f[i].coeffRef(2));
+    EXPECT_DOUBLE_EQ(data.slack.coeff(i), dtau*s.f[i].coeffRef(2));
     EXPECT_TRUE(data.dual.coeff(i) > 0);
   }
 }

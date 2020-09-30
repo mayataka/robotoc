@@ -67,8 +67,6 @@ public:
 
   int dimc_impl() const;
 
-  void setContactStatus(const Robot& robot);
-
   double maxSlackStepSize_impl(
       const ConstraintComponentData& data, 
       const std::vector<bool>& is_contact_active) const;
@@ -96,6 +94,11 @@ public:
 
 private:
   int dimc_;
+  std::vector<double> distance_;
+  std::vector<Eigen::Vector3d> frame_position_;
+  Eigen::MatrixXd frame_derivative_;
+  Eigen::MatrixXd distance_derivative_;
+  Eigen::VectorXd dual_active_;
 
 };
 

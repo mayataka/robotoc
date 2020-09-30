@@ -311,23 +311,27 @@ public:
   ///
   /// @brief Computes the residual of the contact position constriants.
   /// Before calling this function, updateKinematics() must be called.
+  /// @param[in] contact_index Contact index of interest.
   /// @param[out] contact_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
   void computeContactResidual(
+      const int contact_index,
       const Eigen::MatrixBase<VectorType>& contact_residual) const;
 
   ///
   /// @brief Computes the partial derivatives of the contact position 
   /// constriants with respect to the configuration. 
   /// Before calling this function, updateKinematics() must be called. 
+  /// @param[in] contact_index Contact index of interest.
   /// @param[out] baumgarte_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
   ///
   template <typename MatrixType>
   void computeContactDerivative(
+      const int contact_index,
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 
   ///

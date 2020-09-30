@@ -34,9 +34,9 @@ void SimulateWithContactsByOCP() {
   auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
   Eigen::VectorXd q_ref(robot.dimq());
   // q_ref << 0, 0, 0.48, 0, 0, 0, 1, 
-  // q_ref << 0, 0, 0.48, 0, -50, 0, 1, 
+  q_ref << 0, 0, 0.48, 0, -50, 0, 1, 
   // q_ref << 0, 0, 0.48, 0, 50, 0, 1, 
-  q_ref << 0, 0, 0.48, -1, 0, 1, 0.5, 
+  // q_ref << 0, 0, 0.48, -1, 0, 1, 0.5, 
   // q_ref << 0, 0, 0.48, 1, 0, -1, 0.5, 
            0.0315, 0.4, -0.8, 
            0.0315, -0.4, 0.8, 
@@ -64,11 +64,18 @@ void SimulateWithContactsByOCP() {
   auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  constraints->push_back(joint_position_lower);
+  constraints->push_back(joint_position_upper);
+  constraints->push_back(joint_velocity_lower);
+  constraints->push_back(joint_velocity_upper);
+  constraints->push_back(joint_torques_lower);
+  constraints->push_back(joint_torques_upper);
   const double T = 1;
   const int N = 20;
   const int num_proc = 4;
   const double t = 0;
   Eigen::VectorXd q(robot.dimq());
+  // q << 0, 0, 0.48, 0, 0, 0, 1, 
   q << 0, 0, 0.48, 0, 0, 0, 1, 
        0.0315, 0.4, -0.8, 
        0.0315, -0.4, 0.8, 
@@ -84,7 +91,7 @@ void SimulateWithContactsByOCP() {
   mpc.initializeSolution(t, q, v, 100);
   const std::string urdf_for_raisim_file_name = "../anymal/anymal_for_raisim.urdf";
   idocp::QuadrupedSimulator simulator(urdf_for_raisim_file_name, "../sim_result", "forward");
-  simulator.viz(mpc, 5, 0.0025, 0, q, v, false);
+  simulator.viz(mpc, 3, 0.0025, 0, q, v, false);
 }
 
 } // namespace anymal 
