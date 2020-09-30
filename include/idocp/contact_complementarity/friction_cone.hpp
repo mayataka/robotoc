@@ -19,7 +19,7 @@ namespace idocp {
 class FrictionCone final : public ContactComplementarityComponentBase<FrictionCone> {
 public:
   FrictionCone(const Robot& robot, const double barrier=1.0e-04, 
-                     const double fraction_to_boundary_rate=0.995);
+               const double fraction_to_boundary_rate=0.995);
 
   FrictionCone();
 
@@ -74,13 +74,13 @@ public:
   double maxDualStepSize_impl(const ConstraintComponentData& data, 
                               const std::vector<bool>& is_contact_active) const;
 
-  double updateSlack_impl(ConstraintComponentData& data, 
-                          const std::vector<bool>& is_contact_active,
-                          const double step_size) const;
+  void updateSlack_impl(ConstraintComponentData& data, 
+                        const std::vector<bool>& is_contact_active,
+                        const double step_size) const;
 
-  double updateDual_impl(ConstraintComponentData& data,
-                         const std::vector<bool>& is_contact_active,
-                         const double step_size) const;
+  void updateDual_impl(ConstraintComponentData& data,
+                       const std::vector<bool>& is_contact_active,
+                       const double step_size) const;
 
   double costSlackBarrier_impl(
       const ConstraintComponentData& data, 

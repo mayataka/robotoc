@@ -68,7 +68,7 @@ public:
   /// @param[in] s Split solution.
   /// @return true if s is feasible. false if not.
   ///
-  bool isFeasible(Robot& robot, const SplitSolution& s) const;
+  bool isFeasible(Robot& robot, const SplitSolution& s);
 
   void setContactStatus(const Robot& robot);
 
@@ -79,7 +79,7 @@ public:
   /// @param[in] s Split solution.
   ///
   void setSlackAndDual(Robot& robot, const double dtau, 
-                       const SplitSolution& s) const;
+                       const SplitSolution& s);
 
   ///
   /// @brief Augment the dual residual of the constraints to the KKT residual 
@@ -91,8 +91,7 @@ public:
   /// @param[out] kkt_residual KKT residual.
   ///
   void augmentDualResidual(Robot& robot, const double dtau, 
-                           const SplitSolution& s, 
-                           KKTResidual& kkt_residual) const;
+                           const SplitSolution& s, KKTResidual& kkt_residual);
 
   ///
   /// @brief Consense slack and dual of the constraints and factorize condensed
@@ -121,7 +120,7 @@ public:
   ///
   void computeSlackAndDualDirection(Robot& robot, const double dtau, 
                                     const SplitSolution& s, 
-                                    const SplitDirection& d) const;
+                                    const SplitDirection& d);
 
   ///
   /// @brief Computes and return the L1-norm of the primal residual and duality
@@ -134,7 +133,7 @@ public:
   /// @return L1 norm of the primal residual and duality of the constraints. 
   ///
   double residualL1Nrom(Robot& robot, const double dtau, 
-                        const SplitSolution& s) const;
+                        const SplitSolution& s);
 
   ///
   /// @brief Computes and return the squared norm of the primal residual and 
@@ -147,7 +146,7 @@ public:
   /// @return Squared norm of the primal residual and duality of the constraints. 
   ///
   double squaredKKTErrorNorm(Robot& robot, const double dtau, 
-                             const SplitSolution& s) const;
+                             const SplitSolution& s);
 
   ///
   /// @brief Compute and returns the maximum step size by applying 
@@ -167,13 +166,13 @@ public:
   /// @brief Updates the slack with step_size.
   /// @param[in] step_size Step size. 
   ///
-  void updateSlack(const double step_size) const;
+  void updateSlack(const double step_size);
 
   ///
   /// @brief Updates the dual with step_size.
   /// @param[in] step_size Step size. 
   ///
-  void updateDual(const double step_size) const;
+  void updateDual(const double step_size);
 
   ///
   /// @brief Computes and returns the value of the barrier function for slack 
@@ -208,7 +207,7 @@ private:
   ContactNormalForce contact_normal_force_constraint_;
   FrictionCone friction_cone_constraint_;
   ConstraintComponentData distance_to_contact_surface_constraint_data_, 
-                          normal_force_constraint_data_, 
+                          contact_normal_force_constraint_data_, 
                           friction_cone_constraint_data_;
   std::vector<bool> is_each_contact_active_;
 };

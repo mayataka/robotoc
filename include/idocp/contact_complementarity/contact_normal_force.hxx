@@ -114,7 +114,8 @@ inline double ContactNormalForce::residualL1Nrom_impl(
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (robot.is_contact_active(i)) {
       norm += std::abs(data.slack.coeff(i) - dtau * s.f[i].coeff(2));
-      norm += std::abs(computeDuality(data.slack.coeff(i), data.dual.coeff(i)));
+      norm += std::abs(computeDuality(data.slack.coeff(i), 
+                                      data.dual.coeff(i)));
     }
   }
   return norm;
@@ -128,7 +129,8 @@ inline double ContactNormalForce::squaredKKTErrorNorm_impl(
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (robot.is_contact_active(i)) {
       const double residual = data.slack.coeff(i) - dtau * s.f[i].coeff(2);
-      const double duality = computeDuality(data.slack.coeff(i), data.dual.coeff(i));
+      const double duality = computeDuality(data.slack.coeff(i), 
+                                            data.dual.coeff(i));
       norm += residual * residual + duality * duality;
     }
   }
@@ -183,7 +185,7 @@ inline double ContactNormalForce::maxDualStepSize_impl(
 }
 
 
-inline double ContactNormalForce::updateSlack_impl(
+inline void ContactNormalForce::updateSlack_impl(
     ConstraintComponentData& data, const std::vector<bool>& is_contact_active,
     const double step_size) const {
   for (int i=0; i<dimc_; ++i) {
@@ -194,7 +196,7 @@ inline double ContactNormalForce::updateSlack_impl(
 }
 
 
-inline double ContactNormalForce::updateDual_impl(
+inline void ContactNormalForce::updateDual_impl(
     ConstraintComponentData& data, const std::vector<bool>& is_contact_active,
     const double step_size) const {
   for (int i=0; i<dimc_; ++i) {

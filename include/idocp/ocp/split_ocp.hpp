@@ -20,6 +20,7 @@
 #include "idocp/ocp/riccati_gain.hpp"
 #include "idocp/ocp/riccati_matrix_factorizer.hpp"
 #include "idocp/ocp/riccati_matrix_inverter.hpp"
+#include "idocp/contact_complementarity/contact_complementarity.hpp"
 
 
 namespace idocp {
@@ -258,6 +259,7 @@ private:
   KKTMatrix kkt_matrix_;
   StateEquation state_equation_;
   RobotDynamics robot_dynamics_;
+  ContactComplementarity contact_complementarity_;
   RiccatiGain riccati_gain_;
   RiccatiMatrixFactorizer riccati_factorizer_;
   RiccatiMatrixInverter riccati_inverter_;

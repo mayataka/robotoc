@@ -74,13 +74,13 @@ public:
   double maxDualStepSize_impl(const ConstraintComponentData& data, 
                               const std::vector<bool>& is_contact_active) const;
 
-  double updateSlack_impl(ConstraintComponentData& data, 
-                          const std::vector<bool>& is_contact_active,
-                          const double step_size) const;
+  void updateSlack_impl(ConstraintComponentData& data, 
+                        const std::vector<bool>& is_contact_active,
+                        const double step_size) const;
 
-  double updateDual_impl(ConstraintComponentData& data,
-                         const std::vector<bool>& is_contact_active,
-                         const double step_size) const;
+  void updateDual_impl(ConstraintComponentData& data,
+                       const std::vector<bool>& is_contact_active,
+                       const double step_size) const;
 
   double costSlackBarrier_impl(
       const ConstraintComponentData& data, 

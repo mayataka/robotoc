@@ -57,10 +57,10 @@ add_library(
   src/constraints/joint_torques_upper_limit.cpp
   src/constraints/joint_torques_lower_limit.cpp
   src/contact_complementarity/contact_complementarity_component_base.cpp
-  # src/contact_complementarity/distance_to_contact_surface.cpp
+  src/contact_complementarity/distance_to_contact_surface.cpp
   src/contact_complementarity/contact_normal_force.cpp
   src/contact_complementarity/friction_cone.cpp
-  # src/contact_complementarity/contact_complementarity.cpp
+  src/contact_complementarity/contact_complementarity.cpp
   src/ocp/kkt_residual.cpp
   src/ocp/kkt_matrix.cpp
   src/ocp/split_solution.cpp

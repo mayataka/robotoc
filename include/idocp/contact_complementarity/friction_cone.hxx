@@ -200,7 +200,7 @@ inline double FrictionCone::maxDualStepSize_impl(
 }
 
 
-inline double FrictionCone::updateSlack_impl(
+inline void FrictionCone::updateSlack_impl(
     ConstraintComponentData& data, const std::vector<bool>& is_contact_active,
     const double step_size) const {
   for (int i=0; i<dimc_; ++i) {
@@ -211,7 +211,7 @@ inline double FrictionCone::updateSlack_impl(
 }
 
 
-inline double FrictionCone::updateDual_impl(
+inline void FrictionCone::updateDual_impl(
     ConstraintComponentData& data, const std::vector<bool>& is_contact_active,
     const double step_size) const {
   for (int i=0; i<dimc_; ++i) {

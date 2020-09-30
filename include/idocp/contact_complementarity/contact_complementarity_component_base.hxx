@@ -91,8 +91,8 @@ inline void ContactComplementarityComponentBase<Derived>::
 computeSlackAndDualDirection(Robot& robot, ConstraintComponentData& data, 
                              const double dtau, const SplitSolution& s, 
                              const SplitDirection& d) const {
-  static_cast<const Derived*>(this)->computeSlackAndDualDirection_impl(robot, data, 
-                                                                 dtau, s, d);
+  static_cast<const Derived*>(this)->computeSlackAndDualDirection_impl(
+      robot, data, dtau, s, d);
 }
 
 
@@ -100,7 +100,8 @@ template <typename Derived>
 inline double ContactComplementarityComponentBase<Derived>::residualL1Nrom(
     Robot& robot, ConstraintComponentData& data, 
     const double dtau, const SplitSolution& s) const {
-  return static_cast<const Derived*>(this)->residualL1Nrom_impl(robot, data, dtau, s);
+  return static_cast<const Derived*>(this)->residualL1Nrom_impl(
+      robot, data, dtau, s);
 }
 
 
@@ -108,8 +109,8 @@ template <typename Derived>
 inline double ContactComplementarityComponentBase<Derived>::squaredKKTErrorNorm(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
-  return static_cast<const Derived*>(this)->squaredKKTErrorNorm_impl(robot, data, 
-                                                               dtau, s);
+  return static_cast<const Derived*>(this)->squaredKKTErrorNorm_impl(
+      robot, data, dtau, s);
 }
 
 
@@ -142,7 +143,8 @@ inline void ContactComplementarityComponentBase<Derived>::updateSlack(
     ConstraintComponentData& data, const std::vector<bool>& is_contact_active,
     const double step_size) const {
   assert(step_size > 0);
-  static_cast<const Derived*>(this)->updateSlack_impl(data, is_contact_active, step_size);
+  static_cast<const Derived*>(this)->updateSlack_impl(data, is_contact_active, 
+                                                      step_size);
 }
 
 
@@ -151,7 +153,8 @@ inline void ContactComplementarityComponentBase<Derived>::updateDual(
     ConstraintComponentData& data, const std::vector<bool>& is_contact_active,
     const double step_size) const {
   assert(step_size > 0);
-  static_cast<const Derived*>(this)->updateDual_impl(data, is_contact_active, step_size);
+  static_cast<const Derived*>(this)->updateDual_impl(data, is_contact_active, 
+                                                     step_size);
 }
 
 
