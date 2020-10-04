@@ -28,13 +28,13 @@ inline KKTMatrix::KKTMatrix(const Robot& robot)
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dim_passive_(robot.dim_passive()),
-    dimf_(robot.dimf()), 
-    dimc_(robot.dim_passive()+robot.dimf()),
+    dimf_(0), 
+    dimc_(robot.dim_passive()),
     a_begin_(0),
     f_begin_(robot.dimv()),
-    q_begin_(robot.dimv()+robot.dimf()),
-    v_begin_(2*robot.dimv()+robot.dimf()),
-    dimQ_(3*robot.dimv()+robot.dimf()),
+    q_begin_(robot.dimv()),
+    v_begin_(2*robot.dimv()),
+    dimQ_(3*robot.dimv()),
     max_dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf()) {
 }
 
@@ -68,12 +68,12 @@ inline KKTMatrix::~KKTMatrix() {
 }
 
 
-inline void KKTMatrix::setContactStatus(const Robot& robot) {
-  dimf_ = robot.dimf();
-  dimc_ = robot.dim_passive() + robot.dimf();
-  q_begin_ = robot.dimv() + robot.dimf();
-  v_begin_ = 2*robot.dimv() + robot.dimf();
-  dimQ_ = 3*robot.dimv() + robot.dimf();
+inline void KKTMatrix::setContactStatus(const ContactStatus& contact_status) {
+  dimf_ = contact_status.dimf();
+  dimc_ = dim_passive_ + contact_status.dimf();
+  q_begin_ = dimv_ + contact_status.dimf();
+  v_begin_ = 2*dimv_ + contact_status.dimf();
+  dimQ_ = 3*dimv_ + contact_status.dimf();
 }
 
 

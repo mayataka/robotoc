@@ -10,7 +10,7 @@ namespace idocp {
 inline ContactSequence::ContactSequence(const Robot& robot, const int N)
   : max_point_contacts_(robot.max_point_contacts()),
     N_(N),
-    contact_sequence_(N, std::vector<bool>(robot.max_point_contacts(), false)) {
+    contact_sequence_(N, ContactStatus(robot)) {
 }
 
 
@@ -35,7 +35,7 @@ inline void ContactSequence::activateContact(const int contact_index,
   assert(time_stage_end > time_stage_begin);
   assert(time_stage_end <= N_);
   for (int i=time_stage_begin; i<time_stage_end; ++i) {
-    contact_sequence_[i][contact_index] = true;
+    contact_sequence_[i].activateContact(contact_index);
   }
 }
 
@@ -49,7 +49,7 @@ inline void ContactSequence::deactivateContact(const int contact_index,
   assert(time_stage_end > time_stage_begin);
   assert(time_stage_end <= N_);
   for (int i=time_stage_begin; i<time_stage_end; ++i) {
-    contact_sequence_[i][contact_index] = false;
+    contact_sequence_[i].deactivateContact(contact_index);
   }
 }
 
@@ -63,11 +63,7 @@ inline void ContactSequence::activateContacts(
   assert(time_stage_end > time_stage_begin);
   assert(time_stage_end <= N_);
   for (int i=time_stage_begin; i<time_stage_end; ++i) {
-    for (const int contact_index : contact_indices) {
-      assert(contact_index >= 0);
-      assert(contact_index < max_point_contacts_);
-      contact_sequence_[i][contact_index] = true;
-    }
+    contact_sequence_[i].activateContacts(contact_indices);
   }
 }
 
@@ -81,16 +77,12 @@ inline void ContactSequence::deactivateContacts(
   assert(time_stage_end > time_stage_begin);
   assert(time_stage_end <= N_);
   for (int i=time_stage_begin; i<time_stage_end; ++i) {
-    for (const int contact_index : contact_indices) {
-      assert(contact_index >= 0);
-      assert(contact_index < max_point_contacts_);
-      contact_sequence_[i][contact_index] = false;
-    }
+    contact_sequence_[i].deactivateContacts(contact_indices);
   }
 }
 
 
-inline const std::vector<bool>& ContactSequence::contactStatus(
+inline const ContactStatus& ContactSequence::contactStatus(
     const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage < N_);

@@ -19,9 +19,9 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
     dim_passive_(robot.dim_passive()),
-    is_each_contact_active_(robot.is_each_contact_active()),
-    dimf_(robot.dimf()),
-    dimc_(robot.dim_passive()+robot.dimf()) {
+    is_contact_active_(robot.max_point_contacts(), false),
+    dimf_(0),
+    dimc_(robot.dim_passive()) {
   robot.normalizeConfiguration(q);
 }
 
@@ -40,7 +40,7 @@ inline SplitSolution::SplitSolution()
     f_stack_(),
     has_floating_base_(false),
     dim_passive_(0),
-    is_each_contact_active_(),
+    is_contact_active_(),
     dimf_(0),
     dimc_(0) {
 }
@@ -50,10 +50,11 @@ inline SplitSolution::~SplitSolution() {
 }
 
 
-inline void SplitSolution::setContactStatus(const Robot& robot) {
-  is_each_contact_active_ = robot.is_each_contact_active();
-  dimc_ = robot.dim_passive() + robot.dimf();
-  dimf_ = robot.dimf();
+inline void SplitSolution::setContactStatus(
+    const ContactStatus& contact_status) {
+  is_contact_active_ = contact_status.isContactActive();
+  dimc_ = dim_passive_ + contact_status.dimf();
+  dimf_ = contact_status.dimf();
 }
 
 
@@ -104,7 +105,7 @@ SplitSolution::f_stack() const {
 inline void SplitSolution::set_mu_stack() {
   int contact_index = 0;
   int segment_start = dim_passive_;
-  for (const auto is_contact_active : is_each_contact_active_) {
+  for (const auto is_contact_active : is_contact_active_) {
     if (is_contact_active) {
       mu_stack_.template segment<3>(segment_start) = mu_contact[contact_index];
       segment_start += 3;
@@ -117,7 +118,7 @@ inline void SplitSolution::set_mu_stack() {
 inline void SplitSolution::set_mu_contact() {
   int contact_index = 0;
   int segment_start = dim_passive_;
-  for (const auto is_contact_active : is_each_contact_active_) {
+  for (const auto is_contact_active : is_contact_active_) {
     if (is_contact_active) {
       mu_contact[contact_index] = mu_stack_.template segment<3>(segment_start);
       segment_start += 3;
@@ -130,7 +131,7 @@ inline void SplitSolution::set_mu_contact() {
 inline void SplitSolution::set_f_stack() {
   int contact_index = 0;
   int segment_start = 0;
-  for (const auto is_contact_active : is_each_contact_active_) {
+  for (const auto is_contact_active : is_contact_active_) {
     if (is_contact_active) {
       f_stack_.template segment<3>(segment_start) = f[contact_index];
       segment_start += 3;
@@ -143,7 +144,7 @@ inline void SplitSolution::set_f_stack() {
 inline void SplitSolution::set_f() {
   int contact_index = 0;
   int segment_start = 0;
-  for (const auto is_contact_active : is_each_contact_active_) {
+  for (const auto is_contact_active : is_contact_active_) {
     if (is_contact_active) {
       f[contact_index] = f_stack_.template segment<3>(segment_start);
       segment_start += 3;
@@ -167,10 +168,29 @@ inline SplitSolution SplitSolution::Random(const Robot& robot) {
   SplitSolution s(robot);
   s.lmd = Eigen::VectorXd::Random(robot.dimv());
   s.gmm = Eigen::VectorXd::Random(robot.dimv());
-  s.mu_stack() = Eigen::VectorXd::Random(robot.dim_passive()+robot.dimf());
+  s.mu_stack() = Eigen::VectorXd::Random(robot.dim_passive());
   s.set_mu_contact();
   s.a = Eigen::VectorXd::Random(robot.dimv());
-  s.f_stack() = Eigen::VectorXd::Random(robot.dimf());
+  s.q = Eigen::VectorXd::Random(robot.dimq());
+  robot.normalizeConfiguration(s.q);
+  s.v = Eigen::VectorXd::Random(robot.dimv());
+  s.u = Eigen::VectorXd::Random(robot.dimv());
+  s.beta = Eigen::VectorXd::Random(robot.dimv());
+  return s;
+}
+
+
+inline SplitSolution SplitSolution::Random(
+    const Robot& robot, const ContactStatus& contact_status) {
+  SplitSolution s(robot);
+  s.setContactStatus(contact_status);
+  s.lmd = Eigen::VectorXd::Random(robot.dimv());
+  s.gmm = Eigen::VectorXd::Random(robot.dimv());
+  s.mu_stack() 
+      = Eigen::VectorXd::Random(robot.dim_passive()+contact_status.dimf());
+  s.set_mu_contact();
+  s.a = Eigen::VectorXd::Random(robot.dimv());
+  s.f_stack() = Eigen::VectorXd::Random(contact_status.dimf());
   s.set_f();
   s.q = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(s.q);

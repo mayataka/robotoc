@@ -283,24 +283,6 @@ public:
       const pinocchio::Model& model, pinocchio::Data& data, const double coeff,
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 
-
-  ///
-  /// @brief Activate the contact.
-  ///
-  void activate();
-  
-  ///
-  /// @brief Deactivate the contact.
-  ///
-  void deactivate();
-
-  ///
-  /// @brief Check if the contact is active or not. If the contact is active, 
-  /// return true. If the contact is not active, return false.
-  /// @return true if the contact is active. false if the contact is not active.
-  /// 
-  bool isActive() const;
-
   ///
   /// @brief Sets the contact points.
   /// @param[in] contact_point The contact points, i.e., (x,y,z) position of 
@@ -365,7 +347,6 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  bool is_active_;
   int contact_frame_id_, parent_joint_id_, dimv_;
   double friction_coefficient_, restitution_coefficient_;
   Eigen::Vector3d contact_point_;

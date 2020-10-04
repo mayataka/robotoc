@@ -7,6 +7,10 @@
 
 namespace idocp {
 
+///
+/// @class LineSearchFilter
+/// @brief Filter of the line search method to reduce the constraint violation. 
+///
 class LineSearchFilter {
 public:
   LineSearchFilter();

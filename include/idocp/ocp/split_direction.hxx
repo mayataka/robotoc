@@ -13,10 +13,10 @@ inline SplitDirection::SplitDirection(const Robot& robot)
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dim_passive_(robot.dim_passive()), 
-    dimf_(robot.dimf()), 
-    dimc_(robot.dim_passive()+robot.dimf()),
+    dimf_(0), 
+    dimc_(robot.dim_passive()),
     max_dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf()),
-    dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.dimf()) {
+    dimKKT_(5*robot.dimv()+robot.dim_passive()) {
 }
 
 
@@ -38,10 +38,11 @@ inline SplitDirection::~SplitDirection() {
 }
 
 
-inline void SplitDirection::setContactStatus(const Robot& robot) {
-  dimf_ = robot.dimf();
-  dimc_ = robot.dim_passive() + robot.dimf();
-  dimKKT_ = 5*robot.dimv() + robot.dim_passive() + 2*robot.dimf();
+inline void SplitDirection::setContactStatus(
+    const ContactStatus& contact_status) {
+  dimf_ = contact_status.dimf();
+  dimc_ = dim_passive_ + contact_status.dimf();
+  dimKKT_ = 5*dimv_ + dim_passive_ + 2*contact_status.dimf();
 }
 
 
@@ -173,9 +174,25 @@ inline SplitDirection SplitDirection::Random(const Robot& robot) {
   SplitDirection d(robot);
   d.dlmd() = Eigen::VectorXd::Random(robot.dimv());
   d.dgmm() = Eigen::VectorXd::Random(robot.dimv());
-  d.dmu() = Eigen::VectorXd::Random(robot.dim_passive()+robot.dimf());
+  d.dmu() = Eigen::VectorXd::Random(robot.dim_passive());
   d.da() = Eigen::VectorXd::Random(robot.dimv());
-  d.df() = Eigen::VectorXd::Random(robot.dimf());
+  d.dq() = Eigen::VectorXd::Random(robot.dimv());
+  d.dv() = Eigen::VectorXd::Random(robot.dimv());
+  d.du = Eigen::VectorXd::Random(robot.dimv());
+  d.dbeta = Eigen::VectorXd::Random(robot.dimv());
+  return d;
+}
+
+
+inline SplitDirection SplitDirection::Random(
+    const Robot& robot, const ContactStatus& contact_status) {
+  SplitDirection d(robot);
+  d.setContactStatus(contact_status);
+  d.dlmd() = Eigen::VectorXd::Random(robot.dimv());
+  d.dgmm() = Eigen::VectorXd::Random(robot.dimv());
+  d.dmu() = Eigen::VectorXd::Random(robot.dim_passive()+contact_status.dimf());
+  d.da() = Eigen::VectorXd::Random(robot.dimv());
+  d.df() = Eigen::VectorXd::Random(contact_status.dimf());
   d.dq() = Eigen::VectorXd::Random(robot.dimv());
   d.dv() = Eigen::VectorXd::Random(robot.dimv());
   d.du = Eigen::VectorXd::Random(robot.dimv());

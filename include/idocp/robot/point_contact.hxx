@@ -308,21 +308,6 @@ inline void PointContact::computeContactDerivative(
 }
 
 
-inline void PointContact::activate() {
-  is_active_ = true;
-}
-
-
-inline void PointContact::deactivate() {
-  is_active_ = false;
-}
-
-
-inline bool PointContact::isActive() const {
-  return is_active_;
-}
-
-
 inline void PointContact::setContactPoint(
     const Eigen::Vector3d& contact_point) {
   contact_point_ = contact_point;

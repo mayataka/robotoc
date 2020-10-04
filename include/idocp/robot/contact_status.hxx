@@ -7,10 +7,11 @@
 
 namespace idocp {
 
-inline ContactStatus::ContactStatus(const Robot& robot)
-  : is_contact_active_(robot.max_point_contacts(), false),
+inline ContactStatus::ContactStatus(const int max_point_contacts)
+  : is_contact_active_(max_point_contacts, false),
     dimf_(0),
-    max_point_contacts_(robot.max_point_contacts()),
+    max_point_contacts_(max_point_contacts),
+    num_active_contacts_(0),
     has_active_contacts_(false) {
 }
 
@@ -19,6 +20,7 @@ inline ContactStatus::ContactStatus()
   : is_contact_active_(),
     dimf_(0),
     max_point_contacts_(0),
+    num_active_contacts_(0),
     has_active_contacts_(false) {
 }
  
@@ -32,13 +34,8 @@ inline bool ContactStatus::isContactActive(const int contact_index) const {
 }
 
 
-inline const ContactStatus::std::vector<bool>& isContactActive() const {
+inline const std::vector<bool>& ContactStatus::isContactActive() const {
   return is_contact_active_;
-}
-
-
-inline int ContactStatus::dimf() const {
-  return dimf_;
 }
 
 
@@ -47,13 +44,32 @@ inline bool ContactStatus::hasActiveContacts() const {
 }
 
 
+inline int ContactStatus::dimf() const {
+  return dimf_;
+}
+
+
+inline int ContactStatus::num_active_contacts() const {
+  return num_active_contacts_;
+}
+
+
+inline int ContactStatus::max_point_contacts() const {
+  return max_point_contacts_;
+}
+
+
 inline void ContactStatus::setContactStatus(
     const std::vector<bool>& is_contact_active) {
   assert(is_contact_active.size() == max_point_contacts_);
   is_contact_active_ = is_contact_active;
   dimf_ = 0;
+  num_active_contacts_ = 0;
   for (const auto e : is_contact_active) {
-    if (e) dimf_ += 3;
+    if (e) {
+      dimf_ += 3;
+      ++num_active_contacts_;
+    }
   }
   set_has_active_contacts();
 }
@@ -65,6 +81,7 @@ inline void ContactStatus::activateContact(const int contact_index) {
   if (!is_contact_active_[contact_index]) {
     is_contact_active_[contact_index] = true;
     dimf_ += 3;
+    ++num_active_contacts_;
   }
   set_has_active_contacts();
 }
@@ -76,6 +93,7 @@ inline void ContactStatus::deactivateContact(const int contact_index) {
   if (is_contact_active_[contact_index]) {
     is_contact_active_[contact_index] = false;
     dimf_ -= 3;
+    --num_active_contacts_;
   }
   set_has_active_contacts();
 }
@@ -90,6 +108,7 @@ inline void ContactStatus::activateContacts(
     if (!is_contact_active_[index]) {
       is_contact_active_[index] = true;
       dimf_ += 3;
+      ++num_active_contacts_;
     }
   }
   set_has_active_contacts();
@@ -105,6 +124,7 @@ inline void ContactStatus::deactivateContacts(
     if (is_contact_active_[index]) {
       is_contact_active_[index] = false;
       dimf_ -= 3;
+      --num_active_contacts_;
     }
   }
   set_has_active_contacts();
@@ -112,7 +132,7 @@ inline void ContactStatus::deactivateContacts(
 
 
 inline void ContactStatus::set_has_active_contacts() {
-  if (dimf_ > 0) {
+  if (num_active_contacts_ > 0) {
     has_active_contacts_ = true;
   }
   else {

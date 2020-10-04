@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 
 
 namespace idocp {
@@ -53,9 +54,9 @@ public:
   ///
   /// @brief Set contact status from robot model, i.e., set dimension of the 
   /// contacts and equality constraints.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status.
   ///
-  void setContactStatus(const Robot& robot);
+  void setContactStatus(const ContactStatus& contact_status);
 
   ///
   /// @brief KKT residual. 

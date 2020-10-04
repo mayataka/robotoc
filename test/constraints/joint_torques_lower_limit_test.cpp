@@ -79,7 +79,6 @@ TEST_F(JointTorquesLowerLimitTest, setSlackAndDualFixedBase) {
   ConstraintComponentData data(limit.dimc());
   const int dimq = fixed_base_robot_.dimq();
   const int dimv = fixed_base_robot_.dimv();
-  const int dimf = fixed_base_robot_.dimf();
   SplitSolution s(fixed_base_robot_);
   Eigen::VectorXd umin = - fixed_base_robot_.jointEffortLimit();
   ASSERT_EQ(dimq, fixed_base_robot_.jointEffortLimit().size());
@@ -120,7 +119,6 @@ TEST_F(JointTorquesLowerLimitTest, setSlackAndDualFixedBase2) {
   ConstraintComponentData data(limit.dimc());
   const int dimq = fixed_base_robot_.dimq();
   const int dimv = fixed_base_robot_.dimv();
-  const int dimf = fixed_base_robot_.dimf();
   SplitSolution s(fixed_base_robot_);
   ASSERT_EQ(dimq, fixed_base_robot_.jointEffortLimit().size());
   s = SplitSolution::Random(fixed_base_robot_);
@@ -155,7 +153,6 @@ TEST_F(JointTorquesLowerLimitTest, setSlackAndDualFloatingBase) {
   ConstraintComponentData data(limit.dimc());
   const int dimq = floating_base_robot_.dimq();
   const int dimv = floating_base_robot_.dimv();
-  const int dimf = floating_base_robot_.dimf();
   SplitSolution s(floating_base_robot_);
   Eigen::VectorXd umin = - floating_base_robot_.jointEffortLimit();
   const int dimc = floating_base_robot_.jointEffortLimit().size();
@@ -198,7 +195,6 @@ TEST_F(JointTorquesLowerLimitTest, setSlackAndDualFloatingBase2) {
   ConstraintComponentData data(limit.dimc());
   const int dimq = floating_base_robot_.dimq();
   const int dimv = floating_base_robot_.dimv();
-  const int dimf = floating_base_robot_.dimf();
   SplitSolution s(floating_base_robot_);
   const int dimc = floating_base_robot_.jointEffortLimit().size();
   ASSERT_EQ(dimc+6, dimv);
@@ -234,7 +230,6 @@ TEST_F(JointTorquesLowerLimitTest, condenseSlackAndDualFixedBase) {
   ConstraintComponentData data(limit.dimc());
   const int dimq = fixed_base_robot_.dimq();
   const int dimv = fixed_base_robot_.dimv();
-  const int dimf = fixed_base_robot_.dimf();
   SplitSolution s(fixed_base_robot_);
   Eigen::VectorXd umin = - fixed_base_robot_.jointEffortLimit();
   ASSERT_EQ(dimq, fixed_base_robot_.jointEffortLimit().size());
@@ -315,7 +310,6 @@ TEST_F(JointTorquesLowerLimitTest, condenseSlackAndDualFixedBase2) {
   ConstraintComponentData data(limit.dimc());
   const int dimq = fixed_base_robot_.dimq();
   const int dimv = fixed_base_robot_.dimv();
-  const int dimf = fixed_base_robot_.dimf();
   SplitSolution s(fixed_base_robot_);
   ASSERT_EQ(dimq, fixed_base_robot_.jointEffortLimit().size());
   s = SplitSolution::Random(fixed_base_robot_);
@@ -378,7 +372,6 @@ TEST_F(JointTorquesLowerLimitTest, condenseSlackAndDualFloatingBase) {
   ConstraintComponentData data(limit.dimc());
   const int dimq = floating_base_robot_.dimq();
   const int dimv = floating_base_robot_.dimv();
-  const int dimf = floating_base_robot_.dimf();
   SplitSolution s(floating_base_robot_);
   Eigen::VectorXd umin = - floating_base_robot_.jointEffortLimit();
   const int dimc = floating_base_robot_.jointEffortLimit().size();
@@ -459,7 +452,6 @@ TEST_F(JointTorquesLowerLimitTest, condenseSlackAndDualFloatingBase2) {
   ConstraintComponentData data(limit.dimc());
   const int dimq = floating_base_robot_.dimq();
   const int dimv = floating_base_robot_.dimv();
-  const int dimf = floating_base_robot_.dimf();
   SplitSolution s(floating_base_robot_);
   const int dimc = floating_base_robot_.jointEffortLimit().size();
   s = SplitSolution::Random(floating_base_robot_);

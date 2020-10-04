@@ -4,10 +4,16 @@
 #include <vector>
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 
 
 namespace idocp {
 
+  ///
+  /// @class ContactSequence 
+  /// @brief Contact sequence, i.e., sequence of contact status over the 
+  /// horizon. 
+  ///
 class ContactSequence {
 public:
   ///
@@ -86,7 +92,6 @@ public:
                           const int time_stage_begin, 
                           const int time_stage_end);
 
-
   ///
   /// @brief Deactivate contacts over specified time steps 
   /// (from time_stage_begin to time_stage_end). 
@@ -94,11 +99,11 @@ public:
   /// @param[in] time_stage_begin Start time stage. 
   /// @param[in] time_stage_end Last time stage. 
   ///
-  const std::vector<bool>& contactStatus(const int time_stage) const;
+  const ContactStatus& contactStatus(const int time_stage) const;
 
 private:
   int max_point_contacts_, N_;
-  std::vector<std::vector<bool>> contact_sequence_;
+  std::vector<ContactStatus> contact_sequence_;
 
 };
 

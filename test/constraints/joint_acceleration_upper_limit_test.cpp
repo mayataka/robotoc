@@ -81,7 +81,6 @@ TEST_F(JointAccelerationUpperLimitTest, setSlackAndDualFixedBase) {
   ConstraintComponentData data(limit.dimc());
   const int dimq = fixed_base_robot_.dimq();
   const int dimv = fixed_base_robot_.dimv();
-  const int dimf = fixed_base_robot_.dimf();
   SplitSolution s(fixed_base_robot_);
   Eigen::VectorXd amax = amax_fixed;
   ASSERT_EQ(dimq, amax_fixed.size());
@@ -122,7 +121,6 @@ TEST_F(JointAccelerationUpperLimitTest, setSlackAndDualFloatingBase) {
   ConstraintComponentData data(limit.dimc());
   const int dimq = floating_base_robot_.dimq();
   const int dimv = floating_base_robot_.dimv();
-  const int dimf = floating_base_robot_.dimf();
   SplitSolution s(floating_base_robot_);
   Eigen::VectorXd amax = amax_floating;
   const int dimc = amax_floating.size();
@@ -165,7 +163,6 @@ TEST_F(JointAccelerationUpperLimitTest, condenseSlackAndDualFixedBase) {
   ConstraintComponentData data(limit.dimc());
   const int dimq = fixed_base_robot_.dimq();
   const int dimv = fixed_base_robot_.dimv();
-  const int dimf = fixed_base_robot_.dimf();
   SplitSolution s(fixed_base_robot_);
   Eigen::VectorXd amax = amax_fixed;
   ASSERT_EQ(dimq, amax_fixed.size());
@@ -246,7 +243,6 @@ TEST_F(JointAccelerationUpperLimitTest, condenseSlackAndDualFloatingBase) {
   ConstraintComponentData data(limit.dimc());
   const int dimq = floating_base_robot_.dimq();
   const int dimv = floating_base_robot_.dimv();
-  const int dimf = floating_base_robot_.dimf();
   SplitSolution s(floating_base_robot_);
   Eigen::VectorXd amax = amax_floating;
   const int dimc = amax_floating.size();

@@ -55,9 +55,9 @@ public:
   ///
   /// @brief Set contact status from robot model, i.e., set dimension of the 
   /// contacts and equality constraints.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status.
   ///
-  void setContactStatus(const Robot& robot);
+  void setContactStatus(const ContactStatus& contact_status);
 
   ///
   /// @brief Stack of Lagrange multiplier with respect to equality constraints 
@@ -221,6 +221,13 @@ public:
   ///
   static SplitSolution Random(const Robot& robot);
 
+  ///
+  /// @brief Generates split solution filled randomly.
+  /// @return Split solution filled randomly.
+  ///
+  static SplitSolution Random(const Robot& robot, 
+                              const ContactStatus& contact_status);
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
@@ -237,7 +244,7 @@ private:
   int dim_passive_;
 
   /// @brief Dimension of passive joints. 
-  std::vector<bool> is_each_contact_active_;
+  std::vector<bool> is_contact_active_;
 
   /// @brief Dimension of contact forces at the current contact status. 
   int dimf_;

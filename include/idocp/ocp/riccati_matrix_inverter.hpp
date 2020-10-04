@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 
 
 namespace idocp {
@@ -33,7 +34,7 @@ public:
   // Use default move assign operator.
   RiccatiMatrixInverter& operator=(RiccatiMatrixInverter&&) noexcept = default;
 
-  void setContactStatus(const Robot& robot);
+  void setContactStatus(const ContactStatus& contact_status);
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void invert(const Eigen::MatrixBase<MatrixType1>& G,
@@ -55,7 +56,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int dimv_, dimf_, dimc_, dimaf_;
+  int dimv_, dim_passive_, dimf_, dimc_, dimaf_;
   Eigen::MatrixXd G_inv_, Sc_, G_inv_Caf_trans_;
 };
 

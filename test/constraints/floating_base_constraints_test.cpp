@@ -5,6 +5,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 #include "idocp/constraints/joint_position_upper_limit.hpp"
@@ -25,12 +26,14 @@ protected:
     std::vector<int> contact_frames = {14, 24, 34, 44};
     robot = Robot(urdf, contact_frames);
     std::random_device rnd;
+    contact_status = ContactStatus(contact_frames.size());
+    std::vector<bool> is_contact_active;
     for (int i=0; i<contact_frames.size(); ++i) {
-      contact_status.push_back(rnd()%2==0);
+      is_contact_active.push_back(rnd()%2==0);
     }
-    robot.setContactStatus(contact_status);
-    s = SplitSolution::Random(robot);
-    d = SplitDirection::Random(robot);
+    contact_status.setContactStatus(is_contact_active);
+    s = SplitSolution::Random(robot, contact_status);
+    d = SplitDirection::Random(robot, contact_status);
     dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     constraints = std::make_shared<Constraints>();
@@ -66,7 +69,7 @@ protected:
   double dtau, t;
   std::string urdf;
   Robot robot;
-  std::vector<bool> contact_status;
+  ContactStatus contact_status;
   std::shared_ptr<Constraints> constraints;
   ConstraintsData data;
   SplitSolution s;

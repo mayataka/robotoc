@@ -61,7 +61,6 @@ protected:
 TEST_F(FixedBasePointContactTest, defaultConstructor) {
   PointContact contact;
   // Check the default constructor works appropriately.
-  EXPECT_FALSE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), 0);
   EXPECT_EQ(contact.parent_joint_id(), 0);
   EXPECT_DOUBLE_EQ(contact.frictionCoefficient(), 0);
@@ -73,7 +72,6 @@ TEST_F(FixedBasePointContactTest, defaultConstructor) {
 TEST_F(FixedBasePointContactTest, constructor) {
   PointContact contact(model_, contact_frame_id_, friction_coeff_, restitution_coeff_);
   // Check the constructor works appropriately.
-  EXPECT_FALSE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
   EXPECT_DOUBLE_EQ(contact.frictionCoefficient(), friction_coeff_);
@@ -89,11 +87,6 @@ TEST_F(FixedBasePointContactTest, constructor) {
   EXPECT_DOUBLE_EQ(friction_coeff_tmp, contact.frictionCoefficient());
   EXPECT_DOUBLE_EQ(restitution_coeff_tmp, contact.restitutionCoefficient());
   EXPECT_TRUE(contact_point_tmp.isApprox(contact.contactPoint()));
-  // Check activate works appropriately.
-  contact.activate();
-  EXPECT_TRUE(contact.isActive());
-  contact.deactivate();
-  EXPECT_FALSE(contact.isActive());
   // Check the contact point assignment by kinematics.
   pinocchio::forwardKinematics(model_, data_, q_);
   pinocchio::updateFramePlacement(model_, data_, contact_frame_id_);
@@ -106,12 +99,10 @@ TEST_F(FixedBasePointContactTest, constructor) {
 
 TEST_F(FixedBasePointContactTest, copyConstructor) {
   PointContact contact_ref(model_, contact_frame_id_, friction_coeff_, restitution_coeff_);
-  contact_ref.activate();
   const Eigen::Vector3d contact_point_ref = Eigen::Vector3d::Random();
   contact_ref.setContactPoint(contact_point_ref);
   PointContact contact(contact_ref);
   // Check the constructor works well.
-  EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
   EXPECT_DOUBLE_EQ(contact.frictionCoefficient(), friction_coeff_);
@@ -122,13 +113,11 @@ TEST_F(FixedBasePointContactTest, copyConstructor) {
 
 TEST_F(FixedBasePointContactTest, assign) {
   PointContact contact_ref(model_, contact_frame_id_, friction_coeff_, restitution_coeff_);
-  contact_ref.activate();
   const Eigen::Vector3d contact_point_ref = Eigen::Vector3d::Random();
   contact_ref.setContactPoint(contact_point_ref);
   PointContact contact;
   contact = contact_ref;
   // Check the constructor works well.
-  EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
   EXPECT_DOUBLE_EQ(contact.frictionCoefficient(), friction_coeff_);
@@ -139,13 +128,11 @@ TEST_F(FixedBasePointContactTest, assign) {
 
 TEST_F(FixedBasePointContactTest, moveAssign) {
   PointContact contact_ref(model_, contact_frame_id_, friction_coeff_, restitution_coeff_);
-  contact_ref.activate();
   const Eigen::Vector3d contact_point_ref = Eigen::Vector3d::Random();
   contact_ref.setContactPoint(contact_point_ref);
   PointContact contact;
   contact = std::move(contact_ref);
   // Check the constructor works well.
-  EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
   EXPECT_DOUBLE_EQ(contact.frictionCoefficient(), friction_coeff_);
@@ -156,12 +143,10 @@ TEST_F(FixedBasePointContactTest, moveAssign) {
 
 TEST_F(FixedBasePointContactTest, moveConstructor) {
   PointContact contact_ref(model_, contact_frame_id_, friction_coeff_, restitution_coeff_);
-  contact_ref.activate();
   const Eigen::Vector3d contact_point_ref = Eigen::Vector3d::Random();
   contact_ref.setContactPoint(contact_point_ref);
   PointContact contact(std::move(contact_ref));
   // Check the constructor works well.
-  EXPECT_TRUE(contact.isActive());
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id_);
   EXPECT_EQ(contact.parent_joint_id(), model_.frames[contact_frame_id_].parent);
   EXPECT_DOUBLE_EQ(contact.frictionCoefficient(), friction_coeff_);

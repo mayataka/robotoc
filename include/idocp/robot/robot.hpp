@@ -20,6 +20,7 @@
 
 #include "idocp/robot/point_contact.hpp"
 #include "idocp/robot/floating_base.hpp"
+#include "idocp/robot/contact_status.hpp"
 
 
 namespace idocp {
@@ -201,6 +202,7 @@ public:
   /// @brief Computes the residual of the contact constriants represented by 
   /// Baumgarte's stabilization method. Before calling this function, 
   /// updateKinematics() must be called.
+  /// @param[in] contact_status Current contact status.
   /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
   /// Must be positive.
   /// @param[out] baumgarte_residual 3-dimensional vector where the result is 
@@ -208,13 +210,14 @@ public:
   ///
   template <typename VectorType>
   void computeBaumgarteResidual(
-      const double time_step,
+      const ContactStatus& contact_status, const double time_step,
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
   /// @brief Computes the residual of the contact constriants represented by 
   /// Baumgarte's stabilization method multiplied by coeff. Before calling this 
   /// function, updateKinematics() must be called.
+  /// @param[in] contact_status Current contact status.
   /// @param[in] coeff The coefficient that is multiplied to the result.
   /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
   /// Must be positive.
@@ -223,13 +226,15 @@ public:
   ///
   template <typename VectorType>
   void computeBaumgarteResidual(
-      const double coeff, const double time_step,
+      const ContactStatus& contact_status, const double coeff, 
+      const double time_step,
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
   /// @brief Computes the partial derivatives of the contact constriants 
   /// represented by the Baumgarte's stabilization method. 
   /// Before calling this function, updateKinematics() must be called. 
+  /// @param[in] contact_status Current contact status.
   /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
   /// Must be positive.
   /// @param[out] baumgarte_partial_dq The result of the partial derivative  
@@ -244,7 +249,7 @@ public:
   ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
-      const double time_step,
+      const ContactStatus& contact_status,  const double time_step,
       const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
@@ -254,6 +259,7 @@ public:
   /// represented by the Baumgarte's stabilization method. The result is 
   /// multiplied by coeff. Before calling this function, updateKinematics() 
   /// must be called. 
+  /// @param[in] contact_status Current contact status.
   /// @param[in] coeff The coefficient that is multiplied to the resultant 
   /// Jacobians.
   /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
@@ -270,7 +276,8 @@ public:
   ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
-      const double coeff, const double time_step,
+      const ContactStatus& contact_status, const double coeff, 
+      const double time_step,
       const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
@@ -278,16 +285,19 @@ public:
   ///
   /// @brief Computes the residual of the contact velocity. Before calling this  
   /// function, updateKinematics() must be called.
+  /// @param[in] contact_status Current contact status.
   /// @param[out] velocity_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
   void computeContactVelocityResidual(
+      const ContactStatus& contact_status, 
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
   /// @brief Computes the partial derivatives of the contact velocity 
   /// Before calling this function, updateKinematics() must be called. 
+  /// @param[in] contact_status Current contact status.
   /// @param[out] velocity_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
@@ -297,47 +307,54 @@ public:
   ///
   template <typename MatrixType1, typename MatrixType2>
   void computeContactVelocityDerivatives(
+      const ContactStatus& contact_status, 
       const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv);
 
   ///
   /// @brief Computes the residual of the contact position constriants.
   /// Before calling this function, updateKinematics() must be called.
+  /// @param[in] contact_status Current contact status.
   /// @param[out] contact_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
   void computeContactResidual(
+      const ContactStatus& contact_status, 
       const Eigen::MatrixBase<VectorType>& contact_residual) const;
 
   ///
   /// @brief Computes the residual of the contact position constriants.
   /// Before calling this function, updateKinematics() must be called.
+  /// @param[in] contact_status Current contact status.
   /// @param[in] coeff The coefficient that is multiplied to the result.
   /// @param[out] contact_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
   void computeContactResidual(
-      const double coeff,
+      const ContactStatus& contact_status, const double coeff,
       const Eigen::MatrixBase<VectorType>& contact_residual) const;
 
   ///
   /// @brief Computes the partial derivatives of the contact position 
   /// constriants with respect to the configuration. 
   /// Before calling this function, updateKinematics() must be called. 
+  /// @param[in] contact_status Current contact status.
   /// @param[out] baumgarte_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
   ///
   template <typename MatrixType>
   void computeContactDerivative(
+      const ContactStatus& contact_status, 
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 
   ///
   /// @brief Computes the partial derivatives of the contact position 
   /// constriants with respect to the configuration. 
   /// Before calling this function, updateKinematics() must be called. 
+  /// @param[in] contact_status Current contact status.
   /// @param[in] coeff The coefficient that is multiplied to the result.
   /// @param[out] baumgarte_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
@@ -345,7 +362,7 @@ public:
   ///
   template <typename MatrixType>
   void computeContactDerivative(
-      const double coeff,
+      const ContactStatus& contact_status, const double coeff,
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 
   ///
@@ -393,19 +410,14 @@ public:
   double restitutionCoefficient(const int contact_index) const;
 
   ///
-  /// @brief Activate and deactivate the each contact.
-  /// @param[in] is_each_contact_active Bool variables representing wheather 
-  /// each contact is active or not. Size must be Robot::max_point_contacts().
-  /// 
-  void setContactStatus(const std::vector<bool>& is_each_contact_active);
-
-  ///
   /// @brief Set contact forces for each active contacts. Before calling this 
   /// function, update contact status by calling setContactStatus().
+  /// @param[in] contact_status Current contact status.
   /// @param[in] f The stack of the contact forces represented in the local 
   /// coordinate of the contact frame. Size must be Robot::max_point_contacts(). 
   /// 
-  void setContactForces(const std::vector<Eigen::Vector3d>& f);
+  void setContactForces(const ContactStatus& contact_status, 
+                        const std::vector<Eigen::Vector3d>& f);
 
   ///
   /// @brief Computes inverse dynamics, i.e., generalized torques corresponding 
@@ -430,6 +442,7 @@ public:
   /// inverse dynamics with respect to the given configuration, velocity, and
   /// acceleration. If the robot has contacts, update contact forces by 
   /// calling setContactForces().
+  /// @param[in] contact_status Current contact status.
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Generalized velocity. Size must be Robot::dimv().
   /// @param[in] a Generalized acceleration. Size must be Robot::dimv().
@@ -494,12 +507,14 @@ public:
   /// @brief Computes the partial dervative of the function of inverse dynamics 
   /// with respect to the contact forces. Before calling this function, call 
   /// updateKinematics().
+  /// @param[in] contact_status Current contact status.
   /// @param[out] dRNEA_partial_dfext The partial derivative of inverse dynamics 
   /// with respect to the contact forces. Rows must be at least Robot::dimf(). 
   /// Cols must be Robot::dimv().
   ///   
   template <typename MatrixType>
   void dRNEAPartialdFext(
+      const ContactStatus& contact_status,
       const Eigen::MatrixBase<MatrixType>& dRNEA_partial_dfext);
 
   ///
@@ -611,12 +626,6 @@ public:
   int max_dimf() const;
 
   ///
-  /// @brief Returns the current dimension of the contacts.
-  /// @return The current dimension of the contacts.
-  /// 
-  int dimf() const;
-
-  ///
   /// @brief Returns the dimensiton of the generalized torques corresponding to 
   /// the passive joints.
   /// @return The dimensiton of the generalized torques corresponding to the 
@@ -635,32 +644,6 @@ public:
   /// @return The maximum number of the contacts.
   /// 
   int max_point_contacts() const;
-
-  ///
-  /// @brief Returns true if the robot has active contacts and false if not.
-  /// @returns true if the robot has active contacts and false if not.
-  /// 
-  bool has_active_contacts() const;
-
-  ///
-  /// @brief Returns the number of the active contacts.
-  /// @return The number of the active contacts.
-  /// 
-  int num_active_contacts() const;
-
-  ///
-  /// @brief Returns contact status.
-  /// @return Vector of bool representing contact status.
-  /// 
-  std::vector<bool> is_each_contact_active() const;
-
-  ///
-  /// @brief Returns true if contact[contact_index] is active. Returns false if 
-  // contact[contact_index] is not active.
-  /// @param[in] contact_index The contact index of interested.
-  /// @return true if the contact is active. false if not.
-  /// 
-  bool is_contact_active(const int contact_index) const;
 
   ///
   /// @brief Prints the robot model into console.
