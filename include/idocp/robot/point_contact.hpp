@@ -196,40 +196,33 @@ public:
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
 
   ///
-  /// @brief Computes the residual of the impulse velocity constraints 
-  /// considered by the Baumgarte's stabilization method. Before calling this 
-  /// function, you have to update the kinematics of the model in 
-  /// pinocchio::Data.
-  /// @param[in] model Pinocchio model of the robot.
-  /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[out] baumgarte_residual Residual of the Bamgarte's velocity 
-  /// constraint.
-  /// 
-  template <typename VectorType>
-  void computeBaumgarteImpulseResidual(
-      const pinocchio::Model& model, const pinocchio::Data& data, 
-      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
-
-  ///
-  /// @brief Computes the partial derivatives of the contact velocity 
-  /// constraints considered by the Baumgarte's stabilization method. 
+  /// @brief Computes the residual of the contact velocity constraints 
   /// Before calling this function, you have to update the kinematics of the 
   /// model in pinocchio::Data.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
-  /// with respect to the configuaration. Size must be 3 x Robot::dimv().
-  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
-  /// with respect to the velocity. Size must be 3 x Robot::dimv().
-  /// @param[out] baumgarte_partial_ddv The result of the partial derivative  
-  /// with respect to the change in the velocity. Size must be 3 x Robot::dimv().
+  /// @param[out] velocity_residual Residual of the contact velocity constraint.
   /// 
-  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void computeBaumgarteImpulseDerivatives(
+  template <typename VectorType>
+  void computeContactVelocityResidual(
+      const pinocchio::Model& model, const pinocchio::Data& data, 
+      const Eigen::MatrixBase<VectorType>& velocity_residual) const;
+
+  ///
+  /// @brief Computes the partial derivatives of the contact velocity 
+  /// constraints. Before calling this function, you have to update the  
+  /// kinematics of the model in pinocchio::Data.
+  /// @param[in] model Pinocchio model of the robot.
+  /// @param[in] data Pinocchio data of the robot kinematics.
+  /// @param[out] velocity_partial_dq The result of the partial derivative  
+  /// with respect to the configuaration. Size must be 3 x Robot::dimv().
+  /// @param[out] velocity_partial_dv The result of the partial derivative  
+  /// with respect to the velocity. Size must be 3 x Robot::dimv().
+  template <typename MatrixType1, typename MatrixType2>
+  void computeContactVelocityDerivatives(
       const pinocchio::Model& model, pinocchio::Data& data,
-      const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
-      const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
-      const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_ddv);
+      const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
+      const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv);
 
   ///
   /// @brief Computes the residual of the contact position constraints.
@@ -242,6 +235,21 @@ public:
   template <typename VectorType>
   void computeContactResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
+      const Eigen::MatrixBase<VectorType>& contact_residual) const;
+
+  ///
+  /// @brief Computes the residual of the contact position constraints.
+  /// Before calling this function, you have to update the kinematics of the  
+  /// model in pinocchio::Data.
+  /// @param[in] model Pinocchio model of the robot.
+  /// @param[in] data Pinocchio data of the robot kinematics.
+  /// @param[in] coeff Coefficient multiplied to the resultant Jacobian.
+  /// @param[out] contact_residual Residual of the contact constraint.
+  /// 
+  template <typename VectorType>
+  void computeContactResidual(
+      const pinocchio::Model& model, const pinocchio::Data& data, 
+      const double coeff, 
       const Eigen::MatrixBase<VectorType>& contact_residual) const;
 
   ///
@@ -258,6 +266,23 @@ public:
   void computeContactDerivative(
       const pinocchio::Model& model, pinocchio::Data& data,
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
+
+  ///
+  /// @brief Computes the partial derivative of the contact position  
+  /// constraint with respect to the configuration. 
+  /// Before calling this function, you have to update the kinematics of the 
+  /// model in pinocchio::Data.
+  /// @param[in] model Pinocchio model of the robot.
+  /// @param[in] data Pinocchio data of the robot kinematics.
+  /// @param[in] coeff Coefficient multiplied to the resultant Jacobian.
+  /// @param[out] contact_partial_dq The result of the partial derivative  
+  /// with respect to the configuaration. Size must be 3 x Robot::dimv().
+  /// 
+  template <typename MatrixType>
+  void computeContactDerivative(
+      const pinocchio::Model& model, pinocchio::Data& data, const double coeff,
+      const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
+
 
   ///
   /// @brief Activate the contact.

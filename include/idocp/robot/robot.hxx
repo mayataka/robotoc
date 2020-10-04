@@ -232,14 +232,14 @@ inline void Robot::computeBaumgarteDerivatives(
 
 
 template <typename VectorType>
-inline void Robot::computeBaumgarteImpulseResidual(
-    const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
+inline void Robot::computeContactVelocityResidual(
+      const Eigen::MatrixBase<VectorType>& velocity_residual) const {
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
-      point_contacts_[i].computeBaumgarteImpulseResidual(
+      point_contacts_[i].computeContactVelocityResidual(
           model_, data_,
-          (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
+          (const_cast<Eigen::MatrixBase<VectorType>&>(velocity_residual))
               .template segment<3>(3*num_active_contacts));
       ++num_active_contacts;
     }
@@ -247,24 +247,20 @@ inline void Robot::computeBaumgarteImpulseResidual(
 }
 
 
-template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-inline void Robot::computeBaumgarteImpulseDerivatives(
-    const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
-    const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
-    const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_ddv) {
-  assert(baumgarte_partial_dq.cols() == dimv_);
-  assert(baumgarte_partial_dv.cols() == dimv_);
-  assert(baumgarte_partial_ddv.cols() == dimv_);
+template <typename MatrixType1, typename MatrixType2>
+inline void Robot::computeContactVelocityDerivatives(
+    const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
+    const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv) {
+  assert(velocity_partial_dq.cols() == dimv_);
+  assert(velocity_partial_dv.cols() == dimv_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (point_contacts_[i].isActive()) {
-      point_contacts_[i].computeBaumgarteImpulseDerivatives(
+      point_contacts_[i].computeContactVelocityDerivatives(
           model_, data_, 
-          (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
+          (const_cast<Eigen::MatrixBase<MatrixType1>&>(velocity_partial_dq))
               .block(3*num_active_contacts, 0, 3, dimv_),
-          (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))
-              .block(3*num_active_contacts, 0, 3, dimv_),
-          (const_cast<Eigen::MatrixBase<MatrixType3>&>(baumgarte_partial_ddv))
+          (const_cast<Eigen::MatrixBase<MatrixType2>&>(velocity_partial_dv))
               .block(3*num_active_contacts, 0, 3, dimv_));
       ++num_active_contacts;
     }
@@ -274,28 +270,69 @@ inline void Robot::computeBaumgarteImpulseDerivatives(
 
 template <typename VectorType>
 inline void Robot::computeContactResidual(
-    const int contact_index,
     const Eigen::MatrixBase<VectorType>& contact_residual) const {
-  assert(contact_index >= 0);
-  assert(contact_index < point_contacts_.size());
-  assert(contact_residual.size() == 3);
-  point_contacts_[contact_index].computeContactResidual(
-      model_, data_,
-      (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual)));
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeContactResidual(
+          model_, data_,
+          (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
+              .template segment<3>(3*num_active_contacts));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename VectorType>
+inline void Robot::computeContactResidual(
+    const double coeff,
+    const Eigen::MatrixBase<VectorType>& contact_residual) const {
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeContactResidual(
+          model_, data_, coeff,
+          (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
+              .template segment<3>(3*num_active_contacts));
+      ++num_active_contacts;
+    }
+  }
 }
 
 
 template <typename MatrixType>
 inline void Robot::computeContactDerivative(
-    const int contact_index,
     const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
-  assert(contact_index >= 0);
-  assert(contact_index < point_contacts_.size());
-  assert(contact_partial_dq.rows() == 3);
   assert(contact_partial_dq.cols() == dimv_);
-  point_contacts_[contact_index].computeContactDerivative(
-      model_, data_, 
-      (const_cast<Eigen::MatrixBase<MatrixType>&>(contact_partial_dq)));
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeContactDerivative(
+          model_, data_, 
+          (const_cast<Eigen::MatrixBase<MatrixType>&>(contact_partial_dq))
+              .block(3*num_active_contacts, 0, 3, dimv_));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename MatrixType>
+inline void Robot::computeContactDerivative(
+    const double coeff,
+    const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
+  assert(contact_partial_dq.cols() == dimv_);
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (point_contacts_[i].isActive()) {
+      point_contacts_[i].computeContactDerivative(
+          model_, data_, coeff,
+          (const_cast<Eigen::MatrixBase<MatrixType>&>(contact_partial_dq))
+              .block(3*num_active_contacts, 0, 3, dimv_));
+      ++num_active_contacts;
+    }
+  }
 }
 
 

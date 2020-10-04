@@ -276,62 +276,76 @@ public:
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
 
   ///
-  /// @brief Computes the residual of the impulse constriants represented by 
-  /// Baumgarte's stabilization method. Before calling this function, 
-  /// updateKinematics() must be called.
-  /// @param[out] baumgarte_residual 3-dimensional vector where the result is 
+  /// @brief Computes the residual of the contact velocity. Before calling this  
+  /// function, updateKinematics() must be called.
+  /// @param[out] velocity_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
-  void computeBaumgarteImpulseResidual(
+  void computeContactVelocityResidual(
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
-  /// @brief Computes the partial derivatives of the impulse constriants 
-  /// represented by the Baumgarte's stabilization method. 
+  /// @brief Computes the partial derivatives of the contact velocity 
   /// Before calling this function, updateKinematics() must be called. 
-  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
-  /// Must be positive.
-  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
+  /// @param[out] velocity_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
-  /// @param[out] baumgarte_partial_dv The result of the partial derivative  
+  /// @param[out] velocity_partial_dv The result of the partial derivative  
   /// with respect to the velocity. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
-  /// @param[out] baumgarte_partial_ddv The result of the partial derivative  
-  /// with respect to the change in velocity. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
   ///
-  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void computeBaumgarteImpulseDerivatives(
-      const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
-      const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
-      const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_ddv);
+  template <typename MatrixType1, typename MatrixType2>
+  void computeContactVelocityDerivatives(
+      const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
+      const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv);
 
   ///
   /// @brief Computes the residual of the contact position constriants.
   /// Before calling this function, updateKinematics() must be called.
-  /// @param[in] contact_index Contact index of interest.
   /// @param[out] contact_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
   void computeContactResidual(
-      const int contact_index,
+      const Eigen::MatrixBase<VectorType>& contact_residual) const;
+
+  ///
+  /// @brief Computes the residual of the contact position constriants.
+  /// Before calling this function, updateKinematics() must be called.
+  /// @param[in] coeff The coefficient that is multiplied to the result.
+  /// @param[out] contact_residual 3-dimensional vector where the result is 
+  /// stored. Size must be at least 3.
+  ///
+  template <typename VectorType>
+  void computeContactResidual(
+      const double coeff,
       const Eigen::MatrixBase<VectorType>& contact_residual) const;
 
   ///
   /// @brief Computes the partial derivatives of the contact position 
   /// constriants with respect to the configuration. 
   /// Before calling this function, updateKinematics() must be called. 
-  /// @param[in] contact_index Contact index of interest.
   /// @param[out] baumgarte_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
   ///
   template <typename MatrixType>
   void computeContactDerivative(
-      const int contact_index,
+      const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
+
+  ///
+  /// @brief Computes the partial derivatives of the contact position 
+  /// constriants with respect to the configuration. 
+  /// Before calling this function, updateKinematics() must be called. 
+  /// @param[in] coeff The coefficient that is multiplied to the result.
+  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
+  /// with respect to the configuaration. Rows must be at least 3. Cols must 
+  /// be Robot::dimv().
+  ///
+  template <typename MatrixType>
+  void computeContactDerivative(
+      const double coeff,
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 
   ///

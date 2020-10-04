@@ -420,7 +420,7 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
 }
 
 
-TEST_F(FixedBaseRobotTest, baumgarteImpulseResidualAndDerivatives) {
+TEST_F(FixedBaseRobotTest, contactVelocityResidualAndDerivatives) {
   PointContact contact_ref(model_, contact_frames_[0]);
   Robot robot(urdf_, contact_frames_);
   std::random_device rnd;
@@ -435,50 +435,39 @@ TEST_F(FixedBaseRobotTest, baumgarteImpulseResidualAndDerivatives) {
   EXPECT_EQ(robot.is_contact_active(0), true);
   robot.updateKinematics(q_, v_, a_);
   robot.setContactPointsByCurrentKinematics();
-  robot.computeBaumgarteImpulseResidual(residual.segment<3>(segment_begin));
+  robot.computeContactVelocityResidual(residual.segment<3>(segment_begin));
   pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
   pinocchio::updateFramePlacements(model_, data_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
   contact_ref.setContactPointByCurrentKinematics(data_);
-  contact_ref.computeBaumgarteImpulseResidual(model_, data_, residual_ref.segment<3>(segment_begin));
+  contact_ref.computeContactVelocityResidual(model_, data_, residual_ref.segment<3>(segment_begin));
   EXPECT_TRUE(residual.isApprox(residual_ref));
-  Eigen::MatrixXd baumgarte_partial_q_ref
+  Eigen::MatrixXd vel_partial_q_ref
       = Eigen::MatrixXd::Zero(robot.max_dimf(), dimq_);
-  Eigen::MatrixXd baumgarte_partial_v_ref 
+  Eigen::MatrixXd vel_partial_v_ref 
       = Eigen::MatrixXd::Zero(robot.max_dimf(), dimq_);
-  Eigen::MatrixXd baumgarte_partial_a_ref 
-      = Eigen::MatrixXd::Zero(robot.max_dimf(), dimq_);
-  contact_ref.computeBaumgarteImpulseDerivatives(model_, data_,
-                                                 baumgarte_partial_q_ref, 
-                                                 baumgarte_partial_v_ref, 
-                                                 baumgarte_partial_a_ref);
+  contact_ref.computeContactVelocityDerivatives(model_, data_,
+                                                vel_partial_q_ref, 
+                                                vel_partial_v_ref);
   const int block_rows_begin = rnd() % 5;
   const int block_cols_begin = rnd() % 5;
-  Eigen::MatrixXd baumgarte_partial_q 
+  Eigen::MatrixXd vel_partial_q 
       = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
-  Eigen::MatrixXd baumgarte_partial_v 
+  Eigen::MatrixXd vel_partial_v 
       = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
-  Eigen::MatrixXd baumgarte_partial_a 
-      = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
-  robot.computeBaumgarteImpulseDerivatives(
-      baumgarte_partial_q.block(block_rows_begin, block_cols_begin, 
-                                robot.max_dimf(), robot.dimv()), 
-      baumgarte_partial_v.block(block_rows_begin, block_cols_begin, 
-                                robot.max_dimf(), robot.dimv()), 
-      baumgarte_partial_a.block(block_rows_begin, block_cols_begin, 
-                                robot.max_dimf(), robot.dimv()));
+  robot.computeContactVelocityDerivatives(
+      vel_partial_q.block(block_rows_begin, block_cols_begin, 
+                          robot.max_dimf(), robot.dimv()), 
+      vel_partial_v.block(block_rows_begin, block_cols_begin, 
+                          robot.max_dimf(), robot.dimv()));
   EXPECT_TRUE(
-      baumgarte_partial_q.block(block_rows_begin, block_cols_begin, 
-                                robot.max_dimf(), robot.dimv())
-      .isApprox(baumgarte_partial_q_ref));
+      vel_partial_q.block(block_rows_begin, block_cols_begin, 
+                          robot.max_dimf(), robot.dimv())
+      .isApprox(vel_partial_q_ref));
   EXPECT_TRUE(
-      baumgarte_partial_v.block(block_rows_begin, block_cols_begin, 
-                                robot.max_dimf(), robot.dimv())
-      .isApprox(baumgarte_partial_v_ref));
-  EXPECT_TRUE(
-      baumgarte_partial_a.block(block_rows_begin, block_cols_begin, 
-                                robot.max_dimf(), robot.dimv())
-      .isApprox(baumgarte_partial_a_ref));
+      vel_partial_v.block(block_rows_begin, block_cols_begin, 
+                          robot.max_dimf(), robot.dimv())
+      .isApprox(vel_partial_v_ref));
 }
 
 
@@ -495,30 +484,40 @@ TEST_F(FixedBaseRobotTest, contactResidualAndDerivatives) {
   robot.setContactStatus(is_each_contacts_active);
   EXPECT_EQ(robot.dimf(), robot.max_dimf());
   EXPECT_EQ(robot.is_contact_active(0), true);
+  const double time_step = std::abs(Eigen::Vector2d::Random(2)[0]);
   robot.updateKinematics(q_, v_, a_);
   robot.setContactPointsByCurrentKinematics();
-  robot.computeContactResidual(0, residual.segment<3>(segment_begin));
+  robot.computeContactResidual(residual.segment<3>(segment_begin));
   pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
   pinocchio::updateFramePlacements(model_, data_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
   contact_ref.setContactPointByCurrentKinematics(data_);
   contact_ref.computeContactResidual(model_, data_, residual_ref.segment<3>(segment_begin));
   EXPECT_TRUE(residual.isApprox(residual_ref));
+  const double coeff = Eigen::VectorXd::Random(1)[0];
+  robot.computeContactResidual(coeff, residual.segment<3>(segment_begin));
+  EXPECT_TRUE(residual.isApprox(coeff*residual_ref));
   Eigen::MatrixXd contact_partial_q_ref
       = Eigen::MatrixXd::Zero(robot.max_dimf(), dimq_);
-  contact_ref.computeContactDerivative(model_, data_,
-                                       contact_partial_q_ref);
+  contact_ref.computeContactDerivative(model_, data_, contact_partial_q_ref);
   const int block_rows_begin = rnd() % 5;
   const int block_cols_begin = rnd() % 5;
   Eigen::MatrixXd contact_partial_q 
       = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
   robot.computeContactDerivative(
-      0, contact_partial_q.block(block_rows_begin, block_cols_begin, 
-                                 robot.max_dimf(), robot.dimv()));
+      contact_partial_q.block(block_rows_begin, block_cols_begin, 
+                              robot.max_dimf(), robot.dimv()));
   EXPECT_TRUE(
       contact_partial_q.block(block_rows_begin, block_cols_begin, 
                               robot.max_dimf(), robot.dimv())
       .isApprox(contact_partial_q_ref));
+  Eigen::MatrixXd contact_partial_q_coeff
+      = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
+  robot.computeContactDerivative(
+      coeff, 
+      contact_partial_q_coeff.block(block_rows_begin, block_cols_begin, 
+                                    robot.max_dimf(), robot.dimv()));
+  EXPECT_TRUE(contact_partial_q_coeff.isApprox(coeff*contact_partial_q));
 }
 
 

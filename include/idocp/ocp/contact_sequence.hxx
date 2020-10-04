@@ -57,7 +57,7 @@ inline void ContactSequence::deactivateContact(const int contact_index,
 inline void ContactSequence::activateContacts(
     const std::vector<int>& contact_indices, const int time_stage_begin, 
     const int time_stage_end) {
-  assert(contact_indices.size() < max_point_contacts_);
+  assert(contact_indices.size() <= max_point_contacts_);
   assert(time_stage_begin >= 0);
   assert(time_stage_begin < N_);
   assert(time_stage_end > time_stage_begin);
@@ -75,7 +75,7 @@ inline void ContactSequence::activateContacts(
 inline void ContactSequence::deactivateContacts(
     const std::vector<int>& contact_indices, const int time_stage_begin, 
     const int time_stage_end) {
-  assert(contact_indices.size() < max_point_contacts_);
+  assert(contact_indices.size() <= max_point_contacts_);
   assert(time_stage_begin >= 0);
   assert(time_stage_begin < N_);
   assert(time_stage_end > time_stage_begin);
