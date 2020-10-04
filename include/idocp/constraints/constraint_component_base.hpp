@@ -287,21 +287,12 @@ protected:
   ///
   /// @brief Set the slack and dual variables positive.
   ///
-  virtual void setSlackAndDualPositive(Eigen::VectorXd& slack, 
-                                       Eigen::VectorXd& dual) const final;
+  virtual void setSlackAndDualPositive(
+      ConstraintComponentData& data) const final;
 
-  virtual void computeDuality(const Eigen::VectorXd& slack, 
-                              const Eigen::VectorXd& dual, 
-                              Eigen::VectorXd& duality) const final;
+  virtual void computeDuality(ConstraintComponentData& data) const final;
 
-  virtual void computeDualDirection(const Eigen::VectorXd& slack, 
-                                    const Eigen::VectorXd& dual, 
-                                    const Eigen::VectorXd& dslack, 
-                                    const Eigen::VectorXd& duality, 
-                                    Eigen::VectorXd& ddual) const final;
-
-  virtual double fractionToBoundary(const Eigen::VectorXd& vec, 
-                                    const Eigen::VectorXd& dvec) const final;
+  virtual void computeDualDirection(ConstraintComponentData& data) const final;
 
 private:
   double barrier_, fraction_to_boundary_rate_;

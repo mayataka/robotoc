@@ -5,7 +5,6 @@
 
 ## Features for efficient optimal control 
 - Solves the optimal control problem for rigid body systems based on inverse dynamics.
-- Baumgarte-like relaxation and hybrid optimal control formulation for contact complementarity problem. 
 - Sparsity-exploiting Riccati recursion / Parallel Newton's method (ParNMPC)  for computing the Newton direction.
 - Primal-dual interior point method for inequality constraints.
 - Filter line-search method.

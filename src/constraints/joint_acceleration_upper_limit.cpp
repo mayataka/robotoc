@@ -49,7 +49,7 @@ void JointAccelerationUpperLimit::setSlackAndDual(
     const SplitSolution& s) const {
   assert(dtau > 0);
   data.slack = dtau * (amax_-s.a.tail(dimc_));
-  setSlackAndDualPositive(data.slack, data.dual);
+  setSlackAndDualPositive(data);
 }
 
 
@@ -67,7 +67,7 @@ void JointAccelerationUpperLimit::condenseSlackAndDual(
   kkt_matrix.Qaa().diagonal().tail(dimc_).array()
       += dtau * dtau * data.dual.array() / data.slack.array();
   data.residual = dtau * (s.a.tail(dimc_)-amax_) + data.slack;
-  computeDuality(data.slack, data.dual, data.duality);
+  computeDuality(data);
   kkt_residual.la().tail(dimc_).array() 
       += dtau * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
@@ -78,8 +78,7 @@ void JointAccelerationUpperLimit::computeSlackAndDualDirection(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, const SplitDirection& d) const {
   data.dslack = - dtau * d.da().tail(dimc_) - data.residual;
-  computeDualDirection(data.slack, data.dual, data.dslack, data.duality, 
-                       data.ddual);
+  computeDualDirection(data);
 }
 
 
@@ -95,7 +94,7 @@ double JointAccelerationUpperLimit::squaredKKTErrorNorm(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
   data.residual = dtau * (s.a.tail(dimc_)-amax_) + data.slack;
-  computeDuality(data.slack, data.dual, data.duality);
+  computeDuality(data);
   double error = 0;
   error += data.residual.squaredNorm();
   error += data.duality.squaredNorm();

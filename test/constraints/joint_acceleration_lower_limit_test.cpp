@@ -78,7 +78,7 @@ TEST_F(JointAccelerationLowerLimitTest, isFeasibleFloatingBase) {
 
 TEST_F(JointAccelerationLowerLimitTest, setSlackAndDualFixedBase) {
   JointAccelerationLowerLimit limit(fixed_base_robot_, amin_fixed);
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc()), data_ref(limit.dimc());
   const int dimq = fixed_base_robot_.dimq();
   const int dimv = fixed_base_robot_.dimv();
   SplitSolution s(fixed_base_robot_);
@@ -90,28 +90,26 @@ TEST_F(JointAccelerationLowerLimitTest, setSlackAndDualFixedBase) {
   KKTResidual kkt_residual(fixed_base_robot_);
   limit.augmentDualResidual(fixed_base_robot_, data, dtau_, s, kkt_residual);
   limit.augmentDualResidual(fixed_base_robot_, data, dtau_, s.u, kkt_residual.lu);
-  Eigen::VectorXd slack_ref = Eigen::VectorXd::Zero(dimq);
-  Eigen::VectorXd dual_ref = Eigen::VectorXd::Zero(dimq);
-  slack_ref = dtau_ * (s.a-amin);
+  data_ref.slack = dtau_ * (s.a-amin);
   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimq);
-  pdipmfunc::SetSlackAndDualPositive(barrier_, slack_ref, dual_ref);
-  la_ref = - dtau_ * dual_ref;
+  pdipmfunc::SetSlackAndDualPositive(barrier_, data_ref);
+  la_ref = - dtau_ * data_ref.dual;
   EXPECT_TRUE(kkt_residual.la().isApprox(la_ref));
   EXPECT_TRUE(kkt_residual.lv().isZero());
   EXPECT_TRUE(kkt_residual.lf().isZero());
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_TRUE(kkt_residual.lu.isZero());
   const double cost_slack_barrier = limit.costSlackBarrier(data);
-  const double cost_slack_barrier_ref = pdipmfunc::CostSlackBarrier(barrier_, slack_ref);
+  const double cost_slack_barrier_ref = pdipmfunc::CostBarrier(barrier_, data_ref.slack);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
   const double l1residual = limit.residualL1Nrom(fixed_base_robot_, data, dtau_, s);
   const double l1residual_ref = (dtau_*(amin-s.a)+slack_ref).lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1residual, l1residual_ref);
   const double l2residual = limit.squaredKKTErrorNorm(fixed_base_robot_, data, dtau_, s);
   Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dimq);
-  pdipmfunc::ComputeDuality(barrier_, slack_ref, dual_ref, duality_ref);
+  pdipmfunc::ComputeDuality(barrier_, data_ref);
   const double l2residual_ref 
-      = (dtau_*(amin-s.a)+slack_ref).squaredNorm() + duality_ref.squaredNorm();
+      = (dtau_*(amin-s.a)+slack_ref).squaredNorm() + data_ref.duality.squaredNorm();
   EXPECT_DOUBLE_EQ(l2residual, l2residual_ref);
 }
 

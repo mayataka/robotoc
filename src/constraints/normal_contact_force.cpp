@@ -52,7 +52,7 @@ void NormalCotactForce::setSlackAndDual(Robot& robot,
       data.slack.coeffRef(i) = f[i].coeff(2);
     }
   }
-  setSlackAndDualPositive(data.slack, data.dual);
+  setSlackAndDualPositive(data);
 }
 
 
@@ -93,7 +93,7 @@ void NormalCotactForce::condenseSlackAndDual(
           = - dtau * s.f[i].coeff(2) + data.slack.coeff(num_contact_stack);
       data.duality.coeffRef()
 
-      computeDuality(data.slack, data.dual, data.duality);
+      computeDuality(data);
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
           += df * () / 
 
@@ -122,8 +122,7 @@ void NormalCotactForce::computeSlackAndDualDirection(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitDirection& d) const {
   data.dslack = - dtau * d.dv().tail(dimc_) - data.residual;
-  computeDualDirection(data.slack, data.dual, data.dslack, data.duality, 
-                       data.ddual);
+  computeDualDirection(data);
 }
 
 

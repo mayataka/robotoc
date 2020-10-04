@@ -45,7 +45,7 @@ add_library(
   # src/cost/contact_cost.cpp
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
-  src/constraints/pdipm_func.cpp
+  src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
   src/constraints/constraint_component_base.cpp
   src/constraints/constraint_component_data.cpp
