@@ -62,10 +62,10 @@ add_library(
   # src/contact_complementarity/contact_normal_force.cpp
   # src/contact_complementarity/friction_cone.cpp
   # src/contact_complementarity/contact_complementarity.cpp
-  # src/ocp/kkt_residual.cpp
-  # src/ocp/kkt_matrix.cpp
-  # src/ocp/split_solution.cpp
-  # src/ocp/split_direction.cpp
+  src/ocp/kkt_residual.cpp
+  src/ocp/kkt_matrix.cpp
+  src/ocp/split_solution.cpp
+  src/ocp/split_direction.cpp
   # src/ocp/state_equation.cpp
   # src/ocp/robot_dynamics.cpp
   # src/ocp/contact_sequence.cpp

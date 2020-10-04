@@ -12,7 +12,7 @@
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
-#include "idocp/constraints/pdipm_func.hpp"
+#include "idocp/constraints/pdipm.hpp"
 
 namespace idocp {
 

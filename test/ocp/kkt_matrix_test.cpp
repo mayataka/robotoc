@@ -5,6 +5,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 
 
@@ -31,14 +32,15 @@ TEST_F(KKTMatrixTest, fixed_base) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf_, contact_frames);
   std::random_device rnd;
-  std::vector<bool> contact_status = {rnd()%2==0};
-  robot.setContactStatus(contact_status);
+  ContactStatus contact_status(contact_frames.size());
+  std::vector<bool> is_contact_active = {rnd()%2==0};
+  contact_status.setContactStatus(is_contact_active);
   KKTMatrix matrix(robot);
-  matrix.setContactStatus(robot);
+  matrix.setContactStatus(contact_status);
   const int dimv = robot.dimv();
-  const int dimf = robot.dimf();
+  const int dimf = contact_status.dimf();
   const int dim_passive = robot.dim_passive();
-  const int dimc = robot.dim_passive() + robot.dimf();
+  const int dimc = robot.dim_passive() + contact_status.dimf();
   EXPECT_EQ(matrix.dimf(), dimf);
   EXPECT_EQ(matrix.dimc(), dimc);
   EXPECT_EQ(matrix.dimKKT(), 5*dimv+dimf+dimc);
@@ -86,14 +88,14 @@ TEST_F(KKTMatrixTest, fixed_base) {
   EXPECT_TRUE(matrix.constraintsJacobian().block(0,        dimv, dimc, dimf).isApprox(Cf));
   EXPECT_TRUE(matrix.constraintsJacobian().block(0,   dimv+dimf, dimc, dimv).isApprox(Cq));
   EXPECT_TRUE(matrix.constraintsJacobian().block(0, 2*dimv+dimf, dimc, dimv).isApprox(Cv));
-  EXPECT_TRUE(matrix.Ca().topRows(robot.dim_passive()).isApprox(matrix.Ca_floating_base()));
-  EXPECT_TRUE(matrix.Cf().topRows(robot.dim_passive()).isApprox(matrix.Cf_floating_base()));
-  EXPECT_TRUE(matrix.Cq().topRows(robot.dim_passive()).isApprox(matrix.Cq_floating_base()));
-  EXPECT_TRUE(matrix.Cv().topRows(robot.dim_passive()).isApprox(matrix.Cv_floating_base()));
-  EXPECT_TRUE(matrix.Ca().bottomRows(robot.dimf()).isApprox(matrix.Ca_contacts()));
-  EXPECT_TRUE(matrix.Cf().bottomRows(robot.dimf()).isApprox(matrix.Cf_contacts()));
-  EXPECT_TRUE(matrix.Cq().bottomRows(robot.dimf()).isApprox(matrix.Cq_contacts()));
-  EXPECT_TRUE(matrix.Cv().bottomRows(robot.dimf()).isApprox(matrix.Cv_contacts()));
+  EXPECT_TRUE(matrix.Ca().topRows(dim_passive).isApprox(matrix.Ca_floating_base()));
+  EXPECT_TRUE(matrix.Cf().topRows(dim_passive).isApprox(matrix.Cf_floating_base()));
+  EXPECT_TRUE(matrix.Cq().topRows(dim_passive).isApprox(matrix.Cq_floating_base()));
+  EXPECT_TRUE(matrix.Cv().topRows(dim_passive).isApprox(matrix.Cv_floating_base()));
+  EXPECT_TRUE(matrix.Ca().bottomRows(dimf).isApprox(matrix.Ca_contacts()));
+  EXPECT_TRUE(matrix.Cf().bottomRows(dimf).isApprox(matrix.Cf_contacts()));
+  EXPECT_TRUE(matrix.Cq().bottomRows(dimf).isApprox(matrix.Cq_contacts()));
+  EXPECT_TRUE(matrix.Cv().bottomRows(dimf).isApprox(matrix.Cv_contacts()));
   EXPECT_TRUE(matrix.costHessian().block(          0,           0, dimv, dimv).isApprox(Qaa));
   EXPECT_TRUE(matrix.costHessian().block(          0,        dimv, dimv, dimf).isApprox(Qaf));
   EXPECT_TRUE(matrix.costHessian().block(          0,   dimv+dimf, dimv, dimv).isApprox(Qaq));
@@ -150,23 +152,24 @@ TEST_F(KKTMatrixTest, invert_fixed_base) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf_, contact_frames);
   std::random_device rnd;
-  std::vector<bool> contact_status = {rnd()%2==0};
-  robot.setContactStatus(contact_status);
+  ContactStatus contact_status(contact_frames.size());
+  std::vector<bool> is_contact_active = {rnd()%2==0};
+  contact_status.setContactStatus(is_contact_active);
   KKTMatrix matrix(robot);
-  matrix.setContactStatus(robot);
+  matrix.setContactStatus(contact_status);
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
-  const int dimf = robot.dimf();
+  const int dimf = contact_status.dimf();
   const int dim_passive = robot.dim_passive();
-  const int dimc = robot.dim_passive() + robot.dimf();
-  const int dimQ = 3*robot.dimv() + robot.dimf();
+  const int dimc = robot.dim_passive() + contact_status.dimf();
+  const int dimQ = 3*robot.dimv() + contact_status.dimf();
   const Eigen::MatrixXd Q_seed_mat = Eigen::MatrixXd::Random(dimQ, dimQ);
   const Eigen::MatrixXd Q_mat = Q_seed_mat * Q_seed_mat.transpose() + Eigen::MatrixXd::Identity(dimQ, dimQ);
   const Eigen::MatrixXd Jc_mat = Eigen::MatrixXd::Random(dimc, dimQ);
   matrix.costHessian() = Q_mat;
   matrix.constraintsJacobian() = Jc_mat;
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const int dimKKT = 5*robot.dimv()+robot.dim_passive()+2*robot.dimf();
+  const int dimKKT = 5*dimv+dim_passive+2*dimf;
   Eigen::MatrixXd kkt_mat_ref = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
   kkt_mat_ref.bottomRightCorner(dimQ, dimQ) = Q_mat;
   kkt_mat_ref.block(dimx, dimx+dimc, dimc, dimQ) = Jc_mat;
@@ -193,17 +196,18 @@ TEST_F(KKTMatrixTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf_, contact_frames);
   std::random_device rnd;
-  std::vector<bool> contact_status;
+  ContactStatus contact_status(contact_frames.size());
+  std::vector<bool> is_contact_active;
   for (const auto frame : contact_frames) {
-    contact_status.push_back(rnd()%2==0);
+    is_contact_active.push_back(rnd()%2==0);
   }
-  robot.setContactStatus(contact_status);
+  contact_status.setContactStatus(is_contact_active);
   KKTMatrix matrix(robot);
-  matrix.setContactStatus(robot);
+  matrix.setContactStatus(contact_status);
   const int dimv = robot.dimv();
-  const int dimf = robot.dimf();
+  const int dimf = contact_status.dimf();
   const int dim_passive = robot.dim_passive();
-  const int dimc = robot.dim_passive() + robot.dimf();
+  const int dimc = robot.dim_passive() + contact_status.dimf();
   EXPECT_EQ(matrix.dimf(), dimf);
   EXPECT_EQ(matrix.dimc(), dimc);
   EXPECT_EQ(matrix.dimKKT(), 5*dimv+dimf+dimc);
@@ -251,14 +255,14 @@ TEST_F(KKTMatrixTest, floating_base) {
   EXPECT_TRUE(matrix.constraintsJacobian().block(0,        dimv, dimc, dimf).isApprox(Cf));
   EXPECT_TRUE(matrix.constraintsJacobian().block(0,   dimv+dimf, dimc, dimv).isApprox(Cq));
   EXPECT_TRUE(matrix.constraintsJacobian().block(0, 2*dimv+dimf, dimc, dimv).isApprox(Cv));
-  EXPECT_TRUE(matrix.Ca().topRows(robot.dim_passive()).isApprox(matrix.Ca_floating_base()));
-  EXPECT_TRUE(matrix.Cf().topRows(robot.dim_passive()).isApprox(matrix.Cf_floating_base()));
-  EXPECT_TRUE(matrix.Cq().topRows(robot.dim_passive()).isApprox(matrix.Cq_floating_base()));
-  EXPECT_TRUE(matrix.Cv().topRows(robot.dim_passive()).isApprox(matrix.Cv_floating_base()));
-  EXPECT_TRUE(matrix.Ca().bottomRows(robot.dimf()).isApprox(matrix.Ca_contacts()));
-  EXPECT_TRUE(matrix.Cf().bottomRows(robot.dimf()).isApprox(matrix.Cf_contacts()));
-  EXPECT_TRUE(matrix.Cq().bottomRows(robot.dimf()).isApprox(matrix.Cq_contacts()));
-  EXPECT_TRUE(matrix.Cv().bottomRows(robot.dimf()).isApprox(matrix.Cv_contacts()));
+  EXPECT_TRUE(matrix.Ca().topRows(dim_passive).isApprox(matrix.Ca_floating_base()));
+  EXPECT_TRUE(matrix.Cf().topRows(dim_passive).isApprox(matrix.Cf_floating_base()));
+  EXPECT_TRUE(matrix.Cq().topRows(dim_passive).isApprox(matrix.Cq_floating_base()));
+  EXPECT_TRUE(matrix.Cv().topRows(dim_passive).isApprox(matrix.Cv_floating_base()));
+  EXPECT_TRUE(matrix.Ca().bottomRows(dimf).isApprox(matrix.Ca_contacts()));
+  EXPECT_TRUE(matrix.Cf().bottomRows(dimf).isApprox(matrix.Cf_contacts()));
+  EXPECT_TRUE(matrix.Cq().bottomRows(dimf).isApprox(matrix.Cq_contacts()));
+  EXPECT_TRUE(matrix.Cv().bottomRows(dimf).isApprox(matrix.Cv_contacts()));
   EXPECT_TRUE(matrix.costHessian().block(          0,           0, dimv, dimv).isApprox(Qaa));
   EXPECT_TRUE(matrix.costHessian().block(          0,        dimv, dimv, dimf).isApprox(Qaf));
   EXPECT_TRUE(matrix.costHessian().block(          0,   dimv+dimf, dimv, dimv).isApprox(Qaq));
@@ -315,19 +319,20 @@ TEST_F(KKTMatrixTest, invert_floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf_, contact_frames);
   std::random_device rnd;
-  std::vector<bool> contact_status;
+  ContactStatus contact_status(contact_frames.size());
+  std::vector<bool> is_contact_active;
   for (const auto frame : contact_frames) {
-    contact_status.push_back(rnd()%2==0);
+    is_contact_active.push_back(rnd()%2==0);
   }
-  robot.setContactStatus(contact_status);
+  contact_status.setContactStatus(is_contact_active);
   KKTMatrix matrix(robot);
-  matrix.setContactStatus(robot);
+  matrix.setContactStatus(contact_status);
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
-  const int dimf = robot.dimf();
+  const int dimf = contact_status.dimf();
   const int dim_passive = robot.dim_passive();
-  const int dimc = robot.dim_passive() + robot.dimf();
-  const int dimQ = 3*robot.dimv() + robot.dimf();
+  const int dimc = robot.dim_passive() + contact_status.dimf();
+  const int dimQ = 3*robot.dimv() + contact_status.dimf();
   const Eigen::MatrixXd Q_seed_mat = Eigen::MatrixXd::Random(dimQ, dimQ);
   const Eigen::MatrixXd Q_mat = Q_seed_mat * Q_seed_mat.transpose() + Eigen::MatrixXd::Identity(dimQ, dimQ);
   const Eigen::MatrixXd Jc_mat = Eigen::MatrixXd::Random(dimc, dimQ);
@@ -338,7 +343,7 @@ TEST_F(KKTMatrixTest, invert_floating_base) {
   matrix.Fqq = -1 * Eigen::MatrixXd::Identity(dimv, dimv);
   matrix.Fqq.topLeftCorner(6, 6) = - Fqq_mat;
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const int dimKKT = 5*robot.dimv()+robot.dim_passive()+2*robot.dimf();
+  const int dimKKT = 5*dimv+dim_passive+2*dimf;
   Eigen::MatrixXd kkt_mat_ref = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
   kkt_mat_ref.bottomRightCorner(dimQ, dimQ) = Q_mat;
   kkt_mat_ref.block(dimx, dimx+dimc, dimc, dimQ) = Jc_mat;
