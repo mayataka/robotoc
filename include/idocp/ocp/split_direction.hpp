@@ -209,12 +209,15 @@ public:
   ///
   /// @brief Generates split direction filled randomly.
   /// @return Split direction filled randomly.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
   static SplitDirection Random(const Robot& robot);
 
   ///
   /// @brief Generates split direction filled randomly.
   /// @return Split direction filled randomly.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status.
   ///
   static SplitDirection Random(const Robot& robot, 
                                const ContactStatus& contact_status);

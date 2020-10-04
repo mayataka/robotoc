@@ -218,12 +218,15 @@ public:
   ///
   /// @brief Generates split solution filled randomly.
   /// @return Split solution filled randomly.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
   static SplitSolution Random(const Robot& robot);
 
   ///
   /// @brief Generates split solution filled randomly.
   /// @return Split solution filled randomly.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status.
   ///
   static SplitSolution Random(const Robot& robot, 
                               const ContactStatus& contact_status);

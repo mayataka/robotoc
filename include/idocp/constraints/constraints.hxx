@@ -231,30 +231,39 @@ inline double Constraints::costSlackBarrier(const ConstraintsData& data,
 }
 
 
-inline double Constraints::residualL1Nrom(Robot& robot, ConstraintsData& data, 
-                                          const double dtau, 
-                                          const SplitSolution& s) const {
+inline void Constraints::computePrimalAndDualResidual(
+    Robot& robot, ConstraintsData& data, const double dtau, 
+    const SplitSolution& s) const {
+  assert(data.size() == constraints_.size());
+  for (int i=0; i<constraints_.size(); ++i) {
+    assert(data[i].dimc() == constraints_[i]->dimc());
+    assert(data[i].checkDimensionalConsistency());
+    constraints_[i]->computePrimalAndDualResidual(robot, data[i], dtau, s);
+  }
+}
+
+
+inline double Constraints::l1NormPrimalResidual(
+    const ConstraintsData& data) const {
   assert(data.size() == constraints_.size());
   double l1_norm = 0;
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    l1_norm += constraints_[i]->residualL1Nrom(robot, data[i], dtau, s);
+    l1_norm += constraints_[i]->l1NormPrimalResidual(data[i]);
   }
   return l1_norm;
 }
 
 
-inline double Constraints::squaredKKTErrorNorm(Robot& robot, 
-                                               ConstraintsData& data, 
-                                               const double dtau, 
-                                               const SplitSolution& s) const {
+inline double Constraints::squaredNormPrimalAndDualResidual(
+    const ConstraintsData& data) const {
   assert(data.size() == constraints_.size());
   double squared_norm = 0;
   for (int i=0; i<constraints_.size(); ++i) {
     assert(data[i].dimc() == constraints_[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    squared_norm += constraints_[i]->squaredKKTErrorNorm(robot, data[i], dtau, s);
+    squared_norm += constraints_[i]->squaredNormPrimalAndDualResidual(data[i]);
   }
   return squared_norm;
 }

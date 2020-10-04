@@ -81,23 +81,11 @@ void JointTorquesUpperLimit::computeSlackAndDualDirection(
 }
 
 
-double JointTorquesUpperLimit::residualL1Nrom(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  data.residual = dtau * (s.u.tail(dimc_)-umax_) + data.slack;
-  return data.residual.lpNorm<1>();
-}
-
-
-double JointTorquesUpperLimit::squaredKKTErrorNorm(
+void JointTorquesUpperLimit::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
   data.residual = dtau * (s.u.tail(dimc_)-umax_) + data.slack;
   computeDuality(data);
-  double error = 0;
-  error += data.residual.squaredNorm();
-  error += data.duality.squaredNorm();
-  return error;
 }
 
 

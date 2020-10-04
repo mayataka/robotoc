@@ -81,23 +81,11 @@ void JointTorquesLowerLimit::computeSlackAndDualDirection(
 }
 
 
-double JointTorquesLowerLimit::residualL1Nrom(
-    Robot& robot, ConstraintComponentData& data, 
-    const double dtau, const SplitSolution& s) const {
-  data.residual = dtau * (umin_-s.u.tail(dimc_)) + data.slack;
-  return data.residual.lpNorm<1>();
-}
-
-
-double JointTorquesLowerLimit::squaredKKTErrorNorm(
+void JointTorquesLowerLimit::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, 
     const double dtau, const SplitSolution& s) const {
   data.residual = dtau * (umin_-s.u.tail(dimc_)) + data.slack;
   computeDuality(data);
-  double error = 0;
-  error += data.residual.squaredNorm();
-  error += data.duality.squaredNorm();
-  return error;
 }
 
 

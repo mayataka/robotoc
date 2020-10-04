@@ -66,8 +66,7 @@ void JointAccelerationLowerLimit::condenseSlackAndDual(
     KKTResidual& kkt_residual) const {
   kkt_matrix.Qaa().diagonal().tail(dimc_).array()
       += dtau * dtau * data.dual.array() / data.slack.array();
-  data.residual = dtau * (amin_-s.a.tail(dimc_)) + data.slack;
-  computeDuality(data);
+  computePrimalAndDualResidual(robot, data, dtau, s);
   kkt_residual.la().tail(dimc_).array() 
       -= dtau * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
@@ -82,23 +81,11 @@ void JointAccelerationLowerLimit::computeSlackAndDualDirection(
 }
 
 
-double JointAccelerationLowerLimit::residualL1Nrom(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  data.residual = dtau * (amin_-s.a.tail(dimc_)) + data.slack;
-  return data.residual.lpNorm<1>();
-}
-
-
-double JointAccelerationLowerLimit::squaredKKTErrorNorm(
+void JointAccelerationLowerLimit::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
   data.residual = dtau * (amin_-s.a.tail(dimc_)) + data.slack;
   computeDuality(data);
-  double error = 0;
-  error += data.residual.squaredNorm();
-  error += data.duality.squaredNorm();
-  return error;
 }
 
 

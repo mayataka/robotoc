@@ -97,10 +97,11 @@ TEST_F(JointVelocityUpperLimitTest, setSlackAndDualFixedBase) {
   const double cost_slack_barrier = limit.costSlackBarrier(data);
   const double cost_slack_barrier_ref = pdipm::CostBarrier(barrier_, data_ref.slack);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
-  const double l1residual = limit.residualL1Nrom(fixed_base_robot_, data, dtau_, s);
+  limit.computePrimalAndDualResidual(fixed_base_robot_, data, dtau_, s);
+  const double l1residual = limit.l1NormPrimalResidual(data);
   const double l1residual_ref = (dtau_*(s.v-vmax)+data_ref.slack).lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1residual, l1residual_ref);
-  const double l2residual = limit.squaredKKTErrorNorm(fixed_base_robot_, data, dtau_, s);
+  const double l2residual = limit.squaredNormPrimalAndDualResidual(data);
   pdipm::ComputeDuality(barrier_, data_ref);
   const double l2residual_ref 
       = (dtau_*(s.v-vmax)+data_ref.slack).squaredNorm() + data_ref.duality.squaredNorm();
@@ -135,10 +136,11 @@ TEST_F(JointVelocityUpperLimitTest, setSlackAndDualFloatingBase) {
   const double cost_slack_barrier = limit.costSlackBarrier(data);
   const double cost_slack_barrier_ref = pdipm::CostBarrier(barrier_, data_ref.slack);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
-  const double l1residual = limit.residualL1Nrom(floating_base_robot_, data, dtau_, s);
+  limit.computePrimalAndDualResidual(floating_base_robot_, data, dtau_, s);
+  const double l1residual = limit.l1NormPrimalResidual(data);
   const double l1residual_ref = (dtau_*(s.v.tail(dimc)-vmax)+data_ref.slack).lpNorm<1>();
   EXPECT_DOUBLE_EQ(l1residual, l1residual_ref);
-  const double l2residual = limit.squaredKKTErrorNorm(floating_base_robot_, data, dtau_, s);
+  const double l2residual = limit.squaredNormPrimalAndDualResidual(data);
   Eigen::VectorXd duality_ref = Eigen::VectorXd::Zero(dimc);
   pdipm::ComputeDuality(barrier_, data_ref);
   const double l2residual_ref 
