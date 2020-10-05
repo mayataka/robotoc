@@ -27,6 +27,8 @@ public:
 
   RiccatiGain& operator=(RiccatiGain&&) noexcept = default;
 
+  void setContactStatus(const ContactStatus& contact_status);
+
   const Eigen::Block<const Eigen::MatrixXd> Kaq() const;
 
   const Eigen::Block<const Eigen::MatrixXd> Kav() const;
@@ -54,8 +56,6 @@ public:
   void computeFeedforward(const Eigen::MatrixBase<MatrixType>& Ginv, 
                           const Eigen::MatrixBase<VectorType1>& laf, 
                           const Eigen::MatrixBase<VectorType2>& C);
-
-  void setContactStatus(const ContactStatus& contact_status);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

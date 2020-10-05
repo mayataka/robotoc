@@ -12,7 +12,7 @@
 
 namespace idocp {
 
-class RiccatiTest : public ::testing::Test {
+class RiccatiRecursionTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -33,12 +33,11 @@ protected:
 };
 
 
-TEST_F(RiccatiTest, fixed_base_without_contacts) {
+TEST_F(RiccatiRecursionTest, fixed_base_without_contacts) {
   const int dimv = fixed_base_robot_.dimv();
-  const int dimf = fixed_base_robot_.dimf();
-  const int dimc = fixed_base_robot_.dim_passive() + fixed_base_robot_.dimf();
-  ASSERT_EQ(dimf, 0);
-  ASSERT_EQ(dimc, 0);
+  const int dimaf = fixed_base_robot_.dimv();
+  const int dimf = 0;
+  const int dimc = 0;
   Eigen::MatrixXd Qqa = Eigen::MatrixXd::Random(dimv, dimv);
   Eigen::MatrixXd Qva = Eigen::MatrixXd::Random(dimv, dimv);
   Eigen::MatrixXd Qaa = Eigen::MatrixXd::Random(dimv, dimv);
@@ -94,15 +93,15 @@ TEST_F(RiccatiTest, fixed_base_without_contacts) {
 }
 
 
-TEST_F(RiccatiTest, fixed_base_with_contacts) {
-  const int contact_frame = 18;
-  const std::vector<int> contact_frames = {contact_frame};
+TEST_F(RiccatiRecursionTest, fixed_base_with_contacts) {
+  std::vector<int> contact_frames = {18};
   fixed_base_robot_ = Robot(fixed_base_urdf_, contact_frames);
-  const std::vector<bool> active_contacts = {true};
-  fixed_base_robot_.setContactStatus(active_contacts);
+  ContactStatus contact_status(contact_frames.size());
+  contact_status.setContactStatus({true});
   const int dimv = fixed_base_robot_.dimv();
-  const int dimf = fixed_base_robot_.dimf();
-  const int dimc = fixed_base_robot_.dim_passive() + fixed_base_robot_.dimf();
+  const int dimaf = fixed_base_robot_.dimv() + contact_status.dimf();
+  const int dimf = contact_status.dimf();
+  const int dimc = fixed_base_robot_.dim_passive() + contact_status.dimf();
   ASSERT_EQ(dimf, 3);
   ASSERT_EQ(dimc, 3);
   Eigen::MatrixXd gen_mat = Eigen::MatrixXd::Random(dimv+dimf, dimv+dimf);
@@ -176,6 +175,7 @@ TEST_F(RiccatiTest, fixed_base_with_contacts) {
                                    - Minv.block(dimv+dimf,      dimv, dimc, dimf) * lf.head(dimf)
                                    - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * C_res.head(dimc);
   RiccatiMatrixInverter inverter(fixed_base_robot_);
+  inverter.setContactStatus(contact_status);
   Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
   G = M.topLeftCorner(dimv+dimf, dimv+dimf);
   Eigen::MatrixXd Caf = Eigen::MatrixXd::Zero(dimc, dimv+dimf);
@@ -191,6 +191,7 @@ TEST_F(RiccatiTest, fixed_base_with_contacts) {
   Cqv.leftCols(dimv) = Cq;
   Cqv.rightCols(dimv) = Cv;
   RiccatiGain gain(fixed_base_robot_);
+  gain.setContactStatus(contact_status);
   gain.computeFeedbackGain(Ginv, Qafqv, Cqv);
   Eigen::VectorXd laf = Eigen::VectorXd::Zero(dimv+dimf);
   laf.head(dimv) = la;
@@ -236,12 +237,13 @@ TEST_F(RiccatiTest, fixed_base_with_contacts) {
 }
 
 
-TEST_F(RiccatiTest, floating_base_without_contacts) {
+TEST_F(RiccatiRecursionTest, floating_base_without_contacts) {
   const int dimv = floating_base_robot_.dimv();
-  const int dimf = floating_base_robot_.dimf();
-  const int dimc = dimf + floating_base_robot_.dim_passive();
-  ASSERT_TRUE(dimf == 0);
-  ASSERT_TRUE(dimc == 6);
+  const int dimaf = floating_base_robot_.dimv();
+  const int dimf = 0;
+  const int dimc = floating_base_robot_.dim_passive();
+  ASSERT_EQ(dimf, 0);
+  ASSERT_EQ(dimc, 6);
   Eigen::MatrixXd gen_mat = Eigen::MatrixXd::Random(dimv, dimv);
   gen_mat.triangularView<Eigen::StrictlyLower>() 
       = gen_mat.transpose().triangularView<Eigen::StrictlyLower>();
@@ -335,20 +337,22 @@ TEST_F(RiccatiTest, floating_base_without_contacts) {
 }
 
 
-TEST_F(RiccatiTest, floating_base_with_contacts) {
+TEST_F(RiccatiRecursionTest, floating_base_with_contacts) {
   const std::vector<int> contact_frames = {14, 24, 34, 44};
   floating_base_robot_ = Robot(floating_base_urdf_, contact_frames);
+  ContactStatus contact_status(contact_frames.size());
   std::vector<bool> active_contacts;
   std::random_device rnd;
   for (int i=0; i<contact_frames.size(); ++i) {
     active_contacts.push_back(rnd()%2==0);
   }
-  floating_base_robot_.setContactStatus(active_contacts);
+  contact_status.setContactStatus(active_contacts);
   const int dimv = floating_base_robot_.dimv();
+  const int dimaf = floating_base_robot_.dimv() + contact_status.dimf();
+  const int dimf = contact_status.dimf();
+  const int dimc = floating_base_robot_.dim_passive() + contact_status.dimf();
   const int max_dimf = floating_base_robot_.max_dimf();
-  const int dimf = floating_base_robot_.dimf();
   const int max_dimc = max_dimf + floating_base_robot_.dim_passive();
-  const int dimc = dimf + floating_base_robot_.dim_passive();
   const int dim_passive = floating_base_robot_.dim_passive();
   Eigen::MatrixXd gen_mat = Eigen::MatrixXd::Random(dimv+max_dimf, dimv+max_dimf);
   gen_mat.triangularView<Eigen::StrictlyLower>() 
@@ -424,6 +428,7 @@ TEST_F(RiccatiTest, floating_base_with_contacts) {
                                    - Minv.block(dimv+dimf,      dimv, dimc, dimf) * lf.head(dimf)
                                    - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * C_res.head(dimc);
   RiccatiMatrixInverter inverter(floating_base_robot_);
+  inverter.setContactStatus(contact_status);
   Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
   G = M.topLeftCorner(dimv+dimf, dimv+dimf);
   Eigen::MatrixXd Caf = Eigen::MatrixXd::Zero(dimc, dimv+dimf);
@@ -440,6 +445,7 @@ TEST_F(RiccatiTest, floating_base_with_contacts) {
   Cqv.leftCols(dimv) = Cq.topRows(dimc);
   Cqv.rightCols(dimv) = Cv.topRows(dimc);
   RiccatiGain gain(floating_base_robot_);
+  gain.setContactStatus(contact_status);
   gain.computeFeedbackGain(Ginv, Qafqv, Cqv);
   Eigen::VectorXd laf = Eigen::VectorXd::Zero(dimv+dimf);
   laf.head(dimv) = la;

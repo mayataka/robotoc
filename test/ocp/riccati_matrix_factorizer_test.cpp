@@ -47,7 +47,7 @@ TEST_F(RiccatiMatrixFactorizerTest, fixed_base) {
   const Eigen::MatrixXd Qvq_ref = Qvq + dtau_ * Pqq + Pvq;
   const Eigen::MatrixXd Qvv_ref = Qvv + dtau_ * dtau_ * Pqq 
                                       + dtau_ * (Pqv + Pvq) + Pvv;
-  factorizer.factorizeF(dtau_, Pqq, Pqv, Pvq, Pvv, Qqq, Qqv, Qvq, Qvv);
+  factorizer.factorize_F(dtau_, Pqq, Pqv, Pvq, Pvv, Qqq, Qqv, Qvq, Qvv);
   EXPECT_TRUE(Qqq.isApprox(Qqq_ref));
   EXPECT_TRUE(Qqv.isApprox(Qqv_ref));
   EXPECT_TRUE(Qvq.isApprox(Qvq_ref));
@@ -69,7 +69,7 @@ TEST_F(RiccatiMatrixFactorizerTest, fixed_base) {
   Eigen::MatrixXd Qva = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Qqa_ref = Qqa + dtau_ * Pqv;
   const Eigen::MatrixXd Qva_ref = Qva + dtau_ * dtau_ * Pqv + dtau_ * Pvv;
-  factorizer.factorizeH(dtau_, Pqv, Pvv, Qqa, Qva);
+  factorizer.factorize_H(dtau_, Pqv, Pvv, Qqa, Qva);
   EXPECT_TRUE(Qqa.isApprox(Qqa_ref));
   EXPECT_TRUE(Qva.isApprox(Qva_ref));
   std::cout << "Qqa error:" << std::endl;
@@ -81,7 +81,7 @@ TEST_F(RiccatiMatrixFactorizerTest, fixed_base) {
 
   Eigen::MatrixXd Qaa = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Qaa_ref = Qaa + dtau_ * dtau_ * Pvv;
-  factorizer.factorizeG(dtau_, Pvv, Qaa);
+  factorizer.factorize_G(dtau_, Pvv, Qaa);
   EXPECT_TRUE(Qaa.isApprox(Qaa_ref));
   std::cout << "Qaa error:" << std::endl;
   std::cout << Qaa - Qaa_ref << std::endl;
@@ -100,7 +100,7 @@ TEST_F(RiccatiMatrixFactorizerTest, fixed_base) {
   const Eigen::MatrixXd Pvv_ref = Pvv;
   Eigen::VectorXd sq = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd sq_ref = sq;
-  factorizer.correctP(Pqq, Pqv);
+  factorizer.correct_P(Pqq, Pqv);
   EXPECT_TRUE(Pqq.isApprox(Pqq_ref));
   EXPECT_TRUE(Pqv.isApprox(Pqv_ref));
   factorizer.correct_s(sq);
@@ -137,7 +137,7 @@ TEST_F(RiccatiMatrixFactorizerTest, floating_base) {
                                       + dtau_ * (Pvq + Pqv) + Pvv;
   factorizer.setStateEquationDerivative(Fqq);
   factorizer.setStateEquationDerivativeInverse(Fqq_prev);
-  factorizer.factorizeF(dtau_, Pqq, Pqv, Pvq, Pvv, Qqq, Qqv, Qvq, Qvv);
+  factorizer.factorize_F(dtau_, Pqq, Pqv, Pvq, Pvv, Qqq, Qqv, Qvq, Qvv);
   EXPECT_TRUE(Qqq.isApprox(Qqq_ref));
   EXPECT_TRUE(Qqv.isApprox(Qqv_ref));
   EXPECT_TRUE(Qvq.isApprox(Qvq_ref));
@@ -159,7 +159,7 @@ TEST_F(RiccatiMatrixFactorizerTest, floating_base) {
   Eigen::MatrixXd Qva = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Qqa_ref = Qqa + dtau_ * Fqq.transpose() * Pqv;
   const Eigen::MatrixXd Qva_ref = Qva + dtau_ * dtau_ * Pqv + dtau_ * Pvv;
-  factorizer.factorizeH(dtau_, Pqv, Pvv, Qqa, Qva);
+  factorizer.factorize_H(dtau_, Pqv, Pvv, Qqa, Qva);
   EXPECT_TRUE(Qqa.isApprox(Qqa_ref));
   EXPECT_TRUE(Qva.isApprox(Qva_ref));
   std::cout << "Qqa error:" << std::endl;
@@ -171,7 +171,7 @@ TEST_F(RiccatiMatrixFactorizerTest, floating_base) {
 
   Eigen::MatrixXd Qaa = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Qaa_ref = Qaa + dtau_ * dtau_ * Pvv;
-  factorizer.factorizeG(dtau_, Pvv, Qaa);
+  factorizer.factorize_G(dtau_, Pvv, Qaa);
   EXPECT_TRUE(Qaa.isApprox(Qaa_ref));
   std::cout << "Qaa error:" << std::endl;
   std::cout << Qaa - Qaa_ref << std::endl;
@@ -200,7 +200,7 @@ TEST_F(RiccatiMatrixFactorizerTest, floating_base) {
   s.head(dimv) = sq;
   s.tail(dimv) = sv;
   const Eigen::VectorXd s_ref = A_trans_inv * s;
-  factorizer.correctP(Pqq, Pqv);
+  factorizer.correct_P(Pqq, Pqv);
   EXPECT_TRUE(Pqq.isApprox(P_ref.topLeftCorner(dimv, dimv)));
   EXPECT_TRUE(Pqv.isApprox(P_ref.topRightCorner(dimv, dimv)));
   EXPECT_TRUE(Pvq.isApprox(P_ref.bottomLeftCorner(dimv, dimv)));

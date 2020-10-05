@@ -34,11 +34,9 @@ protected:
 
 TEST_F(RiccatiGainTest, fixed_base_without_contacts) {
   const int dimv = fixed_base_robot_.dimv();
-  const int dimaf = fixed_base_robot_.dimv() + fixed_base_robot_.dimf();
-  const int dimf = fixed_base_robot_.dimf();
-  const int dimc = fixed_base_robot_.dim_passive() + fixed_base_robot_.dimf();
-  ASSERT_EQ(dimf, 0);
-  ASSERT_EQ(dimc, 0);
+  const int dimaf = fixed_base_robot_.dimv();
+  const int dimf = 0;
+  const int dimc = 0;
   const Eigen::MatrixXd Ginv_seed = Eigen::MatrixXd::Random(dimaf+dimc, dimaf+dimc);
   const Eigen::MatrixXd Ginv = Ginv_seed * Ginv_seed.transpose();
   const Eigen::MatrixXd Qafqv = Eigen::MatrixXd::Random(dimaf, 2*dimv);
@@ -74,12 +72,12 @@ TEST_F(RiccatiGainTest, fixed_base_without_contacts) {
 TEST_F(RiccatiGainTest, fixed_base_with_contacts) {
   std::vector<int> contact_frames = {18};
   fixed_base_robot_ = Robot(fixed_base_urdf_, contact_frames);
-  std::vector<bool> contact_status = {true};
-  fixed_base_robot_.setContactStatus(contact_status);
+  ContactStatus contact_status(contact_frames.size());
+  contact_status.setContactStatus({true});
   const int dimv = fixed_base_robot_.dimv();
-  const int dimaf = fixed_base_robot_.dimv() + fixed_base_robot_.dimf();
-  const int dimf = fixed_base_robot_.dimf();
-  const int dimc = fixed_base_robot_.dim_passive() + fixed_base_robot_.dimf();
+  const int dimaf = fixed_base_robot_.dimv() + contact_status.dimf();
+  const int dimf = contact_status.dimf();
+  const int dimc = fixed_base_robot_.dim_passive() + contact_status.dimf();
   ASSERT_EQ(dimf, 3);
   ASSERT_EQ(dimc, 3);
   const Eigen::MatrixXd Ginv_seed = Eigen::MatrixXd::Random(dimaf+dimc, dimaf+dimc);
@@ -87,6 +85,7 @@ TEST_F(RiccatiGainTest, fixed_base_with_contacts) {
   const Eigen::MatrixXd Qafqv = Eigen::MatrixXd::Random(dimaf, 2*dimv);
   const Eigen::MatrixXd Cqv = Eigen::MatrixXd::Random(dimc, 2*dimv);
   RiccatiGain gain(fixed_base_robot_);
+  gain.setContactStatus(contact_status);
   gain.computeFeedbackGain(Ginv, Qafqv, Cqv);
   Eigen::MatrixXd HC = Eigen::MatrixXd::Random(dimaf+dimc, 2*dimv);
   HC.topRows(dimaf) = Qafqv;
@@ -116,9 +115,9 @@ TEST_F(RiccatiGainTest, fixed_base_with_contacts) {
 
 TEST_F(RiccatiGainTest, floating_base_without_contacts) {
   const int dimv = floating_base_robot_.dimv();
-  const int dimaf = floating_base_robot_.dimv() + floating_base_robot_.dimf();
-  const int dimf = floating_base_robot_.dimf();
-  const int dimc = floating_base_robot_.dim_passive() + floating_base_robot_.dimf();
+  const int dimaf = floating_base_robot_.dimv();
+  const int dimf = 0;
+  const int dimc = floating_base_robot_.dim_passive();
   ASSERT_EQ(dimf, 0);
   ASSERT_EQ(dimc, 6);
   const Eigen::MatrixXd Ginv_seed = Eigen::MatrixXd::Random(dimaf+dimc, dimaf+dimc);
@@ -156,21 +155,23 @@ TEST_F(RiccatiGainTest, floating_base_without_contacts) {
 TEST_F(RiccatiGainTest, floating_base_with_contacts) {
   const std::vector<int> contact_frames = {14, 24, 34, 44};
   floating_base_robot_ = Robot(floating_base_urdf_, contact_frames);
+  ContactStatus contact_status(contact_frames.size());
   std::vector<bool> active_contacts;
   std::random_device rnd;
   for (int i=0; i<contact_frames.size(); ++i) {
-    active_contacts.push_back(rnd()%1==0);
+    active_contacts.push_back(rnd()%2==0);
   }
-  floating_base_robot_.setContactStatus(active_contacts);
+  contact_status.setContactStatus(active_contacts);
   const int dimv = floating_base_robot_.dimv();
-  const int dimaf = floating_base_robot_.dimv() + floating_base_robot_.dimf();
-  const int dimf = floating_base_robot_.dimf();
-  const int dimc = floating_base_robot_.dim_passive() + floating_base_robot_.dimf();
+  const int dimaf = floating_base_robot_.dimv() + contact_status.dimf();
+  const int dimf = contact_status.dimf();
+  const int dimc = floating_base_robot_.dim_passive() + contact_status.dimf();
   const Eigen::MatrixXd Ginv_seed = Eigen::MatrixXd::Random(dimaf+dimc, dimaf+dimc);
   const Eigen::MatrixXd Ginv = Ginv_seed * Ginv_seed.transpose();
   const Eigen::MatrixXd Qafqv = Eigen::MatrixXd::Random(dimaf, 2*dimv);
   const Eigen::MatrixXd Cqv = Eigen::MatrixXd::Random(dimc, 2*dimv);
   RiccatiGain gain(floating_base_robot_);
+  gain.setContactStatus(contact_status);
   gain.computeFeedbackGain(Ginv, Qafqv, Cqv);
   Eigen::MatrixXd HC = Eigen::MatrixXd::Random(dimaf+dimc, 2*dimv);
   HC.topRows(dimaf) = Qafqv;

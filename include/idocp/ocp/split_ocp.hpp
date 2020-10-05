@@ -7,6 +7,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
@@ -95,7 +96,8 @@ public:
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
   ///
-  void linearizeOCP(Robot& robot, const double t, const double dtau, 
+  void linearizeOCP(Robot& robot, const ContactStatus& contact_status, 
+                    const double t, const double dtau, 
                     const Eigen::VectorXd& q_prev, const SplitSolution& s, 
                     const SplitSolution& s_next);
 
@@ -145,6 +147,10 @@ public:
   /// the inequality constraints.
   ///
   double maxDualStepSize();
+
+  void computeCostAndConstraintViolation(Robot& robot, const double t,
+                                         const double dtau, 
+                                         const SplitSolution& s);
 
   ///
   /// @brief Returns the stage cost and L1-norm of the violation of constraints 
@@ -214,22 +220,6 @@ public:
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
   ///
-  /// @brief Returns the squared KKT error norm by using previously computed 
-  /// KKT residual computed by linearizeOCP(). The result is not exactly the 
-  /// same as the squared KKT error norm of the original OCP. The result is the
-  /// squared norm of the condensed residual. However, this variables is 
-  /// sufficiently close to the original KKT error norm.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] s Split solution of this stage.
-  /// @return The squared norm of the condensed KKT residual.
-  ///
-  double condensedSquaredKKTErrorNorm(Robot& robot, const double t, 
-                                      const double dtau, 
-                                      const SplitSolution& s);
-
-  ///
   /// @brief Computes and returns the squared KKT error norm of the OCP of this
   /// stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -241,11 +231,11 @@ public:
   /// @param[in] s_next Split solution of the next stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double computeSquaredKKTErrorNorm(Robot& robot, const double t, 
-                                    const double dtau, 
-                                    const Eigen::VectorXd& q_prev, 
-                                    const SplitSolution& s, 
-                                    const SplitSolution& s_next);
+  void computeKKTResidual(Robot& robot, const double t, const double dtau, 
+                          const Eigen::VectorXd& q_prev, const SplitSolution& s, 
+                          const SplitSolution& s_next);
+
+  double squaredNormKKTResidual() const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -256,24 +246,37 @@ private:
   ConstraintsData constraints_data_;
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
-  StateEquation state_equation_;
   RobotDynamics robot_dynamics_;
   RiccatiGain riccati_gain_;
   RiccatiMatrixFactorizer riccati_factorizer_;
   RiccatiMatrixInverter riccati_inverter_;
   Eigen::MatrixXd Ginv_full_; /// @brief Inverse of the Riccati matrix G.
   SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
-  int dimv_, dimf_, dimc_;
+  int dimv_, dim_passive_, dimf_, dimc_;
   bool use_kinematics_;
+  double stage_cost_, constraint_violation_;
 
   ///
   /// @brief Set contact status from robot model, i.e., set dimension of the 
   /// contacts and equality constraints.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
-  inline void setContactStatus(const Robot& robot) {
-    dimf_ = robot.dimf();
-    dimc_ = robot.dim_passive() + robot.dimf();
+  inline void setContactStatusForKKT(const ContactStatus& contact_status) {
+    kkt_residual_.setContactStatus(contact_status);
+    kkt_matrix_.setContactStatus(contact_status);
+  }
+
+  ///
+  /// @brief Set contact status from robot model, i.e., set dimension of the 
+  /// contacts and equality constraints.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  ///
+  inline void setContactStatusForRiccatiRecursion(
+      const ContactStatus& contact_status) {
+    riccati_gain_.setContactStatus(contact_status);
+    riccati_inverter_.setContactStatus(contact_status);
+    dimf_ = contact_status.dimf();
+    dimc_ = dim_passive_ + contact_status.dimf();
   }
 
   ///

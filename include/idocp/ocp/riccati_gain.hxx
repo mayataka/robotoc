@@ -37,6 +37,12 @@ inline RiccatiGain::~RiccatiGain() {
 }
 
 
+inline void RiccatiGain::setContactStatus(const ContactStatus& contact_status) {
+  dimf_ = contact_status.dimf();
+  dimc_ = dim_passive_ + contact_status.dimf();
+}
+
+
 inline const Eigen::Block<const Eigen::MatrixXd> RiccatiGain::Kaq() const {
   return K_.block(0, 0, dimv_, dimv_);
 }
@@ -114,12 +120,6 @@ inline void RiccatiGain::computeFeedforward(
   assert(C.size() == dimc_);
   k_.head(dimaf+dimc_).noalias() = - Ginv.leftCols(dimaf) * laf;
   k_.head(dimaf+dimc_).noalias() -= Ginv.rightCols(dimc_) * C;
-}
-
-
-inline void RiccatiGain::setContactStatus(const ContactStatus& contact_status) {
-  dimf_ = contact_status.dimf();
-  dimc_ = dim_passive_ + contact_status.dimf();
 }
 
 } // namespace idocp 
