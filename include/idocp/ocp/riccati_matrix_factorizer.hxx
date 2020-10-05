@@ -60,7 +60,7 @@ inline void RiccatiMatrixFactorizer::setStateEquationDerivativeInverse(
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
           typename MatrixType4, typename MatrixType5, typename MatrixType6, 
           typename MatrixType7, typename MatrixType8>
-inline void RiccatiMatrixFactorizer::factorizeF(
+inline void RiccatiMatrixFactorizer::factorize_F(
     const double dtau, const Eigen::MatrixBase<MatrixType1>& Pqq_next,
     const Eigen::MatrixBase<MatrixType2>& Pqv_next,
     const Eigen::MatrixBase<MatrixType3>& Pvq_next,
@@ -136,7 +136,7 @@ inline void RiccatiMatrixFactorizer::factorizeF(
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
           typename MatrixType4>
-inline void RiccatiMatrixFactorizer::factorizeH(
+inline void RiccatiMatrixFactorizer::factorize_H(
     const double dtau, const Eigen::MatrixBase<MatrixType1>& Pqv_next, 
     const Eigen::MatrixBase<MatrixType2>& Pvv_next, 
     const Eigen::MatrixBase<MatrixType3>& Qqa, 
@@ -166,7 +166,7 @@ inline void RiccatiMatrixFactorizer::factorizeH(
 
 
 template <typename MatrixType1, typename MatrixType2>
-inline void RiccatiMatrixFactorizer::factorizeG(
+inline void RiccatiMatrixFactorizer::factorize_G(
     const double dtau, const Eigen::MatrixBase<MatrixType1>& Pvv_next, 
     const Eigen::MatrixBase<MatrixType2>& Qaa) const {
   assert(dtau > 0);
@@ -204,7 +204,7 @@ inline void RiccatiMatrixFactorizer::factorize_la(
 
 
 template <typename MatrixType1, typename MatrixType2>
-inline void RiccatiMatrixFactorizer::correctP(
+inline void RiccatiMatrixFactorizer::correct_P(
     const Eigen::MatrixBase<MatrixType1>& Pqq, 
     const Eigen::MatrixBase<MatrixType2>& Pqv) const {
   assert(Pqq.rows() == dimv_);

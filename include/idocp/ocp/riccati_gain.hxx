@@ -18,8 +18,8 @@ inline RiccatiGain::RiccatiGain(const Robot& robot)
           robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
     dimv_(robot.dimv()),
     dim_passive_(robot.dim_passive()),
-    dimf_(robot.dimf()),
-    dimc_(robot.dim_passive()+robot.dimf()) {
+    dimf_(0),
+    dimc_(robot.dim_passive()) {
 }
 
 

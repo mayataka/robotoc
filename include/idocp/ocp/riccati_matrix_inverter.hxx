@@ -10,9 +10,9 @@ namespace idocp {
 inline RiccatiMatrixInverter::RiccatiMatrixInverter(const Robot& robot) 
   : dimv_(robot.dimv()),
     dim_passive_(robot.dim_passive()),
-    dimf_(robot.dimf()),
-    dimc_(robot.dim_passive()+robot.dimf()),
-    dimaf_(robot.dimv()+robot.dimf()),
+    dimf_(0),
+    dimc_(robot.dim_passive()),
+    dimaf_(robot.dimv()),
     G_inv_(Eigen::MatrixXd::Zero(robot.dimv()+2*robot.max_dimf()+robot.dim_passive(), 
                                  robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
     Sc_(Eigen::MatrixXd::Zero(robot.max_dimf()+robot.dim_passive(), 
