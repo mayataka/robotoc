@@ -74,8 +74,8 @@ add_library(
   src/ocp/riccati_gain.cpp
   src/ocp/riccati_matrix_factorizer.cpp
   src/ocp/riccati_matrix_inverter.cpp
-  # src/ocp/terminal_ocp.cpp
-  # src/ocp/split_ocp.cpp
+  src/ocp/terminal_ocp.cpp
+  src/ocp/split_ocp.cpp
   # src/ocp/ocp.cpp
   # src/ocp/split_parnmpc.cpp
   # src/ocp/parnmpc.cpp

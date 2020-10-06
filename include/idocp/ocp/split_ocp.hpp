@@ -27,21 +27,21 @@ namespace idocp {
 
 ///
 /// @class SplitOCP
-/// @brief Split OCP for single stage. 
+/// @brief Split optimal control problem of a single stage. 
 ///
 class SplitOCP {
 public:
   ///
-  /// @brief Construct a split OCP.
+  /// @brief Construct a split optimal control problem.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] cost Shared ptr of the cost function.
-  /// @param[in] cost Shared ptr of the constraints.
+  /// @param[in] cost Shared ptr to the cost function.
+  /// @param[in] constraints Shared ptr to the constraints.
   ///
   SplitOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
            const std::shared_ptr<Constraints>& constraints);
 
   ///
-  /// @brief Default constructor. Does not construct any datas. 
+  /// @brief Default constructor.  
   ///
   SplitOCP();
 
@@ -51,22 +51,22 @@ public:
   ~SplitOCP();
 
   ///
-  /// @brief Use default copy constructor. 
+  /// @brief Default copy constructor. 
   ///
   SplitOCP(const SplitOCP&) = default;
 
   ///
-  /// @brief Use default copy assign operator. 
+  /// @brief Default copy assign operator. 
   ///
   SplitOCP& operator=(const SplitOCP&) = default;
 
   ///
-  /// @brief Use default move constructor. 
+  /// @brief Default move constructor. 
   ///
   SplitOCP(SplitOCP&&) noexcept = default;
 
   ///
-  /// @brief Use default move assign operator. 
+  /// @brief Default move assign operator. 
   ///
   SplitOCP& operator=(SplitOCP&&) noexcept = default;
 
@@ -88,8 +88,10 @@ public:
                        const SplitSolution& s);
 
   ///
-  /// @brief Linearize the OCP for Newton's method around the current solution.
+  /// @brief Linearize the OCP for Newton's method around the current solution, 
+  /// i.e., computes the KKT residual and Hessian.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status of robot at this stage. 
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] q_prev Configuration of the previous stage.
@@ -148,24 +150,20 @@ public:
   ///
   double maxDualStepSize();
 
-  void computeCostAndConstraintViolation(Robot& robot, const double t,
-                                         const double dtau, 
-                                         const SplitSolution& s);
-
   ///
   /// @brief Returns the stage cost and L1-norm of the violation of constraints 
   /// of this stage. The stage cost is recomputed. The violation of the  
   /// constriants is not computed. Instead, the previously computed residual  
-  /// computed by linearizeOCP() or computeSquaredKKTErrorNorm(), is used.
+  /// computed by SplitOCP::linearizeOCP or 
+  /// SplitOCP::computeKKTResidual, is used.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @return The stage cost and L1-norm of the constraints violation.
   ///
-  std::pair<double, double> costAndViolation(Robot& robot, const double t, 
-                                             const double dtau, 
-                                             const SplitSolution& s);
+  std::pair<double, double> costAndConstraintViolation(
+      Robot& robot, const double t, const double dtau, const SplitSolution& s);
 
   ///
   /// @brief Returns the stage cost and L1-norm of the violation of constraints 
@@ -174,6 +172,7 @@ public:
   /// The stage cost and the violation of the constriants are computed based on
   /// the temporary solution.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status of robot at this stage. 
   /// @param[in] step_size Step size for the primal variables. 
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
@@ -183,13 +182,11 @@ public:
   /// @param[in] d_next Split direction of the next stage.
   /// @return The stage cost and L1-norm of the constraints violation.
   ///
-  std::pair<double, double> costAndViolation(Robot& robot, 
-                                             const double step_size, 
-                                             const double t, const double dtau, 
-                                             const SplitSolution& s, 
-                                             const SplitDirection& d,
-                                             const SplitSolution& s_next, 
-                                             const SplitDirection& d_next);
+  std::pair<double, double> costAndConstraintViolation(
+      Robot& robot, const ContactStatus& contact_status, const double step_size, 
+      const double t, const double dtau, const SplitSolution& s, 
+      const SplitDirection& d, const SplitSolution& s_next, 
+      const SplitDirection& d_next);
 
   ///
   /// @brief Updates dual variables of the inequality constraints.
@@ -220,22 +217,28 @@ public:
   void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
   ///
-  /// @brief Computes and returns the squared KKT error norm of the OCP of this
-  /// stage.
+  /// @brief Computes the KKT residual of the OCP at this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status of robot at this stage. 
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @param[in] q_prev Configuration of the previous stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
-  /// @return The squared norm of the kKT residual.
   ///
-  void computeKKTResidual(Robot& robot, const double t, const double dtau, 
+  void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
+                          const double t, const double dtau, 
                           const Eigen::VectorXd& q_prev, const SplitSolution& s, 
                           const SplitSolution& s_next);
 
-  double squaredNormKKTResidual() const;
+  ///
+  /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
+  /// this function, SplitOCP::linearizeOCP or SplitOCP::computeKKTResidual
+  /// must be called.
+  /// @return The squared norm of the kKT residual.
+  ///
+  double squaredNormKKTResidual(const double dtau) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -259,7 +262,7 @@ private:
   ///
   /// @brief Set contact status from robot model, i.e., set dimension of the 
   /// contacts and equality constraints.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status.
   ///
   inline void setContactStatusForKKT(const ContactStatus& contact_status) {
     kkt_residual_.setContactStatus(contact_status);
@@ -269,7 +272,7 @@ private:
   ///
   /// @brief Set contact status from robot model, i.e., set dimension of the 
   /// contacts and equality constraints.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status.
   ///
   inline void setContactStatusForRiccatiRecursion(
       const ContactStatus& contact_status) {
@@ -287,6 +290,11 @@ private:
   inline Eigen::Block<Eigen::MatrixXd> Ginv_() {
     return Ginv_full_.topLeftCorner(dimv_+dimf_+dimc_, dimv_+dimf_+dimc_);
   }
+
+  double cost(Robot& robot, const double t, const double dtau, 
+              const SplitSolution& s);
+
+  double constraintViolation(const double dtau) const;
 
 };
 

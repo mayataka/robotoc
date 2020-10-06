@@ -9,7 +9,7 @@ TerminalOCP::TerminalOCP(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints) 
   : cost_(cost),
-    cost_data_(robot),
+    cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
     constraints_data_(constraints->createConstraintsData(robot)),
     kkt_residual_(robot),
@@ -38,13 +38,13 @@ TerminalOCP::~TerminalOCP() {
 }
 
 
-bool TerminalOCP::isFeasible(const Robot& robot, const SplitSolution& s) {
+bool TerminalOCP::isFeasible(Robot& robot, const SplitSolution& s) {
   // TODO: add inequality constraints at the terminal OCP.
   return true;
 }
 
 
-void TerminalOCP::initConstraints(const Robot& robot, const int time_step, 
+void TerminalOCP::initConstraints(Robot& robot, const int time_step, 
                                   const double dtau, const SplitSolution& s) {
   assert(time_step >= 0);
   assert(dtau > 0);
@@ -62,8 +62,10 @@ void TerminalOCP::linearizeOCP(Robot& robot, const double t,
   }
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, 
                                         kkt_residual_);
-  riccati.sq = - kkt_residual_.lq() + s.lmd;
-  riccati.sv = - kkt_residual_.lv() + s.gmm;
+  kkt_residual_.lq().noalias() -= s.lmd;
+  kkt_residual_.lv().noalias() -= s.gmm;
+  riccati.sq = - kkt_residual_.lq();
+  riccati.sv = - kkt_residual_.lv();
   kkt_matrix_.Qqq().setZero();
   kkt_matrix_.Qvv().setZero();
   cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
@@ -129,17 +131,9 @@ void TerminalOCP::updatePrimal(Robot& robot, const double step_size,
 }
 
 
-double TerminalOCP::squaredKKTErrorNorm(Robot& robot, const double t, 
-                                        const SplitSolution& s) const {
-  double error = 0;
-  error += (kkt_residual_.lq()-s.lmd).squaredNorm();
-  error += (kkt_residual_.lv()-s.gmm).squaredNorm();
-  return error;
-}
+void TerminalOCP::computeKKTResidual(Robot& robot, const double t,  
+                                     const SplitSolution& s) {
 
-
-double TerminalOCP::computeSquaredKKTErrorNorm(Robot& robot, const double t, 
-                                               const SplitSolution& s) {
   kkt_residual_.lq().setZero();
   kkt_residual_.lv().setZero();
   if (use_kinematics_) {
@@ -149,6 +143,10 @@ double TerminalOCP::computeSquaredKKTErrorNorm(Robot& robot, const double t,
                                         kkt_residual_);
   kkt_residual_.lq().noalias() -= s.lmd;
   kkt_residual_.lv().noalias() -= s.gmm;
+}
+
+
+double TerminalOCP::squaredNormKKTResidual() const {
   double error = 0;
   error += kkt_residual_.lq().squaredNorm();
   error += kkt_residual_.lv().squaredNorm();
