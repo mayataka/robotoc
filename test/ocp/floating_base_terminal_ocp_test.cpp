@@ -113,6 +113,9 @@ TEST_F(FloatingBaseTerminalOCPTest, linearizeOCP) {
   KKT_ref += (-1*kkt_residual.lq()+s.lmd).squaredNorm();
   KKT_ref += (-1*kkt_residual.lv()+s.gmm).squaredNorm();
   EXPECT_DOUBLE_EQ(KKT_ref, ocp.squaredNormKKTResidual());
+  EXPECT_TRUE(riccati.Pqq.isApprox(riccati.Pqq.transpose()));
+  EXPECT_TRUE(riccati.Pqv.isApprox(riccati.Pvq.transpose()));
+  EXPECT_TRUE(riccati.Pvv.isApprox(riccati.Pvv.transpose()));
 }
 
 

@@ -140,8 +140,6 @@ void SplitOCP::backwardRiccatiRecursion(
   riccati.Pqq.noalias() += riccati_gain_.Kaq().transpose() * kkt_matrix_.Qaq();
   riccati.Pqv = kkt_matrix_.Qqv();
   riccati.Pqv.noalias() += riccati_gain_.Kaq().transpose() * kkt_matrix_.Qav();
-  riccati.Pvq = kkt_matrix_.Qvq();
-  riccati.Pvq.noalias() += riccati_gain_.Kav().transpose() * kkt_matrix_.Qaq();
   riccati.Pvv = kkt_matrix_.Qvv();
   riccati.Pvv.noalias() += riccati_gain_.Kav().transpose() * kkt_matrix_.Qav();
   // Computes the Riccati factorization vectors
@@ -158,7 +156,6 @@ void SplitOCP::backwardRiccatiRecursion(
   if (dimf_ > 0) {
     riccati.Pqq.noalias() += riccati_gain_.Kfq().transpose() * kkt_matrix_.Qfq();
     riccati.Pqv.noalias() += riccati_gain_.Kfq().transpose() * kkt_matrix_.Qfv();
-    riccati.Pvq.noalias() += riccati_gain_.Kfv().transpose() * kkt_matrix_.Qfq();
     riccati.Pvv.noalias() += riccati_gain_.Kfv().transpose() * kkt_matrix_.Qfv();
     riccati.sq.noalias() -= kkt_matrix_.Qfq().transpose() * riccati_gain_.kf();
     riccati.sv.noalias() -= kkt_matrix_.Qfv().transpose() * riccati_gain_.kf();
@@ -166,13 +163,17 @@ void SplitOCP::backwardRiccatiRecursion(
   if (dimc_ > 0) {
     riccati.Pqq.noalias() += riccati_gain_.Kmuq().transpose() * kkt_matrix_.Cq();
     riccati.Pqv.noalias() += riccati_gain_.Kmuq().transpose() * kkt_matrix_.Cv();
-    riccati.Pvq.noalias() += riccati_gain_.Kmuv().transpose() * kkt_matrix_.Cq();
     riccati.Pvv.noalias() += riccati_gain_.Kmuv().transpose() * kkt_matrix_.Cv();
     riccati.sq.noalias() -= kkt_matrix_.Cq().transpose() * riccati_gain_.kmu();
     riccati.sv.noalias() -= kkt_matrix_.Cv().transpose() * riccati_gain_.kmu();
   }
-  // riccati_factorizer_.correctP(riccati.Pqq, riccati.Pqv);
-  // riccati_factorizer_.correct_s(riccati.sq);
+  riccati.Pvq = riccati.Pqv.transpose();
+  // instead of the following factorization, we utilize that the Riccati 
+  // factorization matrix is symmetric.
+  // riccati.Pvq = kkt_matrix_.Qvq();
+  // riccati.Pvq.noalias() += riccati_gain_.Kav().transpose() * kkt_matrix_.Qaq();
+  // riccati.Pvq.noalias() += riccati_gain_.Kfv().transpose() * kkt_matrix_.Qfq();
+  // riccati.Pvq.noalias() += riccati_gain_.Kmuv().transpose() * kkt_matrix_.Cq();
 }
 
 
