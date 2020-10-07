@@ -95,9 +95,7 @@ public:
   ///
   /// @brief Deactivate contacts over specified time steps 
   /// (from time_stage_begin to time_stage_end). 
-  /// @param[in] contact_indices Indices of contacts of interedted. 
-  /// @param[in] time_stage_begin Start time stage. 
-  /// @param[in] time_stage_end Last time stage. 
+  /// @param[in] time_stage Last time stage. 
   ///
   const ContactStatus& contactStatus(const int time_stage) const;
 

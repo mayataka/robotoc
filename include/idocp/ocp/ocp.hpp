@@ -72,7 +72,6 @@ public:
 
   ///
   /// @brief Updates solution by computing the primal-dual Newon direction.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Initial time of the horizon. Current time in MPC. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
@@ -112,10 +111,10 @@ public:
   ///
   /// @brief Sets the configuration and velocity over the horizon by linear 
   //// interpolation. 
-  /// @param[in] q Initial configuration. Size must be Robot::dimq().
-  /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] q Terminal configuration. Size must be Robot::dimq().
-  /// @param[in] v Terminal velocity. Size must be Robot::dimv().
+  /// @param[in] q0 Initial configuration. Size must be Robot::dimq().
+  /// @param[in] v0 Initial velocity. Size must be Robot::dimv().
+  /// @param[in] qN Terminal configuration. Size must be Robot::dimq().
+  /// @param[in] vN Terminal velocity. Size must be Robot::dimv().
   ///
   bool setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0,
                           const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);

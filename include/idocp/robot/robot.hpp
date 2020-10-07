@@ -292,7 +292,7 @@ public:
   template <typename VectorType>
   void computeContactVelocityResidual(
       const ContactStatus& contact_status, 
-      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
+      const Eigen::MatrixBase<VectorType>& velocity_residual) const;
 
   ///
   /// @brief Computes the partial derivatives of the contact velocity 
@@ -341,7 +341,7 @@ public:
   /// constriants with respect to the configuration. 
   /// Before calling this function, updateKinematics() must be called. 
   /// @param[in] contact_status Current contact status.
-  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
+  /// @param[out] contact_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
   ///
@@ -356,7 +356,7 @@ public:
   /// Before calling this function, updateKinematics() must be called. 
   /// @param[in] contact_status Current contact status.
   /// @param[in] coeff The coefficient that is multiplied to the result.
-  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
+  /// @param[out] contact_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
   ///
@@ -442,7 +442,6 @@ public:
   /// inverse dynamics with respect to the given configuration, velocity, and
   /// acceleration. If the robot has contacts, update contact forces by 
   /// calling setContactForces().
-  /// @param[in] contact_status Current contact status.
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Generalized velocity. Size must be Robot::dimv().
   /// @param[in] a Generalized acceleration. Size must be Robot::dimv().
