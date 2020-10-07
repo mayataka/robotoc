@@ -127,6 +127,7 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed variables of this 
   /// stage.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @param[in] d Split direction of this stage.

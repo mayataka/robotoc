@@ -139,10 +139,6 @@ TEST_F(FloatingBaseSplitOCPTest, KKTErrorNormOnlyStateEquation) {
   robot.RNEA(s.q, s.v, s.a, s.u);
   s.beta.setZero();
   s.mu_stack().setZero();
-  s.lmd.setZero();
-  s.gmm.setZero();
-  s_next.lmd.setZero();
-  s_next.gmm.setZero();
   ocp.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
   ocp.computeKKTResidual(robot, contact_status, t, dtau, q_prev, s, s_next);

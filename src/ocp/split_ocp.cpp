@@ -242,7 +242,7 @@ std::pair<double, double> SplitOCP::costAndConstraintViolation(
   }
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, dtau, 
                                              s_tmp_);
-stateequation::ComputeForwardEulerResidual(robot, step_size, dtau, s_tmp_,  
+  stateequation::ComputeForwardEulerResidual(robot, step_size, dtau, s_tmp_,  
                                              s_next.q, s_next.v, d_next.dq(), 
                                              d_next.dv(), kkt_residual_);
   robot_dynamics_.computeRobotDynamicsResidual(robot, contact_status, dtau, 

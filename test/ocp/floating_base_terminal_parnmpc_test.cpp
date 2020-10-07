@@ -5,6 +5,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/split_parnmpc.hpp"
@@ -13,7 +14,7 @@
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
-#include "idocp/cost/contact_cost.hpp"
+// #include "idocp/cost/contact_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 #include "idocp/constraints/joint_position_upper_limit.hpp"
@@ -31,17 +32,20 @@ protected:
     std::vector<int> contact_frames = {14, 24, 34, 44};
     robot = Robot(urdf, contact_frames);
     std::random_device rnd;
+    std::vector<bool> is_contact_active;
     for (const auto frame : contact_frames) {
-      contact_status.push_back(rnd()%2==0);
+      is_contact_active.push_back(rnd()%2==0);
     }
-    robot.setContactStatus(contact_status);
-    s = SplitSolution::Random(robot);
-    s_next = SplitSolution::Random(robot);
-    s_tmp = SplitSolution::Random(robot);
-    s_old = SplitSolution::Random(robot);
-    s_new = SplitSolution::Random(robot);
-    d = SplitDirection::Random(robot);
-    d_prev = SplitDirection::Random(robot);
+    contact_status = ContactStatus(robot.max_point_contacts());
+    contact_status.setContactStatus(is_contact_active);
+    s = SplitSolution::Random(robot, contact_status);
+    s_next = SplitSolution::Random(robot, contact_status);
+    s_prev = SplitSolution::Random(robot, contact_status);
+    s_tmp = SplitSolution::Random(robot, contact_status);
+    s_old = SplitSolution::Random(robot, contact_status);
+    s_new = SplitSolution::Random(robot, contact_status);
+    d = SplitDirection::Random(robot, contact_status);
+    d_prev = SplitDirection::Random(robot, contact_status);
     dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     q_prev = Eigen::VectorXd::Random(robot.dimq());
@@ -50,7 +54,7 @@ protected:
     dq_prev = Eigen::VectorXd::Random(robot.dimv());
     dv_prev = Eigen::VectorXd::Random(robot.dimv());
     std::shared_ptr<JointSpaceCost> joint_cost = std::make_shared<JointSpaceCost>(robot);
-    std::shared_ptr<ContactCost> contact_cost = std::make_shared<ContactCost>(robot);
+    // std::shared_ptr<ContactCost> contact_cost = std::make_shared<ContactCost>(robot);
     const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
     Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
     robot.normalizeConfiguration(q_ref);
@@ -77,11 +81,11 @@ protected:
     joint_cost->set_u_ref(u_ref);
     joint_cost->set_qf_weight(qf_weight);
     joint_cost->set_vf_weight(vf_weight);
-    contact_cost->set_f_weight(f_weight);
-    contact_cost->set_f_ref(f_ref);
+    // contact_cost->set_f_weight(f_weight);
+    // contact_cost->set_f_ref(f_ref);
     cost = std::make_shared<CostFunction>();
     cost->push_back(joint_cost);
-    cost->push_back(contact_cost);
+    // cost->push_back(contact_cost);
     cost_data = CostFunctionData(robot);
     constraints = std::make_shared<Constraints>();
     auto joint_lower_limit = std::make_shared<JointPositionLowerLimit>(robot);
@@ -95,7 +99,8 @@ protected:
     constraints_data = constraints->createConstraintsData(robot);
     kkt_matrix = KKTMatrix(robot);
     kkt_residual = KKTResidual(robot);
-    state_equation = StateEquation(robot);
+    kkt_matrix.setContactStatus(contact_status);
+    kkt_residual.setContactStatus(contact_status);
     robot_dynamics = RobotDynamics(robot);
   }
 
@@ -105,16 +110,15 @@ protected:
   double dtau, t;
   std::string urdf;
   Robot robot;
-  std::vector<bool> contact_status;
+  ContactStatus contact_status;
   std::shared_ptr<CostFunction> cost;
   CostFunctionData cost_data;
   std::shared_ptr<Constraints> constraints;
   ConstraintsData constraints_data;
-  SplitSolution s, s_next, s_tmp, s_old, s_new;
+  SplitSolution s, s_prev, s_next, s_tmp, s_old, s_new;
   SplitDirection d, d_prev;
   KKTMatrix kkt_matrix;
   KKTResidual kkt_residual;
-  StateEquation state_equation;
   RobotDynamics robot_dynamics;
   Eigen::VectorXd q_prev, v_prev, dq_prev, dv_prev;
 };
@@ -122,7 +126,6 @@ protected:
 
 TEST_F(FloatingBaseTerminalParNMPCTest, isFeasible) {
   SplitParNMPC parnmpc(robot, cost, constraints);
-  std::cout << constraints_data.size() << std::endl;
   EXPECT_EQ(parnmpc.isFeasible(robot, s), 
             constraints->isFeasible(robot, constraints_data, s));
 }
@@ -131,18 +134,18 @@ TEST_F(FloatingBaseTerminalParNMPCTest, isFeasible) {
 TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormOnlyStateEquation) {
   auto empty_cost = std::make_shared<CostFunction>();
   auto empty_constraints = std::make_shared<Constraints>();
-  robot.setContactStatus(std::vector<bool>({false, false, false, false}));
-  kkt_residual.setContactStatus(robot);
-  kkt_matrix.setContactStatus(robot);
-  s.setContactStatus(robot);
   SplitParNMPC parnmpc(robot, empty_cost, empty_constraints);
+  contact_status.setContactStatus(std::vector<bool>({false, false, false, false}));
+  kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setContactStatus(contact_status);
+  s.setContactStatus(contact_status);
   robot.RNEA(s.q, s.v, s.a, s.u);
   s.beta.setZero();
   s.mu_stack().setZero();
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.computeSquaredKKTErrorNormTerminal(robot, t, dtau, 
-                                                               q_prev, v_prev, s);
+  parnmpc.computeKKTResidualTerminal(robot, contact_status, t, dtau, q_prev, v_prev, s);
+  const double kkt_error = parnmpc.squaredNormKKTResidual(dtau);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::MatrixXd Jdiffminus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd Jdiffplus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
@@ -160,7 +163,7 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormOnlyStateEquation) {
                          + kkt_residual.la().squaredNorm()
                          + dtau*dtau*s.u.head(6).squaredNorm();
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
-  auto pair = parnmpc.costAndViolation(robot, t, dtau, s);
+  auto pair = parnmpc.costAndConstraintViolation(robot, t, dtau, s);
   EXPECT_DOUBLE_EQ(pair.first, 0);
 }
 
@@ -168,16 +171,16 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormOnlyStateEquation) {
 TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndInverseDynamics) {
   auto empty_cost = std::make_shared<CostFunction>();
   auto empty_constraints = std::make_shared<Constraints>();
-  robot.setContactStatus(std::vector<bool>({false, false, false, false}));
-  kkt_residual.setContactStatus(robot);
-  kkt_matrix.setContactStatus(robot);
-  s.setContactStatus(robot);
+  contact_status.setContactStatus(std::vector<bool>({false, false, false, false}));
+  kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setContactStatus(contact_status);
+  s.setContactStatus(contact_status);
   SplitParNMPC parnmpc(robot, empty_cost, empty_constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
   s.mu_stack().setZero();
-  const double kkt_error = parnmpc.computeSquaredKKTErrorNormTerminal(robot, t, dtau, 
-                                                               q_prev, v_prev, s);
+  parnmpc.computeKKTResidualTerminal(robot, contact_status, t, dtau, q_prev, v_prev, s);
+  const double kkt_error = parnmpc.squaredNormKKTResidual(dtau);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::MatrixXd Jdiffminus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd Jdiffplus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
@@ -192,7 +195,6 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndInverseDynam
   Eigen::MatrixXd du_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd du_dv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd du_da = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  robot.setContactForces(s.f);
   robot.RNEA(s.q, s.v, s.a, kkt_residual.u_res);
   kkt_residual.u_res -= s.u;
   robot.RNEADerivatives(s.q, s.v, s.a, du_dq, du_dv, du_da);
@@ -210,7 +212,7 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndInverseDynam
                          + dtau*dtau*kkt_residual.u_res.squaredNorm()
                          + dtau*dtau*s.u.head(6).squaredNorm();
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
-  auto pair = parnmpc.costAndViolation(robot, t, dtau, s);
+  const auto pair = parnmpc.costAndConstraintViolation(robot, t, dtau, s);
   EXPECT_DOUBLE_EQ(pair.first, 0);
 }
 
@@ -218,15 +220,15 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndInverseDynam
 TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndRobotDynamics) {
   auto empty_cost = std::make_shared<CostFunction>();
   auto empty_constraints = std::make_shared<Constraints>();
-  robot.setContactStatus(contact_status);
-  kkt_residual.setContactStatus(robot);
-  kkt_matrix.setContactStatus(robot);
-  s.setContactStatus(robot);
+  contact_status.setContactStatus(std::vector<bool>({false, false, false, false}));
+  kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setContactStatus(contact_status);
+  s.setContactStatus(contact_status);
   SplitParNMPC parnmpc(robot, empty_cost, empty_constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.computeSquaredKKTErrorNormTerminal(robot, t, dtau, 
-                                                               q_prev, v_prev, s);
+  parnmpc.computeKKTResidualTerminal(robot, contact_status, t, dtau, q_prev, v_prev, s);
+  const double kkt_error = parnmpc.squaredNormKKTResidual(dtau);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::MatrixXd Jdiffminus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd Jdiffplus = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
@@ -241,22 +243,22 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndRobotDynamic
   Eigen::MatrixXd du_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd du_dv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd du_da = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  Eigen::MatrixXd du_df = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimf());
-  robot.setContactForces(s.f);
+  Eigen::MatrixXd du_df = Eigen::MatrixXd::Zero(robot.dimv(), contact_status.dimf());
+  robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, kkt_residual.u_res);
   kkt_residual.u_res -= s.u;
   robot.RNEADerivatives(s.q, s.v, s.a, du_dq, du_dv, du_da);
   robot.updateKinematics(s.q, s.v, s.a);
-  robot.dRNEAPartialdFext(du_df);
+  robot.dRNEAPartialdFext(contact_status, du_df);
   kkt_residual.lq() += dtau * du_dq.transpose() * s.beta;
   kkt_residual.lv() += dtau * du_dv.transpose() * s.beta;
   kkt_residual.la() += dtau * du_da.transpose() * s.beta;
   kkt_residual.lf() += dtau * du_df.transpose() * s.beta;
   kkt_residual.lu -= dtau * s.beta;
-  robot.computeBaumgarteResidual(dtau, dtau, kkt_residual.C().tail(robot.dimf()));
-  robot.computeBaumgarteDerivatives(dtau, dtau, kkt_matrix.Cq().bottomRows(robot.dimf()), 
-                                    kkt_matrix.Cv().bottomRows(robot.dimf()), 
-                                    kkt_matrix.Ca().bottomRows(robot.dimf()));
+  robot.computeBaumgarteResidual(contact_status, dtau, dtau, kkt_residual.C().tail(contact_status.dimf()));
+  robot.computeBaumgarteDerivatives(contact_status, dtau, dtau, kkt_matrix.Cq().bottomRows(contact_status.dimf()), 
+                                    kkt_matrix.Cv().bottomRows(contact_status.dimf()), 
+                                    kkt_matrix.Ca().bottomRows(contact_status.dimf()));
   kkt_residual.lq() += kkt_matrix.Cq().transpose() * s.mu_stack();
   kkt_residual.lv() += kkt_matrix.Cv().transpose() * s.mu_stack();
   kkt_residual.la() += kkt_matrix.Ca().transpose() * s.mu_stack();
@@ -272,7 +274,7 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormStateEquationAndRobotDynamic
                          + dtau*dtau*kkt_residual.u_res.squaredNorm()
                          + kkt_residual.C().squaredNorm();
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
-  auto pair = parnmpc.costAndViolation(robot, t, dtau, s);
+  const auto pair = parnmpc.costAndConstraintViolation(robot, t, dtau, s);
   EXPECT_DOUBLE_EQ(pair.first, 0);
   const double violation_ref = kkt_residual.Fx().lpNorm<1>() 
                                 + dtau * kkt_residual.u_res.lpNorm<1>()
@@ -286,17 +288,22 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormEmptyCost) {
   SplitParNMPC parnmpc(robot, empty_cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.computeSquaredKKTErrorNormTerminal(robot, t, dtau, 
-                                                               q_prev, v_prev, s);
-  kkt_residual.setContactStatus(robot);
-  kkt_matrix.setContactStatus(robot);
-  s.setContactStatus(robot);
+  parnmpc.computeKKTResidualTerminal(robot, contact_status, t, dtau, q_prev, v_prev, s);
+  const double kkt_error = parnmpc.squaredNormKKTResidual(dtau);
   constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, s.u, kkt_residual.lu);
-  state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
-                                               kkt_matrix, kkt_residual);
-  robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
-  double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
+  stateequation::LinearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
+                                                kkt_matrix, kkt_residual);
+  robot_dynamics.linearizeRobotDynamics(robot, contact_status, dtau, s, kkt_matrix, kkt_residual);
+  double kkt_error_ref = 0;
+  kkt_error_ref += kkt_residual.lq().squaredNorm();
+  kkt_error_ref += kkt_residual.lv().squaredNorm();
+  kkt_error_ref += kkt_residual.la().squaredNorm();
+  kkt_error_ref += kkt_residual.lf().squaredNorm();
+  kkt_error_ref += kkt_residual.lu.squaredNorm();
+  kkt_error_ref += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
+  kkt_error_ref += robot_dynamics.squaredNormRobotDynamicsResidual(dtau, kkt_residual);
+  kkt_error_ref += constraints->squaredNormPrimalAndDualResidual(constraints_data);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
 }
 
@@ -305,19 +312,23 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNormEmptyConstraints) {
   auto empty_constraints = std::make_shared<Constraints>();
   SplitParNMPC parnmpc(robot, cost, empty_constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
-  constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.computeSquaredKKTErrorNormTerminal(robot, t, dtau, 
-                                                               q_prev, v_prev, s);
-  kkt_residual.setContactStatus(robot);
-  kkt_matrix.setContactStatus(robot);
-  s.setContactStatus(robot);
+  parnmpc.computeKKTResidualTerminal(robot, contact_status, t, dtau, q_prev, v_prev, s);
+  const double kkt_error = parnmpc.squaredNormKKTResidual(dtau);
+  robot.updateKinematics(s.q, s.v, s.a);
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
   cost->lu(robot, cost_data, t, dtau, s.u, kkt_residual.lu);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
-  state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
-                                               kkt_matrix, kkt_residual);
-  robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
-  double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
+  stateequation::LinearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
+                                                kkt_matrix, kkt_residual);
+  robot_dynamics.linearizeRobotDynamics(robot, contact_status, dtau, s, kkt_matrix, kkt_residual);
+  double kkt_error_ref = 0;
+  kkt_error_ref += kkt_residual.lq().squaredNorm();
+  kkt_error_ref += kkt_residual.lv().squaredNorm();
+  kkt_error_ref += kkt_residual.la().squaredNorm();
+  kkt_error_ref += kkt_residual.lf().squaredNorm();
+  kkt_error_ref += kkt_residual.lu.squaredNorm();
+  kkt_error_ref += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
+  kkt_error_ref += robot_dynamics.squaredNormRobotDynamicsResidual(dtau, kkt_residual);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
 }
 
@@ -326,98 +337,103 @@ TEST_F(FloatingBaseTerminalParNMPCTest, KKTErrorNorm) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.computeSquaredKKTErrorNormTerminal(robot, t, dtau, 
-                                                               q_prev, v_prev, s);
-  kkt_residual.setContactStatus(robot);
-  kkt_matrix.setContactStatus(robot);
-  s.setContactStatus(robot);
+  parnmpc.computeKKTResidualTerminal(robot, contact_status, t, dtau, q_prev, v_prev, s);
+  const double kkt_error = parnmpc.squaredNormKKTResidual(dtau);
   robot.updateKinematics(s.q, s.v, s.a);
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
   cost->lu(robot, cost_data, t, dtau, s.u, kkt_residual.lu);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual);
   constraints->augmentDualResidual(robot, constraints_data, dtau, s.u, kkt_residual.lu);
-  state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
-                                               kkt_matrix, kkt_residual);
-  robot_dynamics.augmentRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
-  double kkt_error_ref = kkt_residual.squaredKKTErrorNorm(dtau);
-  kkt_error_ref += constraints->squaredKKTErrorNorm(robot, constraints_data, dtau, s);
+  stateequation::LinearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
+                                                kkt_matrix, kkt_residual);
+  robot_dynamics.linearizeRobotDynamics(robot, contact_status, dtau, s, kkt_matrix, kkt_residual);
+  double kkt_error_ref = 0;
+  kkt_error_ref += kkt_residual.lq().squaredNorm();
+  kkt_error_ref += kkt_residual.lv().squaredNorm();
+  kkt_error_ref += kkt_residual.la().squaredNorm();
+  kkt_error_ref += kkt_residual.lf().squaredNorm();
+  kkt_error_ref += kkt_residual.lu.squaredNorm();
+  kkt_error_ref += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
+  kkt_error_ref += robot_dynamics.squaredNormRobotDynamicsResidual(dtau, kkt_residual);
+  kkt_error_ref += constraints->squaredNormPrimalAndDualResidual(constraints_data);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
 }
 
 
-TEST_F(FloatingBaseTerminalParNMPCTest, costAndViolation) {
+TEST_F(FloatingBaseTerminalParNMPCTest, costAndConstraintViolation) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
-                                                       v_prev, s, s_next);
-  const auto pair = parnmpc.costAndViolationTerminal(robot, t, dtau, s); 
+  parnmpc.computeKKTResidualTerminal(robot, contact_status, t, dtau, q_prev, v_prev, s);
+  const auto pair = parnmpc.costAndConstraintViolationTerminal(robot, t, dtau, s); 
   const double cost_ref 
       = cost->l(robot, cost_data, t, dtau, s) 
           + cost->phi(robot, cost_data, t, s)
           + constraints->costSlackBarrier(constraints_data);
   EXPECT_DOUBLE_EQ(pair.first, cost_ref);
-  Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
-  robot.subtractConfiguration(q_prev, s.q, qdiff);
-  kkt_residual.Fq() = qdiff + dtau * s.v;
-  kkt_residual.Fv() = v_prev - s.v + dtau * s.a;
-  robot.setContactForces(s.f);
+  stateequation::ComputeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, 
+                                              kkt_residual);
+  robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, kkt_residual.u_res);
   kkt_residual.u_res -= s.u;
   robot.updateKinematics(s.q, s.v, s.a);
-  robot.computeBaumgarteResidual(dtau, dtau, kkt_residual.C());
+  robot.computeBaumgarteResidual(contact_status, dtau, dtau, kkt_residual.C_contacts());
+  constraints->computePrimalAndDualResidual(robot, constraints_data, dtau, s);
   const double violation_ref 
       = kkt_residual.Fq().lpNorm<1>() + kkt_residual.Fv().lpNorm<1>() 
           + dtau * kkt_residual.u_res.lpNorm<1>() 
-          + kkt_residual.C().head(robot.dimf()).lpNorm<1>()
+          + kkt_residual.C_contacts().lpNorm<1>()
           + dtau * s.u.head(6).lpNorm<1>()
-          + constraints->residualL1Nrom(robot, constraints_data, dtau, s);
+          + constraints->l1NormPrimalResidual(constraints_data);
   EXPECT_DOUBLE_EQ(pair.second, violation_ref);
 }
 
 
-TEST_F(FloatingBaseTerminalParNMPCTest, costAndViolationWithStepSize) {
+TEST_F(FloatingBaseTerminalParNMPCTest, costAndConstraintViolationWithStepSize) {
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  const double kkt_error = parnmpc.computeSquaredKKTErrorNorm(robot, t, dtau, q_prev, 
-                                                       v_prev, s, s_next);
   const double step_size = 0.3;
-  const auto pair = parnmpc.costAndViolationTerminal(robot, step_size, t, dtau, s_old, 
-                                                     d_prev, s, d, s_new); 
-  robot.integrateConfiguration(s.q, d.dq(), step_size, s_new.q);
-  s_new.v = s.v + step_size * d.dv();
-  s_new.a = s.a + step_size * d.da();
-  s_new.f_stack() = s.f_stack() + step_size * d.df();
-  s_new.set_f();
-  s_new.u = s.u + step_size * d.du;
+  const auto pair = parnmpc.costAndConstraintViolationTerminal(
+      robot, contact_status, step_size, t, dtau, s_prev, d_prev, s, d, s_tmp); 
+  std::cout << "aaa" << std::endl;
+  robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
+  s_tmp.v = s.v + step_size * d.dv();
+  s_tmp.a = s.a + step_size * d.da();
+  s_tmp.f_stack() = s.f_stack() + step_size * d.df();
+  s_tmp.set_f();
+  s_tmp.u = s.u + step_size * d.du;
+  std::cout << "aaa" << std::endl;
+  constraints->computePrimalAndDualResidual(robot, constraints_data, dtau, s_tmp);
   const double cost_ref 
-      = cost->l(robot, cost_data, t, dtau, s_new) 
-          + cost->phi(robot, cost_data, t, s_new)
-          + constraints->costSlackBarrier(constraints_data, step_size);
+      = cost->l(robot, cost_data, t, dtau, s_tmp) 
+          + cost->phi(robot, cost_data, t, s_tmp)
+          + constraints->costSlackBarrier(constraints_data);
   EXPECT_DOUBLE_EQ(pair.first, cost_ref);
-  Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
-  robot.subtractConfiguration(s_old.q, s_new.q, qdiff);
-  kkt_residual.Fq() = qdiff + dtau * s_new.v + step_size * d_prev.dq();
-  kkt_residual.Fv() = s_old.v - s_new.v + dtau * s_new.a + step_size * d_prev.dv();
-  robot.setContactForces(s_new.f);
-  robot.RNEA(s_new.q, s_new.v, s_new.a, kkt_residual.u_res);
-  kkt_residual.u_res -= s_new.u;
-  robot.updateKinematics(s_new.q, s_new.v, s_new.a);
-  robot.computeBaumgarteResidual(dtau, dtau, kkt_residual.C());
+  std::cout << "aaa" << std::endl;
+  stateequation::ComputeBackwardEulerResidual(robot, dtau, s_prev.q, s_prev.v, s_tmp, 
+                                              kkt_residual);
+  kkt_residual.Fq() += step_size * d_prev.dq();
+  kkt_residual.Fv() += step_size * d_prev.dv();
+  robot.setContactForces(contact_status, s_tmp.f);
+  robot.RNEA(s_tmp.q, s_tmp.v, s_tmp.a, kkt_residual.u_res);
+  kkt_residual.u_res -= s_tmp.u;
+  robot.updateKinematics(s_tmp.q, s_tmp.v, s_tmp.a);
+  robot.computeBaumgarteResidual(contact_status, dtau, dtau, kkt_residual.C_contacts());
+  std::cout << "aaa" << std::endl;
   const double violation_ref 
       = kkt_residual.Fq().lpNorm<1>() + kkt_residual.Fv().lpNorm<1>() 
           + dtau * kkt_residual.u_res.lpNorm<1>() 
-          + kkt_residual.C().head(robot.dimf()).lpNorm<1>()
-          + dtau * s_new.u.head(6).lpNorm<1>()
-          + constraints->residualL1Nrom(robot, constraints_data, dtau, s_new);
+          + kkt_residual.C_contacts().lpNorm<1>()
+          + dtau * s_tmp.u.head(6).lpNorm<1>()
+          + constraints->l1NormPrimalResidual(constraints_data);
   EXPECT_DOUBLE_EQ(pair.second, violation_ref);
 }
 
 
 TEST_F(FloatingBaseTerminalParNMPCTest, coarseUpdate) {
-  s.setContactStatus(robot);
+  s.setContactStatus(contact_status);
   SplitParNMPC parnmpc(robot, cost, constraints);
   parnmpc.initConstraints(robot, 2, dtau, s);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
@@ -425,8 +441,8 @@ TEST_F(FloatingBaseTerminalParNMPCTest, coarseUpdate) {
                                                          2*robot.dimv());
   const Eigen::MatrixXd aux_mat_next = aux_mat_seed.transpose() * aux_mat_seed;
   SplitSolution s_new_coarse(robot);
-  s_new_coarse.setContactStatus(robot);
-  parnmpc.coarseUpdateTerminal(robot, t, dtau, q_prev, v_prev, s, d, s_new_coarse);
+  s_new_coarse.setContactStatus(contact_status);
+  parnmpc.coarseUpdateTerminal(robot, contact_status, t, dtau, q_prev, v_prev, s, d, s_new_coarse);
   // coarse update ref
   kkt_residual.lu.setZero();
   kkt_matrix.Quu.setZero();
@@ -436,13 +452,11 @@ TEST_F(FloatingBaseTerminalParNMPCTest, coarseUpdate) {
   cost->luu(robot, cost_data, t, dtau, s.u, kkt_matrix.Quu);
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s.u, 
                                      kkt_matrix.Quu, kkt_residual.lu);
-  robot_dynamics.condenseRobotDynamics(robot, dtau, s, kkt_matrix, kkt_residual);
-  cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, 
-                                     kkt_residual);
+  robot_dynamics.condenseRobotDynamics(robot, contact_status, dtau, s, kkt_matrix, kkt_residual);
+  cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, s,
-                                   kkt_residual);
-  state_equation.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual);
+  stateequation::LinearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
   cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix);
   cost->computeTerminalCostHessian(robot, cost_data, t, s, kkt_matrix);
@@ -453,10 +467,11 @@ TEST_F(FloatingBaseTerminalParNMPCTest, coarseUpdate) {
   Eigen::MatrixXd kkt_matrix_inverse = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
   kkt_matrix.invert(dtau, kkt_matrix_inverse.topLeftCorner(dimKKT, dimKKT));
   SplitDirection d_ref(robot);
+  d_ref.setContactStatus(contact_status);
   d_ref.split_direction() = kkt_matrix_inverse.topLeftCorner(dimKKT, dimKKT)
                               * kkt_residual.KKT_residual();
   SplitSolution s_new_coarse_ref(robot);
-  s_new_coarse_ref.setContactStatus(robot);
+  s_new_coarse_ref.setContactStatus(contact_status);
   s_new_coarse_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_coarse_ref.gmm = s.gmm - d_ref.dgmm();
   s_new_coarse_ref.mu_stack() = s.mu_stack() - d_ref.dmu();
@@ -520,17 +535,12 @@ TEST_F(FloatingBaseTerminalParNMPCTest, coarseUpdate) {
   EXPECT_TRUE(s_new_coarse.f_stack().isApprox(s_new_coarse_ref.f_stack()));
   EXPECT_TRUE(s_new_coarse.q.isApprox(s_new_coarse_ref.q));
   EXPECT_TRUE(s_new_coarse.v.isApprox(s_new_coarse_ref.v));
-
-  double condensed_KKT_ref = kkt_residual.KKT_residual().squaredNorm();
-  condensed_KKT_ref += constraints->squaredKKTErrorNorm(robot, constraints_data, dtau, s);
-  EXPECT_DOUBLE_EQ(condensed_KKT_ref, parnmpc.condensedSquaredKKTErrorNorm(robot, t, dtau, s));
-
   Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   parnmpc.getStateFeedbackGain(Kuq, Kuv);
   const int dimv = robot.dimv();
-  const int dimf = robot.dimf();
-  const int dimc = robot.dim_passive()+robot.dimf();
+  const int dimf = contact_status.dimf();
+  const int dimc = robot.dim_passive()+contact_status.dimf();
   const Eigen::MatrixXd da_dq = kkt_matrix_inverse.block(dimx+dimc, dimx+dimc+dimv+dimf, dimv, dimv);
   const Eigen::MatrixXd da_dv = kkt_matrix_inverse.block(dimx+dimc, dimx+dimc+dimv+dimf+dimv, dimv, dimv);
   const Eigen::MatrixXd df_dq = kkt_matrix_inverse.block(dimx+dimc+dimv, dimx+dimc+dimv+dimf, dimf, dimv);
@@ -557,7 +567,6 @@ TEST_F(FloatingBaseTerminalParNMPCTest, computePrimalDualDirection) {
   EXPECT_TRUE(d.dq().isApprox(qdiff));
   EXPECT_TRUE(d.dv().isApprox(s_new.v-s.v));
 }
-
 
 } // namespace idocp
 

@@ -19,8 +19,8 @@ public:
   ///
   /// @brief Construct a MPC.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] cost Shared ptr of the cost function.
-  /// @param[in] cost Shared ptr of the constraints.
+  /// @param[in] cost Shared ptr to the cost function.
+  /// @param[in] constraints Shared ptr to the constraints.
   /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
   /// @param[in] num_proc Number of the threads in solving the OCP. Must be 
@@ -129,7 +129,6 @@ public:
 
   ///
   /// @brief Updates solution by computing the primal-dual Newon direction.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
