@@ -168,12 +168,6 @@ void SplitOCP::backwardRiccatiRecursion(
     riccati.sv.noalias() -= kkt_matrix_.Cv().transpose() * riccati_gain_.kmu();
   }
   riccati.Pvq = riccati.Pqv.transpose();
-  // instead of the following factorization, we utilize that the Riccati 
-  // factorization matrix is symmetric.
-  // riccati.Pvq = kkt_matrix_.Qvq();
-  // riccati.Pvq.noalias() += riccati_gain_.Kav().transpose() * kkt_matrix_.Qaq();
-  // riccati.Pvq.noalias() += riccati_gain_.Kfv().transpose() * kkt_matrix_.Qfq();
-  // riccati.Pvq.noalias() += riccati_gain_.Kmuv().transpose() * kkt_matrix_.Cq();
 }
 
 

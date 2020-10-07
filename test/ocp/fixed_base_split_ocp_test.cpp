@@ -508,6 +508,32 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
     kkt_matrix.Qfv() = kkt_matrix.Qvf().transpose();
     kkt_matrix.Qfa() = kkt_matrix.Qaf().transpose();
   }
+  // std::cout << "in test" << std::endl;
+  // std::cout << std::setprecision(20) << "Qqq\n" << kkt_matrix.Qqq() << std::endl;
+  // std::cout << std::setprecision(20) << "Qqv\n" << kkt_matrix.Qqv() << std::endl;
+  // std::cout << std::setprecision(20) << "Qqa\n" << kkt_matrix.Qqa() << std::endl;
+  // std::cout << std::setprecision(20) << "Qqf\n" << kkt_matrix.Qqf() << std::endl;
+  // std::cout << std::setprecision(20) << "Qvq\n" << kkt_matrix.Qvq() << std::endl;
+  // std::cout << std::setprecision(20) << "Qvv\n" << kkt_matrix.Qvv() << std::endl;
+  // std::cout << std::setprecision(20) << "Qva\n" << kkt_matrix.Qva() << std::endl;
+  // std::cout << std::setprecision(20) << "Qvf\n" << kkt_matrix.Qvf() << std::endl;
+  // std::cout << std::setprecision(20) << "Qaq\n" << kkt_matrix.Qaq() << std::endl;
+  // std::cout << std::setprecision(20) << "Qav\n" << kkt_matrix.Qav() << std::endl;
+  // std::cout << std::setprecision(20) << "Qaa\n" << kkt_matrix.Qaa() << std::endl;
+  // std::cout << std::setprecision(20) << "Qaf\n" << kkt_matrix.Qaf() << std::endl;
+  // std::cout << std::setprecision(20) << "Qfq\n" << kkt_matrix.Qfq() << std::endl;
+  // std::cout << std::setprecision(20) << "Qfv\n" << kkt_matrix.Qfv() << std::endl;
+  // std::cout << std::setprecision(20) << "Qfa\n" << kkt_matrix.Qfa() << std::endl;
+  // std::cout << std::setprecision(20) << "Qff\n" << kkt_matrix.Qff() << std::endl;
+  // std::cout << std::setprecision(20) << "Cq\n" << kkt_matrix.Cq() << std::endl;
+  // std::cout << std::setprecision(20) << "Cv\n" << kkt_matrix.Cv() << std::endl;
+  // std::cout << std::setprecision(20) << "Ca\n" << kkt_matrix.Ca() << std::endl;
+  // std::cout << std::setprecision(20) << "Cf\n" << kkt_matrix.Cf() << std::endl;
+  // std::cout << std::setprecision(20) << "lq\n" << kkt_residual.lq() << std::endl;
+  // std::cout << std::setprecision(20) << "lv\n" << kkt_residual.lv() << std::endl;
+  // std::cout << std::setprecision(20) << "la\n" << kkt_residual.la() << std::endl;
+  // std::cout << std::setprecision(20) << "lf\n" << kkt_residual.lf() << std::endl;
+  // std::cout << std::setprecision(20) << "C\n" << kkt_residual.C() << std::endl;
   factorizer.factorize_F(dtau, riccati_next.Pqq, riccati_next.Pqv, 
                          riccati_next.Pvq, riccati_next.Pvv, 
                          kkt_matrix.Qqq(), kkt_matrix.Qqv(), 
@@ -520,6 +546,7 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
                           riccati_next.sv, kkt_residual.la());
   kkt_matrix.Qaq() = kkt_matrix.Qqa().transpose();
   kkt_matrix.Qav() = kkt_matrix.Qva().transpose();
+
   Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf+dimc, dimv+dimf+dimc);
   G.topLeftCorner(dimv+dimf, dimv+dimf) = kkt_matrix.Qafaf();
   G.topRightCorner(dimv+dimf, dimc) = kkt_matrix.Caf().transpose();
@@ -571,12 +598,12 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   sv_ref -= kkt_matrix.Qvf() * gain.kf();
   sq_ref -= kkt_matrix.Cq().transpose() * gain.kmu();
   sv_ref -= kkt_matrix.Cv().transpose() * gain.kmu();
-  EXPECT_TRUE(riccati.Pqq.isApprox(Pqq_ref));
-  EXPECT_TRUE(riccati.Pqv.isApprox(Pqv_ref));
-  EXPECT_TRUE(riccati.Pvq.isApprox(Pvq_ref));;
-  EXPECT_TRUE(riccati.Pvv.isApprox(Pvv_ref));
-  EXPECT_TRUE(riccati.sq.isApprox(sq_ref));
-  EXPECT_TRUE(riccati.sv.isApprox(sv_ref));
+  EXPECT_TRUE(riccati.Pqq.isApprox(Pqq_ref, 1.0e-10));
+  EXPECT_TRUE(riccati.Pqv.isApprox(Pqv_ref, 1.0e-10));
+  EXPECT_TRUE(riccati.Pvq.isApprox(Pvq_ref, 1.0e-10));
+  EXPECT_TRUE(riccati.Pvv.isApprox(Pvv_ref, 1.0e-10));
+  EXPECT_TRUE(riccati.sq.isApprox(sq_ref, 1.0e-10));
+  EXPECT_TRUE(riccati.sv.isApprox(sv_ref, 1.0e-10));
   std::cout << riccati.Pqq - Pqq_ref << std::endl;
   std::cout << riccati.Pqv - Pqv_ref << std::endl;
   std::cout << riccati.Pvq - Pvq_ref << std::endl;
@@ -589,13 +616,13 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   const Eigen::VectorXd da_ref = gain.ka() + gain.Kaq() * d.dq() + gain.Kav() * d.dv(); 
   const Eigen::VectorXd dq_next_ref = d.dq() + dtau * d.dv() + kkt_residual.Fq();
   const Eigen::VectorXd dv_next_ref = d.dv() + dtau * d.da() + kkt_residual.Fv();
-  EXPECT_TRUE(d_next.dq().isApprox(dq_next_ref));
-  EXPECT_TRUE(d_next.dv().isApprox(dv_next_ref));
+  EXPECT_TRUE(d_next.dq().isApprox(dq_next_ref, 1.0e-10));
+  EXPECT_TRUE(d_next.dv().isApprox(dv_next_ref, 1.0e-10));
   gain.computeFeedbackGain(Ginv, Qqvaf.transpose(), kkt_matrix.Cqv());
   gain.computeFeedforward(Ginv, kkt_residual.laf(), kkt_residual.C());
   ocp.computeCondensedDirection(robot, dtau, s, d);
-  EXPECT_TRUE(d.df().isApprox(gain.kf()+gain.Kfq()*d.dq()+gain.Kfv()*d.dv()));
-  EXPECT_TRUE(d.dmu().isApprox(gain.kmu()+gain.Kmuq()*d.dq()+gain.Kmuv()*d.dv()));
+  EXPECT_TRUE(d.df().isApprox(gain.kf()+gain.Kfq()*d.dq()+gain.Kfv()*d.dv(), 1.0e-10));
+  EXPECT_TRUE(d.dmu().isApprox(gain.kmu()+gain.Kmuq()*d.dq()+gain.Kmuv()*d.dv(), 1.0e-10));
   Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   ocp.getStateFeedbackGain(Kuq, Kuv);
@@ -607,8 +634,8 @@ TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
   if (dimf > 0) {
     Kuv_ref += du_df * gain.Kfv();
   }
-  EXPECT_TRUE(Kuq.isApprox(Kuq_ref));
-  EXPECT_TRUE(Kuv.isApprox(Kuv_ref));
+  EXPECT_TRUE(Kuq.isApprox(Kuq_ref, 1.0e-10));
+  EXPECT_TRUE(Kuv.isApprox(Kuv_ref, 1.0e-10));
   ocp.computeKKTResidual(robot, contact_status, t, dtau, q_prev, s, s_next);
   const auto pair_ref = ocp.costAndConstraintViolation(robot, t, dtau, s); 
   EXPECT_DOUBLE_EQ(pair.first, pair_ref.first);

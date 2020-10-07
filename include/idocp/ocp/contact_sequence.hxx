@@ -10,7 +10,7 @@ namespace idocp {
 inline ContactSequence::ContactSequence(const Robot& robot, const int N)
   : max_point_contacts_(robot.max_point_contacts()),
     N_(N),
-    contact_sequence_(N, robot.max_point_contacts()) {
+    contact_sequence_(N, ContactStatus(robot.max_point_contacts())) {
 }
 
 

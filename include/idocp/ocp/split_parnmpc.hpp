@@ -7,6 +7,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
@@ -99,7 +100,8 @@ public:
   /// @param[out] d Split direction of this stage.
   /// @param[out] s_new_coarse Coarse updated split splition of this stage.
   ///
-  void coarseUpdate(Robot& robot, const double t, const double dtau, 
+  void coarseUpdate(Robot& robot, const ContactStatus& contact_status,
+                    const double t, const double dtau, 
                     const Eigen::VectorXd& q_prev, 
                     const Eigen::VectorXd& v_prev, const SplitSolution& s, 
                     const SplitSolution& s_next, 
@@ -120,7 +122,8 @@ public:
   /// @param[out] d Split direction of this stage.
   /// @param[out] s_new_coarse Coarse updated split splition of this stage.
   ///
-  void coarseUpdateTerminal(Robot& robot, const double t, const double dtau, 
+  void coarseUpdateTerminal(Robot& robot, const ContactStatus& contact_status,
+                            const double t, const double dtau, 
                             const Eigen::VectorXd& q_prev, 
                             const Eigen::VectorXd& v_prev, 
                             const SplitSolution& s, SplitDirection& d, 
@@ -453,6 +456,16 @@ private:
   Eigen::VectorXd x_res_; /// @brief Residual of state and costate used in the forward and backward correction.
   Eigen::VectorXd dx_; /// @brief Correction term of state and costate used in the forward and backward correction.
   bool use_kinematics_;
+
+  ///
+  /// @brief Set contact status from robot model, i.e., set dimension of the 
+  /// contacts and equality constraints.
+  /// @param[in] contact_status Contact status.
+  ///
+  inline void setContactStatusForKKT(const ContactStatus& contact_status) {
+    kkt_residual_.setContactStatus(contact_status);
+    kkt_matrix_.setContactStatus(contact_status);
+  }
 
 };
 

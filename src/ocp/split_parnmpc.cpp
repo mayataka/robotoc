@@ -67,7 +67,9 @@ void SplitParNMPC::initConstraints(Robot& robot, const int time_step,
 }
 
 
-void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau, 
+void SplitParNMPC::coarseUpdate(Robot& robot, 
+                                const ContactStatus& contact_status,
+                                const double t, const double dtau, 
                                 const Eigen::VectorXd& q_prev, 
                                 const Eigen::VectorXd& v_prev,
                                 const SplitSolution& s,
@@ -80,8 +82,7 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   assert(v_prev.size() == robot.dimv());
   assert(aux_mat_next_old.rows() == 2*robot.dimv());
   assert(aux_mat_next_old.cols() == 2*robot.dimv());
-  kkt_residual_.setContactStatus(robot);
-  kkt_matrix_.setContactStatus(robot);
+  setContactStatusForKKT(contact_status);
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
@@ -94,15 +95,15 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
   cost_->luu(robot, cost_data_, t, dtau, s.u, kkt_matrix_.Quu);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s.u, 
                                      kkt_matrix_.Quu, kkt_residual_.lu);
-  robot_dynamics_.condenseRobotDynamics(robot, dtau, s, kkt_matrix_, 
-                                        kkt_residual_);
-  // forms the KKT matrix and KKT residual
+  robot_dynamics_.condenseRobotDynamics(robot, contact_status, dtau, s, 
+                                        kkt_matrix_, kkt_residual_);
+  // construct the KKT matrix and KKT residual
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
                                      kkt_residual_);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual_);
-  state_equation_.linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
-                                         kkt_matrix_, kkt_residual_);
+  stateequation::LinearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
+                                        kkt_matrix_, kkt_residual_);
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix_);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
                                      kkt_matrix_, kkt_residual_);
@@ -123,8 +124,9 @@ void SplitParNMPC::coarseUpdate(Robot& robot, const double t, const double dtau,
 }
 
 
-void SplitParNMPC::coarseUpdateTerminal(Robot& robot, const double t, 
-                                        const double dtau, 
+void SplitParNMPC::coarseUpdateTerminal(Robot& robot,  
+                                        const ContactStatus& contact_status,
+                                        const double t, const double dtau, 
                                         const Eigen::VectorXd& q_prev, 
                                         const Eigen::VectorXd& v_prev, 
                                         const SplitSolution& s, 
@@ -153,16 +155,16 @@ void SplitParNMPC::coarseUpdateTerminal(Robot& robot, const double t,
   cost_->luu(robot, cost_data_, t, dtau, s.u, kkt_matrix_.Quu);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s.u, 
                                      kkt_matrix_.Quu, kkt_residual_.lu);
-  robot_dynamics_.condenseRobotDynamics(robot, dtau, s, kkt_matrix_, 
-                                        kkt_residual_);
-  // forms the KKT matrix and KKT residual
+  robot_dynamics_.condenseRobotDynamics(robot, contact_status, dtau, s, 
+                                        kkt_matrix_, kkt_residual_);
+  // constructs the KKT matrix and KKT residual
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
                                      kkt_residual_);
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual_);
-  state_equation_.linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
-                                                 kkt_matrix_, kkt_residual_);
+  stateequation::LinearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
+                                                kkt_matrix_, kkt_residual_);
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix_);
   cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
