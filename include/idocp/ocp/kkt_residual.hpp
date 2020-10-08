@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 
 
 namespace idocp {
@@ -53,9 +54,9 @@ public:
   ///
   /// @brief Set contact status from robot model, i.e., set dimension of the 
   /// contacts and equality constraints.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status.
   ///
-  void setContactStatus(const Robot& robot);
+  void setContactStatus(const ContactStatus& contact_status);
 
   ///
   /// @brief KKT residual. 
@@ -80,7 +81,7 @@ public:
   ///
   /// @brief Residual with respect to q and v transition.
   /// @return Reference to the residual with respect to q and v transition.
-  /// Size is 2*Robot::dimv().
+  /// Size is 2 * Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> Fx();
 
@@ -136,7 +137,7 @@ public:
   ///
   /// @brief Residual with respect to state x.
   /// @return Reference to the residual with respect to state x. Size is 
-  /// 2*Robot::dimv().
+  /// 2 * Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lx();
 
@@ -144,7 +145,7 @@ public:
   /// @brief Residual with respect to acceleration and the stack of the 
   /// contact forces, a and f.
   /// @return Reference to the residual with respect to a and f. Size is 
-  /// Robot::dimv()+KKTResidual::dimf().
+  /// Robot::dimv() + KKTResidual::dimf().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> laf();
 
@@ -172,7 +173,7 @@ public:
   ///
   /// @brief Residual with respect to q and v transition.
   /// @return Const reference to the residual with respect to q and v transition.
-  /// Size is 2*Robot::dimv().
+  /// Size is 2 * Robot::dimv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> Fx() const;
 
@@ -228,7 +229,7 @@ public:
   ///
   /// @brief Residual with respect to state x.
   /// @return Const reference to the residual with respect to state x. Size is 
-  /// 2*Robot::dimv().
+  /// 2 * Robot::dimv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lx() const;
 
@@ -236,7 +237,7 @@ public:
   /// @brief Residual with respect to acceleration and the stack of the 
   /// contact forces, a and f.
   /// @return Const reference to the residual with respect to a and f. Size is 
-  /// Robot::dimv()+KKResidual::dimf().
+  /// Robot::dimv() + KKResidual::dimf().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> laf() const;
 

@@ -22,26 +22,26 @@ namespace idocp {
 
 ///
 /// @class OCP
-/// @brief OCP solver by Riccati recursion. 
+/// @brief Optimal control problem solver by Riccati recursion. 
 ///
 class OCP {
 public:
   ///
-  /// @brief Construct OCP solver.
+  /// @brief Construct optimal control problem solver.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] cost Shared ptr of the cost function.
-  /// @param[in] cost Shared ptr of the constraints.
+  /// @param[in] cost Shared ptr to the cost function.
+  /// @param[in] constraints Shared ptr to the constraints.
   /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] num_proc Number of the threads in solving the OCP. Must be 
-  /// positive. Default is 1.
+  /// @param[in] num_proc Number of the threads in solving the optimal control 
+  /// problem. Must be positive. Default is 1.
   ///
   OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
       const std::shared_ptr<Constraints>& constraints, const double T, 
       const int N, const int num_proc=1);
 
   ///
-  /// @brief Default constructor. Does not construct any datas. 
+  /// @brief Default constructor. 
   ///
   OCP();
 
@@ -72,7 +72,6 @@ public:
 
   ///
   /// @brief Updates solution by computing the primal-dual Newon direction.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Initial time of the horizon. Current time in MPC. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
@@ -112,10 +111,10 @@ public:
   ///
   /// @brief Sets the configuration and velocity over the horizon by linear 
   //// interpolation. 
-  /// @param[in] q Initial configuration. Size must be Robot::dimq().
-  /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] q Terminal configuration. Size must be Robot::dimq().
-  /// @param[in] v Terminal velocity. Size must be Robot::dimv().
+  /// @param[in] q0 Initial configuration. Size must be Robot::dimq().
+  /// @param[in] v0 Initial velocity. Size must be Robot::dimv().
+  /// @param[in] qN Terminal configuration. Size must be Robot::dimq().
+  /// @param[in] vN Terminal velocity. Size must be Robot::dimv().
   ///
   bool setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0,
                           const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
@@ -178,26 +177,23 @@ public:
   void clearLineSearchFilter();
 
   ///
-  /// @brief Returns the squared KKT error norm by using previously computed 
-  /// results computed by updateSolution(). The result is not exactly the 
-  /// same as the squared KKT error norm of the original OCP. The result is the
-  /// squared norm of the condensed residual. However, this variables is 
-  /// sufficiently close to the original KKT error norm.
-  /// @param[in] t Current time. 
-  /// @return The squared norm of the condensed KKT residual.
-  ///
-  double KKTError(const double t);
-
-
-  ///
-  /// @brief Computes and returns the squared KKT error norm of the OCP. 
+  /// @brief Computes the KKT residula of the optimal control problem. 
   /// @param[in] t Current time. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @return The squared norm of the kKT residual.
   ///
-  double computeKKTError(const double t, const Eigen::VectorXd& q, 
-                         const Eigen::VectorXd& v);
+  void computeKKTResidual(const double t, const Eigen::VectorXd& q, 
+                          const Eigen::VectorXd& v);
+
+  ///
+  /// @brief Returns the squared KKT error norm by using previously computed 
+  /// results computed by updateSolution(). The result is not exactly the 
+  /// same as the squared KKT error norm of the original optimal control 
+  /// problem. The result is the squared norm of the condensed residual. 
+  /// However, this variables is sufficiently close to the original KKT error norm.
+  /// @return The squared norm of the condensed KKT residual.
+  ///
+  double KKTError();
 
   ///
   /// @brief Prints the solution into console. 

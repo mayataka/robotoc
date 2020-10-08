@@ -20,21 +20,21 @@ namespace idocp {
 
 ///
 /// @class TerminalOCP
-/// @brief Split OCP for terminal stage. 
+/// @brief Split optimal control problem at the terminal stage. 
 ///
 class TerminalOCP {
 public:
   ///
-  /// @brief Construct a terminal OCP.
+  /// @brief Construct a terminal optimal control problem.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] cost Shared ptr of the cost function.
-  /// @param[in] cost Shared ptr of the constraints.
+  /// @param[in] cost Shared ptr to the cost function.
+  /// @param[in] constraints Shared ptr to the constraints.
   ///
   TerminalOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
               const std::shared_ptr<Constraints>& constraints);
 
   ///
-  /// @brief Default constructor. Does not construct any datas. 
+  /// @brief Default constructor.  
   ///
   TerminalOCP();
   
@@ -44,22 +44,22 @@ public:
   ~TerminalOCP();
 
   ///
-  /// @brief Use default copy constructor. 
+  /// @brief Default copy constructor. 
   ///
   TerminalOCP(const TerminalOCP&) = default;
 
   ///
-  /// @brief Use default copy assign operator. 
+  /// @brief Default copy assign operator. 
   ///
   TerminalOCP& operator=(const TerminalOCP&) = default;
 
   ///
-  /// @brief Use default move constructor. 
+  /// @brief Default move constructor. 
   ///
   TerminalOCP(TerminalOCP&&) noexcept = default;
 
   ///
-  /// @brief Use default move assign operator. 
+  /// @brief Default move assign operator. 
   ///
   TerminalOCP& operator=(TerminalOCP&&) noexcept = default;
 
@@ -68,7 +68,7 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] s Split solution of this stage.
   ///
-  bool isFeasible(const Robot& robot, const SplitSolution& s);
+  bool isFeasible(Robot& robot, const SplitSolution& s);
 
   ///
   /// @brief Initialize the constraints, i.e., set slack and dual variables. 
@@ -77,16 +77,16 @@ public:
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   ///
-  void initConstraints(const Robot& robot, const int time_step, 
+  void initConstraints(Robot& robot, const int time_step, 
                        const double dtau, const SplitSolution& s);
 
   ///
-  /// @brief Linearize the terminal OCP for Newton's method around the current 
-  /// solution.
+  /// @brief Linearize the terminal optimal control problem around the current 
+  /// solution for Newton's method, i.e, computes KKT residual and Hessian.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] s Split solution of this stage.
-  /// @param[out] riccati Riccati factorization of this stage.
+  /// @param[in] t Current time of the terminal stage. 
+  /// @param[in] s Split solution of the terminal stage.
+  /// @param[out] riccati Riccati factorization of the terminal stage.
   ///
   void linearizeOCP(Robot& robot, const double t, const SplitSolution& s, 
                     RiccatiFactorization& riccati);
@@ -94,6 +94,7 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed variables of this 
   /// stage.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] d Split direction of this stage.
   /// 
@@ -118,6 +119,7 @@ public:
 
   ///
   /// @brief Returns the terminal cost.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
   /// @param[in] s Split solution of this stage.
   ///
@@ -126,6 +128,7 @@ public:
   ///
   /// @brief Returns the terminal cost under step_size. The split solution of 
   /// this stage and is computed by step_size temporary. 
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] step_size Step size for the primal variables. 
   /// @param[in] t Current time of this stage. 
   /// @param[in] s Split solution of this stage.
@@ -153,26 +156,20 @@ public:
                     const SplitDirection& d, SplitSolution& s) const;
 
   ///
-  /// @brief Returns the squared KKT error norm by using previously computed 
-  /// KKT residual computed by linearizeOCP().
+  /// @brief Computes the KKT residual of the OCP at this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
   /// @param[in] s Split solution of this stage.
-  /// @return The squared norm of the KKT residual.
   ///
-  double squaredKKTErrorNorm(Robot& robot, const double t, 
-                             const SplitSolution& s) const;
+  void computeKKTResidual(Robot& robot, const double t, const SplitSolution& s);
 
   ///
-  /// @brief Computes and returns the squared KKT error norm by using  
-  /// previously computed KKT residual computed by linearizeOCP().
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] s Split solution of this stage.
-  /// @return The squared norm of the KKT residual.
+  /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
+  /// this function, SplitOCP::linearizeOCP or SplitOCP::computeKKTResidual
+  /// must be called.
+  /// @return The squared norm of the kKT residual.
   ///
-  double computeSquaredKKTErrorNorm(Robot& robot, const double t, 
-                                    const SplitSolution& s);
+  double squaredNormKKTResidual() const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

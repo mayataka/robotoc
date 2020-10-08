@@ -1,2 +1,3 @@
 add_subdirectory(fixed_base)
 add_subdirectory(floating_base)
+add_test_macro(contact_status_test)

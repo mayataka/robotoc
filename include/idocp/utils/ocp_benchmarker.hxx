@@ -62,34 +62,8 @@ inline void OCPBenchmarker<ParNMPC>::setInitialGuessSolution(
 
 
 template <typename OCPType>
-inline void OCPBenchmarker<OCPType>::activateContact(
-    const int contact_index, const int start_time_stage, 
-    const int last_time_stage) {
-  ocp_.activateContact(contact_index, start_time_stage, last_time_stage);
-}
-
-
-template <typename OCPType>
-inline void OCPBenchmarker<OCPType>::deactivateContact(
-    const int contact_index, const int start_time_stage, 
-    const int last_time_stage) {
-  ocp_.deactivateContact(contact_index, start_time_stage, last_time_stage);
-}
-
-
-template <typename OCPType>
-inline void OCPBenchmarker<OCPType>::activateContacts(
-    const std::vector<int>& contact_indices, const int start_time_stage, 
-    const int last_time_stage) {
-  ocp_.activateContacts(contact_indices, start_time_stage, last_time_stage);
-}
-
-
-template <typename OCPType>
-inline void OCPBenchmarker<OCPType>::deactivateContacts(
-    const std::vector<int>& contact_indices, const int start_time_stage, 
-    const int last_time_stage) {
-  ocp_.deactivateContacts(contact_indices, start_time_stage, last_time_stage);
+inline OCPType* OCPBenchmarker<OCPType>::getSolverHandle() {
+  return &ocp_;
 }
 
 
@@ -151,12 +125,13 @@ inline void OCPBenchmarker<OCPType>::testConvergence(const double t,
   else {
     std::cout << "Line search is disable" << std::endl;
   }
-  std::cout << "Initial KKT error = " << ocp_.computeKKTError(t, q, v) 
-            << std::endl;
+  ocp_.computeKKTResidual(t, q, v);
+  std::cout << "Initial KKT error = " << ocp_.KKTError() << std::endl;
   for (int i=0; i<num_iteration; ++i) {
     ocp_.updateSolution(t, q, v, line_search);
+    ocp_.computeKKTResidual(t, q, v);
     std::cout << "KKT error at iteration " << i << " = " 
-              << ocp_.computeKKTError(t, q, v) << std::endl;
+              << ocp_.KKTError() << std::endl;
   }
   std::cout << "-----------------------------------" << std::endl;
   std::cout << std::endl;

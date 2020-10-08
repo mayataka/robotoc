@@ -1,7 +1,7 @@
 #ifndef IDOCP_CONSTRAINT_COMPONENT_BASE_HXX_
 #define IDOCP_CONSTRAINT_COMPONENT_BASE_HXX_
 
-#include "idocp/constraints/pdipm_func.hpp"
+#include "idocp/constraints/pdipm.hpp"
 #include <assert.h>
 
 
@@ -19,16 +19,27 @@ inline void ConstraintComponentBase::setFractionToBoundaryRate(
   fraction_to_boundary_rate_ = fraction_to_boundary_rate;
 }
 
+inline double ConstraintComponentBase::l1NormPrimalResidual(
+    const ConstraintComponentData& data) const {
+  return data.residual.lpNorm<1>();
+}
+
+
+inline double ConstraintComponentBase::squaredNormPrimalAndDualResidual(
+    const ConstraintComponentData& data) const {
+  return (data.residual.squaredNorm() + data.duality.squaredNorm());
+}
+
 
 inline double ConstraintComponentBase::maxSlackStepSize(
     const ConstraintComponentData& data) const {
-  return fractionToBoundary(data.slack, data.dslack);
+  return pdipm::FractionToBoundarySlack(fraction_to_boundary_rate_, data);
 }
 
 
 inline double ConstraintComponentBase::maxDualStepSize(
     const ConstraintComponentData& data) const {
-  return fractionToBoundary(data.dual, data.ddual);
+  return pdipm::FractionToBoundaryDual(fraction_to_boundary_rate_, data);
 }
 
 
@@ -48,44 +59,31 @@ inline void ConstraintComponentBase::updateDual(ConstraintComponentData& data,
 
 inline double ConstraintComponentBase::costSlackBarrier(
     const ConstraintComponentData& data) const {
-  const double cost = - barrier_ * data.slack.array().log().sum();
-  return cost;
+  return pdipm::CostBarrier(barrier_, data.slack);
 }
 
 
 inline double ConstraintComponentBase::costSlackBarrier(
     const ConstraintComponentData& data, const double step_size) const {
-  const double cost 
-      = - barrier_ * (data.slack+step_size*data.dslack).array().log().sum();
-  return cost;
+  return pdipm::CostBarrier(barrier_, data.slack+step_size*data.dslack);
 }
 
 
 inline void ConstraintComponentBase::setSlackAndDualPositive(
-    Eigen::VectorXd& slack, Eigen::VectorXd& dual) const {
-  pdipmfunc::SetSlackAndDualPositive(barrier_, slack, dual);
+    ConstraintComponentData& data) const {
+  pdipm::SetSlackAndDualPositive(barrier_, data);
 }
 
 
 inline void ConstraintComponentBase::computeDuality(
-    const Eigen::VectorXd& slack, const Eigen::VectorXd& dual, 
-    Eigen::VectorXd& duality) const {
-  pdipmfunc::ComputeDuality(barrier_, slack, dual, duality);
+    ConstraintComponentData& data) const {
+  pdipm::ComputeDuality(barrier_, data);
 }
 
 
 inline void ConstraintComponentBase::computeDualDirection(
-    const Eigen::VectorXd& slack, const Eigen::VectorXd& dual, 
-    const Eigen::VectorXd& dslack, const Eigen::VectorXd& duality, 
-    Eigen::VectorXd& ddual) const {
-  pdipmfunc::ComputeDualDirection(slack, dual, dslack, duality, ddual);
-}
-
-
-inline double ConstraintComponentBase::fractionToBoundary(
-    const Eigen::VectorXd& vec, const Eigen::VectorXd& dvec) const {
-  return pdipmfunc::FractionToBoundary(dimc(), fraction_to_boundary_rate_, 
-                                       vec, dvec);
+    ConstraintComponentData& data) const {
+  pdipm::ComputeDualDirection(data);
 }
 
 } // namespace idocp

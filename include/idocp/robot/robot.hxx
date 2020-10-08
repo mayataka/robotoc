@@ -146,12 +146,12 @@ inline void Robot::updateKinematics(
 
 template <typename VectorType>
 inline void Robot::computeBaumgarteResidual(
-    const double time_step,
+    const ContactStatus& contact_status, const double time_step,
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
   assert(time_step > 0);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if (point_contacts_[i].isActive()) {
+    if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeBaumgarteResidual(
           model_, data_, time_step,
           (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
@@ -164,11 +164,12 @@ inline void Robot::computeBaumgarteResidual(
 
 template <typename VectorType>
 inline void Robot::computeBaumgarteResidual(
-    const double coeff, const double time_step,
+    const ContactStatus& contact_status, const double coeff, 
+    const double time_step,
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if (point_contacts_[i].isActive()) {
+    if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeBaumgarteResidual(
           model_, data_, coeff, time_step,
           (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
@@ -181,7 +182,7 @@ inline void Robot::computeBaumgarteResidual(
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void Robot::computeBaumgarteDerivatives(
-    const double time_step,
+    const ContactStatus& contact_status, const double time_step,
     const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
     const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da) {
@@ -190,7 +191,7 @@ inline void Robot::computeBaumgarteDerivatives(
   assert(baumgarte_partial_da.cols() == dimv_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if (point_contacts_[i].isActive()) {
+    if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeBaumgarteDerivatives(
           model_, data_, time_step,
           (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
@@ -207,7 +208,8 @@ inline void Robot::computeBaumgarteDerivatives(
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void Robot::computeBaumgarteDerivatives(
-    const double coeff, const double time_step,
+    const ContactStatus& contact_status, const double coeff, 
+    const double time_step,
     const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
     const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da) {
@@ -216,7 +218,7 @@ inline void Robot::computeBaumgarteDerivatives(
   assert(baumgarte_partial_da.cols() == dimv_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if (point_contacts_[i].isActive()) {
+    if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeBaumgarteDerivatives(
           model_, data_, coeff, time_step,
           (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
@@ -224,6 +226,115 @@ inline void Robot::computeBaumgarteDerivatives(
           (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))
               .block(3*num_active_contacts, 0, 3, dimv_),
           (const_cast<Eigen::MatrixBase<MatrixType3>&>(baumgarte_partial_da))
+              .block(3*num_active_contacts, 0, 3, dimv_));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename VectorType>
+inline void Robot::computeContactVelocityResidual(
+    const ContactStatus& contact_status, 
+    const Eigen::MatrixBase<VectorType>& velocity_residual) const {
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      point_contacts_[i].computeContactVelocityResidual(
+          model_, data_,
+          (const_cast<Eigen::MatrixBase<VectorType>&>(velocity_residual))
+              .template segment<3>(3*num_active_contacts));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename MatrixType1, typename MatrixType2>
+inline void Robot::computeContactVelocityDerivatives(
+    const ContactStatus& contact_status, 
+    const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
+    const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv) {
+  assert(velocity_partial_dq.cols() == dimv_);
+  assert(velocity_partial_dv.cols() == dimv_);
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      point_contacts_[i].computeContactVelocityDerivatives(
+          model_, data_, 
+          (const_cast<Eigen::MatrixBase<MatrixType1>&>(velocity_partial_dq))
+              .block(3*num_active_contacts, 0, 3, dimv_),
+          (const_cast<Eigen::MatrixBase<MatrixType2>&>(velocity_partial_dv))
+              .block(3*num_active_contacts, 0, 3, dimv_));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename VectorType>
+inline void Robot::computeContactResidual(
+    const ContactStatus& contact_status, 
+    const Eigen::MatrixBase<VectorType>& contact_residual) const {
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      point_contacts_[i].computeContactResidual(
+          model_, data_,
+          (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
+              .template segment<3>(3*num_active_contacts));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename VectorType>
+inline void Robot::computeContactResidual(
+    const ContactStatus& contact_status, const double coeff,
+    const Eigen::MatrixBase<VectorType>& contact_residual) const {
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      point_contacts_[i].computeContactResidual(
+          model_, data_, coeff,
+          (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
+              .template segment<3>(3*num_active_contacts));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename MatrixType>
+inline void Robot::computeContactDerivative(
+    const ContactStatus& contact_status,
+    const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
+  assert(contact_partial_dq.cols() == dimv_);
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      point_contacts_[i].computeContactDerivative(
+          model_, data_, 
+          (const_cast<Eigen::MatrixBase<MatrixType>&>(contact_partial_dq))
+              .block(3*num_active_contacts, 0, 3, dimv_));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
+template <typename MatrixType>
+inline void Robot::computeContactDerivative(
+    const ContactStatus& contact_status, const double coeff,
+    const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
+  assert(contact_partial_dq.cols() == dimv_);
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      point_contacts_[i].computeContactDerivative(
+          model_, data_, coeff,
+          (const_cast<Eigen::MatrixBase<MatrixType>&>(contact_partial_dq))
               .block(3*num_active_contacts, 0, 3, dimv_));
       ++num_active_contacts;
     }
@@ -297,36 +408,12 @@ inline double Robot::restitutionCoefficient(const int contact_index) const {
 }
 
 
-inline void Robot::setContactStatus(
-    const std::vector<bool>& is_each_contact_active) {
-  assert(is_each_contact_active.size() == is_each_contact_active_.size());
-  int num_active_contacts = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    is_each_contact_active_[i] = is_each_contact_active[i];
-    if (is_each_contact_active[i]) {
-      point_contacts_[i].activate();
-      ++num_active_contacts;
-    }
-    else {
-      point_contacts_[i].deactivate();
-    }
-  }
-  num_active_contacts_ = num_active_contacts;
-  dimf_ = 3 * num_active_contacts;
-  if (num_active_contacts_ > 0) {
-    has_active_contacts_ = true;
-  }
-  else {
-    has_active_contacts_ = false;
-  }
-}
-
-
-inline void Robot::setContactForces(const std::vector<Eigen::Vector3d>& f) {
+inline void Robot::setContactForces(const ContactStatus& contact_status, 
+                                    const std::vector<Eigen::Vector3d>& f) {
   assert(f.size() == point_contacts_.size());
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if (point_contacts_[i].isActive()) {
+    if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeJointForceFromContactForce(f[i], fjoint_);
       ++num_active_contacts;
     }
@@ -399,13 +486,58 @@ inline void Robot::RNEADerivatives(
 }
 
 
+template <typename ConfigVectorType, typename TangentVectorType1, 
+          typename TangentVectorType2>
+inline void Robot::RNEAImpulse(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType1>& dv,
+    const Eigen::MatrixBase<TangentVectorType2>& res) {
+  assert(q.size() == dimq_);
+  assert(dv.size() == dimv_);
+  assert(res.size() == dimv_);
+  model_.gravity.linear().setZero();
+  const_cast<Eigen::MatrixBase<TangentVectorType2>&>(res)
+      = pinocchio::rnea(model_, data_, q, Eigen::VectorXd::Zero(dimv_), dv, 
+                        fjoint_);
+  model_.gravity.linear() = model_.gravity981;
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType, 
+          typename MatrixType1, typename MatrixType2>
+inline void Robot::RNEAImpulseDerivatives(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType>& dv, 
+    const Eigen::MatrixBase<MatrixType1>& dRNEA_partial_dq, 
+    const Eigen::MatrixBase<MatrixType2>& dRNEA_partial_ddv) {
+  assert(q.size() == dimq_);
+  assert(dv.size() == dimv_);
+  assert(dRNEA_partial_dq.cols() == dimv_);
+  assert(dRNEA_partial_dq.rows() == dimv_);
+  assert(dRNEA_partial_ddv.cols() == dimv_);
+  assert(dRNEA_partial_ddv.rows() == dimv_);
+  model_.gravity.linear().setZero();
+  pinocchio::computeRNEADerivatives(
+      model_, data_, q, Eigen::VectorXd::Zero(dimv_), dv, fjoint_,
+      const_cast<Eigen::MatrixBase<MatrixType1>&>(dRNEA_partial_dq),
+      dimpulse_dv_,
+      const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_ddv));
+  (const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_ddv)) 
+      .template triangularView<Eigen::StrictlyLower>() 
+      = (const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_ddv)).transpose()
+          .template triangularView<Eigen::StrictlyLower>();
+  model_.gravity.linear() = model_.gravity981;
+}
+
+
 template <typename MatrixType>
 inline void Robot::dRNEAPartialdFext(
+    const ContactStatus& contact_status,
     const Eigen::MatrixBase<MatrixType>& dRNEA_partial_dfext) {
   assert(dRNEA_partial_dfext.rows() == dimv_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if (point_contacts_[i].isActive()) {
+    if (contact_status.isContactActive(i)) {
       point_contacts_[i].getContactJacobian(
           model_, data_,  -1, 
           (const_cast<Eigen::MatrixBase<MatrixType>&>(dRNEA_partial_dfext))
@@ -507,11 +639,6 @@ inline int Robot::max_dimf() const {
 }
 
 
-inline int Robot::dimf() const {
-  return dimf_;
-}
-
-
 inline int Robot::dim_passive() const {
   return floating_base_.dim_passive();
 }
@@ -524,28 +651,6 @@ inline bool Robot::has_floating_base() const {
 
 inline int Robot::max_point_contacts() const {
   return point_contacts_.size();
-}
-
-
-inline bool Robot::has_active_contacts() const {
-  return has_active_contacts_;
-}
-
-
-inline int Robot::num_active_contacts() const {
-  return num_active_contacts_;
-}
-
-
-inline std::vector<bool> Robot::is_each_contact_active() const {
-  return is_each_contact_active_;
-}
-
-
-inline bool Robot::is_contact_active(const int contact_index) const {
-  assert(contact_index >= 0);
-  assert(contact_index < point_contacts_.size());
-  return point_contacts_[contact_index].isActive();
 }
 
 

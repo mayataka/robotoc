@@ -3,7 +3,7 @@
 
 #include "idocp/constraints/constraint_component_data.hpp"
 
-#include <exception>
+#include <stdexcept>
 #include <iostream>
 
 

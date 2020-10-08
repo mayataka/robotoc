@@ -13,10 +13,10 @@ inline KKTResidual::KKTResidual(const Robot& robot)
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dim_passive_(robot.dim_passive()),
-    dimf_(robot.dimf()), 
-    dimc_(robot.dim_passive()+robot.dimf()),
+    dimf_(0), 
+    dimc_(robot.dim_passive()),
     max_dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.max_dimf()),
-    dimKKT_(5*robot.dimv()+robot.dim_passive()+2*robot.dimf()) {
+    dimKKT_(5*robot.dimv()+robot.dim_passive()) {
 }
 
 
@@ -38,10 +38,10 @@ inline KKTResidual::~KKTResidual() {
 }
 
 
-inline void KKTResidual::setContactStatus(const Robot& robot) {
-  dimf_ = robot.dimf();
-  dimc_ = robot.dim_passive() + robot.dimf();
-  dimKKT_ = 5*robot.dimv() + robot.dim_passive() + 2*robot.dimf();
+inline void KKTResidual::setContactStatus(const ContactStatus& contact_status) {
+  dimf_ = contact_status.dimf();
+  dimc_ = dim_passive_ + contact_status.dimf();
+  dimKKT_ = 5*dimv_ + dim_passive_ + 2*contact_status.dimf();
 }
 
 

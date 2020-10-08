@@ -5,6 +5,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 
 
@@ -31,14 +32,18 @@ TEST_F(KKTResidualTest, fixed_base) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf_, contact_frames);
   std::random_device rnd;
-  std::vector<bool> contact_status = {rnd()%2==0};
-  robot.setContactStatus(contact_status);
+  ContactStatus contact_status(contact_frames.size());
+  std::vector<bool> is_contact_active = {rnd()%2==0};
+  contact_status.setContactStatus(is_contact_active);
   KKTResidual residual(robot);
-  residual.setContactStatus(robot);
+  residual.setContactStatus(contact_status);
   const int dimv = robot.dimv();
-  const int dimf = robot.dimf();
+  const int dimf = contact_status.dimf();
   const int dim_passive = robot.dim_passive();
-  const int dimc = robot.dim_passive() + robot.dimf();
+  const int dimc = robot.dim_passive() + contact_status.dimf();
+  EXPECT_EQ(residual.dimf(), dimf);
+  EXPECT_EQ(residual.dimc(), dimc);
+  EXPECT_EQ(residual.dimKKT(), 5*dimv+dimf+dimc);
   const Eigen::VectorXd Fq_res = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd Fv_res = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd C_res = Eigen::VectorXd::Random(dimc);
@@ -60,8 +65,8 @@ TEST_F(KKTResidualTest, fixed_base) {
   EXPECT_TRUE(residual.KKT_residual().segment(     3*dimv+dimc, dimf).isApprox(Qf_res));
   EXPECT_TRUE(residual.KKT_residual().segment(3*dimv+dimc+dimf, dimv).isApprox(Qq_res));
   EXPECT_TRUE(residual.KKT_residual().segment(4*dimv+dimc+dimf, dimv).isApprox(Qv_res));
-  EXPECT_TRUE(residual.C_floating_base().isApprox(C_res.head(robot.dim_passive())));
-  EXPECT_TRUE(residual.C_contacts().isApprox(C_res.tail(robot.dimf())));
+  EXPECT_TRUE(residual.C_floating_base().isApprox(C_res.head(dim_passive)));
+  EXPECT_TRUE(residual.C_contacts().isApprox(C_res.tail(dimf)));
   EXPECT_EQ(residual.lx().size(), 2*dimv);
   EXPECT_TRUE(residual.lx().head(dimv).isApprox(Qq_res));
   EXPECT_TRUE(residual.lx().tail(dimv).isApprox(Qv_res));
@@ -73,7 +78,7 @@ TEST_F(KKTResidualTest, fixed_base) {
   EXPECT_EQ(residual.dimf(), dimf);
   EXPECT_EQ(residual.dimc(), dimc);
   EXPECT_EQ(residual.dimKKT(), 5*dimv+dimc+dimf);
-  EXPECT_EQ(residual.max_dimKKT(), 5*dimv+2*robot.max_dimf()+robot.dim_passive());
+  EXPECT_EQ(residual.max_dimKKT(), 5*dimv+2*robot.max_dimf()+dim_passive);
 }
 
 
@@ -81,17 +86,18 @@ TEST_F(KKTResidualTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(fixed_base_urdf_, contact_frames);
   std::random_device rnd;
-  std::vector<bool> contact_status;
+  ContactStatus contact_status(contact_frames.size());
+  std::vector<bool> is_contact_active;
   for (const auto frame : contact_frames) {
-    contact_status.push_back(rnd()%2==0);
+    is_contact_active.push_back(rnd()%2==0);
   }
-  robot.setContactStatus(contact_status);
+  contact_status.setContactStatus(is_contact_active);
   KKTResidual residual(robot);
-  residual.setContactStatus(robot);
+  residual.setContactStatus(contact_status);
   const int dimv = robot.dimv();
-  const int dimf = robot.dimf();
+  const int dimf = contact_status.dimf();
   const int dim_passive = robot.dim_passive();
-  const int dimc = robot.dim_passive() + robot.dimf();
+  const int dimc = robot.dim_passive() + contact_status.dimf();
   const Eigen::VectorXd Fq_res = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd Fv_res = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd C_res = Eigen::VectorXd::Random(dimc);
@@ -113,8 +119,8 @@ TEST_F(KKTResidualTest, floating_base) {
   EXPECT_TRUE(residual.KKT_residual().segment(     3*dimv+dimc, dimf).isApprox(Qf_res));
   EXPECT_TRUE(residual.KKT_residual().segment(3*dimv+dimc+dimf, dimv).isApprox(Qq_res));
   EXPECT_TRUE(residual.KKT_residual().segment(4*dimv+dimc+dimf, dimv).isApprox(Qv_res));
-  EXPECT_TRUE(residual.C_floating_base().isApprox(C_res.head(robot.dim_passive())));
-  EXPECT_TRUE(residual.C_contacts().isApprox(C_res.tail(robot.dimf())));
+  EXPECT_TRUE(residual.C_floating_base().isApprox(C_res.head(dim_passive)));
+  EXPECT_TRUE(residual.C_contacts().isApprox(C_res.tail(dimf)));
   EXPECT_EQ(residual.lx().size(), 2*dimv);
   EXPECT_TRUE(residual.lx().head(dimv).isApprox(Qq_res));
   EXPECT_TRUE(residual.lx().tail(dimv).isApprox(Qv_res));
@@ -126,7 +132,7 @@ TEST_F(KKTResidualTest, floating_base) {
   EXPECT_EQ(residual.dimf(), dimf);
   EXPECT_EQ(residual.dimc(), dimc);
   EXPECT_EQ(residual.dimKKT(), 5*dimv+dimc+dimf);
-  EXPECT_EQ(residual.max_dimKKT(), 5*dimv+2*robot.max_dimf()+robot.dim_passive());
+  EXPECT_EQ(residual.max_dimKKT(), 5*dimv+2*robot.max_dimf()+dim_passive);
 }
 
 } // namespace idocp

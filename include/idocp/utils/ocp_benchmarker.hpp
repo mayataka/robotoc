@@ -42,45 +42,7 @@ public:
   void setInitialGuessSolution(const double t, const Eigen::VectorXd& q, 
                                const Eigen::VectorXd& v);
 
-  ///
-  /// @brief Activate a contact over specified time steps 
-  /// (from start_time_stage to last_time_stage). 
-  /// @param[in] contact_index Index of a contact of interedted. 
-  /// @param[in] start_time_stage Start time stage. 
-  /// @param[in] last_time_stage Last time stage. 
-  ///
-  void activateContact(const int contact_index, const int start_time_stage, 
-                       const int last_time_stage);
-
-  ///
-  /// @brief Deactivate a contact over specified time steps 
-  /// (from start_time_stage to last_time_stage). 
-  /// @param[in] contact_index Index of a contact of interedted. 
-  /// @param[in] start_time_stage Start time stage. 
-  /// @param[in] last_time_stage Last time stage. 
-  ///
-  void deactivateContact(const int contact_index, const int start_time_stage, 
-                         const int last_time_stage);
-
-  ///
-  /// @brief Activate contacts over specified time steps 
-  /// (from start_time_stage to last_time_stage). 
-  /// @param[in] contact_indices Indices of contacts of interedted. 
-  /// @param[in] start_time_stage Start time stage. 
-  /// @param[in] last_time_stage Last time stage. 
-  ///
-  void activateContacts(const std::vector<int>& contact_indices, 
-                        const int start_time_stage, const int last_time_stage);
-
-  ///
-  /// @brief Deactivate contacts over specified time steps 
-  /// (from start_time_stage to last_time_stage). 
-  /// @param[in] contact_indices Indices of contacts of interedted. 
-  /// @param[in] start_time_stage Start time stage. 
-  /// @param[in] last_time_stage Last time stage. 
-  ///
-  void deactivateContacts(const std::vector<int>& contact_indices, 
-                          const int start_time_stage, const int last_time_stage);
+  OCPType* getSolverHandle();
 
   void testCPUTime(const double t, const Eigen::VectorXd& q, 
                    const Eigen::VectorXd& v, const int num_iteration=1000,

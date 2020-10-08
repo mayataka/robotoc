@@ -67,14 +67,10 @@ public:
                                     const double dtau, const SplitSolution& s,
                                     const SplitDirection& d) const override; 
 
-  double residualL1Nrom(Robot& robot, ConstraintComponentData& data, 
-                        const double dtau, 
-                        const SplitSolution& s) const override;
+  void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
+                                    const double dtau, 
+                                    const SplitSolution& s) const override;
 
-  double squaredKKTErrorNorm(Robot& robot, ConstraintComponentData& data, 
-                             const double dtau, 
-                             const SplitSolution& s) const override;
-  
   int dimc() const override;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW 

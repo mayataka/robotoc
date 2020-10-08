@@ -9,8 +9,7 @@ PointContact::PointContact(const pinocchio::Model& model,
                            const int contact_frame_id, 
                            const double friction_coefficient, 
                            const double restitution_coefficient) 
-  : is_active_(false),
-    contact_frame_id_(contact_frame_id),
+  : contact_frame_id_(contact_frame_id),
     parent_joint_id_(model.frames[contact_frame_id_].parent), 
     dimv_(model.nv),
     friction_coefficient_(friction_coefficient),
@@ -51,8 +50,7 @@ PointContact::PointContact(const pinocchio::Model& model,
 
 
 PointContact::PointContact() 
-  : is_active_(false),
-    contact_frame_id_(0),
+  : contact_frame_id_(0),
     parent_joint_id_(0), 
     dimv_(0),
     friction_coefficient_(0),

@@ -19,7 +19,7 @@
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
 
 #include "idocp/utils/joint_constraints_factory.hpp"
-#include "idocp/utils/simulator.hpp"
+#include "idocp/utils/manipulator_simulator.hpp"
 
 namespace mpcsimulation {
 namespace iiwa14 {
@@ -46,7 +46,7 @@ void SimulateWithoutContactsByOCP() {
   const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   idocp::MPC<idocp::OCP> mpc(robot, cost, constraints, T, N, num_proc);
-  idocp::Simulator simulator(robot, "../sim_result", "iiwa14_ocp");
+  idocp::ManipulatorSimulator simulator(robot, "../sim_result", "iiwa14_ocp");
   simulator.run(mpc, 10, 1.0e-03, 0, q, v);
 }
 
@@ -73,7 +73,7 @@ void SimulateWithoutContactsByParNMPC() {
   const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   idocp::MPC<idocp::ParNMPC> mpc(robot, cost, constraints, T, N, num_proc);
-  idocp::Simulator simulator(robot, "../sim_result", "iiwa14_parnmpc");
+  idocp::ManipulatorSimulator simulator(robot, "../sim_result", "iiwa14_parnmpc");
   simulator.run(mpc, 10, 1.0e-03, 0, q, v);
 }
 

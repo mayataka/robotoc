@@ -6,6 +6,7 @@
 #include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/riccati_matrix_inverter.hpp"
 
 
@@ -34,16 +35,15 @@ protected:
 
 TEST_F(RiccatiMatrixInverterTest, fixed_base_without_contacts) {
   const int dimv = fixed_base_robot_.dimv();
-  const int dimaf = fixed_base_robot_.dimv() + fixed_base_robot_.dimf();
-  const int dimf = fixed_base_robot_.dimf();
-  const int dimc = fixed_base_robot_.dim_passive() + fixed_base_robot_.dimf();
-  ASSERT_EQ(dimf, 0);
-  ASSERT_EQ(dimc, 0);
+  const int dimaf = fixed_base_robot_.dimv();
+  const int dimf = 0;
+  const int dimc = 0;
   const Eigen::MatrixXd Qaa_seed = Eigen::MatrixXd::Random(dimaf, dimaf);
   const Eigen::MatrixXd Qaa = Qaa_seed * Qaa_seed.transpose() + Eigen::MatrixXd::Identity(dimaf, dimaf);
   const Eigen::MatrixXd Caf = Eigen::MatrixXd::Random(dimc, dimaf);
   RiccatiMatrixInverter inverter(fixed_base_robot_);
-  inverter.setContactStatus(fixed_base_robot_);
+  ContactStatus contact_status;
+  inverter.setContactStatus(contact_status);
   inverter.invert(Qaa, Caf);
   Eigen::MatrixXd G_inv = Eigen::MatrixXd::Zero(dimaf, dimaf);
   inverter.getInverseMatrix(G_inv);
@@ -64,17 +64,17 @@ TEST_F(RiccatiMatrixInverterTest, fixed_base_without_contacts) {
 TEST_F(RiccatiMatrixInverterTest, fixed_base_with_contacts) {
   std::vector<int> contact_frames = {18};
   fixed_base_robot_ = Robot(fixed_base_urdf_, contact_frames);
-  std::vector<bool> contact_status = {true};
-  fixed_base_robot_.setContactStatus(contact_status);
+  ContactStatus contact_status(contact_frames.size());
+  contact_status.setContactStatus({true});
   const int dimv = fixed_base_robot_.dimv();
-  const int dimaf = fixed_base_robot_.dimv() + fixed_base_robot_.dimf();
-  const int dimf = fixed_base_robot_.dimf();
-  const int dimc = fixed_base_robot_.dim_passive() + fixed_base_robot_.dimf();
+  const int dimaf = fixed_base_robot_.dimv() + contact_status.dimf();
+  const int dimf = contact_status.dimf();
+  const int dimc = fixed_base_robot_.dim_passive() + contact_status.dimf();
   const Eigen::MatrixXd Qaa_seed = Eigen::MatrixXd::Random(dimaf, dimaf);
   const Eigen::MatrixXd Qaa = Qaa_seed * Qaa_seed.transpose() + Eigen::MatrixXd::Identity(dimaf, dimaf);
   const Eigen::MatrixXd Caf = Eigen::MatrixXd::Random(dimc, dimaf);
   RiccatiMatrixInverter inverter(fixed_base_robot_);
-  inverter.setContactStatus(fixed_base_robot_);
+  inverter.setContactStatus(contact_status);
   inverter.invert(Qaa, Caf);
   Eigen::MatrixXd G_mat = Eigen::MatrixXd::Zero(dimaf+dimc, dimaf+dimc);
   G_mat.topLeftCorner(dimaf, dimaf) = Qaa;
@@ -99,14 +99,13 @@ TEST_F(RiccatiMatrixInverterTest, fixed_base_with_contacts) {
 
 TEST_F(RiccatiMatrixInverterTest, floating_base_without_contacts) {
   const int dimv = floating_base_robot_.dimv();
-  const int dimaf = floating_base_robot_.dimv() + floating_base_robot_.dimf();
-  const int dimf = floating_base_robot_.dimf();
-  const int dimc = floating_base_robot_.dim_passive() + floating_base_robot_.dimf();
+  const int dimaf = floating_base_robot_.dimv();
+  const int dimf = 0;
+  const int dimc = floating_base_robot_.dim_passive();
   const Eigen::MatrixXd Qaa_seed = Eigen::MatrixXd::Random(dimaf, dimaf);
   const Eigen::MatrixXd Qaa = Qaa_seed * Qaa_seed.transpose() + Eigen::MatrixXd::Identity(dimaf, dimaf);
   const Eigen::MatrixXd Caf = Eigen::MatrixXd::Random(dimc, dimaf);
   RiccatiMatrixInverter inverter(floating_base_robot_);
-  inverter.setContactStatus(floating_base_robot_);
   inverter.invert(Qaa, Caf);
   Eigen::MatrixXd G_mat = Eigen::MatrixXd::Zero(dimaf+dimc, dimaf+dimc);
   G_mat.topLeftCorner(dimaf, dimaf) = Qaa;
@@ -133,21 +132,22 @@ TEST_F(RiccatiMatrixInverterTest, floating_base_without_contacts) {
 TEST_F(RiccatiMatrixInverterTest, floating_base_with_contacts) {
   const std::vector<int> contact_frames = {14, 24, 34, 44};
   floating_base_robot_ = Robot(floating_base_urdf_, contact_frames);
+  ContactStatus contact_status(contact_frames.size());
   std::vector<bool> active_contacts;
   std::random_device rnd;
   for (int i=0; i<contact_frames.size(); ++i) {
     active_contacts.push_back(rnd()%2==0);
   }
-  floating_base_robot_.setContactStatus(active_contacts);
+  contact_status.setContactStatus(active_contacts);
   const int dimv = floating_base_robot_.dimv();
-  const int dimaf = floating_base_robot_.dimv() + floating_base_robot_.dimf();
-  const int dimf = floating_base_robot_.dimf();
-  const int dimc = floating_base_robot_.dim_passive() + floating_base_robot_.dimf();
+  const int dimaf = floating_base_robot_.dimv() + contact_status.dimf();
+  const int dimf = contact_status.dimf();
+  const int dimc = floating_base_robot_.dim_passive() + contact_status.dimf();
   const Eigen::MatrixXd Qaa_seed = Eigen::MatrixXd::Random(dimaf, dimaf);
   const Eigen::MatrixXd Qaa = Qaa_seed * Qaa_seed.transpose() + Eigen::MatrixXd::Identity(dimaf, dimaf);
   const Eigen::MatrixXd Caf = Eigen::MatrixXd::Random(dimc, dimaf);
   RiccatiMatrixInverter inverter(floating_base_robot_);
-  inverter.setContactStatus(floating_base_robot_);
+  inverter.setContactStatus(contact_status);
   inverter.invert(Qaa, Caf);
   Eigen::MatrixXd G_mat = Eigen::MatrixXd::Zero(dimaf+dimc, dimaf+dimc);
   G_mat.topLeftCorner(dimaf, dimaf) = Qaa;

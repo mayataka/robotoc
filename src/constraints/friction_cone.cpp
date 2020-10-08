@@ -70,7 +70,7 @@ void FrictionCone::setSlackAndDual(
                                          * s.f[contact_index_].coeff(2);
     data.slack.coeffRef(0) = mu_f_normal - f_tangent;
   }
-  setSlackAndDualPositive(data.slack, data.dual);
+  setSlackAndDualPositive(data);
 }
 
 
@@ -147,8 +147,7 @@ void FrictionCone::computeSlackAndDualDirection(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitDirection& d) const {
   data.dslack = - dtau * d.dv().tail(dimc_) - data.residual;
-  computeDualDirection(data.slack, data.dual, data.dslack, data.duality, 
-                       data.ddual);
+  computeDualDirection(data);
 }
 
 
@@ -164,7 +163,7 @@ double FrictionCone::squaredKKTErrorNorm(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
   data.residual = dtau * (s.v.tail(dimc_)-vmax_) + data.slack;
-  computeDuality(data.slack, data.dual, data.duality);
+  computeDuality(data);
   double error = 0;
   error += data.residual.squaredNorm();
   error += data.duality.squaredNorm();

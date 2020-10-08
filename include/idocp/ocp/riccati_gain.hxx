@@ -17,8 +17,9 @@ inline RiccatiGain::RiccatiGain(const Robot& robot)
     k_(Eigen::VectorXd::Zero(
           robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
     dimv_(robot.dimv()),
-    dimf_(robot.dimf()),
-    dimc_(robot.dim_passive()+robot.dimf()) {
+    dim_passive_(robot.dim_passive()),
+    dimf_(0),
+    dimc_(robot.dim_passive()) {
 }
 
 
@@ -26,12 +27,19 @@ inline RiccatiGain::RiccatiGain()
   : K_(),
     k_(),
     dimv_(0),
+    dim_passive_(0),
     dimf_(0),
     dimc_(0) {
 }
 
 
 inline RiccatiGain::~RiccatiGain() {
+}
+
+
+inline void RiccatiGain::setContactStatus(const ContactStatus& contact_status) {
+  dimf_ = contact_status.dimf();
+  dimc_ = dim_passive_ + contact_status.dimf();
 }
 
 
@@ -112,12 +120,6 @@ inline void RiccatiGain::computeFeedforward(
   assert(C.size() == dimc_);
   k_.head(dimaf+dimc_).noalias() = - Ginv.leftCols(dimaf) * laf;
   k_.head(dimaf+dimc_).noalias() -= Ginv.rightCols(dimc_) * C;
-}
-
-
-inline void RiccatiGain::setContactStatus(const Robot& robot) {
-  dimf_ = robot.dimf();
-  dimc_ = robot.dim_passive() + robot.dimf();
 }
 
 } // namespace idocp 

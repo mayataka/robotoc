@@ -9,9 +9,10 @@ namespace idocp {
 
 inline RiccatiMatrixInverter::RiccatiMatrixInverter(const Robot& robot) 
   : dimv_(robot.dimv()),
-    dimf_(robot.dimf()),
-    dimc_(robot.dim_passive()+robot.dimf()),
-    dimaf_(robot.dimv()+robot.dimf()),
+    dim_passive_(robot.dim_passive()),
+    dimf_(0),
+    dimc_(robot.dim_passive()),
+    dimaf_(robot.dimv()),
     G_inv_(Eigen::MatrixXd::Zero(robot.dimv()+2*robot.max_dimf()+robot.dim_passive(), 
                                  robot.dimv()+2*robot.max_dimf()+robot.dim_passive())),
     Sc_(Eigen::MatrixXd::Zero(robot.max_dimf()+robot.dim_passive(), 
@@ -23,6 +24,7 @@ inline RiccatiMatrixInverter::RiccatiMatrixInverter(const Robot& robot)
 
 inline RiccatiMatrixInverter::RiccatiMatrixInverter() 
   : dimv_(0),
+    dim_passive_(0),
     dimf_(0),
     dimc_(0),
     dimaf_(0),
@@ -36,10 +38,11 @@ inline RiccatiMatrixInverter::~RiccatiMatrixInverter() {
 }
 
 
-inline void RiccatiMatrixInverter::setContactStatus(const Robot& robot) {
-  dimf_ = robot.dimf();
-  dimaf_ = robot.dimv() + robot.dimf();
-  dimc_ = robot.dim_passive() + robot.dimf();
+inline void RiccatiMatrixInverter::setContactStatus(
+    const ContactStatus& contact_status) {
+  dimf_ = contact_status.dimf();
+  dimaf_ = dimv_ + contact_status.dimf();
+  dimc_ = dim_passive_ + contact_status.dimf();
 }
 
 

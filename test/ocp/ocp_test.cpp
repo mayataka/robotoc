@@ -7,12 +7,14 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
-#include "idocp/cost/contact_cost.hpp"
+// #include "idocp/cost/contact_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 #include "idocp/constraints/joint_position_upper_limit.hpp"
 #include "idocp/constraints/joint_velocity_lower_limit.hpp"
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
+#include "idocp/constraints/joint_torques_lower_limit.hpp"
+#include "idocp/constraints/joint_torques_upper_limit.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_ocp.hpp"
 #include "idocp/ocp/ocp.hpp"
@@ -20,7 +22,6 @@
 
 namespace idocp {
 
-// tests the equivalence between the paralle and serial implementation.
 class OCPTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
@@ -49,7 +50,7 @@ TEST_F(OCPTest, updateSolutionFixedBaseWithoutContact) {
   std::random_device rnd;
   auto cost = std::make_shared<CostFunction>();
   auto joint_cost = std::make_shared<JointSpaceCost>(robot);
-  auto contact_cost = std::make_shared<ContactCost>(robot);
+  // auto contact_cost = std::make_shared<ContactCost>(robot);
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
   Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
@@ -76,47 +77,49 @@ TEST_F(OCPTest, updateSolutionFixedBaseWithoutContact) {
   joint_cost->set_a_ref(a_ref);
   joint_cost->set_u_weight(u_weight);
   joint_cost->set_u_ref(u_ref);
-  contact_cost->set_f_weight(f_weight);
-  contact_cost->set_f_ref(f_ref);
+  // contact_cost->set_f_weight(f_weight);
+  // contact_cost->set_f_ref(f_ref);
   cost->push_back(joint_cost);
-  cost->push_back(contact_cost);
+  // cost->push_back(contact_cost);
   auto constraints = std::make_shared<Constraints>();
   auto joint_lower_limit = std::make_shared<JointPositionLowerLimit>(robot);
   auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
   auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
   auto velocity_upper_limit = std::make_shared<JointVelocityUpperLimit>(robot);
+  auto torques_lower_limit = std::make_shared<JointTorquesLowerLimit>(robot);
+  auto torques_upper_limit = std::make_shared<JointTorquesUpperLimit>(robot);
   constraints->push_back(joint_upper_limit); 
   constraints->push_back(joint_lower_limit);
   constraints->push_back(velocity_lower_limit); 
   constraints->push_back(velocity_upper_limit);
+  constraints->push_back(torques_lower_limit); 
+  constraints->push_back(torques_upper_limit);
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T_, N_, 1);
   OCP ocp_ref(robot, cost, constraints, T_, N_, 2);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
-  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
+  ocp.computeKKTResidual(t_, q, v);
+  ocp_ref.computeKKTResidual(t_, q, v);
+  EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
   ocp.updateSolution(t_, q, v, false);
   ocp_ref.updateSolution(t_, q, v, false);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
-  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
   ocp.updateSolution(t_, q, v, true);
   ocp_ref.updateSolution(t_, q, v, true);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
-  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
+  ocp.computeKKTResidual(t_, q, v);
+  ocp_ref.computeKKTResidual(t_, q, v);
+  EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
 }
 
 
 TEST_F(OCPTest, updateSolutionFixedBaseWithContact) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf_, contact_frames);
-  std::random_device rnd;
-  std::vector<bool> contact_status = {rnd()%2==0};
-  robot.setContactStatus(contact_status);
   auto cost = std::make_shared<CostFunction>();
   auto joint_cost = std::make_shared<JointSpaceCost>(robot);
-  auto contact_cost = std::make_shared<ContactCost>(robot);
+  // auto contact_cost = std::make_shared<ContactCost>(robot);
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
   Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
@@ -126,7 +129,7 @@ TEST_F(OCPTest, updateSolutionFixedBaseWithContact) {
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd a_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.1);
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd u_weight = Eigen::VectorXd::Zero(robot.dimv());
+  const Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Zero(robot.dimv());
   std::vector<Eigen::Vector3d> f_weight, f_ref;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
@@ -143,57 +146,60 @@ TEST_F(OCPTest, updateSolutionFixedBaseWithContact) {
   joint_cost->set_a_ref(a_ref);
   joint_cost->set_u_weight(u_weight);
   joint_cost->set_u_ref(u_ref);
-  contact_cost->set_f_weight(f_weight);
-  contact_cost->set_f_ref(f_ref);
+  // contact_cost->set_f_weight(f_weight);
+  // contact_cost->set_f_ref(f_ref);
   cost->push_back(joint_cost);
-  cost->push_back(contact_cost);
+  // cost->push_back(contact_cost);
   auto constraints = std::make_shared<Constraints>();
   auto joint_lower_limit = std::make_shared<JointPositionLowerLimit>(robot);
   auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
   auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
   auto velocity_upper_limit = std::make_shared<JointVelocityUpperLimit>(robot);
+  auto torques_lower_limit = std::make_shared<JointTorquesLowerLimit>(robot);
+  auto torques_upper_limit = std::make_shared<JointTorquesUpperLimit>(robot);
   constraints->push_back(joint_upper_limit); 
   constraints->push_back(joint_lower_limit);
   constraints->push_back(velocity_lower_limit); 
   constraints->push_back(velocity_upper_limit);
+  constraints->push_back(torques_lower_limit); 
+  constraints->push_back(torques_upper_limit);
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T_, N_, 1);
-  if (contact_status[0]) {
+  std::random_device rnd;
+  // const bool is_contact_active = (rnd()%2==0);
+  const bool is_contact_active = true;
+  if (is_contact_active) {
     ocp.activateContact(0, 0, N_);
   }
   OCP ocp_ref(robot, cost, constraints, T_, N_, 2);
-  if (contact_status[0]) {
+  if (is_contact_active) {
     ocp_ref.activateContact(0, 0, N_);
   }
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
-  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
+  ocp.setStateTrajectory(q, v);
+  ocp_ref.setStateTrajectory(q, v);
+  EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
+  ocp.computeKKTResidual(t_, q, v);
+  ocp_ref.computeKKTResidual(t_, q, v);
+  EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
   ocp.updateSolution(t_, q, v, false);
   ocp_ref.updateSolution(t_, q, v, false);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
-  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
   ocp.updateSolution(t_, q, v, true);
   ocp_ref.updateSolution(t_, q, v, true);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
-  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
+  ocp.computeKKTResidual(t_, q, v);
+  ocp_ref.computeKKTResidual(t_, q, v);
+  EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
 }
-
 
 
 TEST_F(OCPTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf_, contact_frames);
-  std::random_device rnd;
-  std::vector<bool> contact_status;
-  for (int i=0; i<contact_frames.size(); ++i) {
-    contact_status.push_back(rnd()%2==0);
-  }
-  robot.setContactStatus(contact_status);
   std::shared_ptr<CostFunction> cost = std::make_shared<CostFunction>();
   std::shared_ptr<JointSpaceCost> joint_cost = std::make_shared<JointSpaceCost>(robot);
-  std::shared_ptr<ContactCost> contact_cost = std::make_shared<ContactCost>(robot);
+  // std::shared_ptr<ContactCost> contact_cost = std::make_shared<ContactCost>(robot);
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
   Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
@@ -203,7 +209,7 @@ TEST_F(OCPTest, floating_base) {
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd a_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.1);
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd u_weight = Eigen::VectorXd::Zero(robot.dimv());
+  const Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Constant(robot.dimv(), 0.1);
   std::vector<Eigen::Vector3d> f_weight, f_ref;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
@@ -220,45 +226,55 @@ TEST_F(OCPTest, floating_base) {
   joint_cost->set_a_ref(a_ref);
   joint_cost->set_u_weight(u_weight);
   joint_cost->set_u_ref(u_ref);
-  contact_cost->set_f_weight(f_weight);
-  contact_cost->set_f_ref(f_ref);
+  // contact_cost->set_f_weight(f_weight);
+  // contact_cost->set_f_ref(f_ref);
   cost->push_back(joint_cost);
-  cost->push_back(contact_cost);
+  // cost->push_back(contact_cost);
   auto constraints = std::make_shared<Constraints>();
   auto joint_lower_limit = std::make_shared<JointPositionLowerLimit>(robot);
   auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
   auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
   auto velocity_upper_limit = std::make_shared<JointVelocityUpperLimit>(robot);
+  auto torques_lower_limit = std::make_shared<JointTorquesLowerLimit>(robot);
+  auto torques_upper_limit = std::make_shared<JointTorquesUpperLimit>(robot);
   constraints->push_back(joint_upper_limit); 
   constraints->push_back(joint_lower_limit);
   constraints->push_back(velocity_lower_limit); 
   constraints->push_back(velocity_upper_limit);
+  constraints->push_back(torques_lower_limit); 
+  constraints->push_back(torques_upper_limit);
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T_, N_, 1);
-  for (int i=0; i<contact_status.size(); ++i) {
-    if (contact_status[i]) {
+  std::random_device rnd;
+  std::vector<bool> is_contact_active;
+  for (int i=0; i<contact_frames.size(); ++i) {
+    is_contact_active.push_back(rnd()%2==0);
+  }
+  for (int i=0; i<contact_frames.size(); ++i) {
+    if (is_contact_active[i]) {
       ocp.activateContact(i, 0, N_);
     }
   }
   OCP ocp_ref(robot, cost, constraints, T_, N_, 2);
-  for (int i=0; i<contact_status.size(); ++i) {
-    if (contact_status[i]) {
+  for (int i=0; i<contact_frames.size(); ++i) {
+    if (is_contact_active[i]) {
       ocp_ref.activateContact(i, 0, N_);
     }
   }
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
-  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
+  ocp.computeKKTResidual(t_, q, v);
+  ocp_ref.computeKKTResidual(t_, q, v);
+  EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
   ocp.updateSolution(t_, q, v, false);
   ocp_ref.updateSolution(t_, q, v, false);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
-  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
+  EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
   ocp.updateSolution(t_, q, v, true);
   ocp_ref.updateSolution(t_, q, v, true);
-  EXPECT_DOUBLE_EQ(ocp.KKTError(t_), ocp_ref.KKTError(t_));
-  EXPECT_DOUBLE_EQ(ocp.computeKKTError(t_, q, v), ocp_ref.computeKKTError(t_, q, v));
+  ocp.computeKKTResidual(t_, q, v);
+  ocp_ref.computeKKTResidual(t_, q, v);
+  EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
 }
 
 } // namespace idocp

@@ -1,0 +1,1 @@
+#include "idocp/robot/contact_status.hpp"

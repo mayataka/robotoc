@@ -5,6 +5,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
@@ -13,7 +14,6 @@
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
-#include "idocp/cost/contact_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 #include "idocp/constraints/joint_position_upper_limit.hpp"
@@ -31,17 +31,18 @@ protected:
     std::vector<int> contact_frames = {14, 24, 34, 44};
     robot = Robot(urdf, contact_frames);
     std::random_device rnd;
+    std::vector<bool> is_contact_active;
     for (const auto frame : contact_frames) {
-      contact_status.push_back(rnd()%2==0);
+      is_contact_active.push_back(rnd()%2==0);
     }
-    robot.setContactStatus(contact_status);
-    s = SplitSolution::Random(robot);
-    s_tmp = SplitSolution::Random(robot);
-    d = SplitDirection::Random(robot);
+    contact_status = ContactStatus(robot.max_point_contacts());
+    contact_status.setContactStatus(is_contact_active);
+    s = SplitSolution::Random(robot, contact_status);
+    s_tmp = SplitSolution::Random(robot, contact_status);
+    d = SplitDirection::Random(robot, contact_status);
     dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     auto joint_cost = std::make_shared<JointSpaceCost>(robot);
-    auto contact_cost = std::make_shared<ContactCost>(robot);
     const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
     Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
     robot.normalizeConfiguration(q_ref);
@@ -53,11 +54,6 @@ protected:
     const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(robot.dimv());
     const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
     const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-    std::vector<Eigen::Vector3d> f_weight, f_ref;
-    for (int i=0; i<robot.max_point_contacts(); ++i) {
-      f_weight.push_back(Eigen::Vector3d::Random());
-      f_ref.push_back(Eigen::Vector3d::Random());
-    }
     joint_cost->set_q_weight(q_weight);
     joint_cost->set_q_ref(q_ref);
     joint_cost->set_v_weight(v_weight);
@@ -68,12 +64,9 @@ protected:
     joint_cost->set_u_ref(u_ref);
     joint_cost->set_qf_weight(qf_weight);
     joint_cost->set_vf_weight(vf_weight);
-    contact_cost->set_f_weight(f_weight);
-    contact_cost->set_f_ref(f_ref);
     cost = std::make_shared<CostFunction>();
     cost->push_back(joint_cost);
-    cost->push_back(contact_cost);
-    cost_data = CostFunctionData(robot);
+    cost_data = cost->createCostFunctionData(robot);
     constraints = std::make_shared<Constraints>();
     auto joint_lower_limit = std::make_shared<JointPositionLowerLimit>(robot);
     auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
@@ -94,7 +87,7 @@ protected:
   double dtau, t;
   std::string urdf;
   Robot robot;
-  std::vector<bool> contact_status;
+  ContactStatus contact_status;
   std::shared_ptr<CostFunction> cost;
   CostFunctionData cost_data;
   std::shared_ptr<Constraints> constraints;
@@ -108,7 +101,6 @@ protected:
 
 
 TEST_F(FloatingBaseTerminalOCPTest, linearizeOCP) {
-  s.setContactStatus(robot);
   TerminalOCP ocp(robot, cost, constraints);
   ocp.linearizeOCP(robot, t, s, riccati);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
@@ -117,11 +109,13 @@ TEST_F(FloatingBaseTerminalOCPTest, linearizeOCP) {
   cost->computeTerminalCostHessian(robot, cost_data, t, s, kkt_matrix);
   EXPECT_TRUE(riccati.Pqq.isApprox(kkt_matrix.Qqq()));
   EXPECT_TRUE(riccati.Pvv.isApprox(kkt_matrix.Qvv()));
-
   double KKT_ref = 0;
   KKT_ref += (-1*kkt_residual.lq()+s.lmd).squaredNorm();
   KKT_ref += (-1*kkt_residual.lv()+s.gmm).squaredNorm();
-  EXPECT_DOUBLE_EQ(KKT_ref, ocp.squaredKKTErrorNorm(robot, t, s));
+  EXPECT_DOUBLE_EQ(KKT_ref, ocp.squaredNormKKTResidual());
+  EXPECT_TRUE(riccati.Pqq.isApprox(riccati.Pqq.transpose()));
+  EXPECT_TRUE(riccati.Pqv.isApprox(riccati.Pvq.transpose()));
+  EXPECT_TRUE(riccati.Pvv.isApprox(riccati.Pvv.transpose()));
 }
 
 
@@ -168,14 +162,14 @@ TEST_F(FloatingBaseTerminalOCPTest, updatePrimal) {
 
 
 TEST_F(FloatingBaseTerminalOCPTest, computeSquaredKKTErrorNorm) {
-  s.setContactStatus(robot);
   TerminalOCP ocp(robot, cost, constraints);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
   kkt_residual.lq() -= s.lmd;
   kkt_residual.lv() -= s.gmm;
-  const double kkt_error_ref = kkt_residual.lq().squaredNorm() 
-                                + kkt_residual.lv().squaredNorm();
-  EXPECT_DOUBLE_EQ(kkt_error_ref, ocp.computeSquaredKKTErrorNorm(robot, t, s));
+  const double kkt_ref = kkt_residual.lq().squaredNorm() 
+                          + kkt_residual.lv().squaredNorm();
+  ocp.computeKKTResidual(robot, t, s);
+  EXPECT_DOUBLE_EQ(kkt_ref, ocp.squaredNormKKTResidual());
 }
 
 

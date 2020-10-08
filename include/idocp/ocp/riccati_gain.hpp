@@ -6,6 +6,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 
 
 namespace idocp {
@@ -25,6 +26,8 @@ public:
   RiccatiGain(RiccatiGain&&) noexcept = default;
 
   RiccatiGain& operator=(RiccatiGain&&) noexcept = default;
+
+  void setContactStatus(const ContactStatus& contact_status);
 
   const Eigen::Block<const Eigen::MatrixXd> Kaq() const;
 
@@ -54,12 +57,10 @@ public:
                           const Eigen::MatrixBase<VectorType1>& laf, 
                           const Eigen::MatrixBase<VectorType2>& C);
 
-  void setContactStatus(const Robot& robot);
-
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int dimv_, dimf_, dimc_;
+  int dimv_, dim_passive_, dimf_, dimc_;
   Eigen::MatrixXd K_;
   Eigen::VectorXd k_;
 
