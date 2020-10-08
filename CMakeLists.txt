@@ -79,13 +79,12 @@ add_library(
   src/ocp/ocp.cpp
   src/ocp/split_parnmpc.cpp
   src/ocp/parnmpc.cpp
-  # src/ocp/mpc.cpp
-  # src/utils/joint_constraints_factory.cpp
-  # src/utils/ocp_benchmarker.cpp
-  # src/utils/runge_kutta.cpp
-  # src/utils/simulation_data_saver.cpp
-  # src/utils/simulator.cpp
-  # src/utils/raisim_wrapper.cpp
+  src/ocp/mpc.cpp
+  src/utils/joint_constraints_factory.cpp
+  src/utils/ocp_benchmarker.cpp
+  src/utils/runge_kutta.cpp
+  src/utils/simulation_data_saver.cpp
+  src/utils/simulator.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

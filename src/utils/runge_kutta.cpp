@@ -1,6 +1,6 @@
 #include "idocp/utils/runge_kutta.hpp"
 
-#include <assert.h>
+#include <stdexcept>
 
 namespace idocp {
 
@@ -23,12 +23,36 @@ void RungeKutta::integrate(const double integration_length,
                            const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                            const Eigen::VectorXd& tau, Eigen::VectorXd& q_next, 
                            Eigen::VectorXd& v_next) {
-  assert(integration_length > 0);
-  assert(q.size() == robot_.dimq());
-  assert(v.size() == robot_.dimv());
-  assert(tau.size() == robot_.dimv());
-  assert(q_next.size() == robot_.dimq());
-  assert(v_next.size() == robot_.dimv());
+  try {
+    if (integration_length < 0) {
+      throw std::out_of_range(
+          "Invalid argument: integration_length must be non negative!");
+    }
+    if (q.size() != robot_.dimq()) {
+      throw std::invalid_argument(
+          "Invalid argument: q.size() must be the same as Robot::dimq()!");
+    }
+    if (v.size() != robot_.dimv()) {
+      throw std::invalid_argument(
+          "Invalid argument: v.size() must be the same as Robot::dimv()!");
+    }
+    if (tau.size() != robot_.dimv()) {
+      throw std::invalid_argument(
+          "Invalid argument: tau.size() must be the same as Robot::dimv()!");
+    }
+    if (q_next.size() != robot_.dimq()) {
+      throw std::invalid_argument(
+          "Invalid argument: q_next.size() must be the same as Robot::dimq()!");
+    }
+    if (v_next.size() != robot_.dimv()) {
+      throw std::invalid_argument(
+          "Invalid argument: v_next.size() must be the same as Robot::dimv()!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   robot_.stateEquation(q, v, tau, dq_, dv_);
   kq1_ = integration_length * dq_;
   kv1_ = integration_length * dv_;

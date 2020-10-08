@@ -10,7 +10,6 @@
 #include "idocp/ocp/ocp.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
-#include "idocp/cost/contact_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
 
 #include "idocp/utils/joint_constraints_factory.hpp"
@@ -34,7 +33,6 @@ void BenchmarkWithoutContacts() {
   cost->push_back(joint_cost);
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
-  // auto constraints = std::make_shared<idocp::Constraints>();
   const double T = 1;
   const int N = 20;
   const int num_proc = 4;
@@ -67,12 +65,7 @@ void BenchmarkWithContacts() {
   joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
-  auto contact_cost = std::make_shared<idocp::ContactCost>(robot);
-  std::vector<Eigen::Vector3d> f_weight;
-  f_weight.push_back(Eigen::VectorXd::Constant(robot.max_dimf(), 0.0));
-  contact_cost->set_f_weight(f_weight);
   cost->push_back(joint_cost);
-  cost->push_back(contact_cost);
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
   const double T = 1;
@@ -82,19 +75,18 @@ void BenchmarkWithContacts() {
   const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   joint_cost->set_q_ref(q);
-  robot.setContactStatus({true});
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
   idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for iiwa14 with contacts",
                                                     robot, cost, constraints, T, N, num_proc);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
-  ocp_benchmarker.activateContacts({0}, 0, N);
+  ocp_benchmarker.getSolverHandle()->activateContacts({0}, 0, N);
   ocp_benchmarker.testConvergence(t, q, v, 30, true);
   ocp_benchmarker.testCPUTime(t, q, v);
   idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa14 with contacts",
                                                             robot, cost, constraints, T, N, num_proc);
   parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
-  parnmpc_benchmarker.activateContacts({0}, 0, N);
+  parnmpc_benchmarker.getSolverHandle()->activateContacts({0}, 0, N);
   parnmpc_benchmarker.testConvergence(t, q, v, 30, true);
   parnmpc_benchmarker.testCPUTime(t, q, v);
 }

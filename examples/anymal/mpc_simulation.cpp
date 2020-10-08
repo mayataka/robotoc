@@ -82,7 +82,6 @@ void SimulateWithContactsByOCP() {
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  robot.setContactStatus({true, true, true, true});
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
   idocp::MPC<idocp::OCP> mpc(robot, cost, constraints, T, N, num_proc);
@@ -91,7 +90,9 @@ void SimulateWithContactsByOCP() {
   mpc.initializeSolution(t, q, v, 100);
   const std::string urdf_for_raisim_file_name = "../anymal/anymal_for_raisim.urdf";
   idocp::QuadrupedSimulator simulator(urdf_for_raisim_file_name, "../sim_result", "forward");
-  simulator.viz(mpc, 3, 0.0025, 0, q, v, false);
+  const bool visualization = true;
+  const bool recording = true;
+  simulator.run(mpc, 3, 0.0025, 0, q, v, visualization, recording);
 }
 
 } // namespace anymal 

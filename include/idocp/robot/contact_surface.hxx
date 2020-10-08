@@ -3,7 +3,7 @@
 
 #include "idocp/robot/contact_surface.hpp"
 
-#include <exception>
+#include <stdexcept>
 #include <iostream>
 
 namespace idocp {

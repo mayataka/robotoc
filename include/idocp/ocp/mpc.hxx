@@ -121,16 +121,16 @@ inline void MPC<OCPType>::getStateFeedbackGain(Eigen::MatrixXd& Kq,
 
 
 template <typename OCPType>
-inline double MPC<OCPType>::KKTError(const double t) {
-  return ocp_.KKTError(t);
+inline double MPC<OCPType>::KKTError() {
+  return ocp_.KKTError();
 }
 
 
 template <typename OCPType>
-inline double MPC<OCPType>::computeKKTError(const double t, 
-                                            const Eigen::VectorXd& q, 
-                                            const Eigen::VectorXd& v) {
-  return ocp_.computeKKTError(t, q, v);
+inline void MPC<OCPType>::computeKKTResidual(const double t, 
+                                             const Eigen::VectorXd& q, 
+                                             const Eigen::VectorXd& v) {
+  return ocp_.computeKKTResidual(t, q, v);
 }
 
 } // namespace idocp 

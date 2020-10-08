@@ -158,10 +158,9 @@ public:
   /// same as the squared KKT error norm of the original OCP. The result is the
   /// squared norm of the condensed residual. However, this variables is 
   /// sufficiently close to the original KKT error norm.
-  /// @param[in] t Current time. 
   /// @return The squared norm of the condensed KKT residual.
   ///
-  double KKTError(const double t);
+  double KKTError();
 
   ///
   /// @brief Computes and returns the squared KKT error norm of the OCP. 
@@ -170,8 +169,8 @@ public:
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   /// @return The squared norm of the kKT residual.
   ///
-  double computeKKTError(const double t, const Eigen::VectorXd& q, 
-                         const Eigen::VectorXd& v);
+  void computeKKTResidual(const double t, const Eigen::VectorXd& q, 
+                          const Eigen::VectorXd& v);
 
 private:
   OCPType ocp_;

@@ -1,6 +1,6 @@
 #include "idocp/utils/simulation_data_saver.hpp"
 
-#include <assert.h>
+#include <stdexcept>
 
 namespace idocp {
 
@@ -27,7 +27,16 @@ void SimulationDataSaver::save(const Eigen::VectorXd& q,
                                const Eigen::VectorXd& v, 
                                const Eigen::VectorXd& tau, 
                                const double KKT_error) {
-  assert(KKT_error >= 0);
+  try {
+    if (KKT_error < 0) {
+      throw std::out_of_range(
+          "Invalid argument: KKT error must be non negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   for (int i=0; i<q.size(); ++i) {
     q_file_ << q[i] << " ";
   }
@@ -48,9 +57,24 @@ void SimulationDataSaver::saveConditions(
     const double simulation_time_in_sec, 
     const double sampling_period_in_millisec, 
     const double CPU_time_per_update_in_millisec) {
-  assert(simulation_time_in_sec > 0);
-  assert(sampling_period_in_millisec > 0);
-  assert(CPU_time_per_update_in_millisec > 0);
+  try {
+    if (simulation_time_in_sec <= 0) {
+      throw std::out_of_range(
+          "Invalid argument: simulation_time_in_sec must be positive!");
+    }
+    if (sampling_period_in_millisec <= 0) {
+      throw std::out_of_range(
+          "Invalid argument: sampling_period_in_millisec must be positive!");
+    }
+    if (CPU_time_per_update_in_millisec <= 0) {
+      throw std::out_of_range(
+          "Invalid argument: CPU_time_per_update_in_millisec must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   conditions_file_ << "simulation time: " << simulation_time_in_sec << "[s]\n";
   conditions_file_ << "sampling time: " 
                   << sampling_period_in_millisec << "[ms]\n";

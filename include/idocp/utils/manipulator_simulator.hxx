@@ -1,28 +1,46 @@
-#ifndef IDOCP_UTILS_SIMULATOR_HXX_
-#define IDOCP_UTILS_SIMULATOR_HXX_
+#ifndef IDOCP_UTILS_MANIPULATOR_SIMULATOR_HXX_
+#define IDOCP_UTILS_MANIPULATOR_SIMULATOR_HXX_
+
+#include "idocp/utils/manipulator_simulator.hpp"
 
 #include <chrono>
-#include <assert.h>
+#include <stdexcept>
 
 namespace idocp {
 
-inline Simulator::Simulator(Robot& robot, const std::string& save_dir_path, 
-                            const std::string& save_file_name)
+inline ManipulatorSimulator::ManipulatorSimulator(
+    Robot& robot, const std::string& save_dir_path, 
+    const std::string& save_file_name)
   : runge_kutta_(robot),
     data_saver_(save_dir_path, save_file_name) {
 }
 
 
 template<typename OCPTypeDerived>
-inline void Simulator::run(MPC<OCPTypeDerived>& mpc, 
-                           const double simulation_time_in_sec, 
-                           const double sampling_period_in_sec, 
-                           const double simulation_start_time_in_sec, 
-                           const Eigen::VectorXd& q_initial, 
-                           const Eigen::VectorXd& v_initial) {
-  assert(simulation_time_in_sec > 0);
-  assert(sampling_period_in_sec > 0);
-  assert(simulation_start_time_in_sec >= 0);
+inline void ManipulatorSimulator::run(MPC<OCPTypeDerived>& mpc, 
+                                      const double simulation_time_in_sec, 
+                                      const double sampling_period_in_sec, 
+                                      const double simulation_start_time_in_sec, 
+                                      const Eigen::VectorXd& q_initial, 
+                                      const Eigen::VectorXd& v_initial) {
+  try {
+    if (simulation_time_in_sec <= 0) {
+      throw std::out_of_range(
+          "Invalid argument: simulation_time_in_sec must be positive!");
+    }
+    if (sampling_period_in_sec <= 0) {
+      throw std::out_of_range(
+          "Invalid argument: sampling_period_in_sec must be positive!");
+    }
+    if (simulation_start_time_in_sec < 0) {
+      throw std::out_of_range(
+          "Invalid argument: simulation_start_time_in_sec must be non negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   Eigen::VectorXd q = q_initial;
   Eigen::VectorXd q_next = q;
   Eigen::VectorXd v = v_initial;
@@ -32,7 +50,8 @@ inline void Simulator::run(MPC<OCPTypeDerived>& mpc,
   std::chrono::system_clock::time_point start_clock, end_clock;
   double CPU_time_total_in_sec = 0;
   for (double t=0; t<simulation_time_in_sec; t+=sampling_period_in_sec) {
-    data_saver_.save(q, v, u, mpc.computeKKTError(t, q, v));
+		mpc.computeKKTResidual(t, q, v);
+    data_saver_.save(q, v, u, mpc.KKTError());
     runge_kutta_.integrate(sampling_period_in_sec, q, v, u, q_next, v_next);
     start_clock = std::chrono::system_clock::now();
     mpc.updateSolution(t, q, v);
@@ -62,4 +81,4 @@ inline void Simulator::run(MPC<OCPTypeDerived>& mpc,
 
 } // namespace idocp
 
-#endif // IDOCP_UTILS_SIMULATOR_HXX_ 
+#endif // IDOCP_UTILS_MANIPULATOR_SIMULATOR_HXX_ 

@@ -1,5 +1,5 @@
-#ifndef IDOCP_UTILS_SIMULATOR_HPP_
-#define IDOCP_UTILS_SIMULATOR_HPP_
+#ifndef IDOCP_UTILS_MANIPULATOR_SIMULATOR_HPP_
+#define IDOCP_UTILS_MANIPULATOR_SIMULATOR_HPP_
 
 #include <string>
 
@@ -14,10 +14,10 @@
 
 namespace idocp {
 
-class Simulator {
+class ManipulatorSimulator {
 public:
-Simulator(Robot& robot, const std::string& save_dir_path, 
-          const std::string& save_file_name);
+ManipulatorSimulator(Robot& robot, const std::string& save_dir_path, 
+                     const std::string& save_file_name);
 
 
 template<typename OCPTypeDerived>
@@ -34,6 +34,6 @@ private:
 
 } // namespace idocp
 
-#include "simulator.hxx"
+#include "idocp/utils/manipulator_simulator.hxx"
 
-#endif // IDOCP_UTILS_SIMULATOR_HPP_
+#endif // IDOCP_UTILS_MANIPULATOR_SIMULATOR_HPP_ 

@@ -20,7 +20,7 @@ namespace idocp {
 
 ///
 /// @class ParNMPC
-/// @brief OCP solver by ParNMPC algorithm. 
+/// @brief Optimal control problem solver by ParNMPC algorithm.
 ///
 class ParNMPC {
 public:
