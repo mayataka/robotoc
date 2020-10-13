@@ -43,13 +43,13 @@ add_library(
   src/cost/cost_function_data.cpp
   src/cost/cost_function_component_base.cpp
   src/cost/joint_space_cost.cpp
-  # src/cost/contact_cost.cpp
+  src/cost/contact_force_cost.cpp
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
-  src/cost/impulse_cost_function.cpp
-  src/cost/impulse_cost_function_component_base.cpp
-  src/cost/joint_space_impulse_cost.cpp
-  src/cost/impulse_force_cost.cpp
+  # src/cost/impulse_cost_function.cpp
+  # src/cost/impulse_cost_function_component_base.cpp
+  # src/cost/joint_space_impulse_cost.cpp
+  # src/cost/impulse_force_cost.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
   src/constraints/constraint_component_base.cpp
@@ -67,10 +67,10 @@ add_library(
   # src/contact_complementarity/contact_normal_force.cpp
   # src/contact_complementarity/friction_cone.cpp
   # src/contact_complementarity/contact_complementarity.cpp
-  src/impulse/impulse_kkt_residual.cpp
-  src/impulse/impulse_kkt_matrix.cpp
-  src/impulse/impulse_split_solution.cpp
-  src/impulse/impulse_split_direction.cpp
+  # src/impulse/impulse_kkt_residual.cpp
+  # src/impulse/impulse_kkt_matrix.cpp
+  # src/impulse/impulse_split_solution.cpp
+  # src/impulse/impulse_split_direction.cpp
   # src/impulse/impulse_state_equation.cpp
   # src/impulse/impulse_dynamics.cpp
   # src/impulse/impulse_riccati_gain.cpp

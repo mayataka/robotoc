@@ -34,6 +34,7 @@ protected:
   double dtau_, t_;
   std::string urdf_;
   Robot robot_;
+  ContactStatus contact_status_;
   CostFunctionData data_;
   SplitSolution s;
   KKTResidual kkt_res;

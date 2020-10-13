@@ -37,8 +37,7 @@ public:
 
   void set_f_weight(const std::vector<Eigen::Vector3d>& f_weight);
 
-  double l(Robot& robot, const ContactStatus& contact_status, 
-           CostFunctionData& data, const double t, 
+  double l(Robot& robot, CostFunctionData& data, const double t, 
            const ImpulseSplitSolution& s) const override;
 
   void lq(Robot& robot, CostFunctionData& data, const double t, 
@@ -61,19 +60,17 @@ public:
            const Eigen::VectorXd& dv, 
            Eigen::VectorXd& ldv) const override {}
 
-  void lf(Robot& robot, const ContactStatus& contact_status, 
-          CostFunctionData& data, const double t, 
-          const std::vector<Eigen::Vector3d>& f, 
-          Eigen::VectorXd& lf) const override;
+  void lf(Robot& robot, CostFunctionData& data, const double t, 
+          const ImpulseSplitSolution& s, 
+          ImpulseKKTResidual& kkt_residual) const override;
 
   void ldvdv(Robot& robot, CostFunctionData& data, const double t, 
              const Eigen::VectorXd& dv, 
              Eigen::MatrixXd& Qdvdv) const override {}
 
-  void lff(Robot& robot, const ContactStatus& contact_status, 
-           CostFunctionData& data, const double t, 
-           const std::vector<Eigen::Vector3d>& f, 
-           Eigen::MatrixXd& Qff) const override;
+  void lff(Robot& robot, CostFunctionData& data, const double t, 
+           const ImpulseSplitSolution& s, 
+           ImpulseKKTMatrix& kkt_matrix) const override;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

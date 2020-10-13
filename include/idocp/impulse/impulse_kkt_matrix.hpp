@@ -62,68 +62,6 @@ public:
   void setContactStatus(const ContactStatus& contact_status);
 
   ///
-  /// @brief Jacobian of the equality constraint with respect to the stack of 
-  /// contact forces f.
-  /// @return Reference to the Jacobian. Size is 
-  /// KKTMatrix::dimc() x KKTMatrix::dimf().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cf();
-
-  ///
-  /// @brief Jacobian of the equality constraint with respect to configuration q.
-  /// @return Reference to the Jacobian. Size is 
-  /// KKTMatrix::dimc() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cq();
-
-  ///
-  /// @brief Jacobian of the equality constraint with respect to velocity v.
-  /// @return Reference to the Jacobian. Size is 
-  /// KKTMatrix::dimc() x Robot::dimv().
-  ////
-  Eigen::Block<Eigen::MatrixXd> Cv();
-
-  ///
-  /// @brief Jacobian of the equality constraint with respect to configuration 
-  /// and velocity q and v.
-  /// @return Reference to the Jacobian. Size is 
-  /// KKTMatrix::dimc() x 2 * Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cqv();
-
-  ///
-  /// @brief Jacobian of the contact velocity constraint with respect to 
-  /// the stack of the contact forces f.
-  /// @return Reference to the Jacobian. Size is 
-  /// ContactStatus::dimf() x ContactStatus::dimf().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cf_contact_velocity();
-
-  ///
-  /// @brief Jacobian of the contact velocity constraint with respect to 
-  /// configuration q.
-  /// @return Reference to the Jacobian. Size is 
-  /// ContactStatus::dimf() x KKTMatrix::dimf().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cq_contact_velocity();
-
-  ///
-  /// @brief Jacobian of the contact velocity constraint with respect to 
-  /// generalized velocity v.
-  /// @return Reference to the Jacobian. Size is 
-  /// ContactStatus::dimf() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cv_contact_velocity();
-
-  ///
-  /// @brief Jacobian of the contact position constraint with respect to 
-  /// the stack of the contact forces f.
-  /// @return Reference to the Jacobian. Size is 
-  /// ContactStatus::dimf() x ContactStatus::dimf().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cf_contact_position();
-
-  ///
   /// @brief Jacobian of the contact position constraint with respect to 
   /// configuration q.
   /// @return Reference to the Jacobian. Size is 
@@ -140,36 +78,12 @@ public:
   Eigen::Block<Eigen::MatrixXd> Cv_contact_position();
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the stack of contact 
-  /// forces f.
-  /// @return Reference to the Hessian. Size is 
-  /// KKTMatrix::dimf() x KKTMatrix::dimf().
+  /// @brief Jacobian of the contact position constraint with respect to 
+  /// q and v.
+  /// @return Reference to the Jacobian. Size is 
+  /// ContactStatus::dimf() x 2 * Robot::dimv().
   ///
-  Eigen::Block<Eigen::MatrixXd> Qff();
-
-  ///
-  /// @brief Hessian of the Lagrangian with respect to the stack of contact 
-  /// forces and configuration, f and q.
-  /// @return Reference to the Hessian. Size is 
-  /// KKTMatrix::dimf() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Qfq();
-
-  ///
-  /// @brief Hessian of the Lagrangian with respect to the stack of contact 
-  /// forces and velocity, f and v.
-  /// @return Reference to the Hessian. Size is 
-  /// KKTMatrix::dimf() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Qfv();
-
-  ///
-  /// @brief Hessian of the Lagrangian with respect to configuration and 
-  /// the stack of contact forces, q and f. 
-  /// @return Reference to the Hessian. Size is 
-  /// Robot::dimv() x KKTMatrix::dimf().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Qqf();
+  Eigen::Block<Eigen::MatrixXd> Cqv_contact_position();
 
   ///
   /// @brief Hessian of the Lagrangian with respect to configuration q. 
@@ -183,14 +97,6 @@ public:
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qqv();
-
-  ///
-  /// @brief Hessian of the Lagrangian with respect to velocity and 
-  /// the stack of contact forces, v and f. 
-  /// @return Reference to the Hessian. Size is 
-  /// Robot::dimv() x KKTMatrix::dimf().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Qvf();
 
   ///
   /// @brief Hessian of the Lagrangian with respect to velocity and 
@@ -213,26 +119,36 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qxx();
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the contact 
-  /// forces, and configuraiton and velocity, f and (q, v). 
-  /// @return Reference to the Hessian. Size is 
-  /// KKTMatrix::dimf() x 2 * Robot::dimv().
+  /// @brief Jacobian of the contact velocity constraint with respect to 
+  /// configuration q.
+  /// @return Reference to the Jacobian. Size is 
+  /// ContactStatus::dimf() x KKTMatrix::dimf().
   ///
-  Eigen::Block<Eigen::MatrixXd> Qfqv();
+  Eigen::Block<Eigen::MatrixXd> Cq_contact_velocity();
 
   ///
-  /// @brief Hessian of the Lagrangian. 
-  /// @return Reference to the Hessian. Size is 
-  /// (2 * Robot::dimv() + KKTMatrix::dimf()) x (2 * Robot::dimv() + KKTMatrix::dimf()).
+  /// @brief Jacobian of the contact velocity constraint with respect to 
+  /// generalized velocity v.
+  /// @return Reference to the Jacobian. Size is 
+  /// ContactStatus::dimf() x Robot::dimv().
   ///
-  Eigen::Block<Eigen::MatrixXd> costHessian();
+  Eigen::Block<Eigen::MatrixXd> Cv_contact_velocity();
 
   ///
-  /// @brief Jacobian of the equality constraint. 
-  /// @return Reference to the Hessian. Size is 
-  /// KKTMatrix::dimc() x (2 * Robot::dimv() + KKTMatrix::dimf()).
+  /// @brief Jacobian of the contact velocity constraint with respect to 
+  /// q and v.
+  /// @return Reference to the Jacobian. Size is 
+  /// ContactStatus::dimf() x 2 * Robot::dimv().
   ///
-  Eigen::Block<Eigen::MatrixXd> constraintsJacobian();
+  Eigen::Block<Eigen::MatrixXd> Cqv_contact_velocity();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the stack of contact 
+  /// forces f.
+  /// @return Reference to the Hessian. Size is 
+  /// KKTMatrix::dimf() x KKTMatrix::dimf().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qff();
 
   ///
   /// @brief Symmetrize the Hessian for matrix inversion. 
@@ -240,19 +156,12 @@ public:
   void symmetrize();
 
   ///
-  /// @brief Invert the KKT matrix. 
-  /// @param[in] dtau Time step of the horzion.
+  /// @brief Invert the condensed KKT matrix. 
   /// @param[out] kkt_matrix_inverse Inverse of the KKT matrix. Size must 
   /// be KKTMatrix::dimKKT() x KKTMatrix::dimKKT().
   ///
   template <typename MatrixType>
-  void invert(const double dtau, 
-              const Eigen::MatrixBase<MatrixType>& kkt_matrix_inverse);
-
-  ///
-  /// @brief Set the KKT residual zero.
-  ///
-  void setZeroMinimum();
+  void invert(const Eigen::MatrixBase<MatrixType>& kkt_matrix_inverse);
 
   ///
   /// @brief Set the KKT residual zero.
@@ -300,8 +209,9 @@ public:
 
 private:
   Eigen::MatrixXd C_, Q_, Sc_, Sx_, FMinv_, C_H_inv_;
+  Eigen::MatrixXd Qff_full_, C_contact_velocity_full_;
   bool has_floating_base_, use_contact_position_constraint_;
-  int dimv_, dimx_, dimf_, dimc_, f_begin_, q_begin_, v_begin_, dimQ_, max_dimKKT_;
+  int dimv_, dimx_, dimf_, dimc_, max_dimKKT_;
   static constexpr int kDimFloatingBase = 6;
 
   ///

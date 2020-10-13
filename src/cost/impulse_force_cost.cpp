@@ -32,12 +32,11 @@ void ImpulseForceCost::set_f_weight(const std::vector<Eigen::Vector3d>& f_weight
 }
 
 
-double ImpulseForceCost::l(Robot& robot, const ContactStatus& contact_status, 
-                           CostFunctionData& data, const double t, 
+double ImpulseForceCost::l(Robot& robot, CostFunctionData& data, const double t, 
                            const ImpulseSplitSolution& s) const {
   double l = 0;
   for (int i=0; i<s.f.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
+    if (s.isContactActive(i)) {
       l+= (f_weight_[i].array()*(s.f[i]-f_ref_[i]).array()*(s.f[i]-f_ref_[i]).array()).sum();
     }
   }
@@ -45,14 +44,13 @@ double ImpulseForceCost::l(Robot& robot, const ContactStatus& contact_status,
 }
 
 
-void ImpulseForceCost::lf(Robot& robot, const ContactStatus& contact_status, 
-                          CostFunctionData& data, const double t, 
-                          const std::vector<Eigen::Vector3d>& f, 
-                          Eigen::VectorXd& lf) const {
+void ImpulseForceCost::lf(Robot& robot, CostFunctionData& data, const double t, 
+                          const ImpulseSplitSolution& s, 
+                          ImpulseKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
-  for (int i=0; i<contact_status.max_point_contacts(); ++i) {
-    if (contact_status.isContactActive(i)) {
-      lf.template segment<3>(dimf_stack).array() 
+  for (int i=0; i<s.f.size(); ++i) {
+    if (s.isContactActive(i)) {
+      kkt_residual.lf().template segment<3>(dimf_stack).array() 
           += (f_weight_[i].array()*(f[i]-f_ref_[i]).array());
       dimf_stack += 3;
     }
@@ -60,14 +58,14 @@ void ImpulseForceCost::lf(Robot& robot, const ContactStatus& contact_status,
 }
 
 
-void ImpulseForceCost::lff(Robot& robot, const ContactStatus& contact_status, 
-                           CostFunctionData& data, const double t, 
-                           const std::vector<Eigen::Vector3d>& f, 
-                           Eigen::MatrixXd& Qff) const {
+void ImpulseForceCost::lff(Robot& robot, CostFunctionData& data, const double t, 
+                           const ImpulseSplitSolution& s, 
+                           ImpulseKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
-  for (int i=0; i<contact_status.max_point_contacts(); ++i) {
-    if (contact_status.isContactActive(i)) {
-      Qff.diagonal().template segment<3>(dimf_stack).noalias() += f_weight_[i];
+  for (int i=0; i<s.f.size(); ++i) {
+    if (s.isContactActive(i)) {
+      kkt_matrix.Qff().diagonal().template segment<3>(dimf_stack).noalias() 
+          += f_weight_[i];
       dimf_stack += 3;
     }
   }

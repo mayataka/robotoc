@@ -37,14 +37,12 @@ inline CostFunctionData ImpulseCostFunction::createCostFunctionData(
 }
 
 
-inline double ImpulseCostFunction::l(Robot& robot, 
-                                     const ContactStatus& contact_status,
-                                     CostFunctionData& data, 
+inline double ImpulseCostFunction::l(Robot& robot, CostFunctionData& data, 
                                      const double t, 
                                      const ImpulseSplitSolution& s) const {
   double l = 0;
   for (const auto cost : costs_) {
-    l += cost->l(robot, contact_status, data, t, s);
+    l += cost->l(robot, data, t, s);
   }
   return l;
 }
@@ -127,14 +125,12 @@ inline void ImpulseCostFunction::ldv(Robot& robot, CostFunctionData& data,
 }
 
 
-inline void ImpulseCostFunction::lf(Robot& robot, 
-                                    const ContactStatus& contact_status,
-                                    CostFunctionData& data, 
+inline void ImpulseCostFunction::lf(Robot& robot, CostFunctionData& data, 
                                     const double t, 
-                                    const std::vector<Eigen::Vector3d>& f, 
-                                    Eigen::VectorXd& lf) const {
+                                    const ImpulseSplitSolution& s, 
+                                    ImpulseKKTResidual& kkt_residual) const {
   for (const auto cost : costs_) {
-    cost->lf(robot, contact_status, data, t, f, lf);
+    cost->lf(robot, data, t, s, kkt_residual);
   }
 }
 
@@ -152,14 +148,12 @@ inline void ImpulseCostFunction::ldvdv(Robot& robot, CostFunctionData& data,
 }
 
 
-inline void ImpulseCostFunction::lff(Robot& robot,  
-                                     const ContactStatus& contact_status,
-                                     CostFunctionData& data, 
+inline void ImpulseCostFunction::lff(Robot& robot,  CostFunctionData& data, 
                                      const double t, 
-                                     const std::vector<Eigen::Vector3d>& f, 
-                                     Eigen::MatrixXd& Qff) const {
+                                     const ImpulseSplitSolution& s, 
+                                     ImpulseKKTMatrix& kkt_matrix) const {
   for (const auto cost : costs_) {
-    cost->lff(robot, contact_status, data, t, f, Qff);
+    cost->lff(robot, data, t, s, kkt_matrix);
   }
 }
 

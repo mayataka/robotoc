@@ -71,8 +71,8 @@ public:
 
   void lf(Robot& robot, const ContactStatus& contact_status, 
           CostFunctionData& data, const double t, 
-          const std::vector<Eigen::Vector3d>& f, 
-          Eigen::VectorXd& lf) const override {}
+          const ImpulseSplitSolution& s, 
+          ImpulseKKTResidual& kkt_residual) const override {}
 
   void ldvdv(Robot& robot, CostFunctionData& data, const double t, 
              const Eigen::VectorXd& dv, 
@@ -80,8 +80,8 @@ public:
 
   void lff(Robot& robot, const ContactStatus& contact_status, 
            CostFunctionData& data, const double t, 
-           const std::vector<Eigen::Vector3d>& f, 
-           Eigen::MatrixXd& Qff) const override {}
+           const ImpulseSplitSolution& s, 
+           ImpulseKKTMatrix& kkt_matrix) const override {}
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

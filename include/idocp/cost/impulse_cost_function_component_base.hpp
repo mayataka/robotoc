@@ -156,8 +156,8 @@ public:
   ///
   virtual void lf(Robot& robot, const ContactStatus& contact_status, 
                   CostFunctionData& data, const double t, 
-                  const std::vector<Eigen::Vector3d>& f, 
-                  Eigen::VectorXd& lf) const = 0;
+                  const ImpulseSplitSolution& s, 
+                  ImpulseKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Computes the Hessian of the stage cost with respect
@@ -185,8 +185,8 @@ public:
   ///
   virtual void lff(Robot& robot, const ContactStatus& contact_status, 
                    CostFunctionData& data, const double t, 
-                   const std::vector<Eigen::Vector3d>& f, 
-                   Eigen::MatrixXd& Qff) const = 0;
+                   const ImpulseSplitSolution& s, 
+                   ImpulseKKTMatrix& kkt_matrix) const = 0;
 
 };
 

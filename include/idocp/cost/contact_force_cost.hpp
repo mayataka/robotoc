@@ -1,5 +1,5 @@
-#ifndef IDOCP_CONTACT_COST_HPP_
-#define IDOCP_CONTACT_COST_HPP_
+#ifndef IDOCP_CONTACT_FORCE_COST_HPP_
+#define IDOCP_CONTACT_FORCE_COST_HPP_
 
 #include <vector>
 
@@ -15,25 +15,25 @@
 
 namespace idocp {
 
-class ContactCost final : public CostFunctionComponentBase {
+class ContactForceCost final : public CostFunctionComponentBase {
 public:
-  ContactCost(const Robot& robot);
+  ContactForceCost(const Robot& robot);
 
-  ContactCost();
+  ContactForceCost();
 
-  ~ContactCost();
+  ~ContactForceCost();
 
   // Use defalut copy constructor.
-  ContactCost(const ContactCost&) = default;
+  ContactForceCost(const ContactForceCost&) = default;
 
   // Use defalut copy operator.
-  ContactCost& operator=(const ContactCost&) = default;
+  ContactForceCost& operator=(const ContactForceCost&) = default;
 
   // Use defalut move constructor.
-  ContactCost(ContactCost&&) noexcept = default;
+  ContactForceCost(ContactForceCost&&) noexcept = default;
 
   // Use defalut move assign operator.
-  ContactCost& operator=(ContactCost&&) noexcept = default;
+  ContactForceCost& operator=(ContactForceCost&&) noexcept = default;
 
   bool useKinematics() const override;
 
@@ -102,7 +102,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int max_dimf_;
+  int max_point_contacts_, max_dimf_;
   std::vector<Eigen::Vector3d> f_ref_, f_weight_;
 
 };
@@ -110,4 +110,4 @@ private:
 } // namespace idocp
 
 
-#endif // IDOCP_CONTACT_COST_HPP_
+#endif // IDOCP_CONTACT_FORCE_COST_HPP_ 

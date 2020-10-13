@@ -14,25 +14,23 @@ inline ImpulseKKTMatrix::ImpulseKKTMatrix(
   : Qdvdv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Fqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    C_(Eigen::MatrixXd::Zero(2*robot.max_dimf(), 
-                             2*robot.dimv()+robot.max_dimf())),
-    Q_(Eigen::MatrixXd::Zero(2*robot.dimv()+robot.max_dimf(), 
-                             2*robot.dimv()+robot.max_dimf())),
-    Sc_(Eigen::MatrixXd::Zero(2*robot.max_dimf(), 2*robot.max_dimf())),
+    C_(Eigen::MatrixXd::Zero(robot.max_dimf(), 2*robot.dimv())),
+    Q_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
+    Sc_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.max_dimf())),
     Sx_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
     FMinv_(Eigen::MatrixXd::Zero(2*robot.dimv(), 
-                                 2*robot.dimv()+3*robot.max_dimf())),
-    C_H_inv_(Eigen::MatrixXd::Zero(2*robot.max_dimf(), 
+                                 2*robot.dimv()+robot.max_dimf())),
+    C_H_inv_(Eigen::MatrixXd::Zero(robot.max_dimf(), 
                                    2*robot.dimv()+robot.max_dimf())),
+    Qff_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.max_dimf())),
+    C_contact_velocity_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), 
+                                                   2*robot.dimv())),
+    Fqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     has_floating_base_(robot.has_floating_base()),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dimf_(0), 
     dimc_(0),
-    f_begin_(0),
-    q_begin_(0),
-    v_begin_(robot.dimv()),
-    dimQ_(2*robot.dimv()),
     max_dimKKT_(4*robot.dimv()+3*robot.max_dimf()),
     use_contact_position_constraint_(use_contact_position_constraint) {
 }
@@ -53,10 +51,6 @@ inline ImpulseKKTMatrix::ImpulseKKTMatrix()
     dimx_(0), 
     dimf_(0), 
     dimc_(0),
-    f_begin_(0),
-    q_begin_(0),
-    v_begin_(0),
-    dimQ_(0),
     max_dimKKT_(0),
     use_contact_position_constraint_(false) {
 }
@@ -70,147 +64,67 @@ inline void ImpulseKKTMatrix::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
   if (use_contact_position_constraint_) {
-    dimc_ = 2*contact_status.dimf();
-  }
-  else {
     dimc_ = contact_status.dimf();
   }
-  q_begin_ = dimf_;
-  v_begin_ = dimf_ + dimv_;
-  dimQ_ = 2*dimv_ + dimf_;
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cf() {
-  return C_.block(0, f_begin_, dimc_, dimf_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cq() {
-  return C_.block(0, q_begin_, dimc_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cv() {
-  return C_.block(0, v_begin_, dimc_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cqv() {
-  return C_.block(0, q_begin_, dimc_, dimx_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cf_contact_velocity() {
-  return C_.block(0, f_begin_, dimf_, dimf_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cq_contact_velocity() {
-  return C_.block(0, q_begin_, dimf_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cv_contact_velocity() {
-  return C_.block(0, v_begin_, dimf_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cf_contact_position() {
-  return C_.block(dimf_, f_begin_, dimf_, dimf_);
+  else {
+    dimc_ = 0; 
+  }
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cq_contact_position() {
-  return C_.block(dimf_, q_begin_, dimf_, dimv_);
+  return C_.block(0, q_begin_, dimc_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cv_contact_position() {
-  return C_.block(dimf_, v_begin_, dimf_, dimv_);
+  return C_.block(0, v_begin_, dimc_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qff() {
-  return Q_.block(f_begin_, f_begin_, dimf_, dimf_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qfq() {
-  return Q_.block(f_begin_, q_begin_, dimf_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qfv() {
-  return Q_.block(f_begin_, v_begin_, dimf_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qqf() {
-  return Q_.block(q_begin_, f_begin_, dimv_, dimf_);
+inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cqv_contact_position() {
+  return C_.block(0, q_begin_, dimc_, dimx_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qqq() {
-  return Q_.block(q_begin_, q_begin_, dimv_, dimv_);
+  return Q_.block(0, 0, dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qqv() {
-  return Q_.block(q_begin_, v_begin_, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qvf() {
-  return Q_.block(v_begin_, f_begin_, dimv_, dimf_);
+  return Q_.block(0, dimv_, dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qvq() {
-  return Q_.block(v_begin_, q_begin_, dimv_, dimv_);
+  return Q_.block(dimv_, 0, dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qvv() {
-  return Q_.block(v_begin_, v_begin_, dimv_, dimv_);
+  return Q_.block(dimv_, dimv_, dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qxx() {
-  return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qfqv() {
-  return Q_.block(f_begin_, q_begin_, dimf_, 2*dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::costHessian() {
-  return Q_.topLeftCorner(dimQ_, dimQ_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::constraintsJacobian() {
-  return C_.topLeftCorner(dimc_, dimQ_);
+  return Q_;
 }
 
 
 inline void ImpulseKKTMatrix::symmetrize() {
-  Q_.topLeftCorner(dimQ_, dimQ_).triangularView<Eigen::StrictlyLower>() 
-      = Q_.topLeftCorner(dimQ_, dimQ_).transpose()
-          .triangularView<Eigen::StrictlyLower>();
+  Q_.triangularView<Eigen::StrictlyLower>() 
+    = Q_.transpose().triangularView<Eigen::StrictlyLower>();
 }
 
 
 template <typename MatrixType>
 inline void ImpulseKKTMatrix::invert(
-    const double dtau, 
     const Eigen::MatrixBase<MatrixType>& kkt_matrix_inverse) {
-  assert(kkt_matrix_inverse.rows() == (dimx_+dimc_+dimQ_));
-  assert(kkt_matrix_inverse.cols() == (dimx_+dimc_+dimQ_));
+  assert(kkt_matrix_inverse.rows() == (2*dimx_+dimc_));
+  assert(kkt_matrix_inverse.cols() == (2*dimx_+dimc_));
   // Forms the Schur complement matrix
-  const int dimcQ = dimc_ + dimQ_;
+  const int dimcQ = dimc_ + dimx_;
   invertConstrainedHessian(
       const_cast<Eigen::MatrixBase<MatrixType>&>(kkt_matrix_inverse)
           .bottomRightCorner(dimcQ, dimcQ));
@@ -286,19 +200,13 @@ inline void ImpulseKKTMatrix::invert(
 }
 
 
-inline void ImpulseKKTMatrix::setZeroMinimum() {
-  Qdvdv.setZero();
-  Fqq.topLeftCorner<kDimFloatingBase, kDimFloatingBase>().setZero();
-  C_.topLeftCorner(dimc_, dimQ_).setZero();
-  Q_.topLeftCorner(dimQ_, dimQ_).triangularView<Eigen::Upper>().setZero();
-}
-
-
 inline void ImpulseKKTMatrix::setZero() {
   Qdvdv.setZero();
   Fqq.setZero();
   C_.setZero();
   Q_.setZero();
+  Qff_full_.setZero();
+  C_contact_velocity_full_.setZero();
 }
 
 
@@ -325,33 +233,32 @@ inline int ImpulseKKTMatrix::dimf() const {
 template <typename MatrixType>
 inline void ImpulseKKTMatrix::invertConstrainedHessian( 
     const Eigen::MatrixBase<MatrixType>& H_inv) {
-  assert(H_inv.rows() == dimQ_+dimc_);
-  assert(H_inv.cols() == dimQ_+dimc_);
+  assert(H_inv.rows() == dimx_+dimc_);
+  assert(H_inv.cols() == dimx_+dimc_);
   const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
-      .bottomRightCorner(dimQ_, dimQ_).noalias()
-      = Q_.topLeftCorner(dimQ_, dimQ_)
-          .llt().solve(Eigen::MatrixXd::Identity(dimQ_, dimQ_));
-  C_H_inv_.topLeftCorner(dimc_, dimQ_).noalias()
-      = C_.topLeftCorner(dimc_, dimQ_) * H_inv.bottomRightCorner(dimQ_, dimQ_);
+      .bottomRightCorner(dimx_, dimx_).noalias()
+      = Q_.llt().solve(Eigen::MatrixXd::Identity(dimx_, dimx_));
+  C_H_inv_.topLeftCorner(dimc_, dimx_).noalias()
+      = C_.topLeftCorner(dimc_, dimx_) * H_inv.bottomRightCorner(dimx_, dimx_);
   Sc_.topLeftCorner(dimc_, dimc_).noalias() 
-      = C_H_inv_.topLeftCorner(dimc_, dimQ_)
-          * C_.topLeftCorner(dimc_, dimQ_).transpose();
+      = C_H_inv_.topLeftCorner(dimc_, dimx_)
+          * C_.topLeftCorner(dimc_, dimx_).transpose();
   const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
       .topLeftCorner(dimc_, dimc_).noalias()
       = - Sc_.topLeftCorner(dimc_, dimc_)
               .llt().solve(Eigen::MatrixXd::Identity(dimc_, dimc_));
   const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
-      .topRightCorner(dimc_, dimQ_).noalias()
+      .topRightCorner(dimc_, dimx_).noalias()
       = - H_inv.topLeftCorner(dimc_, dimc_) 
-          * C_H_inv_.topLeftCorner(dimc_, dimQ_);
+          * C_H_inv_.topLeftCorner(dimc_, dimx_);
   const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
-      .bottomLeftCorner(dimQ_, dimc_)
-      = H_inv.topRightCorner(dimc_, dimQ_).transpose();
+      .bottomLeftCorner(dimx_, dimc_)
+      = H_inv.topRightCorner(dimc_, dimx_).transpose();
   const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
-      .bottomRightCorner(dimQ_, dimQ_).noalias()
-      -= H_inv.topRightCorner(dimc_, dimQ_).transpose()
+      .bottomRightCorner(dimx_, dimx_).noalias()
+      -= H_inv.topRightCorner(dimc_, dimx_).transpose()
             * Sc_.topLeftCorner(dimc_, dimc_)
-            * H_inv.topRightCorner(dimc_, dimQ_);
+            * H_inv.topRightCorner(dimc_, dimx_);
 }
 
 } // namespace idocp 

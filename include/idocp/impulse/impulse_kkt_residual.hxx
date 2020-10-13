@@ -107,66 +107,6 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lf() {
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::KKT_residual() const {
-  return kkt_residual_.head(dimKKT_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::Fq() const {
-  return kkt_residual_.head(dimv_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::Fv() const {
-  return kkt_residual_.segment(dimv_, dimv_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::Fx() const {
-  return kkt_residual_.segment(0, dimx_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::C_contact_position() const {
-  return kkt_residual_.segment(dimx_, dimc_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::lq() const {
-  return kkt_residual_.segment(dimx_+dimc_, dimv_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::lv() const {
-  return kkt_residual_.segment(dimx_+dimc_+dimv_, dimv_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::lx() const {
-  return kkt_residual_.segment(dimx_+dimc_, dimx_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::C_contact_velocity() const {
-  return C_contact_velocity_full_.head(dimf_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::lf() const {
-  return lf_full_.head(dimf_);
-}
-
-
 inline void ImpulseKKTResidual::setZero() {
   ldv.setZero();
   dv_res.setZero();

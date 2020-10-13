@@ -88,8 +88,7 @@ public:
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
-  double l(Robot& robot, const ContactStatus& contact_status, 
-           CostFunctionData& data, const double t, 
+  double l(Robot& robot, CostFunctionData& data, const double t, 
            const ImpulseSplitSolution& s) const;
 
   ///
@@ -198,9 +197,9 @@ public:
   /// @param[out] lf The KKT residual with respect to f. Size must be 
   /// ConstactStatus::dimf().
   ///
-  void lf(Robot& robot, const ContactStatus& contact_status,
-          CostFunctionData& data, const double t, 
-          const std::vector<Eigen::Vector3d>& f, Eigen::VectorXd& lf) const;
+  void lf(Robot& robot, CostFunctionData& data, const double t, 
+          const ImpulseSplitSolution& s, 
+          ImpulseKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the Hessian of the stage cost with respect
@@ -225,9 +224,8 @@ public:
   /// @param[out] Qff The Hessian of the KKT residual with respect to f.  
   /// Size must be ConstactStatus::dimf() x ConstactStatus::dimf().
   ///
-  void lff(Robot& robot, const ContactStatus& contact_status, 
-           CostFunctionData& data, const double t, 
-           const std::vector<Eigen::Vector3d>& f, Eigen::MatrixXd& Qff) const;
+  void lff(Robot& robot, CostFunctionData& data, const double t, 
+           const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix) const;
 
 private:
   std::vector<std::shared_ptr<ImpulseCostFunctionComponentBase>> costs_;

@@ -20,8 +20,7 @@ public:
   /// @brief Construct a split solution.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
-  ImpulseSplitSolution(const Robot& robot, 
-                       const bool use_contact_position_constraint=false);
+  ImpulseSplitSolution(const Robot& robot);
 
   ///
   /// @brief Default constructor. Does not construct any datas. 
@@ -116,6 +115,12 @@ public:
   /// @brief Returns the number of active contacts.
   /// @return Number of active contacts.
   ///
+  bool isContactActive(const int contact_index) const;
+
+  ///
+  /// @brief Returns the number of active contacts.
+  /// @return Number of active contacts.
+  ///
   int num_active_contacts() const;
 
   ///
@@ -190,9 +195,8 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] contact_status Contact status.
   ///
-  static ImpulseSplitSolution Random(
-      const Robot& robot, const ContactStatus& contact_status, 
-      const bool use_contact_position_constraint=false);
+  static ImpulseSplitSolution Random(const Robot& robot, 
+                                     const ContactStatus& contact_status);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -212,7 +216,6 @@ private:
   /// @brief Dimension of equality constraints at the current contact status. 
   int dimc_;
 
-  bool use_contact_position_constraint_;
 };
 
 } // namespace idocp 
