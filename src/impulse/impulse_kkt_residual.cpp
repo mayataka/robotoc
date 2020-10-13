@@ -1,0 +1,1 @@
+#include "idocp/impulse/impulse_kkt_residual.hpp"

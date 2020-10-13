@@ -91,7 +91,7 @@ void SimulateWithContactsByOCP() {
   const std::string urdf_for_raisim_file_name = "../anymal/anymal_for_raisim.urdf";
   idocp::QuadrupedSimulator simulator(urdf_for_raisim_file_name, "../sim_result", "forward");
   const bool visualization = true;
-  const bool recording = true;
+  const bool recording = false;
   simulator.run(mpc, 3, 0.0025, 0, q, v, visualization, recording);
 }
 

@@ -1,6 +1,8 @@
 #ifndef IDOCP_COST_FUNCTION_COMPONENT_BASE_HPP_
 #define IDOCP_COST_FUNCTION_COMPONENT_BASE_HPP_
 
+#include "Eigen/Core"
+
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"

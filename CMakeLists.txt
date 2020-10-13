@@ -41,10 +41,15 @@ add_library(
   src/robot/contact_status.cpp
   src/cost/cost_function.cpp
   src/cost/cost_function_data.cpp
+  src/cost/cost_function_component_base.cpp
   src/cost/joint_space_cost.cpp
   # src/cost/contact_cost.cpp
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
+  src/cost/impulse_cost_function.cpp
+  src/cost/impulse_cost_function_component_base.cpp
+  src/cost/joint_space_impulse_cost.cpp
+  src/cost/impulse_force_cost.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
   src/constraints/constraint_component_base.cpp
@@ -62,6 +67,17 @@ add_library(
   # src/contact_complementarity/contact_normal_force.cpp
   # src/contact_complementarity/friction_cone.cpp
   # src/contact_complementarity/contact_complementarity.cpp
+  src/impulse/impulse_kkt_residual.cpp
+  src/impulse/impulse_kkt_matrix.cpp
+  src/impulse/impulse_split_solution.cpp
+  src/impulse/impulse_split_direction.cpp
+  # src/impulse/impulse_state_equation.cpp
+  # src/impulse/impulse_dynamics.cpp
+  # src/impulse/impulse_riccati_gain.cpp
+  # src/impulse/impulse_riccati_matrix_factorizer.cpp
+  # src/impulse/impulse_riccati_matrix_inverter.cpp
+  # src/impulse/split_impulse_ocp.cpp
+  # src/impulse/split_impulse_parnmpc.cpp
   src/ocp/kkt_residual.cpp
   src/ocp/kkt_matrix.cpp
   src/ocp/split_solution.cpp
