@@ -32,6 +32,11 @@ bool JointTorquesUpperLimit::useKinematics() const {
 }
 
 
+KinematicsLevel JointTorquesUpperLimit::kinematicsLevel() const {
+  return KinematicsLevel::AccelerationLevel;
+}
+
+
 bool JointTorquesUpperLimit::isFeasible(Robot& robot, 
                                         ConstraintComponentData& data, 
                                         const SplitSolution& s) const {

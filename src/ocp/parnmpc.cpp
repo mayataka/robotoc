@@ -38,7 +38,6 @@ ParNMPC::ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     robot.normalizeConfiguration(s_[i].q);
     robot.normalizeConfiguration(s_new_[i].q);
   }
-  bool feasible = isCurrentSolutionFeasible();
   initConstraints();
 }
 
@@ -233,10 +232,8 @@ bool ParNMPC::setStateTrajectory(const Eigen::VectorXd& q,
     s_new_[i].q = q_normalized;
     s_new_[i].v = v;
   }
-  bool feasible = isCurrentSolutionFeasible();
-  if (feasible) {
-    initConstraints();
-  }
+  initConstraints();
+  const bool feasible = isCurrentSolutionFeasible();
   return feasible;
 }
 
@@ -266,10 +263,8 @@ bool ParNMPC::setStateTrajectory(const Eigen::VectorXd& q0,
     robots_[0].integrateConfiguration(q0, v, (double)i, s_[i].q);
     s_new_[i].q = s_[i].q;
   }
-  bool feasible = isCurrentSolutionFeasible();
-  if (feasible) {
-    initConstraints();
-  }
+  initConstraints();
+  const bool feasible = isCurrentSolutionFeasible();
   return feasible;
 }
 
@@ -436,7 +431,7 @@ void ParNMPC::initConstraints() {
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     const int robot_id = omp_get_thread_num();
-    split_ocps_[i].initConstraints(robots_[robot_id], i, dtau_, s_[i]);
+    split_ocps_[i].initConstraints(robots_[robot_id], i+1, dtau_, s_[i]);
   }
 }
 

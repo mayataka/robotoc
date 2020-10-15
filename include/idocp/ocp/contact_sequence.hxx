@@ -39,6 +39,7 @@ inline void ContactSequence::activateContact(const int contact_index,
   }
 }
 
+
 inline void ContactSequence::deactivateContact(const int contact_index, 
                                                const int time_stage_begin, 
                                                const int time_stage_end) {

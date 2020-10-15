@@ -78,11 +78,32 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> dgmm();
 
   ///
-  /// @brief Returns the Newton direction of mu_position. Size is 
-  /// ContactStatus::dimf().
+  /// @brief Returns the Newton direction of mu_stack. Size is 
+  /// 2 * ContactStatus::dimf(). 
   /// @return Reference to the Newton direction of mu_stack.
   ///
-  Eigen::VectorBlock<Eigen::VectorXd> dmu_position();
+  Eigen::VectorBlock<Eigen::VectorXd> dmu();
+
+  ///
+  /// @brief Returns the Newton direction of mu_contact_position. Size is 
+  /// ContactStatus::dimf(). 
+  /// @return Reference to the Newton direction of mu_contact_position.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dmu_contact_position();
+
+  ///
+  /// @brief Returns the Newton direction of mu_contact_velocity. Size is 
+  /// ContactStatus::dimf(). 
+  /// @return Reference to the Newton direction of mu_contact_velocity.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dmu_contact_velocity();
+
+  ///
+  /// @brief Returns the Newton direction of f_stack. Size is 
+  /// ContactStatus::dimf(). Note that this direction is assumed to be condensed.
+  /// @return Reference to the Newton direction of f_stack.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> df();
 
   ///
   /// @brief Returns the Newton direction of q. Size is Robot::dimv().
@@ -101,20 +122,6 @@ public:
   /// @return Reference to the Newton direction of q and v.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dx();
-
-  ///
-  /// @brief Returns the Newton direction of mu_velicity. Size is 
-  /// ContactStatus::dimf(). Note that this direction is assumed to be condensed.
-  /// @return Reference to the Newton direction of mu_stack.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> dmu_velocity();
-
-  ///
-  /// @brief Returns the Newton direction of f_stack. Size is 
-  /// ContactStatus::dimf(). Note that this direction is assumed to be condensed.
-  /// @return Reference to the Newton direction of f_stack.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> df();
 
   ///
   /// @brief Returns the stack of Newton directions. Size is 
@@ -136,11 +143,32 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> dgmm() const;
 
   ///
-  /// @brief Returns the Newton direction of mu_position. Size is 
-  /// ContactStatus::dimf().
-  /// @return Reference to the Newton direction of mu_stack.
+  /// @brief Returns the Newton direction of mu_stack. Size is 
+  /// 2 * ContactStatus::dimf(). 
+  /// @return Const reference to the Newton direction of mu_stack.
   ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> dmu_position() const;
+  const Eigen::VectorBlock<const Eigen::VectorXd> dmu() const;
+
+  ///
+  /// @brief Returns the Newton direction of mu_contact_position. Size is 
+  /// ContactStatus::dimf(). 
+  /// @return Const reference to the Newton direction of mu_contact_position.
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> dmu_contact_position() const;
+
+  ///
+  /// @brief Returns the Newton direction of mu_contact_velocity. Size is 
+  /// ContactStatus::dimf(). 
+  /// @return Const reference to the Newton direction of mu_contact_velocity.
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> dmu_contact_velocity() const;
+
+  ///
+  /// @brief Returns the Newton direction of f_stack. Size is 
+  /// ContactStatus::dimf(). Note that this direction is assumed to be condensed.
+  /// @return Reference to the Newton direction of f_stack.
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> df() const;
 
   ///
   /// @brief Returns the Newton direction of q. Size is Robot::dimv().
@@ -159,20 +187,6 @@ public:
   /// @return Const reference to the Newton direction of q and v.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dx() const;
-
-  ///
-  /// @brief Returns the Newton direction of mu_velicity. Size is 
-  /// ContactStatus::dimf(). Note that this direction is assumed to be condensed.
-  /// @return Reference to the Newton direction of mu_stack.
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> dmu_velocity() const;
-
-  ///
-  /// @brief Returns the Newton direction of f_stack. Size is 
-  /// ContactStatus::dimf(). Note that this direction is assumed to be condensed.
-  /// @return Reference to the Newton direction of f_stack.
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> df() const;
 
   ///
   /// @brief Set the all alements of the direction to zero.

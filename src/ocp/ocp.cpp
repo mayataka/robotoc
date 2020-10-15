@@ -35,7 +35,6 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
   for (int i=0; i<=N; ++i) {
     robot.normalizeConfiguration(s_[i].q);
   }
-  bool feasible = isCurrentSolutionFeasible();
   initConstraints();
 }
 
@@ -207,10 +206,8 @@ bool OCP::setStateTrajectory(const Eigen::VectorXd& q,
     s_[i].v = v;
     s_[i].q = q_normalized;
   }
-  bool feasible = isCurrentSolutionFeasible();
-  if (feasible) {
-    initConstraints();
-  }
+  initConstraints();
+  const bool feasible = isCurrentSolutionFeasible();
   return feasible;
 }
 
@@ -237,10 +234,8 @@ bool OCP::setStateTrajectory(const Eigen::VectorXd& q0,
     s_[i].v = v0 + i * a;
     robots_[0].integrateConfiguration(q0, v, (double)i, s_[i].q);
   }
-  bool feasible = isCurrentSolutionFeasible();
-  if (feasible) {
-    initConstraints();
-  }
+  initConstraints();
+  const bool feasible = isCurrentSolutionFeasible();
   return feasible;
 }
 

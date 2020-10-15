@@ -38,6 +38,8 @@ public:
 
   bool useKinematics() const override;
 
+  KinematicsLevel kinematicsLevel() const override;
+
   bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                   const SplitSolution& s) const override;
 

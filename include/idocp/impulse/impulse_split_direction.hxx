@@ -9,32 +9,26 @@ inline ImpulseSplitDirection::ImpulseSplitDirection(
     const Robot& robot, const bool use_contact_position_constraint) 
   : ddv(robot.dimv()),
     dbeta(robot.dimv()),
-    df_full_(robot.max_dimf_()),
-    dmu_velocity_full_(robot.max_dimf_()),
-    split_direction_(Eigen::VectorXd::Zero(4*robot.dimv()+robot.max_dimf())),
+    split_direction_(Eigen::VectorXd::Zero(4*robot.dimv()+3*robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dimf_(0), 
     dimc_(0),
-    max_dimKKT_(4*robot.dimv()+robot.max_dimf()),
-    dimKKT_(4*robot.dimv()),
-    use_contact_position_constraint_(use_contact_position_constraint) {
+    max_dimKKT_(4*robot.dimv()+3*robot.max_dimf()),
+    dimKKT_(4*robot.dimv()) {
 }
 
 
 inline ImpulseSplitDirection::ImpulseSplitDirection() 
   : ddv(),
     dbeta(),
-    df_full_(),
-    dmu_velocity_full_(),
     split_direction_(),
     dimv_(0), 
     dimx_(0), 
     dimf_(0), 
     dimc_(0),
     max_dimKKT_(0),
-    dimKKT_(0),
-    use_contact_position_constraint_(false) {
+    dimKKT_(0) {
 }
 
 
@@ -45,10 +39,8 @@ inline ImpulseSplitDirection::~ImpulseSplitDirection() {
 inline void ImpulseSplitDirection::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
-  if (use_contact_position_constraint_) {
-    dimc_ = contact_status.dimf();
-  }
-  dimKKT_ = 4*dimv_ + dimf_;
+  dimc_ = 2*contact_status.dimf();
+  dimKKT_ = 4*dimv_ + dimf_ + dimc_;
 }
 
 
@@ -68,35 +60,40 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dgmm() {
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseSplitDirection::dmu_position() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dmu() {
   return split_direction_.segment(dimx_, dimc_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dq() {
-  return split_direction_.segment(dimx_+dimc_, dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dv() {
-  return split_direction_.segment(dimx_+dimc_+dimv_, dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dx() {
-  return split_direction_.segment(dimx_+dimc_, dimx_);
+inline Eigen::VectorBlock<Eigen::VectorXd> 
+ImpulseSplitDirection::dmu_contact_position() {
+  return split_direction_.segment(dimx_, dimf_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseSplitDirection::dmu_velocity() {
-  return dmu_velocity_full_.head(dimf_);
+ImpulseSplitDirection::dmu_contact_velocity() {
+  return split_direction_.segment(dimx_+dimf_, dimf_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::df() {
-  return df_full_.head(dimf_);
+  return split_direction_.segment(dimx_+dimc_, dimf_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dq() {
+  return split_direction_.segment(dimx_+dimc_+dimf_, dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dv() {
+  return split_direction_.segment(dimx_+dimc_+dimf_+dimv_, dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dx() {
+  return split_direction_.segment(dimx_+dimc_+dimf_, dimx_);
 }
 
 
@@ -119,42 +116,50 @@ ImpulseSplitDirection::dgmm() const {
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitDirection::dmu_position() const {
+ImpulseSplitDirection::dmu() const {
   return split_direction_.segment(dimx_, dimc_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitDirection::dq() const {
-  return split_direction_.segment(dimx_+dimc_, dimv_);
+ImpulseSplitDirection::dmu_contact_position() const {
+  return split_direction_.segment(dimx_, dimf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitDirection::dv() const {
-  return split_direction_.segment(dimx_+dimc_+dimv_, dimv_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitDirection::dx() const {
-  return split_direction_.segment(dimx_+dimc_, dimx_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitDirection::dmu_velocity() const {
-  return dmu_velocity_full_.head(dimf_);
+ImpulseSplitDirection::dmu_contact_velocity() const {
+  return split_direction_.segment(dimx_+dimf_, dimf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ImpulseSplitDirection::df() const {
-  return df_full_.head(dimf_);
+  return split_direction_.segment(dimx_+dimc_, dimf_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseSplitDirection::dq() const {
+  return split_direction_.segment(dimx_+dimc_+dimf_, dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseSplitDirection::dv() const {
+  return split_direction_.segment(dimx_+dimc_+dimf_+dimv_, dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseSplitDirection::dx() const {
+  return split_direction_.segment(dimx_+dimc_+dimf_, dimx_);
 }
 
 
 inline void ImpulseSplitDirection::setZero() {
+  ddv.setZero();
+  dbeta.setZero();
   split_direction_.setZero();
 }
 
@@ -186,13 +191,12 @@ inline ImpulseSplitDirection ImpulseSplitDirection::Random(
   d.setContactStatus(contact_status);
   d.dlmd() = Eigen::VectorXd::Random(robot.dimv());
   d.dgmm() = Eigen::VectorXd::Random(robot.dimv());
-  d.dmu_position() = Eigen::VectorXd::Random(d.dimc());
+  d.dmu() = Eigen::VectorXd::Random(d.dimc());
+  d.df() = Eigen::VectorXd::Random(d.dimf());
   d.dq() = Eigen::VectorXd::Random(robot.dimv());
   d.dv() = Eigen::VectorXd::Random(robot.dimv());
   d.ddv = Eigen::VectorXd::Random(robot.dimv());
   d.dbeta = Eigen::VectorXd::Random(robot.dimv());
-  d.dmu_velocity() = Eigen::VectorXd::Random(d.dimf());
-  d.df() = Eigen::VectorXd::Random(d.dimf());
   return d;
 }
 

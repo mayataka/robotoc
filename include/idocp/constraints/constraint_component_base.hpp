@@ -14,6 +14,16 @@
 namespace idocp {
 
 ///
+/// @class Kinematics level of the constraint component.
+/// @brief Kinematics level of the constraint component.
+///
+enum class KinematicsLevel {
+  PositionLevel,
+  VelocityLevel,
+  AccelerationLevel
+};
+
+///
 /// @typedef ConstraintComponentBase
 /// @brief Base class for constraint components. 
 ///
@@ -66,6 +76,12 @@ public:
   /// Robot model. false if not.
   ///
   virtual bool useKinematics() const = 0;
+
+  ///
+  /// @brief Check the kinematics level of the constraint component.
+  /// @return Kinematics level of the constraint component.
+  ///
+  virtual KinematicsLevel kinematicsLevel() const = 0;
 
   ///
   /// @brief Check whether the current solution s is feasible or not. 

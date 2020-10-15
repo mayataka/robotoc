@@ -52,6 +52,7 @@ add_library(
   # src/cost/impulse_force_cost.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
+  src/constraints/constraints_data.cpp
   src/constraints/constraint_component_base.cpp
   src/constraints/constraint_component_data.cpp
   src/constraints/joint_position_upper_limit.cpp

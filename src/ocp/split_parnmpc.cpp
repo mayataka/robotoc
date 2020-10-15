@@ -11,7 +11,7 @@ SplitParNMPC::SplitParNMPC(const Robot& robot,
   : cost_(cost),
     cost_data_(robot),
     constraints_(constraints),
-    constraints_data_(constraints->createConstraintsData(robot)),
+    constraints_data_(),
     kkt_residual_(robot),
     kkt_matrix_(robot),
     robot_dynamics_(robot),
@@ -61,6 +61,7 @@ void SplitParNMPC::initConstraints(Robot& robot, const int time_step,
                                    const double dtau, const SplitSolution& s) {
   assert(time_step >= 0);
   assert(dtau > 0);
+  constraints_data_ = constraints_->createConstraintsData(robot, time_step);
   constraints_->setSlackAndDual(robot, constraints_data_, dtau, s);
 }
 

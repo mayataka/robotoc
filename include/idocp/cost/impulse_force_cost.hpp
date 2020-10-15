@@ -75,7 +75,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int max_dimf_;
+  int max_point_contacts_, max_dimf_;
   std::vector<Eigen::Vector3d> f_ref_, f_weight_;
 
 };

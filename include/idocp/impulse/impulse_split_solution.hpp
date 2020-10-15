@@ -60,22 +60,60 @@ public:
   void setContactStatus(const ContactStatus& contact_status);
 
   ///
-  /// @brief Stack of Lagrange multiplier with respect to equality constraints 
-  /// that is active at the current contact status. Size is 
-  /// Robot::dim_passive() + Robot::dimf().
+  /// @brief Stack of Lagrange multiplier with respect to contact position and 
+  /// velocity constraints that is active at the current contact status. Size is 
+  /// 2 * ContactStatus::dimf().
   /// @return Reference to the stack of Lagrange multiplier with respect to 
-  /// equality constraints.
+  /// contact position and velocity constraints.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> mu_stack();
 
   ///
-  /// @brief Stack of Lagrange multiplier with respect to equality constraint 
-  /// that is active at the current contact status. Size is 
-  /// Robot::dim_passive() + Robot::dimf().
+  /// @brief Stack of Lagrange multiplier with respect to contact position 
+  /// constraints that is active at the current contact status. Size is 
+  /// ContactStatus::dimf().
+  /// @return Reference to the stack of Lagrange multiplier with respect to 
+  /// contact position constraints.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> mu_stack_contact_position();
+
+  ///
+  /// @brief Stack of Lagrange multiplier with respect to contact position and 
+  /// velocity constraints that is active at the current contact status. Size is 
+  /// 2 * ContactStatus::dimf().
+  /// @return Reference to the stack of Lagrange multiplier with respect to 
+  /// contact position and velocity constraints.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> mu_stack_contact_velocity();
+
+  ///
+  /// @brief Stack of Lagrange multiplier with respect to contact position and 
+  /// velocity constraints that is active at the current contact status. Size is 
+  /// 2 * ContactStatus::dimf().
   /// @return Const reference to the stack of Lagrange multiplier with respect 
-  /// to equality constraints.
+  /// to contact position and velocity constraints.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> mu_stack() const;
+
+  ///
+  /// @brief Stack of Lagrange multiplier with respect to contact position 
+  /// constraints that is active at the current contact status. Size is 
+  /// ContactStatus::dimf().
+  /// @return Const reference to the stack of Lagrange multiplier with respect 
+  /// to contact position constraints.
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> 
+  mu_stack_contact_position() const;
+
+  ///
+  /// @brief Stack of Lagrange multiplier with respect to contact position and 
+  /// velocity constraints that is active at the current contact status. Size is 
+  /// 2 * ContactStatus::dimf().
+  /// @return Const Reference to the stack of Lagrange multiplier with respect 
+  /// to contact position and velocity constraints.
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> 
+  mu_stack_contact_velocity() const;
 
   ///
   /// @brief Set the stack of the Lagrange multiplier with respect to active 

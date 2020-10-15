@@ -89,12 +89,32 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> Fx();
 
   ///
+  /// @brief Residual of the contact position and velocity constraint.
+  /// @return Reference to the residual of the contact position constraint.  
+  /// Size is 2 * KKTResidual::dimf(). 
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> C();
+
+  ///
   /// @brief Residual of the contact position constraint.
   /// @return Reference to the residual of the contact position constraint.  
-  /// Size is KKTResidual::dimf() if use_contact_position_constraint is true. 
-  /// Size is zero if not.
+  /// Size is KKTResidual::dimf(). 
   ///
   Eigen::VectorBlock<Eigen::VectorXd> C_contact_position();
+
+  ///
+  /// @brief Residual of the contact velocity constraint.
+  /// @return Reference to the residual of the contact position constraint.  
+  /// Size is KKTResidual::dimf(). 
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> C_contact_velocity();
+
+  ///
+  /// @brief Residual with respect to the stack of the contact forces f.
+  /// @return Reference to the residual with respect to the stack of the  
+  /// contact forces f. Size is KKTResidual::dimf().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> lf();
 
   ///
   /// @brief Residual with respect to configuration q.
@@ -116,20 +136,6 @@ public:
   /// 2 * Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lx();
-
-  ///
-  /// @brief Residual of the contact velocity constraint.
-  /// @return Reference to the residual of the contact velocity constraint.  
-  /// Size is KKTResidual::dimf().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> C_contact_velocity();
-
-  ///
-  /// @brief Residual with respect to the stack of the contact forces f.
-  /// @return Reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is KKTResidual::dimf().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> lf();
 
   ///
   /// @brief Set the KKT residual zero.
@@ -171,9 +177,8 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd kkt_residual_, C_contact_velocity_full_, lf_full_;
-  int dimv_, dimx_, dim_passive_, dimf_, dimc_, dimKKT_, max_dimKKT_;
-  bool use_contact_position_constraint_;
+  Eigen::VectorXd kkt_residual_;
+  int dimv_, dimx_, dimf_, dimc_, dimKKT_, max_dimKKT_;
 
 };
 

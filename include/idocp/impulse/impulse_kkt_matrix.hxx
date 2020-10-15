@@ -22,9 +22,6 @@ inline ImpulseKKTMatrix::ImpulseKKTMatrix(
                                  2*robot.dimv()+robot.max_dimf())),
     C_H_inv_(Eigen::MatrixXd::Zero(robot.max_dimf(), 
                                    2*robot.dimv()+robot.max_dimf())),
-    Qff_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.max_dimf())),
-    C_contact_velocity_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), 
-                                                   2*robot.dimv())),
     Fqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     has_floating_base_(robot.has_floating_base()),
     dimv_(robot.dimv()), 
@@ -63,26 +60,22 @@ inline ImpulseKKTMatrix::~ImpulseKKTMatrix() {
 inline void ImpulseKKTMatrix::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
-  if (use_contact_position_constraint_) {
-    dimc_ = contact_status.dimf();
-  }
-  else {
-    dimc_ = 0; 
-  }
+  dimc_ = 2*contact_status.dimf();
+  dimKKT_ = 4*dimv_ + dimf_ + dimc_;
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cq_contact_position() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cq() {
   return C_.block(0, q_begin_, dimc_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cv_contact_position() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cv() {
   return C_.block(0, v_begin_, dimc_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cqv_contact_position() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Cqv() {
   return C_.block(0, q_begin_, dimc_, dimx_);
 }
 

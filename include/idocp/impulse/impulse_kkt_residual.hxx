@@ -9,16 +9,13 @@ inline ImpulseKKTResidual::ImpulseKKTResidual(
     const Robot& robot, const bool use_contact_position_constraint) 
   : ldv(Eigen::VectorXd::Zero(robot.dimv())),
     dv_res(Eigen::VectorXd::Zero(robot.dimv())),
-    kkt_residual_(Eigen::VectorXd::Zero(4*robot.dimv()+robot.max_dimf())),
-    C_contact_velocity_full_(Eigen::VectorXd::Zero(robot.max_dimf())), 
-    lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
+    kkt_residual_(Eigen::VectorXd::Zero(4*robot.dimv()+3*robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dimf_(0), 
     dimc_(0),
-    max_dimKKT_(4*robot.dimv()+robot.max_dimf()),
-    dimKKT_(4*robot.dimv()),
-    use_contact_position_constraint_(use_contact_position_constraint) {
+    max_dimKKT_(4*robot.dimv()+3*robot.max_dimf()),
+    dimKKT_(4*robot.dimv()) {
 }
 
 
@@ -26,15 +23,12 @@ inline ImpulseKKTResidual::ImpulseKKTResidual()
   : ldv(),
     dv_res(),
     kkt_residual_(), 
-    C_contact_velocity_full_(), 
-    lf_full_(),
     dimv_(0), 
     dimx_(0), 
     dimf_(0), 
     dimc_(0),
     max_dimKKT_(0),
-    dimKKT_(0),
-    use_contact_position_constraint_(false) {
+    dimKKT_(0) {
 }
 
 
@@ -45,13 +39,8 @@ inline ImpulseKKTResidual::~ImpulseKKTResidual() {
 inline void ImpulseKKTResidual::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
-  if (use_contact_position_constraint_) {
-    dimc_ = contact_status.dimf();
-  }
-  else {
-    dimc_ = 0;
-  }
-  dimKKT_ = 4*dimv_ + dimc_;
+  dimc_ = 2*contact_status.dimf();
+  dimKKT_ = 4*dimv_ + dimf_ + dimc_;
 }
 
 
@@ -75,43 +64,46 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::Fx() {
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseKKTResidual::C_contact_position() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::C() {
   return kkt_residual_.segment(dimx_, dimc_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lq() {
-  return kkt_residual_.segment(dimx_+dimc_, dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lv() {
-  return kkt_residual_.segment(dimx_+dimc_+dimv_, dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lx() {
-  return kkt_residual_.segment(dimx_+dimc_, dimx_);
+inline Eigen::VectorBlock<Eigen::VectorXd> 
+ImpulseKKTResidual::C_contact_position() {
+  return kkt_residual_.segment(dimx_, dimf_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
 ImpulseKKTResidual::C_contact_velocity() {
-  return C_contact_velocity_full_.head(dimf_);
+  return kkt_residual_.segment(dimx_+dimf_, dimf_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lf() {
-  return lf_full_.head(dimf_);
+  return kkt_residual_.segment(dimx_+dimc_, dimf_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lq() {
+  return kkt_residual_.segment(dimx_+dimc_+dimf_, dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lv() {
+  return kkt_residual_.segment(dimx_+dimc_+dimf_+dimv_, dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lx() {
+  return kkt_residual_.segment(dimx_+dimc_+dimf_, dimx_);
 }
 
 
 inline void ImpulseKKTResidual::setZero() {
   ldv.setZero();
   dv_res.setZero();
-  lf_full_.setZero();
-  C_contact_velocity_full_.setZero();
   kkt_residual_.setZero();
 }
 

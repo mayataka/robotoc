@@ -11,7 +11,7 @@ TerminalOCP::TerminalOCP(
   : cost_(cost),
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
-    constraints_data_(constraints->createConstraintsData(robot)),
+    constraints_data_(),
     kkt_residual_(robot),
     kkt_matrix_(robot),
     s_tmp_(robot),
