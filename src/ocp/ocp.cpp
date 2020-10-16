@@ -32,6 +32,7 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
   assert(T > 0);
   assert(N > 0);
   assert(num_proc > 0);
+  #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<=N; ++i) {
     robot.normalizeConfiguration(s_[i].q);
   }

@@ -27,7 +27,9 @@ void BenchmarkTaskSpace3DControl() {
   idocp::Robot robot(urdf_file_name);
   auto cost = std::make_shared<idocp::CostFunction>();
   auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
+  joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
+  joint_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.00));
@@ -68,7 +70,9 @@ void BenchmarkTaskSpace6DControl() {
   idocp::Robot robot(urdf_file_name);
   auto cost = std::make_shared<idocp::CostFunction>();
   auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
+  joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
+  joint_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.00));
