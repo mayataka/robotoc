@@ -18,11 +18,10 @@ public:
   /// @brief Construct a split solution.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
-  ImpulseSplitDirection(const Robot& robot,  
-                        const bool use_contact_position_constraint);
+  ImpulseSplitDirection(const Robot& robot);
 
   ///
-  /// @brief Default constructor. Does not construct any datas. 
+  /// @brief Default constructor.  
   ///
   ImpulseSplitDirection();
 
@@ -231,21 +230,14 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] contact_status Contact status.
   ///
-  static ImpulseSplitDirection Random(
-      const Robot& robot, const ContactStatus& contact_status, 
-      const bool use_contact_position_constraint);
+  static ImpulseSplitDirection Random(const Robot& robot, 
+                                      const ContactStatus& contact_status);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   /// @brief Stack of the Newton directions.
   Eigen::VectorXd split_direction_;
-
-  /// @brief Newton directions of stack of f.
-  Eigen::VectorXd df_full_;
-
-  /// @brief Newton direction of mu_velocity.
-  Eigen::VectorXd dmu_velocity_full_;
 
   /// @brief Dimension of velocity v.
   int dimv_;
@@ -264,8 +256,6 @@ private:
 
   /// @brief Maximum dimension of the split KKT system. 
   int max_dimKKT_;
-
-  bool use_contact_position_constraint_;
 
 };
 

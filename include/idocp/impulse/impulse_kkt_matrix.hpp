@@ -86,6 +86,14 @@ public:
   Eigen::Block<Eigen::MatrixXd> Cqv();
 
   ///
+  /// @brief Jacobian of the contact position and velocity constraint with  
+  /// respect to generalized velocity v.
+  /// @return Reference to the Jacobian. Size is 
+  /// 2 * ContactStatus::dimf() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Cf();
+
+  ///
   /// @brief Jacobian of the contact position constraint with respect to 
   /// configuration q.
   /// @return Reference to the Jacobian. Size is 
@@ -102,6 +110,14 @@ public:
   Eigen::Block<Eigen::MatrixXd> Cv_contact_position();
 
   ///
+  /// @brief Jacobian of the contact position constraint with respect to 
+  /// generalized velocity v.
+  /// @return Reference to the Jacobian. Size is 
+  /// ContactStatus::dimf() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Cf_contact_position();
+
+  ///
   /// @brief Jacobian of the contact velocity constraint with respect to 
   /// configuration q.
   /// @return Reference to the Jacobian. Size is 
@@ -116,6 +132,14 @@ public:
   /// ContactStatus::dimf() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Cv_contact_velocity();
+
+  ///
+  /// @brief Jacobian of the contact velocity constraint with respect to 
+  /// generalized velocity v.
+  /// @return Reference to the Jacobian. Size is 
+  /// ContactStatus::dimf() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Cf_contact_velocity();
 
   ///
   /// @brief Hessian of the Lagrangian with respect to the stack of contact 

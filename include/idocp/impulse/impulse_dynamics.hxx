@@ -8,33 +8,25 @@
 namespace idocp {
 
 inline ImpulseDynamics::ImpulseDynamics(const Robot& robot) 
-  : lu_condensed_(Eigen::VectorXd::Zero(robot.dimv())),
-    C_floating_base_(Eigen::VectorXd::Zero(robot.dim_passive())),
-    dImD_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+  : dImD_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     dImD_ddv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     dImD_df_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
-    Quu_du_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Quu_du_dv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Quu_du_da_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Quu_du_df_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
-    has_floating_base_(robot.has_floating_base()),
-    has_active_contacts_(false),
+    Qdvdv_du_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Qdvdv_du_dv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Qdvdv_du_da_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Qdvdv_du_df_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     dimf_(0) {
 }
 
 
 inline ImpulseDynamics::ImpulseDynamics() 
-  : lu_condensed_(),
-    C_floating_base_(),
-    dImD_dq_(),
+  : dImD_dq_(),
     dImD_ddv_(),
     dImD_df_full_(),
-    Quu_du_dq_(),
-    Quu_du_dv_(),
-    Quu_du_da_(),
-    Quu_du_df_full_(),
-    has_floating_base_(false),
-    has_active_contacts_(false),
+    Qdvdv_du_dq_(),
+    Qdvdv_du_dv_(),
+    Qdvdv_du_da_(),
+    Qdvdv_du_df_full_(),
     dimf_(0) {
 }
 

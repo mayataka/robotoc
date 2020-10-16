@@ -5,8 +5,7 @@
 
 namespace idocp {
 
-inline ImpulseSplitDirection::ImpulseSplitDirection(
-    const Robot& robot, const bool use_contact_position_constraint) 
+inline ImpulseSplitDirection::ImpulseSplitDirection(const Robot& robot) 
   : ddv(robot.dimv()),
     dbeta(robot.dimv()),
     split_direction_(Eigen::VectorXd::Zero(4*robot.dimv()+3*robot.max_dimf())),
@@ -185,9 +184,8 @@ inline int ImpulseSplitDirection::dimf() const {
 
 
 inline ImpulseSplitDirection ImpulseSplitDirection::Random(
-    const Robot& robot, const ContactStatus& contact_status, 
-    const bool use_contact_position_constraint) {
-  ImpulseSplitDirection d(robot, use_contact_position_constraint);
+    const Robot& robot, const ContactStatus& contact_status) {
+  ImpulseSplitDirection d(robot);
   d.setContactStatus(contact_status);
   d.dlmd() = Eigen::VectorXd::Random(robot.dimv());
   d.dgmm() = Eigen::VectorXd::Random(robot.dimv());

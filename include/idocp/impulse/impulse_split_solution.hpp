@@ -23,7 +23,7 @@ public:
   ImpulseSplitSolution(const Robot& robot);
 
   ///
-  /// @brief Default constructor. Does not construct any datas. 
+  /// @brief Default constructor. 
   ///
   ImpulseSplitSolution();
 
@@ -191,13 +191,13 @@ public:
   /// @brief Lagrange multiplier with respect to contact constraint. 
   /// Size is Robot::max_point_contacts().
   ///
-  std::vector<Eigen::Vector3d> mu_contact_velocity;
+  std::vector<Eigen::Vector3d> mu_contact_position;
 
   ///
   /// @brief Lagrange multiplier with respect to contact constraint. 
   /// Size is Robot::max_point_contacts().
   ///
-  std::vector<Eigen::Vector3d> mu_contact_position;
+  std::vector<Eigen::Vector3d> mu_contact_velocity;
 
   ///
   /// @brief Changes in generalized velocity due to impact. 
