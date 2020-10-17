@@ -5,8 +5,7 @@
 
 namespace idocp {
 
-inline ImpulseKKTResidual::ImpulseKKTResidual(
-    const Robot& robot, const bool use_contact_position_constraint) 
+inline ImpulseKKTResidual::ImpulseKKTResidual(const Robot& robot) 
   : ldv(Eigen::VectorXd::Zero(robot.dimv())),
     dv_res(Eigen::VectorXd::Zero(robot.dimv())),
     kkt_residual_(Eigen::VectorXd::Zero(4*robot.dimv()+3*robot.max_dimf())),

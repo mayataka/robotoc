@@ -8,7 +8,8 @@
 namespace idocp {
 
 inline ImpulseDynamics::ImpulseDynamics(const Robot& robot) 
-  : dImD_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+  : schur_complement_(robot.dimv(), robot.max_dimf()),
+    dImD_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     dImD_ddv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     dImD_df_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     Qdvdv_du_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
@@ -20,7 +21,8 @@ inline ImpulseDynamics::ImpulseDynamics(const Robot& robot)
 
 
 inline ImpulseDynamics::ImpulseDynamics() 
-  : dImD_dq_(),
+  : schur_complement_(),
+    dImD_dq_(),
     dImD_ddv_(),
     dImD_df_full_(),
     Qdvdv_du_dq_(),
@@ -65,6 +67,9 @@ inline void ImpulseDynamics::condenseImpulseDynamics(
   assert(contact_status.hasActiveContacts());
   setContactStatus(contact_status);
   linearizeInverseImpulseDynamics(robot, contact_status, s, kkt_residual);
+  schur_complement_.invertWithZeroBottomRightCorner(dimv_, dimf_, dImD_ddv_, 
+                                                    dImD_df_(), MJTMinv_());
+  MJTMinvCqv_().top = MJTMinv_() * 
   lu_condensed_.noalias() 
       = kkt_residual.lu 
           + kkt_matrix.Quu.diagonal().asDiagonal() * kkt_residual.u_res;
@@ -102,7 +107,6 @@ inline void ImpulseDynamics::condenseImpulseDynamics(
   kkt_residual.la().noalias() += kkt_matrix.Ca().transpose() * s.mu_stack();
   kkt_residual.lq().noalias() += kkt_matrix.Cq().transpose() * s.mu_stack();
   kkt_residual.lv().noalias() += kkt_matrix.Cv().transpose() * s.mu_stack();
-  }
 }
 
 
@@ -158,14 +162,14 @@ inline void ImpulseDynamics::linearizeContactVelocityConstraint(
 inline double ImpulseDynamics::l1NormImpulseDynamicsResidual(
     const ImpulseKKTResidual& kkt_residual) const {
   return (kkt_residual.u_res.lpNorm<1>() 
-          + kkt_residual.C_contacts().lpNorm<1>());
+          + kkt_residual.C().lpNorm<1>());
 }
 
 
 inline double ImpulseDynamics::squaredNormImpulseDynamicsResidual(
     const ImpulseKKTResidual& kkt_residual) const {
-  return (kkt_residual.u_res.squaredNorm() 
-          + kkt_residual.C_contacts().squaredNorm());
+  return (kkt_residual.dv_res.squaredNorm() 
+          + kkt_residual.C().squaredNorm());
 }
 
 
@@ -188,14 +192,14 @@ ImpulseDynamics::dImD_df_() const {
 
 
 inline Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
-ImpulseDynamics::Quu_du_df_() {
-  return Quu_du_df_full_.leftCols(dimf_);
+ImpulseDynamics::MJTMinv_() {
+  return MJTMinv_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
-ImpulseDynamics::Quu_du_df_() const {
-  return Quu_du_df_full_.leftCols(dimf_);
+ImpulseDynamics::MJTMinv_() const {
+  return MJTMinv_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
 }
 
 } // namespace idocp 

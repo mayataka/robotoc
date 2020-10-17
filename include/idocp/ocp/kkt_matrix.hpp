@@ -5,6 +5,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/ocp/schur_complement.hpp"
 
 
 namespace idocp {
@@ -382,7 +383,8 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::MatrixXd C_, Q_, Sc_, Sx_, FMinv_, C_H_inv_;
+  SchurComplement schur_complement_;
+  Eigen::MatrixXd C_, Q_, Sx_, FMinv_;
   bool has_floating_base_;
   int dimv_, dimx_, dim_passive_, dimf_, dimc_, a_begin_, f_begin_, q_begin_, 
       v_begin_, dimQ_, max_dimKKT_;

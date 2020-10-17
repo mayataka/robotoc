@@ -5,6 +5,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/ocp/schur_complement.hpp"
 
 
 namespace idocp {
@@ -21,8 +22,7 @@ public:
   /// @param[in] use_contact_position_constraint true if you treat the contact 
   /// position constraint in this impulse stage. false if not.
   ///
-  ImpulseKKTMatrix(const Robot& robot,
-                   const bool use_contact_position_constraint);
+  ImpulseKKTMatrix(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
@@ -287,9 +287,11 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::MatrixXd C_, Q_, Sc_, Sx_, FMinv_, C_H_inv_;
+  SchurComplement schur_complement_;
+  Eigen::MatrixXd C_, Q_, Sx_, FMinv_;
   bool has_floating_base_;
-  int dimv_, dimx_, dimf_, dimc_, f_begin_, q_begin_, v_begin_, dimQ_, max_dimKKT_;
+  int dimv_, dimx_, dimf_, dimc_, f_begin_, q_begin_, v_begin_, dimQ_, 
+      dimKKT_, max_dimKKT_;
   static constexpr int kDimFloatingBase = 6;
 
   ///

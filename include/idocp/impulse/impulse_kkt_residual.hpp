@@ -21,8 +21,7 @@ public:
   /// @param[in] use_contact_position_constraint true if you treat the contact 
   /// position constraint in this impulse stage. false if not.
   ///
-  ImpulseKKTResidual(const Robot& robot, 
-                     const bool use_contact_position_constraint);
+  ImpulseKKTResidual(const Robot& robot);
 
   ///
   /// @brief Default constructor. 

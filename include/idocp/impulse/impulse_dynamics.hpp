@@ -9,6 +9,7 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/ocp/schur_complement.hpp"
 
 
 namespace idocp {
@@ -59,8 +60,9 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::MatrixXd Qdvdv_, dImD_dq_, dImD_ddv_, dImD_df_full_, 
-                  dC_ddv_;
+  SchurComplement schur_complement_;
+  Eigen::MatrixXd MJTMinv_full_, Qdvdv_, dImD_dq_, dImD_ddv_, dImD_df_full_, 
+                  MJTMinvCqv_full_, dC_ddv_;
   int dimf_;
 
   void linearizeInverseImpulseDynamics(Robot& robot, 
@@ -92,6 +94,12 @@ private:
 
   const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
   dImD_df_() const;
+
+  Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
+  MJTMinv_();
+
+  const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
+  MJTMinv_() const;
 
 };
 

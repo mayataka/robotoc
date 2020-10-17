@@ -149,6 +149,20 @@ public:
           ImpulseKKTResidual& kkt_residual) const;
 
   ///
+  /// @brief Computes the partial derivatives of the stage cost with respect
+  /// to the contact forces. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Cost function data.
+  /// @param[in] t Time.
+  /// @param[in] f Impulse force. Size must be ConstactStatus::dimf().
+  /// @param[out] lf The KKT residual with respect to f. Size must be 
+  /// ConstactStatus::dimf().
+  ///
+  void lf(Robot& robot, CostFunctionData& data, const double t, 
+          const ImpulseSplitSolution& s, 
+          ImpulseKKTResidual& kkt_residual) const;
+
+  ///
   /// @brief Computes the Hessians of the stage cost with respect
   /// to the configuration. 
   /// @param[in] robot Robot model.
@@ -175,6 +189,19 @@ public:
            const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix) const;
 
   ///
+  /// @brief Computes the Hessian of the stage cost with respect
+  /// to the impulse velocity. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Cost function data.
+  /// @param[in] t Time.
+  /// @param[in] f Impulse force. Size must be ConstactStatus::dimf().
+  /// @param[out] Qff The Hessian of the KKT residual with respect to f.  
+  /// Size must be ConstactStatus::dimf() x ConstactStatus::dimf().
+  ///
+  void lff(Robot& robot, CostFunctionData& data, const double t, 
+           const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix) const;
+
+  ///
   /// @brief Computes the partial derivatives of the stage cost with respect
   /// to the control input torques. 
   /// @param[in] robot Robot model.
@@ -188,20 +215,6 @@ public:
            const Eigen::VectorXd& dv, Eigen::VectorXd& ldv) const;
 
   ///
-  /// @brief Computes the partial derivatives of the stage cost with respect
-  /// to the contact forces. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] f Impulse force. Size must be ConstactStatus::dimf().
-  /// @param[out] lf The KKT residual with respect to f. Size must be 
-  /// ConstactStatus::dimf().
-  ///
-  void lf(Robot& robot, CostFunctionData& data, const double t, 
-          const ImpulseSplitSolution& s, 
-          ImpulseKKTResidual& kkt_residual) const;
-
-  ///
   /// @brief Computes the Hessian of the stage cost with respect
   /// to the control input torques. 
   /// @param[in] robot Robot model.
@@ -213,19 +226,6 @@ public:
   ///
   void ldvdv(Robot& robot, CostFunctionData& data, const double t, 
              const Eigen::VectorXd& dv, Eigen::MatrixXd& Qdvdv) const;
-
-  ///
-  /// @brief Computes the Hessian of the stage cost with respect
-  /// to the impulse velocity. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] f Impulse force. Size must be ConstactStatus::dimf().
-  /// @param[out] Qff The Hessian of the KKT residual with respect to f.  
-  /// Size must be ConstactStatus::dimf() x ConstactStatus::dimf().
-  ///
-  void lff(Robot& robot, CostFunctionData& data, const double t, 
-           const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix) const;
 
 private:
   std::vector<std::shared_ptr<ImpulseCostFunctionComponentBase>> costs_;

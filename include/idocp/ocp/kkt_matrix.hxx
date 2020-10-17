@@ -13,17 +13,15 @@ inline KKTMatrix::KKTMatrix(const Robot& robot)
   : Quu(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Fqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    schur_complement_(robot.dim_passive()+robot.max_dimf(),
+                      3*robot.dimv()+robot.max_dimf()),
     C_(Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), 
                              3*robot.dimv()+robot.max_dimf())),
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv()+robot.max_dimf(), 
                              3*robot.dimv()+robot.max_dimf())),
-    Sc_(Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), 
-                              robot.dim_passive()+robot.max_dimf())),
     Sx_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
     FMinv_(Eigen::MatrixXd::Zero(
         2*robot.dimv(), 3*robot.dimv()+robot.dim_passive()+2*robot.max_dimf())),
-    C_H_inv_(Eigen::MatrixXd::Zero(robot.dim_passive()+robot.max_dimf(), 
-                                   3*robot.dimv()+robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
@@ -43,12 +41,11 @@ inline KKTMatrix::KKTMatrix()
   : Quu(),
     Fqq(),
     Fqq_prev(),
+    schur_complement_(),
     C_(), 
     Q_(), 
-    Sc_(), 
     Sx_(), 
     FMinv_(),
-    C_H_inv_(),
     has_floating_base_(false),
     dimv_(0), 
     dimx_(0), 
@@ -380,38 +377,17 @@ inline int KKTMatrix::dimf() const {
 
 template <typename MatrixType>
 inline void KKTMatrix::invertConstrainedHessian( 
-    const Eigen::MatrixBase<MatrixType>& H_inv) {
-  assert(H_inv.rows() == dimQ_+dimc_);
-  assert(H_inv.cols() == dimQ_+dimc_);
+    const Eigen::MatrixBase<MatrixType>& Hinv) {
+  assert(Hinv.rows() == dimQ_+dimc_);
+  assert(Hinv.cols() == dimQ_+dimc_);
   if (dimc_ > 0) {
-    const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
-        .bottomRightCorner(dimQ_, dimQ_).noalias()
-        = Q_.topLeftCorner(dimQ_, dimQ_)
-            .llt().solve(Eigen::MatrixXd::Identity(dimQ_, dimQ_));
-    C_H_inv_.topLeftCorner(dimc_, dimQ_).noalias()
-        = C_.topLeftCorner(dimc_, dimQ_) * H_inv.bottomRightCorner(dimQ_, dimQ_);
-    Sc_.topLeftCorner(dimc_, dimc_).noalias() 
-        = C_H_inv_.topLeftCorner(dimc_, dimQ_)
-            * C_.topLeftCorner(dimc_, dimQ_).transpose();
-    const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
-        .topLeftCorner(dimc_, dimc_).noalias()
-        = - Sc_.topLeftCorner(dimc_, dimc_)
-                .llt().solve(Eigen::MatrixXd::Identity(dimc_, dimc_));
-    const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
-        .topRightCorner(dimc_, dimQ_).noalias()
-        = - H_inv.topLeftCorner(dimc_, dimc_) 
-            * C_H_inv_.topLeftCorner(dimc_, dimQ_);
-    const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
-        .bottomLeftCorner(dimQ_, dimc_)
-        = H_inv.topRightCorner(dimc_, dimQ_).transpose();
-    const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv)
-        .bottomRightCorner(dimQ_, dimQ_).noalias()
-        -= H_inv.topRightCorner(dimc_, dimQ_).transpose()
-              * Sc_.topLeftCorner(dimc_, dimc_)
-              * H_inv.topRightCorner(dimc_, dimQ_);
+    schur_complement_.invertWithZeroTopLeftCorner(
+        dimc_, dimQ_, C_.topLeftCorner(dimc_, dimQ_),
+        Q_.topLeftCorner(dimQ_, dimQ_), 
+        const_cast<Eigen::MatrixBase<MatrixType>&>(Hinv));
   }
   else {
-    const_cast<Eigen::MatrixBase<MatrixType>&>(H_inv).noalias()
+    const_cast<Eigen::MatrixBase<MatrixType>&>(Hinv).noalias()
         = Q_.topLeftCorner(dimQ_, dimQ_)
             .llt().solve(Eigen::MatrixXd::Identity(dimQ_, dimQ_));
   }
