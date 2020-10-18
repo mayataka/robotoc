@@ -280,6 +280,14 @@ public:
   /// configuration q.
   Eigen::MatrixXd Fqq;
 
+  /// @brief Derivative of the state equation with respect to the generalized 
+  /// velocity v and configuration q.
+  Eigen::MatrixXd Fvq;
+
+  /// @brief Derivative of the state equation with respect to the generalized 
+  /// velocity v.
+  Eigen::MatrixXd Fvv;
+
   /// @brief Derivative of the state equation with respect to the 
   /// configuration of the previous time step q_prev.
   Eigen::MatrixXd Fqq_prev;

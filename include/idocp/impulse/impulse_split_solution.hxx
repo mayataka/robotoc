@@ -194,6 +194,19 @@ inline int ImpulseSplitSolution::dimf() const {
 }
 
 
+inline ImpulseSplitSolution ImpulseSplitSolution::Random(const Robot& robot) {
+  ImpulseSplitSolution s(robot);
+  s.lmd = Eigen::VectorXd::Random(robot.dimv());
+  s.gmm = Eigen::VectorXd::Random(robot.dimv());
+  s.q = Eigen::VectorXd::Random(robot.dimq());
+  robot.normalizeConfiguration(s.q);
+  s.v = Eigen::VectorXd::Random(robot.dimv());
+  s.dv = Eigen::VectorXd::Random(robot.dimv());
+  s.beta = Eigen::VectorXd::Random(robot.dimv());
+  return s;
+}
+
+
 inline ImpulseSplitSolution ImpulseSplitSolution::Random(
     const Robot& robot, const ContactStatus& contact_status) {
   ImpulseSplitSolution s(robot);

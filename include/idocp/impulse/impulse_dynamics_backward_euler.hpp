@@ -1,5 +1,5 @@
-#ifndef IDOCP_IMPULSE_DYNAMICS_HPP_
-#define IDOCP_IMPULSE_DYNAMICS_HPP_
+#ifndef IDOCP_IMPULSE_DYNAMICS_BACKWARD_EULER_HPP_
+#define IDOCP_IMPULSE_DYNAMICS_BACKWARD_EULER_HPP_
 
 #include "Eigen/Core"
 
@@ -14,21 +14,21 @@
 
 namespace idocp {
 
-class ImpulseDynamics {
+class ImpulseDynamicsBackwardEuler {
 public:
-  ImpulseDynamics(const Robot& robot);
+  ImpulseDynamicsBackwardEuler(const Robot& robot);
 
-  ImpulseDynamics();
+  ImpulseDynamicsBackwardEuler();
 
-  ~ImpulseDynamics();
+  ~ImpulseDynamicsBackwardEuler();
 
-  ImpulseDynamics(const ImpulseDynamics&) = default;
+  ImpulseDynamicsBackwardEuler(const ImpulseDynamicsBackwardEuler&) = default;
 
-  ImpulseDynamics& operator=(const ImpulseDynamics&) = default;
+  ImpulseDynamicsBackwardEuler& operator=(const ImpulseDynamicsBackwardEuler&) = default;
  
-  ImpulseDynamics(ImpulseDynamics&&) noexcept = default;
+  ImpulseDynamicsBackwardEuler(ImpulseDynamicsBackwardEuler&&) noexcept = default;
 
-  ImpulseDynamics& operator=(ImpulseDynamics&&) noexcept = default;
+  ImpulseDynamicsBackwardEuler& operator=(ImpulseDynamicsBackwardEuler&&) noexcept = default;
 
   void linearizeImpulseDynamics(Robot& robot, 
                                 const ContactStatus& contact_status, 
@@ -51,7 +51,7 @@ public:
                                       const ImpulseSplitSolution& s, 
                                       ImpulseKKTResidual& kkt_residual);
 
-  double l1NormImpulseDynamicsResidual(
+  double l1NormImpulseDynamicsEulerResidual(
       const ImpulseKKTResidual& kkt_residual) const;
 
   double squaredNormImpulseDynamicsResidual(
@@ -105,6 +105,6 @@ private:
 
 } // namespace idocp 
 
-#include "idocp/impulse/impulse_dynamics.hxx"
+#include "idocp/impulse/impulse_dynamics_backward_euler.hxx"
 
-#endif // IDOCP_IMPULSE_DYNAMICS_HPP_ 
+#endif // IDOCP_IMPULSE_DYNAMICS_BACKWARD_EULER_HPP_ 

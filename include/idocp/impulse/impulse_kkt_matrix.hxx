@@ -12,6 +12,8 @@ namespace idocp {
 inline ImpulseKKTMatrix::ImpulseKKTMatrix(const Robot& robot)
   : Qdvdv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Fqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Fvq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Fvv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     schur_complement_(2*robot.max_dimf(), robot.max_dimf()),
     C_(Eigen::MatrixXd::Zero(2*robot.max_dimf(), 
@@ -38,6 +40,8 @@ inline ImpulseKKTMatrix::ImpulseKKTMatrix(const Robot& robot)
 inline ImpulseKKTMatrix::ImpulseKKTMatrix() 
   : Qdvdv(),
     Fqq(),
+    Fvq(),
+    Fvv(),
     Fqq_prev(),
     schur_complement_(),
     C_(), 
@@ -195,7 +199,7 @@ inline void ImpulseKKTMatrix::invert(
   assert(kkt_matrix_inverse.rows() == (2*dimx_+dimc_));
   assert(kkt_matrix_inverse.cols() == (2*dimx_+dimc_));
   // Forms the Schur complement matrix
-  // const int dimcQ = dimc_ + dimx_;
+  const int dimcQ = dimc_ + dimx_;
   // invertConstrainedHessian(
   //     const_cast<Eigen::MatrixBase<MatrixType>&>(kkt_matrix_inverse)
   //         .bottomRightCorner(dimcQ, dimcQ));
@@ -274,6 +278,9 @@ inline void ImpulseKKTMatrix::invert(
 inline void ImpulseKKTMatrix::setZero() {
   Qdvdv.setZero();
   Fqq.setZero();
+  Fvq.setZero();
+  Fvv.setZero();
+  Fqq_prev.setZero();
   C_.setZero();
   Q_.setZero();
 }

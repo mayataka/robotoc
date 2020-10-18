@@ -88,6 +88,13 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> Fx();
 
   ///
+  /// @brief Residual with respect to q and v transition.
+  /// @return Const reference to the residual with respect to q and v transition.
+  /// Size is 2 * Robot::dimv().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> Fx() const;
+
+  ///
   /// @brief Residual of the contact position and velocity constraint.
   /// @return Reference to the residual of the contact position constraint.  
   /// Size is 2 * KKTResidual::dimf(). 

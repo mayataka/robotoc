@@ -29,8 +29,7 @@ void LinearizeImpulseBackwardEuler(
 
 template <typename ConfigVectorType, typename TangentVectorType>
 void LinearizeImpulseBackwardEulerTerminal(
-    const Robot& robot, const double dtau, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
+    const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
     const SplitSolution& s, KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
@@ -49,13 +48,13 @@ void ComputeImpulseForwardEulerResidual(
     const Eigen::MatrixBase<TangentVectorType1>& v_next, 
     const Eigen::MatrixBase<TangentVectorType2>& dq_next, 
     const Eigen::MatrixBase<TangentVectorType3>& dv_next, 
-    KKTResidual& kkt_residual);
+    ImpulseKKTResidual& kkt_residual);
 
 template <typename ConfigVectorType, typename TangentVectorType>
 void ComputeImpulseBackwardEulerResidual(
     const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
-    const SplitSolution& s, KKTResidual& kkt_residual);
+    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual);
 
 template <typename ConfigVectorType, typename TangentVectorType1, 
         typename TangentVectorType2, typename TangentVectorType3>
@@ -65,11 +64,11 @@ void ComputeImpulseBackwardEulerResidual(
     const Eigen::MatrixBase<TangentVectorType1>& v_prev, 
     const Eigen::MatrixBase<TangentVectorType2>& dq_prev, 
     const Eigen::MatrixBase<TangentVectorType3>& dv_prev, 
-    const SplitSolution& s, KKTResidual& kkt_residual);
+    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual);
 
-double L1NormStateEuqationResidual(const KKTResidual& kkt_residual);
+double L1NormStateEuqationResidual(const ImpulseKKTResidual& kkt_residual);
 
-double SquaredNormStateEuqationResidual(const KKTResidual& kkt_residual);
+double SquaredNormStateEuqationResidual(const ImpulseKKTResidual& kkt_residual);
 
 } // namespace stateequation
 

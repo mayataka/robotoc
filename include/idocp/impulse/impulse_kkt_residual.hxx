@@ -63,6 +63,12 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::Fx() {
 }
 
 
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseKKTResidual::Fx() const {
+  return kkt_residual_.segment(0, dimx_);
+}
+
+
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::C() {
   return kkt_residual_.segment(dimx_, dimc_);
 }

@@ -48,7 +48,7 @@ inline void LinearizeImpulseBackwardEuler(
     kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
   }
   kkt_residual.lv().noalias() += - s.gmm + s_next.gmm;
-  kkt_residual.la().noalias() += s.gmm;
+  kkt_residual.ldv.noalias() += s.gmm;
 }
 
 
@@ -56,12 +56,11 @@ template <typename ConfigVectorType, typename TangentVectorType>
 inline void LinearizeImpulseBackwardEulerTerminal(
     const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
-    const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) {
-  assert(dtau > 0);
+    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
+    ImpulseKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
-  ComputeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, kkt_residual);
+  ComputeImpulseBackwardEulerResidual(robot, q_prev, v_prev, s, kkt_residual);
   if (robot.has_floating_base()) {
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq);
     kkt_residual.lq().noalias() 
@@ -70,8 +69,8 @@ inline void LinearizeImpulseBackwardEulerTerminal(
   else {
     kkt_residual.lq().noalias() -= s.lmd;
   }
-  kkt_residual.lv().noalias() += dtau * s.lmd - s.gmm;
-  kkt_residual.la().noalias() += dtau * s.gmm;
+  kkt_residual.lv().noalias() -= s.gmm;
+  kkt_residual.ldv.noalias() += s.gmm;
 }
 
 
@@ -96,7 +95,7 @@ inline void ComputeImpulseForwardEulerResidual(
     const Eigen::MatrixBase<TangentVectorType1>& v_next, 
     const Eigen::MatrixBase<TangentVectorType2>& dq_next, 
     const Eigen::MatrixBase<TangentVectorType3>& dv_next, 
-    KKTResidual& kkt_residual) {
+    ImpulseKKTResidual& kkt_residual) {
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
   assert(dq_next.size() == robot.dimv());
@@ -109,8 +108,7 @@ inline void ComputeImpulseForwardEulerResidual(
 
 template <typename ConfigVectorType, typename TangentVectorType>
 inline void ComputeImpulseBackwardEulerResidual(
-    const Robot& robot, const double dtau, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
+    const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
     const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
@@ -136,6 +134,18 @@ inline void ComputeImpulseBackwardEulerResidual(
   robot.subtractConfiguration(q_prev, s.q, kkt_residual.Fq());
   kkt_residual.Fq().noalias() += step_size * dq_prev;
   kkt_residual.Fv() = v_prev - s.v + s.dv + step_size * dv_prev;
+}
+
+
+inline double L1NormStateEuqationResidual(
+    const ImpulseKKTResidual& kkt_residual) {
+  return kkt_residual.Fx().lpNorm<1>();
+}
+
+
+inline double SquaredNormStateEuqationResidual(
+    const ImpulseKKTResidual& kkt_residual) {
+  return kkt_residual.Fx().squaredNorm();
 }
 
 } // namespace stateequation
