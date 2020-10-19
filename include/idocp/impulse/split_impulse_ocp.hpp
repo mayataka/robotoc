@@ -15,12 +15,9 @@
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/ocp/state_equation.hpp"
-#include "idocp/ocp/robot_dynamics.hpp"
+#include "idocp/impulse/state_equation.hpp"
+#include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
-#include "idocp/ocp/riccati_gain.hpp"
-#include "idocp/ocp/riccati_matrix_factorizer.hpp"
-#include "idocp/ocp/riccati_matrix_inverter.hpp"
 
 
 namespace idocp {
@@ -232,13 +229,9 @@ private:
   CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
-  KKTResidual kkt_residual_;
-  KKTMatrix kkt_matrix_;
-  RobotDynamics robot_dynamics_;
-  RiccatiGain riccati_gain_;
-  RiccatiMatrixFactorizer riccati_factorizer_;
-  RiccatiMatrixInverter riccati_inverter_;
-  Eigen::MatrixXd Ginv_full_; /// @brief Inverse of the Riccati matrix G.
+  ImpulseKKTResidual kkt_residual_;
+  ImpulseKKTMatrix kkt_matrix_;
+  ImpulseDynamicsForwardEuler impulse_dynamics_;
   SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
   int dimv_, dim_passive_, dimf_, dimc_;
   bool use_kinematics_;

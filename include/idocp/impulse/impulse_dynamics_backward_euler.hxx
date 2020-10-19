@@ -110,8 +110,7 @@ inline void ImpulseDynamicsBackwardEuler::condenseImpulseDynamics(
 
 inline void ImpulseDynamicsBackwardEuler::computeCondensedDirection(
     const ImpulseKKTMatrix& kkt_matrix, const ImpulseKKTResidual& kkt_residual, 
-    ImpulseSplitDirection& d) {
-  assert(dtau > 0);
+    ImpulseSplitDirection& d) const {
   d.du = kkt_residual.u_res;
   d.du.noalias() += du_dq_ * d.dq();
   d.du.noalias() += du_dv_ * d.dv();
@@ -127,44 +126,51 @@ inline void ImpulseDynamicsBackwardEuler::computeCondensedDirection(
 }
 
 
-inline void ImpulseDynamicsBackwardEuler::computeImpulseDynamicsBackwardEulerResidual(
+inline void ImpulseDynamicsBackwardEuler::computeImpulseDynamicsResidual(
     Robot& robot, const ContactStatus& contact_status,  
     const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) {
   robot.setContactForces(contact_status, s.f);
-  robot.RNEAImpulse(s.q, s.a, kkt_residual.u_res);
+  robot.RNEAImpulse(s.q, s.dv, kkt_residual.dv_res);
   robot.computeContactVelocityResidual(contact_status, 
-                                       kkt_residual.C_contacts());
+                                       kkt_residual.C_contact_velocity());
+  robot.computeContactResidual(contact_status, 
+                               kkt_residual.C_contact_position());
 }
 
 
-inline void ImpulseDynamicsBackwardEuler::linearizeInverseImpulseDynamicsBackwardEuler(
+inline void ImpulseDynamicsBackwardEuler::linearizeInverseImpulseDynamics(
     Robot& robot, const ContactStatus& contact_status, 
     const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) {
   robot.setContactForces(contact_status, s.f);
-  robot.RNEAImpulse(s.q, s.a, kkt_residual.u_res);
-  robot.RNEAImpulseDerivatives(s.q, s.a, dImD_dq_, dImD_ddv_);
+  robot.RNEAImpulse(s.q, s.dv, kkt_residual.dv_res);
+  robot.RNEAImpulseDerivatives(s.q, s.dv, dImD_dq_, dImD_ddv_);
   robot.dRNEAPartialdFext(contact_status, dImD_df_full_);
 }
 
 
-inline void ImpulseDynamicsBackwardEuler::linearizeContactVelocityConstraint(
+inline void ImpulseDynamicsBackwardEuler::linearizeContactConstraint(
     Robot& robot, const ContactStatus& contact_status, 
     ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual) {
   robot.computeContactVelocityResidual(contact_status, 
-                                       kkt_residual.C_contacts());
-  robot.computeContactVelocityDerivatives(contact_status, dContactVel_dq_,
-                                          dContactVel_dv_);
+                                       kkt_residual.C_contact_velocity());
+  robot.computeContactVelocityDerivatives(contact_status, 
+                                          kkt_matrix.Cq_contact_velocity(),
+                                          kkt_matrix.Cv_contact_velocity());
+  robot.computeContactResidual(contact_status, 
+                               kkt_residual.C_contact_position());
+  robot.computeContactDerivative(contact_status, 
+                                 kkt_matrix.Cq_contact_position());
 }
 
 
-inline double ImpulseDynamicsBackwardEuler::l1NormImpulseDynamicsBackwardEulerResidual(
+inline double ImpulseDynamicsBackwardEuler::l1NormImpulseDynamicsResidual(
     const ImpulseKKTResidual& kkt_residual) const {
-  return (kkt_residual.u_res.lpNorm<1>() 
+  return (kkt_residual.dv_res.lpNorm<1>() 
           + kkt_residual.C().lpNorm<1>());
 }
 
 
-inline double ImpulseDynamicsBackwardEuler::squaredNormImpulseDynamicsBackwardEulerResidual(
+inline double ImpulseDynamicsBackwardEuler::squaredNormImpulseDynamicsResidual(
     const ImpulseKKTResidual& kkt_residual) const {
   return (kkt_residual.dv_res.squaredNorm() 
           + kkt_residual.C().squaredNorm());
@@ -186,18 +192,6 @@ ImpulseDynamicsBackwardEuler::dImD_df_() {
 inline const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
 ImpulseDynamicsBackwardEuler::dImD_df_() const {
   return dImD_df_full_.leftCols(dimf_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
-ImpulseDynamicsBackwardEuler::MJTMinv_() {
-  return MJTMinv_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
-ImpulseDynamicsBackwardEuler::MJTMinv_() const {
-  return MJTMinv_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
 }
 
 } // namespace idocp 

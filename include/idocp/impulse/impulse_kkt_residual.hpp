@@ -102,20 +102,6 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> C();
 
   ///
-  /// @brief Residual of the contact position constraint.
-  /// @return Reference to the residual of the contact position constraint.  
-  /// Size is KKTResidual::dimf(). 
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> C_contact_position();
-
-  ///
-  /// @brief Residual of the contact velocity constraint.
-  /// @return Reference to the residual of the contact position constraint.  
-  /// Size is KKTResidual::dimf(). 
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> C_contact_velocity();
-
-  ///
   /// @brief Residual with respect to the stack of the contact forces f.
   /// @return Reference to the residual with respect to the stack of the  
   /// contact forces f. Size is KKTResidual::dimf().

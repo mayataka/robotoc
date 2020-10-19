@@ -87,6 +87,9 @@ inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
   ldvf_().tail(dimf_) = kkt_residual.lf();
   ImDC_().head(dimv_) = kkt_residual.dv_res;
   ImDC_().tail(dimf_) = kkt_residual.C_contact_velocity();
+  MinvImDC_full_
+  kkt_residual.ldv.noalias() -= ldvf_().asDiagonal()
+
   kkt_matrix.Qxx().noalias() 
       += MJTJinvCqv_().transpose() * ldvf_().asDiagonal() * MJTJinvCqv_();
   kkt_residual.lx().noalias()
@@ -99,7 +102,7 @@ inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
 
 inline void ImpulseDynamicsForwardEuler::computeCondensedDirection(
     const ImpulseKKTMatrix& kkt_matrix, const ImpulseKKTResidual& kkt_residual, 
-    const ImpulseSplitDirection& d_next, ImpulseSplitDirection& d) {
+    const SplitDirection& d_next, ImpulseSplitDirection& d) const {
   d.ddv.noalias() = - MJTJinvImDCqv_().topRows(dimv_) * d.dx() 
                     - MJTJinv_().topRows(dimv_) * ImDC_();
   d.df().noalias() = - MJTJinvImDCqv_().bottomRows(dimf_) * d.dx()
@@ -119,6 +122,8 @@ inline void ImpulseDynamicsForwardEuler::computeImpulseDynamicsResidual(
   robot.RNEAImpulse(s.q, s.dv, kkt_residual.dv_res);
   robot.computeContactVelocityResidual(contact_status, 
                                        kkt_residual.C_contact_velocity());
+  robot.computeContactResidual(contact_status, 
+                               kkt_residual.C_contact_position());
 }
 
 
@@ -132,7 +137,7 @@ inline void ImpulseDynamicsForwardEuler::linearizeInverseImpulseDynamics(
 }
 
 
-inline void ImpulseDynamicsForwardEuler::linearizeContactVelocityConstraint(
+inline void ImpulseDynamicsForwardEuler::linearizeContactConstraint(
     Robot& robot, const ContactStatus& contact_status, 
     ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual) {
   robot.computeContactVelocityResidual(contact_status, 
@@ -140,12 +145,16 @@ inline void ImpulseDynamicsForwardEuler::linearizeContactVelocityConstraint(
   robot.computeContactVelocityDerivatives(contact_status, 
                                           kkt_matrix.Cq_contact_velocity(),
                                           kkt_matrix.Cv_contact_velocity());
+  robot.computeContactResidual(contact_status, 
+                               kkt_residual.C_contact_position());
+  robot.computeContactDerivative(contact_status, 
+                                 kkt_matrix.Cq_contact_position());
 }
 
 
 inline double ImpulseDynamicsForwardEuler::l1NormImpulseDynamicsResidual(
     const ImpulseKKTResidual& kkt_residual) const {
-  return (kkt_residual.u_res.lpNorm<1>() 
+  return (kkt_residual.dv_res.lpNorm<1>() 
           + kkt_residual.C().lpNorm<1>());
 }
 

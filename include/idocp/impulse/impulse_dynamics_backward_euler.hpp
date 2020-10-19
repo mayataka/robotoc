@@ -44,7 +44,7 @@ public:
 
   void computeCondensedDirection(const ImpulseKKTMatrix& kkt_matrix, 
                                  const ImpulseKKTResidual& kkt_residual, 
-                                 ImpulseSplitDirection& d);
+                                 ImpulseSplitDirection& d) const;
 
   void computeImpulseDynamicsResidual(Robot& robot, 
                                       const ContactStatus& contact_status,
@@ -70,9 +70,10 @@ private:
                                        const ImpulseSplitSolution& s, 
                                        ImpulseKKTResidual& kkt_residual);
 
-  static void linearizeContactVelocityConstraint(
-      Robot& robot, const ContactStatus& contact_status, 
-      ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual);
+  static void linearizeContactConstraint(Robot& robot, 
+                                         const ContactStatus& contact_status, 
+                                         ImpulseKKTMatrix& kkt_matrix, 
+                                         ImpulseKKTResidual& kkt_residual);
 
   static void setContactForces(Robot& robot, 
                                const ContactStatus& contact_status, 
@@ -82,7 +83,7 @@ private:
       Robot& robot, const ImpulseSplitSolution& s, 
       ImpulseKKTResidual& kkt_residual);
 
-  static void computeContactVelocityConstraintResidual(
+  static void computeContactConstraintResidual(
       const Robot& robot, const ContactStatus& contact_status, 
       ImpulseKKTResidual& kkt_residual);
 

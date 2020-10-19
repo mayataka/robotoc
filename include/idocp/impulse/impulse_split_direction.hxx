@@ -8,12 +8,12 @@ namespace idocp {
 inline ImpulseSplitDirection::ImpulseSplitDirection(const Robot& robot) 
   : ddv(robot.dimv()),
     dbeta(robot.dimv()),
-    split_direction_(Eigen::VectorXd::Zero(4*robot.dimv()+3*robot.max_dimf())),
+    split_direction_(Eigen::VectorXd::Zero(4*robot.dimv()+2*robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dimf_(0), 
     dimc_(0),
-    max_dimKKT_(4*robot.dimv()+3*robot.max_dimf()),
+    max_dimKKT_(4*robot.dimv()+2*robot.max_dimf()),
     dimKKT_(4*robot.dimv()) {
 }
 
@@ -38,7 +38,7 @@ inline ImpulseSplitDirection::~ImpulseSplitDirection() {
 inline void ImpulseSplitDirection::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
-  dimc_ = 2*contact_status.dimf();
+  dimc_ = contact_status.dimf();
   dimKKT_ = 4*dimv_ + dimf_ + dimc_;
 }
 
@@ -61,18 +61,6 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dgmm() {
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dmu() {
   return split_direction_.segment(dimx_, dimc_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseSplitDirection::dmu_contact_position() {
-  return split_direction_.segment(dimx_, dimf_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseSplitDirection::dmu_contact_velocity() {
-  return split_direction_.segment(dimx_+dimf_, dimf_);
 }
 
 
@@ -117,18 +105,6 @@ ImpulseSplitDirection::dgmm() const {
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ImpulseSplitDirection::dmu() const {
   return split_direction_.segment(dimx_, dimc_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitDirection::dmu_contact_position() const {
-  return split_direction_.segment(dimx_, dimf_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitDirection::dmu_contact_velocity() const {
-  return split_direction_.segment(dimx_+dimf_, dimf_);
 }
 
 

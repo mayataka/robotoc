@@ -39,8 +39,6 @@ TEST_F(ImpulseSplitSolutionTest, fixed_base_contact) {
   s.setContactStatus(contact_status);
   EXPECT_TRUE(s.lmd.size() == robot.dimv());
   EXPECT_TRUE(s.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s.mu_contact_position.size() == 1);
-  EXPECT_TRUE(s.mu_contact_position[0].size() == 3);
   EXPECT_TRUE(s.mu_contact_velocity.size() == 1);
   EXPECT_TRUE(s.mu_contact_velocity[0].size() == 3);
   EXPECT_TRUE(s.dv.size() == robot.dimv());
@@ -50,16 +48,12 @@ TEST_F(ImpulseSplitSolutionTest, fixed_base_contact) {
   EXPECT_TRUE(s.v.size() == robot.dimv());
   EXPECT_TRUE(s.beta.size() == robot.dimv());
   EXPECT_TRUE(s.mu_stack().size() == 0);
-  EXPECT_TRUE(s.mu_stack_contact_position().size() == 0);
-  EXPECT_TRUE(s.mu_stack_contact_velocity().size() == 0);
   EXPECT_TRUE(s.f_stack().size() == 0);
   is_contact_active = {true};
   contact_status.setContactStatus(is_contact_active);
   s.setContactStatus(contact_status);
   EXPECT_TRUE(s.lmd.size() == robot.dimv());
   EXPECT_TRUE(s.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s.mu_contact_position.size() == 1);
-  EXPECT_TRUE(s.mu_contact_position[0].size() == 3);
   EXPECT_TRUE(s.mu_contact_velocity.size() == 1);
   EXPECT_TRUE(s.mu_contact_velocity[0].size() == 3);
   EXPECT_TRUE(s.dv.size() == robot.dimv());
@@ -68,9 +62,7 @@ TEST_F(ImpulseSplitSolutionTest, fixed_base_contact) {
   EXPECT_TRUE(s.q.size() == robot.dimq());
   EXPECT_TRUE(s.v.size() == robot.dimv());
   EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.mu_stack().size() == 6);
-  EXPECT_TRUE(s.mu_stack_contact_position().size() == 3);
-  EXPECT_TRUE(s.mu_stack_contact_velocity().size() == 3);
+  EXPECT_TRUE(s.mu_stack().size() == 3);
   EXPECT_TRUE(s.f_stack().size() == 3);
   const Eigen::VectorXd lmd = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd gmm = Eigen::VectorXd::Random(robot.dimv());
@@ -82,8 +74,7 @@ TEST_F(ImpulseSplitSolutionTest, fixed_base_contact) {
   const Eigen::VectorXd beta = Eigen::VectorXd::Random(robot.dimv());
   s.lmd = lmd;
   s.gmm = gmm;
-  s.mu_contact_position[0] = mu_stack.head(s.dimf());
-  s.mu_contact_velocity[0] = mu_stack.tail(s.dimf());
+  s.mu_contact_velocity[0] = mu_stack;
   s.dv = dv;
   s.f[0] = f;
   s.q = q;
@@ -94,8 +85,6 @@ TEST_F(ImpulseSplitSolutionTest, fixed_base_contact) {
   EXPECT_TRUE(s.lmd.isApprox(lmd));
   EXPECT_TRUE(s.gmm.isApprox(gmm));
   EXPECT_TRUE(s.mu_stack().isApprox(mu_stack));
-  EXPECT_TRUE(s.mu_stack_contact_position().isApprox(mu_stack.head(s.dimf())));
-  EXPECT_TRUE(s.mu_stack_contact_velocity().isApprox(mu_stack.tail(s.dimf())));
   EXPECT_TRUE(s.dv.isApprox(dv));
   EXPECT_TRUE(s.f[0].isApprox(f));
   EXPECT_TRUE(s.f_stack().isApprox(f));
@@ -106,19 +95,15 @@ TEST_F(ImpulseSplitSolutionTest, fixed_base_contact) {
   s.f_stack().setZero();
   s.set_mu_contact();
   s.set_f();
-  EXPECT_TRUE(s.mu_stack_contact_position().isZero());
-  EXPECT_TRUE(s.mu_stack_contact_velocity().isZero());
   EXPECT_TRUE(s.f[0].isZero());
   EXPECT_EQ(s.dimf(), 3);
-  EXPECT_EQ(s.dimc(), 6);
+  EXPECT_EQ(s.dimc(), 3);
   ImpulseSplitSolution s_random = ImpulseSplitSolution::Random(robot, contact_status);
   EXPECT_TRUE(s_random.lmd.size() == robot.dimv());
   EXPECT_TRUE(s_random.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s_random.mu_contact_position.size() == 1);
-  EXPECT_TRUE(s_random.mu_contact_position[0].size() == 3);
   EXPECT_TRUE(s_random.mu_contact_velocity.size() == 1);
   EXPECT_TRUE(s_random.mu_contact_velocity[0].size() == 3);
-  EXPECT_TRUE(s_random.mu_stack().size() == 6);
+  EXPECT_TRUE(s_random.mu_stack().size() == 3);
   EXPECT_TRUE(s_random.dv.size() == robot.dimv());
   EXPECT_TRUE(s_random.f.size() == 1);
   EXPECT_TRUE(s_random.f[0].size() == 3);
@@ -140,11 +125,6 @@ TEST_F(ImpulseSplitSolutionTest, floating_base_contacts_full_contacts) {
   s.setContactStatus(contact_status);
   EXPECT_TRUE(s.lmd.size() == robot.dimv());
   EXPECT_TRUE(s.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s.mu_contact_position.size() == 4);
-  EXPECT_TRUE(s.mu_contact_position[0].size() == 3);
-  EXPECT_TRUE(s.mu_contact_position[1].size() == 3);
-  EXPECT_TRUE(s.mu_contact_position[2].size() == 3);
-  EXPECT_TRUE(s.mu_contact_position[3].size() == 3);
   EXPECT_TRUE(s.mu_contact_velocity.size() == 4);
   EXPECT_TRUE(s.mu_contact_velocity[0].size() == 3);
   EXPECT_TRUE(s.mu_contact_velocity[1].size() == 3);
@@ -159,9 +139,7 @@ TEST_F(ImpulseSplitSolutionTest, floating_base_contacts_full_contacts) {
   EXPECT_TRUE(s.q.size() == robot.dimq());
   EXPECT_TRUE(s.v.size() == robot.dimv());
   EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.mu_stack().size() == 2*contact_status.dimf());
-  EXPECT_TRUE(s.mu_stack_contact_position().size() == contact_status.dimf());
-  EXPECT_TRUE(s.mu_stack_contact_velocity().size() == contact_status.dimf());
+  EXPECT_TRUE(s.mu_stack().size() == contact_status.dimf());
   EXPECT_TRUE(s.f_stack().size() == contact_status.dimf());
   const Eigen::VectorXd lmd = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd gmm = Eigen::VectorXd::Random(robot.dimv());
@@ -173,14 +151,10 @@ TEST_F(ImpulseSplitSolutionTest, floating_base_contacts_full_contacts) {
   const Eigen::VectorXd beta = Eigen::VectorXd::Random(robot.dimv());
   s.lmd = lmd;
   s.gmm = gmm;
-  s.mu_contact_position[0] = mu_stack.segment<3>(  0);
-  s.mu_contact_position[1] = mu_stack.segment<3>(  3);
-  s.mu_contact_position[2] = mu_stack.segment<3>(2*3);
-  s.mu_contact_position[3] = mu_stack.segment<3>(3*3);
-  s.mu_contact_velocity[0] = mu_stack.segment<3>(4*3);
-  s.mu_contact_velocity[1] = mu_stack.segment<3>(5*3);
-  s.mu_contact_velocity[2] = mu_stack.segment<3>(6*3);
-  s.mu_contact_velocity[3] = mu_stack.segment<3>(7*3);
+  s.mu_contact_velocity[0] = mu_stack.segment<3>(0);
+  s.mu_contact_velocity[1] = mu_stack.segment<3>(3);
+  s.mu_contact_velocity[2] = mu_stack.segment<3>(6);
+  s.mu_contact_velocity[3] = mu_stack.segment<3>(9);
   s.dv = dv;
   s.f[0] = f.segment<3>(0);
   s.f[1] = f.segment<3>(3);
@@ -194,8 +168,6 @@ TEST_F(ImpulseSplitSolutionTest, floating_base_contacts_full_contacts) {
   EXPECT_TRUE(s.lmd.isApprox(lmd));
   EXPECT_TRUE(s.gmm.isApprox(gmm));
   EXPECT_TRUE(s.mu_stack().isApprox(mu_stack));
-  EXPECT_TRUE(s.mu_stack_contact_position().isApprox(mu_stack.head(s.dimf())));
-  EXPECT_TRUE(s.mu_stack_contact_velocity().isApprox(mu_stack.tail(s.dimf())));
   EXPECT_TRUE(s.dv.isApprox(dv));
   EXPECT_TRUE(s.f_stack().isApprox(f));
   EXPECT_TRUE(s.q.isApprox(q));
@@ -205,12 +177,6 @@ TEST_F(ImpulseSplitSolutionTest, floating_base_contacts_full_contacts) {
   s.f_stack().setZero();
   s.set_mu_contact();
   s.set_f();
-  EXPECT_TRUE(s.mu_stack_contact_position().isZero());
-  EXPECT_TRUE(s.mu_stack_contact_velocity().isZero());
-  EXPECT_TRUE(s.mu_contact_position[0].isZero());
-  EXPECT_TRUE(s.mu_contact_position[1].isZero());
-  EXPECT_TRUE(s.mu_contact_position[2].isZero());
-  EXPECT_TRUE(s.mu_contact_position[3].isZero());
   EXPECT_TRUE(s.mu_contact_velocity[0].isZero());
   EXPECT_TRUE(s.mu_contact_velocity[1].isZero());
   EXPECT_TRUE(s.mu_contact_velocity[2].isZero());
@@ -220,15 +186,10 @@ TEST_F(ImpulseSplitSolutionTest, floating_base_contacts_full_contacts) {
   EXPECT_TRUE(s.f[2].isZero());
   EXPECT_TRUE(s.f[3].isZero());
   EXPECT_EQ(s.dimf(), contact_status.dimf());
-  EXPECT_EQ(s.dimc(), 2*contact_status.dimf());
+  EXPECT_EQ(s.dimc(), contact_status.dimf());
   ImpulseSplitSolution s_random = ImpulseSplitSolution::Random(robot, contact_status);
   EXPECT_TRUE(s_random.lmd.size() == robot.dimv());
   EXPECT_TRUE(s_random.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s_random.mu_contact_position.size() == 4);
-  EXPECT_TRUE(s_random.mu_contact_position[0].size() == 3);
-  EXPECT_TRUE(s_random.mu_contact_position[1].size() == 3);
-  EXPECT_TRUE(s_random.mu_contact_position[2].size() == 3);
-  EXPECT_TRUE(s_random.mu_contact_position[3].size() == 3);
   EXPECT_TRUE(s_random.mu_contact_velocity.size() == 4);
   EXPECT_TRUE(s_random.mu_contact_velocity[0].size() == 3);
   EXPECT_TRUE(s_random.mu_contact_velocity[1].size() == 3);
@@ -243,9 +204,7 @@ TEST_F(ImpulseSplitSolutionTest, floating_base_contacts_full_contacts) {
   EXPECT_TRUE(s_random.q.size() == robot.dimq());
   EXPECT_TRUE(s_random.v.size() == robot.dimv());
   EXPECT_TRUE(s_random.beta.size() == robot.dimv());
-  EXPECT_TRUE(s_random.mu_stack().size() == 2*contact_status.dimf());
-  EXPECT_TRUE(s_random.mu_stack_contact_position().size() == contact_status.dimf());
-  EXPECT_TRUE(s_random.mu_stack_contact_velocity().size() == contact_status.dimf());
+  EXPECT_TRUE(s_random.mu_stack().size() == contact_status.dimf());
   EXPECT_TRUE(s_random.f_stack().size() == contact_status.dimf());
 }
 
@@ -264,11 +223,6 @@ TEST_F(ImpulseSplitSolutionTest, floating_base_contacts) {
   s.setContactStatus(contact_status);
   EXPECT_TRUE(s.lmd.size() == robot.dimv());
   EXPECT_TRUE(s.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s.mu_contact_position.size() == 4);
-  EXPECT_TRUE(s.mu_contact_position[0].size() == 3);
-  EXPECT_TRUE(s.mu_contact_position[1].size() == 3);
-  EXPECT_TRUE(s.mu_contact_position[2].size() == 3);
-  EXPECT_TRUE(s.mu_contact_position[3].size() == 3);
   EXPECT_TRUE(s.mu_contact_velocity.size() == 4);
   EXPECT_TRUE(s.mu_contact_velocity[0].size() == 3);
   EXPECT_TRUE(s.mu_contact_velocity[1].size() == 3);
@@ -283,9 +237,7 @@ TEST_F(ImpulseSplitSolutionTest, floating_base_contacts) {
   EXPECT_TRUE(s.q.size() == robot.dimq());
   EXPECT_TRUE(s.v.size() == robot.dimv());
   EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.mu_stack().size() == 2*contact_status.dimf());
-  EXPECT_TRUE(s.mu_stack_contact_position().size() == contact_status.dimf());
-  EXPECT_TRUE(s.mu_stack_contact_velocity().size() == contact_status.dimf());
+  EXPECT_TRUE(s.mu_stack().size() == contact_status.dimf());
   EXPECT_TRUE(s.f_stack().size() == contact_status.dimf());
   const Eigen::VectorXd lmd = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd gmm = Eigen::VectorXd::Random(robot.dimv());
@@ -298,11 +250,6 @@ TEST_F(ImpulseSplitSolutionTest, floating_base_contacts) {
   ImpulseSplitSolution s_random = ImpulseSplitSolution::Random(robot, contact_status);
   EXPECT_TRUE(s_random.lmd.size() == robot.dimv());
   EXPECT_TRUE(s_random.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s_random.mu_contact_position.size() == 4);
-  EXPECT_TRUE(s_random.mu_contact_position[0].size() == 3);
-  EXPECT_TRUE(s_random.mu_contact_position[1].size() == 3);
-  EXPECT_TRUE(s_random.mu_contact_position[2].size() == 3);
-  EXPECT_TRUE(s_random.mu_contact_position[3].size() == 3);
   EXPECT_TRUE(s_random.mu_contact_velocity.size() == 4);
   EXPECT_TRUE(s_random.mu_contact_velocity[0].size() == 3);
   EXPECT_TRUE(s_random.mu_contact_velocity[1].size() == 3);
@@ -317,9 +264,7 @@ TEST_F(ImpulseSplitSolutionTest, floating_base_contacts) {
   EXPECT_TRUE(s_random.q.size() == robot.dimq());
   EXPECT_TRUE(s_random.v.size() == robot.dimv());
   EXPECT_TRUE(s_random.beta.size() == robot.dimv());
-  EXPECT_TRUE(s_random.mu_stack().size() == 2*contact_status.dimf());
-  EXPECT_TRUE(s_random.mu_stack_contact_position().size() == contact_status.dimf());
-  EXPECT_TRUE(s_random.mu_stack_contact_velocity().size() == contact_status.dimf());
+  EXPECT_TRUE(s_random.mu_stack().size() == contact_status.dimf());
   EXPECT_TRUE(s_random.f_stack().size() == contact_status.dimf());
 }
 

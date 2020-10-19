@@ -8,7 +8,7 @@ namespace idocp {
 inline ImpulseKKTResidual::ImpulseKKTResidual(const Robot& robot) 
   : ldv(Eigen::VectorXd::Zero(robot.dimv())),
     dv_res(Eigen::VectorXd::Zero(robot.dimv())),
-    kkt_residual_(Eigen::VectorXd::Zero(4*robot.dimv()+3*robot.max_dimf())),
+    kkt_residual_(Eigen::VectorXd::Zero(4*robot.dimv()+2*robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dimf_(0), 
@@ -38,7 +38,7 @@ inline ImpulseKKTResidual::~ImpulseKKTResidual() {
 inline void ImpulseKKTResidual::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
-  dimc_ = 2*contact_status.dimf();
+  dimc_ = contact_status.dimf();
   dimKKT_ = 4*dimv_ + dimf_ + dimc_;
 }
 
@@ -71,18 +71,6 @@ ImpulseKKTResidual::Fx() const {
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::C() {
   return kkt_residual_.segment(dimx_, dimc_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseKKTResidual::C_contact_position() {
-  return kkt_residual_.segment(dimx_, dimf_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseKKTResidual::C_contact_velocity() {
-  return kkt_residual_.segment(dimx_+dimf_, dimf_);
 }
 
 

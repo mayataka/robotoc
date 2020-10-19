@@ -9,13 +9,12 @@ inline ImpulseSplitSolution::ImpulseSplitSolution(const Robot& robot)
   : lmd(Eigen::VectorXd::Zero(robot.dimv())),
     gmm(Eigen::VectorXd::Zero(robot.dimv())),
     mu_contact_velocity(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
-    mu_contact_position(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
     dv(Eigen::VectorXd::Zero(robot.dimv())),
     f(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
     q(Eigen::VectorXd::Zero(robot.dimq())),
     v(Eigen::VectorXd::Zero(robot.dimv())),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
-    mu_stack_(Eigen::VectorXd::Zero(2*robot.max_dimf())),
+    mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     is_contact_active_(robot.max_point_contacts(), false),
     dimf_(0),
@@ -28,7 +27,6 @@ inline ImpulseSplitSolution::ImpulseSplitSolution()
   : lmd(),
     gmm(),
     mu_contact_velocity(),
-    mu_contact_position(),
     dv(),
     f(),
     q(),
@@ -51,7 +49,7 @@ inline void ImpulseSplitSolution::setContactStatus(
   assert(contact_status.max_point_contacts()==is_contact_active_.size());
   is_contact_active_ = contact_status.isContactActive();
   dimf_ = contact_status.dimf();
-  dimc_ = 2*contact_status.dimf();
+  dimc_ = contact_status.dimf();
 }
 
 
@@ -60,33 +58,9 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitSolution::mu_stack() {
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseSplitSolution::mu_stack_contact_position() {
-  return mu_stack_.head(dimf_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseSplitSolution::mu_stack_contact_velocity() {
-  return mu_stack_.segment(dimf_, dimf_);
-}
-
-
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ImpulseSplitSolution::mu_stack() const {
   return mu_stack_.head(dimc_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitSolution::mu_stack_contact_position() const {
-  return mu_stack_.head(dimf_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitSolution::mu_stack_contact_velocity() const {
-  return mu_stack_.segment(dimf_, dimf_);
 }
 
 
@@ -107,15 +81,6 @@ inline void ImpulseSplitSolution::set_mu_stack() {
   for (const auto is_contact_active : is_contact_active_) {
     if (is_contact_active) {
       mu_stack_.template segment<3>(segment_start) 
-          = mu_contact_position[contact_index];
-      segment_start += 3;
-    }
-    ++contact_index;
-  }
-  contact_index = 0;
-  for (const auto is_contact_active : is_contact_active_) {
-    if (is_contact_active) {
-      mu_stack_.template segment<3>(segment_start) 
           = mu_contact_velocity[contact_index];
       segment_start += 3;
     }
@@ -127,15 +92,6 @@ inline void ImpulseSplitSolution::set_mu_stack() {
 inline void ImpulseSplitSolution::set_mu_contact() {
   int contact_index = 0;
   int segment_start = 0;
-  for (const auto is_contact_active : is_contact_active_) {
-    if (is_contact_active) {
-      mu_contact_position[contact_index]
-        = mu_stack_.template segment<3>(segment_start);
-      segment_start += 3;
-    }
-    ++contact_index;
-  }
-  contact_index = 0;
   for (const auto is_contact_active : is_contact_active_) {
     if (is_contact_active) {
       mu_contact_velocity[contact_index]

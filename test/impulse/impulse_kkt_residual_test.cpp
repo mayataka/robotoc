@@ -37,7 +37,7 @@ TEST_F(ImpulseKKTResidualTest, fixed_base) {
   residual.setContactStatus(contact_status);
   const int dimv = robot.dimv();
   const int dimf = contact_status.dimf();
-  const int dimc = 2*contact_status.dimf();
+  const int dimc = contact_status.dimf();
   EXPECT_EQ(residual.dimf(), dimf);
   EXPECT_EQ(residual.dimc(), dimc);
   EXPECT_EQ(residual.dimKKT(), 4*dimv+dimf+dimc);
@@ -63,8 +63,6 @@ TEST_F(ImpulseKKTResidualTest, fixed_base) {
   EXPECT_TRUE(residual.KKT_residual().segment(     2*dimv+dimc, dimf).isApprox(lf_res));
   EXPECT_TRUE(residual.KKT_residual().segment(2*dimv+dimc+dimf, dimv).isApprox(lq_res));
   EXPECT_TRUE(residual.KKT_residual().segment(3*dimv+dimc+dimf, dimv).isApprox(lv_res));
-  EXPECT_TRUE(residual.C_contact_position().isApprox(C_res.head(dimf)));
-  EXPECT_TRUE(residual.C_contact_velocity().isApprox(C_res.tail(dimf)));
   EXPECT_EQ(residual.lx().size(), 2*dimv);
   EXPECT_TRUE(residual.lx().head(dimv).isApprox(lq_res));
   EXPECT_TRUE(residual.lx().tail(dimv).isApprox(lv_res));
@@ -91,7 +89,7 @@ TEST_F(ImpulseKKTResidualTest, floating_base) {
   residual.setContactStatus(contact_status);
   const int dimv = robot.dimv();
   const int dimf = contact_status.dimf();
-  const int dimc = 2*contact_status.dimf();
+  const int dimc = contact_status.dimf();
   EXPECT_EQ(residual.dimf(), dimf);
   EXPECT_EQ(residual.dimc(), dimc);
   EXPECT_EQ(residual.dimKKT(), 4*dimv+dimf+dimc);
@@ -117,8 +115,6 @@ TEST_F(ImpulseKKTResidualTest, floating_base) {
   EXPECT_TRUE(residual.KKT_residual().segment(     2*dimv+dimc, dimf).isApprox(lf_res));
   EXPECT_TRUE(residual.KKT_residual().segment(2*dimv+dimc+dimf, dimv).isApprox(lq_res));
   EXPECT_TRUE(residual.KKT_residual().segment(3*dimv+dimc+dimf, dimv).isApprox(lv_res));
-  EXPECT_TRUE(residual.C_contact_position().isApprox(C_res.head(dimf)));
-  EXPECT_TRUE(residual.C_contact_velocity().isApprox(C_res.tail(dimf)));
   EXPECT_EQ(residual.lx().size(), 2*dimv);
   EXPECT_TRUE(residual.lx().head(dimv).isApprox(lq_res));
   EXPECT_TRUE(residual.lx().tail(dimv).isApprox(lv_res));

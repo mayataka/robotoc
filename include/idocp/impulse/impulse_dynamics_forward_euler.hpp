@@ -46,8 +46,8 @@ public:
 
   void computeCondensedDirection(const ImpulseKKTMatrix& kkt_matrix, 
                                  const ImpulseKKTResidual& kkt_residual, 
-                                 const ImpulseSplitDirection& d_next,
-                                 ImpulseSplitDirection& d);
+                                 const SplitDirection& d_next,
+                                 ImpulseSplitDirection& d) const;
 
   void computeImpulseDynamicsResidual(Robot& robot, 
                                       const ContactStatus& contact_status,
@@ -67,7 +67,7 @@ private:
   Eigen::MatrixXd dImD_dq_, dImD_ddv_, dImD_df_full_, 
                   MJTJinv_full_, MJTJinvImDCqv_full_,
                   Qdvq_, Qdvv_, Qfq_full_, Qfv_full_;
-  Eigen::VectorXd ldvf_full_, ImDC_full_, ldvf_condensed_full_;
+  Eigen::VectorXd ldvf_full_, MinvImDC_full_, ldvf_condensed_full_;
   int dimv_, dimf_;
 
   void linearizeInverseImpulseDynamics(Robot& robot, 
@@ -75,9 +75,10 @@ private:
                                        const ImpulseSplitSolution& s, 
                                        ImpulseKKTResidual& kkt_residual);
 
-  static void linearizeContactVelocityConstraint(
-      Robot& robot, const ContactStatus& contact_status, 
-      ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual);
+  static void linearizeContactConstraint(Robot& robot, 
+                                         const ContactStatus& contact_status, 
+                                         ImpulseKKTMatrix& kkt_matrix, 
+                                         ImpulseKKTResidual& kkt_residual);
 
   static void setContactForces(Robot& robot, 
                                const ContactStatus& contact_status, 
@@ -87,7 +88,7 @@ private:
       Robot& robot, const ImpulseSplitSolution& s, 
       ImpulseKKTResidual& kkt_residual);
 
-  static void computeContactVelocityConstraintResidual(
+  static void computeContactConstraintResidual(
       const Robot& robot, const ContactStatus& contact_status, 
       ImpulseKKTResidual& kkt_residual);
 

@@ -94,54 +94,6 @@ public:
   Eigen::Block<Eigen::MatrixXd> Cf();
 
   ///
-  /// @brief Jacobian of the contact position constraint with respect to 
-  /// configuration q.
-  /// @return Reference to the Jacobian. Size is 
-  /// ContactStatus::dimf() x KKTMatrix::dimf().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cq_contact_position();
-
-  ///
-  /// @brief Jacobian of the contact position constraint with respect to 
-  /// generalized velocity v.
-  /// @return Reference to the Jacobian. Size is 
-  /// ContactStatus::dimf() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cv_contact_position();
-
-  ///
-  /// @brief Jacobian of the contact position constraint with respect to 
-  /// generalized velocity v.
-  /// @return Reference to the Jacobian. Size is 
-  /// ContactStatus::dimf() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cf_contact_position();
-
-  ///
-  /// @brief Jacobian of the contact velocity constraint with respect to 
-  /// configuration q.
-  /// @return Reference to the Jacobian. Size is 
-  /// ContactStatus::dimf() x KKTMatrix::dimf().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cq_contact_velocity();
-
-  ///
-  /// @brief Jacobian of the contact velocity constraint with respect to 
-  /// generalized velocity v.
-  /// @return Reference to the Jacobian. Size is 
-  /// ContactStatus::dimf() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cv_contact_velocity();
-
-  ///
-  /// @brief Jacobian of the contact velocity constraint with respect to 
-  /// generalized velocity v.
-  /// @return Reference to the Jacobian. Size is 
-  /// ContactStatus::dimf() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cf_contact_velocity();
-
-  ///
   /// @brief Hessian of the Lagrangian with respect to the stack of contact 
   /// forces f.
   /// @return Reference to the Hessian. Size is 
@@ -272,7 +224,7 @@ public:
   ///
   int dimf() const;
 
-  /// @brief Hessian of the Lagrangian with respect to the impulse chane in 
+  /// @brief Hessian of the Lagrangian with respect to the impulse change in 
   /// the generalized velocity dv.
   Eigen::MatrixXd Qdvdv;
 
@@ -288,6 +240,10 @@ public:
   /// velocity v.
   Eigen::MatrixXd Fvv;
 
+  /// @brief Derivative of the state equation with respect to the impulse force 
+  /// f.
+  Eigen::Block<Eigen::MatrixXd> Fvf();
+
   /// @brief Derivative of the state equation with respect to the 
   /// configuration of the previous time step q_prev.
   Eigen::MatrixXd Fqq_prev;
@@ -296,7 +252,7 @@ public:
 
 private:
   SchurComplement schur_complement_;
-  Eigen::MatrixXd C_, Q_, Sx_, FMinv_;
+  Eigen::MatrixXd C_, Q_, Fvf_full_, Sx_, FMinv_;
   bool has_floating_base_;
   int dimv_, dimx_, dimf_, dimc_, f_begin_, q_begin_, v_begin_, dimQ_, 
       dimKKT_, max_dimKKT_;

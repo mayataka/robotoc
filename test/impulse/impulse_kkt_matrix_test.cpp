@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "Eigen/Core"
+#include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
@@ -39,7 +40,7 @@ TEST_F(ImpulseKKTMatrixTest, fixed_base) {
   matrix.setContactStatus(contact_status);
   const int dimv = robot.dimv();
   const int dimf = contact_status.dimf();
-  const int dimc = 2 * contact_status.dimf();
+  const int dimc = contact_status.dimf();
   EXPECT_EQ(matrix.dimf(), dimf);
   EXPECT_EQ(matrix.dimc(), dimc);
   EXPECT_EQ(matrix.dimKKT(), 4*dimv+dimf+dimc);
@@ -70,12 +71,6 @@ TEST_F(ImpulseKKTMatrixTest, fixed_base) {
   EXPECT_TRUE(matrix.constraintsJacobian().block(0,         0, dimc, dimf).isApprox(Cf));
   EXPECT_TRUE(matrix.constraintsJacobian().block(0,      dimf, dimc, dimv).isApprox(Cq));
   EXPECT_TRUE(matrix.constraintsJacobian().block(0, dimv+dimf, dimc, dimv).isApprox(Cv));
-  EXPECT_TRUE(matrix.Cf().topRows(dimf).isApprox(matrix.Cf_contact_position()));
-  EXPECT_TRUE(matrix.Cq().topRows(dimf).isApprox(matrix.Cq_contact_position()));
-  EXPECT_TRUE(matrix.Cv().topRows(dimf).isApprox(matrix.Cv_contact_position()));
-  EXPECT_TRUE(matrix.Cf().bottomRows(dimf).isApprox(matrix.Cf_contact_velocity()));
-  EXPECT_TRUE(matrix.Cq().bottomRows(dimf).isApprox(matrix.Cq_contact_velocity()));
-  EXPECT_TRUE(matrix.Cv().bottomRows(dimf).isApprox(matrix.Cv_contact_velocity()));
   EXPECT_TRUE(matrix.costHessian().block(        0,           0, dimf, dimf).isApprox(Qff));
   EXPECT_TRUE(matrix.costHessian().block(        0,        dimf, dimf, dimv).isApprox(Qfq));
   EXPECT_TRUE(matrix.costHessian().block(        0,   dimf+dimv, dimf, dimv).isApprox(Qfv));
@@ -105,48 +100,45 @@ TEST_F(ImpulseKKTMatrixTest, fixed_base) {
 }
 
 
-// TEST_F(ImpulseKKTMatrixTest, invert_fixed_base) {
-//   std::vector<int> contact_frames = {18};
-//   Robot robot(fixed_base_urdf_, contact_frames);
-//   std::random_device rnd;
-//   ContactStatus contact_status(contact_frames.size());
-//   std::vector<bool> is_contact_active = {rnd()%2==0};
-//   contact_status.setContactStatus(is_contact_active);
-//   ImpulseKKTMatrix matrix(robot);
-//   matrix.setContactStatus(contact_status);
-//   const int dimv = robot.dimv();
-//   const int dimx = 2*robot.dimv();
-//   const int dimf = contact_status.dimf();
-//   const int dim_passive = robot.dim_passive();
-//   const int dimc = robot.dim_passive() + contact_status.dimf();
-//   const int dimQ = 3*robot.dimv() + contact_status.dimf();
-//   const Eigen::MatrixXd Q_seed_mat = Eigen::MatrixXd::Random(dimQ, dimQ);
-//   const Eigen::MatrixXd Q_mat = Q_seed_mat * Q_seed_mat.transpose() + Eigen::MatrixXd::Identity(dimQ, dimQ);
-//   const Eigen::MatrixXd Jc_mat = Eigen::MatrixXd::Random(dimc, dimQ);
-//   matrix.costHessian() = Q_mat;
-//   matrix.constraintsJacobian() = Jc_mat;
-//   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
-//   const int dimKKT = 5*dimv+dim_passive+2*dimf;
-//   Eigen::MatrixXd kkt_mat_ref = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
-//   kkt_mat_ref.bottomRightCorner(dimQ, dimQ) = Q_mat;
-//   kkt_mat_ref.block(dimx, dimx+dimc, dimc, dimQ) = Jc_mat;
-//   kkt_mat_ref.block(0, dimx+dimc+dimv+dimf, dimv, dimv) 
-//       = -1 * Eigen::MatrixXd::Identity(dimv, dimv);
-//   kkt_mat_ref.block(0, dimx+dimc+2*dimv+dimf, dimv, dimv) 
-//       = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
-//   kkt_mat_ref.block(dimv, dimx+dimc, dimv, dimv) 
-//       = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
-//   kkt_mat_ref.block(dimv, dimx+dimc+2*dimv+dimf, dimv, dimv) 
-//       = -1 * Eigen::MatrixXd::Identity(dimv, dimv);
-//   kkt_mat_ref.triangularView<Eigen::StrictlyLower>() 
-//       = kkt_mat_ref.transpose().triangularView<Eigen::StrictlyLower>();
-//   std::cout << kkt_mat_ref << std::endl;
-//   const Eigen::MatrixXd kkt_mat_inv_ref = kkt_mat_ref.inverse();
-//   Eigen::MatrixXd kkt_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
-//   matrix.invert(dtau, kkt_mat_inv);
-//   EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-08));
-//   std::cout << "error l2 norm = " << (kkt_mat_inv - kkt_mat_inv_ref).lpNorm<2>() << std::endl;
-// }
+TEST_F(ImpulseKKTMatrixTest, invert_fixed_base) {
+  std::vector<int> contact_frames = {18};
+  Robot robot(fixed_base_urdf_, contact_frames);
+  ContactStatus contact_status(contact_frames.size());
+  std::vector<bool> is_contact_active = {true};
+  contact_status.setContactStatus(is_contact_active);
+  ImpulseKKTMatrix matrix(robot);
+  matrix.setContactStatus(contact_status);
+  const int dimv = robot.dimv();
+  const int dimx = 2*robot.dimv();
+  const int dimf = contact_status.dimf();
+  const int dimc = contact_status.dimf();
+  const int dimQ = 2*robot.dimv() + contact_status.dimf();
+  const int dimKKT = 4*dimv+2*dimf;
+  EXPECT_EQ(dimx+dimQ+dimc, dimKKT);
+  const Eigen::MatrixXd kkt_mat_seed = Eigen::MatrixXd::Random(dimKKT, dimKKT);
+  Eigen::MatrixXd kkt_mat = kkt_mat_seed * kkt_mat_seed.transpose() + Eigen::MatrixXd::Identity(dimKKT, dimKKT);
+  kkt_mat.topLeftCorner(dimx+dimc, dimx+dimc).setZero();
+  kkt_mat.block(0, dimx+dimc, dimv, dimf).setZero();
+  kkt_mat.block(0, dimx+dimc+dimf, dimv, dimv) = - Eigen::MatrixXd::Identity(dimv, dimv);
+  kkt_mat.block(0, dimx+dimc+dimf+dimv, dimv, dimv).setZero();
+  kkt_mat.block(dimv, dimx+dimc+dimf+dimv, dimv, dimv) = - Eigen::MatrixXd::Identity(dimv, dimv);
+  kkt_mat.block(dimx, dimx+dimc, dimc, dimf).setZero();
+  kkt_mat.block(dimx, dimx+dimc+dimf, dimf, dimv).setZero();
+  kkt_mat.triangularView<Eigen::StrictlyLower>() = kkt_mat.transpose().triangularView<Eigen::StrictlyLower>();
+  const Eigen::MatrixXd kkt_mat_inv_ref = kkt_mat.inverse();
+  matrix.costHessian() = kkt_mat.bottomRightCorner(dimQ, dimQ);
+  matrix.constraintsJacobian() = kkt_mat.block(dimx, dimx+dimc, dimc, dimQ);
+  matrix.Fqq = kkt_mat.block(0, dimx+dimc+dimf, dimv, dimv);
+  matrix.Fvf() = kkt_mat.block(dimv, dimx+dimc, dimv, dimf);
+  matrix.Fvq = kkt_mat.block(dimv, dimx+dimc+dimf, dimv, dimv);
+  matrix.Fvv = kkt_mat.block(dimv, dimx+dimc+dimf+dimv, dimv, dimv);
+  Eigen::MatrixXd kkt_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
+  matrix.symmetrize();
+  matrix.invert(kkt_mat_inv);
+  EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-10));
+  EXPECT_TRUE((kkt_mat_inv*kkt_mat).isIdentity(1.0e-08));
+  EXPECT_TRUE((kkt_mat*kkt_mat_inv).isIdentity(1.0e-08));
+}
 
 
 TEST_F(ImpulseKKTMatrixTest, floating_base) {
@@ -163,7 +155,7 @@ TEST_F(ImpulseKKTMatrixTest, floating_base) {
   matrix.setContactStatus(contact_status);
   const int dimv = robot.dimv();
   const int dimf = contact_status.dimf();
-  const int dimc = 2 * contact_status.dimf();
+  const int dimc = contact_status.dimf();
   EXPECT_EQ(matrix.dimf(), dimf);
   EXPECT_EQ(matrix.dimc(), dimc);
   EXPECT_EQ(matrix.dimKKT(), 4*dimv+dimf+dimc);
@@ -194,12 +186,6 @@ TEST_F(ImpulseKKTMatrixTest, floating_base) {
   EXPECT_TRUE(matrix.constraintsJacobian().block(0,         0, dimc, dimf).isApprox(Cf));
   EXPECT_TRUE(matrix.constraintsJacobian().block(0,      dimf, dimc, dimv).isApprox(Cq));
   EXPECT_TRUE(matrix.constraintsJacobian().block(0, dimv+dimf, dimc, dimv).isApprox(Cv));
-  EXPECT_TRUE(matrix.Cf().topRows(dimf).isApprox(matrix.Cf_contact_position()));
-  EXPECT_TRUE(matrix.Cq().topRows(dimf).isApprox(matrix.Cq_contact_position()));
-  EXPECT_TRUE(matrix.Cv().topRows(dimf).isApprox(matrix.Cv_contact_position()));
-  EXPECT_TRUE(matrix.Cf().bottomRows(dimf).isApprox(matrix.Cf_contact_velocity()));
-  EXPECT_TRUE(matrix.Cq().bottomRows(dimf).isApprox(matrix.Cq_contact_velocity()));
-  EXPECT_TRUE(matrix.Cv().bottomRows(dimf).isApprox(matrix.Cv_contact_velocity()));
   EXPECT_TRUE(matrix.costHessian().block(        0,           0, dimf, dimf).isApprox(Qff));
   EXPECT_TRUE(matrix.costHessian().block(        0,        dimf, dimf, dimv).isApprox(Qfq));
   EXPECT_TRUE(matrix.costHessian().block(        0,   dimf+dimv, dimf, dimv).isApprox(Qfv));
@@ -229,57 +215,54 @@ TEST_F(ImpulseKKTMatrixTest, floating_base) {
 }
 
 
-// TEST_F(ImpulseKKTMatrixTest, invert_floating_base) {
-//   std::vector<int> contact_frames = {14, 24, 34, 44};
-//   Robot robot(floating_base_urdf_, contact_frames);
-//   std::random_device rnd;
-//   ContactStatus contact_status(contact_frames.size());
-//   std::vector<bool> is_contact_active;
-//   for (const auto frame : contact_frames) {
-//     is_contact_active.push_back(rnd()%2==0);
-//   }
-//   contact_status.setContactStatus(is_contact_active);
-//   ImpulseKKTMatrix matrix(robot);
-//   matrix.setContactStatus(contact_status);
-//   const int dimv = robot.dimv();
-//   const int dimx = 2*robot.dimv();
-//   const int dimf = contact_status.dimf();
-//   const int dim_passive = robot.dim_passive();
-//   const int dimc = robot.dim_passive() + contact_status.dimf();
-//   const int dimQ = 3*robot.dimv() + contact_status.dimf();
-//   const Eigen::MatrixXd Q_seed_mat = Eigen::MatrixXd::Random(dimQ, dimQ);
-//   const Eigen::MatrixXd Q_mat = Q_seed_mat * Q_seed_mat.transpose() + Eigen::MatrixXd::Identity(dimQ, dimQ);
-//   const Eigen::MatrixXd Jc_mat = Eigen::MatrixXd::Random(dimc, dimQ);
-//   matrix.costHessian() = Q_mat;
-//   matrix.constraintsJacobian() = Jc_mat;
-//   const Eigen::MatrixXd Fqq_seed_mat = Eigen::MatrixXd::Random(6, 6);
-//   const Eigen::MatrixXd Fqq_mat = Fqq_seed_mat * Fqq_seed_mat.transpose();
-//   matrix.Fqq = -1 * Eigen::MatrixXd::Identity(dimv, dimv);
-//   matrix.Fqq.topLeftCorner(6, 6) = - Fqq_mat;
-//   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
-//   const int dimKKT = 5*dimv+dim_passive+2*dimf;
-//   Eigen::MatrixXd kkt_mat_ref = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
-//   kkt_mat_ref.bottomRightCorner(dimQ, dimQ) = Q_mat;
-//   kkt_mat_ref.block(dimx, dimx+dimc, dimc, dimQ) = Jc_mat;
-//   kkt_mat_ref.block(0, dimx+dimc+dimv+dimf, dimv, dimv) 
-//       = -1 * Eigen::MatrixXd::Identity(dimv, dimv);
-//   kkt_mat_ref.block(0, dimx+dimc+dimv+dimf, dimv, dimv).topLeftCorner(6, 6)
-//       = - Fqq_mat;
-//   kkt_mat_ref.block(0, dimx+dimc+2*dimv+dimf, dimv, dimv) 
-//       = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
-//   kkt_mat_ref.block(dimv, dimx+dimc, dimv, dimv) 
-//       = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
-//   kkt_mat_ref.block(dimv, dimx+dimc+2*dimv+dimf, dimv, dimv) 
-//       = -1 * Eigen::MatrixXd::Identity(dimv, dimv);
-//   kkt_mat_ref.triangularView<Eigen::StrictlyLower>() 
-//       = kkt_mat_ref.transpose().triangularView<Eigen::StrictlyLower>();
-//   std::cout << kkt_mat_ref << std::endl;
-//   const Eigen::MatrixXd kkt_mat_inv_ref = kkt_mat_ref.inverse();
-//   Eigen::MatrixXd kkt_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
-//   matrix.invert(dtau, kkt_mat_inv);
-//   EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-08));
-//   std::cout << "error l2 norm = " << (kkt_mat_inv - kkt_mat_inv_ref).lpNorm<2>() << std::endl;
-// }
+TEST_F(ImpulseKKTMatrixTest, invert_floating_base) {
+  std::vector<int> contact_frames = {14, 24, 34, 44};
+  Robot robot(floating_base_urdf_, contact_frames);
+  ContactStatus contact_status(contact_frames.size());
+  std::random_device rnd;
+  std::vector<bool> is_contact_active;
+  for (const auto frame : contact_frames) {
+    is_contact_active.push_back(rnd()%2==0);
+  }
+  contact_status.setContactStatus(is_contact_active);
+  if (!contact_status.hasActiveContacts()) {
+    contact_status.activateContact(0);
+  }
+  ImpulseKKTMatrix matrix(robot);
+  matrix.setContactStatus(contact_status);
+  const int dimv = robot.dimv();
+  const int dimx = 2*robot.dimv();
+  const int dimf = contact_status.dimf();
+  const int dimc = contact_status.dimf();
+  const int dimQ = 2*robot.dimv() + contact_status.dimf();
+  const int dimKKT = 4*dimv+2*dimf;
+  EXPECT_EQ(dimx+dimQ+dimc, dimKKT);
+  const Eigen::MatrixXd kkt_mat_seed = Eigen::MatrixXd::Random(dimKKT, dimKKT);
+  Eigen::MatrixXd kkt_mat = kkt_mat_seed * kkt_mat_seed.transpose() + Eigen::MatrixXd::Identity(dimKKT, dimKKT);
+  kkt_mat.topLeftCorner(dimx+dimc, dimx+dimc).setZero();
+  kkt_mat.block(0, dimx+dimc, dimv, dimf).setZero();
+  kkt_mat.block(0, dimx+dimc+dimf, dimv, dimv) = - Eigen::MatrixXd::Identity(dimv, dimv);
+  kkt_mat.block(0, dimx+dimc+dimf, dimv, dimv).topLeftCorner(6, 6).setRandom();
+  kkt_mat.block(0, dimx+dimc+dimf+dimv, dimv, dimv).setZero();
+  kkt_mat.block(dimv, dimx+dimc+dimf+dimv, dimv, dimv) = - Eigen::MatrixXd::Identity(dimv, dimv);
+  kkt_mat.block(dimx, dimx+dimc, dimc, dimf).setZero();
+  kkt_mat.block(dimx, dimx+dimc+dimf, dimf, dimv).setZero();
+  kkt_mat.triangularView<Eigen::StrictlyLower>() = kkt_mat.transpose().triangularView<Eigen::StrictlyLower>();
+  const Eigen::MatrixXd kkt_mat_inv_ref = kkt_mat.inverse();
+  matrix.costHessian() = kkt_mat.bottomRightCorner(dimQ, dimQ);
+  matrix.constraintsJacobian() = kkt_mat.block(dimx, dimx+dimc, dimc, dimQ);
+  matrix.Fqq = kkt_mat.block(0, dimx+dimc+dimf, dimv, dimv);
+  matrix.Fvf() = kkt_mat.block(dimv, dimx+dimc, dimv, dimf);
+  matrix.Fvq = kkt_mat.block(dimv, dimx+dimc+dimf, dimv, dimv);
+  matrix.Fvv = kkt_mat.block(dimv, dimx+dimc+dimf+dimv, dimv, dimv);
+  Eigen::MatrixXd kkt_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
+  matrix.symmetrize();
+  matrix.invert(kkt_mat_inv);
+  EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-08));
+  EXPECT_TRUE((kkt_mat_inv*kkt_mat).isIdentity(1.0e-06));
+  EXPECT_TRUE((kkt_mat*kkt_mat_inv).isIdentity(1.0e-06));
+  std::cout << kkt_mat_inv*kkt_mat << std::endl;
+}
 
 } // namespace idocp
 

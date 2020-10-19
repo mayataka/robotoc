@@ -180,11 +180,11 @@ TEST_F(ImpulseStateEquationTest, normWithStepSizeFixedBase) {
   kkt_residual.setZero();
   kkt_residual.Fq() = s.q - s_next.q - step_size * dq_next;
   kkt_residual.Fv() = s.v + s.dv - s_next.v - step_size * dv_next;
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), forward_l1);
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), forward_squared);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const Eigen::VectorXd v_prev = Eigen::VectorXd::Random(robot.dimv());
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), forward_l1);
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), forward_squared);
   stateequation::ComputeImpulseBackwardEulerResidual(robot, q_prev, v_prev, s, 
                                                      kkt_residual);
   const double backrward_l1_initial = stateequation::L1NormStateEuqationResidual(kkt_residual);
@@ -228,11 +228,11 @@ TEST_F(ImpulseStateEquationTest, normWithStepSizeFloatingBase) {
   robot.subtractConfiguration(s.q, s_next.q, qdiff);
   kkt_residual.Fq() = qdiff - step_size * dq_next;
   kkt_residual.Fv() = s.v + s.dv - s_next.v - step_size * dv_next;
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), forward_l1);
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), forward_squared);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const Eigen::VectorXd v_prev = Eigen::VectorXd::Random(robot.dimv());
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), forward_l1);
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), forward_squared);
   stateequation::ComputeImpulseBackwardEulerResidual(robot, q_prev, v_prev,
                                                      s, kkt_residual);
   const double backrward_l1_initial = stateequation::L1NormStateEuqationResidual(kkt_residual);

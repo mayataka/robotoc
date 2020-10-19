@@ -8,15 +8,15 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/impulse/split_impulse_solution.hpp"
+#include "idocp/impulse/split_impulse_direction.hpp"
+#include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/impulse/impulse_kkt_matrix.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/ocp/state_equation.hpp"
-#include "idocp/ocp/robot_dynamics.hpp"
+#include "idocp/impulse/state_equation.hpp"
+#include "idocp/impulse/impulse_dynamics_backward_euler.hpp"
 
 
 namespace idocp {
