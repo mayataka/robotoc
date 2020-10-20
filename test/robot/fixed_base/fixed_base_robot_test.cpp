@@ -424,6 +424,15 @@ TEST_F(FixedBaseRobotTest, contactVelocityResidualAndDerivatives) {
   robot.computeContactVelocityResidual(contact_status_, residual.segment<3>(segment_begin));
   std::cout << residual.segment<3>(segment_begin).transpose() << std::endl;
   EXPECT_FALSE(residual.segment<3>(segment_begin).isZero());
+  Eigen::VectorXd tau = Eigen::VectorXd::Zero(dimq_);
+  robot.RNEA(q_, v_, a_, tau);
+  robot.computeContactVelocityResidual(contact_status_, residual.segment<3>(segment_begin));
+  std::cout << residual.segment<3>(segment_begin).transpose() << std::endl;
+  EXPECT_FALSE(residual.segment<3>(segment_begin).isZero());
+  robot.RNEAImpulse(q_, a_, tau);
+  robot.computeContactVelocityResidual(contact_status_, residual.segment<3>(segment_begin));
+  std::cout << residual.segment<3>(segment_begin).transpose() << std::endl;
+  EXPECT_FALSE(residual.segment<3>(segment_begin).isZero());
   pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
   pinocchio::updateFramePlacements(model_, data_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
@@ -577,6 +586,7 @@ TEST_F(FixedBaseRobotTest, RNEADerivativesWithContacts) {
   std::vector<bool> is_contacts_active = {true};
   contact_status_.setContactStatus(is_contacts_active);
   robot.setContactForces(contact_status_, fext);
+  robot.updateKinematics(q_, v_, a_);
   robot.RNEADerivatives(q_, v_, a_, dRNEA_dq, dRNEA_dv, dRNEA_da);
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint 
       = pinocchio::container::aligned_vector<pinocchio::Force>(
@@ -592,6 +602,9 @@ TEST_F(FixedBaseRobotTest, RNEADerivativesWithContacts) {
   EXPECT_TRUE(dRNEA_da.isApprox(dRNEA_da_ref));
   const bool transpose_jacobian = true;
   robot.dRNEAPartialdFext(contact_status_, dRNEA_dfext);
+  pinocchio::forwardKinematics(model_, data_, q_, v_, a_);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
   contact_ref.getContactJacobian(model_, data_, -1, dRNEA_dfext_ref,
                                  transpose_jacobian);
   std::cout << dRNEA_dfext_ref << std::endl;
@@ -643,6 +656,7 @@ TEST_F(FixedBaseRobotTest, RNEAImpulseDerivatives) {
       = Eigen::MatrixXd::Zero(dimq_, robot.max_dimf());
   contact_status_.setContactStatus({true});
   robot.setContactForces(contact_status_, fext);
+  robot.updateKinematics(q_, v_);
   robot.RNEAImpulseDerivatives(q_, a_, dRNEA_dq, dRNEA_ddv);
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint 
       = pinocchio::container::aligned_vector<pinocchio::Force>(
@@ -660,6 +674,9 @@ TEST_F(FixedBaseRobotTest, RNEAImpulseDerivatives) {
   EXPECT_TRUE(dRNEA_ddv.isApprox(dRNEA_ddv_ref));
   const bool transpose_jacobian = true;
   robot.dRNEAPartialdFext(contact_status_, dRNEA_dfext);
+  pinocchio::forwardKinematics(model_, data_, q_, v_);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q_, v_, a_);
   contact_ref.getContactJacobian(model_, data_, -1, dRNEA_dfext_ref,
                                  transpose_jacobian);
   std::cout << dRNEA_dfext_ref << std::endl;

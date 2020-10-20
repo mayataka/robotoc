@@ -150,8 +150,7 @@ inline void Robot::updateKinematics(
     const Eigen::MatrixBase<TangentVectorType>& v) {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
-  pinocchio::forwardKinematics(model_, data_, q, v, 
-                               Eigen::VectorXd::Zero(dimv_));
+  pinocchio::forwardKinematics(model_, data_, q, v);
   pinocchio::updateFramePlacements(model_, data_);
   pinocchio::computeForwardKinematicsDerivatives(model_, data_, q, v, 
                                                  Eigen::VectorXd::Zero(dimv_));
@@ -510,8 +509,8 @@ inline void Robot::RNEAImpulse(
   assert(dv.size() == dimv_);
   assert(res.size() == dimv_);
   const_cast<Eigen::MatrixBase<TangentVectorType2>&>(res)
-      = pinocchio::rnea(impulse_model_, data_, q, Eigen::VectorXd::Zero(dimv_),  
-                        dv, fjoint_);
+      = pinocchio::rnea(impulse_model_, impulse_data_, q, 
+                        Eigen::VectorXd::Zero(dimv_),  dv, fjoint_);
 }
 
 
@@ -529,8 +528,8 @@ inline void Robot::RNEAImpulseDerivatives(
   assert(dRNEA_partial_ddv.cols() == dimv_);
   assert(dRNEA_partial_ddv.rows() == dimv_);
   pinocchio::computeRNEADerivatives(
-      impulse_model_, data_, q, Eigen::VectorXd::Zero(dimv_), dv, fjoint_,
-      const_cast<Eigen::MatrixBase<MatrixType1>&>(dRNEA_partial_dq),
+      impulse_model_, impulse_data_, q, Eigen::VectorXd::Zero(dimv_), dv, 
+      fjoint_, const_cast<Eigen::MatrixBase<MatrixType1>&>(dRNEA_partial_dq),
       dimpulse_dv_,
       const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_ddv));
   (const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_ddv)) 

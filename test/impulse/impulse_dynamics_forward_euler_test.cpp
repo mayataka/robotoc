@@ -62,9 +62,7 @@ TEST_F(ImpulseDynamicsForwardEulerTest, linearizeImpulseDynamicsForwardEulerFixe
   ImpulseDynamicsForwardEuler id(robot);
   robot.updateKinematics(s.q, s.v);
   id.linearizeImpulseDynamics(robot, contact_status, s, kkt_matrix, kkt_residual);
-  Eigen::Vector3d v_ee = Eigen::Vector3d::Zero();
   robot.computeContactVelocityResidual(contact_status, kkt_residual.C());
-  std::cout << "V end effector = " << kkt_residual.C().transpose() << std::endl;
   Eigen::MatrixXd dimd_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd dimd_ddv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd dimd_df = Eigen::MatrixXd::Zero(robot.dimv(), contact_status.dimf());  
@@ -87,8 +85,6 @@ TEST_F(ImpulseDynamicsForwardEulerTest, linearizeImpulseDynamicsForwardEulerFixe
   EXPECT_TRUE(kkt_residual.lf().isApprox(kkt_residual_ref.lf()));
   EXPECT_TRUE(kkt_residual.ldv.isApprox(kkt_residual_ref.ldv));
   EXPECT_TRUE(kkt_residual.C().isApprox(kkt_residual_ref.C()));
-  std::cout << "dv_res = " << kkt_residual.dv_res.transpose() << std::endl;
-  std::cout << "C = " << kkt_residual.C().transpose() << std::endl;
   const double l1norm = id.l1NormImpulseDynamicsResidual(kkt_residual);
   const double squarednorm = id.squaredNormImpulseDynamicsResidual(kkt_residual);
   const double l1norm_ref = kkt_residual_ref.dv_res.lpNorm<1>() 
@@ -145,42 +141,49 @@ TEST_F(ImpulseDynamicsForwardEulerTest, condenseImpulseDynamicsForwardEulerFixed
   robot.computeContactVelocityResidual(contact_status, kkt_residual_ref.C());
   robot.computeContactVelocityDerivatives(contact_status, kkt_matrix_ref.Cq(), 
                                           kkt_matrix_ref.Cv());
-  SchurComplement schur_complement(robot.dimv(), robot.max_dimf());
+  EXPECT_TRUE(kkt_matrix_ref.Cv().isApprox(-1*dimd_df.transpose()));
+  SchurComplement schur_complement(robot.dimv(), contact_status.dimf());
   Eigen::MatrixXd MJTJinv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                   robot.dimv()+contact_status.dimf());
   schur_complement.invertWithZeroBottomRightCorner(robot.dimv(), contact_status.dimf(),
                                                    dimd_ddv, kkt_matrix_ref.Cv(),
                                                    MJTJinv);
-  Eigen::MatrixXd imdc_dqv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
-                                                   2*robot.dimv());
-  imdc_dqv.topLeftCorner(robot.dimv(), robot.dimv()) = dimd_ddv;
-  imdc_dqv.bottomLeftCorner(contact_status.dimf(), robot.dimv()) = kkt_matrix_ref.Cq();
-  imdc_dqv.bottomRightCorner(contact_status.dimf(), robot.dimv()) = kkt_matrix_ref.Cv();
-  const Eigen::MatrixXd MJTJinv_imdc_dqv = MJTJinv * imdc_dqv;
+  Eigen::MatrixXd dimdc_dqv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
+                                                    2*robot.dimv());
+  dimdc_dqv.topLeftCorner(robot.dimv(), robot.dimv()) = dimd_dq;
+  dimdc_dqv.bottomLeftCorner(contact_status.dimf(), robot.dimv()) = kkt_matrix_ref.Cq();
+  dimdc_dqv.bottomRightCorner(contact_status.dimf(), robot.dimv()) = kkt_matrix_ref.Cv();
+  const Eigen::MatrixXd MJTJinv_dimdc_dqv = MJTJinv * dimdc_dqv;
   Eigen::MatrixXd Qdvdvff = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                   robot.dimv()+contact_status.dimf());
   Qdvdvff.topLeftCorner(robot.dimv(), robot.dimv()) = kkt_matrix_ref.Qdvdv;
   Qdvdvff.bottomRightCorner(contact_status.dimf(), contact_status.dimf()) = kkt_matrix_ref.Qff();
-  kkt_matrix_ref.Qxx() += MJTJinv_imdc_dqv.transpose() * Qdvdvff.diagonal().asDiagonal() * MJTJinv_imdc_dqv;
+  kkt_matrix_ref.Qxx() += MJTJinv_dimdc_dqv.transpose() * Qdvdvff.diagonal().asDiagonal() * MJTJinv_dimdc_dqv;
+  Eigen::VectorXd ldvf = Eigen::VectorXd::Zero(robot.dimv()+contact_status.dimf());
+  ldvf.head(robot.dimv()) = kkt_residual_ref.ldv;
+  ldvf.tail(contact_status.dimf()) = - kkt_residual_ref.lf();
   Eigen::VectorXd imdc = Eigen::VectorXd::Zero(robot.dimv()+contact_status.dimf());
   imdc.head(robot.dimv()) = kkt_residual_ref.dv_res;
   imdc.tail(contact_status.dimf()) = kkt_residual_ref.C();
-  kkt_residual_ref.lx() += MJTJinv_imdc_dqv.transpose() * Qdvdvff.diagonal().asDiagonal() * MJTJinv * imdc;
+  kkt_residual_ref.lx() -= MJTJinv_dimdc_dqv.transpose() * ldvf;
+  kkt_residual_ref.lx() += MJTJinv_dimdc_dqv.transpose() * Qdvdvff.diagonal().asDiagonal() * MJTJinv * imdc;
+  kkt_matrix_ref.Fvq = - MJTJinv_dimdc_dqv.topLeftCorner(robot.dimv(), robot.dimv());
+  kkt_matrix_ref.Fvv = Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv()) - MJTJinv_dimdc_dqv.topRightCorner(robot.dimv(), robot.dimv());
+  kkt_residual_ref.Fv() = - (MJTJinv * imdc).head(robot.dimv());
   EXPECT_TRUE(kkt_residual.lq().isApprox(kkt_residual_ref.lq()));
   EXPECT_TRUE(kkt_residual.lv().isApprox(kkt_residual_ref.lv()));
   EXPECT_TRUE(kkt_residual.C().isApprox(kkt_residual_ref.C()));
-  std::cout << kkt_residual.C().transpose() << std::endl;
-  std::cout << kkt_residual_ref.C().transpose() << std::endl;
-  std::cout << kkt_matrix.Cq() << std::endl;
-  std::cout << kkt_matrix_ref.Cq() << std::endl;
-  std::cout << kkt_matrix.Cv() << std::endl;
-  std::cout << kkt_matrix_ref.Cv() << std::endl;
+  EXPECT_TRUE(kkt_residual.Fv().isApprox(kkt_residual_ref.Fv()));
   EXPECT_TRUE(kkt_matrix.Qqq().isApprox(kkt_matrix_ref.Qqq()));
   EXPECT_TRUE(kkt_matrix.Qqv().isApprox(kkt_matrix_ref.Qqv()));
   EXPECT_TRUE(kkt_matrix.Qvq().isApprox(kkt_matrix_ref.Qvq()));
   EXPECT_TRUE(kkt_matrix.Qvv().isApprox(kkt_matrix_ref.Qvv()));
   EXPECT_TRUE(kkt_matrix.Cq().isApprox(kkt_matrix_ref.Cq()));
   EXPECT_TRUE(kkt_matrix.Cv().isApprox(kkt_matrix_ref.Cv()));
+  EXPECT_TRUE(kkt_matrix.Fvq.isApprox(kkt_matrix_ref.Fvq));
+  EXPECT_TRUE(kkt_matrix.Fvv.isApprox(kkt_matrix_ref.Fvv));
+  std::cout << kkt_residual.lq() - kkt_residual_ref.lq() << std::endl;
+  std::cout << kkt_residual.lv() - kkt_residual_ref.lv() << std::endl;
   // SplitDirection d = SplitDirection::Random(robot, contact_status);
   // rd.computeCondensedDirection(dtau_, kkt_matrix, kkt_residual, d);
   // Eigen::VectorXd du_ref = kkt_residual_ref.u_res;
@@ -381,42 +384,47 @@ TEST_F(ImpulseDynamicsForwardEulerTest, condenseImpulseDynamicsForwardEulerFloat
   robot.computeContactVelocityResidual(contact_status, kkt_residual_ref.C());
   robot.computeContactVelocityDerivatives(contact_status, kkt_matrix_ref.Cq(), 
                                           kkt_matrix_ref.Cv());
+  EXPECT_TRUE(kkt_matrix_ref.Cv().isApprox(-1*dimd_df.transpose()));
   SchurComplement schur_complement(robot.dimv(), robot.max_dimf());
   Eigen::MatrixXd MJTJinv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                   robot.dimv()+contact_status.dimf());
   schur_complement.invertWithZeroBottomRightCorner(robot.dimv(), contact_status.dimf(),
                                                    dimd_ddv, kkt_matrix_ref.Cv(),
                                                    MJTJinv);
-  Eigen::MatrixXd imdc_dqv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
-                                                   2*robot.dimv());
-  imdc_dqv.topLeftCorner(robot.dimv(), robot.dimv()) = dimd_ddv;
-  imdc_dqv.bottomLeftCorner(contact_status.dimf(), robot.dimv()) = kkt_matrix_ref.Cq();
-  imdc_dqv.bottomRightCorner(contact_status.dimf(), robot.dimv()) = kkt_matrix_ref.Cv();
-  const Eigen::MatrixXd MJTJinv_imdc_dqv = MJTJinv * imdc_dqv;
+  Eigen::MatrixXd dimdc_dqv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
+                                                    2*robot.dimv());
+  dimdc_dqv.topLeftCorner(robot.dimv(), robot.dimv()) = dimd_dq;
+  dimdc_dqv.bottomLeftCorner(contact_status.dimf(), robot.dimv()) = kkt_matrix_ref.Cq();
+  dimdc_dqv.bottomRightCorner(contact_status.dimf(), robot.dimv()) = kkt_matrix_ref.Cv();
+  const Eigen::MatrixXd MJTJinv_dimdc_dqv = MJTJinv * dimdc_dqv;
   Eigen::MatrixXd Qdvdvff = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                   robot.dimv()+contact_status.dimf());
   Qdvdvff.topLeftCorner(robot.dimv(), robot.dimv()) = kkt_matrix_ref.Qdvdv;
   Qdvdvff.bottomRightCorner(contact_status.dimf(), contact_status.dimf()) = kkt_matrix_ref.Qff();
-  kkt_matrix_ref.Qxx() += MJTJinv_imdc_dqv.transpose() * Qdvdvff.diagonal().asDiagonal() * MJTJinv_imdc_dqv;
+  kkt_matrix_ref.Qxx() += MJTJinv_dimdc_dqv.transpose() * Qdvdvff.diagonal().asDiagonal() * MJTJinv_dimdc_dqv;
+  Eigen::VectorXd ldvf = Eigen::VectorXd::Zero(robot.dimv()+contact_status.dimf());
+  ldvf.head(robot.dimv()) = kkt_residual_ref.ldv;
+  ldvf.tail(contact_status.dimf()) = - kkt_residual_ref.lf();
   Eigen::VectorXd imdc = Eigen::VectorXd::Zero(robot.dimv()+contact_status.dimf());
   imdc.head(robot.dimv()) = kkt_residual_ref.dv_res;
   imdc.tail(contact_status.dimf()) = kkt_residual_ref.C();
-  kkt_residual_ref.lx() += MJTJinv_imdc_dqv.transpose() * Qdvdvff.diagonal().asDiagonal() * MJTJinv * imdc;
+  kkt_residual_ref.lx() -= MJTJinv_dimdc_dqv.transpose() * ldvf;
+  kkt_residual_ref.lx() += MJTJinv_dimdc_dqv.transpose() * Qdvdvff.diagonal().asDiagonal() * MJTJinv * imdc;
+  kkt_matrix_ref.Fvq = - MJTJinv_dimdc_dqv.topLeftCorner(robot.dimv(), robot.dimv());
+  kkt_matrix_ref.Fvv = Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv()) - MJTJinv_dimdc_dqv.topRightCorner(robot.dimv(), robot.dimv());
+  kkt_residual_ref.Fv() = - (MJTJinv * imdc).head(robot.dimv());
   EXPECT_TRUE(kkt_residual.lq().isApprox(kkt_residual_ref.lq()));
   EXPECT_TRUE(kkt_residual.lv().isApprox(kkt_residual_ref.lv()));
   EXPECT_TRUE(kkt_residual.C().isApprox(kkt_residual_ref.C()));
-  std::cout << kkt_residual.C().transpose() << std::endl;
-  std::cout << kkt_residual_ref.C().transpose() << std::endl;
-  std::cout << kkt_matrix.Cq() << std::endl;
-  std::cout << kkt_matrix_ref.Cq() << std::endl;
-  std::cout << kkt_matrix.Cv() << std::endl;
-  std::cout << kkt_matrix_ref.Cv() << std::endl;
+  EXPECT_TRUE(kkt_residual.Fv().isApprox(kkt_residual_ref.Fv()));
   EXPECT_TRUE(kkt_matrix.Qqq().isApprox(kkt_matrix_ref.Qqq()));
   EXPECT_TRUE(kkt_matrix.Qqv().isApprox(kkt_matrix_ref.Qqv()));
   EXPECT_TRUE(kkt_matrix.Qvq().isApprox(kkt_matrix_ref.Qvq()));
   EXPECT_TRUE(kkt_matrix.Qvv().isApprox(kkt_matrix_ref.Qvv()));
   EXPECT_TRUE(kkt_matrix.Cq().isApprox(kkt_matrix_ref.Cq()));
   EXPECT_TRUE(kkt_matrix.Cv().isApprox(kkt_matrix_ref.Cv()));
+  EXPECT_TRUE(kkt_matrix.Fvq.isApprox(kkt_matrix_ref.Fvq));
+  EXPECT_TRUE(kkt_matrix.Fvv.isApprox(kkt_matrix_ref.Fvv));
 }
 
 

@@ -663,7 +663,7 @@ public:
 
 private:
   pinocchio::Model model_, impulse_model_;
-  pinocchio::Data data_;
+  pinocchio::Data data_, impulse_data_;
   FloatingBase floating_base_;
   std::vector<PointContact> point_contacts_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;

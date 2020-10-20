@@ -11,6 +11,7 @@ Robot::Robot(const std::string& path_to_urdf)
   : model_(),
     impulse_model_(),
     data_(model_),
+    impulse_data_(impulse_model_),
     point_contacts_(),
     floating_base_(),
     fjoint_(),
@@ -26,6 +27,7 @@ Robot::Robot(const std::string& path_to_urdf)
   impulse_model_ = model_;
   impulse_model_.gravity.linear().setZero();
   data_ = pinocchio::Data(model_);
+  impulse_data_ = pinocchio::Data(impulse_model_);
   fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
                  model_.joints.size(), pinocchio::Force::Zero());
   floating_base_ = FloatingBase(model_);
@@ -42,6 +44,7 @@ Robot::Robot(const std::string& path_to_urdf,
   : model_(),
     impulse_model_(),
     data_(model_),
+    impulse_data_(impulse_model_),
     point_contacts_(),
     floating_base_(),
     fjoint_(),
@@ -57,6 +60,7 @@ Robot::Robot(const std::string& path_to_urdf,
   impulse_model_ = model_;
   impulse_model_.gravity.linear().setZero();
   data_ = pinocchio::Data(model_);
+  impulse_data_ = pinocchio::Data(impulse_model_);
   for (int i=0; i<contact_frames.size(); ++i) {
     point_contacts_.push_back(PointContact(model_, contact_frames[i]));
     is_each_contact_active_.push_back(false);
