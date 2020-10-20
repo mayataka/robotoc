@@ -61,7 +61,7 @@ public:
 
 private:
   SchurComplement schur_complement_;
-  Eigen::MatrixXd MJTMinv_full_, Qdvdv_, dImD_dq_, dImD_ddv_, dImD_df_full_, 
+  Eigen::MatrixXd Minv_, Qdvdv_, dImD_dq_, dImD_ddv_, dImD_df_full_, 
                   MJTMinvCqv_full_, dC_ddv_;
   int dimf_;
 

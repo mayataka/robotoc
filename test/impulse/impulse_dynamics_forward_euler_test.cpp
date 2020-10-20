@@ -182,88 +182,59 @@ TEST_F(ImpulseDynamicsForwardEulerTest, condenseImpulseDynamicsForwardEulerFixed
   EXPECT_TRUE(kkt_matrix.Cv().isApprox(kkt_matrix_ref.Cv()));
   EXPECT_TRUE(kkt_matrix.Fvq.isApprox(kkt_matrix_ref.Fvq));
   EXPECT_TRUE(kkt_matrix.Fvv.isApprox(kkt_matrix_ref.Fvv));
-  std::cout << kkt_residual.lq() - kkt_residual_ref.lq() << std::endl;
-  std::cout << kkt_residual.lv() - kkt_residual_ref.lv() << std::endl;
-  // SplitDirection d = SplitDirection::Random(robot, contact_status);
-  // rd.computeCondensedDirection(dtau_, kkt_matrix, kkt_residual, d);
-  // Eigen::VectorXd du_ref = kkt_residual_ref.u_res;
-  // du_ref += du_dq * d.dq();
-  // du_ref += du_dv * d.dv();
-  // du_ref += du_da * d.da();
-  // du_ref += du_df.leftCols(contact_status.dimf()) * d.df();
-  // EXPECT_TRUE(du_ref.isApprox(d.du));
-  // Eigen::VectorXd dbeta_ref = (kkt_residual_ref.lu + Quu_ref * du_ref) / dtau_;
-  // EXPECT_TRUE(dbeta_ref.isApprox(d.dbeta));
-  // std::cout << "du_dq" << std::endl;
-  // std::cout << du_dq << std::endl;
-  // std::cout << "du_dv" << std::endl;
-  // std::cout << du_dv << std::endl;
-  // std::cout << "du_da" << std::endl;
-  // std::cout << du_da << std::endl;
-  // std::cout << "du_df" << std::endl;
-  // std::cout << du_df << std::endl;
-  // std::cout << "Cq" << std::endl;
-  // std::cout << kkt_matrix.Cq() << std::endl;
-  // std::cout << "Cv" << std::endl;
-  // std::cout << kkt_matrix.Cv() << std::endl;
-  // std::cout << "Ca" << std::endl;
-  // std::cout << kkt_matrix.Ca() << std::endl;
-  // std::cout << "Cf" << std::endl;
-  // std::cout << kkt_matrix.Cf() << std::endl;
-  // const double l1norm = rd.l1NormImpulseDynamicsForwardEulerResidual(dtau_, kkt_residual);
-  // const double squarednorm = rd.squaredNormImpulseDynamicsForwardEulerResidual(dtau_, kkt_residual);
-  // const double l1norm_ref = dtau_ * kkt_residual_ref.u_res.lpNorm<1>() 
-  //                           + kkt_residual_ref.C().head(contact_status.dimf()).lpNorm<1>();
-  // const double squarednorm_ref = dtau_ * dtau_ * kkt_residual_ref.u_res.squaredNorm()
-  //                                 + kkt_residual_ref.C().head(contact_status.dimf()).squaredNorm();
-  // EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);
-  // EXPECT_DOUBLE_EQ(squarednorm, squarednorm_ref);
-  // const Eigen::MatrixXd da_dq = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
-  // const Eigen::MatrixXd da_dv = Eigen::MatrixXd::Random(robot.dimv(), robot.dimv());
-  // const Eigen::MatrixXd df_dq = Eigen::MatrixXd::Random(contact_status.dimf(), robot.dimv());
-  // const Eigen::MatrixXd df_dv = Eigen::MatrixXd::Random(contact_status.dimf(), robot.dimv());
-  // Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  // Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  // rd.getStateFeedbackGain(da_dq, da_dv, df_dq, df_dv, Kuq, Kuv);
-  // EXPECT_TRUE(Kuq.isApprox(du_dq+du_da*da_dq+du_df*df_dq));
-  // EXPECT_TRUE(Kuv.isApprox(du_dv+du_da*da_dv+du_df*df_dv));
+  ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, contact_status);
+  SplitDirection d_next = SplitDirection::Random(robot, contact_status);
+  id.computeCondensedDirection(kkt_matrix, kkt_residual, d_next, d);
+  const Eigen::VectorXd ddvf_ref = - MJTJinv_dimdc_dqv * d.dx() - MJTJinv * imdc;
+  const Eigen::VectorXd ddv_ref = ddvf_ref.head(robot.dimv());
+  const Eigen::VectorXd df_ref = ddvf_ref.tail(contact_status.dimf());
+  EXPECT_TRUE(ddv_ref.isApprox(d.ddv));
+  EXPECT_TRUE(df_ref.isApprox(d.df()));
+  const Eigen::MatrixXd Qdvfqv_condensed = - Qdvdvff * MJTJinv * dimdc_dqv;
+  Eigen::VectorXd dlmdgmm = Eigen::VectorXd::Zero(robot.dimv()+contact_status.dimf());
+  dlmdgmm.head(robot.dimv()) = d_next.dgmm();
+  const Eigen::VectorXd ldvf_condensed = ldvf - Qdvdvff * MJTJinv * imdc;
+  Eigen::VectorXd dbetamu_ref = - MJTJinv * Qdvfqv_condensed * d.dx()
+                                - MJTJinv * dlmdgmm - MJTJinv * ldvf_condensed;
+  const Eigen::VectorXd dbeta_ref = dbetamu_ref.head(robot.dimv());
+  const Eigen::VectorXd dmu_ref = dbetamu_ref.tail(contact_status.dimf());
+  EXPECT_TRUE(dbeta_ref.isApprox(d.dbeta));
+  EXPECT_TRUE(dmu_ref.isApprox(d.dmu()));
 }
 
 
-// TEST_F(ImpulseDynamicsForwardEulerTest, computeImpulseDynamicsForwardEulerResidualFixedBase) {
-//   std::vector<int> contact_frames = {18};
-//   ContactStatus contact_status(contact_frames.size());
-//   Robot robot(fixed_base_urdf_, contact_frames);
-//   std::vector<bool> is_contact_active = {true};
-//   contact_status.setContactStatus(is_contact_active);
-//   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, contact_status);
-//   ImpulseKKTResidual kkt_residual(robot);
-//   kkt_residual.setContactStatus(contact_status);
-//   ImpulseKKTMatrix kkt_matrix(robot);
-//   kkt_matrix.setContactStatus(contact_status);
-//   ImpulseKKTResidual kkt_residual_ref(robot);
-//   kkt_residual_ref.setContactStatus(contact_status);
-//   ImpulseKKTMatrix kkt_matrix_ref(robot);
-//   kkt_matrix_ref.setContactStatus(contact_status);
-//   ImpulseDynamicsForwardEuler rd(robot);
-//   robot.updateKinematics(s.q, s.v, s.a);
-//   rd.computeImpulseDynamicsForwardEulerResidual(robot, contact_status, dtau_, s, kkt_residual);
-//   const double violation_ref = dtau_ * kkt_residual_ref.u_res.lpNorm<1>();
-//   robot.updateKinematics(s.q, s.v, s.a);
-//   robot.setContactForces(contact_status, s.f);
-//   robot.RNEA(s.q, s.v, s.a, kkt_residual_ref.u_res);
-//   robot.computeBaumgarteResidual(contact_status, dtau_, dtau_, 
-//                                  kkt_residual_ref.C_contacts());
-//   kkt_residual_ref.u_res -= s.u;
-//   const double l1norm = rd.l1NormImpulseDynamicsForwardEulerResidual(dtau_, kkt_residual);
-//   const double squarednorm = rd.squaredNormImpulseDynamicsForwardEulerResidual(dtau_, kkt_residual);
-//   const double l1norm_ref = dtau_ * kkt_residual_ref.u_res.lpNorm<1>() 
-//                             + kkt_residual_ref.C().head(contact_status.dimf()).lpNorm<1>();
-//   const double squarednorm_ref = dtau_ * dtau_ * kkt_residual_ref.u_res.squaredNorm()
-//                                   + kkt_residual_ref.C().head(contact_status.dimf()).squaredNorm();
-//   EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);
-//   EXPECT_DOUBLE_EQ(squarednorm, squarednorm_ref);
-// }
+TEST_F(ImpulseDynamicsForwardEulerTest, computeImpulseDynamicsResidualFixedBase) {
+  std::vector<int> contact_frames = {18};
+  ContactStatus contact_status(contact_frames.size());
+  Robot robot(fixed_base_urdf_, contact_frames);
+  std::vector<bool> is_contact_active = {true};
+  contact_status.setContactStatus(is_contact_active);
+  ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, contact_status);
+  ImpulseKKTResidual kkt_residual(robot);
+  kkt_residual.setContactStatus(contact_status);
+  ImpulseKKTMatrix kkt_matrix(robot);
+  kkt_matrix.setContactStatus(contact_status);
+  ImpulseKKTResidual kkt_residual_ref(robot);
+  kkt_residual_ref.setContactStatus(contact_status);
+  ImpulseKKTMatrix kkt_matrix_ref(robot);
+  kkt_matrix_ref.setContactStatus(contact_status);
+  ImpulseDynamicsForwardEuler id(robot);
+  robot.updateKinematics(s.q, s.v);
+  id.computeImpulseDynamicsResidual(robot, contact_status, s, kkt_residual);
+  const double violation_ref = kkt_residual_ref.dv_res.lpNorm<1>() + kkt_residual_ref.C().lpNorm<1>();
+  robot.updateKinematics(s.q, s.v);
+  robot.setContactForces(contact_status, s.f);
+  robot.RNEAImpulse(s.q, s.dv, kkt_residual_ref.dv_res);
+  robot.computeContactVelocityResidual(contact_status, kkt_residual_ref.C());
+  const double l1norm = id.l1NormImpulseDynamicsResidual(kkt_residual);
+  const double squarednorm = id.squaredNormImpulseDynamicsResidual(kkt_residual);
+  const double l1norm_ref = kkt_residual_ref.dv_res.lpNorm<1>() 
+                            + kkt_residual_ref.C().lpNorm<1>();
+  const double squarednorm_ref = kkt_residual_ref.dv_res.squaredNorm()
+                                  + kkt_residual_ref.C().squaredNorm();
+  EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);
+  EXPECT_DOUBLE_EQ(squarednorm, squarednorm_ref);
+}
 
 
 TEST_F(ImpulseDynamicsForwardEulerTest, linearizeImpulseDynamicsForwardEulerFloatingBaseWithContacts) {
@@ -425,47 +396,63 @@ TEST_F(ImpulseDynamicsForwardEulerTest, condenseImpulseDynamicsForwardEulerFloat
   EXPECT_TRUE(kkt_matrix.Cv().isApprox(kkt_matrix_ref.Cv()));
   EXPECT_TRUE(kkt_matrix.Fvq.isApprox(kkt_matrix_ref.Fvq));
   EXPECT_TRUE(kkt_matrix.Fvv.isApprox(kkt_matrix_ref.Fvv));
+  ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, contact_status);
+  SplitDirection d_next = SplitDirection::Random(robot, contact_status);
+  id.computeCondensedDirection(kkt_matrix, kkt_residual, d_next, d);
+  const Eigen::VectorXd ddvf_ref = - MJTJinv_dimdc_dqv * d.dx() - MJTJinv * imdc;
+  const Eigen::VectorXd ddv_ref = ddvf_ref.head(robot.dimv());
+  const Eigen::VectorXd df_ref = ddvf_ref.tail(contact_status.dimf());
+  EXPECT_TRUE(ddv_ref.isApprox(d.ddv));
+  EXPECT_TRUE(df_ref.isApprox(d.df()));
+  const Eigen::MatrixXd Qdvfqv_condensed = - Qdvdvff * MJTJinv * dimdc_dqv;
+  Eigen::VectorXd dlmdgmm = Eigen::VectorXd::Zero(robot.dimv()+contact_status.dimf());
+  dlmdgmm.head(robot.dimv()) = d_next.dgmm();
+  const Eigen::VectorXd ldvf_condensed = ldvf - Qdvdvff * MJTJinv * imdc;
+  Eigen::VectorXd dbetamu_ref = - MJTJinv * Qdvfqv_condensed * d.dx()
+                                - MJTJinv * dlmdgmm - MJTJinv * ldvf_condensed;
+  const Eigen::VectorXd dbeta_ref = dbetamu_ref.head(robot.dimv());
+  const Eigen::VectorXd dmu_ref = dbetamu_ref.tail(contact_status.dimf());
+  EXPECT_TRUE(dbeta_ref.isApprox(d.dbeta));
+  EXPECT_TRUE(dmu_ref.isApprox(d.dmu()));
 }
 
 
-// TEST_F(ImpulseDynamicsForwardEulerTest, computeImpulseDynamicsForwardEulerResidualFloatingBaseWithContacts) {
-//   std::vector<int> contact_frames = {14, 24, 34, 44};
-//   ContactStatus contact_status(contact_frames.size());
-//   Robot robot(floating_base_urdf_, contact_frames);
-//   std::random_device rnd;
-//   std::vector<bool> is_contact_active;
-//   for (const auto frame : contact_frames) {
-//     is_contact_active.push_back(rnd()%2==0);
-//   }
-//   contact_status.setContactStatus(is_contact_active);
-//   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, contact_status);
-//   ImpulseKKTResidual kkt_residual(robot);
-//   kkt_residual.setContactStatus(contact_status);
-//   ImpulseKKTMatrix kkt_matrix(robot);
-//   kkt_matrix.setContactStatus(contact_status);
-//   ImpulseKKTResidual kkt_residual_ref(robot);
-//   kkt_residual_ref.setContactStatus(contact_status);
-//   ImpulseKKTMatrix kkt_matrix_ref(robot);
-//   kkt_matrix_ref.setContactStatus(contact_status);
-//   ImpulseDynamicsForwardEuler rd(robot);
-//   robot.updateKinematics(s.q, s.v, s.a);
-//   rd.computeImpulseDynamicsForwardEulerResidual(robot, contact_status, dtau_, s, kkt_residual);
-//   const double l1norm = rd.l1NormImpulseDynamicsForwardEulerResidual(dtau_, kkt_residual);
-//   const double squarednorm = rd.squaredNormImpulseDynamicsForwardEulerResidual(dtau_, kkt_residual);
-//   robot.updateKinematics(s.q, s.v, s.a);
-//   robot.setContactForces(contact_status, s.f);
-//   robot.RNEA(s.q, s.v, s.a, kkt_residual_ref.u_res);
-//   kkt_residual_ref.u_res -= s.u;
-//   robot.computeBaumgarteResidual(contact_status, dtau_, dtau_, kkt_residual_ref.C_contacts());
-//   const double l1norm_ref = dtau_ * kkt_residual_ref.u_res.lpNorm<1>() 
-//                             + dtau_ * s.u.head(6).lpNorm<1>()
-//                             + kkt_residual_ref.C_contacts().lpNorm<1>();
-//   const double squarednorm_ref = dtau_ * dtau_ * kkt_residual_ref.u_res.squaredNorm()
-//                             + dtau_ * dtau_ * s.u.head(6).squaredNorm()
-//                             + kkt_residual_ref.C_contacts().squaredNorm();
-//   EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);
-//   EXPECT_DOUBLE_EQ(squarednorm, squarednorm_ref);
-// }
+TEST_F(ImpulseDynamicsForwardEulerTest, computeImpulseDynamicsForwardEulerResidualFloatingBaseWithContacts) {
+  std::vector<int> contact_frames = {14, 24, 34, 44};
+  ContactStatus contact_status(contact_frames.size());
+  Robot robot(floating_base_urdf_, contact_frames);
+  std::random_device rnd;
+  std::vector<bool> is_contact_active;
+  for (const auto frame : contact_frames) {
+    is_contact_active.push_back(rnd()%2==0);
+  }
+  contact_status.setContactStatus(is_contact_active);
+  ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, contact_status);
+  ImpulseKKTResidual kkt_residual(robot);
+  kkt_residual.setContactStatus(contact_status);
+  ImpulseKKTMatrix kkt_matrix(robot);
+  kkt_matrix.setContactStatus(contact_status);
+  ImpulseKKTResidual kkt_residual_ref(robot);
+  kkt_residual_ref.setContactStatus(contact_status);
+  ImpulseKKTMatrix kkt_matrix_ref(robot);
+  kkt_matrix_ref.setContactStatus(contact_status);
+  ImpulseDynamicsForwardEuler id(robot);
+  robot.updateKinematics(s.q, s.v);
+  id.computeImpulseDynamicsResidual(robot, contact_status, s, kkt_residual);
+  const double violation_ref = kkt_residual_ref.dv_res.lpNorm<1>() + kkt_residual_ref.C().lpNorm<1>();
+  robot.updateKinematics(s.q, s.v);
+  robot.setContactForces(contact_status, s.f);
+  robot.RNEAImpulse(s.q, s.dv, kkt_residual_ref.dv_res);
+  robot.computeContactVelocityResidual(contact_status, kkt_residual_ref.C());
+  const double l1norm = id.l1NormImpulseDynamicsResidual(kkt_residual);
+  const double squarednorm = id.squaredNormImpulseDynamicsResidual(kkt_residual);
+  const double l1norm_ref = kkt_residual_ref.dv_res.lpNorm<1>() 
+                            + kkt_residual_ref.C().lpNorm<1>();
+  const double squarednorm_ref = kkt_residual_ref.dv_res.squaredNorm()
+                                  + kkt_residual_ref.C().squaredNorm();
+  EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);
+  EXPECT_DOUBLE_EQ(squarednorm, squarednorm_ref);
+}
 
 } // namespace idocp
 
