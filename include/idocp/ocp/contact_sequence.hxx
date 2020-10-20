@@ -3,6 +3,7 @@
 
 #include "idocp/ocp/contact_sequence.hpp"
 
+#include <stdexcept>
 #include <assert.h>
 
 namespace idocp {
@@ -11,6 +12,15 @@ inline ContactSequence::ContactSequence(const Robot& robot, const int N)
   : max_point_contacts_(robot.max_point_contacts()),
     N_(N),
     contact_sequence_(N, ContactStatus(robot.max_point_contacts())) {
+  try {
+    if (N <= 0) {
+      throw std::out_of_range("invalid value: N must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 

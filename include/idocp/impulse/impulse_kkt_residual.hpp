@@ -97,9 +97,16 @@ public:
   ///
   /// @brief Residual of the contact position and velocity constraint.
   /// @return Reference to the residual of the contact position constraint.  
-  /// Size is 2 * KKTResidual::dimf(). 
+  /// Size is KKTResidual::dimf(). 
   ///
   Eigen::VectorBlock<Eigen::VectorXd> C();
+
+  ///
+  /// @brief Residual of the contact position and velocity constraint.
+  /// @return Const reference to the residual of the contact position constraint.  
+  /// Size is KKTResidual::dimf(). 
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> C() const;
 
   ///
   /// @brief Residual with respect to the stack of the contact forces f.

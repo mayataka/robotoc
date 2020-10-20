@@ -9,6 +9,7 @@ namespace idocp {
 
 Robot::Robot(const std::string& path_to_urdf)
   : model_(),
+    impulse_model_(),
     data_(model_),
     point_contacts_(),
     floating_base_(),
@@ -22,6 +23,8 @@ Robot::Robot(const std::string& path_to_urdf)
     lower_joint_position_limit_(),
     upper_joint_position_limit_() {
   pinocchio::urdf::buildModel(path_to_urdf, model_);
+  impulse_model_ = model_;
+  impulse_model_.gravity.linear().setZero();
   data_ = pinocchio::Data(model_);
   fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
                  model_.joints.size(), pinocchio::Force::Zero());
@@ -37,6 +40,7 @@ Robot::Robot(const std::string& path_to_urdf)
 Robot::Robot(const std::string& path_to_urdf, 
              const std::vector<int>& contact_frames)
   : model_(),
+    impulse_model_(),
     data_(model_),
     point_contacts_(),
     floating_base_(),
@@ -50,6 +54,8 @@ Robot::Robot(const std::string& path_to_urdf,
     lower_joint_position_limit_(),
     upper_joint_position_limit_() {
   pinocchio::urdf::buildModel(path_to_urdf, model_);
+  impulse_model_ = model_;
+  impulse_model_.gravity.linear().setZero();
   data_ = pinocchio::Data(model_);
   for (int i=0; i<contact_frames.size(); ++i) {
     point_contacts_.push_back(PointContact(model_, contact_frames[i]));
@@ -69,6 +75,7 @@ Robot::Robot(const std::string& path_to_urdf,
 
 Robot::Robot()
   : model_(),
+    impulse_model_(),
     data_(model_),
     point_contacts_(),
     floating_base_(),

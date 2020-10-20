@@ -71,7 +71,7 @@ TEST_F(ImpulseKKTResidualTest, fixed_base) {
   EXPECT_EQ(residual.dimf(), dimf);
   EXPECT_EQ(residual.dimc(), dimc);
   EXPECT_EQ(residual.dimKKT(), 4*dimv+dimc+dimf);
-  EXPECT_EQ(residual.max_dimKKT(), 4*dimv+3*robot.max_dimf());
+  EXPECT_EQ(residual.max_dimKKT(), 4*dimv+2*robot.max_dimf());
 }
 
 
@@ -123,7 +123,7 @@ TEST_F(ImpulseKKTResidualTest, floating_base) {
   EXPECT_EQ(residual.dimf(), dimf);
   EXPECT_EQ(residual.dimc(), dimc);
   EXPECT_EQ(residual.dimKKT(), 4*dimv+dimc+dimf);
-  EXPECT_EQ(residual.max_dimKKT(), 4*dimv+3*robot.max_dimf());
+  EXPECT_EQ(residual.max_dimKKT(), 4*dimv+2*robot.max_dimf());
 }
 
 } // namespace idocp

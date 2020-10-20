@@ -144,6 +144,20 @@ inline void Robot::updateKinematics(
 }
 
 
+template <typename ConfigVectorType, typename TangentVectorType>
+inline void Robot::updateKinematics(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType>& v) {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  pinocchio::forwardKinematics(model_, data_, q, v, 
+                               Eigen::VectorXd::Zero(dimv_));
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q, v, 
+                                                 Eigen::VectorXd::Zero(dimv_));
+}
+
+
 template <typename VectorType>
 inline void Robot::computeBaumgarteResidual(
     const ContactStatus& contact_status, const double time_step,
@@ -495,11 +509,9 @@ inline void Robot::RNEAImpulse(
   assert(q.size() == dimq_);
   assert(dv.size() == dimv_);
   assert(res.size() == dimv_);
-  model_.gravity.linear().setZero();
   const_cast<Eigen::MatrixBase<TangentVectorType2>&>(res)
-      = pinocchio::rnea(model_, data_, q, Eigen::VectorXd::Zero(dimv_), dv, 
-                        fjoint_);
-  model_.gravity.linear() = model_.gravity981;
+      = pinocchio::rnea(impulse_model_, data_, q, Eigen::VectorXd::Zero(dimv_),  
+                        dv, fjoint_);
 }
 
 
@@ -516,9 +528,8 @@ inline void Robot::RNEAImpulseDerivatives(
   assert(dRNEA_partial_dq.rows() == dimv_);
   assert(dRNEA_partial_ddv.cols() == dimv_);
   assert(dRNEA_partial_ddv.rows() == dimv_);
-  model_.gravity.linear().setZero();
   pinocchio::computeRNEADerivatives(
-      model_, data_, q, Eigen::VectorXd::Zero(dimv_), dv, fjoint_,
+      impulse_model_, data_, q, Eigen::VectorXd::Zero(dimv_), dv, fjoint_,
       const_cast<Eigen::MatrixBase<MatrixType1>&>(dRNEA_partial_dq),
       dimpulse_dv_,
       const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_ddv));
@@ -526,7 +537,6 @@ inline void Robot::RNEAImpulseDerivatives(
       .template triangularView<Eigen::StrictlyLower>() 
       = (const_cast<Eigen::MatrixBase<MatrixType2>&>(dRNEA_partial_ddv)).transpose()
           .template triangularView<Eigen::StrictlyLower>();
-  model_.gravity.linear() = model_.gravity981;
 }
 
 

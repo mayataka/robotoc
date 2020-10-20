@@ -73,7 +73,8 @@ add_library(
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp
   src/impulse/impulse_state_equation.cpp
-  # src/impulse/impulse_dynamics.cpp
+  src/impulse/impulse_dynamics_forward_euler.cpp
+  # src/impulse/impulse_dynamics_backward_euler.cpp
   # src/impulse/impulse_riccati_gain.cpp
   # src/impulse/impulse_riccati_matrix_factorizer.cpp
   # src/impulse/impulse_riccati_matrix_inverter.cpp

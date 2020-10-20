@@ -16,14 +16,14 @@ inline ImpulseKKTMatrix::ImpulseKKTMatrix(const Robot& robot)
     Fvv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     schur_complement_(2*robot.max_dimf(), 2*robot.dimv()+robot.max_dimf()),
-    C_(Eigen::MatrixXd::Zero(2*robot.max_dimf(), 
+    C_(Eigen::MatrixXd::Zero(robot.max_dimf(), 
                              2*robot.dimv()+robot.max_dimf())),
     Q_(Eigen::MatrixXd::Zero(2*robot.dimv()+robot.max_dimf(), 
                              2*robot.dimv()+robot.max_dimf())),
     Fvf_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     Sx_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
     FMinv_(Eigen::MatrixXd::Zero(2*robot.dimv(), 
-                                 2*robot.dimv()+3*robot.max_dimf())),
+                                 2*robot.dimv()+2*robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
@@ -34,7 +34,7 @@ inline ImpulseKKTMatrix::ImpulseKKTMatrix(const Robot& robot)
     f_begin_(0),
     q_begin_(0),
     v_begin_(robot.dimv()),
-    max_dimKKT_(4*robot.dimv()+3*robot.max_dimf()) {
+    max_dimKKT_(4*robot.dimv()+2*robot.max_dimf()) {
 }
  
 

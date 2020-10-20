@@ -13,7 +13,7 @@ inline ImpulseKKTResidual::ImpulseKKTResidual(const Robot& robot)
     dimx_(2*robot.dimv()), 
     dimf_(0), 
     dimc_(0),
-    max_dimKKT_(4*robot.dimv()+3*robot.max_dimf()),
+    max_dimKKT_(4*robot.dimv()+2*robot.max_dimf()),
     dimKKT_(4*robot.dimv()) {
 }
 
@@ -70,6 +70,12 @@ ImpulseKKTResidual::Fx() const {
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::C() {
+  return kkt_residual_.segment(dimx_, dimc_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseKKTResidual::C() const {
   return kkt_residual_.segment(dimx_, dimc_);
 }
 

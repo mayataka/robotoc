@@ -136,8 +136,8 @@ TEST_F(ImpulseKKTMatrixTest, invert_fixed_base) {
   matrix.symmetrize();
   matrix.invert(kkt_mat_inv);
   EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-10));
-  EXPECT_TRUE((kkt_mat_inv*kkt_mat).isIdentity(1.0e-08));
-  EXPECT_TRUE((kkt_mat*kkt_mat_inv).isIdentity(1.0e-08));
+  EXPECT_TRUE((kkt_mat_inv*kkt_mat).isIdentity(1.0e-06));
+  EXPECT_TRUE((kkt_mat*kkt_mat_inv).isIdentity(1.0e-06));
 }
 
 
@@ -259,9 +259,8 @@ TEST_F(ImpulseKKTMatrixTest, invert_floating_base) {
   matrix.symmetrize();
   matrix.invert(kkt_mat_inv);
   EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-08));
-  EXPECT_TRUE((kkt_mat_inv*kkt_mat).isIdentity(1.0e-06));
-  EXPECT_TRUE((kkt_mat*kkt_mat_inv).isIdentity(1.0e-06));
-  std::cout << kkt_mat_inv*kkt_mat << std::endl;
+  EXPECT_TRUE((kkt_mat_inv*kkt_mat).isIdentity(1.0e-05));
+  EXPECT_TRUE((kkt_mat*kkt_mat_inv).isIdentity(1.0e-05));
 }
 
 } // namespace idocp

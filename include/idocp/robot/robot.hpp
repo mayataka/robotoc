@@ -164,6 +164,10 @@ public:
                         const Eigen::MatrixBase<TangentVectorType1>& v, 
                         const Eigen::MatrixBase<TangentVectorType2>& a);
 
+  template <typename ConfigVectorType, typename TangentVectorType>
+  void updateKinematics(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                        const Eigen::MatrixBase<TangentVectorType>& v);
+
   ///
   /// @brief Returns the position of the frame. Before calling this function, 
   /// updateKinematics() must be called.
@@ -658,7 +662,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  pinocchio::Model model_;
+  pinocchio::Model model_, impulse_model_;
   pinocchio::Data data_;
   FloatingBase floating_base_;
   std::vector<PointContact> point_contacts_;

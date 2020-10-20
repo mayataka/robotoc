@@ -3,6 +3,7 @@
 
 #include "idocp/ocp/schur_complement.hxx"
 
+#include <stdexcept>
 #include <assert.h>
 
 #include "Eigen/LU"
@@ -17,6 +18,18 @@ inline SchurComplement::SchurComplement(const int max_dimA, const int max_dimD)
     SD_(Eigen::MatrixXd::Zero(max_dimA, max_dimA)),
     CAinv_(Eigen::MatrixXd::Zero(max_dimD, max_dimA)),
     BDinv_(Eigen::MatrixXd::Zero(max_dimA, max_dimD)) {
+  try {
+    if (max_dimA < 0) {
+      throw std::out_of_range("invalid value: max_dimA must be non negative!");
+    }
+    if (max_dimD < 0) {
+      throw std::out_of_range("invalid value: max_dimD must be non negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
