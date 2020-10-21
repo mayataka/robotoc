@@ -135,66 +135,7 @@ TEST_F(ImpulseKKTMatrixTest, invert_fixed_base) {
   Eigen::MatrixXd kkt_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
   matrix.symmetrize();
   matrix.invert(kkt_mat_inv);
-  EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-10));
-}
-
-
-TEST_F(ImpulseKKTMatrixTest, invert_fixed_base2) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf_, contact_frames);
-  ContactStatus contact_status(contact_frames.size());
-  std::vector<bool> is_contact_active = {true};
-  contact_status.setContactStatus(is_contact_active);
-  ImpulseKKTMatrix matrix(robot);
-  matrix.setContactStatus(contact_status);
-  const int dimv = robot.dimv();
-  const int dimx = 2*robot.dimv();
-  const int dimf = contact_status.dimf();
-  const int dimc = contact_status.dimf();
-  const int dimQ = 2*robot.dimv() + contact_status.dimf();
-  const int dimKKT = 4*dimv+2*dimf;
-  EXPECT_EQ(dimx+dimQ+dimc, dimKKT);
-  const Eigen::MatrixXd kkt_mat_seed = Eigen::MatrixXd::Random(dimKKT, dimKKT);
-  Eigen::MatrixXd kkt_mat = kkt_mat_seed * kkt_mat_seed.transpose() + Eigen::MatrixXd::Identity(dimKKT, dimKKT);
-  kkt_mat.topLeftCorner(dimx+dimc, dimx+dimc).setZero();
-  kkt_mat.block(0, dimx+dimc, dimv, dimf).setZero();
-  kkt_mat.block(0, dimx+dimc+dimf, dimv, dimv) = - Eigen::MatrixXd::Identity(dimv, dimv);
-  kkt_mat.block(0, dimx+dimc+dimf+dimv, dimv, dimv).setZero();
-  kkt_mat.block(dimv, dimx+dimc+dimf+dimv, dimv, dimv) = - Eigen::MatrixXd::Identity(dimv, dimv);
-  kkt_mat.block(dimx, dimx+dimc, dimc, dimf).setZero();
-  kkt_mat.block(dimx, dimx+dimc+dimf, dimf, dimv).setZero();
-  kkt_mat.triangularView<Eigen::StrictlyLower>() = kkt_mat.transpose().triangularView<Eigen::StrictlyLower>();
-  const Eigen::MatrixXd Q = kkt_mat.bottomRightCorner(dimQ, dimQ);
-  const Eigen::MatrixXd C = kkt_mat.block(dimx, dimx+dimc, dimc, dimQ);
-  Eigen::MatrixXd QCinv = Eigen::MatrixXd::Zero(dimQ+dimc, dimQ+dimc);
-  SchurComplement schur_complement(dimc, dimQ);
-  schur_complement.invertWithZeroTopLeftCorner(dimc, dimQ, C, Q, QCinv);
-  const Eigen::MatrixXd F = kkt_mat.topRightCorner(dimx, dimc+dimQ);
-  const Eigen::MatrixXd FQCinv = F * QCinv;
-  std::cout << "FQCinv" << std::endl;
-  std::cout << FQCinv << std::endl;
-  const Eigen::MatrixXd Sx = FQCinv * F.transpose();
-  std::cout << "Sx" << std::endl;
-  std::cout << Sx << std::endl;
-  Eigen::MatrixXd kkt_mat_inv_ref = Eigen::MatrixXd::Zero(kkt_mat.rows(), kkt_mat.cols());
-  kkt_mat_inv_ref.topLeftCorner(dimx, dimx) = - Sx.llt().solve(Eigen::MatrixXd::Identity(dimx, dimx));
-  kkt_mat_inv_ref.topRightCorner(dimx, dimc+dimQ) 
-    = - kkt_mat_inv_ref.topLeftCorner(dimx, dimx) * FQCinv;
-  kkt_mat_inv_ref.bottomLeftCorner(dimc+dimQ, dimx) 
-    = kkt_mat_inv_ref.topRightCorner(dimx, dimc+dimQ).transpose();
-  kkt_mat_inv_ref.bottomRightCorner(dimc+dimQ, dimc+dimQ) 
-    = QCinv - kkt_mat_inv_ref.topRightCorner(dimx, dimc+dimQ).transpose()
-              * Sx * kkt_mat_inv_ref.topRightCorner(dimx, dimc+dimQ);
-  matrix.costHessian() = kkt_mat.bottomRightCorner(dimQ, dimQ);
-  matrix.constraintsJacobian() = kkt_mat.block(dimx, dimx+dimc, dimc, dimQ);
-  matrix.Fqq = kkt_mat.block(0, dimx+dimc+dimf, dimv, dimv);
-  matrix.Fvf() = kkt_mat.block(dimv, dimx+dimc, dimv, dimf);
-  matrix.Fvq = kkt_mat.block(dimv, dimx+dimc+dimf, dimv, dimv);
-  matrix.Fvv = kkt_mat.block(dimv, dimx+dimc+dimf+dimv, dimv, dimv);
-  Eigen::MatrixXd kkt_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
-  matrix.symmetrize();
-  matrix.invert(kkt_mat_inv);
-  EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref));
+  EXPECT_TRUE(kkt_mat_inv.isApprox(kkt_mat_inv_ref, 1.0e-08));
 }
 
 
@@ -299,7 +240,6 @@ TEST_F(ImpulseKKTMatrixTest, invert_floating_base) {
   kkt_mat.topLeftCorner(dimx+dimc, dimx+dimc).setZero();
   kkt_mat.block(0, dimx+dimc, dimv, dimf).setZero();
   kkt_mat.block(0, dimx+dimc+dimf, dimv, dimv) = - Eigen::MatrixXd::Identity(dimv, dimv);
-  kkt_mat.block(0, dimx+dimc+dimf, dimv, dimv).topLeftCorner(6, 6).setRandom();
   kkt_mat.block(0, dimx+dimc+dimf+dimv, dimv, dimv).setZero();
   kkt_mat.block(dimv, dimx+dimc+dimf+dimv, dimv, dimv) = - Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_mat.block(dimx, dimx+dimc, dimc, dimf).setZero();

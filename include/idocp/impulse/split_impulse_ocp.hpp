@@ -8,17 +8,17 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/impulse/split_impulse_solution.hpp"
-#include "idocp/impulse/split_impulse_direction.hpp"
+#include "idocp/impulse/impulse_split_solution.hpp"
+#include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
 #include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/impulse/state_equation.hpp"
+#include "idocp/impulse/impulse_state_equation.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
 #include "idocp/impulse/impulse_riccati_matrix_factorizer.hpp"
-#include "idocp/ocp/riccati_factorizer.hpp"
+#include "idocp/ocp/riccati_factorization.hpp"
 
 
 namespace idocp {
@@ -124,6 +124,7 @@ public:
   /// @param[in] d Split direction of this stage.
   /// 
   void computeCondensedDirection(Robot& robot, const ImpulseSplitSolution& s, 
+                                 const SplitDirection& d_next,
                                  ImpulseSplitDirection& d);
 
   ///
@@ -230,7 +231,7 @@ private:
   ImpulseKKTMatrix kkt_matrix_;
   ImpulseDynamicsForwardEuler impulse_dynamics_;
   ImpulseRiccatiMatrixFactorizer riccati_factorizer_;
-  SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
+  ImpulseSplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
   int dimv_, dimf_, dimc_;
   double stage_cost_, constraint_violation_;
 
@@ -243,10 +244,10 @@ private:
     kkt_residual_.setContactStatus(contact_status);
     kkt_matrix_.setContactStatus(contact_status);
     dimf_ = contact_status.dimf();
-    dimc_ = dim_passive_ + contact_status.dimf();
+    dimc_ = contact_status.dimf();
   }
 
-  double cost(Robot& robot, const double t, const SplitSolution& s);
+  double cost(Robot& robot, const double t, const ImpulseSplitSolution& s);
 
   double constraintViolation() const;
 

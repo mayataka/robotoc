@@ -68,7 +68,7 @@ add_library(
   # src/contact_complementarity/contact_normal_force.cpp
   # src/contact_complementarity/friction_cone.cpp
   # src/contact_complementarity/contact_complementarity.cpp
-  src/impulse/impulse_kkt_residual.cpp
+  # src/impulse/impulse_kkt_residual.cpp
   src/impulse/impulse_kkt_matrix.cpp
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp

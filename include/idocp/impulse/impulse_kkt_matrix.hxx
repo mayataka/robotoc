@@ -196,7 +196,7 @@ inline void ImpulseKKTMatrix::invert(
   invertConstrainedHessian(
       const_cast<Eigen::MatrixBase<MatrixType>&>(kkt_matrix_inverse)
           .bottomRightCorner(dimcQ, dimcQ));
-  FMinv_.setZero();
+  FMinv_.topLeftCorner(dimx_, dimcQ).setZero();
   if (has_floating_base_) {
     FMinv_.topLeftCorner(dimv_, dimcQ).template topRows<kDimFloatingBase>()
         = Fqq.template topLeftCorner<kDimFloatingBase, kDimFloatingBase>() 
@@ -215,8 +215,6 @@ inline void ImpulseKKTMatrix::invert(
       += Fvq * kkt_matrix_inverse.block(dimx_+dimc_+dimf_, dimx_, dimv_, dimcQ);
   FMinv_.bottomLeftCorner(dimv_, dimcQ).noalias()
       -= kkt_matrix_inverse.block(dimx_+dimc_+dimf_+dimv_, dimx_, dimv_, dimcQ);
-  std::cout << "FMinv_" << std::endl;
-  std::cout << FMinv_ << std::endl;
   if (has_floating_base_) {
     Sx_.topLeftCorner(dimv_, dimv_).template leftCols<kDimFloatingBase>().noalias()
         += FMinv_.block(0, dimc_+dimf_, dimv_, dimv_).template leftCols<kDimFloatingBase>() 
@@ -235,8 +233,6 @@ inline void ImpulseKKTMatrix::invert(
   Sx_.rightCols(dimv_).noalias() = FMinv_.block(0, dimc_, dimx_, dimf_) * Fvf().transpose();
   Sx_.rightCols(dimv_).noalias() += FMinv_.block(0, dimc_+dimf_, dimx_, dimv_) * Fvq.transpose();
   Sx_.rightCols(dimv_).noalias() -= FMinv_.block(0, dimc_+dimf_+dimv_, dimx_, dimv_);
-  std::cout << "Sx_" << std::endl;
-  std::cout << Sx_ << std::endl;
   const_cast<Eigen::MatrixBase<MatrixType>&>(kkt_matrix_inverse)
       .topLeftCorner(dimx_, dimx_).noalias()
       = - Sx_.llt().solve(Eigen::MatrixXd::Identity(dimx_, dimx_));
@@ -248,7 +244,7 @@ inline void ImpulseKKTMatrix::invert(
       .bottomLeftCorner(dimcQ, dimx_)
       = kkt_matrix_inverse.topRightCorner(dimx_, dimcQ).transpose();
   const_cast<Eigen::MatrixBase<MatrixType>&>(kkt_matrix_inverse)
-      .bottomRightCorner(dimcQ, dimcQ).noalias()
+      .bottomRightCorner(dimcQ, dimcQ)
       -= kkt_matrix_inverse.topRightCorner(dimx_, dimcQ).transpose()
               * Sx_ * kkt_matrix_inverse.topRightCorner(dimx_, dimcQ);
 }
@@ -260,6 +256,7 @@ inline void ImpulseKKTMatrix::setZero() {
   Fvq.setZero();
   Fvv.setZero();
   Fqq_prev.setZero();
+  Fvf_full_.setZero();
   C_.setZero();
   Q_.setZero();
 }

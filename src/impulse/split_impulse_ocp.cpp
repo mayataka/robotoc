@@ -5,7 +5,7 @@
 
 namespace idocp {
 
-ImpulseSplitOCP::ImpulseSplitOCP(
+SplitImpulseOCP::SplitImpulseOCP(
     const Robot& robot, const std::shared_ptr<ImpulseCostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints) 
   : cost_(cost),
@@ -16,7 +16,6 @@ ImpulseSplitOCP::ImpulseSplitOCP(
     kkt_matrix_(robot),
     impulse_dynamics_(robot),
     riccati_factorizer_(robot),
-    riccati_inverter_(robot),
     s_tmp_(robot),
     dimv_(robot.dimv()),
     dimf_(0),
@@ -24,7 +23,7 @@ ImpulseSplitOCP::ImpulseSplitOCP(
 }
 
 
-ImpulseSplitOCP::ImpulseSplitOCP() 
+SplitImpulseOCP::SplitImpulseOCP() 
   : cost_(),
     cost_data_(),
     constraints_(),
@@ -33,7 +32,6 @@ ImpulseSplitOCP::ImpulseSplitOCP()
     kkt_matrix_(),
     impulse_dynamics_(),
     riccati_factorizer_(),
-    riccati_inverter_(),
     s_tmp_(),
     dimv_(0),
     dimf_(0),
@@ -41,23 +39,23 @@ ImpulseSplitOCP::ImpulseSplitOCP()
 }
 
 
-ImpulseSplitOCP::~ImpulseSplitOCP() {
+SplitImpulseOCP::~SplitImpulseOCP() {
 }
 
 
-bool ImpulseSplitOCP::isFeasible(Robot& robot, const ImpulseSplitSolution& s) {
+bool SplitImpulseOCP::isFeasible(Robot& robot, const ImpulseSplitSolution& s) {
   return true;
   // return constraints_->isFeasible(robot, constraints_data_, s);
 }
 
 
-void ImpulseSplitOCP::initConstraints(Robot& robot,
+void SplitImpulseOCP::initConstraints(Robot& robot,
                                       const ImpulseSplitSolution& s) { 
   // constraints_->setSlackAndDual(robot, constraints_data_, dtau, s);
 }
 
 
-void ImpulseSplitOCP::linearizeOCP(Robot& robot, 
+void SplitImpulseOCP::linearizeOCP(Robot& robot, 
                                    const ContactStatus& contact_status,  
                                    const double t,  
                                    const Eigen::VectorXd& q_prev, 
@@ -66,8 +64,8 @@ void ImpulseSplitOCP::linearizeOCP(Robot& robot,
   setContactStatusForKKT(contact_status);
   robot.updateKinematics(s.q, s.v);
   // condensing the impulse dynamics
-  kkt_matrix.setZero();
-  kkt_residual.setZero();
+  kkt_matrix_.setZero();
+  kkt_residual_.setZero();
   cost_->computeStageCostHessian(robot, cost_data_, t, s, kkt_matrix_);
   cost_->computeStageCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
   stateequation::LinearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
@@ -78,22 +76,22 @@ void ImpulseSplitOCP::linearizeOCP(Robot& robot,
 }
 
 
-void ImpulseSplitOCP::backwardRiccatiRecursion(
+void SplitImpulseOCP::backwardRiccatiRecursion(
     const RiccatiFactorization& riccati_next, RiccatiFactorization& riccati) {
   riccati_factorizer_.factorize(kkt_matrix_, kkt_residual_, riccati_next, 
                                 riccati);
 }
 
 
-void ImpulseSplitOCP::forwardRiccatiRecursion(ImpulseSplitDirection& d,   
+void SplitImpulseOCP::forwardRiccatiRecursion(ImpulseSplitDirection& d,   
                                               SplitDirection& d_next) {
-  d_next.dq().noalias() = kkt_matrix.Fqq * d.dq() + kkt_residual_.Fq();
-  d_next.dv().noalias() = kkt_matrix.Fvq * d.dq() 
-                          + kkt_matrix.Fvv * d.dv() + kkt_residual_.Fv();
+  d_next.dq().noalias() = kkt_matrix_.Fqq * d.dq() + kkt_residual_.Fq();
+  d_next.dv().noalias() = kkt_matrix_.Fvq * d.dq() 
+                          + kkt_matrix_.Fvv * d.dv() + kkt_residual_.Fv();
 }
 
 
-void ImpulseSplitOCP::computeCondensedDirection(Robot& robot, 
+void SplitImpulseOCP::computeCondensedDirection(Robot& robot, 
                                                 const ImpulseSplitSolution& s, 
                                                 const SplitDirection& d_next, 
                                                 ImpulseSplitDirection& d) {
@@ -102,25 +100,25 @@ void ImpulseSplitOCP::computeCondensedDirection(Robot& robot,
 }
 
  
-double ImpulseSplitOCP::maxPrimalStepSize() {
+double SplitImpulseOCP::maxPrimalStepSize() {
   return 1;
   // return constraints_->maxSlackStepSize(constraints_data_);
 }
 
 
-double ImpulseSplitOCP::maxDualStepSize() {
+double SplitImpulseOCP::maxDualStepSize() {
   return 1;
   // return constraints_->maxDualStepSize(constraints_data_);
 }
 
 
-std::pair<double, double> ImpulseSplitOCP::costAndConstraintViolation(
+std::pair<double, double> SplitImpulseOCP::costAndConstraintViolation(
     Robot& robot, const double t, const ImpulseSplitSolution& s) {
   return std::make_pair(cost(robot, t, s), constraintViolation());
 }
 
 
-std::pair<double, double> ImpulseSplitOCP::costAndConstraintViolation(
+std::pair<double, double> SplitImpulseOCP::costAndConstraintViolation(
     Robot& robot, const ContactStatus& contact_status, const double step_size, 
     const double t, const ImpulseSplitSolution& s, 
     const ImpulseSplitDirection& d, const SplitSolution& s_next, 
@@ -148,14 +146,14 @@ std::pair<double, double> ImpulseSplitOCP::costAndConstraintViolation(
 }
 
 
-void ImpulseSplitOCP::updateDual(const double step_size) {
+void SplitImpulseOCP::updateDual(const double step_size) {
   assert(step_size > 0);
   assert(step_size <= 1);
   // constraints_->updateDual(constraints_data_, step_size);
 }
 
 
-void ImpulseSplitOCP::updatePrimal(Robot& robot, const double step_size, 
+void SplitImpulseOCP::updatePrimal(Robot& robot, const double step_size, 
                                    const RiccatiFactorization& riccati, 
                                    const ImpulseSplitDirection& d, 
                                    ImpulseSplitSolution& s) {
@@ -177,11 +175,11 @@ void ImpulseSplitOCP::updatePrimal(Robot& robot, const double step_size,
 }
 
 
-void ImpulseSplitOCP::computeKKTResidual(Robot& robot, 
+void SplitImpulseOCP::computeKKTResidual(Robot& robot, 
                                          const ContactStatus& contact_status, 
                                          const double t, 
                                          const Eigen::VectorXd& q_prev, 
-                                         const SplitSolution& s,
+                                         const ImpulseSplitSolution& s,
                                          const SplitSolution& s_next) {
   setContactStatusForKKT(contact_status);
   kkt_residual_.setZero();
@@ -199,7 +197,7 @@ void ImpulseSplitOCP::computeKKTResidual(Robot& robot,
 }
 
 
-double ImpulseSplitOCP::squaredNormKKTResidual(const double dtau) const {
+double SplitImpulseOCP::squaredNormKKTResidual() const {
   double error = 0;
   error += kkt_residual_.lq().squaredNorm();
   error += kkt_residual_.lv().squaredNorm();
@@ -212,7 +210,7 @@ double ImpulseSplitOCP::squaredNormKKTResidual(const double dtau) const {
 }
 
 
-double ImpulseSplitOCP::cost(Robot& robot, const double t, 
+double SplitImpulseOCP::cost(Robot& robot, const double t, 
                              const ImpulseSplitSolution& s) {
   double cost = 0;
   cost += cost_->l(robot, cost_data_, t, s);
@@ -221,7 +219,7 @@ double ImpulseSplitOCP::cost(Robot& robot, const double t,
 }
 
 
-double ImpulseSplitOCP::constraintViolation() const {
+double SplitImpulseOCP::constraintViolation() const {
   double violation = 0;
   violation += stateequation::L1NormStateEuqationResidual(kkt_residual_);
   violation += impulse_dynamics_.l1NormImpulseDynamicsResidual(kkt_residual_);
