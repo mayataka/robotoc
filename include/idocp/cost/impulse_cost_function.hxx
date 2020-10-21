@@ -54,9 +54,8 @@ inline void ImpulseCostFunction::computeStageCostDerivatives(
   for (const auto cost : costs_) {
     cost->lq(robot, data, t, s, kkt_residual);
     cost->lv(robot, data, t, s, kkt_residual);
-    // if (robot.has_active_contacts() > 0) {
-    //   cost->lf(robot, data, t, s, kkt_residual);
-    // }
+    cost->lf(robot, data, t, s, kkt_residual);
+    cost->ldv(robot, data, t, s, kkt_residual);
   }
 }
 
@@ -67,9 +66,8 @@ inline void ImpulseCostFunction::computeStageCostHessian(
   for (const auto cost : costs_) {
     cost->lqq(robot, data, t, s, kkt_matrix);
     cost->lvv(robot, data, t, s, kkt_matrix);
-    // if (robot.has_active_contacts() > 0) {
-    //   cost->lff(robot, data, t, s, kkt_matrix);
-    // }
+    cost->lff(robot, data, t, s, kkt_matrix);
+    cost->ldvdv(robot, data, t, s, kkt_matrix);
   }
 }
 
@@ -90,6 +88,16 @@ inline void ImpulseCostFunction::lv(Robot& robot, CostFunctionData& data,
                                     ImpulseKKTResidual& kkt_residual) const {
   for (const auto cost : costs_) {
     cost->lv(robot, data, t, s, kkt_residual);
+  }
+}
+
+
+inline void ImpulseCostFunction::ldv(Robot& robot, CostFunctionData& data, 
+                                     const double t, 
+                                     const ImpulseSplitSolution& s, 
+                                     ImpulseKKTResidual& kkt_residual) const {
+  for (const auto cost : costs_) {
+    cost->ldv(robot, data, t, s, kkt_residual);
   }
 }
 
@@ -124,36 +132,22 @@ inline void ImpulseCostFunction::lvv(Robot& robot, CostFunctionData& data,
 }
 
 
+inline void ImpulseCostFunction::ldvdv(Robot& robot, CostFunctionData& data, 
+                                       const double t, 
+                                       const ImpulseSplitSolution& s, 
+                                       ImpulseKKTMatrix& kkt_matrix) const {
+  for (const auto cost : costs_) {
+    cost->ldvdv(robot, data, t, s, kkt_matrix);
+  }
+}
+
+
 inline void ImpulseCostFunction::lff(Robot& robot,  CostFunctionData& data, 
                                      const double t, 
                                      const ImpulseSplitSolution& s, 
                                      ImpulseKKTMatrix& kkt_matrix) const {
   for (const auto cost : costs_) {
     cost->lff(robot, data, t, s, kkt_matrix);
-  }
-}
-
-
-inline void ImpulseCostFunction::ldv(Robot& robot, CostFunctionData& data, 
-                                     const double t, const Eigen::VectorXd& dv, 
-                                     Eigen::VectorXd& ldv) const {
-  assert(dv.size() == robot.dimv());
-  assert(ldv.size() == robot.dimv());
-  for (const auto cost : costs_) {
-    cost->ldv(robot, data, t, dv, ldv);
-  }
-}
-
-
-inline void ImpulseCostFunction::ldvdv(Robot& robot, CostFunctionData& data, 
-                                       const double t, 
-                                       const Eigen::VectorXd& dv, 
-                                       Eigen::MatrixXd& Qdvdv) const {
-  assert(dv.size() == robot.dimv());
-  assert(Qdvdv.rows() == robot.dimv());
-  assert(Qdvdv.cols() == robot.dimv());
-  for (const auto cost : costs_) {
-    cost->ldvdv(robot, data, t, dv, Qdvdv);
   }
 }
 

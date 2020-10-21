@@ -48,6 +48,10 @@ public:
           const ImpulseSplitSolution& s, 
           ImpulseKKTResidual& kkt_residual) const override {}
 
+  void ldv(Robot& robot, CostFunctionData& data, const double t, 
+           const ImpulseSplitSolution& s, 
+           ImpulseKKTResidual& kkt_residual) const override {}
+
   void lf(Robot& robot, CostFunctionData& data, const double t, 
           const ImpulseSplitSolution& s, 
           ImpulseKKTResidual& kkt_residual) const override;
@@ -60,17 +64,13 @@ public:
            const ImpulseSplitSolution& s, 
            ImpulseKKTMatrix& kkt_matrix) const override {}
 
+  void ldvdv(Robot& robot, CostFunctionData& data, const double t, 
+             const ImpulseSplitSolution& s, 
+             ImpulseKKTMatrix& kkt_matrix) const override {}
+
   void lff(Robot& robot, CostFunctionData& data, const double t, 
            const ImpulseSplitSolution& s, 
            ImpulseKKTMatrix& kkt_matrix) const override;
-
-  void ldv(Robot& robot, CostFunctionData& data, const double t, 
-           const Eigen::VectorXd& dv, 
-           Eigen::VectorXd& ldv) const override {}
-
-  void ldvdv(Robot& robot, CostFunctionData& data, const double t, 
-             const Eigen::VectorXd& dv, 
-             Eigen::MatrixXd& Qdvdv) const override {}
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

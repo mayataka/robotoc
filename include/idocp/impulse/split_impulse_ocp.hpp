@@ -12,12 +12,13 @@
 #include "idocp/impulse/split_impulse_direction.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/cost/cost_function.hpp"
+#include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/impulse/state_equation.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/riccati_matrix_factorizer.hpp"
+#include "idocp/ocp/riccati_factorizer.hpp"
 
 
 namespace idocp {
@@ -34,7 +35,8 @@ public:
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   ///
-  SplitImpulseOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+  SplitImpulseOCP(const Robot& robot, 
+                  const std::shared_ptr<ImpulseCostFunction>& cost,
                   const std::shared_ptr<Constraints>& constraints);
 
   ///
@@ -77,11 +79,9 @@ public:
   ///
   /// @brief Initialize the constraints, i.e., set slack and dual variables. 
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] time_step Time step of this stage.
   /// @param[in] s Split solution of this stage.
   ///
-  void initConstraints(Robot& robot, const int time_step, 
-                       const ImpulseSplitSolution& s);
+  void initConstraints(Robot& robot, const ImpulseSplitSolution& s);
 
   ///
   /// @brief Linearize the OCP for Newton's method around the current solution, 
@@ -222,16 +222,16 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  std::shared_ptr<CostFunction> cost_;
+  std::shared_ptr<ImpulseCostFunction> cost_;
   CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   ImpulseKKTResidual kkt_residual_;
   ImpulseKKTMatrix kkt_matrix_;
   ImpulseDynamicsForwardEuler impulse_dynamics_;
+  RiccatiMatrixFactorizer riccati_factorizer_;
   SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
-  int dimv_, dim_passive_, dimf_, dimc_;
-  bool use_kinematics_;
+  int dimv_, dimf_, dimc_;
   double stage_cost_, constraint_violation_;
 
   ///
@@ -255,15 +255,6 @@ private:
     riccati_inverter_.setContactStatus(contact_status);
     dimf_ = contact_status.dimf();
     dimc_ = dim_passive_ + contact_status.dimf();
-  }
-
-  ///
-  /// @brief Gets the block matrix of Ginv wth appropriate size. Before calling 
-  /// this function, call setContactStatus() to update contact dimensions.
-  /// @return Block matrix of Ginv wth appropriate size.
-  ///
-  inline Eigen::Block<Eigen::MatrixXd> Ginv_() {
-    return Ginv_full_.topLeftCorner(dimv_+dimf_+dimc_, dimv_+dimf_+dimc_);
   }
 
   double cost(Robot& robot, const double t, const SplitSolution& s);

@@ -150,6 +150,20 @@ public:
 
   ///
   /// @brief Computes the partial derivatives of the stage cost with respect
+  /// to the impulse change in velocity. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Cost function data.
+  /// @param[in] t Time.
+  /// @param[in] s Split solution.
+  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
+  /// added to this data.
+  ///
+  void ldv(Robot& robot, CostFunctionData& data, const double t, 
+           const ImpulseSplitSolution& s, 
+           ImpulseKKTResidual& kkt_residual) const;
+
+  ///
+  /// @brief Computes the partial derivatives of the stage cost with respect
   /// to the contact forces. 
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.
@@ -189,6 +203,19 @@ public:
            const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix) const;
 
   ///
+  /// @brief Computes the Hessians of the stage cost with respect
+  /// to the impulse change in the velocity. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Cost function data.
+  /// @param[in] t Time.
+  /// @param[in] s Split solution.
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
+  /// data.
+  ///
+  void ldvdv(Robot& robot, CostFunctionData& data, const double t, 
+             const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix) const;
+
+  ///
   /// @brief Computes the Hessian of the stage cost with respect
   /// to the impulse velocity. 
   /// @param[in] robot Robot model.
@@ -200,32 +227,6 @@ public:
   ///
   void lff(Robot& robot, CostFunctionData& data, const double t, 
            const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix) const;
-
-  ///
-  /// @brief Computes the partial derivatives of the stage cost with respect
-  /// to the control input torques. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dv Impulse velocity. Size must be Robot::dimv().
-  /// @param[out] ldv The KKT residual with respect to dv. Size must be 
-  /// Robot::dimv().
-  ///
-  void ldv(Robot& robot, CostFunctionData& data, const double t, 
-           const Eigen::VectorXd& dv, Eigen::VectorXd& ldv) const;
-
-  ///
-  /// @brief Computes the Hessian of the stage cost with respect
-  /// to the control input torques. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dv Impulse velocity. Size must be Robot::dimv().
-  /// @param[out] Qdvdv The Hessian of the KKT residual with respect to dv.  
-  /// Size must be Robot::dimv() x Robot::dimv().
-  ///
-  void ldvdv(Robot& robot, CostFunctionData& data, const double t, 
-             const Eigen::VectorXd& dv, Eigen::MatrixXd& Qdvdv) const;
 
 private:
   std::vector<std::shared_ptr<ImpulseCostFunctionComponentBase>> costs_;

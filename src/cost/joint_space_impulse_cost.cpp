@@ -104,9 +104,8 @@ void JointSpaceImpulseCost::set_dv_weight(const Eigen::VectorXd& dv_weight) {
 }
 
 
-double JointSpaceImpulseCost::l(Robot& robot, 
-                                const ContactStatus& contact_status, 
-                                CostFunctionData& data, const double t, 
+double JointSpaceImpulseCost::l(Robot& robot, CostFunctionData& data, 
+                                const double t, 
                                 const ImpulseSplitSolution& s) const {
   double l = 0;
   if (robot.has_floating_base()) {
@@ -146,6 +145,16 @@ void JointSpaceImpulseCost::lv(Robot& robot, CostFunctionData& data,
 }
 
 
+
+void JointSpaceImpulseCost::ldv(Robot& robot, CostFunctionData& data, 
+                                const double t, const ImpulseSplitSolution& s, 
+                                ImpulseKKTResidual& kkt_residual) const {
+  kkt_residual.ldv.array() 
+      += dv_weight_.array() * (s.dv.array()-dv_ref_.array());
+}
+
+
+
 void JointSpaceImpulseCost::lqq(Robot& robot, CostFunctionData& data, 
                                 const double t, const ImpulseSplitSolution& s, 
                                 ImpulseKKTMatrix& kkt_matrix) const {
@@ -167,17 +176,10 @@ void JointSpaceImpulseCost::lvv(Robot& robot, CostFunctionData& data,
 }
 
 
-void JointSpaceImpulseCost::ldv(Robot& robot, CostFunctionData& data, 
-                                const double t, const Eigen::VectorXd& dv, 
-                                Eigen::VectorXd& ldv) const {
-  ldv.array() += dv_weight_.array() * (dv.array()-dv_ref_.array());
-}
-
-
 void JointSpaceImpulseCost::ldvdv(Robot& robot, CostFunctionData& data, 
-                                  const double t, const Eigen::VectorXd& dv, 
-                                  Eigen::MatrixXd& Qdvdv) const {
-  Qdvdv.diagonal().noalias() += dv_weight_;
+                                  const double t, const ImpulseSplitSolution& s, 
+                                  ImpulseKKTMatrix& kkt_matrix) const {
+  kkt_matrix.Qdvdv.diagonal().noalias() += dv_weight_;
 }
 
 } // namespace idocp
