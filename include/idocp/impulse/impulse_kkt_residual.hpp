@@ -74,11 +74,25 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> Fq();
 
   ///
+  /// @brief Residual with respect to q transition.
+  /// @return Const reference to the residual with respect to q transition.  
+  /// Size is Robot::dimv().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> Fq() const;
+
+  ///
   /// @brief Residual with respect to v transition.
   /// @return Reference to the residual with respect to v transition. Size is 
   /// Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> Fv();
+
+  ///
+  /// @brief Residual with respect to v transition.
+  /// @return Const reference to the residual with respect to v transition.  
+  /// Size is Robot::dimv().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> Fv() const;
 
   ///
   /// @brief Residual with respect to q and v transition.
@@ -116,11 +130,25 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> lf();
 
   ///
+  /// @brief Residual with respect to the stack of the contact forces f.
+  /// @return Const reference to the residual with respect to the stack of the  
+  /// contact forces f. Size is KKTResidual::dimf().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
+
+  ///
   /// @brief Residual with respect to configuration q.
   /// @return Reference to the residual with respect to configuration q. Size is 
   /// Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lq();
+
+  ///
+  /// @brief Residual with respect to configuration q.
+  /// @return Const reference to the residual with respect to configuration q.  
+  /// Size is Robot::dimv().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> lq() const;
 
   ///
   /// @brief Residual with respect to generalized velocity v.
@@ -130,11 +158,25 @@ public:
   Eigen::VectorBlock<Eigen::VectorXd> lv();
 
   ///
+  /// @brief Residual with respect to generalized velocity v.
+  /// @return Const reference to the residual with respect to generalized 
+  /// velocity v. Size is Robot::dimv().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> lv() const;
+
+  ///
   /// @brief Residual with respect to state x.
   /// @return Reference to the residual with respect to state x. Size is 
   /// 2 * Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lx();
+
+  ///
+  /// @brief Residual with respect to state x.
+  /// @return Const reference to the residual with respect to state x. Size is 
+  /// 2 * Robot::dimv().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> lx() const;
 
   ///
   /// @brief Set the KKT residual zero.

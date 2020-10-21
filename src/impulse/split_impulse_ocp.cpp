@@ -64,9 +64,8 @@ void ImpulseSplitOCP::linearizeOCP(Robot& robot,
                                    const ImpulseSplitSolution& s, 
                                    const SplitSolution& s_next) {
   setContactStatusForKKT(contact_status);
-  setContactStatusForRiccatiRecursion(contact_status);
   robot.updateKinematics(s.q, s.v);
-  // condensing the inverse dynamics
+  // condensing the impulse dynamics
   kkt_matrix.setZero();
   kkt_residual.setZero();
   cost_->computeStageCostHessian(robot, cost_data_, t, s, kkt_matrix_);
@@ -75,75 +74,22 @@ void ImpulseSplitOCP::linearizeOCP(Robot& robot,
                                               kkt_matrix_, kkt_residual_);
   impulse_dynamics_.condenseImpulseDynamics(robot, contact_status, s, 
                                             kkt_matrix_, kkt_residual_);
-  riccati_factorizer_.setStateEquationDerivative(kkt_matrix_.Fqq);
   kkt_matrix_.Qvq() = kkt_matrix_.Qqv().transpose();
 }
 
 
 void ImpulseSplitOCP::backwardRiccatiRecursion(
     const RiccatiFactorization& riccati_next, RiccatiFactorization& riccati) {
-  riccati.Pqq = kkt_matrix_.Qqq();
-  riccati.Pqq.noalias() = ;
-
-  riccati_factorizer_.factorize_F(dtau, riccati_next.Pqq, riccati_next.Pqv, 
-                                  riccati_next.Pvq, riccati_next.Pvv, 
-                                  kkt_matrix_.Qqq(), kkt_matrix_.Qqv(), 
-                                  kkt_matrix_.Qvq(), kkt_matrix_.Qvv());
-  riccati_factorizer_.factorize_H(dtau, riccati_next.Pqv, riccati_next.Pvv, 
-                                  kkt_matrix_.Qaq().transpose(), 
-                                  kkt_matrix_.Qav().transpose());
-  riccati_factorizer_.factorize_G(dtau, riccati_next.Pvv, kkt_matrix_.Qaa());
-  riccati_factorizer_.factorize_la(dtau, riccati_next.Pvq, riccati_next.Pvv, 
-                                   kkt_residual_.Fq(), kkt_residual_.Fv(), 
-                                   riccati_next.sv, kkt_residual_.la());
-  // Computes the matrix inversion
-  riccati_inverter_.invert(kkt_matrix_.Qafaf(), kkt_matrix_.Caf(), Ginv_());
-  // Computes the state feedback gain and feedforward terms
-  riccati_gain_.computeFeedbackGain(Ginv_(), kkt_matrix_.Qafqv(), 
-                                    kkt_matrix_.Cqv());
-  riccati_gain_.computeFeedforward(Ginv_(), kkt_residual_.laf(), 
-                                   kkt_residual_.C());
-  // Computes the Riccati factorization matrices
-  // Qaq() means Qqa().transpose(). This holds for Qav(), Qfq(), Qfv().
-  riccati.Pqq = kkt_matrix_.Qqq();
-  riccati.Pqq.noalias() += riccati_gain_.Kaq().transpose() * kkt_matrix_.Qaq();
-  riccati.Pqv = kkt_matrix_.Qqv();
-  riccati.Pqv.noalias() += riccati_gain_.Kaq().transpose() * kkt_matrix_.Qav();
-  riccati.Pvv = kkt_matrix_.Qvv();
-  riccati.Pvv.noalias() += riccati_gain_.Kav().transpose() * kkt_matrix_.Qav();
-  // Computes the Riccati factorization vectors
-  riccati.sq = riccati_next.sq - kkt_residual_.lq();
-  riccati.sq.noalias() -= riccati_next.Pqq * kkt_residual_.Fq();
-  riccati.sq.noalias() -= riccati_next.Pqv * kkt_residual_.Fv();
-  riccati.sq.noalias() -= kkt_matrix_.Qaq().transpose() * riccati_gain_.ka();
-  riccati.sv = dtau * riccati_next.sq + riccati_next.sv - kkt_residual_.lv();
-  riccati.sv.noalias() -= dtau * riccati_next.Pqq * kkt_residual_.Fq();
-  riccati.sv.noalias() -= riccati_next.Pvq * kkt_residual_.Fq();
-  riccati.sv.noalias() -= dtau * riccati_next.Pqv * kkt_residual_.Fv();
-  riccati.sv.noalias() -= riccati_next.Pvv * kkt_residual_.Fv();
-  riccati.sv.noalias() -= kkt_matrix_.Qav().transpose() * riccati_gain_.ka();
-  if (dimf_ > 0) {
-    riccati.Pqq.noalias() += riccati_gain_.Kfq().transpose() * kkt_matrix_.Qfq();
-    riccati.Pqv.noalias() += riccati_gain_.Kfq().transpose() * kkt_matrix_.Qfv();
-    riccati.Pvv.noalias() += riccati_gain_.Kfv().transpose() * kkt_matrix_.Qfv();
-    riccati.sq.noalias() -= kkt_matrix_.Qfq().transpose() * riccati_gain_.kf();
-    riccati.sv.noalias() -= kkt_matrix_.Qfv().transpose() * riccati_gain_.kf();
-  }
-  if (dimc_ > 0) {
-    riccati.Pqq.noalias() += riccati_gain_.Kmuq().transpose() * kkt_matrix_.Cq();
-    riccati.Pqv.noalias() += riccati_gain_.Kmuq().transpose() * kkt_matrix_.Cv();
-    riccati.Pvv.noalias() += riccati_gain_.Kmuv().transpose() * kkt_matrix_.Cv();
-    riccati.sq.noalias() -= kkt_matrix_.Cq().transpose() * riccati_gain_.kmu();
-    riccati.sv.noalias() -= kkt_matrix_.Cv().transpose() * riccati_gain_.kmu();
-  }
-  riccati.Pvq = riccati.Pqv.transpose();
+  riccati_factorizer_.factorize(kkt_matrix_, kkt_residual_, riccati_next, 
+                                riccati);
 }
 
 
 void ImpulseSplitOCP::forwardRiccatiRecursion(ImpulseSplitDirection& d,   
                                               SplitDirection& d_next) {
-  d_next.dq() = d.dq() + kkt_residual_.Fq();
-  d_next.dv() = d.dv() + kkt_residual_.Fv();
+  d_next.dq().noalias() = kkt_matrix.Fqq * d.dq() + kkt_residual_.Fq();
+  d_next.dv().noalias() = kkt_matrix.Fvq * d.dq() 
+                          + kkt_matrix.Fvv * d.dv() + kkt_residual_.Fv();
 }
 
 
@@ -278,7 +224,7 @@ double ImpulseSplitOCP::cost(Robot& robot, const double t,
 double ImpulseSplitOCP::constraintViolation() const {
   double violation = 0;
   violation += stateequation::L1NormStateEuqationResidual(kkt_residual_);
-  violation += robot_dynamics_.l1NormImpulseDynamicsResidual(kkt_residual_);
+  violation += impulse_dynamics_.l1NormImpulseDynamicsResidual(kkt_residual_);
   // violation += constraints_->l1NormPrimalResidual(constraints_data_);
   return violation;
 }

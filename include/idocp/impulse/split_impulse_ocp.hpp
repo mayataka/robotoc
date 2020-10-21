@@ -17,7 +17,7 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/impulse/state_equation.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
-#include "idocp/ocp/riccati_matrix_factorizer.hpp"
+#include "idocp/impulse/impulse_riccati_matrix_factorizer.hpp"
 #include "idocp/ocp/riccati_factorizer.hpp"
 
 
@@ -229,7 +229,7 @@ private:
   ImpulseKKTResidual kkt_residual_;
   ImpulseKKTMatrix kkt_matrix_;
   ImpulseDynamicsForwardEuler impulse_dynamics_;
-  RiccatiMatrixFactorizer riccati_factorizer_;
+  ImpulseRiccatiMatrixFactorizer riccati_factorizer_;
   SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
   int dimv_, dimf_, dimc_;
   double stage_cost_, constraint_violation_;
@@ -242,17 +242,6 @@ private:
   inline void setContactStatusForKKT(const ContactStatus& contact_status) {
     kkt_residual_.setContactStatus(contact_status);
     kkt_matrix_.setContactStatus(contact_status);
-  }
-
-  ///
-  /// @brief Set contact status from robot model, i.e., set dimension of the 
-  /// contacts and equality constraints.
-  /// @param[in] contact_status Contact status.
-  ///
-  inline void setContactStatusForRiccatiRecursion(
-      const ContactStatus& contact_status) {
-    riccati_gain_.setContactStatus(contact_status);
-    riccati_inverter_.setContactStatus(contact_status);
     dimf_ = contact_status.dimf();
     dimc_ = dim_passive_ + contact_status.dimf();
   }

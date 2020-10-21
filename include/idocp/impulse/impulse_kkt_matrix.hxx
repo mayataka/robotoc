@@ -124,7 +124,17 @@ inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qqq() {
 }
 
 
+inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qqq() const {
+  return Q_.block(q_begin_, q_begin_, dimv_, dimv_);
+}
+
+
 inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qqv() {
+  return Q_.block(q_begin_, v_begin_, dimv_, dimv_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qqv() const {
   return Q_.block(q_begin_, v_begin_, dimv_, dimv_);
 }
 
@@ -139,7 +149,17 @@ inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qvq() {
 }
 
 
+inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qvq() const {
+  return Q_.block(v_begin_, q_begin_, dimv_, dimv_);
+}
+
+
 inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qvv() {
+  return Q_.block(v_begin_, v_begin_, dimv_, dimv_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qvv() const {
   return Q_.block(v_begin_, v_begin_, dimv_, dimv_);
 }
 

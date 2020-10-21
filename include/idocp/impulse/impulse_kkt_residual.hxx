@@ -53,7 +53,19 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::Fq() {
 }
 
 
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseKKTResidual::Fq() const {
+  return kkt_residual_.head(dimv_);
+}
+
+
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::Fv() {
+  return kkt_residual_.segment(dimv_, dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseKKTResidual::Fv() const {
   return kkt_residual_.segment(dimv_, dimv_);
 }
 
@@ -85,7 +97,19 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lf() {
 }
 
 
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseKKTResidual::lf() const {
+  return kkt_residual_.segment(dimx_+dimc_, dimf_);
+}
+
+
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lq() {
+  return kkt_residual_.segment(dimx_+dimc_+dimf_, dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseKKTResidual::lq() const {
   return kkt_residual_.segment(dimx_+dimc_+dimf_, dimv_);
 }
 
@@ -95,7 +119,19 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lv() {
 }
 
 
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseKKTResidual::lv() const {
+  return kkt_residual_.segment(dimx_+dimc_+dimf_+dimv_, dimv_);
+}
+
+
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lx() {
+  return kkt_residual_.segment(dimx_+dimc_+dimf_, dimx_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseKKTResidual::lx() const {
   return kkt_residual_.segment(dimx_+dimc_+dimf_, dimx_);
 }
 
