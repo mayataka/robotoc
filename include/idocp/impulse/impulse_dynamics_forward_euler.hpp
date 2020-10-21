@@ -55,11 +55,11 @@ public:
                                       const ImpulseSplitSolution& s, 
                                       ImpulseKKTResidual& kkt_residual);
 
-  double l1NormImpulseDynamicsResidual(
-      const ImpulseKKTResidual& kkt_residual) const;
+  static double l1NormImpulseDynamicsResidual(
+      const ImpulseKKTResidual& kkt_residual);
 
-  double squaredNormImpulseDynamicsResidual(
-      const ImpulseKKTResidual& kkt_residual) const;
+  static double squaredNormImpulseDynamicsResidual(
+      const ImpulseKKTResidual& kkt_residual);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

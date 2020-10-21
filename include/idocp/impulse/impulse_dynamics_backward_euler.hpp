@@ -51,19 +51,19 @@ public:
                                       const ImpulseSplitSolution& s, 
                                       ImpulseKKTResidual& kkt_residual);
 
-  double l1NormImpulseDynamicsEulerResidual(
-      const ImpulseKKTResidual& kkt_residual) const;
+  static double l1NormImpulseDynamicsResidual(
+      const ImpulseKKTResidual& kkt_residual);
 
-  double squaredNormImpulseDynamicsResidual(
-      const ImpulseKKTResidual& kkt_residual) const;
+  static double squaredNormImpulseDynamicsResidual(
+      const ImpulseKKTResidual& kkt_residual);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  SchurComplement schur_complement_;
-  Eigen::MatrixXd Minv_, Qdvdv_, dImD_dq_, dImD_ddv_, dImD_df_full_, 
-                  MJTMinvCqv_full_, dC_ddv_;
-  int dimf_;
+  Eigen::MatrixXd dImD_dq_, dImD_ddv_, dImD_df_full_, Minv_, MinvImDq_, 
+                  MinvImDf_full_, Qdvq_condensed_, Qdvf_condensed_full_;
+  Eigen::VectorXd MinvImD_, ldv_condensed_;
+  int dimv_, dimf_;
 
   void linearizeInverseImpulseDynamics(Robot& robot, 
                                        const ContactStatus& contact_status,
@@ -90,17 +90,17 @@ private:
 
   void setContactStatus(const ContactStatus& contact_status);
 
-  Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
-  dImD_df_();
+  Eigen::Block<Eigen::MatrixXd> dImD_df_();
 
-  const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
-  dImD_df_() const;
+  const Eigen::Block<const Eigen::MatrixXd> dImD_df_() const;
 
-  Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
-  MJTMinv_();
+  Eigen::Block<Eigen::MatrixXd> MinvImDf_();
 
-  const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
-  MJTMinv_() const;
+  const Eigen::Block<const Eigen::MatrixXd> MinvImDf_() const;
+
+  Eigen::Block<Eigen::MatrixXd> Qdvf_condensed_();
+
+  const Eigen::Block<const Eigen::MatrixXd> Qdvf_condensed_() const;
 
 };
 

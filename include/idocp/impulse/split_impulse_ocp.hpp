@@ -72,7 +72,7 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] s Split solution of this stage.
   ///
-  bool isFeasible(Robot& robot, const SplitSolution& s);
+  bool isFeasible(Robot& robot, const ImpulseSplitSolution& s);
 
   ///
   /// @brief Initialize the constraints, i.e., set slack and dual variables. 
@@ -80,7 +80,8 @@ public:
   /// @param[in] time_step Time step of this stage.
   /// @param[in] s Split solution of this stage.
   ///
-  void initConstraints(Robot& robot, const int time_step, const SplitSolution& s);
+  void initConstraints(Robot& robot, const int time_step, 
+                       const ImpulseSplitSolution& s);
 
   ///
   /// @brief Linearize the OCP for Newton's method around the current solution, 
@@ -94,38 +95,36 @@ public:
   ///
   void linearizeOCP(Robot& robot, const ContactStatus& contact_status, 
                     const double t, const Eigen::VectorXd& q_prev, 
-                    const SplitSolution& s, const SplitSolution& s_next);
+                    const ImpulseSplitSolution& s, 
+                    const SplitSolution& s_next);
 
   ///
   /// @brief Computes the Riccati factorization of this stage from the 
   /// factorization of the previous stage.
-  /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] riccati_next Riccati factorization of the next stage.
   /// @param[out] riccati Riccati factorization of this stage.
   /// 
-  void backwardRiccatiRecursion(const double dtau, 
-                                const RiccatiFactorization& riccati_next,
+  void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next,
                                 RiccatiFactorization& riccati);
 
   ///
   /// @brief Computes the Newton direction of the state of this stage from the 
   /// one of the previous stage.
-  /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] d Split direction of this stage.
   /// @param[in] d_next Split direction of the next stage.
   /// 
-  void forwardRiccatiRecursion(const double dtau, SplitDirection& d,   
+  void forwardRiccatiRecursion(ImpulseSplitDirection& d,
                                SplitDirection& d_next);
 
   ///
   /// @brief Computes the Newton direction of the condensed variables of this 
   /// stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @param[in] d Split direction of this stage.
   /// 
-  void computeCondensedDirection(Robot& robot, const SplitSolution& s, SplitDirection& d);
+  void computeCondensedDirection(Robot& robot, const ImpulseSplitSolution& s, 
+                                 ImpulseSplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -151,14 +150,13 @@ public:
   /// SplitOCP::computeKKTResidual, is used.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @return The stage cost and L1-norm of the constraints violation.
   ///
   std::pair<double, double> costAndConstraintViolation(
-      Robot& robot, const double t, const SplitSolution& s);
+      Robot& robot, const double t, const ImpulseSplitSolution& s);
 
-  ///
+  ///Impulse
   /// @brief Returns the stage cost and L1-norm of the violation of constraints 
   /// of this stage under step_size. The split solution of this stage and the 
   /// state of the next stage are computed by step_size temporary. 
@@ -168,7 +166,6 @@ public:
   /// @param[in] contact_status Contact status of robot at this stage. 
   /// @param[in] step_size Step size for the primal variables. 
   /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @param[in] d Split direction of this stage.
   /// @param[in] s_next Split solution of the next stage.
@@ -177,7 +174,8 @@ public:
   ///
   std::pair<double, double> costAndConstraintViolation(
       Robot& robot, const ContactStatus& contact_status, const double step_size, 
-      const double t, const SplitSolution& s, const SplitDirection& d, 
+      const double t, const ImpulseSplitSolution& s, 
+      const ImpulseSplitDirection& d, 
       const SplitSolution& s_next, const SplitDirection& d_next);
 
   ///
@@ -190,21 +188,19 @@ public:
   /// @brief Updates primal variables of this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] step_size Primal step size of the OCP. 
-  /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] riccati Riccati factorization of this stage.
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
   ///
   void updatePrimal(Robot& robot, const double step_size, 
                     const RiccatiFactorization& riccati, 
-                    const SplitDirection& d, SplitSolution& s);
+                    const ImpulseSplitDirection& d, ImpulseSplitSolution& s);
 
   ///
   /// @brief Computes the KKT residual of the OCP at this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] contact_status Contact status of robot at this stage. 
   /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @param[in] q_prev Configuration of the previous stage.
   /// @param[in] s Split solution of this stage.
@@ -212,7 +208,8 @@ public:
   ///
   void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
                           const double t, const Eigen::VectorXd& q_prev, 
-                          const SplitSolution& s, const SplitSolution& s_next);
+                          const ImpulseSplitSolution& s, 
+                          const SplitSolution& s_next);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 

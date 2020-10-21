@@ -76,9 +76,7 @@ inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
     const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
     ImpulseKKTResidual& kkt_residual) {
   assert(contact_status.hasActiveContacts());
-  setContactStatus(contact_status);
-  linearizeInverseImpulseDynamics(robot, contact_status, s, kkt_residual);
-  linearizeContactConstraint(robot, contact_status, kkt_matrix, kkt_residual);
+  linearizeImpulseDynamics(robot, contact_status, s, kkt_matrix, kkt_residual);
   schur_complement_.invertWithZeroBottomRightCorner(dimv_, dimf_, dImD_ddv_, 
                                                     kkt_matrix.Cv(), MJTJinv_());
   MJTJinvImDCqv_().topLeftCorner(dimv_, dimv_).noalias() 
@@ -195,13 +193,13 @@ inline void ImpulseDynamicsForwardEuler::linearizeContactConstraint(
 
 
 inline double ImpulseDynamicsForwardEuler::l1NormImpulseDynamicsResidual(
-    const ImpulseKKTResidual& kkt_residual) const {
+    const ImpulseKKTResidual& kkt_residual) {
   return (kkt_residual.dv_res.lpNorm<1>() + kkt_residual.C().lpNorm<1>());
 }
 
 
 inline double ImpulseDynamicsForwardEuler::squaredNormImpulseDynamicsResidual(
-    const ImpulseKKTResidual& kkt_residual) const {
+    const ImpulseKKTResidual& kkt_residual) {
   return (kkt_residual.dv_res.squaredNorm() + kkt_residual.C().squaredNorm());
 }
 
