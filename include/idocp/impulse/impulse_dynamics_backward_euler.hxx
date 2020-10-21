@@ -3,7 +3,7 @@
 
 #include "idocp/impulse/impulse_dynamics_backward_euler.hpp"
 
-#include "Eigen/LU"
+#include "pinocchio/algorithm/cholesky.hpp"
 
 #include <assert.h>
 
@@ -71,7 +71,7 @@ inline void ImpulseDynamicsBackwardEuler::condenseImpulseDynamics(
     ImpulseKKTResidual& kkt_residual) {
   assert(contact_status.hasActiveContacts());
   linearizeImpulseDynamics(robot, contact_status, s, kkt_matrix, kkt_residual);
-  Minv_ = dImD_ddv_.llt().solve(Eigen::MatrixXd::Identity(dimv_, dimv_));
+  robot.computeMinv(dImD_ddv_, Minv_);
   MinvImDq_.noalias() = Minv_ * dImD_dq_;
   MinvImDf_().noalias() = Minv_ * dImD_df_();
   MinvImD_.noalias() = Minv_ * kkt_residual.dv_res;

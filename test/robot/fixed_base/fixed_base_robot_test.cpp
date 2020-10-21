@@ -610,6 +610,9 @@ TEST_F(FixedBaseRobotTest, RNEADerivativesWithContacts) {
   std::cout << dRNEA_dfext_ref << std::endl;
   std::cout << dRNEA_dfext << std::endl;
   EXPECT_TRUE(dRNEA_dfext.isApprox(dRNEA_dfext_ref));
+  Eigen::MatrixXd Minv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  robot.computeMinv(dRNEA_da, Minv);
+  EXPECT_TRUE((Minv*dRNEA_da).isIdentity());
 }
 
 
@@ -692,6 +695,9 @@ TEST_F(FixedBaseRobotTest, RNEAImpulseDerivatives) {
   EXPECT_TRUE(dRNEA_dq.isApprox(dRNEA_dq_ref));
   EXPECT_TRUE(dRNEA_dv.isApprox(dRNEA_dv_ref));
   EXPECT_TRUE(dRNEA_ddv.isApprox(dRNEA_ddv_ref));
+  Eigen::MatrixXd Minv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
+  robot.computeMinv(dRNEA_ddv, Minv);
+  EXPECT_TRUE((Minv*dRNEA_ddv).isIdentity());
 }
 
 

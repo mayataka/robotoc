@@ -557,6 +557,20 @@ inline void Robot::dRNEAPartialdFext(
 }
 
 
+template <typename MatrixType1, typename MatrixType2>
+inline void Robot::computeMinv(const Eigen::MatrixBase<MatrixType1>& M, 
+                               const Eigen::MatrixBase<MatrixType2>& Minv) {
+  assert(M.rows() == dimv_);
+  assert(M.cols() == dimv_);
+  assert(Minv.rows() == dimv_);
+  assert(Minv.cols() == dimv_);
+  data_.M = M;
+  pinocchio::cholesky::decompose(model_, data_);
+  pinocchio::cholesky::computeMinv(
+      model_, data_, const_cast<Eigen::MatrixBase<MatrixType2>&>(Minv));
+}
+
+
 template <typename ConfigVectorType, typename TangentVectorType1, 
           typename TangentVectorType2, typename TangentVectorType3,
           typename TangentVectorType4>

@@ -24,7 +24,7 @@ install:
 script:
   - mkdir -p build  && cd build
   - cmake .. -DCMAKE_BUILD_TYPE=Debug -DTESTING=True
-  - travis_wait 90 cmake --build . --config Debug
+  - travis_wait 120 cmake --build . --config Debug
   - ctest --output-on-failure
 
 after_success: 

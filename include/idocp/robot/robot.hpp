@@ -17,6 +17,7 @@
 #include "pinocchio/algorithm/rnea.hpp"
 #include "pinocchio/algorithm/rnea-derivatives.hpp"
 #include "pinocchio/algorithm/aba.hpp"
+#include "pinocchio/algorithm/cholesky.hpp"
 
 #include "idocp/robot/point_contact.hpp"
 #include "idocp/robot/floating_base.hpp"
@@ -519,6 +520,17 @@ public:
   void dRNEAPartialdFext(
       const ContactStatus& contact_status,
       const Eigen::MatrixBase<MatrixType>& dRNEA_partial_dfext);
+
+  ///
+  /// @brief Computes the inverse of the joint inertia matrix M.
+  /// @param[in] M Joint inertia matrix. Size must be 
+  /// Robot::dimv() x Robot::dimv().
+  /// @param[out] Minv Inverse of the joint inertia matrix M. Size must be 
+  /// Robot::dimv() x Robot::dimv().
+  ///   
+  template <typename MatrixType1, typename MatrixType2>
+  void computeMinv(const Eigen::MatrixBase<MatrixType1>& M, 
+                   const Eigen::MatrixBase<MatrixType2>& Minv);
 
   ///
   /// @brief Computes the state equation, i.e., the velocity and forward 

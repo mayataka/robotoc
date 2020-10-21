@@ -195,6 +195,8 @@ inline void ImpulseKKTMatrix::invert(
       += Fvq * kkt_matrix_inverse.block(dimx_+dimc_+dimf_, dimx_, dimv_, dimcQ);
   FMinv_.bottomLeftCorner(dimv_, dimcQ).noalias()
       -= kkt_matrix_inverse.block(dimx_+dimc_+dimf_+dimv_, dimx_, dimv_, dimcQ);
+  std::cout << "FMinv_" << std::endl;
+  std::cout << FMinv_ << std::endl;
   if (has_floating_base_) {
     Sx_.topLeftCorner(dimv_, dimv_).template leftCols<kDimFloatingBase>().noalias()
         += FMinv_.block(0, dimc_+dimf_, dimv_, dimv_).template leftCols<kDimFloatingBase>() 
@@ -213,6 +215,8 @@ inline void ImpulseKKTMatrix::invert(
   Sx_.rightCols(dimv_).noalias() = FMinv_.block(0, dimc_, dimx_, dimf_) * Fvf().transpose();
   Sx_.rightCols(dimv_).noalias() += FMinv_.block(0, dimc_+dimf_, dimx_, dimv_) * Fvq.transpose();
   Sx_.rightCols(dimv_).noalias() -= FMinv_.block(0, dimc_+dimf_+dimv_, dimx_, dimv_);
+  std::cout << "Sx_" << std::endl;
+  std::cout << Sx_ << std::endl;
   const_cast<Eigen::MatrixBase<MatrixType>&>(kkt_matrix_inverse)
       .topLeftCorner(dimx_, dimx_).noalias()
       = - Sx_.llt().solve(Eigen::MatrixXd::Identity(dimx_, dimx_));

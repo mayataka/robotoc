@@ -12,10 +12,10 @@
 #include "idocp/impulse/split_impulse_direction.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/cost/cost_function.hpp"
+#include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/impulse/state_equation.hpp"
+#include "idocp/impulse/impulse_state_equation.hpp"
 #include "idocp/impulse/impulse_dynamics_backward_euler.hpp"
 
 
@@ -34,7 +34,7 @@ public:
   /// @param[in] constraints Shared ptr to the constraints.
   ///
   SplitImpulseParNMPC(const Robot& robot, 
-                      const std::shared_ptr<CostFunction>& cost,
+                      const std::shared_ptr<ImpulseCostFunction>& cost,
                       const std::shared_ptr<Constraints>& constraints);
 
   ///
@@ -72,7 +72,7 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] s Split solution of this stage.
   ///
-  bool isFeasible(Robot& robot, const SplitSolution& s);
+  bool isFeasible(Robot& robot, const ImpulseSplitSolution& s);
 
   ///
   /// @brief Initialize the constraints, i.e., set slack and dual variables. 
@@ -80,7 +80,7 @@ public:
   /// @param[in] time_step Time step of this stage.
   /// @param[in] s Split solution of this stage.
   ///
-  void initConstraints(Robot& robot, const int time_step, const SplitSolution& s);
+  void initConstraints(Robot& robot, const ImpulseSplitSolution& s);
 
   ///
   /// @brief Updates the solution of the split OCP approximately. If this stage
@@ -102,10 +102,10 @@ public:
   ///
   void coarseUpdate(Robot& robot, const ContactStatus& contact_status,
                     const double t, const Eigen::VectorXd& q_prev, 
-                    const Eigen::VectorXd& v_prev, const SplitSolution& s, 
-                    const SplitSolution& s_next, 
-                    const Eigen::MatrixXd& aux_mat_next_old, SplitDirection& d, 
-                    SplitSolution& s_new_coarse);
+                    const Eigen::VectorXd& v_prev, 
+                    const ImpulseSplitSolution& s, const SplitSolution& s_next, 
+                    const Eigen::MatrixXd& aux_mat_next_old, 
+                    ImpulseSplitDirection& d, SplitSolution& s_new_coarse);
 
   ///
   /// @brief Updates the solution of the split OCP at the terminal 
@@ -125,7 +125,8 @@ public:
   void coarseUpdateTerminal(Robot& robot, const ContactStatus& contact_status,
                             const double t, const Eigen::VectorXd& q_prev, 
                             const Eigen::VectorXd& v_prev, 
-                            const SplitSolution& s, SplitDirection& d, 
+                            const ImpulseSplitSolution& s, 
+                            ImpulseSplitDirection& d, 
                             SplitSolution& s_new_coarse);
 
   ///
@@ -134,18 +135,6 @@ public:
   /// 2 * Robot::dimv() x 2 * Robot::dimv().
   ///
   void getAuxiliaryMatrix(Eigen::MatrixXd& aux_mat) const;
-
-  ///
-  /// @brief Gets the hessian of the terminal cost. Useful to initialize the 
-  /// auxiliary matrix.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] s Split solution of this stage.
-  /// @param[out] phixx The hessian of the terminal cost. The size must be 
-  /// 2 * Robot::dimv() x 2 * Robot::dimv().
-  ///
-  void getTerminalCostHessian(Robot& robot, const double t, 
-                              const SplitSolution& s, Eigen::MatrixXd& phixx);
 
   ///
   /// @brief Corrects the part of the solution updated coarsely. Call serially 
@@ -161,7 +150,7 @@ public:
   ///
   void backwardCorrectionSerial(const Robot& robot, const SplitSolution& s_next,
                                 const SplitSolution& s_new_next,
-                                SplitSolution& s_new);
+                                ImpulseSplitSolution& s_new);
 
   ///
   /// @brief Corrects the part of the solutio updated coarsely. Call parallel 
@@ -172,8 +161,8 @@ public:
   /// @param[out] s_new Split solution of the current stage at the current 
   /// iteration.
   ///
-  void backwardCorrectionParallel(const Robot& robot, SplitDirection& d,
-                                  SplitSolution& s_new) const;
+  void backwardCorrectionParallel(const Robot& robot, ImpulseSplitDirection& d,
+                                  ImpulseSplitSolution& s_new) const;
 
   ///
   /// @brief Corrects the part of the solutio updated coarsely. Call serially 
@@ -189,7 +178,7 @@ public:
   ///
   void forwardCorrectionSerial(const Robot& robot, const SplitSolution& s_prev,
                                const SplitSolution& s_new_prev, 
-                               SplitSolution& s_new);
+                               ImpulseSplitSolution& s_new);
 
   ///
   /// @brief Corrects the part of the solutio updated coarsely. Call parallel 
@@ -200,8 +189,8 @@ public:
   /// @param[out] s_new Split solution of the current stage at the current 
   /// iteration.
   ///
-  void forwardCorrectionParallel(const Robot& robot, SplitDirection& d, 
-                                 SplitSolution& s_new) const;
+  void forwardCorrectionParallel(const Robot& robot, ImpulseSplitDirection& d, 
+                                 ImpulseSplitSolution& s_new) const;
 
   ///
   /// @brief Computes the direction of the primal and dual solution. Call after 
@@ -213,9 +202,9 @@ public:
   /// @param[in] s_new Corrected split solution of the current stage.
   /// @param[out] d Split direction of this stage.
   /// 
-  void computePrimalAndDualDirection(Robot& robot, const SplitSolution& s,
+  void computePrimalAndDualDirection(Robot& robot, const ImpulseSplitSolution& s,
                                      const SplitSolution& s_new,
-                                     SplitDirection& d);
+                                     ImpulseSplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -244,9 +233,8 @@ public:
   /// @param[in] s Split solution of this stage.
   /// @return The stage cost and L1-norm of the constraints violation.
   ///
-  std::pair<double, double> costAndConstraintViolation(Robot& robot,  
-                                                       const double t, 
-                                                       const SplitSolution& s);
+  std::pair<double, double> costAndConstraintViolation(
+      Robot& robot,  const double t, const ImpulseSplitSolution& s);
 
   ///
   /// @brief Returns the stage cost and L1-norm of the violation of constraints 
@@ -269,8 +257,8 @@ public:
   std::pair<double, double> costAndConstraintViolation(
       Robot& robot, const ContactStatus& contact_status, const double step_size, 
       const double t, const Eigen::VectorXd& q_prev, 
-      const Eigen::VectorXd& v_prev, const SplitSolution& s, 
-      const SplitDirection& d, SplitSolution& s_tmp);
+      const Eigen::VectorXd& v_prev, const ImpulseSplitSolution& s, 
+      const ImpulseSplitDirection& d, ImpulseSplitSolution& s_tmp);
 
   ///
   /// @brief Returns the stage cost and L1-norm of the violation of constraints 
@@ -293,7 +281,8 @@ public:
   std::pair<double, double> costAndConstraintViolation(
     Robot& robot, const ContactStatus& contact_status, const double step_size, 
     const double t, const SplitSolution& s_prev, const SplitDirection& d_prev, 
-    const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp);
+    const ImpulseSplitSolution& s, const ImpulseSplitDirection& d, 
+    ImpulseSplitSolution& s_tmp);
 
   ///
   /// @brief Returns the sum of the stage cost and terminal cost, and 
@@ -308,7 +297,7 @@ public:
   /// @return The stage cost and L1-norm of the constraints violation.
   ///
   std::pair<double, double> costAndConstraintViolationTerminal(
-      Robot& robot, const double t, const SplitSolution& s);
+      Robot& robot, const double t, const ImpulseSplitSolution& s);
 
   ///
   /// @brief Returns the sum of the stage cost and terminal cost and L1-norm of 
@@ -331,7 +320,8 @@ public:
   std::pair<double, double> costAndConstraintViolationTerminal(
     Robot& robot, const ContactStatus& contact_status, const double step_size, 
     const double t, const SplitSolution& s_prev, const SplitDirection& d_prev, 
-    const SplitSolution& s, const SplitDirection& d, SplitSolution& s_tmp);
+    const ImpulseSplitSolution& s, const ImpulseSplitDirection& d, 
+    ImpulseSplitSolution& s_tmp);
 
   ///
   /// @brief Updates primal variables of this stage.
@@ -342,22 +332,13 @@ public:
   /// @param[in, out] s Split solution of this stage.
   ///
   void updatePrimal(Robot& robot, const double step_size, 
-                    const SplitDirection& d, SplitSolution& s);
+                    const ImpulseSplitDirection& d, ImpulseSplitSolution& s);
 
   ///
   /// @brief Updates dual variables of the inequality constraints.
   /// @param[in] step_size Dula step size of the OCP. 
   ///
   void updateDual(const double step_size);
-
-  ///
-  /// @brief Gets the state-feedback gain for the control input torques.
-  /// @param[out] Kq Gain with respec to the configuration. Size must be 
-  /// Robot::dimv() x Robot::dimv().
-  /// @param[out] Kv Gain with respec to the velocity. Size must be
-  /// Robot::dimv() x Robot::dimv().
-  ///
-  void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
   ///
   /// @brief Computes the KKT residual of the OCP at this stage.
@@ -374,7 +355,8 @@ public:
   void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
                           const double t, const Eigen::VectorXd& q_prev, 
                           const Eigen::VectorXd& v_prev, 
-                          const SplitSolution& s, const SplitSolution& s_next);
+                          const ImpulseSplitSolution& s, 
+                          const SplitSolution& s_next);
 
   ///
   /// @brief Computes the KKT residual of the OCP at this stage.
@@ -391,7 +373,7 @@ public:
                                   const ContactStatus& contact_status, 
                                   const double t, const Eigen::VectorXd& q_prev, 
                                   const Eigen::VectorXd& v_prev, 
-                                  const SplitSolution& s);
+                                  const ImpulseSplitSolution& s);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
@@ -415,7 +397,6 @@ private:
   Eigen::MatrixXd kkt_matrix_inverse_;
   Eigen::VectorXd x_res_; /// @brief Residual of state and costate used in the forward and backward correction.
   Eigen::VectorXd dx_; /// @brief Correction term of state and costate used in the forward and backward correction.
-  bool use_kinematics_;
 
   ///
   /// @brief Set contact status from robot model, i.e., set dimension of the 
@@ -427,9 +408,9 @@ private:
     kkt_matrix_.setContactStatus(contact_status);
   }
 
-  double cost(Robot& robot, const double t, const SplitSolution& s);
+  double cost(Robot& robot, const double t, const ImpulseSplitSolution& s);
 
-  double costTerminal(Robot& robot, const double t, const SplitSolution& s);
+  double costTerminal(Robot& robot, const double t, const ImpulseSplitSolution& s);
 
   double constraintViolation() const;
 

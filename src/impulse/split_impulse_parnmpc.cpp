@@ -6,12 +6,12 @@
 namespace idocp {
 
 SplitParNMPC::SplitParNMPC(const Robot& robot, 
-                           const std::shared_ptr<CostFunction>& cost, 
+                           const std::shared_ptr<ImpulseCostFunction>& cost, 
                            const std::shared_ptr<Constraints>& constraints) 
   : cost_(cost),
     cost_data_(robot),
     constraints_(constraints),
-    constraints_data_(constraints->createConstraintsData(robot)),
+    constraints_data_(),
     kkt_residual_(robot),
     kkt_matrix_(robot),
     robot_dynamics_(robot),
@@ -21,12 +21,7 @@ SplitParNMPC::SplitParNMPC(const Robot& robot,
     kkt_matrix_inverse_(Eigen::MatrixXd::Zero(kkt_residual_.max_dimKKT(), 
                                               kkt_residual_.max_dimKKT())),
     x_res_(Eigen::VectorXd::Zero(2*robot.dimv())),
-    dx_(Eigen::VectorXd::Zero(2*robot.dimv())),
-    use_kinematics_(false) {
-  if (cost_->useKinematics() || constraints_->useKinematics() 
-                             || robot.max_dimf() > 0) {
-    use_kinematics_ = true;
-  }
+    dx_(Eigen::VectorXd::Zero(2*robot.dimv())) {
 }
 
 
@@ -43,8 +38,7 @@ SplitParNMPC::SplitParNMPC()
     dimKKT_(0),
     kkt_matrix_inverse_(),
     x_res_(),
-    dx_(),
-    use_kinematics_(false) {
+    dx_() {
 }
 
 
