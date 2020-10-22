@@ -2,6 +2,12 @@
 #define IDOCP_POINT_CONTACT_HXX_
 
 #include "idocp/robot/point_contact.hpp"
+
+#include "pinocchio/algorithm/joint-configuration.hpp"
+#include "pinocchio/algorithm/frames.hpp"
+#include "pinocchio/algorithm/kinematics-derivatives.hpp"
+#include "pinocchio/algorithm/frames-derivatives.hpp"
+
 #include <assert.h>
 
 

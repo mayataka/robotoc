@@ -2,22 +2,13 @@
 #define IDOCP_ROBOT_HPP_
 
 #include <string>
-#include <map>
 #include <vector>
 
 #include "Eigen/Core"
 #include "pinocchio/multibody/model.hpp"
 #include "pinocchio/multibody/data.hpp"
-#include "pinocchio/parsers/urdf.hpp"
-#include "pinocchio/algorithm/joint-configuration.hpp"
-#include "pinocchio/algorithm/kinematics-derivatives.hpp"
-#include "pinocchio/algorithm/frames.hpp"
-#include "pinocchio/algorithm/frames-derivatives.hpp"
-#include "pinocchio/algorithm/crba.hpp"
-#include "pinocchio/algorithm/rnea.hpp"
-#include "pinocchio/algorithm/rnea-derivatives.hpp"
-#include "pinocchio/algorithm/aba.hpp"
-#include "pinocchio/algorithm/cholesky.hpp"
+#include "pinocchio/container/aligned-vector.hpp"
+#include "pinocchio/spatial/force.hpp"
 
 #include "idocp/robot/point_contact.hpp"
 #include "idocp/robot/floating_base.hpp"
@@ -531,6 +522,22 @@ public:
   template <typename MatrixType1, typename MatrixType2>
   void computeMinv(const Eigen::MatrixBase<MatrixType1>& M, 
                    const Eigen::MatrixBase<MatrixType2>& Minv);
+
+  ///
+  /// @brief Computes the inverse of the joint inertia matrix M.
+  /// @param[in] M Joint inertia matrix. Size must be 
+  /// Robot::dimv() x Robot::dimv().
+  /// @param[in] J Contact Jacobian. Size must be 
+  /// ContactStatus::dimf() x Robot::dimv().
+  /// @param[out] MJtJinv Inverse of the matrix [[M J^T], [J O]]. Size must be 
+  /// (Robot::dimv() + ContactStatus::dimf()) x 
+  /// (Robot::dimv() + ContactStatus::dimf()).
+  ///   
+  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
+  void computeMJtJinv(const ContactStatus& contact_status,
+                      const Eigen::MatrixBase<MatrixType1>& M, 
+                      const Eigen::MatrixBase<MatrixType2>& J,
+                      const Eigen::MatrixBase<MatrixType3>& MJtJinv);
 
   ///
   /// @brief Computes the state equation, i.e., the velocity and forward 

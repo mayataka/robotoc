@@ -1,0 +1,1 @@
+#include "idocp/constraints/impulse_constraints.hpp"

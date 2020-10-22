@@ -63,12 +63,9 @@ add_library(
   src/constraints/joint_acceleration_lower_limit.cpp
   src/constraints/joint_torques_upper_limit.cpp
   src/constraints/joint_torques_lower_limit.cpp
-  # src/contact_complementarity/contact_complementarity_component_base.cpp
-  # src/contact_complementarity/distance_to_contact_surface.cpp
-  # src/contact_complementarity/contact_normal_force.cpp
-  # src/contact_complementarity/friction_cone.cpp
-  # src/contact_complementarity/contact_complementarity.cpp
-  # src/impulse/impulse_kkt_residual.cpp
+  src/constraints/impulse_constraints.cpp
+  src/constraints/impulse_constraint_component_base.cpp
+  src/impulse/impulse_kkt_residual.cpp
   src/impulse/impulse_kkt_matrix.cpp
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp
@@ -76,7 +73,7 @@ add_library(
   src/impulse/impulse_dynamics_forward_euler.cpp
   src/impulse/impulse_dynamics_backward_euler.cpp
   src/impulse/impulse_riccati_matrix_factorizer.cpp
-  # src/impulse/split_impulse_ocp.cpp
+  src/impulse/split_impulse_ocp.cpp
   # src/impulse/split_impulse_parnmpc.cpp
   src/ocp/schur_complement.cpp
   src/ocp/kkt_residual.cpp

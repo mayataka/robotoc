@@ -9,7 +9,6 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/ocp/schur_complement.hpp"
 #include "idocp/ocp/split_direction.hpp"
 
 
@@ -64,12 +63,11 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  SchurComplement schur_complement_;
   Eigen::MatrixXd dImD_dq_, dImD_ddv_, dImD_df_full_, 
-                  MJTJinv_full_, MJTJinvImDCqv_full_, 
+                  MJtJinv_full_, MJtJinvImDCqv_full_, 
                   Qdvq_condensed_, Qdvv_condensed_, 
                   Qfq_condensed_full_, Qfv_condensed_full_;
-  Eigen::VectorXd MJTJinvImDC_full_, ldv_condensed_, lf_condensed_full_;
+  Eigen::VectorXd MJtJinvImDC_full_, ldv_condensed_, lf_condensed_full_;
   int dimv_, dimf_;
 
   void linearizeInverseImpulseDynamics(Robot& robot, 
@@ -99,29 +97,29 @@ private:
 
   Eigen::Block<Eigen::MatrixXd> dImD_df_();
 
-  Eigen::Block<Eigen::MatrixXd> MJTJinv_();
+  Eigen::Block<Eigen::MatrixXd> MJtJinv_();
 
-  Eigen::Block<Eigen::MatrixXd> MJTJinvImDCqv_();
+  Eigen::Block<Eigen::MatrixXd> MJtJinvImDCqv_();
 
   Eigen::Block<Eigen::MatrixXd> Qfq_condensed_();
 
   Eigen::Block<Eigen::MatrixXd> Qfv_condensed_();
 
-  Eigen::VectorBlock<Eigen::VectorXd> MJTJinvImDC_();
+  Eigen::VectorBlock<Eigen::VectorXd> MJtJinvImDC_();
 
   Eigen::VectorBlock<Eigen::VectorXd> lf_condensed_();
 
   const Eigen::Block<const Eigen::MatrixXd> dImD_df_() const;
 
-  const Eigen::Block<const Eigen::MatrixXd> MJTJinv_() const;
+  const Eigen::Block<const Eigen::MatrixXd> MJtJinv_() const;
 
-  const Eigen::Block<const Eigen::MatrixXd> MJTJinvImDCqv_() const;
+  const Eigen::Block<const Eigen::MatrixXd> MJtJinvImDCqv_() const;
 
   const Eigen::Block<const Eigen::MatrixXd> Qfq_condensed_() const;
 
   const Eigen::Block<const Eigen::MatrixXd> Qfv_condensed_() const;
 
-  const Eigen::VectorBlock<const Eigen::VectorXd> MJTJinvImDC_() const;
+  const Eigen::VectorBlock<const Eigen::VectorXd> MJtJinvImDC_() const;
 
   const Eigen::VectorBlock<const Eigen::VectorXd> lf_condensed_() const;
 

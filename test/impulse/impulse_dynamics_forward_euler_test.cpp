@@ -13,7 +13,6 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/schur_complement.hpp"
 
 
 namespace idocp {
@@ -148,12 +147,9 @@ TEST_F(ImpulseDynamicsForwardEulerTest, condenseImpulseDynamicsForwardEulerFixed
   kkt_residual_ref.ldv += dimd_ddv.transpose() * s.beta 
                             + kkt_matrix_ref.Cv().transpose() * s.mu_stack();
   kkt_residual_ref.lf() += dimd_df.transpose() * s.beta;
-  SchurComplement schur_complement(robot.dimv(), contact_status.dimf());
   Eigen::MatrixXd MJTJinv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                   robot.dimv()+contact_status.dimf());
-  schur_complement.invertWithZeroBottomRightCorner(robot.dimv(), contact_status.dimf(),
-                                                   dimd_ddv, kkt_matrix_ref.Cv(),
-                                                   MJTJinv);
+  robot.computeMJtJinv(contact_status, dimd_ddv, kkt_matrix_ref.Cv(), MJTJinv);
   Eigen::MatrixXd dimdc_dqv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                     2*robot.dimv());
   dimdc_dqv.topLeftCorner(robot.dimv(), robot.dimv()) = dimd_dq;
@@ -368,9 +364,9 @@ TEST_F(ImpulseDynamicsForwardEulerTest, condenseImpulseDynamicsForwardEulerFloat
   kkt_residual_ref.ldv += dimd_ddv.transpose() * s.beta 
                             + kkt_matrix_ref.Cv().transpose() * s.mu_stack();
   kkt_residual_ref.lf() += dimd_df.transpose() * s.beta;
-  SchurComplement schur_complement(robot.dimv(), robot.max_dimf());
   Eigen::MatrixXd MJTJinv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                   robot.dimv()+contact_status.dimf());
+  robot.computeMJtJinv(contact_status, dimd_ddv, kkt_matrix_ref.Cv(), MJTJinv);
   schur_complement.invertWithZeroBottomRightCorner(robot.dimv(), contact_status.dimf(),
                                                    dimd_ddv, kkt_matrix_ref.Cv(),
                                                    MJTJinv);

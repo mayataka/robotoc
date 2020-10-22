@@ -5,9 +5,9 @@
 
 namespace idocp {
 
-SplitParNMPC::SplitParNMPC(const Robot& robot, 
-                           const std::shared_ptr<ImpulseCostFunction>& cost, 
-                           const std::shared_ptr<Constraints>& constraints) 
+SplitImpulseParNMPC::SplitImpulseParNMPC(
+    const Robot& robot, const std::shared_ptr<ImpulseCostFunction>& cost, 
+    const std::shared_ptr<ImpulseConstraints>& constraints) 
   : cost_(cost),
     cost_data_(robot),
     constraints_(constraints),
@@ -25,7 +25,7 @@ SplitParNMPC::SplitParNMPC(const Robot& robot,
 }
 
 
-SplitParNMPC::SplitParNMPC() 
+SplitImpulseParNMPC::SplitImpulseParNMPC() 
   : cost_(),
     cost_data_(),
     constraints_(),
@@ -42,34 +42,32 @@ SplitParNMPC::SplitParNMPC()
 }
 
 
-SplitParNMPC::~SplitParNMPC() {
+SplitImpulseParNMPC::~SplitImpulseParNMPC() {
 }
 
 
-bool SplitParNMPC::isFeasible(Robot& robot, const SplitSolution& s) {
+bool SplitImpulseParNMPC::isFeasible(Robot& robot, 
+                                     const ImpulseSplitSolution& s) {
   return constraints_->isFeasible(robot, constraints_data_, s);
 }
 
 
-void SplitParNMPC::initConstraints(Robot& robot, const int time_step, 
-                                   const double dtau, const SplitSolution& s) {
-  assert(time_step >= 0);
-  assert(dtau > 0);
-  constraints_->setSlackAndDual(robot, constraints_data_, dtau, s);
+void SplitImpulseParNMPC::initConstraints(Robot& robot, 
+                                          const ImpulseSplitSolution& s) {
+  constraints_->setSlackAndDual(robot, constraints_data_, s);
 }
 
 
-void SplitParNMPC::coarseUpdate(Robot& robot, 
-                                const ContactStatus& contact_status,
-                                const double t, const double dtau, 
-                                const Eigen::VectorXd& q_prev, 
-                                const Eigen::VectorXd& v_prev,
-                                const SplitSolution& s,
-                                const SplitSolution& s_next,
-                                const Eigen::MatrixXd& aux_mat_next_old,
-                                SplitDirection& d, 
-                                SplitSolution& s_new_coarse) {
-  assert(dtau > 0);
+void SplitImpulseParNMPC::coarseUpdate(Robot& robot, 
+                                       const ContactStatus& contact_status,
+                                       const double t, 
+                                       const Eigen::VectorXd& q_prev, 
+                                       const Eigen::VectorXd& v_prev,
+                                       const ImpulseSplitSolution& s,
+                                       const SplitSolution& s_next,
+                                       const Eigen::MatrixXd& aux_mat_next_old,
+                                       ImpulseSplitDirection& d, 
+                                       ImpulseSplitSolution& s_new_coarse) {
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   assert(aux_mat_next_old.rows() == 2*robot.dimv());
@@ -116,83 +114,17 @@ void SplitParNMPC::coarseUpdate(Robot& robot,
 }
 
 
-void SplitParNMPC::coarseUpdateTerminal(Robot& robot,  
-                                        const ContactStatus& contact_status,
-                                        const double t, const double dtau, 
-                                        const Eigen::VectorXd& q_prev, 
-                                        const Eigen::VectorXd& v_prev, 
-                                        const SplitSolution& s, 
-                                        SplitDirection& d, 
-                                        SplitSolution& s_new_coarse) {
-  assert(dtau > 0);
-  assert(q_prev.size() == robot.dimq());
-  assert(v_prev.size() == robot.dimv());
-  setContactStatusForKKT(contact_status);
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
-  }
-  // condensing the inverse dynamics
-  kkt_residual_.lu.setZero();
-  kkt_matrix_.Quu.setZero();
-  cost_->lu(robot, cost_data_, t, dtau, s.u, kkt_residual_.lu);
-  constraints_->augmentDualResidual(robot, constraints_data_, dtau, s.u,
-                                    kkt_residual_.lu);
-  cost_->luu(robot, cost_data_, t, dtau, s.u, kkt_matrix_.Quu);
-  constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s.u, 
-                                     kkt_matrix_.Quu, kkt_residual_.lu);
-  robot_dynamics_.condenseRobotDynamics(robot, contact_status, dtau, s, 
-                                        kkt_matrix_, kkt_residual_);
-  // constructs the KKT matrix and KKT residual
-  cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
-                                     kkt_residual_);
-  cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
-  constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
-                                    kkt_residual_);
-  stateequation::LinearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
-                                                kkt_matrix_, kkt_residual_);
-  cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix_);
-  cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
-  constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
-                                     kkt_matrix_, kkt_residual_);
-  // coarse update of the solution
-  kkt_matrix_.symmetrize(); 
-  dimKKT_ = kkt_residual_.dimKKT();
-  kkt_matrix_.invert(dtau, kkt_matrix_inverse_.topLeftCorner(dimKKT_, dimKKT_));
-  d.split_direction() = kkt_matrix_inverse_.topLeftCorner(dimKKT_, dimKKT_)
-                          * kkt_residual_.KKT_residual();
-  s_new_coarse.lmd = s.lmd - d.dlmd();
-  s_new_coarse.gmm = s.gmm - d.dgmm();
-  s_new_coarse.mu_stack() = s.mu_stack() - d.dmu();
-  s_new_coarse.a = s.a - d.da();
-  s_new_coarse.f_stack() = s.f_stack() - d.df();
-  robot.integrateConfiguration(s.q, d.dq(), -1, s_new_coarse.q);
-  s_new_coarse.v = s.v - d.dv();
-}
 
-
-void SplitParNMPC::getAuxiliaryMatrix(Eigen::MatrixXd& aux_mat) const {
+void SplitImpulseParNMPC::getAuxiliaryMatrix(Eigen::MatrixXd& aux_mat) const {
   assert(aux_mat.rows() == dimx_);
   assert(aux_mat.cols() == dimx_);
   aux_mat = - kkt_matrix_inverse_.topLeftCorner(dimx_, dimx_);
 }
 
 
-void SplitParNMPC::getTerminalCostHessian(Robot& robot, const double t, 
-                                          const SplitSolution& s, 
-                                          Eigen::MatrixXd& phixx) {
-  assert(phixx.rows() == dimx_);
-  assert(phixx.cols() == dimx_);
-  kkt_matrix_.Qxx().setZero();
-  cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
-  phixx = kkt_matrix_.Qxx();
-  kkt_matrix_.Qxx().setZero();
-}
-
-
-void SplitParNMPC::backwardCorrectionSerial(const Robot& robot,
-                                            const SplitSolution& s_next, 
-                                            const SplitSolution& s_new_next,
-                                            SplitSolution& s_new) {
+void SplitImpulseParNMPC::backwardCorrectionSerial(
+    const Robot& robot, const SplitSolution& s_next, 
+    const SplitSolution& s_new_next, ImpulseSplitSolution& s_new) {
   x_res_.head(robot.dimv()) = s_new_next.lmd - s_next.lmd;
   x_res_.tail(robot.dimv()) = s_new_next.gmm - s_next.gmm;
   dx_.noalias() 
@@ -202,9 +134,9 @@ void SplitParNMPC::backwardCorrectionSerial(const Robot& robot,
 }
 
 
-void SplitParNMPC::backwardCorrectionParallel(const Robot& robot, 
-                                              SplitDirection& d,
-                                              SplitSolution& s_new) const {
+void SplitImpulseParNMPC::backwardCorrectionParallel(
+    const Robot& robot, ImpulseSplitDirection& d, 
+    ImpulseSplitSolution& s_new) const {
   d.split_direction().tail(dimKKT_-dimx_).noalias()
       = kkt_matrix_inverse_.block(dimx_, dimKKT_-dimx_, dimKKT_-dimx_, dimx_) 
           * x_res_;
@@ -216,10 +148,9 @@ void SplitParNMPC::backwardCorrectionParallel(const Robot& robot,
 }
 
 
-void SplitParNMPC::forwardCorrectionSerial(const Robot& robot,
-                                           const SplitSolution& s_prev,
-                                           const SplitSolution& s_new_prev, 
-                                           SplitSolution& s_new) {
+void SplitImpulseParNMPC::forwardCorrectionSerial(
+    const Robot& robot, const SplitSolution& s_prev, 
+    const SplitSolution& s_new_prev, ImpulseSplitSolution& s_new) {
   robot.subtractConfiguration(s_new_prev.q, s_prev.q, 
                               x_res_.head(robot.dimv()));
   x_res_.tail(robot.dimv()) = s_new_prev.v - s_prev.v;
@@ -230,9 +161,9 @@ void SplitParNMPC::forwardCorrectionSerial(const Robot& robot,
 }
 
 
-void SplitParNMPC::forwardCorrectionParallel(const Robot& robot,
-                                             SplitDirection& d,
-                                             SplitSolution& s_new) const {
+void SplitImpulseParNMPC::forwardCorrectionParallel(
+    const Robot& robot, ImpulseSplitDirection& d, 
+    ImpulseSplitSolution& s_new) const {
   d.split_direction().head(dimKKT_-dimx_).noalias()
       = kkt_matrix_inverse_.topLeftCorner(dimKKT_-dimx_, dimx_) * x_res_;
   s_new.lmd.noalias() -= d.dlmd();
@@ -243,11 +174,9 @@ void SplitParNMPC::forwardCorrectionParallel(const Robot& robot,
 }
 
 
-void SplitParNMPC::computePrimalAndDualDirection(Robot& robot, 
-                                                 const double dtau, 
-                                                 const SplitSolution& s, 
-                                                 const SplitSolution& s_new,
-                                                 SplitDirection& d) {
+void SplitImpulseParNMPC::computePrimalAndDualDirection(
+    Robot& robot, const ImpulseSplitSolution& s, 
+    const ImpulseSplitSolution& s_new, ImpulseSplitDirection& d) {
   d.dlmd() = s_new.lmd - s.lmd;
   d.dgmm() = s_new.gmm - s.gmm;
   d.dmu() = s_new.mu_stack() - s.mu_stack();
@@ -260,31 +189,30 @@ void SplitParNMPC::computePrimalAndDualDirection(Robot& robot,
 }
 
  
-double SplitParNMPC::maxPrimalStepSize() {
+double SplitImpulseParNMPC::maxPrimalStepSize() {
   return constraints_->maxSlackStepSize(constraints_data_);
 }
 
 
-double SplitParNMPC::maxDualStepSize() {
+double SplitImpulseParNMPC::maxDualStepSize() {
   return constraints_->maxDualStepSize(constraints_data_);
 }
 
 
-std::pair<double, double> SplitParNMPC::costAndConstraintViolation(
-    Robot& robot, const double t, const double dtau, const SplitSolution& s) {
+std::pair<double, double> SplitImpulseParNMPC::costAndConstraintViolation(
+    Robot& robot, const double t, const ImpulseSplitSolution& s) {
   assert(dtau > 0);
-  return std::make_pair(cost(robot, t, dtau, s), constraintViolation(dtau));
+  return std::make_pair(cost(robot, t, s), constraintViolation());
 }
 
 
-std::pair<double, double> SplitParNMPC::costAndConstraintViolation(
+std::pair<double, double> SplitImpulseParNMPC::costAndConstraintViolation(
     Robot& robot, const ContactStatus& contact_status, const double step_size, 
-    const double t, const double dtau, const Eigen::VectorXd& q_prev, 
-    const Eigen::VectorXd& v_prev, const SplitSolution& s, 
-    const SplitDirection& d, SplitSolution& s_tmp) {
+    const double t, const Eigen::VectorXd& q_prev, 
+    const Eigen::VectorXd& v_prev, const ImpulseSplitSolution& s, 
+    const ImpulseSplitDirection& d, ImpulseSplitSolution& s_tmp) {
   assert(step_size > 0);
   assert(step_size <= 1);
-  assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   setContactStatusForKKT(contact_status);
@@ -302,24 +230,20 @@ std::pair<double, double> SplitParNMPC::costAndConstraintViolation(
   if (use_kinematics_) {
     robot.updateKinematics(s_tmp.q, s_tmp.v, s_tmp.a);
   }
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, dtau, 
-                                             s_tmp);
-  stateequation::ComputeBackwardEulerResidual(robot, dtau, q_prev, v_prev, 
-                                              s_tmp, kkt_residual_);
-  robot_dynamics_.computeRobotDynamicsResidual(robot, contact_status, dtau, 
-                                               s_tmp, kkt_residual_);
-  return std::make_pair(cost(robot, t, dtau, s_tmp), constraintViolation(dtau));
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s_tmp);
+  stateequation::ComputeBackwardEulerResidual(robot, q_prev, v_prev, s_tmp, kkt_residual_);
+  robot_dynamics_.computeRobotDynamicsResidual(robot, contact_status, s_tmp, kkt_residual_);
+  return std::make_pair(cost(robot, t, s_tmp), constraintViolation());
 }
 
 
-std::pair<double, double> SplitParNMPC::costAndConstraintViolation(
+std::pair<double, double> SplitImpulseParNMPC::costAndConstraintViolation(
     Robot& robot, const ContactStatus& contact_status, const double step_size, 
-    const double t, const double dtau, const SplitSolution& s_prev, 
-    const SplitDirection& d_prev, const SplitSolution& s, 
-    const SplitDirection& d, SplitSolution& s_tmp) {
+    const double t, const SplitSolution& s_prev, const SplitDirection& d_prev, 
+    const ImpulseSplitSolution& s, const ImpulseSplitDirection& d, 
+    ImpulseSplitSolution& s_tmp) {
   assert(step_size > 0);
   assert(step_size <= 1);
-  assert(dtau > 0);
   setContactStatusForKKT(contact_status);
   s_tmp.setContactStatus(contact_status);
   s_tmp.a = s.a + step_size * d.da();
@@ -335,69 +259,25 @@ std::pair<double, double> SplitParNMPC::costAndConstraintViolation(
   if (use_kinematics_) {
     robot.updateKinematics(s_tmp.q, s_tmp.v, s_tmp.a);
   }
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, dtau, 
-                                             s_tmp);
-  stateequation::ComputeBackwardEulerResidual(robot, step_size, dtau, s_prev.q, 
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s_tmp);
+  stateequation::ComputeBackwardEulerResidual(robot, step_size, s_prev.q, 
                                               s_prev.v, d_prev.dq(), d_prev.dv(), 
                                               s_tmp, kkt_residual_);
-  robot_dynamics_.computeRobotDynamicsResidual(robot, contact_status, dtau, 
-                                               s_tmp, kkt_residual_);
-  return std::make_pair(cost(robot, t, dtau, s_tmp), constraintViolation(dtau));
+  robot_dynamics_.computeRobotDynamicsResidual(robot, contact_status, s_tmp, kkt_residual_);
+  return std::make_pair(cost(robot, t, s_tmp), constraintViolation());
 }
 
 
-std::pair<double, double> SplitParNMPC::costAndConstraintViolationTerminal(
-    Robot& robot, const double t, const double dtau, const SplitSolution& s) {
-  assert(dtau > 0);
-  return std::make_pair(costTerminal(robot, t, dtau, s), 
-                        constraintViolation(dtau));
-}
-
-
-std::pair<double, double> SplitParNMPC::costAndConstraintViolationTerminal(
-    Robot& robot, const ContactStatus& contact_status, const double step_size, 
-    const double t, const double dtau, const SplitSolution& s_prev, 
-    const SplitDirection& d_prev, const SplitSolution& s, 
-    const SplitDirection& d, SplitSolution& s_tmp) {
-  assert(step_size > 0);
-  assert(step_size <= 1);
-  assert(dtau > 0);
-  setContactStatusForKKT(contact_status);
-  s_tmp.setContactStatus(contact_status);
-  s_tmp.a = s.a + step_size * d.da();
-  if (contact_status.hasActiveContacts()) {
-    s_tmp.f_stack() = s.f_stack() + step_size * d.df();
-    s_tmp.set_f();
-    robot.setContactForces(contact_status, s_tmp.f);
-  }
-  robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
-  s_tmp.v = s.v + step_size * d.dv();
-  s_tmp.u = s.u + step_size * d.du;
-  if (use_kinematics_) {
-    robot.updateKinematics(s_tmp.q, s_tmp.v, s_tmp.a);
-  }
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, dtau, 
-                                             s_tmp);
-  stateequation::ComputeBackwardEulerResidual(robot, step_size, dtau, s_prev.q, 
-                                              s_prev.v, d_prev.dq(), d_prev.dv(), 
-                                              s_tmp, kkt_residual_);
-  robot_dynamics_.computeRobotDynamicsResidual(robot, contact_status, dtau, 
-                                               s_tmp, kkt_residual_);
-  return std::make_pair(costTerminal(robot, t, dtau, s_tmp), 
-                        constraintViolation(dtau));
-}
-
-
-void SplitParNMPC::updateDual(const double step_size) {
+void SplitImpulseParNMPC::updateDual(const double step_size) {
   assert(step_size > 0);
   assert(step_size <= 1);
   constraints_->updateDual(constraints_data_, step_size);
 }
 
 
-void SplitParNMPC::updatePrimal(Robot& robot, const double step_size, 
-                                const double dtau, const SplitDirection& d, 
-                                SplitSolution& s) {
+void SplitImpulseParNMPC::updatePrimal(Robot& robot, const double step_size, 
+                                       const ImpulseSplitDirection& d, 
+                                       ImpulseSplitSolution& s) {
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dtau > 0);
@@ -416,7 +296,7 @@ void SplitParNMPC::updatePrimal(Robot& robot, const double step_size,
 }
 
 
-void SplitParNMPC::getStateFeedbackGain(Eigen::MatrixXd& Kq, 
+void SplitImpulseParNMPC::getStateFeedbackGain(Eigen::MatrixXd& Kq, 
                                         Eigen::MatrixXd& Kv) const {
   assert(Kq.rows() == dimv_);
   assert(Kq.cols() == dimv_);
@@ -436,7 +316,7 @@ void SplitParNMPC::getStateFeedbackGain(Eigen::MatrixXd& Kq,
 }
 
 
-void SplitParNMPC::computeKKTResidual(Robot& robot, 
+void SplitImpulseParNMPC::computeKKTResidual(Robot& robot, 
                                       const ContactStatus& contact_status, 
                                       const double t, const double dtau, 
                                       const Eigen::VectorXd& q_prev, 
@@ -465,34 +345,7 @@ void SplitParNMPC::computeKKTResidual(Robot& robot,
 }
 
 
-void SplitParNMPC::computeKKTResidualTerminal(
-    Robot& robot, const ContactStatus& contact_status, const double t, 
-    const double dtau, const Eigen::VectorXd& q_prev, 
-    const Eigen::VectorXd& v_prev, const SplitSolution& s) {
-  assert(dtau > 0);
-  assert(q_prev.size() == robot.dimq());
-  assert(v_prev.size() == robot.dimv());
-  setContactStatusForKKT(contact_status);
-  kkt_residual_.setZeroMinimum();
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
-  }
-  cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
-                                     kkt_residual_);
-  cost_->lu(robot, cost_data_, t, dtau, s.u, kkt_residual_.lu);
-  cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
-  constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
-                                    kkt_residual_);
-  constraints_->augmentDualResidual(robot, constraints_data_, dtau, s.u,
-                                    kkt_residual_.lu);
-  stateequation::LinearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
-                                                kkt_matrix_, kkt_residual_);
-  robot_dynamics_.linearizeRobotDynamics(robot, contact_status, dtau, s, 
-                                         kkt_matrix_, kkt_residual_);
-}
-
-
-double SplitParNMPC::squaredNormKKTResidual(const double dtau) const {
+double SplitImpulseParNMPC::squaredNormKKTResidual(const double dtau) const {
   double error = 0;
   error += kkt_residual_.lq().squaredNorm();
   error += kkt_residual_.lv().squaredNorm();
@@ -506,7 +359,7 @@ double SplitParNMPC::squaredNormKKTResidual(const double dtau) const {
 }
 
 
-double SplitParNMPC::cost(Robot& robot, const double t, const double dtau, 
+double SplitImpulseParNMPC::cost(Robot& robot, const double t, const double dtau, 
                           const SplitSolution& s) {
   double cost = 0;
   cost += cost_->l(robot, cost_data_, t, dtau, s);
@@ -515,17 +368,7 @@ double SplitParNMPC::cost(Robot& robot, const double t, const double dtau,
 }
 
 
-double SplitParNMPC::costTerminal(Robot& robot, const double t, 
-                                  const double dtau, const SplitSolution& s) {
-  double cost = 0;
-  cost += cost_->l(robot, cost_data_, t, dtau, s);
-  cost += cost_->phi(robot, cost_data_, t, s);
-  cost += constraints_->costSlackBarrier(constraints_data_);
-  return cost;
-}
-
-
-double SplitParNMPC::constraintViolation(const double dtau) const {
+double SplitImpulseParNMPC::constraintViolation() const {
   double violation = 0;
   violation += stateequation::L1NormStateEuqationResidual(kkt_residual_);
   violation += robot_dynamics_.l1NormRobotDynamicsResidual(dtau, kkt_residual_);

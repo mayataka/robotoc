@@ -7,7 +7,7 @@ namespace idocp {
 
 SplitImpulseOCP::SplitImpulseOCP(
     const Robot& robot, const std::shared_ptr<ImpulseCostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints) 
+    const std::shared_ptr<ImpulseConstraints>& constraints) 
   : cost_(cost),
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
@@ -16,10 +16,7 @@ SplitImpulseOCP::SplitImpulseOCP(
     kkt_matrix_(robot),
     impulse_dynamics_(robot),
     riccati_factorizer_(robot),
-    s_tmp_(robot),
-    dimv_(robot.dimv()),
-    dimf_(0),
-    dimc_(0) {
+    s_tmp_(robot) {
 }
 
 
@@ -32,10 +29,7 @@ SplitImpulseOCP::SplitImpulseOCP()
     kkt_matrix_(),
     impulse_dynamics_(),
     riccati_factorizer_(),
-    s_tmp_(),
-    dimv_(0),
-    dimf_(0),
-    dimc_(0) {
+    s_tmp_() {
 }
 
 
@@ -51,7 +45,7 @@ bool SplitImpulseOCP::isFeasible(Robot& robot, const ImpulseSplitSolution& s) {
 
 void SplitImpulseOCP::initConstraints(Robot& robot,
                                       const ImpulseSplitSolution& s) { 
-  // constraints_->setSlackAndDual(robot, constraints_data_, dtau, s);
+  // constraints_->setSlackAndDual(robot, constraints_data_, s);
 }
 
 
@@ -185,11 +179,8 @@ void SplitImpulseOCP::computeKKTResidual(Robot& robot,
   kkt_residual_.setZero();
   robot.updateKinematics(s.q, s.v);
   cost_->computeStageCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
-  // constraints_->computePrimalAndDualResidual(robot, constraints_data_, dtau, s);
-  // constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
-  //                                   kkt_residual_);
-  // constraints_->augmentDualResidual(robot, constraints_data_, dtau, s.u,
-  //                                   kkt_residual_.lu);
+  // constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
+  // constraints_->augmentDualResidual(robot, constraints_data_, s, kkt_residual_);
   stateequation::LinearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
                                               kkt_matrix_, kkt_residual_);
   impulse_dynamics_.linearizeImpulseDynamics(robot, contact_status, s, 

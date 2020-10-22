@@ -55,14 +55,6 @@ public:
       = default;
 
   ///
-  /// @brief Check if the cost function component requres kinematics of robot 
-  /// model.
-  /// @return true if the cost function component requres kinematics of 
-  /// Robot model. false if not.
-  ///
-  virtual bool useKinematics() const = 0;
-
-  ///
   /// @brief Computes and returns stage cost. 
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.

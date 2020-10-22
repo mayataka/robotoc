@@ -3,6 +3,18 @@
 
 #include "idocp/robot/robot.hpp"
 
+#include "pinocchio/parsers/urdf.hpp"
+#include "pinocchio/algorithm/joint-configuration.hpp"
+#include "pinocchio/algorithm/kinematics-derivatives.hpp"
+#include "pinocchio/algorithm/frames.hpp"
+#include "pinocchio/algorithm/frames-derivatives.hpp"
+#include "pinocchio/algorithm/crba.hpp"
+#include "pinocchio/algorithm/rnea.hpp"
+#include "pinocchio/algorithm/rnea-derivatives.hpp"
+#include "pinocchio/algorithm/aba.hpp"
+#include "pinocchio/algorithm/cholesky.hpp"
+#include "pinocchio/algorithm/contact-dynamics.hpp"
+
 #include <stdexcept>
 #include <assert.h>
 
@@ -568,6 +580,48 @@ inline void Robot::computeMinv(const Eigen::MatrixBase<MatrixType1>& M,
   pinocchio::cholesky::decompose(model_, data_);
   pinocchio::cholesky::computeMinv(
       model_, data_, const_cast<Eigen::MatrixBase<MatrixType2>&>(Minv));
+}
+
+
+template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
+inline void Robot::computeMJtJinv(
+    const ContactStatus& contact_status,
+    const Eigen::MatrixBase<MatrixType1>& M, 
+    const Eigen::MatrixBase<MatrixType2>& J, 
+    const Eigen::MatrixBase<MatrixType3>& MJtJinv) {
+  assert(M.rows() == dimv_);
+  assert(M.cols() == dimv_);
+  assert(J.rows() == contact_status.dimf());
+  assert(J.cols() == dimv_);
+  assert(MJtJinv.rows() == dimv_+contact_status.dimf());
+  assert(MJtJinv.cols() == dimv_+contact_status.dimf());
+  const int dimf = contact_status.dimf();
+  data_.M = M;
+  pinocchio::cholesky::decompose(model_, data_);
+  data_.sDUiJt.leftCols(dimf) = J.transpose();
+  pinocchio::cholesky::Uiv(model_, data_, data_.sDUiJt.leftCols(dimf));
+  for (Eigen::DenseIndex k=0; k<dimv_; ++k) {
+    data_.sDUiJt.leftCols(dimf).row(k) /= std::sqrt(data_.D[k]);
+  }
+  data_.JMinvJt.topLeftCorner(dimf, dimf).noalias() 
+      = data_.sDUiJt.leftCols(dimf).transpose() * data_.sDUiJt.leftCols(dimf);
+  data_.llt_JMinvJt.compute(data_.JMinvJt.topLeftCorner(dimf, dimf));
+  Eigen::Block<MatrixType3> topLeft 
+      = const_cast<Eigen::MatrixBase<MatrixType3>&>(MJtJinv).topLeftCorner(dimv_, dimv_);
+  Eigen::Block<MatrixType3> topRight 
+      = const_cast<Eigen::MatrixBase<MatrixType3>&>(MJtJinv).topRightCorner(dimv_, dimf);
+  Eigen::Block<MatrixType3> bottomLeft 
+      = const_cast<Eigen::MatrixBase<MatrixType3>&>(MJtJinv).bottomLeftCorner(dimf, dimv_);
+  Eigen::Block<MatrixType3> bottomRight 
+      = const_cast<Eigen::MatrixBase<MatrixType3>&>(MJtJinv).bottomRightCorner(dimf, dimf);
+  bottomRight = - pinocchio::Data::MatrixXs::Identity(dimf, dimf);
+  topLeft.setIdentity();
+  data_.llt_JMinvJt.solveInPlace(bottomRight);
+  pinocchio::cholesky::solve(model_, data_, topLeft);
+  bottomLeft.noalias() = J * topLeft;
+  topRight.noalias() = bottomLeft.transpose() * (-bottomRight);
+  topLeft.noalias() -= topRight*bottomLeft;
+  bottomLeft = topRight.transpose();
 }
 
 

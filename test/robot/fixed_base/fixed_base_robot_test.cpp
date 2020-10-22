@@ -701,6 +701,31 @@ TEST_F(FixedBaseRobotTest, RNEAImpulseDerivatives) {
 }
 
 
+TEST_F(FixedBaseRobotTest, computeMJtJinv) {
+  Robot robot(urdf_, contact_frames_);
+  Eigen::MatrixXd dRNEA_dq = Eigen::MatrixXd::Zero(dimq_, dimq_);
+  Eigen::MatrixXd dRNEA_dv = Eigen::MatrixXd::Zero(dimq_, dimq_);
+  Eigen::MatrixXd dRNEA_da = Eigen::MatrixXd::Zero(dimq_, dimq_);
+  Eigen::MatrixXd dRNEA_dfext = Eigen::MatrixXd::Zero(dimq_, robot.max_dimf());
+  std::vector<bool> is_contacts_active = {true};
+  contact_status_.setContactStatus(is_contacts_active);
+  const int dimf = contact_status_.dimf();
+  robot.updateKinematics(q_, v_, a_);
+  robot.RNEADerivatives(q_, v_, a_, dRNEA_dq, dRNEA_dv, dRNEA_da);
+  robot.dRNEAPartialdFext(contact_status_, dRNEA_dfext);
+  Eigen::MatrixXd MJtJinv = Eigen::MatrixXd::Zero(dimq_+dimf, dimq_+dimf);
+  const Eigen::MatrixXd J = - dRNEA_dfext.transpose();
+  robot.computeMJtJinv(contact_status_, dRNEA_da, J, MJtJinv);
+  Eigen::MatrixXd MJtJ = Eigen::MatrixXd::Zero(dimq_+dimf, dimq_+dimf);
+  MJtJ.topLeftCorner(dimq_, dimq_) = dRNEA_da;
+  MJtJ.topRightCorner(dimq_, dimf) = J.transpose();
+  MJtJ.bottomLeftCorner(dimf, dimq_) = J;
+  const Eigen::MatrixXd MJtJinv_ref = MJtJ.inverse();
+  EXPECT_TRUE(MJtJinv.isApprox(MJtJinv_ref));
+  EXPECT_TRUE((MJtJinv*MJtJ).isIdentity());
+}
+
+
 TEST_F(FixedBaseRobotTest, generateFeasibleConfiguration) {
   Robot robot(urdf_);
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());

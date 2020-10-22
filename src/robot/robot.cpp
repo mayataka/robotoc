@@ -71,6 +71,10 @@ Robot::Robot(const std::string& path_to_urdf,
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
+  data_.JMinvJt.resize(max_dimf_, max_dimf_);
+  data_.JMinvJt.setZero();
+  data_.sDUiJt.resize(dimv_, max_dimf_);
+  data_.sDUiJt.setZero();
   dimpulse_dv_.resize(dimv_, dimv_);
   dimpulse_dv_.setZero();
   initializeJointLimits();

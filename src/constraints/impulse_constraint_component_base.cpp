@@ -1,4 +1,4 @@
-#include "idocp/constraints/constraint_component_base.hpp"
+#include "idocp/constraints/impulse_constraint_component_base.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -6,7 +6,7 @@
 
 namespace idocp {
 
-ConstraintComponentBase::ConstraintComponentBase(
+ImpulseConstraintComponentBase::ImpulseConstraintComponentBase(
     const double barrier, const double fraction_to_boundary_rate) 
   : barrier_(barrier),
     fraction_to_boundary_rate_(fraction_to_boundary_rate) {
@@ -31,7 +31,7 @@ ConstraintComponentBase::ConstraintComponentBase(
 }
 
 
-ConstraintComponentBase::ConstraintComponentBase() 
+ImpulseConstraintComponentBase::ImpulseConstraintComponentBase() 
   : barrier_(0),
     fraction_to_boundary_rate_(0) {
 }

@@ -9,19 +9,18 @@ namespace idocp {
 
 inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler(
     const Robot& robot) 
-  : schur_complement_(robot.dimv(), robot.max_dimf()),
-    dImD_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+  : dImD_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     dImD_ddv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     dImD_df_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
-    MJTJinv_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
+    MJtJinv_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
                                         robot.dimv()+robot.max_dimf())), 
-    MJTJinvImDCqv_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
+    MJtJinvImDCqv_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
                                               2*robot.dimv())), 
     Qdvq_condensed_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Qdvv_condensed_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Qfq_condensed_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     Qfv_condensed_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
-    MJTJinvImDC_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
+    MJtJinvImDC_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     ldv_condensed_(Eigen::VectorXd::Zero(robot.dimv())),
     lf_condensed_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()),
@@ -30,17 +29,16 @@ inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler(
 
 
 inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler() 
-  : schur_complement_(),
-    dImD_dq_(),
+  : dImD_dq_(),
     dImD_ddv_(),
     dImD_df_full_(),
-    MJTJinv_full_(), 
-    MJTJinvImDCqv_full_(), 
+    MJtJinv_full_(), 
+    MJtJinvImDCqv_full_(), 
     Qdvq_condensed_(),
     Qdvv_condensed_(),
     Qfq_condensed_full_(),
     Qfv_condensed_full_(),
-    MJTJinvImDC_full_(),
+    MJtJinvImDC_full_(),
     ldv_condensed_(),
     lf_condensed_full_(),
     dimv_(0),
@@ -77,90 +75,89 @@ inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
     ImpulseKKTResidual& kkt_residual) {
   assert(contact_status.hasActiveContacts());
   linearizeImpulseDynamics(robot, contact_status, s, kkt_matrix, kkt_residual);
-  schur_complement_.invertWithZeroBottomRightCorner(dimv_, dimf_, dImD_ddv_, 
-                                                    kkt_matrix.Cv(), MJTJinv_());
-  MJTJinvImDCqv_().topLeftCorner(dimv_, dimv_).noalias() 
-      = MJTJinv_().topLeftCorner(dimv_, dimv_) * dImD_dq_;
-  MJTJinvImDCqv_().topLeftCorner(dimv_, dimv_).noalias() 
-      += MJTJinv_().topRightCorner(dimv_, dimf_) * kkt_matrix.Cq();
-  MJTJinvImDCqv_().topRightCorner(dimv_, dimv_).noalias() 
-      = MJTJinv_().topRightCorner(dimv_, dimf_) * kkt_matrix.Cv();
-  MJTJinvImDCqv_().bottomLeftCorner(dimf_, dimv_).noalias() 
-      = MJTJinv_().bottomLeftCorner(dimf_, dimv_) * dImD_dq_;
-  MJTJinvImDCqv_().bottomLeftCorner(dimf_, dimv_).noalias() 
-      += MJTJinv_().bottomRightCorner(dimf_, dimf_) * kkt_matrix.Cq();
-  MJTJinvImDCqv_().bottomRightCorner(dimf_, dimv_).noalias() 
-      = MJTJinv_().bottomRightCorner(dimf_, dimf_) * kkt_matrix.Cv();
-  MJTJinvImDC_().noalias() = MJTJinv_().leftCols(dimv_) * kkt_residual.dv_res;
-  MJTJinvImDC_().noalias() += MJTJinv_().rightCols(dimf_) * kkt_residual.C();
+  robot.computeMJtJinv(contact_status, dImD_ddv_, kkt_matrix.Cv(), MJtJinv_());
+  MJtJinvImDCqv_().topLeftCorner(dimv_, dimv_).noalias() 
+      = MJtJinv_().topLeftCorner(dimv_, dimv_) * dImD_dq_;
+  MJtJinvImDCqv_().topLeftCorner(dimv_, dimv_).noalias() 
+      += MJtJinv_().topRightCorner(dimv_, dimf_) * kkt_matrix.Cq();
+  MJtJinvImDCqv_().topRightCorner(dimv_, dimv_).noalias() 
+      = MJtJinv_().topRightCorner(dimv_, dimf_) * kkt_matrix.Cv();
+  MJtJinvImDCqv_().bottomLeftCorner(dimf_, dimv_).noalias() 
+      = MJtJinv_().bottomLeftCorner(dimf_, dimv_) * dImD_dq_;
+  MJtJinvImDCqv_().bottomLeftCorner(dimf_, dimv_).noalias() 
+      += MJtJinv_().bottomRightCorner(dimf_, dimf_) * kkt_matrix.Cq();
+  MJtJinvImDCqv_().bottomRightCorner(dimf_, dimv_).noalias() 
+      = MJtJinv_().bottomRightCorner(dimf_, dimf_) * kkt_matrix.Cv();
+  MJtJinvImDC_().noalias() = MJtJinv_().leftCols(dimv_) * kkt_residual.dv_res;
+  MJtJinvImDC_().noalias() += MJtJinv_().rightCols(dimf_) * kkt_residual.C();
   Qdvq_condensed_.noalias() = (- kkt_matrix.Qdvdv.diagonal()).asDiagonal() 
-                                * MJTJinvImDCqv_().topLeftCorner(dimv_, dimv_);
+                                * MJtJinvImDCqv_().topLeftCorner(dimv_, dimv_);
   Qdvv_condensed_.noalias() = (- kkt_matrix.Qdvdv.diagonal()).asDiagonal() 
-                                * MJTJinvImDCqv_().topRightCorner(dimv_, dimv_);
+                                * MJtJinvImDCqv_().topRightCorner(dimv_, dimv_);
   Qfq_condensed_().noalias() = (- kkt_matrix.Qff().diagonal()).asDiagonal() 
-                                * MJTJinvImDCqv_().bottomLeftCorner(dimf_, dimv_);
+                                * MJtJinvImDCqv_().bottomLeftCorner(dimf_, dimv_);
   Qfv_condensed_().noalias() = (- kkt_matrix.Qff().diagonal()).asDiagonal() 
-                                * MJTJinvImDCqv_().bottomRightCorner(dimf_, dimv_);
+                                * MJtJinvImDCqv_().bottomRightCorner(dimf_, dimv_);
   ldv_condensed_ = kkt_residual.ldv;
   ldv_condensed_.array() -= kkt_matrix.Qdvdv.diagonal().array() 
-                              * MJTJinvImDC_().head(dimv_).array();
+                              * MJtJinvImDC_().head(dimv_).array();
   lf_condensed_() = - kkt_residual.lf();
   lf_condensed_().array() -= kkt_matrix.Qff().diagonal().array() 
-                              * MJTJinvImDC_().tail(dimf_).array();
+                              * MJtJinvImDC_().tail(dimf_).array();
   kkt_matrix.Qqq().noalias()
-      -= MJTJinvImDCqv_().topLeftCorner(dimv_, dimv_).transpose() 
+      -= MJtJinvImDCqv_().topLeftCorner(dimv_, dimv_).transpose() 
           * Qdvq_condensed_;
   kkt_matrix.Qqq().noalias()
-      -= MJTJinvImDCqv_().bottomLeftCorner(dimf_, dimv_).transpose() 
+      -= MJtJinvImDCqv_().bottomLeftCorner(dimf_, dimv_).transpose() 
           * Qfq_condensed_();
   kkt_matrix.Qqv().noalias()
-      -= MJTJinvImDCqv_().topLeftCorner(dimv_, dimv_).transpose() 
+      -= MJtJinvImDCqv_().topLeftCorner(dimv_, dimv_).transpose() 
           * Qdvv_condensed_;
   kkt_matrix.Qqv().noalias()
-      -= MJTJinvImDCqv_().bottomLeftCorner(dimf_, dimv_).transpose() 
+      -= MJtJinvImDCqv_().bottomLeftCorner(dimf_, dimv_).transpose() 
           * Qfv_condensed_();
   kkt_matrix.Qvq().noalias() = kkt_matrix.Qqv().transpose();
   kkt_matrix.Qvv().noalias()
-      -= MJTJinvImDCqv_().topRightCorner(dimv_, dimv_).transpose() 
+      -= MJtJinvImDCqv_().topRightCorner(dimv_, dimv_).transpose() 
           * Qdvv_condensed_;
   kkt_matrix.Qvv().noalias()
-      -= MJTJinvImDCqv_().bottomRightCorner(dimf_, dimv_).transpose() 
+      -= MJtJinvImDCqv_().bottomRightCorner(dimf_, dimv_).transpose() 
           * Qfv_condensed_();
   kkt_residual.lq().noalias()
-      -= MJTJinvImDCqv_().topLeftCorner(dimv_, dimv_).transpose() 
+      -= MJtJinvImDCqv_().topLeftCorner(dimv_, dimv_).transpose() 
           * ldv_condensed_;
   kkt_residual.lq().noalias()
-      -= MJTJinvImDCqv_().bottomLeftCorner(dimf_, dimv_).transpose() 
+      -= MJtJinvImDCqv_().bottomLeftCorner(dimf_, dimv_).transpose() 
           * lf_condensed_();
   kkt_residual.lv().noalias()
-      -= MJTJinvImDCqv_().topRightCorner(dimv_, dimv_).transpose() 
+      -= MJtJinvImDCqv_().topRightCorner(dimv_, dimv_).transpose() 
           * ldv_condensed_;
   kkt_residual.lv().noalias()
-      -= MJTJinvImDCqv_().bottomRightCorner(dimf_, dimv_).transpose() 
+      -= MJtJinvImDCqv_().bottomRightCorner(dimf_, dimv_).transpose() 
           * lf_condensed_();
-  kkt_matrix.Fvq = - MJTJinvImDCqv_().topLeftCorner(dimv_, dimv_);
+  kkt_matrix.Fvq = - MJtJinvImDCqv_().topLeftCorner(dimv_, dimv_);
   kkt_matrix.Fvv = Eigen::MatrixXd::Identity(dimv_, dimv_) 
-                    - MJTJinvImDCqv_().topRightCorner(dimv_, dimv_);
-  kkt_residual.Fv().noalias() -= MJTJinvImDC_().head(dimv_);
+                    - MJtJinvImDCqv_().topRightCorner(dimv_, dimv_);
+  kkt_residual.Fv().noalias() -= MJtJinvImDC_().head(dimv_);
 }
 
 
 inline void ImpulseDynamicsForwardEuler::computeCondensedDirection(
     const ImpulseKKTMatrix& kkt_matrix, const ImpulseKKTResidual& kkt_residual, 
     const SplitDirection& d_next, ImpulseSplitDirection& d) {
-  d.ddv.noalias() = - MJTJinvImDCqv_().topRows(dimv_) * d.dx() 
-                    - MJTJinvImDC_().head(dimv_);
-  d.df().noalias() = - MJTJinvImDCqv_().bottomRows(dimf_) * d.dx()
-                     - MJTJinvImDC_().tail(dimf_);
+  d.ddv.noalias() = - MJtJinvImDCqv_().topRows(dimv_) * d.dx() 
+                    - MJtJinvImDC_().head(dimv_);
+  d.df().noalias() = - MJtJinvImDCqv_().bottomRows(dimf_) * d.dx()
+                     - MJtJinvImDC_().tail(dimf_);
   ldv_condensed_.noalias() += d_next.dgmm();
   ldv_condensed_.noalias() += Qdvq_condensed_ * d.dq();
   ldv_condensed_.noalias() += Qdvv_condensed_ * d.dv();
   lf_condensed_().noalias() += Qfq_condensed_() * d.dq();
   lf_condensed_().noalias() += Qfv_condensed_() * d.dv();
-  d.dbeta.noalias() = - MJTJinv_().topLeftCorner(dimv_, dimv_) * ldv_condensed_
-                      - MJTJinv_().topRightCorner(dimv_, dimf_) * lf_condensed_();
-  d.dmu().noalias() = - MJTJinv_().bottomLeftCorner(dimf_, dimv_) * ldv_condensed_
-                      - MJTJinv_().bottomRightCorner(dimf_, dimf_) * lf_condensed_();
+  d.dbeta.noalias() = - MJtJinv_().topLeftCorner(dimv_, dimv_) * ldv_condensed_
+                      - MJtJinv_().topRightCorner(dimv_, dimf_) * lf_condensed_();
+  d.dmu().noalias() = - MJtJinv_().bottomLeftCorner(dimf_, dimv_) * ldv_condensed_
+                      - MJtJinv_().bottomRightCorner(dimf_, dimf_) * lf_condensed_();
 }
 
 
@@ -215,14 +212,14 @@ inline Eigen::Block<Eigen::MatrixXd> ImpulseDynamicsForwardEuler::dImD_df_() {
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseDynamicsForwardEuler::MJTJinv_() {
-  return MJTJinv_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
+inline Eigen::Block<Eigen::MatrixXd> ImpulseDynamicsForwardEuler::MJtJinv_() {
+  return MJtJinv_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
-ImpulseDynamicsForwardEuler::MJTJinvImDCqv_() {
-  return MJTJinvImDCqv_full_.topLeftCorner(dimv_+dimf_, 2*dimv_);
+ImpulseDynamicsForwardEuler::MJtJinvImDCqv_() {
+  return MJtJinvImDCqv_full_.topLeftCorner(dimv_+dimf_, 2*dimv_);
 }
 
 
@@ -239,8 +236,8 @@ ImpulseDynamicsForwardEuler::Qfv_condensed_() {
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseDynamicsForwardEuler::MJTJinvImDC_() {
-  return MJTJinvImDC_full_.head(dimv_+dimf_);
+ImpulseDynamicsForwardEuler::MJtJinvImDC_() {
+  return MJtJinvImDC_full_.head(dimv_+dimf_);
 }
 
 
@@ -257,14 +254,14 @@ ImpulseDynamicsForwardEuler::dImD_df_() const {
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsForwardEuler::MJTJinv_() const {
-  return MJTJinv_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
+ImpulseDynamicsForwardEuler::MJtJinv_() const {
+  return MJtJinv_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsForwardEuler::MJTJinvImDCqv_() const {
-  return MJTJinvImDCqv_full_.topLeftCorner(dimv_+dimf_, 2*dimv_);
+ImpulseDynamicsForwardEuler::MJtJinvImDCqv_() const {
+  return MJtJinvImDCqv_full_.topLeftCorner(dimv_+dimf_, 2*dimv_);
 }
 
 
@@ -281,8 +278,8 @@ ImpulseDynamicsForwardEuler::Qfv_condensed_() const {
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseDynamicsForwardEuler::MJTJinvImDC_() const {
-  return MJTJinvImDC_full_.head(dimv_+dimf_);
+ImpulseDynamicsForwardEuler::MJtJinvImDC_() const {
+  return MJtJinvImDC_full_.head(dimv_+dimf_);
 }
 
 
