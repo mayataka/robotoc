@@ -233,6 +233,7 @@ private:
   ImpulseRiccatiMatrixFactorizer riccati_factorizer_;
   ImpulseSplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
   double stage_cost_, constraint_violation_;
+  bool has_floating_base_;
 
   ///
   /// @brief Set contact status from robot model, i.e., set dimension of the 

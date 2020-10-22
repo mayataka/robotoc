@@ -16,7 +16,8 @@ SplitImpulseOCP::SplitImpulseOCP(
     kkt_matrix_(robot),
     impulse_dynamics_(robot),
     riccati_factorizer_(robot),
-    s_tmp_(robot) {
+    s_tmp_(robot),
+    has_floating_base_(robot.has_floating_base()) {
 }
 
 
@@ -29,7 +30,8 @@ SplitImpulseOCP::SplitImpulseOCP()
     kkt_matrix_(),
     impulse_dynamics_(),
     riccati_factorizer_(),
-    s_tmp_() {
+    s_tmp_(),
+    has_floating_base_(false) {
 }
 
 
@@ -79,7 +81,12 @@ void SplitImpulseOCP::backwardRiccatiRecursion(
 
 void SplitImpulseOCP::forwardRiccatiRecursion(ImpulseSplitDirection& d,   
                                               SplitDirection& d_next) {
-  d_next.dq().noalias() = kkt_matrix_.Fqq * d.dq() + kkt_residual_.Fq();
+  if (has_floating_base_) {
+    d_next.dq().noalias() = kkt_matrix_.Fqq * d.dq() + kkt_residual_.Fq();
+  }
+  else {
+    d_next.dq().noalias() = d.dq() + kkt_residual_.Fq();
+  }
   d_next.dv().noalias() = kkt_matrix_.Fvq * d.dq() 
                           + kkt_matrix_.Fvv * d.dv() + kkt_residual_.Fv();
 }

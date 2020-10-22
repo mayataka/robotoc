@@ -81,7 +81,7 @@ protected:
   virtual void TearDown() {
   }
 
-  double dtau, t;
+  double t;
   std::string urdf;
   Robot robot;
   ContactStatus contact_status;
@@ -357,162 +357,44 @@ TEST_F(FixedBaseSplitImpulseOCPTest, riccatiRecursion) {
   ocp.backwardRiccatiRecursion(riccati_next, riccati);
   ocp.forwardRiccatiRecursion(d, d_next);
   robot.updateKinematics(s.q, s.v);
-  cost_->computeStageCostHessian(robot, cost_data_, t, s, kkt_matrix_);
-  cost_->computeStageCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
+  cost->computeStageCostHessian(robot, cost_data, t, s, kkt_matrix);
+  cost->computeStageCostDerivatives(robot, cost_data, t, s, kkt_residual);
   constraints->setSlackAndDual(robot, constraints_data, s);
   constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual);
   constraints->condenseSlackAndDual(robot, constraints_data, s, kkt_matrix, kkt_residual);
   Eigen::MatrixXd ddv_dq = Eigen::MatrixXd::Zero(dimv, dimv);
   Eigen::MatrixXd ddv_ddv = Eigen::MatrixXd::Zero(dimv, dimv);
   Eigen::MatrixXd ddv_df = Eigen::MatrixXd::Zero(dimv, dimf);
-  robot.subtractConfiguration(s.q, s_next.q, kkt_residual.Fq());
-  kkt_residual.Fv() = s.v + s.dv - s_next.v;
-  robot.setContactForces(contact_status, s.f);
-  robot.RNEAImpulse(s.q, s.v, kkt_residual.dv_res);
-  robot.RNEAImpulseDerivatives(s.q, s.v, ddv_dq, ddv_ddv);
-  robot.dRNEAPartialdFext(contact_status, ddv_df);
-  robot.computeVelocityResidual(contact_status, kkt_residual.C());
-  robot.computeVelocityDerivatives(contact_status, kkt_matrix.Cq(), kkt_matrix.Cv());
-  kkt_residual.lq() += ddv_dq.transpose() * s.beta;
-  kkt_residual.ldv += ddv_ddv.transpose() * s.beta;
-  kkt_residual.lf() += ddv_df.transpose() * s.beta;
-  kkt_residual.lq() += s_next.lmd - s.lmd;
-  kkt_residual.lv() += s_next.gmm - s.gmm;
-  kkt_residual.la() += s_next.gmm;
-  kkt_residual.lq() += kkt_matrix.Cq().transpose() * s.mu_stack();
-  kkt_residual.lv() += kkt_matrix.Cv().transpose() * s.mu_stack();
-  kkt_residual.ldv += kkt_matrix.Cv().transpose() * s.mu_stack();
-  Eigen::MatrixXd MJTJinv = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
-  MJTJinv.topLeftCorner(dimv, dimv) = ddv_ddv;
-
-
-  kkt_matrix.Qqq() = du_dq.transpose() * kkt_matrix.Quu * du_dq;
-  kkt_matrix.Qqv() = du_dq.transpose() * kkt_matrix.Quu * du_dv;
-  kkt_matrix.Qqa() = du_dq.transpose() * kkt_matrix.Quu * du_da;
-  kkt_matrix.Qvv() = du_dv.transpose() * kkt_matrix.Quu * du_dv;
-  kkt_matrix.Qva() = du_dv.transpose() * kkt_matrix.Quu * du_da;
-  kkt_matrix.Qaa() = du_da.transpose() * kkt_matrix.Quu * du_da;
-  kkt_matrix.Qqf() = du_dq.transpose() * kkt_matrix.Quu * du_df;
-  kkt_matrix.Qvf() = du_dv.transpose() * kkt_matrix.Quu * du_df;
-  kkt_matrix.Qaf() = du_da.transpose() * kkt_matrix.Quu * du_df;
-  kkt_matrix.Qff() = du_df.transpose() * kkt_matrix.Quu * du_df;
-  cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix);
-  inverter.setContactStatus(contact_status);
-  gain.setContactStatus(contact_status);
+  stateequation::LinearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
+                                              kkt_matrix, kkt_residual);
+  impulse_dynamics.condenseImpulseDynamics(robot, contact_status, s, kkt_matrix, 
+                                           kkt_residual);
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
-  kkt_matrix.Qaq() = kkt_matrix.Qqa().transpose();
-  kkt_matrix.Qav() = kkt_matrix.Qva().transpose();
-  if (dimf > 0) {
-    kkt_matrix.Qfq() = kkt_matrix.Qqf().transpose();
-    kkt_matrix.Qfv() = kkt_matrix.Qvf().transpose();
-    kkt_matrix.Qfa() = kkt_matrix.Qaf().transpose();
-  }
-  factorizer.factorize_F(dtau, riccati_next.Pqq, riccati_next.Pqv, 
-                         riccati_next.Pvq, riccati_next.Pvv, 
-                         kkt_matrix.Qqq(), kkt_matrix.Qqv(), 
-                         kkt_matrix.Qvq(), kkt_matrix.Qvv());
-  factorizer.factorize_H(dtau, riccati_next.Pqv, riccati_next.Pvv, 
-                         kkt_matrix.Qqa(), kkt_matrix.Qva());
-  factorizer.factorize_G(dtau, riccati_next.Pvv, kkt_matrix.Qaa());
-  factorizer.factorize_la(dtau, riccati_next.Pvq, riccati_next.Pvv, 
-                          kkt_residual.Fq(), kkt_residual.Fv(), 
-                          riccati_next.sv, kkt_residual.la());
-  kkt_matrix.Qaq() = kkt_matrix.Qqa().transpose();
-  kkt_matrix.Qav() = kkt_matrix.Qva().transpose();
-
-  Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf+dimc, dimv+dimf+dimc);
-  G.topLeftCorner(dimv+dimf, dimv+dimf) = kkt_matrix.Qafaf();
-  G.topRightCorner(dimv+dimf, dimc) = kkt_matrix.Caf().transpose();
-  G.bottomLeftCorner(dimc, dimv+dimf) = kkt_matrix.Caf();
-  const Eigen::MatrixXd Ginv = G.inverse();
-  // Eigen::MatrixXd Ginv = Eigen::MatrixXd::Zero(dimv+dimf+dimc, dimv+dimf+dimc);
-  // inverter.invert(kkt_matrix.Qafaf(), kkt_matrix.Caf(), Ginv);
-  Eigen::MatrixXd Qqvaf = Eigen::MatrixXd::Zero(2*dimv, dimv+dimf);
-  Qqvaf.topLeftCorner(dimv, dimv) = kkt_matrix.Qqa();
-  Qqvaf.topRightCorner(dimv, dimf) = kkt_matrix.Qqf();
-  Qqvaf.bottomLeftCorner(dimv, dimv) = kkt_matrix.Qva();
-  Qqvaf.bottomRightCorner(dimv, dimf) = kkt_matrix.Qvf();
-  EXPECT_TRUE(Qqvaf.transpose().isApprox(kkt_matrix.Qafqv()));
-  gain.computeFeedbackGain(Ginv, Qqvaf.transpose(), kkt_matrix.Cqv());
-  gain.computeFeedforward(Ginv, kkt_residual.laf(), kkt_residual.C());
-  Eigen::MatrixXd Pqq_ref = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd Pqv_ref = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd Pvq_ref = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd Pvv_ref = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::VectorXd sq_ref = Eigen::VectorXd::Zero(dimv);
-  Eigen::VectorXd sv_ref = Eigen::VectorXd::Zero(dimv);
-  Pqq_ref = kkt_matrix.Qqq();
-  Pqq_ref += gain.Kaq().transpose() * kkt_matrix.Qqa().transpose();
-  Pqv_ref = kkt_matrix.Qqv();
-  Pqv_ref += gain.Kaq().transpose() * kkt_matrix.Qva().transpose();
-  Pvq_ref = kkt_matrix.Qvq();
-  Pvq_ref += gain.Kav().transpose() * kkt_matrix.Qqa().transpose();
-  Pvv_ref = kkt_matrix.Qvv();
-  Pvv_ref += gain.Kav().transpose() * kkt_matrix.Qva().transpose();
-  Pqq_ref += gain.Kfq().transpose() * kkt_matrix.Qqf().transpose();
-  Pqv_ref += gain.Kfq().transpose() * kkt_matrix.Qvf().transpose();
-  Pvq_ref += gain.Kfv().transpose() * kkt_matrix.Qqf().transpose();
-  Pvv_ref += gain.Kfv().transpose() * kkt_matrix.Qvf().transpose();
-  Pqq_ref += gain.Kmuq().transpose() * kkt_matrix.Cq();
-  Pqv_ref += gain.Kmuq().transpose() * kkt_matrix.Cv();
-  Pvq_ref += gain.Kmuv().transpose() * kkt_matrix.Cq();
-  Pvv_ref += gain.Kmuv().transpose() * kkt_matrix.Cv();
-  sq_ref = riccati_next.sq - kkt_residual.lq();
-  sq_ref -= riccati_next.Pqq * kkt_residual.Fq();
-  sq_ref -= riccati_next.Pqv * kkt_residual.Fv();
-  sq_ref -= kkt_matrix.Qqa() * gain.ka();
-  sv_ref = dtau * riccati_next.sq + riccati_next.sv - kkt_residual.lv();
-  sv_ref -= dtau * riccati_next.Pqq * kkt_residual.Fq();
-  sv_ref -= riccati_next.Pvq * kkt_residual.Fq();
-  sv_ref -= dtau * riccati_next.Pqv * kkt_residual.Fv();
-  sv_ref -= riccati_next.Pvv * kkt_residual.Fv();
-  sv_ref -= kkt_matrix.Qva() * gain.ka();
-  sq_ref -= kkt_matrix.Qqf() * gain.kf();
-  sv_ref -= kkt_matrix.Qvf() * gain.kf();
-  sq_ref -= kkt_matrix.Cq().transpose() * gain.kmu();
-  sv_ref -= kkt_matrix.Cv().transpose() * gain.kmu();
-  EXPECT_TRUE(riccati.Pqq.isApprox(Pqq_ref, 1.0e-10));
-  EXPECT_TRUE(riccati.Pqv.isApprox(Pqv_ref, 1.0e-10));
-  EXPECT_TRUE(riccati.Pvq.isApprox(Pvq_ref, 1.0e-10));
-  EXPECT_TRUE(riccati.Pvv.isApprox(Pvv_ref, 1.0e-10));
-  EXPECT_TRUE(riccati.sq.isApprox(sq_ref, 1.0e-10));
-  EXPECT_TRUE(riccati.sv.isApprox(sv_ref, 1.0e-10));
-  std::cout << riccati.Pqq - Pqq_ref << std::endl;
-  std::cout << riccati.Pqv - Pqv_ref << std::endl;
-  std::cout << riccati.Pvq - Pvq_ref << std::endl;
-  std::cout << riccati.Pvv - Pvv_ref << std::endl;
-  std::cout << riccati.sq - sq_ref << std::endl;
-  std::cout << riccati.sv - sv_ref << std::endl;
+  RiccatiFactorization riccati_ref(robot);
+  factorizer.factorize(kkt_matrix, kkt_residual, riccati_next, riccati_ref);
+  EXPECT_TRUE(riccati.Pqq.isApprox(riccati_ref.Pqq));
+  EXPECT_TRUE(riccati.Pqv.isApprox(riccati_ref.Pqv));
+  EXPECT_TRUE(riccati.Pvq.isApprox(riccati_ref.Pvq));
+  EXPECT_TRUE(riccati.Pvv.isApprox(riccati_ref.Pvv));
+  EXPECT_TRUE(riccati.sq.isApprox(riccati_ref.sq));
+  EXPECT_TRUE(riccati.sv.isApprox(riccati_ref.sv));
   EXPECT_TRUE(riccati.Pqq.transpose().isApprox(riccati.Pqq));
   EXPECT_TRUE(riccati.Pqv.transpose().isApprox(riccati.Pvq));
   EXPECT_TRUE(riccati.Pvv.transpose().isApprox(riccati.Pvv));
-  const Eigen::VectorXd da_ref = gain.ka() + gain.Kaq() * d.dq() + gain.Kav() * d.dv(); 
-  const Eigen::VectorXd dq_next_ref = d.dq() + dtau * d.dv() + kkt_residual.Fq();
-  const Eigen::VectorXd dv_next_ref = d.dv() + dtau * d.da() + kkt_residual.Fv();
-  EXPECT_TRUE(d_next.dq().isApprox(dq_next_ref, 1.0e-10));
-  EXPECT_TRUE(d_next.dv().isApprox(dv_next_ref, 1.0e-10));
-  gain.computeFeedbackGain(Ginv, Qqvaf.transpose(), kkt_matrix.Cqv());
-  gain.computeFeedforward(Ginv, kkt_residual.laf(), kkt_residual.C());
-  ocp.computeCondensedDirection(robot, dtau, s, d);
-  EXPECT_TRUE(d.df().isApprox(gain.kf()+gain.Kfq()*d.dq()+gain.Kfv()*d.dv(), 1.0e-10));
-  EXPECT_TRUE(d.dmu().isApprox(gain.kmu()+gain.Kmuq()*d.dq()+gain.Kmuv()*d.dv(), 1.0e-10));
-  Eigen::MatrixXd Kuq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  Eigen::MatrixXd Kuv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  ocp.getStateFeedbackGain(Kuq, Kuv);
-  Eigen::MatrixXd Kuq_ref = du_dq + du_da * gain.Kaq();
-  if (dimf > 0) {
-    Kuq_ref += du_df * gain.Kfq();
-  }
-  Eigen::MatrixXd Kuv_ref = du_dv + du_da * gain.Kav();
-  if (dimf > 0) {
-    Kuv_ref += du_df * gain.Kfv();
-  }
-  EXPECT_TRUE(Kuq.isApprox(Kuq_ref, 1.0e-10));
-  EXPECT_TRUE(Kuv.isApprox(Kuv_ref, 1.0e-10));
-  ocp.computeKKTResidual(robot, contact_status, t, dtau, q_prev, s, s_next);
-  const auto pair_ref = ocp.costAndConstraintViolation(robot, t, dtau, s); 
-  EXPECT_DOUBLE_EQ(pair.first, pair_ref.first);
-  EXPECT_DOUBLE_EQ(pair.second, pair_ref.second);
+  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
+  A.topLeftCorner(dimv, dimv) = Eigen::MatrixXd::Identity(dimv, dimv);
+  A.bottomLeftCorner(dimv, dimv) = kkt_matrix.Fvq;
+  A.bottomRightCorner(dimv, dimv) = kkt_matrix.Fvv;
+  const Eigen::VectorXd dx_next_ref = A * d.dx() + kkt_residual.Fx();
+  EXPECT_TRUE(d_next.dq().isApprox(dx_next_ref.head(dimv)));
+  EXPECT_TRUE(d_next.dv().isApprox(dx_next_ref.tail(dimv)));
+  ImpulseSplitDirection d_ref = d;
+  ocp.computeCondensedDirection(robot, s, d_next, d);
+  impulse_dynamics.computeCondensedDirection(kkt_matrix, kkt_residual, d_next, d_ref);
+  EXPECT_TRUE(d.ddv.isApprox(d_ref.ddv));
+  EXPECT_TRUE(d.df().isApprox(d_ref.df()));
+  EXPECT_TRUE(d.dbeta.isApprox(d_ref.dbeta));
+  EXPECT_TRUE(d.dmu().isApprox(d_ref.dmu()));
   const double step_size = 0.3;
   const Eigen::VectorXd lmd_ref 
       = s.lmd + step_size * (riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq);
@@ -521,20 +403,18 @@ TEST_F(FixedBaseSplitImpulseOCPTest, riccatiRecursion) {
   Eigen::VectorXd q_ref = s.q;
   robot.integrateConfiguration(d.dq(), step_size, q_ref);
   const Eigen::VectorXd v_ref = s.v + step_size * d.dv();
-  const Eigen::VectorXd a_ref = s.a + step_size * d.da();
+  const Eigen::VectorXd dv_ref = s.dv + step_size * d.ddv;
   const Eigen::VectorXd f_ref = s.f_stack() + step_size * d.df();
   const Eigen::VectorXd mu_ref = s.mu_stack() + step_size * d.dmu();
-  const Eigen::VectorXd u_ref = s.u + step_size * d.du;
   const Eigen::VectorXd beta_ref = s.beta + step_size * d.dbeta;
-  ocp.updatePrimal(robot, step_size, dtau, riccati, d, s);
+  ocp.updatePrimal(robot, step_size, riccati, d, s);
   EXPECT_TRUE(lmd_ref.isApprox(s.lmd));
   EXPECT_TRUE(gmm_ref.isApprox(s.gmm));
   EXPECT_TRUE(q_ref.isApprox(s.q));
   EXPECT_TRUE(v_ref.isApprox(s.v));
-  EXPECT_TRUE(a_ref.isApprox(s.a));
+  EXPECT_TRUE(dv_ref.isApprox(s.dv));
   EXPECT_TRUE(f_ref.isApprox(s.f_stack()));
   EXPECT_TRUE(mu_ref.isApprox(s.mu_stack()));
-  EXPECT_TRUE(u_ref.isApprox(s.u));
   EXPECT_TRUE(beta_ref.isApprox(s.beta));
 }
 

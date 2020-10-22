@@ -367,9 +367,6 @@ TEST_F(ImpulseDynamicsForwardEulerTest, condenseImpulseDynamicsForwardEulerFloat
   Eigen::MatrixXd MJTJinv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                   robot.dimv()+contact_status.dimf());
   robot.computeMJtJinv(contact_status, dimd_ddv, kkt_matrix_ref.Cv(), MJTJinv);
-  schur_complement.invertWithZeroBottomRightCorner(robot.dimv(), contact_status.dimf(),
-                                                   dimd_ddv, kkt_matrix_ref.Cv(),
-                                                   MJTJinv);
   Eigen::MatrixXd dimdc_dqv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                     2*robot.dimv());
   dimdc_dqv.topLeftCorner(robot.dimv(), robot.dimv()) = dimd_dq;
