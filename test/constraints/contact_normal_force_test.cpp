@@ -132,23 +132,29 @@ TEST_F(ContactNormalForceTest, condenseSlackAndDual) {
 
 TEST_F(ContactNormalForceTest, computeSlackAndDualDirection) {
   ContactNormalForce contact_normal_force(robot); 
-  const double slack = 0.3;
-  const double dual = 0.2;
-  const double residual = 0.1;
-  const double duality = - 0.1;
-  data.slack.fill(slack);
-  data.dual.fill(dual);
-  data.residual.fill(residual);
-  data.duality.fill(duality);
+  data.slack = Eigen::VectorXd::Random(data.slack.size()).array().abs();
+  data.dual = Eigen::VectorXd::Random(data.dual.size()).array().abs();
+  data.residual = Eigen::VectorXd::Random(data.dual.size());
+  data.duality = Eigen::VectorXd::Random(data.dual.size());
+  contact_normal_force.augmentDualResidual(robot, data, dtau, s, kkt_residual);
+  contact_normal_force.condenseSlackAndDual(robot, data, dtau, s, kkt_matrix, kkt_residual);
   contact_normal_force.computeSlackAndDualDirection(robot, data, dtau, s, d);
+  Eigen::MatrixXd gf = Eigen::MatrixXd::Zero(active_contact_indices.size(), contact_status.dimf());
+  ConstraintComponentData data_ref(active_contact_indices.size());
+  for (int i=0; i<active_contact_indices.size(); ++i) {
+    gf.row(i).coeffRef(3*i+2) = - dtau;
+    data_ref.slack.coeffRef(i) = data.slack(active_contact_indices[i]);
+    data_ref.dual.coeffRef(i) = data.dual(active_contact_indices[i]);
+    data_ref.residual.coeffRef(i) = - dtau * s.f[active_contact_indices[i]].coeff(2) + data_ref.slack.coeff(i);
+    data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
+  }
+  data_ref.dslack = - gf * d.df() - data_ref.residual;
+  pdipm::ComputeDualDirection(data_ref);
   Eigen::VectorXd dslack_ref = Eigen::VectorXd::Ones(robot.max_point_contacts());
   Eigen::VectorXd ddual_ref = Eigen::VectorXd::Ones(robot.max_point_contacts());
   for (int i=0; i<active_contact_indices.size(); ++i) {
-    const int idx = active_contact_indices[i];
-    dslack_ref.coeffRef(idx) = dtau * d.df().coeff(3*i+2) - residual;
-    ddual_ref.coeffRef(idx) = pdipmfunc::ComputeDualDirection(slack, dual, 
-                                                              data.dslack.coeff(idx), 
-                                                              data.duality.coeff(idx));
+    dslack_ref.coeffRef(active_contact_indices[i]) = data_ref.dslack.coeff(i);
+    ddual_ref.coeffRef(active_contact_indices[i]) = data_ref.ddual.coeff(i);
   }
   EXPECT_TRUE(dslack_ref.isApprox(data.dslack));
   EXPECT_TRUE(ddual_ref.isApprox(data.ddual));

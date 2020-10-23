@@ -185,10 +185,7 @@ TEST_F(FrictionConeTest, computeSlackAndDualDirection) {
   friction_cone.condenseSlackAndDual(robot, data, dtau, s, kkt_matrix, kkt_residual);
   friction_cone.computeSlackAndDualDirection(robot, data, dtau, s, d);
   Eigen::MatrixXd gf = Eigen::MatrixXd::Zero(active_contact_indices.size(), contact_status.dimf());
-  Eigen::VectorXd slack_active = Eigen::VectorXd::Zero(active_contact_indices.size());
-  Eigen::VectorXd dual_active = Eigen::VectorXd::Zero(active_contact_indices.size());
-  Eigen::VectorXd residual_active = Eigen::VectorXd::Zero(active_contact_indices.size());
-  Eigen::VectorXd duality_active = Eigen::VectorXd::Zero(active_contact_indices.size());
+  ConstraintComponentData data_ref(active_contact_indices.size());
   for (int i=0; i<active_contact_indices.size(); ++i) {
     const double fx = s.f[active_contact_indices[i]].coeff(0);
     const double fy = s.f[active_contact_indices[i]].coeff(1);
@@ -197,22 +194,18 @@ TEST_F(FrictionConeTest, computeSlackAndDualDirection) {
     gf.row(i).coeffRef(3*i+0) = 2 * dtau * fx;
     gf.row(i).coeffRef(3*i+1) = 2 * dtau * fy;
     gf.row(i).coeffRef(3*i+2) = - 2 * mu * mu * dtau * fz;
-    slack_active.coeffRef(i) = data.slack(active_contact_indices[i]);
-    dual_active.coeffRef(i) = data.dual(active_contact_indices[i]);
-    residual_active.coeffRef(i) = - dtau * (fx*fx+fy*fy-mu*mu*fz*fz) + slack_active.coeff(i);
-    duality_active.coeffRef(i) = slack_active.coeff(i) * dual_active.coeff(i) - barrier;
+    data_ref.slack.coeffRef(i) = data.slack(active_contact_indices[i]);
+    data_ref.dual.coeffRef(i) = data.dual(active_contact_indices[i]);
+    data_ref.residual.coeffRef(i) = - dtau * (fx*fx+fy*fy-mu*mu*fz*fz) + data_ref.slack.coeff(i);
+    data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
   }
-  Eigen::VectorXd dslack_active = Eigen::VectorXd::Zero(active_contact_indices.size());
-  Eigen::VectorXd ddual_active = Eigen::VectorXd::Zero(active_contact_indices.size());
-  dslack_active = - gf * d.df() - residual_active;
-
-  pdipmfunc::ComputeDualDirection(slack_active, dual_active, dslack_active, 
-                                  duality_active, ddual_active);
+  data_ref.dslack = - gf * d.df() - data_ref.residual;
+  pdipm::ComputeDualDirection(data_ref);
   Eigen::VectorXd dslack_ref = Eigen::VectorXd::Ones(robot.max_point_contacts());
   Eigen::VectorXd ddual_ref = Eigen::VectorXd::Ones(robot.max_point_contacts());
   for (int i=0; i<active_contact_indices.size(); ++i) {
-    dslack_ref.coeffRef(active_contact_indices[i]) = dslack_active.coeff(i);
-    ddual_ref.coeffRef(active_contact_indices[i]) = ddual_active.coeff(i);
+    dslack_ref.coeffRef(active_contact_indices[i]) = data_ref.dslack.coeff(i);
+    ddual_ref.coeffRef(active_contact_indices[i]) = data_ref.ddual.coeff(i);
   }
   EXPECT_TRUE(dslack_ref.isApprox(data.dslack));
   EXPECT_TRUE(ddual_ref.isApprox(data.ddual));
