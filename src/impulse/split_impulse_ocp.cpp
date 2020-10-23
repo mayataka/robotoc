@@ -182,6 +182,7 @@ void SplitImpulseOCP::computeKKTResidual(Robot& robot,
                                          const Eigen::VectorXd& q_prev, 
                                          const ImpulseSplitSolution& s,
                                          const SplitSolution& s_next) {
+  assert(q_prev.size() == robot.dimq());
   setContactStatusForKKT(contact_status);
   kkt_residual_.setZero();
   robot.updateKinematics(s.q, s.v);

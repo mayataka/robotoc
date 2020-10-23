@@ -17,8 +17,7 @@ inline ImpulseSplitSolution::ImpulseSplitSolution(const Robot& robot)
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     is_contact_active_(robot.max_point_contacts(), false),
-    dimf_(0),
-    dimc_(0) {
+    dimf_(0) {
   robot.normalizeConfiguration(q);
 }
 
@@ -35,8 +34,7 @@ inline ImpulseSplitSolution::ImpulseSplitSolution()
     mu_stack_(),
     f_stack_(),
     is_contact_active_(),
-    dimf_(0),
-    dimc_(0) {
+    dimf_(0) {
 }
 
 
@@ -49,18 +47,17 @@ inline void ImpulseSplitSolution::setContactStatus(
   assert(contact_status.max_point_contacts()==is_contact_active_.size());
   is_contact_active_ = contact_status.isContactActive();
   dimf_ = contact_status.dimf();
-  dimc_ = contact_status.dimf();
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitSolution::mu_stack() {
-  return mu_stack_.head(dimc_);
+  return mu_stack_.head(dimf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ImpulseSplitSolution::mu_stack() const {
-  return mu_stack_.head(dimc_);
+  return mu_stack_.head(dimf_);
 }
 
 
@@ -141,7 +138,7 @@ inline int ImpulseSplitSolution::num_active_contacts() const {
 
 
 inline int ImpulseSplitSolution::dimc() const {
-  return dimc_;
+  return dimf_;
 }
 
 

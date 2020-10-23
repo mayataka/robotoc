@@ -214,9 +214,6 @@ private:
   /// @brief Dimension of contact forces at the current contact status. 
   int dimf_;
 
-  /// @brief Dimension of equality constraints at the current contact status. 
-  int dimc_;
-
 };
 
 } // namespace idocp 

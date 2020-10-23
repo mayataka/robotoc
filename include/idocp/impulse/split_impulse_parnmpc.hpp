@@ -127,7 +127,7 @@ public:
   /// iteration.
   ///
   void backwardCorrectionSerial(const Robot& robot, const SplitSolution& s_next,
-                                const SplitSolution& s_new_next,
+                                const SplitSolution& s_next_new,
                                 ImpulseSplitSolution& s_new);
 
   ///
@@ -155,7 +155,7 @@ public:
   /// iteration.
   ///
   void forwardCorrectionSerial(const Robot& robot, const SplitSolution& s_prev,
-                               const SplitSolution& s_new_prev, 
+                               const SplitSolution& s_prev_new, 
                                ImpulseSplitSolution& s_new);
 
   ///
@@ -181,7 +181,7 @@ public:
   /// 
   void computePrimalAndDualDirection(Robot& robot, 
                                      const ImpulseSplitSolution& s,
-                                     const SplitSolution& s_new,
+                                     const ImpulseSplitSolution& s_new,
                                      ImpulseSplitDirection& d);
 
   ///
@@ -307,9 +307,9 @@ private:
   CostFunctionData cost_data_;
   std::shared_ptr<ImpulseConstraints> constraints_;
   ConstraintsData constraints_data_;
-  KKTResidual kkt_residual_;
-  KKTMatrix kkt_matrix_;
-  RobotDynamics robot_dynamics_;
+  ImpulseKKTResidual kkt_residual_;
+  ImpulseKKTMatrix kkt_matrix_;
+  ImpulseDynamicsBackwardEuler impulse_dynamics_;
   int dimv_, dimx_, dimKKT_;
   Eigen::MatrixXd kkt_matrix_inverse_;
   Eigen::VectorXd x_res_; /// @brief Residual of state and costate used in the forward and backward correction.
