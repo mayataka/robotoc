@@ -12,7 +12,7 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/constraints/pdipm_func.hpp"
+#include "idocp/constraints/pdipm.hpp"
 #include "idocp/constraints/friction_cone.hpp"
 
 namespace idocp {
