@@ -10,7 +10,6 @@
 #include "idocp/ocp/ocp.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
-#include "idocp/cost/contact_cost.hpp"
 #include "idocp/cost/task_space_3d_cost.hpp"
 #include "idocp/cost/task_space_6d_cost.hpp"
 #include "idocp/constraints/constraints.hpp"

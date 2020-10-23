@@ -15,15 +15,11 @@ include_directories()
 # find Boost
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 # find pinocchio
-find_package(PkgConfig)
-pkg_check_modules(PINOCCHIO REQUIRED pinocchio)
+find_package(pinocchio REQUIRED)
 add_definitions(
   -DPINOCCHIO_URDFDOM_TYPEDEF_SHARED_PTR
   -DPINOCCHIO_URDFDOM_USE_STD_SHARED_PTR
   -DPINOCCHIO_WITH_URDFDOM
-)
-link_directories(
-  ${PINOCCHIO_LIBDIR}
 )
 # find OpenMP
 find_package(OpenMP REQUIRED)
@@ -118,11 +114,6 @@ target_include_directories(
   ${PINOCCHIO_INCLUDE_DIRS}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
-)
-set_target_properties(
-  ${PROJECT_NAME} 
-  PROPERTIES
-  INTERFACE_LINK_DIRECTORIES $<INSTALL_INTERFACE:${PINOCCHIO_LIBDIR}>
 )
 
 #############
