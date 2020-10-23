@@ -16,7 +16,7 @@
 
 namespace idocp {
 
-class DistanceToContactSurfaceTest : public ::testing::Test {
+class ContactDistanceTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -61,8 +61,8 @@ protected:
 };
 
 
-TEST_F(DistanceToContactSurfaceTest, isFeasible) {
-  DistanceToContactSurface constraint(robot); 
+TEST_F(ContactDistanceTest, isFeasible) {
+  ContactDistance constraint(robot); 
   bool feasible = true;
   for (int i=0; i<contact_frames.size(); ++i) {
     if (!robot.is_contact_active(i)) {
@@ -78,8 +78,8 @@ TEST_F(DistanceToContactSurfaceTest, isFeasible) {
 }
 
 
-TEST_F(DistanceToContactSurfaceTest, setSlackAndDual) {
-  DistanceToContactSurface constraint(robot); 
+TEST_F(ContactDistanceTest, setSlackAndDual) {
+  ContactDistance constraint(robot); 
   constraint.setSlackAndDual(robot, data, dtau, s);
   bool feasible = true;
   for (int i=0; i<contact_frames.size(); ++i) {
@@ -98,8 +98,8 @@ TEST_F(DistanceToContactSurfaceTest, setSlackAndDual) {
 }
 
 
-TEST_F(DistanceToContactSurfaceTest, augmentDualResidual) {
-  DistanceToContactSurface constraint(robot); 
+TEST_F(ContactDistanceTest, augmentDualResidual) {
+  ContactDistance constraint(robot); 
   constraint.augmentDualResidual(robot, data, dtau, s, kkt_residual);
   EXPECT_TRUE(kkt_residual.lq().isZero());
   data.slack = Eigen::VectorXd::Random(contact_frames.size()).array().abs();
@@ -117,8 +117,8 @@ TEST_F(DistanceToContactSurfaceTest, augmentDualResidual) {
 }
 
 
-TEST_F(DistanceToContactSurfaceTest, condenseSlackAndDual) {
-  DistanceToContactSurface constraint(robot); 
+TEST_F(ContactDistanceTest, condenseSlackAndDual) {
+  ContactDistance constraint(robot); 
   data.slack = Eigen::VectorXd::Random(contact_frames.size()).array().abs();
   data.dual = Eigen::VectorXd::Random(contact_frames.size()).array().abs();
   Eigen::MatrixXd distance_derivative = Eigen::MatrixXd::Zero(contact_frames.size(), robot.dimv());
@@ -140,8 +140,8 @@ TEST_F(DistanceToContactSurfaceTest, condenseSlackAndDual) {
 }
 
 
-TEST_F(DistanceToContactSurfaceTest, computeSlackAndDualDirection) {
-  DistanceToContactSurface constraint(robot); 
+TEST_F(ContactDistanceTest, computeSlackAndDualDirection) {
+  ContactDistance constraint(robot); 
   data.slack = Eigen::VectorXd::Random(contact_frames.size()).array().abs();
   data.dual = Eigen::VectorXd::Random(contact_frames.size()).array().abs();
   data.residual = Eigen::VectorXd::Random(contact_frames.size()).array().abs();
@@ -169,8 +169,8 @@ TEST_F(DistanceToContactSurfaceTest, computeSlackAndDualDirection) {
 }
 
 
-TEST_F(DistanceToContactSurfaceTest, residualL1Nrom) {
-  DistanceToContactSurface constraint(robot); 
+TEST_F(ContactDistanceTest, residualL1Nrom) {
+  ContactDistance constraint(robot); 
   data.slack = Eigen::VectorXd::Random(contact_frames.size()).array().abs();
   data.dual = Eigen::VectorXd::Random(contact_frames.size()).array().abs();
   data.residual = Eigen::VectorXd::Random(contact_frames.size()).array().abs();
@@ -187,8 +187,8 @@ TEST_F(DistanceToContactSurfaceTest, residualL1Nrom) {
 }
 
 
-TEST_F(DistanceToContactSurfaceTest, squaredKKTErrorNorm) {
-  DistanceToContactSurface constraint(robot); 
+TEST_F(ContactDistanceTest, squaredKKTErrorNorm) {
+  ContactDistance constraint(robot); 
   data.slack = Eigen::VectorXd::Random(contact_frames.size()).array().abs();
   data.dual = Eigen::VectorXd::Random(contact_frames.size()).array().abs();
   data.residual = Eigen::VectorXd::Random(contact_frames.size()).array().abs();
@@ -206,8 +206,8 @@ TEST_F(DistanceToContactSurfaceTest, squaredKKTErrorNorm) {
 }
 
 
-TEST_F(DistanceToContactSurfaceTest, maxStepSize) {
-  DistanceToContactSurface constraint(robot); 
+TEST_F(ContactDistanceTest, maxStepSize) {
+  ContactDistance constraint(robot); 
   data.slack = Eigen::VectorXd::Random(robot.max_point_contacts()).array().abs();
   data.dual = Eigen::VectorXd::Random(robot.max_point_contacts()).array().abs();
   data.dslack = Eigen::VectorXd::Random(robot.max_point_contacts());
@@ -238,8 +238,8 @@ TEST_F(DistanceToContactSurfaceTest, maxStepSize) {
 }
 
 
-TEST_F(DistanceToContactSurfaceTest, updateSlackAndDual) {
-  DistanceToContactSurface constraint(robot); 
+TEST_F(ContactDistanceTest, updateSlackAndDual) {
+  ContactDistance constraint(robot); 
   data.slack = Eigen::VectorXd::Random(robot.max_point_contacts()).array().abs();
   data.dual = Eigen::VectorXd::Random(robot.max_point_contacts()).array().abs();
   data.dslack = Eigen::VectorXd::Random(robot.max_point_contacts());
@@ -260,8 +260,8 @@ TEST_F(DistanceToContactSurfaceTest, updateSlackAndDual) {
 }
 
 
-TEST_F(DistanceToContactSurfaceTest, dimc) {
-  DistanceToContactSurface constraint(robot); 
+TEST_F(ContactDistanceTest, dimc) {
+  ContactDistance constraint(robot); 
   EXPECT_EQ(constraint.dimc(), contact_frames.size());
 }
 

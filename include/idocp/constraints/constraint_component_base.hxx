@@ -86,6 +86,19 @@ inline void ConstraintComponentBase::computeDualDirection(
   pdipm::ComputeDualDirection(data);
 }
 
+
+inline double ConstraintComponentBase::computeDuality(const double slack, 
+                                                      const double dual) const {
+  return (slack * dual - barrier_); 
+}
+
+
+inline double ConstraintComponentBase::computeDualDirection(
+    const double slack, const double dual, const double dslack, 
+    const double duality) const {
+  return (- (dual * dslack + duality) / slack);
+}
+
 } // namespace idocp
 
 #endif // IDOCP_CONSTRAINT_COMPONENT_BASE_HXX_

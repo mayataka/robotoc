@@ -63,6 +63,8 @@ add_library(
   src/constraints/joint_acceleration_lower_limit.cpp
   src/constraints/joint_torques_upper_limit.cpp
   src/constraints/joint_torques_lower_limit.cpp
+  src/constraints/friction_cone.cpp
+  src/constraints/contact_normal_force.cpp
   src/constraints/impulse_constraints.cpp
   src/constraints/impulse_constraint_component_base.cpp
   src/impulse/impulse_kkt_residual.cpp

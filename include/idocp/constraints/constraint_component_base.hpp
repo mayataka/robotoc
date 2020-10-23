@@ -323,6 +323,20 @@ protected:
   ///
   virtual void computeDualDirection(ConstraintComponentData& data) const final;
 
+  ///
+  /// @brief Computes the duality residual between the slack and dual variables.
+  ///
+  virtual double computeDuality(const double slack, 
+                                const double dual) const final;
+
+  ///
+  /// @brief Computes the direction of the dual variable from slack, residual,
+  /// duality, and the direction of the slack.
+  ///
+  virtual double computeDualDirection(const double slack, const double dual,
+                                      const double dslack, 
+                                      const double duality) const final;
+
 private:
   double barrier_, fraction_to_boundary_rate_;
 
