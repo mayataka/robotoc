@@ -1,6 +1,6 @@
 #include "idocp/constraints/constraint_component_base.hpp"
 
-#include <exception>
+#include <stdexcept>
 #include <iostream>
 
 

@@ -11,20 +11,10 @@ endif()
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 # find Eigen
 find_package(Eigen3 REQUIRED)
-include_directories()
 # find Boost
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 # find pinocchio
-find_package(PkgConfig)
-pkg_check_modules(PINOCCHIO REQUIRED pinocchio)
-add_definitions(
-  -DPINOCCHIO_URDFDOM_TYPEDEF_SHARED_PTR
-  -DPINOCCHIO_URDFDOM_USE_STD_SHARED_PTR
-  -DPINOCCHIO_WITH_URDFDOM
-)
-link_directories(
-  ${PINOCCHIO_LIBDIR}
-)
+find_package(pinocchio REQUIRED)
 # find OpenMP
 find_package(OpenMP REQUIRED)
 if(OpenMP_FOUND)
@@ -41,12 +31,18 @@ add_library(
   src/robot/contact_status.cpp
   src/cost/cost_function.cpp
   src/cost/cost_function_data.cpp
+  src/cost/cost_function_component_base.cpp
   src/cost/joint_space_cost.cpp
-  # src/cost/contact_cost.cpp
+  src/cost/contact_force_cost.cpp
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
+  src/cost/impulse_cost_function.cpp
+  src/cost/impulse_cost_function_component_base.cpp
+  src/cost/joint_space_impulse_cost.cpp
+  src/cost/impulse_force_cost.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
+  src/constraints/constraints_data.cpp
   src/constraints/constraint_component_base.cpp
   src/constraints/constraint_component_data.cpp
   src/constraints/joint_position_upper_limit.cpp
@@ -57,11 +53,21 @@ add_library(
   src/constraints/joint_acceleration_lower_limit.cpp
   src/constraints/joint_torques_upper_limit.cpp
   src/constraints/joint_torques_lower_limit.cpp
-  # src/contact_complementarity/contact_complementarity_component_base.cpp
-  # src/contact_complementarity/distance_to_contact_surface.cpp
-  # src/contact_complementarity/contact_normal_force.cpp
-  # src/contact_complementarity/friction_cone.cpp
-  # src/contact_complementarity/contact_complementarity.cpp
+  src/constraints/friction_cone.cpp
+  src/constraints/contact_normal_force.cpp
+  src/constraints/impulse_constraints.cpp
+  src/constraints/impulse_constraint_component_base.cpp
+  src/impulse/impulse_kkt_residual.cpp
+  src/impulse/impulse_kkt_matrix.cpp
+  src/impulse/impulse_split_solution.cpp
+  src/impulse/impulse_split_direction.cpp
+  src/impulse/impulse_state_equation.cpp
+  src/impulse/impulse_dynamics_forward_euler.cpp
+  src/impulse/impulse_dynamics_backward_euler.cpp
+  src/impulse/impulse_riccati_matrix_factorizer.cpp
+  src/impulse/split_impulse_ocp.cpp
+  src/impulse/split_impulse_parnmpc.cpp
+  src/ocp/schur_complement.cpp
   src/ocp/kkt_residual.cpp
   src/ocp/kkt_matrix.cpp
   src/ocp/split_solution.cpp
@@ -102,11 +108,6 @@ target_include_directories(
   ${PINOCCHIO_INCLUDE_DIRS}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
-)
-set_target_properties(
-  ${PROJECT_NAME} 
-  PROPERTIES
-  INTERFACE_LINK_DIRECTORIES $<INSTALL_INTERFACE:${PINOCCHIO_LIBDIR}>
 )
 
 #############

@@ -46,9 +46,6 @@ sudo make install
 You can link your exectables to `idocp` by writing `CMakeLists.txt` as
 ```
 find_package(idocp REQUIRED)
-find_package(PkgConfig)
-pkg_check_modules(PINOCCHIO REQUIRED pinocchio)
-link_directories(${PINOCCHIO_LIBDIR})
 
 add_executable(
     YOUR_EXECTABLE
@@ -74,11 +71,8 @@ First, install [RaiSimLib](https://github.com/leggedrobotics/raisimLib) and [Rai
 Then you can build the simulation by writing `CMakeLists.txt` as
 ```
 find_package(idocp REQUIRED)
-find_package(PkgConfig)
 find_package(raisim CONFIG REQUIRED)
 find_package(raisimOgre CONFIG REQUIRED)
-pkg_check_modules(PINOCCHIO REQUIRED pinocchio)
-link_directories(${PINOCCHIO_LIBDIR})
 
 add_executable(
     YOUR_EXECTABLE

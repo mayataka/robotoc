@@ -31,6 +31,10 @@ bool JointPositionUpperLimit::useKinematics() const {
   return false;
 }
 
+KinematicsLevel JointPositionUpperLimit::kinematicsLevel() const {
+  return KinematicsLevel::PositionLevel;
+}
+
 
 bool JointPositionUpperLimit::isFeasible(Robot& robot, 
                                          ConstraintComponentData& data, 

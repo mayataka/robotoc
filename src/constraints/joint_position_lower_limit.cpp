@@ -32,6 +32,11 @@ bool JointPositionLowerLimit::useKinematics() const {
 }
 
 
+KinematicsLevel JointPositionLowerLimit::kinematicsLevel() const {
+  return KinematicsLevel::PositionLevel;
+}
+
+
 bool JointPositionLowerLimit::isFeasible(Robot& robot, 
                                          ConstraintComponentData& data, 
                                          const SplitSolution& s) const {

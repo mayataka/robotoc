@@ -40,12 +40,14 @@ protected:
 TEST_F(JointVelocityLowerLimitTest, useKinematicsFixedBase) {
   JointVelocityLowerLimit limit(fixed_base_robot_); 
   EXPECT_FALSE(limit.useKinematics());
+  EXPECT_EQ(limit.kinematicsLevel(), KinematicsLevel::VelocityLevel);
 }
 
 
 TEST_F(JointVelocityLowerLimitTest, useKinematicsFloatingBase) {
   JointVelocityLowerLimit limit(floating_base_robot_); 
   EXPECT_FALSE(limit.useKinematics());
+  EXPECT_EQ(limit.kinematicsLevel(), KinematicsLevel::VelocityLevel);
 }
 
 

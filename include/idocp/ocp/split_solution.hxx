@@ -52,6 +52,7 @@ inline SplitSolution::~SplitSolution() {
 
 inline void SplitSolution::setContactStatus(
     const ContactStatus& contact_status) {
+  assert(contact_status.max_point_contacts()==is_contact_active_.size());
   is_contact_active_ = contact_status.isContactActive();
   dimc_ = dim_passive_ + contact_status.dimf();
   dimf_ = contact_status.dimf();
@@ -161,6 +162,14 @@ inline int SplitSolution::dimc() const {
 
 inline int SplitSolution::dimf() const {
   return dimf_;
+}
+
+
+inline bool SplitSolution::isContactActive(const int contact_index) const {
+  assert(!is_contact_active_.empty());
+  assert(contact_index >= 0);
+  assert(contact_index < is_contact_active_.size());
+  return is_contact_active_[contact_index];
 }
 
 

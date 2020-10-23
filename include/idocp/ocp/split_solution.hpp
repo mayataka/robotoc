@@ -216,6 +216,13 @@ public:
   Eigen::VectorXd beta;
 
   ///
+  /// @brief Return true if a contact is active and false if not.
+  /// @param[in] contact_index Index of a contact of interedted. 
+  /// @return true if a contact is active and false if not. 
+  ///
+  bool isContactActive(const int contact_index) const;
+
+  ///
   /// @brief Generates split solution filled randomly.
   /// @return Split solution filled randomly.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.

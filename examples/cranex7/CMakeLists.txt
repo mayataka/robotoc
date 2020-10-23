@@ -5,10 +5,6 @@ set(CMAKE_CXX_STANDARD 14)
 
 find_package(idocp REQUIRED)
 
-find_package(PkgConfig)
-pkg_check_modules(PINOCCHIO REQUIRED pinocchio)
-link_directories(${PINOCCHIO_LIBDIR})
-
 add_executable(
     ocp_benchmark
     ocp_benchmark.cpp

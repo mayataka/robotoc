@@ -2,21 +2,13 @@
 #define IDOCP_ROBOT_HPP_
 
 #include <string>
-#include <map>
 #include <vector>
 
 #include "Eigen/Core"
 #include "pinocchio/multibody/model.hpp"
 #include "pinocchio/multibody/data.hpp"
-#include "pinocchio/parsers/urdf.hpp"
-#include "pinocchio/algorithm/joint-configuration.hpp"
-#include "pinocchio/algorithm/kinematics-derivatives.hpp"
-#include "pinocchio/algorithm/frames.hpp"
-#include "pinocchio/algorithm/frames-derivatives.hpp"
-#include "pinocchio/algorithm/crba.hpp"
-#include "pinocchio/algorithm/rnea.hpp"
-#include "pinocchio/algorithm/rnea-derivatives.hpp"
-#include "pinocchio/algorithm/aba.hpp"
+#include "pinocchio/container/aligned-vector.hpp"
+#include "pinocchio/spatial/force.hpp"
 
 #include "idocp/robot/point_contact.hpp"
 #include "idocp/robot/floating_base.hpp"
@@ -163,6 +155,10 @@ public:
   void updateKinematics(const Eigen::MatrixBase<ConfigVectorType>& q, 
                         const Eigen::MatrixBase<TangentVectorType1>& v, 
                         const Eigen::MatrixBase<TangentVectorType2>& a);
+
+  template <typename ConfigVectorType, typename TangentVectorType>
+  void updateKinematics(const Eigen::MatrixBase<ConfigVectorType>& q, 
+                        const Eigen::MatrixBase<TangentVectorType>& v);
 
   ///
   /// @brief Returns the position of the frame. Before calling this function, 
@@ -517,6 +513,33 @@ public:
       const Eigen::MatrixBase<MatrixType>& dRNEA_partial_dfext);
 
   ///
+  /// @brief Computes the inverse of the joint inertia matrix M.
+  /// @param[in] M Joint inertia matrix. Size must be 
+  /// Robot::dimv() x Robot::dimv().
+  /// @param[out] Minv Inverse of the joint inertia matrix M. Size must be 
+  /// Robot::dimv() x Robot::dimv().
+  ///   
+  template <typename MatrixType1, typename MatrixType2>
+  void computeMinv(const Eigen::MatrixBase<MatrixType1>& M, 
+                   const Eigen::MatrixBase<MatrixType2>& Minv);
+
+  ///
+  /// @brief Computes the inverse of the joint inertia matrix M.
+  /// @param[in] M Joint inertia matrix. Size must be 
+  /// Robot::dimv() x Robot::dimv().
+  /// @param[in] J Contact Jacobian. Size must be 
+  /// ContactStatus::dimf() x Robot::dimv().
+  /// @param[out] MJtJinv Inverse of the matrix [[M J^T], [J O]]. Size must be 
+  /// (Robot::dimv() + ContactStatus::dimf()) x 
+  /// (Robot::dimv() + ContactStatus::dimf()).
+  ///   
+  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
+  void computeMJtJinv(const ContactStatus& contact_status,
+                      const Eigen::MatrixBase<MatrixType1>& M, 
+                      const Eigen::MatrixBase<MatrixType2>& J,
+                      const Eigen::MatrixBase<MatrixType3>& MJtJinv);
+
+  ///
   /// @brief Computes the state equation, i.e., the velocity and forward 
   /// dynamics.
   /// @param[in] q Configuration. Size must be Robot::dimq().
@@ -658,8 +681,8 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  pinocchio::Model model_;
-  pinocchio::Data data_;
+  pinocchio::Model model_, impulse_model_;
+  pinocchio::Data data_, impulse_data_;
   FloatingBase floating_base_;
   std::vector<PointContact> point_contacts_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;

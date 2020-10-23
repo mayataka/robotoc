@@ -30,6 +30,9 @@ inline ContactStatus::~ContactStatus() {
 
 
 inline bool ContactStatus::isContactActive(const int contact_index) const {
+  assert(!is_contact_active_.empty());
+  assert(contact_index >= 0);
+  assert(contact_index < is_contact_active_.size());
   return is_contact_active_[contact_index];
 }
 

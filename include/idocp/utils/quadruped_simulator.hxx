@@ -82,7 +82,7 @@ inline void QuadrupedSimulator::run(MPC<OCPTypeDerived>& mpc,
   pino2rai(q, v, q_raisim, v_raisim);
   pino2rai(u, u_raisim);
   if (visualization && recording) {
-    vis->startRecordingVideo(save_dir_path_+'_'+save_file_name_+".mp4");
+    vis->startRecordingVideo(save_dir_path_+'/'+save_file_name_+".mp4");
   }
   std::chrono::system_clock::time_point start_clock, end_clock;
   double CPU_time_total_in_sec = 0;

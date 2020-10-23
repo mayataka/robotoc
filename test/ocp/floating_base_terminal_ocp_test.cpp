@@ -76,7 +76,7 @@ protected:
     constraints->push_back(joint_lower_limit);
     constraints->push_back(velocity_lower_limit); 
     constraints->push_back(velocity_upper_limit);
-    constraints_data = constraints->createConstraintsData(robot);
+    constraints_data = constraints->createConstraintsData(robot, 2);
     kkt_matrix = KKTMatrix(robot);
     kkt_residual = KKTResidual(robot);
   }

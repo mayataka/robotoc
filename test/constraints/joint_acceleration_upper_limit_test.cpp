@@ -43,12 +43,14 @@ protected:
 TEST_F(JointAccelerationUpperLimitTest, useKinematicsFixedBase) {
   JointAccelerationUpperLimit limit(fixed_base_robot_, amax_fixed); 
   EXPECT_FALSE(limit.useKinematics());
+  EXPECT_EQ(limit.kinematicsLevel(), KinematicsLevel::AccelerationLevel);
 }
 
 
 TEST_F(JointAccelerationUpperLimitTest, useKinematicsFloatingBase) {
   JointAccelerationUpperLimit limit(floating_base_robot_, amax_floating); 
   EXPECT_FALSE(limit.useKinematics());
+  EXPECT_EQ(limit.kinematicsLevel(), KinematicsLevel::AccelerationLevel);
 }
 
 

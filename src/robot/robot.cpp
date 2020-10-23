@@ -9,7 +9,9 @@ namespace idocp {
 
 Robot::Robot(const std::string& path_to_urdf)
   : model_(),
+    impulse_model_(),
     data_(model_),
+    impulse_data_(impulse_model_),
     point_contacts_(),
     floating_base_(),
     fjoint_(),
@@ -22,7 +24,10 @@ Robot::Robot(const std::string& path_to_urdf)
     lower_joint_position_limit_(),
     upper_joint_position_limit_() {
   pinocchio::urdf::buildModel(path_to_urdf, model_);
+  impulse_model_ = model_;
+  impulse_model_.gravity.linear().setZero();
   data_ = pinocchio::Data(model_);
+  impulse_data_ = pinocchio::Data(impulse_model_);
   fjoint_ = pinocchio::container::aligned_vector<pinocchio::Force>(
                  model_.joints.size(), pinocchio::Force::Zero());
   floating_base_ = FloatingBase(model_);
@@ -37,7 +42,9 @@ Robot::Robot(const std::string& path_to_urdf)
 Robot::Robot(const std::string& path_to_urdf, 
              const std::vector<int>& contact_frames)
   : model_(),
+    impulse_model_(),
     data_(model_),
+    impulse_data_(impulse_model_),
     point_contacts_(),
     floating_base_(),
     fjoint_(),
@@ -50,7 +57,10 @@ Robot::Robot(const std::string& path_to_urdf,
     lower_joint_position_limit_(),
     upper_joint_position_limit_() {
   pinocchio::urdf::buildModel(path_to_urdf, model_);
+  impulse_model_ = model_;
+  impulse_model_.gravity.linear().setZero();
   data_ = pinocchio::Data(model_);
+  impulse_data_ = pinocchio::Data(impulse_model_);
   for (int i=0; i<contact_frames.size(); ++i) {
     point_contacts_.push_back(PointContact(model_, contact_frames[i]));
     is_each_contact_active_.push_back(false);
@@ -61,6 +71,10 @@ Robot::Robot(const std::string& path_to_urdf,
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
+  data_.JMinvJt.resize(max_dimf_, max_dimf_);
+  data_.JMinvJt.setZero();
+  data_.sDUiJt.resize(dimv_, max_dimf_);
+  data_.sDUiJt.setZero();
   dimpulse_dv_.resize(dimv_, dimv_);
   dimpulse_dv_.setZero();
   initializeJointLimits();
@@ -69,6 +83,7 @@ Robot::Robot(const std::string& path_to_urdf,
 
 Robot::Robot()
   : model_(),
+    impulse_model_(),
     data_(model_),
     point_contacts_(),
     floating_base_(),

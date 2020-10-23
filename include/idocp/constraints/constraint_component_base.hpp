@@ -14,6 +14,16 @@
 namespace idocp {
 
 ///
+/// @class Kinematics level of the constraint component.
+/// @brief Kinematics level of the constraint component.
+///
+enum class KinematicsLevel {
+  PositionLevel,
+  VelocityLevel,
+  AccelerationLevel
+};
+
+///
 /// @typedef ConstraintComponentBase
 /// @brief Base class for constraint components. 
 ///
@@ -66,6 +76,12 @@ public:
   /// Robot model. false if not.
   ///
   virtual bool useKinematics() const = 0;
+
+  ///
+  /// @brief Check the kinematics level of the constraint component.
+  /// @return Kinematics level of the constraint component.
+  ///
+  virtual KinematicsLevel kinematicsLevel() const = 0;
 
   ///
   /// @brief Check whether the current solution s is feasible or not. 
@@ -306,6 +322,20 @@ protected:
   /// duality, and the direction of the slack.
   ///
   virtual void computeDualDirection(ConstraintComponentData& data) const final;
+
+  ///
+  /// @brief Computes the duality residual between the slack and dual variables.
+  ///
+  virtual double computeDuality(const double slack, 
+                                const double dual) const final;
+
+  ///
+  /// @brief Computes the direction of the dual variable from slack, residual,
+  /// duality, and the direction of the slack.
+  ///
+  virtual double computeDualDirection(const double slack, const double dual,
+                                      const double dslack, 
+                                      const double duality) const final;
 
 private:
   double barrier_, fraction_to_boundary_rate_;
