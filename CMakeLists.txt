@@ -11,16 +11,10 @@ endif()
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 # find Eigen
 find_package(Eigen3 REQUIRED)
-include_directories()
 # find Boost
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 # find pinocchio
 find_package(pinocchio REQUIRED)
-add_definitions(
-  -DPINOCCHIO_URDFDOM_TYPEDEF_SHARED_PTR
-  -DPINOCCHIO_URDFDOM_USE_STD_SHARED_PTR
-  -DPINOCCHIO_WITH_URDFDOM
-)
 # find OpenMP
 find_package(OpenMP REQUIRED)
 if(OpenMP_FOUND)
