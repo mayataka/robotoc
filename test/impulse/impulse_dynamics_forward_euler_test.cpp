@@ -189,7 +189,7 @@ TEST_F(ImpulseDynamicsForwardEulerTest, condenseImpulseDynamicsForwardEulerFixed
   id.computeCondensedDirection(kkt_matrix, kkt_residual, d_next, d);
   const Eigen::VectorXd ddvf_ref = - MJTJinv_dimdc_dqv * d.dx() - MJTJinv * imdc;
   const Eigen::VectorXd ddv_ref = ddvf_ref.head(robot.dimv());
-  const Eigen::VectorXd df_ref = ddvf_ref.tail(contact_status.dimf());
+  const Eigen::VectorXd df_ref = - ddvf_ref.tail(contact_status.dimf());
   EXPECT_TRUE(ddv_ref.isApprox(d.ddv));
   EXPECT_TRUE(df_ref.isApprox(d.df()));
   const Eigen::MatrixXd Qdvfqv_condensed = - Qdvdvff * MJTJinv * dimdc_dqv;
@@ -406,7 +406,7 @@ TEST_F(ImpulseDynamicsForwardEulerTest, condenseImpulseDynamicsForwardEulerFloat
   id.computeCondensedDirection(kkt_matrix, kkt_residual, d_next, d);
   const Eigen::VectorXd ddvf_ref = - MJTJinv_dimdc_dqv * d.dx() - MJTJinv * imdc;
   const Eigen::VectorXd ddv_ref = ddvf_ref.head(robot.dimv());
-  const Eigen::VectorXd df_ref = ddvf_ref.tail(contact_status.dimf());
+  const Eigen::VectorXd df_ref = - ddvf_ref.tail(contact_status.dimf());
   EXPECT_TRUE(ddv_ref.isApprox(d.ddv));
   EXPECT_TRUE(df_ref.isApprox(d.df()));
   const Eigen::MatrixXd Qdvfqv_condensed = - Qdvdvff * MJTJinv * dimdc_dqv;

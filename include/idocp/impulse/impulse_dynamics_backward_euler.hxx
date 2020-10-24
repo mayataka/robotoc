@@ -13,7 +13,6 @@ inline ImpulseDynamicsBackwardEuler::ImpulseDynamicsBackwardEuler(
     const Robot& robot) 
   : dImD_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     dImD_ddv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    dImD_df_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     Minv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     MinvImDq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     MinvImDf_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
@@ -29,7 +28,6 @@ inline ImpulseDynamicsBackwardEuler::ImpulseDynamicsBackwardEuler(
 inline ImpulseDynamicsBackwardEuler::ImpulseDynamicsBackwardEuler() 
   : dImD_dq_(), 
     dImD_ddv_(), 
-    dImD_df_full_(), 
     Minv_(), 
     MinvImDq_(), 
     MinvImDf_full_(), 
@@ -57,7 +55,7 @@ inline void ImpulseDynamicsBackwardEuler::linearizeImpulseDynamics(
   // augment inverse dynamics constraint
   kkt_residual.lq().noalias() += dImD_dq_.transpose() * s.beta;
   kkt_residual.ldv.noalias() += dImD_ddv_.transpose() * s.beta;
-  kkt_residual.lf().noalias() += dImD_df_().transpose() * s.beta;
+  kkt_residual.lf().noalias() -= kkt_matrix.Cv() * s.beta;
   // augment contact constraint
   kkt_residual.lq().noalias() += kkt_matrix.Cq().transpose() * s.mu_stack();
   kkt_residual.lv().noalias() += kkt_matrix.Cv().transpose() * s.mu_stack();
@@ -73,7 +71,7 @@ inline void ImpulseDynamicsBackwardEuler::condenseImpulseDynamics(
   linearizeImpulseDynamics(robot, contact_status, s, kkt_matrix, kkt_residual);
   robot.computeMinv(dImD_ddv_, Minv_);
   MinvImDq_.noalias() = Minv_ * dImD_dq_;
-  MinvImDf_().noalias() = Minv_ * dImD_df_();
+  MinvImDf_().noalias() = - Minv_ * kkt_matrix.Cv().transpose();
   MinvImD_.noalias() = Minv_ * kkt_residual.dv_res;
   Qdvq_condensed_.noalias() 
       = (- kkt_matrix.Qdvdv.diagonal()).asDiagonal() * MinvImDq_;
@@ -117,7 +115,6 @@ inline void ImpulseDynamicsBackwardEuler::linearizeInverseImpulseDynamics(
   robot.setContactForces(contact_status, s.f);
   robot.RNEAImpulse(s.q, s.dv, kkt_residual.dv_res);
   robot.RNEAImpulseDerivatives(s.q, s.dv, dImD_dq_, dImD_ddv_);
-  robot.dRNEAPartialdFext(contact_status, dImD_df_full_);
 }
 
 
@@ -145,17 +142,6 @@ inline double ImpulseDynamicsBackwardEuler::squaredNormImpulseDynamicsResidual(
 inline void ImpulseDynamicsBackwardEuler::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseDynamicsBackwardEuler::dImD_df_() {
-  return dImD_df_full_.topLeftCorner(dimv_, dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsBackwardEuler::dImD_df_() const {
-  return dImD_df_full_.topLeftCorner(dimv_, dimf_);
 }
 
 

@@ -60,8 +60,8 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::MatrixXd dImD_dq_, dImD_ddv_, dImD_df_full_, Minv_, MinvImDq_, 
-                  MinvImDf_full_, Qdvq_condensed_, Qdvf_condensed_full_;
+  Eigen::MatrixXd dImD_dq_, dImD_ddv_, Minv_, MinvImDq_, MinvImDf_full_, 
+                  Qdvq_condensed_, Qdvf_condensed_full_;
   Eigen::VectorXd MinvImD_, ldv_condensed_;
   int dimv_, dimf_;
 
@@ -89,10 +89,6 @@ private:
 
 
   void setContactStatus(const ContactStatus& contact_status);
-
-  Eigen::Block<Eigen::MatrixXd> dImD_df_();
-
-  const Eigen::Block<const Eigen::MatrixXd> dImD_df_() const;
 
   Eigen::Block<Eigen::MatrixXd> MinvImDf_();
 
