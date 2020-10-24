@@ -77,6 +77,10 @@ public:
           const double dtau, const SplitSolution& s, 
           KKTResidual& kkt_residual) const override {}
 
+  void lu(Robot& robot, CostFunctionData& data, const double t, 
+          const double dtau, const SplitSolution& s,
+          KKTResidual& kkt_residual) const override;
+
   void lqq(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
            KKTMatrix& kkt_matrix) const override;
@@ -93,6 +97,10 @@ public:
            const double dtau, const SplitSolution& s, 
            KKTMatrix& kkt_matrix) const override {}
 
+  void luu(Robot& robot, CostFunctionData& data, const double t, 
+           const double dtau, const SplitSolution& s, 
+           KKTMatrix& kkt_matrix) const override;
+
   void phiq(Robot& robot, CostFunctionData& data, const double t, 
             const SplitSolution& s, KKTResidual& kkt_residual) const override;
 
@@ -105,18 +113,10 @@ public:
   void phivv(Robot& robot, CostFunctionData& data, const double t, 
              const SplitSolution& s, KKTMatrix& kkt_matrix) const override;
 
-  void lu(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const Eigen::VectorXd& u, 
-          Eigen::VectorXd& lu) const override;
-
-  void luu(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::VectorXd& u, 
-           Eigen::MatrixXd& Quu) const override;
-
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int dimq_, dimv_;
+  int dimq_, dimv_, dimu_;
   Eigen::VectorXd q_ref_, v_ref_, a_ref_, u_ref_, q_weight_, v_weight_, 
                   a_weight_, u_weight_, qf_weight_, vf_weight_;
 };

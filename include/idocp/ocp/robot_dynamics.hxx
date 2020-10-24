@@ -20,6 +20,7 @@ inline RobotDynamics::RobotDynamics(const Robot& robot)
     Quu_du_df_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
     has_active_contacts_(false),
+    dimv_(robot.dimv()),
     dimf_(0) {
 }
 
@@ -37,6 +38,7 @@ inline RobotDynamics::RobotDynamics()
     Quu_du_df_full_(),
     has_floating_base_(false),
     has_active_contacts_(false),
+    dimv_(0),
     dimf_(0) {
 }
 
@@ -211,9 +213,7 @@ inline void RobotDynamics::linearizeContactConstraint(
 inline void RobotDynamics::setContactForces(Robot& robot, 
                                             const ContactStatus& contact_status, 
                                             const SplitSolution& s) {
-  if (contact_status.hasActiveContacts()) {
-    robot.setContactForces(contact_status, s.f);
-  }
+  robot.setContactForces(contact_status, s.f);
 }
 
 
@@ -304,27 +304,24 @@ inline void RobotDynamics::setContactStatus(
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
-RobotDynamics::du_df_() {
-  return du_df_full_.leftCols(dimf_);
+inline Eigen::Block<Eigen::MatrixXd> RobotDynamics::du_df_() {
+  return du_df_full_.topLeftCorner(dimv_, dimf_); 
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
-RobotDynamics::du_df_() const {
-  return du_df_full_.leftCols(dimf_);
+inline const Eigen::Block<const Eigen::MatrixXd> RobotDynamics::du_df_() const {
+  return du_df_full_.topLeftCorner(dimv_, dimf_); 
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
-RobotDynamics::Quu_du_df_() {
-  return Quu_du_df_full_.leftCols(dimf_);
+inline Eigen::Block<Eigen::MatrixXd> RobotDynamics::Quu_du_df_() {
+  return Quu_du_df_full_.topLeftCorner(dimv_, dimf_); 
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic, true> 
+inline const Eigen::Block<const Eigen::MatrixXd> 
 RobotDynamics::Quu_du_df_() const {
-  return Quu_du_df_full_.leftCols(dimf_);
+  return Quu_du_df_full_.topLeftCorner(dimv_, dimf_); 
 }
 
 

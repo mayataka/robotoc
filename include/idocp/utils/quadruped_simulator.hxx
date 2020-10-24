@@ -9,12 +9,12 @@
 namespace idocp {
 
 inline QuadrupedSimulator::QuadrupedSimulator(
+    const std::string& path_to_raisim_activation_key,
     const std::string& path_to_urdf_for_raisim, 
     const std::string& save_dir_path, const std::string& save_file_name)
-  : data_saver_(save_dir_path, save_file_name),
-    raisim_world_(),
-    raisim_robot_(raisim_world_.addArticulatedSystem(path_to_urdf_for_raisim, "")),
-    raisim_ground_(raisim_world_.addGround()),
+  : path_to_raisim_activation_key_(path_to_raisim_activation_key),
+    path_to_urdf_for_raisim_(path_to_urdf_for_raisim),
+    data_saver_(save_dir_path, save_file_name),
     save_dir_path_(save_dir_path), 
     save_file_name_(save_file_name) {
 }
@@ -47,18 +47,22 @@ inline void QuadrupedSimulator::run(MPC<OCPTypeDerived>& mpc,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  raisim_world_.setTimeStep(sampling_period_in_sec);
-  raisim_world_.setERP(0.2, 0.2);
+  raisim::World::setActivationKey(path_to_raisim_activation_key_);
+  raisim::World raisim_world;
+  auto raisim_robot = raisim_world.addArticulatedSystem(path_to_urdf_for_raisim_, "");
+  auto raisim_ground = raisim_world.addGround();
+  raisim_world.setTimeStep(sampling_period_in_sec);
+  raisim_world.setERP(0.2, 0.2);
   auto vis = raisim::OgreVis::get();
   if (visualization) {
-    vis->setWorld(&raisim_world_);
+    vis->setWorld(&raisim_world);
     vis->setSetUpCallback(setupCallback);
     vis->setAntiAliasing(2);
     vis->setWindowSize(500, 400);
     // vis->setContactVisObjectSize(0.025, 0.01); 
     vis->initApp();
-    vis->createGraphicalObject(raisim_ground_, 20, "floor", "checkerboard_green");
-    vis->createGraphicalObject(raisim_robot_, "ANYmal");
+    vis->createGraphicalObject(raisim_ground, 20, "floor", "checkerboard_green");
+    vis->createGraphicalObject(raisim_robot, "ANYmal");
     const double scaled_position = 0.6;
     vis->getCameraMan()->getCamera()->setPosition(-3.5*scaled_position, 
                                                   -3.5*scaled_position, 
@@ -89,9 +93,9 @@ inline void QuadrupedSimulator::run(MPC<OCPTypeDerived>& mpc,
   for (double t=0; t<simulation_time_in_sec; t+=sampling_period_in_sec) {
     pino2rai(q, v, q_raisim, v_raisim);
     pino2rai(u, u_raisim);
-    raisim_robot_->setState(q_raisim, v_raisim);
-    raisim_robot_->setGeneralizedForce(u_raisim);
-    raisim_world_.integrate();
+    raisim_robot->setState(q_raisim, v_raisim);
+    raisim_robot->setGeneralizedForce(u_raisim);
+    raisim_world.integrate();
     if (visualization) {
       vis->renderOneFrame();
     }
@@ -106,7 +110,7 @@ inline void QuadrupedSimulator::run(MPC<OCPTypeDerived>& mpc,
         = 1.0e-06 * std::chrono::duration_cast<std::chrono::microseconds>(
             end_clock-start_clock).count();
     CPU_time_total_in_sec += CPU_time_in_sec;
-    raisim_robot_->getState(q_raisim, v_raisim);
+    raisim_robot->getState(q_raisim, v_raisim);
     rai2pino(q_raisim, v_raisim, q, v);
   }
   const int num_simulation_update 

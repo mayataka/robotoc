@@ -1,8 +1,6 @@
 #ifndef IDOCP_IMPULSE_CONSTRAINT_COMPONENT_BASE_HPP_
 #define IDOCP_IMPULSE_CONSTRAINT_COMPONENT_BASE_HPP_
 
-#include "Eigen/Core"
-
 #include "idocp/robot/robot.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"

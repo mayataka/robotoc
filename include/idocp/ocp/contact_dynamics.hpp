@@ -1,5 +1,5 @@
-#ifndef IDOCP_ROBOT_DYNAMICS_HPP_
-#define IDOCP_ROBOT_DYNAMICS_HPP_
+#ifndef IDOCP_CONTACT_DYNAMICS_HPP_
+#define IDOCP_CONTACT_DYNAMICS_HPP_
 
 #include "Eigen/Core"
 
@@ -13,21 +13,23 @@
 
 namespace idocp {
 
-class RobotDynamics {
+class ContactDynamics {
 public:
-  RobotDynamics(const Robot& robot);
+  ContactDynamics(const Robot& robot);
 
-  RobotDynamics();
+  ContactDynamics();
 
-  ~RobotDynamics();
+  ~ContactDynamics();
 
-  RobotDynamics(const RobotDynamics&) = default;
+  ContactDynamics(const ContactDynamics&) = default;
 
-  RobotDynamics& operator=(const RobotDynamics&) = default;
+  ContactDynamics& operator=(const ContactDynamics&) 
+      = default;
  
-  RobotDynamics(RobotDynamics&&) noexcept = default;
+  ContactDynamics(ContactDynamics&&) noexcept = default;
 
-  RobotDynamics& operator=(RobotDynamics&&) noexcept = default;
+  ContactDynamics& operator=(ContactDynamics&&) noexcept 
+      = default;
 
   void linearizeRobotDynamics(Robot& robot, const ContactStatus& contact_status, 
                               const double dtau, const SplitSolution& s, 
@@ -37,9 +39,9 @@ public:
                              const double dtau, const SplitSolution& s, 
                              KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
-  void computeCondensedDirection(const double dtau, 
-                                 const KKTMatrix& kkt_matrix, 
+  void computeCondensedDirection(const double dtau, const KKTMatrix& kkt_matrix, 
                                  const KKTResidual& kkt_residual, 
+                                 const SplitDirection& d_next,
                                  SplitDirection& d);
 
   void computeRobotDynamicsResidual(Robot& robot, 
@@ -47,50 +49,39 @@ public:
                                     const double dtau, const SplitSolution& s, 
                                     KKTResidual& kkt_residual);
 
-  double l1NormRobotDynamicsResidual(const double dtau, 
-                                     const KKTResidual& kkt_residual) const;
+  static double l1NormRobotDynamicsResidual(const double dtau, 
+                                            const KKTResidual& kkt_residual);
 
-  double squaredNormRobotDynamicsResidual(
-      const double dtau, const KKTResidual& kkt_residual) const;
-
-  template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
-            typename MatrixType4, typename MatrixType5, typename MatrixType6>
-  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& da_dq,
-                            const Eigen::MatrixBase<MatrixType2>& da_dv,
-                            const Eigen::MatrixBase<MatrixType3>& df_dq,
-                            const Eigen::MatrixBase<MatrixType4>& df_dv,
-                            const Eigen::MatrixBase<MatrixType5>& Kuq,
-                            const Eigen::MatrixBase<MatrixType6>& Kuv) const;
+  static double squaredNormRobotDynamicsResidual(
+      const double dtau, const KKTResidual& kkt_residual);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd lu_condensed_, C_floating_base_;
-  Eigen::MatrixXd du_dq_, du_dv_, du_da_, du_df_full_, 
-                  Quu_du_dq_, Quu_du_dv_, Quu_du_da_, Quu_du_df_full_;
-  bool has_floating_base_, has_active_contacts_;
+  Eigen::MatrixXd dIDC_dqv_full_, dIDC_daf_full_, MJtJinv_full_, 
+                  MJtJinv_IDCqv_full_, Qafqv_condensed_full_, 
+                  Qafu_condensed_full_;
+  Eigen::VectorXd MJtJinv_IDC_full_, laf_condensed_full_;
   int dimv_, dimf_;
-
-  static constexpr int kDimFloatingBase = 6;
 
   void linearizeInverseDynamics(Robot& robot, 
                                 const ContactStatus& contact_status,
-                                const SplitSolution& s, 
+                                const double dtau, const SplitSolution& s, 
                                 KKTResidual& kkt_residual);
 
   static void linearizeContactConstraint(Robot& robot, 
-                                         const ContactStatus& contact_status,
+                                         const ContactStatus& contact_status, 
                                          const double dtau,
                                          KKTMatrix& kkt_matrix, 
                                          KKTResidual& kkt_residual);
-  
+
   static void setContactForces(Robot& robot, 
                                const ContactStatus& contact_status, 
                                const SplitSolution& s);
 
-  static void computeInverseDynamicsResidual(Robot& robot, 
-                                             const SplitSolution& s, 
-                                             KKTResidual& kkt_residual);
+  static void computeInverseDynamicsResidual(
+      Robot& robot, const double dtau, const SplitSolution& s, 
+      KKTResidual& kkt_residual);
 
   void computeFloatingBaseConstraintResidual(const Robot& robot, 
                                              const double dtau,
@@ -104,18 +95,38 @@ private:
 
   void setContactStatus(const ContactStatus& contact_status);
 
-  Eigen::Block<Eigen::MatrixXd> du_df_();
+  Eigen::Block<Eigen::MatrixXd> dIDCdqv_();
 
-  const Eigen::Block<const Eigen::MatrixXd> du_df_() const;
+  Eigen::Block<Eigen::MatrixXd> dIDdq_();
 
-  Eigen::Block<Eigen::MatrixXd> Quu_du_df_();
+  Eigen::Block<Eigen::MatrixXd> dIDdv_();
 
-  const Eigen::Block<const Eigen::MatrixXd> Quu_du_df_() const;
+  Eigen::Block<Eigen::MatrixXd> dCdq_();
+
+  Eigen::Block<Eigen::MatrixXd> dCdv_();
+
+  Eigen::Block<Eigen::MatrixXd> dCda_();
+
+  Eigen::Block<Eigen::MatrixXd> MJtJinv_();
+
+  Eigen::Block<Eigen::MatrixXd> MJtJinv_dIDCdqv_();
+
+  Eigen::Block<Eigen::MatrixXd> Qafqv_condensed_();
+
+  Eigen::Block<Eigen::MatrixXd> Qafu_condensed_();
+
+  Eigen::VectorBlock<Eigen::VectorXd> MJtJinv_IDC_();
+
+  Eigen::VectorBlock<Eigen::VectorXd> laf_condensed_();
+
+  Eigen::VectorBlock<Eigen::VectorXd> la_condensed_();
+
+  Eigen::VectorBlock<Eigen::VectorXd> lf_condensed_();
 
 };
 
 } // namespace idocp 
 
-#include "idocp/ocp/robot_dynamics.hxx"
+#include "idocp/impulse/contact_dynamics.hxx"
 
-#endif // IDOCP_ROBOT_DYNAMICS_HPP_
+#endif // IDOCP_CONTACT_DYNAMICS_HPP_ 

@@ -143,6 +143,21 @@ public:
                   KKTResidual& kkt_residual) const = 0;
 
   ///
+  /// @brief Computes the partial derivatives of the stage cost with respect
+  /// to the contact forces. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Cost function data.
+  /// @param[in] t Time.
+  /// @param[in] dtau Time step.
+  /// @param[in] s Split solution.
+  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
+  /// added to this data.
+  ///
+  virtual void lu(Robot& robot, CostFunctionData& data, const double t, 
+                  const double dtau, const SplitSolution& s, 
+                  KKTResidual& kkt_residual) const = 0;
+
+  ///
   /// @brief Computes the Hessians of the stage cost with respect
   /// to the configuration. 
   /// @param[in] robot Robot model.
@@ -203,6 +218,21 @@ public:
                    KKTMatrix& kkt_matrix) const = 0;
 
   ///
+  /// @brief Computes the Hessians of the stage cost with respect
+  /// to the contact forces. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Cost function data.
+  /// @param[in] t Time.
+  /// @param[in] dtau Time step.
+  /// @param[in] s Split solution.
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
+  /// data.
+  ///
+  virtual void luu(Robot& robot, CostFunctionData& data, const double t, 
+                   const double dtau, const SplitSolution& s, 
+                   KKTMatrix& kkt_matrix) const = 0;
+
+  ///
   /// @brief Computes the partial derivatives of the terminal cost with respect
   /// to the configuration.
   /// @param[in] robot Robot model.
@@ -257,36 +287,6 @@ public:
   virtual void phivv(Robot& robot, CostFunctionData& data,  
                      const double t, const SplitSolution& s,
                      KKTMatrix& kkt_matrix) const = 0;
-
-  ///
-  /// @brief Computes the partial derivatives of the stage cost with respect
-  /// to the control input torques. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dtau Time step.
-  /// @param[in] u Control input torques. Size must be Robot::dimv().
-  /// @param[out] lu The KKT residual with respect to u. Size must be 
-  /// Robot::dimv().
-  ///
-  virtual void lu(Robot& robot, CostFunctionData& data, const double t, 
-                  const double dtau, const Eigen::VectorXd& u, 
-                  Eigen::VectorXd& lu) const = 0;
-
-  ///
-  /// @brief Computes the Hessian of the stage cost with respect
-  /// to the control input torques. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dtau Time step.
-  /// @param[in] u Control input torques. Size must be Robot::dimv().
-  /// @param[out] Quu The Hessian of the KKT residual with respect to u.  
-  /// Size must be Robot::dimv() x Robot::dimv().
-  ///
-  virtual void luu(Robot& robot, CostFunctionData& data, const double t, 
-                   const double dtau, const Eigen::VectorXd& u, 
-                   Eigen::MatrixXd& Quu) const  = 0;
 
 };
 

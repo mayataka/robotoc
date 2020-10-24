@@ -20,9 +20,10 @@ namespace idocp {
 
 class QuadrupedSimulator {
 public:
-  QuadrupedSimulator(const std::string& path_to_urdf_for_raisim, 
-                    const std::string& save_dir_path, 
-                    const std::string& save_file_name);
+  QuadrupedSimulator(const std::string& path_to_raisim_activation_key,
+                     const std::string& path_to_urdf_for_raisim, 
+                     const std::string& save_dir_path, 
+                     const std::string& save_file_name);
 
   template<typename OCPTypeDerived>
   void run(MPC<OCPTypeDerived>& mpc, const double simulation_time_in_sec, 
@@ -47,10 +48,8 @@ public:
 
 private:
   SimulationDataSaver data_saver_;
-  raisim::World raisim_world_;
-  raisim::ArticulatedSystem* raisim_robot_;
-  raisim::Ground* raisim_ground_;
-  std::string save_dir_path_, save_file_name_;
+  std::string path_to_raisim_activation_key_, path_to_urdf_for_raisim_, 
+              save_dir_path_, save_file_name_;
 
 };
 

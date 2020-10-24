@@ -15,7 +15,7 @@
 - gcc, CMake, pkg-config
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  
 - [pinocchio](https://github.com/stack-of-tasks/pinocchio) (instruction for installation is found [here](https://stack-of-tasks.github.io/pinocchio/download.html))
-- (Optional to simulate MPC for quadrupeds) [RaiSim](https://github.com/leggedrobotics/raisimLib), [RaiSimOgre](https://github.com/leggedrobotics/raisimOgre).
+- (Optional to simulate MPC for quadrupeds) [raisimLib](https://github.com/raisimTech/raisimLib), [raisimOgre](https://github.com/raisimTech/raisimOgre), and license of raidimLib.
 
 ## Installation 
 1. Install latest stable version of Eigen3 by 
@@ -67,7 +67,7 @@ target_include_directories(
 
 Class `idocp::QuadrupedSimulator` provides quadruped simulation for MPC utilizing RaiSim.
 Note that RaiSim currently supports only for academic use.
-First, install [RaiSimLib](https://github.com/leggedrobotics/raisimLib) and [RaiSimOgre](https://github.com/leggedrobotics/raisimOgre) into ${RAISIM_LOCAL_BUILD_DIR} (arbitrary directory).
+First, install [raisimLib](https://github.com/raisimTech/raisimLib) and [raisimOgre](https://github.com/raisimTech/raisimOgre) into ${RAISIM_LOCAL_BUILD_DIR} (arbitrary directory) by following the install instructions ([raisimLib](http://raisim.com/sections/Installation.html), [raisimOgre](https://github.com/raisimTech/raisimOgre)).
 Then you can build the simulation by writing `CMakeLists.txt` as
 ```
 find_package(idocp REQUIRED)

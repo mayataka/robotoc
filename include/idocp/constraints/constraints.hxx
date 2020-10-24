@@ -216,25 +216,6 @@ inline void Constraints::augmentDualResidual_impl(
 }
 
 
-inline void Constraints::augmentDualResidual(const Robot& robot, 
-                                             ConstraintsData& data, 
-                                             const double dtau, 
-                                             const Eigen::VectorXd& u,
-                                             Eigen::VectorXd& lu) const {
-  assert(data.acceleration_level_data.size() 
-          == acceleration_level_constraints_.size());
-  assert(u.size() == robot.dimv());
-  assert(lu.size() == robot.dimv());
-  for (int i=0; i<acceleration_level_constraints_.size(); ++i) {
-    assert(data.acceleration_level_data[i].dimc() 
-            == acceleration_level_constraints_[i]->dimc());
-    assert(data.acceleration_level_data[i].checkDimensionalConsistency());
-    acceleration_level_constraints_[i]->augmentDualResidual(
-          robot, data.acceleration_level_data[i], dtau, u, lu);
-  }
-}
-
-
 inline void Constraints::condenseSlackAndDual(Robot& robot,
                                               ConstraintsData& data, 
                                               const double dtau, 
@@ -268,28 +249,6 @@ inline void Constraints::condenseSlackAndDual_impl(
     assert(data[i].checkDimensionalConsistency());
     constraints[i]->condenseSlackAndDual(robot, data[i], dtau, s, kkt_matrix, 
                                          kkt_residual);
-  }
-}
-
-
-inline void Constraints::condenseSlackAndDual(const Robot& robot,
-                                              ConstraintsData& data, 
-                                              const double dtau, 
-                                              const Eigen::VectorXd& u,
-                                              Eigen::MatrixXd& Quu, 
-                                              Eigen::VectorXd& lu) const {
-  assert(data.acceleration_level_data.size() 
-          == acceleration_level_constraints_.size());
-  assert(u.size() == robot.dimv());
-  assert(Quu.rows() == robot.dimv());
-  assert(Quu.cols() == robot.dimv());
-  assert(lu.size() == robot.dimv());
-  for (int i=0; i<acceleration_level_constraints_.size(); ++i) {
-    assert(data.acceleration_level_data[i].dimc() 
-            == acceleration_level_constraints_[i]->dimc());
-    assert(data.acceleration_level_data[i].checkDimensionalConsistency());
-    acceleration_level_constraints_[i]->condenseSlackAndDual(
-        robot, data.acceleration_level_data[i], dtau, u, Quu, lu);
   }
 }
 

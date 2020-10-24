@@ -50,19 +50,10 @@ public:
                            const double dtau, const SplitSolution& s,
                            KKTResidual& kkt_residual) const override;
 
-  void augmentDualResidual(const Robot& robot, ConstraintComponentData& data, 
-                           const double dtau, const Eigen::VectorXd& u,
-                           Eigen::VectorXd& lu) const override {}
-
   void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data, 
                             const double dtau, const SplitSolution& s,
                             KKTMatrix& kkt_matrix,
                             KKTResidual& kkt_residual) const override;
-
-  void condenseSlackAndDual(const Robot& robot, ConstraintComponentData& data, 
-                            const double dtau, const Eigen::VectorXd& u,
-                            Eigen::MatrixXd& Quu, 
-                            Eigen::VectorXd& lu) const override {}
 
   void computeSlackAndDualDirection(Robot& robot, ConstraintComponentData& data, 
                                     const double dtau, const SplitSolution& s,

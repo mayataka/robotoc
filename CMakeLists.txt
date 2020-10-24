@@ -65,32 +65,32 @@ add_library(
   src/impulse/impulse_dynamics_forward_euler.cpp
   src/impulse/impulse_dynamics_backward_euler.cpp
   src/impulse/impulse_riccati_matrix_factorizer.cpp
-  src/impulse/split_impulse_ocp.cpp
-  src/impulse/split_impulse_parnmpc.cpp
+  # src/impulse/split_impulse_ocp.cpp
+  # src/impulse/split_impulse_parnmpc.cpp
   src/ocp/schur_complement.cpp
   src/ocp/kkt_residual.cpp
   src/ocp/kkt_matrix.cpp
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
-  src/ocp/robot_dynamics.cpp
-  src/ocp/line_search_filter.cpp
-  src/ocp/riccati_factorization.cpp
-  src/ocp/riccati_gain.cpp
-  src/ocp/riccati_matrix_factorizer.cpp
-  src/ocp/riccati_matrix_inverter.cpp
-  src/ocp/terminal_ocp.cpp
-  src/ocp/split_ocp.cpp
-  src/ocp/contact_sequence.cpp
-  src/ocp/ocp.cpp
-  src/ocp/split_parnmpc.cpp
-  src/ocp/parnmpc.cpp
-  src/ocp/mpc.cpp
-  src/utils/joint_constraints_factory.cpp
-  src/utils/ocp_benchmarker.cpp
-  src/utils/runge_kutta.cpp
-  src/utils/simulation_data_saver.cpp
-  src/utils/manipulator_simulator.cpp
+  # src/ocp/robot_dynamics.cpp
+  # src/ocp/line_search_filter.cpp
+  # src/ocp/riccati_factorization.cpp
+  # src/ocp/riccati_gain.cpp
+  # src/ocp/riccati_matrix_factorizer.cpp
+  # src/ocp/riccati_matrix_inverter.cpp
+  # src/ocp/terminal_ocp.cpp
+  # src/ocp/split_ocp.cpp
+  # src/ocp/contact_sequence.cpp
+  # src/ocp/ocp.cpp
+  # src/ocp/split_parnmpc.cpp
+  # src/ocp/parnmpc.cpp
+  # src/ocp/mpc.cpp
+  # src/utils/joint_constraints_factory.cpp
+  # src/utils/ocp_benchmarker.cpp
+  # src/utils/runge_kutta.cpp
+  # src/utils/simulation_data_saver.cpp
+  # src/utils/manipulator_simulator.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

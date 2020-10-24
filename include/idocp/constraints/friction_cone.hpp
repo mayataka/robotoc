@@ -49,19 +49,10 @@ public:
                            const double dtau, const SplitSolution& s,
                            KKTResidual& kkt_residual) const override;
 
-  void augmentDualResidual(const Robot& robot, ConstraintComponentData& data, 
-                           const double dtau, const Eigen::VectorXd& u,
-                           Eigen::VectorXd& lu) const override {}
-
   void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data, 
                             const double dtau, const SplitSolution& s,
                             KKTMatrix& kkt_matrix,
                             KKTResidual& kkt_residual) const override;
-
-  void condenseSlackAndDual(const Robot& robot, ConstraintComponentData& data, 
-                            const double dtau, const Eigen::VectorXd& u,
-                            Eigen::MatrixXd& Quu, 
-                            Eigen::VectorXd& lu) const override {}
 
   void computeSlackAndDualDirection(Robot& robot, ConstraintComponentData& data, 
                                     const double dtau, const SplitSolution& s,
@@ -79,8 +70,6 @@ public:
     return (f.coeff(0)*f.coeff(0) + f.coeff(1)*f.coeff(1)
             - mu*mu*f.coeff(2)*f.coeff(2));
   }
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
 
 private:
   int dimc_;

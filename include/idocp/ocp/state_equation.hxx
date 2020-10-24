@@ -17,9 +17,9 @@ inline void LinearizeForwardEuler(
   assert(dtau > 0);
   ComputeForwardEulerResidual(robot, dtau, s, s_next.q, s_next.v, kkt_residual);
   if (robot.has_floating_base()) {
-    robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq);
+    robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq());
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
-    kkt_residual.lq().noalias() += kkt_matrix.Fqq.transpose() * s_next.lmd 
+    kkt_residual.lq().noalias() += kkt_matrix.Fqq().transpose() * s_next.lmd 
                                     + kkt_matrix.Fqq_prev.transpose() * s.lmd;
   }
   else {
@@ -42,11 +42,11 @@ inline void LinearizeBackwardEuler(
   assert(v_prev.size() == robot.dimv());
   ComputeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, kkt_residual);
   if (robot.has_floating_base()) {
-    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq);
+    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq());
     robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq_prev);
     kkt_residual.lq().noalias() 
         += kkt_matrix.Fqq_prev.transpose() * s_next.lmd
-            + kkt_matrix.Fqq.transpose() * s.lmd;
+            + kkt_matrix.Fqq().transpose() * s.lmd;
   }
   else {
     kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
@@ -68,9 +68,9 @@ inline void LinearizeBackwardEulerTerminal(
   assert(v_prev.size() == robot.dimv());
   ComputeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, kkt_residual);
   if (robot.has_floating_base()) {
-    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq);
+    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq());
     kkt_residual.lq().noalias() 
-        += kkt_matrix.Fqq.transpose() * s.lmd;
+        += kkt_matrix.Fqq().transpose() * s.lmd;
   }
   else {
     kkt_residual.lq().noalias() -= s.lmd;

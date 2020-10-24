@@ -86,16 +86,15 @@ TEST_F(JointVelocityUpperLimitTest, setSlackAndDualFixedBase) {
   KKTMatrix kkt_matrix(fixed_base_robot_);
   KKTResidual kkt_residual(fixed_base_robot_);
   limit.augmentDualResidual(fixed_base_robot_, data, dtau_, s, kkt_residual);
-  limit.augmentDualResidual(fixed_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   data_ref.slack = dtau_ * (vmax-s.v);
   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimq);
   pdipm::SetSlackAndDualPositive(barrier_, data_ref);
   lv_ref = dtau_ * data_ref.dual;
   EXPECT_TRUE(kkt_residual.lv().isApprox(lv_ref));
-  EXPECT_TRUE(kkt_residual.la().isZero());
+  EXPECT_TRUE(kkt_residual.la.isZero());
   EXPECT_TRUE(kkt_residual.lf().isZero());
   EXPECT_TRUE(kkt_residual.lq().isZero());
-  EXPECT_TRUE(kkt_residual.lu.isZero());
+  EXPECT_TRUE(kkt_residual.lu().isZero());
   const double cost_slack_barrier = limit.costSlackBarrier(data);
   const double cost_slack_barrier_ref = pdipm::CostBarrier(barrier_, data_ref.slack);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
@@ -125,16 +124,15 @@ TEST_F(JointVelocityUpperLimitTest, setSlackAndDualFloatingBase) {
   KKTMatrix kkt_matrix(floating_base_robot_);
   KKTResidual kkt_residual(floating_base_robot_);
   limit.augmentDualResidual(floating_base_robot_, data, dtau_, s, kkt_residual);
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   data_ref.slack = dtau_ * (vmax-s.v.tail(dimc));
   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
   pdipm::SetSlackAndDualPositive(barrier_, data_ref);
   lv_ref.tail(dimc) = dtau_ * data_ref.dual;
   EXPECT_TRUE(kkt_residual.lv().isApprox(lv_ref));
-  EXPECT_TRUE(kkt_residual.la().isZero());
+  EXPECT_TRUE(kkt_residual.la.isZero());
   EXPECT_TRUE(kkt_residual.lf().isZero());
   EXPECT_TRUE(kkt_residual.lq().isZero());
-  EXPECT_TRUE(kkt_residual.lu.isZero());
+  EXPECT_TRUE(kkt_residual.lu().isZero());
   const double cost_slack_barrier = limit.costSlackBarrier(data);
   const double cost_slack_barrier_ref = pdipm::CostBarrier(barrier_, data_ref.slack);
   EXPECT_DOUBLE_EQ(cost_slack_barrier, cost_slack_barrier_ref);
@@ -166,7 +164,6 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFixedBase) {
   data_ref.slack = dtau_ * (vmax-s.v);
   pdipm::SetSlackAndDualPositive(barrier_, data_ref);
   limit.condenseSlackAndDual(fixed_base_robot_, data, dtau_, s, kkt_matrix, kkt_residual);
-  limit.condenseSlackAndDual(fixed_base_robot_, data, dtau_, s.u, kkt_matrix.Quu, kkt_residual.lu);
   data_ref.residual = dtau_ * (s.v-vmax) + data_ref.slack;
   data_ref.duality = Eigen::VectorXd::Zero(dimq);
   pdipm::ComputeDuality(barrier_, data_ref);
@@ -179,15 +176,15 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFixedBase) {
     Qvv_ref(i, i) += dtau_ * dtau_ * data_ref.dual.coeff(i) / data_ref.slack.coeff(i);
   }
   EXPECT_TRUE(kkt_residual.lv().isApprox(lv_ref));
-  EXPECT_TRUE(kkt_residual.la().isZero());
+  EXPECT_TRUE(kkt_residual.la.isZero());
   EXPECT_TRUE(kkt_residual.lf().isZero());
   EXPECT_TRUE(kkt_residual.lq().isZero());
-  EXPECT_TRUE(kkt_residual.lu.isZero());
+  EXPECT_TRUE(kkt_residual.lu().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isApprox(Qvv_ref));
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
-  EXPECT_TRUE(kkt_matrix.Qaa().isZero());
+  EXPECT_TRUE(kkt_matrix.Qaa.isZero());
   EXPECT_TRUE(kkt_matrix.Qff().isZero());
-  EXPECT_TRUE(kkt_matrix.Quu.isZero());
+  EXPECT_TRUE(kkt_matrix.Quu().isZero());
   SplitDirection d = SplitDirection::Random(fixed_base_robot_);
   limit.computeSlackAndDualDirection(fixed_base_robot_, data, dtau_, s, d);
   data_ref.dslack = - dtau_ * d.dv() - data_ref.residual;
@@ -216,13 +213,12 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFixedBase) {
   kkt_residual.lv().setZero();
   lv_ref.setZero();
   limit.augmentDualResidual(floating_base_robot_, data, dtau_, s, kkt_residual);
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   lv_ref = dtau_ * data_ref.dual;
   EXPECT_TRUE(kkt_residual.lv().isApprox(lv_ref));
   EXPECT_TRUE(kkt_residual.lq().isZero());
-  EXPECT_TRUE(kkt_residual.la().isZero());
+  EXPECT_TRUE(kkt_residual.la.isZero());
   EXPECT_TRUE(kkt_residual.lf().isZero());
-  EXPECT_TRUE(kkt_residual.lu.isZero());
+  EXPECT_TRUE(kkt_residual.lu().isZero());
 }
 
 
@@ -241,7 +237,6 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFloatingBase) {
   data_ref.slack = dtau_ * (vmax-s.v.tail(dimc));
   pdipm::SetSlackAndDualPositive(barrier_, data_ref);
   limit.condenseSlackAndDual(floating_base_robot_, data, dtau_, s, kkt_matrix, kkt_residual);
-  limit.condenseSlackAndDual(floating_base_robot_, data, dtau_, s.u, kkt_matrix.Quu, kkt_residual.lu);
   data_ref.residual = dtau_ * (s.v.tail(dimc)-vmax) + data_ref.slack;
   pdipm::ComputeDuality(barrier_, data_ref);
   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
@@ -253,15 +248,15 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFloatingBase) {
     Qvv_ref(6+i, 6+i) += dtau_ * dtau_ * data_ref.dual.coeff(i) / data_ref.slack.coeff(i);
   }
   EXPECT_TRUE(kkt_residual.lv().isApprox(lv_ref));
-  EXPECT_TRUE(kkt_residual.la().isZero());
+  EXPECT_TRUE(kkt_residual.la.isZero());
   EXPECT_TRUE(kkt_residual.lf().isZero());
   EXPECT_TRUE(kkt_residual.lq().isZero());
-  EXPECT_TRUE(kkt_residual.lu.isZero());
+  EXPECT_TRUE(kkt_residual.lu().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isApprox(Qvv_ref));
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
-  EXPECT_TRUE(kkt_matrix.Qaa().isZero());
+  EXPECT_TRUE(kkt_matrix.Qaa.isZero());
   EXPECT_TRUE(kkt_matrix.Qff().isZero());
-  EXPECT_TRUE(kkt_matrix.Quu.isZero());
+  EXPECT_TRUE(kkt_matrix.Quu().isZero());
   SplitDirection d = SplitDirection::Random(floating_base_robot_);
   limit.computeSlackAndDualDirection(floating_base_robot_, data, dtau_, s, d);
   data_ref.dslack = - dtau_ * d.dv().tail(dimc) - data_ref.residual;
@@ -290,13 +285,12 @@ TEST_F(JointVelocityUpperLimitTest, condenseSlackAndDualFloatingBase) {
   kkt_residual.lv().setZero();
   lv_ref.setZero();
   limit.augmentDualResidual(floating_base_robot_, data, dtau_, s, kkt_residual);
-  limit.augmentDualResidual(floating_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   lv_ref.tail(dimc) = dtau_ * data_ref.dual;
   EXPECT_TRUE(kkt_residual.lv().isApprox(lv_ref));
   EXPECT_TRUE(kkt_residual.lq().isZero());
-  EXPECT_TRUE(kkt_residual.la().isZero());
+  EXPECT_TRUE(kkt_residual.la.isZero());
   EXPECT_TRUE(kkt_residual.lf().isZero());
-  EXPECT_TRUE(kkt_residual.lu.isZero());
+  EXPECT_TRUE(kkt_residual.lu().isZero());
 }
 
 } // namespace idocp

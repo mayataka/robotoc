@@ -81,21 +81,19 @@ TEST_F(ConstraintsTest, timestage0) {
   KKTResidual kkt_residual(fixed_base_robot_);
   constraints->setSlackAndDual(fixed_base_robot_, data, dtau_, s);
   constraints->augmentDualResidual(fixed_base_robot_, data, dtau_, s, kkt_residual);
-  constraints->augmentDualResidual(fixed_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_TRUE(kkt_residual.lv().isZero());
-  EXPECT_FALSE(kkt_residual.la().isZero());
-  EXPECT_FALSE(kkt_residual.lu.isZero());
+  EXPECT_FALSE(kkt_residual.la.isZero());
+  EXPECT_FALSE(kkt_residual.lu().isZero());
   constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s, kkt_matrix, kkt_residual);
-  constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s.u, kkt_matrix.Quu, kkt_residual.lu);
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isZero());
-  EXPECT_FALSE(kkt_matrix.Qaa().isZero());
-  EXPECT_FALSE(kkt_matrix.Quu.isZero());
+  EXPECT_FALSE(kkt_matrix.Qaa.isZero());
+  EXPECT_FALSE(kkt_matrix.Quu().isZero());
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_TRUE(kkt_residual.lv().isZero());
-  EXPECT_FALSE(kkt_residual.la().isZero());
-  EXPECT_FALSE(kkt_residual.lu.isZero());
+  EXPECT_FALSE(kkt_residual.la.isZero());
+  EXPECT_FALSE(kkt_residual.lu().isZero());
 }
 
 
@@ -130,21 +128,19 @@ TEST_F(ConstraintsTest, timestage1) {
   KKTResidual kkt_residual(fixed_base_robot_);
   constraints->setSlackAndDual(fixed_base_robot_, data, dtau_, s);
   constraints->augmentDualResidual(fixed_base_robot_, data, dtau_, s, kkt_residual);
-  constraints->augmentDualResidual(fixed_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
-  EXPECT_FALSE(kkt_residual.la().isZero());
-  EXPECT_FALSE(kkt_residual.lu.isZero());
+  EXPECT_FALSE(kkt_residual.la.isZero());
+  EXPECT_FALSE(kkt_residual.lu().isZero());
   constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s, kkt_matrix, kkt_residual);
-  constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s.u, kkt_matrix.Quu, kkt_residual.lu);
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
   EXPECT_FALSE(kkt_matrix.Qvv().isZero());
-  EXPECT_FALSE(kkt_matrix.Qaa().isZero());
-  EXPECT_FALSE(kkt_matrix.Quu.isZero());
+  EXPECT_FALSE(kkt_matrix.Qaa.isZero());
+  EXPECT_FALSE(kkt_matrix.Quu().isZero());
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
-  EXPECT_FALSE(kkt_residual.la().isZero());
-  EXPECT_FALSE(kkt_residual.lu.isZero());
+  EXPECT_FALSE(kkt_residual.la.isZero());
+  EXPECT_FALSE(kkt_residual.lu().isZero());
 }
 
 
@@ -180,21 +176,19 @@ TEST_F(ConstraintsTest, timestage2) {
   KKTResidual kkt_residual(fixed_base_robot_);
   constraints->setSlackAndDual(fixed_base_robot_, data, dtau_, s);
   constraints->augmentDualResidual(fixed_base_robot_, data, dtau_, s, kkt_residual);
-  constraints->augmentDualResidual(fixed_base_robot_, data, dtau_, s.u, kkt_residual.lu);
   EXPECT_FALSE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
-  EXPECT_FALSE(kkt_residual.la().isZero());
-  EXPECT_FALSE(kkt_residual.lu.isZero());
+  EXPECT_FALSE(kkt_residual.la.isZero());
+  EXPECT_FALSE(kkt_residual.lu().isZero());
   constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s, kkt_matrix, kkt_residual);
-  constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s.u, kkt_matrix.Quu, kkt_residual.lu);
   EXPECT_FALSE(kkt_matrix.Qqq().isZero());
   EXPECT_FALSE(kkt_matrix.Qvv().isZero());
-  EXPECT_FALSE(kkt_matrix.Qaa().isZero());
-  EXPECT_FALSE(kkt_matrix.Quu.isZero());
+  EXPECT_FALSE(kkt_matrix.Qaa.isZero());
+  EXPECT_FALSE(kkt_matrix.Quu().isZero());
   EXPECT_FALSE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
-  EXPECT_FALSE(kkt_residual.la().isZero());
-  EXPECT_FALSE(kkt_residual.lu.isZero());
+  EXPECT_FALSE(kkt_residual.la.isZero());
+  EXPECT_FALSE(kkt_residual.lu().isZero());
 }
 
 } // namespace idocp

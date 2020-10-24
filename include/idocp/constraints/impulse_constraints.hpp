@@ -4,8 +4,6 @@
 #include <vector>
 #include <memory>
 
-#include "Eigen/Core"
-
 #include "idocp/robot/robot.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"

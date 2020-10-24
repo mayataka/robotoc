@@ -77,42 +77,9 @@ public:
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> mu_stack() const;
 
-
-  ///
-  /// @brief Lagrange multiplier with respect to floating base constraints.
-  /// Size is Robot::dim_passive().
-  /// @return Reference to Lagrange multiplier with respect to floating base 
-  /// constraints.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> mu_floating_base();
-
-  ///
-  /// @brief Lagrange multiplier with respect to floating base constraints.
-  /// Size is Robot::dim_passive().
-  /// @return Reference to Lagrange multiplier with respect to floating base 
-  /// constraints.
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> mu_floating_base() const;
-
-  ///
-  /// @brief Stack of Lagrange multiplier with respect to active contact 
-  /// constraints. Size is Robot::dimf().
-  /// @return Reference to the stack of Lagrange multiplier with respect to 
-  /// active contact constraints.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> mu_contacts();
-
-  ///
-  /// @brief Stack of Lagrange multiplier with respect to active contact 
-  /// constraints. Size is Robot::dimf().
-  /// @return Const reference to the stack of Lagrange multiplier with respect 
-  /// to active contact constraints.
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> mu_contacts() const;
-
   ///
   /// @brief Set the stack of the Lagrange multiplier with respect to active 
-  /// equality constraint from mu_floating_base and mu_contacts.
+  /// equality constraint from mu_floating_base and mu.
   ///
   void set_mu_stack();
 
@@ -120,7 +87,7 @@ public:
   /// @brief Set the Lagrange multiplier with respect to active contact 
   /// constraints from mu_stack.
   ///
-  void set_mu_contact();
+  void set_mu();
 
   ///
   /// @brief Stack of active contact forces. Size is Robot::dimf().
@@ -151,13 +118,6 @@ public:
   int num_active_contacts() const;
 
   ///
-  /// @brief Returns the dimension of equality constraint at the current 
-  /// contact status.
-  /// @return Dimension of equality constraint.
-  ///
-  int dimc() const;
-
-  ///
   /// @brief Returns the dimension of the stack of contact forces at the current 
   /// contact status.
   /// @return Dimension of contact forces.
@@ -180,7 +140,7 @@ public:
   /// @brief Lagrange multiplier with respect to contact constraint. 
   /// Size is Robot::max_point_contacts().
   ///
-  std::vector<Eigen::Vector3d> mu_contact;
+  std::vector<Eigen::Vector3d> mu;
 
   ///
   /// @brief Generalized acceleration. 
@@ -214,6 +174,16 @@ public:
   /// Robot::dimv().
   ///
   Eigen::VectorXd beta;
+
+  ///
+  /// @brief Lagrange multiplier with respect to floating base. 
+  ///
+  Eigen::VectorXd u_passive;
+
+  ///
+  /// @brief Lagrange multiplier with respect to floating base. 
+  ///
+  Eigen::VectorXd nu_passive;
 
   ///
   /// @brief Return true if a contact is active and false if not.
@@ -258,9 +228,6 @@ private:
 
   /// @brief Dimension of contact forces at the current contact status. 
   int dimf_;
-
-  /// @brief Dimension of equality constraints at the current contact status. 
-  int dimc_;
 
 };
 

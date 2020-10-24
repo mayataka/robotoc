@@ -1,5 +1,5 @@
-#ifndef IDOCP_ROBOT_DYNAMICS_HPP_
-#define IDOCP_ROBOT_DYNAMICS_HPP_
+#ifndef IDOCP_NON_CONTACT_DYNAMICS_HPP_
+#define IDOCP_NON_CONTACT_DYNAMICS_HPP_
 
 #include "Eigen/Core"
 
@@ -13,21 +13,21 @@
 
 namespace idocp {
 
-class RobotDynamics {
+class NonContactDynamics {
 public:
-  RobotDynamics(const Robot& robot);
+  NonContactDynamics(const Robot& robot);
 
-  RobotDynamics();
+  NonContactDynamics();
 
-  ~RobotDynamics();
+  ~NonContactDynamics();
 
-  RobotDynamics(const RobotDynamics&) = default;
+  NonContactDynamics(const NonContactDynamics&) = default;
 
-  RobotDynamics& operator=(const RobotDynamics&) = default;
+  NonContactDynamics& operator=(const NonContactDynamics&) = default;
  
-  RobotDynamics(RobotDynamics&&) noexcept = default;
+  NonContactDynamics(NonContactDynamics&&) noexcept = default;
 
-  RobotDynamics& operator=(RobotDynamics&&) noexcept = default;
+  NonContactDynamics& operator=(NonContactDynamics&&) noexcept = default;
 
   void linearizeRobotDynamics(Robot& robot, const ContactStatus& contact_status, 
                               const double dtau, const SplitSolution& s, 
@@ -54,20 +54,17 @@ public:
       const double dtau, const KKTResidual& kkt_residual) const;
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
-            typename MatrixType4, typename MatrixType5, typename MatrixType6>
+            typename MatrixType4>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& da_dq,
                             const Eigen::MatrixBase<MatrixType2>& da_dv,
-                            const Eigen::MatrixBase<MatrixType3>& df_dq,
-                            const Eigen::MatrixBase<MatrixType4>& df_dv,
-                            const Eigen::MatrixBase<MatrixType5>& Kuq,
-                            const Eigen::MatrixBase<MatrixType6>& Kuv) const;
+                            const Eigen::MatrixBase<MatrixType3>& Kuq,
+                            const Eigen::MatrixBase<MatrixType4>& Kuv) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   Eigen::VectorXd lu_condensed_, C_floating_base_;
-  Eigen::MatrixXd du_dq_, du_dv_, du_da_, du_df_full_, 
-                  Quu_du_dq_, Quu_du_dv_, Quu_du_da_, Quu_du_df_full_;
+  Eigen::MatrixXd du_dq_, du_dv_, du_da_, Quu_du_dq_, Quu_du_dv_, Quu_du_da_;
   bool has_floating_base_, has_active_contacts_;
   int dimv_, dimf_;
 
@@ -77,16 +74,10 @@ private:
                                 const ContactStatus& contact_status,
                                 const SplitSolution& s, 
                                 KKTResidual& kkt_residual);
-
-  static void linearizeContactConstraint(Robot& robot, 
-                                         const ContactStatus& contact_status,
-                                         const double dtau,
-                                         KKTMatrix& kkt_matrix, 
-                                         KKTResidual& kkt_residual);
   
-  static void setContactForces(Robot& robot, 
-                               const ContactStatus& contact_status, 
-                               const SplitSolution& s);
+  static void setContactForcesZero(Robot& robot, 
+                                   const ContactStatus& contact_status, 
+                                   const SplitSolution& s);
 
   static void computeInverseDynamicsResidual(Robot& robot, 
                                              const SplitSolution& s, 
@@ -97,25 +88,10 @@ private:
                                              const SplitSolution& s, 
                                              KKTResidual& kkt_residual);
 
-  static void computeContactConstraintResidual(
-      const Robot& robot, const ContactStatus& contact_status, 
-      const double dtau, KKTResidual& kkt_residual);
-
-
-  void setContactStatus(const ContactStatus& contact_status);
-
-  Eigen::Block<Eigen::MatrixXd> du_df_();
-
-  const Eigen::Block<const Eigen::MatrixXd> du_df_() const;
-
-  Eigen::Block<Eigen::MatrixXd> Quu_du_df_();
-
-  const Eigen::Block<const Eigen::MatrixXd> Quu_du_df_() const;
-
 };
 
 } // namespace idocp 
 
-#include "idocp/ocp/robot_dynamics.hxx"
+#include "idocp/ocp/non_contact_dynamics.hxx"
 
-#endif // IDOCP_ROBOT_DYNAMICS_HPP_
+#endif // IDOCP_NON_CONTACT_DYNAMICS_HPP_ 

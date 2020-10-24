@@ -18,6 +18,8 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
+#include "idocp/constraints/friction_cone.hpp"
+#include "idocp/constraints/contact_normal_force.hpp"
 
 #include "idocp/utils/joint_constraints_factory.hpp"
 #include "idocp/utils/quadruped_simulator.hpp"
@@ -25,7 +27,8 @@
 namespace mpcsimulation {
 namespace anymal {
 
-void SimulateWithContactsByOCP() {
+void SimulateWithContactsByOCP(
+    const std::string& path_to_raisim_activation_key) {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
   const std::string urdf_file_name = "../anymal/anymal.urdf";
@@ -33,8 +36,8 @@ void SimulateWithContactsByOCP() {
   auto cost = std::make_shared<idocp::CostFunction>();
   auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
   Eigen::VectorXd q_ref(robot.dimq());
-  // q_ref << 0, 0, 0.48, 0, 0, 0, 1, 
-  q_ref << 0, 0, 0.48, 0, -50, 0, 1, 
+  q_ref << 0, 0, 0.48, 0, 0, 0, 1, 
+  // q_ref << 0, 0, 0.48, 0, -50, 0, 1, 
   // q_ref << 0, 0, 0.48, 0, 50, 0, 1, 
   // q_ref << 0, 0, 0.48, -1, 0, 1, 0.5, 
   // q_ref << 0, 0, 0.48, 1, 0, -1, 0.5, 
@@ -52,7 +55,14 @@ void SimulateWithContactsByOCP() {
   joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
+  auto contact_cost = std::make_shared<idocp::ContactForceCost>(robot);
+  std::vector<Eigen::Vector3d> f_weight;
+  for (int i=0; i<contact_frames.size(); ++i) {
+    f_weight.push_back(Eigen::Vector3d::Constant(0.0));
+  }
+  contact_cost->set_f_weight(f_weight);
   cost->push_back(joint_cost);
+  // cost->push_back(contact_cost);
   auto constraints = std::make_shared<idocp::Constraints>();
   auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
   auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
@@ -84,18 +94,20 @@ void SimulateWithContactsByOCP() {
   mpc.activateContacts({0, 1, 2, 3}, 0, N);
   mpc.setContactPointByKinematics(q);
   mpc.initializeSolution(t, q, v, 100);
-  const std::string urdf_for_raisim_file_name = "../anymal/anymal_for_raisim.urdf";
-  idocp::QuadrupedSimulator simulator(urdf_for_raisim_file_name, "../sim_result", "forward");
+  const std::string urdf_for_raisim_file_name = "/home/sotaro/src/idocp/examples/anymal/anymal/anymal_for_raisim.urdf";
+  idocp::QuadrupedSimulator simulator(path_to_raisim_activation_key, 
+                                      urdf_for_raisim_file_name, 
+                                      "../sim_result", "forward");
   const bool visualization = true;
-  const bool recording = false;
-  simulator.run(mpc, 3, 0.0025, 0, q, v, visualization, recording);
+  const bool video_recording = false;
+  simulator.run(mpc, 3, 0.0025, 0, q, v, visualization, video_recording);
 }
 
 } // namespace anymal 
 } // namespace ocpbenchmark
 
 
-int main() {
-  mpcsimulation::anymal::SimulateWithContactsByOCP();
+int main(int argc, char *argv[]) {
+  mpcsimulation::anymal::SimulateWithContactsByOCP(argv[1]);
   return 0;
 }
