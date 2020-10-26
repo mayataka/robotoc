@@ -521,6 +521,34 @@ public:
   /// @return Reference to the Hessian. Size is 
   /// 2 * Robot::dimv() x 2 * Robot::dimv().
   ///
+  Eigen::Block<Eigen::MatrixXd> Qaaff();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qaaff() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qaa();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qaa() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
   Eigen::Block<Eigen::MatrixXd> Qff();
 
   ///
@@ -562,9 +590,6 @@ public:
   ///
   int dimf() const;
 
-  /// @brief Hessian of the Lagrangian with respect to the acceleration a.
-  Eigen::MatrixXd Qaa;
-
   /// @brief Derivative of the state equation with respect to the 
   /// configuration of the previous time step q_prev.
   Eigen::MatrixXd Fqq_prev;
@@ -573,7 +598,7 @@ public:
 
 private:
   SchurComplement schur_complement_;
-  Eigen::MatrixXd F_, Q_, Qff_full_;
+  Eigen::MatrixXd F_, Q_, Qaaff_full_;
   bool has_floating_base_;
   int dimv_, dimx_, dimu_, dim_passive_, dimf_, u_begin_, q_begin_, v_begin_, 
       dimQ_, dimKKT_;

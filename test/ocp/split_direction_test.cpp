@@ -40,8 +40,8 @@ TEST_F(SplitDirectionTest, fixed_base) {
   EXPECT_EQ(d.dq().size(), dimv);
   EXPECT_EQ(d.dv().size(), dimv);
   EXPECT_EQ(d.dx().size(), dimx);
-  EXPECT_EQ(d.da.size(), dimv);
-  EXPECT_EQ(d.dbeta.size(), dimv);
+  EXPECT_EQ(d.da().size(), dimv);
+  EXPECT_EQ(d.dbeta().size(), dimv);
   EXPECT_EQ(d.du_passive.size(), 0);
   EXPECT_EQ(d.dnu_passive.size(), 0);
   EXPECT_EQ(d.dmu().size(), 0);
@@ -71,8 +71,8 @@ TEST_F(SplitDirectionTest, fixed_base) {
   EXPECT_EQ(d_random.dq().size(), dimv);
   EXPECT_EQ(d_random.dv().size(), dimv);
   EXPECT_EQ(d_random.dx().size(), dimx);
-  EXPECT_EQ(d_random.da.size(), dimv);
-  EXPECT_EQ(d_random.dbeta.size(), dimv);
+  EXPECT_EQ(d_random.da().size(), dimv);
+  EXPECT_EQ(d_random.dbeta().size(), dimv);
   EXPECT_EQ(d_random.du_passive.size(), 0);
   EXPECT_EQ(d_random.dnu_passive.size(), 0);
   EXPECT_EQ(d_random.dmu().size(), 0);
@@ -86,8 +86,8 @@ TEST_F(SplitDirectionTest, fixed_base) {
   EXPECT_FALSE(d_random.dq().isZero());
   EXPECT_FALSE(d_random.dv().isZero());
   EXPECT_FALSE(d_random.dx().isZero());
-  EXPECT_FALSE(d_random.da.isZero());
-  EXPECT_FALSE(d_random.dbeta.isZero());
+  EXPECT_FALSE(d_random.da().isZero());
+  EXPECT_FALSE(d_random.dbeta().isZero());
 }
 
 
@@ -104,8 +104,8 @@ TEST_F(SplitDirectionTest, fixed_base_contact) {
   EXPECT_EQ(d.dq().size(), dimv);
   EXPECT_EQ(d.dv().size(), dimv);
   EXPECT_EQ(d.dx().size(), dimx);
-  EXPECT_EQ(d.da.size(), dimv);
-  EXPECT_EQ(d.dbeta.size(), dimv);
+  EXPECT_EQ(d.da().size(), dimv);
+  EXPECT_EQ(d.dbeta().size(), dimv);
   EXPECT_EQ(d.du_passive.size(), 0);
   EXPECT_EQ(d.dnu_passive.size(), 0);
   EXPECT_EQ(d.dmu().size(), 0);
@@ -120,12 +120,20 @@ TEST_F(SplitDirectionTest, fixed_base_contact) {
   const Eigen::VectorXd dq = split_direction.segment(2*dimv+dimu,  dimv);
   const Eigen::VectorXd dv = split_direction.segment(2*dimv+dimu+dimv,  dimv);
   const Eigen::VectorXd dx = split_direction.segment(2*dimv+dimu, 2*dimv);
+  const Eigen::VectorXd da = Eigen::VectorXd::Random(dimv);
+  d.da() = da;
+  const Eigen::VectorXd dbeta = Eigen::VectorXd::Random(dimv);
+  d.dbeta() = dbeta;
   EXPECT_TRUE(dlmd.isApprox(d.dlmd()));
   EXPECT_TRUE(dgmm.isApprox(d.dgmm()));
   EXPECT_TRUE(du.isApprox(d.du()));
   EXPECT_TRUE(dq.isApprox(d.dq()));
   EXPECT_TRUE(dv.isApprox(d.dv()));
   EXPECT_TRUE(dx.isApprox(d.dx()));
+  EXPECT_TRUE(da.isApprox(d.da()));
+  EXPECT_TRUE(da.isApprox(d.daf()));
+  EXPECT_TRUE(dbeta.isApprox(d.dbeta()));
+  EXPECT_TRUE(dbeta.isApprox(d.dbetamu()));
   std::vector<bool> is_contact_active = {true};
   ContactStatus contact_status = ContactStatus(robot.max_point_contacts());
   contact_status.setContactStatus(is_contact_active);
@@ -142,8 +150,8 @@ TEST_F(SplitDirectionTest, fixed_base_contact) {
   EXPECT_EQ(d_random.dq().size(), dimv);
   EXPECT_EQ(d_random.dv().size(), dimv);
   EXPECT_EQ(d_random.dx().size(), dimx);
-  EXPECT_EQ(d_random.da.size(), dimv);
-  EXPECT_EQ(d_random.dbeta.size(), dimv);
+  EXPECT_EQ(d_random.da().size(), dimv);
+  EXPECT_EQ(d_random.dbeta().size(), dimv);
   EXPECT_EQ(d_random.du_passive.size(), 0);
   EXPECT_EQ(d_random.dnu_passive.size(), 0);
   EXPECT_EQ(d_random.dmu().size(), 3);
@@ -157,10 +165,14 @@ TEST_F(SplitDirectionTest, fixed_base_contact) {
   EXPECT_FALSE(d_random.dq().isZero());
   EXPECT_FALSE(d_random.dv().isZero());
   EXPECT_FALSE(d_random.dx().isZero());
-  EXPECT_FALSE(d_random.da.isZero());
-  EXPECT_FALSE(d_random.dbeta.isZero());
+  EXPECT_FALSE(d_random.da().isZero());
+  EXPECT_FALSE(d_random.dbeta().isZero());
   EXPECT_FALSE(d_random.dmu().isZero());
   EXPECT_FALSE(d_random.df().isZero());
+  EXPECT_TRUE(d_random.daf().head(dimv).isApprox(d_random.da()));
+  EXPECT_TRUE(d_random.daf().tail(3).isApprox(d_random.df()));
+  EXPECT_TRUE(d_random.dbetamu().head(dimv).isApprox(d_random.dbeta()));
+  EXPECT_TRUE(d_random.dbetamu().tail(3).isApprox(d_random.dmu()));
 }
 
 
@@ -177,8 +189,8 @@ TEST_F(SplitDirectionTest, floating_base) {
   EXPECT_EQ(d.dq().size(), dimv);
   EXPECT_EQ(d.dv().size(), dimv);
   EXPECT_EQ(d.dx().size(), dimx);
-  EXPECT_EQ(d.da.size(), dimv);
-  EXPECT_EQ(d.dbeta.size(), dimv);
+  EXPECT_EQ(d.da().size(), dimv);
+  EXPECT_EQ(d.dbeta().size(), dimv);
   EXPECT_EQ(d.du_passive.size(), 6);
   EXPECT_EQ(d.dnu_passive.size(), 6);
   EXPECT_EQ(d.dmu().size(), 0);
@@ -219,8 +231,8 @@ TEST_F(SplitDirectionTest, floating_base) {
   EXPECT_EQ(d_random.dq().size(), dimv);
   EXPECT_EQ(d_random.dv().size(), dimv);
   EXPECT_EQ(d_random.dx().size(), dimx);
-  EXPECT_EQ(d_random.da.size(), dimv);
-  EXPECT_EQ(d_random.dbeta.size(), dimv);
+  EXPECT_EQ(d_random.da().size(), dimv);
+  EXPECT_EQ(d_random.dbeta().size(), dimv);
   EXPECT_EQ(d_random.du_passive.size(), 6);
   EXPECT_EQ(d_random.dnu_passive.size(), 6);
   EXPECT_EQ(d_random.dmu().size(), contact_status.dimf());
@@ -234,13 +246,17 @@ TEST_F(SplitDirectionTest, floating_base) {
   EXPECT_FALSE(d_random.dq().isZero());
   EXPECT_FALSE(d_random.dv().isZero());
   EXPECT_FALSE(d_random.dx().isZero());
-  EXPECT_FALSE(d_random.da.isZero());
-  EXPECT_FALSE(d_random.dbeta.isZero());
+  EXPECT_FALSE(d_random.da().isZero());
+  EXPECT_FALSE(d_random.dbeta().isZero());
   EXPECT_FALSE(d_random.du_passive.isZero());
   EXPECT_FALSE(d_random.dnu_passive.isZero());
+  EXPECT_TRUE(d_random.daf().head(dimv).isApprox(d_random.da()));
+  EXPECT_TRUE(d_random.dbetamu().head(dimv).isApprox(d_random.dbeta()));
   if (contact_status.hasActiveContacts()) {
     EXPECT_FALSE(d_random.dmu().isZero());
     EXPECT_FALSE(d_random.df().isZero());
+    EXPECT_TRUE(d_random.daf().tail(contact_status.dimf()).isApprox(d_random.df()));
+    EXPECT_TRUE(d_random.dbetamu().tail(contact_status.dimf()).isApprox(d_random.dmu()));
   }
 }
 

@@ -185,7 +185,7 @@ TEST_F(JointTorquesUpperLimitTest, condenseSlackAndDualFixedBase) {
   EXPECT_TRUE(kkt_residual.lv().isZero());
   EXPECT_TRUE(kkt_matrix.Quu().isApprox(Quu_ref));
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
-  EXPECT_TRUE(kkt_matrix.Qaa.isZero());
+  EXPECT_TRUE(kkt_matrix.Qaa().isZero());
   EXPECT_TRUE(kkt_matrix.Qff().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isZero());
   SplitDirection d = SplitDirection::Random(fixed_base_robot_);
@@ -258,7 +258,7 @@ TEST_F(JointTorquesUpperLimitTest, condenseSlackAndDualFloatingBase) {
   EXPECT_TRUE(kkt_residual.lu().isZero());
   EXPECT_TRUE(kkt_matrix.Quu().isApprox(Quu_ref));
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
-  EXPECT_TRUE(kkt_matrix.Qaa.isZero());
+  EXPECT_TRUE(kkt_matrix.Qaa().isZero());
   EXPECT_TRUE(kkt_matrix.Qff().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isZero());
   SplitDirection d = SplitDirection::Random(floating_base_robot_);

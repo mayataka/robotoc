@@ -25,6 +25,7 @@ inline void LinearizeForwardEuler(
   else {
     kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
   }
+  kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
   kkt_residual.lv().noalias() += dtau * s_next.lmd + s_next.gmm - s.gmm;
   kkt_residual.la.noalias() += dtau * s_next.gmm;
 }

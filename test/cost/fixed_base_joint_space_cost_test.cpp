@@ -115,7 +115,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   cost.lvv(robot_, data_, t_, dtau_, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.Qvv().isApprox(lvv_ref));
   cost.laa(robot_, data_, t_, dtau_, s, kkt_mat);
-  EXPECT_TRUE(kkt_mat.Qaa.isApprox(laa_ref));
+  EXPECT_TRUE(kkt_mat.Qaa().isApprox(laa_ref));
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   cost.luu(robot_, data_, t_, dtau_, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.Quu().isApprox(luu_ref));

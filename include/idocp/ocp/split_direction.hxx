@@ -7,12 +7,10 @@ namespace idocp {
 
 inline SplitDirection::SplitDirection(const Robot& robot) 
   : split_direction(Eigen::VectorXd::Zero(4*robot.dimv()+robot.dimu())),
-    da(Eigen::VectorXd::Zero(robot.dimv())),
-    dbeta(Eigen::VectorXd::Zero(robot.dimv())),
     du_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
     dnu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
-    dmu_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
-    df_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
+    daf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
+    dbetamu_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimu_(robot.dimu()), 
     dimx_(2*robot.dimv()), 
@@ -24,15 +22,13 @@ inline SplitDirection::SplitDirection(const Robot& robot)
 
 inline SplitDirection::SplitDirection() 
   : split_direction(),
-    da(),
-    dbeta(),
     du_passive(),
     dnu_passive(),
-    dmu_full_(),
-    df_full_(),
-    dimv_(), 
-    dimu_(), 
-    dimx_(), 
+    daf_full_(),
+    dbetamu_full_(),
+    dimv_(0), 
+    dimu_(0), 
+    dimx_(0), 
     dim_passive_(0), 
     dimf_(0), 
     dimKKT_(0) {
@@ -115,36 +111,78 @@ SplitDirection::dx() const {
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dmu() {
-  return dmu_full_.head(dimf_);
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::daf() {
+  return daf_full_.head(dimv_+dimf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitDirection::dmu() const {
-  return dmu_full_.head(dimf_);
+SplitDirection::daf() const {
+  return daf_full_.head(dimv_+dimf_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::da() {
+  return daf_full_.head(dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitDirection::da() const {
+  return daf_full_.head(dimv_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::df() {
-  return df_full_.head(dimf_);
+  return daf_full_.segment(dimv_, dimf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitDirection::df() const {
-  return df_full_.head(dimf_);
+  return daf_full_.segment(dimv_, dimf_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dbetamu() {
+  return dbetamu_full_.head(dimv_+dimf_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitDirection::dbetamu() const {
+  return dbetamu_full_.head(dimv_+dimf_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dbeta() {
+  return dbetamu_full_.head(dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitDirection::dbeta() const {
+  return dbetamu_full_.head(dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dmu() {
+  return dbetamu_full_.segment(dimv_, dimf_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitDirection::dmu() const {
+  return dbetamu_full_.segment(dimv_, dimf_);
 }
 
 
 inline void SplitDirection::setZero() {
   split_direction.setZero();
-  da.setZero();
-  dbeta.setZero();
   du_passive.setZero();
   dnu_passive.setZero();
-  dmu_full_.setZero();
-  df_full_.setZero();
+  daf_full_.setZero();
+  dbetamu_full_.setZero();
 }
 
 
@@ -165,8 +203,8 @@ inline SplitDirection SplitDirection::Random(const Robot& robot) {
   d.du() = Eigen::VectorXd::Random(robot.dimu());
   d.dq() = Eigen::VectorXd::Random(robot.dimv());
   d.dv() = Eigen::VectorXd::Random(robot.dimv());
-  d.da = Eigen::VectorXd::Random(robot.dimv());
-  d.dbeta = Eigen::VectorXd::Random(robot.dimv());
+  d.da() = Eigen::VectorXd::Random(robot.dimv());
+  d.dbeta() = Eigen::VectorXd::Random(robot.dimv());
   d.du_passive = Eigen::VectorXd::Random(robot.dim_passive());
   d.dnu_passive = Eigen::VectorXd::Random(robot.dim_passive());
   return d;
@@ -182,10 +220,10 @@ inline SplitDirection SplitDirection::Random(
   d.du() = Eigen::VectorXd::Random(robot.dimu());
   d.dq() = Eigen::VectorXd::Random(robot.dimv());
   d.dv() = Eigen::VectorXd::Random(robot.dimv());
-  d.dmu() = Eigen::VectorXd::Random(contact_status.dimf());
+  d.da() = Eigen::VectorXd::Random(robot.dimv());
   d.df() = Eigen::VectorXd::Random(contact_status.dimf());
-  d.da = Eigen::VectorXd::Random(robot.dimv());
-  d.dbeta = Eigen::VectorXd::Random(robot.dimv());
+  d.dbeta() = Eigen::VectorXd::Random(robot.dimv());
+  d.dmu() = Eigen::VectorXd::Random(contact_status.dimf());
   d.du_passive = Eigen::VectorXd::Random(robot.dim_passive());
   d.dnu_passive = Eigen::VectorXd::Random(robot.dim_passive());
   return d;

@@ -10,12 +10,12 @@
 namespace idocp {
 
 inline KKTMatrix::KKTMatrix(const Robot& robot) 
-  : Qaa(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+  : Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     schur_complement_(2*robot.dimv(), 2*robot.dimv()+robot.dimu()),
     F_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv()+robot.dimu())),
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv(), 3*robot.dimv())),
-    Qff_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.max_dimf())),
+    Qaaff_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
+                                      robot.dimv()+robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
@@ -30,11 +30,11 @@ inline KKTMatrix::KKTMatrix(const Robot& robot)
 
 
 inline KKTMatrix::KKTMatrix() 
-  : Qaa(),
-    Fqq_prev(),
+  : Fqq_prev(),
     schur_complement_(),
     F_(),
     Q_(),
+    Qaaff_full_(),
     has_floating_base_(false),
     dimv_(0), 
     dimx_(0), 
@@ -404,13 +404,33 @@ KKTMatrix::Qxu_passive() const {
 }
 
 
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qaaff() {
+  return Qaaff_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qaaff() const {
+  return Qaaff_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qaa() {
+  return Qaaff_full_.topLeftCorner(dimv_, dimv_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qaa() const {
+  return Qaaff_full_.topLeftCorner(dimv_, dimv_);
+}
+
+
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qff() {
-  return Qff_full_.topLeftCorner(dimf_, dimf_);
+  return Qaaff_full_.block(dimv_, dimv_, dimf_, dimf_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qff() const {
-  return Qff_full_.topLeftCorner(dimf_, dimf_);
+  return Qaaff_full_.block(dimv_, dimv_, dimf_, dimf_);
 }
 
 
@@ -432,11 +452,10 @@ inline void KKTMatrix::invert(
 
 
 inline void KKTMatrix::setZero() {
-  Qaa.setZero();
   Fqq_prev.setZero();
   F_.setZero();
   Q_.setZero();
-  Qff_full_.setZero();
+  Qaaff_full_.setZero();
 }
 
 

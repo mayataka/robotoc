@@ -130,18 +130,28 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> dx() const;
 
   ///
-  /// @brief Returns the Newton direction of mu_stack. Size is 
-  /// Robot::dim_passive() + Robot::dimf().
-  /// @return Reference to the Newton direction of mu_stack.
+  /// @brief Returns the Newton direction of a. Size is Robot::dimv().
+  /// @return Reference to the Newton direction of a.
   ///
-  Eigen::VectorBlock<Eigen::VectorXd> dmu();
+  Eigen::VectorBlock<Eigen::VectorXd> daf();
 
   ///
-  /// @brief Returns the Newton direction of mu_stack. Size is 
-  /// Robot::dim_passive() + Robot::dimf().
-  /// @return Reference to the Newton direction of mu_stack.
+  /// @brief Returns the Newton direction of a. Size is Robot::dimv().
+  /// @return Reference to the Newton direction of a.
   ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> dmu() const;
+  const Eigen::VectorBlock<const Eigen::VectorXd> daf() const;
+
+  ///
+  /// @brief Returns the Newton direction of a. Size is Robot::dimv().
+  /// @return Reference to the Newton direction of a.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> da();
+
+  ///
+  /// @brief Returns the Newton direction of a. Size is Robot::dimv().
+  /// @return Reference to the Newton direction of a.
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> da() const;
 
   ///
   /// @brief Returns the Newton direction of a. Size is Robot::dimv().
@@ -154,6 +164,48 @@ public:
   /// @return Reference to the Newton direction of a.
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> df() const;
+
+  ///
+  /// @brief Returns the Newton direction of mu_stack. Size is 
+  /// Robot::dim_passive() + Robot::dimf().
+  /// @return Reference to the Newton direction of mu_stack.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dbetamu();
+
+  ///
+  /// @brief Returns the Newton direction of mu_stack. Size is 
+  /// Robot::dim_passive() + Robot::dimf().
+  /// @return Reference to the Newton direction of mu_stack.
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> dbetamu() const;
+
+  ///
+  /// @brief Returns the Newton direction of mu_stack. Size is 
+  /// Robot::dim_passive() + Robot::dimf().
+  /// @return Reference to the Newton direction of mu_stack.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dbeta();
+
+  ///
+  /// @brief Returns the Newton direction of mu_stack. Size is 
+  /// Robot::dim_passive() + Robot::dimf().
+  /// @return Reference to the Newton direction of mu_stack.
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> dbeta() const;
+
+  ///
+  /// @brief Returns the Newton direction of mu_stack. Size is 
+  /// Robot::dim_passive() + Robot::dimf().
+  /// @return Reference to the Newton direction of mu_stack.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dmu();
+
+  ///
+  /// @brief Returns the Newton direction of mu_stack. Size is 
+  /// Robot::dim_passive() + Robot::dimf().
+  /// @return Reference to the Newton direction of mu_stack.
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> dmu() const;
 
   ///
   /// @brief Set the all alements of the direction to zero.
@@ -174,12 +226,6 @@ public:
   int dimf() const;
 
   Eigen::VectorXd split_direction;
-
-  /// @brief Newton direction of u.
-  Eigen::VectorXd da;
-
-  /// @brief Newton direction of beta.
-  Eigen::VectorXd dbeta;
 
   /// @brief Newton direction of beta.
   Eigen::VectorXd du_passive;
@@ -207,7 +253,7 @@ public:
 
 private:
   /// @brief Stack of the Newton directions.
-  Eigen::VectorXd dmu_full_, df_full_;
+  Eigen::VectorXd daf_full_, dbetamu_full_;
 
   /// @brief Dimension of velocity v.
   int dimv_;

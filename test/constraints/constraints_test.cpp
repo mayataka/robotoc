@@ -88,7 +88,7 @@ TEST_F(ConstraintsTest, timestage0) {
   constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isZero());
-  EXPECT_FALSE(kkt_matrix.Qaa.isZero());
+  EXPECT_FALSE(kkt_matrix.Qaa().isZero());
   EXPECT_FALSE(kkt_matrix.Quu().isZero());
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_TRUE(kkt_residual.lv().isZero());
@@ -135,7 +135,7 @@ TEST_F(ConstraintsTest, timestage1) {
   constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
   EXPECT_FALSE(kkt_matrix.Qvv().isZero());
-  EXPECT_FALSE(kkt_matrix.Qaa.isZero());
+  EXPECT_FALSE(kkt_matrix.Qaa().isZero());
   EXPECT_FALSE(kkt_matrix.Quu().isZero());
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
@@ -183,7 +183,7 @@ TEST_F(ConstraintsTest, timestage2) {
   constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s, kkt_matrix, kkt_residual);
   EXPECT_FALSE(kkt_matrix.Qqq().isZero());
   EXPECT_FALSE(kkt_matrix.Qvv().isZero());
-  EXPECT_FALSE(kkt_matrix.Qaa.isZero());
+  EXPECT_FALSE(kkt_matrix.Qaa().isZero());
   EXPECT_FALSE(kkt_matrix.Quu().isZero());
   EXPECT_FALSE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());

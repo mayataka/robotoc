@@ -259,7 +259,7 @@ void JointSpaceCost::lvv(Robot& robot, CostFunctionData& data, const double t,
 void JointSpaceCost::laa(Robot& robot, CostFunctionData& data, const double t, 
                          const double dtau, const SplitSolution& s, 
                          KKTMatrix& kkt_matrix) const {
-  kkt_matrix.Qaa.diagonal().noalias() += dtau * a_weight_;
+  kkt_matrix.Qaa().diagonal().noalias() += dtau * a_weight_;
 }
 
 

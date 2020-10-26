@@ -118,7 +118,7 @@ TEST_F(FloatingBaseJointSpaceCostTest, setWeights) {
   cost.lvv(robot_, data_, t_, dtau_, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.Qvv().isApprox(lvv_ref));
   cost.laa(robot_, data_, t_, dtau_, s, kkt_mat);
-  EXPECT_TRUE(kkt_mat.Qaa.isApprox(laa_ref));
+  EXPECT_TRUE(kkt_mat.Qaa().isApprox(laa_ref));
   cost.luu(robot_, data_, t_, dtau_, s, kkt_mat);
   EXPECT_TRUE(kkt_mat.Quu().isApprox(luu_ref));
   lqq_ref += Jq_diff.transpose() * qf_weight.asDiagonal() * Jq_diff;
