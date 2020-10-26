@@ -62,6 +62,7 @@ TEST_F(FixedBaseRobotTest, constructor) {
   Robot robot(urdf_);
   EXPECT_EQ(robot.dimq(), dimq_);
   EXPECT_EQ(robot.dimv(), dimq_);
+  EXPECT_EQ(robot.dimu(), dimq_);
   EXPECT_EQ(robot.max_dimf(), 0);
   EXPECT_EQ(robot.dim_passive(), 0);
   EXPECT_EQ(robot.max_point_contacts(), 0);
@@ -70,6 +71,7 @@ TEST_F(FixedBaseRobotTest, constructor) {
   Robot robot_contact(urdf_, contact_frames_);
   EXPECT_EQ(robot_contact.dimq(), dimq_);
   EXPECT_EQ(robot_contact.dimv(), dimq_);
+  EXPECT_EQ(robot_contact.dimu(), dimq_);
   EXPECT_EQ(robot_contact.max_dimf(), 3);
   EXPECT_EQ(robot_contact.dim_passive(), 0);
   EXPECT_EQ(robot_contact.max_point_contacts(), 1);
@@ -123,6 +125,7 @@ TEST_F(FixedBaseRobotTest, moveAssign) {
   Robot robot_empty;
   EXPECT_EQ(robot_empty.dimq(), 0);
   EXPECT_EQ(robot_empty.dimv(), 0);
+  EXPECT_EQ(robot_empty.dimu(), 0);
   EXPECT_EQ(robot_empty.max_dimf(), 0);
   EXPECT_EQ(robot_empty.dim_passive(), 0);
   EXPECT_EQ(robot_empty.max_point_contacts(), 0);
@@ -130,6 +133,7 @@ TEST_F(FixedBaseRobotTest, moveAssign) {
   Robot robot_contact(urdf_, contact_frames_);
   EXPECT_EQ(robot_contact.dimq(), dimq_);
   EXPECT_EQ(robot_contact.dimv(), dimq_);
+  EXPECT_EQ(robot_contact.dimu(), dimq_);
   EXPECT_EQ(robot_contact.max_dimf(), 3);
   EXPECT_EQ(robot_contact.dim_passive(), 0);
   EXPECT_EQ(robot_contact.max_point_contacts(), 1);
@@ -154,6 +158,7 @@ TEST_F(FixedBaseRobotTest, moveAssign) {
   robot_empty = std::move(robot_ref);
   EXPECT_EQ(robot_contact.dimq(), robot_empty.dimq());
   EXPECT_EQ(robot_contact.dimv(), robot_empty.dimv());
+  EXPECT_EQ(robot_contact.dimu(), robot_empty.dimu());
   EXPECT_EQ(robot_contact.max_dimf(), robot_empty.max_dimf());
   EXPECT_EQ(robot_contact.dim_passive(), robot_empty.dim_passive());
   EXPECT_EQ(robot_contact.max_point_contacts(), robot_empty.max_point_contacts());
@@ -175,6 +180,7 @@ TEST_F(FixedBaseRobotTest, moveConstructor) {
   Robot robot_contact(urdf_, contact_frames_);
   EXPECT_EQ(robot_contact.dimq(), dimq_);
   EXPECT_EQ(robot_contact.dimv(), dimq_);
+  EXPECT_EQ(robot_contact.dimu(), dimq_);
   EXPECT_EQ(robot_contact.max_dimf(), 3);
   EXPECT_EQ(robot_contact.dim_passive(), 0);
   EXPECT_EQ(robot_contact.max_point_contacts(), 1);
@@ -199,6 +205,7 @@ TEST_F(FixedBaseRobotTest, moveConstructor) {
   Robot robot_empty(std::move(robot_ref));
   EXPECT_EQ(robot_contact.dimq(), robot_empty.dimq());
   EXPECT_EQ(robot_contact.dimv(), robot_empty.dimv());
+  EXPECT_EQ(robot_contact.dimu(), robot_empty.dimu());
   EXPECT_EQ(robot_contact.max_dimf(), robot_empty.max_dimf());
   EXPECT_EQ(robot_contact.dim_passive(), robot_empty.dim_passive());
   EXPECT_EQ(robot_contact.max_point_contacts(), robot_empty.max_point_contacts());

@@ -9,15 +9,15 @@ JointSpaceCost::JointSpaceCost(const Robot& robot)
   : CostFunctionComponentBase(),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
-    dimu_(robot.dimv()-robot.dim_passive()),
+    dimu_(robot.dimu()),
     q_ref_(Eigen::VectorXd::Zero(robot.dimq())),
     v_ref_(Eigen::VectorXd::Zero(robot.dimv())),
     a_ref_(Eigen::VectorXd::Zero(robot.dimv())),
-    u_ref_(Eigen::VectorXd::Zero(robot.dimv()-robot.dim_passive())),
+    u_ref_(Eigen::VectorXd::Zero(robot.dimu())),
     q_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     v_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     a_weight_(Eigen::VectorXd::Zero(robot.dimv())),
-    u_weight_(Eigen::VectorXd::Zero(robot.dimv()-robot.dim_passive())),
+    u_weight_(Eigen::VectorXd::Zero(robot.dimu())),
     qf_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     vf_weight_(Eigen::VectorXd::Zero(robot.dimv())) {
   if (robot.has_floating_base()) {

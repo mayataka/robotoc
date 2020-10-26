@@ -6,7 +6,7 @@
 namespace idocp {
 
 inline KKTResidual::KKTResidual(const Robot& robot) 
-  : KKT_residual(Eigen::VectorXd::Zero(5*robot.dimv()-robot.dim_passive())),
+  : KKT_residual(Eigen::VectorXd::Zero(4*robot.dimv()+robot.dimu())),
     la(Eigen::VectorXd::Zero(robot.dimv())),
     ID(Eigen::VectorXd::Zero(robot.dimv())),
     lu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
@@ -15,10 +15,10 @@ inline KKTResidual::KKTResidual(const Robot& robot)
     lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
-    dimu_(robot.dimv()-robot.dim_passive()),
+    dimu_(robot.dimu()),
     dim_passive_(robot.dim_passive()),
     dimf_(0), 
-    dimKKT_(5*robot.dimv()+robot.dim_passive()) {
+    dimKKT_(4*robot.dimv()+robot.dimu()) {
 }
 
 

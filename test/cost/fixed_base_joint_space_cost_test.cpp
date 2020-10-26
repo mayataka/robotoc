@@ -44,16 +44,17 @@ protected:
 TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   const int dimq = robot_.dimq();
   const int dimv = robot_.dimv();
+  const int dimu = robot_.dimu();
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd v_weight = Eigen::VectorXd::Random(dimv); 
   const Eigen::VectorXd a_weight = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(dimv);
+  const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(dimu);
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd q_ref = Eigen::VectorXd::Random(dimq);
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(dimv);
-  const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(dimv);
+  const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(dimu);
   JointSpaceCost cost(robot_);
   EXPECT_FALSE(cost.useKinematics());
   cost.set_q_weight(q_weight);
@@ -81,7 +82,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   Eigen::VectorXd lq_ref = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd lv_ref = Eigen::VectorXd::Zero(dimv);
   Eigen::VectorXd la_ref = Eigen::VectorXd::Zero(dimv);
-  Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimv);
+  Eigen::VectorXd lu_ref = Eigen::VectorXd::Zero(dimu);
   lq_ref = dtau_ * q_weight.asDiagonal() * (s.q-q_ref);
   cost.lq(robot_, data_, t_, dtau_, s, kkt_res);
   EXPECT_TRUE(kkt_res.lq().isApprox(lq_ref));
@@ -104,7 +105,7 @@ TEST_F(FixedBaseJointSpaceCostTest, setWeights) {
   Eigen::MatrixXd lqq_ref = Eigen::MatrixXd::Zero(dimv, dimv);
   Eigen::MatrixXd lvv_ref = Eigen::MatrixXd::Zero(dimv, dimv);
   Eigen::MatrixXd laa_ref = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd luu_ref = Eigen::MatrixXd::Zero(dimv, dimv);
+  Eigen::MatrixXd luu_ref = Eigen::MatrixXd::Zero(dimu, dimu);
   lqq_ref = dtau_ * q_weight.asDiagonal();
   lvv_ref = dtau_ * v_weight.asDiagonal();
   laa_ref = dtau_ * a_weight.asDiagonal();

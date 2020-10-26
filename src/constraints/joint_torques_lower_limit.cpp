@@ -10,15 +10,13 @@ JointTorquesLowerLimit::JointTorquesLowerLimit(
     const double fraction_to_boundary_rate)
   : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
     dimc_(robot.jointEffortLimit().size()),
-    dim_passive_(robot.dim_passive()),
-    umin_(-robot.jointEffortLimit().tail(robot.dimv()-robot.dim_passive())) {
+    umin_(-robot.jointEffortLimit()) {
 }
 
 
 JointTorquesLowerLimit::JointTorquesLowerLimit()
   : ConstraintComponentBase(),
     dimc_(0),
-    dim_passive_(0),
     umin_() {
 }
 

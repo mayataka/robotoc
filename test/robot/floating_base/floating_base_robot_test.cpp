@@ -55,6 +55,7 @@ TEST_F(FloatingBaseRobotTest, constructor) {
   Robot robot_empty;
   EXPECT_EQ(robot_empty.dimq(), 0);
   EXPECT_EQ(robot_empty.dimv(), 0);
+  EXPECT_EQ(robot_empty.dimu(), 0);
   EXPECT_EQ(robot_empty.max_dimf(), 0);
   EXPECT_EQ(robot_empty.dim_passive(), 0);
   EXPECT_EQ(robot_empty.max_point_contacts(), 0);
@@ -62,6 +63,7 @@ TEST_F(FloatingBaseRobotTest, constructor) {
   Robot robot(urdf_);
   EXPECT_EQ(robot.dimq(), dimq_);
   EXPECT_EQ(robot.dimv(), dimv_);
+  EXPECT_EQ(robot.dimu(), dimv_-6);
   EXPECT_EQ(robot.max_dimf(), 0);
   EXPECT_EQ(robot.dim_passive(), 6);
   EXPECT_EQ(robot.max_point_contacts(), 0);
@@ -70,6 +72,7 @@ TEST_F(FloatingBaseRobotTest, constructor) {
   Robot robot_contact(urdf_, contact_frames_);
   EXPECT_EQ(robot_contact.dimq(), dimq_);
   EXPECT_EQ(robot_contact.dimv(), dimv_);
+  EXPECT_EQ(robot_contact.dimu(), dimv_-6);
   EXPECT_EQ(robot_contact.max_dimf(), 12);
   EXPECT_EQ(robot_contact.dim_passive(), 6);
   EXPECT_EQ(robot_contact.max_point_contacts(), 4);
@@ -134,6 +137,7 @@ TEST_F(FloatingBaseRobotTest, moveAssign) {
   Robot robot_empty;
   EXPECT_EQ(robot_empty.dimq(), 0);
   EXPECT_EQ(robot_empty.dimv(), 0);
+  EXPECT_EQ(robot_empty.dimu(), 0);
   EXPECT_EQ(robot_empty.max_dimf(), 0);
   EXPECT_EQ(robot_empty.dim_passive(), 0);
   EXPECT_EQ(robot_empty.max_point_contacts(), 0);
@@ -141,6 +145,7 @@ TEST_F(FloatingBaseRobotTest, moveAssign) {
   Robot robot(urdf_);
   EXPECT_EQ(robot.dimq(), dimq_);
   EXPECT_EQ(robot.dimv(), dimv_);
+  EXPECT_EQ(robot.dimu(), dimv_-6);
   EXPECT_EQ(robot.max_dimf(), 0);
   EXPECT_EQ(robot.dim_passive(), 6);
   EXPECT_EQ(robot.max_point_contacts(), 0);
@@ -148,6 +153,7 @@ TEST_F(FloatingBaseRobotTest, moveAssign) {
   Robot robot_contact(urdf_, contact_frames_);
   EXPECT_EQ(robot_contact.dimq(), dimq_);
   EXPECT_EQ(robot_contact.dimv(), dimv_);
+  EXPECT_EQ(robot_contact.dimu(), dimv_-6);
   EXPECT_EQ(robot_contact.max_dimf(), 3*contact_frames_.size());
   EXPECT_EQ(robot_contact.dim_passive(), 6);
   EXPECT_EQ(robot_contact.max_point_contacts(), contact_frames_.size());
@@ -181,6 +187,7 @@ TEST_F(FloatingBaseRobotTest, moveAssign) {
   robot_empty = std::move(robot_ref);
   EXPECT_EQ(robot_contact.dimq(), robot_empty.dimq());
   EXPECT_EQ(robot_contact.dimv(), robot_empty.dimv());
+  EXPECT_EQ(robot_contact.dimu(), robot_empty.dimu());
   EXPECT_EQ(robot_contact.max_dimf(), robot_empty.max_dimf());
   EXPECT_EQ(robot_contact.dim_passive(), robot_empty.dim_passive());
   EXPECT_EQ(robot_contact.max_point_contacts(), robot_empty.max_point_contacts());
@@ -203,6 +210,7 @@ TEST_F(FloatingBaseRobotTest, moveConstructor) {
   Robot robot_contact(urdf_, contact_frames_);
   EXPECT_EQ(robot_contact.dimq(), dimq_);
   EXPECT_EQ(robot_contact.dimv(), dimv_);
+  EXPECT_EQ(robot_contact.dimu(), dimv_-6);
   EXPECT_EQ(robot_contact.max_dimf(), 3*contact_frames_.size());
   EXPECT_EQ(robot_contact.dim_passive(), 6);
   EXPECT_EQ(robot_contact.max_point_contacts(), contact_frames_.size());
@@ -236,6 +244,7 @@ TEST_F(FloatingBaseRobotTest, moveConstructor) {
   Robot robot_empty(std::move(robot_ref));
   EXPECT_EQ(robot_contact.dimq(), robot_empty.dimq());
   EXPECT_EQ(robot_contact.dimv(), robot_empty.dimv());
+  EXPECT_EQ(robot_contact.dimu(), robot_empty.dimu());
   EXPECT_EQ(robot_contact.max_dimf(), robot_empty.max_dimf());
   EXPECT_EQ(robot_contact.dim_passive(), robot_empty.dim_passive());
   EXPECT_EQ(robot_contact.max_point_contacts(), robot_empty.max_point_contacts());

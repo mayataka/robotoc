@@ -711,6 +711,11 @@ inline int Robot::dimv() const {
 }
 
 
+inline int Robot::dimu() const {
+  return dimu_;
+}
+
+
 inline int Robot::max_dimf() const {
   return max_dimf_;
 }

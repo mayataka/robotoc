@@ -6,18 +6,18 @@
 namespace idocp {
 
 inline SplitDirection::SplitDirection(const Robot& robot) 
-  : split_direction(Eigen::VectorXd::Zero(5*robot.dimv()-robot.dim_passive())),
+  : split_direction(Eigen::VectorXd::Zero(4*robot.dimv()+robot.dimu())),
     da(Eigen::VectorXd::Zero(robot.dimv())),
     dbeta(Eigen::VectorXd::Zero(robot.dimv())),
     dnu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
     dmu_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     df_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
-    dimu_(robot.dimv()-robot.dim_passive()), 
+    dimu_(robot.dimu()), 
     dimx_(2*robot.dimv()), 
     dim_passive_(robot.dim_passive()), 
     dimf_(0), 
-    dimKKT_(5*robot.dimv()-robot.dim_passive()) {
+    dimKKT_(4*robot.dimv()+robot.dimu()) {
 }
 
 
@@ -160,7 +160,7 @@ inline SplitDirection SplitDirection::Random(const Robot& robot) {
   SplitDirection d(robot);
   d.dlmd() = Eigen::VectorXd::Random(robot.dimv());
   d.dgmm() = Eigen::VectorXd::Random(robot.dimv());
-  d.du() = Eigen::VectorXd::Random(robot.dimv()-robot.dim_passive());
+  d.du() = Eigen::VectorXd::Random(robot.dimu());
   d.dq() = Eigen::VectorXd::Random(robot.dimv());
   d.dv() = Eigen::VectorXd::Random(robot.dimv());
   d.da = Eigen::VectorXd::Random(robot.dimv());
@@ -177,7 +177,7 @@ inline SplitDirection SplitDirection::Random(
   d.setContactStatus(contact_status);
   d.dlmd() = Eigen::VectorXd::Random(robot.dimv());
   d.dgmm() = Eigen::VectorXd::Random(robot.dimv());
-  d.du() = Eigen::VectorXd::Random(robot.dimv()-robot.dim_passive());
+  d.du() = Eigen::VectorXd::Random(robot.dimu());
   d.dq() = Eigen::VectorXd::Random(robot.dimv());
   d.dv() = Eigen::VectorXd::Random(robot.dimv());
   d.dmu() = Eigen::VectorXd::Random(contact_status.dimf());

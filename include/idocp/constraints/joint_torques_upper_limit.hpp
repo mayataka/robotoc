@@ -68,7 +68,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
 
 private:
-  int dimc_, dim_passive_;
+  int dimc_;
   Eigen::VectorXd umax_;
 
 };

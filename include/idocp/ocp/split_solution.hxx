@@ -13,7 +13,7 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     f(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
     q(Eigen::VectorXd::Zero(robot.dimq())),
     v(Eigen::VectorXd::Zero(robot.dimv())),
-    u(Eigen::VectorXd::Zero(robot.dimv()-robot.dim_passive())),
+    u(Eigen::VectorXd::Zero(robot.dimu())),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
     u_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
     nu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
@@ -155,8 +155,9 @@ inline SplitSolution SplitSolution::Random(const Robot& robot) {
   s.q = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
-  s.u = Eigen::VectorXd::Random(robot.dimv());
+  s.u = Eigen::VectorXd::Random(robot.dimu());
   s.beta = Eigen::VectorXd::Random(robot.dimv());
+  s.u_passive = Eigen::VectorXd::Random(robot.dim_passive());
   s.nu_passive = Eigen::VectorXd::Random(robot.dim_passive());
   return s;
 }
@@ -176,8 +177,9 @@ inline SplitSolution SplitSolution::Random(
   s.q = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(s.q);
   s.v = Eigen::VectorXd::Random(robot.dimv());
-  s.u = Eigen::VectorXd::Random(robot.dimv());
+  s.u = Eigen::VectorXd::Random(robot.dimu());
   s.beta = Eigen::VectorXd::Random(robot.dimv());
+  s.u_passive = Eigen::VectorXd::Random(robot.dim_passive());
   s.nu_passive = Eigen::VectorXd::Random(robot.dim_passive());
   return s;
 }

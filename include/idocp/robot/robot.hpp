@@ -642,6 +642,13 @@ public:
   int dimv() const;
 
   ///
+  /// @brief Returns the dimensiton of the velocity, i.e, tangent space.
+  /// @return The dimensiton of the velocity, i.e, the dimension of the tangent 
+  /// space of the configuration space.
+  /// 
+  int dimu() const;
+
+  ///
   /// @brief Returns the maximum dimension of the contacts.
   /// @return The maximum dimension of the contacts.
   /// 
@@ -686,7 +693,7 @@ private:
   FloatingBase floating_base_;
   std::vector<PointContact> point_contacts_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
-  int dimq_, dimv_, max_dimf_, dimf_, num_active_contacts_;
+  int dimq_, dimv_, dimu_, max_dimf_, dimf_, num_active_contacts_;
   bool has_active_contacts_;
   std::vector<bool> is_each_contact_active_;
   Eigen::MatrixXd dimpulse_dv_; /// @brief used in RNEAImpulseDerivatives
