@@ -145,6 +145,14 @@ TEST_F(KKTMatrixTest, fixed_base) {
   EXPECT_TRUE(matrix.Qvv().isApprox(Qvv));
   EXPECT_TRUE(matrix.Qff().isApprox(Qff));
   EXPECT_TRUE(matrix.Qaa.isApprox(Qaa));
+  EXPECT_TRUE(matrix.Qxx().topLeftCorner(dimv, dimv).isApprox(Qqq));
+  EXPECT_TRUE(matrix.Qxx().topRightCorner(dimv, dimv).isApprox(Qqv));
+  EXPECT_TRUE(matrix.Qxx().bottomLeftCorner(dimv, dimv).isApprox(Qvq));
+  EXPECT_TRUE(matrix.Qxx().bottomRightCorner(dimv, dimv).isApprox(Qvv));
+  EXPECT_TRUE(matrix.Qxu().topRows(dimv).isApprox(Qqu));
+  EXPECT_TRUE(matrix.Qxu().bottomRows(dimv).isApprox(Qvu));
+  EXPECT_TRUE(matrix.Qux().leftCols(dimv).isApprox(Quq));
+  EXPECT_TRUE(matrix.Qux().rightCols(dimv).isApprox(Quv));
 }
 
 
@@ -318,6 +326,14 @@ TEST_F(KKTMatrixTest, floating_base) {
   EXPECT_TRUE(matrix.Quu_LU.isApprox(Quu_LU));
   EXPECT_TRUE(matrix.Qqu_L.isApprox(Qqu_L));
   EXPECT_TRUE(matrix.Qvu_L.isApprox(Qvu_L));
+  EXPECT_TRUE(matrix.Qxx().topLeftCorner(dimv, dimv).isApprox(Qqq));
+  EXPECT_TRUE(matrix.Qxx().topRightCorner(dimv, dimv).isApprox(Qqv));
+  EXPECT_TRUE(matrix.Qxx().bottomLeftCorner(dimv, dimv).isApprox(Qvq));
+  EXPECT_TRUE(matrix.Qxx().bottomRightCorner(dimv, dimv).isApprox(Qvv));
+  EXPECT_TRUE(matrix.Qxu().topRows(dimv).isApprox(Qqu));
+  EXPECT_TRUE(matrix.Qxu().bottomRows(dimv).isApprox(Qvu));
+  EXPECT_TRUE(matrix.Qux().leftCols(dimv).isApprox(Quq));
+  EXPECT_TRUE(matrix.Qux().rightCols(dimv).isApprox(Quv));
 }
 
 

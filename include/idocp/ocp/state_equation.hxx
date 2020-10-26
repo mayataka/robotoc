@@ -26,7 +26,7 @@ inline void LinearizeForwardEuler(
     kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
   }
   kkt_residual.lv().noalias() += dtau * s_next.lmd + s_next.gmm - s.gmm;
-  kkt_residual.la().noalias() += dtau * s_next.gmm;
+  kkt_residual.la.noalias() += dtau * s_next.gmm;
 }
 
 
@@ -52,7 +52,7 @@ inline void LinearizeBackwardEuler(
     kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
   }
   kkt_residual.lv().noalias() += dtau * s.lmd - s.gmm + s_next.gmm;
-  kkt_residual.la().noalias() += dtau * s.gmm;
+  kkt_residual.la.noalias() += dtau * s.gmm;
 }
 
 
@@ -76,7 +76,7 @@ inline void LinearizeBackwardEulerTerminal(
     kkt_residual.lq().noalias() -= s.lmd;
   }
   kkt_residual.lv().noalias() += dtau * s.lmd - s.gmm;
-  kkt_residual.la().noalias() += dtau * s.gmm;
+  kkt_residual.la.noalias() += dtau * s.gmm;
 }
 
 

@@ -45,7 +45,7 @@ TEST_F(StateEquationTest, forwardEuler_fixed_base) {
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+dtau_*s.a-s_next.v)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s_next.lmd+s_next.gmm-s.gmm)));
-  EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s_next.gmm)));
+  EXPECT_TRUE(kkt_residual.la.isApprox((dtau_*s_next.gmm)));
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
                    stateequation::L1NormStateEuqationResidual(kkt_residual));
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), 
@@ -74,15 +74,15 @@ TEST_F(StateEquationTest, forwardEuler_floating_base) {
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+dtau_*s.a-s_next.v)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((dsubtract_dq.transpose()*s_next.lmd+dsubtract_dq_prev.transpose()*s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s_next.lmd+s_next.gmm-s.gmm)));
-  EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s_next.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq.isApprox(dsubtract_dq));
+  EXPECT_TRUE(kkt_residual.la.isApprox((dtau_*s_next.gmm)));
+  EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dq));
   EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
                    stateequation::L1NormStateEuqationResidual(kkt_residual));
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), 
                    stateequation::SquaredNormStateEuqationResidual(kkt_residual));
-  std::cout << "kkt_matrix.Fqq" << std::endl;
-  std::cout << kkt_matrix.Fqq << std::endl;
+  std::cout << "kkt_matrix.Fqq()" << std::endl;
+  std::cout << kkt_matrix.Fqq() << std::endl;
   std::cout << "kkt_matrix.Fqq_prev" << std::endl;
   std::cout << kkt_matrix.Fqq_prev << std::endl;
 }
@@ -104,8 +104,8 @@ TEST_F(StateEquationTest, backwardEuler_fixed_base) {
   EXPECT_TRUE(kkt_residual.Fv().isApprox((v_prev-s.v+dtau_*s.a)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm+s_next.gmm)));
-  EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq.isZero());
+  EXPECT_TRUE(kkt_residual.la.isApprox((dtau_*s.gmm)));
+  EXPECT_TRUE(kkt_matrix.Fqq().isZero());
   kkt_residual.setZero();
   kkt_matrix.setZero();
   stateequation::LinearizeBackwardEulerTerminal(robot, dtau_, q_prev, v_prev, 
@@ -114,8 +114,8 @@ TEST_F(StateEquationTest, backwardEuler_fixed_base) {
   EXPECT_TRUE(kkt_residual.Fv().isApprox((v_prev-s.v+dtau_*s.a)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((-1*s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm)));
-  EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq.isZero());
+  EXPECT_TRUE(kkt_residual.la.isApprox((dtau_*s.gmm)));
+  EXPECT_TRUE(kkt_matrix.Fqq().isZero());
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
                    stateequation::L1NormStateEuqationResidual(kkt_residual));
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), 
@@ -145,8 +145,8 @@ TEST_F(StateEquationTest, backwardEuler_floating_base) {
   EXPECT_TRUE(kkt_residual.Fv().isApprox((v_prev-s.v+dtau_*s.a)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((dsubtract_dqplus.transpose()*s_next.lmd+dsubtract_dqminus.transpose()*s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm+s_next.gmm)));
-  EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq.isApprox(dsubtract_dqminus));
+  EXPECT_TRUE(kkt_residual.la.isApprox((dtau_*s.gmm)));
+  EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dqminus));
   kkt_residual.setZero();
   kkt_matrix.setZero();
   stateequation::LinearizeBackwardEulerTerminal(robot, dtau_, q_prev, v_prev, 
@@ -155,10 +155,10 @@ TEST_F(StateEquationTest, backwardEuler_floating_base) {
   EXPECT_TRUE(kkt_residual.Fv().isApprox((v_prev-s.v+dtau_*s.a)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((dsubtract_dqminus.transpose()*s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((dtau_*s.lmd-s.gmm)));
-  EXPECT_TRUE(kkt_residual.la().isApprox((dtau_*s.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq.isApprox(dsubtract_dqminus));
-  std::cout << "kkt_matrix.Fqq" << std::endl;
-  std::cout << kkt_matrix.Fqq << std::endl;
+  EXPECT_TRUE(kkt_residual.la.isApprox((dtau_*s.gmm)));
+  EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dqminus));
+  std::cout << "kkt_matrix.Fqq()" << std::endl;
+  std::cout << kkt_matrix.Fqq() << std::endl;
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
                    stateequation::L1NormStateEuqationResidual(kkt_residual));
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), 
