@@ -158,6 +158,62 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Quu() const;
 
   ///
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Quu_full();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Quu_full() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Quu_passive();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Quu_passive() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Quu_passive_drive();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Quu_passive_drive() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Quu_drive_passive();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Quu_drive_passive() const;
+
+  ///
   /// @brief Hessian of the Lagrangian with respect to acceleration and 
   /// configuration, a and q. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
@@ -170,6 +226,34 @@ public:
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Quq() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to acceleration and 
+  /// configuration, a and q. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Quq_full();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to acceleration and 
+  /// configuration, a and q. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Quq_full() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to acceleration and 
+  /// configuration, a and q. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Quq_passive();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to acceleration and 
+  /// configuration, a and q. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Quq_passive() const;
 
   ///
   /// @brief Hessian of the Lagrangian with respect to acceleration and 
@@ -186,6 +270,34 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Quv() const;
 
   ///
+  /// @brief Hessian of the Lagrangian with respect to acceleration and 
+  /// velocity, a and v. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimf().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Quv_full();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to acceleration and 
+  /// velocity, a and v. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimf().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Quv_full() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to acceleration and 
+  /// configuration, a and q. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Quv_passive();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to acceleration and 
+  /// configuration, a and q. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Quv_passive() const;
+
+  ///
   /// @brief Hessian of the Lagrangian with respect to configuration q. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
@@ -196,6 +308,30 @@ public:
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qqu() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to configuration q. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qqu_full();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to configuration q. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qqu_full() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to configuration q. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qqu_passive();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to configuration q. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qqu_passive() const;
 
   ///
   /// @brief Hessian of the Lagrangian with respect to configuration q. 
@@ -234,6 +370,30 @@ public:
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qvu() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to velocity and v. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qvu_full();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to velocity and v. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qvu_full() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to velocity and v. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qvu_passive();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to velocity and v. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qvu_passive() const;
 
   ///
   /// @brief Hessian of the Lagrangian with respect to velocity and v. 
@@ -292,6 +452,34 @@ public:
   /// @return Reference to the Hessian. Size is 
   /// 2 * Robot::dimv() x 2 * Robot::dimv().
   ///
+  Eigen::Block<Eigen::MatrixXd> Qxu_full();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qxu_full() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qxu_passive();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qxu_passive() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
   Eigen::Block<Eigen::MatrixXd> Qux();
 
   ///
@@ -300,6 +488,33 @@ public:
   /// 2 * Robot::dimv() x 2 * Robot::dimv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qux() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qux_full();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qux_full() const;
+  ///
+  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qux_passive();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qux_passive() const;
 
   ///
   /// @brief Hessian of the Lagrangian with respect to state, q and v. 
@@ -349,16 +564,6 @@ public:
 
   /// @brief Hessian of the Lagrangian with respect to the acceleration a.
   Eigen::MatrixXd Qaa;
-
-  Eigen::MatrixXd Quu_LL;
-
-  Eigen::MatrixXd Quu_UL;
-
-  Eigen::MatrixXd Quu_LU;
-
-  Eigen::MatrixXd Qqu_L;
-
-  Eigen::MatrixXd Qvu_L;
 
   /// @brief Derivative of the state equation with respect to the 
   /// configuration of the previous time step q_prev.
