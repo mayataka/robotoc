@@ -44,8 +44,7 @@ public:
                                KKTResidual& kkt_residual);
 
   template <typename VectorType>
-  void computeCondensedDirection(const double dtau, const SplitSolution& s, 
-                                 const KKTMatrix& kkt_matrix, 
+  void computeCondensedDirection(const double dtau, const KKTMatrix& kkt_matrix, 
                                  const KKTResidual& kkt_residual, 
                                  const Eigen::MatrixBase<VectorType>& dgmm,
                                  SplitDirection& d);
@@ -65,7 +64,7 @@ private:
   Eigen::MatrixXd dIDda_, dCda_full_, dIDCdqv_full_, MJtJinv_full_, 
                   MJtJinv_dIDCdqv_full_, Qafqv_condensed_full_, 
                   Qafu_condensed_full_;
-  Eigen::VectorXd IDC_full_, MJtJinv_IDC_full_, laf_condensed_full_;
+  Eigen::VectorXd u_passive_, IDC_full_, MJtJinv_IDC_full_, laf_condensed_full_;
   int dimv_, dimu_, dimf_, dim_passive_;
   bool has_floating_base_, has_active_contacts_;
   static constexpr int kDimFloatingBase = 6;
@@ -108,7 +107,11 @@ private:
 
   Eigen::VectorBlock<Eigen::VectorXd> ID_();
 
+  const Eigen::VectorBlock<const Eigen::VectorXd> ID_() const;
+
   Eigen::VectorBlock<Eigen::VectorXd> C_();
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> C_() const;
 
   Eigen::VectorBlock<Eigen::VectorXd> MJtJinv_IDC_();
 

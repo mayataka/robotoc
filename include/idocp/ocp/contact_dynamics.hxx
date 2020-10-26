@@ -17,9 +17,10 @@ inline ContactDynamics::ContactDynamics(const Robot& robot)
     MJtJinv_dIDCdqv_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
                                                 2*robot.dimv())), 
     Qafqv_condensed_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
-                                                robot.dimv()+robot.max_dimf())), 
+                                                2*robot.dimv())), 
     Qafu_condensed_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
                                                robot.dimv())), 
+    u_passive_(Eigen::VectorXd::Zero(robot.dim_passive())),
     IDC_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     MJtJinv_IDC_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     laf_condensed_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
@@ -40,6 +41,7 @@ inline ContactDynamics::ContactDynamics()
     MJtJinv_dIDCdqv_full_(), 
     Qafqv_condensed_full_(), 
     Qafu_condensed_full_(), 
+    u_passive_(),
     IDC_full_(),
     MJtJinv_IDC_full_(),
     laf_condensed_full_(),
@@ -59,6 +61,7 @@ inline ContactDynamics::~ContactDynamics() {
 inline void ContactDynamics::linearizeContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dtau, 
     const SplitSolution& s, KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) { 
+  assert(dtau > 0);
   setContactStatus(contact_status);
   linearizeInverseDynamics(robot, contact_status, s, kkt_residual);
   linearizeContactConstraint(robot, contact_status, dtau, kkt_matrix, 
@@ -72,19 +75,21 @@ inline void ContactDynamics::linearizeContactDynamics(
     // redundant calculation of dIDdf_().
     kkt_residual.lf().noalias() -= dtau * dCda_() * s.beta;
   }
-  kkt_residual.lu().noalias() -= dtau * s.beta.tail(dimu_); 
   // augment floating base constraint
   if (has_floating_base_) {
-    kkt_residual.lu_passive.noalias() 
-        -= dtau * s.beta.template head<kDimFloatingBase>(); 
-    kkt_residual.C_passive = dtau * s.u_passive; 
+    kkt_residual.lu().noalias() -= dtau * s.beta.tail(dimu_); 
+    kkt_residual.lu_passive.noalias() -= dtau * s.beta.template head<kDimFloatingBase>(); 
+    u_passive_ = s.u_passive; 
     kkt_residual.lu_passive.noalias() += dtau * s.nu_passive;
+  }
+  else {
+    kkt_residual.lu().noalias() -= dtau * s.beta; 
   }
   // augment contact constraint
   if (has_active_contacts_) {
-    kkt_residual.lq().noalias() += dCdq_().transpose() * s.mu_stack();
-    kkt_residual.lv().noalias() += dCdv_().transpose() * s.mu_stack();
-    kkt_residual.la.noalias() += dCda_().transpose() * s.mu_stack();
+    kkt_residual.lq().noalias() += dtau * dCdq_().transpose() * s.mu_stack();
+    kkt_residual.lv().noalias() += dtau * dCdv_().transpose() * s.mu_stack();
+    kkt_residual.la.noalias() += dtau * dCda_().transpose() * s.mu_stack();
   }
 }
 
@@ -93,7 +98,7 @@ inline void ContactDynamics::condenseContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dtau,
     const SplitSolution& s, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual) {
-  setContactStatus(contact_status);
+  assert(dtau > 0);
   linearizeContactDynamics(robot, contact_status, dtau, s, 
                            kkt_matrix, kkt_residual);
   robot.computeMJtJinv(contact_status, dIDda_, dCda_(), MJtJinv_());
@@ -130,22 +135,28 @@ inline void ContactDynamics::condenseContactDynamics(
 
 template <typename VectorType>
 inline void ContactDynamics::computeCondensedDirection(
-    const double dtau, const SplitSolution& s, const KKTMatrix& kkt_matrix, 
-    const KKTResidual& kkt_residual, 
-    const Eigen::MatrixBase<VectorType>& dgmm, SplitDirection& d) {
+    const double dtau, const KKTMatrix& kkt_matrix, 
+    const KKTResidual& kkt_residual, const Eigen::MatrixBase<VectorType>& dgmm, 
+    SplitDirection& d) {
   assert(dgmm.size() == dimv_);
-  d.du_passive = - s.u_passive;
-  d.dnu_passive.noalias()
-      = kkt_residual.lu_passive + kkt_matrix.Quu_passive() * d.du_passive
-          + kkt_matrix.Quu_passive_drive() * d.du()
-          + kkt_matrix.Quq_passive() * d.dq() 
-          + kkt_matrix.Quv_passive() * d.dv() 
-          + dtau * MJtJinv_().topLeftCorner(dim_passive_, dimv_) * dgmm;
-  d.dnu_passive.array() /= - dtau;
-  d.daf().noalias() = - MJtJinv_dIDCdqv_() * d.dx() 
-                     + MJtJinv_().leftCols(dimv_).leftCols(dimu_) * d.du()
-                     + MJtJinv_().leftCols(dimv_).rightCols(dim_passive_) * d.du_passive
-                     - MJtJinv_IDC_();
+  if (has_floating_base_) {
+    d.du_passive = - u_passive_;
+    d.dnu_passive.noalias()
+        = kkt_residual.lu_passive + kkt_matrix.Quu_passive() * d.du_passive
+            + kkt_matrix.Quu_passive_drive() * d.du()
+            + kkt_matrix.Quq_passive() * d.dq() 
+            + kkt_matrix.Quv_passive() * d.dv() 
+            + dtau * MJtJinv_().topLeftCorner(dim_passive_, dimv_) * dgmm;
+    d.dnu_passive.array() /= - dtau;
+    d.daf().noalias() = - MJtJinv_dIDCdqv_() * d.dx() 
+                        + MJtJinv_().topLeftCorner(6, dimv_) * d.du_passive
+                        + MJtJinv_().bottomLeftCorner(dimu_, dimv_) * d.du()
+                        - MJtJinv_IDC_();
+  }
+  else {
+    d.daf().noalias() = - MJtJinv_dIDCdqv_() * d.dx() 
+                        + MJtJinv_().leftCols(dimv_) * d.du() - MJtJinv_IDC_();
+  }
   laf_condensed_().noalias() += Qafqv_condensed_() * d.dx();
   laf_condensed_().noalias() += Qafu_condensed_() * d.du();
   la_condensed_().noalias() += dtau * dgmm;
@@ -158,8 +169,14 @@ inline void ContactDynamics::computeContactDynamicsResidual(
     const SplitSolution& s, KKTResidual& kkt_residual) {
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, ID_());
-  ID_().noalias() -= s.u;
-  robot.computeBaumgarteResidual(contact_status, dtau, dtau, C_());
+  if (has_floating_base_) {
+    ID_().template head<kDimFloatingBase>().noalias() -= s.u_passive;
+    ID_().tail(dimu_).noalias() -= s.u;
+  }
+  else {
+    ID_().noalias() -= s.u;
+  }
+  robot.computeBaumgarteResidual(contact_status, dtau, C_());
 }
 
 
@@ -168,7 +185,13 @@ inline void ContactDynamics::linearizeInverseDynamics(
     const SplitSolution& s, KKTResidual& kkt_residual) {
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, ID_());
-  ID_().noalias() -= s.u;
+  if (has_floating_base_) {
+    ID_().template head<kDimFloatingBase>().noalias() -= s.u_passive;
+    ID_().tail(dimu_).noalias() -= s.u;
+  }
+  else {
+    ID_().noalias() -= s.u;
+  }
   robot.RNEADerivatives(s.q, s.v, s.a, dIDdq_(), dIDdv_(), dIDda_);
 }
 
@@ -177,22 +200,22 @@ inline void ContactDynamics::linearizeContactConstraint(
     Robot& robot, const ContactStatus& contact_status, const double dtau,
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   assert(dtau > 0);
-  robot.computeBaumgarteResidual(contact_status, dtau, dtau, C_());
-  robot.computeBaumgarteDerivatives(contact_status, dtau, dtau, 
-                                    dCdq_(), dCdv_(), dCda_());
+  robot.computeBaumgarteResidual(contact_status, dtau, C_());
+  robot.computeBaumgarteDerivatives(contact_status, dtau, dCdq_(), dCdv_(), dCda_());
 }
 
 
 inline double ContactDynamics::l1NormContactDynamicsResidual(
     const double dtau) const {
   assert(dtau > 0);
-  return (dtau * IDC_().lpNorm<1>());
+  return (dtau * (IDC_().lpNorm<1>() + u_passive_.lpNorm<1>()));
 }
 
 
 inline double ContactDynamics::squaredNormContactDynamicsResidual(
     const double dtau) const {
-  return (dtau * dtau * IDC_().squaredNorm());
+  assert(dtau > 0);
+  return (dtau * dtau * (IDC_().squaredNorm() + u_passive_.squaredNorm()));
 }
 
 
@@ -268,7 +291,19 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::ID_() {
 }
 
 
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ContactDynamics::ID_() const {
+  return IDC_full_.head(dimv_);
+}
+
+
 inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::C_() {
+  return IDC_full_.segment(dimv_, dimf_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ContactDynamics::C_() const {
   return IDC_full_.segment(dimv_, dimf_);
 }
 
