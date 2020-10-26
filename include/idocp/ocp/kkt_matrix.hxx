@@ -14,8 +14,8 @@ inline KKTMatrix::KKTMatrix(const Robot& robot)
     Quu_LL(Eigen::MatrixXd::Zero(robot.dim_passive(), robot.dim_passive())),
     Quu_UL(Eigen::MatrixXd::Zero(robot.dimu(), robot.dim_passive())),
     Quu_LU(Eigen::MatrixXd::Zero(robot.dim_passive(), robot.dimu())),
-    Qqu_L(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())),
-    Qvu_L(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())),
+    Qqu_L(Eigen::MatrixXd::Zero(robot.dimv(), robot.dim_passive())),
+    Qvu_L(Eigen::MatrixXd::Zero(robot.dimv(), robot.dim_passive())),
     Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     schur_complement_(2*robot.dimv(), 2*robot.dimv()+robot.dimu()),
     F_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv()+robot.dimu())),
@@ -70,62 +70,62 @@ inline void KKTMatrix::setContactStatus(const ContactStatus& contact_status) {
 }
 
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Fqu() {
-  return F_.block(q_begin_, u_begin_, dimv_, dimu_);
+  return F_.block(0, u_begin_, dimv_, dimu_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Fqu() const {
-  return F_.block(q_begin_, u_begin_, dimv_, dimu_);
+  return F_.block(0, u_begin_, dimv_, dimu_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Fqq() {
-  return F_.block(q_begin_, q_begin_, dimv_, dimv_);
+  return F_.block(0, q_begin_, dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Fqq() const {
-  return F_.block(q_begin_, u_begin_, dimv_, dimv_);
+  return F_.block(0, u_begin_, dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Fqv() {
-  return F_.block(q_begin_, v_begin_, dimv_, dimv_);
+  return F_.block(0, v_begin_, dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Fqv() const {
-  return F_.block(q_begin_, v_begin_, dimv_, dimv_);
+  return F_.block(0, v_begin_, dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Fvu() {
-  return F_.block(v_begin_, u_begin_, dimv_, dimu_);
+  return F_.block(dimv_, u_begin_, dimv_, dimu_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Fvu() const {
-  return F_.block(v_begin_, u_begin_, dimv_, dimu_);
+  return F_.block(dimv_, u_begin_, dimv_, dimu_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Fvq() {
-  return F_.block(v_begin_, q_begin_, dimv_, dimv_);
+  return F_.block(dimv_, q_begin_, dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Fvq() const {
-  return F_.block(v_begin_, u_begin_, dimv_, dimv_);
+  return F_.block(dimv_, u_begin_, dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Fvv() {
-  return F_.block(v_begin_, v_begin_, dimv_, dimv_);
+  return F_.block(dimv_, v_begin_, dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Fvv() const {
-  return F_.block(v_begin_, v_begin_, dimv_, dimv_);
+  return F_.block(dimv_, v_begin_, dimv_, dimv_);
 }
 
 
@@ -270,6 +270,10 @@ inline void KKTMatrix::invert(
     const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse) {
   assert(KKT_matrix_inverse.rows() == dimKKT_);
   assert(KKT_matrix_inverse.cols() == dimKKT_);
+  std::cout << "Q_" << std::endl;
+  std::cout << Q_ << std::endl;
+  std::cout << "F_" << std::endl;
+  std::cout << F_ << std::endl;
   schur_complement_.invertWithZeroTopLeftCorner(
       dimx_, dimx_+dimu_, F_, Q_, 
       const_cast<Eigen::MatrixBase<MatrixType>&>(KKT_matrix_inverse));

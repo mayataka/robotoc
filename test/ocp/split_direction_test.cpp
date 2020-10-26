@@ -238,8 +238,10 @@ TEST_F(SplitDirectionTest, floating_base) {
   EXPECT_FALSE(d_random.dbeta.isZero());
   EXPECT_FALSE(d_random.du_passive.isZero());
   EXPECT_FALSE(d_random.dnu_passive.isZero());
-  EXPECT_FALSE(d_random.dmu().isZero());
-  EXPECT_FALSE(d_random.df().isZero());
+  if (contact_status.hasActiveContacts()) {
+    EXPECT_FALSE(d_random.dmu().isZero());
+    EXPECT_FALSE(d_random.df().isZero());
+  }
 }
 
 } // namespace idocp
