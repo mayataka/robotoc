@@ -373,6 +373,7 @@ TEST_F(SplitSolutionTest, floating_base_contacts) {
     if (contact_status.isContactActive(i)) {
       f_stack_ref.segment<3>(dimf_stack) = s.f[i];
       mu_stack_ref.segment<3>(dimf_stack) = s.mu[i];
+      dimf_stack += 3;
     }
   }
   EXPECT_TRUE(s.lmd.isApprox(lmd));
