@@ -113,26 +113,22 @@ inline void ContactDynamics::condenseContactDynamics(
   kkt_matrix.Qxu_full().noalias() -= MJtJinv_dIDCdqv_().transpose() * Qafu_condensed_();
   kkt_residual.lx().noalias() -= MJtJinv_dIDCdqv_().transpose() * laf_condensed_();
   if (has_floating_base_) {
-    kkt_matrix.Quu_full() = MJtJinv_().topRows(dimv_).transpose() * Qafu_condensed_();
+    kkt_matrix.Quu_full().noalias() = MJtJinv_().topRows(dimv_) * Qafu_condensed_();
     kkt_residual.lu_passive.noalias() += MJtJinv_().template topRows<kDimFloatingBase>() * laf_condensed_();
-  std::cout << "AAAAAAA" << std::endl;
     kkt_residual.lu().noalias() += MJtJinv_().block(kDimFloatingBase, 0, dimu_, dimv_+dimf_) * laf_condensed_();
     kkt_residual.lu().noalias() -= kkt_matrix.Quu_drive_passive() * s.u_passive;
-  std::cout << "AAAAAAA" << std::endl;
+    kkt_residual.lx().noalias() -= kkt_matrix.Qxu_passive() * s.u_passive;
   }
   else {
     kkt_matrix.Quu().noalias() += MJtJinv_().topRows(dimv_) * Qafu_condensed_();
     kkt_residual.lu().noalias() += MJtJinv_().topRows(dimv_) * laf_condensed_();
   }
-  std::cout << "AAAAAAA" << std::endl;
   kkt_matrix.Fvq() = - dtau * MJtJinv_dIDCdqv_().topLeftCorner(dimv_, dimv_);
   kkt_matrix.Fvv().noalias() = Eigen::MatrixXd::Identity(dimv_, dimv_) 
                                 - dtau * MJtJinv_dIDCdqv_().topRightCorner(dimv_, dimv_);
   kkt_matrix.Fvu().noalias() += dtau * MJtJinv_().block(0, dim_passive_, dimv_, dimu_);
   kkt_residual.Fv().noalias() -= dtau * MJtJinv_IDC_().head(dimv_);
-  std::cout << "AAAAAAA" << std::endl;
   if (has_floating_base_) {
-  std::cout << "AAAAAAA" << std::endl;
     kkt_residual.Fv().noalias() -= dtau * MJtJinv_().topLeftCorner(dimv_, dim_passive_) * s.u_passive;
   }
 }
@@ -147,26 +143,32 @@ inline void ContactDynamics::computeCondensedDirection(
   assert(dgmm.size() == dimv_);
   if (has_floating_base_) {
     d.du_passive = - u_passive_;
-    d.dnu_passive.noalias()
-        = kkt_residual.lu_passive + kkt_matrix.Quu_passive() * d.du_passive
-            + kkt_matrix.Quu_passive_drive() * d.du()
-            + kkt_matrix.Qqu_passive().transpose() * d.dq() 
-            + kkt_matrix.Qvu_passive().transpose() * d.dv() 
-            + dtau * MJtJinv_().topLeftCorner(dim_passive_, dimv_) * dgmm;
+    d.dnu_passive = kkt_residual.lu_passive;
+    d.dnu_passive.noalias() += kkt_matrix.Quu_passive() * d.du_passive;
+    d.dnu_passive.noalias() += kkt_matrix.Quu_passive_drive() * d.du();
+    d.dnu_passive.noalias() += kkt_matrix.Qxu_passive().transpose() * d.dx();
+    d.dnu_passive.noalias() 
+        += dtau * MJtJinv_().topLeftCorner(dim_passive_, dimv_) * dgmm;
     d.dnu_passive.array() /= - dtau;
-    d.daf().noalias() 
-        = - MJtJinv_dIDCdqv_() * d.dx() 
-            + MJtJinv_().template leftCols<kDimFloatingBase>() * d.du_passive 
-            + MJtJinv_().block(0, kDimFloatingBase, dimv_+dimf_, dimu_) * d.du() 
-            - MJtJinv_IDC_();
+    d.daf().noalias() = - MJtJinv_dIDCdqv_() * d.dx();
+    d.daf().noalias() += MJtJinv_().template leftCols<kDimFloatingBase>() * d.du_passive;
+    d.daf().noalias() += MJtJinv_().block(0, kDimFloatingBase, dimv_+dimf_, dimu_) * d.du();
+    d.daf().noalias() -= MJtJinv_IDC_();
   }
   else {
-    d.daf().noalias() = - MJtJinv_dIDCdqv_() * d.dx() 
-                        + MJtJinv_().leftCols(dimv_) * d.du() - MJtJinv_IDC_();
+    d.daf().noalias() = - MJtJinv_dIDCdqv_() * d.dx();
+    d.daf().noalias() += MJtJinv_().leftCols(dimv_) * d.du();
+    d.daf().noalias() -= MJtJinv_IDC_();
   }
   d.df().array() *= -1;
   laf_condensed_().noalias() += Qafqv_condensed_() * d.dx();
-  laf_condensed_().noalias() += Qafu_condensed_() * d.du();
+  if (has_floating_base_) {
+    laf_condensed_().noalias() += Qafu_condensed_().template leftCols<kDimFloatingBase>() * d.du_passive;
+    laf_condensed_().noalias() += Qafu_condensed_().rightCols(dimv_-kDimFloatingBase) * d.du();
+  }
+  else {
+    laf_condensed_().noalias() += Qafu_condensed_() * d.du();
+  }
   la_condensed_().noalias() += dtau * dgmm;
   d.dbetamu().noalias() = - MJtJinv_() * laf_condensed_() / dtau;
 }
