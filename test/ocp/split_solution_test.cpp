@@ -41,8 +41,8 @@ TEST_F(SplitSolutionTest, fixed_base) {
   EXPECT_TRUE(s.v.size() == robot.dimv());
   EXPECT_TRUE(s.u.size() == robot.dimu());
   EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.u_passive.size() == 0);
-  EXPECT_TRUE(s.nu_passive.size() == 0);
+  EXPECT_TRUE(s.u_passive.size() == 6);
+  EXPECT_TRUE(s.nu_passive.size() == 6);
   EXPECT_TRUE(s.mu_stack().size() == 0);
   EXPECT_TRUE(s.f_stack().size() == 0);
   EXPECT_EQ(s.dimf(), 0);
@@ -77,8 +77,8 @@ TEST_F(SplitSolutionTest, fixed_base) {
   EXPECT_TRUE(s_random.v.size() == robot.dimv());
   EXPECT_TRUE(s_random.u.size() == robot.dimu());
   EXPECT_TRUE(s_random.beta.size() == robot.dimv());
-  EXPECT_TRUE(s_random.u_passive.size() == 0);
-  EXPECT_TRUE(s_random.nu_passive.size() == 0);
+  EXPECT_TRUE(s_random.u_passive.size() == 6);
+  EXPECT_TRUE(s_random.nu_passive.size() == 6);
   EXPECT_TRUE(s_random.mu_stack().size() == 0);
   EXPECT_TRUE(s_random.f_stack().size() == 0);
   EXPECT_EQ(s_random.dimf(), 0);
@@ -112,8 +112,8 @@ TEST_F(SplitSolutionTest, fixed_base_contact) {
   EXPECT_TRUE(s.v.size() == robot.dimv());
   EXPECT_TRUE(s.u.size() == robot.dimu());
   EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.u_passive.size() == 0);
-  EXPECT_TRUE(s.nu_passive.size() == 0);
+  EXPECT_TRUE(s.u_passive.size() == 6);
+  EXPECT_TRUE(s.nu_passive.size() == 6);
   EXPECT_TRUE(s.mu_stack().size() == 0);
   EXPECT_TRUE(s.f_stack().size() == 0);
   EXPECT_EQ(s.dimf(), 0);
@@ -131,8 +131,8 @@ TEST_F(SplitSolutionTest, fixed_base_contact) {
   EXPECT_TRUE(s.v.size() == robot.dimv());
   EXPECT_TRUE(s.u.size() == robot.dimu());
   EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.u_passive.size() == 0);
-  EXPECT_TRUE(s.nu_passive.size() == 0);
+  EXPECT_TRUE(s.u_passive.size() == 6);
+  EXPECT_TRUE(s.nu_passive.size() == 6);
   EXPECT_TRUE(s.mu_stack().size() == 3);
   EXPECT_TRUE(s.f_stack().size() == 3);
   EXPECT_EQ(s.dimf(), 3);
@@ -185,8 +185,8 @@ TEST_F(SplitSolutionTest, fixed_base_contact) {
   EXPECT_TRUE(s_random.v.size() == robot.dimv());
   EXPECT_TRUE(s_random.u.size() == robot.dimu());
   EXPECT_TRUE(s_random.beta.size() == robot.dimv());
-  EXPECT_TRUE(s_random.u_passive.size() == 0);
-  EXPECT_TRUE(s_random.nu_passive.size() == 0);
+  EXPECT_TRUE(s_random.u_passive.size() == 6);
+  EXPECT_TRUE(s_random.nu_passive.size() == 6);
   EXPECT_TRUE(s_random.mu_stack().size() == 3);
   EXPECT_TRUE(s_random.f_stack().size() == 3);
   EXPECT_EQ(s_random.dimf(), 3);

@@ -15,8 +15,8 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     v(Eigen::VectorXd::Zero(robot.dimv())),
     u(Eigen::VectorXd::Zero(robot.dimu())),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
-    u_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
-    nu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
+    u_passive(Vector6d::Zero()),
+    nu_passive(Vector6d::Zero()),
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
@@ -37,8 +37,8 @@ inline SplitSolution::SplitSolution()
     v(),
     u(),
     beta(),
-    u_passive(),
-    nu_passive(),
+    u_passive(Vector6d::Zero()),
+    nu_passive(Vector6d::Zero()),
     mu_stack_(),
     f_stack_(),
     has_floating_base_(false),
@@ -157,8 +157,10 @@ inline SplitSolution SplitSolution::Random(const Robot& robot) {
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.u = Eigen::VectorXd::Random(robot.dimu());
   s.beta = Eigen::VectorXd::Random(robot.dimv());
-  s.u_passive = Eigen::VectorXd::Random(robot.dim_passive());
-  s.nu_passive = Eigen::VectorXd::Random(robot.dim_passive());
+  if (robot.has_floating_base()) {
+    s.u_passive = Vector6d::Random();
+    s.nu_passive = Vector6d::Random();
+  }
   return s;
 }
 
@@ -179,8 +181,10 @@ inline SplitSolution SplitSolution::Random(
   s.v = Eigen::VectorXd::Random(robot.dimv());
   s.u = Eigen::VectorXd::Random(robot.dimu());
   s.beta = Eigen::VectorXd::Random(robot.dimv());
-  s.u_passive = Eigen::VectorXd::Random(robot.dim_passive());
-  s.nu_passive = Eigen::VectorXd::Random(robot.dim_passive());
+  if (robot.has_floating_base()) {
+    s.u_passive = Vector6d::Random();
+    s.nu_passive = Vector6d::Random();
+  }
   return s;
 }
 

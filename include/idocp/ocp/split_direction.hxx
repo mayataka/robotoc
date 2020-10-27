@@ -7,8 +7,8 @@ namespace idocp {
 
 inline SplitDirection::SplitDirection(const Robot& robot) 
   : split_direction(Eigen::VectorXd::Zero(4*robot.dimv()+robot.dimu())),
-    du_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
-    dnu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
+    du_passive(Vector6d::Zero()),
+    dnu_passive(Vector6d::Zero()),
     daf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dbetamu_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dimv_(robot.dimv()), 
@@ -22,8 +22,8 @@ inline SplitDirection::SplitDirection(const Robot& robot)
 
 inline SplitDirection::SplitDirection() 
   : split_direction(),
-    du_passive(),
-    dnu_passive(),
+    du_passive(Vector6d::Zero()),
+    dnu_passive(Vector6d::Zero()),
     daf_full_(),
     dbetamu_full_(),
     dimv_(0), 
@@ -205,8 +205,10 @@ inline SplitDirection SplitDirection::Random(const Robot& robot) {
   d.dv() = Eigen::VectorXd::Random(robot.dimv());
   d.da() = Eigen::VectorXd::Random(robot.dimv());
   d.dbeta() = Eigen::VectorXd::Random(robot.dimv());
-  d.du_passive = Eigen::VectorXd::Random(robot.dim_passive());
-  d.dnu_passive = Eigen::VectorXd::Random(robot.dim_passive());
+  if (robot.has_floating_base()) {
+    d.du_passive = Vector6d::Random();
+    d.dnu_passive = Vector6d::Random();
+  }
   return d;
 }
 
@@ -224,8 +226,10 @@ inline SplitDirection SplitDirection::Random(
   d.df() = Eigen::VectorXd::Random(contact_status.dimf());
   d.dbeta() = Eigen::VectorXd::Random(robot.dimv());
   d.dmu() = Eigen::VectorXd::Random(contact_status.dimf());
-  d.du_passive = Eigen::VectorXd::Random(robot.dim_passive());
-  d.dnu_passive = Eigen::VectorXd::Random(robot.dim_passive());
+  if (robot.has_floating_base()) {
+    d.du_passive = Vector6d::Random();
+    d.dnu_passive = Vector6d::Random();
+  }
   return d;
 }
 

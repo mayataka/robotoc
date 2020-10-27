@@ -42,8 +42,8 @@ TEST_F(SplitDirectionTest, fixed_base) {
   EXPECT_EQ(d.dx().size(), dimx);
   EXPECT_EQ(d.da().size(), dimv);
   EXPECT_EQ(d.dbeta().size(), dimv);
-  EXPECT_EQ(d.du_passive.size(), 0);
-  EXPECT_EQ(d.dnu_passive.size(), 0);
+  EXPECT_EQ(d.du_passive.size(), 6);
+  EXPECT_EQ(d.dnu_passive.size(), 6);
   EXPECT_EQ(d.dmu().size(), 0);
   EXPECT_EQ(d.df().size(), 0);
   EXPECT_EQ(d.dimf(), 0);
@@ -73,8 +73,8 @@ TEST_F(SplitDirectionTest, fixed_base) {
   EXPECT_EQ(d_random.dx().size(), dimx);
   EXPECT_EQ(d_random.da().size(), dimv);
   EXPECT_EQ(d_random.dbeta().size(), dimv);
-  EXPECT_EQ(d_random.du_passive.size(), 0);
-  EXPECT_EQ(d_random.dnu_passive.size(), 0);
+  EXPECT_EQ(d_random.du_passive.size(), 6);
+  EXPECT_EQ(d_random.dnu_passive.size(), 6);
   EXPECT_EQ(d_random.dmu().size(), 0);
   EXPECT_EQ(d_random.df().size(), 0);
   EXPECT_EQ(d_random.dimf(), 0);
@@ -106,8 +106,8 @@ TEST_F(SplitDirectionTest, fixed_base_contact) {
   EXPECT_EQ(d.dx().size(), dimx);
   EXPECT_EQ(d.da().size(), dimv);
   EXPECT_EQ(d.dbeta().size(), dimv);
-  EXPECT_EQ(d.du_passive.size(), 0);
-  EXPECT_EQ(d.dnu_passive.size(), 0);
+  EXPECT_EQ(d.du_passive.size(), 6);
+  EXPECT_EQ(d.dnu_passive.size(), 6);
   EXPECT_EQ(d.dmu().size(), 0);
   EXPECT_EQ(d.df().size(), 0);
   EXPECT_EQ(d.dimf(), 0);
@@ -152,8 +152,8 @@ TEST_F(SplitDirectionTest, fixed_base_contact) {
   EXPECT_EQ(d_random.dx().size(), dimx);
   EXPECT_EQ(d_random.da().size(), dimv);
   EXPECT_EQ(d_random.dbeta().size(), dimv);
-  EXPECT_EQ(d_random.du_passive.size(), 0);
-  EXPECT_EQ(d_random.dnu_passive.size(), 0);
+  EXPECT_EQ(d_random.du_passive.size(), 6);
+  EXPECT_EQ(d_random.dnu_passive.size(), 6);
   EXPECT_EQ(d_random.dmu().size(), 3);
   EXPECT_EQ(d_random.df().size(), 3);
   EXPECT_EQ(d_random.dimf(), 3);

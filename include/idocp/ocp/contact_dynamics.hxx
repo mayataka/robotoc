@@ -108,28 +108,33 @@ inline void ContactDynamics::condenseContactDynamics(
   Qafu_condensed_().noalias() = (- kkt_matrix.Qaaff().diagonal()).asDiagonal() * MJtJinv_().leftCols(dimv_);
   la_condensed_() = kkt_residual.la;
   lf_condensed_() = - kkt_residual.lf();
-  la_condensed_().noalias() -= kkt_matrix.Qaaff().diagonal().asDiagonal() * MJtJinv_IDC_();
+  laf_condensed_().noalias() -= kkt_matrix.Qaaff().diagonal().asDiagonal() * MJtJinv_IDC_();
   kkt_matrix.Qxx().noalias() -= MJtJinv_dIDCdqv_().transpose() * Qafqv_condensed_();
   kkt_matrix.Qxu_full().noalias() -= MJtJinv_dIDCdqv_().transpose() * Qafu_condensed_();
   kkt_residual.lx().noalias() -= MJtJinv_dIDCdqv_().transpose() * laf_condensed_();
   if (has_floating_base_) {
     kkt_matrix.Quu_full() = MJtJinv_().topRows(dimv_).transpose() * Qafu_condensed_();
-    kkt_residual.lu_passive.noalias() 
-        += MJtJinv_().topRows(dimv_).transpose().template topRows<kDimFloatingBase>() * laf_condensed_();
-    kkt_residual.lu_passive.noalias() 
-        += MJtJinv_().topRows(dimv_).transpose().bottomRows(dimu_) * laf_condensed_();
-    kkt_residual.lu().noalias() -= kkt_matrix.Quu_passive_drive().transpose() * s.u_passive;
+    kkt_residual.lu_passive.noalias() += MJtJinv_().template topRows<kDimFloatingBase>() * laf_condensed_();
+  std::cout << "AAAAAAA" << std::endl;
+    kkt_residual.lu().noalias() += MJtJinv_().block(kDimFloatingBase, 0, dimu_, dimv_+dimf_) * laf_condensed_();
+    kkt_residual.lu().noalias() -= kkt_matrix.Quu_drive_passive() * s.u_passive;
+  std::cout << "AAAAAAA" << std::endl;
   }
   else {
-    kkt_matrix.Quu().noalias() += MJtJinv_().topRows(dimv_).transpose() * Qafu_condensed_();
-    kkt_residual.lu().noalias() += MJtJinv_().topRows(dimv_).transpose() * laf_condensed_();
+    kkt_matrix.Quu().noalias() += MJtJinv_().topRows(dimv_) * Qafu_condensed_();
+    kkt_residual.lu().noalias() += MJtJinv_().topRows(dimv_) * laf_condensed_();
   }
+  std::cout << "AAAAAAA" << std::endl;
   kkt_matrix.Fvq() = - dtau * MJtJinv_dIDCdqv_().topLeftCorner(dimv_, dimv_);
-  kkt_matrix.Fvv() = Eigen::MatrixXd::Identity(dimv_, dimv_) 
-                      - dtau * MJtJinv_dIDCdqv_().topRightCorner(dimv_, dimv_);
-  kkt_matrix.Fvu() = dtau * MJtJinv_().topLeftCorner(dimv_, dimv_).topRightCorner(dimv_, dimu_);
+  kkt_matrix.Fvv().noalias() = Eigen::MatrixXd::Identity(dimv_, dimv_) 
+                                - dtau * MJtJinv_dIDCdqv_().topRightCorner(dimv_, dimv_);
+  kkt_matrix.Fvu().noalias() += dtau * MJtJinv_().block(0, dim_passive_, dimv_, dimu_);
   kkt_residual.Fv().noalias() -= dtau * MJtJinv_IDC_().head(dimv_);
-  kkt_residual.Fv().noalias() -= dtau * MJtJinv_().topLeftCorner(dimv_, dim_passive_) * s.u_passive;
+  std::cout << "AAAAAAA" << std::endl;
+  if (has_floating_base_) {
+  std::cout << "AAAAAAA" << std::endl;
+    kkt_residual.Fv().noalias() -= dtau * MJtJinv_().topLeftCorner(dimv_, dim_passive_) * s.u_passive;
+  }
 }
 
 
@@ -138,25 +143,28 @@ inline void ContactDynamics::computeCondensedDirection(
     const double dtau, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, const Eigen::MatrixBase<VectorType>& dgmm, 
     SplitDirection& d) {
+  assert(dtau > 0);
   assert(dgmm.size() == dimv_);
   if (has_floating_base_) {
     d.du_passive = - u_passive_;
     d.dnu_passive.noalias()
         = kkt_residual.lu_passive + kkt_matrix.Quu_passive() * d.du_passive
             + kkt_matrix.Quu_passive_drive() * d.du()
-            + kkt_matrix.Quq_passive() * d.dq() 
-            + kkt_matrix.Quv_passive() * d.dv() 
+            + kkt_matrix.Qqu_passive().transpose() * d.dq() 
+            + kkt_matrix.Qvu_passive().transpose() * d.dv() 
             + dtau * MJtJinv_().topLeftCorner(dim_passive_, dimv_) * dgmm;
     d.dnu_passive.array() /= - dtau;
-    d.daf().noalias() = - MJtJinv_dIDCdqv_() * d.dx() 
-                        + MJtJinv_().topLeftCorner(6, dimv_) * d.du_passive
-                        + MJtJinv_().bottomLeftCorner(dimu_, dimv_) * d.du()
-                        - MJtJinv_IDC_();
+    d.daf().noalias() 
+        = - MJtJinv_dIDCdqv_() * d.dx() 
+            + MJtJinv_().template leftCols<kDimFloatingBase>() * d.du_passive 
+            + MJtJinv_().block(0, kDimFloatingBase, dimv_+dimf_, dimu_) * d.du() 
+            - MJtJinv_IDC_();
   }
   else {
     d.daf().noalias() = - MJtJinv_dIDCdqv_() * d.dx() 
                         + MJtJinv_().leftCols(dimv_) * d.du() - MJtJinv_IDC_();
   }
+  d.df().array() *= -1;
   laf_condensed_().noalias() += Qafqv_condensed_() * d.dx();
   laf_condensed_().noalias() += Qafu_condensed_() * d.du();
   la_condensed_().noalias() += dtau * dgmm;
@@ -167,11 +175,13 @@ inline void ContactDynamics::computeCondensedDirection(
 inline void ContactDynamics::computeContactDynamicsResidual(
     Robot& robot, const ContactStatus& contact_status, const double dtau,
     const SplitSolution& s, KKTResidual& kkt_residual) {
+  setContactStatus(contact_status);
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, ID_());
   if (has_floating_base_) {
     ID_().template head<kDimFloatingBase>().noalias() -= s.u_passive;
     ID_().tail(dimu_).noalias() -= s.u;
+    u_passive_ = s.u_passive;
   }
   else {
     ID_().noalias() -= s.u;
@@ -270,9 +280,8 @@ inline Eigen::Block<Eigen::MatrixXd> ContactDynamics::Qafqv_condensed_() {
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> 
-ContactDynamics::Qafu_condensed_() {
-  return Qafqv_condensed_full_.topLeftCorner(dimv_+dimf_, dimv_);
+inline Eigen::Block<Eigen::MatrixXd> ContactDynamics::Qafu_condensed_() {
+  return Qafu_condensed_full_.topLeftCorner(dimv_+dimf_, dimv_);
 }
 
 
@@ -281,7 +290,8 @@ inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::IDC_() {
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> ContactDynamics::IDC_() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ContactDynamics::IDC_() const {
   return IDC_full_.head(dimv_+dimf_);
 }
 
@@ -308,26 +318,22 @@ ContactDynamics::C_() const {
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-ContactDynamics::MJtJinv_IDC_() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::MJtJinv_IDC_() {
   return MJtJinv_IDC_full_.head(dimv_+dimf_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-ContactDynamics::laf_condensed_() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::laf_condensed_() {
   return laf_condensed_full_.head(dimv_+dimf_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-ContactDynamics::la_condensed_() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::la_condensed_() {
   return laf_condensed_full_.head(dimv_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-ContactDynamics::lf_condensed_() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::lf_condensed_() {
   return laf_condensed_full_.segment(dimv_, dimf_);
 }
 

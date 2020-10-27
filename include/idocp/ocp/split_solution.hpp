@@ -16,6 +16,9 @@ namespace idocp {
 ///
 class SplitSolution {
 public:
+
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+
   ///
   /// @brief Construct a split solution.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -178,12 +181,12 @@ public:
   ///
   /// @brief Lagrange multiplier with respect to floating base. 
   ///
-  Eigen::VectorXd u_passive;
+  Vector6d u_passive;
 
   ///
   /// @brief Lagrange multiplier with respect to floating base. 
   ///
-  Eigen::VectorXd nu_passive;
+  Vector6d nu_passive;
 
   ///
   /// @brief Return true if a contact is active and false if not.

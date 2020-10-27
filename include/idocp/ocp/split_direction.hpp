@@ -14,6 +14,9 @@ namespace idocp {
 ///
 class SplitDirection {
 public:
+
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+
   ///
   /// @brief Construct a split solution.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -228,10 +231,10 @@ public:
   Eigen::VectorXd split_direction;
 
   /// @brief Newton direction of beta.
-  Eigen::VectorXd du_passive;
+  Vector6d du_passive;
 
   /// @brief Newton direction of beta.
-  Eigen::VectorXd dnu_passive;
+  Vector6d dnu_passive;
 
   ///
   /// @brief Generates split direction filled randomly.

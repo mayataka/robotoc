@@ -9,8 +9,7 @@ inline KKTResidual::KKTResidual(const Robot& robot)
   : KKT_residual(Eigen::VectorXd::Zero(4*robot.dimv()+robot.dimu())),
     la(Eigen::VectorXd::Zero(robot.dimv())),
     ID(Eigen::VectorXd::Zero(robot.dimv())),
-    lu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
-    C_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
+    lu_passive(Vector6d::Zero()),
     C_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
@@ -26,8 +25,7 @@ inline KKTResidual::KKTResidual()
   : KKT_residual(),
     la(),
     ID(),
-    lu_passive(),
-    C_passive(),
+    lu_passive(Vector6d::Zero()),
     C_full_(),
     lf_full_(),
     dimv_(0), 
@@ -143,7 +141,6 @@ inline void KKTResidual::setZero() {
   la.setZero();
   ID.setZero();
   lu_passive.setZero();
-  C_passive.setZero();
   C_full_.setZero();
   lf_full_.setZero();
 }

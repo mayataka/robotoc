@@ -15,6 +15,9 @@ namespace idocp {
 ///
 class KKTResidual {
 public:
+
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+
   ///
   /// @brief Construct a KKT residual.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -214,10 +217,7 @@ public:
   Eigen::VectorXd ID;
 
   /// @brief Residual with respect to control input torques u.
-  Eigen::VectorXd lu_passive;
-
-  /// @brief Residual of floating base constraint.
-  Eigen::VectorXd C_passive;
+  Vector6d lu_passive;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
