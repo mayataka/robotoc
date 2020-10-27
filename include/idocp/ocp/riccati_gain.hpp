@@ -6,7 +6,8 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/robot/contact_status.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
 
 
 namespace idocp {
@@ -27,42 +28,20 @@ public:
 
   RiccatiGain& operator=(RiccatiGain&&) noexcept = default;
 
-  void setContactStatus(const ContactStatus& contact_status);
+  void computeFeedbackGainAndFeedforward(const KKTMatrix& kkt_matrix, 
+                                         const KKTResidual& kkt_residual);
 
-  const Eigen::Block<const Eigen::MatrixXd> Kaq() const;
+  const Eigen::Block<const Eigen::MatrixXd> Kq() const;
 
-  const Eigen::Block<const Eigen::MatrixXd> Kav() const;
-
-  const Eigen::Block<const Eigen::MatrixXd> Kfq() const;
-
-  const Eigen::Block<const Eigen::MatrixXd> Kfv() const;
-
-  const Eigen::Block<const Eigen::MatrixXd> Kmuq() const;
-
-  const Eigen::Block<const Eigen::MatrixXd> Kmuv() const;
-
-  const Eigen::VectorBlock<const Eigen::VectorXd> ka() const;
-
-  const Eigen::VectorBlock<const Eigen::VectorXd> kf() const;
-
-  const Eigen::VectorBlock<const Eigen::VectorXd> kmu() const;
-
-  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void computeFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Ginv, 
-                           const Eigen::MatrixBase<MatrixType2>& Qafqv, 
-                           const Eigen::MatrixBase<MatrixType3>& Cqv);
-
-  template <typename MatrixType, typename VectorType1, typename VectorType2>
-  void computeFeedforward(const Eigen::MatrixBase<MatrixType>& Ginv, 
-                          const Eigen::MatrixBase<VectorType1>& laf, 
-                          const Eigen::MatrixBase<VectorType2>& C);
+  const Eigen::Block<const Eigen::MatrixXd> Kv() const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  Eigen::MatrixXd K, Ginv;
+  Eigen::VectorXd k;
+
 private:
-  int dimv_, dim_passive_, dimf_, dimc_;
-  Eigen::MatrixXd K_;
-  Eigen::VectorXd k_;
+  int dimv_, dimu_;
 
 };
 
