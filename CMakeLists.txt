@@ -74,7 +74,7 @@ add_library(
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
   src/ocp/contact_dynamics_data.cpp
-  # src/ocp/contact_dynamics.cpp
+  src/ocp/contact_dynamics.cpp
   # src/ocp/robot_dynamics.cpp
   # src/ocp/line_search_filter.cpp
   # src/ocp/riccati_factorization.cpp

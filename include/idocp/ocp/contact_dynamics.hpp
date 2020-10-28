@@ -24,13 +24,11 @@ public:
 
   ContactDynamics(const ContactDynamics&) = default;
 
-  ContactDynamics& operator=(const ContactDynamics&) 
-      = default;
+  ContactDynamics& operator=(const ContactDynamics&) = default;
  
   ContactDynamics(ContactDynamics&&) noexcept = default;
 
-  ContactDynamics& operator=(ContactDynamics&&) noexcept 
-      = default;
+  ContactDynamics& operator=(ContactDynamics&&) noexcept = default;
 
   void linearizeContactDynamics(Robot& robot, 
                                 const ContactStatus& contact_status, 
@@ -38,20 +36,40 @@ public:
                                 KKTMatrix& kkt_matrix, 
                                 KKTResidual& kkt_residual);
 
+  static void linearizeInverseDynamics(Robot& robot, 
+                                       const ContactStatus& contact_status,
+                                       const SplitSolution& s, 
+                                       ContactDynamicsData& data);
+
+  static void linearizeContactConstraint(Robot& robot, 
+                                         const ContactStatus& contact_status, 
+                                         const double dtau, 
+                                         ContactDynamicsData& data);
+
   void condenseContactDynamics(Robot& robot, 
                                const ContactStatus& contact_status, 
                                const double dtau, const SplitSolution& s, 
                                KKTMatrix& kkt_matrix, 
                                KKTResidual& kkt_residual);
 
-  void condensing(const double dtau, ContactDynamicsData& data,
-                  KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const;
+  static void condensing(const Robot& robot, const double dtau, 
+                         ContactDynamicsData& data, KKTMatrix& kkt_matrix, 
+                         KKTResidual& kkt_residual);
 
   template <typename VectorType>
-  void computeCondensedDirection(const double dtau, const KKTMatrix& kkt_matrix, 
+  void computeCondensedDirection(const Robot& robot, const double dtau, 
+                                 const KKTMatrix& kkt_matrix, 
                                  const KKTResidual& kkt_residual, 
                                  const Eigen::MatrixBase<VectorType>& dgmm,
                                  SplitDirection& d);
+
+  template <typename VectorType>
+  static void expansion(const Robot& robot, const double dtau, 
+                        ContactDynamicsData& data,
+                        const KKTMatrix& kkt_matrix, 
+                        const KKTResidual& kkt_residual,
+                        const Eigen::MatrixBase<VectorType>& dgmm,
+                        SplitDirection& d);
 
   void computeContactDynamicsResidual(Robot& robot, 
                                       const ContactStatus& contact_status,
@@ -70,57 +88,7 @@ private:
   bool has_floating_base_, has_active_contacts_;
   static constexpr int kDimFloatingBase = 6;
 
-  void linearizeInverseDynamics(Robot& robot, 
-                                const ContactStatus& contact_status,
-                                const SplitSolution& s, 
-                                KKTResidual& kkt_residual);
-
-  void linearizeContactConstraint(Robot& robot, 
-                                  const ContactStatus& contact_status, 
-                                  const double dtau, KKTMatrix& kkt_matrix, 
-                                  KKTResidual& kkt_residual);
-
   void setContactStatus(const ContactStatus& contact_status);
-
-  // Eigen::Block<Eigen::MatrixXd> dIDCdqv_();
-
-  // Eigen::Block<Eigen::MatrixXd> dIDdq_();
-
-  // Eigen::Block<Eigen::MatrixXd> dIDdv_();
-
-  // Eigen::Block<Eigen::MatrixXd> dCdq_();
-
-  // Eigen::Block<Eigen::MatrixXd> dCdv_();
-
-  // Eigen::Block<Eigen::MatrixXd> dCda_();
-
-  // Eigen::Block<Eigen::MatrixXd> MJtJinv_();
-
-  // Eigen::Block<Eigen::MatrixXd> MJtJinv_dIDCdqv_();
-
-  // Eigen::Block<Eigen::MatrixXd> Qafqv_condensed_();
-
-  // Eigen::Block<Eigen::MatrixXd> Qafu_condensed_();
-
-  // Eigen::VectorBlock<Eigen::VectorXd> IDC_();
-
-  // const Eigen::VectorBlock<const Eigen::VectorXd> IDC_() const;
-
-  // Eigen::VectorBlock<Eigen::VectorXd> ID_();
-
-  // const Eigen::VectorBlock<const Eigen::VectorXd> ID_() const;
-
-  // Eigen::VectorBlock<Eigen::VectorXd> C_();
-
-  // const Eigen::VectorBlock<const Eigen::VectorXd> C_() const;
-
-  // Eigen::VectorBlock<Eigen::VectorXd> MJtJinv_IDC_();
-
-  // Eigen::VectorBlock<Eigen::VectorXd> laf_condensed_();
-
-  // Eigen::VectorBlock<Eigen::VectorXd> la_condensed_();
-
-  // Eigen::VectorBlock<Eigen::VectorXd> lf_condensed_();
 
 };
 
