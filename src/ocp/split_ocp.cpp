@@ -20,7 +20,8 @@ SplitOCP::SplitOCP(const Robot& robot,
     riccati_factorizer_(robot),
     s_tmp_(robot),
     has_floating_base_(robot.has_floating_base()),
-    use_kinematics_(false) {
+    use_kinematics_(false),
+    has_active_contacts_(false) {
   if (cost_->useKinematics() || constraints_->useKinematics() 
                              || robot.max_point_contacts() > 0) {
     use_kinematics_ = true;
@@ -41,7 +42,8 @@ SplitOCP::SplitOCP()
     riccati_factorizer_(),
     s_tmp_(),
     has_floating_base_(false),
-    use_kinematics_(false) {
+    use_kinematics_(false),
+    has_active_contacts_(false) {
 }
 
 
@@ -111,7 +113,8 @@ void SplitOCP::forwardRiccatiRecursion(const double dtau, SplitDirection& d,
   else {
     d_next.dq().noalias() = d.dq() + dtau * d.dv() + kkt_residual_.Fq();
   }
-  d_next.dv().noalias() = kkt_matrix_.Fvq() * d.dv() + kkt_matrix_.Fvv() * d.dv() 
+  d_next.dv().noalias() = kkt_matrix_.Fvq() * d.dq() 
+                          + kkt_matrix_.Fvv() * d.dv() 
                           + kkt_matrix_.Fvu() * d.du() + kkt_residual_.Fv();
 }
 
@@ -121,8 +124,8 @@ void SplitOCP::computeCondensedDirection(Robot& robot, const double dtau,
                                          const SplitDirection& d_next, 
                                          SplitDirection& d) {
   assert(dtau > 0);
-  contact_dynamics_.computeCondensedDirection(dtau, kkt_matrix_, kkt_residual_, 
-                                              d_next.dgmm(), d);
+  contact_dynamics_.computeCondensedDirection(robot, dtau, kkt_matrix_,  
+                                              kkt_residual_, d_next.dgmm(), d);
   constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, s, d);
 }
 
@@ -172,7 +175,7 @@ std::pair<double, double> SplitOCP::costAndConstraintViolation(
                                              s_next.q, s_next.v, d_next.dq(), 
                                              d_next.dv(), kkt_residual_);
   contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, dtau, 
-                                                   s_tmp_, kkt_residual_);
+                                                   s_tmp_);
   return std::make_pair(cost(robot, t, dtau, s_tmp_), constraintViolation(dtau));
 }
 
@@ -198,12 +201,18 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   robot.integrateConfiguration(d.dq(), step_size, s.q);
   s.v.noalias() += step_size * d.dv();
   s.a.noalias() += step_size * d.da();
-  s.f_stack().noalias() += step_size * d.df();
-  s.set_f();
   s.u.noalias() += step_size * d.du();
   s.beta.noalias() += step_size * d.dbeta();
-  s.mu_stack().noalias() += step_size * d.dmu();
-  s.set_mu();
+  if (has_active_contacts_) {
+    s.f_stack().noalias() += step_size * d.df();
+    s.set_f();
+    s.mu_stack().noalias() += step_size * d.dmu();
+    s.set_mu();
+  }
+  if (has_floating_base_) {
+    s.u_passive.noalias() += step_size * d.du_passive;
+    s.nu_passive.noalias() += step_size * d.dnu_passive;
+  }
   constraints_->updateSlack(constraints_data_, step_size);
 }
 

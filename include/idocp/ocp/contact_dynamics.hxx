@@ -62,8 +62,10 @@ inline void ContactDynamics::linearizeContactDynamics(
   }
   // augment contact constraint
   if (has_active_contacts_) {
-    kkt_residual.lq().noalias() += dtau * data_.dCdq().transpose() * s.mu_stack();
-    kkt_residual.lv().noalias() += dtau * data_.dCdv().transpose() * s.mu_stack();
+    kkt_residual.lq().noalias() 
+        += dtau * data_.dCdq().transpose() * s.mu_stack();
+    kkt_residual.lv().noalias() 
+        += dtau * data_.dCdv().transpose() * s.mu_stack();
     kkt_residual.la.noalias() += dtau * data_.dCda().transpose() * s.mu_stack();
   }
 }
@@ -140,12 +142,12 @@ inline void ContactDynamics::condensing(const Robot& robot, const double dtau,
   kkt_matrix.Fvv().noalias() = Eigen::MatrixXd::Identity(dimv, dimv) 
                                 - dtau * data.MJtJinv_dIDCdqv().topRightCorner(dimv, dimv);
   if (robot.has_floating_base()) {
-    kkt_matrix.Fvu().noalias() += dtau * data.MJtJinv().block(0, dim_passive, dimv, dimu);
-    kkt_residual.Fv().noalias() -= dtau * data.MJtJinv_IDC().head(dimv);
+    kkt_matrix.Fvu() = dtau * data.MJtJinv().block(0, dim_passive, dimv, dimu);
     kkt_residual.Fv().noalias() -= dtau * data.MJtJinv().topLeftCorner(dimv, dim_passive) * data.u_passive;
+    kkt_residual.Fv().noalias() -= dtau * data.MJtJinv_IDC().head(dimv);
   }
   else {
-    kkt_matrix.Fvu().noalias() += dtau * data.MJtJinv().topLeftCorner(dimv, dimv);
+    kkt_matrix.Fvu() = dtau * data.MJtJinv().topLeftCorner(dimv, dimv);
     kkt_residual.Fv().noalias() -= dtau * data.MJtJinv_IDC().head(dimv);
   }
 }
@@ -207,11 +209,11 @@ inline void ContactDynamics::expansion(
 
 inline void ContactDynamics::computeContactDynamicsResidual(
     Robot& robot, const ContactStatus& contact_status, const double dtau,
-    const SplitSolution& s, KKTResidual& kkt_residual) {
+    const SplitSolution& s) {
   setContactStatus(contact_status);
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data_.ID_full());
-  if (robot.has_floating_base()) {
+  if (has_floating_base_) {
     data_.ID_passive().noalias() -= s.u_passive;
     data_.ID().noalias() -= s.u;
     data_.u_passive = s.u_passive;
@@ -250,9 +252,9 @@ inline double ContactDynamics::squaredNormContactDynamicsResidual(
 
 inline void ContactDynamics::setContactStatus(
     const ContactStatus& contact_status) {
+  data_.setContactStatus(contact_status);
   dimf_ = contact_status.dimf();
   has_active_contacts_ = contact_status.hasActiveContacts();
-  data_.setContactStatus(contact_status);
 }
 
 } // namespace idocp 

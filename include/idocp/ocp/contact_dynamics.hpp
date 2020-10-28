@@ -73,8 +73,8 @@ public:
 
   void computeContactDynamicsResidual(Robot& robot, 
                                       const ContactStatus& contact_status,
-                                      const double dtau, const SplitSolution& s, 
-                                      KKTResidual& kkt_residual);
+                                      const double dtau, 
+                                      const SplitSolution& s);
 
   double l1NormContactDynamicsResidual(const double dtau) const;
 
