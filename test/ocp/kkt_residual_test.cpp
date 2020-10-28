@@ -49,25 +49,30 @@ TEST_F(KKTResidualTest, fixed_base) {
   EXPECT_EQ(residual.lq().size(), dimv);
   EXPECT_EQ(residual.lv().size(), dimv);
   EXPECT_EQ(residual.lx().size(), 2*dimv);
-  EXPECT_EQ(residual.C().size(), contact_status.dimf());
   EXPECT_EQ(residual.lf().size(), contact_status.dimf());
   EXPECT_EQ(residual.dimf(), contact_status.dimf());
   EXPECT_EQ(residual.la.size(), dimv);
   EXPECT_EQ(residual.ID.size(), dimv);
   EXPECT_EQ(residual.lu_passive.size(), 6);
   residual.KKT_residual = Eigen::VectorXd::Random(residual.dimKKT());
-  const Eigen::VectorXd Fq = residual.KKT_residual.segment(0, dimv);
-  const Eigen::VectorXd Fv = residual.KKT_residual.segment(dimv, dimv);
-  const Eigen::VectorXd lu = residual.KKT_residual.segment(2*dimv, dimu);
-  const Eigen::VectorXd lq = residual.KKT_residual.segment(2*dimv+dimu, dimv);
-  const Eigen::VectorXd lv = residual.KKT_residual.segment(3*dimv+dimu, dimv);
-  const Eigen::VectorXd lx = residual.KKT_residual.segment(2*dimv+dimu, 2*dimv);
-  EXPECT_TRUE(residual.Fq().isApprox(Fq));
-  EXPECT_TRUE(residual.Fv().isApprox(Fv));
-  EXPECT_TRUE(residual.lu().isApprox(lu));
-  EXPECT_TRUE(residual.lq().isApprox(lq));
-  EXPECT_TRUE(residual.lv().isApprox(lv));
-  EXPECT_TRUE(residual.lx().isApprox(lx));
+  const Eigen::VectorXd la_ref = Eigen::VectorXd::Random(dimv);
+  const Eigen::VectorXd lf_ref = Eigen::VectorXd::Random(contact_status.dimf());
+  residual.la = la_ref;
+  residual.lf() = lf_ref;
+  const Eigen::VectorXd Fq_ref = residual.KKT_residual.segment(0, dimv);
+  const Eigen::VectorXd Fv_ref = residual.KKT_residual.segment(dimv, dimv);
+  const Eigen::VectorXd lu_ref = residual.KKT_residual.segment(2*dimv, dimu);
+  const Eigen::VectorXd lq_ref = residual.KKT_residual.segment(2*dimv+dimu, dimv);
+  const Eigen::VectorXd lv_ref = residual.KKT_residual.segment(3*dimv+dimu, dimv);
+  const Eigen::VectorXd lx_ref = residual.KKT_residual.segment(2*dimv+dimu, 2*dimv);
+  EXPECT_TRUE(residual.Fq().isApprox(Fq_ref));
+  EXPECT_TRUE(residual.Fv().isApprox(Fv_ref));
+  EXPECT_TRUE(residual.lu().isApprox(lu_ref));
+  EXPECT_TRUE(residual.lq().isApprox(lq_ref));
+  EXPECT_TRUE(residual.lv().isApprox(lv_ref));
+  EXPECT_TRUE(residual.lx().isApprox(lx_ref));
+  EXPECT_TRUE(residual.la.isApprox(la_ref));
+  EXPECT_TRUE(residual.lf().isApprox(lf_ref));
 }
 
 
@@ -95,25 +100,30 @@ TEST_F(KKTResidualTest, floating_base) {
   EXPECT_EQ(residual.lq().size(), dimv);
   EXPECT_EQ(residual.lv().size(), dimv);
   EXPECT_EQ(residual.lx().size(), 2*dimv);
-  EXPECT_EQ(residual.C().size(), contact_status.dimf());
   EXPECT_EQ(residual.lf().size(), contact_status.dimf());
   EXPECT_EQ(residual.dimf(), contact_status.dimf());
   EXPECT_EQ(residual.la.size(), dimv);
   EXPECT_EQ(residual.ID.size(), dimv);
   EXPECT_EQ(residual.lu_passive.size(), 6);
   residual.KKT_residual = Eigen::VectorXd::Random(residual.dimKKT());
-  const Eigen::VectorXd Fq = residual.KKT_residual.segment(0, dimv);
-  const Eigen::VectorXd Fv = residual.KKT_residual.segment(dimv, dimv);
-  const Eigen::VectorXd lu = residual.KKT_residual.segment(2*dimv, dimu);
-  const Eigen::VectorXd lq = residual.KKT_residual.segment(2*dimv+dimu, dimv);
-  const Eigen::VectorXd lv = residual.KKT_residual.segment(3*dimv+dimu, dimv);
-  const Eigen::VectorXd lx = residual.KKT_residual.segment(2*dimv+dimu, 2*dimv);
-  EXPECT_TRUE(residual.Fq().isApprox(Fq));
-  EXPECT_TRUE(residual.Fv().isApprox(Fv));
-  EXPECT_TRUE(residual.lu().isApprox(lu));
-  EXPECT_TRUE(residual.lq().isApprox(lq));
-  EXPECT_TRUE(residual.lv().isApprox(lv));
-  EXPECT_TRUE(residual.lx().isApprox(lx));
+  const Eigen::VectorXd la_ref = Eigen::VectorXd::Random(dimv);
+  const Eigen::VectorXd lf_ref = Eigen::VectorXd::Random(contact_status.dimf());
+  residual.la = la_ref;
+  residual.lf() = lf_ref;
+  const Eigen::VectorXd Fq_ref = residual.KKT_residual.segment(0, dimv);
+  const Eigen::VectorXd Fv_ref = residual.KKT_residual.segment(dimv, dimv);
+  const Eigen::VectorXd lu_ref = residual.KKT_residual.segment(2*dimv, dimu);
+  const Eigen::VectorXd lq_ref = residual.KKT_residual.segment(2*dimv+dimu, dimv);
+  const Eigen::VectorXd lv_ref = residual.KKT_residual.segment(3*dimv+dimu, dimv);
+  const Eigen::VectorXd lx_ref = residual.KKT_residual.segment(2*dimv+dimu, 2*dimv);
+  EXPECT_TRUE(residual.Fq().isApprox(Fq_ref));
+  EXPECT_TRUE(residual.Fv().isApprox(Fv_ref));
+  EXPECT_TRUE(residual.lu().isApprox(lu_ref));
+  EXPECT_TRUE(residual.lq().isApprox(lq_ref));
+  EXPECT_TRUE(residual.lv().isApprox(lv_ref));
+  EXPECT_TRUE(residual.lx().isApprox(lx_ref));
+  EXPECT_TRUE(residual.la.isApprox(la_ref));
+  EXPECT_TRUE(residual.lf().isApprox(lf_ref));
 }
 
 } // namespace idocp

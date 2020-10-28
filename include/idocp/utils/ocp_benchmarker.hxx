@@ -5,7 +5,7 @@
 #include <chrono>
 
 #include "idocp/ocp/ocp.hpp"
-#include "idocp/ocp/parnmpc.hpp"
+// #include "idocp/ocp/parnmpc.hpp"
 
 namespace idocp {
 
@@ -53,12 +53,12 @@ inline void OCPBenchmarker<OCP>::setInitialGuessSolution(
 }
 
 
-template <>
-inline void OCPBenchmarker<ParNMPC>::setInitialGuessSolution(
-    const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v) {
-  ocp_.setStateTrajectory(q, v);
-  ocp_.setAuxiliaryMatrixGuessByTerminalCost(t);
-}
+// template <>
+// inline void OCPBenchmarker<ParNMPC>::setInitialGuessSolution(
+//     const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v) {
+//   ocp_.setStateTrajectory(q, v);
+//   ocp_.setAuxiliaryMatrixGuessByTerminalCost(t);
+// }
 
 
 template <typename OCPType>

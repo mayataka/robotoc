@@ -16,20 +16,20 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    fixed_base_urdf_ = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf_ = "../urdf/anymal/anymal.urdf";
+    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
+    floating_base_urdf = "../urdf/anymal/anymal.urdf";
   }
 
   virtual void TearDown() {
   }
 
   double dtau_;
-  std::string fixed_base_urdf_, floating_base_urdf_;
+  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
 TEST_F(SplitSolutionTest, fixed_base) {
-  Robot robot(fixed_base_urdf_);
+  Robot robot(fixed_base_urdf);
   std::random_device rnd;
   SplitSolution s(robot);
   EXPECT_TRUE(s.lmd.size() == robot.dimv());
@@ -94,7 +94,7 @@ TEST_F(SplitSolutionTest, fixed_base) {
 
 TEST_F(SplitSolutionTest, fixed_base_contact) {
   std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf_, contact_frames);
+  Robot robot(fixed_base_urdf, contact_frames);
   std::random_device rnd;
   std::vector<bool> is_contact_active = {false};
   ContactStatus contact_status(is_contact_active.size());
@@ -193,9 +193,11 @@ TEST_F(SplitSolutionTest, fixed_base_contact) {
   EXPECT_FALSE(s_random.lmd.isZero());
   EXPECT_FALSE(s_random.gmm.isZero());
   EXPECT_FALSE(s_random.mu[0].isZero());
+  EXPECT_FALSE(s_random.mu_stack().isZero());
   EXPECT_TRUE(s_random.mu[0].isApprox(s_random.mu_stack()));
   EXPECT_FALSE(s_random.a.isZero());
   EXPECT_FALSE(s_random.f[0].isZero());
+  EXPECT_FALSE(s_random.f_stack().isZero());
   EXPECT_TRUE(s_random.f[0].isApprox(s_random.f_stack()));
   EXPECT_FALSE(s_random.q.isZero());
   EXPECT_FALSE(s_random.v.isZero());
@@ -205,7 +207,7 @@ TEST_F(SplitSolutionTest, fixed_base_contact) {
 
 
 TEST_F(SplitSolutionTest, floating_base) {
-  Robot robot(floating_base_urdf_);
+  Robot robot(floating_base_urdf);
   SplitSolution s(robot);
   EXPECT_TRUE(s.lmd.size() == robot.dimv());
   EXPECT_TRUE(s.gmm.size() == robot.dimv());
@@ -277,7 +279,7 @@ TEST_F(SplitSolutionTest, floating_base) {
 
 TEST_F(SplitSolutionTest, floating_base_contacts) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf_, contact_frames);
+  Robot robot(floating_base_urdf, contact_frames);
   std::vector<bool> is_contact_active = {false, false, false, false};
   ContactStatus contact_status(is_contact_active.size());
   contact_status.setContactStatus(is_contact_active);

@@ -15,7 +15,6 @@ namespace idocp {
 ///
 class KKTResidual {
 public:
-
   using Vector6d = Eigen::Matrix<double, 6, 1>;
 
   ///
@@ -166,20 +165,6 @@ public:
   /// @return Reference to the residual with respect to the stack of the  
   /// contact forces f. Size is KKTResidual::dimf().
   ///
-  Eigen::VectorBlock<Eigen::VectorXd> C();
-
-  ///
-  /// @brief Residual with respect to the stack of the contact forces f.
-  /// @return Reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is KKTResidual::dimf().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> C() const;
-
-  ///
-  /// @brief Residual with respect to the stack of the contact forces f.
-  /// @return Reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is KKTResidual::dimf().
-  ///
   Eigen::VectorBlock<Eigen::VectorXd> lf();
 
   ///
@@ -222,7 +207,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd C_full_, lf_full_;
+  Eigen::VectorXd lf_full_;
   int dimv_, dimx_, dimu_, dim_passive_, dimf_, dimKKT_;
 
 };

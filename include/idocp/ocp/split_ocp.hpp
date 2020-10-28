@@ -16,11 +16,11 @@
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/ocp/state_equation.hpp"
-#include "idocp/ocp/robot_dynamics.hpp"
+// #include "idocp/ocp/robot_dynamics.hpp"
+#include "idocp/ocp/contact_dynamics.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/riccati_gain.hpp"
 #include "idocp/ocp/riccati_matrix_factorizer.hpp"
-#include "idocp/ocp/riccati_matrix_inverter.hpp"
 
 
 namespace idocp {
@@ -133,7 +133,9 @@ public:
   /// @param[in] d Split direction of this stage.
   /// 
   void computeCondensedDirection(Robot& robot, const double dtau, 
-                                 const SplitSolution& s, SplitDirection& d);
+                                 const SplitSolution& s, 
+                                 const SplitDirection& d_next, 
+                                 SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -250,14 +252,12 @@ private:
   ConstraintsData constraints_data_;
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
-  RobotDynamics robot_dynamics_;
+  // RobotDynamics robot_dynamics_;
+  ContactDynamics contact_dynamics_;
   RiccatiGain riccati_gain_;
   RiccatiMatrixFactorizer riccati_factorizer_;
-  RiccatiMatrixInverter riccati_inverter_;
-  Eigen::MatrixXd Ginv_full_; /// @brief Inverse of the Riccati matrix G.
   SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
-  int dimv_, dim_passive_, dimf_, dimc_;
-  bool use_kinematics_;
+  bool use_kinematics_, has_floating_base_;
   double stage_cost_, constraint_violation_;
 
   ///
@@ -268,28 +268,6 @@ private:
   inline void setContactStatusForKKT(const ContactStatus& contact_status) {
     kkt_residual_.setContactStatus(contact_status);
     kkt_matrix_.setContactStatus(contact_status);
-  }
-
-  ///
-  /// @brief Set contact status from robot model, i.e., set dimension of the 
-  /// contacts and equality constraints.
-  /// @param[in] contact_status Contact status.
-  ///
-  inline void setContactStatusForRiccatiRecursion(
-      const ContactStatus& contact_status) {
-    riccati_gain_.setContactStatus(contact_status);
-    riccati_inverter_.setContactStatus(contact_status);
-    dimf_ = contact_status.dimf();
-    dimc_ = dim_passive_ + contact_status.dimf();
-  }
-
-  ///
-  /// @brief Gets the block matrix of Ginv wth appropriate size. Before calling 
-  /// this function, call setContactStatus() to update contact dimensions.
-  /// @return Block matrix of Ginv wth appropriate size.
-  ///
-  inline Eigen::Block<Eigen::MatrixXd> Ginv_() {
-    return Ginv_full_.topLeftCorner(dimv_+dimf_+dimc_, dimv_+dimf_+dimc_);
   }
 
   double cost(Robot& robot, const double t, const double dtau, 

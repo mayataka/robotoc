@@ -116,6 +116,49 @@ inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Fvv() const {
 }
 
 
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quu_full() {
+  return Q_.topLeftCorner(dimv_, dimv_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Quu_full() const {
+  return Q_.topLeftCorner(dimv_, dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quu_passive_topLeft() {
+  return Q_.topLeftCorner(dim_passive_, dim_passive_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> 
+KKTMatrix::Quu_passive_topLeft() const {
+  return Q_.topLeftCorner(dim_passive_, dim_passive_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quu_passive_topRight () {
+  return Q_.block(0, dim_passive_, dim_passive_, dimu_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> 
+KKTMatrix::Quu_passive_topRight() const {
+  return Q_.block(0, dim_passive_, dim_passive_, dimu_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quu_passive_bottomLeft() {
+  return Q_.block(dim_passive_, 0, dimu_, dim_passive_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> 
+KKTMatrix::Quu_passive_bottomLeft() const {
+  return Q_.block(dim_passive_, 0, dimu_, dim_passive_);
+}
+
+
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quu() {
   return Q_.block(u_begin_, u_begin_, dimu_, dimu_);
 }
@@ -123,58 +166,6 @@ inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quu() {
 
 inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Quu() const {
   return Q_.block(u_begin_, u_begin_, dimu_, dimu_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quu_full() {
-  return Q_.block(0, 0, dimv_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Quu_full() const {
-  return Q_.block(0, 0, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quu_passive() {
-  return Q_.block(0, 0, dim_passive_, dim_passive_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Quu_passive() const {
-  return Q_.block(0, 0, dim_passive_, dim_passive_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quu_passive_drive() {
-  return Q_.block(0, dim_passive_, dim_passive_, dimu_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-KKTMatrix::Quu_passive_drive() const {
-  return Q_.block(0, dim_passive_, dim_passive_, dimu_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quu_drive_passive() {
-  return Q_.block(dim_passive_, 0, dimu_, dim_passive_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-KKTMatrix::Quu_drive_passive() const {
-  return Q_.block(dim_passive_, 0, dimu_, dim_passive_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quq() {
-  return Q_.block(u_begin_, q_begin_, dimu_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Quq() const {
-  return Q_.block(u_begin_, q_begin_, dimu_, dimv_);
 }
 
 
@@ -199,13 +190,13 @@ KKTMatrix::Quq_passive() const {
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quv() {
-  return Q_.block(u_begin_, v_begin_, dimu_, dimv_);
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quq() {
+  return Q_.block(u_begin_, q_begin_, dimu_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Quv() const {
-  return Q_.block(u_begin_, v_begin_, dimu_, dimv_);
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Quq() const {
+  return Q_.block(u_begin_, q_begin_, dimu_, dimv_);
 }
 
 
@@ -230,13 +221,13 @@ KKTMatrix::Quv_passive() const {
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qqu() {
-  return Q_.block(q_begin_, u_begin_, dimv_, dimu_);
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quv() {
+  return Q_.block(u_begin_, v_begin_, dimu_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qqu() const {
-  return Q_.block(q_begin_, u_begin_, dimv_, dimu_);
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Quv() const {
+  return Q_.block(u_begin_, v_begin_, dimu_, dimv_);
 }
 
 
@@ -261,6 +252,16 @@ KKTMatrix::Qqu_passive() const {
 }
 
 
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qqu() {
+  return Q_.block(q_begin_, u_begin_, dimv_, dimu_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qqu() const {
+  return Q_.block(q_begin_, u_begin_, dimv_, dimu_);
+}
+
+
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qqq() {
   return Q_.block(q_begin_, q_begin_, dimv_, dimv_);
 }
@@ -278,16 +279,6 @@ inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qqv() {
 
 inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qqv() const {
   return Q_.block(q_begin_, v_begin_, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qvu() {
-  return Q_.block(v_begin_, u_begin_, dimv_, dimu_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qvu() const {
-  return Q_.block(v_begin_, u_begin_, dimv_, dimu_);
 }
 
 
@@ -312,6 +303,16 @@ KKTMatrix::Qvu_passive() const {
 }
 
 
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qvu() {
+  return Q_.block(v_begin_, u_begin_, dimv_, dimu_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qvu() const {
+  return Q_.block(v_begin_, u_begin_, dimv_, dimu_);
+}
+
+
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qvq() {
   return Q_.block(v_begin_, q_begin_, dimv_, dimv_);
 }
@@ -329,26 +330,6 @@ inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qvv() {
 
 inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qvv() const {
   return Q_.block(v_begin_, v_begin_, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qxx() {
-  return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qxx() const {
-  return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qux() {
-  return Q_.block(u_begin_, q_begin_, dimu_, dimx_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qux() const {
-  return Q_.block(u_begin_, q_begin_, dimu_, dimx_);
 }
 
 
@@ -373,13 +354,13 @@ KKTMatrix::Qux_passive() const {
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qxu() {
-  return Q_.block(q_begin_, u_begin_, dimx_, dimu_);
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qux() {
+  return Q_.block(u_begin_, q_begin_, dimu_, dimx_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qxu() const {
-  return Q_.block(q_begin_, u_begin_, dimx_, dimu_);
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qux() const {
+  return Q_.block(u_begin_, q_begin_, dimu_, dimx_);
 }
 
 
@@ -401,6 +382,26 @@ inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qxu_passive() {
 inline const Eigen::Block<const Eigen::MatrixXd> 
 KKTMatrix::Qxu_passive() const {
   return Q_.block(q_begin_, 0, dimx_, dim_passive_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qxu() {
+  return Q_.block(q_begin_, u_begin_, dimx_, dimu_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qxu() const {
+  return Q_.block(q_begin_, u_begin_, dimx_, dimu_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Qxx() {
+  return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Qxx() const {
+  return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
 }
 
 

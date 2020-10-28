@@ -6,7 +6,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/parnmpc.hpp"
+// #include "idocp/ocp/parnmpc.hpp"
 #include "idocp/ocp/ocp.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
@@ -74,12 +74,12 @@ void BenchmarkWithContacts() {
   ocp_benchmarker.getSolverHandle()->activateContacts({0, 1, 2, 3}, 0, N);
   ocp_benchmarker.testConvergence(t, q, v, 20, false);
   ocp_benchmarker.testCPUTime(t, q, v);
-  idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
-                                                            robot, cost, constraints, T, N, num_proc);
-  parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
-  parnmpc_benchmarker.getSolverHandle()->activateContacts({0, 1, 2, 3}, 0, N);
-  parnmpc_benchmarker.testConvergence(t, q, v, 20, false);
-  parnmpc_benchmarker.testCPUTime(t, q, v);
+  // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
+  //                                                           robot, cost, constraints, T, N, num_proc);
+  // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
+  // parnmpc_benchmarker.getSolverHandle()->activateContacts({0, 1, 2, 3}, 0, N);
+  // parnmpc_benchmarker.testConvergence(t, q, v, 20, false);
+  // parnmpc_benchmarker.testCPUTime(t, q, v);
 }
 
 } // namespace anymal

@@ -45,6 +45,17 @@ inline void SplitDirection::setContactStatus(
 }
 
 
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dlmdgmm() {
+  return split_direction.head(dimx_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitDirection::dlmdgmm() const {
+  return split_direction.head(dimx_);
+}
+
+
 inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dlmd() {
   return split_direction.head(dimv_);
 }

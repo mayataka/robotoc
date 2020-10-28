@@ -10,7 +10,6 @@ inline KKTResidual::KKTResidual(const Robot& robot)
     la(Eigen::VectorXd::Zero(robot.dimv())),
     ID(Eigen::VectorXd::Zero(robot.dimv())),
     lu_passive(Vector6d::Zero()),
-    C_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
@@ -26,7 +25,6 @@ inline KKTResidual::KKTResidual()
     la(),
     ID(),
     lu_passive(Vector6d::Zero()),
-    C_full_(),
     lf_full_(),
     dimv_(0), 
     dimx_(0), 
@@ -116,16 +114,6 @@ inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::lx() const {
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::C() {
-  return C_full_.head(dimf_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::C() const {
-  return C_full_.head(dimf_);
-}
-
-
 inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::lf() {
   return lf_full_.head(dimf_);
 }
@@ -141,7 +129,6 @@ inline void KKTResidual::setZero() {
   la.setZero();
   ID.setZero();
   lu_passive.setZero();
-  C_full_.setZero();
   lf_full_.setZero();
 }
 

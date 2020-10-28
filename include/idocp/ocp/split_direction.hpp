@@ -64,6 +64,18 @@ public:
   /// @brief Returns the Newton direction of lmd. Size is Robot::dimv().
   /// @return Reference to the Newton direction of lmd.
   ///
+  Eigen::VectorBlock<Eigen::VectorXd> dlmdgmm();
+
+  ///
+  /// @brief Returns the Newton direction of lmd. Size is Robot::dimv().
+  /// @return Reference to the Newton direction of lmd.
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> dlmdgmm() const;
+
+  ///
+  /// @brief Returns the Newton direction of lmd. Size is Robot::dimv().
+  /// @return Reference to the Newton direction of lmd.
+  ///
   Eigen::VectorBlock<Eigen::VectorXd> dlmd();
 
   ///

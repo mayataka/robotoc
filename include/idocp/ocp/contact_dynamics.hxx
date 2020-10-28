@@ -67,19 +67,19 @@ inline void ContactDynamics::linearizeContactDynamics(
   linearizeContactConstraint(robot, contact_status, dtau, kkt_matrix, 
                               kkt_residual);
   // augment inverse dynamics constraint
-  kkt_residual.lq().noalias() += dtau * dIDdq_().transpose() * s.beta;
-  kkt_residual.lv().noalias() += dtau * dIDdv_().transpose() * s.beta;
-  kkt_residual.la.noalias() += dtau * dIDda_.transpose() * s.beta;
+  kkt_residual.lq().noalias() += dtau * data_.dIDdq().transpose() * s.beta;
+  kkt_residual.lv().noalias() += dtau * data_.dIDdv().transpose() * s.beta;
+  kkt_residual.la.noalias() += dtau * data_.dIDda.transpose() * s.beta;
   if (has_active_contacts_) {
     // We use an equivalence, dIDdf_().transpose() = - dCda_(), to avoid
     // redundant calculation of dIDdf_().
-    kkt_residual.lf().noalias() -= dtau * dCda_() * s.beta;
+    kkt_residual.lf().noalias() -= dtau * data_.dCda() * s.beta;
   }
   // augment floating base constraint
   if (has_floating_base_) {
     kkt_residual.lu().noalias() -= dtau * s.beta.tail(dimu_); 
     kkt_residual.lu_passive.noalias() -= dtau * s.beta.template head<kDimFloatingBase>(); 
-    u_passive_ = s.u_passive; 
+    data_.u_passive_ = s.u_passive; 
     kkt_residual.lu_passive.noalias() += dtau * s.nu_passive;
   }
   else {
@@ -87,9 +87,9 @@ inline void ContactDynamics::linearizeContactDynamics(
   }
   // augment contact constraint
   if (has_active_contacts_) {
-    kkt_residual.lq().noalias() += dtau * dCdq_().transpose() * s.mu_stack();
-    kkt_residual.lv().noalias() += dtau * dCdv_().transpose() * s.mu_stack();
-    kkt_residual.la.noalias() += dtau * dCda_().transpose() * s.mu_stack();
+    kkt_residual.lq().noalias() += dtau * data_.dCdq().transpose() * s.mu_stack();
+    kkt_residual.lv().noalias() += dtau * data_.dCdv().transpose() * s.mu_stack();
+    kkt_residual.la.noalias() += dtau * data_.dCda().transpose() * s.mu_stack();
   }
 }
 
@@ -101,35 +101,43 @@ inline void ContactDynamics::condenseContactDynamics(
   assert(dtau > 0);
   linearizeContactDynamics(robot, contact_status, dtau, s, 
                            kkt_matrix, kkt_residual);
-  robot.computeMJtJinv(contact_status, dIDda_, dCda_(), MJtJinv_());
-  MJtJinv_dIDCdqv_().noalias() = MJtJinv_() * dIDCdqv_();
-  MJtJinv_IDC_().noalias() = MJtJinv_() * IDC_();
-  Qafqv_condensed_().noalias() = (- kkt_matrix.Qaaff().diagonal()).asDiagonal() * MJtJinv_dIDCdqv_();
-  Qafu_condensed_().noalias() = (- kkt_matrix.Qaaff().diagonal()).asDiagonal() * MJtJinv_().leftCols(dimv_);
-  la_condensed_() = kkt_residual.la;
-  lf_condensed_() = - kkt_residual.lf();
-  laf_condensed_().noalias() -= kkt_matrix.Qaaff().diagonal().asDiagonal() * MJtJinv_IDC_();
-  kkt_matrix.Qxx().noalias() -= MJtJinv_dIDCdqv_().transpose() * Qafqv_condensed_();
-  kkt_matrix.Qxu_full().noalias() -= MJtJinv_dIDCdqv_().transpose() * Qafu_condensed_();
-  kkt_residual.lx().noalias() -= MJtJinv_dIDCdqv_().transpose() * laf_condensed_();
+  robot.computeMJtJinv(contact_status, data_.dIDda, data_.dCda(), data_.MJtJinv());
+  condensing(dtau, data_, kkt_matrix, kkt_residual);
+}
+
+
+inline void ContactDynamics::condensing(const double dtau, 
+                                        ContactDynamicsData& data,
+                                        KKTMatrix& kkt_matrix, 
+                                        KKTResidual& kkt_residual) const {
+  data.MJtJinv_dIDCdqv().noalias() = data.MJtJinv() * data.dIDCdqv();
+  data.MJtJinv_IDC().noalias() = data.MJtJinv() * data.IDC();
+  data.Qafqv().noalias() = (- kkt_matrix.Qaaff().diagonal()).asDiagonal() * data.MJtJinv_dIDCdqv();
+  data.Qafu_full().noalias() = (- kkt_matrix.Qaaff().diagonal()).asDiagonal() * data.MJtJinv().leftCols(dimv_);
+  data.la() = kkt_residual.la;
+  data.lf() = - kkt_residual.lf();
+  data.laf().noalias() -= kkt_matrix.Qaaff().diagonal().asDiagonal() * data.MJtJinv_IDC();
+  kkt_matrix.Qxx().noalias() -= data.MJtJinv_dIDCdqv().transpose() * data.Qafqv();
+  kkt_matrix.Qxu_full().noalias() -= data.MJtJinv_dIDCdqv().transpose() * data.Qafu_full();
+  kkt_residual.lx().noalias() -= data.MJtJinv_dIDCdqv().transpose() * data.laf();
   if (has_floating_base_) {
-    kkt_matrix.Quu_full().noalias() = MJtJinv_().topRows(dimv_) * Qafu_condensed_();
-    kkt_residual.lu_passive.noalias() += MJtJinv_().template topRows<kDimFloatingBase>() * laf_condensed_();
-    kkt_residual.lu().noalias() += MJtJinv_().block(kDimFloatingBase, 0, dimu_, dimv_+dimf_) * laf_condensed_();
-    kkt_residual.lu().noalias() -= kkt_matrix.Quu_drive_passive() * s.u_passive;
-    kkt_residual.lx().noalias() -= kkt_matrix.Qxu_passive() * s.u_passive;
+    kkt_matrix.Quu_full().noalias() = data.MJtJinv().topRows(dimv_) * data.Qafu_full();
+    kkt_residual.lu_passive.noalias() += data.MJtJinv().template topRows<kDimFloatingBase>() * data.laf();
+    kkt_residual.lu().noalias() += data.MJtJinv().block(kDimFloatingBase, 0, dimu_, dimv_+dimf_) * data.laf();
+    kkt_residual.lu().noalias() -= kkt_matrix.Quu_drive_passive() * data.u_passive;
+    kkt_residual.lx().noalias() -= kkt_matrix.Qxu_passive() * data.u_passive;
   }
   else {
-    kkt_matrix.Quu().noalias() += MJtJinv_().topRows(dimv_) * Qafu_condensed_();
-    kkt_residual.lu().noalias() += MJtJinv_().topRows(dimv_) * laf_condensed_();
+    kkt_matrix.Quu().noalias() += data.MJtJinv().topRows(dimv_) * data.Qafu();
+    kkt_residual.lu().noalias() += data.MJtJinv().topRows(dimv_) * data.laf();
   }
-  kkt_matrix.Fvq() = - dtau * MJtJinv_dIDCdqv_().topLeftCorner(dimv_, dimv_);
+  kkt_matrix.Fvq() = - dtau * data.MJtJinv_dIDCdqv().topLeftCorner(dimv_, dimv_);
   kkt_matrix.Fvv().noalias() = Eigen::MatrixXd::Identity(dimv_, dimv_) 
-                                - dtau * MJtJinv_dIDCdqv_().topRightCorner(dimv_, dimv_);
-  kkt_matrix.Fvu().noalias() += dtau * MJtJinv_().block(0, dim_passive_, dimv_, dimu_);
-  kkt_residual.Fv().noalias() -= dtau * MJtJinv_IDC_().head(dimv_);
+                                - dtau * data.MJtJinv_dIDCdqv().topRightCorner(dimv_, dimv_);
+  kkt_matrix.Fvu().noalias() += dtau * data.MJtJinv().block(0, dim_passive_, dimv_, dimu_);
+  kkt_residual.Fv().noalias() -= dtau * data.MJtJinv_IDC().head(dimv_);
   if (has_floating_base_) {
-    kkt_residual.Fv().noalias() -= dtau * MJtJinv_().topLeftCorner(dimv_, dim_passive_) * s.u_passive;
+    kkt_residual.Fv().noalias() -= dtau * data.MJtJinv().topLeftCorner(dimv_, dim_passive_) * data.u_passive;
   }
 }
 
@@ -142,35 +150,35 @@ inline void ContactDynamics::computeCondensedDirection(
   assert(dtau > 0);
   assert(dgmm.size() == dimv_);
   if (has_floating_base_) {
-    d.du_passive = - u_passive_;
+    d.du_passive = - data_.u_passive;
     d.dnu_passive = kkt_residual.lu_passive;
     d.dnu_passive.noalias() += kkt_matrix.Quu_passive() * d.du_passive;
     d.dnu_passive.noalias() += kkt_matrix.Quu_passive_drive() * d.du();
     d.dnu_passive.noalias() += kkt_matrix.Qxu_passive().transpose() * d.dx();
     d.dnu_passive.noalias() 
-        += dtau * MJtJinv_().topLeftCorner(dim_passive_, dimv_) * dgmm;
+        += dtau * data_.MJtJinv().topLeftCorner(dim_passive_, dimv_) * dgmm;
     d.dnu_passive.array() /= - dtau;
-    d.daf().noalias() = - MJtJinv_dIDCdqv_() * d.dx();
-    d.daf().noalias() += MJtJinv_().template leftCols<kDimFloatingBase>() * d.du_passive;
-    d.daf().noalias() += MJtJinv_().block(0, kDimFloatingBase, dimv_+dimf_, dimu_) * d.du();
-    d.daf().noalias() -= MJtJinv_IDC_();
+    d.daf().noalias() = - data_.MJtJinv_dIDCdqv() * d.dx();
+    d.daf().noalias() += data_.MJtJinv().template leftCols<kDimFloatingBase>() * d.du_passive;
+    d.daf().noalias() += data_.MJtJinv().block(0, kDimFloatingBase, dimv_+dimf_, dimu_) * d.du();
+    d.daf().noalias() -= data_.MJtJinv_IDC();
   }
   else {
-    d.daf().noalias() = - MJtJinv_dIDCdqv_() * d.dx();
-    d.daf().noalias() += MJtJinv_().leftCols(dimv_) * d.du();
-    d.daf().noalias() -= MJtJinv_IDC_();
+    d.daf().noalias() = - data_.MJtJinv_dIDCdqv() * d.dx();
+    d.daf().noalias() += data_.MJtJinv().leftCols(dimv_) * d.du();
+    d.daf().noalias() -= data_.MJtJinv_IDC();
   }
   d.df().array() *= -1;
-  laf_condensed_().noalias() += Qafqv_condensed_() * d.dx();
+  data_.laf().noalias() += data_.Qafqv() * d.dx();
   if (has_floating_base_) {
-    laf_condensed_().noalias() += Qafu_condensed_().template leftCols<kDimFloatingBase>() * d.du_passive;
-    laf_condensed_().noalias() += Qafu_condensed_().rightCols(dimv_-kDimFloatingBase) * d.du();
+    data_.laf().noalias() += data_.Qafu().template leftCols<kDimFloatingBase>() * d.du_passive;
+    data_.laf().noalias() += data_.Qafu().rightCols(dimv_-kDimFloatingBase) * d.du();
   }
   else {
-    laf_condensed_().noalias() += Qafu_condensed_() * d.du();
+    data_.laf().noalias() += data_.Qafu() * d.du();
   }
-  la_condensed_().noalias() += dtau * dgmm;
-  d.dbetamu().noalias() = - MJtJinv_() * laf_condensed_() / dtau;
+  data_.la().noalias() += dtau * dgmm;
+  d.dbetamu().noalias() = - data_.MJtJinv() * data_.laf() / dtau;
 }
 
 
@@ -181,14 +189,14 @@ inline void ContactDynamics::computeContactDynamicsResidual(
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, ID_());
   if (has_floating_base_) {
-    ID_().template head<kDimFloatingBase>().noalias() -= s.u_passive;
-    ID_().tail(dimu_).noalias() -= s.u;
+    data_.ID().template head<kDimFloatingBase>().noalias() -= s.u_passive;
+    data_.ID().tail(dimu_).noalias() -= s.u;
     u_passive_ = s.u_passive;
   }
   else {
-    ID_().noalias() -= s.u;
+    data_.ID().noalias() -= s.u;
   }
-  robot.computeBaumgarteResidual(contact_status, dtau, C_());
+  robot.computeBaumgarteResidual(contact_status, dtau, data_.C());
 }
 
 
@@ -196,15 +204,15 @@ inline void ContactDynamics::linearizeInverseDynamics(
     Robot& robot, const ContactStatus& contact_status, 
     const SplitSolution& s, KKTResidual& kkt_residual) {
   robot.setContactForces(contact_status, s.f);
-  robot.RNEA(s.q, s.v, s.a, ID_());
+  robot.RNEA(s.q, s.v, s.a, data_.ID());
   if (has_floating_base_) {
-    ID_().template head<kDimFloatingBase>().noalias() -= s.u_passive;
-    ID_().tail(dimu_).noalias() -= s.u;
+    data_.ID().template head<kDimFloatingBase>().noalias() -= s.u_passive;
+    data_.ID().tail(dimu_).noalias() -= s.u;
   }
   else {
-    ID_().noalias() -= s.u;
+    data_.ID().noalias() -= s.u;
   }
-  robot.RNEADerivatives(s.q, s.v, s.a, dIDdq_(), dIDdv_(), dIDda_);
+  robot.RNEADerivatives(s.q, s.v, s.a, data_.dIDdq(), data_.dIDdv(), data_.dIDda);
 }
 
 
@@ -212,22 +220,23 @@ inline void ContactDynamics::linearizeContactConstraint(
     Robot& robot, const ContactStatus& contact_status, const double dtau,
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   assert(dtau > 0);
-  robot.computeBaumgarteResidual(contact_status, dtau, C_());
-  robot.computeBaumgarteDerivatives(contact_status, dtau, dCdq_(), dCdv_(), dCda_());
+  robot.computeBaumgarteResidual(contact_status, dtau, data_.C());
+  robot.computeBaumgarteDerivatives(contact_status, dtau, data_.dCdq(), 
+                                    data_.dCdv(), data_.dCda());
 }
 
 
 inline double ContactDynamics::l1NormContactDynamicsResidual(
     const double dtau) const {
   assert(dtau > 0);
-  return (dtau * (IDC_().lpNorm<1>() + u_passive_.lpNorm<1>()));
+  return (dtau * (data_.IDC().lpNorm<1>() + data_.u_passive.lpNorm<1>()));
 }
 
 
 inline double ContactDynamics::squaredNormContactDynamicsResidual(
     const double dtau) const {
   assert(dtau > 0);
-  return (dtau * dtau * (IDC_().squaredNorm() + u_passive_.squaredNorm()));
+  return (dtau * dtau * (data_.IDC_().squaredNorm() + data_.u_passive.squaredNorm()));
 }
 
 
@@ -235,108 +244,7 @@ inline void ContactDynamics::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
   has_active_contacts_ = contact_status.hasActiveContacts();
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ContactDynamics::dIDCdqv_() {
-  return dIDCdqv_full_.topLeftCorner(dimv_+dimf_, 2*dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ContactDynamics::dIDdq_() {
-  return dIDCdqv_full_.topLeftCorner(dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ContactDynamics::dIDdv_() {
-  return dIDCdqv_full_.block(0, dimv_, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ContactDynamics::dCdq_() {
-  return dIDCdqv_full_.block(dimv_, 0, dimf_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ContactDynamics::dCdv_() {
-  return dIDCdqv_full_.block(dimv_, dimv_, dimf_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ContactDynamics::dCda_() {
-  return dCda_full_.topLeftCorner(dimf_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ContactDynamics::MJtJinv_() {
-  return MJtJinv_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
-}
-
-inline Eigen::Block<Eigen::MatrixXd> ContactDynamics::MJtJinv_dIDCdqv_() {
-  return MJtJinv_dIDCdqv_full_.topLeftCorner(dimv_+dimf_, 2*dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ContactDynamics::Qafqv_condensed_() {
-  return Qafqv_condensed_full_.topLeftCorner(dimv_+dimf_, 2*dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ContactDynamics::Qafu_condensed_() {
-  return Qafu_condensed_full_.topLeftCorner(dimv_+dimf_, dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::IDC_() {
-  return IDC_full_.head(dimv_+dimf_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ContactDynamics::IDC_() const {
-  return IDC_full_.head(dimv_+dimf_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::ID_() {
-  return IDC_full_.head(dimv_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ContactDynamics::ID_() const {
-  return IDC_full_.head(dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::C_() {
-  return IDC_full_.segment(dimv_, dimf_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ContactDynamics::C_() const {
-  return IDC_full_.segment(dimv_, dimf_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::MJtJinv_IDC_() {
-  return MJtJinv_IDC_full_.head(dimv_+dimf_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::laf_condensed_() {
-  return laf_condensed_full_.head(dimv_+dimf_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::la_condensed_() {
-  return laf_condensed_full_.head(dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ContactDynamics::lf_condensed_() {
-  return laf_condensed_full_.segment(dimv_, dimf_);
+  data_.setContactStatus(contact_status);
 }
 
 } // namespace idocp 
