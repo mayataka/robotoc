@@ -20,6 +20,7 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
+    has_active_contacts_(false),
     dim_passive_(robot.dim_passive()),
     is_contact_active_(robot.max_point_contacts(), false),
     dimf_(0) {
@@ -42,6 +43,7 @@ inline SplitSolution::SplitSolution()
     mu_stack_(),
     f_stack_(),
     has_floating_base_(false),
+    has_active_contacts_(false),
     dim_passive_(0),
     is_contact_active_(),
     dimf_(0) {
@@ -57,6 +59,7 @@ inline void SplitSolution::setContactStatus(
   assert(contact_status.max_point_contacts()==is_contact_active_.size());
   is_contact_active_ = contact_status.isContactActive();
   dimf_ = contact_status.dimf();
+  has_active_contacts_ = contact_status.hasActiveContacts();
 }
 
 
@@ -144,6 +147,11 @@ inline bool SplitSolution::isContactActive(const int contact_index) const {
   assert(contact_index >= 0);
   assert(contact_index < is_contact_active_.size());
   return is_contact_active_[contact_index];
+}
+
+
+inline bool SplitSolution::hasActiveContacts() const {
+  return has_active_contacts_;
 }
 
 

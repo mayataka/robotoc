@@ -95,9 +95,9 @@ inline void RiccatiMatrixFactorizer::factorizeMatrices(
 
 
 inline void RiccatiMatrixFactorizer::factorizeRecursion(
-    const RiccatiFactorization& riccati_next, const KKTMatrix& kkt_matrix, 
-    const KKTResidual& kkt_residual, const RiccatiGain& gain, const double dtau, 
-    RiccatiFactorization& riccati) const {
+    const RiccatiFactorization& riccati_next, const double dtau, 
+    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+    const RiccatiGain& gain, RiccatiFactorization& riccati) const {
   assert(dtau > 0);
   riccati.Pqq = kkt_matrix.Qqq();
   riccati.Pqv = kkt_matrix.Qqv();

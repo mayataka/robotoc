@@ -42,10 +42,9 @@ public:
                          KKTResidual& kkt_residual);
 
   void factorizeRecursion(const RiccatiFactorization& riccati_next, 
-                          const KKTMatrix& kkt_matrix, 
+                          const double dtau, const KKTMatrix& kkt_matrix, 
                           const KKTResidual& kkt_residual,
                           const RiccatiGain& gain, 
-                          const double dtau,
                           RiccatiFactorization& riccati) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

@@ -52,7 +52,6 @@ TEST_F(KKTResidualTest, fixed_base) {
   EXPECT_EQ(residual.lf().size(), contact_status.dimf());
   EXPECT_EQ(residual.dimf(), contact_status.dimf());
   EXPECT_EQ(residual.la.size(), dimv);
-  EXPECT_EQ(residual.ID.size(), dimv);
   EXPECT_EQ(residual.lu_passive.size(), 6);
   residual.KKT_residual = Eigen::VectorXd::Random(residual.dimKKT());
   const Eigen::VectorXd la_ref = Eigen::VectorXd::Random(dimv);
@@ -103,7 +102,6 @@ TEST_F(KKTResidualTest, floating_base) {
   EXPECT_EQ(residual.lf().size(), contact_status.dimf());
   EXPECT_EQ(residual.dimf(), contact_status.dimf());
   EXPECT_EQ(residual.la.size(), dimv);
-  EXPECT_EQ(residual.ID.size(), dimv);
   EXPECT_EQ(residual.lu_passive.size(), 6);
   residual.KKT_residual = Eigen::VectorXd::Random(residual.dimKKT());
   const Eigen::VectorXd la_ref = Eigen::VectorXd::Random(dimv);

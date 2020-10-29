@@ -2,6 +2,7 @@
 #define IDOCP_KKT_MATRIX_HPP_
 
 #include "Eigen/Core"
+#include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"

@@ -3,8 +3,6 @@
 
 #include "idocp/ocp/riccati_gain.hpp"
 
-#include "Eigen/LU"
-
 #include <assert.h>
 
 
@@ -14,6 +12,7 @@ inline RiccatiGain::RiccatiGain(const Robot& robot)
   : K(Eigen::MatrixXd::Zero(robot.dimu(), 2*robot.dimv())),
     Ginv(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimu())),
     k(Eigen::VectorXd::Zero(robot.dimu())),
+    llt_(robot.dimu()),
     dimv_(robot.dimv()),
     dimu_(robot.dimu()) {
 }
@@ -23,6 +22,7 @@ inline RiccatiGain::RiccatiGain()
   : K(),
     Ginv(),
     k(),
+    llt_(),
     dimv_(0),
     dimu_(0) {
 }
@@ -34,7 +34,9 @@ inline RiccatiGain::~RiccatiGain() {
 
 inline void RiccatiGain::computeFeedbackGainAndFeedforward(
     const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual) {
-  Ginv = kkt_matrix.Quu().llt().solve(Eigen::MatrixXd::Identity(dimu_, dimu_));
+  // Ginv = kkt_matrix.Quu().llt().solve(Eigen::MatrixXd::Identity(dimu_, dimu_));
+  llt_.compute(kkt_matrix.Quu());
+  Ginv = llt_.solve(Eigen::MatrixXd::Identity(dimu_, dimu_));
   K.noalias() = - Ginv * kkt_matrix.Qxu().transpose();
   k.noalias() = - Ginv * kkt_residual.lu();
 }

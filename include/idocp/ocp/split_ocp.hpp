@@ -257,7 +257,7 @@ private:
   RiccatiGain riccati_gain_;
   RiccatiMatrixFactorizer riccati_factorizer_;
   SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
-  bool use_kinematics_, has_floating_base_, has_active_contacts_;
+  bool use_kinematics_, has_floating_base_, fd_like_elimination_;
   double stage_cost_, constraint_violation_;
 
   ///
@@ -268,7 +268,6 @@ private:
   inline void setContactStatusForKKT(const ContactStatus& contact_status) {
     kkt_residual_.setContactStatus(contact_status);
     kkt_matrix_.setContactStatus(contact_status);
-    has_active_contacts_ = contact_status.hasActiveContacts();
   }
 
   double cost(Robot& robot, const double t, const double dtau, 

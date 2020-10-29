@@ -198,9 +198,6 @@ public:
   /// @brief Residual with respect to control input torques u.
   Eigen::VectorXd la;
 
-  /// @brief Residual of inverse dynamics constraint.
-  Eigen::VectorXd ID;
-
   /// @brief Residual with respect to control input torques u.
   Vector6d lu_passive;
 

@@ -238,6 +238,10 @@ TEST_F(KKTMatrixTest, invert_fixed_base) {
   matrix.Qvv() = KKT_mat.block(dimx+dimu+dimv, dimx+dimu+dimv, dimv, dimv);
   matrix.symmetrize();
   Eigen::MatrixXd KKT_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
+  std::cout << "matrix.Fxu()" << std::endl;
+  std::cout << matrix.Fxu() << std::endl;
+  std::cout << "matrix.Fxx()" << std::endl;
+  std::cout << matrix.Fxx() << std::endl;
   matrix.invert(KKT_mat_inv);
   const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat.inverse();
   EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref));

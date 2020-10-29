@@ -19,7 +19,8 @@ JointSpaceCost::JointSpaceCost(const Robot& robot)
     a_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     u_weight_(Eigen::VectorXd::Zero(robot.dimu())),
     qf_weight_(Eigen::VectorXd::Zero(robot.dimv())),
-    vf_weight_(Eigen::VectorXd::Zero(robot.dimv())) {
+    vf_weight_(Eigen::VectorXd::Zero(robot.dimv())),
+    u_passive_weight_(Vector6d::Zero()) {
   if (robot.has_floating_base()) {
     robot.normalizeConfiguration(q_ref_);
   }
@@ -40,7 +41,8 @@ JointSpaceCost::JointSpaceCost()
     a_weight_(),
     u_weight_(),
     qf_weight_(),
-    vf_weight_() {
+    vf_weight_(),
+    u_passive_weight_(Vector6d::Zero()) {
 }
 
 
@@ -141,6 +143,11 @@ void JointSpaceCost::set_u_weight(const Eigen::VectorXd& u_weight) {
 }
 
 
+void JointSpaceCost::set_u_passive_weight(const Vector6d& u_passive_weight) {
+  u_passive_weight_ = u_passive_weight;
+}
+
+
 void JointSpaceCost::set_qf_weight(const Eigen::VectorXd& qf_weight) {
   if (qf_weight.size() == dimv_) {
     qf_weight_ = qf_weight;
@@ -176,6 +183,9 @@ double JointSpaceCost::l(Robot& robot, CostFunctionData& data, const double t,
   l += (v_weight_.array()*(s.v-v_ref_).array()*(s.v-v_ref_).array()).sum();
   l += (a_weight_.array()*(s.a-a_ref_).array()*(s.a-a_ref_).array()).sum();
   l += (u_weight_.array()*(s.u-u_ref_).array()*(s.u-u_ref_).array()).sum();
+  if (robot.has_floating_base()) {
+    l += (u_passive_weight_.array()*s.u_passive.array()*s.u_passive.array()).sum();
+  }
   return 0.5 * dtau * l;
 }
 
@@ -230,6 +240,10 @@ void JointSpaceCost::la(Robot& robot, CostFunctionData& data, const double t,
 void JointSpaceCost::lu(Robot& robot, CostFunctionData& data, const double t, 
                         const double dtau, const SplitSolution& s, 
                         KKTResidual& kkt_residual) const {
+  if (robot.has_floating_base()) {
+    kkt_residual.lu_passive.array()
+      += dtau * u_passive_weight_.array() * s.u_passive.array();
+  }
   kkt_residual.lu().array() 
       += dtau * u_weight_.array() * (s.u.array()-u_ref_.array());
 }
@@ -266,6 +280,10 @@ void JointSpaceCost::laa(Robot& robot, CostFunctionData& data, const double t,
 void JointSpaceCost::luu(Robot& robot, CostFunctionData& data, const double t, 
                          const double dtau, const SplitSolution& s, 
                          KKTMatrix& kkt_matrix) const {
+  if (robot.has_floating_base()) {
+    kkt_matrix.Quu_passive_topLeft().diagonal().noalias()
+        += dtau * u_passive_weight_;
+  }
   kkt_matrix.Quu().diagonal().noalias() += dtau * u_weight_;
 }
 

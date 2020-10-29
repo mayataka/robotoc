@@ -1,7 +1,7 @@
 add_test_macro(impulse_split_solution_test)
 add_test_macro(impulse_split_direction_test)
 add_test_macro(impulse_kkt_residual_test)
-add_test_macro(impulse_kkt_matrix_test)
+# add_test_macro(impulse_kkt_matrix_test)
 add_test_macro(impulse_state_equation_test)
 add_test_macro(impulse_dynamics_forward_euler_test)
 add_test_macro(impulse_dynamics_backward_euler_test)

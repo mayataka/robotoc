@@ -15,6 +15,8 @@ namespace idocp {
 
 class JointSpaceCost final : public CostFunctionComponentBase {
 public:
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+
   JointSpaceCost(const Robot& robot);
 
   JointSpaceCost();
@@ -50,6 +52,8 @@ public:
   void set_a_weight(const Eigen::VectorXd& a_weight);
 
   void set_u_weight(const Eigen::VectorXd& u_weight);
+
+  void set_u_passive_weight(const Vector6d& u_passive_weight);
 
   void set_qf_weight(const Eigen::VectorXd& qf_weight);
 
@@ -119,6 +123,7 @@ private:
   int dimq_, dimv_, dimu_;
   Eigen::VectorXd q_ref_, v_ref_, a_ref_, u_ref_, q_weight_, v_weight_, 
                   a_weight_, u_weight_, qf_weight_, vf_weight_;
+  Vector6d u_passive_weight_;
 };
 
 } // namespace idocp

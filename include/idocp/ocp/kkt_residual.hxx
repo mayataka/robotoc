@@ -8,7 +8,6 @@ namespace idocp {
 inline KKTResidual::KKTResidual(const Robot& robot) 
   : KKT_residual(Eigen::VectorXd::Zero(4*robot.dimv()+robot.dimu())),
     la(Eigen::VectorXd::Zero(robot.dimv())),
-    ID(Eigen::VectorXd::Zero(robot.dimv())),
     lu_passive(Vector6d::Zero()),
     lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
@@ -23,7 +22,6 @@ inline KKTResidual::KKTResidual(const Robot& robot)
 inline KKTResidual::KKTResidual() 
   : KKT_residual(),
     la(),
-    ID(),
     lu_passive(Vector6d::Zero()),
     lf_full_(),
     dimv_(0), 
@@ -127,7 +125,6 @@ inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::lf() const {
 inline void KKTResidual::setZero() {
   KKT_residual.setZero();
   la.setZero();
-  ID.setZero();
   lu_passive.setZero();
   lf_full_.setZero();
 }

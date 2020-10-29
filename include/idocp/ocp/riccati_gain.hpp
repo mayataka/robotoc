@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "Eigen/Core"
+#include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
@@ -41,6 +42,7 @@ public:
   Eigen::VectorXd k;
 
 private:
+  Eigen::LLT<Eigen::MatrixXd> llt_;
   int dimv_, dimu_;
 
 };

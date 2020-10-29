@@ -5,7 +5,6 @@
 
 #include <assert.h>
 
-#include "Eigen/LU"
 
 namespace idocp {
 
@@ -467,7 +466,7 @@ inline void KKTMatrix::invert(
   assert(KKT_matrix_inverse.rows() == dimKKT_);
   assert(KKT_matrix_inverse.cols() == dimKKT_);
   schur_complement_.invertWithZeroTopLeftCorner(
-      dimx_, dimx_+dimu_, F_, Q_.bottomRightCorner(dimx_+dimu_, dimx_+dimu_), 
+      F_, Q_.bottomRightCorner(dimx_+dimu_, dimx_+dimu_), 
       const_cast<Eigen::MatrixBase<MatrixType>&>(KKT_matrix_inverse));
 }
 

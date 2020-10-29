@@ -29,62 +29,58 @@ public:
 
   NonContactDynamics& operator=(NonContactDynamics&&) noexcept = default;
 
-  void linearizeRobotDynamics(Robot& robot, const ContactStatus& contact_status, 
-                              const double dtau, const SplitSolution& s, 
-                              KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
+  void linearizeNonContactDynamics(Robot& robot, 
+                                   const ContactStatus& contact_status, 
+                                   const double dtau, const SplitSolution& s, 
+                                   KKTMatrix& kkt_matrix, 
+                                   KKTResidual& kkt_residual);
 
-  void condenseRobotDynamics(Robot& robot, const ContactStatus& contact_status,
-                             const double dtau, const SplitSolution& s, 
-                             KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
-
+  void condenseNonContactDynamics(Robot& robot, 
+                                  const ContactStatus& contact_status, 
+                                  const double dtau, const SplitSolution& s, 
+                                  KKTMatrix& kkt_matrix, 
+                                  KKTResidual& kkt_residual);
+  
   void computeCondensedDirection(const double dtau, 
                                  const KKTMatrix& kkt_matrix, 
                                  const KKTResidual& kkt_residual, 
                                  SplitDirection& d);
 
-  void computeRobotDynamicsResidual(Robot& robot, 
-                                    const ContactStatus& contact_status,
-                                    const double dtau, const SplitSolution& s, 
-                                    KKTResidual& kkt_residual);
+  void computeNonContactDynamicsResidual(Robot& robot, 
+                                         const ContactStatus& contact_status,
+                                         const double dtau, 
+                                         const SplitSolution& s, 
+                                         KKTResidual& kkt_residual);
 
-  double l1NormRobotDynamicsResidual(const double dtau, 
-                                     const KKTResidual& kkt_residual) const;
+  double l1NormNonContactDynamicsResidual(const double dtau) const;
 
-  double squaredNormRobotDynamicsResidual(
-      const double dtau, const KKTResidual& kkt_residual) const;
+  double squaredNormNonContactDynamicsResidual(const double dtau) const;
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4>
-  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& da_dq,
-                            const Eigen::MatrixBase<MatrixType2>& da_dv,
+  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Kaq,
+                            const Eigen::MatrixBase<MatrixType2>& Kav,
                             const Eigen::MatrixBase<MatrixType3>& Kuq,
                             const Eigen::MatrixBase<MatrixType4>& Kuv) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd lu_condensed_, C_floating_base_;
-  Eigen::MatrixXd du_dq_, du_dv_, du_da_, Quu_du_dq_, Quu_du_dv_, Quu_du_da_;
-  bool has_floating_base_, has_active_contacts_;
-  int dimv_, dimf_;
-
-  static constexpr int kDimFloatingBase = 6;
+  Eigen::VectorXd ID_, lu_condensed_;
+  Eigen::MatrixXd dID_dq_, dID_dv_, dID_da_, Quu_, Quu_du_dq_, Quu_du_dv_, 
+                  Quu_du_da_;
+  int dimv_;
 
   void linearizeInverseDynamics(Robot& robot, 
                                 const ContactStatus& contact_status,
                                 const SplitSolution& s, 
                                 KKTResidual& kkt_residual);
-  
+
   static void setContactForcesZero(Robot& robot, 
                                    const ContactStatus& contact_status, 
                                    const SplitSolution& s);
 
   static void computeInverseDynamicsResidual(Robot& robot, 
-                                             const SplitSolution& s, 
-                                             KKTResidual& kkt_residual);
-
-  void computeFloatingBaseConstraintResidual(const Robot& robot, 
-                                             const double dtau,
                                              const SplitSolution& s, 
                                              KKTResidual& kkt_residual);
 

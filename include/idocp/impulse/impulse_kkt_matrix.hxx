@@ -292,7 +292,7 @@ inline void ImpulseKKTMatrix::invertConstrainedHessian(
     const Eigen::MatrixBase<MatrixType>& Hinv) {
   assert(dimc_ > 0);
   schur_complement_.invertWithZeroTopLeftCorner(
-      dimc_, dimQ_, C_.topLeftCorner(dimc_, dimQ_),
+      C_.topLeftCorner(dimc_, dimQ_),
       Q_.topLeftCorner(dimQ_, dimQ_), 
       const_cast<Eigen::MatrixBase<MatrixType>&>(Hinv));
 }

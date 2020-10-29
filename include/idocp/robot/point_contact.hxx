@@ -74,19 +74,18 @@ inline void PointContact::computeBaumgarteResidual(
   assert(time_step > 0);
   assert(baumgarte_residual.size() == 3);
   const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual).noalias()
-      = pinocchio::getFrameClassicalAcceleration(model, data, 
-                                                  contact_frame_id_, 
-                                                  pinocchio::LOCAL).linear();
+      = pinocchio::getFrameClassicalAcceleration(model, data, contact_frame_id_, 
+                                                 pinocchio::LOCAL).linear();
   const double baumgarte_weight_on_velocity 
-        = (2-restitution_coefficient_) / time_step;
+      = (2-restitution_coefficient_) / time_step;
   (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
       += baumgarte_weight_on_velocity 
-            * pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
-                                          pinocchio::LOCAL).linear();
+          * pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
+                                              pinocchio::LOCAL).linear();
   const double baumgarte_weight_on_position = 1 / (time_step*time_step);
   (const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual)).noalias()
       += baumgarte_weight_on_position
-            * (data.oMf[contact_frame_id_].translation()-contact_point_);
+          * (data.oMf[contact_frame_id_].translation()-contact_point_);
 }
 
 
@@ -166,9 +165,8 @@ inline void PointContact::computeBaumgarteDerivatives(
           * frame_a_partial_da_.template topRows<3>();
   const double baumgarte_weight_on_position = 1 / (time_step*time_step);
   (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
-      += baumgarte_weight_on_position 
-          * data.oMf[contact_frame_id_].rotation()
-          * J_frame_.template topRows<3>();
+      += baumgarte_weight_on_position * data.oMf[contact_frame_id_].rotation()
+                                      * J_frame_.template topRows<3>();
 }
 
 

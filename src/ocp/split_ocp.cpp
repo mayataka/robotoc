@@ -21,10 +21,13 @@ SplitOCP::SplitOCP(const Robot& robot,
     s_tmp_(robot),
     has_floating_base_(robot.has_floating_base()),
     use_kinematics_(false),
-    has_active_contacts_(false) {
+    fd_like_elimination_(false) {
   if (cost_->useKinematics() || constraints_->useKinematics() 
                              || robot.max_point_contacts() > 0) {
     use_kinematics_ = true;
+  }
+  if (robot.max_point_contacts() || robot.has_floating_base()) {
+    fd_like_elimination_ = true;
   }
 }
 
@@ -43,7 +46,7 @@ SplitOCP::SplitOCP()
     s_tmp_(),
     has_floating_base_(false),
     use_kinematics_(false),
-    has_active_contacts_(false) {
+    fd_like_elimination_(false) {
 }
 
 
@@ -95,10 +98,11 @@ void SplitOCP::backwardRiccatiRecursion(
     const double dtau, const RiccatiFactorization& riccati_next, 
     RiccatiFactorization& riccati) {
   assert(dtau > 0);
-  riccati_factorizer_.factorizeMatrices(riccati_next, dtau, kkt_matrix_, kkt_residual_);
+  riccati_factorizer_.factorizeMatrices(riccati_next, dtau, kkt_matrix_, 
+                                        kkt_residual_);
   riccati_gain_.computeFeedbackGainAndFeedforward(kkt_matrix_, kkt_residual_);
-  riccati_factorizer_.factorizeRecursion(riccati_next, kkt_matrix_, kkt_residual_, 
-                                         riccati_gain_, dtau, riccati);
+  riccati_factorizer_.factorizeRecursion(riccati_next, dtau, kkt_matrix_, 
+                                         kkt_residual_, riccati_gain_, riccati);
 }
 
 
@@ -108,14 +112,15 @@ void SplitOCP::forwardRiccatiRecursion(const double dtau, SplitDirection& d,
   d.du() = riccati_gain_.k;
   d.du().noalias() += riccati_gain_.K * d.dx();
   if (has_floating_base_) {
-    d_next.dq().noalias() = kkt_matrix_.Fqq() * d.dq() + dtau * d.dv() + kkt_residual_.Fq();
+    d_next.dq().noalias() = kkt_matrix_.Fqq() * d.dq() 
+                              + dtau * d.dv() + kkt_residual_.Fq();
   }
   else {
     d_next.dq().noalias() = d.dq() + dtau * d.dv() + kkt_residual_.Fq();
   }
   d_next.dv().noalias() = kkt_matrix_.Fvq() * d.dq() 
-                          + kkt_matrix_.Fvv() * d.dv() 
-                          + kkt_matrix_.Fvu() * d.du() + kkt_residual_.Fv();
+                            + kkt_matrix_.Fvv() * d.dv() 
+                            + kkt_matrix_.Fvu() * d.du() + kkt_residual_.Fv();
 }
 
 
@@ -203,7 +208,7 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   s.a.noalias() += step_size * d.da();
   s.u.noalias() += step_size * d.du();
   s.beta.noalias() += step_size * d.dbeta();
-  if (has_active_contacts_) {
+  if (s.hasActiveContacts()) {
     s.f_stack().noalias() += step_size * d.df();
     s.set_f();
     s.mu_stack().noalias() += step_size * d.dmu();
@@ -219,13 +224,18 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
 
 void SplitOCP::getStateFeedbackGain(Eigen::MatrixXd& Kq, 
                                     Eigen::MatrixXd& Kv) const {
-  // assert(Kq.cols() == dimv_);
-  // assert(Kq.rows() == dimv_);
-  // assert(Kv.cols() == dimv_);
-  // assert(Kv.rows() == dimv_);
-  // robot_dynamics_.getStateFeedbackGain(riccati_gain_.Kaq(), riccati_gain_.Kav(), 
-  //                                      riccati_gain_.Kfq(), riccati_gain_.Kfv(), 
-  //                                      Kq, Kv);
+  assert(Kq.cols() == riccati_gain_.Kq().cols());
+  assert(Kq.rows() == riccati_gain_.Kq().rows());
+  assert(Kv.cols() == riccati_gain_.Kv().cols());
+  assert(Kv.rows() == riccati_gain_.Kv().rows());
+  if (fd_like_elimination_) {
+    Kq = riccati_gain_.Kq();
+    Kv = riccati_gain_.Kv();
+  }
+  else {
+    // robot_dynamics_.getStateFeedbackGain(riccati_gain_.Kq(), riccati_gain_.Kv(), 
+    //                                      Kq, Kv);
+  }
 }
 
 
@@ -259,6 +269,9 @@ double SplitOCP::squaredNormKKTResidual(const double dtau) const {
   error += kkt_residual_.lv().squaredNorm();
   error += kkt_residual_.la.squaredNorm();
   error += kkt_residual_.lf().squaredNorm();
+  if (has_floating_base_) {
+    error += kkt_residual_.lu_passive.squaredNorm();
+  }
   error += kkt_residual_.lu().squaredNorm();
   error += stateequation::SquaredNormStateEuqationResidual(kkt_residual_);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dtau);

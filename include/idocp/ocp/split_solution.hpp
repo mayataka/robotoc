@@ -195,6 +195,9 @@ public:
   ///
   bool isContactActive(const int contact_index) const;
 
+
+  bool hasActiveContacts() const;
+
   ///
   /// @brief Generates split solution filled randomly.
   /// @return Split solution filled randomly.
@@ -222,6 +225,9 @@ private:
 
   /// @brief Dimension of passive joints. 
   bool has_floating_base_;
+
+  /// @brief Dimension of passive joints. 
+  bool has_active_contacts_;
 
   /// @brief Dimension of passive joints. 
   int dim_passive_;
