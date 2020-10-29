@@ -54,6 +54,10 @@ TEST_F(KKTMatrixTest, fixed_base) {
   EXPECT_EQ(matrix.Fvq().cols(), dimv);
   EXPECT_EQ(matrix.Fvv().rows(), dimv);
   EXPECT_EQ(matrix.Fvv().cols(), dimv);
+  EXPECT_EQ(matrix.Fxu().rows(), 2*dimv);
+  EXPECT_EQ(matrix.Fxu().cols(), dimu);
+  EXPECT_EQ(matrix.Fxx().rows(), 2*dimv);
+  EXPECT_EQ(matrix.Fxx().cols(), 2*dimv);
   EXPECT_EQ(matrix.Quu_full().rows(), dimv);
   EXPECT_EQ(matrix.Quu_full().cols(), dimv);
   EXPECT_EQ(matrix.Quu_passive_topLeft().rows(), 0);
@@ -158,6 +162,12 @@ TEST_F(KKTMatrixTest, fixed_base) {
   EXPECT_TRUE(matrix.Fvu().isApprox(Fvu));
   EXPECT_TRUE(matrix.Fvq().isApprox(Fvq));
   EXPECT_TRUE(matrix.Fvv().isApprox(Fvv));
+  EXPECT_TRUE(matrix.Fxu().topRows(dimv).isApprox(Fqu));
+  EXPECT_TRUE(matrix.Fxu().bottomRows(dimv).isApprox(Fvu));
+  EXPECT_TRUE(matrix.Fxx().topLeftCorner(dimv, dimv).isApprox(Fqq));
+  EXPECT_TRUE(matrix.Fxx().topRightCorner(dimv, dimv).isApprox(Fqv));
+  EXPECT_TRUE(matrix.Fxx().bottomLeftCorner(dimv, dimv).isApprox(Fvq));
+  EXPECT_TRUE(matrix.Fxx().bottomRightCorner(dimv, dimv).isApprox(Fvv));
   EXPECT_TRUE(matrix.Quu_full().isApprox(Quu_full));
   EXPECT_TRUE(matrix.Quu().isApprox(Quu_full));
   EXPECT_TRUE(matrix.Quu_passive_topLeft().isZero());
@@ -264,6 +274,10 @@ TEST_F(KKTMatrixTest, floating_base) {
   EXPECT_EQ(matrix.Fvq().cols(), dimv);
   EXPECT_EQ(matrix.Fvv().rows(), dimv);
   EXPECT_EQ(matrix.Fvv().cols(), dimv);
+  EXPECT_EQ(matrix.Fxu().rows(), 2*dimv);
+  EXPECT_EQ(matrix.Fxu().cols(), dimu);
+  EXPECT_EQ(matrix.Fxx().rows(), 2*dimv);
+  EXPECT_EQ(matrix.Fxx().cols(), 2*dimv);
   EXPECT_EQ(matrix.Quu_full().rows(), dimv);
   EXPECT_EQ(matrix.Quu_full().cols(), dimv);
   EXPECT_EQ(matrix.Quu_passive_topLeft().rows(), 6);
@@ -368,6 +382,12 @@ TEST_F(KKTMatrixTest, floating_base) {
   EXPECT_TRUE(matrix.Fvu().isApprox(Fvu));
   EXPECT_TRUE(matrix.Fvq().isApprox(Fvq));
   EXPECT_TRUE(matrix.Fvv().isApprox(Fvv));
+  EXPECT_TRUE(matrix.Fxu().topRows(dimv).isApprox(Fqu));
+  EXPECT_TRUE(matrix.Fxu().bottomRows(dimv).isApprox(Fvu));
+  EXPECT_TRUE(matrix.Fxx().topLeftCorner(dimv, dimv).isApprox(Fqq));
+  EXPECT_TRUE(matrix.Fxx().topRightCorner(dimv, dimv).isApprox(Fqv));
+  EXPECT_TRUE(matrix.Fxx().bottomLeftCorner(dimv, dimv).isApprox(Fvq));
+  EXPECT_TRUE(matrix.Fxx().bottomRightCorner(dimv, dimv).isApprox(Fvv));
   EXPECT_TRUE(matrix.Quu_full().isApprox(Quu_full));
   EXPECT_TRUE(matrix.Quu().isApprox(Quu_full.bottomRightCorner(dimu, dimu)));
   EXPECT_TRUE(matrix.Quu_passive_topLeft().isApprox(Quu_full.topLeftCorner(6, 6)));

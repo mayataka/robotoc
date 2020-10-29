@@ -116,6 +116,26 @@ inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Fvv() const {
 }
 
 
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Fxu() {
+  return F_.block(0, 0, dimx_, dimu_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Fxu() const {
+  return F_.block(0, 0, dimx_, dimu_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Fxx() {
+  return F_.block(0, dimu_, dimx_, dimx_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Fxx() const {
+  return F_.block(0, dimu_, dimx_, dimx_);
+}
+
+
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Quu_full() {
   return Q_.topLeftCorner(dimv_, dimv_);
 }

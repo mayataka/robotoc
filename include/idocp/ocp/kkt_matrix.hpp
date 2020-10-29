@@ -148,6 +148,34 @@ public:
   /// u. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
+  Eigen::Block<Eigen::MatrixXd> Fxu();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Fxu() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Fxx();
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Fxx() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
   Eigen::Block<Eigen::MatrixXd> Quu_full();
 
   ///

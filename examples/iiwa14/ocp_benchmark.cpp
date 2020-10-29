@@ -73,7 +73,7 @@ void BenchmarkWithContacts() {
   }
   contact_force_cost->set_f_weight(f_weight);
   cost->push_back(joint_cost);
-  cost->push_back(contact_force_cost);
+  // cost->push_back(contact_force_cost);
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
   const double T = 1;
