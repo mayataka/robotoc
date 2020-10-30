@@ -98,12 +98,17 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
     split_ocps_[i].forwardRiccatiRecursion(dtau_, d_[i], d_[i+1]);
   }
   #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<N_; ++i) {
-    const int robot_id = omp_get_thread_num();
-    split_ocps_[i].computeCondensedDirection(robots_[robot_id], dtau_, 
-                                             s_[i], d_[i+1], d_[i]);
-    primal_step_sizes_.coeffRef(i) = split_ocps_[i].maxPrimalStepSize();
-    dual_step_sizes_.coeffRef(i) = split_ocps_[i].maxDualStepSize();
+  for (int i=0; i<=N_; ++i) {
+    if (i < N_) {
+      const int robot_id = omp_get_thread_num();
+      split_ocps_[i].computeCondensedPrimalDirection(robots_[robot_id], dtau_, 
+                                                    riccati_[i], s_[i], d_[i]);
+      primal_step_sizes_.coeffRef(i) = split_ocps_[i].maxPrimalStepSize();
+      dual_step_sizes_.coeffRef(i) = split_ocps_[i].maxDualStepSize();
+    }
+    else {
+      terminal_ocp_.computeCondensedPrimalDirection(riccati_[N_], d_[N_]);
+    }
   }
   double primal_step_size = primal_step_sizes_.minCoeff();
   const double dual_step_size = dual_step_sizes_.minCoeff();
@@ -162,14 +167,15 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
       const int robot_id = omp_get_thread_num();
+      split_ocps_[i].computeCondensedDualDirection(robots_[robot_id], dtau_, 
+                                                   d_[i+1], d_[i]);
       split_ocps_[i].updatePrimal(robots_[robot_id], primal_step_size, dtau_, 
-                                  riccati_[i], d_[i], s_[i]);
+                                  d_[i], s_[i]);
       split_ocps_[i].updateDual(dual_step_size);
     }
     else {
       const int robot_id = omp_get_thread_num();
-      terminal_ocp_.updatePrimal(robots_[robot_id], primal_step_size, 
-                                 riccati_[N_], d_[N_], s_[N_]);
+      terminal_ocp_.updatePrimal(robots_[robot_id], primal_step_size, d_[N_], s_[N_]);
       terminal_ocp_.updateDual(dual_step_size);
     }
   }

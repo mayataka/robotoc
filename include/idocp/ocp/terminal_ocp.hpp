@@ -10,7 +10,7 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -89,17 +89,18 @@ public:
   /// @param[out] riccati Riccati factorization of the terminal stage.
   ///
   void linearizeOCP(Robot& robot, const double t, const SplitSolution& s, 
-                    RiccatiFactorization& riccati);
+                    RiccatiSolution& riccati);
 
   ///
   /// @brief Computes the Newton direction of the condensed variables of this 
   /// stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] s Split solution of this stage.
   /// @param[in] d Split direction of this stage.
   /// 
-  void computeCondensedDirection(Robot& robot, const double dtau, 
-                                 SplitDirection& d);
+  void computeCondensedPrimalDirection(const RiccatiSolution& riccati,
+                                       SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -152,7 +153,6 @@ public:
   /// @param[in, out] s Split solution of this stage.
   ///
   void updatePrimal(Robot& robot, const double step_size, 
-                    const RiccatiFactorization& riccati,
                     const SplitDirection& d, SplitSolution& s) const;
 
   ///

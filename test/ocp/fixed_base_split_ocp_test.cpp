@@ -21,9 +21,9 @@
 #include "idocp/constraints/joint_velocity_lower_limit.hpp"
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/ocp/riccati_gain.hpp"
-#include "idocp/ocp/riccati_matrix_factorizer.hpp"
+#include "idocp/ocp/riccati_factorizer.hpp"
 
 
 namespace idocp {
@@ -406,7 +406,7 @@ TEST_F(FixedBaseSplitOCPTest, costAndConstraintViolationWithStepSize) {
 
 // TEST_F(FixedBaseSplitOCPTest, riccatiRecursion) {
 //   const int dimv = robot.dimv();
-//   RiccatiFactorization riccati_next(robot);
+//   RiccatiSolution riccati_next(robot);
 //   const Eigen::MatrixXd seed_mat = Eigen::MatrixXd::Random(2*dimv, 2*dimv);
 //   const Eigen::MatrixXd P = seed_mat * seed_mat.transpose() + Eigen::MatrixXd::Identity(2*dimv, 2*dimv);
 //   riccati_next.Pqq = P.topLeftCorner(dimv, dimv);
@@ -424,7 +424,7 @@ TEST_F(FixedBaseSplitOCPTest, costAndConstraintViolationWithStepSize) {
 //   ASSERT_TRUE(ocp.isFeasible(robot, s));
 //   ocp.initConstraints(robot, 5, dtau, s);
 //   ocp.linearizeOCP(robot, contact_status, t, dtau, q_prev, s, s_next);
-//   RiccatiFactorization riccati(robot);
+//   RiccatiSolution riccati(robot);
 //   ocp.backwardRiccatiRecursion(dtau, riccati_next, riccati);
 //   ocp.forwardRiccatiRecursion(dtau, d, d_next);
 //   const auto pair = ocp.costAndConstraintViolation(robot, t, dtau, s); 
@@ -437,7 +437,7 @@ TEST_F(FixedBaseSplitOCPTest, costAndConstraintViolationWithStepSize) {
 //   contact_dynamics.condenseContactDynamics(robot, contact_status, dtau, s, kkt_matrix, kkt_residual);
 //   factorizer.factorizeMatrices(riccati_next, dtau, kkt_matrix, kkt_residual);
 //   gain.computeFeedbackGainAndFeedforward(kkt_matrix, kkt_residual);
-//   RiccatiFactorization riccati_ref(robot);
+//   RiccatiSolution riccati_ref(robot);
 //   factorizer.factorizeRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, gain, riccati_ref);
 //   EXPECT_TRUE(riccati.Pqq.isApprox(riccati_ref.Pqq));
 //   EXPECT_TRUE(riccati.Pqv.isApprox(riccati_ref.Pqv));

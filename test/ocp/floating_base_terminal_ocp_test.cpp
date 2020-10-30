@@ -20,6 +20,7 @@
 #include "idocp/constraints/joint_velocity_lower_limit.hpp"
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 
+#include "idocp/ocp/riccati_solution.hpp"
 
 namespace idocp {
 
@@ -96,7 +97,7 @@ protected:
   SplitDirection d;
   KKTMatrix kkt_matrix;
   KKTResidual kkt_residual;
-  RiccatiFactorization riccati;
+  RiccatiSolution riccati;
 };
 
 

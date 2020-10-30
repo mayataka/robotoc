@@ -21,9 +21,9 @@
 #include "idocp/constraints/joint_velocity_lower_limit.hpp"
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/ocp/riccati_gain.hpp"
-#include "idocp/ocp/riccati_matrix_factorizer.hpp"
+#include "idocp/ocp/riccati_factorizer.hpp"
 
 
 namespace idocp {

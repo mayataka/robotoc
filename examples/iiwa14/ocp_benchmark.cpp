@@ -76,7 +76,7 @@ void BenchmarkWithContacts() {
   cost->push_back(contact_force_cost);
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
-  const double T = 0.4;
+  const double T = 1;
   const int N = 20;
   const int num_proc = 4;
   const double t = 0;
@@ -90,7 +90,7 @@ void BenchmarkWithContacts() {
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   ocp_benchmarker.getSolverHandle()->activateContacts({0}, 0, N);
   ocp_benchmarker.testConvergence(t, q, v, 20, false);
-  ocp_benchmarker.testCPUTime(t, q, v);
+  // ocp_benchmarker.testCPUTime(t, q, v);
   // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa14 with contacts",
   //                                                           robot, cost, constraints, T, N, num_proc);
   // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
@@ -104,7 +104,7 @@ void BenchmarkWithContacts() {
 
 
 int main() {
- ocpbenchmark::iiwa14::BenchmarkWithoutContacts();
+  // ocpbenchmark::iiwa14::BenchmarkWithoutContacts();
   ocpbenchmark::iiwa14::BenchmarkWithContacts();
   return 0;
 }

@@ -52,7 +52,7 @@ void BenchmarkWithContacts() {
   auto constraints = constraints_factory.create();
   const double T = 1;
   const int N = 20;
-  const int num_proc = 1;
+  const int num_proc = 4;
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   q << 0, 0, 0.48, 0, 0, 0, 1, 

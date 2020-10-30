@@ -54,7 +54,7 @@ void TerminalOCP::initConstraints(Robot& robot, const int time_step,
 
 void TerminalOCP::linearizeOCP(Robot& robot, const double t, 
                                const SplitSolution& s, 
-                               RiccatiFactorization& riccati) {
+                               RiccatiSolution& riccati) {
   kkt_residual_.lq().setZero();
   kkt_residual_.lv().setZero();
   if (use_kinematics_) {
@@ -74,9 +74,10 @@ void TerminalOCP::linearizeOCP(Robot& robot, const double t,
 }
 
 
-void TerminalOCP::computeCondensedDirection(Robot& robot, const double dtau, 
-                                            SplitDirection& d) {
-  // TODO: add inequality constraints at the terminal OCP.
+void TerminalOCP::computeCondensedPrimalDirection(
+    const RiccatiSolution& riccati, SplitDirection& d) {
+  d.dlmd().noalias() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
+  d.dgmm().noalias() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
 }
 
  
@@ -117,15 +118,12 @@ void TerminalOCP::updateDual(const double step_size) {
 
 
 void TerminalOCP::updatePrimal(Robot& robot, const double step_size, 
-                               const RiccatiFactorization& riccati,
                                const SplitDirection& d,
                                SplitSolution& s) const {
   assert(step_size > 0);
   assert(step_size <= 1);
-  s.lmd.noalias() 
-      += step_size * (riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq);
-  s.gmm.noalias() 
-      += step_size * (riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv);
+  s.lmd.noalias() += step_size * d.dlmd();
+  s.gmm.noalias() += step_size * d.dgmm();
   robot.integrateConfiguration(d.dq(), step_size, s.q);
   s.v.noalias() += step_size * d.dv();
 }
