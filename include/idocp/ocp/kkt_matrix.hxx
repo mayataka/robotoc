@@ -499,6 +499,9 @@ inline bool KKTMatrix::isApprox(const KKTMatrix& other) const {
   if (!Quu_full().isApprox(other.Quu_full())) {
     return false;
   }
+  if (!Qux_full().isApprox(other.Qux_full())) {
+    return false;
+  }
   if (!Qxu_full().isApprox(other.Qxu_full())) {
     return false;
   }

@@ -155,8 +155,10 @@ inline bool KKTResidual::isApprox(const KKTResidual& other) const {
   if (!la.isApprox(other.la)) {
     return false;
   }
-  if (!lf().isApprox(other.lf())) {
-    return false;
+  if (dimf_ > 0) {
+    if (!lf().isApprox(other.lf())) {
+      return false;
+    }
   }
   if (has_floating_base_) {
     if (!lu_passive.isApprox(other.lu_passive)) {

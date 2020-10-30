@@ -24,8 +24,7 @@ protected:
   }
 
   static void TestWithoutContacts(const Robot& robot);
-  static void TestWithContacts(const Robot& robot, 
-                               const ContactStatus& contact_status);
+  static void TestWithContacts(const Robot& robot, const ContactStatus& contact_status);
   static void TestIsApprox(const Robot& robot, const ContactStatus& contact_status);
   static void TestIntegrate(const Robot& robot, const ContactStatus& contact_status);
 
@@ -140,18 +139,6 @@ void SplitSolutionTest::TestWithoutContacts(const Robot& robot) {
     EXPECT_TRUE(s_random.u_passive.isZero());
     EXPECT_TRUE(s_random.nu_passive.isZero());
   }
-}
-
-
-TEST_F(SplitSolutionTest, withoutContactsFixedBase) {
-  Robot robot(fixed_base_urdf);
-  TestWithoutContacts(robot);
-}
-
-
-TEST_F(SplitSolutionTest, withoutContactsFloatingBase) {
-  Robot robot(floating_base_urdf);
-  TestWithoutContacts(robot);
 }
 
 
@@ -358,32 +345,6 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
 }
 
 
-TEST_F(SplitSolutionTest, withContactsFixed) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
-  ContactStatus contact_status(contact_frames.size());
-  contact_status.setContactStatus({true});
-  TestWithContacts(robot, contact_status);
-}
-
-
-TEST_F(SplitSolutionTest, withContactsFloating) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
-  std::vector<bool> is_contact_active;
-  std::random_device rnd;
-  for (const auto frame : contact_frames) {
-    is_contact_active.push_back(rnd()%2==0);
-  }
-  ContactStatus contact_status(contact_frames.size());
-  contact_status.setContactStatus(is_contact_active);
-  if (!contact_status.hasActiveContacts()) {
-    contact_status.activateContact(0);
-  }
-  TestWithContacts(robot, contact_status);
-}
-
-
 void SplitSolutionTest::TestIsApprox(const Robot& robot, 
                                      const ContactStatus& contact_status) {
   SplitSolution s(robot);
@@ -468,35 +429,6 @@ void SplitSolutionTest::TestIsApprox(const Robot& robot,
 }
 
 
-TEST_F(SplitSolutionTest, isApproxFixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
-  std::vector<bool> is_contact_active = {false};
-  ContactStatus contact_status(is_contact_active.size());
-  contact_status.setContactStatus(is_contact_active);
-  TestIsApprox(robot, contact_status);
-  contact_status.activateContact(0);
-  TestIsApprox(robot, contact_status);
-}
-
-
-TEST_F(SplitSolutionTest, isApproxFloatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
-  std::vector<bool> is_contact_active = {false, false, false, false};
-  ContactStatus contact_status(is_contact_active.size());
-  contact_status.setContactStatus(is_contact_active);
-  TestIsApprox(robot, contact_status);
-  std::random_device rnd;
-  for (int i=0; i<is_contact_active.size(); ++i) {
-    if (rnd()%2==0) {
-      contact_status.activateContact(i);
-    }
-  }
-  TestIsApprox(robot, contact_status);
-}
-
-
 void SplitSolutionTest::TestIntegrate(const Robot& robot, 
                                       const ContactStatus& contact_status) {
   SplitSolution s = SplitSolution::Random(robot, contact_status);
@@ -525,24 +457,32 @@ void SplitSolutionTest::TestIntegrate(const Robot& robot,
 }
 
 
-TEST_F(SplitSolutionTest, integrateFixedBase) {
+TEST_F(SplitSolutionTest, fixedBase) {
+  Robot robot_without_contacts(fixed_base_urdf);
+  TestWithoutContacts(robot_without_contacts);
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
   std::vector<bool> is_contact_active = {false};
   ContactStatus contact_status(is_contact_active.size());
   contact_status.setContactStatus(is_contact_active);
+  TestIsApprox(robot, contact_status);
   TestIntegrate(robot, contact_status);
   contact_status.activateContact(0);
+  TestWithContacts(robot, contact_status);
+  TestIsApprox(robot, contact_status);
   TestIntegrate(robot, contact_status);
 }
 
 
-TEST_F(SplitSolutionTest, integrateFloatingBase) {
+TEST_F(SplitSolutionTest, floatingBase) {
+  Robot robot_without_contacts(floating_base_urdf);
+  TestWithoutContacts(robot_without_contacts);
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
   std::vector<bool> is_contact_active = {false, false, false, false};
   ContactStatus contact_status(is_contact_active.size());
   contact_status.setContactStatus(is_contact_active);
+  TestIsApprox(robot, contact_status);
   TestIntegrate(robot, contact_status);
   std::random_device rnd;
   for (int i=0; i<is_contact_active.size(); ++i) {
@@ -550,9 +490,10 @@ TEST_F(SplitSolutionTest, integrateFloatingBase) {
       contact_status.activateContact(i);
     }
   }
+  TestWithContacts(robot, contact_status);
+  TestIsApprox(robot, contact_status);
   TestIntegrate(robot, contact_status);
 }
-
 
 } // namespace idocp
 
