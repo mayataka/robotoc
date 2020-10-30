@@ -1,5 +1,5 @@
-#ifndef IDOCP_RICCATI_FACTORIZATION_HPP_
-#define IDOCP_RICCATI_FACTORIZATION_HPP_
+#ifndef IDOCP_RICCATI_SOLUTION_HPP_
+#define IDOCP_RICCATI_SOLUTION_HPP_
 
 #include "Eigen/Core"
 
@@ -9,16 +9,16 @@
 namespace idocp {
 
 ///
-/// @class RiccatiFactorization
-/// @brief Riccati factorization matrix and vector of a time stage.
+/// @class RiccatiSolution
+/// @brief Riccati solution matrix and vector of a time stage.
 ///
-class RiccatiFactorization {
+class RiccatiSolution {
 public:
   ///
   /// @brief Allocate Riccati factorization matrix and vector.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
-  RiccatiFactorization(const Robot& robot) 
+  RiccatiSolution(const Robot& robot) 
     : Pqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Pqv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Pvq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
@@ -30,7 +30,7 @@ public:
   ///
   /// @brief Default constructor. 
   ///
-  RiccatiFactorization() 
+  RiccatiSolution() 
     : Pqq(),
       Pqv(),
       Pvq(),
@@ -42,28 +42,28 @@ public:
   ///
   /// @brief Destructor. 
   ///
-  ~RiccatiFactorization() {
+  ~RiccatiSolution() {
   }
 
   ///
   /// @brief Default copy constructor. 
   ///
-  RiccatiFactorization(const RiccatiFactorization&) = default;
+  RiccatiSolution(const RiccatiSolution&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  RiccatiFactorization& operator=(const RiccatiFactorization&) = default;
+  RiccatiSolution& operator=(const RiccatiSolution&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  RiccatiFactorization(RiccatiFactorization&&) noexcept = default;
+  RiccatiSolution(RiccatiSolution&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  RiccatiFactorization& operator=(RiccatiFactorization&&) noexcept = default;
+  RiccatiSolution& operator=(RiccatiSolution&&) noexcept = default;
 
   ///
   /// @brief Top left corner of the Riccati factorization matrix. Size is 
@@ -108,4 +108,4 @@ public:
 } // namespace idocp 
 
 
-#endif // IDOCP_RICCATI_FACTORIZATION_HPP_ 
+#endif // IDOCP_RICCATI_SOLUTION_HPP_ 

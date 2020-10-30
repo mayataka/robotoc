@@ -819,7 +819,7 @@ TEST_F(ContactDynamicsTest, expansionFixedBaseWithoutContacts) {
   SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitDirection d_ref = d;
   const Eigen::VectorXd dlmdgmm_next = Eigen::VectorXd::Random(2*robot.dimv());
-  ContactDynamics::expansion(robot, dtau, data, kkt_matrix, kkt_residual, dlmdgmm_next.tail(robot.dimv()), d);
+  ContactDynamics::expansionPrimal(robot, data, d);
   Eigen::MatrixXd IO_mat = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), robot.dimv());
   Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*robot.dimv(), robot.dimv()+contact_status.dimf());
   IO_mat.topRows(robot.dimv()).setIdentity();
@@ -827,12 +827,13 @@ TEST_F(ContactDynamicsTest, expansionFixedBaseWithoutContacts) {
   d_ref.daf() = - data_ref.MJtJinv_dIDCdqv() * d_ref.dx() + data_ref.MJtJinv() * IO_mat * d_ref.du()
                   - data_ref.MJtJinv_IDC();
   d_ref.df().array() *= -1;
+  EXPECT_TRUE(d_ref.da().isApprox(d.da()));
+  EXPECT_TRUE(d_ref.df().isApprox(d.df()));
+  ContactDynamics::expansionDual(robot, dtau, data, kkt_matrix, kkt_residual, dlmdgmm_next.tail(robot.dimv()), d);
   d_ref.dbetamu() = - data_ref.MJtJinv() * (data_ref.Qafqv() * d_ref.dx()
                                             + data_ref.Qafu() * d_ref.du()
                                             + OOIO_mat.transpose() * dlmdgmm_next
                                             + data_ref.laf()) / dtau;
-  EXPECT_TRUE(d_ref.da().isApprox(d.da()));
-  EXPECT_TRUE(d_ref.df().isApprox(d.df()));
   EXPECT_TRUE(d_ref.dbeta().isApprox(d.dbeta()));
   EXPECT_TRUE(d_ref.dmu().isApprox(d.dmu()));
 }
@@ -881,7 +882,7 @@ TEST_F(ContactDynamicsTest, expansionFixedBaseWithContacts) {
   SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitDirection d_ref = d;
   const Eigen::VectorXd dlmdgmm_next = Eigen::VectorXd::Random(2*robot.dimv());
-  ContactDynamics::expansion(robot, dtau, data, kkt_matrix, kkt_residual, dlmdgmm_next.tail(robot.dimv()), d);
+  ContactDynamics::expansionPrimal(robot, data, d);
   Eigen::MatrixXd IO_mat = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), robot.dimv());
   Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*robot.dimv(), robot.dimv()+contact_status.dimf());
   IO_mat.topRows(robot.dimv()).setIdentity();
@@ -889,12 +890,13 @@ TEST_F(ContactDynamicsTest, expansionFixedBaseWithContacts) {
   d_ref.daf() = - data_ref.MJtJinv_dIDCdqv() * d_ref.dx() + data_ref.MJtJinv() * IO_mat * d_ref.du()
                   - data_ref.MJtJinv_IDC();
   d_ref.df().array() *= -1;
+  EXPECT_TRUE(d_ref.da().isApprox(d.da()));
+  EXPECT_TRUE(d_ref.df().isApprox(d.df()));
+  ContactDynamics::expansionDual(robot, dtau, data, kkt_matrix, kkt_residual, dlmdgmm_next.tail(robot.dimv()), d);
   d_ref.dbetamu() = - data_ref.MJtJinv() * (data_ref.Qafqv() * d_ref.dx()
                                             + data_ref.Qafu() * d_ref.du()
                                             + OOIO_mat.transpose() * dlmdgmm_next
                                             + data_ref.laf()) / dtau;
-  EXPECT_TRUE(d_ref.da().isApprox(d.da()));
-  EXPECT_TRUE(d_ref.df().isApprox(d.df()));
   EXPECT_TRUE(d_ref.dbeta().isApprox(d.dbeta()));
   EXPECT_TRUE(d_ref.dmu().isApprox(d.dmu()));
 }
@@ -943,7 +945,7 @@ TEST_F(ContactDynamicsTest, expansionFloatingBaseWithoutContacts) {
   SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitDirection d_ref = d;
   const Eigen::VectorXd dlmdgmm_next = Eigen::VectorXd::Random(2*robot.dimv());
-  ContactDynamics::expansion(robot, dtau, data, kkt_matrix, kkt_residual, dlmdgmm_next.tail(robot.dimv()), d);
+  ContactDynamics::expansionPrimal(robot, data, d);
   Eigen::MatrixXd IO_mat = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), robot.dimv());
   Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*robot.dimv(), robot.dimv()+contact_status.dimf());
   IO_mat.topRows(robot.dimv()).setIdentity();
@@ -952,22 +954,23 @@ TEST_F(ContactDynamicsTest, expansionFloatingBaseWithoutContacts) {
   Eigen::VectorXd du_full = Eigen::VectorXd::Zero(robot.dimv());
   du_full.head(robot.dim_passive()) = d_ref.du_passive;
   du_full.tail(robot.dimu()) = d_ref.du();
+  d_ref.daf() = - data_ref.MJtJinv_dIDCdqv() * d_ref.dx() + data_ref.MJtJinv() * IO_mat * du_full
+                  - data_ref.MJtJinv_IDC();
+  d_ref.df().array() *= -1;
+  EXPECT_TRUE(d_ref.du_passive.isApprox(d.du_passive));
+  EXPECT_TRUE(d_ref.da().isApprox(d.da()));
+  EXPECT_TRUE(d_ref.df().isApprox(d.df()));
+  ContactDynamics::expansionDual(robot, dtau, data, kkt_matrix, kkt_residual, dlmdgmm_next.tail(robot.dimv()), d);
   d_ref.dnu_passive = - kkt_residual_ref.lu_passive 
                       - kkt_matrix_ref.Quu_full().topRows(robot.dim_passive()) * du_full
                       - (kkt_matrix_ref.Qxu_full().transpose()).topRows(robot.dim_passive()) * d_ref.dx()
                       - (IO_mat.transpose()).topRows(robot.dim_passive()) * data_ref.MJtJinv() * OOIO_mat.transpose() * dlmdgmm_next;
   d_ref.dnu_passive /= dtau;
-  d_ref.daf() = - data_ref.MJtJinv_dIDCdqv() * d_ref.dx() + data_ref.MJtJinv() * IO_mat * du_full
-                  - data_ref.MJtJinv_IDC();
-  d_ref.df().array() *= -1;
   d_ref.dbetamu() = - data_ref.MJtJinv() * (data_ref.Qafqv() * d_ref.dx()
                                             + data_ref.Qafu_full() * du_full
                                             + OOIO_mat.transpose() * dlmdgmm_next
                                             + data_ref.laf()) / dtau;
-  EXPECT_TRUE(d_ref.du_passive.isApprox(d.du_passive));
   EXPECT_TRUE(d_ref.dnu_passive.isApprox(d.dnu_passive));
-  EXPECT_TRUE(d_ref.da().isApprox(d.da()));
-  EXPECT_TRUE(d_ref.df().isApprox(d.df()));
   EXPECT_TRUE(d_ref.dbeta().isApprox(d.dbeta()));
   EXPECT_TRUE(d_ref.dmu().isApprox(d.dmu()));
 }
@@ -1019,7 +1022,7 @@ TEST_F(ContactDynamicsTest, expansionFloatingBaseWithContacts) {
   SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitDirection d_ref = d;
   const Eigen::VectorXd dlmdgmm_next = Eigen::VectorXd::Random(2*robot.dimv());
-  ContactDynamics::expansion(robot, dtau, data, kkt_matrix, kkt_residual, dlmdgmm_next.tail(robot.dimv()), d);
+  ContactDynamics::expansionPrimal(robot, data, d);
   Eigen::MatrixXd IO_mat = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), robot.dimv());
   Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*robot.dimv(), robot.dimv()+contact_status.dimf());
   IO_mat.topRows(robot.dimv()).setIdentity();
@@ -1028,22 +1031,23 @@ TEST_F(ContactDynamicsTest, expansionFloatingBaseWithContacts) {
   Eigen::VectorXd du_full = Eigen::VectorXd::Zero(robot.dimv());
   du_full.head(robot.dim_passive()) = d_ref.du_passive;
   du_full.tail(robot.dimu()) = d_ref.du();
+  d_ref.daf() = - data_ref.MJtJinv_dIDCdqv() * d_ref.dx() + data_ref.MJtJinv() * IO_mat * du_full
+                  - data_ref.MJtJinv_IDC();
+  d_ref.df().array() *= -1;
+  EXPECT_TRUE(d_ref.du_passive.isApprox(d.du_passive));
+  EXPECT_TRUE(d_ref.da().isApprox(d.da()));
+  EXPECT_TRUE(d_ref.df().isApprox(d.df()));
+  ContactDynamics::expansionDual(robot, dtau, data, kkt_matrix, kkt_residual, dlmdgmm_next.tail(robot.dimv()), d);
   d_ref.dnu_passive = - kkt_residual_ref.lu_passive 
                       - kkt_matrix_ref.Quu_full().topRows(robot.dim_passive()) * du_full
                       - (kkt_matrix_ref.Qxu_full().transpose()).topRows(robot.dim_passive()) * d_ref.dx()
                       - (IO_mat.transpose()).topRows(robot.dim_passive()) * data_ref.MJtJinv() * OOIO_mat.transpose() * dlmdgmm_next;
   d_ref.dnu_passive /= dtau;
-  d_ref.daf() = - data_ref.MJtJinv_dIDCdqv() * d_ref.dx() + data_ref.MJtJinv() * IO_mat * du_full
-                  - data_ref.MJtJinv_IDC();
-  d_ref.df().array() *= -1;
   d_ref.dbetamu() = - data_ref.MJtJinv() * (data_ref.Qafqv() * d_ref.dx()
                                             + data_ref.Qafu_full() * du_full
                                             + OOIO_mat.transpose() * dlmdgmm_next
                                             + data_ref.laf()) / dtau;
-  EXPECT_TRUE(d_ref.du_passive.isApprox(d.du_passive));
   EXPECT_TRUE(d_ref.dnu_passive.isApprox(d.dnu_passive));
-  EXPECT_TRUE(d_ref.da().isApprox(d.da()));
-  EXPECT_TRUE(d_ref.df().isApprox(d.df()));
   EXPECT_TRUE(d_ref.dbeta().isApprox(d.dbeta()));
   EXPECT_TRUE(d_ref.dmu().isApprox(d.dmu()));
 }
@@ -1087,19 +1091,25 @@ TEST_F(ContactDynamicsTest, condenseAndExpansionFixedBaseWithoutContacts) {
   EXPECT_TRUE(kkt_matrix.Quu_full().isApprox(kkt_matrix_ref.Quu_full()));
   EXPECT_TRUE(kkt_matrix.Fxx().isApprox(kkt_matrix_ref.Fxx()));
   EXPECT_TRUE(kkt_matrix.Fxu().isApprox(kkt_matrix_ref.Fxu()));
+  EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.lx().isApprox(kkt_residual_ref.lx()));
   EXPECT_TRUE(kkt_residual.lu_passive.isApprox(kkt_residual_ref.lu_passive));
   EXPECT_TRUE(kkt_residual.lu().isApprox(kkt_residual_ref.lu()));
   EXPECT_TRUE(kkt_residual.Fx().isApprox(kkt_residual_ref.Fx()));
+  EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
+  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   Eigen::VectorXd dgmm_next = Eigen::VectorXd::Random(robot.dimv());
   SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitDirection d_ref = d;
-  cd.computeCondensedDirection(robot, dtau, kkt_matrix, kkt_residual, dgmm_next, d);
-  ContactDynamics::expansion(robot, dtau, data_ref, kkt_matrix_ref, kkt_residual_ref, dgmm_next, d_ref);
+  cd.computeCondensedPrimalDirection(robot, d);
+  ContactDynamics::expansionPrimal(robot, data_ref, d_ref);
   EXPECT_TRUE(d.da().isApprox(d_ref.da()));
   EXPECT_TRUE(d.df().isApprox(d_ref.df()));
+  cd.computeCondensedDualDirection(robot, dtau, kkt_matrix, kkt_residual, dgmm_next, d);
+  ContactDynamics::expansionDual(robot, dtau, data_ref, kkt_matrix_ref, kkt_residual_ref, dgmm_next, d_ref);
   EXPECT_TRUE(d.dbeta().isApprox(d_ref.dbeta()));
   EXPECT_TRUE(d.dmu().isApprox(d_ref.dmu()));
+  EXPECT_TRUE(d.isApprox(d_ref));
 }
 
 
@@ -1145,15 +1155,20 @@ TEST_F(ContactDynamicsTest, condenseAndExpansionFixedBaseWithContacts) {
   EXPECT_TRUE(kkt_residual.lu_passive.isApprox(kkt_residual_ref.lu_passive));
   EXPECT_TRUE(kkt_residual.lu().isApprox(kkt_residual_ref.lu()));
   EXPECT_TRUE(kkt_residual.Fx().isApprox(kkt_residual_ref.Fx()));
+  EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
+  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   Eigen::VectorXd dgmm_next = Eigen::VectorXd::Random(robot.dimv());
   SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitDirection d_ref = d;
-  cd.computeCondensedDirection(robot, dtau, kkt_matrix, kkt_residual, dgmm_next, d);
-  ContactDynamics::expansion(robot, dtau, data_ref, kkt_matrix_ref, kkt_residual_ref, dgmm_next, d_ref);
+  cd.computeCondensedPrimalDirection(robot, d);
+  ContactDynamics::expansionPrimal(robot, data_ref, d_ref);
   EXPECT_TRUE(d.da().isApprox(d_ref.da()));
   EXPECT_TRUE(d.df().isApprox(d_ref.df()));
+  cd.computeCondensedDualDirection(robot, dtau, kkt_matrix, kkt_residual, dgmm_next, d);
+  ContactDynamics::expansionDual(robot, dtau, data_ref, kkt_matrix_ref, kkt_residual_ref, dgmm_next, d_ref);
   EXPECT_TRUE(d.dbeta().isApprox(d_ref.dbeta()));
   EXPECT_TRUE(d.dmu().isApprox(d_ref.dmu()));
+  EXPECT_TRUE(d.isApprox(d_ref));
 }
 
 
@@ -1200,15 +1215,20 @@ TEST_F(ContactDynamicsTest, condenseAndExpansionFloatingBaseWithoutContacts) {
   EXPECT_TRUE(kkt_residual.lu_passive.isApprox(kkt_residual_ref.lu_passive));
   EXPECT_TRUE(kkt_residual.lu().isApprox(kkt_residual_ref.lu()));
   EXPECT_TRUE(kkt_residual.Fx().isApprox(kkt_residual_ref.Fx()));
+  EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
+  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   Eigen::VectorXd dgmm_next = Eigen::VectorXd::Random(robot.dimv());
   SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitDirection d_ref = d;
-  cd.computeCondensedDirection(robot, dtau, kkt_matrix, kkt_residual, dgmm_next, d);
-  ContactDynamics::expansion(robot, dtau, data_ref, kkt_matrix_ref, kkt_residual_ref, dgmm_next, d_ref);
+  cd.computeCondensedPrimalDirection(robot, d);
+  ContactDynamics::expansionPrimal(robot, data_ref, d_ref);
   EXPECT_TRUE(d.da().isApprox(d_ref.da()));
   EXPECT_TRUE(d.df().isApprox(d_ref.df()));
+  cd.computeCondensedDualDirection(robot, dtau, kkt_matrix, kkt_residual, dgmm_next, d);
+  ContactDynamics::expansionDual(robot, dtau, data_ref, kkt_matrix_ref, kkt_residual_ref, dgmm_next, d_ref);
   EXPECT_TRUE(d.dbeta().isApprox(d_ref.dbeta()));
   EXPECT_TRUE(d.dmu().isApprox(d_ref.dmu()));
+  EXPECT_TRUE(d.isApprox(d_ref));
 }
 
 
@@ -1258,15 +1278,20 @@ TEST_F(ContactDynamicsTest, condenseAndExpansionFloatingBaseWithContacts) {
   EXPECT_TRUE(kkt_residual.lu_passive.isApprox(kkt_residual_ref.lu_passive));
   EXPECT_TRUE(kkt_residual.lu().isApprox(kkt_residual_ref.lu()));
   EXPECT_TRUE(kkt_residual.Fx().isApprox(kkt_residual_ref.Fx()));
+  EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
+  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   Eigen::VectorXd dgmm_next = Eigen::VectorXd::Random(robot.dimv());
   SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitDirection d_ref = d;
-  cd.computeCondensedDirection(robot, dtau, kkt_matrix, kkt_residual, dgmm_next, d);
-  ContactDynamics::expansion(robot, dtau, data_ref, kkt_matrix_ref, kkt_residual_ref, dgmm_next, d_ref);
+  cd.computeCondensedPrimalDirection(robot, d);
+  ContactDynamics::expansionPrimal(robot, data_ref, d_ref);
   EXPECT_TRUE(d.da().isApprox(d_ref.da()));
   EXPECT_TRUE(d.df().isApprox(d_ref.df()));
+  cd.computeCondensedDualDirection(robot, dtau, kkt_matrix, kkt_residual, dgmm_next, d);
+  ContactDynamics::expansionDual(robot, dtau, data_ref, kkt_matrix_ref, kkt_residual_ref, dgmm_next, d_ref);
   EXPECT_TRUE(d.dbeta().isApprox(d_ref.dbeta()));
   EXPECT_TRUE(d.dmu().isApprox(d_ref.dmu()));
+  EXPECT_TRUE(d.isApprox(d_ref));
 }
 
 } // namespace idocp

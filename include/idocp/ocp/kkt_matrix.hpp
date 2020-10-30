@@ -619,6 +619,8 @@ public:
   ///
   int dimf() const;
 
+  bool isApprox(const KKTMatrix& other) const;
+
   /// @brief Derivative of the state equation with respect to the 
   /// configuration of the previous time step q_prev.
   Eigen::MatrixXd Fqq_prev;

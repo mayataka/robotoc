@@ -95,8 +95,8 @@ void SplitOCP::linearizeOCP(Robot& robot, const ContactStatus& contact_status,
 
 
 void SplitOCP::backwardRiccatiRecursion(
-    const double dtau, const RiccatiFactorization& riccati_next, 
-    RiccatiFactorization& riccati) {
+    const double dtau, const RiccatiSolution& riccati_next, 
+    RiccatiSolution& riccati) {
   assert(dtau > 0);
   riccati_factorizer_.factorizeMatrices(riccati_next, dtau, kkt_matrix_, 
                                         kkt_residual_);
@@ -194,7 +194,7 @@ void SplitOCP::updateDual(const double step_size) {
 
 void SplitOCP::updatePrimal(Robot& robot, const double step_size, 
                             const double dtau,  
-                            const RiccatiFactorization& riccati, 
+                            const RiccatiSolution& riccati, 
                             const SplitDirection& d, SplitSolution& s) {
   assert(step_size > 0);
   assert(step_size <= 1);
@@ -210,9 +210,9 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   s.beta.noalias() += step_size * d.dbeta();
   if (s.hasActiveContacts()) {
     s.f_stack().noalias() += step_size * d.df();
-    s.set_f();
+    s.set_f_vector();
     s.mu_stack().noalias() += step_size * d.dmu();
-    s.set_mu();
+    s.set_mu_vector();
   }
   if (has_floating_base_) {
     s.u_passive.noalias() += step_size * d.du_passive;

@@ -1,44 +1,61 @@
-#ifndef IDOCP_RICCATI_MATRIX_FACTORIZER_HXX_
-#define IDOCP_RICCATI_MATRIX_FACTORIZER_HXX_
+#ifndef IDOCP_RICCATI_FACTORIZER_HXX_
+#define IDOCP_RICCATI_FACTORIZER_HXX_
 
-#include "Eigen/LU"
+#include "idocp/ocp/riccati_factorizer.hpp"
 
 #include <assert.h>
 
 namespace idocp {
 
-inline RiccatiMatrixFactorizer::RiccatiMatrixFactorizer(const Robot& robot) 
+inline RiccatiFactorizer::RiccatiFactorizer(const Robot& robot) 
   : has_floating_base_(robot.has_floating_base()),
     dimv_(robot.dimv()),
     dimu_(robot.dimu()),
+    llt_(robot.dimu()),
     AtPqq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     AtPqv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     AtPvq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     AtPvv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     BtPq_(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())),
-    BtPv_(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())) {
+    BtPv_(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())),
+    Ginv_(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimu())) {
 }
 
 
-inline RiccatiMatrixFactorizer::RiccatiMatrixFactorizer() 
+inline RiccatiFactorizer::RiccatiFactorizer() 
   : has_floating_base_(false),
     dimv_(0),
     dimu_(0),
+    llt_(),
     AtPqq_(),
     AtPqv_(),
     AtPvq_(),
     AtPvv_(),
     BtPq_(),
-    BtPv_() {
+    BtPv_(),
+    Ginv_() {
 }
 
 
-inline RiccatiMatrixFactorizer::~RiccatiMatrixFactorizer() {
+inline RiccatiFactorizer::~RiccatiFactorizer() {
 }
 
 
-inline void RiccatiMatrixFactorizer::factorizeMatrices(
-    const RiccatiFactorization& riccati_next, const double dtau, 
+inline void RiccatiFactorizer::factorize(const RiccatiSolution& riccati_next, 
+                                         const double dtau, 
+                                         KKTMatrix& kkt_matrix, 
+                                         KKTResidual& kkt_residual, 
+                                         RiccatiGain& gain, 
+                                         RiccatiSolution& riccati) {
+  assert(dtau > 0);
+  factorizeMatrices(riccati_next, dtau, kkt_matrix, kkt_residual);
+  computeFeedbackGainAndFeedforward(kkt_matrix, kkt_residual, gain);
+  factorizeRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, gain, riccati);
+}
+
+
+inline void RiccatiFactorizer::factorizeMatrices(
+    const RiccatiSolution& riccati_next, const double dtau, 
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   assert(dtau > 0);
   if (has_floating_base_) {
@@ -94,10 +111,20 @@ inline void RiccatiMatrixFactorizer::factorizeMatrices(
 }
 
 
-inline void RiccatiMatrixFactorizer::factorizeRecursion(
-    const RiccatiFactorization& riccati_next, const double dtau, 
+inline void RiccatiFactorizer::computeFeedbackGainAndFeedforward(
     const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
-    const RiccatiGain& gain, RiccatiFactorization& riccati) const {
+    RiccatiGain& gain) {
+  llt_.compute(kkt_matrix.Quu());
+  Ginv_ = llt_.solve(Eigen::MatrixXd::Identity(dimu_, dimu_));
+  gain.K.noalias() = - Ginv_ * kkt_matrix.Qxu().transpose();
+  gain.k.noalias() = - Ginv_ * kkt_residual.lu();
+}
+
+
+inline void RiccatiFactorizer::factorizeRecursion(
+    const RiccatiSolution& riccati_next, const double dtau, 
+    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+    const RiccatiGain& gain, RiccatiSolution& riccati) const {
   assert(dtau > 0);
   riccati.Pqq = kkt_matrix.Qqq();
   riccati.Pqv = kkt_matrix.Qqv();
@@ -130,4 +157,4 @@ inline void RiccatiMatrixFactorizer::factorizeRecursion(
 
 } // namespace idocp
 
-#endif // IDOCP_RICCATI_MATRIX_FACTORIZER_HXX_
+#endif // IDOCP_RICCATI_FACTORIZER_HXX_

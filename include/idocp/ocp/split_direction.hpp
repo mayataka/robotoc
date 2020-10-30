@@ -248,6 +248,12 @@ public:
   /// @brief Newton direction of beta.
   Vector6d dnu_passive;
 
+  bool isApprox(const SplitDirection& other) const;
+
+  void setRandom();
+
+  void setRandom(const ContactStatus& contact_status);
+
   ///
   /// @brief Generates split direction filled randomly.
   /// @return Split direction filled randomly.
@@ -279,14 +285,13 @@ private:
   /// @brief Dimension of state x.
   int dimx_;
 
-  /// @brief Dimension of passive joints. 
-  int dim_passive_;
-
   /// @brief Dimension of contact forces at the current contact status. 
   int dimf_;
 
   /// @brief Dimension of the split KKT system. 
   int dimKKT_;
+
+  bool has_floating_base_;
 
 };
 

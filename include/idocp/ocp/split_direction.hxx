@@ -14,9 +14,9 @@ inline SplitDirection::SplitDirection(const Robot& robot)
     dimv_(robot.dimv()), 
     dimu_(robot.dimu()), 
     dimx_(2*robot.dimv()), 
-    dim_passive_(robot.dim_passive()), 
     dimf_(0), 
-    dimKKT_(4*robot.dimv()+robot.dimu()) {
+    dimKKT_(4*robot.dimv()+robot.dimu()),
+    has_floating_base_(robot.has_floating_base()) {
 }
 
 
@@ -29,9 +29,9 @@ inline SplitDirection::SplitDirection()
     dimv_(0), 
     dimu_(0), 
     dimx_(0), 
-    dim_passive_(0), 
     dimf_(0), 
-    dimKKT_(0) {
+    dimKKT_(0),
+    has_floating_base_(false) {
 }
 
 
@@ -207,19 +207,66 @@ inline int SplitDirection::dimf() const {
 }
 
 
+inline bool SplitDirection::isApprox(const SplitDirection& other) const {
+  if (!dlmd().isApprox(other.dlmd())) {
+    return false;
+  }
+  if (!dgmm().isApprox(other.dgmm())) {
+    return false;
+  }
+  if (!du().isApprox(other.du())) {
+    return false;
+  }
+  if (!dq().isApprox(other.dq())) {
+    return false;
+  }
+  if (!dv().isApprox(other.dv())) {
+    return false;
+  }
+  if (!da().isApprox(other.da())) {
+    return false;
+  }
+  if (!df().isApprox(other.df())) {
+    return false;
+  }
+  if (!dbeta().isApprox(other.dbeta())) {
+    return false;
+  }
+  if (!dmu().isApprox(other.dmu())) {
+    return false;
+  }
+  if (has_floating_base_) {
+    if (!du_passive.isApprox(other.du_passive)) {
+      return false;
+    }
+    if (!dnu_passive.isApprox(other.dnu_passive)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+inline void SplitDirection::setRandom() {
+  split_direction.setRandom();
+  daf().setRandom();
+  dbetamu().setRandom();
+  if (has_floating_base_) {
+    du_passive.setRandom();
+    dnu_passive.setRandom();
+  }
+}
+
+
+inline void SplitDirection::setRandom(const ContactStatus& contact_status) {
+  setContactStatus(contact_status);
+  setRandom();
+}
+
+
 inline SplitDirection SplitDirection::Random(const Robot& robot) {
   SplitDirection d(robot);
-  d.dlmd() = Eigen::VectorXd::Random(robot.dimv());
-  d.dgmm() = Eigen::VectorXd::Random(robot.dimv());
-  d.du() = Eigen::VectorXd::Random(robot.dimu());
-  d.dq() = Eigen::VectorXd::Random(robot.dimv());
-  d.dv() = Eigen::VectorXd::Random(robot.dimv());
-  d.da() = Eigen::VectorXd::Random(robot.dimv());
-  d.dbeta() = Eigen::VectorXd::Random(robot.dimv());
-  if (robot.has_floating_base()) {
-    d.du_passive = Vector6d::Random();
-    d.dnu_passive = Vector6d::Random();
-  }
+  d.setRandom();
   return d;
 }
 
@@ -227,20 +274,7 @@ inline SplitDirection SplitDirection::Random(const Robot& robot) {
 inline SplitDirection SplitDirection::Random(
     const Robot& robot, const ContactStatus& contact_status) {
   SplitDirection d(robot);
-  d.setContactStatus(contact_status);
-  d.dlmd() = Eigen::VectorXd::Random(robot.dimv());
-  d.dgmm() = Eigen::VectorXd::Random(robot.dimv());
-  d.du() = Eigen::VectorXd::Random(robot.dimu());
-  d.dq() = Eigen::VectorXd::Random(robot.dimv());
-  d.dv() = Eigen::VectorXd::Random(robot.dimv());
-  d.da() = Eigen::VectorXd::Random(robot.dimv());
-  d.df() = Eigen::VectorXd::Random(contact_status.dimf());
-  d.dbeta() = Eigen::VectorXd::Random(robot.dimv());
-  d.dmu() = Eigen::VectorXd::Random(contact_status.dimf());
-  if (robot.has_floating_base()) {
-    d.du_passive = Vector6d::Random();
-    d.dnu_passive = Vector6d::Random();
-  }
+  d.setRandom(contact_status);
   return d;
 }
 

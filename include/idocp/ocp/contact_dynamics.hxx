@@ -167,36 +167,30 @@ inline void ContactDynamics::condensing(const Robot& robot, const double dtau,
 }
 
 
+inline void ContactDynamics::computeCondensedPrimalDirection(
+    const Robot& robot, SplitDirection& d) {
+  expansionPrimal(robot, data_, d);
+}
+
+
 template <typename VectorType>
-inline void ContactDynamics::computeCondensedDirection(
+inline void ContactDynamics::computeCondensedDualDirection(
     const Robot& robot, const double dtau, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, const Eigen::MatrixBase<VectorType>& dgmm, 
     SplitDirection& d) {
   assert(dtau > 0);
   assert(dgmm.size() == robot.dimv());
-  expansion(robot, dtau, data_, kkt_matrix, kkt_residual, dgmm, d);
+  expansionDual(robot, dtau, data_, kkt_matrix, kkt_residual, dgmm, d);
 }
 
 
-template <typename VectorType>
-inline void ContactDynamics::expansion(
-    const Robot& robot, const double dtau, ContactDynamicsData& data, 
-    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
-    const Eigen::MatrixBase<VectorType>& dgmm, SplitDirection& d) {
-  assert(dtau > 0);
-  assert(dgmm.size() == robot.dimv());
+inline void ContactDynamics::expansionPrimal(const Robot& robot, 
+                                             ContactDynamicsData& data, 
+                                             SplitDirection& d) {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  const int dim_passive = robot.dim_passive();
   if (robot.has_floating_base()) {
     d.du_passive = - data.u_passive;
-    d.dnu_passive = kkt_residual.lu_passive;
-    d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topLeft() * d.du_passive;
-    d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topRight() * d.du();
-    d.dnu_passive.noalias() += kkt_matrix.Qxu_passive().transpose() * d.dx();
-    d.dnu_passive.noalias() 
-        += dtau * data.MJtJinv().topLeftCorner(dim_passive, dimv) * dgmm;
-    d.dnu_passive.array() *= - (1/dtau);
     d.daf().noalias() = - data.MJtJinv_dIDCdqv() * d.dx();
     d.daf().noalias() 
         += data.MJtJinv().template leftCols<kDimFloatingBase>() * d.du_passive;
@@ -210,6 +204,26 @@ inline void ContactDynamics::expansion(
     d.daf().noalias() -= data.MJtJinv_IDC();
   }
   d.df().array() *= -1;
+}
+
+
+template <typename VectorType>
+inline void ContactDynamics::expansionDual(
+    const Robot& robot, const double dtau, ContactDynamicsData& data, 
+    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+    const Eigen::MatrixBase<VectorType>& dgmm, SplitDirection& d) {
+  assert(dtau > 0);
+  assert(dgmm.size() == robot.dimv());
+  const int dimv = robot.dimv();
+  if (robot.has_floating_base()) {
+    d.dnu_passive = kkt_residual.lu_passive;
+    d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topLeft() * d.du_passive;
+    d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topRight() * d.du();
+    d.dnu_passive.noalias() += kkt_matrix.Qxu_passive().transpose() * d.dx();
+    d.dnu_passive.noalias() 
+        += dtau * data.MJtJinv().topLeftCorner(kDimFloatingBase, dimv) * dgmm;
+    d.dnu_passive.array() *= - (1/dtau);
+  }
   data.laf().noalias() += data.Qafqv() * d.dx();
   if (robot.has_floating_base()) {
     data.laf().noalias() += data.Qafu_passive() * d.du_passive;

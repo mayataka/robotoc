@@ -98,7 +98,7 @@ inline void SplitSolution::set_mu_stack() {
 }
 
 
-inline void SplitSolution::set_mu() {
+inline void SplitSolution::set_mu_vector() {
   int contact_index = 0;
   int segment_start = 0;
   for (const auto is_contact_active : is_contact_active_) {
@@ -124,7 +124,7 @@ inline void SplitSolution::set_f_stack() {
 }
 
 
-inline void SplitSolution::set_f() {
+inline void SplitSolution::set_f_vector() {
   int contact_index = 0;
   int segment_start = 0;
   for (const auto is_contact_active : is_contact_active_) {
@@ -155,20 +155,98 @@ inline bool SplitSolution::hasActiveContacts() const {
 }
 
 
+inline bool SplitSolution::isApprox(const SplitSolution& other) const {
+  if (!lmd.isApprox(other.lmd)) {
+    return false;
+  }
+  if (!gmm.isApprox(other.gmm)) {
+    return false;
+  }
+  if (!q.isApprox(other.q)) {
+    return false;
+  }
+  if (!v.isApprox(other.v)) {
+    return false;
+  }
+  if (!a.isApprox(other.a)) {
+    return false;
+  }
+  if (!u.isApprox(other.u)) {
+    return false;
+  }
+  if (!beta.isApprox(other.beta)) {
+    return false;
+  }
+  if (has_active_contacts_) {
+    if (!f_stack().isApprox(other.f_stack())) {
+      return false;
+    }
+    if (!mu_stack().isApprox(other.mu_stack())) {
+      return false;
+    }
+    for (int i=0; i<is_contact_active_.size(); ++i) {
+      if (is_contact_active_[i]) {
+        if (!other.isContactActive(i)) {
+          return false;
+        }
+        if (!f[i].isApprox(other.f[i])) {
+          return false;
+        }
+        if (!mu[i].isApprox(other.mu[i])) {
+          return false;
+        }
+      }
+      else {
+        if (other.isContactActive(i)) {
+          return false;
+        }
+      }
+    }
+  }
+  if (has_floating_base_) {
+    if (!u_passive.isApprox(other.u_passive)) {
+      return false;
+    }
+    if (!nu_passive.isApprox(other.nu_passive)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+inline void SplitSolution::setRandom(const Robot& robot) {
+  lmd.setRandom();
+  gmm.setRandom(); 
+  q.setRandom(); 
+  robot.normalizeConfiguration(q);
+  v.setRandom();
+  a.setRandom(); 
+  u.setRandom(); 
+  beta.setRandom(); 
+  if (robot.has_floating_base()) {
+    u_passive.setRandom();
+    nu_passive.setRandom();
+  }
+}
+
+
+inline void SplitSolution::setRandom(const Robot& robot, 
+                                     const ContactStatus& contact_status) {
+  setContactStatus(contact_status);
+  setRandom(robot);
+  if (contact_status.hasActiveContacts()) {
+    f_stack().setRandom();
+    mu_stack().setRandom();
+    set_f_vector();
+    set_mu_vector();
+  }
+}
+
+
 inline SplitSolution SplitSolution::Random(const Robot& robot) {
   SplitSolution s(robot);
-  s.lmd = Eigen::VectorXd::Random(robot.dimv());
-  s.gmm = Eigen::VectorXd::Random(robot.dimv());
-  s.a = Eigen::VectorXd::Random(robot.dimv());
-  s.q = Eigen::VectorXd::Random(robot.dimq());
-  robot.normalizeConfiguration(s.q);
-  s.v = Eigen::VectorXd::Random(robot.dimv());
-  s.u = Eigen::VectorXd::Random(robot.dimu());
-  s.beta = Eigen::VectorXd::Random(robot.dimv());
-  if (robot.has_floating_base()) {
-    s.u_passive = Vector6d::Random();
-    s.nu_passive = Vector6d::Random();
-  }
+  s.setRandom(robot);
   return s;
 }
 
@@ -176,23 +254,7 @@ inline SplitSolution SplitSolution::Random(const Robot& robot) {
 inline SplitSolution SplitSolution::Random(
     const Robot& robot, const ContactStatus& contact_status) {
   SplitSolution s(robot);
-  s.setContactStatus(contact_status);
-  s.lmd = Eigen::VectorXd::Random(robot.dimv());
-  s.gmm = Eigen::VectorXd::Random(robot.dimv());
-  s.mu_stack() = Eigen::VectorXd::Random(contact_status.dimf());
-  s.set_mu();
-  s.a = Eigen::VectorXd::Random(robot.dimv());
-  s.f_stack() = Eigen::VectorXd::Random(contact_status.dimf());
-  s.set_f();
-  s.q = Eigen::VectorXd::Random(robot.dimq());
-  robot.normalizeConfiguration(s.q);
-  s.v = Eigen::VectorXd::Random(robot.dimv());
-  s.u = Eigen::VectorXd::Random(robot.dimu());
-  s.beta = Eigen::VectorXd::Random(robot.dimv());
-  if (robot.has_floating_base()) {
-    s.u_passive = Vector6d::Random();
-    s.nu_passive = Vector6d::Random();
-  }
+  s.setRandom(robot, contact_status);
   return s;
 }
 

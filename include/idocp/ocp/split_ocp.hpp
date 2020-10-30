@@ -18,9 +18,9 @@
 #include "idocp/ocp/state_equation.hpp"
 // #include "idocp/ocp/robot_dynamics.hpp"
 #include "idocp/ocp/contact_dynamics.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/ocp/riccati_gain.hpp"
-#include "idocp/ocp/riccati_matrix_factorizer.hpp"
+#include "idocp/ocp/riccati_factorizer.hpp"
 
 
 namespace idocp {
@@ -111,8 +111,8 @@ public:
   /// @param[out] riccati Riccati factorization of this stage.
   /// 
   void backwardRiccatiRecursion(const double dtau, 
-                                const RiccatiFactorization& riccati_next,
-                                RiccatiFactorization& riccati);
+                                const RiccatiSolution& riccati_next,
+                                RiccatiSolution& riccati);
 
   ///
   /// @brief Computes the Newton direction of the state of this stage from the 
@@ -207,7 +207,7 @@ public:
   /// @param[in, out] s Split solution of this stage.
   ///
   void updatePrimal(Robot& robot, const double step_size, const double dtau, 
-                    const RiccatiFactorization& riccati, 
+                    const RiccatiSolution& riccati, 
                     const SplitDirection& d, SplitSolution& s);
 
   ///
@@ -255,7 +255,7 @@ private:
   // RobotDynamics robot_dynamics_;
   ContactDynamics contact_dynamics_;
   RiccatiGain riccati_gain_;
-  RiccatiMatrixFactorizer riccati_factorizer_;
+  RiccatiFactorizer riccati_factorizer_;
   SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
   bool use_kinematics_, has_floating_base_, fd_like_elimination_;
   double stage_cost_, constraint_violation_;

@@ -28,7 +28,7 @@ protected:
 };
 
 
-TEST_F(KKTResidualTest, fixed_base) {
+TEST_F(KKTResidualTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf_, contact_frames);
   std::random_device rnd;
@@ -72,10 +72,55 @@ TEST_F(KKTResidualTest, fixed_base) {
   EXPECT_TRUE(residual.lx().isApprox(lx_ref));
   EXPECT_TRUE(residual.la.isApprox(la_ref));
   EXPECT_TRUE(residual.lf().isApprox(lf_ref));
+  KKTResidual kkt_residual_ref = residual;
+  EXPECT_TRUE(residual.isApprox(kkt_residual_ref));
+  kkt_residual_ref.KKT_residual.setRandom();
+  EXPECT_FALSE(residual.isApprox(kkt_residual_ref));
 }
 
 
-TEST_F(KKTResidualTest, floating_base) {
+TEST_F(KKTResidualTest, isApproxFixedBaseWithoutContacts) {
+  std::vector<int> contact_frames = {18};
+  Robot robot(fixed_base_urdf_, contact_frames);
+  std::random_device rnd;
+  ContactStatus contact_status(contact_frames.size());
+  contact_status.setContactStatus({false});
+  KKTResidual residual(robot);
+  residual.setContactStatus(contact_status);
+  residual.KKT_residual.setRandom();
+  residual.la.setRandom();
+  KKTResidual kkt_residual_ref = residual;
+  EXPECT_TRUE(residual.isApprox(kkt_residual_ref));
+  kkt_residual_ref.lf().setRandom();
+  EXPECT_TRUE(residual.isApprox(kkt_residual_ref));
+  kkt_residual_ref.lu_passive.setRandom();
+  EXPECT_TRUE(residual.isApprox(kkt_residual_ref));
+  kkt_residual_ref.KKT_residual.setRandom();
+  EXPECT_FALSE(residual.isApprox(kkt_residual_ref));
+}
+
+
+TEST_F(KKTResidualTest, isApproxFixedBaseWithContacts) {
+  std::vector<int> contact_frames = {18};
+  Robot robot(fixed_base_urdf_, contact_frames);
+  std::random_device rnd;
+  ContactStatus contact_status(contact_frames.size());
+  contact_status.setContactStatus({true});
+  KKTResidual residual(robot);
+  residual.setContactStatus(contact_status);
+  residual.KKT_residual.setRandom();
+  residual.la.setRandom();
+  residual.lf().setRandom();
+  KKTResidual kkt_residual_ref = residual;
+  EXPECT_TRUE(residual.isApprox(kkt_residual_ref));
+  kkt_residual_ref.lu_passive.setRandom();
+  EXPECT_TRUE(residual.isApprox(kkt_residual_ref));
+  kkt_residual_ref.lf().setRandom();
+  EXPECT_FALSE(residual.isApprox(kkt_residual_ref));
+}
+
+
+TEST_F(KKTResidualTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf_, contact_frames);
   std::random_device rnd;
@@ -122,6 +167,53 @@ TEST_F(KKTResidualTest, floating_base) {
   EXPECT_TRUE(residual.lx().isApprox(lx_ref));
   EXPECT_TRUE(residual.la.isApprox(la_ref));
   EXPECT_TRUE(residual.lf().isApprox(lf_ref));
+  KKTResidual kkt_residual_ref = residual;
+  EXPECT_TRUE(residual.isApprox(kkt_residual_ref));
+  kkt_residual_ref.KKT_residual.setRandom();
+  EXPECT_FALSE(residual.isApprox(kkt_residual_ref));
+}
+
+
+TEST_F(KKTResidualTest, isApproxFloatingBaseWithoutContacts) {
+  std::vector<int> contact_frames = {14, 24, 34, 44};
+  Robot robot(floating_base_urdf_, contact_frames);
+  std::random_device rnd;
+  ContactStatus contact_status(contact_frames.size());
+  contact_status.setContactStatus({false, false, false, false});
+  KKTResidual residual(robot);
+  residual.setContactStatus(contact_status);
+  residual.KKT_residual.setRandom();
+  residual.la.setRandom();
+  residual.lu_passive.setRandom();
+  KKTResidual kkt_residual_ref = residual;
+  EXPECT_TRUE(residual.isApprox(kkt_residual_ref));
+  kkt_residual_ref.lf().setRandom();
+  EXPECT_TRUE(residual.isApprox(kkt_residual_ref));
+  kkt_residual_ref.lu_passive.setRandom();
+  EXPECT_FALSE(residual.isApprox(kkt_residual_ref));
+}
+
+
+TEST_F(KKTResidualTest, isApproxFloatingBaseWithContacts) {
+  std::vector<int> contact_frames = {14, 24, 34, 44};
+  Robot robot(floating_base_urdf_, contact_frames);
+  std::random_device rnd;
+  std::vector<bool> is_contact_active;
+  for (const auto frame : contact_frames) {
+    is_contact_active.push_back(rnd()%2==0);
+  }
+  ContactStatus contact_status(contact_frames.size());
+  contact_status.setContactStatus(is_contact_active);
+  KKTResidual residual(robot);
+  residual.setContactStatus(contact_status);
+  residual.KKT_residual.setRandom();
+  residual.la.setRandom();
+  residual.lf().setRandom();
+  residual.lu_passive.setRandom();
+  KKTResidual kkt_residual_ref = residual;
+  EXPECT_TRUE(residual.isApprox(kkt_residual_ref));
+  kkt_residual_ref.lf().setRandom();
+  EXPECT_FALSE(residual.isApprox(kkt_residual_ref));
 }
 
 } // namespace idocp

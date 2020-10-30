@@ -488,6 +488,29 @@ inline int KKTMatrix::dimf() const {
   return dimf_;
 }
 
+
+inline bool KKTMatrix::isApprox(const KKTMatrix& other) const {
+  if (!Fxu().isApprox(other.Fxu())) {
+    return false;
+  }
+  if (!Fxx().isApprox(other.Fxx())) {
+    return false;
+  }
+  if (!Quu_full().isApprox(other.Quu_full())) {
+    return false;
+  }
+  if (!Qxu_full().isApprox(other.Qxu_full())) {
+    return false;
+  }
+  if (!Qxx().isApprox(other.Qxx())) {
+    return false;
+  }
+  if (!Qaaff().isApprox(other.Qaaff())) {
+    return false;
+  }
+  return true;
+}
+
 } // namespace idocp 
 
 #endif // IDOCP_KKT_MATRIX_HXX_

@@ -90,7 +90,7 @@ public:
   /// @brief Set the Lagrange multiplier with respect to active contact 
   /// constraints from mu_stack.
   ///
-  void set_mu();
+  void set_mu_vector();
 
   ///
   /// @brief Stack of active contact forces. Size is Robot::dimf().
@@ -112,7 +112,7 @@ public:
   ///
   /// @brief Set the each contact forces from stack of contact forces.
   ///
-  void set_f();
+  void set_f_vector();
 
   ///
   /// @brief Returns the number of active contacts.
@@ -195,8 +195,13 @@ public:
   ///
   bool isContactActive(const int contact_index) const;
 
-
   bool hasActiveContacts() const;
+
+  bool isApprox(const SplitSolution& other) const;
+
+  void setRandom(const Robot& robot);
+
+  void setRandom(const Robot& robot, const ContactStatus& contact_status);
 
   ///
   /// @brief Generates split solution filled randomly.

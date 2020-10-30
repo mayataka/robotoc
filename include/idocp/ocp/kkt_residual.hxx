@@ -15,7 +15,8 @@ inline KKTResidual::KKTResidual(const Robot& robot)
     dimu_(robot.dimu()),
     dim_passive_(robot.dim_passive()),
     dimf_(0), 
-    dimKKT_(4*robot.dimv()+robot.dimu()) {
+    dimKKT_(4*robot.dimv()+robot.dimu()),
+    has_floating_base_(robot.has_floating_base()) {
 }
 
 
@@ -29,7 +30,8 @@ inline KKTResidual::KKTResidual()
     dimu_(0),
     dim_passive_(0),
     dimf_(0), 
-    dimKKT_(0) {
+    dimKKT_(0),
+    has_floating_base_(false) {
 }
 
 
@@ -137,6 +139,31 @@ inline int KKTResidual::dimKKT() const {
 
 inline int KKTResidual::dimf() const {
   return dimf_;
+}
+
+
+inline bool KKTResidual::isApprox(const KKTResidual& other) const {
+  if (!Fx().isApprox(other.Fx())) {
+    return false;
+  }
+  if (!lu().isApprox(other.lu())) {
+    return false;
+  }
+  if (!lx().isApprox(other.lx())) {
+    return false;
+  }
+  if (!la.isApprox(other.la)) {
+    return false;
+  }
+  if (!lf().isApprox(other.lf())) {
+    return false;
+  }
+  if (has_floating_base_) {
+    if (!lu_passive.isApprox(other.lu_passive)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 } // namespace idocp 

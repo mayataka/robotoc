@@ -56,20 +56,25 @@ public:
                          ContactDynamicsData& data, KKTMatrix& kkt_matrix, 
                          KKTResidual& kkt_residual);
 
-  template <typename VectorType>
-  void computeCondensedDirection(const Robot& robot, const double dtau, 
-                                 const KKTMatrix& kkt_matrix, 
-                                 const KKTResidual& kkt_residual, 
-                                 const Eigen::MatrixBase<VectorType>& dgmm,
-                                 SplitDirection& d);
+  void computeCondensedPrimalDirection(const Robot& robot, SplitDirection& d);
 
   template <typename VectorType>
-  static void expansion(const Robot& robot, const double dtau, 
-                        ContactDynamicsData& data,
-                        const KKTMatrix& kkt_matrix, 
-                        const KKTResidual& kkt_residual,
-                        const Eigen::MatrixBase<VectorType>& dgmm,
-                        SplitDirection& d);
+  void computeCondensedDualDirection(const Robot& robot, const double dtau, 
+                                     const KKTMatrix& kkt_matrix, 
+                                     const KKTResidual& kkt_residual, 
+                                     const Eigen::MatrixBase<VectorType>& dgmm,
+                                     SplitDirection& d);
+
+  static void expansionPrimal(const Robot& robot, ContactDynamicsData& data, 
+                              SplitDirection& d);
+
+  template <typename VectorType>
+  static void expansionDual(const Robot& robot, const double dtau, 
+                            ContactDynamicsData& data,
+                            const KKTMatrix& kkt_matrix, 
+                            const KKTResidual& kkt_residual,
+                            const Eigen::MatrixBase<VectorType>& dgmm,
+                            SplitDirection& d);
 
   void computeContactDynamicsResidual(Robot& robot, 
                                       const ContactStatus& contact_status,

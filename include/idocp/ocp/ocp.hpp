@@ -12,7 +12,7 @@
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/ocp/line_search_filter.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -228,7 +228,7 @@ private:
   int N_, num_proc_;
   std::vector<SplitSolution> s_;
   std::vector<SplitDirection> d_;
-  std::vector<RiccatiFactorization> riccati_;
+  std::vector<RiccatiSolution> riccati_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_;
   // std::vector<std::vector<bool>> contact_sequence_;
 };

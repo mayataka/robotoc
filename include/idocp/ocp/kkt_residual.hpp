@@ -192,6 +192,8 @@ public:
   ///
   int dimf() const;
 
+  bool isApprox(const KKTResidual& other) const;
+
   /// @brief KKT residual.
   Eigen::VectorXd KKT_residual;
 
@@ -206,6 +208,7 @@ public:
 private:
   Eigen::VectorXd lf_full_;
   int dimv_, dimx_, dimu_, dim_passive_, dimf_, dimKKT_;
+  bool has_floating_base_;
 
 };
 

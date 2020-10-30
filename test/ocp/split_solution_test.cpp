@@ -169,8 +169,8 @@ TEST_F(SplitSolutionTest, fixed_base_contact) {
   EXPECT_TRUE(s.beta.isApprox(beta));
   s.mu_stack().setZero();
   s.f_stack().setZero();
-  s.set_mu();
-  s.set_f();
+  s.set_mu_vector();
+  s.set_f_vector();
   EXPECT_TRUE(s.mu[0].isZero());
   EXPECT_TRUE(s.f[0].isZero());
   SplitSolution s_random = SplitSolution::Random(robot, contact_status);
@@ -397,8 +397,8 @@ TEST_F(SplitSolutionTest, floating_base_contacts) {
   EXPECT_TRUE(s.beta.isApprox(beta));
   s.mu_stack().setZero();
   s.f_stack().setZero();
-  s.set_mu();
-  s.set_f();
+  s.set_mu_vector();
+  s.set_f_vector();
   for (int i=0; i<contact_status.max_point_contacts(); ++i) {
     if (contact_status.isContactActive(i)) {
       EXPECT_TRUE(s.mu[i].isZero());
