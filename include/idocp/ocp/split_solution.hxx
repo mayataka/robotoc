@@ -8,20 +8,19 @@ namespace idocp {
 inline SplitSolution::SplitSolution(const Robot& robot) 
   : lmd(Eigen::VectorXd::Zero(robot.dimv())),
     gmm(Eigen::VectorXd::Zero(robot.dimv())),
-    mu(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
-    a(Eigen::VectorXd::Zero(robot.dimv())),
-    f(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
     q(Eigen::VectorXd::Zero(robot.dimq())),
     v(Eigen::VectorXd::Zero(robot.dimv())),
+    a(Eigen::VectorXd::Zero(robot.dimv())),
+    f(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
     u(Eigen::VectorXd::Zero(robot.dimu())),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
+    mu(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
     u_passive(Vector6d::Zero()),
     nu_passive(Vector6d::Zero()),
-    mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
+    mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
     has_active_contacts_(false),
-    dim_passive_(robot.dim_passive()),
     is_contact_active_(robot.max_point_contacts(), false),
     dimf_(0) {
   robot.normalizeConfiguration(q);
@@ -31,20 +30,19 @@ inline SplitSolution::SplitSolution(const Robot& robot)
 inline SplitSolution::SplitSolution() 
   : lmd(),
     gmm(),
-    mu(),
-    a(),
-    f(),
     q(),
     v(),
+    a(),
+    f(),
     u(),
     beta(),
+    mu(),
     u_passive(Vector6d::Zero()),
     nu_passive(Vector6d::Zero()),
-    mu_stack_(),
     f_stack_(),
+    mu_stack_(),
     has_floating_base_(false),
     has_active_contacts_(false),
-    dim_passive_(0),
     is_contact_active_(),
     dimf_(0) {
 }
@@ -57,20 +55,9 @@ inline SplitSolution::~SplitSolution() {
 inline void SplitSolution::setContactStatus(
     const ContactStatus& contact_status) {
   assert(contact_status.max_point_contacts()==is_contact_active_.size());
+  has_active_contacts_ = contact_status.hasActiveContacts();
   is_contact_active_ = contact_status.isContactActive();
   dimf_ = contact_status.dimf();
-  has_active_contacts_ = contact_status.hasActiveContacts();
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> SplitSolution::mu_stack() {
-  return mu_stack_.head(dimf_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitSolution::mu_stack() const {
-  return mu_stack_.head(dimf_);
 }
 
 
@@ -82,32 +69,6 @@ inline Eigen::VectorBlock<Eigen::VectorXd> SplitSolution::f_stack() {
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitSolution::f_stack() const {
   return f_stack_.head(dimf_);
-}
-
-
-inline void SplitSolution::set_mu_stack() {
-  int contact_index = 0;
-  int segment_start = 0;
-  for (const auto is_contact_active : is_contact_active_) {
-    if (is_contact_active) {
-      mu_stack_.template segment<3>(segment_start) = mu[contact_index];
-      segment_start += 3;
-    }
-    ++contact_index;
-  }
-}
-
-
-inline void SplitSolution::set_mu_vector() {
-  int contact_index = 0;
-  int segment_start = 0;
-  for (const auto is_contact_active : is_contact_active_) {
-    if (is_contact_active) {
-      mu[contact_index] = mu_stack_.template segment<3>(segment_start);
-      segment_start += 3;
-    }
-    ++contact_index;
-  }
 }
 
 
@@ -137,6 +98,43 @@ inline void SplitSolution::set_f_vector() {
 }
 
 
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitSolution::mu_stack() {
+  return mu_stack_.head(dimf_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitSolution::mu_stack() const {
+  return mu_stack_.head(dimf_);
+}
+
+
+inline void SplitSolution::set_mu_stack() {
+  int contact_index = 0;
+  int segment_start = 0;
+  for (const auto is_contact_active : is_contact_active_) {
+    if (is_contact_active) {
+      mu_stack_.template segment<3>(segment_start) = mu[contact_index];
+      segment_start += 3;
+    }
+    ++contact_index;
+  }
+}
+
+
+inline void SplitSolution::set_mu_vector() {
+  int contact_index = 0;
+  int segment_start = 0;
+  for (const auto is_contact_active : is_contact_active_) {
+    if (is_contact_active) {
+      mu[contact_index] = mu_stack_.template segment<3>(segment_start);
+      segment_start += 3;
+    }
+    ++contact_index;
+  }
+}
+
+
 inline int SplitSolution::dimf() const {
   return dimf_;
 }
@@ -152,6 +150,30 @@ inline bool SplitSolution::isContactActive(const int contact_index) const {
 
 inline bool SplitSolution::hasActiveContacts() const {
   return has_active_contacts_;
+}
+
+
+inline void SplitSolution::integrate(const Robot& robot, const double step_size, 
+                                     const SplitDirection& d) {
+  lmd.noalias() += step_size * d.dlmd();
+  gmm.noalias() += step_size * d.dgmm();
+  robot.integrateConfiguration(d.dq(), step_size, q);
+  v.noalias() += step_size * d.dv();
+  a.noalias() += step_size * d.da();
+  u.noalias() += step_size * d.du();
+  beta.noalias() += step_size * d.dbeta();
+  if (has_active_contacts_) {
+    assert(f_stack().size() == d.df().size());
+    f_stack().noalias() += step_size * d.df();
+    set_f_vector();
+    assert(mu_stack().size() == d.dmu().size());
+    mu_stack().noalias() += step_size * d.dmu();
+    set_mu_vector();
+  }
+  if (has_floating_base_) {
+    u_passive.noalias() += step_size * d.du_passive;
+    nu_passive.noalias() += step_size * d.dnu_passive;
+  }
 }
 
 

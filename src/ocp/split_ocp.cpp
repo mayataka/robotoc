@@ -125,16 +125,18 @@ void SplitOCP::forwardRiccatiRecursion(const double dtau, SplitDirection& d,
 
 
 void SplitOCP::computeCondensedDirection(Robot& robot, const double dtau, 
+                                         const RiccatiSolution& riccati,
                                          const SplitSolution& s, 
                                          const SplitDirection& d_next, 
                                          SplitDirection& d) {
   assert(dtau > 0);
-  contact_dynamics_.computeCondensedDirection(robot, dtau, kkt_matrix_,  
-                                              kkt_residual_, d_next.dgmm(), d);
+  d.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
+  d.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
+  contact_dynamics_.computeCondensedPrimalDirection(robot, d);
   constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, s, d);
 }
 
- 
+
 double SplitOCP::maxPrimalStepSize() {
   return constraints_->maxSlackStepSize(constraints_data_);
 }
@@ -161,16 +163,8 @@ std::pair<double, double> SplitOCP::costAndConstraintViolation(
   assert(step_size <= 1);
   assert(dtau > 0);
   setContactStatusForKKT(contact_status);
-  s_tmp_.setContactStatus(contact_status);
-  s_tmp_.a = s.a + step_size * d.da();
-  if (contact_status.hasActiveContacts()) {
-    s_tmp_.f_stack() = s.f_stack() + step_size * d.df();
-    s_tmp_.set_f();
-    robot.setContactForces(contact_status, s_tmp_.f);
-  }
-  robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp_.q);
-  s_tmp_.v = s.v + step_size * d.dv();
-  s_tmp_.u = s.u + step_size * d.du();
+  s_tmp_ = s;
+  s_tmp_.integratePrimal(robot, step_size, d);
   if (use_kinematics_) {
     robot.updateKinematics(s_tmp_.q, s_tmp_.v, s_tmp_.a);
   }
@@ -199,25 +193,10 @@ void SplitOCP::updatePrimal(Robot& robot, const double step_size,
   assert(step_size > 0);
   assert(step_size <= 1);
   assert(dtau > 0);
-  s.lmd.noalias() 
-      += step_size * (riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq);
-  s.gmm.noalias() 
-      += step_size * (riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv);
-  robot.integrateConfiguration(d.dq(), step_size, s.q);
-  s.v.noalias() += step_size * d.dv();
-  s.a.noalias() += step_size * d.da();
-  s.u.noalias() += step_size * d.du();
-  s.beta.noalias() += step_size * d.dbeta();
-  if (s.hasActiveContacts()) {
-    s.f_stack().noalias() += step_size * d.df();
-    s.set_f_vector();
-    s.mu_stack().noalias() += step_size * d.dmu();
-    s.set_mu_vector();
-  }
-  if (has_floating_base_) {
-    s.u_passive.noalias() += step_size * d.du_passive;
-    s.nu_passive.noalias() += step_size * d.dnu_passive;
-  }
+  contact_dynamics_.computeCondensedDualDirection(robot, dtau, kkt_matrix_,  
+                                                  kkt_residual_, d_next.dgmm(), 
+                                                  d);
+  s.integrate(robot, step_size, d);
   constraints_->updateSlack(constraints_data_, step_size);
 }
 

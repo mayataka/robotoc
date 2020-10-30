@@ -133,6 +133,7 @@ public:
   /// @param[in] d Split direction of this stage.
   /// 
   void computeCondensedDirection(Robot& robot, const double dtau, 
+                                 const RiccatiSolution& riccati,
                                  const SplitSolution& s, 
                                  const SplitDirection& d_next, 
                                  SplitDirection& d);

@@ -28,7 +28,7 @@ protected:
 };
 
 
-TEST_F(SplitDirectionTest, fixed_base) {
+TEST_F(SplitDirectionTest, fixedBase) {
   Robot robot(fixed_base_urdf);
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
@@ -111,7 +111,7 @@ TEST_F(SplitDirectionTest, fixed_base) {
 }
 
 
-TEST_F(SplitDirectionTest, fixed_base_contact) {
+TEST_F(SplitDirectionTest, fixedBaseContact) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
   const int dimv = robot.dimv();
@@ -215,7 +215,7 @@ TEST_F(SplitDirectionTest, fixed_base_contact) {
 }
 
 
-TEST_F(SplitDirectionTest, floating_base) {
+TEST_F(SplitDirectionTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
   const int dimv = robot.dimv();
@@ -321,6 +321,196 @@ TEST_F(SplitDirectionTest, floating_base) {
     EXPECT_TRUE(d_random.dbetamu().tail(dimf).isApprox(d_random.dmu()));
   }
 }
+
+
+TEST_F(SplitDirectionTest, isApproxFixedBase) {
+  Robot robot(fixed_base_urdf);
+  SplitDirection d(robot);
+  d.setRandom();
+  EXPECT_FALSE(d.dlmd().isZero());
+  EXPECT_FALSE(d.dgmm().isZero());
+  EXPECT_FALSE(d.du().isZero());
+  EXPECT_FALSE(d.dq().isZero());
+  EXPECT_FALSE(d.dv().isZero());
+  EXPECT_FALSE(d.dx().isZero());
+  EXPECT_FALSE(d.da().isZero());
+  EXPECT_FALSE(d.dbeta().isZero());
+  SplitDirection d_ref = d;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.du_passive.setRandom();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dnu_passive.setRandom();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.df().setRandom();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dmu().setRandom();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dlmd().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dlmd() = d.dlmd();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dgmm().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dgmm() = d.dgmm();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.du().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.du() = d.du();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dq().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dq() = d.dq();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dv().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dv() = d.dv();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.da().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.da() = d.da();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dbeta().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dbeta() = d.dbeta();
+  EXPECT_TRUE(d.isApprox(d_ref));
+}
+
+
+TEST_F(SplitDirectionTest, isApproxFixedBaseWithContacts) {
+  std::vector<int> contact_frames = {18};
+  Robot robot(fixed_base_urdf, contact_frames);
+  std::vector<bool> is_contact_active = {true};
+  ContactStatus contact_status = ContactStatus(robot.max_point_contacts());
+  contact_status.setContactStatus(is_contact_active);
+  SplitDirection d(robot);
+  d.setRandom(contact_status);
+  EXPECT_FALSE(d.dlmd().isZero());
+  EXPECT_FALSE(d.dgmm().isZero());
+  EXPECT_FALSE(d.du().isZero());
+  EXPECT_FALSE(d.dq().isZero());
+  EXPECT_FALSE(d.dv().isZero());
+  EXPECT_FALSE(d.dx().isZero());
+  EXPECT_FALSE(d.da().isZero());
+  EXPECT_FALSE(d.df().isZero());
+  EXPECT_FALSE(d.dbeta().isZero());
+  EXPECT_FALSE(d.dmu().isZero());
+  SplitDirection d_ref = d;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.du_passive.setRandom();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dnu_passive.setRandom();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dlmd().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dlmd() = d.dlmd();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dgmm().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dgmm() = d.dgmm();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.du().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.du() = d.du();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dq().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dq() = d.dq();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dv().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dv() = d.dv();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.da().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.da() = d.da();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dbeta().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dbeta() = d.dbeta();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.df().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.df() = d.df();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dmu().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dmu() = d.dmu();
+  EXPECT_TRUE(d.isApprox(d_ref));
+}
+
+
+TEST_F(SplitDirectionTest, isApproxFloatingBase) {
+  std::vector<int> contact_frames = {14, 24, 34, 44};
+  Robot robot(floating_base_urdf, contact_frames);
+  std::random_device rnd;
+  std::vector<bool> is_contact_active;
+  for (const auto frame : contact_frames) {
+    is_contact_active.push_back(rnd()%2==0);
+  }
+  ContactStatus contact_status = ContactStatus(robot.max_point_contacts());
+  contact_status.setContactStatus(is_contact_active);
+  SplitDirection d(robot);
+  d.setRandom(contact_status);
+  EXPECT_FALSE(d.dlmd().isZero());
+  EXPECT_FALSE(d.dgmm().isZero());
+  EXPECT_FALSE(d.du().isZero());
+  EXPECT_FALSE(d.dq().isZero());
+  EXPECT_FALSE(d.dv().isZero());
+  EXPECT_FALSE(d.dx().isZero());
+  EXPECT_FALSE(d.da().isZero());
+  EXPECT_FALSE(d.dbeta().isZero());
+  EXPECT_FALSE(d.du_passive.isZero());
+  EXPECT_FALSE(d.dnu_passive.isZero());
+  SplitDirection d_ref = d;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dlmd().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dlmd() = d.dlmd();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dgmm().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dgmm() = d.dgmm();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.du().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.du() = d.du();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dq().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dq() = d.dq();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dv().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dv() = d.dv();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.da().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.da() = d.da();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dbeta().setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dbeta() = d.dbeta();
+  EXPECT_TRUE(d.isApprox(d_ref));
+  if (contact_status.hasActiveContacts()) {
+    d_ref.df().setRandom();
+    EXPECT_FALSE(d.isApprox(d_ref));
+    d_ref.df() = d.df();
+    EXPECT_TRUE(d.isApprox(d_ref));
+    d_ref.dmu().setRandom();
+    EXPECT_FALSE(d.isApprox(d_ref));
+    d_ref.dmu() = d.dmu();
+    EXPECT_TRUE(d.isApprox(d_ref));
+  }
+  d_ref.du_passive.setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.du_passive = d.du_passive;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  d_ref.dnu_passive.setRandom();
+  EXPECT_FALSE(d.isApprox(d_ref));
+  d_ref.dnu_passive = d.dnu_passive;
+  EXPECT_TRUE(d.isApprox(d_ref));
+}
+
 
 } // namespace idocp
 
