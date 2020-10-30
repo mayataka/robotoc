@@ -17,8 +17,8 @@
 #include "idocp/constraints/impulse_constraints.hpp"
 #include "idocp/impulse/impulse_state_equation.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
-#include "idocp/impulse/impulse_riccati_matrix_factorizer.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/impulse/impulse_riccati_factorizer.hpp"
+#include "idocp/ocp/riccati_solution.hpp"
 
 
 namespace idocp {
@@ -104,8 +104,8 @@ public:
   /// @param[in] riccati_next Riccati factorization of the next stage.
   /// @param[out] riccati Riccati factorization of this stage.
   /// 
-  void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next,
-                                RiccatiFactorization& riccati);
+  void backwardRiccatiRecursion(const RiccatiSolution& riccati_next,
+                                RiccatiSolution& riccati);
 
   ///
   /// @brief Computes the Newton direction of the state of this stage from the 
@@ -194,7 +194,7 @@ public:
   /// @param[in, out] s Split solution of this stage.
   ///
   void updatePrimal(Robot& robot, const double step_size, 
-                    const RiccatiFactorization& riccati, 
+                    const RiccatiSolution& riccati, 
                     const ImpulseSplitDirection& d, ImpulseSplitSolution& s);
 
   ///
@@ -230,7 +230,7 @@ private:
   ImpulseKKTResidual kkt_residual_;
   ImpulseKKTMatrix kkt_matrix_;
   ImpulseDynamicsForwardEuler impulse_dynamics_;
-  ImpulseRiccatiMatrixFactorizer riccati_factorizer_;
+  ImpulseRiccatiFactorizer riccati_factorizer_;
   ImpulseSplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
   double stage_cost_, constraint_violation_;
   bool has_floating_base_;

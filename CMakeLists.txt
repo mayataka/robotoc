@@ -81,8 +81,8 @@ add_library(
   src/ocp/riccati_solution.cpp
   src/ocp/riccati_gain.cpp
   src/ocp/riccati_factorizer.cpp
-  # src/ocp/terminal_ocp.cpp
-  # src/ocp/split_ocp.cpp
+  src/ocp/terminal_ocp.cpp
+  src/ocp/split_ocp.cpp
   # src/ocp/contact_sequence.cpp
   # src/ocp/ocp.cpp
   # src/ocp/split_parnmpc.cpp

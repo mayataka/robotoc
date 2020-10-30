@@ -5,15 +5,15 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
-#include "idocp/impulse/impulse_riccati_matrix_factorizer.hpp"
+#include "idocp/ocp/riccati_solution.hpp"
+#include "idocp/impulse/impulse_riccati_factorizer.hpp"
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 
 
 namespace idocp {
 
-class ImpulseRiccatiMatrixFactorizerTest : public ::testing::Test {
+class ImpulseRiccatiFactorizerTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -32,11 +32,11 @@ protected:
 };
 
 
-TEST_F(ImpulseRiccatiMatrixFactorizerTest, fixed_base) {
+TEST_F(ImpulseRiccatiFactorizerTest, fixed_base) {
   const int dimv = fixed_base_robot_.dimv();
   const Eigen::MatrixXd P_seed = Eigen::MatrixXd::Random(2*dimv, 2*dimv);
   const Eigen::MatrixXd P_next = P_seed * P_seed.transpose();
-  RiccatiFactorization riccati_next(fixed_base_robot_);
+  RiccatiSolution riccati_next(fixed_base_robot_);
   riccati_next.Pqq = P_next.topLeftCorner(dimv, dimv);
   riccati_next.Pqv = P_next.topRightCorner(dimv, dimv);
   riccati_next.Pvq = P_next.bottomLeftCorner(dimv, dimv);
@@ -55,8 +55,8 @@ TEST_F(ImpulseRiccatiMatrixFactorizerTest, fixed_base) {
   kkt_residual.Fv() = Eigen::VectorXd::Random(dimv);
   kkt_residual.lq() = Eigen::VectorXd::Random(dimv);
   kkt_residual.lv() = Eigen::VectorXd::Random(dimv);
-  RiccatiFactorization riccati(fixed_base_robot_);
-  ImpulseRiccatiMatrixFactorizer factorizer(fixed_base_robot_);
+  RiccatiSolution riccati(fixed_base_robot_);
+  ImpulseRiccatiFactorizer factorizer(fixed_base_robot_);
   factorizer.factorize(kkt_matrix, kkt_residual, riccati_next, riccati);
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
   A.topLeftCorner(dimv, dimv) = kkt_matrix.Fqq;
@@ -75,11 +75,11 @@ TEST_F(ImpulseRiccatiMatrixFactorizerTest, fixed_base) {
 }
 
 
-TEST_F(ImpulseRiccatiMatrixFactorizerTest, floating_base) {
+TEST_F(ImpulseRiccatiFactorizerTest, floating_base) {
   const int dimv = floating_base_robot_.dimv();
   const Eigen::MatrixXd P_seed = Eigen::MatrixXd::Random(2*dimv, 2*dimv);
   const Eigen::MatrixXd P_next = P_seed * P_seed.transpose();
-  RiccatiFactorization riccati_next(floating_base_robot_);
+  RiccatiSolution riccati_next(floating_base_robot_);
   riccati_next.Pqq = P_next.topLeftCorner(dimv, dimv);
   riccati_next.Pqv = P_next.topRightCorner(dimv, dimv);
   riccati_next.Pvq = P_next.bottomLeftCorner(dimv, dimv);
@@ -99,8 +99,8 @@ TEST_F(ImpulseRiccatiMatrixFactorizerTest, floating_base) {
   kkt_residual.Fv() = Eigen::VectorXd::Random(dimv);
   kkt_residual.lq() = Eigen::VectorXd::Random(dimv);
   kkt_residual.lv() = Eigen::VectorXd::Random(dimv);
-  RiccatiFactorization riccati(floating_base_robot_);
-  ImpulseRiccatiMatrixFactorizer factorizer(floating_base_robot_);
+  RiccatiSolution riccati(floating_base_robot_);
+  ImpulseRiccatiFactorizer factorizer(floating_base_robot_);
   factorizer.factorize(kkt_matrix, kkt_residual, riccati_next, riccati);
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
   A.topLeftCorner(dimv, dimv) = kkt_matrix.Fqq;

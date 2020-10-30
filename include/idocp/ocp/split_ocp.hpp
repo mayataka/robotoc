@@ -132,11 +132,22 @@ public:
   /// @param[in] s Split solution of this stage.
   /// @param[in] d Split direction of this stage.
   /// 
-  void computeCondensedDirection(Robot& robot, const double dtau, 
-                                 const RiccatiSolution& riccati,
-                                 const SplitSolution& s, 
-                                 const SplitDirection& d_next, 
-                                 SplitDirection& d);
+  void computeCondensedPrimalDirection(Robot& robot, const double dtau, 
+                                       const RiccatiSolution& riccati,
+                                       const SplitSolution& s, 
+                                       SplitDirection& d);
+
+  ///
+  /// @brief Computes the Newton direction of the condensed variables of this 
+  /// stage.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in] d Split direction of this stage.
+  /// 
+  void computeCondensedDualDirection(Robot& robot, const double dtau, 
+                                     const SplitDirection& d_next,
+                                     SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -194,9 +205,9 @@ public:
 
   ///
   /// @brief Updates dual variables of the inequality constraints.
-  /// @param[in] step_size Dula step size of the OCP. 
+  /// @param[in] dual_step_size Dula step size of the OCP. 
   ///
-  void updateDual(const double step_size);
+  void updateDual(const double dual_step_size);
 
   ///
   /// @brief Updates primal variables of this stage.
@@ -207,9 +218,9 @@ public:
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
   ///
-  void updatePrimal(Robot& robot, const double step_size, const double dtau, 
-                    const RiccatiSolution& riccati, 
-                    const SplitDirection& d, SplitSolution& s);
+  void updatePrimal(Robot& robot, const double primal_step_size, 
+                    const double dtau, const SplitDirection& d, 
+                    SplitSolution& s);
 
   ///
   /// @brief Gets the state-feedback gain for the control input torques.
@@ -269,6 +280,14 @@ private:
   inline void setContactStatusForKKT(const ContactStatus& contact_status) {
     kkt_residual_.setContactStatus(contact_status);
     kkt_matrix_.setContactStatus(contact_status);
+    if (contact_status.hasActiveContacts()) {
+      fd_like_elimination_ = true;
+    }
+    else {
+      if (!has_floating_base_) {
+        fd_like_elimination_ = false;
+      }
+    }
   }
 
   double cost(Robot& robot, const double t, const double dtau, 
