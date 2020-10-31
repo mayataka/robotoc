@@ -262,7 +262,6 @@ TEST_F(StateEquationTest, normWithStepSizeFloatingBase) {
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), backrward_squared);
 }
 
-
 } // namespace idocp
 
 

@@ -283,7 +283,7 @@ TEST_F(SplitDirectionTest, fixedBase) {
 }
 
 
-TEST_F(SplitDirectionTest, isApproxFloatingBase) {
+TEST_F(SplitDirectionTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
   std::vector<bool> is_contact_active = {false, false, false, false};
@@ -296,6 +296,10 @@ TEST_F(SplitDirectionTest, isApproxFloatingBase) {
   for (const auto frame : contact_frames) {
     is_contact_active.push_back(rnd()%2==0);
   }
+  if (!contact_status.hasActiveContacts()) {
+    contact_status.activateContact(0);
+  }
+  contact_status.setContactStatus(is_contact_active);
   testSize(robot, contact_status);
   testIsApprox(robot, contact_status);
 }

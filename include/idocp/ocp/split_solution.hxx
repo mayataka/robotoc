@@ -3,6 +3,8 @@
 
 #include "idocp/ocp/split_solution.hpp"
 
+#include <assert.h>
+
 namespace idocp {
 
 inline SplitSolution::SplitSolution(const Robot& robot) 

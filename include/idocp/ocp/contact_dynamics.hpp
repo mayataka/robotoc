@@ -65,7 +65,8 @@ public:
                                      const Eigen::MatrixBase<VectorType>& dgmm,
                                      SplitDirection& d);
 
-  static void expansionPrimal(const Robot& robot, ContactDynamicsData& data, 
+  static void expansionPrimal(const Robot& robot, 
+                              const ContactDynamicsData& data, 
                               SplitDirection& d);
 
   template <typename VectorType>

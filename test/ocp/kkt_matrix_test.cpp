@@ -349,6 +349,7 @@ TEST_F(KKTMatrixTest, floatingBase) {
   for (const auto frame : contact_frames) {
     is_contact_active.push_back(rnd()%2==0);
   }
+  contact_status.setContactStatus(is_contact_active);
   testSize(robot, contact_status);
   testIsApprox(robot, contact_status);
   testInverse(robot);

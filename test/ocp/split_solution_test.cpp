@@ -485,10 +485,12 @@ TEST_F(SplitSolutionTest, floatingBase) {
   TestIsApprox(robot, contact_status);
   TestIntegrate(robot, contact_status);
   std::random_device rnd;
-  for (int i=0; i<is_contact_active.size(); ++i) {
-    if (rnd()%2==0) {
-      contact_status.activateContact(i);
-    }
+  is_contact_active.clear();
+  for (const auto frame : contact_frames) {
+    is_contact_active.push_back(rnd()%2==0);
+  }
+  if (!contact_status.hasActiveContacts()) {
+    contact_status.activateContact(0);
   }
   TestWithContacts(robot, contact_status);
   TestIsApprox(robot, contact_status);

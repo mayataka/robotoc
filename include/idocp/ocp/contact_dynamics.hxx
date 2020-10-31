@@ -185,7 +185,7 @@ inline void ContactDynamics::computeCondensedDualDirection(
 
 
 inline void ContactDynamics::expansionPrimal(const Robot& robot, 
-                                             ContactDynamicsData& data, 
+                                             const ContactDynamicsData& data, 
                                              SplitDirection& d) {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
