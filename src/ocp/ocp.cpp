@@ -103,7 +103,7 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
     if (i < N_) {
       const int robot_id = omp_get_thread_num();
       split_ocps_[i].computeCondensedPrimalDirection(robots_[robot_id], dtau_, 
-                                                    riccati_[i], s_[i], d_[i]);
+                                                     riccati_[i], s_[i], d_[i]);
       primal_step_sizes_.coeffRef(i) = split_ocps_[i].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i) = split_ocps_[i].maxDualStepSize();
     }

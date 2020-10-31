@@ -89,6 +89,12 @@ public:
   ///
   void getControlInput(const int stage, Eigen::VectorXd& u) const;
 
+  ///
+  /// @brief Get the const reference to the split solution of a time stage.
+  /// @param[in] stage Time stage of interest. Must be more than 0 and less 
+  /// than N-1.
+  /// @return Const reference to the split solution of the specified time stage.
+  ///
   const SplitSolution& getSplitSolution(const int stage) const;
 
   ///
