@@ -7,6 +7,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/ocp/riccati_gain.hpp"
 
@@ -38,9 +39,21 @@ public:
   // Use default move assign operator.
   RiccatiFactorizer& operator=(RiccatiFactorizer&&) noexcept = default;
 
-  void factorize(const RiccatiSolution& riccati_next, const double dtau, 
-                 KKTMatrix& kkt_matrix, KKTResidual& kkt_residual,
-                 RiccatiGain& gain, RiccatiSolution& riccati);
+  void factorizeBackwardRicursion(const RiccatiSolution& riccati_next, 
+                                  const double dtau, KKTMatrix& kkt_matrix, 
+                                  KKTResidual& kkt_residual, RiccatiGain& gain, 
+                                  RiccatiSolution& riccati);
+
+  void factorizeForwardRicursion(const KKTMatrix& kkt_matrix, 
+                                 const KKTResidual& kkt_residual,
+                                 const SplitDirection& d, const double dtau,
+                                 SplitDirection& d_next) const;
+
+  static void computeCostateDirection(const RiccatiSolution& riccati, 
+                                      SplitDirection& d);
+
+  static void computeControlInputDirection(const RiccatiGain& gain, 
+                                           SplitDirection& d);
 
   void factorizeMatrices(const RiccatiSolution& riccati_next, 
                          const double dtau, KKTMatrix& kkt_matrix, 

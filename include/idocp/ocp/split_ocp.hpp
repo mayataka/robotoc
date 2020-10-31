@@ -119,18 +119,19 @@ public:
   /// one of the previous stage.
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] d Split direction of this stage.
-  /// @param[in] d_next Split direction of the next stage.
+  /// @param[out] d_next Split direction of the next stage.
   /// 
   void forwardRiccatiRecursion(const double dtau, SplitDirection& d,   
-                               SplitDirection& d_next);
+                               SplitDirection& d_next) const;
 
   ///
   /// @brief Computes the Newton direction of the condensed variables of this 
   /// stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] riccati Riccati factorization of this stage.
   /// @param[in] s Split solution of this stage.
-  /// @param[in] d Split direction of this stage.
+  /// @param[in, out] d Split direction of this stage.
   /// 
   void computeCondensedPrimalDirection(Robot& robot, const double dtau, 
                                        const RiccatiSolution& riccati,
@@ -142,8 +143,8 @@ public:
   /// stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] d Split direction of this stage.
+  /// @param[in] d_next Split direction of the next stage.
+  /// @param[in, out] d Split direction of this stage.
   /// 
   void computeCondensedDualDirection(Robot& robot, const double dtau, 
                                      const SplitDirection& d_next,
@@ -212,9 +213,8 @@ public:
   ///
   /// @brief Updates primal variables of this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] step_size Primal step size of the OCP. 
+  /// @param[in] primal_step_size Primal step size of the OCP. 
   /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] riccati Riccati factorization of this stage.
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
   ///
@@ -249,16 +249,11 @@ public:
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
-  /// this function, SplitOCP::linearizeOCP or SplitOCP::computeKKTResidual
+  /// this function, SplitOCP::linearizeOCP() or SplitOCP::computeKKTResidual()
   /// must be called.
   /// @return The squared norm of the kKT residual.
   ///
   double squaredNormKKTResidual(const double dtau) const;
-
-  double cost(Robot& robot, const double t, const double dtau, 
-              const SplitSolution& s);
-
-  double constraintViolation(const double dtau) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -294,6 +289,8 @@ private:
       }
     }
   }
+
+  double constraintViolation(const double dtau) const;
 
 };
 

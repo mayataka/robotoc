@@ -275,21 +275,13 @@ TEST_F(TerminalOCPTest, fixedBase) {
   Robot robot(fixed_base_urdf);
   const auto cost = createCost(robot);
   const auto constraints = createConstraints(robot);
-  std::cout << "aaa" << std::endl;
   testLinearizeOCPAndBackwardRiccatiRecursion(robot, cost, constraints);
-  std::cout << "aaa" << std::endl;
   testTerminalCost(robot, cost, constraints);
-  std::cout << "aaa" << std::endl;
   testTerminalCostWithStepSize(robot, cost, constraints);
-  std::cout << "aaa" << std::endl;
   testComputeCondensedPrimalDirection(robot, cost, constraints);
-  std::cout << "aaa" << std::endl;
   testComputeCondensedDualDirection(robot, cost, constraints);
-  std::cout << "aaa" << std::endl;
   testUpdatePrimal(robot, cost, constraints);
-  std::cout << "aaa" << std::endl;
   testUpdateDual(robot, cost, constraints);
-  std::cout << "aaa" << std::endl;
   testComputeKKTResidual(robot, cost, constraints);
 }
 

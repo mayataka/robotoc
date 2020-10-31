@@ -7,6 +7,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/ocp/riccati_gain.hpp"
 #include "idocp/ocp/riccati_factorizer.hpp"
@@ -29,9 +30,15 @@ protected:
   virtual void TearDown() {
   }
 
-  static void testUnits(const Robot& robot, const double dtau);
+  static void testBackwardRecursionUnits(const Robot& robot, const double dtau);
 
-  static void testIntegration(const Robot& robot, const double dtau);
+  static void testBackwardRecursion(const Robot& robot, const double dtau);
+
+  static void testForwardRecursion(const Robot& robot, const double dtau);
+
+  static void testComputeCostateDirection(const Robot& robot, const double dtau);
+
+  static void testComputeControlInputDirection(const Robot& robot, const double dtau);
 
   double dtau;
   std::string fixed_base_urdf, floating_base_urdf;
@@ -39,7 +46,7 @@ protected:
 };
 
 
-void RiccatiFactorizerTest::testUnits(const Robot& robot, const double dtau) {
+void RiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot, const double dtau) {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   RiccatiSolution riccati_next(robot);
@@ -124,7 +131,7 @@ void RiccatiFactorizerTest::testUnits(const Robot& robot, const double dtau) {
 }
 
 
-void RiccatiFactorizerTest::testIntegration(const Robot& robot, const double dtau) {
+void RiccatiFactorizerTest::testBackwardRecursion(const Robot& robot, const double dtau) {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   RiccatiSolution riccati_next(robot);
@@ -167,7 +174,7 @@ void RiccatiFactorizerTest::testIntegration(const Robot& robot, const double dta
   RiccatiFactorizer factorizer(robot), factorizer_ref(robot);
   RiccatiSolution riccati(robot), riccati_ref(robot);
   RiccatiGain gain(robot), gain_ref(robot);
-  factorizer.factorize(riccati_next, dtau, kkt_matrix, kkt_residual, gain, riccati);
+  factorizer.factorizeBackwardRicursion(riccati_next, dtau, kkt_matrix, kkt_residual, gain, riccati);
   factorizer_ref.factorizeMatrices(riccati_next, dtau, kkt_matrix_ref, kkt_residual_ref);
   factorizer_ref.computeFeedbackGainAndFeedforward(kkt_matrix_ref, kkt_residual_ref, gain_ref);
   factorizer_ref.factorizeRecursion(riccati_next, dtau, kkt_matrix_ref, kkt_residual_ref, gain_ref, riccati_ref);
@@ -182,15 +189,100 @@ void RiccatiFactorizerTest::testIntegration(const Robot& robot, const double dta
 }
 
 
+void RiccatiFactorizerTest::testForwardRecursion(const Robot& robot, const double dtau) {
+  const int dimv = robot.dimv();
+  const int dimu = robot.dimu();
+  KKTMatrix kkt_matrix(robot);
+  KKTResidual kkt_residual(robot);
+  Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
+  const Eigen::MatrixXd Qqq = seed * seed.transpose();
+  const Eigen::MatrixXd Qqv = Eigen::MatrixXd::Random(dimv, dimv);
+  const Eigen::MatrixXd Qvq = Qqv.transpose();
+  seed = Eigen::MatrixXd::Random(dimv, dimv);
+  const Eigen::MatrixXd Qvv = seed * seed.transpose();
+  seed = Eigen::MatrixXd::Random(dimu, dimu);
+  const Eigen::MatrixXd Qqu = Eigen::MatrixXd::Random(dimv, dimu);
+  const Eigen::MatrixXd Qvu = Eigen::MatrixXd::Random(dimv, dimu);
+  const Eigen::MatrixXd Quu = seed * seed.transpose();
+  kkt_matrix.Qqq() = Qqq;
+  kkt_matrix.Qqv() = Qqv;
+  kkt_matrix.Qvq() = Qvq;
+  kkt_matrix.Qvv() = Qvv;
+  kkt_matrix.Qqu() = Qqu;
+  kkt_matrix.Qvu() = Qvu;
+  kkt_matrix.Quu() = Quu;
+  kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(dimv, dimv);
+  if (robot.has_floating_base()) {
+    kkt_matrix.Fqq().topLeftCorner(6, 6).setRandom();
+  }
+  kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
+  kkt_matrix.Fvq().setRandom();
+  kkt_matrix.Fvv().setRandom();
+  kkt_matrix.Fvu().setRandom();
+  kkt_residual.lu().setRandom();
+  kkt_residual.Fx().setRandom();
+  const SplitDirection d = SplitDirection::Random(robot);
+  SplitDirection d_next(robot), d_next_ref(robot);
+  RiccatiFactorizer factorizer(robot);
+  factorizer.factorizeForwardRicursion(kkt_matrix, kkt_residual, d, dtau, d_next);
+  d_next_ref.dx() = kkt_matrix.Fxx() * d.dx() + kkt_matrix.Fxu() * d.du() + kkt_residual.Fx();
+  EXPECT_TRUE(d_next.isApprox(d_next_ref));
+}
+
+
+void RiccatiFactorizerTest::testComputeCostateDirection(const Robot& robot, const double dtau) {
+  const int dimv = robot.dimv();
+  const int dimu = robot.dimu();
+  RiccatiSolution riccati(robot);
+  Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
+  riccati.Pqq = seed * seed.transpose();
+  riccati.Pqv = Eigen::MatrixXd::Random(dimv, dimv);
+  riccati.Pvq = riccati.Pqv.transpose();
+  seed = Eigen::MatrixXd::Random(dimv, dimv);
+  riccati.Pvv = seed * seed.transpose();
+  riccati.sq.setRandom();
+  riccati.sv.setRandom();
+  SplitDirection d = SplitDirection::Random(robot);
+  d.dlmd().setZero();
+  d.dgmm().setZero();
+  SplitDirection d_ref = d;
+  RiccatiFactorizer::computeCostateDirection(riccati, d);
+  d_ref.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
+  d_ref.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
+  EXPECT_TRUE(d.isApprox(d_ref));
+}
+
+
+void RiccatiFactorizerTest::testComputeControlInputDirection(const Robot& robot, const double dtau) {
+  const int dimv = robot.dimv();
+  const int dimu = robot.dimu();
+  RiccatiGain gain(robot);
+  gain.K.setRandom();
+  gain.k.setRandom();
+  SplitDirection d = SplitDirection::Random(robot);
+  d.du().setZero();
+  SplitDirection d_ref = d;
+  RiccatiFactorizer::computeControlInputDirection(gain, d);
+  d_ref.du() = gain.K * d_ref.dx() + gain.k;
+  EXPECT_TRUE(d.isApprox(d_ref));
+}
+
+
 TEST_F(RiccatiFactorizerTest, fixedBase) {
-  testUnits(fixed_base_robot, dtau);
-  testIntegration(fixed_base_robot, dtau);
+  testBackwardRecursionUnits(fixed_base_robot, dtau);
+  testBackwardRecursion(fixed_base_robot, dtau);
+  testForwardRecursion(fixed_base_robot, dtau);
+  testComputeCostateDirection(fixed_base_robot, dtau);
+  testComputeControlInputDirection(fixed_base_robot, dtau);
 }
 
 
 TEST_F(RiccatiFactorizerTest, floating_base) {
-  testUnits(floating_base_robot, dtau);
-  testIntegration(floating_base_robot, dtau);
+  testBackwardRecursionUnits(floating_base_robot, dtau);
+  testBackwardRecursion(floating_base_robot, dtau);
+  testForwardRecursion(floating_base_robot, dtau);
+  testComputeCostateDirection(floating_base_robot, dtau);
+  testComputeControlInputDirection(floating_base_robot, dtau);
 }
 
 } // namespace idocp

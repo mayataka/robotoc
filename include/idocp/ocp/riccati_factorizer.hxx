@@ -41,16 +41,44 @@ inline RiccatiFactorizer::~RiccatiFactorizer() {
 }
 
 
-inline void RiccatiFactorizer::factorize(const RiccatiSolution& riccati_next, 
-                                         const double dtau, 
-                                         KKTMatrix& kkt_matrix, 
-                                         KKTResidual& kkt_residual, 
-                                         RiccatiGain& gain, 
-                                         RiccatiSolution& riccati) {
+inline void RiccatiFactorizer::factorizeBackwardRicursion(
+    const RiccatiSolution& riccati_next, const double dtau, 
+    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, RiccatiGain& gain, 
+    RiccatiSolution& riccati) {
   assert(dtau > 0);
   factorizeMatrices(riccati_next, dtau, kkt_matrix, kkt_residual);
   computeFeedbackGainAndFeedforward(kkt_matrix, kkt_residual, gain);
   factorizeRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, gain, riccati);
+}
+
+
+inline void RiccatiFactorizer::factorizeForwardRicursion(
+    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual,
+    const SplitDirection& d, const double dtau, SplitDirection& d_next) const {
+  assert(dtau > 0);
+  if (has_floating_base_) {
+    d_next.dq().noalias() = kkt_matrix.Fqq() * d.dq() + dtau * d.dv() 
+                              + kkt_residual.Fq();
+  }
+  else {
+    d_next.dq().noalias() = d.dq() + dtau * d.dv() + kkt_residual.Fq();
+  }
+  d_next.dv().noalias() = kkt_matrix.Fvq() * d.dq() + kkt_matrix.Fvv() * d.dv() 
+                            + kkt_matrix.Fvu() * d.du() + kkt_residual.Fv();
+}
+
+
+inline void RiccatiFactorizer::computeCostateDirection(
+    const RiccatiSolution& riccati, SplitDirection& d) {
+  d.dlmd().noalias() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
+  d.dgmm().noalias() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
+}
+
+
+inline void RiccatiFactorizer::computeControlInputDirection(
+    const RiccatiGain& gain, SplitDirection& d) {
+  d.du() = gain.k;
+  d.du().noalias() += gain.K * d.dx();
 }
 
 

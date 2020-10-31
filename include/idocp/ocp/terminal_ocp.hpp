@@ -90,7 +90,8 @@ public:
   void linearizeOCP(Robot& robot, const double t, const SplitSolution& s);
 
   ///
-  /// @brief Computes the Riccati factorization of this terminal stage.
+  /// @brief Computes the Riccati factorization of this terminal stage. 
+  /// TerminalOCP::linearizeOCP() must be called before calling this function.
   /// @param[out] riccati Riccati factorization of this terminal stage.
   /// 
   void backwardRiccatiRecursion(RiccatiSolution& riccati) const;
@@ -98,8 +99,8 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
   /// this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] d Split direction of this stage.
+  /// @param[in] riccati Riccati factorization of this terminal stage.
+  /// @param[in, out] d Split direction of this stage.
   /// 
   void computeCondensedPrimalDirection(const RiccatiSolution& riccati,
                                        SplitDirection& d) const;
@@ -113,7 +114,8 @@ public:
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
-  /// the inequality constraints.
+  /// the inequality constraints. TerminalOCP::computeCondensedPrimalDirection()
+  /// must be called before calling this function.
   /// @return Maximum stap size of the primal variables that satisfies 
   /// the inequality constraints.
   ///
@@ -121,7 +123,8 @@ public:
 
   ///
   /// @brief Returns maximum stap size of the dual variables that satisfies 
-  /// the inequality constraints.
+  /// the inequality constraints. TerminalOCP::computeCondensedDualDirection()
+  /// must be called before calling this function.
   /// @return Maximum stap size of the dual variables that satisfies 
   /// the inequality constraints.
   ///
@@ -136,8 +139,7 @@ public:
   double terminalCost(Robot& robot, const double t, const SplitSolution& s);
 
   ///
-  /// @brief Returns the terminal cost under step_size. The split solution of 
-  /// this stage and is computed by step_size temporary. 
+  /// @brief Returns the terminal cost under step_size. 
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] step_size Step size for the primal variables. 
   /// @param[in] t Current time of this stage. 
@@ -148,16 +150,19 @@ public:
                       const SplitSolution& s, const SplitDirection& d);
 
   ///
-  /// @brief Updates dual variables of the inequality constraints.
+  /// @brief Updates dual variables of the inequality constraints. 
+  /// TerminalOCP::computeCondensedDualDirection() must be called before 
+  /// calling this function.
   /// @param[in] step_size Dula step size of the OCP. 
   ///
   void updateDual(const double step_size);
 
   ///
   /// @brief Updates primal variables of this stage.
+  /// TerminalOCP::computeCondensedPrimalDirection() must be called before
+  /// calling this function.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] step_size Primal step size of the OCP. 
-  /// @param[in] riccati Riccati factorization of this stage.
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
   ///
@@ -173,10 +178,10 @@ public:
   void computeKKTResidual(Robot& robot, const double t, const SplitSolution& s);
 
   ///
-  /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
-  /// this function, SplitOCP::linearizeOCP or SplitOCP::computeKKTResidual
-  /// must be called.
-  /// @return The squared norm of the kKT residual.
+  /// @brief Returns the KKT residual of the OCP at this stage.  
+  /// SplitOCP::linearizeOCP or SplitOCP::computeKKTResidual must be called 
+  /// before calling this function.
+  /// @return The squared norm of the KKT residual.
   ///
   double squaredNormKKTResidual() const;
 
