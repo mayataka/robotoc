@@ -89,6 +89,8 @@ public:
   ///
   void getControlInput(const int stage, Eigen::VectorXd& u) const;
 
+  const SplitSolution& getSplitSolution(const int stage) const;
+
   ///
   /// @brief Gets the state-feedback gain for the control input torques.
   /// @param[in] stage Time stage of interest. Must be more than 0 and less 

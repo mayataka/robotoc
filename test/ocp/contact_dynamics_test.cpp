@@ -36,6 +36,7 @@ protected:
   static void testExpansionPrimal(Robot& robot, const ContactStatus& contact_status);
   static void testExpansionDual(Robot& robot, const ContactStatus& contact_status);
   static void testIntegration(Robot& robot, const ContactStatus& contact_status);
+  static void testComputeResidual(Robot& robot, const ContactStatus& contact_status);
 
   std::string fixed_base_urdf, floating_base_urdf;
 };
@@ -421,6 +422,39 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
 }
 
 
+void ContactDynamicsTest::testComputeResidual(Robot& robot, const ContactStatus& contact_status) {
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  ContactDynamics cd(robot);
+  robot.updateKinematics(s.q, s.v, s.a);
+  const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+  cd.computeContactDynamicsResidual(robot, contact_status, dtau, s);
+  const double l1norm = cd.l1NormContactDynamicsResidual(dtau);
+  const double squarednorm = cd.squaredNormContactDynamicsResidual(dtau);
+  ContactDynamicsData data(robot);
+  data.setContactStatus(contact_status);
+  robot.setContactForces(contact_status, s.f);
+  robot.RNEA(s.q, s.v, s.a, data.ID_full());
+  data.ID().noalias() -= s.u;
+  if (robot.has_floating_base()) {
+    data.ID_passive().noalias() -= s.u_passive;
+  }
+  robot.updateKinematics(s.q, s.v, s.a);
+  if (contact_status.hasActiveContacts()) {
+    robot.computeBaumgarteResidual(contact_status, dtau, data.C());
+  }
+  double l1norm_ref = dtau * data.IDC().lpNorm<1>();
+  if (robot.has_floating_base()) {
+     l1norm_ref += dtau * s.u_passive.lpNorm<1>();
+  }
+  double squarednorm_ref = dtau * dtau * data.IDC().squaredNorm();
+  if (robot.has_floating_base()) {
+     squarednorm_ref += dtau * dtau * s.u_passive.squaredNorm();
+  }
+  EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);
+  EXPECT_DOUBLE_EQ(squarednorm, squarednorm_ref);
+}
+
+
 TEST_F(ContactDynamicsTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   ContactStatus contact_status(contact_frames.size());
@@ -433,6 +467,7 @@ TEST_F(ContactDynamicsTest, fixedBase) {
   testExpansionPrimal(robot, contact_status);
   testExpansionDual(robot, contact_status);
   testIntegration(robot, contact_status);
+  testComputeResidual(robot, contact_status);
   contact_status.setContactStatus({true});
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
@@ -441,6 +476,7 @@ TEST_F(ContactDynamicsTest, fixedBase) {
   testExpansionPrimal(robot, contact_status);
   testExpansionDual(robot, contact_status);
   testIntegration(robot, contact_status);
+  testComputeResidual(robot, contact_status);
 }
 
 
@@ -456,6 +492,7 @@ TEST_F(ContactDynamicsTest, floatingBase) {
   testExpansionPrimal(robot, contact_status);
   testExpansionDual(robot, contact_status);
   testIntegration(robot, contact_status);
+  testComputeResidual(robot, contact_status);
   std::random_device rnd;
   std::vector<bool> is_contact_active;
   for (const auto frame : contact_frames) {
@@ -472,6 +509,7 @@ TEST_F(ContactDynamicsTest, floatingBase) {
   testExpansionPrimal(robot, contact_status);
   testExpansionDual(robot, contact_status);
   testIntegration(robot, contact_status);
+  testComputeResidual(robot, contact_status);
 }
 
 } // namespace idocp

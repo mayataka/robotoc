@@ -86,21 +86,30 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of the terminal stage. 
   /// @param[in] s Split solution of the terminal stage.
-  /// @param[out] riccati Riccati factorization of the terminal stage.
   ///
-  void linearizeOCP(Robot& robot, const double t, const SplitSolution& s, 
-                    RiccatiSolution& riccati);
+  void linearizeOCP(Robot& robot, const double t, const SplitSolution& s);
 
   ///
-  /// @brief Computes the Newton direction of the condensed variables of this 
-  /// stage.
+  /// @brief Computes the Riccati factorization of this terminal stage.
+  /// @param[out] riccati Riccati factorization of this terminal stage.
+  /// 
+  void backwardRiccatiRecursion(RiccatiSolution& riccati) const;
+
+  ///
+  /// @brief Computes the Newton direction of the condensed primal variables of 
+  /// this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] s Split solution of this stage.
   /// @param[in] d Split direction of this stage.
   /// 
   void computeCondensedPrimalDirection(const RiccatiSolution& riccati,
-                                       SplitDirection& d);
+                                       SplitDirection& d) const;
+
+  ///
+  /// @brief Computes the Newton direction of the condensed dual variables of 
+  /// this stage.
+  /// @param[in] d Split direction of this stage.
+  /// 
+  void computeCondensedDualDirection(const SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -180,7 +189,7 @@ private:
   ConstraintsData constraints_data_;
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
-  SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
+  SplitSolution s_tmp_; 
   bool use_kinematics_;
 
 };

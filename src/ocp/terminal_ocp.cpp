@@ -53,31 +53,37 @@ void TerminalOCP::initConstraints(Robot& robot, const int time_step,
 
 
 void TerminalOCP::linearizeOCP(Robot& robot, const double t, 
-                               const SplitSolution& s, 
-                               RiccatiSolution& riccati) {
-  kkt_residual_.lq().setZero();
-  kkt_residual_.lv().setZero();
+                               const SplitSolution& s) {
+  kkt_residual_.lx().setZero();
   if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
+    robot.updateKinematics(s.q, s.v);
   }
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, 
                                         kkt_residual_);
   kkt_residual_.lq().noalias() -= s.lmd;
   kkt_residual_.lv().noalias() -= s.gmm;
-  riccati.sq = - kkt_residual_.lq();
-  riccati.sv = - kkt_residual_.lv();
   kkt_matrix_.Qqq().setZero();
   kkt_matrix_.Qvv().setZero();
   cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
+}
+
+
+void TerminalOCP::backwardRiccatiRecursion(RiccatiSolution& riccati) const {
+  riccati.sq = - kkt_residual_.lq();
+  riccati.sv = - kkt_residual_.lv();
   riccati.Pqq = kkt_matrix_.Qqq();
   riccati.Pvv = kkt_matrix_.Qvv();
 }
 
 
 void TerminalOCP::computeCondensedPrimalDirection(
-    const RiccatiSolution& riccati, SplitDirection& d) {
+    const RiccatiSolution& riccati, SplitDirection& d) const {
   d.dlmd().noalias() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
   d.dgmm().noalias() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
+}
+
+
+void TerminalOCP::computeCondensedDualDirection(const SplitDirection& d) {
 }
 
  
@@ -95,6 +101,9 @@ double TerminalOCP::maxDualStepSize() {
 
 double TerminalOCP::terminalCost(Robot& robot, const double t, 
                                  const SplitSolution& s) {
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q, s.v);
+  }
   return cost_->phi(robot, cost_data_, t, s);
 }
 
@@ -106,6 +115,9 @@ double TerminalOCP::terminalCost(Robot& robot, const double step_size,
   assert(step_size <= 1);
   robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp_.q);
   s_tmp_.v = s.v + step_size * d.dv();
+  if (use_kinematics_) {
+    robot.updateKinematics(s_tmp_.q, s_tmp_.v);
+  }
   return cost_->phi(robot, cost_data_, t, s_tmp_);
 }
 
@@ -132,10 +144,9 @@ void TerminalOCP::updatePrimal(Robot& robot, const double step_size,
 void TerminalOCP::computeKKTResidual(Robot& robot, const double t,  
                                      const SplitSolution& s) {
 
-  kkt_residual_.lq().setZero();
-  kkt_residual_.lv().setZero();
+  kkt_residual_.lx().setZero();
   if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
+    robot.updateKinematics(s.q, s.v);
   }
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, 
                                         kkt_residual_);
@@ -146,8 +157,7 @@ void TerminalOCP::computeKKTResidual(Robot& robot, const double t,
 
 double TerminalOCP::squaredNormKKTResidual() const {
   double error = 0;
-  error += kkt_residual_.lq().squaredNorm();
-  error += kkt_residual_.lv().squaredNorm();
+  error += kkt_residual_.lx().squaredNorm();
   return error;
 }
 

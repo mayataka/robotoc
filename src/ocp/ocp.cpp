@@ -86,7 +86,8 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
     }
     else {
       const int robot_id = omp_get_thread_num();
-      terminal_ocp_.linearizeOCP(robots_[robot_id], t+T_, s_[N_], riccati_[N_]);
+      terminal_ocp_.linearizeOCP(robots_[robot_id], t+T_, s_[N_]);
+      terminal_ocp_.backwardRiccatiRecursion(riccati_[N_]);
     }
   }
   for (int i=N_-1; i>=0; --i) {
@@ -175,7 +176,8 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
     }
     else {
       const int robot_id = omp_get_thread_num();
-      terminal_ocp_.updatePrimal(robots_[robot_id], primal_step_size, d_[N_], s_[N_]);
+      terminal_ocp_.updatePrimal(robots_[robot_id], primal_step_size, d_[N_], 
+                                 s_[N_]);
       terminal_ocp_.updateDual(dual_step_size);
     }
   }
@@ -187,6 +189,13 @@ void OCP::getControlInput(const int stage, Eigen::VectorXd& u) const {
   assert(stage < N_);
   assert(u.size() == robots_[0].dimv());
   u = s_[stage].u;
+}
+
+
+const SplitSolution& OCP::getSplitSolution(const int stage) const {
+  assert(stage >= 0);
+  assert(stage < N_);
+  return s_[stage];
 }
 
 

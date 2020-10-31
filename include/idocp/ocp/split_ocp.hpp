@@ -255,6 +255,11 @@ public:
   ///
   double squaredNormKKTResidual(const double dtau) const;
 
+  double cost(Robot& robot, const double t, const double dtau, 
+              const SplitSolution& s);
+
+  double constraintViolation(const double dtau) const;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
@@ -289,11 +294,6 @@ private:
       }
     }
   }
-
-  double cost(Robot& robot, const double t, const double dtau, 
-              const SplitSolution& s);
-
-  double constraintViolation(const double dtau) const;
 
 };
 
