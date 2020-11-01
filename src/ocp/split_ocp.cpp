@@ -91,6 +91,8 @@ void SplitOCP::linearizeOCP(Robot& robot, const ContactStatus& contact_status,
                                      kkt_matrix_, kkt_residual_);
   contact_dynamics_.condenseContactDynamics(robot, contact_status, dtau, 
                                             kkt_matrix_, kkt_residual_);
+  kkt_matrix_.Qxx() = 0.5 * (kkt_matrix_.Qxx() + kkt_matrix_.Qxx());
+  kkt_matrix_.Quu() = 0.5 * (kkt_matrix_.Quu() + kkt_matrix_.Quu());
 }
 
 

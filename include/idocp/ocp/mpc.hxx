@@ -2,7 +2,7 @@
 #define IDOCP_MPC_HXX_ 
 
 #include "idocp/ocp/ocp.hpp"
-#include "idocp/ocp/parnmpc.hpp"
+// #include "idocp/ocp/parnmpc.hpp"
 
 namespace idocp {
 
@@ -38,17 +38,17 @@ inline void MPC<OCP>::initializeSolution(const double t,
 }
 
 
-template <>
-inline void MPC<ParNMPC>::initializeSolution(const double t, 
-                                             const Eigen::VectorXd& q, 
-                                             const Eigen::VectorXd& v, 
-                                             const int max_itr) {
-  ocp_.setStateTrajectory(q, v);
-  ocp_.setAuxiliaryMatrixGuessByTerminalCost(t);
-  for (int i=0; i<max_itr; ++i) {
-    ocp_.updateSolution(t, q, v, true);
-  }
-}
+// template <>
+// inline void MPC<ParNMPC>::initializeSolution(const double t, 
+//                                              const Eigen::VectorXd& q, 
+//                                              const Eigen::VectorXd& v, 
+//                                              const int max_itr) {
+//   ocp_.setStateTrajectory(q, v);
+//   ocp_.setAuxiliaryMatrixGuessByTerminalCost(t);
+//   for (int i=0; i<max_itr; ++i) {
+//     ocp_.updateSolution(t, q, v, true);
+//   }
+// }
 
 
 template <typename OCPType>
@@ -108,7 +108,7 @@ inline void MPC<OCPType>::updateSolution(const double t,
 template <typename OCPType>
 inline void MPC<OCPType>::getControlInput(Eigen::VectorXd& u) {
   constexpr int initial_stage = 0;
-  ocp_.getControlInput(initial_stage, u);
+  u.tail(12) = ocp_.getSolution(initial_stage).u;
 }
 
 

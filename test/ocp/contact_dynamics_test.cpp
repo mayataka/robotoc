@@ -260,6 +260,8 @@ void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& cont
   EXPECT_TRUE(data_ref.laf().isApprox(data.laf()));
   EXPECT_TRUE(kkt_residual_ref.isApprox(kkt_residual));
   EXPECT_TRUE(kkt_matrix_ref.isApprox(kkt_matrix));
+  EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
+  EXPECT_TRUE(kkt_matrix.Quu().isApprox(kkt_matrix.Quu().transpose()));
 }
 
 

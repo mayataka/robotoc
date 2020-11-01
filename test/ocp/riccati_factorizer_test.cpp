@@ -108,8 +108,10 @@ void RiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot, const
   sx_next.tail(dimv) = riccati_next.sv;
   const Eigen::VectorXd lu_ref = B.transpose() * P_next * kkt_residual_ref.Fx() - B.transpose() * sx_next + kkt_residual_ref.lu();
   EXPECT_TRUE(F_ref.isApprox(kkt_matrix.Qxx()));
+  EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
   EXPECT_TRUE(H_ref.isApprox(kkt_matrix.Qxu()));
   EXPECT_TRUE(G_ref.isApprox(kkt_matrix.Quu()));
+  EXPECT_TRUE(kkt_matrix.Quu().isApprox(kkt_matrix.Quu().transpose()));
   EXPECT_TRUE(lu_ref.isApprox(kkt_residual.lu()));
   RiccatiGain gain(robot), gain_ref(robot);
   factorizer.computeFeedbackGainAndFeedforward(kkt_matrix, kkt_residual, gain);
@@ -120,7 +122,8 @@ void RiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot, const
   EXPECT_TRUE(gain.k.isApprox(gain_ref.k));
   RiccatiSolution riccati(robot);
   factorizer.factorizeRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, gain, riccati);
-  const Eigen::MatrixXd P_ref = F_ref + H_ref * gain.K;
+  // const Eigen::MatrixXd P_ref = F_ref + H_ref * gain.K;
+  const Eigen::MatrixXd P_ref = F_ref - gain.K.transpose() * G_ref * gain.K;
   const Eigen::VectorXd s_ref = A.transpose() * sx_next - A.transpose() * P_next * kkt_residual_ref.Fx() - kkt_residual_ref.lx() - H_ref * gain.k;
   EXPECT_TRUE(P_ref.topLeftCorner(dimv, dimv).isApprox(riccati.Pqq));
   EXPECT_TRUE(P_ref.topRightCorner(dimv, dimv).isApprox(riccati.Pqv));
@@ -186,6 +189,16 @@ void RiccatiFactorizerTest::testBackwardRecursion(const Robot& robot, const doub
   EXPECT_TRUE(riccati.Pvv.isApprox(riccati_ref.Pvv));
   EXPECT_TRUE(riccati.sq.isApprox(riccati_ref.sq));
   EXPECT_TRUE(riccati.sv.isApprox(riccati_ref.sv));
+  EXPECT_TRUE(riccati.Pqq.isApprox(riccati.Pqq.transpose()));
+  EXPECT_TRUE(riccati.Pvv.isApprox(riccati.Pvv.transpose()));
+  EXPECT_TRUE(riccati.Pvq.isApprox(riccati.Pqv.transpose()));
+  EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
+  EXPECT_TRUE(kkt_matrix.Quu().isApprox(kkt_matrix.Quu().transpose()));
+  std::cout << riccati.Pqq - riccati.Pqq.transpose() << std::endl;
+  std::cout << riccati.Pqv - riccati.Pvq.transpose() << std::endl;
+  std::cout << riccati.Pvv - riccati.Pvv.transpose() << std::endl;
+  std::cout << kkt_matrix.Qxx() - kkt_matrix.Qxx().transpose() << std::endl;
+  std::cout << kkt_matrix.Quu() - kkt_matrix.Quu().transpose() << std::endl;
 }
 
 

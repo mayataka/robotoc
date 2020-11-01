@@ -525,6 +525,7 @@ public:
 
   ///
   /// @brief Computes the inverse of the joint inertia matrix M.
+  /// @param[in] contact_status Current contact status.
   /// @param[in] M Joint inertia matrix. Size must be 
   /// Robot::dimv() x Robot::dimv().
   /// @param[in] J Contact Jacobian. Size must be 

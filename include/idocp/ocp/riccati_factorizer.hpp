@@ -67,7 +67,7 @@ public:
                           const double dtau, const KKTMatrix& kkt_matrix, 
                           const KKTResidual& kkt_residual,
                           const RiccatiGain& gain, 
-                          RiccatiSolution& riccati) const;
+                          RiccatiSolution& riccati);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -76,7 +76,7 @@ private:
   int dimv_, dimu_;
   static constexpr int kDimFloatingBase = 6;
   Eigen::LLT<Eigen::MatrixXd> llt_;
-  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, BtPq_, BtPv_, Ginv_;
+  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, BtPq_, BtPv_, Ginv_, GK_;
 };
 
 } // namespace idocp
