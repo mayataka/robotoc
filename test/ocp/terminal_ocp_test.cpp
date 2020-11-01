@@ -47,10 +47,6 @@ protected:
       Robot& robot, const std::shared_ptr<CostFunction>& cost, 
       const std::shared_ptr<Constraints>& constraints);
 
-  static void testTerminalCostWithStepSize(
-      Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-      const std::shared_ptr<Constraints>& constraints);
-
   static void testComputeCondensedPrimalDirection(
       const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
       const std::shared_ptr<Constraints>& constraints);
@@ -173,25 +169,6 @@ void TerminalOCPTest::testTerminalCost(
 }
 
 
-void TerminalOCPTest::testTerminalCostWithStepSize(
-    Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints) {
-  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const SplitSolution s = SplitSolution::Random(robot);
-  const SplitDirection d = SplitDirection::Random(robot);
-  const double step_size = 0.3;
-  TerminalOCP ocp(robot, cost, constraints);
-  const double terminal_cost = ocp.terminalCost(robot, step_size, t, s, d);
-  SplitSolution s_tmp(robot);
-  robot.integrateConfiguration(s.q, d.dq(), step_size, s_tmp.q);
-  s_tmp.v = s.v + step_size * d.dv();
-  robot.updateKinematics(s_tmp.q, s_tmp.v);
-  auto cost_data = cost->createCostFunctionData(robot);
-  const double terminal_cost_ref = cost->phi(robot, cost_data, t, s_tmp);
-  EXPECT_DOUBLE_EQ(terminal_cost, terminal_cost_ref);
-}
-
-
 void TerminalOCPTest::testComputeCondensedPrimalDirection(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints) {
@@ -277,7 +254,6 @@ TEST_F(TerminalOCPTest, fixedBase) {
   const auto constraints = createConstraints(robot);
   testLinearizeOCPAndBackwardRiccatiRecursion(robot, cost, constraints);
   testTerminalCost(robot, cost, constraints);
-  testTerminalCostWithStepSize(robot, cost, constraints);
   testComputeCondensedPrimalDirection(robot, cost, constraints);
   testComputeCondensedDualDirection(robot, cost, constraints);
   testUpdatePrimal(robot, cost, constraints);
@@ -292,7 +268,6 @@ TEST_F(TerminalOCPTest, floatingBase) {
   const auto constraints = createConstraints(robot);
   testLinearizeOCPAndBackwardRiccatiRecursion(robot, cost, constraints);
   testTerminalCost(robot, cost, constraints);
-  testTerminalCostWithStepSize(robot, cost, constraints);
   testComputeCondensedPrimalDirection(robot, cost, constraints);
   testComputeCondensedDualDirection(robot, cost, constraints);
   testUpdatePrimal(robot, cost, constraints);

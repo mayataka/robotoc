@@ -48,8 +48,7 @@ public:
 
   void condenseContactDynamics(Robot& robot, 
                                const ContactStatus& contact_status, 
-                               const double dtau, const SplitSolution& s, 
-                               KKTMatrix& kkt_matrix, 
+                               const double dtau, KKTMatrix& kkt_matrix, 
                                KKTResidual& kkt_residual);
 
   static void condensing(const Robot& robot, const double dtau, 

@@ -12,6 +12,7 @@ inline KKTMatrix::KKTMatrix(const Robot& robot)
   : Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     schur_complement_(2*robot.dimv(), 2*robot.dimv()+robot.dimu()),
     F_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv()+robot.dimu())),
+    C_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv(), 3*robot.dimv())),
     Qaaff_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
                                       robot.dimv()+robot.max_dimf())),
@@ -21,6 +22,7 @@ inline KKTMatrix::KKTMatrix(const Robot& robot)
     dimu_(robot.dimu()), 
     dim_passive_(robot.dim_passive()),
     dimf_(0), 
+    dimp_(0), 
     u_begin_(robot.dim_passive()),
     q_begin_(robot.dimv()),
     v_begin_(2*robot.dimv()),
@@ -32,6 +34,7 @@ inline KKTMatrix::KKTMatrix()
   : Fqq_prev(),
     schur_complement_(),
     F_(),
+    C_(),
     Q_(),
     Qaaff_full_(),
     has_floating_base_(false),
@@ -40,6 +43,7 @@ inline KKTMatrix::KKTMatrix()
     dimu_(0), 
     dim_passive_(0),
     dimf_(0), 
+    dimp_(0), 
     u_begin_(0),
     q_begin_(0),
     v_begin_(0),
@@ -54,6 +58,12 @@ inline KKTMatrix::~KKTMatrix() {
 inline void KKTMatrix::setContactStatus(const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
 }
+
+
+inline void KKTMatrix::setImpulseStatus(const ContactStatus& contact_status) {
+  dimp_ = contact_status.dimf();
+}
+
 
 inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Fqu() {
   return F_.block(0, 0, dimv_, dimu_);
@@ -132,6 +142,16 @@ inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Fxx() {
 
 inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Fxx() const {
   return F_.block(0, dimu_, dimx_, dimx_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> KKTMatrix::Cq() {
+  return C_.topLeftCorner(dimp_, dimv_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> KKTMatrix::Cq() const {
+  return C_.topLeftCorner(dimp_, dimv_);
 }
 
 
@@ -463,11 +483,15 @@ inline void KKTMatrix::symmetrize() {
 template <typename MatrixType>
 inline void KKTMatrix::invert(
     const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse) {
-  assert(KKT_matrix_inverse.rows() == dimKKT_);
-  assert(KKT_matrix_inverse.cols() == dimKKT_);
-  schur_complement_.invertWithZeroTopLeftCorner(
-      F_, Q_.bottomRightCorner(dimx_+dimu_, dimx_+dimu_), 
-      const_cast<Eigen::MatrixBase<MatrixType>&>(KKT_matrix_inverse));
+  if (dimp_ > 0) {
+  }
+  else {
+    assert(KKT_matrix_inverse.rows() == dimKKT_);
+    assert(KKT_matrix_inverse.cols() == dimKKT_);
+    schur_complement_.invertWithZeroTopLeftCorner(
+        F_, Q_.bottomRightCorner(dimx_+dimu_, dimx_+dimu_), 
+        const_cast<Eigen::MatrixBase<MatrixType>&>(KKT_matrix_inverse));
+  }
 }
 
 
@@ -489,11 +513,19 @@ inline int KKTMatrix::dimf() const {
 }
 
 
+inline int KKTMatrix::dimp() const {
+  return dimp_;
+}
+
+
 inline bool KKTMatrix::isApprox(const KKTMatrix& other) const {
   if (!Fxu().isApprox(other.Fxu())) {
     return false;
   }
   if (!Fxx().isApprox(other.Fxx())) {
+    return false;
+  }
+  if (!Cq().isApprox(other.Cq())) {
     return false;
   }
   if (!Quu_full().isApprox(other.Quu_full())) {

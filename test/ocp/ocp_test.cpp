@@ -39,9 +39,9 @@ protected:
 
   static void testUpdateSolutionInParallel(Robot& robot);
 
-  static void testUpdateSolutionInParallelWithoutactiveContacts(Robot& robot);
+  static void testUpdateSolutionInParallelWithoutActiveContacts(Robot& robot);
 
-  static void testUpdateSolutionInParallelWithactiveContacts(Robot& robot);
+  static void testUpdateSolutionInParallelWithActiveContacts(Robot& robot);
 
   std::string fixed_base_urdf, floating_base_urdf;
 };
@@ -108,7 +108,7 @@ void OCPTest::testUpdateSolutionInParallel(Robot& robot) {
   robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T, N, 1);
-  OCP ocp_ref(robot, cost, constraints, T, N, 2);
+  OCP ocp_ref(robot, cost, constraints, T, N, 4);
   EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
   ocp.computeKKTResidual(t, q, v);
   ocp_ref.computeKKTResidual(t, q, v);
@@ -121,10 +121,13 @@ void OCPTest::testUpdateSolutionInParallel(Robot& robot) {
   ocp.computeKKTResidual(t, q, v);
   ocp_ref.computeKKTResidual(t, q, v);
   EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
+  for (int i=0; i<=N; ++i) {
+    EXPECT_TRUE(ocp.getSolution(i).isApprox(ocp_ref.getSolution(i)));
+  }
 }
 
 
-void OCPTest::testUpdateSolutionInParallelWithoutactiveContacts(Robot& robot) {
+void OCPTest::testUpdateSolutionInParallelWithoutActiveContacts(Robot& robot) {
   auto cost = createCost(robot);
   auto constraints = createConstraints(robot);
   const double t = 0;
@@ -134,9 +137,11 @@ void OCPTest::testUpdateSolutionInParallelWithoutactiveContacts(Robot& robot) {
   robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T, N, 1);
-  OCP ocp_ref(robot, cost, constraints, T, N, 2);
-  ocp.deactivateContact(0, 0, N);
-  ocp_ref.deactivateContact(0, 0, N);
+  OCP ocp_ref(robot, cost, constraints, T, N, 4);
+  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    ocp.deactivateContacts({i}, 0, N);
+    ocp_ref.deactivateContacts({i}, 0, N);
+  }
   EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
   ocp.computeKKTResidual(t, q, v);
   ocp_ref.computeKKTResidual(t, q, v);
@@ -149,10 +154,13 @@ void OCPTest::testUpdateSolutionInParallelWithoutactiveContacts(Robot& robot) {
   ocp.computeKKTResidual(t, q, v);
   ocp_ref.computeKKTResidual(t, q, v);
   EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
+  for (int i=0; i<=N; ++i) {
+    EXPECT_TRUE(ocp.getSolution(i).isApprox(ocp_ref.getSolution(i)));
+  }
 }
 
 
-void OCPTest::testUpdateSolutionInParallelWithactiveContacts(Robot& robot) {
+void OCPTest::testUpdateSolutionInParallelWithActiveContacts(Robot& robot) {
   auto cost = createCost(robot);
   auto constraints = createConstraints(robot);
   const double t = 0;
@@ -162,9 +170,11 @@ void OCPTest::testUpdateSolutionInParallelWithactiveContacts(Robot& robot) {
   robot.generateFeasibleConfiguration(q);
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T, N, 1);
-  OCP ocp_ref(robot, cost, constraints, T, N, 2);
-  ocp.activateContact(0, 0, N);
-  ocp_ref.activateContact(0, 0, N);
+  OCP ocp_ref(robot, cost, constraints, T, N, 4);
+  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    ocp.activateContacts({i}, 0, N);
+    ocp_ref.activateContacts({i}, 0, N);
+  }
   EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
   ocp.computeKKTResidual(t, q, v);
   ocp_ref.computeKKTResidual(t, q, v);
@@ -177,6 +187,9 @@ void OCPTest::testUpdateSolutionInParallelWithactiveContacts(Robot& robot) {
   ocp.computeKKTResidual(t, q, v);
   ocp_ref.computeKKTResidual(t, q, v);
   EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
+  for (int i=0; i<=N; ++i) {
+    EXPECT_TRUE(ocp.getSolution(i).isApprox(ocp_ref.getSolution(i)));
+  }
 }
 
 
@@ -185,8 +198,8 @@ TEST_F(OCPTest, fixedBase) {
   testUpdateSolutionInParallel(robot);
   std::vector<int> contact_frames = {18};
   robot = Robot(fixed_base_urdf, contact_frames);
-  testUpdateSolutionInParallelWithoutactiveContacts(robot);
-  testUpdateSolutionInParallelWithactiveContacts(robot);
+  testUpdateSolutionInParallelWithoutActiveContacts(robot);
+  testUpdateSolutionInParallelWithActiveContacts(robot);
 }
 
 
@@ -195,8 +208,8 @@ TEST_F(OCPTest, floatingBase) {
   testUpdateSolutionInParallel(robot);
   std::vector<int> contact_frames = {14, 24, 34, 44};
   robot = Robot(floating_base_urdf, contact_frames);
-  testUpdateSolutionInParallelWithoutactiveContacts(robot);
-  testUpdateSolutionInParallelWithactiveContacts(robot);
+  testUpdateSolutionInParallelWithoutActiveContacts(robot);
+  testUpdateSolutionInParallelWithActiveContacts(robot);
 }
 
 } // namespace idocp

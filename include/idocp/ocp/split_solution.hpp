@@ -198,17 +198,6 @@ public:
                  const SplitDirection& d);
 
   ///
-  /// @brief Integrates the solution based on another solution, step size, and 
-  /// direction. 
-  /// @param[in] robot Robot model.
-  /// @param[in] other Split solution.
-  /// @param[in] step_size Step size.
-  /// @param[in] d Split direction.
-  ///
-  void integratePrimal(const Robot& robot, const SplitSolution& other, 
-                       const double step_size, const SplitDirection& d);
-
-  ///
   /// @brief Return true if two SplitSolution have the same value and false if 
   /// not. 
   /// @param[in] other Split solution that is compared with this object.

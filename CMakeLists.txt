@@ -76,13 +76,13 @@ add_library(
   src/ocp/contact_dynamics_data.cpp
   src/ocp/contact_dynamics.cpp
   # src/ocp/non_contact_dynamics.cpp
-  # src/ocp/robot_dynamics.cpp
   src/ocp/line_search_filter.cpp
   src/ocp/riccati_solution.cpp
   src/ocp/riccati_gain.cpp
   src/ocp/riccati_factorizer.cpp
   src/ocp/terminal_ocp.cpp
   src/ocp/split_ocp.cpp
+  src/ocp/split_temporary_solution.cpp
   src/ocp/contact_sequence.cpp
   src/ocp/ocp.cpp
   # src/ocp/split_parnmpc.cpp

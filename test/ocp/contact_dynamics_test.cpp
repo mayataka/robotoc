@@ -396,7 +396,8 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
   robot.updateKinematics(s.q, s.v, s.a);
   ContactDynamics cd(robot), cd_ref(robot);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
-  cd.condenseContactDynamics(robot, contact_status, dtau, s, kkt_matrix, kkt_residual);
+  cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_matrix, kkt_residual);
+  cd.condenseContactDynamics(robot, contact_status, dtau, kkt_matrix, kkt_residual);
   ContactDynamicsData data_ref(robot);
   data_ref.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);

@@ -14,12 +14,12 @@ SplitParNMPC::SplitParNMPC(const Robot& robot,
     constraints_data_(),
     kkt_residual_(robot),
     kkt_matrix_(robot),
-    robot_dynamics_(robot),
+    contact_dynamics_(robot),
     dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
     dimKKT_(kkt_residual_.dimKKT()),
-    kkt_matrix_inverse_(Eigen::MatrixXd::Zero(kkt_residual_.max_dimKKT(), 
-                                              kkt_residual_.max_dimKKT())),
+    kkt_matrix_inverse_(Eigen::MatrixXd::Zero(kkt_residual_.dimKKT(), 
+                                              kkt_residual_.dimKKT())),
     x_res_(Eigen::VectorXd::Zero(2*robot.dimv())),
     dx_(Eigen::VectorXd::Zero(2*robot.dimv())),
     use_kinematics_(false) {
@@ -37,7 +37,7 @@ SplitParNMPC::SplitParNMPC()
     constraints_data_(),
     kkt_residual_(),
     kkt_matrix_(),
-    robot_dynamics_(),
+    contact_dynamics_(),
     dimv_(0),
     dimx_(0),
     dimKKT_(0),
@@ -85,18 +85,8 @@ void SplitParNMPC::coarseUpdate(Robot& robot,
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
-  // condensing the inverse dynamics
-  kkt_residual_.lu.setZero();
-  kkt_matrix_.Quu.setZero();
-  cost_->lu(robot, cost_data_, t, dtau, s.u, kkt_residual_.lu);
-  constraints_->augmentDualResidual(robot, constraints_data_, dtau, s.u,
-                                    kkt_residual_.lu);
-  cost_->luu(robot, cost_data_, t, dtau, s.u, kkt_matrix_.Quu);
-  constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s.u, 
-                                     kkt_matrix_.Quu, kkt_residual_.lu);
-  robot_dynamics_.condenseRobotDynamics(robot, contact_status, dtau, s, 
-                                        kkt_matrix_, kkt_residual_);
-  // construct the KKT matrix and KKT residual
+  kkt_residual_.setZero();
+  kkt_matrix_.setZero();
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
                                      kkt_residual_);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
@@ -106,20 +96,11 @@ void SplitParNMPC::coarseUpdate(Robot& robot,
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix_);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
                                      kkt_matrix_, kkt_residual_);
+  contact_dynamics_.condenseRobotDynamics(robot, contact_status, dtau, s, 
+                                          kkt_matrix_, kkt_residual_);
   // coarse update of the solution
   kkt_matrix_.Qxx().noalias() += aux_mat_next_old;
-  kkt_matrix_.symmetrize(); 
-  dimKKT_ = kkt_residual_.dimKKT();
-  kkt_matrix_.invert(dtau, kkt_matrix_inverse_.topLeftCorner(dimKKT_, dimKKT_));
-  d.split_direction() = kkt_matrix_inverse_.topLeftCorner(dimKKT_, dimKKT_)
-                          * kkt_residual_.KKT_residual();
-  s_new_coarse.lmd = s.lmd - d.dlmd();
-  s_new_coarse.gmm = s.gmm - d.dgmm();
-  s_new_coarse.mu_stack() = s.mu_stack() - d.dmu();
-  s_new_coarse.a = s.a - d.da();
-  s_new_coarse.f_stack() = s.f_stack() - d.df();
-  robot.integrateConfiguration(s.q, d.dq(), -1, s_new_coarse.q);
-  s_new_coarse.v = s.v - d.dv();
+  computeCoarseUpdatedSolution(s, dtau, d, s_new_coarse);
 }
 
 
@@ -138,18 +119,8 @@ void SplitParNMPC::coarseUpdateTerminal(Robot& robot,
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
-  // condensing the inverse dynamics
-  kkt_residual_.lu.setZero();
-  kkt_matrix_.Quu.setZero();
-  cost_->lu(robot, cost_data_, t, dtau, s.u, kkt_residual_.lu);
-  constraints_->augmentDualResidual(robot, constraints_data_, dtau, s.u,
-                                    kkt_residual_.lu);
-  cost_->luu(robot, cost_data_, t, dtau, s.u, kkt_matrix_.Quu);
-  constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s.u, 
-                                     kkt_matrix_.Quu, kkt_residual_.lu);
-  robot_dynamics_.condenseRobotDynamics(robot, contact_status, dtau, s, 
-                                        kkt_matrix_, kkt_residual_);
-  // constructs the KKT matrix and KKT residual
+  kkt_residual_.setZero();
+  kkt_matrix_.setZero();
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
                                      kkt_residual_);
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
@@ -161,19 +132,10 @@ void SplitParNMPC::coarseUpdateTerminal(Robot& robot,
   cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
                                      kkt_matrix_, kkt_residual_);
+  contact_dynamics_.condenseRobotDynamics(robot, contact_status, dtau, s, 
+                                          kkt_matrix_, kkt_residual_);
   // coarse update of the solution
-  kkt_matrix_.symmetrize(); 
-  dimKKT_ = kkt_residual_.dimKKT();
-  kkt_matrix_.invert(dtau, kkt_matrix_inverse_.topLeftCorner(dimKKT_, dimKKT_));
-  d.split_direction() = kkt_matrix_inverse_.topLeftCorner(dimKKT_, dimKKT_)
-                          * kkt_residual_.KKT_residual();
-  s_new_coarse.lmd = s.lmd - d.dlmd();
-  s_new_coarse.gmm = s.gmm - d.dgmm();
-  s_new_coarse.mu_stack() = s.mu_stack() - d.dmu();
-  s_new_coarse.a = s.a - d.da();
-  s_new_coarse.f_stack() = s.f_stack() - d.df();
-  robot.integrateConfiguration(s.q, d.dq(), -1, s_new_coarse.q);
-  s_new_coarse.v = s.v - d.dv();
+  computeCoarseUpdatedSolution(s, dtau, d, s_new_coarse);
 }
 
 
@@ -215,9 +177,7 @@ void SplitParNMPC::backwardCorrectionParallel(const Robot& robot,
   d.split_direction().tail(dimKKT_-dimx_).noalias()
       = kkt_matrix_inverse_.block(dimx_, dimKKT_-dimx_, dimKKT_-dimx_, dimx_) 
           * x_res_;
-  s_new.mu_stack().noalias() -= d.dmu();
-  s_new.a.noalias() -= d.da();
-  s_new.f_stack().noalias() -= d.df();
+  s_new.u.noalias() -= d.du();
   robot.integrateConfiguration(d.dq(), -1, s_new.q);
   s_new.v.noalias() -= d.dv();
 }
@@ -244,9 +204,7 @@ void SplitParNMPC::forwardCorrectionParallel(const Robot& robot,
       = kkt_matrix_inverse_.topLeftCorner(dimKKT_-dimx_, dimx_) * x_res_;
   s_new.lmd.noalias() -= d.dlmd();
   s_new.gmm.noalias() -= d.dgmm();
-  s_new.mu_stack().noalias() -= d.dmu();
-  s_new.a.noalias() -= d.da();
-  s_new.f_stack().noalias() -= d.df();
+  s_new.u.noalias() -= d.du();
 }
 
 

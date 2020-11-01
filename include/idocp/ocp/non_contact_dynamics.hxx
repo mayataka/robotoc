@@ -58,25 +58,23 @@ inline void NonContactDynamics::condenseNonContactDynamics(
     const SplitSolution& s, KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   assert(!contact_status.hasActiveContacts());
   assert(dtau > 0);
-  linearizeInverseDynamics(robot, contact_status, s, kkt_residual);
-  lu_condensed_.noalias() 
-      = kkt_residual.lu() + kkt_matrix.Quu().diagonal().asDiagonal() * ID_;
-  // condense Newton residual
-  kkt_residual.la.noalias() = dID_da_.transpose() * lu_condensed_;
-  kkt_residual.lq().noalias() = dID_dq_.transpose() * lu_condensed_;
-  kkt_residual.lv().noalias() = dID_dv_.transpose() * lu_condensed_;
+  lu_condensed_.noalias() = kkt_residual.lu() 
+          + kkt_matrix.Quu().diagonal().asDiagonal() * ID_;
+  // condense KKT residual
+  kkt_residual.la.noalias() = du_da_.transpose() * lu_condensed_;
+  kkt_residual.lq().noalias() = du_dq_.transpose() * lu_condensed_;
+  kkt_residual.lv().noalias() = du_dv_.transpose() * lu_condensed_;
   kkt_residual.lu().noalias() -= dtau * s.beta;   
-  Quu_ = kkt_matrix.Quu();
-  Quu_du_da_.noalias() = Quu_.diagonal().asDiagonal() * dID_da_;
-  // kkt_matrix.Quu() is considered as Qaa() in the following solver.
-  kkt_matrix.Quu().noalias() = dID_da_.transpose() * Quu_du_da_;
-  Quu_du_dq_.noalias() = Quu_.diagonal().asDiagonal() * dID_dq_;
-  Quu_du_dv_.noalias() = Quu_.diagonal().asDiagonal() * dID_dv_;
-  kkt_matrix.Qaq().noalias() = dID_da_.transpose() * Quu_du_dq_;
-  kkt_matrix.Qav().noalias() = dID_da_.transpose() * Quu_du_dv_;
-  kkt_matrix.Qqq().noalias() = dID_dq_.transpose() * Quu_du_dq_;
-  kkt_matrix.Qqv().noalias() = dID_dq_.transpose() * Quu_du_dv_;
-  kkt_matrix.Qvv().noalias() = dID_dv_.transpose() * Quu_du_dv_;
+  // condense KKT Hessian
+  Quu_du_da_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * du_da_;
+  kkt_matrix.Qaa().noalias() = du_da_.transpose() * Quu_du_da_;
+  Quu_du_dq_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * du_dq_;
+  Quu_du_dv_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * du_dv_;
+  kkt_matrix.Qaq().noalias() = du_da_.transpose() * Quu_du_dq_;
+  kkt_matrix.Qav().noalias() = du_da_.transpose() * Quu_du_dv_;
+  kkt_matrix.Qqq().noalias() = du_dq_.transpose() * Quu_du_dq_;
+  kkt_matrix.Qqv().noalias() = du_dq_.transpose() * Quu_du_dv_;
+  kkt_matrix.Qvv().noalias() = du_dv_.transpose() * Quu_du_dv_;
 }
 
 

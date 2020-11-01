@@ -167,44 +167,6 @@ public:
   double maxDualStepSize();
 
   ///
-  /// @brief Returns the stage cost and L1-norm of the violation of constraints 
-  /// of this stage. The stage cost is recomputed. The violation of the  
-  /// constriants is not computed. Instead, the previously computed residual  
-  /// computed by SplitOCP::linearizeOCP or 
-  /// SplitOCP::computeKKTResidual, is used.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] s Split solution of this stage.
-  /// @return The stage cost and L1-norm of the constraints violation.
-  ///
-  std::pair<double, double> costAndConstraintViolation(
-      Robot& robot, const double t, const double dtau, const SplitSolution& s);
-
-  ///
-  /// @brief Returns the stage cost and L1-norm of the violation of constraints 
-  /// of this stage under step_size. The split solution of this stage and the 
-  /// state of the next stage are computed by step_size temporary. 
-  /// The stage cost and the violation of the constriants are computed based on
-  /// the temporary solution.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
-  /// @param[in] step_size Step size for the primal variables. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] d Split direction of this stage.
-  /// @param[in] s_next Split solution of the next stage.
-  /// @param[in] d_next Split direction of the next stage.
-  /// @return The stage cost and L1-norm of the constraints violation.
-  ///
-  std::pair<double, double> costAndConstraintViolation(
-      Robot& robot, const ContactStatus& contact_status, const double step_size, 
-      const double t, const double dtau, const SplitSolution& s, 
-      const SplitDirection& d, const SplitSolution& s_next, 
-      const SplitDirection& d_next);
-
-  ///
   /// @brief Updates dual variables of the inequality constraints.
   /// @param[in] dual_step_size Dula step size of the OCP. 
   ///
@@ -221,15 +183,6 @@ public:
   void updatePrimal(Robot& robot, const double primal_step_size, 
                     const double dtau, const SplitDirection& d, 
                     SplitSolution& s);
-
-  ///
-  /// @brief Gets the state-feedback gain for the control input torques.
-  /// @param[out] Kq Gain with respec to the configuration. Size must be 
-  /// Robot::dimv() x Robot::dimv().
-  /// @param[out] Kv Gain with respec to the velocity. Size must be
-  /// Robot::dimv() x Robot::dimv().
-  ///
-  void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
 
   ///
   /// @brief Computes the KKT residual of the OCP at this stage.
@@ -255,6 +208,46 @@ public:
   ///
   double squaredNormKKTResidual(const double dtau) const;
 
+  ///
+  /// @brief Computes the stage cost of this stage.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in] primal_step_size Primal step size of the OCP. Default is 0.
+  /// @return Stage cost of this stage.
+  /// 
+  double stageCost(Robot& robot, const double t, const double dtau, 
+                   const SplitSolution& s, const double primal_step_size=0);
+
+  ///
+  /// @brief Computes and returns the constraint violation of the OCP at this 
+  /// stage.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status of robot at this stage. 
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in] q_next Configuration at the next stage.
+  /// @param[in] v_next Generaized velocity at the next stage.
+  /// @return Constraint violation of this stage.
+  ///
+  double constraintViolation(Robot& robot, const ContactStatus& contact_status, 
+                             const double t, const double dtau, 
+                             const SplitSolution& s, 
+                             const Eigen::VectorXd& q_next,
+                             const Eigen::VectorXd& v_next);
+
+  ///
+  /// @brief Gets the state-feedback gain for the control input torques.
+  /// @param[out] Kq Gain with respec to the configuration. Size must be 
+  /// Robot::dimv() x Robot::dimv().
+  /// @param[out] Kv Gain with respec to the velocity. Size must be
+  /// Robot::dimv() x Robot::dimv().
+  ///
+  void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
+
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
@@ -268,7 +261,6 @@ private:
   ContactDynamics contact_dynamics_;
   RiccatiGain riccati_gain_;
   RiccatiFactorizer riccati_factorizer_;
-  SplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
   bool use_kinematics_, has_floating_base_, fd_like_elimination_;
   double stage_cost_, constraint_violation_;
 
@@ -289,8 +281,6 @@ private:
       }
     }
   }
-
-  double constraintViolation(const double dtau) const;
 
 };
 

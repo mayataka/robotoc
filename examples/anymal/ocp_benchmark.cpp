@@ -60,8 +60,8 @@ void BenchmarkWithContacts() {
        0.0315, -0.4, 0.8, 
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
-  const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  // const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  // const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
   idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for anymal with contacts",

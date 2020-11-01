@@ -99,11 +99,8 @@ inline void ContactDynamics::linearizeContactConstraint(
 
 inline void ContactDynamics::condenseContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dtau,
-    const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) {
+    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   assert(dtau > 0);
-  linearizeContactDynamics(robot, contact_status, dtau, s, 
-                           kkt_matrix, kkt_residual);
   robot.computeMJtJinv(contact_status, data_.dIDda, data_.dCda(), 
                        data_.MJtJinv());
   condensing(robot, dtau, data_, kkt_matrix, kkt_residual);

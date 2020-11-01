@@ -16,7 +16,8 @@
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/ocp/state_equation.hpp"
-#include "idocp/ocp/robot_dynamics.hpp"
+// #include "idocp/ocp/robot_dynamics.hpp"
+#include "idocp/ocp/contact_dynamics.hpp"
 
 
 namespace idocp {
@@ -419,7 +420,8 @@ private:
   ConstraintsData constraints_data_;
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
-  RobotDynamics robot_dynamics_;
+  // RobotDynamics robot_dynamics_;
+  ContactDynamics contact_dynamics_;
   int dimv_, dimx_, dimKKT_;
   Eigen::MatrixXd kkt_matrix_inverse_;
   Eigen::VectorXd x_res_; /// @brief Residual of state and costate used in the forward and backward correction.
@@ -443,6 +445,19 @@ private:
                       const SplitSolution& s);
 
   double constraintViolation(const double dtau) const;
+
+  void computeCoarseUpdatedSolution(const SplitSolution& s, const double dtau, 
+                                    SplitDirection& d, 
+                                    SplitSolution& s_new_coarse) {
+    kkt_matrix_.symmetrize(); 
+    kkt_matrix_.invert(dtau, kkt_matrix_inverse_);
+    d.split_direction = kkt_matrix_inverse_ * kkt_residual_.KKT_residual;
+    s_new_coarse.lmd = s.lmd - d.dlmd();
+    s_new_coarse.gmm = s.gmm - d.dgmm();
+    s_new_coarse.q = s.q - d.dq();
+    s_new_coarse.v = s.v - d.dv();
+    s_new_coarse.u = s.u - d.du();
+  }
 
 };
 

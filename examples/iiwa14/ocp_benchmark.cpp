@@ -35,7 +35,7 @@ void BenchmarkWithoutContacts() {
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
   const double T = 1;
-  const int N = 20;
+  const int N = 50;
   const int num_proc = 4;
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
@@ -104,7 +104,7 @@ void BenchmarkWithContacts() {
 
 
 int main() {
-  // ocpbenchmark::iiwa14::BenchmarkWithoutContacts();
+  ocpbenchmark::iiwa14::BenchmarkWithoutContacts();
   ocpbenchmark::iiwa14::BenchmarkWithContacts();
   return 0;
 }

@@ -139,17 +139,6 @@ public:
   double terminalCost(Robot& robot, const double t, const SplitSolution& s);
 
   ///
-  /// @brief Returns the terminal cost under step_size. 
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] step_size Step size for the primal variables. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] d Split direction of this stage.
-  ///
-  double terminalCost(Robot& robot, const double step_size, const double t, 
-                      const SplitSolution& s, const SplitDirection& d);
-
-  ///
   /// @brief Updates dual variables of the inequality constraints. 
   /// TerminalOCP::computeCondensedDualDirection() must be called before 
   /// calling this function.
@@ -194,7 +183,6 @@ private:
   ConstraintsData constraints_data_;
   KKTResidual kkt_residual_;
   KKTMatrix kkt_matrix_;
-  SplitSolution s_tmp_; 
   bool use_kinematics_;
 
 };

@@ -186,7 +186,8 @@ void SplitOCPTest::testLinearizeOCPAndRiccatiRecursion(
   stateequation::LinearizeForwardEuler(robot, dtau, s_prev.q, s, s_next, kkt_matrix, kkt_residual);
   ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
-  cd.condenseContactDynamics(robot, contact_status, dtau, s, kkt_matrix, kkt_residual);
+  cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_matrix, kkt_residual);
+  cd.condenseContactDynamics(robot, contact_status, dtau, kkt_matrix, kkt_residual);
   RiccatiFactorizer riccati_factorizer(robot);
   RiccatiGain riccati_gain(robot);
   riccati_factorizer.factorizeBackwardRicursion(riccati_next, dtau, kkt_matrix, kkt_residual, riccati_gain, riccati_ref);
@@ -211,15 +212,6 @@ void SplitOCPTest::testLinearizeOCPAndRiccatiRecursion(
   cd.computeCondensedDualDirection(robot, dtau, kkt_matrix, kkt_residual, 
                                    d_next_ref.dgmm(), d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
-  const auto pair = ocp.costAndConstraintViolation(robot, t, dtau, s);
-  const double cost_ref = cost->l(robot, cost_data, t, dtau, s) 
-                            + constraints->costSlackBarrier(constraints_data);
-  double violation_ref = 0;
-  violation_ref += stateequation::L1NormStateEuqationResidual(kkt_residual);
-  violation_ref += cd.l1NormContactDynamicsResidual(dtau);
-  violation_ref += constraints->l1NormPrimalResidual(constraints_data);
-  EXPECT_DOUBLE_EQ(pair.first, cost_ref);
-  EXPECT_DOUBLE_EQ(pair.second, violation_ref);
 }
 
 
@@ -236,8 +228,6 @@ void SplitOCPTest::testComputeKKTResidualEmptyCostAndEmptyConstraints(
   ocp.initConstraints(robot, 10, dtau, s);
   ocp.computeKKTResidual(robot, contact_status, t, dtau, s_prev.q, s, s_next);
   const double kkt_error = ocp.squaredNormKKTResidual(dtau);
-  const auto pair = ocp.costAndConstraintViolation(robot, t, dtau, s);
-  EXPECT_DOUBLE_EQ(pair.first, 0);
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
   KKTResidual kkt_residual(robot);
@@ -321,7 +311,6 @@ void SplitOCPTest::testComputeKKTResidualEmptyCostAndEmptyConstraints(
   if (contact_status.hasActiveContacts()) {
     constraint_violation_ref += dtau * C.lpNorm<1>();
   }
-  EXPECT_DOUBLE_EQ(pair.second, constraint_violation_ref);
 }
 
 
@@ -338,7 +327,6 @@ void SplitOCPTest::testComputeKKTResidualEmptyCost(
   ocp.initConstraints(robot, 10, dtau, s);
   ocp.computeKKTResidual(robot, contact_status, t, dtau, s_prev.q, s, s_next);
   const double kkt_error = ocp.squaredNormKKTResidual(dtau);
-  const auto pair = ocp.costAndConstraintViolation(robot, t, dtau, s);
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
   KKTResidual kkt_residual(robot);
@@ -361,11 +349,6 @@ void SplitOCPTest::testComputeKKTResidualEmptyCost(
     kkt_error_ref += kkt_residual.lu_passive.squaredNorm();
   }
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
-  EXPECT_DOUBLE_EQ(constraints->costSlackBarrier(constraints_data), pair.first);
-  double constraint_violation_ref = kkt_residual.Fx().lpNorm<1>() 
-                                    + cd.l1NormContactDynamicsResidual(dtau)
-                                    + constraints->l1NormPrimalResidual(constraints_data);
-  EXPECT_DOUBLE_EQ(constraint_violation_ref, pair.second);
 }
 
 
@@ -382,7 +365,6 @@ void SplitOCPTest::testComputeKKTResidualEmptyConstraints(
   ocp.initConstraints(robot, 10, dtau, s);
   ocp.computeKKTResidual(robot, contact_status, t, dtau, s_prev.q, s, s_next);
   const double kkt_error = ocp.squaredNormKKTResidual(dtau);
-  const auto pair = ocp.costAndConstraintViolation(robot, t, dtau, s);
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
   KKTResidual kkt_residual(robot);
@@ -404,10 +386,6 @@ void SplitOCPTest::testComputeKKTResidualEmptyConstraints(
     kkt_error_ref += kkt_residual.lu_passive.squaredNorm();
   }
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
-  EXPECT_DOUBLE_EQ(cost->l(robot, cost_data, t, dtau, s), pair.first);
-  double constraint_violation_ref = kkt_residual.Fx().lpNorm<1>() 
-                                    + cd.l1NormContactDynamicsResidual(dtau);
-  EXPECT_DOUBLE_EQ(constraint_violation_ref, pair.second);
 }
 
 
@@ -424,7 +402,6 @@ void SplitOCPTest::testComputeKKTResidual(
   ocp.initConstraints(robot, 10, dtau, s);
   ocp.computeKKTResidual(robot, contact_status, t, dtau, s_prev.q, s, s_next);
   const double kkt_error = ocp.squaredNormKKTResidual(dtau);
-  const auto pair = ocp.costAndConstraintViolation(robot, t, dtau, s);
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
   KKTResidual kkt_residual(robot);
@@ -450,11 +427,6 @@ void SplitOCPTest::testComputeKKTResidual(
     kkt_error_ref += kkt_residual.lu_passive.squaredNorm();
   }
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
-  EXPECT_DOUBLE_EQ(cost->l(robot, cost_data, t, dtau, s)+constraints->costSlackBarrier(constraints_data), pair.first);
-  double constraint_violation_ref = kkt_residual.Fx().lpNorm<1>() 
-                                    + cd.l1NormContactDynamicsResidual(dtau)
-                                    + constraints->l1NormPrimalResidual(constraints_data);
-  EXPECT_DOUBLE_EQ(constraint_violation_ref, pair.second);
 }
 
 
@@ -475,7 +447,6 @@ void SplitOCPTest::testCostAndConstraintViolation(
   ocp.computeKKTResidual(robot, contact_status, t, dtau, s_prev.q, s, s_next);
   const double kkt_error = ocp.squaredNormKKTResidual(dtau);
   const double step_size = 0.3;
-  const auto pair = ocp.costAndConstraintViolation(robot, contact_status, step_size, t, dtau, s, d, s_next, d_next);
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
   KKTResidual kkt_residual(robot);
@@ -495,12 +466,6 @@ void SplitOCPTest::testCostAndConstraintViolation(
                                              d_next.dv(), kkt_residual);
   ContactDynamics cd(robot);
   cd.computeContactDynamicsResidual(robot, contact_status, dtau, s_tmp);
-  double violation_ref = 0;
-  violation_ref += stateequation::L1NormStateEuqationResidual(kkt_residual);
-  violation_ref += cd.l1NormContactDynamicsResidual(dtau);
-  violation_ref += constraints->l1NormPrimalResidual(constraints_data);
-  EXPECT_DOUBLE_EQ(cost_ref, pair.first);
-  EXPECT_DOUBLE_EQ(violation_ref, pair.second);
 }
 
 

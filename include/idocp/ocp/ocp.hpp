@@ -7,6 +7,8 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/cost/cost_function.hpp"
+#include "idocp/constraints/constraints.hpp"
 #include "idocp/ocp/contact_sequence.hpp"
 #include "idocp/ocp/split_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
@@ -14,8 +16,7 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/ocp/line_search_filter.hpp"
-#include "idocp/cost/cost_function.hpp"
-#include "idocp/constraints/constraints.hpp"
+#include "idocp/ocp/split_temporary_solution.hpp"
 
 
 namespace idocp {
@@ -75,27 +76,22 @@ public:
   /// @param[in] t Initial time of the horizon. Current time in MPC. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] use_line_search If true, line search is utilized. If false, it
-  /// is not utilized. Default is true.
+  /// @param[in] use_line_search If true, filter line search is enabled. If 
+  /// false, it is disabled. Default is false.
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v, const bool use_line_search=true);
+                      const Eigen::VectorXd& v, 
+                      const bool use_line_search=false);
 
   ///
-  /// @brief Get the contorl input torques of a time stage.
+  /// @brief Get the const reference to the split solution of a time stage. 
+  /// For example, you can get the const reference to the control input torques 
+  /// at the initial stage via ocp.getSolution(0).u.
   /// @param[in] stage Time stage of interest. Must be more than 0 and less 
-  /// than N-1.
-  /// @param[out] u The control input torques. Size must be Robot::dimv().
-  ///
-  void getControlInput(const int stage, Eigen::VectorXd& u) const;
-
-  ///
-  /// @brief Get the const reference to the split solution of a time stage.
-  /// @param[in] stage Time stage of interest. Must be more than 0 and less 
-  /// than N-1.
+  /// than N.
   /// @return Const reference to the split solution of the specified time stage.
   ///
-  const SplitSolution& getSplitSolution(const int stage) const;
+  const SplitSolution& getSolution(const int stage) const;
 
   ///
   /// @brief Gets the state-feedback gain for the control input torques.
@@ -126,26 +122,6 @@ public:
   ///
   bool setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0,
                           const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
-
-  ///
-  /// @brief Activate a contact over specified time steps 
-  /// (from time_stage_begin until time_stage_end). 
-  /// @param[in] contact_index Index of a contact of interedted. 
-  /// @param[in] time_stage_begin Beginning of time stages to activate. 
-  /// @param[in] time_stage_end End of time stages to activate. 
-  ///
-  void activateContact(const int contact_index, const int time_stage_begin, 
-                       const int time_stage_end);
-
-  ///
-  /// @brief Deactivate a contact over specified time steps 
-  /// (from time_stage_begin until time_stage_end). 
-  /// @param[in] contact_index Index of a contact of interedted. 
-  /// @param[in] time_stage_begin Beginning of time stages to deactivate. 
-  /// @param[in] time_stage_end End of time stages to deactivate. 
-  ///
-  void deactivateContact(const int contact_index, const int time_stage_begin, 
-                         const int time_stage_end);
 
   ///
   /// @brief Activate contacts over specified time steps 
@@ -204,15 +180,6 @@ public:
   double KKTError();
 
   ///
-  /// @brief Prints the solution into console. 
-  ///
-  void printSolution() const;
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-private:
-
-  ///
   /// @brief Return true if the current solution is feasible under the 
   /// inequality constraints. Return false if it is not feasible.
   /// @return true if the current solution is feasible under the inequality 
@@ -227,6 +194,15 @@ private:
   ///
   void initConstraints();
 
+  ///
+  /// @brief Prints the solution into console. 
+  ///
+  void printSolution() const;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+private:
+
   std::vector<SplitOCP> split_ocps_;
   TerminalOCP terminal_ocp_;
   std::vector<Robot> robots_;
@@ -237,8 +213,8 @@ private:
   std::vector<SplitSolution> s_;
   std::vector<SplitDirection> d_;
   std::vector<RiccatiSolution> riccati_;
+  std::vector<SplitTemporarySolution> s_tmp_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_;
-  // std::vector<std::vector<bool>> contact_sequence_;
 };
 
 } // namespace idocp 

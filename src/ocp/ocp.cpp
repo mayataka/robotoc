@@ -25,6 +25,7 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     s_(N+1, SplitSolution(robot)),
     d_(N+1, SplitDirection(robot)),
     riccati_(N+1, RiccatiSolution(robot)),
+    s_tmp_(N+1, SplitTemporarySolution(robot)),
     primal_step_sizes_(Eigen::VectorXd::Zero(N)),
     dual_step_sizes_(Eigen::VectorXd::Zero(N)),
     costs_(Eigen::VectorXd::Zero(N+1)), 
@@ -55,6 +56,7 @@ OCP::OCP()
     s_(),
     d_(),
     riccati_(),
+    s_tmp_(),
     primal_step_sizes_(),
     dual_step_sizes_(),
     costs_(), 
@@ -74,15 +76,13 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   for (int i=0; i<=N_; ++i) {
     if (i == 0) {
       const int robot_id = omp_get_thread_num();
-      split_ocps_[i].linearizeOCP(robots_[robot_id], 
-                                  contact_sequence_.contactStatus(i), t+i*dtau_, 
-                                  dtau_, q, s_[i], s_[i+1]);
+      split_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.contactStatus(i), 
+                                  t+i*dtau_, dtau_, q, s_[i], s_[i+1]);
     }
     else if (i < N_) {
       const int robot_id = omp_get_thread_num();
-      split_ocps_[i].linearizeOCP(robots_[robot_id], 
-                                  contact_sequence_.contactStatus(i), t+i*dtau_, 
-                                  dtau_, s_[i-1].q, s_[i], s_[i+1]);
+      split_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.contactStatus(i), 
+                                  t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
     }
     else {
       const int robot_id = omp_get_thread_num();
@@ -120,17 +120,14 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
       for (int i=0; i<=N_; ++i) {
         if (i < N_) {
           const int robot_id = omp_get_thread_num();
-          const std::pair<double, double> filter_pair
-              = split_ocps_[i].costAndConstraintViolation(robots_[robot_id], 
-                                                          t+i*dtau_, dtau_, 
-                                                          s_[i]);
-          costs_.coeffRef(i) = filter_pair.first;
-          violations_.coeffRef(i) = filter_pair.second;
+          costs_.coeffRef(i) = split_ocps_[i].stageCost(robots_[robot_id], t+i*dtau_, dtau_, s_[i]);
+          violations_.coeffRef(i) = split_ocps_[i].constraintViolation(
+              robots_[robot_id], contact_sequence_.contactStatus(i), t+i*dtau_, 
+              dtau_, s_[i], s_[i+1].q, s_[i+1].v);
         }
         else {
           const int robot_id = omp_get_thread_num();
-          costs_.coeffRef(N_) = terminal_ocp_.terminalCost(robots_[robot_id], 
-                                                           t+T_, s_[N_]);
+          costs_.coeffRef(N_) = terminal_ocp_.terminalCost(robots_[robot_id], t+T_, s_[N_]);
         }
       }
       filter_.augment(costs_.sum(), violations_.sum());
@@ -140,19 +137,19 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
       for (int i=0; i<=N_; ++i) {
         if (i < N_) {
           const int robot_id = omp_get_thread_num();
-          const std::pair<double, double> filter_pair
-              = split_ocps_[i].costAndConstraintViolation(
-                  robots_[robot_id], contact_sequence_.contactStatus(i), 
-                  primal_step_size, t+i*dtau_, dtau_, s_[i], d_[i], 
-                  s_[i+1], d_[i+1]);
-          costs_.coeffRef(i) = filter_pair.first;
-          violations_.coeffRef(i) = filter_pair.second;
+          s_tmp_[i].setTemporarySolution(robots_[robot_id], contact_sequence_.contactStatus(i), 
+                                         primal_step_size, s_[i], d_[i], s_[i+1], d_[i+1]);
+          costs_.coeffRef(i) = split_ocps_[i].stageCost(robots_[robot_id], t+i*dtau_, dtau_, 
+                                                        s_tmp_[i].splitSolution(), 
+                                                        primal_step_size);
+          violations_.coeffRef(i) = split_ocps_[i].constraintViolation(
+              robots_[robot_id], contact_sequence_.contactStatus(i), t+i*dtau_, 
+              dtau_, s_tmp_[i].splitSolution(), s_tmp_[i].q_next(), s_tmp_[i].v_next());
         }
         else {
           const int robot_id = omp_get_thread_num();
-          costs_.coeffRef(N_) = terminal_ocp_.terminalCost(robots_[robot_id], 
-                                                           primal_step_size, 
-                                                           t+T_, s_[N_], d_[N_]);
+          s_tmp_[N_].setTemporarySolution(robots_[robot_id], primal_step_size, s_[N_], d_[N_]);
+          costs_.coeffRef(N_) = terminal_ocp_.terminalCost(robots_[robot_id], t+T_, s_tmp_[N_].splitSolution());
         }
       }
       const double cost_sum = costs_.sum();
@@ -168,33 +165,22 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
       const int robot_id = omp_get_thread_num();
-      split_ocps_[i].computeCondensedDualDirection(robots_[robot_id], dtau_, 
-                                                   d_[i+1], d_[i]);
-      split_ocps_[i].updatePrimal(robots_[robot_id], primal_step_size, dtau_, 
-                                  d_[i], s_[i]);
+      split_ocps_[i].computeCondensedDualDirection(robots_[robot_id], dtau_, d_[i+1], d_[i]);
+      split_ocps_[i].updatePrimal(robots_[robot_id], primal_step_size, dtau_, d_[i], s_[i]);
       split_ocps_[i].updateDual(dual_step_size);
     }
     else {
       const int robot_id = omp_get_thread_num();
-      terminal_ocp_.updatePrimal(robots_[robot_id], primal_step_size, d_[N_], 
-                                 s_[N_]);
+      terminal_ocp_.updatePrimal(robots_[robot_id], primal_step_size, d_[N_], s_[N_]);
       terminal_ocp_.updateDual(dual_step_size);
     }
   }
 } 
 
 
-void OCP::getControlInput(const int stage, Eigen::VectorXd& u) const {
+const SplitSolution& OCP::getSolution(const int stage) const {
   assert(stage >= 0);
-  assert(stage < N_);
-  assert(u.size() == robots_[0].dimv());
-  u = s_[stage].u;
-}
-
-
-const SplitSolution& OCP::getSplitSolution(const int stage) const {
-  assert(stage >= 0);
-  assert(stage < N_);
+  assert(stage <= N_);
   return s_[stage];
 }
 
@@ -253,30 +239,6 @@ bool OCP::setStateTrajectory(const Eigen::VectorXd& q0,
   initConstraints();
   const bool feasible = isCurrentSolutionFeasible();
   return feasible;
-}
-
-
-void OCP::activateContact(const int contact_index, const int time_stage_begin, 
-                          const int time_stage_end) {
-  contact_sequence_.activateContact(contact_index, time_stage_begin, 
-                                    time_stage_end);
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<N_; ++i) {
-    s_[i].setContactStatus(contact_sequence_.contactStatus(i));
-    d_[i].setContactStatus(contact_sequence_.contactStatus(i));
-  }
-}
-
-
-void OCP::deactivateContact(const int contact_index, const int time_stage_begin, 
-                            const int time_stage_end) {
-  contact_sequence_.deactivateContact(contact_index, time_stage_begin, 
-                                      time_stage_end);
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<N_; ++i) {
-    s_[i].setContactStatus(contact_sequence_.contactStatus(i));
-    d_[i].setContactStatus(contact_sequence_.contactStatus(i));
-  }
 }
 
 

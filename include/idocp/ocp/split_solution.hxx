@@ -179,24 +179,6 @@ inline void SplitSolution::integrate(const Robot& robot, const double step_size,
 }
 
 
-inline void SplitSolution::integratePrimal(const Robot& robot, 
-                                           const SplitSolution& other, 
-                                           const double step_size, 
-                                           const SplitDirection& d) {
-  a = other.a + step_size * d.da();
-  if (has_active_contacts_) {
-    f_stack() = other.f_stack() + step_size * d.df();
-    set_f_vector();
-  }
-  robot.integrateConfiguration(other.q, d.dq(), step_size, q);
-  v = other.v + step_size * d.dv();
-  u = other.u + step_size * d.du();
-  if (has_floating_base_) {
-    u_passive = other.u_passive + step_size * d.du_passive;
-  }
-}
-
-
 inline bool SplitSolution::isApprox(const SplitSolution& other) const {
   if (!lmd.isApprox(other.lmd)) {
     return false;
