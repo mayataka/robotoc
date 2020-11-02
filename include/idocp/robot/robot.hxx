@@ -16,7 +16,7 @@
 #include "pinocchio/algorithm/contact-dynamics.hpp"
 
 #include <stdexcept>
-#include <assert.h>
+#include <cassert>
 
 namespace idocp {
 
@@ -214,109 +214,109 @@ inline void Robot::computeBaumgarteDerivatives(
 
 
 template <typename VectorType>
-inline void Robot::computeContactVelocityResidual(
-    const ContactStatus& contact_status, 
+inline void Robot::computeImpulseVelocityResidual(
+    const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<VectorType>& velocity_residual) const {
-  int num_active_contacts = 0;
+  int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
+    if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeContactVelocityResidual(
           model_, data_,
           (const_cast<Eigen::MatrixBase<VectorType>&>(velocity_residual))
-              .template segment<3>(3*num_active_contacts));
-      ++num_active_contacts;
+              .template segment<3>(3*num_active_impulse));
+      ++num_active_impulse;
     }
   }
 }
 
 
 template <typename MatrixType1, typename MatrixType2>
-inline void Robot::computeContactVelocityDerivatives(
-    const ContactStatus& contact_status, 
+inline void Robot::computeImpulseVelocityDerivatives(
+    const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv) {
   assert(velocity_partial_dq.cols() == dimv_);
   assert(velocity_partial_dv.cols() == dimv_);
-  int num_active_contacts = 0;
+  int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
+    if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeContactVelocityDerivatives(
           model_, data_, 
           (const_cast<Eigen::MatrixBase<MatrixType1>&>(velocity_partial_dq))
-              .block(3*num_active_contacts, 0, 3, dimv_),
+              .block(3*num_active_impulse, 0, 3, dimv_),
           (const_cast<Eigen::MatrixBase<MatrixType2>&>(velocity_partial_dv))
-              .block(3*num_active_contacts, 0, 3, dimv_));
-      ++num_active_contacts;
+              .block(3*num_active_impulse, 0, 3, dimv_));
+      ++num_active_impulse;
     }
   }
 }
 
 
 template <typename VectorType>
-inline void Robot::computeContactResidual(
-    const ContactStatus& contact_status, 
+inline void Robot::computeImpulseConditionResidual(
+    const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<VectorType>& contact_residual) const {
-  int num_active_contacts = 0;
+  int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
+    if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeContactResidual(
           model_, data_,
           (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
-              .template segment<3>(3*num_active_contacts));
-      ++num_active_contacts;
+              .template segment<3>(3*num_active_impulse));
+      ++num_active_impulse;
     }
   }
 }
 
 
 template <typename VectorType>
-inline void Robot::computeContactResidual(
-    const ContactStatus& contact_status, const double coeff,
+inline void Robot::computeImpulseConditionResidual(
+    const ImpulseStatus& impulse_status, const double coeff,
     const Eigen::MatrixBase<VectorType>& contact_residual) const {
-  int num_active_contacts = 0;
+  int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
+    if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeContactResidual(
           model_, data_, coeff,
           (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
-              .template segment<3>(3*num_active_contacts));
-      ++num_active_contacts;
+              .template segment<3>(3*num_active_impulse));
+      ++num_active_impulse;
     }
   }
 }
 
 
 template <typename MatrixType>
-inline void Robot::computeContactDerivative(
-    const ContactStatus& contact_status,
+inline void Robot::computeImpulseConditionDerivative(
+    const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
   assert(contact_partial_dq.cols() == dimv_);
-  int num_active_contacts = 0;
+  int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
+    if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeContactDerivative(
           model_, data_, 
           (const_cast<Eigen::MatrixBase<MatrixType>&>(contact_partial_dq))
-              .block(3*num_active_contacts, 0, 3, dimv_));
-      ++num_active_contacts;
+              .block(3*num_active_impulse, 0, 3, dimv_));
+      ++num_active_impulse;
     }
   }
 }
 
 
 template <typename MatrixType>
-inline void Robot::computeContactDerivative(
-    const ContactStatus& contact_status, const double coeff,
+inline void Robot::computeImpulseConditionDerivative(
+    const ImpulseStatus& impulse_status, const double coeff,
     const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
   assert(contact_partial_dq.cols() == dimv_);
-  int num_active_contacts = 0;
+  int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
+    if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeContactDerivative(
           model_, data_, coeff,
           (const_cast<Eigen::MatrixBase<MatrixType>&>(contact_partial_dq))
-              .block(3*num_active_contacts, 0, 3, dimv_));
-      ++num_active_contacts;
+              .block(3*num_active_impulse, 0, 3, dimv_));
+      ++num_active_impulse;
     }
   }
 }
@@ -396,6 +396,23 @@ inline void Robot::setContactForces(const ContactStatus& contact_status,
     if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeJointForceFromContactForce(f[i], fjoint_);
       ++num_active_contacts;
+    }
+    else {
+      point_contacts_[i].computeJointForceFromContactForce(
+          Eigen::Vector3d::Zero(), fjoint_);
+    }
+  }
+}
+
+
+inline void Robot::setImpulseForces(const ImpulseStatus& impulse_status, 
+                                    const std::vector<Eigen::Vector3d>& f) {
+  assert(f.size() == point_contacts_.size());
+  int num_active_impulse = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (impulse_status.isImpulseActive(i)) {
+      point_contacts_[i].computeJointForceFromContactForce(f[i], fjoint_);
+      ++num_active_impulse;
     }
     else {
       point_contacts_[i].computeJointForceFromContactForce(

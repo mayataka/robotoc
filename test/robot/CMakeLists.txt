@@ -1,6 +1,5 @@
-add_subdirectory(fixed_base)
-add_subdirectory(floating_base)
 add_test_macro(contact_status_test)
 add_test_macro(impulse_status_test)
 add_test_macro(floating_base_test)
 add_test_macro(point_contact_test)
+add_test_macro(robot_test)

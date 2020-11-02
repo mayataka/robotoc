@@ -8,8 +8,7 @@
 #include "pinocchio/algorithm/kinematics-derivatives.hpp"
 #include "pinocchio/algorithm/frames-derivatives.hpp"
 
-#include <assert.h>
-
+#include <cassert>
 
 namespace idocp {
 
@@ -47,8 +46,6 @@ inline void PointContact::getContactJacobian(
     const pinocchio::Model& model, pinocchio::Data& data, 
     const double coeff, const Eigen::MatrixBase<MatrixType>& Jacobian, 
     const bool transpose) {
-  pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
-                              pinocchio::LOCAL, J_frame_);
   pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
                               pinocchio::LOCAL, J_frame_);
   if (transpose) {

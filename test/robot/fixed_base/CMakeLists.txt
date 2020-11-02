@@ -1,1 +1,0 @@
-add_test_macro(fixed_base_robot_test)

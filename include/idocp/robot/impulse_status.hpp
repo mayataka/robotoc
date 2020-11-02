@@ -9,7 +9,7 @@ namespace idocp {
 
   ///
   /// @class ImpulseStatus
-  /// @brief Impulse status. A wrappper of ContactStatus for impulse condition.
+  /// @brief Impulse status. A wrappper of ContactStatus for impulse problem.
   ///
 class ImpulseStatus {
 public:

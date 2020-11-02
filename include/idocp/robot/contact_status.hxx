@@ -3,7 +3,7 @@
 
 #include "idocp/robot/contact_status.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 namespace idocp {
 

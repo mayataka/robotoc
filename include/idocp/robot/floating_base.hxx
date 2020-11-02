@@ -3,7 +3,6 @@
 
 #include "idocp/robot/floating_base.hpp"
 
-
 namespace idocp {
 
 inline int FloatingBase::dim_passive() const {

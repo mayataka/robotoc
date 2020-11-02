@@ -71,7 +71,6 @@ TEST_F(PointContactTest, defaultConstructor) {
 }
 
 
-
 void PointContactTest::testConstructorAndSetter(pinocchio::Model& model, pinocchio::Data& data, const int contact_frame_id) const {
   PointContact contact(model, contact_frame_id, friction_coeff, restitution_coeff);
   EXPECT_EQ(contact.contact_frame_id(), contact_frame_id);
@@ -378,7 +377,7 @@ void PointContactTest::testContactDerivatives(pinocchio::Model& model, pinocchio
 }
 
 
-TEST_F(PointContactTest, constructor) {
+TEST_F(PointContactTest, test) {
   for (const auto frame : fixed_base_contact_frames) {
     pinocchio::Model robot = fixed_base_robot;
     pinocchio::Data data = fixed_base_data;

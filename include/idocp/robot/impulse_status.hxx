@@ -3,8 +3,6 @@
 
 #include "idocp/robot/impulse_status.hpp"
 
-#include <assert.h>
-
 namespace idocp {
 
 inline ImpulseStatus::ImpulseStatus(const int max_point_contacts)
