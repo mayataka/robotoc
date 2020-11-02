@@ -53,6 +53,7 @@ inline void QuadrupedSimulator::run(MPC<OCPTypeDerived>& mpc,
   auto raisim_ground = raisim_world.addGround();
   raisim_world.setTimeStep(sampling_period_in_sec);
   raisim_world.setERP(0.2, 0.2);
+  raisim_world.setDefaultMaterial(10, 0, 0);
   auto vis = raisim::OgreVis::get();
   if (visualization) {
     vis->setWorld(&raisim_world);

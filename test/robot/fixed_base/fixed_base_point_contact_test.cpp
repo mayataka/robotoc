@@ -277,11 +277,6 @@ TEST_F(FixedBasePointContactTest, baumgarteResidual) {
   EXPECT_TRUE(residuals.head(5).isZero());
   EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
   EXPECT_TRUE(residuals.tail(2).isZero());
-  const double coeff = Eigen::Vector2d::Random()[0];
-  contact.computeBaumgarteResidual(model_, data_, coeff, time_step, residuals.segment<3>(5));
-  EXPECT_TRUE(residuals.head(5).isZero());
-  EXPECT_TRUE(residuals.segment<3>(5).isApprox(coeff*residual_ref));
-  EXPECT_TRUE(residuals.tail(2).isZero());
 }
 
 
@@ -385,21 +380,6 @@ TEST_F(FixedBasePointContactTest, baumgarteDerivativesBlock) {
   EXPECT_TRUE(
         baum_partial_da.block(block_rows_begin, block_cols_begin, 3, dimv_)
         .isApprox(baum_partial_da_ref));
-  Eigen::MatrixXd baum_partial_dq_coeff
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_+2*block_cols_begin);
-  Eigen::MatrixXd baum_partial_dv_coeff
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_+2*block_cols_begin);
-  Eigen::MatrixXd baum_partial_da_coeff
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv_+2*block_cols_begin);
-  const double coeff = Eigen::VectorXd::Random(1)[0];
-  contact.computeBaumgarteDerivatives(
-      model_, data_, coeff, time_step,
-      baum_partial_dq.block(block_rows_begin, block_cols_begin, 3, dimv_),
-      baum_partial_dv.block(block_rows_begin, block_cols_begin, 3, dimv_),
-      baum_partial_da.block(block_rows_begin, block_cols_begin, 3, dimv_));
-  EXPECT_TRUE(baum_partial_dq_coeff.isApprox(coeff*baum_partial_dq));
-  EXPECT_TRUE(baum_partial_dv_coeff.isApprox(coeff*baum_partial_dv));
-  EXPECT_TRUE(baum_partial_da_coeff.isApprox(coeff*baum_partial_da));
   baum_partial_dq.block(block_rows_begin, block_cols_begin, 3, dimv_) 
       -= baum_partial_dq_ref;
   baum_partial_dv.block(block_rows_begin, block_cols_begin, 3, dimv_) 

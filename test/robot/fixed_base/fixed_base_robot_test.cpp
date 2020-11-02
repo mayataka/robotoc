@@ -346,9 +346,6 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
   contact_ref.setContactPointByCurrentKinematics(data_);
   contact_ref.computeBaumgarteResidual(model_, data_, time_step, residual_ref.segment<3>(segment_begin));
   EXPECT_TRUE(residual.isApprox(residual_ref));
-  const double coeff = Eigen::VectorXd::Random(1)[0];
-  robot.computeBaumgarteResidual(contact_status_, coeff, time_step, residual.segment<3>(segment_begin));
-  EXPECT_TRUE(residual.isApprox(coeff*residual_ref));
   Eigen::MatrixXd baumgarte_partial_q_ref
       = Eigen::MatrixXd::Zero(robot.max_dimf(), dimq_);
   Eigen::MatrixXd baumgarte_partial_v_ref 
@@ -387,29 +384,9 @@ TEST_F(FixedBaseRobotTest, baumgarteResidualAndDerivatives) {
       baumgarte_partial_a.block(block_rows_begin, block_cols_begin, 
                                 robot.max_dimf(), robot.dimv())
       .isApprox(baumgarte_partial_a_ref));
-  Eigen::MatrixXd baumgarte_partial_q_coeff
-      = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
-  Eigen::MatrixXd baumgarte_partial_v_coeff 
-      = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
-  Eigen::MatrixXd baumgarte_partial_a_coeff 
-      = Eigen::MatrixXd::Zero(2*block_rows_begin+robot.max_dimf(), 2*block_cols_begin+dimq_);
-  robot.computeBaumgarteDerivatives(
-      contact_status_, coeff, time_step, 
-      baumgarte_partial_q_coeff.block(block_rows_begin, block_cols_begin, 
-                                      robot.max_dimf(), robot.dimv()), 
-      baumgarte_partial_v_coeff.block(block_rows_begin, block_cols_begin, 
-                                      robot.max_dimf(), robot.dimv()), 
-      baumgarte_partial_a_coeff.block(block_rows_begin, block_cols_begin, 
-                                      robot.max_dimf(), robot.dimv()));
-  EXPECT_TRUE(baumgarte_partial_q_coeff.isApprox(coeff*baumgarte_partial_q));
-  EXPECT_TRUE(baumgarte_partial_v_coeff.isApprox(coeff*baumgarte_partial_v));
-  EXPECT_TRUE(baumgarte_partial_a_coeff.isApprox(coeff*baumgarte_partial_a));
   std::cout << baumgarte_partial_q << std::endl;
-  std::cout << baumgarte_partial_q_coeff << std::endl;
   std::cout << baumgarte_partial_v << std::endl;
-  std::cout << baumgarte_partial_v_coeff << std::endl;
   std::cout << baumgarte_partial_a << std::endl;
-  std::cout << baumgarte_partial_a_coeff << std::endl;
 }
 
 

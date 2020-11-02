@@ -209,7 +209,7 @@ public:
   double squaredNormKKTResidual(const double dtau) const;
 
   ///
-  /// @brief Computes the stage cost of this stage.
+  /// @brief Computes the stage cost of this stage for line search.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
@@ -222,7 +222,7 @@ public:
 
   ///
   /// @brief Computes and returns the constraint violation of the OCP at this 
-  /// stage.
+  /// stage for line search.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] contact_status Contact status of robot at this stage. 
   /// @param[in] t Current time of this stage. 

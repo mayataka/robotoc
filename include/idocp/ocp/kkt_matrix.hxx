@@ -60,8 +60,8 @@ inline void KKTMatrix::setContactStatus(const ContactStatus& contact_status) {
 }
 
 
-inline void KKTMatrix::setImpulseStatus(const ContactStatus& contact_status) {
-  dimp_ = contact_status.dimf();
+inline void KKTMatrix::setImpulseStatus(const ImpulseStatus& impulse_status) {
+  dimp_ = impulse_status.dimp();
 }
 
 

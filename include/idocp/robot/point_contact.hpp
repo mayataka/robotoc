@@ -128,23 +128,6 @@ public:
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
-  /// @brief Computes the residual of the contact constraints considered by the 
-  /// Baumgarte's stabilization method multiplied by user-defined coefficient. 
-  /// Before calling this function, you have to update the kinematics of the 
-  /// model in pinocchio::Data.
-  /// @param[in] model Pinocchio model of the robot.
-  /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] coeff Coefficient multiplied to the resultant Jacobian.
-  /// @param[in] time_step Time step of the discretization. Must be positive.
-  /// @param[out] baumgarte_residual Residual of the Bamgarte's constraint.
-  /// 
-  template <typename VectorType>
-  void computeBaumgarteResidual(
-      const pinocchio::Model& model, const pinocchio::Data& data, 
-      const double coeff, const double time_step,
-      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
-
-  ///
   /// @brief Computes the partial derivatives of the contact constraints
   /// considered by the Baumgarte's stabilization method. Before calling this 
   /// function, you have to update the kinematics of the model in 
@@ -162,30 +145,6 @@ public:
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
       const pinocchio::Model& model, pinocchio::Data& data, 
-      const double time_step,
-      const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
-      const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
-      const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
-
-  ///
-  /// @brief Computes the partial derivatives of the contact constraints
-  /// considered by the Baumgarte's stabilization method multiplied by 
-  /// user-defined coefficient. Before calling this function, you have to 
-  /// update the kinematics of the model in pinocchio::Data.
-  /// @param[in] model Pinocchio model of the robot.
-  /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] coeff Coefficient multiplied to the resultant Jacobian.
-  /// @param[in] time_step Time step of the discretization. Must be positive.
-  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
-  /// with respect to the configuaration. Size must be 3 x Robot::dimv().
-  /// @param[out] baumgarte_partial_dv The result of the partial derivative  
-  /// with respect to the velocity. Size must be 3 x Robot::dimv().
-  /// @param[out] baumgarte_partial_da The result of the partial derivative  
-  /// with respect to the acceleration. Size must be 3 x Robot::dimv().
-  /// 
-  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void computeBaumgarteDerivatives(
-      const pinocchio::Model& model, pinocchio::Data& data, const double coeff,
       const double time_step,
       const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 

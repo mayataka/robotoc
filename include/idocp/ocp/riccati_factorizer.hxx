@@ -72,8 +72,12 @@ inline void RiccatiFactorizer::factorizeForwardRicursion(
 
 inline void RiccatiFactorizer::computeCostateDirection(
     const RiccatiSolution& riccati, SplitDirection& d) {
-  d.dlmd().noalias() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
-  d.dgmm().noalias() = riccati.Pqv.transpose() * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
+  d.dlmd().noalias() = riccati.Pqq * d.dq();
+  d.dlmd().noalias() += riccati.Pqv * d.dv();
+  d.dlmd().noalias() -= riccati.sq;
+  d.dgmm().noalias() = riccati.Pqv.transpose() * d.dq();
+  d.dgmm().noalias() += riccati.Pvv * d.dv();
+  d.dgmm().noalias() -= riccati.sv;
 }
 
 
@@ -134,8 +138,8 @@ inline void RiccatiFactorizer::factorizeMatrices(
   kkt_matrix.Qvu().noalias() += AtPvv_ * kkt_matrix.Fvu();
   // Factorize G
   kkt_matrix.Quu().noalias() += BtPv_ * kkt_matrix.Fvu();
-  // symmetrize G to avoid failures in Eigen::LLT
-  kkt_matrix.Quu() = 0.5 * (kkt_matrix.Quu() + kkt_matrix.Quu().transpose()).eval();
+  // // symmetrize G to avoid failures in Eigen::LLT
+  // kkt_matrix.Quu() = 0.5 * (kkt_matrix.Quu() + kkt_matrix.Quu().transpose()).eval();
   // Factorize vector term
   kkt_residual.lu().noalias() += BtPq_ * kkt_residual.Fq();
   kkt_residual.lu().noalias() += BtPv_ * kkt_residual.Fv();
@@ -147,10 +151,9 @@ inline void RiccatiFactorizer::computeFeedbackGainAndFeedforward(
     const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
     RiccatiGain& gain) {
   llt_.compute(kkt_matrix.Quu());
-  Ginv_ = llt_.solve(Eigen::MatrixXd::Identity(dimu_, dimu_));
   assert(llt_.info() == Eigen::Success);
-  gain.K.noalias() = - Ginv_ * kkt_matrix.Qxu().transpose();
-  gain.k.noalias() = - Ginv_ * kkt_residual.lu();
+  gain.K = - llt_.solve(kkt_matrix.Qxu().transpose());
+  gain.k = - llt_.solve(kkt_residual.lu());
 }
 
 

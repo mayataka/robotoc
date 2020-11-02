@@ -210,23 +210,6 @@ public:
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
-  /// @brief Computes the residual of the contact constriants represented by 
-  /// Baumgarte's stabilization method multiplied by coeff. Before calling this 
-  /// function, updateKinematics() must be called.
-  /// @param[in] contact_status Current contact status.
-  /// @param[in] coeff The coefficient that is multiplied to the result.
-  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
-  /// Must be positive.
-  /// @param[out] baumgarte_residual 3-dimensional vector where the result is 
-  /// stored. Size must be at least 3.
-  ///
-  template <typename VectorType>
-  void computeBaumgarteResidual(
-      const ContactStatus& contact_status, const double coeff, 
-      const double time_step,
-      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
-
-  ///
   /// @brief Computes the partial derivatives of the contact constriants 
   /// represented by the Baumgarte's stabilization method. 
   /// Before calling this function, updateKinematics() must be called. 
@@ -246,34 +229,6 @@ public:
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
       const ContactStatus& contact_status,  const double time_step,
-      const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
-      const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
-      const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
-
-  ///
-  /// @brief Computes the partial derivatives of the contact constriants 
-  /// represented by the Baumgarte's stabilization method. The result is 
-  /// multiplied by coeff. Before calling this function, updateKinematics() 
-  /// must be called. 
-  /// @param[in] contact_status Current contact status.
-  /// @param[in] coeff The coefficient that is multiplied to the resultant 
-  /// Jacobians.
-  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
-  /// Must be positive.
-  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
-  /// with respect to the configuaration. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
-  /// @param[out] baumgarte_partial_dv The result of the partial derivative  
-  /// with respect to the velocity. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
-  /// @param[out] baumgarte_partial_da The result of the partial derivative  
-  /// with respect to the acceleration. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
-  ///
-  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void computeBaumgarteDerivatives(
-      const ContactStatus& contact_status, const double coeff, 
-      const double time_step,
       const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);

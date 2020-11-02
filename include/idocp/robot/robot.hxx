@@ -187,24 +187,6 @@ inline void Robot::computeBaumgarteResidual(
 }
 
 
-template <typename VectorType>
-inline void Robot::computeBaumgarteResidual(
-    const ContactStatus& contact_status, const double coeff, 
-    const double time_step,
-    const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
-  int num_active_contacts = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
-      point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, coeff, time_step,
-          (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
-              .template segment<3>(3*num_active_contacts));
-      ++num_active_contacts;
-    }
-  }
-}
-
-
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void Robot::computeBaumgarteDerivatives(
     const ContactStatus& contact_status, const double time_step,
@@ -219,33 +201,6 @@ inline void Robot::computeBaumgarteDerivatives(
     if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeBaumgarteDerivatives(
           model_, data_, time_step,
-          (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
-              .block(3*num_active_contacts, 0, 3, dimv_),
-          (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))
-              .block(3*num_active_contacts, 0, 3, dimv_),
-          (const_cast<Eigen::MatrixBase<MatrixType3>&>(baumgarte_partial_da))
-              .block(3*num_active_contacts, 0, 3, dimv_));
-      ++num_active_contacts;
-    }
-  }
-}
-
-
-template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-inline void Robot::computeBaumgarteDerivatives(
-    const ContactStatus& contact_status, const double coeff, 
-    const double time_step,
-    const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
-    const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
-    const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da) {
-  assert(baumgarte_partial_dq.cols() == dimv_);
-  assert(baumgarte_partial_dv.cols() == dimv_);
-  assert(baumgarte_partial_da.cols() == dimv_);
-  int num_active_contacts = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
-      point_contacts_[i].computeBaumgarteDerivatives(
-          model_, data_, coeff, time_step,
           (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
               .block(3*num_active_contacts, 0, 3, dimv_),
           (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))

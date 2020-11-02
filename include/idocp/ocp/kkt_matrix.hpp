@@ -6,6 +6,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
 #include "idocp/ocp/schur_complement.hpp"
 
 
@@ -61,9 +62,9 @@ public:
 
   ///
   /// @brief Set impulse status, i.e., set dimension of the impulse.
-  /// @param[in] contact_status Contact status.
+  /// @param[in] impulse_status Contact status.
   ///
-  void setImpulseStatus(const ContactStatus& contact_status);
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
   /// @brief Jacobian of the state equation of the configuration with respect  
