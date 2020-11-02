@@ -1,2 +1,1 @@
-add_test_macro(floating_base_point_contact_test)
 add_test_macro(floating_base_robot_test)
