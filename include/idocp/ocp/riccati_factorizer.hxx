@@ -3,8 +3,6 @@
 
 #include "idocp/ocp/riccati_factorizer.hpp"
 
-#include <limits>
-#include <cmath>
 #include <cassert>
 
 namespace idocp {
@@ -136,23 +134,12 @@ inline void RiccatiFactorizer::factorizeMatrices(
   kkt_matrix.Qvu().noalias() += AtPvv_ * kkt_matrix.Fvu();
   // Factorize G
   kkt_matrix.Quu().noalias() += BtPv_ * kkt_matrix.Fvu();
-  kkt_matrix.Quu() = 0.5 * (kkt_matrix.Quu() + kkt_matrix.Quu().transpose());
+  // symmetrize G to avoid failures in Eigen::LLT
+  kkt_matrix.Quu() = 0.5 * (kkt_matrix.Quu() + kkt_matrix.Quu().transpose()).eval();
   // Factorize vector term
   kkt_residual.lu().noalias() += BtPq_ * kkt_residual.Fq();
   kkt_residual.lu().noalias() += BtPv_ * kkt_residual.Fv();
   kkt_residual.lu().noalias() -= kkt_matrix.Fvu().transpose() * riccati_next.sv;
-  // TODO: Dynamic regularization to use Eigen::LLT even for ill-conditioned problems.
-  // constexpr double reg = std::sqrt(std::numeric_limits<double>::epsilon());
-  // for (int i=0; i<2*dimv_; ++i) {
-  //   if (kkt_matrix.Qxx().coeff(i, i) < reg) {
-  //     kkt_matrix.Qxx().coeffRef(i, i) = reg;
-  //   }
-  // }
-  // for (int i=0; i<dimu_; ++i) {
-  //   if (kkt_matrix.Quu().coeff(i, i) < reg) {
-  //     kkt_matrix.Quu().coeffRef(i, i) = reg;
-  //   }
-  // }
 }
 
 
@@ -161,9 +148,6 @@ inline void RiccatiFactorizer::computeFeedbackGainAndFeedforward(
     RiccatiGain& gain) {
   llt_.compute(kkt_matrix.Quu());
   Ginv_ = llt_.solve(Eigen::MatrixXd::Identity(dimu_, dimu_));
-  if (llt_.info() == Eigen::Success) {
-    assert(Ginv_.isApprox(Ginv_.transpose()));
-  }
   assert(llt_.info() == Eigen::Success);
   gain.K.noalias() = - Ginv_ * kkt_matrix.Qxu().transpose();
   gain.k.noalias() = - Ginv_ * kkt_residual.lu();
@@ -175,17 +159,17 @@ inline void RiccatiFactorizer::factorizeRecursion(
     const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
     const RiccatiGain& gain, RiccatiSolution& riccati) {
   assert(dtau > 0);
-  riccati.Pqq.noalias() = 0.5 * (kkt_matrix.Qqq() + kkt_matrix.Qqq().transpose());
+  riccati.Pqq = kkt_matrix.Qqq();
   riccati.Pqv = kkt_matrix.Qqv();
-  riccati.Pvv.noalias() = 0.5 * (kkt_matrix.Qvv() + kkt_matrix.Qvv().transpose());
+  riccati.Pvv = kkt_matrix.Qvv();
   GK_.noalias() = kkt_matrix.Quu() * gain.K; 
   riccati.Pqq.noalias() -= gain.Kq().transpose() * GK_.leftCols(dimv_);
   riccati.Pqv.noalias() -= gain.Kq().transpose() * GK_.rightCols(dimv_);
   riccati.Pvv.noalias() -= gain.Kv().transpose() * GK_.rightCols(dimv_);
   riccati.Pvq = riccati.Pqv.transpose();
   // preserve the symmetry
-  riccati.Pqq = 0.5 * (riccati.Pqq + riccati.Pqq.transpose());
-  riccati.Pvv = 0.5 * (riccati.Pvv + riccati.Pvv.transpose());
+  riccati.Pqq = 0.5 * (riccati.Pqq + riccati.Pqq.transpose()).eval();
+  riccati.Pvv = 0.5 * (riccati.Pvv + riccati.Pvv.transpose()).eval();
   if (has_floating_base_) {
     riccati.sq.noalias() = kkt_matrix.Fqq().transpose() * riccati_next.sq;
     riccati.sq.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.sv;
