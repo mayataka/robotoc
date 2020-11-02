@@ -409,7 +409,7 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
   cd_ref.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics::linearizeInverseDynamics(robot, contact_status, s, data_ref);
   ContactDynamics::linearizeContactConstraint(robot, contact_status, dtau, data_ref);
-  robot.computeMJtJinv(contact_status, data_ref.dIDda, data_ref.dCda(), data_ref.MJtJinv());
+  robot.computeMJtJinv(data_ref.dIDda, data_ref.dCda(), data_ref.MJtJinv());
   ContactDynamics::condensing(robot, dtau, data_ref, kkt_matrix_ref, kkt_residual_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));

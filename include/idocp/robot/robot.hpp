@@ -497,7 +497,6 @@ public:
 
   ///
   /// @brief Computes the inverse of the joint inertia matrix M.
-  /// @param[in] contact_status Current contact status.
   /// @param[in] M Joint inertia matrix. Size must be 
   /// Robot::dimv() x Robot::dimv().
   /// @param[in] J Contact Jacobian. Size must be 
@@ -507,8 +506,7 @@ public:
   /// (Robot::dimv() + ContactStatus::dimf()).
   ///   
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void computeMJtJinv(const ContactStatus& contact_status,
-                      const Eigen::MatrixBase<MatrixType1>& M, 
+  void computeMJtJinv(const Eigen::MatrixBase<MatrixType1>& M, 
                       const Eigen::MatrixBase<MatrixType2>& J,
                       const Eigen::MatrixBase<MatrixType3>& MJtJinv);
 

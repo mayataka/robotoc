@@ -6,6 +6,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 
 
@@ -23,16 +24,16 @@ protected:
   virtual void TearDown() {
   }
 
-  static void testSize(const Robot& robot, const ContactStatus& contact_status);
-  static void testIsApprox(const Robot& robot, const ContactStatus& contact_status);
-  static void testInverse(const Robot& robot);
+  static void testSize(const Robot& robot, const ContactStatus& contact_status, const ImpulseStatus& impulse_status);
+  static void testIsApprox(const Robot& robot, const ContactStatus& contact_status, const ImpulseStatus& impulse_status);
+  static void testInverse(const Robot& robot, const ImpulseStatus& impulse_status);
 
   double dtau_;
   std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
-void KKTMatrixTest::testSize(const Robot& robot, const ContactStatus& contact_status) {
+void KKTMatrixTest::testSize(const Robot& robot, const ContactStatus& contact_status, const ImpulseStatus& impulse_status) {
   KKTMatrix matrix(robot);
   matrix.setContactStatus(contact_status);
   const int dimv = robot.dimv();
@@ -217,7 +218,7 @@ void KKTMatrixTest::testSize(const Robot& robot, const ContactStatus& contact_st
 }
 
 
-void KKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& contact_status) {
+void KKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& contact_status, const ImpulseStatus& impulse_status) {
   KKTMatrix matrix(robot);
   matrix.setContactStatus(contact_status);
   const int dimv = robot.dimv();
@@ -287,7 +288,7 @@ void KKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& contac
 }
 
 
-void KKTMatrixTest::testInverse(const Robot& robot) {
+void KKTMatrixTest::testInverse(const Robot& robot, const ImpulseStatus& impulse_status) {
   KKTMatrix matrix(robot);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
@@ -326,13 +327,19 @@ TEST_F(KKTMatrixTest, fixedBase) {
   Robot robot(fixed_base_urdf, contact_frames);
   std::random_device rnd;
   ContactStatus contact_status(contact_frames.size());
+  ImpulseStatus impulse_status(contact_frames.size());
   contact_status.setContactStatus({false});
-  testSize(robot, contact_status);
-  testIsApprox(robot, contact_status);
+  impulse_status.setImpulseStatus({false});
+  testSize(robot, contact_status, impulse_status);
+  testIsApprox(robot, contact_status, impulse_status);
   contact_status.setContactStatus({true});
-  testSize(robot, contact_status);
-  testIsApprox(robot, contact_status);
-  testInverse(robot);
+  testSize(robot, contact_status, impulse_status);
+  testIsApprox(robot, contact_status, impulse_status);
+  testInverse(robot, impulse_status);
+  impulse_status.setImpulseStatus({true});
+  testSize(robot, contact_status, impulse_status);
+  testIsApprox(robot, contact_status, impulse_status);
+  testInverse(robot, impulse_status);
 }
 
 
@@ -341,18 +348,24 @@ TEST_F(KKTMatrixTest, floatingBase) {
   Robot robot(floating_base_urdf, contact_frames);
   std::vector<bool> is_contact_active = {false, false, false, false};
   ContactStatus contact_status(contact_frames.size());
+  ImpulseStatus impulse_status(contact_frames.size());
   contact_status.setContactStatus(is_contact_active);
-  testSize(robot, contact_status);
-  testIsApprox(robot, contact_status);
+  impulse_status.setImpulseStatus(is_contact_active);
+  testSize(robot, contact_status, impulse_status);
+  testIsApprox(robot, contact_status, impulse_status);
   is_contact_active.clear();
   std::random_device rnd;
   for (const auto frame : contact_frames) {
     is_contact_active.push_back(rnd()%2==0);
   }
   contact_status.setContactStatus(is_contact_active);
-  testSize(robot, contact_status);
-  testIsApprox(robot, contact_status);
-  testInverse(robot);
+  testSize(robot, contact_status, impulse_status);
+  testIsApprox(robot, contact_status, impulse_status);
+  testInverse(robot, impulse_status);
+  impulse_status.setImpulseStatus(is_contact_active);
+  testSize(robot, contact_status, impulse_status);
+  testIsApprox(robot, contact_status, impulse_status);
+  testInverse(robot, impulse_status);
 }
 
 } // namespace idocp

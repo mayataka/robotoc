@@ -544,7 +544,7 @@ void RobotTest::testMJtJinv(const std::string& path_to_urdf, pinocchio::Model& m
   robot.dRNEAPartialdFext(contact_status, dRNEA_dfext);
   Eigen::MatrixXd MJtJinv = Eigen::MatrixXd::Zero(model.nv+dimf, model.nv+dimf);
   const Eigen::MatrixXd J = - dRNEA_dfext.transpose();
-  robot.computeMJtJinv(contact_status, dRNEA_da, J, MJtJinv);
+  robot.computeMJtJinv(dRNEA_da, J, MJtJinv);
   Eigen::MatrixXd MJtJ = Eigen::MatrixXd::Zero(model.nv+dimf, model.nv+dimf);
   MJtJ.topLeftCorner(model.nv, model.nv) = dRNEA_da;
   MJtJ.topRightCorner(model.nv, dimf) = J.transpose();

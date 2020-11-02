@@ -557,17 +557,16 @@ inline void Robot::computeMinv(const Eigen::MatrixBase<MatrixType1>& M,
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void Robot::computeMJtJinv(
-    const ContactStatus& contact_status,
     const Eigen::MatrixBase<MatrixType1>& M, 
     const Eigen::MatrixBase<MatrixType2>& J, 
     const Eigen::MatrixBase<MatrixType3>& MJtJinv) {
   assert(M.rows() == dimv_);
   assert(M.cols() == dimv_);
-  assert(J.rows() == contact_status.dimf());
+  assert(J.rows() <= max_dimf_);
   assert(J.cols() == dimv_);
-  assert(MJtJinv.rows() == dimv_+contact_status.dimf());
-  assert(MJtJinv.cols() == dimv_+contact_status.dimf());
-  const int dimf = contact_status.dimf();
+  assert(MJtJinv.rows() == M.rows()+J.rows());
+  assert(MJtJinv.cols() == M.rows()+J.rows());
+  const int dimf = J.rows();
   data_.M = M;
   pinocchio::cholesky::decompose(model_, data_);
   data_.sDUiJt.leftCols(dimf) = J.transpose();

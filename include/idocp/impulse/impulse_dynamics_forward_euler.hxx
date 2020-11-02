@@ -66,7 +66,7 @@ inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
     ImpulseKKTResidual& kkt_residual) {
   assert(contact_status.hasActiveContacts());
   linearizeImpulseDynamics(robot, contact_status, s, kkt_matrix, kkt_residual);
-  robot.computeMJtJinv(contact_status, dImD_ddv_, kkt_matrix.Cv(), MJtJinv_());
+  robot.computeMJtJinv(dImD_ddv_, kkt_matrix.Cv(), MJtJinv_());
   MJtJinv_dImDCdqv_().topLeftCorner(dimv_, dimv_).noalias() 
       = MJtJinv_().topLeftCorner(dimv_, dimv_) * dImD_dq_;
   MJtJinv_dImDCdqv_().topLeftCorner(dimv_, dimv_).noalias() 

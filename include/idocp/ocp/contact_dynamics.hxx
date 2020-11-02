@@ -101,8 +101,7 @@ inline void ContactDynamics::condenseContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dtau,
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   assert(dtau > 0);
-  robot.computeMJtJinv(contact_status, data_.dIDda, data_.dCda(), 
-                       data_.MJtJinv());
+  robot.computeMJtJinv(data_.dIDda, data_.dCda(), data_.MJtJinv());
   condensing(robot, dtau, data_, kkt_matrix, kkt_residual);
 }
 

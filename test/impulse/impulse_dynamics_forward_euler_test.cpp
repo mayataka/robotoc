@@ -149,7 +149,7 @@ TEST_F(ImpulseDynamicsForwardEulerTest, condenseImpulseDynamicsForwardEulerFixed
   kkt_residual_ref.lf() += dimd_df.transpose() * s.beta;
   Eigen::MatrixXd MJTJinv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                   robot.dimv()+contact_status.dimf());
-  robot.computeMJtJinv(contact_status, dimd_ddv, kkt_matrix_ref.Cv(), MJTJinv);
+  robot.computeMJtJinv(dimd_ddv, kkt_matrix_ref.Cv(), MJTJinv);
   Eigen::MatrixXd dimdc_dqv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                     2*robot.dimv());
   dimdc_dqv.topLeftCorner(robot.dimv(), robot.dimv()) = dimd_dq;
@@ -366,7 +366,7 @@ TEST_F(ImpulseDynamicsForwardEulerTest, condenseImpulseDynamicsForwardEulerFloat
   kkt_residual_ref.lf() += dimd_df.transpose() * s.beta;
   Eigen::MatrixXd MJTJinv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                   robot.dimv()+contact_status.dimf());
-  robot.computeMJtJinv(contact_status, dimd_ddv, kkt_matrix_ref.Cv(), MJTJinv);
+  robot.computeMJtJinv(dimd_ddv, kkt_matrix_ref.Cv(), MJTJinv);
   Eigen::MatrixXd dimdc_dqv = Eigen::MatrixXd::Zero(robot.dimv()+contact_status.dimf(), 
                                                     2*robot.dimv());
   dimdc_dqv.topLeftCorner(robot.dimv(), robot.dimv()) = dimd_dq;
