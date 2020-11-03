@@ -135,7 +135,11 @@ void FrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, const Cont
   for (int i=0; i<contact_status.max_point_contacts(); ++i) {
     if (contact_status.isContactActive(i)) {
       const double mu = robot.frictionCoefficient(i);
-      data_ref.residual.coeffRef(i) = dtau * FrictionCone::frictionConeResidual(mu, s.f[i]) + data_ref.slack.coeff(i);
+      const double fx = s.f[i].coeff(0);
+      const double fy = s.f[i].coeff(1);
+      const double fz = s.f[i].coeff(2);
+      const double cone = fx*fx + fy*fy - mu*mu*fz*fz;
+      data_ref.residual.coeffRef(i) = dtau * cone + data_ref.slack.coeff(i);
       data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
       dimf_stack += 3;
     }
@@ -165,7 +169,11 @@ void FrictionConeTest::testCondenseSlackAndDual(Robot& robot, const ContactStatu
   for (int i=0; i<contact_status.max_point_contacts(); ++i) {
     if (contact_status.isContactActive(i)) {
       const double mu = robot.frictionCoefficient(i);
-      data_ref.residual.coeffRef(i) = dtau * FrictionCone::frictionConeResidual(mu, s.f[i]) + data_ref.slack.coeff(i);
+      const double fx = s.f[i].coeff(0);
+      const double fy = s.f[i].coeff(1);
+      const double fz = s.f[i].coeff(2);
+      const double cone = fx*fx + fy*fy - mu*mu*fz*fz;
+      data_ref.residual.coeffRef(i) = dtau * cone + data_ref.slack.coeff(i);
       data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
       dimf_stack += 3;
     }

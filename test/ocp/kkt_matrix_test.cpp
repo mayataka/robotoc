@@ -36,9 +36,11 @@ protected:
 void KKTMatrixTest::testSize(const Robot& robot, const ContactStatus& contact_status, const ImpulseStatus& impulse_status) {
   KKTMatrix matrix(robot);
   matrix.setContactStatus(contact_status);
+  matrix.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dimf = contact_status.dimf();
+  const int dimp = impulse_status.dimp();
   const int dim_passive = robot.dim_passive();
   EXPECT_EQ(matrix.dimf(), dimf);
   EXPECT_EQ(matrix.dimKKT(), 4*dimv+dimu);
@@ -58,6 +60,8 @@ void KKTMatrixTest::testSize(const Robot& robot, const ContactStatus& contact_st
   EXPECT_EQ(matrix.Fxu().cols(), dimu);
   EXPECT_EQ(matrix.Fxx().rows(), 2*dimv);
   EXPECT_EQ(matrix.Fxx().cols(), 2*dimv);
+  EXPECT_EQ(matrix.Cq().rows(), dimp);
+  EXPECT_EQ(matrix.Cq().cols(), dimv);
   EXPECT_EQ(matrix.Quu_full().rows(), dimv);
   EXPECT_EQ(matrix.Quu_full().cols(), dimv);
   EXPECT_EQ(matrix.Quu_passive_topLeft().rows(), dim_passive);
@@ -128,6 +132,7 @@ void KKTMatrixTest::testSize(const Robot& robot, const ContactStatus& contact_st
   const Eigen::MatrixXd Fvu = Eigen::MatrixXd::Random(dimv, dimu);
   const Eigen::MatrixXd Fvq = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Fvv = Eigen::MatrixXd::Random(dimv, dimv);
+  const Eigen::MatrixXd Cq = Eigen::MatrixXd::Random(dimp, dimv);
   const Eigen::MatrixXd Quu_full = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Quq_full = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Quv_full = Eigen::MatrixXd::Random(dimv, dimv);
@@ -145,6 +150,7 @@ void KKTMatrixTest::testSize(const Robot& robot, const ContactStatus& contact_st
   matrix.Fvu() = Fvu;
   matrix.Fvq() = Fvq;
   matrix.Fvv() = Fvv;
+  matrix.Cq() = Cq;
   matrix.Quu_full() = Quu_full;
   matrix.Quq_full() = Quq_full;
   matrix.Quv_full() = Quv_full;
@@ -168,6 +174,7 @@ void KKTMatrixTest::testSize(const Robot& robot, const ContactStatus& contact_st
   EXPECT_TRUE(matrix.Fxx().topRightCorner(dimv, dimv).isApprox(Fqv));
   EXPECT_TRUE(matrix.Fxx().bottomLeftCorner(dimv, dimv).isApprox(Fvq));
   EXPECT_TRUE(matrix.Fxx().bottomRightCorner(dimv, dimv).isApprox(Fvv));
+  EXPECT_TRUE(matrix.Cq().isApprox(Cq));
   EXPECT_TRUE(matrix.Quu_full().isApprox(Quu_full));
   EXPECT_TRUE(matrix.Quu().isApprox(Quu_full.bottomRightCorner(dimu, dimu)));
   EXPECT_TRUE(matrix.Quu_passive_topLeft().isApprox(Quu_full.topLeftCorner(dim_passive, dim_passive)));
@@ -221,9 +228,11 @@ void KKTMatrixTest::testSize(const Robot& robot, const ContactStatus& contact_st
 void KKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& contact_status, const ImpulseStatus& impulse_status) {
   KKTMatrix matrix(robot);
   matrix.setContactStatus(contact_status);
+  matrix.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dimf = contact_status.dimf();
+  const int dimp = impulse_status.dimp();
   const int dim_passive = robot.dim_passive();
   const Eigen::MatrixXd Fqu = Eigen::MatrixXd::Random(dimv, dimu);
   const Eigen::MatrixXd Fqq = Eigen::MatrixXd::Random(dimv, dimv);
@@ -231,6 +240,7 @@ void KKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& contac
   const Eigen::MatrixXd Fvu = Eigen::MatrixXd::Random(dimv, dimu);
   const Eigen::MatrixXd Fvq = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Fvv = Eigen::MatrixXd::Random(dimv, dimv);
+  const Eigen::MatrixXd Cq = Eigen::MatrixXd::Random(dimp, dimv);
   const Eigen::MatrixXd Quu_full = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Quq_full = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Quv_full = Eigen::MatrixXd::Random(dimv, dimv);
@@ -248,6 +258,7 @@ void KKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& contac
   matrix.Fvu() = Fvu;
   matrix.Fvq() = Fvq;
   matrix.Fvv() = Fvv;
+  matrix.Cq() = Cq;
   matrix.Quu_full() = Quu_full;
   matrix.Quq_full() = Quq_full;
   matrix.Quv_full() = Quv_full;
@@ -269,6 +280,18 @@ void KKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& contac
   EXPECT_FALSE(matrix.isApprox(matrix_ref));
   matrix_ref = matrix;
   EXPECT_TRUE(matrix.isApprox(matrix_ref));
+  if (impulse_status.hasActiveImpulse()) {
+    matrix_ref.Cq().setRandom();
+    EXPECT_FALSE(matrix.isApprox(matrix_ref));
+    matrix_ref = matrix;
+    EXPECT_TRUE(matrix.isApprox(matrix_ref));
+  }
+  else {
+    matrix_ref.Cq().setRandom();
+    EXPECT_TRUE(matrix.isApprox(matrix_ref));
+    matrix_ref = matrix;
+    EXPECT_TRUE(matrix.isApprox(matrix_ref));
+  }
   matrix_ref.Qxx().setRandom();
   EXPECT_FALSE(matrix.isApprox(matrix_ref));
   matrix_ref = matrix;
