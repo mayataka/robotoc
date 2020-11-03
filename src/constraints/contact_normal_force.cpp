@@ -51,7 +51,6 @@ void ContactNormalForce::setSlackAndDual(
     const SplitSolution& s) const {
   assert(dtau > 0);
   for (int i=0; i<robot.max_point_contacts(); ++i) {
-    const double mu = robot.frictionCoefficient(i);
     data.slack.coeffRef(i) = dtau * s.f[i].coeff(2);
   }
   setSlackAndDualPositive(data);
@@ -82,7 +81,7 @@ void ContactNormalForce::condenseSlackAndDual(
     if (s.isContactActive(i)) {
       const double dual_per_slack = data.dual.coeff(i) / data.slack.coeff(i);
       kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack+2) 
-          = dtau * dtau * data.dual.coeff(i) / data.slack.coeff(i);
+          += dtau * dtau * data.dual.coeff(i) / data.slack.coeff(i);
       data.residual.coeffRef(i) = - dtau * s.f[i].coeff(2) + data.slack.coeff(i);
       data.duality.coeffRef(i) = computeDuality(data.slack.coeff(i), 
                                                 data.dual.coeff(i));
@@ -110,10 +109,11 @@ void ContactNormalForce::computeSlackAndDualDirection(
       dimf_stack += 3;
     }
     else {
-      data.slack.coeffRef(i) = 1;
-      data.dslack.coeffRef(i) = 1;
-      data.dual.coeffRef(i) = 1;
-      data.ddual.coeffRef(i) = 1;
+      // Set 1.0 to make the fraction-to-boundary rule easy.
+      data.slack.coeffRef(i) = 1.0;
+      data.dslack.coeffRef(i) = 1.0;
+      data.dual.coeffRef(i) = 1.0;
+      data.ddual.coeffRef(i) = 1.0;
     }
   }
 }

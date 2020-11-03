@@ -93,23 +93,23 @@ void FrictionCone::condenseSlackAndDual(
       const double fz = - 2 * dtau * mu * mu * s.f[i].coeff(2);
       const double dual_per_slack = data.dual.coeff(i) / data.slack.coeff(i);
       kkt_matrix.Qff().coeffRef(dimf_stack  , dimf_stack  ) 
-          = dual_per_slack * fx * fx;
+          += dual_per_slack * fx * fx;
       kkt_matrix.Qff().coeffRef(dimf_stack  , dimf_stack+1) 
-          = dual_per_slack * fx * fy;
+          += dual_per_slack * fx * fy;
       kkt_matrix.Qff().coeffRef(dimf_stack  , dimf_stack+2) 
-          = dual_per_slack * fx * fz;
+          += dual_per_slack * fx * fz;
       kkt_matrix.Qff().coeffRef(dimf_stack+1, dimf_stack  ) 
-          = dual_per_slack * fy * fx;
+          += dual_per_slack * fy * fx;
       kkt_matrix.Qff().coeffRef(dimf_stack+1, dimf_stack+1) 
-          = dual_per_slack * fy * fy;
+          += dual_per_slack * fy * fy;
       kkt_matrix.Qff().coeffRef(dimf_stack+1, dimf_stack+2) 
-          = dual_per_slack * fy * fz;
+          += dual_per_slack * fy * fz;
       kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack  ) 
-          = dual_per_slack * fz * fx;
+          += dual_per_slack * fz * fx;
       kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack+1) 
-          = dual_per_slack * fz * fy;
+          += dual_per_slack * fz * fy;
       kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack+2) 
-          = dual_per_slack * fz * fz;
+          += dual_per_slack * fz * fz;
       data.residual.coeffRef(i) = - dtau * frictionConeResidual(mu, s.f[i]) 
                                   + data.slack.coeff(i);
       data.duality.coeffRef(i) = computeDuality(data.slack.coeff(i), 
@@ -117,9 +117,9 @@ void FrictionCone::condenseSlackAndDual(
       const double coeff 
           = (data.dual.coeff(i)*data.residual.coeff(i)-data.duality.coeff(i)) 
             / data.slack.coeff(i);
-      kkt_residual.lf().coeffRef(dimf_stack  ) = fx * coeff;
-      kkt_residual.lf().coeffRef(dimf_stack+1) = fy * coeff; 
-      kkt_residual.lf().coeffRef(dimf_stack+2) = fz * coeff;
+      kkt_residual.lf().coeffRef(dimf_stack  ) += fx * coeff;
+      kkt_residual.lf().coeffRef(dimf_stack+1) += fy * coeff; 
+      kkt_residual.lf().coeffRef(dimf_stack+2) += fz * coeff;
       dimf_stack += 3;
     }
   }
