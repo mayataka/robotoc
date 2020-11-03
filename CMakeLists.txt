@@ -29,6 +29,7 @@ add_library(
   src/robot/floating_base.cpp
   src/robot/point_contact.cpp
   src/robot/contact_status.cpp
+  src/robot/impulse_status.cpp
   src/cost/cost_function.cpp
   src/cost/cost_function_data.cpp
   src/cost/cost_function_component_base.cpp
@@ -57,14 +58,14 @@ add_library(
   src/constraints/contact_normal_force.cpp
   src/constraints/impulse_constraints.cpp
   src/constraints/impulse_constraint_component_base.cpp
-  src/impulse/impulse_kkt_residual.cpp
-  src/impulse/impulse_kkt_matrix.cpp
-  src/impulse/impulse_split_solution.cpp
-  src/impulse/impulse_split_direction.cpp
-  src/impulse/impulse_state_equation.cpp
-  src/impulse/impulse_dynamics_forward_euler.cpp
-  src/impulse/impulse_dynamics_backward_euler.cpp
-  src/impulse/impulse_riccati_factorizer.cpp
+  # src/impulse/impulse_kkt_residual.cpp
+  # src/impulse/impulse_kkt_matrix.cpp
+  # src/impulse/impulse_split_solution.cpp
+  # src/impulse/impulse_split_direction.cpp
+  # src/impulse/impulse_state_equation.cpp
+  # src/impulse/impulse_dynamics_forward_euler.cpp
+  # src/impulse/impulse_dynamics_backward_euler.cpp
+  # src/impulse/impulse_riccati_factorizer.cpp
   # src/impulse/split_impulse_ocp.cpp
   # src/impulse/split_impulse_parnmpc.cpp
   src/ocp/schur_complement.cpp
