@@ -12,10 +12,6 @@ class ContactDynamicsData {
 public:
   using Vector6d = Eigen::Matrix<double, 6, 1>;
 
-  Eigen::MatrixXd dIDda;
-
-  Vector6d u_passive;
-
   ContactDynamicsData(const Robot& robot);
 
   ContactDynamicsData();
@@ -31,6 +27,10 @@ public:
   ContactDynamicsData& operator=(ContactDynamicsData&&) noexcept = default;
 
   void setContactStatus(const ContactStatus& contact_status);
+
+  Eigen::MatrixXd dIDda;
+
+  Vector6d u_passive;
 
   Eigen::Block<Eigen::MatrixXd> dCda();
 

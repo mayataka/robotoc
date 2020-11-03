@@ -63,7 +63,7 @@ public:
   void setContactStatus(const ContactStatus& contact_status);
 
   ///
-  /// @brief Stack of active contact forces. Size is Robot::dimf().
+  /// @brief Stack of active contact forces. Size is ContactStatus::dimf().
   /// @return Reference to the stack of active contact forces.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> f_stack();
@@ -166,7 +166,7 @@ public:
   std::vector<Eigen::Vector3d> mu;
 
   ///
-  /// @brief Lagrange multiplier with respect to floating base. Size is 6.
+  /// @brief Control input torques of the virtual floating base joint. Size is 6.
   ///
   Vector6d u_passive;
 

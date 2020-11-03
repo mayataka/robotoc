@@ -6,13 +6,15 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/impulse_status.hpp"
+#include "idocp/impulse/impulse_split_direction.hpp"
 
 
 namespace idocp {
 
 ///
-/// @class SplitSolution
-/// @brief Solution split into each time stage. 
+/// @class ImpulseSplitSolution
+/// @brief Solution of the optimal control problem at the impulse stage. 
 ///
 class ImpulseSplitSolution {
 public:
@@ -33,139 +35,118 @@ public:
   ~ImpulseSplitSolution();
 
   ///
-  /// @brief Use default copy constructor. 
+  /// @brief Default copy constructor. 
   ///
   ImpulseSplitSolution(const ImpulseSplitSolution&) = default;
 
   ///
-  /// @brief Use default copy assign operator. 
+  /// @brief Default copy assign operator. 
   ///
   ImpulseSplitSolution& operator=(const ImpulseSplitSolution&) = default;
 
   ///
-  /// @brief Use default move constructor. 
+  /// @brief Default move constructor. 
   ///
   ImpulseSplitSolution(ImpulseSplitSolution&&) noexcept = default;
 
   ///
-  /// @brief Use default move assign operator. 
+  /// @brief Default move assign operator. 
   ///
   ImpulseSplitSolution& operator=(ImpulseSplitSolution&&) noexcept = default;
 
   ///
-  /// @brief Set contact status from robot model, i.e., set dimension of the 
-  /// contacts and equality constraints.
-  /// @param[in] contact_status Contact status.
+  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @param[in] impulse_status Impulse status.
   ///
-  void setContactStatus(const ContactStatus& contact_status);
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Stack of Lagrange multiplier with respect to contact position and 
-  /// velocity constraints that is active at the current contact status. Size is 
-  /// 2 * ContactStatus::dimf().
-  /// @return Reference to the stack of Lagrange multiplier with respect to 
-  /// contact position and velocity constraints.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> mu_stack();
-
-  ///
-  /// @brief Stack of Lagrange multiplier with respect to contact position and 
-  /// velocity constraints that is active at the current contact status. Size is 
-  /// 2 * ContactStatus::dimf().
-  /// @return Const reference to the stack of Lagrange multiplier with respect 
-  /// to contact position and velocity constraints.
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> mu_stack() const;
-
-  ///
-  /// @brief Set the stack of the Lagrange multiplier with respect to active 
-  /// equality constraint from mu_floating_base and mu_contacts.
-  ///
-  void set_mu_stack();
-
-  ///
-  /// @brief Set the Lagrange multiplier with respect to active contact 
-  /// constraints from mu_stack.
-  ///
-  void set_mu_contact();
-
-  ///
-  /// @brief Stack of active contact forces. Size is Robot::dimf().
-  /// @return Reference to the stack of active contact forces.
+  /// @brief Stack of active impulse forces. Size is ImpulseStatus::dimp().
+  /// @return Reference to the stack of active impulse forces.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> f_stack();
 
   ///
-  /// @brief Stack of active contact forces. Size is Robot::dimf().
-  /// @return Const reference to the stack of active contact forces.
+  /// @brief const version of ImpulseSplitSolution::f_stack().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> f_stack() const;
 
   ///
-  /// @brief Set the stack of contact forces from each contact forces.
+  /// @brief Set ImpulseSplitSolution::f_stack() from ImpulseSplitSolution::f.
   ///
   void set_f_stack();
 
   ///
-  /// @brief Set the each contact forces from stack of contact forces.
+  /// @brief Set ImpulseSplitSolution::f from ImpulseSplitSolution::f_stack().
   ///
-  void set_f();
+  void set_f_vector();
 
   ///
-  /// @brief Returns the number of active contacts.
-  /// @return Number of active contacts.
+  /// @brief Stack of Lagrange multiplier with respect to impulse velocity 
+  /// constraints that is active at the current impulse status. Size is 
+  /// ImpulseSplitSolution::dimf().
+  /// @return Reference to the stack of Lagrange multiplier with respect to 
+  /// impulse velocity constraints.
   ///
-  bool isContactActive(const int contact_index) const;
+  Eigen::VectorBlock<Eigen::VectorXd> mu_stack();
 
   ///
-  /// @brief Returns the number of active contacts.
-  /// @return Number of active contacts.
+  /// @brief const version of ImpulseSplitSolution::mu_stack().
   ///
-  int num_active_contacts() const;
+  const Eigen::VectorBlock<const Eigen::VectorXd> mu_stack() const;
 
   ///
-  /// @brief Returns the dimension of equality constraint at the current 
-  /// contact status.
-  /// @return Dimension of equality constraint.
+  /// @brief Set ImpulseSplitSolution::mu_stack() from ImpulseSplitSolution::mu. 
   ///
-  int dimc() const;
+  void set_mu_stack();
 
   ///
-  /// @brief Returns the dimension of the stack of contact forces at the current 
-  /// contact status.
-  /// @return Dimension of contact forces.
+  /// @brief Set ImpulseSplitSolution::mu from ImpulseSplitSolution::mu_stack(). 
+  ///
+  void set_mu_vector();
+
+  ///
+  /// @brief Stack of Lagrange multiplier with respect to impulse position 
+  /// constraints that is active at the current impulse status. Size is 
+  /// ImpulseSplitSolution::dimf().
+  /// @return Reference to the stack of Lagrange multiplier with respect to 
+  /// impulse position constraints.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> xi_stack();
+
+  ///
+  /// @brief const version of ImpulseSplitSolution::xi_stack().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> xi_stack() const;
+
+  ///
+  /// @brief Set ImpulseSplitSolution::xi_stack() from ImpulseSplitSolution::mu. 
+  ///
+  void set_xi_stack();
+
+  ///
+  /// @brief Set ImpulseSplitSolution::xi from ImpulseSplitSolution::mu_stack(). 
+  ///
+  void set_xi_vector();
+
+  ///
+  /// @brief Returns the dimension of the stack of impulse forces at the current 
+  /// impulse status.
+  /// @return Dimension of impulse forces.
   ///
   int dimf() const;
 
   ///
-  /// @brief Lagrange multiplier with respect to transition of q. 
-  /// Size is Robot::dimv().
+  /// @brief Lagrange multiplier with respect to the transition of 
+  /// ImpulseSplitSolution::q. Size is ImpulseStatus::dimp().
   ///
   Eigen::VectorXd lmd;
 
   ///
-  /// @brief Lagrange multiplier with respect to transition of v. 
-  /// Size is Robot::dimv().
+  /// @brief Lagrange multiplier with respect to the transition of  
+  /// ImpulseSplitSolution::v. Size is Robot::dimv().
   ///
   Eigen::VectorXd gmm;
-
-  ///
-  /// @brief Lagrange multiplier with respect to contact constraint. 
-  /// Size is Robot::max_point_contacts().
-  ///
-  std::vector<Eigen::Vector3d> mu_contact_velocity;
-
-  ///
-  /// @brief Changes in generalized velocity due to impact. 
-  /// Size is Robot::dimv().
-  ///
-  Eigen::VectorXd dv;
-
-  ///
-  /// @brief Contact forces. 
-  /// Size is Robot::max_point_contacts().
-  ///
-  std::vector<Eigen::Vector3d> f;
 
   ///
   /// @brief Configuration. Size is Robot::dimq().
@@ -178,40 +159,100 @@ public:
   Eigen::VectorXd v;
 
   ///
-  /// @brief Lagrange multiplier with respect to inverse dynamics. Size is 
+  /// @brief Impulse change in the generalized velocity. 
+  /// Size is Robot::dimv().
+  ///
+  Eigen::VectorXd dv;
+
+  ///
+  /// @brief Impulse forces. 
+  /// Size is Robot::max_point_contacts().
+  ///
+  std::vector<Eigen::Vector3d> f;
+
+  ///
+  /// @brief Lagrange multiplier with respect to impulse dynamics. Size is 
   /// Robot::dimv().
   ///
   Eigen::VectorXd beta;
 
   ///
-  /// @brief Generates split solution filled randomly.
-  /// @return Split solution filled randomly.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Lagrange multiplier with respect to impulse velocity constraint. 
+  /// Size is Robot::max_point_contacts().
+  ///
+  std::vector<Eigen::Vector3d> mu;
+
+  ///
+  /// @brief Lagrange multiplier with respect to impulse position constraint. 
+  /// Size is Robot::max_point_contacts().
+  ///
+  std::vector<Eigen::Vector3d> xi;
+
+  ///
+  /// @brief Return true if a Impulse is active and false if not.
+  /// @param[in] contact_index Index of a contact at impulse. 
+  /// @return true if a Impulse is active and false if not. 
+  ///
+  bool isImpulseActive(const int contact_index) const;
+
+  ///
+  /// @brief Return true if there are active impulse and false if not.
+  /// @return true if there are active impulse and false if not. 
+  ///
+  bool hasActiveImpulse() const;
+
+  ///
+  /// @brief Integrates the solution based on step size and direction. 
+  /// @param[in] robot Robot model.
+  /// @param[in] step_size Step size.
+  /// @param[in] d Split direction.
+  ///
+  void integrate(const Robot& robot, const double step_size, 
+                 const ImpulseSplitDirection& d);
+
+  ///
+  /// @brief Return true if two ImpulseSplitSolution have the same value and  
+  /// false if not. 
+  /// @param[in] other Impulse split solution that is compared with this object.
+  ///
+  bool isApprox(const ImpulseSplitSolution& other) const;
+
+  ///
+  /// @brief Set each component vector by random value based on the current 
+  /// impulse status. 
+  /// @param[in] robot Robot model.
+  ///
+  void setRandom(const Robot& robot);
+
+  ///
+  /// @brief Set each component vector by random value. Impulse status is reset.
+  /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setRandom(const Robot& robot, const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Generates impulse split solution filled randomly.
+  /// @return Impulse split solution filled randomly.
+  /// @param[in] robot Robot model. 
   ///
   static ImpulseSplitSolution Random(const Robot& robot);
 
   ///
-  /// @brief Generates split solution filled randomly.
-  /// @return Split solution filled randomly.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status.
+  /// @brief Generates impulse split solution filled randomly.
+  /// @return Impulse split solution filled randomly.
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status.
   ///
   static ImpulseSplitSolution Random(const Robot& robot, 
-                                     const ContactStatus& contact_status);
+                                     const ImpulseStatus& impulse_status);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  /// @brief Stack of Lagrange multiplier with respect to equality constraints. 
-  Eigen::VectorXd mu_stack_;
-
-  /// @brief Stack of the contact forces. 
-  Eigen::VectorXd f_stack_;
-
-  /// @brief Dimension of passive joints. 
-  std::vector<bool> is_contact_active_;
-
-  /// @brief Dimension of contact forces at the current contact status. 
+  Eigen::VectorXd mu_stack_, f_stack_, xi_stack_;
+  bool has_floating_base_, has_active_impulse_;
+  std::vector<bool> is_impulse_active_;
   int dimf_;
 
 };
