@@ -37,6 +37,8 @@ protected:
     barrier = 1.0e-04;
     dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
     mu = 0.8;
+    fixed_base_robot = Robot(fixed_base_urdf);
+    floating_base_robot = Robot(floating_base_urdf);
     amin_fixed = Eigen::VectorXd::Constant(fixed_base_robot.dimu(), -10);
     amax_fixed = Eigen::VectorXd::Constant(fixed_base_robot.dimu(), 10);
     amin_floating = Eigen::VectorXd::Constant(floating_base_robot.dimu(), -10);
@@ -53,11 +55,12 @@ protected:
 
   double barrier, dtau, mu;
   std::string fixed_base_urdf, floating_base_urdf;
+  Robot fixed_base_robot, floating_base_robot;
   Eigen::VectorXd amin_fixed, amax_fixed, amin_floating, amax_floating;
 };
 
 
-void std::shared_ptr<Constraints> ConstraintsTest::createConstraints(Robot& robot) const {
+std::shared_ptr<Constraints> ConstraintsTest::createConstraints(Robot& robot) const {
   auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
   auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
   auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
