@@ -38,14 +38,17 @@ public:
                                 ImpulseKKTMatrix& kkt_matrix, 
                                 ImpulseKKTResidual& kkt_residual);
 
-  static void linearizeInverseDynamics(Robot& robot, 
-                                       const ImpulseStatus& impulse_status,
-                                       const ImpulseSplitSolution& s, 
-                                       ImpulseDynamicsData& data);
+  static void linearizeInverseImpulseDynamics(
+      Robot& robot, const ImpulseStatus& impulse_status, 
+      const ImpulseSplitSolution& s, ImpulseDynamicsData& data);
 
-  static void linearizeContactConstraint(Robot& robot, 
-                                         const ImpulseStatus& impulse_status,
-                                         ImpulseDynamicsData& data);
+  static void linearizeImpulseVelocityConstraint(
+      Robot& robot, const ImpulseStatus& impulse_status, 
+      ImpulseDynamicsData& data);
+
+  static void linearizeImpulsePositionConstraint(
+      Robot& robot, const ImpulseStatus& impulse_status, 
+      ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual);
 
   void condenseImpulseDynamics(Robot& robot, 
                                const ImpulseStatus& impulse_status,

@@ -9,30 +9,15 @@ namespace idocp {
 
 inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler(
     const Robot& robot) 
-  : dImD_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    dImD_ddv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    MJtJinv_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
-                                        robot.dimv()+robot.max_dimf())), 
-    MJtJinv_dImDCdqv_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
-                                                 2*robot.dimv())), 
-    Qdvfqv_condensed_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
-                                                 2*robot.dimv())),
-    MJtJinv_ImDC_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
-    ldvf_condensed_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
+  : data_(robot),
     dimv_(robot.dimv()),
     dimf_(0) {
 }
 
 
 inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler() 
-  : dImD_dq_(),
-    dImD_ddv_(),
-    MJtJinv_full_(), 
-    MJtJinv_dImDCdqv_full_(), 
-    Qdvfqv_condensed_full_(),
-    MJtJinv_ImDC_full_(),
-    ldvf_condensed_full_(),
-    dimv_(0),
+  : data_(robot),
+    dimv_(robot.dimv()),
     dimf_(0) {
 }
 
@@ -42,32 +27,67 @@ inline ImpulseDynamicsForwardEuler::~ImpulseDynamicsForwardEuler() {
 
 
 inline void ImpulseDynamicsForwardEuler::linearizeImpulseDynamics(
-    Robot& robot, const ContactStatus& contact_status,  
+    Robot& robot, const ImpulseStatus& impulse_status,  
     const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
     ImpulseKKTResidual& kkt_residual) { 
   assert(contact_status.hasActiveContacts());
-  setContactStatus(contact_status);
-  linearizeInverseImpulseDynamics(robot, contact_status, s, kkt_residual);
-  linearizeContactConstraint(robot, contact_status, kkt_matrix, kkt_residual);
-  // augment inverse dynamics constraint
-  kkt_residual.lq().noalias() += dImD_dq_.transpose() * s.beta;
-  kkt_residual.ldv.noalias() += dImD_ddv_.transpose() * s.beta;
+  setImpulseStatus(impulse_status);
+  linearizeInverseImpulseDynamics(robot, impulse_status, s, data_);
+  linearizeImpulseVelocityConstraint(robot, impulse_status, data_);
+  linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix, 
+                                     kkt_residual);
+  // augment inverse impulse dynamics constraint
+  kkt_residual.lq().noalias() += data_.dImDdq.transpose() * s.beta;
+  kkt_residual.ldv.noalias() += data_.dImDddv.transpose() * s.beta;
   kkt_residual.lf().noalias() -= kkt_matrix.Cv() * s.beta;
-  // augment contact constraint
-  kkt_residual.lq().noalias() += kkt_matrix.Cq().transpose() * s.mu_stack();
-  kkt_residual.lv().noalias() += kkt_matrix.Cv().transpose() * s.mu_stack();
-  kkt_residual.ldv.noalias() += kkt_matrix.Cv().transpose() * s.mu_stack();
+  // augment impulse velocity constraint
+  kkt_residual.lq().noalias() += data_.dCdq().transpose() * s.mu_stack();
+  kkt_residual.lv().noalias() += data_.dCdv().transpose() * s.mu_stack();
+  kkt_residual.ldv.noalias() += data_.dCdv().transpose() * s.mu_stack();
+  // augment impulse position constraint
+  kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.xi_stack();
+}
+
+
+inline void ImpulseDynamicsForwardEuler::linearizeInverseImpulseDynamics(
+    Robot& robot, const ImpulseStatus& impulse_status, 
+    const ImpulseSplitSolution& s, ImpulseDynamicsData& data) {
+  robot.setImpulseForces(impulse_status, s.f);
+  robot.RNEAImpulse(s.q, s.dv, data.ID());
+  robot.RNEAImpulseDerivatives(s.q, s.dv, data.dImDdq(), data.dImDda);
+}
+
+
+inline void ImpulseDynamicsForwardEuler::linearizeImpulseVelocityConstraint(
+    Robot& robot, const ImpulseStatus& impulse_status, 
+    ImpulseDynamicsData& data) {
+  robot.computeImpulseVelocityResidual(impulse_status, data.C());
+  robot.computeImpulseVelocityDerivatives(impulse_status, data.dCdq(), 
+                                          data.dCdv());
+}
+
+
+inline void ImpulseDynamicsForwardEuler::linearizeImpulsePositionConstraint(
+      Robot& robot, const ImpulseStatus& impulse_status, 
+      ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual) {
+  robot.computeImpulsePositionResidual(impulse_status, kkt_residual.P());
+  robot.computeImpulsePositionDerivative(impulse_status, kkt_matrix.Pq());
 }
 
 
 inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
-    Robot& robot, const ContactStatus& contact_status, 
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual) {
-  assert(contact_status.hasActiveContacts());
-  linearizeImpulseDynamics(robot, contact_status, s, kkt_matrix, kkt_residual);
-  robot.computeMJtJinv(dImD_ddv_, kkt_matrix.Cv(), MJtJinv_());
-  MJtJinv_dImDCdqv_().topLeftCorner(dimv_, dimv_).noalias() 
+    Robot& robot, const ImpulseStatus& impulse_status, 
+    ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual) {
+  robot.computeMJtJinv(data_.dImDddv, data_.dCdv(), data_.MJtJinv());
+  condensing(robot, data_, kkt_matrix, kkt_residual);
+}
+
+
+inline void ImpulseDynamicsForwardEuler::condensing(
+    Robot& robot, const ImpulseStatus& impulse_status, 
+    ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual) {
+  const int dimv = robot.dimv();
+  data.MJtJinv_dImDCdqv().topLeftCorner(dimv_, dimv_).noalias() 
       = MJtJinv_().topLeftCorner(dimv_, dimv_) * dImD_dq_;
   MJtJinv_dImDCdqv_().topLeftCorner(dimv_, dimv_).noalias() 
       += MJtJinv_().topRightCorner(dimv_, dimf_) * kkt_matrix.Cq();

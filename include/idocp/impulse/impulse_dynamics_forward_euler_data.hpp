@@ -10,8 +10,6 @@ namespace idocp {
 
 class ImpulseDynamicsForwardEulerData {
 public:
-  using Vector6d = Eigen::Matrix<double, 6, 1>;
-
   ImpulseDynamicsForwardEulerData(const Robot& robot);
 
   ImpulseDynamicsForwardEulerData();
@@ -32,13 +30,23 @@ public:
 
   void setImpulseStatus(const ImpulseStatus& Impulse_status);
 
-  Eigen::MatrixXd dImDdq;
-
   Eigen::MatrixXd dImDddv;
 
-  Eigen::Block<Eigen::MatrixXd> dCdqv();
+  Eigen::Block<Eigen::MatrixXd> dCddv();
 
-  const Eigen::Block<const Eigen::MatrixXd> dCdqv() const;
+  const Eigen::Block<const Eigen::MatrixXd> dCddv() const;
+
+  Eigen::Block<Eigen::MatrixXd> dImDCdqv();
+
+  const Eigen::Block<const Eigen::MatrixXd> dImDCdqv() const;
+
+  Eigen::Block<Eigen::MatrixXd> dImDCdq();
+
+  const Eigen::Block<const Eigen::MatrixXd> dImDCdq() const;
+
+  Eigen::Block<Eigen::MatrixXd> dImDdq();
+
+  const Eigen::Block<const Eigen::MatrixXd> dImDdq() const;
 
   Eigen::Block<Eigen::MatrixXd> dCdq();
 
@@ -47,10 +55,6 @@ public:
   Eigen::Block<Eigen::MatrixXd> dCdv();
 
   const Eigen::Block<const Eigen::MatrixXd> dCdv() const;
-
-  Eigen::Block<Eigen::MatrixXd> dCddv();
-
-  const Eigen::Block<const Eigen::MatrixXd> dCddv() const;
 
   Eigen::Block<Eigen::MatrixXd> MJtJinv();
 
@@ -95,7 +99,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::MatrixXd dCdqv_full_, dCddv_full_, MJtJinv_full_, 
+  Eigen::MatrixXd dImDCdqv_full_, dCddv_full_, MJtJinv_full_, 
                   MJtJinv_dImDCdqv_full_, Qdvfqv_full_;
   Eigen::VectorXd ImDC_full_, MJtJinv_ImDC_full_, ldvf_full_;
   int dimv_, dimf_, dimvf_;

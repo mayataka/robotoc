@@ -101,6 +101,34 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> Fx() const;
 
   ///
+  /// @brief Residual with respect to q and v transition.
+  /// @return Reference to the residual with respect to q and v transition.
+  /// Size is 2 * Robot::dimv().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> P();
+
+  ///
+  /// @brief Residual with respect to q and v transition.
+  /// @return Reference to the residual with respect to q and v transition.
+  /// Size is 2 * Robot::dimv().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> P() const;
+
+  ///
+  /// @brief Residual with respect to q and v transition.
+  /// @return Reference to the residual with respect to q and v transition.
+  /// Size is 2 * Robot::dimv().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> V();
+
+  ///
+  /// @brief Residual with respect to q and v transition.
+  /// @return Reference to the residual with respect to q and v transition.
+  /// Size is 2 * Robot::dimv().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> V() const;
+
+  ///
   /// @brief Residual with respect to configuration q.
   /// @return Reference to the residual with respect to configuration q. Size is 
   /// Robot::dimv().

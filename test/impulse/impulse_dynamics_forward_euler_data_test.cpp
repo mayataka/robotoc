@@ -36,18 +36,23 @@ void ImpulseDynamicsForwardEulerDataTest::testSize(const Robot& robot, const Imp
   const int dimf = impulse_status.dimp();
   ImpulseDynamicsForwardEulerData data(robot);
   data.setImpulseStatus(impulse_status);
-  EXPECT_EQ(data.dImDdq.rows(), dimv);
-  EXPECT_EQ(data.dImDdq.cols(), dimv);
   EXPECT_EQ(data.dImDddv.rows(), dimv);
   EXPECT_EQ(data.dImDddv.cols(), dimv);
-  EXPECT_EQ(data.dCdqv().rows(), dimf);
-  EXPECT_EQ(data.dCdqv().cols(), dimx);
-  EXPECT_EQ(data.dCdq().rows(), dimf);
-  EXPECT_EQ(data.dCdq().cols(), dimv);
-  EXPECT_EQ(data.dCdv().rows(), dimf);
-  EXPECT_EQ(data.dCdv().cols(), dimv);
   EXPECT_EQ(data.dCddv().rows(), dimf);
   EXPECT_EQ(data.dCddv().cols(), dimv);
+
+  EXPECT_EQ(data.dImDCdqv().rows(), dimv+dimf);
+  EXPECT_EQ(data.dImDCdqv().cols(), dimx);
+
+  EXPECT_EQ(data.dImDCdq().rows(), dimv+dimf);
+  EXPECT_EQ(data.dImDCdq().cols(), dimv);
+
+  EXPECT_EQ(data.dCdq().rows(), dimf);
+  EXPECT_EQ(data.dCdq().cols(), dimv);
+
+  EXPECT_EQ(data.dCdv().rows(), dimf);
+  EXPECT_EQ(data.dCdv().cols(), dimv);
+
   EXPECT_EQ(data.MJtJinv().rows(), dimv+dimf);
   EXPECT_EQ(data.MJtJinv().cols(), dimv+dimf);
   EXPECT_EQ(data.MJtJinv_dImDCdqv().rows(), dimv+dimf);
@@ -61,32 +66,31 @@ void ImpulseDynamicsForwardEulerDataTest::testSize(const Robot& robot, const Imp
   EXPECT_EQ(data.ldvf().size(), dimv+dimf);
   EXPECT_EQ(data.ldv().size(), dimv);
   EXPECT_EQ(data.lf().size(), dimf);
-  const Eigen::MatrixXd dImDdq_ref = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd dImDddv_ref = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd dCdqv_ref = Eigen::MatrixXd::Random(dimf, dimx);
   const Eigen::MatrixXd dCddv_ref = Eigen::MatrixXd::Random(dimf, dimv);
+  const Eigen::MatrixXd dImDCdqv_ref = Eigen::MatrixXd::Random(dimv+dimf, dimx);
   const Eigen::MatrixXd MJtJinv_ref = Eigen::MatrixXd::Random(dimv+dimf, dimv+dimf);
   const Eigen::MatrixXd MJtJinv_dImDCdqv_ref = Eigen::MatrixXd::Random(dimv+dimf, dimx);
   const Eigen::MatrixXd Qdvfqv_ref = Eigen::MatrixXd::Random(dimv+dimf, dimx);
   const Eigen::VectorXd ImDC_ref = Eigen::VectorXd::Random(dimv+dimf);
   const Eigen::VectorXd MJtJinv_ImDC_ref = Eigen::VectorXd::Random(dimv+dimf);
   const Eigen::VectorXd ldvf_ref = Eigen::VectorXd::Random(dimv+dimf);
-  data.dImDdq = dImDdq_ref;
   data.dImDddv = dImDddv_ref;
-  data.dCdqv() = dCdqv_ref;
   data.dCddv() = dCddv_ref;
+  data.dImDCdqv() = dImDCdqv_ref;
   data.MJtJinv() = MJtJinv_ref;
   data.MJtJinv_dImDCdqv() = MJtJinv_dImDCdqv_ref;
   data.Qdvfqv() = Qdvfqv_ref;
   data.ImDC() = ImDC_ref;
   data.MJtJinv_ImDC() = MJtJinv_ImDC_ref;
   data.ldvf() = ldvf_ref;
-  EXPECT_TRUE(data.dImDdq.isApprox(dImDdq_ref));
   EXPECT_TRUE(data.dImDddv.isApprox(dImDddv_ref));
-  EXPECT_TRUE(data.dCdqv().isApprox(dCdqv_ref));
-  EXPECT_TRUE(data.dCdq().isApprox(dCdqv_ref.leftCols(dimv)));
-  EXPECT_TRUE(data.dCdv().isApprox(dCdqv_ref.rightCols(dimv)));
   EXPECT_TRUE(data.dCddv().isApprox(dCddv_ref));
+  EXPECT_TRUE(data.dImDCdqv().isApprox(dImDCdqv_ref));
+  EXPECT_TRUE(data.dImDCdq().isApprox(dImDCdqv_ref.leftCols(dimv)));
+  EXPECT_TRUE(data.dImDdq().isApprox(dImDCdqv_ref.block(0, 0, dimv, dimv)));
+  EXPECT_TRUE(data.dCdq().isApprox(dImDCdqv_ref.block(dimv, 0, dimf, dimv)));
+  EXPECT_TRUE(data.dCdv().isApprox(dImDCdqv_ref.block(dimv, dimv, dimf, dimv)));
   EXPECT_TRUE(data.MJtJinv().isApprox(MJtJinv_ref));
   EXPECT_TRUE(data.MJtJinv_dImDCdqv().isApprox(MJtJinv_dImDCdqv_ref));
   EXPECT_TRUE(data.Qdvfqv().isApprox(Qdvfqv_ref));
