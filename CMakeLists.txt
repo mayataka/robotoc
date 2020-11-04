@@ -63,7 +63,7 @@ add_library(
   src/impulse/impulse_kkt_matrix.cpp
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp
-  # src/impulse/impulse_state_equation.cpp
+  src/impulse/impulse_state_equation.cpp
   src/impulse/impulse_dynamics_forward_euler_data.cpp
   src/impulse/impulse_dynamics_forward_euler.cpp
   # src/impulse/impulse_dynamics_backward_euler.cpp
