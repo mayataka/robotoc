@@ -44,7 +44,7 @@ void BenchmarkWithoutContacts() {
                                                     robot, cost, constraints, T, N, num_proc);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   ocp_benchmarker.testConvergence(t, q, v, 20, false);
-  ocp_benchmarker.testCPUTime(t, q, v, 10000);
+  // ocp_benchmarker.testCPUTime(t, q, v, 10000);
   // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa14 without contacts",
   //                                                           robot, cost, constraints, T, N, num_proc);
   // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
@@ -77,11 +77,11 @@ void BenchmarkWithContacts() {
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
   const double T = 1;
-  const int N = 20;
+  const int N = 50;
   const int num_proc = 4;
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
-  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
   joint_cost->set_q_ref(q);
   robot.updateKinematics(q, v);
   robot.setContactPointsByCurrentKinematics();
@@ -90,6 +90,13 @@ void BenchmarkWithContacts() {
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   ocp_benchmarker.getSolverHandle()->activateContacts({0}, 0, N);
   ocp_benchmarker.testConvergence(t, q, v, 20, false);
+
+  const int N2 = 100;
+  idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker2("OCP for iiwa14 with contacts2",
+                                                    robot, cost, constraints, T, N2, num_proc);
+  ocp_benchmarker2.setInitialGuessSolution(t, q, v);
+  ocp_benchmarker2.getSolverHandle()->activateContacts({0}, 0, N2);
+  ocp_benchmarker2.testConvergence(t, q, v, 20, false);
   // ocp_benchmarker.testCPUTime(t, q, v);
   // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa14 with contacts",
   //                                                           robot, cost, constraints, T, N, num_proc);
@@ -98,6 +105,7 @@ void BenchmarkWithContacts() {
   // parnmpc_benchmarker.testConvergence(t, q, v, 30, true);
   // parnmpc_benchmarker.testCPUTime(t, q, v);
 }
+
 
 } // namespace iiwa14
 } // namespace ocpbenchmark

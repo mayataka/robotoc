@@ -38,7 +38,7 @@ void BenchmarkWithContacts() {
   joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
+  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 0.0));
   // joint_cost->set_u_passive_weight(Eigen::VectorXd::Constant(6, 0.001));
   auto contact_cost = std::make_shared<idocp::ContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight;
@@ -60,8 +60,8 @@ void BenchmarkWithContacts() {
        0.0315, -0.4, 0.8, 
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
-  // const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
+  // const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
   idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for anymal with contacts",
@@ -75,7 +75,7 @@ void BenchmarkWithContacts() {
   // ocp_benchmarker.getSolverHandle()->deactivateContacts({0, 1, 2, 3}, 0, N);
   ocp_benchmarker.getSolverHandle()->activateContacts({0, 1, 2, 3}, 0, N);
   ocp_benchmarker.testConvergence(t, q, v, 20, false);
-  // ocp_benchmarker.testCPUTime(t, q, v, 10000);
+  ocp_benchmarker.testCPUTime(t, q, v, 10000);
   // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
   //                                                           robot, cost, constraints, T, N, num_proc);
   // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);

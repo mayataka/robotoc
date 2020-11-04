@@ -11,20 +11,18 @@ namespace idocp {
 
 ///
 /// @class ImpulseKKTResidual
-/// @brief KKT residual split into impulse time stage. 
+/// @brief KKT residual split at the impulse stage. 
 ///
 class ImpulseKKTResidual {
 public:
   ///
-  /// @brief Construct a impulse KKT residual.
+  /// @brief Construct a KKT residual.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] use_contact_position_constraint true if you treat the contact 
-  /// position constraint in this impulse stage. false if not.
   ///
   ImpulseKKTResidual(const Robot& robot);
 
   ///
-  /// @brief Default constructor. 
+  /// @brief Default constructor. Does not construct any datas. 
   ///
   ImpulseKKTResidual();
 
@@ -54,17 +52,11 @@ public:
   ImpulseKKTResidual& operator=(ImpulseKKTResidual&&) noexcept = default;
 
   ///
-  /// @brief Set contact status from robot model, i.e., set dimension of the 
-  /// contacts and equality constraints.
-  /// @param[in] contact_status Contact status.
+  /// @brief Set impulse status from robot model, i.e., set dimension of the 
+  /// impulse and equality constraints.
+  /// @param[in] impulse_status Impulse status.
   ///
-  void setContactStatus(const ContactStatus& contact_status);
-
-  ///
-  /// @brief KKT residual. 
-  /// @return Reference to the KKT residual. Size is KKTResidual::dimKKT().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> KKT_residual();
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
   /// @brief Residual with respect to q transition.
@@ -75,8 +67,8 @@ public:
 
   ///
   /// @brief Residual with respect to q transition.
-  /// @return Const reference to the residual with respect to q transition.  
-  /// Size is Robot::dimv().
+  /// @return Reference to the residual with respect to q transition. Size is 
+  /// Robot::dimv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> Fq() const;
 
@@ -89,8 +81,8 @@ public:
 
   ///
   /// @brief Residual with respect to v transition.
-  /// @return Const reference to the residual with respect to v transition.  
-  /// Size is Robot::dimv().
+  /// @return Reference to the residual with respect to v transition. Size is 
+  /// Robot::dimv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> Fv() const;
 
@@ -103,38 +95,10 @@ public:
 
   ///
   /// @brief Residual with respect to q and v transition.
-  /// @return Const reference to the residual with respect to q and v transition.
+  /// @return Reference to the residual with respect to q and v transition.
   /// Size is 2 * Robot::dimv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> Fx() const;
-
-  ///
-  /// @brief Residual of the contact position and velocity constraint.
-  /// @return Reference to the residual of the contact position constraint.  
-  /// Size is KKTResidual::dimf(). 
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> C();
-
-  ///
-  /// @brief Residual of the contact position and velocity constraint.
-  /// @return Const reference to the residual of the contact position constraint.  
-  /// Size is KKTResidual::dimf(). 
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> C() const;
-
-  ///
-  /// @brief Residual with respect to the stack of the contact forces f.
-  /// @return Reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is KKTResidual::dimf().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> lf();
-
-  ///
-  /// @brief Residual with respect to the stack of the contact forces f.
-  /// @return Const reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is KKTResidual::dimf().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
   ///
   /// @brief Residual with respect to configuration q.
@@ -145,8 +109,8 @@ public:
 
   ///
   /// @brief Residual with respect to configuration q.
-  /// @return Const reference to the residual with respect to configuration q.  
-  /// Size is Robot::dimv().
+  /// @return Reference to the residual with respect to configuration q. Size is 
+  /// Robot::dimv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lq() const;
 
@@ -159,8 +123,8 @@ public:
 
   ///
   /// @brief Residual with respect to generalized velocity v.
-  /// @return Const reference to the residual with respect to generalized 
-  /// velocity v. Size is Robot::dimv().
+  /// @return Reference to the residual with respect to generalized velocity v.
+  /// Size is Robot::dimv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lv() const;
 
@@ -173,10 +137,24 @@ public:
 
   ///
   /// @brief Residual with respect to state x.
-  /// @return Const reference to the residual with respect to state x. Size is 
+  /// @return Reference to the residual with respect to state x. Size is 
   /// 2 * Robot::dimv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lx() const;
+
+  ///
+  /// @brief Residual with respect to the stack of the contact forces f.
+  /// @return Reference to the residual with respect to the stack of the  
+  /// contact forces f. Size is ImpulseKKTResidual::dimf().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> lf();
+
+  ///
+  /// @brief Residual with respect to the stack of the contact forces f.
+  /// @return Reference to the residual with respect to the stack of the  
+  /// contact forces f. Size is ImpulseKKTResidual::dimf().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
   ///
   /// @brief Set the KKT residual zero.
@@ -190,36 +168,25 @@ public:
   int dimKKT() const;
 
   ///
-  /// @brief Returns the maximum dimension of the KKT.
-  /// @return Maximum dimension of the KKT at the current contact status.
-  ///
-  int max_dimKKT() const;
-
-  ///
-  /// @brief Returns the dimension of equality constraint at the current 
-  /// contact status.
-  /// @return Dimension of equality constraint.
-  ///
-  int dimc() const;
-
-  ///
   /// @brief Returns the dimension of the stack of contact forces at the current 
   /// contact status.
   /// @return Dimension of the stack of contact forces.
   ///
   int dimf() const;
 
-  /// @brief Residual with respect to the impulse velocity.
-  Eigen::VectorXd ldv;
+  bool isApprox(const ImpulseKKTResidual& other) const;
 
-  /// @brief Residual of inverse impulse dynamics constraint.
-  Eigen::VectorXd dv_res;
+  /// @brief KKT residual.
+  Eigen::VectorXd KKT_residual;
+
+  /// @brief Residual with respect to control input torques u.
+  Eigen::VectorXd ldv;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd kkt_residual_;
-  int dimv_, dimx_, dimf_, dimc_, dimKKT_, max_dimKKT_;
+  Eigen::VectorXd lf_full_;
+  int dimv_, dimx_, dimf_, dimKKT_;
 
 };
 
