@@ -59,14 +59,6 @@ public:
       = default;
 
   ///
-  /// @brief Check if the constraints component requres kinematics of robot 
-  /// model.
-  /// @return true if the constraints component requres kinematics of 
-  /// Robot model. false if not.
-  ///
-  virtual bool useKinematics() const = 0;
-
-  ///
   /// @brief Check the kinematics level of the constraint component.
   /// @return Kinematics level of the constraint component.
   ///
@@ -272,6 +264,20 @@ protected:
   /// duality, and the direction of the slack.
   ///
   virtual void computeDualDirection(ConstraintComponentData& data) const final;
+
+  ///
+  /// @brief Computes the duality residual between the slack and dual variables.
+  ///
+  virtual double computeDuality(const double slack, 
+                                const double dual) const final;
+
+  ///
+  /// @brief Computes the direction of the dual variable from slack, residual,
+  /// duality, and the direction of the slack.
+  ///
+  virtual double computeDualDirection(const double slack, const double dual,
+                                      const double dslack, 
+                                      const double duality) const final;
 
 private:
   double barrier_, fraction_to_boundary_rate_;

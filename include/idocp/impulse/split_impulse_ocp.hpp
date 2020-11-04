@@ -1,7 +1,6 @@
 #ifndef IDOCP_SPLIT_IMPULSE_OCP_HPP_
 #define IDOCP_SPLIT_IMPULSE_OCP_HPP_
 
-#include <utility>
 #include <memory>
 
 #include "Eigen/Core"
@@ -19,6 +18,7 @@
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
 #include "idocp/impulse/impulse_riccati_factorizer.hpp"
 #include "idocp/ocp/riccati_solution.hpp"
+#include "idocp/ocp/split_direction.hpp"
 
 
 namespace idocp {
@@ -87,13 +87,13 @@ public:
   /// @brief Linearize the OCP for Newton's method around the current solution, 
   /// i.e., computes the KKT residual and Hessian.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
+  /// @param[in] impulse_status Impulse status of robot at this stage. 
   /// @param[in] t Current time of this stage. 
   /// @param[in] q_prev Configuration of the previous stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
   ///
-  void linearizeOCP(Robot& robot, const ContactStatus& contact_status, 
+  void linearizeOCP(Robot& robot, const ImpulseStatus& impulse_status, 
                     const double t, const Eigen::VectorXd& q_prev, 
                     const ImpulseSplitSolution& s, 
                     const SplitSolution& s_next);
@@ -123,9 +123,14 @@ public:
   /// @param[in] s Split solution of this stage.
   /// @param[in] d Split direction of this stage.
   /// 
-  void computeCondensedDirection(Robot& robot, const ImpulseSplitSolution& s, 
-                                 const SplitDirection& d_next,
-                                 ImpulseSplitDirection& d);
+  void computeCondensedPrimalDirection(Robot& robot, 
+                                       const RiccatiSolution& riccati, 
+                                       const ImpulseSplitSolution& s, 
+                                       ImpulseSplitDirection& d);
+
+  void computeCondensedDualDirection(Robot& robot, 
+                                     const SplitDirection& d_next, 
+                                     ImpulseSplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -144,42 +149,6 @@ public:
   double maxDualStepSize();
 
   ///
-  /// @brief Returns the stage cost and L1-norm of the violation of constraints 
-  /// of this stage. The stage cost is recomputed. The violation of the  
-  /// constriants is not computed. Instead, the previously computed residual  
-  /// computed by SplitOCP::linearizeOCP or 
-  /// SplitOCP::computeKKTResidual, is used.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] s Split solution of this stage.
-  /// @return The stage cost and L1-norm of the constraints violation.
-  ///
-  std::pair<double, double> costAndConstraintViolation(
-      Robot& robot, const double t, const ImpulseSplitSolution& s);
-
-  ///Impulse
-  /// @brief Returns the stage cost and L1-norm of the violation of constraints 
-  /// of this stage under step_size. The split solution of this stage and the 
-  /// state of the next stage are computed by step_size temporary. 
-  /// The stage cost and the violation of the constriants are computed based on
-  /// the temporary solution.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
-  /// @param[in] step_size Step size for the primal variables. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] d Split direction of this stage.
-  /// @param[in] s_next Split solution of the next stage.
-  /// @param[in] d_next Split direction of the next stage.
-  /// @return The stage cost and L1-norm of the constraints violation.
-  ///
-  std::pair<double, double> costAndConstraintViolation(
-      Robot& robot, const ContactStatus& contact_status, const double step_size, 
-      const double t, const ImpulseSplitSolution& s, 
-      const ImpulseSplitDirection& d, const SplitSolution& s_next, 
-      const SplitDirection& d_next);
-
-  ///
   /// @brief Updates dual variables of the inequality constraints.
   /// @param[in] step_size Dula step size of the OCP. 
   ///
@@ -194,20 +163,19 @@ public:
   /// @param[in, out] s Split solution of this stage.
   ///
   void updatePrimal(Robot& robot, const double step_size, 
-                    const RiccatiSolution& riccati, 
                     const ImpulseSplitDirection& d, ImpulseSplitSolution& s);
 
   ///
   /// @brief Computes the KKT residual of the OCP at this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
+  /// @param[in] impulse_status Impulse status of robot at this stage. 
   /// @param[in] t Current time of this stage. 
   /// @param[in] s Split solution of this stage.
   /// @param[in] q_prev Configuration of the previous stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
   ///
-  void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
+  void computeKKTResidual(Robot& robot, const ImpulseStatus& impulse_status,
                           const double t, const Eigen::VectorXd& q_prev, 
                           const ImpulseSplitSolution& s, 
                           const SplitSolution& s_next);
@@ -220,6 +188,35 @@ public:
   ///
   double squaredNormKKTResidual() const;
 
+  ///
+  /// @brief Computes the stage cost of this stage for line search.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in] primal_step_size Primal step size of the OCP. Default is 0.
+  /// @return Stage cost of this stage.
+  /// 
+  double stageCost(Robot& robot, const double t, const ImpulseSplitSolution& s, 
+                   const double primal_step_size=0);
+
+  ///
+  /// @brief Computes and returns the constraint violation of the OCP at this 
+  /// stage for line search.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status of robot at this stage. 
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in] q_next Configuration at the next stage.
+  /// @param[in] v_next Generaized velocity at the next stage.
+  /// @return Constraint violation of this stage.
+  ///
+  double constraintViolation(Robot& robot, const ImpulseStatus& impulse_status, 
+                             const double t, const ImpulseSplitSolution& s, 
+                             const Eigen::VectorXd& q_next,
+                             const Eigen::VectorXd& v_next);
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
@@ -231,23 +228,16 @@ private:
   ImpulseKKTMatrix kkt_matrix_;
   ImpulseDynamicsForwardEuler impulse_dynamics_;
   ImpulseRiccatiFactorizer riccati_factorizer_;
-  ImpulseSplitSolution s_tmp_; /// @brief Temporary split solution used in line search.
-  double stage_cost_, constraint_violation_;
-  bool has_floating_base_;
 
   ///
-  /// @brief Set contact status from robot model, i.e., set dimension of the 
-  /// contacts and equality constraints.
-  /// @param[in] contact_status Contact status.
+  /// @brief Set impulse status from robot model, i.e., set dimension of the 
+  /// impulses and equality constraints.
+  /// @param[in] impulse_status Impulse status.
   ///
-  inline void setContactStatusForKKT(const ContactStatus& contact_status) {
-    kkt_residual_.setContactStatus(contact_status);
-    kkt_matrix_.setContactStatus(contact_status);
+  inline void setImpulseStatusForKKT(const ImpulseStatus& impulse_status) {
+    kkt_residual_.setImpulseStatus(impulse_status);
+    kkt_matrix_.setImpulseStatus(impulse_status);
   }
-
-  double cost(Robot& robot, const double t, const ImpulseSplitSolution& s);
-
-  double constraintViolation() const;
 
 };
 

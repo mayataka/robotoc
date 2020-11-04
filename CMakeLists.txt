@@ -58,6 +58,8 @@ add_library(
   src/constraints/contact_normal_force.cpp
   src/constraints/impulse_constraints.cpp
   src/constraints/impulse_constraint_component_base.cpp
+  src/constraints/impulse_friction_cone.cpp
+  src/constraints/impulse_normal_force.cpp
   src/impulse/dynamic_schur_complement.cpp
   src/impulse/impulse_kkt_residual.cpp
   src/impulse/impulse_kkt_matrix.cpp

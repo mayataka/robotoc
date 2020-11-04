@@ -70,31 +70,6 @@ inline bool ImpulseConstraints::isEmpty_impl(
 }
 
 
-inline bool ImpulseConstraints::useKinematics() const {
-  if (useKinematics_impl(position_level_constraints_)) {
-    return true;
-  }
-  if (useKinematics_impl(velocity_level_constraints_)) {
-    return true;
-  }
-  if (useKinematics_impl(acceleration_level_constraints_)) {
-    return true;
-  }
-  return false;
-}
-
-
-inline bool ImpulseConstraints::useKinematics_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints) {
-  for (const auto constraint : constraints) {
-    if (constraint->useKinematics()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-
 inline ConstraintsData ImpulseConstraints::createConstraintsData(
     const Robot& robot) const {
   ConstraintsData data;

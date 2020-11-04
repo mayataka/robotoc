@@ -1,7 +1,6 @@
 #ifndef IDOCP_SPLIT_OCP_HPP_
 #define IDOCP_SPLIT_OCP_HPP_
 
-#include <utility>
 #include <memory>
 
 #include "Eigen/Core"

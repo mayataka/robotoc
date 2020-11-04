@@ -113,9 +113,9 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
-  /// @param[in] f Impulse force. Size must be ConstactStatus::dimf().
-  /// @param[out] lf The KKT residual with respect to f. Size must be 
-  /// ConstactStatus::dimf().
+  /// @param[in] s Split solution.
+  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
+  /// added to this data.
   ///
   virtual void lf(Robot& robot, CostFunctionData& data, const double t, 
                   const ImpulseSplitSolution& s, 
@@ -169,9 +169,9 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
-  /// @param[in] f Impulse force. Size must be ConstactStatus::dimf().
-  /// @param[out] Qff The Hessian of the KKT residual with respect to f.  
-  /// Size must be ConstactStatus::dimf() x ConstactStatus::dimf().
+  /// @param[in] s Split solution.
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
+  /// data.
   ///
   virtual void lff(Robot& robot, CostFunctionData& data, const double t, 
                    const ImpulseSplitSolution& s, 
