@@ -28,7 +28,6 @@ protected:
   static void testIsApprox(const Robot& robot, const ContactStatus& contact_status, const ImpulseStatus& impulse_status);
   static void testInverse(const Robot& robot, const ImpulseStatus& impulse_status);
 
-  double dtau_;
   std::string fixed_base_urdf, floating_base_urdf;
 };
 

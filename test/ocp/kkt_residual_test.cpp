@@ -26,7 +26,6 @@ protected:
   virtual void TearDown() {
   }
 
-  double dtau_;
   std::string fixed_base_urdf, floating_base_urdf;
 };
 
