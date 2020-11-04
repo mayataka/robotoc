@@ -1,0 +1,1 @@
+#include "idocp/impulse/dynamic_schur_complement.hpp"

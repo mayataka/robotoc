@@ -3,12 +3,12 @@
 
 #include "Eigen/Core"
 
-#include "idocp/ocp/schur_complement.hpp"
+#include "idocp/impulse/dynamic_schur_complement.hpp"
 
 
 namespace idocp {
 
-class SchurComplementTest : public ::testing::Test {
+class DynamicSchurComplementTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -20,10 +20,12 @@ protected:
 };
 
 
-TEST_F(SchurComplementTest, invertWithZeroBottomRightCorner) {
-  const int dimA = 100;
-  const int dimD = 50;
-  SchurComplement schur_complement(dimA, dimD);
+TEST_F(DynamicSchurComplementTest, invertWithZeroBottomRightCorner) {
+  const int max_dimA = 100;
+  const int max_dimD = 50;
+  DynamicSchurComplement schur_complement(max_dimA, max_dimD);
+  const int dimA = 70;
+  const int dimD = 30;
   const Eigen::MatrixXd M_seed = Eigen::MatrixXd::Random(dimA+dimD, dimA+dimD);
   Eigen::MatrixXd M = M_seed * M_seed.transpose() + Eigen::MatrixXd::Identity(dimA+dimD, dimA+dimD);
   M.bottomRightCorner(dimD, dimD).setZero();
@@ -38,10 +40,12 @@ TEST_F(SchurComplementTest, invertWithZeroBottomRightCorner) {
 }
 
 
-TEST_F(SchurComplementTest, invertWithZeroBottomRightCorner2) {
-  const int dimA = 100;
-  const int dimD = 50;
-  SchurComplement schur_complement(dimA, dimD);
+TEST_F(DynamicSchurComplementTest, invertWithZeroBottomRightCorner2) {
+  const int max_dimA = 100;
+  const int max_dimD = 50;
+  DynamicSchurComplement schur_complement(max_dimA, max_dimD);
+  const int dimA = 70;
+  const int dimD = 30;
   const Eigen::MatrixXd M_seed = Eigen::MatrixXd::Random(dimA+dimD, dimA+dimD);
   Eigen::MatrixXd M = M_seed * M_seed.transpose() + Eigen::MatrixXd::Identity(dimA+dimD, dimA+dimD);
   M.bottomRightCorner(dimD, dimD).setZero();
@@ -57,10 +61,12 @@ TEST_F(SchurComplementTest, invertWithZeroBottomRightCorner2) {
 }
 
 
-TEST_F(SchurComplementTest, invertWithZeroTopLeftCorner) {
-  const int dimA = 50;
-  const int dimD = 100;
-  SchurComplement schur_complement(dimA, dimD);
+TEST_F(DynamicSchurComplementTest, invertWithZeroTopLeftCorner) {
+  const int max_dimA = 50;
+  const int max_dimD = 100;
+  DynamicSchurComplement schur_complement(max_dimA, max_dimD);
+  const int dimA = 30;
+  const int dimD = 70;
   const Eigen::MatrixXd M_seed = Eigen::MatrixXd::Random(dimA+dimD, dimA+dimD);
   Eigen::MatrixXd M = M_seed * M_seed.transpose() + Eigen::MatrixXd::Identity(dimA+dimD, dimA+dimD);
   M.topLeftCorner(dimA, dimA).setZero();
@@ -75,10 +81,12 @@ TEST_F(SchurComplementTest, invertWithZeroTopLeftCorner) {
 }
 
 
-TEST_F(SchurComplementTest, invertWithZeroTopLeftCorner2) {
-  const int dimA = 50;
-  const int dimD = 100;
-  SchurComplement schur_complement(dimA, dimD);
+TEST_F(DynamicSchurComplementTest, invertWithZeroTopLeftCorner2) {
+  const int max_dimA = 50;
+  const int max_dimD = 100;
+  DynamicSchurComplement schur_complement(max_dimA, max_dimD);
+  const int dimA = 30;
+  const int dimD = 70;
   const Eigen::MatrixXd M_seed = Eigen::MatrixXd::Random(dimA+dimD, dimA+dimD);
   Eigen::MatrixXd M = M_seed * M_seed.transpose() + Eigen::MatrixXd::Identity(dimA+dimD, dimA+dimD);
   M.topLeftCorner(dimA, dimA).setZero();

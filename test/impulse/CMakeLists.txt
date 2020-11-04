@@ -1,3 +1,4 @@
+add_test_macro(dynamic_schur_complement_test)
 add_test_macro(impulse_split_solution_test)
 # add_test_macro(impulse_split_direction_test)
 # add_test_macro(impulse_kkt_residual_test)
