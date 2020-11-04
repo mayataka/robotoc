@@ -32,10 +32,6 @@ public:
 
   Eigen::MatrixXd dImDddv;
 
-  Eigen::Block<Eigen::MatrixXd> dCddv();
-
-  const Eigen::Block<const Eigen::MatrixXd> dCddv() const;
-
   Eigen::Block<Eigen::MatrixXd> dImDCdqv();
 
   const Eigen::Block<const Eigen::MatrixXd> dImDCdqv() const;

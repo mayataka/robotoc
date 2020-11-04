@@ -213,7 +213,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd lf_full_;
+  Eigen::VectorXd P_full_, V_full_, lf_full_;
   int dimv_, dimx_, dimf_, dimKKT_;
 
 };

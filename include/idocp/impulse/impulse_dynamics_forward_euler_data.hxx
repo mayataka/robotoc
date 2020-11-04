@@ -8,7 +8,6 @@ namespace idocp {
 inline ImpulseDynamicsForwardEulerData::ImpulseDynamicsForwardEulerData(
     const Robot& robot) 
   : dImDddv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    dCddv_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())), 
     dImDCdqv_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
                                          2*robot.dimv())), 
     MJtJinv_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
@@ -28,7 +27,6 @@ inline ImpulseDynamicsForwardEulerData::ImpulseDynamicsForwardEulerData(
 
 inline ImpulseDynamicsForwardEulerData::ImpulseDynamicsForwardEulerData() 
   : dImDddv(),
-    dCddv_full_(), 
     dImDCdqv_full_(), 
     MJtJinv_full_(), 
     MJtJinv_dImDCdqv_full_(), 
@@ -50,17 +48,6 @@ inline void ImpulseDynamicsForwardEulerData::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   dimf_ = impulse_status.dimp();
   dimvf_ = dimv_ + dimf_;
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseDynamicsForwardEulerData::dCddv() {
-  return dCddv_full_.topLeftCorner(dimf_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::dCddv() const {
-  return dCddv_full_.topLeftCorner(dimf_, dimv_);
 }
 
 

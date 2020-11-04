@@ -42,6 +42,8 @@ void ImpulseKKTResidualTest::testSize(const Robot& robot,
   EXPECT_EQ(kkt_residual.KKT_residual.size(), 4*dimv);
   EXPECT_EQ(kkt_residual.Fq().size(), dimv);
   EXPECT_EQ(kkt_residual.Fv().size(), dimv);
+  EXPECT_EQ(kkt_residual.P().size(), dimf);
+  EXPECT_EQ(kkt_residual.V().size(), dimf);
   EXPECT_EQ(kkt_residual.lq().size(), dimv);
   EXPECT_EQ(kkt_residual.lv().size(), dimv);
   EXPECT_EQ(kkt_residual.lx().size(), 2*dimv);
@@ -49,8 +51,12 @@ void ImpulseKKTResidualTest::testSize(const Robot& robot,
   EXPECT_EQ(kkt_residual.dimf(), dimf);
   EXPECT_EQ(kkt_residual.ldv.size(), dimv);
   kkt_residual.KKT_residual = Eigen::VectorXd::Random(kkt_residual.dimKKT());
+  const Eigen::VectorXd P_ref = Eigen::VectorXd::Random(dimf);
+  const Eigen::VectorXd V_ref = Eigen::VectorXd::Random(dimf);
   const Eigen::VectorXd ldv_ref = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd lf_ref = Eigen::VectorXd::Random(dimf);
+  kkt_residual.P() = P_ref;
+  kkt_residual.V() = V_ref;
   kkt_residual.ldv = ldv_ref;
   kkt_residual.lf() = lf_ref;
   const Eigen::VectorXd Fq_ref = kkt_residual.KKT_residual.segment(0, dimv);
@@ -60,6 +66,8 @@ void ImpulseKKTResidualTest::testSize(const Robot& robot,
   const Eigen::VectorXd lx_ref = kkt_residual.KKT_residual.segment(2*dimv, 2*dimv);
   EXPECT_TRUE(kkt_residual.Fq().isApprox(Fq_ref));
   EXPECT_TRUE(kkt_residual.Fv().isApprox(Fv_ref));
+  EXPECT_TRUE(kkt_residual.P().isApprox(P_ref));
+  EXPECT_TRUE(kkt_residual.V().isApprox(V_ref));
   EXPECT_TRUE(kkt_residual.lq().isApprox(lq_ref));
   EXPECT_TRUE(kkt_residual.lv().isApprox(lv_ref));
   EXPECT_TRUE(kkt_residual.lx().isApprox(lx_ref));
@@ -77,6 +85,8 @@ void ImpulseKKTResidualTest::testIsApprox(const Robot& robot,
   ImpulseKKTResidual kkt_residual(robot);
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.KKT_residual.setRandom();
+  kkt_residual.P().setRandom();
+  kkt_residual.V().setRandom();
   kkt_residual.ldv.setRandom();
   kkt_residual.lf().setRandom();
   ImpulseKKTResidual kkt_residual_ref = kkt_residual;
@@ -112,9 +122,23 @@ void ImpulseKKTResidualTest::testIsApprox(const Robot& robot,
   if (impulse_status.hasActiveImpulse()) {
     kkt_residual_ref.lf().setRandom();
     EXPECT_FALSE(kkt_residual.isApprox(kkt_residual_ref));
+    kkt_residual.lf() = kkt_residual_ref.lf();
+    EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
+
+    kkt_residual_ref.P().setRandom();
+    EXPECT_FALSE(kkt_residual.isApprox(kkt_residual_ref));
+    kkt_residual.P() = kkt_residual_ref.P();
+    EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
+
+    kkt_residual_ref.V().setRandom();
+    EXPECT_FALSE(kkt_residual.isApprox(kkt_residual_ref));
+    kkt_residual.V() = kkt_residual_ref.V();
+    EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   }
   else {
     kkt_residual_ref.lf().setRandom();
+    kkt_residual_ref.P().setRandom();
+    kkt_residual_ref.V().setRandom();
     EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   }
   kkt_residual_ref = kkt_residual;

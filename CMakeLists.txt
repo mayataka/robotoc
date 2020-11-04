@@ -65,7 +65,7 @@ add_library(
   src/impulse/impulse_split_direction.cpp
   # src/impulse/impulse_state_equation.cpp
   src/impulse/impulse_dynamics_forward_euler_data.cpp
-  # src/impulse/impulse_dynamics_forward_euler.cpp
+  src/impulse/impulse_dynamics_forward_euler.cpp
   # src/impulse/impulse_dynamics_backward_euler.cpp
   # src/impulse/impulse_riccati_factorizer.cpp
   # src/impulse/split_impulse_ocp.cpp

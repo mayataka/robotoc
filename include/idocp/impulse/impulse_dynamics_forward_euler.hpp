@@ -4,12 +4,12 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/ocp/split_direction.hpp"
+#include "idocp/impulse/impulse_dynamics_forward_euler_data.hpp"
 
 
 namespace idocp {
@@ -40,11 +40,11 @@ public:
 
   static void linearizeInverseImpulseDynamics(
       Robot& robot, const ImpulseStatus& impulse_status, 
-      const ImpulseSplitSolution& s, ImpulseDynamicsData& data);
+      const ImpulseSplitSolution& s, ImpulseDynamicsForwardEulerData& data);
 
   static void linearizeImpulseVelocityConstraint(
       Robot& robot, const ImpulseStatus& impulse_status, 
-      ImpulseDynamicsData& data);
+      ImpulseDynamicsForwardEulerData& data);
 
   static void linearizeImpulsePositionConstraint(
       Robot& robot, const ImpulseStatus& impulse_status, 
@@ -55,7 +55,9 @@ public:
                                ImpulseKKTMatrix& kkt_matrix, 
                                ImpulseKKTResidual& kkt_residual);
 
-  static void condensing(const Robot& robot, ImpulseDynamicsData& data, 
+  static void condensing(const Robot& robot, 
+                         const ImpulseStatus& impulse_status,
+                         ImpulseDynamicsForwardEulerData& data, 
                          ImpulseKKTMatrix& kkt_matrix, 
                          ImpulseKKTResidual& kkt_residual);
 
@@ -70,37 +72,36 @@ public:
                                      ImpulseSplitDirection& d);
 
   static void expansionPrimal(const Robot& robot, 
-                              const ImpulseDynamicsData& data, 
+                              const ImpulseDynamicsForwardEulerData& data, 
                               ImpulseSplitDirection& d);
 
   template <typename VectorType>
-  static void expansionDual(const Robot& robot, ImpulseDynamicsData& data,
+  static void expansionDual(const Robot& robot, 
+                            ImpulseDynamicsForwardEulerData& data,
                             const ImpulseKKTMatrix& kkt_matrix, 
                             const ImpulseKKTResidual& kkt_residual,
                             const Eigen::MatrixBase<VectorType>& dgmm,
                             ImpulseSplitDirection& d);
-
 
   void computeImpulseDynamicsResidual(Robot& robot, 
                                       const ImpulseStatus& impulse_status,
                                       const ImpulseSplitSolution& s, 
                                       ImpulseKKTResidual& kkt_residual);
 
-  double l1NormImpulseDynamicsResidual() const;
+  double l1NormImpulseDynamicsResidual(
+      const ImpulseKKTResidual& kkt_residual) const;
 
-  double squaredNormImpulseDynamicsResidual() const;
+  double squaredNormImpulseDynamicsResidual(
+      const ImpulseKKTResidual& kkt_residual) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  ImpulseDynamicsData data_;
-  int dimv_, dimf_, dim_passive_;
+  ImpulseDynamicsForwardEulerData data_;
+  int dimv_, dimf_;
   bool has_active_impulse_;
 
-  Eigen::MatrixXd dImD_dq_, dImD_ddv_, MJtJinv_full_, MJtJinv_dImDCdqv_full_, 
-                  Qdvfqv_condensed_full_;
-  Eigen::VectorXd MJtJinv_ImDC_full_, ldvf_condensed_full_;
-  int dimv_, dimf_;
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
 
 };
 
