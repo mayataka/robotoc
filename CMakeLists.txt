@@ -37,10 +37,10 @@ add_library(
   src/cost/contact_force_cost.cpp
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
-  # src/cost/impulse_cost_function.cpp
-  # src/cost/impulse_cost_function_component_base.cpp
-  # src/cost/joint_space_impulse_cost.cpp
-  # src/cost/impulse_force_cost.cpp
+  src/cost/impulse_cost_function.cpp
+  src/cost/impulse_cost_function_component_base.cpp
+  src/cost/joint_space_impulse_cost.cpp
+  src/cost/impulse_force_cost.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
   src/constraints/constraints_data.cpp
@@ -56,11 +56,11 @@ add_library(
   src/constraints/joint_torques_lower_limit.cpp
   src/constraints/friction_cone.cpp
   src/constraints/contact_normal_force.cpp
-  # src/constraints/impulse_constraints.cpp
-  # src/constraints/impulse_constraint_component_base.cpp
+  src/constraints/impulse_constraints.cpp
+  src/constraints/impulse_constraint_component_base.cpp
   src/impulse/dynamic_schur_complement.cpp
   src/impulse/impulse_kkt_residual.cpp
-  # src/impulse/impulse_kkt_matrix.cpp
+  src/impulse/impulse_kkt_matrix.cpp
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp
   # src/impulse/impulse_state_equation.cpp

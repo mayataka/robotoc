@@ -4,23 +4,21 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/robot/contact_status.hpp"
-#include "idocp/ocp/schur_complement.hpp"
+#include "idocp/robot/impulse_status.hpp"
+#include "idocp/impulse/dynamic_schur_complement.hpp"
 
 
 namespace idocp {
 
 ///
 /// @class ImpulseKKTMatrix
-/// @brief The KKT matrix of a impulse time stage.
+/// @brief The KKT matrix of a time stage.
 ///
 class ImpulseKKTMatrix {
 public:
   ///
-  /// @brief Construct a impulse KKT matrix.
+  /// @brief Construct a KKT matrix.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] use_contact_position_constraint true if you treat the contact 
-  /// position constraint in this impulse stage. false if not.
   ///
   ImpulseKKTMatrix(const Robot& robot);
 
@@ -55,160 +53,277 @@ public:
   ImpulseKKTMatrix& operator=(ImpulseKKTMatrix&&) noexcept = default;
 
   ///
-  /// @brief Set contact status from robot model, i.e., set dimension of the 
-  /// contacts and equality constraints.
-  /// @param[in] contact_status Contact status.
+  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @param[in] impulse_status Contact status.
   ///
-  void setContactStatus(const ContactStatus& contact_status);
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Jacobian of the contact position and velocity constraint with  
-  /// respect to configuration q.
-  /// @return Reference to the Jacobian. Size is 
-  /// 2 * ContactStatus::dimf() x KKTMatrix::dimf().
+  /// @brief Jacobian of the state equation of the configuration with respect  
+  /// to the impulse forces. 
+  /// @return Reference to the block part of the Hessian. 
+  /// Size is Robot::dimv() x ImpulseStatus::dimp().
   ///
-  Eigen::Block<Eigen::MatrixXd> Cq();
+  Eigen::Block<Eigen::MatrixXd> Fqf();
 
   ///
-  /// @brief Jacobian of the contact position and velocity constraint with  
-  /// respect to generalized velocity v.
-  /// @return Reference to the Jacobian. Size is 
-  /// 2 * ContactStatus::dimf() x Robot::dimv().
+  /// @brief const version of ImpulseKKTMatrix::Fqf().
   ///
-  Eigen::Block<Eigen::MatrixXd> Cv();
+  const Eigen::Block<const Eigen::MatrixXd> Fqf() const;
 
   ///
-  /// @brief Jacobian of the contact position and velocity constraint with  
-  /// respect to q and v.
-  /// @return Reference to the Jacobian. Size is 
-  /// 2 * ContactStatus::dimf() x 2 * Robot::dimv().
+  /// @brief Jacobian of the state equation of the configuration with respect  
+  /// to the configuration. 
+  /// @return Reference to the block part of the Hessian. 
+  /// Size is Robot::dimv() x Robot::dimv().
   ///
-  Eigen::Block<Eigen::MatrixXd> Cqv();
+  Eigen::Block<Eigen::MatrixXd> Fqq();
 
   ///
-  /// @brief Jacobian of the contact position and velocity constraint with  
-  /// respect to generalized velocity v.
-  /// @return Reference to the Jacobian. Size is 
-  /// 2 * ContactStatus::dimf() x Robot::dimv().
+  /// @brief const version of ImpulseKKTMatrix::Fqq().
   ///
-  Eigen::Block<Eigen::MatrixXd> Cf();
+  const Eigen::Block<const Eigen::MatrixXd> Fqq() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the stack of contact 
-  /// forces f.
+  /// @brief Jacobian of the state equation of the configuration with respect  
+  /// to the generalized velocity. 
+  /// @return Reference to the block part of the Hessian. 
+  /// Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Fqv();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Fqv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Fqv() const;
+
+  ///
+  /// @brief Jacobian of the state equation of the generalized velocity with 
+  /// respect to the impulse forces. 
+  /// @return Reference to the block part of the Hessian. 
+  /// Size is Robot::dimv() x ImpulseStatus::dimp().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Fvf();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Fvf().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Fvf() const;
+
+  ///
+  /// @brief Jacobian of the state equation of the generalized velocity with 
+  /// respect to the configuration. 
+  /// @return Reference to the block part of the Hessian. 
+  /// Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Fvq();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Fvq().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Fvq() const;
+
+  ///
+  /// @brief Jacobian of the state equation of the generalized velocity with 
+  /// respect to the generalized velocity. 
+  /// @return Reference to the block part of the Hessian. 
+  /// Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Fvv();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Fvv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Fvv() const;
+
+  ///
+  /// @brief Jacobian of the state equation with respect to the impulse forces. 
+  /// @return Reference to the block part of the Hessian. 
+  /// Size is 2 * Robot::dimv() x ImpulseStatus::dimp().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Fxf();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Fxf().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Fxf() const;
+
+  ///
+  /// @brief Jacobian of the state equation with respect to the state, i.e.,
+  /// the configuration and the generalized velocity.
+  /// @return Reference to the block part of the Hessian. 
+  /// Size is 2 * Robot::dimv() x 2 * Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Fxx();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Fxx().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Fxx() const;
+
+  ///
+  /// @brief Jacobian of the contact position constraint related to impulse 
+  /// condition with respect to the configuration. 
+  /// ImpulseKKTMatrix::setImpulseStatus() muset be called to set the impulse 
+  /// dimension before calling this function.
+  /// @return Reference to the block part of the Hessian. 
+  /// Size is ImpulseStatus::dimp() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Pq();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Pq().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Pq() const;
+
+  ///
+  /// @brief Jacobian of the contact velocity constraint after impulse with 
+  /// respect to the configuration. ImpulseKKTMatrix::setImpulseStatus() must be
+  /// called to set the impulse dimension before calling this function.
+  /// @return Reference to the block part of the Hessian. 
+  /// Size is ImpulseStatus::dimp() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Vq();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Vq().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Vq() const;
+
+  ///
+  /// @brief Jacobian of the contact velocity constraint after impulse with 
+  /// respect to the velocity. ImpulseKKTMatrix::setImpulseStatus() must be
+  /// called to set the impulse dimension before calling this function.
+  /// @return Reference to the block part of the Hessian. 
+  /// Size is ImpulseStatus::dimp() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Vv();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Vv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Vv() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the impulse change in 
+  /// velocity and contact forces. 
   /// @return Reference to the Hessian. Size is 
-  /// KKTMatrix::dimf() x KKTMatrix::dimf().
+  /// Robot::dimv() + ContactStatus::dimf() 
+  /// x  Robot::dimv() + ContactStatus::dimf().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qdvdvff();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Qdvdvff().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qdvdvff() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to impulse change in 
+  /// velocity. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qdvdv();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Qdvdv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qdvdv() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to acceleration. 
+  /// @return Reference to the Hessian. Size is 
+  /// ContactStatus::dimf() x ContactStatus::dimf().
   ///
   Eigen::Block<Eigen::MatrixXd> Qff();
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the stack of contact 
-  /// forces and configuration, f and q.
+  /// @brief const version of ImpulseKKTMatrix::Qff().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qff() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to impulse forces and 
+  /// configuration. 
   /// @return Reference to the Hessian. Size is 
-  /// KKTMatrix::dimf() x Robot::dimv().
+  /// ContactStatus::dimf() x ContactStatus::dimf().
   ///
   Eigen::Block<Eigen::MatrixXd> Qfq();
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the stack of contact 
-  /// forces and velocity, f and v.
-  /// @return Reference to the Hessian. Size is 
-  /// KKTMatrix::dimf() x Robot::dimv().
+  /// @brief const version of ImpulseKKTMatrix::Qfq().
   ///
-  Eigen::Block<Eigen::MatrixXd> Qfv();
+  const Eigen::Block<const Eigen::MatrixXd> Qfq() const;
 
   ///
   /// @brief Hessian of the Lagrangian with respect to configuration and 
-  /// the stack of contact forces, q and f. 
-  /// @return Reference to the Hessian. Size is 
-  /// Robot::dimv() x KKTMatrix::dimf().
+  /// impulse forces.
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qqf();
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to configuration q. 
+  /// @brief const version of ImpulseKKTMatrix::Qqf().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qqf() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to configuration. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qqq();
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to configuration q. 
-  /// @return Const reference to the Hessian. Size is 
-  /// Robot::dimv() x Robot::dimv().
+  /// @brief const version of ImpulseKKTMatrix::Qqq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qqq() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to configuration and 
-  /// velocity, a and v. 
+  /// @brief Hessian of the Lagrangian with respect to generalized velocity and 
+  /// configuration. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qqv();
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to configuration and 
-  /// velocity, a and v. 
-  /// @return Const reference to the Hessian. Size is 
-  /// Robot::dimv() x Robot::dimv().
+  /// @brief const version of ImpulseKKTMatrix::Qqv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qqv() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to velocity and 
-  /// the stack of contact forces, v and f. 
-  /// @return Reference to the Hessian. Size is 
-  /// Robot::dimv() x KKTMatrix::dimf().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Qvf();
-
-  ///
-  /// @brief Hessian of the Lagrangian with respect to velocity and 
-  /// configuration, v and q. 
+  /// @brief Hessian of the Lagrangian with respect to generalized velocity and 
+  /// configuration. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qvq();
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to velocity and 
-  /// configuration, v and q. 
-  /// @return Const reference to the Hessian. Size is 
-  /// Robot::dimv() x Robot::dimv().
+  /// @brief const version of ImpulseKKTMatrix::Qvq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qvq() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to velocity and v. 
+  /// @brief Hessian of the Lagrangian with respect to generalized velocity.
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qvv();
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to velocity and v. 
-  /// @return Const reference to the Hessian. Size is 
-  /// Robot::dimv() x Robot::dimv().
+  /// @brief const version of ImpulseKKTMatrix::Qvv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qvv() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to state, q and v. 
+  /// @brief Hessian of the Lagrangian with respect to state. 
   /// @return Reference to the Hessian. Size is 
   /// 2 * Robot::dimv() x 2 * Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qxx();
 
   ///
-  /// @brief Hessian of the Lagrangian. 
-  /// @return Reference to the Hessian. Size is 
-  /// (3 * Robot::dimv() + KKTMatrix::dimf()) x (3 * Robot::dimv() + KKTMatrix::dimf()).
+  /// @brief const version of ImpulseKKTMatrix::Qxx().
   ///
-  Eigen::Block<Eigen::MatrixXd> costHessian();
-
-  ///
-  /// @brief Jacobian of the equality constraint. 
-  /// @return Reference to the Hessian. Size is 
-  /// KKTMatrix::dimc() x (3 * Robot::dimv() + KKTMatrix::dimf()).
-  ///
-  Eigen::Block<Eigen::MatrixXd> constraintsJacobian();
+  const Eigen::Block<const Eigen::MatrixXd> Qxx() const;
 
   ///
   /// @brief Symmetrize the Hessian for matrix inversion. 
@@ -216,36 +331,23 @@ public:
   void symmetrize();
 
   ///
-  /// @brief Invert the condensed KKT matrix. 
-  /// @param[out] kkt_matrix_inverse Inverse of the KKT matrix. Size must 
-  /// be KKTMatrix::dimKKT() x KKTMatrix::dimKKT().
+  /// @brief Invert the KKT matrix. 
+  /// @param[out] KKT_matrix_inverse Inverse of the KKT matrix. Size must 
+  /// be ImpulseKKTMatrix::dimKKT() x ImpulseKKTMatrix::dimKKT().
   ///
   template <typename MatrixType>
-  void invert(const Eigen::MatrixBase<MatrixType>& kkt_matrix_inverse);
+  void invert(const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse);
 
   ///
-  /// @brief Set the KKT residual zero.
+  /// @brief Set the all components zero.
   ///
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the KKT at the current contact status.
-  /// @return Dimension of the KKT at the current contact status.
+  /// @brief Returns the dimension of the condensed KKT condition.
+  /// @return Dimension of the condensed KKT condition.
   ///
   int dimKKT() const;
-
-  ///
-  /// @brief Returns the maximum dimension of the KKT.
-  /// @return Maximum dimension of the KKT at the current contact status.
-  ///
-  int max_dimKKT() const;
-
-  ///
-  /// @brief Returns the dimension of equality constraint at the current 
-  /// contact status.
-  /// @return Dimension of equality constraint.
-  ///
-  int dimc() const;
 
   ///
   /// @brief Returns the dimension of the stack of contact forces at the current 
@@ -254,25 +356,7 @@ public:
   ///
   int dimf() const;
 
-  /// @brief Hessian of the Lagrangian with respect to the impulse change in 
-  /// the generalized velocity dv.
-  Eigen::MatrixXd Qdvdv;
-
-  /// @brief Derivative of the state equation with respect to the 
-  /// configuration q.
-  Eigen::MatrixXd Fqq;
-
-  /// @brief Derivative of the state equation with respect to the generalized 
-  /// velocity v and configuration q.
-  Eigen::MatrixXd Fvq;
-
-  /// @brief Derivative of the state equation with respect to the generalized 
-  /// velocity v.
-  Eigen::MatrixXd Fvv;
-
-  /// @brief Derivative of the state equation with respect to the impulse force 
-  /// f.
-  Eigen::Block<Eigen::MatrixXd> Fvf();
+  bool isApprox(const ImpulseKKTMatrix& other) const;
 
   /// @brief Derivative of the state equation with respect to the 
   /// configuration of the previous time step q_prev.
@@ -281,20 +365,12 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  SchurComplement schur_complement_;
-  Eigen::MatrixXd C_, Q_, Fvf_full_, Sx_, FMinv_;
+  DynamicSchurComplement schur_complement_;
+  Eigen::MatrixXd F_, C_, Q_;
   bool has_floating_base_;
-  int dimv_, dimx_, dimf_, dimc_, f_begin_, q_begin_, v_begin_, dimQ_, 
-      dimKKT_, max_dimKKT_;
+  int dimv_, dimx_, dimu_, dim_passive_, dimf_, dimp_, u_begin_, q_begin_, 
+      v_begin_, dimKKT_;
   static constexpr int kDimFloatingBase = 6;
-
-  ///
-  /// @brief Invert the cost Hessian matrix. 
-  /// @param[out] hessian_inverse Inverse of the Hessian matrix.
-  ///
-  template <typename MatrixType>
-  void invertConstrainedHessian(
-      const Eigen::MatrixBase<MatrixType>& hessian_inverse);
 
 };
 

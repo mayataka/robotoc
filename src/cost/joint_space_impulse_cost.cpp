@@ -179,7 +179,7 @@ void JointSpaceImpulseCost::lvv(Robot& robot, CostFunctionData& data,
 void JointSpaceImpulseCost::ldvdv(Robot& robot, CostFunctionData& data, 
                                   const double t, const ImpulseSplitSolution& s, 
                                   ImpulseKKTMatrix& kkt_matrix) const {
-  kkt_matrix.Qdvdv.diagonal().noalias() += dv_weight_;
+  kkt_matrix.Qdvdv().diagonal().noalias() += dv_weight_;
 }
 
 } // namespace idocp

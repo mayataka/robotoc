@@ -51,7 +51,7 @@ double ImpulseForceCost::l(Robot& robot, CostFunctionData& data, const double t,
                            const ImpulseSplitSolution& s) const {
   double l = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
-    if (s.isContactActive(i)) {
+    if (s.isImpulseActive(i)) {
       l += (f_weight_[i].array() * (s.f[i].array()-f_ref_[i].array()) 
                                  * (s.f[i].array()-f_ref_[i].array())).sum();
     }
@@ -65,7 +65,7 @@ void ImpulseForceCost::lf(Robot& robot, CostFunctionData& data, const double t,
                           ImpulseKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
-    if (s.isContactActive(i)) {
+    if (s.isImpulseActive(i)) {
       kkt_residual.lf().template segment<3>(dimf_stack).array()
           += f_weight_[i].array() * (s.f[i].array()-f_ref_[i].array());
       dimf_stack += 3;
@@ -79,7 +79,7 @@ void ImpulseForceCost::lff(Robot& robot, CostFunctionData& data, const double t,
                            ImpulseKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
-    if (s.isContactActive(i)) {
+    if (s.isImpulseActive(i)) {
       kkt_matrix.Qff().diagonal().template segment<3>(dimf_stack).noalias() 
           += f_weight_[i];
       dimf_stack += 3;

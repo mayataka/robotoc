@@ -3,7 +3,7 @@
 
 #include "idocp/ocp/kkt_matrix.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
