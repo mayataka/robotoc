@@ -98,9 +98,9 @@ void SplitOCP::backwardRiccatiRecursion(const double dtau,
                                         const RiccatiSolution& riccati_next, 
                                         RiccatiSolution& riccati) {
   assert(dtau > 0);
-  riccati_factorizer_.factorizeBackwardRicursion(riccati_next, dtau, 
-                                                 kkt_matrix_, kkt_residual_, 
-                                                 riccati_gain_, riccati);
+  riccati_factorizer_.backwardRiccatiRecursion(riccati_next, dtau, kkt_matrix_, 
+                                               kkt_residual_, riccati_gain_, 
+                                               riccati);
 }
 
 
@@ -108,8 +108,8 @@ void SplitOCP::forwardRiccatiRecursion(const double dtau, SplitDirection& d,
                                        SplitDirection& d_next) const {
   assert(dtau > 0);
   riccati_factorizer_.computeControlInputDirection(riccati_gain_, d);
-  riccati_factorizer_.factorizeForwardRicursion(kkt_matrix_, kkt_residual_, d,
-                                                dtau, d_next);
+  riccati_factorizer_.forwardRiccatiRecursion(kkt_matrix_, kkt_residual_, d,
+                                              dtau, d_next);
 }
 
 

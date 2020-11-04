@@ -190,7 +190,7 @@ void SplitOCPTest::testLinearizeOCPAndRiccatiRecursion(
   cd.condenseContactDynamics(robot, contact_status, dtau, kkt_matrix, kkt_residual);
   RiccatiFactorizer riccati_factorizer(robot);
   RiccatiGain riccati_gain(robot);
-  riccati_factorizer.factorizeBackwardRicursion(riccati_next, dtau, kkt_matrix, kkt_residual, riccati_gain, riccati_ref);
+  riccati_factorizer.backwardRiccatiRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, riccati_gain, riccati_ref);
   EXPECT_TRUE(riccati.Pqq.isApprox(riccati_ref.Pqq));
   EXPECT_TRUE(riccati.Pqv.isApprox(riccati_ref.Pqv));
   EXPECT_TRUE(riccati.Pvq.isApprox(riccati_ref.Pvq));
@@ -201,7 +201,7 @@ void SplitOCPTest::testLinearizeOCPAndRiccatiRecursion(
   d_ref = d;
   ocp.forwardRiccatiRecursion(dtau, d, d_next);
   riccati_factorizer.computeControlInputDirection(riccati_gain, d_ref);
-  riccati_factorizer.factorizeForwardRicursion(kkt_matrix, kkt_residual, d_ref, dtau, d_next_ref);
+  riccati_factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, d_ref, dtau, d_next_ref);
   EXPECT_TRUE(d_next.isApprox(d_next_ref));
   ocp.computeCondensedPrimalDirection(robot, dtau, riccati_ref, s, d);
   riccati_factorizer.computeCostateDirection(riccati, d_ref);

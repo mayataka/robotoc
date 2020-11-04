@@ -7,6 +7,8 @@
 #include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_direction.hpp"
+#include "idocp/ocp/split_direction.hpp"
 
 
 namespace idocp {
@@ -36,9 +38,27 @@ public:
   // Use default move assign operator.
   ImpulseRiccatiFactorizer& operator=(ImpulseRiccatiFactorizer&&) noexcept = default;
 
-  void factorize(const ImpulseKKTMatrix& kkt_matrix,
-                 const ImpulseKKTResidual& kkt_residual,
-                 const RiccatiSolution& riccati_next, RiccatiSolution& riccati);
+  void backwardRiccatiRecursion(const RiccatiSolution& riccati_next, 
+                                ImpulseKKTMatrix& kkt_matrix, 
+                                ImpulseKKTResidual& kkt_residual, 
+                                RiccatiSolution& riccati);
+
+  void forwardRiccatiRecursion(const ImpulseKKTMatrix& kkt_matrix, 
+                               const ImpulseKKTResidual& kkt_residual,
+                               const ImpulseSplitDirection& d,
+                               SplitDirection& d_next) const;
+
+  static void computeCostateDirection(const RiccatiSolution& riccati, 
+                                      ImpulseSplitDirection& d);
+
+  void factorizeKKTMatrix(const RiccatiSolution& riccati_next, 
+                          ImpulseKKTMatrix& kkt_matrix, 
+                          ImpulseKKTResidual& kkt_residual);
+
+  void factorizeRiccatiSolution(const RiccatiSolution& riccati_next, 
+                                const ImpulseKKTMatrix& kkt_matrix, 
+                                const ImpulseKKTResidual& kkt_residual,
+                                RiccatiSolution& riccati);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

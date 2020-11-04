@@ -43,18 +43,19 @@ inline RiccatiFactorizer::~RiccatiFactorizer() {
 }
 
 
-inline void RiccatiFactorizer::factorizeBackwardRicursion(
+inline void RiccatiFactorizer::backwardRiccatiRecursion(
     const RiccatiSolution& riccati_next, const double dtau, 
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, RiccatiGain& gain, 
     RiccatiSolution& riccati) {
   assert(dtau > 0);
-  factorizeMatrices(riccati_next, dtau, kkt_matrix, kkt_residual);
+  factorizeKKTMatrix(riccati_next, dtau, kkt_matrix, kkt_residual);
   computeFeedbackGainAndFeedforward(kkt_matrix, kkt_residual, gain);
-  factorizeRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, gain, riccati);
+  factorizeRiccatiSolution(riccati_next, dtau, kkt_matrix, kkt_residual, gain, 
+                           riccati);
 }
 
 
-inline void RiccatiFactorizer::factorizeForwardRicursion(
+inline void RiccatiFactorizer::forwardRiccatiRecursion(
     const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual,
     const SplitDirection& d, const double dtau, SplitDirection& d_next) const {
   assert(dtau > 0);
@@ -88,7 +89,7 @@ inline void RiccatiFactorizer::computeControlInputDirection(
 }
 
 
-inline void RiccatiFactorizer::factorizeMatrices(
+inline void RiccatiFactorizer::factorizeKKTMatrix(
     const RiccatiSolution& riccati_next, const double dtau, 
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   assert(dtau > 0);
@@ -138,8 +139,6 @@ inline void RiccatiFactorizer::factorizeMatrices(
   kkt_matrix.Qvu().noalias() += AtPvv_ * kkt_matrix.Fvu();
   // Factorize G
   kkt_matrix.Quu().noalias() += BtPv_ * kkt_matrix.Fvu();
-  // // symmetrize G to avoid failures in Eigen::LLT
-  // kkt_matrix.Quu() = 0.5 * (kkt_matrix.Quu() + kkt_matrix.Quu().transpose()).eval();
   // Factorize vector term
   kkt_residual.lu().noalias() += BtPq_ * kkt_residual.Fq();
   kkt_residual.lu().noalias() += BtPv_ * kkt_residual.Fv();
@@ -157,7 +156,7 @@ inline void RiccatiFactorizer::computeFeedbackGainAndFeedforward(
 }
 
 
-inline void RiccatiFactorizer::factorizeRecursion(
+inline void RiccatiFactorizer::factorizeRiccatiSolution(
     const RiccatiSolution& riccati_next, const double dtau, 
     const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
     const RiccatiGain& gain, RiccatiSolution& riccati) {

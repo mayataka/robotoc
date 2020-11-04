@@ -31,13 +31,9 @@ protected:
   }
 
   static void testBackwardRecursionUnits(const Robot& robot, const double dtau);
-
   static void testBackwardRecursion(const Robot& robot, const double dtau);
-
   static void testForwardRecursion(const Robot& robot, const double dtau);
-
   static void testComputeCostateDirection(const Robot& robot, const double dtau);
-
   static void testComputeControlInputDirection(const Robot& robot, const double dtau);
 
   double dtau;
@@ -87,7 +83,7 @@ void RiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot, const
   const KKTMatrix kkt_matrix_ref = kkt_matrix;
   const KKTResidual kkt_residual_ref = kkt_residual;
   RiccatiFactorizer factorizer(robot);
-  factorizer.factorizeMatrices(riccati_next, dtau, kkt_matrix, kkt_residual);
+  factorizer.factorizeKKTMatrix(riccati_next, dtau, kkt_matrix, kkt_residual);
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
   A.topLeftCorner(dimv, dimv) = kkt_matrix_ref.Fqq();
   A.topRightCorner(dimv, dimv) = kkt_matrix_ref.Fqv();
@@ -121,7 +117,7 @@ void RiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot, const
   EXPECT_TRUE(gain.K.isApprox(gain_ref.K));
   EXPECT_TRUE(gain.k.isApprox(gain_ref.k));
   RiccatiSolution riccati(robot);
-  factorizer.factorizeRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, gain, riccati);
+  factorizer.factorizeRiccatiSolution(riccati_next, dtau, kkt_matrix, kkt_residual, gain, riccati);
   // const Eigen::MatrixXd P_ref = F_ref + H_ref * gain.K;
   const Eigen::MatrixXd P_ref = F_ref - gain.K.transpose() * G_ref * gain.K;
   const Eigen::VectorXd s_ref = A.transpose() * sx_next - A.transpose() * P_next * kkt_residual_ref.Fx() - kkt_residual_ref.lx() - H_ref * gain.k;
@@ -177,10 +173,10 @@ void RiccatiFactorizerTest::testBackwardRecursion(const Robot& robot, const doub
   RiccatiFactorizer factorizer(robot), factorizer_ref(robot);
   RiccatiSolution riccati(robot), riccati_ref(robot);
   RiccatiGain gain(robot), gain_ref(robot);
-  factorizer.factorizeBackwardRicursion(riccati_next, dtau, kkt_matrix, kkt_residual, gain, riccati);
-  factorizer_ref.factorizeMatrices(riccati_next, dtau, kkt_matrix_ref, kkt_residual_ref);
+  factorizer.backwardRiccatiRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, gain, riccati);
+  factorizer_ref.factorizeKKTMatrix(riccati_next, dtau, kkt_matrix_ref, kkt_residual_ref);
   factorizer_ref.computeFeedbackGainAndFeedforward(kkt_matrix_ref, kkt_residual_ref, gain_ref);
-  factorizer_ref.factorizeRecursion(riccati_next, dtau, kkt_matrix_ref, kkt_residual_ref, gain_ref, riccati_ref);
+  factorizer_ref.factorizeRiccatiSolution(riccati_next, dtau, kkt_matrix_ref, kkt_residual_ref, gain_ref, riccati_ref);
   EXPECT_TRUE(gain.K.isApprox(gain_ref.K));
   EXPECT_TRUE(gain.k.isApprox(gain_ref.k));
   EXPECT_TRUE(riccati.Pqq.isApprox(riccati_ref.Pqq));
@@ -194,11 +190,6 @@ void RiccatiFactorizerTest::testBackwardRecursion(const Robot& robot, const doub
   EXPECT_TRUE(riccati.Pvq.isApprox(riccati.Pqv.transpose()));
   EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
   EXPECT_TRUE(kkt_matrix.Quu().isApprox(kkt_matrix.Quu().transpose()));
-  std::cout << riccati.Pqq - riccati.Pqq.transpose() << std::endl;
-  std::cout << riccati.Pqv - riccati.Pvq.transpose() << std::endl;
-  std::cout << riccati.Pvv - riccati.Pvv.transpose() << std::endl;
-  std::cout << kkt_matrix.Qxx() - kkt_matrix.Qxx().transpose() << std::endl;
-  std::cout << kkt_matrix.Quu() - kkt_matrix.Quu().transpose() << std::endl;
 }
 
 
@@ -237,7 +228,7 @@ void RiccatiFactorizerTest::testForwardRecursion(const Robot& robot, const doubl
   const SplitDirection d = SplitDirection::Random(robot);
   SplitDirection d_next(robot), d_next_ref(robot);
   RiccatiFactorizer factorizer(robot);
-  factorizer.factorizeForwardRicursion(kkt_matrix, kkt_residual, d, dtau, d_next);
+  factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, d, dtau, d_next);
   d_next_ref.dx() = kkt_matrix.Fxx() * d.dx() + kkt_matrix.Fxu() * d.du() + kkt_residual.Fx();
   EXPECT_TRUE(d_next.isApprox(d_next_ref));
 }

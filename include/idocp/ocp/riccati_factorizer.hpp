@@ -39,15 +39,15 @@ public:
   // Use default move assign operator.
   RiccatiFactorizer& operator=(RiccatiFactorizer&&) noexcept = default;
 
-  void factorizeBackwardRicursion(const RiccatiSolution& riccati_next, 
-                                  const double dtau, KKTMatrix& kkt_matrix, 
-                                  KKTResidual& kkt_residual, RiccatiGain& gain, 
-                                  RiccatiSolution& riccati);
+  void backwardRiccatiRecursion(const RiccatiSolution& riccati_next, 
+                                const double dtau, KKTMatrix& kkt_matrix, 
+                                KKTResidual& kkt_residual, RiccatiGain& gain, 
+                                RiccatiSolution& riccati);
 
-  void factorizeForwardRicursion(const KKTMatrix& kkt_matrix, 
-                                 const KKTResidual& kkt_residual,
-                                 const SplitDirection& d, const double dtau,
-                                 SplitDirection& d_next) const;
+  void forwardRiccatiRecursion(const KKTMatrix& kkt_matrix, 
+                               const KKTResidual& kkt_residual,
+                               const SplitDirection& d, const double dtau,
+                               SplitDirection& d_next) const;
 
   static void computeCostateDirection(const RiccatiSolution& riccati, 
                                       SplitDirection& d);
@@ -55,19 +55,19 @@ public:
   static void computeControlInputDirection(const RiccatiGain& gain, 
                                            SplitDirection& d);
 
-  void factorizeMatrices(const RiccatiSolution& riccati_next, 
-                         const double dtau, KKTMatrix& kkt_matrix, 
-                         KKTResidual& kkt_residual);
+  void factorizeKKTMatrix(const RiccatiSolution& riccati_next, 
+                          const double dtau, KKTMatrix& kkt_matrix, 
+                          KKTResidual& kkt_residual);
 
   void computeFeedbackGainAndFeedforward(const KKTMatrix& kkt_matrix, 
                                          const KKTResidual& kkt_residual,
                                          RiccatiGain& gain);
 
-  void factorizeRecursion(const RiccatiSolution& riccati_next, 
-                          const double dtau, const KKTMatrix& kkt_matrix, 
-                          const KKTResidual& kkt_residual,
-                          const RiccatiGain& gain, 
-                          RiccatiSolution& riccati);
+  void factorizeRiccatiSolution(const RiccatiSolution& riccati_next, 
+                                const double dtau, const KKTMatrix& kkt_matrix, 
+                                const KKTResidual& kkt_residual,
+                                const RiccatiGain& gain, 
+                                RiccatiSolution& riccati);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

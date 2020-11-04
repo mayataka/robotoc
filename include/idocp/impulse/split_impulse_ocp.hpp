@@ -7,7 +7,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
