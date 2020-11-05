@@ -70,7 +70,7 @@ add_library(
   src/impulse/impulse_dynamics_forward_euler.cpp
   # src/impulse/impulse_dynamics_backward_euler.cpp
   src/impulse/impulse_riccati_factorizer.cpp
-  # src/impulse/split_impulse_ocp.cpp
+  src/impulse/split_impulse_ocp.cpp
   # src/impulse/split_impulse_parnmpc.cpp
   src/ocp/schur_complement.cpp
   src/ocp/kkt_residual.cpp

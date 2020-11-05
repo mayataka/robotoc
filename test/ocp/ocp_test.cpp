@@ -34,15 +34,10 @@ protected:
   }
 
   static std::shared_ptr<CostFunction> createCost(const Robot& robot);
-
   static std::shared_ptr<Constraints> createConstraints(const Robot& robot);
-
   static void testUpdateSolutionInParallel(Robot& robot);
-
   static void testUpdateSolutionInParallelWithoutActiveContacts(Robot& robot);
-
   static void testUpdateSolutionInParallelWithActiveContacts(Robot& robot);
-
   std::string fixed_base_urdf, floating_base_urdf;
 };
 
@@ -89,11 +84,15 @@ std::shared_ptr<Constraints> OCPTest::createConstraints(const Robot& robot) {
   auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
   auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
   auto velocity_upper_limit = std::make_shared<JointVelocityUpperLimit>(robot);
+  auto torques_lower_limit = std::make_shared<JointTorquesLowerLimit>(robot);
+  auto torques_upper_limit = std::make_shared<JointTorquesUpperLimit>(robot);
   auto constraints = std::make_shared<Constraints>();
   constraints->push_back(joint_upper_limit); 
   constraints->push_back(joint_lower_limit);
   constraints->push_back(velocity_lower_limit); 
   constraints->push_back(velocity_upper_limit);
+  constraints->push_back(torques_lower_limit);
+  constraints->push_back(torques_upper_limit);
   return constraints;
 }
 
@@ -103,10 +102,10 @@ void OCPTest::testUpdateSolutionInParallel(Robot& robot) {
   auto constraints = createConstraints(robot);
   const double t = 0;
   const double T = 1;
-  const double N = 10;
+  const double N = 8;
   Eigen::VectorXd q(robot.dimq());
   robot.generateFeasibleConfiguration(q);
-  Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T, N, 1);
   OCP ocp_ref(robot, cost, constraints, T, N, 4);
   EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
@@ -132,10 +131,10 @@ void OCPTest::testUpdateSolutionInParallelWithoutActiveContacts(Robot& robot) {
   auto constraints = createConstraints(robot);
   const double t = 0;
   const double T = 1;
-  const double N = 10;
+  const double N = 8;
   Eigen::VectorXd q(robot.dimq());
   robot.generateFeasibleConfiguration(q);
-  Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T, N, 1);
   OCP ocp_ref(robot, cost, constraints, T, N, 4);
   for (int i=0; i<robot.max_point_contacts(); ++i) {
@@ -165,16 +164,18 @@ void OCPTest::testUpdateSolutionInParallelWithActiveContacts(Robot& robot) {
   auto constraints = createConstraints(robot);
   const double t = 0;
   const double T = 1;
-  const double N = 10;
+  const double N = 8;
   Eigen::VectorXd q(robot.dimq());
   robot.generateFeasibleConfiguration(q);
-  Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T, N, 1);
   OCP ocp_ref(robot, cost, constraints, T, N, 4);
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     ocp.activateContacts({i}, 0, N);
     ocp_ref.activateContacts({i}, 0, N);
   }
+  ocp.setStateTrajectory(q, v);
+  ocp_ref.setStateTrajectory(q, v);
   EXPECT_DOUBLE_EQ(ocp.KKTError(), ocp_ref.KKTError());
   ocp.computeKKTResidual(t, q, v);
   ocp_ref.computeKKTResidual(t, q, v);

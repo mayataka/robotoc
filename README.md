@@ -12,10 +12,10 @@
 
 ## Requirements
 - Ubuntu 
-- gcc, CMake, pkg-config
+- gcc, CMake
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  
 - [pinocchio](https://github.com/stack-of-tasks/pinocchio) (instruction for installation is found [here](https://stack-of-tasks.github.io/pinocchio/download.html))
-- (Optional to simulate MPC for quadrupeds) [raisimLib](https://github.com/raisimTech/raisimLib), [raisimOgre](https://github.com/raisimTech/raisimOgre), and license of raidimLib.
+- (Optional to simulate MPC for quadrupeds) [raisimLib](https://github.com/raisimTech/raisimLib), [raisimOgre](https://github.com/raisimTech/raisimOgre), and [raisim's license](http://raisim.com/sections/License.html).
 
 ## Installation 
 1. Install latest stable version of Eigen3 by 

@@ -145,8 +145,9 @@ public:
   /// @param[in] d_next Split direction of the next stage.
   /// @param[in, out] d Split direction of this stage.
   /// 
+  template <typename SplitDirectionType>
   void computeCondensedDualDirection(Robot& robot, const double dtau, 
-                                     const SplitDirection& d_next,
+                                     const SplitDirectionType& d_next,
                                      SplitDirection& d);
 
   ///
@@ -285,5 +286,6 @@ private:
 
 } // namespace idocp
 
+#include "idocp/ocp/split_ocp.hxx"
 
 #endif // IDOCP_SPLIT_OCP_HPP_

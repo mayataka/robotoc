@@ -124,16 +124,6 @@ void SplitOCP::computeCondensedPrimalDirection(Robot& robot, const double dtau,
 }
 
 
-void SplitOCP::computeCondensedDualDirection(Robot& robot, const double dtau, 
-                                             const SplitDirection& d_next, 
-                                             SplitDirection& d) {
-  assert(dtau > 0);
-  contact_dynamics_.computeCondensedDualDirection(robot, dtau, kkt_matrix_,
-                                                  kkt_residual_, 
-                                                  d_next.dgmm(), d);
-}
-
-
 double SplitOCP::maxPrimalStepSize() {
   return constraints_->maxSlackStepSize(constraints_data_);
 }
