@@ -83,10 +83,11 @@ public:
   /// @brief Creates ConstraintsData according to robot model and constraint 
   /// components. 
   /// @param[in] robot Robot model.
+  /// @param[in] time_stage Time stage. Default is 0.
   /// @return Constraints data.
   ///
   ConstraintsData createConstraintsData(const Robot& robot, 
-                                        const int time_stage) const;
+                                        const int time_stage=0) const;
 
   ///
   /// @brief Check whether the current solution s is feasible or not. 

@@ -11,7 +11,7 @@ SplitImpulseOCP::SplitImpulseOCP(
   : cost_(cost),
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
-    constraints_data_(),
+    constraints_data_(constraints->createConstraintsData(robot)),
     kkt_residual_(robot),
     kkt_matrix_(robot),
     impulse_dynamics_(robot),
@@ -59,13 +59,16 @@ void SplitImpulseOCP::linearizeOCP(Robot& robot,
   kkt_residual_.setZero();
   kkt_matrix_.setZero();
   cost_->computeStageCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
+  constraints_->augmentDualResidual(robot, constraints_data_, s, kkt_residual_);
   stateequation::LinearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
                                               kkt_matrix_, kkt_residual_);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s,
                                              kkt_matrix_, kkt_residual_);
+  cost_->computeStageCostHessian(robot, cost_data_, t, s, kkt_matrix_);
+  constraints_->condenseSlackAndDual(robot, constraints_data_, s, kkt_matrix_, 
+                                     kkt_residual_);
   impulse_dynamics_.condenseImpulseDynamics(robot, impulse_status, 
                                             kkt_matrix_, kkt_residual_);
-  cost_->computeStageCostHessian(robot, cost_data_, t, s, kkt_matrix_);
 }
 
 
@@ -95,7 +98,8 @@ void SplitImpulseOCP::computeCondensedPrimalDirection(
 void SplitImpulseOCP::computeCondensedDualDirection(
     Robot& robot, const SplitDirection& d_next, ImpulseSplitDirection& d) {
   impulse_dynamics_.computeCondensedDualDirection(robot, kkt_matrix_,
-                                                  kkt_residual_, d_next.dgmm(), d);
+                                                  kkt_residual_, 
+                                                  d_next.dgmm(), d);
 }
 
  
@@ -106,6 +110,23 @@ double SplitImpulseOCP::maxPrimalStepSize() {
 
 double SplitImpulseOCP::maxDualStepSize() {
   return constraints_->maxDualStepSize(constraints_data_);
+}
+
+
+void SplitImpulseOCP::updateDual(const double dual_step_size) {
+  assert(dual_step_size > 0);
+  assert(dual_step_size <= 1);
+  constraints_->updateDual(constraints_data_, dual_step_size);
+}
+
+
+void SplitImpulseOCP::updatePrimal(Robot& robot, const double primal_step_size, 
+                                   const ImpulseSplitDirection& d, 
+                                   ImpulseSplitSolution& s) {
+  assert(primal_step_size > 0);
+  assert(primal_step_size <= 1);
+  s.integrate(robot, primal_step_size, d);
+  constraints_->updateSlack(constraints_data_, primal_step_size);
 }
 
 
@@ -165,6 +186,7 @@ double SplitImpulseOCP::constraintViolation(Robot& robot,
                                             const ImpulseSplitSolution& s, 
                                             const Eigen::VectorXd& q_next, 
                                             const Eigen::VectorXd& v_next) {
+  setImpulseStatusForKKT(impulse_status);
   robot.updateKinematics(s.q, s.v);
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   stateequation::ComputeImpulseForwardEulerResidual(robot, s, q_next, v_next, 
@@ -172,9 +194,9 @@ double SplitImpulseOCP::constraintViolation(Robot& robot,
   impulse_dynamics_.computeImpulseDynamicsResidual(robot, impulse_status, s, 
                                                    kkt_residual_);
   double violation = 0;
+  violation += constraints_->l1NormPrimalResidual(constraints_data_);
   violation += stateequation::L1NormStateEuqationResidual(kkt_residual_);
   violation += impulse_dynamics_.l1NormImpulseDynamicsResidual(kkt_residual_);
-  violation += constraints_->l1NormPrimalResidual(constraints_data_);
   return violation;
 }
 

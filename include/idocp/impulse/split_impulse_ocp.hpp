@@ -150,19 +150,19 @@ public:
 
   ///
   /// @brief Updates dual variables of the inequality constraints.
-  /// @param[in] step_size Dula step size of the OCP. 
+  /// @param[in] dual_step_size Dula step size of the OCP. 
   ///
-  void updateDual(const double step_size);
+  void updateDual(const double dual_step_size);
 
   ///
   /// @brief Updates primal variables of this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] step_size Primal step size of the OCP. 
+  /// @param[in] primal_step_size Primal step size of the OCP. 
   /// @param[in] riccati Riccati factorization of this stage.
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
   ///
-  void updatePrimal(Robot& robot, const double step_size, 
+  void updatePrimal(Robot& robot, const double primal_step_size, 
                     const ImpulseSplitDirection& d, ImpulseSplitSolution& s);
 
   ///

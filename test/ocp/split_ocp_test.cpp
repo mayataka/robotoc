@@ -137,10 +137,9 @@ std::shared_ptr<Constraints> SplitOCPTest::createConstraints(const Robot& robot)
 SplitSolution SplitOCPTest::generateFeasibleSolution(
     Robot& robot, const ContactStatus& contact_staus,
     const std::shared_ptr<Constraints>& constraints) {
-  auto empty_cost = std::make_shared<CostFunction>();
-  SplitOCP ocp(robot, empty_cost, constraints);
+  auto data = constraints->createConstraintsData(robot, 10);
   SplitSolution s = SplitSolution::Random(robot, contact_staus);
-  while (!ocp.isFeasible(robot, s)) {
+  while (!constraints->isFeasible(robot, data, s)) {
     s = SplitSolution::Random(robot, contact_staus);
   }
   return s;
@@ -436,17 +435,14 @@ void SplitOCPTest::testCostAndConstraintViolation(
     const std::shared_ptr<Constraints>& constraints) {
   const SplitSolution s_prev = SplitSolution::Random(robot, contact_status);
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
-  const SplitSolution s_next = SplitSolution::Random(robot, contact_status);
-  const SplitDirection d_prev = SplitDirection::Random(robot, contact_status);
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
-  const SplitDirection d_next = SplitDirection::Random(robot, contact_status);
   SplitOCP ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
-  ocp.initConstraints(robot, 10, dtau, s);
-  ocp.computeKKTResidual(robot, contact_status, t, dtau, s_prev.q, s, s_next);
-  const double kkt_error = ocp.squaredNormKKTResidual(dtau);
   const double step_size = 0.3;
+  ocp.initConstraints(robot, 10, dtau, s);
+  const double stage_cost = ocp.stageCost(robot, t, dtau, s, step_size);
+  const double constraint_violation = ocp.constraintViolation(robot, contact_status, t, dtau, s, s_prev.q, s_prev.v);
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
   KKTResidual kkt_residual(robot);
@@ -454,18 +450,21 @@ void SplitOCPTest::testCostAndConstraintViolation(
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
-  SplitSolution s_tmp = s;
-  s_tmp.integrate(robot, step_size, d);
-  robot.updateKinematics(s_tmp.q, s_tmp.v, s_tmp.a);
-  double cost_ref = 0;
-  cost_ref += cost->l(robot, cost_data, t, dtau, s_tmp);
-  cost_ref += constraints->costSlackBarrier(constraints_data, step_size);
-  constraints->computePrimalAndDualResidual(robot, constraints_data, dtau, s_tmp);
-  stateequation::ComputeForwardEulerResidual(robot, step_size, dtau, s_tmp,  
-                                             s_next.q, s_next.v, d_next.dq(), 
-                                             d_next.dv(), kkt_residual);
+  robot.updateKinematics(s.q, s.v, s.a);
+  double stage_cost_ref = 0;
+  stage_cost_ref += cost->l(robot, cost_data, t, dtau, s);
+  stage_cost_ref += constraints->costSlackBarrier(constraints_data, step_size);
+  EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
+  constraints->computePrimalAndDualResidual(robot, constraints_data, dtau, s);
+  stateequation::ComputeForwardEulerResidual(robot, dtau, s, s_prev.q, 
+                                             s_prev.v, kkt_residual);
   ContactDynamics cd(robot);
-  cd.computeContactDynamicsResidual(robot, contact_status, dtau, s_tmp);
+  cd.computeContactDynamicsResidual(robot, contact_status, dtau, s);
+  double constraint_violation_ref = 0;
+  constraint_violation_ref += constraints->l1NormPrimalResidual(constraints_data);
+  constraint_violation_ref += stateequation::L1NormStateEuqationResidual(kkt_residual);
+  constraint_violation_ref += cd.l1NormContactDynamicsResidual(dtau);
+  EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
 }
 
 

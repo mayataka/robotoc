@@ -11,7 +11,7 @@ SplitOCP::SplitOCP(const Robot& robot,
   : cost_(cost),
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
-    constraints_data_(),
+    constraints_data_(constraints->createConstraintsData(robot)),
     kkt_residual_(robot),
     kkt_matrix_(robot),
     // robot_dynamics_(robot),
@@ -120,7 +120,8 @@ void SplitOCP::computeCondensedPrimalDirection(Robot& robot, const double dtau,
   assert(dtau > 0);
   riccati_factorizer_.computeCostateDirection(riccati, d);
   contact_dynamics_.computeCondensedPrimalDirection(robot, d);
-  constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, s, d);
+  constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, 
+                                             s, d);
 }
 
 
@@ -219,6 +220,7 @@ double SplitOCP::constraintViolation(Robot& robot,
                                      const SplitSolution& s, 
                                      const Eigen::VectorXd& q_next, 
                                      const Eigen::VectorXd& v_next) {
+  setContactStatusForKKT(contact_status);
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
@@ -227,9 +229,9 @@ double SplitOCP::constraintViolation(Robot& robot,
                                              kkt_residual_);
   contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, dtau, s);
   double violation = 0;
+  violation += constraints_->l1NormPrimalResidual(constraints_data_);
   violation += stateequation::L1NormStateEuqationResidual(kkt_residual_);
   violation += contact_dynamics_.l1NormContactDynamicsResidual(dtau);
-  violation += constraints_->l1NormPrimalResidual(constraints_data_);
   return violation;
 }
 

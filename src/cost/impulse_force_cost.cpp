@@ -8,14 +8,18 @@ namespace idocp {
 ImpulseForceCost::ImpulseForceCost(const Robot& robot)
   : ImpulseCostFunctionComponentBase(),
     max_point_contacts_(robot.max_point_contacts()),
-    max_dimf_(robot.max_dimf()) {
+    max_dimf_(robot.max_dimf()),
+    f_ref_(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
+    f_weight_(robot.max_point_contacts(), Eigen::Vector3d::Zero()) {
 }
 
 
 ImpulseForceCost::ImpulseForceCost()
   : ImpulseCostFunctionComponentBase(),
     max_point_contacts_(0),
-    max_dimf_(0) {
+    max_dimf_(0),
+    f_ref_(),
+    f_weight_() {
 }
 
 
