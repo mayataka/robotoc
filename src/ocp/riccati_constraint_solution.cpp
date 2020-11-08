@@ -1,0 +1,1 @@
+#include "idocp/ocp/riccati_constraint_solution.hpp"

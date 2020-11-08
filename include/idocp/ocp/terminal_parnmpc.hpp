@@ -1,5 +1,5 @@
-#ifndef IDOCP_SPLIT_PARNMPC_HPP_ 
-#define IDOCP_SPLIT_PARNMPC_HPP_
+#ifndef IDOCP_TERMINAL_PARNMPC_HPP_ 
+#define IDOCP_TERMINAL_PARNMPC_HPP_
 
 #include <memory>
 
@@ -23,49 +23,50 @@
 namespace idocp {
 
 ///
-/// @class SplitParNMPC
-/// @brief Split optimal control problem of ParNMPC algorithm for single stage. 
+/// @class TerminalParNMPC
+/// @brief Split optimal control problem of ParNMPC algorithm for the terminal 
+/// stage. 
 ///
-class SplitParNMPC {
+class TerminalParNMPC {
 public:
   ///
-  /// @brief Construct SplitParNMPC.
+  /// @brief Construct TerminalParNMPC.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   ///
-  SplitParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-               const std::shared_ptr<Constraints>& constraints);
+  TerminalParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+                  const std::shared_ptr<Constraints>& constraints);
 
   ///
   /// @brief Default constructor. 
   ///
-  SplitParNMPC();
+  TerminalParNMPC();
 
   ///
   /// @brief Destructor. 
   ///
-  ~SplitParNMPC();
+  ~TerminalParNMPC();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  SplitParNMPC(const SplitParNMPC&) = default;
+  TerminalParNMPC(const TerminalParNMPC&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  SplitParNMPC& operator=(const SplitParNMPC&) = default;
+  TerminalParNMPC& operator=(const TerminalParNMPC&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  SplitParNMPC(SplitParNMPC&&) noexcept = default;
+  TerminalParNMPC(TerminalParNMPC&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  SplitParNMPC& operator=(SplitParNMPC&&) noexcept = default;
+  TerminalParNMPC& operator=(TerminalParNMPC&&) noexcept = default;
 
   ///
   /// @brief Check whether the solution is feasible under inequality constraints.
@@ -85,7 +86,7 @@ public:
                        const SplitSolution& s);
 
   ///
-  /// @brief Linearize the split OCP. 
+  /// @brief Linearize the terminal OCP. 
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] contact_status Contact status of robot at this stage. 
   /// @param[in] t Current time of this stage. 
@@ -95,13 +96,11 @@ public:
   /// @param[in] v_prev Velocity of the previous stage. Size must be 
   /// Robot::dimv().
   /// @param[in] s Split solution of this stage.
-  /// @param[in] s_next Split solution of the next stage.
   ///
   void linearizeOCP(Robot& robot, const ContactStatus& contact_status,
                     const double t, const double dtau, 
                     const Eigen::VectorXd& q_prev, 
-                    const Eigen::VectorXd& v_prev, const SplitSolution& s, 
-                    const SplitSolution& s_next);
+                    const Eigen::VectorXd& v_prev, const SplitSolution& s);
 
   ///
   /// @brief Updates the solution of the split OCP approximately. Call  
@@ -111,8 +110,7 @@ public:
   /// @param[out] d Split direction of this stage.
   /// @param[out] s_new_coarse Coarse updated split splition of this stage.
   ///
-  void coarseUpdate(const Eigen::MatrixXd& aux_mat_next_old, SplitDirection& d, 
-                    SplitSolution& s_new_coarse);
+  void coarseUpdate(SplitDirection& d, SplitSolution& s_new_coarse);
 
   ///
   /// @brief Gets the auxiliary matrix of this stage.
@@ -247,31 +245,12 @@ public:
   /// @param[in] q_prev Configuration of the previous stage.
   /// @param[in] v_prev Velocity of the previous stage.
   /// @param[in] s Split solution of this stage.
-  /// @param[in] s_next Split solution of the next stage.
   ///
-  void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
+  void computeKKTResidual(Robot& robot, const ContactStatus& contact_status, 
                           const double t, const double dtau, 
                           const Eigen::VectorXd& q_prev, 
                           const Eigen::VectorXd& v_prev, 
-                          const SplitSolution& s, const SplitSolution& s_next);
-
-  ///
-  /// @brief Computes the KKT residual of the OCP at this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] q_prev Configuration of the previous stage.
-  /// @param[in] v_prev Velocity of the previous stage.
-  /// @param[in] s Split solution of this stage.
-  ///
-  void computeKKTResidualTerminal(Robot& robot, 
-                                  const ContactStatus& contact_status, 
-                                  const double t, const double dtau, 
-                                  const Eigen::VectorXd& q_prev, 
-                                  const Eigen::VectorXd& v_prev, 
-                                  const SplitSolution& s);
+                          const SplitSolution& s);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
@@ -290,8 +269,8 @@ public:
   /// @param[in] primal_step_size Primal step size of the OCP. Default is 0.
   /// @return Stage cost of this stage.
   /// 
-  double stageCost(Robot& robot, const double t, const double dtau, 
-                   const SplitSolution& s, const double primal_step_size=0);
+  double terminalCost(Robot& robot, const double t, const double dtau, 
+                      const SplitSolution& s, const double primal_step_size=0);
 
   ///
   /// @brief Computes and returns the constraint violation of the OCP at this 
@@ -352,4 +331,4 @@ private:
 
 } // namespace idocp
 
-#endif // IDOCP_SPLIT_PARNMPC_HPP_
+#endif // IDOCP_TERMINAL_PARNMPC_HPP_ 

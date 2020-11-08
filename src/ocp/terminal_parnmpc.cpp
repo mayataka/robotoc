@@ -1,11 +1,11 @@
-#include "idocp/ocp/split_parnmpc.hpp"
+#include "idocp/ocp/terminal_parnmpc.hpp"
 
 #include <assert.h>
 
 
 namespace idocp {
 
-SplitParNMPC::SplitParNMPC(const Robot& robot, 
+TerminalParNMPC::TerminalParNMPC(const Robot& robot, 
                            const std::shared_ptr<CostFunction>& cost, 
                            const std::shared_ptr<Constraints>& constraints) 
   : cost_(cost),
@@ -31,7 +31,7 @@ SplitParNMPC::SplitParNMPC(const Robot& robot,
 }
 
 
-SplitParNMPC::SplitParNMPC() 
+TerminalParNMPC::TerminalParNMPC() 
   : cost_(),
     cost_data_(),
     constraints_(),
@@ -50,16 +50,16 @@ SplitParNMPC::SplitParNMPC()
 }
 
 
-SplitParNMPC::~SplitParNMPC() {
+TerminalParNMPC::~TerminalParNMPC() {
 }
 
 
-bool SplitParNMPC::isFeasible(Robot& robot, const SplitSolution& s) {
+bool TerminalParNMPC::isFeasible(Robot& robot, const SplitSolution& s) {
   return constraints_->isFeasible(robot, constraints_data_, s);
 }
 
 
-void SplitParNMPC::initConstraints(Robot& robot, const int time_step, 
+void TerminalParNMPC::initConstraints(Robot& robot, const int time_step, 
                                    const double dtau, const SplitSolution& s) {
   assert(time_step >= 0);
   assert(dtau > 0);
@@ -68,18 +68,16 @@ void SplitParNMPC::initConstraints(Robot& robot, const int time_step,
 }
 
 
-void SplitParNMPC::linearizeOCP(Robot& robot, 
-                                const ContactStatus& contact_status,
-                                const double t, const double dtau, 
-                                const Eigen::VectorXd& q_prev, 
-                                const Eigen::VectorXd& v_prev,
-                                const SplitSolution& s,
-                                const SplitSolution& s_next) {
+void TerminalParNMPC::linearizeOCP(Robot& robot,  
+                                   const ContactStatus& contact_status,
+                                   const double t, const double dtau, 
+                                   const Eigen::VectorXd& q_prev, 
+                                   const Eigen::VectorXd& v_prev, 
+                                   const SplitSolution& s, SplitDirection& d, 
+                                   SplitSolution& s_new_coarse) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
-  assert(aux_mat_next_old.rows() == 2*robot.dimv());
-  assert(aux_mat_next_old.cols() == 2*robot.dimv());
   setContactStatusForKKT(contact_status);
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
@@ -88,11 +86,13 @@ void SplitParNMPC::linearizeOCP(Robot& robot,
   kkt_matrix_.setZero();
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
                                      kkt_residual_);
+  cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual_);
-  stateequation::LinearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
-                                        kkt_matrix_, kkt_residual_);
+  stateequation::LinearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
+                                                kkt_matrix_, kkt_residual_);
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix_);
+  cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
                                      kkt_matrix_, kkt_residual_);
   contact_dynamics_.condenseRobotDynamics(robot, contact_status, dtau, s, 
@@ -100,12 +100,8 @@ void SplitParNMPC::linearizeOCP(Robot& robot,
 }
 
 
-void SplitParNMPC::coarseUpdate(const Eigen::MatrixXd& aux_mat_next_old,
-                                SplitDirection& d, 
-                                SplitSolution& s_new_coarse) {
-  assert(aux_mat_next_old.rows() == 2*robot.dimv());
-  assert(aux_mat_next_old.cols() == 2*robot.dimv());
-  kkt_matrix_.Qxx().noalias() += aux_mat_next_old;
+void TerminalParNMPC::coarseUpdate(SplitDirection& d, 
+                                   SplitSolution& s_new_coarse) {
   kkt_matrix_.symmetrize(); 
   kkt_matrix_.invert(kkt_matrix_inverse_);
   d.split_direction = kkt_matrix_inverse_ * kkt_residual_.KKT_residual;
@@ -117,14 +113,26 @@ void SplitParNMPC::coarseUpdate(const Eigen::MatrixXd& aux_mat_next_old,
 }
 
 
-void SplitParNMPC::getAuxiliaryMatrix(Eigen::MatrixXd& aux_mat) const {
+void TerminalParNMPC::getAuxiliaryMatrix(Eigen::MatrixXd& aux_mat) const {
   assert(aux_mat.rows() == dimx_);
   assert(aux_mat.cols() == dimx_);
   aux_mat = - kkt_matrix_inverse_.topLeftCorner(dimx_, dimx_);
 }
 
 
-void SplitParNMPC::backwardCorrectionSerial(const Robot& robot,
+void TerminalParNMPC::getTerminalCostHessian(Robot& robot, const double t, 
+                                             const SplitSolution& s, 
+                                             Eigen::MatrixXd& phixx) {
+  assert(phixx.rows() == dimx_);
+  assert(phixx.cols() == dimx_);
+  kkt_matrix_.Qxx().setZero();
+  cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
+  phixx = kkt_matrix_.Qxx();
+  kkt_matrix_.Qxx().setZero();
+}
+
+
+void TerminalParNMPC::backwardCorrectionSerial(const Robot& robot,
                                             const SplitSolution& s_next, 
                                             const SplitSolution& s_new_next,
                                             SplitSolution& s_new) {
@@ -137,7 +145,7 @@ void SplitParNMPC::backwardCorrectionSerial(const Robot& robot,
 }
 
 
-void SplitParNMPC::backwardCorrectionParallel(const Robot& robot, 
+void TerminalParNMPC::backwardCorrectionParallel(const Robot& robot, 
                                               SplitDirection& d,
                                               SplitSolution& s_new) const {
   d.split_direction().tail(dimKKT_-dimx_).noalias()
@@ -149,7 +157,7 @@ void SplitParNMPC::backwardCorrectionParallel(const Robot& robot,
 }
 
 
-void SplitParNMPC::forwardCorrectionSerial(const Robot& robot,
+void TerminalParNMPC::forwardCorrectionSerial(const Robot& robot,
                                            const SplitSolution& s_prev,
                                            const SplitSolution& s_new_prev, 
                                            SplitSolution& s_new) {
@@ -163,7 +171,7 @@ void SplitParNMPC::forwardCorrectionSerial(const Robot& robot,
 }
 
 
-void SplitParNMPC::forwardCorrectionParallel(const Robot& robot,
+void TerminalParNMPC::forwardCorrectionParallel(const Robot& robot,
                                              SplitDirection& d,
                                              SplitSolution& s_new) const {
   d.split_direction().head(dimKKT_-dimx_).noalias()
@@ -174,7 +182,7 @@ void SplitParNMPC::forwardCorrectionParallel(const Robot& robot,
 }
 
 
-void SplitParNMPC::computePrimalAndDualDirection(Robot& robot, 
+void TerminalParNMPC::computePrimalAndDualDirection(Robot& robot, 
                                                  const double dtau, 
                                                  const SplitSolution& s, 
                                                  const SplitSolution& s_new,
@@ -191,24 +199,24 @@ void SplitParNMPC::computePrimalAndDualDirection(Robot& robot,
 }
 
  
-double SplitParNMPC::maxPrimalStepSize() {
+double TerminalParNMPC::maxPrimalStepSize() {
   return constraints_->maxSlackStepSize(constraints_data_);
 }
 
 
-double SplitParNMPC::maxDualStepSize() {
+double TerminalParNMPC::maxDualStepSize() {
   return constraints_->maxDualStepSize(constraints_data_);
 }
 
 
-void SplitParNMPC::updateDual(const double step_size) {
+void TerminalParNMPC::updateDual(const double step_size) {
   assert(step_size > 0);
   assert(step_size <= 1);
   constraints_->updateDual(constraints_data_, step_size);
 }
 
 
-void SplitParNMPC::updatePrimal(Robot& robot, const double step_size, 
+void TerminalParNMPC::updatePrimal(Robot& robot, const double step_size, 
                                 const double dtau, const SplitDirection& d, 
                                 SplitSolution& s) {
   assert(step_size > 0);
@@ -229,7 +237,7 @@ void SplitParNMPC::updatePrimal(Robot& robot, const double step_size,
 }
 
 
-void SplitParNMPC::computeKKTResidual(Robot& robot, 
+void TerminalParNMPC::computeKKTResidual(Robot& robot, 
                                       const ContactStatus& contact_status, 
                                       const double t, const double dtau, 
                                       const Eigen::VectorXd& q_prev, 
@@ -246,6 +254,7 @@ void SplitParNMPC::computeKKTResidual(Robot& robot,
   }
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
                                      kkt_residual_);
+  cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual_);
   stateequation::LinearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next,
@@ -255,7 +264,7 @@ void SplitParNMPC::computeKKTResidual(Robot& robot,
 }
 
 
-double SplitParNMPC::squaredNormKKTResidual(const double dtau) const {
+double TerminalParNMPC::squaredNormKKTResidual(const double dtau) const {
   double error = 0;
   error += kkt_residual_.lx().squaredNorm();
   error += kkt_residual_.la.squaredNorm();
@@ -271,14 +280,15 @@ double SplitParNMPC::squaredNormKKTResidual(const double dtau) const {
 }
 
 
-double SplitParNMPC::stageCost(Robot& robot, const double t, const double dtau, 
-                               const SplitSolution& s,
-                               const double primal_step_size) {
+double TerminalParNMPC::terminalCost(Robot& robot, const double t, 
+                                     const double dtau, const SplitSolution& s,
+                                     const double primal_step_size) {
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
   double cost = 0;
   cost += cost_->l(robot, cost_data_, t, dtau, s);
+  cost += cost_->phi(robot, cost_data_, t, s);
   if (primal_step_size > 0) {
     cost += constraints_->costSlackBarrier(constraints_data_, primal_step_size);
   }
@@ -289,12 +299,12 @@ double SplitParNMPC::stageCost(Robot& robot, const double t, const double dtau,
 }
 
 
-double SplitParNMPC::constraintViolation(Robot& robot, 
-                                         const ContactStatus& contact_status, 
-                                         const double t, const double dtau, 
-                                         const Eigen::VectorXd& q_prev, 
-                                         const Eigen::VectorXd& v_prev,
-                                         const SplitSolution& s) {
+double TerminalParNMPC::constraintViolation(Robot& robot, 
+                                            const ContactStatus& contact_status, 
+                                            const double t, const double dtau, 
+                                            const Eigen::VectorXd& q_prev, 
+                                            const Eigen::VectorXd& v_prev,
+                                            const SplitSolution& s) {
   setContactStatusForKKT(contact_status);
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
@@ -311,8 +321,8 @@ double SplitParNMPC::constraintViolation(Robot& robot,
 }
 
 
-void SplitParNMPC::getStateFeedbackGain(Eigen::MatrixXd& Kq, 
-                                        Eigen::MatrixXd& Kv) const {
+void TerminalParNMPC::getStateFeedbackGain(Eigen::MatrixXd& Kq, 
+                                           Eigen::MatrixXd& Kv) const {
   assert(Kq.rows() == riccati_gain_.Kq().rows());
   assert(Kq.cols() == riccati_gain_.Kq().cols());
   assert(Kv.rows() == riccati_gain_.Kv().rows());

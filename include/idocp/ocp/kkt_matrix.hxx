@@ -483,15 +483,11 @@ inline void KKTMatrix::symmetrize() {
 template <typename MatrixType>
 inline void KKTMatrix::invert(
     const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse) {
-  if (dimp_ > 0) {
-  }
-  else {
-    assert(KKT_matrix_inverse.rows() == dimKKT_);
-    assert(KKT_matrix_inverse.cols() == dimKKT_);
-    schur_complement_.invertWithZeroTopLeftCorner(
-        F_, Q_.bottomRightCorner(dimx_+dimu_, dimx_+dimu_), 
-        const_cast<Eigen::MatrixBase<MatrixType>&>(KKT_matrix_inverse));
-  }
+  assert(KKT_matrix_inverse.rows() == dimKKT_);
+  assert(KKT_matrix_inverse.cols() == dimKKT_);
+  schur_complement_.invertWithZeroTopLeftCorner(
+      F_, Q_.bottomRightCorner(dimx_+dimu_, dimx_+dimu_), 
+      const_cast<Eigen::MatrixBase<MatrixType>&>(KKT_matrix_inverse));
 }
 
 

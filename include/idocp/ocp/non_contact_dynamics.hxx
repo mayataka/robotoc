@@ -3,7 +3,7 @@
 
 #include "idocp/ocp/non_contact_dynamics.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 namespace idocp {
 

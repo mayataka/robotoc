@@ -9,11 +9,16 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
+#include "idocp/cost/impulse_cost_function.hpp"
+#include "idocp/constraints/impulse_constraints.hpp"
 #include "idocp/ocp/contact_sequence.hpp"
 #include "idocp/ocp/split_ocp.hpp"
+#include "idocp/impulse/split_impulse_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
+#include "idocp/impulse/impulse_split_solution.hpp"
+#include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/ocp/line_search_filter.hpp"
 #include "idocp/ocp/split_temporary_solution.hpp"
@@ -40,6 +45,24 @@ public:
   OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
       const std::shared_ptr<Constraints>& constraints, const double T, 
       const int N, const int num_proc=1);
+
+  ///
+  /// @brief Construct optimal control problem solver.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] cost Shared ptr to the cost function.
+  /// @param[in] constraints Shared ptr to the constraints.
+  /// @param[in] impulse_cost Shared ptr to the impulse cost function.
+  /// @param[in] impulse_constraints Shared ptr to the impulse constraints.
+  /// @param[in] T Length of the horizon. Must be positive.
+  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  /// @param[in] num_proc Number of the threads in solving the optimal control 
+  /// problem. Must be positive. Default is 1.
+  ///
+  OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+      const std::shared_ptr<Constraints>& constraints, 
+      const std::shared_ptr<ImpulseCostFunction>& impulse_cost,
+      const std::shared_ptr<ImpulseConstraints>& impulse_constraints,
+      const double T, const int N, const int num_proc=1);
 
   ///
   /// @brief Default constructor. 
@@ -201,9 +224,14 @@ public:
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  static std::shared_ptr<ImpulseCostFunction> empty_impulse_cost;
+  static std::shared_ptr<ImpulseConstraints> empty_impulse_constraints;
+
 private:
 
   std::vector<SplitOCP> split_ocps_;
+  std::vector<SplitImpulseOCP> split_impulse_ocps_; // Split OCPs for impulse stages
+  std::vector<SplitOCP> split_lift_ocps_; // Split OCPs for lift stages
   TerminalOCP terminal_ocp_;
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
@@ -212,9 +240,16 @@ private:
   int N_, num_proc_;
   std::vector<SplitSolution> s_;
   std::vector<SplitDirection> d_;
+  std::vector<ImpulseSplitSolution> s_impulse_; // Split Solution for impulse stages
+  std::vector<ImpulseSplitDirection> d_impulse_; // Split Direction for impulse stages
+  std::vector<SplitSolution> s_lift_; // Split Solution for lift stages
+  std::vector<SplitDirection> d_lift_; // Split Direction for lift stages
   std::vector<RiccatiSolution> riccati_;
   std::vector<SplitTemporarySolution> s_tmp_;
-  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_;
+  std::vector<SplitTemporarySolution> s_lift_tmp_;
+  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_,
+                  costs_impulse_, violations_impulse, costs_lift_, 
+                  violations_lift_;
 };
 
 } // namespace idocp 

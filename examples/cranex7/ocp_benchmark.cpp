@@ -6,7 +6,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/parnmpc.hpp"
+// #include "idocp/ocp/parnmpc.hpp"
 #include "idocp/ocp/ocp.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
@@ -55,11 +55,11 @@ void BenchmarkTaskSpace3DControl() {
   ocp_benchmarker.testConvergence(t, q, v, 30, false);
   ocp_benchmarker.printSolution();
   ocp_benchmarker.testCPUTime(t, q, v, 1000);
-  idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for task-space control of cranex7",
-                                                            robot, cost, constraints, T, N, num_proc);
-  parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
-  parnmpc_benchmarker.testConvergence(t, q, v, 30, false);
-  parnmpc_benchmarker.testCPUTime(t, q, v, 1000);
+  // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for task-space control of cranex7",
+  //                                                           robot, cost, constraints, T, N, num_proc);
+  // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
+  // parnmpc_benchmarker.testConvergence(t, q, v, 30, false);
+  // parnmpc_benchmarker.testCPUTime(t, q, v, 1000);
 }
 
 
@@ -98,11 +98,11 @@ void BenchmarkTaskSpace6DControl() {
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   ocp_benchmarker.testConvergence(t, q, v, 30, false);
   ocp_benchmarker.testCPUTime(t, q, v, 1000);
-  idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for task-space control of cranex7",
-                                                            robot, cost, constraints, T, N, num_proc);
-  parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
-  parnmpc_benchmarker.testConvergence(t, q, v, 30, false);
-  parnmpc_benchmarker.testCPUTime(t, q, v, 1000);
+  // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for task-space control of cranex7",
+  //                                                           robot, cost, constraints, T, N, num_proc);
+  // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
+  // parnmpc_benchmarker.testConvergence(t, q, v, 30, false);
+  // parnmpc_benchmarker.testCPUTime(t, q, v, 1000);
 }
 
 

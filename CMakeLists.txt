@@ -89,7 +89,10 @@ add_library(
   src/ocp/split_ocp.cpp
   src/ocp/split_temporary_solution.cpp
   src/ocp/contact_sequence.cpp
-  src/ocp/ocp.cpp
+  # src/ocp/ocp.cpp
+  # src/ocp/riccati_constraint_solution.cpp
+  # src/ocp/pure_state_equality_constraints.cpp
+  src/ocp/backward_correction.cpp
   # src/ocp/split_parnmpc.cpp
   # src/ocp/parnmpc.cpp
   # src/ocp/mpc.cpp

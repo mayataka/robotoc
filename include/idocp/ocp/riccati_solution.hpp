@@ -24,7 +24,18 @@ public:
       Pvq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Pvv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       sq(Eigen::VectorXd::Zero(robot.dimv())),
-      sv(Eigen::VectorXd::Zero(robot.dimv())) {
+      sv(Eigen::VectorXd::Zero(robot.dimv())),
+      BGinvBt(),
+      Gmm(),
+      N() {
+    if (robot.max_point_contacts() > 0) {
+      BGinvBt.resize(2*robot.dimv(), 2*robot.dimv());
+      BGinvBt.setZero();
+      Gmm.resize(2*robot.dimv(), 2*robot.dimv());
+      Gmm.setZero();
+      N.resize(2*robot.dimv(), 2*robot.dimv());
+      N.setZero();
+    }
   }
 
   ///
@@ -36,7 +47,10 @@ public:
       Pvq(),
       Pvv(),
       sq(),
-      sv() {
+      sv(),
+      BGinvBt(),
+      Gmm(),
+      N() {
   }
 
   ///
@@ -100,6 +114,27 @@ public:
   /// Robot::dimv().
   ///
   Eigen::VectorXd sv;
+
+  ///
+  /// @brief Riccati factorization for pure-state equality constraints. 
+  /// Size is 2 * Robot::dimv() x 2 * Robot::dimv() if the robot can have
+  /// contacts. Size is 0 x 0 otherwise.
+  ///
+  Eigen::MatrixXd BGinvBt;
+
+  ///
+  /// @brief Riccati factorization for pure-state equality constraints. 
+  /// Size is 2 * Robot::dimv() x 2 * Robot::dimv() if the robot can have
+  /// contacts. Size is 0 x 0 otherwise.
+  ///
+  Eigen::MatrixXd Gmm;
+
+  ///
+  /// @brief Riccati factorization for pure-state equality constraints. 
+  /// Size is 2 * Robot::dimv() x 2 * Robot::dimv() if the robot can have
+  /// contacts. Size is 0 x 0 otherwise.
+  ///
+  Eigen::MatrixXd N;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
