@@ -7,7 +7,7 @@
 
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
-#include "idocp/robot/discrete_event.hpp"
+#include "idocp/ocp/discrete_event.hpp"
 
 
 namespace idocp {
@@ -28,138 +28,79 @@ protected:
 
 
 TEST_F(DiscreteEventTest, constructor) {
-  DiscreteEvent impulse_status(max_point_contacts);
+  DiscreteEvent discrete_event(max_point_contacts);
+  EXPECT_EQ(discrete_event.max_point_contacts(), max_point_contacts);
+  EXPECT_FALSE(discrete_event.hasDiscreteEvent());
+  EXPECT_FALSE(discrete_event.hasImpulse());
+  EXPECT_FALSE(discrete_event.hasLift());
+  EXPECT_DOUBLE_EQ(discrete_event.eventTime(), 0);
   ContactStatus contact_status(max_point_contacts);
-  EXPECT_EQ(contact_status.max_point_contacts(), impulse_status.max_point_contacts());
-  EXPECT_EQ(contact_status.num_active_contacts(), impulse_status.num_active_impulse());
-  EXPECT_FALSE(impulse_status.hasActiveImpulse());
-  EXPECT_EQ(impulse_status.dimp(), 0);
-  for (int i=0; i<contact_status.max_point_contacts(); ++i) {
-    EXPECT_FALSE(impulse_status.isImpulseActive(i));
-  }
+  EXPECT_EQ(contact_status.num_active_contacts(), 0);
+  discrete_event.act(contact_status);
+  EXPECT_EQ(contact_status.num_active_contacts(), 0);
+  const double event_time = 10;
+  discrete_event.setEventTime(event_time);
+  EXPECT_DOUBLE_EQ(event_time, discrete_event.eventTime());
 }
 
 
-TEST_F(DiscreteEventTest, comparison) {
-  DiscreteEvent impulse_status1(max_point_contacts);
-  DiscreteEvent impulse_status2(max_point_contacts);
-  impulse_status1.activateImpulse({5, 6, 7});
-  EXPECT_FALSE(impulse_status1 == impulse_status2);
-  impulse_status2.activateImpulse({1, 2, 3});
-  EXPECT_FALSE(impulse_status1 == impulse_status2);
-  impulse_status1.activateImpulse({1, 2, 3});
-  EXPECT_FALSE(impulse_status1 == impulse_status2);
-  impulse_status2.activateImpulse({5, 6, 7});
-  EXPECT_FALSE(impulse_status1 == impulse_status2);
+TEST_F(DiscreteEventTest, impulse) {
+  DiscreteEvent discrete_event(max_point_contacts);
+  ContactStatus cs_before(max_point_contacts), cs_after(max_point_contacts);
+  cs_before.activateContacts({1, 2, 3});
+  cs_after.activateContacts({1, 2, 3, 4, 5, 6});
+  discrete_event.setDiscreteEvent(cs_before, cs_after);
+  EXPECT_EQ(discrete_event.max_point_contacts(), max_point_contacts);
+  EXPECT_TRUE(discrete_event.hasDiscreteEvent());
+  EXPECT_TRUE(discrete_event.hasImpulse());
+  EXPECT_FALSE(discrete_event.hasLift());
+  EXPECT_DOUBLE_EQ(discrete_event.eventTime(), 0);
+  discrete_event.act(cs_before);
+  EXPECT_TRUE(cs_before == cs_after);
+  discrete_event.disableDiscreteEvent();
+  EXPECT_FALSE(discrete_event.hasDiscreteEvent());
+  EXPECT_FALSE(discrete_event.hasImpulse());
+  EXPECT_FALSE(discrete_event.hasLift());
 }
 
 
-TEST_F(DiscreteEventTest, activate) {
-  DiscreteEvent impulse_status(max_point_contacts);
-  ContactStatus contact_status(max_point_contacts);
-  contact_status.activateContact(3);
-  impulse_status.activateImpulse(3);
-  EXPECT_EQ(contact_status.num_active_contacts(), impulse_status.num_active_impulse());
-  EXPECT_TRUE(contact_status.hasActiveContacts());
-  EXPECT_TRUE(impulse_status.hasActiveImpulse());
-  EXPECT_EQ(contact_status.dimf(), 3);
-  EXPECT_EQ(contact_status.dimf(), impulse_status.dimp());
-  for (int i=0; i<3; ++i) {
-    EXPECT_FALSE(contact_status.isContactActive(i));
-    EXPECT_FALSE(impulse_status.isImpulseActive(i));
-  }
-  EXPECT_TRUE(contact_status.isContactActive(3));
-  EXPECT_TRUE(impulse_status.isImpulseActive(3));
-  for (int i=4; i<contact_status.max_point_contacts(); ++i) {
-    EXPECT_FALSE(contact_status.isContactActive(i));
-    EXPECT_FALSE(impulse_status.isImpulseActive(i));
-  }
-  contact_status.activateContacts({5, 6});
-  impulse_status.activateImpulse({5, 6});
-  EXPECT_EQ(contact_status.num_active_contacts(), 3);
-  EXPECT_EQ(contact_status.num_active_contacts(), impulse_status.num_active_impulse());
-  EXPECT_TRUE(contact_status.hasActiveContacts());
-  EXPECT_TRUE(impulse_status.hasActiveImpulse());
-  EXPECT_EQ(contact_status.dimf(), 9);
-  EXPECT_EQ(contact_status.dimf(), impulse_status.dimp());
-  for (int i=0; i<3; ++i) {
-    EXPECT_FALSE(contact_status.isContactActive(i));
-    EXPECT_FALSE(impulse_status.isImpulseActive(i));
-  }
-  EXPECT_TRUE(contact_status.isContactActive(3));
-  EXPECT_TRUE(impulse_status.isImpulseActive(3));
-  EXPECT_FALSE(contact_status.isContactActive(4));
-  EXPECT_FALSE(impulse_status.isImpulseActive(4));
-  EXPECT_TRUE(contact_status.isContactActive(5));
-  EXPECT_TRUE(impulse_status.isImpulseActive(5));
-  EXPECT_TRUE(contact_status.isContactActive(6));
-  EXPECT_TRUE(impulse_status.isImpulseActive(6));
-  for (int i=7; i<contact_status.max_point_contacts(); ++i) {
-    EXPECT_FALSE(contact_status.isContactActive(i));
-    EXPECT_FALSE(impulse_status.isImpulseActive(i));
-  }
+TEST_F(DiscreteEventTest, lift) {
+  DiscreteEvent discrete_event(max_point_contacts);
+  ContactStatus cs_before(max_point_contacts), cs_after(max_point_contacts);
+  cs_before.activateContacts({1, 2, 3, 4, 5, 6});
+  cs_after.activateContacts({1, 2, 3});
+  discrete_event.setDiscreteEvent(cs_before, cs_after);
+  EXPECT_EQ(discrete_event.max_point_contacts(), max_point_contacts);
+  EXPECT_TRUE(discrete_event.hasDiscreteEvent());
+  EXPECT_FALSE(discrete_event.hasImpulse());
+  EXPECT_TRUE(discrete_event.hasLift());
+  EXPECT_DOUBLE_EQ(discrete_event.eventTime(), 0);
+  discrete_event.act(cs_before);
+  EXPECT_TRUE(cs_before == cs_after);
+  discrete_event.disableDiscreteEvent();
+  EXPECT_FALSE(discrete_event.hasDiscreteEvent());
+  EXPECT_FALSE(discrete_event.hasImpulse());
+  EXPECT_FALSE(discrete_event.hasLift());
 }
 
 
-TEST_F(DiscreteEventTest, deactivate) {
-  DiscreteEvent impulse_status(max_point_contacts);
-  ContactStatus contact_status(max_point_contacts);
-  contact_status.setContactStatus(std::vector<bool>(max_point_contacts, true));
-  impulse_status.setDiscreteEvent(std::vector<bool>(max_point_contacts, true));
-  EXPECT_EQ(contact_status.max_point_contacts(), max_point_contacts);
-  EXPECT_EQ(contact_status.num_active_contacts(), max_point_contacts);
-  EXPECT_EQ(impulse_status.max_point_contacts(), max_point_contacts);
-  EXPECT_EQ(impulse_status.num_active_impulse(), max_point_contacts);
-  EXPECT_TRUE(contact_status.hasActiveContacts());
-  EXPECT_TRUE(impulse_status.hasActiveImpulse());
-  EXPECT_EQ(contact_status.dimf(), 3*max_point_contacts);
-  EXPECT_EQ(impulse_status.dimp(), 3*max_point_contacts);
-  for (int i=0; i<contact_status.max_point_contacts(); ++i) {
-    EXPECT_TRUE(contact_status.isContactActive(i));
-    EXPECT_TRUE(impulse_status.isImpulseActive(i));
-  }
-  contact_status.deactivateContact(3);
-  impulse_status.deactivateImpulse(3);
-  EXPECT_EQ(contact_status.num_active_contacts(), max_point_contacts-1);
-  EXPECT_EQ(impulse_status.num_active_impulse(), max_point_contacts-1);
-  EXPECT_TRUE(contact_status.hasActiveContacts());
-  EXPECT_TRUE(impulse_status.hasActiveImpulse());
-  EXPECT_EQ(contact_status.dimf(), 3*max_point_contacts-3);
-  EXPECT_EQ(impulse_status.dimp(), 3*max_point_contacts-3);
-  for (int i=0; i<3; ++i) {
-    EXPECT_TRUE(contact_status.isContactActive(i));
-    EXPECT_TRUE(impulse_status.isImpulseActive(i));
-  }
-  EXPECT_FALSE(contact_status.isContactActive(3));
-  EXPECT_FALSE(impulse_status.isImpulseActive(3));
-  for (int i=4; i<contact_status.max_point_contacts(); ++i) {
-    EXPECT_TRUE(contact_status.isContactActive(i));
-    EXPECT_TRUE(impulse_status.isImpulseActive(i));
-  }
-  contact_status.deactivateContacts({5, 6});
-  impulse_status.deactivateImpulse({5, 6});
-  EXPECT_EQ(contact_status.num_active_contacts(), max_point_contacts-3);
-  EXPECT_EQ(impulse_status.num_active_impulse(), max_point_contacts-3);
-  EXPECT_TRUE(contact_status.hasActiveContacts());
-  EXPECT_TRUE(impulse_status.hasActiveImpulse());
-  EXPECT_EQ(contact_status.dimf(), 3*max_point_contacts-9);
-  EXPECT_EQ(impulse_status.dimp(), 3*max_point_contacts-9);
-  for (int i=0; i<3; ++i) {
-    EXPECT_TRUE(contact_status.isContactActive(i));
-    EXPECT_TRUE(impulse_status.isImpulseActive(i));
-  }
-  EXPECT_FALSE(contact_status.isContactActive(3));
-  EXPECT_FALSE(impulse_status.isImpulseActive(3));
-  EXPECT_TRUE(contact_status.isContactActive(4));
-  EXPECT_TRUE(impulse_status.isImpulseActive(4));
-  EXPECT_FALSE(contact_status.isContactActive(5));
-  EXPECT_FALSE(impulse_status.isImpulseActive(5));
-  EXPECT_FALSE(contact_status.isContactActive(6));
-  EXPECT_FALSE(impulse_status.isImpulseActive(6));
-  for (int i=7; i<contact_status.max_point_contacts(); ++i) {
-    EXPECT_TRUE(contact_status.isContactActive(i));
-    EXPECT_TRUE(impulse_status.isImpulseActive(i));
-  }
+TEST_F(DiscreteEventTest, impulseAndLift) {
+  DiscreteEvent discrete_event(max_point_contacts);
+  ContactStatus cs_before(max_point_contacts), cs_after(max_point_contacts);
+  cs_before.activateContacts({1, 2, 3, 6, 7});
+  cs_after.activateContacts({3, 5, 6, 7, 8, 9});
+  discrete_event.setDiscreteEvent(cs_before, cs_after);
+  EXPECT_EQ(discrete_event.max_point_contacts(), max_point_contacts);
+  EXPECT_TRUE(discrete_event.hasDiscreteEvent());
+  EXPECT_TRUE(discrete_event.hasImpulse());
+  EXPECT_TRUE(discrete_event.hasLift());
+  EXPECT_DOUBLE_EQ(discrete_event.eventTime(), 0);
+  discrete_event.act(cs_before);
+  EXPECT_TRUE(cs_before == cs_after);
+  discrete_event.disableDiscreteEvent();
+  EXPECT_FALSE(discrete_event.hasDiscreteEvent());
+  EXPECT_FALSE(discrete_event.hasImpulse());
+  EXPECT_FALSE(discrete_event.hasLift());
 }
 
 } // namespace idocp

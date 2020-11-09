@@ -1,7 +1,7 @@
 #ifndef IDOCP_DISCRETE_EVENT_HXX_
 #define IDOCP_DISCRETE_EVENT_HXX_
 
-#include "idocp/robot/discrete_event.hpp"
+#include "idocp/ocp/discrete_event.hpp"
 
 #include <cassert>
 
@@ -54,7 +54,7 @@ inline bool DiscreteEvent::hasLift() const {
 }
 
 
-inline bool DiscreteEvent::eventTime() const {
+inline double DiscreteEvent::eventTime() const {
   return time_;
 }
 
@@ -62,7 +62,7 @@ inline bool DiscreteEvent::eventTime() const {
 inline void DiscreteEvent::act(ContactStatus& contact_status) const {
   assert(contact_status.max_point_contacts() == max_point_contacts_);
   assert(contact_status == contact_status_before_);
-  contact_status.isContactActive() = contact_status_after_.isContactActive();
+  contact_status.setContactStatus(contact_status_after_.isContactActive());
 }
 
 
@@ -91,7 +91,8 @@ inline void DiscreteEvent::setDiscreteEvent(
       }
     }
   }
-  contact_status_after_ = contact_status_after;
+  contact_status_before_.setContactStatus(contact_status_before.isContactActive());
+  contact_status_after_.setContactStatus(contact_status_after.isContactActive());
 }
 
 

@@ -52,6 +52,9 @@ inline void ContactSequence::setContactStatusUniformly(
   for (auto e : contact_sequence_) {
     e.isContactActive() = contact_status.isContactActive();
   }
+  for (auto e : discrete_event_sequence_) {
+    e.disableDiscreteEvent();
+  }
 }
 
 

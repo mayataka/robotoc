@@ -20,6 +20,9 @@ class ContactSequence {
 public:
   ///
   /// @brief Constructor. 
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] T Length of the horizon. Must be positive.
+  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
   ///
   ContactSequence(const Robot& robot, const double T, const int N);
 
@@ -53,6 +56,10 @@ public:
   ///
   ContactSequence& operator=(ContactSequence&&) noexcept = default;
 
+  ///
+  /// @brief Set all of the contact status uniformly. Also, disable all of the 
+  /// discrete events.
+  ///
   void setContactStatusUniformly(const ContactStatus& contact_status);
 
   void setDiscreteEvent(const DiscreteEvent& discrete_event);
@@ -64,6 +71,7 @@ public:
 
   void shiftDiscreteEvent(const int time_stage, const int shit_time_stages);
 
+  void removeDiscreteEvent(const int time_stage);
 
   ///
   /// @brief Deactivate contacts over specified time steps 

@@ -121,4 +121,6 @@ private:
 
 } // namespace idocp
 
+#include "idocp/ocp/discrete_event.hxx"
+
 #endif // IDOCP_DISCRETE_EVENT_HPP_
