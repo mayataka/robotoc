@@ -59,34 +59,64 @@ public:
   ///
   /// @brief Set all of the contact status uniformly. Also, disable all of the 
   /// discrete events.
+  /// @param[in] contact_status Contact status.
   ///
   void setContactStatusUniformly(const ContactStatus& contact_status);
 
+  ///
+  /// @brief Set the discrete event. Contact status after discrete event is also
+  /// uniformly changed by discrete_event. To determine the event time and 
+  /// stage, discrete_event.eventTime() is internally called. Hence, set the 
+  /// time by discrete_event.setEventTime().
+  /// @param[in] discrete_event Discrete event.
+  ///
   void setDiscreteEvent(const DiscreteEvent& discrete_event);
 
-  void setDiscreteEvent(const int time_stage, 
-                        const DiscreteEvent& discrete_event);
-
-  void shiftDiscreteEvent(const int time_stage, const double shift_event_time);
-
-  void shiftDiscreteEvent(const int time_stage, const int shit_time_stages);
-
-  void removeDiscreteEvent(const int time_stage);
+  ///
+  /// @brief Shift the discrete event. 
+  /// @param[in] time_stage Time stage where the discrete event of interest 
+  /// occurs.
+  /// @param[in] shifted_event_time Time after shifted.
+  ///
+  void shiftDiscreteEvent(const int time_stage, 
+                          const double shifted_event_time);
 
   ///
-  /// @brief Deactivate contacts over specified time steps 
-  /// (from time_stage_begin to time_stage_end). 
-  /// @param[in] time_stage Last time stage. 
+  /// @brief Getter of the contact status. 
+  /// @param[in] time_stage Time stage of interest.
+  /// @return const reference to the contact status.
   ///
   const ContactStatus& contactStatus(const int time_stage) const;
 
+  ///
+  /// @brief Getter of the impulse status. 
+  /// @param[in] time_stage Time stage of interest.
+  /// @return const reference to the impulse status.
+  ///
   const ImpulseStatus& impulseStatus(const int time_stage) const;
 
-  bool hasDiscreteEvent(const int time_stage) const;
+  ///
+  /// @brief Returns true if discrete event exists over time_stage. Returns 
+  /// false if not.
+  /// @param[in] time_stage Time stage of interested.
+  /// @return true if discrete event exists over time_stage. false if not.
+  ///
+  bool existDiscreteEvent(const int time_stage) const;
 
-  bool hasImpulse(const int time_stage) const;
+  ///
+  /// @brief Returns true if impulse exists over time_stage. Returns false if
+  /// not.
+  /// @param[in] time_stage Time stage of interested.
+  /// @return true if impulse exists over time_stage. false if not.
+  ///
+  bool existImpulse(const int time_stage) const;
 
-  bool hasLift(const int time_stage) const;
+  ///
+  /// @brief Returns true if lift exists over time_stage. Returns false if not.
+  /// @param[in] time_stage Time stage of interested.
+  /// @return true if lift exists over time_stage. false if not.
+  ///
+  bool existLift(const int time_stage) const;
 
 private:
   int max_point_contacts_, N_;
@@ -94,7 +124,6 @@ private:
   std::vector<ContactStatus> contact_sequence_;
   std::vector<DiscreteEvent> discrete_event_sequence_;
 
-  void setContactSequenceFromDiscreteEvent(const int time_stage_begin);
 };
 
 } // namespace idocp 

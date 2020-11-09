@@ -1,8 +1,6 @@
 #include "idocp/robot/robot.hpp"
 
-#include <limits>
 #include <stdexcept>
-#include <assert.h>
 
 
 namespace idocp {

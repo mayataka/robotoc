@@ -1,7 +1,5 @@
 #include "idocp/robot/floating_base.hpp"
 
-#include <assert.h>
-
 
 namespace idocp {
 

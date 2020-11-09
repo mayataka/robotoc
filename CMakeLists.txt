@@ -89,7 +89,7 @@ add_library(
   src/ocp/terminal_ocp.cpp
   src/ocp/split_temporary_solution.cpp
   src/ocp/discrete_event.cpp
-  # src/ocp/contact_sequence.cpp
+  src/ocp/contact_sequence.cpp
   # src/ocp/ocp.cpp
   # src/ocp/riccati_constraint_solution.cpp
   # src/ocp/pure_state_equality_constraints.cpp

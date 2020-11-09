@@ -66,6 +66,13 @@ inline void DiscreteEvent::act(ContactStatus& contact_status) const {
 }
 
 
+inline void DiscreteEvent::actInv(ContactStatus& contact_status) const {
+  assert(contact_status.max_point_contacts() == max_point_contacts_);
+  assert(contact_status == contact_status_after_);
+  contact_status.setContactStatus(contact_status_before_.isContactActive());
+}
+
+
 inline void DiscreteEvent::setDiscreteEvent(
     const ContactStatus& contact_status_before, 
     const ContactStatus& contact_status_after) {

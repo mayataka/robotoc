@@ -82,9 +82,18 @@ public:
   ///
   /// @brief Act on the contact status and change it according to this discrete 
   /// event.
-  /// @param[in] Contact status. Must be consistent with this discrete event. 
+  /// @param[in] contact_status Contact status. Must be consistent with this 
+  /// discrete event. 
   ///
   void act(ContactStatus& contact_status) const;
+
+  ///
+  /// @brief Act inversly on the contact status and change it according to this 
+  /// discrete  event.
+  /// @param[in] contact_status Contact status. Must be consistent with this 
+  /// discrete event. 
+  ///
+  void actInv(ContactStatus& contact_status) const;
 
   ///
   /// @brief Set the contact status from two sequential contact status.
