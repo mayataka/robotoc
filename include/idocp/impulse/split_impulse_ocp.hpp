@@ -32,8 +32,8 @@ public:
   ///
   /// @brief Construct a split optimal control problem.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] cost Shared ptr to the cost function.
-  /// @param[in] constraints Shared ptr to the constraints.
+  /// @param[in] cost Shared ptr to the impulse cost function.
+  /// @param[in] constraints Shared ptr to the impulse constraints.
   ///
   SplitImpulseOCP(const Robot& robot, 
                   const std::shared_ptr<ImpulseCostFunction>& cost,
@@ -117,9 +117,10 @@ public:
                                SplitDirection& d_next);
 
   ///
-  /// @brief Computes the Newton direction of the condensed variables of this 
-  /// stage.
+  /// @brief Computes the Newton direction of the condensed primal variables of 
+  /// this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] riccati Riccati factorization of this stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] d Split direction of this stage.
   /// 
@@ -128,6 +129,13 @@ public:
                                        const ImpulseSplitSolution& s, 
                                        ImpulseSplitDirection& d);
 
+  ///
+  /// @brief Computes the Newton direction of the condensed dual variables of 
+  /// this stage.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] d_next Split direction of the next stage.
+  /// @param[in] d Split direction of this stage.
+  /// 
   void computeCondensedDualDirection(Robot& robot, 
                                      const SplitDirection& d_next, 
                                      ImpulseSplitDirection& d);
@@ -158,7 +166,6 @@ public:
   /// @brief Updates primal variables of this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] primal_step_size Primal step size of the OCP. 
-  /// @param[in] riccati Riccati factorization of this stage.
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
   ///
@@ -192,7 +199,6 @@ public:
   /// @brief Computes the stage cost of this stage for line search.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @param[in] primal_step_size Primal step size of the OCP. Default is 0.
   /// @return Stage cost of this stage.
@@ -204,9 +210,8 @@ public:
   /// @brief Computes and returns the constraint violation of the OCP at this 
   /// stage for line search.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
+  /// @param[in] impulse_status Impulse status of robot at this stage. 
   /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @param[in] q_next Configuration at the next stage.
   /// @param[in] v_next Generaized velocity at the next stage.

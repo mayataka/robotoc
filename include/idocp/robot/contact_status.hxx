@@ -16,6 +16,16 @@ inline ContactStatus::ContactStatus(const int max_point_contacts)
 }
 
 
+inline ContactStatus::ContactStatus(const std::vector<bool>& is_contact_active)
+  : is_contact_active_(is_contact_active),
+    dimf_(0),
+    max_point_contacts_(is_contact_active.size()),
+    num_active_contacts_(0),
+    has_active_contacts_(false) {
+  setContactStatus(is_contact_active);
+}
+
+
 inline ContactStatus::ContactStatus() 
   : is_contact_active_(),
     dimf_(0),
@@ -26,6 +36,22 @@ inline ContactStatus::ContactStatus()
  
 
 inline ContactStatus::~ContactStatus() {
+}
+
+
+inline bool ContactStatus::operator==(const ContactStatus& other) const {
+  assert(other.max_point_contacts() == max_point_contacts_);
+  for (int i=0; i<max_point_contacts_; ++i) {
+    if (other.isContactActive(i) != isContactActive(i)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+inline bool ContactStatus::operator!=(const ContactStatus& other) const {
+  return !(*this == other);
 }
 
 

@@ -85,15 +85,17 @@ add_library(
   src/ocp/riccati_solution.cpp
   src/ocp/riccati_gain.cpp
   src/ocp/riccati_factorizer.cpp
-  src/ocp/terminal_ocp.cpp
   src/ocp/split_ocp.cpp
+  src/ocp/terminal_ocp.cpp
   src/ocp/split_temporary_solution.cpp
-  src/ocp/contact_sequence.cpp
+  src/ocp/discrete_event.cpp
+  # src/ocp/contact_sequence.cpp
   # src/ocp/ocp.cpp
   # src/ocp/riccati_constraint_solution.cpp
   # src/ocp/pure_state_equality_constraints.cpp
   src/ocp/backward_correction.cpp
-  # src/ocp/split_parnmpc.cpp
+  src/ocp/split_parnmpc.cpp
+  src/ocp/terminal_parnmpc.cpp
   # src/ocp/parnmpc.cpp
   # src/ocp/mpc.cpp
   # src/utils/joint_constraints_factory.cpp

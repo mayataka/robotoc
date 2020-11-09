@@ -4,15 +4,23 @@
 #include "idocp/ocp/contact_sequence.hpp"
 
 #include <stdexcept>
-#include <assert.h>
+#include <cassert>
+#include <cmath>
 
 namespace idocp {
 
-inline ContactSequence::ContactSequence(const Robot& robot, const int N)
+inline ContactSequence::ContactSequence(const Robot& robot, const double T, 
+                                        const int N)
   : max_point_contacts_(robot.max_point_contacts()),
     N_(N),
-    contact_sequence_(N, ContactStatus(robot.max_point_contacts())) {
+    T_(T),
+    dtau_(T/N),
+    contact_sequence_(N, ContactStatus(robot.max_point_contacts())),
+    discrete_event_sequence_(N, DiscreteEvent(robot.max_point_contacts())) {
   try {
+    if (T <= 0) {
+      throw std::out_of_range("invalid value: T must be positive!");
+    }
     if (N <= 0) {
       throw std::out_of_range("invalid value: N must be positive!");
     }
@@ -27,7 +35,10 @@ inline ContactSequence::ContactSequence(const Robot& robot, const int N)
 inline ContactSequence::ContactSequence()
   : max_point_contacts_(0),
     N_(0),
-    contact_sequence_() {
+    T_(0),
+    dtau_(0),
+    contact_sequence_(),
+    discrete_event_sequence_() {
 }
 
 
@@ -35,61 +46,51 @@ inline ContactSequence::~ContactSequence() {
 }
 
 
-inline void ContactSequence::activateContact(const int contact_index, 
-                                             const int time_stage_begin, 
-                                             const int time_stage_end) {
-  assert(contact_index >= 0);
-  assert(contact_index < max_point_contacts_);
-  assert(time_stage_begin >= 0);
-  assert(time_stage_begin < N_-1);
-  assert(time_stage_end > time_stage_begin);
-  assert(time_stage_end <= N_);
-  for (int i=time_stage_begin; i<time_stage_end; ++i) {
-    contact_sequence_[i].activateContact(contact_index);
+inline void ContactSequence::setContactStatusUniformly(
+    const ContactStatus& contact_status) {
+  assert(contact_status.max_point_contacts() == max_point_contacts_);
+  for (auto e : contact_sequence_) {
+    e.isContactActive() = contact_status.isContactActive();
   }
 }
 
 
-inline void ContactSequence::deactivateContact(const int contact_index, 
-                                               const int time_stage_begin, 
-                                               const int time_stage_end) {
-  assert(contact_index >= 0);
-  assert(contact_index < max_point_contacts_);
-  assert(time_stage_begin >= 0);
-  assert(time_stage_begin < N_-1);
-  assert(time_stage_end > time_stage_begin);
-  assert(time_stage_end <= N_);
-  for (int i=time_stage_begin; i<time_stage_end; ++i) {
-    contact_sequence_[i].deactivateContact(contact_index);
+inline void ContactSequence::setDiscreteEvent(
+    const DiscreteEvent& discrete_event) {
+  assert(discrete_event.eventTime() > 0);
+  assert(discrete_event.eventTime() < T_);
+  assert(discrete_event.hasDiscreteEvent());
+  const int time_stage = std::floor(discrete_event.eventTime()/dtau_);
+  setDiscreteEvent(time_stage, discrete_event);
+}
+
+
+inline void ContactSequence::setDiscreteEvent(
+    const int time_stage, const DiscreteEvent& discrete_event) {
+  assert(time_stage >= 0);
+  assert(time_stage < N_);
+  assert(discrete_event.hasDiscreteEvent());
+  discrete_event_sequence_[time_stage] = discrete_event;
+  for (int i=time_stage+1; i<N_; ++i) {
+    discrete_event.act(contact_sequence_[i]);
+    discrete_event_sequence_[i+1].disableDiscreteEvent();
   }
 }
 
 
-inline void ContactSequence::activateContacts(
-    const std::vector<int>& contact_indices, const int time_stage_begin, 
-    const int time_stage_end) {
-  assert(contact_indices.size() <= max_point_contacts_);
-  assert(time_stage_begin >= 0);
-  assert(time_stage_begin < N_);
-  assert(time_stage_end > time_stage_begin);
-  assert(time_stage_end <= N_);
-  for (int i=time_stage_begin; i<time_stage_end; ++i) {
-    contact_sequence_[i].activateContacts(contact_indices);
-  }
+inline void ContactSequence::shiftDiscreteEvent(const int time_stage, 
+                                                const double shift_event_time) {
+  assert(time_stage >= 0);
+  assert(time_stage < N_);
+  discrete_event_sequence_[time_stage] = discrete_event;
 }
 
 
-inline void ContactSequence::deactivateContacts(
-    const std::vector<int>& contact_indices, const int time_stage_begin, 
-    const int time_stage_end) {
-  assert(contact_indices.size() <= max_point_contacts_);
-  assert(time_stage_begin >= 0);
-  assert(time_stage_begin < N_);
-  assert(time_stage_end > time_stage_begin);
-  assert(time_stage_end <= N_);
-  for (int i=time_stage_begin; i<time_stage_end; ++i) {
-    contact_sequence_[i].deactivateContacts(contact_indices);
-  }
+inline void ContactSequence::shiftDiscreteEvent(const int time_stage, 
+                                                const int shift_time_stages) {
+  assert(time_stage >= 0);
+  assert(time_stage < N_);
+  discrete_event_sequence_[time_stage] = discrete_event;
 }
 
 
@@ -98,6 +99,43 @@ inline const ContactStatus& ContactSequence::contactStatus(
   assert(time_stage >= 0);
   assert(time_stage < N_);
   return contact_sequence_[time_stage];
+}
+
+
+inline const ImpulseStatus& ContactSequence::impulseStatus(
+    const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage < N_);
+  return discrete_event_sequence_[time_stage].impulseStatus();
+}
+
+
+inline bool ContactSequence::hasDiscreteEvent(const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage < N_);
+  return (hasImpulse(time_stage) || hasLift(time_stage));
+}
+
+
+inline bool ContactSequence::hasImpulse(const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage < N_);
+  return discrete_event_sequence_[time_stage].hasImpulse();
+}
+
+
+inline bool ContactSequence::hasLift(const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage < N_);
+  return discrete_event_sequence_[time_stage].hasLift();
+}
+
+
+inline void ContactSequence::setContactSequenceFromDiscreteEvent(
+    const int time_stage_begin) {
+  for (int i=time_stage_begin; i<N_; ++i) {
+
+  }
 }
 
 } // namespace idocp 

@@ -14,6 +14,7 @@
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
+#include "idocp/constraints/constraints_data.hpp"
 #include "idocp/ocp/state_equation.hpp"
 // #include "idocp/ocp/robot_dynamics.hpp"
 #include "idocp/ocp/contact_dynamics.hpp"

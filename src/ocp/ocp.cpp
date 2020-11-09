@@ -109,8 +109,11 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
                          const Eigen::VectorXd& v, const bool use_line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
+  const int N_impulse = contact_sequence_.numImpulse();
+  const int N_lift = contact_sequence_.numLifts();
+  const int N = N_ + N_impulse + N_lift;
   #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N_; ++i) {
+  for (int i=0; i<=N; ++i) {
     if (i == 0) {
       const int robot_id = omp_get_thread_num();
       split_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.contactStatus(i), 
@@ -121,14 +124,34 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
       split_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.contactStatus(i), 
                                   t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
     }
-    else {
+    else if (i == N_) {
       const int robot_id = omp_get_thread_num();
       terminal_ocp_.linearizeOCP(robots_[robot_id], t+T_, s_[N_]);
       terminal_ocp_.backwardRiccatiRecursion(riccati_[N_]);
     }
+    else if (i < N_+N_impulse) {
+      const int robot_id = omp_get_thread_num();
+      split_impulse_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.impulseStatus(i+1), 
+                                          t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
+    }
+    else {
+      const int robot_id = omp_get_thread_num();
+      split_lift_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.impulseStatus(i+1), 
+                                       t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
+        
+    }
   }
   for (int i=N_-1; i>=0; --i) {
-    split_ocps_[i].backwardRiccatiRecursion(dtau_, riccati_[i+1], riccati_[i]);
+    if (contact_sequence_.hasImpulse(i)) {
+      split_ocps_[i].backwardRiccatiRecursion(dtau_, riccati_[i+1], riccati_[i]);
+
+    }
+    else if (contact_sequence_.hasLifts(i)) {
+
+    }
+    else {
+      split_ocps_[i].backwardRiccatiRecursion(dtau_, riccati_[i+1], riccati_[i]);
+    }
   }
   robots_[0].subtractConfiguration(q, s_[0].q, d_[0].dq());
   d_[0].dv() = v - s_[0].v;
@@ -213,6 +236,20 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
     }
   }
 } 
+
+
+void OCP::computePrimalAndDualDirection(const double t, 
+                                        const Eigen::VectorXd& q, 
+                                        const Eigen::VectorXd& v) {
+
+}
+
+
+
+lineSearch(const double t, const Eigen::VectorXd& q, 
+                       const Eigen::VectorXd& v) {
+
+}
 
 
 const SplitSolution& OCP::getSolution(const int stage) const {

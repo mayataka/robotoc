@@ -5,6 +5,8 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
+#include "idocp/ocp/discrete_event.hpp"
 
 
 namespace idocp {
@@ -19,7 +21,7 @@ public:
   ///
   /// @brief Constructor. 
   ///
-  ContactSequence(const Robot& robot, const int N);
+  ContactSequence(const Robot& robot, const double T, const int N);
 
   ///
   /// @brief Default constructor. 
@@ -51,46 +53,17 @@ public:
   ///
   ContactSequence& operator=(ContactSequence&&) noexcept = default;
 
-  ///
-  /// @brief Activate a contact over specified time steps 
-  /// (from time_stage_begin to time_stage_end). 
-  /// @param[in] contact_index Index of a contact of interedted. 
-  /// @param[in] time_stage_begin Start time stage. 
-  /// @param[in] time_stage_end Last time stage. 
-  ///
-  void activateContact(const int contact_index, const int time_stage_begin, 
-                       const int time_stage_end);
+  void setContactStatusUniformly(const ContactStatus& contact_status);
 
-  ///
-  /// @brief Deactivate a contact over specified time steps 
-  /// (from time_stage_begin to time_stage_end). 
-  /// @param[in] contact_index Index of a contact of interedted. 
-  /// @param[in] time_stage_begin Start time stage. 
-  /// @param[in] time_stage_end Last time stage. 
-  ///
-  void deactivateContact(const int contact_index, const int time_stage_begin, 
-                         const int time_stage_end);
+  void setDiscreteEvent(const DiscreteEvent& discrete_event);
 
-  ///
-  /// @brief Activate contacts over specified time steps 
-  /// (from time_stage_begin to time_stage_end). 
-  /// @param[in] contact_indices Indices of contacts of interedted. 
-  /// @param[in] time_stage_begin Start time stage. 
-  /// @param[in] time_stage_end Last time stage. 
-  ///
-  void activateContacts(const std::vector<int>& contact_indices, 
-                        const int time_stage_begin, const int time_stage_end);
+  void setDiscreteEvent(const int time_stage, 
+                        const DiscreteEvent& discrete_event);
 
-  ///
-  /// @brief Deactivate contacts over specified time steps 
-  /// (from time_stage_begin to time_stage_end). 
-  /// @param[in] contact_indices Indices of contacts of interedted. 
-  /// @param[in] time_stage_begin Start time stage. 
-  /// @param[in] time_stage_end Last time stage. 
-  ///
-  void deactivateContacts(const std::vector<int>& contact_indices, 
-                          const int time_stage_begin, 
-                          const int time_stage_end);
+  void shiftDiscreteEvent(const int time_stage, const double shift_event_time);
+
+  void shiftDiscreteEvent(const int time_stage, const int shit_time_stages);
+
 
   ///
   /// @brief Deactivate contacts over specified time steps 
@@ -99,10 +72,21 @@ public:
   ///
   const ContactStatus& contactStatus(const int time_stage) const;
 
+  const ImpulseStatus& impulseStatus(const int time_stage) const;
+
+  bool hasDiscreteEvent(const int time_stage) const;
+
+  bool hasImpulse(const int time_stage) const;
+
+  bool hasLift(const int time_stage) const;
+
 private:
   int max_point_contacts_, N_;
+  double T_, dtau_;
   std::vector<ContactStatus> contact_sequence_;
+  std::vector<DiscreteEvent> discrete_event_sequence_;
 
+  void setContactSequenceFromDiscreteEvent(const int time_stage_begin);
 };
 
 } // namespace idocp 

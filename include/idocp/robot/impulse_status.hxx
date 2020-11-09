@@ -3,10 +3,18 @@
 
 #include "idocp/robot/impulse_status.hpp"
 
+#include <cassert>
+
+
 namespace idocp {
 
 inline ImpulseStatus::ImpulseStatus(const int max_point_contacts)
   : impulse_status_(max_point_contacts) {
+}
+
+
+inline ImpulseStatus::ImpulseStatus(const std::vector<bool>& is_impulse_active)
+  : impulse_status_(is_impulse_active) {
 }
 
 
@@ -16,6 +24,22 @@ inline ImpulseStatus::ImpulseStatus()
  
 
 inline ImpulseStatus::~ImpulseStatus() {
+}
+
+
+inline bool ImpulseStatus::operator==(const ImpulseStatus& other) const {
+  assert(other.max_point_contacts() == max_point_contacts());
+  for (int i=0; i<max_point_contacts(); ++i) {
+    if (other.isImpulseActive(i) != isImpulseActive(i)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+inline bool ImpulseStatus::operator!=(const ImpulseStatus& other) const {
+  return !(*this == other);
 }
 
 
@@ -46,6 +70,27 @@ inline int ImpulseStatus::num_active_impulse() const {
 
 inline int ImpulseStatus::max_point_contacts() const {
   return impulse_status_.max_point_contacts();
+}
+
+
+inline void ImpulseStatus::setImpulseStatus(
+    const ContactStatus& current_contact_status, 
+    const ContactStatus& next_contact_status) {
+  assert(current_contact_status.max_point_contacts() == max_point_contacts());
+  assert(next_contact_status.max_point_contacts() == max_point_contacts());
+  for (int i=0; i<impulse_status_.max_point_contacts(); ++i) {
+    if (current_contact_status.isContactActive(i)) {
+      deactivateImpulse(i);
+    }
+    else {
+      if (next_contact_status.isContactActive(i)) {
+        activateImpulse(i);
+      }
+      else {
+        deactivateImpulse(i);
+      }
+    }
+  }
 }
 
 

@@ -64,10 +64,11 @@ public:
   LineSearch& operator=(LineSearch&&) noexcept = default;
 
   template <typename OCPType>
-  double computeStepSize(const double t, const Eigen::VectorXd& q, 
-                         const Eigen::VectorXd& v, OCPType& ocp, 
+  double computeStepSize(const std::vector<SplitOCPType>& split_ocp,  
+                         const double t, const Eigen::VectorXd& q, 
+                         const Eigen::VectorXd& v, 
                          const std::vector<SplitSolution>& s,
-                         const std::vector<SplitDirection>& s,
+                         const std::vector<SplitDirection>& d,
                          const int max_iteration);
 
   template <typename OCPType, typename ImpulseOCPType, typename LiftOCPType>

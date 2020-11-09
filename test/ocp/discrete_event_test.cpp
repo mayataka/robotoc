@@ -7,11 +7,12 @@
 
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
+#include "idocp/robot/discrete_event.hpp"
 
 
 namespace idocp {
 
-class ImpulseStatusTest : public ::testing::Test {
+class DiscreteEventTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -26,8 +27,8 @@ protected:
 };
 
 
-TEST_F(ImpulseStatusTest, constructor) {
-  ImpulseStatus impulse_status(max_point_contacts);
+TEST_F(DiscreteEventTest, constructor) {
+  DiscreteEvent impulse_status(max_point_contacts);
   ContactStatus contact_status(max_point_contacts);
   EXPECT_EQ(contact_status.max_point_contacts(), impulse_status.max_point_contacts());
   EXPECT_EQ(contact_status.num_active_contacts(), impulse_status.num_active_impulse());
@@ -39,9 +40,9 @@ TEST_F(ImpulseStatusTest, constructor) {
 }
 
 
-TEST_F(ImpulseStatusTest, comparison) {
-  ImpulseStatus impulse_status1(max_point_contacts);
-  ImpulseStatus impulse_status2(max_point_contacts);
+TEST_F(DiscreteEventTest, comparison) {
+  DiscreteEvent impulse_status1(max_point_contacts);
+  DiscreteEvent impulse_status2(max_point_contacts);
   impulse_status1.activateImpulse({5, 6, 7});
   EXPECT_FALSE(impulse_status1 == impulse_status2);
   impulse_status2.activateImpulse({1, 2, 3});
@@ -49,12 +50,12 @@ TEST_F(ImpulseStatusTest, comparison) {
   impulse_status1.activateImpulse({1, 2, 3});
   EXPECT_FALSE(impulse_status1 == impulse_status2);
   impulse_status2.activateImpulse({5, 6, 7});
-  EXPECT_TRUE(impulse_status1 == impulse_status2);
+  EXPECT_FALSE(impulse_status1 == impulse_status2);
 }
 
 
-TEST_F(ImpulseStatusTest, activate) {
-  ImpulseStatus impulse_status(max_point_contacts);
+TEST_F(DiscreteEventTest, activate) {
+  DiscreteEvent impulse_status(max_point_contacts);
   ContactStatus contact_status(max_point_contacts);
   contact_status.activateContact(3);
   impulse_status.activateImpulse(3);
@@ -100,11 +101,11 @@ TEST_F(ImpulseStatusTest, activate) {
 }
 
 
-TEST_F(ImpulseStatusTest, deactivate) {
-  ImpulseStatus impulse_status(max_point_contacts);
+TEST_F(DiscreteEventTest, deactivate) {
+  DiscreteEvent impulse_status(max_point_contacts);
   ContactStatus contact_status(max_point_contacts);
   contact_status.setContactStatus(std::vector<bool>(max_point_contacts, true));
-  impulse_status.setImpulseStatus(std::vector<bool>(max_point_contacts, true));
+  impulse_status.setDiscreteEvent(std::vector<bool>(max_point_contacts, true));
   EXPECT_EQ(contact_status.max_point_contacts(), max_point_contacts);
   EXPECT_EQ(contact_status.num_active_contacts(), max_point_contacts);
   EXPECT_EQ(impulse_status.max_point_contacts(), max_point_contacts);

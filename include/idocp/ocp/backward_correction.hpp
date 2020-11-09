@@ -67,6 +67,12 @@ public:
   void forwardCorrectionParallel(SplitDirection& d, 
                                  SplitSolution& s_new) const;
 
+  static void computeDirection(const Robot& robot, const SplitSolution& s, 
+                               const SplitSolution& s_new, SplitDirection& d);
+
+  template <typename MatrixType>
+  void getAuxiliaryMatrix(const Eigen::MatrixBase<MatrixType>& aux_mat) const;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

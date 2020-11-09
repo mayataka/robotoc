@@ -1,6 +1,6 @@
 #include "idocp/ocp/split_ocp.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
@@ -72,6 +72,7 @@ void SplitOCP::linearizeOCP(Robot& robot, const ContactStatus& contact_status,
                             const SplitSolution& s, 
                             const SplitSolution& s_next) {
   assert(dtau > 0);
+  assert(q_prev.size() == robot.dimq());
   setContactStatusForKKT(contact_status);
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);

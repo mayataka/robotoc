@@ -14,6 +14,7 @@
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
+#include "idocp/constraints/constraints_data.hpp"
 #include "idocp/ocp/state_equation.hpp"
 // #include "idocp/ocp/robot_dynamics.hpp"
 #include "idocp/ocp/contact_dynamics.hpp"
@@ -106,13 +107,16 @@ public:
   ///
   /// @brief Updates the solution of the split OCP approximately. Call  
   /// linearizeOCP() or linearizeTerminalOCP() before calling this function.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] s Split solution of this stage.
   /// @param[in] aux_mat_next_old Guess of the auxiliary matrix of the next 
   /// stage. Size must be 2 * Robot::dimv() x 2 * Robot::dimv().
   /// @param[out] d Split direction of this stage.
   /// @param[out] s_new_coarse Coarse updated split splition of this stage.
   ///
-  void coarseUpdate(const Eigen::MatrixXd& aux_mat_next_old, SplitDirection& d, 
-                    SplitSolution& s_new_coarse);
+  void coarseUpdate(const Robot& robot, const SplitSolution& s, 
+                    const Eigen::MatrixXd& aux_mat_next_old, 
+                    SplitDirection& d, SplitSolution& s_new_coarse);
 
   ///
   /// @brief Gets the auxiliary matrix of this stage.
@@ -122,22 +126,9 @@ public:
   void getAuxiliaryMatrix(Eigen::MatrixXd& aux_mat) const;
 
   ///
-  /// @brief Gets the hessian of the terminal cost. Useful to initialize the 
-  /// auxiliary matrix.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] s Split solution of this stage.
-  /// @param[out] phixx The hessian of the terminal cost. The size must be 
-  /// 2 * Robot::dimv() x 2 * Robot::dimv().
-  ///
-  void getTerminalCostHessian(Robot& robot, const double t, 
-                              const SplitSolution& s, Eigen::MatrixXd& phixx);
-
-  ///
   /// @brief Corrects the part of the solution updated coarsely. Call serially 
   /// after calling coarseUpdate() or coarseUpdateTerminal() and before calling
   /// backwardCorrectionParallel().
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] s_next Split solution of the next stage at the previous 
   /// iteration.
   /// @param[in] s_new_next Split solution of the next stage at the current 
@@ -145,7 +136,7 @@ public:
   /// @param[out] s_new Split solution of the current stage at the current 
   /// iteration.
   ///
-  void backwardCorrectionSerial(const Robot& robot, const SplitSolution& s_next,
+  void backwardCorrectionSerial(const SplitSolution& s_next,
                                 const SplitSolution& s_new_next,
                                 SplitSolution& s_new);
 
@@ -181,13 +172,11 @@ public:
   /// @brief Corrects the part of the solutio updated coarsely. Call parallel 
   /// after forwardCorrectionSerial() and before calling 
   /// computePrimalAndDualDirection().
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] d Split directtion of the current stage.
   /// @param[out] s_new Split solution of the current stage at the current 
   /// iteration.
   ///
-  void forwardCorrectionParallel(const Robot& robot, SplitDirection& d, 
-                                 SplitSolution& s_new) const;
+  void forwardCorrectionParallel(SplitDirection& d, SplitSolution& s_new) const;
 
   ///
   /// @brief Computes the direction of the primal and dual solution. Call after 
@@ -223,19 +212,20 @@ public:
   ///
   /// @brief Updates primal variables of this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] step_size Primal step size of the OCP. 
+  /// @param[in] primal_step_size Primal step size of the OCP. 
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
   ///
-  void updatePrimal(Robot& robot, const double step_size, const double dtau, 
-                    const SplitDirection& d, SplitSolution& s);
+  void updatePrimal(Robot& robot, const double primal_step_size, 
+                    const double dtau, const SplitDirection& d, 
+                    SplitSolution& s);
 
   ///
   /// @brief Updates dual variables of the inequality constraints.
-  /// @param[in] step_size Dula step size of the OCP. 
+  /// @param[in] dual_step_size Dula step size of the OCP. 
   ///
-  void updateDual(const double step_size);
+  void updateDual(const double dual_step_size);
 
   ///
   /// @brief Computes the KKT residual of the OCP at this stage.
@@ -243,9 +233,10 @@ public:
   /// @param[in] contact_status Contact status of robot at this stage. 
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] q_prev Configuration of the previous stage.
-  /// @param[in] v_prev Velocity of the previous stage.
+  /// @param[in] q_prev Configuration of the previous stage. Size must be 
+  /// Robot::dimq().
+  /// @param[in] v_prev Velocity of the previous stage. Size must be 
+  /// Robot::dimv().
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
   ///
@@ -254,24 +245,6 @@ public:
                           const Eigen::VectorXd& q_prev, 
                           const Eigen::VectorXd& v_prev, 
                           const SplitSolution& s, const SplitSolution& s_next);
-
-  ///
-  /// @brief Computes the KKT residual of the OCP at this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] q_prev Configuration of the previous stage.
-  /// @param[in] v_prev Velocity of the previous stage.
-  /// @param[in] s Split solution of this stage.
-  ///
-  void computeKKTResidualTerminal(Robot& robot, 
-                                  const ContactStatus& contact_status, 
-                                  const double t, const double dtau, 
-                                  const Eigen::VectorXd& q_prev, 
-                                  const Eigen::VectorXd& v_prev, 
-                                  const SplitSolution& s);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
@@ -296,20 +269,22 @@ public:
   ///
   /// @brief Computes and returns the constraint violation of the OCP at this 
   /// stage for line search.
+  /// @brief Computes the KKT residual of the OCP at this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] contact_status Contact status of robot at this stage. 
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] q_prev Configuration of the previous stage. Size must be 
+  /// Robot::dimq().
+  /// @param[in] v_prev Velocity of the previous stage. Size must be 
+  /// Robot::dimv().
   /// @param[in] s Split solution of this stage.
-  /// @param[in] q_next Configuration at the next stage.
-  /// @param[in] v_next Generaized velocity at the next stage.
-  /// @return Constraint violation of this stage.
   ///
   double constraintViolation(Robot& robot, const ContactStatus& contact_status, 
                              const double t, const double dtau, 
-                             const SplitSolution& s, 
-                             const Eigen::VectorXd& q_next,
-                             const Eigen::VectorXd& v_next);
+                             const Eigen::VectorXd& q_prev,
+                             const Eigen::VectorXd& v_prev,
+                             const SplitSolution& s);
 
   ///
   /// @brief Gets the state-feedback gain for the control input torques.
@@ -332,11 +307,7 @@ private:
   // RobotDynamics robot_dynamics_;
   ContactDynamics contact_dynamics_;
   BackwardCorrection backward_correction_;
-  int dimv_, dimx_, dimKKT_;
-  Eigen::MatrixXd kkt_matrix_inverse_;
-  Eigen::VectorXd x_res_; /// @brief Residual of state and costate used in the forward and backward correction.
-  Eigen::VectorXd dx_; /// @brief Correction term of state and costate used in the forward and backward correction.
-  bool use_kinematics_;
+  bool use_kinematics_, has_floating_base_;
 
   ///
   /// @brief Set contact status from robot model, i.e., set dimension of the 

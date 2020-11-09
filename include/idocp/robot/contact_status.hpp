@@ -19,6 +19,13 @@ public:
   ContactStatus(const int max_point_contacts);
 
   ///
+  /// @brief Constructor. 
+  /// @param[in] is_contact_active Vector containing bool representing that each 
+  /// point contact is active or not. 
+  ///
+  ContactStatus(const std::vector<bool>& is_contact_active);
+
+  ///
   /// @brief Default constructor. 
   ///
   ContactStatus();
@@ -47,6 +54,16 @@ public:
   /// @brief Default move assign operator. 
   ///
   ContactStatus& operator=(ContactStatus&&) noexcept = default;
+
+  ///
+  /// @brief Define comparison operator. 
+  ///
+  bool operator==(const ContactStatus& other) const;
+
+  ///
+  /// @brief Define comparison operator. 
+  ///
+  bool operator!=(const ContactStatus& other) const;
 
   ///
   /// @brief Return true if a contact is active and false if not.

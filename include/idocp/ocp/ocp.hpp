@@ -106,6 +106,12 @@ public:
                       const Eigen::VectorXd& v, 
                       const bool use_line_search=false);
 
+  void computePrimalAndDualDirection(const double t, const Eigen::VectorXd& q, 
+                                     const Eigen::VectorXd& v);
+
+  double lineSearch(const double t, const Eigen::VectorXd& q, 
+                    const Eigen::VectorXd& v, const double max_primal_step_size);
+
   ///
   /// @brief Get the const reference to the split solution of a time stage. 
   /// For example, you can get the const reference to the control input torques 

@@ -29,7 +29,8 @@ protected:
 
   void testCoarseUpdate(const Robot& robot) const;
   void testBackwardCorrection(const Robot& robot) const;
-  void testForkwardCorrection(const Robot& robot) const;
+  void testForwardCorrection(const Robot& robot) const;
+  void testComputeDirection(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
   Robot fixed_base_robot, floating_base_robot;
@@ -40,6 +41,7 @@ protected:
 void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
+  const int dimx = 2 * robot.dimv();
   const int dimKKT = 4*dimv + dimu;
   BackwardCorrection backward_correction(robot);
   const SplitSolution s = SplitSolution::Random(robot);
@@ -53,6 +55,7 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
   kkt_matrix.Fqq().setIdentity();
   kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_matrix.Fvu().setRandom();
+  kkt_matrix.symmetrize();
   kkt_residual.KKT_residual.setRandom();
   SplitSolution s_new_coarse(robot);
   backward_correction.coarseUpdate(robot, s, d, kkt_matrix, kkt_residual, s_new_coarse);
@@ -73,6 +76,9 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
   s_new_coarse_ref.u = s.u - d_ref.du();
   EXPECT_TRUE(s_new_coarse.isApprox(s_new_coarse_ref));
   EXPECT_TRUE(d_ref.isApprox(d));
+  Eigen::MatrixXd aux_mat = Eigen::MatrixXd::Zero(dimx, dimx);
+  backward_correction.getAuxiliaryMatrix(aux_mat);
+  EXPECT_TRUE(aux_mat.isApprox((-1*kkt_matrix_inverse.topLeftCorner(dimx, dimx))));
 }
 
 
@@ -96,6 +102,7 @@ void BackwardCorrectionTest::testBackwardCorrection(const Robot& robot) const {
   }
   kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_matrix.Fvu().setRandom();
+  kkt_matrix.symmetrize();
   kkt_residual.KKT_residual.setRandom();
   SplitSolution s_new_coarse(robot);
   backward_correction.coarseUpdate(robot, s, d, kkt_matrix, kkt_residual, s_new_coarse);
@@ -120,6 +127,41 @@ void BackwardCorrectionTest::testBackwardCorrection(const Robot& robot) const {
   robot.integrateConfiguration(d_ref.dq(), -1, s_new_coarse_ref.q);
   s_new_coarse_ref.v.noalias() -= d_ref.dv();
   EXPECT_TRUE(s_new_coarse.isApprox(s_new_coarse_ref));
+}
+
+
+void BackwardCorrectionTest::testForwardCorrection(const Robot& robot) const {
+  const int dimv = robot.dimv();
+  const int dimu = robot.dimu();
+  const int dimx = 2 * robot.dimv();
+  const int dimKKT = 4*dimv + dimu;
+  BackwardCorrection backward_correction(robot);
+  const SplitSolution s = SplitSolution::Random(robot);
+  SplitDirection d(robot);
+  KKTMatrix kkt_matrix(robot);
+  KKTResidual kkt_residual(robot);
+  kkt_matrix.Qxx().setRandom();
+  kkt_matrix.Qxu().setRandom();
+  kkt_matrix.Quu().setRandom();
+  kkt_matrix.Fxx().setRandom();
+  kkt_matrix.Fqq().setIdentity();
+  if (robot.has_floating_base()) {
+    kkt_matrix.Fqq().topLeftCorner(6, 6).setRandom();
+  }
+  kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
+  kkt_matrix.Fvu().setRandom();
+  kkt_matrix.symmetrize();
+  kkt_residual.KKT_residual.setRandom();
+  SplitSolution s_new_coarse(robot);
+  backward_correction.coarseUpdate(robot, s, d, kkt_matrix, kkt_residual, s_new_coarse);
+  Eigen::MatrixXd kkt_matrix_inverse = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
+  kkt_matrix.invert(kkt_matrix_inverse);
+  const SplitSolution s_next = SplitSolution::Random(robot);
+  const SplitSolution s_new_next = SplitSolution::Random(robot);
+  backward_correction.backwardCorrectionSerial(s_next, s_new_next, s_new_coarse);
+  backward_correction.backwardCorrectionParallel(robot, d, s_new_coarse);
+  SplitDirection d_ref = d;
+  SplitSolution s_new_coarse_ref = s_new_coarse;
   const SplitSolution s_prev = SplitSolution::Random(robot);
   const SplitSolution s_new_prev = SplitSolution::Random(robot);
   backward_correction.forwardCorrectionSerial(robot, s_prev, s_new_prev, s_new_coarse);
@@ -141,15 +183,38 @@ void BackwardCorrectionTest::testBackwardCorrection(const Robot& robot) const {
 }
 
 
+void BackwardCorrectionTest::testComputeDirection(const Robot& robot) const {
+  const int dimv = robot.dimv();
+  const int dimu = robot.dimu();
+  const int dimx = 2 * robot.dimv();
+  const int dimKKT = 4*dimv + dimu;
+  const SplitSolution s = SplitSolution::Random(robot);
+  const SplitSolution s_new = SplitSolution::Random(robot);
+  SplitDirection d(robot);
+  BackwardCorrection::computeDirection(robot, s, s_new, d);
+  SplitDirection d_ref(robot);
+  d_ref.dlmd() = s_new.lmd - s.lmd;
+  d_ref.dgmm() = s_new.gmm - s.gmm;
+  d_ref.du() = s_new.u - s.u;
+  robot.subtractConfiguration(s_new.q, s.q, d_ref.dq());
+  d_ref.dv() = s_new.v - s.v;
+  EXPECT_TRUE(d.isApprox(d_ref));
+}
+
+
 TEST_F(BackwardCorrectionTest, fixed_base) {
   testCoarseUpdate(fixed_base_robot);
   testBackwardCorrection(fixed_base_robot);
+  testForwardCorrection(fixed_base_robot);
+  testComputeDirection(fixed_base_robot);
 }
 
 
 TEST_F(BackwardCorrectionTest, floating_base) {
   testCoarseUpdate(floating_base_robot);
   testBackwardCorrection(floating_base_robot);
+  testForwardCorrection(floating_base_robot);
+  testComputeDirection(floating_base_robot);
 }
 
 } // namespace idocp
