@@ -50,7 +50,7 @@ inline void ContactSequence::setContactStatusUniformly(
     const ContactStatus& contact_status) {
   assert(contact_status.max_point_contacts() == max_point_contacts_);
   for (auto& e : contact_sequence_) {
-    e.setContactStatus(contact_status.isContactActive());
+    e.set(contact_status);
   }
   for (auto& e : discrete_event_sequence_) {
     e.disableDiscreteEvent();
@@ -62,7 +62,7 @@ inline void ContactSequence::setDiscreteEvent(
     const DiscreteEvent& discrete_event) {
   assert(discrete_event.eventTime() > 0);
   assert(discrete_event.eventTime() < T_);
-  assert(discrete_event.hasDiscreteEvent());
+  assert(discrete_event.existDiscreteEvent());
   const int time_stage = std::floor(discrete_event.eventTime()/dtau_);
   discrete_event_sequence_[time_stage] = discrete_event;
   for (int i=time_stage+1; i<N_; ++i) {
@@ -72,45 +72,54 @@ inline void ContactSequence::setDiscreteEvent(
 }
 
 
-inline void ContactSequence::shiftDiscreteEvent(
-    const int time_stage, const double shifted_event_time) {
-  if (shifted_event_time < 0) {
-    for (int i=time_stage; i>=0; --i) {
-      discrete_event_sequence_[time_stage].actInv(contact_sequence_[i]);
-    }
-    for (int i=0; i<=time_stage; ++i) {
-      discrete_event_sequence_[i].disableDiscreteEvent();
-    }
+inline void ContactSequence::shiftDiscreteEvent(const int time_stage, 
+                                                const double event_time) {
+  assert(existDiscreteEvent(time_stage));
+  if (event_time < 0) {
+    shiftDiscreteEventToInitial(time_stage);
   }
-  else if (shifted_event_time > T_) {
-    for (int i=time_stage+1; i<N_; ++i) {
-      discrete_event_sequence_[time_stage].act(contact_sequence_[i]);
-    }
-    for (int i=time_stage; i<N_; ++i) {
-      discrete_event_sequence_[i].disableDiscreteEvent();
-    }
+  else if (event_time > T_) {
+    shiftDiscreteEventToTerminal(time_stage);
   }
   else {
-    const int shifted_time_stage = std::floor(shifted_event_time/dtau_);
+    const int shifted_time_stage = timeStageFromTime(event_time);
     if (shifted_time_stage < time_stage) {
-      for (int i=time_stage; i>=shifted_time_stage; --i) {
-        discrete_event_sequence_[time_stage].actInv(contact_sequence_[i]);
-      }
-      for (int i=shifted_time_stage; i<=time_stage; ++i) {
+      for (int i=time_stage; i>=shifted_time_stage+1; --i) {
+        contact_sequence_[i].set(contact_sequence_[time_stage+1]);
         discrete_event_sequence_[i].disableDiscreteEvent();
       }
     }
     else if (shifted_time_stage > time_stage) {
-      for (int i=time_stage+1; i<shifted_time_stage; ++i) {
-        discrete_event_sequence_[time_stage].act(contact_sequence_[i]);
-      }
-      for (int i=time_stage; i<shifted_time_stage; ++i) {
+      for (int i=time_stage; i<=shifted_time_stage; ++i) {
+        contact_sequence_[i].set(contact_sequence_[time_stage]);
         discrete_event_sequence_[i].disableDiscreteEvent();
       }
     }
-    else {
-      discrete_event_sequence_[time_stage].setEventTime(shifted_event_time);
-    }
+    discrete_event_sequence_[shifted_time_stage].setDiscreteEvent(
+        contact_sequence_[shifted_time_stage],
+        contact_sequence_[shifted_time_stage+1]);
+    discrete_event_sequence_[shifted_time_stage].setEventTime(event_time);
+  }
+}
+
+
+inline void ContactSequence::shiftDiscreteEventToInitial(
+    const int time_stage) {
+  assert(existDiscreteEvent(time_stage));
+  for (int i=time_stage; i>=0; --i) {
+    contact_sequence_[i].set(contact_sequence_[time_stage+1]);
+    discrete_event_sequence_[i].disableDiscreteEvent();
+  }
+}
+
+
+inline void ContactSequence::shiftDiscreteEventToTerminal(
+    const int time_stage) {
+  assert(existDiscreteEvent(time_stage));
+  discrete_event_sequence_[time_stage].disableDiscreteEvent();
+  for (int i=time_stage+1; i<N_; ++i) {
+    contact_sequence_[i].set(contact_sequence_[time_stage]);
+    discrete_event_sequence_[i].disableDiscreteEvent();
   }
 }
 
@@ -131,6 +140,13 @@ inline const ImpulseStatus& ContactSequence::impulseStatus(
 }
 
 
+inline double ContactSequence::eventTime(const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage < N_);
+  return discrete_event_sequence_[time_stage].eventTime();
+}
+
+
 inline bool ContactSequence::existDiscreteEvent(const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage < N_);
@@ -141,14 +157,27 @@ inline bool ContactSequence::existDiscreteEvent(const int time_stage) const {
 inline bool ContactSequence::existImpulse(const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage < N_);
-  return discrete_event_sequence_[time_stage].hasImpulse();
+  return discrete_event_sequence_[time_stage].existImpulse();
 }
 
 
 inline bool ContactSequence::existLift(const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage < N_);
-  return discrete_event_sequence_[time_stage].hasLift();
+  return discrete_event_sequence_[time_stage].existLift();
+}
+
+
+inline int ContactSequence::timeStageFromTime(const double time) const {
+  if (time < 0) {
+    return 0;
+  }
+  else if (time > T_) {
+    return N_;
+  }
+  else {
+    return std::floor(time/dtau_);
+  }
 }
 
 } // namespace idocp 

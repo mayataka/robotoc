@@ -88,6 +88,11 @@ inline int ContactStatus::max_point_contacts() const {
 }
 
 
+inline void ContactStatus::set(const ContactStatus& other) {
+  setContactStatus(other.isContactActive());
+}
+
+
 inline void ContactStatus::setContactStatus(
     const std::vector<bool>& is_contact_active) {
   assert(is_contact_active.size() == max_point_contacts_);

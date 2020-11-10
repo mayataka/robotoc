@@ -103,6 +103,12 @@ public:
   int max_point_contacts() const;
 
   ///
+  /// @brief Set from other contact status that has the same size.
+  /// @param[in] other Other contact status. 
+  ///
+  void set(const ContactStatus& other);
+
+  ///
   /// @brief Set the contact status.
   /// @param[in] is_contact_active Contact status. Size must be 
   /// ContactStatus::max_point_contacts();

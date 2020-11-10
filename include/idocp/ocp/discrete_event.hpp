@@ -56,22 +56,24 @@ public:
   const ImpulseStatus& impulseStatus() const;
 
   ///
-  /// @brief Returns true if this object has discrete event. Returns false if not.
-  /// @return true if this object has discrete event. false if not.
+  /// @brief Returns true if this discrete event exists. Returns false if not.
+  /// @return true if this discrete event exists. false if not.
   ///
-  bool hasDiscreteEvent() const;
+  bool existDiscreteEvent() const;
 
   ///
-  /// @brief Returns true if this object has impulse. Returns false if not.
-  /// @return true if this object has impulse. false if not.
+  /// @brief Returns true if impulse exists in this discrete event. Returns 
+  /// false if not.
+  /// @return true if impulse exists. false if not.
   ///
-  bool hasImpulse() const;
+  bool existImpulse() const;
 
   ///
-  /// @brief Returns true if this object has lift. Returns false if not.
-  /// @return true if this object has lift. false if not.
+  /// @brief Returns true if lift exists in this discrete event. Returns false 
+  /// if not.
+  /// @return true if lift exists. false if not.
   ///
-  bool hasLift() const;
+  bool existLift() const;
 
   ///
   /// @brief Returns the time of the discrete event occurs.
@@ -89,19 +91,39 @@ public:
 
   ///
   /// @brief Act inversly on the contact status and change it according to this 
-  /// discrete  event.
+  /// discrete event.
   /// @param[in] contact_status Contact status. Must be consistent with this 
   /// discrete event. 
   ///
   void actInv(ContactStatus& contact_status) const;
 
   ///
-  /// @brief Set the contact status from two sequential contact status.
-  /// @param[in] contact_status_before Contact status before this discrete event. 
-  /// @param[in] contact_status_after Contact status after this discrete event. 
+  /// @brief Check whether the input contact_status is consistent with the 
+  /// pre contact status of this discrete event.
+  /// @param[in] contact_status Contact status. 
+  /// @return true if input contact_status is consistent with the pre contact 
+  /// status of this discrete event. false if not.
   ///
-  void setDiscreteEvent(const ContactStatus& contact_status_before, 
-                        const ContactStatus& contact_status_after);
+  bool isConsisitentWithPreContactStatus(
+      const ContactStatus& contact_status) const;
+
+  ///
+  /// @brief Check whether the input contact_status is consistent with the 
+  /// post contact status of this discrete event.
+  /// @param[in] contact_status Contact status. 
+  /// @return true if input contact_status is consistent with the post contact 
+  /// status of this discrete event. false if not.
+  ///
+  bool isConsisitentWithPostContactStatus(
+      const ContactStatus& contact_status) const;
+
+  ///
+  /// @brief Set the contact status from two sequential contact status.
+  /// @param[in] pre_contact_status Contact status before this discrete event. 
+  /// @param[in] post_contact_status Contact status after this discrete event. 
+  ///
+  void setDiscreteEvent(const ContactStatus& pre_contact_status, 
+                        const ContactStatus& post_contact_status);
 
   ///
   /// @brief set the time of the discrete event.
@@ -120,10 +142,10 @@ public:
   int max_point_contacts() const;
 
 private:
-  ContactStatus contact_status_before_, contact_status_after_;
+  ContactStatus pre_contact_status_, post_contact_status_;
   ImpulseStatus impulse_status_;
   int max_point_contacts_;
-  bool has_impulse_, has_lift_;
+  bool exist_impulse_, exist_lift_;
   double time_;
 
 };

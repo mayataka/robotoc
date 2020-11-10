@@ -13,11 +13,6 @@ inline ImpulseStatus::ImpulseStatus(const int max_point_contacts)
 }
 
 
-inline ImpulseStatus::ImpulseStatus(const std::vector<bool>& is_impulse_active)
-  : impulse_status_(is_impulse_active) {
-}
-
-
 inline ImpulseStatus::ImpulseStatus() 
   : impulse_status_() {
 }
@@ -74,16 +69,16 @@ inline int ImpulseStatus::max_point_contacts() const {
 
 
 inline void ImpulseStatus::setImpulseStatus(
-    const ContactStatus& current_contact_status, 
-    const ContactStatus& next_contact_status) {
-  assert(current_contact_status.max_point_contacts() == max_point_contacts());
-  assert(next_contact_status.max_point_contacts() == max_point_contacts());
+    const ContactStatus& pre_contact_status, 
+    const ContactStatus& post_contact_status) {
+  assert(pre_contact_status.max_point_contacts() == max_point_contacts());
+  assert(post_contact_status.max_point_contacts() == max_point_contacts());
   for (int i=0; i<impulse_status_.max_point_contacts(); ++i) {
-    if (current_contact_status.isContactActive(i)) {
+    if (pre_contact_status.isContactActive(i)) {
       deactivateImpulse(i);
     }
     else {
-      if (next_contact_status.isContactActive(i)) {
+      if (post_contact_status.isContactActive(i)) {
         activateImpulse(i);
       }
       else {

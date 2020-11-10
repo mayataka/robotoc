@@ -66,8 +66,8 @@ public:
   ///
   /// @brief Set the discrete event. Contact status after discrete event is also
   /// uniformly changed by discrete_event. To determine the event time and 
-  /// stage, discrete_event.eventTime() is internally called. Hence, set the 
-  /// time by discrete_event.setEventTime().
+  /// stage, DiscreteEvent::eventTime() is internally called. Hence, set the 
+  /// time by DiscreteEvent::setEventTime() before calling this function.
   /// @param[in] discrete_event Discrete event.
   ///
   void setDiscreteEvent(const DiscreteEvent& discrete_event);
@@ -76,10 +76,23 @@ public:
   /// @brief Shift the discrete event. 
   /// @param[in] time_stage Time stage where the discrete event of interest 
   /// occurs.
-  /// @param[in] shifted_event_time Time after shifted.
+  /// @param[in] event_time Event time after shifted.
   ///
-  void shiftDiscreteEvent(const int time_stage, 
-                          const double shifted_event_time);
+  void shiftDiscreteEvent(const int time_stage, const double event_time);
+
+  ///
+  /// @brief Shift the discrete event. 
+  /// @param[in] time_stage Time stage where the discrete event of interest 
+  /// occurs.
+  ///
+  void shiftDiscreteEventToInitial(const int time_stage);
+
+  ///
+  /// @brief Shift the discrete event. 
+  /// @param[in] time_stage Time stage where the discrete event of interest 
+  /// occurs.
+  ///
+  void shiftDiscreteEventToTerminal(const int time_stage);
 
   ///
   /// @brief Getter of the contact status. 
@@ -94,6 +107,13 @@ public:
   /// @return const reference to the impulse status.
   ///
   const ImpulseStatus& impulseStatus(const int time_stage) const;
+
+  ///
+  /// @brief Getter of the event time. 
+  /// @param[in] time_stage Time stage of interest.
+  /// @return Event time.
+  ///
+  double eventTime(const int time_stage) const;
 
   ///
   /// @brief Returns true if discrete event exists over time_stage. Returns 
@@ -123,6 +143,8 @@ private:
   double T_, dtau_;
   std::vector<ContactStatus> contact_sequence_;
   std::vector<DiscreteEvent> discrete_event_sequence_;
+
+  int timeStageFromTime(const double time) const;
 
 };
 

@@ -20,13 +20,6 @@ public:
   ImpulseStatus(const int max_point_contacts);
 
   ///
-  /// @brief Constructor. 
-  /// @param[in] is_impulse_active Vector containing bool representing that each 
-  /// point impulse is active or not. 
-  ///
-  ImpulseStatus(const std::vector<bool>& is_impulse_active);
-
-  ///
   /// @brief Default constructor. 
   ///
   ImpulseStatus();
@@ -105,11 +98,11 @@ public:
 
   ///
   /// @brief Set the contact status from two sequential contact status.
-  /// @param[in] current_contact_status Current contact status. 
-  /// @param[in] next_contact_status Next contact status. 
+  /// @param[in] pre_contact_status Current contact status. 
+  /// @param[in] post_contact_status Next contact status. 
   ///
-  void setImpulseStatus(const ContactStatus& current_contact_status, 
-                        const ContactStatus& next_contact_status);
+  void setImpulseStatus(const ContactStatus& pre_contact_status, 
+                        const ContactStatus& post_contact_status);
 
   ///
   /// @brief Set the impulse status.
