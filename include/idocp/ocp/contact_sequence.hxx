@@ -98,7 +98,12 @@ inline void ContactSequence::shiftDiscreteEvent(const int time_stage,
     discrete_event_sequence_[shifted_time_stage].setDiscreteEvent(
         contact_sequence_[shifted_time_stage],
         contact_sequence_[shifted_time_stage+1]);
-    discrete_event_sequence_[shifted_time_stage].setEventTime(event_time);
+    if (discrete_event_sequence_[shifted_time_stage].existDiscreteEvent()) {
+      discrete_event_sequence_[shifted_time_stage].setEventTime(event_time);
+    }
+    else {
+      discrete_event_sequence_[shifted_time_stage].setEventTime(0);
+    }
   }
 }
 

@@ -37,6 +37,7 @@ protected:
   void testShiftDiscreteEventToTerminal2(const Robot& robot) const;
   void testShiftDiscreteEventForward(const Robot& robot) const;
   void testShiftDiscreteEventBackward(const Robot& robot) const;
+  void testShiftDiscreteEventMultiple(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
   int N;
@@ -108,9 +109,8 @@ void ContactSequenceTest::testSetContactStatus(const Robot& robot) const {
 void ContactSequenceTest::testSetDiscreteEvent(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
   ContactStatus pre_contact_status(robot.max_point_contacts());
-
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
-  EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
+  ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
   discrete_event.setEventTime(T / 2.0);
   contact_sequence.setDiscreteEvent(discrete_event);
@@ -151,7 +151,7 @@ void ContactSequenceTest::testShiftDiscreteEventToInitial1(const Robot& robot) c
   ContactSequence contact_sequence(robot, T, N);
   ContactStatus pre_contact_status(robot.max_point_contacts());
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
-  EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
+  ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
   discrete_event.setEventTime(T / 2.0);
   contact_sequence.setDiscreteEvent(discrete_event);
@@ -172,7 +172,7 @@ void ContactSequenceTest::testShiftDiscreteEventToInitial2(const Robot& robot) c
   ContactSequence contact_sequence(robot, T, N);
   ContactStatus pre_contact_status(robot.max_point_contacts());
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
-  EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
+  ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
   discrete_event.setEventTime(T / 2.0);
   contact_sequence.setDiscreteEvent(discrete_event);
@@ -193,7 +193,7 @@ void ContactSequenceTest::testShiftDiscreteEventToTerminal1(const Robot& robot) 
   ContactSequence contact_sequence(robot, T, N);
   ContactStatus pre_contact_status(robot.max_point_contacts());
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
-  EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
+  ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
   discrete_event.setEventTime(T / 2.0);
   contact_sequence.setDiscreteEvent(discrete_event);
@@ -214,7 +214,7 @@ void ContactSequenceTest::testShiftDiscreteEventToTerminal2(const Robot& robot) 
   ContactSequence contact_sequence(robot, T, N);
   ContactStatus pre_contact_status(robot.max_point_contacts());
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
-  EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
+  ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
   discrete_event.setEventTime(T / 2.0);
   contact_sequence.setDiscreteEvent(discrete_event);
@@ -235,7 +235,7 @@ void ContactSequenceTest::testShiftDiscreteEventForward(const Robot& robot) cons
   ContactSequence contact_sequence(robot, T, N);
   ContactStatus pre_contact_status(robot.max_point_contacts());
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
-  EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
+  ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
   discrete_event.setEventTime(T / 2.0);
   contact_sequence.setDiscreteEvent(discrete_event);
@@ -279,7 +279,7 @@ void ContactSequenceTest::testShiftDiscreteEventBackward(const Robot& robot) con
   ContactSequence contact_sequence(robot, T, N);
   ContactStatus pre_contact_status(robot.max_point_contacts());
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
-  EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
+  ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
   discrete_event.setEventTime(T / 2.0);
   contact_sequence.setDiscreteEvent(discrete_event);
@@ -319,6 +319,150 @@ void ContactSequenceTest::testShiftDiscreteEventBackward(const Robot& robot) con
 }
 
 
+void ContactSequenceTest::testShiftDiscreteEventMultiple(const Robot& robot) const {
+  ContactSequence contact_sequence(robot, T, N);
+  ContactStatus pre_contact_status(robot.max_point_contacts()), 
+                intermediate_contact_status(robot.max_point_contacts()),
+                post_contact_status(robot.max_point_contacts());
+  DiscreteEvent discrete_event1(robot.max_point_contacts()),
+                discrete_event2(robot.max_point_contacts());
+  std::random_device rnd;
+  while (!discrete_event1.existDiscreteEvent() || !discrete_event2.existDiscreteEvent()) {
+    for (int i=0; i<robot.max_point_contacts(); ++i) {
+      pre_contact_status.deactivateContact(i);
+      intermediate_contact_status.deactivateContact(i);
+      post_contact_status.deactivateContact(i);
+    }
+    for (int i=0; i<robot.max_point_contacts(); ++i) {
+      if (rnd()%2==0) {
+        pre_contact_status.activateContact(i);
+      }
+    }
+    for (int i=0; i<robot.max_point_contacts(); ++i) {
+      if (rnd()%2==0) {
+        intermediate_contact_status.activateContact(i);
+      }
+    }
+    for (int i=0; i<robot.max_point_contacts(); ++i) {
+      if (rnd()%2==0) {
+        post_contact_status.activateContact(i);
+      }
+    }
+    discrete_event1.setDiscreteEvent(pre_contact_status, intermediate_contact_status);
+    discrete_event2.setDiscreteEvent(intermediate_contact_status, post_contact_status);
+  }
+  ASSERT_TRUE(discrete_event1.isConsisitentWithPreContactStatus(pre_contact_status));
+  ASSERT_TRUE(discrete_event1.isConsisitentWithPostContactStatus(intermediate_contact_status));
+  ASSERT_TRUE(discrete_event2.isConsisitentWithPreContactStatus(intermediate_contact_status));
+  ASSERT_TRUE(discrete_event2.isConsisitentWithPostContactStatus(post_contact_status));
+  contact_sequence.setContactStatusUniformly(pre_contact_status);
+  const double time1 = T / 3.0;
+  const double time2 = 2.0 * T / 3.0;
+  discrete_event1.setEventTime(time1);
+  discrete_event2.setEventTime(time2);
+  contact_sequence.setDiscreteEvent(discrete_event1);
+  contact_sequence.setDiscreteEvent(discrete_event2);
+  const int event_time_stage1 = std::floor(time1/dtau);
+  const int event_time_stage2 = std::floor(time2/dtau);
+  for (int i=0; i<event_time_stage1; ++i) {
+    EXPECT_TRUE(discrete_event1.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
+    EXPECT_DOUBLE_EQ(contact_sequence.eventTime(i), 0);
+    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
+    EXPECT_FALSE(contact_sequence.existImpulse(i));
+    EXPECT_FALSE(contact_sequence.existLift(i));
+  }
+  EXPECT_TRUE(discrete_event1.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(event_time_stage1)));
+  EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stage1));
+  EXPECT_DOUBLE_EQ(contact_sequence.eventTime(event_time_stage1), time1);
+  if (discrete_event1.existImpulse()) {
+    EXPECT_TRUE(contact_sequence.existImpulse(event_time_stage1));
+  }
+  else {
+    EXPECT_FALSE(contact_sequence.existImpulse(event_time_stage1));
+  }
+  if (discrete_event1.existLift()) {
+    EXPECT_TRUE(contact_sequence.existLift(event_time_stage1));
+  }
+  else {
+    EXPECT_FALSE(contact_sequence.existLift(event_time_stage1));
+  }
+  for (int i=event_time_stage1+1; i<event_time_stage2; ++i) {
+    EXPECT_TRUE(discrete_event1.isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
+    EXPECT_TRUE(discrete_event2.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
+    EXPECT_DOUBLE_EQ(contact_sequence.eventTime(i), 0);
+    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
+    EXPECT_FALSE(contact_sequence.existImpulse(i));
+    EXPECT_FALSE(contact_sequence.existLift(i));
+  }
+  EXPECT_TRUE(discrete_event1.isConsisitentWithPostContactStatus(contact_sequence.contactStatus(event_time_stage2)));
+  EXPECT_TRUE(discrete_event2.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(event_time_stage2)));
+  EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stage2));
+  EXPECT_DOUBLE_EQ(contact_sequence.eventTime(event_time_stage2), time2);
+  if (discrete_event2.existImpulse()) {
+    EXPECT_TRUE(contact_sequence.existImpulse(event_time_stage2));
+  }
+  else {
+    EXPECT_FALSE(contact_sequence.existImpulse(event_time_stage2));
+  }
+  if (discrete_event2.existLift()) {
+    EXPECT_TRUE(contact_sequence.existLift(event_time_stage2));
+  }
+  else {
+    EXPECT_FALSE(contact_sequence.existLift(event_time_stage2));
+  }
+  for (int i=event_time_stage2+1; i<N; ++i) {
+    EXPECT_TRUE(discrete_event2.isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
+    EXPECT_DOUBLE_EQ(contact_sequence.eventTime(i), 0);
+    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
+    EXPECT_FALSE(contact_sequence.existImpulse(i));
+    EXPECT_FALSE(contact_sequence.existLift(i));
+  }
+  const double shifted_time1 = 3.0 * T / 4.0;
+  ASSERT_TRUE(shifted_time1 > time2);
+  const int shifted_event_time_stage = std::floor(shifted_time1/dtau);
+  contact_sequence.shiftDiscreteEvent(event_time_stage1, shifted_time1);
+  for (int i=0; i<shifted_event_time_stage; ++i) {
+    EXPECT_TRUE(discrete_event1.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
+    EXPECT_DOUBLE_EQ(contact_sequence.eventTime(i), 0);
+    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
+    EXPECT_FALSE(contact_sequence.existImpulse(i));
+    EXPECT_FALSE(contact_sequence.existLift(i));
+  }
+  if (pre_contact_status == post_contact_status) {
+    EXPECT_TRUE(discrete_event1.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(shifted_event_time_stage)));
+    EXPECT_FALSE(contact_sequence.existDiscreteEvent(shifted_event_time_stage));
+    EXPECT_DOUBLE_EQ(contact_sequence.eventTime(shifted_event_time_stage), 0);
+  }
+  else {
+    EXPECT_TRUE(discrete_event1.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(shifted_event_time_stage)));
+    EXPECT_TRUE(contact_sequence.existDiscreteEvent(shifted_event_time_stage));
+    EXPECT_DOUBLE_EQ(contact_sequence.eventTime(shifted_event_time_stage), shifted_time1);
+    DiscreteEvent discrete_event(robot.max_point_contacts());
+    discrete_event.setDiscreteEvent(pre_contact_status, post_contact_status);
+    if (discrete_event.existImpulse()) {
+      EXPECT_TRUE(contact_sequence.existImpulse(shifted_event_time_stage));
+    }
+    else {
+      EXPECT_FALSE(contact_sequence.existImpulse(shifted_event_time_stage));
+    }
+    if (discrete_event.existLift()) {
+      EXPECT_TRUE(contact_sequence.existLift(shifted_event_time_stage));
+    }
+    else {
+      EXPECT_FALSE(contact_sequence.existLift(shifted_event_time_stage));
+    }
+  }
+  for (int i=shifted_event_time_stage+1; i<N; ++i) {
+    EXPECT_TRUE(discrete_event2.isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
+    EXPECT_DOUBLE_EQ(contact_sequence.eventTime(i), 0);
+    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
+    EXPECT_FALSE(contact_sequence.existImpulse(i));
+    EXPECT_FALSE(contact_sequence.existLift(i));
+  }
+}
+
+
+
 TEST_F(ContactSequenceTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
@@ -330,6 +474,7 @@ TEST_F(ContactSequenceTest, fixedBase) {
   testShiftDiscreteEventToTerminal2(robot);
   testShiftDiscreteEventForward(robot);
   testShiftDiscreteEventBackward(robot);
+  testShiftDiscreteEventMultiple(robot);
 }
 
 
@@ -344,6 +489,7 @@ TEST_F(ContactSequenceTest, floatingBase) {
   testShiftDiscreteEventToTerminal2(robot);
   testShiftDiscreteEventForward(robot);
   testShiftDiscreteEventBackward(robot);
+  testShiftDiscreteEventMultiple(robot);
 }
 
 } // namespace idocp
