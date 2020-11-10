@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/riccati_solution.hpp"
+#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
@@ -38,27 +38,27 @@ public:
   // Use default move assign operator.
   ImpulseRiccatiFactorizer& operator=(ImpulseRiccatiFactorizer&&) noexcept = default;
 
-  void backwardRiccatiRecursion(const RiccatiSolution& riccati_next, 
+  void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next, 
                                 ImpulseKKTMatrix& kkt_matrix, 
                                 ImpulseKKTResidual& kkt_residual, 
-                                RiccatiSolution& riccati);
+                                RiccatiFactorization& riccati);
 
   void forwardRiccatiRecursion(const ImpulseKKTMatrix& kkt_matrix, 
                                const ImpulseKKTResidual& kkt_residual,
                                const ImpulseSplitDirection& d,
                                SplitDirection& d_next) const;
 
-  static void computeCostateDirection(const RiccatiSolution& riccati, 
+  static void computeCostateDirection(const RiccatiFactorization& riccati, 
                                       ImpulseSplitDirection& d);
 
-  void factorizeKKTMatrix(const RiccatiSolution& riccati_next, 
+  void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
                           ImpulseKKTMatrix& kkt_matrix, 
                           ImpulseKKTResidual& kkt_residual);
 
-  void factorizeRiccatiSolution(const RiccatiSolution& riccati_next, 
+  void factorizeRiccatiFactorization(const RiccatiFactorization& riccati_next, 
                                 const ImpulseKKTMatrix& kkt_matrix, 
                                 const ImpulseKKTResidual& kkt_residual,
-                                RiccatiSolution& riccati);
+                                RiccatiFactorization& riccati);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

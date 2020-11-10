@@ -69,8 +69,8 @@ add_library(
   src/impulse/impulse_dynamics_forward_euler_data.cpp
   src/impulse/impulse_dynamics_forward_euler.cpp
   # src/impulse/impulse_dynamics_backward_euler.cpp
-  src/impulse/impulse_riccati_factorizer.cpp
-  src/impulse/split_impulse_ocp.cpp
+  # src/impulse/impulse_riccati_factorizer.cpp
+  # src/impulse/split_impulse_ocp.cpp
   # src/impulse/split_impulse_parnmpc.cpp
   src/ocp/schur_complement.cpp
   src/ocp/kkt_residual.cpp
@@ -82,16 +82,15 @@ add_library(
   src/ocp/contact_dynamics.cpp
   # src/ocp/non_contact_dynamics.cpp
   src/ocp/line_search_filter.cpp
-  src/ocp/riccati_solution.cpp
-  src/ocp/riccati_gain.cpp
+  src/ocp/riccati_factorization.cpp
   src/ocp/riccati_factorizer.cpp
-  src/ocp/split_ocp.cpp
-  src/ocp/terminal_ocp.cpp
-  src/ocp/split_temporary_solution.cpp
-  src/ocp/discrete_event.cpp
-  src/ocp/contact_sequence.cpp
-  src/ocp/state_constraint_riccati_factorization.cpp
-  src/ocp/state_constraints_riccati_factorizer.cpp
+  # src/ocp/split_ocp.cpp
+  # src/ocp/terminal_ocp.cpp
+  # src/ocp/split_temporary_solution.cpp
+  # src/ocp/discrete_event.cpp
+  # src/ocp/contact_sequence.cpp
+  # src/ocp/state_constraint_riccati_factorization.cpp
+  # src/ocp/state_constraints_riccati_factorizer.cpp
   # src/ocp/ocp.cpp
   src/ocp/backward_correction.cpp
   src/ocp/split_parnmpc.cpp

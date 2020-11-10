@@ -31,10 +31,10 @@ inline ImpulseRiccatiFactorizer::~ImpulseRiccatiFactorizer() {
 
 
 inline void ImpulseRiccatiFactorizer::backwardRiccatiRecursion(
-    const RiccatiSolution& riccati_next, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual, RiccatiSolution& riccati) {
+    const RiccatiFactorization& riccati_next, ImpulseKKTMatrix& kkt_matrix, 
+    ImpulseKKTResidual& kkt_residual, RiccatiFactorization& riccati) {
   factorizeKKTMatrix(riccati_next, kkt_matrix, kkt_residual);
-  factorizeRiccatiSolution(riccati_next, kkt_matrix, kkt_residual, riccati);
+  factorizeRiccatiFactorization(riccati_next, kkt_matrix, kkt_residual, riccati);
 }
 
 
@@ -53,7 +53,7 @@ inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursion(
 
 
 inline void ImpulseRiccatiFactorizer::computeCostateDirection(
-    const RiccatiSolution& riccati, ImpulseSplitDirection& d) {
+    const RiccatiFactorization& riccati, ImpulseSplitDirection& d) {
   d.dlmd().noalias() = riccati.Pqq * d.dq();
   d.dlmd().noalias() += riccati.Pqv * d.dv();
   d.dlmd().noalias() -= riccati.sq;
@@ -64,7 +64,7 @@ inline void ImpulseRiccatiFactorizer::computeCostateDirection(
 
 
 inline void ImpulseRiccatiFactorizer::factorizeKKTMatrix(
-    const RiccatiSolution& riccati_next, ImpulseKKTMatrix& kkt_matrix, 
+    const RiccatiFactorization& riccati_next, ImpulseKKTMatrix& kkt_matrix, 
     ImpulseKKTResidual& kkt_residual) {
   if (has_floating_base_) {
     AtPqq_.noalias() = kkt_matrix.Fqq().transpose() * riccati_next.Pqq;
@@ -100,9 +100,9 @@ inline void ImpulseRiccatiFactorizer::factorizeKKTMatrix(
 }
 
 
-inline void ImpulseRiccatiFactorizer::factorizeRiccatiSolution(
-    const RiccatiSolution& riccati_next, const ImpulseKKTMatrix& kkt_matrix, 
-    const ImpulseKKTResidual& kkt_residual, RiccatiSolution& riccati) {
+inline void ImpulseRiccatiFactorizer::factorizeRiccatiFactorization(
+    const RiccatiFactorization& riccati_next, const ImpulseKKTMatrix& kkt_matrix, 
+    const ImpulseKKTResidual& kkt_residual, RiccatiFactorization& riccati) {
   riccati.Pqq = kkt_matrix.Qqq();
   riccati.Pqv = kkt_matrix.Qqv();
   riccati.Pvv = kkt_matrix.Qvv();

@@ -41,10 +41,12 @@ public:
   StateConstraintsRiccatiFactorizer& operator=(
       StateConstraintsRiccatiFactorizer&&) noexcept = default;
 
+  template <typename VectorType>
   void computeLagrangeMultiplierDirection(
       const ContactSequence& contact_sequence,
-      const std::vector<StateConstraintRiccatiFactorization>& factorizations,
+      std::vector<StateConstraintRiccatiFactorization>& factorizations,
       const std::vector<RiccatiSolution>& riccati_solutions,
+      const Eigen::MatrixBase<VectorType>& dx0,
       std::vector<ImpulseSplitDirection>& d);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

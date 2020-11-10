@@ -49,19 +49,28 @@ public:
 
   const Eigen::Block<const Eigen::MatrixXd> T_aux(const int time_stage) const;
 
-  Eigen::Block<Eigen::MatrixXd> ENEt();
+  Eigen::Block<Eigen::MatrixXd> Eq();
 
-  const Eigen::Block<const Eigen::MatrixXd> ENEt() const;
+  const Eigen::Block<const Eigen::MatrixXd> Eq() const;
 
   Eigen::Block<Eigen::MatrixXd> EqNqq();
 
   const Eigen::Block<const Eigen::MatrixXd> EqNqq() const;
 
+  Eigen::Block<Eigen::MatrixXd> ENEt();
+
+  const Eigen::Block<const Eigen::MatrixXd> ENEt() const;
+
+  Eigen::VectorBlock<Eigen::VectorXd> e();
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> e() const;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   std::vector<Eigen::MatrixXd> T_full_, T_aux_full_;
-  Eigen::MatrixXd EqNqq_full_, ENEt_full_;
+  Eigen::MatrixXd E_full_, EqNqq_full_, ENEt_full_;
+  Eigen::VectorXd e_full_;
   int N_, dimv_, dimx_, dimf_;
   bool is_active_;
 

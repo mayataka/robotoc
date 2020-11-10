@@ -8,8 +8,7 @@
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/riccati_solution.hpp"
-#include "idocp/ocp/riccati_gain.hpp"
+#include "idocp/ocp/riccati_factorization.hpp"
 
 
 namespace idocp {
@@ -39,35 +38,45 @@ public:
   // Use default move assign operator.
   RiccatiFactorizer& operator=(RiccatiFactorizer&&) noexcept = default;
 
-  void backwardRiccatiRecursion(const RiccatiSolution& riccati_next, 
+  void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next, 
                                 const double dtau, KKTMatrix& kkt_matrix, 
-                                KKTResidual& kkt_residual, RiccatiGain& gain, 
-                                RiccatiSolution& riccati);
+                                KKTResidual& kkt_residual, 
+                                RiccatiFactorization& riccati);
 
   void forwardRiccatiRecursion(const KKTMatrix& kkt_matrix, 
                                const KKTResidual& kkt_residual,
                                const SplitDirection& d, const double dtau,
                                SplitDirection& d_next) const;
 
-  static void computeCostateDirection(const RiccatiSolution& riccati, 
+  void factorizeStateConstraintParallel(const KKTMatrix& kkt_matrix, 
+                                        const KKTResidual& kkt_residual, 
+                                        const double dtau,
+                                        RiccatiFactorization& riccati);
+
+  static void factorizeStateConstraintSerial(RiccatiFactorization& riccati);
+
+  void factorizeStateConstraintSerial(const RiccatiFactorization& riccati,
+                                      RiccatiFactorization& riccati_next);
+
+  static void computeCostateDirection(const RiccatiFactorization& riccati, 
                                       SplitDirection& d);
 
-  static void computeControlInputDirection(const RiccatiGain& gain, 
+  static void computeControlInputDirection(const RiccatiFactorization& riccati, 
                                            SplitDirection& d);
 
-  void factorizeKKTMatrix(const RiccatiSolution& riccati_next, 
+  void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
                           const double dtau, KKTMatrix& kkt_matrix, 
                           KKTResidual& kkt_residual);
 
   void computeFeedbackGainAndFeedforward(const KKTMatrix& kkt_matrix, 
                                          const KKTResidual& kkt_residual,
-                                         RiccatiGain& gain);
+                                         RiccatiFactorization& riccati);
 
-  void factorizeRiccatiSolution(const RiccatiSolution& riccati_next, 
-                                const double dtau, const KKTMatrix& kkt_matrix, 
-                                const KKTResidual& kkt_residual,
-                                const RiccatiGain& gain, 
-                                RiccatiSolution& riccati);
+  void factorizeRiccatiFactorization(const RiccatiFactorization& riccati_next, 
+                                     const double dtau, 
+                                     const KKTMatrix& kkt_matrix, 
+                                     const KKTResidual& kkt_residual,
+                                     RiccatiFactorization& riccati);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -76,7 +85,8 @@ private:
   int dimv_, dimu_;
   static constexpr int kDimFloatingBase = 6;
   Eigen::LLT<Eigen::MatrixXd> llt_;
-  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, BtPq_, BtPv_, Ginv_, GK_;
+  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, BtPq_, BtPv_, GK_, 
+                  GinvBt_, NApBKt_;
 };
 
 } // namespace idocp

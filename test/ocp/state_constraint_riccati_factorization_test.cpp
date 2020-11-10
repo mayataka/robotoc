@@ -38,10 +38,13 @@ void StateConstraintRiccatiFactorizationTest::test(const Robot& robot) const {
     EXPECT_EQ(factorization.T_aux(i).rows(), dimx);
     EXPECT_EQ(factorization.T_aux(i).cols(), 0);
   }
+  EXPECT_EQ(factorization.Eq().rows(), 0);
+  EXPECT_EQ(factorization.Eq().cols(), dimv);
   EXPECT_EQ(factorization.ENEt().rows(), 0);
   EXPECT_EQ(factorization.ENEt().cols(), 0);
   EXPECT_EQ(factorization.EqNqq().rows(), 0);
   EXPECT_EQ(factorization.EqNqq().cols(), dimv);
+  EXPECT_EQ(factorization.e().size(), 0);
   auto impulse_status = robot.createImpulseStatus();
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     std::random_device rnd;
@@ -57,10 +60,13 @@ void StateConstraintRiccatiFactorizationTest::test(const Robot& robot) const {
     EXPECT_EQ(factorization.T_aux(i).rows(), dimx);
     EXPECT_EQ(factorization.T_aux(i).cols(), dimf);
   }
+  EXPECT_EQ(factorization.Eq().rows(), dimf);
+  EXPECT_EQ(factorization.Eq().cols(), dimv);
   EXPECT_EQ(factorization.ENEt().rows(), dimf);
   EXPECT_EQ(factorization.ENEt().cols(), dimf);
   EXPECT_EQ(factorization.EqNqq().rows(), dimf);
   EXPECT_EQ(factorization.EqNqq().cols(), dimv);
+  EXPECT_EQ(factorization.e().size(), dimf);
 }
 
 
