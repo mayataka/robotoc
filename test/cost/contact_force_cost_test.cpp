@@ -46,7 +46,7 @@ void ContactForceCostTest::commonTest(Robot& robot) const {
   EXPECT_FALSE(cost.useKinematics());
   cost.set_f_weight(f_weight);
   cost.set_f_ref(f_ref);
-  ContactStatus contact_status(robot.max_point_contacts());
+  ContactStatus contact_status = robot.createContactStatus();
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     contact_status.deactivateContact(i);
   }

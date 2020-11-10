@@ -656,6 +656,18 @@ public:
   /// 
   void initializeJointLimits();
 
+  ///
+  /// @brief Creates a ContactStatus that has consisitent size. 
+  /// @return ContactStatus that has consisitent size.
+  /// 
+  ContactStatus createContactStatus() const;
+
+  ///
+  /// @brief Creates a ImpulseStatus that has consisitent size. 
+  /// @return ImpulseStatus that has consisitent size.
+  /// 
+  ImpulseStatus createImpulseStatus() const;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

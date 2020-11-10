@@ -251,7 +251,7 @@ TEST_F(FrictionConeTest, frictionConeResidual) {
 TEST_F(FrictionConeTest, fixedBase) {
   const std::vector<int> frames = {18};
   Robot robot(fixed_base_urdf, frames);
-  ContactStatus contact_status(frames.size());
+  ContactStatus contact_status = robot.createContactStatus();
   contact_status.setContactStatus({false});
   testKinematics(robot, contact_status);
   testIsFeasible(robot, contact_status);
@@ -274,7 +274,7 @@ TEST_F(FrictionConeTest, fixedBase) {
 TEST_F(FrictionConeTest, floatingBase) {
   const std::vector<int> frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, frames);
-  ContactStatus contact_status(frames.size());
+  ContactStatus contact_status = robot.createContactStatus();
   contact_status.setContactStatus({false, false, false, false});
   testKinematics(robot, contact_status);
   testIsFeasible(robot, contact_status);

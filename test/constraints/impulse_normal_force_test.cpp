@@ -203,7 +203,7 @@ void ImpulseNormalForceTest::testComputeSlackAndDualDirection(Robot& robot, cons
 TEST_F(ImpulseNormalForceTest, fixedBase) {
   const std::vector<int> frames = {18};
   Robot robot(fixed_base_urdf, frames);
-  ImpulseStatus impulse_status(frames.size());
+  ImpulseStatus impulse_status = robot.createImpulseStatus();
   impulse_status.setImpulseStatus({false});
   testKinematics(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
@@ -226,7 +226,7 @@ TEST_F(ImpulseNormalForceTest, fixedBase) {
 TEST_F(ImpulseNormalForceTest, floatingBase) {
   const std::vector<int> frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, frames);
-  ImpulseStatus impulse_status(frames.size());
+  ImpulseStatus impulse_status = robot.createImpulseStatus();
   impulse_status.setImpulseStatus({false, false, false, false});
   testKinematics(robot, impulse_status);
   testIsFeasible(robot, impulse_status);

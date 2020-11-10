@@ -44,7 +44,7 @@ void ImpulseForceCostTest::commonTest(Robot& robot) const {
   CostFunctionData data(robot);
   cost.set_f_weight(f_weight);
   cost.set_f_ref(f_ref);
-  ImpulseStatus impulse_status(robot.max_point_contacts());
+  ImpulseStatus impulse_status = robot.createImpulseStatus();
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     impulse_status.deactivateImpulse(i);
   }

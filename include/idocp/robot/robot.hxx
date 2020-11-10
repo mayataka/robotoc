@@ -719,6 +719,16 @@ inline void Robot::initializeJointLimits() {
   upper_joint_position_limit_ = model_.upperPositionLimit.tail(dim_joint);
 }
 
+
+inline ContactStatus Robot::createContactStatus() const {
+  return ContactStatus(point_contacts_.size());
+}
+
+
+inline ImpulseStatus Robot::createImpulseStatus() const {
+  return ImpulseStatus(point_contacts_.size());
+}
+
 } // namespace idocp
 
 #endif // IDOCP_ROBOT_HXX_ 

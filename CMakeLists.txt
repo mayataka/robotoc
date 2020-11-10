@@ -90,9 +90,9 @@ add_library(
   src/ocp/split_temporary_solution.cpp
   src/ocp/discrete_event.cpp
   src/ocp/contact_sequence.cpp
+  src/ocp/state_constraint_riccati_factorization.cpp
+  src/ocp/state_constraints_riccati_factorizer.cpp
   # src/ocp/ocp.cpp
-  # src/ocp/riccati_constraint_solution.cpp
-  # src/ocp/pure_state_equality_constraints.cpp
   src/ocp/backward_correction.cpp
   src/ocp/split_parnmpc.cpp
   src/ocp/terminal_parnmpc.cpp

@@ -231,7 +231,8 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf, pinocchio::Model&
   for (const auto frame : frames) {
     is_contacts_active.push_back(rnd()%2==0);
   }
-  ContactStatus contact_status(frames.size());
+  ContactStatus contact_status = robot.createContactStatus();
+  EXPECT_EQ(contact_status.max_point_contacts(), frames.size());
   contact_status.setContactStatus(is_contacts_active);
   const double time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
@@ -297,7 +298,8 @@ void RobotTest::testImpulseVelocity(const std::string& path_to_urdf, pinocchio::
   for (const auto frame : frames) {
     is_impulse_active.push_back(rnd()%2==0);
   }
-  ImpulseStatus impulse_status(frames.size());
+  ImpulseStatus impulse_status = robot.createImpulseStatus();
+  EXPECT_EQ(impulse_status.max_point_contacts(), frames.size());
   impulse_status.setImpulseStatus(is_impulse_active);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -355,7 +357,8 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
   for (const auto frame : frames) {
     is_impulse_active.push_back(rnd()%2==0);
   }
-  ImpulseStatus impulse_status(frames.size());
+  ImpulseStatus impulse_status = robot.createImpulseStatus();
+  EXPECT_EQ(impulse_status.max_point_contacts(), frames.size());
   impulse_status.setImpulseStatus(is_impulse_active);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -439,7 +442,8 @@ void RobotTest::testRNEA(const std::string& path_to_urdf, pinocchio::Model& mode
     is_contacts_active.push_back(rnd()%2==0);
     f.push_back(Eigen::Vector3d::Random());
   }
-  ContactStatus contact_status(frames.size());
+  ContactStatus contact_status = robot.createContactStatus();
+  EXPECT_EQ(contact_status.max_point_contacts(), frames.size());
   contact_status.setContactStatus(is_contacts_active);
   robot.setContactForces(contact_status, f);
   Eigen::VectorXd tau = Eigen::VectorXd::Zero(model.nv);
@@ -487,7 +491,8 @@ void RobotTest::testRNEAImpulse(const std::string& path_to_urdf, pinocchio::Mode
     is_impulse_active.push_back(rnd()%2==0);
     f.push_back(Eigen::Vector3d::Random());
   }
-  ImpulseStatus impulse_status(frames.size());
+  ImpulseStatus impulse_status = robot.createImpulseStatus();
+  EXPECT_EQ(impulse_status.max_point_contacts(), frames.size());
   impulse_status.setImpulseStatus(is_impulse_active);
   robot.setImpulseForces(impulse_status, f);
   Eigen::VectorXd impulse_res = Eigen::VectorXd::Zero(model.nv);
@@ -532,7 +537,8 @@ void RobotTest::testMJtJinv(const std::string& path_to_urdf, pinocchio::Model& m
   for (int i=0; i<frames.size(); ++i) {
     is_contacts_active.push_back(rnd()%2 == 0);
   }
-  ContactStatus contact_status(frames.size());
+  ContactStatus contact_status = robot.createContactStatus();
+  EXPECT_EQ(contact_status.max_point_contacts(), frames.size());
   contact_status.setContactStatus(is_contacts_active);
   const int dimf = contact_status.dimf();
   Eigen::MatrixXd dRNEA_dq = Eigen::MatrixXd::Zero(model.nv, model.nv);
