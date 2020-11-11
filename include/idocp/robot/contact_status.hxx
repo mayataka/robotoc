@@ -4,6 +4,7 @@
 #include "idocp/robot/contact_status.hpp"
 
 #include <cassert>
+#include <random>
 
 namespace idocp {
 
@@ -162,6 +163,19 @@ inline void ContactStatus::deactivateContacts(
     }
   }
   set_has_active_contacts();
+}
+
+
+inline void ContactStatus::setRandom() {
+  std::random_device rnd;
+  for (int i=0; i<max_point_contacts_; ++i) {
+    if (rnd()%2 == 0) {
+      activateContact(i);
+    }
+    else {
+      deactivateContact(i);
+    }
+  }
 }
 
 

@@ -237,11 +237,7 @@ TEST_F(ContactNormalForceTest, floatingBase) {
   testComputePrimalAndDualResidual(robot, contact_status);
   testCondenseSlackAndDual(robot, contact_status);
   testComputeSlackAndDualDirection(robot, contact_status);
-  std::random_device rnd;
-  for (int i=0; i<contact_status.max_point_contacts(); ++i) {
-    if (rnd()%2 == 0) 
-      contact_status.activateContact(i);
-  }
+  contact_status.setRandom();
   testKinematics(robot, contact_status);
   testIsFeasible(robot, contact_status);
   testSetSlackAndDual(robot, contact_status);

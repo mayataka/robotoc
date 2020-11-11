@@ -46,23 +46,12 @@ protected:
 
 
 DiscreteEvent ContactSequenceTest::createDiscreteEvent(const Robot& robot, ContactStatus& pre_contact_status) {
-  DiscreteEvent discrete_event(robot.max_point_contacts());
-  ContactStatus post_contact_status(robot.max_point_contacts());
+  DiscreteEvent discrete_event(robot);
+  ContactStatus post_contact_status = robot.createContactStatus();
   std::random_device rnd;
   while (!discrete_event.existDiscreteEvent()) {
-    for (int i=0; i<robot.max_point_contacts(); ++i) {
-      post_contact_status.deactivateContact(i);
-    }
-    for (int i=0; i<robot.max_point_contacts(); ++i) {
-      if (rnd()%2==0) {
-        pre_contact_status.activateContact(i);
-      }
-    }
-    for (int i=0; i<robot.max_point_contacts(); ++i) {
-      if (rnd()%2==0) {
-        post_contact_status.activateContact(i);
-      }
-    }
+    pre_contact_status.setRandom();
+    post_contact_status.setRandom();
     discrete_event.setDiscreteEvent(pre_contact_status, post_contact_status);
   }
   return discrete_event;
@@ -71,8 +60,8 @@ DiscreteEvent ContactSequenceTest::createDiscreteEvent(const Robot& robot, Conta
 
 void ContactSequenceTest::testConstructor(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
-  ContactStatus contact_status(robot.max_point_contacts());
-  ImpulseStatus impulse_status(robot.max_point_contacts());
+  ContactStatus contact_status = robot.createContactStatus();
+  ImpulseStatus impulse_status = robot.createImpulseStatus();
   for (int i=0; i<N; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == contact_status);
     EXPECT_TRUE(contact_sequence.impulseStatus(i) == impulse_status);
@@ -88,14 +77,10 @@ void ContactSequenceTest::testConstructor(const Robot& robot) const {
 
 void ContactSequenceTest::testSetContactStatus(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
-  ContactStatus contact_status(robot.max_point_contacts());
-  ImpulseStatus impulse_status(robot.max_point_contacts());
+  ContactStatus contact_status = robot.createContactStatus();
+  ImpulseStatus impulse_status = robot.createImpulseStatus();
   std::random_device rnd;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
-    if (rnd()%2==0) {
-      contact_status.activateContact(i);
-    }
-  }
+  contact_status.setRandom();
   contact_sequence.setContactStatusUniformly(contact_status);
   for (int i=0; i<N; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == contact_status);
@@ -112,7 +97,7 @@ void ContactSequenceTest::testSetContactStatus(const Robot& robot) const {
 
 void ContactSequenceTest::testSetDiscreteEvent(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
-  ContactStatus pre_contact_status(robot.max_point_contacts());
+  ContactStatus pre_contact_status = robot.createContactStatus();
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
   ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
@@ -161,7 +146,7 @@ void ContactSequenceTest::testSetDiscreteEvent(const Robot& robot) const {
 
 void ContactSequenceTest::testShiftDiscreteEventBeyondInitial1(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
-  ContactStatus pre_contact_status(robot.max_point_contacts());
+  ContactStatus pre_contact_status = robot.createContactStatus();
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
   ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
@@ -184,7 +169,7 @@ void ContactSequenceTest::testShiftDiscreteEventBeyondInitial1(const Robot& robo
 
 void ContactSequenceTest::testShiftDiscreteEventBeyondInitial2(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
-  ContactStatus pre_contact_status(robot.max_point_contacts());
+  ContactStatus pre_contact_status = robot.createContactStatus();
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
   ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
@@ -207,7 +192,7 @@ void ContactSequenceTest::testShiftDiscreteEventBeyondInitial2(const Robot& robo
 
 void ContactSequenceTest::testShiftDiscreteEventBeyondTerminal1(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
-  ContactStatus pre_contact_status(robot.max_point_contacts());
+  ContactStatus pre_contact_status = robot.createContactStatus();
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
   ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
@@ -230,7 +215,7 @@ void ContactSequenceTest::testShiftDiscreteEventBeyondTerminal1(const Robot& rob
 
 void ContactSequenceTest::testShiftDiscreteEventBeyondTerminal2(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
-  ContactStatus pre_contact_status(robot.max_point_contacts());
+  ContactStatus pre_contact_status = robot.createContactStatus();
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
   ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
@@ -253,7 +238,7 @@ void ContactSequenceTest::testShiftDiscreteEventBeyondTerminal2(const Robot& rob
 
 void ContactSequenceTest::testShiftDiscreteEventForward(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
-  ContactStatus pre_contact_status(robot.max_point_contacts());
+  ContactStatus pre_contact_status = robot.createContactStatus();
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
   ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
@@ -305,7 +290,7 @@ void ContactSequenceTest::testShiftDiscreteEventForward(const Robot& robot) cons
 
 void ContactSequenceTest::testShiftDiscreteEventBackward(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
-  ContactStatus pre_contact_status(robot.max_point_contacts());
+  ContactStatus pre_contact_status = robot.createContactStatus();
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
   ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
@@ -357,33 +342,16 @@ void ContactSequenceTest::testShiftDiscreteEventBackward(const Robot& robot) con
 
 void ContactSequenceTest::testShiftDiscreteEventMultiple(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
-  ContactStatus pre_contact_status(robot.max_point_contacts()), 
-                intermediate_contact_status(robot.max_point_contacts()),
-                post_contact_status(robot.max_point_contacts());
-  DiscreteEvent discrete_event1(robot.max_point_contacts()),
-                discrete_event2(robot.max_point_contacts());
+  ContactStatus pre_contact_status = robot.createContactStatus();
+  ContactStatus intermediate_contact_status = robot.createContactStatus();
+  ContactStatus post_contact_status = robot.createContactStatus();
+  DiscreteEvent discrete_event1(robot),
+                discrete_event2(robot);
   std::random_device rnd;
   while (!discrete_event1.existDiscreteEvent() || !discrete_event2.existDiscreteEvent()) {
-    for (int i=0; i<robot.max_point_contacts(); ++i) {
-      pre_contact_status.deactivateContact(i);
-      intermediate_contact_status.deactivateContact(i);
-      post_contact_status.deactivateContact(i);
-    }
-    for (int i=0; i<robot.max_point_contacts(); ++i) {
-      if (rnd()%2==0) {
-        pre_contact_status.activateContact(i);
-      }
-    }
-    for (int i=0; i<robot.max_point_contacts(); ++i) {
-      if (rnd()%2==0) {
-        intermediate_contact_status.activateContact(i);
-      }
-    }
-    for (int i=0; i<robot.max_point_contacts(); ++i) {
-      if (rnd()%2==0) {
-        post_contact_status.activateContact(i);
-      }
-    }
+    pre_contact_status.setRandom();
+    intermediate_contact_status.setRandom();
+    post_contact_status.setRandom();
     discrete_event1.setDiscreteEvent(pre_contact_status, intermediate_contact_status);
     discrete_event2.setDiscreteEvent(intermediate_contact_status, post_contact_status);
   }

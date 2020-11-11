@@ -281,11 +281,7 @@ TEST_F(ImpulseFrictionConeTest, floatingBase) {
   testComputePrimalAndDualResidual(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
   testComputeSlackAndDualDirection(robot, impulse_status);
-  std::random_device rnd;
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
-    if (rnd()%2 == 0) 
-      impulse_status.activateImpulse(i);
-  }
+  impulse_status.setRandom();
   testKinematics(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
   testSetSlackAndDual(robot, impulse_status);

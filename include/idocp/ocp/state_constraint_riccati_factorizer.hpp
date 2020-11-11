@@ -17,7 +17,8 @@ public:
   // Argments:
   //    robot: The robot model that has been already initialized.
   StateConstraintRiccatiFactorizer(const Robot& robot, 
-                                   const int max_num_impulse, const int nproc);
+                                   const int max_num_impulse, 
+                                   const int nproc=1);
 
   // Default constructor.
   StateConstraintRiccatiFactorizer();
@@ -53,7 +54,7 @@ public:
   void factorizeLinearProblem(
       const RiccatiFactorization& impulse_riccati_factorization,
       StateConstraintRiccatiFactorization& constraint_factorization,
-      const Eigen::MatrixBase<VectorType>& dx0);
+      const Eigen::MatrixBase<VectorType>& dx0) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

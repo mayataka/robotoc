@@ -52,7 +52,7 @@ inline void StateConstraintRiccatiFactorizer::computeLagrangeMultiplierDirection
     for (int j=i+1; j<num_impulse; ++j) {
       constraint_factorization[i].e().noalias() 
           -= constraint_factorization[i].EN() 
-              * constraint_factorization[i].T_impulse(j) * d[j].dxi();
+              * constraint_factorization[j].T_impulse(i) * d[j].dxi();
     }
     d[i].dxi() = llts_[i].solve(constraint_factorization[i].e());
   }
@@ -63,7 +63,7 @@ template <typename VectorType>
 inline void StateConstraintRiccatiFactorizer::factorizeLinearProblem(
     const RiccatiFactorization& impulse_riccati_factorization,
     StateConstraintRiccatiFactorization& constraint_factorization,
-    const Eigen::MatrixBase<VectorType>& dx0) {
+    const Eigen::MatrixBase<VectorType>& dx0) const {
   constraint_factorization.EN().noalias() 
       = constraint_factorization.Eq() 
           * impulse_riccati_factorization.N.topRows(dimv_);

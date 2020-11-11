@@ -58,11 +58,7 @@ void ImpulseForceCostTest::commonTest(Robot& robot) const {
   cost.lff(robot, data, t, s, kkt_mat);
   EXPECT_TRUE(kkt_res.lf().isZero());
   EXPECT_TRUE(kkt_mat.Qff().isZero());
-  std::random_device rnd;
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
-    if (rnd()%2 == 0) 
-      impulse_status.activateImpulse(i);
-  }
+  impulse_status.setRandom();
   s.setRandom(robot, impulse_status);
   double l_ref = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {

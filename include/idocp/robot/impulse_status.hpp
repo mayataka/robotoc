@@ -135,10 +135,13 @@ public:
   ///
   void deactivateImpulse(const std::vector<int>& contact_indices);
 
+  ///
+  /// @brief Fill impulse status randomly.
+  ///
+  void setRandom();
+
 private:
   ContactStatus impulse_status_;
-
-  void set_has_active_impulse();
 
 };
 

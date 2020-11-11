@@ -139,12 +139,7 @@ TEST_F(ContactDynamicsDataTest, floatingBase) {
   Robot robot(floating_base_urdf, contact_frames);
   contact_status.setContactStatus({false, false, false, false});
   testSize(robot, contact_status);
-  std::random_device rnd;
-  std::vector<bool> is_contact_active;
-  for (const auto frame : contact_frames) {
-    is_contact_active.push_back(rnd()%2==0);
-  }
-  contact_status.setContactStatus(is_contact_active);
+  contact_status.setRandom();
   testSize(robot, contact_status);
 }
 

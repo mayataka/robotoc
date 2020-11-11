@@ -53,12 +53,7 @@ void StateConstraintRiccatiFactorizationTest::test(const Robot& robot) const {
   EXPECT_EQ(factorization.ENq().cols(), dimv);
   EXPECT_EQ(factorization.e().size(), 0);
   auto impulse_status = robot.createImpulseStatus();
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
-    std::random_device rnd;
-    if (rnd()%2==0) {
-      impulse_status.activateImpulse(i);
-    }
-  }
+  impulse_status.setRandom();
   factorization.setImpulseStatus(impulse_status);
   const int dimf = impulse_status.dimp();
   for (int i=0; i<N; ++i) {

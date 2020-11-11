@@ -238,11 +238,7 @@ TEST_F(ConstraintsTest, floatingBase) {
   timeStage0(robot, contact_status);
   timeStage1(robot, contact_status);
   timeStage2(robot, contact_status);
-  std::random_device rnd;
-  for (int i=0; i<contact_status.max_point_contacts(); ++i) {
-    if (rnd()%2 == 0) 
-      contact_status.activateContact(i);
-  }
+  contact_status.setRandom();
   timeStage0(robot, contact_status);
   timeStage1(robot, contact_status);
   timeStage2(robot, contact_status);

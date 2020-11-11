@@ -4,6 +4,7 @@
 #include "idocp/robot/impulse_status.hpp"
 
 #include <cassert>
+#include <random>
 
 
 namespace idocp {
@@ -114,6 +115,11 @@ inline void ImpulseStatus::activateImpulse(
 inline void ImpulseStatus::deactivateImpulse(
     const std::vector<int>& contact_indices) {
   impulse_status_.deactivateContacts(contact_indices);
+}
+
+
+inline void ImpulseStatus::setRandom() {
+  impulse_status_.setRandom();
 }
 
 } // namespace idocp

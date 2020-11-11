@@ -496,15 +496,10 @@ TEST_F(ContactDynamicsTest, floatingBase) {
   testExpansionDual(robot, contact_status);
   testIntegration(robot, contact_status);
   testComputeResidual(robot, contact_status);
-  std::random_device rnd;
-  std::vector<bool> is_contact_active;
-  for (const auto frame : contact_frames) {
-    is_contact_active.push_back(rnd()%2==0);
-  }
+  contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
-  contact_status.setContactStatus(is_contact_active);
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
   testLinearizeContactDynamics(robot, contact_status);

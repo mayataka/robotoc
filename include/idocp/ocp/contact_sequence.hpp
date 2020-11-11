@@ -187,7 +187,7 @@ public:
   int liftStage(const int lift_index) const;
 
 private:
-  int max_point_contacts_, N_;
+  int N_;
   double T_, dtau_;
   std::vector<ContactStatus> contact_sequence_;
   std::vector<DiscreteEvent> discrete_event_sequence_;

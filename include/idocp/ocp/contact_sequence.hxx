@@ -11,12 +11,11 @@ namespace idocp {
 
 inline ContactSequence::ContactSequence(const Robot& robot, const double T, 
                                         const int N)
-  : max_point_contacts_(robot.max_point_contacts()),
-    N_(N),
+  : N_(N),
     T_(T),
     dtau_(T/N),
-    contact_sequence_(N, ContactStatus(robot.max_point_contacts())),
-    discrete_event_sequence_(N, DiscreteEvent(robot.max_point_contacts())),
+    contact_sequence_(N, robot.createContactStatus()),
+    discrete_event_sequence_(N, DiscreteEvent(robot)),
     impulse_index_(N, -1), 
     lift_index_(N, -1),
     impulse_stage_(N, -1),
@@ -37,8 +36,7 @@ inline ContactSequence::ContactSequence(const Robot& robot, const double T,
 
 
 inline ContactSequence::ContactSequence()
-  : max_point_contacts_(0),
-    N_(0),
+  : N_(0),
     T_(0),
     dtau_(0),
     contact_sequence_(),
@@ -56,7 +54,6 @@ inline ContactSequence::~ContactSequence() {
 
 inline void ContactSequence::setContactStatusUniformly(
     const ContactStatus& contact_status) {
-  assert(contact_status.max_point_contacts() == max_point_contacts_);
   for (auto& e : contact_sequence_) {
     e.set(contact_status);
   }

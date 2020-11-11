@@ -1,6 +1,7 @@
 #ifndef IDOCP_DISCRETE_EVENT_HPP_
 #define IDOCP_DISCRETE_EVENT_HPP_
 
+#include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
 
@@ -18,6 +19,12 @@ public:
   /// @param[in] max_point_contacts Maximum number of the point contacts.
   ///
   DiscreteEvent(const int max_point_contacts);
+
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  ///
+  DiscreteEvent(const Robot& robot);
 
   ///
   /// @brief Default constructor. 

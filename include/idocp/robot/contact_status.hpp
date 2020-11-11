@@ -139,6 +139,11 @@ public:
   ///
   void deactivateContacts(const std::vector<int>& contact_indices);
 
+  ///
+  /// @brief Fill contact status randomly.
+  ///
+  void setRandom();
+
 private:
   std::vector<bool> is_contact_active_;
   int dimf_, max_point_contacts_, num_active_contacts_;
