@@ -9,6 +9,7 @@
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 
 
 namespace idocp {
@@ -53,13 +54,19 @@ public:
                                         const double dtau,
                                         RiccatiFactorization& riccati);
 
-  static void factorizeStateConstraintSerial(RiccatiFactorization& riccati);
-
   void factorizeStateConstraintSerial(const RiccatiFactorization& riccati,
                                       RiccatiFactorization& riccati_next);
 
+  static void factorizeStateConstraintSerialInitial(
+      RiccatiFactorization& riccati);
+
   static void computeCostateDirection(const RiccatiFactorization& riccati, 
                                       SplitDirection& d);
+
+  static void computeCostateDirection(
+      const RiccatiFactorization& riccati, 
+      const std::vector<StateConstraintRiccatiFactorization>& cons, 
+      SplitDirection& d);
 
   static void computeControlInputDirection(const RiccatiFactorization& riccati, 
                                            SplitDirection& d);

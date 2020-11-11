@@ -9,7 +9,7 @@
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/riccati_solution.hpp"
+#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/impulse/impulse_riccati_factorizer.hpp"
 
 
@@ -43,7 +43,7 @@ protected:
 
 void ImpulseRiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot) {
   const int dimv = robot.dimv();
-  RiccatiSolution riccati_next(robot);
+  RiccatiFactorization riccati_next(robot);
   ImpulseKKTMatrix kkt_matrix(robot);
   ImpulseKKTResidual kkt_residual(robot);
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
@@ -89,8 +89,8 @@ void ImpulseRiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot
   sx_next.tail(dimv) = riccati_next.sv;
   EXPECT_TRUE(F_ref.isApprox(kkt_matrix.Qxx()));
   EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
-  RiccatiSolution riccati(robot);
-  factorizer.factorizeRiccatiSolution(riccati_next, kkt_matrix, kkt_residual, riccati);
+  RiccatiFactorization riccati(robot);
+  factorizer.factorizeRiccatiFactorization(riccati_next, kkt_matrix, kkt_residual, riccati);
   const Eigen::MatrixXd P_ref = F_ref;
   const Eigen::VectorXd s_ref = A.transpose() * sx_next - A.transpose() * P_next * kkt_residual_ref.Fx() - kkt_residual_ref.lx();
   EXPECT_TRUE(P_ref.topLeftCorner(dimv, dimv).isApprox(riccati.Pqq));
@@ -104,7 +104,7 @@ void ImpulseRiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot
 
 void ImpulseRiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) {
   const int dimv = robot.dimv();
-  RiccatiSolution riccati_next(robot);
+  RiccatiFactorization riccati_next(robot);
   ImpulseKKTMatrix kkt_matrix(robot);
   ImpulseKKTResidual kkt_residual(robot);
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
@@ -133,10 +133,10 @@ void ImpulseRiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) {
   ImpulseKKTMatrix kkt_matrix_ref = kkt_matrix;
   ImpulseKKTResidual kkt_residual_ref = kkt_residual;
   ImpulseRiccatiFactorizer factorizer(robot), factorizer_ref(robot);
-  RiccatiSolution riccati(robot), riccati_ref(robot);
+  RiccatiFactorization riccati(robot), riccati_ref(robot);
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
   factorizer_ref.factorizeKKTMatrix(riccati_next, kkt_matrix_ref, kkt_residual_ref);
-  factorizer_ref.factorizeRiccatiSolution(riccati_next, kkt_matrix_ref, kkt_residual_ref, riccati_ref);
+  factorizer_ref.factorizeRiccatiFactorization(riccati_next, kkt_matrix_ref, kkt_residual_ref, riccati_ref);
   EXPECT_TRUE(riccati.Pqq.isApprox(riccati_ref.Pqq));
   EXPECT_TRUE(riccati.Pqv.isApprox(riccati_ref.Pqv));
   EXPECT_TRUE(riccati.Pvq.isApprox(riccati_ref.Pvq));
@@ -183,7 +183,7 @@ void ImpulseRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) {
 
 void ImpulseRiccatiFactorizerTest::testComputeCostateDirection(const Robot& robot) {
   const int dimv = robot.dimv();
-  RiccatiSolution riccati(robot);
+  RiccatiFactorization riccati(robot);
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
   riccati.Pqq = seed * seed.transpose();
   riccati.Pqv = Eigen::MatrixXd::Random(dimv, dimv);

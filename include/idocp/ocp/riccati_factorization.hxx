@@ -19,8 +19,8 @@ inline RiccatiFactorization::RiccatiFactorization(const Robot& robot)
     apBk(),
     BGinvBt(),
     Pi(),
-    N(),
     pi(),
+    N(),
     dimv_(robot.dimv()),
     dimu_(robot.dimu()) {
   if (robot.max_point_contacts() > 0) {
@@ -32,10 +32,10 @@ inline RiccatiFactorization::RiccatiFactorization(const Robot& robot)
     BGinvBt.setZero();
     Pi.resize(2*robot.dimv(), 2*robot.dimv());
     Pi.setZero();
-    N.resize(2*robot.dimv(), 2*robot.dimv());
-    N.setZero();
     pi.resize(2*robot.dimv());
     pi.setZero();
+    N.resize(2*robot.dimv(), 2*robot.dimv());
+    N.setZero();
   }
 }
 
@@ -53,8 +53,8 @@ inline RiccatiFactorization::RiccatiFactorization()
     apBk(),
     BGinvBt(),
     Pi(),
-    N(),
     pi(),
+    N(),
     dimv_(0),
     dimu_(0) {
 }

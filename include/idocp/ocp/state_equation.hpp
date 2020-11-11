@@ -41,31 +41,11 @@ void ComputeForwardEulerResidual(
     const Eigen::MatrixBase<TangentVectorType>& v_next, 
     KKTResidual& kkt_residual);
 
-template <typename ConfigVectorType, typename TangentVectorType1, 
-        typename TangentVectorType2, typename TangentVectorType3>
-void ComputeForwardEulerResidual(
-    const Robot& robot, const double step_size, const double dtau, 
-    const SplitSolution& s, const Eigen::MatrixBase<ConfigVectorType>& q_next, 
-    const Eigen::MatrixBase<TangentVectorType1>& v_next, 
-    const Eigen::MatrixBase<TangentVectorType2>& dq_next, 
-    const Eigen::MatrixBase<TangentVectorType3>& dv_next, 
-    KKTResidual& kkt_residual);
-
 template <typename ConfigVectorType, typename TangentVectorType>
 void ComputeBackwardEulerResidual(
     const Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
-    const SplitSolution& s, KKTResidual& kkt_residual);
-
-template <typename ConfigVectorType, typename TangentVectorType1, 
-        typename TangentVectorType2, typename TangentVectorType3>
-void ComputeBackwardEulerResidual(
-    const Robot& robot, const double step_size, const double dtau, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const Eigen::MatrixBase<TangentVectorType1>& v_prev, 
-    const Eigen::MatrixBase<TangentVectorType2>& dq_prev, 
-    const Eigen::MatrixBase<TangentVectorType3>& dv_prev, 
     const SplitSolution& s, KKTResidual& kkt_residual);
 
 double L1NormStateEuqationResidual(const KKTResidual& kkt_residual);

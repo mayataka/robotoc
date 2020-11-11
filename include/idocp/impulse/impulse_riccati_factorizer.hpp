@@ -56,9 +56,9 @@ public:
                           ImpulseKKTResidual& kkt_residual);
 
   void factorizeRiccatiFactorization(const RiccatiFactorization& riccati_next, 
-                                const ImpulseKKTMatrix& kkt_matrix, 
-                                const ImpulseKKTResidual& kkt_residual,
-                                RiccatiFactorization& riccati);
+                                     const ImpulseKKTMatrix& kkt_matrix, 
+                                     const ImpulseKKTResidual& kkt_residual,
+                                     RiccatiFactorization& riccati);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

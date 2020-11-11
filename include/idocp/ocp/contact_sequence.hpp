@@ -85,14 +85,14 @@ public:
   /// @param[in] time_stage Time stage where the discrete event of interest 
   /// occurs.
   ///
-  void shiftDiscreteEventToInitial(const int time_stage);
+  void shiftDiscreteEventBeyondInitial(const int time_stage);
 
   ///
   /// @brief Shift the discrete event. 
   /// @param[in] time_stage Time stage where the discrete event of interest 
   /// occurs.
   ///
-  void shiftDiscreteEventToTerminal(const int time_stage);
+  void shiftDiscreteEventBeyondTerminal(const int time_stage);
 
   ///
   /// @brief Getter of the contact status. 
@@ -132,20 +132,78 @@ public:
   bool existImpulse(const int time_stage) const;
 
   ///
+  /// @brief Returns the index of the impulse at time_stage. Returned value is
+  /// valid only if ContactSequence::existImpulse(time_stage) is true. 
+  /// Otherwise return -1.
+  /// @param[in] time_stage Time stage of interested.
+  /// @return Index of impulse.
+  ///
+  int impulseIndex(const int time_stage) const;
+
+  ///
   /// @brief Returns true if lift exists over time_stage. Returns false if not.
   /// @param[in] time_stage Time stage of interested.
   /// @return true if lift exists over time_stage. false if not.
   ///
   bool existLift(const int time_stage) const;
 
+  ///
+  /// @brief Returns the index of the lift at time_stage. Returned value is 
+  /// valid only if ContactSequence::existLift(time_stage) is true.
+  /// Otherwise return -1.
+  /// @param[in] time_stage Time stage of interested.
+  /// @return Index of lift.
+  ///
+  int liftIndex(const int time_stage) const;
+
+  ///
+  /// @brief Returns the number of impulse.
+  /// @return Number of impulse.
+  ///
+  int numImpulse() const;
+
+  ///
+  /// @brief Returns the number of lift.
+  /// @return Number of lift.
+  ///
+  int numLift() const;
+
+  ///
+  /// @brief Returns the time stage of the impulse having impulse_index.  
+  /// Returned value is valid only if impulse_index is less than 
+  /// ContactSequence::numImpoulse(). Otherwise return -1.
+  /// @param[in] impulse_index Index of the impulse of interested.
+  /// @return Time stage of impulse.
+  ///
+  int impulseStage(const int impulse_index) const;
+
+  ///
+  /// @brief Returns the time stage of the lift having lift_index.  
+  /// Returned value is valid only if lift_index is less than 
+  /// ContactSequence::numLift(). Otherwise return -1.
+  /// @param[in] lift_index Index of the impulse of interested.
+  /// @return Time stage of lift.
+  ///
+  int liftStage(const int lift_index) const;
+
 private:
   int max_point_contacts_, N_;
   double T_, dtau_;
   std::vector<ContactStatus> contact_sequence_;
   std::vector<DiscreteEvent> discrete_event_sequence_;
+  std::vector<int> impulse_index_, lift_index_, impulse_stage_, lift_stage_;
 
   int timeStageFromTime(const double time) const;
 
+  void countAll();
+
+  void countImpulse();
+
+  void countLift();
+
+  void countImpulseStage();
+
+  void countLiftStage();
 };
 
 } // namespace idocp 

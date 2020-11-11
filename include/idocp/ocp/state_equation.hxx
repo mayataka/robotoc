@@ -95,26 +95,6 @@ inline void ComputeForwardEulerResidual(
 }
 
 
-template <typename ConfigVectorType, typename TangentVectorType1, 
-          typename TangentVectorType2, typename TangentVectorType3>
-inline void ComputeForwardEulerResidual(
-    const Robot& robot, const double step_size, const double dtau, 
-    const SplitSolution& s, const Eigen::MatrixBase<ConfigVectorType>& q_next, 
-    const Eigen::MatrixBase<TangentVectorType1>& v_next, 
-    const Eigen::MatrixBase<TangentVectorType2>& dq_next, 
-    const Eigen::MatrixBase<TangentVectorType3>& dv_next, 
-    KKTResidual& kkt_residual) {
-  assert(dtau > 0);
-  assert(q_next.size() == robot.dimq());
-  assert(v_next.size() == robot.dimv());
-  assert(dq_next.size() == robot.dimv());
-  assert(dv_next.size() == robot.dimv());
-  robot.subtractConfiguration(s.q, q_next, kkt_residual.Fq());
-  kkt_residual.Fq().noalias() += dtau * s.v - step_size * dq_next;
-  kkt_residual.Fv() = s.v + dtau * s.a - v_next - step_size * dv_next;
-}
-
-
 template <typename ConfigVectorType, typename TangentVectorType>
 inline void ComputeBackwardEulerResidual(
     const Robot& robot, const double dtau, 
@@ -127,26 +107,6 @@ inline void ComputeBackwardEulerResidual(
   robot.subtractConfiguration(q_prev, s.q, kkt_residual.Fq());
   kkt_residual.Fq().noalias() += dtau * s.v;
   kkt_residual.Fv() = v_prev - s.v + dtau * s.a;
-}
-
-
-template <typename ConfigVectorType, typename TangentVectorType1, 
-          typename TangentVectorType2, typename TangentVectorType3>
-inline void ComputeBackwardEulerResidual(
-    const Robot& robot, const double step_size, const double dtau, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const Eigen::MatrixBase<TangentVectorType1>& v_prev, 
-    const Eigen::MatrixBase<TangentVectorType2>& dq_prev, 
-    const Eigen::MatrixBase<TangentVectorType3>& dv_prev, 
-    const SplitSolution& s, KKTResidual& kkt_residual) {
-  assert(dtau > 0);
-  assert(q_prev.size() == robot.dimq());
-  assert(v_prev.size() == robot.dimv());
-  assert(dq_prev.size() == robot.dimv());
-  assert(dv_prev.size() == robot.dimv());
-  robot.subtractConfiguration(q_prev, s.q, kkt_residual.Fq());
-  kkt_residual.Fq().noalias() += dtau * s.v + step_size * dq_prev;
-  kkt_residual.Fv() = v_prev - s.v + dtau * s.a + step_size * dv_prev;
 }
 
 

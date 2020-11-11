@@ -94,21 +94,21 @@ inline void RiccatiFactorizer::factorizeStateConstraintParallel(
 
 
 inline void RiccatiFactorizer::factorizeStateConstraintSerial(
-    RiccatiFactorization& riccati) {
-  riccati.Pi = riccati.ApBK;
-  riccati.pi = riccati.apBk;
-  riccati.N.setZero();
-}
-
-
-inline void RiccatiFactorizer::factorizeStateConstraintSerial(
     const RiccatiFactorization& riccati, 
     RiccatiFactorization& riccati_next) {
   riccati_next.Pi.noalias() = riccati.ApBK * riccati.Pi;
   riccati_next.pi.noalias() = riccati.apBk + riccati.ApBK * riccati.pi;
-  NApBKt_.noalias() = riccati.N * riccati.ApBK.transpose();
   riccati_next.N = riccati.BGinvBt;
+  NApBKt_.noalias() = riccati.N * riccati.ApBK.transpose();
   riccati_next.N.noalias() += riccati.ApBK * NApBKt_;
+}
+
+
+inline void RiccatiFactorizer::factorizeStateConstraintSerialInitial(
+    RiccatiFactorization& riccati) {
+  riccati.Pi = riccati.ApBK;
+  riccati.pi = riccati.apBk;
+  riccati.N.setZero();
 }
 
 
@@ -120,6 +120,14 @@ inline void RiccatiFactorizer::computeCostateDirection(
   d.dgmm().noalias() = riccati.Pqv.transpose() * d.dq();
   d.dgmm().noalias() += riccati.Pvv * d.dv();
   d.dgmm().noalias() -= riccati.sv;
+}
+
+
+inline void RiccatiFactorizer::computeCostateDirection(
+    const RiccatiFactorization& riccati, 
+    const std::vector<StateConstraintRiccatiFactorization>& cons, 
+    SplitDirection& d) {
+  computeCostateDirection(riccati, d);
 }
 
 

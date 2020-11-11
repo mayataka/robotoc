@@ -250,7 +250,7 @@ private:
   std::vector<ImpulseSplitDirection> d_impulse_; // Split Direction for impulse stages
   std::vector<SplitSolution> s_lift_; // Split Solution for lift stages
   std::vector<SplitDirection> d_lift_; // Split Direction for lift stages
-  std::vector<RiccatiSolution> riccati_;
+  std::vector<RiccatiFactorization> riccati_;
   std::vector<SplitTemporarySolution> s_tmp_;
   std::vector<SplitTemporarySolution> s_lift_tmp_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_,

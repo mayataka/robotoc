@@ -96,22 +96,22 @@ public:
   Eigen::VectorXd k;
 
   ///
-  /// @brief Riccati factorization for pure-state equality constraints. 
-  /// Size is 2 * Robot::dimv() x 2 * Robot::dimv() if the robot can have
-  /// contacts. Size is 0 x 0 otherwise.
+  /// @brief Riccati factorization for pure-state equality constraints, which 
+  /// means A + BK. Size is 2 * Robot::dimv() x 2 * Robot::dimv() if the robot 
+  /// can have contacts. Size is 0 x 0 otherwise.
   ///
   Eigen::MatrixXd ApBK;
 
   ///
-  /// @brief Riccati factorization for pure-state equality constraints. Size is 
-  /// 2 * Robot::dimv(). Size is 0 otherwise.
+  /// @brief Riccati factorization for pure-state equality constraints, which
+  /// means means a + Bk. Size is 2 * Robot::dimv(). Size is 0 otherwise.
   ///
   Eigen::VectorXd apBk;
 
   ///
-  /// @brief Riccati factorization for pure-state equality constraints. 
-  /// Size is Robot::dimv() x Robot::dimv() if the robot can have
-  /// contacts. Size is 0 x 0 otherwise.
+  /// @brief Riccati factorization for pure-state equality constraints, which 
+  /// means B Ginv B^T. Size is Robot::dimv() x Robot::dimv() if the robot can 
+  /// have contacts. Size is 0 x 0 otherwise.
   ///
   Eigen::MatrixXd BGinvBt;
 
@@ -123,17 +123,17 @@ public:
   Eigen::MatrixXd Pi;
 
   ///
+  /// @brief Riccati factorization for pure-state equality constraints. Size is 
+  /// 2 * Robot::dimv(). Size is 0 otherwise.
+  ///
+  Eigen::VectorXd pi;
+
+  ///
   /// @brief Riccati factorization for pure-state equality constraints. 
   /// Size is 2 * Robot::dimv() x 2 * Robot::dimv() if the robot can have
   /// contacts. Size is 0 x 0 otherwise.
   ///
   Eigen::MatrixXd N;
-
-  ///
-  /// @brief Riccati factorization for pure-state equality constraints. Size is 
-  /// 2 * Robot::dimv(). Size is 0 otherwise.
-  ///
-  Eigen::VectorXd pi;
 
   ///
   /// @brief Left cols of the feedback gain of the LQR subproblem. Size is 
