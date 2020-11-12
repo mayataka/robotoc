@@ -49,31 +49,11 @@ void RiccatiFactorizationTest::testWithoutContact(const Robot& robot) {
   EXPECT_EQ(riccati.Pvv.cols(), dimv);
   EXPECT_EQ(riccati.sq.size(), dimv);
   EXPECT_EQ(riccati.sv.size(), dimv);
-  EXPECT_EQ(riccati.K.rows(), dimu);
-  EXPECT_EQ(riccati.K.cols(), dimx);
-  EXPECT_EQ(riccati.k.size(), dimu);
-  EXPECT_EQ(riccati.ApBK.rows(), 0);
-  EXPECT_EQ(riccati.ApBK.cols(), 0);
-  EXPECT_EQ(riccati.apBk.size(), 0);
-  EXPECT_EQ(riccati.BGinvBt.rows(), 0);
-  EXPECT_EQ(riccati.BGinvBt.cols(), 0);
   EXPECT_EQ(riccati.Pi.rows(), 0);
   EXPECT_EQ(riccati.Pi.cols(), 0);
   EXPECT_EQ(riccati.pi.size(), 0);
   EXPECT_EQ(riccati.N.rows(), 0);
   EXPECT_EQ(riccati.N.cols(), 0);
-  EXPECT_EQ(riccati.Kq().rows(), dimu);
-  EXPECT_EQ(riccati.Kq().cols(), dimv);
-  EXPECT_EQ(riccati.Kv().rows(), dimu);
-  EXPECT_EQ(riccati.Kv().cols(), dimv);
-  const Eigen::MatrixXd K_ref = Eigen::MatrixXd::Random(dimu, dimx);
-  const Eigen::VectorXd k_ref = Eigen::VectorXd::Random(dimu);
-  riccati.K = K_ref;
-  riccati.k = k_ref;
-  EXPECT_TRUE(K_ref.isApprox(riccati.K));
-  EXPECT_TRUE(k_ref.isApprox(riccati.k));
-  EXPECT_TRUE(K_ref.leftCols(dimv).isApprox(riccati.Kq()));
-  EXPECT_TRUE(K_ref.rightCols(dimv).isApprox(riccati.Kv()));
 }
 
 
@@ -93,31 +73,12 @@ void RiccatiFactorizationTest::testWithContact(const Robot& robot) {
   EXPECT_EQ(riccati.Pvv.cols(), dimv);
   EXPECT_EQ(riccati.sq.size(), dimv);
   EXPECT_EQ(riccati.sv.size(), dimv);
-  EXPECT_EQ(riccati.K.rows(), dimu);
-  EXPECT_EQ(riccati.K.cols(), dimx);
-  EXPECT_EQ(riccati.k.size(), dimu);
-  EXPECT_EQ(riccati.ApBK.rows(), dimx);
-  EXPECT_EQ(riccati.ApBK.cols(), dimx);
-  EXPECT_EQ(riccati.apBk.size(), dimx);
-  EXPECT_EQ(riccati.BGinvBt.rows(), dimv);
-  EXPECT_EQ(riccati.BGinvBt.cols(), dimv);
   EXPECT_EQ(riccati.Pi.rows(), dimx);
   EXPECT_EQ(riccati.Pi.cols(), dimx);
   EXPECT_EQ(riccati.pi.size(), dimx);
   EXPECT_EQ(riccati.N.rows(), dimx);
   EXPECT_EQ(riccati.N.cols(), dimx);
-  EXPECT_EQ(riccati.Kq().rows(), dimu);
-  EXPECT_EQ(riccati.Kq().cols(), dimv);
-  EXPECT_EQ(riccati.Kv().rows(), dimu);
-  EXPECT_EQ(riccati.Kv().cols(), dimv);
-  const Eigen::MatrixXd K_ref = Eigen::MatrixXd::Random(dimu, dimx);
-  const Eigen::VectorXd k_ref = Eigen::VectorXd::Random(dimu);
-  riccati.K = K_ref;
-  riccati.k = k_ref;
-  EXPECT_TRUE(K_ref.isApprox(riccati.K));
-  EXPECT_TRUE(k_ref.isApprox(riccati.k));
-  EXPECT_TRUE(K_ref.leftCols(dimv).isApprox(riccati.Kq()));
-  EXPECT_TRUE(K_ref.rightCols(dimv).isApprox(riccati.Kv()));
+  EXPECT_TRUE(riccati.Pi.isIdentity());
 }
 
 

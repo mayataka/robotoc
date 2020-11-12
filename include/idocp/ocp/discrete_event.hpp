@@ -89,16 +89,14 @@ public:
   double eventTime() const;
 
   ///
-  /// @brief Act on the contact status and change it according to this discrete 
-  /// event.
+  /// @brief Change the input contact status as is before this discrete event.
   /// @param[in] contact_status Contact status. Must be consistent with this 
   /// discrete event. 
   ///
   void act(ContactStatus& contact_status) const;
 
   ///
-  /// @brief Act inversly on the contact status and change it according to this 
-  /// discrete event.
+  /// @brief Change the input contact status as is after this discrete event.
   /// @param[in] contact_status Contact status. Must be consistent with this 
   /// discrete event. 
   ///

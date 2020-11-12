@@ -18,17 +18,51 @@ public:
   /// @brief Allocate Riccati factorization matrix and vector.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
-  RiccatiFactorization(const Robot& robot);
+  RiccatiFactorization(const Robot& robot)
+    : Pqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+      Pqv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+      Pvq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+      Pvv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+      sq(Eigen::VectorXd::Zero(robot.dimv())),
+      sv(Eigen::VectorXd::Zero(robot.dimv())),
+      Pi(),
+      pi(),
+      N(),
+      n() {
+    if (robot.max_point_contacts() > 0) {
+      const int dimx = 2*robot.dimv();
+      Pi.resize(dimx, dimx);
+      Pi.setIdentity();
+      pi.resize(dimx);
+      pi.setZero();
+      N.resize(dimx, dimx);
+      N.setZero();
+      n.resize(dimx);
+      n.setZero();
+    }
+  }
 
   ///
   /// @brief Default constructor. 
   ///
-  RiccatiFactorization();
+  RiccatiFactorization()
+    : Pqq(),
+      Pqv(),
+      Pvq(),
+      Pvv(),
+      sq(),
+      sv(),
+      Pi(),
+      pi(),
+      N(),
+      n() {
+  }
 
   ///
   /// @brief Destructor. 
   ///
-  ~RiccatiFactorization();
+  ~RiccatiFactorization() {
+  }
 
   ///
   /// @brief Default copy constructor. 
@@ -85,37 +119,6 @@ public:
   Eigen::VectorXd sv;
 
   ///
-  /// @brief Feedback gain of LQR subproblem. Size is 
-  /// Robot::dimu() x 2 * Robot::dimv().
-  ///
-  Eigen::MatrixXd K;
-
-  ///
-  /// @brief Feedforward term of LQR subproblem. Size is Robot::dimu().
-  ///
-  Eigen::VectorXd k;
-
-  ///
-  /// @brief Riccati factorization for pure-state equality constraints, which 
-  /// means A + BK. Size is 2 * Robot::dimv() x 2 * Robot::dimv() if the robot 
-  /// can have contacts. Size is 0 x 0 otherwise.
-  ///
-  Eigen::MatrixXd ApBK;
-
-  ///
-  /// @brief Riccati factorization for pure-state equality constraints, which
-  /// means means a + Bk. Size is 2 * Robot::dimv(). Size is 0 otherwise.
-  ///
-  Eigen::VectorXd apBk;
-
-  ///
-  /// @brief Riccati factorization for pure-state equality constraints, which 
-  /// means B Ginv B^T. Size is Robot::dimv() x Robot::dimv() if the robot can 
-  /// have contacts. Size is 0 x 0 otherwise.
-  ///
-  Eigen::MatrixXd BGinvBt;
-
-  ///
   /// @brief Riccati factorization for pure-state equality constraints. 
   /// Size is 2 * Robot::dimv() x 2 * Robot::dimv() if the robot can have
   /// contacts. Size is 0 x 0 otherwise.
@@ -136,36 +139,15 @@ public:
   Eigen::MatrixXd N;
 
   ///
-  /// @brief Left cols of the feedback gain of the LQR subproblem. Size is 
-  /// Robot::dimu() x Robot::dimv().
+  /// @brief Riccati factorization for pure-state equality constraints. Size is 
+  /// 2 * Robot::dimv(). Size is 0 otherwise.
   ///
-  Eigen::Block<Eigen::MatrixXd> Kq();
-
-  ///
-  /// @brief const version of RiccatiFactorization::Kq() 
-  ///
-  const Eigen::Block<const Eigen::MatrixXd> Kq() const;
-
-  ///
-  /// @brief Right cols of the feedback gain of the LQR subproblem. Size is 
-  /// Robot::dimu() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Kv();
-
-  ///
-  /// @brief const version of RiccatiFactorization::Kv() 
-  ///
-  const Eigen::Block<const Eigen::MatrixXd> Kv() const;
+  Eigen::VectorXd n;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-private:
-  int dimv_, dimu_;
 
 };
 
 } // namespace idocp 
-
-#include "idocp/ocp/riccati_factorization.hxx"
 
 #endif // IDOCP_RICCATI_FACTORIZATION_HPP_ 

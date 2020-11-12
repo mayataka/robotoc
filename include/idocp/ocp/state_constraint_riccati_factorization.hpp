@@ -61,38 +61,97 @@ public:
   StateConstraintRiccatiFactorization& operator=(
       StateConstraintRiccatiFactorization&&) noexcept = default;
 
+  ///
+  /// @brief Set the dimension of the impulse. 
+  /// @param[in] impulse_status Impulse status. 
+  ///
   void setImpulseStatus(const ImpulseStatus& impulse_status);
 
+  ///
+  /// @brief A factorization matrix at a time stage. 
+  /// @param[in] time_stage Time stage of interested. 
+  ///
   Eigen::Block<Eigen::MatrixXd> T(const int time_stage);
 
+  ///
+  /// @brief const version of StateConstraintRiccatiFactorization::T(). 
+  ///
   const Eigen::Block<const Eigen::MatrixXd> T(const int time_stage) const;
 
+  ///
+  /// @brief A factorization matrix at a impulse time stage. 
+  /// @param[in] impulse_index Impulse index of interested. 
+  ///
   Eigen::Block<Eigen::MatrixXd> T_impulse(const int impulse_index);
 
-  const Eigen::Block<const Eigen::MatrixXd> T_impulse(const int impulse_index) const;
+  ///
+  /// @brief const version of StateConstraintRiccatiFactorization::T_impulse(). 
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> T_impulse(
+      const int impulse_index) const;
 
+  ///
+  /// @brief A factorization matrix at a lift time stage. 
+  /// @param[in] lift_index Lift index of interested. 
+  ///
   Eigen::Block<Eigen::MatrixXd> T_lift(const int lift_index);
 
+  ///
+  /// @brief const version of StateConstraintRiccatiFactorization::T_lift(). 
+  ///
   const Eigen::Block<const Eigen::MatrixXd> T_lift(const int lift_index) const;
 
+  ///
+  /// @brief Partial derivative of the equality constriant with respect to the 
+  /// configuration. 
+  ///
   Eigen::Block<Eigen::MatrixXd> Eq();
 
+  ///
+  /// @brief const version of StateConstraintRiccatiFactorization::Eq(). 
+  ///
   const Eigen::Block<const Eigen::MatrixXd> Eq() const;
 
+  ///
+  /// @brief Product of the partial derivative of the equality constriant with 
+  /// respect to state and RiccatiFactorization::N. 
+  ///
   Eigen::Block<Eigen::MatrixXd> EN();
 
+  ///
+  /// @brief const version of StateConstraintRiccatiFactorization::EN(). 
+  ///
   const Eigen::Block<const Eigen::MatrixXd> EN() const;
 
+  ///
+  /// @brief Top Robot::dimv() rows of RiccatiFactorization::EN(). 
+  ///
   Eigen::Block<Eigen::MatrixXd> ENq();
 
+  ///
+  /// @brief const version of StateConstraintRiccatiFactorization::ENq(). 
+  ///
   const Eigen::Block<const Eigen::MatrixXd> ENq() const;
 
+  ///
+  /// @brief Product of RiccatiFactorization::EN() and 
+  /// StateConstraintRiccatiFactorization::Eq(). 
+  ///
   Eigen::Block<Eigen::MatrixXd> ENEt();
 
+  ///
+  /// @brief const version of StateConstraintRiccatiFactorization::ENEt(). 
+  ///
   const Eigen::Block<const Eigen::MatrixXd> ENEt() const;
 
+  ///
+  /// @brief Residual of the equality constriant.
+  ///
   Eigen::VectorBlock<Eigen::VectorXd> e();
 
+  ///
+  /// @brief const version of StateConstraintRiccatiFactorization::e(). 
+  ///
   const Eigen::VectorBlock<const Eigen::VectorXd> e() const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

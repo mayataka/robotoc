@@ -43,13 +43,27 @@ public:
                                 ImpulseKKTResidual& kkt_residual, 
                                 RiccatiFactorization& riccati);
 
-  void forwardRiccatiRecursion(const ImpulseKKTMatrix& kkt_matrix, 
-                               const ImpulseKKTResidual& kkt_residual,
-                               const ImpulseSplitDirection& d,
-                               SplitDirection& d_next) const;
+  void forwardStateConstraintFactorizationSerial(
+      const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
+      const ImpulseKKTResidual& kkt_residual, 
+      RiccatiFactorization& riccati_next);
+
+  template <typename SplitDirectionType>
+  inline void forwardRiccatiRecursionSerial(
+      const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
+      const ImpulseKKTResidual& kkt_residual, const ImpulseSplitDirection& d, 
+      SplitDirectionType& d_next) const;
 
   static void computeCostateDirection(const RiccatiFactorization& riccati, 
                                       ImpulseSplitDirection& d);
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+private:
+  bool has_floating_base_;
+  int dimv_;
+  static constexpr int kDimFloatingBase = 6;
+  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, NApBKt_;
 
   void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
                           ImpulseKKTMatrix& kkt_matrix, 
@@ -59,14 +73,6 @@ public:
                                      const ImpulseKKTMatrix& kkt_matrix, 
                                      const ImpulseKKTResidual& kkt_residual,
                                      RiccatiFactorization& riccati);
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-private:
-  bool has_floating_base_;
-  int dimv_;
-  static constexpr int kDimFloatingBase = 6;
-  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_;
 
 };
 

@@ -9,70 +9,108 @@
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
-#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 
 
 namespace idocp {
 
+///
+/// @class RiccatiFactorizer
+/// @brief Riccati factorizer for SplitOCP.
+///
 class RiccatiFactorizer {
 public:
-  // Constructor.
-  // Argments:
-  //    robot: The robot model that has been already initialized.
+  ///
+  /// @brief Construct factorizer.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  ///
   RiccatiFactorizer(const Robot& robot);
 
-  // Default constructor.
+  ///
+  /// @brief Default constructor. 
+  ///
   RiccatiFactorizer();
 
-  // Destructor.
+  ///
+  /// @brief Destructor. 
+  ///
   ~RiccatiFactorizer();
  
-  // Use default copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   RiccatiFactorizer(const RiccatiFactorizer&) = default;
 
-  // Use default copy operator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   RiccatiFactorizer& operator=(const RiccatiFactorizer&) = default;
 
-  // Use default move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   RiccatiFactorizer(RiccatiFactorizer&&) noexcept = default;
 
-  // Use default move assign operator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   RiccatiFactorizer& operator=(RiccatiFactorizer&&) noexcept = default;
 
   void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next, 
-                                const double dtau, KKTMatrix& kkt_matrix, 
-                                KKTResidual& kkt_residual, 
+                                KKTMatrix& kkt_matrix, 
+                                KKTResidual& kkt_residual, const double dtau, 
                                 RiccatiFactorization& riccati);
 
+  void forwardRiccatiRecursionParallel(KKTMatrix& kkt_matrix, 
+                                       KKTResidual& kkt_residual, 
+                                       RiccatiFactorization& riccati);
+
+  static void forwardRiccatiRecursionSerialInitial(
+      const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+      RiccatiFactorization& riccati);
+
+  void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati, 
+                                     const KKTMatrix& kkt_matrix, 
+                                     const KKTResidual& kkt_residual, 
+                                     RiccatiFactorization& riccati_next);
+
+  template <typename SplitDirectionType>
   void forwardRiccatiRecursion(const KKTMatrix& kkt_matrix, 
                                const KKTResidual& kkt_residual,
                                const SplitDirection& d, const double dtau,
-                               SplitDirection& d_next) const;
+                               SplitDirectionType& d_next) const;
 
-  void factorizeStateConstraintParallel(const KKTMatrix& kkt_matrix, 
-                                        const KKTResidual& kkt_residual, 
-                                        const double dtau,
-                                        RiccatiFactorization& riccati);
+  template <typename VectorType>
+  void computeStateDirection(const RiccatiFactorization& riccati, 
+                             SplitDirection& d, 
+                             const Eigen::MatrixBase<VectorType>& dx0);
 
-  void factorizeStateConstraintSerial(const RiccatiFactorization& riccati,
-                                      RiccatiFactorization& riccati_next);
+  void computeCostateDirection(const RiccatiFactorization& riccati, 
+                               SplitDirection& d);
 
-  static void factorizeStateConstraintSerialInitial(
-      RiccatiFactorization& riccati);
+  void computeControlInputDirection(const RiccatiFactorization& riccati, 
+                                    SplitDirection& d) const;
 
-  static void computeCostateDirection(const RiccatiFactorization& riccati, 
-                                      SplitDirection& d);
+  template <typename MatrixType>
+  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType>& K);
 
-  static void computeCostateDirection(
-      const RiccatiFactorization& riccati, 
-      const std::vector<StateConstraintRiccatiFactorization>& cons, 
-      SplitDirection& d);
+  template <typename MatrixType1, typename MatrixType2>
+  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Kq,
+                            const Eigen::MatrixBase<MatrixType2>& Kv);
 
-  static void computeControlInputDirection(const RiccatiFactorization& riccati, 
-                                           SplitDirection& d);
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+private:
+  bool has_floating_base_, has_state_constraint_;
+  int dimv_, dimu_;
+  static constexpr int kDimFloatingBase = 6;
+  Eigen::LLT<Eigen::MatrixXd> llt_;
+  Eigen::MatrixXd K_; // State feedback gain of the LQR subproblem
+  Eigen::VectorXd k_; // Feedforward term of the LQR subproblem
+  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, BtPq_, BtPv_, GK_, 
+                  GinvBt_, BGinvBt_, NApBKt_;
 
   void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
-                          const double dtau, KKTMatrix& kkt_matrix, 
+                          const double dtau, KKTMatrix& kkt_matrix,  
                           KKTResidual& kkt_residual);
 
   void computeFeedbackGainAndFeedforward(const KKTMatrix& kkt_matrix, 
@@ -80,20 +118,11 @@ public:
                                          RiccatiFactorization& riccati);
 
   void factorizeRiccatiFactorization(const RiccatiFactorization& riccati_next, 
-                                     const double dtau, 
                                      const KKTMatrix& kkt_matrix, 
                                      const KKTResidual& kkt_residual,
+                                     const double dtau, 
                                      RiccatiFactorization& riccati);
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-private:
-  bool has_floating_base_;
-  int dimv_, dimu_;
-  static constexpr int kDimFloatingBase = 6;
-  Eigen::LLT<Eigen::MatrixXd> llt_;
-  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, BtPq_, BtPv_, GK_, 
-                  GinvBt_, NApBKt_;
 };
 
 } // namespace idocp

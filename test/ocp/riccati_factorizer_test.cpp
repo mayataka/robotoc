@@ -21,19 +21,20 @@ protected:
     std::random_device rnd;
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
-    fixed_base_robot = Robot(fixed_base_urdf);
-    floating_base_robot = Robot(floating_base_urdf);
+    fixed_base_robot = Robot(fixed_base_urdf, {18});
+    floating_base_robot = Robot(floating_base_urdf, {14, 24, 34, 44});
     dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
   }
 
-  static void testBackwardRecursionUnits(const Robot& robot, const double dtau);
-  static void testBackwardRecursion(const Robot& robot, const double dtau);
-  static void testForwardRecursion(const Robot& robot, const double dtau);
-  static void testComputeCostateDirection(const Robot& robot, const double dtau);
-  static void testComputeControlInputDirection(const Robot& robot, const double dtau);
+  void testBackwardRecursionUnits(const Robot& robot) const;
+  void testBackwardRecursion(const Robot& robot) const;
+  void testForwardRecursion(const Robot& robot) const;
+  void testComputeCostateDirection(const Robot& robot) const;
+  void testComputeControlInputDirection(const Robot& robot) const;
+  void testFactorizeStateConstraintParallel(const Robot& robot) const;
 
   double dtau;
   std::string fixed_base_urdf, floating_base_urdf;
@@ -41,7 +42,7 @@ protected:
 };
 
 
-void RiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot, const double dtau) {
+void RiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   RiccatiFactorization riccati_next(robot);
@@ -127,7 +128,7 @@ void RiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot, const
 }
 
 
-void RiccatiFactorizerTest::testBackwardRecursion(const Robot& robot, const double dtau) {
+void RiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   RiccatiFactorization riccati_next(robot);
@@ -189,7 +190,7 @@ void RiccatiFactorizerTest::testBackwardRecursion(const Robot& robot, const doub
 }
 
 
-void RiccatiFactorizerTest::testForwardRecursion(const Robot& robot, const double dtau) {
+void RiccatiFactorizerTest::testForwardRecursion(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   KKTMatrix kkt_matrix(robot);
@@ -230,7 +231,7 @@ void RiccatiFactorizerTest::testForwardRecursion(const Robot& robot, const doubl
 }
 
 
-void RiccatiFactorizerTest::testComputeCostateDirection(const Robot& robot, const double dtau) {
+void RiccatiFactorizerTest::testComputeCostateDirection(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   RiccatiFactorization riccati(robot);
@@ -253,7 +254,7 @@ void RiccatiFactorizerTest::testComputeCostateDirection(const Robot& robot, cons
 }
 
 
-void RiccatiFactorizerTest::testComputeControlInputDirection(const Robot& robot, const double dtau) {
+void RiccatiFactorizerTest::testComputeControlInputDirection(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   RiccatiFactorization riccati(robot);
@@ -268,21 +269,38 @@ void RiccatiFactorizerTest::testComputeControlInputDirection(const Robot& robot,
 }
 
 
+void RiccatiFactorizerTest::testFactorizeStateConstraintParallel(const Robot& robot) const {
+  const int dimv = robot.dimv();
+  const int dimu = robot.dimu();
+  const int dimx = 2*robot.dimv();
+  KKTMatrix kkt_matrix(robot);
+  if (robot.has_floating_base()) {
+    kkt_matrix.Fqq().setIdentity();
+    kkt_matrix.Fqq().topLeftCorner(6, 6).setRandom();
+  }
+  kkt_matrix.Fvq().setRandom();
+  kkt_matrix.Fvv().setRandom();
+  kkt_matrix.Fvu().setRandom();
+  KKTResidual kkt_residual(robot);
+   factorizeStateConstraintParallel
+}
+
+
 TEST_F(RiccatiFactorizerTest, fixedBase) {
-  testBackwardRecursionUnits(fixed_base_robot, dtau);
-  testBackwardRecursion(fixed_base_robot, dtau);
-  testForwardRecursion(fixed_base_robot, dtau);
-  testComputeCostateDirection(fixed_base_robot, dtau);
-  testComputeControlInputDirection(fixed_base_robot, dtau);
+  testBackwardRecursionUnits(fixed_base_robot);
+  testBackwardRecursion(fixed_base_robot);
+  testForwardRecursion(fixed_base_robot);
+  testComputeCostateDirection(fixed_base_robot);
+  testComputeControlInputDirection(fixed_base_robot);
 }
 
 
 TEST_F(RiccatiFactorizerTest, floating_base) {
-  testBackwardRecursionUnits(floating_base_robot, dtau);
-  testBackwardRecursion(floating_base_robot, dtau);
-  testForwardRecursion(floating_base_robot, dtau);
-  testComputeCostateDirection(floating_base_robot, dtau);
-  testComputeControlInputDirection(floating_base_robot, dtau);
+  testBackwardRecursionUnits(floating_base_robot);
+  testBackwardRecursion(floating_base_robot);
+  testForwardRecursion(floating_base_robot);
+  testComputeCostateDirection(floating_base_robot);
+  testComputeControlInputDirection(floating_base_robot);
 }
 
 } // namespace idocp

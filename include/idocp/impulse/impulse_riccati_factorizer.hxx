@@ -12,7 +12,8 @@ inline ImpulseRiccatiFactorizer::ImpulseRiccatiFactorizer(
     AtPqq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     AtPqv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     AtPvq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    AtPvv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())) {
+    AtPvv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    NApBKt_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())) {
 }
 
 
@@ -22,7 +23,8 @@ inline ImpulseRiccatiFactorizer::ImpulseRiccatiFactorizer()
     AtPqq_(),
     AtPqv_(),
     AtPvq_(),
-    AtPvv_() {
+    AtPvv_(),
+    NApBKt_() {
 }
 
 
@@ -34,21 +36,39 @@ inline void ImpulseRiccatiFactorizer::backwardRiccatiRecursion(
     const RiccatiFactorization& riccati_next, ImpulseKKTMatrix& kkt_matrix, 
     ImpulseKKTResidual& kkt_residual, RiccatiFactorization& riccati) {
   factorizeKKTMatrix(riccati_next, kkt_matrix, kkt_residual);
-  factorizeRiccatiFactorization(riccati_next, kkt_matrix, kkt_residual, riccati);
+  factorizeRiccatiFactorization(riccati_next, kkt_matrix, kkt_residual, 
+                                riccati);
 }
 
 
-inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursion(
-    const ImpulseKKTMatrix& kkt_matrix, const ImpulseKKTResidual& kkt_residual,
-    const ImpulseSplitDirection& d, SplitDirection& d_next) const {
+inline void ImpulseRiccatiFactorizer::forwardStateConstraintFactorizationSerial(
+    const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
+    const ImpulseKKTResidual& kkt_residual, 
+    RiccatiFactorization& riccati_next) {
+  riccati_next.Pi.noalias() = kkt_matrix.Fxx() * riccati.Pi;
+  riccati_next.pi = kkt_residual.Fx();
+  riccati_next.pi.noalias() += kkt_matrix.Fxx() * riccati.pi;
+  NApBKt_.noalias() = riccati.N * kkt_matrix.Fxx().transpose();
+  riccati_next.N.noalias() = kkt_matrix.Fxx() * NApBKt_;
+}
+
+
+template <typename SplitDirectionType>
+inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursionSerial(
+    const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
+    const ImpulseKKTResidual& kkt_residual, const ImpulseSplitDirection& d, 
+    SplitDirectionType& d_next) const {
+  assert(dtau > 0);
   if (has_floating_base_) {
-    d_next.dq().noalias() = kkt_matrix.Fqq() * d.dq() + kkt_residual.Fq();
+    d_next.dq().noalias() = kkt_matrix.Fqq() * d.dq();
+    d_next.dq().noalias() += kkt_residual.Fq();
   }
   else {
     d_next.dq().noalias() = d.dq() + kkt_residual.Fq();
   }
-  d_next.dv().noalias() = kkt_matrix.Fvq() * d.dq() + kkt_matrix.Fvv() * d.dv() 
-                            + kkt_residual.Fv();
+  d_next.dv().noalias() = kkt_matrix.Fvq() * d.dq();
+  d_next.dv().noalias() += kkt_matrix.Fvv() * d.dv();
+  d_next.dv().noalias() += kkt_residual.Fv();
 }
 
 
@@ -60,6 +80,7 @@ inline void ImpulseRiccatiFactorizer::computeCostateDirection(
   d.dgmm().noalias() = riccati.Pqv.transpose() * d.dq();
   d.dgmm().noalias() += riccati.Pvv * d.dv();
   d.dgmm().noalias() -= riccati.sv;
+  d.dlmdgmm().noalias() += riccati.n;
 }
 
 

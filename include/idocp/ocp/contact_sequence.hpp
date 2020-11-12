@@ -11,11 +11,12 @@
 
 namespace idocp {
 
-  ///
-  /// @class ContactSequence 
-  /// @brief Contact sequence, i.e., sequence of contact status over the 
-  /// horizon. 
-  ///
+///
+/// @class ContactSequence 
+/// @brief Contact sequence, i.e., sequence of contact status over the 
+/// horizon. Provides the formulation of the optimal control problem 
+/// with impulse and lift.
+///
 class ContactSequence {
 public:
   ///
@@ -57,8 +58,8 @@ public:
   ContactSequence& operator=(ContactSequence&&) noexcept = default;
 
   ///
-  /// @brief Set all of the contact status uniformly. Also, disable all of the 
-  /// discrete events.
+  /// @brief Set all of the contact status uniformly. Also, disable all of 
+  /// discrete events, i.e., impulse and lift.
   /// @param[in] contact_status Contact status.
   ///
   void setContactStatusUniformly(const ContactStatus& contact_status);
@@ -73,133 +74,123 @@ public:
   void setDiscreteEvent(const DiscreteEvent& discrete_event);
 
   ///
-  /// @brief Shift the discrete event. 
-  /// @param[in] time_stage Time stage where the discrete event of interest 
-  /// occurs.
-  /// @param[in] event_time Event time after shifted.
+  /// @brief Shift the impulse. 
+  /// @param[in] impulse_index Impulse index. Must be less than 
+  /// ContactSequence::totalNumImpulseStages().
+  /// @param[in] impulse_time Impulse time after shifted.
   ///
-  void shiftDiscreteEvent(const int time_stage, const double event_time);
+  void shiftImpulse(const int impulse_index, const double impulse_time);
 
   ///
   /// @brief Shift the discrete event. 
-  /// @param[in] time_stage Time stage where the discrete event of interest 
-  /// occurs.
+  /// @param[in] lift_index Lift index. Must be less than 
+  /// ContactSequence::totalNumLiftStages().
+  /// @param[in] lift_time Lift time after shifted.
   ///
-  void shiftDiscreteEventBeyondInitial(const int time_stage);
-
-  ///
-  /// @brief Shift the discrete event. 
-  /// @param[in] time_stage Time stage where the discrete event of interest 
-  /// occurs.
-  ///
-  void shiftDiscreteEventBeyondTerminal(const int time_stage);
+  void shiftLift(const int lift_index, const double lift_time);
 
   ///
   /// @brief Getter of the contact status. 
-  /// @param[in] time_stage Time stage of interest.
+  /// @param[in] time_stage Time stage of interest. The discrete event of  
+  /// interest occurs between time_stage and time_stage+1.
   /// @return const reference to the contact status.
   ///
   const ContactStatus& contactStatus(const int time_stage) const;
 
   ///
   /// @brief Getter of the impulse status. 
-  /// @param[in] time_stage Time stage of interest.
+  /// ContactSequence::totalNumImpulseStages() must be positive.
+  /// @param[in] impulse_index Impulse index. Must be less than 
+  /// ContactSequence::totalNumImpulseStages().
   /// @return const reference to the impulse status.
   ///
-  const ImpulseStatus& impulseStatus(const int time_stage) const;
+  const ImpulseStatus& impulseStatus(const int impulse_index) const;
 
   ///
-  /// @brief Getter of the event time. 
-  /// @param[in] time_stage Time stage of interest.
-  /// @return Event time.
+  /// @brief Getter of the impulse time. 
+  /// @param[in] impulse_index Impulse index. Must be less than 
+  /// ContactSequence::totalNumImpulseStages().
+  /// @return Impulse time.
   ///
-  double eventTime(const int time_stage) const;
+  double impulseTime(const int impulse_index) const;
 
   ///
-  /// @brief Returns true if discrete event exists over time_stage. Returns 
-  /// false if not.
+  /// @brief Getter of the lift time. 
+  /// @param[in] lift_index Lift index. Must be less than 
+  /// ContactSequence::totalNumLiftStages().
+  /// @return Lift time.
+  ///
+  double liftTime(const int lift_index) const;
+
+  ///
+  /// @brief Returns the number of impulse stages before the time_stage. 
   /// @param[in] time_stage Time stage of interested.
-  /// @return true if discrete event exists over time_stage. false if not.
+  /// @return Number of impulse stages.
   ///
-  bool existDiscreteEvent(const int time_stage) const;
+  int numImpulseStages(const int time_stage) const;
 
   ///
-  /// @brief Returns true if impulse exists over time_stage. Returns false if
-  /// not.
+  /// @brief Returns the number of lift stages before the time_stage. 
   /// @param[in] time_stage Time stage of interested.
-  /// @return true if impulse exists over time_stage. false if not.
+  /// @return Number of lift stages.
   ///
-  bool existImpulse(const int time_stage) const;
+  int numLiftStages(const int time_stage) const;
 
   ///
-  /// @brief Returns the index of the impulse at time_stage. Returned value is
-  /// valid only if ContactSequence::existImpulse(time_stage) is true. 
-  /// Otherwise return -1.
-  /// @param[in] time_stage Time stage of interested.
-  /// @return Index of impulse.
+  /// @brief Returns the total number of impulse stages over the horizon.
+  /// @return Total number of impulse stages over the horizon.
   ///
-  int impulseIndex(const int time_stage) const;
+  int totalNumImpulseStages() const;
 
   ///
-  /// @brief Returns true if lift exists over time_stage. Returns false if not.
-  /// @param[in] time_stage Time stage of interested.
-  /// @return true if lift exists over time_stage. false if not.
+  /// @brief Returns the total number of lift stages over the horizon.
+  /// @return Total number of lift stages over the horizon.
   ///
-  bool existLift(const int time_stage) const;
+  int totalNumLiftStages() const;
 
   ///
-  /// @brief Returns the index of the lift at time_stage. Returned value is 
-  /// valid only if ContactSequence::existLift(time_stage) is true.
-  /// Otherwise return -1.
-  /// @param[in] time_stage Time stage of interested.
-  /// @return Index of lift.
+  /// @brief Returns the time stage just before impulse having impulse_index.  
+  /// @param[in] impulse_index Impulse index. Must be less than 
+  /// ContactSequence::totalNumImpulseStages().
+  /// @return Time stage before the impulse.
   ///
-  int liftIndex(const int time_stage) const;
+  int timeStageBeforeImpulse(const int impulse_index) const;
 
   ///
-  /// @brief Returns the number of impulse.
-  /// @return Number of impulse.
+  /// @brief Returns the time stage just before lift having lift_index.  
+  /// @param[in] lift_index Lift index. Must be less than 
+  /// ContactSequence::totalNumLiftStages().
+  /// @return Time stage before the lift.
   ///
-  int numImpulse() const;
-
-  ///
-  /// @brief Returns the number of lift.
-  /// @return Number of lift.
-  ///
-  int numLift() const;
-
-  ///
-  /// @brief Returns the time stage of the impulse having impulse_index.  
-  /// Returned value is valid only if impulse_index is less than 
-  /// ContactSequence::numImpoulse(). Otherwise return -1.
-  /// @param[in] impulse_index Index of the impulse of interested.
-  /// @return Time stage of impulse.
-  ///
-  int impulseStage(const int impulse_index) const;
-
-  ///
-  /// @brief Returns the time stage of the lift having lift_index.  
-  /// Returned value is valid only if lift_index is less than 
-  /// ContactSequence::numLift(). Otherwise return -1.
-  /// @param[in] lift_index Index of the impulse of interested.
-  /// @return Time stage of lift.
-  ///
-  int liftStage(const int lift_index) const;
+  int timeStageBeforeLift(const int lift_index) const;
 
 private:
   int N_;
   double T_, dtau_;
   std::vector<ContactStatus> contact_sequence_;
   std::vector<DiscreteEvent> discrete_event_sequence_;
-  std::vector<int> impulse_index_, lift_index_, impulse_stage_, lift_stage_;
+  std::vector<int> num_impulse_stages_, num_lift_stages_,  
+                   impulse_stage_, lift_stage_;
 
-  int timeStageFromTime(const double time) const;
+  void shiftDiscreteEvent(const int event_index, const double event_time);
+
+  void shiftDiscreteEventBeyondInitial(const int time_stage);
+
+  void shiftDiscreteEventBeyondTerminal(const int time_stage);
+
+  bool existDiscreteEvent(const int time_stage) const;
+
+  bool existImpulse(const int time_stage) const;
+
+  bool existLift(const int time_stage) const;
+
+  int timeStageFromContinuousTime(const double time) const;
 
   void countAll();
 
-  void countImpulse();
+  void countNumImpulseStaeges();
 
-  void countLift();
+  void countNumLiftStages();
 
   void countImpulseStage();
 

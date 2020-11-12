@@ -11,50 +11,98 @@
 
 namespace idocp {
 
+///
+/// @class StateConstraintRiccatiFactorizer 
+/// @brief State constriant factorizer for Riccati recursion.
+///
 class StateConstraintRiccatiFactorizer {
 public:
-  // Constructor.
-  // Argments:
-  //    robot: The robot model that has been already initialized.
+  ///
+  /// @brief Construct factorizer.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] max_num_impulse_phase Maximum number of impulse phases over the horizon.
+  /// @param[in] nproc Number of threads used in this class.
+  ///
   StateConstraintRiccatiFactorizer(const Robot& robot, 
-                                   const int max_num_impulse, 
+                                   const int max_num_impulse_phase, 
                                    const int nproc=1);
 
-  // Default constructor.
+  ///
+  /// @brief Default constructor. 
+  ///
   StateConstraintRiccatiFactorizer();
 
-  // Destructor.
+  ///
+  /// @brief Destructor. 
+  ///
   ~StateConstraintRiccatiFactorizer();
- 
-  // Default copy constructor.
+
+  ///
+  /// @brief Default copy constructor. 
+  ///
   StateConstraintRiccatiFactorizer(
       const StateConstraintRiccatiFactorizer&) = default;
 
-  // Default copy operator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   StateConstraintRiccatiFactorizer& operator=(
       const StateConstraintRiccatiFactorizer&) = default;
 
-  // Default move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   StateConstraintRiccatiFactorizer(
       StateConstraintRiccatiFactorizer&&) noexcept = default;
 
-  // Default move assign operator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   StateConstraintRiccatiFactorizer& operator=(
       StateConstraintRiccatiFactorizer&&) noexcept = default;
 
+  ///
+  /// @brief Computes the directions of the Lagrange multipliers with respect
+  /// to the pure-state constraints.
+  ///
   template <typename VectorType>
   void computeLagrangeMultiplierDirection(
       const ContactSequence& contact_sequence,
       const std::vector<RiccatiFactorization>& impulse_riccati_factorization,
       std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
       const Eigen::MatrixBase<VectorType>& dx0,
-      std::vector<ImpulseSplitDirection>& d);
+      std::vector<ImpulseSplitDirection>& d_impulse);
 
+  ///
+  /// @brief Factorize matrices and vectors for the linear problem to obtain
+  /// the directions of the Lagrange multipliers.
+  ///
   template <typename VectorType>
   void factorizeLinearProblem(
       const RiccatiFactorization& impulse_riccati_factorization,
       StateConstraintRiccatiFactorization& constraint_factorization,
       const Eigen::MatrixBase<VectorType>& dx0) const;
+
+  void aggregateLagrangeMultiplierDirection(
+      const ContactSequence& contact_sequence,
+      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
+      const std::vector<ImpulseSplitDirection>& d_impulse, const int time_stage,
+      RiccatiFactorization& riccati_factorization) const;
+
+  void aggregateLagrangeMultiplierDirectionImpulse(
+      const ContactSequence& contact_sequence,
+      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
+      const std::vector<ImpulseSplitDirection>& d_impulse, 
+      const int impulse_index,
+      RiccatiFactorization& riccati_factorization) const;
+
+  void aggregateLagrangeMultiplierDirectionLift(
+      const ContactSequence& contact_sequence,
+      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
+      const std::vector<ImpulseSplitDirection>& d_impulse, 
+      const int lift_index,
+      RiccatiFactorization& riccati_factorization) const;
+
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

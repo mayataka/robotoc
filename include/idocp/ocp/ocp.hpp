@@ -256,6 +256,10 @@ private:
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_,
                   costs_impulse_, violations_impulse, costs_lift_, 
                   violations_lift_;
+
+  void linearizeOCP(const double t, const Eigen::VectorXd& q, 
+                    const Eigen::VectorXd& v);
+
 };
 
 } // namespace idocp 

@@ -72,14 +72,12 @@ inline double DiscreteEvent::eventTime() const {
 
 inline void DiscreteEvent::act(ContactStatus& contact_status) const {
   assert(contact_status.max_point_contacts() == max_point_contacts_);
-  assert(isConsisitentWithPreContactStatus(contact_status));
   contact_status.set(post_contact_status_);
 }
 
 
 inline void DiscreteEvent::actInv(ContactStatus& contact_status) const {
   assert(contact_status.max_point_contacts() == max_point_contacts_);
-  assert(isConsisitentWithPostContactStatus(contact_status));
   contact_status.set(pre_contact_status_);
 }
 

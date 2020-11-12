@@ -9,9 +9,12 @@ namespace idocp {
 
 inline RiccatiFactorizer::RiccatiFactorizer(const Robot& robot) 
   : has_floating_base_(robot.has_floating_base()),
+    has_state_constraint_(robot.max_point_contacts() > 0),
     dimv_(robot.dimv()),
     dimu_(robot.dimu()),
     llt_(robot.dimu()),
+    K_(Eigen::MatrixXd::Zero(robot.dimu(), 2*robot.dimv())),
+    k_(Eigen::VectorXd::Zero(robot.dimu())),
     AtPqq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     AtPqv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     AtPvq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
@@ -20,15 +23,19 @@ inline RiccatiFactorizer::RiccatiFactorizer(const Robot& robot)
     BtPv_(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())),
     GK_(Eigen::MatrixXd::Zero(robot.dimu(), 2*robot.dimv())),
     GinvBt_(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())),
+    BGinvBt_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     NApBKt_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())) {
 }
 
 
 inline RiccatiFactorizer::RiccatiFactorizer() 
   : has_floating_base_(false),
+    has_state_constraint_(false),
     dimv_(0),
     dimu_(0),
     llt_(),
+    K_(),
+    k_(),
     AtPqq_(),
     AtPqv_(),
     AtPvq_(),
@@ -37,6 +44,7 @@ inline RiccatiFactorizer::RiccatiFactorizer()
     BtPv_(),
     GK_(),
     GinvBt_(), 
+    BGinvBt_(), 
     NApBKt_() {
 }
 
@@ -46,95 +54,123 @@ inline RiccatiFactorizer::~RiccatiFactorizer() {
 
 
 inline void RiccatiFactorizer::backwardRiccatiRecursion(
-    const RiccatiFactorization& riccati_next, const double dtau, 
-    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, 
+    const RiccatiFactorization& riccati_next, KKTMatrix& kkt_matrix, 
+    KKTResidual& kkt_residual, const double dtau,
     RiccatiFactorization& riccati) {
   assert(dtau > 0);
   factorizeKKTMatrix(riccati_next, dtau, kkt_matrix, kkt_residual);
   computeFeedbackGainAndFeedforward(kkt_matrix, kkt_residual, riccati);
-  factorizeRiccatiFactorization(riccati_next, dtau, kkt_matrix, kkt_residual, riccati);
+  factorizeRiccatiFactorization(riccati_next, kkt_matrix, kkt_residual, dtau, 
+                                riccati);
 }
 
 
+inline void RiccatiFactorizer::forwardRiccatiRecursionParallel(
+    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, 
+    RiccatiFactorization& riccati) {
+  kkt_matrix.Fxx().bottomRows(dimv_).noalias() += kkt_matrix.Fvu() * K_;
+  GinvBt_.noalias() = llt_.solve(kkt_matrix.Fvu().transpose());
+  BGinvBt_.noalias() = kkt_matrix.Fvu() * GinvBt_;
+  kkt_residual.Fx().tail(dimv_).noalias() += kkt_matrix.Fvu() * k_;
+}
+
+
+inline void RiccatiFactorizer::forwardRiccatiRecursionSerialInitial(
+    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+    RiccatiFactorization& riccati) {
+  assert(riccati.Pi.isIdentity()); // assume riccati.Pi is already a identity matrix
+  assert(riccati.pi.isZero()); // assume riccati.pi is already a zero vector  
+  assert(riccati.N.isZero()); // assume riccati.N is already a zero matrix.
+}
+
+
+inline void RiccatiFactorizer::forwardRiccatiRecursionSerial(
+    const RiccatiFactorization& riccati, const KKTMatrix& kkt_matrix, 
+    const KKTResidual& kkt_residual, RiccatiFactorization& riccati_next) {
+  riccati_next.Pi.noalias() = kkt_matrix.Fxx() * riccati.Pi;
+  riccati_next.pi = kkt_residual.Fx();
+  riccati_next.pi.noalias() += kkt_matrix.Fxx() * riccati.pi;
+  NApBKt_.noalias() = riccati.N * kkt_matrix.Fxx().transpose();
+  riccati_next.N.noalias() = kkt_matrix.Fxx() * NApBKt_;
+  riccati_next.N.bottomRightCorner(dimv_, dimv_).noalias() += BGinvBt_;
+}
+
+
+template <typename SplitDirectionType>
 inline void RiccatiFactorizer::forwardRiccatiRecursion(
-    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual,
-    const SplitDirection& d, const double dtau, SplitDirection& d_next) const {
+    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+    const SplitDirection& d, const double dtau, 
+    SplitDirectionType& d_next) const {
   assert(dtau > 0);
   if (has_floating_base_) {
-    d_next.dq().noalias() = kkt_matrix.Fqq() * d.dq() + dtau * d.dv() 
-                              + kkt_residual.Fq();
+    d_next.dq().noalias() = kkt_matrix.Fqq() * d.dq();
+    d_next.dq().noalias() += dtau * d.dv() + kkt_residual.Fq();
   }
   else {
     d_next.dq().noalias() = d.dq() + dtau * d.dv() + kkt_residual.Fq();
   }
-  d_next.dv().noalias() = kkt_matrix.Fvq() * d.dq() + kkt_matrix.Fvv() * d.dv() 
-                            + kkt_matrix.Fvu() * d.du() + kkt_residual.Fv();
+  d_next.dv().noalias() = kkt_matrix.Fvq() * d.dq();
+  d_next.dv().noalias() += kkt_matrix.Fvv() * d.dv();
+  d_next.dv().noalias() += kkt_matrix.Fvu() * d.du();
+  d_next.dv().noalias() += kkt_residual.Fv();
 }
 
 
-inline void RiccatiFactorizer::factorizeStateConstraintParallel(
-    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
-    const double dtau, RiccatiFactorization& riccati) {
-  if (has_floating_base_) {
-    riccati.ApBK.topLeftCorner(dimv_, dimv_) = kkt_matrix.Fqq();
+template <typename VectorType>
+inline void RiccatiFactorizer::computeStateDirection(
+    const RiccatiFactorization& riccati, SplitDirection& d, 
+    const Eigen::MatrixBase<VectorType>& dx0) {
+  d.dx().noalias() = riccati.Pi * dx0;
+  d.dx().noalias() += riccati.pi;
+  if (has_state_constraint_) {
+    d.dx().noalias() -= riccati.N * riccati.n;
   }
-  else {
-    riccati.ApBK.topLeftCorner(dimv_, dimv_).setIdentity();
-  }
-  riccati.ApBK.topRightCorner(dimv_, dimv_) 
-      = dtau * Eigen::MatrixXd::Identity(dimv_, dimv_);
-  riccati.ApBK.bottomLeftCorner(dimv_, dimv_) = kkt_matrix.Fvq();
-  riccati.ApBK.bottomRightCorner(dimv_, dimv_) = kkt_matrix.Fvv();
-  riccati.ApBK.bottomRows(dimv_).noalias() += kkt_matrix.Fvu() * riccati.K;
-  GinvBt_.noalias() = llt_.solve(kkt_matrix.Fvu().transpose());
-  riccati.BGinvBt.noalias() = kkt_matrix.Fvu() * GinvBt_;
-  riccati.apBk = kkt_residual.Fx();
-  riccati.apBk.tail(dimv_).noalias() = kkt_matrix.Fvu() * riccati.k;
-}
-
-
-inline void RiccatiFactorizer::factorizeStateConstraintSerial(
-    const RiccatiFactorization& riccati, 
-    RiccatiFactorization& riccati_next) {
-  riccati_next.Pi.noalias() = riccati.ApBK * riccati.Pi;
-  riccati_next.pi.noalias() = riccati.apBk + riccati.ApBK * riccati.pi;
-  riccati_next.N = riccati.BGinvBt;
-  NApBKt_.noalias() = riccati.N * riccati.ApBK.transpose();
-  riccati_next.N.noalias() += riccati.ApBK * NApBKt_;
-}
-
-
-inline void RiccatiFactorizer::factorizeStateConstraintSerialInitial(
-    RiccatiFactorization& riccati) {
-  riccati.Pi = riccati.ApBK;
-  riccati.pi = riccati.apBk;
-  riccati.N.setZero();
 }
 
 
 inline void RiccatiFactorizer::computeCostateDirection(
-    const RiccatiFactorization& riccati, SplitDirection& d) {
+    const RiccatiFactorization& riccati, SplitDirection& d) const {
   d.dlmd().noalias() = riccati.Pqq * d.dq();
   d.dlmd().noalias() += riccati.Pqv * d.dv();
   d.dlmd().noalias() -= riccati.sq;
   d.dgmm().noalias() = riccati.Pqv.transpose() * d.dq();
   d.dgmm().noalias() += riccati.Pvv * d.dv();
   d.dgmm().noalias() -= riccati.sv;
-}
-
-
-inline void RiccatiFactorizer::computeCostateDirection(
-    const RiccatiFactorization& riccati, 
-    const std::vector<StateConstraintRiccatiFactorization>& cons, 
-    SplitDirection& d) {
-  computeCostateDirection(riccati, d);
+  if (has_state_constraint_) {
+    d.dlmdgmm().noalias() += riccati.n;
+  }
 }
 
 
 inline void RiccatiFactorizer::computeControlInputDirection(
-    const RiccatiFactorization& riccati, SplitDirection& d) {
-  d.du() = riccati.k;
-  d.du().noalias() += riccati.K * d.dx();
+    const RiccatiFactorization& riccati, SplitDirection& d) const {
+  d.du().noalias() = K_ * d.dx();
+  d.du().noalias() += k_;
+  if (has_state_constraint_) {
+    d.du().noalias() -= GinvBt_ * riccati.n;
+  }
+}
+
+
+template <typename MatrixType>
+inline void RiccatiFactorizer::getStateFeedbackGain(
+    const Eigen::MatrixBase<MatrixType>& K) {
+  assert(K.rows() == dimu_);
+  assert(K.cols() == 2*dimv_);
+  const_cast<Eigen::MatrixBase<MatrixType>&> (K) = K_;
+}
+
+
+template <typename MatrixType1, typename MatrixType2>
+inline void RiccatiFactorizer::getStateFeedbackGain(
+    const Eigen::MatrixBase<MatrixType1>& Kq, 
+    const Eigen::MatrixBase<MatrixType2>& Kv) {
+  assert(Kq.rows() == dimu_);
+  assert(Kq.cols() == dimv_);
+  assert(Kv.rows() == dimu_);
+  assert(Kv.cols() == dimv_);
+  const_cast<Eigen::MatrixBase<MatrixType1>&> (Kq) = K_.leftCols(dimv_);
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (Kv) = K_.rightCols(dimv_);
 }
 
 
@@ -186,7 +222,7 @@ inline void RiccatiFactorizer::factorizeKKTMatrix(
   // Factorize H
   kkt_matrix.Qqu().noalias() += AtPqv_ * kkt_matrix.Fvu();
   kkt_matrix.Qvu().noalias() += AtPvv_ * kkt_matrix.Fvu();
-  // Factorize G
+  
   kkt_matrix.Quu().noalias() += BtPv_ * kkt_matrix.Fvu();
   // Factorize vector term
   kkt_residual.lu().noalias() += BtPq_ * kkt_residual.Fq();
@@ -200,20 +236,20 @@ inline void RiccatiFactorizer::computeFeedbackGainAndFeedforward(
     RiccatiFactorization& riccati) {
   llt_.compute(kkt_matrix.Quu());
   assert(llt_.info() == Eigen::Success);
-  riccati.K = - llt_.solve(kkt_matrix.Qxu().transpose());
-  riccati.k = - llt_.solve(kkt_residual.lu());
+  K_ = - llt_.solve(kkt_matrix.Qxu().transpose());
+  k_ = - llt_.solve(kkt_residual.lu());
 }
 
 
 inline void RiccatiFactorizer::factorizeRiccatiFactorization(
-    const RiccatiFactorization& riccati_next, const double dtau, 
-    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+    const RiccatiFactorization& riccati_next, const KKTMatrix& kkt_matrix, 
+    const KKTResidual& kkt_residual, const double dtau,
     RiccatiFactorization& riccati) {
   assert(dtau > 0);
   riccati.Pqq = kkt_matrix.Qqq();
   riccati.Pqv = kkt_matrix.Qqv();
   riccati.Pvv = kkt_matrix.Qvv();
-  GK_.noalias() = kkt_matrix.Quu() * riccati.K; 
+  GK_.noalias() = kkt_matrix.Quu() * K_; 
   riccati.Pqq.noalias() -= riccati.Kq().transpose() * GK_.leftCols(dimv_);
   riccati.Pqv.noalias() -= riccati.Kq().transpose() * GK_.rightCols(dimv_);
   riccati.Pvv.noalias() -= riccati.Kv().transpose() * GK_.rightCols(dimv_);
@@ -239,8 +275,8 @@ inline void RiccatiFactorizer::factorizeRiccatiFactorization(
   riccati.sv.noalias() -= AtPvv_ * kkt_residual.Fv();
   riccati.sq.noalias() -= kkt_residual.lq();
   riccati.sv.noalias() -= kkt_residual.lv();
-  riccati.sq.noalias() -= kkt_matrix.Qqu() * riccati.k;
-  riccati.sv.noalias() -= kkt_matrix.Qvu() * riccati.k;
+  riccati.sq.noalias() -= kkt_matrix.Qqu() * k_;
+  riccati.sv.noalias() -= kkt_matrix.Qvu() * k_;
 }
 
 } // namespace idocp

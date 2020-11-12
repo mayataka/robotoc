@@ -10,8 +10,10 @@ namespace idocp {
 inline StateConstraintRiccatiFactorization::StateConstraintRiccatiFactorization(
     const Robot& robot, const int N, const int max_num_impulse) 
   : T_full_(N, Eigen::MatrixXd(2*robot.dimv(), robot.max_dimf())),
-    T_impulse_full_(max_num_impulse, Eigen::MatrixXd(2*robot.dimv(), robot.max_dimf())),
-    T_lift_full_(max_num_impulse, Eigen::MatrixXd(2*robot.dimv(), robot.max_dimf())),
+    T_impulse_full_(max_num_impulse, Eigen::MatrixXd(2*robot.dimv(), 
+                                                     robot.max_dimf())),
+    T_lift_full_(max_num_impulse, Eigen::MatrixXd(2*robot.dimv(), 
+                                                  robot.max_dimf())),
     E_full_(Eigen::MatrixXd(robot.max_dimf(), 2*robot.dimv())),
     EN_full_(Eigen::MatrixXd(robot.max_dimf(), 2*robot.dimv())),
     ENEt_full_(Eigen::MatrixXd(robot.max_dimf(), robot.max_dimf())),
