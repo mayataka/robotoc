@@ -92,7 +92,7 @@ void StateConstraintRiccatiFactorizerTest::testComputeLagrangeMultiplierDirectio
     ContactStatus post_contact_status = createRamdomContactStatus(robot);
     DiscreteEvent discrete_event(robot);
     discrete_event.setDiscreteEvent(pre_contact_status, post_contact_status);
-    discrete_event.setEventTime(T*i/max_num_impulse+0.5*dtau);
+    discrete_event.eventTime = T*i/max_num_impulse+0.5*dtau;
     if (discrete_event.existDiscreteEvent()) {
       contact_sequence.setDiscreteEvent(discrete_event);
     }

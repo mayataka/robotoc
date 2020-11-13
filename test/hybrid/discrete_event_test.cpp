@@ -7,7 +7,7 @@
 
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
-#include "idocp/ocp/discrete_event.hpp"
+#include "idocp/hybrid/discrete_event.hpp"
 
 
 namespace idocp {
@@ -33,16 +33,13 @@ TEST_F(DiscreteEventTest, constructor) {
   EXPECT_FALSE(discrete_event.existDiscreteEvent());
   EXPECT_FALSE(discrete_event.existImpulse());
   EXPECT_FALSE(discrete_event.existLift());
-  EXPECT_DOUBLE_EQ(discrete_event.eventTime(), 0);
+  EXPECT_DOUBLE_EQ(discrete_event.eventTime, 0);
   ContactStatus contact_status(max_point_contacts);
   EXPECT_EQ(contact_status.num_active_contacts(), 0);
-  discrete_event.act(contact_status);
-  EXPECT_EQ(contact_status.num_active_contacts(), 0);
-  discrete_event.actInv(contact_status);
-  EXPECT_EQ(contact_status.num_active_contacts(), 0);
   const double event_time = 10;
-  discrete_event.setEventTime(event_time);
-  EXPECT_DOUBLE_EQ(event_time, discrete_event.eventTime());
+  discrete_event.eventTime = event_time;
+  EXPECT_DOUBLE_EQ(event_time, discrete_event.eventTime);
+  EXPECT_TRUE(discrete_event.preContactStatus() == discrete_event.postContactStatus());
 }
 
 
@@ -53,20 +50,17 @@ TEST_F(DiscreteEventTest, impulse) {
   cs_after.activateContacts({1, 2, 3, 4, 5, 6});
   discrete_event.setDiscreteEvent(cs_before, cs_after);
   EXPECT_EQ(discrete_event.max_point_contacts(), max_point_contacts);
+  EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
+  EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
   EXPECT_TRUE(discrete_event.existImpulse());
   EXPECT_FALSE(discrete_event.existLift());
-  EXPECT_DOUBLE_EQ(discrete_event.eventTime(), 0);
-  discrete_event.act(cs_before);
-  EXPECT_TRUE(cs_before == cs_after);
-  cs_before.deactivateContacts({4, 5, 6});
-  EXPECT_FALSE(cs_before == cs_after);
-  discrete_event.actInv(cs_after);
-  EXPECT_TRUE(cs_before == cs_after);
+  EXPECT_DOUBLE_EQ(discrete_event.eventTime, 0);
   discrete_event.disableDiscreteEvent();
   EXPECT_FALSE(discrete_event.existDiscreteEvent());
   EXPECT_FALSE(discrete_event.existImpulse());
   EXPECT_FALSE(discrete_event.existLift());
+  EXPECT_TRUE(discrete_event.preContactStatus() == discrete_event.postContactStatus());
 }
 
 
@@ -77,20 +71,17 @@ TEST_F(DiscreteEventTest, lift) {
   cs_after.activateContacts({1, 2, 3});
   discrete_event.setDiscreteEvent(cs_before, cs_after);
   EXPECT_EQ(discrete_event.max_point_contacts(), max_point_contacts);
+  EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
+  EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
   EXPECT_FALSE(discrete_event.existImpulse());
   EXPECT_TRUE(discrete_event.existLift());
-  EXPECT_DOUBLE_EQ(discrete_event.eventTime(), 0);
-  discrete_event.act(cs_before);
-  EXPECT_TRUE(cs_before == cs_after);
-  cs_before.activateContacts({4, 5, 6});
-  EXPECT_FALSE(cs_before == cs_after);
-  discrete_event.actInv(cs_after);
-  EXPECT_TRUE(cs_before == cs_after);
+  EXPECT_DOUBLE_EQ(discrete_event.eventTime, 0);
   discrete_event.disableDiscreteEvent();
   EXPECT_FALSE(discrete_event.existDiscreteEvent());
   EXPECT_FALSE(discrete_event.existImpulse());
   EXPECT_FALSE(discrete_event.existLift());
+  EXPECT_TRUE(discrete_event.preContactStatus() == discrete_event.postContactStatus());
 }
 
 
@@ -101,34 +92,17 @@ TEST_F(DiscreteEventTest, impulseAndLift) {
   cs_after.activateContacts({3, 5, 6, 7, 8, 9});
   discrete_event.setDiscreteEvent(cs_before, cs_after);
   EXPECT_EQ(discrete_event.max_point_contacts(), max_point_contacts);
+  EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
+  EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
   EXPECT_TRUE(discrete_event.existImpulse());
   EXPECT_TRUE(discrete_event.existLift());
-  EXPECT_DOUBLE_EQ(discrete_event.eventTime(), 0);
+  EXPECT_DOUBLE_EQ(discrete_event.eventTime, 0);
   discrete_event.disableDiscreteEvent();
   EXPECT_FALSE(discrete_event.existDiscreteEvent());
   EXPECT_FALSE(discrete_event.existImpulse());
   EXPECT_FALSE(discrete_event.existLift());
-}
-
-
-TEST_F(DiscreteEventTest, impulseAndLift2) {
-  DiscreteEvent discrete_event(max_point_contacts);
-  ContactStatus cs_before(max_point_contacts), cs_after(max_point_contacts);
-  cs_before.activateContacts({1, 2, 3, 6, 7});
-  cs_after.activateContacts({3, 5, 6, 7, 8, 9});
-  discrete_event.setDiscreteEvent(cs_before, cs_after);
-  EXPECT_EQ(discrete_event.max_point_contacts(), max_point_contacts);
-  EXPECT_TRUE(discrete_event.existDiscreteEvent());
-  EXPECT_TRUE(discrete_event.existImpulse());
-  EXPECT_TRUE(discrete_event.existLift());
-  EXPECT_DOUBLE_EQ(discrete_event.eventTime(), 0);
-  discrete_event.actInv(cs_after);
-  EXPECT_TRUE(cs_before == cs_after);
-  discrete_event.disableDiscreteEvent();
-  EXPECT_FALSE(discrete_event.existDiscreteEvent());
-  EXPECT_FALSE(discrete_event.existImpulse());
-  EXPECT_FALSE(discrete_event.existLift());
+  EXPECT_TRUE(discrete_event.preContactStatus() == discrete_event.postContactStatus());
 }
 
 } // namespace idocp

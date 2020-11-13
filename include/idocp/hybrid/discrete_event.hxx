@@ -1,7 +1,7 @@
 #ifndef IDOCP_DISCRETE_EVENT_HXX_
 #define IDOCP_DISCRETE_EVENT_HXX_
 
-#include "idocp/ocp/discrete_event.hpp"
+#include "idocp/hybrid/discrete_event.hpp"
 
 #include <cassert>
 
@@ -9,24 +9,24 @@
 namespace idocp {
 
 inline DiscreteEvent::DiscreteEvent(const int max_point_contacts)
-  : pre_contact_status_(max_point_contacts),
+  : eventTime(0),
+    pre_contact_status_(max_point_contacts),
     post_contact_status_(max_point_contacts),
     impulse_status_(max_point_contacts),
     max_point_contacts_(max_point_contacts),
     exist_impulse_(false), 
-    exist_lift_(false),
-    time_(0) {
+    exist_lift_(false) {
 }
 
 
 inline DiscreteEvent::DiscreteEvent(const Robot& robot)
-  : pre_contact_status_(robot.max_point_contacts()),
+  : eventTime(0),
+    pre_contact_status_(robot.max_point_contacts()),
     post_contact_status_(robot.max_point_contacts()),
     impulse_status_(robot.max_point_contacts()),
     max_point_contacts_(robot.max_point_contacts()),
     exist_impulse_(false), 
-    exist_lift_(false),
-    time_(0) {
+    exist_lift_(false) {
 }
 
 
@@ -36,8 +36,7 @@ inline DiscreteEvent::DiscreteEvent()
     impulse_status_(),
     max_point_contacts_(0),
     exist_impulse_(false), 
-    exist_lift_(false),
-    time_(0) {
+    exist_lift_(false) {
 }
  
 
@@ -65,34 +64,13 @@ inline bool DiscreteEvent::existLift() const {
 }
 
 
-inline double DiscreteEvent::eventTime() const {
-  return time_;
+inline const ContactStatus& DiscreteEvent::preContactStatus() const {
+  return pre_contact_status_;
 }
 
 
-inline void DiscreteEvent::act(ContactStatus& contact_status) const {
-  assert(contact_status.max_point_contacts() == max_point_contacts_);
-  contact_status.set(post_contact_status_);
-}
-
-
-inline void DiscreteEvent::actInv(ContactStatus& contact_status) const {
-  assert(contact_status.max_point_contacts() == max_point_contacts_);
-  contact_status.set(pre_contact_status_);
-}
-
-
-inline bool DiscreteEvent::isConsisitentWithPreContactStatus(
-    const ContactStatus& contact_status) const {
-  assert(contact_status.max_point_contacts() == max_point_contacts_);
-  return (contact_status == pre_contact_status_);
-}
-
-
-inline bool DiscreteEvent::isConsisitentWithPostContactStatus(
-    const ContactStatus& contact_status) const {
-  assert(contact_status.max_point_contacts() == max_point_contacts_);
-  return (contact_status == post_contact_status_);
+inline const ContactStatus& DiscreteEvent::postContactStatus() const {
+  return post_contact_status_;
 }
 
 
@@ -125,18 +103,14 @@ inline void DiscreteEvent::setDiscreteEvent(
 }
 
 
-inline void DiscreteEvent::setEventTime(const double time) {
-  time_ = time;
-}
-
-
 inline void DiscreteEvent::disableDiscreteEvent() {
   for (int i=0; i<max_point_contacts_; ++i) {
     impulse_status_.deactivateImpulse(i);
   }
   exist_impulse_ = false;
   exist_lift_ = false;
-  time_ = 0;
+  eventTime = 0;
+  post_contact_status_.set(pre_contact_status_);
 }
 
 

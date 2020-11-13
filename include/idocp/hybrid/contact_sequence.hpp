@@ -6,7 +6,8 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
-#include "idocp/ocp/discrete_event.hpp"
+#include "idocp/hybrid/discrete_event.hpp"
+#include "idocp/hybrid/contact_sequence_primitive.hpp"
 
 
 namespace idocp {
@@ -67,8 +68,8 @@ public:
   ///
   /// @brief Set the discrete event. Contact status after discrete event is also
   /// uniformly changed by discrete_event. To determine the event time and 
-  /// stage, DiscreteEvent::eventTime() is internally called. Hence, set the 
-  /// time by DiscreteEvent::setEventTime() before calling this function.
+  /// stage, DiscreteEvent::eventTime is internally called. Hence, set the 
+  /// time DiscreteEvent::eventTime before calling this function.
   /// @param[in] discrete_event Discrete event.
   ///
   void setDiscreteEvent(const DiscreteEvent& discrete_event);
@@ -167,22 +168,9 @@ public:
 private:
   int N_;
   double T_, dtau_;
-  std::vector<ContactStatus> contact_sequence_;
-  std::vector<DiscreteEvent> discrete_event_sequence_;
+  ContactSequencePrimitive contact_sequence_;
   std::vector<int> num_impulse_stages_, num_lift_stages_,  
                    impulse_stage_, lift_stage_;
-
-  void shiftDiscreteEvent(const int event_index, const double event_time);
-
-  void shiftDiscreteEventBeyondInitial(const int time_stage);
-
-  void shiftDiscreteEventBeyondTerminal(const int time_stage);
-
-  bool existDiscreteEvent(const int time_stage) const;
-
-  bool existImpulse(const int time_stage) const;
-
-  bool existLift(const int time_stage) const;
 
   int timeStageFromContinuousTime(const double time) const;
 
@@ -199,6 +187,6 @@ private:
 
 } // namespace idocp 
 
-#include "idocp/ocp/contact_sequence.hxx"
+#include "idocp/hybrid/contact_sequence.hxx"
 
 #endif // IDOCP_CONTACT_SEQUENCE_HPP_

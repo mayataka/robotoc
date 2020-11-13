@@ -6,8 +6,8 @@
 
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
-#include "idocp/ocp/discrete_event.hpp"
-#include "idocp/ocp/contact_sequence.hpp"
+#include "idocp/hybrid/discrete_event.hpp"
+#include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/robot/robot.hpp"
 
 
@@ -118,7 +118,7 @@ void ContactSequenceTest::testSetDiscreteEvent(const Robot& robot) const {
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
   ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
-  discrete_event.setEventTime(T / 2.0);
+  discrete_event.eventTime = T / 2.0;
   contact_sequence.setDiscreteEvent(discrete_event);
   const int event_time_stage = std::floor((T/2.0)/dtau);
   for (int i=0; i<event_time_stage; ++i) {
@@ -136,7 +136,7 @@ void ContactSequenceTest::testSetDiscreteEvent(const Robot& robot) const {
     EXPECT_TRUE(discrete_event.impulseStatus() == contact_sequence.impulseStatus(0));
     EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 1);
     EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-    EXPECT_DOUBLE_EQ(discrete_event.eventTime(), contact_sequence.impulseTime(0));
+    EXPECT_DOUBLE_EQ(discrete_event.eventTime, contact_sequence.impulseTime(0));
     for (int i=event_time_stage+1; i<N; ++i) {
       EXPECT_EQ(contact_sequence.numImpulseStages(i), 1);
       EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
@@ -145,7 +145,7 @@ void ContactSequenceTest::testSetDiscreteEvent(const Robot& robot) const {
   else {
     EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
     EXPECT_EQ(contact_sequence.totalNumLiftStages(), 1);
-    EXPECT_DOUBLE_EQ(discrete_event.eventTime(), contact_sequence.liftTime(0));
+    EXPECT_DOUBLE_EQ(discrete_event.eventTime, contact_sequence.liftTime(0));
     for (int i=event_time_stage+1; i<N; ++i) {
       EXPECT_EQ(contact_sequence.numLiftStages(i), 1);
       EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
@@ -179,7 +179,7 @@ void ContactSequenceTest::testSetMultipleDiscreteEvents(const Robot& robot, cons
   ASSERT_TRUE(event_time[2] < T);
   contact_sequence.setContactStatusUniformly(initial_contact_status);
   for (int i=0; i<3; ++i) {
-    discrete_events[i].setEventTime(event_time[i]);
+    discrete_events[i].eventTime = event_time[i];
     contact_sequence.setDiscreteEvent(discrete_events[i]);
   }
   std::vector<int> event_time_stage;
@@ -257,7 +257,7 @@ void ContactSequenceTest::testShiftDiscreteEventBeyondInitial(const Robot& robot
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
   ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
-  discrete_event.setEventTime(T / 2.0);
+  discrete_event.eventTime = T / 2.0;
   contact_sequence.setDiscreteEvent(discrete_event);
   const int event_time_stage = std::floor((T/2.0)/dtau);
   if (discrete_event.existImpulse()) {
@@ -285,7 +285,7 @@ void ContactSequenceTest::testShiftDiscreteEventBeyondTerminal(const Robot& robo
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
   ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
-  discrete_event.setEventTime(T / 2.0);
+  discrete_event.eventTime = T / 2.0;
   contact_sequence.setDiscreteEvent(discrete_event);
   const int event_time_stage = std::floor((T/2.0)/dtau);
   if (discrete_event.existImpulse()) {
@@ -312,7 +312,7 @@ void ContactSequenceTest::testShiftDiscreteEventForward(const Robot& robot) cons
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
   ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
-  discrete_event.setEventTime(T / 2.0);
+  discrete_event.eventTime = T / 2.0;
   contact_sequence.setDiscreteEvent(discrete_event);
   const int event_time_stage = std::floor((T/2.0)/dtau);
   const double shifted_time = T / 3.0;
@@ -362,7 +362,7 @@ void ContactSequenceTest::testShiftDiscreteEventBackward(const Robot& robot) con
   DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
   ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
-  discrete_event.setEventTime(T / 2.0);
+  discrete_event.eventTime = T / 2.0;
   contact_sequence.setDiscreteEvent(discrete_event);
   const int event_time_stage = std::floor((T/2.0)/dtau);
   const double shifted_time = 2.0 * T / 3.0;

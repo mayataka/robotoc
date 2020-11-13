@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/contact_sequence.hpp"
+#include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"

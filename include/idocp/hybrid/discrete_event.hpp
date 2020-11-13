@@ -83,44 +83,16 @@ public:
   bool existLift() const;
 
   ///
-  /// @brief Returns the time of the discrete event occurs.
-  /// @return The time of the discrete event occurs.
+  /// @brief Getter of contact status before this discrete event.
+  /// @return const reference to the pre contact status.
   ///
-  double eventTime() const;
+  const ContactStatus& preContactStatus() const;
 
   ///
-  /// @brief Change the input contact status as is before this discrete event.
-  /// @param[in] contact_status Contact status. Must be consistent with this 
-  /// discrete event. 
+  /// @brief Getter of contact status after this discrete event.
+  /// @return const reference to the post contact status.
   ///
-  void act(ContactStatus& contact_status) const;
-
-  ///
-  /// @brief Change the input contact status as is after this discrete event.
-  /// @param[in] contact_status Contact status. Must be consistent with this 
-  /// discrete event. 
-  ///
-  void actInv(ContactStatus& contact_status) const;
-
-  ///
-  /// @brief Check whether the input contact_status is consistent with the 
-  /// pre contact status of this discrete event.
-  /// @param[in] contact_status Contact status. 
-  /// @return true if input contact_status is consistent with the pre contact 
-  /// status of this discrete event. false if not.
-  ///
-  bool isConsisitentWithPreContactStatus(
-      const ContactStatus& contact_status) const;
-
-  ///
-  /// @brief Check whether the input contact_status is consistent with the 
-  /// post contact status of this discrete event.
-  /// @param[in] contact_status Contact status. 
-  /// @return true if input contact_status is consistent with the post contact 
-  /// status of this discrete event. false if not.
-  ///
-  bool isConsisitentWithPostContactStatus(
-      const ContactStatus& contact_status) const;
+  const ContactStatus& postContactStatus() const;
 
   ///
   /// @brief Set the contact status from two sequential contact status.
@@ -129,11 +101,6 @@ public:
   ///
   void setDiscreteEvent(const ContactStatus& pre_contact_status, 
                         const ContactStatus& post_contact_status);
-
-  ///
-  /// @brief set the time of the discrete event.
-  ///
-  void setEventTime(const double time);
 
   ///
   /// @brief Disable discrete event.
@@ -146,6 +113,11 @@ public:
   ///
   int max_point_contacts() const;
 
+  ///
+  /// @brief Event time.
+  ///
+  double eventTime;
+
 private:
   ContactStatus pre_contact_status_, post_contact_status_;
   ImpulseStatus impulse_status_;
@@ -157,6 +129,6 @@ private:
 
 } // namespace idocp
 
-#include "idocp/ocp/discrete_event.hxx"
+#include "idocp/hybrid/discrete_event.hxx"
 
 #endif // IDOCP_DISCRETE_EVENT_HPP_

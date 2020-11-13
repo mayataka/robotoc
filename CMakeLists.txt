@@ -72,6 +72,9 @@ add_library(
   # src/impulse/split_impulse_ocp.cpp
   # src/impulse/impulse_dynamics_backward_euler.cpp
   # src/impulse/split_impulse_parnmpc.cpp
+  src/hybrid/discrete_event.cpp
+  src/hybrid/contact_sequence_primitive.cpp
+  src/hybrid/contact_sequence.cpp
   src/ocp/schur_complement.cpp
   src/ocp/kkt_residual.cpp
   src/ocp/kkt_matrix.cpp
@@ -87,10 +90,8 @@ add_library(
   # src/ocp/split_ocp.cpp
   # src/ocp/terminal_ocp.cpp
   # src/ocp/split_temporary_solution.cpp
-  src/ocp/discrete_event.cpp
-  src/ocp/contact_sequence.cpp
-  src/ocp/state_constraint_riccati_factorization.cpp
-  src/ocp/state_constraint_riccati_factorizer.cpp
+  # src/ocp/state_constraint_riccati_factorization.cpp
+  # src/ocp/state_constraint_riccati_factorizer.cpp
   # src/ocp/ocp.cpp
   src/ocp/backward_correction.cpp
   src/ocp/split_parnmpc.cpp
