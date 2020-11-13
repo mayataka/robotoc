@@ -32,12 +32,10 @@ protected:
   void testConstructor(const Robot& robot) const;
   void testSetContactStatus(const Robot& robot) const;
   void testSetDiscreteEvent(const Robot& robot) const;
-  void testSetMultipleDiscreteEvents(const Robot& robot, const bool is_duplicated_stage) const;
   void testShiftDiscreteEventBeyondInitial(const Robot& robot) const;
   void testShiftDiscreteEventBeyondTerminal(const Robot& robot) const;
-  void testShiftDiscreteEventForward(const Robot& robot) const;
-  void testShiftDiscreteEventBackward(const Robot& robot) const;
-  void testShiftDiscreteEventMultiple(const Robot& robot) const;
+  void testShiftDiscreteEventInitial(const Robot& robot) const;
+  void testShiftDiscreteEventTerminal(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
   int N;
@@ -87,6 +85,7 @@ void ContactSequenceTest::testConstructor(const Robot& robot) const {
     EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
     EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
   }
+  EXPECT_TRUE(contact_sequence.contactStatus(N) == contact_status);
   EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
   EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
 }
@@ -106,6 +105,7 @@ void ContactSequenceTest::testSetContactStatus(const Robot& robot) const {
     EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
     EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
   }
+  EXPECT_TRUE(contact_sequence.contactStatus(N) == contact_status);
   EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
   EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
 }
@@ -115,164 +115,67 @@ void ContactSequenceTest::testSetDiscreteEvent(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
-  DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
-  ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
-  discrete_event.eventTime = T / 2.0;
-  contact_sequence.setDiscreteEvent(discrete_event);
-  const int event_time_stage = std::floor((T/2.0)/dtau);
-  for (int i=0; i<event_time_stage; ++i) {
-    EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
-    EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
-    EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
-  }
-  EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(event_time_stage)));
-  EXPECT_EQ(contact_sequence.numImpulseStages(event_time_stage), 0);
-  EXPECT_EQ(contact_sequence.numLiftStages(event_time_stage), 0);
-  for (int i=event_time_stage+1; i<N; ++i) {
-    EXPECT_TRUE(discrete_event.isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
-  }
-  if (discrete_event.existImpulse()) {
-    EXPECT_TRUE(discrete_event.impulseStatus() == contact_sequence.impulseStatus(0));
-    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 1);
-    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-    EXPECT_DOUBLE_EQ(discrete_event.eventTime, contact_sequence.impulseTime(0));
-    for (int i=event_time_stage+1; i<N; ++i) {
-      EXPECT_EQ(contact_sequence.numImpulseStages(i), 1);
-      EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
-    }
-  }
-  else {
-    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 1);
-    EXPECT_DOUBLE_EQ(discrete_event.eventTime, contact_sequence.liftTime(0));
-    for (int i=event_time_stage+1; i<N; ++i) {
-      EXPECT_EQ(contact_sequence.numLiftStages(i), 1);
-      EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
-    }
-  }
-}
-
-
-void ContactSequenceTest::testSetMultipleDiscreteEvents(const Robot& robot, const bool is_duplicated_stage) const {
-  ContactSequence contact_sequence(robot, T, N);
-  ContactStatus initial_contact_status = robot.createContactStatus();
-  initial_contact_status.setRandom();
-  std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, initial_contact_status, 5);
-  std::vector<double> event_time;
-  if (is_duplicated_stage) {
-    const double event_time1 = 5 * dtau * std::abs(Eigen::VectorXd::Random(1)[0]);
-    const double event_time2 = event_time1 + 5 * dtau + dtau * std::abs(Eigen::VectorXd::Random(1)[0]);
-    const double event_time3 = event_time2 + 0.01 * dtau;
-    event_time.push_back(event_time1);
-    event_time.push_back(event_time2);
-    event_time.push_back(event_time3);
-  }
-  else {
-    const double event_time1 = 5 * dtau * std::abs(Eigen::VectorXd::Random(1)[0]);
-    const double event_time2 = event_time1 + dtau + 5 * dtau * std::abs(Eigen::VectorXd::Random(1)[0]);
-    const double event_time3 = event_time2 + dtau + 5 * dtau * std::abs(Eigen::VectorXd::Random(1)[0]);
-    event_time.push_back(event_time1);
-    event_time.push_back(event_time2);
-    event_time.push_back(event_time3);
-  }
-  ASSERT_TRUE(event_time[2] < T);
-  contact_sequence.setContactStatusUniformly(initial_contact_status);
-  for (int i=0; i<3; ++i) {
-    discrete_events[i].eventTime = event_time[i];
+  std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
+  std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
+  for (int i=0; i<5; ++i) {
+    discrete_events[i].eventTime = event_times[i];
     contact_sequence.setDiscreteEvent(discrete_events[i]);
   }
-  std::vector<int> event_time_stage;
-  for (int i=0; i<3; ++i) {
-    event_time_stage.push_back(std::floor(event_time[i] / dtau));
-  }
-  int num_impulse_ref = 0;
-  int num_lift_ref = 0;
-  for (int i=0; i<event_time_stage[0]; ++i) {
-    EXPECT_TRUE(discrete_events[0].isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
-    EXPECT_EQ(contact_sequence.numImpulseStages(i), num_impulse_ref);
-    EXPECT_EQ(contact_sequence.numLiftStages(i), num_lift_ref);
-  }
-  EXPECT_TRUE(discrete_events[0].isConsisitentWithPreContactStatus(contact_sequence.contactStatus(event_time_stage[0])));
-  EXPECT_EQ(contact_sequence.numImpulseStages(event_time_stage[0]), num_impulse_ref);
-  EXPECT_EQ(contact_sequence.numLiftStages(event_time_stage[0]), num_lift_ref);
-  if (discrete_events[0].existImpulse()) ++num_impulse_ref;
-  else if (discrete_events[0].existLift()) ++num_lift_ref;
-  for (int i=event_time_stage[0]+1; i<event_time_stage[1]; ++i) {
-    EXPECT_TRUE(discrete_events[0].isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
-    EXPECT_TRUE(discrete_events[1].isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
-    EXPECT_EQ(contact_sequence.numImpulseStages(i), num_impulse_ref);
-    EXPECT_EQ(contact_sequence.numLiftStages(i), num_lift_ref);
-  }
-  if (is_duplicated_stage) {
-    ASSERT_EQ(event_time_stage[1], event_time_stage[2]);
-    EXPECT_TRUE(discrete_events[1].isConsisitentWithPreContactStatus(contact_sequence.contactStatus(event_time_stage[1])));
-    EXPECT_TRUE(discrete_events[0].isConsisitentWithPostContactStatus(contact_sequence.contactStatus(event_time_stage[1])));
-    EXPECT_EQ(contact_sequence.numImpulseStages(event_time_stage[1]), num_impulse_ref);
-    EXPECT_EQ(contact_sequence.numLiftStages(event_time_stage[1]), num_lift_ref);
-    DiscreteEvent event(robot);
-    event.setDiscreteEvent(contact_sequence.contactStatus(event_time_stage[1]), contact_sequence.contactStatus(event_time_stage[1]+1));
-    if (event.existImpulse()) ++num_impulse_ref;
-    else if (event.existLift()) ++num_lift_ref;
-    for (int i=event_time_stage[1]+1; i<N; ++i) {
-      EXPECT_TRUE(discrete_events[2].isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
-      EXPECT_EQ(contact_sequence.numImpulseStages(i), num_impulse_ref);
-      EXPECT_EQ(contact_sequence.numLiftStages(i), num_lift_ref);
+  int num_impulse = 0;
+  int num_lift = 0;
+  for (int i=0; i<5; ++i) {
+    const int stage = std::floor(event_times[i] / dtau);
+    EXPECT_EQ(contact_sequence.numImpulseStages(stage), num_impulse);
+    EXPECT_EQ(contact_sequence.numLiftStages(stage), num_lift);
+    if (discrete_events[i].existImpulse()) {
+      EXPECT_EQ(contact_sequence.numImpulseStages(stage+1), num_impulse+1);
+      EXPECT_EQ(contact_sequence.numLiftStages(stage+1), num_lift);
+      EXPECT_EQ(contact_sequence.timeStageBeforeImpulse(num_impulse), stage);
+      EXPECT_DOUBLE_EQ(contact_sequence.impulseTime(num_impulse), event_times[num_impulse+num_lift]);
+      EXPECT_TRUE(contact_sequence.impulseStatus(num_impulse) == discrete_events[num_impulse+num_lift].impulseStatus());
+      ++num_impulse;
+    } 
+    else {
+      EXPECT_EQ(contact_sequence.numImpulseStages(stage+1), num_impulse);
+      EXPECT_EQ(contact_sequence.numLiftStages(stage+1), num_lift+1);
+      EXPECT_EQ(contact_sequence.timeStageBeforeLift(num_lift), stage);
+      EXPECT_DOUBLE_EQ(contact_sequence.liftTime(num_lift), event_times[num_impulse+num_lift]);
+      ++num_lift;
     }
   }
-  else {
-    EXPECT_TRUE(discrete_events[1].isConsisitentWithPreContactStatus(contact_sequence.contactStatus(event_time_stage[1])));
-    EXPECT_EQ(contact_sequence.numImpulseStages(event_time_stage[1]), num_impulse_ref);
-    EXPECT_EQ(contact_sequence.numLiftStages(event_time_stage[1]), num_lift_ref);
-    if (discrete_events[1].existImpulse()) ++num_impulse_ref;
-    else if (discrete_events[1].existLift()) ++num_lift_ref;
-    else ++num_lift_ref;
-    for (int i=event_time_stage[1]+1; i<event_time_stage[2]; ++i) {
-      EXPECT_TRUE(discrete_events[1].isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
-      EXPECT_TRUE(discrete_events[2].isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
-      EXPECT_EQ(contact_sequence.numImpulseStages(i), num_impulse_ref);
-      EXPECT_EQ(contact_sequence.numLiftStages(i), num_lift_ref);
-    }
-    EXPECT_TRUE(discrete_events[2].isConsisitentWithPreContactStatus(contact_sequence.contactStatus(event_time_stage[2])));
-    EXPECT_EQ(contact_sequence.numImpulseStages(event_time_stage[2]), num_impulse_ref);
-    EXPECT_EQ(contact_sequence.numLiftStages(event_time_stage[2]), num_lift_ref);
-    if (discrete_events[2].existImpulse()) ++num_impulse_ref;
-    else if (discrete_events[2].existLift()) ++num_lift_ref;
-    for (int i=event_time_stage[2]+1; i<N; ++i) {
-      EXPECT_TRUE(discrete_events[2].isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
-      EXPECT_EQ(contact_sequence.numImpulseStages(i), num_impulse_ref);
-      EXPECT_EQ(contact_sequence.numLiftStages(i), num_lift_ref);
-    }
-  }
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), num_impulse_ref);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), num_lift_ref);
+  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), num_impulse);
+  EXPECT_EQ(contact_sequence.totalNumLiftStages(), num_lift);
 }
-
 
 
 void ContactSequenceTest::testShiftDiscreteEventBeyondInitial(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
-  DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
-  ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
-  discrete_event.eventTime = T / 2.0;
-  contact_sequence.setDiscreteEvent(discrete_event);
-  const int event_time_stage = std::floor((T/2.0)/dtau);
-  if (discrete_event.existImpulse()) {
-    contact_sequence.shiftImpulse(0, -1.0);
+  std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
+  std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
+  for (int i=0; i<5; ++i) {
+    discrete_events[i].eventTime = event_times[i];
+    contact_sequence.setDiscreteEvent(discrete_events[i]);
   }
-  else {
-    contact_sequence.shiftLift(0, -1.0);
+  if (contact_sequence.totalNumImpulseStages() > 0) {
+    contact_sequence.shiftImpulse(contact_sequence.totalNumImpulseStages()-1, -1);
+    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
   }
+  if (contact_sequence.totalNumLiftStages() > 0) {
+    contact_sequence.shiftLift(contact_sequence.totalNumLiftStages()-1, -1);
+    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
+  }
+  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
+  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
   for (int i=0; i<N; ++i) {
-    EXPECT_TRUE(discrete_event.isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
-  }
-  for (int i=0; i<N; ++i) {
+    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].postContactStatus());
     EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
     EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
   }
+  EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[4].postContactStatus());
   EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
   EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
 }
@@ -282,289 +185,96 @@ void ContactSequenceTest::testShiftDiscreteEventBeyondTerminal(const Robot& robo
   ContactSequence contact_sequence(robot, T, N);
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
-  DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
-  ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
   contact_sequence.setContactStatusUniformly(pre_contact_status);
-  discrete_event.eventTime = T / 2.0;
-  contact_sequence.setDiscreteEvent(discrete_event);
-  const int event_time_stage = std::floor((T/2.0)/dtau);
-  if (discrete_event.existImpulse()) {
-    contact_sequence.shiftImpulse(0, T+1.0);
+  std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
+  std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
+  for (int i=0; i<5; ++i) {
+    discrete_events[i].eventTime = event_times[i];
+    contact_sequence.setDiscreteEvent(discrete_events[i]);
   }
-  else {
-    contact_sequence.shiftLift(0, T+1.0);
+  if (contact_sequence.totalNumImpulseStages() > 0) {
+    contact_sequence.shiftImpulse(0, T+1);
+    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
   }
+  if (contact_sequence.totalNumLiftStages() > 0) {
+    contact_sequence.shiftLift(0, T+1);
+    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
+  }
+  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
+  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
   for (int i=0; i<N; ++i) {
-    EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
-  }
-  for (int i=0; i<N; ++i) {
+    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].preContactStatus());
     EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
     EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
   }
+  EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[0].preContactStatus());
   EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
   EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
 }
 
 
-void ContactSequenceTest::testShiftDiscreteEventForward(const Robot& robot) const {
+void ContactSequenceTest::testShiftDiscreteEventInitial(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
   ContactStatus pre_contact_status = robot.createContactStatus();
-  DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
-  ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
+  pre_contact_status.setRandom();
   contact_sequence.setContactStatusUniformly(pre_contact_status);
-  discrete_event.eventTime = T / 2.0;
-  contact_sequence.setDiscreteEvent(discrete_event);
-  const int event_time_stage = std::floor((T/2.0)/dtau);
-  const double shifted_time = T / 3.0;
-  const int shifted_event_time_stage = std::floor(shifted_time/dtau);
-  if (discrete_event.existImpulse()) {
-    contact_sequence.shiftImpulse(0, shifted_time);
+  std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
+  std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
+  for (int i=0; i<5; ++i) {
+    discrete_events[i].eventTime = event_times[i];
+    contact_sequence.setDiscreteEvent(discrete_events[i]);
   }
-  else {
-    contact_sequence.shiftLift(0, shifted_time);
+  if (contact_sequence.totalNumImpulseStages() > 0) {
+    contact_sequence.shiftImpulse(contact_sequence.totalNumImpulseStages()-1, 0);
+    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
   }
-  for (int i=0; i<shifted_event_time_stage; ++i) {
-    EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
+  if (contact_sequence.totalNumLiftStages() > 0) {
+    contact_sequence.shiftLift(contact_sequence.totalNumLiftStages()-1, 0);
+    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
+  }
+  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
+  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
+  for (int i=0; i<N; ++i) {
+    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].postContactStatus());
     EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
     EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
   }
-  EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(shifted_event_time_stage)));
-  EXPECT_EQ(contact_sequence.numImpulseStages(shifted_event_time_stage), 0);
-  EXPECT_EQ(contact_sequence.numLiftStages(shifted_event_time_stage), 0);
-  for (int i=shifted_event_time_stage+1; i<N; ++i) {
-    EXPECT_TRUE(discrete_event.isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
-  }
-  if (discrete_event.existImpulse()) {
-    EXPECT_TRUE(discrete_event.impulseStatus() == contact_sequence.impulseStatus(0));
-    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 1);
-    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-    EXPECT_DOUBLE_EQ(shifted_time, contact_sequence.impulseTime(0));
-    for (int i=shifted_event_time_stage+1; i<N; ++i) {
-      EXPECT_EQ(contact_sequence.numImpulseStages(i), 1);
-      EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
-    }
-  }
-  else {
-    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 1);
-    EXPECT_DOUBLE_EQ(shifted_time, contact_sequence.liftTime(0));
-    for (int i=shifted_event_time_stage+1; i<N; ++i) {
-      EXPECT_EQ(contact_sequence.numLiftStages(i), 1);
-      EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
-    }
-  }
+  EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[4].postContactStatus());
+  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
+  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
 }
 
 
-void ContactSequenceTest::testShiftDiscreteEventBackward(const Robot& robot) const {
+void ContactSequenceTest::testShiftDiscreteEventTerminal(const Robot& robot) const {
   ContactSequence contact_sequence(robot, T, N);
   ContactStatus pre_contact_status = robot.createContactStatus();
-  DiscreteEvent discrete_event = createDiscreteEvent(robot, pre_contact_status);
-  ASSERT_TRUE(discrete_event.isConsisitentWithPreContactStatus(pre_contact_status));
+  pre_contact_status.setRandom();
   contact_sequence.setContactStatusUniformly(pre_contact_status);
-  discrete_event.eventTime = T / 2.0;
-  contact_sequence.setDiscreteEvent(discrete_event);
-  const int event_time_stage = std::floor((T/2.0)/dtau);
-  const double shifted_time = 2.0 * T / 3.0;
-  const int shifted_event_time_stage = std::floor(shifted_time/dtau);
-  if (discrete_event.existImpulse()) {
-    contact_sequence.shiftImpulse(0, shifted_time);
+  std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
+  std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
+  for (int i=0; i<5; ++i) {
+    discrete_events[i].eventTime = event_times[i];
+    contact_sequence.setDiscreteEvent(discrete_events[i]);
   }
-  else {
-    contact_sequence.shiftLift(0, shifted_time);
+  if (contact_sequence.totalNumImpulseStages() > 0) {
+    contact_sequence.shiftImpulse(0, T);
+    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
   }
-  for (int i=0; i<shifted_event_time_stage; ++i) {
-    EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
+  if (contact_sequence.totalNumLiftStages() > 0) {
+    contact_sequence.shiftLift(0, T);
+    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
+  }
+  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
+  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
+  for (int i=0; i<N; ++i) {
+    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].preContactStatus());
     EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
     EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
   }
-  EXPECT_TRUE(discrete_event.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(shifted_event_time_stage)));
-  EXPECT_EQ(contact_sequence.numImpulseStages(shifted_event_time_stage), 0);
-  EXPECT_EQ(contact_sequence.numLiftStages(shifted_event_time_stage), 0);
-  for (int i=shifted_event_time_stage+1; i<N; ++i) {
-    EXPECT_TRUE(discrete_event.isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
-  }
-  if (discrete_event.existImpulse()) {
-    EXPECT_TRUE(discrete_event.impulseStatus() == contact_sequence.impulseStatus(0));
-    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 1);
-    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-    EXPECT_DOUBLE_EQ(shifted_time, contact_sequence.impulseTime(0));
-    for (int i=shifted_event_time_stage+1; i<N; ++i) {
-      EXPECT_EQ(contact_sequence.numImpulseStages(i), 1);
-      EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
-    }
-  }
-  else {
-    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 1);
-    EXPECT_DOUBLE_EQ(shifted_time, contact_sequence.liftTime(0));
-    for (int i=shifted_event_time_stage+1; i<N; ++i) {
-      EXPECT_EQ(contact_sequence.numLiftStages(i), 1);
-      EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
-    }
-  }
+  EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[0].preContactStatus());
+  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
+  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
 }
-
-
-void ContactSequenceTest::testShiftDiscreteEventMultiple(const Robot& robot) const {
-  // ContactSequence contact_sequence(robot, T, N);
-  // ContactStatus pre_contact_status = robot.createContactStatus();
-  // ContactStatus intermediate_contact_status = robot.createContactStatus();
-  // ContactStatus post_contact_status = robot.createContactStatus();
-  // DiscreteEvent discrete_event1(robot),
-  //               discrete_event2(robot);
-  // std::random_device rnd;
-  // while (!discrete_event1.existDiscreteEvent() || !discrete_event2.existDiscreteEvent()) {
-  //   pre_contact_status.setRandom();
-  //   intermediate_contact_status.setRandom();
-  //   post_contact_status.setRandom();
-  //   discrete_event1.setDiscreteEvent(pre_contact_status, intermediate_contact_status);
-  //   discrete_event2.setDiscreteEvent(intermediate_contact_status, post_contact_status);
-  // }
-  // ASSERT_TRUE(discrete_event1.isConsisitentWithPreContactStatus(pre_contact_status));
-  // ASSERT_TRUE(discrete_event1.isConsisitentWithPostContactStatus(intermediate_contact_status));
-  // ASSERT_TRUE(discrete_event2.isConsisitentWithPreContactStatus(intermediate_contact_status));
-  // ASSERT_TRUE(discrete_event2.isConsisitentWithPostContactStatus(post_contact_status));
-  // contact_sequence.setContactStatusUniformly(pre_contact_status);
-  // const double time1 = T / 3.0;
-  // const double time2 = 2.0 * T / 3.0;
-  // discrete_event1.setEventTime(time1);
-  // discrete_event2.setEventTime(time2);
-  // contact_sequence.setDiscreteEvent(discrete_event1);
-  // contact_sequence.setDiscreteEvent(discrete_event2);
-  // const int event_time_stage1 = std::floor(time1/dtau);
-  // const int event_time_stage2 = std::floor(time2/dtau);
-  // for (int i=0; i<event_time_stage1; ++i) {
-  //   EXPECT_TRUE(discrete_event1.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
-  //   EXPECT_DOUBLE_EQ(contact_sequence.eventTime(i), 0);
-  //   EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-  //   EXPECT_FALSE(contact_sequence.existImpulse(i));
-  //   EXPECT_FALSE(contact_sequence.existLift(i));
-  //   EXPECT_EQ(contact_sequence.impulseIndex(i), -1);
-  //   EXPECT_EQ(contact_sequence.liftIndex(i), -1);
-  // }
-  // EXPECT_TRUE(discrete_event1.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(event_time_stage1)));
-  // EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stage1));
-  // EXPECT_DOUBLE_EQ(contact_sequence.eventTime(event_time_stage1), time1);
-  // if (discrete_event1.existImpulse()) {
-  //   EXPECT_TRUE(contact_sequence.existImpulse(event_time_stage1));
-  //   EXPECT_EQ(contact_sequence.impulseIndex(event_time_stage1), 0);
-  // }
-  // else {
-  //   EXPECT_FALSE(contact_sequence.existImpulse(event_time_stage1));
-  //   EXPECT_EQ(contact_sequence.impulseIndex(event_time_stage1), -1);
-  // }
-  // if (discrete_event1.existLift()) {
-  //   EXPECT_TRUE(contact_sequence.existLift(event_time_stage1));
-  //   EXPECT_EQ(contact_sequence.liftIndex(event_time_stage1), 0);
-  // }
-  // else {
-  //   EXPECT_FALSE(contact_sequence.existLift(event_time_stage1));
-  //   EXPECT_EQ(contact_sequence.liftIndex(event_time_stage1), -1);
-  // }
-  // for (int i=event_time_stage1+1; i<event_time_stage2; ++i) {
-  //   EXPECT_TRUE(discrete_event1.isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
-  //   EXPECT_TRUE(discrete_event2.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
-  //   EXPECT_DOUBLE_EQ(contact_sequence.eventTime(i), 0);
-  //   EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-  //   EXPECT_FALSE(contact_sequence.existImpulse(i));
-  //   EXPECT_FALSE(contact_sequence.existLift(i));
-  //   EXPECT_EQ(contact_sequence.impulseIndex(i), -1);
-  //   EXPECT_EQ(contact_sequence.liftIndex(i), -1);
-  // }
-  // EXPECT_TRUE(discrete_event1.isConsisitentWithPostContactStatus(contact_sequence.contactStatus(event_time_stage2)));
-  // EXPECT_TRUE(discrete_event2.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(event_time_stage2)));
-  // EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stage2));
-  // EXPECT_DOUBLE_EQ(contact_sequence.eventTime(event_time_stage2), time2);
-  // if (discrete_event2.existImpulse()) {
-  //   EXPECT_TRUE(contact_sequence.existImpulse(event_time_stage2));
-  //   if (discrete_event1.existImpulse()) {
-  //     EXPECT_EQ(contact_sequence.impulseIndex(event_time_stage2), 1);
-  //   }
-  //   else {
-  //     EXPECT_EQ(contact_sequence.impulseIndex(event_time_stage2), 0);
-  //   }
-  // }
-  // else {
-  //   EXPECT_FALSE(contact_sequence.existImpulse(event_time_stage2));
-  //   EXPECT_EQ(contact_sequence.impulseIndex(event_time_stage2), -1);
-  // }
-  // if (discrete_event2.existLift()) {
-  //   EXPECT_TRUE(contact_sequence.existLift(event_time_stage2));
-  //   if (discrete_event1.existLift()) {
-  //     EXPECT_EQ(contact_sequence.liftIndex(event_time_stage2), 1);
-  //   }
-  //   else {
-  //     EXPECT_EQ(contact_sequence.liftIndex(event_time_stage2), 0);
-  //   }
-  // }
-  // else {
-  //   EXPECT_FALSE(contact_sequence.existLift(event_time_stage2));
-  //   EXPECT_EQ(contact_sequence.liftIndex(event_time_stage2), -1);
-  // }
-  // for (int i=event_time_stage2+1; i<N; ++i) {
-  //   EXPECT_TRUE(discrete_event2.isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
-  //   EXPECT_DOUBLE_EQ(contact_sequence.eventTime(i), 0);
-  //   EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-  //   EXPECT_FALSE(contact_sequence.existImpulse(i));
-  //   EXPECT_FALSE(contact_sequence.existLift(i));
-  //   EXPECT_EQ(contact_sequence.impulseIndex(i), -1);
-  //   EXPECT_EQ(contact_sequence.liftIndex(i), -1);
-  // }
-  // const double shifted_time1 = 3.0 * T / 4.0;
-  // ASSERT_TRUE(shifted_time1 > time2);
-  // const int shifted_event_time_stage = std::floor(shifted_time1/dtau);
-  // contact_sequence.shiftDiscreteEvent(event_time_stage1, shifted_time1);
-  // for (int i=0; i<shifted_event_time_stage; ++i) {
-  //   EXPECT_TRUE(discrete_event1.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(i)));
-  //   EXPECT_DOUBLE_EQ(contact_sequence.eventTime(i), 0);
-  //   EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-  //   EXPECT_FALSE(contact_sequence.existImpulse(i));
-  //   EXPECT_FALSE(contact_sequence.existLift(i));
-  //   EXPECT_EQ(contact_sequence.impulseIndex(i), -1);
-  //   EXPECT_EQ(contact_sequence.liftIndex(i), -1);
-  // }
-  // if (pre_contact_status == post_contact_status) {
-  //   EXPECT_TRUE(discrete_event1.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(shifted_event_time_stage)));
-  //   EXPECT_FALSE(contact_sequence.existDiscreteEvent(shifted_event_time_stage));
-  //   EXPECT_DOUBLE_EQ(contact_sequence.eventTime(shifted_event_time_stage), 0);
-  //   EXPECT_EQ(contact_sequence.impulseIndex(shifted_event_time_stage), -1);
-  //   EXPECT_EQ(contact_sequence.liftIndex(shifted_event_time_stage), -1);
-  // }
-  // else {
-  //   EXPECT_TRUE(discrete_event1.isConsisitentWithPreContactStatus(contact_sequence.contactStatus(shifted_event_time_stage)));
-  //   EXPECT_TRUE(contact_sequence.existDiscreteEvent(shifted_event_time_stage));
-  //   EXPECT_DOUBLE_EQ(contact_sequence.eventTime(shifted_event_time_stage), shifted_time1);
-  //   DiscreteEvent discrete_event(robot.max_point_contacts());
-  //   discrete_event.setDiscreteEvent(pre_contact_status, post_contact_status);
-  //   if (discrete_event.existImpulse()) {
-  //     EXPECT_TRUE(contact_sequence.existImpulse(shifted_event_time_stage));
-  //     EXPECT_EQ(contact_sequence.impulseIndex(shifted_event_time_stage), 0);
-  //   }
-  //   else {
-  //     EXPECT_FALSE(contact_sequence.existImpulse(shifted_event_time_stage));
-  //     EXPECT_EQ(contact_sequence.impulseIndex(shifted_event_time_stage), -1);
-  //   }
-  //   if (discrete_event.existLift()) {
-  //     EXPECT_TRUE(contact_sequence.existLift(shifted_event_time_stage));
-  //     EXPECT_EQ(contact_sequence.liftIndex(shifted_event_time_stage), 0);
-  //   }
-  //   else {
-  //     EXPECT_FALSE(contact_sequence.existLift(shifted_event_time_stage));
-  //     EXPECT_EQ(contact_sequence.liftIndex(shifted_event_time_stage), -1);
-  //   }
-  // }
-  // for (int i=shifted_event_time_stage+1; i<N; ++i) {
-  //   EXPECT_TRUE(discrete_event2.isConsisitentWithPostContactStatus(contact_sequence.contactStatus(i)));
-  //   EXPECT_DOUBLE_EQ(contact_sequence.eventTime(i), 0);
-  //   EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-  //   EXPECT_FALSE(contact_sequence.existImpulse(i));
-  //   EXPECT_FALSE(contact_sequence.existLift(i));
-  //   EXPECT_EQ(contact_sequence.impulseIndex(i), -1);
-  //   EXPECT_EQ(contact_sequence.liftIndex(i), -1);
-  // }
-}
-
 
 
 TEST_F(ContactSequenceTest, fixedBase) {
@@ -573,13 +283,10 @@ TEST_F(ContactSequenceTest, fixedBase) {
   testConstructor(robot);
   testSetContactStatus(robot);
   testSetDiscreteEvent(robot);
-  testSetMultipleDiscreteEvents(robot, false);
-  testSetMultipleDiscreteEvents(robot, true);
   testShiftDiscreteEventBeyondInitial(robot);
   testShiftDiscreteEventBeyondTerminal(robot);
-  testShiftDiscreteEventForward(robot);
-  testShiftDiscreteEventBackward(robot);
-  testShiftDiscreteEventMultiple(robot);
+  testShiftDiscreteEventInitial(robot);
+  testShiftDiscreteEventTerminal(robot);
 }
 
 
@@ -589,13 +296,10 @@ TEST_F(ContactSequenceTest, floatingBase) {
   testConstructor(robot);
   testSetContactStatus(robot);
   testSetDiscreteEvent(robot);
-  testSetMultipleDiscreteEvents(robot, false);
-  testSetMultipleDiscreteEvents(robot, true);
   testShiftDiscreteEventBeyondInitial(robot);
   testShiftDiscreteEventBeyondTerminal(robot);
-  testShiftDiscreteEventForward(robot);
-  testShiftDiscreteEventBackward(robot);
-  testShiftDiscreteEventMultiple(robot);
+  testShiftDiscreteEventInitial(robot);
+  testShiftDiscreteEventTerminal(robot);
 }
 
 } // namespace idocp

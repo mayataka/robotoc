@@ -27,6 +27,8 @@ protected:
 
   static DiscreteEvent createDiscreteEvent(const Robot& robot, const ContactStatus& pre_contact_status);
   static std::vector<DiscreteEvent> createDiscreteEvents(const Robot& robot, const ContactStatus& initial_contact_status, const int num);
+  static void testNoDiscreteEvent(const ContactSequencePrimitive& contact_sequence, const int time_stage);
+  static void testDiscreteEvent(const ContactSequencePrimitive& contact_sequence, const int time_stage, const DiscreteEvent& discrete_event);
   void testConstructor(const Robot& robot) const;
   void testSetContactStatus(const Robot& robot) const;
   void testSetDiscreteEvent(const Robot& robot) const;
@@ -34,6 +36,8 @@ protected:
   void testShiftDiscreteEventBeyondTerminal(const Robot& robot) const;
   void testShiftDiscreteEventForward(const Robot& robot) const;
   void testShiftDiscreteEventBackward(const Robot& robot) const;
+  void testShiftDiscreteEventForwardSameStage(const Robot& robot) const;
+  void testShiftDiscreteEventBackwardSameStage(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
   int N;
@@ -71,6 +75,26 @@ std::vector<DiscreteEvent> ContactSequencePrimitiveTest::createDiscreteEvents(co
 }
 
 
+void ContactSequencePrimitiveTest::testNoDiscreteEvent(const ContactSequencePrimitive& contact_sequence, const int time_stage) {
+  EXPECT_DOUBLE_EQ(contact_sequence.eventTime(time_stage), 0);
+  EXPECT_FALSE(contact_sequence.existDiscreteEvent(time_stage));
+  EXPECT_FALSE(contact_sequence.existImpulse(time_stage));
+  EXPECT_FALSE(contact_sequence.existLift(time_stage));
+  EXPECT_FALSE(contact_sequence.existOnlyLift(time_stage));
+}
+
+
+void ContactSequencePrimitiveTest::testDiscreteEvent(const ContactSequencePrimitive& contact_sequence, const int time_stage, const DiscreteEvent& discrete_event) {
+  EXPECT_TRUE(contact_sequence.contactStatus(time_stage) == discrete_event.preContactStatus());
+  EXPECT_TRUE(contact_sequence.impulseStatus(time_stage) == discrete_event.impulseStatus());
+  EXPECT_DOUBLE_EQ(contact_sequence.eventTime(time_stage), 0);
+  EXPECT_EQ(contact_sequence.existDiscreteEvent(time_stage), discrete_event.existDiscreteEvent());
+  EXPECT_EQ(contact_sequence.existImpulse(time_stage), discrete_event.existImpulse());
+  EXPECT_EQ(contact_sequence.existLift(time_stage), discrete_event.existLift());
+  EXPECT_EQ(contact_sequence.existOnlyLift(time_stage), (discrete_event.existLift() && (!discrete_event.existImpulse())));
+}
+
+
 void ContactSequencePrimitiveTest::testConstructor(const Robot& robot) const {
   ContactSequencePrimitive contact_sequence(robot, N);
   ContactStatus contact_status = robot.createContactStatus();
@@ -78,11 +102,7 @@ void ContactSequencePrimitiveTest::testConstructor(const Robot& robot) const {
   for (int i=0; i<N; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == contact_status);
     EXPECT_TRUE(contact_sequence.impulseStatus(i) == impulse_status);
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
   EXPECT_TRUE(contact_sequence.contactStatus(N) == contact_status);
 }
@@ -98,11 +118,7 @@ void ContactSequencePrimitiveTest::testSetContactStatus(const Robot& robot) cons
   for (int i=0; i<N; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == contact_status);
     EXPECT_TRUE(contact_sequence.impulseStatus(i) == impulse_status);
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
   EXPECT_TRUE(contact_sequence.contactStatus(N) == contact_status);
 }
@@ -120,43 +136,21 @@ void ContactSequencePrimitiveTest::testSetDiscreteEvent(const Robot& robot) cons
   }
   for (int i=0; i<event_time_stages[0]; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].preContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
-  EXPECT_TRUE(contact_sequence.contactStatus(event_time_stages[0]) == discrete_events[0].preContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(event_time_stages[0]) == discrete_events[0].impulseStatus());
-  EXPECT_EQ(contact_sequence.eventTime(event_time_stages[0]), 0);
   EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[0]));
-  EXPECT_EQ(contact_sequence.existImpulse(event_time_stages[0]), discrete_events[0].existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(event_time_stages[0]), discrete_events[0].existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(event_time_stages[0]), (discrete_events[0].existLift() && (!discrete_events[0].existImpulse())));
+  testDiscreteEvent(contact_sequence, event_time_stages[0], discrete_events[0]);
   for (int i=1; i<5; ++i) {
     for (int j=event_time_stages[i-1]+1; j<event_time_stages[i]; ++j) {
       EXPECT_TRUE(contact_sequence.contactStatus(j) == discrete_events[i].preContactStatus());
-      EXPECT_EQ(contact_sequence.eventTime(j), 0);
-      EXPECT_FALSE(contact_sequence.existDiscreteEvent(j));
-      EXPECT_FALSE(contact_sequence.existImpulse(j));
-      EXPECT_FALSE(contact_sequence.existLift(j));
-      EXPECT_FALSE(contact_sequence.existOnlyLift(j));
+      testNoDiscreteEvent(contact_sequence, j);
     }
-    EXPECT_TRUE(contact_sequence.contactStatus(event_time_stages[i]) == discrete_events[i].preContactStatus());
-    EXPECT_TRUE(contact_sequence.impulseStatus(event_time_stages[i]) == discrete_events[i].impulseStatus());
-    EXPECT_EQ(contact_sequence.eventTime(event_time_stages[i]), 0);
     EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[i]));
-    EXPECT_EQ(contact_sequence.existImpulse(event_time_stages[i]), discrete_events[i].existImpulse());
-    EXPECT_EQ(contact_sequence.existLift(event_time_stages[i]), discrete_events[i].existLift());
-    EXPECT_EQ(contact_sequence.existOnlyLift(event_time_stages[i]), (discrete_events[i].existLift() && (!discrete_events[i].existImpulse())));
+    testDiscreteEvent(contact_sequence, event_time_stages[i], discrete_events[i]);
   }
   for (int i=event_time_stages[4]+1; i<N; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].postContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
   EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[4].postContactStatus());
   discrete_events[1] = createDiscreteEvent(robot, discrete_events[0].postContactStatus());
@@ -164,41 +158,19 @@ void ContactSequencePrimitiveTest::testSetDiscreteEvent(const Robot& robot) cons
   contact_sequence.setDiscreteEvent(discrete_events[1], new_event_time_stage);
   for (int i=0; i<event_time_stages[0]; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].preContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
-  EXPECT_TRUE(contact_sequence.contactStatus(event_time_stages[0]) == discrete_events[0].preContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(event_time_stages[0]) == discrete_events[0].impulseStatus());
-  EXPECT_EQ(contact_sequence.eventTime(event_time_stages[0]), 0);
   EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[0]));
-  EXPECT_EQ(contact_sequence.existImpulse(event_time_stages[0]), discrete_events[0].existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(event_time_stages[0]), discrete_events[0].existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(event_time_stages[0]), (discrete_events[0].existLift() && (!discrete_events[0].existImpulse())));
+  testDiscreteEvent(contact_sequence, event_time_stages[0], discrete_events[0]);
   for (int i=event_time_stages[0]+1; i<new_event_time_stage; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[1].preContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
-  EXPECT_TRUE(contact_sequence.contactStatus(new_event_time_stage) == discrete_events[1].preContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(new_event_time_stage) == discrete_events[1].impulseStatus());
-  EXPECT_DOUBLE_EQ(contact_sequence.eventTime(new_event_time_stage), 0);
   EXPECT_TRUE(contact_sequence.existDiscreteEvent(new_event_time_stage));
-  EXPECT_EQ(contact_sequence.existImpulse(new_event_time_stage), discrete_events[1].existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(new_event_time_stage), discrete_events[1].existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(new_event_time_stage), (discrete_events[1].existLift() && (!discrete_events[1].existImpulse())));
+  testDiscreteEvent(contact_sequence, new_event_time_stage, discrete_events[1]);
   for (int i=new_event_time_stage+1; i<N; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[1].postContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
   EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[1].postContactStatus());
 }
@@ -217,41 +189,19 @@ void ContactSequencePrimitiveTest::testShiftDiscreteEventBeyondInitial(const Rob
   contact_sequence.shiftDiscreteEventBeyondInitial(event_time_stages[2]);
   for (int i=0; i<event_time_stages[3]; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[3].preContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
-  EXPECT_TRUE(contact_sequence.contactStatus(event_time_stages[3]) == discrete_events[3].preContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(event_time_stages[3]) == discrete_events[3].impulseStatus());
-  EXPECT_EQ(contact_sequence.eventTime(event_time_stages[3]), 0);
   EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[3]));
-  EXPECT_EQ(contact_sequence.existImpulse(event_time_stages[3]), discrete_events[3].existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(event_time_stages[3]), discrete_events[3].existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(event_time_stages[3]), (discrete_events[3].existLift() && (!discrete_events[3].existImpulse())));
+  testDiscreteEvent(contact_sequence, event_time_stages[3], discrete_events[3]);
   for (int i=event_time_stages[3]+1; i<event_time_stages[4]; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].preContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
-  EXPECT_TRUE(contact_sequence.contactStatus(event_time_stages[4]) == discrete_events[4].preContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(event_time_stages[4]) == discrete_events[4].impulseStatus());
-  EXPECT_EQ(contact_sequence.eventTime(event_time_stages[4]), 0);
   EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[4]));
-  EXPECT_EQ(contact_sequence.existImpulse(event_time_stages[4]), discrete_events[4].existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(event_time_stages[4]), discrete_events[4].existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(event_time_stages[4]), (discrete_events[4].existLift() && (!discrete_events[4].existImpulse())));
+  testDiscreteEvent(contact_sequence, event_time_stages[4], discrete_events[4]);
   for (int i=event_time_stages[4]+1; i<N; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].postContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
   EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[4].postContactStatus());
 }
@@ -270,41 +220,19 @@ void ContactSequencePrimitiveTest::testShiftDiscreteEventBeyondTerminal(const Ro
   contact_sequence.shiftDiscreteEventBeyondTerminal(event_time_stages[2]);
   for (int i=0; i<event_time_stages[0]; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].preContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
-  EXPECT_TRUE(contact_sequence.contactStatus(event_time_stages[0]) == discrete_events[0].preContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(event_time_stages[0]) == discrete_events[0].impulseStatus());
-  EXPECT_EQ(contact_sequence.eventTime(event_time_stages[0]), 0);
   EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[0]));
-  EXPECT_EQ(contact_sequence.existImpulse(event_time_stages[0]), discrete_events[0].existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(event_time_stages[0]), discrete_events[0].existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(event_time_stages[0]), (discrete_events[0].existLift() && (!discrete_events[0].existImpulse())));
+  testDiscreteEvent(contact_sequence, event_time_stages[0], discrete_events[0]);
   for (int i=event_time_stages[0]+1; i<event_time_stages[1]; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[1].preContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
-  EXPECT_TRUE(contact_sequence.contactStatus(event_time_stages[1]) == discrete_events[1].preContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(event_time_stages[1]) == discrete_events[1].impulseStatus());
-  EXPECT_EQ(contact_sequence.eventTime(event_time_stages[1]), 0);
   EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[1]));
-  EXPECT_EQ(contact_sequence.existImpulse(event_time_stages[1]), discrete_events[1].existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(event_time_stages[1]), discrete_events[1].existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(event_time_stages[1]), (discrete_events[1].existLift() && (!discrete_events[1].existImpulse())));
+  testDiscreteEvent(contact_sequence, event_time_stages[1], discrete_events[1]);
   for (int i=event_time_stages[1]+1; i<N; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[1].postContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
   EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[1].postContactStatus());
 }
@@ -324,58 +252,27 @@ void ContactSequencePrimitiveTest::testShiftDiscreteEventForward(const Robot& ro
   contact_sequence.shiftDiscreteEvent(event_time_stages[3], new_event_time_stage);
   for (int i=0; i<event_time_stages[0]; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].preContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
-  EXPECT_TRUE(contact_sequence.contactStatus(event_time_stages[0]) == discrete_events[0].preContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(event_time_stages[0]) == discrete_events[0].impulseStatus());
-  EXPECT_EQ(contact_sequence.eventTime(event_time_stages[0]), 0);
   EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[0]));
-  EXPECT_EQ(contact_sequence.existImpulse(event_time_stages[0]), discrete_events[0].existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(event_time_stages[0]), discrete_events[0].existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(event_time_stages[0]), (discrete_events[0].existLift() && (!discrete_events[0].existImpulse())));
+  testDiscreteEvent(contact_sequence, event_time_stages[0], discrete_events[0]);
   for (int i=event_time_stages[0]+1; i<new_event_time_stage; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].postContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
   EXPECT_TRUE(contact_sequence.contactStatus(new_event_time_stage) == discrete_events[0].postContactStatus());
   DiscreteEvent new_discrete_event(robot);
   new_discrete_event.setDiscreteEvent(discrete_events[0].postContactStatus(), discrete_events[3].postContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(new_event_time_stage) == new_discrete_event.impulseStatus());
-  EXPECT_EQ(contact_sequence.eventTime(new_event_time_stage), 0);
-  EXPECT_EQ(contact_sequence.existDiscreteEvent(new_event_time_stage), new_discrete_event.existDiscreteEvent());
-  EXPECT_EQ(contact_sequence.existImpulse(new_event_time_stage), new_discrete_event.existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(new_event_time_stage), new_discrete_event.existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(new_event_time_stage), (new_discrete_event.existLift() && (!new_discrete_event.existImpulse())));
+  testDiscreteEvent(contact_sequence, new_event_time_stage, new_discrete_event);
   for (int i=new_event_time_stage+1; i<event_time_stages[4]; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].preContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
-  EXPECT_TRUE(contact_sequence.contactStatus(event_time_stages[4]) == discrete_events[4].preContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(event_time_stages[4]) == discrete_events[4].impulseStatus());
-  EXPECT_EQ(contact_sequence.eventTime(event_time_stages[4]), 0);
   EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[4]));
-  EXPECT_EQ(contact_sequence.existImpulse(event_time_stages[4]), discrete_events[4].existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(event_time_stages[4]), discrete_events[4].existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(event_time_stages[4]), (discrete_events[4].existLift() && (!discrete_events[4].existImpulse())));
+  testDiscreteEvent(contact_sequence, event_time_stages[4], discrete_events[4]);
   for (int i=event_time_stages[4]+1; i<N; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].postContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
   EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[4].postContactStatus());
 }
@@ -395,60 +292,109 @@ void ContactSequencePrimitiveTest::testShiftDiscreteEventBackward(const Robot& r
   contact_sequence.shiftDiscreteEvent(event_time_stages[1], new_event_time_stage);
   for (int i=0; i<event_time_stages[0]; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].preContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
-  EXPECT_TRUE(contact_sequence.contactStatus(event_time_stages[0]) == discrete_events[0].preContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(event_time_stages[0]) == discrete_events[0].impulseStatus());
-  EXPECT_EQ(contact_sequence.eventTime(event_time_stages[0]), 0);
   EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[0]));
-  EXPECT_EQ(contact_sequence.existImpulse(event_time_stages[0]), discrete_events[0].existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(event_time_stages[0]), discrete_events[0].existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(event_time_stages[0]), (discrete_events[0].existLift() && (!discrete_events[0].existImpulse())));
+  testDiscreteEvent(contact_sequence, event_time_stages[0], discrete_events[0]);
   for (int i=event_time_stages[0]+1; i<new_event_time_stage; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[1].preContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
   DiscreteEvent new_discrete_event(robot);
   new_discrete_event.setDiscreteEvent(discrete_events[1].preContactStatus(), discrete_events[4].preContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(new_event_time_stage) == new_discrete_event.impulseStatus());
-  EXPECT_EQ(contact_sequence.eventTime(new_event_time_stage), 0);
-  EXPECT_EQ(contact_sequence.existDiscreteEvent(new_event_time_stage), new_discrete_event.existDiscreteEvent());
-  EXPECT_EQ(contact_sequence.existImpulse(new_event_time_stage), new_discrete_event.existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(new_event_time_stage), new_discrete_event.existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(new_event_time_stage), (new_discrete_event.existLift() && (!new_discrete_event.existImpulse())));
+  testDiscreteEvent(contact_sequence, new_event_time_stage, new_discrete_event);
   for (int i=new_event_time_stage+1; i<event_time_stages[4]; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].preContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
-  EXPECT_TRUE(contact_sequence.contactStatus(event_time_stages[4]) == discrete_events[4].preContactStatus());
-  EXPECT_TRUE(contact_sequence.impulseStatus(event_time_stages[4]) == discrete_events[4].impulseStatus());
-  EXPECT_EQ(contact_sequence.eventTime(event_time_stages[4]), 0);
   EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[4]));
-  EXPECT_EQ(contact_sequence.existImpulse(event_time_stages[4]), discrete_events[4].existImpulse());
-  EXPECT_EQ(contact_sequence.existLift(event_time_stages[4]), discrete_events[4].existLift());
-  EXPECT_EQ(contact_sequence.existOnlyLift(event_time_stages[4]), (discrete_events[4].existLift() && (!discrete_events[4].existImpulse())));
+  testDiscreteEvent(contact_sequence, event_time_stages[4], discrete_events[4]);
   for (int i=event_time_stages[4]+1; i<N; ++i) {
     EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].postContactStatus());
-    EXPECT_EQ(contact_sequence.eventTime(i), 0);
-    EXPECT_FALSE(contact_sequence.existDiscreteEvent(i));
-    EXPECT_FALSE(contact_sequence.existImpulse(i));
-    EXPECT_FALSE(contact_sequence.existLift(i));
-    EXPECT_FALSE(contact_sequence.existOnlyLift(i));
+    testNoDiscreteEvent(contact_sequence, i);
   }
   EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[4].postContactStatus());
 }
+
+
+void ContactSequencePrimitiveTest::testShiftDiscreteEventForwardSameStage(const Robot& robot) const {
+  ContactSequencePrimitive contact_sequence(robot, N);
+  ContactStatus pre_contact_status = robot.createContactStatus();
+  pre_contact_status.setRandom();
+  std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
+  contact_sequence.setContactStatusUniformly(pre_contact_status);
+  const std::vector<int> event_time_stages = {4, 7, 8, 9, 15};
+  for (int i=0; i<5; ++i) {
+    contact_sequence.setDiscreteEvent(discrete_events[i], event_time_stages[i]);
+  }
+  const int new_event_time_stage = event_time_stages[1];
+  contact_sequence.shiftDiscreteEvent(event_time_stages[3], new_event_time_stage);
+  for (int i=0; i<event_time_stages[0]; ++i) {
+    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].preContactStatus());
+    testNoDiscreteEvent(contact_sequence, i);
+  }
+  EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[0]));
+  testDiscreteEvent(contact_sequence, event_time_stages[0], discrete_events[0]);
+  for (int i=event_time_stages[0]+1; i<new_event_time_stage; ++i) {
+    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].postContactStatus());
+    testNoDiscreteEvent(contact_sequence, i);
+  }
+  EXPECT_TRUE(contact_sequence.contactStatus(new_event_time_stage) == discrete_events[0].postContactStatus());
+  DiscreteEvent new_discrete_event(robot);
+  new_discrete_event.setDiscreteEvent(discrete_events[0].postContactStatus(), discrete_events[4].preContactStatus());
+  testDiscreteEvent(contact_sequence, new_event_time_stage, new_discrete_event);
+  for (int i=new_event_time_stage+1; i<event_time_stages[4]; ++i) {
+    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].preContactStatus());
+    testNoDiscreteEvent(contact_sequence, i);
+  }
+  EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[4]));
+  testDiscreteEvent(contact_sequence, event_time_stages[4], discrete_events[4]);
+  for (int i=event_time_stages[4]+1; i<N; ++i) {
+    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].postContactStatus());
+    testNoDiscreteEvent(contact_sequence, i);
+  }
+  EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[4].postContactStatus());
+}
+
+
+void ContactSequencePrimitiveTest::testShiftDiscreteEventBackwardSameStage(const Robot& robot) const {
+  ContactSequencePrimitive contact_sequence(robot, N);
+  ContactStatus pre_contact_status = robot.createContactStatus();
+  pre_contact_status.setRandom();
+  std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
+  contact_sequence.setContactStatusUniformly(pre_contact_status);
+  const std::vector<int> event_time_stages = {4, 7, 8, 9, 15};
+  for (int i=0; i<5; ++i) {
+    contact_sequence.setDiscreteEvent(discrete_events[i], event_time_stages[i]);
+  }
+  const int new_event_time_stage = event_time_stages[3];
+  contact_sequence.shiftDiscreteEvent(event_time_stages[1], new_event_time_stage);
+  for (int i=0; i<event_time_stages[0]; ++i) {
+    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].preContactStatus());
+    testNoDiscreteEvent(contact_sequence, i);
+  }
+  EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[0]));
+  testDiscreteEvent(contact_sequence, event_time_stages[0], discrete_events[0]);
+  for (int i=event_time_stages[0]+1; i<new_event_time_stage; ++i) {
+    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[1].preContactStatus());
+    testNoDiscreteEvent(contact_sequence, i);
+  }
+  DiscreteEvent new_discrete_event(robot);
+  new_discrete_event.setDiscreteEvent(discrete_events[0].postContactStatus(), discrete_events[4].preContactStatus());
+  testDiscreteEvent(contact_sequence, new_event_time_stage, new_discrete_event);
+  for (int i=new_event_time_stage+1; i<event_time_stages[4]; ++i) {
+    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].preContactStatus());
+    testNoDiscreteEvent(contact_sequence, i);
+  }
+  EXPECT_TRUE(contact_sequence.existDiscreteEvent(event_time_stages[4]));
+  testDiscreteEvent(contact_sequence, event_time_stages[4], discrete_events[4]);
+  for (int i=event_time_stages[4]+1; i<N; ++i) {
+    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].postContactStatus());
+    testNoDiscreteEvent(contact_sequence, i);
+  }
+  EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[4].postContactStatus());
+}
+
 
 
 TEST_F(ContactSequencePrimitiveTest, fixedBase) {
@@ -461,6 +407,8 @@ TEST_F(ContactSequencePrimitiveTest, fixedBase) {
   testShiftDiscreteEventBeyondTerminal(robot);
   testShiftDiscreteEventForward(robot);
   testShiftDiscreteEventBackward(robot);
+  testShiftDiscreteEventForwardSameStage(robot);
+  testShiftDiscreteEventBackwardSameStage(robot);
 }
 
 
@@ -474,6 +422,8 @@ TEST_F(ContactSequencePrimitiveTest, floatingBase) {
   testShiftDiscreteEventBeyondTerminal(robot);
   testShiftDiscreteEventForward(robot);
   testShiftDiscreteEventBackward(robot);
+  testShiftDiscreteEventForwardSameStage(robot);
+  testShiftDiscreteEventBackwardSameStage(robot);
 }
 
 } // namespace idocp

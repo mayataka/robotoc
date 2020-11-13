@@ -172,7 +172,7 @@ private:
   std::vector<int> num_impulse_stages_, num_lift_stages_,  
                    impulse_stage_, lift_stage_;
 
-  int timeStageFromContinuousTime(const double time) const;
+  int eventTimeStageFromContinuousEventTime(const double event_time) const;
 
   void countAll();
 
@@ -180,9 +180,9 @@ private:
 
   void countNumLiftStages();
 
-  void countImpulseStage();
+  void setImpulseStage();
 
-  void countLiftStage();
+  void setLiftStage();
 };
 
 } // namespace idocp 

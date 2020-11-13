@@ -61,7 +61,8 @@ inline void ContactSequence::setDiscreteEvent(
   assert(discrete_event.eventTime > 0);
   assert(discrete_event.eventTime < T_);
   assert(discrete_event.existDiscreteEvent());
-  const int event_time_stage = std::floor(discrete_event.eventTime/dtau_);
+  const int event_time_stage 
+      = eventTimeStageFromContinuousEventTime(discrete_event.eventTime);
   contact_sequence_.setDiscreteEvent(discrete_event, event_time_stage);
   contact_sequence_.setEventTime(event_time_stage, discrete_event.eventTime);
   countAll();
@@ -72,9 +73,15 @@ inline void ContactSequence::shiftImpulse(const int impulse_index,
                                           const double impulse_time) {
   assert(impulse_index >= 0);
   assert(impulse_index < totalNumImpulseStages());
-  const int shifted_impulse_time_stage = std::floor(impulse_time/dtau_);
+  const int shifted_impulse_time_stage 
+      = eventTimeStageFromContinuousEventTime(impulse_time);
   contact_sequence_.shiftDiscreteEvent(timeStageBeforeImpulse(impulse_index), 
                                        shifted_impulse_time_stage);
+  if (shifted_impulse_time_stage >= 0 && shifted_impulse_time_stage < N_) {
+    assert(impulse_time > 0);
+    assert(impulse_time < T_);
+    contact_sequence_.setEventTime(shifted_impulse_time_stage, impulse_time);
+  }
   countAll();
 }
 
@@ -82,10 +89,16 @@ inline void ContactSequence::shiftImpulse(const int impulse_index,
 inline void ContactSequence::shiftLift(const int lift_index, 
                                        const double lift_time) {
   assert(lift_index >= 0);
-  assert(lift_index < totalNumImpulseStages());
-  const int shifted_lift_time_stage = std::floor(lift_time/dtau_);
+  assert(lift_index < totalNumLiftStages());
+  const int shifted_lift_time_stage 
+      = eventTimeStageFromContinuousEventTime(lift_time);
   contact_sequence_.shiftDiscreteEvent(timeStageBeforeLift(lift_index), 
                                        shifted_lift_time_stage);
+  if (shifted_lift_time_stage >= 0 && shifted_lift_time_stage < N_) {
+    assert(lift_time > 0);
+    assert(lift_time < T_);
+    contact_sequence_.setEventTime(shifted_lift_time_stage, lift_time);
+  }
   countAll();
 }
 
@@ -93,7 +106,7 @@ inline void ContactSequence::shiftLift(const int lift_index,
 inline const ContactStatus& ContactSequence::contactStatus(
     const int time_stage) const {
   assert(time_stage >= 0);
-  assert(time_stage < N_);
+  assert(time_stage <= N_);
   return contact_sequence_.contactStatus(time_stage);
 }
 
@@ -159,16 +172,16 @@ inline int ContactSequence::timeStageBeforeLift(const int lift_index) const {
 }
 
 
-inline int ContactSequence::timeStageFromContinuousTime(
-    const double time) const {
-  if (time < 0) {
-    return 0;
+inline int ContactSequence::eventTimeStageFromContinuousEventTime(
+    const double event_time) const {
+  if (event_time <= 0) {
+    return -1;
   }
-  else if (time > T_) {
-    return N_;
+  else if (event_time >= T_) {
+    return N_+1;
   }
   else {
-    return std::floor(time/dtau_);
+    return std::floor(event_time/dtau_);
   }
 }
 
@@ -176,8 +189,8 @@ inline int ContactSequence::timeStageFromContinuousTime(
 inline void ContactSequence::countAll() {
   countNumImpulseStaeges();
   countNumLiftStages();
-  countImpulseStage();
-  countLiftStage();
+  setImpulseStage();
+  setLiftStage();
 }
 
 
@@ -203,7 +216,7 @@ inline void ContactSequence::countNumLiftStages() {
 }
 
 
-inline void ContactSequence::countImpulseStage() {
+inline void ContactSequence::setImpulseStage() {
   int iterator = 0;
   for (int i=0; i<N_; ++i) {
     if (contact_sequence_.existImpulse(i)) {
@@ -217,7 +230,7 @@ inline void ContactSequence::countImpulseStage() {
 }
 
 
-inline void ContactSequence::countLiftStage() {
+inline void ContactSequence::setLiftStage() {
   int iterator = 0;
   for (int i=0; i<N_; ++i) {
     if (contact_sequence_.existOnlyLift(i)) {
