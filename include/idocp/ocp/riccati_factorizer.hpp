@@ -9,6 +9,8 @@
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/lqr_state_feedback_policy.hpp"
+#include "idocp/ocp/backward_riccati_recursion.hpp"
 
 
 namespace idocp {
@@ -85,7 +87,7 @@ public:
                              const Eigen::MatrixBase<VectorType>& dx0);
 
   void computeCostateDirection(const RiccatiFactorization& riccati, 
-                               SplitDirection& d);
+                               SplitDirection& d) const;
 
   void computeControlInputDirection(const RiccatiFactorization& riccati, 
                                     SplitDirection& d) const;
@@ -104,24 +106,9 @@ private:
   int dimv_, dimu_;
   static constexpr int kDimFloatingBase = 6;
   Eigen::LLT<Eigen::MatrixXd> llt_;
-  Eigen::MatrixXd K_; // State feedback gain of the LQR subproblem
-  Eigen::VectorXd k_; // Feedforward term of the LQR subproblem
-  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, BtPq_, BtPv_, GK_, 
-                  GinvBt_, BGinvBt_, NApBKt_;
-
-  void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
-                          const double dtau, KKTMatrix& kkt_matrix,  
-                          KKTResidual& kkt_residual);
-
-  void computeFeedbackGainAndFeedforward(const KKTMatrix& kkt_matrix, 
-                                         const KKTResidual& kkt_residual,
-                                         RiccatiFactorization& riccati);
-
-  void factorizeRiccatiFactorization(const RiccatiFactorization& riccati_next, 
-                                     const KKTMatrix& kkt_matrix, 
-                                     const KKTResidual& kkt_residual,
-                                     const double dtau, 
-                                     RiccatiFactorization& riccati);
+  LQRStateFeedbackPolicy lqr_policy_;
+  BackwardRiccatiRecursion backward_recursion_;
+  Eigen::MatrixXd GinvBt_, BGinvBt_, NApBKt_;
 
 };
 

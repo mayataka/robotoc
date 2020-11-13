@@ -86,7 +86,8 @@ add_library(
   # src/ocp/non_contact_dynamics.cpp
   src/ocp/line_search_filter.cpp
   src/ocp/riccati_factorization.cpp
-  # src/ocp/riccati_factorizer.cpp
+  src/ocp/backward_riccati_recursion.cpp
+  src/ocp/riccati_factorizer.cpp
   # src/ocp/split_ocp.cpp
   # src/ocp/terminal_ocp.cpp
   # src/ocp/split_temporary_solution.cpp
