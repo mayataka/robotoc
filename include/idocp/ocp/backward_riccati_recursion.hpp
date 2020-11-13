@@ -14,7 +14,7 @@ namespace idocp {
 
 ///
 /// @class BackwardRiccatiRecursion
-/// @brief Factorizer of the Riccati backward recursion for SplitOCP.
+/// @brief Factorizer of the backward Riccati recursion for SplitOCP.
 ///
 class BackwardRiccatiRecursion {
 public:

@@ -57,14 +57,15 @@ public:
   ///
   RiccatiFactorizer& operator=(RiccatiFactorizer&&) noexcept = default;
 
+  void setExistStateConstraint(const bool exist_state_constraint);
+
   void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next, 
-                                KKTMatrix& kkt_matrix, 
-                                KKTResidual& kkt_residual, const double dtau, 
+                                const double dtau, KKTMatrix& kkt_matrix, 
+                                KKTResidual& kkt_residual,  
                                 RiccatiFactorization& riccati);
 
   void forwardRiccatiRecursionParallel(KKTMatrix& kkt_matrix, 
-                                       KKTResidual& kkt_residual, 
-                                       RiccatiFactorization& riccati);
+                                       KKTResidual& kkt_residual);
 
   static void forwardRiccatiRecursionSerialInitial(
       const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
@@ -83,8 +84,8 @@ public:
 
   template <typename VectorType>
   void computeStateDirection(const RiccatiFactorization& riccati, 
-                             SplitDirection& d, 
-                             const Eigen::MatrixBase<VectorType>& dx0);
+                             const Eigen::MatrixBase<VectorType>& dx0,
+                             SplitDirection& d);
 
   void computeCostateDirection(const RiccatiFactorization& riccati, 
                                SplitDirection& d) const;
@@ -102,7 +103,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  bool has_floating_base_, has_state_constraint_;
+  bool has_floating_base_, exist_state_constraint_;
   int dimv_, dimu_;
   static constexpr int kDimFloatingBase = 6;
   Eigen::LLT<Eigen::MatrixXd> llt_;

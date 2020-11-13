@@ -9,8 +9,9 @@
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/lqr_state_feedback_policy.hpp"
+#include "idocp/ocp/backward_riccati_recursion.hpp"
 #include "idocp/ocp/riccati_factorizer.hpp"
-
 
 namespace idocp {
 
@@ -29,12 +30,15 @@ protected:
   virtual void TearDown() {
   }
 
-  void testBackwardRecursionUnits(const Robot& robot) const;
+  KKTMatrix createKKTMatrix(const Robot& robot) const;
+  KKTResidual createKKTResidual(const Robot& robot) const;
+  RiccatiFactorization createRiccatiFactorization(const Robot& robot) const;
+
   void testBackwardRecursion(const Robot& robot) const;
-  void testForwardRecursion(const Robot& robot) const;
+  void testForwardRecursionWithoutStateConstraint(const Robot& robot) const;
+  void testForwardRecursionWithStateConstraint(const Robot& robot) const;
+  void testComputeDirectionWithStateConstraint(const Robot& robot) const;
   void testComputeCostateDirection(const Robot& robot) const;
-  void testComputeControlInputDirection(const Robot& robot) const;
-  void testFactorizeStateConstraintParallel(const Robot& robot) const;
 
   double dtau;
   std::string fixed_base_urdf, floating_base_urdf;
@@ -42,21 +46,10 @@ protected:
 };
 
 
-void RiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot) const {
+KKTMatrix RiccatiFactorizerTest::createKKTMatrix(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  RiccatiFactorization riccati_next(robot);
-  KKTMatrix kkt_matrix(robot);
-  KKTResidual kkt_residual(robot);
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
-  riccati_next.Pqq = seed * seed.transpose();
-  riccati_next.Pqv = Eigen::MatrixXd::Random(dimv, dimv);
-  riccati_next.Pvq = riccati_next.Pqv.transpose();
-  seed = Eigen::MatrixXd::Random(dimv, dimv);
-  riccati_next.Pvv = seed * seed.transpose();
-  riccati_next.sq.setRandom();
-  riccati_next.sv.setRandom();
-  seed = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Qqq = seed * seed.transpose();
   const Eigen::MatrixXd Qqv = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Qvq = Qqv.transpose();
@@ -66,6 +59,7 @@ void RiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot) const
   const Eigen::MatrixXd Qqu = Eigen::MatrixXd::Random(dimv, dimu);
   const Eigen::MatrixXd Qvu = Eigen::MatrixXd::Random(dimv, dimu);
   const Eigen::MatrixXd Quu = seed * seed.transpose();
+  KKTMatrix kkt_matrix(robot);
   kkt_matrix.Qqq() = Qqq;
   kkt_matrix.Qqv() = Qqv;
   kkt_matrix.Qvq() = Qvq;
@@ -74,108 +68,60 @@ void RiccatiFactorizerTest::testBackwardRecursionUnits(const Robot& robot) const
   kkt_matrix.Qvu() = Qvu;
   kkt_matrix.Quu() = Quu;
   kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(dimv, dimv);
+  if (robot.has_floating_base()) {
+    kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
+  }
   kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_matrix.Fvq().setRandom();
   kkt_matrix.Fvv().setRandom();
   kkt_matrix.Fvu().setRandom();
+  return kkt_matrix;
+}
+
+
+KKTResidual RiccatiFactorizerTest::createKKTResidual(const Robot& robot) const {
+  KKTResidual kkt_residual(robot);
+  kkt_residual.lx().setRandom();
   kkt_residual.lu().setRandom();
   kkt_residual.Fx().setRandom();
-  const KKTMatrix kkt_matrix_ref = kkt_matrix;
-  const KKTResidual kkt_residual_ref = kkt_residual;
-  RiccatiFactorizer factorizer(robot);
-  factorizer.factorizeKKTMatrix(riccati_next, dtau, kkt_matrix, kkt_residual);
-  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
-  A.topLeftCorner(dimv, dimv) = kkt_matrix_ref.Fqq();
-  A.topRightCorner(dimv, dimv) = kkt_matrix_ref.Fqv();
-  A.bottomLeftCorner(dimv, dimv) = kkt_matrix_ref.Fvq();
-  A.bottomRightCorner(dimv, dimv) = kkt_matrix_ref.Fvv();
-  Eigen::MatrixXd B = Eigen::MatrixXd::Zero(2*dimv, dimu);
-  B.bottomRows(dimv) = kkt_matrix_ref.Fvu();
-  Eigen::MatrixXd P_next = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
-  P_next.topLeftCorner(dimv, dimv) = riccati_next.Pqq;
-  P_next.topRightCorner(dimv, dimv) = riccati_next.Pqv;
-  P_next.bottomLeftCorner(dimv, dimv) = riccati_next.Pvq;
-  P_next.bottomRightCorner(dimv, dimv) = riccati_next.Pvv;
-  const Eigen::MatrixXd F_ref = kkt_matrix_ref.Qxx() + A.transpose() * P_next * A;
-  const Eigen::MatrixXd H_ref = kkt_matrix_ref.Qxu() + A.transpose() * P_next * B;
-  const Eigen::MatrixXd G_ref = kkt_matrix_ref.Quu() + B.transpose() * P_next * B;
-  Eigen::VectorXd sx_next = Eigen::VectorXd::Zero(2*dimv);
-  sx_next.head(dimv) = riccati_next.sq;
-  sx_next.tail(dimv) = riccati_next.sv;
-  const Eigen::VectorXd lu_ref = B.transpose() * P_next * kkt_residual_ref.Fx() - B.transpose() * sx_next + kkt_residual_ref.lu();
-  EXPECT_TRUE(F_ref.isApprox(kkt_matrix.Qxx()));
-  EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
-  EXPECT_TRUE(H_ref.isApprox(kkt_matrix.Qxu()));
-  EXPECT_TRUE(G_ref.isApprox(kkt_matrix.Quu()));
-  EXPECT_TRUE(kkt_matrix.Quu().isApprox(kkt_matrix.Quu().transpose()));
-  EXPECT_TRUE(lu_ref.isApprox(kkt_residual.lu()));
-  RiccatiFactorization riccati(robot), riccati_ref(robot);
-  factorizer.computeFeedbackGainAndFeedforward(kkt_matrix, kkt_residual, riccati);
-  const Eigen::MatrixXd Ginv = G_ref.inverse();
-  riccati_ref.K = - Ginv * H_ref.transpose();
-  riccati_ref.k = - Ginv * lu_ref;
-  EXPECT_TRUE(riccati.K.isApprox(riccati_ref.K));
-  EXPECT_TRUE(riccati.k.isApprox(riccati_ref.k));
-  factorizer.factorizeRiccatiFactorization(riccati_next, dtau, kkt_matrix, kkt_residual, riccati);
-  const Eigen::MatrixXd P_ref = F_ref - riccati_ref.K.transpose() * G_ref * riccati_ref.K;
-  const Eigen::VectorXd s_ref = A.transpose() * sx_next - A.transpose() * P_next * kkt_residual_ref.Fx() - kkt_residual_ref.lx() - H_ref * riccati_ref.k;
-  EXPECT_TRUE(P_ref.topLeftCorner(dimv, dimv).isApprox(riccati.Pqq));
-  EXPECT_TRUE(P_ref.topRightCorner(dimv, dimv).isApprox(riccati.Pqv));
-  EXPECT_TRUE(P_ref.bottomLeftCorner(dimv, dimv).isApprox(riccati.Pvq));
-  EXPECT_TRUE(P_ref.bottomRightCorner(dimv, dimv).isApprox(riccati.Pvv));
-  EXPECT_TRUE(s_ref.head(dimv).isApprox(riccati.sq));
-  EXPECT_TRUE(s_ref.tail(dimv).isApprox(riccati.sv));
+  return kkt_residual;
 }
+
+
+RiccatiFactorization RiccatiFactorizerTest::createRiccatiFactorization(const Robot& robot) const {
+  RiccatiFactorization riccati(robot);
+  const int dimv = robot.dimv();
+  Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
+  riccati.Pqq = seed * seed.transpose();
+  riccati.Pqv = Eigen::MatrixXd::Random(dimv, dimv);
+  riccati.Pvq = riccati.Pqv.transpose();
+  seed = Eigen::MatrixXd::Random(dimv, dimv);
+  riccati.Pvv = seed * seed.transpose();
+  riccati.sq.setRandom();
+  riccati.sv.setRandom();
+  return riccati; 
+}
+
 
 
 void RiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  RiccatiFactorization riccati_next(robot);
-  KKTMatrix kkt_matrix(robot);
-  KKTResidual kkt_residual(robot);
-  Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
-  riccati_next.Pqq = seed * seed.transpose();
-  riccati_next.Pqv = Eigen::MatrixXd::Random(dimv, dimv);
-  riccati_next.Pvq = riccati_next.Pqv.transpose();
-  seed = Eigen::MatrixXd::Random(dimv, dimv);
-  riccati_next.Pvv = seed * seed.transpose();
-  riccati_next.sq.setRandom();
-  riccati_next.sv.setRandom();
-  seed = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qqq = seed * seed.transpose();
-  const Eigen::MatrixXd Qqv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvq = Qqv.transpose();
-  seed = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvv = seed * seed.transpose();
-  seed = Eigen::MatrixXd::Random(dimu, dimu);
-  const Eigen::MatrixXd Qqu = Eigen::MatrixXd::Random(dimv, dimu);
-  const Eigen::MatrixXd Qvu = Eigen::MatrixXd::Random(dimv, dimu);
-  const Eigen::MatrixXd Quu = seed * seed.transpose();
-  kkt_matrix.Qqq() = Qqq;
-  kkt_matrix.Qqv() = Qqv;
-  kkt_matrix.Qvq() = Qvq;
-  kkt_matrix.Qvv() = Qvv;
-  kkt_matrix.Qqu() = Qqu;
-  kkt_matrix.Qvu() = Qvu;
-  kkt_matrix.Quu() = Quu;
-  kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(dimv, dimv);
-  kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
-  kkt_matrix.Fvq().setRandom();
-  kkt_matrix.Fvv().setRandom();
-  kkt_matrix.Fvu().setRandom();
-  kkt_residual.lu().setRandom();
-  kkt_residual.Fx().setRandom();
+  const RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
+  KKTMatrix kkt_matrix = createKKTMatrix(robot);
+  KKTResidual kkt_residual = createKKTResidual(robot);
   KKTMatrix kkt_matrix_ref = kkt_matrix;
   KKTResidual kkt_residual_ref = kkt_residual;
-  RiccatiFactorizer factorizer(robot), factorizer_ref(robot);
+  RiccatiFactorizer factorizer(robot);
+  LQRStateFeedbackPolicy lqr_policy_ref(robot);
+  BackwardRiccatiRecursion backward_recursion_ref(robot);
   RiccatiFactorization riccati(robot), riccati_ref(robot);
   factorizer.backwardRiccatiRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, riccati);
-  factorizer_ref.factorizeKKTMatrix(riccati_next, dtau, kkt_matrix_ref, kkt_residual_ref);
-  factorizer_ref.computeFeedbackGainAndFeedforward(kkt_matrix_ref, kkt_residual_ref, riccati_ref);
-  factorizer_ref.factorizeRiccatiFactorization(riccati_next, dtau, kkt_matrix_ref, kkt_residual_ref, riccati_ref);
-  EXPECT_TRUE(riccati.K.isApprox(riccati_ref.K));
-  EXPECT_TRUE(riccati.k.isApprox(riccati_ref.k));
+  backward_recursion_ref.factorizeKKTMatrix(riccati_next, dtau, kkt_matrix_ref, kkt_residual_ref);
+  Eigen::MatrixXd Ginv = kkt_matrix_ref.Quu().inverse();
+  lqr_policy_ref.K = - Ginv  * kkt_matrix_ref.Qxu().transpose();
+  lqr_policy_ref.k = - Ginv  * kkt_residual.lu();
+  backward_recursion_ref.factorizeRiccatiFactorization(riccati_next, kkt_matrix_ref, kkt_residual_ref, lqr_policy_ref, dtau, riccati_ref);
   EXPECT_TRUE(riccati.Pqq.isApprox(riccati_ref.Pqq));
   EXPECT_TRUE(riccati.Pqv.isApprox(riccati_ref.Pqv));
   EXPECT_TRUE(riccati.Pvq.isApprox(riccati_ref.Pvq));
@@ -187,41 +133,25 @@ void RiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) const {
   EXPECT_TRUE(riccati.Pvq.isApprox(riccati.Pqv.transpose()));
   EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
   EXPECT_TRUE(kkt_matrix.Quu().isApprox(kkt_matrix.Quu().transpose()));
+  Eigen::MatrixXd K(robot.dimu(), 2*robot.dimv());
+  factorizer.getStateFeedbackGain(K);
+  EXPECT_TRUE(lqr_policy_ref.K.isApprox(K));
+  Eigen::MatrixXd Kq(dimu, dimv);
+  Eigen::MatrixXd Kv(dimu, dimv);
+  factorizer.getStateFeedbackGain(Kq, Kv);
+  EXPECT_TRUE(lqr_policy_ref.K.leftCols(dimv).isApprox(Kq));
+  EXPECT_TRUE(lqr_policy_ref.K.rightCols(dimv).isApprox(Kv));
 }
 
 
-void RiccatiFactorizerTest::testForwardRecursion(const Robot& robot) const {
+void RiccatiFactorizerTest::testForwardRecursionWithoutStateConstraint(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  KKTMatrix kkt_matrix(robot);
-  KKTResidual kkt_residual(robot);
-  Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qqq = seed * seed.transpose();
-  const Eigen::MatrixXd Qqv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvq = Qqv.transpose();
-  seed = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvv = seed * seed.transpose();
-  seed = Eigen::MatrixXd::Random(dimu, dimu);
-  const Eigen::MatrixXd Qqu = Eigen::MatrixXd::Random(dimv, dimu);
-  const Eigen::MatrixXd Qvu = Eigen::MatrixXd::Random(dimv, dimu);
-  const Eigen::MatrixXd Quu = seed * seed.transpose();
-  kkt_matrix.Qqq() = Qqq;
-  kkt_matrix.Qqv() = Qqv;
-  kkt_matrix.Qvq() = Qvq;
-  kkt_matrix.Qvv() = Qvv;
-  kkt_matrix.Qqu() = Qqu;
-  kkt_matrix.Qvu() = Qvu;
-  kkt_matrix.Quu() = Quu;
-  kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(dimv, dimv);
-  if (robot.has_floating_base()) {
-    kkt_matrix.Fqq().topLeftCorner(6, 6).setRandom();
-  }
-  kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
-  kkt_matrix.Fvq().setRandom();
-  kkt_matrix.Fvv().setRandom();
-  kkt_matrix.Fvu().setRandom();
-  kkt_residual.lu().setRandom();
-  kkt_residual.Fx().setRandom();
+  const RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
+  KKTMatrix kkt_matrix = createKKTMatrix(robot);
+  KKTResidual kkt_residual = createKKTResidual(robot);
+  KKTMatrix kkt_matrix_ref = kkt_matrix;
+  KKTResidual kkt_residual_ref = kkt_residual;
   const SplitDirection d = SplitDirection::Random(robot);
   SplitDirection d_next(robot), d_next_ref(robot);
   RiccatiFactorizer factorizer(robot);
@@ -231,76 +161,94 @@ void RiccatiFactorizerTest::testForwardRecursion(const Robot& robot) const {
 }
 
 
+void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot& robot) const {
+  const int dimv = robot.dimv();
+  const int dimu = robot.dimu();
+  RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
+  KKTMatrix kkt_matrix = createKKTMatrix(robot);
+  KKTResidual kkt_residual = createKKTResidual(robot);
+  KKTMatrix kkt_matrix_ref = kkt_matrix;
+  KKTResidual kkt_residual_ref = kkt_residual;
+  RiccatiFactorizer factorizer(robot);
+  LQRStateFeedbackPolicy lqr_policy_ref(robot);
+  BackwardRiccatiRecursion backward_recursion_ref(robot);
+  RiccatiFactorization riccati(robot), riccati_ref(robot);
+  factorizer.backwardRiccatiRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, riccati);
+  backward_recursion_ref.factorizeKKTMatrix(riccati_next, dtau, kkt_matrix_ref, kkt_residual_ref);
+  Eigen::MatrixXd Ginv = kkt_matrix_ref.Quu().inverse();
+  lqr_policy_ref.K = - Ginv  * kkt_matrix_ref.Qxu().transpose();
+  lqr_policy_ref.k = - Ginv  * kkt_residual.lu();
+  factorizer.forwardRiccatiRecursionParallel(kkt_matrix, kkt_residual);
+  kkt_matrix_ref.Fxx() += kkt_matrix_ref.Fxu() * lqr_policy_ref.K;
+  kkt_residual_ref.Fx() += kkt_matrix_ref.Fxu() * lqr_policy_ref.k;
+  Eigen::MatrixXd BGinvBt = kkt_matrix_ref.Fxu() * Ginv * kkt_matrix_ref.Fxu().transpose();
+  EXPECT_TRUE(kkt_matrix_ref.isApprox(kkt_matrix));
+  EXPECT_TRUE(kkt_residual_ref.isApprox(kkt_residual));
+  RiccatiFactorization riccati_next_ref(robot);
+  riccati.Pi.setRandom();
+  riccati.pi.setRandom();
+  riccati.N.setRandom();
+  factorizer.forwardRiccatiRecursionSerial(riccati, kkt_matrix, kkt_residual, riccati_next);
+  riccati_next_ref.Pi = kkt_matrix_ref.Fxx() * riccati.Pi;
+  riccati_next_ref.pi = kkt_residual.Fx() + kkt_matrix_ref.Fxx() * riccati.pi;
+  riccati_next_ref.N = BGinvBt + kkt_matrix_ref.Fxx() * riccati.N * kkt_matrix_ref.Fxx().transpose();
+  EXPECT_TRUE(riccati_next.Pi.isApprox(riccati_next_ref.Pi));
+  EXPECT_TRUE(riccati_next.pi.isApprox(riccati_next_ref.pi));
+  EXPECT_TRUE(riccati_next.N.isApprox(riccati_next_ref.N));
+  riccati.n.setRandom();
+  const Eigen::VectorXd dx0 = Eigen::VectorXd::Random(2*dimv);
+  SplitDirection d(robot), d_ref(robot);
+  factorizer.setExistStateConstraint(true);
+  factorizer.computeStateDirection(riccati, dx0, d);
+  d_ref.dx().noalias() = riccati.Pi * dx0 + riccati.pi - riccati.N * riccati.n;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  factorizer.computeCostateDirection(riccati, d);
+  d_ref.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq + riccati.n.head(dimv);
+  d_ref.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv + riccati.n.tail(dimv);
+  EXPECT_TRUE(d.isApprox(d_ref));
+  factorizer.computeControlInputDirection(riccati, d);
+  d_ref.du() = lqr_policy_ref.K * d.dx() + lqr_policy_ref.k - Ginv * kkt_matrix_ref.Fxu().transpose() * riccati.n;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  factorizer.setExistStateConstraint(false);
+  factorizer.computeCostateDirection(riccati, d);
+  d_ref.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
+  d_ref.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  factorizer.computeControlInputDirection(riccati, d);
+  d_ref.du() = lqr_policy_ref.K * d.dx() + lqr_policy_ref.k;
+  EXPECT_TRUE(d.isApprox(d_ref));
+}
+
+
 void RiccatiFactorizerTest::testComputeCostateDirection(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  RiccatiFactorization riccati(robot);
-  Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
-  riccati.Pqq = seed * seed.transpose();
-  riccati.Pqv = Eigen::MatrixXd::Random(dimv, dimv);
-  riccati.Pvq = riccati.Pqv.transpose();
-  seed = Eigen::MatrixXd::Random(dimv, dimv);
-  riccati.Pvv = seed * seed.transpose();
-  riccati.sq.setRandom();
-  riccati.sv.setRandom();
+  const RiccatiFactorization riccati = createRiccatiFactorization(robot);
   SplitDirection d = SplitDirection::Random(robot);
   d.dlmd().setZero();
   d.dgmm().setZero();
   SplitDirection d_ref = d;
-  RiccatiFactorizer::computeCostateDirection(riccati, d);
+  RiccatiFactorizer factorizer(robot);
+  factorizer.computeCostateDirection(riccati, d);
   d_ref.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
   d_ref.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 
 
-void RiccatiFactorizerTest::testComputeControlInputDirection(const Robot& robot) const {
-  const int dimv = robot.dimv();
-  const int dimu = robot.dimu();
-  RiccatiFactorization riccati(robot);
-  riccati.K.setRandom();
-  riccati.k.setRandom();
-  SplitDirection d = SplitDirection::Random(robot);
-  d.du().setZero();
-  SplitDirection d_ref = d;
-  RiccatiFactorizer::computeControlInputDirection(riccati, d);
-  d_ref.du() = riccati.K * d_ref.dx() + riccati.k;
-  EXPECT_TRUE(d.isApprox(d_ref));
-}
-
-
-void RiccatiFactorizerTest::testFactorizeStateConstraintParallel(const Robot& robot) const {
-  const int dimv = robot.dimv();
-  const int dimu = robot.dimu();
-  const int dimx = 2*robot.dimv();
-  KKTMatrix kkt_matrix(robot);
-  if (robot.has_floating_base()) {
-    kkt_matrix.Fqq().setIdentity();
-    kkt_matrix.Fqq().topLeftCorner(6, 6).setRandom();
-  }
-  kkt_matrix.Fvq().setRandom();
-  kkt_matrix.Fvv().setRandom();
-  kkt_matrix.Fvu().setRandom();
-  KKTResidual kkt_residual(robot);
-   factorizeStateConstraintParallel
-}
-
-
 TEST_F(RiccatiFactorizerTest, fixedBase) {
-  testBackwardRecursionUnits(fixed_base_robot);
   testBackwardRecursion(fixed_base_robot);
-  testForwardRecursion(fixed_base_robot);
+  testForwardRecursionWithoutStateConstraint(fixed_base_robot);
+  testForwardRecursionWithStateConstraint(fixed_base_robot);
   testComputeCostateDirection(fixed_base_robot);
-  testComputeControlInputDirection(fixed_base_robot);
 }
 
 
 TEST_F(RiccatiFactorizerTest, floating_base) {
-  testBackwardRecursionUnits(floating_base_robot);
   testBackwardRecursion(floating_base_robot);
-  testForwardRecursion(floating_base_robot);
+  testForwardRecursionWithoutStateConstraint(floating_base_robot);
+  testForwardRecursionWithStateConstraint(floating_base_robot);
   testComputeCostateDirection(floating_base_robot);
-  testComputeControlInputDirection(floating_base_robot);
 }
 
 } // namespace idocp

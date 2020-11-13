@@ -19,6 +19,7 @@
 #include "idocp/impulse/impulse_riccati_factorizer.hpp"
 #include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
+#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 
 
 namespace idocp {
@@ -97,6 +98,9 @@ public:
                     const double t, const Eigen::VectorXd& q_prev, 
                     const ImpulseSplitSolution& s, 
                     const SplitSolution& s_next);
+
+  void getStateConstraint(
+      StateConstraintRiccatiFactorization& state_constraint_factorization) const;
 
   ///
   /// @brief Computes the Riccati factorization of this stage from the 

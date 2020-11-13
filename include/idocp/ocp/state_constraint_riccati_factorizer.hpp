@@ -75,7 +75,8 @@ public:
 
   ///
   /// @brief Factorize matrices and vectors for the linear problem to obtain
-  /// the directions of the Lagrange multipliers.
+  /// the directions of the Lagrange multipliers. Used 
+  /// in StateConstraintRiccatiFactorizer::computeLagrangeMultiplierDirection().
   ///
   template <typename VectorType>
   void factorizeLinearProblem(

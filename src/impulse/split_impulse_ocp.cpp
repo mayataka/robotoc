@@ -71,6 +71,12 @@ void SplitImpulseOCP::linearizeOCP(Robot& robot,
                                             kkt_matrix_, kkt_residual_);
 }
 
+void SplitImpulseOCP::getStateConstraint(
+    StateConstraintRiccatiFactorization& state_constraint_factorization) const {
+  state_constraint_factorization.E() = 
+  state_constraint_factorization.e() = 
+  state_constraint_factorization.T_impulse().head(dimv_) = 
+}
 
 void SplitImpulseOCP::backwardRiccatiRecursion(
     const RiccatiSolution& riccati_next, RiccatiSolution& riccati) {
