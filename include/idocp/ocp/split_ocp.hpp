@@ -19,8 +19,9 @@
 // #include "idocp/ocp/robot_dynamics.hpp"
 #include "idocp/ocp/contact_dynamics.hpp"
 #include "idocp/ocp/riccati_solution.hpp"
-#include "idocp/ocp/riccati_gain.hpp"
+#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/riccati_factorizer.hpp"
+#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 
 
 namespace idocp {
@@ -98,10 +99,11 @@ public:
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
   ///
+  template <typename SplitSolutionType>
   void linearizeOCP(Robot& robot, const ContactStatus& contact_status, 
                     const double t, const double dtau, 
                     const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                    const SplitSolution& s_next);
+                    const SplitSolutionType& s_next);
 
   ///
   /// @brief Computes the Riccati factorization of this stage from the 
@@ -110,9 +112,9 @@ public:
   /// @param[in] riccati_next Riccati factorization of the next stage.
   /// @param[out] riccati Riccati factorization of this stage.
   /// 
-  void backwardRiccatiRecursion(const double dtau, 
-                                const RiccatiSolution& riccati_next,
-                                RiccatiSolution& riccati);
+  void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next,
+                                const double dtau, 
+                                RiccatiFactorization& riccati);
 
   ///
   /// @brief Computes the Newton direction of the state of this stage from the 
@@ -121,8 +123,23 @@ public:
   /// @param[in] d Split direction of this stage.
   /// @param[out] d_next Split direction of the next stage.
   /// 
-  void forwardRiccatiRecursion(const double dtau, SplitDirection& d,   
-                               SplitDirection& d_next) const;
+  void forwardRiccatiRecursionParallel();
+
+  ///
+  /// @brief Computes the Newton direction of the state of this stage from the 
+  /// one of the previous stage.
+  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] d Split direction of this stage.
+  /// @param[out] d_next Split direction of the next stage.
+  /// 
+  void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati,
+                                     RiccatiFactorization& riccati_next);
+
+
+  template <typename MatrixType1, typename MatrixType2>
+  void backwardStateConstraintFactorization(
+      const Eigen::MatrixBase<MatrixType1>& T_next,
+      const Eigen::MatrixBase<MatrixType2>& T) const;
 
   ///
   /// @brief Computes the Newton direction of the condensed variables of this 
@@ -133,10 +150,18 @@ public:
   /// @param[in] s Split solution of this stage.
   /// @param[in, out] d Split direction of this stage.
   /// 
-  void computeCondensedPrimalDirection(Robot& robot, const double dtau, 
-                                       const RiccatiSolution& riccati,
-                                       const SplitSolution& s, 
-                                       SplitDirection& d);
+  void computePrimalDirection(Robot& robot, const double dtau, 
+                              const RiccatiFactorization& riccati,
+                              const SplitSolution& s, SplitDirection& d, 
+                              const bool exist_state_constraint);
+
+  template <typename VectorType>
+  void computePrimalDirection(Robot& robot, const double dtau, 
+                              const RiccatiFactorization& riccati,
+                              const SplitSolution& s, 
+                              const Eigen::MatrixBase<VectorType>& dx0, 
+                              SplitDirection& d, 
+                              const bool exist_state_constraint);
 
   ///
   /// @brief Computes the Newton direction of the condensed variables of this 
@@ -147,9 +172,9 @@ public:
   /// @param[in, out] d Split direction of this stage.
   /// 
   template <typename SplitDirectionType>
-  void computeCondensedDualDirection(Robot& robot, const double dtau, 
-                                     const SplitDirectionType& d_next,
-                                     SplitDirection& d);
+  void computeDualDirection(Robot& robot, const double dtau, 
+                            const SplitDirectionType& d_next,
+                            SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -196,10 +221,11 @@ public:
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
   ///
+  template <typename SplitSolutionType>
   void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
                           const double t, const double dtau, 
                           const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                          const SplitSolution& s_next);
+                          const SplitSolutionType& s_next);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
@@ -260,7 +286,6 @@ private:
   KKTMatrix kkt_matrix_;
   // RobotDynamics robot_dynamics_;
   ContactDynamics contact_dynamics_;
-  RiccatiGain riccati_gain_;
   RiccatiFactorizer riccati_factorizer_;
   bool use_kinematics_, has_floating_base_, fd_like_elimination_;
   double stage_cost_, constraint_violation_;

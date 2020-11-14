@@ -21,6 +21,7 @@
 #include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/ocp/line_search_filter.hpp"
 #include "idocp/ocp/split_temporary_solution.hpp"
+#include "idocp/hybrid/hybrid_container.hpp"
 
 
 namespace idocp {
@@ -31,7 +32,7 @@ namespace idocp {
 ///
 class LineSearch {
 public:
-  LineSearch(const Robot& robot, const double T, const int N, const int num_proc=1);
+  LineSearch(const int N, const int num_proc=1, const int max_step_size);
 
   ///
   /// @brief Default constructor. 
@@ -63,19 +64,15 @@ public:
   ///
   LineSearch& operator=(LineSearch&&) noexcept = default;
 
-  template <typename OCPType>
-  double computeStepSize(const std::vector<SplitOCPType>& split_ocp,  
-                         const double t, const Eigen::VectorXd& q, 
-                         const Eigen::VectorXd& v, 
-                         const std::vector<SplitSolution>& s,
-                         const std::vector<SplitDirection>& d,
-                         const int max_iteration);
-
-  template <typename OCPType, typename ImpulseOCPType, typename LiftOCPType>
-  double computeStepSize(const double t, const Eigen::VectorXd& q, 
-                         const Eigen::VectorXd& v, OCPType& ocp,
-                         ImpulseOCPType& impulse_ocp, LiftOCPType& lift_ocp,
-                         const int max_iteration);
+  template <typename HybridOCPContainerType, 
+            typename HybridSolutionContainerType,
+            typename HybridDirectionContainerType>
+  std::pair<double, double> computeStepSize(
+      HybridOCPContainerType& split_ocps, std::vector<Robot>& robot,
+      const ContactSequence& contact_sequence, const double t, 
+      const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+      const HybridSolutionContainerType& s, 
+      const HybridDirectionContainerType& d);
 
   ///
   /// @brief Clear the line search filter. 
@@ -86,8 +83,7 @@ private:
   LineSearchFilter filter_;
   double step_size_reduction_rate_, min_step_size_;
   int N_, num_proc_;
-  std::vector<SplitTemporarySolution> s_tmp_;
-  std::vector<SplitTemporarySolution> s_lift_tmp_;
+  std::vector<SplitTemporarySolution> s_tmp_, s_lift_tmp_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_,
                   costs_impulse_, violations_impulse, costs_lift_, 
                   violations_lift_;

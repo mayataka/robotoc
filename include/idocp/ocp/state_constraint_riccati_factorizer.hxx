@@ -81,7 +81,7 @@ inline void StateConstraintRiccatiFactorizer::aggregateLagrangeMultiplierDirecti
     const ContactSequence& contact_sequence,
     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
     const std::vector<ImpulseSplitDirection>& d_impulse, const int time_stage,
-    RiccatiFactorization& riccati_factorization) const {
+    RiccatiFactorization& riccati_factorization) {
   assert(time_stage >= 0);
   const int num_impulse = contact_sequence.totalNumImpulseStages();
   riccati_factorization.n.setZero();
@@ -97,7 +97,7 @@ inline void StateConstraintRiccatiFactorizer::aggregateLagrangeMultiplierDirecti
     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
     const std::vector<ImpulseSplitDirection>& d_impulse, 
     const int impulse_index,
-    RiccatiFactorization& riccati_factorization) const {
+    RiccatiFactorization& riccati_factorization) {
   assert(impulse_index >= 0);
   assert(impulse_index < contact_sequence.totalNumImpulseStages());
   const int num_impulse = contact_sequence.totalNumImpulseStages();
@@ -114,7 +114,7 @@ inline void StateConstraintRiccatiFactorizer::aggregateLagrangeMultiplierDirecti
     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
     const std::vector<ImpulseSplitDirection>& d_impulse, 
     const int lift_index,
-    RiccatiFactorization& riccati_factorization) const {
+    RiccatiFactorization& riccati_factorization) {
   assert(lift_index >= 0);
   assert(lift_index < contact_sequence.totalNumLiftStages());
   const int num_impulse = contact_sequence.totalNumImpulseStages();

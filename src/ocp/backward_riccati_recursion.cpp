@@ -1,1 +1,0 @@
-#include "idocp/ocp/backward_riccati_recursion.hpp"

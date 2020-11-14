@@ -1,12 +1,16 @@
 #include "idocp/ocp/line_search.hpp"
 
-template <typename OCPType>
-inline double computeStepSize(const std::vector<SplitOCPType>& split_ocp,  
-                              const double t, const Eigen::VectorXd& q, 
-                              const Eigen::VectorXd& v, 
-                              const std::vector<SplitSolution>& s,
-                              const std::vector<SplitDirection>& d,
-                              const int max_iteration) {
+namespace idocp {
+
+template <typename HybridOCPContainerType, 
+          typename HybridSolutionContainerType,
+          typename HybridDirectionContainerType>
+inline std::pair<double, double> computeStepSize(
+    HybridOCPContainerType& split_ocps, std::vector<Robot>& robot,
+    const ContactSequence& contact_sequence, const double t, 
+    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+    const HybridSolutionContainerType& s, 
+    const HybridDirectionContainerType& d) {
   // If filter is empty, augment the current solution to the filter.
   if (filter_.isEmpty()) {
     #pragma omp parallel for num_threads(num_proc_)
@@ -54,3 +58,5 @@ inline double computeStepSize(const std::vector<SplitOCPType>& split_ocp,
     primal_step_size *= step_size_reduction_rate_;
   }
 }
+
+} // namespace idocp

@@ -1,6 +1,7 @@
 #include "idocp/ocp/terminal_ocp.hpp"
+#include "idocp/ocp/riccati_factorizer.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
@@ -65,7 +66,8 @@ void TerminalOCP::linearizeOCP(Robot& robot, const double t,
 }
 
 
-void TerminalOCP::backwardRiccatiRecursion(RiccatiSolution& riccati) const {
+void TerminalOCP::backwardRiccatiRecursion(
+      RiccatiFactorization& riccati) const {
   riccati.sq = - kkt_residual_.lq();
   riccati.sv = - kkt_residual_.lv();
   riccati.Pqq = kkt_matrix_.Qqq();
@@ -73,14 +75,7 @@ void TerminalOCP::backwardRiccatiRecursion(RiccatiSolution& riccati) const {
 }
 
 
-void TerminalOCP::computeCondensedPrimalDirection(
-    const RiccatiSolution& riccati, SplitDirection& d) const {
-  d.dlmd().noalias() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
-  d.dgmm().noalias() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
-}
-
-
-void TerminalOCP::computeCondensedDualDirection(const SplitDirection& d) {
+void TerminalOCP::computeDualDirection(const SplitDirection& d) {
 }
 
  

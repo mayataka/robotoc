@@ -10,7 +10,7 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/lqr_state_feedback_policy.hpp"
-#include "idocp/ocp/backward_riccati_recursion.hpp"
+#include "idocp/ocp/backward_riccati_recursion_factorizer.hpp"
 
 
 namespace idocp {
@@ -57,41 +57,69 @@ public:
   ///
   RiccatiFactorizer& operator=(RiccatiFactorizer&&) noexcept = default;
 
-  void setExistStateConstraint(const bool exist_state_constraint);
-
+  ///
+  /// @brief Performs backward Riccati recursion. 
+  ///
   void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next, 
                                 const double dtau, KKTMatrix& kkt_matrix, 
                                 KKTResidual& kkt_residual,  
                                 RiccatiFactorization& riccati);
 
+  ///
+  /// @brief Parallelizable part of the forward Riccati recursion with state 
+  /// constraint. 
+  ///
   void forwardRiccatiRecursionParallel(KKTMatrix& kkt_matrix, 
-                                       KKTResidual& kkt_residual);
+                                       KKTResidual& kkt_residual,
+                                       const bool exist_state_constraint=false);
 
+  ///
+  /// @brief Serial part of the forward Riccati recursion with state 
+  /// constraint. 
+  ///
   static void forwardRiccatiRecursionSerialInitial(
-      const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
-      RiccatiFactorization& riccati);
+      const RiccatiFactorization& riccati);
 
+  ///
+  /// @brief Serial part of the forward Riccati recursion with state 
+  /// constraint. 
+  ///
   void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati, 
                                      const KKTMatrix& kkt_matrix, 
                                      const KKTResidual& kkt_residual, 
-                                     RiccatiFactorization& riccati_next);
+                                     RiccatiFactorization& riccati_next,
+                                     const bool exist_state_constraint=false);
 
-  template <typename SplitDirectionType>
-  void forwardRiccatiRecursion(const KKTMatrix& kkt_matrix, 
-                               const KKTResidual& kkt_residual,
-                               const SplitDirection& d, const double dtau,
-                               SplitDirectionType& d_next) const;
+  ///
+  /// @brief Factorization of the state constraint. 
+  ///
+  template <typename MatrixType1, typename MatrixType2>
+  static void backwardStateConstraintFactorization(
+      const KKTMatrix& kkt_matrix, const Eigen::MatrixBase<MatrixType1>& T_next,  
+      const Eigen::MatrixBase<MatrixType2>& T);
+
+  // ///
+  // /// @brief This is unconstrained version of forward Riccati recursion. 
+  // ///
+  // template <typename SplitDirectionType>
+  // void forwardRiccatiRecursion(const KKTMatrix& kkt_matrix, 
+  //                              const KKTResidual& kkt_residual,
+  //                              const SplitDirection& d, const double dtau,
+  //                              SplitDirectionType& d_next) const;
 
   template <typename VectorType>
-  void computeStateDirection(const RiccatiFactorization& riccati, 
-                             const Eigen::MatrixBase<VectorType>& dx0,
-                             SplitDirection& d);
+  static void computeStateDirection(const RiccatiFactorization& riccati, 
+                                    const Eigen::MatrixBase<VectorType>& dx0,
+                                    SplitDirection& d,
+                                    const bool exist_state_constraint=false);
 
-  void computeCostateDirection(const RiccatiFactorization& riccati, 
-                               SplitDirection& d) const;
+  static void computeCostateDirection(const RiccatiFactorization& riccati, 
+                                      SplitDirection& d,
+                                      const bool exist_state_constraint=false);
 
-  void computeControlInputDirection(const RiccatiFactorization& riccati, 
-                                    SplitDirection& d) const;
+  void computeControlInputDirection(
+      const RiccatiFactorization& riccati, SplitDirection& d,
+      const bool exist_state_constraint=false) const;
 
   template <typename MatrixType>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType>& K);
@@ -103,12 +131,12 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  bool has_floating_base_, exist_state_constraint_;
+  bool has_floating_base_, exist_state_constraint;
   int dimv_, dimu_;
   static constexpr int kDimFloatingBase = 6;
   Eigen::LLT<Eigen::MatrixXd> llt_;
   LQRStateFeedbackPolicy lqr_policy_;
-  BackwardRiccatiRecursion backward_recursion_;
+  BackwardRiccatiRecursionFactorizer backward_recursion_;
   Eigen::MatrixXd GinvBt_, BGinvBt_, NApBKt_;
 
 };

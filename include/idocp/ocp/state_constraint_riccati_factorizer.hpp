@@ -84,25 +84,25 @@ public:
       StateConstraintRiccatiFactorization& constraint_factorization,
       const Eigen::MatrixBase<VectorType>& dx0) const;
 
-  void aggregateLagrangeMultiplierDirection(
+  static void aggregateLagrangeMultiplierDirection(
       const ContactSequence& contact_sequence,
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
       const std::vector<ImpulseSplitDirection>& d_impulse, const int time_stage,
-      RiccatiFactorization& riccati_factorization) const;
+      RiccatiFactorization& riccati_factorization);
 
-  void aggregateLagrangeMultiplierDirectionImpulse(
+  static void aggregateLagrangeMultiplierDirectionImpulse(
       const ContactSequence& contact_sequence,
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
       const std::vector<ImpulseSplitDirection>& d_impulse, 
       const int impulse_index,
-      RiccatiFactorization& riccati_factorization) const;
+      RiccatiFactorization& riccati_factorization);
 
-  void aggregateLagrangeMultiplierDirectionLift(
+  static void aggregateLagrangeMultiplierDirectionLift(
       const ContactSequence& contact_sequence,
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
       const std::vector<ImpulseSplitDirection>& d_impulse, 
       const int lift_index,
-      RiccatiFactorization& riccati_factorization) const;
+      RiccatiFactorization& riccati_factorization);
 
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

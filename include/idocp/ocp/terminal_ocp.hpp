@@ -10,7 +10,7 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/riccati_solution.hpp"
+#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -95,7 +95,7 @@ public:
   /// TerminalOCP::linearizeOCP() must be called before calling this function.
   /// @param[out] riccati Riccati factorization of this terminal stage.
   /// 
-  void backwardRiccatiRecursion(RiccatiSolution& riccati) const;
+  void backwardRiccatiRecursion(RiccatiFactorization& riccati) const;
 
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
@@ -103,15 +103,17 @@ public:
   /// @param[in] riccati Riccati factorization of this terminal stage.
   /// @param[in, out] d Split direction of this stage.
   /// 
-  void computeCondensedPrimalDirection(const RiccatiSolution& riccati,
-                                       SplitDirection& d) const;
+  template <typename VectorType>
+  void computePrimalDirection(const RiccatiFactorization& riccati,
+                              const Eigen::MatrixBase<VectorType>& dx0, 
+                              SplitDirection& d) const;
 
   ///
   /// @brief Computes the Newton direction of the condensed dual variables of 
   /// this stage.
   /// @param[in] d Split direction of this stage.
   /// 
-  void computeCondensedDualDirection(const SplitDirection& d);
+  void computeDualDirection(const SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -190,5 +192,6 @@ private:
 
 } // namespace idocp
 
+#include "idocp/ocp/terminal_ocp.hxx"
 
 #endif // IDOCPT_TERMINAL_OCP_HPP_

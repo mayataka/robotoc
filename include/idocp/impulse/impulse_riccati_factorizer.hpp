@@ -8,7 +8,7 @@
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/ocp/split_direction.hpp"
+#include "idocp/impulse/impulse_backward_riccati_recursion_factorizer.hpp"
 
 
 namespace idocp {
@@ -43,16 +43,16 @@ public:
                                 ImpulseKKTResidual& kkt_residual, 
                                 RiccatiFactorization& riccati);
 
-  void forwardStateConstraintFactorizationSerial(
-      const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
-      const ImpulseKKTResidual& kkt_residual, 
-      RiccatiFactorization& riccati_next);
+  void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati, 
+                                     const ImpulseKKTMatrix& kkt_matrix, 
+                                     const ImpulseKKTResidual& kkt_residual, 
+                                     RiccatiFactorization& riccati_next);
 
-  template <typename SplitDirectionType>
-  inline void forwardRiccatiRecursionSerial(
-      const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
-      const ImpulseKKTResidual& kkt_residual, const ImpulseSplitDirection& d, 
-      SplitDirectionType& d_next) const;
+
+  template <typename VectorType>
+  static void computeStateDirection(
+      const RiccatiFactorization& riccati, 
+      const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d);
 
   static void computeCostateDirection(const RiccatiFactorization& riccati, 
                                       ImpulseSplitDirection& d);
@@ -63,16 +63,8 @@ private:
   bool has_floating_base_;
   int dimv_;
   static constexpr int kDimFloatingBase = 6;
-  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, NApBKt_;
-
-  void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
-                          ImpulseKKTMatrix& kkt_matrix, 
-                          ImpulseKKTResidual& kkt_residual);
-
-  void factorizeRiccatiFactorization(const RiccatiFactorization& riccati_next, 
-                                     const ImpulseKKTMatrix& kkt_matrix, 
-                                     const ImpulseKKTResidual& kkt_residual,
-                                     RiccatiFactorization& riccati);
+  ImpulseBackwardRiccatiRecursionFactorizer backward_recursion_;
+  Eigen::MatrixXd NApBKt_;
 
 };
 

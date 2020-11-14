@@ -1,9 +1,8 @@
 #include "idocp/ocp/ocp.hpp"
 
-#include <utility>
 #include <cmath>
 #include <omp.h>
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
@@ -14,7 +13,6 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
   : split_ocps_(N, SplitOCP(robot, cost, constraints)),
     terminal_ocp_(robot, cost, constraints),
     robots_(num_proc, robot),
-    contact_sequence_(robot, N),
     filter_(),
     T_(T),
     dtau_(T/N),
@@ -22,14 +20,14 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     min_step_size_(0.05),
     N_(N),
     num_proc_(num_proc),
-    s_(N+1, SplitSolution(robot)),
-    d_(N+1, SplitDirection(robot)),
-    riccati_(N+1, RiccatiSolution(robot)),
-    s_tmp_(N+1, SplitTemporarySolution(robot)),
+    s_(N+1, SplitSolution(robot), N, ImpulseSplitSolution(robot)),
+    d_(N+1, SplitDirection(robot), N, ImpulseSplitDirection(robot)),
+    riccati_(N+1, RiccatiFactorization(robot), N, RiccatiFactorization(robot)),
     primal_step_sizes_(Eigen::VectorXd::Zero(N)),
     dual_step_sizes_(Eigen::VectorXd::Zero(N)),
     costs_(Eigen::VectorXd::Zero(N+1)), 
-    violations_(Eigen::VectorXd::Zero(N)) {
+    violations_(Eigen::VectorXd::Zero(N)),
+    contact_sequence_(robot, T, N) {
   assert(T > 0);
   assert(N > 0);
   assert(num_proc > 0);
@@ -41,41 +39,37 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
 }
 
 
-OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-         const std::shared_ptr<Constraints>& constraints, 
-         const std::shared_ptr<ImpulseCostFunction>& impulse_cost,
-         const std::shared_ptr<ImpulseConstraints>& impulse_constraints,
-         const double T, const int N, const int num_proc)
-  : split_ocps_(N, SplitOCP(robot, cost, constraints)),
-    terminal_ocp_(robot, cost, constraints),
-    split_impulse_ocps_(N, SplitImpulseOCP(robot, impulse_cost, impulse_constraints)),
-    split_lift_ocps_(N, SplitOCP(robot, cost, constraints)),
-    robots_(num_proc, robot),
-    contact_sequence_(robot, N),
-    filter_(),
-    T_(T),
-    dtau_(T/N),
-    step_size_reduction_rate_(0.75),
-    min_step_size_(0.05),
-    N_(N),
-    num_proc_(num_proc),
-    s_(N+1, SplitSolution(robot)),
-    d_(N+1, SplitDirection(robot)),
-    riccati_(N+1, RiccatiSolution(robot)),
-    s_tmp_(N+1, SplitTemporarySolution(robot)),
-    primal_step_sizes_(Eigen::VectorXd::Zero(N)),
-    dual_step_sizes_(Eigen::VectorXd::Zero(N)),
-    costs_(Eigen::VectorXd::Zero(N+1)), 
-    violations_(Eigen::VectorXd::Zero(N)) {
-  assert(T > 0);
-  assert(N > 0);
-  assert(num_proc > 0);
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N; ++i) {
-    robot.normalizeConfiguration(s_[i].q);
-  }
-  initConstraints();
-}
+// OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+//          const std::shared_ptr<Constraints>& constraints, 
+//          const std::shared_ptr<ImpulseCostFunction>& impulse_cost,
+//          const std::shared_ptr<ImpulseConstraints>& impulse_constraints,
+//          const double T, const int N, const int num_proc)
+//   : split_ocps_(N, SplitOCP(robot, cost, constraints), 
+//                 N, SplitImpulseOCP(robot, impulse_cost, impulse_constraints)),
+//     terminal_ocp_(robot, cost, constraints),
+//     robots_(num_proc, robot),
+//     filter_(),
+//     T_(T),
+//     dtau_(T/N),
+//     step_size_reduction_rate_(0.75),
+//     min_step_size_(0.05),
+//     N_(N),
+//     num_proc_(num_proc),
+//     s_(N+1, SplitSolution(robot), N, ImpulseSplitSolution(robot)),
+//     d_(N+1, SplitDirection(robot), N, ImpulseSplitDirection(robot)),
+//     riccati_(N+1, RiccatiFactorization(robot), N, RiccatiFactorization(robot)),
+//     primal_step_sizes_(Eigen::VectorXd::Zero(N+N)),
+//     dual_step_sizes_(Eigen::VectorXd::Zero(N+N)),
+//     contact_sequence_(robot, T, N) {
+//   assert(T > 0);
+//   assert(N > 0);
+//   assert(num_proc > 0);
+//   #pragma omp parallel for num_threads(num_proc_)
+//   for (int i=0; i<=N; ++i) {
+//     robot.normalizeConfiguration(s_[i].q);
+//   }
+//   initConstraints();
+// }
 
 
 OCP::OCP() 
@@ -93,7 +87,6 @@ OCP::OCP()
     s_(),
     d_(),
     riccati_(),
-    s_tmp_(),
     primal_step_sizes_(),
     dual_step_sizes_(),
     costs_(), 
@@ -109,123 +102,68 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
                          const Eigen::VectorXd& v, const bool use_line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  const int N_impulse = contact_sequence_.numImpulse();
-  const int N_lift = contact_sequence_.numLifts();
-  const int N = N_ + N_impulse + N_lift;
   #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N; ++i) {
+  for (int i=0; i<=N_; ++i) {
     if (i == 0) {
       const int robot_id = omp_get_thread_num();
-      split_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.contactStatus(i), 
+      split_ocps_[i].linearizeOCP(robots_[robot_id], 
+                                  contact_sequence_.contactStatus(i), 
                                   t+i*dtau_, dtau_, q, s_[i], s_[i+1]);
     }
     else if (i < N_) {
       const int robot_id = omp_get_thread_num();
-      split_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.contactStatus(i), 
+      split_ocps_[i].linearizeOCP(robots_[robot_id], 
+                                  contact_sequence_.contactStatus(i), 
                                   t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
     }
-    else if (i == N_) {
+    else {
       const int robot_id = omp_get_thread_num();
       terminal_ocp_.linearizeOCP(robots_[robot_id], t+T_, s_[N_]);
       terminal_ocp_.backwardRiccatiRecursion(riccati_[N_]);
     }
-    else if (i < N_+N_impulse) {
-      const int robot_id = omp_get_thread_num();
-      split_impulse_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.impulseStatus(i+1), 
-                                          t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
-    }
-    else {
-      const int robot_id = omp_get_thread_num();
-      split_lift_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.impulseStatus(i+1), 
-                                       t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
-        
-    }
   }
   for (int i=N_-1; i>=0; --i) {
-    if (contact_sequence_.hasImpulse(i)) {
-      split_ocps_[i].backwardRiccatiRecursion(dtau_, riccati_[i+1], riccati_[i]);
-
-    }
-    else if (contact_sequence_.hasLifts(i)) {
-
-    }
-    else {
-      split_ocps_[i].backwardRiccatiRecursion(dtau_, riccati_[i+1], riccati_[i]);
-    }
+    split_ocps_[i].backwardRiccatiRecursion(riccati_[i+1], dtau_, riccati_[i]);
   }
   robots_[0].subtractConfiguration(q, s_[0].q, d_[0].dq());
   d_[0].dv() = v - s_[0].v;
+  #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
-    split_ocps_[i].forwardRiccatiRecursion(dtau_, d_[i], d_[i+1]);
+    split_ocps_[i].forwardRiccatiRecursionParallel();
+  }
+  assert(riccati_[0].Pi.isIdentity());
+  assert(riccati_[0].pi.isZero());
+  assert(riccati_[0].N.isZero());
+  for (int i=0; i<N_; ++i) {
+    split_ocps_[i].forwardRiccatiRecursionSerial(riccati_[i], riccati_[i+1]);
   }
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<=N_; ++i) {
-    if (i < N_) {
+    if (i == 0) {
       const int robot_id = omp_get_thread_num();
-      split_ocps_[i].computeCondensedPrimalDirection(robots_[robot_id], dtau_, 
-                                                     riccati_[i], s_[i], d_[i]);
+      split_ocps_[i].computePrimalDirection(robots_[robot_id], dtau_, riccati_[i], 
+                                            s_[i], d_[i], false);
+      primal_step_sizes_.coeffRef(i) = split_ocps_[i].maxPrimalStepSize();
+      dual_step_sizes_.coeffRef(i) = split_ocps_[i].maxDualStepSize();
+    }
+    else if (i < N_) {
+      const int robot_id = omp_get_thread_num();
+      split_ocps_[i].computePrimalDirection(robots_[robot_id], dtau_, riccati_[i], 
+                                            s_[i], d_[0].dx(), d_[i], false);
       primal_step_sizes_.coeffRef(i) = split_ocps_[i].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i) = split_ocps_[i].maxDualStepSize();
     }
     else {
-      terminal_ocp_.computeCondensedPrimalDirection(riccati_[N_], d_[N_]);
+      terminal_ocp_.computePrimalDirection(riccati_[N_], d_[0].dx(), d_[N_]);
     }
   }
-  double primal_step_size = primal_step_sizes_.minCoeff();
+  const double primal_step_size = primal_step_sizes_.minCoeff();
   const double dual_step_size = dual_step_sizes_.minCoeff();
-  if (use_line_search) {
-    // If filter is empty, augment the current solution to the filter.
-    if (filter_.isEmpty()) {
-      #pragma omp parallel for num_threads(num_proc_)
-      for (int i=0; i<=N_; ++i) {
-        if (i < N_) {
-          const int robot_id = omp_get_thread_num();
-          costs_.coeffRef(i) = split_ocps_[i].stageCost(robots_[robot_id], t+i*dtau_, dtau_, s_[i]);
-          violations_.coeffRef(i) = split_ocps_[i].constraintViolation(
-              robots_[robot_id], contact_sequence_.contactStatus(i), t+i*dtau_, 
-              dtau_, s_[i], s_[i+1].q, s_[i+1].v);
-        }
-        else {
-          const int robot_id = omp_get_thread_num();
-          costs_.coeffRef(N_) = terminal_ocp_.terminalCost(robots_[robot_id], t+T_, s_[N_]);
-        }
-      }
-      filter_.augment(costs_.sum(), violations_.sum());
-    }
-    while (primal_step_size > min_step_size_) {
-      #pragma omp parallel for num_threads(num_proc_)
-      for (int i=0; i<=N_; ++i) {
-        if (i < N_) {
-          const int robot_id = omp_get_thread_num();
-          s_tmp_[i].setTemporarySolution(robots_[robot_id], contact_sequence_.contactStatus(i), 
-                                         primal_step_size, s_[i], d_[i], s_[i+1], d_[i+1]);
-          costs_.coeffRef(i) = split_ocps_[i].stageCost(robots_[robot_id], t+i*dtau_, dtau_, 
-                                                        s_tmp_[i].splitSolution(), 
-                                                        primal_step_size);
-          violations_.coeffRef(i) = split_ocps_[i].constraintViolation(
-              robots_[robot_id], contact_sequence_.contactStatus(i), t+i*dtau_, 
-              dtau_, s_tmp_[i].splitSolution(), s_tmp_[i].q_next(), s_tmp_[i].v_next());
-        }
-        else {
-          const int robot_id = omp_get_thread_num();
-          s_tmp_[N_].setTemporarySolution(robots_[robot_id], primal_step_size, s_[N_], d_[N_]);
-          costs_.coeffRef(N_) = terminal_ocp_.terminalCost(robots_[robot_id], t+T_, s_tmp_[N_].splitSolution());
-        }
-      }
-      const double cost_sum = costs_.sum();
-      const double violation_sum = violations_.sum();
-      if (filter_.isAccepted(cost_sum, violation_sum)) {
-        filter_.augment(cost_sum, violation_sum);
-        break;
-      }
-      primal_step_size *= step_size_reduction_rate_;
-    }
-  }  // end if (use_line_search) 
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
       const int robot_id = omp_get_thread_num();
-      split_ocps_[i].computeCondensedDualDirection(robots_[robot_id], dtau_, d_[i+1], d_[i]);
+      split_ocps_[i].computeDualDirection(robots_[robot_id], dtau_, d_[i+1], d_[i]);
       split_ocps_[i].updatePrimal(robots_[robot_id], primal_step_size, dtau_, d_[i], s_[i]);
       split_ocps_[i].updateDual(dual_step_size);
     }
@@ -238,17 +176,57 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
 } 
 
 
-void OCP::computePrimalAndDualDirection(const double t, 
-                                        const Eigen::VectorXd& q, 
-                                        const Eigen::VectorXd& v) {
-
-}
-
-
-
-lineSearch(const double t, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v) {
-
+void OCP::linearizeSplitOCPs(const double t, const Eigen::VectorXd& q, 
+                             const Eigen::VectorXd& v) {
+  // assert(q.size() == robots_[0].dimq());
+  // assert(v.size() == robots_[0].dimv());
+  // #pragma omp parallel for num_threads(num_proc_)
+  // const int N_all = N_ + contact_sequence_.totalNumImpulseStages() 
+  //                      + contact_sequence_.totalNumLiftStages();
+  // for (int i=0; i<N_all; ++i) {
+  //   if (i == 0) {
+  //     const int robot_id = omp_get_thread_num();
+  //     if (contact_sequence_.timeStageBeforeImpulse(0) == 0) {
+  //       split_ocps_[i].linearizeOCP(robots_[robot_id], 
+  //                                   contact_sequence_.contactStatus(i), 
+  //                                   t+i*dtau_, dtau_, q, s_[i], 
+  //                                   s_[i].impulse(0));
+  //     }
+  //     else if (contact_sequence_.timeStageBeforeLift(0) == 0) {
+  //       split_ocps_[i].linearizeOCP(robots_[robot_id], 
+  //                                   contact_sequence_.contactStatus(i), 
+  //                                   t+i*dtau_, dtau_, q, s_[i], s_[i].lift(0));
+  //     }
+  //     split_ocps_[i].linearizeOCP(robots_[robot_id], 
+  //                                 contact_sequence_.contactStatus(i), 
+  //                                 t+i*dtau_, dtau_, q, s_[i], s_[i+1]);
+  //   }
+  //   else if (i < N_) {
+  //     const int robot_id = omp_get_thread_num();
+  //     split_ocps_[i].linearizeOCP(robots_[robot_id], 
+  //                                 contact_sequence_.contactStatus(i), 
+  //                                 t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
+  //   }
+  //   else if (i == N_) {
+  //     const int robot_id = omp_get_thread_num();
+  //     terminal_ocp_.linearizeOCP(robots_[robot_id], t+T_, s_[N_]);
+  //     terminal_ocp_.backwardRiccatiRecursion(riccati_[N_]);
+  //   }
+  //   else if (i < N_ + contact_sequence_.totalNumImpulseStages()) {
+  //     const int robot_id = omp_get_thread_num();
+  //     const int impulse_idx = 
+  //     split_ocps_[i].impulse(impulse_idx).linearizeOCP(
+  //         robots_[robot_id], contact_sequence_.impulseStatus(impulse_idx), 
+  //         t+i*dtau_, dtau_, q, s_.impulse(impulse_idx), s_[i+1]);
+  //   }
+  //   else {
+  //     const int robot_id = omp_get_thread_num();
+  //     const int lift_idx = 
+  //     split_ocps_[i].lift(lift_idx).linearizeOCP(
+  //         robots_[robot_id], contact_sequence_.contactStatus(i), 
+  //         t+i*dtau_, dtau_, q, s_.lift(lift_idx), s_[i+1]);
+  //   }
+  // }
 }
 
 
@@ -316,24 +294,8 @@ bool OCP::setStateTrajectory(const Eigen::VectorXd& q0,
 }
 
 
-void OCP::activateContacts(const std::vector<int>& contact_indices, 
-                           const int time_stage_begin, 
-                           const int time_stage_end) {
-  contact_sequence_.activateContacts(contact_indices, time_stage_begin, 
-                                     time_stage_end);
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<N_; ++i) {
-    s_[i].setContactStatus(contact_sequence_.contactStatus(i));
-    d_[i].setContactStatus(contact_sequence_.contactStatus(i));
-  }
-}
-
-
-void OCP::deactivateContacts(const std::vector<int>& contact_indices, 
-                             const int time_stage_begin, 
-                             const int time_stage_end) {
-  contact_sequence_.deactivateContacts(contact_indices, time_stage_begin, 
-                                       time_stage_end);
+void OCP::setContactStatus(const ContactStatus& contact_status) {
+  contact_sequence_.setContactStatusUniformly(contact_status);
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     s_[i].setContactStatus(contact_sequence_.contactStatus(i));
@@ -450,37 +412,45 @@ void OCP::initConstraints() {
 
 
 
-void OCP::linearizeOCP(const double t, const Eigen::VectorXd& q, 
-                       const Eigen::VectorXd& v) {
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N; ++i) {
-    if (i == 0) {
-      const int robot_id = omp_get_thread_num();
-      split_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.contactStatus(i), 
-                                  t+i*dtau_, dtau_, q, s_[i], s_[i+1]);
-    }
-    else if (i < N_) {
-      const int robot_id = omp_get_thread_num();
-      split_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.contactStatus(i), 
-                                  t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
-    }
-    else if (i == N_) {
-      const int robot_id = omp_get_thread_num();
-      terminal_ocp_.linearizeOCP(robots_[robot_id], t+T_, s_[N_]);
-      terminal_ocp_.backwardRiccatiRecursion(riccati_[N_]);
-    }
-    else if (i < N_+N_impulse) {
-      const int robot_id = omp_get_thread_num();
-      split_impulse_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.impulseStatus(i+1), 
-                                          t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
-    }
-    else {
-      const int robot_id = omp_get_thread_num();
-      split_lift_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.impulseStatus(i+1), 
-                                       t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
+// void OCP::linearizeOCP(const double t, const Eigen::VectorXd& q, 
+//                        const Eigen::VectorXd& v) {
+//   assert(q.size() == robots_[0].dimq());
+//   assert(v.size() == robots_[0].dimv());
+//   const int N_impulse = contact_sequence_.numImpulse();
+//   const int N_lift = contact_sequence_.numLifts();
+//   const int N = N_ + N_impulse + N_lift;
+//   #pragma omp parallel for num_threads(num_proc_)
+//   for (int i=0; i<=N; ++i) {
+//     if (i == 0) {
+//       const int robot_id = omp_get_thread_num();
+//       split_ocps_[i].linearizeOCP(robots_[robot_id], 
+//                                   contact_sequence_.contactStatus(i), 
+//                                   t+i*dtau_, dtau_, q, s_[i], s_[i+1]);
+//     }
+//     else if (i < N_) {
+//       const int robot_id = omp_get_thread_num();
+//       split_ocps_[i].linearizeOCP(robots_[robot_id], 
+//                                   contact_sequence_.contactStatus(i), 
+//                                   t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
+//     }
+//     else if (i == N_) {
+//       const int robot_id = omp_get_thread_num();
+//       terminal_ocp_.linearizeOCP(robots_[robot_id], t+T_, s_[N_]);
+//       terminal_ocp_.backwardRiccatiRecursion(riccati_[N_]);
+//     }
+//     else if (i < N_+N_impulse) {
+//       const int robot_id = omp_get_thread_num();
+//       split_impulse_ocps_[i].linearizeOCP(robots_[robot_id], 
+//                                           contact_sequence_.impulseStatus(i-N_), 
+//                                           t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
+//     }
+//     else {
+//       const int robot_id = omp_get_thread_num();
+//       split_lift_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.impulseStatus(i+1), 
+//                                        t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
         
-    }
-  }
-}
+//     }
+//   }
+// }
 
 } // namespace idocp

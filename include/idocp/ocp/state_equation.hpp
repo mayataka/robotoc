@@ -12,19 +12,20 @@
 namespace idocp {
 namespace stateequation {
 
-template <typename ConfigVectorType>
+template <typename ConfigVectorType, typename SplitSolutionType>
 void LinearizeForwardEuler(
     const Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
-    const SplitSolution& s_next, KKTMatrix& kkt_matrix, 
+    const SplitSolutionType& s_next, KKTMatrix& kkt_matrix, 
     KKTResidual& kkt_residual);
 
-template <typename ConfigVectorType, typename TangentVectorType>
+template <typename ConfigVectorType, typename TangentVectorType, 
+          typename SplitSolutionType>
 void LinearizeBackwardEuler(
     const Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
-    const SplitSolution& s, const SplitSolution& s_next, 
+    const SplitSolution& s, const SplitSolutionType& s_next, 
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
 template <typename ConfigVectorType, typename TangentVectorType>

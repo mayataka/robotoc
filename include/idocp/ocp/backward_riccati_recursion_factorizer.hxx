@@ -1,13 +1,13 @@
-#ifndef IDOCP_BACKWARD_RICCATI_RECURSION_HXX_
-#define IDOCP_BACKWARD_RICCATI_RECURSION_HXX_
+#ifndef IDOCP_BACKWARD_RICCATI_RECURSION_FACTORIZER_HXX_ 
+#define IDOCP_BACKWARD_RICCATI_RECURSION_FACTORIZER_HXX_
 
-#include "idocp/ocp/backward_riccati_recursion.hpp"
+#include "idocp/ocp/backward_riccati_recursion_factorizer.hpp"
 
 #include <cassert>
 
 namespace idocp {
 
-inline BackwardRiccatiRecursion::BackwardRiccatiRecursion(
+inline BackwardRiccatiRecursionFactorizer::BackwardRiccatiRecursionFactorizer(
     const Robot& robot) 
   : has_floating_base_(robot.has_floating_base()),
     dimv_(robot.dimv()),
@@ -22,7 +22,7 @@ inline BackwardRiccatiRecursion::BackwardRiccatiRecursion(
 }
 
 
-inline BackwardRiccatiRecursion::BackwardRiccatiRecursion() 
+inline BackwardRiccatiRecursionFactorizer::BackwardRiccatiRecursionFactorizer() 
   : has_floating_base_(false),
     dimv_(0),
     dimu_(0),
@@ -36,11 +36,11 @@ inline BackwardRiccatiRecursion::BackwardRiccatiRecursion()
 }
 
 
-inline BackwardRiccatiRecursion::~BackwardRiccatiRecursion() {
+inline BackwardRiccatiRecursionFactorizer::~BackwardRiccatiRecursionFactorizer() {
 }
 
 
-inline void BackwardRiccatiRecursion::factorizeKKTMatrix(
+inline void BackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
     const RiccatiFactorization& riccati_next, const double dtau, 
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
   assert(dtau > 0);
@@ -97,7 +97,7 @@ inline void BackwardRiccatiRecursion::factorizeKKTMatrix(
 }
 
 
-inline void BackwardRiccatiRecursion::factorizeRiccatiFactorization(
+inline void BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
     const RiccatiFactorization& riccati_next, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, const LQRStateFeedbackPolicy& lqr_policy,
     const double dtau, RiccatiFactorization& riccati) {
@@ -140,4 +140,4 @@ inline void BackwardRiccatiRecursion::factorizeRiccatiFactorization(
 
 } // namespace idocp
 
-#endif // IDOCP_BACKWARD_RICCATI_RECURSION_HXX_ 
+#endif // IDOCP_BACKWARD_RICCATI_RECURSION_FACTORIZER_HXX_ 

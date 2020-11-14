@@ -165,6 +165,18 @@ public:
   ///
   int timeStageBeforeLift(const int lift_index) const;
 
+  ///
+  /// @brief Check if the impulse stage exists or not.  
+  /// @return true if the impulse stage exists. false otherwise.
+  ///
+  bool existImpulseStage() const;
+
+  ///
+  /// @brief Check if the lift stage exists or not.  
+  /// @return true if the lift stage exists. false otherwise.
+  ///
+  bool existLiftStage() const;
+
 private:
   int N_;
   double T_, dtau_;

@@ -172,6 +172,18 @@ inline int ContactSequence::timeStageBeforeLift(const int lift_index) const {
 }
 
 
+inline bool ContactSequence::existImpulseStage() const {
+  if (totalNumImpulseStages() > 0) return true;
+  else return false;
+}
+
+
+inline bool ContactSequence::existLiftStage() const {
+  if (totalNumLiftStages() > 0) return true;
+  else return false;
+}
+
+
 inline int ContactSequence::eventTimeStageFromContinuousEventTime(
     const double event_time) const {
   if (event_time <= 0) {

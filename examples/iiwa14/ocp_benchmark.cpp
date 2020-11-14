@@ -88,15 +88,11 @@ void BenchmarkWithContacts() {
   idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for iiwa14 with contacts",
                                                     robot, cost, constraints, T, N, num_proc);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
-  ocp_benchmarker.getSolverHandle()->activateContacts({0}, 0, N);
+  auto contact_status = robot.createContactStatus();
+  contact_status.activateContact(0);
+  ocp_benchmarker.getSolverHandle()->setContactStatus(contact_status);
   ocp_benchmarker.testConvergence(t, q, v, 20, false);
 
-  const int N2 = 100;
-  idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker2("OCP for iiwa14 with contacts2",
-                                                    robot, cost, constraints, T, N2, num_proc);
-  ocp_benchmarker2.setInitialGuessSolution(t, q, v);
-  ocp_benchmarker2.getSolverHandle()->activateContacts({0}, 0, N2);
-  ocp_benchmarker2.testConvergence(t, q, v, 20, false);
   // ocp_benchmarker.testCPUTime(t, q, v);
   // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa14 with contacts",
   //                                                           robot, cost, constraints, T, N, num_proc);

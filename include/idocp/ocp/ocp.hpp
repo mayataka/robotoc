@@ -11,17 +11,19 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/constraints/impulse_constraints.hpp"
-#include "idocp/ocp/contact_sequence.hpp"
 #include "idocp/ocp/split_ocp.hpp"
-#include "idocp/impulse/split_impulse_ocp.hpp"
+// #include "idocp/impulse/split_impulse_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/ocp/riccati_solution.hpp"
+#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
+#include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
 #include "idocp/ocp/line_search_filter.hpp"
-#include "idocp/ocp/split_temporary_solution.hpp"
+#include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/hybrid/hybrid_container.hpp"
 
 
 namespace idocp {
@@ -46,23 +48,23 @@ public:
       const std::shared_ptr<Constraints>& constraints, const double T, 
       const int N, const int num_proc=1);
 
-  ///
-  /// @brief Construct optimal control problem solver.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] cost Shared ptr to the cost function.
-  /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] impulse_cost Shared ptr to the impulse cost function.
-  /// @param[in] impulse_constraints Shared ptr to the impulse constraints.
-  /// @param[in] T Length of the horizon. Must be positive.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] num_proc Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
-  ///
-  OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-      const std::shared_ptr<Constraints>& constraints, 
-      const std::shared_ptr<ImpulseCostFunction>& impulse_cost,
-      const std::shared_ptr<ImpulseConstraints>& impulse_constraints,
-      const double T, const int N, const int num_proc=1);
+  // ///
+  // /// @brief Construct optimal control problem solver.
+  // /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  // /// @param[in] cost Shared ptr to the cost function.
+  // /// @param[in] constraints Shared ptr to the constraints.
+  // /// @param[in] impulse_cost Shared ptr to the impulse cost function.
+  // /// @param[in] impulse_constraints Shared ptr to the impulse constraints.
+  // /// @param[in] T Length of the horizon. Must be positive.
+  // /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  // /// @param[in] num_proc Number of the threads in solving the optimal control 
+  // /// problem. Must be positive. Default is 1.
+  // ///
+  // OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+  //     const std::shared_ptr<Constraints>& constraints, 
+  //     const std::shared_ptr<ImpulseCostFunction>& impulse_cost,
+  //     const std::shared_ptr<ImpulseConstraints>& impulse_constraints,
+  //     const double T, const int N, const int num_proc=1);
 
   ///
   /// @brief Default constructor. 
@@ -106,12 +108,6 @@ public:
                       const Eigen::VectorXd& v, 
                       const bool use_line_search=false);
 
-  void computePrimalAndDualDirection(const double t, const Eigen::VectorXd& q, 
-                                     const Eigen::VectorXd& v);
-
-  double lineSearch(const double t, const Eigen::VectorXd& q, 
-                    const Eigen::VectorXd& v, const double max_primal_step_size);
-
   ///
   /// @brief Get the const reference to the split solution of a time stage. 
   /// For example, you can get the const reference to the control input torques 
@@ -152,25 +148,7 @@ public:
   bool setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0,
                           const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
 
-  ///
-  /// @brief Activate contacts over specified time steps 
-  /// (from time_stage_begin until time_stage_end). 
-  /// @param[in] contact_indices Indices of contacts of interedted. 
-  /// @param[in] time_stage_begin Beginning of time stages to activate. 
-  /// @param[in] time_stage_end End of time stages to activate. 
-  ///
-  void activateContacts(const std::vector<int>& contact_indices, 
-                        const int time_stage_begin, const int time_stage_end);
-
-  ///
-  /// @brief Deactivate contacts over specified time steps 
-  /// (from time_stage_begin until time_stage_end). 
-  /// @param[in] contact_indices Indices of contacts of interedted. 
-  /// @param[in] time_stage_begin Beginning of time stages to deactivate. 
-  /// @param[in] time_stage_end End of time stages to deactivate. 
-  ///
-  void deactivateContacts(const std::vector<int>& contact_indices, 
-                          const int time_stage_begin, const int time_stage_end);
+  void setContactStatus(const ContactStatus& contact_status);
 
   ///
   /// @brief Sets the contact points over the horizon. 
@@ -235,30 +213,23 @@ public:
 
 private:
 
-  std::vector<SplitOCP> split_ocps_;
-  std::vector<SplitImpulseOCP> split_impulse_ocps_; // Split OCPs for impulse stages
-  std::vector<SplitOCP> split_lift_ocps_; // Split OCPs for lift stages
+  // hybrid_container<SplitOCP, SplitImpulseOCP> split_ocps_;
+  hybrid_container<SplitOCP, SplitOCP> split_ocps_;
   TerminalOCP terminal_ocp_;
+  hybrid_container<SplitSolution, ImpulseSplitSolution> s_;
+  hybrid_container<SplitDirection, ImpulseSplitDirection> d_;
+  hybrid_container<RiccatiFactorization, RiccatiFactorization> riccati_;
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
   LineSearchFilter filter_;
   double T_, dtau_, step_size_reduction_rate_, min_step_size_;
   int N_, num_proc_;
-  std::vector<SplitSolution> s_;
-  std::vector<SplitDirection> d_;
-  std::vector<ImpulseSplitSolution> s_impulse_; // Split Solution for impulse stages
-  std::vector<ImpulseSplitDirection> d_impulse_; // Split Direction for impulse stages
-  std::vector<SplitSolution> s_lift_; // Split Solution for lift stages
-  std::vector<SplitDirection> d_lift_; // Split Direction for lift stages
-  std::vector<RiccatiFactorization> riccati_;
-  std::vector<SplitTemporarySolution> s_tmp_;
-  std::vector<SplitTemporarySolution> s_lift_tmp_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_,
                   costs_impulse_, violations_impulse, costs_lift_, 
                   violations_lift_;
 
-  void linearizeOCP(const double t, const Eigen::VectorXd& q, 
-                    const Eigen::VectorXd& v);
+  void linearizeSplitOCPs(const double t, const Eigen::VectorXd& q, 
+                          const Eigen::VectorXd& v);
 
 };
 

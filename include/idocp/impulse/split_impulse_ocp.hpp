@@ -17,7 +17,7 @@
 #include "idocp/impulse/impulse_state_equation.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
 #include "idocp/impulse/impulse_riccati_factorizer.hpp"
-#include "idocp/ocp/riccati_solution.hpp"
+#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 

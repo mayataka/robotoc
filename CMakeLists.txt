@@ -68,7 +68,8 @@ add_library(
   src/impulse/impulse_state_equation.cpp
   src/impulse/impulse_dynamics_forward_euler_data.cpp
   src/impulse/impulse_dynamics_forward_euler.cpp
-  # src/impulse/impulse_riccati_factorizer.cpp
+  src/impulse/impulse_backward_riccati_recursion_factorizer.cpp
+  src/impulse/impulse_riccati_factorizer.cpp
   # src/impulse/split_impulse_ocp.cpp
   # src/impulse/impulse_dynamics_backward_euler.cpp
   # src/impulse/split_impulse_parnmpc.cpp
@@ -86,23 +87,23 @@ add_library(
   # src/ocp/non_contact_dynamics.cpp
   src/ocp/line_search_filter.cpp
   src/ocp/riccati_factorization.cpp
-  src/ocp/backward_riccati_recursion.cpp
+  src/ocp/backward_riccati_recursion_factorizer.cpp
   src/ocp/riccati_factorizer.cpp
-  # src/ocp/split_ocp.cpp
-  # src/ocp/terminal_ocp.cpp
+  src/ocp/split_ocp.cpp
+  src/ocp/terminal_ocp.cpp
   # src/ocp/split_temporary_solution.cpp
-  # src/ocp/state_constraint_riccati_factorization.cpp
-  # src/ocp/state_constraint_riccati_factorizer.cpp
-  # src/ocp/ocp.cpp
-  src/ocp/backward_correction.cpp
-  src/ocp/split_parnmpc.cpp
-  src/ocp/terminal_parnmpc.cpp
+  src/ocp/state_constraint_riccati_factorization.cpp
+  src/ocp/state_constraint_riccati_factorizer.cpp
+  src/ocp/ocp.cpp
+  # src/ocp/backward_correction.cpp
+  # src/ocp/split_parnmpc.cpp
   # src/ocp/parnmpc.cpp
+  # src/ocp/terminal_parnmpc.cpp
   # src/ocp/mpc.cpp
   # src/utils/joint_constraints_factory.cpp
   # src/utils/ocp_benchmarker.cpp
-  # src/utils/runge_kutta.cpp
   # src/utils/simulation_data_saver.cpp
+  # src/utils/runge_kutta.cpp
   # src/utils/manipulator_simulator.cpp
 )
 target_link_libraries(
