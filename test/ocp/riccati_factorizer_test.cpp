@@ -168,10 +168,11 @@ void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot&
   Eigen::MatrixXd Ginv = kkt_matrix_ref.Quu().inverse();
   lqr_policy_ref.K = - Ginv  * kkt_matrix_ref.Qxu().transpose();
   lqr_policy_ref.k = - Ginv  * kkt_residual.lu();
+  backward_recursion_ref.factorizeRiccatiFactorization(riccati_next, kkt_matrix_ref, kkt_residual_ref, lqr_policy_ref, dtau, riccati_ref);
   factorizer.forwardRiccatiRecursionParallel(kkt_matrix, kkt_residual, true);
   kkt_matrix_ref.Fxx() += kkt_matrix_ref.Fxu() * lqr_policy_ref.K;
   kkt_residual_ref.Fx() += kkt_matrix_ref.Fxu() * lqr_policy_ref.k;
-  Eigen::MatrixXd BGinvBt = kkt_matrix_ref.Fxu() * Ginv * kkt_matrix_ref.Fxu().transpose();
+  const Eigen::MatrixXd BGinvBt = kkt_matrix_ref.Fxu() * Ginv * kkt_matrix_ref.Fxu().transpose();
   EXPECT_TRUE(kkt_matrix_ref.isApprox(kkt_matrix));
   EXPECT_TRUE(kkt_residual_ref.isApprox(kkt_residual));
   RiccatiFactorization riccati_next_ref(robot);

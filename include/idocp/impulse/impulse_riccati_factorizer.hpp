@@ -13,29 +13,46 @@
 
 namespace idocp {
 
+///
+/// @class ImpulseRiccatiFactorizer
+/// @brief Riccati factorizer for SplitImpulseOCP.
+///
 class ImpulseRiccatiFactorizer {
 public:
-  // Constructor.
-  // Argments:
-  //    robot: The robot model that has been already initialized.
+  ///
+  /// @brief Construct factorizer.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  ///
   ImpulseRiccatiFactorizer(const Robot& robot);
 
-  // Default constructor.
+  ///
+  /// @brief Default constructor. 
+  ///
   ImpulseRiccatiFactorizer();
 
-  // Destructor.
+  ///
+  /// @brief Destructor. 
+  ///
   ~ImpulseRiccatiFactorizer();
  
-  // Use default copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   ImpulseRiccatiFactorizer(const ImpulseRiccatiFactorizer&) = default;
 
-  // Use default copy operator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   ImpulseRiccatiFactorizer& operator=(const ImpulseRiccatiFactorizer&) = default;
 
-  // Use default move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   ImpulseRiccatiFactorizer(ImpulseRiccatiFactorizer&&) noexcept = default;
 
-  // Use default move assign operator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   ImpulseRiccatiFactorizer& operator=(ImpulseRiccatiFactorizer&&) noexcept = default;
 
   void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next, 
@@ -47,7 +64,6 @@ public:
                                      const ImpulseKKTMatrix& kkt_matrix, 
                                      const ImpulseKKTResidual& kkt_residual, 
                                      RiccatiFactorization& riccati_next);
-
 
   template <typename VectorType>
   static void computeStateDirection(

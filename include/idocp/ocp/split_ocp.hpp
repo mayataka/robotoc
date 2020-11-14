@@ -18,7 +18,6 @@
 #include "idocp/ocp/state_equation.hpp"
 // #include "idocp/ocp/robot_dynamics.hpp"
 #include "idocp/ocp/contact_dynamics.hpp"
-#include "idocp/ocp/riccati_solution.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/riccati_factorizer.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
