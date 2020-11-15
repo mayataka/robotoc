@@ -9,10 +9,11 @@ namespace idocp {
 
 OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
          const std::shared_ptr<Constraints>& constraints, const double T, 
-         const int N, const int num_proc)
+         const int N, const int max_num_impulse, const int num_proc)
   : split_ocps_(N, SplitOCP(robot, cost, constraints), 
-                N, SplitImpulseOCP(robot, cost->getImpulseCostFunction(), 
-                                   constraints->getImpulseConstraints())),
+                max_num_impulse, SplitImpulseOCP(robot, 
+                                                 cost->getImpulseCostFunction(), 
+                                                 constraints->getImpulseConstraints())),
     terminal_ocp_(robot, cost, constraints),
     robots_(num_proc, robot),
     filter_(),
@@ -22,11 +23,13 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     min_step_size_(0.05),
     N_(N),
     num_proc_(num_proc),
-    s_(N+1, SplitSolution(robot), N, ImpulseSplitSolution(robot)),
-    d_(N+1, SplitDirection(robot), N, ImpulseSplitDirection(robot)),
-    riccati_(N+1, RiccatiFactorization(robot), N, RiccatiFactorization(robot)),
-    constraint_factorization_(N, StateConstraintRiccatiFactorization(robot, N, N)),
-    constraint_factorizer_(robot, N, num_proc),
+    s_(N+1, SplitSolution(robot), max_num_impulse, ImpulseSplitSolution(robot)),
+    d_(N+1, SplitDirection(robot), max_num_impulse, ImpulseSplitDirection(robot)),
+    riccati_(N+1, RiccatiFactorization(robot), max_num_impulse, RiccatiFactorization(robot)),
+    constraint_factorization_(max_num_impulse, 
+                              StateConstraintRiccatiFactorization(robot, N, 
+                                                                  max_num_impulse)),
+    constraint_factorizer_(robot, max_num_impulse, num_proc),
     primal_step_sizes_(Eigen::VectorXd::Zero(N)),
     dual_step_sizes_(Eigen::VectorXd::Zero(N)),
     costs_(Eigen::VectorXd::Zero(N+1)), 
@@ -76,10 +79,10 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
 
   const int N_impulse = contact_sequence_.totalNumImpulseStages();
   const int N_lift = contact_sequence_.totalNumLiftStages();
-  const int N_all = N_ + N_impulse + N_lift;
+  const int N_all = N_ + 1 + N_impulse + N_lift;
 
   #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N_; ++i) {
+  for (int i=0; i<N_all; ++i) {
     if (i == 0) {
       const int robot_id = omp_get_thread_num();
       split_ocps_[i].linearizeOCP(robots_[robot_id], 

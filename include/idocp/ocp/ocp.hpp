@@ -46,7 +46,7 @@ public:
   ///
   OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
       const std::shared_ptr<Constraints>& constraints, const double T, 
-      const int N, const int num_proc=1);
+      const int N, const int max_num_impulse=0, const int num_proc=1);
 
   ///
   /// @brief Default constructor. 

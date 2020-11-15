@@ -11,7 +11,7 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/riccati_solution.hpp"
+#include "idocp/ocp/riccati_factorizer.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
@@ -157,7 +157,7 @@ void SplitOCPTest::testLinearizeOCPAndRiccatiRecursion(
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, 10, dtau, s);
-  RiccatiSolution riccati_next(robot), riccati(robot), riccati_ref(robot);
+  RiccatiFactorization riccati_next(robot), riccati(robot), riccati_ref(robot);
   SplitDirection d(robot), d_ref(robot), d_next(robot), d_next_ref(robot);
   d.setContactStatus(contact_status);
   d_ref.setContactStatus(contact_status);
@@ -169,7 +169,7 @@ void SplitOCPTest::testLinearizeOCPAndRiccatiRecursion(
   riccati_next.Pvq = riccati_next.Pqv.transpose();
   riccati_next.Pvv = P.bottomRightCorner(dimv, dimv);
   ocp.linearizeOCP(robot, contact_status, t, dtau, s_prev.q, s, s_next);
-  ocp.backwardRiccatiRecursion(dtau, riccati_next, riccati);
+  ocp.backwardRiccatiRecursion(riccati_next, dtau, riccati);
   KKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
   KKTResidual kkt_residual(robot);
@@ -188,8 +188,7 @@ void SplitOCPTest::testLinearizeOCPAndRiccatiRecursion(
   cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_matrix, kkt_residual);
   cd.condenseContactDynamics(robot, contact_status, dtau, kkt_matrix, kkt_residual);
   RiccatiFactorizer riccati_factorizer(robot);
-  RiccatiGain riccati_gain(robot);
-  riccati_factorizer.backwardRiccatiRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, riccati_gain, riccati_ref);
+  riccati_factorizer.backwardRiccatiRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, riccati_ref);
   EXPECT_TRUE(riccati.Pqq.isApprox(riccati_ref.Pqq));
   EXPECT_TRUE(riccati.Pqv.isApprox(riccati_ref.Pqv));
   EXPECT_TRUE(riccati.Pvq.isApprox(riccati_ref.Pvq));
@@ -197,17 +196,29 @@ void SplitOCPTest::testLinearizeOCPAndRiccatiRecursion(
   EXPECT_TRUE(riccati.sq.isApprox(riccati_ref.sq));
   EXPECT_TRUE(riccati.sv.isApprox(riccati_ref.sv));
   d.dx().setRandom();
+  riccati.Pi.setRandom();
+  riccati.pi.setRandom();
+  riccati.N.setRandom();
+  riccati.n.setRandom();
+  RiccatiFactorization riccati_next_ref = riccati_next;
+  ocp.forwardRiccatiRecursionParallel(true);
+  ocp.forwardRiccatiRecursionSerial(riccati, dtau, riccati_next, true);
+  riccati_factorizer.forwardRiccatiRecursionParallel(kkt_matrix, kkt_residual, true);
+  riccati_factorizer.forwardRiccatiRecursionSerial(riccati, kkt_matrix, kkt_residual, 
+                                                   dtau, riccati_next_ref, true);
+  EXPECT_TRUE(riccati_next.Pi.isApprox(riccati_next_ref.Pi));
+  EXPECT_TRUE(riccati_next.pi.isApprox(riccati_next_ref.pi));
+  EXPECT_TRUE(riccati_next.N.isApprox(riccati_next_ref.N));
+  const Eigen::VectorXd dx0 = Eigen::VectorXd::Random(2*robot.dimv());
   d_ref = d;
-  ocp.forwardRiccatiRecursion(dtau, d, d_next);
-  riccati_factorizer.computeControlInputDirection(riccati_gain, d_ref);
-  riccati_factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, d_ref, dtau, d_next_ref);
-  EXPECT_TRUE(d_next.isApprox(d_next_ref));
-  ocp.computeCondensedPrimalDirection(robot, dtau, riccati_ref, s, d);
-  riccati_factorizer.computeCostateDirection(riccati, d_ref);
+  ocp.computePrimalDirection(robot, dtau, riccati, s, dx0, d, true);
+  riccati_factorizer.computeStateDirection(riccati, dx0, d_ref, true);
+  riccati_factorizer.computeCostateDirection(riccati, d_ref, true);
+  riccati_factorizer.computeControlInputDirection(riccati, d_ref, true);
   cd.computeCondensedPrimalDirection(robot, d_ref);
   constraints->computeSlackAndDualDirection(robot, constraints_data, dtau, s, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
-  ocp.computeCondensedDualDirection(robot, dtau, d_next, d);
+  ocp.computeDualDirection(robot, dtau, d_next, d);
   cd.computeCondensedDualDirection(robot, dtau, kkt_matrix, kkt_residual, 
                                    d_next_ref.dgmm(), d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));

@@ -73,19 +73,22 @@ void SplitOCP::backwardRiccatiRecursion(
 }
 
 
-void SplitOCP::forwardRiccatiRecursionParallel() {
+void SplitOCP::forwardRiccatiRecursionParallel(
+    const bool exist_state_constraint) {
   riccati_factorizer_.forwardRiccatiRecursionParallel(kkt_matrix_, 
-                                                      kkt_residual_);
+                                                      kkt_residual_,
+                                                      exist_state_constraint);
 }
 
 
 void SplitOCP::forwardRiccatiRecursionSerial(
     const RiccatiFactorization& riccati, const double dtau,
-    RiccatiFactorization& riccati_next) {
+    RiccatiFactorization& riccati_next, const bool exist_state_constraint) {
   assert(dtau > 0);
   riccati_factorizer_.forwardRiccatiRecursionSerial(riccati, kkt_matrix_, 
                                                     kkt_residual_, dtau,
-                                                    riccati_next);
+                                                    riccati_next,
+                                                    exist_state_constraint);
 }
 
 

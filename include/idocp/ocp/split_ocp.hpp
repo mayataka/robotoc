@@ -125,7 +125,7 @@ public:
   /// @param[in] d Split direction of this stage.
   /// @param[out] d_next Split direction of the next stage.
   /// 
-  void forwardRiccatiRecursionParallel();
+  void forwardRiccatiRecursionParallel(const bool exist_state_constraint=false);
 
   ///
   /// @brief Computes the Newton direction of the state of this stage from the 
@@ -136,7 +136,8 @@ public:
   /// 
   void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati,
                                      const double dtau,
-                                     RiccatiFactorization& riccati_next);
+                                     RiccatiFactorization& riccati_next,
+                                     const bool exist_state_constraint=false);
 
   template <typename MatrixType1, typename MatrixType2>
   void backwardStateConstraintFactorization(

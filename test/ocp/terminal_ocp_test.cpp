@@ -10,7 +10,7 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/riccati_solution.hpp"
+#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
@@ -47,11 +47,11 @@ protected:
       Robot& robot, const std::shared_ptr<CostFunction>& cost, 
       const std::shared_ptr<Constraints>& constraints);
 
-  static void testComputeCondensedPrimalDirection(
+  static void testComputePrimalDirection(
       const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
       const std::shared_ptr<Constraints>& constraints);
 
-  static void testComputeCondensedDualDirection(
+  static void testComputeDualDirection(
       const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
       const std::shared_ptr<Constraints>& constraints);
 
@@ -130,7 +130,7 @@ void TerminalOCPTest::testLinearizeOCPAndBackwardRiccatiRecursion(
   const SplitSolution s = SplitSolution::Random(robot);
   TerminalOCP ocp(robot, cost, constraints);
   ocp.linearizeOCP(robot, t, s);
-  RiccatiSolution riccati(robot);
+  RiccatiFactorization riccati(robot);
   robot.updateKinematics(s.q, s.v);
   ocp.backwardRiccatiRecursion(riccati);
   KKTResidual kkt_residual(robot);  
@@ -169,35 +169,44 @@ void TerminalOCPTest::testTerminalCost(
 }
 
 
-void TerminalOCPTest::testComputeCondensedPrimalDirection(
+void TerminalOCPTest::testComputePrimalDirection(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints) {
   const SplitSolution s = SplitSolution::Random(robot);
   TerminalOCP ocp(robot, cost, constraints);
-  RiccatiSolution riccati(robot);
+  RiccatiFactorization riccati(robot);
   riccati.Pqq.setRandom();
   riccati.Pqv.setRandom();
-  riccati.Pvq.setRandom();
+  riccati.Pvq = riccati.Pqv.transpose();
   riccati.Pvv.setRandom();
   riccati.sq.setRandom();
   riccati.sv.setRandom();
+  riccati.Pi.setRandom();
+  riccati.pi.setRandom();
+  riccati.n.setRandom();
   SplitDirection d(robot);
   d.dq().setRandom();
   d.dv().setRandom();
   SplitDirection d_ref = d;
-  ocp.computeCondensedPrimalDirection(riccati, d);
+  ocp.computePrimalDirection(riccati, d);
+  d_ref.dlmd() = riccati.Pqq * d_ref.dq() + riccati.Pqv * d_ref.dv() - riccati.sq;
+  d_ref.dgmm() = riccati.Pvq * d_ref.dq() + riccati.Pvv * d_ref.dv() - riccati.sv;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  const Eigen::VectorXd dx0 = Eigen::VectorXd::Random(2*robot.dimv());
+  ocp.computePrimalDirection(riccati, dx0, d);
+  d_ref.dx() = riccati.Pi * dx0 + riccati.pi;
   d_ref.dlmd() = riccati.Pqq * d_ref.dq() + riccati.Pqv * d_ref.dv() - riccati.sq;
   d_ref.dgmm() = riccati.Pvq * d_ref.dq() + riccati.Pvv * d_ref.dv() - riccati.sv;
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 
 
-void TerminalOCPTest::testComputeCondensedDualDirection(
+void TerminalOCPTest::testComputeDualDirection(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints) {
   TerminalOCP ocp(robot, cost, constraints);
   const SplitDirection d = SplitDirection::Random(robot);
-  ocp.computeCondensedDualDirection(d);
+  ocp.computeDualDirection(d);
 }
 
 
@@ -254,8 +263,8 @@ TEST_F(TerminalOCPTest, fixedBase) {
   const auto constraints = createConstraints(robot);
   testLinearizeOCPAndBackwardRiccatiRecursion(robot, cost, constraints);
   testTerminalCost(robot, cost, constraints);
-  testComputeCondensedPrimalDirection(robot, cost, constraints);
-  testComputeCondensedDualDirection(robot, cost, constraints);
+  testComputePrimalDirection(robot, cost, constraints);
+  testComputeDualDirection(robot, cost, constraints);
   testUpdatePrimal(robot, cost, constraints);
   testUpdateDual(robot, cost, constraints);
   testComputeKKTResidual(robot, cost, constraints);
@@ -268,8 +277,8 @@ TEST_F(TerminalOCPTest, floatingBase) {
   const auto constraints = createConstraints(robot);
   testLinearizeOCPAndBackwardRiccatiRecursion(robot, cost, constraints);
   testTerminalCost(robot, cost, constraints);
-  testComputeCondensedPrimalDirection(robot, cost, constraints);
-  testComputeCondensedDualDirection(robot, cost, constraints);
+  testComputePrimalDirection(robot, cost, constraints);
+  testComputeDualDirection(robot, cost, constraints);
   testUpdatePrimal(robot, cost, constraints);
   testUpdateDual(robot, cost, constraints);
   testComputeKKTResidual(robot, cost, constraints);

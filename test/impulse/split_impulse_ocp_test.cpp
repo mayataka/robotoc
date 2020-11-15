@@ -13,7 +13,7 @@
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
-#include "idocp/ocp/riccati_solution.hpp"
+#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_impulse_cost.hpp"
@@ -131,7 +131,7 @@ void SplitImpulseOCPTest::testLinearizeOCPAndRiccatiRecursion(
   SplitImpulseOCP ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, s);
-  RiccatiSolution riccati_next(robot), riccati(robot), riccati_ref(robot);
+  RiccatiFactorization riccati_next(robot), riccati(robot), riccati_ref(robot);
   ImpulseSplitDirection d(robot), d_ref(robot);
   SplitDirection d_next(robot), d_next_ref(robot);
   d.setImpulseStatus(impulse_status);
@@ -171,16 +171,38 @@ void SplitImpulseOCPTest::testLinearizeOCPAndRiccatiRecursion(
   EXPECT_TRUE(riccati.sq.isApprox(riccati_ref.sq));
   EXPECT_TRUE(riccati.sv.isApprox(riccati_ref.sv));
   d.dx().setRandom();
+  riccati.Pi.setRandom();
+  riccati.pi.setRandom();
+  riccati.N.setRandom();
+  riccati.n.setRandom();
+  RiccatiFactorization riccati_next_ref = riccati_next;
+  ocp.forwardRiccatiRecursionSerial(riccati, riccati_next);
+  riccati_factorizer.forwardRiccatiRecursionSerial(riccati, kkt_matrix, kkt_residual, riccati_next_ref);
+  EXPECT_TRUE(riccati_next.Pi.isApprox(riccati_next_ref.Pi));
+  EXPECT_TRUE(riccati_next.pi.isApprox(riccati_next_ref.pi));
+  EXPECT_TRUE(riccati_next.N.isApprox(riccati_next_ref.N));
+  Eigen::MatrixXd Eq = Eigen::MatrixXd::Zero(impulse_status.dimp(), robot.dimv());
+  Eigen::VectorXd e = Eigen::VectorXd::Zero(impulse_status.dimp());
+  ocp.getStateConstraintFactorization(Eq, e);
+  EXPECT_TRUE(Eq.isApprox(kkt_matrix.Pq()));
+  EXPECT_TRUE(e.isApprox(kkt_residual.P()));
+  const Eigen::MatrixXd T_next = Eigen::MatrixXd::Random(2*robot.dimv(), impulse_status.dimp());
+  Eigen::MatrixXd T = Eigen::MatrixXd::Zero(2*robot.dimv(), impulse_status.dimp());
+  ocp.backwardStateConstraintFactorization(T_next, T);
+  if (!robot.has_floating_base()) {
+    kkt_matrix.Fqq().setIdentity();
+  }
+  const Eigen::MatrixXd T_ref = kkt_matrix.Fxx().transpose() * T_next;
+  EXPECT_TRUE(T.isApprox(T_ref));
+  const Eigen::VectorXd dx0 = Eigen::VectorXd::Random(2*robot.dimv());
   d_ref = d;
-  ocp.forwardRiccatiRecursion(d, d_next);
-  riccati_factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, d_ref, d_next_ref);
-  EXPECT_TRUE(d_next.isApprox(d_next_ref));
-  ocp.computeCondensedPrimalDirection(robot, riccati_ref, s, d);
+  ocp.computePrimalDirection(robot, riccati, s, dx0, d);
+  riccati_factorizer.computeStateDirection(riccati, dx0, d_ref);
   riccati_factorizer.computeCostateDirection(riccati, d_ref);
   id.computeCondensedPrimalDirection(robot, d_ref);
   constraints->computeSlackAndDualDirection(robot, constraints_data, s, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
-  ocp.computeCondensedDualDirection(robot, d_next, d);
+  ocp.computeDualDirection(robot, d_next, d);
   id.computeCondensedDualDirection(robot, kkt_matrix, kkt_residual, 
                                    d_next_ref.dgmm(), d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
