@@ -75,6 +75,14 @@ void TerminalOCP::backwardRiccatiRecursion(
 }
 
 
+void TerminalOCP::computePrimalDirection(const RiccatiFactorization& riccati,
+                                         SplitDirection& d) const {
+  static constexpr bool exist_state_constraint = false;
+  RiccatiFactorizer::computeCostateDirection(riccati, d, 
+                                             exist_state_constraint);
+}
+
+
 void TerminalOCP::computeDualDirection(const SplitDirection& d) {
 }
 

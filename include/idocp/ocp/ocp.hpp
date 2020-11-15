@@ -12,7 +12,7 @@
 #include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/constraints/impulse_constraints.hpp"
 #include "idocp/ocp/split_ocp.hpp"
-// #include "idocp/impulse/split_impulse_ocp.hpp"
+#include "idocp/impulse/split_impulse_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
@@ -49,22 +49,22 @@ public:
       const int N, const int num_proc=1);
 
   // ///
-  // /// @brief Construct optimal control problem solver.
-  // /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  // /// @param[in] cost Shared ptr to the cost function.
-  // /// @param[in] constraints Shared ptr to the constraints.
-  // /// @param[in] impulse_cost Shared ptr to the impulse cost function.
-  // /// @param[in] impulse_constraints Shared ptr to the impulse constraints.
-  // /// @param[in] T Length of the horizon. Must be positive.
-  // /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  // /// @param[in] num_proc Number of the threads in solving the optimal control 
-  // /// problem. Must be positive. Default is 1.
-  // ///
-  // OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-  //     const std::shared_ptr<Constraints>& constraints, 
-  //     const std::shared_ptr<ImpulseCostFunction>& impulse_cost,
-  //     const std::shared_ptr<ImpulseConstraints>& impulse_constraints,
-  //     const double T, const int N, const int num_proc=1);
+  /// @brief Construct optimal control problem solver.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] cost Shared ptr to the cost function.
+  /// @param[in] constraints Shared ptr to the constraints.
+  /// @param[in] impulse_cost Shared ptr to the impulse cost function.
+  /// @param[in] impulse_constraints Shared ptr to the impulse constraints.
+  /// @param[in] T Length of the horizon. Must be positive.
+  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  /// @param[in] num_proc Number of the threads in solving the optimal control 
+  /// problem. Must be positive. Default is 1.
+  ///
+  OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+      const std::shared_ptr<Constraints>& constraints, 
+      const std::shared_ptr<ImpulseCostFunction>& impulse_cost,
+      const std::shared_ptr<ImpulseConstraints>& impulse_constraints,
+      const double T, const int N, const int num_proc=1);
 
   ///
   /// @brief Default constructor. 
@@ -213,8 +213,7 @@ public:
 
 private:
 
-  // hybrid_container<SplitOCP, SplitImpulseOCP> split_ocps_;
-  hybrid_container<SplitOCP, SplitOCP> split_ocps_;
+  hybrid_container<SplitOCP, SplitImpulseOCP> split_ocps_;
   TerminalOCP terminal_ocp_;
   hybrid_container<SplitSolution, ImpulseSplitSolution> s_;
   hybrid_container<SplitDirection, ImpulseSplitDirection> d_;

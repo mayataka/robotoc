@@ -71,38 +71,24 @@ void SplitImpulseOCP::linearizeOCP(Robot& robot,
                                             kkt_matrix_, kkt_residual_);
 }
 
-void SplitImpulseOCP::getStateConstraint(
-    StateConstraintRiccatiFactorization& state_constraint_factorization) const {
-  state_constraint_factorization.E() = 
-  state_constraint_factorization.e() = 
-  state_constraint_factorization.T_impulse().head(dimv_) = 
-}
 
 void SplitImpulseOCP::backwardRiccatiRecursion(
-    const RiccatiSolution& riccati_next, RiccatiSolution& riccati) {
+    const RiccatiFactorization& riccati_next, RiccatiFactorization& riccati) {
   riccati_factorizer_.backwardRiccatiRecursion(riccati_next, kkt_matrix_, 
                                                kkt_residual_, riccati);
 }
 
 
-void SplitImpulseOCP::forwardRiccatiRecursion(ImpulseSplitDirection& d,   
-                                              SplitDirection& d_next) {
-  riccati_factorizer_.forwardRiccatiRecursion(kkt_matrix_, kkt_residual_, d,
-                                              d_next);
+void SplitImpulseOCP::forwardRiccatiRecursionSerial(
+    const RiccatiFactorization& riccati, RiccatiFactorization& riccati_next) {
+  riccati_factorizer_.forwardRiccatiRecursionSerial(riccati, kkt_matrix_, 
+                                                    kkt_residual_, riccati_next);
 }
 
 
-void SplitImpulseOCP::computeCondensedPrimalDirection(
-    Robot& robot, const RiccatiSolution& riccati, const ImpulseSplitSolution& s, 
-    ImpulseSplitDirection& d) {
-  riccati_factorizer_.computeCostateDirection(riccati, d);
-  impulse_dynamics_.computeCondensedPrimalDirection(robot, d);
-  constraints_->computeSlackAndDualDirection(robot, constraints_data_, s, d);
-}
-
-
-void SplitImpulseOCP::computeCondensedDualDirection(
-    Robot& robot, const SplitDirection& d_next, ImpulseSplitDirection& d) {
+void SplitImpulseOCP::computeDualDirection(Robot& robot, 
+                                           const SplitDirection& d_next, 
+                                           ImpulseSplitDirection& d) {
   impulse_dynamics_.computeCondensedDualDirection(robot, kkt_matrix_,
                                                   kkt_residual_, 
                                                   d_next.dgmm(), d);

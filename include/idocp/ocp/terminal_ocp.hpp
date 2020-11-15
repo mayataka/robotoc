@@ -108,6 +108,9 @@ public:
                               const Eigen::MatrixBase<VectorType>& dx0, 
                               SplitDirection& d) const;
 
+  void computePrimalDirection(const RiccatiFactorization& riccati,
+                              SplitDirection& d) const;
+
   ///
   /// @brief Computes the Newton direction of the condensed dual variables of 
   /// this stage.

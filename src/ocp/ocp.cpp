@@ -39,37 +39,39 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
 }
 
 
-// OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-//          const std::shared_ptr<Constraints>& constraints, 
-//          const std::shared_ptr<ImpulseCostFunction>& impulse_cost,
-//          const std::shared_ptr<ImpulseConstraints>& impulse_constraints,
-//          const double T, const int N, const int num_proc)
-//   : split_ocps_(N, SplitOCP(robot, cost, constraints), 
-//                 N, SplitImpulseOCP(robot, impulse_cost, impulse_constraints)),
-//     terminal_ocp_(robot, cost, constraints),
-//     robots_(num_proc, robot),
-//     filter_(),
-//     T_(T),
-//     dtau_(T/N),
-//     step_size_reduction_rate_(0.75),
-//     min_step_size_(0.05),
-//     N_(N),
-//     num_proc_(num_proc),
-//     s_(N+1, SplitSolution(robot), N, ImpulseSplitSolution(robot)),
-//     d_(N+1, SplitDirection(robot), N, ImpulseSplitDirection(robot)),
-//     riccati_(N+1, RiccatiFactorization(robot), N, RiccatiFactorization(robot)),
-//     primal_step_sizes_(Eigen::VectorXd::Zero(N+N)),
-//     dual_step_sizes_(Eigen::VectorXd::Zero(N+N)),
-//     contact_sequence_(robot, T, N) {
-//   assert(T > 0);
-//   assert(N > 0);
-//   assert(num_proc > 0);
-//   #pragma omp parallel for num_threads(num_proc_)
-//   for (int i=0; i<=N; ++i) {
-//     robot.normalizeConfiguration(s_[i].q);
-//   }
-//   initConstraints();
-// }
+OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+         const std::shared_ptr<Constraints>& constraints, 
+         const std::shared_ptr<ImpulseCostFunction>& impulse_cost,
+         const std::shared_ptr<ImpulseConstraints>& impulse_constraints,
+         const double T, const int N, const int num_proc)
+  : split_ocps_(N, SplitOCP(robot, cost, constraints), 
+                N, SplitImpulseOCP(robot, impulse_cost, impulse_constraints)),
+    terminal_ocp_(robot, cost, constraints),
+    robots_(num_proc, robot),
+    filter_(),
+    T_(T),
+    dtau_(T/N),
+    step_size_reduction_rate_(0.75),
+    min_step_size_(0.05),
+    N_(N),
+    num_proc_(num_proc),
+    s_(N+1, SplitSolution(robot), N, ImpulseSplitSolution(robot)),
+    d_(N+1, SplitDirection(robot), N, ImpulseSplitDirection(robot)),
+    riccati_(N+1, RiccatiFactorization(robot), N, RiccatiFactorization(robot)),
+    primal_step_sizes_(Eigen::VectorXd::Zero(N+N)),
+    dual_step_sizes_(Eigen::VectorXd::Zero(N+N)),
+    costs_(Eigen::VectorXd::Zero(N+1)), 
+    violations_(Eigen::VectorXd::Zero(N)),
+    contact_sequence_(robot, T, N) {
+  assert(T > 0);
+  assert(N > 0);
+  assert(num_proc > 0);
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<=N; ++i) {
+    robot.normalizeConfiguration(s_[i].q);
+  }
+  initConstraints();
+}
 
 
 OCP::OCP() 
@@ -127,6 +129,7 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   }
   robots_[0].subtractConfiguration(q, s_[0].q, d_[0].dq());
   d_[0].dv() = v - s_[0].v;
+
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
     split_ocps_[i].forwardRiccatiRecursionParallel();
@@ -135,7 +138,7 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(riccati_[0].pi.isZero());
   assert(riccati_[0].N.isZero());
   for (int i=0; i<N_; ++i) {
-    split_ocps_[i].forwardRiccatiRecursionSerial(riccati_[i], riccati_[i+1]);
+    split_ocps_[i].forwardRiccatiRecursionSerial(riccati_[i], dtau_, riccati_[i+1]);
   }
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<=N_; ++i) {
@@ -157,6 +160,7 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
       terminal_ocp_.computePrimalDirection(riccati_[N_], d_[0].dx(), d_[N_]);
     }
   }
+
   const double primal_step_size = primal_step_sizes_.minCoeff();
   const double dual_step_size = dual_step_sizes_.minCoeff();
   #pragma omp parallel for num_threads(num_proc_)

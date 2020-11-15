@@ -115,6 +115,9 @@ public:
                                 const double dtau, 
                                 RiccatiFactorization& riccati);
 
+  void backwardRiccatiRecursionInitial(const double dtau,
+                                       RiccatiFactorization& riccati);
+
   ///
   /// @brief Computes the Newton direction of the state of this stage from the 
   /// one of the previous stage.
@@ -132,13 +135,17 @@ public:
   /// @param[out] d_next Split direction of the next stage.
   /// 
   void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati,
+                                     const double dtau,
                                      RiccatiFactorization& riccati_next);
-
 
   template <typename MatrixType1, typename MatrixType2>
   void backwardStateConstraintFactorization(
       const Eigen::MatrixBase<MatrixType1>& T_next,
       const Eigen::MatrixBase<MatrixType2>& T) const;
+
+  void forwardRiccatiRecursion(SplitDirection& d, const double dtau, 
+                               SplitDirection& d_next);
+
 
   ///
   /// @brief Computes the Newton direction of the condensed variables of this 

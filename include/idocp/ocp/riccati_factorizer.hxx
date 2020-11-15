@@ -14,9 +14,9 @@ inline RiccatiFactorizer::RiccatiFactorizer(const Robot& robot)
     llt_(robot.dimu()),
     lqr_policy_(robot),
     backward_recursion_(robot),
+    forward_recursion_(robot),
     GinvBt_(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())),
-    BGinvBt_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    NApBKt_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())) {
+    BGinvBt_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())) {
 }
 
 
@@ -27,9 +27,9 @@ inline RiccatiFactorizer::RiccatiFactorizer()
     llt_(),
     lqr_policy_(),
     backward_recursion_(),
+    forward_recursion_(),
     GinvBt_(), 
-    BGinvBt_(), 
-    NApBKt_() {
+    BGinvBt_() {
 }
 
 
@@ -77,14 +77,16 @@ inline void RiccatiFactorizer::forwardRiccatiRecursionSerialInitial(
 
 inline void RiccatiFactorizer::forwardRiccatiRecursionSerial(
     const RiccatiFactorization& riccati, const KKTMatrix& kkt_matrix, 
-    const KKTResidual& kkt_residual, RiccatiFactorization& riccati_next,
+    const KKTResidual& kkt_residual, const double dtau,
+    RiccatiFactorization& riccati_next, 
     const bool exist_state_constraint) {
-  riccati_next.Pi.noalias() = kkt_matrix.Fxx() * riccati.Pi;
-  riccati_next.pi = kkt_residual.Fx();
-  riccati_next.pi.noalias() += kkt_matrix.Fxx() * riccati.pi;
+  assert(dtau > 0);
+  forward_recursion_.factorizeStateTransition(riccati, kkt_matrix, kkt_residual, 
+                                              dtau, riccati_next);
   if (exist_state_constraint) {
-    NApBKt_.noalias() = riccati.N * kkt_matrix.Fxx().transpose();
-    riccati_next.N.noalias() = kkt_matrix.Fxx() * NApBKt_;
+    forward_recursion_.factorizeStateConstraintFactorization(riccati, 
+                                                             kkt_matrix, dtau, 
+                                                             riccati_next);
     riccati_next.N.bottomRightCorner(dimv_, dimv_).noalias() += BGinvBt_;
   }
 }
@@ -101,24 +103,25 @@ void RiccatiFactorizer::backwardStateConstraintFactorization(
 }
 
 
-// template <typename SplitDirectionType>
-// inline void RiccatiFactorizer::forwardRiccatiRecursion(
-//     const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
-//     const SplitDirection& d, const double dtau, 
-//     SplitDirectionType& d_next) const {
-//   assert(dtau > 0);
-//   if (has_floating_base_) {
-//     d_next.dq().noalias() = kkt_matrix.Fqq() * d.dq();
-//     d_next.dq().noalias() += dtau * d.dv() + kkt_residual.Fq();
-//   }
-//   else {
-//     d_next.dq().noalias() = d.dq() + dtau * d.dv() + kkt_residual.Fq();
-//   }
-//   d_next.dv().noalias() = kkt_matrix.Fvq() * d.dq();
-//   d_next.dv().noalias() += kkt_matrix.Fvv() * d.dv();
-//   d_next.dv().noalias() += kkt_matrix.Fvu() * d.du();
-//   d_next.dv().noalias() += kkt_residual.Fv();
-// }
+inline void RiccatiFactorizer::forwardRiccatiRecursion(
+    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+    SplitDirection& d, const double dtau, 
+    SplitDirection& d_next) const {
+  assert(dtau > 0);
+  d.du().noalias() = lqr_policy_.K * d.dx();
+  d.du().noalias() += lqr_policy_.k;
+  if (has_floating_base_) {
+    d_next.dq().noalias() = kkt_matrix.Fqq() * d.dq();
+    d_next.dq().noalias() += dtau * d.dv() + kkt_residual.Fq();
+  }
+  else {
+    d_next.dq().noalias() = d.dq() + dtau * d.dv() + kkt_residual.Fq();
+  }
+  d_next.dv().noalias() = kkt_matrix.Fvq() * d.dq();
+  d_next.dv().noalias() += kkt_matrix.Fvv() * d.dv();
+  // d_next.dv().noalias() += kkt_matrix.Fvu() * d.du();
+  d_next.dv().noalias() += kkt_residual.Fv();
+}
 
 
 template <typename VectorType>

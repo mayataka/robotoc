@@ -65,6 +65,15 @@ public:
                                      const ImpulseKKTResidual& kkt_residual, 
                                      RiccatiFactorization& riccati_next);
 
+  ///
+  /// @brief Factorization of the state constraint. 
+  ///
+  template <typename MatrixType1, typename MatrixType2>
+  static void backwardStateConstraintFactorization(
+      const ImpulseKKTMatrix& kkt_matrix, 
+      const Eigen::MatrixBase<MatrixType1>& T_next,  
+      const Eigen::MatrixBase<MatrixType2>& T);
+
   template <typename VectorType>
   static void computeStateDirection(
       const RiccatiFactorization& riccati, 

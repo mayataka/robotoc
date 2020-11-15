@@ -37,6 +37,7 @@ protected:
   void testBackwardRecursion(const Robot& robot) const;
   void testForwardRecursionWithoutStateConstraint(const Robot& robot) const;
   void testForwardRecursionWithStateConstraint(const Robot& robot) const;
+  void testRiccatiRecursion(const Robot& robot) const;
 
   double dtau;
   std::string fixed_base_urdf, floating_base_urdf;
@@ -179,9 +180,9 @@ void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot&
   riccati.Pi.setRandom();
   riccati.pi.setRandom();
   riccati.N.setRandom();
-  factorizer.forwardRiccatiRecursionSerial(riccati, kkt_matrix, kkt_residual, riccati_next, true);
+  factorizer.forwardRiccatiRecursionSerial(riccati, kkt_matrix, kkt_residual, dtau, riccati_next, true);
   riccati_next_ref.Pi = kkt_matrix_ref.Fxx() * riccati.Pi;
-  riccati_next_ref.pi = kkt_residual.Fx() + kkt_matrix_ref.Fxx() * riccati.pi;
+  riccati_next_ref.pi = kkt_residual_ref.Fx() + kkt_matrix_ref.Fxx() * riccati.pi;
   riccati_next_ref.N = BGinvBt + kkt_matrix_ref.Fxx() * riccati.N * kkt_matrix_ref.Fxx().transpose();
   EXPECT_TRUE(riccati_next.Pi.isApprox(riccati_next_ref.Pi));
   EXPECT_TRUE(riccati_next.pi.isApprox(riccati_next_ref.pi));
@@ -209,6 +210,11 @@ void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot&
   factorizer.computeControlInputDirection(riccati, d, false);
   d_ref.du() = lqr_policy_ref.K * d.dx() + lqr_policy_ref.k;
   EXPECT_TRUE(d.isApprox(d_ref));
+}
+
+
+void RiccatiFactorizerTest::testRiccatiRecursion(const Robot& robot) const {
+
 }
 
 

@@ -11,6 +11,7 @@
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/lqr_state_feedback_policy.hpp"
 #include "idocp/ocp/backward_riccati_recursion_factorizer.hpp"
+#include "idocp/ocp/forward_riccati_recursion_factorizer.hpp"
 
 
 namespace idocp {
@@ -87,6 +88,7 @@ public:
   void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati, 
                                      const KKTMatrix& kkt_matrix, 
                                      const KKTResidual& kkt_residual, 
+                                     const double dtau,
                                      RiccatiFactorization& riccati_next,
                                      const bool exist_state_constraint=false);
 
@@ -98,14 +100,13 @@ public:
       const KKTMatrix& kkt_matrix, const Eigen::MatrixBase<MatrixType1>& T_next,  
       const Eigen::MatrixBase<MatrixType2>& T);
 
-  // ///
-  // /// @brief This is unconstrained version of forward Riccati recursion. 
-  // ///
-  // template <typename SplitDirectionType>
-  // void forwardRiccatiRecursion(const KKTMatrix& kkt_matrix, 
-  //                              const KKTResidual& kkt_residual,
-  //                              const SplitDirection& d, const double dtau,
-  //                              SplitDirectionType& d_next) const;
+  ///
+  /// @brief This is unconstrained version of forward Riccati recursion. 
+  ///
+  void forwardRiccatiRecursion(const KKTMatrix& kkt_matrix, 
+                               const KKTResidual& kkt_residual,
+                               SplitDirection& d, const double dtau,
+                               SplitDirection& d_next) const;
 
   template <typename VectorType>
   static void computeStateDirection(const RiccatiFactorization& riccati, 
@@ -137,7 +138,8 @@ private:
   Eigen::LLT<Eigen::MatrixXd> llt_;
   LQRStateFeedbackPolicy lqr_policy_;
   BackwardRiccatiRecursionFactorizer backward_recursion_;
-  Eigen::MatrixXd GinvBt_, BGinvBt_, NApBKt_;
+  ForwardRiccatiRecursionFactorizer forward_recursion_;
+  Eigen::MatrixXd GinvBt_, BGinvBt_;
 
 };
 

@@ -99,8 +99,15 @@ public:
                     const ImpulseSplitSolution& s, 
                     const SplitSolution& s_next);
 
-  void getStateConstraint(
-      StateConstraintRiccatiFactorization& state_constraint_factorization) const;
+  template <typename MatrixType, typename VectorType>
+  void getStateConstraintFactorization(
+      const Eigen::MatrixBase<MatrixType>& T,
+      const Eigen::MatrixBase<VectorType>& e) const;
+
+  template <typename MatrixType1, typename MatrixType2>
+  void backwardStateConstraintFactorization(
+      const Eigen::MatrixBase<MatrixType1>& T_next,
+      const Eigen::MatrixBase<MatrixType2>& T) const;
 
   ///
   /// @brief Computes the Riccati factorization of this stage from the 
@@ -108,17 +115,18 @@ public:
   /// @param[in] riccati_next Riccati factorization of the next stage.
   /// @param[out] riccati Riccati factorization of this stage.
   /// 
-  void backwardRiccatiRecursion(const RiccatiSolution& riccati_next,
-                                RiccatiSolution& riccati);
+  void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next,
+                                RiccatiFactorization& riccati);
 
   ///
   /// @brief Computes the Newton direction of the state of this stage from the 
   /// one of the previous stage.
+  /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] d Split direction of this stage.
-  /// @param[in] d_next Split direction of the next stage.
+  /// @param[out] d_next Split direction of the next stage.
   /// 
-  void forwardRiccatiRecursion(ImpulseSplitDirection& d,
-                               SplitDirection& d_next);
+  void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati,
+                                     RiccatiFactorization& riccati_next);
 
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
@@ -128,10 +136,11 @@ public:
   /// @param[in] s Split solution of this stage.
   /// @param[in] d Split direction of this stage.
   /// 
-  void computeCondensedPrimalDirection(Robot& robot, 
-                                       const RiccatiSolution& riccati, 
-                                       const ImpulseSplitSolution& s, 
-                                       ImpulseSplitDirection& d);
+  template <typename VectorType>
+  void computePrimalDirection(Robot& robot, const RiccatiFactorization& riccati, 
+                              const ImpulseSplitSolution& s, 
+                              const Eigen::MatrixBase<VectorType>& dx0, 
+                              ImpulseSplitDirection& d);
 
   ///
   /// @brief Computes the Newton direction of the condensed dual variables of 
@@ -140,9 +149,8 @@ public:
   /// @param[in] d_next Split direction of the next stage.
   /// @param[in] d Split direction of this stage.
   /// 
-  void computeCondensedDualDirection(Robot& robot, 
-                                     const SplitDirection& d_next, 
-                                     ImpulseSplitDirection& d);
+  void computeDualDirection(Robot& robot, const SplitDirection& d_next, 
+                            ImpulseSplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -252,5 +260,6 @@ private:
 
 } // namespace idocp
 
+#include "idocp/impulse/split_impulse_ocp.hxx"
 
 #endif // IDOCP_SPLIT_IMPULSE_OCP_HPP_ 

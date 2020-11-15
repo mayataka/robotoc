@@ -73,9 +73,11 @@ void BenchmarkWithContacts() {
        -0.0315, -0.4, 0.8;
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   // ocp_benchmarker.getSolverHandle()->deactivateContacts({0, 1, 2, 3}, 0, N);
-  ocp_benchmarker.getSolverHandle()->activateContacts({0, 1, 2, 3}, 0, N);
+  auto contact_status = robot.createContactStatus();
+  contact_status.activateContacts({0, 1, 2, 3});
+  ocp_benchmarker.getSolverHandle()->setContactStatus(contact_status);
   ocp_benchmarker.testConvergence(t, q, v, 20, false);
-  ocp_benchmarker.testCPUTime(t, q, v, 10000);
+  // ocp_benchmarker.testCPUTime(t, q, v, 10000);
   // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
   //                                                           robot, cost, constraints, T, N, num_proc);
   // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);

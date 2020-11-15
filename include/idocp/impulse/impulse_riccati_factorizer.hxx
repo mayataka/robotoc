@@ -47,24 +47,6 @@ inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursionSerial(
 }
 
 
-// template <typename SplitDirectionType>
-// inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursion(
-//     const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
-//     const ImpulseKKTResidual& kkt_residual, const ImpulseSplitDirection& d, 
-//     SplitDirectionType& d_next) const {
-//   if (has_floating_base_) {
-//     d_next.dq().noalias() = kkt_matrix.Fqq() * d.dq();
-//     d_next.dq().noalias() += kkt_residual.Fq();
-//   }
-//   else {
-//     d_next.dq().noalias() = d.dq() + kkt_residual.Fq();
-//   }
-//   d_next.dv().noalias() = kkt_matrix.Fvq() * d.dq();
-//   d_next.dv().noalias() += kkt_matrix.Fvv() * d.dv();
-//   d_next.dv().noalias() += kkt_residual.Fv();
-// }
-
-
 template <typename VectorType>
 inline void ImpulseRiccatiFactorizer::computeStateDirection(
     const RiccatiFactorization& riccati, 

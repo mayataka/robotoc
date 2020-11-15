@@ -80,9 +80,19 @@ void SplitOCP::forwardRiccatiRecursionParallel() {
 
 
 void SplitOCP::forwardRiccatiRecursionSerial(
-    const RiccatiFactorization& riccati, RiccatiFactorization& riccati_next) {
+    const RiccatiFactorization& riccati, const double dtau,
+    RiccatiFactorization& riccati_next) {
+  assert(dtau > 0);
   riccati_factorizer_.forwardRiccatiRecursionSerial(riccati, kkt_matrix_, 
-                                                    kkt_residual_, riccati_next);
+                                                    kkt_residual_, dtau,
+                                                    riccati_next);
+}
+
+
+void SplitOCP::forwardRiccatiRecursion(SplitDirection& d, const double dtau, 
+                                       SplitDirection& d_next) {
+  riccati_factorizer_.forwardRiccatiRecursion(kkt_matrix_, kkt_residual_, 
+                                              d, dtau, d_next);
 }
 
 

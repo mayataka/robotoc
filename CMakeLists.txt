@@ -70,12 +70,13 @@ add_library(
   src/impulse/impulse_dynamics_forward_euler.cpp
   src/impulse/impulse_backward_riccati_recursion_factorizer.cpp
   src/impulse/impulse_riccati_factorizer.cpp
-  # src/impulse/split_impulse_ocp.cpp
+  src/impulse/split_impulse_ocp.cpp
   # src/impulse/impulse_dynamics_backward_euler.cpp
   # src/impulse/split_impulse_parnmpc.cpp
   src/hybrid/discrete_event.cpp
   src/hybrid/contact_sequence_primitive.cpp
   src/hybrid/contact_sequence.cpp
+  src/hybrid/hybrid_container.cpp
   src/ocp/schur_complement.cpp
   src/ocp/kkt_residual.cpp
   src/ocp/kkt_matrix.cpp
@@ -88,6 +89,8 @@ add_library(
   src/ocp/line_search_filter.cpp
   src/ocp/riccati_factorization.cpp
   src/ocp/backward_riccati_recursion_factorizer.cpp
+  src/ocp/forward_riccati_recursion_factorizer.cpp
+  src/ocp/lqr_state_feedback_policy.cpp
   src/ocp/riccati_factorizer.cpp
   src/ocp/split_ocp.cpp
   src/ocp/terminal_ocp.cpp
