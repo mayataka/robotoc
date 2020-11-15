@@ -14,7 +14,7 @@ namespace idocp {
 
 ///
 /// @class ForwardRiccatiRecursionFactorizer
-/// @brief Factorizer of the backward Riccati recursion for SplitOCP.
+/// @brief Factorizer of the forward Riccati recursion for SplitOCP.
 ///
 class ForwardRiccatiRecursionFactorizer {
 public:
@@ -59,13 +59,13 @@ public:
       ForwardRiccatiRecursionFactorizer&&) noexcept = default;
 
   ///
-  /// @brief Factorize the KKT matrix and KKT residual for the backward Riccati  
-  /// recursion, i.e., factorize matrices F, H, G and vectors lx, lu.
-  /// @param[in] riccati_next Riccati factorization at the next time stage.
-  /// @param[in] dtau Time step between the current time stage and the next 
-  /// time stage.
+  /// @brief Factorize the state transition matrix and vector in terms of the 
+  /// initial state.  
+  /// @param[in] riccati Riccati factorization at the current time stage.
   /// @param[in] kkt_matrix The KKT matrix.
   /// @param[in] kkt_residual The KKT residual.
+  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[out] riccati_next Riccati factorization at the next time stage.
   ///
   void factorizeStateTransition(const RiccatiFactorization& riccati, 
                                 const KKTMatrix& kkt_matrix, 
@@ -73,6 +73,13 @@ public:
                                 const double dtau,
                                 RiccatiFactorization& riccati_next);
 
+  ///
+  /// @brief Factorize the pure-state constraint factorization matrix.  
+  /// @param[in] riccati Riccati factorization at the current time stage.
+  /// @param[in] kkt_matrix The KKT matrix.
+  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[out] riccati_next Riccati factorization at the next time stage.
+  ///
   void factorizeStateConstraintFactorization(
       const RiccatiFactorization& riccati, const KKTMatrix& kkt_matrix, 
       const double dtau, RiccatiFactorization& riccati_next);

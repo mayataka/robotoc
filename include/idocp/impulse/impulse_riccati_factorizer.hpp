@@ -56,27 +56,60 @@ public:
   ///
   ImpulseRiccatiFactorizer& operator=(ImpulseRiccatiFactorizer&&) noexcept = default;
 
+  ///
+  /// @brief Performs the backward Riccati recursion. 
+  /// @param[in] riccati_next Riccati factorization at the next time stage. 
+  /// @param[in, out] kkt_matrix KKT matrix at the current impulse stage. 
+  /// @param[in, out] kkt_residual KKT residual at the current impulse stage. 
+  /// @param[out] riccati Riccati factorization at the current impulse stage. 
+  ///
   void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next, 
                                 ImpulseKKTMatrix& kkt_matrix, 
                                 ImpulseKKTResidual& kkt_residual, 
                                 RiccatiFactorization& riccati);
 
+  ///
+  /// @brief Performs the serial part of the forward Riccati recursion with 
+  /// pure-state equality constraints. 
+  /// @param[in] riccati Riccati factorization at the current impulse stage. 
+  /// @param[in] kkt_matrix KKT matrix at the current impulse stage. 
+  /// @param[in] kkt_residual KKT residual at the current impulse stage. 
+  /// @param[out] riccati_next Riccati factorization at the next time stage. 
+  ///
   void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati, 
                                      const ImpulseKKTMatrix& kkt_matrix, 
                                      const ImpulseKKTResidual& kkt_residual, 
                                      RiccatiFactorization& riccati_next);
 
+  ///
+  /// @brief Performs the backward factorization of matrices related to the 
+  /// pure-state equality constraints. 
+  /// @param[in] kkt_matrix KKT matrix at the current impulse stage. 
+  /// @param[in] T_next A factorization at the next time stage. 
+  /// @param[out] T A factorization at the current impulse stage. 
+  ///
   template <typename MatrixType1, typename MatrixType2>
   void backwardStateConstraintFactorization(
       const ImpulseKKTMatrix& kkt_matrix, 
       const Eigen::MatrixBase<MatrixType1>& T_next,  
       const Eigen::MatrixBase<MatrixType2>& T) const;
 
+  ///
+  /// @brief Computes the Newton direction of the state vector. 
+  /// @param[in] riccati Riccati factorization at the current impulse stage. 
+  /// @param[in] dx0 Direction of the state at the initial time stage. 
+  /// @param[out] d Split direction of the current impulse stage. 
+  ///
   template <typename VectorType>
   static void computeStateDirection(
       const RiccatiFactorization& riccati, 
       const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d);
 
+  ///
+  /// @brief Computes the Newton direction of the costate vector. 
+  /// @param[in] riccati Riccati factorization at the current impulse stage. 
+  /// @param[out] d Split direction of the current impulse stage. 
+  ///
   static void computeCostateDirection(const RiccatiFactorization& riccati, 
                                       ImpulseSplitDirection& d);
 

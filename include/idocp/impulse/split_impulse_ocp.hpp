@@ -101,7 +101,7 @@ public:
 
   template <typename MatrixType, typename VectorType>
   void getStateConstraintFactorization(
-      const Eigen::MatrixBase<MatrixType>& T,
+      const Eigen::MatrixBase<MatrixType>& Eq,
       const Eigen::MatrixBase<VectorType>& e) const;
 
   template <typename MatrixType1, typename MatrixType2>

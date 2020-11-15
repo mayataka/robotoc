@@ -140,7 +140,7 @@ public:
 
   template <typename MatrixType1, typename MatrixType2>
   void backwardStateConstraintFactorization(
-      const Eigen::MatrixBase<MatrixType1>& T_next,
+      const Eigen::MatrixBase<MatrixType1>& T_next, const double dtau,
       const Eigen::MatrixBase<MatrixType2>& T) const;
 
   void forwardRiccatiRecursion(SplitDirection& d, const double dtau, 

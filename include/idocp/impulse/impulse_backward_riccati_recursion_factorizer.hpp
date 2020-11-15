@@ -61,8 +61,8 @@ public:
   /// @brief Factorize the KKT matrix and KKT residual for the backward Riccati  
   /// recursion, i.e., factorize matrices F, and vectors lx.
   /// @param[in] riccati_next Riccati factorization at the next time stage.
-  /// @param[in] kkt_matrix The KKT matrix.
-  /// @param[in] kkt_residual The KKT residual.
+  /// @param[in, out] kkt_matrix The KKT matrix.
+  /// @param[in, out] kkt_residual The KKT residual.
   ///
   void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
                           ImpulseKKTMatrix& kkt_matrix, 
@@ -75,7 +75,7 @@ public:
   /// BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization().
   /// @param[in] kkt_residual The KKT residual factorized by
   /// BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization().
-  /// @param[in] riccati The Riccati factorization at this time stage.
+  /// @param[out] riccati The Riccati factorization at this time stage.
   ///
   void factorizeRiccatiFactorization(const RiccatiFactorization& riccati_next, 
                                      const ImpulseKKTMatrix& kkt_matrix, 

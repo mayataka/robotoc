@@ -25,8 +25,7 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     s_(N+1, SplitSolution(robot), N, ImpulseSplitSolution(robot)),
     d_(N+1, SplitDirection(robot), N, ImpulseSplitDirection(robot)),
     riccati_(N+1, RiccatiFactorization(robot), N, RiccatiFactorization(robot)),
-    constraint_factorization_(N+1, StateConstraintRiccatiFactorization(robot, N, N),
-                              N, StateConstraintRiccatiFactorization(robot, N, N)),
+    constraint_factorization_(N, StateConstraintRiccatiFactorization(robot, N, N)),
     constraint_factorizer_(robot, N, num_proc),
     primal_step_sizes_(Eigen::VectorXd::Zero(N)),
     dual_step_sizes_(Eigen::VectorXd::Zero(N)),
@@ -74,6 +73,11 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
                          const Eigen::VectorXd& v, const bool use_line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
+
+  const int N_impulse = contact_sequence_.totalNumImpulseStages();
+  const int N_lift = contact_sequence_.totalNumLiftStages();
+  const int N_all = N_ + N_impulse + N_lift;
+
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<=N_; ++i) {
     if (i == 0) {
@@ -88,10 +92,40 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
                                   contact_sequence_.contactStatus(i), 
                                   t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
     }
-    else {
+    else if (i == N_) {
       const int robot_id = omp_get_thread_num();
       terminal_ocp_.linearizeOCP(robots_[robot_id], t+T_, s_[N_]);
       terminal_ocp_.backwardRiccatiRecursion(riccati_[N_]);
+    }
+    else if (i < N_ + 1 + N_impulse) {
+      const int robot_id = omp_get_thread_num();
+      const int impulse_idx = i - (N_+1);
+      const int time_stage_before_impulse = contact_sequence_.timeStageBeforeImpulse(impulse_idx);
+      split_ocps_.impulse[i].linearizeOCP(robots_[robot_id], 
+                                          contact_sequence_.impulseStatus(i), 
+                                          t+contact_sequence_.impulseTime(impulse_idx),  
+                                          s_[time_stage_before_impulse].q, 
+                                          s_.impulse[i], 
+                                          s_[time_stage_before_impulse+1]);
+      split_ocps_.impulse[i].getStateConstraintFactorization(
+          constraint_factorization_[impulse_idx].Eq(), 
+          constraint_factorization_[impulse_idx].e());
+      constraint_factorization_[impulse_idx].T_impulse(impulse_idx).topRows(robots_[robot_id].dimv())
+          = constraint_factorization_[impulse_idx].Eq();
+      constraint_factorization_[impulse_idx].T_impulse(impulse_idx).bottomRows(robots_[robot_id].dimv()).setZero();
+    }
+    else {
+      const int robot_id = omp_get_thread_num();
+      const int lift_idx = i - (N_+1+N_impulse);
+      const int time_stage_before_lift = contact_sequence_.timeStageBeforeLift(lift_idx);
+      split_ocps_.lift[i].linearizeOCP(robots_[robot_id], 
+                                       contact_sequence_.contactStatus(time_stage_before_lift+1), 
+                                       t+contact_sequence_.liftTime(lift_idx),  
+                                       dtau_,
+                                       s_[time_stage_before_lift].q, 
+                                       s_.lift[i],  
+                                       s_[time_stage_before_lift+1]);
+
     }
   }
   for (int i=N_-1; i>=0; --i) {
@@ -110,19 +144,39 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   for (int i=0; i<N_; ++i) {
     split_ocps_[i].forwardRiccatiRecursionSerial(riccati_[i], dtau_, riccati_[i+1]);
   }
+  // compute the direction of the Lagrange multiplier with respect to 
+  // pure-state constraints.
+  constraint_factorizer_.computeLagrangeMultiplierDirection(
+      contact_sequence_, riccati_.impulse, constraint_factorization_, 
+      d_[0].dx(), d_.impulse);
+  const int num_impulse = contact_sequence_.totalNumImpulseStages();
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<num_impulse; ++i) {
+    for (int j=N_; j>=0; --j) {
+      split_ocps_[i].backwardStateConstraintFactorization(
+          constraint_factorization_[i].T(j+1), dtau_,
+          constraint_factorization_[i].T(j));
+    }
+  }
+  const bool exist_state_constarint = contact_sequence_.existImpulseStage();
+
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<=N_; ++i) {
+    constraint_factorizer_.aggregateLagrangeMultiplierDirection(
+        contact_sequence_, constraint_factorization_, d_.impulse, 
+        i, riccati_[i]);
+
     if (i == 0) {
       const int robot_id = omp_get_thread_num();
       split_ocps_[i].computePrimalDirection(robots_[robot_id], dtau_, riccati_[i], 
-                                            s_[i], d_[i], false);
+                                            s_[i], d_[i], exist_state_constarint);
       primal_step_sizes_.coeffRef(i) = split_ocps_[i].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i) = split_ocps_[i].maxDualStepSize();
     }
     else if (i < N_) {
       const int robot_id = omp_get_thread_num();
       split_ocps_[i].computePrimalDirection(robots_[robot_id], dtau_, riccati_[i], 
-                                            s_[i], d_[0].dx(), d_[i], false);
+                                            s_[i], d_[0].dx(), d_[i], exist_state_constarint);
       primal_step_sizes_.coeffRef(i) = split_ocps_[i].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i) = split_ocps_[i].maxDualStepSize();
     }
@@ -148,6 +202,11 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
     }
   }
 } 
+
+
+void OCP::setProblem() {
+  
+}
 
 
 void OCP::linearizeSplitOCPs(const double t, const Eigen::VectorXd& q, 
@@ -275,6 +334,11 @@ void OCP::setContactStatus(const ContactStatus& contact_status) {
     s_[i].setContactStatus(contact_sequence_.contactStatus(i));
     d_[i].setContactStatus(contact_sequence_.contactStatus(i));
   }
+}
+
+
+ContactSequence& OCP::getContactSequenceHandle() {
+  return contact_sequence_;
 }
 
 

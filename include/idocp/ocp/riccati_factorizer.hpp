@@ -59,7 +59,12 @@ public:
   RiccatiFactorizer& operator=(RiccatiFactorizer&&) noexcept = default;
 
   ///
-  /// @brief Performs backward Riccati recursion. 
+  /// @brief Performs the backward Riccati recursion. 
+  /// @param[in] riccati_next Riccati factorization at the next time stage. 
+  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[in, out] kkt_matrix KKT matrix at the current impulse stage. 
+  /// @param[in, out] kkt_residual KKT residual at the current impulse stage. 
+  /// @param[out] riccati Riccati factorization at the current impulse stage. 
   ///
   void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next, 
                                 const double dtau, KKTMatrix& kkt_matrix, 
@@ -67,8 +72,12 @@ public:
                                 RiccatiFactorization& riccati);
 
   ///
-  /// @brief Parallelizable part of the forward Riccati recursion with state 
-  /// constraint. 
+  /// @brief Performs the parallel part of the forward Riccati recursion with 
+  /// pure-state equality constraints. 
+  /// @param[in, out] kkt_matrix KKT matrix at the current impulse stage. 
+  /// @param[in, out] kkt_residual KKT residual at the current impulse stage. 
+  /// @param[in] exist_state_constraint If true, the factorization for state
+  /// constraints are also performed. Default is false.
   ///
   void forwardRiccatiRecursionParallel(KKTMatrix& kkt_matrix, 
                                        KKTResidual& kkt_residual,
@@ -82,8 +91,15 @@ public:
       const RiccatiFactorization& riccati);
 
   ///
-  /// @brief Serial part of the forward Riccati recursion with state 
-  /// constraint. 
+  /// @brief Performs the serial part of the forward Riccati recursion with 
+  /// pure-state equality constraints. 
+  /// @param[in] riccati Riccati factorization at the current time stage. 
+  /// @param[in] kkt_matrix KKT matrix at the current time stage. 
+  /// @param[in] kkt_residual KKT residual at the current time stage. 
+  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[out] riccati_next Riccati factorization at the next time stage. 
+  /// @param[in] exist_state_constraint If true, the factorization for state
+  /// constraints are also performed. Default is false.
   ///
   void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati, 
                                      const KKTMatrix& kkt_matrix, 
@@ -93,7 +109,12 @@ public:
                                      const bool exist_state_constraint=false);
 
   ///
-  /// @brief Factorization of the state constraint. 
+  /// @brief Performs the backward factorization of matrices related to the 
+  /// pure-state equality constraints. 
+  /// @param[in] kkt_matrix KKT matrix at the current impulse stage. 
+  /// @param[in] T_next A factorization at the next time stage. 
+  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[out] T A factorization at the current impulse stage. 
   ///
   template <typename MatrixType1, typename MatrixType2>
   void backwardStateConstraintFactorization(
@@ -101,30 +122,66 @@ public:
       const double dtau, const Eigen::MatrixBase<MatrixType2>& T) const;
 
   ///
-  /// @brief This is unconstrained version of forward Riccati recursion. 
+  /// @brief This is unconstrained version of the forward Riccati recursion. 
+  /// @param[in] kkt_matrix KKT matrix at the current time stage. 
+  /// @param[in] kkt_residual KKT residual at the current time stage. 
+  /// @param[in, out] d Split direction at the current time stage. 
+  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[out] d_next Split direction at the next time stage. 
   ///
   void forwardRiccatiRecursion(const KKTMatrix& kkt_matrix, 
                                const KKTResidual& kkt_residual,
                                SplitDirection& d, const double dtau,
                                SplitDirection& d_next) const;
 
+  ///
+  /// @brief Computes the Newton direction of the state vector. 
+  /// @param[in] riccati Riccati factorization at the current impulse stage. 
+  /// @param[in] dx0 Direction of the state at the initial time stage. 
+  /// @param[out] d Split direction of the current impulse stage. 
+  /// @param[in] exist_state_constraint If true, the factorization for state
+  /// constraints are also performed. Default is false.
+  ///
   template <typename VectorType>
   static void computeStateDirection(const RiccatiFactorization& riccati, 
                                     const Eigen::MatrixBase<VectorType>& dx0,
                                     SplitDirection& d,
                                     const bool exist_state_constraint=false);
 
+  ///
+  /// @brief Computes the Newton direction of the costate vector. 
+  /// @param[in] riccati Riccati factorization at the current impulse stage. 
+  /// @param[in, out] d Split direction of the current impulse stage. 
+  /// @param[in] exist_state_constraint If true, the factorization for state
+  /// constraints are also performed. Default is false.
+  ///
   static void computeCostateDirection(const RiccatiFactorization& riccati, 
                                       SplitDirection& d,
                                       const bool exist_state_constraint=false);
 
+  ///
+  /// @brief Computes the Newton direction of the control input vector. 
+  /// @param[in] riccati Riccati factorization at the current impulse stage. 
+  /// @param[in, out] d Split direction of the current impulse stage. 
+  /// @param[in] exist_state_constraint If true, the factorization for state
+  /// constraints are also performed. Default is false.
+  ///
   void computeControlInputDirection(
       const RiccatiFactorization& riccati, SplitDirection& d,
       const bool exist_state_constraint=false) const;
 
+  ///
+  /// @brief Getter of the state feedback gain of the LQR subproblem. 
+  /// @param[in] K The state feedback gain. 
+  ///
   template <typename MatrixType>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType>& K);
 
+  ///
+  /// @brief Getter of the state feedback gain of the LQR subproblem. 
+  /// @param[in] Kq The state feedback gain with respect to the configuration. 
+  /// @param[in] Kv The state feedback gain with respect to the velocity. 
+  ///
   template <typename MatrixType1, typename MatrixType2>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Kq,
                             const Eigen::MatrixBase<MatrixType2>& Kv);

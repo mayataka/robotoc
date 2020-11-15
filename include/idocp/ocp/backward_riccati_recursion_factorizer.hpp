@@ -64,8 +64,8 @@ public:
   /// @param[in] riccati_next Riccati factorization at the next time stage.
   /// @param[in] dtau Time step between the current time stage and the next 
   /// time stage.
-  /// @param[in] kkt_matrix The KKT matrix.
-  /// @param[in] kkt_residual The KKT residual.
+  /// @param[in, out] kkt_matrix The KKT matrix.
+  /// @param[in, out] kkt_residual The KKT residual.
   ///
   void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
                           const double dtau, KKTMatrix& kkt_matrix,  
@@ -82,7 +82,7 @@ public:
   /// subproblem.
   /// @param[in] dtau Time step between the current time stage and the next 
   /// time stage.
-  /// @param[in] riccati The Riccati factorization at this time stage.
+  /// @param[out] riccati The Riccati factorization at this time stage.
   ///
   void factorizeRiccatiFactorization(const RiccatiFactorization& riccati_next, 
                                      const KKTMatrix& kkt_matrix, 

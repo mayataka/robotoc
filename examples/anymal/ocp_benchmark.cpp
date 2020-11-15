@@ -49,7 +49,7 @@ void BenchmarkWithContacts() {
     f_weight.push_back(Eigen::Vector3d::Constant(0.001));
   }
   contact_cost->set_f_weight(f_weight);
-  auto impulse_joint_cost = std::make_shared<idocp::JointSpaceImpulseCost>();
+  auto impulse_joint_cost = std::make_shared<idocp::JointSpaceImpulseCost>(robot);
   impulse_joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   impulse_joint_cost->set_q_ref(q_ref);
   impulse_joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
@@ -62,7 +62,7 @@ void BenchmarkWithContacts() {
   cost->push_back(impulse_force_cost);
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
-  const double T = 1;
+  const double T = 0.5;
   const int N = 20;
   const int num_proc = 4;
   const double t = 0;
@@ -72,7 +72,12 @@ void BenchmarkWithContacts() {
        0.0315, -0.4, 0.8, 
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
-  const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
+  v << 0.5, 0, 0, 0, 0, 0, 
+       0.0, 0.0, 0.0, 
+       0.0, 0.0, 0.0, 
+       0.0, 0.0, 0.0,
+       0.0, 0.0, 0.0;
   // const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
@@ -86,7 +91,8 @@ void BenchmarkWithContacts() {
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   // ocp_benchmarker.getSolverHandle()->deactivateContacts({0, 1, 2, 3}, 0, N);
   auto contact_status = robot.createContactStatus();
-  contact_status.activateContacts({0, 1, 2, 3});
+  contact_status.activateContacts({0, 2});
+  // contact_status.activateContacts({0, 1, 2, 3});
   ocp_benchmarker.getSolverHandle()->setContactStatus(contact_status);
   ocp_benchmarker.testConvergence(t, q, v, 20, false);
   // ocp_benchmarker.testCPUTime(t, q, v, 10000);

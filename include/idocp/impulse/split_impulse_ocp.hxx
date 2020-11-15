@@ -12,14 +12,16 @@ inline void SplitImpulseOCP::backwardStateConstraintFactorization(
     const Eigen::MatrixBase<MatrixType1>& T_next,
     const Eigen::MatrixBase<MatrixType2>& T) const {
   riccati_factorizer_.backwardStateConstraintFactorization(
-      kkt_matrix_, T_next, T);
+      kkt_matrix_, T_next, const_cast<Eigen::MatrixBase<MatrixType2>&> (T));
 }
 
 
 template <typename MatrixType, typename VectorType>
 inline void SplitImpulseOCP::getStateConstraintFactorization(
-    const Eigen::MatrixBase<MatrixType>& T,
+    const Eigen::MatrixBase<MatrixType>& Eq,
     const Eigen::MatrixBase<VectorType>& e) const {
+  const_cast<Eigen::MatrixBase<MatrixType>&> (Eq) = kkt_matrix_.Pq();
+  const_cast<Eigen::MatrixBase<VectorType>&> (e) = kkt_residual_.P();
 }
 
 

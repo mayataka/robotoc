@@ -40,10 +40,11 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
 
 template <typename MatrixType1, typename MatrixType2>
 inline void SplitOCP::backwardStateConstraintFactorization(
-    const Eigen::MatrixBase<MatrixType1>& T_next,
+    const Eigen::MatrixBase<MatrixType1>& T_next, const double dtau,
     const Eigen::MatrixBase<MatrixType2>& T) const {
   riccati_factorizer_.backwardStateConstraintFactorization(
-      kkt_matrix_, T_next, T);
+      kkt_matrix_, T_next, dtau, 
+      const_cast<Eigen::MatrixBase<MatrixType2>&> (T));
 }
 
 

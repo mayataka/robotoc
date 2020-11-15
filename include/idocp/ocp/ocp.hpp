@@ -90,6 +90,8 @@ public:
                       const Eigen::VectorXd& v, 
                       const bool use_line_search=false);
 
+  void setProblem();
+
   ///
   /// @brief Get the const reference to the split solution of a time stage. 
   /// For example, you can get the const reference to the control input torques 
@@ -131,6 +133,8 @@ public:
                           const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
 
   void setContactStatus(const ContactStatus& contact_status);
+
+  ContactSequence& getContactSequenceHandle();
 
   ///
   /// @brief Sets the contact points over the horizon. 
@@ -197,8 +201,7 @@ private:
   hybrid_container<SplitSolution, ImpulseSplitSolution> s_;
   hybrid_container<SplitDirection, ImpulseSplitDirection> d_;
   hybrid_container<RiccatiFactorization, RiccatiFactorization> riccati_;
-  hybrid_container<StateConstraintRiccatiFactorization, StateConstraintRiccatiFactorization> 
-      constraint_factorization_;
+  std::vector<StateConstraintRiccatiFactorization> constraint_factorization_;
   StateConstraintRiccatiFactorizer constraint_factorizer_;
   // hybrid_container<double, double> dtau_;
   std::vector<Robot> robots_;
