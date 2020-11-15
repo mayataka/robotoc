@@ -48,7 +48,6 @@ ImpulseKKTMatrix ImpulseBackwardRiccatiRecursionFactorizerTest::createKKTMatrix(
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   seed = Eigen::MatrixXd::Random(dimv, dimv);
   kkt_matrix.Qvv() = seed * seed.transpose();
-  kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(dimv, dimv);
   if (robot.has_floating_base()) {
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
   }
@@ -90,10 +89,23 @@ void ImpulseBackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) con
   const ImpulseKKTMatrix kkt_matrix_ref = kkt_matrix;
   const ImpulseKKTResidual kkt_residual_ref = kkt_residual;
   ImpulseBackwardRiccatiRecursionFactorizer factorizer(robot);
+  if (!robot.has_floating_base()) {
+    ASSERT_TRUE(kkt_matrix.Fqq().isZero());
+  }
+  ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   factorizer.factorizeKKTMatrix(riccati_next, kkt_matrix, kkt_residual);
+  if (!robot.has_floating_base()) {
+    ASSERT_TRUE(kkt_matrix.Fqq().isZero());
+  }
+  ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
-  A.topLeftCorner(dimv, dimv) = kkt_matrix_ref.Fqq();
-  A.topRightCorner(dimv, dimv) = kkt_matrix_ref.Fqv();
+  if (robot.has_floating_base()) {
+    A.topLeftCorner(dimv, dimv) = kkt_matrix_ref.Fqq();
+  }
+  else {
+    A.topLeftCorner(dimv, dimv).setIdentity();
+  }
+  A.topRightCorner(dimv, dimv).setZero();
   A.bottomLeftCorner(dimv, dimv) = kkt_matrix_ref.Fvq();
   A.bottomRightCorner(dimv, dimv) = kkt_matrix_ref.Fvv();
   Eigen::MatrixXd P_next = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
@@ -108,7 +120,15 @@ void ImpulseBackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) con
   EXPECT_TRUE(F_ref.isApprox(kkt_matrix.Qxx()));
   EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
   RiccatiFactorization riccati(robot), riccati_ref(robot);
+  if (!robot.has_floating_base()) {
+    ASSERT_TRUE(kkt_matrix.Fqq().isZero());
+  }
+  ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   factorizer.factorizeRiccatiFactorization(riccati_next, kkt_matrix, kkt_residual, riccati);
+  if (!robot.has_floating_base()) {
+    ASSERT_TRUE(kkt_matrix.Fqq().isZero());
+  }
+  ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   const Eigen::MatrixXd P_ref = F_ref;
   const Eigen::VectorXd s_ref = A.transpose() * sx_next - A.transpose() * P_next * kkt_residual_ref.Fx() - kkt_residual_ref.lx();
   EXPECT_TRUE(P_ref.topLeftCorner(dimv, dimv).isApprox(riccati.Pqq));

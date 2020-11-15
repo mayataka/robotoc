@@ -9,6 +9,7 @@
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_backward_riccati_recursion_factorizer.hpp"
+#include "idocp/impulse/impulse_forward_riccati_recursion_factorizer.hpp"
 
 
 namespace idocp {
@@ -65,14 +66,11 @@ public:
                                      const ImpulseKKTResidual& kkt_residual, 
                                      RiccatiFactorization& riccati_next);
 
-  ///
-  /// @brief Factorization of the state constraint. 
-  ///
   template <typename MatrixType1, typename MatrixType2>
-  static void backwardStateConstraintFactorization(
+  void backwardStateConstraintFactorization(
       const ImpulseKKTMatrix& kkt_matrix, 
       const Eigen::MatrixBase<MatrixType1>& T_next,  
-      const Eigen::MatrixBase<MatrixType2>& T);
+      const Eigen::MatrixBase<MatrixType2>& T) const;
 
   template <typename VectorType>
   static void computeStateDirection(
@@ -87,9 +85,8 @@ public:
 private:
   bool has_floating_base_;
   int dimv_;
-  static constexpr int kDimFloatingBase = 6;
   ImpulseBackwardRiccatiRecursionFactorizer backward_recursion_;
-  Eigen::MatrixXd NApBKt_;
+  ImpulseForwardRiccatiRecursionFactorizer forward_recursion_;
 
 };
 

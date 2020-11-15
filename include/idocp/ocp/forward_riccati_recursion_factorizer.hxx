@@ -57,7 +57,6 @@ inline void ForwardRiccatiRecursionFactorizer::factorizeStateTransition(
 }
 
 
-
 inline void ForwardRiccatiRecursionFactorizer::factorizeStateConstraintFactorization(
     const RiccatiFactorization& riccati, const KKTMatrix& kkt_matrix, 
     const double dtau, RiccatiFactorization& riccati_next) {

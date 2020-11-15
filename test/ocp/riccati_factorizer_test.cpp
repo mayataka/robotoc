@@ -37,7 +37,7 @@ protected:
   void testBackwardRecursion(const Robot& robot) const;
   void testForwardRecursionWithoutStateConstraint(const Robot& robot) const;
   void testForwardRecursionWithStateConstraint(const Robot& robot) const;
-  void testRiccatiRecursion(const Robot& robot) const;
+  void testFactorizeStateConstraintFactorization(const Robot& robot) const;
 
   double dtau;
   std::string fixed_base_urdf, floating_base_urdf;
@@ -213,8 +213,32 @@ void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot&
 }
 
 
-void RiccatiFactorizerTest::testRiccatiRecursion(const Robot& robot) const {
-
+void RiccatiFactorizerTest::testFactorizeStateConstraintFactorization(const Robot& robot) const {
+  const int dimv = robot.dimv();
+  const int dimu = robot.dimu();
+  const RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
+  const KKTMatrix kkt_matrix = createKKTMatrix(robot);
+  const KKTResidual kkt_residual = createKKTResidual(robot);
+  RiccatiFactorizer factorizer(robot);
+  RiccatiFactorization riccati(robot), riccati_ref(robot);
+  const int dimf = 6;
+  Eigen::MatrixXd T_next(2*dimv, dimf), T(2*dimv, dimf), T_ref(2*dimv, dimf);
+  T_next.setRandom();
+  T.setZero();
+  T_ref.setZero();
+  factorizer.backwardStateConstraintFactorization(kkt_matrix, T_next, dtau, T);
+  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
+  if (robot.has_floating_base()) {
+    A.topLeftCorner(dimv, dimv) = kkt_matrix.Fqq();
+  }
+  else {
+    A.topLeftCorner(dimv, dimv).setIdentity();
+  }
+  A.topRightCorner(dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
+  A.bottomLeftCorner(dimv, dimv) = kkt_matrix.Fvq();
+  A.bottomRightCorner(dimv, dimv) = kkt_matrix.Fvv();
+  T_ref = A.transpose() * T_next;
+  EXPECT_TRUE(T.isApprox(T_ref));
 }
 
 
@@ -222,6 +246,7 @@ TEST_F(RiccatiFactorizerTest, fixedBase) {
   testBackwardRecursion(fixed_base_robot);
   testForwardRecursionWithoutStateConstraint(fixed_base_robot);
   testForwardRecursionWithStateConstraint(fixed_base_robot);
+  testFactorizeStateConstraintFactorization(fixed_base_robot);
 }
 
 
@@ -229,6 +254,7 @@ TEST_F(RiccatiFactorizerTest, floating_base) {
   testBackwardRecursion(floating_base_robot);
   testForwardRecursionWithoutStateConstraint(floating_base_robot);
   testForwardRecursionWithStateConstraint(floating_base_robot);
+  testFactorizeStateConstraintFactorization(floating_base_robot);
 }
 
 } // namespace idocp

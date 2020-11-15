@@ -69,6 +69,7 @@ add_library(
   src/impulse/impulse_dynamics_forward_euler_data.cpp
   src/impulse/impulse_dynamics_forward_euler.cpp
   src/impulse/impulse_backward_riccati_recursion_factorizer.cpp
+  src/impulse/impulse_forward_riccati_recursion_factorizer.cpp
   src/impulse/impulse_riccati_factorizer.cpp
   src/impulse/split_impulse_ocp.cpp
   # src/impulse/impulse_dynamics_backward_euler.cpp

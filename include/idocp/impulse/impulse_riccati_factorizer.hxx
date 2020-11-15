@@ -10,7 +10,7 @@ inline ImpulseRiccatiFactorizer::ImpulseRiccatiFactorizer(
   : has_floating_base_(robot.has_floating_base()),
     dimv_(robot.dimv()),
     backward_recursion_(robot),
-    NApBKt_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())) {
+    forward_recursion_(robot) {
 }
 
 
@@ -18,7 +18,7 @@ inline ImpulseRiccatiFactorizer::ImpulseRiccatiFactorizer()
   : has_floating_base_(false),
     dimv_(0),
     backward_recursion_(),
-    NApBKt_() {
+    forward_recursion_() {
 }
 
 
@@ -39,11 +39,32 @@ inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursionSerial(
     const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
     const ImpulseKKTResidual& kkt_residual, 
     RiccatiFactorization& riccati_next) {
-  riccati_next.Pi.noalias() = kkt_matrix.Fxx() * riccati.Pi;
-  riccati_next.pi = kkt_residual.Fx();
-  riccati_next.pi.noalias() += kkt_matrix.Fxx() * riccati.pi;
-  NApBKt_.noalias() = riccati.N * kkt_matrix.Fxx().transpose();
-  riccati_next.N.noalias() = kkt_matrix.Fxx() * NApBKt_;
+  forward_recursion_.factorizeStateTransition(riccati, kkt_matrix, kkt_residual, 
+                                              riccati_next);
+  forward_recursion_.factorizeStateConstraintFactorization(riccati, kkt_matrix,
+                                                           riccati_next);
+}
+
+
+template <typename MatrixType1, typename MatrixType2>
+inline void ImpulseRiccatiFactorizer::backwardStateConstraintFactorization(
+    const ImpulseKKTMatrix& kkt_matrix, 
+    const Eigen::MatrixBase<MatrixType1>& T_next,
+    const Eigen::MatrixBase<MatrixType2>& T) const {
+  assert(T_next.rows() == T.rows());
+  assert(T_next.rows() == T.rows());
+  if (has_floating_base_) {
+    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_).noalias() 
+        = kkt_matrix.Fqq().transpose() * T_next.topRows(dimv_);
+  }
+  else {
+    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_) 
+        = T_next.topRows(dimv_);
+  }
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_).noalias()
+      += kkt_matrix.Fvq().transpose() * T_next.bottomRows(dimv_);
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_).noalias() 
+      =  kkt_matrix.Fvv().transpose() * T_next.bottomRows(dimv_);
 }
 
 

@@ -96,9 +96,9 @@ public:
   /// @brief Factorization of the state constraint. 
   ///
   template <typename MatrixType1, typename MatrixType2>
-  static void backwardStateConstraintFactorization(
+  void backwardStateConstraintFactorization(
       const KKTMatrix& kkt_matrix, const Eigen::MatrixBase<MatrixType1>& T_next,  
-      const Eigen::MatrixBase<MatrixType2>& T);
+      const double dtau, const Eigen::MatrixBase<MatrixType2>& T) const;
 
   ///
   /// @brief This is unconstrained version of forward Riccati recursion. 

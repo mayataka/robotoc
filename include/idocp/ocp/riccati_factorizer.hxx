@@ -93,13 +93,26 @@ inline void RiccatiFactorizer::forwardRiccatiRecursionSerial(
 
 
 template <typename MatrixType1, typename MatrixType2>
-void RiccatiFactorizer::backwardStateConstraintFactorization(
+inline void RiccatiFactorizer::backwardStateConstraintFactorization(
     const KKTMatrix& kkt_matrix, const Eigen::MatrixBase<MatrixType1>& T_next,
-    const Eigen::MatrixBase<MatrixType2>& T) {
+    const double dtau, const Eigen::MatrixBase<MatrixType2>& T) const {
   assert(T_next.rows() == T.rows());
   assert(T_next.rows() == T.rows());
-  const_cast<Eigen::MatrixBase<MatrixType2>&> (T).noalias() 
-      = kkt_matrix.Fxx().transpose() * T_next;
+  assert(dtau > 0);
+  if (has_floating_base_) {
+    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_).noalias() 
+        = kkt_matrix.Fqq().transpose() * T_next.topRows(dimv_);
+  }
+  else {
+    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_) 
+        = T_next.topRows(dimv_);
+  }
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_).noalias()
+      += kkt_matrix.Fvq().transpose() * T_next.bottomRows(dimv_);
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_)
+      = dtau * T_next.topRows(dimv_);
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_).noalias() 
+      +=  kkt_matrix.Fvv().transpose() * T_next.bottomRows(dimv_);
 }
 
 

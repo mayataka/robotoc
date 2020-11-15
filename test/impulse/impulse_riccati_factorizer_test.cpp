@@ -36,6 +36,7 @@ protected:
 
   static void testBackwardRecursion(const Robot& robot);
   static void testForwardRecursion(const Robot& robot);
+  static void testFactorizeStateConstraintFactorization(const Robot& robot);
 
   std::string fixed_base_urdf, floating_base_urdf;
   Robot fixed_base_robot, floating_base_robot;
@@ -148,15 +149,45 @@ void ImpulseRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) {
 }
 
 
+void ImpulseRiccatiFactorizerTest::testFactorizeStateConstraintFactorization(const Robot& robot) {
+  const int dimv = robot.dimv();
+  const int dimu = robot.dimu();
+  const RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
+  const ImpulseKKTMatrix kkt_matrix = createKKTMatrix(robot);
+  const ImpulseKKTResidual kkt_residual = createKKTResidual(robot);
+  ImpulseRiccatiFactorizer factorizer(robot);
+  RiccatiFactorization riccati(robot), riccati_ref(robot);
+  const int dimf = 6;
+  Eigen::MatrixXd T_next(2*dimv, dimf), T(2*dimv, dimf), T_ref(2*dimv, dimf);
+  T_next.setRandom();
+  T.setZero();
+  T_ref.setZero();
+  factorizer.backwardStateConstraintFactorization(kkt_matrix, T_next, T);
+  Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
+  if (robot.has_floating_base()) {
+    A.topLeftCorner(dimv, dimv) = kkt_matrix.Fqq();
+  }
+  else {
+    A.topLeftCorner(dimv, dimv).setIdentity();
+  }
+  A.bottomLeftCorner(dimv, dimv) = kkt_matrix.Fvq();
+  A.bottomRightCorner(dimv, dimv) = kkt_matrix.Fvv();
+  T_ref = A.transpose() * T_next;
+  EXPECT_TRUE(T.isApprox(T_ref));
+}
+
+
 TEST_F(ImpulseRiccatiFactorizerTest, fixedBase) {
   testBackwardRecursion(fixed_base_robot);
   testForwardRecursion(fixed_base_robot);
+  testFactorizeStateConstraintFactorization(fixed_base_robot);
 }
 
 
 TEST_F(ImpulseRiccatiFactorizerTest, floating_base) {
   testBackwardRecursion(floating_base_robot);
   testForwardRecursion(floating_base_robot);
+  testFactorizeStateConstraintFactorization(floating_base_robot);
 }
 
 } // namespace idocp
