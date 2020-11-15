@@ -197,6 +197,9 @@ private:
   hybrid_container<SplitSolution, ImpulseSplitSolution> s_;
   hybrid_container<SplitDirection, ImpulseSplitDirection> d_;
   hybrid_container<RiccatiFactorization, RiccatiFactorization> riccati_;
+  hybrid_container<StateConstraintRiccatiFactorization, StateConstraintRiccatiFactorization> 
+      constraint_factorization_;
+  StateConstraintRiccatiFactorizer constraint_factorizer_;
   // hybrid_container<double, double> dtau_;
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
@@ -206,6 +209,7 @@ private:
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_,
                   costs_impulse_, violations_impulse, costs_lift_, 
                   violations_lift_;
+  
 
   void linearizeSplitOCPs(const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v);
