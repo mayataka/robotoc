@@ -12,6 +12,8 @@
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/constraints/impulse_constraint_component_base.hpp"
+#include "idocp/constraints/impulse_constraints.hpp"
 
 
 namespace idocp {
@@ -61,15 +63,18 @@ public:
   void push_back(const std::shared_ptr<ConstraintComponentBase>& constraint);
 
   ///
+  /// @brief Append a constraint component to the cost function.
+  /// @param[in] constraint shared pointer to the constraint component appended 
+  /// to the constraints.
+  ///
+  void push_back(const std::shared_ptr<ImpulseConstraintComponentBase>& constraint);
+
+  std::shared_ptr<ImpulseConstraints> getImpulseConstraints();
+
+  ///
   /// @brief Clear constraints by removing all components.
   ///
   void clear();
-
-  ///
-  /// @brief Check whether the constraints is empty or not.
-  /// @return true if the constraints is empty. false if not.
-  ///
-  bool isEmpty() const;
 
   ///
   /// @brief Check if the constraints component requres kinematics of robot 
@@ -250,11 +255,10 @@ private:
                                                         velocity_level_constraints_, 
                                                         acceleration_level_constraints_;
 
+  std::shared_ptr<ImpulseConstraints> impulse_constraints_;
+
   static void clear_impl(
       std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints);
-
-  static bool isEmpty_impl(
-      const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints);
 
   static bool useKinematics_impl(
       const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints);

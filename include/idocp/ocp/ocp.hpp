@@ -9,7 +9,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/cost/impulse_cost_function.hpp"
+// #include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/constraints/impulse_constraints.hpp"
 #include "idocp/ocp/split_ocp.hpp"
 #include "idocp/impulse/split_impulse_ocp.hpp"
@@ -48,24 +48,6 @@ public:
       const std::shared_ptr<Constraints>& constraints, const double T, 
       const int N, const int num_proc=1);
 
-  // ///
-  /// @brief Construct optimal control problem solver.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] cost Shared ptr to the cost function.
-  /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] impulse_cost Shared ptr to the impulse cost function.
-  /// @param[in] impulse_constraints Shared ptr to the impulse constraints.
-  /// @param[in] T Length of the horizon. Must be positive.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] num_proc Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
-  ///
-  OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-      const std::shared_ptr<Constraints>& constraints, 
-      const std::shared_ptr<ImpulseCostFunction>& impulse_cost,
-      const std::shared_ptr<ImpulseConstraints>& impulse_constraints,
-      const double T, const int N, const int num_proc=1);
-
   ///
   /// @brief Default constructor. 
   ///
@@ -97,7 +79,7 @@ public:
   OCP& operator=(OCP&&) noexcept = default;
 
   ///
-  /// @brief Updates solution by computing the primal-dual Newon direction.
+  /// @brief Updates the solution by computing the primal-dual Newon direction.
   /// @param[in] t Initial time of the horizon. Current time in MPC. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
@@ -208,9 +190,6 @@ public:
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  static std::shared_ptr<ImpulseCostFunction> empty_impulse_cost;
-  static std::shared_ptr<ImpulseConstraints> empty_impulse_constraints;
-
 private:
 
   hybrid_container<SplitOCP, SplitImpulseOCP> split_ocps_;
@@ -218,6 +197,7 @@ private:
   hybrid_container<SplitSolution, ImpulseSplitSolution> s_;
   hybrid_container<SplitDirection, ImpulseSplitDirection> d_;
   hybrid_container<RiccatiFactorization, RiccatiFactorization> riccati_;
+  // hybrid_container<double, double> dtau_;
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
   LineSearchFilter filter_;

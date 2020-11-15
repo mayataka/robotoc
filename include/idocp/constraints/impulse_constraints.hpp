@@ -67,12 +67,6 @@ public:
   void clear();
 
   ///
-  /// @brief Check whether the constraints is empty or not.
-  /// @return true if the constraints is empty. false if not.
-  ///
-  bool isEmpty() const;
-
-  ///
   /// @brief Creates ConstraintsData according to robot model and constraint 
   /// components. 
   /// @param[in] robot Robot model.
@@ -242,9 +236,6 @@ private:
 
   static void clear_impl(
       std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints);
-
-  static bool isEmpty_impl(
-      const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints);
 
   static bool useKinematics_impl(
       const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints);

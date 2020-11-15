@@ -1,14 +1,15 @@
 #ifndef IDOCP_CONSTRAINTS_HXX_
 #define IDOCP_CONSTRAINTS_HXX_
 
-#include <assert.h>
+#include <cassert>
 
 namespace idocp {
 
 inline Constraints::Constraints() 
   : position_level_constraints_(),
     velocity_level_constraints_(),
-    acceleration_level_constraints_() {
+    acceleration_level_constraints_(),
+    impulse_constraints_(std::make_shared<ImpulseConstraints>()) {
 }
 
 
@@ -30,41 +31,29 @@ inline void Constraints::push_back(
 }
 
 
+inline void Constraints::push_back(
+    const std::shared_ptr<ImpulseConstraintComponentBase>& constraint) {
+  impulse_constraints_->push_back(constraint);
+}
+
+
+inline std::shared_ptr<ImpulseConstraints> 
+Constraints::getImpulseConstraints() {
+  return impulse_constraints_;
+}
+
+
 inline void Constraints::clear() {
   clear_impl(position_level_constraints_);
   clear_impl(velocity_level_constraints_);
   clear_impl(acceleration_level_constraints_);
+  impulse_constraints_->clear();
 }
 
 
 inline void Constraints::clear_impl(
     std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints) {
   constraints.clear();
-}
-
-
-inline bool Constraints::isEmpty() const {
-  if (isEmpty_impl(position_level_constraints_)) {
-    return true;
-  }
-  if (isEmpty_impl(velocity_level_constraints_)) {
-    return true;
-  }
-  if (isEmpty_impl(acceleration_level_constraints_)) {
-    return true;
-  }
-  return false;
-}
-
-
-inline bool Constraints::isEmpty_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints) {
-  if (constraints.empty()) {
-    return true;
-  }
-  else {
-    return false;
-  }
 }
 
 

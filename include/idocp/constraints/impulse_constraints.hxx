@@ -3,7 +3,7 @@
 
 #include "idocp/constraints/impulse_constraints.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 namespace idocp {
 
@@ -42,31 +42,6 @@ inline void ImpulseConstraints::clear() {
 inline void ImpulseConstraints::clear_impl(
     std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints) {
   constraints.clear();
-}
-
-
-inline bool ImpulseConstraints::isEmpty() const {
-  if (isEmpty_impl(position_level_constraints_)) {
-    return true;
-  }
-  if (isEmpty_impl(velocity_level_constraints_)) {
-    return true;
-  }
-  if (isEmpty_impl(acceleration_level_constraints_)) {
-    return true;
-  }
-  return false;
-}
-
-
-inline bool ImpulseConstraints::isEmpty_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints) {
-  if (constraints.empty()) {
-    return true;
-  }
-  else {
-    return false;
-  }
 }
 
 

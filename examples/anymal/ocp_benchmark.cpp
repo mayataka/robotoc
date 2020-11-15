@@ -9,8 +9,11 @@
 // #include "idocp/ocp/parnmpc.hpp"
 #include "idocp/ocp/ocp.hpp"
 #include "idocp/cost/cost_function.hpp"
+#include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
 #include "idocp/cost/contact_force_cost.hpp"
+#include "idocp/cost/joint_space_impulse_cost.hpp"
+#include "idocp/cost/impulse_force_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
 
 #include "idocp/utils/joint_constraints_factory.hpp"
@@ -46,8 +49,17 @@ void BenchmarkWithContacts() {
     f_weight.push_back(Eigen::Vector3d::Constant(0.001));
   }
   contact_cost->set_f_weight(f_weight);
+  auto impulse_joint_cost = std::make_shared<idocp::JointSpaceImpulseCost>();
+  impulse_joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
+  impulse_joint_cost->set_q_ref(q_ref);
+  impulse_joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
+  impulse_joint_cost->set_dv_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  auto impulse_force_cost = std::make_shared<idocp::ImpulseForceCost>(robot);
+  impulse_force_cost->set_f_weight(f_weight);
   cost->push_back(joint_cost);
   cost->push_back(contact_cost);
+  cost->push_back(impulse_joint_cost);
+  cost->push_back(impulse_force_cost);
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
   const double T = 1;

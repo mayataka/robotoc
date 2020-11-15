@@ -8,10 +8,15 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function_component_base.hpp"
+#include "idocp/cost/impulse_cost_function_component_base.hpp"
+#include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_solution.hpp"
+#include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/impulse/impulse_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -62,15 +67,18 @@ public:
   void push_back(const std::shared_ptr<CostFunctionComponentBase>& cost);
 
   ///
+  /// @brief Append a cost function component to the cost function.
+  /// @param[in] cost shared pointer to the cost function component appended 
+  /// to the cost.
+  ///
+  void push_back(const std::shared_ptr<ImpulseCostFunctionComponentBase>& cost);
+
+  std::shared_ptr<ImpulseCostFunction> getImpulseCostFunction();
+
+  ///
   /// @brief Clear cost function by removing all components.
   ///
   void clear();
-
-  ///
-  /// @brief Check whether the cost function is empty or not.
-  /// @return true if the cost function is empty. false if not.
-  ///
-  bool isEmpty() const;
 
   ///
   /// @brief Check if the cost function component requres kinematics of robot 
@@ -146,7 +154,7 @@ public:
   ///
   /// @brief Computes the partial derivatives of the terminal cost with respect
   /// to the configuration and velocity. 
-  /// @param[in] robot Robot model.
+  /// @param[in] robot Robot modol.
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] s Split solution.
@@ -171,210 +179,10 @@ public:
                                   const double t, const SplitSolution& s, 
                                   KKTMatrix& kkt_matrix) const;
 
-  ///
-  /// @brief Computes the partial derivatives of the stage cost with respect
-  /// to the configuration. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dtau Time step.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
-  /// added to this data.
-  ///
-  void lq(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const;
-
-  ///
-  /// @brief Computes the partial derivatives of the stage cost with respect
-  /// to the velocity. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dtau Time step.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
-  /// added to this data.
-  ///
-  void lv(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const;
-
-  ///
-  /// @brief Computes the partial derivatives of the stage cost with respect
-  /// to the acceleration. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dtau Time step.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
-  /// added to this data.
-  ///
-  void la(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const;
-
-  ///
-  /// @brief Computes the partial derivatives of the stage cost with respect
-  /// to the contact forces. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dtau Time step.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
-  /// added to this data.
-  ///
-  void lf(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const;
-
-  ///
-  /// @brief Computes the partial derivatives of the stage cost with respect
-  /// to the contact forces. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dtau Time step.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
-  /// added to this data.
-  ///
-  void lu(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const;
-
-  ///
-  /// @brief Computes the Hessians of the stage cost with respect
-  /// to the configuration. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dtau Time step.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
-  /// data.
-  ///
-  void lqq(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const;
-
-  ///
-  /// @brief Computes the Hessians of the stage cost with respect
-  /// to the velocity. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dtau Time step.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
-  /// data.
-  ///
-  void lvv(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const;
-
-  ///
-  /// @brief Computes the Hessians of the stage cost with respect
-  /// to the acceleration. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dtau Time step.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
-  /// data.
-  ///
-  void laa(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const;
-
-  ///
-  /// @brief Computes the Hessians of the stage cost with respect
-  /// to the contact forces. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dtau Time step.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
-  /// data.
-  ///
-  void lff(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const;
-
-  ///
-  /// @brief Computes the Hessians of the stage cost with respect
-  /// to the contact forces. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] dtau Time step.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
-  /// data.
-  ///
-  void luu(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const;
-
-  ///
-  /// @brief Computes the partial derivatives of the terminal cost with respect
-  /// to the configuration.
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
-  /// added to this data.
-  ///
-  void phiq(Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, KKTResidual& kkt_residual) const;
-
-  ///
-  /// @brief Computes the partial derivatives of the terminal cost with respect
-  /// to the velocity.
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
-  /// added to this data.
-  ///
-  void phiv(Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, KKTResidual& kkt_residual) const;
-
-  ///
-  /// @brief Computes the Hessians of the terminal cost with respect
-  /// to the configuration. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
-  /// data.
-  ///
-  void phiqq(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s, KKTMatrix& kkt_matrix) const;
-
-  ///
-  /// @brief Computes the Hessians of the terminal cost with respect
-  /// to the velocity. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
-  /// data.
-  ///
-  void phivv(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s, KKTMatrix& kkt_matrix) const;
 
 private:
   std::vector<std::shared_ptr<CostFunctionComponentBase>> costs_;
+  std::shared_ptr<ImpulseCostFunction> impulse_cost_function_;
 
 };
 

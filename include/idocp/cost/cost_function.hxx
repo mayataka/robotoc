@@ -1,12 +1,13 @@
 #ifndef IDOCP_COST_FUNCTION_HXX_
 #define IDOCP_COST_FUNCTION_HXX_
 
-#include <assert.h>
+#include <cassert>
 
 namespace idocp {
 
 inline CostFunction::CostFunction()
-  : costs_() {
+  : costs_(),
+    impulse_cost_function_(std::make_shared<ImpulseCostFunction>()) {
 }
 
 
@@ -20,13 +21,21 @@ inline void CostFunction::push_back(
 }
 
 
-inline void CostFunction::clear() {
-  costs_.clear();
+inline void CostFunction::push_back(
+    const std::shared_ptr<ImpulseCostFunctionComponentBase>& cost) {
+  impulse_cost_function_->push_back(cost);
 }
 
 
-inline bool CostFunction::isEmpty() const {
-  return costs_.empty();
+inline std::shared_ptr<ImpulseCostFunction> 
+CostFunction::getImpulseCostFunction() {
+  return impulse_cost_function_;
+}
+
+
+inline void CostFunction::clear() {
+  costs_.clear();
+  impulse_cost_function_->clear();
 }
 
 
@@ -117,152 +126,6 @@ inline void CostFunction::computeTerminalCostHessian(
     const SplitSolution& s, KKTMatrix& kkt_matrix) const {
   for (const auto cost : costs_) {
     cost->phiqq(robot, data, t, s, kkt_matrix);
-    cost->phivv(robot, data, t, s, kkt_matrix);
-  }
-}
-
-
-inline void CostFunction::lq(Robot& robot, CostFunctionData& data, 
-                             const double t, const double dtau, 
-                             const SplitSolution& s, 
-                             KKTResidual& kkt_residual) const {
-  assert(dtau > 0);
-  for (const auto cost : costs_) {
-    cost->lq(robot, data, t, dtau, s, kkt_residual);
-  }
-}
-
-
-inline void CostFunction::lv(Robot& robot, CostFunctionData& data, 
-                             const double t, const double dtau, 
-                             const SplitSolution& s, 
-                             KKTResidual& kkt_residual) const {
-  assert(dtau > 0);
-  for (const auto cost : costs_) {
-    cost->lv(robot, data, t, dtau, s, kkt_residual);
-  }
-}
-
-
-inline void CostFunction::la(Robot& robot, CostFunctionData& data, 
-                             const double t, const double dtau, 
-                             const SplitSolution& s, 
-                             KKTResidual& kkt_residual) const {
-  assert(dtau > 0);
-  for (const auto cost : costs_) {
-    cost->la(robot, data, t, dtau, s, kkt_residual);
-  }
-}
-
-
-inline void CostFunction::lf(Robot& robot, CostFunctionData& data, 
-                             const double t, const double dtau, 
-                             const SplitSolution& s, 
-                             KKTResidual& kkt_residual) const {
-  assert(dtau > 0);
-  for (const auto cost : costs_) {
-    cost->lf(robot, data, t, dtau, s, kkt_residual);
-  }
-}
-
-
-inline void CostFunction::lu(Robot& robot, CostFunctionData& data, 
-                             const double t, const double dtau, 
-                             const SplitSolution& s, 
-                             KKTResidual& kkt_residual) const {
-  assert(dtau > 0);
-  for (const auto cost : costs_) {
-    cost->lu(robot, data, t, dtau, s, kkt_residual);
-  }
-}
-
-
-inline void CostFunction::lqq(Robot& robot, CostFunctionData& data, 
-                              const double t, const double dtau, 
-                              const SplitSolution& s, 
-                              KKTMatrix& kkt_matrix) const {
-  assert(dtau > 0);
-  for (const auto cost : costs_) {
-    cost->lqq(robot, data, t, dtau, s, kkt_matrix);
-  }
-}
-
-
-inline void CostFunction::lvv(Robot& robot, CostFunctionData& data, 
-                              const double t, const double dtau, 
-                              const SplitSolution& s, 
-                              KKTMatrix& kkt_matrix) const {
-  assert(dtau > 0);
-  for (const auto cost : costs_) {
-    cost->lvv(robot, data, t, dtau, s, kkt_matrix);
-  }
-}
-
-
-inline void CostFunction::laa(Robot& robot, CostFunctionData& data, 
-                              const double t, const double dtau, 
-                              const SplitSolution& s, 
-                              KKTMatrix& kkt_matrix) const {
-  assert(dtau > 0);
-  for (const auto cost : costs_) {
-    cost->laa(robot, data, t, dtau, s, kkt_matrix);
-  }
-}
-
-
-inline void CostFunction::lff(Robot& robot, CostFunctionData& data, 
-                              const double t, const double dtau, 
-                              const SplitSolution& s, 
-                              KKTMatrix& kkt_matrix) const {
-  assert(dtau > 0);
-  for (const auto cost : costs_) {
-    cost->lff(robot, data, t, dtau, s, kkt_matrix);
-  }
-}
-
-
-inline void CostFunction::luu(Robot& robot, CostFunctionData& data, 
-                              const double t, const double dtau, 
-                              const SplitSolution& s, 
-                              KKTMatrix& kkt_matrix) const {
-  assert(dtau > 0);
-  for (const auto cost : costs_) {
-    cost->luu(robot, data, t, dtau, s, kkt_matrix);
-  }
-}
-
-
-inline void CostFunction::phiq(Robot& robot, CostFunctionData& data, 
-                               const double t, const SplitSolution& s, 
-                               KKTResidual& kkt_residual) const {
-  for (const auto cost : costs_) {
-    cost->phiq(robot, data, t, s, kkt_residual);
-  }
-}
-
-
-inline void CostFunction::phiv(Robot& robot, CostFunctionData& data, 
-                               const double t, const SplitSolution& s, 
-                               KKTResidual& kkt_residual) const {
-  for (const auto cost : costs_) {
-    cost->phiv(robot, data, t, s, kkt_residual);
-  }
-}
-
-
-inline void CostFunction::phiqq(Robot& robot, CostFunctionData& data, 
-                                const double t, const SplitSolution& s, 
-                                KKTMatrix& kkt_matrix) const {
-  for (const auto cost : costs_) {
-    cost->phiqq(robot, data, t, s, kkt_matrix);
-  }
-}
-
-
-inline void CostFunction::phivv(Robot& robot, CostFunctionData& data, 
-                                const double t, const SplitSolution& s, 
-                                KKTMatrix& kkt_matrix) const {
-  for (const auto cost : costs_) {
     cost->phivv(robot, data, t, s, kkt_matrix);
   }
 }
