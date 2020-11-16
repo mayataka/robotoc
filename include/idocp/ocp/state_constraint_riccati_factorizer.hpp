@@ -91,21 +91,21 @@ public:
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
       const std::vector<ImpulseSplitDirection>& d_impulse, 
       const int impulse_index,
-      RiccatiFactorization& riccati_factorization);
+      RiccatiFactorization& impulse_riccati_factorization);
 
   static void aggregateLagrangeMultiplierDirectionImpulseAux(
       const ContactSequence& contact_sequence,
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
       const std::vector<ImpulseSplitDirection>& d_impulse, 
       const int impulse_index,
-      RiccatiFactorization& riccati_factorization);
+      RiccatiFactorization& aux_riccati_factorization);
 
   static void aggregateLagrangeMultiplierDirectionLift(
       const ContactSequence& contact_sequence,
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
       const std::vector<ImpulseSplitDirection>& d_impulse, 
       const int lift_index,
-      RiccatiFactorization& riccati_factorization);
+      RiccatiFactorization& lift_riccati_factorization);
 
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

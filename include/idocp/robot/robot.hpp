@@ -168,6 +168,14 @@ public:
                         const Eigen::MatrixBase<TangentVectorType>& v);
 
   ///
+  /// @brief Updates the frame kinematics of the robot. The frame placements 
+  /// are calculated. 
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  ///
+  template <typename ConfigVectorType>
+  void updateFrameKinematics(const Eigen::MatrixBase<ConfigVectorType>& q);
+
+  ///
   /// @brief Returns the position of the frame. Before calling this function, 
   /// updateKinematics() must be called.
   /// @param[in] frame_id Index of the frame.
@@ -655,6 +663,12 @@ public:
   /// lower_joint_position_limit_, upper_joint_position_limit_, by the URDF.
   /// 
   void initializeJointLimits();
+
+  ///
+  /// @brief Retruns the indices of the contact frames. 
+  /// @return Indices of the contact frames.
+  /// 
+  std::vector<int> contactFramesIndices() const;
 
   ///
   /// @brief Creates a ContactStatus that has consisitent size. 

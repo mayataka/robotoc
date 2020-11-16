@@ -12,7 +12,7 @@ namespace idocp {
 class AlignedHybridOCP {
 public:
   HybridOCP();
-  ~(HybridOCP);
+  ~HybridOCP();
 
   void linearizeOCP();
 

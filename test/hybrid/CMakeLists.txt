@@ -1,3 +1,4 @@
 add_test_macro(discrete_event_test)
 add_test_macro(contact_sequence_primitive_test)
 add_test_macro(contact_sequence_test)
+add_test_macro(collision_checker_test)

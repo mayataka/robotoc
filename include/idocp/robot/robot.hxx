@@ -169,6 +169,15 @@ inline void Robot::updateKinematics(
 }
 
 
+template <typename ConfigVectorType>
+inline void Robot::updateFrameKinematics(
+    const Eigen::MatrixBase<ConfigVectorType>& q) {
+  assert(q.size() == dimq_);
+  pinocchio::forwardKinematics(model_, data_, q);
+  pinocchio::updateFramePlacements(model_, data_);
+}
+
+
 template <typename VectorType>
 inline void Robot::computeBaumgarteResidual(
     const ContactStatus& contact_status, const double time_step,
@@ -717,6 +726,15 @@ inline void Robot::initializeJointLimits() {
   joint_velocity_limit_ = model_.velocityLimit.tail(dim_joint);
   lower_joint_position_limit_ = model_.lowerPositionLimit.tail(dim_joint);
   upper_joint_position_limit_ = model_.upperPositionLimit.tail(dim_joint);
+}
+
+
+inline std::vector<int> Robot::contactFramesIndices() const {
+  std::vector<int> contact_frames_indices;
+  for (const auto& e : point_contacts_) {
+    contact_frames_indices.push_back(e.contact_frame_id());
+  }
+  return contact_frames_indices;
 }
 
 

@@ -78,6 +78,7 @@ add_library(
   src/hybrid/contact_sequence_primitive.cpp
   src/hybrid/contact_sequence.cpp
   src/hybrid/hybrid_container.cpp
+  src/hybrid/collision_checker.cpp
   src/ocp/schur_complement.cpp
   src/ocp/kkt_residual.cpp
   src/ocp/kkt_matrix.cpp
