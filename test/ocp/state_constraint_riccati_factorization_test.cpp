@@ -40,6 +40,8 @@ void StateConstraintRiccatiFactorizationTest::test(const Robot& robot) const {
   for (int i=0; i<max_num_impulse; ++i) {
     EXPECT_EQ(factorization.T_impulse(i).rows(), dimx);
     EXPECT_EQ(factorization.T_impulse(i).cols(), 0);
+    EXPECT_EQ(factorization.T_aux(i).rows(), dimx);
+    EXPECT_EQ(factorization.T_aux(i).cols(), 0);
     EXPECT_EQ(factorization.T_lift(i).rows(), dimx);
     EXPECT_EQ(factorization.T_lift(i).cols(), 0);
   }
@@ -63,6 +65,8 @@ void StateConstraintRiccatiFactorizationTest::test(const Robot& robot) const {
   for (int i=0; i<max_num_impulse; ++i) {
     EXPECT_EQ(factorization.T_impulse(i).rows(), dimx);
     EXPECT_EQ(factorization.T_impulse(i).cols(), dimf);
+    EXPECT_EQ(factorization.T_aux(i).rows(), dimx);
+    EXPECT_EQ(factorization.T_aux(i).cols(), dimf);
     EXPECT_EQ(factorization.T_lift(i).rows(), dimx);
     EXPECT_EQ(factorization.T_lift(i).cols(), dimf);
   }

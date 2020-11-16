@@ -209,6 +209,15 @@ void SplitOCPTest::testLinearizeOCPAndRiccatiRecursion(
   EXPECT_TRUE(riccati_next.Pi.isApprox(riccati_next_ref.Pi));
   EXPECT_TRUE(riccati_next.pi.isApprox(riccati_next_ref.pi));
   EXPECT_TRUE(riccati_next.N.isApprox(riccati_next_ref.N));
+  const Eigen::MatrixXd T_next = Eigen::MatrixXd::Random(2*robot.dimv(), contact_status.dimf());
+  Eigen::MatrixXd T = Eigen::MatrixXd::Zero(2*robot.dimv(), contact_status.dimf());
+  ocp.backwardStateConstraintFactorization(T_next, dtau, T);
+  if (!robot.has_floating_base()) {
+    kkt_matrix.Fqq().setIdentity();
+  }
+  kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv());
+  const Eigen::MatrixXd T_ref = kkt_matrix.Fxx().transpose() * T_next;
+  EXPECT_TRUE(T.isApprox(T_ref));
   const Eigen::VectorXd dx0 = Eigen::VectorXd::Random(2*robot.dimv());
   d_ref = d;
   ocp.computePrimalDirection(robot, dtau, riccati, s, dx0, d, true);

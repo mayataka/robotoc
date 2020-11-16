@@ -7,6 +7,7 @@
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
+#include "idocp/ocp/state_constraint_riccati_lp_factorizer.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 
 namespace idocp {
@@ -64,6 +65,12 @@ public:
   ///
   /// @brief Computes the directions of the Lagrange multipliers with respect
   /// to the pure-state constraints.
+  /// @param[in] contact_sequence Contact sequence.
+  /// @param[in] impulse_riccati_factorization Riccati factorizations for 
+  /// impulse stages.
+  /// @param[in, out] constraint_factorization Constraint factorizations.
+  /// @param[in] dx0 Newton direction at the initial stage.
+  /// @param[in, out] d_impulse Directions at the impulse stages.
   ///
   template <typename VectorType>
   void computeLagrangeMultiplierDirection(
@@ -73,17 +80,6 @@ public:
       const Eigen::MatrixBase<VectorType>& dx0,
       std::vector<ImpulseSplitDirection>& d_impulse);
 
-  ///
-  /// @brief Factorize matrices and vectors for the linear problem to obtain
-  /// the directions of the Lagrange multipliers. Used 
-  /// in StateConstraintRiccatiFactorizer::computeLagrangeMultiplierDirection().
-  ///
-  template <typename VectorType>
-  void factorizeLinearProblem(
-      const RiccatiFactorization& impulse_riccati_factorization,
-      StateConstraintRiccatiFactorization& constraint_factorization,
-      const Eigen::MatrixBase<VectorType>& dx0) const;
-
   static void aggregateLagrangeMultiplierDirection(
       const ContactSequence& contact_sequence,
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
@@ -91,6 +87,13 @@ public:
       RiccatiFactorization& riccati_factorization);
 
   static void aggregateLagrangeMultiplierDirectionImpulse(
+      const ContactSequence& contact_sequence,
+      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
+      const std::vector<ImpulseSplitDirection>& d_impulse, 
+      const int impulse_index,
+      RiccatiFactorization& riccati_factorization);
+
+  static void aggregateLagrangeMultiplierDirectionImpulseAux(
       const ContactSequence& contact_sequence,
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
       const std::vector<ImpulseSplitDirection>& d_impulse, 
@@ -109,6 +112,7 @@ public:
 
 private:
   std::vector<Eigen::LLT<Eigen::MatrixXd>> llts_;
+  std::vector<StateConstraintRiccatiLPFactorizer> lp_factorizer_;
   int max_num_impulse_, dimv_, nproc_;
 
 };

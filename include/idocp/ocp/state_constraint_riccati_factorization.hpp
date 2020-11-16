@@ -91,6 +91,17 @@ public:
       const int impulse_index) const;
 
   ///
+  /// @brief A factorization matrix at a aux time stage. 
+  /// @param[in] impulse_index Impulse index of interested. 
+  ///
+  Eigen::Block<Eigen::MatrixXd> T_aux(const int impulse_index);
+
+  ///
+  /// @brief const version of StateConstraintRiccatiFactorization::T_aux(). 
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> T_aux(const int impulse_index) const;
+
+  ///
   /// @brief A factorization matrix at a lift time stage. 
   /// @param[in] lift_index Lift index of interested. 
   ///
@@ -157,7 +168,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  std::vector<Eigen::MatrixXd> T_full_, T_impulse_full_, T_lift_full_;
+  std::vector<Eigen::MatrixXd> T_full_, T_impulse_full_, T_aux_full_, T_lift_full_;
   Eigen::MatrixXd E_full_, EN_full_, ENEt_full_;
   Eigen::VectorXd e_full_;
   int N_, max_num_impulse_, dimv_, dimx_, dimf_;

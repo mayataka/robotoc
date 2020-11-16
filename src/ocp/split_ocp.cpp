@@ -92,10 +92,11 @@ void SplitOCP::forwardRiccatiRecursionSerial(
 }
 
 
-void SplitOCP::forwardRiccatiRecursion(SplitDirection& d, const double dtau, 
-                                       SplitDirection& d_next) {
-  riccati_factorizer_.forwardRiccatiRecursion(kkt_matrix_, kkt_residual_, 
-                                              d, dtau, d_next);
+void SplitOCP::forwardRiccatiRecursionUnconstrained(
+    SplitDirection& d, const double dtau, SplitDirection& d_next) const {
+  riccati_factorizer_.forwardRiccatiRecursionUnconstrained(kkt_matrix_, 
+                                                           kkt_residual_, d, 
+                                                           dtau, d_next);
 }
 
 
@@ -196,11 +197,6 @@ double SplitOCP::constraintViolation(Robot& robot,
   violation += stateequation::L1NormStateEuqationResidual(kkt_residual_);
   violation += contact_dynamics_.l1NormContactDynamicsResidual(dtau);
   return violation;
-}
-
-
-void SplitOCP::getStateFeedbackGain(Eigen::MatrixXd& Kq, 
-                                    Eigen::MatrixXd& Kv) const {
 }
 
 } // namespace idocp

@@ -69,9 +69,9 @@ inline void RiccatiFactorizer::forwardRiccatiRecursionParallel(
 
 inline void RiccatiFactorizer::forwardRiccatiRecursionSerialInitial(
     const RiccatiFactorization& riccati) {
-  assert(riccati.Pi.isIdentity()); // assume riccati.Pi is already a identity matrix
-  assert(riccati.pi.isZero()); // assume riccati.pi is already a zero vector  
-  assert(riccati.N.isZero()); // assume riccati.N is already a zero matrix.
+  assert(riccati.Pi.isIdentity()); // Checks riccati.Pi is a identity matrix.
+  assert(riccati.pi.isZero()); // Checks riccati.pi is a zero vector.
+  assert(riccati.N.isZero()); // Checks riccati.N is a zero matrix.
 }
 
 
@@ -116,7 +116,7 @@ inline void RiccatiFactorizer::backwardStateConstraintFactorization(
 }
 
 
-inline void RiccatiFactorizer::forwardRiccatiRecursion(
+inline void RiccatiFactorizer::forwardRiccatiRecursionUnconstrained(
     const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
     SplitDirection& d, const double dtau, 
     SplitDirection& d_next) const {
@@ -132,7 +132,7 @@ inline void RiccatiFactorizer::forwardRiccatiRecursion(
   }
   d_next.dv().noalias() = kkt_matrix.Fvq() * d.dq();
   d_next.dv().noalias() += kkt_matrix.Fvv() * d.dv();
-  // d_next.dv().noalias() += kkt_matrix.Fvu() * d.du();
+  d_next.dv().noalias() += kkt_matrix.Fvu() * d.du();
   d_next.dv().noalias() += kkt_residual.Fv();
 }
 
@@ -178,7 +178,7 @@ inline void RiccatiFactorizer::computeControlInputDirection(
 
 template <typename MatrixType>
 inline void RiccatiFactorizer::getStateFeedbackGain(
-    const Eigen::MatrixBase<MatrixType>& K) {
+    const Eigen::MatrixBase<MatrixType>& K) const {
   assert(K.rows() == dimu_);
   assert(K.cols() == 2*dimv_);
   const_cast<Eigen::MatrixBase<MatrixType>&> (K) = lqr_policy_.K;
@@ -188,7 +188,7 @@ inline void RiccatiFactorizer::getStateFeedbackGain(
 template <typename MatrixType1, typename MatrixType2>
 inline void RiccatiFactorizer::getStateFeedbackGain(
     const Eigen::MatrixBase<MatrixType1>& Kq, 
-    const Eigen::MatrixBase<MatrixType2>& Kv) {
+    const Eigen::MatrixBase<MatrixType2>& Kv) const {
   assert(Kq.rows() == dimu_);
   assert(Kq.cols() == dimv_);
   assert(Kv.rows() == dimu_);

@@ -100,6 +100,24 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
                                              kkt_matrix_, kkt_residual_);
 }
 
+
+template <typename MatrixType>
+inline void SplitOCP::getStateFeedbackGain(
+    const Eigen::MatrixBase<MatrixType>& K) const {
+  riccati_factorizer_.getStateFeedbackGain(
+      const_cast<Eigen::MatrixBase<MatrixType>&> (K));
+}
+
+
+template <typename MatrixType1, typename MatrixType2>
+inline void SplitOCP::getStateFeedbackGain(
+    const Eigen::MatrixBase<MatrixType1>& Kq, 
+    const Eigen::MatrixBase<MatrixType2>& Kv) const {
+  riccati_factorizer_.getStateFeedbackGain(
+      const_cast<Eigen::MatrixBase<MatrixType1>&> (Kq),
+      const_cast<Eigen::MatrixBase<MatrixType2>&> (Kv));
+}
+
 } // namespace idocp
 
 #endif // IDOCP_SPLIT_OCP_HXX_

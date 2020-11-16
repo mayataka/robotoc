@@ -12,6 +12,8 @@ inline StateConstraintRiccatiFactorization::StateConstraintRiccatiFactorization(
   : T_full_(N, Eigen::MatrixXd(2*robot.dimv(), robot.max_dimf())),
     T_impulse_full_(max_num_impulse, Eigen::MatrixXd(2*robot.dimv(), 
                                                      robot.max_dimf())),
+    T_aux_full_(max_num_impulse, Eigen::MatrixXd(2*robot.dimv(), 
+                                                 robot.max_dimf())),
     T_lift_full_(max_num_impulse, Eigen::MatrixXd(2*robot.dimv(), 
                                                   robot.max_dimf())),
     E_full_(Eigen::MatrixXd(robot.max_dimf(), 2*robot.dimv())),
@@ -30,6 +32,7 @@ inline StateConstraintRiccatiFactorization::
 StateConstraintRiccatiFactorization() 
   : T_full_(),
     T_impulse_full_(),
+    T_aux_full_(),
     T_lift_full_(),
     E_full_(),
     EN_full_(),
@@ -83,6 +86,22 @@ StateConstraintRiccatiFactorization::T_impulse(const int impulse_index) const {
   assert(impulse_index >= 0);
   assert(impulse_index < max_num_impulse_);
   return T_impulse_full_[impulse_index].topLeftCorner(dimx_, dimf_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> 
+StateConstraintRiccatiFactorization::T_aux(const int impulse_index) {
+  assert(impulse_index >= 0);
+  assert(impulse_index < max_num_impulse_);
+  return T_aux_full_[impulse_index].topLeftCorner(dimx_, dimf_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> 
+StateConstraintRiccatiFactorization::T_aux(const int impulse_index) const {
+  assert(impulse_index >= 0);
+  assert(impulse_index < max_num_impulse_);
+  return T_aux_full_[impulse_index].topLeftCorner(dimx_, dimf_);
 }
 
 

@@ -84,8 +84,9 @@ public:
                                        const bool exist_state_constraint=false);
 
   ///
-  /// @brief Serial part of the forward Riccati recursion with state 
-  /// constraint. 
+  /// @brief Checks the initial factorization of the serial part of the forward 
+  /// Riccati recursion with pure-state equality constraints. 
+  /// @param[in] riccati Riccati factorization at the current time stage. 
   ///
   static void forwardRiccatiRecursionSerialInitial(
       const RiccatiFactorization& riccati);
@@ -122,17 +123,17 @@ public:
       const double dtau, const Eigen::MatrixBase<MatrixType2>& T) const;
 
   ///
-  /// @brief This is unconstrained version of the forward Riccati recursion. 
+  /// @brief Performs the unconstrained, classical forward Riccati recursion. 
   /// @param[in] kkt_matrix KKT matrix at the current time stage. 
   /// @param[in] kkt_residual KKT residual at the current time stage. 
   /// @param[in, out] d Split direction at the current time stage. 
   /// @param[in] dtau Time step between the current time stage and the next 
   /// @param[out] d_next Split direction at the next time stage. 
   ///
-  void forwardRiccatiRecursion(const KKTMatrix& kkt_matrix, 
-                               const KKTResidual& kkt_residual,
-                               SplitDirection& d, const double dtau,
-                               SplitDirection& d_next) const;
+  void forwardRiccatiRecursionUnconstrained(const KKTMatrix& kkt_matrix, 
+                                            const KKTResidual& kkt_residual,
+                                            SplitDirection& d, const double dtau,
+                                            SplitDirection& d_next) const;
 
   ///
   /// @brief Computes the Newton direction of the state vector. 
@@ -175,7 +176,7 @@ public:
   /// @param[in] K The state feedback gain. 
   ///
   template <typename MatrixType>
-  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType>& K);
+  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType>& K) const;
 
   ///
   /// @brief Getter of the state feedback gain of the LQR subproblem. 
@@ -184,7 +185,7 @@ public:
   ///
   template <typename MatrixType1, typename MatrixType2>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Kq,
-                            const Eigen::MatrixBase<MatrixType2>& Kv);
+                            const Eigen::MatrixBase<MatrixType2>& Kv) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

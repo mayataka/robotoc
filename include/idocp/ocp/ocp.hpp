@@ -209,10 +209,7 @@ private:
   LineSearchFilter filter_;
   double T_, dtau_, step_size_reduction_rate_, min_step_size_;
   int N_, num_proc_;
-  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_,
-                  costs_impulse_, violations_impulse, costs_lift_, 
-                  violations_lift_;
-  
+  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_;
 
   void linearizeSplitOCPs(const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v);

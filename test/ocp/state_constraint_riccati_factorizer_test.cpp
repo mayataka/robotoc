@@ -6,6 +6,7 @@
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
+#include "idocp/ocp/state_constraint_riccati_lp_factorizer.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
@@ -29,7 +30,6 @@ protected:
   }
 
   static ContactStatus createRamdomContactStatus(const Robot& robot);
-  void testFactorizeLinearProblem(const Robot& robot) const;
   void testComputeLagrangeMultiplierDirection(const Robot& robot) const;
   void testAggregateLagrangeMultiplierDirection(const Robot& robot) const;
   void testAggregateLagrangeMultiplierDirectionImpulse(const Robot& robot) const;
@@ -48,45 +48,11 @@ ContactStatus StateConstraintRiccatiFactorizerTest::createRamdomContactStatus(co
 }
 
 
-void StateConstraintRiccatiFactorizerTest::testFactorizeLinearProblem(const Robot& robot) const {
-  RiccatiFactorization impulse_riccati_factorization(robot);
-  impulse_riccati_factorization.N.setRandom();
-  impulse_riccati_factorization.N = (impulse_riccati_factorization.N * impulse_riccati_factorization.N.transpose()).eval();
-  impulse_riccati_factorization.N += Eigen::MatrixXd::Identity(2*robot.dimv(), 2*robot.dimv());
-  impulse_riccati_factorization.Pi.setRandom();
-  impulse_riccati_factorization.pi.setRandom();
-  StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
-  ImpulseStatus impulse_status = robot.createImpulseStatus();
-  impulse_status.setRandom();
-  constraint_factorization.setImpulseStatus(impulse_status);
-  constraint_factorization.Eq().setRandom();
-  constraint_factorization.e().setRandom();
-  RiccatiFactorization impulse_riccati_factorization_ref = impulse_riccati_factorization;
-  StateConstraintRiccatiFactorization constraint_factorization_ref = constraint_factorization;
-  const Eigen::VectorXd dx0 = Eigen::VectorXd::Random(2*robot.dimv());
-  StateConstraintRiccatiFactorizer factorizer(robot, max_num_impulse);
-  factorizer.factorizeLinearProblem(impulse_riccati_factorization, constraint_factorization, dx0);
-  const int dimf = impulse_status.dimp();
-  const int dimv = robot.dimv();
-  const int dimx = 2*robot.dimv();
-  Eigen::MatrixXd E = Eigen::MatrixXd::Zero(dimf, dimx);
-  E.leftCols(dimv) = constraint_factorization_ref.Eq();
-  const Eigen::MatrixXd EN = E * impulse_riccati_factorization_ref.N;
-  const Eigen::MatrixXd ENEt = EN * E.transpose();
-  const Eigen::VectorXd e = constraint_factorization_ref.e() 
-                            + E * impulse_riccati_factorization_ref.Pi * dx0
-                            + E * impulse_riccati_factorization_ref.pi;
-  EXPECT_TRUE(EN.isApprox(constraint_factorization.EN()));
-  EXPECT_TRUE(ENEt.isApprox(constraint_factorization.ENEt()));
-  EXPECT_TRUE(e.isApprox(constraint_factorization.e()));
-  std::cout << dimf << std::endl;
-}
-
-
 void StateConstraintRiccatiFactorizerTest::testComputeLagrangeMultiplierDirection(const Robot& robot) const {
   std::vector<RiccatiFactorization> impulse_riccati_factorization(max_num_impulse, RiccatiFactorization(robot));
   std::vector<StateConstraintRiccatiFactorization> constraint_factorization(max_num_impulse, StateConstraintRiccatiFactorization(robot, N, max_num_impulse));
   std::vector<ImpulseSplitDirection> d(max_num_impulse, ImpulseSplitDirection(robot));
+  std::vector<StateConstraintRiccatiLPFactorizer> lp_factorizer(max_num_impulse, StateConstraintRiccatiLPFactorizer(robot));
   ContactSequence contact_sequence(robot, T, N);
   const int num_proc = 4;
   StateConstraintRiccatiFactorizer factorizer(robot, max_num_impulse, num_proc);
@@ -123,7 +89,7 @@ void StateConstraintRiccatiFactorizerTest::testComputeLagrangeMultiplierDirectio
   int dim_total = 0;
   std::vector<int> dims;
   for (int i=0; i<contact_sequence.totalNumImpulseStages(); ++i) {
-    factorizer.factorizeLinearProblem(impulse_riccati_factorization[i], constraint_factorization_ref[i], dx0);
+    lp_factorizer[i].factorizeLinearProblem(impulse_riccati_factorization[i], constraint_factorization_ref[i], dx0);
     const int dim = contact_sequence.impulseStatus(i).dimp();
     dims.push_back(dim);
     dim_total += dim;
@@ -307,7 +273,6 @@ void StateConstraintRiccatiFactorizerTest::testAggregateLagrangeMultiplierDirect
 TEST_F(StateConstraintRiccatiFactorizerTest, fixed_base) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
-  testFactorizeLinearProblem(robot);
   testComputeLagrangeMultiplierDirection(robot);
   testAggregateLagrangeMultiplierDirection(robot);
   testAggregateLagrangeMultiplierDirectionImpulse(robot);
@@ -318,7 +283,6 @@ TEST_F(StateConstraintRiccatiFactorizerTest, fixed_base) {
 TEST_F(StateConstraintRiccatiFactorizerTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
-  testFactorizeLinearProblem(robot);
   testComputeLagrangeMultiplierDirection(robot);
   testAggregateLagrangeMultiplierDirection(robot);
   testAggregateLagrangeMultiplierDirectionImpulse(robot);

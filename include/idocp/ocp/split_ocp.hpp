@@ -144,8 +144,9 @@ public:
       const Eigen::MatrixBase<MatrixType1>& T_next, const double dtau,
       const Eigen::MatrixBase<MatrixType2>& T) const;
 
-  void forwardRiccatiRecursion(SplitDirection& d, const double dtau, 
-                               SplitDirection& d_next);
+  void forwardRiccatiRecursionUnconstrained(SplitDirection& d,  
+                                            const double dtau, 
+                                            SplitDirection& d_next) const;
 
 
   ///
@@ -273,14 +274,20 @@ public:
                              const Eigen::VectorXd& v_next);
 
   ///
-  /// @brief Gets the state-feedback gain for the control input torques.
-  /// @param[out] Kq Gain with respec to the configuration. Size must be 
-  /// Robot::dimv() x Robot::dimv().
-  /// @param[out] Kv Gain with respec to the velocity. Size must be
-  /// Robot::dimv() x Robot::dimv().
+  /// @brief Getter of the state feedback gain of the LQR subproblem. 
+  /// @param[in] K The state feedback gain. 
   ///
-  void getStateFeedbackGain(Eigen::MatrixXd& Kq, Eigen::MatrixXd& Kv) const;
+  template <typename MatrixType>
+  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType>& K) const;
 
+  ///
+  /// @brief Getter of the state feedback gain of the LQR subproblem. 
+  /// @param[in] Kq The state feedback gain with respect to the configuration. 
+  /// @param[in] Kv The state feedback gain with respect to the velocity. 
+  ///
+  template <typename MatrixType1, typename MatrixType2>
+  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Kq,
+                            const Eigen::MatrixBase<MatrixType2>& Kv) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

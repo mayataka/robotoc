@@ -10,10 +10,9 @@ namespace idocp {
 OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
          const std::shared_ptr<Constraints>& constraints, const double T, 
          const int N, const int max_num_impulse, const int num_proc)
-  : split_ocps_(N, SplitOCP(robot, cost, constraints), 
-                max_num_impulse, SplitImpulseOCP(robot, 
-                                                 cost->getImpulseCostFunction(), 
-                                                 constraints->getImpulseConstraints())),
+  : split_ocps_(N, SplitOCP(robot, cost, constraints), max_num_impulse, 
+                SplitImpulseOCP(robot, cost->getImpulseCostFunction(), 
+                                constraints->getImpulseConstraints())),
     terminal_ocp_(robot, cost, constraints),
     robots_(num_proc, robot),
     filter_(),
@@ -27,13 +26,10 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     d_(N+1, SplitDirection(robot), max_num_impulse, ImpulseSplitDirection(robot)),
     riccati_(N+1, RiccatiFactorization(robot), max_num_impulse, RiccatiFactorization(robot)),
     constraint_factorization_(max_num_impulse, 
-                              StateConstraintRiccatiFactorization(robot, N, 
-                                                                  max_num_impulse)),
+                              StateConstraintRiccatiFactorization(robot, N, max_num_impulse)),
     constraint_factorizer_(robot, max_num_impulse, num_proc),
     primal_step_sizes_(Eigen::VectorXd::Zero(N)),
     dual_step_sizes_(Eigen::VectorXd::Zero(N)),
-    costs_(Eigen::VectorXd::Zero(N+1)), 
-    violations_(Eigen::VectorXd::Zero(N)),
     contact_sequence_(robot, T, N) {
   assert(T > 0);
   assert(N > 0);
@@ -62,9 +58,7 @@ OCP::OCP()
     d_(),
     riccati_(),
     primal_step_sizes_(),
-    dual_step_sizes_(),
-    costs_(), 
-    violations_() {
+    dual_step_sizes_() {
 }
 
 
@@ -108,8 +102,7 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
                                           contact_sequence_.impulseStatus(i), 
                                           t+contact_sequence_.impulseTime(impulse_idx),  
                                           s_[time_stage_before_impulse].q, 
-                                          s_.impulse[i], 
-                                          s_[time_stage_before_impulse+1]);
+                                          s_.impulse[i], s_.aux[i]);
       split_ocps_.impulse[i].getStateConstraintFactorization(
           constraint_factorization_[impulse_idx].Eq(), 
           constraint_factorization_[impulse_idx].e());

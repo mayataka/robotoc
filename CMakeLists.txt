@@ -97,6 +97,7 @@ add_library(
   src/ocp/terminal_ocp.cpp
   # src/ocp/split_temporary_solution.cpp
   src/ocp/state_constraint_riccati_factorization.cpp
+  src/ocp/state_constraint_riccati_lp_factorizer.cpp
   src/ocp/state_constraint_riccati_factorizer.cpp
   src/ocp/ocp.cpp
   # src/ocp/backward_correction.cpp
