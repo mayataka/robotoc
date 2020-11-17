@@ -211,8 +211,24 @@ private:
   int N_, num_proc_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_;
 
+  const Eigen::VectorXd& q_prev(const int time_stage) const {
+    assert(time_stage >= 1);
+    if (contact_sequence_.existImpulseStage(time_stage-1)) {
+      return s_.aux[time_stage-1].q;
+    }
+    else if (contact_sequence_.existLiftStage(time_stage-1)) {
+      return s_.lift[time_stage-1].q;
+    }
+    else {
+      return s_[time_stage-1].q;
+    }
+  }
+
   void linearizeSplitOCPs(const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v);
+
+  void linearizeSplitOCP(const double t, const Eigen::VectorXd& q, 
+                         const Eigen::VectorXd& v);
 
 };
 

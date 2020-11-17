@@ -166,23 +166,41 @@ public:
   int timeStageBeforeLift(const int lift_index) const;
 
   ///
-  /// @brief Check if the impulse stage exists or not.  
+  /// @brief Check if the impulse stage exists over the horizon or not.  
   /// @return true if the impulse stage exists. false otherwise.
   ///
   bool existImpulseStage() const;
 
   ///
-  /// @brief Check if the lift stage exists or not.  
+  /// @brief Check if the lift stage exists over the horizon or not.  
   /// @return true if the lift stage exists. false otherwise.
   ///
   bool existLiftStage() const;
+
+  ///
+  /// @brief Check if the impulse stage exists over a time stage or not.
+  /// @param[in] time_stage Time stage of interested.
+  /// @return true if the impulse stage exists. false otherwise.
+  ///
+  bool existImpulseStage(const int time_stage) const;
+
+  ///
+  /// @brief Check if the lift stage exists over a time stage or not.  
+  /// @param[in] time_stage Time stage of interested.
+  /// @return true if the lift stage exists. false otherwise.
+  ///
+  bool existLiftStage(const int time_stage) const;
+
+  int impulseIndex(const int time_stage) const;
+
+  int liftIndex(const int time_stage) const;
 
 private:
   int N_;
   double T_, dtau_;
   ContactSequencePrimitive contact_sequence_;
-  std::vector<int> num_impulse_stages_, num_lift_stages_,  
-                   impulse_stage_, lift_stage_;
+  std::vector<int> num_impulse_stages_, num_lift_stages_, impulse_stage_, 
+                   lift_stage_, impulse_index_, lift_index_;
 
   int eventTimeStageFromContinuousEventTime(const double event_time) const;
 
@@ -195,6 +213,10 @@ private:
   void setImpulseStage();
 
   void setLiftStage();
+
+  void setImpulseIndex();
+
+  void setLiftIndex();
 };
 
 } // namespace idocp 

@@ -15,21 +15,21 @@
 
 namespace idocp {
 
-class RobotDynamics {
+class UnconstrainedDynamics {
 public:
-  RobotDynamics(const Robot& robot);
+  UnconstrainedDynamics(const Robot& robot);
 
-  RobotDynamics();
+  UnconstrainedDynamics();
 
-  ~RobotDynamics();
+  ~UnconstrainedDynamics();
 
-  RobotDynamics(const RobotDynamics&) = default;
+  UnconstrainedDynamics(const UnconstrainedDynamics&) = default;
 
-  RobotDynamics& operator=(const RobotDynamics&) = default;
+  UnconstrainedDynamics& operator=(const UnconstrainedDynamics&) = default;
  
-  RobotDynamics(RobotDynamics&&) noexcept = default;
+  UnconstrainedDynamics(UnconstrainedDynamics&&) noexcept = default;
 
-  RobotDynamics& operator=(RobotDynamics&&) noexcept = default;
+  Dynamics& operator=(RobotDynamics&&) noexcept = default;
 
   void linearizeRobotDynamics(Robot& robot, const ContactStatus& contact_status, 
                               const double dtau, const SplitSolution& s, 

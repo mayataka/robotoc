@@ -85,9 +85,9 @@ add_library(
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
+  # src/ocp/unconstrained_dynamics.cpp
   src/ocp/contact_dynamics_data.cpp
   src/ocp/contact_dynamics.cpp
-  # src/ocp/non_contact_dynamics.cpp
   src/ocp/line_search_filter.cpp
   src/ocp/riccati_factorization.cpp
   src/ocp/backward_riccati_recursion_factorizer.cpp
@@ -100,6 +100,7 @@ add_library(
   src/ocp/state_constraint_riccati_factorization.cpp
   src/ocp/state_constraint_riccati_lp_factorizer.cpp
   src/ocp/state_constraint_riccati_factorizer.cpp
+  src/ocp/riccati_recursion.cpp
   src/ocp/ocp.cpp
   # src/ocp/backward_correction.cpp
   # src/ocp/split_parnmpc.cpp

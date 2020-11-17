@@ -18,7 +18,9 @@ inline ContactSequence::ContactSequence(const Robot& robot, const double T,
     num_impulse_stages_(N+1, 0), 
     num_lift_stages_(N+1, 0),
     impulse_stage_(N, -1),
-    lift_stage_(N, -1) {
+    lift_stage_(N, -1),
+    impulse_index_(N, -1),
+    lift_index_(N, -1) {
   try {
     if (T <= 0) {
       throw std::out_of_range("invalid value: T must be positive!");
@@ -41,7 +43,9 @@ inline ContactSequence::ContactSequence()
     num_impulse_stages_(), 
     num_lift_stages_(),
     impulse_stage_(), 
-    lift_stage_() {
+    lift_stage_(),
+    impulse_index_(),
+    lift_index_() {
 }
 
 
@@ -184,6 +188,30 @@ inline bool ContactSequence::existLiftStage() const {
 }
 
 
+inline bool ContactSequence::existImpulseStage(const int time_stage) const {
+  return contact_sequence_.existImpulse(time_stage);
+}
+
+
+inline bool ContactSequence::existLiftStage(const int time_stage) const {
+  return contact_sequence_.existOnlyLift(time_stage);
+}
+
+
+inline int ContactSequence::impulseIndex(const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage < N_);
+  return impulse_index_[time_stage];
+}
+
+
+inline int ContactSequence::liftIndex(const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage < N_);
+  return lift_index_[time_stage];
+}
+
+
 inline int ContactSequence::eventTimeStageFromContinuousEventTime(
     const double event_time) const {
   if (event_time <= 0) {
@@ -203,6 +231,8 @@ inline void ContactSequence::countAll() {
   countNumLiftStages();
   setImpulseStage();
   setLiftStage();
+  setImpulseIndex();
+  setLiftIndex();
 }
 
 
@@ -252,6 +282,34 @@ inline void ContactSequence::setLiftStage() {
   }
   for (int i=iterator; i<N_; ++i) {
     lift_stage_[i] = -1;
+  }
+}
+
+
+inline void ContactSequence::setImpulseIndex() {
+  int iterator = 0;
+  for (int i=0; i<N_; ++i) {
+    if (contact_sequence_.existImpulse(i)) {
+      impulse_index_[i] = iterator;
+      ++iterator;
+    }
+    else {
+      impulse_index_[i] = -1;
+    }
+  }
+}
+
+
+inline void ContactSequence::setLiftIndex() {
+  int iterator = 0;
+  for (int i=0; i<N_; ++i) {
+    if (contact_sequence_.existOnlyLift(i)) {
+      lift_index_[i] = iterator;
+      ++iterator;
+    }
+    else {
+      lift_index_[i] = -1;
+    }
   }
 }
 

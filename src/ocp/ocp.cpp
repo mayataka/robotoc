@@ -124,6 +124,7 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
 
     }
   }
+
   for (int i=N_-1; i>=0; --i) {
     split_ocps_[i].backwardRiccatiRecursion(riccati_[i+1], dtau_, riccati_[i]);
   }
@@ -207,55 +208,84 @@ void OCP::setProblem() {
 
 void OCP::linearizeSplitOCPs(const double t, const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v) {
-  // assert(q.size() == robots_[0].dimq());
-  // assert(v.size() == robots_[0].dimv());
+  // const int N_impulse = contact_sequence_.totalNumImpulseStages();
+  // const int N_lift = contact_sequence_.totalNumLiftStages();
+  // const int N_all = N_ + 1 + N_impulse + N_lift;
   // #pragma omp parallel for num_threads(num_proc_)
-  // const int N_all = N_ + contact_sequence_.totalNumImpulseStages() 
-  //                      + contact_sequence_.totalNumLiftStages();
   // for (int i=0; i<N_all; ++i) {
   //   if (i == 0) {
   //     const int robot_id = omp_get_thread_num();
-  //     if (contact_sequence_.timeStageBeforeImpulse(0) == 0) {
-  //       split_ocps_[i].linearizeOCP(robots_[robot_id], 
-  //                                   contact_sequence_.contactStatus(i), 
-  //                                   t+i*dtau_, dtau_, q, s_[i], 
-  //                                   s_[i].impulse(0));
+  //     if (contact_sequence_.existImpulse(0)) {
+  //       split_ocps_[0].linearizeOCP(robots_[robot_id], 
+  //                                   contact_sequence_.contactStatus(0), 
+  //                                   t, dtau_, q, s_[0], s_.aux[0]);
   //     }
-  //     else if (contact_sequence_.timeStageBeforeLift(0) == 0) {
-  //       split_ocps_[i].linearizeOCP(robots_[robot_id], 
-  //                                   contact_sequence_.contactStatus(i), 
-  //                                   t+i*dtau_, dtau_, q, s_[i], s_[i].lift(0));
+  //     else if (contact_sequence_.existLift(0)) {
+  //       split_ocps_[0].linearizeOCP(robots_[robot_id], 
+  //                                   contact_sequence_.contactStatus(0), 
+  //                                   t, dtau_, q, s_[0], s_.lift[0]);
   //     }
-  //     split_ocps_[i].linearizeOCP(robots_[robot_id], 
-  //                                 contact_sequence_.contactStatus(i), 
-  //                                 t+i*dtau_, dtau_, q, s_[i], s_[i+1]);
+  //     else {
+  //       split_ocps_[0].linearizeOCP(robots_[robot_id], 
+  //                                   contact_sequence_.contactStatus(0), 
+  //                                   t, dtau_, q, s_[0], s_[1]);
+  //     }
   //   }
   //   else if (i < N_) {
   //     const int robot_id = omp_get_thread_num();
-  //     split_ocps_[i].linearizeOCP(robots_[robot_id], 
-  //                                 contact_sequence_.contactStatus(i), 
-  //                                 t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
+  //     if (contact_sequence_.existImpulse(i)) {
+  //       split_ocps_[i].linearizeOCP(robots_[robot_id], 
+  //                                   contact_sequence_.contactStatus(i), 
+  //                                   t, dtau_, q_prev(i), s_[i], 
+  //                                   s_.aux[contact_sequence_.impulseIndex(i)]);
+  //     }
+  //     else if (contact_sequence_.existLift(i)) {
+  //       split_ocps_[i].linearizeOCP(robots_[robot_id], 
+  //                                   contact_sequence_.contactStatus(i), 
+  //                                   t, dtau_, q_prev(i), s_[i], 
+  //                                   s_.lift[contact_sequence_.liftIndex(i)]);
+  //     }
+  //     else {
+  //       split_ocps_[i].linearizeOCP(robots_[robot_id], 
+  //                                   contact_sequence_.contactStatus(i), 
+  //                                   t, dtau_, q_prev(i), s_[i], s_[i]);
+  //     }
   //   }
   //   else if (i == N_) {
   //     const int robot_id = omp_get_thread_num();
   //     terminal_ocp_.linearizeOCP(robots_[robot_id], t+T_, s_[N_]);
   //     terminal_ocp_.backwardRiccatiRecursion(riccati_[N_]);
   //   }
-  //   else if (i < N_ + contact_sequence_.totalNumImpulseStages()) {
+  //   else if (i < N_ + 1 + N_impulse) {
   //     const int robot_id = omp_get_thread_num();
-  //     const int impulse_idx = 
-  //     split_ocps_[i].impulse(impulse_idx).linearizeOCP(
-  //         robots_[robot_id], contact_sequence_.impulseStatus(impulse_idx), 
-  //         t+i*dtau_, dtau_, q, s_.impulse(impulse_idx), s_[i+1]);
+  //     const int impulse_idx = i - (N_+1);
+  //     const int time_stage_before_impulse = contact_sequence_.timeStageBeforeImpulse(impulse_idx);
+  //     split_ocps_.impulse[i].linearizeOCP(robots_[robot_id], 
+  //                                         contact_sequence_.impulseStatus(i), 
+  //                                         t+contact_sequence_.impulseTime(impulse_idx),  
+  //                                         s_[time_stage_before_impulse].q, 
+  //                                         s_.impulse[i], s_.aux[i]);
+  //     split_ocps_.impulse[i].getStateConstraintFactorization(
+  //         constraint_factorization_[impulse_idx].Eq(), 
+  //         constraint_factorization_[impulse_idx].e());
+  //     constraint_factorization_[impulse_idx].T_impulse(impulse_idx).topRows(robots_[robot_id].dimv())
+  //         = constraint_factorization_[impulse_idx].Eq();
+  //     constraint_factorization_[impulse_idx].T_impulse(impulse_idx).bottomRows(robots_[robot_id].dimv()).setZero();
   //   }
   //   else {
   //     const int robot_id = omp_get_thread_num();
-  //     const int lift_idx = 
-  //     split_ocps_[i].lift(lift_idx).linearizeOCP(
-  //         robots_[robot_id], contact_sequence_.contactStatus(i), 
-  //         t+i*dtau_, dtau_, q, s_.lift(lift_idx), s_[i+1]);
+  //     const int lift_idx = i - (N_+1+N_impulse);
+  //     const int time_stage_before_lift = contact_sequence_.timeStageBeforeLift(lift_idx);
+  //     split_ocps_.lift[i].linearizeOCP(robots_[robot_id], 
+  //                                      contact_sequence_.contactStatus(time_stage_before_lift+1), 
+  //                                      t+contact_sequence_.liftTime(lift_idx),  
+  //                                      dtau_,
+  //                                      s_[time_stage_before_lift].q, 
+  //                                      s_.lift[i],  
+  //                                      s_[time_stage_before_lift+1]);
   //   }
   // }
+
 }
 
 
