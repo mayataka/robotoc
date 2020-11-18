@@ -5,7 +5,6 @@
 #include <cassert>
 
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
 
 namespace idocp {
 
@@ -13,6 +12,7 @@ class DiscretizationSize {
 public:
   DiscretizationSize(const double T, const int N) 
     : T_(T),
+      dtau_origin_(T/N),
       N_(N),
       total_num_impulse_(0),
       total_num_lift_(0),
@@ -23,6 +23,7 @@ public:
 
   DiscretizationSize() 
     : T_(0),
+      dtau_origin_(0),
       N_(0),
       total_num_impulse_(0),
       total_num_lift_(0),
@@ -35,17 +36,17 @@ public:
   }
 
   void setContactSequence(const ContactSequence& contact_sequence) {
-    total_num_impulse = contact_sequence.totalNumImpulseStages();
-    total_num_lift = contact_sequence.totalNumLiftStages();
     const double dtau = T_ / N_;
     for (int i=0; i<N_; ++i) {
-      if () {
-        dtau_[i] = 
-        dtau_aux_[] = 
+      if (contact_sequence.existImpulseStage(i)) {
+        dtau_[i] = contact_sequence.impulseTime(contact_sequence.impulseIndex(i)) 
+                    - i * dtau_origin_;
+        dtau_aux_[i] = dtau_origin_ - dtau_[i];
       }
-      else if () {
-        dtau_[i] = 
-        dtau_lift_[] = 
+      else if (contact_sequence.existLiftStage(i)) {
+        dtau_[i] = contact_sequence.liftTime(contact_sequence.liftIndex(i)) 
+                    - i * dtau_origin_;
+        dtau_lift_[i] = dtau_origin_ - dtau_[i];
       }
       else {
         dtau_[i] = dtau;
@@ -71,9 +72,8 @@ public:
     return dtau_lift_[lift_index];
   }
 
-
 private:
-  double T_;
+  double T_, dtau_origin_;
   int N_, total_num_impulse_, total_num_lift_;
   std::vector<double> dtau_;
   std::vector<double> dtau_aux_;

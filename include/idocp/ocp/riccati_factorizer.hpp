@@ -18,7 +18,7 @@ namespace idocp {
 
 ///
 /// @class RiccatiFactorizer
-/// @brief Riccati factorizer for SplitOCP.
+/// @brief Riccati factorizer for a time stage.
 ///
 class RiccatiFactorizer {
 public:
@@ -119,7 +119,7 @@ public:
   ///
   template <typename MatrixType1, typename MatrixType2>
   void backwardStateConstraintFactorization(
-      const KKTMatrix& kkt_matrix, const Eigen::MatrixBase<MatrixType1>& T_next,  
+      const Eigen::MatrixBase<MatrixType1>& T_next, const KKTMatrix& kkt_matrix, 
       const double dtau, const Eigen::MatrixBase<MatrixType2>& T) const;
 
   ///
@@ -205,4 +205,4 @@ private:
 
 #include "idocp/ocp/riccati_factorizer.hxx"
 
-#endif // IDOCP_RICCATI_FACTORIZER_HPP_
+#endif // IDOCP_RICCATI_FACTORIZER_HPP_ 

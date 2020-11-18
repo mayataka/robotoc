@@ -2,41 +2,43 @@
 #define IDOCP_RICCATI_RECURSION_HPP_
 
 #include <vector>
+#include <utility>
 
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/ocp/split_ocp.hpp"
-#include "idocp/ocp/terminal_ocp.hpp"
-#include "idocp/impulse/split_impulse_ocp.hpp"
+#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_solution.hpp"
+#include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
-#include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
+#include "idocp/ocp/riccati_factorizer.hpp"
+#include "idocp/impulse/impulse_riccati_factorizer.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 
 namespace idocp {
 
 ///
-/// @class RiccatiRecursion 
-/// @brief Contact sequence, i.e., sequence of contact status over the 
-/// horizon. Provides the formulation of the optimal control problem 
-/// with impulse and lift.
+/// @class RiccatiRecursion
+/// @brief Riccati factorizer for SplitOCP.
 ///
 class RiccatiRecursion {
 public:
-  using HybridSplitOCPs = hybrid_container<SplitOCP, SplitImpulseOCP>;
-  using HybridSplitSolutions = hybrid_container<SplitSolution, ImpulseSplitSolution>;
-  using HybridSplitDirections = hybrid_container<SplitDirection, ImpulseSplitDirection>;
+  using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
+  using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
+  using HybridRiccatiFactorization = hybrid_container<RiccatiFactorization, RiccatiFactorization>;
+  using HybridRiccatiFactorizer = hybrid_container<RiccatiFactorizer, ImpulseRiccatiFactorizer>;
 
   ///
-  /// @brief Constructor. 
+  /// @brief Construct factorizer.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] T Length of the horizon. Must be positive.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
   ///
   RiccatiRecursion(const Robot& robot, const double T, const int N, 
-                   const int max_num_impulse=0, const int nproc=1);
+                    const int max_num_impulse, const int nproc);
 
   ///
   /// @brief Default constructor. 
@@ -47,14 +49,14 @@ public:
   /// @brief Destructor. 
   ///
   ~RiccatiRecursion();
-
+ 
   ///
   /// @brief Default copy constructor. 
   ///
   RiccatiRecursion(const RiccatiRecursion&) = default;
 
   ///
-  /// @brief Default copy assign operator. 
+  /// @brief Default copy operator. 
   ///
   RiccatiRecursion& operator=(const RiccatiRecursion&) = default;
 
@@ -68,46 +70,37 @@ public:
   ///
   RiccatiRecursion& operator=(RiccatiRecursion&&) noexcept = default;
 
-  void backwardRiccatiRecursionTerminal(const TerminalOCP& terminal_ocp);
+  void backwardRiccatiRecursionTerminal(
+      const HybridKKTMatrix& kkt_matrix, const HybridKKTResidual& kkt_residual,
+      HybridRiccatiFactorization& riccati_factorization) const;
 
-  void backwardRiccatiRecursion(const ContactSequence& contact_sequence, 
-                                HybridSplitOCPs& split_ocps);
+  void backwardRiccatiRecursion(
+      const ContactSequence& contact_sequence, HybridKKTMatrix& kkt_matrix, 
+      HybridKKTResidual& kkt_residual, 
+      HybridRiccatiFactorization& riccati_factorization);
 
-  void forwardRiccatiRecursionParallel(const ContactSequence& contact_sequence, 
-                                       HybridSplitOCPs& split_ocps) const;
+  void forwardRiccatiRecursionParallel(
+      const ContactSequence& contact_sequence, HybridKKTMatrix& kkt_matrix, 
+      HybridKKTResidual& kkt_residual);
 
-  void forwardRiccatiRecursionSerial(const ContactSequence& contact_sequence,
-                                     HybridSplitOCPs& split_ocps);
+  void forwardRiccatiRecursionSerial(
+      const ContactSequence& contact_sequence, 
+      const HybridKKTMatrix& kkt_matrix, const HybridKKTResidual& kkt_residual, 
+      HybridRiccatiFactorization& riccati_factorization);
 
-  template <typename VectorType>
-  void computeLagrangeMultiplierDirection(
-      const ContactSequence& contact_sequence, const HybridSplitOCPs& split_ocps,
-      const Eigen::MatrixBase<VectorType>& dx0, HybridSplitDirections& d);
-
-  void computeDirectionAndStepSize(std::vector<Robot>& robots,
-                                   const ContactSequence& contact_sequence,
-                                   const HybridSplitOCPs& split_ocps,
-                                   const HybridSplitSolutions& s,
-                                   HybridSplitDirections& d);
-  
-  double primalStepSize() const;
-
-  double dualStepSize() const;
+  void backwardStateConstraintFactorization(
+      const ContactSequence& contact_sequence, 
+      const HybridKKTMatrix& kkt_matrix, 
+      std::vector<StateConstraintRiccatiFactorization>& constraint_factorization) const;
 
 private:
   int N_, max_num_impulse_, nproc_;
   double dtau_;
-  std::vector<RiccatiFactorization> riccati_factorization_, 
-                                    impulse_riccati_factorization_, 
-                                    aux_riccati_factorization_,
-                                    lift_riccati_factorization_;
-  std::vector<StateConstraintRiccatiFactorization> constraint_factorization_;
-  StateConstraintRiccatiFactorizer constraint_factorizer_;
-  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_;
+  HybridRiccatiFactorizer riccati_factorizer_;
 
 };
 
-} // namespace idocp 
+} // namespace idocp
 
 #include "idocp/ocp/riccati_recursion.hxx"
 

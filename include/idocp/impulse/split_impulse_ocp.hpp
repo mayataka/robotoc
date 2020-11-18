@@ -16,10 +16,7 @@
 #include "idocp/constraints/impulse_constraints.hpp"
 #include "idocp/impulse/impulse_state_equation.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
-#include "idocp/impulse/impulse_riccati_factorizer.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 
 
 namespace idocp {
@@ -93,64 +90,41 @@ public:
   /// @param[in] q_prev Configuration of the previous stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
+  /// @param[out] kkt_matrix KKT matrix of this stage.
+  /// @param[out] kkt_residual KKT residual of this stage.
   ///
   void linearizeOCP(Robot& robot, const ImpulseStatus& impulse_status, 
                     const double t, const Eigen::VectorXd& q_prev, 
                     const ImpulseSplitSolution& s, 
-                    const SplitSolution& s_next);
-
-  template <typename MatrixType, typename VectorType>
-  void getStateConstraintFactorization(
-      const Eigen::MatrixBase<MatrixType>& Eq,
-      const Eigen::MatrixBase<VectorType>& e) const;
-
-  template <typename MatrixType1, typename MatrixType2>
-  void backwardStateConstraintFactorization(
-      const Eigen::MatrixBase<MatrixType1>& T_next,
-      const Eigen::MatrixBase<MatrixType2>& T) const;
-
-  ///
-  /// @brief Computes the Riccati factorization of this stage from the 
-  /// factorization of the previous stage.
-  /// @param[in] riccati_next Riccati factorization of the next stage.
-  /// @param[out] riccati Riccati factorization of this stage.
-  /// 
-  void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next,
-                                RiccatiFactorization& riccati);
-
-  ///
-  /// @brief Computes the Newton direction of the state of this stage from the 
-  /// one of the previous stage.
-  /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] d Split direction of this stage.
-  /// @param[out] d_next Split direction of the next stage.
-  /// 
-  void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati,
-                                     RiccatiFactorization& riccati_next);
+                    const SplitSolution& s_next, 
+                    ImpulseKKTMatrix& kkt_matrix, 
+                    ImpulseKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
   /// this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] riccati Riccati factorization of this stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] d Split direction of this stage.
   /// 
-  template <typename VectorType>
-  void computePrimalDirection(Robot& robot, const RiccatiFactorization& riccati, 
-                              const ImpulseSplitSolution& s, 
-                              const Eigen::MatrixBase<VectorType>& dx0, 
-                              ImpulseSplitDirection& d);
+  void computeCondensedPrimalDirection(Robot& robot,  
+                                       const ImpulseSplitSolution& s, 
+                                       ImpulseSplitDirection& d);
 
   ///
   /// @brief Computes the Newton direction of the condensed dual variables of 
   /// this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] kkt_matrix KKT matrix of this stage.
+  /// @param[in] kkt_residual KKT residual of this stage.
   /// @param[in] d_next Split direction of the next stage.
   /// @param[in] d Split direction of this stage.
   /// 
-  void computeDualDirection(Robot& robot, const SplitDirection& d_next, 
-                            ImpulseSplitDirection& d);
+  void computeCondensedDualDirection(Robot& robot, 
+                                     const ImpulseKKTMatrix& kkt_matrix, 
+                                     const ImpulseKKTResidual& kkt_residual,
+                                     const SplitDirection& d_next, 
+                                     ImpulseSplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -193,19 +167,24 @@ public:
   /// @param[in] q_prev Configuration of the previous stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
+  /// @param[out] kkt_matrix KKT matrix of this stage.
+  /// @param[out] kkt_residual KKT residual of this stage.
   ///
   void computeKKTResidual(Robot& robot, const ImpulseStatus& impulse_status,
                           const double t, const Eigen::VectorXd& q_prev, 
                           const ImpulseSplitSolution& s, 
-                          const SplitSolution& s_next);
+                          const SplitSolution& s_next,
+                          ImpulseKKTMatrix& kkt_matrix, 
+                          ImpulseKKTResidual& kkt_residual);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
   /// this function, SplitOCP::linearizeOCP or SplitOCP::computeKKTResidual
   /// must be called.
+  /// @param[in] kkt_residual KKT residual of this stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual() const;
+  double squaredNormKKTResidual(const ImpulseKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the stage cost of this stage for line search.
@@ -227,12 +206,14 @@ public:
   /// @param[in] s Split solution of this stage.
   /// @param[in] q_next Configuration at the next stage.
   /// @param[in] v_next Generaized velocity at the next stage.
+  /// @param[out] kkt_residual KKT residual of this stage.
   /// @return Constraint violation of this stage.
   ///
   double constraintViolation(Robot& robot, const ImpulseStatus& impulse_status, 
                              const double t, const ImpulseSplitSolution& s, 
                              const Eigen::VectorXd& q_next,
-                             const Eigen::VectorXd& v_next);
+                             const Eigen::VectorXd& v_next,
+                             ImpulseKKTResidual& kkt_residual);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -241,20 +222,7 @@ private:
   CostFunctionData cost_data_;
   std::shared_ptr<ImpulseConstraints> constraints_;
   ConstraintsData constraints_data_;
-  ImpulseKKTResidual kkt_residual_;
-  ImpulseKKTMatrix kkt_matrix_;
   ImpulseDynamicsForwardEuler impulse_dynamics_;
-  ImpulseRiccatiFactorizer riccati_factorizer_;
-
-  ///
-  /// @brief Set impulse status from robot model, i.e., set dimension of the 
-  /// impulses and equality constraints.
-  /// @param[in] impulse_status Impulse status.
-  ///
-  inline void setImpulseStatusForKKT(const ImpulseStatus& impulse_status) {
-    kkt_residual_.setImpulseStatus(impulse_status);
-    kkt_matrix_.setImpulseStatus(impulse_status);
-  }
 
 };
 

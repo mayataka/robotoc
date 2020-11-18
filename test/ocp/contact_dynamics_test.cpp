@@ -108,7 +108,7 @@ void ContactDynamicsTest::testLinearizeContactDynamics(Robot& robot, const Conta
   ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
-  cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_matrix, kkt_residual);
+  cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_residual);
   const double l1norm = cd.l1NormContactDynamicsResidual(dtau);
   const double squarednorm = cd.squaredNormContactDynamicsResidual(dtau);
   ContactDynamicsData data(robot);
@@ -398,7 +398,7 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
   robot.updateKinematics(s.q, s.v, s.a);
   ContactDynamics cd(robot), cd_ref(robot);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
-  cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_matrix, kkt_residual);
+  cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_residual);
   cd.condenseContactDynamics(robot, contact_status, dtau, kkt_matrix, kkt_residual);
   ContactDynamicsData data_ref(robot);
   data_ref.setContactStatus(contact_status);
@@ -406,7 +406,7 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
   if (robot.has_floating_base()) {
     data_ref.u_passive = s.u_passive;
   }
-  cd_ref.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_matrix_ref, kkt_residual_ref);
+  cd_ref.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_residual_ref);
   ContactDynamics::linearizeInverseDynamics(robot, contact_status, s, data_ref);
   ContactDynamics::linearizeContactConstraint(robot, contact_status, dtau, data_ref);
   robot.computeMJtJinv(data_ref.dIDda, data_ref.dCda(), data_ref.MJtJinv());

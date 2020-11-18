@@ -91,8 +91,8 @@ void BenchmarkWithContacts() {
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   // ocp_benchmarker.getSolverHandle()->deactivateContacts({0, 1, 2, 3}, 0, N);
   auto contact_status = robot.createContactStatus();
-  contact_status.activateContacts({0, 2});
-  // contact_status.activateContacts({0, 1, 2, 3});
+  // contact_status.activateContacts({0, 2});
+  contact_status.activateContacts({0, 1, 2, 3});
   ocp_benchmarker.getSolverHandle()->setContactStatus(contact_status);
   ocp_benchmarker.testConvergence(t, q, v, 20, false);
   // ocp_benchmarker.testCPUTime(t, q, v, 10000);

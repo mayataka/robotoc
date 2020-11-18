@@ -212,6 +212,39 @@ inline int ContactSequence::liftIndex(const int time_stage) const {
 }
 
 
+inline double ContactSequence::dtau(const int time_stage) const {
+  if (existImpulseStage(time_stage)) {
+    return dtau_ - dtau_impulse(time_stage);
+  }
+  else if (existLiftStage(time_stage)) {
+    return dtau_ - dtau_lift(time_stage);
+  }
+  else {
+    return dtau_;
+  }
+}
+
+
+inline double ContactSequence::dtau_impulse(const int time_stage) const {
+  if (existImpulseStage(time_stage)) {
+    return impulseTime(impulseIndex(time_stage)) - time_stage * dtau_;
+  }
+  else {
+    return 0;
+  }
+}
+
+
+inline double ContactSequence::dtau_lift(const int time_stage) const {
+  if (existLiftStage(time_stage)) {
+    return liftTime(liftIndex(time_stage)) - time_stage * dtau_;
+  }
+  else {
+    return 0;
+  }
+}
+
+
 inline int ContactSequence::eventTimeStageFromContinuousEventTime(
     const double event_time) const {
   if (event_time <= 0) {

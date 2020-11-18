@@ -35,7 +35,7 @@ inline ContactDynamics::~ContactDynamics() {
 
 inline void ContactDynamics::linearizeContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dtau, 
-    const SplitSolution& s, KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) { 
+    const SplitSolution& s, KKTResidual& kkt_residual) { 
   assert(dtau > 0);
   setContactStatus(contact_status);
   linearizeInverseDynamics(robot, contact_status, s, data_);

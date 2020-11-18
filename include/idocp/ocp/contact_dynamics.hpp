@@ -33,7 +33,6 @@ public:
   void linearizeContactDynamics(Robot& robot, 
                                 const ContactStatus& contact_status, 
                                 const double dtau, const SplitSolution& s, 
-                                KKTMatrix& kkt_matrix, 
                                 KKTResidual& kkt_residual);
 
   static void linearizeInverseDynamics(Robot& robot, 

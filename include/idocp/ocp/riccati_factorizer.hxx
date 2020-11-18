@@ -1,4 +1,4 @@
-#ifndef IDOCP_RICCATI_FACTORIZER_HXX_
+#ifndef IDOCP_RICCATI_FACTORIZER_HXX_ 
 #define IDOCP_RICCATI_FACTORIZER_HXX_
 
 #include "idocp/ocp/riccati_factorizer.hpp"
@@ -94,7 +94,7 @@ inline void RiccatiFactorizer::forwardRiccatiRecursionSerial(
 
 template <typename MatrixType1, typename MatrixType2>
 inline void RiccatiFactorizer::backwardStateConstraintFactorization(
-    const KKTMatrix& kkt_matrix, const Eigen::MatrixBase<MatrixType1>& T_next,
+    const Eigen::MatrixBase<MatrixType1>& T_next, const KKTMatrix& kkt_matrix, 
     const double dtau, const Eigen::MatrixBase<MatrixType2>& T) const {
   assert(T_next.rows() == T.rows());
   assert(T_next.rows() == T.rows());
@@ -201,4 +201,4 @@ inline void RiccatiFactorizer::getStateFeedbackGain(
 
 } // namespace idocp
 
-#endif // IDOCP_RICCATI_FACTORIZER_HXX_
+#endif // IDOCP_RICCATI_FACTORIZER_HXX_ 

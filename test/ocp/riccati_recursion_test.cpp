@@ -7,9 +7,12 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/split_direction.hpp"
+#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/riccati_factorizer.hpp"
 #include "idocp/ocp/riccati_recursion.hpp"
+#include "idocp/hybrid/hybrid_container.hpp"
 
 namespace idocp {
 
@@ -33,10 +36,22 @@ protected:
   virtual void TearDown() {
   }
 
-  std::shared_ptr<CostFunctionData> createCost() const;
-  std::shared_ptr<Constraints> createConstraints() const;
-  void testBackwardRiccatiRecursionTerminal(const Robot& robot_const) const;
-  void testBackwardRiccatiRecursion(const Robot& robot_const) const;
+  using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
+  using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
+  using HybridRiccatiFactorization = hybrid_container<RiccatiFactorization, RiccatiFactorization>;
+  using HybridRiccatiRecursion = hybrid_container<RiccatiFactorizer, ImpulseRiccatiFactorizer>;
+
+  HybridKKTMatrix createHybridKKTMatrix(const Robot& robot) const;
+  HybridKKTResidual createHybridKKTResidual(const Robot& robot) const;
+
+  DiscreteEvent createDiscreteEvent(const Robot& robot, const ContactStatus& pre_contact_status) const;
+  ContactSequence createContactSequence(const Robot& robot) const;
+
+  static void RiccatiIsZero(const RiccatiFactorization& riccati);
+
+  static void RiccatiIsSame(const RiccatiFactorization& lhs, const RiccatiFactorization& rhs);
+
+  void testBackwardRiccatiRecursion(const Robot& robot) const;
 
   int N, max_num_impulse, nproc;
   double T, t, dtau;
@@ -45,89 +60,190 @@ protected:
 };
 
 
-std::shared_ptr<CostFunctionData> RiccatiRecursionTest::createCost(const Robot& robot) const {
-  auto joint_cost = std::make_shared<JointSpaceCost>(robot);
-  const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
-  robot.normalizeConfiguration(q_ref);
-  const Eigen::VectorXd v_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd a_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(robot.dimu()).array().abs();
-  const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(robot.dimu());
-  const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  joint_cost->set_q_weight(q_weight);
-  joint_cost->set_q_ref(q_ref);
-  joint_cost->set_v_weight(v_weight);
-  joint_cost->set_v_ref(v_ref);
-  joint_cost->set_a_weight(a_weight);
-  joint_cost->set_a_ref(a_ref);
-  joint_cost->set_u_weight(u_weight);
-  joint_cost->set_u_ref(u_ref);
-  joint_cost->set_qf_weight(qf_weight);
-  joint_cost->set_vf_weight(vf_weight);
-  const int task_frame = 10;
-  auto contact_force_cost = std::make_shared<idocp::ContactForceCost>(robot);
-  std::vector<Eigen::Vector3d> f_weight;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
-    f_weight.push_back(Eigen::Vector3d::Constant(0.001));
+RiccatiRecursionTest::HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot) const {
+  HybridKKTMatrix kkt_matrix = HybridKKTMatrix(N+1, KKTMatrix(robot), max_num_impulse, ImpulseKKTMatrix(robot));
+  const int dimx = 2*robot.dimv();
+  const int dimu = robot.dimu();
+  for (int i=0; i<=N; ++i) {
+    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx, dimx);
+    kkt_matrix[i].Qxx() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
+    tmp = Eigen::MatrixXd::Random(dimu, dimu);
+    kkt_matrix[i].Quu() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimu, dimu);
+    kkt_matrix[i].Qxu().setRandom();
+    if (robot.has_floating_base()) {
+      kkt_matrix[i].Fqq().topLeftCorner(6, 6).setRandom();
+    }
+    kkt_matrix[i].Fvq().setRandom();
+    kkt_matrix[i].Fvv().setRandom();
+    kkt_matrix[i].Fvu().setRandom();
   }
-  contact_force_cost->set_f_weight(f_weight);
-  auto cost = std::make_shared<CostFunction>();
-  cost->push_back(joint_cost);
-  cost->push_back(contact_force_cost);
-  return cost;
+  for (int i=0; i<max_num_impulse; ++i) {
+    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx, dimx);
+    kkt_matrix.impulse[i].Qxx() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
+    if (robot.has_floating_base()) {
+      kkt_matrix.impulse[i].Fqq().topLeftCorner(6, 6).setRandom();
+    }
+    kkt_matrix.impulse[i].Fvq().setRandom();
+    kkt_matrix.impulse[i].Fvv().setRandom();
+  }
+  for (int i=0; i<max_num_impulse; ++i) {
+    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx, dimx);
+    kkt_matrix.aux[i].Qxx() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
+    tmp = Eigen::MatrixXd::Random(dimu, dimu);
+    kkt_matrix.aux[i].Quu() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimu, dimu);
+    kkt_matrix.aux[i].Qxu().setRandom();
+    if (robot.has_floating_base()) {
+      kkt_matrix.aux[i].Fqq().topLeftCorner(6, 6).setRandom();
+    }
+    kkt_matrix.aux[i].Fvq().setRandom();
+    kkt_matrix.aux[i].Fvv().setRandom();
+    kkt_matrix.aux[i].Fvu().setRandom();
+  }
+  for (int i=0; i<max_num_impulse; ++i) {
+    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx, dimx);
+    kkt_matrix.lift[i].Qxx() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
+    tmp = Eigen::MatrixXd::Random(dimu, dimu);
+    kkt_matrix.lift[i].Quu() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimu, dimu);
+    kkt_matrix.lift[i].Qxu().setRandom();
+    if (robot.has_floating_base()) {
+      kkt_matrix.lift[i].Fqq().topLeftCorner(6, 6).setRandom();
+    }
+    kkt_matrix.lift[i].Fvq().setRandom();
+    kkt_matrix.lift[i].Fvv().setRandom();
+    kkt_matrix.lift[i].Fvu().setRandom();
+  }
+  return kkt_matrix;
 }
 
 
-std::shared_ptr<Constraints> RiccatiRecursionTest::createConstraints(const Robot& robot) const {
-  auto joint_lower_limit = std::make_shared<JointPositionLowerLimit>(robot);
-  auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
-  auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
-  auto velocity_upper_limit = std::make_shared<JointVelocityUpperLimit>(robot);
-  auto torques_lower_limit = std::make_shared<JointTorquesLowerLimit>(robot);
-  auto torques_upper_limit = std::make_shared<JointTorquesUpperLimit>(robot);
-  auto constraints = std::make_shared<Constraints>();
-  constraints->push_back(joint_upper_limit); 
-  constraints->push_back(joint_lower_limit);
-  constraints->push_back(velocity_lower_limit); 
-  constraints->push_back(velocity_upper_limit);
-  constraints->push_back(torques_lower_limit);
-  constraints->push_back(torques_upper_limit);
-  return constraints;
+RiccatiRecursionTest::HybridKKTResidual RiccatiRecursionTest::createHybridKKTResidual(const Robot& robot) const {
+  HybridKKTResidual kkt_residual = HybridKKTResidual(N+1, KKTResidual(robot), max_num_impulse, ImpulseKKTResidual(robot));
+  for (int i=0; i<=N; ++i) {
+    kkt_residual[i].lx().setRandom();
+    kkt_residual[i].lu().setRandom();
+    kkt_residual[i].Fx().setRandom();
+  }
+  for (int i=0; i<max_num_impulse; ++i) {
+    kkt_residual.impulse[i].lx().setRandom();
+    kkt_residual.impulse[i].Fx().setRandom();
+  }
+  for (int i=0; i<max_num_impulse; ++i) {
+    kkt_residual.aux[i].lx().setRandom();
+    kkt_residual.aux[i].lu().setRandom();
+    kkt_residual.aux[i].Fx().setRandom();
+  }
+  for (int i=0; i<max_num_impulse; ++i) {
+    kkt_residual.lift[i].lx().setRandom();
+    kkt_residual.lift[i].lu().setRandom();
+    kkt_residual.lift[i].Fx().setRandom();
+  }
+  return kkt_residual;
 }
 
 
-void RiccatiRecursionTest::testBackwardRiccatiRecursionTerminal(const Robot& robot_const) const {
-  TerminalOCP terminal_ocp(robot createCost(robot_const), createConstraints(robot_const));
-  auto robot = robot_const;
-  const auto s = SplitSolution::Random(robot_const);
-  terminal_ocp.linearizeOCP(robot, t, s);
-  RiccatiRecursion riccati_recursion(robot, T, N, max_num_impulse, nproc);
-  riccati_recursion.backwardRiccatiRecursionTerminal(terminal_ocp);
+DiscreteEvent RiccatiRecursionTest::createDiscreteEvent(const Robot& robot, const ContactStatus& pre_contact_status) const {
+  DiscreteEvent discrete_event(robot);
+  ContactStatus post_contact_status = pre_contact_status;
+  std::random_device rnd;
+  while (!discrete_event.existDiscreteEvent()) {
+    post_contact_status.setRandom();
+    discrete_event.setDiscreteEvent(pre_contact_status, post_contact_status);
+  }
+  return discrete_event;
+}
 
-  auto robot_ref = robot_const;
-  TerminalOCP terminal_ocp_ref(robot createCost(robot_const), createConstraints(robot_const));
-  terminal_ocp_ref.linearizeOCP(robot_ref, t, s);
-  
+
+ContactSequence RiccatiRecursionTest::createContactSequence(const Robot& robot) const {
+  std::vector<DiscreteEvent> discrete_events;
+  ContactStatus pre_contact_status = robot.createContactStatus();
+  pre_contact_status.setRandom();
+  ContactSequence contact_sequence(robot, T, N);
+  contact_sequence.setContactStatusUniformly(pre_contact_status);
+  ContactStatus post_contact_status = pre_contact_status;
+  std::random_device rnd;
+  for (int i=0; i<max_num_impulse; ++i) {
+    DiscreteEvent tmp(robot);
+    tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
+    while (!tmp.existDiscreteEvent()) {
+      post_contact_status.setRandom();
+      tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
+    }
+    tmp.eventTime = i * 0.15 + 0.01 * std::abs(Eigen::VectorXd::Random(1)[0]);
+    discrete_events.push_back(tmp);
+    pre_contact_status = post_contact_status;
+  }
+  for (int i=0; i<max_num_impulse; ++i) {
+    contact_sequence.setDiscreteEvent(discrete_events[i]);
+  }
+  return contact_sequence;
+}
+
+
+void RiccatiRecursionTest::RiccatiIsZero(const RiccatiFactorization& riccati) {
+  EXPECT_TRUE(riccati.Pqq.isZero());
+  EXPECT_TRUE(riccati.Pqv.isZero());
+  EXPECT_TRUE(riccati.Pvq.isZero());
+  EXPECT_TRUE(riccati.Pvv.isZero());
+  EXPECT_TRUE(riccati.sq.isZero());
+  EXPECT_TRUE(riccati.sv.isZero());
+  EXPECT_TRUE(riccati.Pi.isIdentity()); // Default value of Pi is identity.
+  EXPECT_TRUE(riccati.pi.isZero());
+  EXPECT_TRUE(riccati.N.isZero());
+  EXPECT_TRUE(riccati.n.isZero());
+}
+
+
+void RiccatiRecursionTest::RiccatiIsSame(const RiccatiFactorization& lhs, const RiccatiFactorization& rhs) {
+  EXPECT_TRUE(lhs.Pqq.isApprox(rhs.Pqq));
+  EXPECT_TRUE(lhs.Pqv.isApprox(rhs.Pqv));
+  EXPECT_TRUE(lhs.Pvq.isApprox(rhs.Pvq));
+  EXPECT_TRUE(lhs.Pvv.isApprox(rhs.Pvv));
+  EXPECT_TRUE(lhs.sq.isApprox(rhs.sq));
+  EXPECT_TRUE(lhs.sv.isApprox(rhs.sv));
+  EXPECT_TRUE(lhs.Pi.isApprox(rhs.Pi));
+  EXPECT_TRUE(lhs.pi.isApprox(rhs.pi));
+  EXPECT_TRUE(lhs.N.isApprox(rhs.N));
+  EXPECT_TRUE(lhs.n.isApprox(rhs.n));
+}
+
+
+void RiccatiRecursionTest::testBackwardRiccatiRecursion(const Robot& robot) const {
+  const auto contact_sequence = createContactSequence(robot);
+  auto kkt_matrix = createHybridKKTMatrix(robot);
+  auto kkt_residual= createHybridKKTResidual(robot);
+  HybridRiccatiFactorization factorization(N+1, RiccatiFactorization(robot), max_num_impulse, RiccatiFactorization(robot));
+  RiccatiRecursion factorizer(robot, T, N, max_num_impulse, nproc);
+  factorizer.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
+  for (int i=0; i<N; ++i) {
+    RiccatiIsZero(factorization[i]);
+  }
+  EXPECT_TRUE(factorization[N].Pqq.isApprox(kkt_matrix[N].Qqq()));
+  EXPECT_TRUE(factorization[N].Pqv.isZero());
+  EXPECT_TRUE(factorization[N].Pvq.isZero());
+  EXPECT_TRUE(factorization[N].Pvv.isApprox(kkt_matrix[N].Qvv()));
+  EXPECT_TRUE(factorization[N].sq.isApprox(-1*kkt_residual[N].lq()));
+  EXPECT_TRUE(factorization[N].sv.isApprox(-1*kkt_residual[N].lv()));
+  for (int i=0; i<max_num_impulse; ++i) {
+    RiccatiIsZero(factorization.impulse[i]);
+  }
+  for (int i=0; i<max_num_impulse; ++i) {
+    RiccatiIsZero(factorization.aux[i]);
+  }
+  for (int i=0; i<max_num_impulse; ++i) {
+    RiccatiIsZero(factorization.lift[i]);
+  }
+  factorizer.backwardRiccatiRecursion(contact_sequence, kkt_matrix, kkt_residual, factorization);
+
 }
 
 
 TEST_F(RiccatiRecursionTest, fixedBase) {
-  testBackwardRecursion(fixed_base_robot);
-  testForwardRecursionWithoutStateConstraint(fixed_base_robot);
-  testForwardRecursionWithStateConstraint(fixed_base_robot);
-  testFactorizeStateConstraintFactorization(fixed_base_robot);
+  testBackwardRiccatiRecursion(fixed_base_robot);
 }
 
 
 TEST_F(RiccatiRecursionTest, floating_base) {
-  testBackwardRecursion(floating_base_robot);
-  testForwardRecursionWithoutStateConstraint(floating_base_robot);
-  testForwardRecursionWithStateConstraint(floating_base_robot);
-  testFactorizeStateConstraintFactorization(floating_base_robot);
+  testBackwardRiccatiRecursion(floating_base_robot);
 }
 
 } // namespace idocp

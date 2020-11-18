@@ -10,7 +10,6 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -87,36 +86,11 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of the terminal stage. 
   /// @param[in] s Split solution of the terminal stage.
+  /// @param[out] kkt_matrix KKT matrix of this stage.
+  /// @param[out] kkt_residual KKT residual of this stage.
   ///
-  void linearizeOCP(Robot& robot, const double t, const SplitSolution& s);
-
-  ///
-  /// @brief Computes the Riccati factorization of this terminal stage. 
-  /// TerminalOCP::linearizeOCP() must be called before calling this function.
-  /// @param[out] riccati Riccati factorization of this terminal stage.
-  /// 
-  void backwardRiccatiRecursion(RiccatiFactorization& riccati) const;
-
-  ///
-  /// @brief Computes the Newton direction of the condensed primal variables of 
-  /// this stage.
-  /// @param[in] riccati Riccati factorization of this terminal stage.
-  /// @param[in, out] d Split direction of this stage.
-  /// 
-  template <typename VectorType>
-  void computePrimalDirection(const RiccatiFactorization& riccati,
-                              const Eigen::MatrixBase<VectorType>& dx0, 
-                              SplitDirection& d) const;
-
-  void computePrimalDirection(const RiccatiFactorization& riccati,
-                              SplitDirection& d) const;
-
-  ///
-  /// @brief Computes the Newton direction of the condensed dual variables of 
-  /// this stage.
-  /// @param[in] d Split direction of this stage.
-  /// 
-  void computeDualDirection(const SplitDirection& d);
+  void linearizeOCP(Robot& robot, const double t, const SplitSolution& s,
+                    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -145,14 +119,6 @@ public:
   double terminalCost(Robot& robot, const double t, const SplitSolution& s);
 
   ///
-  /// @brief Updates dual variables of the inequality constraints. 
-  /// TerminalOCP::computeCondensedDualDirection() must be called before 
-  /// calling this function.
-  /// @param[in] step_size Dula step size of the OCP. 
-  ///
-  void updateDual(const double step_size);
-
-  ///
   /// @brief Updates primal variables of this stage.
   /// TerminalOCP::computeCondensedPrimalDirection() must be called before
   /// calling this function.
@@ -165,20 +131,31 @@ public:
                     const SplitDirection& d, SplitSolution& s) const;
 
   ///
+  /// @brief Updates dual variables of the inequality constraints. 
+  /// TerminalOCP::computeCondensedDualDirection() must be called before 
+  /// calling this function.
+  /// @param[in] step_size Dula step size of the OCP. 
+  ///
+  void updateDual(const double step_size);
+
+  ///
   /// @brief Computes the KKT residual of the OCP at this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
   /// @param[in] s Split solution of this stage.
+  /// @param[out] kkt_residual KKT residual of this stage.
   ///
-  void computeKKTResidual(Robot& robot, const double t, const SplitSolution& s);
+  void computeKKTResidual(Robot& robot, const double t, const SplitSolution& s,
+                          KKTResidual& kkt_residual);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage.  
   /// SplitOCP::linearizeOCP or SplitOCP::computeKKTResidual must be called 
   /// before calling this function.
+  /// @param[in] kkt_residual KKT residual of this stage.
   /// @return The squared norm of the KKT residual.
   ///
-  double squaredNormKKTResidual() const;
+  double squaredNormKKTResidual(const KKTResidual& kkt_residual) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -187,8 +164,6 @@ private:
   CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
-  KKTResidual kkt_residual_;
-  KKTMatrix kkt_matrix_;
   bool use_kinematics_;
 
 };

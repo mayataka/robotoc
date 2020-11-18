@@ -48,8 +48,8 @@ inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursionSerial(
 
 template <typename MatrixType1, typename MatrixType2>
 inline void ImpulseRiccatiFactorizer::backwardStateConstraintFactorization(
-    const ImpulseKKTMatrix& kkt_matrix, 
     const Eigen::MatrixBase<MatrixType1>& T_next,
+    const ImpulseKKTMatrix& kkt_matrix, 
     const Eigen::MatrixBase<MatrixType2>& T) const {
   assert(T_next.rows() == T.rows());
   assert(T_next.rows() == T.rows());

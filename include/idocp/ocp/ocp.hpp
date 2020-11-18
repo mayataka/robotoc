@@ -24,6 +24,7 @@
 #include "idocp/ocp/line_search_filter.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/ocp/riccati_recursion.hpp"
 
 
 namespace idocp {
@@ -34,6 +35,13 @@ namespace idocp {
 ///
 class OCP {
 public:
+
+  using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
+  using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
+  using HybridSolution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
+  using HybridDirection = hybrid_container<SplitDirection, ImpulseSplitDirection>;
+  using HybridRiccatiFactorization = hybrid_container<RiccatiFactorization, RiccatiFactorization>;
+
   ///
   /// @brief Construct optimal control problem solver.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -198,12 +206,12 @@ private:
 
   hybrid_container<SplitOCP, SplitImpulseOCP> split_ocps_;
   TerminalOCP terminal_ocp_;
-  hybrid_container<SplitSolution, ImpulseSplitSolution> s_;
-  hybrid_container<SplitDirection, ImpulseSplitDirection> d_;
-  hybrid_container<RiccatiFactorization, RiccatiFactorization> riccati_;
-  std::vector<StateConstraintRiccatiFactorization> constraint_factorization_;
-  StateConstraintRiccatiFactorizer constraint_factorizer_;
-  // hybrid_container<double, double> dtau_;
+  HybridKKTMatrix kkt_matrix_;
+  HybridKKTResidual kkt_residual_;
+  HybridSolution s_;
+  HybridDirection d_;
+  HybridRiccatiFactorization riccati_factorization_;
+  RiccatiRecursion riccati_recursion_;
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
   LineSearchFilter filter_;

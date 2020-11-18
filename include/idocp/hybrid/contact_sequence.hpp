@@ -195,6 +195,12 @@ public:
 
   int liftIndex(const int time_stage) const;
 
+  double dtau(const int time_stage) const;
+
+  double dtau_impulse(const int time_stage) const;
+
+  double dtau_lift(const int time_stage) const;
+
 private:
   int N_;
   double T_, dtau_;

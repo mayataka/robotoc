@@ -226,7 +226,7 @@ void RiccatiFactorizerTest::testFactorizeStateConstraintFactorization(const Robo
   T_next.setRandom();
   T.setZero();
   T_ref.setZero();
-  factorizer.backwardStateConstraintFactorization(kkt_matrix, T_next, dtau, T);
+  factorizer.backwardStateConstraintFactorization(T_next, kkt_matrix, dtau, T);
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
   if (robot.has_floating_base()) {
     A.topLeftCorner(dimv, dimv) = kkt_matrix.Fqq();

@@ -10,7 +10,6 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/kkt_residual.hpp"
 #include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
@@ -39,28 +38,12 @@ protected:
 
   static std::shared_ptr<Constraints> createConstraints(const Robot& robot);
 
-  static void testLinearizeOCPAndBackwardRiccatiRecursion(
+  static void testLinearizeOCP(
       Robot& robot, const std::shared_ptr<CostFunction>& cost, 
       const std::shared_ptr<Constraints>& constraints);
 
   static void testTerminalCost(
       Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-      const std::shared_ptr<Constraints>& constraints);
-
-  static void testComputePrimalDirection(
-      const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-      const std::shared_ptr<Constraints>& constraints);
-
-  static void testComputeDualDirection(
-      const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-      const std::shared_ptr<Constraints>& constraints);
-
-  static void testUpdatePrimal(
-      Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-      const std::shared_ptr<Constraints>& constraints);
-
-  static void testUpdateDual(
-      const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
       const std::shared_ptr<Constraints>& constraints);
 
   static void testComputeKKTResidual(
@@ -123,35 +106,26 @@ std::shared_ptr<Constraints> TerminalOCPTest::createConstraints(const Robot& rob
 }
 
 
-void TerminalOCPTest::testLinearizeOCPAndBackwardRiccatiRecursion(
+void TerminalOCPTest::testLinearizeOCP(
     Robot& robot, const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints) {
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const SplitSolution s = SplitSolution::Random(robot);
   TerminalOCP ocp(robot, cost, constraints);
-  ocp.linearizeOCP(robot, t, s);
-  RiccatiFactorization riccati(robot);
-  robot.updateKinematics(s.q, s.v);
-  ocp.backwardRiccatiRecursion(riccati);
-  KKTResidual kkt_residual(robot);  
   KKTMatrix kkt_matrix(robot);  
+  KKTResidual kkt_residual(robot);  
+  ocp.linearizeOCP(robot, t, s, kkt_matrix, kkt_residual);
+  robot.updateKinematics(s.q, s.v);
+  KKTMatrix kkt_matrix_ref(robot);  
+  KKTResidual kkt_residual_ref(robot);  
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
-  cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
-  cost->computeTerminalCostHessian(robot, cost_data, t, s, kkt_matrix);
-  EXPECT_TRUE(riccati.sq.isApprox(-1*kkt_residual.lq()+s.lmd));
-  EXPECT_TRUE(riccati.sv.isApprox(-1*kkt_residual.lv()+s.gmm));
-  EXPECT_TRUE(riccati.Pqq.isApprox(kkt_matrix.Qqq()));
-  EXPECT_TRUE(riccati.Pqv.isApprox(kkt_matrix.Qqv()));
-  EXPECT_TRUE(riccati.Pvq.isApprox(kkt_matrix.Qvq()));
-  EXPECT_TRUE(riccati.Pvv.isApprox(kkt_matrix.Qvv()));
-  EXPECT_TRUE(riccati.Pqq.isApprox(riccati.Pqq.transpose()));
-  EXPECT_TRUE(riccati.Pqv.isApprox(riccati.Pvq.transpose()));
-  EXPECT_TRUE(riccati.Pvv.isApprox(riccati.Pvv.transpose()));
-  double KKT_ref = 0;
-  KKT_ref += (-1*kkt_residual.lq()+s.lmd).squaredNorm();
-  KKT_ref += (-1*kkt_residual.lv()+s.gmm).squaredNorm();
-  EXPECT_DOUBLE_EQ(KKT_ref, ocp.squaredNormKKTResidual());
+  cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
+  kkt_residual_ref.lq() -= s.lmd;
+  kkt_residual_ref.lv() -= s.gmm;
+  cost->computeTerminalCostHessian(robot, cost_data, t, s, kkt_matrix_ref);
+  EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
+  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
 }
 
 
@@ -169,91 +143,27 @@ void TerminalOCPTest::testTerminalCost(
 }
 
 
-void TerminalOCPTest::testComputePrimalDirection(
-    const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints) {
-  const SplitSolution s = SplitSolution::Random(robot);
-  TerminalOCP ocp(robot, cost, constraints);
-  RiccatiFactorization riccati(robot);
-  riccati.Pqq.setRandom();
-  riccati.Pqv.setRandom();
-  riccati.Pvq = riccati.Pqv.transpose();
-  riccati.Pvv.setRandom();
-  riccati.sq.setRandom();
-  riccati.sv.setRandom();
-  riccati.Pi.setRandom();
-  riccati.pi.setRandom();
-  riccati.n.setRandom();
-  SplitDirection d(robot);
-  d.dq().setRandom();
-  d.dv().setRandom();
-  SplitDirection d_ref = d;
-  ocp.computePrimalDirection(riccati, d);
-  d_ref.dlmd() = riccati.Pqq * d_ref.dq() + riccati.Pqv * d_ref.dv() - riccati.sq;
-  d_ref.dgmm() = riccati.Pvq * d_ref.dq() + riccati.Pvv * d_ref.dv() - riccati.sv;
-  EXPECT_TRUE(d.isApprox(d_ref));
-  const Eigen::VectorXd dx0 = Eigen::VectorXd::Random(2*robot.dimv());
-  ocp.computePrimalDirection(riccati, dx0, d);
-  d_ref.dx() = riccati.Pi * dx0 + riccati.pi;
-  d_ref.dlmd() = riccati.Pqq * d_ref.dq() + riccati.Pqv * d_ref.dv() - riccati.sq;
-  d_ref.dgmm() = riccati.Pvq * d_ref.dq() + riccati.Pvv * d_ref.dv() - riccati.sv;
-  EXPECT_TRUE(d.isApprox(d_ref));
-}
-
-
-void TerminalOCPTest::testComputeDualDirection(
-    const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints) {
-  TerminalOCP ocp(robot, cost, constraints);
-  const SplitDirection d = SplitDirection::Random(robot);
-  ocp.computeDualDirection(d);
-}
-
-
-void TerminalOCPTest::testUpdatePrimal(
-    Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints) {
-  SplitSolution s = SplitSolution::Random(robot);
-  SplitSolution s_ref = s;
-  const SplitDirection d = SplitDirection::Random(robot);
-  const double step_size = 0.3;
-  TerminalOCP ocp(robot, cost, constraints);
-  ocp.updatePrimal(robot, step_size, d, s);
-  s_ref.lmd += step_size * d.dlmd();
-  s_ref.gmm += step_size * d.dgmm();
-  robot.integrateConfiguration(d.dq(), step_size, s_ref.q);
-  s_ref.v += step_size * d.dv();
-  EXPECT_TRUE(s.isApprox(s_ref));
-}
-
-
-void TerminalOCPTest::testUpdateDual(
-    const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints) {
-  const SplitDirection d = SplitDirection::Random(robot);
-  TerminalOCP ocp(robot, cost, constraints);
-  const double step_size = 0.3;
-  ocp.updateDual(step_size);
-}
-
-
 void TerminalOCPTest::testComputeKKTResidual(
     Robot& robot, const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints) {
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const SplitSolution s = SplitSolution::Random(robot);
   TerminalOCP ocp(robot, cost, constraints);
-  ocp.computeKKTResidual(robot, t, s);
-  const double KKT = ocp.squaredNormKKTResidual();
-  robot.updateKinematics(s.q, s.v);
   KKTResidual kkt_residual(robot);  
+  ocp.computeKKTResidual(robot, t, s, kkt_residual);
+  const double KKT = ocp.squaredNormKKTResidual(kkt_residual);
+  robot.updateKinematics(s.q, s.v);
+  KKTResidual kkt_residual_ref(robot);  
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
-  cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual);
+  cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
+  kkt_residual_ref.lq() -= s.lmd;
+  kkt_residual_ref.lv() -= s.gmm;
   double KKT_ref = 0;
-  KKT_ref += (-1*kkt_residual.lq()+s.lmd).squaredNorm();
-  KKT_ref += (-1*kkt_residual.lv()+s.gmm).squaredNorm();
+  KKT_ref += kkt_residual_ref.lq().squaredNorm();
+  KKT_ref += kkt_residual_ref.lv().squaredNorm();
   EXPECT_DOUBLE_EQ(KKT, KKT_ref);
+  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
 }
 
 
@@ -261,12 +171,8 @@ TEST_F(TerminalOCPTest, fixedBase) {
   Robot robot(fixed_base_urdf);
   const auto cost = createCost(robot);
   const auto constraints = createConstraints(robot);
-  testLinearizeOCPAndBackwardRiccatiRecursion(robot, cost, constraints);
+  testLinearizeOCP(robot, cost, constraints);
   testTerminalCost(robot, cost, constraints);
-  testComputePrimalDirection(robot, cost, constraints);
-  testComputeDualDirection(robot, cost, constraints);
-  testUpdatePrimal(robot, cost, constraints);
-  testUpdateDual(robot, cost, constraints);
   testComputeKKTResidual(robot, cost, constraints);
 }
 
@@ -275,12 +181,8 @@ TEST_F(TerminalOCPTest, floatingBase) {
   Robot robot(floating_base_urdf);
   const auto cost = createCost(robot);
   const auto constraints = createConstraints(robot);
-  testLinearizeOCPAndBackwardRiccatiRecursion(robot, cost, constraints);
+  testLinearizeOCP(robot, cost, constraints);
   testTerminalCost(robot, cost, constraints);
-  testComputePrimalDirection(robot, cost, constraints);
-  testComputeDualDirection(robot, cost, constraints);
-  testUpdatePrimal(robot, cost, constraints);
-  testUpdateDual(robot, cost, constraints);
   testComputeKKTResidual(robot, cost, constraints);
 }
 
