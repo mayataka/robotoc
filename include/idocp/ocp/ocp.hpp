@@ -9,11 +9,6 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
-// #include "idocp/cost/impulse_cost_function.hpp"
-#include "idocp/constraints/impulse_constraints.hpp"
-#include "idocp/ocp/split_ocp.hpp"
-#include "idocp/impulse/split_impulse_ocp.hpp"
-#include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
@@ -25,6 +20,7 @@
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/ocp/riccati_recursion.hpp"
+#include "idocp/ocp/ocp_linearizer.hpp"
 
 
 namespace idocp {
@@ -204,39 +200,21 @@ public:
 
 private:
 
-  hybrid_container<SplitOCP, SplitImpulseOCP> split_ocps_;
-  TerminalOCP terminal_ocp_;
+  std::vector<Robot> robots_;
+  ContactSequence contact_sequence_;
+  OCPLinearizer ocp_linearizer_;
   HybridKKTMatrix kkt_matrix_;
   HybridKKTResidual kkt_residual_;
   HybridSolution s_;
   HybridDirection d_;
-  HybridRiccatiFactorization riccati_factorization_;
   RiccatiRecursion riccati_recursion_;
-  std::vector<Robot> robots_;
-  ContactSequence contact_sequence_;
+  StateConstraintRiccatiFactorizer constraint_factorizer_;
+  HybridRiccatiFactorization riccati_factorization_;
+  std::vector<StateConstraintRiccatiFactorization> constraint_factorization_;
   LineSearchFilter filter_;
-  double T_, dtau_, step_size_reduction_rate_, min_step_size_;
+  double step_size_reduction_rate_, min_step_size_;
   int N_, num_proc_;
   Eigen::VectorXd primal_step_sizes_, dual_step_sizes_;
-
-  const Eigen::VectorXd& q_prev(const int time_stage) const {
-    assert(time_stage >= 1);
-    if (contact_sequence_.existImpulseStage(time_stage-1)) {
-      return s_.aux[time_stage-1].q;
-    }
-    else if (contact_sequence_.existLiftStage(time_stage-1)) {
-      return s_.lift[time_stage-1].q;
-    }
-    else {
-      return s_[time_stage-1].q;
-    }
-  }
-
-  void linearizeSplitOCPs(const double t, const Eigen::VectorXd& q, 
-                          const Eigen::VectorXd& v);
-
-  void linearizeSplitOCP(const double t, const Eigen::VectorXd& q, 
-                         const Eigen::VectorXd& v);
 
 };
 

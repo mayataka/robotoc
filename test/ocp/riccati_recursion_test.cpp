@@ -43,8 +43,6 @@ protected:
 
   HybridKKTMatrix createHybridKKTMatrix(const Robot& robot) const;
   HybridKKTResidual createHybridKKTResidual(const Robot& robot) const;
-
-  DiscreteEvent createDiscreteEvent(const Robot& robot, const ContactStatus& pre_contact_status) const;
   ContactSequence createContactSequence(const Robot& robot) const;
 
   static void testIsRiccatiZero(const RiccatiFactorization& riccati);
@@ -140,18 +138,6 @@ RiccatiRecursionTest::HybridKKTResidual RiccatiRecursionTest::createHybridKKTRes
     kkt_residual.lift[i].Fx().setRandom();
   }
   return kkt_residual;
-}
-
-
-DiscreteEvent RiccatiRecursionTest::createDiscreteEvent(const Robot& robot, const ContactStatus& pre_contact_status) const {
-  DiscreteEvent discrete_event(robot);
-  ContactStatus post_contact_status = pre_contact_status;
-  std::random_device rnd;
-  while (!discrete_event.existDiscreteEvent()) {
-    post_contact_status.setRandom();
-    discrete_event.setDiscreteEvent(pre_contact_status, post_contact_status);
-  }
-  return discrete_event;
 }
 
 

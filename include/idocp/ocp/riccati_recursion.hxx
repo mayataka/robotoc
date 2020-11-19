@@ -3,6 +3,7 @@
 
 #include "idocp/ocp/riccati_recursion.hpp"
 
+#include <stdexcept>
 #include <cassert>
 
 namespace idocp {

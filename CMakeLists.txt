@@ -91,6 +91,7 @@ add_library(
   src/ocp/contact_dynamics.cpp
   src/ocp/split_ocp.cpp
   src/ocp/terminal_ocp.cpp
+  src/ocp/ocp_linearizer.cpp
   src/ocp/riccati_factorization.cpp
   src/ocp/backward_riccati_recursion_factorizer.cpp
   src/ocp/forward_riccati_recursion_factorizer.cpp
