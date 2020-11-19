@@ -98,6 +98,12 @@ private:
   double dtau_;
   HybridRiccatiFactorizer riccati_factorizer_;
 
+  void backwardStateConstraintFactorization(
+      const ContactSequence& contact_sequence, 
+      const HybridKKTMatrix& kkt_matrix, 
+      StateConstraintRiccatiFactorization& constraint_factorization,
+      const int constraint_index) const;
+
 };
 
 } // namespace idocp

@@ -128,13 +128,13 @@ inline void RiccatiRecursion::forwardRiccatiRecursionParallel(
           kkt_matrix[i], kkt_residual[i], exist_state_constraint);
     } 
     else if (i < N_+N_impulse) {
-      const int impulse_index = contact_sequence.impulseIndex(i-N_);
+      const int impulse_index = i - N_;
       riccati_factorizer_.aux[impulse_index].forwardRiccatiRecursionParallel(
           kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index], 
           exist_state_constraint);
     }
     else {
-      const int lift_index = contact_sequence.impulseIndex(i-N_-N_impulse);
+      const int lift_index = i - N_ - N_impulse;
       riccati_factorizer_.lift[lift_index].forwardRiccatiRecursionParallel(
           kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index], 
           exist_state_constraint);
@@ -181,15 +181,16 @@ inline void RiccatiRecursion::forwardRiccatiRecursionSerial(
       assert(dtau_aux < dtau_);
       riccati_factorizer_[i].forwardRiccatiRecursionSerial(
           riccati_factorization[i], kkt_matrix[i], kkt_residual[i], dtau_lift, 
-          riccati_factorization.lift[lift_index]);
+          riccati_factorization.lift[lift_index], exist_state_constraint);
       riccati_factorizer_.lift[lift_index].forwardRiccatiRecursionSerial(
           riccati_factorization.lift[lift_index], kkt_matrix.lift[lift_index], 
-          kkt_residual.lift[lift_index], dtau_aux, riccati_factorization[i+1]);
+          kkt_residual.lift[lift_index], dtau_aux, riccati_factorization[i+1],
+          exist_state_constraint);
     }
     else {
       riccati_factorizer_[i].forwardRiccatiRecursionSerial(
         riccati_factorization[i], kkt_matrix[i], kkt_residual[i], dtau_, 
-        riccati_factorization[i+1]);
+        riccati_factorization[i+1], exist_state_constraint);
     }
   }
 }
@@ -199,55 +200,75 @@ inline void RiccatiRecursion::backwardStateConstraintFactorization(
     const ContactSequence& contact_sequence, 
     const HybridKKTMatrix& kkt_matrix, 
     std::vector<StateConstraintRiccatiFactorization>& constraint_factorization) const {
-  const int num_impulse = contact_sequence.totalNumImpulseStages();
+  const int num_constraint = contact_sequence.totalNumImpulseStages();
   #pragma omp parallel for num_threads(nproc_)
-  for (int i=0; i<num_impulse; ++i) {
-    const int impulse_stage = contact_sequence.timeStageBeforeImpulse(i);
-    for (int j=impulse_stage; j>=0; --j) {
-      if (contact_sequence.existImpulseStage(i)) {
-        const int impulse_index = contact_sequence.impulseIndex(i);
-        const double dtau_impulse = contact_sequence.impulseTime(impulse_index) - i * dtau_;
-        const double dtau_aux = dtau_ - dtau_impulse;
-        assert(dtau_impulse > 0);
-        assert(dtau_impulse < dtau_);
-        assert(dtau_aux > 0);
-        assert(dtau_aux < dtau_);
-        riccati_factorizer_.aux[impulse_index].backwardStateConstraintFactorization(
-            constraint_factorization[i].T(j+1), 
-            kkt_matrix.aux[impulse_index], dtau_aux, 
-            constraint_factorization[i].T_aux(impulse_index));
-        riccati_factorizer_.impulse[impulse_index].backwardStateConstraintFactorization(
-            constraint_factorization[i].T_aux(impulse_index), 
-            kkt_matrix.impulse[impulse_index], 
-            constraint_factorization[i].T_impulse(impulse_index));
-        riccati_factorizer_[i].backwardStateConstraintFactorization(
-            constraint_factorization[i].T_impulse(impulse_index), 
-            kkt_matrix[i], dtau_impulse, 
-            constraint_factorization[i].T(j));
-      }
-      else if (contact_sequence.existLiftStage(i)) {
-        const int lift_index = contact_sequence.liftIndex(i);
-        const double dtau_lift = contact_sequence.liftTime(lift_index) - i * dtau_;
-        const double dtau_aux = dtau_ - dtau_lift;
-        assert(dtau_lift > 0);
-        assert(dtau_lift < dtau_);
-        assert(dtau_aux > 0);
-        assert(dtau_aux < dtau_);
-        riccati_factorizer_.lift[lift_index].backwardStateConstraintFactorization(
-            constraint_factorization[i].T(j+1), 
-            kkt_matrix.lift[lift_index], dtau_aux, 
-            constraint_factorization[i].T_lift(lift_index));
-        riccati_factorizer_[i].backwardStateConstraintFactorization(
-            constraint_factorization[i].T_lift(lift_index), 
-            kkt_matrix[i], dtau_lift, 
-            constraint_factorization[i].T(j));
-      }
-      else {
-        riccati_factorizer_[i].backwardStateConstraintFactorization(
-            constraint_factorization[i].T(j+1), 
-            kkt_matrix[j], dtau_, 
-            constraint_factorization[i].T(j));
-      }
+  for (int i=0; i<num_constraint; ++i) {
+    backwardStateConstraintFactorization(contact_sequence, kkt_matrix, 
+                                         constraint_factorization[i], i);
+  }
+}
+
+
+inline void RiccatiRecursion::backwardStateConstraintFactorization(
+    const ContactSequence& contact_sequence, 
+    const HybridKKTMatrix& kkt_matrix, 
+    StateConstraintRiccatiFactorization& constraint_factorization,
+    const int constraint_index) const {
+  assert(constraint_index >= 0);
+  assert(constraint_index < contact_sequence.totalNumImpulseStages());
+  const int time_stage_before_constraint 
+      = contact_sequence.timeStageBeforeImpulse(constraint_index);
+  const double dtau_constraint 
+      = contact_sequence.impulseTime(constraint_index) 
+          - time_stage_before_constraint * dtau_;
+  riccati_factorizer_[time_stage_before_constraint].backwardStateConstraintFactorization(
+      constraint_factorization.T_impulse(constraint_index), 
+      kkt_matrix[time_stage_before_constraint], dtau_constraint, 
+      constraint_factorization.T(time_stage_before_constraint));
+  for (int i=time_stage_before_constraint-1; i>=0; --i) {
+    if (contact_sequence.existImpulseStage(i)) {
+      const int impulse_index = contact_sequence.impulseIndex(i);
+      const double dtau_impulse = contact_sequence.impulseTime(impulse_index) - i * dtau_;
+      const double dtau_aux = dtau_ - dtau_impulse;
+      assert(dtau_impulse > 0);
+      assert(dtau_impulse < dtau_);
+      assert(dtau_aux > 0);
+      assert(dtau_aux < dtau_);
+      riccati_factorizer_.aux[impulse_index].backwardStateConstraintFactorization(
+          constraint_factorization.T(i+1), 
+          kkt_matrix.aux[impulse_index], dtau_aux, 
+          constraint_factorization.T_aux(impulse_index));
+      riccati_factorizer_.impulse[impulse_index].backwardStateConstraintFactorization(
+          constraint_factorization.T_aux(impulse_index), 
+          kkt_matrix.impulse[impulse_index], 
+          constraint_factorization.T_impulse(impulse_index));
+      riccati_factorizer_[i].backwardStateConstraintFactorization(
+          constraint_factorization.T_impulse(impulse_index), 
+          kkt_matrix[i], dtau_impulse, 
+          constraint_factorization.T(i));
+    }
+    else if (contact_sequence.existLiftStage(i)) {
+      const int lift_index = contact_sequence.liftIndex(i);
+      const double dtau_lift = contact_sequence.liftTime(lift_index) - i * dtau_;
+      const double dtau_aux = dtau_ - dtau_lift;
+      assert(dtau_lift > 0);
+      assert(dtau_lift < dtau_);
+      assert(dtau_aux > 0);
+      assert(dtau_aux < dtau_);
+      riccati_factorizer_.lift[lift_index].backwardStateConstraintFactorization(
+          constraint_factorization.T(i+1), 
+          kkt_matrix.lift[lift_index], dtau_aux, 
+          constraint_factorization.T_lift(lift_index));
+      riccati_factorizer_[i].backwardStateConstraintFactorization(
+          constraint_factorization.T_lift(lift_index), 
+          kkt_matrix[i], dtau_lift, 
+          constraint_factorization.T(i));
+    }
+    else {
+      riccati_factorizer_[i].backwardStateConstraintFactorization(
+          constraint_factorization.T(i+1), 
+          kkt_matrix[i], dtau_, 
+          constraint_factorization.T(i));
     }
   }
 }
