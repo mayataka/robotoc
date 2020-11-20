@@ -91,41 +91,13 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   constraint_factorizer_.computeLagrangeMultiplierDirection(
       contact_sequence_, riccati_factorization_.impulse, 
       constraint_factorization_, d_[0].dx(), d_);
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N_; ++i) {
-    if (i < N_) {
-      const int robot_id = omp_get_thread_num();
-      SplitRiccatiFactorizer::computeStateDirection();
-      SplitRiccatiFactorizer::computeCostateDirection();
-      SplitRiccatiFactorizer::computeControlInputDirection();
-      split_ocps_[i].computeCondensedPrimalDirection(robots_[robot_id], dtau_, d_[i+1], d_[i]);
-      
-    }
-    else {
-      const int robot_id = omp_get_thread_num();
-      terminal_ocp_.updatePrimal(robots_[robot_id], primal_step_size, d_[N_], s_[N_]);
-      terminal_ocp_.updateDual(dual_step_size);
-    }
-  }
-  const double primal_step_size = riccati_recursion_.primalStepSize(contact_sequence_);
-  const double dual_step_size = riccati_recursion_.dualStepSize(contact_sequence_);
+  ocp_linearizer_.computeDirections(robots_, contact_sequence_, 
+                                    riccati_recursion_.getFactorizersHandle(),
+                                    riccati_factorization_, 
+                                    constraint_factorization_, s_, d_);
+  const double primal_step_size = ocp_linearizer_.primalStepSize(contact_sequence_);
+  const double dual_step_size = ocp_linearizer_.dualStepSize(contact_sequence_);
   ocp_linearizer_.updateSolution(robots_, s_, primal_step_size, dual_step_size, d_);
-
-
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N_; ++i) {
-    if (i < N_) {
-      const int robot_id = omp_get_thread_num();
-      split_ocps_[i].computeCondensedDualDirection(robots_[robot_id], dtau_, d_[i+1], d_[i]);
-      split_ocps_[i].updatePrimal(robots_[robot_id], primal_step_size, dtau_, d_[i], s_[i]);
-      split_ocps_[i].updateDual(dual_step_size);
-    }
-    else {
-      const int robot_id = omp_get_thread_num();
-      terminal_ocp_.updatePrimal(robots_[robot_id], primal_step_size, d_[N_], s_[N_]);
-      terminal_ocp_.updateDual(dual_step_size);
-    }
-  }
 } 
 
 
@@ -313,48 +285,5 @@ void OCP::initConstraints() {
     split_ocps_[i].initConstraints(robots_[robot_id], i, dtau_, s_[i]);
   }
 }
-
-
-
-// void OCP::linearizeOCP(const double t, const Eigen::VectorXd& q, 
-//                        const Eigen::VectorXd& v) {
-//   assert(q.size() == robots_[0].dimq());
-//   assert(v.size() == robots_[0].dimv());
-//   const int N_impulse = contact_sequence_.numImpulse();
-//   const int N_lift = contact_sequence_.numLifts();
-//   const int N = N_ + N_impulse + N_lift;
-//   #pragma omp parallel for num_threads(num_proc_)
-//   for (int i=0; i<=N; ++i) {
-//     if (i == 0) {
-//       const int robot_id = omp_get_thread_num();
-//       split_ocps_[i].linearizeOCP(robots_[robot_id], 
-//                                   contact_sequence_.contactStatus(i), 
-//                                   t+i*dtau_, dtau_, q, s_[i], s_[i+1]);
-//     }
-//     else if (i < N_) {
-//       const int robot_id = omp_get_thread_num();
-//       split_ocps_[i].linearizeOCP(robots_[robot_id], 
-//                                   contact_sequence_.contactStatus(i), 
-//                                   t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
-//     }
-//     else if (i == N_) {
-//       const int robot_id = omp_get_thread_num();
-//       terminal_ocp_.linearizeOCP(robots_[robot_id], t+T_, s_[N_]);
-//       terminal_ocp_.backwardRiccatiRecursion(riccati_[N_]);
-//     }
-//     else if (i < N_+N_impulse) {
-//       const int robot_id = omp_get_thread_num();
-//       split_impulse_ocps_[i].linearizeOCP(robots_[robot_id], 
-//                                           contact_sequence_.impulseStatus(i-N_), 
-//                                           t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
-//     }
-//     else {
-//       const int robot_id = omp_get_thread_num();
-//       split_lift_ocps_[i].linearizeOCP(robots_[robot_id], contact_sequence_.impulseStatus(i+1), 
-//                                        t+i*dtau_, dtau_, s_[i-1].q, s_[i], s_[i+1]);
-        
-//     }
-//   }
-// }
 
 } // namespace idocp

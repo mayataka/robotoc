@@ -1,6 +1,10 @@
 #ifndef IDOCP_HYBRID_CONTAINER_HPP_
 #define IDOCP_HYBRID_CONTAINER_HPP_
 
+#include "idocp/ocp/split_ocp.hpp"
+#include "idocp/ocp/terminal_ocp.hpp"
+#include "idocp/impulse/split_impulse_ocp.hpp"
+
 #include <vector>
 
 namespace idocp {
@@ -115,7 +119,7 @@ struct hybrid_container {
   std::vector<Type> data, aux, lift;
   std::vector<ImpulseType> impulse;
 };
-  
+
 } // namespace idocp
 
 #endif // IDOCP_HYBRID_CONTAINER_HPP_

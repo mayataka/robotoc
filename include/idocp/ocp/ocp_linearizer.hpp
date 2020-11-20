@@ -15,9 +15,7 @@
 #include "idocp/impulse/split_impulse_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_direction.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 
@@ -32,7 +30,6 @@ class OCPLinearizer {
 public:
   using HybridOCP = hybrid_container<SplitOCP, SplitImpulseOCP>;
   using HybridSolution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
-  using HybridDirection = hybrid_container<SplitDirection, ImpulseSplitDirection>;
   using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
   using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
 
@@ -48,9 +45,8 @@ public:
   /// @param[in] num_proc Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  OCPLinearizer(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-                const std::shared_ptr<Constraints>& constraints, const double T, 
-                const int N, const int max_num_impulse=0, const int num_proc=1);
+  OCPLinearizer(const double T, const int N, const int max_num_impulse=0, 
+                const int num_proc=1);
 
   ///
   /// @brief Default constructor. 
@@ -82,38 +78,107 @@ public:
   ///
   OCPLinearizer& operator=(OCPLinearizer&&) noexcept = default;
 
-  void linearizeOCP(std::vector<Robot>& robots,
+  void linearizeOCP(HybridOCP& split_ocps, TerminalOCP& terminal_ocp, 
+                    std::vector<Robot>& robots,
                     const ContactSequence& contact_sequence,
                     const double t, const Eigen::VectorXd& q, 
                     const Eigen::VectorXd& v, const HybridSolution& s,
                     HybridKKTMatrix& kkt_matrix,
                     HybridKKTResidual& kkt_residual);
 
-  void linearizeInitialState(const Robot& robot, const double t, 
-                             const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-                             const HybridSolution& s, HybridDirection& d) const;
-
-  void updateSolution(const std::vector<Robot>& robots, const HybridSolution& s,
-                      const double primal_step_size, 
-                      const double dual_step_size, HybridDirection& d);
-
-  void computeKKTResidual(std::vector<Robot>& robots, 
+  void computeKKTResidual(HybridOCP& split_ocps, TerminalOCP& terminal_ocp,
+                          std::vector<Robot>& robots, 
                           const ContactSequence& contact_sequence,
                           const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v, const HybridSolution& s,
                           HybridKKTMatrix& kkt_matrix, 
                           HybridKKTResidual& kkt_residual);
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  // void computeDirections(
+  //     std::vector<Robot>& robots, const ContactSequence& contact_sequence, 
+  //     const HybridRiccatiFactorizer& factorizer, 
+  //     HybridRiccatiFactorization& factorization, 
+  //     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization, 
+  //     const HybridSolution& s, HybridDirection& d);
+
+  // double maxPrimalStepSize(const ContactSequence& contact_sequence) const;
+
+  // double maxDualStepSize(const ContactSequence& contact_sequence) const;
+
+  // void updateSolution(const std::vector<Robot>& robots, 
+  //                     const HybridKKTMatrix& kkt_matrix,
+  //                     const HybridKKTResidual& kkt_residual,
+  //                     const double primal_step_size, 
+  //                     const double dual_step_size, HybridDirection& d, 
+  //                     HybridSolution& s);
+
+  // static void computePrimalDirectionInitial(
+  //     const RiccatiFactorizer factorizer, 
+  //     const RiccatiFactorization factorization, SplitDirection& d, 
+  //     const bool exist_state_constraint);
+
+  // template <typename VectorType>
+  // static void computePrimalDirection(const RiccatiFactorizer factorizer,
+  //                                    const RiccatiFactorization factorization,
+  //                                    const Eigen::MatrixBase<VectorType>& dx0, 
+  //                                    SplitDirection& d,
+  //                                    const bool exist_state_constraint);
+
+  // template <typename VectorType>
+  // static void computePrimalDirectionTerminal(
+  //     const RiccatiFactorization factorization, 
+  //     const Eigen::MatrixBase<VectorType>& dx0, SplitDirection& d);
+
+  // template <typename VectorType>
+  // static void computePrimalDirectionImpulse(
+  //     const RiccatiFactorization factorization, 
+  //     const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d);
+
+  // static void aggregateLagrangeMultiplierDirection(
+  //     const ContactSequence& contact_sequence,
+  //     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
+  //     const std::vector<ImpulseSplitDirection>& d_impulse, const int time_stage,
+  //     RiccatiFactorization& riccati_factorization);
+
+  // static void aggregateLagrangeMultiplierDirectionImpulse(
+  //     const ContactSequence& contact_sequence,
+  //     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
+  //     const std::vector<ImpulseSplitDirection>& d_impulse, 
+  //     const int impulse_index,
+  //     RiccatiFactorization& impulse_riccati_factorization);
+
+  // static void aggregateLagrangeMultiplierDirectionAux(
+  //     const ContactSequence& contact_sequence,
+  //     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
+  //     const std::vector<ImpulseSplitDirection>& d_impulse, 
+  //     const int impulse_index,
+  //     RiccatiFactorization& aux_riccati_factorization);
+
+  // static void aggregateLagrangeMultiplierDirectionLift(
+  //     const ContactSequence& contact_sequence,
+  //     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
+  //     const std::vector<ImpulseSplitDirection>& d_impulse, 
+  //     const int lift_index,
+  //     RiccatiFactorization& lift_riccati_factorization);
 
 private:
 
+  template <typename Algorithm>
+  void runParallel(HybridOCP& split_ocps, TerminalOCP& terminal_ocp,
+                   std::vector<Robot>& robots,
+                   const ContactSequence& contact_sequence,
+                   const double t, const Eigen::VectorXd& q, 
+                   const Eigen::VectorXd& v, const HybridSolution& s,
+                   HybridKKTMatrix& kkt_matrix, HybridKKTResidual& kkt_residual);
+
   const Eigen::VectorXd& q_prev(const ContactSequence& contact_sequence, 
+                                const Eigen::VectorXd& q,
                                 const HybridSolution& s,
                                 const int time_stage) const;
 
-  HybridOCP split_ocps_;
-  TerminalOCP terminal_ocp_;
+  double dtau(const ContactSequence& contact_sequence, 
+              const int time_stage) const;
+
   double T_, dtau_;
   int N_, num_proc_;
 

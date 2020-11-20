@@ -274,6 +274,12 @@ inline void RiccatiRecursion::backwardStateConstraintFactorization(
   }
 }
 
+
+inline const RiccatiRecursion::HybridRiccatiFactorizer& 
+RiccatiRecursion::getFactorizersHandle() const {
+  return riccati_factorizer_;
+}
+
 } // namespace idocp
 
 #endif // IDOCP_RICCATI_RECURSION_HXX_ 

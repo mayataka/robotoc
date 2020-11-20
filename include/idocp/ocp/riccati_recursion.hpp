@@ -93,6 +93,8 @@ public:
       const HybridKKTMatrix& kkt_matrix, 
       std::vector<StateConstraintRiccatiFactorization>& constraint_factorization) const;
 
+  const HybridRiccatiFactorizer& getFactorizersHandle() const;
+
 private:
   int N_, max_num_impulse_, nproc_;
   double dtau_;

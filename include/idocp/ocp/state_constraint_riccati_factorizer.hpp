@@ -80,33 +80,6 @@ public:
       const Eigen::MatrixBase<VectorType>& dx0,
       std::vector<ImpulseSplitDirection>& d_impulse);
 
-  static void aggregateLagrangeMultiplierDirection(
-      const ContactSequence& contact_sequence,
-      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-      const std::vector<ImpulseSplitDirection>& d_impulse, const int time_stage,
-      RiccatiFactorization& riccati_factorization);
-
-  static void aggregateLagrangeMultiplierDirectionImpulse(
-      const ContactSequence& contact_sequence,
-      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-      const std::vector<ImpulseSplitDirection>& d_impulse, 
-      const int impulse_index,
-      RiccatiFactorization& impulse_riccati_factorization);
-
-  static void aggregateLagrangeMultiplierDirectionImpulseAux(
-      const ContactSequence& contact_sequence,
-      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-      const std::vector<ImpulseSplitDirection>& d_impulse, 
-      const int impulse_index,
-      RiccatiFactorization& aux_riccati_factorization);
-
-  static void aggregateLagrangeMultiplierDirectionLift(
-      const ContactSequence& contact_sequence,
-      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-      const std::vector<ImpulseSplitDirection>& d_impulse, 
-      const int lift_index,
-      RiccatiFactorization& lift_riccati_factorization);
-
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
