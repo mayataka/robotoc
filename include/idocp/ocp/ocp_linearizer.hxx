@@ -10,8 +10,8 @@
 
 namespace idocp {
 namespace internal {
-struct LinearizeOCP {
 
+struct LinearizeOCP {
   template <typename ConfigVectorType, typename SplitSolutionType>
   static inline void run(SplitOCP& split_ocp, Robot& robot, 
                          const ContactStatus& contact_status, const double t, 
@@ -87,7 +87,8 @@ inline OCPLinearizer::OCPLinearizer(const double T, const int N,
   : T_(T),
     dtau_(T/N),
     N_(N),
-    num_proc_(num_proc) {
+    num_proc_(num_proc),
+    kkt_error_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)) {
   try {
     if (T <= 0) {
       throw std::out_of_range("invalid value: T must be positive!");
@@ -113,7 +114,8 @@ inline OCPLinearizer::OCPLinearizer()
   : T_(0),
     dtau_(0),
     N_(0),
-    num_proc_(0) {
+    num_proc_(0),
+    kkt_error_() {
 }
 
 
@@ -126,7 +128,7 @@ inline void OCPLinearizer::linearizeOCP(
     std::vector<Robot>& robots, const ContactSequence& contact_sequence, 
     const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const HybridSolution& s, HybridKKTMatrix& kkt_matrix, 
-    HybridKKTResidual& kkt_residual) {
+    HybridKKTResidual& kkt_residual) const {
   runParallel<internal::LinearizeOCP>(split_ocps, terminal_ocp, robots, 
                                       contact_sequence, t, q, v, s, 
                                       kkt_matrix, kkt_residual);
@@ -138,10 +140,73 @@ inline void OCPLinearizer::computeKKTResidual(
     std::vector<Robot>& robots, const ContactSequence& contact_sequence, 
     const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const HybridSolution& s, HybridKKTMatrix& kkt_matrix, 
-    HybridKKTResidual& kkt_residual) {
+    HybridKKTResidual& kkt_residual) const {
   runParallel<internal::ComputeKKTResidual>(split_ocps, terminal_ocp, robots, 
                                             contact_sequence, t, q, v, s, 
                                             kkt_matrix, kkt_residual);
+}
+
+
+inline double OCPLinearizer::KKTError(const HybridOCP& split_ocps, 
+                                      const TerminalOCP& terminal_ocp, 
+                                      const ContactSequence& contact_sequence, 
+                                      const HybridKKTResidual& kkt_residual) {
+  const int N_impulse = contact_sequence.totalNumImpulseStages();
+  const int N_lift = contact_sequence.totalNumLiftStages();
+  const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
+  #pragma omp parallel for num_threads(num_proc_)
+  for (int i=0; i<N_all; ++i) {
+    if (i < N_) {
+      if (contact_sequence.existImpulseStage(i)) {
+        const int impulse_index = contact_sequence.impulseIndex(i);
+        const double dtau_impulse = contact_sequence.impulseTime(impulse_index) - i * dtau_;
+        assert(dtau_impulse > 0);
+        assert(dtau_impulse < dtau_);
+        kkt_error_.coeffRef(i) = split_ocps[i].squaredNormKKTResidual(kkt_residual[i], dtau_impulse);
+      }
+      else if (contact_sequence.existLiftStage(i)) {
+        const int lift_index = contact_sequence.liftIndex(i);
+        const double dtau_lift = contact_sequence.liftTime(lift_index) - i * dtau_;
+        assert(dtau_lift > 0);
+        assert(dtau_lift < dtau_);
+        kkt_error_.coeffRef(i) = split_ocps[i].squaredNormKKTResidual(kkt_residual[i], dtau_lift);
+      }
+      else {
+        kkt_error_.coeffRef(i) = split_ocps[i].squaredNormKKTResidual(kkt_residual[i], dtau_);
+      }
+    }
+    else if (i == N_) {
+      kkt_error_.coeffRef(N_) = terminal_ocp.squaredNormKKTResidual(kkt_residual[N_]);
+    }
+    else if (i < N_ + 1 + N_impulse) {
+      const int impulse_index  = i - (N_+1);
+      const int time_stage_before_impulse 
+          = contact_sequence.timeStageBeforeImpulse(impulse_index);
+      kkt_error_.coeffRef(i) 
+          = split_ocps.impulse[impulse_index].squaredNormKKTResidual(kkt_residual.impulse[impulse_index]);
+    }
+    else if (i < N_ + 1 + 2*N_impulse) {
+      const int impulse_index  = i - (N_+1+N_impulse);
+      const int time_stage_before_impulse 
+          = contact_sequence.timeStageBeforeImpulse(impulse_index);
+      const double dtau_aux 
+          = (time_stage_before_impulse+1) * dtau_ 
+              - contact_sequence.impulseTime(impulse_index);
+      kkt_error_.coeffRef(i) 
+          = split_ocps.aux[impulse_index].squaredNormKKTResidual(kkt_residual.aux[impulse_index], dtau_aux);
+    }
+    else {
+      const int lift_index = i - (N_+1+2*N_impulse);
+      const int time_stage_before_lift 
+          = contact_sequence.timeStageBeforeLift(lift_index);
+      const double dtau_aux
+          = (time_stage_before_lift+1) * dtau_ 
+              - contact_sequence.liftTime(lift_index);
+      kkt_error_.coeffRef(i) 
+          = split_ocps.lift[lift_index].squaredNormKKTResidual(kkt_residual.lift[lift_index], dtau_aux);
+    }
+  }
+  return std::sqrt(kkt_error_.head(N_all).sum());
 }
 
 
@@ -154,7 +219,7 @@ inline void OCPLinearizer::runParallel(HybridOCP& split_ocps,
                                        const Eigen::VectorXd& v, 
                                        const HybridSolution& s,
                                        HybridKKTMatrix& kkt_matrix,
-                                       HybridKKTResidual& kkt_residual) {
+                                       HybridKKTResidual& kkt_residual) const {
   assert(robots.size() == num_proc_);
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
@@ -279,126 +344,6 @@ inline double OCPLinearizer::dtau(const ContactSequence& contact_sequence,
     return dtau_;
   }
 }
-
-
-// inline void OCPLinearizer::computePrimalDirectionInitial(
-//     const RiccatiFactorizer factorizer, 
-//     const RiccatiFactorization factorization, SplitDirection& d, 
-//     const bool exist_state_constraint) {
-//   RiccatiFactorizer::computeCostateDirection(factorization, d, 
-//                                              exist_state_constraint);
-//   factorizer.computeControlInputDirection(factorization, d, 
-//                                           exist_state_constraint);
-// }
-
-
-// template <typename VectorType>
-// inline void OCPLinearizer::computePrimalDirection(
-//     const RiccatiFactorizer factorizer, const RiccatiFactorization factorization, 
-//     const Eigen::MatrixBase<VectorType>& dx0, SplitDirection& d, 
-//     const bool exist_state_constraint) {
-//   RiccatiFactorizer::computeStateDirection(factorization, dx0, d,
-//                                            exist_state_constraint);
-//   RiccatiFactorizer::computeCostateDirection(factorization, d, 
-//                                              exist_state_constraint);
-//   factorizer.computeControlInputDirection(factorization, d, 
-//                                           exist_state_constraint);
-// }
-
-
-// template <typename VectorType>
-// inline void OCPLinearizer::computePrimalDirectionTerminal(
-//     const RiccatiFactorization factorization, 
-//     const Eigen::MatrixBase<VectorType>& dx0, SplitDirection& d) {
-//   RiccatiFactorizer::computeStateDirection(factorization, dx0, d, false);
-//   RiccatiFactorizer::computeCostateDirection(factorization, d, false);
-// }
- 
-
-// template <typename VectorType>
-// inline void OCPLinearizer::computePrimalDirectionImpulse(
-//     const RiccatiFactorization factorization, 
-//     const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d) {
-//   ImpulseRiccatiFactorizer::computeStateDirection(factorization, dx0, d);
-//   ImpulseRiccatiFactorizer::computeCostateDirection(factorization, d);
-// }
- 
-
-// inline void OCPLinearizer::aggregateLagrangeMultiplierDirection(
-//     const ContactSequence& contact_sequence,
-//     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-//     const std::vector<ImpulseSplitDirection>& d_impulse, const int time_stage,
-//     RiccatiFactorization& riccati_factorization) {
-//   assert(time_stage >= 0);
-//   const int num_impulse = contact_sequence.totalNumImpulseStages();
-//   riccati_factorization.n.setZero();
-//   for (int i=num_impulse-1; i>=0; --i) {
-//     if (contact_sequence.timeStageBeforeImpulse(i) < time_stage) {
-//       break;
-//     }
-//     else {
-//       riccati_factorization.n.noalias() 
-//           += constraint_factorization[i].T(time_stage) * d_impulse[i].dxi();
-//     }
-//   }
-// }
-
-
-// inline void OCPLinearizer::aggregateLagrangeMultiplierDirectionImpulse(
-//     const ContactSequence& contact_sequence,
-//     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-//     const std::vector<ImpulseSplitDirection>& d_impulse, 
-//     const int impulse_index,
-//     RiccatiFactorization& impulse_riccati_factorization) {
-//   assert(impulse_index >= 0);
-//   assert(impulse_index < contact_sequence.totalNumImpulseStages());
-//   const int num_impulse = contact_sequence.totalNumImpulseStages();
-//   impulse_riccati_factorization.n.setZero();
-//   for (int i=num_impulse-1; i>=impulse_index; --i) {
-//     impulse_riccati_factorization.n.noalias() 
-//         += constraint_factorization[i].T_impulse(impulse_index) * d_impulse[i].dxi();
-//   }
-// }
-
-
-// inline void OCPLinearizer::aggregateLagrangeMultiplierDirectionAux(
-//     const ContactSequence& contact_sequence,
-//     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-//     const std::vector<ImpulseSplitDirection>& d_impulse, 
-//     const int impulse_index,
-//     RiccatiFactorization& aux_riccati_factorization) {
-//   assert(impulse_index >= 0);
-//   assert(impulse_index < contact_sequence.totalNumImpulseStages());
-//   const int num_impulse = contact_sequence.totalNumImpulseStages();
-//   aux_riccati_factorization.n.setZero();
-//   for (int i=num_impulse-1; i>=impulse_index; --i) {
-//     aux_riccati_factorization.n.noalias() 
-//         += constraint_factorization[i].T_aux(impulse_index) * d_impulse[i].dxi();
-//   }
-// }
-
-
-// inline void OCPLinearizer::aggregateLagrangeMultiplierDirectionLift(
-//     const ContactSequence& contact_sequence,
-//     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-//     const std::vector<ImpulseSplitDirection>& d_impulse, 
-//     const int lift_index,
-//     RiccatiFactorization& lift_riccati_factorization) {
-//   assert(lift_index >= 0);
-//   assert(lift_index < contact_sequence.totalNumLiftStages());
-//   const int num_impulse = contact_sequence.totalNumImpulseStages();
-//   const int time_stage_before_lift = contact_sequence.timeStageBeforeLift(lift_index);
-//   lift_riccati_factorization.n.setZero();
-//   for (int i=num_impulse-1; i>=0; --i) {
-//     if (contact_sequence.timeStageBeforeImpulse(i) < time_stage_before_lift) {
-//       break;
-//     }
-//     else {
-//       lift_riccati_factorization.n.noalias() 
-//           += constraint_factorization[i].T_lift(lift_index) * d_impulse[i].dxi();
-//     }
-//   }
-// }
 
 } // namespace idocp 
 

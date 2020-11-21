@@ -100,10 +100,13 @@ add_library(
   src/ocp/state_constraint_riccati_factorization.cpp
   src/ocp/state_constraint_riccati_lp_factorizer.cpp
   src/ocp/state_constraint_riccati_factorizer.cpp
-  # src/ocp/riccati_recursion.cpp
+  src/ocp/riccati_recursion.cpp
+  src/ocp/ocp_linearizer.cpp
+  src/ocp/ocp_direction_calculator.cpp
+  src/ocp/ocp_solution_integrator.cpp
+  src/ocp/ocp.cpp
   # src/ocp/split_temporary_solution.cpp
-  # src/ocp/line_search_filter.cpp
-  # src/ocp/ocp.cpp
+  src/ocp/line_search_filter.cpp
   # src/ocp/backward_correction.cpp
   # src/ocp/split_parnmpc.cpp
   # src/ocp/parnmpc.cpp

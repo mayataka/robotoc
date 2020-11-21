@@ -18,19 +18,15 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     filter_(),
     T_(T),
     dtau_(T/N),
-    step_size_reduction_rate_(0.75),
-    min_step_size_(0.05),
     N_(N),
     num_proc_(num_proc),
     s_(N+1, SplitSolution(robot), max_num_impulse, ImpulseSplitSolution(robot)),
     d_(N+1, SplitDirection(robot), max_num_impulse, ImpulseSplitDirection(robot)),
-    riccati_(N+1, RiccatiFactorization(robot), max_num_impulse, RiccatiFactorization(robot)),
+    riccati_factorization_(N+1, RiccatiFactorization(robot), max_num_impulse, RiccatiFactorization(robot)),
     constraint_factorization_(max_num_impulse, 
                               StateConstraintRiccatiFactorization(robot, N, max_num_impulse)),
     constraint_factorizer_(robot, max_num_impulse, num_proc),
     riccati_recursion_(robot, T, N, max_num_impulse, num_proc),
-    primal_step_sizes_(Eigen::VectorXd::Zero(N)),
-    dual_step_sizes_(Eigen::VectorXd::Zero(N)),
     contact_sequence_(robot, T, N) {
   assert(T > 0);
   assert(N > 0);
@@ -43,23 +39,7 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
 }
 
 
-OCP::OCP() 
-  : split_ocps_(),
-    terminal_ocp_(),
-    robots_(),
-    contact_sequence_(),
-    filter_(),
-    T_(),
-    dtau_(),
-    step_size_reduction_rate_(),
-    min_step_size_(),
-    N_(),
-    num_proc_(),
-    s_(),
-    d_(),
-    riccati_(),
-    primal_step_sizes_(),
-    dual_step_sizes_() {
+OCP::OCP() {
 }
 
 
@@ -71,7 +51,8 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
                          const Eigen::VectorXd& v, const bool use_line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  ocp_linearizer_.linearizeOCP(robots_, contact_sequence_, t, q, v, s_,
+  ocp_linearizer_.linearizeOCP(split_ocps_, terminal_ocp_, robots_, 
+                               contact_sequence_, t, q, v, s_,
                                kkt_matrix_, kkt_residual_);
   riccati_recursion_.backwardRiccatiRecursionTerminal(kkt_matrix_, 
                                                       kkt_residual_, 
@@ -88,16 +69,21 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   riccati_recursion_.backwardStateConstraintFactorization(contact_sequence_,
                                                           kkt_matrix_, 
                                                           constraint_factorization_);
+
+  ocp_direction_calculator_.computeInitialStateDirection(robots_, s_, q, v, d_);
   constraint_factorizer_.computeLagrangeMultiplierDirection(
       contact_sequence_, riccati_factorization_.impulse, 
-      constraint_factorization_, d_[0].dx(), d_);
-  ocp_linearizer_.computeDirections(robots_, contact_sequence_, 
-                                    riccati_recursion_.getFactorizersHandle(),
-                                    riccati_factorization_, 
-                                    constraint_factorization_, s_, d_);
-  const double primal_step_size = ocp_linearizer_.primalStepSize(contact_sequence_);
-  const double dual_step_size = ocp_linearizer_.dualStepSize(contact_sequence_);
-  ocp_linearizer_.updateSolution(robots_, s_, primal_step_size, dual_step_size, d_);
+      constraint_factorization_, d_[0].dx(), d_.impulse);
+  ocp_direction_calculator_.computeDirection(split_ocps_, terminal_ocp_, 
+                                             robots_, contact_sequence_, 
+                                             riccati_recursion_.getFactorizersHandle(),
+                                             riccati_factorization_, 
+                                             constraint_factorization_, s_, d_);
+  const double primal_step_size = ocp_direction_calculator_.maxPrimalStepSize(contact_sequence_);
+  const double dual_step_size = ocp_direction_calculator_.maxDualStepSize(contact_sequence_);
+  ocp_solution_integrator_.integrate(split_ocps_, terminal_ocp_, robots_, 
+                                     contact_sequence_, kkt_matrix_, kkt_residual_, 
+                                     primal_step_size, dual_step_size, d_, s_);
 } 
 
 
@@ -116,7 +102,7 @@ void OCP::getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq,
   assert(Kq.cols() == robots_[0].dimv());
   assert(Kv.rows() == robots_[0].dimv());
   assert(Kv.cols() == robots_[0].dimv());
-  split_ocps_[stage].getStateFeedbackGain(Kq, Kv);
+  // split_ocps_[stage].getStateFeedbackGain(Kq, Kv);
 }
 
 
@@ -208,43 +194,16 @@ void OCP::clearLineSearchFilter() {
 
 
 double OCP::KKTError() {
-  Eigen::VectorXd error = Eigen::VectorXd::Zero(N_+1);
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N_; ++i) {
-    const int robot_id = omp_get_thread_num();
-    if (i < N_) {
-      error(i) = split_ocps_[i].squaredNormKKTResidual(dtau_);
-    }
-    else {
-      error(N_) = terminal_ocp_.squaredNormKKTResidual();
-    }
-  }
-  return std::sqrt(error.sum());
+  return ocp_linearizer_.KKTError(split_ocps_, terminal_ocp_, 
+                                  contact_sequence_, kkt_residual_);
 }
 
 
 void OCP::computeKKTResidual(const double t, const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v) {
-  assert(q.size() == robots_[0].dimq());
-  assert(v.size() == robots_[0].dimv());
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N_; ++i) {
-    const int robot_id = omp_get_thread_num();
-    if (i == 0) {
-      split_ocps_[i].computeKKTResidual(robots_[robot_id], 
-                                        contact_sequence_.contactStatus(i), 
-                                        t+(i+1)*dtau_, dtau_, q, s_[i], s_[i+1]);
-    }
-    else if (i < N_) {
-      split_ocps_[i].computeKKTResidual(robots_[robot_id], 
-                                        contact_sequence_.contactStatus(i), 
-                                        t+(i+1)*dtau_, dtau_, s_[i-1].q, s_[i], 
-                                        s_[i+1]);
-    }
-    else {
-      terminal_ocp_.computeKKTResidual(robots_[robot_id], t+T_, s_[N_]);
-    }
-  }
+  ocp_linearizer_.computeKKTResidual(split_ocps_, terminal_ocp_, robots_, 
+                                     contact_sequence_, t, q, v, s_,
+                                     kkt_matrix_, kkt_residual_);
 }
 
 

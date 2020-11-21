@@ -21,6 +21,8 @@
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/ocp/riccati_recursion.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
+#include "idocp/ocp/ocp_direction_calculator.hpp"
+#include "idocp/ocp/ocp_solution_integrator.hpp"
 
 
 namespace idocp {
@@ -31,11 +33,11 @@ namespace idocp {
 ///
 class OCP {
 public:
-
-  using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
-  using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
+  using HybridOCP = hybrid_container<SplitOCP, SplitImpulseOCP>;
   using HybridSolution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
   using HybridDirection = hybrid_container<SplitDirection, ImpulseSplitDirection>;
+  using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
+  using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
   using HybridRiccatiFactorization = hybrid_container<RiccatiFactorization, RiccatiFactorization>;
 
   ///
@@ -93,8 +95,6 @@ public:
   void updateSolution(const double t, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v, 
                       const bool use_line_search=false);
-
-  void setProblem();
 
   ///
   /// @brief Get the const reference to the split solution of a time stage. 
@@ -203,18 +203,21 @@ private:
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
   OCPLinearizer ocp_linearizer_;
+  OCPDirectionCalculator ocp_direction_calculator_;
+  OCPSolutionIntegrator ocp_solution_integrator_;
+  RiccatiRecursion riccati_recursion_;
+  StateConstraintRiccatiFactorizer constraint_factorizer_;
+  HybridOCP split_ocps_;
+  TerminalOCP terminal_ocp_;
   HybridKKTMatrix kkt_matrix_;
   HybridKKTResidual kkt_residual_;
   HybridSolution s_;
   HybridDirection d_;
-  RiccatiRecursion riccati_recursion_;
-  StateConstraintRiccatiFactorizer constraint_factorizer_;
   HybridRiccatiFactorization riccati_factorization_;
   std::vector<StateConstraintRiccatiFactorization> constraint_factorization_;
   LineSearchFilter filter_;
-  double step_size_reduction_rate_, min_step_size_;
   int N_, num_proc_;
-  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_;
+  double T_, dtau_;
 
 };
 
