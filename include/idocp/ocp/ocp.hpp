@@ -33,13 +33,6 @@ namespace idocp {
 ///
 class OCP {
 public:
-  using HybridOCP = hybrid_container<SplitOCP, SplitImpulseOCP>;
-  using HybridSolution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
-  using HybridDirection = hybrid_container<SplitDirection, ImpulseSplitDirection>;
-  using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
-  using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
-  using HybridRiccatiFactorization = hybrid_container<RiccatiFactorization, RiccatiFactorization>;
-
   ///
   /// @brief Construct optimal control problem solver.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.

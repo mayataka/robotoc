@@ -10,19 +10,16 @@ namespace idocp {
 OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
          const std::shared_ptr<Constraints>& constraints, const double T, 
          const int N, const int max_num_impulse, const int num_proc)
-  : split_ocps_(N, SplitOCP(robot, cost, constraints), max_num_impulse, 
-                SplitImpulseOCP(robot, cost->getImpulseCostFunction(), 
-                                constraints->getImpulseConstraints())),
-    terminal_ocp_(robot, cost, constraints),
+  : split_ocps_(N, max_num_impulse, robot, cost, constraints),
     robots_(num_proc, robot),
     filter_(),
     T_(T),
     dtau_(T/N),
     N_(N),
     num_proc_(num_proc),
-    s_(N+1, SplitSolution(robot), max_num_impulse, ImpulseSplitSolution(robot)),
-    d_(N+1, SplitDirection(robot), max_num_impulse, ImpulseSplitDirection(robot)),
-    riccati_factorization_(N+1, RiccatiFactorization(robot), max_num_impulse, RiccatiFactorization(robot)),
+    s_(N, max_num_impulse, robot),
+    d_(N, max_num_impulse, robot),
+    riccati_factorization_(N, max_num_impulse, robot),
     constraint_factorization_(max_num_impulse, 
                               StateConstraintRiccatiFactorization(robot, N, max_num_impulse)),
     constraint_factorizer_(robot, max_num_impulse, num_proc),
@@ -51,9 +48,8 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
                          const Eigen::VectorXd& v, const bool use_line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  ocp_linearizer_.linearizeOCP(split_ocps_, terminal_ocp_, robots_, 
-                               contact_sequence_, t, q, v, s_,
-                               kkt_matrix_, kkt_residual_);
+  ocp_linearizer_.linearizeOCP(split_ocps_, robots_, contact_sequence_, 
+                               t, q, v, s_, kkt_matrix_, kkt_residual_);
   riccati_recursion_.backwardRiccatiRecursionTerminal(kkt_matrix_, 
                                                       kkt_residual_, 
                                                       riccati_factorization_);
@@ -74,15 +70,14 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   constraint_factorizer_.computeLagrangeMultiplierDirection(
       contact_sequence_, riccati_factorization_.impulse, 
       constraint_factorization_, d_[0].dx(), d_.impulse);
-  ocp_direction_calculator_.computeDirection(split_ocps_, terminal_ocp_, 
-                                             robots_, contact_sequence_, 
+  ocp_direction_calculator_.computeDirection(split_ocps_, robots_, contact_sequence_, 
                                              riccati_recursion_.getFactorizersHandle(),
                                              riccati_factorization_, 
                                              constraint_factorization_, s_, d_);
   const double primal_step_size = ocp_direction_calculator_.maxPrimalStepSize(contact_sequence_);
   const double dual_step_size = ocp_direction_calculator_.maxDualStepSize(contact_sequence_);
-  ocp_solution_integrator_.integrate(split_ocps_, terminal_ocp_, robots_, 
-                                     contact_sequence_, kkt_matrix_, kkt_residual_, 
+  ocp_solution_integrator_.integrate(split_ocps_, robots_, contact_sequence_, 
+                                     kkt_matrix_, kkt_residual_, 
                                      primal_step_size, dual_step_size, d_, s_);
 } 
 
@@ -194,16 +189,14 @@ void OCP::clearLineSearchFilter() {
 
 
 double OCP::KKTError() {
-  return ocp_linearizer_.KKTError(split_ocps_, terminal_ocp_, 
-                                  contact_sequence_, kkt_residual_);
+  return ocp_linearizer_.KKTError(split_ocps_, contact_sequence_, kkt_residual_);
 }
 
 
 void OCP::computeKKTResidual(const double t, const Eigen::VectorXd& q, 
                              const Eigen::VectorXd& v) {
-  ocp_linearizer_.computeKKTResidual(split_ocps_, terminal_ocp_, robots_, 
-                                     contact_sequence_, t, q, v, s_,
-                                     kkt_matrix_, kkt_residual_);
+  ocp_linearizer_.computeKKTResidual(split_ocps_, robots_, contact_sequence_, 
+                                     t, q, v, s_, kkt_matrix_, kkt_residual_);
 }
 
 

@@ -124,31 +124,26 @@ inline OCPLinearizer::~OCPLinearizer() {
 
 
 inline void OCPLinearizer::linearizeOCP(
-    HybridOCP& split_ocps, TerminalOCP& terminal_ocp, 
-    std::vector<Robot>& robots, const ContactSequence& contact_sequence, 
-    const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-    const HybridSolution& s, HybridKKTMatrix& kkt_matrix, 
-    HybridKKTResidual& kkt_residual) const {
-  runParallel<internal::LinearizeOCP>(split_ocps, terminal_ocp, robots, 
-                                      contact_sequence, t, q, v, s, 
-                                      kkt_matrix, kkt_residual);
+    HybridOCP& split_ocps, std::vector<Robot>& robots, 
+    const ContactSequence& contact_sequence, const double t, 
+    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const HybridSolution& s, 
+    HybridKKTMatrix& kkt_matrix, HybridKKTResidual& kkt_residual) const {
+  runParallel<internal::LinearizeOCP>(split_ocps, robots, contact_sequence, 
+                                      t, q, v, s, kkt_matrix, kkt_residual);
 }
 
 
 inline void OCPLinearizer::computeKKTResidual(
-    HybridOCP& split_ocps, TerminalOCP& terminal_ocp, 
-    std::vector<Robot>& robots, const ContactSequence& contact_sequence, 
-    const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-    const HybridSolution& s, HybridKKTMatrix& kkt_matrix, 
-    HybridKKTResidual& kkt_residual) const {
-  runParallel<internal::ComputeKKTResidual>(split_ocps, terminal_ocp, robots, 
-                                            contact_sequence, t, q, v, s, 
-                                            kkt_matrix, kkt_residual);
+    HybridOCP& split_ocps, std::vector<Robot>& robots, 
+    const ContactSequence& contact_sequence, const double t, 
+    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const HybridSolution& s, 
+    HybridKKTMatrix& kkt_matrix, HybridKKTResidual& kkt_residual) const {
+  runParallel<internal::ComputeKKTResidual>(split_ocps, robots, contact_sequence,
+                                            t, q, v, s, kkt_matrix, kkt_residual);
 }
 
 
 inline double OCPLinearizer::KKTError(const HybridOCP& split_ocps, 
-                                      const TerminalOCP& terminal_ocp, 
                                       const ContactSequence& contact_sequence, 
                                       const HybridKKTResidual& kkt_residual) {
   const int N_impulse = contact_sequence.totalNumImpulseStages();
@@ -176,7 +171,7 @@ inline double OCPLinearizer::KKTError(const HybridOCP& split_ocps,
       }
     }
     else if (i == N_) {
-      kkt_error_.coeffRef(N_) = terminal_ocp.squaredNormKKTResidual(kkt_residual[N_]);
+      kkt_error_.coeffRef(N_) = split_ocps.terminal.squaredNormKKTResidual(kkt_residual[N_]);
     }
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);
@@ -212,7 +207,6 @@ inline double OCPLinearizer::KKTError(const HybridOCP& split_ocps,
 
 template <typename Algorithm>
 inline void OCPLinearizer::runParallel(HybridOCP& split_ocps, 
-                                       TerminalOCP& terminal_ocp,
                                        std::vector<Robot>& robots,
                                        const ContactSequence& contact_sequence,
                                        const double t, const Eigen::VectorXd& q, 
@@ -257,8 +251,8 @@ inline void OCPLinearizer::runParallel(HybridOCP& split_ocps,
       }
     }
     else if (i == N_) {
-      Algorithm::run(terminal_ocp, robots[omp_get_thread_num()], t+T_, s[N_], 
-                     kkt_matrix[N_], kkt_residual[N_]);
+      Algorithm::run(split_ocps.terminal, robots[omp_get_thread_num()], t+T_, 
+                     s[N_], kkt_matrix[N_], kkt_residual[N_]);
     }
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);

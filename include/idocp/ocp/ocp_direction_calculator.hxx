@@ -70,8 +70,8 @@ inline void OCPDirectionCalculator::computeInitialStateDirection(
 
 
 inline void OCPDirectionCalculator::computeDirection(
-    HybridOCP& split_ocps, TerminalOCP& terminal_ocp, 
-    std::vector<Robot>& robots, const ContactSequence& contact_sequence, 
+    HybridOCP& split_ocps, std::vector<Robot>& robots, 
+    const ContactSequence& contact_sequence, 
     const HybridRiccatiFactorizer& factorizer, 
     HybridRiccatiFactorization& factorization, 
     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization, 
@@ -110,8 +110,8 @@ inline void OCPDirectionCalculator::computeDirection(
     }
     else if (i == N_) {
       computePrimalDirectionTerminal(factorization[N_], dx0, d[N_]);
-      max_primal_step_sizes_.coeffRef(N_) = terminal_ocp.maxPrimalStepSize();
-      max_dual_step_sizes_.coeffRef(N_) = terminal_ocp.maxDualStepSize();
+      max_primal_step_sizes_.coeffRef(N_) = split_ocps.terminal.maxPrimalStepSize();
+      max_dual_step_sizes_.coeffRef(N_) = split_ocps.terminal.maxDualStepSize();
     }
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);

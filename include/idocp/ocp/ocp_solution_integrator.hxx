@@ -51,11 +51,10 @@ inline OCPSolutionIntegrator::~OCPSolutionIntegrator() {
 
 
 inline void OCPSolutionIntegrator::integrate(
-    HybridOCP& split_ocps, TerminalOCP& terminal_ocp, 
-    std::vector<Robot>& robots, const ContactSequence& contact_sequence, 
-    const HybridKKTMatrix& kkt_matrix, const HybridKKTResidual& kkt_residual, 
-    const double primal_step_size, const double dual_step_size, 
-    HybridDirection& d, HybridSolution& s) const {
+    HybridOCP& split_ocps, std::vector<Robot>& robots, 
+    const ContactSequence& contact_sequence, const HybridKKTMatrix& kkt_matrix, 
+    const HybridKKTResidual& kkt_residual, const double primal_step_size, 
+    const double dual_step_size, HybridDirection& d, HybridSolution& s) const {
   assert(robots.size() == num_proc_);
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();
@@ -95,9 +94,9 @@ inline void OCPSolutionIntegrator::integrate(
       split_ocps[i].updateDual(dual_step_size);
     }
     else if (i == N_) {
-      split_ocps[N_].updatePrimal(robots[omp_get_thread_num()], 
-                                  primal_step_size, dtau_, d[N_], s[N_]);
-      split_ocps[N_].updateDual(dual_step_size);
+      split_ocps.terminal.updatePrimal(robots[omp_get_thread_num()], 
+                                       primal_step_size, d[N_], s[N_]);
+      split_ocps.terminal.updateDual(dual_step_size);
     }
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);

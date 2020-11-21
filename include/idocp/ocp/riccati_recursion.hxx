@@ -16,8 +16,7 @@ inline RiccatiRecursion::RiccatiRecursion(const Robot& robot, const double T,
     max_num_impulse_(max_num_impulse),
     nproc_(nproc),
     dtau_(T/N),
-    riccati_factorizer_(N+1, RiccatiFactorizer(robot),
-                        max_num_impulse, ImpulseRiccatiFactorizer(robot)) {
+    riccati_factorizer_(N, max_num_impulse, robot) {
   try {
     if (T <= 0) {
       throw std::out_of_range("invalid value: T must be positive!");

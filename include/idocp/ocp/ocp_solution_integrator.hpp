@@ -27,12 +27,6 @@ namespace idocp {
 ///
 class OCPSolutionIntegrator {
 public:
-  using HybridOCP = hybrid_container<SplitOCP, SplitImpulseOCP>;
-  using HybridSolution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
-  using HybridDirection = hybrid_container<SplitDirection, ImpulseSplitDirection>;
-  using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
-  using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
-
   ///
   /// @brief Construct optimal control problem solver.
   /// @param[in] T Length of the horizon. Must be positive.
@@ -75,8 +69,7 @@ public:
   ///
   OCPSolutionIntegrator& operator=(OCPSolutionIntegrator&&) noexcept = default;
 
-  void integrate(HybridOCP& split_ocps, TerminalOCP& terminal_ocp, 
-                 std::vector<Robot>& robots,
+  void integrate(HybridOCP& split_ocps, std::vector<Robot>& robots,
                  const ContactSequence& contact_sequence,
                  const HybridKKTMatrix& kkt_matrix,
                  const HybridKKTResidual& kkt_residual,

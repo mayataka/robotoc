@@ -44,11 +44,6 @@ protected:
   virtual void TearDown() {
   }
 
-  using HybridOCP = hybrid_container<SplitOCP, SplitImpulseOCP>;
-  using HybridSolution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
-  using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
-  using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
-
   static std::shared_ptr<CostFunction> createCost(const Robot& robot);
   static std::shared_ptr<Constraints> createConstraints(const Robot& robot);
   HybridSolution createSolution(const Robot& robot) const;
@@ -130,8 +125,8 @@ std::shared_ptr<Constraints> OCPLinearizerTest::createConstraints(const Robot& r
 }
 
 
-OCPLinearizerTest::HybridSolution OCPLinearizerTest::createSolution(const Robot& robot) const {
-  HybridSolution s(N+1, SplitSolution(robot), max_num_impulse, ImpulseSplitSolution(robot));
+HybridSolution OCPLinearizerTest::createSolution(const Robot& robot) const {
+  HybridSolution s(N+1, max_num_impulse, robot);
   for (int i=0; i<=N; ++i) {
     s[i].setRandom(robot);
   }
@@ -139,12 +134,12 @@ OCPLinearizerTest::HybridSolution OCPLinearizerTest::createSolution(const Robot&
 }
 
 
-OCPLinearizerTest::HybridSolution OCPLinearizerTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
+HybridSolution OCPLinearizerTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
   if (robot.max_point_contacts() == 0) {
     return createSolution(robot);
   }
   else {
-    HybridSolution s(N+1, SplitSolution(robot), max_num_impulse, ImpulseSplitSolution(robot));
+    HybridSolution s(N+1, max_num_impulse, robot);
     for (int i=0; i<=N; ++i) {
       s[i].setRandom(robot, contact_sequence.contactStatus(i));
     }
@@ -200,8 +195,8 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   if (robot.max_point_contacts() > 0) {
     contact_sequence = createContactSequence(robot);
   }
-  auto kkt_matrix = HybridKKTMatrix(N+1, KKTMatrix(robot), max_num_impulse, ImpulseKKTMatrix(robot));
-  auto kkt_residual = HybridKKTResidual(N+1, KKTResidual(robot), max_num_impulse, ImpulseKKTResidual(robot));
+  auto kkt_matrix = HybridKKTMatrix(N+1, max_num_impulse, robot);
+  auto kkt_residual = HybridKKTResidual(N+1, max_num_impulse, robot);
   HybridSolution s;
   if (robot.max_point_contacts() > 0) {
     s = createSolution(robot, contact_sequence);
@@ -215,17 +210,9 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   std::vector<Robot> robots(nproc, robot);
-  auto split_ocps = HybridOCP(N, SplitOCP(robot, cost, constraints), 
-                              max_num_impulse, SplitImpulseOCP(robot, 
-                                                               cost->getImpulseCostFunction(), 
-                                                               constraints->getImpulseConstraints()));
-  auto terminal_ocp = TerminalOCP(robot, cost, constraints);
-  linearizer.linearizeOCP(split_ocps, terminal_ocp, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
-  auto terminal_ocp_ref = TerminalOCP(robot, cost, constraints);
-  auto split_ocps_ref = HybridOCP(N, SplitOCP(robot, cost, constraints), 
-                                  max_num_impulse, SplitImpulseOCP(robot, 
-                                                                  cost->getImpulseCostFunction(), 
-                                                                  constraints->getImpulseConstraints()));
+  auto split_ocps = HybridOCP(N, max_num_impulse, robot, cost, constraints);
+  linearizer.linearizeOCP(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
+  auto split_ocps_ref = HybridOCP(N, max_num_impulse, robot, cost, constraints);
   auto robot_ref = robot;
   if (contact_sequence.existImpulseStage(0)) {
     const double dtau_impulse = contact_sequence.impulseTime(0);
@@ -310,7 +297,7 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
           q_prev, s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
     }
   }
-  terminal_ocp_ref.linearizeOCP(robot_ref, t+T, s[N], kkt_matrix_ref[N], kkt_residual_ref[N]);
+  split_ocps_ref.terminal.linearizeOCP(robot_ref, t+T, s[N], kkt_matrix_ref[N], kkt_residual_ref[N]);
   for (int i=0; i<=N; ++i) {
     kkt_matrix[i].isApprox(kkt_matrix_ref[i]);
     kkt_residual[i].isApprox(kkt_residual_ref[i]);
@@ -338,8 +325,8 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   if (robot.max_point_contacts() > 0) {
     contact_sequence = createContactSequence(robot);
   }
-  auto kkt_matrix = HybridKKTMatrix(N+1, KKTMatrix(robot), max_num_impulse, ImpulseKKTMatrix(robot));
-  auto kkt_residual = HybridKKTResidual(N+1, KKTResidual(robot), max_num_impulse, ImpulseKKTResidual(robot));
+  auto kkt_matrix = HybridKKTMatrix(N+1, max_num_impulse, robot);
+  auto kkt_residual = HybridKKTResidual(N+1, max_num_impulse, robot);
   HybridSolution s;
   if (robot.max_point_contacts() > 0) {
     s = createSolution(robot, contact_sequence);
@@ -353,18 +340,10 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   std::vector<Robot> robots(nproc, robot);
-  auto split_ocps = HybridOCP(N, SplitOCP(robot, cost, constraints), 
-                              max_num_impulse, SplitImpulseOCP(robot, 
-                                                               cost->getImpulseCostFunction(), 
-                                                               constraints->getImpulseConstraints()));
-  auto terminal_ocp = TerminalOCP(robot, cost, constraints);
-  linearizer.computeKKTResidual(split_ocps, terminal_ocp, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
-  const double kkt_error = linearizer.KKTError(split_ocps, terminal_ocp, contact_sequence, kkt_residual);
-  auto split_ocps_ref = HybridOCP(N, SplitOCP(robot, cost, constraints), 
-                                  max_num_impulse, SplitImpulseOCP(robot, 
-                                                                  cost->getImpulseCostFunction(), 
-                                                                  constraints->getImpulseConstraints()));
-  auto terminal_ocp_ref = TerminalOCP(robot, cost, constraints);
+  auto split_ocps = HybridOCP(N, max_num_impulse, robot, cost, constraints);
+  linearizer.computeKKTResidual(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
+  const double kkt_error = linearizer.KKTError(split_ocps, contact_sequence, kkt_residual);
+  auto split_ocps_ref = HybridOCP(N, max_num_impulse, robot, cost, constraints);
   auto robot_ref = robot;
   double kkt_error_ref = 0;
   if (contact_sequence.existImpulseStage(0)) {
@@ -465,8 +444,8 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
       kkt_error_ref += split_ocps_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dtau);
     }
   }
-  terminal_ocp_ref.computeKKTResidual(robot_ref, t+T, s[N], kkt_residual_ref[N]);
-  kkt_error_ref += terminal_ocp_ref.squaredNormKKTResidual(kkt_residual_ref[N]);
+  split_ocps_ref.terminal.computeKKTResidual(robot_ref, t+T, s[N], kkt_residual_ref[N]);
+  kkt_error_ref += split_ocps_ref.terminal.squaredNormKKTResidual(kkt_residual_ref[N]);
   for (int i=0; i<=N; ++i) {
     kkt_matrix[i].isApprox(kkt_matrix_ref[i]);
     kkt_residual[i].isApprox(kkt_residual_ref[i]);

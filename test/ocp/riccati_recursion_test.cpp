@@ -36,11 +36,6 @@ protected:
   virtual void TearDown() {
   }
 
-  using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
-  using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
-  using HybridRiccatiFactorization = hybrid_container<RiccatiFactorization, RiccatiFactorization>;
-  using HybridRiccatiFactorizer = hybrid_container<RiccatiFactorizer, ImpulseRiccatiFactorizer>;
-
   HybridKKTMatrix createHybridKKTMatrix(const Robot& robot) const;
   HybridKKTResidual createHybridKKTResidual(const Robot& robot) const;
   ContactSequence createContactSequence(const Robot& robot) const;
@@ -60,8 +55,8 @@ protected:
 };
 
 
-RiccatiRecursionTest::HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot) const {
-  HybridKKTMatrix kkt_matrix = HybridKKTMatrix(N+1, KKTMatrix(robot), max_num_impulse, ImpulseKKTMatrix(robot));
+HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot) const {
+  HybridKKTMatrix kkt_matrix = HybridKKTMatrix(N, max_num_impulse, robot);
   const int dimx = 2*robot.dimv();
   const int dimu = robot.dimu();
   for (int i=0; i<=N; ++i) {
@@ -116,8 +111,8 @@ RiccatiRecursionTest::HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatri
 }
 
 
-RiccatiRecursionTest::HybridKKTResidual RiccatiRecursionTest::createHybridKKTResidual(const Robot& robot) const {
-  HybridKKTResidual kkt_residual = HybridKKTResidual(N+1, KKTResidual(robot), max_num_impulse, ImpulseKKTResidual(robot));
+HybridKKTResidual RiccatiRecursionTest::createHybridKKTResidual(const Robot& robot) const {
+  HybridKKTResidual kkt_residual = HybridKKTResidual(N, max_num_impulse, robot);
   for (int i=0; i<=N; ++i) {
     kkt_residual[i].lx().setRandom();
     kkt_residual[i].lu().setRandom();
@@ -217,7 +212,7 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   const auto contact_sequence = createContactSequence(robot);
   auto kkt_matrix = createHybridKKTMatrix(robot);
   auto kkt_residual= createHybridKKTResidual(robot);
-  HybridRiccatiFactorization factorization(N+1, RiccatiFactorization(robot), max_num_impulse, RiccatiFactorization(robot));
+  HybridRiccatiFactorization factorization(N, max_num_impulse, robot);
   RiccatiRecursion riccati_recursion(robot, T, N, max_num_impulse, nproc);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
   for (int i=0; i<N; ++i) {
@@ -242,7 +237,7 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   auto kkt_matrix_ref = kkt_matrix; 
   auto kkt_residual_ref = kkt_residual; 
   riccati_recursion.backwardRiccatiRecursion(contact_sequence, kkt_matrix, kkt_residual, factorization);
-  HybridRiccatiFactorizer factorizer(N+1, RiccatiFactorizer(robot), max_num_impulse, ImpulseRiccatiFactorizer(robot));
+  HybridRiccatiFactorizer factorizer(N, max_num_impulse, robot);
   for (int i=N-1; i>=0; --i) {
     if (contact_sequence.existImpulseStage(i)) {
       const int impulse_index = contact_sequence.impulseIndex(i);
@@ -428,7 +423,7 @@ void RiccatiRecursionTest::testStateConstraintFactorization(const Robot& robot) 
   const auto contact_sequence = createContactSequence(robot);
   auto kkt_matrix = createHybridKKTMatrix(robot);
   auto kkt_residual= createHybridKKTResidual(robot);
-  HybridRiccatiFactorization factorization(N+1, RiccatiFactorization(robot), max_num_impulse, RiccatiFactorization(robot));
+  HybridRiccatiFactorization factorization(N, max_num_impulse, robot);
   RiccatiRecursion riccati_recursion(robot, T, N, max_num_impulse, nproc);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
   riccati_recursion.backwardRiccatiRecursion(contact_sequence, kkt_matrix, kkt_residual, factorization);
@@ -442,7 +437,7 @@ void RiccatiRecursionTest::testStateConstraintFactorization(const Robot& robot) 
   }
   auto constraint_factorization_ref = constraint_factorization;
   riccati_recursion.backwardStateConstraintFactorization(contact_sequence, kkt_matrix, constraint_factorization);
-  HybridRiccatiFactorizer factorizer(N+1, RiccatiFactorizer(robot), max_num_impulse, ImpulseRiccatiFactorizer(robot));
+  HybridRiccatiFactorizer factorizer(N, max_num_impulse, robot);
   const int num_constraint = contact_sequence.totalNumImpulseStages();
   for (int constraint_index=0; constraint_index<num_constraint; ++constraint_index) {
     StateConstraintRiccatiFactorization& factorization_ref = constraint_factorization_ref[constraint_index];

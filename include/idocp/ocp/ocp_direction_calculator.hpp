@@ -34,14 +34,6 @@ namespace idocp {
 ///
 class OCPDirectionCalculator {
 public:
-  using HybridOCP = hybrid_container<SplitOCP, SplitImpulseOCP>;
-  using HybridSolution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
-  using HybridDirection = hybrid_container<SplitDirection, ImpulseSplitDirection>;
-  using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
-  using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
-  using HybridRiccatiFactorization = hybrid_container<RiccatiFactorization, RiccatiFactorization>; 
-  using HybridRiccatiFactorizer = hybrid_container<RiccatiFactorizer, ImpulseRiccatiFactorizer>; 
-
   ///
   /// @brief Construct optimal control problem solver.
   /// @param[in] T Length of the horizon. Must be positive.
@@ -91,8 +83,8 @@ public:
                                     HybridDirection& d) const;
 
   void computeDirection(
-      HybridOCP& split_ocps, TerminalOCP& terminal_ocp, 
-      std::vector<Robot>& robots, const ContactSequence& contact_sequence, 
+      HybridOCP& split_ocps, std::vector<Robot>& robots, 
+      const ContactSequence& contact_sequence, 
       const HybridRiccatiFactorizer& factorizer, 
       HybridRiccatiFactorization& factorization, 
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization, 

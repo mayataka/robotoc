@@ -27,11 +27,6 @@ namespace idocp {
 ///
 class OCPLinearizer {
 public:
-  using HybridOCP = hybrid_container<SplitOCP, SplitImpulseOCP>;
-  using HybridSolution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
-  using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
-  using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
-
   ///
   /// @brief Construct optimal control problem solver.
   /// @param[in] T Length of the horizon. Must be positive.
@@ -74,23 +69,21 @@ public:
   ///
   OCPLinearizer& operator=(OCPLinearizer&&) noexcept = default;
 
-  void linearizeOCP(HybridOCP& split_ocps, TerminalOCP& terminal_ocp, 
-                    std::vector<Robot>& robots,
+  void linearizeOCP(HybridOCP& split_ocps, std::vector<Robot>& robots,
                     const ContactSequence& contact_sequence,
                     const double t, const Eigen::VectorXd& q, 
                     const Eigen::VectorXd& v, const HybridSolution& s,
                     HybridKKTMatrix& kkt_matrix,
                     HybridKKTResidual& kkt_residual) const;
 
-  void computeKKTResidual(HybridOCP& split_ocps, TerminalOCP& terminal_ocp,
-                          std::vector<Robot>& robots, 
+  void computeKKTResidual(HybridOCP& split_ocps, std::vector<Robot>& robots, 
                           const ContactSequence& contact_sequence,
                           const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v, const HybridSolution& s,
                           HybridKKTMatrix& kkt_matrix, 
                           HybridKKTResidual& kkt_residual) const;
 
-  double KKTError(const HybridOCP& split_ocps, const TerminalOCP& terminal_ocp, 
+  double KKTError(const HybridOCP& split_ocps, 
                   const ContactSequence& contact_sequence, 
                   const HybridKKTResidual& kkt_residual);
 
@@ -99,8 +92,7 @@ public:
 private:
 
   template <typename Algorithm>
-  void runParallel(HybridOCP& split_ocps, TerminalOCP& terminal_ocp,
-                   std::vector<Robot>& robots,
+  void runParallel(HybridOCP& split_ocps, std::vector<Robot>& robots,
                    const ContactSequence& contact_sequence,
                    const double t, const Eigen::VectorXd& q, 
                    const Eigen::VectorXd& v, const HybridSolution& s,
