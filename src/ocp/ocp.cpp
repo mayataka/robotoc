@@ -65,8 +65,7 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   riccati_recursion_.backwardStateConstraintFactorization(contact_sequence_,
                                                           kkt_matrix_, 
                                                           constraint_factorization_);
-
-  ocp_direction_calculator_.computeInitialStateDirection(robots_, s_, q, v, d_);
+  ocp_direction_calculator_.computeInitialStateDirection(robots_, q, v, s_, d_);
   constraint_factorizer_.computeLagrangeMultiplierDirection(
       contact_sequence_, riccati_factorization_.impulse, 
       constraint_factorization_, d_[0].dx(), d_.impulse);

@@ -8,8 +8,7 @@
 
 namespace idocp {
 
-class LQRStateFeedbackPolicy {
-public:
+struct LQRStateFeedbackPolicy {
   LQRStateFeedbackPolicy(const Robot& robot)
     : K(Eigen::MatrixXd::Zero(robot.dimu(), 2*robot.dimv())),
       k(Eigen::VectorXd::Zero(robot.dimu())) {
@@ -22,14 +21,6 @@ public:
 
   ~LQRStateFeedbackPolicy() {
   }
-
-  LQRStateFeedbackPolicy(const LQRStateFeedbackPolicy&) = default;
-
-  LQRStateFeedbackPolicy& operator=(const LQRStateFeedbackPolicy&) = default;
- 
-  LQRStateFeedbackPolicy(LQRStateFeedbackPolicy&&) noexcept = default;
-
-  LQRStateFeedbackPolicy& operator=(LQRStateFeedbackPolicy&&) noexcept = default;
 
   Eigen::MatrixXd K;
   Eigen::VectorXd k;

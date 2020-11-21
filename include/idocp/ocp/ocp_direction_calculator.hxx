@@ -57,11 +57,9 @@ inline OCPDirectionCalculator::~OCPDirectionCalculator() {
 }
 
 
-
 inline void OCPDirectionCalculator::computeInitialStateDirection(
-    const std::vector<Robot>& robots, const HybridSolution& s, 
-    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-    HybridDirection& d) const {
+    const std::vector<Robot>& robots, const Eigen::VectorXd& q, 
+    const Eigen::VectorXd& v, const HybridSolution& s, HybridDirection& d) {
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
   robots[0].subtractConfiguration(q, s[0].q, d[0].dq());
@@ -85,9 +83,9 @@ inline void OCPDirectionCalculator::computeDirection(
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_all; ++i) {
     if (i == 0) {
-      aggregateLagrangeMultiplierDirection(contact_sequence, 
-                                           constraint_factorization, d.impulse, 
-                                           0, factorization[0]);
+      aggregateLagrangeMultiplierDirection(
+          contact_sequence, constraint_factorization, d.impulse, 0, 
+          factorization[0]);
       computePrimalDirectionInitial(factorizer[0], factorization[0], d[0], 
                                     exist_state_constraint);
       split_ocps[0].computeCondensedPrimalDirection(robots[omp_get_thread_num()], 
@@ -97,9 +95,9 @@ inline void OCPDirectionCalculator::computeDirection(
       max_dual_step_sizes_.coeffRef(0) = split_ocps[0].maxDualStepSize();
     }
     else if (i < N_) {
-      aggregateLagrangeMultiplierDirection(contact_sequence, 
-                                           constraint_factorization, d.impulse, 
-                                           i, factorization[i]);
+      aggregateLagrangeMultiplierDirection(
+          contact_sequence, constraint_factorization, d.impulse, i, 
+          factorization[i]);
       computePrimalDirection(factorizer[i], factorization[i], dx0, d[i], 
                              exist_state_constraint);
       split_ocps[i].computeCondensedPrimalDirection(robots[omp_get_thread_num()], 
@@ -115,16 +113,18 @@ inline void OCPDirectionCalculator::computeDirection(
     }
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);
-      aggregateLagrangeMultiplierDirectionImpulse(contact_sequence, 
-                                                  constraint_factorization, 
-                                                  d.impulse, impulse_index, 
-                                                  factorization.impulse[impulse_index]);
+      aggregateLagrangeMultiplierDirectionImpulse(
+          contact_sequence, constraint_factorization, d.impulse, impulse_index, 
+          factorization.impulse[impulse_index]);
       computePrimalDirectionImpulse(factorization.impulse[impulse_index], 
                                     dx0, d.impulse[impulse_index]);
       split_ocps.impulse[impulse_index].computeCondensedPrimalDirection(
-          robots[omp_get_thread_num()], s.impulse[impulse_index], d.impulse[impulse_index]);
-      max_primal_step_sizes_.coeffRef(i) = split_ocps.impulse[impulse_index].maxPrimalStepSize();
-      max_dual_step_sizes_.coeffRef(i) = split_ocps.impulse[impulse_index].maxDualStepSize();
+          robots[omp_get_thread_num()], s.impulse[impulse_index], 
+          d.impulse[impulse_index]);
+      max_primal_step_sizes_.coeffRef(i) 
+          = split_ocps.impulse[impulse_index].maxPrimalStepSize();
+      max_dual_step_sizes_.coeffRef(i) 
+          = split_ocps.impulse[impulse_index].maxDualStepSize();
     }
     else if (i < N_ + 1 + 2*N_impulse) {
       const int impulse_index  = i - (N_+1+N_impulse);
@@ -133,17 +133,19 @@ inline void OCPDirectionCalculator::computeDirection(
       const double dtau_aux 
           = (time_stage_before_impulse+1) * dtau_ 
               - contact_sequence.impulseTime(impulse_index);
-      aggregateLagrangeMultiplierDirectionAux(contact_sequence, 
-                                              constraint_factorization, d.impulse, 
-                                              impulse_index, 
-                                              factorization.aux[impulse_index]);
+      aggregateLagrangeMultiplierDirectionAux(
+          contact_sequence, constraint_factorization, d.impulse, impulse_index, 
+          factorization.aux[impulse_index]);
       computePrimalDirection(factorizer.aux[impulse_index], 
                              factorization.aux[impulse_index], dx0, 
                              d.aux[impulse_index], exist_state_constraint);
       split_ocps.aux[impulse_index].computeCondensedPrimalDirection(
-          robots[omp_get_thread_num()], dtau_aux, s.aux[impulse_index], d.aux[impulse_index]);
-      max_primal_step_sizes_.coeffRef(i) = split_ocps.aux[impulse_index].maxPrimalStepSize();
-      max_dual_step_sizes_.coeffRef(i) = split_ocps.aux[impulse_index].maxDualStepSize();
+          robots[omp_get_thread_num()], dtau_aux, s.aux[impulse_index], 
+          d.aux[impulse_index]);
+      max_primal_step_sizes_.coeffRef(i) 
+          = split_ocps.aux[impulse_index].maxPrimalStepSize();
+      max_dual_step_sizes_.coeffRef(i) 
+          = split_ocps.aux[impulse_index].maxDualStepSize();
     }
     else {
       const int lift_index = i - (N_+1+2*N_impulse);
@@ -152,17 +154,19 @@ inline void OCPDirectionCalculator::computeDirection(
       const double dtau_aux
           = (time_stage_before_lift+1) * dtau_ 
               - contact_sequence.liftTime(lift_index);
-      aggregateLagrangeMultiplierDirectionLift(contact_sequence, 
-                                               constraint_factorization, d.impulse, 
-                                               lift_index, 
-                                               factorization.lift[lift_index]);
+      aggregateLagrangeMultiplierDirectionLift(
+          contact_sequence, constraint_factorization, d.impulse, lift_index, 
+          factorization.lift[lift_index]);
       computePrimalDirection(factorizer.lift[lift_index], 
                              factorization.lift[lift_index], dx0, 
                              d.lift[lift_index], exist_state_constraint);
       split_ocps.lift[lift_index].computeCondensedPrimalDirection(
-          robots[omp_get_thread_num()], dtau_aux, s.lift[lift_index], d.lift[lift_index]);
-      max_primal_step_sizes_.coeffRef(i) = split_ocps.lift[lift_index].maxPrimalStepSize();
-      max_dual_step_sizes_.coeffRef(i) = split_ocps.lift[lift_index].maxDualStepSize();
+          robots[omp_get_thread_num()], dtau_aux, s.lift[lift_index], 
+          d.lift[lift_index]);
+      max_primal_step_sizes_.coeffRef(i) 
+          = split_ocps.lift[lift_index].maxPrimalStepSize();
+      max_dual_step_sizes_.coeffRef(i) 
+          = split_ocps.lift[lift_index].maxDualStepSize();
     }
   }
 }
@@ -199,7 +203,8 @@ inline void OCPDirectionCalculator::computePrimalDirectionInitial(
 
 template <typename VectorType>
 inline void OCPDirectionCalculator::computePrimalDirection(
-    const RiccatiFactorizer factorizer, const RiccatiFactorization factorization, 
+    const RiccatiFactorizer factorizer, 
+    const RiccatiFactorization factorization, 
     const Eigen::MatrixBase<VectorType>& dx0, SplitDirection& d, 
     const bool exist_state_constraint) {
   RiccatiFactorizer::computeStateDirection(factorization, dx0, d,

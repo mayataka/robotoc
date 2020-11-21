@@ -21,6 +21,8 @@
 #include "idocp/impulse/split_impulse_ocp.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/ocp/riccati_recursion.hpp"
+#include "idocp/ocp/ocp_linearizer.hpp"
 #include "idocp/ocp/ocp_direction_calculator.hpp"
 
 
@@ -124,7 +126,7 @@ std::shared_ptr<Constraints> OCPDirectionCalculatorTest::createConstraints(const
 }
 
 
-OCPDirectionCalculatorTest::HybridSolution OCPDirectionCalculatorTest::createSolution(const Robot& robot) const {
+HybridSolution OCPDirectionCalculatorTest::createSolution(const Robot& robot) const {
   HybridSolution s(N+1, max_num_impulse, robot);
   for (int i=0; i<=N; ++i) {
     s[i].setRandom(robot);
@@ -133,7 +135,7 @@ OCPDirectionCalculatorTest::HybridSolution OCPDirectionCalculatorTest::createSol
 }
 
 
-OCPDirectionCalculatorTest::HybridSolution OCPDirectionCalculatorTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
+HybridSolution OCPDirectionCalculatorTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
   if (robot.max_point_contacts() == 0) {
     return createSolution(robot);
   }
@@ -189,7 +191,6 @@ ContactSequence OCPDirectionCalculatorTest::createContactSequence(const Robot& r
 void OCPDirectionCalculatorTest::testComputeDirection(const Robot& robot) const {
   auto cost = createCost(robot);
   auto constraints = createConstraints(robot);
-  OCPDirectionCalculator linearizer(T, N, max_num_impulse, nproc);
   ContactSequence contact_sequence(robot, T, N);
   if (robot.max_point_contacts() > 0) {
     contact_sequence = createContactSequence(robot);
@@ -206,56 +207,137 @@ void OCPDirectionCalculatorTest::testComputeDirection(const Robot& robot) const 
   Eigen::VectorXd q(robot.dimq());
   robot.generateFeasibleConfiguration(q);
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  auto split_ocps = HybridOCP(N, max_num_impulse, robot, cost, constraints);
+  OCPLinearizer linearizer(T, N, max_num_impulse, nproc);
+  std::vector<Robot> robots(nproc, robot);
+  linearizer.linearizeOCP(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
+  RiccatiRecursion riccati_recursion(robot, T, N, max_num_impulse, nproc);
+  HybridRiccatiFactorization riccati_factorization(N, max_num_impulse, robot);
+  riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, riccati_factorization);
+  riccati_recursion.backwardRiccatiRecursion(contact_sequence, kkt_matrix, kkt_residual, riccati_factorization);
+  riccati_recursion.forwardRiccatiRecursionParallel(contact_sequence, kkt_matrix, kkt_residual);
+  riccati_recursion.forwardRiccatiRecursionSerial(contact_sequence, kkt_matrix, kkt_residual, riccati_factorization);
+  std::vector<StateConstraintRiccatiFactorization> constraint_factorization(max_num_impulse, 
+                                                                            StateConstraintRiccatiFactorization(robot, N, max_num_impulse));
+  const int num_impulse = contact_sequence.totalNumImpulseStages();
+  const int num_lift = contact_sequence.totalNumLiftStages();
+  for (int i=0; i<num_impulse; ++i) {
+    constraint_factorization[i].setImpulseStatus(contact_sequence.impulseStatus(i));
+  }
+  riccati_recursion.backwardStateConstraintFactorization(contact_sequence, kkt_matrix, constraint_factorization);
+  HybridDirection d = HybridDirection(N, max_num_impulse, robot);
+  for (int i=0; i<N; ++i) {
+    d[i].setContactStatus(contact_sequence.contactStatus(i));
+  }
+  for (int i=0; i<num_impulse; ++i) {
+    d.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
+    d.impulse[i].dxi().setRandom();
+    d.aux[i].setContactStatus(contact_sequence.contactStatus(contact_sequence.timeStageBeforeImpulse(i)+1));
+  }
+  for (int i=0; i<num_lift; ++i) {
+    d.lift[i].setContactStatus(contact_sequence.contactStatus(contact_sequence.timeStageBeforeLift(i)+1));
+  }
+  auto d_ref = d;
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
-  std::vector<Robot> robots(nproc, robot);
-  auto split_ocps = HybridOCP(N, max_num_impulse, robot, cost, constraints);
-  linearizer.linearizeOCP(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
-  auto split_ocps_ref = HybridOCP(N, max_num_impulse, robot, cost, constraints);
+  auto split_ocps_ref = split_ocps;
+  auto riccati_factorization_ref = riccati_factorization;
+  const auto factorizer = riccati_recursion.getFactorizersHandle();
+  OCPDirectionCalculator direction_calculator(T, N, max_num_impulse, nproc);
+  OCPDirectionCalculator::computeInitialStateDirection(robots, q, v, s, d);
+  robot.subtractConfiguration(q, s[0].q, d_ref[0].dq());
+  d_ref[0].dv() = v - s[0].v;
+  EXPECT_TRUE(d[0].isApprox(d_ref[0]));
+  direction_calculator.computeDirection(split_ocps, robots, contact_sequence,  
+                                        riccati_recursion.getFactorizersHandle(), 
+                                        riccati_factorization, 
+                                        constraint_factorization, s, d);
+  const double primal_step_size = direction_calculator.maxPrimalStepSize(contact_sequence);
+  const double dual_step_size = direction_calculator.maxDualStepSize(contact_sequence);
   auto robot_ref = robot;
+  const Eigen::VectorXd dx0 = d_ref[0].dx();
+  const bool exist_state_constraint = contact_sequence.existImpulseStage();
+  double primal_step_size_ref = 1;
+  double dual_step_size_ref = 1;
   if (contact_sequence.existImpulseStage(0)) {
     const double dtau_impulse = contact_sequence.impulseTime(0);
     const double dtau_aux = dtau - dtau_impulse;
     ASSERT_TRUE(dtau_impulse > 0);
     ASSERT_TRUE(dtau_impulse < dtau);
-    split_ocps_ref[0].linearizeOCP(
-        robot_ref, contact_sequence.contactStatus(0), t, dtau_impulse, 
-        q, s[0], s.impulse[0], kkt_matrix_ref[0], kkt_residual_ref[0]);
-    split_ocps_ref.impulse[0].linearizeOCP(
-        robot_ref, contact_sequence.impulseStatus(0), t+dtau_impulse, 
-        s[0].q, s.impulse[0], s.aux[0], kkt_matrix_ref.impulse[0], kkt_residual_ref.impulse[0]);
-    split_ocps_ref.aux[0].linearizeOCP(
-        robot_ref, contact_sequence.contactStatus(1), t+dtau_impulse, dtau_aux, 
-        s.impulse[0].q, s.aux[0], s[1], kkt_matrix_ref.aux[0], kkt_residual_ref.aux[0]);
+    OCPDirectionCalculator::aggregateLagrangeMultiplierDirection(
+        contact_sequence, constraint_factorization, d_ref.impulse, 0, 
+        riccati_factorization_ref[0]);
+    OCPDirectionCalculator::computePrimalDirectionInitial(
+        factorizer[0], riccati_factorization_ref[0], d_ref[0], exist_state_constraint);
+    split_ocps_ref[0].computeCondensedPrimalDirection(robot_ref, dtau_impulse, 
+                                                      s[0], d_ref[0]);
+    if (split_ocps_ref[0].maxPrimalStepSize() < primal_step_size_ref) 
+      primal_step_size_ref = split_ocps_ref[0].maxPrimalStepSize();
+    if (split_ocps_ref[0].maxDualStepSize() < dual_step_size_ref) 
+      dual_step_size_ref = split_ocps_ref[0].maxDualStepSize();
+    OCPDirectionCalculator::aggregateLagrangeMultiplierDirectionImpulse(
+        contact_sequence, constraint_factorization, d_ref.impulse, 0, 
+        riccati_factorization_ref.impulse[0]);
+    OCPDirectionCalculator::computePrimalDirectionImpulse(
+        riccati_factorization_ref.impulse[0], dx0, d_ref.impulse[0]);
+    split_ocps.impulse[0].computeCondensedPrimalDirection(robot_ref, 
+                                                          s.impulse[0], 
+                                                          d_ref.impulse[0]);
+    if (split_ocps_ref.impulse[0].maxPrimalStepSize() < primal_step_size_ref) 
+      primal_step_size_ref = split_ocps_ref.impulse[0].maxPrimalStepSize();
+    if (split_ocps_ref.impulse[0].maxDualStepSize() < dual_step_size_ref) 
+      dual_step_size_ref = split_ocps_ref.impulse[0].maxDualStepSize();
+    OCPDirectionCalculator::aggregateLagrangeMultiplierDirectionAux(
+        contact_sequence, constraint_factorization, d_ref.impulse, 0, 
+        riccati_factorization_ref.aux[0]);
+    OCPDirectionCalculator::computePrimalDirection(
+        factorizer.aux[0], riccati_factorization_ref.aux[0], dx0, d_ref.aux[0],
+        exist_state_constraint);
+    if (split_ocps_ref.aux[0].maxPrimalStepSize() < primal_step_size_ref)
+      primal_step_size_ref = split_ocps_ref.aux[0].maxPrimalStepSize();
+    if (split_ocps_ref.aux[0].maxDualStepSize() < dual_step_size_ref)
+      dual_step_size_ref = split_ocps_ref.aux[0].maxDualStepSize();
   }
   else if (contact_sequence.existLiftStage(0)) {
     const double dtau_lift = contact_sequence.liftTime(0);
     const double dtau_aux = dtau - dtau_lift;
     ASSERT_TRUE(dtau_lift > 0);
     ASSERT_TRUE(dtau_lift < dtau);
-    split_ocps_ref[0].linearizeOCP(
-        robot_ref, contact_sequence.contactStatus(0), t, dtau_lift, 
-        q, s[0], s.lift[0], kkt_matrix_ref[0], kkt_residual_ref[0]);
-    split_ocps_ref.lift[0].linearizeOCP(
-        robot_ref, contact_sequence.contactStatus(1), t+dtau_lift, dtau_aux, 
-        s[0].q, s.lift[0], s[1], kkt_matrix_ref.lift[0], kkt_residual_ref.lift[0]);
+    OCPDirectionCalculator::aggregateLagrangeMultiplierDirection(
+        contact_sequence, constraint_factorization, d_ref.impulse, 0, 
+        riccati_factorization_ref[0]);
+    OCPDirectionCalculator::computePrimalDirectionInitial(
+        factorizer[0], riccati_factorization_ref[0], d_ref[0], exist_state_constraint);
+    split_ocps_ref[0].computeCondensedPrimalDirection(robot_ref, dtau_lift, 
+                                                      s[0], d_ref[0]);
+    if (split_ocps_ref[0].maxPrimalStepSize() < primal_step_size_ref) 
+      primal_step_size_ref = split_ocps_ref[0].maxPrimalStepSize();
+    if (split_ocps_ref[0].maxDualStepSize() < dual_step_size_ref) 
+      dual_step_size_ref = split_ocps_ref[0].maxDualStepSize();
+    OCPDirectionCalculator::aggregateLagrangeMultiplierDirectionLift(
+        contact_sequence, constraint_factorization, d_ref.impulse, 0, 
+        riccati_factorization_ref.lift[0]);
+    OCPDirectionCalculator::computePrimalDirection(
+        factorizer.lift[0], riccati_factorization_ref.lift[0], dx0, d_ref.lift[0], 
+        exist_state_constraint);
+    if (split_ocps_ref.lift[0].maxPrimalStepSize() < primal_step_size_ref) 
+      primal_step_size_ref = split_ocps_ref.lift[0].maxPrimalStepSize();
+    if (split_ocps_ref.lift[0].maxDualStepSize() < dual_step_size_ref)
+      dual_step_size_ref = split_ocps_ref.lift[0].maxDualStepSize();
   }
   else {
-    split_ocps_ref[0].linearizeOCP(
-        robot_ref, contact_sequence.contactStatus(0), t, dtau, 
-        q, s[0], s[1], kkt_matrix_ref[0], kkt_residual_ref[0]);
+    OCPDirectionCalculator::aggregateLagrangeMultiplierDirection(
+        contact_sequence, constraint_factorization, d_ref.impulse, 0, 
+        riccati_factorization_ref[0]);
+    OCPDirectionCalculator::computePrimalDirectionInitial(
+        factorizer[0], riccati_factorization_ref[0], d_ref[0], exist_state_constraint);
+    split_ocps_ref[0].computeCondensedPrimalDirection(robot_ref, dtau, s[0], d_ref[0]);
+    if (split_ocps_ref[0].maxPrimalStepSize() < primal_step_size_ref)
+      primal_step_size_ref = split_ocps_ref[0].maxPrimalStepSize();
+    if (split_ocps_ref[0].maxDualStepSize() < dual_step_size_ref)
+      dual_step_size_ref = split_ocps_ref[0].maxDualStepSize();
   }
   for (int i=1; i<N; ++i) {
-    Eigen::VectorXd q_prev;
-    if (contact_sequence.existImpulseStage(i-1)) {
-      q_prev = s.aux[contact_sequence.impulseIndex(i-1)].q;
-    }
-    else if (contact_sequence.existLiftStage(i-1)) {
-      q_prev = s.lift[contact_sequence.liftIndex(i-1)].q;
-    }
-    else {
-      q_prev = s[i-1].q;
-    }
     if (contact_sequence.existImpulseStage(i)) {
       const int impulse_index = contact_sequence.impulseIndex(i);
       const double impulse_time = contact_sequence.impulseTime(impulse_index);
@@ -263,18 +345,38 @@ void OCPDirectionCalculatorTest::testComputeDirection(const Robot& robot) const 
       const double dtau_aux = dtau - dtau_impulse;
       ASSERT_TRUE(dtau_impulse > 0);
       ASSERT_TRUE(dtau_aux > 0);
-      split_ocps_ref[i].linearizeOCP(
-          robot_ref, contact_sequence.contactStatus(i), 
-          t+i*dtau, dtau_impulse, q_prev, s[i], s.impulse[impulse_index], 
-          kkt_matrix_ref[i], kkt_residual_ref[i]);
-      split_ocps_ref.impulse[impulse_index].linearizeOCP(
-          robot_ref, contact_sequence.impulseStatus(impulse_index), t+impulse_time, 
-          s[i].q, s.impulse[impulse_index], s.aux[impulse_index], 
-          kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index]);
-      split_ocps_ref.aux[impulse_index].linearizeOCP(
-          robot_ref, contact_sequence.contactStatus(i+1), t+impulse_time, dtau_aux, 
-          s.impulse[impulse_index].q, s.aux[impulse_index], s[i+1], 
-          kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
+      OCPDirectionCalculator::aggregateLagrangeMultiplierDirection(
+          contact_sequence, constraint_factorization, d_ref.impulse, i, 
+          riccati_factorization_ref[i]);
+      OCPDirectionCalculator::computePrimalDirection(
+          factorizer[i], riccati_factorization_ref[i], dx0, d_ref[i], exist_state_constraint);
+      split_ocps_ref[i].computeCondensedPrimalDirection(robot_ref, dtau_impulse, 
+                                                        s[i], d_ref[i]);
+      if (split_ocps_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
+        primal_step_size_ref = split_ocps_ref[i].maxPrimalStepSize();
+      if (split_ocps_ref[i].maxDualStepSize() < dual_step_size_ref) 
+        dual_step_size_ref = split_ocps_ref[i].maxDualStepSize();
+      OCPDirectionCalculator::aggregateLagrangeMultiplierDirectionImpulse(
+          contact_sequence, constraint_factorization, d_ref.impulse, impulse_index, 
+          riccati_factorization_ref.impulse[impulse_index]);
+      OCPDirectionCalculator::computePrimalDirectionImpulse(
+          riccati_factorization_ref.impulse[impulse_index], dx0, d_ref.impulse[impulse_index]);
+      split_ocps.impulse[impulse_index].computeCondensedPrimalDirection(
+          robot_ref, s.impulse[impulse_index], d_ref.impulse[impulse_index]);
+      if (split_ocps_ref.impulse[impulse_index].maxPrimalStepSize() < primal_step_size_ref) 
+        primal_step_size_ref = split_ocps_ref.impulse[impulse_index].maxPrimalStepSize();
+      if (split_ocps_ref.impulse[impulse_index].maxDualStepSize() < dual_step_size_ref) 
+        dual_step_size_ref = split_ocps_ref.impulse[impulse_index].maxDualStepSize();
+      OCPDirectionCalculator::aggregateLagrangeMultiplierDirectionAux(
+          contact_sequence, constraint_factorization, d_ref.impulse, impulse_index, 
+          riccati_factorization_ref.aux[impulse_index]);
+      OCPDirectionCalculator::computePrimalDirection(
+          factorizer.aux[impulse_index], riccati_factorization_ref.aux[impulse_index], dx0, 
+          d_ref.aux[impulse_index], exist_state_constraint);
+      if (split_ocps_ref.aux[impulse_index].maxPrimalStepSize() < primal_step_size_ref)
+        primal_step_size_ref = split_ocps_ref.aux[impulse_index].maxPrimalStepSize();
+      if (split_ocps_ref.aux[impulse_index].maxDualStepSize() < dual_step_size_ref)
+        dual_step_size_ref = split_ocps_ref.aux[impulse_index].maxDualStepSize();
     }
     else if (contact_sequence.existLiftStage(i)) {
       const int lift_index = contact_sequence.liftIndex(i);
@@ -283,36 +385,60 @@ void OCPDirectionCalculatorTest::testComputeDirection(const Robot& robot) const 
       const double dtau_aux = dtau - dtau_lift;
       ASSERT_TRUE(dtau_lift > 0);
       ASSERT_TRUE(dtau_aux > 0);
-      split_ocps_ref[i].linearizeOCP(
-          robot_ref, contact_sequence.contactStatus(i), t+i*dtau, dtau_lift, 
-          q_prev, s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
-      split_ocps_ref.lift[lift_index].linearizeOCP(
-          robot_ref, contact_sequence.contactStatus(i+1), t+lift_time, dtau_aux, 
-          s[i].q, s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
+      OCPDirectionCalculator::aggregateLagrangeMultiplierDirection(
+          contact_sequence, constraint_factorization, d_ref.impulse, i, 
+          riccati_factorization_ref[i]);
+      OCPDirectionCalculator::computePrimalDirection(
+          factorizer[i], riccati_factorization_ref[i], dx0, d_ref[i], exist_state_constraint);
+      split_ocps_ref[i].computeCondensedPrimalDirection(robot_ref, dtau_lift, 
+                                                        s[i], d_ref[i]);
+      if (split_ocps_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
+        primal_step_size_ref = split_ocps_ref[i].maxPrimalStepSize();
+      if (split_ocps_ref[i].maxDualStepSize() < dual_step_size_ref) 
+        dual_step_size_ref = split_ocps_ref[i].maxDualStepSize();
+      OCPDirectionCalculator::aggregateLagrangeMultiplierDirectionLift(
+          contact_sequence, constraint_factorization, d_ref.impulse, lift_index, 
+          riccati_factorization_ref.lift[lift_index]);
+      OCPDirectionCalculator::computePrimalDirection(
+          factorizer.lift[lift_index], riccati_factorization_ref.lift[lift_index], dx0, 
+          d_ref.lift[lift_index], exist_state_constraint);
+      if (split_ocps_ref.lift[lift_index].maxPrimalStepSize() < primal_step_size_ref) 
+        primal_step_size_ref = split_ocps_ref.lift[lift_index].maxPrimalStepSize();
+      if (split_ocps_ref.lift[lift_index].maxDualStepSize() < dual_step_size_ref)
+        dual_step_size_ref = split_ocps_ref.lift[lift_index].maxDualStepSize();
     }
     else {
-      split_ocps_ref[i].linearizeOCP(
-          robot_ref, contact_sequence.contactStatus(i), t+i*dtau, dtau, 
-          q_prev, s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      OCPDirectionCalculator::aggregateLagrangeMultiplierDirection(
+          contact_sequence, constraint_factorization, d_ref.impulse, i, 
+          riccati_factorization_ref[i]);
+      OCPDirectionCalculator::computePrimalDirection(
+          factorizer[i], riccati_factorization_ref[i], dx0, d_ref[i], exist_state_constraint);
+      split_ocps_ref[i].computeCondensedPrimalDirection(robot_ref, dtau, s[i], d_ref[i]);
+      if (split_ocps_ref[i].maxPrimalStepSize() < primal_step_size_ref)
+        primal_step_size_ref = split_ocps_ref[i].maxPrimalStepSize();
+      if (split_ocps_ref[i].maxDualStepSize() < dual_step_size_ref)
+        dual_step_size_ref = split_ocps_ref[i].maxDualStepSize();
     }
   }
-  terminal_ocp_ref.linearizeOCP(robot_ref, t+T, s[N], kkt_matrix_ref[N], kkt_residual_ref[N]);
+  OCPDirectionCalculator::computePrimalDirectionTerminal(riccati_factorization_ref[N], dx0, d_ref[N]);
+  if (split_ocps_ref.terminal.maxPrimalStepSize() < primal_step_size_ref)
+    primal_step_size_ref = split_ocps_ref.terminal.maxPrimalStepSize();
+  if (split_ocps_ref.terminal.maxDualStepSize() < dual_step_size_ref)
+    dual_step_size_ref = split_ocps_ref.terminal.maxDualStepSize();
   for (int i=0; i<=N; ++i) {
-    kkt_matrix[i].isApprox(kkt_matrix_ref[i]);
-    kkt_residual[i].isApprox(kkt_residual_ref[i]);
+    d[i].isApprox(d_ref[i]);
   }
   for (int i=0; i<max_num_impulse; ++i) {
-    kkt_matrix.aux[i].isApprox(kkt_matrix_ref.aux[i]);
-    kkt_residual.aux[i].isApprox(kkt_residual_ref.aux[i]);
+    d.aux[i].isApprox(d_ref.aux[i]);
   }
   for (int i=0; i<max_num_impulse; ++i) {
-    kkt_matrix.impulse[i].isApprox(kkt_matrix_ref.impulse[i]);
-    kkt_residual.impulse[i].isApprox(kkt_residual_ref.impulse[i]);
+    d.impulse[i].isApprox(d_ref.impulse[i]);
   }
   for (int i=0; i<max_num_impulse; ++i) {
-    kkt_matrix.lift[i].isApprox(kkt_matrix_ref.lift[i]);
-    kkt_residual.lift[i].isApprox(kkt_residual_ref.lift[i]);
+    d.lift[i].isApprox(d_ref.lift[i]);
   }
+  EXPECT_DOUBLE_EQ(primal_step_size, primal_step_size_ref);
+  EXPECT_DOUBLE_EQ(dual_step_size, dual_step_size_ref);
 }
 
 

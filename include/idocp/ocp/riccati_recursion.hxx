@@ -274,7 +274,7 @@ inline void RiccatiRecursion::backwardStateConstraintFactorization(
 }
 
 
-inline const RiccatiRecursion::HybridRiccatiFactorizer& 
+inline const HybridRiccatiFactorizer& 
 RiccatiRecursion::getFactorizersHandle() const {
   return riccati_factorizer_;
 }

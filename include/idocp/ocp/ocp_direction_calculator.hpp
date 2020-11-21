@@ -76,11 +76,11 @@ public:
   ///
   OCPDirectionCalculator& operator=(OCPDirectionCalculator&&) noexcept = default;
 
-  void computeInitialStateDirection(const std::vector<Robot>& robots, 
-                                    const HybridSolution& s, 
-                                    const Eigen::VectorXd& q, 
-                                    const Eigen::VectorXd& v, 
-                                    HybridDirection& d) const;
+  static void computeInitialStateDirection(const std::vector<Robot>& robots, 
+                                           const Eigen::VectorXd& q, 
+                                           const Eigen::VectorXd& v, 
+                                           const HybridSolution& s, 
+                                           HybridDirection& d);
 
   void computeDirection(
       HybridOCP& split_ocps, std::vector<Robot>& robots, 

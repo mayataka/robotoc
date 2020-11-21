@@ -28,11 +28,6 @@ namespace idocp {
 ///
 class RiccatiRecursion {
 public:
-  using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
-  using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
-  using HybridRiccatiFactorization = hybrid_container<RiccatiFactorization, RiccatiFactorization>;
-  using HybridRiccatiFactorizer = hybrid_container<RiccatiFactorizer, ImpulseRiccatiFactorizer>;
-
   ///
   /// @brief Construct factorizer.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
