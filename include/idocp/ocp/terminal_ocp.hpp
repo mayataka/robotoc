@@ -127,7 +127,7 @@ public:
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
   ///
-  void updatePrimal(Robot& robot, const double step_size, 
+  void updatePrimal(const Robot& robot, const double step_size, 
                     const SplitDirection& d, SplitSolution& s) const;
 
   ///

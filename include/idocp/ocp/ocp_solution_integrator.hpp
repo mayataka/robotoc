@@ -69,7 +69,7 @@ public:
   ///
   OCPSolutionIntegrator& operator=(OCPSolutionIntegrator&&) noexcept = default;
 
-  void integrate(HybridOCP& split_ocps, std::vector<Robot>& robots,
+  void integrate(HybridOCP& split_ocps, const std::vector<Robot>& robots,
                  const ContactSequence& contact_sequence,
                  const HybridKKTMatrix& kkt_matrix,
                  const HybridKKTResidual& kkt_residual,

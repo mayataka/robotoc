@@ -87,7 +87,8 @@ inline double TerminalOCP::terminalCost(Robot& robot, const double t,
 }
 
 
-inline void TerminalOCP::updatePrimal(Robot& robot, const double step_size, 
+inline void TerminalOCP::updatePrimal(const Robot& robot, 
+                                      const double step_size, 
                                       const SplitDirection& d, 
                                       SplitSolution& s) const {
   assert(step_size > 0);

@@ -81,7 +81,7 @@ inline void SplitImpulseOCP::computeCondensedPrimalDirection(
 
 
 inline void SplitImpulseOCP::computeCondensedDualDirection(
-    Robot& robot, const ImpulseKKTMatrix& kkt_matrix, 
+    const Robot& robot, const ImpulseKKTMatrix& kkt_matrix, 
     const ImpulseKKTResidual& kkt_residual, const SplitDirection& d_next, 
     ImpulseSplitDirection& d) {
   impulse_dynamics_.computeCondensedDualDirection(robot, kkt_matrix,
@@ -106,7 +106,7 @@ inline void SplitImpulseOCP::updateDual(const double dual_step_size) {
 }
 
 
-inline void SplitImpulseOCP::updatePrimal(Robot& robot, 
+inline void SplitImpulseOCP::updatePrimal(const Robot& robot, 
                                           const double primal_step_size, 
                                           const ImpulseSplitDirection& d, 
                                           ImpulseSplitSolution& s) {

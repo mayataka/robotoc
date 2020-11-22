@@ -120,7 +120,7 @@ public:
   /// @param[in] d_next Split direction of the next stage.
   /// @param[in] d Split direction of this stage.
   /// 
-  void computeCondensedDualDirection(Robot& robot, 
+  void computeCondensedDualDirection(const Robot& robot, 
                                      const ImpulseKKTMatrix& kkt_matrix, 
                                      const ImpulseKKTResidual& kkt_residual,
                                      const SplitDirection& d_next, 
@@ -155,7 +155,7 @@ public:
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
   ///
-  void updatePrimal(Robot& robot, const double primal_step_size, 
+  void updatePrimal(const Robot& robot, const double primal_step_size, 
                     const ImpulseSplitDirection& d, ImpulseSplitSolution& s);
 
   ///

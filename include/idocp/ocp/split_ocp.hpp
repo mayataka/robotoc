@@ -128,7 +128,7 @@ public:
   /// @param[in, out] d Split direction of this stage.
   /// 
   template <typename SplitDirectionType>
-  void computeCondensedDualDirection(Robot& robot, const double dtau, 
+  void computeCondensedDualDirection(const Robot& robot, const double dtau, 
                                      const KKTMatrix& kkt_matrix, 
                                      const KKTResidual& kkt_residual,
                                      const SplitDirectionType& d_next,
@@ -158,7 +158,7 @@ public:
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
   ///
-  void updatePrimal(Robot& robot, const double primal_step_size, 
+  void updatePrimal(const Robot& robot, const double primal_step_size, 
                     const double dtau, const SplitDirection& d, 
                     SplitSolution& s);
 

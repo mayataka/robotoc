@@ -99,7 +99,7 @@ inline void SplitOCP::computeCondensedPrimalDirection(
 
 template <typename SplitDirectionType>
 inline void SplitOCP::computeCondensedDualDirection(
-    Robot& robot, const double dtau, const KKTMatrix& kkt_matrix, 
+    const Robot& robot, const double dtau, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, const SplitDirectionType& d_next, 
     SplitDirection& d) {
   assert(dtau > 0);
@@ -119,14 +119,8 @@ inline double SplitOCP::maxDualStepSize() {
 }
 
 
-inline void SplitOCP::updateDual(const double dual_step_size) {
-  assert(dual_step_size > 0);
-  assert(dual_step_size <= 1);
-  constraints_->updateDual(constraints_data_, dual_step_size);
-}
-
-
-inline void SplitOCP::updatePrimal(Robot& robot, const double primal_step_size, 
+inline void SplitOCP::updatePrimal(const Robot& robot, 
+                                   const double primal_step_size, 
                                    const double dtau, const SplitDirection& d, 
                                    SplitSolution& s) {
   assert(primal_step_size > 0);
@@ -134,6 +128,13 @@ inline void SplitOCP::updatePrimal(Robot& robot, const double primal_step_size,
   assert(dtau > 0);
   s.integrate(robot, primal_step_size, d);
   constraints_->updateSlack(constraints_data_, primal_step_size);
+}
+
+
+inline void SplitOCP::updateDual(const double dual_step_size) {
+  assert(dual_step_size > 0);
+  assert(dual_step_size <= 1);
+  constraints_->updateDual(constraints_data_, dual_step_size);
 }
 
 

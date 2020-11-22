@@ -52,6 +52,22 @@ protected:
   HybridSolution createSolution(const Robot& robot, const ContactSequence& contact_sequence) const;
   ContactSequence createContactSequence(const Robot& robot) const;
 
+  template <typename T>
+  void testIsSame(const T& rhs, const T& lhs) const {
+    for (int i=0; i<=N; ++i) {
+      EXPECT_TRUE(rhs[i].isApprox(lhs[i]));
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_TRUE(rhs.impulse[i].isApprox(lhs.impulse[i]));
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_TRUE(rhs.aux[i].isApprox(lhs.aux[i]));
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_TRUE(rhs.lift[i].isApprox(lhs.lift[i]));
+    }
+  }
+
   void testComputeDirection(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
@@ -456,22 +472,9 @@ void OCPDirectionCalculatorTest::testComputeDirection(const Robot& robot) const 
     primal_step_size_ref = split_ocps_ref.terminal.maxPrimalStepSize();
   if (split_ocps_ref.terminal.maxDualStepSize() < dual_step_size_ref)
     dual_step_size_ref = split_ocps_ref.terminal.maxDualStepSize();
-  for (int i=0; i<=N; ++i) {
-    EXPECT_TRUE(d[i].isApprox(d_ref[i]));
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    EXPECT_TRUE(d.impulse[i].isApprox(d_ref.impulse[i]));
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    EXPECT_TRUE(d.aux[i].isApprox(d_ref.aux[i]));
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    EXPECT_TRUE(d.lift[i].isApprox(d_ref.lift[i]));
-  }
+  testIsSame(d, d_ref);
   EXPECT_DOUBLE_EQ(primal_step_size, primal_step_size_ref);
   EXPECT_DOUBLE_EQ(dual_step_size, dual_step_size_ref);
-  std::cout << primal_step_size << std::endl;
-  std::cout << dual_step_size << std::endl;
 }
 
 

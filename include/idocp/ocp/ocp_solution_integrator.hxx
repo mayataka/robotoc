@@ -51,7 +51,7 @@ inline OCPSolutionIntegrator::~OCPSolutionIntegrator() {
 
 
 inline void OCPSolutionIntegrator::integrate(
-    HybridOCP& split_ocps, std::vector<Robot>& robots, 
+    HybridOCP& split_ocps, const std::vector<Robot>& robots, 
     const ContactSequence& contact_sequence, const HybridKKTMatrix& kkt_matrix, 
     const HybridKKTResidual& kkt_residual, const double primal_step_size, 
     const double dual_step_size, HybridDirection& d, HybridSolution& s) const {
@@ -59,13 +59,10 @@ inline void OCPSolutionIntegrator::integrate(
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();
   const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
-  const bool exist_state_constraint = contact_sequence.existImpulseStage();
-  const Eigen::VectorXd& dx0 = d[0].dx();
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
       if (contact_sequence.existImpulseStage(i)) {
-        printf("start i = %d impulse\n", i);
         const int impulse_index = contact_sequence.impulseIndex(i);
         const double dtau_impulse = contact_sequence.impulseTime(impulse_index) - i * dtau_;
         assert(dtau_impulse > 0);
@@ -74,10 +71,8 @@ inline void OCPSolutionIntegrator::integrate(
                                                     dtau_impulse, kkt_matrix[i], 
                                                     kkt_residual[i], 
                                                     d.impulse[impulse_index], d[i]);
-        printf("end i = %d impulse\n", i);
       }
       else if (contact_sequence.existLiftStage(i)) {
-        printf("start i = %d lift\n", i);
         const int lift_index = contact_sequence.liftIndex(i);
         const double dtau_lift = contact_sequence.liftTime(lift_index) - i * dtau_;
         assert(dtau_lift > 0);
@@ -86,31 +81,23 @@ inline void OCPSolutionIntegrator::integrate(
                                                     dtau_lift, kkt_matrix[i], 
                                                     kkt_residual[i], 
                                                     d.lift[lift_index], d[i]);
-        printf("end i = %d lift\n", i);
       }
       else {
-        printf("start i = %d\n", i);
         split_ocps[i].computeCondensedDualDirection(robots[omp_get_thread_num()], 
                                                     dtau_, kkt_matrix[i], 
                                                     kkt_residual[i], d[i+1], d[i]);
-        printf("end i = %d\n", i);
       }
-      printf("start i = %d update\n", i);
       split_ocps[i].updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
                                  dtau_, d[i], s[i]);
       split_ocps[i].updateDual(dual_step_size);
-      printf("end i = %d update\n", i);
     }
     else if (i == N_) {
-      printf("start i = %d update\n", i);
       split_ocps.terminal.updatePrimal(robots[omp_get_thread_num()], 
                                        primal_step_size, d[N_], s[N_]);
       split_ocps.terminal.updateDual(dual_step_size);
-      printf("end i = %d update\n", i);
     }
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);
-      printf("start impulse %d \n", impulse_index);
       split_ocps.impulse[impulse_index].computeCondensedDualDirection(
           robots[omp_get_thread_num()], kkt_matrix.impulse[impulse_index], 
           kkt_residual.impulse[impulse_index], d.aux[impulse_index], 
@@ -120,16 +107,16 @@ inline void OCPSolutionIntegrator::integrate(
                                                      d.impulse[impulse_index], 
                                                      s.impulse[impulse_index]);
       split_ocps.impulse[impulse_index].updateDual(dual_step_size);
-      printf("end impulse %d \n", impulse_index);
     }
     else if (i < N_ + 1 + 2*N_impulse) {
       const int impulse_index  = i - (N_+1+N_impulse);
-      printf("start aux %d \n", impulse_index);
       const int time_stage_after_impulse 
           = contact_sequence.timeStageAfterImpulse(impulse_index);
       const double dtau_aux 
           = time_stage_after_impulse * dtau_ 
               - contact_sequence.impulseTime(impulse_index);
+      assert(dtau_aux > 0);
+      assert(dtau_aux < dtau_);
       split_ocps.aux[impulse_index].computeCondensedDualDirection(
           robots[omp_get_thread_num()], dtau_aux,
           kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index],
@@ -139,16 +126,16 @@ inline void OCPSolutionIntegrator::integrate(
                                                  d.aux[impulse_index], 
                                                  s.aux[impulse_index]);
       split_ocps.aux[impulse_index].updateDual(dual_step_size);
-      printf("end aux %d \n", impulse_index);
     }
     else {
       const int lift_index = i - (N_+1+2*N_impulse);
-      printf("start lift %d \n", lift_index);
       const int time_stage_after_lift 
           = contact_sequence.timeStageAfterLift(lift_index);
       const double dtau_aux
           = time_stage_after_lift * dtau_ 
               - contact_sequence.liftTime(lift_index);
+      assert(dtau_aux > 0);
+      assert(dtau_aux < dtau_);
       split_ocps.lift[lift_index].computeCondensedDualDirection(
           robots[omp_get_thread_num()], dtau_aux,
           kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index],
@@ -158,7 +145,6 @@ inline void OCPSolutionIntegrator::integrate(
                                                d.lift[lift_index], 
                                                s.lift[lift_index]);
       split_ocps.lift[lift_index].updateDual(dual_step_size);
-      printf("end lift %d \n", lift_index);
     }
   }
 }
