@@ -606,7 +606,18 @@ public:
   ///
   int dimp() const;
 
+  ///
+  /// @brief Chech the equivalence of two KKTMatrix.
+  /// @param[in] other Other object.
+  /// @return true if this and other is same. false otherwise.
+  ///
   bool isApprox(const KKTMatrix& other) const;
+
+  ///
+  /// @brief Chech this has at least one NaN.
+  /// @return true if this has at least one NaN. false otherwise.
+  ///
+  bool hasNaN() const;
 
   /// @brief Derivative of the state equation with respect to the 
   /// configuration of the previous time step q_prev.

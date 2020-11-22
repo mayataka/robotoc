@@ -128,10 +128,10 @@ inline void OCPDirectionCalculator::computeDirection(
     }
     else if (i < N_ + 1 + 2*N_impulse) {
       const int impulse_index  = i - (N_+1+N_impulse);
-      const int time_stage_before_impulse 
-          = contact_sequence.timeStageBeforeImpulse(impulse_index);
+      const int time_stage_after_impulse 
+          = contact_sequence.timeStageAfterImpulse(impulse_index);
       const double dtau_aux 
-          = (time_stage_before_impulse+1) * dtau_ 
+          = time_stage_after_impulse * dtau_ 
               - contact_sequence.impulseTime(impulse_index);
       aggregateLagrangeMultiplierDirectionAux(
           contact_sequence, constraint_factorization, d.impulse, impulse_index, 
@@ -149,10 +149,10 @@ inline void OCPDirectionCalculator::computeDirection(
     }
     else {
       const int lift_index = i - (N_+1+2*N_impulse);
-      const int time_stage_before_lift 
-          = contact_sequence.timeStageBeforeLift(lift_index);
+      const int time_stage_after_lift 
+          = contact_sequence.timeStageAfterLift(lift_index);
       const double dtau_aux
-          = (time_stage_before_lift+1) * dtau_ 
+          = time_stage_after_lift * dtau_ 
               - contact_sequence.liftTime(lift_index);
       aggregateLagrangeMultiplierDirectionLift(
           contact_sequence, constraint_factorization, d.impulse, lift_index, 

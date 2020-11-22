@@ -176,6 +176,17 @@ inline int ContactSequence::timeStageBeforeLift(const int lift_index) const {
 }
 
 
+inline int ContactSequence::timeStageAfterImpulse(
+    const int impulse_index) const {
+  return (timeStageBeforeImpulse(impulse_index)+1);
+}
+
+
+inline int ContactSequence::timeStageAfterLift(const int lift_index) const {
+  return (timeStageBeforeLift(lift_index)+1);
+}
+
+
 inline bool ContactSequence::existImpulseStage() const {
   if (totalNumImpulseStages() > 0) return true;
   else return false;

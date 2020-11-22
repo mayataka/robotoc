@@ -40,8 +40,26 @@ protected:
   HybridKKTResidual createHybridKKTResidual(const Robot& robot) const;
   ContactSequence createContactSequence(const Robot& robot) const;
 
-  static void testIsRiccatiZero(const RiccatiFactorization& riccati);
-  static void testIsRiccatiSame(const RiccatiFactorization& lhs, const RiccatiFactorization& rhs);
+  template <typename T>
+  void testIsSame(const T& rhs, const T& lhs) const {
+    for (int i=0; i<=N; ++i) {
+      EXPECT_TRUE(rhs[i].isApprox(lhs[i]));
+      EXPECT_FALSE(rhs[i].hasNaN());
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_TRUE(rhs.impulse[i].isApprox(lhs.impulse[i]));
+      EXPECT_FALSE(rhs.impulse[i].hasNaN());
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_TRUE(rhs.aux[i].isApprox(lhs.aux[i]));
+      EXPECT_FALSE(rhs.aux[i].hasNaN());
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_TRUE(rhs.lift[i].isApprox(lhs.lift[i]));
+      EXPECT_FALSE(rhs.lift[i].hasNaN());
+    }
+  }
+
   void testIsConstraintFactorizationSame(const StateConstraintRiccatiFactorization& lhs, 
                                          const StateConstraintRiccatiFactorization& rhs) const;
 
@@ -66,6 +84,7 @@ HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot) 
     kkt_matrix[i].Quu() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimu, dimu);
     kkt_matrix[i].Qxu().setRandom();
     if (robot.has_floating_base()) {
+      kkt_matrix[i].Fqq().setIdentity();
       kkt_matrix[i].Fqq().topLeftCorner(6, 6).setRandom();
     }
     kkt_matrix[i].Fvq().setRandom();
@@ -76,6 +95,7 @@ HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot) 
     Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx, dimx);
     kkt_matrix.impulse[i].Qxx() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
     if (robot.has_floating_base()) {
+      kkt_matrix.impulse[i].Fqq().setIdentity();
       kkt_matrix.impulse[i].Fqq().topLeftCorner(6, 6).setRandom();
     }
     kkt_matrix.impulse[i].Fvq().setRandom();
@@ -88,6 +108,7 @@ HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot) 
     kkt_matrix.aux[i].Quu() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimu, dimu);
     kkt_matrix.aux[i].Qxu().setRandom();
     if (robot.has_floating_base()) {
+      kkt_matrix.aux[i].Fqq().setIdentity();
       kkt_matrix.aux[i].Fqq().topLeftCorner(6, 6).setRandom();
     }
     kkt_matrix.aux[i].Fvq().setRandom();
@@ -101,6 +122,7 @@ HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot) 
     kkt_matrix.lift[i].Quu() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimu, dimu);
     kkt_matrix.lift[i].Qxu().setRandom();
     if (robot.has_floating_base()) {
+      kkt_matrix.lift[i].Fqq().setIdentity();
       kkt_matrix.lift[i].Fqq().topLeftCorner(6, 6).setRandom();
     }
     kkt_matrix.lift[i].Fvq().setRandom();
@@ -162,34 +184,6 @@ ContactSequence RiccatiRecursionTest::createContactSequence(const Robot& robot) 
 }
 
 
-void RiccatiRecursionTest::testIsRiccatiZero(const RiccatiFactorization& riccati) {
-  EXPECT_TRUE(riccati.Pqq.isZero());
-  EXPECT_TRUE(riccati.Pqv.isZero());
-  EXPECT_TRUE(riccati.Pvq.isZero());
-  EXPECT_TRUE(riccati.Pvv.isZero());
-  EXPECT_TRUE(riccati.sq.isZero());
-  EXPECT_TRUE(riccati.sv.isZero());
-  EXPECT_TRUE(riccati.Pi.isIdentity()); // Default value of Pi is identity.
-  EXPECT_TRUE(riccati.pi.isZero());
-  EXPECT_TRUE(riccati.N.isZero());
-  EXPECT_TRUE(riccati.n.isZero());
-}
-
-
-void RiccatiRecursionTest::testIsRiccatiSame(const RiccatiFactorization& lhs, const RiccatiFactorization& rhs) {
-  EXPECT_TRUE(lhs.Pqq.isApprox(rhs.Pqq));
-  EXPECT_TRUE(lhs.Pqv.isApprox(rhs.Pqv));
-  EXPECT_TRUE(lhs.Pvq.isApprox(rhs.Pvq));
-  EXPECT_TRUE(lhs.Pvv.isApprox(rhs.Pvv));
-  EXPECT_TRUE(lhs.sq.isApprox(rhs.sq));
-  EXPECT_TRUE(lhs.sv.isApprox(rhs.sv));
-  EXPECT_TRUE(lhs.Pi.isApprox(rhs.Pi));
-  EXPECT_TRUE(lhs.pi.isApprox(rhs.pi));
-  EXPECT_TRUE(lhs.N.isApprox(rhs.N));
-  EXPECT_TRUE(lhs.n.isApprox(rhs.n));
-}
-
-
 void RiccatiRecursionTest::testIsConstraintFactorizationSame(
     const StateConstraintRiccatiFactorization& lhs, 
     const StateConstraintRiccatiFactorization& rhs) const {
@@ -215,23 +209,24 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   HybridRiccatiFactorization factorization(N, max_num_impulse, robot);
   RiccatiRecursion riccati_recursion(robot, T, N, max_num_impulse, nproc);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
-  for (int i=0; i<N; ++i) {
-    testIsRiccatiZero(factorization[i]);
-  }
   EXPECT_TRUE(factorization[N].Pqq.isApprox(kkt_matrix[N].Qqq()));
   EXPECT_TRUE(factorization[N].Pqv.isZero());
   EXPECT_TRUE(factorization[N].Pvq.isZero());
   EXPECT_TRUE(factorization[N].Pvv.isApprox(kkt_matrix[N].Qvv()));
   EXPECT_TRUE(factorization[N].sq.isApprox(-1*kkt_residual[N].lq()));
   EXPECT_TRUE(factorization[N].sv.isApprox(-1*kkt_residual[N].lv()));
-  for (int i=0; i<max_num_impulse; ++i) {
-    testIsRiccatiZero(factorization.impulse[i]);
+  const RiccatiFactorization riccati_factorization_default = RiccatiFactorization(robot);
+  for (int i=N-1; i>=0; --i) {
+    EXPECT_TRUE(factorization[i].isApprox(riccati_factorization_default));
   }
   for (int i=0; i<max_num_impulse; ++i) {
-    testIsRiccatiZero(factorization.aux[i]);
+    EXPECT_TRUE(factorization.impulse[i].isApprox(riccati_factorization_default));
   }
   for (int i=0; i<max_num_impulse; ++i) {
-    testIsRiccatiZero(factorization.lift[i]);
+    EXPECT_TRUE(factorization.aux[i].isApprox(riccati_factorization_default));
+  }
+  for (int i=0; i<max_num_impulse; ++i) {
+    EXPECT_TRUE(factorization.lift[i].isApprox(riccati_factorization_default));
   }
   auto factorization_ref = factorization;
   auto kkt_matrix_ref = kkt_matrix; 
@@ -291,26 +286,9 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
           factorization_ref[i]);
     }
   }
-  for (int i=0; i<=N; ++i) {
-    testIsRiccatiSame(factorization[i], factorization_ref[i]);
-    kkt_matrix[i].isApprox(kkt_matrix_ref[i]);
-    kkt_residual[i].isApprox(kkt_residual_ref[i]);
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    testIsRiccatiSame(factorization.aux[i], factorization_ref.aux[i]);
-    kkt_matrix.aux[i].isApprox(kkt_matrix_ref.aux[i]);
-    kkt_residual.aux[i].isApprox(kkt_residual_ref.aux[i]);
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    testIsRiccatiSame(factorization.impulse[i], factorization_ref.impulse[i]);
-    kkt_matrix.impulse[i].isApprox(kkt_matrix_ref.impulse[i]);
-    kkt_residual.impulse[i].isApprox(kkt_residual_ref.impulse[i]);
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    testIsRiccatiSame(factorization.lift[i], factorization_ref.lift[i]);
-    kkt_matrix.lift[i].isApprox(kkt_matrix_ref.lift[i]);
-    kkt_residual.lift[i].isApprox(kkt_residual_ref.lift[i]);
-  }
+  testIsSame(factorization, factorization_ref);
+  testIsSame(kkt_matrix, kkt_matrix_ref);
+  testIsSame(kkt_residual, kkt_residual_ref);
   riccati_recursion.forwardRiccatiRecursionParallel(contact_sequence, kkt_matrix, kkt_residual);
   riccati_recursion.forwardRiccatiRecursionSerial(contact_sequence, kkt_matrix, kkt_residual, factorization);
   const bool exist_state_constraint = contact_sequence.existImpulseStage();
@@ -396,26 +374,9 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
           exist_state_constraint);
     }
   }
-  for (int i=0; i<=N; ++i) {
-    testIsRiccatiSame(factorization[i], factorization_ref[i]);
-    kkt_matrix[i].isApprox(kkt_matrix_ref[i]);
-    kkt_residual[i].isApprox(kkt_residual_ref[i]);
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    testIsRiccatiSame(factorization.aux[i], factorization_ref.aux[i]);
-    kkt_matrix.aux[i].isApprox(kkt_matrix_ref.aux[i]);
-    kkt_residual.aux[i].isApprox(kkt_residual_ref.aux[i]);
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    testIsRiccatiSame(factorization.impulse[i], factorization_ref.impulse[i]);
-    kkt_matrix.impulse[i].isApprox(kkt_matrix_ref.impulse[i]);
-    kkt_residual.impulse[i].isApprox(kkt_residual_ref.impulse[i]);
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    testIsRiccatiSame(factorization.lift[i], factorization_ref.lift[i]);
-    kkt_matrix.lift[i].isApprox(kkt_matrix_ref.lift[i]);
-    kkt_residual.lift[i].isApprox(kkt_residual_ref.lift[i]);
-  }
+  testIsSame(factorization, factorization_ref);
+  testIsSame(kkt_matrix, kkt_matrix_ref);
+  testIsSame(kkt_residual, kkt_residual_ref);
 }
 
 

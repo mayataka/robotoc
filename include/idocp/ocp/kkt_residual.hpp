@@ -192,7 +192,18 @@ public:
   ///
   int dimf() const;
 
+  ///
+  /// @brief Chech the equivalence of two KKTResidual.
+  /// @param[in] other Other object.
+  /// @return true if this and other is same. false otherwise.
+  ///
   bool isApprox(const KKTResidual& other) const;
+
+  ///
+  /// @brief Chech this has at least one NaN.
+  /// @return true if this has at least one NaN. false otherwise.
+  ///
+  bool hasNaN() const;
 
   /// @brief KKT residual.
   Eigen::VectorXd KKT_residual;

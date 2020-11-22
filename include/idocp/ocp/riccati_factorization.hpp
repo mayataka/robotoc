@@ -12,7 +12,7 @@ namespace idocp {
 /// @class RiccatiFactorization
 /// @brief Riccati factorized matrix and vector split into a time stage.
 ///
-class RiccatiFactorization {
+struct RiccatiFactorization {
 public:
   ///
   /// @brief Allocate Riccati factorization matrix and vector.
@@ -154,6 +154,43 @@ public:
   /// 2 * Robot::dimv(). Size is 0 otherwise.
   ///
   Eigen::VectorXd n;
+
+  ///
+  /// @brief Chech the equivalence of two RiccatiFactorization.
+  /// @param[in] other object.
+  /// @return true if this and other is same. false otherwise.
+  ///
+  bool isApprox(const RiccatiFactorization& other) const {
+    if (!Pqq.isApprox(other.Pqq)) return false;
+    if (!Pqv.isApprox(other.Pqv)) return false;
+    if (!Pvq.isApprox(other.Pvq)) return false;
+    if (!Pvv.isApprox(other.Pvv)) return false;
+    if (!sq.isApprox(other.sq)) return false;
+    if (!sv.isApprox(other.sv)) return false;
+    if (!Pi.isApprox(other.Pi)) return false;
+    if (!pi.isApprox(other.pi)) return false;
+    if (!N.isApprox(other.N)) return false;
+    if (!n.isApprox(other.n)) return false;
+    return true;
+  }
+
+  ///
+  /// @brief Chech this has at least one NaN.
+  /// @return true if this has at least one NaN. false otherwise.
+  ///
+  bool hasNaN() const {
+    if (Pqq.hasNaN()) return true;
+    if (Pqv.hasNaN()) return true;
+    if (Pvq.hasNaN()) return true;
+    if (Pvv.hasNaN()) return true;
+    if (sq.hasNaN()) return true;
+    if (sv.hasNaN()) return true;
+    if (Pi.hasNaN()) return true;
+    if (pi.hasNaN()) return true;
+    if (N.hasNaN()) return true;
+    if (n.hasNaN()) return true;
+    return false;
+  }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

@@ -3,6 +3,7 @@
 
 #include "idocp/ocp/kkt_residual.hpp"
 
+
 namespace idocp {
 
 inline KKTResidual::KKTResidual(const Robot& robot) 
@@ -143,29 +144,26 @@ inline int KKTResidual::dimf() const {
 
 
 inline bool KKTResidual::isApprox(const KKTResidual& other) const {
-  if (!Fx().isApprox(other.Fx())) {
-    return false;
-  }
-  if (!lu().isApprox(other.lu())) {
-    return false;
-  }
-  if (!lx().isApprox(other.lx())) {
-    return false;
-  }
-  if (!la.isApprox(other.la)) {
-    return false;
-  }
+  if (!Fx().isApprox(other.Fx())) return false;
+  if (!lu().isApprox(other.lu())) return false;
+  if (!lx().isApprox(other.lx())) return false;
+  if (!la.isApprox(other.la)) return false;
   if (dimf_ > 0) {
-    if (!lf().isApprox(other.lf())) {
-      return false;
-    }
+    if (!lf().isApprox(other.lf())) return false;
   }
   if (has_floating_base_) {
-    if (!lu_passive.isApprox(other.lu_passive)) {
-      return false;
-    }
+    if (!lu_passive.isApprox(other.lu_passive)) return false;
   }
   return true;
+}
+
+
+inline bool KKTResidual::hasNaN() const {
+  if (KKT_residual.hasNaN()) return true;
+  if (la.hasNaN()) return true;
+  if (lu_passive.hasNaN()) return true;
+  if (lf_full_.hasNaN()) return true;
+  return false;
 }
 
 } // namespace idocp 

@@ -69,6 +69,10 @@ public:
   ///
   OCPLinearizer& operator=(OCPLinearizer&&) noexcept = default;
 
+  void initConstraints(HybridOCP& split_ocps, std::vector<Robot>& robots,
+                       const ContactSequence& contact_sequence,
+                       const double t, const HybridSolution& s) const;
+
   void linearizeOCP(HybridOCP& split_ocps, std::vector<Robot>& robots,
                     const ContactSequence& contact_sequence,
                     const double t, const Eigen::VectorXd& q, 

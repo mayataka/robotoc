@@ -296,34 +296,25 @@ inline int ImpulseKKTMatrix::dimf() const {
 
 
 inline bool ImpulseKKTMatrix::isApprox(const ImpulseKKTMatrix& other) const {
-  if (!Fxf().isApprox(other.Fxf())) {
-    return false;
-  }
-  if (!Fxx().isApprox(other.Fxx())) {
-    return false;
-  }
-  if (!Pq().isApprox(other.Pq())) {
-    return false;
-  }
-  if (!Vq().isApprox(other.Vq())) {
-    return false;
-  }
-  if (!Vv().isApprox(other.Vv())) {
-    return false;
-  }
-  if (!Qdvdvff().isApprox(other.Qdvdvff())) {
-    return false;
-  }
-  if (!Qfq().isApprox(other.Qfq())) {
-    return false;
-  }
-  if (!Qqf().isApprox(other.Qqf())) {
-    return false;
-  }
-  if (!Qxx().isApprox(other.Qxx())) {
-    return false;
-  }
+  if (!Fxf().isApprox(other.Fxf())) return false;
+  if (!Fxx().isApprox(other.Fxx())) return false;
+  if (!Pq().isApprox(other.Pq())) return false;
+  if (!Vq().isApprox(other.Vq())) return false;
+  if (!Vv().isApprox(other.Vv())) return false;
+  if (!Qdvdvff().isApprox(other.Qdvdvff())) return false;
+  if (!Qfq().isApprox(other.Qfq())) return false;
+  if (!Qqf().isApprox(other.Qqf())) return false;
+  if (!Qxx().isApprox(other.Qxx())) return false;
   return true;
+}
+
+
+inline bool ImpulseKKTMatrix::hasNaN() const {
+  if (Fqq_prev.hasNaN()) return true;
+  if (F_.hasNaN()) return true;
+  if (C_.hasNaN()) return true;
+  if (Q_.hasNaN()) return true;
+  return false;
 }
 
 } // namespace idocp 

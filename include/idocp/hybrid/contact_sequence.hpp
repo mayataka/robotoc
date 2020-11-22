@@ -166,6 +166,22 @@ public:
   int timeStageBeforeLift(const int lift_index) const;
 
   ///
+  /// @brief Returns the time stage just after impulse having impulse_index.  
+  /// @param[in] impulse_index Impulse index. Must be less than 
+  /// ContactSequence::totalNumImpulseStages().
+  /// @return Time stage after the impulse.
+  ///
+  int timeStageAfterImpulse(const int impulse_index) const;
+
+  ///
+  /// @brief Returns the time stage just after lift having lift_index.  
+  /// @param[in] lift_index Lift index. Must be less than 
+  /// ContactSequence::totalNumLiftStages().
+  /// @return Time stage after the lift.
+  ///
+  int timeStageAfterLift(const int lift_index) const;
+
+  ///
   /// @brief Check if the impulse stage exists over the horizon or not.  
   /// @return true if the impulse stage exists. false otherwise.
   ///

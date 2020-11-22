@@ -515,31 +515,25 @@ inline int KKTMatrix::dimp() const {
 
 
 inline bool KKTMatrix::isApprox(const KKTMatrix& other) const {
-  if (!Fxu().isApprox(other.Fxu())) {
-    return false;
-  }
-  if (!Fxx().isApprox(other.Fxx())) {
-    return false;
-  }
-  if (!Cq().isApprox(other.Cq())) {
-    return false;
-  }
-  if (!Quu_full().isApprox(other.Quu_full())) {
-    return false;
-  }
-  if (!Qux_full().isApprox(other.Qux_full())) {
-    return false;
-  }
-  if (!Qxu_full().isApprox(other.Qxu_full())) {
-    return false;
-  }
-  if (!Qxx().isApprox(other.Qxx())) {
-    return false;
-  }
-  if (!Qaaff().isApprox(other.Qaaff())) {
-    return false;
-  }
+  if (!Fxu().isApprox(other.Fxu())) return false;
+  if (!Fxx().isApprox(other.Fxx())) return false;
+  if (!Cq().isApprox(other.Cq())) return false;
+  if (!Quu_full().isApprox(other.Quu_full())) return false;
+  if (!Qux_full().isApprox(other.Qux_full())) return false;
+  if (!Qxu_full().isApprox(other.Qxu_full())) return false;
+  if (!Qxx().isApprox(other.Qxx())) return false;
+  if (!Qaaff().isApprox(other.Qaaff())) return false;
   return true;
+}
+
+
+inline bool KKTMatrix::hasNaN() const {
+  if (Fqq_prev.hasNaN()) return true;
+  if (F_.hasNaN()) return true;
+  if (C_.hasNaN()) return true;
+  if (Q_.hasNaN()) return true;
+  if (Qaaff_full_.hasNaN()) return true;
+  return false;
 }
 
 } // namespace idocp 

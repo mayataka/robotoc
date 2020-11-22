@@ -161,27 +161,25 @@ inline int ImpulseKKTResidual::dimf() const {
 
 inline bool ImpulseKKTResidual::isApprox(
     const ImpulseKKTResidual& other) const {
-  if (!Fx().isApprox(other.Fx())) {
-    return false;
-  }
-  if (!lx().isApprox(other.lx())) {
-    return false;
-  }
-  if (!ldv.isApprox(other.ldv)) {
-    return false;
-  }
+  if (!Fx().isApprox(other.Fx())) return false;
+  if (!lx().isApprox(other.lx())) return false;
+  if (!ldv.isApprox(other.ldv)) return false;
   if (dimf_ > 0) {
-    if (!P().isApprox(other.P())) {
-      return false;
-    }
-    if (!V().isApprox(other.V())) {
-      return false;
-    }
-    if (!lf().isApprox(other.lf())) {
-      return false;
-    }
+    if (!P().isApprox(other.P())) return false;
+    if (!V().isApprox(other.V())) return false;
+    if (!lf().isApprox(other.lf())) return false;
   }
   return true;
+}
+
+
+inline bool ImpulseKKTResidual::hasNaN() const {
+  if (KKT_residual.hasNaN()) return true;
+  if (ldv.hasNaN()) return true;
+  if (P_full_.hasNaN()) return true;
+  if (V_full_.hasNaN()) return true;
+  if (lf_full_.hasNaN()) return true;
+  return false;
 }
 
 } // namespace idocp 
