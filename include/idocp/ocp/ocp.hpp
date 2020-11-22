@@ -13,15 +13,11 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
-#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
-#include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
 #include "idocp/ocp/line_search_filter.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
-#include "idocp/ocp/riccati_recursion.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
-#include "idocp/ocp/ocp_direction_calculator.hpp"
+#include "idocp/ocp/ocp_riccati_solver.hpp"
 #include "idocp/ocp/ocp_solution_integrator.hpp"
 
 
@@ -196,18 +192,13 @@ private:
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
   OCPLinearizer ocp_linearizer_;
-  OCPDirectionCalculator ocp_direction_calculator_;
+  OCPRiccatiSolver ocp_riccati_solver_;
   OCPSolutionIntegrator ocp_solution_integrator_;
-  RiccatiRecursion riccati_recursion_;
-  StateConstraintRiccatiFactorizer constraint_factorizer_;
   HybridOCP split_ocps_;
-  TerminalOCP terminal_ocp_;
   HybridKKTMatrix kkt_matrix_;
   HybridKKTResidual kkt_residual_;
   HybridSolution s_;
   HybridDirection d_;
-  HybridRiccatiFactorization riccati_factorization_;
-  std::vector<StateConstraintRiccatiFactorization> constraint_factorization_;
   LineSearchFilter filter_;
   int N_, num_proc_;
   double T_, dtau_;

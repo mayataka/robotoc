@@ -62,8 +62,9 @@ void BenchmarkWithContacts() {
   cost->push_back(impulse_force_cost);
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
-  const double T = 0.5;
+  const double T = 1;
   const int N = 20;
+  const int max_num_impulse_phase = 5;
   const int num_proc = 4;
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
@@ -82,7 +83,8 @@ void BenchmarkWithContacts() {
   robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
   robot.setContactPointsByCurrentKinematics();
   idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for anymal with contacts",
-                                                    robot, cost, constraints, T, N, num_proc);
+                                                    robot, cost, constraints, T, N, 
+                                                    max_num_impulse_phase, num_proc);
   q << 0, 0, 0.5, 0, 0, 0, 1, 
        0.0315, 0.4, -0.8, 
        0.0315, -0.4, 0.8, 
@@ -95,7 +97,7 @@ void BenchmarkWithContacts() {
   contact_status.activateContacts({0, 1, 2, 3});
   ocp_benchmarker.getSolverHandle()->setContactStatus(contact_status);
   ocp_benchmarker.testConvergence(t, q, v, 20, false);
-  // ocp_benchmarker.testCPUTime(t, q, v, 10000);
+  ocp_benchmarker.testCPUTime(t, q, v, 10000);
   // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
   //                                                           robot, cost, constraints, T, N, num_proc);
   // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);

@@ -44,7 +44,7 @@ public:
   /// problem. Must be positive. Default is 1.
   ///
   OCPDirectionCalculator(const double T, const int N, 
-                         const int max_num_impulse=0, const int num_proc=1);
+                         const int max_num_impulse, const int num_proc);
 
   ///
   /// @brief Default constructor. 

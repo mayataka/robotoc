@@ -26,7 +26,7 @@ public:
   ///
   StateConstraintRiccatiFactorizer(const Robot& robot, 
                                    const int max_num_impulse_phase, 
-                                   const int nproc=1);
+                                   const int nproc);
 
   ///
   /// @brief Default constructor. 

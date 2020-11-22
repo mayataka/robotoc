@@ -232,7 +232,7 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   std::vector<Robot> robots(nproc, robot);
   auto split_ocps = HybridOCP(N, max_num_impulse, robot, cost, constraints);
   auto split_ocps_ref = split_ocps;
-  linearizer.initConstraints(split_ocps, robots, contact_sequence, t, s);
+  linearizer.initConstraints(split_ocps, robots, contact_sequence, s);
   linearizer.linearizeOCP(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
   auto robot_ref = robot;
   if (contact_sequence.existImpulseStage(0)) {
@@ -361,7 +361,7 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   std::vector<Robot> robots(nproc, robot);
   auto split_ocps = HybridOCP(N, max_num_impulse, robot, cost, constraints);
   auto split_ocps_ref = split_ocps;
-  linearizer.initConstraints(split_ocps, robots, contact_sequence, t, s);
+  linearizer.initConstraints(split_ocps, robots, contact_sequence, s);
   linearizer.computeKKTResidual(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
   const double kkt_error = linearizer.KKTError(split_ocps, contact_sequence, kkt_residual);
   auto robot_ref = robot;

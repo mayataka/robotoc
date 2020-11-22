@@ -1,7 +1,7 @@
 #include "idocp/ocp/ocp.hpp"
 
-#include <cmath>
 #include <omp.h>
+#include <stdexcept>
 #include <cassert>
 
 
@@ -10,27 +10,47 @@ namespace idocp {
 OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
          const std::shared_ptr<Constraints>& constraints, const double T, 
          const int N, const int max_num_impulse, const int num_proc)
-  : split_ocps_(N, max_num_impulse, robot, cost, constraints),
-    robots_(num_proc, robot),
-    filter_(),
-    T_(T),
-    dtau_(T/N),
-    N_(N),
-    num_proc_(num_proc),
+  : robots_(num_proc, robot),
+    contact_sequence_(robot, T, N),
+    ocp_linearizer_(T, N, max_num_impulse, num_proc),
+    ocp_riccati_solver_(robot, T, N, max_num_impulse, num_proc),
+    ocp_solution_integrator_(T, N, max_num_impulse, num_proc),
+    split_ocps_(N, max_num_impulse, robot, cost, constraints),
+    kkt_matrix_(N, max_num_impulse, robot),
+    kkt_residual_(N, max_num_impulse, robot),
     s_(N, max_num_impulse, robot),
     d_(N, max_num_impulse, robot),
-    riccati_factorization_(N, max_num_impulse, robot),
-    constraint_factorization_(max_num_impulse, 
-                              StateConstraintRiccatiFactorization(robot, N, max_num_impulse)),
-    constraint_factorizer_(robot, max_num_impulse, num_proc),
-    riccati_recursion_(robot, T, N, max_num_impulse, num_proc),
-    contact_sequence_(robot, T, N) {
-  assert(T > 0);
-  assert(N > 0);
-  assert(num_proc > 0);
+    filter_(),
+    N_(N),
+    num_proc_(num_proc),
+    T_(T),
+    dtau_(T/N) {
+  try {
+    if (T <= 0) {
+      throw std::out_of_range("invalid value: T must be positive!");
+    }
+    if (N <= 0) {
+      throw std::out_of_range("invalid value: N must be positive!");
+    }
+    if (max_num_impulse < 0) {
+      throw std::out_of_range("invalid value: max_num_impulse must be non-negative!");
+    }
+    if (num_proc <= 0) {
+      throw std::out_of_range("invalid value: num_proc must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<=N; ++i) {
     robot.normalizeConfiguration(s_[i].q);
+  }
+  for (int i=0; i<max_num_impulse; ++i) {
+    robot.normalizeConfiguration(s_.impulse[i].q);
+    robot.normalizeConfiguration(s_.aux[i].q);
+    robot.normalizeConfiguration(s_.lift[i].q);
   }
   initConstraints();
 }
@@ -50,31 +70,10 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(v.size() == robots_[0].dimv());
   ocp_linearizer_.linearizeOCP(split_ocps_, robots_, contact_sequence_, 
                                t, q, v, s_, kkt_matrix_, kkt_residual_);
-  riccati_recursion_.backwardRiccatiRecursionTerminal(kkt_matrix_, 
-                                                      kkt_residual_, 
-                                                      riccati_factorization_);
-  riccati_recursion_.backwardRiccatiRecursion(contact_sequence_, kkt_matrix_, 
-                                              kkt_residual_, 
-                                              riccati_factorization_);
-  riccati_recursion_.forwardRiccatiRecursionParallel(contact_sequence_, 
-                                                     kkt_matrix_, 
-                                                     kkt_residual_);
-  riccati_recursion_.forwardRiccatiRecursionSerial(contact_sequence_, 
-                                                   kkt_matrix_, kkt_residual_, 
-                                                   riccati_factorization_);
-  riccati_recursion_.backwardStateConstraintFactorization(contact_sequence_,
-                                                          kkt_matrix_, 
-                                                          constraint_factorization_);
-  ocp_direction_calculator_.computeInitialStateDirection(robots_, q, v, s_, d_);
-  constraint_factorizer_.computeLagrangeMultiplierDirection(
-      contact_sequence_, riccati_factorization_.impulse, 
-      constraint_factorization_, d_[0].dx(), d_.impulse);
-  ocp_direction_calculator_.computeDirection(split_ocps_, robots_, contact_sequence_, 
-                                             riccati_recursion_.getFactorizersHandle(),
-                                             riccati_factorization_, 
-                                             constraint_factorization_, s_, d_);
-  const double primal_step_size = ocp_direction_calculator_.maxPrimalStepSize(contact_sequence_);
-  const double dual_step_size = ocp_direction_calculator_.maxDualStepSize(contact_sequence_);
+  ocp_riccati_solver_.computeDirection(split_ocps_, robots_, contact_sequence_, 
+                                       q, v, s_, d_, kkt_matrix_, kkt_residual_);
+  const double primal_step_size = ocp_riccati_solver_.maxPrimalStepSize(contact_sequence_);
+  const double dual_step_size = ocp_riccati_solver_.maxDualStepSize(contact_sequence_);
   ocp_solution_integrator_.integrate(split_ocps_, robots_, contact_sequence_, 
                                      kkt_matrix_, kkt_residual_, 
                                      primal_step_size, dual_step_size, d_, s_);
@@ -230,11 +229,7 @@ bool OCP::isCurrentSolutionFeasible() {
 
 
 void OCP::initConstraints() {
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<N_; ++i) {
-    const int robot_id = omp_get_thread_num();
-    split_ocps_[i].initConstraints(robots_[robot_id], i, dtau_, s_[i]);
-  }
+  ocp_linearizer_.initConstraints(split_ocps_, robots_, contact_sequence_, s_);
 }
 
 } // namespace idocp

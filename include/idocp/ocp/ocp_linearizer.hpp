@@ -32,12 +32,12 @@ public:
   /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
   /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
-  /// Must be non-negative. Default is 0.
+  /// Must be non-negative. 
   /// @param[in] num_proc Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
+  /// problem. Must be positive. 
   ///
-  OCPLinearizer(const double T, const int N, const int max_num_impulse=0, 
-                const int num_proc=1);
+  OCPLinearizer(const double T, const int N, const int max_num_impulse, 
+                const int num_proc);
 
   ///
   /// @brief Default constructor. 
@@ -71,7 +71,7 @@ public:
 
   void initConstraints(HybridOCP& split_ocps, std::vector<Robot>& robots,
                        const ContactSequence& contact_sequence,
-                       const double t, const HybridSolution& s) const;
+                       const HybridSolution& s) const;
 
   void linearizeOCP(HybridOCP& split_ocps, std::vector<Robot>& robots,
                     const ContactSequence& contact_sequence,

@@ -125,7 +125,7 @@ inline OCPLinearizer::~OCPLinearizer() {
 
 inline void OCPLinearizer::initConstraints(
     HybridOCP& split_ocps, std::vector<Robot>& robots, 
-    const ContactSequence& contact_sequence, const double t, 
+    const ContactSequence& contact_sequence, 
     const HybridSolution& s) const {
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();

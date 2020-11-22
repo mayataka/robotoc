@@ -226,7 +226,7 @@ void OCPDirectionCalculatorTest::testComputeDirection(const Robot& robot) const 
   auto split_ocps = HybridOCP(N, max_num_impulse, robot, cost, constraints);
   OCPLinearizer linearizer(T, N, max_num_impulse, nproc);
   std::vector<Robot> robots(nproc, robot);
-  linearizer.initConstraints(split_ocps, robots, contact_sequence, t, s);
+  linearizer.initConstraints(split_ocps, robots, contact_sequence, s);
   linearizer.linearizeOCP(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
   RiccatiRecursion riccati_recursion(robot, T, N, max_num_impulse, nproc);
   HybridRiccatiFactorization riccati_factorization(N, max_num_impulse, robot);

@@ -21,7 +21,8 @@ public:
   OCPBenchmarker(const std::string& benchmark_name, const Robot& robot, 
                  const std::shared_ptr<CostFunction>& cost,
                  const std::shared_ptr<Constraints>& constraints, 
-                 const double T, const int N, const int num_proc);
+                 const double T, const int N, const int max_num_impulse,
+                 const int num_proc);
 
   OCPBenchmarker();
 

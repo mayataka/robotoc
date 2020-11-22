@@ -14,9 +14,9 @@ inline OCPBenchmarker<OCPType>::OCPBenchmarker(
     const std::string& benchmark_name, const Robot& robot, 
     const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints, const double T, 
-    const int N, const int num_proc)
+    const int N, const int max_num_impulse, const int num_proc)
   : benchmark_name_(benchmark_name),
-    ocp_(robot, cost, constraints, T, N, num_proc),
+    ocp_(robot, cost, constraints, T, N, max_num_impulse, num_proc),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
     max_dimf_(robot.max_dimf()),

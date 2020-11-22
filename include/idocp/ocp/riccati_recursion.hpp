@@ -33,7 +33,7 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
   RiccatiRecursion(const Robot& robot, const double T, const int N, 
-                    const int max_num_impulse, const int nproc);
+                   const int max_num_impulse, const int nproc);
 
   ///
   /// @brief Default constructor. 

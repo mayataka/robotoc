@@ -1,0 +1,1 @@
+#include "idocp/ocp/ocp_riccati_solver.hpp"
