@@ -129,14 +129,15 @@ void SplitImpulseOCPTest::testLinearizeOCP(
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot);
   constraints->setSlackAndDual(robot, constraints_data, s);
-  robot.updateKinematics(s.q, s.v);
+  const Eigen::VectorXd v_after_impulse = s.v + s.dv;
+  robot.updateKinematics(s.q, v_after_impulse);
   cost->computeStageCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
   cost->computeStageCostHessian(robot, cost_data, t, s, kkt_matrix_ref);
   constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
   stateequation::LinearizeImpulseForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamicsForwardEuler id(robot);
-  robot.updateKinematics(s.q, s.v);
+  robot.updateKinematics(s.q, v_after_impulse);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref);
   id.condenseImpulseDynamics(robot, impulse_status, kkt_matrix_ref, kkt_residual_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
@@ -184,12 +185,13 @@ void SplitImpulseOCPTest::testComputeKKTResidual(
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot);
   constraints->setSlackAndDual(robot, constraints_data, s);
-  robot.updateKinematics(s.q, s.v);
+  const Eigen::VectorXd v_after_impulse = s.v + s.dv;
+  robot.updateKinematics(s.q, v_after_impulse);
   cost->computeStageCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
   constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
   stateequation::LinearizeImpulseForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamicsForwardEuler id(robot);
-  robot.updateKinematics(s.q, s.v);
+  robot.updateKinematics(s.q, v_after_impulse);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref);
   const double kkt_error_ref = kkt_residual_ref.Fx().squaredNorm()
                                 + kkt_residual_ref.lx().squaredNorm()
@@ -224,7 +226,8 @@ void SplitImpulseOCPTest::testCostAndConstraintViolation(
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot);
   constraints->setSlackAndDual(robot, constraints_data, s);
-  robot.updateKinematics(s.q, s.v);
+  const Eigen::VectorXd v_after_impulse = s.v + s.dv;
+  robot.updateKinematics(s.q, v_after_impulse);
   double stage_cost_ref = 0;
   stage_cost_ref += cost->l(robot, cost_data, t, s);
   stage_cost_ref += constraints->costSlackBarrier(constraints_data, step_size);
@@ -245,6 +248,9 @@ void SplitImpulseOCPTest::testCostAndConstraintViolation(
 TEST_F(SplitImpulseOCPTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   ImpulseStatus impulse_status(contact_frames.size());
+  for (int i=0; i<contact_frames.size(); ++i) {
+    impulse_status.setContactPoint(i, Eigen::Vector3d::Random());
+  }
   Robot robot(fixed_base_urdf, contact_frames);
   impulse_status.setImpulseStatus({false});
   const auto cost = createCost(robot);
@@ -262,6 +268,9 @@ TEST_F(SplitImpulseOCPTest, fixedBase) {
 TEST_F(SplitImpulseOCPTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   ImpulseStatus impulse_status(contact_frames.size());
+  for (int i=0; i<contact_frames.size(); ++i) {
+    impulse_status.setContactPoint(i, Eigen::Vector3d::Random());
+  }
   Robot robot(floating_base_urdf, contact_frames);
   impulse_status.setImpulseStatus({false, false, false, false});
   const auto cost = createCost(robot);

@@ -10,6 +10,7 @@ namespace idocp {
 
 inline ContactStatus::ContactStatus(const int max_point_contacts)
   : is_contact_active_(max_point_contacts, false),
+    contact_points_(max_point_contacts, Eigen::Vector3d::Zero()),
     dimf_(0),
     max_point_contacts_(max_point_contacts),
     num_active_contacts_(0),
@@ -19,6 +20,7 @@ inline ContactStatus::ContactStatus(const int max_point_contacts)
 
 inline ContactStatus::ContactStatus(const std::vector<bool>& is_contact_active)
   : is_contact_active_(is_contact_active),
+    contact_points_(is_contact_active.size(), Eigen::Vector3d::Zero()),
     dimf_(0),
     max_point_contacts_(is_contact_active.size()),
     num_active_contacts_(0),
@@ -29,6 +31,7 @@ inline ContactStatus::ContactStatus(const std::vector<bool>& is_contact_active)
 
 inline ContactStatus::ContactStatus() 
   : is_contact_active_(),
+    contact_points_(),
     dimf_(0),
     max_point_contacts_(0),
     num_active_contacts_(0),
@@ -44,6 +47,9 @@ inline bool ContactStatus::operator==(const ContactStatus& other) const {
   assert(other.max_point_contacts() == max_point_contacts_);
   for (int i=0; i<max_point_contacts_; ++i) {
     if (other.isContactActive(i) != isContactActive(i)) {
+      return false;
+    }
+    if (!other.contactPoints()[i].isApprox(contactPoints()[i])) {
       return false;
     }
   }
@@ -91,6 +97,7 @@ inline int ContactStatus::max_point_contacts() const {
 
 inline void ContactStatus::set(const ContactStatus& other) {
   setContactStatus(other.isContactActive());
+  setContactPoints(other.contactPoints());
 }
 
 
@@ -163,6 +170,28 @@ inline void ContactStatus::deactivateContacts(
     }
   }
   set_has_active_contacts();
+}
+
+
+inline void ContactStatus::setContactPoint(
+    const int contact_index, const Eigen::Vector3d& contact_point) {
+  assert(contact_index >= 0);
+  assert(contact_index < max_point_contacts_);
+  contact_points_[contact_index] = contact_point;
+}
+
+
+inline void ContactStatus::setContactPoints(
+    const std::vector<Eigen::Vector3d>& contact_points) {
+  assert(contact_points.size() == max_point_contacts_);
+  for (int i=0; i<max_point_contacts_; ++i) {
+    setContactPoint(i, contact_points[i]);
+  }
+}
+
+
+inline const std::vector<Eigen::Vector3d>& ContactStatus::contactPoints() const {
+  return contact_points_;
 }
 
 

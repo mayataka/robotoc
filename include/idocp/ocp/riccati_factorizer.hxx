@@ -48,6 +48,8 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
   assert(llt_.info() == Eigen::Success);
   lqr_policy_.K = - llt_.solve(kkt_matrix.Qxu().transpose());
   lqr_policy_.k = - llt_.solve(kkt_residual.lu());
+  assert(!lqr_policy_.K.hasNaN());
+  assert(!lqr_policy_.k.hasNaN());
   backward_recursion_.factorizeRiccatiFactorization(riccati_next, kkt_matrix, 
                                                     kkt_residual, lqr_policy_,
                                                     dtau, riccati);
@@ -166,12 +168,12 @@ inline void RiccatiFactorizer::computeCostateDirection(
 
 
 inline void RiccatiFactorizer::computeControlInputDirection(
-    const RiccatiFactorization& riccati, SplitDirection& d,
+    const RiccatiFactorization& riccati_next, SplitDirection& d,
     const bool exist_state_constraint) const {
   d.du().noalias() = lqr_policy_.K * d.dx();
   d.du().noalias() += lqr_policy_.k;
   if (exist_state_constraint) {
-    d.du().noalias() -= GinvBt_ * riccati.n.tail(dimv_);
+    d.du().noalias() -= GinvBt_ * riccati_next.n.tail(dimv_);
   }
 }
 

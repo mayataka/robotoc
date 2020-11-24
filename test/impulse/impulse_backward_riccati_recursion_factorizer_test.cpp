@@ -49,6 +49,7 @@ ImpulseKKTMatrix ImpulseBackwardRiccatiRecursionFactorizerTest::createKKTMatrix(
   seed = Eigen::MatrixXd::Random(dimv, dimv);
   kkt_matrix.Qvv() = seed * seed.transpose();
   if (robot.has_floating_base()) {
+    kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
   }
   kkt_matrix.Fqv().setZero();
@@ -77,6 +78,11 @@ RiccatiFactorization ImpulseBackwardRiccatiRecursionFactorizerTest::createRiccat
   riccati.Pvv = seed * seed.transpose();
   riccati.sq.setRandom();
   riccati.sv.setRandom();
+  const int dimx = 2 * robot.dimv();
+  seed = Eigen::MatrixXd::Random(dimx, dimx);
+  riccati.N = seed * seed.transpose();
+  riccati.Pi.setRandom();
+  riccati.pi.setRandom();
   return riccati; 
 }
 

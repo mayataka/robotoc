@@ -65,6 +65,8 @@ public:
   ///
   OCPRiccatiSolver& operator=(OCPRiccatiSolver&&) noexcept = default;
 
+  void setConstraintDimensions(const ContactSequence& contact_sequence);
+
   void computeDirection(
       HybridOCP& split_ocps, std::vector<Robot>& robots, 
       const ContactSequence& contact_sequence,

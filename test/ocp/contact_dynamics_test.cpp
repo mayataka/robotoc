@@ -69,7 +69,7 @@ void ContactDynamicsTest::testLinearizeContactConstraints(Robot& robot, const Co
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
   ContactDynamics::linearizeContactConstraint(robot, contact_status, dtau, data);
   if (contact_status.hasActiveContacts()) {
-    robot.computeBaumgarteResidual(contact_status, dtau, data_ref.C());
+    robot.computeBaumgarteResidual(contact_status, dtau, contact_status.contactPoints(), data_ref.C());
     robot.computeBaumgarteDerivatives(contact_status, dtau, data_ref.dCdq(), 
                                       data_ref.dCdv(), data_ref.dCda());
     EXPECT_TRUE(data.IDC().isApprox(data_ref.IDC()));
@@ -443,7 +443,7 @@ void ContactDynamicsTest::testComputeResidual(Robot& robot, const ContactStatus&
   }
   robot.updateKinematics(s.q, s.v, s.a);
   if (contact_status.hasActiveContacts()) {
-    robot.computeBaumgarteResidual(contact_status, dtau, data.C());
+    robot.computeBaumgarteResidual(contact_status, dtau, contact_status.contactPoints(), data.C());
   }
   double l1norm_ref = dtau * data.IDC().lpNorm<1>();
   if (robot.has_floating_base()) {
@@ -461,6 +461,9 @@ void ContactDynamicsTest::testComputeResidual(Robot& robot, const ContactStatus&
 TEST_F(ContactDynamicsTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   ContactStatus contact_status(contact_frames.size());
+  for (int i=0; i<contact_frames.size(); ++i) {
+    contact_status.setContactPoint(i, Eigen::Vector3d::Random());
+  }
   Robot robot(fixed_base_urdf, contact_frames);
   contact_status.setContactStatus({false});
   testLinearizeInverseDynamics(robot, contact_status);
@@ -486,6 +489,9 @@ TEST_F(ContactDynamicsTest, fixedBase) {
 TEST_F(ContactDynamicsTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   ContactStatus contact_status(contact_frames.size());
+  for (int i=0; i<contact_frames.size(); ++i) {
+    contact_status.setContactPoint(i, Eigen::Vector3d::Random());
+  }
   Robot robot(floating_base_urdf, contact_frames);
   contact_status.setContactStatus({false, false, false, false});
   testLinearizeInverseDynamics(robot, contact_status);

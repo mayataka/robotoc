@@ -50,6 +50,7 @@ ImpulseKKTMatrix ImpulseForwardRiccatiRecursionFactorizerTest::createKKTMatrix(c
   seed = Eigen::MatrixXd::Random(dimv, dimv);
   kkt_matrix.Qvv() = seed * seed.transpose();
   if (robot.has_floating_base()) {
+    kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
   }
   kkt_matrix.Fqv().setZero();
@@ -78,6 +79,11 @@ RiccatiFactorization ImpulseForwardRiccatiRecursionFactorizerTest::createRiccati
   riccati.Pvv = seed * seed.transpose();
   riccati.sq.setRandom();
   riccati.sv.setRandom();
+  const int dimx = 2 * robot.dimv();
+  seed = Eigen::MatrixXd::Random(dimx, dimx);
+  riccati.N = seed * seed.transpose();
+  riccati.Pi.setRandom();
+  riccati.pi.setRandom();
   return riccati; 
 }
 
@@ -103,14 +109,20 @@ void ImpulseForwardRiccatiRecursionFactorizerTest::test(const Robot& robot) {
   A.bottomLeftCorner(dimv, dimv) = kkt_matrix.Fvq();
   A.bottomRightCorner(dimv, dimv) = kkt_matrix.Fvv();
   const RiccatiFactorization riccati = createRiccatiFactorization(robot);
-  RiccatiFactorization riccati_next(robot), riccati_next_ref(robot);
+  RiccatiFactorization riccati_next(robot);
   factorizer.factorizeStateTransition(riccati, kkt_matrix, kkt_residual, riccati_next);
+  RiccatiFactorization riccati_next_ref(robot);
   riccati_next_ref.Pi = A * riccati.Pi;
   riccati_next_ref.pi = A * riccati.pi + kkt_residual.Fx();
   EXPECT_TRUE(riccati_next.Pi.isApprox(riccati_next_ref.Pi));
   EXPECT_TRUE(riccati_next.pi.isApprox(riccati_next_ref.pi));
   factorizer.factorizeStateConstraintFactorization(riccati, kkt_matrix, riccati_next);
   riccati_next_ref.N = A * riccati.N * A.transpose();
+  std::cout << riccati_next_ref.Pi << std::endl;
+  std::cout << riccati_next_ref.pi << std::endl;
+  std::cout << riccati_next_ref.N << std::endl;
+  std::cout << A << std::endl;
+  std::cout << kkt_residual.Fx() << std::endl;
   EXPECT_TRUE(riccati_next.N.isApprox(riccati_next_ref.N));
 }
 

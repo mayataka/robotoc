@@ -196,12 +196,6 @@ public:
   bool isImpulseActive(const int contact_index) const;
 
   ///
-  /// @brief Return true if there are active impulse and false if not.
-  /// @return true if there are active impulse and false if not. 
-  ///
-  bool hasActiveImpulse() const;
-
-  ///
   /// @brief Integrates the solution based on step size and direction. 
   /// @param[in] robot Robot model.
   /// @param[in] step_size Step size.
@@ -251,7 +245,7 @@ public:
 
 private:
   Eigen::VectorXd mu_stack_, f_stack_, xi_stack_;
-  bool has_floating_base_, has_active_impulse_;
+  bool has_floating_base_;
   std::vector<bool> is_impulse_active_;
   int dimf_;
 

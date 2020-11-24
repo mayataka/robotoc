@@ -333,6 +333,9 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   split_ocps_ref.terminal.linearizeOCP(robot_ref, t+T, s[N], kkt_matrix_ref[N], kkt_residual_ref[N]);
   testIsSame(kkt_matrix, kkt_matrix_ref);
   testIsSame(kkt_residual, kkt_residual_ref);
+  for (int i=0; i<contact_sequence.totalNumLiftStages(); ++i) {
+    std::cout << kkt_matrix.lift[i].Quu() << std::endl;
+  }
 }
 
 

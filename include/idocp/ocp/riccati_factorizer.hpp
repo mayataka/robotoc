@@ -137,7 +137,7 @@ public:
 
   ///
   /// @brief Computes the Newton direction of the state vector. 
-  /// @param[in] riccati Riccati factorization at the current impulse stage. 
+  /// @param[in] riccati Riccati factorization at the current stage. 
   /// @param[in] dx0 Direction of the state at the initial time stage. 
   /// @param[out] d Split direction of the current impulse stage. 
   /// @param[in] exist_state_constraint If true, the factorization for state
@@ -151,7 +151,7 @@ public:
 
   ///
   /// @brief Computes the Newton direction of the costate vector. 
-  /// @param[in] riccati Riccati factorization at the current impulse stage. 
+  /// @param[in] riccati Riccati factorization at the current stage. 
   /// @param[in, out] d Split direction of the current impulse stage. 
   /// @param[in] exist_state_constraint If true, the factorization for state
   /// constraints are also performed. Default is false.
@@ -162,13 +162,13 @@ public:
 
   ///
   /// @brief Computes the Newton direction of the control input vector. 
-  /// @param[in] riccati Riccati factorization at the current impulse stage. 
+  /// @param[in] riccati_next Riccati factorization at the next stage. 
   /// @param[in, out] d Split direction of the current impulse stage. 
   /// @param[in] exist_state_constraint If true, the factorization for state
   /// constraints are also performed. Default is false.
   ///
   void computeControlInputDirection(
-      const RiccatiFactorization& riccati, SplitDirection& d,
+      const RiccatiFactorization& riccati_next, SplitDirection& d,
       const bool exist_state_constraint=false) const;
 
   ///

@@ -196,6 +196,26 @@ inline void Robot::computeBaumgarteResidual(
 }
 
 
+template <typename VectorType>
+inline void Robot::computeBaumgarteResidual(
+    const ContactStatus& contact_status, const double time_step,
+    const std::vector<Eigen::Vector3d>& contact_points,
+    const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
+  assert(time_step > 0);
+  assert(contact_points.size() == point_contacts_.size());
+  int num_active_contacts = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      point_contacts_[i].computeBaumgarteResidual(
+          model_, data_, time_step, contact_points[i],
+          (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
+              .template segment<3>(3*num_active_contacts));
+      ++num_active_contacts;
+    }
+  }
+}
+
+
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void Robot::computeBaumgarteDerivatives(
     const ContactStatus& contact_status, const double time_step,
@@ -280,6 +300,25 @@ inline void Robot::computeImpulseConditionResidual(
 
 template <typename VectorType>
 inline void Robot::computeImpulseConditionResidual(
+    const ImpulseStatus& impulse_status, 
+    const std::vector<Eigen::Vector3d>& contact_points,
+    const Eigen::MatrixBase<VectorType>& contact_residual) const {
+  assert(contact_points.size() == point_contacts_.size());
+  int num_active_impulse = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (impulse_status.isImpulseActive(i)) {
+      point_contacts_[i].computeContactResidual(
+          model_, data_, contact_points[i],
+          (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
+              .template segment<3>(3*num_active_impulse));
+      ++num_active_impulse;
+    }
+  }
+}
+
+
+template <typename VectorType>
+inline void Robot::computeImpulseConditionResidual(
     const ImpulseStatus& impulse_status, const double coeff,
     const Eigen::MatrixBase<VectorType>& contact_residual) const {
   int num_active_impulse = 0;
@@ -287,6 +326,24 @@ inline void Robot::computeImpulseConditionResidual(
     if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeContactResidual(
           model_, data_, coeff,
+          (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
+              .template segment<3>(3*num_active_impulse));
+      ++num_active_impulse;
+    }
+  }
+}
+
+
+template <typename VectorType>
+inline void Robot::computeImpulseConditionResidual(
+    const ImpulseStatus& impulse_status, const double coeff,
+    const std::vector<Eigen::Vector3d>& contact_points,
+    const Eigen::MatrixBase<VectorType>& contact_residual) const {
+  int num_active_impulse = 0;
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    if (impulse_status.isImpulseActive(i)) {
+      point_contacts_[i].computeContactResidual(
+          model_, data_, coeff, contact_points[i],
           (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
               .template segment<3>(3*num_active_impulse));
       ++num_active_impulse;
@@ -586,6 +643,7 @@ inline void Robot::computeMJtJinv(
   data_.JMinvJt.topLeftCorner(dimf, dimf).noalias() 
       = data_.sDUiJt.leftCols(dimf).transpose() * data_.sDUiJt.leftCols(dimf);
   data_.llt_JMinvJt.compute(data_.JMinvJt.topLeftCorner(dimf, dimf));
+  assert(data_.llt_JMinvJt.info() == Eigen::Success);
   Eigen::Block<MatrixType3> topLeft 
       = const_cast<Eigen::MatrixBase<MatrixType3>&>(MJtJinv).topLeftCorner(dimv_, dimv_);
   Eigen::Block<MatrixType3> topRight 
@@ -602,6 +660,7 @@ inline void Robot::computeMJtJinv(
   topRight.noalias() = bottomLeft.transpose() * (-bottomRight);
   topLeft.noalias() -= topRight*bottomLeft;
   bottomLeft = topRight.transpose();
+  assert(!MJtJinv.hasNaN());
 }
 
 
@@ -745,6 +804,14 @@ inline ContactStatus Robot::createContactStatus() const {
 
 inline ImpulseStatus Robot::createImpulseStatus() const {
   return ImpulseStatus(point_contacts_.size());
+}
+
+
+template <typename ContactStatusType>
+inline void Robot::setContactPoints(ContactStatusType& contact_status) const {
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    contact_status.setContactPoint(i, point_contacts_[i].contactPoint(data_));
+  }
 }
 
 } // namespace idocp

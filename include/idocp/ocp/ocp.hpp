@@ -125,9 +125,9 @@ public:
   bool setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0,
                           const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
 
-  void setContactStatus(const ContactStatus& contact_status);
+  void setContactStatusUniformly(const ContactStatus& contact_status);
 
-  ContactSequence& getContactSequenceHandle();
+  void setDiscreteEvent(const DiscreteEvent& discrete_event);
 
   ///
   /// @brief Sets the contact points over the horizon. 

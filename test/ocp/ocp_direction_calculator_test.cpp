@@ -230,9 +230,16 @@ void OCPDirectionCalculatorTest::testComputeDirection(const Robot& robot) const 
   linearizer.linearizeOCP(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
   RiccatiRecursion riccati_recursion(robot, T, N, max_num_impulse, nproc);
   HybridRiccatiFactorization riccati_factorization(N, max_num_impulse, robot);
+  std::vector<StateConstraintRiccatiFactorization> constraint_factorization(max_num_impulse, 
+                                                                            StateConstraintRiccatiFactorization(robot, N, max_num_impulse));
+  const int num_impulse = contact_sequence.totalNumImpulseStages();
+  const int num_lift = contact_sequence.totalNumLiftStages();
+  for (int i=0; i<num_impulse; ++i) {
+    constraint_factorization[i].setImpulseStatus(contact_sequence.impulseStatus(i));
+  }
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, riccati_factorization);
   riccati_recursion.backwardRiccatiRecursion(contact_sequence, kkt_matrix, kkt_residual, riccati_factorization);
-  riccati_recursion.forwardRiccatiRecursionParallel(contact_sequence, kkt_matrix, kkt_residual);
+  riccati_recursion.forwardRiccatiRecursionParallel(contact_sequence, kkt_matrix, kkt_residual, constraint_factorization);
   riccati_recursion.forwardRiccatiRecursionSerial(contact_sequence, kkt_matrix, kkt_residual, riccati_factorization);
   for (int i=0; i<=N; ++i) {
     EXPECT_FALSE(riccati_factorization[i].hasNaN());
@@ -253,13 +260,6 @@ void OCPDirectionCalculatorTest::testComputeDirection(const Robot& robot) const 
     EXPECT_FALSE(riccati_factorization.lift[i].hasNaN());
     EXPECT_FALSE(kkt_matrix.lift[i].hasNaN());
     EXPECT_FALSE(kkt_residual.lift[i].hasNaN());
-  }
-  std::vector<StateConstraintRiccatiFactorization> constraint_factorization(max_num_impulse, 
-                                                                            StateConstraintRiccatiFactorization(robot, N, max_num_impulse));
-  const int num_impulse = contact_sequence.totalNumImpulseStages();
-  const int num_lift = contact_sequence.totalNumLiftStages();
-  for (int i=0; i<num_impulse; ++i) {
-    constraint_factorization[i].setImpulseStatus(contact_sequence.impulseStatus(i));
   }
   riccati_recursion.backwardStateConstraintFactorization(contact_sequence, kkt_matrix, constraint_factorization);
   HybridDirection d = HybridDirection(N, max_num_impulse, robot);

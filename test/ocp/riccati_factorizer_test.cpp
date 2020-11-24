@@ -91,6 +91,10 @@ RiccatiFactorization RiccatiFactorizerTest::createRiccatiFactorization(const Rob
   riccati.Pvv = seed * seed.transpose();
   riccati.sq.setRandom();
   riccati.sv.setRandom();
+  riccati.Pi.setRandom();
+  riccati.pi.setRandom();
+  riccati.N.setRandom();
+  riccati.N = (riccati.N + riccati.N.transpose()).eval();
   return riccati; 
 }
 
@@ -180,6 +184,7 @@ void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot&
   riccati.Pi.setRandom();
   riccati.pi.setRandom();
   riccati.N.setRandom();
+  riccati.N = (riccati.N + riccati.N.transpose()).eval();
   factorizer.forwardRiccatiRecursionSerial(riccati, kkt_matrix, kkt_residual, dtau, riccati_next, true);
   riccati_next_ref.Pi = kkt_matrix_ref.Fxx() * riccati.Pi;
   riccati_next_ref.pi = kkt_residual_ref.Fx() + kkt_matrix_ref.Fxx() * riccati.pi;

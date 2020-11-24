@@ -15,6 +15,7 @@ inline RiccatiRecursion::RiccatiRecursion(const Robot& robot, const double T,
   : N_(N),
     max_num_impulse_(max_num_impulse),
     nproc_(nproc),
+    dimv_(robot.dimv()),
     dtau_(T/N),
     riccati_factorizer_(N, max_num_impulse, robot) {
   try {
@@ -42,6 +43,7 @@ inline RiccatiRecursion::RiccatiRecursion()
   : N_(0),
     max_num_impulse_(0),
     nproc_(0),
+    dimv_(0),
     dtau_(0),
     riccati_factorizer_() {
 }
@@ -49,7 +51,6 @@ inline RiccatiRecursion::RiccatiRecursion()
 
 inline RiccatiRecursion::~RiccatiRecursion() {
 }
-
 
 
 inline void RiccatiRecursion::backwardRiccatiRecursionTerminal(
@@ -116,10 +117,11 @@ inline void RiccatiRecursion::backwardRiccatiRecursion(
 
 inline void RiccatiRecursion::forwardRiccatiRecursionParallel(
     const ContactSequence& contact_sequence, HybridKKTMatrix& kkt_matrix, 
-    HybridKKTResidual& kkt_residual) {
+    HybridKKTResidual& kkt_residual,
+      std::vector<StateConstraintRiccatiFactorization>& constraint_factorization) {
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();
-  const int N_all = N_ + N_impulse + N_lift;
+  const int N_all = N_ + 2*N_impulse + N_lift;
   const bool exist_state_constraint = contact_sequence.existImpulseStage();
   #pragma omp parallel for num_threads(nproc_)
   for (int i=0; i<N_all; ++i) {
@@ -129,12 +131,22 @@ inline void RiccatiRecursion::forwardRiccatiRecursionParallel(
     } 
     else if (i < N_+N_impulse) {
       const int impulse_index = i - N_;
+      constraint_factorization[impulse_index].Eq() 
+          = kkt_matrix.impulse[impulse_index].Pq();
+      constraint_factorization[impulse_index].e() 
+          = kkt_residual.impulse[impulse_index].P();
+      constraint_factorization[impulse_index].T_impulse(impulse_index).topRows(dimv_)
+          = kkt_matrix.impulse[impulse_index].Pq().transpose();
+      constraint_factorization[impulse_index].T_impulse(impulse_index).bottomRows(dimv_).setZero();
+    }
+    else if (i < N_+2*N_impulse) {
+      const int impulse_index = i - N_ - N_impulse;
       riccati_factorizer_.aux[impulse_index].forwardRiccatiRecursionParallel(
           kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index], 
           exist_state_constraint);
     }
     else {
-      const int lift_index = i - N_ - N_impulse;
+      const int lift_index = i - N_ - 2 * N_impulse;
       riccati_factorizer_.lift[lift_index].forwardRiccatiRecursionParallel(
           kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index], 
           exist_state_constraint);

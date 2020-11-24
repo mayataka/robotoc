@@ -323,7 +323,7 @@ void ImpulseSplitSolutionTest::TestIsApprox(const Robot& robot,
   EXPECT_FALSE(s.v.isZero());
   EXPECT_FALSE(s.dv.isZero());
   EXPECT_FALSE(s.beta.isZero());
-  if (s.hasActiveImpulse()) {
+  if (impulse_status.hasActiveImpulse()) {
     EXPECT_FALSE(s.f_stack().isZero());
     EXPECT_FALSE(s.mu_stack().isZero());
     EXPECT_FALSE(s.xi_stack().isZero());
@@ -354,7 +354,7 @@ void ImpulseSplitSolutionTest::TestIsApprox(const Robot& robot,
   EXPECT_FALSE(s.isApprox(s_ref));
   s_ref.beta = s.beta;
   EXPECT_TRUE(s.isApprox(s_ref));
-  if (s.hasActiveImpulse()) {
+  if (impulse_status.hasActiveImpulse()) {
     s_ref.f_stack().setRandom();
     EXPECT_FALSE(s.isApprox(s_ref));
     s_ref.f_stack() = s.f_stack();

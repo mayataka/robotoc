@@ -9,10 +9,7 @@ namespace idocp {
 
 inline ContactDynamics::ContactDynamics(const Robot& robot) 
   : data_(robot),
-    dimv_(robot.dimv()),
     dimu_(robot.dimu()),
-    dimf_(0),
-    dim_passive_(robot.dim_passive()),
     has_floating_base_(robot.has_floating_base()),
     has_active_contacts_(false) {
 }
@@ -20,10 +17,7 @@ inline ContactDynamics::ContactDynamics(const Robot& robot)
 
 inline ContactDynamics::ContactDynamics() 
   : data_(),
-    dimv_(0),
     dimu_(0),
-    dimf_(0),
-    dim_passive_(0),
     has_floating_base_(false),
     has_active_contacts_(false) {
 }
@@ -45,7 +39,7 @@ inline void ContactDynamics::linearizeContactDynamics(
   kkt_residual.lv().noalias() += dtau * data_.dIDdv().transpose() * s.beta;
   kkt_residual.la.noalias() += dtau * data_.dIDda.transpose() * s.beta;
   if (has_active_contacts_) {
-    // We use an equivalence, dIDdf_().transpose() = - dCda_(), to avoid
+    // We use an equivalence dIDdf_().transpose() = - dCda_(), to avoid
     // redundant calculation of dIDdf_().
     kkt_residual.lf().noalias() -= dtau * data_.dCda() * s.beta;
   }
@@ -91,7 +85,8 @@ inline void ContactDynamics::linearizeContactConstraint(
     Robot& robot, const ContactStatus& contact_status, const double dtau, 
     ContactDynamicsData& data) {
   assert(dtau > 0);
-  robot.computeBaumgarteResidual(contact_status, dtau, data.C());
+  robot.computeBaumgarteResidual(contact_status, dtau, 
+                                 contact_status.contactPoints(), data.C());
   robot.computeBaumgarteDerivatives(contact_status, dtau, data.dCdq(), 
                                     data.dCdv(), data.dCda());
 }
@@ -247,7 +242,8 @@ inline void ContactDynamics::computeContactDynamicsResidual(
   else {
     data_.ID_full().noalias() -= s.u;
   }
-  robot.computeBaumgarteResidual(contact_status, dtau, data_.C());
+  robot.computeBaumgarteResidual(contact_status, dtau, 
+                                 contact_status.contactPoints(), data_.C());
 }
 
 
@@ -279,7 +275,6 @@ inline double ContactDynamics::squaredNormContactDynamicsResidual(
 inline void ContactDynamics::setContactStatus(
     const ContactStatus& contact_status) {
   data_.setContactStatus(contact_status);
-  dimf_ = contact_status.dimf();
   has_active_contacts_ = contact_status.hasActiveContacts();
 }
 

@@ -103,6 +103,12 @@ public:
                         const ContactStatus& post_contact_status);
 
   ///
+  /// @brief Set the contact points of the impoulse status from robot kinematics.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  ///
+  void setContactPoints(const Robot& robot);
+
+  ///
   /// @brief Disable discrete event.
   ///
   void disableDiscreteEvent();

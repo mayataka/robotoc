@@ -19,7 +19,6 @@ inline ImpulseSplitSolution::ImpulseSplitSolution(const Robot& robot)
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     xi_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     has_floating_base_(robot.has_floating_base()),
-    has_active_impulse_(false),
     is_impulse_active_(robot.max_point_contacts(), false),
     dimf_(0) {
   robot.normalizeConfiguration(q);
@@ -40,7 +39,6 @@ inline ImpulseSplitSolution::ImpulseSplitSolution()
     mu_stack_(),
     xi_stack_(),
     has_floating_base_(false),
-    has_active_impulse_(false),
     is_impulse_active_(),
     dimf_(0) {
 }
@@ -53,7 +51,6 @@ inline ImpulseSplitSolution::~ImpulseSplitSolution() {
 inline void ImpulseSplitSolution::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   assert(impulse_status.max_point_contacts() == is_impulse_active_.size());
-  has_active_impulse_ = impulse_status.hasActiveImpulse();
   is_impulse_active_ = impulse_status.isImpulseActive();
   dimf_ = impulse_status.dimp();
 }
@@ -184,11 +181,6 @@ inline bool ImpulseSplitSolution::isImpulseActive(
 }
 
 
-inline bool ImpulseSplitSolution::hasActiveImpulse() const {
-  return has_active_impulse_;
-}
-
-
 inline void ImpulseSplitSolution::integrate(const Robot& robot, 
                                             const double step_size, 
                                             const ImpulseSplitDirection& d) {
@@ -198,17 +190,15 @@ inline void ImpulseSplitSolution::integrate(const Robot& robot,
   v.noalias() += step_size * d.dv();
   dv.noalias() += step_size * d.ddv();
   beta.noalias() += step_size * d.dbeta();
-  if (has_active_impulse_) {
-    assert(f_stack().size() == d.df().size());
-    f_stack().noalias() += step_size * d.df();
-    set_f_vector();
-    assert(mu_stack().size() == d.dmu().size());
-    mu_stack().noalias() += step_size * d.dmu();
-    set_mu_vector();
-    assert(xi_stack().size() == d.dxi().size());
-    xi_stack().noalias() += step_size * d.dxi();
-    set_xi_vector();
-  }
+  assert(f_stack().size() == d.df().size());
+  f_stack().noalias() += step_size * d.df();
+  set_f_vector();
+  assert(mu_stack().size() == d.dmu().size());
+  mu_stack().noalias() += step_size * d.dmu();
+  set_mu_vector();
+  assert(xi_stack().size() == d.dxi().size());
+  xi_stack().noalias() += step_size * d.dxi();
+  set_xi_vector();
 }
 
 
@@ -232,35 +222,33 @@ inline bool ImpulseSplitSolution::isApprox(
   if (!beta.isApprox(other.beta)) {
     return false;
   }
-  if (has_active_impulse_) {
-    if (!f_stack().isApprox(other.f_stack())) {
-      return false;
-    }
-    if (!mu_stack().isApprox(other.mu_stack())) {
-      return false;
-    }
-    if (!xi_stack().isApprox(other.xi_stack())) {
-      return false;
-    }
-    for (int i=0; i<is_impulse_active_.size(); ++i) {
-      if (is_impulse_active_[i]) {
-        if (!other.isImpulseActive(i)) {
-          return false;
-        }
-        if (!f[i].isApprox(other.f[i])) {
-          return false;
-        }
-        if (!mu[i].isApprox(other.mu[i])) {
-          return false;
-        }
-        if (!xi[i].isApprox(other.xi[i])) {
-          return false;
-        }
+  if (!f_stack().isApprox(other.f_stack())) {
+    return false;
+  }
+  if (!mu_stack().isApprox(other.mu_stack())) {
+    return false;
+  }
+  if (!xi_stack().isApprox(other.xi_stack())) {
+    return false;
+  }
+  for (int i=0; i<is_impulse_active_.size(); ++i) {
+    if (is_impulse_active_[i]) {
+      if (!other.isImpulseActive(i)) {
+        return false;
       }
-      else {
-        if (other.isImpulseActive(i)) {
-          return false;
-        }
+      if (!f[i].isApprox(other.f[i])) {
+        return false;
+      }
+      if (!mu[i].isApprox(other.mu[i])) {
+        return false;
+      }
+      if (!xi[i].isApprox(other.xi[i])) {
+        return false;
+      }
+    }
+    else {
+      if (other.isImpulseActive(i)) {
+        return false;
       }
     }
   }

@@ -234,6 +234,9 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf, pinocchio::Model&
   ContactStatus contact_status = robot.createContactStatus();
   EXPECT_EQ(contact_status.max_point_contacts(), frames.size());
   contact_status.setContactStatus(is_contacts_active);
+  for (int i=0; i<frames.size(); ++i) {
+    contact_status.setContactPoint(i, Eigen::Vector3d::Random());
+  }
   const double time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -241,7 +244,7 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf, pinocchio::Model&
   const Eigen::VectorXd a = Eigen::VectorXd::Random(model.nv);
   robot.updateKinematics(q, v, a);
   robot.setContactPointsByCurrentKinematics();
-  robot.computeBaumgarteResidual(contact_status, time_step, residual.head(contact_status.dimf()));
+  robot.computeBaumgarteResidual(contact_status, time_step, contact_status.contactPoints(), residual.head(contact_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, a);
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
@@ -252,7 +255,8 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf, pinocchio::Model&
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (contact_status.isContactActive(i)) {
       contacts_ref[i].computeBaumgarteResidual(
-          model, data, time_step, residual_ref.segment<3>(3*num_active_contacts));
+          model, data, time_step, contact_status.contactPoints()[i], 
+          residual_ref.segment<3>(3*num_active_contacts));
       ++num_active_contacts;
     }
   }
@@ -360,12 +364,15 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
   ImpulseStatus impulse_status = robot.createImpulseStatus();
   EXPECT_EQ(impulse_status.max_point_contacts(), frames.size());
   impulse_status.setImpulseStatus(is_impulse_active);
+  for (int i=0; i<frames.size(); ++i) {
+    impulse_status.setContactPoint(i, Eigen::Vector3d::Random());
+  }
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
   robot.updateKinematics(q, v);
   robot.setContactPointsByCurrentKinematics();
-  robot.computeImpulseConditionResidual(impulse_status, residual.head(impulse_status.dimp()));
+  robot.computeImpulseConditionResidual(impulse_status, impulse_status.contactPoints(), residual.head(impulse_status.dimp()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
@@ -376,7 +383,8 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       contacts_ref[i].computeContactResidual(
-        model, data, residual_ref.segment<3>(3*num_active_impulse));
+        model, data, impulse_status.contactPoints()[i], 
+        residual_ref.segment<3>(3*num_active_impulse));
         ++num_active_impulse;
     }
   }

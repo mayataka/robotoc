@@ -186,6 +186,11 @@ void PointContactTest::testBaumgarteResidual(pinocchio::Model& model, pinocchio:
   contact.computeBaumgarteResidual(model, data, time_step, residuals.segment<3>(5));
   EXPECT_TRUE(residuals.head(5).isZero());
   EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
+  residuals.setZero();
+  const Eigen::Vector3d contact_point = contact.contactPoint();
+  contact.computeBaumgarteResidual(model, data, time_step, contact_point, residuals.segment<3>(5));
+  EXPECT_TRUE(residuals.head(5).isZero());
+  EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
 }
 
 
@@ -345,6 +350,16 @@ void PointContactTest::testContactResidual(pinocchio::Model& model, pinocchio::D
   EXPECT_TRUE(residuals.tail(2).isZero());
   const double coeff = Eigen::VectorXd::Random(1)[0];
   contact.computeContactResidual(model, data, coeff, residuals.segment<3>(5));
+  EXPECT_TRUE(residuals.head(5).isZero());
+  EXPECT_TRUE(residuals.segment<3>(5).isApprox(coeff*residual_ref));
+  EXPECT_TRUE(residuals.tail(2).isZero());
+  residuals.setZero();
+  const Eigen::Vector3d contact_point = contact.contactPoint();
+  contact.computeContactResidual(model, data, contact_point, residuals.segment<3>(5));
+  EXPECT_TRUE(residuals.head(5).isZero());
+  EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
+  EXPECT_TRUE(residuals.tail(2).isZero());
+  contact.computeContactResidual(model, data, coeff, contact_point, residuals.segment<3>(5));
   EXPECT_TRUE(residuals.head(5).isZero());
   EXPECT_TRUE(residuals.segment<3>(5).isApprox(coeff*residual_ref));
   EXPECT_TRUE(residuals.tail(2).isZero());

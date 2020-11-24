@@ -110,6 +110,16 @@ bool OCP::setStateTrajectory(const Eigen::VectorXd& q,
     s_[i].v = v;
     s_[i].q = q_normalized;
   }
+  for (int i=0; i<contact_sequence_.totalNumImpulseStages(); ++i) {
+    s_.impulse[i].v = v;
+    s_.impulse[i].q = q_normalized;
+    s_.aux[i].v = v;
+    s_.aux[i].q = q_normalized;
+  }
+  for (int i=0; i<contact_sequence_.totalNumLiftStages(); ++i) {
+    s_.lift[i].v = v;
+    s_.lift[i].q = q_normalized;
+  }
   initConstraints();
   const bool feasible = isCurrentSolutionFeasible();
   return feasible;
@@ -144,7 +154,7 @@ bool OCP::setStateTrajectory(const Eigen::VectorXd& q0,
 }
 
 
-void OCP::setContactStatus(const ContactStatus& contact_status) {
+void OCP::setContactStatusUniformly(const ContactStatus& contact_status) {
   contact_sequence_.setContactStatusUniformly(contact_status);
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
@@ -154,8 +164,25 @@ void OCP::setContactStatus(const ContactStatus& contact_status) {
 }
 
 
-ContactSequence& OCP::getContactSequenceHandle() {
-  return contact_sequence_;
+void OCP::setDiscreteEvent(const DiscreteEvent& discrete_event) {
+  contact_sequence_.setDiscreteEvent(discrete_event);
+  for (int i=0; i<=N_; ++i) {
+    s_[i].setContactStatus(contact_sequence_.contactStatus(i));
+    d_[i].setContactStatus(contact_sequence_.contactStatus(i));
+  }
+  for (int i=0; i<contact_sequence_.totalNumImpulseStages(); ++i) {
+    s_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
+    d_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
+    const int stage = contact_sequence_.timeStageAfterImpulse(i);
+    s_.aux[i].setContactStatus(contact_sequence_.contactStatus(stage));
+    d_.aux[i].setContactStatus(contact_sequence_.contactStatus(stage));
+  }
+  for (int i=0; i<contact_sequence_.totalNumLiftStages(); ++i) {
+    const int stage = contact_sequence_.timeStageAfterLift(i);
+    s_.lift[i].setContactStatus(contact_sequence_.contactStatus(stage));
+    d_.lift[i].setContactStatus(contact_sequence_.contactStatus(stage));
+  }
+  ocp_riccati_solver_.setConstraintDimensions(contact_sequence_);
 }
 
 

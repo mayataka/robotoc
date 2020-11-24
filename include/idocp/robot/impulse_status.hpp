@@ -2,6 +2,9 @@
 #define IDOCP_IMPULSE_STATUS_HPP_
 
 #include <vector>
+
+#include "Eigen/Core"
+
 #include "idocp/robot/contact_status.hpp"
 
 
@@ -134,6 +137,27 @@ public:
   /// @param[in] contact_indices Indices of the contacts that are deactivated.
   ///
   void deactivateImpulse(const std::vector<int>& contact_indices);
+
+  ///
+  /// @brief Set a contact point.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] contact_point Contact point.
+  ///
+  void setContactPoint(const int contact_index, 
+                       const Eigen::Vector3d& contact_point);
+
+  ///
+  /// @brief Set contact points.
+  /// @param[in] contact_points Contact points. Size must be 
+  /// ImpulseStatus::max_point_contacts().
+  ///
+  void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
+
+  ///
+  /// @brief Get contact points.
+  /// @return const reference to the vector of contact points. 
+  ///
+  const std::vector<Eigen::Vector3d>& contactPoints() const;
 
   ///
   /// @brief Fill impulse status randomly.

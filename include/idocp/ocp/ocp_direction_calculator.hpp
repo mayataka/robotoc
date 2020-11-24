@@ -82,6 +82,12 @@ public:
                                            const HybridSolution& s, 
                                            HybridDirection& d);
 
+  void aggregateLagrangeMultiplierDirection(
+      const ContactSequence& contact_sequence, 
+      HybridRiccatiFactorization& factorization, 
+      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
+      const HybridDirection& d) const;
+
   void computeDirection(
       HybridOCP& split_ocps, std::vector<Robot>& robots, 
       const ContactSequence& contact_sequence, 
@@ -96,12 +102,14 @@ public:
 
   static void computePrimalDirectionInitial(
       const RiccatiFactorizer factorizer, 
-      const RiccatiFactorization factorization, SplitDirection& d, 
+      const RiccatiFactorization factorization, 
+      const RiccatiFactorization factorization_next, SplitDirection& d, 
       const bool exist_state_constraint);
 
   template <typename VectorType>
   static void computePrimalDirection(const RiccatiFactorizer factorizer,
                                      const RiccatiFactorization factorization,
+                                     const RiccatiFactorization factorization_next,
                                      const Eigen::MatrixBase<VectorType>& dx0, 
                                      SplitDirection& d,
                                      const bool exist_state_constraint);
@@ -116,32 +124,32 @@ public:
       const RiccatiFactorization factorization, 
       const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d);
 
-  static void aggregateLagrangeMultiplierDirection(
+  void aggregateLagrangeMultiplierDirection(
       const ContactSequence& contact_sequence,
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
       const std::vector<ImpulseSplitDirection>& d_impulse, const int time_stage,
-      RiccatiFactorization& riccati_factorization);
+      RiccatiFactorization& riccati_factorization) const;
 
-  static void aggregateLagrangeMultiplierDirectionImpulse(
+  void aggregateLagrangeMultiplierDirectionImpulse(
       const ContactSequence& contact_sequence,
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
       const std::vector<ImpulseSplitDirection>& d_impulse, 
       const int impulse_index,
-      RiccatiFactorization& impulse_riccati_factorization);
+      RiccatiFactorization& impulse_riccati_factorization) const;
 
-  static void aggregateLagrangeMultiplierDirectionAux(
+  void aggregateLagrangeMultiplierDirectionAux(
       const ContactSequence& contact_sequence,
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
       const std::vector<ImpulseSplitDirection>& d_impulse, 
       const int impulse_index,
-      RiccatiFactorization& aux_riccati_factorization);
+      RiccatiFactorization& aux_riccati_factorization) const;
 
-  static void aggregateLagrangeMultiplierDirectionLift(
+  void aggregateLagrangeMultiplierDirectionLift(
       const ContactSequence& contact_sequence,
       const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
       const std::vector<ImpulseSplitDirection>& d_impulse, 
       const int lift_index,
-      RiccatiFactorization& lift_riccati_factorization);
+      RiccatiFactorization& lift_riccati_factorization) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

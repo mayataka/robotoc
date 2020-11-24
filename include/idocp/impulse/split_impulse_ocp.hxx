@@ -54,7 +54,7 @@ inline void SplitImpulseOCP::linearizeOCP(Robot& robot,
                                           ImpulseKKTResidual& kkt_residual) {
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_residual.setImpulseStatus(impulse_status);
-  robot.updateKinematics(s.q, s.v);
+  robot.updateKinematics(s.q, s.v+s.dv);
   // condensing the impulse dynamics
   kkt_residual.setZero();
   kkt_matrix.setZero();
@@ -126,7 +126,7 @@ inline void SplitImpulseOCP::computeKKTResidual(
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.setZero();
-  robot.updateKinematics(s.q, s.v);
+  robot.updateKinematics(s.q, s.v+s.dv);
   cost_->computeStageCostDerivatives(robot, cost_data_, t, s, kkt_residual);
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   constraints_->augmentDualResidual(robot, constraints_data_, s, kkt_residual);
@@ -155,7 +155,7 @@ inline double SplitImpulseOCP::stageCost(Robot& robot, const double t,
                                          const double primal_step_size) {
   assert(primal_step_size >= 0);
   assert(primal_step_size <= 1);
-  robot.updateKinematics(s.q, s.v);
+  robot.updateKinematics(s.q, s.v+s.dv);
   double cost = 0;
   cost += cost_->l(robot, cost_data_, t, s);
   if (primal_step_size > 0) {
@@ -174,7 +174,7 @@ inline double SplitImpulseOCP::constraintViolation(
     const Eigen::VectorXd& v_next, ImpulseKKTResidual& kkt_residual) {
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.setZero();
-  robot.updateKinematics(s.q, s.v);
+  robot.updateKinematics(s.q, s.v+s.dv);
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   stateequation::ComputeImpulseForwardEulerResidual(robot, s, q_next, v_next, 
                                                     kkt_residual);

@@ -76,7 +76,8 @@ public:
 
   void forwardRiccatiRecursionParallel(
       const ContactSequence& contact_sequence, HybridKKTMatrix& kkt_matrix, 
-      HybridKKTResidual& kkt_residual);
+      HybridKKTResidual& kkt_residual,
+      std::vector<StateConstraintRiccatiFactorization>& constraint_factorization);
 
   void forwardRiccatiRecursionSerial(
       const ContactSequence& contact_sequence, 
@@ -91,7 +92,7 @@ public:
   const HybridRiccatiFactorizer& getFactorizersHandle() const;
 
 private:
-  int N_, max_num_impulse_, nproc_;
+  int N_, max_num_impulse_, nproc_, dimv_;
   double dtau_;
   HybridRiccatiFactorizer riccati_factorizer_;
 

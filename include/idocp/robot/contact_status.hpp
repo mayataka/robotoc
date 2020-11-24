@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "Eigen/Core"
+
 
 namespace idocp {
 
@@ -140,12 +142,36 @@ public:
   void deactivateContacts(const std::vector<int>& contact_indices);
 
   ///
+  /// @brief Set a contact point.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] contact_point Contact point.
+  ///
+  void setContactPoint(const int contact_index, 
+                       const Eigen::Vector3d& contact_point);
+
+  ///
+  /// @brief Set contact points.
+  /// @param[in] contact_points Contact points. Size must be 
+  /// ContactStatus::max_point_contacts().
+  ///
+  void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
+
+  ///
+  /// @brief Get contact points.
+  /// @return const reference to the vector of contact points. 
+  ///
+  const std::vector<Eigen::Vector3d>& contactPoints() const;
+
+  ///
   /// @brief Fill contact status randomly.
   ///
   void setRandom();
 
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 private:
   std::vector<bool> is_contact_active_;
+  std::vector<Eigen::Vector3d> contact_points_;
   int dimf_, max_point_contacts_, num_active_contacts_;
   bool has_active_contacts_;
 

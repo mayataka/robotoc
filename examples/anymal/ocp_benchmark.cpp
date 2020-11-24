@@ -15,9 +15,17 @@
 #include "idocp/cost/joint_space_impulse_cost.hpp"
 #include "idocp/cost/impulse_force_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
+#include "idocp/constraints/joint_position_lower_limit.hpp"
+#include "idocp/constraints/joint_position_upper_limit.hpp"
+#include "idocp/constraints/joint_velocity_lower_limit.hpp"
+#include "idocp/constraints/joint_velocity_upper_limit.hpp"
+#include "idocp/constraints/joint_torques_lower_limit.hpp"
+#include "idocp/constraints/joint_torques_upper_limit.hpp"
 
 #include "idocp/utils/joint_constraints_factory.hpp"
 #include "idocp/utils/ocp_benchmarker.hpp"
+#include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/hybrid/discrete_event.hpp"
 
 namespace ocpbenchmark {
 namespace anymal {
@@ -29,7 +37,7 @@ void BenchmarkWithContacts() {
   idocp::Robot robot(urdf_file_name, contact_frames);
   Eigen::VectorXd q_ref(robot.dimq());
   q_ref << 0, 0, 0.48, 0, 0, 0, 1, 
-           0.0315, 0.4, -0.8, 
+           0.0315, 0.4, -0.6, 
            0.0315, -0.4, 0.8, 
            -0.0315, 0.4, -0.8,
            -0.0315, -0.4, 0.8;
@@ -60,8 +68,21 @@ void BenchmarkWithContacts() {
   cost->push_back(contact_cost);
   cost->push_back(impulse_joint_cost);
   cost->push_back(impulse_force_cost);
-  idocp::JointConstraintsFactory constraints_factory(robot);
-  auto constraints = constraints_factory.create();
+//   idocp::JointConstraintsFactory constraints_factory(robot);
+//   auto constraints = constraints_factory.create();
+  auto constraints = std::make_shared<idocp::Constraints>();
+  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
+  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
+  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
+  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  constraints->push_back(joint_position_lower);
+  constraints->push_back(joint_position_upper);
+  constraints->push_back(joint_velocity_lower);
+  constraints->push_back(joint_velocity_upper);
+  // constraints->push_back(joint_torques_lower);
+  // constraints->push_back(joint_torques_upper);
   const double T = 1;
   const int N = 20;
   const int max_num_impulse_phase = 5;
@@ -74,14 +95,11 @@ void BenchmarkWithContacts() {
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
   Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  v << 0.5, 0, 0, 0, 0, 0, 
+  v << 0.0, 0, 0, 0, 0, 0, 
        0.0, 0.0, 0.0, 
        0.0, 0.0, 0.0, 
        0.0, 0.0, 0.0,
        0.0, 0.0, 0.0;
-  // const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  robot.updateKinematics(q, v, Eigen::VectorXd::Zero(robot.dimv()));
-  robot.setContactPointsByCurrentKinematics();
   idocp::OCPBenchmarker<idocp::OCP> ocp_benchmarker("OCP for anymal with contacts",
                                                     robot, cost, constraints, T, N, 
                                                     max_num_impulse_phase, num_proc);
@@ -90,14 +108,34 @@ void BenchmarkWithContacts() {
        0.0315, -0.4, 0.8, 
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
-  ocp_benchmarker.setInitialGuessSolution(t, q, v);
-  // ocp_benchmarker.getSolverHandle()->deactivateContacts({0, 1, 2, 3}, 0, N);
   auto contact_status = robot.createContactStatus();
-  // contact_status.activateContacts({0, 2});
-  contact_status.activateContacts({0, 1, 2, 3});
-  ocp_benchmarker.getSolverHandle()->setContactStatus(contact_status);
-  ocp_benchmarker.testConvergence(t, q, v, 20, false);
-  ocp_benchmarker.testCPUTime(t, q, v, 10000);
+  robot.updateFrameKinematics(q);
+  robot.setContactPoints(contact_status);
+  // contact_status.activateContacts({0, 1, 2, 3});
+  contact_status.activateContacts({1, 2, 3});
+  ocp_benchmarker.getSolverHandle()->setContactStatusUniformly(contact_status);
+  auto contact_status_next = robot.createContactStatus();
+  robot.setContactPoints(contact_status_next);
+  // contact_status_next.activateContacts({1, 2, 3});
+  contact_status_next.activateContacts({0, 1, 2, 3});
+  idocp::DiscreteEvent discrete_event(robot);
+  discrete_event.setDiscreteEvent(contact_status, contact_status_next);
+  discrete_event.setContactPoints(robot);
+  discrete_event.eventTime = 0.175;
+  // discrete_event.eventTime = 0.125;
+  // discrete_event.eventTime = 0.025;
+  ocp_benchmarker.getSolverHandle()->setDiscreteEvent(discrete_event);
+  q << 0, 0, 0.5, 0, 0, 0, 1, 
+       0.0315, 0.4, -0.9,
+       0.0315, -0.4, 0.8, 
+       -0.0315, 0.4, -0.8,
+       -0.0315, -0.4, 0.8;
+  ocp_benchmarker.setInitialGuessSolution(t, q, v);
+  for (int i=0; i<4; ++i) std::cout << contact_status.contactPoints()[i].transpose() << std::endl;
+  for (int i=0; i<4; ++i) std::cout << contact_status_next.contactPoints()[i].transpose() << std::endl;
+  for (int i=0; i<4; ++i) std::cout << discrete_event.impulseStatus().contactPoints()[i].transpose() << std::endl;
+  ocp_benchmarker.testConvergence(t, q, v, 50, false);
+  // ocp_benchmarker.testCPUTime(t, q, v, 10000);
   // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
   //                                                           robot, cost, constraints, T, N, num_proc);
   // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);

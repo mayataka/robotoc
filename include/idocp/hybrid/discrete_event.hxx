@@ -103,9 +103,15 @@ inline void DiscreteEvent::setDiscreteEvent(
 }
 
 
+inline void DiscreteEvent::setContactPoints(const Robot& robot) {
+  robot.setContactPoints(impulse_status_);
+}
+
+
 inline void DiscreteEvent::disableDiscreteEvent() {
   for (int i=0; i<max_point_contacts_; ++i) {
     impulse_status_.deactivateImpulse(i);
+    impulse_status_.setContactPoint(i, Eigen::Vector3d::Zero());
   }
   exist_impulse_ = false;
   exist_lift_ = false;

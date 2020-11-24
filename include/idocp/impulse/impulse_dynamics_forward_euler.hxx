@@ -9,16 +9,12 @@ namespace idocp {
 
 inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler(
     const Robot& robot) 
-  : data_(robot),
-    dimv_(robot.dimv()),
-    dimf_(0) {
+  : data_(robot) {
 }
 
 
 inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler() 
-  : data_(),
-    dimv_(),
-    dimf_(0) {
+  : data_() {
 }
 
 
@@ -38,13 +34,18 @@ inline void ImpulseDynamicsForwardEuler::linearizeImpulseDynamics(
   // augment inverse impulse dynamics constraint
   kkt_residual.lq().noalias() += data_.dImDdq().transpose() * s.beta;
   kkt_residual.ldv.noalias() += data_.dImDddv.transpose() * s.beta;
+  // We use an equivalence dmIDdf_().transpose() = - dCdv_() = - dCddv, to avoid
+  // redundant calculation of dImDdf_().
   kkt_residual.lf().noalias() -= data_.dCdv() * s.beta;
   // augment impulse velocity constraint
   kkt_residual.lq().noalias() += data_.dCdq().transpose() * s.mu_stack();
   kkt_residual.lv().noalias() += data_.dCdv().transpose() * s.mu_stack();
+  // We use an equivalence dCdv_() = dCddv, to avoid redundant calculation.
   kkt_residual.ldv.noalias() += data_.dCdv().transpose() * s.mu_stack();
   // augment impulse position constraint
-  kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.xi_stack();
+  // kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.xi_stack();
+  const double penalty = 1000;
+  kkt_residual.lq().noalias() += penalty * kkt_matrix.Pq().transpose() * kkt_residual.P();
 }
 
 
@@ -69,7 +70,9 @@ inline void ImpulseDynamicsForwardEuler::linearizeImpulseVelocityConstraint(
 inline void ImpulseDynamicsForwardEuler::linearizeImpulsePositionConstraint(
       Robot& robot, const ImpulseStatus& impulse_status, 
       ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual) {
-  robot.computeImpulseConditionResidual(impulse_status, kkt_residual.P());
+  robot.computeImpulseConditionResidual(impulse_status,
+                                        impulse_status.contactPoints(),
+                                        kkt_residual.P());
   robot.computeImpulseConditionDerivative(impulse_status, kkt_matrix.Pq());
 }
 
@@ -79,6 +82,8 @@ inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
     ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual) {
   robot.computeMJtJinv(data_.dImDddv, data_.dCdv(), data_.MJtJinv());
   condensing(robot, impulse_status, data_, kkt_matrix, kkt_residual);
+  const double penalty = 1000;
+  kkt_matrix.Qqq().noalias() += penalty * kkt_matrix.Pq().transpose() * kkt_matrix.Pq();
 }
 
 
@@ -156,7 +161,9 @@ inline void ImpulseDynamicsForwardEuler::computeImpulseDynamicsResidual(
   robot.setImpulseForces(impulse_status, s.f);
   robot.RNEAImpulse(s.q, s.dv, data_.ImD());
   robot.computeImpulseVelocityResidual(impulse_status, data_.C());
-  robot.computeImpulseConditionResidual(impulse_status, kkt_residual.P());
+  robot.computeImpulseConditionResidual(impulse_status, 
+                                        impulse_status.contactPoints(), 
+                                        kkt_residual.P());
 }
 
 
@@ -168,6 +175,7 @@ inline double ImpulseDynamicsForwardEuler::l1NormImpulseDynamicsResidual(
 
 inline double ImpulseDynamicsForwardEuler::squaredNormImpulseDynamicsResidual(
     const ImpulseKKTResidual& kkt_residual) const {
+  printf("Error in impulse condition constraints = %lf\n", kkt_residual.P().squaredNorm());
   return (data_.ImDC().squaredNorm() + kkt_residual.P().squaredNorm());
 }
 
@@ -175,7 +183,6 @@ inline double ImpulseDynamicsForwardEuler::squaredNormImpulseDynamicsResidual(
 inline void ImpulseDynamicsForwardEuler::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   data_.setImpulseStatus(impulse_status);
-  dimf_ = impulse_status.dimp();
 }
 
 } // namespace idocp 

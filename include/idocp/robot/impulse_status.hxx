@@ -118,6 +118,23 @@ inline void ImpulseStatus::deactivateImpulse(
 }
 
 
+inline void ImpulseStatus::setContactPoint(
+    const int contact_index, const Eigen::Vector3d& contact_point) {
+  impulse_status_.setContactPoint(contact_index, contact_point);
+}
+
+
+inline void ImpulseStatus::setContactPoints(
+    const std::vector<Eigen::Vector3d>& contact_points) {
+  impulse_status_.setContactPoints(contact_points);
+}
+
+
+inline const std::vector<Eigen::Vector3d>& ImpulseStatus::contactPoints() const {
+  return impulse_status_.contactPoints();
+}
+
+
 inline void ImpulseStatus::setRandom() {
   impulse_status_.setRandom();
 }

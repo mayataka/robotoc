@@ -85,10 +85,11 @@ RiccatiFactorization ForwardRiccatiRecursionFactorizerTest::createRiccatiFactori
   riccati.Pvv = seed * seed.transpose();
   riccati.sq.setRandom();
   riccati.sv.setRandom();
+  const int dimx = 2 * robot.dimv();
+  seed = Eigen::MatrixXd::Random(dimx, dimx);
+  riccati.N = seed * seed.transpose();
   riccati.Pi.setRandom();
   riccati.pi.setRandom();
-  riccati.N.setRandom();
-  riccati.N = (riccati.N + riccati.N.transpose()).eval();
   return riccati; 
 }
 
