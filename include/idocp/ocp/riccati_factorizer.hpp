@@ -77,11 +77,11 @@ public:
   /// @param[in, out] kkt_matrix KKT matrix at the current impulse stage. 
   /// @param[in, out] kkt_residual KKT residual at the current impulse stage. 
   /// @param[in] exist_state_constraint If true, the factorization for state
-  /// constraints are also performed. Default is false.
+  /// constraints are also performed. 
   ///
   void forwardRiccatiRecursionParallel(KKTMatrix& kkt_matrix, 
                                        KKTResidual& kkt_residual,
-                                       const bool exist_state_constraint=false);
+                                       const bool exist_state_constraint);
 
   ///
   /// @brief Checks the initial factorization of the serial part of the forward 
@@ -100,14 +100,14 @@ public:
   /// @param[in] dtau Time step between the current time stage and the next 
   /// @param[out] riccati_next Riccati factorization at the next time stage. 
   /// @param[in] exist_state_constraint If true, the factorization for state
-  /// constraints are also performed. Default is false.
+  /// constraints are also performed. 
   ///
   void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati, 
                                      const KKTMatrix& kkt_matrix, 
                                      const KKTResidual& kkt_residual, 
                                      const double dtau,
                                      RiccatiFactorization& riccati_next,
-                                     const bool exist_state_constraint=false);
+                                     const bool exist_state_constraint);
 
   ///
   /// @brief Performs the backward factorization of matrices related to the 
@@ -141,35 +141,35 @@ public:
   /// @param[in] dx0 Direction of the state at the initial time stage. 
   /// @param[out] d Split direction of the current impulse stage. 
   /// @param[in] exist_state_constraint If true, the factorization for state
-  /// constraints are also performed. Default is false.
+  /// constraints are also performed. 
   ///
   template <typename VectorType>
   static void computeStateDirection(const RiccatiFactorization& riccati, 
                                     const Eigen::MatrixBase<VectorType>& dx0,
                                     SplitDirection& d,
-                                    const bool exist_state_constraint=false);
+                                    const bool exist_state_constraint);
 
   ///
   /// @brief Computes the Newton direction of the costate vector. 
   /// @param[in] riccati Riccati factorization at the current stage. 
   /// @param[in, out] d Split direction of the current impulse stage. 
   /// @param[in] exist_state_constraint If true, the factorization for state
-  /// constraints are also performed. Default is false.
+  /// constraints are also performed.
   ///
   static void computeCostateDirection(const RiccatiFactorization& riccati, 
                                       SplitDirection& d,
-                                      const bool exist_state_constraint=false);
+                                      const bool exist_state_constraint);
 
   ///
   /// @brief Computes the Newton direction of the control input vector. 
   /// @param[in] riccati_next Riccati factorization at the next stage. 
   /// @param[in, out] d Split direction of the current impulse stage. 
   /// @param[in] exist_state_constraint If true, the factorization for state
-  /// constraints are also performed. Default is false.
+  /// constraints are also performed. 
   ///
   void computeControlInputDirection(
       const RiccatiFactorization& riccati_next, SplitDirection& d,
-      const bool exist_state_constraint=false) const;
+      const bool exist_state_constraint) const;
 
   ///
   /// @brief Getter of the state feedback gain of the LQR subproblem. 

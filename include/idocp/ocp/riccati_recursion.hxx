@@ -177,7 +177,7 @@ inline void RiccatiRecursion::forwardRiccatiRecursionSerial(
           riccati_factorization.impulse[impulse_index],
           kkt_matrix.impulse[impulse_index],
           kkt_residual.impulse[impulse_index],
-          riccati_factorization.aux[impulse_index]);
+          riccati_factorization.aux[impulse_index], exist_state_constraint);
       riccati_factorizer_.aux[impulse_index].forwardRiccatiRecursionSerial(
           riccati_factorization.aux[impulse_index],
           kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index],

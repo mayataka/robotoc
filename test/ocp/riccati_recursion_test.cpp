@@ -337,7 +337,8 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
           factorization_ref.impulse[impulse_index], 
           kkt_matrix_ref.impulse[impulse_index], 
           kkt_residual_ref.impulse[impulse_index], 
-          factorization_ref.aux[impulse_index]);
+          factorization_ref.aux[impulse_index],
+          exist_state_constraint);
 
       factorizer.aux[impulse_index].forwardRiccatiRecursionParallel(
           kkt_matrix_ref.aux[impulse_index], 

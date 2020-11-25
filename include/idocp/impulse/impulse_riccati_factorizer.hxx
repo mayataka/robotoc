@@ -38,11 +38,14 @@ inline void ImpulseRiccatiFactorizer::backwardRiccatiRecursion(
 inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursionSerial(
     const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
     const ImpulseKKTResidual& kkt_residual, 
-    RiccatiFactorization& riccati_next) {
+    RiccatiFactorization& riccati_next, const bool exist_state_constraint) {
   forward_recursion_.factorizeStateTransition(riccati, kkt_matrix, kkt_residual, 
                                               riccati_next);
-  forward_recursion_.factorizeStateConstraintFactorization(riccati, kkt_matrix,
-                                                           riccati_next);
+  if (exist_state_constraint) {
+    forward_recursion_.factorizeStateConstraintFactorization(riccati, 
+                                                             kkt_matrix, 
+                                                             riccati_next);
+  }
 }
 
 
@@ -71,22 +74,28 @@ inline void ImpulseRiccatiFactorizer::backwardStateConstraintFactorization(
 template <typename VectorType>
 inline void ImpulseRiccatiFactorizer::computeStateDirection(
     const RiccatiFactorization& riccati, 
-    const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d) {
+    const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d,
+    const bool exist_state_constraint) {
   d.dx().noalias() = riccati.Pi * dx0;
   d.dx().noalias() += riccati.pi;
-  d.dx().noalias() -= riccati.N * riccati.n;
+  if (exist_state_constraint) {
+    d.dx().noalias() -= riccati.N * riccati.n;
+  }
 }
 
 
 inline void ImpulseRiccatiFactorizer::computeCostateDirection(
-    const RiccatiFactorization& riccati, ImpulseSplitDirection& d) {
+    const RiccatiFactorization& riccati, ImpulseSplitDirection& d,
+    const bool exist_state_constraint) {
   d.dlmd().noalias() = riccati.Pqq * d.dq();
   d.dlmd().noalias() += riccati.Pqv * d.dv();
   d.dlmd().noalias() -= riccati.sq;
   d.dgmm().noalias() = riccati.Pqv.transpose() * d.dq();
   d.dgmm().noalias() += riccati.Pvv * d.dv();
   d.dgmm().noalias() -= riccati.sv;
-  d.dlmdgmm().noalias() += riccati.n;
+  if (exist_state_constraint) {
+    d.dlmdgmm().noalias() += riccati.n;
+  }
 }
 
 } // namespace idocp

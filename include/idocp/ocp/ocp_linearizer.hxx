@@ -235,7 +235,6 @@ inline bool OCPLinearizer::is_state_constraint_valid(
   else {
     return false;
   }
-  // return false;
 }
 
 } // namespace idocp 

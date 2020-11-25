@@ -49,9 +49,12 @@ inline void OCPDirectionCalculator::computePrimalDirectionTerminal(
 template <typename VectorType>
 inline void OCPDirectionCalculator::computePrimalDirectionImpulse(
     const RiccatiFactorization factorization, 
-    const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d) {
-  ImpulseRiccatiFactorizer::computeStateDirection(factorization, dx0, d);
-  ImpulseRiccatiFactorizer::computeCostateDirection(factorization, d);
+    const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d,
+    const bool exist_state_constraint) {
+  ImpulseRiccatiFactorizer::computeStateDirection(factorization, dx0, d, 
+                                                  exist_state_constraint);
+  ImpulseRiccatiFactorizer::computeCostateDirection(factorization, d, 
+                                                    exist_state_constraint);
 }
  
 

@@ -122,7 +122,8 @@ public:
   template <typename VectorType>
   static void computePrimalDirectionImpulse(
       const RiccatiFactorization factorization, 
-      const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d);
+      const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d,
+      const bool exist_state_constraint);
 
   void aggregateLagrangeMultiplierDirection(
       const ContactSequence& contact_sequence,

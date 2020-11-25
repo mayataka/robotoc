@@ -151,7 +151,8 @@ void OCPDirectionCalculator::computeDirection(
       }
       else {
         computePrimalDirection(factorizer[i], factorization[i], 
-                               factorization[i+1], dx0, d[i], exist_state_constraint);
+                               factorization[i+1], dx0, d[i], 
+                               exist_state_constraint);
       }
       split_ocps[i].computeCondensedPrimalDirection(robots[omp_get_thread_num()], 
                                                     dtau(contact_sequence, i), 
@@ -167,7 +168,8 @@ void OCPDirectionCalculator::computeDirection(
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);
       computePrimalDirectionImpulse(factorization.impulse[impulse_index], 
-                                    dx0, d.impulse[impulse_index]);
+                                    dx0, d.impulse[impulse_index], 
+                                    exist_state_constraint);
       split_ocps.impulse[impulse_index].computeCondensedPrimalDirection(
           robots[omp_get_thread_num()], s.impulse[impulse_index], 
           d.impulse[impulse_index]);

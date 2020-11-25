@@ -192,17 +192,9 @@ void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot&
   EXPECT_TRUE(riccati_next.pi.isApprox(riccati_next_ref.pi));
   EXPECT_TRUE(riccati_next.N.isApprox(riccati_next_ref.N));
   const Eigen::VectorXd dx0 = Eigen::VectorXd::Random(2*dimv);
-  SplitDirection d(robot), d_ref(robot);
-  factorizer.computeStateDirection(riccati, dx0, d, true);
-  d_ref.dx().noalias() = riccati.Pi * dx0 + riccati.pi - riccati.N * riccati.n;
-  EXPECT_TRUE(d.isApprox(d_ref));
-  factorizer.computeCostateDirection(riccati, d, true);
-  d_ref.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq + riccati.n.head(dimv);
-  d_ref.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv + riccati.n.tail(dimv);
-  EXPECT_TRUE(d.isApprox(d_ref));
-  factorizer.computeControlInputDirection(riccati, d, true);
-  d_ref.du() = lqr_policy_ref.K * d.dx() + lqr_policy_ref.k - Ginv * kkt_matrix_ref.Fxu().transpose() * riccati.n;
-  EXPECT_TRUE(d.isApprox(d_ref));
+  SplitDirection d(robot);
+  d.setRandom();
+  SplitDirection d_ref = d;
   factorizer.computeStateDirection(riccati, dx0, d, false);
   d_ref.dx().noalias() = riccati.Pi * dx0 + riccati.pi;
   EXPECT_TRUE(d.isApprox(d_ref));
@@ -212,6 +204,16 @@ void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot&
   EXPECT_TRUE(d.isApprox(d_ref));
   factorizer.computeControlInputDirection(riccati, d, false);
   d_ref.du() = lqr_policy_ref.K * d.dx() + lqr_policy_ref.k;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  factorizer.computeStateDirection(riccati, dx0, d, true);
+  d_ref.dx().noalias() = riccati.Pi * dx0 + riccati.pi - riccati.N * riccati.n;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  factorizer.computeCostateDirection(riccati, d, true);
+  d_ref.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq + riccati.n.head(dimv);
+  d_ref.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv + riccati.n.tail(dimv);
+  EXPECT_TRUE(d.isApprox(d_ref));
+  factorizer.computeControlInputDirection(riccati, d, true);
+  d_ref.du() = lqr_policy_ref.K * d.dx() + lqr_policy_ref.k - Ginv * kkt_matrix_ref.Fxu().transpose() * riccati.n;
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 

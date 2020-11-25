@@ -87,6 +87,7 @@ RiccatiFactorization ImpulseRiccatiFactorizerTest::createRiccatiFactorization(co
   riccati.N = seed * seed.transpose();
   riccati.Pi.setRandom();
   riccati.pi.setRandom();
+  riccati.n.setRandom();
   return riccati; 
 }
 
@@ -130,7 +131,7 @@ void ImpulseRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) {
   RiccatiFactorization riccati = createRiccatiFactorization(robot);
   RiccatiFactorization riccati_ref = riccati;
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
-  factorizer.forwardRiccatiRecursionSerial(riccati, kkt_matrix, kkt_residual, riccati_next);
+  factorizer.forwardRiccatiRecursionSerial(riccati, kkt_matrix, kkt_residual, riccati_next, true);
   ImpulseBackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next_ref, kkt_matrix_ref);
   backward_recursion_ref.factorizeRiccatiFactorization(riccati_next_ref, kkt_matrix_ref, kkt_residual_ref, riccati_ref);
@@ -143,11 +144,20 @@ void ImpulseRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) {
   EXPECT_TRUE(riccati_next.N.isApprox(riccati_next_ref.N));
   riccati.n.setRandom();
   const Eigen::VectorXd dx0 = Eigen::VectorXd::Random(2*dimv);
-  ImpulseSplitDirection d(robot), d_ref(robot);
-  factorizer.computeStateDirection(riccati, dx0, d);
+  ImpulseSplitDirection d(robot);
+  d.setRandom();
+  ImpulseSplitDirection d_ref = d;
+  factorizer.computeStateDirection(riccati, dx0, d, false);
+  d_ref.dx().noalias() = riccati.Pi * dx0 + riccati.pi;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  factorizer.computeCostateDirection(riccati, d, false);
+  d_ref.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
+  d_ref.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  factorizer.computeStateDirection(riccati, dx0, d, true);
   d_ref.dx().noalias() = riccati.Pi * dx0 + riccati.pi - riccati.N * riccati.n;
   EXPECT_TRUE(d.isApprox(d_ref));
-  factorizer.computeCostateDirection(riccati, d);
+  factorizer.computeCostateDirection(riccati, d, true);
   d_ref.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq + riccati.n.head(dimv);
   d_ref.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv + riccati.n.tail(dimv);
   EXPECT_TRUE(d.isApprox(d_ref));
