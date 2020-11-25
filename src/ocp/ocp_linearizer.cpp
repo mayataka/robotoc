@@ -60,7 +60,8 @@ void OCPLinearizer::initConstraints(HybridOCP& split_ocps,
     if (i < N_) {
       if (contact_sequence.existImpulseStage(i)) {
         const int impulse_index = contact_sequence.impulseIndex(i);
-        const double dtau_impulse = contact_sequence.impulseTime(impulse_index) - i * dtau_;
+        const double dtau_impulse 
+            = contact_sequence.impulseTime(impulse_index) - i * dtau_;
         assert(dtau_impulse > 0);
         assert(dtau_impulse < dtau_);
         split_ocps[i].initConstraints(robots[omp_get_thread_num()], i, 
@@ -68,7 +69,8 @@ void OCPLinearizer::initConstraints(HybridOCP& split_ocps,
       }
       else if (contact_sequence.existLiftStage(i)) {
         const int lift_index = contact_sequence.liftIndex(i);
-        const double dtau_lift = contact_sequence.liftTime(lift_index) - i * dtau_;
+        const double dtau_lift 
+            = contact_sequence.liftTime(lift_index) - i * dtau_;
         assert(dtau_lift > 0);
         assert(dtau_lift < dtau_);
         split_ocps[i].initConstraints(robots[omp_get_thread_num()], i, 
@@ -155,31 +157,40 @@ double OCPLinearizer::KKTError(const HybridOCP& split_ocps,
     if (i < N_) {
       if (contact_sequence.existImpulseStage(i)) {
         const int impulse_index = contact_sequence.impulseIndex(i);
-        const double dtau_impulse = contact_sequence.impulseTime(impulse_index) - i * dtau_;
+        const double dtau_impulse 
+            = contact_sequence.impulseTime(impulse_index) - i * dtau_;
         assert(dtau_impulse > 0);
         assert(dtau_impulse < dtau_);
-        kkt_error_.coeffRef(i) = split_ocps[i].squaredNormKKTResidual(kkt_residual[i], dtau_impulse);
+        kkt_error_.coeffRef(i) 
+            = split_ocps[i].squaredNormKKTResidual(kkt_residual[i], 
+                                                   dtau_impulse);
       }
       else if (contact_sequence.existLiftStage(i)) {
         const int lift_index = contact_sequence.liftIndex(i);
-        const double dtau_lift = contact_sequence.liftTime(lift_index) - i * dtau_;
+        const double dtau_lift 
+            = contact_sequence.liftTime(lift_index) - i * dtau_;
         assert(dtau_lift > 0);
         assert(dtau_lift < dtau_);
-        kkt_error_.coeffRef(i) = split_ocps[i].squaredNormKKTResidual(kkt_residual[i], dtau_lift);
+        kkt_error_.coeffRef(i) 
+            = split_ocps[i].squaredNormKKTResidual(kkt_residual[i], dtau_lift);
       }
       else {
-        kkt_error_.coeffRef(i) = split_ocps[i].squaredNormKKTResidual(kkt_residual[i], dtau_);
+        kkt_error_.coeffRef(i) 
+            = split_ocps[i].squaredNormKKTResidual(kkt_residual[i], dtau_);
       }
     }
     else if (i == N_) {
-      kkt_error_.coeffRef(N_) = split_ocps.terminal.squaredNormKKTResidual(kkt_residual[N_]);
+      kkt_error_.coeffRef(N_) 
+          = split_ocps.terminal.squaredNormKKTResidual(kkt_residual[N_]);
     }
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);
       const int time_stage_before_impulse 
           = contact_sequence.timeStageBeforeImpulse(impulse_index);
       kkt_error_.coeffRef(i) 
-          = split_ocps.impulse[impulse_index].squaredNormKKTResidual(kkt_residual.impulse[impulse_index]);
+          = split_ocps.impulse[impulse_index].squaredNormKKTResidual(
+              kkt_residual.impulse[impulse_index], 
+              is_state_constraint_valid(time_stage_before_impulse));
     }
     else if (i < N_ + 1 + 2*N_impulse) {
       const int impulse_index  = i - (N_+1+N_impulse);
@@ -191,7 +202,8 @@ double OCPLinearizer::KKTError(const HybridOCP& split_ocps,
       assert(dtau_aux > 0);
       assert(dtau_aux < dtau_);
       kkt_error_.coeffRef(i) 
-          = split_ocps.aux[impulse_index].squaredNormKKTResidual(kkt_residual.aux[impulse_index], dtau_aux);
+          = split_ocps.aux[impulse_index].squaredNormKKTResidual(
+                kkt_residual.aux[impulse_index], dtau_aux);
     }
     else {
       const int lift_index = i - (N_+1+2*N_impulse);
@@ -203,14 +215,10 @@ double OCPLinearizer::KKTError(const HybridOCP& split_ocps,
       assert(dtau_aux > 0);
       assert(dtau_aux < dtau_);
       kkt_error_.coeffRef(i) 
-          = split_ocps.lift[lift_index].squaredNormKKTResidual(kkt_residual.lift[lift_index], dtau_aux);
+          = split_ocps.lift[lift_index].squaredNormKKTResidual(
+              kkt_residual.lift[lift_index], dtau_aux);
     }
   }
-  // std::cout << "impulse.lq = " << kkt_residual.impulse[0].lq().squaredNorm() << std::endl;
-  // std::cout << "impulse.lv = " << kkt_residual.impulse[0].lv().squaredNorm() << std::endl;
-  // std::cout << "impulse.ldv = " << kkt_residual.impulse[0].ldv.squaredNorm() << std::endl;
-  // std::cout << "impulse.lf = " << kkt_residual.impulse[0].lf().squaredNorm() << std::endl;
-  // std::cout << "impulse.Fx = " << kkt_residual.impulse[0].Fx().squaredNorm() << std::endl;
   return std::sqrt(kkt_error_.head(N_all).sum());
 }
 

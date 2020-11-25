@@ -92,13 +92,16 @@ public:
   /// @param[in] s_next Split solution of the next stage.
   /// @param[out] kkt_matrix KKT matrix of this stage.
   /// @param[out] kkt_residual KKT residual of this stage.
+  /// @param[in] is_state_constraint_valid Specify wheather the pure-state
+  /// equality constraint is valid or not.
   ///
   void linearizeOCP(Robot& robot, const ImpulseStatus& impulse_status, 
                     const double t, const Eigen::VectorXd& q_prev, 
                     const ImpulseSplitSolution& s, 
                     const SplitSolution& s_next, 
                     ImpulseKKTMatrix& kkt_matrix, 
-                    ImpulseKKTResidual& kkt_residual);
+                    ImpulseKKTResidual& kkt_residual,
+                    const bool is_state_constraint_valid);
 
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
@@ -154,9 +157,12 @@ public:
   /// @param[in] primal_step_size Primal step size of the OCP. 
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
+  /// @param[in] is_state_constraint_valid Specify wheather the pure-state
+  /// equality constraint is valid or not.
   ///
   void updatePrimal(const Robot& robot, const double primal_step_size, 
-                    const ImpulseSplitDirection& d, ImpulseSplitSolution& s);
+                    const ImpulseSplitDirection& d, ImpulseSplitSolution& s,
+                    const bool is_state_constraint_valid);
 
   ///
   /// @brief Computes the KKT residual of the OCP at this stage.
@@ -169,22 +175,28 @@ public:
   /// @param[in] s_next Split solution of the next stage.
   /// @param[out] kkt_matrix KKT matrix of this stage.
   /// @param[out] kkt_residual KKT residual of this stage.
+  /// @param[in] is_state_constraint_valid Specify wheather the pure-state
+  /// equality constraint is valid or not.
   ///
   void computeKKTResidual(Robot& robot, const ImpulseStatus& impulse_status,
                           const double t, const Eigen::VectorXd& q_prev, 
                           const ImpulseSplitSolution& s, 
                           const SplitSolution& s_next,
                           ImpulseKKTMatrix& kkt_matrix, 
-                          ImpulseKKTResidual& kkt_residual);
+                          ImpulseKKTResidual& kkt_residual,
+                          const bool is_state_constraint_valid);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
   /// this function, SplitOCP::linearizeOCP or SplitOCP::computeKKTResidual
   /// must be called.
   /// @param[in] kkt_residual KKT residual of this stage.
+  /// @param[in] is_state_constraint_valid Specify wheather the pure-state
+  /// equality constraint is valid or not.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual(const ImpulseKKTResidual& kkt_residual) const;
+  double squaredNormKKTResidual(const ImpulseKKTResidual& kkt_residual,
+                                const bool is_state_constraint_valid) const;
 
   ///
   /// @brief Computes the stage cost of this stage for line search.
@@ -207,13 +219,16 @@ public:
   /// @param[in] q_next Configuration at the next stage.
   /// @param[in] v_next Generaized velocity at the next stage.
   /// @param[out] kkt_residual KKT residual of this stage.
+  /// @param[in] is_state_constraint_valid Specify wheather the pure-state
+  /// equality constraint is valid or not.
   /// @return Constraint violation of this stage.
   ///
   double constraintViolation(Robot& robot, const ImpulseStatus& impulse_status, 
                              const double t, const ImpulseSplitSolution& s, 
                              const Eigen::VectorXd& q_next,
                              const Eigen::VectorXd& v_next,
-                             ImpulseKKTResidual& kkt_residual);
+                             ImpulseKKTResidual& kkt_residual,
+                             const bool is_state_constraint_valid);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

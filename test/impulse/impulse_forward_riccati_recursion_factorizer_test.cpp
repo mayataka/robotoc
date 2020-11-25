@@ -109,20 +109,15 @@ void ImpulseForwardRiccatiRecursionFactorizerTest::test(const Robot& robot) {
   A.bottomLeftCorner(dimv, dimv) = kkt_matrix.Fvq();
   A.bottomRightCorner(dimv, dimv) = kkt_matrix.Fvv();
   const RiccatiFactorization riccati = createRiccatiFactorization(robot);
-  RiccatiFactorization riccati_next(robot);
+  RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
+  RiccatiFactorization riccati_next_ref = riccati_next;
   factorizer.factorizeStateTransition(riccati, kkt_matrix, kkt_residual, riccati_next);
-  RiccatiFactorization riccati_next_ref(robot);
   riccati_next_ref.Pi = A * riccati.Pi;
   riccati_next_ref.pi = A * riccati.pi + kkt_residual.Fx();
   EXPECT_TRUE(riccati_next.Pi.isApprox(riccati_next_ref.Pi));
   EXPECT_TRUE(riccati_next.pi.isApprox(riccati_next_ref.pi));
   factorizer.factorizeStateConstraintFactorization(riccati, kkt_matrix, riccati_next);
   riccati_next_ref.N = A * riccati.N * A.transpose();
-  std::cout << riccati_next_ref.Pi << std::endl;
-  std::cout << riccati_next_ref.pi << std::endl;
-  std::cout << riccati_next_ref.N << std::endl;
-  std::cout << A << std::endl;
-  std::cout << kkt_residual.Fx() << std::endl;
   EXPECT_TRUE(riccati_next.N.isApprox(riccati_next_ref.N));
 }
 

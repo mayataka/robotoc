@@ -26,7 +26,7 @@ protected:
   static void TestWithoutImpulses(const Robot& robot);
   static void TestWithImpulses(const Robot& robot, const ImpulseStatus& impulse_status);
   static void TestIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void TestIntegrate(const Robot& robot, const ImpulseStatus& impulse_status);
+  static void TestIntegrate(const Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid);
 
   double dtau_;
   std::string fixed_base_urdf, floating_base_urdf;
@@ -384,12 +384,13 @@ void ImpulseSplitSolutionTest::TestIsApprox(const Robot& robot,
 
 
 void ImpulseSplitSolutionTest::TestIntegrate(const Robot& robot, 
-                                             const ImpulseStatus& impulse_status) {
+                                             const ImpulseStatus& impulse_status,
+                                             const bool is_state_constraint_valid) {
   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   const ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
   ImpulseSplitSolution s_ref = s;
   const double step_size = 0.3;
-  s.integrate(robot, step_size, d);
+  s.integrate(robot, step_size, d, is_state_constraint_valid);
   s_ref.lmd.noalias() += step_size * d.dlmd();
   s_ref.gmm.noalias() += step_size * d.dgmm();
   robot.integrateConfiguration(d.dq(), step_size, s_ref.q);
@@ -401,8 +402,10 @@ void ImpulseSplitSolutionTest::TestIntegrate(const Robot& robot,
     s_ref.set_f_vector();
     s_ref.mu_stack().noalias() += step_size * d.dmu();
     s_ref.set_mu_vector();
-    s_ref.xi_stack().noalias() += step_size * d.dxi();
-    s_ref.set_xi_vector();
+    if (is_state_constraint_valid) {
+      s_ref.xi_stack().noalias() += step_size * d.dxi();
+      s_ref.set_xi_vector();
+    }
   }
   EXPECT_TRUE(s.isApprox(s_ref));
 }
@@ -417,11 +420,13 @@ TEST_F(ImpulseSplitSolutionTest, fixedBase) {
   ImpulseStatus impulse_status(is_impulse_active.size());
   impulse_status.setImpulseStatus(is_impulse_active);
   TestIsApprox(robot, impulse_status);
-  TestIntegrate(robot, impulse_status);
+  TestIntegrate(robot, impulse_status, false);
+  TestIntegrate(robot, impulse_status, true);
   impulse_status.activateImpulse(0);
   TestWithImpulses(robot, impulse_status);
   TestIsApprox(robot, impulse_status);
-  TestIntegrate(robot, impulse_status);
+  TestIntegrate(robot, impulse_status, false);
+  TestIntegrate(robot, impulse_status, true);
 }
 
 
@@ -434,7 +439,8 @@ TEST_F(ImpulseSplitSolutionTest, floatingBase) {
   ImpulseStatus impulse_status(is_impulse_active.size());
   impulse_status.setImpulseStatus(is_impulse_active);
   TestIsApprox(robot, impulse_status);
-  TestIntegrate(robot, impulse_status);
+  TestIntegrate(robot, impulse_status, false);
+  TestIntegrate(robot, impulse_status, true);
   std::random_device rnd;
   is_impulse_active.clear();
   for (const auto frame : contact_frames) {
@@ -445,7 +451,8 @@ TEST_F(ImpulseSplitSolutionTest, floatingBase) {
   }
   TestWithImpulses(robot, impulse_status);
   TestIsApprox(robot, impulse_status);
-  TestIntegrate(robot, impulse_status);
+  TestIntegrate(robot, impulse_status, false);
+  TestIntegrate(robot, impulse_status, true);
 }
 
 } // namespace idocp

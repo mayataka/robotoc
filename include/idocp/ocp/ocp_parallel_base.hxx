@@ -1,7 +1,7 @@
-#ifndef IDOCP_OCP_LINEARIZER_HXX_ 
-#define IDOCP_OCP_LINEARIZER_HXX_
+#ifndef IDOCP_OCP_PARALLEL_BASE_HXX_ 
+#define IDOCP_OCP_PARALLEL_BASE_HXX_
 
-#include "idocp/ocp/ocp_linearizer.hpp"
+#include "idocp/ocp/ocp_parallel_base.hpp"
 
 #include <omp.h>
 #include <stdexcept>
@@ -9,90 +9,11 @@
 
 
 namespace idocp {
-namespace internal {
-
-struct LinearizeOCP {
-  template <typename ConfigVectorType, typename SplitSolutionType>
-  static inline void run(SplitOCP& split_ocp, Robot& robot, 
-                         const ContactStatus& contact_status, const double t, 
-                         const double dtau, 
-                         const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-                         const SplitSolution& s, const SplitSolutionType& s_next, 
-                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
-    split_ocp.linearizeOCP(robot, contact_status, t, dtau, q_prev, s, s_next,
-                           kkt_matrix, kkt_residual);
-  }
-
-  static inline void run(TerminalOCP& terminal_ocp, Robot& robot, 
-                         const double t, const SplitSolution& s, 
-                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
-    terminal_ocp.linearizeOCP(robot, t, s, kkt_matrix, kkt_residual);
-  }
-
-  template <typename ConfigVectorType>
-  static inline void run(SplitImpulseOCP& split_ocp, Robot& robot, 
-                         const ImpulseStatus& impulse_status, const double t, 
-                         const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-                         const ImpulseSplitSolution& s, 
-                         const SplitSolution& s_next, 
-                         ImpulseKKTMatrix& kkt_matrix, 
-                         ImpulseKKTResidual& kkt_residual,
-                         const bool is_state_constraint_valid) {
-    split_ocp.linearizeOCP(robot, impulse_status, t, q_prev, s, s_next,
-                           kkt_matrix, kkt_residual, is_state_constraint_valid);
-  }
-};
-
-
-struct ComputeKKTResidual {
-  template <typename ConfigVectorType, typename SplitSolutionType>
-  static inline void run(SplitOCP& split_ocp, Robot& robot, 
-                         const ContactStatus& contact_status, const double t, 
-                         const double dtau, 
-                         const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-                         const SplitSolution& s, 
-                         const SplitSolutionType& s_next, 
-                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
-    split_ocp.computeKKTResidual(robot, contact_status, t, dtau, q_prev, s, 
-                                 s_next, kkt_matrix, kkt_residual);
-  }
-
-  static inline void run(TerminalOCP& terminal_ocp, Robot& robot,  
-                         const double t, const SplitSolution& s, 
-                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
-    terminal_ocp.computeKKTResidual(robot, t, s, kkt_residual);
-  }
-
-  template <typename ConfigVectorType>
-  static inline void run(SplitImpulseOCP& split_ocp, Robot& robot, 
-                         const ImpulseStatus& impulse_status, const double t, 
-                         const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-                         const ImpulseSplitSolution& s, 
-                         const SplitSolution& s_next, 
-                         ImpulseKKTMatrix& kkt_matrix, 
-                         ImpulseKKTResidual& kkt_residual,
-                         const bool is_state_constraint_valid) {
-    split_ocp.computeKKTResidual(robot, impulse_status, t, q_prev, s, s_next,
-                                 kkt_matrix, kkt_residual, 
-                                 is_state_constraint_valid);
-  }
-};
-
-} // namespace internal
-} // namespace idocp
-
 
 namespace idocp {
 
-template <typename Algorithm>
-inline void OCPLinearizer::runParallel(HybridOCP& split_ocps, 
-                                       std::vector<Robot>& robots,
-                                       const ContactSequence& contact_sequence,
-                                       const double t, const Eigen::VectorXd& q, 
-                                       const Eigen::VectorXd& v, 
-                                       const HybridSolution& s,
-                                       HybridKKTMatrix& kkt_matrix,
-                                       HybridKKTResidual& kkt_residual) const {
+template <typename Derived, typename... Args>
+inline void OCPParallelBase::runParallel(Args... args) const {
   assert(robots.size() == num_proc_);
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
@@ -108,10 +29,10 @@ inline void OCPLinearizer::runParallel(HybridOCP& split_ocps,
             = contact_sequence.impulseTime(impulse_index) - i * dtau_;
         assert(dtau_impulse > 0);
         assert(dtau_impulse < dtau_);
-        Algorithm::run(split_ocps[i], robots[omp_get_thread_num()], 
-                       contact_sequence.contactStatus(i), t+i*dtau_, 
-                       dtau_impulse, q_prev(contact_sequence, q, s, i), s[i], 
-                       s.impulse[impulse_index], kkt_matrix[i], kkt_residual[i]);
+        Derived::run(split_ocps[i], robots[omp_get_thread_num()], 
+                     contact_sequence.contactStatus(i), t+i*dtau_, 
+                     dtau_impulse, q_prev(contact_sequence, q, s, i), s[i], 
+                     s.impulse[impulse_index], kkt_matrix[i], kkt_residual[i]);
       }
       else if (contact_sequence.existLiftStage(i)) {
         const int lift_index = contact_sequence.liftIndex(i);
@@ -188,7 +109,7 @@ inline void OCPLinearizer::runParallel(HybridOCP& split_ocps,
 }
 
 
-inline const Eigen::VectorXd& OCPLinearizer::q_prev(
+inline const Eigen::VectorXd& OCPParallelBase::q_prev(
     const ContactSequence& contact_sequence, const Eigen::VectorXd& q,
     const HybridSolution& s, const int time_stage) const {
   assert(time_stage >= 0);
@@ -208,8 +129,8 @@ inline const Eigen::VectorXd& OCPLinearizer::q_prev(
 }
 
 
-inline double OCPLinearizer::dtau(const ContactSequence& contact_sequence, 
-                                  const int time_stage) const {
+inline double OCPParallelBase::dtau(const ContactSequence& contact_sequence, 
+                                    const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage < N_);
   if (contact_sequence.existImpulseStage(time_stage)) {
@@ -226,16 +147,15 @@ inline double OCPLinearizer::dtau(const ContactSequence& contact_sequence,
 }
 
 
-inline bool OCPLinearizer::is_state_constraint_valid(
+inline bool OCPParallelBase::is_state_constraint_valid(
     const int time_stage_before_impulse) {
   assert(time_stage_before_impulse >= 0);
   if (time_stage_before_impulse > 0) {
-    return true;
+    return true
   }
   else {
     return false;
   }
-  // return false;
 }
 
 } // namespace idocp 

@@ -1,5 +1,5 @@
-#ifndef IDOCP_OCP_SOLUTION_INTEGRATOR_HPP_
-#define IDOCP_OCP_SOLUTION_INTEGRATOR_HPP_
+#ifndef IDOCP_OCP_PARALLEL_BASE_HPP_ 
+#define IDOCP_OCP_PARALLEL_BASE_HPP_
 
 #include <vector>
 
@@ -22,72 +22,80 @@
 namespace idocp {
 
 ///
-/// @class OCPSolutionIntegrator
+/// @class OCPParallelBase
 /// @brief Linearize of the optimal control problem. 
 ///
-class OCPSolutionIntegrator {
+template <typename Derived>
+class OCPParallelBase {
 public:
   ///
   /// @brief Construct optimal control problem solver.
   /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
   /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
-  /// Must be non-negative. Default is 0.
+  /// Must be non-negative. 
   /// @param[in] num_proc Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
+  /// problem. Must be positive. 
   ///
-  OCPSolutionIntegrator(const double T, const int N, 
-                        const int max_num_impulse, const int num_proc);
+  OCPParallelBase(const double T, const int N, const int max_num_impulse, 
+                  const int num_proc);
 
   ///
   /// @brief Default constructor. 
   ///
-  OCPSolutionIntegrator();
+  OCPParallelBase();
 
   ///
   /// @brief Destructor. 
   ///
-  ~OCPSolutionIntegrator();
+  ~OCPParallelBase();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  OCPSolutionIntegrator(const OCPSolutionIntegrator&) = default;
+  OCPParallelBase(const OCPParallelBase&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  OCPSolutionIntegrator& operator=(const OCPSolutionIntegrator&) = default;
+  OCPParallelBase& operator=(const OCPParallelBase&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  OCPSolutionIntegrator(OCPSolutionIntegrator&&) noexcept = default;
+  OCPParallelBase(OCPParallelBase&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  OCPSolutionIntegrator& operator=(OCPSolutionIntegrator&&) noexcept = default;
+  OCPParallelBase& operator=(OCPParallelBase&&) noexcept = default;
 
-  void integrate(HybridOCP& split_ocps, const std::vector<Robot>& robots,
-                 const ContactSequence& contact_sequence,
-                 const HybridKKTMatrix& kkt_matrix,
-                 const HybridKKTResidual& kkt_residual,
-                 const double primal_step_size,
-                 const double dual_step_size,
-                 HybridDirection& d, HybridSolution& s) const;
+  template <typename... Args>
+  void runParallel(Args... args);
+
+  template <typename... Args>
+  void runParallel(Args... args) const;
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
 
-  static bool is_state_constraint_valid(const int time_stage_before_impulse);
+  const Eigen::VectorXd& q_prev(const ContactSequence& contact_sequence, 
+                                const Eigen::VectorXd& q,
+                                const HybridSolution& s,
+                                const int time_stage) const;
+
+  double dtau(const ContactSequence& contact_sequence, 
+              const int time_stage) const;
+
 
   double T_, dtau_;
   int N_, num_proc_;
-
+  Eigen::VectorXd kkt_error_;
 };
 
 } // namespace idocp 
 
-#include "idocp/ocp/ocp_solution_integrator.hxx"
+#include "idocp/ocp/ocp_parallel_base.hxx"
 
-#endif // IDOCP_OCP_SOLUTION_INTEGRATOR_HPP_ 
+#endif // IDOCP_OCP_PARALLEL_BASE_HPP_

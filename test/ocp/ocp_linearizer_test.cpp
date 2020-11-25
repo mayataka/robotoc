@@ -247,7 +247,7 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
     split_ocps_ref.impulse[0].initConstraints(robot_ref, s.impulse[0]);
     split_ocps_ref.impulse[0].linearizeOCP(
         robot_ref, contact_sequence.impulseStatus(0), t+dtau_impulse, 
-        s[0].q, s.impulse[0], s.aux[0], kkt_matrix_ref.impulse[0], kkt_residual_ref.impulse[0]);
+        s[0].q, s.impulse[0], s.aux[0], kkt_matrix_ref.impulse[0], kkt_residual_ref.impulse[0], false);
     split_ocps_ref.aux[0].initConstraints(robot_ref, 0, dtau_aux, s.aux[0]);
     split_ocps_ref.aux[0].linearizeOCP(
         robot_ref, contact_sequence.contactStatus(1), t+dtau_impulse, dtau_aux, 
@@ -300,7 +300,7 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
       split_ocps_ref.impulse[impulse_index].linearizeOCP(
           robot_ref, contact_sequence.impulseStatus(impulse_index), t+impulse_time, 
           s[i].q, s.impulse[impulse_index], s.aux[impulse_index], 
-          kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index]);
+          kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index], true);
       split_ocps_ref.aux[impulse_index].initConstraints(robot_ref, 0, dtau_aux, s.aux[impulse_index]);
       split_ocps_ref.aux[impulse_index].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(i+1), t+impulse_time, dtau_aux, 
@@ -382,8 +382,8 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
     split_ocps_ref.impulse[0].initConstraints(robot_ref, s.impulse[0]);
     split_ocps_ref.impulse[0].computeKKTResidual(
         robot_ref, contact_sequence.impulseStatus(0), t+dtau_impulse, 
-        s[0].q, s.impulse[0], s.aux[0], kkt_matrix_ref.impulse[0], kkt_residual_ref.impulse[0]);
-    kkt_error_ref += split_ocps_ref.impulse[0].squaredNormKKTResidual(kkt_residual_ref.impulse[0]);
+        s[0].q, s.impulse[0], s.aux[0], kkt_matrix_ref.impulse[0], kkt_residual_ref.impulse[0], false);
+    kkt_error_ref += split_ocps_ref.impulse[0].squaredNormKKTResidual(kkt_residual_ref.impulse[0], false);
     split_ocps_ref.aux[0].initConstraints(robot_ref, 0, dtau_aux, s.aux[0]);
     split_ocps_ref.aux[0].computeKKTResidual(
         robot_ref, contact_sequence.contactStatus(1), t+dtau_impulse, dtau_aux, 
@@ -441,8 +441,8 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
       split_ocps_ref.impulse[impulse_index].computeKKTResidual(
           robot_ref, contact_sequence.impulseStatus(impulse_index), 
           t+impulse_time, s[i].q, s.impulse[impulse_index], s.aux[impulse_index], 
-          kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index]);
-      kkt_error_ref += split_ocps_ref.impulse[impulse_index].squaredNormKKTResidual(kkt_residual_ref.impulse[impulse_index]);
+          kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index], true);
+      kkt_error_ref += split_ocps_ref.impulse[impulse_index].squaredNormKKTResidual(kkt_residual_ref.impulse[impulse_index], true);
       split_ocps_ref.aux[impulse_index].initConstraints(robot_ref, 0, dtau_aux, s.aux[impulse_index]);
       split_ocps_ref.aux[impulse_index].computeKKTResidual(
           robot_ref, contact_sequence.contactStatus(i+1), 

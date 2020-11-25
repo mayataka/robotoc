@@ -32,30 +32,6 @@ inline void ImpulseRiccatiFactorizer::backwardRiccatiRecursion(
   backward_recursion_.factorizeKKTMatrix(riccati_next, kkt_matrix);
   backward_recursion_.factorizeRiccatiFactorization(riccati_next, kkt_matrix, 
                                                     kkt_residual, riccati);
-  // const int dimv = dimv_;
-  // const int dimx = 2 * dimv;
-  // Eigen::MatrixXd P_next = Eigen::MatrixXd::Zero(dimx, dimx);
-  // P_next.topLeftCorner(dimv, dimv) = riccati_next.Pqq;
-  // P_next.topRightCorner(dimv, dimv) = riccati_next.Pqv;
-  // P_next.bottomLeftCorner(dimv, dimv) = riccati_next.Pvq;
-  // P_next.bottomRightCorner(dimv, dimv) = riccati_next.Pvv;
-  // // std::cout << "Fxx impulse backward" << std::endl;
-  // // std::cout << kkt_matrix.Fxx() << std::endl;
-  // // kkt_matrix.Qxx() += kkt_matrix.Fxx().transpose() * P_next * kkt_matrix.Fxx();
-  // assert(kkt_matrix.Qxx().isApprox(kkt_matrix.Fxx().transpose() * P_next * kkt_matrix.Fxx()));
-  // const Eigen::MatrixXd P = kkt_matrix.Qxx();
-  // riccati.Pqq = P.topLeftCorner(dimv, dimv);
-  // riccati.Pqv = P.topRightCorner(dimv, dimv);
-  // riccati.Pvq = P.bottomLeftCorner(dimv, dimv);
-  // riccati.Pvv = P.bottomRightCorner(dimv, dimv);
-  // Eigen::VectorXd s_next = Eigen::VectorXd::Zero(dimx);
-  // s_next.head(dimv) = riccati_next.sq;
-  // s_next.tail(dimv) = riccati_next.sv;
-  // const Eigen::VectorXd s = kkt_matrix.Fxx().transpose() * s_next
-  //                           - kkt_matrix.Fxx().transpose() * P_next * kkt_residual.Fx()
-  //                           - kkt_residual.lx();
-  // riccati.sq = s.head(dimv);
-  // riccati.sv = s.tail(dimv);
 }
 
 
@@ -67,14 +43,6 @@ inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursionSerial(
                                               riccati_next);
   forward_recursion_.factorizeStateConstraintFactorization(riccati, kkt_matrix,
                                                            riccati_next);
-  // const int dimv = dimv_;
-  // const int dimx = 2 * dimv;
-  // std::cout << "Fxx impulse forward" << std::endl;
-  // std::cout << kkt_matrix.Fxx() << std::endl;
-  // std::cout << "Fx impulse forward" << std::endl;
-  // std::cout << kkt_residual.Fx().transpose() << std::endl;
-  // riccati_next.Pi = kkt_matrix.Fxx() * riccati.Pi;
-  // riccati_next.pi = kkt_matrix.Fxx() * riccati.pi + kkt_residual.Fx();
 }
 
 

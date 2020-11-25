@@ -29,21 +29,21 @@ protected:
   virtual void TearDown() {
   }
 
-  static void testLinearizeInverseImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status);
+  static void testLinearizeInverseImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid);
   static void testLinearizeImpulseVelocityConstraints(Robot& robot, const ImpulseStatus& impulse_status);
   static void testLinearizeImpulsePositionConstraints(Robot& robot, const ImpulseStatus& impulse_status);
-  static void testLinearizeImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status);
+  static void testLinearizeImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid);
   static void testCondensing(Robot& robot, const ImpulseStatus& impulse_status);
   static void testExpansionPrimal(Robot& robot, const ImpulseStatus& impulse_status);
   static void testExpansionDual(Robot& robot, const ImpulseStatus& impulse_status);
-  static void testIntegration(Robot& robot, const ImpulseStatus& impulse_status);
-  static void testComputeResidual(Robot& robot, const ImpulseStatus& impulse_status);
+  static void testIntegration(Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid);
+  static void testComputeResidual(Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid);
 
   std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
-void ImpulseDynamicsForwardEulerTest::testLinearizeInverseImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsForwardEulerTest::testLinearizeInverseImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid) {
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   ImpulseDynamicsForwardEulerData data(robot), data_ref(robot);
   ImpulseDynamicsForwardEuler::linearizeInverseImpulseDynamics(robot, impulse_status, s, data);
@@ -61,7 +61,7 @@ void ImpulseDynamicsForwardEulerTest::testLinearizeImpulseVelocityConstraints(Ro
   ImpulseDynamicsForwardEulerData data(robot), data_ref(robot);
   data.setImpulseStatus(impulse_status);
   data_ref.setImpulseStatus(impulse_status);
-  robot.updateKinematics(s.q, s.v);
+  robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamicsForwardEuler::linearizeImpulseVelocityConstraint(robot, impulse_status, data);
   robot.computeImpulseVelocityResidual(impulse_status, data_ref.C());
   robot.computeImpulseVelocityDerivatives(impulse_status, data_ref.dCdq(), 
@@ -81,7 +81,7 @@ void ImpulseDynamicsForwardEulerTest::testLinearizeImpulsePositionConstraints(Ro
   kkt_matrix_ref.setImpulseStatus(impulse_status);
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual_ref.setImpulseStatus(impulse_status);
-  robot.updateKinematics(s.q, s.v);
+  robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamicsForwardEuler::linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix, kkt_residual);
   robot.computeImpulseConditionResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
   robot.computeImpulseConditionDerivative(impulse_status, kkt_matrix_ref.Pq());
@@ -93,7 +93,7 @@ void ImpulseDynamicsForwardEulerTest::testLinearizeImpulsePositionConstraints(Ro
 
 
 
-void ImpulseDynamicsForwardEulerTest::testLinearizeImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsForwardEulerTest::testLinearizeImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid) {
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   ImpulseKKTMatrix kkt_matrix(robot);
   kkt_matrix.setImpulseStatus(impulse_status);
@@ -106,37 +106,44 @@ void ImpulseDynamicsForwardEulerTest::testLinearizeImpulseDynamics(Robot& robot,
   kkt_residual.lf().setRandom();
   ImpulseKKTResidual kkt_residual_ref = kkt_residual;
   ImpulseDynamicsForwardEuler id(robot);
-  robot.updateKinematics(s.q, s.v);
-  id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix, kkt_residual);
-  const double l1norm = id.l1NormImpulseDynamicsResidual(kkt_residual);
-  const double squarednorm = id.squaredNormImpulseDynamicsResidual(kkt_residual);
+  robot.updateKinematics(s.q, s.v+s.dv);
+  id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix, kkt_residual, is_state_constraint_valid);
+  const double l1norm = id.l1NormImpulseDynamicsResidual(kkt_residual, is_state_constraint_valid);
+  const double squarednorm = id.squaredNormImpulseDynamicsResidual(kkt_residual, is_state_constraint_valid);
   ImpulseDynamicsForwardEulerData data(robot);
   data.setImpulseStatus(impulse_status);
-  robot.updateKinematics(s.q, s.v);
+  robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamicsForwardEuler::linearizeInverseImpulseDynamics(robot, impulse_status, s, data);
   ImpulseDynamicsForwardEuler::linearizeImpulseVelocityConstraint(robot, impulse_status, data);
-  ImpulseDynamicsForwardEuler::linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix_ref, kkt_residual_ref);
+  if (is_state_constraint_valid) {
+    ImpulseDynamicsForwardEuler::linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix_ref, kkt_residual_ref);
+  }
   Eigen::MatrixXd dImDdf = Eigen::MatrixXd::Zero(robot.dimv(), impulse_status.dimp());
-  robot.updateKinematics(s.q, s.v);
+  robot.updateKinematics(s.q, s.v+s.dv);
   ContactStatus contact_status(impulse_status.max_point_contacts());
   contact_status.setContactStatus(impulse_status.isImpulseActive());
   robot.dRNEAPartialdFext(contact_status, dImDdf);
-  // kkt_residual_ref.lq() += data.dImDdq().transpose() * s.beta + data.dCdq().transpose() * s.mu_stack() + kkt_matrix_ref.Pq().transpose() * s.xi_stack();
-
-  ///////
-  const double penalty = 1000;
-  kkt_residual_ref.lq() += data.dImDdq().transpose() * s.beta + data.dCdq().transpose() * s.mu_stack() + penalty * kkt_matrix_ref.Pq().transpose() * kkt_residual_ref.P();
-  ////// 
-
+  kkt_residual_ref.lq() += data.dImDdq().transpose() * s.beta + data.dCdq().transpose() * s.mu_stack();
+  if (is_state_constraint_valid) {
+    kkt_residual_ref.lq() += kkt_matrix_ref.Pq().transpose() * s.xi_stack();
+  }
   kkt_residual_ref.lv() += data.dCdv().transpose() * s.mu_stack(); 
   kkt_residual_ref.ldv += data.dImDddv.transpose() * s.beta + data.dCdv().transpose() * s.mu_stack();
   kkt_residual_ref.lf() += dImDdf.transpose() * s.beta;
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
-  const double l1norm_ref = data.ImDC().lpNorm<1>() + kkt_residual.P().lpNorm<1>();
-  const double squarednorm_ref = data.ImDC().squaredNorm() + kkt_residual.P().squaredNorm();
-  EXPECT_DOUBLE_EQ(l1norm_ref, l1norm);
-  EXPECT_DOUBLE_EQ(squarednorm_ref, squarednorm);
+  if (is_state_constraint_valid) {
+    const double l1norm_ref = data.ImDC().lpNorm<1>() + kkt_residual_ref.P().lpNorm<1>();
+    const double squarednorm_ref = data.ImDC().squaredNorm() + kkt_residual_ref.P().squaredNorm();
+    EXPECT_DOUBLE_EQ(l1norm_ref, l1norm);
+    EXPECT_DOUBLE_EQ(squarednorm_ref, squarednorm);
+  }
+  else {
+    const double l1norm_ref = data.ImDC().lpNorm<1>();
+    const double squarednorm_ref = data.ImDC().squaredNorm();
+    EXPECT_DOUBLE_EQ(l1norm_ref, l1norm);
+    EXPECT_DOUBLE_EQ(squarednorm_ref, squarednorm);
+  }
 }  
 
 
@@ -255,7 +262,7 @@ void ImpulseDynamicsForwardEulerTest::testExpansionDual(Robot& robot, const Impu
 }
 
 
-void ImpulseDynamicsForwardEulerTest::testIntegration(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsForwardEulerTest::testIntegration(Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid) {
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimp();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
@@ -276,25 +283,21 @@ void ImpulseDynamicsForwardEulerTest::testIntegration(Robot& robot, const Impuls
   }
   ImpulseKKTResidual kkt_residual_ref = kkt_residual;
   ImpulseKKTMatrix kkt_matrix_ref = kkt_matrix;
-  robot.updateKinematics(s.q, s.v);
+  robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamicsForwardEuler id(robot), id_ref(robot);
-  id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix, kkt_residual);
+  id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix, kkt_residual, is_state_constraint_valid);
   id.condenseImpulseDynamics(robot, impulse_status, kkt_matrix, kkt_residual);
   ImpulseDynamicsForwardEulerData data_ref(robot);
   data_ref.setImpulseStatus(impulse_status);
-  robot.updateKinematics(s.q, s.v);
-  id_ref.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref);
+  robot.updateKinematics(s.q, s.v+s.dv);
+  id_ref.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref, is_state_constraint_valid);
   ImpulseDynamicsForwardEuler::linearizeInverseImpulseDynamics(robot, impulse_status, s, data_ref);
   ImpulseDynamicsForwardEuler::linearizeImpulseVelocityConstraint(robot, impulse_status, data_ref);
-  ImpulseDynamicsForwardEuler::linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix, kkt_residual);
+  if (is_state_constraint_valid) {
+    ImpulseDynamicsForwardEuler::linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix_ref, kkt_residual_ref);
+  }
   robot.computeMJtJinv(data_ref.dImDddv, data_ref.dCdv(), data_ref.MJtJinv());
   ImpulseDynamicsForwardEuler::condensing(robot, impulse_status, data_ref, kkt_matrix_ref, kkt_residual_ref);
-
-  //////////////////////////// 
-  const double penalty = 1000;
-  kkt_matrix_ref.Qqq() += penalty * kkt_matrix_ref.Pq().transpose() * kkt_matrix_ref.Pq();
-  //////////////////////////// 
-
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
@@ -309,27 +312,35 @@ void ImpulseDynamicsForwardEulerTest::testIntegration(Robot& robot, const Impuls
 }
 
 
-void ImpulseDynamicsForwardEulerTest::testComputeResidual(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsForwardEulerTest::testComputeResidual(Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid) {
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   ImpulseDynamicsForwardEuler id(robot);
   ImpulseKKTResidual kkt_residual(robot);
   kkt_residual.setImpulseStatus(impulse_status);
   ImpulseKKTResidual kkt_residual_ref = kkt_residual;
-  robot.updateKinematics(s.q, s.v);
-  id.computeImpulseDynamicsResidual(robot, impulse_status, s, kkt_residual);
-  const double l1norm = id.l1NormImpulseDynamicsResidual(kkt_residual);
-  const double squarednorm = id.squaredNormImpulseDynamicsResidual(kkt_residual);
+  robot.updateKinematics(s.q, s.v+s.dv);
+  id.computeImpulseDynamicsResidual(robot, impulse_status, s, kkt_residual, is_state_constraint_valid);
+  const double l1norm = id.l1NormImpulseDynamicsResidual(kkt_residual, is_state_constraint_valid);
+  const double squarednorm = id.squaredNormImpulseDynamicsResidual(kkt_residual, is_state_constraint_valid);
   ImpulseDynamicsForwardEulerData data(robot);
   data.setImpulseStatus(impulse_status);
   robot.setImpulseForces(impulse_status, s.f);
   robot.RNEAImpulse(s.q, s.dv, data.ImD());
-  robot.updateKinematics(s.q, s.v);
+  robot.updateKinematics(s.q, s.v+s.dv);
   robot.computeImpulseVelocityResidual(impulse_status, data.C());
   robot.computeImpulseConditionResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
-  double l1norm_ref = data.ImDC().lpNorm<1>() + kkt_residual_ref.P().lpNorm<1>();
-  double squarednorm_ref = data.ImDC().squaredNorm() + kkt_residual_ref.P().squaredNorm();
-  EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);
-  EXPECT_DOUBLE_EQ(squarednorm, squarednorm_ref);
+  if (is_state_constraint_valid) {
+    double l1norm_ref = data.ImDC().lpNorm<1>() + kkt_residual_ref.P().lpNorm<1>();
+    double squarednorm_ref = data.ImDC().squaredNorm() + kkt_residual_ref.P().squaredNorm();
+    EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);
+    EXPECT_DOUBLE_EQ(squarednorm, squarednorm_ref);
+  }
+  else {
+    double l1norm_ref = data.ImDC().lpNorm<1>();
+    double squarednorm_ref = data.ImDC().squaredNorm();
+    EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);
+    EXPECT_DOUBLE_EQ(squarednorm, squarednorm_ref);
+  }
 }
 
 
@@ -341,25 +352,33 @@ TEST_F(ImpulseDynamicsForwardEulerTest, fixedBase) {
   }
   Robot robot(fixed_base_urdf, impulse_frames);
   impulse_status.setImpulseStatus({false});
-  testLinearizeInverseImpulseDynamics(robot, impulse_status);
+  testLinearizeInverseImpulseDynamics(robot, impulse_status, false);
+  testLinearizeInverseImpulseDynamics(robot, impulse_status, true);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulsePositionConstraints(robot, impulse_status);
-  testLinearizeImpulseDynamics(robot, impulse_status);
+  testLinearizeImpulseDynamics(robot, impulse_status, false);
+  testLinearizeImpulseDynamics(robot, impulse_status, true);
   testCondensing(robot, impulse_status);
   testExpansionPrimal(robot, impulse_status);
   testExpansionDual(robot, impulse_status);
-  testIntegration(robot, impulse_status);
-  testComputeResidual(robot, impulse_status);
+  testIntegration(robot, impulse_status, false);
+  testIntegration(robot, impulse_status, true);
+  testComputeResidual(robot, impulse_status, false);
+  testComputeResidual(robot, impulse_status, true);
   impulse_status.setImpulseStatus({true});
-  testLinearizeInverseImpulseDynamics(robot, impulse_status);
+  testLinearizeInverseImpulseDynamics(robot, impulse_status, false);
+  testLinearizeInverseImpulseDynamics(robot, impulse_status, true);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulsePositionConstraints(robot, impulse_status);
-  testLinearizeImpulseDynamics(robot, impulse_status);
+  testLinearizeImpulseDynamics(robot, impulse_status, false);
+  testLinearizeImpulseDynamics(robot, impulse_status, true);
   testCondensing(robot, impulse_status);
   testExpansionPrimal(robot, impulse_status);
   testExpansionDual(robot, impulse_status);
-  testIntegration(robot, impulse_status);
-  testComputeResidual(robot, impulse_status);
+  testIntegration(robot, impulse_status, false);
+  testIntegration(robot, impulse_status, true);
+  testComputeResidual(robot, impulse_status, false);
+  testComputeResidual(robot, impulse_status, true);
 }
 
 
@@ -371,15 +390,19 @@ TEST_F(ImpulseDynamicsForwardEulerTest, floatingBase) {
   }
   Robot robot(floating_base_urdf, impulse_frames);
   impulse_status.setImpulseStatus({false, false, false, false});
-  testLinearizeInverseImpulseDynamics(robot, impulse_status);
+  testLinearizeInverseImpulseDynamics(robot, impulse_status, false);
+  testLinearizeInverseImpulseDynamics(robot, impulse_status, true);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulsePositionConstraints(robot, impulse_status);
-  testLinearizeImpulseDynamics(robot, impulse_status);
+  testLinearizeImpulseDynamics(robot, impulse_status, false);
+  testLinearizeImpulseDynamics(robot, impulse_status, true);
   testCondensing(robot, impulse_status);
   testExpansionPrimal(robot, impulse_status);
   testExpansionDual(robot, impulse_status);
-  testIntegration(robot, impulse_status);
-  testComputeResidual(robot, impulse_status);
+  testIntegration(robot, impulse_status, false);
+  testIntegration(robot, impulse_status, true);
+  testComputeResidual(robot, impulse_status, false);
+  testComputeResidual(robot, impulse_status, true);
   std::random_device rnd;
   std::vector<bool> is_impulse_active;
   for (const auto frame : impulse_frames) {
@@ -389,15 +412,19 @@ TEST_F(ImpulseDynamicsForwardEulerTest, floatingBase) {
     impulse_status.activateImpulse(0);
   }
   impulse_status.setImpulseStatus(is_impulse_active);
-  testLinearizeInverseImpulseDynamics(robot, impulse_status);
+  testLinearizeInverseImpulseDynamics(robot, impulse_status, false);
+  testLinearizeInverseImpulseDynamics(robot, impulse_status, true);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulsePositionConstraints(robot, impulse_status);
-  testLinearizeImpulseDynamics(robot, impulse_status);
+  testLinearizeImpulseDynamics(robot, impulse_status, false);
+  testLinearizeImpulseDynamics(robot, impulse_status, true);
   testCondensing(robot, impulse_status);
   testExpansionPrimal(robot, impulse_status);
   testExpansionDual(robot, impulse_status);
-  testIntegration(robot, impulse_status);
-  testComputeResidual(robot, impulse_status);
+  testIntegration(robot, impulse_status, false);
+  testIntegration(robot, impulse_status, true);
+  testComputeResidual(robot, impulse_status, false);
+  testComputeResidual(robot, impulse_status, true);
 }
 
 } // namespace idocp

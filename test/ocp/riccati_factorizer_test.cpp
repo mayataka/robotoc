@@ -95,6 +95,7 @@ RiccatiFactorization RiccatiFactorizerTest::createRiccatiFactorization(const Rob
   riccati.pi.setRandom();
   riccati.N.setRandom();
   riccati.N = (riccati.N + riccati.N.transpose()).eval();
+  riccati.n.setRandom();
   return riccati; 
 }
 
@@ -110,7 +111,8 @@ void RiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) const {
   RiccatiFactorizer factorizer(robot);
   LQRStateFeedbackPolicy lqr_policy_ref(robot);
   BackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
-  RiccatiFactorization riccati(robot), riccati_ref(robot);
+  RiccatiFactorization riccati = createRiccatiFactorization(robot);
+  RiccatiFactorization riccati_ref = riccati;
   factorizer.backwardRiccatiRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, riccati);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next, dtau, kkt_matrix_ref, kkt_residual_ref);
   Eigen::MatrixXd Ginv = kkt_matrix_ref.Quu().inverse();
@@ -160,6 +162,7 @@ void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot&
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
+  RiccatiFactorization riccati_next_ref = riccati_next;
   KKTMatrix kkt_matrix = createKKTMatrix(robot);
   KKTResidual kkt_residual = createKKTResidual(robot);
   KKTMatrix kkt_matrix_ref = kkt_matrix;
@@ -167,7 +170,8 @@ void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot&
   RiccatiFactorizer factorizer(robot);
   LQRStateFeedbackPolicy lqr_policy_ref(robot);
   BackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
-  RiccatiFactorization riccati(robot), riccati_ref(robot);
+  RiccatiFactorization riccati = createRiccatiFactorization(robot);
+  RiccatiFactorization riccati_ref = riccati;
   factorizer.backwardRiccatiRecursion(riccati_next, dtau, kkt_matrix, kkt_residual, riccati);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next, dtau, kkt_matrix_ref, kkt_residual_ref);
   Eigen::MatrixXd Ginv = kkt_matrix_ref.Quu().inverse();
@@ -180,11 +184,6 @@ void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot&
   const Eigen::MatrixXd BGinvBt = kkt_matrix_ref.Fxu() * Ginv * kkt_matrix_ref.Fxu().transpose();
   EXPECT_TRUE(kkt_matrix_ref.isApprox(kkt_matrix));
   EXPECT_TRUE(kkt_residual_ref.isApprox(kkt_residual));
-  RiccatiFactorization riccati_next_ref(robot);
-  riccati.Pi.setRandom();
-  riccati.pi.setRandom();
-  riccati.N.setRandom();
-  riccati.N = (riccati.N + riccati.N.transpose()).eval();
   factorizer.forwardRiccatiRecursionSerial(riccati, kkt_matrix, kkt_residual, dtau, riccati_next, true);
   riccati_next_ref.Pi = kkt_matrix_ref.Fxx() * riccati.Pi;
   riccati_next_ref.pi = kkt_residual_ref.Fx() + kkt_matrix_ref.Fxx() * riccati.pi;
@@ -192,7 +191,6 @@ void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot&
   EXPECT_TRUE(riccati_next.Pi.isApprox(riccati_next_ref.Pi));
   EXPECT_TRUE(riccati_next.pi.isApprox(riccati_next_ref.pi));
   EXPECT_TRUE(riccati_next.N.isApprox(riccati_next_ref.N));
-  riccati.n.setRandom();
   const Eigen::VectorXd dx0 = Eigen::VectorXd::Random(2*dimv);
   SplitDirection d(robot), d_ref(robot);
   factorizer.computeStateDirection(riccati, dx0, d, true);
@@ -221,16 +219,14 @@ void RiccatiFactorizerTest::testForwardRecursionWithStateConstraint(const Robot&
 void RiccatiFactorizerTest::testFactorizeStateConstraintFactorization(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  const RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
   const KKTMatrix kkt_matrix = createKKTMatrix(robot);
   const KKTResidual kkt_residual = createKKTResidual(robot);
   RiccatiFactorizer factorizer(robot);
-  RiccatiFactorization riccati(robot), riccati_ref(robot);
   const int dimf = 6;
   Eigen::MatrixXd T_next(2*dimv, dimf), T(2*dimv, dimf), T_ref(2*dimv, dimf);
   T_next.setRandom();
-  T.setZero();
-  T_ref.setZero();
+  T.setRandom();
+  T_ref = T;
   factorizer.backwardStateConstraintFactorization(T_next, kkt_matrix, dtau, T);
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
   if (robot.has_floating_base()) {

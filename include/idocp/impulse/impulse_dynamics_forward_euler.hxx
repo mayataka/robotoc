@@ -25,12 +25,10 @@ inline ImpulseDynamicsForwardEuler::~ImpulseDynamicsForwardEuler() {
 inline void ImpulseDynamicsForwardEuler::linearizeImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status,  
     const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual) { 
+    ImpulseKKTResidual& kkt_residual, const bool is_state_constraint_valid) {
   setImpulseStatus(impulse_status);
   linearizeInverseImpulseDynamics(robot, impulse_status, s, data_);
   linearizeImpulseVelocityConstraint(robot, impulse_status, data_);
-  linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix, 
-                                     kkt_residual);
   // augment inverse impulse dynamics constraint
   kkt_residual.lq().noalias() += data_.dImDdq().transpose() * s.beta;
   kkt_residual.ldv.noalias() += data_.dImDddv.transpose() * s.beta;
@@ -43,7 +41,11 @@ inline void ImpulseDynamicsForwardEuler::linearizeImpulseDynamics(
   // We use an equivalence dCdv_() = dCddv, to avoid redundant calculation.
   kkt_residual.ldv.noalias() += data_.dCdv().transpose() * s.mu_stack();
   // augment impulse position constraint
-  // kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.xi_stack();
+  if (is_state_constraint_valid) {
+    linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix, 
+                                       kkt_residual);
+    kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.xi_stack();
+  }
 }
 
 
@@ -152,28 +154,41 @@ inline void ImpulseDynamicsForwardEuler::expansionDual(
 
 inline void ImpulseDynamicsForwardEuler::computeImpulseDynamicsResidual(
     Robot& robot, const ImpulseStatus& impulse_status,
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) {
+    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual,
+    const bool is_state_constraint_valid) {
   setImpulseStatus(impulse_status);
   robot.setImpulseForces(impulse_status, s.f);
   robot.RNEAImpulse(s.q, s.dv, data_.ImD());
   robot.computeImpulseVelocityResidual(impulse_status, data_.C());
-  robot.computeImpulseConditionResidual(impulse_status, 
-                                        impulse_status.contactPoints(), 
-                                        kkt_residual.P());
+  if (is_state_constraint_valid) {
+    robot.computeImpulseConditionResidual(impulse_status, 
+                                          impulse_status.contactPoints(), 
+                                          kkt_residual.P());
+  }
 }
 
 
 inline double ImpulseDynamicsForwardEuler::l1NormImpulseDynamicsResidual(
-    const ImpulseKKTResidual& kkt_residual) const {
-  return (data_.ImDC().lpNorm<1>() + kkt_residual.P().lpNorm<1>());
+    const ImpulseKKTResidual& kkt_residual,
+    const bool is_state_constraint_valid) const {
+  if (is_state_constraint_valid) {
+    return (data_.ImDC().lpNorm<1>() + kkt_residual.P().lpNorm<1>());
+  }
+  else {
+    return data_.ImDC().lpNorm<1>();
+  }
 }
 
 
 inline double ImpulseDynamicsForwardEuler::squaredNormImpulseDynamicsResidual(
-    const ImpulseKKTResidual& kkt_residual) const {
-  // printf("Error in impulse condition constraints = %lf\n", kkt_residual.P().squaredNorm());
-  // return (data_.ImDC().squaredNorm() + kkt_residual.P().squaredNorm());
-  return data_.ImDC().squaredNorm();
+    const ImpulseKKTResidual& kkt_residual,
+    const bool is_state_constraint_valid) const {
+  if (is_state_constraint_valid) {
+    return (data_.ImDC().squaredNorm() + kkt_residual.P().squaredNorm());
+  }
+  else {
+    return data_.ImDC().squaredNorm();
+  }
 }
 
 

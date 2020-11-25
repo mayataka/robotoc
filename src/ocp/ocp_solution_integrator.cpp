@@ -99,10 +99,10 @@ void OCPSolutionIntegrator::integrate(
           robots[omp_get_thread_num()], kkt_matrix.impulse[impulse_index], 
           kkt_residual.impulse[impulse_index], d.aux[impulse_index], 
           d.impulse[impulse_index]);
-      split_ocps.impulse[impulse_index].updatePrimal(robots[omp_get_thread_num()],
-                                                     primal_step_size, 
-                                                     d.impulse[impulse_index], 
-                                                     s.impulse[impulse_index]);
+      split_ocps.impulse[impulse_index].updatePrimal(
+          robots[omp_get_thread_num()], primal_step_size, 
+          d.impulse[impulse_index], s.impulse[impulse_index], 
+          is_state_constraint_valid(contact_sequence.timeStageBeforeImpulse(impulse_index)));
       split_ocps.impulse[impulse_index].updateDual(dual_step_size);
     }
     else if (i < N_ + 1 + 2*N_impulse) {

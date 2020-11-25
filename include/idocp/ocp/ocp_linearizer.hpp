@@ -111,6 +111,8 @@ private:
   double dtau(const ContactSequence& contact_sequence, 
               const int time_stage) const;
 
+  static bool is_state_constraint_valid(const int time_stage_before_impulse);
+
   double T_, dtau_;
   int N_, num_proc_;
   Eigen::VectorXd kkt_error_;

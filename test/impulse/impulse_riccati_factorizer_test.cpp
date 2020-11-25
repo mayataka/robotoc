@@ -100,7 +100,8 @@ void ImpulseRiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) {
   ImpulseKKTResidual kkt_residual_ref = kkt_residual;
   ImpulseRiccatiFactorizer factorizer(robot);
   ImpulseBackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
-  RiccatiFactorization riccati(robot), riccati_ref(robot);
+  RiccatiFactorization riccati = createRiccatiFactorization(robot);
+  RiccatiFactorization riccati_ref = riccati;
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next, kkt_matrix_ref);
   backward_recursion_ref.factorizeRiccatiFactorization(riccati_next, kkt_matrix_ref, kkt_residual_ref, riccati_ref);

@@ -181,9 +181,9 @@ inline bool ImpulseSplitSolution::isImpulseActive(
 }
 
 
-inline void ImpulseSplitSolution::integrate(const Robot& robot, 
-                                            const double step_size, 
-                                            const ImpulseSplitDirection& d) {
+inline void ImpulseSplitSolution::integrate(
+    const Robot& robot, const double step_size, const ImpulseSplitDirection& d, 
+    const bool is_state_constraint_valid) {
   lmd.noalias() += step_size * d.dlmd();
   gmm.noalias() += step_size * d.dgmm();
   robot.integrateConfiguration(d.dq(), step_size, q);
@@ -196,9 +196,11 @@ inline void ImpulseSplitSolution::integrate(const Robot& robot,
   assert(mu_stack().size() == d.dmu().size());
   mu_stack().noalias() += step_size * d.dmu();
   set_mu_vector();
-  assert(xi_stack().size() == d.dxi().size());
-  xi_stack().noalias() += step_size * d.dxi();
-  set_xi_vector();
+  if (is_state_constraint_valid) {
+    assert(xi_stack().size() == d.dxi().size());
+    xi_stack().noalias() += step_size * d.dxi();
+    set_xi_vector();
+  }
 }
 
 

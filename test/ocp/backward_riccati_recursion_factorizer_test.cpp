@@ -143,7 +143,7 @@ void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   EXPECT_TRUE(G_ref.isApprox(kkt_matrix.Quu()));
   EXPECT_TRUE(kkt_matrix.Quu().isApprox(kkt_matrix.Quu().transpose()));
   EXPECT_TRUE(lu_ref.isApprox(kkt_residual.lu()));
-  RiccatiFactorization riccati(robot), riccati_ref(robot);
+  RiccatiFactorization riccati = createRiccatiFactorization(robot);
   LQRStateFeedbackPolicy lqr_policy(robot);
   lqr_policy.K.setRandom();
   lqr_policy.k.setRandom();

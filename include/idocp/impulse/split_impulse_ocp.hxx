@@ -44,14 +44,11 @@ inline void SplitImpulseOCP::initConstraints(Robot& robot,
 }
 
 
-inline void SplitImpulseOCP::linearizeOCP(Robot& robot, 
-                                          const ImpulseStatus& impulse_status,  
-                                          const double t,  
-                                          const Eigen::VectorXd& q_prev, 
-                                          const ImpulseSplitSolution& s, 
-                                          const SplitSolution& s_next, 
-                                          ImpulseKKTMatrix& kkt_matrix, 
-                                          ImpulseKKTResidual& kkt_residual) {
+inline void SplitImpulseOCP::linearizeOCP(
+    Robot& robot, const ImpulseStatus& impulse_status, const double t,  
+    const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
+    const SplitSolution& s_next, ImpulseKKTMatrix& kkt_matrix, 
+    ImpulseKKTResidual& kkt_residual, const bool is_state_constraint_valid) {
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_residual.setImpulseStatus(impulse_status);
   robot.updateKinematics(s.q, s.v+s.dv);
@@ -63,19 +60,13 @@ inline void SplitImpulseOCP::linearizeOCP(Robot& robot,
   stateequation::LinearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
                                               kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s,
-                                             kkt_matrix, kkt_residual);
+                                             kkt_matrix, kkt_residual,
+                                             is_state_constraint_valid);
   cost_->computeStageCostHessian(robot, cost_data_, t, s, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, s, kkt_matrix, 
                                      kkt_residual);
   impulse_dynamics_.condenseImpulseDynamics(robot, impulse_status, 
                                             kkt_matrix, kkt_residual);
-
-  // kkt_matrix.Fvv().setIdentity();
-
-  // const double penalty = 1000;
-  // kkt_residual.lq().noalias() += penalty * kkt_matrix.Pq().transpose() * kkt_residual.P();
-  // kkt_matrix.Qqq().noalias() += penalty * kkt_matrix.Pq().transpose() * kkt_matrix.Pq();
-
 }
 
 
@@ -84,7 +75,6 @@ inline void SplitImpulseOCP::computeCondensedPrimalDirection(
   impulse_dynamics_.computeCondensedPrimalDirection(robot, d);
   constraints_->computeSlackAndDualDirection(robot, constraints_data_, s, d);
 }
-
 
 
 inline void SplitImpulseOCP::computeCondensedDualDirection(
@@ -113,13 +103,13 @@ inline void SplitImpulseOCP::updateDual(const double dual_step_size) {
 }
 
 
-inline void SplitImpulseOCP::updatePrimal(const Robot& robot, 
-                                          const double primal_step_size, 
-                                          const ImpulseSplitDirection& d, 
-                                          ImpulseSplitSolution& s) {
+inline void SplitImpulseOCP::updatePrimal(
+    const Robot& robot, const double primal_step_size, 
+    const ImpulseSplitDirection& d, ImpulseSplitSolution& s, 
+    const bool is_state_constraint_valid) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
-  s.integrate(robot, primal_step_size, d);
+  s.integrate(robot, primal_step_size, d, is_state_constraint_valid);
   constraints_->updateSlack(constraints_data_, primal_step_size);
 }
 
@@ -128,7 +118,7 @@ inline void SplitImpulseOCP::computeKKTResidual(
     Robot& robot, const ImpulseStatus& impulse_status, const double t, 
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
     const SplitSolution& s_next, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual) {
+    ImpulseKKTResidual& kkt_residual, const bool is_state_constraint_valid) {
   assert(q_prev.size() == robot.dimq());
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_residual.setImpulseStatus(impulse_status);
@@ -140,22 +130,21 @@ inline void SplitImpulseOCP::computeKKTResidual(
   stateequation::LinearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
                                               kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
-                                             kkt_matrix, kkt_residual);
-
-  // const double penalty = 1000;
-  // kkt_residual.lq().noalias() += penalty * kkt_matrix.Pq().transpose() * kkt_residual.P();
+                                             kkt_matrix, kkt_residual, 
+                                             is_state_constraint_valid);
 }
 
 
 inline double SplitImpulseOCP::squaredNormKKTResidual(
-    const ImpulseKKTResidual& kkt_residual) const {
+    const ImpulseKKTResidual& kkt_residual, 
+    const bool is_state_constraint_valid) const {
   double error = 0;
   error += kkt_residual.lx().squaredNorm();
   error += kkt_residual.ldv.squaredNorm();
   error += kkt_residual.lf().squaredNorm();
   error += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
-  error += impulse_dynamics_.squaredNormImpulseDynamicsResidual(kkt_residual);
-  // error += kkt_residual.P().squaredNorm();
+  error += impulse_dynamics_.squaredNormImpulseDynamicsResidual(
+      kkt_residual, is_state_constraint_valid);
   error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
   return error;
 }
@@ -182,7 +171,8 @@ inline double SplitImpulseOCP::stageCost(Robot& robot, const double t,
 inline double SplitImpulseOCP::constraintViolation(
     Robot& robot, const ImpulseStatus& impulse_status, const double t, 
     const ImpulseSplitSolution& s, const Eigen::VectorXd& q_next, 
-    const Eigen::VectorXd& v_next, ImpulseKKTResidual& kkt_residual) {
+    const Eigen::VectorXd& v_next, ImpulseKKTResidual& kkt_residual,
+    const bool is_state_constraint_valid) {
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.setZero();
   robot.updateKinematics(s.q, s.v+s.dv);
@@ -190,11 +180,13 @@ inline double SplitImpulseOCP::constraintViolation(
   stateequation::ComputeImpulseForwardEulerResidual(robot, s, q_next, v_next, 
                                                     kkt_residual);
   impulse_dynamics_.computeImpulseDynamicsResidual(robot, impulse_status, s, 
-                                                   kkt_residual);
+                                                   kkt_residual,
+                                                   is_state_constraint_valid);
   double violation = 0;
   violation += constraints_->l1NormPrimalResidual(constraints_data_);
   violation += stateequation::L1NormStateEuqationResidual(kkt_residual);
-  violation += impulse_dynamics_.l1NormImpulseDynamicsResidual(kkt_residual);
+  violation += impulse_dynamics_.l1NormImpulseDynamicsResidual(
+      kkt_residual, is_state_constraint_valid);
   return violation;
 }
 

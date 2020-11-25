@@ -36,7 +36,8 @@ public:
                                 const ImpulseStatus& impulse_status, 
                                 const ImpulseSplitSolution& s, 
                                 ImpulseKKTMatrix& kkt_matrix, 
-                                ImpulseKKTResidual& kkt_residual);
+                                ImpulseKKTResidual& kkt_residual, 
+                                const bool is_state_constraint_valid);
 
   static void linearizeInverseImpulseDynamics(
       Robot& robot, const ImpulseStatus& impulse_status, 
@@ -86,13 +87,16 @@ public:
   void computeImpulseDynamicsResidual(Robot& robot, 
                                       const ImpulseStatus& impulse_status,
                                       const ImpulseSplitSolution& s, 
-                                      ImpulseKKTResidual& kkt_residual);
+                                      ImpulseKKTResidual& kkt_residual,
+                                      const bool is_state_constraint_valid);
 
   double l1NormImpulseDynamicsResidual(
-      const ImpulseKKTResidual& kkt_residual) const;
+      const ImpulseKKTResidual& kkt_residual, 
+      const bool is_state_constraint_valid) const;
 
   double squaredNormImpulseDynamicsResidual(
-      const ImpulseKKTResidual& kkt_residual) const;
+      const ImpulseKKTResidual& kkt_residual,
+      const bool is_state_constraint_valid) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

@@ -200,9 +200,12 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] step_size Step size.
   /// @param[in] d Split direction.
+  /// @param[in] is_state_constraint_valid Specify wheather the pure-state
+  /// equality constraint is valid or not.
   ///
   void integrate(const Robot& robot, const double step_size, 
-                 const ImpulseSplitDirection& d);
+                 const ImpulseSplitDirection& d, 
+                 const bool is_state_constraint_valid);
 
   ///
   /// @brief Return true if two ImpulseSplitSolution have the same value and  

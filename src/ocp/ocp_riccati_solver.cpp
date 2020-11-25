@@ -64,13 +64,13 @@ void OCPRiccatiSolver::computeDirection(HybridOCP& split_ocps,
   riccati_recursion_.backwardStateConstraintFactorization(
       contact_sequence, kkt_matrix, constraint_factorization_);
   ocp_direction_calculator_.computeInitialStateDirection(robots, q, v, s, d);
-  // if (contact_sequence.existImpulseStage()) {
-  //   constraint_factorizer_.computeLagrangeMultiplierDirection(
-  //       contact_sequence, riccati_factorization_.impulse, 
-  //       constraint_factorization_, d[0].dx(), d.impulse);
-  //   ocp_direction_calculator_.aggregateLagrangeMultiplierDirection(
-  //       contact_sequence, riccati_factorization_, constraint_factorization_, d);
-  // }
+  if (contact_sequence.existImpulseStage()) {
+    // constraint_factorizer_.computeLagrangeMultiplierDirection(
+    //     contact_sequence, riccati_factorization_.impulse, 
+    //     constraint_factorization_, d[0].dx(), d.impulse);
+    // ocp_direction_calculator_.aggregateLagrangeMultiplierDirection(
+    //     contact_sequence, riccati_factorization_, constraint_factorization_, d);
+  }
   ocp_direction_calculator_.computeDirection(
       split_ocps, robots, contact_sequence, 
       riccati_recursion_.getFactorizersHandle(), riccati_factorization_, 
