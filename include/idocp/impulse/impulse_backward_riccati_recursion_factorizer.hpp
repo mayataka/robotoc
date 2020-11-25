@@ -62,11 +62,9 @@ public:
   /// recursion, i.e., factorize matrices F, and vectors lx.
   /// @param[in] riccati_next Riccati factorization at the next time stage.
   /// @param[in, out] kkt_matrix The KKT matrix.
-  /// @param[in, out] kkt_residual The KKT residual.
   ///
   void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
-                          ImpulseKKTMatrix& kkt_matrix, 
-                          ImpulseKKTResidual& kkt_residual);
+                          ImpulseKKTMatrix& kkt_matrix);
 
   ///
   /// @brief Factorize the Riccati factorization matrix P and vector s.

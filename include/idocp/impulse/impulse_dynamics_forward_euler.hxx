@@ -44,8 +44,6 @@ inline void ImpulseDynamicsForwardEuler::linearizeImpulseDynamics(
   kkt_residual.ldv.noalias() += data_.dCdv().transpose() * s.mu_stack();
   // augment impulse position constraint
   // kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.xi_stack();
-  const double penalty = 1000;
-  kkt_residual.lq().noalias() += penalty * kkt_matrix.Pq().transpose() * kkt_residual.P();
 }
 
 
@@ -82,8 +80,6 @@ inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
     ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual) {
   robot.computeMJtJinv(data_.dImDddv, data_.dCdv(), data_.MJtJinv());
   condensing(robot, impulse_status, data_, kkt_matrix, kkt_residual);
-  const double penalty = 1000;
-  kkt_matrix.Qqq().noalias() += penalty * kkt_matrix.Pq().transpose() * kkt_matrix.Pq();
 }
 
 
@@ -175,8 +171,9 @@ inline double ImpulseDynamicsForwardEuler::l1NormImpulseDynamicsResidual(
 
 inline double ImpulseDynamicsForwardEuler::squaredNormImpulseDynamicsResidual(
     const ImpulseKKTResidual& kkt_residual) const {
-  printf("Error in impulse condition constraints = %lf\n", kkt_residual.P().squaredNorm());
-  return (data_.ImDC().squaredNorm() + kkt_residual.P().squaredNorm());
+  // printf("Error in impulse condition constraints = %lf\n", kkt_residual.P().squaredNorm());
+  // return (data_.ImDC().squaredNorm() + kkt_residual.P().squaredNorm());
+  return data_.ImDC().squaredNorm();
 }
 
 

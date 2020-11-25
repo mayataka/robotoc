@@ -99,7 +99,7 @@ void ImpulseBackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) con
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
   }
   ASSERT_TRUE(kkt_matrix.Fqv().isZero());
-  factorizer.factorizeKKTMatrix(riccati_next, kkt_matrix, kkt_residual);
+  factorizer.factorizeKKTMatrix(riccati_next, kkt_matrix);
   if (!robot.has_floating_base()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
   }

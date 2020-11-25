@@ -69,6 +69,13 @@ inline void SplitImpulseOCP::linearizeOCP(Robot& robot,
                                      kkt_residual);
   impulse_dynamics_.condenseImpulseDynamics(robot, impulse_status, 
                                             kkt_matrix, kkt_residual);
+
+  // kkt_matrix.Fvv().setIdentity();
+
+  // const double penalty = 1000;
+  // kkt_residual.lq().noalias() += penalty * kkt_matrix.Pq().transpose() * kkt_residual.P();
+  // kkt_matrix.Qqq().noalias() += penalty * kkt_matrix.Pq().transpose() * kkt_matrix.Pq();
+
 }
 
 
@@ -134,6 +141,9 @@ inline void SplitImpulseOCP::computeKKTResidual(
                                               kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
                                              kkt_matrix, kkt_residual);
+
+  // const double penalty = 1000;
+  // kkt_residual.lq().noalias() += penalty * kkt_matrix.Pq().transpose() * kkt_residual.P();
 }
 
 
@@ -145,6 +155,7 @@ inline double SplitImpulseOCP::squaredNormKKTResidual(
   error += kkt_residual.lf().squaredNorm();
   error += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
   error += impulse_dynamics_.squaredNormImpulseDynamicsResidual(kkt_residual);
+  // error += kkt_residual.P().squaredNorm();
   error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
   return error;
 }

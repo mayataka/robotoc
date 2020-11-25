@@ -206,12 +206,11 @@ double OCPLinearizer::KKTError(const HybridOCP& split_ocps,
           = split_ocps.lift[lift_index].squaredNormKKTResidual(kkt_residual.lift[lift_index], dtau_aux);
     }
   }
-  std::cout << kkt_error_.head(N_all).transpose() << std::endl;
-  std::cout << "impulse.lq = " << kkt_residual.impulse[0].lq().squaredNorm() << std::endl;
-  std::cout << "impulse.lv = " << kkt_residual.impulse[0].lv().squaredNorm() << std::endl;
-  std::cout << "impulse.ldv = " << kkt_residual.impulse[0].ldv.squaredNorm() << std::endl;
-  std::cout << "impulse.lf = " << kkt_residual.impulse[0].lf().squaredNorm() << std::endl;
-  std::cout << "impulse.Fx = " << kkt_residual.impulse[0].Fx().squaredNorm() << std::endl;
+  // std::cout << "impulse.lq = " << kkt_residual.impulse[0].lq().squaredNorm() << std::endl;
+  // std::cout << "impulse.lv = " << kkt_residual.impulse[0].lv().squaredNorm() << std::endl;
+  // std::cout << "impulse.ldv = " << kkt_residual.impulse[0].ldv.squaredNorm() << std::endl;
+  // std::cout << "impulse.lf = " << kkt_residual.impulse[0].lf().squaredNorm() << std::endl;
+  // std::cout << "impulse.Fx = " << kkt_residual.impulse[0].Fx().squaredNorm() << std::endl;
   return std::sqrt(kkt_error_.head(N_all).sum());
 }
 

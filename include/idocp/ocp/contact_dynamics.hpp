@@ -88,7 +88,6 @@ public:
 
 private:
   ContactDynamicsData data_;
-  int dimu_;
   bool has_floating_base_, has_active_contacts_;
   static constexpr int kDimFloatingBase = 6;
 

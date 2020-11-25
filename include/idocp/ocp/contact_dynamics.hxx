@@ -9,7 +9,6 @@ namespace idocp {
 
 inline ContactDynamics::ContactDynamics(const Robot& robot) 
   : data_(robot),
-    dimu_(robot.dimu()),
     has_floating_base_(robot.has_floating_base()),
     has_active_contacts_(false) {
 }
@@ -17,7 +16,6 @@ inline ContactDynamics::ContactDynamics(const Robot& robot)
 
 inline ContactDynamics::ContactDynamics() 
   : data_(),
-    dimu_(0),
     has_floating_base_(false),
     has_active_contacts_(false) {
 }
@@ -45,7 +43,7 @@ inline void ContactDynamics::linearizeContactDynamics(
   }
   // augment floating base constraint
   if (has_floating_base_) {
-    kkt_residual.lu().noalias() -= dtau * s.beta.tail(dimu_); 
+    kkt_residual.lu().noalias() -= dtau * s.beta.tail(robot.dimu()); 
     kkt_residual.lu_passive.noalias() 
         -= dtau * s.beta.template head<kDimFloatingBase>(); 
     data_.u_passive = s.u_passive; 
