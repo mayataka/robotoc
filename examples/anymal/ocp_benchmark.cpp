@@ -121,8 +121,8 @@ void BenchmarkWithContacts() {
   idocp::DiscreteEvent discrete_event(robot);
   discrete_event.setDiscreteEvent(contact_status, contact_status_next);
   discrete_event.setContactPoints(robot);
-  // discrete_event.eventTime = 0.175;
-  discrete_event.eventTime = 0.125;
+  discrete_event.eventTime = 0.175;
+  // discrete_event.eventTime = 0.125;
   // discrete_event.eventTime = 0.025;
   ocp_benchmarker.getSolverHandle()->setDiscreteEvent(discrete_event);
   q << 0, 0, 0.5, 0, 0, 0, 1, 

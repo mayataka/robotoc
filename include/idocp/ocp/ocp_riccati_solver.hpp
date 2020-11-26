@@ -8,9 +8,10 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/ocp/riccati_factorizer.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
-#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
+#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/riccati_recursion.hpp"
 #include "idocp/ocp/ocp_direction_calculator.hpp"
 
@@ -80,6 +81,7 @@ public:
 
 private:
   RiccatiRecursion riccati_recursion_;
+  HybridRiccatiFactorizer riccati_factorizer_;
   HybridRiccatiFactorization riccati_factorization_;
   StateConstraintRiccatiFactorizer constraint_factorizer_;
   std::vector<StateConstraintRiccatiFactorization> constraint_factorization_;

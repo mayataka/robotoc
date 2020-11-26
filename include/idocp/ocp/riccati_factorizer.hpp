@@ -88,11 +88,11 @@ public:
   /// Riccati recursion with pure-state equality constraints. 
   /// @param[in] riccati Riccati factorization at the current time stage. 
   ///
-  static void forwardRiccatiRecursionSerialInitial(
+  static void forwardStateConstraintFactorizationInitial(
       const RiccatiFactorization& riccati);
 
   ///
-  /// @brief Performs the serial part of the forward Riccati recursion with 
+  /// @brief Performs the serial part of the forward Riccati recursion due to
   /// pure-state equality constraints. 
   /// @param[in] riccati Riccati factorization at the current time stage. 
   /// @param[in] kkt_matrix KKT matrix at the current time stage. 
@@ -102,12 +102,10 @@ public:
   /// @param[in] exist_state_constraint If true, the factorization for state
   /// constraints are also performed. 
   ///
-  void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati, 
-                                     const KKTMatrix& kkt_matrix, 
-                                     const KKTResidual& kkt_residual, 
-                                     const double dtau,
-                                     RiccatiFactorization& riccati_next,
-                                     const bool exist_state_constraint);
+  void forwardStateConstraintFactorization(
+      const RiccatiFactorization& riccati, const KKTMatrix& kkt_matrix, 
+      const KKTResidual& kkt_residual, const double dtau, 
+      RiccatiFactorization& riccati_next, const bool exist_state_constraint);
 
   ///
   /// @brief Performs the backward factorization of matrices related to the 
@@ -123,31 +121,24 @@ public:
       const double dtau, const Eigen::MatrixBase<MatrixType2>& T) const;
 
   ///
-  /// @brief Performs the unconstrained, classical forward Riccati recursion. 
+  /// @brief Performs forward Riccati recursion and computes state direction. 
   /// @param[in] kkt_matrix KKT matrix at the current time stage. 
   /// @param[in] kkt_residual KKT residual at the current time stage. 
-  /// @param[in, out] d Split direction at the current time stage. 
+  /// @param[in] riccati_next Riccati factorization at the next stage. 
+  /// @param[in] d Split direction at the current time stage. 
   /// @param[in] dtau Time step between the current time stage and the next 
   /// @param[out] d_next Split direction at the next time stage. 
-  ///
-  void forwardRiccatiRecursionUnconstrained(const KKTMatrix& kkt_matrix, 
-                                            const KKTResidual& kkt_residual,
-                                            SplitDirection& d, const double dtau,
-                                            SplitDirection& d_next) const;
-
-  ///
-  /// @brief Computes the Newton direction of the state vector. 
-  /// @param[in] riccati Riccati factorization at the current stage. 
-  /// @param[in] dx0 Direction of the state at the initial time stage. 
-  /// @param[out] d Split direction of the current impulse stage. 
   /// @param[in] exist_state_constraint If true, the factorization for state
   /// constraints are also performed. 
   ///
-  template <typename VectorType>
-  static void computeStateDirection(const RiccatiFactorization& riccati, 
-                                    const Eigen::MatrixBase<VectorType>& dx0,
-                                    SplitDirection& d,
-                                    const bool exist_state_constraint);
+  template <typename SplitDirectionType>
+  void forwardRiccatiRecursion(const KKTMatrix& kkt_matrix, 
+                               const KKTResidual& kkt_residual,
+                               const RiccatiFactorization& riccati_next,
+                               const SplitDirection& d, 
+                               const double dtau, 
+                               SplitDirectionType& d_next, 
+                               const bool exist_state_constraint) const;
 
   ///
   /// @brief Computes the Newton direction of the costate vector. 

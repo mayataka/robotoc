@@ -69,7 +69,7 @@ inline void RiccatiFactorizer::forwardRiccatiRecursionParallel(
 }
 
 
-inline void RiccatiFactorizer::forwardRiccatiRecursionSerialInitial(
+inline void RiccatiFactorizer::forwardStateConstraintFactorizationInitial(
     const RiccatiFactorization& riccati) {
   assert(riccati.Pi.isIdentity()); // Checks riccati.Pi is a identity matrix.
   assert(riccati.pi.isZero()); // Checks riccati.pi is a zero vector.
@@ -77,7 +77,7 @@ inline void RiccatiFactorizer::forwardRiccatiRecursionSerialInitial(
 }
 
 
-inline void RiccatiFactorizer::forwardRiccatiRecursionSerial(
+inline void RiccatiFactorizer::forwardStateConstraintFactorization(
     const RiccatiFactorization& riccati, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, const double dtau,
     RiccatiFactorization& riccati_next, 
@@ -118,36 +118,25 @@ inline void RiccatiFactorizer::backwardStateConstraintFactorization(
 }
 
 
-inline void RiccatiFactorizer::forwardRiccatiRecursionUnconstrained(
+template <typename SplitDirectionType>
+inline void RiccatiFactorizer::forwardRiccatiRecursion(
     const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
-    SplitDirection& d, const double dtau, 
-    SplitDirection& d_next) const {
+    const RiccatiFactorization& riccati_next, const SplitDirection& d, 
+    const double dtau, SplitDirectionType& d_next, 
+    const bool exist_state_constraint) const {
   assert(dtau > 0);
-  d.du().noalias() = lqr_policy_.K * d.dx();
-  d.du().noalias() += lqr_policy_.k;
+  d_next.dx() = kkt_residual.Fx();
   if (has_floating_base_) {
-    d_next.dq().noalias() = kkt_matrix.Fqq() * d.dq();
-    d_next.dq().noalias() += dtau * d.dv() + kkt_residual.Fq();
+    d_next.dq().noalias() += kkt_matrix.Fqq() * d.dq();
+    d_next.dq().noalias() += dtau * d.dv();
   }
   else {
-    d_next.dq().noalias() = d.dq() + dtau * d.dv() + kkt_residual.Fq();
+    d_next.dq().noalias() += d.dq() + dtau * d.dv();
   }
-  d_next.dv().noalias() = kkt_matrix.Fvq() * d.dq();
+  d_next.dv().noalias() += kkt_matrix.Fvq() * d.dq();
   d_next.dv().noalias() += kkt_matrix.Fvv() * d.dv();
-  d_next.dv().noalias() += kkt_matrix.Fvu() * d.du();
-  d_next.dv().noalias() += kkt_residual.Fv();
-}
-
-
-template <typename VectorType>
-inline void RiccatiFactorizer::computeStateDirection(
-    const RiccatiFactorization& riccati, 
-    const Eigen::MatrixBase<VectorType>& dx0, SplitDirection& d,
-    const bool exist_state_constraint) {
-  d.dx().noalias() = riccati.Pi * dx0;
-  d.dx().noalias() += riccati.pi;
   if (exist_state_constraint) {
-    d.dx().noalias() -= riccati.N * riccati.n;
+    d_next.dv().noalias() -= BGinvBt_ * riccati_next.n.tail(dimv_);
   }
 }
 

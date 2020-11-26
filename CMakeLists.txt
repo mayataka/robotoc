@@ -90,8 +90,8 @@ add_library(
   src/ocp/contact_dynamics.cpp
   src/ocp/split_ocp.cpp
   src/ocp/terminal_ocp.cpp
-  src/ocp/ocp_linearizer.cpp
-  src/ocp/ocp_solution_integrator.cpp
+  # src/ocp/ocp_linearizer.cpp
+  # src/ocp/ocp_solution_integrator.cpp
   src/ocp/riccati_factorization.cpp
   src/ocp/backward_riccati_recursion_factorizer.cpp
   src/ocp/forward_riccati_recursion_factorizer.cpp
@@ -102,18 +102,18 @@ add_library(
   src/ocp/state_constraint_riccati_lp_factorizer.cpp
   src/ocp/state_constraint_riccati_factorizer.cpp
   src/ocp/riccati_recursion.cpp
-  src/ocp/ocp_direction_calculator.cpp
-  src/ocp/ocp_riccati_solver.cpp
-  src/ocp/ocp.cpp
+  # src/ocp/ocp_direction_calculator.cpp
+  # src/ocp/ocp_riccati_solver.cpp
+  # src/ocp/ocp.cpp
   # src/ocp/split_temporary_solution.cpp
-  src/ocp/line_search_filter.cpp
+  # src/ocp/line_search_filter.cpp
   # src/ocp/backward_correction.cpp
   # src/ocp/split_parnmpc.cpp
   # src/ocp/parnmpc.cpp
   # src/ocp/terminal_parnmpc.cpp
   # src/ocp/mpc.cpp
-  src/utils/joint_constraints_factory.cpp
-  src/utils/ocp_benchmarker.cpp
+  # src/utils/joint_constraints_factory.cpp
+  # src/utils/ocp_benchmarker.cpp
   # src/utils/simulation_data_saver.cpp
   # src/utils/runge_kutta.cpp
   # src/utils/manipulator_simulator.cpp

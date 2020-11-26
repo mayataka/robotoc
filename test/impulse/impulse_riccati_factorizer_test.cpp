@@ -8,7 +8,7 @@
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_split_direction.hpp"
+#include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/impulse/impulse_backward_riccati_recursion_factorizer.hpp"
 #include "idocp/impulse/impulse_riccati_factorizer.hpp"
@@ -35,8 +35,9 @@ protected:
   static RiccatiFactorization createRiccatiFactorization(const Robot& robot);
 
   static void testBackwardRecursion(const Robot& robot);
+  static void testForwardStateConstraintFactorization(const Robot& robot);
+  static void testBackwardStateConstraintFactorization(const Robot& robot);
   static void testForwardRecursion(const Robot& robot);
-  static void testFactorizeStateConstraintFactorization(const Robot& robot);
 
   std::string fixed_base_urdf, floating_base_urdf;
   Robot fixed_base_robot, floating_base_robot;
@@ -119,7 +120,7 @@ void ImpulseRiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) {
 }
 
 
-void ImpulseRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) {
+void ImpulseRiccatiFactorizerTest::testForwardStateConstraintFactorization(const Robot& robot) {
   const int dimv = robot.dimv();
   RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
   RiccatiFactorization riccati_next_ref = riccati_next;
@@ -131,7 +132,7 @@ void ImpulseRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) {
   RiccatiFactorization riccati = createRiccatiFactorization(robot);
   RiccatiFactorization riccati_ref = riccati;
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
-  factorizer.forwardRiccatiRecursionSerial(riccati, kkt_matrix, kkt_residual, riccati_next, true);
+  factorizer.forwardStateConstraintFactorization(riccati, kkt_matrix, kkt_residual, riccati_next, true);
   ImpulseBackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next_ref, kkt_matrix_ref);
   backward_recursion_ref.factorizeRiccatiFactorization(riccati_next_ref, kkt_matrix_ref, kkt_residual_ref, riccati_ref);
@@ -142,29 +143,10 @@ void ImpulseRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) {
   EXPECT_TRUE(riccati_next.Pi.isApprox(riccati_next_ref.Pi));
   EXPECT_TRUE(riccati_next.pi.isApprox(riccati_next_ref.pi));
   EXPECT_TRUE(riccati_next.N.isApprox(riccati_next_ref.N));
-  riccati.n.setRandom();
-  const Eigen::VectorXd dx0 = Eigen::VectorXd::Random(2*dimv);
-  ImpulseSplitDirection d(robot);
-  d.setRandom();
-  ImpulseSplitDirection d_ref = d;
-  factorizer.computeStateDirection(riccati, dx0, d, false);
-  d_ref.dx().noalias() = riccati.Pi * dx0 + riccati.pi;
-  EXPECT_TRUE(d.isApprox(d_ref));
-  factorizer.computeCostateDirection(riccati, d, false);
-  d_ref.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
-  d_ref.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
-  EXPECT_TRUE(d.isApprox(d_ref));
-  factorizer.computeStateDirection(riccati, dx0, d, true);
-  d_ref.dx().noalias() = riccati.Pi * dx0 + riccati.pi - riccati.N * riccati.n;
-  EXPECT_TRUE(d.isApprox(d_ref));
-  factorizer.computeCostateDirection(riccati, d, true);
-  d_ref.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq + riccati.n.head(dimv);
-  d_ref.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv + riccati.n.tail(dimv);
-  EXPECT_TRUE(d.isApprox(d_ref));
 }
 
 
-void ImpulseRiccatiFactorizerTest::testFactorizeStateConstraintFactorization(const Robot& robot) {
+void ImpulseRiccatiFactorizerTest::testBackwardStateConstraintFactorization(const Robot& robot) {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
@@ -192,17 +174,54 @@ void ImpulseRiccatiFactorizerTest::testFactorizeStateConstraintFactorization(con
 }
 
 
+void ImpulseRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) {
+  const int dimv = robot.dimv();
+  RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
+  RiccatiFactorization riccati_next_ref = riccati_next;
+  ImpulseKKTMatrix kkt_matrix = createKKTMatrix(robot);
+  ImpulseKKTResidual kkt_residual = createKKTResidual(robot);
+  ImpulseRiccatiFactorizer factorizer(robot);
+  RiccatiFactorization riccati = createRiccatiFactorization(robot);
+  RiccatiFactorization riccati_ref = riccati;
+  factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
+  ImpulseKKTMatrix kkt_matrix_ref = kkt_matrix;
+  ImpulseKKTResidual kkt_residual_ref = kkt_residual;
+  ImpulseSplitDirection d(robot);
+  d.setRandom();
+  SplitDirection d_next(robot);
+  d_next.setRandom();
+  SplitDirection d_next_ref = d_next;
+  factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, d, d_next);
+  if (!robot.has_floating_base()) {
+    kkt_matrix_ref.Fqq().setIdentity();
+  }
+  d_next_ref.dx() = kkt_matrix_ref.Fxx() * d.dx() + kkt_residual_ref.Fx();
+  EXPECT_TRUE(d_next.isApprox(d_next_ref));
+  ImpulseSplitDirection d_ref = d;
+  factorizer.computeCostateDirection(riccati, d, false);
+  d_ref.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq;
+  d_ref.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv;
+  EXPECT_TRUE(d.isApprox(d_ref));
+  factorizer.computeCostateDirection(riccati, d, true);
+  d_ref.dlmd() = riccati.Pqq * d.dq() + riccati.Pqv * d.dv() - riccati.sq + riccati.n.head(dimv);
+  d_ref.dgmm() = riccati.Pvq * d.dq() + riccati.Pvv * d.dv() - riccati.sv + riccati.n.tail(dimv);
+  EXPECT_TRUE(d.isApprox(d_ref));
+}
+
+
 TEST_F(ImpulseRiccatiFactorizerTest, fixedBase) {
   testBackwardRecursion(fixed_base_robot);
+  testForwardStateConstraintFactorization(fixed_base_robot);
+  testBackwardStateConstraintFactorization(fixed_base_robot);
   testForwardRecursion(fixed_base_robot);
-  testFactorizeStateConstraintFactorization(fixed_base_robot);
 }
 
 
 TEST_F(ImpulseRiccatiFactorizerTest, floating_base) {
   testBackwardRecursion(floating_base_robot);
+  testForwardStateConstraintFactorization(floating_base_robot);
+  testBackwardStateConstraintFactorization(floating_base_robot);
   testForwardRecursion(floating_base_robot);
-  testFactorizeStateConstraintFactorization(floating_base_robot);
 }
 
 } // namespace idocp

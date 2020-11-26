@@ -8,6 +8,7 @@
 #include "idocp/impulse/impulse_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
+#include "idocp/ocp/split_direction.hpp"
 #include "idocp/impulse/impulse_backward_riccati_recursion_factorizer.hpp"
 #include "idocp/impulse/impulse_forward_riccati_recursion_factorizer.hpp"
 
@@ -69,7 +70,7 @@ public:
                                 RiccatiFactorization& riccati);
 
   ///
-  /// @brief Performs the serial part of the forward Riccati recursion with 
+  /// @brief Performs the serial part of the forward Riccati recursion due to 
   /// pure-state equality constraints. 
   /// @param[in] riccati Riccati factorization at the current impulse stage. 
   /// @param[in] kkt_matrix KKT matrix at the current impulse stage. 
@@ -78,11 +79,10 @@ public:
   /// @param[in] exist_state_constraint If true, the factorization for state
   /// constraints are also performed. 
   ///
-  void forwardRiccatiRecursionSerial(const RiccatiFactorization& riccati, 
-                                     const ImpulseKKTMatrix& kkt_matrix, 
-                                     const ImpulseKKTResidual& kkt_residual, 
-                                     RiccatiFactorization& riccati_next,
-                                     const bool exist_state_constraint);
+  void forwardStateConstraintFactorization(
+      const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
+      const ImpulseKKTResidual& kkt_residual, 
+      RiccatiFactorization& riccati_next, const bool exist_state_constraint);
 
   ///
   /// @brief Performs the backward factorization of matrices related to the 
@@ -98,19 +98,16 @@ public:
       const Eigen::MatrixBase<MatrixType2>& T) const;
 
   ///
-  /// @brief Computes the Newton direction of the state vector. 
-  /// @param[in] riccati Riccati factorization at the current impulse stage. 
-  /// @param[in] dx0 Direction of the state at the initial time stage. 
-  /// @param[out] d Split direction of the current impulse stage. 
-  /// @param[in] exist_state_constraint If true, the factorization for state
-  /// constraints are also performed.
+  /// @brief Performs forward Riccati recursion and computes state direction. 
+  /// @param[in] kkt_matrix KKT matrix at the current time stage. 
+  /// @param[in] kkt_residual KKT residual at the current time stage. 
+  /// @param[in] d Split direction at the current time stage. 
+  /// @param[out] d_next Split direction at the next time stage. 
   ///
-  ///
-  template <typename VectorType>
-  static void computeStateDirection(
-      const RiccatiFactorization& riccati, 
-      const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d,
-      const bool exist_state_constraint);
+  void forwardRiccatiRecursion(const ImpulseKKTMatrix& kkt_matrix, 
+                               const ImpulseKKTResidual& kkt_residual,
+                               const ImpulseSplitDirection& d, 
+                               SplitDirection& d_next) const;
 
   ///
   /// @brief Computes the Newton direction of the costate vector. 

@@ -112,7 +112,20 @@ void OCPDirectionCalculator::computeDirection(
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();
   const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
-  const bool exist_state_constraint = contact_sequence.existImpulseStage();
+
+
+
+
+
+
+  // const bool exist_state_constraint = contact_sequence.existImpulseStage();
+  const bool exist_state_constraint = false;
+
+
+
+
+
+
   const Eigen::VectorXd& dx0 = d[0].dx();
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_all; ++i) {

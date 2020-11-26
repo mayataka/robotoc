@@ -35,7 +35,7 @@ inline void ImpulseRiccatiFactorizer::backwardRiccatiRecursion(
 }
 
 
-inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursionSerial(
+inline void ImpulseRiccatiFactorizer::forwardStateConstraintFactorization(
     const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
     const ImpulseKKTResidual& kkt_residual, 
     RiccatiFactorization& riccati_next, const bool exist_state_constraint) {
@@ -71,16 +71,18 @@ inline void ImpulseRiccatiFactorizer::backwardStateConstraintFactorization(
 }
 
 
-template <typename VectorType>
-inline void ImpulseRiccatiFactorizer::computeStateDirection(
-    const RiccatiFactorization& riccati, 
-    const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d,
-    const bool exist_state_constraint) {
-  d.dx().noalias() = riccati.Pi * dx0;
-  d.dx().noalias() += riccati.pi;
-  if (exist_state_constraint) {
-    d.dx().noalias() -= riccati.N * riccati.n;
+inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursion(
+    const ImpulseKKTMatrix& kkt_matrix, const ImpulseKKTResidual& kkt_residual, 
+    const ImpulseSplitDirection& d, SplitDirection& d_next) const {
+  d_next.dx() = kkt_residual.Fx();
+  if (has_floating_base_) {
+    d_next.dq().noalias() += kkt_matrix.Fqq() * d.dq();
   }
+  else {
+    d_next.dq().noalias() += d.dq();
+  }
+  d_next.dv().noalias() += kkt_matrix.Fvq() * d.dq();
+  d_next.dv().noalias() += kkt_matrix.Fvv() * d.dv();
 }
 
 
