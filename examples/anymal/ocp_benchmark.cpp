@@ -126,14 +126,11 @@ void BenchmarkWithContacts() {
   // discrete_event.eventTime = 0.025;
   ocp_benchmarker.getSolverHandle()->setDiscreteEvent(discrete_event);
   q << 0, 0, 0.5, 0, 0, 0, 1, 
-       0.0315, 0.4, -0.9,
+       0.0315, 0.4, -0.8,
        0.0315, -0.4, 0.8, 
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
-  for (int i=0; i<4; ++i) std::cout << contact_status.contactPoints()[i].transpose() << std::endl;
-  for (int i=0; i<4; ++i) std::cout << contact_status_next.contactPoints()[i].transpose() << std::endl;
-  for (int i=0; i<4; ++i) std::cout << discrete_event.impulseStatus().contactPoints()[i].transpose() << std::endl;
   ocp_benchmarker.testConvergence(t, q, v, 50, false);
   // ocp_benchmarker.testCPUTime(t, q, v, 10000);
   // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",

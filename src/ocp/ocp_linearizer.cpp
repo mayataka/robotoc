@@ -219,6 +219,7 @@ double OCPLinearizer::KKTError(const HybridOCP& split_ocps,
               kkt_residual.lift[lift_index], dtau_aux);
     }
   }
+  std::cout << "KKT error of the switching constraints = " << std::sqrt(kkt_residual.impulse[0].P().squaredNorm()) << std::endl;
   return std::sqrt(kkt_error_.head(N_all).sum());
 }
 

@@ -70,6 +70,7 @@ public:
 
   ///
   /// @brief A factorization matrix at a time stage. 
+  /// @param[in] constraint_index Index of the constraint of interested. 
   /// @param[in] time_stage Time stage of interested. 
   ///
   Eigen::Block<Eigen::MatrixXd> T(const int constraint_index, 
@@ -83,6 +84,7 @@ public:
 
   ///
   /// @brief A factorization matrix at a impulse time stage. 
+  /// @param[in] constraint_index Index of the constraint of interested. 
   /// @param[in] impulse_index Impulse index of interested. 
   ///
   Eigen::Block<Eigen::MatrixXd> T_impulse(const int constraint_index,
@@ -96,6 +98,7 @@ public:
 
   ///
   /// @brief A factorization matrix at a aux time stage. 
+  /// @param[in] constraint_index Index of the constraint of interested. 
   /// @param[in] impulse_index Impulse index of interested. 
   ///
   Eigen::Block<Eigen::MatrixXd> T_aux(const int constraint_index, 
@@ -109,6 +112,7 @@ public:
 
   ///
   /// @brief A factorization matrix at a lift time stage. 
+  /// @param[in] constraint_index Index of the constraint of interested. 
   /// @param[in] lift_index Lift index of interested. 
   ///
   Eigen::Block<Eigen::MatrixXd> T_lift(const int constraint_index, 
@@ -123,6 +127,7 @@ public:
   ///
   /// @brief Partial derivative of the equality constriant with respect to the 
   /// configuration. 
+  /// @param[in] constraint_index Index of the constraint of interested. 
   ///
   Eigen::Block<Eigen::MatrixXd> Eq(const int constraint_index);
 
@@ -135,6 +140,7 @@ public:
   ///
   /// @brief Product of the partial derivative of the equality constriant with 
   /// respect to state and RiccatiFactorization::N. 
+  /// @param[in] constraint_index Index of the constraint of interested. 
   ///
   Eigen::Block<Eigen::MatrixXd> EN(const int constraint_index);
 
@@ -146,6 +152,7 @@ public:
 
   ///
   /// @brief Top Robot::dimv() rows of RiccatiFactorization::EN(). 
+  /// @param[in] constraint_index Index of the constraint of interested. 
   ///
   Eigen::Block<Eigen::MatrixXd> ENq(const int constraint_index);
 
@@ -187,8 +194,6 @@ public:
   ///
   /// @brief Product of RiccatiFactorization::EN() and 
   /// StateConstraintRiccatiFactorization::Eq(). 
-  /// @param[in] constraint_index Constraint index of interested. 
-  /// @param[in] impulse_index Impulse index of interested. 
   ///
   Eigen::Block<Eigen::MatrixXd> ENT();
 
@@ -210,8 +215,7 @@ public:
       const int constraint_index) const;
 
   ///
-  /// @brief Residual of the equality constriant.
-  /// @param[in] constraint_index Constraint index of interested. 
+  /// @brief Residual of the stack of the equality constriants.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> e();
 

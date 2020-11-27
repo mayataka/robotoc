@@ -144,6 +144,19 @@ public:
       StateConstraintRiccatiFactorization& constraint_factorization) const;
 
   ///
+  /// @brief Aggregates the all of the Lagrange multipliers with respect to 
+  /// the pure-state constriants for fowrad Riccati recursion.
+  /// @param[in] constraint_factorization Pure-state constraint factorization. 
+  /// @param[in] contact_sequence Contact sequence. 
+  /// @param[in] d Split direction.
+  /// @param[in, out] riccati_factorization Riccati factorization. 
+  ///
+  void aggregateLagrangeMultiplierDirection(
+      const StateConstraintRiccatiFactorization& constraint_factorization,
+      const ContactSequence& contact_sequence, const HybridDirection& d, 
+      HybridRiccatiFactorization& riccati_factorization) const;
+
+  ///
   /// @brief Performs the forward Riccati recursion.
   /// @param[in] riccati_factorizer Riccati factorizer. 
   /// @param[in] contact_sequence Contact sequence. 
@@ -167,7 +180,5 @@ private:
 };
 
 } // namespace idocp
-
-#include "idocp/ocp/riccati_recursion.hxx"
 
 #endif // IDOCP_RICCATI_RECURSION_HPP_ 

@@ -82,75 +82,28 @@ public:
                                            const HybridSolution& s, 
                                            HybridDirection& d);
 
-  void aggregateLagrangeMultiplierDirection(
-      const ContactSequence& contact_sequence, 
-      HybridRiccatiFactorization& factorization, 
-      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-      const HybridDirection& d) const;
-
-  void computeDirection(
-      HybridOCP& split_ocps, std::vector<Robot>& robots, 
-      const ContactSequence& contact_sequence, 
-      const HybridRiccatiFactorizer& factorizer, 
-      HybridRiccatiFactorization& factorization, 
-      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization, 
-      const HybridSolution& s, HybridDirection& d);
+  void computeDirection(HybridOCP& split_ocps, std::vector<Robot>& robots, 
+                        const ContactSequence& contact_sequence, 
+                        const HybridRiccatiFactorizer& factorizer, 
+                        HybridRiccatiFactorization& factorization, 
+                        const HybridSolution& s, HybridDirection& d);
 
   double maxPrimalStepSize(const ContactSequence& contact_sequence) const;
 
   double maxDualStepSize(const ContactSequence& contact_sequence) const;
 
-  static void computePrimalDirectionInitial(
+  static void computePrimalDirection(
       const RiccatiFactorizer factorizer, 
       const RiccatiFactorization factorization, 
       const RiccatiFactorization factorization_next, SplitDirection& d, 
       const bool exist_state_constraint);
 
-  template <typename VectorType>
-  static void computePrimalDirection(const RiccatiFactorizer factorizer,
-                                     const RiccatiFactorization factorization,
-                                     const RiccatiFactorization factorization_next,
-                                     const Eigen::MatrixBase<VectorType>& dx0, 
-                                     SplitDirection& d,
-                                     const bool exist_state_constraint);
-
-  template <typename VectorType>
   static void computePrimalDirectionTerminal(
-      const RiccatiFactorization factorization, 
-      const Eigen::MatrixBase<VectorType>& dx0, SplitDirection& d);
+      const RiccatiFactorization factorization, SplitDirection& d);
 
-  template <typename VectorType>
   static void computePrimalDirectionImpulse(
-      const RiccatiFactorization factorization, 
-      const Eigen::MatrixBase<VectorType>& dx0, ImpulseSplitDirection& d,
+      const RiccatiFactorization factorization, ImpulseSplitDirection& d,
       const bool exist_state_constraint);
-
-  void aggregateLagrangeMultiplierDirection(
-      const ContactSequence& contact_sequence,
-      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-      const std::vector<ImpulseSplitDirection>& d_impulse, const int time_stage,
-      RiccatiFactorization& riccati_factorization) const;
-
-  void aggregateLagrangeMultiplierDirectionImpulse(
-      const ContactSequence& contact_sequence,
-      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-      const std::vector<ImpulseSplitDirection>& d_impulse, 
-      const int impulse_index,
-      RiccatiFactorization& impulse_riccati_factorization) const;
-
-  void aggregateLagrangeMultiplierDirectionAux(
-      const ContactSequence& contact_sequence,
-      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-      const std::vector<ImpulseSplitDirection>& d_impulse, 
-      const int impulse_index,
-      RiccatiFactorization& aux_riccati_factorization) const;
-
-  void aggregateLagrangeMultiplierDirectionLift(
-      const ContactSequence& contact_sequence,
-      const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-      const std::vector<ImpulseSplitDirection>& d_impulse, 
-      const int lift_index,
-      RiccatiFactorization& lift_riccati_factorization) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

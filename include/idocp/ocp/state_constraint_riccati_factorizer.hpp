@@ -81,7 +81,6 @@ public:
       const Eigen::MatrixBase<VectorType>& dx0,
       std::vector<ImpulseSplitDirection>& d_impulse);
 
-
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

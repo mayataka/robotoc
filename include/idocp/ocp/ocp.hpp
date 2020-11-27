@@ -17,7 +17,7 @@
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
-#include "idocp/ocp/ocp_riccati_solver.hpp"
+#include "idocp/ocp/riccati_solver.hpp"
 #include "idocp/ocp/ocp_solution_integrator.hpp"
 
 
@@ -192,7 +192,7 @@ private:
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
   OCPLinearizer ocp_linearizer_;
-  OCPRiccatiSolver ocp_riccati_solver_;
+  RiccatiSolver riccati_solver_;
   OCPSolutionIntegrator ocp_solution_integrator_;
   HybridOCP split_ocps_;
   HybridKKTMatrix kkt_matrix_;

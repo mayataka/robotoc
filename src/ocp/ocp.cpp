@@ -13,7 +13,7 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
   : robots_(num_proc, robot),
     contact_sequence_(robot, T, N),
     ocp_linearizer_(T, N, max_num_impulse, num_proc),
-    ocp_riccati_solver_(robot, T, N, max_num_impulse, num_proc),
+    riccati_solver_(robot, T, N, max_num_impulse, num_proc),
     ocp_solution_integrator_(T, N, max_num_impulse, num_proc),
     split_ocps_(N, max_num_impulse, robot, cost, constraints),
     kkt_matrix_(N, max_num_impulse, robot),
@@ -70,10 +70,10 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(v.size() == robots_[0].dimv());
   ocp_linearizer_.linearizeOCP(split_ocps_, robots_, contact_sequence_, 
                                t, q, v, s_, kkt_matrix_, kkt_residual_);
-  ocp_riccati_solver_.computeDirection(split_ocps_, robots_, contact_sequence_, 
-                                       q, v, s_, d_, kkt_matrix_, kkt_residual_);
-  const double primal_step_size = ocp_riccati_solver_.maxPrimalStepSize(contact_sequence_);
-  const double dual_step_size = ocp_riccati_solver_.maxDualStepSize(contact_sequence_);
+  riccati_solver_.computeNewtonDirection(split_ocps_, robots_, contact_sequence_, 
+                                         q, v, s_, d_, kkt_matrix_, kkt_residual_);
+  const double primal_step_size = riccati_solver_.maxPrimalStepSize(contact_sequence_);
+  const double dual_step_size = riccati_solver_.maxDualStepSize(contact_sequence_);
   ocp_solution_integrator_.integrate(split_ocps_, robots_, contact_sequence_, 
                                      kkt_matrix_, kkt_residual_, 
                                      primal_step_size, dual_step_size, d_, s_);
@@ -182,7 +182,7 @@ void OCP::setDiscreteEvent(const DiscreteEvent& discrete_event) {
     s_.lift[i].setContactStatus(contact_sequence_.contactStatus(stage));
     d_.lift[i].setContactStatus(contact_sequence_.contactStatus(stage));
   }
-  ocp_riccati_solver_.setConstraintDimensions(contact_sequence_);
+  riccati_solver_.setConstraintDimensions(contact_sequence_);
 }
 
 
