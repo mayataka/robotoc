@@ -64,12 +64,14 @@ public:
   /// an impulse stage.
   /// @param[in, out] constraint_factorization A constraint factorization.
   /// @param[in] dx0 Newton direction at the initial stage.
+  /// @param[in] constraint_index Constraint index.
   ///
   template <typename VectorType>
   void factorizeLinearProblem(
       const RiccatiFactorization& impulse_riccati_factorization,
       StateConstraintRiccatiFactorization& constraint_factorization,
-      const Eigen::MatrixBase<VectorType>& dx0);
+      const Eigen::MatrixBase<VectorType>& dx0,
+      const int constraint_index);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

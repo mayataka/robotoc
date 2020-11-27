@@ -10,19 +10,17 @@ namespace idocp {
 
 inline StateConstraintRiccatiFactorizer::StateConstraintRiccatiFactorizer(
     const Robot& robot, const int max_num_impulse, const int nproc) 
-  : llts_(max_num_impulse, Eigen::LLT<Eigen::MatrixXd>()),
+  : llt_(Eigen::LLT<Eigen::MatrixXd>()),
     lp_factorizer_(max_num_impulse, StateConstraintRiccatiLPFactorizer(robot)),
     max_num_impulse_(max_num_impulse),
-    dimv_(robot.dimv()),
     nproc_(nproc) { 
 }
 
 
 inline StateConstraintRiccatiFactorizer::StateConstraintRiccatiFactorizer() 
-  : llts_(),
+  : llt_(),
     lp_factorizer_(),
     max_num_impulse_(0),
-    dimv_(0),
     nproc_(0) { 
 }
 
@@ -35,29 +33,21 @@ template <typename VectorType>
 inline void StateConstraintRiccatiFactorizer::computeLagrangeMultiplierDirection(
     const ContactSequence& contact_sequence,
     const std::vector<RiccatiFactorization>& impulse_riccati_factorization,
-    std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
+    StateConstraintRiccatiFactorization& constraint_factorization,
     const Eigen::MatrixBase<VectorType>& dx0,
     std::vector<ImpulseSplitDirection>& d_impulse) {
   assert(impulse_riccati_factorization.size() == max_num_impulse_);
-  assert(constraint_factorization.size() == max_num_impulse_);
   assert(d_impulse.size() == max_num_impulse_);
   const int num_impulse = contact_sequence.totalNumImpulseStages();
   assert(num_impulse <= max_num_impulse_);
   #pragma omp parallel for num_threads(nproc_)
   for (int i=0; i<num_impulse; ++i) {
     lp_factorizer_[i].factorizeLinearProblem(impulse_riccati_factorization[i], 
-                                             constraint_factorization[i], dx0);
-    llts_[i].compute(constraint_factorization[i].ENEt());
-    assert(llts_[i].info() == Eigen::Success);
+                                             constraint_factorization, dx0, i);
   }
-  for (int i=num_impulse-1; i>=0; --i) {
-    for (int j=i+1; j<num_impulse; ++j) {
-      constraint_factorization[i].e().noalias() 
-          -= constraint_factorization[i].EN() 
-              * constraint_factorization[j].T_impulse(i) * d_impulse[j].dxi();
-    }
-    d_impulse[i].dxi() = llts_[i].solve(constraint_factorization[i].e());
-  }
+  llt_.compute(constraint_factorization.ENT());
+  assert(llt_.info() == Eigen::Success);
+  constraint_factorization.dxi() = llt_.solve(constraint_factorization.e());
 }
 
 } // namespace idocp

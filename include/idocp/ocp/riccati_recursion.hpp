@@ -1,8 +1,6 @@
 #ifndef IDOCP_RICCATI_RECURSION_HPP_
 #define IDOCP_RICCATI_RECURSION_HPP_
 
-#include <vector>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -110,7 +108,7 @@ public:
       HybridRiccatiFactorizer& riccati_factorizer,
       const ContactSequence& contact_sequence, HybridKKTMatrix& kkt_matrix, 
       HybridKKTResidual& kkt_residual,
-      std::vector<StateConstraintRiccatiFactorization>& constraint_factorization);
+      StateConstraintRiccatiFactorization& constraint_factorization);
 
   ///
   /// @brief Performs the forward factorization of the pure-state constraint
@@ -143,7 +141,7 @@ public:
       const HybridRiccatiFactorizer& riccati_factorizer,
       const ContactSequence& contact_sequence, 
       const HybridKKTMatrix& kkt_matrix, 
-      std::vector<StateConstraintRiccatiFactorization>& constraint_factorization) const;
+      StateConstraintRiccatiFactorization& constraint_factorization) const;
 
   ///
   /// @brief Performs the forward Riccati recursion.
@@ -165,13 +163,6 @@ public:
 private:
   int N_, max_num_impulse_, nproc_, dimv_;
   double dtau_;
-
-  void backwardStateConstraintFactorization(
-      const HybridRiccatiFactorizer& riccati_factorizer,
-      const ContactSequence& contact_sequence, 
-      const HybridKKTMatrix& kkt_matrix, 
-      StateConstraintRiccatiFactorization& constraint_factorization,
-      const int constraint_index) const;
 
 };
 

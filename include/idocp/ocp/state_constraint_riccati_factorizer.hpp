@@ -21,11 +21,12 @@ public:
   ///
   /// @brief Construct factorizer.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] max_num_impulse_phase Maximum number of impulse phases over the horizon.
+  /// @param[in] max_num_impulse Maximum number of impulse phases over the 
+  /// horizon.
   /// @param[in] nproc Number of threads used in this class.
   ///
   StateConstraintRiccatiFactorizer(const Robot& robot, 
-                                   const int max_num_impulse_phase, 
+                                   const int max_num_impulse, 
                                    const int nproc);
 
   ///
@@ -76,7 +77,7 @@ public:
   void computeLagrangeMultiplierDirection(
       const ContactSequence& contact_sequence,
       const std::vector<RiccatiFactorization>& impulse_riccati_factorization,
-      std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
+      StateConstraintRiccatiFactorization& constraint_factorization,
       const Eigen::MatrixBase<VectorType>& dx0,
       std::vector<ImpulseSplitDirection>& d_impulse);
 
@@ -84,9 +85,9 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  std::vector<Eigen::LLT<Eigen::MatrixXd>> llts_;
+  int N_, max_num_impulse_, dimv_, nproc_;
+  Eigen::LLT<Eigen::MatrixXd> llt_;
   std::vector<StateConstraintRiccatiLPFactorizer> lp_factorizer_;
-  int max_num_impulse_, dimv_, nproc_;
 
 };
 
