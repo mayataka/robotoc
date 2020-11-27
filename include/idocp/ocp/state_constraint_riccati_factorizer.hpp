@@ -86,7 +86,7 @@ public:
 
 private:
   int N_, max_num_impulse_, dimv_, nproc_;
-  Eigen::LLT<Eigen::MatrixXd> llt_;
+  Eigen::LDLT<Eigen::MatrixXd> ldlt_;
   std::vector<StateConstraintRiccatiLPFactorizer> lp_factorizer_;
 
 };

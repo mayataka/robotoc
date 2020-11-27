@@ -66,7 +66,7 @@ public:
   /// @brief Set the dimension of the constraints. 
   /// @param[in] contact_sequence Contact sequence. 
   ///
-  void setContactSequence(const ContactSequence& contact_sequence);
+  void setConstraintStatus(const ContactSequence& contact_sequence);
 
   ///
   /// @brief A factorization matrix at a time stage. 

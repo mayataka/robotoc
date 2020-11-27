@@ -95,7 +95,7 @@ void StateConstraintRiccatiFactorizationTest::testDim(const Robot& robot) const 
   EXPECT_EQ(factorization.dxi().size(), 0);
   const auto contact_sequence = createContactSequence(robot);
   const int num_impulse = contact_sequence.totalNumImpulseStages();
-  factorization.setContactSequence(contact_sequence);
+  factorization.setConstraintStatus(contact_sequence);
   for (int constraint_index=0; constraint_index<num_impulse; ++constraint_index) {
     const int dimc = contact_sequence.impulseStatus(constraint_index).dimp();
     for (int i=0; i<N; ++i) {
@@ -185,10 +185,10 @@ void StateConstraintRiccatiFactorizationTest::testDim(const Robot& robot) const 
 void StateConstraintRiccatiFactorizationTest::testAssignment(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
-  StateConstraintRiccatiFactorization factorization(robot, N, max_num_impulse);
   const auto contact_sequence = createContactSequence(robot);
-  factorization.setContactSequence(contact_sequence);
   const int num_impulse = contact_sequence.totalNumImpulseStages();
+  StateConstraintRiccatiFactorization factorization(robot, N, max_num_impulse);
+  factorization.setConstraintStatus(contact_sequence);
   std::vector<std::vector<Eigen::MatrixXd>> T, T_impulse, T_aux, T_lift;
   std::vector<Eigen::MatrixXd> Eq, EN;
   for (int constraint_index=0; constraint_index<num_impulse; ++constraint_index) {
@@ -259,6 +259,7 @@ void StateConstraintRiccatiFactorizationTest::testAssignment(const Robot& robot)
   for (int constraint_index=0; constraint_index<num_impulse; ++constraint_index) {
     const int dimc = contact_sequence.impulseStatus(constraint_index).dimp();
     int dimf_stack_inner = 0;
+    EXPECT_TRUE(factorization.ENEt(constraint_index).isApprox(factorization.ENT().block(dimf_stack, dimf_stack, dimc, dimc)));
     for (int i=0; i<num_impulse; ++i) {
       const int dimf = contact_sequence.impulseStatus(i).dimp();
       EXPECT_TRUE(factorization.ENT(constraint_index, i).isApprox(factorization.ENT().block(dimf_stack, dimf_stack_inner, dimc, dimf)));

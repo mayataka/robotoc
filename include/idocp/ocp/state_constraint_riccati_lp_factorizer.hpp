@@ -68,6 +68,7 @@ public:
   ///
   template <typename VectorType>
   void factorizeLinearProblem(
+      const ContactSequence& constact_sequence,
       const RiccatiFactorization& impulse_riccati_factorization,
       StateConstraintRiccatiFactorization& constraint_factorization,
       const Eigen::MatrixBase<VectorType>& dx0,

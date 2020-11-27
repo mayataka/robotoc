@@ -59,7 +59,7 @@ inline StateConstraintRiccatiFactorization::
 }
 
 
-inline void StateConstraintRiccatiFactorization::setContactSequence(
+inline void StateConstraintRiccatiFactorization::setConstraintStatus(
     const ContactSequence& contact_sequence) {
   const int total_num_impulse = contact_sequence.totalNumImpulseStages();
   for (int i=0; i<total_num_impulse; ++i) {
