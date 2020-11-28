@@ -83,6 +83,7 @@ protected:
   void testForwardRiccatiRecursionParallel(const Robot& robot) const;
   void testForwardStateConstraintFactorization(const Robot& robot) const;
   void testBackwardStateConstraintFactorization(const Robot& robot) const;
+  void testAggregateLagrangeMultiplierDirection(const Robot& robot) const;
   void testForwardRiccatiRecursion(const Robot& robot) const;
 
   int N, max_num_impulse, nproc;
@@ -214,19 +215,22 @@ ContactSequence RiccatiRecursionTest::createContactSequence(const Robot& robot) 
 void RiccatiRecursionTest::testIsConstraintFactorizationSame(
     const StateConstraintRiccatiFactorization& lhs, 
     const StateConstraintRiccatiFactorization& rhs) const {
-  EXPECT_TRUE(lhs.Eq().isApprox(rhs.Eq()));
+  EXPECT_TRUE(lhs.ENT().isApprox(rhs.ENT()));
   EXPECT_TRUE(lhs.e().isApprox(rhs.e()));
-  for (int i=0; i<N; ++i) {
-    EXPECT_TRUE(lhs.T(i).isApprox(rhs.T(i)));
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    EXPECT_TRUE(lhs.T_impulse(i).isApprox(rhs.T_impulse(i)));
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    EXPECT_TRUE(lhs.T_aux(i).isApprox(rhs.T_aux(i)));
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    EXPECT_TRUE(lhs.T_lift(i).isApprox(rhs.T_lift(i)));
+  EXPECT_TRUE(lhs.dxi().isApprox(rhs.dxi()));
+  for (int constraint_index=0; constraint_index<max_num_impulse; ++constraint_index) {
+    for (int i=0; i<N; ++i) {
+      EXPECT_TRUE(lhs.T(constraint_index, i).isApprox(rhs.T(constraint_index, i)));
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_TRUE(lhs.T_impulse(constraint_index, i).isApprox(rhs.T_impulse(constraint_index, i)));
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_TRUE(lhs.T_aux(constraint_index, i).isApprox(rhs.T_aux(constraint_index, i)));
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_TRUE(lhs.T_lift(constraint_index, i).isApprox(rhs.T_lift(constraint_index, i)));
+    }
   }
 }
 
@@ -331,10 +335,8 @@ void RiccatiRecursionTest::testForwardRiccatiRecursionParallel(const Robot& robo
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
   HybridRiccatiFactorizer factorizer(N, max_num_impulse, robot);
   riccati_recursion.backwardRiccatiRecursion(factorizer, contact_sequence, kkt_matrix, kkt_residual, factorization);
-  std::vector<StateConstraintRiccatiFactorization> constraint_factorization(max_num_impulse, StateConstraintRiccatiFactorization(robot, N, max_num_impulse));
-  for (int i=0; i<contact_sequence.totalNumImpulseStages(); ++i) {
-    constraint_factorization[i].setImpulseStatus(contact_sequence.impulseStatus(i));
-  }
+  StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
+  constraint_factorization.setConstraintStatus(contact_sequence);
   auto constraint_factorization_ref = constraint_factorization;
   auto factorizer_ref = factorizer;
   auto factorization_ref = factorization;
@@ -345,11 +347,11 @@ void RiccatiRecursionTest::testForwardRiccatiRecursionParallel(const Robot& robo
   for (int i=0; i<N; ++i) {
     if (contact_sequence.existImpulseStage(i)) {
       const int impulse_index = contact_sequence.impulseIndex(i);
-      constraint_factorization_ref[impulse_index].Eq() = kkt_matrix_ref.impulse[impulse_index].Pq();
-      constraint_factorization_ref[impulse_index].e() = kkt_residual_ref.impulse[impulse_index].P();
-      constraint_factorization_ref[impulse_index].T_impulse(impulse_index).topRows(robot.dimv())
+      constraint_factorization_ref.Eq(impulse_index) = kkt_matrix_ref.impulse[impulse_index].Pq();
+      constraint_factorization_ref.e(impulse_index) = kkt_residual_ref.impulse[impulse_index].P();
+      constraint_factorization_ref.T_impulse(impulse_index, impulse_index).topRows(robot.dimv())
           = kkt_matrix_ref.impulse[impulse_index].Pq().transpose();
-      constraint_factorization_ref[impulse_index].T_impulse(impulse_index).bottomRows(robot.dimv()).setZero();
+      constraint_factorization_ref.T_impulse(impulse_index, impulse_index).bottomRows(robot.dimv()).setZero();
       const double dtau_impulse = contact_sequence.impulseTime(impulse_index) - i * dtau;
       const double dtau_aux = dtau - dtau_impulse;
       ASSERT_TRUE(dtau_impulse > 0);
@@ -388,9 +390,7 @@ void RiccatiRecursionTest::testForwardRiccatiRecursionParallel(const Robot& robo
   testIsSame(factorization, factorization_ref);
   testIsSame(kkt_matrix, kkt_matrix_ref);
   testIsSame(kkt_residual, kkt_residual_ref);
-  for (int i=0; i<max_num_impulse; ++i) {
-    testIsConstraintFactorizationSame(constraint_factorization[i], constraint_factorization_ref[i]);
-  }
+  testIsConstraintFactorizationSame(constraint_factorization, constraint_factorization_ref);
 }
 
 
@@ -403,12 +403,6 @@ void RiccatiRecursionTest::testForwardStateConstraintFactorization(const Robot& 
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
   HybridRiccatiFactorizer factorizer(N, max_num_impulse, robot);
   riccati_recursion.backwardRiccatiRecursion(factorizer, contact_sequence, kkt_matrix, kkt_residual, factorization);
-  std::vector<StateConstraintRiccatiFactorization> constraint_factorization(max_num_impulse, StateConstraintRiccatiFactorization(robot, N, max_num_impulse));
-  for (int i=0; i<contact_sequence.totalNumImpulseStages(); ++i) {
-    constraint_factorization[i].setImpulseStatus(contact_sequence.impulseStatus(i));
-  }
-  riccati_recursion.forwardRiccatiRecursionParallel(factorizer, contact_sequence, kkt_matrix, kkt_residual, constraint_factorization);
-  auto constraint_factorization_ref = constraint_factorization;
   auto factorizer_ref = factorizer;
   auto factorization_ref = factorization;
   auto kkt_matrix_ref = kkt_matrix; 
@@ -477,9 +471,6 @@ void RiccatiRecursionTest::testForwardStateConstraintFactorization(const Robot& 
   testIsSame(factorization, factorization_ref);
   testIsSame(kkt_matrix, kkt_matrix_ref);
   testIsSame(kkt_residual, kkt_residual_ref);
-  for (int i=0; i<max_num_impulse; ++i) {
-    testIsConstraintFactorizationSame(constraint_factorization[i], constraint_factorization_ref[i]);
-  }
 }
 
 
@@ -492,10 +483,8 @@ void RiccatiRecursionTest::testBackwardStateConstraintFactorization(const Robot&
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
   HybridRiccatiFactorizer factorizer(N, max_num_impulse, robot);
   riccati_recursion.backwardRiccatiRecursion(factorizer, contact_sequence, kkt_matrix, kkt_residual, factorization);
-  std::vector<StateConstraintRiccatiFactorization> constraint_factorization(max_num_impulse, StateConstraintRiccatiFactorization(robot, N, max_num_impulse));
-  for (int i=0; i<contact_sequence.totalNumImpulseStages(); ++i) {
-    constraint_factorization[i].setImpulseStatus(contact_sequence.impulseStatus(i));
-  }
+  StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
+  constraint_factorization.setConstraintStatus(contact_sequence);
   riccati_recursion.forwardRiccatiRecursionParallel(factorizer, contact_sequence, kkt_matrix, kkt_residual, constraint_factorization);
   riccati_recursion.forwardStateConstraintFactorization(factorizer, contact_sequence, kkt_matrix, kkt_residual, factorization);
   auto constraint_factorization_ref = constraint_factorization;
@@ -506,20 +495,26 @@ void RiccatiRecursionTest::testBackwardStateConstraintFactorization(const Robot&
   riccati_recursion.backwardStateConstraintFactorization(factorizer, contact_sequence, kkt_matrix, constraint_factorization);
   const int num_constraint = contact_sequence.totalNumImpulseStages();
   for (int constraint_index=0; constraint_index<num_constraint; ++constraint_index) {
-    StateConstraintRiccatiFactorization& factorization_ref = constraint_factorization_ref[constraint_index];
-    const int constraint_stage = contact_sequence.timeStageBeforeImpulse(constraint_index);
-    const double dtau_constraint = contact_sequence.impulseTime(constraint_index) - constraint_stage * dtau;
+    ASSERT_FALSE(constraint_factorization.Eq(constraint_index).isZero());
+    ASSERT_FALSE(constraint_factorization.e(constraint_index).isZero());
+    ASSERT_FALSE(constraint_factorization.T_impulse(constraint_index, constraint_index).isZero());
+    ASSERT_TRUE(constraint_factorization.Eq(constraint_index).isApprox(kkt_matrix.impulse[constraint_index].Pq()));
+    ASSERT_TRUE(constraint_factorization.e(constraint_index).isApprox(kkt_residual.impulse[constraint_index].P()));
+    const int dimv = robot.dimv();
+    ASSERT_TRUE((constraint_factorization.T_impulse(constraint_index, constraint_index).topRows(dimv)).isApprox(kkt_matrix.impulse[constraint_index].Pq().transpose()));
+    ASSERT_TRUE((constraint_factorization.T_impulse(constraint_index, constraint_index).bottomRows(dimv)).isZero());
+  }
+  for (int constraint_index=0; constraint_index<num_constraint; ++constraint_index) {
+    const int time_stage_before_constraint = contact_sequence.timeStageBeforeImpulse(constraint_index);
+    const double dtau_constraint = contact_sequence.impulseTime(constraint_index) - time_stage_before_constraint * dtau;
     ASSERT_TRUE(dtau_constraint > 0);
     ASSERT_TRUE(dtau_constraint < dtau);
-    factorization_ref.Eq() = kkt_matrix_ref.impulse[constraint_index].Pq();
-    factorization_ref.e() = kkt_residual_ref.impulse[constraint_index].P();
-    factorization_ref.T_impulse(constraint_index).topRows(robot.dimv()) = kkt_matrix_ref.impulse[constraint_index].Pq().transpose();
-    factorization_ref.T_impulse(constraint_index).bottomRows(robot.dimv()).setZero();
-    factorizer_ref[constraint_stage].backwardStateConstraintFactorization(
-        factorization_ref.T_impulse(constraint_index), 
-        kkt_matrix[constraint_stage], dtau_constraint, 
-        factorization_ref.T(constraint_stage));
-    for (int i=constraint_stage-1; i>=0; --i) {
+    factorizer_ref[time_stage_before_constraint].backwardStateConstraintFactorization(
+        constraint_factorization_ref.T_impulse(constraint_index, constraint_index), 
+        kkt_matrix[time_stage_before_constraint], 
+        dtau_constraint, 
+        constraint_factorization_ref.T(constraint_index, time_stage_before_constraint));
+    for (int i=time_stage_before_constraint-1; i>=0; --i) {
       if (contact_sequence.existImpulseStage(i)) {
         const int impulse_index = contact_sequence.impulseIndex(i);
         const double dtau_impulse = contact_sequence.impulseTime(impulse_index) - i * dtau;
@@ -527,19 +522,19 @@ void RiccatiRecursionTest::testBackwardStateConstraintFactorization(const Robot&
         ASSERT_TRUE(dtau_impulse > 0);
         ASSERT_TRUE(dtau_aux > 0);
         factorizer_ref.aux[impulse_index].backwardStateConstraintFactorization(
-            factorization_ref.T(i+1),
+            constraint_factorization_ref.T(constraint_index, i+1),
             kkt_matrix_ref.aux[impulse_index], 
             dtau_aux, 
-            factorization_ref.T_aux(impulse_index));
+            constraint_factorization_ref.T_aux(constraint_index, impulse_index));
         factorizer_ref.impulse[impulse_index].backwardStateConstraintFactorization(
-            factorization_ref.T_aux(impulse_index),
+            constraint_factorization_ref.T_aux(constraint_index, impulse_index),
             kkt_matrix_ref.impulse[impulse_index], 
-            factorization_ref.T_impulse(impulse_index));
+            constraint_factorization_ref.T_impulse(constraint_index, impulse_index));
         factorizer_ref[i].backwardStateConstraintFactorization(
-            factorization_ref.T_impulse(impulse_index),
+            constraint_factorization_ref.T_impulse(constraint_index, impulse_index),
             kkt_matrix_ref[i], 
             dtau_impulse, 
-            factorization_ref.T(i));
+            constraint_factorization_ref.T(constraint_index, i));
       }
       else if (contact_sequence.existLiftStage(i)) {
         const int lift_index = contact_sequence.liftIndex(i);
@@ -548,31 +543,29 @@ void RiccatiRecursionTest::testBackwardStateConstraintFactorization(const Robot&
         ASSERT_TRUE(dtau_lift > 0);
         ASSERT_TRUE(dtau_aux > 0);
         factorizer_ref.lift[lift_index].backwardStateConstraintFactorization(
-            factorization_ref.T(i+1), 
+            constraint_factorization_ref.T(constraint_index, i+1), 
             kkt_matrix_ref.lift[lift_index], 
             dtau_aux, 
-            factorization_ref.T_lift(lift_index));
+            constraint_factorization_ref.T_lift(constraint_index, lift_index));
         factorizer_ref[i].backwardStateConstraintFactorization(
-            factorization_ref.T_lift(lift_index), 
+            constraint_factorization_ref.T_lift(constraint_index, lift_index), 
             kkt_matrix_ref[i], 
             dtau_lift, 
-            factorization_ref.T(i));
+            constraint_factorization_ref.T(constraint_index, i));
       }
       else {
         factorizer_ref[i].backwardStateConstraintFactorization(
-            factorization_ref.T(i+1), 
+            constraint_factorization_ref.T(constraint_index, i+1), 
             kkt_matrix_ref[i], 
             dtau, 
-            factorization_ref.T(i));
+            constraint_factorization_ref.T(constraint_index, i));
       }
     }
   }
   testIsSame(factorization, factorization_ref);
   testIsSame(kkt_matrix, kkt_matrix_ref);
   testIsSame(kkt_residual, kkt_residual_ref);
-  for (int i=0; i<max_num_impulse; ++i) {
-    testIsConstraintFactorizationSame(constraint_factorization[i], constraint_factorization_ref[i]);
-  }
+  testIsConstraintFactorizationSame(constraint_factorization, constraint_factorization_ref);
 }
 
 
@@ -585,19 +578,24 @@ void RiccatiRecursionTest::testForwardRiccatiRecursion(const Robot& robot) const
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
   HybridRiccatiFactorizer factorizer(N, max_num_impulse, robot);
   riccati_recursion.backwardRiccatiRecursion(factorizer, contact_sequence, kkt_matrix, kkt_residual, factorization);
-  std::vector<StateConstraintRiccatiFactorization> constraint_factorization(max_num_impulse, StateConstraintRiccatiFactorization(robot, N, max_num_impulse));
-  for (int i=0; i<contact_sequence.totalNumImpulseStages(); ++i) {
-    constraint_factorization[i].setImpulseStatus(contact_sequence.impulseStatus(i));
-  }
+  StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
+  constraint_factorization.setConstraintStatus(contact_sequence);
   riccati_recursion.forwardRiccatiRecursionParallel(factorizer, contact_sequence, kkt_matrix, kkt_residual, constraint_factorization);
   riccati_recursion.forwardStateConstraintFactorization(factorizer, contact_sequence, kkt_matrix, kkt_residual, factorization);
-  auto constraint_factorization_ref = constraint_factorization;
+  riccati_recursion.backwardStateConstraintFactorization(factorizer, contact_sequence, kkt_matrix, constraint_factorization);
   auto factorizer_ref = factorizer;
   auto factorization_ref = factorization;
   auto kkt_matrix_ref = kkt_matrix; 
   auto kkt_residual_ref = kkt_residual; 
   HybridDirection d(N, max_num_impulse, robot);
-  d[0].dx().setRandom();
+  for (int i=0; i<=N; ++i) {
+    d[i].dx().setRandom();
+  }
+  for (int i=0; i<max_num_impulse; ++i) {
+    d.impulse[i].dx().setRandom();
+    d.aux[i].dx().setRandom();
+    d.lift[i].dx().setRandom();
+  }
   auto d_ref = d;
   riccati_recursion.forwardRiccatiRecursion(factorizer, contact_sequence, kkt_matrix, kkt_residual, factorization, d);
   const bool exist_state_constraint = contact_sequence.existImpulseStage();
@@ -668,9 +666,6 @@ void RiccatiRecursionTest::testForwardRiccatiRecursion(const Robot& robot) const
   testIsSame(factorization, factorization_ref);
   testIsSame(kkt_matrix, kkt_matrix_ref);
   testIsSame(kkt_residual, kkt_residual_ref);
-  for (int i=0; i<max_num_impulse; ++i) {
-    testIsConstraintFactorizationSame(constraint_factorization[i], constraint_factorization_ref[i]);
-  }
 }
 
 

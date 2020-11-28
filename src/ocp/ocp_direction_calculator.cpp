@@ -64,43 +64,6 @@ void OCPDirectionCalculator::computeInitialStateDirection(
 }
 
 
-// void OCPDirectionCalculator::aggregateLagrangeMultiplierDirection(
-//     const ContactSequence& contact_sequence, 
-//     HybridRiccatiFactorization& factorization, 
-//     const std::vector<StateConstraintRiccatiFactorization>& constraint_factorization,
-//     const HybridDirection& d) const {
-//   const int N_impulse = contact_sequence.totalNumImpulseStages();
-//   const int N_lift = contact_sequence.totalNumLiftStages();
-//   const int N_all = N_ + 2 * N_impulse + N_lift;
-//   #pragma omp parallel for num_threads(num_proc_)
-//   for (int i=0; i<N_all; ++i) {
-//     if (i < N_) {
-//       aggregateLagrangeMultiplierDirection(
-//           contact_sequence, constraint_factorization, d.impulse, i, 
-//           factorization[i]);
-//     }
-//     else if (i < N_ + N_impulse) {
-//       const int impulse_index = i - N_;
-//       aggregateLagrangeMultiplierDirectionImpulse(
-//           contact_sequence, constraint_factorization, d.impulse, impulse_index, 
-//           factorization.impulse[impulse_index]);
-//     }
-//     else if (i < N_ + 2*N_impulse) {
-//       const int impulse_index = i - N_ - N_impulse;
-//       aggregateLagrangeMultiplierDirectionAux(
-//           contact_sequence, constraint_factorization, d.impulse, impulse_index, 
-//           factorization.aux[impulse_index]);
-//     }
-//     else {
-//       const int lift_index = i - N_ - 2*N_impulse;
-//       aggregateLagrangeMultiplierDirectionLift(
-//           contact_sequence, constraint_factorization, d.impulse, lift_index, 
-//           factorization.lift[lift_index]);
-//     }
-//   }
-// }
-
-
 void OCPDirectionCalculator::computeDirection(
     HybridOCP& split_ocps, std::vector<Robot>& robots, 
     const ContactSequence& contact_sequence, 

@@ -58,9 +58,9 @@ void BenchmarkWithContacts() {
   }
   contact_cost->set_f_weight(f_weight);
   auto impulse_joint_cost = std::make_shared<idocp::JointSpaceImpulseCost>(robot);
-  impulse_joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
+  impulse_joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
   impulse_joint_cost->set_q_ref(q_ref);
-  impulse_joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
+  impulse_joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
   impulse_joint_cost->set_dv_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   auto impulse_force_cost = std::make_shared<idocp::ImpulseForceCost>(robot);
   impulse_force_cost->set_f_weight(f_weight);
@@ -121,12 +121,13 @@ void BenchmarkWithContacts() {
   idocp::DiscreteEvent discrete_event(robot);
   discrete_event.setDiscreteEvent(contact_status, contact_status_next);
   discrete_event.setContactPoints(robot);
+  // discrete_event.eventTime = 0.475;
   discrete_event.eventTime = 0.175;
   // discrete_event.eventTime = 0.125;
   // discrete_event.eventTime = 0.025;
   ocp_benchmarker.getSolverHandle()->setDiscreteEvent(discrete_event);
   q << 0, 0, 0.5, 0, 0, 0, 1, 
-       0.0315, 0.4, -0.8,
+       0.0315, 0.4, -0.8, 
        0.0315, -0.4, 0.8, 
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;

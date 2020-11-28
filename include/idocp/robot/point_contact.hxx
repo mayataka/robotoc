@@ -181,14 +181,10 @@ inline void PointContact::computeContactVelocityDerivatives(
                                          pinocchio::LOCAL,
                                          frame_v_partial_dq_, 
                                          frame_a_partial_da_);
-  pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
-                              pinocchio::LOCAL, J_frame_);
   (const_cast<Eigen::MatrixBase<MatrixType1>&> (velocity_partial_dq)).noalias()
       = frame_v_partial_dq_.template topRows<3>();
   (const_cast<Eigen::MatrixBase<MatrixType2>&> (velocity_partial_dv)).noalias() 
       = frame_a_partial_da_.template topRows<3>();
-  (const_cast<Eigen::MatrixBase<MatrixType1>&> (velocity_partial_dq)).noalias()
-      += data.oMf[contact_frame_id_].rotation() * J_frame_.template topRows<3>();
 }
 
 

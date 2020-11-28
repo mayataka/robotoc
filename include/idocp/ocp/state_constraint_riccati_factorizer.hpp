@@ -9,6 +9,7 @@
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_lp_factorizer.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
+#include "idocp/hybrid/hybrid_container.hpp"
 
 namespace idocp {
 
@@ -21,11 +22,12 @@ public:
   ///
   /// @brief Construct factorizer.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
   /// @param[in] max_num_impulse Maximum number of impulse phases over the 
   /// horizon.
   /// @param[in] nproc Number of threads used in this class.
   ///
-  StateConstraintRiccatiFactorizer(const Robot& robot, 
+  StateConstraintRiccatiFactorizer(const Robot& robot, const int N,
                                    const int max_num_impulse, 
                                    const int nproc);
 
@@ -67,31 +69,38 @@ public:
   /// @brief Computes the directions of the Lagrange multipliers with respect
   /// to the pure-state constraints.
   /// @param[in] contact_sequence Contact sequence.
-  /// @param[in] impulse_riccati_factorization Riccati factorizations for 
-  /// impulse stages.
+  /// @param[in] riccati_factorization Riccati factorizations.
   /// @param[in, out] constraint_factorization Constraint factorizations.
-  /// @param[in] dx0 Newton direction at the initial stage.
-  /// @param[in, out] d_impulse Directions at the impulse stages.
+  /// @param[in, out] d Split directions.
   ///
-  template <typename VectorType>
   void computeLagrangeMultiplierDirection(
       const ContactSequence& contact_sequence,
-      const std::vector<RiccatiFactorization>& impulse_riccati_factorization,
+      const HybridRiccatiFactorization& riccati_factorization,
       StateConstraintRiccatiFactorization& constraint_factorization,
-      const Eigen::MatrixBase<VectorType>& dx0,
-      std::vector<ImpulseSplitDirection>& d_impulse);
+      HybridDirection& d);
+
+  ///
+  /// @brief Aggregates the all of the Lagrange multipliers with respect to 
+  /// the pure-state constriants for fowrad Riccati recursion.
+  /// @param[in] constraint_factorization Pure-state constraint factorization. 
+  /// @param[in] contact_sequence Contact sequence. 
+  /// @param[in] d_impulse Split directions of impulse stages.
+  /// @param[in, out] riccati_factorization Riccati factorization. 
+  ///
+  void aggregateLagrangeMultiplierDirection(
+      const StateConstraintRiccatiFactorization& constraint_factorization,
+      const ContactSequence& contact_sequence, const HybridDirection& d,
+      HybridRiccatiFactorization& riccati_factorization) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int N_, max_num_impulse_, dimv_, nproc_;
+  int N_, max_num_impulse_, nproc_;
   Eigen::LDLT<Eigen::MatrixXd> ldlt_;
   std::vector<StateConstraintRiccatiLPFactorizer> lp_factorizer_;
 
 };
 
 } // namespace idocp
-
-#include "idocp/ocp/state_constraint_riccati_factorizer.hxx"
 
 #endif // IDOCP_STATE_CONSTRAINT_RICCATI_FACTORIZATER_HPP_ 

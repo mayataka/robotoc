@@ -8,7 +8,7 @@ RiccatiSolver::RiccatiSolver(const Robot& robot, const double T, const int N,
   : riccati_recursion_(robot, T, N, max_num_impulse, num_proc),
     riccati_factorizer_(N, max_num_impulse, robot),
     riccati_factorization_(N, max_num_impulse, robot),
-    constraint_factorizer_(robot, max_num_impulse, num_proc),
+    constraint_factorizer_(robot, N, max_num_impulse, num_proc),
     constraint_factorization_(robot, N, max_num_impulse),
     ocp_direction_calculator_(T, N, max_num_impulse, num_proc) {
 }
@@ -60,9 +60,8 @@ void RiccatiSolver::computeNewtonDirection(
   ocp_direction_calculator_.computeInitialStateDirection(robots, q, v, s, d);
   if (contact_sequence.existImpulseStage()) {
     constraint_factorizer_.computeLagrangeMultiplierDirection(
-        contact_sequence, riccati_factorization_.impulse, 
-        constraint_factorization_, d[0].dx(), d.impulse);
-    riccati_recursion_.aggregateLagrangeMultiplierDirection(
+        contact_sequence, riccati_factorization_, constraint_factorization_, d);
+    constraint_factorizer_.aggregateLagrangeMultiplierDirection(
         constraint_factorization_, contact_sequence, d, riccati_factorization_);
   }
   riccati_recursion_.forwardRiccatiRecursion(

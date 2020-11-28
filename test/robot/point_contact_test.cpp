@@ -312,13 +312,8 @@ void PointContactTest::testContactVelocityDerivatives(pinocchio::Model& model, p
                                          frame_v_partial_dq, 
                                          frame_v_partial_dv);
   Eigen::MatrixXd J_frame = Eigen::MatrixXd::Zero(6, dimv);
-  pinocchio::getFrameJacobian(model, data, contact_frame_id, 
-                              pinocchio::LOCAL, J_frame);
-  vel_partial_dq_ref 
-      = frame_v_partial_dq.template topRows<3>() 
-          + data.oMf[contact_frame_id].rotation() * J_frame.template topRows<3>();
-  vel_partial_dv_ref 
-      = frame_v_partial_dv.template topRows<3>();
+  vel_partial_dq_ref = frame_v_partial_dq.template topRows<3>();
+  vel_partial_dv_ref = frame_v_partial_dv.template topRows<3>();
   EXPECT_TRUE(vel_partial_dq_ref.isApprox(vel_partial_dq));
   EXPECT_TRUE(vel_partial_dv_ref.isApprox(vel_partial_dv));
 }
