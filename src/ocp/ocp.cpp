@@ -183,8 +183,6 @@ void OCP::setDiscreteEvent(const DiscreteEvent& discrete_event) {
     d_.lift[i].setContactStatus(contact_sequence_.contactStatus(stage));
   }
   riccati_solver_.setConstraintDimensions(contact_sequence_);
-
-  s_.impulse[0].xi_stack().fill(1e3);
 }
 
 

@@ -9,31 +9,20 @@
 
 namespace idocp {
 
-inline void OCPDirectionCalculator::computePrimalDirection(
-    const RiccatiFactorizer factorizer, 
-    const RiccatiFactorization factorization, 
-    const RiccatiFactorization factorization_next, SplitDirection& d, 
-    const bool exist_state_constraint) {
-  RiccatiFactorizer::computeCostateDirection(factorization, d, 
-                                             exist_state_constraint);
-  factorizer.computeControlInputDirection(factorization_next, d, 
-                                          exist_state_constraint);
+inline const RiccatiFactorization& OCPDirectionCalculator::
+riccati_factorization_next(const HybridRiccatiFactorization& factorization, 
+                           const ContactSequence& contact_sequence, 
+                           const int time_stage) {
+  if (contact_sequence.existImpulseStage(time_stage)) {
+    return factorization.impulse[contact_sequence.impulseIndex(time_stage)];
+  }
+  else if (contact_sequence.existLiftStage(time_stage)) {
+    return factorization.lift[contact_sequence.liftIndex(time_stage)];
+  }
+  else {
+    return factorization[time_stage+1];
+  }
 }
-
-
-inline void OCPDirectionCalculator::computePrimalDirectionTerminal(
-    const RiccatiFactorization factorization, SplitDirection& d) {
-  RiccatiFactorizer::computeCostateDirection(factorization, d, false);
-}
- 
-
-inline void OCPDirectionCalculator::computePrimalDirectionImpulse(
-    const RiccatiFactorization factorization, ImpulseSplitDirection& d,
-    const bool exist_state_constraint) {
-  ImpulseRiccatiFactorizer::computeCostateDirection(factorization, d, 
-                                                    exist_state_constraint);
-}
- 
 
 inline double OCPDirectionCalculator::dtau(
     const ContactSequence& contact_sequence, const int time_stage) const {

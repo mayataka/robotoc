@@ -68,7 +68,7 @@ void OCPDirectionCalculator::computeDirection(
     HybridOCP& split_ocps, std::vector<Robot>& robots, 
     const ContactSequence& contact_sequence, 
     const HybridRiccatiFactorizer& factorizer, 
-    HybridRiccatiFactorization& factorization, const HybridSolution& s, 
+    const HybridRiccatiFactorization& factorization, const HybridSolution& s, 
     HybridDirection& d) {
   assert(robots.size() == num_proc_);
   const int N_impulse = contact_sequence.totalNumImpulseStages();
@@ -78,20 +78,11 @@ void OCPDirectionCalculator::computeDirection(
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
-      if (contact_sequence.existImpulseStage(i)) {
-        computePrimalDirection(factorizer[i], factorization[i], 
-                               factorization.impulse[contact_sequence.impulseIndex(i)], 
-                               d[i], exist_state_constraint);
-      }
-      else if (contact_sequence.existLiftStage(i)) {
-        computePrimalDirection(factorizer[i], factorization[i],
-                               factorization.lift[contact_sequence.liftIndex(i)], 
-                               d[i], exist_state_constraint);
-      }
-      else {
-        computePrimalDirection(factorizer[i], factorization[i], 
-                               factorization[i+1], d[i], exist_state_constraint);
-      }
+      RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], 
+                                                 exist_state_constraint);
+      factorizer[i].computeControlInputDirection(
+          riccati_factorization_next(factorization, contact_sequence, i), d[i], 
+          exist_state_constraint);
       split_ocps[i].computeCondensedPrimalDirection(robots[omp_get_thread_num()], 
                                                     dtau(contact_sequence, i), 
                                                     s[i], d[i]);
@@ -99,14 +90,16 @@ void OCPDirectionCalculator::computeDirection(
       max_dual_step_sizes_.coeffRef(i) = split_ocps[i].maxDualStepSize();
     }
     else if (i == N_) {
-      computePrimalDirectionTerminal(factorization[N_], d[N_]);
+      RiccatiFactorizer::computeCostateDirection(factorization[N_], d[N_], 
+                                                 false);
       max_primal_step_sizes_.coeffRef(N_) = split_ocps.terminal.maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(N_) = split_ocps.terminal.maxDualStepSize();
     }
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);
-      computePrimalDirectionImpulse(factorization.impulse[impulse_index], 
-                                    d.impulse[impulse_index], exist_state_constraint);
+      ImpulseRiccatiFactorizer::computeCostateDirection(
+          factorization.impulse[impulse_index], d.impulse[impulse_index], 
+          exist_state_constraint);
       split_ocps.impulse[impulse_index].computeCondensedPrimalDirection(
           robots[omp_get_thread_num()], s.impulse[impulse_index], 
           d.impulse[impulse_index]);
@@ -122,10 +115,12 @@ void OCPDirectionCalculator::computeDirection(
       const double dtau_aux 
           = time_stage_after_impulse * dtau_ 
               - contact_sequence.impulseTime(impulse_index);
-      computePrimalDirection(factorizer.aux[impulse_index], 
-                             factorization.aux[impulse_index], 
-                             factorization[time_stage_after_impulse], 
-                             d.aux[impulse_index], exist_state_constraint);
+      RiccatiFactorizer::computeCostateDirection(
+          factorization.aux[impulse_index], d.aux[impulse_index], 
+          exist_state_constraint);
+      factorizer.aux[impulse_index].computeControlInputDirection(
+          factorization[time_stage_after_impulse], d.aux[impulse_index], 
+          exist_state_constraint);
       split_ocps.aux[impulse_index].computeCondensedPrimalDirection(
           robots[omp_get_thread_num()], dtau_aux, s.aux[impulse_index], 
           d.aux[impulse_index]);
@@ -141,10 +136,12 @@ void OCPDirectionCalculator::computeDirection(
       const double dtau_aux
           = time_stage_after_lift * dtau_ 
               - contact_sequence.liftTime(lift_index);
-      computePrimalDirection(factorizer.lift[lift_index], 
-                             factorization.lift[lift_index], 
-                             factorization[time_stage_after_lift], 
-                             d.lift[lift_index], exist_state_constraint);
+      RiccatiFactorizer::computeCostateDirection(
+          factorization.lift[lift_index], d.lift[lift_index], 
+          exist_state_constraint);
+      factorizer.lift[lift_index].computeControlInputDirection(
+          factorization[time_stage_after_lift], d.lift[lift_index], 
+          exist_state_constraint);
       split_ocps.lift[lift_index].computeCondensedPrimalDirection(
           robots[omp_get_thread_num()], dtau_aux, s.lift[lift_index], 
           d.lift[lift_index]);

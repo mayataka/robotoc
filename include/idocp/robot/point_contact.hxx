@@ -206,7 +206,7 @@ inline void PointContact::computeContactResidual(
   assert(contact_point.size() == 3);
   assert(contact_residual.size() == 3);
   (const_cast<Eigen::MatrixBase<VectorType2>&> (contact_residual))
-      = (data.oMf[contact_frame_id_].translation()-contact_point_);
+      = (data.oMf[contact_frame_id_].translation()-contact_point);
 }
 
 
@@ -230,7 +230,7 @@ inline void PointContact::computeContactResidual(
   assert(contact_point.size() == 3);
   assert(contact_residual.size() == 3);
   (const_cast<Eigen::MatrixBase<VectorType2>&> (contact_residual))
-      = coeff * (data.oMf[contact_frame_id_].translation()-contact_point_);
+      = coeff * (data.oMf[contact_frame_id_].translation()-contact_point);
 }
 
 

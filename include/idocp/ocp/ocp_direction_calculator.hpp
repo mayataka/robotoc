@@ -85,29 +85,20 @@ public:
   void computeDirection(HybridOCP& split_ocps, std::vector<Robot>& robots, 
                         const ContactSequence& contact_sequence, 
                         const HybridRiccatiFactorizer& factorizer, 
-                        HybridRiccatiFactorization& factorization, 
+                        const HybridRiccatiFactorization& factorization, 
                         const HybridSolution& s, HybridDirection& d);
 
   double maxPrimalStepSize(const ContactSequence& contact_sequence) const;
 
   double maxDualStepSize(const ContactSequence& contact_sequence) const;
 
-  static void computePrimalDirection(
-      const RiccatiFactorizer factorizer, 
-      const RiccatiFactorization factorization, 
-      const RiccatiFactorization factorization_next, SplitDirection& d, 
-      const bool exist_state_constraint);
-
-  static void computePrimalDirectionTerminal(
-      const RiccatiFactorization factorization, SplitDirection& d);
-
-  static void computePrimalDirectionImpulse(
-      const RiccatiFactorization factorization, ImpulseSplitDirection& d,
-      const bool exist_state_constraint);
-
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
+
+  static const RiccatiFactorization& riccati_factorization_next(
+      const HybridRiccatiFactorization& factorization, 
+      const ContactSequence& contact_sequence, const int time_stage);
 
   double dtau(const ContactSequence& contact_sequence, 
               const int time_stage) const;
