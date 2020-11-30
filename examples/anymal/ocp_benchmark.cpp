@@ -112,7 +112,7 @@ void BenchmarkWithContacts() {
   robot.updateFrameKinematics(q);
   robot.setContactPoints(contact_status);
   // contact_status.activateContacts({0, 1, 2, 3});
-  contact_status.activateContacts({1, 2, 3});
+  contact_status.activateContacts({1, 3});
   ocp_benchmarker.getSolverHandle()->setContactStatusUniformly(contact_status);
   auto contact_status_next = robot.createContactStatus();
   robot.setContactPoints(contact_status_next);

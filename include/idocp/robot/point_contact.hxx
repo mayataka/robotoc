@@ -63,17 +63,6 @@ inline void PointContact::getContactJacobian(
 }
 
 
-template <typename VectorType>
-inline void PointContact::computeBaumgarteResidual(
-    const pinocchio::Model& model, const pinocchio::Data& data, 
-    const double time_step, 
-    const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
-  computeBaumgarteResidual(
-      model, data, time_step, contact_point_, 
-      const_cast<Eigen::MatrixBase<VectorType>&> (baumgarte_residual));
-}
-
-
 template <typename VectorType1, typename VectorType2>
 inline void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
@@ -188,16 +177,6 @@ inline void PointContact::computeContactVelocityDerivatives(
 }
 
 
-template <typename VectorType>
-inline void PointContact::computeContactResidual(
-    const pinocchio::Model& model, const pinocchio::Data& data, 
-    const Eigen::MatrixBase<VectorType>& contact_residual) const {
-  computeContactResidual(
-      model, data, contact_point_, 
-      const_cast<Eigen::MatrixBase<VectorType>&> (contact_residual));
-}
-
-
 template <typename VectorType1, typename VectorType2>
 inline void PointContact::computeContactResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
@@ -207,17 +186,6 @@ inline void PointContact::computeContactResidual(
   assert(contact_residual.size() == 3);
   (const_cast<Eigen::MatrixBase<VectorType2>&> (contact_residual))
       = (data.oMf[contact_frame_id_].translation()-contact_point);
-}
-
-
-template <typename VectorType>
-inline void PointContact::computeContactResidual(
-    const pinocchio::Model& model, const pinocchio::Data& data, 
-    const double coeff, 
-    const Eigen::MatrixBase<VectorType>& contact_residual) const {
-  computeContactResidual(
-      model, data, coeff, contact_point_, 
-      const_cast<Eigen::MatrixBase<VectorType>&> (contact_residual));
 }
 
 
@@ -258,23 +226,6 @@ inline void PointContact::computeContactDerivative(
   (const_cast<Eigen::MatrixBase<MatrixType>&> (contact_partial_dq)).noalias()
       = coeff * data.oMf[contact_frame_id_].rotation() 
               * J_frame_.template topRows<3>();
-}
-
-
-inline void PointContact::setContactPoint(
-    const Eigen::Vector3d& contact_point) {
-  contact_point_ = contact_point;
-}
-
-
-inline void PointContact::setContactPointByCurrentKinematics(
-    const pinocchio::Data& data) {
-  contact_point_ = data.oMf[contact_frame_id_].translation();
-}
-
-
-inline const Eigen::Vector3d& PointContact::contactPoint() const {
-  return contact_point_;
 }
 
 

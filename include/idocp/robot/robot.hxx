@@ -181,24 +181,6 @@ inline void Robot::updateFrameKinematics(
 template <typename VectorType>
 inline void Robot::computeBaumgarteResidual(
     const ContactStatus& contact_status, const double time_step,
-    const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
-  assert(time_step > 0);
-  int num_active_contacts = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (contact_status.isContactActive(i)) {
-      point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, time_step,
-          (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
-              .template segment<3>(3*num_active_contacts));
-      ++num_active_contacts;
-    }
-  }
-}
-
-
-template <typename VectorType>
-inline void Robot::computeBaumgarteResidual(
-    const ContactStatus& contact_status, const double time_step,
     const std::vector<Eigen::Vector3d>& contact_points,
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
   assert(time_step > 0);
@@ -275,23 +257,6 @@ inline void Robot::computeImpulseVelocityDerivatives(
               .block(3*num_active_impulse, 0, 3, dimv_),
           (const_cast<Eigen::MatrixBase<MatrixType2>&>(velocity_partial_dv))
               .block(3*num_active_impulse, 0, 3, dimv_));
-      ++num_active_impulse;
-    }
-  }
-}
-
-
-template <typename VectorType>
-inline void Robot::computeImpulseConditionResidual(
-    const ImpulseStatus& impulse_status, 
-    const Eigen::MatrixBase<VectorType>& contact_residual) const {
-  int num_active_impulse = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
-      point_contacts_[i].computeContactResidual(
-          model_, data_,
-          (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
-              .template segment<3>(3*num_active_impulse));
       ++num_active_impulse;
     }
   }
@@ -384,22 +349,6 @@ inline void Robot::computeImpulseConditionDerivative(
               .block(3*num_active_impulse, 0, 3, dimv_));
       ++num_active_impulse;
     }
-  }
-}
-
-
-inline void Robot::setContactPoints(
-    const std::vector<Eigen::Vector3d>& contact_points) {
-  assert(contact_points.size() == point_contacts_.size());
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    point_contacts_[i].setContactPoint(contact_points[i]);
-  }
-}
-
-
-inline void Robot::setContactPointsByCurrentKinematics() {
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    point_contacts_[i].setContactPointByCurrentKinematics(data_);
   }
 }
 

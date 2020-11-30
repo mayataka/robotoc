@@ -67,7 +67,6 @@ TEST_F(PointContactTest, defaultConstructor) {
   EXPECT_EQ(contact.parent_joint_id(), 0);
   EXPECT_DOUBLE_EQ(contact.frictionCoefficient(), 0);
   EXPECT_DOUBLE_EQ(contact.restitutionCoefficient(), 0);
-  EXPECT_TRUE(contact.contactPoint().isApprox(Eigen::Vector3d::Zero()));
 }
 
 
@@ -77,24 +76,14 @@ void PointContactTest::testConstructorAndSetter(pinocchio::Model& model, pinocch
   EXPECT_EQ(contact.parent_joint_id(), model.frames[contact_frame_id].parent);
   EXPECT_DOUBLE_EQ(contact.frictionCoefficient(), friction_coeff);
   EXPECT_DOUBLE_EQ(contact.restitutionCoefficient(), restitution_coeff);
-  EXPECT_TRUE(contact.contactPoint().isApprox(Eigen::Vector3d::Zero()));
   // Check set parameters set appropriately.
   const double friction_coeff_tmp = std::abs(Eigen::VectorXd::Random(2)[1]);
   const double restitution_coeff_tmp = std::abs(Eigen::VectorXd::Random(2)[1]);
   const Eigen::Vector3d contact_point_tmp = Eigen::Vector3d::Random();
   contact.setFrictionCoefficient(friction_coeff_tmp);
   contact.setRestitutionCoefficient(restitution_coeff_tmp);
-  contact.setContactPoint(contact_point_tmp);
   EXPECT_DOUBLE_EQ(friction_coeff_tmp, contact.frictionCoefficient());
   EXPECT_DOUBLE_EQ(restitution_coeff_tmp, contact.restitutionCoefficient());
-  EXPECT_TRUE(contact_point_tmp.isApprox(contact.contactPoint()));
-  // Check the contact point assignment by kinematics.
-  const Eigen::VectorXd q = pinocchio::randomConfiguration(
-      model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
-  pinocchio::forwardKinematics(model, data, q);
-  pinocchio::updateFramePlacement(model, data, contact_frame_id);
-  contact.setContactPointByCurrentKinematics(data);
-  EXPECT_TRUE(contact.contactPoint().isApprox(data.oMf[contact_frame_id].translation()));
 }
 
 
@@ -167,9 +156,9 @@ void PointContactTest::testBaumgarteResidual(pinocchio::Model& model, pinocchio:
   Eigen::Vector3d residual, residual_ref;
   residual.setZero();
   residual_ref.setZero();
-  contact.setContactPointByCurrentKinematics(data);
   const double time_step = 0.5;
-  contact.computeBaumgarteResidual(model, data, time_step, residual);
+  const Eigen::Vector3d contact_point = Eigen::Vector3d::Random();
+  contact.computeBaumgarteResidual(model, data, time_step, contact_point, residual);
   const double baumgarte_weight_on_velocity = (2-restitution_coeff) / time_step;
   const double baumgarte_weight_on_position = 1 / (time_step*time_step);
   residual_ref 
@@ -180,14 +169,9 @@ void PointContactTest::testBaumgarteResidual(pinocchio::Model& model, pinocchio:
                                             pinocchio::LOCAL).linear()
           + baumgarte_weight_on_position 
               * (data.oMf[contact_frame_id].translation()
-                 -contact.contactPoint());
+                 -contact_point);
   EXPECT_TRUE(residual.isApprox(residual_ref));
   Eigen::VectorXd residuals = Eigen::VectorXd::Zero(10);
-  contact.computeBaumgarteResidual(model, data, time_step, residuals.segment<3>(5));
-  EXPECT_TRUE(residuals.head(5).isZero());
-  EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
-  residuals.setZero();
-  const Eigen::Vector3d contact_point = contact.contactPoint();
   contact.computeBaumgarteResidual(model, data, time_step, contact_point, residuals.segment<3>(5));
   EXPECT_TRUE(residuals.head(5).isZero());
   EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
@@ -274,7 +258,6 @@ void PointContactTest::testContactVelocityResidual(pinocchio::Model& model, pino
   Eigen::Vector3d residual, residual_ref;
   residual.setZero();
   residual_ref.setZero();
-  contact.setContactPointByCurrentKinematics(data);
   const double time_step = 0.5;
   contact.computeContactVelocityResidual(model, data, residual);
   residual_ref = pinocchio::getFrameVelocity(model, data, contact_frame_id, 
@@ -333,27 +316,16 @@ void PointContactTest::testContactResidual(pinocchio::Model& model, pinocchio::D
   Eigen::Vector3d residual, residual_ref;
   residual.setZero();
   residual_ref.setZero();
-  contact.setContactPointByCurrentKinematics(data);
-  const double time_step = 0.5;
-  contact.computeContactResidual(model, data, residual);
-  residual_ref = (data.oMf[contact_frame_id].translation()-contact.contactPoint());
+  const Eigen::Vector3d contact_point = Eigen::Vector3d::Random();
+  contact.computeContactResidual(model, data, contact_point, residual);
+  residual_ref = (data.oMf[contact_frame_id].translation()-contact_point);
   EXPECT_TRUE(residual.isApprox(residual_ref));
   Eigen::VectorXd residuals = Eigen::VectorXd::Zero(10);
-  contact.computeContactResidual(model, data, residuals.segment<3>(5));
-  EXPECT_TRUE(residuals.head(5).isZero());
-  EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
-  EXPECT_TRUE(residuals.tail(2).isZero());
-  const double coeff = Eigen::VectorXd::Random(1)[0];
-  contact.computeContactResidual(model, data, coeff, residuals.segment<3>(5));
-  EXPECT_TRUE(residuals.head(5).isZero());
-  EXPECT_TRUE(residuals.segment<3>(5).isApprox(coeff*residual_ref));
-  EXPECT_TRUE(residuals.tail(2).isZero());
-  residuals.setZero();
-  const Eigen::Vector3d contact_point = contact.contactPoint();
   contact.computeContactResidual(model, data, contact_point, residuals.segment<3>(5));
   EXPECT_TRUE(residuals.head(5).isZero());
   EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
   EXPECT_TRUE(residuals.tail(2).isZero());
+  const double coeff = Eigen::VectorXd::Random(1)[0];
   contact.computeContactResidual(model, data, coeff, contact_point, residuals.segment<3>(5));
   EXPECT_TRUE(residuals.head(5).isZero());
   EXPECT_TRUE(residuals.segment<3>(5).isApprox(coeff*residual_ref));

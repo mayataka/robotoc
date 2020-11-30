@@ -114,21 +114,6 @@ public:
 
   ///
   /// @brief Computes the residual of the contact constraints considered by the 
-  /// Baumgarte's stabilization method. Before calling this function, you have 
-  /// to update the kinematics of the model in pinocchio::Data.
-  /// @param[in] model Pinocchio model of the robot.
-  /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] time_step Time step of the discretization. Must be positive.
-  /// @param[out] baumgarte_residual Residual of the Bamgarte's constraint.
-  /// 
-  template <typename VectorType>
-  void computeBaumgarteResidual(
-      const pinocchio::Model& model, const pinocchio::Data& data, 
-      const double time_step,
-      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
-
-  ///
-  /// @brief Computes the residual of the contact constraints considered by the 
   /// Baumgarte's stabilization method.  
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
@@ -198,20 +183,6 @@ public:
 
   ///
   /// @brief Computes the residual of the contact position constraints.
-  /// Before calling this function, you have to update the kinematics of the  
-  /// model in pinocchio::Data.
-  /// @param[in] model Pinocchio model of the robot.
-  /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[out] contact_residual Residual of the contact constraint. size must 
-  /// be 3.
-  /// 
-  template <typename VectorType>
-  void computeContactResidual(
-      const pinocchio::Model& model, const pinocchio::Data& data, 
-      const Eigen::MatrixBase<VectorType>& contact_residual) const;
-
-  ///
-  /// @brief Computes the residual of the contact position constraints.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
   /// @param[in] contact_point Contact point. Size must be 3.
@@ -223,22 +194,6 @@ public:
       const pinocchio::Model& model, const pinocchio::Data& data, 
       const Eigen::MatrixBase<VectorType1>& contact_point,
       const Eigen::MatrixBase<VectorType2>& contact_residual) const;
-
-  ///
-  /// @brief Computes the residual of the contact position constraints.
-  /// Before calling this function, you have to update the kinematics of the  
-  /// model in pinocchio::Data.
-  /// @param[in] model Pinocchio model of the robot.
-  /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] coeff Coefficient multiplied to the resultant Jacobian.
-  /// @param[out] contact_residual Residual of the contact constraint. Size must 
-  /// be 3.
-  /// 
-  template <typename VectorType>
-  void computeContactResidual(
-      const pinocchio::Model& model, const pinocchio::Data& data, 
-      const double coeff, 
-      const Eigen::MatrixBase<VectorType>& contact_residual) const;
 
   ///
   /// @brief Computes the residual of the contact position constraints.
@@ -288,22 +243,6 @@ public:
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 
   ///
-  /// @brief Sets the contact points.
-  /// @param[in] contact_point The contact points, i.e., (x,y,z) position of 
-  /// the end-effector frame having the contact.
-  /// 
-  void setContactPoint(const Eigen::Vector3d& contact_point);
-
-  ///
-  /// @brief Sets the contact points by current kinematics of the robot. 
-  /// The kinematics is passed through pinocchio::Data. Before calling this 
-  /// function, kinematics (only with respect to the position) in 
-  /// pinocchio::Data must be updated.
-  /// @param[in] data The data including kinematics of the robot.
-  ///
-  void setContactPointByCurrentKinematics(const pinocchio::Data& data);
-
-  ///
   /// @brief Sets the friction coefficient.
   /// @param[in] friction_coefficient Friction coefficient. Must be positive.
   ///
@@ -316,12 +255,6 @@ public:
   /// (complete inelastic).
   ///
   void setRestitutionCoefficient(const double restitution_coefficient);
-
-  ///
-  /// @brief Returns the contact point.
-  /// @return Const reference to the contact point.
-  ///
-  const Eigen::Vector3d& contactPoint() const;
 
   ///
   /// @brief Returns the contact point resulted by the current kinematics of 
@@ -363,7 +296,6 @@ public:
 private:
   int contact_frame_id_, parent_joint_id_, dimv_;
   double friction_coefficient_, restitution_coefficient_;
-  Eigen::Vector3d contact_point_;
   pinocchio::SE3 jXf_;
   pinocchio::Motion v_frame_;
   Eigen::Matrix3d v_linear_skew_, v_angular_skew_;

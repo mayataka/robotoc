@@ -71,7 +71,8 @@ public:
   /// @param[in] contact_sequence Contact sequence.
   /// @param[in] riccati_factorization Riccati factorizations.
   /// @param[in, out] constraint_factorization Constraint factorizations.
-  /// @param[in, out] d Split directions.
+  /// @param[in, out] d Split directions. Initial state direction d[0].dx() 
+  /// must be computed before calling this function.
   ///
   void computeLagrangeMultiplierDirection(
       const ContactSequence& contact_sequence,
@@ -84,7 +85,7 @@ public:
   /// the pure-state constriants for fowrad Riccati recursion.
   /// @param[in] constraint_factorization Pure-state constraint factorization. 
   /// @param[in] contact_sequence Contact sequence. 
-  /// @param[in] d_impulse Split directions of impulse stages.
+  /// @param[in] d Split directions. 
   /// @param[in, out] riccati_factorization Riccati factorization. 
   ///
   void aggregateLagrangeMultiplierDirection(

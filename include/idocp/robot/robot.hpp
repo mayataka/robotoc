@@ -216,21 +216,6 @@ public:
   /// @param[in] contact_status Current contact status.
   /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
   /// Must be positive.
-  /// @param[out] baumgarte_residual 3-dimensional vector where the result is 
-  /// stored. Size must be at least 3.
-  ///
-  template <typename VectorType>
-  void computeBaumgarteResidual(
-      const ContactStatus& contact_status, const double time_step,
-      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
-
-  ///
-  /// @brief Computes the residual of the contact constriants represented by 
-  /// Baumgarte's stabilization method. Before calling this function, 
-  /// updateKinematics() must be called.
-  /// @param[in] contact_status Current contact status.
-  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
-  /// Must be positive.
   /// @param[in] contact_points Contact points. Size must be 
   /// Robot::max_point_contacts(). 
   /// @param[out] baumgarte_residual 3-dimensional vector where the result is 
@@ -300,19 +285,6 @@ public:
   /// position constriants at the impulse. Before calling this function, 
   /// updateKinematics() must be called.
   /// @param[in] impulse_status Impulse status.
-  /// @param[out] contact_residual 3-dimensional vector where the result is 
-  /// stored. Size must be at least 3.
-  ///
-  template <typename VectorType>
-  void computeImpulseConditionResidual(
-      const ImpulseStatus& impulse_status, 
-      const Eigen::MatrixBase<VectorType>& contact_residual) const;
-
-  ///
-  /// @brief Computes the residual of the implse condition, i.e, contact 
-  /// position constriants at the impulse. Before calling this function, 
-  /// updateKinematics() must be called.
-  /// @param[in] impulse_status Impulse status.
   /// @param[in] contact_points Contact points. Size must be 
   /// Robot::max_point_contacts(). 
   /// @param[out] contact_residual 3-dimensional vector where the result is 
@@ -383,18 +355,6 @@ public:
   void computeImpulseConditionDerivative(
       const ImpulseStatus& impulse_status, const double coeff,
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
-
-  ///
-  /// @brief Sets the contact points.
-  /// @param[in] contact_points Collection of contact points. Size must be 
-  /// Robot::max_point_contacts().
-  /// 
-  void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
-
-  ///
-  /// @brief Sets all the contact points by using current kinematics.
-  /// 
-  void setContactPointsByCurrentKinematics();
 
   ///
   /// @brief Sets the friction coefficient.
@@ -734,8 +694,9 @@ public:
   ImpulseStatus createImpulseStatus() const;
 
   ///
-  /// @brief Set contact points in contact_status. 
-  /// @param[in] contact_status Contact status.
+  /// @brief Set contact points in contact_status using current kinematics. 
+  /// Call Robot::updateFrameKinematics() before calling this function.
+  /// @param[out] contact_status ContactStatus or ImpulseStatus.
   /// 
   template <typename ContactStatusType>
   void setContactPoints(ContactStatusType& contact_status) const;

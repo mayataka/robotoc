@@ -243,14 +243,10 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf, pinocchio::Model&
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   const Eigen::VectorXd a = Eigen::VectorXd::Random(model.nv);
   robot.updateKinematics(q, v, a);
-  robot.setContactPointsByCurrentKinematics();
   robot.computeBaumgarteResidual(contact_status, time_step, contact_status.contactPoints(), residual.head(contact_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, a);
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
-  for (int i=0; i<contacts_ref.size(); ++i) {
-    contacts_ref[i].setContactPointByCurrentKinematics(data);
-  }
   int num_active_contacts = 0;
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (contact_status.isContactActive(i)) {
@@ -309,14 +305,10 @@ void RobotTest::testImpulseVelocity(const std::string& path_to_urdf, pinocchio::
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   robot.updateKinematics(q, v);
-  robot.setContactPointsByCurrentKinematics();
   robot.computeImpulseVelocityResidual(impulse_status, residual.head(impulse_status.dimp()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
-  for (int i=0; i<contacts_ref.size(); ++i) {
-    contacts_ref[i].setContactPointByCurrentKinematics(data);
-  }
   int num_active_impulse = 0;
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -371,14 +363,10 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
   robot.updateKinematics(q, v);
-  robot.setContactPointsByCurrentKinematics();
   robot.computeImpulseConditionResidual(impulse_status, impulse_status.contactPoints(), residual.head(impulse_status.dimp()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
-  for (int i=0; i<contacts_ref.size(); ++i) {
-    contacts_ref[i].setContactPointByCurrentKinematics(data);
-  }
   int num_active_impulse = 0;
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
