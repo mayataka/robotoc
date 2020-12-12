@@ -1,7 +1,4 @@
-#include "idocp/ocp/ocp_direction_calculator.hpp"
-
-#include "idocp/ocp/riccati_factorizer.hpp"
-#include "idocp/impulse/impulse_riccati_factorizer.hpp"
+#include "idocp/ocp/riccati_direction_calculator.hpp"
 
 #include <omp.h>
 #include <stdexcept>
@@ -10,9 +7,8 @@
 
 namespace idocp {
 
-OCPDirectionCalculator::OCPDirectionCalculator(const double T, const int N, 
-                                               const int max_num_impulse, 
-                                               const int num_proc) 
+RiccatiDirectionCalculator::RiccatiDirectionCalculator(
+    const double T, const int N, const int max_num_impulse, const int num_proc) 
   : T_(T),
     dtau_(T/N),
     N_(N),
@@ -40,7 +36,7 @@ OCPDirectionCalculator::OCPDirectionCalculator(const double T, const int N,
 }
 
 
-OCPDirectionCalculator::OCPDirectionCalculator()
+RiccatiDirectionCalculator::RiccatiDirectionCalculator()
   : T_(0),
     dtau_(0),
     N_(0),
@@ -50,11 +46,11 @@ OCPDirectionCalculator::OCPDirectionCalculator()
 }
 
 
-OCPDirectionCalculator::~OCPDirectionCalculator() {
+RiccatiDirectionCalculator::~RiccatiDirectionCalculator() {
 }
 
 
-void OCPDirectionCalculator::computeInitialStateDirection(
+void RiccatiDirectionCalculator::computeInitialStateDirection(
     const std::vector<Robot>& robots, const Eigen::VectorXd& q, 
     const Eigen::VectorXd& v, const HybridSolution& s, HybridDirection& d) {
   assert(q.size() == robots[0].dimq());
@@ -64,7 +60,7 @@ void OCPDirectionCalculator::computeInitialStateDirection(
 }
 
 
-void OCPDirectionCalculator::computeDirection(
+void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
     HybridOCP& split_ocps, std::vector<Robot>& robots, 
     const ContactSequence& contact_sequence, 
     const HybridRiccatiFactorizer& factorizer, 
@@ -73,15 +69,15 @@ void OCPDirectionCalculator::computeDirection(
   assert(robots.size() == num_proc_);
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();
-  const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
+  N_all_ = N_ + 1 + 2 * N_impulse + N_lift;
   const bool exist_state_constraint = contact_sequence.existImpulseStage();
   #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<N_all; ++i) {
+  for (int i=0; i<N_all_; ++i) {
     if (i < N_) {
       RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], 
                                                  exist_state_constraint);
       factorizer[i].computeControlInputDirection(
-          riccati_factorization_next(factorization, contact_sequence, i), d[i], 
+          next_riccati_factorization(factorization, contact_sequence, i), d[i], 
           exist_state_constraint);
       split_ocps[i].computeCondensedPrimalDirection(robots[omp_get_thread_num()], 
                                                     dtau(contact_sequence, i), 
@@ -154,21 +150,13 @@ void OCPDirectionCalculator::computeDirection(
 }
 
 
-double OCPDirectionCalculator::maxPrimalStepSize(
-    const ContactSequence& contact_sequence) const {
-  const int N_impulse = contact_sequence.totalNumImpulseStages();
-  const int N_lift = contact_sequence.totalNumLiftStages();
-  const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
-  return max_primal_step_sizes_.head(N_all).minCoeff();
+double RiccatiDirectionCalculator::maxPrimalStepSize() const {
+  return max_primal_step_sizes_.head(N_all_).minCoeff();
 }
 
 
-double OCPDirectionCalculator::maxDualStepSize(
-    const ContactSequence& contact_sequence) const {
-  const int N_impulse = contact_sequence.totalNumImpulseStages();
-  const int N_lift = contact_sequence.totalNumLiftStages();
-  const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
-  return max_dual_step_sizes_.head(N_all).minCoeff();
+double RiccatiDirectionCalculator::maxDualStepSize() const {
+  return max_dual_step_sizes_.head(N_all_).minCoeff();
 }
 
 } // namespace idocp 

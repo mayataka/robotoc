@@ -36,6 +36,7 @@ using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
 using HybridRiccatiFactorization = hybrid_container<RiccatiFactorization, RiccatiFactorization>;
 using HybridRiccatiFactorizer = hybrid_container<RiccatiFactorizer, ImpulseRiccatiFactorizer>; 
 
+
 ///
 /// @class hybrid_container
 /// @brief A container that is useful to formulate the hybrid optimal control 

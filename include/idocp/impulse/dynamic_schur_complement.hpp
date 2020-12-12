@@ -2,17 +2,20 @@
 #define IDOCP_DYNAMIC_SCHUR_COMPLEMENT_HPP_
 
 #include "Eigen/Dense"
+#include "Eigen/LU"
 
 
 namespace idocp {
 ///
-/// @class DynamicSchurComplement
-/// @brief The KKT matrix of a time stage.
+/// @class DynamicSchurComplement for symmetric block matrix in the form of
+/// [A B]
+/// [C D]
+/// @brief Schur complement for matrices with dynamic size.
 ///
 class DynamicSchurComplement {
 public:
   ///
-  /// @brief Construct a KKT matrix.
+  /// @brief Construct a Schur complement.
   ///
   DynamicSchurComplement(const int max_dimA, const int max_dimD);
 
@@ -69,6 +72,8 @@ public:
 private:
   int max_dimA_, max_dimD_;
   Eigen::MatrixXd SA_, SD_, CAinv_, BDinv_;
+  Eigen::LLT<Eigen::MatrixXd> llt_;
+  Eigen::LDLT<Eigen::MatrixXd> ldlt_;
 
 };
 

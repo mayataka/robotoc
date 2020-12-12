@@ -17,6 +17,7 @@
 #include "idocp/constraints/impulse_constraints.hpp"
 #include "idocp/impulse/impulse_state_equation.hpp"
 #include "idocp/impulse/impulse_dynamics_backward_euler.hpp"
+#include "idocp/ocp/split_direction.hpp"
 
 
 namespace idocp {
@@ -83,105 +84,129 @@ public:
   void initConstraints(Robot& robot, const ImpulseSplitSolution& s);
 
   ///
-  /// @brief Updates the solution of the split OCP approximately. If this stage
-  /// is terminal, call coarseUpdateTerminal() instead.
+  /// @brief Linearize the OCP for Newton's method around the current solution, 
+  /// i.e., computes the KKT residual and Hessian.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
+  /// @param[in] impulse_status Impulse status of robot at this stage. 
   /// @param[in] t Current time of this stage. 
-  /// @param[in] q_prev Configuration of the previous stage. Size must be 
-  /// Robot::dimq().
-  /// @param[in] v_prev Velocity of the previous stage. Size must be 
-  /// Robot::dimv().
+  /// @param[in] q_prev Configuration of the previous stage.
+  /// @param[in] v_prev Velocity of the previous stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
-  /// @param[in] aux_mat_next_old Guess of the auxiliary matrix of the next 
-  /// stage. Size must be 2 * Robot::dimv() x 2 * Robot::dimv().
-  /// @param[out] d Split direction of this stage.
-  /// @param[out] s_new_coarse Coarse updated split splition of this stage.
+  /// @param[out] kkt_matrix KKT matrix of this stage.
+  /// @param[out] kkt_residual KKT residual of this stage.
+  /// @param[in] is_state_constraint_valid Specify wheather the pure-state
+  /// equality constraint is valid or not.
   ///
-  void coarseUpdate(Robot& robot, const ContactStatus& contact_status,
+  void linearizeOCP(Robot& robot, const ImpulseStatus& impulse_status, 
                     const double t, const Eigen::VectorXd& q_prev, 
                     const Eigen::VectorXd& v_prev, 
-                    const ImpulseSplitSolution& s, const SplitSolution& s_next, 
-                    const Eigen::MatrixXd& aux_mat_next_old, 
-                    ImpulseSplitDirection& d, 
-                    ImpulseSplitSolution& s_new_coarse);
+                    const ImpulseSplitSolution& s, 
+                    const SplitSolution& s_next, 
+                    ImpulseKKTMatrix& kkt_matrix, 
+                    ImpulseKKTResidual& kkt_residual,
+                    const bool is_state_constraint_valid);
+
+  // ///
+  // /// @brief Gets the auxiliary matrix of this stage.
+  // /// @param[out] aux_mat The auxiliary matrix of this stage. Size must be 
+  // /// 2 * Robot::dimv() x 2 * Robot::dimv().
+  // ///
+  // void getAuxiliaryMatrix(Eigen::MatrixXd& aux_mat) const;
+
+  // ///
+  // /// @brief Corrects the part of the solution updated coarsely. Call serially 
+  // /// after calling coarseUpdate() or coarseUpdateTerminal() and before calling
+  // /// backwardCorrectionParallel().
+  // /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  // /// @param[in] s_next Split solution of the next stage at the previous 
+  // /// iteration.
+  // /// @param[in] s_new_next Split solution of the next stage at the current 
+  // /// iteration.
+  // /// @param[out] s_new Split solution of the current stage at the current 
+  // /// iteration.
+  // ///
+  // void backwardCorrectionSerial(const Robot& robot, const SplitSolution& s_next,
+  //                               const SplitSolution& s_next_new,
+  //                               ImpulseSplitSolution& s_new);
+
+  // ///
+  // /// @brief Corrects the part of the solutio updated coarsely. Call parallel 
+  // /// after backwardCorrectionSerial() and before calling 
+  // /// forwardCorrectionSerial().
+  // /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  // /// @param[in] d Split directtion of the current stage.
+  // /// @param[out] s_new Split solution of the current stage at the current 
+  // /// iteration.
+  // ///
+  // void backwardCorrectionParallel(const Robot& robot, ImpulseSplitDirection& d,
+  //                                 ImpulseSplitSolution& s_new) const;
+
+  // ///
+  // /// @brief Corrects the part of the solutio updated coarsely. Call serially 
+  // /// after backwardCorrectionParallel() and before calling 
+  // /// forwardCorrectionParallel().
+  // /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  // /// @param[in] s_prev Split solution of the previous stage at the previous 
+  // /// iteration.
+  // /// @param[in] s_new_prev Split solution of the previous stage at the current 
+  // /// iteration.
+  // /// @param[out] s_new Split solution of the current stage at the current 
+  // /// iteration.
+  // ///
+  // void forwardCorrectionSerial(const Robot& robot, const SplitSolution& s_prev,
+  //                              const SplitSolution& s_prev_new, 
+  //                              ImpulseSplitSolution& s_new);
+
+  // ///
+  // /// @brief Corrects the part of the solutio updated coarsely. Call parallel 
+  // /// after forwardCorrectionSerial() and before calling 
+  // /// computePrimalAndDualDirection().
+  // /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  // /// @param[in] d Split directtion of the current stage.
+  // /// @param[out] s_new Split solution of the current stage at the current 
+  // /// iteration.
+  // ///
+  // void forwardCorrectionParallel(const Robot& robot, ImpulseSplitDirection& d, 
+  //                                ImpulseSplitSolution& s_new) const;
+
+  // ///
+  // /// @brief Computes the direction of the primal and dual solution. Call after 
+  // /// forwardCorrectionParallel() and before calling 
+  // /// computePrimalAndDualDirection().
+  // /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  // /// @param[in] s Split solution of this stage.
+  // /// @param[in] s_new Corrected split solution of the current stage.
+  // /// @param[out] d Split direction of this stage.
+  // /// 
+  // void computePrimalAndDualDirection(Robot& robot, 
+  //                                    const ImpulseSplitSolution& s,
+  //                                    const ImpulseSplitSolution& s_new,
+  //                                    ImpulseSplitDirection& d);
 
   ///
-  /// @brief Gets the auxiliary matrix of this stage.
-  /// @param[out] aux_mat The auxiliary matrix of this stage. Size must be 
-  /// 2 * Robot::dimv() x 2 * Robot::dimv().
-  ///
-  void getAuxiliaryMatrix(Eigen::MatrixXd& aux_mat) const;
-
-  ///
-  /// @brief Corrects the part of the solution updated coarsely. Call serially 
-  /// after calling coarseUpdate() or coarseUpdateTerminal() and before calling
-  /// backwardCorrectionParallel().
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] s_next Split solution of the next stage at the previous 
-  /// iteration.
-  /// @param[in] s_new_next Split solution of the next stage at the current 
-  /// iteration.
-  /// @param[out] s_new Split solution of the current stage at the current 
-  /// iteration.
-  ///
-  void backwardCorrectionSerial(const Robot& robot, const SplitSolution& s_next,
-                                const SplitSolution& s_next_new,
-                                ImpulseSplitSolution& s_new);
-
-  ///
-  /// @brief Corrects the part of the solutio updated coarsely. Call parallel 
-  /// after backwardCorrectionSerial() and before calling 
-  /// forwardCorrectionSerial().
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] d Split directtion of the current stage.
-  /// @param[out] s_new Split solution of the current stage at the current 
-  /// iteration.
-  ///
-  void backwardCorrectionParallel(const Robot& robot, ImpulseSplitDirection& d,
-                                  ImpulseSplitSolution& s_new) const;
-
-  ///
-  /// @brief Corrects the part of the solutio updated coarsely. Call serially 
-  /// after backwardCorrectionParallel() and before calling 
-  /// forwardCorrectionParallel().
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] s_prev Split solution of the previous stage at the previous 
-  /// iteration.
-  /// @param[in] s_new_prev Split solution of the previous stage at the current 
-  /// iteration.
-  /// @param[out] s_new Split solution of the current stage at the current 
-  /// iteration.
-  ///
-  void forwardCorrectionSerial(const Robot& robot, const SplitSolution& s_prev,
-                               const SplitSolution& s_prev_new, 
-                               ImpulseSplitSolution& s_new);
-
-  ///
-  /// @brief Corrects the part of the solutio updated coarsely. Call parallel 
-  /// after forwardCorrectionSerial() and before calling 
-  /// computePrimalAndDualDirection().
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] d Split directtion of the current stage.
-  /// @param[out] s_new Split solution of the current stage at the current 
-  /// iteration.
-  ///
-  void forwardCorrectionParallel(const Robot& robot, ImpulseSplitDirection& d, 
-                                 ImpulseSplitSolution& s_new) const;
-
-  ///
-  /// @brief Computes the direction of the primal and dual solution. Call after 
-  /// forwardCorrectionParallel() and before calling 
-  /// computePrimalAndDualDirection().
+  /// @brief Computes the Newton direction of the condensed primal variables of 
+  /// this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] s Split solution of this stage.
-  /// @param[in] s_new Corrected split solution of the current stage.
-  /// @param[out] d Split direction of this stage.
+  /// @param[in] d Split direction of this stage.
   /// 
-  void computePrimalAndDualDirection(Robot& robot, 
-                                     const ImpulseSplitSolution& s,
-                                     const ImpulseSplitSolution& s_new,
+  void computeCondensedPrimalDirection(Robot& robot,  
+                                       const ImpulseSplitSolution& s, 
+                                       ImpulseSplitDirection& d);
+
+  ///
+  /// @brief Computes the Newton direction of the condensed dual variables of 
+  /// this stage.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] kkt_matrix KKT matrix of this stage.
+  /// @param[in] kkt_residual KKT residual of this stage.
+  /// @param[in] d_next Split direction of the next stage.
+  /// @param[in] d Split direction of this stage.
+  /// 
+  void computeCondensedDualDirection(const Robot& robot, 
+                                     const ImpulseKKTMatrix& kkt_matrix, 
+                                     const ImpulseKKTResidual& kkt_residual,
                                      ImpulseSplitDirection& d);
 
   ///
@@ -201,104 +226,89 @@ public:
   double maxDualStepSize();
 
   ///
-  /// @brief Returns the stage cost and L1-norm of the violation of constraints 
-  /// of this stage. The stage cost is recomputed. The violation of the  
-  /// constriants is not computed. Instead, the previously computed residual  
-  /// computed by coarseUpdate() or computeSquaredKKTErrorNorm(), is used.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] s Split solution of this stage.
-  /// @return The stage cost and L1-norm of the constraints violation.
+  /// @brief Updates dual variables of the inequality constraints.
+  /// @param[in] dual_step_size Dula step size of the OCP. 
   ///
-  std::pair<double, double> costAndConstraintViolation(
-      Robot& robot, const double t, const ImpulseSplitSolution& s);
-
-  ///
-  /// @brief Returns the stage cost and L1-norm of the violation of constraints 
-  /// of this stage under step_size. The split solution of this stage and the 
-  /// state of the previous stage are computed by step_size temporary. 
-  /// The stage cost and the violation of the constriants are computed based on
-  /// the temporary solution.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
-  /// @param[in] step_size Step size for the primal variables. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] q_prev Configuration of the previous stage.
-  /// @param[in] v_prev Velocity of the previous stage.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] d Split direction of this stage.
-  /// @param[out] s_tmp The temporary split solution.
-  /// @return The stage cost and L1-norm of the constraints violation.
-  ///
-  std::pair<double, double> costAndConstraintViolation(
-      Robot& robot, const ContactStatus& contact_status, const double step_size, 
-      const double t, const Eigen::VectorXd& q_prev, 
-      const Eigen::VectorXd& v_prev, const ImpulseSplitSolution& s, 
-      const ImpulseSplitDirection& d, ImpulseSplitSolution& s_tmp);
-
-  ///
-  /// @brief Returns the stage cost and L1-norm of the violation of constraints 
-  /// of this stage under step_size. The split solution of this stage and the 
-  /// state of the previous stage are computed by step_size temporary. 
-  /// The stage cost and the violation of the constriants are computed based on
-  /// the temporary solution.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
-  /// @param[in] step_size Step size for the primal variables. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] s_prev Split solutio of the previous stage.
-  /// @param[in] d_prev Split direction of the previous stage.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] d Split direction of this stage.
-  /// @param[out] s_tmp The temporary split solution.
-  /// @return The stage cost and L1-norm of the constraints violation.
-  ///
-  std::pair<double, double> costAndConstraintViolation(
-    Robot& robot, const ContactStatus& contact_status, const double step_size, 
-    const double t, const SplitSolution& s_prev, const SplitDirection& d_prev, 
-    const ImpulseSplitSolution& s, const ImpulseSplitDirection& d, 
-    ImpulseSplitSolution& s_tmp);
+  void updateDual(const double dual_step_size);
 
   ///
   /// @brief Updates primal variables of this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] step_size Primal step size of the OCP. 
+  /// @param[in] primal_step_size Primal step size of the OCP. 
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
+  /// @param[in] is_state_constraint_valid Specify wheather the pure-state
+  /// equality constraint is valid or not.
   ///
-  void updatePrimal(Robot& robot, const double step_size, 
-                    const ImpulseSplitDirection& d, ImpulseSplitSolution& s);
-
-  ///
-  /// @brief Updates dual variables of the inequality constraints.
-  /// @param[in] step_size Dula step size of the OCP. 
-  ///
-  void updateDual(const double step_size);
+  void updatePrimal(const Robot& robot, const double primal_step_size, 
+                    const ImpulseSplitDirection& d, ImpulseSplitSolution& s,
+                    const bool is_state_constraint_valid);
 
   ///
   /// @brief Computes the KKT residual of the OCP at this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
+  /// @param[in] impulse_status Impulse status of robot at this stage. 
   /// @param[in] t Current time of this stage. 
-  /// @param[in] s Split solution of this stage.
   /// @param[in] q_prev Configuration of the previous stage.
-  /// @param[in] v_prev Velocity of the previous stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
+  /// @param[out] kkt_matrix KKT matrix of this stage.
+  /// @param[out] kkt_residual KKT residual of this stage.
+  /// @param[in] is_state_constraint_valid Specify wheather the pure-state
+  /// equality constraint is valid or not.
   ///
-  void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
+  void computeKKTResidual(Robot& robot, const ImpulseStatus& impulse_status, 
                           const double t, const Eigen::VectorXd& q_prev, 
                           const Eigen::VectorXd& v_prev, 
                           const ImpulseSplitSolution& s, 
-                          const SplitSolution& s_next);
+                          const SplitSolution& s_next, 
+                          ImpulseKKTMatrix& kkt_matrix, 
+                          ImpulseKKTResidual& kkt_residual,
+                          const bool is_state_constraint_valid);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
   /// this function, SplitOCP::linearizeOCP or SplitOCP::computeKKTResidual
   /// must be called.
+  /// @param[in] kkt_residual KKT residual of this stage.
+  /// @param[in] is_state_constraint_valid Specify wheather the pure-state
+  /// equality constraint is valid or not.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual() const;
+  double squaredNormKKTResidual(const ImpulseKKTResidual& kkt_residual,
+                                const bool is_state_constraint_valid) const;
+
+  ///
+  /// @brief Computes the stage cost of this stage for line search.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] s Split solution of this stage.
+  /// @param[in] primal_step_size Primal step size of the OCP. Default is 0.
+  /// @return Stage cost of this stage.
+  /// 
+  double stageCost(Robot& robot, const double t, const ImpulseSplitSolution& s, 
+                   const double primal_step_size=0);
+
+  ///
+  /// @brief Computes and returns the constraint violation of the OCP at this 
+  /// stage for line search.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] impulse_status Impulse status of robot at this stage. 
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] q_prev Configuration of the previous stage.
+  /// @param[in] v_prev Velocity of the previous stage.
+  /// @param[in] s Split solution of this stage.
+  /// @param[out] kkt_residual KKT residual of this stage.
+  /// @param[in] is_state_constraint_valid Specify wheather the pure-state
+  /// equality constraint is valid or not.
+  /// @return Constraint violation of this stage.
+  ///
+  double constraintViolation(Robot& robot, const ImpulseStatus& impulse_status, 
+                             const double t, const Eigen::VectorXd& q_prev, 
+                             const Eigen::VectorXd& v_prev, 
+                             const ImpulseSplitSolution& s, 
+                             ImpulseKKTResidual& kkt_residual,
+                             const bool is_state_constraint_valid);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -307,31 +317,12 @@ private:
   CostFunctionData cost_data_;
   std::shared_ptr<ImpulseConstraints> constraints_;
   ConstraintsData constraints_data_;
-  ImpulseKKTResidual kkt_residual_;
-  ImpulseKKTMatrix kkt_matrix_;
   ImpulseDynamicsBackwardEuler impulse_dynamics_;
-  int dimv_, dimx_, dimKKT_;
-  Eigen::MatrixXd kkt_matrix_inverse_;
-  Eigen::VectorXd x_res_; /// @brief Residual of state and costate used in the forward and backward correction.
-  Eigen::VectorXd dx_; /// @brief Correction term of state and costate used in the forward and backward correction.
-
-  ///
-  /// @brief Set contact status from robot model, i.e., set dimension of the 
-  /// contacts and equality constraints.
-  /// @param[in] contact_status Contact status.
-  ///
-  inline void setContactStatusForKKT(const ContactStatus& contact_status) {
-    kkt_residual_.setContactStatus(contact_status);
-    kkt_matrix_.setContactStatus(contact_status);
-  }
-
-  double cost(Robot& robot, const double t, const ImpulseSplitSolution& s);
-
-  double constraintViolation() const;
 
 };
 
 } // namespace idocp
 
+#include "idocp/impulse/split_impulse_parnmpc.hxx"
 
 #endif // IDOCP_SPLIT_IMPULSE_PARNMPC_HPP_ 

@@ -1,4 +1,4 @@
-#include "idocp/ocp/line_search.hpp"
+#include "idocp/line_search/line_search.hpp"
 
 namespace idocp {
 

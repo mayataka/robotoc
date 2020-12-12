@@ -13,12 +13,11 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/ocp/line_search_filter.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 #include "idocp/ocp/riccati_solver.hpp"
-#include "idocp/ocp/ocp_solution_integrator.hpp"
+// #include "idocp/line_search/line_search_filter.hpp"
 
 
 namespace idocp {
@@ -169,9 +168,14 @@ public:
   void initConstraints();
 
   ///
-  /// @brief Prints the solution into console. 
+  /// @brief Prints the variable into console. 
+  /// @param[in] name Name of the printed variable. Default is "all" 
+  /// (print all variables).
+  /// @param[in] frame_id Index of the end-effector frames. Only used if 
+  /// name == "end-effector". Default is {} (do not specify any frames).
   ///
-  void printSolution() const;
+  void printSolution(const std::string& name="all", 
+                     const std::vector<int> frames={}) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -181,13 +185,12 @@ private:
   ContactSequence contact_sequence_;
   OCPLinearizer ocp_linearizer_;
   RiccatiSolver riccati_solver_;
-  OCPSolutionIntegrator ocp_solution_integrator_;
   HybridOCP split_ocps_;
   HybridKKTMatrix kkt_matrix_;
   HybridKKTResidual kkt_residual_;
   HybridSolution s_;
   HybridDirection d_;
-  LineSearchFilter filter_;
+  // LineSearchFilter filter_;
   int N_, num_proc_;
   double T_, dtau_;
 

@@ -30,6 +30,19 @@ inline DiscreteEvent::DiscreteEvent(const Robot& robot)
 }
 
 
+inline DiscreteEvent::DiscreteEvent(const ContactStatus& pre_contact_status, 
+                                    const ContactStatus& post_contact_status)
+  : eventTime(0),
+    pre_contact_status_(pre_contact_status.max_point_contacts()),
+    post_contact_status_(pre_contact_status.max_point_contacts()),
+    impulse_status_(pre_contact_status.max_point_contacts()),
+    max_point_contacts_(pre_contact_status.max_point_contacts()),
+    exist_impulse_(false), 
+    exist_lift_(false) {
+  setDiscreteEvent(pre_contact_status, post_contact_status);
+}
+
+
 inline DiscreteEvent::DiscreteEvent() 
   : pre_contact_status_(),
     post_contact_status_(),

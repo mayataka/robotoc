@@ -1,4 +1,4 @@
-#include "idocp/ocp/line_search_filter.hpp"
+#include "idocp/line_search/line_search_filter.hpp"
 
 #include <assert.h>
 

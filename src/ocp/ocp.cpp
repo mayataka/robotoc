@@ -14,13 +14,12 @@ OCP::OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
     contact_sequence_(robot, T, N),
     ocp_linearizer_(T, N, max_num_impulse, num_proc),
     riccati_solver_(robot, T, N, max_num_impulse, num_proc),
-    ocp_solution_integrator_(T, N, max_num_impulse, num_proc),
     split_ocps_(N, max_num_impulse, robot, cost, constraints),
     kkt_matrix_(N, max_num_impulse, robot),
     kkt_residual_(N, max_num_impulse, robot),
     s_(N, max_num_impulse, robot),
     d_(N, max_num_impulse, robot),
-    filter_(),
+    // filter_(),
     N_(N),
     num_proc_(num_proc),
     T_(T),
@@ -72,11 +71,11 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
                                t, q, v, s_, kkt_matrix_, kkt_residual_);
   riccati_solver_.computeNewtonDirection(split_ocps_, robots_, contact_sequence_, 
                                          q, v, s_, d_, kkt_matrix_, kkt_residual_);
-  const double primal_step_size = riccati_solver_.maxPrimalStepSize(contact_sequence_);
-  const double dual_step_size = riccati_solver_.maxDualStepSize(contact_sequence_);
-  ocp_solution_integrator_.integrate(split_ocps_, robots_, contact_sequence_, 
-                                     kkt_matrix_, kkt_residual_, 
-                                     primal_step_size, dual_step_size, d_, s_);
+  const double primal_step_size = riccati_solver_.maxPrimalStepSize();
+  const double dual_step_size = riccati_solver_.maxDualStepSize();
+  ocp_linearizer_.integrateSolution(split_ocps_, robots_, contact_sequence_, 
+                                    kkt_matrix_, kkt_residual_, 
+                                    primal_step_size, dual_step_size, d_, s_);
 } 
 
 
@@ -182,12 +181,11 @@ void OCP::setDiscreteEvent(const DiscreteEvent& discrete_event) {
     s_.lift[i].setContactStatus(contact_sequence_.contactStatus(stage));
     d_.lift[i].setContactStatus(contact_sequence_.contactStatus(stage));
   }
-  riccati_solver_.setConstraintDimensions(contact_sequence_);
 }
 
 
 void OCP::clearLineSearchFilter() {
-  filter_.clear();
+  // filter_.clear();
 }
 
 
@@ -203,21 +201,61 @@ void OCP::computeKKTResidual(const double t, const Eigen::VectorXd& q,
 }
 
 
-void OCP::printSolution() const {
-  for (int i=0; i<N_; ++i) {
-    std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
-    std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
-    std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
-    std::cout << "f[" << i << "] = ";
-    for (int j=0; j<s_[i].f.size(); ++j) {
-      std::cout << s_[i].f[j].transpose() << "; ";
+void OCP::printSolution(const std::string& name, 
+                        const std::vector<int> frames) const {
+  if (name == "q") {
+    for (int i=0; i<=N_; ++i) {
+      std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
     }
-    std::cout << std::endl;
-    std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
-    std::cout << "mu[" << i << "] = " << s_[i].mu_stack().transpose() << std::endl;
   }
-  std::cout << "q[" << N_ << "] = " << s_[N_].q.transpose() << std::endl;
-  std::cout << "v[" << N_ << "] = " << s_[N_].v.transpose() << std::endl;
+  if (name == "v") {
+    for (int i=0; i<=N_; ++i) {
+      std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
+    }
+  }
+  if (name == "a") {
+    for (int i=0; i<N_; ++i) {
+      std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
+    }
+  }
+  if (name == "f") {
+    for (int i=0; i<N_; ++i) {
+      std::cout << "f[" << i << "] = ";
+      for (int j=0; j<s_[i].f.size(); ++j) {
+        std::cout << s_[i].f[j].transpose() << "; ";
+      }
+    }
+  }
+  if (name == "u") {
+    for (int i=0; i<N_; ++i) {
+      std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
+    }
+  }
+  if (name == "all") {
+    for (int i=0; i<N_; ++i) {
+      std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
+      std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
+      std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
+      std::cout << "f[" << i << "] = ";
+      for (int j=0; j<s_[i].f.size(); ++j) {
+        std::cout << s_[i].f[j].transpose() << "; ";
+      }
+      std::cout << std::endl;
+      std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
+    }
+    std::cout << "q[" << N_ << "] = " << s_[N_].q.transpose() << std::endl;
+    std::cout << "v[" << N_ << "] = " << s_[N_].v.transpose() << std::endl;
+  }
+  if (name == "end-effector") {
+    Robot robot = robots_[0];
+    for (int i=0; i<N_; ++i) {
+      robot.updateFrameKinematics(s_[i].q);
+      for (const auto e : frames) {
+      std::cout << "ee[" << i << "][" << e << "] = " 
+                << robot.framePosition(e).transpose() << std::endl;
+      }
+    }
+  }
 }
 
 

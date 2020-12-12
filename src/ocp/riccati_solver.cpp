@@ -1,5 +1,7 @@
 #include "idocp/ocp/riccati_solver.hpp"
 
+#include <stdexcept>
+
 
 namespace idocp {
 
@@ -10,7 +12,25 @@ RiccatiSolver::RiccatiSolver(const Robot& robot, const double T, const int N,
     riccati_factorization_(N, max_num_impulse, robot),
     constraint_factorizer_(robot, N, max_num_impulse, num_proc),
     constraint_factorization_(robot, N, max_num_impulse),
-    ocp_direction_calculator_(T, N, max_num_impulse, num_proc) {
+    direction_calculator_(T, N, max_num_impulse, num_proc) {
+  try {
+    if (T <= 0) {
+      throw std::out_of_range("invalid value: T must be positive!");
+    }
+    if (N <= 0) {
+      throw std::out_of_range("invalid value: N must be positive!");
+    }
+    if (max_num_impulse < 0) {
+      throw std::out_of_range("invalid value: max_num_impulse must be non-negative!");
+    }
+    if (num_proc <= 0) {
+      throw std::out_of_range("invalid value: num_proc must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -20,17 +40,11 @@ RiccatiSolver::RiccatiSolver()
     riccati_factorization_(),
     constraint_factorizer_(),
     constraint_factorization_(),
-    ocp_direction_calculator_() {
+    direction_calculator_() {
 }
 
 
 RiccatiSolver::~RiccatiSolver() {
-}
-
-
-void RiccatiSolver::setConstraintDimensions(
-    const ContactSequence& contact_sequence) {
-  constraint_factorization_.setConstraintStatus(contact_sequence);
 }
 
 
@@ -45,6 +59,7 @@ void RiccatiSolver::computeNewtonDirection(
                                               contact_sequence, kkt_matrix, 
                                               kkt_residual, 
                                               riccati_factorization_);
+  constraint_factorization_.setConstraintStatus(contact_sequence);
   riccati_recursion_.forwardRiccatiRecursionParallel(riccati_factorizer_, 
                                                      contact_sequence, 
                                                      kkt_matrix, kkt_residual,
@@ -57,7 +72,7 @@ void RiccatiSolver::computeNewtonDirection(
         riccati_factorizer_, contact_sequence, kkt_matrix, 
         constraint_factorization_);
   }
-  ocp_direction_calculator_.computeInitialStateDirection(robots, q, v, s, d);
+  direction_calculator_.computeInitialStateDirection(robots, q, v, s, d);
   if (contact_sequence.existImpulseStage()) {
     constraint_factorizer_.computeLagrangeMultiplierDirection(
         contact_sequence, riccati_factorization_, constraint_factorization_, d);
@@ -67,21 +82,19 @@ void RiccatiSolver::computeNewtonDirection(
   riccati_recursion_.forwardRiccatiRecursion(
       riccati_factorizer_, contact_sequence, kkt_matrix, kkt_residual, 
       riccati_factorization_, d);
-  ocp_direction_calculator_.computeDirection(
+  direction_calculator_.computeNewtonDirectionFromRiccatiFactorization(
       split_ocps, robots, contact_sequence, riccati_factorizer_, 
       riccati_factorization_, s, d);
 }
 
 
-double RiccatiSolver::maxPrimalStepSize(
-    const ContactSequence& contact_sequence) const {
-  return ocp_direction_calculator_.maxPrimalStepSize(contact_sequence);
+double RiccatiSolver::maxPrimalStepSize() const {
+  return direction_calculator_.maxPrimalStepSize();
 }
 
 
-double RiccatiSolver::maxDualStepSize(
-    const ContactSequence& contact_sequence) const {
-  return ocp_direction_calculator_.maxDualStepSize(contact_sequence);
+double RiccatiSolver::maxDualStepSize() const {
+  return direction_calculator_.maxDualStepSize();
 }
 
 } // namespace idocp

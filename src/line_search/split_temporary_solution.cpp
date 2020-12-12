@@ -1,0 +1,1 @@
+#include "idocp/line_search/split_temporary_solution.hpp"

@@ -1,7 +1,7 @@
 #ifndef IDOCP_SPLIT_TEMPORARY_SOLUTION_HXX_
 #define IDOCP_SPLIT_TEMPORARY_SOLUTION_HXX_
 
-#include "idocp/ocp/split_temporary_solution.hpp"
+#include "idocp/line_search/split_temporary_solution.hpp"
 
 #include <assert.h>
 

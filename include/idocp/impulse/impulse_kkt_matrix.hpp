@@ -256,6 +256,19 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qfq() const;
 
   ///
+  /// @brief Hessian of the Lagrangian with respect to impulse forces and 
+  /// velocity. 
+  /// @return Reference to the Hessian. Size is 
+  /// ContactStatus::dimf() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qfv();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Qfv().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qfv() const;
+
+  ///
   /// @brief Hessian of the Lagrangian with respect to configuration and 
   /// impulse forces.
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
@@ -289,6 +302,18 @@ public:
   /// @brief const version of ImpulseKKTMatrix::Qqv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qqv() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to velocity and 
+  /// impulse forces.
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qvf();
+
+  ///
+  /// @brief const version of ImpulseKKTMatrix::Qvf().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qvf() const;
 
   ///
   /// @brief Hessian of the Lagrangian with respect to generalized velocity and 
@@ -377,7 +402,7 @@ public:
 
 private:
   DynamicSchurComplement schur_complement_;
-  Eigen::MatrixXd F_, C_, Q_;
+  Eigen::MatrixXd FC_, Q_;
   bool has_floating_base_;
   int dimv_, dimx_, dimu_, dim_passive_, dimf_, dimp_, u_begin_, q_begin_, 
       v_begin_, dimKKT_;

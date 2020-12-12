@@ -98,11 +98,11 @@ HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot, 
   const int dimx = 2*robot.dimv();
   const int dimu = robot.dimu();
   for (int i=0; i<=N; ++i) {
-    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx, dimx);
-    kkt_matrix[i].Qxx() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
-    tmp = Eigen::MatrixXd::Random(dimu, dimu);
-    kkt_matrix[i].Quu() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimu, dimu);
-    kkt_matrix[i].Qxu().setRandom();
+    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx+dimu, dimx+dimu);
+    const Eigen::MatrixXd Qxxuu = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx+dimu, dimx+dimu);
+    kkt_matrix[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
+    kkt_matrix[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
+    kkt_matrix[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
     if (robot.has_floating_base()) {
       kkt_matrix[i].Fqq().setIdentity();
       kkt_matrix[i].Fqq().topLeftCorner(6, 6).setRandom();
@@ -125,11 +125,11 @@ HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot, 
     kkt_matrix.impulse[i].Pq().setRandom();
   }
   for (int i=0; i<num_impulse; ++i) {
-    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx, dimx);
-    kkt_matrix.aux[i].Qxx() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
-    tmp = Eigen::MatrixXd::Random(dimu, dimu);
-    kkt_matrix.aux[i].Quu() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimu, dimu);
-    kkt_matrix.aux[i].Qxu().setRandom();
+    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx+dimu, dimx+dimu);
+    const Eigen::MatrixXd Qxxuu = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx+dimu, dimx+dimu);
+    kkt_matrix[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
+    kkt_matrix[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
+    kkt_matrix[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
     if (robot.has_floating_base()) {
       kkt_matrix.aux[i].Fqq().setIdentity();
       kkt_matrix.aux[i].Fqq().topLeftCorner(6, 6).setRandom();
@@ -140,11 +140,11 @@ HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot, 
   }
   const int num_lift = contact_sequence.totalNumLiftStages();
   for (int i=0; i<num_lift; ++i) {
-    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx, dimx);
-    kkt_matrix.lift[i].Qxx() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
-    tmp = Eigen::MatrixXd::Random(dimu, dimu);
-    kkt_matrix.lift[i].Quu() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimu, dimu);
-    kkt_matrix.lift[i].Qxu().setRandom();
+    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx+dimu, dimx+dimu);
+    const Eigen::MatrixXd Qxxuu = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx+dimu, dimx+dimu);
+    kkt_matrix[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
+    kkt_matrix[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
+    kkt_matrix[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
     if (robot.has_floating_base()) {
       kkt_matrix.lift[i].Fqq().setIdentity();
       kkt_matrix.lift[i].Fqq().topLeftCorner(6, 6).setRandom();

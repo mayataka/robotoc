@@ -102,7 +102,6 @@ public:
 
 private:
   ImpulseDynamicsForwardEulerData data_;
-  bool has_active_impulse_;
 
   void setImpulseStatus(const ImpulseStatus& impulse_status);
 

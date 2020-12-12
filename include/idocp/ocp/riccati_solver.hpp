@@ -8,12 +8,10 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
-#include "idocp/ocp/riccati_factorizer.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/riccati_recursion.hpp"
-#include "idocp/ocp/ocp_direction_calculator.hpp"
+#include "idocp/ocp/riccati_direction_calculator.hpp"
 
 
 namespace idocp {
@@ -68,13 +66,6 @@ public:
   RiccatiSolver& operator=(RiccatiSolver&&) noexcept = default;
 
   ///
-  /// @brief Sets the dimensions of the pure-state equality constraints from
-  /// contact sequence. 
-  /// @param[in] contact_sequence Contact sequence. 
-  /// 
-  void setConstraintDimensions(const ContactSequence& contact_sequence);
-
-  ///
   /// @brief Computes the Newton direction using Riccati recursion. Call after
   /// calling OCPLinearizer::linearizeOCP() before calling this function.
   /// @param[in] split_ocps Split OCPs. 
@@ -97,18 +88,16 @@ public:
   ///
   /// @brief Computes the maximum step size computed from the primal variables. 
   /// Before call this function, call RiccatiSolver::computeNewtonDirection().
-  /// @param[in] contact_sequence Contact sequence. 
   /// @return Maximum primal step size
   /// 
-  double maxPrimalStepSize(const ContactSequence& contact_sequence) const;
+  double maxPrimalStepSize() const;
 
   ///
   /// @brief Computes the maximum step size computed from the dual variables. 
   /// Before call this function, call RiccatiSolver::computeNewtonDirection().
-  /// @param[in] contact_sequence Contact sequence. 
   /// @return maximum dual step size
   /// 
-  double maxDualStepSize(const ContactSequence& contact_sequence) const;
+  double maxDualStepSize() const;
 
 private:
   RiccatiRecursion riccati_recursion_;
@@ -116,7 +105,7 @@ private:
   HybridRiccatiFactorization riccati_factorization_;
   StateConstraintRiccatiFactorizer constraint_factorizer_;
   StateConstraintRiccatiFactorization constraint_factorization_;
-  OCPDirectionCalculator ocp_direction_calculator_;
+  RiccatiDirectionCalculator direction_calculator_;
 
 };
 

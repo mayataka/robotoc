@@ -1,5 +1,5 @@
-#ifndef IDOCP_DIRECTION_CALCULATOR_HPP_
-#define IDOCP_DIRECTION_CALCULATOR_HPP_
+#ifndef IDOCP_RICCATI_DIRECTION_CALCULATOR_HPP_
+#define IDOCP_RICCATI_DIRECTION_CALCULATOR_HPP_
 
 #include <vector>
 
@@ -29,10 +29,10 @@
 namespace idocp {
 
 ///
-/// @class OCPDirectionCalculator
+/// @class RiccatiDirectionCalculator 
 /// @brief Linearize of the optimal control problem. 
 ///
-class OCPDirectionCalculator {
+class RiccatiDirectionCalculator {
 public:
   ///
   /// @brief Construct optimal control problem solver.
@@ -43,38 +43,38 @@ public:
   /// @param[in] num_proc Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  OCPDirectionCalculator(const double T, const int N, 
-                         const int max_num_impulse, const int num_proc);
+  RiccatiDirectionCalculator(const double T, const int N, 
+                             const int max_num_impulse, const int num_proc);
 
   ///
   /// @brief Default constructor. 
   ///
-  OCPDirectionCalculator();
+  RiccatiDirectionCalculator();
 
   ///
   /// @brief Destructor. 
   ///
-  ~OCPDirectionCalculator();
+  ~RiccatiDirectionCalculator();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  OCPDirectionCalculator(const OCPDirectionCalculator&) = default;
+  RiccatiDirectionCalculator(const RiccatiDirectionCalculator&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  OCPDirectionCalculator& operator=(const OCPDirectionCalculator&) = default;
+  RiccatiDirectionCalculator& operator=(const RiccatiDirectionCalculator&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  OCPDirectionCalculator(OCPDirectionCalculator&&) noexcept = default;
+  RiccatiDirectionCalculator(RiccatiDirectionCalculator&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  OCPDirectionCalculator& operator=(OCPDirectionCalculator&&) noexcept = default;
+  RiccatiDirectionCalculator& operator=(RiccatiDirectionCalculator&&) noexcept = default;
 
   static void computeInitialStateDirection(const std::vector<Robot>& robots, 
                                            const Eigen::VectorXd& q, 
@@ -82,35 +82,36 @@ public:
                                            const HybridSolution& s, 
                                            HybridDirection& d);
 
-  void computeDirection(HybridOCP& split_ocps, std::vector<Robot>& robots, 
-                        const ContactSequence& contact_sequence, 
-                        const HybridRiccatiFactorizer& factorizer, 
-                        const HybridRiccatiFactorization& factorization, 
-                        const HybridSolution& s, HybridDirection& d);
+  void computeNewtonDirectionFromRiccatiFactorization(
+      HybridOCP& split_ocps, std::vector<Robot>& robots, 
+      const ContactSequence& contact_sequence, 
+      const HybridRiccatiFactorizer& factorizer, 
+      const HybridRiccatiFactorization& factorization, 
+      const HybridSolution& s, HybridDirection& d);
 
-  double maxPrimalStepSize(const ContactSequence& contact_sequence) const;
+  double maxPrimalStepSize() const;
 
-  double maxDualStepSize(const ContactSequence& contact_sequence) const;
+  double maxDualStepSize() const;
+
+  double dtau(const ContactSequence& contact_sequence, 
+              const int time_stage) const;
+
+  static const RiccatiFactorization& next_riccati_factorization(
+      const HybridRiccatiFactorization& factorization, 
+      const ContactSequence& contact_sequence, const int time_stage);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
 
-  static const RiccatiFactorization& riccati_factorization_next(
-      const HybridRiccatiFactorization& factorization, 
-      const ContactSequence& contact_sequence, const int time_stage);
-
-  double dtau(const ContactSequence& contact_sequence, 
-              const int time_stage) const;
-
   double T_, dtau_;
-  int N_, num_proc_;
+  int N_, num_proc_, N_all_;
   Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 
 };
 
 } // namespace idocp 
 
-#include "idocp/ocp/ocp_direction_calculator.hxx"
+#include "idocp/ocp/riccati_direction_calculator.hxx"
 
-#endif // IDOCP_DIRECTION_CALCULATOR_HPP_ 
+#endif // IDOCP_RICCATI_DIRECTION_CALCULATOR_HPP_ 

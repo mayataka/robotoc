@@ -21,6 +21,7 @@
 #include "idocp/impulse/split_impulse_ocp.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/ocp/riccati_solver.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 
 
@@ -54,24 +55,38 @@ protected:
   void testIsSame(const T& rhs, const T& lhs) const {
     for (int i=0; i<=N; ++i) {
       EXPECT_TRUE(rhs[i].isApprox(lhs[i]));
-      EXPECT_FALSE(rhs[i].hasNaN());
     }
     for (int i=0; i<max_num_impulse; ++i) {
       EXPECT_TRUE(rhs.impulse[i].isApprox(lhs.impulse[i]));
-      EXPECT_FALSE(rhs.impulse[i].hasNaN());
     }
     for (int i=0; i<max_num_impulse; ++i) {
       EXPECT_TRUE(rhs.aux[i].isApprox(lhs.aux[i]));
-      EXPECT_FALSE(rhs.aux[i].hasNaN());
     }
     for (int i=0; i<max_num_impulse; ++i) {
       EXPECT_TRUE(rhs.lift[i].isApprox(lhs.lift[i]));
-      EXPECT_FALSE(rhs.lift[i].hasNaN());
     }
   }
 
+  template <typename T>
+  void testNaN(const T& ob) const {
+    for (int i=0; i<=N; ++i) {
+      EXPECT_FALSE(ob[i].hasNaN());
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_FALSE(ob.impulse[i].hasNaN());
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_FALSE(ob.aux[i].hasNaN());
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_FALSE(ob.lift[i].hasNaN());
+    }
+  }
+
+
   void testLinearizeOCP(const Robot& robot) const;
   void testComputeKKTResidual(const Robot& robot) const;
+  void testIntegrateSolution(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
   int N, max_num_impulse, nproc;
@@ -146,7 +161,7 @@ std::shared_ptr<Constraints> OCPLinearizerTest::createConstraints(const Robot& r
 
 
 HybridSolution OCPLinearizerTest::createSolution(const Robot& robot) const {
-  HybridSolution s(N+1, max_num_impulse, robot);
+  HybridSolution s(N, max_num_impulse, robot);
   for (int i=0; i<=N; ++i) {
     s[i].setRandom(robot);
   }
@@ -159,7 +174,7 @@ HybridSolution OCPLinearizerTest::createSolution(const Robot& robot, const Conta
     return createSolution(robot);
   }
   else {
-    HybridSolution s(N+1, max_num_impulse, robot);
+    HybridSolution s(N, max_num_impulse, robot);
     for (int i=0; i<=N; ++i) {
       s[i].setRandom(robot, contact_sequence.contactStatus(i));
     }
@@ -215,8 +230,8 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   if (robot.max_point_contacts() > 0) {
     contact_sequence = createContactSequence(robot);
   }
-  auto kkt_matrix = HybridKKTMatrix(N+1, max_num_impulse, robot);
-  auto kkt_residual = HybridKKTResidual(N+1, max_num_impulse, robot);
+  auto kkt_matrix = HybridKKTMatrix(N, max_num_impulse, robot);
+  auto kkt_residual = HybridKKTResidual(N, max_num_impulse, robot);
   HybridSolution s;
   if (robot.max_point_contacts() > 0) {
     s = createSolution(robot, contact_sequence);
@@ -333,9 +348,8 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   split_ocps_ref.terminal.linearizeOCP(robot_ref, t+T, s[N], kkt_matrix_ref[N], kkt_residual_ref[N]);
   testIsSame(kkt_matrix, kkt_matrix_ref);
   testIsSame(kkt_residual, kkt_residual_ref);
-  for (int i=0; i<contact_sequence.totalNumLiftStages(); ++i) {
-    std::cout << kkt_matrix.lift[i].Quu() << std::endl;
-  }
+  testNaN(kkt_matrix);
+  testNaN(kkt_residual);
 }
 
 
@@ -347,8 +361,8 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   if (robot.max_point_contacts() > 0) {
     contact_sequence = createContactSequence(robot);
   }
-  auto kkt_matrix = HybridKKTMatrix(N+1, max_num_impulse, robot);
-  auto kkt_residual = HybridKKTResidual(N+1, max_num_impulse, robot);
+  auto kkt_matrix = HybridKKTMatrix(N, max_num_impulse, robot);
+  auto kkt_residual = HybridKKTResidual(N, max_num_impulse, robot);
   HybridSolution s;
   if (robot.max_point_contacts() > 0) {
     s = createSolution(robot, contact_sequence);
@@ -483,7 +497,132 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   kkt_error_ref += split_ocps_ref.terminal.squaredNormKKTResidual(kkt_residual_ref[N]);
   testIsSame(kkt_matrix, kkt_matrix_ref);
   testIsSame(kkt_residual, kkt_residual_ref);
+  testNaN(kkt_matrix);
+  testNaN(kkt_residual);
   EXPECT_DOUBLE_EQ(kkt_error, std::sqrt(kkt_error_ref));
+}
+
+
+void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
+  auto cost = createCost(robot);
+  auto constraints = createConstraints(robot);
+  ContactSequence contact_sequence(robot, T, N);
+  if (robot.max_point_contacts() > 0) {
+    contact_sequence = createContactSequence(robot);
+  }
+  auto kkt_matrix = HybridKKTMatrix(N, max_num_impulse, robot);
+  auto kkt_residual = HybridKKTResidual(N, max_num_impulse, robot);
+  HybridSolution s;
+  if (robot.max_point_contacts() > 0) {
+    s = createSolution(robot, contact_sequence);
+  }
+  else {
+    s = createSolution(robot);
+  }
+  Eigen::VectorXd q(robot.dimq());
+  robot.generateFeasibleConfiguration(q);
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  auto split_ocps = HybridOCP(N, max_num_impulse, robot, cost, constraints);
+  OCPLinearizer linearizer(T, N, max_num_impulse, nproc);
+  std::vector<Robot> robots(nproc, robot);
+  linearizer.initConstraints(split_ocps, robots, contact_sequence, s);
+  linearizer.linearizeOCP(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
+  auto d = HybridDirection(N, max_num_impulse, robot);
+  for (int i=0; i<N; ++i) {
+    d[i].setContactStatus(contact_sequence.contactStatus(i));
+  }
+  for (int i=0; i<contact_sequence.totalNumImpulseStages(); ++i) {
+    d.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
+    d.impulse[i].dxi().setRandom();
+    d.aux[i].setContactStatus(contact_sequence.contactStatus(contact_sequence.timeStageAfterImpulse(i)));
+  }
+  for (int i=0; i<contact_sequence.totalNumLiftStages(); ++i) {
+    d.lift[i].setContactStatus(contact_sequence.contactStatus(contact_sequence.timeStageAfterLift(i)));
+  }
+  RiccatiSolver riccati_solver(robots[0], T, N, max_num_impulse, nproc);
+  riccati_solver.computeNewtonDirection(split_ocps, robots, contact_sequence, 
+                                        q, v, s, d, kkt_matrix, kkt_residual);
+  const double primal_step_size = riccati_solver.maxPrimalStepSize();
+  const double dual_step_size = riccati_solver.maxDualStepSize();
+  ASSERT_TRUE(primal_step_size > 0);
+  ASSERT_TRUE(primal_step_size <= 1);
+  ASSERT_TRUE(dual_step_size > 0);
+  ASSERT_TRUE(dual_step_size <= 1);
+  auto split_ocps_ref = split_ocps;
+  auto s_ref = s;
+  auto d_ref = d;
+  linearizer.integrateSolution(split_ocps, robots, contact_sequence, 
+                               kkt_matrix, kkt_residual, 
+                               primal_step_size, dual_step_size, d, s);
+  auto robot_ref = robot;
+  for (int i=0; i<N; ++i) {
+    if (contact_sequence.existImpulseStage(i)) {
+      const int impulse_index = contact_sequence.impulseIndex(i);
+      const double impulse_time = contact_sequence.impulseTime(impulse_index);
+      const double dtau_impulse = impulse_time - i * dtau;
+      const double dtau_aux = (i+1) * dtau - impulse_time;
+      ASSERT_TRUE(dtau_impulse > 0);
+      ASSERT_TRUE(dtau_aux > 0);
+      split_ocps_ref[i].computeCondensedDualDirection(robot_ref, dtau_impulse, 
+                                                      kkt_matrix[i], kkt_residual[i],
+                                                      d_ref.impulse[impulse_index], d_ref[i]);
+      split_ocps_ref[i].updatePrimal(robot_ref, primal_step_size, dtau_impulse, 
+                                    d_ref[i], s_ref[i]);
+      split_ocps_ref[i].updateDual(dual_step_size);
+      split_ocps_ref.impulse[impulse_index].computeCondensedDualDirection(
+          robot_ref, kkt_matrix.impulse[impulse_index], kkt_residual.impulse[impulse_index], 
+          d_ref.aux[impulse_index], d_ref.impulse[impulse_index]);
+      bool is_state_constraint_valid = false;
+      if (i > 0) is_state_constraint_valid = true;
+      std::cout << "impulse at " << i << std::endl;
+      split_ocps_ref.impulse[impulse_index].updatePrimal(
+          robot_ref, primal_step_size, d_ref.impulse[impulse_index], s_ref.impulse[impulse_index],
+          is_state_constraint_valid);
+      split_ocps_ref.impulse[impulse_index].updateDual(dual_step_size);
+      split_ocps_ref.aux[impulse_index].computeCondensedDualDirection(
+          robot_ref, dtau_aux, kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index],
+          d_ref[i+1], d_ref.aux[impulse_index]);
+      split_ocps_ref.aux[impulse_index].updatePrimal(
+          robot_ref, primal_step_size, dtau_aux, 
+          d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
+      split_ocps_ref.aux[impulse_index].updateDual(dual_step_size);
+    }
+    else if (contact_sequence.existLiftStage(i)) {
+      const int lift_index = contact_sequence.liftIndex(i);
+      const double lift_time = contact_sequence.liftTime(lift_index);
+      const double dtau_lift = lift_time - i * dtau;
+      const double dtau_aux = (i+1) * dtau - lift_time;
+      ASSERT_TRUE(dtau_lift > 0);
+      ASSERT_TRUE(dtau_aux > 0);
+      split_ocps_ref[i].computeCondensedDualDirection(robot_ref, dtau_lift, 
+                                                      kkt_matrix[i], kkt_residual[i],
+                                                      d_ref.lift[lift_index], d_ref[i]);
+      split_ocps_ref[i].updatePrimal(robot_ref, primal_step_size, dtau_lift, 
+                                    d_ref[i], s_ref[i]);
+      split_ocps_ref[i].updateDual(dual_step_size);
+      split_ocps_ref.lift[lift_index].computeCondensedDualDirection(
+          robot_ref, dtau_aux, kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index], 
+          d_ref[i+1], d_ref.lift[lift_index]);
+      split_ocps_ref.lift[lift_index].updatePrimal(
+          robot_ref, primal_step_size, dtau_aux, d_ref.lift[lift_index], s_ref.lift[lift_index]);
+      split_ocps_ref.lift[lift_index].updateDual(dual_step_size);
+    }
+    else {
+      split_ocps_ref[i].computeCondensedDualDirection(robot_ref, dtau, 
+                                                      kkt_matrix[i], kkt_residual[i],
+                                                      d_ref[i+1], d_ref[i]);
+      split_ocps_ref[i].updatePrimal(robot_ref, primal_step_size, dtau, 
+                                     d_ref[i], s_ref[i]);
+      split_ocps_ref[i].updateDual(dual_step_size);
+    }
+  }
+  split_ocps_ref.terminal.updatePrimal(robot_ref, primal_step_size, 
+                                       d_ref[N], s_ref[N]);
+  split_ocps_ref.terminal.updateDual(dual_step_size);
+  std::cout << "check d" << std::endl;
+  testIsSame(d, d_ref);
+  std::cout << "check s" << std::endl;
+  testIsSame(s, s_ref);
 }
 
 
@@ -491,10 +630,12 @@ TEST_F(OCPLinearizerTest, fixedBase) {
   Robot robot(fixed_base_urdf);
   testLinearizeOCP(robot);
   testComputeKKTResidual(robot);
+  testIntegrateSolution(robot);
   std::vector<int> contact_frames = {18};
   robot = Robot(fixed_base_urdf, contact_frames);
   testLinearizeOCP(robot);
   testComputeKKTResidual(robot);
+  testIntegrateSolution(robot);
 }
 
 
@@ -502,10 +643,12 @@ TEST_F(OCPLinearizerTest, floatingBase) {
   Robot robot(floating_base_urdf);
   testLinearizeOCP(robot);
   testComputeKKTResidual(robot);
+  testIntegrateSolution(robot);
   std::vector<int> contact_frames = {14, 24, 34, 44};
   robot = Robot(floating_base_urdf, contact_frames);
   testLinearizeOCP(robot);
   testComputeKKTResidual(robot);
+  testIntegrateSolution(robot);
 }
 
 } // namespace idocp

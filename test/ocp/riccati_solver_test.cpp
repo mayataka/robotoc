@@ -22,12 +22,16 @@
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
-#include "idocp/ocp/ocp_riccati_solver.hpp"
+#include "idocp/ocp/riccati_solver.hpp"
+#include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
+#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
+#include "idocp/ocp/riccati_recursion.hpp"
+#include "idocp/ocp/riccati_direction_calculator.hpp"
 
 
 namespace idocp {
 
-class OCPRiccatiSolverTest : public ::testing::Test {
+class RiccatiSolverTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -55,19 +59,15 @@ protected:
   void testIsSame(const T& rhs, const T& lhs) const {
     for (int i=0; i<=N; ++i) {
       EXPECT_TRUE(rhs[i].isApprox(lhs[i]));
-      EXPECT_FALSE(rhs[i].hasNaN());
     }
     for (int i=0; i<max_num_impulse; ++i) {
       EXPECT_TRUE(rhs.impulse[i].isApprox(lhs.impulse[i]));
-      EXPECT_FALSE(rhs.impulse[i].hasNaN());
     }
     for (int i=0; i<max_num_impulse; ++i) {
       EXPECT_TRUE(rhs.aux[i].isApprox(lhs.aux[i]));
-      EXPECT_FALSE(rhs.aux[i].hasNaN());
     }
     for (int i=0; i<max_num_impulse; ++i) {
       EXPECT_TRUE(rhs.lift[i].isApprox(lhs.lift[i]));
-      EXPECT_FALSE(rhs.lift[i].hasNaN());
     }
   }
 
@@ -79,7 +79,7 @@ protected:
 };
 
 
-std::shared_ptr<CostFunction> OCPRiccatiSolverTest::createCost(const Robot& robot) {
+std::shared_ptr<CostFunction> RiccatiSolverTest::createCost(const Robot& robot) {
   auto joint_cost = std::make_shared<JointSpaceCost>(robot);
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
   Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
@@ -127,7 +127,7 @@ std::shared_ptr<CostFunction> OCPRiccatiSolverTest::createCost(const Robot& robo
 }
 
 
-std::shared_ptr<Constraints> OCPRiccatiSolverTest::createConstraints(const Robot& robot) {
+std::shared_ptr<Constraints> RiccatiSolverTest::createConstraints(const Robot& robot) {
   auto joint_lower_limit = std::make_shared<JointPositionLowerLimit>(robot);
   auto joint_upper_limit = std::make_shared<JointPositionUpperLimit>(robot);
   auto velocity_lower_limit = std::make_shared<JointVelocityLowerLimit>(robot);
@@ -145,8 +145,8 @@ std::shared_ptr<Constraints> OCPRiccatiSolverTest::createConstraints(const Robot
 }
 
 
-HybridSolution OCPRiccatiSolverTest::createSolution(const Robot& robot) const {
-  HybridSolution s(N+1, max_num_impulse, robot);
+HybridSolution RiccatiSolverTest::createSolution(const Robot& robot) const {
+  HybridSolution s(N, max_num_impulse, robot);
   for (int i=0; i<=N; ++i) {
     s[i].setRandom(robot);
   }
@@ -154,12 +154,12 @@ HybridSolution OCPRiccatiSolverTest::createSolution(const Robot& robot) const {
 }
 
 
-HybridSolution OCPRiccatiSolverTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
+HybridSolution RiccatiSolverTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
   if (robot.max_point_contacts() == 0) {
     return createSolution(robot);
   }
   else {
-    HybridSolution s(N+1, max_num_impulse, robot);
+    HybridSolution s(N, max_num_impulse, robot);
     for (int i=0; i<=N; ++i) {
       s[i].setRandom(robot, contact_sequence.contactStatus(i));
     }
@@ -181,7 +181,7 @@ HybridSolution OCPRiccatiSolverTest::createSolution(const Robot& robot, const Co
 }
 
 
-ContactSequence OCPRiccatiSolverTest::createContactSequence(const Robot& robot) const {
+ContactSequence RiccatiSolverTest::createContactSequence(const Robot& robot) const {
   std::vector<DiscreteEvent> discrete_events;
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
@@ -207,7 +207,7 @@ ContactSequence OCPRiccatiSolverTest::createContactSequence(const Robot& robot) 
 }
 
 
-void OCPRiccatiSolverTest::test(const Robot& robot) const {
+void RiccatiSolverTest::test(const Robot& robot) const {
   auto cost = createCost(robot);
   auto constraints = createConstraints(robot);
   OCPLinearizer linearizer(T, N, max_num_impulse, nproc);
@@ -215,8 +215,8 @@ void OCPRiccatiSolverTest::test(const Robot& robot) const {
   if (robot.max_point_contacts() > 0) {
     contact_sequence = createContactSequence(robot);
   }
-  auto kkt_matrix = HybridKKTMatrix(N+1, max_num_impulse, robot);
-  auto kkt_residual = HybridKKTResidual(N+1, max_num_impulse, robot);
+  auto kkt_matrix = HybridKKTMatrix(N, max_num_impulse, robot);
+  auto kkt_residual = HybridKKTResidual(N, max_num_impulse, robot);
   HybridSolution s;
   if (robot.max_point_contacts() > 0) {
     s = createSolution(robot, contact_sequence);
@@ -231,9 +231,6 @@ void OCPRiccatiSolverTest::test(const Robot& robot) const {
   std::vector<Robot> robots(nproc, robot);
   linearizer.initConstraints(split_ocps, robots, contact_sequence, s);
   linearizer.linearizeOCP(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
-  auto kkt_matrix_ref = kkt_matrix;
-  auto kkt_residual_ref = kkt_residual;
-  auto split_ocps_ref = split_ocps;
   HybridDirection d = HybridDirection(N, max_num_impulse, robot);
   for (int i=0; i<N; ++i) {
     d[i].setContactStatus(contact_sequence.contactStatus(i));
@@ -247,15 +244,59 @@ void OCPRiccatiSolverTest::test(const Robot& robot) const {
   for (int i=0; i<num_lift; ++i) {
     d.lift[i].setContactStatus(contact_sequence.contactStatus(contact_sequence.timeStageBeforeLift(i)+1));
   }
+  auto split_ocps_ref = split_ocps;
+  auto robots_ref = robots;
   auto d_ref = d;
-  OCPRiccatiSolver riccati_solver(robot, T, N, max_num_impulse, nproc);
-  riccati_solver.setConstraintDimensions(contact_sequence);
-  riccati_solver.computeDirection(split_ocps, robots, contact_sequence, q, v, s, d, kkt_matrix, kkt_residual);
-
+  auto kkt_matrix_ref = kkt_matrix;
+  auto kkt_residual_ref = kkt_residual;
+  RiccatiSolver riccati_solver(robot, T, N, max_num_impulse, nproc);
+  riccati_solver.computeNewtonDirection(split_ocps, robots, contact_sequence, 
+                                        q, v, s, d, kkt_matrix, kkt_residual);
+  RiccatiRecursion riccati_recursion(robot, T, N, max_num_impulse, nproc);
+  HybridRiccatiFactorizer riccati_factorizer(N, max_num_impulse, robot);
+  HybridRiccatiFactorization riccati_factorization(N, max_num_impulse, robot);
+  StateConstraintRiccatiFactorizer constraint_factorizer(robot, N, max_num_impulse, nproc);
+  StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
+  RiccatiDirectionCalculator direction_calculator(T, N, max_num_impulse, nproc);
+  riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix_ref, kkt_residual_ref, 
+                                                     riccati_factorization);
+  riccati_recursion.backwardRiccatiRecursion(riccati_factorizer, 
+                                              contact_sequence, kkt_matrix_ref, 
+                                              kkt_residual_ref, 
+                                              riccati_factorization);
+  constraint_factorization.setConstraintStatus(contact_sequence);
+  riccati_recursion.forwardRiccatiRecursionParallel(riccati_factorizer, 
+                                                    contact_sequence, 
+                                                    kkt_matrix_ref, kkt_residual_ref,
+                                                    constraint_factorization);
+  if (contact_sequence.existImpulseStage()) {
+    riccati_recursion.forwardStateConstraintFactorization(
+        riccati_factorizer, contact_sequence, kkt_matrix_ref, kkt_residual_ref, 
+        riccati_factorization);
+    riccati_recursion.backwardStateConstraintFactorization(
+        riccati_factorizer, contact_sequence, kkt_matrix_ref, 
+        constraint_factorization);
+  }
+  direction_calculator.computeInitialStateDirection(robots_ref, q, v, s, d_ref);
+  if (contact_sequence.existImpulseStage()) {
+    constraint_factorizer.computeLagrangeMultiplierDirection(
+        contact_sequence, riccati_factorization, constraint_factorization, d_ref);
+    constraint_factorizer.aggregateLagrangeMultiplierDirection(
+        constraint_factorization, contact_sequence, d_ref, riccati_factorization);
+  }
+  riccati_recursion.forwardRiccatiRecursion(
+      riccati_factorizer, contact_sequence, kkt_matrix_ref, kkt_residual_ref, 
+      riccati_factorization, d_ref);
+  direction_calculator.computeNewtonDirectionFromRiccatiFactorization(
+      split_ocps_ref, robots_ref, contact_sequence, riccati_factorizer, 
+      riccati_factorization, s, d_ref);
+  testIsSame(d, d_ref);
+  testIsSame(kkt_matrix, kkt_matrix_ref);
+  testIsSame(kkt_residual, kkt_residual_ref);
 }
 
 
-TEST_F(OCPRiccatiSolverTest, fixedBase) {
+TEST_F(RiccatiSolverTest, fixedBase) {
   Robot robot(fixed_base_urdf);
   test(robot);
   std::vector<int> contact_frames = {18};
@@ -264,7 +305,7 @@ TEST_F(OCPRiccatiSolverTest, fixedBase) {
 }
 
 
-TEST_F(OCPRiccatiSolverTest, floatingBase) {
+TEST_F(RiccatiSolverTest, floatingBase) {
   Robot robot(floating_base_urdf);
   test(robot);
   std::vector<int> contact_frames = {14, 24, 34, 44};

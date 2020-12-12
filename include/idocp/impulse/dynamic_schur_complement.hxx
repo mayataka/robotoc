@@ -7,8 +7,6 @@
 #include <stdexcept>
 #include <cassert>
 
-#include "Eigen/LU"
-
 
 namespace idocp {
 
@@ -19,7 +17,9 @@ inline DynamicSchurComplement::DynamicSchurComplement(const int max_dimA,
     SA_(Eigen::MatrixXd::Zero(max_dimD, max_dimD)),
     SD_(Eigen::MatrixXd::Zero(max_dimA, max_dimA)),
     CAinv_(Eigen::MatrixXd::Zero(max_dimD, max_dimA)),
-    BDinv_(Eigen::MatrixXd::Zero(max_dimA, max_dimD)) {
+    BDinv_(Eigen::MatrixXd::Zero(max_dimA, max_dimD)),
+    llt_(),
+    ldlt_() {
   try {
     if (max_dimA < 0) {
       throw std::out_of_range("invalid value: max_dimA must be non negative!");
@@ -41,7 +41,9 @@ inline DynamicSchurComplement::DynamicSchurComplement()
     SA_(),
     SD_(),
     CAinv_(),
-    BDinv_() {
+    BDinv_(),
+    llt_(),
+    ldlt_() {
 }
 
 
@@ -64,9 +66,10 @@ inline void DynamicSchurComplement::invertWithZeroBottomRightCorner(
   assert(C.cols() == dimA);
   assert(Minv.rows() == dimA+dimD);
   assert(Minv.cols() == dimA+dimD);
+  llt_.compute(A);
   const_cast<Eigen::MatrixBase<MatrixType3>&>(Minv)
       .topLeftCorner(dimA, dimA).noalias()
-      = A.llt().solve(Eigen::MatrixXd::Identity(dimA, dimA));
+      = llt_.solve(Eigen::MatrixXd::Identity(dimA, dimA));
   invertWithZeroBottomRightCorner(
       C, const_cast<Eigen::MatrixBase<MatrixType3>&>(Minv));
 }
@@ -86,10 +89,10 @@ inline void DynamicSchurComplement::invertWithZeroBottomRightCorner(
       = C * Minv.topLeftCorner(dimA, dimA);
   SA_.topLeftCorner(dimD, dimD).noalias() 
       = CAinv_.topLeftCorner(dimD, dimA) * C.transpose();
+  ldlt_.compute(SA_.topLeftCorner(dimD, dimD));
   const_cast<Eigen::MatrixBase<MatrixType2>&>(Minv)
       .bottomRightCorner(dimD, dimD).noalias()
-      = - SA_.topLeftCorner(dimD, dimD)
-             .llt().solve(Eigen::MatrixXd::Identity(dimD, dimD));
+      = - ldlt_.solve(Eigen::MatrixXd::Identity(dimD, dimD));
   const_cast<Eigen::MatrixBase<MatrixType2>&>(Minv)
       .bottomLeftCorner(dimD, dimA).noalias()
       = - Minv.bottomRightCorner(dimD, dimD) * CAinv_.topLeftCorner(dimD, dimA);
@@ -117,9 +120,10 @@ inline void DynamicSchurComplement::invertWithZeroTopLeftCorner(
   assert(D.cols() == dimD);
   assert(Minv.rows() == dimA+dimD);
   assert(Minv.cols() == dimA+dimD);
+  llt_.compute(D);
   const_cast<Eigen::MatrixBase<MatrixType3>&>(Minv)
       .bottomRightCorner(dimD, dimD).noalias()
-      = D.llt().solve(Eigen::MatrixXd::Identity(dimD, dimD));
+      = llt_.solve(Eigen::MatrixXd::Identity(dimD, dimD));
   invertWithZeroTopLeftCorner( 
       B, const_cast<Eigen::MatrixBase<MatrixType3>&>(Minv));
 }
@@ -139,10 +143,10 @@ inline void DynamicSchurComplement::invertWithZeroTopLeftCorner(
       = B * Minv.bottomRightCorner(dimD, dimD);
   SD_.topLeftCorner(dimA, dimA).noalias() 
       = BDinv_.topLeftCorner(dimA, dimD) * B.transpose();
+  ldlt_.compute(SD_.topLeftCorner(dimA, dimA));
   const_cast<Eigen::MatrixBase<MatrixType2>&>(Minv)
       .topLeftCorner(dimA, dimA).noalias()
-      = - SD_.topLeftCorner(dimA, dimA)
-             .llt().solve(Eigen::MatrixXd::Identity(dimA, dimA));
+      = - ldlt_.solve(Eigen::MatrixXd::Identity(dimA, dimA));
   const_cast<Eigen::MatrixBase<MatrixType2>&>(Minv)
       .topRightCorner(dimA, dimD).noalias()
       = - Minv.topLeftCorner(dimA, dimA) * BDinv_.topLeftCorner(dimA, dimD);

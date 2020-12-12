@@ -27,6 +27,14 @@ public:
   DiscreteEvent(const Robot& robot);
 
   ///
+  /// @brief Set the contact status from two sequential contact status.
+  /// @param[in] pre_contact_status Contact status before this discrete event. 
+  /// @param[in] post_contact_status Contact status after this discrete event. 
+  ///
+  DiscreteEvent(const ContactStatus& pre_contact_status, 
+                const ContactStatus& post_contact_status);
+
+  ///
   /// @brief Default constructor. 
   ///
   DiscreteEvent();

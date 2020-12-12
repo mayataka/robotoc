@@ -6,15 +6,6 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/split_ocp.hpp"
-#include "idocp/impulse/split_impulse_ocp.hpp"
-#include "idocp/ocp/terminal_ocp.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 
@@ -70,7 +61,7 @@ public:
   OCPLinearizer& operator=(OCPLinearizer&&) noexcept = default;
 
   void initConstraints(HybridOCP& split_ocps, std::vector<Robot>& robots,
-                       const ContactSequence& contact_sequence,
+                       const ContactSequence& contact_sequence, 
                        const HybridSolution& s) const;
 
   void linearizeOCP(HybridOCP& split_ocps, std::vector<Robot>& robots,
@@ -90,6 +81,14 @@ public:
   double KKTError(const HybridOCP& split_ocps, 
                   const ContactSequence& contact_sequence, 
                   const HybridKKTResidual& kkt_residual);
+
+  void integrateSolution(HybridOCP& split_ocps, const std::vector<Robot>& robots,
+                         const ContactSequence& contact_sequence,
+                         const HybridKKTMatrix& kkt_matrix,
+                         const HybridKKTResidual& kkt_residual,
+                         const double primal_step_size,
+                         const double dual_step_size,
+                         HybridDirection& d, HybridSolution& s) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

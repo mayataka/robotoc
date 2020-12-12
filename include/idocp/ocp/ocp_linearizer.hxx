@@ -78,6 +78,41 @@ struct ComputeKKTResidual {
   }
 };
 
+
+struct initConstraints {
+  template <typename ConfigVectorType, typename SplitSolutionType>
+  static inline void run(SplitOCP& split_ocp, Robot& robot, 
+                         const ContactStatus& contact_status, const double t, 
+                         const double dtau, 
+                         const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
+                         const SplitSolution& s, 
+                         const SplitSolutionType& s_next, 
+                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+    split_ocp.computeKKTResidual(robot, contact_status, t, dtau, q_prev, s, 
+                                 s_next, kkt_matrix, kkt_residual);
+  }
+
+  static inline void run(TerminalOCP& terminal_ocp, Robot& robot,  
+                         const double t, const SplitSolution& s, 
+                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+    terminal_ocp.computeKKTResidual(robot, t, s, kkt_residual);
+  }
+
+  template <typename ConfigVectorType>
+  static inline void run(SplitImpulseOCP& split_ocp, Robot& robot, 
+                         const ImpulseStatus& impulse_status, const double t, 
+                         const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
+                         const ImpulseSplitSolution& s, 
+                         const SplitSolution& s_next, 
+                         ImpulseKKTMatrix& kkt_matrix, 
+                         ImpulseKKTResidual& kkt_residual,
+                         const bool is_state_constraint_valid) {
+    split_ocp.computeKKTResidual(robot, impulse_status, t, q_prev, s, s_next,
+                                 kkt_matrix, kkt_residual, 
+                                 is_state_constraint_valid);
+  }
+};
+
 } // namespace internal
 } // namespace idocp
 
