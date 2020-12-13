@@ -97,4 +97,11 @@ double RiccatiSolver::maxDualStepSize() const {
   return direction_calculator_.maxDualStepSize();
 }
 
+
+void RiccatiSolver::getStateFeedbackGain(const int time_stage, 
+                                         Eigen::MatrixXd& Kq, 
+                                         Eigen::MatrixXd& Kv) const {
+  riccati_factorizer_[time_stage].getStateFeedbackGain(Kq, Kv);
+}
+
 } // namespace idocp

@@ -113,20 +113,13 @@ public:
   ///
   bool setStateTrajectory(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
 
-  ///
-  /// @brief Sets the configuration and velocity over the horizon by linear 
-  //// interpolation. 
-  /// @param[in] q0 Initial configuration. Size must be Robot::dimq().
-  /// @param[in] v0 Initial velocity. Size must be Robot::dimv().
-  /// @param[in] qN Terminal configuration. Size must be Robot::dimq().
-  /// @param[in] vN Terminal velocity. Size must be Robot::dimv().
-  ///
-  bool setStateTrajectory(const Eigen::VectorXd& q0, const Eigen::VectorXd& v0,
-                          const Eigen::VectorXd& qN, const Eigen::VectorXd& vN);
-
   void setContactStatusUniformly(const ContactStatus& contact_status);
 
   void setDiscreteEvent(const DiscreteEvent& discrete_event);
+
+  void shiftImpulse(const int impulse_index, const double impulse_time);
+
+  void shiftLift(const int lift_index, const double lift_time);
   
   ///
   /// @brief Clear the line search filter. 

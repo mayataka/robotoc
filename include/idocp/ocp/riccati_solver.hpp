@@ -99,6 +99,15 @@ public:
   /// 
   double maxDualStepSize() const;
 
+  ///
+  /// @brief Getter of the state feedback gain of the LQR subproblem. 
+  /// @param[in] Kq The state feedback gain with respect to the configuration. 
+  /// @param[in] Kv The state feedback gain with respect to the velocity. 
+  /// @param[in] time_stage Time stage of interested. 
+  ///
+  void getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq, 
+                            Eigen::MatrixXd& Kv) const;
+
 private:
   RiccatiRecursion riccati_recursion_;
   HybridRiccatiFactorizer riccati_factorizer_;

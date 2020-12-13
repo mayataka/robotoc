@@ -24,7 +24,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages 
-          publish_dir: ./html
+          publish_dir: ./doc/html
           enable_jekyll: false
           allow_empty_commit: false
           force_orphan: true

@@ -35,11 +35,13 @@ add_library(
   src/cost/cost_function_component_base.cpp
   src/cost/joint_space_cost.cpp
   src/cost/contact_force_cost.cpp
+  src/cost/time_varying_configuration_cost.cpp
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
   src/cost/impulse_cost_function.cpp
   src/cost/impulse_cost_function_component_base.cpp
   src/cost/joint_space_impulse_cost.cpp
+  src/cost/impulse_time_varying_configuration_cost.cpp
   src/cost/impulse_force_cost.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp

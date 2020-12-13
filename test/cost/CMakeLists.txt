@@ -1,6 +1,8 @@
 add_test_macro(joint_space_cost_test)
+add_test_macro(time_varying_configuration_cost_test)
 add_test_macro(task_space_3d_cost_test)
 add_test_macro(task_space_6d_cost_test)
 add_test_macro(contact_force_cost_test)
 add_test_macro(joint_space_impulse_cost_test)
+add_test_macro(impulse_time_varying_configuration_cost_test)
 add_test_macro(impulse_force_cost_test)

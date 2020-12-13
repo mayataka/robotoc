@@ -192,7 +192,7 @@ double JointSpaceCost::l(Robot& robot, CostFunctionData& data, const double t,
 
 double JointSpaceCost::phi(Robot& robot, CostFunctionData& data, 
                            const double t, const SplitSolution& s) const {
-  double phi = 0;
+double phi = 0;
   if (robot.has_floating_base()) {
     robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
     phi += (qf_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
@@ -307,29 +307,29 @@ void JointSpaceCost::phiq(Robot& robot, CostFunctionData& data, const double t,
 void JointSpaceCost::phiv(Robot& robot, CostFunctionData& data, const double t, 
                           const SplitSolution& s,
                           KKTResidual& kkt_residual) const {
-    kkt_residual.lv().array()
-        += vf_weight_.array() * (s.v.array()-v_ref_.array());
+  kkt_residual.lv().array()
+      += vf_weight_.array() * (s.v.array()-v_ref_.array());
 }
 
 
 void JointSpaceCost::phiqq(Robot& robot, CostFunctionData& data, const double t, 
                            const SplitSolution& s, 
                            KKTMatrix& kkt_matrix) const {
-    if (robot.has_floating_base()) {
-      robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
-      kkt_matrix.Qqq().noalias()
-          += data.J_qdiff.transpose() * qf_weight_.asDiagonal() * data.J_qdiff;
-    }
-    else {
-      kkt_matrix.Qqq().diagonal().noalias() += qf_weight_;
-    }
+  if (robot.has_floating_base()) {
+    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
+    kkt_matrix.Qqq().noalias()
+        += data.J_qdiff.transpose() * qf_weight_.asDiagonal() * data.J_qdiff;
+  }
+  else {
+    kkt_matrix.Qqq().diagonal().noalias() += qf_weight_;
+  }
 }
 
 
 void JointSpaceCost::phivv(Robot& robot, CostFunctionData& data, const double t, 
                            const SplitSolution& s, 
                            KKTMatrix& kkt_matrix) const {
-    kkt_matrix.Qvv().diagonal().noalias() += vf_weight_;
+  kkt_matrix.Qvv().diagonal().noalias() += vf_weight_;
 }
 
 } // namespace idocp

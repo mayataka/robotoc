@@ -69,10 +69,14 @@ void OCP::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(v.size() == robots_[0].dimv());
   ocp_linearizer_.linearizeOCP(split_ocps_, robots_, contact_sequence_, 
                                t, q, v, s_, kkt_matrix_, kkt_residual_);
-  riccati_solver_.computeNewtonDirection(split_ocps_, robots_, contact_sequence_, 
-                                         q, v, s_, d_, kkt_matrix_, kkt_residual_);
+  riccati_solver_.computeNewtonDirection(split_ocps_, robots_, 
+                                         contact_sequence_, q, v, s_, d_, 
+                                         kkt_matrix_, kkt_residual_);
   const double primal_step_size = riccati_solver_.maxPrimalStepSize();
   const double dual_step_size = riccati_solver_.maxDualStepSize();
+  if (use_line_search) {
+    // TODO: add filter line search method
+  }
   ocp_linearizer_.integrateSolution(split_ocps_, robots_, contact_sequence_, 
                                     kkt_matrix_, kkt_residual_, 
                                     primal_step_size, dual_step_size, d_, s_);
@@ -86,15 +90,15 @@ const SplitSolution& OCP::getSolution(const int stage) const {
 }
 
 
-void OCP::getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq, 
+void OCP::getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq, 
                                Eigen::MatrixXd& Kv) const {
-  assert(stage >= 0);
-  assert(stage < N_);
+  assert(time_stage >= 0);
+  assert(time_stage < N_);
   assert(Kq.rows() == robots_[0].dimv());
   assert(Kq.cols() == robots_[0].dimv());
   assert(Kv.rows() == robots_[0].dimv());
   assert(Kv.cols() == robots_[0].dimv());
-  // split_ocps_[stage].getStateFeedbackGain(Kq, Kv);
+  riccati_solver_.getStateFeedbackGain(time_stage, Kq, Kv);
 }
 
 
@@ -118,34 +122,6 @@ bool OCP::setStateTrajectory(const Eigen::VectorXd& q,
   for (int i=0; i<contact_sequence_.totalNumLiftStages(); ++i) {
     s_.lift[i].v = v;
     s_.lift[i].q = q_normalized;
-  }
-  initConstraints();
-  const bool feasible = isCurrentSolutionFeasible();
-  return feasible;
-}
-
-
-bool OCP::setStateTrajectory(const Eigen::VectorXd& q0, 
-                             const Eigen::VectorXd& v0, 
-                             const Eigen::VectorXd& qN, 
-                             const Eigen::VectorXd& vN) {
-  assert(q0.size() == robots_[0].dimq());
-  assert(v0.size() == robots_[0].dimv());
-  assert(qN.size() == robots_[0].dimq());
-  assert(vN.size() == robots_[0].dimv());
-  Eigen::VectorXd q0_normalized = q0;
-  robots_[0].normalizeConfiguration(q0_normalized);
-  Eigen::VectorXd qN_normalized = qN;
-  robots_[0].normalizeConfiguration(qN_normalized);
-  const Eigen::VectorXd a = (vN-v0) / N_;
-  Eigen::VectorXd dqN = Eigen::VectorXd::Zero(robots_[0].dimv());
-  robots_[0].subtractConfiguration(qN, q0, dqN);
-  const Eigen::VectorXd v = dqN / N_;
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N_; ++i) {
-    s_[i].a = a;
-    s_[i].v = v0 + i * a;
-    robots_[0].integrateConfiguration(q0, v, (double)i, s_[i].q);
   }
   initConstraints();
   const bool feasible = isCurrentSolutionFeasible();
@@ -184,6 +160,48 @@ void OCP::setDiscreteEvent(const DiscreteEvent& discrete_event) {
 }
 
 
+void OCP::shiftImpulse(const int impulse_index, const double impulse_time) {
+  contact_sequence_.shiftImpulse(impulse_index, impulse_time);
+  for (int i=0; i<=N_; ++i) {
+    s_[i].setContactStatus(contact_sequence_.contactStatus(i));
+    d_[i].setContactStatus(contact_sequence_.contactStatus(i));
+  }
+  for (int i=0; i<contact_sequence_.totalNumImpulseStages(); ++i) {
+    s_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
+    d_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
+    const int stage = contact_sequence_.timeStageAfterImpulse(i);
+    s_.aux[i].setContactStatus(contact_sequence_.contactStatus(stage));
+    d_.aux[i].setContactStatus(contact_sequence_.contactStatus(stage));
+  }
+  for (int i=0; i<contact_sequence_.totalNumLiftStages(); ++i) {
+    const int stage = contact_sequence_.timeStageAfterLift(i);
+    s_.lift[i].setContactStatus(contact_sequence_.contactStatus(stage));
+    d_.lift[i].setContactStatus(contact_sequence_.contactStatus(stage));
+  }
+}
+
+
+void OCP::shiftLift(const int lift_index, const double lift_time) {
+  contact_sequence_.shiftLift(lift_index, lift_time);
+  for (int i=0; i<=N_; ++i) {
+    s_[i].setContactStatus(contact_sequence_.contactStatus(i));
+    d_[i].setContactStatus(contact_sequence_.contactStatus(i));
+  }
+  for (int i=0; i<contact_sequence_.totalNumImpulseStages(); ++i) {
+    s_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
+    d_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
+    const int stage = contact_sequence_.timeStageAfterImpulse(i);
+    s_.aux[i].setContactStatus(contact_sequence_.contactStatus(stage));
+    d_.aux[i].setContactStatus(contact_sequence_.contactStatus(stage));
+  }
+  for (int i=0; i<contact_sequence_.totalNumLiftStages(); ++i) {
+    const int stage = contact_sequence_.timeStageAfterLift(i);
+    s_.lift[i].setContactStatus(contact_sequence_.contactStatus(stage));
+    d_.lift[i].setContactStatus(contact_sequence_.contactStatus(stage));
+  }
+}
+
+
 void OCP::clearLineSearchFilter() {
   // filter_.clear();
 }
@@ -203,6 +221,21 @@ void OCP::computeKKTResidual(const double t, const Eigen::VectorXd& q,
 
 void OCP::printSolution(const std::string& name, 
                         const std::vector<int> frames) const {
+  if (name == "all") {
+    for (int i=0; i<N_; ++i) {
+      std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
+      std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
+      std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
+      std::cout << "f[" << i << "] = ";
+      for (int j=0; j<s_[i].f.size(); ++j) {
+        std::cout << s_[i].f[j].transpose() << "; ";
+      }
+      std::cout << std::endl;
+      std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
+    }
+    std::cout << "q[" << N_ << "] = " << s_[N_].q.transpose() << std::endl;
+    std::cout << "v[" << N_ << "] = " << s_[N_].v.transpose() << std::endl;
+  }
   if (name == "q") {
     for (int i=0; i<=N_; ++i) {
       std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
@@ -231,21 +264,6 @@ void OCP::printSolution(const std::string& name,
       std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
     }
   }
-  if (name == "all") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
-      std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
-      std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
-      std::cout << "f[" << i << "] = ";
-      for (int j=0; j<s_[i].f.size(); ++j) {
-        std::cout << s_[i].f[j].transpose() << "; ";
-      }
-      std::cout << std::endl;
-      std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
-    }
-    std::cout << "q[" << N_ << "] = " << s_[N_].q.transpose() << std::endl;
-    std::cout << "v[" << N_ << "] = " << s_[N_].v.transpose() << std::endl;
-  }
   if (name == "end-effector") {
     Robot robot = robots_[0];
     for (int i=0; i<N_; ++i) {
@@ -263,7 +281,31 @@ bool OCP::isCurrentSolutionFeasible() {
   for (int i=0; i<N_; ++i) {
     const bool feasible = split_ocps_[i].isFeasible(robots_[0], s_[i]);
     if (!feasible) {
-      std::cout << "INFEASIBLE at time step " << i << std::endl;
+      std::cout << "INFEASIBLE at time stage " << i << std::endl;
+      return false;
+    }
+  }
+  const int num_impulse = contact_sequence_.totalNumImpulseStages();
+  for (int i=0; i<num_impulse; ++i) {
+    const bool feasible = split_ocps_.impulse[i].isFeasible(robots_[0], 
+                                                            s_.impulse[i]);
+    if (!feasible) {
+      std::cout << "INFEASIBLE at impulse " << i << std::endl;
+      return false;
+    }
+  }
+  for (int i=0; i<num_impulse; ++i) {
+    const bool feasible = split_ocps_.aux[i].isFeasible(robots_[0], s_.aux[i]);
+    if (!feasible) {
+      std::cout << "INFEASIBLE at aux " << i << std::endl;
+      return false;
+    }
+  }
+  const int num_lift = contact_sequence_.totalNumLiftStages();
+  for (int i=0; i<num_lift; ++i) {
+    const bool feasible = split_ocps_.lift[i].isFeasible(robots_[0], s_.lift[i]);
+    if (!feasible) {
+      std::cout << "INFEASIBLE at lift " << i << std::endl;
       return false;
     }
   }
