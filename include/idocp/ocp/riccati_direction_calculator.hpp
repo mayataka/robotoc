@@ -7,7 +7,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_ocp.hpp"
-#include "idocp/impulse/split_impulse_ocp.hpp"
+#include "idocp/impulse/impulse_split_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
@@ -17,9 +17,9 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
-#include "idocp/ocp/riccati_factorizer.hpp"
-#include "idocp/impulse/impulse_riccati_factorizer.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorizer.hpp"
+#include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
@@ -64,7 +64,8 @@ public:
   ///
   /// @brief Default copy assign operator. 
   ///
-  RiccatiDirectionCalculator& operator=(const RiccatiDirectionCalculator&) = default;
+  RiccatiDirectionCalculator& operator=(
+      const RiccatiDirectionCalculator&) = default;
 
   ///
   /// @brief Default move constructor. 
@@ -74,7 +75,8 @@ public:
   ///
   /// @brief Default move assign operator. 
   ///
-  RiccatiDirectionCalculator& operator=(RiccatiDirectionCalculator&&) noexcept = default;
+  RiccatiDirectionCalculator& operator=(
+      RiccatiDirectionCalculator&&) noexcept = default;
 
   static void computeInitialStateDirection(const std::vector<Robot>& robots, 
                                            const Eigen::VectorXd& q, 
@@ -84,8 +86,8 @@ public:
   void computeNewtonDirectionFromRiccatiFactorization(
       HybridOCP& split_ocps, std::vector<Robot>& robots, 
       const ContactSequence& contact_sequence, 
-      const HybridRiccatiFactorizer& factorizer, 
-      const HybridRiccatiFactorization& factorization, 
+      const RiccatiFactorizer& factorizer, 
+      const RiccatiFactorization& factorization, 
       const Solution& s, Direction& d);
 
   double maxPrimalStepSize() const;
@@ -95,8 +97,8 @@ public:
   double dtau(const ContactSequence& contact_sequence, 
               const int time_stage) const;
 
-  static const RiccatiFactorization& next_riccati_factorization(
-      const HybridRiccatiFactorization& factorization, 
+  static const SplitRiccatiFactorization& next_riccati_factorization(
+      const RiccatiFactorization& factorization, 
       const ContactSequence& contact_sequence, const int time_stage);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

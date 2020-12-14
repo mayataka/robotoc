@@ -3,7 +3,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 
 
 namespace idocp {
@@ -38,7 +38,7 @@ void RiccatiFactorizationTest::testWithoutContact(const Robot& robot) {
   const int dimv = robot.dimv();
   const int dimx = 2 * robot.dimv();
   const int dimu = robot.dimu();
-  RiccatiFactorization riccati(robot);
+  SplitRiccatiFactorization riccati(robot);
   EXPECT_EQ(riccati.Pqq.rows(), dimv);
   EXPECT_EQ(riccati.Pqq.cols(), dimv);
   EXPECT_EQ(riccati.Pqv.rows(), dimv);
@@ -62,7 +62,7 @@ void RiccatiFactorizationTest::testWithContact(const Robot& robot) {
   const int dimv = robot.dimv();
   const int dimx = 2 * robot.dimv();
   const int dimu = robot.dimu();
-  RiccatiFactorization riccati(robot);
+  SplitRiccatiFactorization riccati(robot);
   EXPECT_EQ(riccati.Pqq.rows(), dimv);
   EXPECT_EQ(riccati.Pqq.cols(), dimv);
   EXPECT_EQ(riccati.Pqv.rows(), dimv);

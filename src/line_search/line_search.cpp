@@ -1,19 +1,24 @@
 #include "idocp/line_search/line_search.hpp"
 
+#include <cassert>
+
+
 namespace idocp {
 
-inline std::pair<double, double> computeStepSize(
+
+LineSearch::LineSearch(const int N, const int max_num_impulse, 
+                       const int num_proc) 
+  : filter_(),
+    max_num_impulse_(max_num_impulse),
+    num_proc_(num_proc) {
+}
+
+
+std::pair<double, double> LineSearch::computeStepSize(
     HybridOCP& split_ocps, std::vector<Robot>& robot,
     const ContactSequence& contact_sequence, const double t, 
     const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
-    const Diretion& d);
-
-inline std::pair<double, double> computeStepSize(
-    HybridOCPContainerType& split_ocps, std::vector<Robot>& robot,
-    const ContactSequence& contact_sequence, const double t, 
-    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-    const HybridSolutionContainerType& s, 
-    const HybridDirectionContainerType& d) {
+    const Diretion& d) {
   // If filter is empty, augment the current solution to the filter.
   if (filter_.isEmpty()) {
     #pragma omp parallel for num_threads(num_proc_)
@@ -60,6 +65,16 @@ inline std::pair<double, double> computeStepSize(
     }
     primal_step_size *= step_size_reduction_rate_;
   }
+}
+
+
+void LineSearch::clearFilter() {
+  filter_.clear();
+}
+
+
+bool LineSearch::isFilterEmpty() const {
+  return filter_.empty();
 }
 
 } // namespace idocp

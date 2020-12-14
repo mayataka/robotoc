@@ -63,9 +63,8 @@ void RiccatiDirectionCalculator::computeInitialStateDirection(
 void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
     HybridOCP& split_ocps, std::vector<Robot>& robots, 
     const ContactSequence& contact_sequence, 
-    const HybridRiccatiFactorizer& factorizer, 
-    const HybridRiccatiFactorization& factorization, const Solution& s, 
-    Direction& d) {
+    const RiccatiFactorizer& factorizer, 
+    const RiccatiFactorization& factorization, const Solution& s, Direction& d) {
   assert(robots.size() == num_proc_);
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();
@@ -74,8 +73,8 @@ void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_all_; ++i) {
     if (i < N_) {
-      RiccatiFactorizer::computeCostateDirection(factorization[i], d[i], 
-                                                 exist_state_constraint);
+      SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d[i], 
+                                                      exist_state_constraint);
       factorizer[i].computeControlInputDirection(
           next_riccati_factorization(factorization, contact_sequence, i), d[i], 
           exist_state_constraint);
@@ -86,14 +85,14 @@ void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
       max_dual_step_sizes_.coeffRef(i) = split_ocps[i].maxDualStepSize();
     }
     else if (i == N_) {
-      RiccatiFactorizer::computeCostateDirection(factorization[N_], d[N_], 
-                                                 false);
+      SplitRiccatiFactorizer::computeCostateDirection(factorization[N_], d[N_], 
+                                                      false);
       max_primal_step_sizes_.coeffRef(N_) = split_ocps.terminal.maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(N_) = split_ocps.terminal.maxDualStepSize();
     }
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);
-      ImpulseRiccatiFactorizer::computeCostateDirection(
+      ImpulseSplitRiccatiFactorizer::computeCostateDirection(
           factorization.impulse[impulse_index], d.impulse[impulse_index], 
           exist_state_constraint);
       split_ocps.impulse[impulse_index].computeCondensedPrimalDirection(
@@ -111,7 +110,7 @@ void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
       const double dtau_aux 
           = time_stage_after_impulse * dtau_ 
               - contact_sequence.impulseTime(impulse_index);
-      RiccatiFactorizer::computeCostateDirection(
+      SplitRiccatiFactorizer::computeCostateDirection(
           factorization.aux[impulse_index], d.aux[impulse_index], 
           exist_state_constraint);
       factorizer.aux[impulse_index].computeControlInputDirection(
@@ -132,7 +131,7 @@ void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
       const double dtau_aux
           = time_stage_after_lift * dtau_ 
               - contact_sequence.liftTime(lift_index);
-      RiccatiFactorizer::computeCostateDirection(
+      SplitRiccatiFactorizer::computeCostateDirection(
           factorization.lift[lift_index], d.lift[lift_index], 
           exist_state_constraint);
       factorizer.lift[lift_index].computeControlInputDirection(

@@ -139,7 +139,7 @@ public:
 
   ///
   /// @brief Product of the partial derivative of the equality constriant with 
-  /// respect to state and RiccatiFactorization::N. 
+  /// respect to state and SplitRiccatiFactorization::N. 
   /// @param[in] constraint_index Index of the constraint of interested. 
   ///
   Eigen::Block<Eigen::MatrixXd> EN(const int constraint_index);
@@ -151,7 +151,7 @@ public:
       const int constraint_index) const;
 
   ///
-  /// @brief Top Robot::dimv() rows of RiccatiFactorization::EN(). 
+  /// @brief Top Robot::dimv() rows of SplitRiccatiFactorization::EN(). 
   /// @param[in] constraint_index Index of the constraint of interested. 
   ///
   Eigen::Block<Eigen::MatrixXd> ENq(const int constraint_index);
@@ -163,7 +163,7 @@ public:
       const int constraint_index) const;
 
   ///
-  /// @brief Product of RiccatiFactorization::EN() and 
+  /// @brief Product of SplitRiccatiFactorization::EN() and 
   /// StateConstraintRiccatiFactorization::Eq(). 
   /// @param[in] constraint_index Constraint index of interested. 
   ///
@@ -177,7 +177,7 @@ public:
       const int constraint_index) const;
 
   ///
-  /// @brief Product of RiccatiFactorization::EN() and 
+  /// @brief Product of SplitRiccatiFactorization::EN() and 
   /// StateConstraintRiccatiFactorization::Eq(). 
   /// @param[in] constraint_index Constraint index of interested. 
   /// @param[in] impulse_index Impulse index of interested. 
@@ -192,7 +192,7 @@ public:
       const int constraint_index, const int impulse_index) const;
 
   ///
-  /// @brief Product of RiccatiFactorization::EN() and 
+  /// @brief Product of SplitRiccatiFactorization::EN() and 
   /// StateConstraintRiccatiFactorization::Eq(). 
   ///
   Eigen::Block<Eigen::MatrixXd> ENT();

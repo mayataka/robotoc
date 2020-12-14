@@ -4,7 +4,7 @@
 #include "idocp/robot/robot.hpp"
 
 #include "idocp/ocp/split_ocp.hpp"
-#include "idocp/impulse/split_impulse_ocp.hpp"
+#include "idocp/impulse/impulse_split_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -16,9 +16,9 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
-#include "idocp/ocp/riccati_factorizer.hpp"
-#include "idocp/impulse/impulse_riccati_factorizer.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorizer.hpp"
+#include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
 
 #include <vector>
 #include <memory>
@@ -33,9 +33,8 @@ using Solution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
 using Direction = hybrid_container<SplitDirection, ImpulseSplitDirection>;
 using KKTMatrix = hybrid_container<SplitKKTMatrix, ImpulseSplitKKTMatrix>;
 using KKTResidual = hybrid_container<SplitKKTResidual, ImpulseSplitKKTResidual>;
-using HybridRiccatiFactorization = hybrid_container<RiccatiFactorization, RiccatiFactorization>;
-using HybridRiccatiFactorizer = hybrid_container<RiccatiFactorizer, ImpulseRiccatiFactorizer>; 
-
+using RiccatiFactorization = hybrid_container<SplitRiccatiFactorization, SplitRiccatiFactorization>;
+using RiccatiFactorizer = hybrid_container<SplitRiccatiFactorizer, ImpulseSplitRiccatiFactorizer>; 
 
 ///
 /// @class hybrid_container
@@ -161,7 +160,7 @@ struct HybridOCP {
     : data(N, SplitOCP()), 
       aux(N_impulse, SplitOCP()), 
       lift(N_impulse, SplitOCP()),
-      impulse(N_impulse, SplitImpulseOCP()),
+      impulse(N_impulse, ImpulseSplitOCP()),
       terminal(TerminalOCP()) {
   }
 
@@ -179,7 +178,7 @@ struct HybridOCP {
     : data(N, SplitOCP(robot, cost, constraints)), 
       aux(N_impulse, SplitOCP(robot, cost, constraints)), 
       lift(N_impulse, SplitOCP(robot, cost, constraints)),
-      impulse(N_impulse, SplitImpulseOCP(robot, cost->getImpulseCostFunction(), 
+      impulse(N_impulse, ImpulseSplitOCP(robot, cost->getImpulseCostFunction(), 
                                          constraints->getImpulseConstraints())),
       terminal(TerminalOCP(robot, cost, constraints)) {
   }
@@ -264,7 +263,7 @@ struct HybridOCP {
   }
 
   std::vector<SplitOCP> data, aux, lift;
-  std::vector<SplitImpulseOCP> impulse;
+  std::vector<ImpulseSplitOCP> impulse;
   TerminalOCP terminal;
 };
 

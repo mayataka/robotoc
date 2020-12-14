@@ -1,5 +1,5 @@
-#ifndef IDOCP_RICCATI_FACTORIZATION_HPP_
-#define IDOCP_RICCATI_FACTORIZATION_HPP_
+#ifndef IDOCP_SPLIT_RICCATI_FACTORIZATION_HPP_
+#define IDOCP_SPLIT_RICCATI_FACTORIZATION_HPP_
 
 #include "Eigen/Core"
 
@@ -9,16 +9,16 @@
 namespace idocp {
 
 ///
-/// @class RiccatiFactorization
+/// @class SplitRiccatiFactorization
 /// @brief Riccati factorized matrix and vector split into a time stage.
 ///
-struct RiccatiFactorization {
+struct SplitRiccatiFactorization {
 public:
   ///
   /// @brief Allocate Riccati factorization matrix and vector.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
-  RiccatiFactorization(const Robot& robot)
+  SplitRiccatiFactorization(const Robot& robot)
     : Pqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Pqv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Pvq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
@@ -56,7 +56,7 @@ public:
   ///
   /// @brief Default constructor. 
   ///
-  RiccatiFactorization()
+  SplitRiccatiFactorization()
     : Pqq(),
       Pqv(),
       Pvq(),
@@ -72,28 +72,31 @@ public:
   ///
   /// @brief Destructor. 
   ///
-  ~RiccatiFactorization() {
+  ~SplitRiccatiFactorization() {
   }
 
   ///
   /// @brief Default copy constructor. 
   ///
-  RiccatiFactorization(const RiccatiFactorization&) = default;
+  SplitRiccatiFactorization(const SplitRiccatiFactorization&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  RiccatiFactorization& operator=(const RiccatiFactorization&) = default;
+  SplitRiccatiFactorization& operator=(
+      const SplitRiccatiFactorization&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  RiccatiFactorization(RiccatiFactorization&&) noexcept = default;
+  SplitRiccatiFactorization(
+      SplitRiccatiFactorization&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  RiccatiFactorization& operator=(RiccatiFactorization&&) noexcept = default;
+  SplitRiccatiFactorization& operator=(
+      SplitRiccatiFactorization&&) noexcept = default;
 
   ///
   /// @brief Riccati factorization matrix. Size is 
@@ -156,11 +159,11 @@ public:
   Eigen::VectorXd n;
 
   ///
-  /// @brief Chech the equivalence of two RiccatiFactorization.
+  /// @brief Chech the equivalence of two SplitRiccatiFactorization.
   /// @param[in] other object.
   /// @return true if this and other is same. false otherwise.
   ///
-  bool isApprox(const RiccatiFactorization& other) const {
+  bool isApprox(const SplitRiccatiFactorization& other) const {
     if (!Pqq.isApprox(other.Pqq)) return false;
     if (!Pqv.isApprox(other.Pqv)) return false;
     if (!Pvq.isApprox(other.Pvq)) return false;
@@ -198,4 +201,4 @@ public:
 
 } // namespace idocp 
 
-#endif // IDOCP_RICCATI_FACTORIZATION_HPP_ 
+#endif // IDOCP_SPLIT_RICCATI_FACTORIZATION_HPP_ 

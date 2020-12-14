@@ -6,7 +6,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/lqr_state_feedback_policy.hpp"
 
 
@@ -67,11 +67,11 @@ public:
   /// @param[in] dtau Time step between the current time stage and the next 
   /// @param[out] riccati_next Riccati factorization at the next time stage.
   ///
-  void factorizeStateTransition(const RiccatiFactorization& riccati, 
+  void factorizeStateTransition(const SplitRiccatiFactorization& riccati, 
                                 const SplitKKTMatrix& kkt_matrix, 
                                 const SplitKKTResidual& kkt_residual, 
                                 const double dtau,
-                                RiccatiFactorization& riccati_next);
+                                SplitRiccatiFactorization& riccati_next);
 
   ///
   /// @brief Factorize the pure-state constraint factorization matrix.  
@@ -81,8 +81,9 @@ public:
   /// @param[out] riccati_next Riccati factorization at the next time stage.
   ///
   void factorizeStateConstraintFactorization(
-      const RiccatiFactorization& riccati, const SplitKKTMatrix& kkt_matrix, 
-      const double dtau, RiccatiFactorization& riccati_next);
+      const SplitRiccatiFactorization& riccati, 
+      const SplitKKTMatrix& kkt_matrix, const double dtau, 
+      SplitRiccatiFactorization& riccati_next);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

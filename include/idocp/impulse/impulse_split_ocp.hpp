@@ -1,5 +1,5 @@
-#ifndef IDOCP_SPLIT_IMPULSE_OCP_HPP_
-#define IDOCP_SPLIT_IMPULSE_OCP_HPP_
+#ifndef IDOCP_IMPULSE_SPLIT_OCP_HPP_
+#define IDOCP_IMPULSE_SPLIT_OCP_HPP_
 
 #include <memory>
 
@@ -22,10 +22,10 @@
 namespace idocp {
 
 ///
-/// @class SplitImpulseOCP
+/// @class ImpulseSplitOCP
 /// @brief Split optimal control problem of a single stage. 
 ///
-class SplitImpulseOCP {
+class ImpulseSplitOCP {
 public:
   ///
   /// @brief Construct a split optimal control problem.
@@ -33,39 +33,39 @@ public:
   /// @param[in] cost Shared ptr to the impulse cost function.
   /// @param[in] constraints Shared ptr to the impulse constraints.
   ///
-  SplitImpulseOCP(const Robot& robot, 
+  ImpulseSplitOCP(const Robot& robot, 
                   const std::shared_ptr<ImpulseCostFunction>& cost,
                   const std::shared_ptr<ImpulseConstraints>& constraints);
 
   ///
   /// @brief Default constructor.  
   ///
-  SplitImpulseOCP();
+  ImpulseSplitOCP();
 
   ///
   /// @brief Destructor. 
   ///
-  ~SplitImpulseOCP();
+  ~ImpulseSplitOCP();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  SplitImpulseOCP(const SplitImpulseOCP&) = default;
+  ImpulseSplitOCP(const ImpulseSplitOCP&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  SplitImpulseOCP& operator=(const SplitImpulseOCP&) = default;
+  ImpulseSplitOCP& operator=(const ImpulseSplitOCP&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  SplitImpulseOCP(SplitImpulseOCP&&) noexcept = default;
+  ImpulseSplitOCP(ImpulseSplitOCP&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  SplitImpulseOCP& operator=(SplitImpulseOCP&&) noexcept = default;
+  ImpulseSplitOCP& operator=(ImpulseSplitOCP&&) noexcept = default;
 
   ///
   /// @brief Check whether the solution is feasible under inequality constraints.
@@ -243,6 +243,6 @@ private:
 
 } // namespace idocp
 
-#include "idocp/impulse/split_impulse_ocp.hxx"
+#include "idocp/impulse/impulse_split_ocp.hxx"
 
-#endif // IDOCP_SPLIT_IMPULSE_OCP_HPP_ 
+#endif // IDOCP_IMPULSE_SPLIT_OCP_HPP_ 

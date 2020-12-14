@@ -110,8 +110,8 @@ public:
 
 private:
   RiccatiRecursion riccati_recursion_;
-  HybridRiccatiFactorizer riccati_factorizer_;
-  HybridRiccatiFactorization riccati_factorization_;
+  RiccatiFactorizer riccati_factorizer_;
+  RiccatiFactorization riccati_factorization_;
   StateConstraintRiccatiFactorizer constraint_factorizer_;
   StateConstraintRiccatiFactorization constraint_factorization_;
   RiccatiDirectionCalculator direction_calculator_;

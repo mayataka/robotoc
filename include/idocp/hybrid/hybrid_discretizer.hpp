@@ -4,7 +4,7 @@
 #include "idocp/robot/robot.hpp"
 
 #include "idocp/ocp/split_ocp.hpp"
-#include "idocp/impulse/split_impulse_ocp.hpp"
+#include "idocp/impulse/impulse_split_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -16,9 +16,9 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
-#include "idocp/ocp/riccati_factorizer.hpp"
-#include "idocp/impulse/impulse_riccati_factorizer.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorizer.hpp"
+#include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
 
 #include <vector>
 #include <memory>

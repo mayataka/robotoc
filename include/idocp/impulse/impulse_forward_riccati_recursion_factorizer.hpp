@@ -6,7 +6,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 
 
 namespace idocp {
@@ -65,10 +65,10 @@ public:
   /// @param[in] kkt_residual The KKT residual at the current impulse stage.
   /// @param[out] riccati_next Riccati factorization at the next time stage.
   ///
-  void factorizeStateTransition(const RiccatiFactorization& riccati, 
+  void factorizeStateTransition(const SplitRiccatiFactorization& riccati, 
                                 const ImpulseSplitKKTMatrix& kkt_matrix, 
                                 const ImpulseSplitKKTResidual& kkt_residual, 
-                                RiccatiFactorization& riccati_next);
+                                SplitRiccatiFactorization& riccati_next);
 
   ///
   /// @brief Factorize the pure-state constraint factorization matrix.  
@@ -77,9 +77,9 @@ public:
   /// @param[out] riccati_next Riccati factorization at the next time stage.
   ///
   void factorizeStateConstraintFactorization(
-      const RiccatiFactorization& riccati, 
+      const SplitRiccatiFactorization& riccati, 
       const ImpulseSplitKKTMatrix& kkt_matrix, 
-      RiccatiFactorization& riccati_next);
+      SplitRiccatiFactorization& riccati_next);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

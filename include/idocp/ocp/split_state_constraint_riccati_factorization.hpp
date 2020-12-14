@@ -133,7 +133,7 @@ public:
 
   ///
   /// @brief Product of the partial derivative of the equality constriant with 
-  /// respect to state and RiccatiFactorization::N. 
+  /// respect to state and SplitRiccatiFactorization::N. 
   ///
   Eigen::Block<Eigen::MatrixXd> EN();
 
@@ -143,7 +143,7 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> EN() const;
 
   ///
-  /// @brief Top Robot::dimv() rows of RiccatiFactorization::EN(). 
+  /// @brief Top Robot::dimv() rows of SplitRiccatiFactorization::EN(). 
   ///
   Eigen::Block<Eigen::MatrixXd> ENq();
 

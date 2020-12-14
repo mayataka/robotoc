@@ -12,7 +12,7 @@
 #include "idocp/constraints/impulse_constraints.hpp"
 #include "idocp/ocp/contact_sequence.hpp"
 #include "idocp/ocp/split_ocp.hpp"
-#include "idocp/impulse/split_impulse_ocp.hpp"
+#include "idocp/impulse/impulse_split_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
@@ -32,7 +32,7 @@ namespace idocp {
 ///
 class LineSearch {
 public:
-  LineSearch(const int N, const int num_proc=1, const int max_step_size);
+  LineSearch(const int N, const int max_num_impulse=0, const int num_proc=1);
 
   ///
   /// @brief Default constructor. 
@@ -64,29 +64,26 @@ public:
   ///
   LineSearch& operator=(LineSearch&&) noexcept = default;
 
-  template <typename HybridOCPContainerType, 
-            typename HybridSolutionContainerType,
-            typename HybridDirectionContainerType>
   std::pair<double, double> computeStepSize(
-      HybridOCPContainerType& split_ocps, std::vector<Robot>& robot,
+      HybridOCP& split_ocps, std::vector<Robot>& robot,
       const ContactSequence& contact_sequence, const double t, 
-      const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-      const HybridSolutionContainerType& s, 
-      const HybridDirectionContainerType& d);
+      const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
+      const Diretion& d);
 
   ///
   /// @brief Clear the line search filter. 
   ///
-  void clearLineSearchFilter();
+  void clearFilter();
+
+  bool isFilterEmpty() const;
 
 private:
   LineSearchFilter filter_;
+  int N_, max_num_impulse_, num_proc_;
   double step_size_reduction_rate_, min_step_size_;
-  int N_, num_proc_;
-  std::vector<SplitTemporarySolution> s_tmp_, s_lift_tmp_;
-  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_,
-                  costs_impulse_, violations_impulse, costs_lift_, 
-                  violations_lift_;
+  Solution s_tmp_;
+  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_, costs_, violations_;
+
 };
 
 } // namespace idocp 

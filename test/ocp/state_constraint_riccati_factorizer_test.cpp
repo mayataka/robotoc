@@ -4,7 +4,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/impulse_status.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_lp_factorizer.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
@@ -14,7 +14,7 @@
 
 namespace idocp {
 
-class StateConstraintRiccatiFactorizerTest : public ::testing::Test {
+class StateConstraintSplitRiccatiFactorizerTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -40,7 +40,7 @@ protected:
 };
 
 
-ContactSequence StateConstraintRiccatiFactorizerTest::createContactSequence(const Robot& robot) const {
+ContactSequence StateConstraintSplitRiccatiFactorizerTest::createContactSequence(const Robot& robot) const {
   std::vector<DiscreteEvent> discrete_events;
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
@@ -66,7 +66,7 @@ ContactSequence StateConstraintRiccatiFactorizerTest::createContactSequence(cons
 }
 
 
-void StateConstraintRiccatiFactorizerTest::testComputeLagrangeMultiplierDirection(const Robot& robot) const {
+void StateConstraintSplitRiccatiFactorizerTest::testComputeLagrangeMultiplierDirection(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const auto contact_sequence = createContactSequence(robot);
@@ -82,7 +82,7 @@ void StateConstraintRiccatiFactorizerTest::testComputeLagrangeMultiplierDirectio
     constraint_factorization.T_impulse(i, i).topRows(dimv) = constraint_factorization.Eq(i).transpose();
     constraint_factorization.T_impulse(i, i).bottomRows(dimv).setZero();
   }
-  HybridRiccatiFactorization riccati_factorization(N, max_num_impulse, robot);
+  RiccatiFactorization riccati_factorization(N, max_num_impulse, robot);
   for (int i=0; i<num_impulse; ++i) {
     const Eigen::MatrixXd seed_mat = Eigen::MatrixXd::Random(dimx, dimx);
     riccati_factorization.impulse[i].N = seed_mat * seed_mat.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
@@ -118,7 +118,7 @@ void StateConstraintRiccatiFactorizerTest::testComputeLagrangeMultiplierDirectio
 }
 
 
-void StateConstraintRiccatiFactorizerTest::testAggregateLagrangeMultiplierDirection(const Robot& robot) const {
+void StateConstraintSplitRiccatiFactorizerTest::testAggregateLagrangeMultiplierDirection(const Robot& robot) const {
   const auto contact_sequence = createContactSequence(robot);
   StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
   constraint_factorization.setConstraintStatus(contact_sequence);
@@ -141,7 +141,7 @@ void StateConstraintRiccatiFactorizerTest::testAggregateLagrangeMultiplierDirect
     d.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
     d.impulse[i].dxi().setRandom();
   }
-  HybridRiccatiFactorization factorization(N, max_num_impulse, robot);
+  RiccatiFactorization factorization(N, max_num_impulse, robot);
   for (int i=0; i<N; ++i) {
     factorization[i].n.setRandom();
   }
@@ -202,7 +202,7 @@ void StateConstraintRiccatiFactorizerTest::testAggregateLagrangeMultiplierDirect
 }
 
 
-TEST_F(StateConstraintRiccatiFactorizerTest, fixed_base) {
+TEST_F(StateConstraintSplitRiccatiFactorizerTest, fixed_base) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
   testComputeLagrangeMultiplierDirection(robot);
@@ -210,7 +210,7 @@ TEST_F(StateConstraintRiccatiFactorizerTest, fixed_base) {
 }
 
 
-TEST_F(StateConstraintRiccatiFactorizerTest, floating_base) {
+TEST_F(StateConstraintSplitRiccatiFactorizerTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
   testComputeLagrangeMultiplierDirection(robot);

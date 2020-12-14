@@ -1,13 +1,13 @@
-#ifndef IDOCP_RICCATI_FACTORIZER_HXX_ 
-#define IDOCP_RICCATI_FACTORIZER_HXX_
+#ifndef IDOCP_SPLIT_RICCATI_FACTORIZER_HXX_ 
+#define IDOCP_SPLIT_RICCATI_FACTORIZER_HXX_
 
-#include "idocp/ocp/riccati_factorizer.hpp"
+#include "idocp/ocp/split_riccati_factorizer.hpp"
 
 #include <cassert>
 
 namespace idocp {
 
-inline RiccatiFactorizer::RiccatiFactorizer(const Robot& robot) 
+inline SplitRiccatiFactorizer::SplitRiccatiFactorizer(const Robot& robot) 
   : has_floating_base_(robot.has_floating_base()),
     dimv_(robot.dimv()),
     dimu_(robot.dimu()),
@@ -20,7 +20,7 @@ inline RiccatiFactorizer::RiccatiFactorizer(const Robot& robot)
 }
 
 
-inline RiccatiFactorizer::RiccatiFactorizer() 
+inline SplitRiccatiFactorizer::SplitRiccatiFactorizer() 
   : has_floating_base_(false),
     dimv_(0),
     dimu_(0),
@@ -33,14 +33,14 @@ inline RiccatiFactorizer::RiccatiFactorizer()
 }
 
 
-inline RiccatiFactorizer::~RiccatiFactorizer() {
+inline SplitRiccatiFactorizer::~SplitRiccatiFactorizer() {
 }
 
 
-inline void RiccatiFactorizer::backwardRiccatiRecursion(
-    const RiccatiFactorization& riccati_next, const double dtau, 
+inline void SplitRiccatiFactorizer::backwardRiccatiRecursion(
+    const SplitRiccatiFactorization& riccati_next, const double dtau, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
-    RiccatiFactorization& riccati) {
+    SplitRiccatiFactorization& riccati) {
   assert(dtau > 0);
   backward_recursion_.factorizeKKTMatrix(riccati_next, dtau, kkt_matrix, 
                                          kkt_residual);
@@ -56,7 +56,7 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 }
 
 
-inline void RiccatiFactorizer::forwardRiccatiRecursionParallel(
+inline void SplitRiccatiFactorizer::forwardRiccatiRecursionParallel(
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     const bool exist_state_constraint) {
   kkt_matrix.Fxx().bottomRows(dimv_).noalias() 
@@ -69,18 +69,18 @@ inline void RiccatiFactorizer::forwardRiccatiRecursionParallel(
 }
 
 
-inline void RiccatiFactorizer::forwardStateConstraintFactorizationInitial(
-    const RiccatiFactorization& riccati) {
+inline void SplitRiccatiFactorizer::forwardStateConstraintFactorizationInitial(
+    const SplitRiccatiFactorization& riccati) {
   assert(riccati.Pi.isIdentity()); // Checks riccati.Pi is a identity matrix.
   assert(riccati.pi.isZero()); // Checks riccati.pi is a zero vector.
   assert(riccati.N.isZero()); // Checks riccati.N is a zero matrix.
 }
 
 
-inline void RiccatiFactorizer::forwardStateConstraintFactorization(
-    const RiccatiFactorization& riccati, const SplitKKTMatrix& kkt_matrix, 
-    const SplitKKTResidual& kkt_residual, const double dtau,
-    RiccatiFactorization& riccati_next, 
+inline void SplitRiccatiFactorizer::forwardStateConstraintFactorization(
+    const SplitRiccatiFactorization& riccati, 
+    const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
+    const double dtau, SplitRiccatiFactorization& riccati_next, 
     const bool exist_state_constraint) {
   assert(dtau > 0);
   forward_recursion_.factorizeStateTransition(riccati, kkt_matrix, kkt_residual, 
@@ -95,9 +95,10 @@ inline void RiccatiFactorizer::forwardStateConstraintFactorization(
 
 
 template <typename MatrixType1, typename MatrixType2>
-inline void RiccatiFactorizer::backwardStateConstraintFactorization(
-    const Eigen::MatrixBase<MatrixType1>& T_next, const SplitKKTMatrix& kkt_matrix, 
-    const double dtau, const Eigen::MatrixBase<MatrixType2>& T) const {
+inline void SplitRiccatiFactorizer::backwardStateConstraintFactorization(
+    const Eigen::MatrixBase<MatrixType1>& T_next, 
+    const SplitKKTMatrix& kkt_matrix, const double dtau, 
+    const Eigen::MatrixBase<MatrixType2>& T) const {
   assert(T_next.rows() == T.rows());
   assert(T_next.rows() == T.rows());
   assert(dtau > 0);
@@ -119,9 +120,9 @@ inline void RiccatiFactorizer::backwardStateConstraintFactorization(
 
 
 template <typename SplitDirectionType>
-inline void RiccatiFactorizer::forwardRiccatiRecursion(
+inline void SplitRiccatiFactorizer::forwardRiccatiRecursion(
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
-    const RiccatiFactorization& riccati_next, const SplitDirection& d, 
+    const SplitRiccatiFactorization& riccati_next, const SplitDirection& d, 
     const double dtau, SplitDirectionType& d_next, 
     const bool exist_state_constraint) const {
   assert(dtau > 0);
@@ -141,8 +142,8 @@ inline void RiccatiFactorizer::forwardRiccatiRecursion(
 }
 
 
-inline void RiccatiFactorizer::computeCostateDirection(
-    const RiccatiFactorization& riccati, SplitDirection& d,
+inline void SplitRiccatiFactorizer::computeCostateDirection(
+    const SplitRiccatiFactorization& riccati, SplitDirection& d,
     const bool exist_state_constraint) {
   d.dlmd().noalias() = riccati.Pqq * d.dq();
   d.dlmd().noalias() += riccati.Pqv * d.dv();
@@ -156,8 +157,8 @@ inline void RiccatiFactorizer::computeCostateDirection(
 }
 
 
-inline void RiccatiFactorizer::computeControlInputDirection(
-    const RiccatiFactorization& riccati_next, SplitDirection& d,
+inline void SplitRiccatiFactorizer::computeControlInputDirection(
+    const SplitRiccatiFactorization& riccati_next, SplitDirection& d,
     const bool exist_state_constraint) const {
   d.du().noalias() = lqr_policy_.K * d.dx();
   d.du().noalias() += lqr_policy_.k;
@@ -168,7 +169,7 @@ inline void RiccatiFactorizer::computeControlInputDirection(
 
 
 template <typename MatrixType>
-inline void RiccatiFactorizer::getStateFeedbackGain(
+inline void SplitRiccatiFactorizer::getStateFeedbackGain(
     const Eigen::MatrixBase<MatrixType>& K) const {
   assert(K.rows() == dimu_);
   assert(K.cols() == 2*dimv_);
@@ -177,7 +178,7 @@ inline void RiccatiFactorizer::getStateFeedbackGain(
 
 
 template <typename MatrixType1, typename MatrixType2>
-inline void RiccatiFactorizer::getStateFeedbackGain(
+inline void SplitRiccatiFactorizer::getStateFeedbackGain(
     const Eigen::MatrixBase<MatrixType1>& Kq, 
     const Eigen::MatrixBase<MatrixType2>& Kv) const {
   assert(Kq.rows() == dimu_);
@@ -192,4 +193,4 @@ inline void RiccatiFactorizer::getStateFeedbackGain(
 
 } // namespace idocp
 
-#endif // IDOCP_RICCATI_FACTORIZER_HXX_ 
+#endif // IDOCP_SPLIT_RICCATI_FACTORIZER_HXX_ 

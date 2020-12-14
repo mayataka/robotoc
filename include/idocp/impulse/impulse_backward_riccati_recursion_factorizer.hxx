@@ -31,7 +31,7 @@ inline ImpulseBackwardRiccatiRecursionFactorizer::~ImpulseBackwardRiccatiRecursi
 
 
 inline void ImpulseBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
-    const RiccatiFactorization& riccati_next, 
+    const SplitRiccatiFactorization& riccati_next, 
     ImpulseSplitKKTMatrix& kkt_matrix) {
   if (has_floating_base_) {
     AtPqq_.noalias() = kkt_matrix.Fqq().transpose() * riccati_next.Pqq;
@@ -63,10 +63,10 @@ inline void ImpulseBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
 
 
 inline void ImpulseBackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
-    const RiccatiFactorization& riccati_next, 
+    const SplitRiccatiFactorization& riccati_next, 
     const ImpulseSplitKKTMatrix& kkt_matrix, 
     const ImpulseSplitKKTResidual& kkt_residual, 
-    RiccatiFactorization& riccati) {
+    SplitRiccatiFactorization& riccati) {
   riccati.Pqq = kkt_matrix.Qqq();
   riccati.Pqv = kkt_matrix.Qqv();
   riccati.Pvv = kkt_matrix.Qvv();

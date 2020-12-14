@@ -4,7 +4,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/impulse_status.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_lp_factorizer.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
@@ -67,7 +67,7 @@ void StateConstraintRiccatiLPFactorizerTest::test(const Robot& robot) const {
   const int dimv = robot.dimv();
   const auto contact_sequence = createContactSequence(robot);
   const int num_impulse = contact_sequence.totalNumImpulseStages();
-  std::vector<RiccatiFactorization> impulse_riccati_factorization(max_num_impulse, RiccatiFactorization(robot));
+  std::vector<SplitRiccatiFactorization> impulse_riccati_factorization(max_num_impulse, SplitRiccatiFactorization(robot));
   for (int i=0; i<num_impulse; ++i) {
     const int dimx = 2*robot.dimv();
     const Eigen::MatrixXd seed_mat = Eigen::MatrixXd::Random(dimx, dimx);

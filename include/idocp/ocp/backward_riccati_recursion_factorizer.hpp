@@ -6,7 +6,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/lqr_state_feedback_policy.hpp"
 
 
@@ -67,7 +67,7 @@ public:
   /// @param[in, out] kkt_matrix The KKT matrix.
   /// @param[in, out] kkt_residual The KKT residual.
   ///
-  void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
+  void factorizeKKTMatrix(const SplitRiccatiFactorization& riccati_next, 
                           const double dtau, SplitKKTMatrix& kkt_matrix,  
                           SplitKKTResidual& kkt_residual);
 
@@ -84,12 +84,11 @@ public:
   /// time stage.
   /// @param[out] riccati The Riccati factorization at this time stage.
   ///
-  void factorizeRiccatiFactorization(const RiccatiFactorization& riccati_next, 
-                                     const SplitKKTMatrix& kkt_matrix, 
-                                     const SplitKKTResidual& kkt_residual,
-                                     const LQRStateFeedbackPolicy& lqr_policy,
-                                     const double dtau, 
-                                     RiccatiFactorization& riccati);
+  void factorizeRiccatiFactorization(
+      const SplitRiccatiFactorization& riccati_next, 
+      const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
+      const LQRStateFeedbackPolicy& lqr_policy, const double dtau, 
+      SplitRiccatiFactorization& riccati);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

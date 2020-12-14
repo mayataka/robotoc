@@ -18,7 +18,7 @@
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
 #include "idocp/ocp/split_ocp.hpp"
-#include "idocp/impulse/split_impulse_ocp.hpp"
+#include "idocp/impulse/impulse_split_ocp.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/riccati_recursion.hpp"
@@ -247,8 +247,8 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   linearizer.linearizeOCP(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
   RiccatiRecursion riccati_recursion(robot, T, N, max_num_impulse, nproc);
   StateConstraintRiccatiFactorizer constraint_factorizer(robot, N, max_num_impulse, nproc);
-  HybridRiccatiFactorization factorization(N, max_num_impulse, robot);
-  HybridRiccatiFactorizer factorizer(N, max_num_impulse, robot);
+  RiccatiFactorization factorization(N, max_num_impulse, robot);
+  RiccatiFactorizer factorizer(N, max_num_impulse, robot);
   StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
   constraint_factorization.setConstraintStatus(contact_sequence);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
@@ -315,7 +315,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
       const double dtau_aux = dtau - dtau_impulse;
       ASSERT_TRUE(dtau_impulse > 0);
       ASSERT_TRUE(dtau_aux > 0);
-      RiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], 
+      SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], 
                                                  exist_state_constraint);
       factorizer[i].computeControlInputDirection(
           factorization.impulse[impulse_index], d_ref[i], 
@@ -327,7 +327,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
       if (split_ocps_ref[i].maxDualStepSize() < dual_step_size_ref) 
         dual_step_size_ref = split_ocps_ref[i].maxDualStepSize();
       // impulse
-      ImpulseRiccatiFactorizer::computeCostateDirection(
+      ImpulseSplitRiccatiFactorizer::computeCostateDirection(
           factorization.impulse[impulse_index], d_ref.impulse[impulse_index], 
           exist_state_constraint);
       split_ocps_ref.impulse[impulse_index].computeCondensedPrimalDirection(
@@ -338,7 +338,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
       if (split_ocps_ref.impulse[impulse_index].maxDualStepSize() < dual_step_size_ref) 
         dual_step_size_ref = split_ocps_ref.impulse[impulse_index].maxDualStepSize();
       // aux 
-      RiccatiFactorizer::computeCostateDirection(
+      SplitRiccatiFactorizer::computeCostateDirection(
           factorization.aux[impulse_index], d_ref.aux[impulse_index], 
           exist_state_constraint);
       factorizer.aux[impulse_index].computeControlInputDirection(
@@ -358,7 +358,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
       const double dtau_aux = dtau - dtau_lift;
       ASSERT_TRUE(dtau_lift > 0);
       ASSERT_TRUE(dtau_aux > 0);
-      RiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], 
+      SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], 
                                                  exist_state_constraint);
       factorizer[i].computeControlInputDirection(
           factorization.lift[lift_index], d_ref[i], 
@@ -370,7 +370,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
       if (split_ocps_ref[i].maxDualStepSize() < dual_step_size_ref) 
         dual_step_size_ref = split_ocps_ref[i].maxDualStepSize();
       // lift
-      RiccatiFactorizer::computeCostateDirection(
+      SplitRiccatiFactorizer::computeCostateDirection(
           factorization.lift[lift_index], d_ref.lift[lift_index], 
           exist_state_constraint);
       factorizer.lift[lift_index].computeControlInputDirection(
@@ -384,7 +384,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
         dual_step_size_ref = split_ocps_ref.lift[lift_index].maxDualStepSize();
     }
     else {
-      RiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], 
+      SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], 
                                                  exist_state_constraint);
       factorizer[i].computeControlInputDirection(
           factorization[i+1], d_ref[i], exist_state_constraint);
@@ -396,7 +396,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
         dual_step_size_ref = split_ocps_ref[i].maxDualStepSize();
     }
   }
-  RiccatiFactorizer::computeCostateDirection(factorization[N], d_ref[N], false);
+  SplitRiccatiFactorizer::computeCostateDirection(factorization[N], d_ref[N], false);
   if (split_ocps_ref.terminal.maxPrimalStepSize() < primal_step_size_ref) 
     primal_step_size_ref = split_ocps_ref.terminal.maxPrimalStepSize();
   if (split_ocps_ref.terminal.maxDualStepSize() < dual_step_size_ref) 

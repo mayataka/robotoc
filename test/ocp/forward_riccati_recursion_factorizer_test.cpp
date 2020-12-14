@@ -8,7 +8,7 @@
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/lqr_state_feedback_policy.hpp"
 #include "idocp/ocp/forward_riccati_recursion_factorizer.hpp"
 
@@ -31,7 +31,7 @@ protected:
 
   SplitKKTMatrix createKKTMatrix(const Robot& robot) const;
   SplitKKTResidual createKKTResidual(const Robot& robot) const;
-  RiccatiFactorization createRiccatiFactorization(const Robot& robot) const;
+  SplitRiccatiFactorization createRiccatiFactorization(const Robot& robot) const;
 
   void test(const Robot& robot) const;
 
@@ -74,8 +74,8 @@ SplitKKTResidual ForwardRiccatiRecursionFactorizerTest::createKKTResidual(const 
 }
 
 
-RiccatiFactorization ForwardRiccatiRecursionFactorizerTest::createRiccatiFactorization(const Robot& robot) const {
-  RiccatiFactorization riccati(robot);
+SplitRiccatiFactorization ForwardRiccatiRecursionFactorizerTest::createRiccatiFactorization(const Robot& robot) const {
+  SplitRiccatiFactorization riccati(robot);
   const int dimv = robot.dimv();
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
   riccati.Pqq = seed * seed.transpose();
@@ -116,8 +116,8 @@ void ForwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   A.bottomRightCorner(dimv, dimv) = kkt_matrix.Fvv();
   Eigen::MatrixXd B = Eigen::MatrixXd::Zero(2*dimv, dimu);
   B.bottomRows(dimv) = kkt_matrix.Fvu();
-  const RiccatiFactorization riccati = createRiccatiFactorization(robot);
-  RiccatiFactorization riccati_next(robot), riccati_next_ref(robot);
+  const SplitRiccatiFactorization riccati = createRiccatiFactorization(robot);
+  SplitRiccatiFactorization riccati_next(robot), riccati_next_ref(robot);
   factorizer.factorizeStateTransition(riccati, kkt_matrix, kkt_residual, dtau, riccati_next);
   riccati_next_ref.Pi = A * riccati.Pi;
   riccati_next_ref.pi = A * riccati.pi + kkt_residual.Fx();

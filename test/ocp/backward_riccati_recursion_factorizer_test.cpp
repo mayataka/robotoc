@@ -8,7 +8,7 @@
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/lqr_state_feedback_policy.hpp"
 #include "idocp/ocp/backward_riccati_recursion_factorizer.hpp"
 
@@ -32,7 +32,7 @@ protected:
 
   SplitKKTMatrix createKKTMatrix(const Robot& robot) const;
   SplitKKTResidual createKKTResidual(const Robot& robot) const;
-  RiccatiFactorization createRiccatiFactorization(const Robot& robot) const;
+  SplitRiccatiFactorization createRiccatiFactorization(const Robot& robot) const;
 
   void test(const Robot& robot) const;
 
@@ -75,8 +75,8 @@ SplitKKTResidual BackwardRiccatiRecursionFactorizerTest::createKKTResidual(const
 }
 
 
-RiccatiFactorization BackwardRiccatiRecursionFactorizerTest::createRiccatiFactorization(const Robot& robot) const {
-  RiccatiFactorization riccati(robot);
+SplitRiccatiFactorization BackwardRiccatiRecursionFactorizerTest::createRiccatiFactorization(const Robot& robot) const {
+  SplitRiccatiFactorization riccati(robot);
   const int dimv = robot.dimv();
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
   riccati.Pqq = seed * seed.transpose();
@@ -98,7 +98,7 @@ RiccatiFactorization BackwardRiccatiRecursionFactorizerTest::createRiccatiFactor
 void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  const RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
+  const SplitRiccatiFactorization riccati_next = createRiccatiFactorization(robot);
   SplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
   SplitKKTResidual kkt_residual = createKKTResidual(robot);
   const SplitKKTMatrix kkt_matrix_ref = kkt_matrix;
@@ -143,7 +143,7 @@ void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   EXPECT_TRUE(G_ref.isApprox(kkt_matrix.Quu()));
   EXPECT_TRUE(kkt_matrix.Quu().isApprox(kkt_matrix.Quu().transpose()));
   EXPECT_TRUE(lu_ref.isApprox(kkt_residual.lu()));
-  RiccatiFactorization riccati = createRiccatiFactorization(robot);
+  SplitRiccatiFactorization riccati = createRiccatiFactorization(robot);
   LQRStateFeedbackPolicy lqr_policy(robot);
   lqr_policy.K.setRandom();
   lqr_policy.k.setRandom();

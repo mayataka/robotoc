@@ -18,7 +18,7 @@
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
 #include "idocp/ocp/split_ocp.hpp"
-#include "idocp/impulse/split_impulse_ocp.hpp"
+#include "idocp/impulse/impulse_split_ocp.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
@@ -253,8 +253,8 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   riccati_solver.computeNewtonDirection(split_ocps, robots, contact_sequence, 
                                         q, v, s, d, kkt_matrix, kkt_residual);
   RiccatiRecursion riccati_recursion(robot, T, N, max_num_impulse, nproc);
-  HybridRiccatiFactorizer riccati_factorizer(N, max_num_impulse, robot);
-  HybridRiccatiFactorization riccati_factorization(N, max_num_impulse, robot);
+  RiccatiFactorizer riccati_factorizer(N, max_num_impulse, robot);
+  RiccatiFactorization riccati_factorization(N, max_num_impulse, robot);
   StateConstraintRiccatiFactorizer constraint_factorizer(robot, N, max_num_impulse, nproc);
   StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
   RiccatiDirectionCalculator direction_calculator(T, N, max_num_impulse, nproc);

@@ -1,11 +1,11 @@
-#ifndef IDOCP_IMPULSE_RICCATI_FACTORIZER_HXX_
-#define IDOCP_IMPULSE_RICCATI_FACTORIZER_HXX_
+#ifndef IDOCP_IMPULSE_SPLIT_RICCATI_FACTORIZER_HXX_
+#define IDOCP_IMPULSE_SPLIT_RICCATI_FACTORIZER_HXX_
 
-#include "idocp/impulse/impulse_riccati_factorizer.hpp"
+#include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
 
 namespace idocp {
 
-inline ImpulseRiccatiFactorizer::ImpulseRiccatiFactorizer(
+inline ImpulseSplitRiccatiFactorizer::ImpulseSplitRiccatiFactorizer(
     const Robot& robot) 
   : has_floating_base_(robot.has_floating_base()),
     dimv_(robot.dimv()),
@@ -14,7 +14,7 @@ inline ImpulseRiccatiFactorizer::ImpulseRiccatiFactorizer(
 }
 
 
-inline ImpulseRiccatiFactorizer::ImpulseRiccatiFactorizer() 
+inline ImpulseSplitRiccatiFactorizer::ImpulseSplitRiccatiFactorizer() 
   : has_floating_base_(false),
     dimv_(0),
     backward_recursion_(),
@@ -22,23 +22,25 @@ inline ImpulseRiccatiFactorizer::ImpulseRiccatiFactorizer()
 }
 
 
-inline ImpulseRiccatiFactorizer::~ImpulseRiccatiFactorizer() {
+inline ImpulseSplitRiccatiFactorizer::~ImpulseSplitRiccatiFactorizer() {
 }
 
 
-inline void ImpulseRiccatiFactorizer::backwardRiccatiRecursion(
-    const RiccatiFactorization& riccati_next, ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual, RiccatiFactorization& riccati) {
+inline void ImpulseSplitRiccatiFactorizer::backwardRiccatiRecursion(
+    const SplitRiccatiFactorization& riccati_next, 
+    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual, 
+    SplitRiccatiFactorization& riccati) {
   backward_recursion_.factorizeKKTMatrix(riccati_next, kkt_matrix);
   backward_recursion_.factorizeRiccatiFactorization(riccati_next, kkt_matrix, 
                                                     kkt_residual, riccati);
 }
 
 
-inline void ImpulseRiccatiFactorizer::forwardStateConstraintFactorization(
-    const RiccatiFactorization& riccati, const ImpulseSplitKKTMatrix& kkt_matrix, 
+inline void ImpulseSplitRiccatiFactorizer::forwardStateConstraintFactorization(
+    const SplitRiccatiFactorization& riccati, 
+    const ImpulseSplitKKTMatrix& kkt_matrix, 
     const ImpulseSplitKKTResidual& kkt_residual, 
-    RiccatiFactorization& riccati_next, const bool exist_state_constraint) {
+    SplitRiccatiFactorization& riccati_next, const bool exist_state_constraint) {
   forward_recursion_.factorizeStateTransition(riccati, kkt_matrix, kkt_residual, 
                                               riccati_next);
   if (exist_state_constraint) {
@@ -50,7 +52,7 @@ inline void ImpulseRiccatiFactorizer::forwardStateConstraintFactorization(
 
 
 template <typename MatrixType1, typename MatrixType2>
-inline void ImpulseRiccatiFactorizer::backwardStateConstraintFactorization(
+inline void ImpulseSplitRiccatiFactorizer::backwardStateConstraintFactorization(
     const Eigen::MatrixBase<MatrixType1>& T_next,
     const ImpulseSplitKKTMatrix& kkt_matrix, 
     const Eigen::MatrixBase<MatrixType2>& T) const {
@@ -71,8 +73,9 @@ inline void ImpulseRiccatiFactorizer::backwardStateConstraintFactorization(
 }
 
 
-inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursion(
-    const ImpulseSplitKKTMatrix& kkt_matrix, const ImpulseSplitKKTResidual& kkt_residual, 
+inline void ImpulseSplitRiccatiFactorizer::forwardRiccatiRecursion(
+    const ImpulseSplitKKTMatrix& kkt_matrix, 
+    const ImpulseSplitKKTResidual& kkt_residual, 
     const ImpulseSplitDirection& d, SplitDirection& d_next) const {
   d_next.dx() = kkt_residual.Fx();
   if (has_floating_base_) {
@@ -86,8 +89,8 @@ inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursion(
 }
 
 
-inline void ImpulseRiccatiFactorizer::computeCostateDirection(
-    const RiccatiFactorization& riccati, ImpulseSplitDirection& d,
+inline void ImpulseSplitRiccatiFactorizer::computeCostateDirection(
+    const SplitRiccatiFactorization& riccati, ImpulseSplitDirection& d,
     const bool exist_state_constraint) {
   d.dlmd().noalias() = riccati.Pqq * d.dq();
   d.dlmd().noalias() += riccati.Pqv * d.dv();
@@ -102,4 +105,4 @@ inline void ImpulseRiccatiFactorizer::computeCostateDirection(
 
 } // namespace idocp
 
-#endif // IDOCP_IMPULSE_RICCATI_FACTORIZER_HXX_
+#endif // IDOCP_IMPULSE_SPLIT_RICCATI_FACTORIZER_HXX_ 

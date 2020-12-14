@@ -1,10 +1,10 @@
-#ifndef IDOCP_IMPULSE_RICCATI_FACTORIZER_HPP_
-#define IDOCP_IMPULSE_RICCATI_FACTORIZER_HPP_
+#ifndef IDOCP_IMPULSE_SPLIT_RICCATI_FACTORIZER_HPP_
+#define IDOCP_IMPULSE_SPLIT_RICCATI_FACTORIZER_HPP_
 
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
@@ -16,46 +16,50 @@
 namespace idocp {
 
 ///
-/// @class ImpulseRiccatiFactorizer
-/// @brief Riccati factorizer for SplitImpulseOCP.
+/// @class ImpulseSplitRiccatiFactorizer
+/// @brief Riccati factorizer for ImpulseSplitOCP.
 ///
-class ImpulseRiccatiFactorizer {
+class ImpulseSplitRiccatiFactorizer {
 public:
   ///
   /// @brief Construct factorizer.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
-  ImpulseRiccatiFactorizer(const Robot& robot);
+  ImpulseSplitRiccatiFactorizer(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  ImpulseRiccatiFactorizer();
+  ImpulseSplitRiccatiFactorizer();
 
   ///
   /// @brief Destructor. 
   ///
-  ~ImpulseRiccatiFactorizer();
+  ~ImpulseSplitRiccatiFactorizer();
  
   ///
   /// @brief Default copy constructor. 
   ///
-  ImpulseRiccatiFactorizer(const ImpulseRiccatiFactorizer&) = default;
+  ImpulseSplitRiccatiFactorizer(
+      const ImpulseSplitRiccatiFactorizer&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  ImpulseRiccatiFactorizer& operator=(const ImpulseRiccatiFactorizer&) = default;
+  ImpulseSplitRiccatiFactorizer& operator=(
+      const ImpulseSplitRiccatiFactorizer&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  ImpulseRiccatiFactorizer(ImpulseRiccatiFactorizer&&) noexcept = default;
+  ImpulseSplitRiccatiFactorizer(
+      ImpulseSplitRiccatiFactorizer&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  ImpulseRiccatiFactorizer& operator=(ImpulseRiccatiFactorizer&&) noexcept = default;
+  ImpulseSplitRiccatiFactorizer& operator=(
+      ImpulseSplitRiccatiFactorizer&&) noexcept = default;
 
   ///
   /// @brief Performs the backward Riccati recursion. 
@@ -64,10 +68,10 @@ public:
   /// @param[in, out] kkt_residual KKT residual at the current impulse stage. 
   /// @param[out] riccati Riccati factorization at the current impulse stage. 
   ///
-  void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next, 
+  void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
                                 ImpulseSplitKKTMatrix& kkt_matrix, 
                                 ImpulseSplitKKTResidual& kkt_residual, 
-                                RiccatiFactorization& riccati);
+                                SplitRiccatiFactorization& riccati);
 
   ///
   /// @brief Performs the serial part of the forward Riccati recursion due to 
@@ -80,9 +84,11 @@ public:
   /// constraints are also performed. 
   ///
   void forwardStateConstraintFactorization(
-      const RiccatiFactorization& riccati, const ImpulseSplitKKTMatrix& kkt_matrix, 
+      const SplitRiccatiFactorization& riccati, 
+      const ImpulseSplitKKTMatrix& kkt_matrix, 
       const ImpulseSplitKKTResidual& kkt_residual, 
-      RiccatiFactorization& riccati_next, const bool exist_state_constraint);
+      SplitRiccatiFactorization& riccati_next, 
+      const bool exist_state_constraint);
 
   ///
   /// @brief Performs the backward factorization of matrices related to the 
@@ -117,7 +123,7 @@ public:
   /// constraints are also performed.
   ///
   ///
-  static void computeCostateDirection(const RiccatiFactorization& riccati, 
+  static void computeCostateDirection(const SplitRiccatiFactorization& riccati, 
                                       ImpulseSplitDirection& d,
                                       const bool exist_state_constraint);
 
@@ -133,6 +139,6 @@ private:
 
 } // namespace idocp
 
-#include "idocp/impulse/impulse_riccati_factorizer.hxx"
+#include "idocp/impulse/impulse_split_riccati_factorizer.hxx"
 
-#endif // IDOCP_IMPULSE_RICCATI_FACTORIZER_HPP_ 
+#endif // IDOCP_IMPULSE_SPLIT_RICCATI_FACTORIZER_HPP_ 

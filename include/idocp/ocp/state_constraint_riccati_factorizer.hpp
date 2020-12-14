@@ -5,7 +5,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_lp_factorizer.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
@@ -76,7 +76,7 @@ public:
   ///
   void computeLagrangeMultiplierDirection(
       const ContactSequence& contact_sequence,
-      const HybridRiccatiFactorization& riccati_factorization,
+      const RiccatiFactorization& riccati_factorization,
       StateConstraintRiccatiFactorization& constraint_factorization,
       Direction& d);
 
@@ -91,7 +91,7 @@ public:
   void aggregateLagrangeMultiplierDirection(
       const StateConstraintRiccatiFactorization& constraint_factorization,
       const ContactSequence& contact_sequence, const Direction& d,
-      HybridRiccatiFactorization& riccati_factorization) const;
+      RiccatiFactorization& riccati_factorization) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

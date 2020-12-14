@@ -27,7 +27,7 @@ inline StateConstraintRiccatiLPFactorizer::~StateConstraintRiccatiLPFactorizer()
 template <typename VectorType>
 inline void StateConstraintRiccatiLPFactorizer::factorizeLinearProblem(
     const ContactSequence& constact_sequence,
-    const RiccatiFactorization& impulse_riccati_factorization,
+    const SplitRiccatiFactorization& impulse_riccati_factorization,
     StateConstraintRiccatiFactorization& constraint_factorization,
     const Eigen::MatrixBase<VectorType>& dx0, const int constraint_index) {
   const int num_impulse = constact_sequence.totalNumImpulseStages();

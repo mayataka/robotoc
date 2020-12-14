@@ -8,7 +8,7 @@
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/impulse/impulse_backward_riccati_recursion_factorizer.hpp"
 
 
@@ -30,7 +30,7 @@ protected:
 
   ImpulseSplitKKTMatrix createKKTMatrix(const Robot& robot) const;
   ImpulseSplitKKTResidual createKKTResidual(const Robot& robot) const;
-  RiccatiFactorization createRiccatiFactorization(const Robot& robot) const;
+  SplitRiccatiFactorization createRiccatiFactorization(const Robot& robot) const;
 
   void test(const Robot& robot) const;
 
@@ -67,8 +67,8 @@ ImpulseSplitKKTResidual ImpulseBackwardRiccatiRecursionFactorizerTest::createKKT
 }
 
 
-RiccatiFactorization ImpulseBackwardRiccatiRecursionFactorizerTest::createRiccatiFactorization(const Robot& robot) const {
-  RiccatiFactorization riccati(robot);
+SplitRiccatiFactorization ImpulseBackwardRiccatiRecursionFactorizerTest::createRiccatiFactorization(const Robot& robot) const {
+  SplitRiccatiFactorization riccati(robot);
   const int dimv = robot.dimv();
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
   riccati.Pqq = seed * seed.transpose();
@@ -89,7 +89,7 @@ RiccatiFactorization ImpulseBackwardRiccatiRecursionFactorizerTest::createRiccat
 
 void ImpulseBackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   const int dimv = robot.dimv();
-  const RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
+  const SplitRiccatiFactorization riccati_next = createRiccatiFactorization(robot);
   ImpulseSplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
   ImpulseSplitKKTResidual kkt_residual = createKKTResidual(robot);
   const ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
@@ -125,7 +125,7 @@ void ImpulseBackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) con
   sx_next.tail(dimv) = riccati_next.sv;
   EXPECT_TRUE(F_ref.isApprox(kkt_matrix.Qxx()));
   EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
-  RiccatiFactorization riccati(robot), riccati_ref(robot);
+  SplitRiccatiFactorization riccati(robot), riccati_ref(robot);
   if (!robot.has_floating_base()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
   }

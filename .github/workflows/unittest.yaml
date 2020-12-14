@@ -46,4 +46,3 @@ jobs:
           lcov --remove coverage.info '/usr/*' '/opt/*' '"${HOME}"/.cache/*' '*/googletest/*' '*/test/*' '*/c++/*' '*/pinocchio/*' --output-file coverage.info
           lcov --list coverage.info
           bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
-

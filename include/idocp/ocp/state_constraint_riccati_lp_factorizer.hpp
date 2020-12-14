@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 
 namespace idocp {
@@ -70,7 +70,7 @@ public:
   template <typename VectorType>
   void factorizeLinearProblem(
       const ContactSequence& contact_sequence,
-      const RiccatiFactorization& impulse_riccati_factorization,
+      const SplitRiccatiFactorization& impulse_riccati_factorization,
       StateConstraintRiccatiFactorization& constraint_factorization,
       const Eigen::MatrixBase<VectorType>& dx0,
       const int constraint_index);

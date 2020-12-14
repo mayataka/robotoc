@@ -11,10 +11,10 @@
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
-#include "idocp/ocp/riccati_factorizer.hpp"
-#include "idocp/impulse/impulse_riccati_factorizer.hpp"
+#include "idocp/ocp/split_riccati_factorizer.hpp"
+#include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 
 namespace idocp {
@@ -76,7 +76,7 @@ public:
   ///
   void backwardRiccatiRecursionTerminal(
       const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual,
-      HybridRiccatiFactorization& riccati_factorization) const;
+      RiccatiFactorization& riccati_factorization) const;
 
   ///
   /// @brief Performs the backward Riccati recursion. Call 
@@ -89,10 +89,9 @@ public:
   /// @param[out] riccati_factorization Riccati factorization. 
   ///
   void backwardRiccatiRecursion(
-      HybridRiccatiFactorizer& riccati_factorizer,
+      RiccatiFactorizer& riccati_factorizer,
       const ContactSequence& contact_sequence, KKTMatrix& kkt_matrix, 
-      KKTResidual& kkt_residual, 
-      HybridRiccatiFactorization& riccati_factorization);
+      KKTResidual& kkt_residual, RiccatiFactorization& riccati_factorization);
 
   ///
   /// @brief Performs the parallel parts of the forward Riccati recursion. 
@@ -105,7 +104,7 @@ public:
   /// @param[out] constraint_factorization Pure-state constraint factorization. 
   ///
   void forwardRiccatiRecursionParallel(
-      HybridRiccatiFactorizer& riccati_factorizer,
+      RiccatiFactorizer& riccati_factorizer,
       const ContactSequence& contact_sequence, KKTMatrix& kkt_matrix, 
       KKTResidual& kkt_residual,
       StateConstraintRiccatiFactorization& constraint_factorization);
@@ -121,10 +120,10 @@ public:
   /// @param[in, out] riccati_factorization Riccati factorization. 
   ///
   void forwardStateConstraintFactorization(
-      HybridRiccatiFactorizer& riccati_factorizer,
-      const ContactSequence& contact_sequence, 
-      const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
-      HybridRiccatiFactorization& riccati_factorization);
+      RiccatiFactorizer& riccati_factorizer,
+      const ContactSequence& contact_sequence, const KKTMatrix& kkt_matrix, 
+      const KKTResidual& kkt_residual, 
+      RiccatiFactorization& riccati_factorization);
 
   ///
   /// @brief Performs the backward factorization of the pure-state constraint
@@ -138,9 +137,8 @@ public:
   /// factorization. 
   ///
   void backwardStateConstraintFactorization(
-      const HybridRiccatiFactorizer& riccati_factorizer,
-      const ContactSequence& contact_sequence, 
-      const KKTMatrix& kkt_matrix, 
+      const RiccatiFactorizer& riccati_factorizer,
+      const ContactSequence& contact_sequence, const KKTMatrix& kkt_matrix, 
       StateConstraintRiccatiFactorization& constraint_factorization) const;
 
   ///
@@ -154,11 +152,10 @@ public:
   /// calling this function.
   ///
   void forwardRiccatiRecursion(
-      const HybridRiccatiFactorizer& riccati_factorizer,
+      const RiccatiFactorizer& riccati_factorizer,
       const ContactSequence& contact_sequence, 
       const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
-      const HybridRiccatiFactorization& riccati_factorization,
-      Direction& d);
+      const RiccatiFactorization& riccati_factorization, Direction& d);
 
 private:
   int N_, max_num_impulse_, nproc_, dimv_;

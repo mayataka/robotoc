@@ -1,5 +1,5 @@
-#ifndef IDOCP_RICCATI_FACTORIZER_HPP_
-#define IDOCP_RICCATI_FACTORIZER_HPP_
+#ifndef IDOCP_SPLIT_RICCATI_FACTORIZER_HPP_ 
+#define IDOCP_SPLIT_RICCATI_FACTORIZER_HPP_
 
 #include "Eigen/Core"
 #include "Eigen/LU"
@@ -8,7 +8,7 @@
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/lqr_state_feedback_policy.hpp"
 #include "idocp/ocp/backward_riccati_recursion_factorizer.hpp"
 #include "idocp/ocp/forward_riccati_recursion_factorizer.hpp"
@@ -17,46 +17,46 @@
 namespace idocp {
 
 ///
-/// @class RiccatiFactorizer
+/// @class SplitRiccatiFactorizer
 /// @brief Riccati factorizer for a time stage.
 ///
-class RiccatiFactorizer {
+class SplitRiccatiFactorizer {
 public:
   ///
   /// @brief Construct factorizer.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
-  RiccatiFactorizer(const Robot& robot);
+  SplitRiccatiFactorizer(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  RiccatiFactorizer();
+  SplitRiccatiFactorizer();
 
   ///
   /// @brief Destructor. 
   ///
-  ~RiccatiFactorizer();
+  ~SplitRiccatiFactorizer();
  
   ///
   /// @brief Default copy constructor. 
   ///
-  RiccatiFactorizer(const RiccatiFactorizer&) = default;
+  SplitRiccatiFactorizer(const SplitRiccatiFactorizer&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  RiccatiFactorizer& operator=(const RiccatiFactorizer&) = default;
+  SplitRiccatiFactorizer& operator=(const SplitRiccatiFactorizer&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  RiccatiFactorizer(RiccatiFactorizer&&) noexcept = default;
+  SplitRiccatiFactorizer(SplitRiccatiFactorizer&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  RiccatiFactorizer& operator=(RiccatiFactorizer&&) noexcept = default;
+  SplitRiccatiFactorizer& operator=(SplitRiccatiFactorizer&&) noexcept = default;
 
   ///
   /// @brief Performs the backward Riccati recursion. 
@@ -66,10 +66,10 @@ public:
   /// @param[in, out] kkt_residual KKT residual at the current impulse stage. 
   /// @param[out] riccati Riccati factorization at the current impulse stage. 
   ///
-  void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next, 
+  void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
                                 const double dtau, SplitKKTMatrix& kkt_matrix, 
                                 SplitKKTResidual& kkt_residual,  
-                                RiccatiFactorization& riccati);
+                                SplitRiccatiFactorization& riccati);
 
   ///
   /// @brief Performs the parallel part of the forward Riccati recursion with 
@@ -89,7 +89,7 @@ public:
   /// @param[in] riccati Riccati factorization at the current time stage. 
   ///
   static void forwardStateConstraintFactorizationInitial(
-      const RiccatiFactorization& riccati);
+      const SplitRiccatiFactorization& riccati);
 
   ///
   /// @brief Performs the serial part of the forward Riccati recursion due to
@@ -103,9 +103,10 @@ public:
   /// constraints are also performed. 
   ///
   void forwardStateConstraintFactorization(
-      const RiccatiFactorization& riccati, const SplitKKTMatrix& kkt_matrix, 
-      const SplitKKTResidual& kkt_residual, const double dtau, 
-      RiccatiFactorization& riccati_next, const bool exist_state_constraint);
+      const SplitRiccatiFactorization& riccati, 
+      const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
+      const double dtau, SplitRiccatiFactorization& riccati_next, 
+      const bool exist_state_constraint);
 
   ///
   /// @brief Performs the backward factorization of matrices related to the 
@@ -117,8 +118,9 @@ public:
   ///
   template <typename MatrixType1, typename MatrixType2>
   void backwardStateConstraintFactorization(
-      const Eigen::MatrixBase<MatrixType1>& T_next, const SplitKKTMatrix& kkt_matrix, 
-      const double dtau, const Eigen::MatrixBase<MatrixType2>& T) const;
+      const Eigen::MatrixBase<MatrixType1>& T_next, 
+      const SplitKKTMatrix& kkt_matrix, const double dtau, 
+      const Eigen::MatrixBase<MatrixType2>& T) const;
 
   ///
   /// @brief Performs forward Riccati recursion and computes state direction. 
@@ -134,7 +136,7 @@ public:
   template <typename SplitDirectionType>
   void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
                                const SplitKKTResidual& kkt_residual,
-                               const RiccatiFactorization& riccati_next,
+                               const SplitRiccatiFactorization& riccati_next,
                                const SplitDirection& d, 
                                const double dtau, 
                                SplitDirectionType& d_next, 
@@ -147,7 +149,7 @@ public:
   /// @param[in] exist_state_constraint If true, the factorization for state
   /// constraints are also performed.
   ///
-  static void computeCostateDirection(const RiccatiFactorization& riccati, 
+  static void computeCostateDirection(const SplitRiccatiFactorization& riccati, 
                                       SplitDirection& d,
                                       const bool exist_state_constraint);
 
@@ -159,7 +161,7 @@ public:
   /// constraints are also performed. 
   ///
   void computeControlInputDirection(
-      const RiccatiFactorization& riccati_next, SplitDirection& d,
+      const SplitRiccatiFactorization& riccati_next, SplitDirection& d,
       const bool exist_state_constraint) const;
 
   ///
@@ -194,6 +196,6 @@ private:
 
 } // namespace idocp
 
-#include "idocp/ocp/riccati_factorizer.hxx"
+#include "idocp/ocp/split_riccati_factorizer.hxx"
 
-#endif // IDOCP_RICCATI_FACTORIZER_HPP_ 
+#endif // IDOCP_SPLIT_RICCATI_FACTORIZER_HPP_ 

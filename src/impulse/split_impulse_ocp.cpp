@@ -1,1 +1,0 @@
-#include "idocp/impulse/split_impulse_ocp.hpp"

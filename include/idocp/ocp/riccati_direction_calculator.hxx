@@ -25,8 +25,8 @@ inline double RiccatiDirectionCalculator::dtau(
 }
 
 
-inline const RiccatiFactorization& RiccatiDirectionCalculator::
-next_riccati_factorization(const HybridRiccatiFactorization& factorization, 
+inline const SplitRiccatiFactorization& RiccatiDirectionCalculator::
+next_riccati_factorization(const RiccatiFactorization& factorization, 
                            const ContactSequence& contact_sequence, 
                            const int time_stage) {
   if (contact_sequence.existImpulseStage(time_stage)) {

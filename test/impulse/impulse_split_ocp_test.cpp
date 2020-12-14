@@ -7,7 +7,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/impulse/split_impulse_ocp.hpp"
+#include "idocp/impulse/impulse_split_ocp.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
@@ -23,7 +23,7 @@
 
 namespace idocp {
 
-class SplitImpulseOCPTest : public ::testing::Test {
+class ImpulseSplitOCPTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -64,7 +64,7 @@ protected:
 };
 
 
-std::shared_ptr<ImpulseCostFunction> SplitImpulseOCPTest::createCost(const Robot& robot) {
+std::shared_ptr<ImpulseCostFunction> ImpulseSplitOCPTest::createCost(const Robot& robot) {
   auto joint_cost = std::make_shared<JointSpaceImpulseCost>(robot);
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
   Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
@@ -92,7 +92,7 @@ std::shared_ptr<ImpulseCostFunction> SplitImpulseOCPTest::createCost(const Robot
 }
 
 
-std::shared_ptr<ImpulseConstraints> SplitImpulseOCPTest::createConstraints(const Robot& robot) {
+std::shared_ptr<ImpulseConstraints> ImpulseSplitOCPTest::createConstraints(const Robot& robot) {
   auto impulse_normal_force = std::make_shared<ImpulseNormalForce>(robot);
   auto constraints = std::make_shared<ImpulseConstraints>();
   constraints->push_back(impulse_normal_force);
@@ -100,7 +100,7 @@ std::shared_ptr<ImpulseConstraints> SplitImpulseOCPTest::createConstraints(const
 }
 
 
-ImpulseSplitSolution SplitImpulseOCPTest::generateFeasibleSolution(
+ImpulseSplitSolution ImpulseSplitOCPTest::generateFeasibleSolution(
     Robot& robot, const ImpulseStatus& impulse_status,
     const std::shared_ptr<ImpulseConstraints>& constraints) {
   auto data = constraints->createConstraintsData(robot);
@@ -112,7 +112,7 @@ ImpulseSplitSolution SplitImpulseOCPTest::generateFeasibleSolution(
 }
 
 
-void SplitImpulseOCPTest::testLinearizeOCP(
+void ImpulseSplitOCPTest::testLinearizeOCP(
     Robot& robot, const ImpulseStatus& impulse_status, 
     const std::shared_ptr<ImpulseCostFunction>& cost,
     const std::shared_ptr<ImpulseConstraints>& constraints,
@@ -120,7 +120,7 @@ void SplitImpulseOCPTest::testLinearizeOCP(
   const SplitSolution s_prev = SplitSolution::Random(robot);
   const ImpulseSplitSolution s = generateFeasibleSolution(robot, impulse_status, constraints);
   const SplitSolution s_next = SplitSolution::Random(robot);
-  SplitImpulseOCP ocp(robot, cost, constraints);
+  ImpulseSplitOCP ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, s);
   ImpulseSplitKKTMatrix kkt_matrix(robot);
@@ -168,7 +168,7 @@ void SplitImpulseOCPTest::testLinearizeOCP(
 }
 
 
-void SplitImpulseOCPTest::testComputeKKTResidual(
+void ImpulseSplitOCPTest::testComputeKKTResidual(
     Robot& robot, const ImpulseStatus& impulse_status, 
     const std::shared_ptr<ImpulseCostFunction>& cost,
     const std::shared_ptr<ImpulseConstraints>& constraints, 
@@ -176,7 +176,7 @@ void SplitImpulseOCPTest::testComputeKKTResidual(
   const SplitSolution s_prev = SplitSolution::Random(robot);
   const ImpulseSplitSolution s = generateFeasibleSolution(robot, impulse_status, constraints);
   const SplitSolution s_next = SplitSolution::Random(robot);
-  SplitImpulseOCP ocp(robot, cost, constraints);
+  ImpulseSplitOCP ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, s);
   ImpulseSplitKKTMatrix kkt_matrix(robot);
@@ -210,7 +210,7 @@ void SplitImpulseOCPTest::testComputeKKTResidual(
 }
 
 
-void SplitImpulseOCPTest::testCostAndConstraintViolation(
+void ImpulseSplitOCPTest::testCostAndConstraintViolation(
     Robot& robot, const ImpulseStatus& impulse_status, 
     const std::shared_ptr<ImpulseCostFunction>& cost,
     const std::shared_ptr<ImpulseConstraints>& constraints,
@@ -218,7 +218,7 @@ void SplitImpulseOCPTest::testCostAndConstraintViolation(
   const SplitSolution s_prev = SplitSolution::Random(robot);
   const ImpulseSplitSolution s = generateFeasibleSolution(robot, impulse_status, constraints);
   const ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
-  SplitImpulseOCP ocp(robot, cost, constraints);
+  ImpulseSplitOCP ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double step_size = 0.3;
   ocp.initConstraints(robot, s);
@@ -251,7 +251,7 @@ void SplitImpulseOCPTest::testCostAndConstraintViolation(
 }
 
 
-TEST_F(SplitImpulseOCPTest, fixedBase) {
+TEST_F(ImpulseSplitOCPTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   ImpulseStatus impulse_status(contact_frames.size());
   for (int i=0; i<contact_frames.size(); ++i) {
@@ -277,7 +277,7 @@ TEST_F(SplitImpulseOCPTest, fixedBase) {
 }
 
 
-TEST_F(SplitImpulseOCPTest, floatingBase) {
+TEST_F(ImpulseSplitOCPTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   ImpulseStatus impulse_status(contact_frames.size());
   for (int i=0; i<contact_frames.size(); ++i) {

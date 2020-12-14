@@ -1,13 +1,13 @@
-#ifndef IDOCP_SPLIT_IMPULSE_OCP_HXX_
-#define IDOCP_SPLIT_IMPULSE_OCP_HXX_
+#ifndef IDOCP_IMPULSE_SPLIT_OCP_HXX_
+#define IDOCP_IMPULSE_SPLIT_OCP_HXX_
 
-#include "idocp/impulse/split_impulse_ocp.hpp"
+#include "idocp/impulse/impulse_split_ocp.hpp"
 
 #include <cassert>
 
 namespace idocp {
 
-inline SplitImpulseOCP::SplitImpulseOCP(
+inline ImpulseSplitOCP::ImpulseSplitOCP(
     const Robot& robot, const std::shared_ptr<ImpulseCostFunction>& cost, 
     const std::shared_ptr<ImpulseConstraints>& constraints) 
   : cost_(cost),
@@ -18,7 +18,7 @@ inline SplitImpulseOCP::SplitImpulseOCP(
 }
 
 
-inline SplitImpulseOCP::SplitImpulseOCP() 
+inline ImpulseSplitOCP::ImpulseSplitOCP() 
   : cost_(),
     cost_data_(),
     constraints_(),
@@ -27,24 +27,24 @@ inline SplitImpulseOCP::SplitImpulseOCP()
 }
 
 
-inline SplitImpulseOCP::~SplitImpulseOCP() {
+inline ImpulseSplitOCP::~ImpulseSplitOCP() {
 }
 
 
-inline bool SplitImpulseOCP::isFeasible(Robot& robot, 
+inline bool ImpulseSplitOCP::isFeasible(Robot& robot, 
                                         const ImpulseSplitSolution& s) {
   return constraints_->isFeasible(robot, constraints_data_, s);
 }
 
 
-inline void SplitImpulseOCP::initConstraints(Robot& robot,
+inline void ImpulseSplitOCP::initConstraints(Robot& robot,
                                              const ImpulseSplitSolution& s) { 
   constraints_data_ = constraints_->createConstraintsData(robot);
   constraints_->setSlackAndDual(robot, constraints_data_, s);
 }
 
 
-inline void SplitImpulseOCP::linearizeOCP(
+inline void ImpulseSplitOCP::linearizeOCP(
     Robot& robot, const ImpulseStatus& impulse_status, const double t,  
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
     const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
@@ -71,14 +71,14 @@ inline void SplitImpulseOCP::linearizeOCP(
 }
 
 
-inline void SplitImpulseOCP::computeCondensedPrimalDirection(
+inline void ImpulseSplitOCP::computeCondensedPrimalDirection(
     Robot& robot, const ImpulseSplitSolution& s, ImpulseSplitDirection& d) {
   impulse_dynamics_.computeCondensedPrimalDirection(robot, d);
   constraints_->computeSlackAndDualDirection(robot, constraints_data_, s, d);
 }
 
 
-inline void SplitImpulseOCP::computeCondensedDualDirection(
+inline void ImpulseSplitOCP::computeCondensedDualDirection(
     const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix, 
     const ImpulseSplitKKTResidual& kkt_residual, const SplitDirection& d_next, 
     ImpulseSplitDirection& d) {
@@ -88,24 +88,24 @@ inline void SplitImpulseOCP::computeCondensedDualDirection(
 }
 
 
-inline double SplitImpulseOCP::maxPrimalStepSize() {
+inline double ImpulseSplitOCP::maxPrimalStepSize() {
   return constraints_->maxSlackStepSize(constraints_data_);
 }
 
 
-inline double SplitImpulseOCP::maxDualStepSize() {
+inline double ImpulseSplitOCP::maxDualStepSize() {
   return constraints_->maxDualStepSize(constraints_data_);
 }
 
 
-inline void SplitImpulseOCP::updateDual(const double dual_step_size) {
+inline void ImpulseSplitOCP::updateDual(const double dual_step_size) {
   assert(dual_step_size > 0);
   assert(dual_step_size <= 1);
   constraints_->updateDual(constraints_data_, dual_step_size);
 }
 
 
-inline void SplitImpulseOCP::updatePrimal(
+inline void ImpulseSplitOCP::updatePrimal(
     const Robot& robot, const double primal_step_size, 
     const ImpulseSplitDirection& d, ImpulseSplitSolution& s, 
     const bool is_state_constraint_valid) {
@@ -116,7 +116,7 @@ inline void SplitImpulseOCP::updatePrimal(
 }
 
 
-inline void SplitImpulseOCP::computeKKTResidual(
+inline void ImpulseSplitOCP::computeKKTResidual(
     Robot& robot, const ImpulseStatus& impulse_status, const double t, 
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
     const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
@@ -138,7 +138,7 @@ inline void SplitImpulseOCP::computeKKTResidual(
 }
 
 
-inline double SplitImpulseOCP::squaredNormKKTResidual(
+inline double ImpulseSplitOCP::squaredNormKKTResidual(
     const ImpulseSplitKKTResidual& kkt_residual, 
     const bool is_state_constraint_valid) const {
   double error = 0;
@@ -153,7 +153,7 @@ inline double SplitImpulseOCP::squaredNormKKTResidual(
 }
 
 
-inline double SplitImpulseOCP::stageCost(Robot& robot, const double t, 
+inline double ImpulseSplitOCP::stageCost(Robot& robot, const double t, 
                                          const ImpulseSplitSolution& s, 
                                          const double primal_step_size) {
   assert(primal_step_size >= 0);
@@ -171,7 +171,7 @@ inline double SplitImpulseOCP::stageCost(Robot& robot, const double t,
 }
 
 
-inline double SplitImpulseOCP::constraintViolation(
+inline double ImpulseSplitOCP::constraintViolation(
     Robot& robot, const ImpulseStatus& impulse_status, const double t, 
     const ImpulseSplitSolution& s, const Eigen::VectorXd& q_next, 
     const Eigen::VectorXd& v_next, ImpulseSplitKKTResidual& kkt_residual,
@@ -195,4 +195,4 @@ inline double SplitImpulseOCP::constraintViolation(
 
 } // namespace idocp
 
-#endif // IDOCP_SPLIT_IMPULSE_OCP_HXX_ 
+#endif // IDOCP_IMPULSE_SPLIT_OCP_HXX_ 

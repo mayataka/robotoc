@@ -9,7 +9,7 @@
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/impulse/impulse_forward_riccati_recursion_factorizer.hpp"
 
 
@@ -31,7 +31,7 @@ protected:
 
   static ImpulseSplitKKTMatrix createKKTMatrix(const Robot& robot);
   static ImpulseSplitKKTResidual createKKTResidual(const Robot& robot);
-  static RiccatiFactorization createRiccatiFactorization(const Robot& robot);
+  static SplitRiccatiFactorization createRiccatiFactorization(const Robot& robot);
 
   static void test(const Robot& robot);
 
@@ -68,8 +68,8 @@ ImpulseSplitKKTResidual ImpulseForwardRiccatiRecursionFactorizerTest::createKKTR
 }
 
 
-RiccatiFactorization ImpulseForwardRiccatiRecursionFactorizerTest::createRiccatiFactorization(const Robot& robot) {
-  RiccatiFactorization riccati(robot);
+SplitRiccatiFactorization ImpulseForwardRiccatiRecursionFactorizerTest::createRiccatiFactorization(const Robot& robot) {
+  SplitRiccatiFactorization riccati(robot);
   const int dimv = robot.dimv();
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
   riccati.Pqq = seed * seed.transpose();
@@ -108,9 +108,9 @@ void ImpulseForwardRiccatiRecursionFactorizerTest::test(const Robot& robot) {
   A.topRightCorner(dimv, dimv).setZero();
   A.bottomLeftCorner(dimv, dimv) = kkt_matrix.Fvq();
   A.bottomRightCorner(dimv, dimv) = kkt_matrix.Fvv();
-  const RiccatiFactorization riccati = createRiccatiFactorization(robot);
-  RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
-  RiccatiFactorization riccati_next_ref = riccati_next;
+  const SplitRiccatiFactorization riccati = createRiccatiFactorization(robot);
+  SplitRiccatiFactorization riccati_next = createRiccatiFactorization(robot);
+  SplitRiccatiFactorization riccati_next_ref = riccati_next;
   factorizer.factorizeStateTransition(riccati, kkt_matrix, kkt_residual, riccati_next);
   riccati_next_ref.Pi = A * riccati.Pi;
   riccati_next_ref.pi = A * riccati.pi + kkt_residual.Fx();

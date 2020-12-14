@@ -6,14 +6,14 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
-#include "idocp/ocp/riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
 
 
 namespace idocp {
 
 ///
 /// @class ImpulseBackwardRiccatiRecursionFactorizer
-/// @brief Factorizer of the backward Riccati recursion for SplitImpulseOCP.
+/// @brief Factorizer of the backward Riccati recursion for ImpulseSplitOCP.
 ///
 class ImpulseBackwardRiccatiRecursionFactorizer {
 public:
@@ -63,7 +63,7 @@ public:
   /// @param[in] riccati_next Riccati factorization at the next time stage.
   /// @param[in, out] kkt_matrix The KKT matrix.
   ///
-  void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
+  void factorizeKKTMatrix(const SplitRiccatiFactorization& riccati_next, 
                           ImpulseSplitKKTMatrix& kkt_matrix);
 
   ///
@@ -76,10 +76,10 @@ public:
   /// @param[out] riccati The Riccati factorization at this time stage.
   ///
   void factorizeRiccatiFactorization(
-      const RiccatiFactorization& riccati_next, 
+      const SplitRiccatiFactorization& riccati_next, 
       const ImpulseSplitKKTMatrix& kkt_matrix, 
       const ImpulseSplitKKTResidual& kkt_residual, 
-      RiccatiFactorization& riccati);
+      SplitRiccatiFactorization& riccati);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

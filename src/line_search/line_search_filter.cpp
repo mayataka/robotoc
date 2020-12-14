@@ -1,6 +1,6 @@
 #include "idocp/line_search/line_search_filter.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {

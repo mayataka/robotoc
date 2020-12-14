@@ -30,7 +30,7 @@ struct LinearizeOCP {
   }
 
   template <typename ConfigVectorType>
-  static inline void run(SplitImpulseOCP& split_ocp, Robot& robot, 
+  static inline void run(ImpulseSplitOCP& split_ocp, Robot& robot, 
                          const ImpulseStatus& impulse_status, const double t, 
                          const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
                          const ImpulseSplitSolution& s, 
@@ -65,7 +65,7 @@ struct ComputeKKTResidual {
   }
 
   template <typename ConfigVectorType>
-  static inline void run(SplitImpulseOCP& split_ocp, Robot& robot, 
+  static inline void run(ImpulseSplitOCP& split_ocp, Robot& robot, 
                          const ImpulseStatus& impulse_status, const double t, 
                          const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
                          const ImpulseSplitSolution& s, 
@@ -100,7 +100,7 @@ struct initConstraints {
   }
 
   template <typename ConfigVectorType>
-  static inline void run(SplitImpulseOCP& split_ocp, Robot& robot, 
+  static inline void run(ImpulseSplitOCP& split_ocp, Robot& robot, 
                          const ImpulseStatus& impulse_status, const double t, 
                          const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
                          const ImpulseSplitSolution& s, 
