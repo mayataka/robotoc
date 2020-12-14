@@ -12,11 +12,11 @@
 #include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -28,6 +28,10 @@ namespace idocp {
 ///
 class CostFunction {
 public:
+  using CostFunctionComponentBasePtr 
+      = std::shared_ptr<CostFunctionComponentBase>;
+  using ImpulseCostFunctionComponentBasePtr 
+      = std::shared_ptr<ImpulseCostFunctionComponentBase>;
 
   ///
   /// @brief Default constructor. 
@@ -64,14 +68,14 @@ public:
   /// @param[in] cost shared pointer to the cost function component appended 
   /// to the cost.
   ///
-  void push_back(const std::shared_ptr<CostFunctionComponentBase>& cost);
+  void push_back(const CostFunctionComponentBasePtr& cost);
 
   ///
   /// @brief Append a cost function component to the cost function.
   /// @param[in] cost shared pointer to the cost function component appended 
   /// to the cost.
   ///
-  void push_back(const std::shared_ptr<ImpulseCostFunctionComponentBase>& cost);
+  void push_back(const ImpulseCostFunctionComponentBasePtr& cost);
 
   std::shared_ptr<ImpulseCostFunction> getImpulseCostFunction();
 
@@ -133,7 +137,7 @@ public:
   void computeStageCostDerivatives(Robot& robot, CostFunctionData& data, 
                                    const double t, const double dtau, 
                                    const SplitSolution& s, 
-                                   KKTResidual& kkt_residual) const;
+                                   SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the Hessians of the stage cost with respect
@@ -149,7 +153,7 @@ public:
   void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
                                const double t, const double dtau, 
                                const SplitSolution& s, 
-                               KKTMatrix& kkt_matrix) const;
+                               SplitKKTMatrix& kkt_matrix) const;
 
   ///
   /// @brief Computes the partial derivatives of the terminal cost with respect
@@ -163,7 +167,7 @@ public:
   ///
   void computeTerminalCostDerivatives(Robot& robot, CostFunctionData& data, 
                                       const double t, const SplitSolution& s, 
-                                      KKTResidual& kkt_residual) const;
+                                      SplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the Hessians of the terminal cost with respect
@@ -177,11 +181,11 @@ public:
   ///
   void computeTerminalCostHessian(Robot& robot, CostFunctionData& data, 
                                   const double t, const SplitSolution& s, 
-                                  KKTMatrix& kkt_matrix) const;
+                                  SplitKKTMatrix& kkt_matrix) const;
 
 
 private:
-  std::vector<std::shared_ptr<CostFunctionComponentBase>> costs_;
+  std::vector<CostFunctionComponentBasePtr> costs_;
   std::shared_ptr<ImpulseCostFunction> impulse_cost_function_;
 
 };

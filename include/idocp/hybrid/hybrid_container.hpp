@@ -10,12 +10,12 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/riccati_factorizer.hpp"
 #include "idocp/impulse/impulse_riccati_factorizer.hpp"
@@ -29,10 +29,10 @@ namespace idocp {
 template <typename Type, typename ImpulseType>
 struct hybrid_container;
 
-using HybridSolution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
-using HybridDirection = hybrid_container<SplitDirection, ImpulseSplitDirection>;
-using HybridKKTMatrix = hybrid_container<KKTMatrix, ImpulseKKTMatrix>;
-using HybridKKTResidual = hybrid_container<KKTResidual, ImpulseKKTResidual>;
+using Solution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
+using Direction = hybrid_container<SplitDirection, ImpulseSplitDirection>;
+using KKTMatrix = hybrid_container<SplitKKTMatrix, ImpulseSplitKKTMatrix>;
+using KKTResidual = hybrid_container<SplitKKTResidual, ImpulseSplitKKTResidual>;
 using HybridRiccatiFactorization = hybrid_container<RiccatiFactorization, RiccatiFactorization>;
 using HybridRiccatiFactorizer = hybrid_container<RiccatiFactorizer, ImpulseRiccatiFactorizer>; 
 

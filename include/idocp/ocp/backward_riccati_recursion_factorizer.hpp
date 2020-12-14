@@ -4,8 +4,8 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/lqr_state_feedback_policy.hpp"
 
@@ -68,8 +68,8 @@ public:
   /// @param[in, out] kkt_residual The KKT residual.
   ///
   void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
-                          const double dtau, KKTMatrix& kkt_matrix,  
-                          KKTResidual& kkt_residual);
+                          const double dtau, SplitKKTMatrix& kkt_matrix,  
+                          SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Factorize the Riccati factorization matrix P and vector s.
@@ -85,8 +85,8 @@ public:
   /// @param[out] riccati The Riccati factorization at this time stage.
   ///
   void factorizeRiccatiFactorization(const RiccatiFactorization& riccati_next, 
-                                     const KKTMatrix& kkt_matrix, 
-                                     const KKTResidual& kkt_residual,
+                                     const SplitKKTMatrix& kkt_matrix, 
+                                     const SplitKKTResidual& kkt_residual,
                                      const LQRStateFeedbackPolicy& lqr_policy,
                                      const double dtau, 
                                      RiccatiFactorization& riccati);

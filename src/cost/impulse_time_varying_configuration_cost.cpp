@@ -112,7 +112,8 @@ double ImpulseTimeVaryingConfigurationCost::l(
 
 void ImpulseTimeVaryingConfigurationCost::lq(
     Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) const {
+    const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTResidual& kkt_residual) const {
   robot.integrateConfiguration(q0_, v0_, t-t0_, data.q_ref);
   if (robot.has_floating_base()) {
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
@@ -129,7 +130,8 @@ void ImpulseTimeVaryingConfigurationCost::lq(
 
 void ImpulseTimeVaryingConfigurationCost::lv(
     Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) const {
+    const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTResidual& kkt_residual) const {
   kkt_residual.lv().array()
       += v_weight_.array() * (s.v.array()-v0_.array());
 }
@@ -137,14 +139,16 @@ void ImpulseTimeVaryingConfigurationCost::lv(
 
 void ImpulseTimeVaryingConfigurationCost::ldv(
     Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) const {
+    const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTResidual& kkt_residual) const {
   kkt_residual.ldv.array() += dv_weight_.array() * s.dv.array();
 }
 
 
 void ImpulseTimeVaryingConfigurationCost::lqq(
     Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix) const {
+    const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTMatrix& kkt_matrix) const {
   if (robot.has_floating_base()) {
     robot.integrateConfiguration(q0_, v0_, t-t0_, data.q_ref);
     robot.dSubtractdConfigurationPlus(s.q, data.q_ref, data.J_qdiff);
@@ -159,14 +163,16 @@ void ImpulseTimeVaryingConfigurationCost::lqq(
 
 void ImpulseTimeVaryingConfigurationCost::lvv(
     Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix) const {
+    const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qvv().diagonal().noalias() += v_weight_;
 }
 
 
 void ImpulseTimeVaryingConfigurationCost::ldvdv(
     Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix) const {
+    const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qdvdv().diagonal().noalias() += dv_weight_;
 }
 

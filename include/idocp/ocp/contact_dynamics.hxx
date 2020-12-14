@@ -27,7 +27,7 @@ inline ContactDynamics::~ContactDynamics() {
 
 inline void ContactDynamics::linearizeContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dtau, 
-    const SplitSolution& s, KKTResidual& kkt_residual) { 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) { 
   assert(dtau > 0);
   setContactStatus(contact_status);
   linearizeInverseDynamics(robot, contact_status, s, data_);
@@ -92,7 +92,7 @@ inline void ContactDynamics::linearizeContactConstraint(
 
 inline void ContactDynamics::condenseContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dtau,
-    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(dtau > 0);
   robot.computeMJtJinv(data_.dIDda, data_.dCda(), data_.MJtJinv());
   condensing(robot, dtau, data_, kkt_matrix, kkt_residual);
@@ -101,8 +101,8 @@ inline void ContactDynamics::condenseContactDynamics(
 
 inline void ContactDynamics::condensing(const Robot& robot, const double dtau, 
                                         ContactDynamicsData& data, 
-                                        KKTMatrix& kkt_matrix, 
-                                        KKTResidual& kkt_residual) {
+                                        SplitKKTMatrix& kkt_matrix, 
+                                        SplitKKTResidual& kkt_residual) {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dim_passive = robot.dim_passive();
@@ -164,9 +164,9 @@ inline void ContactDynamics::computeCondensedPrimalDirection(
 
 template <typename VectorType>
 inline void ContactDynamics::computeCondensedDualDirection(
-    const Robot& robot, const double dtau, const KKTMatrix& kkt_matrix, 
-    const KKTResidual& kkt_residual, const Eigen::MatrixBase<VectorType>& dgmm, 
-    SplitDirection& d) {
+    const Robot& robot, const double dtau, const SplitKKTMatrix& kkt_matrix, 
+    const SplitKKTResidual& kkt_residual, 
+    const Eigen::MatrixBase<VectorType>& dgmm, SplitDirection& d) {
   assert(dtau > 0);
   assert(dgmm.size() == robot.dimv());
   expansionDual(robot, dtau, data_, kkt_matrix, kkt_residual, dgmm, d);
@@ -199,7 +199,7 @@ inline void ContactDynamics::expansionPrimal(const Robot& robot,
 template <typename VectorType>
 inline void ContactDynamics::expansionDual(
     const Robot& robot, const double dtau, ContactDynamicsData& data, 
-    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+    const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const Eigen::MatrixBase<VectorType>& dgmm, SplitDirection& d) {
   assert(dtau > 0);
   assert(dgmm.size() == robot.dimv());

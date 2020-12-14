@@ -51,8 +51,8 @@ protected:
 
   static std::shared_ptr<CostFunction> createCost(const Robot& robot);
   static std::shared_ptr<Constraints> createConstraints(const Robot& robot);
-  HybridSolution createSolution(const Robot& robot) const;
-  HybridSolution createSolution(const Robot& robot, const ContactSequence& contact_sequence) const;
+  Solution createSolution(const Robot& robot) const;
+  Solution createSolution(const Robot& robot, const ContactSequence& contact_sequence) const;
   ContactSequence createContactSequence(const Robot& robot) const;
 
   template <typename T>
@@ -145,8 +145,8 @@ std::shared_ptr<Constraints> RiccatiSolverTest::createConstraints(const Robot& r
 }
 
 
-HybridSolution RiccatiSolverTest::createSolution(const Robot& robot) const {
-  HybridSolution s(N, max_num_impulse, robot);
+Solution RiccatiSolverTest::createSolution(const Robot& robot) const {
+  Solution s(N, max_num_impulse, robot);
   for (int i=0; i<=N; ++i) {
     s[i].setRandom(robot);
   }
@@ -154,12 +154,12 @@ HybridSolution RiccatiSolverTest::createSolution(const Robot& robot) const {
 }
 
 
-HybridSolution RiccatiSolverTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
+Solution RiccatiSolverTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
   if (robot.max_point_contacts() == 0) {
     return createSolution(robot);
   }
   else {
-    HybridSolution s(N, max_num_impulse, robot);
+    Solution s(N, max_num_impulse, robot);
     for (int i=0; i<=N; ++i) {
       s[i].setRandom(robot, contact_sequence.contactStatus(i));
     }
@@ -215,9 +215,9 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   if (robot.max_point_contacts() > 0) {
     contact_sequence = createContactSequence(robot);
   }
-  auto kkt_matrix = HybridKKTMatrix(N, max_num_impulse, robot);
-  auto kkt_residual = HybridKKTResidual(N, max_num_impulse, robot);
-  HybridSolution s;
+  auto kkt_matrix = KKTMatrix(N, max_num_impulse, robot);
+  auto kkt_residual = KKTResidual(N, max_num_impulse, robot);
+  Solution s;
   if (robot.max_point_contacts() > 0) {
     s = createSolution(robot, contact_sequence);
   }
@@ -231,7 +231,7 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   std::vector<Robot> robots(nproc, robot);
   linearizer.initConstraints(split_ocps, robots, contact_sequence, s);
   linearizer.linearizeOCP(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
-  HybridDirection d = HybridDirection(N, max_num_impulse, robot);
+  Direction d = Direction(N, max_num_impulse, robot);
   for (int i=0; i<N; ++i) {
     d[i].setContactStatus(contact_sequence.contactStatus(i));
   }

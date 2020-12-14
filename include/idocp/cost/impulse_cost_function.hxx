@@ -15,7 +15,7 @@ inline ImpulseCostFunction::~ImpulseCostFunction() {
 
 
 inline void ImpulseCostFunction::push_back(
-    const std::shared_ptr<ImpulseCostFunctionComponentBase>& cost) {
+    const ImpulseCostFunctionComponentBasePtr& cost) {
   costs_.push_back(cost);
 }
 
@@ -50,7 +50,7 @@ inline double ImpulseCostFunction::l(Robot& robot, CostFunctionData& data,
 
 inline void ImpulseCostFunction::computeStageCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) const {
+    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) const {
   for (const auto cost : costs_) {
     cost->lq(robot, data, t, s, kkt_residual);
     cost->lv(robot, data, t, s, kkt_residual);
@@ -62,7 +62,7 @@ inline void ImpulseCostFunction::computeStageCostDerivatives(
 
 inline void ImpulseCostFunction::computeStageCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix) const {
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
   for (const auto cost : costs_) {
     cost->lqq(robot, data, t, s, kkt_matrix);
     cost->lvv(robot, data, t, s, kkt_matrix);

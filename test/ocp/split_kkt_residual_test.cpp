@@ -6,12 +6,12 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 
 
 namespace idocp {
 
-class KKTResidualTest : public ::testing::Test {
+class SplitKKTResidualTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -30,9 +30,9 @@ protected:
 };
 
 
-void KKTResidualTest::testSize(const Robot& robot, 
-                               const ContactStatus& contact_status) {
-  KKTResidual kkt_residual(robot);
+void SplitKKTResidualTest::testSize(const Robot& robot, 
+                                    const ContactStatus& contact_status) {
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
@@ -69,21 +69,21 @@ void KKTResidualTest::testSize(const Robot& robot,
   EXPECT_TRUE(kkt_residual.lx().isApprox(lx_ref));
   EXPECT_TRUE(kkt_residual.la.isApprox(la_ref));
   EXPECT_TRUE(kkt_residual.lf().isApprox(lf_ref));
-  KKTResidual kkt_residual_ref = kkt_residual;
+  SplitKKTResidual kkt_residual_ref = kkt_residual;
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   kkt_residual_ref.KKT_residual.setRandom();
   EXPECT_FALSE(kkt_residual.isApprox(kkt_residual_ref));
 }
 
 
-void KKTResidualTest::testIsApprox(const Robot& robot, 
-                                   const ContactStatus& contact_status) {
-  KKTResidual kkt_residual(robot);
+void SplitKKTResidualTest::testIsApprox(const Robot& robot, 
+                                        const ContactStatus& contact_status) {
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
   kkt_residual.KKT_residual.setRandom();
   kkt_residual.la.setRandom();
   kkt_residual.lf().setRandom();
-  KKTResidual kkt_residual_ref = kkt_residual;
+  SplitKKTResidual kkt_residual_ref = kkt_residual;
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   kkt_residual.Fq().setRandom();
   EXPECT_FALSE(kkt_residual.isApprox(kkt_residual_ref));
@@ -142,7 +142,7 @@ void KKTResidualTest::testIsApprox(const Robot& robot,
 }
 
 
-TEST_F(KKTResidualTest, fixedBase) {
+TEST_F(SplitKKTResidualTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
   std::random_device rnd;
@@ -156,7 +156,7 @@ TEST_F(KKTResidualTest, fixedBase) {
 }
 
 
-TEST_F(KKTResidualTest, floatingBase) {
+TEST_F(SplitKKTResidualTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
   std::vector<bool> is_contact_active = {false, false, false, false};

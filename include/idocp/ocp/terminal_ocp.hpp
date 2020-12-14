@@ -8,8 +8,8 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -90,7 +90,7 @@ public:
   /// @param[out] kkt_residual KKT residual of this stage.
   ///
   void linearizeOCP(Robot& robot, const double t, const SplitSolution& s,
-                    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
+                    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -146,7 +146,7 @@ public:
   /// @param[out] kkt_residual KKT residual of this stage.
   ///
   void computeKKTResidual(Robot& robot, const double t, const SplitSolution& s,
-                          KKTResidual& kkt_residual);
+                          SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage.  
@@ -155,7 +155,7 @@ public:
   /// @param[in] kkt_residual KKT residual of this stage.
   /// @return The squared norm of the KKT residual.
   ///
-  double squaredNormKKTResidual(const KKTResidual& kkt_residual) const;
+  double squaredNormKKTResidual(const SplitKKTResidual& kkt_residual) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

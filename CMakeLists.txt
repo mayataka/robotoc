@@ -63,8 +63,8 @@ add_library(
   src/constraints/impulse_friction_cone.cpp
   src/constraints/impulse_normal_force.cpp
   src/impulse/dynamic_schur_complement.cpp
-  src/impulse/impulse_kkt_residual.cpp
-  src/impulse/impulse_kkt_matrix.cpp
+  src/impulse/impulse_split_kkt_residual.cpp
+  src/impulse/impulse_split_kkt_matrix.cpp
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp
   src/impulse/impulse_state_equation.cpp
@@ -84,8 +84,8 @@ add_library(
   src/hybrid/hybrid_container.cpp
   src/hybrid/collision_checker.cpp
   src/ocp/schur_complement.cpp
-  src/ocp/kkt_residual.cpp
-  src/ocp/kkt_matrix.cpp
+  src/ocp/split_kkt_residual.cpp
+  src/ocp/split_kkt_matrix.cpp
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
@@ -117,10 +117,10 @@ add_library(
   # src/ocp/backward_correction.cpp
   # src/ocp/parnmpc.cpp
   # src/ocp/mpc.cpp
-  # src/utils/joint_constraints_factory.cpp
+  src/utils/joint_constraints_factory.cpp
   # src/utils/ocp_benchmarker.cpp
-  # src/utils/simulation_data_saver.cpp
-  # src/utils/runge_kutta.cpp
+  src/utils/simulation_data_saver.cpp
+  src/utils/runge_kutta.cpp
   # src/utils/manipulator_simulator.cpp
 )
 target_link_libraries(

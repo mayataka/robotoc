@@ -5,10 +5,10 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
@@ -75,7 +75,7 @@ public:
   /// @param[out] riccati_factorization Riccati factorization. 
   ///
   void backwardRiccatiRecursionTerminal(
-      const HybridKKTMatrix& kkt_matrix, const HybridKKTResidual& kkt_residual,
+      const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual,
       HybridRiccatiFactorization& riccati_factorization) const;
 
   ///
@@ -90,8 +90,8 @@ public:
   ///
   void backwardRiccatiRecursion(
       HybridRiccatiFactorizer& riccati_factorizer,
-      const ContactSequence& contact_sequence, HybridKKTMatrix& kkt_matrix, 
-      HybridKKTResidual& kkt_residual, 
+      const ContactSequence& contact_sequence, KKTMatrix& kkt_matrix, 
+      KKTResidual& kkt_residual, 
       HybridRiccatiFactorization& riccati_factorization);
 
   ///
@@ -106,8 +106,8 @@ public:
   ///
   void forwardRiccatiRecursionParallel(
       HybridRiccatiFactorizer& riccati_factorizer,
-      const ContactSequence& contact_sequence, HybridKKTMatrix& kkt_matrix, 
-      HybridKKTResidual& kkt_residual,
+      const ContactSequence& contact_sequence, KKTMatrix& kkt_matrix, 
+      KKTResidual& kkt_residual,
       StateConstraintRiccatiFactorization& constraint_factorization);
 
   ///
@@ -123,7 +123,7 @@ public:
   void forwardStateConstraintFactorization(
       HybridRiccatiFactorizer& riccati_factorizer,
       const ContactSequence& contact_sequence, 
-      const HybridKKTMatrix& kkt_matrix, const HybridKKTResidual& kkt_residual, 
+      const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
       HybridRiccatiFactorization& riccati_factorization);
 
   ///
@@ -140,7 +140,7 @@ public:
   void backwardStateConstraintFactorization(
       const HybridRiccatiFactorizer& riccati_factorizer,
       const ContactSequence& contact_sequence, 
-      const HybridKKTMatrix& kkt_matrix, 
+      const KKTMatrix& kkt_matrix, 
       StateConstraintRiccatiFactorization& constraint_factorization) const;
 
   ///
@@ -156,9 +156,9 @@ public:
   void forwardRiccatiRecursion(
       const HybridRiccatiFactorizer& riccati_factorizer,
       const ContactSequence& contact_sequence, 
-      const HybridKKTMatrix& kkt_matrix, const HybridKKTResidual& kkt_residual, 
+      const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
       const HybridRiccatiFactorization& riccati_factorization,
-      HybridDirection& d);
+      Direction& d);
 
 private:
   int N_, max_num_impulse_, nproc_, dimv_;

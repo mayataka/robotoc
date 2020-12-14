@@ -9,8 +9,8 @@
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -101,8 +101,8 @@ public:
   void linearizeOCP(Robot& robot, const ContactStatus& contact_status, 
                     const double t, const double dtau, 
                     const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                    const SplitSolutionType& s_next, KKTMatrix& kkt_matrix,
-                    KKTResidual& kkt_residual);
+                    const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix,
+                    SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the Newton direction of the condensed primal variables  
@@ -129,8 +129,8 @@ public:
   /// 
   template <typename SplitDirectionType>
   void computeCondensedDualDirection(const Robot& robot, const double dtau, 
-                                     const KKTMatrix& kkt_matrix, 
-                                     const KKTResidual& kkt_residual,
+                                     const SplitKKTMatrix& kkt_matrix, 
+                                     const SplitKKTResidual& kkt_residual,
                                      const SplitDirectionType& d_next,
                                      SplitDirection& d);
 
@@ -187,7 +187,8 @@ public:
                           const double t, const double dtau, 
                           const Eigen::VectorXd& q_prev, const SplitSolution& s, 
                           const SplitSolutionType& s_next,
-                          KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
+                          SplitKKTMatrix& kkt_matrix, 
+                          SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
@@ -195,7 +196,7 @@ public:
   /// must be called.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual(const KKTResidual& kkt_residual, 
+  double squaredNormKKTResidual(const SplitKKTResidual& kkt_residual, 
                                 const double dtau) const;
 
   ///
@@ -228,7 +229,7 @@ public:
                              const SplitSolution& s, 
                              const Eigen::VectorXd& q_next,
                              const Eigen::VectorXd& v_next,
-                             KKTResidual& kkt_residual);
+                             SplitKKTResidual& kkt_residual);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

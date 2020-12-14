@@ -7,8 +7,8 @@
 #include "idocp/cost/joint_space_cost.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -38,8 +38,8 @@ void JointSpaceCostTest::test(Robot& robot) const {
   const int dimq = robot.dimq();
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  KKTMatrix kkt_mat(robot);
-  KKTResidual kkt_res(robot);
+  SplitKKTMatrix kkt_mat(robot);
+  SplitKKTResidual kkt_res(robot);
   kkt_mat.Qqq().setRandom();
   kkt_mat.Qvv().setRandom();
   kkt_mat.Qaa().setRandom();
@@ -48,8 +48,8 @@ void JointSpaceCostTest::test(Robot& robot) const {
   kkt_res.lv().setRandom();
   kkt_res.la.setRandom();
   kkt_res.lu().setRandom();
-  KKTMatrix kkt_mat_ref = kkt_mat;
-  KKTResidual kkt_res_ref = kkt_res;
+  SplitKKTMatrix kkt_mat_ref = kkt_mat;
+  SplitKKTResidual kkt_res_ref = kkt_res;
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd v_weight = Eigen::VectorXd::Random(dimv); 
   const Eigen::VectorXd a_weight = Eigen::VectorXd::Random(dimv);

@@ -159,7 +159,7 @@ void PointContactTest::testBaumgarteResidual(pinocchio::Model& model, pinocchio:
   const double time_step = 0.5;
   const Eigen::Vector3d contact_point = Eigen::Vector3d::Random();
   contact.computeBaumgarteResidual(model, data, time_step, contact_point, residual);
-  const double baumgarte_weight_on_velocity = (2-restitution_coeff) / time_step;
+  const double baumgarte_weight_on_velocity = 2 / time_step;
   const double baumgarte_weight_on_position = 1 / (time_step*time_step);
   residual_ref 
       = pinocchio::getFrameClassicalAcceleration(model, data, contact_frame_id, 
@@ -219,7 +219,7 @@ void PointContactTest::testBaumgarteDerivative(pinocchio::Model& model, pinocchi
   v_angular_skew.setZero();
   pinocchio::skew(v_frame.linear(), v_linear_skew);
   pinocchio::skew(v_frame.angular(), v_angular_skew);
-  const double baumgarte_weight_on_velocity = (2-restitution_coeff) / time_step;
+  const double baumgarte_weight_on_velocity = 2 / time_step;
   const double baumgarte_weight_on_position = 1 / (time_step*time_step);
   baum_partial_dq_ref 
       = frame_a_partial_dq.template topRows<3>()

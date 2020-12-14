@@ -7,8 +7,8 @@
 #include "idocp/cost/impulse_cost_function_component_base.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -51,35 +51,35 @@ public:
 
   void lq(Robot& robot, CostFunctionData& data, const double t, 
           const ImpulseSplitSolution& s, 
-          ImpulseKKTResidual& kkt_residual) const override;
+          ImpulseSplitKKTResidual& kkt_residual) const override;
 
   void lv(Robot& robot, CostFunctionData& data, const double t, 
           const ImpulseSplitSolution& s, 
-          ImpulseKKTResidual& kkt_residual) const override;
+          ImpulseSplitKKTResidual& kkt_residual) const override;
 
   void ldv(Robot& robot, CostFunctionData& data, const double t, 
            const ImpulseSplitSolution& s, 
-           ImpulseKKTResidual& kkt_residual) const override;
+           ImpulseSplitKKTResidual& kkt_residual) const override;
 
   void lf(Robot& robot, CostFunctionData& data, const double t, 
           const ImpulseSplitSolution& s, 
-          ImpulseKKTResidual& kkt_residual) const override {}
+          ImpulseSplitKKTResidual& kkt_residual) const override {}
 
   void lqq(Robot& robot, CostFunctionData& data, const double t, 
            const ImpulseSplitSolution& s, 
-           ImpulseKKTMatrix& kkt_matrix) const override;
+           ImpulseSplitKKTMatrix& kkt_matrix) const override;
 
   void lvv(Robot& robot, CostFunctionData& data, const double t, 
            const ImpulseSplitSolution& s, 
-           ImpulseKKTMatrix& kkt_matrix) const override;
+           ImpulseSplitKKTMatrix& kkt_matrix) const override;
 
   void ldvdv(Robot& robot, CostFunctionData& data, const double t, 
              const ImpulseSplitSolution& s, 
-             ImpulseKKTMatrix& kkt_matrix) const override;
+             ImpulseSplitKKTMatrix& kkt_matrix) const override;
 
   void lff(Robot& robot, CostFunctionData& data, const double t, 
            const ImpulseSplitSolution& s, 
-           ImpulseKKTMatrix& kkt_matrix) const override {}
+           ImpulseSplitKKTMatrix& kkt_matrix) const override {}
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

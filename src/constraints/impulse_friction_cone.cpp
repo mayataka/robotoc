@@ -1,13 +1,14 @@
 #include "idocp/constraints/impulse_friction_cone.hpp"
 
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
 
-ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot, const double barrier,
-                           const double fraction_to_boundary_rate)
+ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot, 
+                                         const double barrier,
+                                         const double fraction_to_boundary_rate)
   : ImpulseConstraintComponentBase(barrier, fraction_to_boundary_rate),
     dimc_(robot.max_point_contacts()) {
 }
@@ -56,7 +57,7 @@ void ImpulseFrictionCone::setSlackAndDual(
 
 void ImpulseFrictionCone::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, 
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) const {
+    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (s.isImpulseActive(i)) {
@@ -75,8 +76,8 @@ void ImpulseFrictionCone::augmentDualResidual(
 
 void ImpulseFrictionCone::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, 
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual) const {
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (s.isImpulseActive(i)) {

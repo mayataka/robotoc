@@ -1,14 +1,14 @@
-#ifndef IDOCP_IMPULSE_KKT_MATRIX_HXX_
-#define IDOCP_IMPULSE_KKT_MATRIX_HXX_
+#ifndef IDOCP_IMPULSE_SPLIT_KKT_MATRIX_HXX_
+#define IDOCP_IMPULSE_SPLIT_KKT_MATRIX_HXX_
 
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 #include <cassert>
 
 
 namespace idocp {
 
-inline ImpulseKKTMatrix::ImpulseKKTMatrix(const Robot& robot) 
+inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix(const Robot& robot) 
   : Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     schur_complement_(2*robot.dimv()+2*robot.max_dimf(),  
                       2*robot.dimv()+robot.max_dimf()),
@@ -25,7 +25,7 @@ inline ImpulseKKTMatrix::ImpulseKKTMatrix(const Robot& robot)
 }
 
 
-inline ImpulseKKTMatrix::ImpulseKKTMatrix() 
+inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix() 
   : Fqq_prev(),
     schur_complement_(),
     FC_(),
@@ -39,11 +39,11 @@ inline ImpulseKKTMatrix::ImpulseKKTMatrix()
 }
 
 
-inline ImpulseKKTMatrix::~ImpulseKKTMatrix() {
+inline ImpulseSplitKKTMatrix::~ImpulseSplitKKTMatrix() {
 }
 
 
-inline void ImpulseKKTMatrix::setImpulseStatus(
+inline void ImpulseSplitKKTMatrix::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   dimf_ = impulse_status.dimp();
   q_begin_ = dimv_ + dimf_;
@@ -52,246 +52,267 @@ inline void ImpulseKKTMatrix::setImpulseStatus(
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Fqf() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fqf() {
   return FC_.block(0, 0, dimv_, dimf_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Fqf() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Fqf() const {
   return FC_.block(0, 0, dimv_, dimf_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Fqq() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fqq() {
   return FC_.block(0, dimf_, dimv_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Fqq() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Fqq() const {
   return FC_.block(0, dimf_, dimv_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Fqv() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fqv() {
   return FC_.block(0, dimf_+dimv_, dimv_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Fqv() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Fqv() const {
   return FC_.block(0, dimf_+dimv_, dimv_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Fvf() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fvf() {
   return FC_.block(dimv_, 0, dimv_, dimf_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Fvf() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Fvf() const {
   return FC_.block(dimv_, 0, dimv_, dimf_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Fvq() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fvq() {
   return FC_.block(dimv_, dimf_, dimv_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Fvq() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Fvq() const {
   return FC_.block(dimv_, dimf_, dimv_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Fvv() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fvv() {
   return FC_.block(dimv_, dimf_+dimv_, dimv_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Fvv() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Fvv() const {
   return FC_.block(dimv_, dimf_+dimv_, dimv_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Fxf() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fxf() {
   return FC_.block(0, 0, dimx_, dimf_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Fxf() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Fxf() const {
   return FC_.block(0, 0, dimx_, dimf_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Fxx() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fxx() {
   return FC_.block(0, dimf_, dimx_, dimx_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Fxx() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Fxx() const {
   return FC_.block(0, dimf_, dimx_, dimx_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Pq() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Pq() {
   return FC_.block(dimx_, dimf_, dimf_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Pq() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Pq() const {
   return FC_.block(dimx_, dimf_, dimf_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Vq() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Vq() {
   return FC_.block(dimx_+dimf_, dimf_, dimf_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Vq() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Vq() const {
   return FC_.block(dimx_+dimf_, dimf_, dimf_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Vv() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Vv() {
   return FC_.block(dimx_+dimf_, dimf_+dimv_, dimf_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Vv() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Vv() const {
   return FC_.block(dimx_+dimf_, dimf_+dimv_, dimf_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qdvdvff() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qdvdvff() {
   return Q_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseKKTMatrix::Qdvdvff() const {
+ImpulseSplitKKTMatrix::Qdvdvff() const {
   return Q_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qdvdv() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qdvdv() {
   return Q_.topLeftCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseKKTMatrix::Qdvdv() const {
+ImpulseSplitKKTMatrix::Qdvdv() const {
   return Q_.topLeftCorner(dimv_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qff() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qff() {
   return Q_.block(dimv_, dimv_, dimf_, dimf_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qff() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Qff() const {
   return Q_.block(dimv_, dimv_, dimf_, dimf_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qfq() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qfq() {
   return Q_.block(dimv_, q_begin_, dimf_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qfq() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Qfq() const {
   return Q_.block(dimv_, q_begin_, dimf_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qfv() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qfv() {
   return Q_.block(dimv_, v_begin_, dimf_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qfv() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Qfv() const {
   return Q_.block(dimv_, v_begin_, dimf_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qqf() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qqf() {
   return Q_.block(q_begin_, dimv_, dimv_, dimf_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qqf() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Qqf() const {
   return Q_.block(q_begin_, dimv_, dimv_, dimf_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qqq() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qqq() {
   return Q_.block(q_begin_, q_begin_, dimv_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qqq() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Qqq() const {
   return Q_.block(q_begin_, q_begin_, dimv_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qqv() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qqv() {
   return Q_.block(q_begin_, v_begin_, dimv_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qqv() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Qqv() const {
   return Q_.block(q_begin_, v_begin_, dimv_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qvf() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qvf() {
   return Q_.block(v_begin_, dimv_, dimv_, dimf_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qvf() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Qvf() const {
   return Q_.block(v_begin_, dimv_, dimv_, dimf_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qvq() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qvq() {
   return Q_.block(v_begin_, q_begin_, dimv_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qvq() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Qvq() const {
   return Q_.block(v_begin_, q_begin_, dimv_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qvv() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qvv() {
   return Q_.block(v_begin_, v_begin_, dimv_, dimv_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qvv() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Qvv() const {
   return Q_.block(v_begin_, v_begin_, dimv_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseKKTMatrix::Qxx() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qxx() {
   return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> ImpulseKKTMatrix::Qxx() const {
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Qxx() const {
   return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
 }
 
 
-inline void ImpulseKKTMatrix::symmetrize() {
+inline void ImpulseSplitKKTMatrix::symmetrize() {
   Q_.template triangularView<Eigen::StrictlyLower>() 
       = Q_.transpose().template triangularView<Eigen::StrictlyLower>();
 }
 
 
 template <typename MatrixType>
-inline void ImpulseKKTMatrix::invert(
+inline void ImpulseSplitKKTMatrix::invert(
     const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse) {
   assert(KKT_matrix_inverse.rows() == dimKKT_);
   assert(KKT_matrix_inverse.cols() == dimKKT_);
@@ -302,24 +323,25 @@ inline void ImpulseKKTMatrix::invert(
 }
 
 
-inline void ImpulseKKTMatrix::setZero() {
+inline void ImpulseSplitKKTMatrix::setZero() {
   Fqq_prev.setZero();
   FC_.setZero();
   Q_.setZero();
 }
 
 
-inline int ImpulseKKTMatrix::dimKKT() const {
+inline int ImpulseSplitKKTMatrix::dimKKT() const {
   return dimKKT_;
 }
 
 
-inline int ImpulseKKTMatrix::dimf() const {
+inline int ImpulseSplitKKTMatrix::dimf() const {
   return dimf_;
 }
 
 
-inline bool ImpulseKKTMatrix::isApprox(const ImpulseKKTMatrix& other) const {
+inline bool ImpulseSplitKKTMatrix::isApprox(
+    const ImpulseSplitKKTMatrix& other) const {
   if (!Fxf().isApprox(other.Fxf())) return false;
   if (!Fxx().isApprox(other.Fxx())) return false;
   if (!Pq().isApprox(other.Pq())) return false;
@@ -333,7 +355,7 @@ inline bool ImpulseKKTMatrix::isApprox(const ImpulseKKTMatrix& other) const {
 }
 
 
-inline bool ImpulseKKTMatrix::hasNaN() const {
+inline bool ImpulseSplitKKTMatrix::hasNaN() const {
   if (Fqq_prev.hasNaN()) return true;
   if (FC_.hasNaN()) return true;
   if (Q_.hasNaN()) return true;
@@ -342,4 +364,4 @@ inline bool ImpulseKKTMatrix::hasNaN() const {
 
 } // namespace idocp 
 
-#endif // IDOCP_IMPULSE_KKT_MATRIX_HXX_ 
+#endif // IDOCP_IMPULSE_SPLIT_KKT_MATRIX_HXX_ 

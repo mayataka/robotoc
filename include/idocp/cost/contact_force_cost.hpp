@@ -9,8 +9,8 @@
 #include "idocp/cost/cost_function_component_base.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -49,55 +49,59 @@ public:
 
   void lq(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const override {}
+          SplitKKTResidual& kkt_residual) const override {}
 
   void lv(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const override {}
+          SplitKKTResidual& kkt_residual) const override {}
 
   void la(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s,
-          KKTResidual& kkt_residual) const override {}
+          SplitKKTResidual& kkt_residual) const override {}
 
   void lf(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const override;
+          SplitKKTResidual& kkt_residual) const override;
 
   void lu(Robot& robot, CostFunctionData& data, const double t, 
           const double dtau, const SplitSolution& s,
-          KKTResidual& kkt_residual) const override {}
+          SplitKKTResidual& kkt_residual) const override {}
 
   void lqq(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override {}
+           SplitKKTMatrix& kkt_matrix) const override {}
 
   void lvv(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override {}
+           SplitKKTMatrix& kkt_matrix) const override {}
 
   void laa(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override {}
+           SplitKKTMatrix& kkt_matrix) const override {}
 
   void lff(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override;
+           SplitKKTMatrix& kkt_matrix) const override;
 
   void luu(Robot& robot, CostFunctionData& data, const double t, 
            const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override {}
+           SplitKKTMatrix& kkt_matrix) const override {}
 
   void phiq(Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, KKTResidual& kkt_residual) const override {}
+            const SplitSolution& s, 
+            SplitKKTResidual& kkt_residual) const override {}
 
   void phiv(Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, KKTResidual& kkt_residual) const override {}
+            const SplitSolution& s, 
+            SplitKKTResidual& kkt_residual) const override {}
 
   void phiqq(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s, KKTMatrix& kkt_matrix) const override {}
+             const SplitSolution& s, 
+             SplitKKTMatrix& kkt_matrix) const override {}
 
   void phivv(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s, KKTMatrix& kkt_matrix) const override {}
+             const SplitSolution& s, 
+             SplitKKTMatrix& kkt_matrix) const override {}
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

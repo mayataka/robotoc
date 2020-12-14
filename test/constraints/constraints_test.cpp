@@ -10,8 +10,8 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/constraints/joint_position_lower_limit.hpp"
@@ -105,8 +105,8 @@ void ConstraintsTest::timeStage0(Robot& robot, const ContactStatus& contact_stat
   EXPECT_EQ(data.acceleration_level_data.size(), 6);
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
-  KKTMatrix kkt_matrix(robot);
-  KKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   constraints->setSlackAndDual(robot, data, dtau, s);
@@ -145,8 +145,8 @@ void ConstraintsTest::timeStage1(Robot& robot, const ContactStatus& contact_stat
   EXPECT_EQ(data.acceleration_level_data.size(), 6);
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
-  KKTMatrix kkt_matrix(robot);
-  KKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   constraints->setSlackAndDual(robot, data, dtau, s);
@@ -186,8 +186,8 @@ void ConstraintsTest::timeStage2(Robot& robot, const ContactStatus& contact_stat
   EXPECT_EQ(data.acceleration_level_data.size(), 6);
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
-  KKTMatrix kkt_matrix(robot);
-  KKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   constraints->setSlackAndDual(robot, data, dtau, s);

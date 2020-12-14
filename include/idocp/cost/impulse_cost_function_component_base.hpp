@@ -7,8 +7,8 @@
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -39,20 +39,20 @@ public:
   ///
   /// @brief Default copy operator. 
   ///
-  ImpulseCostFunctionComponentBase& operator=(const ImpulseCostFunctionComponentBase&) 
-      = default;
+  ImpulseCostFunctionComponentBase& operator=(
+      const ImpulseCostFunctionComponentBase&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  ImpulseCostFunctionComponentBase(ImpulseCostFunctionComponentBase&&) noexcept 
-      = default;
+  ImpulseCostFunctionComponentBase(
+      ImpulseCostFunctionComponentBase&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  ImpulseCostFunctionComponentBase& operator=(ImpulseCostFunctionComponentBase&&) noexcept 
-      = default;
+  ImpulseCostFunctionComponentBase& operator=(
+      ImpulseCostFunctionComponentBase&&) noexcept = default;
 
   ///
   /// @brief Computes and returns stage cost. 
@@ -77,7 +77,7 @@ public:
   ///
   virtual void lq(Robot& robot, CostFunctionData& data, const double t, 
                   const ImpulseSplitSolution& s, 
-                  ImpulseKKTResidual& kkt_residual) const = 0;
+                  ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Computes the partial derivatives of the stage cost with respect
@@ -91,7 +91,7 @@ public:
   ///
   virtual void lv(Robot& robot, CostFunctionData& data, const double t, 
                   const ImpulseSplitSolution& s, 
-                  ImpulseKKTResidual& kkt_residual) const = 0;
+                  ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Computes the partial derivatives of the stage cost with respect
@@ -105,7 +105,7 @@ public:
   ///
   virtual void ldv(Robot& robot, CostFunctionData& data, const double t, 
                    const ImpulseSplitSolution& s, 
-                   ImpulseKKTResidual& kkt_residual) const = 0;
+                   ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Computes the partial derivatives of the stage cost with respect
@@ -119,7 +119,7 @@ public:
   ///
   virtual void lf(Robot& robot, CostFunctionData& data, const double t, 
                   const ImpulseSplitSolution& s, 
-                  ImpulseKKTResidual& kkt_residual) const = 0;
+                  ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Computes the Hessians of the stage cost with respect
@@ -133,7 +133,7 @@ public:
   ///
   virtual void lqq(Robot& robot, CostFunctionData& data, const double t, 
                    const ImpulseSplitSolution& s, 
-                   ImpulseKKTMatrix& kkt_matrix) const = 0;
+                   ImpulseSplitKKTMatrix& kkt_matrix) const = 0;
 
   ///
   /// @brief Computes the Hessians of the stage cost with respect
@@ -147,7 +147,7 @@ public:
   ///
   virtual void lvv(Robot& robot, CostFunctionData& data, const double t, 
                    const ImpulseSplitSolution& s, 
-                   ImpulseKKTMatrix& kkt_matrix) const = 0;
+                   ImpulseSplitKKTMatrix& kkt_matrix) const = 0;
 
   ///
   /// @brief Computes the Hessians of the stage cost with respect
@@ -161,7 +161,7 @@ public:
   ///
   virtual void ldvdv(Robot& robot, CostFunctionData& data, const double t, 
                      const ImpulseSplitSolution& s, 
-                     ImpulseKKTMatrix& kkt_matrix) const = 0;
+                     ImpulseSplitKKTMatrix& kkt_matrix) const = 0;
 
   ///
   /// @brief Computes the Hessian of the stage cost with respect
@@ -175,7 +175,7 @@ public:
   ///
   virtual void lff(Robot& robot, CostFunctionData& data, const double t, 
                    const ImpulseSplitSolution& s, 
-                   ImpulseKKTMatrix& kkt_matrix) const = 0;
+                   ImpulseSplitKKTMatrix& kkt_matrix) const = 0;
 
 };
 

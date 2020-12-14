@@ -9,8 +9,8 @@
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/impulse_constraints.hpp"
@@ -99,8 +99,8 @@ public:
                     const double t, const Eigen::VectorXd& q_prev, 
                     const ImpulseSplitSolution& s, 
                     const SplitSolution& s_next, 
-                    ImpulseKKTMatrix& kkt_matrix, 
-                    ImpulseKKTResidual& kkt_residual,
+                    ImpulseSplitKKTMatrix& kkt_matrix, 
+                    ImpulseSplitKKTResidual& kkt_residual,
                     const bool is_state_constraint_valid);
 
   ///
@@ -124,8 +124,8 @@ public:
   /// @param[in] d Split direction of this stage.
   /// 
   void computeCondensedDualDirection(const Robot& robot, 
-                                     const ImpulseKKTMatrix& kkt_matrix, 
-                                     const ImpulseKKTResidual& kkt_residual,
+                                     const ImpulseSplitKKTMatrix& kkt_matrix, 
+                                     const ImpulseSplitKKTResidual& kkt_residual,
                                      const SplitDirection& d_next, 
                                      ImpulseSplitDirection& d);
 
@@ -182,8 +182,8 @@ public:
                           const double t, const Eigen::VectorXd& q_prev, 
                           const ImpulseSplitSolution& s, 
                           const SplitSolution& s_next,
-                          ImpulseKKTMatrix& kkt_matrix, 
-                          ImpulseKKTResidual& kkt_residual,
+                          ImpulseSplitKKTMatrix& kkt_matrix, 
+                          ImpulseSplitKKTResidual& kkt_residual,
                           const bool is_state_constraint_valid);
 
   ///
@@ -195,7 +195,7 @@ public:
   /// equality constraint is valid or not.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual(const ImpulseKKTResidual& kkt_residual,
+  double squaredNormKKTResidual(const ImpulseSplitKKTResidual& kkt_residual,
                                 const bool is_state_constraint_valid) const;
 
   ///
@@ -227,7 +227,7 @@ public:
                              const double t, const ImpulseSplitSolution& s, 
                              const Eigen::VectorXd& q_next,
                              const Eigen::VectorXd& v_next,
-                             ImpulseKKTResidual& kkt_residual,
+                             ImpulseSplitKKTResidual& kkt_residual,
                              const bool is_state_constraint_valid);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

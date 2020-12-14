@@ -7,8 +7,8 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/impulse_status.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler_data.hpp"
@@ -75,8 +75,8 @@ void ImpulseDynamicsForwardEulerTest::testLinearizeImpulseVelocityConstraints(Ro
 
 void ImpulseDynamicsForwardEulerTest::testLinearizeImpulsePositionConstraints(Robot& robot, const ImpulseStatus& impulse_status) {
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
-  ImpulseKKTMatrix kkt_matrix(robot), kkt_matrix_ref(robot);
-  ImpulseKKTResidual kkt_residual(robot), kkt_residual_ref(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot), kkt_matrix_ref(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot), kkt_residual_ref(robot);
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_matrix_ref.setImpulseStatus(impulse_status);
   kkt_residual.setImpulseStatus(impulse_status);
@@ -95,16 +95,16 @@ void ImpulseDynamicsForwardEulerTest::testLinearizeImpulsePositionConstraints(Ro
 
 void ImpulseDynamicsForwardEulerTest::testLinearizeImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid) {
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setImpulseStatus(impulse_status);
-  ImpulseKKTMatrix kkt_matrix_ref = kkt_matrix;
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
+  ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.lq().setRandom();
   kkt_residual.lv().setRandom();
   kkt_residual.ldv.setRandom();
   kkt_residual.lf().setRandom();
-  ImpulseKKTResidual kkt_residual_ref = kkt_residual;
+  ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
   ImpulseDynamicsForwardEuler id(robot);
   robot.updateKinematics(s.q, s.v+s.dv);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix, kkt_residual, is_state_constraint_valid);
@@ -150,9 +150,9 @@ void ImpulseDynamicsForwardEulerTest::testLinearizeImpulseDynamics(Robot& robot,
 void ImpulseDynamicsForwardEulerTest::testCondensing(Robot& robot, const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimp();
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setImpulseStatus(impulse_status);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_residual.lx().setRandom();
   kkt_residual.ldv.setRandom();
@@ -162,8 +162,8 @@ void ImpulseDynamicsForwardEulerTest::testCondensing(Robot& robot, const Impulse
   kkt_matrix.Qxx().template triangularView<Eigen::StrictlyLower>()
       = kkt_matrix.Qxx().transpose().template triangularView<Eigen::StrictlyLower>();
   kkt_matrix.Qdvdvff().diagonal().setRandom();
-  ImpulseKKTResidual kkt_residual_ref = kkt_residual;
-  ImpulseKKTMatrix kkt_matrix_ref = kkt_matrix;
+  ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
+  ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
   ImpulseDynamicsForwardEuler id(robot);
   ImpulseDynamicsForwardEulerData data(robot);
   data.setImpulseStatus(impulse_status);
@@ -235,9 +235,9 @@ void ImpulseDynamicsForwardEulerTest::testExpansionDual(Robot& robot, const Impu
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimp();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setImpulseStatus(impulse_status);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setImpulseStatus(impulse_status);
   ImpulseDynamicsForwardEulerData data(robot);
   data.setImpulseStatus(impulse_status);
@@ -266,12 +266,12 @@ void ImpulseDynamicsForwardEulerTest::testIntegration(Robot& robot, const Impuls
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimp();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.lx().setRandom();
   kkt_residual.ldv.setRandom();
   kkt_residual.Fx().setRandom();
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_matrix.Qxx().setRandom();
   kkt_matrix.Qxx().template triangularView<Eigen::StrictlyLower>()
@@ -281,8 +281,8 @@ void ImpulseDynamicsForwardEulerTest::testIntegration(Robot& robot, const Impuls
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
   }
-  ImpulseKKTResidual kkt_residual_ref = kkt_residual;
-  ImpulseKKTMatrix kkt_matrix_ref = kkt_matrix;
+  ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
+  ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
   robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamicsForwardEuler id(robot), id_ref(robot);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix, kkt_residual, is_state_constraint_valid);
@@ -315,9 +315,9 @@ void ImpulseDynamicsForwardEulerTest::testIntegration(Robot& robot, const Impuls
 void ImpulseDynamicsForwardEulerTest::testComputeResidual(Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid) {
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   ImpulseDynamicsForwardEuler id(robot);
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setImpulseStatus(impulse_status);
-  ImpulseKKTResidual kkt_residual_ref = kkt_residual;
+  ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
   robot.updateKinematics(s.q, s.v+s.dv);
   id.computeImpulseDynamicsResidual(robot, impulse_status, s, kkt_residual, is_state_constraint_valid);
   const double l1norm = id.l1NormImpulseDynamicsResidual(kkt_residual, is_state_constraint_valid);

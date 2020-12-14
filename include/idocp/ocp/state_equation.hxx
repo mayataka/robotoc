@@ -12,8 +12,8 @@ template <typename ConfigVectorType, typename SplitSolutionType>
 inline void LinearizeForwardEuler(
     const Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
-    const SplitSolutionType& s_next, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) {
+    const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
   assert(dtau > 0);
   ComputeForwardEulerResidual(robot, dtau, s, s_next.q, s_next.v, kkt_residual);
   if (robot.has_floating_base()) {
@@ -37,7 +37,7 @@ inline void LinearizeBackwardEuler(
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
     const SplitSolution& s, const SplitSolutionType& s_next,
-    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -62,8 +62,8 @@ inline void LinearizeBackwardEulerTerminal(
     const Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
-    const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) {
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -86,7 +86,7 @@ inline void ComputeForwardEulerResidual(
     const Robot& robot, const double dtau, const SplitSolution& s, 
     const Eigen::MatrixBase<ConfigVectorType>& q_next, 
     const Eigen::MatrixBase<TangentVectorType>& v_next, 
-    KKTResidual& kkt_residual) {
+    SplitKKTResidual& kkt_residual) {
   assert(dtau > 0);
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
@@ -101,7 +101,7 @@ inline void ComputeBackwardEulerResidual(
     const Robot& robot, const double dtau, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, const SplitSolution& s, 
-    KKTResidual& kkt_residual) {
+    SplitKKTResidual& kkt_residual) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -111,13 +111,14 @@ inline void ComputeBackwardEulerResidual(
 }
 
 
-inline double L1NormStateEuqationResidual(const KKTResidual& kkt_residual) {
+inline double L1NormStateEuqationResidual(
+    const SplitKKTResidual& kkt_residual) {
   return kkt_residual.Fx().lpNorm<1>();
 }
 
 
 inline double SquaredNormStateEuqationResidual(
-    const KKTResidual& kkt_residual) {
+    const SplitKKTResidual& kkt_residual) {
   return kkt_residual.Fx().squaredNorm();
 }
 

@@ -5,8 +5,8 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/state_equation.hpp"
 
@@ -36,8 +36,8 @@ TEST_F(StateEquationTest, forwardEulerFixedbase) {
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_next = SplitSolution::Random(robot);
-  KKTResidual kkt_residual(robot);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   stateequation::LinearizeForwardEuler(robot, dtau, q_prev, s, s_next, 
                                        kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q+dtau*s.v-s_next.q)));
@@ -59,8 +59,8 @@ TEST_F(StateEquationTest, forwardEulerFloatingBase) {
   robot.normalizeConfiguration(q_prev);
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_next = SplitSolution::Random(robot);
-  KKTResidual kkt_residual(robot);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   stateequation::LinearizeForwardEuler(robot, dtau, q_prev, s, s_next, 
                                        kkt_matrix, kkt_residual);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
@@ -95,8 +95,8 @@ TEST_F(StateEquationTest, backwardEulerFixedBase) {
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const Eigen::VectorXd v_prev = Eigen::VectorXd::Random(robot.dimv());
-  KKTResidual kkt_residual(robot);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   stateequation::LinearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next,
                                         kkt_matrix,  kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((q_prev-s.q+dtau*s.v)));
@@ -130,8 +130,8 @@ TEST_F(StateEquationTest, backwardEulerFloatingBase) {
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const Eigen::VectorXd v_prev = Eigen::VectorXd::Random(robot.dimv());
-  KKTResidual kkt_residual(robot);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   stateequation::LinearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next,
                                         kkt_matrix,  kkt_residual);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());

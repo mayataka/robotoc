@@ -1,7 +1,7 @@
 #include "idocp/constraints/contact_distance.hpp"
 
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
@@ -66,7 +66,7 @@ void ContactDistance::augmentDualResidual(Robot& robot,
                                           ConstraintComponentData& data, 
                                           const double dtau, 
                                           const SplitSolution& s, 
-                                          KKTResidual& kkt_residual) const {
+                                          SplitKKTResidual& kkt_residual) const {
   assert(dtau > 0);
   int dimf_stack = 0;
   Eigen::MatrixXd end_effector_Jacobian = Eigen::MatrixXd::Zero(s.dimf(), 
@@ -85,8 +85,8 @@ void ContactDistance::augmentDualResidual(Robot& robot,
 
 void ContactDistance::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) const {
   assert(dtau > 0);
   Eigen::MatrixXd end_effector_Jacobian = Eigen::MatrixXd::Zero(3, robot.dimv());
   for (int i=0; i<robot.max_point_contacts(); ++i) {

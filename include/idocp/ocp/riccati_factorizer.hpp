@@ -5,8 +5,8 @@
 #include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/lqr_state_feedback_policy.hpp"
@@ -67,8 +67,8 @@ public:
   /// @param[out] riccati Riccati factorization at the current impulse stage. 
   ///
   void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next, 
-                                const double dtau, KKTMatrix& kkt_matrix, 
-                                KKTResidual& kkt_residual,  
+                                const double dtau, SplitKKTMatrix& kkt_matrix, 
+                                SplitKKTResidual& kkt_residual,  
                                 RiccatiFactorization& riccati);
 
   ///
@@ -79,8 +79,8 @@ public:
   /// @param[in] exist_state_constraint If true, the factorization for state
   /// constraints are also performed. 
   ///
-  void forwardRiccatiRecursionParallel(KKTMatrix& kkt_matrix, 
-                                       KKTResidual& kkt_residual,
+  void forwardRiccatiRecursionParallel(SplitKKTMatrix& kkt_matrix, 
+                                       SplitKKTResidual& kkt_residual,
                                        const bool exist_state_constraint);
 
   ///
@@ -103,8 +103,8 @@ public:
   /// constraints are also performed. 
   ///
   void forwardStateConstraintFactorization(
-      const RiccatiFactorization& riccati, const KKTMatrix& kkt_matrix, 
-      const KKTResidual& kkt_residual, const double dtau, 
+      const RiccatiFactorization& riccati, const SplitKKTMatrix& kkt_matrix, 
+      const SplitKKTResidual& kkt_residual, const double dtau, 
       RiccatiFactorization& riccati_next, const bool exist_state_constraint);
 
   ///
@@ -117,7 +117,7 @@ public:
   ///
   template <typename MatrixType1, typename MatrixType2>
   void backwardStateConstraintFactorization(
-      const Eigen::MatrixBase<MatrixType1>& T_next, const KKTMatrix& kkt_matrix, 
+      const Eigen::MatrixBase<MatrixType1>& T_next, const SplitKKTMatrix& kkt_matrix, 
       const double dtau, const Eigen::MatrixBase<MatrixType2>& T) const;
 
   ///
@@ -132,8 +132,8 @@ public:
   /// constraints are also performed. 
   ///
   template <typename SplitDirectionType>
-  void forwardRiccatiRecursion(const KKTMatrix& kkt_matrix, 
-                               const KKTResidual& kkt_residual,
+  void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
+                               const SplitKKTResidual& kkt_residual,
                                const RiccatiFactorization& riccati_next,
                                const SplitDirection& d, 
                                const double dtau, 

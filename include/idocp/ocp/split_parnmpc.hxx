@@ -60,8 +60,8 @@ inline void SplitParNMPC::linearizeOCP(Robot& robot,
                                        const Eigen::VectorXd& v_prev, 
                                        const SplitSolution& s, 
                                        const SplitSolutionType& s_next, 
-                                       KKTMatrix& kkt_matrix, 
-                                       KKTResidual& kkt_residual) {
+                                       SplitKKTMatrix& kkt_matrix, 
+                                       SplitKKTResidual& kkt_residual) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -143,8 +143,8 @@ inline void SplitParNMPC::computeCondensedPrimalDirection(
 
 
 inline void SplitParNMPC::computeCondensedDualDirection(
-    const Robot& robot, const double dtau, const KKTMatrix& kkt_matrix, 
-    const KKTResidual& kkt_residual, SplitDirection& d) {
+    const Robot& robot, const double dtau, const SplitKKTMatrix& kkt_matrix, 
+    const SplitKKTResidual& kkt_residual, SplitDirection& d) {
   assert(dtau > 0);
   contact_dynamics_.computeCondensedDualDirection(robot, dtau, kkt_matrix,
                                                   kkt_residual, d.dgmm(), d);
@@ -175,9 +175,9 @@ inline double SplitParNMPC::maxDualStepSize() {
 }
 
 
-inline void SplitParNMPC::updatePrimal(Robot& robot, const double primal_step_size, 
-                                const double dtau, const SplitDirection& d, 
-                                SplitSolution& s) {
+inline void SplitParNMPC::updatePrimal(
+    Robot& robot, const double primal_step_size, const double dtau, 
+    const SplitDirection& d, SplitSolution& s) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
   assert(dtau > 0);
@@ -198,8 +198,8 @@ inline void SplitParNMPC::computeKKTResidual(
     Robot& robot, const ContactStatus& contact_status, const double t, 
     const double dtau, const Eigen::VectorXd& q_prev, 
     const Eigen::VectorXd& v_prev, const SplitSolution& s, 
-    const SplitSolutionType& s_next, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) {
+    const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -262,7 +262,7 @@ inline double SplitParNMPC::constraintViolation(
     Robot& robot, const ContactStatus& contact_status, const double t, 
     const double dtau, const Eigen::VectorXd& q_prev, 
     const Eigen::VectorXd& v_prev, const SplitSolution& s, 
-    KKTResidual& kkt_residual) {
+    SplitKKTResidual& kkt_residual) {
   kkt_residual.setContactStatus(contact_status);
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);

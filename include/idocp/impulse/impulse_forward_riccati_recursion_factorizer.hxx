@@ -27,8 +27,9 @@ inline ImpulseForwardRiccatiRecursionFactorizer::~ImpulseForwardRiccatiRecursion
 
 
 inline void ImpulseForwardRiccatiRecursionFactorizer::factorizeStateTransition(
-    const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
-    const ImpulseKKTResidual& kkt_residual,
+    const RiccatiFactorization& riccati, 
+    const ImpulseSplitKKTMatrix& kkt_matrix, 
+    const ImpulseSplitKKTResidual& kkt_residual,
     RiccatiFactorization& riccati_next) {
   if (has_floating_base_) {
     riccati_next.Pi.topRows(dimv_).noalias()
@@ -53,7 +54,8 @@ inline void ImpulseForwardRiccatiRecursionFactorizer::factorizeStateTransition(
 
 
 inline void ImpulseForwardRiccatiRecursionFactorizer::factorizeStateConstraintFactorization(
-    const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
+    const RiccatiFactorization& riccati, 
+    const ImpulseSplitKKTMatrix& kkt_matrix, 
     RiccatiFactorization& riccati_next) {
   if (has_floating_base_) {
     NApBKt_.leftCols(dimv_).noalias() 

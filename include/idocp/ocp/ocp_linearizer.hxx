@@ -18,14 +18,14 @@ struct LinearizeOCP {
                          const double dtau, 
                          const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
                          const SplitSolution& s, const SplitSolutionType& s_next, 
-                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+                         SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
     split_ocp.linearizeOCP(robot, contact_status, t, dtau, q_prev, s, s_next,
                            kkt_matrix, kkt_residual);
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot, 
                          const double t, const SplitSolution& s, 
-                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+                         SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
     terminal_ocp.linearizeOCP(robot, t, s, kkt_matrix, kkt_residual);
   }
 
@@ -35,11 +35,12 @@ struct LinearizeOCP {
                          const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
                          const ImpulseSplitSolution& s, 
                          const SplitSolution& s_next, 
-                         ImpulseKKTMatrix& kkt_matrix, 
-                         ImpulseKKTResidual& kkt_residual,
-                         const bool is_state_constraint_valid) {
+                         ImpulseSplitKKTMatrix& kkt_matrix, 
+                         ImpulseSplitKKTResidual& kkt_residual,
+                         const bool _is_state_constraint_valid) {
     split_ocp.linearizeOCP(robot, impulse_status, t, q_prev, s, s_next,
-                           kkt_matrix, kkt_residual, is_state_constraint_valid);
+                           kkt_matrix, kkt_residual, 
+                           _is_state_constraint_valid);
   }
 };
 
@@ -52,14 +53,14 @@ struct ComputeKKTResidual {
                          const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
                          const SplitSolution& s, 
                          const SplitSolutionType& s_next, 
-                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+                         SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
     split_ocp.computeKKTResidual(robot, contact_status, t, dtau, q_prev, s, 
                                  s_next, kkt_matrix, kkt_residual);
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot,  
                          const double t, const SplitSolution& s, 
-                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+                         SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
     terminal_ocp.computeKKTResidual(robot, t, s, kkt_residual);
   }
 
@@ -69,12 +70,12 @@ struct ComputeKKTResidual {
                          const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
                          const ImpulseSplitSolution& s, 
                          const SplitSolution& s_next, 
-                         ImpulseKKTMatrix& kkt_matrix, 
-                         ImpulseKKTResidual& kkt_residual,
-                         const bool is_state_constraint_valid) {
+                         ImpulseSplitKKTMatrix& kkt_matrix, 
+                         ImpulseSplitKKTResidual& kkt_residual,
+                         const bool _is_state_constraint_valid) {
     split_ocp.computeKKTResidual(robot, impulse_status, t, q_prev, s, s_next,
                                  kkt_matrix, kkt_residual, 
-                                 is_state_constraint_valid);
+                                 _is_state_constraint_valid);
   }
 };
 
@@ -87,14 +88,14 @@ struct initConstraints {
                          const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
                          const SplitSolution& s, 
                          const SplitSolutionType& s_next, 
-                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+                         SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
     split_ocp.computeKKTResidual(robot, contact_status, t, dtau, q_prev, s, 
                                  s_next, kkt_matrix, kkt_residual);
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot,  
                          const double t, const SplitSolution& s, 
-                         KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+                         SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
     terminal_ocp.computeKKTResidual(robot, t, s, kkt_residual);
   }
 
@@ -104,8 +105,8 @@ struct initConstraints {
                          const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
                          const ImpulseSplitSolution& s, 
                          const SplitSolution& s_next, 
-                         ImpulseKKTMatrix& kkt_matrix, 
-                         ImpulseKKTResidual& kkt_residual,
+                         ImpulseSplitKKTMatrix& kkt_matrix, 
+                         ImpulseSplitKKTResidual& kkt_residual,
                          const bool is_state_constraint_valid) {
     split_ocp.computeKKTResidual(robot, impulse_status, t, q_prev, s, s_next,
                                  kkt_matrix, kkt_residual, 
@@ -125,9 +126,8 @@ inline void OCPLinearizer::runParallel(HybridOCP& split_ocps,
                                        const ContactSequence& contact_sequence,
                                        const double t, const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v, 
-                                       const HybridSolution& s,
-                                       HybridKKTMatrix& kkt_matrix,
-                                       HybridKKTResidual& kkt_residual) const {
+                                       const Solution& s, KKTMatrix& kkt_matrix,
+                                       KKTResidual& kkt_residual) const {
   assert(robots.size() == num_proc_);
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
@@ -225,7 +225,7 @@ inline void OCPLinearizer::runParallel(HybridOCP& split_ocps,
 
 inline const Eigen::VectorXd& OCPLinearizer::q_prev(
     const ContactSequence& contact_sequence, const Eigen::VectorXd& q,
-    const HybridSolution& s, const int time_stage) const {
+    const Solution& s, const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage <= N_);
   if (time_stage == 0) {

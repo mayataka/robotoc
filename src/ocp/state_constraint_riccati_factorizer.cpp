@@ -32,7 +32,7 @@ void StateConstraintRiccatiFactorizer::computeLagrangeMultiplierDirection(
     const ContactSequence& contact_sequence,
     const HybridRiccatiFactorization& riccati_factorization,
     StateConstraintRiccatiFactorization& constraint_factorization,
-    HybridDirection& d) {
+    Direction& d) {
   assert(riccati_factorization.impulse.size() == max_num_impulse_);
   assert(d.impulse.size() == max_num_impulse_);
   const int num_impulse = contact_sequence.totalNumImpulseStages();
@@ -57,7 +57,7 @@ void StateConstraintRiccatiFactorizer::computeLagrangeMultiplierDirection(
 
 void StateConstraintRiccatiFactorizer::aggregateLagrangeMultiplierDirection(
     const StateConstraintRiccatiFactorization& constraint_factorization,
-    const ContactSequence& contact_sequence, const HybridDirection& d,
+    const ContactSequence& contact_sequence, const Direction& d,
     HybridRiccatiFactorization& riccati_factorization) const {
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();

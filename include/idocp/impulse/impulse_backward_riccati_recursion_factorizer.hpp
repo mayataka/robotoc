@@ -4,8 +4,8 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 
 
@@ -64,7 +64,7 @@ public:
   /// @param[in, out] kkt_matrix The KKT matrix.
   ///
   void factorizeKKTMatrix(const RiccatiFactorization& riccati_next, 
-                          ImpulseKKTMatrix& kkt_matrix);
+                          ImpulseSplitKKTMatrix& kkt_matrix);
 
   ///
   /// @brief Factorize the Riccati factorization matrix P and vector s.
@@ -75,10 +75,11 @@ public:
   /// BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization().
   /// @param[out] riccati The Riccati factorization at this time stage.
   ///
-  void factorizeRiccatiFactorization(const RiccatiFactorization& riccati_next, 
-                                     const ImpulseKKTMatrix& kkt_matrix, 
-                                     const ImpulseKKTResidual& kkt_residual,
-                                     RiccatiFactorization& riccati);
+  void factorizeRiccatiFactorization(
+      const RiccatiFactorization& riccati_next, 
+      const ImpulseSplitKKTMatrix& kkt_matrix, 
+      const ImpulseSplitKKTResidual& kkt_residual, 
+      RiccatiFactorization& riccati);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

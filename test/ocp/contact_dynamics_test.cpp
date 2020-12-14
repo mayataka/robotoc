@@ -7,8 +7,8 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/contact_dynamics_data.hpp"
@@ -86,9 +86,9 @@ void ContactDynamicsTest::testLinearizeContactConstraints(Robot& robot, const Co
 
 void ContactDynamicsTest::testLinearizeContactDynamics(Robot& robot, const ContactStatus& contact_status) {
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.lq().setRandom();
   kkt_residual.lv().setRandom();
@@ -96,7 +96,7 @@ void ContactDynamicsTest::testLinearizeContactDynamics(Robot& robot, const Conta
   kkt_residual.lf().setRandom();
   kkt_residual.lu().setRandom();
   kkt_residual.lu_passive.setRandom();
-  KKTResidual kkt_residual_ref = kkt_residual;
+  SplitKKTResidual kkt_residual_ref = kkt_residual;
   Eigen::VectorXd lu_full_ref = Eigen::VectorXd::Zero(robot.dimv());
   if (robot.has_floating_base()) {
     lu_full_ref.head(robot.dim_passive()) = kkt_residual_ref.lu_passive;
@@ -158,9 +158,9 @@ void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& cont
   const int dimu = robot.dimu();
   const int dim_passive = robot.dim_passive();
   const int dimf = contact_status.dimf();
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.lx().setRandom();
   kkt_residual.la.setRandom();
@@ -183,8 +183,8 @@ void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& cont
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(dim_passive, dim_passive).setRandom();
   }
-  KKTResidual kkt_residual_ref = kkt_residual;
-  KKTMatrix kkt_matrix_ref = kkt_matrix;
+  SplitKKTResidual kkt_residual_ref = kkt_residual;
+  SplitKKTMatrix kkt_matrix_ref = kkt_matrix;
   ContactDynamics cd(robot);
   ContactDynamicsData data(robot);
   data.setContactStatus(contact_status);
@@ -310,12 +310,12 @@ void ContactDynamicsTest::testExpansionDual(Robot& robot, const ContactStatus& c
   const int dim_passive = robot.dim_passive();
   const int dimf = contact_status.dimf();
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
   if (robot.has_floating_base()) {
     kkt_residual.lu_passive.setRandom();
   }
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
   kkt_matrix.Qxu_full().setRandom();
   kkt_matrix.Quu_full().setRandom();
@@ -369,7 +369,7 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
   const int dim_passive = robot.dim_passive();
   const int dimf = contact_status.dimf();
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
   kkt_residual.lx().setRandom();
   kkt_residual.la.setRandom();
@@ -378,7 +378,7 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
     kkt_residual.lu_passive.setRandom();
   }
   kkt_residual.Fx().setRandom();
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
   kkt_matrix.Qxx().setRandom();
   kkt_matrix.Qxx().template triangularView<Eigen::StrictlyLower>()
@@ -393,8 +393,8 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(dim_passive, dim_passive).setRandom();
   }
-  KKTResidual kkt_residual_ref = kkt_residual;
-  KKTMatrix kkt_matrix_ref = kkt_matrix;
+  SplitKKTResidual kkt_residual_ref = kkt_residual;
+  SplitKKTMatrix kkt_matrix_ref = kkt_matrix;
   robot.updateKinematics(s.q, s.v, s.a);
   ContactDynamics cd(robot), cd_ref(robot);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);

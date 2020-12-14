@@ -10,8 +10,8 @@
 #include "idocp/cost/impulse_cost_function_component_base.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -23,6 +23,8 @@ namespace idocp {
 ///
 class ImpulseCostFunction {
 public:
+  using ImpulseCostFunctionComponentBasePtr 
+      = std::shared_ptr<ImpulseCostFunctionComponentBase>;
 
   ///
   /// @brief Default constructor. 
@@ -59,7 +61,7 @@ public:
   /// @param[in] cost shared pointer to the cost function component appended 
   /// to the cost.
   ///
-  void push_back(const std::shared_ptr<ImpulseCostFunctionComponentBase>& cost);
+  void push_back(const ImpulseCostFunctionComponentBasePtr& cost);
 
   ///
   /// @brief Clear cost function by removing all components.
@@ -104,7 +106,7 @@ public:
   void computeStageCostDerivatives(Robot& robot, CostFunctionData& data, 
                                    const double t, 
                                    const ImpulseSplitSolution& s, 
-                                   ImpulseKKTResidual& kkt_residual) const;
+                                   ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the Hessians of the stage cost with respect
@@ -118,10 +120,10 @@ public:
   ///
   void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
                                const double t, const ImpulseSplitSolution& s, 
-                               ImpulseKKTMatrix& kkt_matrix) const;
+                               ImpulseSplitKKTMatrix& kkt_matrix) const;
 
 private:
-  std::vector<std::shared_ptr<ImpulseCostFunctionComponentBase>> costs_;
+  std::vector<ImpulseCostFunctionComponentBasePtr> costs_;
 
 };
 

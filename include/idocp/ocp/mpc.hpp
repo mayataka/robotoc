@@ -28,7 +28,7 @@ public:
   ///
   MPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
       const std::shared_ptr<Constraints>& constraints, const double T, 
-      const int N, const int num_proc=1);
+      const int N, const int max_num_impulse=0, const int num_proc=1);
 
   ///
   /// @brief Default constructor. Does not construct any datas. 
@@ -75,66 +75,14 @@ public:
                           const Eigen::VectorXd& v, const int max_itr=0);
 
   ///
-  /// @brief Activate a contact over specified time steps 
-  /// (from time_stage_begin until time_stage_end). 
-  /// @param[in] contact_index Index of a contact of interedted. 
-  /// @param[in] time_stage_begin Beginning of time stages to activate. 
-  /// @param[in] time_stage_end End of time stages to activate. 
-  ///
-  void activateContact(const int contact_index, const int time_stage_begin, 
-                       const int time_stage_end);
-
-  ///
-  /// @brief Deactivate a contact over specified time steps 
-  /// (from time_stage_begin until time_stage_end). 
-  /// @param[in] contact_index Index of a contact of interedted. 
-  /// @param[in] time_stage_begin Beginning of time stages to deactivate. 
-  /// @param[in] time_stage_end End of time stages to deactivate. 
-  ///
-  void deactivateContact(const int contact_index, const int time_stage_begin, 
-                         const int time_stage_end);
-
-  ///
-  /// @brief Activate contacts over specified time steps 
-  /// (from time_stage_begin until time_stage_end). 
-  /// @param[in] contact_indices Indices of contacts of interedted. 
-  /// @param[in] time_stage_begin Beginning of time stages to activate. 
-  /// @param[in] time_stage_end End of time stages to activate. 
-  ///
-  void activateContacts(const std::vector<int>& contact_indices, 
-                        const int time_stage_begin, const int time_stage_end);
-
-  ///
-  /// @brief Deactivate contacts over specified time steps 
-  /// (from time_stage_begin until time_stage_end). 
-  /// @param[in] contact_indices Indices of contacts of interedted. 
-  /// @param[in] time_stage_begin Beginning of time stages to deactivate. 
-  /// @param[in] time_stage_end End of time stages to deactivate. 
-  ///
-  void deactivateContacts(const std::vector<int>& contact_indices, 
-                          const int time_stage_begin, const int time_stage_end);
-
-  ///
-  /// @brief Sets the contact points over the horizon. 
-  /// @param[in] contact_points Contact points over the horizon.
-  ///
-  void setContactPoint(const std::vector<Eigen::Vector3d>& contact_points);
-
-
-  ///
-  /// @brief Sets the contact points over the horizon by the configuration. 
-  /// @param[in] q configuration. Size must be Robot::dimq().
-  ///
-  void setContactPointByKinematics(const Eigen::VectorXd& q);
-
-  ///
   /// @brief Updates solution by computing the primal-dual Newon direction.
   /// @param[in] t Current time. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v);
+                      const Eigen::VectorXd& v, const int max_iter=1,
+                      const double KKT_tol=-1);
 
   ///
   /// @brief Get the contorl input torques of the initial stage.
@@ -171,6 +119,8 @@ public:
   ///
   void computeKKTResidual(const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v);
+
+  OCPType* getSolverHandle();
 
 private:
   OCPType ocp_;

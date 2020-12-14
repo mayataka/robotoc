@@ -9,8 +9,8 @@
 #include "idocp/ocp/split_parnmpc.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/backward_correction.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
@@ -169,9 +169,9 @@ void SplitParNMPCTest::testLinearizeOCPAndBackwardCorrection(
   // SplitSolution s_new_coarse(robot);
   // s_new_coarse.setContactStatus(contact_status);
   // parnmpc.coarseUpdate(robot, s, aux_mat_next_old, d, s_new_coarse);
-  // KKTMatrix kkt_matrix(robot);
+  // SplitKKTMatrix kkt_matrix(robot);
   // kkt_matrix.setContactStatus(contact_status);
-  // KKTResidual kkt_residual(robot);
+  // SplitKKTResidual kkt_residual(robot);
   // kkt_residual.setContactStatus(contact_status);
   // auto cost_data = cost->createCostFunctionData(robot);
   // auto constraints_data = constraints->createConstraintsData(robot, 10);
@@ -230,9 +230,9 @@ void SplitParNMPCTest::testComputeKKTResidualEmptyCostAndEmptyConstraints(
   parnmpc.initConstraints(robot, 10, dtau, s);
   parnmpc.computeKKTResidual(robot, contact_status, t, dtau, s_prev.q, s_prev.v, s, s_next);
   const double kkt_error = parnmpc.squaredNormKKTResidual(dtau);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
   if (robot.has_floating_base()) {
     robot.subtractConfiguration(s_prev.q, s.q, kkt_residual.Fq());
@@ -329,9 +329,9 @@ void SplitParNMPCTest::testComputeKKTResidualEmptyCost(
   parnmpc.initConstraints(robot, 10, dtau, s);
   parnmpc.computeKKTResidual(robot, contact_status, t, dtau, s_prev.q, s_prev.v, s, s_next);
   const double kkt_error = parnmpc.squaredNormKKTResidual(dtau);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, dtau, s);
@@ -368,9 +368,9 @@ void SplitParNMPCTest::testComputeKKTResidualEmptyConstraints(
   parnmpc.initConstraints(robot, 10, dtau, s);
   parnmpc.computeKKTResidual(robot, contact_status, t, dtau, s_prev.q, s_prev.v, s, s_next);
   const double kkt_error = parnmpc.squaredNormKKTResidual(dtau);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
   auto cost_data = cost->createCostFunctionData(robot);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -406,9 +406,9 @@ void SplitParNMPCTest::testComputeKKTResidual(
   parnmpc.initConstraints(robot, 10, dtau, s);
   parnmpc.computeKKTResidual(robot, contact_status, t, dtau, s_prev.q, s_prev.v, s, s_next);
   const double kkt_error = parnmpc.squaredNormKKTResidual(dtau);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
@@ -449,9 +449,9 @@ void SplitParNMPCTest::testCostAndConstraintViolation(
   parnmpc.initConstraints(robot, 10, dtau, s);
   const double stage_cost = parnmpc.stageCost(robot, t, dtau, s, step_size);
   const double constraint_violation = parnmpc.constraintViolation(robot, contact_status, t, dtau, s_prev.q, s_prev.v, s);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);

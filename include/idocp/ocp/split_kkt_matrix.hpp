@@ -1,70 +1,63 @@
-#ifndef IDOCP_KKT_MATRIX_HPP_
-#define IDOCP_KKT_MATRIX_HPP_
+#ifndef IDOCP_SPLIT_KKT_MATRIX_HPP_
+#define IDOCP_SPLIT_KKT_MATRIX_HPP_
 
 #include "Eigen/Core"
 #include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/robot/impulse_status.hpp"
 #include "idocp/ocp/schur_complement.hpp"
 
 
 namespace idocp {
 
 ///
-/// @class KKTMatrix
-/// @brief The KKT matrix of a time stage.
+/// @class SplitKKTMatrix
+/// @brief The KKT matrix split into a time stage.
 ///
-class KKTMatrix {
+class SplitKKTMatrix {
 public:
   ///
   /// @brief Construct a KKT matrix.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
-  KKTMatrix(const Robot& robot);
+  SplitKKTMatrix(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  KKTMatrix();
+  SplitKKTMatrix();
 
   ///
   /// @brief Destructor. 
   ///
-  ~KKTMatrix();
+  ~SplitKKTMatrix();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  KKTMatrix(const KKTMatrix&) = default;
+  SplitKKTMatrix(const SplitKKTMatrix&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  KKTMatrix& operator=(const KKTMatrix&) = default;
+  SplitKKTMatrix& operator=(const SplitKKTMatrix&) = default;
  
   ///
   /// @brief Default move constructor. 
   ///
-  KKTMatrix(KKTMatrix&&) noexcept = default;
+  SplitKKTMatrix(SplitKKTMatrix&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  KKTMatrix& operator=(KKTMatrix&&) noexcept = default;
+  SplitKKTMatrix& operator=(SplitKKTMatrix&&) noexcept = default;
 
   ///
   /// @brief Set contact status, i.e., set dimension of the contacts.
   /// @param[in] contact_status Contact status.
   ///
   void setContactStatus(const ContactStatus& contact_status);
-
-  ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse.
-  /// @param[in] impulse_status Contact status.
-  ///
-  void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
   /// @brief Jacobian of the state equation of the configuration with respect  
@@ -75,7 +68,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fqu();
 
   ///
-  /// @brief const version of KKTMatrix::Fqu().
+  /// @brief const version of SplitKKTMatrix::Fqu().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fqu() const;
 
@@ -88,7 +81,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fqq();
 
   ///
-  /// @brief const version of KKTMatrix::Fqq().
+  /// @brief const version of SplitKKTMatrix::Fqq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fqq() const;
 
@@ -101,7 +94,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fqv();
 
   ///
-  /// @brief const version of KKTMatrix::Fqv().
+  /// @brief const version of SplitKKTMatrix::Fqv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fqv() const;
 
@@ -114,7 +107,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fvu();
 
   ///
-  /// @brief const version of KKTMatrix::Fvu().
+  /// @brief const version of SplitKKTMatrix::Fvu().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fvu() const;
 
@@ -127,7 +120,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fvq();
 
   ///
-  /// @brief const version of KKTMatrix::Fvq().
+  /// @brief const version of SplitKKTMatrix::Fvq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fvq() const;
 
@@ -140,7 +133,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fvv();
 
   ///
-  /// @brief const version of KKTMatrix::Fvv().
+  /// @brief const version of SplitKKTMatrix::Fvv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fvv() const;
 
@@ -153,7 +146,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fxu();
 
   ///
-  /// @brief const version of KKTMatrix::Fxu().
+  /// @brief const version of SplitKKTMatrix::Fxu().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fxu() const;
 
@@ -166,23 +159,9 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fxx();
 
   ///
-  /// @brief const version of KKTMatrix::Fxx().
+  /// @brief const version of SplitKKTMatrix::Fxx().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fxx() const;
-
-  ///
-  /// @brief Jacobian of the contact position constraint related to impulse 
-  /// condition with respect to the configuration. KKTMatrix::setImpulseStatus()
-  /// muset be called to set the impulse dimension before calling this function.
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is ContactStatus::dimf() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Cq();
-
-  ///
-  /// @brief const version of KKTMatrix::Cq().
-  ///
-  const Eigen::Block<const Eigen::MatrixXd> Cq() const;
 
   ///
   /// @brief Hessian of the Lagrangian with respect to the control input torques 
@@ -192,7 +171,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Quu_full();
 
   ///
-  /// @brief const version of KKTMatrix::Quu_full().
+  /// @brief const version of SplitKKTMatrix::Quu_full().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Quu_full() const;
 
@@ -205,7 +184,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Quu_passive_topLeft();
 
   ///
-  /// @brief const version of KKTMatrix::Quu_passive_topLeft().
+  /// @brief const version of SplitKKTMatrix::Quu_passive_topLeft().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Quu_passive_topLeft() const;
 
@@ -218,7 +197,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Quu_passive_topRight();
 
   ///
-  /// @brief const version of KKTMatrix::Quu_passive_topRight().
+  /// @brief const version of SplitKKTMatrix::Quu_passive_topRight().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Quu_passive_topRight() const;
 
@@ -231,7 +210,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Quu_passive_bottomLeft();
 
   ///
-  /// @brief const version of KKTMatrix::Quu_passive_bottomLeft().
+  /// @brief const version of SplitKKTMatrix::Quu_passive_bottomLeft().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Quu_passive_bottomLeft() const;
 
@@ -243,7 +222,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Quu();
 
   ///
-  /// @brief const version of KKTMatrix::Quu().
+  /// @brief const version of SplitKKTMatrix::Quu().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Quu() const;
 
@@ -255,7 +234,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Quq_full();
 
   ///
-  /// @brief const version of KKTMatrix::Quq_full().
+  /// @brief const version of SplitKKTMatrix::Quq_full().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Quq_full() const;
 
@@ -268,7 +247,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Quq_passive();
 
   ///
-  /// @brief const version of KKTMatrix::Quq_passive().
+  /// @brief const version of SplitKKTMatrix::Quq_passive().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Quq_passive() const;
 
@@ -280,7 +259,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Quq();
 
   ///
-  /// @brief const version of KKTMatrix::Quq().
+  /// @brief const version of SplitKKTMatrix::Quq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Quq() const;
 
@@ -292,7 +271,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Quv_full();
 
   ///
-  /// @brief const version of KKTMatrix::Quv_full().
+  /// @brief const version of SplitKKTMatrix::Quv_full().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Quv_full() const;
 
@@ -305,7 +284,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Quv_passive();
 
   ///
-  /// @brief const version of KKTMatrix::Quv_passive().
+  /// @brief const version of SplitKKTMatrix::Quv_passive().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Quv_passive() const;
 
@@ -317,7 +296,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Quv();
 
   ///
-  /// @brief const version of KKTMatrix::Quv().
+  /// @brief const version of SplitKKTMatrix::Quv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Quv() const;
 
@@ -329,7 +308,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qqu_full();
 
   ///
-  /// @brief const version of KKTMatrix::Qqu_full().
+  /// @brief const version of SplitKKTMatrix::Qqu_full().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qqu_full() const;
 
@@ -342,7 +321,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qqu_passive();
 
   ///
-  /// @brief const version of KKTMatrix::Qqu_passive().
+  /// @brief const version of SplitKKTMatrix::Qqu_passive().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qqu_passive() const;
 
@@ -354,7 +333,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qqu();
 
   ///
-  /// @brief const version of KKTMatrix::Qqu().
+  /// @brief const version of SplitKKTMatrix::Qqu().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qqu() const;
 
@@ -365,7 +344,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qqq();
 
   ///
-  /// @brief const version of KKTMatrix::Qqq().
+  /// @brief const version of SplitKKTMatrix::Qqq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qqq() const;
 
@@ -377,7 +356,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qqv();
 
   ///
-  /// @brief const version of KKTMatrix::Qqv().
+  /// @brief const version of SplitKKTMatrix::Qqv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qqv() const;
 
@@ -389,7 +368,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qvu_full();
 
   ///
-  /// @brief const version of KKTMatrix::Qvu_full().
+  /// @brief const version of SplitKKTMatrix::Qvu_full().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qvu_full() const;
 
@@ -402,7 +381,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qvu_passive();
 
   ///
-  /// @brief const version of KKTMatrix::Qvu_passive().
+  /// @brief const version of SplitKKTMatrix::Qvu_passive().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qvu_passive() const;
 
@@ -414,7 +393,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qvu();
 
   ///
-  /// @brief const version of KKTMatrix::Qvu().
+  /// @brief const version of SplitKKTMatrix::Qvu().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qvu() const;
 
@@ -426,7 +405,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qvq();
 
   ///
-  /// @brief const version of KKTMatrix::Qvq().
+  /// @brief const version of SplitKKTMatrix::Qvq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qvq() const;
 
@@ -437,7 +416,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qvv();
 
   ///
-  /// @brief const version of KKTMatrix::Qvv().
+  /// @brief const version of SplitKKTMatrix::Qvv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qvv() const;
 
@@ -450,7 +429,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qux_full();
 
   ///
-  /// @brief const version of KKTMatrix::Qux().
+  /// @brief const version of SplitKKTMatrix::Qux().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qux_full() const;
 
@@ -463,7 +442,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qux_passive();
 
   ///
-  /// @brief const version of KKTMatrix::Qux_passive().
+  /// @brief const version of SplitKKTMatrix::Qux_passive().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qux_passive() const;
 
@@ -476,7 +455,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qux();
 
   ///
-  /// @brief const version of KKTMatrix::Qux().
+  /// @brief const version of SplitKKTMatrix::Qux().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qux() const;
 
@@ -489,7 +468,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qxu_full();
 
   ///
-  /// @brief const version of KKTMatrix::Qux_full().
+  /// @brief const version of SplitKKTMatrix::Qux_full().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qxu_full() const;
 
@@ -502,7 +481,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qxu_passive();
 
   ///
-  /// @brief const version of KKTMatrix::Qxu_passive().
+  /// @brief const version of SplitKKTMatrix::Qxu_passive().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qxu_passive() const;
 
@@ -515,7 +494,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qxu();
 
   ///
-  /// @brief const version of KKTMatrix::Qxu().
+  /// @brief const version of SplitKKTMatrix::Qxu().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qxu() const;
 
@@ -527,7 +506,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qxx();
 
   ///
-  /// @brief const version of KKTMatrix::Qxx().
+  /// @brief const version of SplitKKTMatrix::Qxx().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qxx() const;
 
@@ -541,7 +520,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qaaff();
 
   ///
-  /// @brief const version of KKTMatrix::Qaaff().
+  /// @brief const version of SplitKKTMatrix::Qaaff().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qaaff() const;
 
@@ -552,7 +531,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qaa();
 
   ///
-  /// @brief const version of KKTMatrix::Qaa().
+  /// @brief const version of SplitKKTMatrix::Qaa().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qaa() const;
 
@@ -564,7 +543,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qff();
 
   ///
-  /// @brief const version of KKTMatrix::Qff().
+  /// @brief const version of SplitKKTMatrix::Qff().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qff() const;
 
@@ -574,9 +553,9 @@ public:
   void symmetrize();
 
   ///
-  /// @brief Invert the KKT matrix. 
+  /// @brief Invert the split KKT matrix. 
   /// @param[out] KKT_matrix_inverse Inverse of the KKT matrix. Size must 
-  /// be KKTMatrix::dimKKT() x KKTMatrix::dimKKT().
+  /// be SplitKKTMatrix::dimKKT() x SplitKKTMatrix::dimKKT().
   ///
   template <typename MatrixType>
   void invert(const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse);
@@ -600,18 +579,11 @@ public:
   int dimf() const;
 
   ///
-  /// @brief Returns the dimension of the stack of impulse forces at the current 
-  /// impulse status.
-  /// @return Dimension of the stack of impulse forces.
-  ///
-  int dimp() const;
-
-  ///
-  /// @brief Chech the equivalence of two KKTMatrix.
+  /// @brief Chech the equivalence of two SplitKKTMatrix.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
-  bool isApprox(const KKTMatrix& other) const;
+  bool isApprox(const SplitKKTMatrix& other) const;
 
   ///
   /// @brief Chech this has at least one NaN.
@@ -627,16 +599,15 @@ public:
 
 private:
   SchurComplement schur_complement_;
-  Eigen::MatrixXd F_, C_, Q_, Qaaff_full_;
+  Eigen::MatrixXd F_, Q_, Qaaff_full_;
   bool has_floating_base_;
-  int dimv_, dimx_, dimu_, dim_passive_, dimf_, dimp_, u_begin_, q_begin_, 
-      v_begin_, dimKKT_;
+  int dimv_, dimx_, dimu_, dim_passive_, dimf_, u_begin_, q_begin_, v_begin_, dimKKT_;
   static constexpr int kDimFloatingBase = 6;
 
 };
 
 } // namespace idocp 
 
-#include "idocp/ocp/kkt_matrix.hxx"
+#include "idocp/ocp/split_kkt_matrix.hxx"
 
-#endif // IDOCP_KKT_MATRIX_HPP_
+#endif // IDOCP_SPLIT_KKT_MATRIX_HPP_ 

@@ -1,12 +1,12 @@
-#ifndef IDOCP_KKT_RESIDUAL_HXX_
-#define IDOCP_KKT_RESIDUAL_HXX_
+#ifndef IDOCP_SPLIT_KKT_RESIDUAL_HXX_ 
+#define IDOCP_SPLIT_KKT_RESIDUAL_HXX_
 
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 
 
 namespace idocp {
 
-inline KKTResidual::KKTResidual(const Robot& robot) 
+inline SplitKKTResidual::SplitKKTResidual(const Robot& robot) 
   : KKT_residual(Eigen::VectorXd::Zero(4*robot.dimv()+robot.dimu())),
     la(Eigen::VectorXd::Zero(robot.dimv())),
     lu_passive(Vector6d::Zero()),
@@ -21,7 +21,7 @@ inline KKTResidual::KKTResidual(const Robot& robot)
 }
 
 
-inline KKTResidual::KKTResidual() 
+inline SplitKKTResidual::SplitKKTResidual() 
   : KKT_residual(),
     la(),
     lu_passive(Vector6d::Zero()),
@@ -36,96 +36,105 @@ inline KKTResidual::KKTResidual()
 }
 
 
-inline KKTResidual::~KKTResidual() {
+inline SplitKKTResidual::~SplitKKTResidual() {
 }
 
 
-inline void KKTResidual::setContactStatus(const ContactStatus& contact_status) {
+inline void SplitKKTResidual::setContactStatus(
+    const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::Fq() {
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::Fq() {
   return KKT_residual.head(dimv_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::Fq() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitKKTResidual::Fq() const {
   return KKT_residual.head(dimv_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::Fv() {
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::Fv() {
   return KKT_residual.segment(dimv_, dimv_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::Fv() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitKKTResidual::Fv() const {
   return KKT_residual.segment(dimv_, dimv_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::Fx() {
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::Fx() {
   return KKT_residual.head(dimx_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::Fx() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitKKTResidual::Fx() const {
   return KKT_residual.head(dimx_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::lu() {
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::lu() {
   return KKT_residual.segment(dimx_, dimu_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::lu() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitKKTResidual::lu() const {
   return KKT_residual.segment(dimx_, dimu_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::lq() {
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::lq() {
   return KKT_residual.segment(dimx_+dimu_, dimv_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::lq() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitKKTResidual::lq() const {
   return KKT_residual.segment(dimx_+dimu_, dimv_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::lv() {
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::lv() {
   return KKT_residual.segment(dimx_+dimu_+dimv_, dimv_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::lv() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitKKTResidual::lv() const {
   return KKT_residual.segment(dimx_+dimu_+dimv_, dimv_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::lx() {
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::lx() {
   return KKT_residual.segment(dimx_+dimu_, dimx_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::lx() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitKKTResidual::lx() const {
   return KKT_residual.segment(dimx_+dimu_, dimx_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> KKTResidual::lf() {
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::lf() {
   return lf_full_.head(dimf_);
 }
 
 
-inline const Eigen::VectorBlock<const Eigen::VectorXd> KKTResidual::lf() const {
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitKKTResidual::lf() const {
   return lf_full_.head(dimf_);
 }
 
 
-inline void KKTResidual::setZero() {
+inline void SplitKKTResidual::setZero() {
   KKT_residual.setZero();
   la.setZero();
   lu_passive.setZero();
@@ -133,17 +142,17 @@ inline void KKTResidual::setZero() {
 }
 
 
-inline int KKTResidual::dimKKT() const {
+inline int SplitKKTResidual::dimKKT() const {
   return dimKKT_;
 }
 
 
-inline int KKTResidual::dimf() const {
+inline int SplitKKTResidual::dimf() const {
   return dimf_;
 }
 
 
-inline bool KKTResidual::isApprox(const KKTResidual& other) const {
+inline bool SplitKKTResidual::isApprox(const SplitKKTResidual& other) const {
   if (!Fx().isApprox(other.Fx())) return false;
   if (!lu().isApprox(other.lu())) return false;
   if (!lx().isApprox(other.lx())) return false;
@@ -158,7 +167,7 @@ inline bool KKTResidual::isApprox(const KKTResidual& other) const {
 }
 
 
-inline bool KKTResidual::hasNaN() const {
+inline bool SplitKKTResidual::hasNaN() const {
   if (KKT_residual.hasNaN()) return true;
   if (la.hasNaN()) return true;
   if (lu_passive.hasNaN()) return true;
@@ -168,4 +177,4 @@ inline bool KKTResidual::hasNaN() const {
 
 } // namespace idocp 
 
-#endif // IDOCP_KKT_RESIDUAL_HXX_
+#endif // IDOCP_SPLIT_KKT_RESIDUAL_HXX_ 

@@ -10,8 +10,8 @@
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/constraints/pdipm.hpp"
 #include "idocp/constraints/friction_cone.hpp"
 
@@ -101,10 +101,10 @@ void FrictionConeTest::testAugmentDualResidual(Robot& robot, const ContactStatus
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   limit.setSlackAndDual(robot, data, dtau, s);
   ConstraintComponentData data_ref = data;
-  KKTResidual kkt_res(robot);
+  SplitKKTResidual kkt_res(robot);
   kkt_res.setContactStatus(contact_status);
   kkt_res.lf().setRandom();
-  KKTResidual kkt_res_ref = kkt_res;
+  SplitKKTResidual kkt_res_ref = kkt_res;
   limit.augmentDualResidual(robot, data, dtau, s, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<contact_status.max_point_contacts(); ++i) {
@@ -156,14 +156,14 @@ void FrictionConeTest::testCondenseSlackAndDual(Robot& robot, const ContactStatu
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   limit.setSlackAndDual(robot, data, dtau, s);
   ConstraintComponentData data_ref = data;
-  KKTMatrix kkt_mat(robot);
+  SplitKKTMatrix kkt_mat(robot);
   kkt_mat.setContactStatus(contact_status);
   kkt_mat.Qff().setRandom();
-  KKTResidual kkt_res(robot);
+  SplitKKTResidual kkt_res(robot);
   kkt_res.setContactStatus(contact_status);
   kkt_res.lf().setRandom();
-  KKTMatrix kkt_mat_ref = kkt_mat;
-  KKTResidual kkt_res_ref = kkt_res;
+  SplitKKTMatrix kkt_mat_ref = kkt_mat;
+  SplitKKTResidual kkt_res_ref = kkt_res;
   limit.condenseSlackAndDual(robot, data, dtau, s, kkt_mat, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<contact_status.max_point_contacts(); ++i) {

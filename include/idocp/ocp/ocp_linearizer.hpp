@@ -62,33 +62,32 @@ public:
 
   void initConstraints(HybridOCP& split_ocps, std::vector<Robot>& robots,
                        const ContactSequence& contact_sequence, 
-                       const HybridSolution& s) const;
+                       const Solution& s) const;
 
   void linearizeOCP(HybridOCP& split_ocps, std::vector<Robot>& robots,
                     const ContactSequence& contact_sequence,
                     const double t, const Eigen::VectorXd& q, 
-                    const Eigen::VectorXd& v, const HybridSolution& s,
-                    HybridKKTMatrix& kkt_matrix,
-                    HybridKKTResidual& kkt_residual) const;
+                    const Eigen::VectorXd& v, const Solution& s,
+                    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const;
 
   void computeKKTResidual(HybridOCP& split_ocps, std::vector<Robot>& robots, 
                           const ContactSequence& contact_sequence,
                           const double t, const Eigen::VectorXd& q, 
-                          const Eigen::VectorXd& v, const HybridSolution& s,
-                          HybridKKTMatrix& kkt_matrix, 
-                          HybridKKTResidual& kkt_residual) const;
+                          const Eigen::VectorXd& v, const Solution& s,
+                          KKTMatrix& kkt_matrix, 
+                          KKTResidual& kkt_residual) const;
 
   double KKTError(const HybridOCP& split_ocps, 
                   const ContactSequence& contact_sequence, 
-                  const HybridKKTResidual& kkt_residual);
+                  const KKTResidual& kkt_residual);
 
   void integrateSolution(HybridOCP& split_ocps, const std::vector<Robot>& robots,
                          const ContactSequence& contact_sequence,
-                         const HybridKKTMatrix& kkt_matrix,
-                         const HybridKKTResidual& kkt_residual,
+                         const KKTMatrix& kkt_matrix,
+                         const KKTResidual& kkt_residual,
                          const double primal_step_size,
                          const double dual_step_size,
-                         HybridDirection& d, HybridSolution& s) const;
+                         Direction& d, Solution& s) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -98,14 +97,12 @@ private:
   void runParallel(HybridOCP& split_ocps, std::vector<Robot>& robots,
                    const ContactSequence& contact_sequence,
                    const double t, const Eigen::VectorXd& q, 
-                   const Eigen::VectorXd& v, const HybridSolution& s,
-                   HybridKKTMatrix& kkt_matrix, 
-                   HybridKKTResidual& kkt_residual) const;
+                   const Eigen::VectorXd& v, const Solution& s,
+                   KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const;
 
   const Eigen::VectorXd& q_prev(const ContactSequence& contact_sequence, 
                                 const Eigen::VectorXd& q,
-                                const HybridSolution& s,
-                                const int time_stage) const;
+                                const Solution& s, const int time_stage) const;
 
   double dtau(const ContactSequence& contact_sequence, 
               const int time_stage) const;

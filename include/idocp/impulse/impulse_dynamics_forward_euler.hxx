@@ -24,8 +24,9 @@ inline ImpulseDynamicsForwardEuler::~ImpulseDynamicsForwardEuler() {
 
 inline void ImpulseDynamicsForwardEuler::linearizeImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status,  
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual, const bool is_state_constraint_valid) {
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual, 
+    const bool is_state_constraint_valid) {
   setImpulseStatus(impulse_status);
   linearizeInverseImpulseDynamics(robot, impulse_status, s, data_);
   linearizeImpulseVelocityConstraint(robot, impulse_status, data_);
@@ -69,7 +70,7 @@ inline void ImpulseDynamicsForwardEuler::linearizeImpulseVelocityConstraint(
 
 inline void ImpulseDynamicsForwardEuler::linearizeImpulsePositionConstraint(
       Robot& robot, const ImpulseStatus& impulse_status, 
-      ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual) {
+      ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
   robot.computeImpulseConditionResidual(impulse_status,
                                         impulse_status.contactPoints(),
                                         kkt_residual.P());
@@ -79,7 +80,7 @@ inline void ImpulseDynamicsForwardEuler::linearizeImpulsePositionConstraint(
 
 inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status, 
-    ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual) {
+    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
   robot.computeMJtJinv(data_.dImDddv, data_.dCdv(), data_.MJtJinv());
   condensing(robot, impulse_status, data_, kkt_matrix, kkt_residual);
 }
@@ -87,8 +88,8 @@ inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
 
 inline void ImpulseDynamicsForwardEuler::condensing(
     const Robot& robot, const ImpulseStatus& impulse_status, 
-    ImpulseDynamicsForwardEulerData& data, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual) {
+    ImpulseDynamicsForwardEulerData& data, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) {
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimp();
   data.MJtJinv_dImDCdqv().leftCols(dimv).noalias() 
@@ -123,8 +124,8 @@ inline void ImpulseDynamicsForwardEuler::computeCondensedPrimalDirection(
 
 template <typename VectorType>
 inline void ImpulseDynamicsForwardEuler::computeCondensedDualDirection(
-    const Robot& robot, const ImpulseKKTMatrix& kkt_matrix, 
-    const ImpulseKKTResidual& kkt_residual, 
+    const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix, 
+    const ImpulseSplitKKTResidual& kkt_residual, 
     const Eigen::MatrixBase<VectorType>& dgmm, ImpulseSplitDirection& d) {
   assert(dgmm.size() == robot.dimv());
   expansionDual(robot, data_, kkt_matrix, kkt_residual, dgmm, d);
@@ -143,7 +144,8 @@ inline void ImpulseDynamicsForwardEuler::expansionPrimal(
 template <typename VectorType>
 inline void ImpulseDynamicsForwardEuler::expansionDual(
     const Robot& robot, ImpulseDynamicsForwardEulerData& data, 
-    const ImpulseKKTMatrix& kkt_matrix, const ImpulseKKTResidual& kkt_residual, 
+    const ImpulseSplitKKTMatrix& kkt_matrix, 
+    const ImpulseSplitKKTResidual& kkt_residual, 
     const Eigen::MatrixBase<VectorType>& dgmm, ImpulseSplitDirection& d) {
   assert(dgmm.size() == robot.dimv());
   data.ldvf().noalias() += data.Qdvfqv() * d.dx();
@@ -154,7 +156,7 @@ inline void ImpulseDynamicsForwardEuler::expansionDual(
 
 inline void ImpulseDynamicsForwardEuler::computeImpulseDynamicsResidual(
     Robot& robot, const ImpulseStatus& impulse_status,
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual,
+    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual,
     const bool is_state_constraint_valid) {
   setImpulseStatus(impulse_status);
   robot.setImpulseForces(impulse_status, s.f);
@@ -169,7 +171,7 @@ inline void ImpulseDynamicsForwardEuler::computeImpulseDynamicsResidual(
 
 
 inline double ImpulseDynamicsForwardEuler::l1NormImpulseDynamicsResidual(
-    const ImpulseKKTResidual& kkt_residual,
+    const ImpulseSplitKKTResidual& kkt_residual,
     const bool is_state_constraint_valid) const {
   if (is_state_constraint_valid) {
     return (data_.ImDC().lpNorm<1>() + kkt_residual.P().lpNorm<1>());
@@ -181,7 +183,7 @@ inline double ImpulseDynamicsForwardEuler::l1NormImpulseDynamicsResidual(
 
 
 inline double ImpulseDynamicsForwardEuler::squaredNormImpulseDynamicsResidual(
-    const ImpulseKKTResidual& kkt_residual,
+    const ImpulseSplitKKTResidual& kkt_residual,
     const bool is_state_constraint_valid) const {
   if (is_state_constraint_valid) {
     return (data_.ImDC().squaredNorm() + kkt_residual.P().squaredNorm());

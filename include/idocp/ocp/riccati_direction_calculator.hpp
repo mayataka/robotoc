@@ -11,12 +11,12 @@
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/riccati_factorizer.hpp"
 #include "idocp/impulse/impulse_riccati_factorizer.hpp"
@@ -79,15 +79,14 @@ public:
   static void computeInitialStateDirection(const std::vector<Robot>& robots, 
                                            const Eigen::VectorXd& q, 
                                            const Eigen::VectorXd& v, 
-                                           const HybridSolution& s, 
-                                           HybridDirection& d);
+                                           const Solution& s, Direction& d);
 
   void computeNewtonDirectionFromRiccatiFactorization(
       HybridOCP& split_ocps, std::vector<Robot>& robots, 
       const ContactSequence& contact_sequence, 
       const HybridRiccatiFactorizer& factorizer, 
       const HybridRiccatiFactorization& factorization, 
-      const HybridSolution& s, HybridDirection& d);
+      const Solution& s, Direction& d);
 
   double maxPrimalStepSize() const;
 

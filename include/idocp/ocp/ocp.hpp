@@ -179,10 +179,10 @@ private:
   OCPLinearizer ocp_linearizer_;
   RiccatiSolver riccati_solver_;
   HybridOCP split_ocps_;
-  HybridKKTMatrix kkt_matrix_;
-  HybridKKTResidual kkt_residual_;
-  HybridSolution s_;
-  HybridDirection d_;
+  KKTMatrix kkt_matrix_;
+  KKTResidual kkt_residual_;
+  Solution s_;
+  Direction d_;
   // LineSearchFilter filter_;
   int N_, num_proc_;
   double T_, dtau_;

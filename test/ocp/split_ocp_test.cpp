@@ -9,8 +9,8 @@
 #include "idocp/ocp/split_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
@@ -146,12 +146,12 @@ void SplitOCPTest::testLinearizeOCP(
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, 10, dtau, s);
   const int dimv = robot.dimv();
-  KKTMatrix kkt_matrix(robot);
-  KKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
   ocp.linearizeOCP(robot, contact_status, t, dtau, s_prev.q, s, s_next, kkt_matrix, kkt_residual);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
@@ -201,13 +201,13 @@ void SplitOCPTest::testComputeKKTResidual(
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, 10, dtau, s);
-  KKTMatrix kkt_matrix(robot);
-  KKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
   ocp.computeKKTResidual(robot, contact_status, t, dtau, s_prev.q, s, s_next, kkt_matrix, kkt_residual);
   const double kkt_error = ocp.squaredNormKKTResidual(kkt_residual, dtau);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
@@ -248,11 +248,11 @@ void SplitOCPTest::testCostAndConstraintViolation(
   const double step_size = 0.3;
   ocp.initConstraints(robot, 10, dtau, s);
   const double stage_cost = ocp.stageCost(robot, t, dtau, s, step_size);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   const double constraint_violation = ocp.constraintViolation(robot, contact_status, t, dtau, s, s_next.q, s_next.v, kkt_residual);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);

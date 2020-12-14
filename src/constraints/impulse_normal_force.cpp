@@ -53,7 +53,7 @@ void ImpulseNormalForce::setSlackAndDual(
 
 void ImpulseNormalForce::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, 
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) const {
+    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (s.isImpulseActive(i)) {
@@ -66,8 +66,8 @@ void ImpulseNormalForce::augmentDualResidual(
 
 void ImpulseNormalForce::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, 
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual) const {
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     if (s.isImpulseActive(i)) {

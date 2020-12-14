@@ -5,8 +5,8 @@
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/constraints/constraint_component_data.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/constraints/constraint_component_base.hpp"
 
 
@@ -97,9 +97,10 @@ public:
   /// @param[in] s Split solution.
   /// @param[out] kkt_residual KKT residual.
   ///
-  virtual void augmentDualResidual(Robot& robot, ConstraintComponentData& data,
-                                   const ImpulseSplitSolution& s,
-                                   ImpulseKKTResidual& kkt_residual) const = 0;
+  virtual void augmentDualResidual(
+      Robot& robot, ConstraintComponentData& data, 
+      const ImpulseSplitSolution& s,
+      ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Consense slack and dual of the constraints and factorize condensed
@@ -116,10 +117,10 @@ public:
   /// @param[out] kkt_residual KKT residual. The condensed residual are added 
   /// to this data.
   ///
-  virtual void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data,
-                                    const ImpulseSplitSolution& s, 
-                                    ImpulseKKTMatrix& kkt_matrix,
-                                    ImpulseKKTResidual& kkt_residual) const = 0;
+  virtual void condenseSlackAndDual(
+      Robot& robot, ConstraintComponentData& data,
+      const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+      ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Compute directions of slack and dual.

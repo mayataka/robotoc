@@ -69,7 +69,7 @@ double TaskSpace3DCost::phi(Robot& robot, CostFunctionData& data,
 void TaskSpace3DCost::lq(Robot& robot, CostFunctionData& data, 
                          const double t, const double dtau, 
                          const SplitSolution& s, 
-                         KKTResidual& kkt_residual) const {
+                         SplitKKTResidual& kkt_residual) const {
   data.diff_3d = robot.framePosition(frame_id_) - q_3d_ref_;
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
@@ -81,7 +81,8 @@ void TaskSpace3DCost::lq(Robot& robot, CostFunctionData& data,
 
 void TaskSpace3DCost::lqq(Robot& robot, CostFunctionData& data, 
                           const double t, const double dtau, 
-                          const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+                          const SplitSolution& s, 
+                          SplitKKTMatrix& kkt_matrix) const {
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
       = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
@@ -92,7 +93,7 @@ void TaskSpace3DCost::lqq(Robot& robot, CostFunctionData& data,
 
 void TaskSpace3DCost::phiq(Robot& robot, CostFunctionData& data, 
                            const double t, const SplitSolution& s,
-                           KKTResidual& kkt_residual) const {
+                           SplitKKTResidual& kkt_residual) const {
   data.diff_3d = robot.framePosition(frame_id_) - q_3d_ref_;
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
@@ -104,7 +105,7 @@ void TaskSpace3DCost::phiq(Robot& robot, CostFunctionData& data,
 
 void TaskSpace3DCost::phiqq(Robot& robot, CostFunctionData& data, 
                             const double t, const SplitSolution& s,
-                            KKTMatrix& kkt_matrix) const {
+                            SplitKKTMatrix& kkt_matrix) const {
     robot.getFrameJacobian(frame_id_, data.J_6d);
     data.J_3d.noalias() 
         = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();

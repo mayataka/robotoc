@@ -10,8 +10,8 @@
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/constraints/pdipm.hpp"
 #include "idocp/constraints/impulse_friction_cone.hpp"
 
@@ -99,10 +99,10 @@ void ImpulseFrictionConeTest::testAugmentDualResidual(Robot& robot, const Impuls
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   limit.setSlackAndDual(robot, data, s);
   ConstraintComponentData data_ref = data;
-  ImpulseKKTResidual kkt_res(robot);
+  ImpulseSplitKKTResidual kkt_res(robot);
   kkt_res.setImpulseStatus(impulse_status);
   kkt_res.lf().setRandom();
-  ImpulseKKTResidual kkt_res_ref = kkt_res;
+  ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
   limit.augmentDualResidual(robot, data, s, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
@@ -154,14 +154,14 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, const Impul
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   limit.setSlackAndDual(robot, data, s);
   ConstraintComponentData data_ref = data;
-  ImpulseKKTMatrix kkt_mat(robot);
+  ImpulseSplitKKTMatrix kkt_mat(robot);
   kkt_mat.setImpulseStatus(impulse_status);
   kkt_mat.Qff().setRandom();
-  ImpulseKKTResidual kkt_res(robot);
+  ImpulseSplitKKTResidual kkt_res(robot);
   kkt_res.setImpulseStatus(impulse_status);
   kkt_res.lf().setRandom();
-  ImpulseKKTMatrix kkt_mat_ref = kkt_mat;
-  ImpulseKKTResidual kkt_res_ref = kkt_res;
+  ImpulseSplitKKTMatrix kkt_mat_ref = kkt_mat;
+  ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
   limit.condenseSlackAndDual(robot, data, s, kkt_mat, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<impulse_status.max_point_contacts(); ++i) {

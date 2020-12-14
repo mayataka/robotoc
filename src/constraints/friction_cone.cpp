@@ -1,7 +1,7 @@
 #include "idocp/constraints/friction_cone.hpp"
 
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
@@ -61,7 +61,7 @@ void FrictionCone::setSlackAndDual(
 
 void FrictionCone::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTResidual& kkt_residual) const {
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   assert(dtau > 0);
   int dimf_stack = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
@@ -81,8 +81,8 @@ void FrictionCone::augmentDualResidual(
 
 void FrictionCone::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) const {
   assert(dtau > 0);
   int dimf_stack = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {

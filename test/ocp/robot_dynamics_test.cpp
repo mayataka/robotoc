@@ -7,8 +7,8 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/robot_dynamics.hpp"
@@ -43,13 +43,13 @@ TEST_F(RobotDynamicsTest, linearizeRobotDynamicsFixedBaseWithoutContacts) {
   std::vector<bool> is_contact_active = {false};
   contact_status.setContactStatus(is_contact_active);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   kkt_residual.lq() = Eigen::VectorXd::Random(robot.dimv());
   kkt_residual.lv() = Eigen::VectorXd::Random(robot.dimv());
@@ -96,13 +96,13 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFixedBaseWithoutContacts) {
   std::vector<bool> is_contact_active = {false};
   contact_status.setContactStatus(is_contact_active);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   const Eigen::MatrixXd Quu_ref = Eigen::VectorXd::Random(robot.dimv()).asDiagonal();
   kkt_matrix.Quu = Quu_ref;
@@ -203,13 +203,13 @@ TEST_F(RobotDynamicsTest, computeRobotDynamicsResidualFixedBaseWithoutContacts) 
   std::vector<bool> is_contact_active = {false};
   contact_status.setContactStatus(is_contact_active);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   RobotDynamics rd(robot);
   rd.computeRobotDynamicsResidual(robot, contact_status, dtau_, s, kkt_residual);
@@ -234,13 +234,13 @@ TEST_F(RobotDynamicsTest, linearizeRobotDynamicsFixedBaseWithContact) {
   std::vector<bool> is_contact_active = {true};
   contact_status.setContactStatus(is_contact_active);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   kkt_residual.lq() = Eigen::VectorXd::Random(robot.dimv());
   kkt_residual.lv() = Eigen::VectorXd::Random(robot.dimv());
@@ -303,13 +303,13 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFixedBaseWithContact) {
   std::vector<bool> is_contact_active = {true};
   contact_status.setContactStatus(is_contact_active);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   const Eigen::MatrixXd Quu_ref = Eigen::VectorXd::Random(robot.dimv()).asDiagonal();
   kkt_matrix.Quu = Quu_ref;
@@ -429,13 +429,13 @@ TEST_F(RobotDynamicsTest, computeRobotDynamicsResidualFixedBaseWithContacts) {
   std::vector<bool> is_contact_active = {true};
   contact_status.setContactStatus(is_contact_active);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   RobotDynamics rd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -469,13 +469,13 @@ TEST_F(RobotDynamicsTest, linearizeRobotDynamicsFloatingBaseWithoutContacts) {
   }
   contact_status.setContactStatus(is_contact_active);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   kkt_residual.lq() = Eigen::VectorXd::Random(robot.dimv());
   kkt_residual.lv() = Eigen::VectorXd::Random(robot.dimv());
@@ -531,13 +531,13 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithoutContacts) {
   }
   contact_status.setContactStatus(is_contact_active);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   const Eigen::MatrixXd Quu_ref = Eigen::VectorXd::Random(robot.dimv()).asDiagonal();
   kkt_matrix.Quu = Quu_ref;
@@ -660,13 +660,13 @@ TEST_F(RobotDynamicsTest, computeRobotDynamicsResidualFloatingBaseWithoutContact
   }
   contact_status.setContactStatus(is_contact_active);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   RobotDynamics rd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -697,13 +697,13 @@ TEST_F(RobotDynamicsTest, linearizeRobotDynamicsFloatingBaseWithContacts) {
   }
   contact_status.setContactStatus(is_contact_active);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   kkt_residual.lq() = Eigen::VectorXd::Random(robot.dimv());
   kkt_residual.lv() = Eigen::VectorXd::Random(robot.dimv());
@@ -776,13 +776,13 @@ TEST_F(RobotDynamicsTest, condenseRobotDynamicsFloatingBaseWithContacts) {
   }
   contact_status.setContactStatus(is_contact_active);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   const Eigen::MatrixXd Quu_ref = Eigen::VectorXd::Random(robot.dimv()).asDiagonal();
   kkt_matrix.Quu = Quu_ref;
@@ -926,13 +926,13 @@ TEST_F(RobotDynamicsTest, computeRobotDynamicsResidualFloatingBaseWithContacts) 
   }
   contact_status.setContactStatus(is_contact_active);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  KKTResidual kkt_residual(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  KKTResidual kkt_residual_ref(robot);
+  SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  KKTMatrix kkt_matrix_ref(robot);
+  SplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   RobotDynamics rd(robot);
   robot.updateKinematics(s.q, s.v, s.a);

@@ -5,10 +5,10 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/riccati_factorizer.hpp"
 #include "idocp/ocp/riccati_recursion.hpp"
@@ -36,8 +36,8 @@ protected:
   virtual void TearDown() {
   }
 
-  HybridKKTMatrix createHybridKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence) const;
-  HybridKKTResidual createHybridKKTResidual(const Robot& robot, const ContactSequence& contact_sequence) const;
+  KKTMatrix createHybridKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence) const;
+  KKTResidual createHybridKKTResidual(const Robot& robot, const ContactSequence& contact_sequence) const;
   ContactSequence createContactSequence(const Robot& robot) const;
 
   template <typename T>
@@ -93,8 +93,8 @@ protected:
 };
 
 
-HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence) const {
-  HybridKKTMatrix kkt_matrix = HybridKKTMatrix(N, max_num_impulse, robot);
+KKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence) const {
+  KKTMatrix kkt_matrix = KKTMatrix(N, max_num_impulse, robot);
   const int dimx = 2*robot.dimv();
   const int dimu = robot.dimu();
   for (int i=0; i<=N; ++i) {
@@ -157,8 +157,8 @@ HybridKKTMatrix RiccatiRecursionTest::createHybridKKTMatrix(const Robot& robot, 
 }
 
 
-HybridKKTResidual RiccatiRecursionTest::createHybridKKTResidual(const Robot& robot, const ContactSequence& contact_sequence) const {
-  HybridKKTResidual kkt_residual = HybridKKTResidual(N, max_num_impulse, robot);
+KKTResidual RiccatiRecursionTest::createHybridKKTResidual(const Robot& robot, const ContactSequence& contact_sequence) const {
+  KKTResidual kkt_residual = KKTResidual(N, max_num_impulse, robot);
   for (int i=0; i<=N; ++i) {
     kkt_residual[i].lx().setRandom();
     kkt_residual[i].lu().setRandom();
@@ -587,7 +587,7 @@ void RiccatiRecursionTest::testForwardRiccatiRecursion(const Robot& robot) const
   auto factorization_ref = factorization;
   auto kkt_matrix_ref = kkt_matrix; 
   auto kkt_residual_ref = kkt_residual; 
-  HybridDirection d(N, max_num_impulse, robot);
+  Direction d(N, max_num_impulse, robot);
   for (int i=0; i<=N; ++i) {
     d[i].dx().setRandom();
   }

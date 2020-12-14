@@ -78,7 +78,7 @@ public:
       const ContactSequence& contact_sequence,
       const HybridRiccatiFactorization& riccati_factorization,
       StateConstraintRiccatiFactorization& constraint_factorization,
-      HybridDirection& d);
+      Direction& d);
 
   ///
   /// @brief Aggregates the all of the Lagrange multipliers with respect to 
@@ -90,7 +90,7 @@ public:
   ///
   void aggregateLagrangeMultiplierDirection(
       const StateConstraintRiccatiFactorization& constraint_factorization,
-      const ContactSequence& contact_sequence, const HybridDirection& d,
+      const ContactSequence& contact_sequence, const Direction& d,
       HybridRiccatiFactorization& riccati_factorization) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

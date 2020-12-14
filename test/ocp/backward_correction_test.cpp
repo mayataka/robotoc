@@ -5,8 +5,8 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/backward_correction.hpp"
 
 
@@ -46,8 +46,8 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
   BackwardCorrection backward_correction(robot);
   const SplitSolution s = SplitSolution::Random(robot);
   SplitDirection d(robot);
-  KKTMatrix kkt_matrix(robot);
-  KKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_matrix.Qxx().setRandom();
   kkt_matrix.Qxu().setRandom();
   kkt_matrix.Quu().setRandom();
@@ -90,8 +90,8 @@ void BackwardCorrectionTest::testBackwardCorrection(const Robot& robot) const {
   BackwardCorrection backward_correction(robot);
   const SplitSolution s = SplitSolution::Random(robot);
   SplitDirection d(robot);
-  KKTMatrix kkt_matrix(robot);
-  KKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_matrix.Qxx().setRandom();
   kkt_matrix.Qxu().setRandom();
   kkt_matrix.Quu().setRandom();
@@ -138,8 +138,8 @@ void BackwardCorrectionTest::testForwardCorrection(const Robot& robot) const {
   BackwardCorrection backward_correction(robot);
   const SplitSolution s = SplitSolution::Random(robot);
   SplitDirection d(robot);
-  KKTMatrix kkt_matrix(robot);
-  KKTResidual kkt_residual(robot);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
   kkt_matrix.Qxx().setRandom();
   kkt_matrix.Qxu().setRandom();
   kkt_matrix.Quu().setRandom();

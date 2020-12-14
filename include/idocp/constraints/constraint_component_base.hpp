@@ -5,8 +5,8 @@
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/constraints/constraint_component_data.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -117,7 +117,7 @@ public:
   ///
   virtual void augmentDualResidual(Robot& robot, ConstraintComponentData& data,
                                    const double dtau, const SplitSolution& s,
-                                   KKTResidual& kkt_residual) const = 0;
+                                   SplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Consense slack and dual of the constraints and factorize condensed
@@ -136,8 +136,8 @@ public:
   ///
   virtual void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data,
                                     const double dtau, const SplitSolution& s, 
-                                    KKTMatrix& kkt_matrix,
-                                    KKTResidual& kkt_residual) const = 0;
+                                    SplitKKTMatrix& kkt_matrix,
+                                    SplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Compute directions of slack and dual.

@@ -8,8 +8,8 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/constraints/impulse_constraint_component_base.hpp"
 #include "idocp/constraints/constraint_component_data.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -43,21 +43,24 @@ public:
   void setSlackAndDual(Robot& robot, ConstraintComponentData& data, 
                        const ImpulseSplitSolution& s) const override;
 
-  void augmentDualResidual(Robot& robot, ConstraintComponentData& data, 
-                           const ImpulseSplitSolution& s,
-                           ImpulseKKTResidual& kkt_residual) const override;
+  void augmentDualResidual(
+      Robot& robot, ConstraintComponentData& data, 
+      const ImpulseSplitSolution& s, 
+      ImpulseSplitKKTResidual& kkt_residual) const override;
 
-  void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data, 
-                            const ImpulseSplitSolution& s,
-                            ImpulseKKTMatrix& kkt_matrix,
-                            ImpulseKKTResidual& kkt_residual) const override;
+  void condenseSlackAndDual(
+      Robot& robot, ConstraintComponentData& data, 
+      const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+      ImpulseSplitKKTResidual& kkt_residual) const override;
 
-  void computeSlackAndDualDirection(Robot& robot, ConstraintComponentData& data, 
-                                    const ImpulseSplitSolution& s,
-                                    const ImpulseSplitDirection& d) const override; 
+  void computeSlackAndDualDirection(
+      Robot& robot, ConstraintComponentData& data, 
+      const ImpulseSplitSolution& s, 
+      const ImpulseSplitDirection& d) const override; 
 
-  void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
-                                    const ImpulseSplitSolution& s) const override;
+  void computePrimalAndDualResidual(
+      Robot& robot, ConstraintComponentData& data, 
+      const ImpulseSplitSolution& s) const override;
 
   int dimc() const override;
 

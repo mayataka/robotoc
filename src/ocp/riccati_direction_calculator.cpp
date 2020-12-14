@@ -52,7 +52,7 @@ RiccatiDirectionCalculator::~RiccatiDirectionCalculator() {
 
 void RiccatiDirectionCalculator::computeInitialStateDirection(
     const std::vector<Robot>& robots, const Eigen::VectorXd& q, 
-    const Eigen::VectorXd& v, const HybridSolution& s, HybridDirection& d) {
+    const Eigen::VectorXd& v, const Solution& s, Direction& d) {
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
   robots[0].subtractConfiguration(q, s[0].q, d[0].dq());
@@ -64,8 +64,8 @@ void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
     HybridOCP& split_ocps, std::vector<Robot>& robots, 
     const ContactSequence& contact_sequence, 
     const HybridRiccatiFactorizer& factorizer, 
-    const HybridRiccatiFactorization& factorization, const HybridSolution& s, 
-    HybridDirection& d) {
+    const HybridRiccatiFactorization& factorization, const Solution& s, 
+    Direction& d) {
   assert(robots.size() == num_proc_);
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();

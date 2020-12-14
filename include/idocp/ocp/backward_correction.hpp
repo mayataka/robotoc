@@ -4,8 +4,8 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 
 #include "Eigen/Core"
 
@@ -46,8 +46,8 @@ public:
   BackwardCorrection& operator=(BackwardCorrection&&) noexcept = default;
 
   void coarseUpdate(const Robot& robot, const SplitSolution& s, 
-                    SplitDirection& d, KKTMatrix& kkt_matrix, 
-                    const KKTResidual& kkt_residual,
+                    SplitDirection& d, SplitKKTMatrix& kkt_matrix, 
+                    const SplitKKTResidual& kkt_residual,
                     SplitSolution& s_new_coarse);
 
   template <typename SplitSolutionType>

@@ -8,8 +8,8 @@
 #include "idocp/ocp/terminal_ocp.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
@@ -112,12 +112,12 @@ void TerminalOCPTest::testLinearizeOCP(
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const SplitSolution s = SplitSolution::Random(robot);
   TerminalOCP ocp(robot, cost, constraints);
-  KKTMatrix kkt_matrix(robot);  
-  KKTResidual kkt_residual(robot);  
+  SplitKKTMatrix kkt_matrix(robot);  
+  SplitKKTResidual kkt_residual(robot);  
   ocp.linearizeOCP(robot, t, s, kkt_matrix, kkt_residual);
   robot.updateKinematics(s.q, s.v);
-  KKTMatrix kkt_matrix_ref(robot);  
-  KKTResidual kkt_residual_ref(robot);  
+  SplitKKTMatrix kkt_matrix_ref(robot);  
+  SplitKKTResidual kkt_residual_ref(robot);  
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
@@ -149,11 +149,11 @@ void TerminalOCPTest::testComputeKKTResidual(
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const SplitSolution s = SplitSolution::Random(robot);
   TerminalOCP ocp(robot, cost, constraints);
-  KKTResidual kkt_residual(robot);  
+  SplitKKTResidual kkt_residual(robot);  
   ocp.computeKKTResidual(robot, t, s, kkt_residual);
   const double KKT = ocp.squaredNormKKTResidual(kkt_residual);
   robot.updateKinematics(s.q, s.v);
-  KKTResidual kkt_residual_ref(robot);  
+  SplitKKTResidual kkt_residual_ref(robot);  
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);

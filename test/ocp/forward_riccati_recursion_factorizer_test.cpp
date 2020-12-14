@@ -5,8 +5,8 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
 #include "idocp/ocp/lqr_state_feedback_policy.hpp"
@@ -29,8 +29,8 @@ protected:
   virtual void TearDown() {
   }
 
-  KKTMatrix createKKTMatrix(const Robot& robot) const;
-  KKTResidual createKKTResidual(const Robot& robot) const;
+  SplitKKTMatrix createKKTMatrix(const Robot& robot) const;
+  SplitKKTResidual createKKTResidual(const Robot& robot) const;
   RiccatiFactorization createRiccatiFactorization(const Robot& robot) const;
 
   void test(const Robot& robot) const;
@@ -41,11 +41,11 @@ protected:
 };
 
 
-KKTMatrix ForwardRiccatiRecursionFactorizerTest::createKKTMatrix(const Robot& robot) const {
+SplitKKTMatrix ForwardRiccatiRecursionFactorizerTest::createKKTMatrix(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
-  KKTMatrix kkt_matrix(robot);
+  SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.Qqq() = seed * seed.transpose();
   kkt_matrix.Qqv().setRandom();
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
@@ -65,8 +65,8 @@ KKTMatrix ForwardRiccatiRecursionFactorizerTest::createKKTMatrix(const Robot& ro
 }
 
 
-KKTResidual ForwardRiccatiRecursionFactorizerTest::createKKTResidual(const Robot& robot) const {
-  KKTResidual kkt_residual(robot);
+SplitKKTResidual ForwardRiccatiRecursionFactorizerTest::createKKTResidual(const Robot& robot) const {
+  SplitKKTResidual kkt_residual(robot);
   kkt_residual.lx().setRandom();
   kkt_residual.lu().setRandom();
   kkt_residual.Fx().setRandom();
@@ -97,12 +97,12 @@ RiccatiFactorization ForwardRiccatiRecursionFactorizerTest::createRiccatiFactori
 void ForwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  const KKTMatrix kkt_matrix = createKKTMatrix(robot);
+  const SplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
   if (!robot.has_floating_base()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
   }
   ASSERT_TRUE(kkt_matrix.Fqv().isZero());
-  const KKTResidual kkt_residual = createKKTResidual(robot);
+  const SplitKKTResidual kkt_residual = createKKTResidual(robot);
   ForwardRiccatiRecursionFactorizer factorizer(robot);
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
   if (robot.has_floating_base()) {

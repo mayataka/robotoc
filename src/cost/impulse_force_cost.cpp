@@ -66,7 +66,7 @@ double ImpulseForceCost::l(Robot& robot, CostFunctionData& data, const double t,
 
 void ImpulseForceCost::lf(Robot& robot, CostFunctionData& data, const double t, 
                           const ImpulseSplitSolution& s, 
-                          ImpulseKKTResidual& kkt_residual) const {
+                          ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
     if (s.isImpulseActive(i)) {
@@ -80,7 +80,7 @@ void ImpulseForceCost::lf(Robot& robot, CostFunctionData& data, const double t,
 
 void ImpulseForceCost::lff(Robot& robot, CostFunctionData& data, const double t, 
                            const ImpulseSplitSolution& s, 
-                           ImpulseKKTMatrix& kkt_matrix) const {
+                           ImpulseSplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
     if (s.isImpulseActive(i)) {

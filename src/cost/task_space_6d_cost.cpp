@@ -97,7 +97,7 @@ double TaskSpace6DCost::phi(Robot& robot, CostFunctionData& data,
 void TaskSpace6DCost::lq(Robot& robot, CostFunctionData& data, 
                          const double t, const double dtau, 
                          const SplitSolution& s, 
-                         KKTResidual& kkt_residual) const {
+                         SplitKKTResidual& kkt_residual) const {
   data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
   data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
   pinocchio::Jlog6(data.diff_SE3, data.J_66);
@@ -111,7 +111,8 @@ void TaskSpace6DCost::lq(Robot& robot, CostFunctionData& data,
 
 void TaskSpace6DCost::lqq(Robot& robot, CostFunctionData& data, 
                           const double t, const double dtau, 
-                          const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+                          const SplitSolution& s, 
+                          SplitKKTMatrix& kkt_matrix) const {
   data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
   pinocchio::Jlog6(data.diff_SE3, data.J_66);
   robot.getFrameJacobian(frame_id_, data.J_6d);
@@ -123,7 +124,7 @@ void TaskSpace6DCost::lqq(Robot& robot, CostFunctionData& data,
 
 void TaskSpace6DCost::phiq(Robot& robot, CostFunctionData& data, 
                            const double t, const SplitSolution& s,
-                           KKTResidual& kkt_residual) const {
+                           SplitKKTResidual& kkt_residual) const {
   data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
   data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
   pinocchio::Jlog6(data.diff_SE3, data.J_66);
@@ -136,7 +137,7 @@ void TaskSpace6DCost::phiq(Robot& robot, CostFunctionData& data,
 
 void TaskSpace6DCost::phiqq(Robot& robot, CostFunctionData& data, 
                             const double t, const SplitSolution& s,
-                            KKTMatrix& kkt_matrix) const {
+                            SplitKKTMatrix& kkt_matrix) const {
   data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
   pinocchio::Jlog6(data.diff_SE3, data.J_66);
   robot.getFrameJacobian(frame_id_, data.J_6d);

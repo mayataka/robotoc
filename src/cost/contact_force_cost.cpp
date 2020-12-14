@@ -76,7 +76,7 @@ double ContactForceCost::phi(Robot& robot, CostFunctionData& data,
 
 void ContactForceCost::lf(Robot& robot, CostFunctionData& data, const double t, 
                           const double dtau, const SplitSolution& s, 
-                          KKTResidual& kkt_residual) const {
+                          SplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
     if (s.isContactActive(i)) {
@@ -90,7 +90,7 @@ void ContactForceCost::lf(Robot& robot, CostFunctionData& data, const double t,
 
 void ContactForceCost::lff(Robot& robot, CostFunctionData& data, const double t, 
                            const double dtau, const SplitSolution& s, 
-                           KKTMatrix& kkt_matrix) const {
+                           SplitKKTMatrix& kkt_matrix) const {
   int dimf_stack = 0;
   for (int i=0; i<max_point_contacts_; ++i) {
     if (s.isContactActive(i)) {

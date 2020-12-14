@@ -61,8 +61,8 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
                                    const Eigen::VectorXd& q_prev, 
                                    const SplitSolution& s, 
                                    const SplitSolutionType& s_next,
-                                   KKTMatrix& kkt_matrix, 
-                                   KKTResidual& kkt_residual) {
+                                   SplitKKTMatrix& kkt_matrix, 
+                                   SplitKKTResidual& kkt_residual) {
   assert(dtau > 0);
   assert(q_prev.size() == robot.dimq());
   kkt_matrix.setContactStatus(contact_status);
@@ -99,8 +99,8 @@ inline void SplitOCP::computeCondensedPrimalDirection(
 
 template <typename SplitDirectionType>
 inline void SplitOCP::computeCondensedDualDirection(
-    const Robot& robot, const double dtau, const KKTMatrix& kkt_matrix, 
-    const KKTResidual& kkt_residual, const SplitDirectionType& d_next, 
+    const Robot& robot, const double dtau, const SplitKKTMatrix& kkt_matrix, 
+    const SplitKKTResidual& kkt_residual, const SplitDirectionType& d_next, 
     SplitDirection& d) {
   assert(dtau > 0);
   contact_dynamics_.computeCondensedDualDirection(robot, dtau, kkt_matrix,
@@ -145,8 +145,8 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
                                          const Eigen::VectorXd& q_prev, 
                                          const SplitSolution& s,
                                          const SplitSolutionType& s_next, 
-                                         KKTMatrix& kkt_matrix,
-                                         KKTResidual& kkt_residual) {
+                                         SplitKKTMatrix& kkt_matrix,
+                                         SplitKKTResidual& kkt_residual) {
   assert(dtau > 0);
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
@@ -166,8 +166,8 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
 }
 
 
-inline double SplitOCP::squaredNormKKTResidual(const KKTResidual& kkt_residual, 
-                                               const double dtau) const {
+inline double SplitOCP::squaredNormKKTResidual(
+    const SplitKKTResidual& kkt_residual, const double dtau) const {
   double error = 0;
   error += kkt_residual.lx().squaredNorm();
   error += kkt_residual.la.squaredNorm();
@@ -210,7 +210,7 @@ inline double SplitOCP::constraintViolation(Robot& robot,
                                             const SplitSolution& s, 
                                             const Eigen::VectorXd& q_next, 
                                             const Eigen::VectorXd& v_next,
-                                            KKTResidual& kkt_residual) {
+                                            SplitKKTResidual& kkt_residual) {
   kkt_residual.setContactStatus(contact_status);
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);

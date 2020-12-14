@@ -15,14 +15,13 @@ inline CostFunction::~CostFunction() {
 }
 
 
-inline void CostFunction::push_back(
-    const std::shared_ptr<CostFunctionComponentBase>& cost) {
+inline void CostFunction::push_back(const CostFunctionComponentBasePtr& cost) {
   costs_.push_back(cost);
 }
 
 
 inline void CostFunction::push_back(
-    const std::shared_ptr<ImpulseCostFunctionComponentBase>& cost) {
+    const ImpulseCostFunctionComponentBasePtr& cost) {
   impulse_cost_function_->push_back(cost);
 }
 
@@ -81,7 +80,7 @@ inline double CostFunction::phi(Robot& robot, CostFunctionData& data,
 inline void CostFunction::computeStageCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const double dtau, const SplitSolution& s, 
-    KKTResidual& kkt_residual) const {
+    SplitKKTResidual& kkt_residual) const {
   assert(dtau > 0);
   for (const auto cost : costs_) {
     cost->lq(robot, data, t, dtau, s, kkt_residual);
@@ -97,7 +96,7 @@ inline void CostFunction::computeStageCostDerivatives(
 
 inline void CostFunction::computeStageCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
-    const double dtau, const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+    const double dtau, const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   assert(dtau > 0);
   for (const auto cost : costs_) {
     cost->lqq(robot, data, t, dtau, s, kkt_matrix);
@@ -113,7 +112,7 @@ inline void CostFunction::computeStageCostHessian(
 
 inline void CostFunction::computeTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
-    const SplitSolution& s, KKTResidual& kkt_residual) const {
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   for (const auto cost : costs_) {
     cost->phiq(robot, data, t, s, kkt_residual);
     cost->phiv(robot, data, t, s, kkt_residual);
@@ -123,7 +122,7 @@ inline void CostFunction::computeTerminalCostDerivatives(
 
 inline void CostFunction::computeTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
-    const SplitSolution& s, KKTMatrix& kkt_matrix) const {
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   for (const auto cost : costs_) {
     cost->phiqq(robot, data, t, s, kkt_matrix);
     cost->phivv(robot, data, t, s, kkt_matrix);

@@ -1,6 +1,6 @@
 #include "idocp/constraints/joint_acceleration_lower_limit.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
@@ -60,15 +60,15 @@ void JointAccelerationLowerLimit::setSlackAndDual(
 
 void JointAccelerationLowerLimit::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTResidual& kkt_residual) const {
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   kkt_residual.la.tail(dimc_).noalias() -= dtau * data.dual;
 }
 
 
 void JointAccelerationLowerLimit::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Qaa().diagonal().tail(dimc_).array()
       += dtau * dtau * data.dual.array() / data.slack.array();
   computePrimalAndDualResidual(robot, data, dtau, s);

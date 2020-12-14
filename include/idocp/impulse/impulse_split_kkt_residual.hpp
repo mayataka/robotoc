@@ -1,5 +1,5 @@
-#ifndef IDOCP_IMPULSE_KKT_RESIDUAL_HPP_
-#define IDOCP_IMPULSE_KKT_RESIDUAL_HPP_
+#ifndef IDOCP_IMPULSE_SPLIT_KKT_RESIDUAL_HPP_ 
+#define IDOCP_IMPULSE_SPLIT_KKT_RESIDUAL_HPP_
 
 #include "Eigen/Core"
 
@@ -10,46 +10,47 @@
 namespace idocp {
 
 ///
-/// @class ImpulseKKTResidual
+/// @class ImpulseSplitKKTResidual
 /// @brief KKT residual split at the impulse stage. 
 ///
-class ImpulseKKTResidual {
+class ImpulseSplitKKTResidual {
 public:
   ///
   /// @brief Construct a KKT residual.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
-  ImpulseKKTResidual(const Robot& robot);
+  ImpulseSplitKKTResidual(const Robot& robot);
 
   ///
   /// @brief Default constructor. Does not construct any datas. 
   ///
-  ImpulseKKTResidual();
+  ImpulseSplitKKTResidual();
 
   ///
   /// @brief Destructor. 
   ///
-  ~ImpulseKKTResidual();
+  ~ImpulseSplitKKTResidual();
 
   ///
   /// @brief Use default copy constructor. 
   ///
-  ImpulseKKTResidual(const ImpulseKKTResidual&) = default;
+  ImpulseSplitKKTResidual(const ImpulseSplitKKTResidual&) = default;
 
   ///
   /// @brief Use default copy assign operator. 
   ///
-  ImpulseKKTResidual& operator=(const ImpulseKKTResidual&) = default;
+  ImpulseSplitKKTResidual& operator=(const ImpulseSplitKKTResidual&) = default;
 
   ///
   /// @brief Use default move constructor. 
   ///
-  ImpulseKKTResidual(ImpulseKKTResidual&&) noexcept = default;
+  ImpulseSplitKKTResidual(ImpulseSplitKKTResidual&&) noexcept = default;
 
   ///
   /// @brief Use default move assign operator. 
   ///
-  ImpulseKKTResidual& operator=(ImpulseKKTResidual&&) noexcept = default;
+  ImpulseSplitKKTResidual& operator=(
+      ImpulseSplitKKTResidual&&) noexcept = default;
 
   ///
   /// @brief Set impulse status from robot model, i.e., set dimension of the 
@@ -173,14 +174,14 @@ public:
   ///
   /// @brief Residual with respect to the stack of the contact forces f.
   /// @return Reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is ImpulseKKTResidual::dimf().
+  /// contact forces f. Size is ImpulseSplitKKTResidual::dimf().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lf();
 
   ///
   /// @brief Residual with respect to the stack of the contact forces f.
   /// @return Reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is ImpulseKKTResidual::dimf().
+  /// contact forces f. Size is ImpulseSplitKKTResidual::dimf().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
@@ -203,11 +204,11 @@ public:
   int dimf() const;
 
   ///
-  /// @brief Chech the equivalence of two ImpulseKKTResidual.
+  /// @brief Chech the equivalence of two ImpulseSplitKKTResidual.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
-  bool isApprox(const ImpulseKKTResidual& other) const;
+  bool isApprox(const ImpulseSplitKKTResidual& other) const;
 
   ///
   /// @brief Chech this has at least one NaN.
@@ -231,6 +232,6 @@ private:
 
 } // namespace idocp 
 
-#include "idocp/impulse/impulse_kkt_residual.hxx"
+#include "idocp/impulse/impulse_split_kkt_residual.hxx"
 
-#endif // IDOCP_IMPULSE_KKT_RESIDUAL_HPP_ 
+#endif // IDOCP_IMPULSE_SPLIT_KKT_RESIDUAL_HPP_ 

@@ -49,7 +49,7 @@ RiccatiRecursion::~RiccatiRecursion() {
 
 
 void RiccatiRecursion::backwardRiccatiRecursionTerminal(
-    const HybridKKTMatrix& kkt_matrix, const HybridKKTResidual& kkt_residual,
+    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual,
     HybridRiccatiFactorization& riccati_factorization) const {
   riccati_factorization[N_].Pqq = kkt_matrix[N_].Qqq();
   riccati_factorization[N_].Pvv = kkt_matrix[N_].Qvv();
@@ -60,8 +60,8 @@ void RiccatiRecursion::backwardRiccatiRecursionTerminal(
 
 void RiccatiRecursion::backwardRiccatiRecursion(
     HybridRiccatiFactorizer& riccati_factorizer,
-    const ContactSequence& contact_sequence, HybridKKTMatrix& kkt_matrix, 
-    HybridKKTResidual& kkt_residual, 
+    const ContactSequence& contact_sequence, KKTMatrix& kkt_matrix, 
+    KKTResidual& kkt_residual, 
     HybridRiccatiFactorization& riccati_factorization) {
   for (int i=N_-1; i>=0; --i) {
     if (contact_sequence.existImpulseStage(i)) {
@@ -112,8 +112,8 @@ void RiccatiRecursion::backwardRiccatiRecursion(
 
 void RiccatiRecursion::forwardRiccatiRecursionParallel(
     HybridRiccatiFactorizer& riccati_factorizer,
-    const ContactSequence& contact_sequence, HybridKKTMatrix& kkt_matrix, 
-    HybridKKTResidual& kkt_residual,
+    const ContactSequence& contact_sequence, KKTMatrix& kkt_matrix, 
+    KKTResidual& kkt_residual,
     StateConstraintRiccatiFactorization& constraint_factorization) {
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();
@@ -155,8 +155,8 @@ void RiccatiRecursion::forwardRiccatiRecursionParallel(
 
 void RiccatiRecursion::forwardStateConstraintFactorization(
     HybridRiccatiFactorizer& riccati_factorizer,
-    const ContactSequence& contact_sequence, const HybridKKTMatrix& kkt_matrix, 
-    const HybridKKTResidual& kkt_residual, 
+    const ContactSequence& contact_sequence, const KKTMatrix& kkt_matrix, 
+    const KKTResidual& kkt_residual, 
     HybridRiccatiFactorization& riccati_factorization) {
   const bool exist_state_constraint = contact_sequence.existImpulseStage();
   riccati_factorizer[0].forwardStateConstraintFactorizationInitial(
@@ -211,7 +211,7 @@ void RiccatiRecursion::forwardStateConstraintFactorization(
 
 void RiccatiRecursion::backwardStateConstraintFactorization(
     const HybridRiccatiFactorizer& riccati_factorizer,
-    const ContactSequence& contact_sequence, const HybridKKTMatrix& kkt_matrix,
+    const ContactSequence& contact_sequence, const KKTMatrix& kkt_matrix,
     StateConstraintRiccatiFactorization& constraint_factorization) const {
   const int num_constraint = contact_sequence.totalNumImpulseStages();
   #pragma omp parallel for num_threads(nproc_)
@@ -279,10 +279,9 @@ void RiccatiRecursion::backwardStateConstraintFactorization(
 
 void RiccatiRecursion::forwardRiccatiRecursion(
     const HybridRiccatiFactorizer& riccati_factorizer,
-    const ContactSequence& contact_sequence, const HybridKKTMatrix& kkt_matrix, 
-    const HybridKKTResidual& kkt_residual, 
-    const HybridRiccatiFactorization& riccati_factorization, 
-    HybridDirection& d) {
+    const ContactSequence& contact_sequence, const KKTMatrix& kkt_matrix, 
+    const KKTResidual& kkt_residual, 
+    const HybridRiccatiFactorization& riccati_factorization, Direction& d) {
   const bool exist_state_constraint = contact_sequence.existImpulseStage();
   for (int i=0; i<N_; ++i) {
     if (contact_sequence.existImpulseStage(i)) {

@@ -7,8 +7,8 @@
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/contact_dynamics.hpp"
 #include "idocp/ocp/non_contact_dynamics.hpp"
 
@@ -33,26 +33,26 @@ public:
 
   void linearizeRobotDynamics(Robot& robot, const ContactStatus& contact_status, 
                               const double dtau, const SplitSolution& s, 
-                              KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
+                              SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
 
   void condenseRobotDynamics(Robot& robot, const ContactStatus& contact_status,
                              const double dtau, const SplitSolution& s, 
-                             KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
+                             SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
 
   void computeCondensedPrimalDirection(const double dtau, 
-                                       const KKTMatrix& kkt_matrix, 
-                                       const KKTResidual& kkt_residual, 
+                                       const SplitKKTMatrix& kkt_matrix, 
+                                       const SplitKKTResidual& kkt_residual, 
                                        SplitDirection& d);
 
   void computeCondensedDualDirection(const double dtau, 
-                                     const KKTMatrix& kkt_matrix, 
-                                     const KKTResidual& kkt_residual, 
+                                     const SplitKKTMatrix& kkt_matrix, 
+                                     const SplitKKTResidual& kkt_residual, 
                                      SplitDirection& d);
 
   void computeRobotDynamicsResidual(Robot& robot, 
                                     const ContactStatus& contact_status,
                                     const double dtau, const SplitSolution& s, 
-                                    KKTResidual& kkt_residual);
+                                    SplitKKTResidual& kkt_residual);
 
   double l1NormRobotDynamicsResidual(const double dtau) const;
 

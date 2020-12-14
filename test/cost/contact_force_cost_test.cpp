@@ -8,8 +8,8 @@
 #include "idocp/cost/contact_force_cost.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -50,8 +50,8 @@ void ContactForceCostTest::commonTest(Robot& robot) const {
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     contact_status.deactivateContact(i);
   }
-  KKTMatrix kkt_mat(robot);
-  KKTResidual kkt_res(robot);
+  SplitKKTMatrix kkt_mat(robot);
+  SplitKKTResidual kkt_res(robot);
   kkt_res.setContactStatus(contact_status);
   kkt_mat.setContactStatus(contact_status);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
@@ -74,8 +74,8 @@ void ContactForceCostTest::commonTest(Robot& robot) const {
   kkt_mat.setContactStatus(contact_status);
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
-  KKTResidual kkt_res_ref = kkt_res;
-  KKTMatrix kkt_mat_ref = kkt_mat;
+  SplitKKTResidual kkt_res_ref = kkt_res;
+  SplitKKTMatrix kkt_mat_ref = kkt_mat;
   cost.lf(robot, data, t, dtau, s, kkt_res);
   cost.lff(robot, data, t, dtau, s, kkt_mat);
   int dimf_stack = 0;

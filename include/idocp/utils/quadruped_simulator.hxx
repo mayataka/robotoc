@@ -21,7 +21,7 @@ inline QuadrupedSimulator::QuadrupedSimulator(
 
 
 template<typename OCPTypeDerived>
-inline void QuadrupedSimulator::run(MPC<OCPTypeDerived>& mpc, 
+inline void QuadrupedSimulator::run(Robot& robot, MPC<OCPTypeDerived>& mpc, 
                                     const double simulation_time_in_sec, 
                                     const double sampling_period_in_sec, 
                                     const double simulation_start_time_in_sec, 
@@ -50,10 +50,11 @@ inline void QuadrupedSimulator::run(MPC<OCPTypeDerived>& mpc,
   raisim::World::setActivationKey(path_to_raisim_activation_key_);
   raisim::World raisim_world;
   auto raisim_robot = raisim_world.addArticulatedSystem(path_to_urdf_for_raisim_, "");
+
   auto raisim_ground = raisim_world.addGround();
   raisim_world.setTimeStep(sampling_period_in_sec);
   raisim_world.setERP(0.2, 0.2);
-  raisim_world.setDefaultMaterial(10, 0, 0);
+  raisim_world.setDefaultMaterial(1000, 0, 0);
   auto vis = raisim::OgreVis::get();
   if (visualization) {
     vis->setWorld(&raisim_world);
@@ -84,35 +85,38 @@ inline void QuadrupedSimulator::run(MPC<OCPTypeDerived>& mpc,
   Eigen::VectorXd v_raisim = Eigen::VectorXd::Zero(v_initial.size());
   Eigen::VectorXd u_raisim = Eigen::VectorXd::Zero(v_initial.size());
   mpc.getControlInput(u);
-  pino2rai(q, v, q_raisim, v_raisim);
-  pino2rai(u, u_raisim);
+  pino2rai(robot, q, v, q_raisim, v_raisim);
+  raisim_robot->setState(q_raisim, v_raisim);
+  raisim_robot->setGeneralizedForce(u_raisim);
   if (visualization && recording) {
     vis->startRecordingVideo(save_dir_path_+'/'+save_file_name_+".mp4");
   }
   std::chrono::system_clock::time_point start_clock, end_clock;
+  auto contact_status_ref = robot.createContactStatus();
+  contact_status_ref.activateContacts({0, 1, 2, 3});
   double CPU_time_total_in_sec = 0;
   for (double t=0; t<simulation_time_in_sec; t+=sampling_period_in_sec) {
-    pino2rai(q, v, q_raisim, v_raisim);
-    pino2rai(u, u_raisim);
-    raisim_robot->setState(q_raisim, v_raisim);
     raisim_robot->setGeneralizedForce(u_raisim);
     raisim_world.integrate();
     if (visualization) {
       vis->renderOneFrame();
     }
+    raisim_robot->getState(q_raisim, v_raisim);
+    rai2pino(robot, q_raisim, v_raisim, q, v);
     mpc.computeKKTResidual(t, q, v);
     data_saver_.save(q, v, u, mpc.KKTError());
     start_clock = std::chrono::system_clock::now();
-    mpc.setContactPointByKinematics(q);
-    mpc.updateSolution(t, q, v);
+    robot.updateFrameKinematics(q);
+    robot.setContactPoints(contact_status_ref);
+    mpc.getSolverHandle()->setContactStatusUniformly(contact_status_ref);
+    mpc.updateSolution(t, q, v, 100, 1.0e-06);
     mpc.getControlInput(u);
+    pino2rai(u, u_raisim);
     end_clock = std::chrono::system_clock::now();
     const double CPU_time_in_sec
         = 1.0e-06 * std::chrono::duration_cast<std::chrono::microseconds>(
             end_clock-start_clock).count();
     CPU_time_total_in_sec += CPU_time_in_sec;
-    raisim_robot->getState(q_raisim, v_raisim);
-    rai2pino(q_raisim, v_raisim, q, v);
   }
   const int num_simulation_update 
       = (int)(simulation_time_in_sec/sampling_period_in_sec);
@@ -163,7 +167,8 @@ inline void QuadrupedSimulator::setupCallback() {
 }
 
 
-inline void QuadrupedSimulator::pino2rai(const Eigen::VectorXd& q_pinocchio, 
+inline void QuadrupedSimulator::pino2rai(Robot& robot, 
+                                         const Eigen::VectorXd& q_pinocchio, 
                                          const Eigen::VectorXd& v_pinocchio, 
                                          Eigen::VectorXd& q_raisim, 
                                          Eigen::VectorXd& v_raisim) {
@@ -174,37 +179,46 @@ inline void QuadrupedSimulator::pino2rai(const Eigen::VectorXd& q_pinocchio,
   q_raisim.coeffRef(0)  = q_pinocchio.coeff(0);
   q_raisim.coeffRef(1)  = q_pinocchio.coeff(1);
   q_raisim.coeffRef(2)  = q_pinocchio.coeff(2);
+
   q_raisim.coeffRef(3)  = q_pinocchio.coeff(6);
   q_raisim.coeffRef(4)  = q_pinocchio.coeff(3);
   q_raisim.coeffRef(5)  = q_pinocchio.coeff(4);
   q_raisim.coeffRef(6)  = q_pinocchio.coeff(5);
+
   q_raisim.coeffRef(7)  = q_pinocchio.coeff(7);
   q_raisim.coeffRef(8)  = q_pinocchio.coeff(8);
   q_raisim.coeffRef(9)  = q_pinocchio.coeff(9);
+
   q_raisim.coeffRef(10) = q_pinocchio.coeff(13);
   q_raisim.coeffRef(11) = q_pinocchio.coeff(14);
   q_raisim.coeffRef(12) = q_pinocchio.coeff(15);
+
   q_raisim.coeffRef(13) = q_pinocchio.coeff(10);
   q_raisim.coeffRef(14) = q_pinocchio.coeff(11);
   q_raisim.coeffRef(15) = q_pinocchio.coeff(12);
+
   q_raisim.coeffRef(16) = q_pinocchio.coeff(16);
   q_raisim.coeffRef(17) = q_pinocchio.coeff(17);
   q_raisim.coeffRef(18) = q_pinocchio.coeff(18);
-  v_raisim.coeffRef(0)  = v_pinocchio.coeff(0);
-  v_raisim.coeffRef(1)  = v_pinocchio.coeff(1);
-  v_raisim.coeffRef(2)  = v_pinocchio.coeff(2);
-  v_raisim.coeffRef(3)  = v_pinocchio.coeff(3);
-  v_raisim.coeffRef(4)  = v_pinocchio.coeff(4);
-  v_raisim.coeffRef(5)  = v_pinocchio.coeff(5);
+
+  // Change velocity's reference frame from LOCAL to WORLD.
+  robot.updateFrameKinematics(q_pinocchio);
+  const Eigen::Matrix3d R = robot.frameRotation(4);
+  v_raisim.head<3>()     = R * v_pinocchio.head<3>();
+  v_raisim.segment<3>(3) = R * v_pinocchio.segment<3>(3);
+
   v_raisim.coeffRef(6)  = v_pinocchio.coeff(6);
   v_raisim.coeffRef(7)  = v_pinocchio.coeff(7);
   v_raisim.coeffRef(8)  = v_pinocchio.coeff(8);
+
   v_raisim.coeffRef(9)  = v_pinocchio.coeff(12);
   v_raisim.coeffRef(10) = v_pinocchio.coeff(13);
   v_raisim.coeffRef(11) = v_pinocchio.coeff(14);
+
   v_raisim.coeffRef(12) = v_pinocchio.coeff(9);
   v_raisim.coeffRef(13) = v_pinocchio.coeff(10);
   v_raisim.coeffRef(14) = v_pinocchio.coeff(11);
+
   v_raisim.coeffRef(15) = v_pinocchio.coeff(15);
   v_raisim.coeffRef(16) = v_pinocchio.coeff(16);
   v_raisim.coeffRef(17) = v_pinocchio.coeff(17);
@@ -219,19 +233,23 @@ inline void QuadrupedSimulator::pino2rai(const Eigen::VectorXd& u_pinocchio,
   u_raisim.coeffRef(6)  = u_pinocchio.coeff(6);
   u_raisim.coeffRef(7)  = u_pinocchio.coeff(7);
   u_raisim.coeffRef(8)  = u_pinocchio.coeff(8);
+
   u_raisim.coeffRef(9)  = u_pinocchio.coeff(12);
   u_raisim.coeffRef(10) = u_pinocchio.coeff(13);
   u_raisim.coeffRef(11) = u_pinocchio.coeff(14);
+
   u_raisim.coeffRef(12) = u_pinocchio.coeff(9);
   u_raisim.coeffRef(13) = u_pinocchio.coeff(10);
   u_raisim.coeffRef(14) = u_pinocchio.coeff(11);
+
   u_raisim.coeffRef(15) = u_pinocchio.coeff(15);
   u_raisim.coeffRef(16) = u_pinocchio.coeff(16);
   u_raisim.coeffRef(17) = u_pinocchio.coeff(17);
 }
 
 
-inline void QuadrupedSimulator::rai2pino(const Eigen::VectorXd& q_raisim, 
+inline void QuadrupedSimulator::rai2pino(Robot& robot, 
+                                         const Eigen::VectorXd& q_raisim, 
                                          const Eigen::VectorXd& v_raisim, 
                                          Eigen::VectorXd& q_pinocchio, 
                                          Eigen::VectorXd& v_pinocchio) {
@@ -242,37 +260,46 @@ inline void QuadrupedSimulator::rai2pino(const Eigen::VectorXd& q_raisim,
   q_pinocchio.coeffRef(0)  = q_raisim.coeff(0);
   q_pinocchio.coeffRef(1)  = q_raisim.coeff(1);
   q_pinocchio.coeffRef(2)  = q_raisim.coeff(2);
+
   q_pinocchio.coeffRef(6)  = q_raisim.coeff(3);
   q_pinocchio.coeffRef(3)  = q_raisim.coeff(4);
   q_pinocchio.coeffRef(4)  = q_raisim.coeff(5);
   q_pinocchio.coeffRef(5)  = q_raisim.coeff(6);
+
   q_pinocchio.coeffRef(7)  = q_raisim.coeff(7);
   q_pinocchio.coeffRef(8)  = q_raisim.coeff(8);
   q_pinocchio.coeffRef(9)  = q_raisim.coeff(9);
+
   q_pinocchio.coeffRef(13) = q_raisim.coeff(10);
   q_pinocchio.coeffRef(14) = q_raisim.coeff(11);
   q_pinocchio.coeffRef(15) = q_raisim.coeff(12);
+
   q_pinocchio.coeffRef(10) = q_raisim.coeff(13);
   q_pinocchio.coeffRef(11) = q_raisim.coeff(14);
   q_pinocchio.coeffRef(12) = q_raisim.coeff(15);
+
   q_pinocchio.coeffRef(16) = q_raisim.coeff(16);
   q_pinocchio.coeffRef(17) = q_raisim.coeff(17);
   q_pinocchio.coeffRef(18) = q_raisim.coeff(18);
-  v_pinocchio.coeffRef(0)  = v_raisim.coeff(0);
-  v_pinocchio.coeffRef(1)  = v_raisim.coeff(1);
-  v_pinocchio.coeffRef(2)  = v_raisim.coeff(2);
-  v_pinocchio.coeffRef(3)  = v_raisim.coeff(3);
-  v_pinocchio.coeffRef(4)  = v_raisim.coeff(4);
-  v_pinocchio.coeffRef(5)  = v_raisim.coeff(5);
+
+  // Change velocity's reference frame from WORLD to LOCAL.
+  robot.updateFrameKinematics(q_pinocchio);
+  const Eigen::Matrix3d R = robot.frameRotation(4);
+  v_pinocchio.head<3>()     = R.transpose() * v_raisim.head<3>();
+  v_pinocchio.segment<3>(3) = R.transpose() * v_raisim.segment<3>(3);
+
   v_pinocchio.coeffRef(6)  = v_raisim.coeff(6);
   v_pinocchio.coeffRef(7)  = v_raisim.coeff(7);
   v_pinocchio.coeffRef(8)  = v_raisim.coeff(8);
+
   v_pinocchio.coeffRef(9)  = v_raisim.coeff(12);
   v_pinocchio.coeffRef(10) = v_raisim.coeff(13);
   v_pinocchio.coeffRef(11) = v_raisim.coeff(14);
+
   v_pinocchio.coeffRef(12) = v_raisim.coeff(9);
   v_pinocchio.coeffRef(13) = v_raisim.coeff(10);
   v_pinocchio.coeffRef(14) = v_raisim.coeff(11);
+
   v_pinocchio.coeffRef(15) = v_raisim.coeff(15);
   v_pinocchio.coeffRef(16) = v_raisim.coeff(16);
   v_pinocchio.coeffRef(17) = v_raisim.coeff(17);

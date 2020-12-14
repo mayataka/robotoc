@@ -5,8 +5,8 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_state_equation.hpp"
 
@@ -34,8 +34,8 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFixedBase) {
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   const SplitSolution s_next = SplitSolution::Random(robot);
-  ImpulseKKTResidual kkt_residual(robot);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   stateequation::LinearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
                                               kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q-s_next.q)));
@@ -57,8 +57,8 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFloatingBase) {
   robot.normalizeConfiguration(q_prev);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   const SplitSolution s_next = SplitSolution::Random(robot);
-  ImpulseKKTResidual kkt_residual(robot);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   stateequation::LinearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
                                               kkt_matrix, kkt_residual);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
@@ -89,8 +89,8 @@ TEST_F(ImpulseStateEquationTest, backwardEulerFixedBase) {
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const Eigen::VectorXd v_prev = Eigen::VectorXd::Random(robot.dimv());
-  ImpulseKKTResidual kkt_residual(robot);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   stateequation::LinearizeImpulseBackwardEuler(robot, q_prev, v_prev, s, s_next,
                                                kkt_matrix,  kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((q_prev-s.q)));
@@ -124,8 +124,8 @@ TEST_F(ImpulseStateEquationTest, backwardEulerFloatingBase) {
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const Eigen::VectorXd v_prev = Eigen::VectorXd::Random(robot.dimv());
-  ImpulseKKTResidual kkt_residual(robot);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   stateequation::LinearizeImpulseBackwardEuler(robot, q_prev, v_prev, s, s_next,
                                                kkt_matrix,  kkt_residual);
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());

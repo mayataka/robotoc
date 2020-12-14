@@ -89,7 +89,7 @@ void StateConstraintRiccatiFactorizerTest::testComputeLagrangeMultiplierDirectio
     riccati_factorization.impulse[i].Pi.setRandom();
     riccati_factorization.impulse[i].pi.setRandom();
   }
-  HybridDirection d(N, max_num_impulse, robot);
+  Direction d(N, max_num_impulse, robot);
   d[0].dx().setRandom();
   for (int i=0; i<num_impulse; ++i) {
     d.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
@@ -136,7 +136,7 @@ void StateConstraintRiccatiFactorizerTest::testAggregateLagrangeMultiplierDirect
       constraint_factorization.T_lift(i, j).setRandom();
     }
   }
-  HybridDirection d(N, max_num_impulse, robot);
+  Direction d(N, max_num_impulse, robot);
   for (int i=0; i<num_impulse; ++i) {
     d.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
     d.impulse[i].dxi().setRandom();

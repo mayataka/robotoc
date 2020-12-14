@@ -5,8 +5,8 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/impulse/impulse_backward_riccati_recursion_factorizer.hpp"
@@ -65,8 +65,8 @@ public:
   /// @param[out] riccati Riccati factorization at the current impulse stage. 
   ///
   void backwardRiccatiRecursion(const RiccatiFactorization& riccati_next, 
-                                ImpulseKKTMatrix& kkt_matrix, 
-                                ImpulseKKTResidual& kkt_residual, 
+                                ImpulseSplitKKTMatrix& kkt_matrix, 
+                                ImpulseSplitKKTResidual& kkt_residual, 
                                 RiccatiFactorization& riccati);
 
   ///
@@ -80,8 +80,8 @@ public:
   /// constraints are also performed. 
   ///
   void forwardStateConstraintFactorization(
-      const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
-      const ImpulseKKTResidual& kkt_residual, 
+      const RiccatiFactorization& riccati, const ImpulseSplitKKTMatrix& kkt_matrix, 
+      const ImpulseSplitKKTResidual& kkt_residual, 
       RiccatiFactorization& riccati_next, const bool exist_state_constraint);
 
   ///
@@ -94,7 +94,7 @@ public:
   template <typename MatrixType1, typename MatrixType2>
   void backwardStateConstraintFactorization(
       const Eigen::MatrixBase<MatrixType1>& T_next,  
-      const ImpulseKKTMatrix& kkt_matrix, 
+      const ImpulseSplitKKTMatrix& kkt_matrix, 
       const Eigen::MatrixBase<MatrixType2>& T) const;
 
   ///
@@ -104,8 +104,8 @@ public:
   /// @param[in] d Split direction at the current time stage. 
   /// @param[out] d_next Split direction at the next time stage. 
   ///
-  void forwardRiccatiRecursion(const ImpulseKKTMatrix& kkt_matrix, 
-                               const ImpulseKKTResidual& kkt_residual,
+  void forwardRiccatiRecursion(const ImpulseSplitKKTMatrix& kkt_matrix, 
+                               const ImpulseSplitKKTResidual& kkt_residual,
                                const ImpulseSplitDirection& d, 
                                SplitDirection& d_next) const;
 

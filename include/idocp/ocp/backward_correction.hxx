@@ -36,8 +36,8 @@ inline BackwardCorrection::~BackwardCorrection() {
 inline void BackwardCorrection::coarseUpdate(const Robot& robot,
                                              const SplitSolution& s, 
                                              SplitDirection& d, 
-                                             KKTMatrix& kkt_matrix, 
-                                             const KKTResidual& kkt_residual,
+                                             SplitKKTMatrix& kkt_matrix, 
+                                             const SplitKKTResidual& kkt_residual,
                                              SplitSolution& s_new_coarse) {
   kkt_matrix.invert(kkt_matrix_inverse_);
   d.split_direction = kkt_matrix_inverse_ * kkt_residual.KKT_residual;

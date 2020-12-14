@@ -5,8 +5,8 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/riccati_factorization.hpp"
@@ -30,8 +30,8 @@ protected:
   virtual void TearDown() {
   }
 
-  static ImpulseKKTMatrix createKKTMatrix(const Robot& robot);
-  static ImpulseKKTResidual createKKTResidual(const Robot& robot);
+  static ImpulseSplitKKTMatrix createKKTMatrix(const Robot& robot);
+  static ImpulseSplitKKTResidual createKKTResidual(const Robot& robot);
   static RiccatiFactorization createRiccatiFactorization(const Robot& robot);
 
   static void testBackwardRecursion(const Robot& robot);
@@ -44,10 +44,10 @@ protected:
 };
 
 
-ImpulseKKTMatrix ImpulseRiccatiFactorizerTest::createKKTMatrix(const Robot& robot) {
+ImpulseSplitKKTMatrix ImpulseRiccatiFactorizerTest::createKKTMatrix(const Robot& robot) {
   const int dimv = robot.dimv();
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.Qqq() = seed * seed.transpose();
   kkt_matrix.Qqv().setRandom();
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
@@ -64,8 +64,8 @@ ImpulseKKTMatrix ImpulseRiccatiFactorizerTest::createKKTMatrix(const Robot& robo
 }
 
 
-ImpulseKKTResidual ImpulseRiccatiFactorizerTest::createKKTResidual(const Robot& robot) {
-  ImpulseKKTResidual kkt_residual(robot);
+ImpulseSplitKKTResidual ImpulseRiccatiFactorizerTest::createKKTResidual(const Robot& robot) {
+  ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.lx().setRandom();
   kkt_residual.Fx().setRandom();
   return kkt_residual;
@@ -96,10 +96,10 @@ RiccatiFactorization ImpulseRiccatiFactorizerTest::createRiccatiFactorization(co
 void ImpulseRiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) {
   const int dimv = robot.dimv();
   const RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
-  ImpulseKKTMatrix kkt_matrix = createKKTMatrix(robot);
-  ImpulseKKTResidual kkt_residual = createKKTResidual(robot);
-  ImpulseKKTMatrix kkt_matrix_ref = kkt_matrix;
-  ImpulseKKTResidual kkt_residual_ref = kkt_residual;
+  ImpulseSplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
+  ImpulseSplitKKTResidual kkt_residual = createKKTResidual(robot);
+  ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
+  ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
   ImpulseRiccatiFactorizer factorizer(robot);
   ImpulseBackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
   RiccatiFactorization riccati = createRiccatiFactorization(robot);
@@ -124,10 +124,10 @@ void ImpulseRiccatiFactorizerTest::testForwardStateConstraintFactorization(const
   const int dimv = robot.dimv();
   RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
   RiccatiFactorization riccati_next_ref = riccati_next;
-  ImpulseKKTMatrix kkt_matrix = createKKTMatrix(robot);
-  ImpulseKKTResidual kkt_residual = createKKTResidual(robot);
-  ImpulseKKTMatrix kkt_matrix_ref = kkt_matrix;
-  ImpulseKKTResidual kkt_residual_ref = kkt_residual;
+  ImpulseSplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
+  ImpulseSplitKKTResidual kkt_residual = createKKTResidual(robot);
+  ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
+  ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
   ImpulseRiccatiFactorizer factorizer(robot);
   RiccatiFactorization riccati = createRiccatiFactorization(robot);
   RiccatiFactorization riccati_ref = riccati;
@@ -150,8 +150,8 @@ void ImpulseRiccatiFactorizerTest::testBackwardStateConstraintFactorization(cons
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
-  const ImpulseKKTMatrix kkt_matrix = createKKTMatrix(robot);
-  const ImpulseKKTResidual kkt_residual = createKKTResidual(robot);
+  const ImpulseSplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
+  const ImpulseSplitKKTResidual kkt_residual = createKKTResidual(robot);
   ImpulseRiccatiFactorizer factorizer(robot);
   RiccatiFactorization riccati(robot), riccati_ref(robot);
   const int dimf = 6;
@@ -178,14 +178,14 @@ void ImpulseRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) {
   const int dimv = robot.dimv();
   RiccatiFactorization riccati_next = createRiccatiFactorization(robot);
   RiccatiFactorization riccati_next_ref = riccati_next;
-  ImpulseKKTMatrix kkt_matrix = createKKTMatrix(robot);
-  ImpulseKKTResidual kkt_residual = createKKTResidual(robot);
+  ImpulseSplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
+  ImpulseSplitKKTResidual kkt_residual = createKKTResidual(robot);
   ImpulseRiccatiFactorizer factorizer(robot);
   RiccatiFactorization riccati = createRiccatiFactorization(robot);
   RiccatiFactorization riccati_ref = riccati;
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
-  ImpulseKKTMatrix kkt_matrix_ref = kkt_matrix;
-  ImpulseKKTResidual kkt_residual_ref = kkt_residual;
+  ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
+  ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
   ImpulseSplitDirection d(robot);
   d.setRandom();
   SplitDirection d_next(robot);

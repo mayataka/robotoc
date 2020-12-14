@@ -11,12 +11,12 @@
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -48,24 +48,24 @@ void setSlackAndDual(
 void augmentDualResidual(
    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
    Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const double dtau, const SplitSolution& s, KKTResidual& kkt_residual);
+   const double dtau, const SplitSolution& s, SplitKKTResidual& kkt_residual);
 
 void augmentDualResidual(
    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
    Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual);
+   const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual);
 
 void condenseSlackAndDual(
    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
    Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const double dtau, const SplitSolution& s, KKTMatrix& kkt_matrix, 
-   KKTResidual& kkt_residual);
+   const double dtau, const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+   SplitKKTResidual& kkt_residual);
 
 void condenseSlackAndDual(
    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
    Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
-   ImpulseKKTResidual& kkt_residual);
+   const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+   ImpulseSplitKKTResidual& kkt_residual);
 
 void computeSlackAndDualDirection(
    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,

@@ -8,8 +8,8 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/constraints/constraint_component_base.hpp"
 #include "idocp/constraints/constraint_component_data.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -47,7 +47,7 @@ public:
 
   void augmentDualResidual(Robot& robot, ConstraintComponentData& data, 
                            const double dtau, const SplitSolution& s,
-                           KKTResidual& kkt_residual) const override;
+                           SplitKKTResidual& kkt_residual) const override;
 
   void augmentDualResidual(const Robot& robot, ConstraintComponentData& data, 
                            const double dtau, const Eigen::VectorXd& u,
@@ -55,8 +55,8 @@ public:
 
   void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data, 
                             const double dtau, const SplitSolution& s,
-                            KKTMatrix& kkt_matrix,
-                            KKTResidual& kkt_residual) const override;
+                            SplitKKTMatrix& kkt_matrix,
+                            SplitKKTResidual& kkt_residual) const override;
 
   void condenseSlackAndDual(const Robot& robot, ConstraintComponentData& data, 
                             const double dtau, const Eigen::VectorXd& u,

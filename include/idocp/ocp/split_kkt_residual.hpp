@@ -1,5 +1,5 @@
-#ifndef IDOCP_KKT_RESIDUAL_HPP_
-#define IDOCP_KKT_RESIDUAL_HPP_
+#ifndef IDOCP_SPLIT_KKT_RESIDUAL_HPP_ 
+#define IDOCP_SPLIT_KKT_RESIDUAL_HPP_
 
 #include "Eigen/Core"
 
@@ -10,10 +10,10 @@
 namespace idocp {
 
 ///
-/// @class KKTResidual
+/// @class SplitKKTResidual
 /// @brief KKT residual split into each time stage. 
 ///
-class KKTResidual {
+class SplitKKTResidual {
 public:
   using Vector6d = Eigen::Matrix<double, 6, 1>;
 
@@ -21,37 +21,37 @@ public:
   /// @brief Construct a KKT residual.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
-  KKTResidual(const Robot& robot);
+  SplitKKTResidual(const Robot& robot);
 
   ///
   /// @brief Default constructor. Does not construct any datas. 
   ///
-  KKTResidual();
+  SplitKKTResidual();
 
   ///
   /// @brief Destructor. 
   ///
-  ~KKTResidual();
+  ~SplitKKTResidual();
 
   ///
   /// @brief Use default copy constructor. 
   ///
-  KKTResidual(const KKTResidual&) = default;
+  SplitKKTResidual(const SplitKKTResidual&) = default;
 
   ///
   /// @brief Use default copy assign operator. 
   ///
-  KKTResidual& operator=(const KKTResidual&) = default;
+  SplitKKTResidual& operator=(const SplitKKTResidual&) = default;
 
   ///
   /// @brief Use default move constructor. 
   ///
-  KKTResidual(KKTResidual&&) noexcept = default;
+  SplitKKTResidual(SplitKKTResidual&&) noexcept = default;
 
   ///
   /// @brief Use default move assign operator. 
   ///
-  KKTResidual& operator=(KKTResidual&&) noexcept = default;
+  SplitKKTResidual& operator=(SplitKKTResidual&&) noexcept = default;
 
   ///
   /// @brief Set contact status from robot model, i.e., set dimension of the 
@@ -106,7 +106,7 @@ public:
   /// @brief Residual with respect to acceleration and the stack of the 
   /// contact forces, a and f.
   /// @return Reference to the residual with respect to a and f. Size is 
-  /// Robot::dimv() + KKTResidual::dimf().
+  /// Robot::dimv() + SplitKKTResidual::dimf().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lu();
 
@@ -114,7 +114,7 @@ public:
   /// @brief Residual with respect to acceleration and the stack of the 
   /// contact forces, a and f.
   /// @return Reference to the residual with respect to a and f. Size is 
-  /// Robot::dimv() + KKTResidual::dimf().
+  /// Robot::dimv() + SplitKKTResidual::dimf().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lu() const;
 
@@ -163,14 +163,14 @@ public:
   ///
   /// @brief Residual with respect to the stack of the contact forces f.
   /// @return Reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is KKTResidual::dimf().
+  /// contact forces f. Size is SplitKKTResidual::dimf().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lf();
 
   ///
   /// @brief Residual with respect to the stack of the contact forces f.
   /// @return Reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is KKTResidual::dimf().
+  /// contact forces f. Size is SplitKKTResidual::dimf().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
@@ -193,11 +193,11 @@ public:
   int dimf() const;
 
   ///
-  /// @brief Chech the equivalence of two KKTResidual.
+  /// @brief Chech the equivalence of two SplitKKTResidual.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
-  bool isApprox(const KKTResidual& other) const;
+  bool isApprox(const SplitKKTResidual& other) const;
 
   ///
   /// @brief Chech this has at least one NaN.
@@ -225,6 +225,6 @@ private:
 
 } // namespace idocp 
 
-#include "idocp/ocp/kkt_residual.hxx"
+#include "idocp/ocp/split_kkt_residual.hxx"
 
-#endif // IDOCP_KKT_RESIDUAL_HPP_
+#endif // IDOCP_SPLIT_KKT_RESIDUAL_HPP_

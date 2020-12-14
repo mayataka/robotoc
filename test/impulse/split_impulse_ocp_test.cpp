@@ -10,8 +10,8 @@
 #include "idocp/impulse/split_impulse_ocp.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
 #include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
@@ -123,12 +123,12 @@ void SplitImpulseOCPTest::testLinearizeOCP(
   SplitImpulseOCP ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, s);
-  ImpulseKKTMatrix kkt_matrix(robot);
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   ocp.linearizeOCP(robot, impulse_status, t, s_prev.q, s, s_next, kkt_matrix, kkt_residual, is_state_constraint_valid);
-  ImpulseKKTMatrix kkt_matrix_ref(robot);
+  ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setImpulseStatus(impulse_status);
-  ImpulseKKTResidual kkt_residual_ref(robot);
+  ImpulseSplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setImpulseStatus(impulse_status);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot);
@@ -179,13 +179,13 @@ void SplitImpulseOCPTest::testComputeKKTResidual(
   SplitImpulseOCP ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, s);
-  ImpulseKKTMatrix kkt_matrix(robot);
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   ocp.computeKKTResidual(robot, impulse_status, t, s_prev.q, s, s_next, kkt_matrix, kkt_residual, is_state_constraint_valid);
   const double kkt_error = ocp.squaredNormKKTResidual(kkt_residual, is_state_constraint_valid);
-  ImpulseKKTMatrix kkt_matrix_ref(robot);
+  ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setImpulseStatus(impulse_status);
-  ImpulseKKTResidual kkt_residual_ref(robot);
+  ImpulseSplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setImpulseStatus(impulse_status);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot);
@@ -223,11 +223,11 @@ void SplitImpulseOCPTest::testCostAndConstraintViolation(
   const double step_size = 0.3;
   ocp.initConstraints(robot, s);
   const double stage_cost = ocp.stageCost(robot, t, s, step_size);
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   const double constraint_violation = ocp.constraintViolation(robot, impulse_status, t, s, s_prev.q, s_prev.v, kkt_residual, is_state_constraint_valid);
-  ImpulseKKTMatrix kkt_matrix_ref(robot);
+  ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setImpulseStatus(impulse_status);
-  ImpulseKKTResidual kkt_residual_ref(robot);
+  ImpulseSplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setImpulseStatus(impulse_status);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot);

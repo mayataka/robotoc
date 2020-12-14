@@ -27,8 +27,8 @@ inline ImpulseRiccatiFactorizer::~ImpulseRiccatiFactorizer() {
 
 
 inline void ImpulseRiccatiFactorizer::backwardRiccatiRecursion(
-    const RiccatiFactorization& riccati_next, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual, RiccatiFactorization& riccati) {
+    const RiccatiFactorization& riccati_next, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual, RiccatiFactorization& riccati) {
   backward_recursion_.factorizeKKTMatrix(riccati_next, kkt_matrix);
   backward_recursion_.factorizeRiccatiFactorization(riccati_next, kkt_matrix, 
                                                     kkt_residual, riccati);
@@ -36,8 +36,8 @@ inline void ImpulseRiccatiFactorizer::backwardRiccatiRecursion(
 
 
 inline void ImpulseRiccatiFactorizer::forwardStateConstraintFactorization(
-    const RiccatiFactorization& riccati, const ImpulseKKTMatrix& kkt_matrix, 
-    const ImpulseKKTResidual& kkt_residual, 
+    const RiccatiFactorization& riccati, const ImpulseSplitKKTMatrix& kkt_matrix, 
+    const ImpulseSplitKKTResidual& kkt_residual, 
     RiccatiFactorization& riccati_next, const bool exist_state_constraint) {
   forward_recursion_.factorizeStateTransition(riccati, kkt_matrix, kkt_residual, 
                                               riccati_next);
@@ -52,7 +52,7 @@ inline void ImpulseRiccatiFactorizer::forwardStateConstraintFactorization(
 template <typename MatrixType1, typename MatrixType2>
 inline void ImpulseRiccatiFactorizer::backwardStateConstraintFactorization(
     const Eigen::MatrixBase<MatrixType1>& T_next,
-    const ImpulseKKTMatrix& kkt_matrix, 
+    const ImpulseSplitKKTMatrix& kkt_matrix, 
     const Eigen::MatrixBase<MatrixType2>& T) const {
   assert(T_next.rows() == T.rows());
   assert(T_next.rows() == T.rows());
@@ -72,7 +72,7 @@ inline void ImpulseRiccatiFactorizer::backwardStateConstraintFactorization(
 
 
 inline void ImpulseRiccatiFactorizer::forwardRiccatiRecursion(
-    const ImpulseKKTMatrix& kkt_matrix, const ImpulseKKTResidual& kkt_residual, 
+    const ImpulseSplitKKTMatrix& kkt_matrix, const ImpulseSplitKKTResidual& kkt_residual, 
     const ImpulseSplitDirection& d, SplitDirection& d_next) const {
   d_next.dx() = kkt_residual.Fx();
   if (has_floating_base_) {

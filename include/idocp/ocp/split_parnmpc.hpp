@@ -9,8 +9,8 @@
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -107,8 +107,8 @@ public:
                     const Eigen::VectorXd& q_prev, 
                     const Eigen::VectorXd& v_prev, 
                     const SplitSolution& s, 
-                    const SplitSolutionType& s_next, KKTMatrix& kkt_matrix,
-                    KKTResidual& kkt_residual);
+                    const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix,
+                    SplitKKTResidual& kkt_residual);
 
   // ///
   // /// @brief Updates the solution of the split OCP approximately. Call  
@@ -223,8 +223,8 @@ public:
   /// @param[in, out] d Split direction of this stage.
   /// 
   void computeCondensedDualDirection(const Robot& robot, const double dtau, 
-                                     const KKTMatrix& kkt_matrix, 
-                                     const KKTResidual& kkt_residual,
+                                     const SplitKKTMatrix& kkt_matrix, 
+                                     const SplitKKTResidual& kkt_residual,
                                      SplitDirection& d);
 
   ///

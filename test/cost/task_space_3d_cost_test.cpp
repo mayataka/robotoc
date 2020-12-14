@@ -7,8 +7,8 @@
 #include "idocp/cost/task_space_3d_cost.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -36,8 +36,8 @@ protected:
 
 void TaskSpace3DCostTest::test(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
-  KKTMatrix kkt_mat(robot);
-  KKTResidual kkt_res(robot);
+  SplitKKTMatrix kkt_mat(robot);
+  SplitKKTResidual kkt_res(robot);
   kkt_mat.Qqq().setRandom();
   kkt_mat.Qvv().setRandom();
   kkt_mat.Qaa().setRandom();
@@ -46,8 +46,8 @@ void TaskSpace3DCostTest::test(Robot& robot, const int frame_id) const {
   kkt_res.lv().setRandom();
   kkt_res.la.setRandom();
   kkt_res.lu().setRandom();
-  KKTMatrix kkt_mat_ref = kkt_mat;
-  KKTResidual kkt_res_ref = kkt_res;
+  SplitKKTMatrix kkt_mat_ref = kkt_mat;
+  SplitKKTResidual kkt_res_ref = kkt_res;
   const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d q_ref = Eigen::Vector3d::Random();

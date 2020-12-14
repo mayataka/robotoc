@@ -54,7 +54,7 @@ inline UnconstrainedDynamics::~UnconstrainedDynamics() {
 
 inline void UnconstrainedDynamics::linearizeUnconstrainedDynamics(
     Robot& robot, const double dtau, const SplitSolution& s, 
-    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) { 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) { 
   assert(dtau > 0);
   linearizeInverseDynamics(robot, s);
   // augment inverse dynamics constraint
@@ -67,7 +67,7 @@ inline void UnconstrainedDynamics::linearizeUnconstrainedDynamics(
 
 inline void UnconstrainedDynamics::condenseUnconstrainedDynamics(
     Robot& robot, const double dtau, const SplitSolution& s, 
-    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(dtau > 0);
   lu_condensed_.noalias() = kkt_residual.lu() 
           + kkt_matrix.Quu().diagonal().asDiagonal() * ID_;
@@ -90,8 +90,8 @@ inline void UnconstrainedDynamics::condenseUnconstrainedDynamics(
 
 
 inline void UnconstrainedDynamics::computeCondensedDirection(
-    const double dtau, const KKTMatrix& kkt_matrix, 
-    const KKTResidual& kkt_residual, SplitDirection& d) {
+    const double dtau, const SplitKKTMatrix& kkt_matrix, 
+    const SplitKKTResidual& kkt_residual, SplitDirection& d) {
   assert(dtau > 0);
   d.du() = ID_;
   d.du().noalias() += dID_dq_ * d.dq();

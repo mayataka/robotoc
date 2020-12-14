@@ -7,8 +7,8 @@
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler_data.hpp"
 
 
@@ -35,8 +35,8 @@ public:
   void linearizeImpulseDynamics(Robot& robot, 
                                 const ImpulseStatus& impulse_status, 
                                 const ImpulseSplitSolution& s, 
-                                ImpulseKKTMatrix& kkt_matrix, 
-                                ImpulseKKTResidual& kkt_residual, 
+                                ImpulseSplitKKTMatrix& kkt_matrix, 
+                                ImpulseSplitKKTResidual& kkt_residual, 
                                 const bool is_state_constraint_valid);
 
   static void linearizeInverseImpulseDynamics(
@@ -49,26 +49,26 @@ public:
 
   static void linearizeImpulsePositionConstraint(
       Robot& robot, const ImpulseStatus& impulse_status, 
-      ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual);
+      ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual);
 
   void condenseImpulseDynamics(Robot& robot, 
                                const ImpulseStatus& impulse_status,
-                               ImpulseKKTMatrix& kkt_matrix, 
-                               ImpulseKKTResidual& kkt_residual);
+                               ImpulseSplitKKTMatrix& kkt_matrix, 
+                               ImpulseSplitKKTResidual& kkt_residual);
 
   static void condensing(const Robot& robot, 
                          const ImpulseStatus& impulse_status,
                          ImpulseDynamicsForwardEulerData& data, 
-                         ImpulseKKTMatrix& kkt_matrix, 
-                         ImpulseKKTResidual& kkt_residual);
+                         ImpulseSplitKKTMatrix& kkt_matrix, 
+                         ImpulseSplitKKTResidual& kkt_residual);
 
   void computeCondensedPrimalDirection(const Robot& robot, 
                                        ImpulseSplitDirection& d);
 
   template <typename VectorType>
   void computeCondensedDualDirection(const Robot& robot, 
-                                     const ImpulseKKTMatrix& kkt_matrix, 
-                                     const ImpulseKKTResidual& kkt_residual, 
+                                     const ImpulseSplitKKTMatrix& kkt_matrix, 
+                                     const ImpulseSplitKKTResidual& kkt_residual, 
                                      const Eigen::MatrixBase<VectorType>& dgmm,
                                      ImpulseSplitDirection& d);
 
@@ -79,23 +79,23 @@ public:
   template <typename VectorType>
   static void expansionDual(const Robot& robot, 
                             ImpulseDynamicsForwardEulerData& data,
-                            const ImpulseKKTMatrix& kkt_matrix, 
-                            const ImpulseKKTResidual& kkt_residual,
+                            const ImpulseSplitKKTMatrix& kkt_matrix, 
+                            const ImpulseSplitKKTResidual& kkt_residual,
                             const Eigen::MatrixBase<VectorType>& dgmm,
                             ImpulseSplitDirection& d);
 
   void computeImpulseDynamicsResidual(Robot& robot, 
                                       const ImpulseStatus& impulse_status,
                                       const ImpulseSplitSolution& s, 
-                                      ImpulseKKTResidual& kkt_residual,
+                                      ImpulseSplitKKTResidual& kkt_residual,
                                       const bool is_state_constraint_valid);
 
   double l1NormImpulseDynamicsResidual(
-      const ImpulseKKTResidual& kkt_residual, 
+      const ImpulseSplitKKTResidual& kkt_residual, 
       const bool is_state_constraint_valid) const;
 
   double squaredNormImpulseDynamicsResidual(
-      const ImpulseKKTResidual& kkt_residual,
+      const ImpulseSplitKKTResidual& kkt_residual,
       const bool is_state_constraint_valid) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

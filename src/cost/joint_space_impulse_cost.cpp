@@ -123,7 +123,7 @@ double JointSpaceImpulseCost::l(Robot& robot, CostFunctionData& data,
 
 void JointSpaceImpulseCost::lq(Robot& robot, CostFunctionData& data, 
                                const double t, const ImpulseSplitSolution& s, 
-                               ImpulseKKTResidual& kkt_residual) const {
+                               ImpulseSplitKKTResidual& kkt_residual) const {
   if (robot.has_floating_base()) {
     robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
     robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
@@ -139,7 +139,7 @@ void JointSpaceImpulseCost::lq(Robot& robot, CostFunctionData& data,
 
 void JointSpaceImpulseCost::lv(Robot& robot, CostFunctionData& data, 
                                const double t, const ImpulseSplitSolution& s, 
-                               ImpulseKKTResidual& kkt_residual) const {
+                               ImpulseSplitKKTResidual& kkt_residual) const {
   kkt_residual.lv().array()
       += v_weight_.array() * (s.v.array()-v_ref_.array());
 }
@@ -148,7 +148,7 @@ void JointSpaceImpulseCost::lv(Robot& robot, CostFunctionData& data,
 
 void JointSpaceImpulseCost::ldv(Robot& robot, CostFunctionData& data, 
                                 const double t, const ImpulseSplitSolution& s, 
-                                ImpulseKKTResidual& kkt_residual) const {
+                                ImpulseSplitKKTResidual& kkt_residual) const {
   kkt_residual.ldv.array() 
       += dv_weight_.array() * (s.dv.array()-dv_ref_.array());
 }
@@ -157,7 +157,7 @@ void JointSpaceImpulseCost::ldv(Robot& robot, CostFunctionData& data,
 
 void JointSpaceImpulseCost::lqq(Robot& robot, CostFunctionData& data, 
                                 const double t, const ImpulseSplitSolution& s, 
-                                ImpulseKKTMatrix& kkt_matrix) const {
+                                ImpulseSplitKKTMatrix& kkt_matrix) const {
   if (robot.has_floating_base()) {
     robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_matrix.Qqq().noalias()
@@ -171,14 +171,14 @@ void JointSpaceImpulseCost::lqq(Robot& robot, CostFunctionData& data,
 
 void JointSpaceImpulseCost::lvv(Robot& robot, CostFunctionData& data, 
                                 const double t, const ImpulseSplitSolution& s, 
-                                ImpulseKKTMatrix& kkt_matrix) const {
+                                ImpulseSplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qvv().diagonal().noalias() += v_weight_;
 }
 
 
 void JointSpaceImpulseCost::ldvdv(Robot& robot, CostFunctionData& data, 
                                   const double t, const ImpulseSplitSolution& s, 
-                                  ImpulseKKTMatrix& kkt_matrix) const {
+                                  ImpulseSplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qdvdv().diagonal().noalias() += dv_weight_;
 }
 

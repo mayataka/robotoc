@@ -7,8 +7,8 @@
 #include "idocp/cost/joint_space_impulse_cost.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -36,15 +36,15 @@ protected:
 void JointSpaceImpulseCostTest::test(Robot& robot) const {
   const int dimq = robot.dimq();
   const int dimv = robot.dimv();
-  ImpulseKKTMatrix kkt_mat(robot);
-  ImpulseKKTResidual kkt_res(robot);
+  ImpulseSplitKKTMatrix kkt_mat(robot);
+  ImpulseSplitKKTResidual kkt_res(robot);
   kkt_mat.Qqq().setRandom();
   kkt_mat.Qvv().setRandom();
   kkt_mat.Qdvdv().setRandom();
   kkt_res.lx().setRandom();
   kkt_res.ldv.setRandom();
-  ImpulseKKTMatrix kkt_mat_ref = kkt_mat;
-  ImpulseKKTResidual kkt_res_ref = kkt_res;
+  ImpulseSplitKKTMatrix kkt_mat_ref = kkt_mat;
+  ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd v_weight = Eigen::VectorXd::Random(dimv); 
   const Eigen::VectorXd dv_weight = Eigen::VectorXd::Random(dimv);

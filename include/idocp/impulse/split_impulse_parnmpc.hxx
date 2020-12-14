@@ -45,7 +45,7 @@ inline void SplitImpulseParNMPC::linearizeOCP(
     Robot& robot, const ImpulseStatus& impulse_status, const double t,  
     const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
     const ImpulseSplitSolution& s, const SplitSolution& s_next, 
-    ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual,
+    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual,
     const bool is_state_constraint_valid) {
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_residual.setImpulseStatus(impulse_status);
@@ -189,8 +189,8 @@ inline void SplitImpulseParNMPC::computeCondensedPrimalDirection(
 
 
 inline void SplitImpulseParNMPC::computeCondensedDualDirection(
-    const Robot& robot, const ImpulseKKTMatrix& kkt_matrix, 
-    const ImpulseKKTResidual& kkt_residual, ImpulseSplitDirection& d) {
+    const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix, 
+    const ImpulseSplitKKTResidual& kkt_residual, ImpulseSplitDirection& d) {
   impulse_dynamics_.computeCondensedDualDirection(robot, kkt_matrix,
                                                   kkt_residual, d.dgmm(), d);
 }
@@ -247,7 +247,7 @@ inline void SplitImpulseParNMPC::computeKKTResidual(
     Robot& robot, const ImpulseStatus& impulse_status, const double t,  
     const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
     const ImpulseSplitSolution& s, const SplitSolution& s_next,
-    ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual,
+    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual,
     const bool is_state_constraint_valid) {
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -269,7 +269,7 @@ inline void SplitImpulseParNMPC::computeKKTResidual(
 
 
 inline double SplitImpulseParNMPC::squaredNormKKTResidual(
-    const ImpulseKKTResidual& kkt_residual, 
+    const ImpulseSplitKKTResidual& kkt_residual, 
     const bool is_state_constraint_valid) const {
   double error = 0;
   error += kkt_residual.lx().squaredNorm();
@@ -304,7 +304,7 @@ inline double SplitImpulseParNMPC::stageCost(Robot& robot, const double t,
 inline double SplitImpulseParNMPC::constraintViolation(
     Robot& robot, const ImpulseStatus& impulse_status, const double t, 
     const ImpulseSplitSolution& s, const Eigen::VectorXd& q_next, 
-    const Eigen::VectorXd& v_next, ImpulseKKTResidual& kkt_residual,
+    const Eigen::VectorXd& v_next, ImpulseSplitKKTResidual& kkt_residual,
     const bool is_state_constraint_valid) {
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.setZero();

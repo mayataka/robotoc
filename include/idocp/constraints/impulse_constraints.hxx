@@ -19,7 +19,7 @@ inline ImpulseConstraints::~ImpulseConstraints() {
 
 
 inline void ImpulseConstraints::push_back(
-    const std::shared_ptr<ImpulseConstraintComponentBase>& constraint) {
+    const ImpulseConstraintComponentBasePtr& constraint) {
   if (constraint->kinematicsLevel() == KinematicsLevel::PositionLevel) {
     position_level_constraints_.push_back(constraint);
   }
@@ -40,7 +40,7 @@ inline void ImpulseConstraints::clear() {
 
 
 inline void ImpulseConstraints::clear_impl(
-    std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints) {
+    std::vector<ImpulseConstraintComponentBasePtr>& constraints) {
   constraints.clear();
 }
 
@@ -91,7 +91,7 @@ inline bool ImpulseConstraints::isFeasible(
 
 
 inline bool ImpulseConstraints::isFeasible_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const ImpulseSplitSolution& s) {
   assert(constraints.size() == data.size());
@@ -123,7 +123,7 @@ inline void ImpulseConstraints::setSlackAndDual(
 
 
 inline void ImpulseConstraints::setSlackAndDual_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const ImpulseSplitSolution& s) {
   assert(constraints.size() == data.size());
@@ -137,7 +137,7 @@ inline void ImpulseConstraints::setSlackAndDual_impl(
 
 inline void ImpulseConstraints::augmentDualResidual(
     Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s, 
-    ImpulseKKTResidual& kkt_residual) const {
+    ImpulseSplitKKTResidual& kkt_residual) const {
   if (data.isPositionLevelValid()) {
     augmentDualResidual_impl(position_level_constraints_, robot, 
                              data.position_level_data, s, kkt_residual);
@@ -152,9 +152,9 @@ inline void ImpulseConstraints::augmentDualResidual(
 
 
 inline void ImpulseConstraints::augmentDualResidual_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) {
+    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -166,7 +166,8 @@ inline void ImpulseConstraints::augmentDualResidual_impl(
 
 inline void ImpulseConstraints::condenseSlackAndDual(
     Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s, 
-    ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual) const {
+    ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) const {
   if (data.isPositionLevelValid()) {
     condenseSlackAndDual_impl(position_level_constraints_, robot,
                               data.position_level_data, s, kkt_matrix,
@@ -184,10 +185,10 @@ inline void ImpulseConstraints::condenseSlackAndDual(
 
 
 inline void ImpulseConstraints::condenseSlackAndDual_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual) {
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -215,7 +216,7 @@ inline void ImpulseConstraints::computeSlackAndDualDirection(
 
 
 inline void ImpulseConstraints::computeSlackAndDualDirection_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const ImpulseSplitSolution& s, const ImpulseSplitDirection& d) {
   assert(constraints.size() == data.size());
@@ -254,7 +255,7 @@ inline double ImpulseConstraints::maxSlackStepSize(
 
 
 inline double ImpulseConstraints::maxSlackStepSize_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double min_step_size = 1;
@@ -297,7 +298,7 @@ inline double ImpulseConstraints::maxDualStepSize(
 
 
 inline double ImpulseConstraints::maxDualStepSize_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double min_step_size = 1;
@@ -331,7 +332,7 @@ inline void ImpulseConstraints::updateSlack(ConstraintsData& data,
 
 
 inline void ImpulseConstraints::updateSlack_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     std::vector<ConstraintComponentData>& data, const double step_size) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
@@ -360,7 +361,7 @@ inline void ImpulseConstraints::updateDual(ConstraintsData& data,
 
 
 inline void ImpulseConstraints::updateDual_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     std::vector<ConstraintComponentData>& data, const double step_size) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
@@ -389,7 +390,7 @@ inline double ImpulseConstraints::costSlackBarrier(
 
 
 inline double ImpulseConstraints::costSlackBarrier_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double cost = 0;
@@ -422,7 +423,7 @@ inline double ImpulseConstraints::costSlackBarrier(
 
 
 inline double ImpulseConstraints::costSlackBarrier_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     const std::vector<ConstraintComponentData>& data, const double step_size) {
   assert(constraints.size() == data.size());
   double cost = 0;
@@ -451,7 +452,7 @@ inline void ImpulseConstraints::computePrimalAndDualResidual(
 
 
 inline void ImpulseConstraints::computePrimalAndDualResidual_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const ImpulseSplitSolution& s) {
   assert(constraints.size() == data.size());
@@ -481,7 +482,7 @@ inline double ImpulseConstraints::l1NormPrimalResidual(
 
 
 inline double ImpulseConstraints::l1NormPrimalResidual_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double l1_norm = 0;
@@ -512,7 +513,7 @@ inline double ImpulseConstraints::squaredNormPrimalAndDualResidual(
 
 
 inline double ImpulseConstraints::squaredNormPrimalAndDualResidual_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double squared_norm = 0;

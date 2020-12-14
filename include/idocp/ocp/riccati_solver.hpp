@@ -81,9 +81,9 @@ public:
   void computeNewtonDirection(HybridOCP& split_ocps, std::vector<Robot>& robots, 
                               const ContactSequence& contact_sequence,
                               const Eigen::VectorXd& q, 
-                              const Eigen::VectorXd& v, const HybridSolution& s, 
-                              HybridDirection& d, HybridKKTMatrix& kkt_matrix, 
-                              HybridKKTResidual& kkt_residual);
+                              const Eigen::VectorXd& v, const Solution& s, 
+                              Direction& d, KKTMatrix& kkt_matrix, 
+                              KKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the maximum step size computed from the primal variables. 

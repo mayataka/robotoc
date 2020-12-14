@@ -65,7 +65,7 @@ void BenchmarkWithContacts() {
   configuration_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   configuration_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   configuration_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
-  configuration_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  configuration_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
   auto contact_cost = std::make_shared<idocp::ContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight;
   for (int i=0; i<contact_frames.size(); ++i) {
@@ -78,10 +78,10 @@ void BenchmarkWithContacts() {
   // impulse_joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
   // impulse_joint_cost->set_dv_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   auto impulse_configuration_cost = std::make_shared<idocp::ImpulseTimeVaryingConfigurationCost>(robot);
-  impulse_configuration_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
+  impulse_configuration_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   impulse_configuration_cost->set_ref(0, q_ref, v_ref);
-  impulse_configuration_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
-  impulse_configuration_cost->set_dv_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  impulse_configuration_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
+  impulse_configuration_cost->set_dv_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
   auto impulse_force_cost = std::make_shared<idocp::ImpulseForceCost>(robot);
   impulse_force_cost->set_f_weight(f_weight);
   // cost->push_back(joint_cost);
@@ -117,7 +117,7 @@ void BenchmarkWithContacts() {
        -0.0315, 0.4, -0.8,
        -0.0315, -0.4, 0.8;
   Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  v << 0, 0.5, 0, 0, 0, 0, 
+  v << 0, 0, 0, 0, 0, 0, 
        0.0, 0.0, 0.0, 
        0.0, 0.0, 0.0, 
        0.0, 0.0, 0.0,

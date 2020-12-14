@@ -39,7 +39,7 @@ inline RiccatiFactorizer::~RiccatiFactorizer() {
 
 inline void RiccatiFactorizer::backwardRiccatiRecursion(
     const RiccatiFactorization& riccati_next, const double dtau, 
-    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     RiccatiFactorization& riccati) {
   assert(dtau > 0);
   backward_recursion_.factorizeKKTMatrix(riccati_next, dtau, kkt_matrix, 
@@ -57,7 +57,7 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 
 
 inline void RiccatiFactorizer::forwardRiccatiRecursionParallel(
-    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     const bool exist_state_constraint) {
   kkt_matrix.Fxx().bottomRows(dimv_).noalias() 
       += kkt_matrix.Fvu() * lqr_policy_.K;
@@ -78,8 +78,8 @@ inline void RiccatiFactorizer::forwardStateConstraintFactorizationInitial(
 
 
 inline void RiccatiFactorizer::forwardStateConstraintFactorization(
-    const RiccatiFactorization& riccati, const KKTMatrix& kkt_matrix, 
-    const KKTResidual& kkt_residual, const double dtau,
+    const RiccatiFactorization& riccati, const SplitKKTMatrix& kkt_matrix, 
+    const SplitKKTResidual& kkt_residual, const double dtau,
     RiccatiFactorization& riccati_next, 
     const bool exist_state_constraint) {
   assert(dtau > 0);
@@ -96,7 +96,7 @@ inline void RiccatiFactorizer::forwardStateConstraintFactorization(
 
 template <typename MatrixType1, typename MatrixType2>
 inline void RiccatiFactorizer::backwardStateConstraintFactorization(
-    const Eigen::MatrixBase<MatrixType1>& T_next, const KKTMatrix& kkt_matrix, 
+    const Eigen::MatrixBase<MatrixType1>& T_next, const SplitKKTMatrix& kkt_matrix, 
     const double dtau, const Eigen::MatrixBase<MatrixType2>& T) const {
   assert(T_next.rows() == T.rows());
   assert(T_next.rows() == T.rows());
@@ -120,7 +120,7 @@ inline void RiccatiFactorizer::backwardStateConstraintFactorization(
 
 template <typename SplitDirectionType>
 inline void RiccatiFactorizer::forwardRiccatiRecursion(
-    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+    const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const RiccatiFactorization& riccati_next, const SplitDirection& d, 
     const double dtau, SplitDirectionType& d_next, 
     const bool exist_state_constraint) const {

@@ -1,5 +1,5 @@
-#ifndef IDOCP_IMPULSE_KKT_MATRIX_HPP_
-#define IDOCP_IMPULSE_KKT_MATRIX_HPP_
+#ifndef IDOCP_IMPULSE_SPLIT_KKT_MATRIX_HPP_
+#define IDOCP_IMPULSE_SPLIT_KKT_MATRIX_HPP_
 
 #include "Eigen/Core"
 
@@ -11,46 +11,46 @@
 namespace idocp {
 
 ///
-/// @class ImpulseKKTMatrix
+/// @class ImpulseSplitKKTMatrix
 /// @brief The KKT matrix of a time stage.
 ///
-class ImpulseKKTMatrix {
+class ImpulseSplitKKTMatrix {
 public:
   ///
   /// @brief Construct a KKT matrix.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///
-  ImpulseKKTMatrix(const Robot& robot);
+  ImpulseSplitKKTMatrix(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  ImpulseKKTMatrix();
+  ImpulseSplitKKTMatrix();
 
   ///
   /// @brief Destructor. 
   ///
-  ~ImpulseKKTMatrix();
+  ~ImpulseSplitKKTMatrix();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  ImpulseKKTMatrix(const ImpulseKKTMatrix&) = default;
+  ImpulseSplitKKTMatrix(const ImpulseSplitKKTMatrix&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  ImpulseKKTMatrix& operator=(const ImpulseKKTMatrix&) = default;
+  ImpulseSplitKKTMatrix& operator=(const ImpulseSplitKKTMatrix&) = default;
  
   ///
   /// @brief Default move constructor. 
   ///
-  ImpulseKKTMatrix(ImpulseKKTMatrix&&) noexcept = default;
+  ImpulseSplitKKTMatrix(ImpulseSplitKKTMatrix&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  ImpulseKKTMatrix& operator=(ImpulseKKTMatrix&&) noexcept = default;
+  ImpulseSplitKKTMatrix& operator=(ImpulseSplitKKTMatrix&&) noexcept = default;
 
   ///
   /// @brief Set impulse status, i.e., set dimension of the impulse.
@@ -67,7 +67,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fqf();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Fqf().
+  /// @brief const version of ImpulseSplitKKTMatrix::Fqf().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fqf() const;
 
@@ -80,7 +80,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fqq();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Fqq().
+  /// @brief const version of ImpulseSplitKKTMatrix::Fqq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fqq() const;
 
@@ -93,7 +93,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fqv();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Fqv().
+  /// @brief const version of ImpulseSplitKKTMatrix::Fqv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fqv() const;
 
@@ -106,7 +106,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fvf();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Fvf().
+  /// @brief const version of ImpulseSplitKKTMatrix::Fvf().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fvf() const;
 
@@ -119,7 +119,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fvq();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Fvq().
+  /// @brief const version of ImpulseSplitKKTMatrix::Fvq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fvq() const;
 
@@ -132,7 +132,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fvv();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Fvv().
+  /// @brief const version of ImpulseSplitKKTMatrix::Fvv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fvv() const;
 
@@ -144,7 +144,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fxf();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Fxf().
+  /// @brief const version of ImpulseSplitKKTMatrix::Fxf().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fxf() const;
 
@@ -157,14 +157,14 @@ public:
   Eigen::Block<Eigen::MatrixXd> Fxx();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Fxx().
+  /// @brief const version of ImpulseSplitKKTMatrix::Fxx().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fxx() const;
 
   ///
   /// @brief Jacobian of the contact position constraint related to impulse 
   /// condition with respect to the configuration. 
-  /// ImpulseKKTMatrix::setImpulseStatus() muset be called to set the impulse 
+  /// ImpulseSplitKKTMatrix::setImpulseStatus() muset be called to set the impulse 
   /// dimension before calling this function.
   /// @return Reference to the block part of the Hessian. 
   /// Size is ImpulseStatus::dimp() x Robot::dimv().
@@ -172,13 +172,13 @@ public:
   Eigen::Block<Eigen::MatrixXd> Pq();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Pq().
+  /// @brief const version of ImpulseSplitKKTMatrix::Pq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Pq() const;
 
   ///
   /// @brief Jacobian of the contact velocity constraint after impulse with 
-  /// respect to the configuration. ImpulseKKTMatrix::setImpulseStatus() must be
+  /// respect to the configuration. ImpulseSplitKKTMatrix::setImpulseStatus() must be
   /// called to set the impulse dimension before calling this function.
   /// @return Reference to the block part of the Hessian. 
   /// Size is ImpulseStatus::dimp() x Robot::dimv().
@@ -186,13 +186,13 @@ public:
   Eigen::Block<Eigen::MatrixXd> Vq();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Vq().
+  /// @brief const version of ImpulseSplitKKTMatrix::Vq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Vq() const;
 
   ///
   /// @brief Jacobian of the contact velocity constraint after impulse with 
-  /// respect to the velocity. ImpulseKKTMatrix::setImpulseStatus() must be
+  /// respect to the velocity. ImpulseSplitKKTMatrix::setImpulseStatus() must be
   /// called to set the impulse dimension before calling this function.
   /// @return Reference to the block part of the Hessian. 
   /// Size is ImpulseStatus::dimp() x Robot::dimv().
@@ -200,7 +200,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Vv();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Vv().
+  /// @brief const version of ImpulseSplitKKTMatrix::Vv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Vv() const;
 
@@ -214,7 +214,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qdvdvff();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Qdvdvff().
+  /// @brief const version of ImpulseSplitKKTMatrix::Qdvdvff().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qdvdvff() const;
 
@@ -226,7 +226,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qdvdv();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Qdvdv().
+  /// @brief const version of ImpulseSplitKKTMatrix::Qdvdv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qdvdv() const;
 
@@ -238,7 +238,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qff();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Qff().
+  /// @brief const version of ImpulseSplitKKTMatrix::Qff().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qff() const;
 
@@ -251,7 +251,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qfq();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Qfq().
+  /// @brief const version of ImpulseSplitKKTMatrix::Qfq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qfq() const;
 
@@ -264,7 +264,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qfv();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Qfv().
+  /// @brief const version of ImpulseSplitKKTMatrix::Qfv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qfv() const;
 
@@ -276,7 +276,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qqf();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Qqf().
+  /// @brief const version of ImpulseSplitKKTMatrix::Qqf().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qqf() const;
 
@@ -287,7 +287,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qqq();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Qqq().
+  /// @brief const version of ImpulseSplitKKTMatrix::Qqq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qqq() const;
 
@@ -299,7 +299,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qqv();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Qqv().
+  /// @brief const version of ImpulseSplitKKTMatrix::Qqv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qqv() const;
 
@@ -311,7 +311,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qvf();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Qvf().
+  /// @brief const version of ImpulseSplitKKTMatrix::Qvf().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qvf() const;
 
@@ -323,7 +323,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qvq();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Qvq().
+  /// @brief const version of ImpulseSplitKKTMatrix::Qvq().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qvq() const;
 
@@ -334,7 +334,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qvv();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Qvv().
+  /// @brief const version of ImpulseSplitKKTMatrix::Qvv().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qvv() const;
 
@@ -346,7 +346,7 @@ public:
   Eigen::Block<Eigen::MatrixXd> Qxx();
 
   ///
-  /// @brief const version of ImpulseKKTMatrix::Qxx().
+  /// @brief const version of ImpulseSplitKKTMatrix::Qxx().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Qxx() const;
 
@@ -358,7 +358,7 @@ public:
   ///
   /// @brief Invert the KKT matrix. 
   /// @param[out] KKT_matrix_inverse Inverse of the KKT matrix. Size must 
-  /// be ImpulseKKTMatrix::dimKKT() x ImpulseKKTMatrix::dimKKT().
+  /// be ImpulseSplitKKTMatrix::dimKKT() x ImpulseSplitKKTMatrix::dimKKT().
   ///
   template <typename MatrixType>
   void invert(const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse);
@@ -382,11 +382,11 @@ public:
   int dimf() const;
 
   ///
-  /// @brief Chech the equivalence of two ImpulseKKTMatrix.
+  /// @brief Chech the equivalence of two ImpulseSplitKKTMatrix.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
-  bool isApprox(const ImpulseKKTMatrix& other) const;
+  bool isApprox(const ImpulseSplitKKTMatrix& other) const;
 
   ///
   /// @brief Chech this has at least one NaN.
@@ -412,6 +412,6 @@ private:
 
 } // namespace idocp 
 
-#include "idocp/impulse/impulse_kkt_matrix.hxx"
+#include "idocp/impulse/impulse_split_kkt_matrix.hxx"
 
-#endif // IDOCP_IMPULSE_KKT_MATRIX_HPP_ 
+#endif // IDOCP_IMPULSE_SPLIT_KKT_MATRIX_HPP_ 

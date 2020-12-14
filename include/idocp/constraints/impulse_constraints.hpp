@@ -10,8 +10,8 @@
 #include "idocp/constraints/impulse_constraint_component_base.hpp"
 #include "idocp/constraints/constraint_component_data.hpp"
 #include "idocp/constraints/constraints_data.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -23,6 +23,9 @@ namespace idocp {
 ///
 class ImpulseConstraints {
 public:
+  using ImpulseConstraintComponentBasePtr 
+      = std::shared_ptr<ImpulseConstraintComponentBase>;
+
   ///
   /// @brief Default constructor. 
   ///
@@ -58,8 +61,7 @@ public:
   /// @param[in] constraint shared pointer to the constraint component appended 
   /// to the constraints.
   ///
-  void push_back(
-      const std::shared_ptr<ImpulseConstraintComponentBase>& constraint);
+  void push_back(const ImpulseConstraintComponentBasePtr& constraint);
 
   ///
   /// @brief Clear constraints by removing all components.
@@ -109,7 +111,7 @@ public:
   ///
   void augmentDualResidual(Robot& robot, ConstraintsData& data,
                            const ImpulseSplitSolution& s,
-                           ImpulseKKTResidual& kkt_residual) const;
+                           ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Consense slack and dual of the constraints and factorize condensed
@@ -128,8 +130,8 @@ public:
   ///
   void condenseSlackAndDual(Robot& robot, ConstraintsData& data,
                             const ImpulseSplitSolution& s,
-                            ImpulseKKTMatrix& kkt_matrix, 
-                            ImpulseKKTResidual& kkt_residual) const;
+                            ImpulseSplitKKTMatrix& kkt_matrix, 
+                            ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
   /// @brief Compute directions of slack and dual.
@@ -230,78 +232,78 @@ public:
   double squaredNormPrimalAndDualResidual(const ConstraintsData& data) const;
 
 private:
-  std::vector<std::shared_ptr<ImpulseConstraintComponentBase>> position_level_constraints_, 
-                                                               velocity_level_constraints_, 
-                                                               acceleration_level_constraints_;
+  std::vector<ImpulseConstraintComponentBasePtr> position_level_constraints_, 
+                                                 velocity_level_constraints_, 
+                                                 acceleration_level_constraints_;
 
   static void clear_impl(
-      std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints);
+      std::vector<ImpulseConstraintComponentBasePtr>& constraints);
 
   static bool useKinematics_impl(
-      const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints);
+      const std::vector<ImpulseConstraintComponentBasePtr>& constraints);
 
   static bool isFeasible_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const ImpulseSplitSolution& s);
 
   static void setSlackAndDual_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const ImpulseSplitSolution& s);
 
   static void augmentDualResidual_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual);
+    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual);
 
   static void condenseSlackAndDual_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual);
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual);
 
   static void computeSlackAndDualDirection_impl(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const ImpulseSplitSolution& s, const ImpulseSplitDirection& d);
 
   static double maxSlackStepSize_impl(
-     const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
      const std::vector<ConstraintComponentData>& data);
 
   static double maxDualStepSize_impl(
-     const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
      const std::vector<ConstraintComponentData>& data);
 
   static void updateSlack_impl(
-     const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
      std::vector<ConstraintComponentData>& data, const double step_size);
 
   static void updateDual_impl(
-     const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
      std::vector<ConstraintComponentData>& data, const double step_size);
 
   static double costSlackBarrier_impl(
-     const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
      const std::vector<ConstraintComponentData>& data);
 
   static double costSlackBarrier_impl(
-     const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
      const std::vector<ConstraintComponentData>& data, 
      const double step_size);
 
   static void computePrimalAndDualResidual_impl(
-     const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
      Robot& robot, std::vector<ConstraintComponentData>& data, 
      const ImpulseSplitSolution& s);
 
   static double l1NormPrimalResidual_impl(
-     const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
      const std::vector<ConstraintComponentData>& data);
 
   static double squaredNormPrimalAndDualResidual_impl(
-     const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
      const std::vector<ConstraintComponentData>& data);
 
 };

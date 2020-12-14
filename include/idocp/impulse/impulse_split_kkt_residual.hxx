@@ -1,11 +1,11 @@
-#ifndef IDOCP_IMPULSE_KKT_RESIDUAL_HXX_
-#define IDOCP_IMPULSE_KKT_RESIDUAL_HXX_
+#ifndef IDOCP_IMPULSE_SPLIT_KKT_RESIDUAL_HXX_ 
+#define IDOCP_IMPULSE_SPLIT_KKT_RESIDUAL_HXX_
 
-#include "idocp/impulse/impulse_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
 
 namespace idocp {
 
-inline ImpulseKKTResidual::ImpulseKKTResidual(const Robot& robot) 
+inline ImpulseSplitKKTResidual::ImpulseSplitKKTResidual(const Robot& robot) 
   : KKT_residual(Eigen::VectorXd::Zero(4*robot.dimv())),
     ldv(Eigen::VectorXd::Zero(robot.dimv())),
     P_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
@@ -18,7 +18,7 @@ inline ImpulseKKTResidual::ImpulseKKTResidual(const Robot& robot)
 }
 
 
-inline ImpulseKKTResidual::ImpulseKKTResidual() 
+inline ImpulseSplitKKTResidual::ImpulseSplitKKTResidual() 
   : KKT_residual(),
     ldv(),
     P_full_(),
@@ -31,116 +31,116 @@ inline ImpulseKKTResidual::ImpulseKKTResidual()
 }
 
 
-inline ImpulseKKTResidual::~ImpulseKKTResidual() {
+inline ImpulseSplitKKTResidual::~ImpulseSplitKKTResidual() {
 }
 
 
-inline void ImpulseKKTResidual::setImpulseStatus(
+inline void ImpulseSplitKKTResidual::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   dimf_ = impulse_status.dimp();
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::Fq() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitKKTResidual::Fq() {
   return KKT_residual.head(dimv_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::Fq() const {
+ImpulseSplitKKTResidual::Fq() const {
   return KKT_residual.head(dimv_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::Fv() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitKKTResidual::Fv() {
   return KKT_residual.segment(dimv_, dimv_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::Fv() const {
+ImpulseSplitKKTResidual::Fv() const {
   return KKT_residual.segment(dimv_, dimv_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::Fx() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitKKTResidual::Fx() {
   return KKT_residual.head(dimx_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::Fx() const {
+ImpulseSplitKKTResidual::Fx() const {
   return KKT_residual.head(dimx_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::P() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitKKTResidual::P() {
   return P_full_.head(dimf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::P() const {
+ImpulseSplitKKTResidual::P() const {
   return P_full_.head(dimf_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::V() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitKKTResidual::V() {
   return V_full_.head(dimf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::V() const {
+ImpulseSplitKKTResidual::V() const {
   return V_full_.head(dimf_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lq() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitKKTResidual::lq() {
   return KKT_residual.segment(dimx_, dimv_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::lq() const {
+ImpulseSplitKKTResidual::lq() const {
   return KKT_residual.segment(dimx_, dimv_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lv() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitKKTResidual::lv() {
   return KKT_residual.segment(dimx_+dimv_, dimv_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::lv() const {
+ImpulseSplitKKTResidual::lv() const {
   return KKT_residual.segment(dimx_+dimv_, dimv_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lx() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitKKTResidual::lx() {
   return KKT_residual.segment(dimx_, dimx_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::lx() const {
+ImpulseSplitKKTResidual::lx() const {
   return KKT_residual.segment(dimx_, dimx_);
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseKKTResidual::lf() {
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitKKTResidual::lf() {
   return lf_full_.head(dimf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseKKTResidual::lf() const {
+ImpulseSplitKKTResidual::lf() const {
   return lf_full_.head(dimf_);
 }
 
 
-inline void ImpulseKKTResidual::setZero() {
+inline void ImpulseSplitKKTResidual::setZero() {
   KKT_residual.setZero();
   ldv.setZero();
   lf_full_.setZero();
@@ -149,18 +149,18 @@ inline void ImpulseKKTResidual::setZero() {
 }
 
 
-inline int ImpulseKKTResidual::dimKKT() const {
+inline int ImpulseSplitKKTResidual::dimKKT() const {
   return dimKKT_;
 }
 
 
-inline int ImpulseKKTResidual::dimf() const {
+inline int ImpulseSplitKKTResidual::dimf() const {
   return dimf_;
 }
 
 
-inline bool ImpulseKKTResidual::isApprox(
-    const ImpulseKKTResidual& other) const {
+inline bool ImpulseSplitKKTResidual::isApprox(
+    const ImpulseSplitKKTResidual& other) const {
   if (!Fx().isApprox(other.Fx())) return false;
   if (!lx().isApprox(other.lx())) return false;
   if (!ldv.isApprox(other.ldv)) return false;
@@ -173,7 +173,7 @@ inline bool ImpulseKKTResidual::isApprox(
 }
 
 
-inline bool ImpulseKKTResidual::hasNaN() const {
+inline bool ImpulseSplitKKTResidual::hasNaN() const {
   if (KKT_residual.hasNaN()) return true;
   if (ldv.hasNaN()) return true;
   if (P_full_.hasNaN()) return true;
@@ -184,4 +184,4 @@ inline bool ImpulseKKTResidual::hasNaN() const {
 
 } // namespace idocp 
 
-#endif // IDOCP_IMPULSE_KKT_RESIDUAL_HXX_ 
+#endif // IDOCP_IMPULSE_SPLIT_KKT_RESIDUAL_HXX_ 

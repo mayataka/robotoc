@@ -7,12 +7,12 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/impulse_status.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace idocp {
 
-class ImpulseKKTMatrixTest : public ::testing::Test {
+class SplitImpulseKKTMatrixTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -32,8 +32,8 @@ protected:
 };
 
 
-void ImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus& impulse_status) {
-  ImpulseKKTMatrix matrix(robot);
+void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus& impulse_status) {
+  ImpulseSplitKKTMatrix matrix(robot);
   matrix.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
@@ -144,8 +144,8 @@ void ImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus& imp
 }
 
 
-void ImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status) {
-  ImpulseKKTMatrix matrix(robot);
+void SplitImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status) {
+  ImpulseSplitKKTMatrix matrix(robot);
   matrix.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimp();
@@ -181,7 +181,7 @@ void ImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseStatus&
   matrix.Qqv() = Qqv;
   matrix.Qvq() = Qvq;
   matrix.Qvv() = Qvv;
-  ImpulseKKTMatrix matrix_ref = matrix;
+  ImpulseSplitKKTMatrix matrix_ref = matrix;
   EXPECT_TRUE(matrix.isApprox(matrix_ref));
   matrix_ref.Fxx().setRandom();
   EXPECT_FALSE(matrix.isApprox(matrix_ref));
@@ -235,8 +235,8 @@ void ImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseStatus&
 }
 
 
-void ImpulseKKTMatrixTest::testInverse(const Robot& robot, const ImpulseStatus& impulse_status) {
-  // ImpulseKKTMatrix matrix(robot);
+void SplitImpulseKKTMatrixTest::testInverse(const Robot& robot, const ImpulseStatus& impulse_status) {
+  // ImpulseSplitKKTMatrix matrix(robot);
   // matrix.setImpulseStatus(impulse_status);
   // const int dimv = robot.dimv();
   // const int dimx = 2*robot.dimv();
@@ -280,7 +280,7 @@ void ImpulseKKTMatrixTest::testInverse(const Robot& robot, const ImpulseStatus& 
 }
 
 
-TEST_F(ImpulseKKTMatrixTest, fixedBase) {
+TEST_F(SplitImpulseKKTMatrixTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
   std::random_device rnd;
@@ -295,7 +295,7 @@ TEST_F(ImpulseKKTMatrixTest, fixedBase) {
 }
 
 
-TEST_F(ImpulseKKTMatrixTest, floatingBase) {
+TEST_F(SplitImpulseKKTMatrixTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
   std::vector<bool> is_impulse_active = {false, false, false, false};

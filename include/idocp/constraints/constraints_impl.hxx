@@ -74,7 +74,7 @@ inline void setSlackAndDual(
 inline void augmentDualResidual(
     const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const double dtau, const SplitSolution& s, KKTResidual& kkt_residual) {
+    const double dtau, const SplitSolution& s, SplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -87,7 +87,7 @@ inline void augmentDualResidual(
 inline void augmentDualResidual(
     const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) {
+    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -100,8 +100,8 @@ inline void augmentDualResidual(
 inline void condenseSlackAndDual(
     const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const double dtau, const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) {
+    const double dtau, const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -115,8 +115,8 @@ inline void condenseSlackAndDual(
 inline void condenseSlackAndDual(
     const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual) {
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());

@@ -10,8 +10,9 @@ template <typename OCPType>
 inline MPC<OCPType>::MPC(const Robot& robot, 
                          const std::shared_ptr<CostFunction>& cost,
                          const std::shared_ptr<Constraints>& constraints, 
-                         const double T, const int N, const int num_proc)
-  : ocp_(robot, cost, constraints, T, N, num_proc) {
+                         const double T, const int N, const int max_num_impulse,
+                         const int num_proc)
+  : ocp_(robot, cost, constraints, T, N, max_num_impulse, num_proc) {
 }
 
 
@@ -52,56 +53,20 @@ inline void MPC<OCP>::initializeSolution(const double t,
 
 
 template <typename OCPType>
-inline void MPC<OCPType>::activateContact(const int contact_index, 
-                                          const int time_stage_begin, 
-                                          const int time_stage_end) {
-  ocp_.activateContact(contact_index, time_stage_begin, time_stage_end);
-}
-
-
-template <typename OCPType>
-inline void MPC<OCPType>::deactivateContact(const int contact_index, 
-                                            const int time_stage_begin, 
-                                            const int time_stage_end) {
-  ocp_.deactivateContact(contact_index, time_stage_begin, time_stage_end);
-}
-
-
-template <typename OCPType>
-inline void MPC<OCPType>::activateContacts(
-    const std::vector<int>& contact_indices, const int time_stage_begin, 
-    const int time_stage_end) {
-  ocp_.activateContacts(contact_indices, time_stage_begin, time_stage_end);
-}
-
-
-template <typename OCPType>
-inline void MPC<OCPType>::deactivateContacts(
-    const std::vector<int>& contact_indices, const int time_stage_begin, 
-    const int time_stage_end) {
-  ocp_.deactivateContacts(contact_indices, time_stage_begin, time_stage_end);
-}
-
-
-template <typename OCPType>
-inline void MPC<OCPType>::setContactPoint(
-    const std::vector<Eigen::Vector3d>& contact_points) {
-  ocp_.setContactSequence(contact_points);
-}
-
-
-template <typename OCPType>
-inline void MPC<OCPType>::setContactPointByKinematics(
-    const Eigen::VectorXd& q) {
-  ocp_.setContactPointByKinematics(q);
-}
-
-
-template <typename OCPType>
 inline void MPC<OCPType>::updateSolution(const double t, 
                                          const Eigen::VectorXd& q, 
-                                         const Eigen::VectorXd& v) {
-  ocp_.updateSolution(t, q, v, false);
+                                         const Eigen::VectorXd& v,
+                                         const int max_iter,
+                                         const double KKT_tol) {
+  for (int i=0; i<max_iter; ++i) {
+    ocp_.updateSolution(t, q, v, false);
+    if (KKT_tol > 0) {
+      ocp_.computeKKTResidual(t, q, v);
+      if (ocp_.KKTError() < KKT_tol) {
+        break;
+      }
+    }
+  }
 }
 
 
@@ -131,6 +96,12 @@ inline void MPC<OCPType>::computeKKTResidual(const double t,
                                              const Eigen::VectorXd& q, 
                                              const Eigen::VectorXd& v) {
   return ocp_.computeKKTResidual(t, q, v);
+}
+
+
+template <typename OCPType>
+inline OCPType* MPC<OCPType>::getSolverHandle() {
+  return &ocp_;
 }
 
 } // namespace idocp 

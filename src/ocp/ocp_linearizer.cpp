@@ -51,7 +51,7 @@ OCPLinearizer::~OCPLinearizer() {
 void OCPLinearizer::initConstraints(HybridOCP& split_ocps, 
                                     std::vector<Robot>& robots, 
                                     const ContactSequence& contact_sequence, 
-                                    const HybridSolution& s) const {
+                                    const Solution& s) const {
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();
   const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
@@ -124,10 +124,9 @@ void OCPLinearizer::linearizeOCP(HybridOCP& split_ocps,
                                  std::vector<Robot>& robots, 
                                  const ContactSequence& contact_sequence, 
                                  const double t, const Eigen::VectorXd& q, 
-                                 const Eigen::VectorXd& v, 
-                                 const HybridSolution& s, 
-                                 HybridKKTMatrix& kkt_matrix, 
-                                 HybridKKTResidual& kkt_residual) const {
+                                 const Eigen::VectorXd& v, const Solution& s, 
+                                 KKTMatrix& kkt_matrix, 
+                                 KKTResidual& kkt_residual) const {
   runParallel<internal::LinearizeOCP>(split_ocps, robots, contact_sequence, 
                                       t, q, v, s, kkt_matrix, kkt_residual);
 }
@@ -138,9 +137,8 @@ void OCPLinearizer::computeKKTResidual(HybridOCP& split_ocps,
                                        const ContactSequence& contact_sequence, 
                                        const double t, const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v, 
-                                       const HybridSolution& s, 
-                                       HybridKKTMatrix& kkt_matrix, 
-                                       HybridKKTResidual& kkt_residual) const {
+                                       const Solution& s, KKTMatrix& kkt_matrix, 
+                                       KKTResidual& kkt_residual) const {
   runParallel<internal::ComputeKKTResidual>(split_ocps, robots, contact_sequence,
                                             t, q, v, s, kkt_matrix, kkt_residual);
 }
@@ -148,7 +146,7 @@ void OCPLinearizer::computeKKTResidual(HybridOCP& split_ocps,
 
 double OCPLinearizer::KKTError(const HybridOCP& split_ocps, 
                                const ContactSequence& contact_sequence, 
-                               const HybridKKTResidual& kkt_residual) {
+                               const KKTResidual& kkt_residual) {
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();
   const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
@@ -226,12 +224,11 @@ double OCPLinearizer::KKTError(const HybridOCP& split_ocps,
 void OCPLinearizer::integrateSolution(HybridOCP& split_ocps, 
                                       const std::vector<Robot>& robots, 
                                       const ContactSequence& contact_sequence, 
-                                      const HybridKKTMatrix& kkt_matrix, 
-                                      const HybridKKTResidual& kkt_residual, 
+                                      const KKTMatrix& kkt_matrix, 
+                                      const KKTResidual& kkt_residual, 
                                       const double primal_step_size, 
                                       const double dual_step_size, 
-                                      HybridDirection& d, 
-                                      HybridSolution& s) const {
+                                      Direction& d, Solution& s) const {
   assert(robots.size() == num_proc_);
   const int N_impulse = contact_sequence.totalNumImpulseStages();
   const int N_lift = contact_sequence.totalNumLiftStages();

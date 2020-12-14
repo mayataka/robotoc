@@ -131,7 +131,7 @@ double TimeVaryingConfigurationCost::l(Robot& robot, CostFunctionData& data,
   robot.integrateConfiguration(q0_, v0_, t-t0_, data.q_ref);
   if (robot.has_floating_base()) {
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
-    l += (q_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
+    l += (q_weight_.array()*data.qdiff.array()*data.qdiff.array()).sum();
   }
   else {
     l += (q_weight_.array()*(s.q-data.q_ref).array()*(s.q-data.q_ref).array()).sum();
@@ -149,7 +149,7 @@ double TimeVaryingConfigurationCost::phi(Robot& robot, CostFunctionData& data,
   robot.integrateConfiguration(q0_, v0_, t-t0_, data.q_ref);
   if (robot.has_floating_base()) {
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
-    phi += (qf_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
+    phi += (qf_weight_.array()*data.qdiff.array()*data.qdiff.array()).sum();
   }
   else {
     phi += (qf_weight_.array()*(s.q-data.q_ref).array()*(s.q-data.q_ref).array()).sum();
@@ -162,7 +162,7 @@ double TimeVaryingConfigurationCost::phi(Robot& robot, CostFunctionData& data,
 void TimeVaryingConfigurationCost::lq(Robot& robot, CostFunctionData& data, 
                                       const double t, const double dtau, 
                                       const SplitSolution& s, 
-                                      KKTResidual& kkt_residual) const {
+                                      SplitKKTResidual& kkt_residual) const {
   robot.integrateConfiguration(q0_, v0_, t-t0_, data.q_ref);
   if (robot.has_floating_base()) {
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
@@ -180,7 +180,7 @@ void TimeVaryingConfigurationCost::lq(Robot& robot, CostFunctionData& data,
 void TimeVaryingConfigurationCost::lv(Robot& robot, CostFunctionData& data, 
                                       const double t, const double dtau, 
                                       const SplitSolution& s, 
-                                      KKTResidual& kkt_residual) const {
+                                      SplitKKTResidual& kkt_residual) const {
   kkt_residual.lv().array()
       += dtau * v_weight_.array() * (s.v.array()-v0_.array());
 }
@@ -189,7 +189,7 @@ void TimeVaryingConfigurationCost::lv(Robot& robot, CostFunctionData& data,
 void TimeVaryingConfigurationCost::la(Robot& robot, CostFunctionData& data, 
                                       const double t, const double dtau, 
                                       const SplitSolution& s, 
-                                      KKTResidual& kkt_residual) const {
+                                      SplitKKTResidual& kkt_residual) const {
   kkt_residual.la.array() += dtau * a_weight_.array() * s.a.array();
 }
 
@@ -197,7 +197,7 @@ void TimeVaryingConfigurationCost::la(Robot& robot, CostFunctionData& data,
 void TimeVaryingConfigurationCost::lqq(Robot& robot, CostFunctionData& data, 
                                        const double t, const double dtau, 
                                        const SplitSolution& s, 
-                                       KKTMatrix& kkt_matrix) const {
+                                       SplitKKTMatrix& kkt_matrix) const {
   if (robot.has_floating_base()) {
     robot.integrateConfiguration(q0_, v0_, t-t0_, data.q_ref);
     robot.dSubtractdConfigurationPlus(s.q, data.q_ref, data.J_qdiff);
@@ -213,7 +213,7 @@ void TimeVaryingConfigurationCost::lqq(Robot& robot, CostFunctionData& data,
 void TimeVaryingConfigurationCost::lvv(Robot& robot, CostFunctionData& data, 
                                        const double t, const double dtau, 
                                        const SplitSolution& s, 
-                                       KKTMatrix& kkt_matrix) const {
+                                       SplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qvv().diagonal().noalias() += dtau * v_weight_;
 }
 
@@ -221,14 +221,14 @@ void TimeVaryingConfigurationCost::lvv(Robot& robot, CostFunctionData& data,
 void TimeVaryingConfigurationCost::laa(Robot& robot, CostFunctionData& data, 
                                        const double t, const double dtau, 
                                        const SplitSolution& s, 
-                                       KKTMatrix& kkt_matrix) const {
+                                       SplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qaa().diagonal().noalias() += dtau * a_weight_;
 }
 
 
 void TimeVaryingConfigurationCost::phiq(Robot& robot, CostFunctionData& data, 
                                         const double t, const SplitSolution& s, 
-                                        KKTResidual& kkt_residual) const {
+                                        SplitKKTResidual& kkt_residual) const {
   robot.integrateConfiguration(q0_, v0_, t-t0_, data.q_ref);
   if (robot.has_floating_base()) {
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
@@ -245,7 +245,7 @@ void TimeVaryingConfigurationCost::phiq(Robot& robot, CostFunctionData& data,
 
 void TimeVaryingConfigurationCost::phiv(Robot& robot, CostFunctionData& data, 
                                         const double t, const SplitSolution& s, 
-                                        KKTResidual& kkt_residual) const {
+                                        SplitKKTResidual& kkt_residual) const {
   kkt_residual.lv().array()
       += vf_weight_.array() * (s.v.array()-v0_.array());
 }
@@ -253,7 +253,7 @@ void TimeVaryingConfigurationCost::phiv(Robot& robot, CostFunctionData& data,
 
 void TimeVaryingConfigurationCost::phiqq(Robot& robot, CostFunctionData& data, 
                                          const double t, const SplitSolution& s, 
-                                         KKTMatrix& kkt_matrix) const {
+                                         SplitKKTMatrix& kkt_matrix) const {
   if (robot.has_floating_base()) {
     robot.integrateConfiguration(q0_, v0_, t-t0_, data.q_ref);
     robot.dSubtractdConfigurationPlus(s.q, data.q_ref, data.J_qdiff);
@@ -268,7 +268,7 @@ void TimeVaryingConfigurationCost::phiqq(Robot& robot, CostFunctionData& data,
 
 void TimeVaryingConfigurationCost::phivv(Robot& robot, CostFunctionData& data, 
                                          const double t, const SplitSolution& s, 
-                                         KKTMatrix& kkt_matrix) const {
+                                         SplitKKTMatrix& kkt_matrix) const {
   kkt_matrix.Qvv().diagonal().noalias() += vf_weight_;
 }
 

@@ -6,8 +6,8 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -30,17 +30,17 @@ public:
 
   void linearizeUnconstrainedDynamics(Robot& robot, const double dtau, 
                                       const SplitSolution& s, 
-                                      KKTMatrix& kkt_matrix, 
-                                      KKTResidual& kkt_residual);
+                                      SplitKKTMatrix& kkt_matrix, 
+                                      SplitKKTResidual& kkt_residual);
 
   void condenseUnconstrainedDynamics(Robot& robot, const double dtau, 
                                      const SplitSolution& s, 
-                                     KKTMatrix& kkt_matrix, 
-                                     KKTResidual& kkt_residual);
+                                     SplitKKTMatrix& kkt_matrix, 
+                                     SplitKKTResidual& kkt_residual);
   
   void computeCondensedDirection(const double dtau, 
-                                 const KKTMatrix& kkt_matrix, 
-                                 const KKTResidual& kkt_residual, 
+                                 const SplitKKTMatrix& kkt_matrix, 
+                                 const SplitKKTResidual& kkt_residual, 
                                  SplitDirection& d);
 
   void computeUnconstrainedDynamicsResidual(Robot& robot, 

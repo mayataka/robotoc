@@ -1,7 +1,7 @@
 #include "idocp/constraints/contact_normal_force.hpp"
 
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
@@ -59,7 +59,7 @@ void ContactNormalForce::setSlackAndDual(
 
 void ContactNormalForce::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTResidual& kkt_residual) const {
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   assert(dtau > 0);
   int dimf_stack = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {
@@ -73,8 +73,8 @@ void ContactNormalForce::augmentDualResidual(
 
 void ContactNormalForce::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) const {
   assert(dtau > 0);
   int dimf_stack = 0;
   for (int i=0; i<robot.max_point_contacts(); ++i) {

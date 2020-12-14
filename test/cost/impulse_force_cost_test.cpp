@@ -8,8 +8,8 @@
 #include "idocp/cost/impulse_force_cost.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -48,8 +48,8 @@ void ImpulseForceCostTest::commonTest(Robot& robot) const {
   for (int i=0; i<robot.max_point_contacts(); ++i) {
     impulse_status.deactivateImpulse(i);
   }
-  ImpulseKKTMatrix kkt_mat(robot);
-  ImpulseKKTResidual kkt_res(robot);
+  ImpulseSplitKKTMatrix kkt_mat(robot);
+  ImpulseSplitKKTResidual kkt_res(robot);
   kkt_res.setImpulseStatus(impulse_status);
   kkt_mat.setImpulseStatus(impulse_status);
   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
@@ -72,8 +72,8 @@ void ImpulseForceCostTest::commonTest(Robot& robot) const {
   kkt_mat.setImpulseStatus(impulse_status);
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
-  ImpulseKKTResidual kkt_res_ref = kkt_res;
-  ImpulseKKTMatrix kkt_mat_ref = kkt_mat;
+  ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
+  ImpulseSplitKKTMatrix kkt_mat_ref = kkt_mat;
   cost.lf(robot, data, t, s, kkt_res);
   cost.lff(robot, data, t, s, kkt_mat);
   int dimf_stack = 0;

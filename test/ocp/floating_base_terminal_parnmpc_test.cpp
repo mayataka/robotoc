@@ -9,8 +9,8 @@
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/split_parnmpc.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
@@ -97,8 +97,8 @@ protected:
     constraints->push_back(velocity_lower_limit); 
     constraints->push_back(velocity_upper_limit);
     constraints_data = constraints->createConstraintsData(robot, 2);
-    kkt_matrix = KKTMatrix(robot);
-    kkt_residual = KKTResidual(robot);
+    kkt_matrix = SplitKKTMatrix(robot);
+    kkt_residual = SplitKKTResidual(robot);
     kkt_matrix.setContactStatus(contact_status);
     kkt_residual.setContactStatus(contact_status);
     robot_dynamics = RobotDynamics(robot);
@@ -117,8 +117,8 @@ protected:
   ConstraintsData constraints_data;
   SplitSolution s, s_prev, s_next, s_tmp, s_old, s_new;
   SplitDirection d, d_prev;
-  KKTMatrix kkt_matrix;
-  KKTResidual kkt_residual;
+  SplitKKTMatrix kkt_matrix;
+  SplitKKTResidual kkt_residual;
   RobotDynamics robot_dynamics;
   Eigen::VectorXd q_prev, v_prev, dq_prev, dv_prev;
 };

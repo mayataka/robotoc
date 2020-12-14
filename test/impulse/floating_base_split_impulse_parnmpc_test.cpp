@@ -11,8 +11,8 @@
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/impulse/split_impulse_parnmpc.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_impulse_cost.hpp"
@@ -85,8 +85,8 @@ protected:
     cost->push_back(impulse_cost);
     cost_data = CostFunctionData(robot);
     constraints = std::make_shared<ImpulseConstraints>();
-    kkt_matrix = ImpulseKKTMatrix(robot);
-    kkt_residual = ImpulseKKTResidual(robot);
+    kkt_matrix = ImpulseSplitKKTMatrix(robot);
+    kkt_residual = ImpulseSplitKKTResidual(robot);
     kkt_matrix.setContactStatus(contact_status);
     kkt_residual.setContactStatus(contact_status);
     impulse_dynamics = ImpulseDynamicsBackwardEuler(robot);
@@ -107,8 +107,8 @@ protected:
   SplitSolution s_prev, s_prev_new, s_next, s_next_new;
   ImpulseSplitDirection d, d_ref;
   SplitDirection d_prev;
-  ImpulseKKTMatrix kkt_matrix;
-  ImpulseKKTResidual kkt_residual;
+  ImpulseSplitKKTMatrix kkt_matrix;
+  ImpulseSplitKKTResidual kkt_residual;
   ImpulseDynamicsBackwardEuler impulse_dynamics;
   Eigen::VectorXd q_prev, v_prev, dq_prev, dv_prev;
 };

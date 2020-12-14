@@ -18,7 +18,7 @@ inline Constraints::~Constraints() {
 
 
 inline void Constraints::push_back(
-    const std::shared_ptr<ConstraintComponentBase>& constraint) {
+    const ConstraintComponentBasePtr& constraint) {
   if (constraint->kinematicsLevel() == KinematicsLevel::PositionLevel) {
     position_level_constraints_.push_back(constraint);
   }
@@ -32,7 +32,7 @@ inline void Constraints::push_back(
 
 
 inline void Constraints::push_back(
-    const std::shared_ptr<ImpulseConstraintComponentBase>& constraint) {
+    const ImpulseConstraintComponentBasePtr& constraint) {
   impulse_constraints_->push_back(constraint);
 }
 
@@ -52,7 +52,7 @@ inline void Constraints::clear() {
 
 
 inline void Constraints::clear_impl(
-    std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints) {
+    std::vector<ConstraintComponentBasePtr>& constraints) {
   constraints.clear();
 }
 
@@ -72,7 +72,7 @@ inline bool Constraints::useKinematics() const {
 
 
 inline bool Constraints::useKinematics_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints) {
+    const std::vector<ConstraintComponentBasePtr>& constraints) {
   for (const auto constraint : constraints) {
     if (constraint->useKinematics()) {
       return true;
@@ -129,9 +129,8 @@ inline bool Constraints::isFeasible(Robot& robot, ConstraintsData& data,
 
 
 inline bool Constraints::isFeasible_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const SplitSolution& s) {
+    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
+    std::vector<ConstraintComponentData>& data, const SplitSolution& s) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -162,9 +161,9 @@ inline void Constraints::setSlackAndDual(Robot& robot, ConstraintsData& data,
 
 
 inline void Constraints::setSlackAndDual_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const double dtau, const SplitSolution& s) {
+    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
+    std::vector<ConstraintComponentData>& data, const double dtau, 
+    const SplitSolution& s) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -178,7 +177,7 @@ inline void Constraints::augmentDualResidual(Robot& robot,
                                              ConstraintsData& data, 
                                              const double dtau, 
                                              const SplitSolution& s,
-                                             KKTResidual& kkt_residual) const {
+                                             SplitKKTResidual& kkt_residual) const {
   if (data.isPositionLevelValid()) {
     augmentDualResidual_impl(position_level_constraints_, robot, 
                              data.position_level_data, dtau, s, kkt_residual);
@@ -193,9 +192,9 @@ inline void Constraints::augmentDualResidual(Robot& robot,
 
 
 inline void Constraints::augmentDualResidual_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const double dtau, const SplitSolution& s, KKTResidual& kkt_residual) {
+    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
+    std::vector<ConstraintComponentData>& data, const double dtau, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -209,8 +208,8 @@ inline void Constraints::condenseSlackAndDual(Robot& robot,
                                               ConstraintsData& data, 
                                               const double dtau, 
                                               const SplitSolution& s,
-                                              KKTMatrix& kkt_matrix, 
-                                              KKTResidual& kkt_residual) const {
+                                              SplitKKTMatrix& kkt_matrix, 
+                                              SplitKKTResidual& kkt_residual) const {
   if (data.isPositionLevelValid()) {
     condenseSlackAndDual_impl(position_level_constraints_, robot,
                               data.position_level_data, dtau, s, kkt_matrix,
@@ -228,10 +227,10 @@ inline void Constraints::condenseSlackAndDual(Robot& robot,
 
 
 inline void Constraints::condenseSlackAndDual_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const double dtau, const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) {
+    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
+    std::vector<ConstraintComponentData>& data, const double dtau, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -259,9 +258,9 @@ inline void Constraints::computeSlackAndDualDirection(
 
 
 inline void Constraints::computeSlackAndDualDirection_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const double dtau, const SplitSolution& s, const SplitDirection& d) {
+    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
+    std::vector<ConstraintComponentData>& data, const double dtau, 
+    const SplitSolution& s, const SplitDirection& d) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -297,7 +296,7 @@ inline double Constraints::maxSlackStepSize(const ConstraintsData& data) const {
 
 
 inline double Constraints::maxSlackStepSize_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
+    const std::vector<ConstraintComponentBasePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double min_step_size = 1;
@@ -339,7 +338,7 @@ inline double Constraints::maxDualStepSize(const ConstraintsData& data) const {
 
 
 inline double Constraints::maxDualStepSize_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
+    const std::vector<ConstraintComponentBasePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double min_step_size = 1;
@@ -373,7 +372,7 @@ inline void Constraints::updateSlack(ConstraintsData& data,
 
 
 inline void Constraints::updateSlack_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
+    const std::vector<ConstraintComponentBasePtr>& constraints,
     std::vector<ConstraintComponentData>& data, const double step_size) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
@@ -402,7 +401,7 @@ inline void Constraints::updateDual(ConstraintsData& data,
 
 
 inline void Constraints::updateDual_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
+    const std::vector<ConstraintComponentBasePtr>& constraints,
     std::vector<ConstraintComponentData>& data, const double step_size) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
@@ -430,7 +429,7 @@ inline double Constraints::costSlackBarrier(const ConstraintsData& data) const {
 
 
 inline double Constraints::costSlackBarrier_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
+    const std::vector<ConstraintComponentBasePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double cost = 0;
@@ -463,7 +462,7 @@ inline double Constraints::costSlackBarrier(const ConstraintsData& data,
 
 
 inline double Constraints::costSlackBarrier_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
+    const std::vector<ConstraintComponentBasePtr>& constraints,
     const std::vector<ConstraintComponentData>& data, const double step_size) {
   assert(constraints.size() == data.size());
   double cost = 0;
@@ -493,9 +492,9 @@ inline void Constraints::computePrimalAndDualResidual(
 
 
 inline void Constraints::computePrimalAndDualResidual_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const double dtau, const SplitSolution& s) {
+    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
+    std::vector<ConstraintComponentData>& data, const double dtau, 
+    const SplitSolution& s) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -523,7 +522,7 @@ inline double Constraints::l1NormPrimalResidual(
 
 
 inline double Constraints::l1NormPrimalResidual_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
+    const std::vector<ConstraintComponentBasePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double l1_norm = 0;
@@ -554,7 +553,7 @@ inline double Constraints::squaredNormPrimalAndDualResidual(
 
 
 inline double Constraints::squaredNormPrimalAndDualResidual_impl(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
+    const std::vector<ConstraintComponentBasePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double squared_norm = 0;

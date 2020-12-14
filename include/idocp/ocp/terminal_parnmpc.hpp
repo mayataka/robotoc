@@ -9,8 +9,8 @@
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -310,8 +310,8 @@ private:
   CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
-  KKTResidual kkt_residual_;
-  KKTMatrix kkt_matrix_;
+  SplitKKTResidual kkt_residual_;
+  SplitKKTMatrix kkt_matrix_;
   // RobotDynamics robot_dynamics_;
   ContactDynamics contact_dynamics_;
   BackwardCorrection backward_correction_;

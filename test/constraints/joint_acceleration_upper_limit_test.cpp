@@ -9,8 +9,8 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/constraints/joint_acceleration_upper_limit.hpp"
 #include "idocp/constraints/pdipm.hpp"
 
@@ -80,9 +80,9 @@ void JointAccelerationUpperLimitTest::testAugmentDualResidual(Robot& robot, cons
   const SplitSolution s = SplitSolution::Random(robot);
   limit.setSlackAndDual(robot, data, dtau, s);
   ConstraintComponentData data_ref = data;
-  KKTResidual kkt_res(robot);
+  SplitKKTResidual kkt_res(robot);
   kkt_res.la.setRandom();
-  KKTResidual kkt_res_ref = kkt_res;
+  SplitKKTResidual kkt_res_ref = kkt_res;
   limit.augmentDualResidual(robot, data, dtau, s, kkt_res);
   kkt_res_ref.la.tail(dimc) += dtau * data_ref.dual;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
@@ -112,12 +112,12 @@ void JointAccelerationUpperLimitTest::testCondenseSlackAndDual(Robot& robot, con
   const SplitSolution s = SplitSolution::Random(robot);
   limit.setSlackAndDual(robot, data, dtau, s);
   ConstraintComponentData data_ref = data;
-  KKTMatrix kkt_mat(robot);
+  SplitKKTMatrix kkt_mat(robot);
   kkt_mat.Qaa().setRandom();
-  KKTResidual kkt_res(robot);
+  SplitKKTResidual kkt_res(robot);
   kkt_res.la.setRandom();
-  KKTMatrix kkt_mat_ref = kkt_mat;
-  KKTResidual kkt_res_ref = kkt_res;
+  SplitKKTMatrix kkt_mat_ref = kkt_mat;
+  SplitKKTResidual kkt_res_ref = kkt_res;
   limit.condenseSlackAndDual(robot, data, dtau, s, kkt_mat, kkt_res);
   data_ref.residual = dtau * (s.a.tail(dimc)-amax) + data_ref.slack;
   pdipm::ComputeDuality(barrier, data_ref);
