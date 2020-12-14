@@ -84,7 +84,7 @@ public:
                                            const Solution& s, Direction& d);
 
   void computeNewtonDirectionFromRiccatiFactorization(
-      HybridOCP& split_ocps, std::vector<Robot>& robots, 
+      OCP& ocp, std::vector<Robot>& robots, 
       const ContactSequence& contact_sequence, 
       const RiccatiFactorizer& factorizer, 
       const RiccatiFactorization& factorization, 

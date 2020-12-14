@@ -60,28 +60,27 @@ public:
   ///
   OCPLinearizer& operator=(OCPLinearizer&&) noexcept = default;
 
-  void initConstraints(HybridOCP& split_ocps, std::vector<Robot>& robots,
+  void initConstraints(OCP& ocp, std::vector<Robot>& robots,
                        const ContactSequence& contact_sequence, 
                        const Solution& s) const;
 
-  void linearizeOCP(HybridOCP& split_ocps, std::vector<Robot>& robots,
+  void linearizeOCP(OCP& ocp, std::vector<Robot>& robots,
                     const ContactSequence& contact_sequence,
                     const double t, const Eigen::VectorXd& q, 
                     const Eigen::VectorXd& v, const Solution& s,
                     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const;
 
-  void computeKKTResidual(HybridOCP& split_ocps, std::vector<Robot>& robots, 
+  void computeKKTResidual(OCP& ocp, std::vector<Robot>& robots, 
                           const ContactSequence& contact_sequence,
                           const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v, const Solution& s,
                           KKTMatrix& kkt_matrix, 
                           KKTResidual& kkt_residual) const;
 
-  double KKTError(const HybridOCP& split_ocps, 
-                  const ContactSequence& contact_sequence, 
+  double KKTError(const OCP& ocp, const ContactSequence& contact_sequence, 
                   const KKTResidual& kkt_residual);
 
-  void integrateSolution(HybridOCP& split_ocps, const std::vector<Robot>& robots,
+  void integrateSolution(OCP& ocp, const std::vector<Robot>& robots,
                          const ContactSequence& contact_sequence,
                          const KKTMatrix& kkt_matrix,
                          const KKTResidual& kkt_residual,
@@ -94,7 +93,7 @@ public:
 private:
 
   template <typename Algorithm>
-  void runParallel(HybridOCP& split_ocps, std::vector<Robot>& robots,
+  void runParallel(OCP& ocp, std::vector<Robot>& robots,
                    const ContactSequence& contact_sequence,
                    const double t, const Eigen::VectorXd& q, 
                    const Eigen::VectorXd& v, const Solution& s,

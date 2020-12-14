@@ -27,8 +27,8 @@ public:
                      const std::string& save_dir_path, 
                      const std::string& save_file_name);
 
-  template<typename OCPTypeDerived>
-  void run(Robot& robot, MPC<OCPTypeDerived>& mpc, 
+  template<typename OCPSolverType>
+  void run(Robot& robot, MPC<OCPSolverType>& mpc, 
            const double simulation_time_in_sec, 
            const double sampling_period_in_sec, 
            const double simulation_start_time_in_sec, 

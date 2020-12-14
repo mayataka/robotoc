@@ -1,13 +1,13 @@
 #ifndef IDOCP_MPC_HXX_
 #define IDOCP_MPC_HXX_ 
 
-#include "idocp/ocp/ocp.hpp"
-// #include "idocp/ocp/parnmpc.hpp"
+#include "idocp/ocp/ocp_solver.hpp"
+// #include "idocp/ocp/parnmpc_solver.hpp"
 
 namespace idocp {
 
-template <typename OCPType>
-inline MPC<OCPType>::MPC(const Robot& robot, 
+template <typename OCPSolverType>
+inline MPC<OCPSolverType>::MPC(const Robot& robot, 
                          const std::shared_ptr<CostFunction>& cost,
                          const std::shared_ptr<Constraints>& constraints, 
                          const double T, const int N, const int max_num_impulse,
@@ -16,22 +16,22 @@ inline MPC<OCPType>::MPC(const Robot& robot,
 }
 
 
-template <typename OCPType>
-inline MPC<OCPType>::MPC() 
+template <typename OCPSolverType>
+inline MPC<OCPSolverType>::MPC() 
   : ocp_() {
 }
 
 
-template <typename OCPType>
-inline MPC<OCPType>::~MPC() {
+template <typename OCPSolverType>
+inline MPC<OCPSolverType>::~MPC() {
 }
 
 
 template <>
-inline void MPC<OCP>::initializeSolution(const double t, 
-                                         const Eigen::VectorXd& q, 
-                                         const Eigen::VectorXd& v, 
-                                         const int max_itr) {
+inline void MPC<OCPSolver>::initializeSolution(const double t, 
+                                               const Eigen::VectorXd& q, 
+                                               const Eigen::VectorXd& v, 
+                                               const int max_itr) {
   ocp_.setStateTrajectory(q, v);
   for (int i=0; i<max_itr; ++i) {
     ocp_.updateSolution(t, q, v, true);
@@ -52,8 +52,8 @@ inline void MPC<OCP>::initializeSolution(const double t,
 // }
 
 
-template <typename OCPType>
-inline void MPC<OCPType>::updateSolution(const double t, 
+template <typename OCPSolverType>
+inline void MPC<OCPSolverType>::updateSolution(const double t, 
                                          const Eigen::VectorXd& q, 
                                          const Eigen::VectorXd& v,
                                          const int max_iter,
@@ -70,37 +70,37 @@ inline void MPC<OCPType>::updateSolution(const double t,
 }
 
 
-template <typename OCPType>
-inline void MPC<OCPType>::getControlInput(Eigen::VectorXd& u) {
+template <typename OCPSolverType>
+inline void MPC<OCPSolverType>::getControlInput(Eigen::VectorXd& u) {
   constexpr int initial_stage = 0;
   u.tail(12) = ocp_.getSolution(initial_stage).u;
 }
 
 
-template <typename OCPType>
-inline void MPC<OCPType>::getStateFeedbackGain(Eigen::MatrixXd& Kq, 
+template <typename OCPSolverType>
+inline void MPC<OCPSolverType>::getStateFeedbackGain(Eigen::MatrixXd& Kq, 
                                                Eigen::MatrixXd& Kv) {
   constexpr int initial_stage = 0;
   ocp_.getStateFeedbackGain(initial_stage, Kq, Kv);
 }
 
 
-template <typename OCPType>
-inline double MPC<OCPType>::KKTError() {
+template <typename OCPSolverType>
+inline double MPC<OCPSolverType>::KKTError() {
   return ocp_.KKTError();
 }
 
 
-template <typename OCPType>
-inline void MPC<OCPType>::computeKKTResidual(const double t, 
+template <typename OCPSolverType>
+inline void MPC<OCPSolverType>::computeKKTResidual(const double t, 
                                              const Eigen::VectorXd& q, 
                                              const Eigen::VectorXd& v) {
   return ocp_.computeKKTResidual(t, q, v);
 }
 
 
-template <typename OCPType>
-inline OCPType* MPC<OCPType>::getSolverHandle() {
+template <typename OCPSolverType>
+inline OCPSolverType* MPC<OCPSolverType>::getSolverHandle() {
   return &ocp_;
 }
 

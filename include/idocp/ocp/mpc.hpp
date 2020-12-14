@@ -12,7 +12,7 @@
 
 namespace idocp {
 
-template <typename OCPType>
+template <typename OCPSolverType>
 class MPC {
 public:
 

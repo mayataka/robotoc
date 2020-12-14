@@ -6,8 +6,8 @@
 
 #include "Eigen/Core"
 
-#include "idocp/ocp/ocp.hpp"
-// #include "idocp/ocp/parnmpc.hpp"
+#include "idocp/ocp/ocp_solver.hpp"
+// #include "idocp/ocp/parnmpc_solver.hpp"
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
@@ -15,7 +15,7 @@
 
 namespace idocp {
 
-template <typename OCPType>
+template <typename OCPSolverType>
 class OCPBenchmarker {
 public:
   OCPBenchmarker(const std::string& benchmark_name, const Robot& robot, 

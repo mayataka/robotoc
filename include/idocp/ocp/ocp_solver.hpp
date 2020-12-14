@@ -1,5 +1,5 @@
-#ifndef IDOCP_OCP_HPP_
-#define IDOCP_OCP_HPP_ 
+#ifndef IDOCP_OCP_SOLVER_HPP_
+#define IDOCP_OCP_SOLVER_HPP_
 
 #include <vector>
 #include <memory>
@@ -23,10 +23,10 @@
 namespace idocp {
 
 ///
-/// @class OCP
+/// @class OCPSolver
 /// @brief Optimal control problem solver by Riccati recursion. 
 ///
-class OCP {
+class OCPSolver {
 public:
   ///
   /// @brief Construct optimal control problem solver.
@@ -38,39 +38,39 @@ public:
   /// @param[in] num_proc Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-      const std::shared_ptr<Constraints>& constraints, const double T, 
-      const int N, const int max_num_impulse=0, const int num_proc=1);
+  OCPSolver(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+            const std::shared_ptr<Constraints>& constraints, const double T, 
+            const int N, const int max_num_impulse=0, const int num_proc=1);
 
   ///
   /// @brief Default constructor. 
   ///
-  OCP();
+  OCPSolver();
 
   ///
   /// @brief Destructor. 
   ///
-  ~OCP();
+  ~OCPSolver();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  OCP(const OCP&) = default;
+  OCPSolver(const OCPSolver&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  OCP& operator=(const OCP&) = default;
+  OCPSolver& operator=(const OCPSolver&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  OCP(OCP&&) noexcept = default;
+  OCPSolver(OCPSolver&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  OCP& operator=(OCP&&) noexcept = default;
+  OCPSolver& operator=(OCPSolver&&) noexcept = default;
 
   ///
   /// @brief Updates the solution by computing the primal-dual Newon direction.
@@ -178,7 +178,7 @@ private:
   ContactSequence contact_sequence_;
   OCPLinearizer ocp_linearizer_;
   RiccatiSolver riccati_solver_;
-  HybridOCP split_ocps_;
+  OCP ocp_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
   Solution s_;
@@ -192,4 +192,4 @@ private:
 } // namespace idocp 
 
 
-#endif // IDOCP_OCP_HPP_
+#endif // IDOCP_OCP_SOLVER_HPP_ 

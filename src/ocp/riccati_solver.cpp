@@ -49,7 +49,7 @@ RiccatiSolver::~RiccatiSolver() {
 
 
 void RiccatiSolver::computeNewtonDirection(
-    HybridOCP& split_ocps, std::vector<Robot>& robots, 
+    OCP& ocp, std::vector<Robot>& robots, 
     const ContactSequence& contact_sequence, const Eigen::VectorXd& q, 
     const Eigen::VectorXd& v, const Solution& s, Direction& d, 
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
@@ -83,7 +83,7 @@ void RiccatiSolver::computeNewtonDirection(
       riccati_factorizer_, contact_sequence, kkt_matrix, kkt_residual, 
       riccati_factorization_, d);
   direction_calculator_.computeNewtonDirectionFromRiccatiFactorization(
-      split_ocps, robots, contact_sequence, riccati_factorizer_, 
+      ocp, robots, contact_sequence, riccati_factorizer_, 
       riccati_factorization_, s, d);
 }
 

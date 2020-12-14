@@ -61,7 +61,7 @@ void RiccatiDirectionCalculator::computeInitialStateDirection(
 
 
 void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
-    HybridOCP& split_ocps, std::vector<Robot>& robots, 
+    OCP& ocp, std::vector<Robot>& robots, 
     const ContactSequence& contact_sequence, 
     const RiccatiFactorizer& factorizer, 
     const RiccatiFactorization& factorization, const Solution& s, Direction& d) {
@@ -78,30 +78,27 @@ void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
       factorizer[i].computeControlInputDirection(
           next_riccati_factorization(factorization, contact_sequence, i), d[i], 
           exist_state_constraint);
-      split_ocps[i].computeCondensedPrimalDirection(robots[omp_get_thread_num()], 
-                                                    dtau(contact_sequence, i), 
-                                                    s[i], d[i]);
-      max_primal_step_sizes_.coeffRef(i) = split_ocps[i].maxPrimalStepSize();
-      max_dual_step_sizes_.coeffRef(i) = split_ocps[i].maxDualStepSize();
+      ocp[i].computeCondensedPrimalDirection(robots[omp_get_thread_num()], 
+                                             dtau(contact_sequence, i), s[i], d[i]);
+      max_primal_step_sizes_.coeffRef(i) = ocp[i].maxPrimalStepSize();
+      max_dual_step_sizes_.coeffRef(i) = ocp[i].maxDualStepSize();
     }
     else if (i == N_) {
       SplitRiccatiFactorizer::computeCostateDirection(factorization[N_], d[N_], 
                                                       false);
-      max_primal_step_sizes_.coeffRef(N_) = split_ocps.terminal.maxPrimalStepSize();
-      max_dual_step_sizes_.coeffRef(N_) = split_ocps.terminal.maxDualStepSize();
+      max_primal_step_sizes_.coeffRef(N_) = ocp.terminal.maxPrimalStepSize();
+      max_dual_step_sizes_.coeffRef(N_) = ocp.terminal.maxDualStepSize();
     }
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);
       ImpulseSplitRiccatiFactorizer::computeCostateDirection(
           factorization.impulse[impulse_index], d.impulse[impulse_index], 
           exist_state_constraint);
-      split_ocps.impulse[impulse_index].computeCondensedPrimalDirection(
+      ocp.impulse[impulse_index].computeCondensedPrimalDirection(
           robots[omp_get_thread_num()], s.impulse[impulse_index], 
           d.impulse[impulse_index]);
-      max_primal_step_sizes_.coeffRef(i) 
-          = split_ocps.impulse[impulse_index].maxPrimalStepSize();
-      max_dual_step_sizes_.coeffRef(i) 
-          = split_ocps.impulse[impulse_index].maxDualStepSize();
+      max_primal_step_sizes_.coeffRef(i) = ocp.impulse[impulse_index].maxPrimalStepSize();
+      max_dual_step_sizes_.coeffRef(i) = ocp.impulse[impulse_index].maxDualStepSize();
     }
     else if (i < N_ + 1 + 2*N_impulse) {
       const int impulse_index  = i - (N_+1+N_impulse);
@@ -116,13 +113,11 @@ void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
       factorizer.aux[impulse_index].computeControlInputDirection(
           factorization[time_stage_after_impulse], d.aux[impulse_index], 
           exist_state_constraint);
-      split_ocps.aux[impulse_index].computeCondensedPrimalDirection(
+      ocp.aux[impulse_index].computeCondensedPrimalDirection(
           robots[omp_get_thread_num()], dtau_aux, s.aux[impulse_index], 
           d.aux[impulse_index]);
-      max_primal_step_sizes_.coeffRef(i) 
-          = split_ocps.aux[impulse_index].maxPrimalStepSize();
-      max_dual_step_sizes_.coeffRef(i) 
-          = split_ocps.aux[impulse_index].maxDualStepSize();
+      max_primal_step_sizes_.coeffRef(i) = ocp.aux[impulse_index].maxPrimalStepSize();
+      max_dual_step_sizes_.coeffRef(i) = ocp.aux[impulse_index].maxDualStepSize();
     }
     else {
       const int lift_index = i - (N_+1+2*N_impulse);
@@ -137,13 +132,11 @@ void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
       factorizer.lift[lift_index].computeControlInputDirection(
           factorization[time_stage_after_lift], d.lift[lift_index], 
           exist_state_constraint);
-      split_ocps.lift[lift_index].computeCondensedPrimalDirection(
+      ocp.lift[lift_index].computeCondensedPrimalDirection(
           robots[omp_get_thread_num()], dtau_aux, s.lift[lift_index], 
           d.lift[lift_index]);
-      max_primal_step_sizes_.coeffRef(i) 
-          = split_ocps.lift[lift_index].maxPrimalStepSize();
-      max_dual_step_sizes_.coeffRef(i) 
-          = split_ocps.lift[lift_index].maxDualStepSize();
+      max_primal_step_sizes_.coeffRef(i) = ocp.lift[lift_index].maxPrimalStepSize();
+      max_dual_step_sizes_.coeffRef(i) = ocp.lift[lift_index].maxDualStepSize();
     }
   }
 }

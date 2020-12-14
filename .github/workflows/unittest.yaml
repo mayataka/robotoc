@@ -23,11 +23,6 @@ jobs:
           curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add 
           sudo apt update
           sudo apt install -qqy robotpkg-py27-pinocchio
-          export PATH=/opt/openrobots/bin:$PATH
-          export PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH
-          export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH
-          export PYTHONPATH=/opt/openrobots/lib/python2.7/site-packages:$PYTHONPATH
-          export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
       - name: Install lcov
         run: |
           sudo apt-get update -y
@@ -35,6 +30,11 @@ jobs:
           sudo apt-get install -y valgrind
       - name: Build and run test
         run: |
+          export PATH=/opt/openrobots/bin:$PATH
+          export PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH
+          export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH
+          export PYTHONPATH=/opt/openrobots/lib/python2.7/site-packages:$PYTHONPATH
+          export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
           mkdir -p build  && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Debug -DTESTING=True
           cmake --build . --config Debug

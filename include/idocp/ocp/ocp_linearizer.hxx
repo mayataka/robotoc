@@ -121,8 +121,7 @@ struct initConstraints {
 namespace idocp {
 
 template <typename Algorithm>
-inline void OCPLinearizer::runParallel(HybridOCP& split_ocps, 
-                                       std::vector<Robot>& robots,
+inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
                                        const ContactSequence& contact_sequence,
                                        const double t, const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v, 
@@ -143,7 +142,7 @@ inline void OCPLinearizer::runParallel(HybridOCP& split_ocps,
             = contact_sequence.impulseTime(impulse_index) - i * dtau_;
         assert(dtau_impulse > 0);
         assert(dtau_impulse < dtau_);
-        Algorithm::run(split_ocps[i], robots[omp_get_thread_num()], 
+        Algorithm::run(ocp[i], robots[omp_get_thread_num()], 
                        contact_sequence.contactStatus(i), t+i*dtau_, 
                        dtau_impulse, q_prev(contact_sequence, q, s, i), s[i], 
                        s.impulse[impulse_index], kkt_matrix[i], kkt_residual[i]);
@@ -154,28 +153,27 @@ inline void OCPLinearizer::runParallel(HybridOCP& split_ocps,
             = contact_sequence.liftTime(lift_index) - i * dtau_;
         assert(dtau_lift > 0);
         assert(dtau_lift < dtau_);
-        Algorithm::run(split_ocps[i], robots[omp_get_thread_num()], 
+        Algorithm::run(ocp[i], robots[omp_get_thread_num()], 
                        contact_sequence.contactStatus(i), t+i*dtau_, 
                        dtau_lift, q_prev(contact_sequence, q, s, i), s[i], 
                        s.lift[lift_index], kkt_matrix[i], kkt_residual[i]);
       }
       else {
-        Algorithm::run(split_ocps[i], robots[omp_get_thread_num()], 
+        Algorithm::run(ocp[i], robots[omp_get_thread_num()], 
                        contact_sequence.contactStatus(i), t+i*dtau_, 
                        dtau_, q_prev(contact_sequence, q, s, i), s[i], s[i+1], 
                        kkt_matrix[i], kkt_residual[i]);
       }
     }
     else if (i == N_) {
-      Algorithm::run(split_ocps.terminal, robots[omp_get_thread_num()], t+T_, 
+      Algorithm::run(ocp.terminal, robots[omp_get_thread_num()], t+T_, 
                      s[N_], kkt_matrix[N_], kkt_residual[N_]);
     }
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);
       const int time_stage_before_impulse 
           = contact_sequence.timeStageBeforeImpulse(impulse_index);
-      Algorithm::run(split_ocps.impulse[impulse_index],
-                     robots[omp_get_thread_num()], 
+      Algorithm::run(ocp.impulse[impulse_index], robots[omp_get_thread_num()], 
                      contact_sequence.impulseStatus(impulse_index), 
                      t+contact_sequence.impulseTime(impulse_index), 
                      s[time_stage_before_impulse].q, s.impulse[impulse_index], 
@@ -193,8 +191,7 @@ inline void OCPLinearizer::runParallel(HybridOCP& split_ocps,
               - contact_sequence.impulseTime(impulse_index);
       assert(dtau_aux > 0);
       assert(dtau_aux < dtau_);
-      Algorithm::run(split_ocps.aux[impulse_index], 
-                     robots[omp_get_thread_num()], 
+      Algorithm::run(ocp.aux[impulse_index], robots[omp_get_thread_num()], 
                      contact_sequence.contactStatus(time_stage_after_impulse), 
                      t+contact_sequence.impulseTime(impulse_index), dtau_aux,
                      s.impulse[impulse_index].q, s.aux[impulse_index], 
@@ -211,7 +208,7 @@ inline void OCPLinearizer::runParallel(HybridOCP& split_ocps,
               - contact_sequence.liftTime(lift_index);
       assert(dtau_aux > 0);
       assert(dtau_aux < dtau_);
-      Algorithm::run(split_ocps.lift[lift_index], robots[omp_get_thread_num()], 
+      Algorithm::run(ocp.lift[lift_index], robots[omp_get_thread_num()], 
                      contact_sequence.contactStatus(time_stage_after_lift), 
                      t+contact_sequence.liftTime(lift_index), dtau_aux, 
                      s[time_stage_after_lift-1].q, s.lift[lift_index], 

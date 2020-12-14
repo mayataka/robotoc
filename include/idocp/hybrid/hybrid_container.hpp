@@ -150,13 +150,13 @@ struct hybrid_container {
 };
 
 
-struct HybridOCP {
+struct OCP {
   ///
   /// @brief Construct the standard data, impulse data, and lift data. 
   /// @param[in] N number of the standard data.
   /// @param[in] N_impulse number of the impulse data.
   ///
-  HybridOCP(const int N, const int N_impulse) 
+  OCP(const int N, const int N_impulse) 
     : data(N, SplitOCP()), 
       aux(N_impulse, SplitOCP()), 
       lift(N_impulse, SplitOCP()),
@@ -172,9 +172,9 @@ struct HybridOCP {
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   ///
-  HybridOCP(const int N, const int N_impulse, 
-            const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-            const std::shared_ptr<Constraints>& constraints) 
+  OCP(const int N, const int N_impulse, const Robot& robot, 
+      const std::shared_ptr<CostFunction>& cost, 
+      const std::shared_ptr<Constraints>& constraints) 
     : data(N, SplitOCP(robot, cost, constraints)), 
       aux(N_impulse, SplitOCP(robot, cost, constraints)), 
       lift(N_impulse, SplitOCP(robot, cost, constraints)),
@@ -187,7 +187,7 @@ struct HybridOCP {
   /// @brief Construct only the standard data. 
   /// @param[in] N number of the standard data.
   ///
-  HybridOCP(const int N) 
+  OCP(const int N) 
     : data(N, SplitOCP()), 
       aux(),
       lift(),
@@ -202,9 +202,9 @@ struct HybridOCP {
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   ///
-  HybridOCP(const int N, const Robot& robot, 
-            const std::shared_ptr<CostFunction>& cost,
-            const std::shared_ptr<Constraints>& constraints) 
+  OCP(const int N, const Robot& robot, 
+      const std::shared_ptr<CostFunction>& cost,
+      const std::shared_ptr<Constraints>& constraints) 
     : data(N, SplitOCP(robot, cost, constraints)), 
       aux(), 
       lift(),
@@ -215,7 +215,7 @@ struct HybridOCP {
   ///
   /// @brief Default Constructor.
   ///
-  HybridOCP() 
+  OCP() 
     : data(), 
       aux(),
       lift(),
@@ -226,22 +226,22 @@ struct HybridOCP {
   ///
   /// @brief Default copy constructor. 
   ///
-  HybridOCP(const HybridOCP&) = default;
+  OCP(const OCP&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  HybridOCP& operator=(const HybridOCP&) = default;
+  OCP& operator=(const OCP&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  HybridOCP(HybridOCP&&) noexcept = default;
+  OCP(OCP&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  HybridOCP& operator=(HybridOCP&&) noexcept = default;
+  OCP& operator=(OCP&&) noexcept = default;
 
   ///
   /// @brief Overload operator[] to access the standard data, i.e., 

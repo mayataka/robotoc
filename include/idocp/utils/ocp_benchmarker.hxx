@@ -9,8 +9,8 @@
 
 namespace idocp {
 
-template <typename OCPType>
-inline OCPBenchmarker<OCPType>::OCPBenchmarker(
+template <typename OCPSolverType>
+inline OCPBenchmarker<OCPSolverType>::OCPBenchmarker(
     const std::string& benchmark_name, const Robot& robot, 
     const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints, const double T, 
@@ -27,8 +27,8 @@ inline OCPBenchmarker<OCPType>::OCPBenchmarker(
 }
 
 
-template <typename OCPType>
-inline OCPBenchmarker<OCPType>::OCPBenchmarker()
+template <typename OCPSolverType>
+inline OCPBenchmarker<OCPSolverType>::OCPBenchmarker()
   : benchmark_name_(),
     ocp_(),
     dimq_(0),
@@ -41,13 +41,13 @@ inline OCPBenchmarker<OCPType>::OCPBenchmarker()
 }
 
 
-template <typename OCPType>
-inline OCPBenchmarker<OCPType>::~OCPBenchmarker() {
+template <typename OCPSolverType>
+inline OCPBenchmarker<OCPSolverType>::~OCPBenchmarker() {
 }
 
 
 template <>
-inline void OCPBenchmarker<OCP>::setInitialGuessSolution(
+inline void OCPBenchmarker<OCPSolver>::setInitialGuessSolution(
     const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v) {
   ocp_.setStateTrajectory(q, v);
 }
@@ -61,18 +61,16 @@ inline void OCPBenchmarker<OCP>::setInitialGuessSolution(
 // }
 
 
-template <typename OCPType>
-inline OCPType* OCPBenchmarker<OCPType>::getSolverHandle() {
+template <typename OCPSolverType>
+inline OCPSolverType* OCPBenchmarker<OCPSolverType>::getSolverHandle() {
   return &ocp_;
 }
 
 
-template <typename OCPType>
-inline void OCPBenchmarker<OCPType>::testCPUTime(const double t, 
-                                                 const Eigen::VectorXd& q, 
-                                                 const Eigen::VectorXd& v,
-                                                 const int num_iteration,
-                                                 const bool line_search) {
+template <typename OCPSolverType>
+inline void OCPBenchmarker<OCPSolverType>::testCPUTime(
+    const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+    const int num_iteration, const bool line_search) {
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
   for (int i=0; i<num_iteration; ++i) {
@@ -105,12 +103,10 @@ inline void OCPBenchmarker<OCPType>::testCPUTime(const double t,
 }
 
 
-template <typename OCPType>
-inline void OCPBenchmarker<OCPType>::testConvergence(const double t, 
-                                                     const Eigen::VectorXd& q, 
-                                                     const Eigen::VectorXd& v,
-                                                     const int num_iteration,
-                                                     const bool line_search) {
+template <typename OCPSolverType>
+inline void OCPBenchmarker<OCPSolverType>::testConvergence(
+    const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+    const int num_iteration, const bool line_search) {
   std::cout << "---------- OCP benchmark ----------" << std::endl;
   std::cout << "Test convergence of " << benchmark_name_ << std::endl;
   std::cout << "robot.dimq() = " << dimq_ << std::endl;
@@ -138,8 +134,8 @@ inline void OCPBenchmarker<OCPType>::testConvergence(const double t,
 }
 
 
-template <typename OCPType>
-inline void OCPBenchmarker<OCPType>::printSolution() {
+template <typename OCPSolverType>
+inline void OCPBenchmarker<OCPSolverType>::printSolution() {
   ocp_.printSolution();
 }
 

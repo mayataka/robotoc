@@ -227,10 +227,10 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   Eigen::VectorXd q(robot.dimq());
   robot.generateFeasibleConfiguration(q);
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  auto split_ocps = HybridOCP(N, max_num_impulse, robot, cost, constraints);
+  auto ocp = OCP(N, max_num_impulse, robot, cost, constraints);
   std::vector<Robot> robots(nproc, robot);
-  linearizer.initConstraints(split_ocps, robots, contact_sequence, s);
-  linearizer.linearizeOCP(split_ocps, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
+  linearizer.initConstraints(ocp, robots, contact_sequence, s);
+  linearizer.linearizeOCP(ocp, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
   Direction d = Direction(N, max_num_impulse, robot);
   for (int i=0; i<N; ++i) {
     d[i].setContactStatus(contact_sequence.contactStatus(i));
@@ -244,13 +244,13 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   for (int i=0; i<num_lift; ++i) {
     d.lift[i].setContactStatus(contact_sequence.contactStatus(contact_sequence.timeStageBeforeLift(i)+1));
   }
-  auto split_ocps_ref = split_ocps;
+  auto ocp_ref = ocp;
   auto robots_ref = robots;
   auto d_ref = d;
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   RiccatiSolver riccati_solver(robot, T, N, max_num_impulse, nproc);
-  riccati_solver.computeNewtonDirection(split_ocps, robots, contact_sequence, 
+  riccati_solver.computeNewtonDirection(ocp, robots, contact_sequence, 
                                         q, v, s, d, kkt_matrix, kkt_residual);
   RiccatiRecursion riccati_recursion(robot, T, N, max_num_impulse, nproc);
   RiccatiFactorizer riccati_factorizer(N, max_num_impulse, robot);
@@ -288,7 +288,7 @@ void RiccatiSolverTest::test(const Robot& robot) const {
       riccati_factorizer, contact_sequence, kkt_matrix_ref, kkt_residual_ref, 
       riccati_factorization, d_ref);
   direction_calculator.computeNewtonDirectionFromRiccatiFactorization(
-      split_ocps_ref, robots_ref, contact_sequence, riccati_factorizer, 
+      ocp_ref, robots_ref, contact_sequence, riccati_factorizer, 
       riccati_factorization, s, d_ref);
   testIsSame(d, d_ref);
   testIsSame(kkt_matrix, kkt_matrix_ref);

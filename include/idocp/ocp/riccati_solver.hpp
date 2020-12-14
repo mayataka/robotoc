@@ -68,7 +68,7 @@ public:
   ///
   /// @brief Computes the Newton direction using Riccati recursion. Call after
   /// calling OCPLinearizer::linearizeOCP() before calling this function.
-  /// @param[in] split_ocps Split OCPs. 
+  /// @param[in] ocp OCP. 
   /// @param[in] robots Robot models. 
   /// @param[in] contact_sequence Contact sequence. 
   /// @param[in] q Initial configuration vector. 
@@ -78,7 +78,7 @@ public:
   /// @param[in] kkt_matrix KKT matrices. 
   /// @param[in] kkt_residual KKT residuals. 
   /// 
-  void computeNewtonDirection(HybridOCP& split_ocps, std::vector<Robot>& robots, 
+  void computeNewtonDirection(OCP& ocp, std::vector<Robot>& robots, 
                               const ContactSequence& contact_sequence,
                               const Eigen::VectorXd& q, 
                               const Eigen::VectorXd& v, const Solution& s, 

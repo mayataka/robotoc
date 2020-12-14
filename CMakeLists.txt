@@ -109,7 +109,7 @@ add_library(
   src/ocp/riccati_solver.cpp
   # src/line_search/split_temporary_solution.cpp
   # src/line_search/line_search_filter.cpp
-  src/ocp/ocp.cpp
+  src/ocp/ocp_solver.cpp
 
   # src/ocp/split_parnmpc.cpp
   # src/ocp/terminal_parnmpc.cpp

@@ -20,8 +20,8 @@ inline QuadrupedSimulator::QuadrupedSimulator(
 }
 
 
-template<typename OCPTypeDerived>
-inline void QuadrupedSimulator::run(Robot& robot, MPC<OCPTypeDerived>& mpc, 
+template<typename OCPSolverType>
+inline void QuadrupedSimulator::run(Robot& robot, MPC<OCPSolverType>& mpc, 
                                     const double simulation_time_in_sec, 
                                     const double sampling_period_in_sec, 
                                     const double simulation_start_time_in_sec, 
