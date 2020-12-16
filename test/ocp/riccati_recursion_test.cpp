@@ -103,7 +103,7 @@ KKTMatrix RiccatiRecursionTest::createKKTMatrix(const Robot& robot, const Contac
     kkt_matrix[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
     kkt_matrix[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
     kkt_matrix[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
-    if (robot.has_floating_base()) {
+    if (robot.hasFloatingBase()) {
       kkt_matrix[i].Fqq().setIdentity();
       kkt_matrix[i].Fqq().topLeftCorner(6, 6).setRandom();
     }
@@ -116,7 +116,7 @@ KKTMatrix RiccatiRecursionTest::createKKTMatrix(const Robot& robot, const Contac
     kkt_matrix.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
     Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx, dimx);
     kkt_matrix.impulse[i].Qxx() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
-    if (robot.has_floating_base()) {
+    if (robot.hasFloatingBase()) {
       kkt_matrix.impulse[i].Fqq().setIdentity();
       kkt_matrix.impulse[i].Fqq().topLeftCorner(6, 6).setRandom();
     }
@@ -130,7 +130,7 @@ KKTMatrix RiccatiRecursionTest::createKKTMatrix(const Robot& robot, const Contac
     kkt_matrix[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
     kkt_matrix[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
     kkt_matrix[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
-    if (robot.has_floating_base()) {
+    if (robot.hasFloatingBase()) {
       kkt_matrix.aux[i].Fqq().setIdentity();
       kkt_matrix.aux[i].Fqq().topLeftCorner(6, 6).setRandom();
     }
@@ -145,7 +145,7 @@ KKTMatrix RiccatiRecursionTest::createKKTMatrix(const Robot& robot, const Contac
     kkt_matrix[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
     kkt_matrix[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
     kkt_matrix[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
-    if (robot.has_floating_base()) {
+    if (robot.hasFloatingBase()) {
       kkt_matrix.lift[i].Fqq().setIdentity();
       kkt_matrix.lift[i].Fqq().topLeftCorner(6, 6).setRandom();
     }

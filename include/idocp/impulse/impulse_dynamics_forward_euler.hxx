@@ -91,7 +91,7 @@ inline void ImpulseDynamicsForwardEuler::condensing(
     ImpulseDynamicsForwardEulerData& data, ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual) {
   const int dimv = robot.dimv();
-  const int dimf = impulse_status.dimp();
+  const int dimf = impulse_status.dimf();
   data.MJtJinv_dImDCdqv().leftCols(dimv).noalias() 
       = data.MJtJinv() * data.dImDCdq();
   data.MJtJinv_dImDCdqv().topRightCorner(dimv, dimv).noalias() 

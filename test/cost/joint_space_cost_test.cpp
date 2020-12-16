@@ -76,7 +76,7 @@ void JointSpaceCostTest::test(Robot& robot) const {
   cost.set_u_ref(u_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s.q, q_ref, q_diff);
   }
   else {
@@ -96,7 +96,7 @@ void JointSpaceCostTest::test(Robot& robot) const {
   cost.la(robot, data, t, dtau, s, kkt_res);
   cost.lu(robot, data, t, dtau, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
     kkt_res_ref.lq() += dtau * Jq_diff.transpose() * q_weight.asDiagonal() * q_diff;
   }
@@ -109,7 +109,7 @@ void JointSpaceCostTest::test(Robot& robot) const {
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   cost.phiq(robot, data, t, s, kkt_res);
   cost.phiv(robot, data, t, s, kkt_res);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_res_ref.lq() += Jq_diff.transpose() * qf_weight.asDiagonal() * q_diff;
   }
   else {
@@ -121,7 +121,7 @@ void JointSpaceCostTest::test(Robot& robot) const {
   cost.lvv(robot, data, t, dtau, s, kkt_mat);
   cost.laa(robot, data, t, dtau, s, kkt_mat);
   cost.luu(robot, data, t, dtau, s, kkt_mat);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += dtau * Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
   }
   else {
@@ -133,7 +133,7 @@ void JointSpaceCostTest::test(Robot& robot) const {
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   cost.phiqq(robot, data, t, s, kkt_mat);
   cost.phivv(robot, data, t, s, kkt_mat);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += Jq_diff.transpose() * qf_weight.asDiagonal() * Jq_diff;
   }
   else {

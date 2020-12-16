@@ -38,57 +38,71 @@ ImpulseTimeVaryingConfigurationCost::~ImpulseTimeVaryingConfigurationCost() {
 void ImpulseTimeVaryingConfigurationCost::set_ref(const double t0, 
                                                   const Eigen::VectorXd q0, 
                                                   const Eigen::VectorXd v0) {
+  try {
+    if (q0.size() != dimq_) {
+      throw std::invalid_argument(
+          "invalid size: q0.size() must be " + std::to_string(dimq_) + "!");
+    }
+    if (v0.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: v0.size() must be " + std::to_string(dimv_) + "!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
   t0_ = t0;
-  if (q0.size() == dimq_) {
-    q0_ = q0;
-  }
-  else {
-    std::cout << "invalid argment in set_ref(): size of q0 must be " 
-              << dimq_ << std::endl;
-  }
-  if (v0.size() == dimv_) {
-    v0_ = v0;
-  }
-  else {
-    std::cout << "invalid argment in set_ref(): size of v0 must be " 
-              << dimv_ << std::endl;
-  }
+  q0_ = q0;
+  v0_ = v0;
 }
 
 
 void ImpulseTimeVaryingConfigurationCost::set_q_weight(
     const Eigen::VectorXd& q_weight) {
-  if (q_weight.size() == dimv_) {
-    q_weight_ = q_weight;
+  try {
+    if (q_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: q_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_q_weight(): size of q_weight must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  q_weight_ = q_weight;
 }
 
 
 void ImpulseTimeVaryingConfigurationCost::set_v_weight(
     const Eigen::VectorXd& v_weight) {
-  if (v_weight.size() == dimv_) {
-    v_weight_ = v_weight;
+  try {
+    if (v_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: v_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_v_weight(): size of v_weight must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  v_weight_ = v_weight;
 }
 
 
 void ImpulseTimeVaryingConfigurationCost::set_dv_weight(
     const Eigen::VectorXd& dv_weight) {
-  if (dv_weight.size() == dimv_) {
-    dv_weight_ = dv_weight;
+  try {
+    if (dv_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: dv_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_dv_weight(): size of dv_weight must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  dv_weight_ = dv_weight;
 }
 
 
@@ -97,7 +111,7 @@ double ImpulseTimeVaryingConfigurationCost::l(
     const ImpulseSplitSolution& s) const {
   double l = 0;
   robot.integrateConfiguration(q0_, v0_, t-t0_, data.q_ref);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
     l += (q_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
   }
@@ -115,7 +129,7 @@ void ImpulseTimeVaryingConfigurationCost::lq(
     const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   robot.integrateConfiguration(q0_, v0_, t-t0_, data.q_ref);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s.q, data.q_ref, data.qdiff);
     robot.dSubtractdConfigurationPlus(s.q, data.q_ref, data.J_qdiff);
     kkt_residual.lq().noalias()
@@ -149,7 +163,7 @@ void ImpulseTimeVaryingConfigurationCost::lqq(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, 
     ImpulseSplitKKTMatrix& kkt_matrix) const {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.integrateConfiguration(q0_, v0_, t-t0_, data.q_ref);
     robot.dSubtractdConfigurationPlus(s.q, data.q_ref, data.J_qdiff);
     kkt_matrix.Qqq().noalias()

@@ -9,7 +9,7 @@ namespace idocp {
 
 inline ContactDynamics::ContactDynamics(const Robot& robot) 
   : data_(robot),
-    has_floating_base_(robot.has_floating_base()),
+    has_floating_base_(robot.hasFloatingBase()),
     has_active_contacts_(false) {
 }
 
@@ -68,7 +68,7 @@ inline void ContactDynamics::linearizeInverseDynamics(
     const SplitSolution& s, ContactDynamicsData& data) {
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data.ID_full());
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     data.ID_passive().noalias() -= s.u_passive;
     data.ID().noalias() -= s.u;
   }
@@ -123,7 +123,7 @@ inline void ContactDynamics::condensing(const Robot& robot, const double dtau,
       -= data.MJtJinv_dIDCdqv().transpose() * data.Qafu_full();
   kkt_residual.lx().noalias() 
       -= data.MJtJinv_dIDCdqv().transpose() * data.laf();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_matrix.Quu_full().noalias() 
         += data.MJtJinv().topRows(dimv) * data.Qafu_full();
     kkt_residual.lu_passive.noalias() 
@@ -142,7 +142,7 @@ inline void ContactDynamics::condensing(const Robot& robot, const double dtau,
   kkt_matrix.Fvv().noalias() 
       = Eigen::MatrixXd::Identity(dimv, dimv) 
           - dtau * data.MJtJinv_dIDCdqv().topRightCorner(dimv, dimv);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_matrix.Fvu() = dtau * data.MJtJinv().block(0, dim_passive, dimv, dimu);
     kkt_residual.Fv().noalias() 
         -= dtau * data.MJtJinv().topLeftCorner(dimv, dim_passive) 
@@ -178,7 +178,7 @@ inline void ContactDynamics::expansionPrimal(const Robot& robot,
                                              SplitDirection& d) {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     d.du_passive = - data.u_passive;
     d.daf().noalias() = - data.MJtJinv_dIDCdqv() * d.dx();
     d.daf().noalias() 
@@ -204,7 +204,7 @@ inline void ContactDynamics::expansionDual(
   assert(dtau > 0);
   assert(dgmm.size() == robot.dimv());
   const int dimv = robot.dimv();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     d.dnu_passive = kkt_residual.lu_passive;
     d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topLeft() * d.du_passive;
     d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topRight() * d.du();
@@ -214,7 +214,7 @@ inline void ContactDynamics::expansionDual(
     d.dnu_passive.array() *= - (1/dtau);
   }
   data.laf().noalias() += data.Qafqv() * d.dx();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     data.laf().noalias() += data.Qafu_passive() * d.du_passive;
     data.laf().noalias() += data.Qafu() * d.du();
   }

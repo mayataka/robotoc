@@ -32,7 +32,7 @@ TEST_F(FloatingBaseTest, fixedBaseRobot) {
   FloatingBase floating_base(fixed_base_robot);
   EXPECT_EQ(floating_base.dim_passive(), 0);
   EXPECT_TRUE(floating_base.passive_joint_indices().empty());
-  EXPECT_FALSE(floating_base.has_floating_base());
+  EXPECT_FALSE(floating_base.hasFloatingBase());
 }
 
 
@@ -43,7 +43,7 @@ TEST_F(FloatingBaseTest, floatingBaseRobot) {
   for (int i=0; i<floating_base.dim_passive(); ++i) {
     EXPECT_EQ(floating_base.passive_joint_indices()[i], i);
   }
-  EXPECT_TRUE(floating_base.has_floating_base());
+  EXPECT_TRUE(floating_base.hasFloatingBase());
 }
 
 } // namespace idocp

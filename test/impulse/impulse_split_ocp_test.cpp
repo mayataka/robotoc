@@ -81,7 +81,7 @@ std::shared_ptr<ImpulseCostFunction> ImpulseSplitOCPTest::createCost(const Robot
   joint_cost->set_dv_ref(dv_ref);
   auto impulse_force_cost = std::make_shared<idocp::ImpulseForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Constant(0.001));
   }
   impulse_force_cost->set_f_weight(f_weight);

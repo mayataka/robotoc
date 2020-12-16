@@ -55,7 +55,7 @@ SplitKKTMatrix ForwardRiccatiRecursionFactorizerTest::createKKTMatrix(const Robo
   kkt_matrix.Qvu().setRandom();
   seed = Eigen::MatrixXd::Random(dimu, dimu);
   kkt_matrix.Quu() = seed * seed.transpose();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
   }
   kkt_matrix.Fvq().setRandom();
@@ -98,14 +98,14 @@ void ForwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const SplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
-  if (!robot.has_floating_base()) {
+  if (!robot.hasFloatingBase()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
   }
   ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   const SplitKKTResidual kkt_residual = createKKTResidual(robot);
   ForwardRiccatiRecursionFactorizer factorizer(robot);
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     A.topLeftCorner(dimv, dimv) = kkt_matrix.Fqq();
   }
   else {

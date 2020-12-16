@@ -32,15 +32,15 @@ void CollisionCheckerTest::test(Robot& robot) {
   Eigen::VectorXd q(robot.dimq());
   robot.generateFeasibleConfiguration(q);
   const auto is_collision = checker.check(robot, q);
-  std::vector<Eigen::Vector3d> ee(robot.max_point_contacts(), Eigen::Vector3d::Zero());
-  std::vector<bool> is_collision_ref(robot.max_point_contacts());
+  std::vector<Eigen::Vector3d> ee(robot.maxPointContacts(), Eigen::Vector3d::Zero());
+  std::vector<bool> is_collision_ref(robot.maxPointContacts());
   robot.updateFrameKinematics(q);
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     ee[i] = robot.framePosition(robot.contactFramesIndices()[i]);
     if (ee[i].coeff(2) <= 0) is_collision_ref[i] = true;
     else is_collision_ref[i] = false;
   }
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_EQ(is_collision[i], is_collision_ref[i]);
     EXPECT_TRUE(ee[i].isApprox(checker.contactFramePositions()[i]));
   }

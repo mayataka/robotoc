@@ -17,7 +17,7 @@ inline CostFunctionData::CostFunctionData(const Robot& robot)
     J_3d(Eigen::MatrixXd::Zero(3, robot.dimv())),
     J_66(Eigen::MatrixXd::Zero(6, 6)),
     JJ_6d(Eigen::MatrixXd::Zero(6, robot.dimv())) {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     qdiff.resize(robot.dimv());
     qdiff.setZero();
     J_qdiff.resize(robot.dimv(), robot.dimv());

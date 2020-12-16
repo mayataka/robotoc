@@ -6,7 +6,7 @@
 namespace idocp {
 
 inline CollisionChecker::CollisionChecker(const Robot& robot)
-  : contact_points_(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
+  : contact_points_(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
     contact_frames_indices_(robot.contactFramesIndices()) {
 }
 
@@ -24,11 +24,11 @@ inline CollisionChecker::~CollisionChecker() {
 inline std::vector<bool> CollisionChecker::check(Robot& robot, 
                                                  const Eigen::VectorXd& q) {
   robot.updateFrameKinematics(q);
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     contact_points_[i] = robot.framePosition(contact_frames_indices_[i]);
   }
   std::vector<bool> is_impulse;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (contact_points_[i].coeff(2) <= 0) is_impulse.push_back(true);
     else is_impulse.push_back(false);
   }

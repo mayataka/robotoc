@@ -46,7 +46,7 @@ inline ImpulseDynamicsForwardEulerData::~ImpulseDynamicsForwardEulerData() {
 
 inline void ImpulseDynamicsForwardEulerData::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimf_ = impulse_status.dimp();
+  dimf_ = impulse_status.dimf();
   dimvf_ = dimv_ + dimf_;
 }
 

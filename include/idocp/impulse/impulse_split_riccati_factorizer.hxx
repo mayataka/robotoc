@@ -7,7 +7,7 @@ namespace idocp {
 
 inline ImpulseSplitRiccatiFactorizer::ImpulseSplitRiccatiFactorizer(
     const Robot& robot) 
-  : has_floating_base_(robot.has_floating_base()),
+  : has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()),
     backward_recursion_(robot),
     forward_recursion_(robot) {

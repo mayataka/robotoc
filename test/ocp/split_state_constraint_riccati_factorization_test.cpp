@@ -21,7 +21,7 @@ protected:
   virtual void TearDown() {
   }
 
-  void testDim(const Robot& robot) const;
+  void testDimension(const Robot& robot) const;
   void testAssignment(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
@@ -29,7 +29,7 @@ protected:
 };
 
 
-void SplitStateConstraintRiccatiFactorizationTest::testDim(const Robot& robot) const {
+void SplitStateConstraintRiccatiFactorizationTest::testDimension(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   SplitStateConstraintRiccatiFactorization factorization(robot, N, max_num_impulse);
@@ -54,7 +54,7 @@ void SplitStateConstraintRiccatiFactorizationTest::testDim(const Robot& robot) c
   auto impulse_status = robot.createImpulseStatus();
   impulse_status.setRandom();
   factorization.setImpulseStatus(impulse_status);
-  const int dimf = impulse_status.dimp();
+  const int dimf = impulse_status.dimf();
   for (int i=0; i<N; ++i) {
     EXPECT_EQ(factorization.T(i).rows(), dimx);
     EXPECT_EQ(factorization.T(i).cols(), dimf);
@@ -105,7 +105,7 @@ void SplitStateConstraintRiccatiFactorizationTest::testAssignment(const Robot& r
   auto impulse_status = robot.createImpulseStatus();
   impulse_status.setRandom();
   factorization.setImpulseStatus(impulse_status);
-  const int dimf = impulse_status.dimp();
+  const int dimf = impulse_status.dimf();
   std::vector<Eigen::MatrixXd> T;
   for (int i=0; i<N; ++i) {
     T.push_back(Eigen::MatrixXd::Random(dimx, dimf));
@@ -141,7 +141,7 @@ void SplitStateConstraintRiccatiFactorizationTest::testAssignment(const Robot& r
 TEST_F(SplitStateConstraintRiccatiFactorizationTest, fixed_base) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
-  testDim(robot);
+  testDimension(robot);
   testAssignment(robot);
 }
 
@@ -149,7 +149,7 @@ TEST_F(SplitStateConstraintRiccatiFactorizationTest, fixed_base) {
 TEST_F(SplitStateConstraintRiccatiFactorizationTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
-  testDim(robot);
+  testDimension(robot);
   testAssignment(robot);
 }
 

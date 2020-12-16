@@ -29,13 +29,13 @@ protected:
 
 TEST_F(DiscreteEventTest, constructor) {
   DiscreteEvent discrete_event(max_point_contacts);
-  EXPECT_EQ(discrete_event.max_point_contacts(), max_point_contacts);
+  EXPECT_EQ(discrete_event.maxPointContacts(), max_point_contacts);
   EXPECT_FALSE(discrete_event.existDiscreteEvent());
   EXPECT_FALSE(discrete_event.existImpulse());
   EXPECT_FALSE(discrete_event.existLift());
   EXPECT_DOUBLE_EQ(discrete_event.eventTime, 0);
   ContactStatus contact_status(max_point_contacts);
-  EXPECT_EQ(contact_status.num_active_contacts(), 0);
+  EXPECT_EQ(contact_status.dimf(), 0);
   const double event_time = 10;
   discrete_event.eventTime = event_time;
   EXPECT_DOUBLE_EQ(event_time, discrete_event.eventTime);
@@ -49,7 +49,7 @@ TEST_F(DiscreteEventTest, impulse) {
   cs_before.activateContacts({1, 2, 3});
   cs_after.activateContacts({1, 2, 3, 4, 5, 6});
   discrete_event.setDiscreteEvent(cs_before, cs_after);
-  EXPECT_EQ(discrete_event.max_point_contacts(), max_point_contacts);
+  EXPECT_EQ(discrete_event.maxPointContacts(), max_point_contacts);
   EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
   EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
@@ -70,7 +70,7 @@ TEST_F(DiscreteEventTest, lift) {
   cs_before.activateContacts({1, 2, 3, 4, 5, 6});
   cs_after.activateContacts({1, 2, 3});
   discrete_event.setDiscreteEvent(cs_before, cs_after);
-  EXPECT_EQ(discrete_event.max_point_contacts(), max_point_contacts);
+  EXPECT_EQ(discrete_event.maxPointContacts(), max_point_contacts);
   EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
   EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
@@ -91,7 +91,7 @@ TEST_F(DiscreteEventTest, impulseAndLift) {
   cs_before.activateContacts({1, 2, 3, 6, 7});
   cs_after.activateContacts({3, 5, 6, 7, 8, 9});
   discrete_event.setDiscreteEvent(cs_before, cs_after);
-  EXPECT_EQ(discrete_event.max_point_contacts(), max_point_contacts);
+  EXPECT_EQ(discrete_event.maxPointContacts(), max_point_contacts);
   EXPECT_TRUE(discrete_event.preContactStatus() == cs_before);
   EXPECT_TRUE(discrete_event.postContactStatus() == cs_after);
   EXPECT_TRUE(discrete_event.existDiscreteEvent());

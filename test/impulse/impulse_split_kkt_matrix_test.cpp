@@ -37,7 +37,7 @@ void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus
   matrix.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  const int dimf = impulse_status.dimp();
+  const int dimf = impulse_status.dimf();
   EXPECT_EQ(matrix.dimf(), dimf);
   EXPECT_EQ(matrix.dimKKT(), 4*dimv+3*dimf);
   EXPECT_EQ(matrix.Fqf().rows(), dimv);
@@ -148,7 +148,7 @@ void SplitImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseSt
   ImpulseSplitKKTMatrix matrix(robot);
   matrix.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
-  const int dimf = impulse_status.dimp();
+  const int dimf = impulse_status.dimf();
   const Eigen::MatrixXd Fqf = Eigen::MatrixXd::Random(dimv, dimf);
   const Eigen::MatrixXd Fqq = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Fqv = Eigen::MatrixXd::Random(dimv, dimv);
@@ -240,7 +240,7 @@ void SplitImpulseKKTMatrixTest::testInverse(const Robot& robot, const ImpulseSta
   // matrix.setImpulseStatus(impulse_status);
   // const int dimv = robot.dimv();
   // const int dimx = 2*robot.dimv();
-  // const int dimf = impulse_status.dimp();
+  // const int dimf = impulse_status.dimf();
   // const int dimQ = 2*dimv + dimf;
   // const int dimKKT = 4*dimv + 3*dimf;
   // const Eigen::MatrixXd KKT_seed_mat = Eigen::MatrixXd::Random(dimKKT, dimKKT);

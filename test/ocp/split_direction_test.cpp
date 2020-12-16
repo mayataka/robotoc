@@ -134,7 +134,7 @@ void SplitDirectionTest::testSize(const Robot& robot,
     EXPECT_FALSE(d.dmu().isZero());
   }
   EXPECT_FALSE(d.dbetamu().isZero());
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     EXPECT_FALSE(d.du_passive.isZero());
     EXPECT_FALSE(d.dnu_passive.isZero());
   }
@@ -176,7 +176,7 @@ void SplitDirectionTest::testSize(const Robot& robot,
     EXPECT_FALSE(d_random.dmu().isZero());
   }
   EXPECT_FALSE(d_random.dbetamu().isZero());
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     EXPECT_FALSE(d_random.du_passive.isZero());
     EXPECT_FALSE(d_random.dnu_passive.isZero());
   }
@@ -249,7 +249,7 @@ void SplitDirectionTest::testIsApprox(const Robot& robot,
     d_ref.dmu().setRandom();
     EXPECT_TRUE(d.isApprox(d_ref));
   }
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     d_ref.du_passive.setRandom();
     EXPECT_FALSE(d.isApprox(d_ref));
     d_ref.du_passive = d.du_passive;
@@ -272,7 +272,7 @@ TEST_F(SplitDirectionTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
   std::vector<bool> is_contact_active = {false};
-  ContactStatus contact_status = ContactStatus(robot.max_point_contacts());
+  ContactStatus contact_status = ContactStatus(robot.maxPointContacts());
   contact_status.setContactStatus(is_contact_active);
   testSize(robot, contact_status);
   testIsApprox(robot, contact_status);
@@ -286,7 +286,7 @@ TEST_F(SplitDirectionTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
   std::vector<bool> is_contact_active = {false, false, false, false};
-  ContactStatus contact_status = ContactStatus(robot.max_point_contacts());
+  ContactStatus contact_status = ContactStatus(robot.maxPointContacts());
   contact_status.setContactStatus(is_contact_active);
   testSize(robot, contact_status);
   testIsApprox(robot, contact_status);

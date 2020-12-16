@@ -1,6 +1,7 @@
 #include "idocp/cost/joint_space_impulse_cost.hpp"
 
 #include <iostream>
+#include <stdexcept>
 
 
 namespace idocp {
@@ -15,7 +16,7 @@ JointSpaceImpulseCost::JointSpaceImpulseCost(const Robot& robot)
     q_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     v_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     dv_weight_(Eigen::VectorXd::Zero(robot.dimv())) {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.normalizeConfiguration(q_ref_);
   }
 }
@@ -39,68 +40,92 @@ JointSpaceImpulseCost::~JointSpaceImpulseCost() {
 
 
 void JointSpaceImpulseCost::set_q_ref(const Eigen::VectorXd& q_ref) {
-  if (q_ref.size() == dimq_) {
-    q_ref_ = q_ref;
+  try {
+    if (q_ref.size() != dimq_) {
+      throw std::invalid_argument(
+          "invalid size: q_ref.size() must be " + std::to_string(dimq_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_q_ref(): size of q_ref must be " 
-              << dimq_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  q_ref_ = q_ref;
 }
 
 
 void JointSpaceImpulseCost::set_v_ref(const Eigen::VectorXd& v_ref) {
-  if (v_ref.size() == dimv_) {
-    v_ref_ = v_ref;
+  try {
+    if (v_ref.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: v_ref.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_v_ref(): size of v_ref must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  v_ref_ = v_ref;
 }
 
 
 void JointSpaceImpulseCost::set_dv_ref(const Eigen::VectorXd& dv_ref) {
-  if (dv_ref.size() == dimv_) {
-    dv_ref_ = dv_ref;
+  try {
+    if (dv_ref.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: dv_ref.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_v_ref(): size of v_ref must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  dv_ref_ = dv_ref;
 }
 
 
 void JointSpaceImpulseCost::set_q_weight(const Eigen::VectorXd& q_weight) {
-  if (q_weight.size() == dimv_) {
-    q_weight_ = q_weight;
+  try {
+    if (q_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: q_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_q_weight(): size of q_weight must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  q_weight_ = q_weight;
 }
 
 
 void JointSpaceImpulseCost::set_v_weight(const Eigen::VectorXd& v_weight) {
-  if (v_weight.size() == dimv_) {
-    v_weight_ = v_weight;
+  try {
+    if (v_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: v_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_v_weight(): size of v_weight must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  v_weight_ = v_weight;
 }
 
 
 void JointSpaceImpulseCost::set_dv_weight(const Eigen::VectorXd& dv_weight) {
-  if (dv_weight.size() == dimv_) {
-    dv_weight_ = dv_weight;
+  try {
+    if (dv_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: dv_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_v_weight(): size of v_weight must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  dv_weight_ = dv_weight;
 }
 
 
@@ -108,7 +133,7 @@ double JointSpaceImpulseCost::l(Robot& robot, CostFunctionData& data,
                                 const double t, 
                                 const ImpulseSplitSolution& s) const {
   double l = 0;
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
     l += (q_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
   }
@@ -124,7 +149,7 @@ double JointSpaceImpulseCost::l(Robot& robot, CostFunctionData& data,
 void JointSpaceImpulseCost::lq(Robot& robot, CostFunctionData& data, 
                                const double t, const ImpulseSplitSolution& s, 
                                ImpulseSplitKKTResidual& kkt_residual) const {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
     robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
@@ -158,7 +183,7 @@ void JointSpaceImpulseCost::ldv(Robot& robot, CostFunctionData& data,
 void JointSpaceImpulseCost::lqq(Robot& robot, CostFunctionData& data, 
                                 const double t, const ImpulseSplitSolution& s, 
                                 ImpulseSplitKKTMatrix& kkt_matrix) const {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_matrix.Qqq().noalias()
         += data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;

@@ -36,7 +36,7 @@ void SplitImpulseKKTResidualTest::testSize(const Robot& robot,
   kkt_residual.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
-  const int dimf = impulse_status.dimp();
+  const int dimf = impulse_status.dimf();
   EXPECT_EQ(kkt_residual.dimf(), dimf);
   EXPECT_EQ(kkt_residual.dimKKT(), 4*dimv);
   EXPECT_EQ(kkt_residual.KKT_residual.size(), 4*dimv);

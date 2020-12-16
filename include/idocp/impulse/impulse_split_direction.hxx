@@ -14,7 +14,7 @@ inline ImpulseSplitDirection::ImpulseSplitDirection(const Robot& robot)
     dimx_(2*robot.dimv()), 
     dimf_(0), 
     dimKKT_(4*robot.dimv()),
-    has_floating_base_(robot.has_floating_base()) {
+    has_floating_base_(robot.hasFloatingBase()) {
 }
 
 
@@ -37,7 +37,7 @@ inline ImpulseSplitDirection::~ImpulseSplitDirection() {
 
 inline void ImpulseSplitDirection::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimf_ = impulse_status.dimp();
+  dimf_ = impulse_status.dimf();
 }
 
 

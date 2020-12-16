@@ -21,10 +21,10 @@ inline DiscreteEvent::DiscreteEvent(const int max_point_contacts)
 
 inline DiscreteEvent::DiscreteEvent(const Robot& robot)
   : eventTime(0),
-    pre_contact_status_(robot.max_point_contacts()),
-    post_contact_status_(robot.max_point_contacts()),
-    impulse_status_(robot.max_point_contacts()),
-    max_point_contacts_(robot.max_point_contacts()),
+    pre_contact_status_(robot.maxPointContacts()),
+    post_contact_status_(robot.maxPointContacts()),
+    impulse_status_(robot.maxPointContacts()),
+    max_point_contacts_(robot.maxPointContacts()),
     exist_impulse_(false), 
     exist_lift_(false) {
 }
@@ -33,10 +33,10 @@ inline DiscreteEvent::DiscreteEvent(const Robot& robot)
 inline DiscreteEvent::DiscreteEvent(const ContactStatus& pre_contact_status, 
                                     const ContactStatus& post_contact_status)
   : eventTime(0),
-    pre_contact_status_(pre_contact_status.max_point_contacts()),
-    post_contact_status_(pre_contact_status.max_point_contacts()),
-    impulse_status_(pre_contact_status.max_point_contacts()),
-    max_point_contacts_(pre_contact_status.max_point_contacts()),
+    pre_contact_status_(pre_contact_status.maxPointContacts()),
+    post_contact_status_(pre_contact_status.maxPointContacts()),
+    impulse_status_(pre_contact_status.maxPointContacts()),
+    max_point_contacts_(pre_contact_status.maxPointContacts()),
     exist_impulse_(false), 
     exist_lift_(false) {
   setDiscreteEvent(pre_contact_status, post_contact_status);
@@ -90,8 +90,8 @@ inline const ContactStatus& DiscreteEvent::postContactStatus() const {
 inline void DiscreteEvent::setDiscreteEvent(
     const ContactStatus& pre_contact_status, 
     const ContactStatus& post_contact_status) {
-  assert(pre_contact_status.max_point_contacts() == max_point_contacts_);
-  assert(post_contact_status.max_point_contacts() == max_point_contacts_);
+  assert(pre_contact_status.maxPointContacts() == max_point_contacts_);
+  assert(post_contact_status.maxPointContacts() == max_point_contacts_);
   exist_impulse_ = false;
   exist_lift_ = false;
   for (int i=0; i<max_point_contacts_; ++i) {
@@ -133,7 +133,7 @@ inline void DiscreteEvent::disableDiscreteEvent() {
 }
 
 
-inline int DiscreteEvent::max_point_contacts() const {
+inline int DiscreteEvent::maxPointContacts() const {
   return max_point_contacts_;
 }
 

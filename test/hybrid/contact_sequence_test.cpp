@@ -19,9 +19,7 @@ protected:
     srand((unsigned int) time(0));
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
-    N = 20;
-    T = 1;
-    dtau = T / N;
+    max_num_events = 20;
   }
 
   virtual void TearDown() {
@@ -31,15 +29,12 @@ protected:
   static std::vector<DiscreteEvent> createDiscreteEvents(const Robot& robot, const ContactStatus& initial_contact_status, const int num);
   void testConstructor(const Robot& robot) const;
   void testSetContactStatus(const Robot& robot) const;
-  void testSetDiscreteEvent(const Robot& robot) const;
-  void testShiftDiscreteEventBeyondInitial(const Robot& robot) const;
-  void testShiftDiscreteEventBeyondTerminal(const Robot& robot) const;
-  void testShiftDiscreteEventInitial(const Robot& robot) const;
-  void testShiftDiscreteEventTerminal(const Robot& robot) const;
+  void testPushBackDiscreteEvent(const Robot& robot) const;
+  void testPopBackDiscreteEvent(const Robot& robot) const;
+  void testPopFrontDiscreteEvent(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  int N;
-  double T, dtau;
+  int max_num_events;
 };
 
 
@@ -75,44 +70,32 @@ std::vector<DiscreteEvent> ContactSequenceTest::createDiscreteEvents(const Robot
 
 
 void ContactSequenceTest::testConstructor(const Robot& robot) const {
-  ContactSequence contact_sequence(robot, T, N);
+  ContactSequence contact_sequence(robot, max_num_events);
   ContactStatus contact_status = robot.createContactStatus();
   ImpulseStatus impulse_status = robot.createImpulseStatus();
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-  for (int i=0; i<N; ++i) {
-    EXPECT_TRUE(contact_sequence.contactStatus(i) == contact_status);
-    EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
-    EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
-  }
-  EXPECT_TRUE(contact_sequence.contactStatus(N) == contact_status);
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
+  EXPECT_EQ(contact_sequence.numImpulseEvents(), 0);
+  EXPECT_EQ(contact_sequence.numLiftEvents(), 0);
+  EXPECT_TRUE(contact_sequence.contactStatus(0) == contact_status);
+  contact_sequence.popBackDiscreteEvent();
+  contact_sequence.popFrontDiscreteEvent();
 }
 
 
 void ContactSequenceTest::testSetContactStatus(const Robot& robot) const {
-  ContactSequence contact_sequence(robot, T, N);
+  ContactSequence contact_sequence(robot, max_num_events);
   ContactStatus contact_status = robot.createContactStatus();
   ImpulseStatus impulse_status = robot.createImpulseStatus();
   std::random_device rnd;
   contact_status.setRandom();
   contact_sequence.setContactStatusUniformly(contact_status);
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-  for (int i=0; i<N; ++i) {
-    EXPECT_TRUE(contact_sequence.contactStatus(i) == contact_status);
-    EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
-    EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
-  }
-  EXPECT_TRUE(contact_sequence.contactStatus(N) == contact_status);
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
+  EXPECT_TRUE(contact_sequence.contactStatus(0) == contact_status);
+  contact_sequence.popBackDiscreteEvent();
+  contact_sequence.popFrontDiscreteEvent();
 }
 
 
-void ContactSequenceTest::testSetDiscreteEvent(const Robot& robot) const {
-  ContactSequence contact_sequence(robot, T, N);
+void ContactSequenceTest::testPushBackDiscreteEvent(const Robot& robot) const {
+  ContactSequence contact_sequence(robot, max_num_events);
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
   contact_sequence.setContactStatusUniformly(pre_contact_status);
@@ -120,37 +103,34 @@ void ContactSequenceTest::testSetDiscreteEvent(const Robot& robot) const {
   std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
   for (int i=0; i<5; ++i) {
     discrete_events[i].eventTime = event_times[i];
-    contact_sequence.setDiscreteEvent(discrete_events[i]);
   }
-  int num_impulse = 0;
-  int num_lift = 0;
-  for (int i=0; i<5; ++i) {
-    const int stage = std::floor(event_times[i] / dtau);
-    EXPECT_EQ(contact_sequence.numImpulseStages(stage), num_impulse);
-    EXPECT_EQ(contact_sequence.numLiftStages(stage), num_lift);
-    if (discrete_events[i].existImpulse()) {
-      EXPECT_EQ(contact_sequence.numImpulseStages(stage+1), num_impulse+1);
-      EXPECT_EQ(contact_sequence.numLiftStages(stage+1), num_lift);
-      EXPECT_EQ(contact_sequence.timeStageBeforeImpulse(num_impulse), stage);
-      EXPECT_DOUBLE_EQ(contact_sequence.impulseTime(num_impulse), event_times[num_impulse+num_lift]);
-      EXPECT_TRUE(contact_sequence.impulseStatus(num_impulse) == discrete_events[num_impulse+num_lift].impulseStatus());
-      ++num_impulse;
-    } 
-    else {
-      EXPECT_EQ(contact_sequence.numImpulseStages(stage+1), num_impulse);
-      EXPECT_EQ(contact_sequence.numLiftStages(stage+1), num_lift+1);
-      EXPECT_EQ(contact_sequence.timeStageBeforeLift(num_lift), stage);
-      EXPECT_DOUBLE_EQ(contact_sequence.liftTime(num_lift), event_times[num_impulse+num_lift]);
-      ++num_lift;
+  for (int j=0; j<5; ++j) {
+    contact_sequence.pushBackDiscreteEvent(discrete_events[j]);
+    for (int i=0; i<j+1; ++i) {
+      EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[i].preContactStatus());
     }
+    EXPECT_TRUE(contact_sequence.contactStatus(j+1) == discrete_events[j].postContactStatus());
+    int num_impulse = 0;
+    int num_lift = 0;
+    for (int i=0; i<j+1; ++i) {
+      if (discrete_events[i].existImpulse()) {
+        EXPECT_DOUBLE_EQ(contact_sequence.impulseTime(num_impulse), event_times[num_impulse+num_lift]);
+        EXPECT_TRUE(contact_sequence.impulseStatus(num_impulse) == discrete_events[num_impulse+num_lift].impulseStatus());
+        ++num_impulse;
+      } 
+      else {
+        EXPECT_DOUBLE_EQ(contact_sequence.liftTime(num_lift), event_times[num_impulse+num_lift]);
+        ++num_lift;
+      }
+    }
+    EXPECT_EQ(contact_sequence.numImpulseEvents(), num_impulse);
+    EXPECT_EQ(contact_sequence.numLiftEvents(), num_lift);
   }
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), num_impulse);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), num_lift);
 }
 
 
-void ContactSequenceTest::testShiftDiscreteEventBeyondInitial(const Robot& robot) const {
-  ContactSequence contact_sequence(robot, T, N);
+void ContactSequenceTest::testPopBackDiscreteEvent(const Robot& robot) const {
+  ContactSequence contact_sequence(robot, max_num_events);
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
   contact_sequence.setContactStatusUniformly(pre_contact_status);
@@ -158,31 +138,45 @@ void ContactSequenceTest::testShiftDiscreteEventBeyondInitial(const Robot& robot
   std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
   for (int i=0; i<5; ++i) {
     discrete_events[i].eventTime = event_times[i];
-    contact_sequence.setDiscreteEvent(discrete_events[i]);
+    contact_sequence.pushBackDiscreteEvent(discrete_events[i]);
   }
-  if (contact_sequence.totalNumImpulseStages() > 0) {
-    contact_sequence.shiftImpulse(contact_sequence.totalNumImpulseStages()-1, -1);
-    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
+  int num_impulse = contact_sequence.numImpulseEvents();
+  int num_lift = contact_sequence.numLiftEvents();
+  for (int j=0; j<5; ++j) {
+    for (int i=0; i<5-j; ++i) {
+      EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[i].preContactStatus());
+    }
+    EXPECT_TRUE(contact_sequence.contactStatus(5-j) == discrete_events[4-j].postContactStatus());
+    int num_impulse_tmp = 0;
+    int num_lift_tmp = 0;
+    for (int i=0; i<5-j; ++i) {
+      if (discrete_events[i].existImpulse()) {
+        EXPECT_DOUBLE_EQ(contact_sequence.impulseTime(num_impulse_tmp), event_times[num_impulse_tmp+num_lift_tmp]);
+        EXPECT_TRUE(contact_sequence.impulseStatus(num_impulse_tmp) == discrete_events[num_impulse_tmp+num_lift_tmp].impulseStatus());
+        ++num_impulse_tmp;
+      } 
+      else {
+        EXPECT_DOUBLE_EQ(contact_sequence.liftTime(num_lift_tmp), event_times[num_impulse_tmp+num_lift_tmp]);
+        ++num_lift_tmp;
+      }
+    }
+    contact_sequence.popBackDiscreteEvent();
+    if (discrete_events[5-j-1].existImpulse()) {
+      --num_impulse;
+    }
+    else {
+      --num_lift;
+    }
+    EXPECT_EQ(contact_sequence.numImpulseEvents(), num_impulse);
+    EXPECT_EQ(contact_sequence.numLiftEvents(), num_lift);
   }
-  if (contact_sequence.totalNumLiftStages() > 0) {
-    contact_sequence.shiftLift(contact_sequence.totalNumLiftStages()-1, -1);
-    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-  }
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-  for (int i=0; i<N; ++i) {
-    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].postContactStatus());
-    EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
-    EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
-  }
-  EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[4].postContactStatus());
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
+  EXPECT_EQ(contact_sequence.numImpulseEvents(), 0);
+  EXPECT_EQ(contact_sequence.numLiftEvents(), 0);
 }
 
 
-void ContactSequenceTest::testShiftDiscreteEventBeyondTerminal(const Robot& robot) const {
-  ContactSequence contact_sequence(robot, T, N);
+void ContactSequenceTest::testPopFrontDiscreteEvent(const Robot& robot) const {
+  ContactSequence contact_sequence(robot, max_num_events);
   ContactStatus pre_contact_status = robot.createContactStatus();
   pre_contact_status.setRandom();
   contact_sequence.setContactStatusUniformly(pre_contact_status);
@@ -190,90 +184,41 @@ void ContactSequenceTest::testShiftDiscreteEventBeyondTerminal(const Robot& robo
   std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
   for (int i=0; i<5; ++i) {
     discrete_events[i].eventTime = event_times[i];
-    contact_sequence.setDiscreteEvent(discrete_events[i]);
+    contact_sequence.pushBackDiscreteEvent(discrete_events[i]);
   }
-  if (contact_sequence.totalNumImpulseStages() > 0) {
-    contact_sequence.shiftImpulse(0, T+1);
-    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
+  int num_impulse = contact_sequence.numImpulseEvents();
+  int num_lift = contact_sequence.numLiftEvents();
+  for (int j=0; j<5; ++j) {
+    for (int i=0; i<5-j; ++i) {
+      EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[i+j].preContactStatus());
+    }
+    EXPECT_TRUE(contact_sequence.contactStatus(5-j) == discrete_events[4].postContactStatus());
+    int impulse_index = contact_sequence.numImpulseEvents() - 1;
+    int lift_index = contact_sequence.numLiftEvents() - 1;
+    for (int i=4-j; i>=0; --i) {
+      if (discrete_events[i+j].existImpulse()) {
+        EXPECT_DOUBLE_EQ(contact_sequence.impulseTime(impulse_index), event_times[i+j]);
+        EXPECT_TRUE(contact_sequence.impulseStatus(impulse_index) == discrete_events[i+j].impulseStatus());
+        --impulse_index;
+      } 
+      else {
+        EXPECT_DOUBLE_EQ(contact_sequence.liftTime(lift_index), event_times[i+j]);
+        --lift_index;
+      }
+    }
+    contact_sequence.popFrontDiscreteEvent();
+    if (discrete_events[j].existImpulse()) {
+      --num_impulse;
+    }
+    else {
+      --num_lift;
+    }
+    EXPECT_EQ(contact_sequence.numImpulseEvents(), num_impulse);
+    EXPECT_EQ(contact_sequence.numLiftEvents(), num_lift);
   }
-  if (contact_sequence.totalNumLiftStages() > 0) {
-    contact_sequence.shiftLift(0, T+1);
-    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-  }
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-  for (int i=0; i<N; ++i) {
-    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].preContactStatus());
-    EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
-    EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
-  }
-  EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[0].preContactStatus());
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-}
-
-
-void ContactSequenceTest::testShiftDiscreteEventInitial(const Robot& robot) const {
-  ContactSequence contact_sequence(robot, T, N);
-  ContactStatus pre_contact_status = robot.createContactStatus();
-  pre_contact_status.setRandom();
-  contact_sequence.setContactStatusUniformly(pre_contact_status);
-  std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
-  std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
-  for (int i=0; i<5; ++i) {
-    discrete_events[i].eventTime = event_times[i];
-    contact_sequence.setDiscreteEvent(discrete_events[i]);
-  }
-  if (contact_sequence.totalNumImpulseStages() > 0) {
-    contact_sequence.shiftImpulse(contact_sequence.totalNumImpulseStages()-1, 0);
-    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  }
-  if (contact_sequence.totalNumLiftStages() > 0) {
-    contact_sequence.shiftLift(contact_sequence.totalNumLiftStages()-1, 0);
-    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-  }
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-  for (int i=0; i<N; ++i) {
-    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[4].postContactStatus());
-    EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
-    EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
-  }
-  EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[4].postContactStatus());
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-}
-
-
-void ContactSequenceTest::testShiftDiscreteEventTerminal(const Robot& robot) const {
-  ContactSequence contact_sequence(robot, T, N);
-  ContactStatus pre_contact_status = robot.createContactStatus();
-  pre_contact_status.setRandom();
-  contact_sequence.setContactStatusUniformly(pre_contact_status);
-  std::vector<DiscreteEvent> discrete_events = createDiscreteEvents(robot, pre_contact_status, 5);
-  std::vector<double> event_times = {0.1, 0.25, 0.5, 0.7, 0.9};
-  for (int i=0; i<5; ++i) {
-    discrete_events[i].eventTime = event_times[i];
-    contact_sequence.setDiscreteEvent(discrete_events[i]);
-  }
-  if (contact_sequence.totalNumImpulseStages() > 0) {
-    contact_sequence.shiftImpulse(0, T);
-    EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  }
-  if (contact_sequence.totalNumLiftStages() > 0) {
-    contact_sequence.shiftLift(0, T);
-    EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-  }
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
-  for (int i=0; i<N; ++i) {
-    EXPECT_TRUE(contact_sequence.contactStatus(i) == discrete_events[0].preContactStatus());
-    EXPECT_EQ(contact_sequence.numImpulseStages(i), 0);
-    EXPECT_EQ(contact_sequence.numLiftStages(i), 0);
-  }
-  EXPECT_TRUE(contact_sequence.contactStatus(N) == discrete_events[0].preContactStatus());
-  EXPECT_EQ(contact_sequence.totalNumImpulseStages(), 0);
-  EXPECT_EQ(contact_sequence.totalNumLiftStages(), 0);
+  EXPECT_EQ(contact_sequence.numImpulseEvents(), 0);
+  EXPECT_EQ(contact_sequence.numLiftEvents(), 0);
+  EXPECT_TRUE(contact_sequence.contactStatus(0) == discrete_events[4].postContactStatus());
 }
 
 
@@ -282,11 +227,9 @@ TEST_F(ContactSequenceTest, fixedBase) {
   Robot robot(fixed_base_urdf, contact_frames);
   testConstructor(robot);
   testSetContactStatus(robot);
-  testSetDiscreteEvent(robot);
-  testShiftDiscreteEventBeyondInitial(robot);
-  testShiftDiscreteEventBeyondTerminal(robot);
-  testShiftDiscreteEventInitial(robot);
-  testShiftDiscreteEventTerminal(robot);
+  testPushBackDiscreteEvent(robot);
+  testPopBackDiscreteEvent(robot);
+  testPopFrontDiscreteEvent(robot);
 }
 
 
@@ -295,11 +238,9 @@ TEST_F(ContactSequenceTest, floatingBase) {
   Robot robot(floating_base_urdf, contact_frames);
   testConstructor(robot);
   testSetContactStatus(robot);
-  testSetDiscreteEvent(robot);
-  testShiftDiscreteEventBeyondInitial(robot);
-  testShiftDiscreteEventBeyondTerminal(robot);
-  testShiftDiscreteEventInitial(robot);
-  testShiftDiscreteEventTerminal(robot);
+  testPushBackDiscreteEvent(robot);
+  testPopBackDiscreteEvent(robot);
+  testPopFrontDiscreteEvent(robot);
 }
 
 } // namespace idocp

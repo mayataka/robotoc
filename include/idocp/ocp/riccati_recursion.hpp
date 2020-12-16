@@ -5,17 +5,9 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_split_kkt_residual.hpp"
-#include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
-#include "idocp/ocp/split_riccati_factorizer.hpp"
-#include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/hybrid/ocp_discretizer.hpp"
 
 namespace idocp {
 
@@ -28,15 +20,11 @@ public:
   ///
   /// @brief Construct factorizer.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
-  /// Must be non-negative. Default is 0.
   /// @param[in] nproc Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  RiccatiRecursion(const Robot& robot, const double T, const int N, 
-                   const int max_num_impulse, const int nproc);
+  RiccatiRecursion(const Robot& robot, const int N, const int nproc);
 
   ///
   /// @brief Default constructor. 
@@ -75,7 +63,7 @@ public:
   /// @param[out] riccati_factorization Riccati factorization. 
   ///
   void backwardRiccatiRecursionTerminal(
-      const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual,
+      const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
       RiccatiFactorization& riccati_factorization) const;
 
   ///
@@ -83,14 +71,14 @@ public:
   /// RiccatiRecursion::backwardRiccatiRecursionTerminal() before calling this
   /// function.
   /// @param[in, out] riccati_factorizer Riccati factorizer. 
-  /// @param[in] contact_sequence Contact sequence. 
+  /// @param[in] ocp_discretizer OCP discretizer.
   /// @param[in] kkt_matrix KKT matrix. 
   /// @param[in] kkt_residual KKT residual. 
   /// @param[out] riccati_factorization Riccati factorization. 
   ///
   void backwardRiccatiRecursion(
-      RiccatiFactorizer& riccati_factorizer,
-      const ContactSequence& contact_sequence, KKTMatrix& kkt_matrix, 
+      RiccatiFactorizer& riccati_factorizer, 
+      const OCPDiscretizer& ocp_discretizer, KKTMatrix& kkt_matrix, 
       KKTResidual& kkt_residual, RiccatiFactorization& riccati_factorization);
 
   ///
@@ -98,14 +86,14 @@ public:
   /// Call RiccatiRecursion::backwardRiccatiRecursion() before calling this
   /// function.
   /// @param[in, out] riccati_factorizer Riccati factorizer. 
-  /// @param[in] contact_sequence Contact sequence. 
+  /// @param[in] ocp_discretizer OCP discretizer.
   /// @param[in, out] kkt_matrix KKT matrix. 
   /// @param[in, out] kkt_residual KKT residual. 
   /// @param[out] constraint_factorization Pure-state constraint factorization. 
   ///
   void forwardRiccatiRecursionParallel(
-      RiccatiFactorizer& riccati_factorizer,
-      const ContactSequence& contact_sequence, KKTMatrix& kkt_matrix, 
+      RiccatiFactorizer& riccati_factorizer, 
+      const OCPDiscretizer& ocp_discretizer, KKTMatrix& kkt_matrix, 
       KKTResidual& kkt_residual,
       StateConstraintRiccatiFactorization& constraint_factorization);
 
@@ -114,14 +102,14 @@ public:
   /// factorization. Call RiccatiRecursion::forwardRiccatiRecursionParallel() 
   /// before calling this function.
   /// @param[in, out] riccati_factorizer Riccati factorizer. 
-  /// @param[in] contact_sequence Contact sequence. 
+  /// @param[in] ocp_discretizer OCP discretizer.
   /// @param[in] kkt_matrix KKT matrix. 
   /// @param[in] kkt_residual KKT residual. 
   /// @param[in, out] riccati_factorization Riccati factorization. 
   ///
   void forwardStateConstraintFactorization(
-      RiccatiFactorizer& riccati_factorizer,
-      const ContactSequence& contact_sequence, const KKTMatrix& kkt_matrix, 
+      RiccatiFactorizer& riccati_factorizer, 
+      const OCPDiscretizer& ocp_discretizer, const KKTMatrix& kkt_matrix, 
       const KKTResidual& kkt_residual, 
       RiccatiFactorization& riccati_factorization);
 
@@ -131,20 +119,20 @@ public:
   /// RiccatiRecursion::forwardStateConstraintFactorization() before calling 
   /// this function. 
   /// @param[in] riccati_factorizer Riccati factorizer. 
-  /// @param[in] contact_sequence Contact sequence. 
+  /// @param[in] ocp_discretizer OCP discretizer.
   /// @param[in] kkt_matrix KKT matrix. 
   /// @param[in, out] constraint_factorization Pure-state constraint 
   /// factorization. 
   ///
   void backwardStateConstraintFactorization(
-      const RiccatiFactorizer& riccati_factorizer,
-      const ContactSequence& contact_sequence, const KKTMatrix& kkt_matrix, 
+      const RiccatiFactorizer& riccati_factorizer, 
+      const OCPDiscretizer& ocp_discretizer, const KKTMatrix& kkt_matrix, 
       StateConstraintRiccatiFactorization& constraint_factorization) const;
 
   ///
   /// @brief Performs the forward Riccati recursion.
   /// @param[in] riccati_factorizer Riccati factorizer. 
-  /// @param[in] contact_sequence Contact sequence. 
+  /// @param[in] ocp_discretizer OCP discretizer.
   /// @param[in] kkt_matrix KKT matrix. 
   /// @param[in] kkt_residual KKT residual. 
   /// @param[in] riccati_factorization Riccati factorization. 
@@ -153,13 +141,12 @@ public:
   ///
   void forwardRiccatiRecursion(
       const RiccatiFactorizer& riccati_factorizer,
-      const ContactSequence& contact_sequence, 
-      const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+      const OCPDiscretizer& ocp_discretizer, const KKTMatrix& kkt_matrix, 
+      const KKTResidual& kkt_residual, 
       const RiccatiFactorization& riccati_factorization, Direction& d);
 
 private:
-  int N_, max_num_impulse_, nproc_, dimv_;
-  double dtau_;
+  int N_, nproc_, dimv_;
 
 };
 

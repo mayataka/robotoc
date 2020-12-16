@@ -64,7 +64,7 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithoutContact) {
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Zero(robot.dimv());
   std::vector<Eigen::Vector3d> f_weight, f_ref;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Constant(0.01));
     f_ref.push_back(Eigen::Vector3d::Zero());
   }
@@ -133,7 +133,7 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithContact) {
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Zero(robot.dimv());
   std::vector<Eigen::Vector3d> f_weight, f_ref;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Constant(0.01));
     f_ref.push_back(Eigen::Vector3d::Zero());
   }
@@ -211,7 +211,7 @@ TEST_F(ParNMPCTest, floating_base) {
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Constant(robot.dimv(), 0.1);
   std::vector<Eigen::Vector3d> f_weight, f_ref;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Constant(0.01));
     f_ref.push_back(Eigen::Vector3d::Zero());
   }

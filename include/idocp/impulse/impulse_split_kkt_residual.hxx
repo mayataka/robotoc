@@ -37,7 +37,7 @@ inline ImpulseSplitKKTResidual::~ImpulseSplitKKTResidual() {
 
 inline void ImpulseSplitKKTResidual::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimf_ = impulse_status.dimp();
+  dimf_ = impulse_status.dimf();
 }
 
 

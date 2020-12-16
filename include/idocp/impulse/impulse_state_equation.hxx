@@ -14,7 +14,7 @@ inline void LinearizeImpulseForwardEuler(
     const ImpulseSplitSolution& s, const SplitSolution& s_next, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
   ComputeImpulseForwardEulerResidual(robot, s, s_next.q, s_next.v, kkt_residual);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq());
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
     kkt_residual.lq().noalias() += kkt_matrix.Fqq().transpose() * s_next.lmd 
@@ -37,7 +37,7 @@ inline void LinearizeImpulseBackwardEuler(
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   ComputeImpulseBackwardEulerResidual(robot, q_prev, v_prev, s, kkt_residual);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq());
     robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq_prev);
     kkt_residual.lq().noalias() 
@@ -61,7 +61,7 @@ inline void LinearizeImpulseBackwardEulerTerminal(
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   ComputeImpulseBackwardEulerResidual(robot, q_prev, v_prev, s, kkt_residual);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq());
     kkt_residual.lq().noalias() 
         += kkt_matrix.Fqq().transpose() * s.lmd;

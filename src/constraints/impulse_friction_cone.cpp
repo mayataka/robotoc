@@ -10,7 +10,7 @@ ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot,
                                          const double barrier,
                                          const double fraction_to_boundary_rate)
   : ImpulseConstraintComponentBase(barrier, fraction_to_boundary_rate),
-    dimc_(robot.max_point_contacts()) {
+    dimc_(robot.maxPointContacts()) {
 }
 
 
@@ -32,7 +32,7 @@ KinematicsLevel ImpulseFrictionCone::kinematicsLevel() const {
 bool ImpulseFrictionCone::isFeasible(
     Robot& robot, ConstraintComponentData& data, 
     const ImpulseSplitSolution& s) const {
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       if (frictionConeResidual(mu, s.f[i]) > 0) {
@@ -47,7 +47,7 @@ bool ImpulseFrictionCone::isFeasible(
 void ImpulseFrictionCone::setSlackAndDual(
     Robot& robot, ConstraintComponentData& data, 
     const ImpulseSplitSolution& s) const {
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     const double mu = robot.frictionCoefficient(i);
     data.slack.coeffRef(i) = - frictionConeResidual(mu, s.f[i]);
   }
@@ -59,7 +59,7 @@ void ImpulseFrictionCone::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       const double gx = 2 * s.f[i].coeff(0);
@@ -79,7 +79,7 @@ void ImpulseFrictionCone::condenseSlackAndDual(
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       const double gx = 2 * s.f[i].coeff(0);
@@ -115,7 +115,7 @@ void ImpulseFrictionCone::computeSlackAndDualDirection(
     Robot& robot, ConstraintComponentData& data, 
     const ImpulseSplitSolution& s, const ImpulseSplitDirection& d) const {
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       const double gx = 2 * s.f[i].coeff(0);
@@ -145,7 +145,7 @@ void ImpulseFrictionCone::computeSlackAndDualDirection(
 void ImpulseFrictionCone::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, 
     const ImpulseSplitSolution& s) const {
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       data.residual.coeffRef(i) = frictionConeResidual(mu, s.f[i]) 

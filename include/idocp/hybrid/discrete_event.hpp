@@ -125,7 +125,7 @@ public:
   /// @brief Return the maximum number of the contacts.
   /// @return The maximum number of the contacts. 
   ///
-  int max_point_contacts() const;
+  int maxPointContacts() const;
 
   ///
   /// @brief Event time.

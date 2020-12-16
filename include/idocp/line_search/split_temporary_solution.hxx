@@ -37,7 +37,7 @@ inline void SplitTemporarySolution::setTemporarySolution(
     s_tmp_.f_stack() = s.f_stack() + step_size * d.df();
   }
   s_tmp_.u = s.u + step_size * d.du();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     s_tmp_.u_passive = s.u_passive + step_size * d.du_passive;
   }
   robot.integrateConfiguration(s_next.q, d_next.dq(), step_size, q_next_tmp_);

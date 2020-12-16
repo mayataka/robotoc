@@ -1,16 +1,17 @@
 #include "idocp/cost/impulse_force_cost.hpp"
 
 #include <iostream>
+#include <stdexcept>
 
 
 namespace idocp {
 
 ImpulseForceCost::ImpulseForceCost(const Robot& robot)
   : ImpulseCostFunctionComponentBase(),
-    max_point_contacts_(robot.max_point_contacts()),
+    max_point_contacts_(robot.maxPointContacts()),
     max_dimf_(robot.max_dimf()),
-    f_ref_(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
-    f_weight_(robot.max_point_contacts(), Eigen::Vector3d::Zero()) {
+    f_ref_(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
+    f_weight_(robot.maxPointContacts(), Eigen::Vector3d::Zero()) {
 }
 
 
@@ -29,25 +30,35 @@ ImpulseForceCost::~ImpulseForceCost() {
 
 
 void ImpulseForceCost::set_f_ref(const std::vector<Eigen::Vector3d>& f_ref) {
-  if (f_ref.size() == max_point_contacts_) {
-    f_ref_ = f_ref;
+  try {
+    if (f_ref.size() != max_point_contacts_) {
+      throw std::invalid_argument(
+          "invalid size: f_ref.size() must be " 
+          + std::to_string(max_point_contacts_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_f_ref(): size of f_ref must be " 
-              << max_point_contacts_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  f_ref_ = f_ref;
 }
 
 
 void ImpulseForceCost::set_f_weight(
     const std::vector<Eigen::Vector3d>& f_weight) {
-  if (f_weight.size() == max_point_contacts_) {
-    f_weight_ = f_weight;
+  try {
+    if (f_weight.size() != max_point_contacts_) {
+      throw std::invalid_argument(
+          "invalid size: f_weight.size() must be " 
+          + std::to_string(max_point_contacts_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_f_weight(): size of f_ref must be " 
-              << max_point_contacts_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  f_weight_ = f_weight;
 }
 
 

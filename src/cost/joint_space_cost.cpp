@@ -1,6 +1,7 @@
 #include "idocp/cost/joint_space_cost.hpp"
 
 #include <iostream>
+#include <stdexcept>
 
 
 namespace idocp {
@@ -21,7 +22,7 @@ JointSpaceCost::JointSpaceCost(const Robot& robot)
     qf_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     vf_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     u_passive_weight_(Vector6d::Zero()) {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.normalizeConfiguration(q_ref_);
   }
 }
@@ -56,90 +57,122 @@ bool JointSpaceCost::useKinematics() const {
 
 
 void JointSpaceCost::set_q_ref(const Eigen::VectorXd& q_ref) {
-  if (q_ref.size() == dimq_) {
-    q_ref_ = q_ref;
+  try {
+    if (q_ref.size() != dimq_) {
+      throw std::invalid_argument(
+          "invalid size: q_ref.size() must be " + std::to_string(dimq_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_q_ref(): size of q_ref must be " 
-              << dimq_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  q_ref_ = q_ref;
 }
 
 
 void JointSpaceCost::set_v_ref(const Eigen::VectorXd& v_ref) {
-  if (v_ref.size() == dimv_) {
-    v_ref_ = v_ref;
+  try {
+    if (v_ref.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: v_ref.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_v_ref(): size of v_ref must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  v_ref_ = v_ref;
 }
 
 
 void JointSpaceCost::set_a_ref(const Eigen::VectorXd& a_ref) {
-  if (a_ref.size() == dimv_) {
-    a_ref_ = a_ref;
+  try {
+    if (a_ref.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: a_ref.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_a_ref(): size of a_ref must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  a_ref_ = a_ref;
 }
 
 
 void JointSpaceCost::set_u_ref(const Eigen::VectorXd& u_ref) {
-  if (u_ref.size() == dimu_) {
-    u_ref_ = u_ref;
+  try {
+    if (u_ref.size() != dimu_) {
+      throw std::invalid_argument(
+          "invalid size: u_ref.size() must be " + std::to_string(dimu_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_u_ref(): size of u_ref must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  u_ref_ = u_ref;
 }
 
 
 void JointSpaceCost::set_q_weight(const Eigen::VectorXd& q_weight) {
-  if (q_weight.size() == dimv_) {
-    q_weight_ = q_weight;
+  try {
+    if (q_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: q_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_q_weight(): size of q_weight must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  q_weight_ = q_weight;
 }
 
 
 void JointSpaceCost::set_v_weight(const Eigen::VectorXd& v_weight) {
-  if (v_weight.size() == dimv_) {
-    v_weight_ = v_weight;
+  try {
+    if (v_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: v_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_v_weight(): size of v_weight must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  v_weight_ = v_weight;
 }
 
 
 void JointSpaceCost::set_a_weight(const Eigen::VectorXd& a_weight) {
-  if (a_weight.size() == dimv_) {
-    a_weight_ = a_weight;
+  try {
+    if (a_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: a_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_a_weight(): size of a_weight must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  a_weight_ = a_weight;
 }
 
 
 void JointSpaceCost::set_u_weight(const Eigen::VectorXd& u_weight) {
-  if (u_weight.size() == dimu_) {
-    u_weight_ = u_weight;
+  try {
+    if (u_weight.size() != dimu_) {
+      throw std::invalid_argument(
+          "invalid size: u_weight.size() must be " + std::to_string(dimu_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_u_weight(): size of u_weight must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  u_weight_ = u_weight;
 }
 
 
@@ -149,31 +182,39 @@ void JointSpaceCost::set_u_passive_weight(const Vector6d& u_passive_weight) {
 
 
 void JointSpaceCost::set_qf_weight(const Eigen::VectorXd& qf_weight) {
-  if (qf_weight.size() == dimv_) {
-    qf_weight_ = qf_weight;
+  try {
+    if (qf_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: qf_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_qf_weight(): size of qf_weight must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  qf_weight_ = qf_weight;
 }
 
 
 void JointSpaceCost::set_vf_weight(const Eigen::VectorXd& vf_weight) {
-  if (vf_weight.size() == dimv_) {
-    vf_weight_ = vf_weight;
+  try {
+    if (vf_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: vf_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
   }
-  else {
-    std::cout << "invalid argment in set_vf_weight(): size of vf_weight must be " 
-              << dimv_ << std::endl;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
+  vf_weight_ = vf_weight;
 }
 
 
 double JointSpaceCost::l(Robot& robot, CostFunctionData& data, const double t, 
                          const double dtau, const SplitSolution& s) const {
   double l = 0;
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
     l += (q_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
   }
@@ -183,7 +224,7 @@ double JointSpaceCost::l(Robot& robot, CostFunctionData& data, const double t,
   l += (v_weight_.array()*(s.v-v_ref_).array()*(s.v-v_ref_).array()).sum();
   l += (a_weight_.array()*(s.a-a_ref_).array()*(s.a-a_ref_).array()).sum();
   l += (u_weight_.array()*(s.u-u_ref_).array()*(s.u-u_ref_).array()).sum();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     l += (u_passive_weight_.array()*s.u_passive.array()*s.u_passive.array()).sum();
   }
   return 0.5 * dtau * l;
@@ -193,7 +234,7 @@ double JointSpaceCost::l(Robot& robot, CostFunctionData& data, const double t,
 double JointSpaceCost::phi(Robot& robot, CostFunctionData& data, 
                            const double t, const SplitSolution& s) const {
 double phi = 0;
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
     phi += (qf_weight_.array()*(data.qdiff).array()*(data.qdiff).array()).sum();
   }
@@ -208,7 +249,7 @@ double phi = 0;
 void JointSpaceCost::lq(Robot& robot, CostFunctionData& data, const double t, 
                         const double dtau, const SplitSolution& s, 
                         SplitKKTResidual& kkt_residual) const {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
     robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
@@ -240,7 +281,7 @@ void JointSpaceCost::la(Robot& robot, CostFunctionData& data, const double t,
 void JointSpaceCost::lu(Robot& robot, CostFunctionData& data, const double t, 
                         const double dtau, const SplitSolution& s, 
                         SplitKKTResidual& kkt_residual) const {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_residual.lu_passive.array()
       += dtau * u_passive_weight_.array() * s.u_passive.array();
   }
@@ -252,7 +293,7 @@ void JointSpaceCost::lu(Robot& robot, CostFunctionData& data, const double t,
 void JointSpaceCost::lqq(Robot& robot, CostFunctionData& data, const double t, 
                          const double dtau, const SplitSolution& s, 
                          SplitKKTMatrix& kkt_matrix) const {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_matrix.Qqq().noalias()
         += dtau * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
@@ -280,7 +321,7 @@ void JointSpaceCost::laa(Robot& robot, CostFunctionData& data, const double t,
 void JointSpaceCost::luu(Robot& robot, CostFunctionData& data, const double t, 
                          const double dtau, const SplitSolution& s, 
                          SplitKKTMatrix& kkt_matrix) const {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_matrix.Quu_passive_topLeft().diagonal().noalias()
         += dtau * u_passive_weight_;
   }
@@ -291,7 +332,7 @@ void JointSpaceCost::luu(Robot& robot, CostFunctionData& data, const double t,
 void JointSpaceCost::phiq(Robot& robot, CostFunctionData& data, const double t, 
                           const SplitSolution& s,
                           SplitKKTResidual& kkt_residual) const {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
     robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
@@ -315,7 +356,7 @@ void JointSpaceCost::phiv(Robot& robot, CostFunctionData& data, const double t,
 void JointSpaceCost::phiqq(Robot& robot, CostFunctionData& data, const double t, 
                            const SplitSolution& s, 
                            SplitKKTMatrix& kkt_matrix) const {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_matrix.Qqq().noalias()
         += data.J_qdiff.transpose() * qf_weight_.asDiagonal() * data.J_qdiff;

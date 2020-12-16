@@ -66,7 +66,7 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
   SplitSolution s_new_coarse_ref(robot);
   s_new_coarse_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_coarse_ref.gmm = s.gmm - d_ref.dgmm();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.integrateConfiguration(s.q, d_ref.dq(), -1, s_new_coarse_ref.q);
   }
   else {
@@ -97,7 +97,7 @@ void BackwardCorrectionTest::testBackwardCorrection(const Robot& robot) const {
   kkt_matrix.Quu().setRandom();
   kkt_matrix.Fxx().setRandom();
   kkt_matrix.Fqq().setIdentity();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().topLeftCorner(6, 6).setRandom();
   }
   kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
@@ -145,7 +145,7 @@ void BackwardCorrectionTest::testForwardCorrection(const Robot& robot) const {
   kkt_matrix.Quu().setRandom();
   kkt_matrix.Fxx().setRandom();
   kkt_matrix.Fqq().setIdentity();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().topLeftCorner(6, 6).setRandom();
   }
   kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(dimv, dimv);

@@ -68,7 +68,7 @@ std::shared_ptr<Constraints> ConstraintsTest::createConstraints(Robot& robot) co
   auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
   Eigen::VectorXd amin, amax;
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     amin = amin_floating;
     amax = amax_floating;
   }

@@ -70,7 +70,7 @@ public:
   /// @brief Returns true if the robot has a floating base and false if not.
   /// @returns true if the robot has a floating base and false if not.
   /// 
-  bool has_floating_base() const;
+  bool hasFloatingBase() const;
 
 private:
   bool has_floating_base_;

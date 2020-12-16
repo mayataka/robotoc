@@ -34,7 +34,7 @@ void ImpulseSplitDirectionTest::testSize(const Robot& robot,
                                          const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
-  const int dimf = impulse_status.dimp();
+  const int dimf = impulse_status.dimf();
   ImpulseSplitDirection d(robot);
   EXPECT_EQ(d.dlmd().size(), dimv);
   EXPECT_EQ(d.dgmm().size(), dimv);
@@ -173,7 +173,7 @@ void ImpulseSplitDirectionTest::testIsApprox(const Robot& robot,
                                              const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
-  const int dimf = impulse_status.dimp();
+  const int dimf = impulse_status.dimf();
   ImpulseSplitDirection d(robot);
   d.setRandom(impulse_status);
   EXPECT_FALSE(d.split_direction.isZero());
@@ -251,7 +251,7 @@ TEST_F(ImpulseSplitDirectionTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
   std::vector<bool> is_contact_active = {false};
-  ImpulseStatus impulse_status = ImpulseStatus(robot.max_point_contacts());
+  ImpulseStatus impulse_status = ImpulseStatus(robot.maxPointContacts());
   impulse_status.setImpulseStatus(is_contact_active);
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
@@ -265,7 +265,7 @@ TEST_F(ImpulseSplitDirectionTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
   std::vector<bool> is_contact_active = {false, false, false, false};
-  ImpulseStatus impulse_status = ImpulseStatus(robot.max_point_contacts());
+  ImpulseStatus impulse_status = ImpulseStatus(robot.maxPointContacts());
   impulse_status.setImpulseStatus(is_contact_active);
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);

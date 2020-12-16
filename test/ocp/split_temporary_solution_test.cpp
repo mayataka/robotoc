@@ -49,7 +49,7 @@ void SplitTemporarySolutionTest::test(
   s_tmp_ref.a = s.a + step_size * d.da();
   s_tmp_ref.f_stack() = s.f_stack() + step_size * d.df();
   s_tmp_ref.u = s.u + step_size * d.du();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     s_tmp_ref.u_passive = s.u_passive + step_size * d.du_passive;
   }
   Eigen::VectorXd q_next_ref = s_next.q;

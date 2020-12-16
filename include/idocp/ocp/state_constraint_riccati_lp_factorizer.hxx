@@ -26,11 +26,11 @@ inline StateConstraintRiccatiLPFactorizer::~StateConstraintRiccatiLPFactorizer()
 
 template <typename VectorType>
 inline void StateConstraintRiccatiLPFactorizer::factorizeLinearProblem(
-    const ContactSequence& constact_sequence,
+    const OCPDiscretizer& ocp_discretizer,
     const SplitRiccatiFactorization& impulse_riccati_factorization,
     StateConstraintRiccatiFactorization& constraint_factorization,
     const Eigen::MatrixBase<VectorType>& dx0, const int constraint_index) {
-  const int num_impulse = constact_sequence.totalNumImpulseStages();
+  const int num_impulse = ocp_discretizer.numImpulseStages();
   constraint_factorization.EN(constraint_index).noalias() 
       = constraint_factorization.Eq(constraint_index) 
           * impulse_riccati_factorization.N.topRows(dimv_);

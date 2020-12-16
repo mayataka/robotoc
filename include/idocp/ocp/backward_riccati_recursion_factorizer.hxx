@@ -9,7 +9,7 @@ namespace idocp {
 
 inline BackwardRiccatiRecursionFactorizer::BackwardRiccatiRecursionFactorizer(
     const Robot& robot) 
-  : has_floating_base_(robot.has_floating_base()),
+  : has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()),
     dimu_(robot.dimu()),
     AtPqq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),

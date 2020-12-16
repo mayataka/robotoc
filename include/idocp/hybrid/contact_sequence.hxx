@@ -1,31 +1,24 @@
-#ifndef IDOCP_CONTACT_SEQUENCE_HXX
-#define IDOCP_CONTACT_SEQUENCE_HXX_
+#ifndef IDOCP_CONTACT_SEQUENCE_HXX_
+#define IDOCP_CONTACT_SEQUENCE_HXX_ 
 
 #include "idocp/hybrid/contact_sequence.hpp"
 
 #include <stdexcept>
 #include <cassert>
-#include <cmath>
+#include <algorithm>
 
 namespace idocp {
 
-inline ContactSequence::ContactSequence(const Robot& robot, const double T, 
-                                        const int N)
-  : N_(N),
-    T_(T),
-    dtau_(T/N),
-    contact_sequence_(robot, N),
-    num_impulse_stages_(N+1, 0), 
-    num_lift_stages_(N+1, 0),
-    impulse_stage_(N, -1),
-    lift_stage_(N, -1),
-    impulse_index_(N, -1),
-    lift_index_(N, -1) {
+inline ContactSequence::ContactSequence(const Robot& robot, 
+                                        const int max_num_events)
+  : max_num_events_(max_num_events),
+    num_impulse_events_(0), 
+    num_lift_events_(0),
+    contact_status_sequence_(max_num_events+1, robot.createContactStatus()),
+    impulse_event_sequence_(max_num_events, DiscreteEvent(robot)),
+    lift_event_sequence_(max_num_events, DiscreteEvent(robot)) {
   try {
-    if (T <= 0) {
-      throw std::out_of_range("invalid value: T must be positive!");
-    }
-    if (N <= 0) {
+    if (max_num_events <= 0) {
       throw std::out_of_range("invalid value: N must be positive!");
     }
   }
@@ -37,15 +30,12 @@ inline ContactSequence::ContactSequence(const Robot& robot, const double T,
 
 
 inline ContactSequence::ContactSequence()
-  : N_(0),
-    T_(0),
-    contact_sequence_(),
-    num_impulse_stages_(), 
-    num_lift_stages_(),
-    impulse_stage_(), 
-    lift_stage_(),
-    impulse_index_(),
-    lift_index_() {
+  : max_num_events_(0),
+    num_impulse_events_(0), 
+    num_lift_events_(0),
+    contact_status_sequence_(),
+    impulse_event_sequence_(),
+    lift_event_sequence_() {
 }
 
 
@@ -55,305 +45,312 @@ inline ContactSequence::~ContactSequence() {
 
 inline void ContactSequence::setContactStatusUniformly(
     const ContactStatus& contact_status) {
-  contact_sequence_.setContactStatusUniformly(contact_status);
-  countAll();
+  for (auto& e : contact_status_sequence_) {
+    e.set(contact_status);
+  }
+  for (auto& e : impulse_event_sequence_) {
+    e.disableDiscreteEvent();
+  }
+  for (auto& e : lift_event_sequence_) {
+    e.disableDiscreteEvent();
+  }
+  num_impulse_events_ = 0;
+  num_lift_events_ = 0;
 }
 
 
-inline void ContactSequence::setDiscreteEvent(
+inline void ContactSequence::pushBackDiscreteEvent(
     const DiscreteEvent& discrete_event) {
-  assert(discrete_event.eventTime > 0);
-  assert(discrete_event.eventTime < T_);
-  assert(discrete_event.existDiscreteEvent());
-  const int event_time_stage 
-      = eventTimeStageFromContinuousEventTime(discrete_event.eventTime);
-  contact_sequence_.setDiscreteEvent(discrete_event, event_time_stage);
-  contact_sequence_.setEventTime(event_time_stage, discrete_event.eventTime);
-  countAll();
+  try {
+    if (!discrete_event.existDiscreteEvent()) {
+      throw std::runtime_error(
+          "discrete_event.existDiscreteEvent() must be true!");
+    }
+    const int num_discrete_events = numImpulseEvents() + numLiftEvents();
+    if (discrete_event.preContactStatus() 
+          != contactStatus(num_discrete_events)) {
+      throw std::runtime_error(
+          "discrete_event.preContactStatus() is not consistent with this!");
+    }
+    if (num_discrete_events >= max_num_events_) {
+      throw std::runtime_error(
+          "Number of discrete events exceeds predefined max_num_events!");
+    }
+    if (numImpulseEvents() > 0 && numLiftEvents() > 0) {
+      const double max_event_time = std::max(impulseTime(numImpulseEvents()-1),
+                                             liftTime(numLiftEvents()-1));
+      if (discrete_event.eventTime <= max_event_time) {
+        throw std::runtime_error(
+            "discrete_event.eventTime must be larger than max event time!");
+      }
+    }
+    else if (numImpulseEvents() > 0 && numLiftEvents() == 0) {
+      if (discrete_event.eventTime <= impulseTime(numImpulseEvents()-1)) {
+        throw std::runtime_error(
+            "discrete_event.eventTime must be larger than max event time!");
+      }
+    }
+    else if (numImpulseEvents() == 0 && numLiftEvents() > 0) {
+      if (discrete_event.eventTime <= liftTime(numLiftEvents()-1)) {
+        throw std::runtime_error(
+            "discrete_event.eventTime must be larger than max event time!");
+      }
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  if (discrete_event.existImpulse()) {
+    impulse_event_sequence_[num_impulse_events_] = discrete_event;
+    ++num_impulse_events_;
+  }
+  else if (discrete_event.existLift()) {
+    lift_event_sequence_[num_lift_events_] = discrete_event;
+    ++num_lift_events_;
+  }
+  const int num_discrete_events = num_impulse_events_ + num_lift_events_;
+  contact_status_sequence_[num_discrete_events].set(
+      discrete_event.postContactStatus());
 }
 
 
-inline void ContactSequence::shiftImpulse(const int impulse_index, 
-                                          const double impulse_time) {
-  assert(impulse_index >= 0);
-  assert(impulse_index < totalNumImpulseStages());
-  const int shifted_impulse_time_stage 
-      = eventTimeStageFromContinuousEventTime(impulse_time);
-  contact_sequence_.shiftDiscreteEvent(timeStageBeforeImpulse(impulse_index), 
-                                       shifted_impulse_time_stage);
-  if (shifted_impulse_time_stage >= 0 && shifted_impulse_time_stage < N_) {
-    assert(impulse_time > 0);
-    assert(impulse_time < T_);
-    contact_sequence_.setEventTime(shifted_impulse_time_stage, impulse_time);
-  }
-  countAll();
+inline void ContactSequence::pushBackDiscreteEvent(
+    const ContactStatus& contact_status, const double event_time) {
+  const int num_discrete_events = num_impulse_events_ + num_lift_events_;
+  DiscreteEvent discrete_event(contact_status_sequence_[num_discrete_events], 
+                               contact_status);
+  discrete_event.eventTime = event_time;
+  pushBackDiscreteEvent(discrete_event);
 }
 
 
-inline void ContactSequence::shiftLift(const int lift_index, 
-                                       const double lift_time) {
-  assert(lift_index >= 0);
-  assert(lift_index < totalNumLiftStages());
-  const int shifted_lift_time_stage 
-      = eventTimeStageFromContinuousEventTime(lift_time);
-  contact_sequence_.shiftDiscreteEvent(timeStageBeforeLift(lift_index), 
-                                       shifted_lift_time_stage);
-  if (shifted_lift_time_stage >= 0 && shifted_lift_time_stage < N_) {
-    assert(lift_time > 0);
-    assert(lift_time < T_);
-    contact_sequence_.setEventTime(shifted_lift_time_stage, lift_time);
+inline void ContactSequence::popBackDiscreteEvent() {
+  if (num_impulse_events_ > 0 && num_lift_events_ > 0) {
+    const double max_impulse_time 
+        = impulse_event_sequence_[num_impulse_events_-1].eventTime;
+    const double max_lift_time 
+        = lift_event_sequence_[num_lift_events_-1].eventTime;
+    if (max_impulse_time > max_lift_time) {
+      popBackImpulseEvent();
+    }
+    else {
+      popBackLiftEvent();
+    }
   }
-  countAll();
+  else if (num_impulse_events_ > 0 && num_lift_events_ == 0) {
+    popBackImpulseEvent();
+  }
+  else if (num_impulse_events_ == 0 && num_lift_events_ > 0) {
+    popBackLiftEvent();
+  }
+}
+
+
+inline void ContactSequence::popFrontDiscreteEvent() {
+  const int num_discrete_events = num_impulse_events_ + num_lift_events_;
+  if (num_discrete_events > 0) {
+    for (int i=0; i<=num_discrete_events-1; ++i) {
+      contact_status_sequence_[i] = contact_status_sequence_[i+1];
+    }
+    if (num_impulse_events_ > 0 && num_lift_events_ > 0) {
+      const double min_impulse_time = impulseTime(0);
+      const double min_lift_time = liftTime(0);
+      if (min_impulse_time < min_lift_time) {
+        popFrontImpulseEvent();
+      }
+      else {
+        popFrontLiftEvent();
+      }
+    }
+    else if (num_impulse_events_ > 0 && num_lift_events_ == 0) {
+      popFrontImpulseEvent();
+    }
+    else if (num_impulse_events_ == 0 && num_lift_events_ > 0) {
+      popFrontLiftEvent();
+    }
+  }
+}
+
+
+inline void ContactSequence::shiftImpulseEvent(const int impulse_index, 
+                                               const double event_time) {
+  try {
+    if (num_impulse_events_ <= 0) {
+      throw std::runtime_error(
+          "numImpulseEvents() must be positive when calling this method!");
+    }
+    if (impulse_index < 0) {
+      throw std::runtime_error("impulse_index must be non-negative!");
+    }
+    if (impulse_index >= num_impulse_events_) {
+      throw std::runtime_error(
+          "impulse_index must be less than numImpulseEvents()!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  impulse_event_sequence_[impulse_index] = event_time;
+}
+
+
+inline void ContactSequence::shiftLiftEvent(const int lift_index, 
+                                            const double event_time) {
+  try {
+    if (num_lift_events_ <= 0) {
+      throw std::runtime_error(
+          "numLiftEvents() must be positive when calling this method!");
+    }
+    if (lift_index < 0) {
+      throw std::runtime_error("lift_index must be non-negative!");
+    }
+    if (lift_index >= num_lift_events_) {
+      throw std::runtime_error("lift_index must be less than numLiftEvents()!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  lift_event_sequence_[lift_index] = event_time;
+}
+
+
+inline void ContactSequence::setContactPointsToImpulseEvent(
+    const int impulse_index, Robot& robot, const Eigen::VectorXd& q) {
+  try {
+    if (impulse_index >= num_impulse_events_) {
+      throw std::runtime_error(
+          "impulse_index must be less than numImpulseEvents()!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  impulse_event_sequence_[impulse_index].setContactPoints(robot);
+}
+
+
+inline void ContactSequence::setContactPointsToLiftEvent(
+    const int lift_index, Robot& robot, const Eigen::VectorXd& q) {
+  try {
+    if (lift_index >= num_lift_events_) {
+      throw std::runtime_error(
+          "lift_index must be less than numLiftEvents()!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  lift_event_sequence_[lift_index].setContactPoints(robot);
+}
+
+
+inline void ContactSequence::setContactPointsToContatStatus(
+    const int contact_phase, Robot& robot, const Eigen::VectorXd& q) {
+  try {
+    if (contact_phase > num_impulse_events_+num_lift_events_) {
+      throw std::runtime_error(
+          "contact_phase must be less than numImpulseEvents()+numLiftEvents()!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  robot.setContactPoints(contact_status_sequence_[contact_phase]);
+}
+
+
+inline void ContactSequence::setContactPointsUniformly(
+    Robot& robot, const Eigen::VectorXd& q) {
+  for (int i=0; i<=num_impulse_events_+num_lift_events_; ++i) {
+    robot.setContactPoints(contact_status_sequence_[i]);
+  }
+  for (int i=0; i<num_impulse_events_; ++i) {
+    impulse_event_sequence_[i].setContactPoints(robot);
+  }
+  for (int i=0; i<num_lift_events_; ++i) {
+    lift_event_sequence_[i].setContactPoints(robot);
+  }
+}
+
+
+inline int ContactSequence::numImpulseEvents() const {
+  return num_impulse_events_;
+}
+
+
+inline int ContactSequence::numLiftEvents() const {
+  return num_lift_events_;
 }
 
 
 inline const ContactStatus& ContactSequence::contactStatus(
-    const int time_stage) const {
-  assert(time_stage >= 0);
-  assert(time_stage <= N_);
-  return contact_sequence_.contactStatus(time_stage);
+    const int contact_phase) const {
+  assert(contact_phase >= 0);
+  assert(contact_phase <= num_impulse_events_+num_lift_events_);
+  return contact_status_sequence_[contact_phase];
 }
 
 
 inline const ImpulseStatus& ContactSequence::impulseStatus(
     const int impulse_index) const {
   assert(impulse_index >= 0);
-  assert(impulse_index < totalNumImpulseStages());
-  return contact_sequence_.impulseStatus(timeStageBeforeImpulse(impulse_index));
+  assert(impulse_index < num_impulse_events_);
+  assert(impulse_event_sequence_[impulse_index].existImpulse());
+  return impulse_event_sequence_[impulse_index].impulseStatus();
 }
 
 
 inline double ContactSequence::impulseTime(const int impulse_index) const {
   assert(impulse_index >= 0);
-  assert(impulse_index < totalNumImpulseStages());
-  return contact_sequence_.eventTime(timeStageBeforeImpulse(impulse_index));
+  assert(impulse_index < num_impulse_events_);
+  return impulse_event_sequence_[impulse_index].eventTime;
 }
 
 
 inline double ContactSequence::liftTime(const int lift_index) const {
   assert(lift_index >= 0);
-  assert(lift_index < totalNumLiftStages());
-  return contact_sequence_.eventTime(timeStageBeforeLift(lift_index));
+  assert(lift_index < num_lift_events_);
+  return lift_event_sequence_[lift_index].eventTime;
 }
 
 
-inline int ContactSequence::numImpulseStages(const int time_stage) const {
-  assert(time_stage >= 0);
-  assert(time_stage < N_);
-  return num_impulse_stages_[time_stage];
-}
-
-
-inline int ContactSequence::numLiftStages(const int time_stage) const {
-  assert(time_stage >= 0);
-  assert(time_stage < N_);
-  return num_lift_stages_[time_stage];
-}
-
-
-inline int ContactSequence::totalNumImpulseStages() const {
-  return num_impulse_stages_[N_];
-}
-
-
-inline int ContactSequence::totalNumLiftStages() const {
-  return num_lift_stages_[N_];
-}
-
-
-inline int ContactSequence::timeStageBeforeImpulse(
-    const int impulse_index) const {
-  assert(impulse_index >= 0);
-  assert(impulse_index < totalNumImpulseStages());
-  return impulse_stage_[impulse_index];
-}
-
-
-inline int ContactSequence::timeStageBeforeLift(const int lift_index) const {
-  assert(lift_index >= 0);
-  assert(lift_index < totalNumLiftStages());
-  return lift_stage_[lift_index];
-}
-
-
-inline int ContactSequence::timeStageAfterImpulse(
-    const int impulse_index) const {
-  return (timeStageBeforeImpulse(impulse_index)+1);
-}
-
-
-inline int ContactSequence::timeStageAfterLift(const int lift_index) const {
-  return (timeStageBeforeLift(lift_index)+1);
-}
-
-
-inline bool ContactSequence::existImpulseStage() const {
-  if (totalNumImpulseStages() > 0) return true;
-  else return false;
-}
-
-
-inline bool ContactSequence::existLiftStage() const {
-  if (totalNumLiftStages() > 0) return true;
-  else return false;
-}
-
-
-inline bool ContactSequence::existImpulseStage(const int time_stage) const {
-  return contact_sequence_.existImpulse(time_stage);
-}
-
-
-inline bool ContactSequence::existLiftStage(const int time_stage) const {
-  return contact_sequence_.existOnlyLift(time_stage);
-}
-
-
-inline int ContactSequence::impulseIndex(const int time_stage) const {
-  assert(time_stage >= 0);
-  assert(time_stage < N_);
-  return impulse_index_[time_stage];
-}
-
-
-inline int ContactSequence::liftIndex(const int time_stage) const {
-  assert(time_stage >= 0);
-  assert(time_stage < N_);
-  return lift_index_[time_stage];
-}
-
-
-inline double ContactSequence::dtau(const int time_stage) const {
-  if (existImpulseStage(time_stage)) {
-    return dtau_ - dtau_impulse(time_stage);
-  }
-  else if (existLiftStage(time_stage)) {
-    return dtau_ - dtau_lift(time_stage);
-  }
-  else {
-    return dtau_;
+inline void ContactSequence::popBackImpulseEvent() {
+  if (num_impulse_events_ > 0)  {
+    --num_impulse_events_;
   }
 }
 
 
-inline double ContactSequence::dtau_impulse(const int time_stage) const {
-  if (existImpulseStage(time_stage)) {
-    return impulseTime(impulseIndex(time_stage)) - time_stage * dtau_;
-  }
-  else {
-    return 0;
+inline void ContactSequence::popBackLiftEvent() {
+  if (num_lift_events_ > 0)  {
+    --num_lift_events_;
   }
 }
 
 
-inline double ContactSequence::dtau_lift(const int time_stage) const {
-  if (existLiftStage(time_stage)) {
-    return liftTime(liftIndex(time_stage)) - time_stage * dtau_;
-  }
-  else {
-    return 0;
-  }
-}
-
-
-inline int ContactSequence::eventTimeStageFromContinuousEventTime(
-    const double event_time) const {
-  if (event_time <= 0) {
-    return -1;
-  }
-  else if (event_time >= T_) {
-    return N_+1;
-  }
-  else {
-    return std::floor(event_time/dtau_);
-  }
-}
-
-
-inline void ContactSequence::countAll() {
-  countNumImpulseStaeges();
-  countNumLiftStages();
-  setImpulseStage();
-  setLiftStage();
-  setImpulseIndex();
-  setLiftIndex();
-}
-
-
-inline void ContactSequence::countNumImpulseStaeges() {
-  num_impulse_stages_[0] = 0;
-  for (int i=0; i<N_; ++i) {
-    if (contact_sequence_.existImpulse(i)) 
-      num_impulse_stages_[i+1] = num_impulse_stages_[i] + 1;
-    else 
-      num_impulse_stages_[i+1] = num_impulse_stages_[i];
-  }
-}
-
-
-inline void ContactSequence::countNumLiftStages() {
-  num_lift_stages_[0] = 0;
-  for (int i=0; i<N_; ++i) {
-    if (contact_sequence_.existOnlyLift(i)) 
-      num_lift_stages_[i+1] = num_lift_stages_[i] + 1;
-    else 
-      num_lift_stages_[i+1] = num_lift_stages_[i];
-  }
-}
-
-
-inline void ContactSequence::setImpulseStage() {
-  int iterator = 0;
-  for (int i=0; i<N_; ++i) {
-    if (contact_sequence_.existImpulse(i)) {
-      impulse_stage_[iterator] = i;
-      ++iterator;
+inline void ContactSequence::popFrontImpulseEvent() {
+  if (num_impulse_events_ > 0)  {
+    for (int i=0; i<=num_impulse_events_-2; ++i) {
+      impulse_event_sequence_[i] = impulse_event_sequence_[i+1];
     }
-  }
-  for (int i=iterator; i<N_; ++i) {
-    impulse_stage_[i] = -1;
+    --num_impulse_events_;
   }
 }
 
 
-inline void ContactSequence::setLiftStage() {
-  int iterator = 0;
-  for (int i=0; i<N_; ++i) {
-    if (contact_sequence_.existOnlyLift(i)) {
-      lift_stage_[iterator] = i;
-      ++iterator;
+inline void ContactSequence::popFrontLiftEvent() {
+  if (num_lift_events_ > 0)  {
+    for (int i=0; i<=num_lift_events_-2; ++i) {
+      lift_event_sequence_[i] = lift_event_sequence_[i+1];
     }
-  }
-  for (int i=iterator; i<N_; ++i) {
-    lift_stage_[i] = -1;
-  }
-}
-
-
-inline void ContactSequence::setImpulseIndex() {
-  int iterator = 0;
-  for (int i=0; i<N_; ++i) {
-    if (contact_sequence_.existImpulse(i)) {
-      impulse_index_[i] = iterator;
-      ++iterator;
-    }
-    else {
-      impulse_index_[i] = -1;
-    }
-  }
-}
-
-
-inline void ContactSequence::setLiftIndex() {
-  int iterator = 0;
-  for (int i=0; i<N_; ++i) {
-    if (contact_sequence_.existOnlyLift(i)) {
-      lift_index_[i] = iterator;
-      ++iterator;
-    }
-    else {
-      lift_index_[i] = -1;
-    }
+    --num_lift_events_;
   }
 }
 

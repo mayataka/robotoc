@@ -92,17 +92,17 @@ public:
   ///
   int dimf() const;
 
-  ///
-  /// @brief Return the number of the active contacts.
-  /// @return The number of the active contacts. 
-  ///
-  int num_active_contacts() const;
+  // ///
+  // /// @brief Return the number of the active contacts.
+  // /// @return The number of the active contacts. 
+  // ///
+  // int num_active_contacts() const;
 
   ///
   /// @brief Return the maximum number of the contacts.
   /// @return The maximum number of the contacts. 
   ///
-  int max_point_contacts() const;
+  int maxPointContacts() const;
 
   ///
   /// @brief Set from other contact status that has the same size.
@@ -113,7 +113,7 @@ public:
   ///
   /// @brief Set the contact status.
   /// @param[in] is_contact_active Contact status. Size must be 
-  /// ContactStatus::max_point_contacts();
+  /// ContactStatus::maxPointContacts();
   ///
   void setContactStatus(const std::vector<bool>& is_contact_active);
 
@@ -152,9 +152,16 @@ public:
   ///
   /// @brief Set contact points.
   /// @param[in] contact_points Contact points. Size must be 
-  /// ContactStatus::max_point_contacts().
+  /// ContactStatus::maxPointContacts().
   ///
   void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
+
+  ///
+  /// @brief Get contact point.
+  /// @param[in] contact_indices Indices of the contacts that are activated.
+  /// @return const reference to the contact points. 
+  ///
+  const Eigen::Vector3d& contactPoint(const int contact_index) const;
 
   ///
   /// @brief Get contact points.
@@ -172,7 +179,7 @@ public:
 private:
   std::vector<bool> is_contact_active_;
   std::vector<Eigen::Vector3d> contact_points_;
-  int dimf_, max_point_contacts_, num_active_contacts_;
+  int dimf_, max_point_contacts_;
   bool has_active_contacts_;
 
   void set_has_active_contacts();

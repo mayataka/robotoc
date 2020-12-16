@@ -45,7 +45,7 @@ inline ImpulseSplitKKTMatrix::~ImpulseSplitKKTMatrix() {
 
 inline void ImpulseSplitKKTMatrix::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimf_ = impulse_status.dimp();
+  dimf_ = impulse_status.dimf();
   q_begin_ = dimv_ + dimf_;
   v_begin_ = 2*dimv_ + dimf_;
   dimKKT_ = 4*dimv_ + 3*dimf_;

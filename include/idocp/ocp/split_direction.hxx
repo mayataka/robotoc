@@ -16,7 +16,7 @@ inline SplitDirection::SplitDirection(const Robot& robot)
     dimx_(2*robot.dimv()), 
     dimf_(0), 
     dimKKT_(4*robot.dimv()+robot.dimu()),
-    has_floating_base_(robot.has_floating_base()) {
+    has_floating_base_(robot.hasFloatingBase()) {
 }
 
 

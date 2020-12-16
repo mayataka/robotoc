@@ -13,17 +13,17 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     q(Eigen::VectorXd::Zero(robot.dimq())),
     v(Eigen::VectorXd::Zero(robot.dimv())),
     a(Eigen::VectorXd::Zero(robot.dimv())),
-    f(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
+    f(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
     u(Eigen::VectorXd::Zero(robot.dimu())),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
-    mu(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
+    mu(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
     u_passive(Vector6d::Zero()),
     nu_passive(Vector6d::Zero()),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
-    has_floating_base_(robot.has_floating_base()),
+    has_floating_base_(robot.hasFloatingBase()),
     has_active_contacts_(false),
-    is_contact_active_(robot.max_point_contacts(), false),
+    is_contact_active_(robot.maxPointContacts(), false),
     dimf_(0) {
   robot.normalizeConfiguration(q);
 }
@@ -56,7 +56,7 @@ inline SplitSolution::~SplitSolution() {
 
 inline void SplitSolution::setContactStatus(
     const ContactStatus& contact_status) {
-  assert(contact_status.max_point_contacts()==is_contact_active_.size());
+  assert(contact_status.maxPointContacts()==is_contact_active_.size());
   has_active_contacts_ = contact_status.hasActiveContacts();
   is_contact_active_ = contact_status.isContactActive();
   dimf_ = contact_status.dimf();
@@ -248,7 +248,7 @@ inline void SplitSolution::setRandom(const Robot& robot) {
   a.setRandom(); 
   u.setRandom(); 
   beta.setRandom(); 
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     u_passive.setRandom();
     nu_passive.setRandom();
   }

@@ -1,1 +1,0 @@
-#include "idocp/hybrid/contact_sequence_primitive.hpp"

@@ -6,6 +6,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
+#include "idocp/hybrid/ocp_discretizer.hpp"
 
 namespace idocp {
 
@@ -60,7 +61,7 @@ public:
   /// @brief Factorize matrices and vectors for the linear problem to obtain
   /// the directions of the Lagrange multipliers. Used in
   /// StateConstraintRiccatiFactorizer::computeLagrangeMultiplierDirection().
-  /// @param[in] contact_sequence Contact sequence.
+  /// @param[in] ocp_discretizer OCP discretizer.
   /// @param[in] impulse_riccati_factorization Riccati factorizations for 
   /// an impulse stage.
   /// @param[in, out] constraint_factorization A constraint factorization.
@@ -69,7 +70,7 @@ public:
   ///
   template <typename VectorType>
   void factorizeLinearProblem(
-      const ContactSequence& contact_sequence,
+      const OCPDiscretizer& ocp_discretizer,
       const SplitRiccatiFactorization& impulse_riccati_factorization,
       StateConstraintRiccatiFactorization& constraint_factorization,
       const Eigen::MatrixBase<VectorType>& dx0,

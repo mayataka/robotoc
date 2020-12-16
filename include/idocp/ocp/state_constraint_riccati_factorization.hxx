@@ -61,9 +61,9 @@ inline StateConstraintRiccatiFactorization::
 
 inline void StateConstraintRiccatiFactorization::setConstraintStatus(
     const ContactSequence& contact_sequence) {
-  const int total_num_impulse = contact_sequence.totalNumImpulseStages();
+  const int total_num_impulse = contact_sequence.numImpulseEvents();
   for (int i=0; i<total_num_impulse; ++i) {
-    dimf_[i] = contact_sequence.impulseStatus(i).dimp();
+    dimf_[i] = contact_sequence.impulseStatus(i).dimf();
     factorizations_[i].setImpulseStatus(contact_sequence.impulseStatus(i));
   }
   for (int i=total_num_impulse; i<max_num_impulse_; ++i) {

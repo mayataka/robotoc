@@ -51,7 +51,7 @@ void ImpulseNormalForceTest::testKinematics(Robot& robot, const ImpulseStatus& i
 void ImpulseNormalForceTest::testIsFeasible(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseNormalForce limit(robot); 
   ConstraintComponentData data(limit.dimc());
-  EXPECT_EQ(limit.dimc(), impulse_status.max_point_contacts());
+  EXPECT_EQ(limit.dimc(), impulse_status.maxPointContacts());
   ImpulseSplitSolution s(robot);
   s.setImpulseStatus(impulse_status);
   s.f_stack().setZero();
@@ -74,7 +74,7 @@ void ImpulseNormalForceTest::testSetSlackAndDual(Robot& robot, const ImpulseStat
   const int dimc = limit.dimc();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   limit.setSlackAndDual(robot, data, s);
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     data_ref.slack.coeffRef(i) = s.f[i].coeff(2);
   }
   pdipm::SetSlackAndDualPositive(barrier, data_ref);
@@ -96,7 +96,7 @@ void ImpulseNormalForceTest::testAugmentDualResidual(Robot& robot, const Impulse
   ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
   limit.augmentDualResidual(robot, data, s, kkt_res);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       kkt_res_ref.lf().segment<3>(dimf_stack).coeffRef(2) -= data_ref.dual.coeff(i);
       dimf_stack += 3;
@@ -116,7 +116,7 @@ void ImpulseNormalForceTest::testComputePrimalAndDualResidual(Robot& robot, cons
   ConstraintComponentData data_ref = data;
   limit.computePrimalAndDualResidual(robot, data, s);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       data_ref.residual.coeffRef(i) = - s.f[i].coeff(2) + data_ref.slack.coeff(i);
       data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
@@ -144,7 +144,7 @@ void ImpulseNormalForceTest::testCondenseSlackAndDual(Robot& robot, const Impuls
   ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
   limit.condenseSlackAndDual(robot, data, s, kkt_mat, kkt_res);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       data_ref.residual.coeffRef(i) = - s.f[i].coeff(2) + data_ref.slack.coeff(i);
       data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
@@ -152,7 +152,7 @@ void ImpulseNormalForceTest::testCondenseSlackAndDual(Robot& robot, const Impuls
     }
   }
   dimf_stack = 0;
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       kkt_res_ref.lf().segment<3>(dimf_stack).coeffRef(2) 
           -= (data_ref.dual.coeff(i)*data_ref.residual.coeff(i)-data_ref.duality.coeff(i)) 
@@ -179,7 +179,7 @@ void ImpulseNormalForceTest::testComputeSlackAndDualDirection(Robot& robot, cons
   const ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
   limit.computeSlackAndDualDirection(robot, data, s, d);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       data_ref.dslack.coeffRef(i) = d.df().segment<3>(dimf_stack).coeff(2) - data_ref.residual.coeff(i);
       data_ref.ddual.coeffRef(i) = - (data_ref.dual.coeff(i)*data_ref.dslack.coeff(i)+data_ref.duality.coeff(i))

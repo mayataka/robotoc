@@ -1,4 +1,4 @@
-name: Unit test
+name: build
 
 on: 
   push:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-18.04
+    runs-on: [ubuntu-18.04, ubuntu-20.04]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -37,7 +37,7 @@ jobs:
           export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
           mkdir -p build  && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Debug -DTESTING=True
-          cmake --build . --config Debug
+          cmake --build . --config Debug -j2
           ctest --output-on-failure
       - name: Collect and upload coverage to Codecov
         if: 'success()'

@@ -13,10 +13,10 @@ inline SplitParNMPC::SplitParNMPC(
     constraints_(constraints),
     constraints_data_(),
     contact_dynamics_(robot),
-    has_floating_base_(robot.has_floating_base()),
+    has_floating_base_(robot.hasFloatingBase()),
     use_kinematics_(false) {
   if (cost_->useKinematics() || constraints_->useKinematics() 
-                             || robot.max_point_contacts() > 0) {
+                             || robot.maxPointContacts() > 0) {
     use_kinematics_ = true;
   }
 }

@@ -17,6 +17,7 @@
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 #include "idocp/ocp/riccati_solver.hpp"
+#include "idocp/hybrid/ocp_discretizer.hpp"
 // #include "idocp/line_search/line_search_filter.hpp"
 
 
@@ -73,6 +74,14 @@ public:
   OCPSolver& operator=(OCPSolver&&) noexcept = default;
 
   ///
+  /// @brief Initializes the inequality constraints, i.e., set slack variables 
+  /// and the Lagrange multipliers of inequality constraints. Based on the 
+  /// current solution.
+  /// @param[in] t Initial time of the horizon. Current time in MPC. 
+  ///
+  void initConstraints(const double t);
+
+  ///
   /// @brief Updates the solution by computing the primal-dual Newon direction.
   /// @param[in] t Initial time of the horizon. Current time in MPC. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
@@ -111,15 +120,31 @@ public:
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Velocity. Size must be Robot::dimv().
   ///
-  bool setStateTrajectory(const Eigen::VectorXd& q, const Eigen::VectorXd& v);
+  bool setStateTrajectory(const double t, const Eigen::VectorXd& q, 
+                          const Eigen::VectorXd& v);
 
   void setContactStatusUniformly(const ContactStatus& contact_status);
 
-  void setDiscreteEvent(const DiscreteEvent& discrete_event);
+  void pushBackDiscreteEvent(const DiscreteEvent& discrete_event, 
+                             const double t);
 
   void shiftImpulse(const int impulse_index, const double impulse_time);
 
   void shiftLift(const int lift_index, const double lift_time);
+
+  void discretizeOCP(const double t);
+
+  ///
+  /// @brief Pop back the discrete event. Contact status after discrete event 
+  /// is also removed. 
+  ///
+  void popBackDiscreteEvent();
+
+  ///
+  /// @brief Pop front the discrete event. Contact status before the front 
+  /// discrete event is also removed. 
+  ///
+  void popFrontDiscreteEvent();
   
   ///
   /// @brief Clear the line search filter. 
@@ -154,13 +179,6 @@ public:
   bool isCurrentSolutionFeasible();
 
   ///
-  /// @brief Initializes the inequality constraints, i.e., set slack variables 
-  /// and the Lagrange multipliers of inequality constraints. Based on the 
-  /// current solution.
-  ///
-  void initConstraints();
-
-  ///
   /// @brief Prints the variable into console. 
   /// @param[in] name Name of the printed variable. Default is "all" 
   /// (print all variables).
@@ -174,6 +192,27 @@ public:
 
 private:
 
+  template <typename T> 
+  void setContactSequenceStatus(T& obj) {
+    for (int i=0; i<=N_; ++i) {
+      obj[i].setContactStatus(
+          contact_sequence_.contactStatus(ocp_discretizer_.contactPhase(i)));
+    }
+    for (int i=0; i<ocp_discretizer_.numImpulseStages(); ++i) {
+      obj.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
+      obj.aux[i].setContactStatus(
+          contact_sequence_.contactStatus(
+              ocp_discretizer_.contactPhase(
+                  ocp_discretizer_.timeStageAfterImpulse(i))));
+    }
+    for (int i=0; i<contact_sequence_.numLiftEvents(); ++i) {
+      obj.lift[i].setContactStatus(
+          contact_sequence_.contactStatus(
+              ocp_discretizer_.contactPhase(
+                  ocp_discretizer_.timeStageAfterLift(i))));
+    }
+  }
+
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
   OCPLinearizer ocp_linearizer_;
@@ -183,9 +222,9 @@ private:
   KKTResidual kkt_residual_;
   Solution s_;
   Direction d_;
+  OCPDiscretizer ocp_discretizer_;
   // LineSearchFilter filter_;
   int N_, num_proc_;
-  double T_, dtau_;
 
 };
 

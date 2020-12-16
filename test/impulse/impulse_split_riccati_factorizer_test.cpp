@@ -53,7 +53,7 @@ ImpulseSplitKKTMatrix ImpulseSplitRiccatiFactorizerTest::createKKTMatrix(const R
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   seed = Eigen::MatrixXd::Random(dimv, dimv);
   kkt_matrix.Qvv() = seed * seed.transpose();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
   }
@@ -136,7 +136,7 @@ void ImpulseSplitRiccatiFactorizerTest::testForwardStateConstraintFactorization(
   ImpulseBackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next_ref, kkt_matrix_ref);
   backward_recursion_ref.factorizeRiccatiFactorization(riccati_next_ref, kkt_matrix_ref, kkt_residual_ref, riccati_ref);
-  if (!robot.has_floating_base()) kkt_matrix_ref.Fqq().setIdentity();
+  if (!robot.hasFloatingBase()) kkt_matrix_ref.Fqq().setIdentity();
   riccati_next_ref.Pi = kkt_matrix_ref.Fxx() * riccati_ref.Pi;
   riccati_next_ref.pi = kkt_residual_ref.Fx() + kkt_matrix_ref.Fxx() * riccati_ref.pi;
   riccati_next_ref.N = kkt_matrix_ref.Fxx() * riccati_ref.N * kkt_matrix_ref.Fxx().transpose();
@@ -161,7 +161,7 @@ void ImpulseSplitRiccatiFactorizerTest::testBackwardStateConstraintFactorization
   T_ref.setZero();
   factorizer.backwardStateConstraintFactorization(T_next, kkt_matrix, T);
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     A.topLeftCorner(dimv, dimv) = kkt_matrix.Fqq();
   }
   else {
@@ -192,7 +192,7 @@ void ImpulseSplitRiccatiFactorizerTest::testForwardRecursion(const Robot& robot)
   d_next.setRandom();
   SplitDirection d_next_ref = d_next;
   factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, d, d_next);
-  if (!robot.has_floating_base()) {
+  if (!robot.hasFloatingBase()) {
     kkt_matrix_ref.Fqq().setIdentity();
   }
   d_next_ref.dx() = kkt_matrix_ref.Fxx() * d.dx() + kkt_residual_ref.Fx();

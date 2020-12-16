@@ -16,7 +16,7 @@ inline void LinearizeForwardEuler(
     SplitKKTResidual& kkt_residual) {
   assert(dtau > 0);
   ComputeForwardEulerResidual(robot, dtau, s, s_next.q, s_next.v, kkt_residual);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq());
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
     kkt_residual.lq().noalias() += kkt_matrix.Fqq().transpose() * s_next.lmd 
@@ -42,7 +42,7 @@ inline void LinearizeBackwardEuler(
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   ComputeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, kkt_residual);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq());
     robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq_prev);
     kkt_residual.lq().noalias() 
@@ -68,7 +68,7 @@ inline void LinearizeBackwardEulerTerminal(
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   ComputeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, kkt_residual);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq());
     kkt_residual.lq().noalias() 
         += kkt_matrix.Fqq().transpose() * s.lmd;

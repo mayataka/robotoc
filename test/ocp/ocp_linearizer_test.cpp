@@ -120,7 +120,7 @@ std::shared_ptr<CostFunction> OCPLinearizerTest::createCost(const Robot& robot) 
   const int task_frame = 10;
   auto contact_force_cost = std::make_shared<idocp::ContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Constant(0.001));
   }
   contact_force_cost->set_f_weight(f_weight);
@@ -170,7 +170,7 @@ Solution OCPLinearizerTest::createSolution(const Robot& robot) const {
 
 
 Solution OCPLinearizerTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
-  if (robot.max_point_contacts() == 0) {
+  if (robot.maxPointContacts() == 0) {
     return createSolution(robot);
   }
   else {
@@ -227,13 +227,13 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   auto constraints = createConstraints(robot);
   OCPLinearizer linearizer(T, N, max_num_impulse, nproc);
   ContactSequence contact_sequence(robot, T, N);
-  if (robot.max_point_contacts() > 0) {
+  if (robot.maxPointContacts() > 0) {
     contact_sequence = createContactSequence(robot);
   }
   auto kkt_matrix = KKTMatrix(N, max_num_impulse, robot);
   auto kkt_residual = KKTResidual(N, max_num_impulse, robot);
   Solution s;
-  if (robot.max_point_contacts() > 0) {
+  if (robot.maxPointContacts() > 0) {
     s = createSolution(robot, contact_sequence);
   }
   else {
@@ -358,13 +358,13 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   auto constraints = createConstraints(robot);
   OCPLinearizer linearizer(T, N, max_num_impulse, nproc);
   ContactSequence contact_sequence(robot, T, N);
-  if (robot.max_point_contacts() > 0) {
+  if (robot.maxPointContacts() > 0) {
     contact_sequence = createContactSequence(robot);
   }
   auto kkt_matrix = KKTMatrix(N, max_num_impulse, robot);
   auto kkt_residual = KKTResidual(N, max_num_impulse, robot);
   Solution s;
-  if (robot.max_point_contacts() > 0) {
+  if (robot.maxPointContacts() > 0) {
     s = createSolution(robot, contact_sequence);
   }
   else {
@@ -507,13 +507,13 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto cost = createCost(robot);
   auto constraints = createConstraints(robot);
   ContactSequence contact_sequence(robot, T, N);
-  if (robot.max_point_contacts() > 0) {
+  if (robot.maxPointContacts() > 0) {
     contact_sequence = createContactSequence(robot);
   }
   auto kkt_matrix = KKTMatrix(N, max_num_impulse, robot);
   auto kkt_residual = KKTResidual(N, max_num_impulse, robot);
   Solution s;
-  if (robot.max_point_contacts() > 0) {
+  if (robot.maxPointContacts() > 0) {
     s = createSolution(robot, contact_sequence);
   }
   else {

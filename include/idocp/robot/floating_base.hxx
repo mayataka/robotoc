@@ -15,7 +15,7 @@ inline std::vector<int> FloatingBase::passive_joint_indices() const {
 }
 
 
-inline bool FloatingBase::has_floating_base() const {
+inline bool FloatingBase::hasFloatingBase() const {
   return has_floating_base_;
 }
 

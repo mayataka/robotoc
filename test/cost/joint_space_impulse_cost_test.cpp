@@ -64,7 +64,7 @@ void JointSpaceImpulseCostTest::test(Robot& robot) const {
   cost.set_dv_ref(dv_ref);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s.q, q_ref, q_diff);
   }
   else {
@@ -78,7 +78,7 @@ void JointSpaceImpulseCostTest::test(Robot& robot) const {
   cost.lv(robot, data, t, s, kkt_res);
   cost.ldv(robot, data, t, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
     kkt_res_ref.lq() += Jq_diff.transpose() * q_weight.asDiagonal() * q_diff;
   }
@@ -91,7 +91,7 @@ void JointSpaceImpulseCostTest::test(Robot& robot) const {
   cost.lqq(robot, data, t, s, kkt_mat);
   cost.lvv(robot, data, t, s, kkt_mat);
   cost.ldvdv(robot, data, t, s, kkt_mat);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_mat_ref.Qqq() += Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
   }
   else {

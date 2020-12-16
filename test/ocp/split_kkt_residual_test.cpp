@@ -127,7 +127,7 @@ void SplitKKTResidualTest::testIsApprox(const Robot& robot,
   }
   kkt_residual_ref = kkt_residual;
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_residual_ref.lu_passive.setRandom();
     EXPECT_FALSE(kkt_residual.isApprox(kkt_residual_ref));
   }

@@ -37,7 +37,7 @@ protected:
 
 void ContactForceCostTest::commonTest(Robot& robot) const {
   std::vector<Eigen::Vector3d> f_weight, f_ref;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Random());
     f_ref.push_back(Eigen::Vector3d::Random());
   }
@@ -47,7 +47,7 @@ void ContactForceCostTest::commonTest(Robot& robot) const {
   cost.set_f_weight(f_weight);
   cost.set_f_ref(f_ref);
   ContactStatus contact_status = robot.createContactStatus();
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     contact_status.deactivateContact(i);
   }
   SplitKKTMatrix kkt_mat(robot);
@@ -63,7 +63,7 @@ void ContactForceCostTest::commonTest(Robot& robot) const {
   contact_status.setRandom();
   s.setRandom(robot, contact_status);
   double l_ref = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
       l_ref += (f_weight[i].array() * (s.f[i].array()-f_ref[i].array()) 
                                     * (s.f[i].array()-f_ref[i].array())).sum();
@@ -79,7 +79,7 @@ void ContactForceCostTest::commonTest(Robot& robot) const {
   cost.lf(robot, data, t, dtau, s, kkt_res);
   cost.lff(robot, data, t, dtau, s, kkt_mat);
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
       kkt_res_ref.lf().segment<3>(dimf_stack).array()
           += dtau * f_weight[i].array() * (s.f[i].array()-f_ref[i].array());
@@ -87,7 +87,7 @@ void ContactForceCostTest::commonTest(Robot& robot) const {
     }
   }
   dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
       kkt_mat_ref.Qff().diagonal().segment<3>(dimf_stack) += dtau * f_weight[i];
       dimf_stack += 3;

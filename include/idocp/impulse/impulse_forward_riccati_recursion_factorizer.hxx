@@ -9,7 +9,7 @@ namespace idocp {
 
 inline ImpulseForwardRiccatiRecursionFactorizer::ImpulseForwardRiccatiRecursionFactorizer(
     const Robot& robot) 
-  : has_floating_base_(robot.has_floating_base()),
+  : has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()),
     NApBKt_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())) {
 }

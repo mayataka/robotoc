@@ -217,7 +217,7 @@ public:
   /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
   /// Must be positive.
   /// @param[in] contact_points Contact points. Size must be 
-  /// Robot::max_point_contacts(). 
+  /// Robot::maxPointContacts(). 
   /// @param[out] baumgarte_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
@@ -286,7 +286,7 @@ public:
   /// updateKinematics() must be called.
   /// @param[in] impulse_status Impulse status.
   /// @param[in] contact_points Contact points. Size must be 
-  /// Robot::max_point_contacts(). 
+  /// Robot::maxPointContacts(). 
   /// @param[out] contact_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
@@ -317,7 +317,7 @@ public:
   /// @param[in] impulse_status Impulse status.
   /// @param[in] coeff The coefficient that is multiplied to the result.
   /// @param[in] contact_points Contact points. Size must be 
-  /// Robot::max_point_contacts(). 
+  /// Robot::maxPointContacts(). 
   /// @param[out] contact_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
@@ -359,14 +359,14 @@ public:
   ///
   /// @brief Sets the friction coefficient.
   /// @param[in] friction_coefficient Friction coefficient of each contact.  
-  /// Size must be Robot::max_point_contacts(). Each element must be positive.
+  /// Size must be Robot::maxPointContacts(). Each element must be positive.
   /// 
   void setFrictionCoefficient(const std::vector<double>& friction_coefficient);
 
   ///
   /// @brief Returns the friction coefficient of a contact.
   /// @param[in] contact_index Index of the contact. Must be nonnegative.
-  /// Must be less than Robot::max_point_contacts().
+  /// Must be less than Robot::maxPointContacts().
   /// @return Friction coefficient of the contact of contact_index.
   /// 
   double frictionCoefficient(const int contact_index) const;
@@ -374,7 +374,7 @@ public:
   ///
   /// @brief Sets the coefficient of the restitution of each contact.
   /// @param[in] restitution_coefficient Coefficient of the restitution of 
-  /// each contact. Size must be Robot::max_point_contacts(). 
+  /// each contact. Size must be Robot::maxPointContacts(). 
   /// Each element must be positive.
   /// 
   void setRestitutionCoefficient(
@@ -383,7 +383,7 @@ public:
   ///
   /// @brief Returns the coefficient of the restitution of each contact.
   /// @param[in] contact_index Index of the contact. Must be nonnegative.
-  /// Must be less than Robot::max_point_contacts().
+  /// Must be less than Robot::maxPointContacts().
   /// @return Coefficient of the restitution of the contact of contact_index.
   /// 
   double restitutionCoefficient(const int contact_index) const;
@@ -392,7 +392,7 @@ public:
   /// @brief Set contact forces for each active contacts.  
   /// @param[in] contact_status Current contact status.
   /// @param[in] f The stack of the contact forces represented in the local 
-  /// coordinate of the contact frame. Size must be Robot::max_point_contacts(). 
+  /// coordinate of the contact frame. Size must be Robot::maxPointContacts(). 
   /// 
   void setContactForces(const ContactStatus& contact_status, 
                         const std::vector<Eigen::Vector3d>& f);
@@ -401,7 +401,7 @@ public:
   /// @brief Set impulse forces for each active impulse. 
   /// @param[in] impulse_status Current contact status.
   /// @param[in] f The stack of the impulse forces represented in the local 
-  /// coordinate of the contact frame. Size must be Robot::max_point_contacts(). 
+  /// coordinate of the contact frame. Size must be Robot::maxPointContacts(). 
   /// 
   void setImpulseForces(const ImpulseStatus& impulse_status, 
                         const std::vector<Eigen::Vector3d>& f);
@@ -656,13 +656,13 @@ public:
   /// @brief Returns true if the robot has a floating base and false if not.
   /// @returns true if the robot has a floating base and false if not.
   /// 
-  bool has_floating_base() const;
+  bool hasFloatingBase() const;
 
   ///
   /// @brief Returns the maximum number of the contacts.
   /// @return The maximum number of the contacts.
   /// 
-  int max_point_contacts() const;
+  int maxPointContacts() const;
 
   ///
   /// @brief Prints the robot model into console.

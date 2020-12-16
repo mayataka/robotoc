@@ -33,7 +33,7 @@ protected:
 void ImpulseDynamicsForwardEulerDataTest::testSize(const Robot& robot, const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
-  const int dimf = impulse_status.dimp();
+  const int dimf = impulse_status.dimf();
   ImpulseDynamicsForwardEulerData data(robot);
   data.setImpulseStatus(impulse_status);
   EXPECT_EQ(data.dImDddv.rows(), dimv);

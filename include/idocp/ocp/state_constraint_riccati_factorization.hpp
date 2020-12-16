@@ -63,7 +63,7 @@ public:
       StateConstraintRiccatiFactorization&&) noexcept = default;
 
   ///
-  /// @brief Set the dimension of the constraints. 
+  /// @brief Set the dimensions of the constraints. 
   /// @param[in] contact_sequence Contact sequence. 
   ///
   void setConstraintStatus(const ContactSequence& contact_sequence);

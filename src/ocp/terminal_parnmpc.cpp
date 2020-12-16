@@ -17,9 +17,9 @@ TerminalParNMPC::TerminalParNMPC(const Robot& robot,
     contact_dynamics_(robot),
     backward_correction_(robot),
     use_kinematics_(false),
-    has_floating_base_(robot.has_floating_base()) {
+    has_floating_base_(robot.hasFloatingBase()) {
   if (cost_->useKinematics() || constraints_->useKinematics() 
-                             || robot.max_point_contacts() > 0) {
+                             || robot.maxPointContacts() > 0) {
     use_kinematics_ = true;
   }
 }

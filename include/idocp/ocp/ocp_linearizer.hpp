@@ -8,6 +8,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/hybrid/ocp_discretizer.hpp"
 
 
 namespace idocp {
@@ -62,26 +63,23 @@ public:
 
   void initConstraints(OCP& ocp, std::vector<Robot>& robots,
                        const ContactSequence& contact_sequence, 
-                       const Solution& s) const;
+                       const double t, const Solution& s);
 
   void linearizeOCP(OCP& ocp, std::vector<Robot>& robots,
                     const ContactSequence& contact_sequence,
                     const double t, const Eigen::VectorXd& q, 
                     const Eigen::VectorXd& v, const Solution& s,
-                    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const;
+                    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
   void computeKKTResidual(OCP& ocp, std::vector<Robot>& robots, 
                           const ContactSequence& contact_sequence,
                           const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v, const Solution& s,
-                          KKTMatrix& kkt_matrix, 
-                          KKTResidual& kkt_residual) const;
+                          KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
-  double KKTError(const OCP& ocp, const ContactSequence& contact_sequence, 
-                  const KKTResidual& kkt_residual);
+  double KKTError(const OCP& ocp, const KKTResidual& kkt_residual);
 
   void integrateSolution(OCP& ocp, const std::vector<Robot>& robots,
-                         const ContactSequence& contact_sequence,
                          const KKTMatrix& kkt_matrix,
                          const KKTResidual& kkt_residual,
                          const double primal_step_size,
@@ -99,22 +97,17 @@ private:
                    const Eigen::VectorXd& v, const Solution& s,
                    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) const;
 
-  const Eigen::VectorXd& q_prev(const ContactSequence& contact_sequence, 
-                                const Eigen::VectorXd& q,
+  const Eigen::VectorXd& q_prev(const Eigen::VectorXd& q,
                                 const Solution& s, const int time_stage) const;
-
-  double dtau(const ContactSequence& contact_sequence, 
-              const int time_stage) const;
-
-  static bool is_state_constraint_valid(const int time_stage_before_impulse);
 
   double T_, dtau_;
   int N_, num_proc_;
+  OCPDiscretizer ocp_discretizer_;
   Eigen::VectorXd kkt_error_;
 };
 
 } // namespace idocp 
-
+;
 #include "idocp/ocp/ocp_linearizer.hxx"
 
 #endif // IDOCP_OCP_LINEARIZER_HPP_

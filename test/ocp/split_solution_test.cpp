@@ -100,7 +100,7 @@ void SplitSolutionTest::TestWithoutContacts(const Robot& robot) {
   EXPECT_FALSE(s.v.isZero());
   EXPECT_FALSE(s.u.isZero());
   EXPECT_FALSE(s.beta.isZero());
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     EXPECT_FALSE(s.u_passive.isZero());
     EXPECT_FALSE(s.nu_passive.isZero());
   }
@@ -130,7 +130,7 @@ void SplitSolutionTest::TestWithoutContacts(const Robot& robot) {
   EXPECT_FALSE(s_random.v.isZero());
   EXPECT_FALSE(s_random.u.isZero());
   EXPECT_FALSE(s_random.beta.isZero());
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     EXPECT_FALSE(s_random.u_passive.isZero());
     EXPECT_FALSE(s_random.nu_passive.isZero());
   }
@@ -148,13 +148,13 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   s.setContactStatus(contact_status);
   EXPECT_TRUE(s.lmd.size() == robot.dimv());
   EXPECT_TRUE(s.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s.mu.size() == robot.max_point_contacts());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  EXPECT_TRUE(s.mu.size() == robot.maxPointContacts());
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_TRUE(s.mu[i].size() == 3);
   }
   EXPECT_TRUE(s.a.size() == robot.dimv());
-  EXPECT_TRUE(s.f.size() == robot.max_point_contacts());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  EXPECT_TRUE(s.f.size() == robot.maxPointContacts());
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_TRUE(s.f[i].size() == 3);
   }
   EXPECT_TRUE(s.q.size() == robot.dimq());
@@ -166,7 +166,7 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   EXPECT_TRUE(s.mu_stack().size() == contact_status.dimf());
   EXPECT_TRUE(s.f_stack().size() == contact_status.dimf());
   EXPECT_EQ(s.dimf(), contact_status.dimf());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_EQ(s.isContactActive(i), contact_status.isContactActive(i));
   }
   const Eigen::VectorXd lmd = Eigen::VectorXd::Random(robot.dimv());
@@ -204,7 +204,7 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   EXPECT_TRUE(s.mu_stack().isApprox(mu_stack));
   s.set_f_vector();
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       EXPECT_TRUE(s.f[i].isApprox(s.f_stack().segment<3>(dimf_stack)));
       dimf_stack += 3;
@@ -212,7 +212,7 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   }
   dimf_stack = 0;
   s.set_mu_vector();
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       EXPECT_TRUE(s.mu[i].isApprox(s.mu_stack().segment<3>(dimf_stack)));
       dimf_stack += 3;
@@ -223,14 +223,14 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   s.set_f_stack();
   s.set_mu_stack();
   dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       EXPECT_TRUE(s.f[i].isApprox(s.f_stack().segment<3>(dimf_stack)));
       dimf_stack += 3;
     }
   }
   dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       EXPECT_TRUE(s.mu[i].isApprox(s.mu_stack().segment<3>(dimf_stack)));
       dimf_stack += 3;
@@ -242,13 +242,13 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   s.setRandom(robot, contact_status);
   EXPECT_TRUE(s.lmd.size() == robot.dimv());
   EXPECT_TRUE(s.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s.mu.size() == robot.max_point_contacts());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  EXPECT_TRUE(s.mu.size() == robot.maxPointContacts());
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_TRUE(s.mu[i].size() == 3);
   }
   EXPECT_TRUE(s.a.size() == robot.dimv());
-  EXPECT_TRUE(s.f.size() == robot.max_point_contacts());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  EXPECT_TRUE(s.f.size() == robot.maxPointContacts());
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_TRUE(s.f[i].size() == 3);
   }
   EXPECT_TRUE(s.q.size() == robot.dimq());
@@ -260,7 +260,7 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   EXPECT_TRUE(s.mu_stack().size() == contact_status.dimf());
   EXPECT_TRUE(s.f_stack().size() == contact_status.dimf());
   EXPECT_EQ(s.dimf(), contact_status.dimf());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_EQ(s.isContactActive(i), contact_status.isContactActive(i));
   }
   EXPECT_FALSE(s.lmd.isZero());
@@ -272,17 +272,17 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   EXPECT_FALSE(s.beta.isZero());
   EXPECT_FALSE(s.f_stack().isZero());
   EXPECT_FALSE(s.mu_stack().isZero());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       EXPECT_FALSE(s.f[i].isZero());
     }
   }
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       EXPECT_FALSE(s.mu[i].isZero());
     }
   }
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     EXPECT_FALSE(s.u_passive.isZero());
     EXPECT_FALSE(s.nu_passive.isZero());
   }
@@ -293,13 +293,13 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   const SplitSolution s_random = SplitSolution::Random(robot, contact_status);
   EXPECT_TRUE(s_random.lmd.size() == robot.dimv());
   EXPECT_TRUE(s_random.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s_random.mu.size() == robot.max_point_contacts());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  EXPECT_TRUE(s_random.mu.size() == robot.maxPointContacts());
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_TRUE(s_random.mu[i].size() == 3);
   }
   EXPECT_TRUE(s_random.a.size() == robot.dimv());
-  EXPECT_TRUE(s_random.f.size() == robot.max_point_contacts());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  EXPECT_TRUE(s_random.f.size() == robot.maxPointContacts());
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_TRUE(s_random.f[i].size() == 3);
   }
   EXPECT_TRUE(s_random.q.size() == robot.dimq());
@@ -311,7 +311,7 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   EXPECT_TRUE(s_random.mu_stack().size() == contact_status.dimf());
   EXPECT_TRUE(s_random.f_stack().size() == contact_status.dimf());
   EXPECT_EQ(s_random.dimf(), contact_status.dimf());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_EQ(s_random.isContactActive(i), contact_status.isContactActive(i));
   }
   EXPECT_FALSE(s_random.lmd.isZero());
@@ -323,17 +323,17 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   EXPECT_FALSE(s_random.beta.isZero());
   EXPECT_FALSE(s_random.f_stack().isZero());
   EXPECT_FALSE(s_random.mu_stack().isZero());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s_random.isContactActive(i)) {
       EXPECT_FALSE(s.f[i].isZero());
     }
   }
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s_random.isContactActive(i)) {
       EXPECT_FALSE(s_random.mu[i].isZero());
     }
   }
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     EXPECT_FALSE(s_random.u_passive.isZero());
     EXPECT_FALSE(s_random.nu_passive.isZero());
   }
@@ -355,7 +355,7 @@ void SplitSolutionTest::TestIsApprox(const Robot& robot,
   EXPECT_FALSE(s.a.isZero());
   EXPECT_FALSE(s.u.isZero());
   EXPECT_FALSE(s.beta.isZero());
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     EXPECT_FALSE(s.u_passive.isZero());
     EXPECT_FALSE(s.nu_passive.isZero());
   }
@@ -393,7 +393,7 @@ void SplitSolutionTest::TestIsApprox(const Robot& robot,
   EXPECT_FALSE(s.isApprox(s_ref));
   s_ref.beta = s.beta;
   EXPECT_TRUE(s.isApprox(s_ref));
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     s_ref.u_passive.setRandom();
     s_ref.nu_passive.setRandom();
     EXPECT_FALSE(s.isApprox(s_ref));
@@ -448,7 +448,7 @@ void SplitSolutionTest::TestIntegrate(const Robot& robot,
     s_ref.mu_stack().noalias() += step_size * d.dmu();
     s_ref.set_mu_vector();
   }
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     s_ref.u_passive.noalias() += step_size * d.du_passive;
     s_ref.nu_passive.noalias() += step_size * d.dnu_passive;
   }

@@ -24,8 +24,8 @@ inline ImpulseStatus::~ImpulseStatus() {
 
 
 inline bool ImpulseStatus::operator==(const ImpulseStatus& other) const {
-  assert(other.max_point_contacts() == max_point_contacts());
-  for (int i=0; i<max_point_contacts(); ++i) {
+  assert(other.maxPointContacts() == maxPointContacts());
+  for (int i=0; i<maxPointContacts(); ++i) {
     if (other.isImpulseActive(i) != isImpulseActive(i)) {
       return false;
     }
@@ -54,27 +54,22 @@ inline bool ImpulseStatus::hasActiveImpulse() const {
 }
 
 
-inline int ImpulseStatus::dimp() const {
+inline int ImpulseStatus::dimf() const {
   return impulse_status_.dimf();
 }
 
 
-inline int ImpulseStatus::num_active_impulse() const {
-  return impulse_status_.num_active_contacts();
-}
-
-
-inline int ImpulseStatus::max_point_contacts() const {
-  return impulse_status_.max_point_contacts();
+inline int ImpulseStatus::maxPointContacts() const {
+  return impulse_status_.maxPointContacts();
 }
 
 
 inline void ImpulseStatus::setImpulseStatus(
     const ContactStatus& pre_contact_status, 
     const ContactStatus& post_contact_status) {
-  assert(pre_contact_status.max_point_contacts() == max_point_contacts());
-  assert(post_contact_status.max_point_contacts() == max_point_contacts());
-  for (int i=0; i<impulse_status_.max_point_contacts(); ++i) {
+  assert(pre_contact_status.maxPointContacts() == maxPointContacts());
+  assert(post_contact_status.maxPointContacts() == maxPointContacts());
+  for (int i=0; i<impulse_status_.maxPointContacts(); ++i) {
     if (pre_contact_status.isContactActive(i)) {
       deactivateImpulse(i);
     }
@@ -130,7 +125,8 @@ inline void ImpulseStatus::setContactPoints(
 }
 
 
-inline const std::vector<Eigen::Vector3d>& ImpulseStatus::contactPoints() const {
+inline const std::vector<Eigen::Vector3d>& 
+ImpulseStatus::contactPoints() const {
   return impulse_status_.contactPoints();
 }
 

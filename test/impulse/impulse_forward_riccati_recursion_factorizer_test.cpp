@@ -49,7 +49,7 @@ ImpulseSplitKKTMatrix ImpulseForwardRiccatiRecursionFactorizerTest::createKKTMat
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   seed = Eigen::MatrixXd::Random(dimv, dimv);
   kkt_matrix.Qvv() = seed * seed.transpose();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
   }
@@ -92,14 +92,14 @@ void ImpulseForwardRiccatiRecursionFactorizerTest::test(const Robot& robot) {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const ImpulseSplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
-  if (!robot.has_floating_base()) {
+  if (!robot.hasFloatingBase()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
   }
   ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   const ImpulseSplitKKTResidual kkt_residual = createKKTResidual(robot);
   ImpulseForwardRiccatiRecursionFactorizer factorizer(robot);
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     A.topLeftCorner(dimv, dimv) = kkt_matrix.Fqq();
   }
   else {

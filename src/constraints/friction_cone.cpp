@@ -9,7 +9,7 @@ namespace idocp {
 FrictionCone::FrictionCone(const Robot& robot, const double barrier,
                            const double fraction_to_boundary_rate)
   : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
-    dimc_(robot.max_point_contacts()) {
+    dimc_(robot.maxPointContacts()) {
 }
 
 
@@ -35,7 +35,7 @@ KinematicsLevel FrictionCone::kinematicsLevel() const {
 
 bool FrictionCone::isFeasible(Robot& robot, ConstraintComponentData& data, 
                               const SplitSolution& s) const {
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       if (frictionConeResidual(mu, s.f[i]) > 0) {
@@ -51,7 +51,7 @@ void FrictionCone::setSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
   assert(dtau > 0);
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     const double mu = robot.frictionCoefficient(i);
     data.slack.coeffRef(i) = - dtau * frictionConeResidual(mu, s.f[i]);
   }
@@ -64,7 +64,7 @@ void FrictionCone::augmentDualResidual(
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   assert(dtau > 0);
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       const double gx = 2 * dtau * s.f[i].coeff(0);
@@ -85,7 +85,7 @@ void FrictionCone::condenseSlackAndDual(
     SplitKKTResidual& kkt_residual) const {
   assert(dtau > 0);
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       const double gx = 2 * dtau * s.f[i].coeff(0);
@@ -121,7 +121,7 @@ void FrictionCone::computeSlackAndDualDirection(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, const SplitDirection& d) const {
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       const double gx = 2 * dtau * s.f[i].coeff(0);
@@ -151,7 +151,7 @@ void FrictionCone::computeSlackAndDualDirection(
 void FrictionCone::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       data.residual.coeffRef(i) = dtau * frictionConeResidual(mu, s.f[i]) 

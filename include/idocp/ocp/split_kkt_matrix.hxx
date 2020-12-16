@@ -15,7 +15,7 @@ inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv(), 3*robot.dimv())),
     Qaaff_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
                                       robot.dimv()+robot.max_dimf())),
-    has_floating_base_(robot.has_floating_base()),
+    has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dimu_(robot.dimu()), 

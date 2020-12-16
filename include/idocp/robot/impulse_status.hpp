@@ -85,19 +85,13 @@ public:
   /// @brief Return the dimension of the active impulse.
   /// @return Dimension of the active impulse. 
   ///
-  int dimp() const;
-
-  ///
-  /// @brief Return the number of the active impulse.
-  /// @return The number of the active impulse. 
-  ///
-  int num_active_impulse() const;
+  int dimf() const;
 
   ///
   /// @brief Return the maximum number of the contacts.
   /// @return The maximum number of the contacts. 
   ///
-  int max_point_contacts() const;
+  int maxPointContacts() const;
 
   ///
   /// @brief Set the contact status from two sequential contact status.
@@ -110,7 +104,7 @@ public:
   ///
   /// @brief Set the impulse status.
   /// @param[in] is_impulse_active Impulse status. Size must be 
-  /// ImpulseStatus::max_point_contacts();
+  /// ImpulseStatus::maxPointContacts();
   ///
   void setImpulseStatus(const std::vector<bool>& is_impulse_active);
 
@@ -149,9 +143,16 @@ public:
   ///
   /// @brief Set contact points.
   /// @param[in] contact_points Contact points. Size must be 
-  /// ImpulseStatus::max_point_contacts().
+  /// ImpulseStatus::maxPointContacts().
   ///
   void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
+
+  ///
+  /// @brief Get contact point.
+  /// @param[in] contact_indices Indices of the contacts that are activated.
+  /// @return const reference to the contact points. 
+  ///
+  const Eigen::Vector3d& contactPoint(const int contact_index) const;
 
   ///
   /// @brief Get contact points.

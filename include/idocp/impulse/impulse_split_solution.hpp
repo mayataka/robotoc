@@ -61,7 +61,7 @@ public:
   void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Stack of active impulse forces. Size is ImpulseStatus::dimp().
+  /// @brief Stack of active impulse forces. Size is ImpulseStatus::dimf().
   /// @return Reference to the stack of active impulse forces.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> f_stack();
@@ -138,7 +138,7 @@ public:
 
   ///
   /// @brief Lagrange multiplier with respect to the transition of 
-  /// ImpulseSplitSolution::q. Size is ImpulseStatus::dimp().
+  /// ImpulseSplitSolution::q. Size is ImpulseStatus::dimf().
   ///
   Eigen::VectorXd lmd;
 
@@ -166,7 +166,7 @@ public:
 
   ///
   /// @brief Impulse forces. 
-  /// Size is Robot::max_point_contacts().
+  /// Size is Robot::maxPointContacts().
   ///
   std::vector<Eigen::Vector3d> f;
 
@@ -178,13 +178,13 @@ public:
 
   ///
   /// @brief Lagrange multiplier with respect to impulse velocity constraint. 
-  /// Size is Robot::max_point_contacts().
+  /// Size is Robot::maxPointContacts().
   ///
   std::vector<Eigen::Vector3d> mu;
 
   ///
   /// @brief Lagrange multiplier with respect to impulse position constraint. 
-  /// Size is Robot::max_point_contacts().
+  /// Size is Robot::maxPointContacts().
   ///
   std::vector<Eigen::Vector3d> xi;
 

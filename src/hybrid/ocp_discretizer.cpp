@@ -1,0 +1,1 @@
+#include "idocp/hybrid/ocp_discretizer.hpp"

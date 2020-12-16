@@ -8,8 +8,10 @@
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_lp_factorizer.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/hybrid/ocp_discretizer.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 
+#include "test_helper.hpp"
 
 namespace idocp {
 
@@ -19,6 +21,7 @@ protected:
     srand((unsigned int) time(0));
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
+    t = std::abs(Eigen::VectorXd::Random(1)[0]);
     T = 1;
     N = 20;
     max_num_impulse = 5;
@@ -32,41 +35,20 @@ protected:
   void test(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  double T, dtau;
+  double t, T, dtau;
   int N, max_num_impulse;
 };
 
 
 ContactSequence StateConstraintRiccatiLPFactorizerTest::createContactSequence(const Robot& robot) const {
-  std::vector<DiscreteEvent> discrete_events;
-  ContactStatus pre_contact_status = robot.createContactStatus();
-  pre_contact_status.setRandom();
-  ContactSequence contact_sequence(robot, T, N);
-  contact_sequence.setContactStatusUniformly(pre_contact_status);
-  ContactStatus post_contact_status = pre_contact_status;
-  std::random_device rnd;
-  for (int i=0; i<max_num_impulse; ++i) {
-    DiscreteEvent tmp(robot);
-    tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
-    while (!tmp.existDiscreteEvent()) {
-      post_contact_status.setRandom();
-      tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
-    }
-    tmp.eventTime = i * 0.15 + 0.1 * std::abs(Eigen::VectorXd::Random(1)[0]);
-    discrete_events.push_back(tmp);
-    pre_contact_status = post_contact_status;
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    contact_sequence.setDiscreteEvent(discrete_events[i]);
-  }
-  return contact_sequence;
+  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dtau);
 }
 
 
 void StateConstraintRiccatiLPFactorizerTest::test(const Robot& robot) const {
   const int dimv = robot.dimv();
   const auto contact_sequence = createContactSequence(robot);
-  const int num_impulse = contact_sequence.totalNumImpulseStages();
+  const int num_impulse = contact_sequence.numImpulseEvents();
   std::vector<SplitRiccatiFactorization> impulse_riccati_factorization(max_num_impulse, SplitRiccatiFactorization(robot));
   for (int i=0; i<num_impulse; ++i) {
     const int dimx = 2*robot.dimv();
@@ -89,14 +71,16 @@ void StateConstraintRiccatiLPFactorizerTest::test(const Robot& robot) const {
   }
   auto constraint_factorization_ref = constraint_factorization;
   const Eigen::VectorXd dx0 = Eigen::VectorXd::Random(2*robot.dimv());
+  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+  ocp_discretizer.discretizeOCP(contact_sequence, t);
   StateConstraintRiccatiLPFactorizer factorizer(robot);
   for (int constraint_index=0; constraint_index<num_impulse; ++constraint_index) {
-    factorizer.factorizeLinearProblem(contact_sequence, impulse_riccati_factorization[constraint_index], 
+    factorizer.factorizeLinearProblem(ocp_discretizer, impulse_riccati_factorization[constraint_index], 
                                       constraint_factorization, dx0, constraint_index);
   }
   for (int constraint_index=0; constraint_index<num_impulse; ++constraint_index) {
     const auto impulse_riccati_factorization_ref = impulse_riccati_factorization[constraint_index];
-    const int dimf = contact_sequence.impulseStatus(constraint_index).dimp();
+    const int dimf = contact_sequence.impulseStatus(constraint_index).dimf();
     const int dimv = robot.dimv();
     const int dimx = 2*robot.dimv();
     Eigen::MatrixXd E = Eigen::MatrixXd::Zero(dimf, dimx);

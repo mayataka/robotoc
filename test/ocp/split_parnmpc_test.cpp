@@ -108,7 +108,7 @@ std::shared_ptr<CostFunction> SplitParNMPCTest::createCost(const Robot& robot) {
   task_space_3d_cost->set_q_3d_ref(q_3d_ref);
   auto contact_force_cost = std::make_shared<idocp::ContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Constant(0.001));
   }
   contact_force_cost->set_f_weight(f_weight);
@@ -234,7 +234,7 @@ void SplitParNMPCTest::testComputeKKTResidualEmptyCostAndEmptyConstraints(
   kkt_matrix.setContactStatus(contact_status);
   SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s_prev.q, s.q, kkt_residual.Fq());
     robot.dSubtractdConfigurationMinus(s_prev.q, s.q, kkt_matrix.Fqq());
     robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq_prev);
@@ -257,7 +257,7 @@ void SplitParNMPCTest::testComputeKKTResidualEmptyCostAndEmptyConstraints(
   Eigen::MatrixXd dID_da = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, ID);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     ID.head(robot.dim_passive()) -= s.u_passive;
     ID.tail(robot.dimu()) -= s.u;
   }
@@ -268,7 +268,7 @@ void SplitParNMPCTest::testComputeKKTResidualEmptyCostAndEmptyConstraints(
   kkt_residual.lq() += dtau * dID_dq.transpose() * s.beta;
   kkt_residual.lv() += dtau * dID_dv.transpose() * s.beta;
   kkt_residual.la += dtau * dID_da.transpose() * s.beta;
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_residual.lu() -= dtau * s.beta.tail(robot.dimu());
     kkt_residual.lu_passive -= dtau * s.beta.head(robot.dim_passive());
     kkt_residual.lu_passive += dtau * s.nu_passive;
@@ -298,7 +298,7 @@ void SplitParNMPCTest::testComputeKKTResidualEmptyCostAndEmptyConstraints(
                          + kkt_residual.lf().squaredNorm()
                          + kkt_residual.lu().squaredNorm()
                          + dtau * dtau * ID.squaredNorm();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_error_ref += kkt_residual.lu_passive.squaredNorm();
     kkt_error_ref += dtau * dtau * s.u_passive.squaredNorm();
   }
@@ -307,7 +307,7 @@ void SplitParNMPCTest::testComputeKKTResidualEmptyCostAndEmptyConstraints(
   }
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
   double constraint_violation_ref = kkt_residual.Fx().lpNorm<1>() + dtau * ID.lpNorm<1>();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     constraint_violation_ref += dtau * s.u_passive.lpNorm<1>();
   }
   if (contact_status.hasActiveContacts()) {
@@ -348,7 +348,7 @@ void SplitParNMPCTest::testComputeKKTResidualEmptyCost(
                          + kkt_residual.lu().squaredNorm()
                          + cd.squaredNormContactDynamicsResidual(dtau)
                          + constraints->squaredNormPrimalAndDualResidual(constraints_data);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_error_ref += kkt_residual.lu_passive.squaredNorm();
   }
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
@@ -386,7 +386,7 @@ void SplitParNMPCTest::testComputeKKTResidualEmptyConstraints(
                          + kkt_residual.lf().squaredNorm()
                          + kkt_residual.lu().squaredNorm()
                          + cd.squaredNormContactDynamicsResidual(dtau);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_error_ref += kkt_residual.lu_passive.squaredNorm();
   }
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
@@ -428,7 +428,7 @@ void SplitParNMPCTest::testComputeKKTResidual(
                          + kkt_residual.lu().squaredNorm()
                          + cd.squaredNormContactDynamicsResidual(dtau)
                          + constraints->squaredNormPrimalAndDualResidual(constraints_data);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_error_ref += kkt_residual.lu_passive.squaredNorm();
   }
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);

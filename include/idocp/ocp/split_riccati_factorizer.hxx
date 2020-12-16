@@ -8,7 +8,7 @@
 namespace idocp {
 
 inline SplitRiccatiFactorizer::SplitRiccatiFactorizer(const Robot& robot) 
-  : has_floating_base_(robot.has_floating_base()),
+  : has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()),
     dimu_(robot.dimu()),
     llt_(robot.dimu()),

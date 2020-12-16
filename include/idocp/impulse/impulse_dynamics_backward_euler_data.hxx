@@ -40,7 +40,7 @@ inline ImpulseDynamicsBackwardEulerData::~ImpulseDynamicsBackwardEulerData() {
 
 inline void ImpulseDynamicsBackwardEulerData::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimf_ = impulse_status.dimp();
+  dimf_ = impulse_status.dimf();
 }
 
 

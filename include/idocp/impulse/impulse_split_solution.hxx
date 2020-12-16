@@ -11,15 +11,15 @@ inline ImpulseSplitSolution::ImpulseSplitSolution(const Robot& robot)
     q(Eigen::VectorXd::Zero(robot.dimq())),
     v(Eigen::VectorXd::Zero(robot.dimv())),
     dv(Eigen::VectorXd::Zero(robot.dimv())),
-    f(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
+    f(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
-    mu(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
-    xi(robot.max_point_contacts(), Eigen::Vector3d::Zero()),
+    mu(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
+    xi(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     xi_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
-    has_floating_base_(robot.has_floating_base()),
-    is_impulse_active_(robot.max_point_contacts(), false),
+    has_floating_base_(robot.hasFloatingBase()),
+    is_impulse_active_(robot.maxPointContacts(), false),
     dimf_(0) {
   robot.normalizeConfiguration(q);
 }
@@ -50,9 +50,9 @@ inline ImpulseSplitSolution::~ImpulseSplitSolution() {
 
 inline void ImpulseSplitSolution::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  assert(impulse_status.max_point_contacts() == is_impulse_active_.size());
+  assert(impulse_status.maxPointContacts() == is_impulse_active_.size());
   is_impulse_active_ = impulse_status.isImpulseActive();
-  dimf_ = impulse_status.dimp();
+  dimf_ = impulse_status.dimf();
 }
 
 

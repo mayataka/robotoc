@@ -34,7 +34,7 @@ protected:
 
 
 void RiccatiFactorizationTest::testWithoutContact(const Robot& robot) {
-  ASSERT_TRUE(robot.max_point_contacts() == 0);
+  ASSERT_TRUE(robot.maxPointContacts() == 0);
   const int dimv = robot.dimv();
   const int dimx = 2 * robot.dimv();
   const int dimu = robot.dimu();
@@ -58,7 +58,7 @@ void RiccatiFactorizationTest::testWithoutContact(const Robot& robot) {
 
 
 void RiccatiFactorizationTest::testWithContact(const Robot& robot) {
-  ASSERT_TRUE(robot.max_point_contacts() > 0);
+  ASSERT_TRUE(robot.maxPointContacts() > 0);
   const int dimv = robot.dimv();
   const int dimx = 2 * robot.dimv();
   const int dimu = robot.dimu();

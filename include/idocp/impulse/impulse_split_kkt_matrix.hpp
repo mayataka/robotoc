@@ -62,7 +62,7 @@ public:
   /// @brief Jacobian of the state equation of the configuration with respect  
   /// to the impulse forces. 
   /// @return Reference to the block part of the Hessian. 
-  /// Size is Robot::dimv() x ImpulseStatus::dimp().
+  /// Size is Robot::dimv() x ImpulseStatus::dimf().
   ///
   Eigen::Block<Eigen::MatrixXd> Fqf();
 
@@ -101,7 +101,7 @@ public:
   /// @brief Jacobian of the state equation of the generalized velocity with 
   /// respect to the impulse forces. 
   /// @return Reference to the block part of the Hessian. 
-  /// Size is Robot::dimv() x ImpulseStatus::dimp().
+  /// Size is Robot::dimv() x ImpulseStatus::dimf().
   ///
   Eigen::Block<Eigen::MatrixXd> Fvf();
 
@@ -139,7 +139,7 @@ public:
   ///
   /// @brief Jacobian of the state equation with respect to the impulse forces. 
   /// @return Reference to the block part of the Hessian. 
-  /// Size is 2 * Robot::dimv() x ImpulseStatus::dimp().
+  /// Size is 2 * Robot::dimv() x ImpulseStatus::dimf().
   ///
   Eigen::Block<Eigen::MatrixXd> Fxf();
 
@@ -167,7 +167,7 @@ public:
   /// ImpulseSplitKKTMatrix::setImpulseStatus() muset be called to set the impulse 
   /// dimension before calling this function.
   /// @return Reference to the block part of the Hessian. 
-  /// Size is ImpulseStatus::dimp() x Robot::dimv().
+  /// Size is ImpulseStatus::dimf() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Pq();
 
@@ -181,7 +181,7 @@ public:
   /// respect to the configuration. ImpulseSplitKKTMatrix::setImpulseStatus() must be
   /// called to set the impulse dimension before calling this function.
   /// @return Reference to the block part of the Hessian. 
-  /// Size is ImpulseStatus::dimp() x Robot::dimv().
+  /// Size is ImpulseStatus::dimf() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Vq();
 
@@ -195,7 +195,7 @@ public:
   /// respect to the velocity. ImpulseSplitKKTMatrix::setImpulseStatus() must be
   /// called to set the impulse dimension before calling this function.
   /// @return Reference to the block part of the Hessian. 
-  /// Size is ImpulseStatus::dimp() x Robot::dimv().
+  /// Size is ImpulseStatus::dimf() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Vv();
 

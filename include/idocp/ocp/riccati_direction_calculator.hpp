@@ -23,7 +23,7 @@
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
-#include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/hybrid/ocp_discretizer.hpp"
 
 
 namespace idocp {
@@ -36,15 +36,14 @@ class RiccatiDirectionCalculator {
 public:
   ///
   /// @brief Construct optimal control problem solver.
-  /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
   /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
   /// Must be non-negative. Default is 0.
   /// @param[in] num_proc Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  RiccatiDirectionCalculator(const double T, const int N, 
-                             const int max_num_impulse, const int num_proc);
+  RiccatiDirectionCalculator(const int N, const int max_num_impulse, 
+                             const int num_proc);
 
   ///
   /// @brief Default constructor. 
@@ -85,7 +84,7 @@ public:
 
   void computeNewtonDirectionFromRiccatiFactorization(
       OCP& ocp, std::vector<Robot>& robots, 
-      const ContactSequence& contact_sequence, 
+      const OCPDiscretizer& ocp_discretizer,
       const RiccatiFactorizer& factorizer, 
       const RiccatiFactorization& factorization, 
       const Solution& s, Direction& d);
@@ -94,25 +93,28 @@ public:
 
   double maxDualStepSize() const;
 
-  double dtau(const ContactSequence& contact_sequence, 
-              const int time_stage) const;
-
   static const SplitRiccatiFactorization& next_riccati_factorization(
       const RiccatiFactorization& factorization, 
-      const ContactSequence& contact_sequence, const int time_stage);
+      const OCPDiscretizer& ocp_discretizer, const int time_stage) {
+    if (ocp_discretizer.isTimeStageBeforeImpulse(time_stage)) {
+      return factorization.impulse[ocp_discretizer.impulseIndex(time_stage)];
+    }
+    else if (ocp_discretizer.isTimeStageBeforeLift(time_stage)) {
+      return factorization.lift[ocp_discretizer.liftIndex(time_stage)];
+    }
+    else {
+      return factorization[time_stage+1];
+    }
+  }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-
-  double T_, dtau_;
   int N_, num_proc_, N_all_;
   Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 
 };
 
 } // namespace idocp 
-
-#include "idocp/ocp/riccati_direction_calculator.hxx"
 
 #endif // IDOCP_RICCATI_DIRECTION_CALCULATOR_HPP_ 

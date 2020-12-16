@@ -20,10 +20,10 @@ inline UnconstrainedDynamics::UnconstrainedDynamics(const Robot& robot)
     Quu_dID_da_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     dimv_(robot.dimv()) {
   try {
-    if (robot.has_floating_base()) {
+    if (robot.hasFloatingBase()) {
       throw std::logic_error("robot has floating base: robot should have no constraints!");
     }
-    if (robot.max_point_contacts() > 0) {
+    if (robot.maxPointContacts() > 0) {
       throw std::logic_error("robot can have contacts: robot should have no constraints!");
     }
   }

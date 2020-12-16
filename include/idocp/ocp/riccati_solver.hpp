@@ -8,6 +8,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/hybrid/ocp_discretizer.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/riccati_recursion.hpp"
@@ -66,21 +67,23 @@ public:
   RiccatiSolver& operator=(RiccatiSolver&&) noexcept = default;
 
   ///
-  /// @brief Computes the Newton direction using Riccati recursion. Call after
-  /// calling OCPLinearizer::linearizeOCP() before calling this function.
+  /// @brief Computes the Newton direction using Riccati recursion. Before 
+  /// calling this function, call OCPLinearizer::linearizeOCP() to compute
+  /// kkt_matrix and kkt_residual.
   /// @param[in] ocp OCP. 
   /// @param[in] robots Robot models. 
   /// @param[in] contact_sequence Contact sequence. 
+  /// @param[in] t Initial time. 
   /// @param[in] q Initial configuration vector. 
   /// @param[in] v Initial generalized velocity vector. 
-  /// @param[in] s Splits solutions. 
-  /// @param[in] d Splits directions. 
-  /// @param[in] kkt_matrix KKT matrices. 
-  /// @param[in] kkt_residual KKT residuals. 
+  /// @param[in] s Solution. 
+  /// @param[in, out] d Direction. 
+  /// @param[in, out] kkt_matrix KKT matrix. 
+  /// @param[in, out] kkt_residual KKT residual. 
   /// 
   void computeNewtonDirection(OCP& ocp, std::vector<Robot>& robots, 
                               const ContactSequence& contact_sequence,
-                              const Eigen::VectorXd& q, 
+                              const double t, const Eigen::VectorXd& q, 
                               const Eigen::VectorXd& v, const Solution& s, 
                               Direction& d, KKTMatrix& kkt_matrix, 
                               KKTResidual& kkt_residual);
@@ -100,7 +103,8 @@ public:
   double maxDualStepSize() const;
 
   ///
-  /// @brief Getter of the state feedback gain of the LQR subproblem. 
+  /// @brief Getter of the state feedback gain of the LQR subproblem at the 
+  /// specified time stage. 
   /// @param[in] Kq The state feedback gain with respect to the configuration. 
   /// @param[in] Kv The state feedback gain with respect to the velocity. 
   /// @param[in] time_stage Time stage of interested. 
@@ -115,7 +119,7 @@ private:
   StateConstraintRiccatiFactorizer constraint_factorizer_;
   StateConstraintRiccatiFactorization constraint_factorization_;
   RiccatiDirectionCalculator direction_calculator_;
-
+  OCPDiscretizer ocp_discretizer_;
 };
 
 } // namespace idocp 

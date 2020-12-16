@@ -9,7 +9,7 @@ namespace idocp {
 ContactDistance::ContactDistance(const Robot& robot, const double barrier,
                                  const double fraction_to_boundary_rate)
   : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
-    dimc_(robot.max_point_contacts()) {
+    dimc_(robot.maxPointContacts()) {
 }
 
 
@@ -36,7 +36,7 @@ KinematicsLevel ContactDistance::kinematicsLevel() const {
 bool ContactDistance::isFeasible(Robot& robot, ConstraintComponentData& data, 
                                  const SplitSolution& s) const {
   Eigen::Vector3d end_effector_position = Eigen::Vector3d::Zero();
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (!s.isContactActive(i)) {
       robot.computeContactResidual(i, end_effector_position);
       if (end_effector_position.coeff(2) < 0) {
@@ -54,7 +54,7 @@ void ContactDistance::setSlackAndDual(Robot& robot,
                                       const SplitSolution& s) const {
   assert(dtau > 0);
   Eigen::Vector3d end_effector_position = Eigen::Vector3d::Zero();
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     robot.computeContactResidual(i, end_effector_position);
     data.slack.coeffRef(i) = dtau * end_effector_position.coeff(2);
   }
@@ -71,7 +71,7 @@ void ContactDistance::augmentDualResidual(Robot& robot,
   int dimf_stack = 0;
   Eigen::MatrixXd end_effector_Jacobian = Eigen::MatrixXd::Zero(s.dimf(), 
                                                                 robot.dimv());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (!s.isContactActive(i)) {
       robot.computeContactDerivative(i, end_effector_Jacobian);
     }
@@ -89,7 +89,7 @@ void ContactDistance::condenseSlackAndDual(
     SplitKKTResidual& kkt_residual) const {
   assert(dtau > 0);
   Eigen::MatrixXd end_effector_Jacobian = Eigen::MatrixXd::Zero(3, robot.dimv());
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (!robot.is_contact_active(i)) {
       robot.computeContactDerivative(i, end_effector_Jacobian);
       kkt_matrix.Qqq().noalias() 
@@ -111,7 +111,7 @@ void ContactDistance::condenseSlackAndDual(
 
 
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const double dual_per_slack = data.dual.coeff(i) / data.slack.coeff(i);
       kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack+2) 
@@ -132,7 +132,7 @@ void ContactDistance::computeSlackAndDualDirection(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, const SplitDirection& d) const {
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       data.dslack.coeffRef(i) 
           = dtau * d.df().coeff(dimf_stack+2) - data.residual.coeff(i);
@@ -155,7 +155,7 @@ void ContactDistance::computeSlackAndDualDirection(
 void ContactDistance::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s) const {
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       data.residual.coeffRef(i) = - dtau * s.f[i].coeff(2) + data.slack.coeff(i);
       data.duality.coeffRef(i) = computeDuality(data.slack.coeff(i), 

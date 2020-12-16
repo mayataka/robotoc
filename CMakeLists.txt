@@ -79,8 +79,8 @@ add_library(
   # src/impulse/split_impulse_parnmpc.cpp
   # src/impulse/impulse_split_backward_correction.cpp
   src/hybrid/discrete_event.cpp
-  src/hybrid/contact_sequence_primitive.cpp
   src/hybrid/contact_sequence.cpp
+  src/hybrid/ocp_discretizer.cpp
   src/hybrid/hybrid_container.cpp
   src/hybrid/collision_checker.cpp
   src/ocp/schur_complement.cpp

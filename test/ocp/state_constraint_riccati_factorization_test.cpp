@@ -6,6 +6,7 @@
 #include "idocp/ocp/split_state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 
+#include "test_helper.hpp"
 
 namespace idocp {
 
@@ -15,51 +16,32 @@ protected:
     srand((unsigned int) time(0));
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
+    t = std::abs(Eigen::VectorXd::Random(1)[0]);
     T = 1;
     N = 20;
     max_num_impulse = 5;
+    dtau = T / N;
   }
 
   virtual void TearDown() {
   }
 
   ContactSequence createContactSequence(const Robot& robot) const;
-  void testDim(const Robot& robot) const;
+  void testDimension(const Robot& robot) const;
   void testAssignment(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  double T;
+  double t, T, dtau;
   int N, max_num_impulse;
 };
 
 
 ContactSequence StateConstraintRiccatiFactorizationTest::createContactSequence(const Robot& robot) const {
-  std::vector<DiscreteEvent> discrete_events;
-  ContactStatus pre_contact_status = robot.createContactStatus();
-  pre_contact_status.setRandom();
-  ContactSequence contact_sequence(robot, T, N);
-  contact_sequence.setContactStatusUniformly(pre_contact_status);
-  ContactStatus post_contact_status = pre_contact_status;
-  std::random_device rnd;
-  for (int i=0; i<max_num_impulse; ++i) {
-    DiscreteEvent tmp(robot);
-    tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
-    while (!tmp.existDiscreteEvent()) {
-      post_contact_status.setRandom();
-      tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
-    }
-    tmp.eventTime = i * 0.15 + 0.01 * std::abs(Eigen::VectorXd::Random(1)[0]);
-    discrete_events.push_back(tmp);
-    pre_contact_status = post_contact_status;
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    contact_sequence.setDiscreteEvent(discrete_events[i]);
-  }
-  return contact_sequence;
+  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dtau);
 }
 
 
-void StateConstraintRiccatiFactorizationTest::testDim(const Robot& robot) const {
+void StateConstraintRiccatiFactorizationTest::testDimension(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   StateConstraintRiccatiFactorization factorization(robot, N, max_num_impulse);
@@ -94,10 +76,10 @@ void StateConstraintRiccatiFactorizationTest::testDim(const Robot& robot) const 
   EXPECT_EQ(factorization.e().size(), 0);
   EXPECT_EQ(factorization.dxi().size(), 0);
   const auto contact_sequence = createContactSequence(robot);
-  const int num_impulse = contact_sequence.totalNumImpulseStages();
+  const int num_impulse = contact_sequence.numImpulseEvents();
   factorization.setConstraintStatus(contact_sequence);
   for (int constraint_index=0; constraint_index<num_impulse; ++constraint_index) {
-    const int dimc = contact_sequence.impulseStatus(constraint_index).dimp();
+    const int dimc = contact_sequence.impulseStatus(constraint_index).dimf();
     for (int i=0; i<N; ++i) {
       EXPECT_EQ(factorization.T(constraint_index, i).rows(), dimx);
       EXPECT_EQ(factorization.T(constraint_index, i).cols(), dimc);
@@ -109,7 +91,7 @@ void StateConstraintRiccatiFactorizationTest::testDim(const Robot& robot) const 
       EXPECT_EQ(factorization.T_aux(constraint_index, i).cols(), dimc);
       EXPECT_EQ(factorization.T_lift(constraint_index, i).rows(), dimx);
       EXPECT_EQ(factorization.T_lift(constraint_index, i).cols(), dimc);
-      const int dimf = contact_sequence.impulseStatus(i).dimp();
+      const int dimf = contact_sequence.impulseStatus(i).dimf();
       EXPECT_EQ(factorization.ENT(constraint_index, i).rows(), dimc);
       EXPECT_EQ(factorization.ENT(constraint_index, i).cols(), dimf);
     }
@@ -146,7 +128,7 @@ void StateConstraintRiccatiFactorizationTest::testDim(const Robot& robot) const 
       EXPECT_EQ(factorization.T_aux(constraint_index, i).cols(), 0);
       EXPECT_EQ(factorization.T_lift(constraint_index, i).rows(), dimx);
       EXPECT_EQ(factorization.T_lift(constraint_index, i).cols(), 0);
-      const int dimf = contact_sequence.impulseStatus(i).dimp();
+      const int dimf = contact_sequence.impulseStatus(i).dimf();
       EXPECT_EQ(factorization.ENT(constraint_index, i).rows(), 0);
       EXPECT_EQ(factorization.ENT(constraint_index, i).cols(), dimf);
     }
@@ -173,7 +155,7 @@ void StateConstraintRiccatiFactorizationTest::testDim(const Robot& robot) const 
   }
   int dimf_total = 0;
   for (int i=0; i<num_impulse; ++i) {
-    dimf_total += contact_sequence.impulseStatus(i).dimp();
+    dimf_total += contact_sequence.impulseStatus(i).dimf();
   }
   EXPECT_EQ(factorization.ENT().rows(), dimf_total);
   EXPECT_EQ(factorization.ENT().cols(), dimf_total);
@@ -186,13 +168,13 @@ void StateConstraintRiccatiFactorizationTest::testAssignment(const Robot& robot)
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const auto contact_sequence = createContactSequence(robot);
-  const int num_impulse = contact_sequence.totalNumImpulseStages();
+  const int num_impulse = contact_sequence.numImpulseEvents();
   StateConstraintRiccatiFactorization factorization(robot, N, max_num_impulse);
   factorization.setConstraintStatus(contact_sequence);
   std::vector<std::vector<Eigen::MatrixXd>> T, T_impulse, T_aux, T_lift;
   std::vector<Eigen::MatrixXd> Eq, EN;
   for (int constraint_index=0; constraint_index<num_impulse; ++constraint_index) {
-    const int dimc = contact_sequence.impulseStatus(constraint_index).dimp();
+    const int dimc = contact_sequence.impulseStatus(constraint_index).dimf();
     std::vector<Eigen::MatrixXd> T_vec;
     for (int i=0; i<N; ++i) {
       T_vec.push_back(Eigen::MatrixXd::Random(dimx, dimc));
@@ -218,7 +200,7 @@ void StateConstraintRiccatiFactorizationTest::testAssignment(const Robot& robot)
   }
   int dimf_total = 0;
   for (int i=0; i<num_impulse; ++i) {
-    dimf_total += contact_sequence.impulseStatus(i).dimp();
+    dimf_total += contact_sequence.impulseStatus(i).dimf();
   }
   const Eigen::MatrixXd ENT = Eigen::MatrixXd::Random(dimf_total, dimf_total);
   const Eigen::MatrixXd e = Eigen::VectorXd::Random(dimf_total);
@@ -257,11 +239,11 @@ void StateConstraintRiccatiFactorizationTest::testAssignment(const Robot& robot)
   EXPECT_FALSE(factorization.dxi().isZero());
   int dimf_stack = 0;
   for (int constraint_index=0; constraint_index<num_impulse; ++constraint_index) {
-    const int dimc = contact_sequence.impulseStatus(constraint_index).dimp();
+    const int dimc = contact_sequence.impulseStatus(constraint_index).dimf();
     int dimf_stack_inner = 0;
     EXPECT_TRUE(factorization.ENEt(constraint_index).isApprox(factorization.ENT().block(dimf_stack, dimf_stack, dimc, dimc)));
     for (int i=0; i<num_impulse; ++i) {
-      const int dimf = contact_sequence.impulseStatus(i).dimp();
+      const int dimf = contact_sequence.impulseStatus(i).dimf();
       EXPECT_TRUE(factorization.ENT(constraint_index, i).isApprox(factorization.ENT().block(dimf_stack, dimf_stack_inner, dimc, dimf)));
       dimf_stack_inner += dimf;
     }
@@ -275,7 +257,7 @@ void StateConstraintRiccatiFactorizationTest::testAssignment(const Robot& robot)
 TEST_F(StateConstraintRiccatiFactorizationTest, fixed_base) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
-  testDim(robot);
+  testDimension(robot);
   testAssignment(robot);
 }
 
@@ -283,7 +265,7 @@ TEST_F(StateConstraintRiccatiFactorizationTest, fixed_base) {
 TEST_F(StateConstraintRiccatiFactorizationTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
-  testDim(robot);
+  testDimension(robot);
   testAssignment(robot);
 }
 

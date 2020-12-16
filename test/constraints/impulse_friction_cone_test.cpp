@@ -52,7 +52,7 @@ void ImpulseFrictionConeTest::testKinematics(Robot& robot, const ImpulseStatus& 
 void ImpulseFrictionConeTest::testIsFeasible(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone limit(robot); 
   ConstraintComponentData data(limit.dimc());
-  EXPECT_EQ(limit.dimc(), impulse_status.max_point_contacts());
+  EXPECT_EQ(limit.dimc(), impulse_status.maxPointContacts());
   ImpulseSplitSolution s(robot);
   s.setImpulseStatus(impulse_status);
   s.f_stack().setZero();
@@ -65,7 +65,7 @@ void ImpulseFrictionConeTest::testIsFeasible(Robot& robot, const ImpulseStatus& 
     s.f_stack().setRandom();
     s.set_f_vector();
     bool feasible = true;
-    for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+    for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
       if (impulse_status.isImpulseActive(i)) {
         if (ImpulseFrictionCone::frictionConeResidual(robot.frictionCoefficient(i), s.f[i]) > 0) {
           feasible = false;
@@ -83,7 +83,7 @@ void ImpulseFrictionConeTest::testSetSlackAndDual(Robot& robot, const ImpulseSta
   const int dimc = limit.dimc();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   limit.setSlackAndDual(robot, data, s);
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     data_ref.slack.coeffRef(i) = - ImpulseFrictionCone::frictionConeResidual(robot.frictionCoefficient(i), s.f[i]);
   }
   pdipm::SetSlackAndDualPositive(barrier, data_ref);
@@ -105,7 +105,7 @@ void ImpulseFrictionConeTest::testAugmentDualResidual(Robot& robot, const Impuls
   ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
   limit.augmentDualResidual(robot, data, s, kkt_res);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       Eigen::Vector3d gf;
@@ -130,7 +130,7 @@ void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, con
   ConstraintComponentData data_ref = data;
   limit.computePrimalAndDualResidual(robot, data, s);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       const double fx = s.f[i].coeff(0);
@@ -164,7 +164,7 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, const Impul
   ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
   limit.condenseSlackAndDual(robot, data, s, kkt_mat, kkt_res);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       const double fx = s.f[i].coeff(0);
@@ -177,7 +177,7 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, const Impul
     }
   }
   dimf_stack = 0;
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       Eigen::Vector3d gf;
@@ -209,7 +209,7 @@ void ImpulseFrictionConeTest::testComputeSlackAndDualDirection(Robot& robot, con
   const ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
   limit.computeSlackAndDualDirection(robot, data, s, d);
   int dimf_stack = 0;
-  for (int i=0; i<impulse_status.max_point_contacts(); ++i) {
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       const double mu = robot.frictionCoefficient(i);
       Eigen::Vector3d gf;

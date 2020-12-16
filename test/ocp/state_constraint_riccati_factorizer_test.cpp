@@ -11,6 +11,7 @@
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 
+#include "test_helper.hpp"
 
 namespace idocp {
 
@@ -22,6 +23,7 @@ protected:
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N = 20;
     max_num_impulse = 5;
+    t = std::abs(Eigen::VectorXd::Random(1)[0]);
     T = 1;
     dtau = T / N;
     nproc = 4;
@@ -36,33 +38,12 @@ protected:
 
   std::string fixed_base_urdf, floating_base_urdf;
   int N, max_num_impulse, nproc;
-  double T, dtau;
+  double t, T, dtau;
 };
 
 
 ContactSequence StateConstraintSplitRiccatiFactorizerTest::createContactSequence(const Robot& robot) const {
-  std::vector<DiscreteEvent> discrete_events;
-  ContactStatus pre_contact_status = robot.createContactStatus();
-  pre_contact_status.setRandom();
-  ContactSequence contact_sequence(robot, T, N);
-  contact_sequence.setContactStatusUniformly(pre_contact_status);
-  ContactStatus post_contact_status = pre_contact_status;
-  std::random_device rnd;
-  for (int i=0; i<max_num_impulse; ++i) {
-    DiscreteEvent tmp(robot);
-    tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
-    while (!tmp.existDiscreteEvent()) {
-      post_contact_status.setRandom();
-      tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
-    }
-    tmp.eventTime = i * 0.15 + 0.01 * std::abs(Eigen::VectorXd::Random(1)[0]);
-    discrete_events.push_back(tmp);
-    pre_contact_status = post_contact_status;
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    contact_sequence.setDiscreteEvent(discrete_events[i]);
-  }
-  return contact_sequence;
+  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dtau);
 }
 
 
@@ -70,7 +51,7 @@ void StateConstraintSplitRiccatiFactorizerTest::testComputeLagrangeMultiplierDir
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const auto contact_sequence = createContactSequence(robot);
-  const int num_impulse = contact_sequence.totalNumImpulseStages();
+  const int num_impulse = contact_sequence.numImpulseEvents();
   StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
   constraint_factorization.setConstraintStatus(contact_sequence);
   for (int i=0; i<num_impulse; ++i) {
@@ -99,11 +80,13 @@ void StateConstraintSplitRiccatiFactorizerTest::testComputeLagrangeMultiplierDir
   auto riccati_factorization_ref = riccati_factorization;
   auto constraint_factorization_ref = constraint_factorization;
   auto d_ref = d;
-  factorizer.computeLagrangeMultiplierDirection(contact_sequence, riccati_factorization, 
+  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+  ocp_discretizer.discretizeOCP(contact_sequence, t);
+  factorizer.computeLagrangeMultiplierDirection(ocp_discretizer, riccati_factorization, 
                                                 constraint_factorization, d);
   StateConstraintRiccatiLPFactorizer lp_factorizer(robot);
   for (int constraint_index=0; constraint_index<num_impulse; ++constraint_index) {
-    lp_factorizer.factorizeLinearProblem(contact_sequence, riccati_factorization_ref.impulse[constraint_index], 
+    lp_factorizer.factorizeLinearProblem(ocp_discretizer, riccati_factorization_ref.impulse[constraint_index], 
                                          constraint_factorization_ref, d_ref[0].dx(), constraint_index);
   }
   constraint_factorization_ref.ENT().triangularView<Eigen::StrictlyLower>() 
@@ -122,8 +105,8 @@ void StateConstraintSplitRiccatiFactorizerTest::testAggregateLagrangeMultiplierD
   const auto contact_sequence = createContactSequence(robot);
   StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
   constraint_factorization.setConstraintStatus(contact_sequence);
-  const int num_impulse = contact_sequence.totalNumImpulseStages();
-  const int num_lift = contact_sequence.totalNumLiftStages();
+  const int num_impulse = contact_sequence.numImpulseEvents();
+  const int num_lift = contact_sequence.numLiftEvents();
   for (int i=0; i<num_impulse; ++i) {
     for (int j=0; j<N; ++j) {
       constraint_factorization.T(i, j).setRandom();
@@ -154,12 +137,14 @@ void StateConstraintSplitRiccatiFactorizerTest::testAggregateLagrangeMultiplierD
   }
   StateConstraintRiccatiFactorizer factorizer(robot, N, max_num_impulse, nproc);
   auto factorization_ref = factorization;
+  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+  ocp_discretizer.discretizeOCP(contact_sequence, t);
   factorizer.aggregateLagrangeMultiplierDirection(
-      constraint_factorization, contact_sequence, d, factorization);
+      constraint_factorization, ocp_discretizer, d, factorization);
   for (int i=0; i<N; ++i) {
     factorization_ref[i].n.setZero();
     for (int j=0; j<num_impulse; ++j) {
-      if (i <= contact_sequence.timeStageBeforeImpulse(j)) {
+      if (i <= ocp_discretizer.timeStageBeforeImpulse(j)) {
         factorization_ref[i].n += constraint_factorization.T(j, i) * d.impulse[j].dxi();
       }
     }
@@ -175,10 +160,10 @@ void StateConstraintSplitRiccatiFactorizerTest::testAggregateLagrangeMultiplierD
     }
   }
   for (int i=0; i<num_lift; ++i) {
-    const int time_stage_after_lift = contact_sequence.timeStageAfterLift(i);
+    const int time_stage_after_lift = ocp_discretizer.timeStageAfterLift(i);
     factorization_ref.lift[i].n.setZero();
     for (int j=0; j<num_impulse; ++j) {
-      if (time_stage_after_lift <= contact_sequence.timeStageBeforeImpulse(j)) {
+      if (time_stage_after_lift <= ocp_discretizer.timeStageBeforeImpulse(j)) {
         factorization_ref.lift[i].n += constraint_factorization.T_lift(j, i) * d.impulse[j].dxi();
       }
     }

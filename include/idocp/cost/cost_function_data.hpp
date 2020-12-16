@@ -54,7 +54,7 @@ public:
   ///
   /// @brief Vector used for computing the difference of the configurations in
   /// JointSpaceCost. 
-  /// Be allocated only when Robot::has_floating_base() is true. Then the size 
+  /// Be allocated only when Robot::hasFloatingBase() is true. Then the size 
   /// is Robot::dimv().
   ///
   Eigen::VectorXd qdiff;
@@ -92,7 +92,7 @@ public:
   ///
   /// @brief Jacobian of the difference of the configurations used in 
   /// JointSpaceCost. 
-  /// Be allocated only when Robot::has_floating_base() is true. Then the size 
+  /// Be allocated only when Robot::hasFloatingBase() is true. Then the size 
   /// is Robot::dimv() x Robot::dimv().
   ///
   Eigen::MatrixXd J_qdiff;

@@ -36,7 +36,7 @@ protected:
 
 void ImpulseForceCostTest::commonTest(Robot& robot) const {
   std::vector<Eigen::Vector3d> f_weight, f_ref;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Random());
     f_ref.push_back(Eigen::Vector3d::Random());
   }
@@ -45,7 +45,7 @@ void ImpulseForceCostTest::commonTest(Robot& robot) const {
   cost.set_f_weight(f_weight);
   cost.set_f_ref(f_ref);
   ImpulseStatus impulse_status = robot.createImpulseStatus();
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     impulse_status.deactivateImpulse(i);
   }
   ImpulseSplitKKTMatrix kkt_mat(robot);
@@ -61,7 +61,7 @@ void ImpulseForceCostTest::commonTest(Robot& robot) const {
   impulse_status.setRandom();
   s.setRandom(robot, impulse_status);
   double l_ref = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       l_ref += (f_weight[i].array() * (s.f[i].array()-f_ref[i].array()) 
                                     * (s.f[i].array()-f_ref[i].array())).sum();
@@ -77,7 +77,7 @@ void ImpulseForceCostTest::commonTest(Robot& robot) const {
   cost.lf(robot, data, t, s, kkt_res);
   cost.lff(robot, data, t, s, kkt_mat);
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       kkt_res_ref.lf().segment<3>(dimf_stack).array()
           += f_weight[i].array() * (s.f[i].array()-f_ref[i].array());
@@ -85,7 +85,7 @@ void ImpulseForceCostTest::commonTest(Robot& robot) const {
     }
   }
   dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       kkt_mat_ref.Qff().diagonal().segment<3>(dimf_stack) += f_weight[i];
       dimf_stack += 3;

@@ -40,7 +40,7 @@ public:
     //   pi(),
     //   N(),
     //   n() {
-    // if (robot.max_point_contacts() > 0) {
+    // if (robot.maxPointContacts() > 0) {
     //   const int dimx = 2*robot.dimv();
     //   Pi.resize(dimx, dimx);
     //   Pi.setIdentity();

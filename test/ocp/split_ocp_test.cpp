@@ -96,7 +96,7 @@ std::shared_ptr<CostFunction> SplitOCPTest::createCost(const Robot& robot) {
   task_space_3d_cost->set_q_3d_ref(q_3d_ref);
   auto contact_force_cost = std::make_shared<idocp::ContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Constant(0.001));
   }
   contact_force_cost->set_f_weight(f_weight);
@@ -226,7 +226,7 @@ void SplitOCPTest::testComputeKKTResidual(
                          + kkt_residual_ref.lu().squaredNorm()
                          + cd.squaredNormContactDynamicsResidual(dtau)
                          + constraints->squaredNormPrimalAndDualResidual(constraints_data);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_error_ref += kkt_residual_ref.lu_passive.squaredNorm();
   }
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);

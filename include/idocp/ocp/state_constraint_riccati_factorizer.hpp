@@ -4,12 +4,12 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_lp_factorizer.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/hybrid/ocp_discretizer.hpp"
 
 namespace idocp {
 
@@ -68,14 +68,14 @@ public:
   ///
   /// @brief Computes the directions of the Lagrange multipliers with respect
   /// to the pure-state constraints.
-  /// @param[in] contact_sequence Contact sequence.
+  /// @param[in] ocp_discretizer OCP discretizer.
   /// @param[in] riccati_factorization Riccati factorizations.
   /// @param[in, out] constraint_factorization Constraint factorizations.
   /// @param[in, out] d Split directions. Initial state direction d[0].dx() 
   /// must be computed before calling this function.
   ///
   void computeLagrangeMultiplierDirection(
-      const ContactSequence& contact_sequence,
+      const OCPDiscretizer& ocp_discretizer,
       const RiccatiFactorization& riccati_factorization,
       StateConstraintRiccatiFactorization& constraint_factorization,
       Direction& d);
@@ -84,19 +84,19 @@ public:
   /// @brief Aggregates the all of the Lagrange multipliers with respect to 
   /// the pure-state constriants for fowrad Riccati recursion.
   /// @param[in] constraint_factorization Pure-state constraint factorization. 
-  /// @param[in] contact_sequence Contact sequence. 
+  /// @param[in] ocp_discretizer OCP discretizer.
   /// @param[in] d Split directions. 
   /// @param[in, out] riccati_factorization Riccati factorization. 
   ///
   void aggregateLagrangeMultiplierDirection(
       const StateConstraintRiccatiFactorization& constraint_factorization,
-      const ContactSequence& contact_sequence, const Direction& d,
+      const OCPDiscretizer& ocp_discretizer, const Direction& d,
       RiccatiFactorization& riccati_factorization) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int N_, max_num_impulse_, nproc_;
+  int N_, nproc_;
   Eigen::LDLT<Eigen::MatrixXd> ldlt_;
   std::vector<StateConstraintRiccatiLPFactorizer> lp_factorizer_;
 

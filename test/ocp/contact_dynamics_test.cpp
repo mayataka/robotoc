@@ -49,7 +49,7 @@ void ContactDynamicsTest::testLinearizeInverseDynamics(Robot& robot, const Conta
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data_ref.ID_full());
   data_ref.ID().noalias() -= s.u;
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     data_ref.ID_passive().noalias() -= s.u_passive;
   }
   robot.RNEADerivatives(s.q, s.v, s.a, data_ref.dIDdq(), data_ref.dIDdv(), data_ref.dIDda);
@@ -98,7 +98,7 @@ void ContactDynamicsTest::testLinearizeContactDynamics(Robot& robot, const Conta
   kkt_residual.lu_passive.setRandom();
   SplitKKTResidual kkt_residual_ref = kkt_residual;
   Eigen::VectorXd lu_full_ref = Eigen::VectorXd::Zero(robot.dimv());
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     lu_full_ref.head(robot.dim_passive()) = kkt_residual_ref.lu_passive;
     lu_full_ref.tail(robot.dimu()) = kkt_residual_ref.lu();
   }
@@ -126,7 +126,7 @@ void ContactDynamicsTest::testLinearizeContactDynamics(Robot& robot, const Conta
     kkt_residual_ref.lf() += dtau * dIDdf.transpose() * s.beta;
   }
   lu_full_ref -= dtau * s.beta;
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     lu_full_ref.head(robot.dim_passive()) += dtau * s.nu_passive;
   }
   EXPECT_TRUE(kkt_residual.lq().isApprox(kkt_residual_ref.lq()));
@@ -135,7 +135,7 @@ void ContactDynamicsTest::testLinearizeContactDynamics(Robot& robot, const Conta
   if (contact_status.hasActiveContacts()) {
     EXPECT_TRUE(kkt_residual.lf().isApprox(kkt_residual_ref.lf()));
   }
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     EXPECT_TRUE(kkt_residual.lu_passive.isApprox(lu_full_ref.head(robot.dim_passive())));
     EXPECT_TRUE(kkt_residual.lu().isApprox(lu_full_ref.tail(robot.dimu())));
     const double l1norm_ref = dtau * (data.IDC().lpNorm<1>() + s.u_passive.lpNorm<1>());
@@ -165,7 +165,7 @@ void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& cont
   kkt_residual.lx().setRandom();
   kkt_residual.la.setRandom();
   kkt_residual.lf().setRandom();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_residual.lu_passive.setRandom();
   }
   kkt_residual.lu().setRandom();
@@ -179,7 +179,7 @@ void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& cont
   kkt_matrix.Quu_full().template triangularView<Eigen::StrictlyLower>()
       = kkt_matrix.Quu_full().transpose().template triangularView<Eigen::StrictlyLower>();
   kkt_matrix.Qaaff().diagonal().setRandom();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(dim_passive, dim_passive).setRandom();
   }
@@ -189,7 +189,7 @@ void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& cont
   ContactDynamicsData data(robot);
   data.setContactStatus(contact_status);
   data.dIDda.setRandom();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     data.u_passive.setRandom();
   }
   data.dCda().setRandom();
@@ -225,7 +225,7 @@ void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& cont
   kkt_matrix_ref.Quu_full() += IO_mat.transpose() * data_ref.MJtJinv() * data_ref.Qafu_full();
   kkt_residual_ref.lx() -= data_ref.MJtJinv_dIDCdqv().transpose() * data_ref.laf();
   Eigen::VectorXd lu_full_ref = Eigen::VectorXd::Zero(dimv);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     lu_full_ref.head(dim_passive) = kkt_residual_ref.lu_passive;
     lu_full_ref.tail(dimu) = kkt_residual_ref.lu();
   }
@@ -233,7 +233,7 @@ void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& cont
     lu_full_ref = kkt_residual_ref.lu();
   }
   lu_full_ref += IO_mat.transpose() * data_ref.MJtJinv() * data_ref.laf();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_residual_ref.lu_passive = lu_full_ref.head(dim_passive);
     kkt_residual_ref.lu() = lu_full_ref.tail(dimu);
     kkt_residual_ref.lu() -= kkt_matrix_ref.Quu_passive_bottomLeft() * data_ref.u_passive;
@@ -249,7 +249,7 @@ void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& cont
   const Eigen::MatrixXd Fxu_full = OOIO_mat * data_ref.MJtJinv() * IO_mat;
   kkt_matrix_ref.Fxu() = Fxu_full.rightCols(dimu);
   kkt_residual_ref.Fx() -= (OOIO_mat * data_ref.MJtJinv() * data_ref.IDC());
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_residual_ref.Fx() -= Fxu_full.leftCols(dim_passive) * data_ref.u_passive;
   }
   EXPECT_TRUE(data_ref.MJtJinv().isApprox(data.MJtJinv()));
@@ -274,7 +274,7 @@ void ContactDynamicsTest::testExpansionPrimal(Robot& robot, const ContactStatus&
   ContactDynamicsData data(robot);
   data.setContactStatus(contact_status);
   data.dIDda.setRandom();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     data.u_passive.setRandom();
   }
   data.dIDCdqv().setRandom();
@@ -290,7 +290,7 @@ void ContactDynamicsTest::testExpansionPrimal(Robot& robot, const ContactStatus&
   Eigen::MatrixXd IO_mat = Eigen::MatrixXd::Zero(dimv+dimf, dimv);
   IO_mat.topRows(dimv).setIdentity();
   Eigen::VectorXd du_full = Eigen::VectorXd::Zero(dimv);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     d_ref.du_passive = - data.u_passive;
     du_full.head(dim_passive) = d_ref.du_passive; 
     du_full.tail(dimu) = d_ref.du(); 
@@ -312,7 +312,7 @@ void ContactDynamicsTest::testExpansionDual(Robot& robot, const ContactStatus& c
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_residual.lu_passive.setRandom();
   }
   SplitKKTMatrix kkt_matrix(robot);
@@ -324,7 +324,7 @@ void ContactDynamicsTest::testExpansionDual(Robot& robot, const ContactStatus& c
   ContactDynamicsData data(robot);
   data.setContactStatus(contact_status);
   data.dIDda.setRandom();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     data.u_passive.setRandom();
   }
   data.MJtJinv().setRandom();
@@ -345,7 +345,7 @@ void ContactDynamicsTest::testExpansionDual(Robot& robot, const ContactStatus& c
   Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*dimv, dimv+dimf);
   OOIO_mat.bottomLeftCorner(dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
   Eigen::VectorXd du_full = Eigen::VectorXd::Zero(dimv);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     du_full.head(dim_passive) = d_ref.du_passive; 
     du_full.tail(dimu) = d_ref.du(); 
     d_ref.dnu_passive = - (kkt_residual.lu_passive + (kkt_matrix.Qxu_full().leftCols(dim_passive)).transpose() * d_ref.dx() 
@@ -374,7 +374,7 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
   kkt_residual.lx().setRandom();
   kkt_residual.la.setRandom();
   kkt_residual.lu().setRandom();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_residual.lu_passive.setRandom();
   }
   kkt_residual.Fx().setRandom();
@@ -389,7 +389,7 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
   kkt_matrix.Quu_full().template triangularView<Eigen::StrictlyLower>()
       = kkt_matrix.Quu_full().transpose().template triangularView<Eigen::StrictlyLower>();
   kkt_matrix.Qaaff().diagonal().setRandom();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(dim_passive, dim_passive).setRandom();
   }
@@ -403,7 +403,7 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
   ContactDynamicsData data_ref(robot);
   data_ref.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     data_ref.u_passive = s.u_passive;
   }
   cd_ref.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_residual_ref);
@@ -438,7 +438,7 @@ void ContactDynamicsTest::testComputeResidual(Robot& robot, const ContactStatus&
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data.ID_full());
   data.ID().noalias() -= s.u;
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     data.ID_passive().noalias() -= s.u_passive;
   }
   robot.updateKinematics(s.q, s.v, s.a);
@@ -446,11 +446,11 @@ void ContactDynamicsTest::testComputeResidual(Robot& robot, const ContactStatus&
     robot.computeBaumgarteResidual(contact_status, dtau, contact_status.contactPoints(), data.C());
   }
   double l1norm_ref = dtau * data.IDC().lpNorm<1>();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
      l1norm_ref += dtau * s.u_passive.lpNorm<1>();
   }
   double squarednorm_ref = dtau * dtau * data.IDC().squaredNorm();
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
      squarednorm_ref += dtau * dtau * s.u_passive.squaredNorm();
   }
   EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);

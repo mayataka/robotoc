@@ -68,7 +68,7 @@ std::shared_ptr<CostFunction> OCPTest::createCost(const Robot& robot) {
   const int task_frame = 10;
   auto contact_force_cost = std::make_shared<idocp::ContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Constant(0.001));
   }
   contact_force_cost->set_f_weight(f_weight);
@@ -137,7 +137,7 @@ void OCPTest::testUpdateSolutionInParallelWithoutActiveContacts(Robot& robot) {
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T, N, 1);
   OCP ocp_ref(robot, cost, constraints, T, N, 4);
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     ocp.deactivateContacts({i}, 0, N);
     ocp_ref.deactivateContacts({i}, 0, N);
   }
@@ -170,7 +170,7 @@ void OCPTest::testUpdateSolutionInParallelWithActiveContacts(Robot& robot) {
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T, N, 1);
   OCP ocp_ref(robot, cost, constraints, T, N, 4);
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     ocp.activateContacts({i}, 0, N);
     ocp_ref.activateContacts({i}, 0, N);
   }

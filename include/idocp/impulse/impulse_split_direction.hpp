@@ -134,7 +134,7 @@ public:
 
   ///
   /// @brief Returns the Newton direction of ImpulseSplitSolution::dv and 
-  /// ImpulseSplitSolution::f. Size is ImpulseStatus::dimp() + Robot::dimv().
+  /// ImpulseSplitSolution::f. Size is ImpulseStatus::dimf() + Robot::dimv().
   /// @return Reference to the Newton direction of ImpulseSplitSolution::a and 
   /// ImpulseSplitSolution::f.
   ///
@@ -159,7 +159,7 @@ public:
 
   ///
   /// @brief Returns the Newton direction of ImpulseSplitSolution::f_stack(). 
-  /// Size is ImpulseStatus::dimp().
+  /// Size is ImpulseStatus::dimf().
   /// @return Reference to the Newton direction of 
   /// ImpulseSplitSolution::f_stack().
   ///
@@ -173,7 +173,7 @@ public:
   ///
   /// @brief Returns the Newton direction of ImpulseSplitSolution::beta and 
   /// ImpulseSplitSolution::mu_stack(). Size is Robot::dimv() + 
-  /// ImpulseStatus::dimp().
+  /// ImpulseStatus::dimf().
   /// @return Reference to the Newton direction of ImpulseSplitSolution::beta 
   /// and ImpulseSplitSolution::mu_stack().
   ///
