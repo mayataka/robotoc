@@ -69,6 +69,13 @@ public:
   void setConstraintStatus(const ContactSequence& contact_sequence);
 
   ///
+  /// @brief Returns the dimension of the constraint. 
+  /// @param[in] constraint_index Index of the constraint of interested. 
+  /// @return Dimension of the constraint. 
+  ///
+  int dimf(const int constraint_index) const;
+
+  ///
   /// @brief A factorization matrix at a time stage. 
   /// @param[in] constraint_index Index of the constraint of interested. 
   /// @param[in] time_stage Time stage of interested. 

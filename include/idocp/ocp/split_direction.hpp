@@ -65,7 +65,7 @@ public:
   /// @brief Set contact status, i.e., set dimension of the contact.
   /// @param[in] dimf Total dimension of the contact.
   ///
-  void setContactStatus(const int dimf);
+  void setContactStatusByDimension(const int dimf);
 
   ///
   /// @brief Returns the Newton direction of SplitSolution::lmd and 

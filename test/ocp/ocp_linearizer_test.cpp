@@ -249,7 +249,6 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
           robot_ref, contact_sequence.contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[i+1], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
-
       kkt_error_ref += ocp_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dt);
       kkt_error_ref += ocp_ref.impulse[impulse_index].squaredNormKKTResidual(kkt_residual_ref.impulse[impulse_index], 
                                                                              is_state_constraint_valid);
@@ -274,7 +273,6 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
       ocp_ref.lift[lift_index].computeKKTResidual(
           robot_ref, contact_sequence.contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
-
       kkt_error_ref += ocp_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dt);
       kkt_error_ref += ocp_ref.lift[lift_index].squaredNormKKTResidual(kkt_residual_ref.lift[lift_index], dt_lift);
     }
@@ -286,7 +284,6 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
           robot_ref, contact_sequence.contactStatus(contact_phase), 
           ocp_discretizer.t(i), dt, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
-
       kkt_error_ref += ocp_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dt);
     }
   }
@@ -321,15 +318,13 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   }
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  auto kkt_matrix_ref = kkt_matrix;
-  auto kkt_residual_ref = kkt_residual;
   std::vector<Robot> robots(nproc, robot);
   auto ocp = OCP(N, max_num_impulse, robot, cost, constraints);
   linearizer.initConstraints(ocp, robots, contact_sequence, t, s);
   linearizer.linearizeOCP(ocp, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
   OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
   ocp_discretizer.discretizeOCP(contact_sequence, t);
-  auto d = Direction(N, max_num_impulse, robot);
+  Direction d(N, max_num_impulse, robot);
   RiccatiSolver riccati_solver(robots[0], T, N, max_num_impulse, nproc);
   riccati_solver.computeNewtonDirection(ocp, robots, contact_sequence, 
                                         t, q, v, s, d, kkt_matrix, kkt_residual);
@@ -342,15 +337,14 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto ocp_ref = ocp;
   auto s_ref = s;
   auto d_ref = d;
+  auto kkt_matrix_ref = kkt_matrix;
+  auto kkt_residual_ref = kkt_residual;
   linearizer.integrateSolution(ocp, robots, kkt_matrix, kkt_residual, 
                                primal_step_size, dual_step_size, d, s);
   auto robot_ref = robot;
   for (int i=0; i<N; ++i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int contact_phase = ocp_discretizer.contactPhase(i);
       const int impulse_index = ocp_discretizer.impulseIndex(i);
-      const double ti = ocp_discretizer.t(i);
-      const double t_impulse = ocp_discretizer.t_impulse(impulse_index);
       const double dt = ocp_discretizer.dtau(i);
       const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
       ASSERT_TRUE(dt >= 0);
@@ -372,16 +366,13 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
       ocp_ref.impulse[impulse_index].updateDual(dual_step_size);
       ocp_ref.aux[impulse_index].computeCondensedDualDirection(
           robot_ref, dt_aux, kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index],
-          d_ref.aux[impulse_index], d_ref[i+1]);
+          d_ref[i+1], d_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].updateDual(dual_step_size);
     }
     else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int contact_phase = ocp_discretizer.contactPhase(i);
       const int lift_index = ocp_discretizer.liftIndex(i);
-      const double ti = ocp_discretizer.t(i);
-      const double t_lift = ocp_discretizer.t_lift(lift_index);
       const double dt = ocp_discretizer.dtau(i);
       const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
       ASSERT_TRUE(dt >= 0);
@@ -394,16 +385,15 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
       ocp_ref.lift[lift_index].computeCondensedDualDirection(
-          robot_ref, dt, kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
+          robot_ref, dt_lift, kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
           d_ref[i+1], d_ref.lift[lift_index]);
       ocp_ref.lift[lift_index].updatePrimal(robot_ref, primal_step_size, d_ref.lift[lift_index], s_ref.lift[lift_index]);
       ocp_ref.lift[lift_index].updateDual(dual_step_size);
     }
     else {
-      const int contact_phase = ocp_discretizer.contactPhase(i);
       const double dt = ocp_discretizer.dtau(i);
       ocp_ref[i].computeCondensedDualDirection(
-          robot_ref, dt, kkt_matrix_ref[i], kkt_residual_ref[i], d_ref[i+1], d_ref[i]);
+          robot_ref, dtau, kkt_matrix_ref[i], kkt_residual_ref[i], d_ref[i+1], d_ref[i]);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
     }
@@ -424,7 +414,7 @@ TEST_F(OCPLinearizerTest, fixedBase) {
   robot = Robot(fixed_base_urdf, contact_frames);
   testLinearizeOCP(robot);
   testComputeKKTResidual(robot);
-  // testIntegrateSolution(robot);
+  testIntegrateSolution(robot);
 }
 
 
@@ -437,7 +427,7 @@ TEST_F(OCPLinearizerTest, floatingBase) {
   robot = Robot(floating_base_urdf, contact_frames);
   testLinearizeOCP(robot);
   testComputeKKTResidual(robot);
-  // testIntegrateSolution(robot);
+  testIntegrateSolution(robot);
 }
 
 } // namespace idocp

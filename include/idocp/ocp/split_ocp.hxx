@@ -92,7 +92,7 @@ inline void SplitOCP::computeCondensedPrimalDirection(Robot& robot,
                                                       const double dtau, 
                                                       const SplitSolution& s, 
                                                       SplitDirection& d) {
-  d.setContactStatus(s.dimf());
+  d.setContactStatusByDimension(s.dimf());
   contact_dynamics_.computeCondensedPrimalDirection(robot, d);
   constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, 
                                              s, d);

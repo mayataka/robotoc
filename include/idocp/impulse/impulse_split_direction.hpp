@@ -62,7 +62,7 @@ public:
   /// @brief Set impulse status, i.e., set dimension of the impulse.
   /// @param[in] dimf Total dimension of the impulse.
   ///
-  void setImpulseStatus(const int dimf);
+  void setImpulseStatusByDimension(const int dimf);
 
   ///
   /// @brief Returns the Newton direction of ImpulseSplitSolution::lmd and 

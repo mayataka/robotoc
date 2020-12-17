@@ -45,6 +45,7 @@ void StateConstraintRiccatiFactorizer::computeLagrangeMultiplierDirection(
   assert(ldlt_.info() == Eigen::Success);
   constraint_factorization.dxi() = ldlt_.solve(constraint_factorization.e());
   for (int i=0; i<num_impulse; ++i) {
+    d.impulse[i].setImpulseStatusByDimension(constraint_factorization.dimf(i));
     d.impulse[i].dxi() = constraint_factorization.dxi(i);
   }
 }

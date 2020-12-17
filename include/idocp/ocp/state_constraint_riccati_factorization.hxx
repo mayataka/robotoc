@@ -81,6 +81,14 @@ inline void StateConstraintRiccatiFactorization::setConstraintStatus(
 }
 
 
+inline int StateConstraintRiccatiFactorization::dimf(
+    const int constraint_index) const {
+  assert(constraint_index >= 0);
+  assert(constraint_index < max_num_impulse_);
+  return dimf_[constraint_index];
+}
+
+
 inline Eigen::Block<Eigen::MatrixXd> 
 StateConstraintRiccatiFactorization::T(const int constraint_index, 
                                        const int time_stage) {

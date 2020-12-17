@@ -246,8 +246,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
       riccati_factorizer.aux[impulse_idx].forwardRiccatiRecursion(
           kkt_matrix.aux[impulse_idx], kkt_residual.aux[impulse_idx],
           riccati_factorization[i+1], d.aux[impulse_idx], 
-          ocp_discretizer.dtau_aux(impulse_idx), d[i+1], 
-          exist_state_constraint);
+          ocp_discretizer.dtau_aux(impulse_idx), d[i+1], exist_state_constraint);
     }
     else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
       const int lift_idx = ocp_discretizer.liftIndex(i);
@@ -258,7 +257,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
       riccati_factorizer.lift[lift_idx].forwardRiccatiRecursion(
           kkt_matrix.lift[lift_idx], kkt_residual.lift[lift_idx],
           riccati_factorization[i+1], d.lift[lift_idx], 
-          ocp_discretizer.dtau_lift(i), d[i+1], exist_state_constraint);
+          ocp_discretizer.dtau_lift(lift_idx), d[i+1], exist_state_constraint);
     }
     else {
       riccati_factorizer[i].forwardRiccatiRecursion(

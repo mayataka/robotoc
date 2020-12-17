@@ -44,7 +44,7 @@ inline void ImpulseSplitDirection::setImpulseStatus(
 }
 
 
-inline void ImpulseSplitDirection::setImpulseStatus(const int dimf) {
+inline void ImpulseSplitDirection::setImpulseStatusByDimension(const int dimf) {
   assert(dimf >= 0);
   assert(dimf % 3 == 0);
   dimf_ = dimf;

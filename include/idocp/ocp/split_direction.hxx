@@ -45,7 +45,7 @@ inline void SplitDirection::setContactStatus(
 }
 
 
-inline void SplitDirection::setContactStatus(const int dimf) {
+inline void SplitDirection::setContactStatusByDimension(const int dimf) {
   assert(dimf >= 0);
   assert(dimf % 3 == 0);
   dimf_ = dimf;

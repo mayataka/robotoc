@@ -176,6 +176,101 @@ Solution CreateSolution(const Robot& robot, const ContactSequence& contact_seque
 }
 
 
+KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence, 
+                          const int N, const int max_num_impulse) {
+  KKTMatrix kkt_matrix = KKTMatrix(N, max_num_impulse, robot);
+  const int dimx = 2*robot.dimv();
+  const int dimu = robot.dimu();
+  for (int i=0; i<=N; ++i) {
+    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx+dimu, dimx+dimu);
+    const Eigen::MatrixXd Qxxuu = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx+dimu, dimx+dimu);
+    kkt_matrix[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
+    kkt_matrix[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
+    kkt_matrix[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
+    if (robot.hasFloatingBase()) {
+      kkt_matrix[i].Fqq().setIdentity();
+      kkt_matrix[i].Fqq().topLeftCorner(6, 6).setRandom();
+    }
+    kkt_matrix[i].Fvq().setRandom();
+    kkt_matrix[i].Fvv().setRandom();
+    kkt_matrix[i].Fvu().setRandom();
+  }
+  const int num_impulse = contact_sequence.numImpulseEvents();
+  for (int i=0; i<num_impulse; ++i) {
+    kkt_matrix.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
+    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx, dimx);
+    kkt_matrix.impulse[i].Qxx() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
+    if (robot.hasFloatingBase()) {
+      kkt_matrix.impulse[i].Fqq().setIdentity();
+      kkt_matrix.impulse[i].Fqq().topLeftCorner(6, 6).setRandom();
+    }
+    kkt_matrix.impulse[i].Fvq().setRandom();
+    kkt_matrix.impulse[i].Fvv().setRandom();
+    kkt_matrix.impulse[i].Pq().setRandom();
+  }
+  for (int i=0; i<num_impulse; ++i) {
+    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx+dimu, dimx+dimu);
+    const Eigen::MatrixXd Qxxuu = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx+dimu, dimx+dimu);
+    kkt_matrix[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
+    kkt_matrix[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
+    kkt_matrix[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
+    if (robot.hasFloatingBase()) {
+      kkt_matrix.aux[i].Fqq().setIdentity();
+      kkt_matrix.aux[i].Fqq().topLeftCorner(6, 6).setRandom();
+    }
+    kkt_matrix.aux[i].Fvq().setRandom();
+    kkt_matrix.aux[i].Fvv().setRandom();
+    kkt_matrix.aux[i].Fvu().setRandom();
+  }
+  const int num_lift = contact_sequence.numLiftEvents();
+  for (int i=0; i<num_lift; ++i) {
+    Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx+dimu, dimx+dimu);
+    const Eigen::MatrixXd Qxxuu = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx+dimu, dimx+dimu);
+    kkt_matrix[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
+    kkt_matrix[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
+    kkt_matrix[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
+    if (robot.hasFloatingBase()) {
+      kkt_matrix.lift[i].Fqq().setIdentity();
+      kkt_matrix.lift[i].Fqq().topLeftCorner(6, 6).setRandom();
+    }
+    kkt_matrix.lift[i].Fvq().setRandom();
+    kkt_matrix.lift[i].Fvv().setRandom();
+    kkt_matrix.lift[i].Fvu().setRandom();
+  }
+  return kkt_matrix;
+}
+
+
+KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact_sequence, 
+                              const int N, const int max_num_impulse) {
+  KKTResidual kkt_residual = KKTResidual(N, max_num_impulse, robot);
+  for (int i=0; i<=N; ++i) {
+    kkt_residual[i].lx().setRandom();
+    kkt_residual[i].lu().setRandom();
+    kkt_residual[i].Fx().setRandom();
+  }
+  const int num_impulse = contact_sequence.numImpulseEvents();
+  for (int i=0; i<num_impulse; ++i) {
+    kkt_residual.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
+    kkt_residual.impulse[i].lx().setRandom();
+    kkt_residual.impulse[i].Fx().setRandom();
+    kkt_residual.impulse[i].P().setRandom();
+  }
+  for (int i=0; i<num_impulse; ++i) {
+    kkt_residual.aux[i].lx().setRandom();
+    kkt_residual.aux[i].lu().setRandom();
+    kkt_residual.aux[i].Fx().setRandom();
+  }
+  const int num_lift = contact_sequence.numLiftEvents();
+  for (int i=0; i<num_lift; ++i) {
+    kkt_residual.lift[i].lx().setRandom();
+    kkt_residual.lift[i].lu().setRandom();
+    kkt_residual.lift[i].Fx().setRandom();
+  }
+  return kkt_residual;
+}
+
+
 template <typename Type, typename ImpulseType>
 bool IsApprox(const hybrid_container<Type, ImpulseType>& rhs, 
               const hybrid_container<Type, ImpulseType>& lhs) {

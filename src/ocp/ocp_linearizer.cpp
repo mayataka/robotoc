@@ -166,24 +166,21 @@ void OCPLinearizer::integrateSolution(OCP& ocp, const std::vector<Robot>& robots
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
       if (ocp_discretizer_.isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_discretizer_.impulseIndex(i);
-        ocp[i].computeCondensedDualDirection(robots[omp_get_thread_num()], 
-                                             ocp_discretizer_.dtau(i), 
-                                             kkt_matrix[i], kkt_residual[i], 
-                                             d.impulse[impulse_index], d[i]);
+        ocp[i].computeCondensedDualDirection(
+            robots[omp_get_thread_num()], ocp_discretizer_.dtau(i), 
+            kkt_matrix[i], kkt_residual[i], 
+            d.impulse[ocp_discretizer_.impulseIndex(i)], d[i]);
       }
       else if (ocp_discretizer_.isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_discretizer_.liftIndex(i);
-        ocp[i].computeCondensedDualDirection(robots[omp_get_thread_num()], 
-                                             ocp_discretizer_.dtau(i), 
-                                             kkt_matrix[i], kkt_residual[i], 
-                                             d.lift[lift_index], d[i]);
+        ocp[i].computeCondensedDualDirection(
+            robots[omp_get_thread_num()], ocp_discretizer_.dtau(i), 
+            kkt_matrix[i], kkt_residual[i], 
+            d.lift[ocp_discretizer_.liftIndex(i)], d[i]);
       }
       else {
-        ocp[i].computeCondensedDualDirection(robots[omp_get_thread_num()], 
-                                             ocp_discretizer_.dtau(i), 
-                                             kkt_matrix[i], kkt_residual[i], 
-                                             d[i+1], d[i]);
+        ocp[i].computeCondensedDualDirection(
+            robots[omp_get_thread_num()], ocp_discretizer_.dtau(i), 
+            kkt_matrix[i], kkt_residual[i], d[i+1], d[i]);
       }
       ocp[i].updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
                           d[i], s[i]);

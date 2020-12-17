@@ -73,7 +73,7 @@ inline void ImpulseSplitOCP::linearizeOCP(
 
 inline void ImpulseSplitOCP::computeCondensedPrimalDirection(
     Robot& robot, const ImpulseSplitSolution& s, ImpulseSplitDirection& d) {
-  d.setImpulseStatus(s.dimf());
+  d.setImpulseStatusByDimension(s.dimf());
   impulse_dynamics_.computeCondensedPrimalDirection(robot, d);
   constraints_->computeSlackAndDualDirection(robot, constraints_data_, s, d);
 }

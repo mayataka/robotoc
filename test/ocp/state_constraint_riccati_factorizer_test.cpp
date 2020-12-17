@@ -15,7 +15,7 @@
 
 namespace idocp {
 
-class StateConstraintSplitRiccatiFactorizerTest : public ::testing::Test {
+class StateConstraintRiccatiFactorizerTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -42,12 +42,12 @@ protected:
 };
 
 
-ContactSequence StateConstraintSplitRiccatiFactorizerTest::createContactSequence(const Robot& robot) const {
+ContactSequence StateConstraintRiccatiFactorizerTest::createContactSequence(const Robot& robot) const {
   return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dtau);
 }
 
 
-void StateConstraintSplitRiccatiFactorizerTest::testComputeLagrangeMultiplierDirection(const Robot& robot) const {
+void StateConstraintRiccatiFactorizerTest::testComputeLagrangeMultiplierDirection(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const auto contact_sequence = createContactSequence(robot);
@@ -82,6 +82,9 @@ void StateConstraintSplitRiccatiFactorizerTest::testComputeLagrangeMultiplierDir
   auto d_ref = d;
   OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
   ocp_discretizer.discretizeOCP(contact_sequence, t);
+  for (int i=0; i<num_impulse; ++i) {
+    d.impulse[i].setImpulseStatusByDimension(0);
+  }
   factorizer.computeLagrangeMultiplierDirection(ocp_discretizer, riccati_factorization, 
                                                 constraint_factorization, d);
   StateConstraintRiccatiLPFactorizer lp_factorizer(robot);
@@ -101,7 +104,7 @@ void StateConstraintSplitRiccatiFactorizerTest::testComputeLagrangeMultiplierDir
 }
 
 
-void StateConstraintSplitRiccatiFactorizerTest::testAggregateLagrangeMultiplierDirection(const Robot& robot) const {
+void StateConstraintRiccatiFactorizerTest::testAggregateLagrangeMultiplierDirection(const Robot& robot) const {
   const auto contact_sequence = createContactSequence(robot);
   StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
   constraint_factorization.setConstraintStatus(contact_sequence);
@@ -187,7 +190,7 @@ void StateConstraintSplitRiccatiFactorizerTest::testAggregateLagrangeMultiplierD
 }
 
 
-TEST_F(StateConstraintSplitRiccatiFactorizerTest, fixed_base) {
+TEST_F(StateConstraintRiccatiFactorizerTest, fixed_base) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
   testComputeLagrangeMultiplierDirection(robot);
@@ -195,7 +198,7 @@ TEST_F(StateConstraintSplitRiccatiFactorizerTest, fixed_base) {
 }
 
 
-TEST_F(StateConstraintSplitRiccatiFactorizerTest, floating_base) {
+TEST_F(StateConstraintRiccatiFactorizerTest, floating_base) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
   testComputeLagrangeMultiplierDirection(robot);
