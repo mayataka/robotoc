@@ -56,8 +56,7 @@ void JointSpaceCostTest::test(Robot& robot) const {
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(dimu);
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(dimv);
-  Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
-  robot.generateFeasibleConfiguration(q_ref);
+  const Eigen::VectorXd q_ref = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
   const Eigen::VectorXd a_ref = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(dimu);

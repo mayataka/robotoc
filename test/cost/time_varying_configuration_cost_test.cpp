@@ -55,8 +55,7 @@ void TimeVaryingConfigurationCostTest::test(Robot& robot) const {
   const Eigen::VectorXd a_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(dimv);
-  Eigen::VectorXd q0 = Eigen::VectorXd::Zero(dimq);
-  robot.generateFeasibleConfiguration(q0);
+  const Eigen::VectorXd q0 = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v0 = Eigen::VectorXd::Random(dimv); 
   const double t0 = std::abs(Eigen::VectorXd::Random(1)[0]);
   TimeVaryingConfigurationCost cost(robot);

@@ -154,13 +154,11 @@ public:
   /// @brief Updates primal variables of this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] primal_step_size Primal step size of the OCP. 
-  /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
   ///
   void updatePrimal(const Robot& robot, const double primal_step_size, 
-                    const double dtau, const SplitDirection& d, 
-                    SplitSolution& s);
+                    const SplitDirection& d, SplitSolution& s);
 
   ///
   /// @brief Updates dual variables of the inequality constraints.

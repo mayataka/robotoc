@@ -639,18 +639,14 @@ inline void Robot::stateEquation(
 }
 
 
-template <typename ConfigVectorType>
-inline void Robot::generateFeasibleConfiguration(
-    const Eigen::MatrixBase<ConfigVectorType>& q) const {
-  assert(q.size() == dimq_);
+inline Eigen::VectorXd Robot::generateFeasibleConfiguration() const {
   Eigen::VectorXd q_min = model_.lowerPositionLimit;
   Eigen::VectorXd q_max = model_.upperPositionLimit;
   if (floating_base_.hasFloatingBase()) {
     q_min.head(7) = - Eigen::VectorXd::Ones(7);
     q_max.head(7) = Eigen::VectorXd::Ones(7);
   }
-  const_cast<Eigen::MatrixBase<ConfigVectorType>&> (q) 
-      = pinocchio::randomConfiguration(model_, q_min, q_max);
+  return pinocchio::randomConfiguration(model_, q_min, q_max);
 }
 
 

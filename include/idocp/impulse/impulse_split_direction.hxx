@@ -3,6 +3,9 @@
 
 #include "idocp/impulse/impulse_split_direction.hpp"
 
+#include <cassert>
+
+
 namespace idocp {
 
 inline ImpulseSplitDirection::ImpulseSplitDirection(const Robot& robot) 
@@ -38,6 +41,13 @@ inline ImpulseSplitDirection::~ImpulseSplitDirection() {
 inline void ImpulseSplitDirection::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   dimf_ = impulse_status.dimf();
+}
+
+
+inline void ImpulseSplitDirection::setImpulseStatus(const int dimf) {
+  assert(dimf >= 0);
+  assert(dimf % 3 == 0);
+  dimf_ = dimf;
 }
 
 

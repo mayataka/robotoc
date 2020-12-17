@@ -54,7 +54,7 @@ void RiccatiDirectionCalculator::computeInitialStateDirection(
 
 
 void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
-    OCP& ocp, std::vector<Robot>& robots, const OCPDiscretizer& ocp_discretizer,
+    OCP& ocp, std::vector<Robot>& robots, const OCPDiscretizer& ocp_discretizer, 
     const RiccatiFactorizer& factorizer, 
     const RiccatiFactorization& factorization, const Solution& s, Direction& d) {
   assert(robots.size() == num_proc_);

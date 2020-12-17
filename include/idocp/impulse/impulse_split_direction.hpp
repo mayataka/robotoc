@@ -59,6 +59,12 @@ public:
   void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
+  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @param[in] dimf Total dimension of the impulse.
+  ///
+  void setImpulseStatus(const int dimf);
+
+  ///
   /// @brief Returns the Newton direction of ImpulseSplitSolution::lmd and 
   /// SplitSolution::gmm. Size is 2 * Robot::dimv().
   /// @return Reference to the Newton direction of ImpulseSplitSolution::lmd and 

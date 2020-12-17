@@ -551,11 +551,9 @@ public:
 
   ///
   /// @brief Generates feasible configuration randomly.
-  /// @param[out] q The random configuration. Size must be Robot::dimq().
+  /// @return The random configuration. Size is Robot::dimq().
   ///
-  template <typename ConfigVectorType>
-  void generateFeasibleConfiguration(
-      const Eigen::MatrixBase<ConfigVectorType>& q) const;
+  Eigen::VectorXd generateFeasibleConfiguration() const;
 
   ///
   /// @brief Normalizes a configuration vector.

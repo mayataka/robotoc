@@ -3,6 +3,7 @@
 
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 
+
 namespace idocp {
 
 inline ImpulseSplitKKTResidual::ImpulseSplitKKTResidual(const Robot& robot) 

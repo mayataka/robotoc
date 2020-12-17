@@ -88,9 +88,11 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
 }
 
 
-inline void SplitOCP::computeCondensedPrimalDirection(
-    Robot& robot, const double dtau, const SplitSolution& s, 
-    SplitDirection& d) {
+inline void SplitOCP::computeCondensedPrimalDirection(Robot& robot, 
+                                                      const double dtau, 
+                                                      const SplitSolution& s, 
+                                                      SplitDirection& d) {
+  d.setContactStatus(s.dimf());
   contact_dynamics_.computeCondensedPrimalDirection(robot, d);
   constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, 
                                              s, d);
@@ -121,11 +123,10 @@ inline double SplitOCP::maxDualStepSize() {
 
 inline void SplitOCP::updatePrimal(const Robot& robot, 
                                    const double primal_step_size, 
-                                   const double dtau, const SplitDirection& d, 
+                                   const SplitDirection& d, 
                                    SplitSolution& s) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
-  assert(dtau > 0);
   s.integrate(robot, primal_step_size, d);
   constraints_->updateSlack(constraints_data_, primal_step_size);
 }

@@ -110,7 +110,7 @@ public:
   /// @param[in] s Split solution of this stage.
   /// @param[in] d Split direction of this stage.
   /// 
-  void computeCondensedPrimalDirection(Robot& robot,  
+  void computeCondensedPrimalDirection(Robot& robot, 
                                        const ImpulseSplitSolution& s, 
                                        ImpulseSplitDirection& d);
 

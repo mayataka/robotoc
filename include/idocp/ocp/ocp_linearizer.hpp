@@ -100,7 +100,6 @@ private:
   const Eigen::VectorXd& q_prev(const Eigen::VectorXd& q,
                                 const Solution& s, const int time_stage) const;
 
-  double T_, dtau_;
   int N_, num_proc_;
   OCPDiscretizer ocp_discretizer_;
   Eigen::VectorXd kkt_error_;

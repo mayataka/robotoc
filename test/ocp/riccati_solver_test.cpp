@@ -224,8 +224,7 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   else {
     s = createSolution(robot);
   }
-  Eigen::VectorXd q(robot.dimq());
-  robot.generateFeasibleConfiguration(q);
+  const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto ocp = OCP(N, max_num_impulse, robot, cost, constraints);
   std::vector<Robot> robots(nproc, robot);

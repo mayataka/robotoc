@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 
 
 namespace idocp {
@@ -59,6 +60,12 @@ public:
   /// @param[in] contact_status Contact status.
   ///
   void setContactStatus(const ContactStatus& contact_status);
+
+  ///
+  /// @brief Set contact status, i.e., set dimension of the contact.
+  /// @param[in] dimf Total dimension of the contact.
+  ///
+  void setContactStatus(const int dimf);
 
   ///
   /// @brief Returns the Newton direction of SplitSolution::lmd and 

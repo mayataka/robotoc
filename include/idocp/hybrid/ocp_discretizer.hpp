@@ -64,6 +64,14 @@ public:
 
   int timeStageAfterLift(const int lift_index) const;
 
+  int contactPhaseBeforeImpulse(const int impulse_index) const;
+
+  int contactPhaseAfterImpulse(const int impulse_index) const;
+
+  int contactPhaseBeforeLift(const int lift_index) const;
+
+  int contactPhaseAfterLift(const int lift_index) const;
+
   bool isTimeStageBeforeImpulse(const int time_stage) const;
 
   bool isTimeStageBeforeLift(const int time_stage) const;

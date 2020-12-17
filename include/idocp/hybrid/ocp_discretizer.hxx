@@ -129,6 +129,28 @@ inline int OCPDiscretizer::timeStageAfterLift(const int lift_index) const {
 }
 
 
+inline int OCPDiscretizer::contactPhaseBeforeImpulse(
+    const int impulse_index) const {
+  return contactPhase(timeStageBeforeImpulse(impulse_index));
+}
+
+
+inline int OCPDiscretizer::contactPhaseAfterImpulse(
+    const int impulse_index) const {
+  return contactPhase(timeStageAfterImpulse(impulse_index));
+}
+
+
+inline int OCPDiscretizer::contactPhaseBeforeLift(const int lift_index) const {
+  return contactPhase(timeStageBeforeLift(lift_index));
+}
+
+
+inline int OCPDiscretizer::contactPhaseAfterLift(const int lift_index) const {
+  return contactPhase(timeStageAfterLift(lift_index));
+}
+
+
 inline bool OCPDiscretizer::isTimeStageBeforeImpulse(
     const int time_stage) const {
   return is_time_stage_before_impulse_[time_stage];
@@ -147,7 +169,7 @@ inline bool OCPDiscretizer::existImpulse() const {
 
 inline double OCPDiscretizer::t(const int time_stage) const {
   assert(time_stage >= 0);
-  assert(time_stage < N_);
+  assert(time_stage <= N_);
   return t_[time_stage];
 }
 
@@ -168,7 +190,7 @@ inline double OCPDiscretizer::t_lift(const int lift_index) const {
 
 inline double OCPDiscretizer::dtau(const int time_stage) const {
   assert(time_stage >= 0);
-  assert(time_stage < N_);
+  assert(time_stage <= N_);
   return dtau_[time_stage];
 }
 

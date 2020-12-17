@@ -103,8 +103,7 @@ void OCPTest::testUpdateSolutionInParallel(Robot& robot) {
   const double t = 0;
   const double T = 1;
   const double N = 8;
-  Eigen::VectorXd q(robot.dimq());
-  robot.generateFeasibleConfiguration(q);
+  const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T, N, 1);
   OCP ocp_ref(robot, cost, constraints, T, N, 4);
@@ -132,8 +131,7 @@ void OCPTest::testUpdateSolutionInParallelWithoutActiveContacts(Robot& robot) {
   const double t = 0;
   const double T = 1;
   const double N = 8;
-  Eigen::VectorXd q(robot.dimq());
-  robot.generateFeasibleConfiguration(q);
+  const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T, N, 1);
   OCP ocp_ref(robot, cost, constraints, T, N, 4);
@@ -165,8 +163,7 @@ void OCPTest::testUpdateSolutionInParallelWithActiveContacts(Robot& robot) {
   const double t = 0;
   const double T = 1;
   const double N = 8;
-  Eigen::VectorXd q(robot.dimq());
-  robot.generateFeasibleConfiguration(q);
+  const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   OCP ocp(robot, cost, constraints, T, N, 1);
   OCP ocp_ref(robot, cost, constraints, T, N, 4);

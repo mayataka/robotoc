@@ -559,8 +559,8 @@ void RobotTest::testMJtJinv(const std::string& path_to_urdf, pinocchio::Model& m
 
 void RobotTest::testGenConfiguration(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data) const {
   Robot robot(path_to_urdf);
-  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
-  robot.generateFeasibleConfiguration(q);
+  const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
+  EXPECT_TRUE(q.size() == robot.dimq());
   Eigen::VectorXd qmin = robot.lowerJointPositionLimit();
   Eigen::VectorXd qmax = robot.upperJointPositionLimit();
   if (robot.hasFloatingBase()) {
@@ -575,8 +575,9 @@ void RobotTest::testGenConfiguration(const std::string& path_to_urdf, pinocchio:
       EXPECT_TRUE(q(i) <= qmax(i));
     }
   }
-  q = Eigen::VectorXd::Random(robot.dimq());
-  robot.normalizeConfiguration(q);
+  Eigen::VectorXd q_norm  = Eigen::VectorXd::Random(robot.dimq());
+  robot.normalizeConfiguration(q_norm);
+  EXPECT_TRUE(q_norm.size() == robot.dimq());
 }
 
 

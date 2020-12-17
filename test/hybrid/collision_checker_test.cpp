@@ -29,8 +29,7 @@ protected:
 
 void CollisionCheckerTest::test(Robot& robot) {
   CollisionChecker checker(robot);
-  Eigen::VectorXd q(robot.dimq());
-  robot.generateFeasibleConfiguration(q);
+  const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const auto is_collision = checker.check(robot, q);
   std::vector<Eigen::Vector3d> ee(robot.maxPointContacts(), Eigen::Vector3d::Zero());
   std::vector<bool> is_collision_ref(robot.maxPointContacts());

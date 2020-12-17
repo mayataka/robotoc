@@ -45,6 +45,13 @@ inline void SplitDirection::setContactStatus(
 }
 
 
+inline void SplitDirection::setContactStatus(const int dimf) {
+  assert(dimf >= 0);
+  assert(dimf % 3 == 0);
+  dimf_ = dimf;
+}
+
+
 inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dlmdgmm() {
   return split_direction.head(dimx_);
 }
