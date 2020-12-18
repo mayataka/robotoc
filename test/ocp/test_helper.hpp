@@ -34,28 +34,33 @@ ContactSequence CreateContactSequence(const Robot& robot, const int N,
                                       const int max_num_impulse,
                                       const double t0,
                                       const double event_period) {
-  std::vector<DiscreteEvent> discrete_events;
-  ContactStatus pre_contact_status = robot.createContactStatus();
-  pre_contact_status.setRandom();
-  ContactSequence contact_sequence(robot, N);
-  contact_sequence.setContactStatusUniformly(pre_contact_status);
-  ContactStatus post_contact_status = pre_contact_status;
-  std::random_device rnd;
-  for (int i=0; i<max_num_impulse; ++i) {
-    DiscreteEvent tmp(robot);
-    tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
-    while (!tmp.existDiscreteEvent()) {
-      post_contact_status.setRandom();
+  if (robot.max_dimf() > 0) {
+    std::vector<DiscreteEvent> discrete_events;
+    ContactStatus pre_contact_status = robot.createContactStatus();
+    pre_contact_status.setRandom();
+    ContactSequence contact_sequence(robot, N);
+    contact_sequence.setContactStatusUniformly(pre_contact_status);
+    ContactStatus post_contact_status = pre_contact_status;
+    std::random_device rnd;
+    for (int i=0; i<max_num_impulse; ++i) {
+      DiscreteEvent tmp(robot);
       tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
+      while (!tmp.existDiscreteEvent()) {
+        post_contact_status.setRandom();
+        tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
+      }
+      tmp.eventTime = t0 + i * event_period + 0.1 * event_period * std::abs(Eigen::VectorXd::Random(1)[0]);
+      discrete_events.push_back(tmp);
+      pre_contact_status = post_contact_status;
     }
-    tmp.eventTime = t0 + i * event_period + 0.1 * event_period * std::abs(Eigen::VectorXd::Random(1)[0]);
-    discrete_events.push_back(tmp);
-    pre_contact_status = post_contact_status;
+    for (int i=0; i<max_num_impulse; ++i) {
+      contact_sequence.pushBackDiscreteEvent(discrete_events[i]);
+    }
+    return contact_sequence;
   }
-  for (int i=0; i<max_num_impulse; ++i) {
-    contact_sequence.pushBackDiscreteEvent(discrete_events[i]);
+  else {
+    return ContactSequence(robot, N);
   }
-  return contact_sequence;
 }
   
 
@@ -140,7 +145,7 @@ std::shared_ptr<Constraints> CreateConstraints(const Robot& robot) {
 
 
 Solution CreateSolution(const Robot& robot, const int N, const int max_num_impulse=0) {
-  Solution s(N, max_num_impulse, robot);
+  Solution s(robot, N, max_num_impulse);
   for (int i=0; i<=N; ++i) {
     s[i].setRandom(robot);
   }
@@ -156,7 +161,7 @@ Solution CreateSolution(const Robot& robot, const ContactSequence& contact_seque
   else {
     OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
     ocp_discretizer.discretizeOCP(contact_sequence, t);
-    Solution s(N, max_num_impulse, robot);
+    Solution s(robot, N, max_num_impulse);
     for (int i=0; i<=N; ++i) {
       s[i].setRandom(robot, contact_sequence.contactStatus(ocp_discretizer.contactPhase(i)));
     }
@@ -178,7 +183,7 @@ Solution CreateSolution(const Robot& robot, const ContactSequence& contact_seque
 
 KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence, 
                           const int N, const int max_num_impulse) {
-  KKTMatrix kkt_matrix = KKTMatrix(N, max_num_impulse, robot);
+  KKTMatrix kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   const int dimx = 2*robot.dimv();
   const int dimu = robot.dimu();
   for (int i=0; i<=N; ++i) {
@@ -243,7 +248,7 @@ KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_seq
 
 KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact_sequence, 
                               const int N, const int max_num_impulse) {
-  KKTResidual kkt_residual = KKTResidual(N, max_num_impulse, robot);
+  KKTResidual kkt_residual = KKTResidual(robot, N, max_num_impulse);
   for (int i=0; i<=N; ++i) {
     kkt_residual[i].lx().setRandom();
     kkt_residual[i].lu().setRandom();

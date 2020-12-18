@@ -43,7 +43,7 @@ public:
   void setInitialGuessSolution(const double t, const Eigen::VectorXd& q, 
                                const Eigen::VectorXd& v);
 
-  OCPType* getSolverHandle();
+  OCPSolverType* getSolverHandle();
 
   void testCPUTime(const double t, const Eigen::VectorXd& q, 
                    const Eigen::VectorXd& v, const int num_iteration=1000,

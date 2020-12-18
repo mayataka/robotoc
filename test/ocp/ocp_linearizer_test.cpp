@@ -69,32 +69,23 @@ ContactSequence OCPLinearizerTest::createContactSequence(const Robot& robot) con
 void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  OCPLinearizer linearizer(T, N, max_num_impulse, nproc);
-  ContactSequence contact_sequence(robot, N);
-  if (robot.maxPointContacts() > 0) {
-    contact_sequence = createContactSequence(robot);
-  }
-  auto kkt_matrix = KKTMatrix(N, max_num_impulse, robot);
-  auto kkt_residual = KKTResidual(N, max_num_impulse, robot);
-  Solution s;
-  if (robot.maxPointContacts() > 0) {
-    s = createSolution(robot, contact_sequence);
-  }
-  else {
-    s = createSolution(robot);
-  }
+  OCPLinearizer linearizer(N, max_num_impulse, nproc);
+  const auto contact_sequence = createContactSequence(robot);
+  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+  auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
+  auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
+  const auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   std::vector<Robot> robots(nproc, robot);
-  auto ocp = OCP(N, max_num_impulse, robot, cost, constraints);
+  auto ocp = OCP(robot, cost, constraints, N, max_num_impulse);
   auto ocp_ref = ocp;
-  linearizer.initConstraints(ocp, robots, contact_sequence, t, s);
-  linearizer.linearizeOCP(ocp, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
-  auto robot_ref = robot;
-  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
   ocp_discretizer.discretizeOCP(contact_sequence, t);
+  linearizer.initConstraints(ocp, ocp_discretizer, robots, contact_sequence, s);
+  linearizer.linearizeOCP(ocp, ocp_discretizer, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  auto robot_ref = robot;
   for (int i=0; i<N; ++i) {
     Eigen::VectorXd q_prev;
     if (i == 0 ) {
@@ -180,33 +171,24 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
 void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  OCPLinearizer linearizer(T, N, max_num_impulse, nproc);
-  ContactSequence contact_sequence(robot, N);
-  if (robot.maxPointContacts() > 0) {
-    contact_sequence = createContactSequence(robot);
-  }
-  auto kkt_matrix = KKTMatrix(N, max_num_impulse, robot);
-  auto kkt_residual = KKTResidual(N, max_num_impulse, robot);
-  Solution s;
-  if (robot.maxPointContacts() > 0) {
-    s = createSolution(robot, contact_sequence);
-  }
-  else {
-    s = createSolution(robot);
-  }
+  OCPLinearizer linearizer(N, max_num_impulse, nproc);
+  const auto contact_sequence = createContactSequence(robot);
+  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+  auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
+  auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
+  const auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   std::vector<Robot> robots(nproc, robot);
-  auto ocp = OCP(N, max_num_impulse, robot, cost, constraints);
+  auto ocp = OCP(robot, cost, constraints, N, max_num_impulse);
   auto ocp_ref = ocp;
-  linearizer.initConstraints(ocp, robots, contact_sequence, t, s);
-  linearizer.computeKKTResidual(ocp, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
-  const double kkt_error = linearizer.KKTError(ocp, kkt_residual);
-  auto robot_ref = robot;
-  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
   ocp_discretizer.discretizeOCP(contact_sequence, t);
+  linearizer.initConstraints(ocp, ocp_discretizer, robots, contact_sequence, s);
+  linearizer.computeKKTResidual(ocp, ocp_discretizer, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  const double kkt_error = linearizer.KKTError(ocp, ocp_discretizer, kkt_residual);
+  auto robot_ref = robot;
   double kkt_error_ref = 0;
   for (int i=0; i<N; ++i) {
     Eigen::VectorXd q_prev;
@@ -302,32 +284,25 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
 void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  OCPLinearizer linearizer(T, N, max_num_impulse, nproc);
-  ContactSequence contact_sequence(robot, N);
-  if (robot.maxPointContacts() > 0) {
-    contact_sequence = createContactSequence(robot);
-  }
-  auto kkt_matrix = KKTMatrix(N, max_num_impulse, robot);
-  auto kkt_residual = KKTResidual(N, max_num_impulse, robot);
-  Solution s;
-  if (robot.maxPointContacts() > 0) {
-    s = createSolution(robot, contact_sequence);
-  }
-  else {
-    s = createSolution(robot);
-  }
+  OCPLinearizer linearizer(N, max_num_impulse, nproc);
+  const auto contact_sequence = createContactSequence(robot);
+  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+  auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
+  auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
+  auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   std::vector<Robot> robots(nproc, robot);
-  auto ocp = OCP(N, max_num_impulse, robot, cost, constraints);
-  linearizer.initConstraints(ocp, robots, contact_sequence, t, s);
-  linearizer.linearizeOCP(ocp, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
-  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+  auto ocp = OCP(robot, cost, constraints, N, max_num_impulse);
   ocp_discretizer.discretizeOCP(contact_sequence, t);
-  Direction d(N, max_num_impulse, robot);
-  RiccatiSolver riccati_solver(robots[0], T, N, max_num_impulse, nproc);
-  riccati_solver.computeNewtonDirection(ocp, robots, contact_sequence, 
-                                        t, q, v, s, d, kkt_matrix, kkt_residual);
+  linearizer.initConstraints(ocp, ocp_discretizer, robots, contact_sequence, s);
+  linearizer.linearizeOCP(ocp, ocp_discretizer, robots, contact_sequence, 
+                          q, v, s, kkt_matrix, kkt_residual);
+  Direction d(robot, N, max_num_impulse);
+  RiccatiSolver riccati_solver(robots[0], N, max_num_impulse, nproc);
+  riccati_solver.computeNewtonDirection(ocp, ocp_discretizer, robots, 
+                                        contact_sequence, q, v, s, d, 
+                                        kkt_matrix, kkt_residual);
   const double primal_step_size = riccati_solver.maxPrimalStepSize();
   const double dual_step_size = riccati_solver.maxDualStepSize();
   ASSERT_TRUE(primal_step_size > 0);
@@ -339,7 +314,8 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto d_ref = d;
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
-  linearizer.integrateSolution(ocp, robots, kkt_matrix, kkt_residual, 
+  linearizer.integrateSolution(ocp, ocp_discretizer, robots, 
+                               kkt_matrix, kkt_residual, 
                                primal_step_size, dual_step_size, d, s);
   auto robot_ref = robot;
   for (int i=0; i<N; ++i) {

@@ -1,6 +1,6 @@
 ## idocp - Inverse Dynamics based Optimal Control Problem solver for rigid body systems 
 
-[![Build Status](https://travis-ci.com/mayataka/idocp.svg?token=fusqwLK1c8Q529AAxFz6&branch=master)](https://travis-ci.com/mayataka/idocp)
+[![build](https://github.com/mayataka/idocp/workflows/build/badge.svg?branch=master)](https://github.com/mayataka/idocp/actions?query=workflow%3Abuild)
 [![codecov](https://codecov.io/gh/mayataka/idocp/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/idocp)
 
 ## Features for efficient optimal control 

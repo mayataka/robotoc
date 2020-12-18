@@ -54,7 +54,7 @@ void RiccatiDirectionCalculator::computeInitialStateDirection(
 
 
 void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
-    OCP& ocp, std::vector<Robot>& robots, const OCPDiscretizer& ocp_discretizer, 
+    OCP& ocp, const OCPDiscretizer& ocp_discretizer, std::vector<Robot>& robots,
     const RiccatiFactorizer& factorizer, 
     const RiccatiFactorization& factorization, const Solution& s, Direction& d) {
   assert(robots.size() == num_proc_);
@@ -68,7 +68,7 @@ void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
       SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d[i], 
                                                       exist_state_constraint);
       factorizer[i].computeControlInputDirection(
-          next_riccati_factorization(factorization, ocp_discretizer, i), d[i], 
+          next_riccati_factorization(ocp_discretizer, factorization, i), d[i], 
           exist_state_constraint);
       ocp[i].computeCondensedPrimalDirection(robots[omp_get_thread_num()], 
                                              ocp_discretizer.dtau(i), s[i], d[i]);

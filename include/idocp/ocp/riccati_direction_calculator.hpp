@@ -83,9 +83,8 @@ public:
                                            const Solution& s, Direction& d);
 
   void computeNewtonDirectionFromRiccatiFactorization(
-      OCP& ocp, std::vector<Robot>& robots, 
-      const OCPDiscretizer& ocp_discretizer,
-      const RiccatiFactorizer& factorizer, 
+      OCP& ocp, const OCPDiscretizer& ocp_discretizer,
+      std::vector<Robot>& robots, const RiccatiFactorizer& factorizer, 
       const RiccatiFactorization& factorization, 
       const Solution& s, Direction& d);
 
@@ -94,8 +93,8 @@ public:
   double maxDualStepSize() const;
 
   static const SplitRiccatiFactorization& next_riccati_factorization(
-      const RiccatiFactorization& factorization, 
-      const OCPDiscretizer& ocp_discretizer, const int time_stage) {
+      const OCPDiscretizer& ocp_discretizer, 
+      const RiccatiFactorization& factorization, const int time_stage) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(time_stage)) {
       return factorization.impulse[ocp_discretizer.impulseIndex(time_stage)];
     }

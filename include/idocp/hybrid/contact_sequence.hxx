@@ -290,6 +290,11 @@ inline int ContactSequence::numLiftEvents() const {
 }
 
 
+inline int ContactSequence::numContactPhases() const {
+  return num_impulse_events_+num_lift_events_+1;
+}
+
+
 inline const ContactStatus& ContactSequence::contactStatus(
     const int contact_phase) const {
   assert(contact_phase >= 0);

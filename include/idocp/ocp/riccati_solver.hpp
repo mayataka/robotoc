@@ -26,15 +26,14 @@ public:
   ///
   /// @brief Construct optimal control problem solver.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
   /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
   /// Must be non-negative. Default is 0.
   /// @param[in] num_proc Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  RiccatiSolver(const Robot& robot, const double T, const int N, 
-                const int max_num_impulse, const int num_proc);
+  RiccatiSolver(const Robot& robot, const int N, const int max_num_impulse, 
+                const int num_proc);
 
   ///
   /// @brief Default constructor. 
@@ -71,9 +70,9 @@ public:
   /// calling this function, call OCPLinearizer::linearizeOCP() to compute
   /// kkt_matrix and kkt_residual.
   /// @param[in] ocp OCP. 
+  /// @param[in] ocp_discretizer OCP discretizer. 
   /// @param[in] robots Robot models. 
   /// @param[in] contact_sequence Contact sequence. 
-  /// @param[in] t Initial time. 
   /// @param[in] q Initial configuration vector. 
   /// @param[in] v Initial generalized velocity vector. 
   /// @param[in] s Solution. 
@@ -81,9 +80,10 @@ public:
   /// @param[in, out] kkt_matrix KKT matrix. 
   /// @param[in, out] kkt_residual KKT residual. 
   /// 
-  void computeNewtonDirection(OCP& ocp, std::vector<Robot>& robots, 
+  void computeNewtonDirection(OCP& ocp, const OCPDiscretizer ocp_discretizer, 
+                              std::vector<Robot>& robots, 
                               const ContactSequence& contact_sequence,
-                              const double t, const Eigen::VectorXd& q, 
+                              const Eigen::VectorXd& q, 
                               const Eigen::VectorXd& v, const Solution& s, 
                               Direction& d, KKTMatrix& kkt_matrix, 
                               KKTResidual& kkt_residual);
@@ -119,7 +119,7 @@ private:
   StateConstraintRiccatiFactorizer constraint_factorizer_;
   StateConstraintRiccatiFactorization constraint_factorization_;
   RiccatiDirectionCalculator direction_calculator_;
-  OCPDiscretizer ocp_discretizer_;
+
 };
 
 } // namespace idocp 

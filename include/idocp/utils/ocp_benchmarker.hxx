@@ -84,10 +84,10 @@ inline void OCPBenchmarker<OCPSolverType>::testCPUTime(
   std::cout << "robot.max_dimf() = " << max_dimf_ << std::endl;
   std::cout << "N (number of stages) = " << N_ << std::endl;
   if (line_search) {
-    std::cout << "Line search is enable" << std::endl;
+    std::cout << "Line search: enable" << std::endl;
   }
   else {
-    std::cout << "Line search is disable" << std::endl;
+    std::cout << "Line search: disable" << std::endl;
   }
   std::cout << "number of threads = " << num_proc_ << std::endl;
   std::cout << "total CPU time: " 
@@ -116,10 +116,10 @@ inline void OCPBenchmarker<OCPSolverType>::testConvergence(
   std::cout << "q = " << q.transpose() << std::endl;
   std::cout << "v = " << v.transpose() << std::endl;
   if (line_search) {
-    std::cout << "Line search is enable" << std::endl;
+    std::cout << "Line search: enable" << std::endl;
   }
   else {
-    std::cout << "Line search is disable" << std::endl;
+    std::cout << "Line search: disable" << std::endl;
   }
   ocp_.computeKKTResidual(t, q, v);
   std::cout << "Initial KKT error = " << ocp_.KKTError() << std::endl;

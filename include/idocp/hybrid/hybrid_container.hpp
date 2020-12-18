@@ -62,11 +62,11 @@ struct hybrid_container {
 
   ///
   /// @brief Construct the standard data, impulse data, and lift data. 
+  /// @param[in] robot Robot model.
   /// @param[in] N number of the standard data.
   /// @param[in] N_impulse number of the impulse data.
-  /// @param[in] robot Robot model.
   ///
-  hybrid_container(const int N, const int N_impulse, const Robot& robot) 
+  hybrid_container(const Robot& robot, const int N, const int N_impulse) 
     : data(N+1, Type(robot)), 
       aux(N_impulse, Type(robot)), 
       lift(N_impulse, Type(robot)),
@@ -86,10 +86,10 @@ struct hybrid_container {
 
   ///
   /// @brief Construct only the standard data. 
-  /// @param[in] N number of the standard data.
   /// @param[in] robot Robot model.
+  /// @param[in] N number of the standard data.
   ///
-  hybrid_container(const int N, const Robot& robot) 
+  hybrid_container(const Robot& robot, const int N) 
     : data(N+1, Type(robot)), 
       aux(),
       lift(),
@@ -166,15 +166,15 @@ struct OCP {
 
   ///
   /// @brief Construct only the standard data. 
-  /// @param[in] N number of the standard data.
-  /// @param[in] N_impulse number of the impulse data.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
+  /// @param[in] N number of the standard data.
+  /// @param[in] N_impulse number of the impulse data.
   ///
-  OCP(const int N, const int N_impulse, const Robot& robot, 
-      const std::shared_ptr<CostFunction>& cost, 
-      const std::shared_ptr<Constraints>& constraints) 
+  OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
+      const std::shared_ptr<Constraints>& constraints,
+      const int N, const int N_impulse) 
     : data(N, SplitOCP(robot, cost, constraints)), 
       aux(N_impulse, SplitOCP(robot, cost, constraints)), 
       lift(N_impulse, SplitOCP(robot, cost, constraints)),
@@ -197,14 +197,13 @@ struct OCP {
 
   ///
   /// @brief Construct only the standard data. 
-  /// @param[in] N number of the standard data.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
+  /// @param[in] N number of the standard data.
   ///
-  OCP(const int N, const Robot& robot, 
-      const std::shared_ptr<CostFunction>& cost,
-      const std::shared_ptr<Constraints>& constraints) 
+  OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+      const std::shared_ptr<Constraints>& constraints, const int N) 
     : data(N, SplitOCP(robot, cost, constraints)), 
       aux(), 
       lift(),
@@ -265,6 +264,7 @@ struct OCP {
   std::vector<SplitOCP> data, aux, lift;
   std::vector<ImpulseSplitOCP> impulse;
   TerminalOCP terminal;
+  // OCPDiscretizer discretizer;
 };
 
 } // namespace idocp

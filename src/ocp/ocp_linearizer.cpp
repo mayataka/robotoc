@@ -6,17 +6,12 @@
 
 namespace idocp{
 
-OCPLinearizer::OCPLinearizer(const double T, const int N, 
-                             const int max_num_impulse, 
+OCPLinearizer::OCPLinearizer(const int N, const int max_num_impulse, 
                              const int num_proc) 
   : N_(N),
     num_proc_(num_proc),
-    ocp_discretizer_(T, N, max_num_impulse),
     kkt_error_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)) {
   try {
-    if (T <= 0) {
-      throw std::out_of_range("invalid value: T must be positive!");
-    }
     if (N <= 0) {
       throw std::out_of_range("invalid value: N must be positive!");
     }
@@ -37,7 +32,6 @@ OCPLinearizer::OCPLinearizer(const double T, const int N,
 OCPLinearizer::OCPLinearizer()
   : N_(0),
     num_proc_(0),
-    ocp_discretizer_(),
     kkt_error_() {
 }
 
@@ -46,22 +40,23 @@ OCPLinearizer::~OCPLinearizer() {
 }
 
 
-void OCPLinearizer::initConstraints(OCP& ocp, std::vector<Robot>& robots, 
+void OCPLinearizer::initConstraints(OCP& ocp, 
+                                    const OCPDiscretizer& ocp_discretizer, 
+                                    std::vector<Robot>& robots, 
                                     const ContactSequence& contact_sequence, 
-                                    const double t, const Solution& s) {
-  ocp_discretizer_.discretizeOCP(contact_sequence, t);
-  const int N_impulse = ocp_discretizer_.numImpulseStages();
-  const int N_lift = ocp_discretizer_.numLiftStages();
+                                    const Solution& s) const {
+  const int N_impulse = ocp_discretizer.numImpulseStages();
+  const int N_lift = ocp_discretizer.numLiftStages();
   const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
       ocp[i].initConstraints(robots[omp_get_thread_num()], i, 
-                             ocp_discretizer_.dtau(i), s[i]);
+                             ocp_discretizer.dtau(i), s[i]);
     }
     else if (i == N_) {
       ocp.terminal.initConstraints(robots[omp_get_thread_num()], N_, 
-                                   ocp_discretizer_.dtau(N_), s[N_]);
+                                   ocp_discretizer.dtau(N_), s[N_]);
     }
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);
@@ -72,53 +67,58 @@ void OCPLinearizer::initConstraints(OCP& ocp, std::vector<Robot>& robots,
       const int impulse_index  = i - (N_+1+N_impulse);
       ocp.aux[impulse_index].initConstraints(
           robots[omp_get_thread_num()], 0, 
-          ocp_discretizer_.dtau_aux(impulse_index), s.aux[impulse_index]);
+          ocp_discretizer.dtau_aux(impulse_index), s.aux[impulse_index]);
     }
     else {
       const int lift_index = i - (N_+1+2*N_impulse);
       ocp.lift[lift_index].initConstraints(
           robots[omp_get_thread_num()], 0, 
-          ocp_discretizer_.dtau_lift(lift_index), s.lift[lift_index]);
+          ocp_discretizer.dtau_lift(lift_index), s.lift[lift_index]);
     }
   }
 }
 
 
-void OCPLinearizer::linearizeOCP(OCP& ocp, std::vector<Robot>& robots, 
+void OCPLinearizer::linearizeOCP(OCP& ocp, 
+                                 const OCPDiscretizer& ocp_discretizer, 
+                                 std::vector<Robot>& robots, 
                                  const ContactSequence& contact_sequence, 
-                                 const double t, const Eigen::VectorXd& q, 
+                                 const Eigen::VectorXd& q, 
                                  const Eigen::VectorXd& v, const Solution& s, 
                                  KKTMatrix& kkt_matrix, 
-                                 KKTResidual& kkt_residual) {
-  ocp_discretizer_.discretizeOCP(contact_sequence, t);
-  runParallel<internal::LinearizeOCP>(ocp, robots, contact_sequence, t, q, v, s, 
+                                 KKTResidual& kkt_residual) const {
+  runParallel<internal::LinearizeOCP>(ocp, ocp_discretizer, robots, 
+                                      contact_sequence, q, v, s, 
                                       kkt_matrix, kkt_residual);
 }
 
 
-void OCPLinearizer::computeKKTResidual(OCP& ocp, std::vector<Robot>& robots, 
+void OCPLinearizer::computeKKTResidual(OCP& ocp, 
+                                       const OCPDiscretizer& ocp_discretizer, 
+                                       std::vector<Robot>& robots, 
                                        const ContactSequence& contact_sequence, 
-                                       const double t, const Eigen::VectorXd& q, 
+                                       const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v, 
                                        const Solution& s, KKTMatrix& kkt_matrix, 
-                                       KKTResidual& kkt_residual) {
-  ocp_discretizer_.discretizeOCP(contact_sequence, t);
-  runParallel<internal::ComputeKKTResidual>(ocp, robots, contact_sequence, t, 
-                                            q, v, s, kkt_matrix, kkt_residual);
+                                       KKTResidual& kkt_residual) const {
+  runParallel<internal::ComputeKKTResidual>(ocp, ocp_discretizer, robots, 
+                                            contact_sequence, q, v, s, 
+                                            kkt_matrix, kkt_residual);
 }
 
 
 double OCPLinearizer::KKTError(const OCP& ocp, 
+                               const OCPDiscretizer& ocp_discretizer,  
                                const KKTResidual& kkt_residual) {
-  const int N_impulse = ocp_discretizer_.numImpulseStages();
-  const int N_lift = ocp_discretizer_.numLiftStages();
+  const int N_impulse = ocp_discretizer.numImpulseStages();
+  const int N_lift = ocp_discretizer.numLiftStages();
   const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
       kkt_error_.coeffRef(i) 
           = ocp[i].squaredNormKKTResidual(kkt_residual[i], 
-                                          ocp_discretizer_.dtau(i));
+                                          ocp_discretizer.dtau(i));
     }
     else if (i == N_) {
       kkt_error_.coeffRef(N_) 
@@ -127,7 +127,7 @@ double OCPLinearizer::KKTError(const OCP& ocp,
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);
       const int time_stage_before_impulse 
-          = ocp_discretizer_.timeStageBeforeImpulse(impulse_index);
+          = ocp_discretizer.timeStageBeforeImpulse(impulse_index);
       const bool is_state_constraint_valid = (time_stage_before_impulse > 0);
       kkt_error_.coeffRef(i) 
           = ocp.impulse[impulse_index].squaredNormKKTResidual(
@@ -138,48 +138,50 @@ double OCPLinearizer::KKTError(const OCP& ocp,
       kkt_error_.coeffRef(i) 
           = ocp.aux[impulse_index].squaredNormKKTResidual(
                 kkt_residual.aux[impulse_index], 
-                ocp_discretizer_.dtau_aux(impulse_index));
+                ocp_discretizer.dtau_aux(impulse_index));
     }
     else {
       const int lift_index = i - (N_+1+2*N_impulse);
       kkt_error_.coeffRef(i) 
           = ocp.lift[lift_index].squaredNormKKTResidual(
               kkt_residual.lift[lift_index], 
-              ocp_discretizer_.dtau_lift(lift_index));
+              ocp_discretizer.dtau_lift(lift_index));
     }
   }
   return std::sqrt(kkt_error_.head(N_all).sum());
 }
 
 
-void OCPLinearizer::integrateSolution(OCP& ocp, const std::vector<Robot>& robots, 
+void OCPLinearizer::integrateSolution(OCP& ocp, 
+                                      const OCPDiscretizer& ocp_discretizer, 
+                                      const std::vector<Robot>& robots, 
                                       const KKTMatrix& kkt_matrix, 
                                       const KKTResidual& kkt_residual, 
                                       const double primal_step_size, 
                                       const double dual_step_size, 
                                       Direction& d, Solution& s) const {
   assert(robots.size() == num_proc_);
-  const int N_impulse = ocp_discretizer_.numImpulseStages();
-  const int N_lift = ocp_discretizer_.numLiftStages();
+  const int N_impulse = ocp_discretizer.numImpulseStages();
+  const int N_lift = ocp_discretizer.numLiftStages();
   const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
-      if (ocp_discretizer_.isTimeStageBeforeImpulse(i)) {
+      if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
         ocp[i].computeCondensedDualDirection(
-            robots[omp_get_thread_num()], ocp_discretizer_.dtau(i), 
+            robots[omp_get_thread_num()], ocp_discretizer.dtau(i), 
             kkt_matrix[i], kkt_residual[i], 
-            d.impulse[ocp_discretizer_.impulseIndex(i)], d[i]);
+            d.impulse[ocp_discretizer.impulseIndex(i)], d[i]);
       }
-      else if (ocp_discretizer_.isTimeStageBeforeLift(i)) {
+      else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
         ocp[i].computeCondensedDualDirection(
-            robots[omp_get_thread_num()], ocp_discretizer_.dtau(i), 
+            robots[omp_get_thread_num()], ocp_discretizer.dtau(i), 
             kkt_matrix[i], kkt_residual[i], 
-            d.lift[ocp_discretizer_.liftIndex(i)], d[i]);
+            d.lift[ocp_discretizer.liftIndex(i)], d[i]);
       }
       else {
         ocp[i].computeCondensedDualDirection(
-            robots[omp_get_thread_num()], ocp_discretizer_.dtau(i), 
+            robots[omp_get_thread_num()], ocp_discretizer.dtau(i), 
             kkt_matrix[i], kkt_residual[i], d[i+1], d[i]);
       }
       ocp[i].updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
@@ -194,7 +196,7 @@ void OCPLinearizer::integrateSolution(OCP& ocp, const std::vector<Robot>& robots
     else if (i < N_ + 1 + N_impulse) {
       const int impulse_index  = i - (N_+1);
       const bool is_state_constraint_valid 
-          = (ocp_discretizer_.timeStageBeforeImpulse(impulse_index) > 0);
+          = (ocp_discretizer.timeStageBeforeImpulse(impulse_index) > 0);
       ocp.impulse[impulse_index].computeCondensedDualDirection(
           robots[omp_get_thread_num()], kkt_matrix.impulse[impulse_index], 
           kkt_residual.impulse[impulse_index], d.aux[impulse_index], 
@@ -208,9 +210,9 @@ void OCPLinearizer::integrateSolution(OCP& ocp, const std::vector<Robot>& robots
     else if (i < N_ + 1 + 2*N_impulse) {
       const int impulse_index  = i - (N_+1+N_impulse);
       ocp.aux[impulse_index].computeCondensedDualDirection(
-          robots[omp_get_thread_num()], ocp_discretizer_.dtau_aux(impulse_index),
+          robots[omp_get_thread_num()], ocp_discretizer.dtau_aux(impulse_index),
           kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index],
-          d[ocp_discretizer_.timeStageAfterImpulse(impulse_index)], 
+          d[ocp_discretizer.timeStageAfterImpulse(impulse_index)], 
           d.aux[impulse_index]);
       ocp.aux[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
                                           primal_step_size, 
@@ -221,10 +223,9 @@ void OCPLinearizer::integrateSolution(OCP& ocp, const std::vector<Robot>& robots
     else {
       const int lift_index = i - (N_+1+2*N_impulse);
       ocp.lift[lift_index].computeCondensedDualDirection(
-          robots[omp_get_thread_num()], ocp_discretizer_.dtau_lift(lift_index), 
+          robots[omp_get_thread_num()], ocp_discretizer.dtau_lift(lift_index), 
           kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index], 
-          d[ocp_discretizer_.timeStageAfterLift(lift_index)], 
-          d.lift[lift_index]);
+          d[ocp_discretizer.timeStageAfterLift(lift_index)], d.lift[lift_index]);
       ocp.lift[lift_index].updatePrimal(robots[omp_get_thread_num()], 
                                         primal_step_size, 
                                         d.lift[lift_index], s.lift[lift_index]);

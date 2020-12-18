@@ -63,14 +63,14 @@ void StateConstraintRiccatiFactorizerTest::testComputeLagrangeMultiplierDirectio
     constraint_factorization.T_impulse(i, i).topRows(dimv) = constraint_factorization.Eq(i).transpose();
     constraint_factorization.T_impulse(i, i).bottomRows(dimv).setZero();
   }
-  RiccatiFactorization riccati_factorization(N, max_num_impulse, robot);
+  RiccatiFactorization riccati_factorization(robot, N, max_num_impulse);
   for (int i=0; i<num_impulse; ++i) {
     const Eigen::MatrixXd seed_mat = Eigen::MatrixXd::Random(dimx, dimx);
     riccati_factorization.impulse[i].N = seed_mat * seed_mat.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
     riccati_factorization.impulse[i].Pi.setRandom();
     riccati_factorization.impulse[i].pi.setRandom();
   }
-  Direction d(N, max_num_impulse, robot);
+  Direction d(robot, N, max_num_impulse);
   d[0].dx().setRandom();
   for (int i=0; i<num_impulse; ++i) {
     d.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
@@ -122,12 +122,12 @@ void StateConstraintRiccatiFactorizerTest::testAggregateLagrangeMultiplierDirect
       constraint_factorization.T_lift(i, j).setRandom();
     }
   }
-  Direction d(N, max_num_impulse, robot);
+  Direction d(robot, N, max_num_impulse);
   for (int i=0; i<num_impulse; ++i) {
     d.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
     d.impulse[i].dxi().setRandom();
   }
-  RiccatiFactorization factorization(N, max_num_impulse, robot);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
   for (int i=0; i<N; ++i) {
     factorization[i].n.setRandom();
   }

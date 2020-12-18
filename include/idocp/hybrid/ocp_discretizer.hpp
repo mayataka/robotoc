@@ -52,9 +52,9 @@ public:
 
   int contactPhase(const int time_stage) const;
 
-  int impulseIndex(const int time_stage) const;
+  int impulseIndex(const int time_stage_before_impulse) const;
 
-  int liftIndex(const int time_stage) const;
+  int liftIndex(const int time_stage_before_lift) const;
 
   int timeStageBeforeImpulse(const int impulse_index) const;
 
@@ -74,7 +74,11 @@ public:
 
   bool isTimeStageBeforeImpulse(const int time_stage) const;
 
+  bool isTimeStageAfterImpulse(const int time_stage) const;
+
   bool isTimeStageBeforeLift(const int time_stage) const;
+
+  bool isTimeStageAfterLift(const int time_stage) const;
 
   bool existImpulse() const;
 

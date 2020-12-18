@@ -89,17 +89,19 @@ inline int OCPDiscretizer::contactPhase(const int time_stage) const {
 }
 
 
-inline int OCPDiscretizer::impulseIndex(const int time_stage) const {
-  assert(time_stage >= 0);
-  assert(time_stage <= N_);
-  return impulse_index_from_time_stage_[time_stage];
+inline int OCPDiscretizer::impulseIndex(
+    const int time_stage_before_impulse) const {
+  assert(time_stage_before_impulse >= 0);
+  assert(time_stage_before_impulse <= N_);
+  return impulse_index_from_time_stage_[time_stage_before_impulse];
 }
 
 
-inline int OCPDiscretizer::liftIndex(const int time_stage) const {
-  assert(time_stage >= 0);
-  assert(time_stage <= N_);
-  return lift_index_from_time_stage_[time_stage];
+inline int OCPDiscretizer::liftIndex(
+    const int time_stage_before_lift) const {
+  assert(time_stage_before_lift >= 0);
+  assert(time_stage_before_lift <= N_);
+  return lift_index_from_time_stage_[time_stage_before_lift];
 }
 
 
@@ -153,12 +155,31 @@ inline int OCPDiscretizer::contactPhaseAfterLift(const int lift_index) const {
 
 inline bool OCPDiscretizer::isTimeStageBeforeImpulse(
     const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage <= N_);
   return is_time_stage_before_impulse_[time_stage];
 }
 
 
+inline bool OCPDiscretizer::isTimeStageAfterImpulse(
+    const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage <= N_);
+  return is_time_stage_before_impulse_[time_stage-1];
+}
+
+
 inline bool OCPDiscretizer::isTimeStageBeforeLift(const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage <= N_);
   return is_time_stage_before_lift_[time_stage];
+}
+
+
+inline bool OCPDiscretizer::isTimeStageAfterLift(const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage <= N_);
+  return is_time_stage_before_lift_[time_stage-1];
 }
 
 

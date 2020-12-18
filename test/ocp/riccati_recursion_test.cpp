@@ -104,7 +104,7 @@ void RiccatiRecursionTest::testBackwardRiccatiRecursion(const Robot& robot) cons
   ocp_discretizer.discretizeOCP(contact_sequence, t);
   auto kkt_matrix = createKKTMatrix(robot, contact_sequence);
   auto kkt_residual= createKKTResidual(robot, contact_sequence);
-  RiccatiFactorization factorization(N, max_num_impulse, robot);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
   RiccatiRecursion riccati_recursion(robot, N, nproc);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
   EXPECT_TRUE(factorization[N].Pqq.isApprox(kkt_matrix[N].Qqq()));
@@ -121,7 +121,7 @@ void RiccatiRecursionTest::testBackwardRiccatiRecursion(const Robot& robot) cons
   auto factorization_ref = factorization;
   auto kkt_matrix_ref = kkt_matrix; 
   auto kkt_residual_ref = kkt_residual; 
-  RiccatiFactorizer factorizer(N, max_num_impulse, robot);
+  RiccatiFactorizer factorizer(robot, N, max_num_impulse);
   auto factorizer_ref = factorizer;
   riccati_recursion.backwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
   for (int i=N-1; i>=0; --i) {
@@ -179,10 +179,10 @@ void RiccatiRecursionTest::testForwardRiccatiRecursionParallel(const Robot& robo
   ocp_discretizer.discretizeOCP(contact_sequence, t);
   auto kkt_matrix = createKKTMatrix(robot, contact_sequence);
   auto kkt_residual= createKKTResidual(robot, contact_sequence);
-  RiccatiFactorization factorization(N, max_num_impulse, robot);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
   RiccatiRecursion riccati_recursion(robot, N, nproc);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
-  RiccatiFactorizer factorizer(N, max_num_impulse, robot);
+  RiccatiFactorizer factorizer(robot, N, max_num_impulse);
   riccati_recursion.backwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
   StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
   constraint_factorization.setConstraintStatus(contact_sequence);
@@ -239,10 +239,10 @@ void RiccatiRecursionTest::testForwardStateConstraintFactorization(const Robot& 
   ocp_discretizer.discretizeOCP(contact_sequence, t);
   auto kkt_matrix = createKKTMatrix(robot, contact_sequence);
   auto kkt_residual= createKKTResidual(robot, contact_sequence);
-  RiccatiFactorization factorization(N, max_num_impulse, robot);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
   RiccatiRecursion riccati_recursion(robot, N, nproc);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
-  RiccatiFactorizer factorizer(N, max_num_impulse, robot);
+  RiccatiFactorizer factorizer(robot, N, max_num_impulse);
   riccati_recursion.backwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
   auto factorizer_ref = factorizer;
   auto factorization_ref = factorization;
@@ -308,10 +308,10 @@ void RiccatiRecursionTest::testBackwardStateConstraintFactorization(const Robot&
   ocp_discretizer.discretizeOCP(contact_sequence, t);
   auto kkt_matrix = createKKTMatrix(robot, contact_sequence);
   auto kkt_residual= createKKTResidual(robot, contact_sequence);
-  RiccatiFactorization factorization(N, max_num_impulse, robot);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
   RiccatiRecursion riccati_recursion(robot, N, nproc);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
-  RiccatiFactorizer factorizer(N, max_num_impulse, robot);
+  RiccatiFactorizer factorizer(robot, N, max_num_impulse);
   riccati_recursion.backwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
   StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
   constraint_factorization.setConstraintStatus(contact_sequence);
@@ -396,10 +396,10 @@ void RiccatiRecursionTest::testForwardRiccatiRecursion(const Robot& robot) const
   ocp_discretizer.discretizeOCP(contact_sequence, t);
   auto kkt_matrix = createKKTMatrix(robot, contact_sequence);
   auto kkt_residual= createKKTResidual(robot, contact_sequence);
-  RiccatiFactorization factorization(N, max_num_impulse, robot);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
   RiccatiRecursion riccati_recursion(robot, N, nproc);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
-  RiccatiFactorizer factorizer(N, max_num_impulse, robot);
+  RiccatiFactorizer factorizer(robot, N, max_num_impulse);
   riccati_recursion.backwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
   StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
   constraint_factorization.setConstraintStatus(contact_sequence);
@@ -410,7 +410,7 @@ void RiccatiRecursionTest::testForwardRiccatiRecursion(const Robot& robot) const
   auto factorization_ref = factorization;
   auto kkt_matrix_ref = kkt_matrix; 
   auto kkt_residual_ref = kkt_residual; 
-  Direction d(N, max_num_impulse, robot);
+  Direction d(robot, N, max_num_impulse);
   for (int i=0; i<=N; ++i) {
     d[i].dx().setRandom();
   }

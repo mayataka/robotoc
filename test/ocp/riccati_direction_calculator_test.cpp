@@ -79,32 +79,23 @@ ContactSequence RiccatiDirectionCalculatorTest::createContactSequence(const Robo
 void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  ContactSequence contact_sequence(robot, N);
-  if (robot.maxPointContacts() > 0) {
-    contact_sequence = createContactSequence(robot);
-  }
+  const auto contact_sequence = createContactSequence(robot);
   OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
-  ocp_discretizer.discretizeOCP(contact_sequence, t);
-  auto kkt_matrix = KKTMatrix(N, max_num_impulse, robot);
-  auto kkt_residual = KKTResidual(N, max_num_impulse, robot);
-  Solution s;
-  if (robot.maxPointContacts() > 0) {
-    s = createSolution(robot, contact_sequence);
-  }
-  else {
-    s = createSolution(robot);
-  }
+  auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
+  auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
+  const auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  auto ocp = OCP(N, max_num_impulse, robot, cost, constraints);
-  OCPLinearizer linearizer(T, N, max_num_impulse, nproc);
+  auto ocp = OCP(robot, cost, constraints, N, max_num_impulse);
+  OCPLinearizer linearizer(N, max_num_impulse, nproc);
   std::vector<Robot> robots(nproc, robot);
-  linearizer.initConstraints(ocp, robots, contact_sequence, t, s);
-  linearizer.linearizeOCP(ocp, robots, contact_sequence, t, q, v, s, kkt_matrix, kkt_residual);
+  ocp_discretizer.discretizeOCP(contact_sequence, t);
+  linearizer.initConstraints(ocp, ocp_discretizer, robots, contact_sequence, s);
+  linearizer.linearizeOCP(ocp, ocp_discretizer, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   RiccatiRecursion riccati_recursion(robot, N, nproc);
   StateConstraintRiccatiFactorizer constraint_factorizer(robot, N, max_num_impulse, nproc);
-  RiccatiFactorization factorization(N, max_num_impulse, robot);
-  RiccatiFactorizer factorizer(N, max_num_impulse, robot);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
+  RiccatiFactorizer factorizer(robot, N, max_num_impulse);
   StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
   constraint_factorization.setConstraintStatus(contact_sequence);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
@@ -117,7 +108,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   }
   const int num_impulse = ocp_discretizer.numImpulseStages();
   const int num_lift = ocp_discretizer.numLiftStages();
-  Direction d = Direction(N, max_num_impulse, robot);
+  Direction d = Direction(robot, N, max_num_impulse);
   auto d_ref = d;
   RiccatiDirectionCalculator::computeInitialStateDirection(robots, q, v, s, d);
   robot.subtractConfiguration(q, s[0].q, d_ref[0].dq());
@@ -134,12 +125,11 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   EXPECT_FALSE(testhelper::HasNaN(factorization));
   EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
-  
   d_ref = d;
   auto ocp_ref = ocp;
   RiccatiDirectionCalculator direction_calculator(N, max_num_impulse, nproc);
   direction_calculator.computeNewtonDirectionFromRiccatiFactorization(
-      ocp, robots, ocp_discretizer, factorizer, factorization, s, d);
+      ocp, ocp_discretizer, robots, factorizer, factorization, s, d);
   const double primal_step_size = direction_calculator.maxPrimalStepSize();
   const double dual_step_size = direction_calculator.maxDualStepSize();
   const Eigen::VectorXd dx0 = d_ref[0].dx();

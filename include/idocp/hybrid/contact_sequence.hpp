@@ -130,6 +130,12 @@ public:
   int numLiftEvents() const;
 
   ///
+  /// @brief Returns number of contact phases. 
+  /// @return Number of contact phases.
+  ///
+  int numContactPhases() const;
+
+  ///
   /// @brief Getter of the contact status. 
   /// @param[in] contact_phase Index of contact status phase.
   /// @return const reference to the contact status.

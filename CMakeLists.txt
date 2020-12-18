@@ -107,9 +107,9 @@ add_library(
   src/ocp/state_constraint_riccati_factorizer.cpp
   src/ocp/riccati_direction_calculator.cpp
   src/ocp/riccati_solver.cpp
+  src/ocp/ocp_solver.cpp
   # src/line_search/split_temporary_solution.cpp
   # src/line_search/line_search_filter.cpp
-  src/ocp/ocp_solver.cpp
 
   # src/ocp/split_parnmpc.cpp
   # src/ocp/terminal_parnmpc.cpp

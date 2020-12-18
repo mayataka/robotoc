@@ -20,6 +20,7 @@ add_test_macro(state_constraint_riccati_factorizer_test)
 add_test_macro(riccati_recursion_test)
 add_test_macro(riccati_direction_calculator_test)
 add_test_macro(riccati_solver_test)
+
 # add_test_macro(ocp_solver_test)
 # add_test_macro(backward_correction_test)
 # add_test_macro(split_parnmpc_test)
