@@ -113,20 +113,21 @@ bool OCPSolver::setStateTrajectory(const double t, const Eigen::VectorXd& q,
   assert(v.size() == robots_[0].dimv());
   Eigen::VectorXd q_normalized = q;
   robots_[0].normalizeConfiguration(q_normalized);
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N_; ++i) {
-    s_[i].v = v;
-    s_[i].q = q_normalized;
+  for (auto& e : s_.data) {
+    e.v = v;
+    e.q = q_normalized;
   }
-  for (int i=0; i<contact_sequence_.numImpulseEvents(); ++i) {
-    s_.impulse[i].v = v;
-    s_.impulse[i].q = q_normalized;
-    s_.aux[i].v = v;
-    s_.aux[i].q = q_normalized;
+  for (auto& e : s_.impulse) {
+    e.v = v;
+    e.q = q_normalized;
   }
-  for (int i=0; i<contact_sequence_.numLiftEvents(); ++i) {
-    s_.lift[i].v = v;
-    s_.lift[i].q = q_normalized;
+  for (auto& e : s_.aux) {
+    e.v = v;
+    e.q = q_normalized;
+  }
+  for (auto& e : s_.lift) {
+    e.v = v;
+    e.q = q_normalized;
   }
   initConstraints(t);
   const bool feasible = isCurrentSolutionFeasible();
@@ -136,6 +137,9 @@ bool OCPSolver::setStateTrajectory(const double t, const Eigen::VectorXd& q,
 
 void OCPSolver::setContactStatusUniformly(const ContactStatus& contact_status) {
   contact_sequence_.setContactStatusUniformly(contact_status);
+  for (int i=0; i<=N_; ++i) {
+    s_[i].setContactStatus(contact_sequence_.contactStatus(0));
+  }
 }
 
 
@@ -150,23 +154,34 @@ void OCPSolver::pushBackContactStatus(const ContactStatus& contact_status,
   ocp_.discretize(contact_sequence_, t);
   if (discrete_event.existImpulse()) {
     const int last_impulse_index = contact_sequence_.numImpulseEvents() - 1;
+    const int time_stage_before_last_impulse 
+        = ocp_.discrete().timeStageBeforeImpulse(last_impulse_index);
     s_.impulse[last_impulse_index].copyPartial(
-        s_[ocp_.discrete().timeStageBeforeImpulse(last_impulse_index)]);
+        s_[time_stage_before_last_impulse]);
     s_.impulse[last_impulse_index].setImpulseStatus(
         contact_sequence_.impulseStatus(last_impulse_index));
     s_.aux[last_impulse_index].copy(
-        s_[ocp_.discrete().timeStageBeforeImpulse(last_impulse_index)]);
+        s_[time_stage_before_last_impulse]);
     s_.aux[last_impulse_index].setContactStatus(
         contact_sequence_.contactStatus(
             ocp_.discrete().contactPhaseAfterImpulse(last_impulse_index)));
+    const int last_contact_phase = contact_sequence_.numContactPhases() - 1;
+    for (int i=time_stage_before_last_impulse+1; i<=N_; ++i) {
+      s_[i].setContactStatus(contact_sequence_.contactStatus(last_contact_phase));
+    }
   }
   else {
     const int last_lift_index = contact_sequence_.numLiftEvents() - 1;
-    s_.lift[last_lift_index].copy(
-        s_[ocp_.discrete().timeStageBeforeLift(last_lift_index)]);
+    const int time_stage_before_last_lift 
+        = ocp_.discrete().timeStageBeforeLift(last_lift_index);
+    s_.lift[last_lift_index].copy(s_[time_stage_before_last_lift]);
     s_.lift[last_lift_index].setContactStatus(
         contact_sequence_.contactStatus(
             ocp_.discrete().contactPhaseAfterLift(last_lift_index)));
+    const int last_contact_phase = contact_sequence_.numContactPhases() - 1;
+    for (int i=time_stage_before_last_lift+1; i<=N_; ++i) {
+      s_[i].setContactStatus(contact_sequence_.contactStatus(last_contact_phase));
+    }
   }
 }
 
@@ -183,6 +198,28 @@ void OCPSolver::shiftLift(const int lift_index, const double lift_time) {
 
 
 void OCPSolver::popBackDiscreteEvent() {
+  const int last_discrete_event = contact_sequence_.numDiscreteEvents() - 1;
+  if (contact_sequence_.isImpulseEvent(last_discrete_event)) {
+    const int last_impulse_index = contact_sequence_.numImpulseEvents() - 1;
+    const int time_stage_after_second_last_impulse 
+        = ocp_.discrete().timeStageAfterImpulse(last_impulse_index-1);
+    const int second_last_contact_phase = contact_sequence_.numContactPhases() - 2;
+    for (int i=time_stage_after_second_last_impulse; i<=N_; ++i) {
+      s_[i].setContactStatus(
+          contact_sequence_.contactStatus(second_last_contact_phase));
+    }
+  }
+  else {
+    const int last_lift_index = contact_sequence_.numLiftEvents() - 1;
+    const int time_stage_after_second_last_lift
+        = ocp_.discrete().timeStageAfterLift(last_lift_index-1);
+    const int second_last_contact_phase = contact_sequence_.numContactPhases() - 2;
+    for (int i=time_stage_after_second_last_lift; i<=N_; ++i) {
+      s_[i].setContactStatus(
+          contact_sequence_.contactStatus(second_last_contact_phase));
+    }
+
+  }
   contact_sequence_.popBackDiscreteEvent();
 }
 
@@ -190,6 +227,11 @@ void OCPSolver::popBackDiscreteEvent() {
 void OCPSolver::popFrontDiscreteEvent() {
   if (contact_sequence_.numDiscreteEvents() > 0) {
     if (contact_sequence_.isImpulseEvent(0)) {
+      const int time_stage_before_first_impulse 
+          = ocp_.discrete().timeStageBeforeImpulse(0);
+      for (int i=0; i<=time_stage_before_first_impulse; ++i) {
+        s_[i].setContactStatus(contact_sequence_.contactStatus(1));
+      }
       for (int i=0; i<=contact_sequence_.numImpulseEvents()-2; ++i) {
         s_.impulse[i].copy(s_.impulse[i+1]);
       }
@@ -198,12 +240,17 @@ void OCPSolver::popFrontDiscreteEvent() {
       }
     }
     else {
+      const int time_stage_before_first_lift 
+          = ocp_.discrete().timeStageBeforeLift(0);
+      for (int i=0; i<=time_stage_before_first_lift; ++i) {
+        s_[i].setContactStatus(contact_sequence_.contactStatus(1));
+      }
       for (int i=0; i<=contact_sequence_.numLiftEvents()-2; ++i) {
         s_.lift[i].copy(s_.lift[i+1]);
       }
     }
+    contact_sequence_.popFrontDiscreteEvent();
   }
-  contact_sequence_.popFrontDiscreteEvent();
 }
 
 

@@ -4,8 +4,8 @@
 #include <iostream>
 #include <chrono>
 
-#include "idocp/ocp/ocp.hpp"
-// #include "idocp/ocp/parnmpc.hpp"
+#include "idocp/ocp/ocp_solver.hpp"
+// #include "idocp/ocp/parnmpc_solver.hpp"
 
 namespace idocp {
 
@@ -16,28 +16,26 @@ inline OCPBenchmarker<OCPSolverType>::OCPBenchmarker(
     const std::shared_ptr<Constraints>& constraints, const double T, 
     const int N, const int max_num_impulse, const int num_proc)
   : benchmark_name_(benchmark_name),
-    ocp_(robot, cost, constraints, T, N, max_num_impulse, num_proc),
+    ocp_solver_(robot, cost, constraints, T, N, max_num_impulse, num_proc),
     dimq_(robot.dimq()),
     dimv_(robot.dimv()),
     max_dimf_(robot.max_dimf()),
     N_(N),
     num_proc_(num_proc),
-    T_(T),
-    dtau_(T/N) {
+    T_(T) {
 }
 
 
 template <typename OCPSolverType>
 inline OCPBenchmarker<OCPSolverType>::OCPBenchmarker()
   : benchmark_name_(),
-    ocp_(),
+    ocp_solver_(),
     dimq_(0),
     dimv_(0),
     max_dimf_(0),
     N_(0),
     num_proc_(0),
-    T_(0),
-    dtau_(0) {
+    T_(0) {
 }
 
 
@@ -49,7 +47,7 @@ inline OCPBenchmarker<OCPSolverType>::~OCPBenchmarker() {
 template <>
 inline void OCPBenchmarker<OCPSolver>::setInitialGuessSolution(
     const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v) {
-  ocp_.setStateTrajectory(q, v);
+  ocp_solver_.setStateTrajectory(t, q, v);
 }
 
 
@@ -63,7 +61,7 @@ inline void OCPBenchmarker<OCPSolver>::setInitialGuessSolution(
 
 template <typename OCPSolverType>
 inline OCPSolverType* OCPBenchmarker<OCPSolverType>::getSolverHandle() {
-  return &ocp_;
+  return &ocp_solver_;
 }
 
 
@@ -74,7 +72,7 @@ inline void OCPBenchmarker<OCPSolverType>::testCPUTime(
   std::chrono::system_clock::time_point start_clock, end_clock;
   start_clock = std::chrono::system_clock::now();
   for (int i=0; i<num_iteration; ++i) {
-    ocp_.updateSolution(t, q, v, line_search);
+    ocp_solver_.updateSolution(t, q, v, line_search);
   }
   end_clock = std::chrono::system_clock::now();
   std::cout << "---------- OCP benchmark ----------" << std::endl;
@@ -121,13 +119,13 @@ inline void OCPBenchmarker<OCPSolverType>::testConvergence(
   else {
     std::cout << "Line search: disable" << std::endl;
   }
-  ocp_.computeKKTResidual(t, q, v);
-  std::cout << "Initial KKT error = " << ocp_.KKTError() << std::endl;
+  ocp_solver_.computeKKTResidual(t, q, v);
+  std::cout << "Initial KKT error = " << ocp_solver_.KKTError() << std::endl;
   for (int i=0; i<num_iteration; ++i) {
-    ocp_.updateSolution(t, q, v, line_search);
-    ocp_.computeKKTResidual(t, q, v);
+    ocp_solver_.updateSolution(t, q, v, line_search);
+    ocp_solver_.computeKKTResidual(t, q, v);
     std::cout << "KKT error at iteration " << i << " = " 
-              << ocp_.KKTError() << std::endl;
+              << ocp_solver_.KKTError() << std::endl;
   }
   std::cout << "-----------------------------------" << std::endl;
   std::cout << std::endl;
@@ -136,7 +134,7 @@ inline void OCPBenchmarker<OCPSolverType>::testConvergence(
 
 template <typename OCPSolverType>
 inline void OCPBenchmarker<OCPSolverType>::printSolution() {
-  ocp_.printSolution();
+  ocp_solver_.printSolution();
 }
 
 } // namespace idocp 

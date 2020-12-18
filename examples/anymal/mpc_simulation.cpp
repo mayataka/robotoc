@@ -69,14 +69,16 @@ void SimulateWithContactsByOCP(
   cost->push_back(configuration_cost);
 
   auto contact_cost = std::make_shared<idocp::ContactForceCost>(robot);
-  std::vector<Eigen::Vector3d> f_weight;
+  std::vector<Eigen::Vector3d> f_weight, f_ref;
   for (int i=0; i<contact_frames.size(); ++i) {
-    Eigen::Vector3d fw;
-    // fw << 1, 1, 0.001;
+    Eigen::Vector3d fw, fr;
     fw << 0.001, 0.001, 0.001;
     f_weight.push_back(fw);
+    fr << 0.0, 0.0, 70;
+    f_ref.push_back(fr);
   }
   contact_cost->set_f_weight(f_weight);
+  contact_cost->set_f_ref(f_ref);
   cost->push_back(contact_cost);
   auto impulse_configuration_cost = std::make_shared<idocp::ImpulseTimeVaryingConfigurationCost>(robot);
   impulse_configuration_cost->set_ref(0, q_ref, v_ref);

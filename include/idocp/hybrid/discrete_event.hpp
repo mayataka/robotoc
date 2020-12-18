@@ -111,6 +111,21 @@ public:
                         const ContactStatus& post_contact_status);
 
   ///
+  /// @brief Set a contact point.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] contact_point Contact point.
+  ///
+  void setContactPoint(const int contact_index, 
+                       const Eigen::Vector3d& contact_point);
+
+  ///
+  /// @brief Set contact points.
+  /// @param[in] contact_points Contact points. Size must be 
+  /// ImpulseStatus::maxPointContacts().
+  ///
+  void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
+
+  ///
   /// @brief Set the contact points of the impoulse status from robot kinematics.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   ///

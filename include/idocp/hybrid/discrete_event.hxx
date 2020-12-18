@@ -113,6 +113,22 @@ inline void DiscreteEvent::setDiscreteEvent(
   }
   pre_contact_status_.set(pre_contact_status);
   post_contact_status_.set(post_contact_status);
+  setContactPoints(post_contact_status.contactPoints());
+}
+
+
+inline void DiscreteEvent::setContactPoint(
+    const int contact_index, const Eigen::Vector3d& contact_point) {
+  assert(contact_index >= 0);
+  assert(contact_index < max_point_contacts_);
+  impulse_status_.setContactPoint(contact_index, contact_point);
+}
+
+
+inline void DiscreteEvent::setContactPoints(
+    const std::vector<Eigen::Vector3d>& contact_points) {
+  assert(contact_points.size() == max_point_contacts_);
+  impulse_status_.setContactPoints(contact_points);
 }
 
 

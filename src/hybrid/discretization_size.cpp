@@ -1,1 +1,0 @@
-#include "idocp/hybrid/discretization_size.hpp"

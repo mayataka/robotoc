@@ -57,9 +57,9 @@ public:
 
 private:
   std::string benchmark_name_;
-  OCPType ocp_;
+  OCPSolverType ocp_solver_;
   int dimq_, dimv_, max_dimf_, N_, num_proc_;
-  double T_, dtau_;
+  double T_;
 
 };
 
