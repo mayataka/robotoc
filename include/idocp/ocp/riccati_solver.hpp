@@ -70,7 +70,6 @@ public:
   /// calling this function, call OCPLinearizer::linearizeOCP() to compute
   /// kkt_matrix and kkt_residual.
   /// @param[in] ocp OCP. 
-  /// @param[in] ocp_discretizer OCP discretizer. 
   /// @param[in] robots Robot models. 
   /// @param[in] contact_sequence Contact sequence. 
   /// @param[in] q Initial configuration vector. 
@@ -80,8 +79,7 @@ public:
   /// @param[in, out] kkt_matrix KKT matrix. 
   /// @param[in, out] kkt_residual KKT residual. 
   /// 
-  void computeNewtonDirection(OCP& ocp, const OCPDiscretizer ocp_discretizer, 
-                              std::vector<Robot>& robots, 
+  void computeNewtonDirection(OCP& ocp, std::vector<Robot>& robots, 
                               const ContactSequence& contact_sequence,
                               const Eigen::VectorXd& q, 
                               const Eigen::VectorXd& v, const Solution& s, 

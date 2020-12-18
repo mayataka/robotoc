@@ -83,17 +83,16 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   auto constraints = testhelper::CreateConstraints(robot);
   OCPLinearizer linearizer(N, max_num_impulse, nproc);
   const auto contact_sequence = createContactSequence(robot);
-  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
   auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
   auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  auto ocp = OCP(robot, cost, constraints, N, max_num_impulse);
+  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
+  ocp.discretize(contact_sequence, t);
   std::vector<Robot> robots(nproc, robot);
-  ocp_discretizer.discretizeOCP(contact_sequence, t);
-  linearizer.initConstraints(ocp, ocp_discretizer, robots, contact_sequence, s);
-  linearizer.linearizeOCP(ocp, ocp_discretizer, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  linearizer.initConstraints(ocp, robots, contact_sequence, s);
+  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   Direction d = Direction(robot, N, max_num_impulse);
   auto ocp_ref = ocp;
   auto robots_ref = robots;
@@ -101,7 +100,7 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   RiccatiSolver riccati_solver(robot, N, max_num_impulse, nproc);
-  riccati_solver.computeNewtonDirection(ocp, ocp_discretizer, robots, contact_sequence, 
+  riccati_solver.computeNewtonDirection(ocp, robots, contact_sequence, 
                                         q, v, s, d, kkt_matrix, kkt_residual);
   RiccatiRecursion riccati_recursion(robot, N, nproc);
   RiccatiFactorizer riccati_factorizer(robot, N, max_num_impulse);
@@ -111,34 +110,33 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   RiccatiDirectionCalculator direction_calculator(N, max_num_impulse, nproc);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix_ref, kkt_residual_ref, 
                                                      riccati_factorization);
-  riccati_recursion.backwardRiccatiRecursion(riccati_factorizer, ocp_discretizer, 
+  riccati_recursion.backwardRiccatiRecursion(riccati_factorizer, ocp_ref.discretized(), 
                                              kkt_matrix_ref, kkt_residual_ref, 
                                              riccati_factorization);
   constraint_factorization.setConstraintStatus(contact_sequence);
-  riccati_recursion.forwardRiccatiRecursionParallel(riccati_factorizer, ocp_discretizer,
+  riccati_recursion.forwardRiccatiRecursionParallel(riccati_factorizer, ocp_ref.discretized(),
                                                     kkt_matrix_ref, kkt_residual_ref,
                                                     constraint_factorization);
-  if (ocp_discretizer.existImpulse()) {
+  if (ocp_ref.discretized().existImpulse()) {
     riccati_recursion.forwardStateConstraintFactorization(
-        riccati_factorizer, ocp_discretizer, kkt_matrix_ref, kkt_residual_ref, 
+        riccati_factorizer, ocp_ref.discretized(), kkt_matrix_ref, kkt_residual_ref, 
         riccati_factorization);
     riccati_recursion.backwardStateConstraintFactorization(
-        riccati_factorizer, ocp_discretizer, kkt_matrix_ref, 
+        riccati_factorizer, ocp_ref.discretized(), kkt_matrix_ref, 
         constraint_factorization);
   }
   direction_calculator.computeInitialStateDirection(robots_ref, q, v, s, d_ref);
-  if (ocp_discretizer.existImpulse()) {
+  if (ocp_ref.discretized().existImpulse()) {
     constraint_factorizer.computeLagrangeMultiplierDirection(
-        ocp_discretizer, riccati_factorization, constraint_factorization, d_ref);
+        ocp_ref.discretized(), riccati_factorization, constraint_factorization, d_ref);
     constraint_factorizer.aggregateLagrangeMultiplierDirection(
-        constraint_factorization, ocp_discretizer, d_ref, riccati_factorization);
+        constraint_factorization, ocp.discretized(), d_ref, riccati_factorization);
   }
   riccati_recursion.forwardRiccatiRecursion(
-      riccati_factorizer, ocp_discretizer, kkt_matrix_ref, kkt_residual_ref, 
+      riccati_factorizer, ocp.discretized(), kkt_matrix_ref, kkt_residual_ref, 
       riccati_factorization, d_ref);
   direction_calculator.computeNewtonDirectionFromRiccatiFactorization(
-      ocp_ref, ocp_discretizer, robots_ref, riccati_factorizer, 
-      riccati_factorization, s, d_ref);
+      ocp_ref, robots_ref, riccati_factorizer, riccati_factorization, s, d_ref);
   EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
   EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));

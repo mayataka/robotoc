@@ -83,10 +83,8 @@ public:
                                            const Solution& s, Direction& d);
 
   void computeNewtonDirectionFromRiccatiFactorization(
-      OCP& ocp, const OCPDiscretizer& ocp_discretizer,
-      std::vector<Robot>& robots, const RiccatiFactorizer& factorizer, 
-      const RiccatiFactorization& factorization, 
-      const Solution& s, Direction& d);
+      OCP& ocp, std::vector<Robot>& robots, const RiccatiFactorizer& factorizer, 
+      const RiccatiFactorization& factorization, const Solution& s, Direction& d);
 
   double maxPrimalStepSize() const;
 

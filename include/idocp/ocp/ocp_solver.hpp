@@ -15,7 +15,6 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
-#include "idocp/hybrid/ocp_discretizer.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 #include "idocp/ocp/riccati_solver.hpp"
 // #include "idocp/line_search/line_search_filter.hpp"
@@ -195,7 +194,6 @@ private:
 
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
-  OCPDiscretizer ocp_discretizer_;
   OCPLinearizer ocp_linearizer_;
   RiccatiSolver riccati_solver_;
   OCP ocp_;

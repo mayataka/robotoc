@@ -19,6 +19,7 @@
 #include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/split_riccati_factorizer.hpp"
 #include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
+#include "idocp/hybrid/ocp_discretizer.hpp"
 
 #include <vector>
 #include <memory>
@@ -27,7 +28,7 @@
 namespace idocp {
 
 template <typename Type, typename ImpulseType>
-struct hybrid_container;
+class hybrid_container;
 
 using Solution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
 using Direction = hybrid_container<SplitDirection, ImpulseSplitDirection>;
@@ -47,53 +48,19 @@ using RiccatiFactorizer = hybrid_container<SplitRiccatiFactorizer, ImpulseSplitR
 /// 
 ///
 template <typename Type, typename ImpulseType>
-struct hybrid_container {
-  ///
-  /// @brief Construct the standard data, impulse data, and lift data. 
-  /// @param[in] N number of the standard data.
-  /// @param[in] N_impulse number of the impulse data.
-  ///
-  hybrid_container(const int N, const int N_impulse) 
-    : data(N+1, Type()), 
-      aux(N_impulse, Type()), 
-      lift(N_impulse, Type()),
-      impulse(N_impulse, ImpulseType()) {
-  }
-
+class hybrid_container {
+public:
   ///
   /// @brief Construct the standard data, impulse data, and lift data. 
   /// @param[in] robot Robot model.
   /// @param[in] N number of the standard data.
-  /// @param[in] N_impulse number of the impulse data.
+  /// @param[in] N_impulse number of the impulse data. Default is zero.
   ///
-  hybrid_container(const Robot& robot, const int N, const int N_impulse) 
+  hybrid_container(const Robot& robot, const int N, const int N_impulse=0) 
     : data(N+1, Type(robot)), 
       aux(N_impulse, Type(robot)), 
       lift(N_impulse, Type(robot)),
       impulse(N_impulse, ImpulseType(robot)) {
-  }
-
-  ///
-  /// @brief Construct only the standard data. 
-  /// @param[in] N number of the standard data.
-  ///
-  hybrid_container(const int N) 
-    : data(N+1, Type()), 
-      aux(),
-      lift(),
-      impulse() {
-  }
-
-  ///
-  /// @brief Construct only the standard data. 
-  /// @param[in] robot Robot model.
-  /// @param[in] N number of the standard data.
-  ///
-  hybrid_container(const Robot& robot, const int N) 
-    : data(N+1, Type(robot)), 
-      aux(),
-      lift(),
-      impulse() {
   }
 
   ///
@@ -150,65 +117,27 @@ struct hybrid_container {
 };
 
 
-struct OCP {
-  ///
-  /// @brief Construct the standard data, impulse data, and lift data. 
-  /// @param[in] N number of the standard data.
-  /// @param[in] N_impulse number of the impulse data.
-  ///
-  OCP(const int N, const int N_impulse) 
-    : data(N, SplitOCP()), 
-      aux(N_impulse, SplitOCP()), 
-      lift(N_impulse, SplitOCP()),
-      impulse(N_impulse, ImpulseSplitOCP()),
-      terminal(TerminalOCP()) {
-  }
-
+class OCP {
+public:
   ///
   /// @brief Construct only the standard data. 
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
+  /// @param[in] T length of the horzion.
   /// @param[in] N number of the standard data.
-  /// @param[in] N_impulse number of the impulse data.
+  /// @param[in] N_impulse number of the impulse data. Default is zero.
   ///
   OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
       const std::shared_ptr<Constraints>& constraints,
-      const int N, const int N_impulse) 
+      const double T, const int N, const int N_impulse=0) 
     : data(N, SplitOCP(robot, cost, constraints)), 
       aux(N_impulse, SplitOCP(robot, cost, constraints)), 
       lift(N_impulse, SplitOCP(robot, cost, constraints)),
       impulse(N_impulse, ImpulseSplitOCP(robot, cost->getImpulseCostFunction(), 
                                          constraints->getImpulseConstraints())),
-      terminal(TerminalOCP(robot, cost, constraints)) {
-  }
-
-  ///
-  /// @brief Construct only the standard data. 
-  /// @param[in] N number of the standard data.
-  ///
-  OCP(const int N) 
-    : data(N, SplitOCP()), 
-      aux(),
-      lift(),
-      impulse(),
-      terminal(TerminalOCP()) {
-  }
-
-  ///
-  /// @brief Construct only the standard data. 
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] cost Shared ptr to the cost function.
-  /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] N number of the standard data.
-  ///
-  OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-      const std::shared_ptr<Constraints>& constraints, const int N) 
-    : data(N, SplitOCP(robot, cost, constraints)), 
-      aux(), 
-      lift(),
-      impulse(),
-      terminal(TerminalOCP(robot, cost, constraints)) {
+      terminal(TerminalOCP(robot, cost, constraints)),
+      discretizer_(T, N, N_impulse) {
   }
 
   ///
@@ -219,7 +148,8 @@ struct OCP {
       aux(),
       lift(),
       impulse(),
-      terminal() {
+      terminal(),
+      discretizer_() {
   }
 
   ///
@@ -261,10 +191,21 @@ struct OCP {
     return data[i];
   }
 
+  void discretize(const ContactSequence& contact_sequence, const double t) {
+    discretizer_.discretizeOCP(contact_sequence, t);
+  }
+
+  const OCPDiscretizer& discretized() const {
+    return discretizer_;
+  }
+
   std::vector<SplitOCP> data, aux, lift;
   std::vector<ImpulseSplitOCP> impulse;
   TerminalOCP terminal;
-  // OCPDiscretizer discretizer;
+
+private:
+  OCPDiscretizer discretizer_;
+
 };
 
 } // namespace idocp

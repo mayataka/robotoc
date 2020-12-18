@@ -8,7 +8,6 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/ocp_discretizer.hpp"
 #include "idocp/ocp/riccati_solver.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 
@@ -71,7 +70,6 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   auto constraints = testhelper::CreateConstraints(robot);
   OCPLinearizer linearizer(N, max_num_impulse, nproc);
   const auto contact_sequence = createContactSequence(robot);
-  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
   auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
   const auto s = createSolution(robot, contact_sequence);
@@ -80,33 +78,33 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   std::vector<Robot> robots(nproc, robot);
-  auto ocp = OCP(robot, cost, constraints, N, max_num_impulse);
+  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
+  ocp.discretize(contact_sequence, t);
   auto ocp_ref = ocp;
-  ocp_discretizer.discretizeOCP(contact_sequence, t);
-  linearizer.initConstraints(ocp, ocp_discretizer, robots, contact_sequence, s);
-  linearizer.linearizeOCP(ocp, ocp_discretizer, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  linearizer.initConstraints(ocp, robots, contact_sequence, s);
+  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   auto robot_ref = robot;
   for (int i=0; i<N; ++i) {
     Eigen::VectorXd q_prev;
     if (i == 0 ) {
       q_prev = q;
     }
-    else if (ocp_discretizer.isTimeStageBeforeImpulse(i-1)) {
-      q_prev = s.aux[ocp_discretizer.impulseIndex(i-1)].q;
+    else if (ocp_ref.discretized().isTimeStageBeforeImpulse(i-1)) {
+      q_prev = s.aux[ocp_ref.discretized().impulseIndex(i-1)].q;
     }
-    else if (ocp_discretizer.isTimeStageBeforeLift(i-1)) {
-      q_prev = s.lift[ocp_discretizer.liftIndex(i-1)].q;
+    else if (ocp_ref.discretized().isTimeStageBeforeLift(i-1)) {
+      q_prev = s.lift[ocp_ref.discretized().liftIndex(i-1)].q;
     }
     else {
       q_prev = s[i-1].q;
     }
-    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int contact_phase = ocp_discretizer.contactPhase(i);
-      const int impulse_index = ocp_discretizer.impulseIndex(i);
-      const double ti = ocp_discretizer.t(i);
-      const double t_impulse = ocp_discretizer.t_impulse(impulse_index);
-      const double dt = ocp_discretizer.dtau(i);
-      const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
+    if (ocp_ref.discretized().isTimeStageBeforeImpulse(i)) {
+      const int contact_phase = ocp_ref.discretized().contactPhase(i);
+      const int impulse_index = ocp_ref.discretized().impulseIndex(i);
+      const double ti = ocp_ref.discretized().t(i);
+      const double t_impulse = ocp_ref.discretized().t_impulse(impulse_index);
+      const double dt = ocp_ref.discretized().dtau(i);
+      const double dt_aux = ocp_ref.discretized().dtau_aux(impulse_index);
       ASSERT_TRUE(dt >= 0);
       ASSERT_TRUE(dt <= dtau);
       ASSERT_TRUE(dt_aux >= 0);
@@ -128,13 +126,13 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
           s.aux[impulse_index], s[i+1], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
     }
-    else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int contact_phase = ocp_discretizer.contactPhase(i);
-      const int lift_index = ocp_discretizer.liftIndex(i);
-      const double ti = ocp_discretizer.t(i);
-      const double t_lift = ocp_discretizer.t_lift(lift_index);
-      const double dt = ocp_discretizer.dtau(i);
-      const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
+    else if (ocp_ref.discretized().isTimeStageBeforeLift(i)) {
+      const int contact_phase = ocp_ref.discretized().contactPhase(i);
+      const int lift_index = ocp_ref.discretized().liftIndex(i);
+      const double ti = ocp_ref.discretized().t(i);
+      const double t_lift = ocp_ref.discretized().t_lift(lift_index);
+      const double dt = ocp_ref.discretized().dtau(i);
+      const double dt_lift = ocp_ref.discretized().dtau_lift(lift_index);
       ASSERT_TRUE(dt >= 0);
       ASSERT_TRUE(dt <= dtau);
       ASSERT_TRUE(dt_lift >= 0);
@@ -149,12 +147,12 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
     }
     else {
-      const int contact_phase = ocp_discretizer.contactPhase(i);
-      const double dt = ocp_discretizer.dtau(i);
-      ocp_ref[i].initConstraints(robot_ref, i, ocp_discretizer.dtau(i), s[i]);
+      const int contact_phase = ocp_ref.discretized().contactPhase(i);
+      const double dt = ocp_ref.discretized().dtau(i);
+      ocp_ref[i].initConstraints(robot_ref, i, ocp_ref.discretized().dtau(i), s[i]);
       ocp_ref[i].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase), 
-          ocp_discretizer.t(i), dt, q_prev, 
+          ocp_ref.discretized().t(i), dt, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
     }
   }
@@ -173,7 +171,6 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   auto constraints = testhelper::CreateConstraints(robot);
   OCPLinearizer linearizer(N, max_num_impulse, nproc);
   const auto contact_sequence = createContactSequence(robot);
-  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
   auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
   const auto s = createSolution(robot, contact_sequence);
@@ -182,12 +179,12 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   std::vector<Robot> robots(nproc, robot);
-  auto ocp = OCP(robot, cost, constraints, N, max_num_impulse);
+  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
+  ocp.discretize(contact_sequence, t);
   auto ocp_ref = ocp;
-  ocp_discretizer.discretizeOCP(contact_sequence, t);
-  linearizer.initConstraints(ocp, ocp_discretizer, robots, contact_sequence, s);
-  linearizer.computeKKTResidual(ocp, ocp_discretizer, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
-  const double kkt_error = linearizer.KKTError(ocp, ocp_discretizer, kkt_residual);
+  linearizer.initConstraints(ocp, robots, contact_sequence, s);
+  linearizer.computeKKTResidual(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  const double kkt_error = linearizer.KKTError(ocp, kkt_residual);
   auto robot_ref = robot;
   double kkt_error_ref = 0;
   for (int i=0; i<N; ++i) {
@@ -195,22 +192,22 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
     if (i == 0 ) {
       q_prev = q;
     }
-    else if (ocp_discretizer.isTimeStageBeforeImpulse(i-1)) {
-      q_prev = s.aux[ocp_discretizer.impulseIndex(i-1)].q;
+    else if (ocp_ref.discretized().isTimeStageBeforeImpulse(i-1)) {
+      q_prev = s.aux[ocp_ref.discretized().impulseIndex(i-1)].q;
     }
-    else if (ocp_discretizer.isTimeStageBeforeLift(i-1)) {
-      q_prev = s.lift[ocp_discretizer.liftIndex(i-1)].q;
+    else if (ocp_ref.discretized().isTimeStageBeforeLift(i-1)) {
+      q_prev = s.lift[ocp_ref.discretized().liftIndex(i-1)].q;
     }
     else {
       q_prev = s[i-1].q;
     }
-    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int contact_phase = ocp_discretizer.contactPhase(i);
-      const int impulse_index = ocp_discretizer.impulseIndex(i);
-      const double ti = ocp_discretizer.t(i);
-      const double t_impulse = ocp_discretizer.t_impulse(impulse_index);
-      const double dt = ocp_discretizer.dtau(i);
-      const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
+    if (ocp_ref.discretized().isTimeStageBeforeImpulse(i)) {
+      const int contact_phase = ocp_ref.discretized().contactPhase(i);
+      const int impulse_index = ocp_ref.discretized().impulseIndex(i);
+      const double ti = ocp_ref.discretized().t(i);
+      const double t_impulse = ocp_ref.discretized().t_impulse(impulse_index);
+      const double dt = ocp_ref.discretized().dtau(i);
+      const double dt_aux = ocp_ref.discretized().dtau_aux(impulse_index);
       ASSERT_TRUE(dt >= 0);
       ASSERT_TRUE(dt <= dtau);
       ASSERT_TRUE(dt_aux >= 0);
@@ -236,13 +233,13 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
                                                                              is_state_constraint_valid);
       kkt_error_ref += ocp_ref.aux[impulse_index].squaredNormKKTResidual(kkt_residual_ref.aux[impulse_index], dt_aux);
     }
-    else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int contact_phase = ocp_discretizer.contactPhase(i);
-      const int lift_index = ocp_discretizer.liftIndex(i);
-      const double ti = ocp_discretizer.t(i);
-      const double t_lift = ocp_discretizer.t_lift(lift_index);
-      const double dt = ocp_discretizer.dtau(i);
-      const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
+    else if (ocp_ref.discretized().isTimeStageBeforeLift(i)) {
+      const int contact_phase = ocp_ref.discretized().contactPhase(i);
+      const int lift_index = ocp_ref.discretized().liftIndex(i);
+      const double ti = ocp_ref.discretized().t(i);
+      const double t_lift = ocp_ref.discretized().t_lift(lift_index);
+      const double dt = ocp_ref.discretized().dtau(i);
+      const double dt_lift = ocp_ref.discretized().dtau_lift(lift_index);
       ASSERT_TRUE(dt >= 0);
       ASSERT_TRUE(dt <= dtau);
       ASSERT_TRUE(dt_lift >= 0);
@@ -259,12 +256,12 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
       kkt_error_ref += ocp_ref.lift[lift_index].squaredNormKKTResidual(kkt_residual_ref.lift[lift_index], dt_lift);
     }
     else {
-      const int contact_phase = ocp_discretizer.contactPhase(i);
-      const double dt = ocp_discretizer.dtau(i);
-      ocp_ref[i].initConstraints(robot_ref, i, ocp_discretizer.dtau(i), s[i]);
+      const int contact_phase = ocp_ref.discretized().contactPhase(i);
+      const double dt = ocp_ref.discretized().dtau(i);
+      ocp_ref[i].initConstraints(robot_ref, i, ocp_ref.discretized().dtau(i), s[i]);
       ocp_ref[i].computeKKTResidual(
           robot_ref, contact_sequence.contactStatus(contact_phase), 
-          ocp_discretizer.t(i), dt, q_prev, 
+          ocp_ref.discretized().t(i), dt, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
       kkt_error_ref += ocp_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dt);
     }
@@ -286,22 +283,20 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto constraints = testhelper::CreateConstraints(robot);
   OCPLinearizer linearizer(N, max_num_impulse, nproc);
   const auto contact_sequence = createContactSequence(robot);
-  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
   auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
   auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   std::vector<Robot> robots(nproc, robot);
-  auto ocp = OCP(robot, cost, constraints, N, max_num_impulse);
-  ocp_discretizer.discretizeOCP(contact_sequence, t);
-  linearizer.initConstraints(ocp, ocp_discretizer, robots, contact_sequence, s);
-  linearizer.linearizeOCP(ocp, ocp_discretizer, robots, contact_sequence, 
+  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
+  ocp.discretize(contact_sequence, t);
+  linearizer.initConstraints(ocp, robots, contact_sequence, s);
+  linearizer.linearizeOCP(ocp, robots, contact_sequence, 
                           q, v, s, kkt_matrix, kkt_residual);
   Direction d(robot, N, max_num_impulse);
   RiccatiSolver riccati_solver(robots[0], N, max_num_impulse, nproc);
-  riccati_solver.computeNewtonDirection(ocp, ocp_discretizer, robots, 
-                                        contact_sequence, q, v, s, d, 
+  riccati_solver.computeNewtonDirection(ocp, robots, contact_sequence, q, v, s, d, 
                                         kkt_matrix, kkt_residual);
   const double primal_step_size = riccati_solver.maxPrimalStepSize();
   const double dual_step_size = riccati_solver.maxDualStepSize();
@@ -314,15 +309,14 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto d_ref = d;
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
-  linearizer.integrateSolution(ocp, ocp_discretizer, robots, 
-                               kkt_matrix, kkt_residual, 
+  linearizer.integrateSolution(ocp, robots, kkt_matrix, kkt_residual, 
                                primal_step_size, dual_step_size, d, s);
   auto robot_ref = robot;
   for (int i=0; i<N; ++i) {
-    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = ocp_discretizer.impulseIndex(i);
-      const double dt = ocp_discretizer.dtau(i);
-      const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
+    if (ocp_ref.discretized().isTimeStageBeforeImpulse(i)) {
+      const int impulse_index = ocp_ref.discretized().impulseIndex(i);
+      const double dt = ocp_ref.discretized().dtau(i);
+      const double dt_aux = ocp_ref.discretized().dtau_aux(impulse_index);
       ASSERT_TRUE(dt >= 0);
       ASSERT_TRUE(dt <= dtau);
       ASSERT_TRUE(dt_aux >= 0);
@@ -347,10 +341,10 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
           robot_ref, primal_step_size, d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].updateDual(dual_step_size);
     }
-    else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp_discretizer.liftIndex(i);
-      const double dt = ocp_discretizer.dtau(i);
-      const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
+    else if (ocp_ref.discretized().isTimeStageBeforeLift(i)) {
+      const int lift_index = ocp_ref.discretized().liftIndex(i);
+      const double dt = ocp_ref.discretized().dtau(i);
+      const double dt_lift = ocp_ref.discretized().dtau_lift(lift_index);
       ASSERT_TRUE(dt >= 0);
       ASSERT_TRUE(dt <= dtau);
       ASSERT_TRUE(dt_lift >= 0);
@@ -367,7 +361,7 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
       ocp_ref.lift[lift_index].updateDual(dual_step_size);
     }
     else {
-      const double dt = ocp_discretizer.dtau(i);
+      const double dt = ocp_ref.discretized().dtau(i);
       ocp_ref[i].computeCondensedDualDirection(
           robot_ref, dtau, kkt_matrix_ref[i], kkt_residual_ref[i], d_ref[i+1], d_ref[i]);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
