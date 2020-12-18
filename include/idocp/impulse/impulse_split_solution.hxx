@@ -56,6 +56,14 @@ inline void ImpulseSplitSolution::setImpulseStatus(
 }
 
 
+inline void ImpulseSplitSolution::setImpulseStatus(
+    const ImpulseSplitSolution& other) {
+  assert(other.isImpulseActive().size() == is_impulse_active_.size());
+  is_impulse_active_ = other.isImpulseActive();
+  dimf_ = other.dimf();
+}
+
+
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitSolution::f_stack() {
   return f_stack_.head(dimf_);
 }
@@ -178,6 +186,45 @@ inline bool ImpulseSplitSolution::isImpulseActive(
   assert(contact_index >= 0);
   assert(contact_index < is_impulse_active_.size());
   return is_impulse_active_[contact_index];
+}
+
+
+inline std::vector<bool> ImpulseSplitSolution::isImpulseActive() const {
+  return is_impulse_active_;
+}
+
+
+inline void ImpulseSplitSolution::copy(const ImpulseSplitSolution& other) {
+  setImpulseStatus(other);
+  lmd        = other.lmd;
+  gmm        = other.gmm;
+  q          = other.q;
+  v          = other.v;
+  dv         = other.dv;
+  beta       = other.beta;
+  f_stack()  = other.f_stack();
+  mu_stack() = other.mu_stack();
+  xi_stack() = other.xi_stack();
+  set_f_vector();
+  set_mu_vector();
+  set_xi_vector();
+}
+
+
+inline void ImpulseSplitSolution::copyPartial(const SplitSolution& s) {
+  lmd        = s.lmd;
+  gmm        = s.gmm;
+  q          = s.q;
+  v          = s.v;
+  dv         = s.a;
+  beta       = s.beta;
+  const int fsize = f.size();
+  for (int i=0; i<fsize; ++i) {
+    f[i] = s.f[i];
+  }
+  for (int i=0; i<fsize; ++i) {
+    mu[i] = s.mu[i];
+  }
 }
 
 

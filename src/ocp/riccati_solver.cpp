@@ -53,31 +53,32 @@ void RiccatiSolver::computeNewtonDirection(
   riccati_recursion_.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, 
                                                       riccati_factorization_);
   riccati_recursion_.backwardRiccatiRecursion(riccati_factorizer_, 
-                                              ocp.discretized(), kkt_matrix, 
+                                              ocp.discrete(), kkt_matrix, 
                                               kkt_residual, 
                                               riccati_factorization_);
   constraint_factorization_.setConstraintStatus(contact_sequence);
   riccati_recursion_.forwardRiccatiRecursionParallel(riccati_factorizer_, 
-                                                     ocp.discretized(),
+                                                     ocp.discrete(),
                                                      kkt_matrix, kkt_residual,
                                                      constraint_factorization_);
-  if (ocp.discretized().existImpulse()) {
+  const bool exist_state_constraint = ocp.discrete().existImpulse();
+  if (exist_state_constraint) {
     riccati_recursion_.forwardStateConstraintFactorization(
-        riccati_factorizer_, ocp.discretized(), kkt_matrix, kkt_residual, 
+        riccati_factorizer_, ocp.discrete(), kkt_matrix, kkt_residual, 
         riccati_factorization_);
     riccati_recursion_.backwardStateConstraintFactorization(
-        riccati_factorizer_, ocp.discretized(), kkt_matrix, 
+        riccati_factorizer_, ocp.discrete(), kkt_matrix, 
         constraint_factorization_);
   }
   direction_calculator_.computeInitialStateDirection(robots, q, v, s, d);
-  if (ocp.discretized().existImpulse()) {
+  if (exist_state_constraint) {
     constraint_factorizer_.computeLagrangeMultiplierDirection(
-        ocp.discretized(), riccati_factorization_, constraint_factorization_, d);
+        ocp.discrete(), riccati_factorization_, constraint_factorization_, d);
     constraint_factorizer_.aggregateLagrangeMultiplierDirection(
-       constraint_factorization_,  ocp.discretized(), d, riccati_factorization_);
+       constraint_factorization_,  ocp.discrete(), d, riccati_factorization_);
   }
   riccati_recursion_.forwardRiccatiRecursion(
-      riccati_factorizer_, ocp.discretized(), kkt_matrix, kkt_residual, 
+      riccati_factorizer_, ocp.discrete(), kkt_matrix, kkt_residual, 
       riccati_factorization_, d);
   direction_calculator_.computeNewtonDirectionFromRiccatiFactorization(
       ocp, robots, riccati_factorizer_, riccati_factorization_, s, d);

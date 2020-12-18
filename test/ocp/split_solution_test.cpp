@@ -26,6 +26,7 @@ protected:
   static void TestWithoutContacts(const Robot& robot);
   static void TestWithContacts(const Robot& robot, const ContactStatus& contact_status);
   static void TestIsApprox(const Robot& robot, const ContactStatus& contact_status);
+  static void TestCopy(const Robot& robot, const ContactStatus& contact_status);
   static void TestIntegrate(const Robot& robot, const ContactStatus& contact_status);
 
   std::string fixed_base_urdf, floating_base_urdf;
@@ -428,6 +429,16 @@ void SplitSolutionTest::TestIsApprox(const Robot& robot,
 }
 
 
+void SplitSolutionTest::TestCopy(const Robot& robot, 
+                                 const ContactStatus& contact_status) {
+  SplitSolution s(robot);
+  s.setRandom(robot, contact_status);
+  SplitSolution s_new(robot);
+  s_new.copy(s);
+  EXPECT_TRUE(s_new.isApprox(s));
+}
+
+
 void SplitSolutionTest::TestIntegrate(const Robot& robot, 
                                       const ContactStatus& contact_status) {
   SplitSolution s = SplitSolution::Random(robot, contact_status);
@@ -465,10 +476,12 @@ TEST_F(SplitSolutionTest, fixedBase) {
   ContactStatus contact_status(is_contact_active.size());
   contact_status.setContactStatus(is_contact_active);
   TestIsApprox(robot, contact_status);
+  TestCopy(robot, contact_status);
   TestIntegrate(robot, contact_status);
   contact_status.activateContact(0);
   TestWithContacts(robot, contact_status);
   TestIsApprox(robot, contact_status);
+  TestCopy(robot, contact_status);
   TestIntegrate(robot, contact_status);
 }
 
@@ -482,6 +495,7 @@ TEST_F(SplitSolutionTest, floatingBase) {
   ContactStatus contact_status(is_contact_active.size());
   contact_status.setContactStatus(is_contact_active);
   TestIsApprox(robot, contact_status);
+  TestCopy(robot, contact_status);
   TestIntegrate(robot, contact_status);
   std::random_device rnd;
   is_contact_active.clear();
@@ -493,6 +507,7 @@ TEST_F(SplitSolutionTest, floatingBase) {
   }
   TestWithContacts(robot, contact_status);
   TestIsApprox(robot, contact_status);
+  TestCopy(robot, contact_status);
   TestIntegrate(robot, contact_status);
 }
 

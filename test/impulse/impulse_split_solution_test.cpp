@@ -7,6 +7,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
+#include "idocp/ocp/split_solution.hpp"
 
 
 namespace idocp {
@@ -26,6 +27,8 @@ protected:
   static void TestWithoutImpulses(const Robot& robot);
   static void TestWithImpulses(const Robot& robot, const ImpulseStatus& impulse_status);
   static void TestIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
+  static void TestCopy(const Robot& robot, const ImpulseStatus& impulse_status);
+  static void TestCopyPartial(const Robot& robot, const ImpulseStatus& impulse_status);
   static void TestIntegrate(const Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid);
 
   double dtau_;
@@ -383,6 +386,39 @@ void ImpulseSplitSolutionTest::TestIsApprox(const Robot& robot,
 }
 
 
+void ImpulseSplitSolutionTest::TestCopy(const Robot& robot, 
+                                        const ImpulseStatus& impulse_status) {
+  ImpulseSplitSolution s(robot);
+  s.setRandom(robot, impulse_status);
+  ImpulseSplitSolution s_new(robot);
+  s_new.copy(s);
+  EXPECT_TRUE(s_new.isApprox(s));
+}
+
+
+void ImpulseSplitSolutionTest::TestCopyPartial(const Robot& robot, 
+                                               const ImpulseStatus& impulse_status) {
+
+  SplitSolution s(robot);
+  ContactStatus contact_status(impulse_status.isImpulseActive().size());
+  contact_status.setContactStatus(impulse_status.isImpulseActive());
+  s.setRandom(robot);
+  s.f_stack().setRandom();
+  s.mu_stack().setRandom();
+  s.set_f_vector();
+  s.set_mu_vector();
+  ImpulseSplitSolution s_new(robot);
+  s_new.copyPartial(s);
+  EXPECT_TRUE(s_new.q.isApprox(s.q));
+  EXPECT_TRUE(s_new.v.isApprox(s.v));
+  EXPECT_TRUE(s_new.dv.isApprox(s.a));
+  EXPECT_TRUE(s_new.beta.isApprox(s.beta));
+  EXPECT_TRUE(s_new.f_stack().isApprox(s.f_stack()));
+  EXPECT_TRUE(s_new.mu_stack().isApprox(s.mu_stack()));
+  EXPECT_TRUE(s_new.xi_stack().isZero());
+}
+
+
 void ImpulseSplitSolutionTest::TestIntegrate(const Robot& robot, 
                                              const ImpulseStatus& impulse_status,
                                              const bool is_state_constraint_valid) {
@@ -420,11 +456,15 @@ TEST_F(ImpulseSplitSolutionTest, fixedBase) {
   ImpulseStatus impulse_status(is_impulse_active.size());
   impulse_status.setImpulseStatus(is_impulse_active);
   TestIsApprox(robot, impulse_status);
+  TestCopy(robot, impulse_status);
+  TestCopyPartial(robot, impulse_status);
   TestIntegrate(robot, impulse_status, false);
   TestIntegrate(robot, impulse_status, true);
   impulse_status.activateImpulse(0);
   TestWithImpulses(robot, impulse_status);
   TestIsApprox(robot, impulse_status);
+  TestCopy(robot, impulse_status);
+  TestCopyPartial(robot, impulse_status);
   TestIntegrate(robot, impulse_status, false);
   TestIntegrate(robot, impulse_status, true);
 }
@@ -439,6 +479,8 @@ TEST_F(ImpulseSplitSolutionTest, floatingBase) {
   ImpulseStatus impulse_status(is_impulse_active.size());
   impulse_status.setImpulseStatus(is_impulse_active);
   TestIsApprox(robot, impulse_status);
+  TestCopy(robot, impulse_status);
+  TestCopyPartial(robot, impulse_status);
   TestIntegrate(robot, impulse_status, false);
   TestIntegrate(robot, impulse_status, true);
   std::random_device rnd;
@@ -451,6 +493,8 @@ TEST_F(ImpulseSplitSolutionTest, floatingBase) {
   }
   TestWithImpulses(robot, impulse_status);
   TestIsApprox(robot, impulse_status);
+  TestCopy(robot, impulse_status);
+  TestCopyPartial(robot, impulse_status);
   TestIntegrate(robot, impulse_status, false);
   TestIntegrate(robot, impulse_status, true);
 }

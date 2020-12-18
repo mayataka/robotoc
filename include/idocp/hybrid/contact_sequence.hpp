@@ -2,6 +2,7 @@
 #define IDOCP_CONTACT_SEQUENCE_HPP_ 
 
 #include <vector>
+#include <deque>
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
@@ -130,6 +131,13 @@ public:
   int numLiftEvents() const;
 
   ///
+  /// @brief Returns number of discrete events, i.e., sum of 
+  /// numImpulseEvents() and numLiftEvents().
+  /// @return Number of discrete events.
+  ///
+  int numDiscreteEvents() const;
+
+  ///
   /// @brief Returns number of contact phases. 
   /// @return Number of contact phases.
   ///
@@ -153,10 +161,15 @@ public:
 
   double liftTime(const int lift_index) const;
 
+  bool isImpulseEvent(const int event_index) const;
+
+  bool isLiftEvent(const int event_index) const;
+
 private:
   int max_num_events_, num_impulse_events_, num_lift_events_;
   std::vector<ContactStatus> contact_status_sequence_;
   std::vector<DiscreteEvent> impulse_event_sequence_, lift_event_sequence_;
+  std::deque<bool> is_impulse_event_;
 
   void popBackImpulseEvent();
 

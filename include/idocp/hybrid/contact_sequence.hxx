@@ -16,7 +16,8 @@ inline ContactSequence::ContactSequence(const Robot& robot,
     num_lift_events_(0),
     contact_status_sequence_(max_num_events+1, robot.createContactStatus()),
     impulse_event_sequence_(max_num_events, DiscreteEvent(robot)),
-    lift_event_sequence_(max_num_events, DiscreteEvent(robot)) {
+    lift_event_sequence_(max_num_events, DiscreteEvent(robot)),
+    is_impulse_event_() {
   try {
     if (max_num_events <= 0) {
       throw std::out_of_range("invalid value: N must be positive!");
@@ -35,7 +36,8 @@ inline ContactSequence::ContactSequence()
     num_lift_events_(0),
     contact_status_sequence_(),
     impulse_event_sequence_(),
-    lift_event_sequence_() {
+    lift_event_sequence_(),
+    is_impulse_event_() {
 }
 
 
@@ -56,6 +58,7 @@ inline void ContactSequence::setContactStatusUniformly(
   }
   num_impulse_events_ = 0;
   num_lift_events_ = 0;
+  is_impulse_event_.clear();
 }
 
 
@@ -103,10 +106,12 @@ inline void ContactSequence::pushBackDiscreteEvent(
   }
   if (discrete_event.existImpulse()) {
     impulse_event_sequence_[num_impulse_events_] = discrete_event;
+    is_impulse_event_.push_back(true);
     ++num_impulse_events_;
   }
   else if (discrete_event.existLift()) {
     lift_event_sequence_[num_lift_events_] = discrete_event;
+    is_impulse_event_.push_back(false);
     ++num_lift_events_;
   }
   const int num_discrete_events = num_impulse_events_ + num_lift_events_;
@@ -137,12 +142,15 @@ inline void ContactSequence::popBackDiscreteEvent() {
     else {
       popBackLiftEvent();
     }
+    is_impulse_event_.pop_back();
   }
   else if (num_impulse_events_ > 0 && num_lift_events_ == 0) {
     popBackImpulseEvent();
+    is_impulse_event_.pop_back();
   }
   else if (num_impulse_events_ == 0 && num_lift_events_ > 0) {
     popBackLiftEvent();
+    is_impulse_event_.pop_back();
   }
 }
 
@@ -169,6 +177,7 @@ inline void ContactSequence::popFrontDiscreteEvent() {
     else if (num_impulse_events_ == 0 && num_lift_events_ > 0) {
       popFrontLiftEvent();
     }
+    is_impulse_event_.pop_front();
   }
 }
 
@@ -290,6 +299,11 @@ inline int ContactSequence::numLiftEvents() const {
 }
 
 
+inline int ContactSequence::numDiscreteEvents() const {
+  return num_impulse_events_+num_lift_events_;
+}
+
+
 inline int ContactSequence::numContactPhases() const {
   return num_impulse_events_+num_lift_events_+1;
 }
@@ -323,6 +337,20 @@ inline double ContactSequence::liftTime(const int lift_index) const {
   assert(lift_index >= 0);
   assert(lift_index < num_lift_events_);
   return lift_event_sequence_[lift_index].eventTime;
+}
+
+
+inline bool ContactSequence::isImpulseEvent(const int event_index) const {
+  assert(event_index >= 0);
+  assert(event_index < numDiscreteEvents());
+  return is_impulse_event_[event_index];
+}
+
+
+inline bool ContactSequence::isLiftEvent(const int event_index) const {
+  assert(event_index >= 0);
+  assert(event_index < numDiscreteEvents());
+  return !isImpulseEvent(event_index);
 }
 
 

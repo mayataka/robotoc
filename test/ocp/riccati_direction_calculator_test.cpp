@@ -98,29 +98,29 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
   constraint_factorization.setConstraintStatus(contact_sequence);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
-  riccati_recursion.backwardRiccatiRecursion(factorizer, ocp.discretized(), kkt_matrix, kkt_residual, factorization);
-  if (ocp.discretized().existImpulse()) {
+  riccati_recursion.backwardRiccatiRecursion(factorizer, ocp.discrete(), kkt_matrix, kkt_residual, factorization);
+  if (ocp.discrete().existImpulse()) {
     riccati_recursion.forwardStateConstraintFactorization(
-        factorizer, ocp.discretized(), kkt_matrix, kkt_residual, factorization);
+        factorizer, ocp.discrete(), kkt_matrix, kkt_residual, factorization);
     riccati_recursion.backwardStateConstraintFactorization(
-        factorizer, ocp.discretized(), kkt_matrix, constraint_factorization);
+        factorizer, ocp.discrete(), kkt_matrix, constraint_factorization);
   }
-  const int num_impulse = ocp.discretized().numImpulseStages();
-  const int num_lift = ocp.discretized().numLiftStages();
+  const int num_impulse = ocp.discrete().numImpulseStages();
+  const int num_lift = ocp.discrete().numLiftStages();
   Direction d = Direction(robot, N, max_num_impulse);
   auto d_ref = d;
   RiccatiDirectionCalculator::computeInitialStateDirection(robots, q, v, s, d);
   robot.subtractConfiguration(q, s[0].q, d_ref[0].dq());
   d_ref[0].dv() = v - s[0].v;
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
-  if (ocp.discretized().existImpulse()) {
+  if (ocp.discrete().existImpulse()) {
     constraint_factorizer.computeLagrangeMultiplierDirection(
-        ocp.discretized(), factorization, constraint_factorization, d);
+        ocp.discrete(), factorization, constraint_factorization, d);
     constraint_factorizer.aggregateLagrangeMultiplierDirection(
-        constraint_factorization, ocp.discretized(), d, factorization);
+        constraint_factorization, ocp.discrete(), d, factorization);
   }
   riccati_recursion.forwardRiccatiRecursion(
-      factorizer, ocp.discretized(), kkt_matrix, kkt_residual, factorization, d);
+      factorizer, ocp.discrete(), kkt_matrix, kkt_residual, factorization, d);
   EXPECT_FALSE(testhelper::HasNaN(factorization));
   EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
@@ -132,15 +132,15 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   const double primal_step_size = direction_calculator.maxPrimalStepSize();
   const double dual_step_size = direction_calculator.maxDualStepSize();
   const Eigen::VectorXd dx0 = d_ref[0].dx();
-  const bool exist_state_constraint = ocp.discretized().existImpulse();
+  const bool exist_state_constraint = ocp.discrete().existImpulse();
   double primal_step_size_ref = 1;
   double dual_step_size_ref = 1;
   auto robot_ref = robot;
   for (int i=0; i<N; ++i) {
-    if (ocp.discretized().isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = ocp.discretized().impulseIndex(i);
-      const double dt = ocp.discretized().dtau(i);
-      const double dt_aux = ocp.discretized().dtau_aux(impulse_index);
+    if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
+      const int impulse_index = ocp.discrete().impulseIndex(i);
+      const double dt = ocp.discrete().dtau(i);
+      const double dt_aux = ocp.discrete().dtau_aux(impulse_index);
       ASSERT_TRUE(dt >= 0);
       ASSERT_TRUE(dt <= dtau);
       ASSERT_TRUE(dt_aux >= 0);
@@ -176,10 +176,10 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
       if (ocp_ref.aux[impulse_index].maxDualStepSize() < dual_step_size_ref) 
         dual_step_size_ref = ocp_ref.aux[impulse_index].maxDualStepSize();
     }
-    else if (ocp.discretized().isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp.discretized().liftIndex(i);
-      const double dt = ocp.discretized().dtau(i);
-      const double dt_lift = ocp.discretized().dtau_lift(lift_index);
+    else if (ocp.discrete().isTimeStageBeforeLift(i)) {
+      const int lift_index = ocp.discrete().liftIndex(i);
+      const double dt = ocp.discrete().dtau(i);
+      const double dt_lift = ocp.discrete().dtau_lift(lift_index);
       ASSERT_TRUE(dt >= 0);
       ASSERT_TRUE(dt <= dtau);
       ASSERT_TRUE(dt_lift >= 0);

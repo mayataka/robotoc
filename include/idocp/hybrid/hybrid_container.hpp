@@ -20,6 +20,7 @@
 #include "idocp/ocp/split_riccati_factorizer.hpp"
 #include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
 #include "idocp/hybrid/ocp_discretizer.hpp"
+#include "idocp/hybrid/contact_sequence.hpp"
 
 #include <vector>
 #include <memory>
@@ -54,7 +55,7 @@ public:
   /// @brief Construct the standard data, impulse data, and lift data. 
   /// @param[in] robot Robot model.
   /// @param[in] N number of the standard data.
-  /// @param[in] N_impulse number of the impulse data. Default is zero.
+  /// @param[in] N_impulse number of the impulse data. Default is 0.
   ///
   hybrid_container(const Robot& robot, const int N, const int N_impulse=0) 
     : data(N+1, Type(robot)), 
@@ -126,11 +127,11 @@ public:
   /// @param[in] constraints Shared ptr to the constraints.
   /// @param[in] T length of the horzion.
   /// @param[in] N number of the standard data.
-  /// @param[in] N_impulse number of the impulse data. Default is zero.
+  /// @param[in] N_impulse number of the impulse data. Default is 0.
   ///
   OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-      const std::shared_ptr<Constraints>& constraints,
-      const double T, const int N, const int N_impulse=0) 
+      const std::shared_ptr<Constraints>& constraints, const double T, 
+      const int N, const int N_impulse=0) 
     : data(N, SplitOCP(robot, cost, constraints)), 
       aux(N_impulse, SplitOCP(robot, cost, constraints)), 
       lift(N_impulse, SplitOCP(robot, cost, constraints)),
@@ -195,7 +196,7 @@ public:
     discretizer_.discretizeOCP(contact_sequence, t);
   }
 
-  const OCPDiscretizer& discretized() const {
+  const OCPDiscretizer& discrete() const {
     return discretizer_;
   }
 

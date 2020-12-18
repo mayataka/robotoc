@@ -64,6 +64,12 @@ public:
   void setContactStatus(const ContactStatus& contact_status);
 
   ///
+  /// @brief Set contact status, i.e., set dimension of the contacts.
+  /// @param[in] other Other split solution.
+  ///
+  void setContactStatus(const SplitSolution& other);
+
+  ///
   /// @brief Stack of active contact forces. Size is ContactStatus::dimf().
   /// @return Reference to the stack of active contact forces.
   ///
@@ -184,6 +190,12 @@ public:
   bool isContactActive(const int contact_index) const;
 
   ///
+  /// @brief Return contact status.
+  /// @return Contact status. 
+  ///
+  std::vector<bool> isContactActive() const;
+
+  ///
   /// @brief Return true if there are active contacts and false if not.
   /// @return true if there are active contacts and false if not. 
   ///
@@ -197,6 +209,11 @@ public:
   ///
   void integrate(const Robot& robot, const double step_size, 
                  const SplitDirection& d);
+  ///
+  /// @brief Copy other split solution without reallocating memory.
+  /// @param[in] other Other split solution.
+  ///
+  void copy(const SplitSolution& other);
 
   ///
   /// @brief Return true if two SplitSolution have the same value and false if 

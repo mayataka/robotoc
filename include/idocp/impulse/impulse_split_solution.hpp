@@ -8,6 +8,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
+#include "idocp/ocp/split_solution.hpp"
 
 
 namespace idocp {
@@ -59,6 +60,12 @@ public:
   /// @param[in] impulse_status Impulse status.
   ///
   void setImpulseStatus(const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @param[in] other Other impulse split solution.
+  ///
+  void setImpulseStatus(const ImpulseSplitSolution& other);
 
   ///
   /// @brief Stack of active impulse forces. Size is ImpulseStatus::dimf().
@@ -196,6 +203,12 @@ public:
   bool isImpulseActive(const int contact_index) const;
 
   ///
+  /// @brief Return impulse status.
+  /// @return Impulse status. 
+  ///
+  std::vector<bool> isImpulseActive() const;
+
+  ///
   /// @brief Integrates the solution based on step size and direction. 
   /// @param[in] robot Robot model.
   /// @param[in] step_size Step size.
@@ -206,6 +219,18 @@ public:
   void integrate(const Robot& robot, const double step_size, 
                  const ImpulseSplitDirection& d, 
                  const bool is_state_constraint_valid);
+
+  ///
+  /// @brief Copy other impulse split solution without reallocating memory.
+  /// @param[in] other Other impulse split solution.
+  ///
+  void copy(const ImpulseSplitSolution& other);
+
+  ///
+  /// @brief Copy other split solution without reallocating memory.
+  /// @param[in] s Split solution.
+  ///
+  void copyPartial(const SplitSolution& s);
 
   ///
   /// @brief Return true if two ImpulseSplitSolution have the same value and  

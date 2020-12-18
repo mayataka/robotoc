@@ -56,10 +56,18 @@ inline SplitSolution::~SplitSolution() {
 
 inline void SplitSolution::setContactStatus(
     const ContactStatus& contact_status) {
-  assert(contact_status.maxPointContacts()==is_contact_active_.size());
+  assert(contact_status.maxPointContacts() == is_contact_active_.size());
   has_active_contacts_ = contact_status.hasActiveContacts();
   is_contact_active_ = contact_status.isContactActive();
   dimf_ = contact_status.dimf();
+}
+
+
+inline void SplitSolution::setContactStatus(const SplitSolution& other) {
+  assert(other.isContactActive().size() == is_contact_active_.size());
+  has_active_contacts_ = other.hasActiveContacts();
+  is_contact_active_ = other.isContactActive();
+  dimf_ = other.dimf();
 }
 
 
@@ -150,6 +158,11 @@ inline bool SplitSolution::isContactActive(const int contact_index) const {
 }
 
 
+inline std::vector<bool> SplitSolution::isContactActive() const {
+  return is_contact_active_;
+}
+
+
 inline bool SplitSolution::hasActiveContacts() const {
   return has_active_contacts_;
 }
@@ -175,6 +188,28 @@ inline void SplitSolution::integrate(const Robot& robot, const double step_size,
   if (has_floating_base_) {
     u_passive.noalias() += step_size * d.du_passive;
     nu_passive.noalias() += step_size * d.dnu_passive;
+  }
+}
+
+
+inline void SplitSolution::copy(const SplitSolution& other) {
+  setContactStatus(other);
+  lmd          = other.lmd;
+  gmm          = other.gmm;
+  q            = other.q;
+  v            = other.v;
+  a            = other.a;
+  u            = other.u;
+  beta         = other.beta;
+  if (has_floating_base_) {
+    u_passive  = other.u_passive;
+    nu_passive = other.nu_passive;
+  }
+  if (has_active_contacts_) {
+    f_stack()  = other.f_stack();
+    mu_stack() = other.mu_stack();
+    set_f_vector();
+    set_mu_vector();
   }
 }
 
