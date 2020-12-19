@@ -86,7 +86,7 @@ public:
 
   ///
   /// @brief Get the contorl input torques of the initial stage.
-  /// @param[out] u The control input torques. Size must be Robot::dimv().
+  /// @param[out] u The control input torques. Size must be Robot::dimu().
   ///
   void getControlInput(Eigen::VectorXd& u);
 
@@ -120,10 +120,10 @@ public:
   void computeKKTResidual(const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v);
 
-  OCPType* getSolverHandle();
+  OCPSolverType* getSolverHandle();
 
 private:
-  OCPType ocp_;
+  OCPSolverType ocp_solver_;
 
 };
 

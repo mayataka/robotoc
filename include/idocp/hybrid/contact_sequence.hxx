@@ -227,64 +227,22 @@ inline void ContactSequence::shiftLiftEvent(const int lift_index,
 }
 
 
-inline void ContactSequence::setContactPointsToImpulseEvent(
-    const int impulse_index, Robot& robot, const Eigen::VectorXd& q) {
+inline void ContactSequence::setContactPoints(
+    const int contact_phase, 
+    const std::vector<Eigen::Vector3d>& contact_points) {
   try {
-    if (impulse_index >= num_impulse_events_) {
+    if (contact_phase >= numContactPhases()) {
       throw std::runtime_error(
-          "impulse_index must be less than numImpulseEvents()!");
+          "contact_phase must be smaller than numContactPhases()!");
     }
   }
   catch(const std::exception& e) {
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  impulse_event_sequence_[impulse_index].setContactPoints(robot);
-}
-
-
-inline void ContactSequence::setContactPointsToLiftEvent(
-    const int lift_index, Robot& robot, const Eigen::VectorXd& q) {
-  try {
-    if (lift_index >= num_lift_events_) {
-      throw std::runtime_error(
-          "lift_index must be less than numLiftEvents()!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
-  lift_event_sequence_[lift_index].setContactPoints(robot);
-}
-
-
-inline void ContactSequence::setContactPointsToContatStatus(
-    const int contact_phase, Robot& robot, const Eigen::VectorXd& q) {
-  try {
-    if (contact_phase > num_impulse_events_+num_lift_events_) {
-      throw std::runtime_error(
-          "contact_phase must be less than numImpulseEvents()+numLiftEvents()!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
-  robot.setContactPoints(contact_status_sequence_[contact_phase]);
-}
-
-
-inline void ContactSequence::setContactPointsUniformly(
-    Robot& robot, const Eigen::VectorXd& q) {
-  for (int i=0; i<=num_impulse_events_+num_lift_events_; ++i) {
-    robot.setContactPoints(contact_status_sequence_[i]);
-  }
-  for (int i=0; i<num_impulse_events_; ++i) {
-    impulse_event_sequence_[i].setContactPoints(robot);
-  }
-  for (int i=0; i<num_lift_events_; ++i) {
-    lift_event_sequence_[i].setContactPoints(robot);
+  contact_status_sequence_[contact_phase].setContactPoints(contact_points);
+  if (contact_phase > 0) {
+    // TODO: add contact points setter for impulse events and lift events.
   }
 }
 

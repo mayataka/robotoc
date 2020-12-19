@@ -107,16 +107,15 @@ public:
   ///
   void shiftLiftEvent(const int lift_index, const double event_time);
 
-  void setContactPointsToImpulseEvent(const int impulse_index, Robot& robot, 
-                                      const Eigen::VectorXd& q);
-
-  void setContactPointsToLiftEvent(const int lift_index, Robot& robot, 
-                                   const Eigen::VectorXd& q);
-
-  void setContactPointsToContatStatus(const int contact_phase, Robot& robot, 
-                                      const Eigen::VectorXd& q);
-
-  void setContactPointsUniformly(Robot& robot, const Eigen::VectorXd& q);
+  ///
+  /// @brief Set the contact points to contact statsus with specified contact  
+  /// phase. Also set the contact points of the discrete event just before the  
+  /// contact phase.
+  /// @param[in] contact_phase Contact phase.
+  /// @param[in] contact_points Contact points.
+  ///
+  void setContactPoints(const int contact_phase, 
+                        const std::vector<Eigen::Vector3d>& contact_points);
 
   ///
   /// @brief Returns number of impulse events. 

@@ -759,6 +759,14 @@ inline void Robot::setContactPoints(ContactStatusType& contact_status) const {
   }
 }
 
+
+inline void Robot::getContactPoints(
+    std::vector<Eigen::Vector3d>& contact_points) const {
+  for (int i=0; i<point_contacts_.size(); ++i) {
+    contact_points[i] = point_contacts_[i].contactPoint(data_);
+  }
+}
+
 } // namespace idocp
 
 #endif // IDOCP_ROBOT_HXX_ 

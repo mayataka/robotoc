@@ -8,7 +8,8 @@
 
 namespace idocp {
 
-inline QuadrupedSimulator::QuadrupedSimulator(
+template <typename OCPSolverType>
+inline QuadrupedSimulator<OCPSolverType>::QuadrupedSimulator(
     const std::string& path_to_raisim_activation_key,
     const std::string& path_to_urdf_for_raisim, 
     const std::string& save_dir_path, const std::string& save_file_name)
@@ -20,15 +21,14 @@ inline QuadrupedSimulator::QuadrupedSimulator(
 }
 
 
-template<typename OCPSolverType>
-inline void QuadrupedSimulator::run(Robot& robot, MPC<OCPSolverType>& mpc, 
-                                    const double simulation_time_in_sec, 
-                                    const double sampling_period_in_sec, 
-                                    const double simulation_start_time_in_sec, 
-                                    const Eigen::VectorXd& q_initial, 
-                                    const Eigen::VectorXd& v_initial,
-                                    const bool visualization, 
-                                    const bool recording) {
+template <typename OCPSolverType>
+template <typename MPCCallbackType>
+inline void QuadrupedSimulator<OCPSolverType>::run(
+    MPC<OCPSolverType>& mpc, const double simulation_time_in_sec, 
+    const double sampling_period_in_sec, 
+    const double simulation_start_time_in_sec, 
+    const Eigen::VectorXd& q_initial, const Eigen::VectorXd& v_initial, 
+    const bool visualization, const bool recording) {
   try {
     if (simulation_time_in_sec <= 0) {
       throw std::out_of_range(
@@ -50,51 +50,33 @@ inline void QuadrupedSimulator::run(Robot& robot, MPC<OCPSolverType>& mpc,
   raisim::World::setActivationKey(path_to_raisim_activation_key_);
   raisim::World raisim_world;
   auto raisim_robot = raisim_world.addArticulatedSystem(path_to_urdf_for_raisim_, "");
-
   auto raisim_ground = raisim_world.addGround();
   raisim_world.setTimeStep(sampling_period_in_sec);
   raisim_world.setERP(0.2, 0.2);
-  raisim_world.setDefaultMaterial(1000, 0, 0);
+  // raisim_world.setDefaultMaterial(1000, 0, 0);
   auto vis = raisim::OgreVis::get();
   if (visualization) {
-    vis->setWorld(&raisim_world);
-    vis->setSetUpCallback(setupCallback);
-    vis->setAntiAliasing(2);
-    vis->setWindowSize(500, 400);
-    // vis->setContactVisObjectSize(0.025, 0.01); 
-    vis->initApp();
+    raisimadapter::SetupRaisimOgre(raisim_world);
     vis->createGraphicalObject(raisim_ground, 20, "floor", "checkerboard_green");
     vis->createGraphicalObject(raisim_robot, "ANYmal");
-    const double scaled_position = 0.6;
-    vis->getCameraMan()->getCamera()->setPosition(-3.5*scaled_position, 
-                                                  -3.5*scaled_position, 
-                                                  2*scaled_position);
-    vis->getCameraMan()->getCamera()->rotate(Ogre::Vector3(1.0, 0, 0), 
-                                            Ogre::Radian(M_PI_2));
-    vis->getCameraMan()->getCamera()->rotate(Ogre::Vector3(-1.0, -1.0, 0.), 
-                                            Ogre::Radian(0.3));
-    vis->getCameraMan()->getCamera()->rotate(Ogre::Vector3(0, -1.0, 0), 
-                                            Ogre::Radian(0.5));
-    vis->getCameraMan()->getCamera()->rotate(Ogre::Vector3(0, 0, -1.0), 
-                                            Ogre::Radian(0.2));
   }
+  Robot robot = mpc.getSolverHandle()->createRobot();
   Eigen::VectorXd q = q_initial;
   Eigen::VectorXd v = v_initial;
-  Eigen::VectorXd u = Eigen::VectorXd::Zero(v_initial.size());
-  Eigen::VectorXd q_raisim = Eigen::VectorXd::Zero(q_initial.size());
-  Eigen::VectorXd v_raisim = Eigen::VectorXd::Zero(v_initial.size());
-  Eigen::VectorXd u_raisim = Eigen::VectorXd::Zero(v_initial.size());
+  Eigen::VectorXd u = Eigen::VectorXd::Zero(robot.dimu());
+  Eigen::VectorXd q_raisim = Eigen::VectorXd::Zero(robot.dimq());
+  Eigen::VectorXd v_raisim = Eigen::VectorXd::Zero(robot.dimv());
+  Eigen::VectorXd u_raisim = Eigen::VectorXd::Zero(robot.dimv());
   mpc.getControlInput(u);
-  pino2rai(robot, q, v, q_raisim, v_raisim);
+  raisimadapter::pino2rai(robot, q, v, q_raisim, v_raisim);
   raisim_robot->setState(q_raisim, v_raisim);
   raisim_robot->setGeneralizedForce(u_raisim);
   if (visualization && recording) {
     vis->startRecordingVideo(save_dir_path_+'/'+save_file_name_+".mp4");
   }
   std::chrono::system_clock::time_point start_clock, end_clock;
-  auto contact_status_ref = robot.createContactStatus();
-  contact_status_ref.activateContacts({0, 1, 2, 3});
   double CPU_time_total_in_sec = 0;
+  MPCCallbackType mpc_callback(robot);
   for (double t=0; t<simulation_time_in_sec; t+=sampling_period_in_sec) {
     raisim_robot->setGeneralizedForce(u_raisim);
     raisim_world.integrate();
@@ -102,16 +84,14 @@ inline void QuadrupedSimulator::run(Robot& robot, MPC<OCPSolverType>& mpc,
       vis->renderOneFrame();
     }
     raisim_robot->getState(q_raisim, v_raisim);
-    rai2pino(robot, q_raisim, v_raisim, q, v);
+    raisimadapter::rai2pino(robot, q_raisim, v_raisim, q, v);
     mpc.computeKKTResidual(t, q, v);
     data_saver_.save(q, v, u, mpc.KKTError());
     start_clock = std::chrono::system_clock::now();
-    robot.updateFrameKinematics(q);
-    robot.setContactPoints(contact_status_ref);
-    mpc.getSolverHandle()->setContactStatusUniformly(contact_status_ref);
-    mpc.updateSolution(t, q, v, 100, 1.0e-06);
+    mpc_callback.callback(t, q, v, mpc);
+    mpc.updateSolution(t, q, v);
     mpc.getControlInput(u);
-    pino2rai(u, u_raisim);
+    raisimadapter::pino2rai(u, u_raisim);
     end_clock = std::chrono::system_clock::now();
     const double CPU_time_in_sec
         = 1.0e-06 * std::chrono::duration_cast<std::chrono::microseconds>(
@@ -138,12 +118,28 @@ inline void QuadrupedSimulator::run(Robot& robot, MPC<OCPSolverType>& mpc,
 }
 
 
-inline void QuadrupedSimulator::setupCallback() {
+inline void raisimadapter::SetupRaisimOgre(raisim::World& world) {
+  auto vis = raisim::OgreVis::get();
+  vis->setWorld(&world);
+  vis->setSetUpCallback(raisimadapter::RaiSimOgreCallback);
+  vis->setAntiAliasing(2);
+  vis->setWindowSize(500, 400);
+  vis->setContactVisObjectSize(0.025, 0.01); 
+  vis->initApp();
+  vis->getCameraMan()->getCamera()->setPosition(2.5, 2.5, 1);
+  vis->getCameraMan()->getCamera()->rotate(Ogre::Vector3(0.0, 0.0, 1.0), 
+                                           Ogre::Radian(3*M_PI_4));
+  vis->getCameraMan()->getCamera()->rotate(Ogre::Vector3(1.0, 0.0, 0.0), 
+                                           Ogre::Radian(M_PI_2*9/10));
+}
+
+
+inline void raisimadapter::RaiSimOgreCallback() {
   auto vis = raisim::OgreVis::get();
   /// light
   vis->getLight()->setDiffuseColour(1, 1, 1);
   vis->getLight()->setCastShadows(true);
-  Ogre::Vector3 lightdir(-3,3,-0.5);
+  Ogre::Vector3 lightdir(-3, -3, -0.5);
   lightdir.normalise();
   vis->getLightNode()->setDirection({lightdir});
   vis->setCameraSpeed(300);
@@ -158,20 +154,21 @@ inline void QuadrupedSimulator::setupCallback() {
   vis->getSceneManager()->setShadowFarDistance(10);
   // size of contact points and contact forces
   vis->setContactVisObjectSize(0.03, 0.6);
-  // speed of camera motion in freelook mode
+  // speed of camera motion in free look mode
   vis->getCameraMan()->setTopSpeed(5);
   /// skybox
   Ogre::Quaternion quat;
-  quat.FromAngleAxis(Ogre::Radian(0.5*M_PI_2), {1., 0, 0});
+  quat.FromAngleAxis(Ogre::Radian(M_PI_2), {1., 0, 0});
   vis->getSceneManager()->setSkyBox(true, "Examples/StormySkyBox", 500, true, quat);
+  // vis->getSceneManager()->setSkyBox(true, "white", 500, true, quat);
 }
 
 
-inline void QuadrupedSimulator::pino2rai(Robot& robot, 
-                                         const Eigen::VectorXd& q_pinocchio, 
-                                         const Eigen::VectorXd& v_pinocchio, 
-                                         Eigen::VectorXd& q_raisim, 
-                                         Eigen::VectorXd& v_raisim) {
+inline void raisimadapter::pino2rai(Robot& robot, 
+                                    const Eigen::VectorXd& q_pinocchio, 
+                                    const Eigen::VectorXd& v_pinocchio, 
+                                    Eigen::VectorXd& q_raisim, 
+                                    Eigen::VectorXd& v_raisim) {
   assert(q_pinocchio.size() == 19);
   assert(v_pinocchio.size() == 18);
   assert(q_raisim.size() == 19);
@@ -179,80 +176,75 @@ inline void QuadrupedSimulator::pino2rai(Robot& robot,
   q_raisim.coeffRef(0)  = q_pinocchio.coeff(0);
   q_raisim.coeffRef(1)  = q_pinocchio.coeff(1);
   q_raisim.coeffRef(2)  = q_pinocchio.coeff(2);
-
+  // Change quaternion order
   q_raisim.coeffRef(3)  = q_pinocchio.coeff(6);
   q_raisim.coeffRef(4)  = q_pinocchio.coeff(3);
   q_raisim.coeffRef(5)  = q_pinocchio.coeff(4);
   q_raisim.coeffRef(6)  = q_pinocchio.coeff(5);
-
   q_raisim.coeffRef(7)  = q_pinocchio.coeff(7);
   q_raisim.coeffRef(8)  = q_pinocchio.coeff(8);
   q_raisim.coeffRef(9)  = q_pinocchio.coeff(9);
-
+  // Change leg order
   q_raisim.coeffRef(10) = q_pinocchio.coeff(13);
   q_raisim.coeffRef(11) = q_pinocchio.coeff(14);
   q_raisim.coeffRef(12) = q_pinocchio.coeff(15);
-
+  // Change leg order
   q_raisim.coeffRef(13) = q_pinocchio.coeff(10);
   q_raisim.coeffRef(14) = q_pinocchio.coeff(11);
   q_raisim.coeffRef(15) = q_pinocchio.coeff(12);
-
   q_raisim.coeffRef(16) = q_pinocchio.coeff(16);
   q_raisim.coeffRef(17) = q_pinocchio.coeff(17);
   q_raisim.coeffRef(18) = q_pinocchio.coeff(18);
-
   // Change velocity's reference frame from LOCAL to WORLD.
   robot.updateFrameKinematics(q_pinocchio);
   const Eigen::Matrix3d R = robot.frameRotation(4);
   v_raisim.head<3>()     = R * v_pinocchio.head<3>();
   v_raisim.segment<3>(3) = R * v_pinocchio.segment<3>(3);
-
   v_raisim.coeffRef(6)  = v_pinocchio.coeff(6);
   v_raisim.coeffRef(7)  = v_pinocchio.coeff(7);
   v_raisim.coeffRef(8)  = v_pinocchio.coeff(8);
-
+  // Change leg order
   v_raisim.coeffRef(9)  = v_pinocchio.coeff(12);
   v_raisim.coeffRef(10) = v_pinocchio.coeff(13);
   v_raisim.coeffRef(11) = v_pinocchio.coeff(14);
-
+  // Change leg order
   v_raisim.coeffRef(12) = v_pinocchio.coeff(9);
   v_raisim.coeffRef(13) = v_pinocchio.coeff(10);
   v_raisim.coeffRef(14) = v_pinocchio.coeff(11);
-
   v_raisim.coeffRef(15) = v_pinocchio.coeff(15);
   v_raisim.coeffRef(16) = v_pinocchio.coeff(16);
   v_raisim.coeffRef(17) = v_pinocchio.coeff(17);
 }
 
 
-inline void QuadrupedSimulator::pino2rai(const Eigen::VectorXd& u_pinocchio, 
-                                         Eigen::VectorXd& u_raisim) {
-  assert(u_pinocchio.size() == 19);
+inline void raisimadapter::pino2rai(const Eigen::VectorXd& u_pinocchio, 
+                                    Eigen::VectorXd& u_raisim) {
+  assert(u_pinocchio.size() == 12);
   assert(u_raisim.size() == 18);
   u_raisim.template head<6>().setZero();
-  u_raisim.coeffRef(6)  = u_pinocchio.coeff(6);
-  u_raisim.coeffRef(7)  = u_pinocchio.coeff(7);
-  u_raisim.coeffRef(8)  = u_pinocchio.coeff(8);
-
-  u_raisim.coeffRef(9)  = u_pinocchio.coeff(12);
-  u_raisim.coeffRef(10) = u_pinocchio.coeff(13);
-  u_raisim.coeffRef(11) = u_pinocchio.coeff(14);
-
-  u_raisim.coeffRef(12) = u_pinocchio.coeff(9);
-  u_raisim.coeffRef(13) = u_pinocchio.coeff(10);
-  u_raisim.coeffRef(14) = u_pinocchio.coeff(11);
-
-  u_raisim.coeffRef(15) = u_pinocchio.coeff(15);
-  u_raisim.coeffRef(16) = u_pinocchio.coeff(16);
-  u_raisim.coeffRef(17) = u_pinocchio.coeff(17);
+  u_raisim.coeffRef(6)  = u_pinocchio.coeff(0);
+  u_raisim.coeffRef(7)  = u_pinocchio.coeff(1);
+  u_raisim.coeffRef(8)  = u_pinocchio.coeff(2);
+  // Change leg order
+  u_raisim.coeffRef(9)  = u_pinocchio.coeff(6);
+  u_raisim.coeffRef(10) = u_pinocchio.coeff(7);
+  u_raisim.coeffRef(11) = u_pinocchio.coeff(8);
+  // Change leg order
+  u_raisim.coeffRef(12) = u_pinocchio.coeff(3);
+  u_raisim.coeffRef(13) = u_pinocchio.coeff(4);
+  u_raisim.coeffRef(14) = u_pinocchio.coeff(5);
+  // Change leg order
+  u_raisim.coeffRef(15) = u_pinocchio.coeff(9);
+  u_raisim.coeffRef(16) = u_pinocchio.coeff(10);
+  u_raisim.coeffRef(17) = u_pinocchio.coeff(11);
 }
 
 
-inline void QuadrupedSimulator::rai2pino(Robot& robot, 
-                                         const Eigen::VectorXd& q_raisim, 
-                                         const Eigen::VectorXd& v_raisim, 
-                                         Eigen::VectorXd& q_pinocchio, 
-                                         Eigen::VectorXd& v_pinocchio) {
+inline void raisimadapter::rai2pino(Robot& robot, 
+                                    const Eigen::VectorXd& q_raisim, 
+                                    const Eigen::VectorXd& v_raisim, 
+                                    Eigen::VectorXd& q_pinocchio, 
+                                    Eigen::VectorXd& v_pinocchio) {
   assert(q_raisim.size() == 19);
   assert(v_raisim.size() == 18);
   assert(q_pinocchio.size() == 19);

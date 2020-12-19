@@ -699,6 +699,14 @@ public:
   template <typename ContactStatusType>
   void setContactPoints(ContactStatusType& contact_status) const;
 
+  ///
+  /// @brief Get contact points in contact_status using current kinematics. 
+  /// Call Robot::updateFrameKinematics() before calling this function.
+  /// @param[out] contact_points Contact points. Size must be 
+  /// robot::maxPointContacts().
+  /// 
+  void getContactPoints(std::vector<Eigen::Vector3d>& contact_points) const;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

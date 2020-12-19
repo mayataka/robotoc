@@ -132,6 +132,9 @@ public:
 
   void shiftLift(const int lift_index, const double lift_time);
 
+  void setContactPoints(const int contact_phase, 
+                        const std::vector<Eigen::Vector3d>& contact_points);
+
   ///
   /// @brief Pop back the discrete event. Contact status after discrete event 
   /// is also removed. 
@@ -143,7 +146,7 @@ public:
   /// discrete event is also removed. 
   ///
   void popFrontDiscreteEvent();
-  
+
   ///
   /// @brief Clear the line search filter. 
   ///
@@ -177,6 +180,12 @@ public:
   bool isCurrentSolutionFeasible();
 
   ///
+  /// @brief Creates robot model.
+  /// @return Robot model.
+  ///
+  Robot createRobot() const;
+
+  ///
   /// @brief Prints the variable into console. 
   /// @param[in] name Name of the printed variable. Default is "all" 
   /// (print all variables).
@@ -189,9 +198,6 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-
-  void setContactSequenceToSolution();
-
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
   OCPLinearizer ocp_linearizer_;

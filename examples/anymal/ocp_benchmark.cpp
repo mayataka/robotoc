@@ -26,13 +26,9 @@
 
 #include "idocp/utils/joint_constraints_factory.hpp"
 #include "idocp/utils/ocp_benchmarker.hpp"
-#include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/discrete_event.hpp"
 
-namespace ocpbenchmark {
-namespace anymal {
 
-void BenchmarkWithContacts() {
+int main () {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
   const std::string urdf_file_name = "../anymal/anymal.urdf";
@@ -151,13 +147,6 @@ void BenchmarkWithContacts() {
   // parnmpc_benchmarker.getSolverHandle()->activateContacts({0, 1, 2, 3}, 0, N);
   // parnmpc_benchmarker.testConvergence(t, q, v, 20, false);
   // parnmpc_benchmarker.testCPUTime(t, q, v);
-}
 
-} // namespace anymal
-} // namespace ocpbenchmark
-
-
-int main() {
-  ocpbenchmark::anymal::BenchmarkWithContacts();
   return 0;
 }

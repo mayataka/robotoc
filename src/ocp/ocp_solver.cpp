@@ -41,15 +41,10 @@ OCPSolver::OCPSolver(const Robot& robot,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N; ++i) {
-    robot.normalizeConfiguration(s_[i].q);
-  }
-  for (int i=0; i<max_num_impulse; ++i) {
-    robot.normalizeConfiguration(s_.impulse[i].q);
-    robot.normalizeConfiguration(s_.aux[i].q);
-    robot.normalizeConfiguration(s_.lift[i].q);
-  }
+  for (auto& e : s_.data)    { robot.normalizeConfiguration(e.q); }
+  for (auto& e : s_.impulse) { robot.normalizeConfiguration(e.q); }
+  for (auto& e : s_.aux)     { robot.normalizeConfiguration(e.q); }
+  for (auto& e : s_.lift)    { robot.normalizeConfiguration(e.q); }
   initConstraints(0);
 }
 
@@ -130,8 +125,7 @@ bool OCPSolver::setStateTrajectory(const double t, const Eigen::VectorXd& q,
     e.q = q_normalized;
   }
   initConstraints(t);
-  const bool feasible = isCurrentSolutionFeasible();
-  return feasible;
+  return isCurrentSolutionFeasible();
 }
 
 
@@ -197,30 +191,38 @@ void OCPSolver::shiftLift(const int lift_index, const double lift_time) {
 }
 
 
-void OCPSolver::popBackDiscreteEvent() {
-  const int last_discrete_event = contact_sequence_.numDiscreteEvents() - 1;
-  if (contact_sequence_.isImpulseEvent(last_discrete_event)) {
-    const int last_impulse_index = contact_sequence_.numImpulseEvents() - 1;
-    const int time_stage_after_second_last_impulse 
-        = ocp_.discrete().timeStageAfterImpulse(last_impulse_index-1);
-    const int second_last_contact_phase = contact_sequence_.numContactPhases() - 2;
-    for (int i=time_stage_after_second_last_impulse; i<=N_; ++i) {
-      s_[i].setContactStatus(
-          contact_sequence_.contactStatus(second_last_contact_phase));
-    }
-  }
-  else {
-    const int last_lift_index = contact_sequence_.numLiftEvents() - 1;
-    const int time_stage_after_second_last_lift
-        = ocp_.discrete().timeStageAfterLift(last_lift_index-1);
-    const int second_last_contact_phase = contact_sequence_.numContactPhases() - 2;
-    for (int i=time_stage_after_second_last_lift; i<=N_; ++i) {
-      s_[i].setContactStatus(
-          contact_sequence_.contactStatus(second_last_contact_phase));
-    }
+void OCPSolver::setContactPoints(
+    const int contact_phase, 
+    const std::vector<Eigen::Vector3d>& contact_points) {
+  contact_sequence_.setContactPoints(contact_phase, contact_points);
+}
 
+
+void OCPSolver::popBackDiscreteEvent() {
+  if (contact_sequence_.numDiscreteEvents() > 0) {
+    const int last_discrete_event = contact_sequence_.numDiscreteEvents() - 1;
+    if (contact_sequence_.isImpulseEvent(last_discrete_event)) {
+      const int last_impulse_index = contact_sequence_.numImpulseEvents() - 1;
+      const int time_stage_after_second_last_impulse 
+          = ocp_.discrete().timeStageAfterImpulse(last_impulse_index-1);
+      const int second_last_contact_phase = contact_sequence_.numContactPhases() - 2;
+      for (int i=time_stage_after_second_last_impulse; i<=N_; ++i) {
+        s_[i].setContactStatus(
+            contact_sequence_.contactStatus(second_last_contact_phase));
+      }
+    }
+    else {
+      const int last_lift_index = contact_sequence_.numLiftEvents() - 1;
+      const int time_stage_after_second_last_lift
+          = ocp_.discrete().timeStageAfterLift(last_lift_index-1);
+      const int second_last_contact_phase = contact_sequence_.numContactPhases() - 2;
+      for (int i=time_stage_after_second_last_lift; i<=N_; ++i) {
+        s_[i].setContactStatus(
+            contact_sequence_.contactStatus(second_last_contact_phase));
+      }
+    }
+    contact_sequence_.popBackDiscreteEvent();
   }
-  contact_sequence_.popBackDiscreteEvent();
 }
 
 
@@ -269,6 +271,46 @@ void OCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
   ocp_.discretize(contact_sequence_, t);
   ocp_linearizer_.computeKKTResidual(ocp_, robots_, contact_sequence_, q, v, s_, 
                                      kkt_matrix_, kkt_residual_);
+}
+
+
+bool OCPSolver::isCurrentSolutionFeasible() {
+  for (int i=0; i<N_; ++i) {
+    const bool feasible = ocp_[i].isFeasible(robots_[0], s_[i]);
+    if (!feasible) {
+      std::cout << "INFEASIBLE at time stage " << i << std::endl;
+      return false;
+    }
+  }
+  const int num_impulse = contact_sequence_.numImpulseEvents();
+  for (int i=0; i<num_impulse; ++i) {
+    const bool feasible = ocp_.impulse[i].isFeasible(robots_[0], s_.impulse[i]);
+    if (!feasible) {
+      std::cout << "INFEASIBLE at impulse " << i << std::endl;
+      return false;
+    }
+  }
+  for (int i=0; i<num_impulse; ++i) {
+    const bool feasible = ocp_.aux[i].isFeasible(robots_[0], s_.aux[i]);
+    if (!feasible) {
+      std::cout << "INFEASIBLE at aux " << i << std::endl;
+      return false;
+    }
+  }
+  const int num_lift = contact_sequence_.numLiftEvents();
+  for (int i=0; i<num_lift; ++i) {
+    const bool feasible = ocp_.lift[i].isFeasible(robots_[0], s_.lift[i]);
+    if (!feasible) {
+      std::cout << "INFEASIBLE at lift " << i << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
+
+
+Robot OCPSolver::createRobot() const {
+  return robots_[0];
 }
 
 
@@ -322,64 +364,10 @@ void OCPSolver::printSolution(const std::string& name,
     for (int i=0; i<N_; ++i) {
       robot.updateFrameKinematics(s_[i].q);
       for (const auto e : frames) {
-      std::cout << "ee[" << i << "][" << e << "] = " 
+      std::cout << "end-effector[" << i << "][" << e << "] = " 
                 << robot.framePosition(e).transpose() << std::endl;
       }
     }
-  }
-}
-
-
-bool OCPSolver::isCurrentSolutionFeasible() {
-  for (int i=0; i<N_; ++i) {
-    const bool feasible = ocp_[i].isFeasible(robots_[0], s_[i]);
-    if (!feasible) {
-      std::cout << "INFEASIBLE at time stage " << i << std::endl;
-      return false;
-    }
-  }
-  const int num_impulse = contact_sequence_.numImpulseEvents();
-  for (int i=0; i<num_impulse; ++i) {
-    const bool feasible = ocp_.impulse[i].isFeasible(robots_[0], s_.impulse[i]);
-    if (!feasible) {
-      std::cout << "INFEASIBLE at impulse " << i << std::endl;
-      return false;
-    }
-  }
-  for (int i=0; i<num_impulse; ++i) {
-    const bool feasible = ocp_.aux[i].isFeasible(robots_[0], s_.aux[i]);
-    if (!feasible) {
-      std::cout << "INFEASIBLE at aux " << i << std::endl;
-      return false;
-    }
-  }
-  const int num_lift = contact_sequence_.numLiftEvents();
-  for (int i=0; i<num_lift; ++i) {
-    const bool feasible = ocp_.lift[i].isFeasible(robots_[0], s_.lift[i]);
-    if (!feasible) {
-      std::cout << "INFEASIBLE at lift " << i << std::endl;
-      return false;
-    }
-  }
-  return true;
-}
-
-
-void OCPSolver::setContactSequenceToSolution() {
-  for (int i=0; i<=N_; ++i) {
-    s_[i].setContactStatus(
-        contact_sequence_.contactStatus(ocp_.discrete().contactPhase(i)));
-  }
-  for (int i=0; i<ocp_.discrete().numImpulseStages(); ++i) {
-    s_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
-    s_.aux[i].setContactStatus(
-        contact_sequence_.contactStatus(
-            ocp_.discrete().contactPhaseAfterImpulse(i)));
-  }
-  for (int i=0; i<contact_sequence_.numLiftEvents(); ++i) {
-    s_.lift[i].setContactStatus(
-        contact_sequence_.contactStatus(
-            ocp_.discrete().contactPhaseAfterLift(i)));
   }
 }
 
