@@ -60,7 +60,7 @@ void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
   const int N_impulse = ocp.discrete().numImpulseStages();
   const int N_lift = ocp.discrete().numLiftStages();
   N_all_ = N_ + 1 + 2 * N_impulse + N_lift;
-  const bool exist_state_constraint = ocp.discrete().existImpulse();
+  const bool exist_state_constraint = ocp.discrete().existStateConstraint();
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_all_; ++i) {
     if (i < N_) {

@@ -74,11 +74,10 @@ public:
   /// @brief Initialize the constraints, i.e., set slack and dual variables. 
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] time_step Time step of this stage.
-  /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   ///
   void initConstraints(Robot& robot, const int time_step, 
-                       const double dtau, const SplitSolution& s);
+                       const SplitSolution& s);
 
   ///
   /// @brief Linearize the terminal optimal control problem around the current 

@@ -18,9 +18,14 @@
 
 namespace idocp {
 
-template <typename OCPSolverType>
 struct MPCCallbackEmpty {
   MPCCallbackEmpty(const Robot& robot) {} 
+
+  template <typename OCPSolverType>
+  void init(const double t, const Eigen::VectorXd& q, 
+            const Eigen::VectorXd& v, MPC<OCPSolverType>& mpc) {}
+
+  template <typename OCPSolverType>
   void callback(const double t, const Eigen::VectorXd& q, 
                 const Eigen::VectorXd& v, MPC<OCPSolverType>& mpc) {}
 };
@@ -34,7 +39,7 @@ public:
                      const std::string& save_dir_path, 
                      const std::string& save_file_name);
 
-  template <typename MPCCallBackType=MPCCallbackEmpty<OCPSolverType> >
+  template <typename MPCCallBackType = MPCCallbackEmpty>
   void run(MPC<OCPSolverType>& mpc, const double simulation_time_in_sec, 
            const double sampling_period_in_sec, 
            const double simulation_start_time_in_sec, 

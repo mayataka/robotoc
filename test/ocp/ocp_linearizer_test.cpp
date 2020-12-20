@@ -110,7 +110,7 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
       ASSERT_TRUE(dt_aux >= 0);
       ASSERT_TRUE(dt_aux <= dtau);
       const bool is_state_constraint_valid = (i > 0);
-      ocp_ref[i].initConstraints(robot_ref, i, dt, s[i]);
+      ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase), ti, dt, q_prev, 
           s[i], s.impulse[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
@@ -120,7 +120,7 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
           s.impulse[impulse_index], s.aux[impulse_index], 
           kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index], 
           is_state_constraint_valid);
-      ocp_ref.aux[impulse_index].initConstraints(robot_ref, 0, dt_aux, s.aux[impulse_index]);
+      ocp_ref.aux[impulse_index].initConstraints(robot_ref, 0, s.aux[impulse_index]);
       ocp_ref.aux[impulse_index].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[i+1], 
@@ -137,11 +137,11 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
       ASSERT_TRUE(dt <= dtau);
       ASSERT_TRUE(dt_lift >= 0);
       ASSERT_TRUE(dt_lift <= dtau);
-      ocp_ref[i].initConstraints(robot_ref, i, dt, s[i]);
+      ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase), ti, dt, q_prev, 
           s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
-      ocp_ref.lift[lift_index].initConstraints(robot_ref, 0, dt_lift, s.lift[lift_index]);
+      ocp_ref.lift[lift_index].initConstraints(robot_ref, 0, s.lift[lift_index]);
       ocp_ref.lift[lift_index].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
@@ -149,7 +149,7 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
     else {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const double dt = ocp_ref.discrete().dtau(i);
-      ocp_ref[i].initConstraints(robot_ref, i, ocp_ref.discrete().dtau(i), s[i]);
+      ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase), 
           ocp_ref.discrete().t(i), dt, q_prev, 
@@ -213,7 +213,7 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
       ASSERT_TRUE(dt_aux >= 0);
       ASSERT_TRUE(dt_aux <= dtau);
       const bool is_state_constraint_valid = (i > 0);
-      ocp_ref[i].initConstraints(robot_ref, i, dt, s[i]);
+      ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].computeKKTResidual(
           robot_ref, contact_sequence.contactStatus(contact_phase), ti, dt, q_prev, 
           s[i], s.impulse[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
@@ -223,7 +223,7 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
           s.impulse[impulse_index], s.aux[impulse_index], 
           kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index], 
           is_state_constraint_valid);
-      ocp_ref.aux[impulse_index].initConstraints(robot_ref, 0, dt_aux, s.aux[impulse_index]);
+      ocp_ref.aux[impulse_index].initConstraints(robot_ref, 0, s.aux[impulse_index]);
       ocp_ref.aux[impulse_index].computeKKTResidual(
           robot_ref, contact_sequence.contactStatus(contact_phase+1), t_impulse, dt_aux, s.impulse[impulse_index].q, 
           s.aux[impulse_index], s[i+1], 
@@ -244,11 +244,11 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
       ASSERT_TRUE(dt <= dtau);
       ASSERT_TRUE(dt_lift >= 0);
       ASSERT_TRUE(dt_lift <= dtau);
-      ocp_ref[i].initConstraints(robot_ref, i, dt, s[i]);
+      ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].computeKKTResidual(
           robot_ref, contact_sequence.contactStatus(contact_phase), ti, dt, q_prev, 
           s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
-      ocp_ref.lift[lift_index].initConstraints(robot_ref, 0, dt_lift, s.lift[lift_index]);
+      ocp_ref.lift[lift_index].initConstraints(robot_ref, 0, s.lift[lift_index]);
       ocp_ref.lift[lift_index].computeKKTResidual(
           robot_ref, contact_sequence.contactStatus(contact_phase+1), t_lift, dt_lift, s[i].q, 
           s.lift[lift_index], s[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
@@ -258,7 +258,7 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
     else {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
       const double dt = ocp_ref.discrete().dtau(i);
-      ocp_ref[i].initConstraints(robot_ref, i, ocp_ref.discrete().dtau(i), s[i]);
+      ocp_ref[i].initConstraints(robot_ref, i, s[i]);
       ocp_ref[i].computeKKTResidual(
           robot_ref, contact_sequence.contactStatus(contact_phase), 
           ocp_ref.discrete().t(i), dt, q_prev, 

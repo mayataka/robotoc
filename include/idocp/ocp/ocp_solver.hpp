@@ -76,9 +76,8 @@ public:
   /// @brief Initializes the inequality constraints, i.e., set slack variables 
   /// and the Lagrange multipliers of inequality constraints. Based on the 
   /// current solution.
-  /// @param[in] t Initial time of the horizon. Current time in MPC. 
   ///
-  void initConstraints(const double t);
+  void initConstraints();
 
   ///
   /// @brief Updates the solution by computing the primal-dual Newon direction.
@@ -91,6 +90,8 @@ public:
   void updateSolution(const double t, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v, 
                       const bool use_line_search=false);
+
+  void warmStartSolution(const double t_prev, const double t);
 
   ///
   /// @brief Get the const reference to the split solution of a time stage. 

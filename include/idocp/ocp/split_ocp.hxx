@@ -45,12 +45,10 @@ inline bool SplitOCP::isFeasible(Robot& robot, const SplitSolution& s) {
 
 
 inline void SplitOCP::initConstraints(Robot& robot, const int time_step, 
-                                      const double dtau, 
                                       const SplitSolution& s) { 
   assert(time_step >= 0);
-  assert(dtau > 0);
   constraints_data_ = constraints_->createConstraintsData(robot, time_step);
-  constraints_->setSlackAndDual(robot, constraints_data_, dtau, s);
+  constraints_->setSlackAndDual(robot, constraints_data_, s);
 }
 
 
@@ -94,8 +92,7 @@ inline void SplitOCP::computeCondensedPrimalDirection(Robot& robot,
                                                       SplitDirection& d) {
   d.setContactStatusByDimension(s.dimf());
   contact_dynamics_.computeCondensedPrimalDirection(robot, d);
-  constraints_->computeSlackAndDualDirection(robot, constraints_data_, dtau, 
-                                             s, d);
+  constraints_->computeSlackAndDualDirection(robot, constraints_data_, s, d);
 }
 
 
@@ -157,7 +154,7 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
   }
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
                                      kkt_residual);
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, dtau, s);
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual);
   stateequation::LinearizeForwardEuler(robot, dtau, q_prev, s, s_next, 
@@ -179,7 +176,14 @@ inline double SplitOCP::squaredNormKKTResidual(
   error += kkt_residual.lu().squaredNorm();
   error += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dtau);
-  error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
+  error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_, dtau);
+  std::cout << "SplitOCP: lx = " << kkt_residual.lx().squaredNorm() << std::endl;
+  std::cout << "SplitOCP: la = " << kkt_residual.la.squaredNorm() << std::endl;
+  std::cout << "SplitOCP: lf = " << kkt_residual.lf().squaredNorm() << std::endl;
+  std::cout << "SplitOCP: lu = " << kkt_residual.lu().squaredNorm() << std::endl;
+  std::cout << "SplitOCP: F = " << stateequation::SquaredNormStateEuqationResidual(kkt_residual) << std::endl;
+  std::cout << "SplitOCP: ID = " << contact_dynamics_.squaredNormContactDynamicsResidual(dtau) << std::endl;
+  std::cout << "SplitOCP: g = " << constraints_->squaredNormPrimalAndDualResidual(constraints_data_, dtau) << std::endl;
   return error;
 }
 
@@ -196,10 +200,11 @@ inline double SplitOCP::stageCost(Robot& robot, const double t,
   double cost = 0;
   cost += cost_->l(robot, cost_data_, t, dtau, s);
   if (primal_step_size > 0) {
-    cost += constraints_->costSlackBarrier(constraints_data_, primal_step_size);
+    cost += constraints_->costSlackBarrier(constraints_data_, dtau, 
+                                           primal_step_size);
   }
   else {
-    cost += constraints_->costSlackBarrier(constraints_data_);
+    cost += constraints_->costSlackBarrier(constraints_data_, dtau);
   }
   return cost;
 }
@@ -216,13 +221,13 @@ inline double SplitOCP::constraintViolation(Robot& robot,
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, dtau, s);
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   stateequation::ComputeForwardEulerResidual(robot, dtau, s, q_next, v_next, 
                                              kkt_residual);
   contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, dtau, s);
   double violation = 0;
   violation += stateequation::L1NormStateEuqationResidual(kkt_residual);
-  violation += constraints_->l1NormPrimalResidual(constraints_data_);
+  violation += constraints_->l1NormPrimalResidual(constraints_data_, dtau);
   violation += contact_dynamics_.l1NormContactDynamicsResidual(dtau);
   return violation;
 }

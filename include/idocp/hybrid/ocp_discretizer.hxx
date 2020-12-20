@@ -183,8 +183,33 @@ inline bool OCPDiscretizer::isTimeStageAfterLift(const int time_stage) const {
 }
 
 
-inline bool OCPDiscretizer::existImpulse() const {
-  return (numImpulseStages() > 0);
+inline bool OCPDiscretizer::isTimeStageValid(const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage <= N_);
+  if (dtau_[time_stage] < kMinDiscretizationSize) {
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+
+
+inline bool OCPDiscretizer::existStateConstraint() const {
+  if (numImpulseStages() >= 2) {
+    return true;
+  }
+  else if (numImpulseStages() == 1) {
+    if (timeStageBeforeImpulse(0) > 0) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+  else {
+    return false;
+  }
 }
 
 

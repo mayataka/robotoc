@@ -50,10 +50,8 @@ bool JointVelocityLowerLimit::isFeasible(Robot& robot,
 
 
 void JointVelocityLowerLimit::setSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  assert(dtau > 0);
-  data.slack = dtau * (s.v.tail(dimc_)-vmin_);
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  data.slack = s.v.tail(dimc_) - vmin_;
   setSlackAndDualPositive(data);
 }
 
@@ -61,6 +59,7 @@ void JointVelocityLowerLimit::setSlackAndDual(
 void JointVelocityLowerLimit::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  assert(dtau > 0);
   kkt_residual.lv().tail(dimc_).noalias() -= dtau * data.dual;
 }
 
@@ -69,9 +68,10 @@ void JointVelocityLowerLimit::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
+  assert(dtau > 0);
   kkt_matrix.Qvv().diagonal().tail(dimc_).array()
-      += dtau * dtau * data.dual.array() / data.slack.array();
-  computePrimalAndDualResidual(robot, data, dtau, s);
+      += dtau * data.dual.array() / data.slack.array();
+  computePrimalAndDualResidual(robot, data, s);
   kkt_residual.lv().tail(dimc_).array() 
       -= dtau * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
@@ -79,17 +79,16 @@ void JointVelocityLowerLimit::condenseSlackAndDual(
 
 
 void JointVelocityLowerLimit::computeSlackAndDualDirection(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, const SplitDirection& d) const {
-  data.dslack = dtau * d.dv().tail(dimc_) - data.residual;
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
+    const SplitDirection& d) const {
+  data.dslack = d.dv().tail(dimc_) - data.residual;
   computeDualDirection(data);
 }
 
 
 void JointVelocityLowerLimit::computePrimalAndDualResidual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  data.residual = dtau * (vmin_-s.v.tail(dimc_)) + data.slack;
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  data.residual = vmin_ - s.v.tail(dimc_) + data.slack;
   computeDuality(data);
 }
 

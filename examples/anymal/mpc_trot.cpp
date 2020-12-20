@@ -84,14 +84,33 @@ public:
     robot_.updateFrameKinematics(q);
     robot_.getContactPoints(contact_points_even_);
     mpc.getSolverHandle()->setContactPoints(0, contact_points_even_);
-    if (t <= 0.37) {
-      mpc.getSolverHandle()->setContactPoints(1, contact_points_even_);
-    }
-    if (0.37 <= t) {
+    // if (t <= 0.5) {
+    //   mpc.getSolverHandle()->setContactPoints(1, contact_points_even_);
+    // }
+    if (step_time_.front() <= t) {
+      step_time_.pop_front();
       mpc.getSolverHandle()->popFrontDiscreteEvent();
     }
-    mpc.computeKKTResidual(t, q, v);
-    std::cout << "kkt error at time " << t << ": " << mpc.KKTError() << std::endl;
+    if (step_time_.back()+kPeriod < t+kT) {
+      if (steps_%2 == 0) {
+      }
+      else {
+      }
+      // mpc.getSolverHandle()->pushBackDiscreteEvent();
+    }
+    // if (steps_%2 == 0) {
+    //   robot_.updateFrameKinematics(q);
+    //   robot_.getContactPoints(contact_points_even_);
+    //   contact_status_even_.getContactPoints(contact_points_even_);
+    //   mpc.getSolverHandle()->setContactPoints(0, contact_points_even_);
+    //   mpc.getSolverHandle()->setContactPoints(1, contact_points_odd_);
+    // }
+    // else {
+    //   robot_.updateFrameKinematics(q);= {14, 24, 34, 44}
+    //   robot_.getContactPoints(contact_points_odd_);
+    //   mpc.getSolverHandle()->setContactPoints(0, contact_points_odd_);
+    //   mpc.getSolverHandle()->setContactPoints(1, contact_points_even_);
+    // }
   }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -110,11 +129,6 @@ private:
 };
 
 
-  // q_ref << 0, 0, 0.48, 0, 1, 0, 0, 
-  //           0.0315,  0.4, -0.8, 
-  //           0.0315, -0.4,  0.8, 
-  //          -0.0315,  0.4, -0.8,
-  //          -0.0315, -0.4,  0.8;
 
 int main(int argc, char *argv[]) {
   srand((unsigned int) time(0));
@@ -123,89 +137,62 @@ int main(int argc, char *argv[]) {
   const std::string path_to_urdf_for_raisim = "/home/sotaro/src/idocp/examples/anymal/anymal/anymal_for_raisim.urdf";
   idocp::Robot robot(path_to_urdf, contact_frames);
   auto cost = std::make_shared<idocp::CostFunction>();
-  Eigen::VectorXd q_ref(Eigen::VectorXd::Zero(robot.dimq()));
-  q_ref << 0, 0, 0.4792, 0, 0, 0, 1, 
-          -0.1,  0.7, -1.0, 
-          -0.1, -0.7,  1.0, 
-           0.1,  0.7, -1.0, 
-           0.1, -0.7,  1.0;
-  robot.normalizeConfiguration(q_ref);
-  Eigen::VectorXd v_ref(Eigen::VectorXd::Zero(robot.dimv()));
-  v_ref <<  0.3, 0, 0, 0, 0, 0, 
-            0,  0,  -1,
-            0,  0,  0,
-            0,  0,  0,
-            0, -0,   1;
-  // v_ref << 0, 0, 0, 0, 4*M_PI, 0, 
-  //           0,  0,  0,
-  //           0,  0,  0,
-  //           0,  0,  0,
-  //           0,  0,  0;
-  Eigen::VectorXd q_weight(Eigen::VectorXd::Zero(robot.dimv()));
-  q_weight << 10, 10, 10, 10, 10, 10, 
-               1, 1, 1,
-               1, 1, 1,
-               1, 1, 1,
-               1, 1, 1;
-  Eigen::VectorXd v_weight(Eigen::VectorXd::Zero(robot.dimv()));
-  v_weight << 1, 1, 1, 1, 1, 1, 
-              0.1, 0.1, 0.1,
-              0.1, 0.1, 0.1,
-              0.1, 0.1, 0.1,
-              0.1, 0.1, 0.1;
-  auto configuration_cost = std::make_shared<idocp::TimeVaryingConfigurationCost>(robot);
-  const double t_ref_start = 0;
-  // const double t_ref_start = 1;
-  Eigen::VectorXd q_test(Eigen::VectorXd::Zero(robot.dimq()));
-  robot.integrateConfiguration(q_ref, v_ref, t_ref_start, q_test);
-  // std::cout << "qtest = " << q_test << std::endl;
-  configuration_cost->set_ref(t_ref_start, q_ref, v_ref);
-  // configuration_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
-  // configuration_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
-  // configuration_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
-  // configuration_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
-  configuration_cost->set_q_weight(q_weight);
-  configuration_cost->set_qf_weight(q_weight);
-  configuration_cost->set_v_weight(v_weight);
-  configuration_cost->set_vf_weight(v_weight);
-  configuration_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
-  cost->push_back(configuration_cost);
-
   // Eigen::VectorXd q_ref(Eigen::VectorXd::Zero(robot.dimq()));
   // q_ref << 0, 0, 0.4792, 0, 0, 0, 1, 
   //          -0.1,  0.7, -1.0, 
   //          -0.1, -0.7,  1.0, 
   //           0.1,  0.7, -1.0, 
   //           0.1, -0.7,  1.0;
-  // // q_ref << 0.0, 0, 0.4792, 0, 0, 0, 1, 
-  // //          -0.1,  0.0, -1.0, 
-  // //          -0.1, -0.7,  1.0, 
-  // //           0.1,  0.7, -1.0, 
-  // //           0.1, -1.5,  1.5;
   // Eigen::VectorXd v_ref(Eigen::VectorXd::Zero(robot.dimv()));
-  // v_ref << 0.0, 0, 0, 0, 0, 0, 
+  // v_ref << 0.5, 0, 0, 0, 0, 0, 
+  //            0,  2.0, -2.25,
+  //            0,  1.5,  0.5,
+  //            0, -1.5, -0.5,
+  //            0, -2.0,  2.25;
+  // auto configuration_cost = std::make_shared<idocp::TimeVaryingConfigurationCost>(robot);
+  // configuration_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
+  // configuration_cost->set_ref(0, q_ref, v_ref);
+  // configuration_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
+  // configuration_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
+  // configuration_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
+  // configuration_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
+  // cost->push_back(configuration_cost);
+
+  Eigen::VectorXd q_ref(Eigen::VectorXd::Zero(robot.dimq()));
+  q_ref << 0, 0, 0.4792, 0, 0, 0, 1, 
+           -0.1,  0.7, -1.0, 
+           -0.1, -0.7,  1.0, 
+            0.1,  0.7, -1.0, 
+            0.1, -0.7,  1.0;
+  // q_ref << 0.0, 0, 0.4792, 0, 0, 0, 1, 
+  //          -0.1,  0.0, -1.0, 
+  //          -0.1, -0.7,  1.0, 
+  //           0.1,  0.7, -1.0, 
+  //           0.1, -1.5,  1.5;
+  Eigen::VectorXd v_ref(Eigen::VectorXd::Zero(robot.dimv()));
+  v_ref << 0.0, 0, 0, 0, 0, 0, 
+             0,  0,  0,
+             0,  0,  0,
+             0,  0,  0,
+             0,  0,  0;
+  auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
+  joint_cost->set_q_ref(q_ref);
+  joint_cost->set_v_ref(v_ref);
+  // Eigen::VectorXd q_weight(Eigen::VectorXd::Zero(robot.dimv()));
+  // q_weight << 10, 10, 10, 10, 10, 10, 
   //            0,  0,  0,
   //            0,  0,  0,
   //            0,  0,  0,
   //            0,  0,  0;
-  // auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
-  // joint_cost->set_q_ref(q_ref);
-  // joint_cost->set_v_ref(v_ref);
-  // // Eigen::VectorXd q_weight(Eigen::VectorXd::Zero(robot.dimv()));
-  // // q_weight << 10, 10, 10, 10, 10, 10, 
-  // //            0,  0,  0,
-  // //            0,  0,  0,
-  // //            0,  0,  0,
-  // //            0,  0,  0;
-  // // joint_cost->set_q_weight(q_weight);
-  // // joint_cost->set_qf_weight(q_weight);
-  // joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
-  // joint_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
-  // joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
-  // joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
-  // joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  // joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 0.0));
-  // cost->push_back(joint_cost);
+  // joint_cost->set_q_weight(q_weight);
+  // joint_cost->set_qf_weight(q_weight);
+  joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
+  joint_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
+  joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
+  joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
+  joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 0.0));
+  cost->push_back(joint_cost);
 
   auto contact_cost = std::make_shared<idocp::ContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight, f_ref;
@@ -225,7 +212,7 @@ int main(int argc, char *argv[]) {
   impulse_joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   impulse_joint_cost->set_q_ref(q_ref);
   impulse_joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
-  impulse_joint_cost->set_dv_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  impulse_joint_cost->set_dv_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
   cost->push_back(impulse_joint_cost);
   // auto impulse_configuration_cost = std::make_shared<idocp::ImpulseTimeVaryingConfigurationCost>(robot);
   // impulse_configuration_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
@@ -237,6 +224,14 @@ int main(int argc, char *argv[]) {
   impulse_force_cost->set_f_weight(f_weight);
   impulse_force_cost->set_f_ref(f_ref);
   cost->push_back(impulse_force_cost);
+
+  auto task_3d_cost1 = std::make_shared<idocp::TaskSpace3DCost>(robot, 14);
+  task_3d_cost1->set_q_3d_weight(Eigen::Vector3d::Constant(100));
+  task_3d_cost1->set_qf_3d_weight(Eigen::Vector3d::Constant(100));
+  Eigen::Vector3d q_ref1;
+  q_ref1 << 0.369915+0.1, 0.198573, 0.01;
+  task_3d_cost1->set_q_3d_ref(q_ref1);
+  cost->push_back(task_3d_cost1);
 
   // auto task_3d_cost4 = std::make_shared<idocp::TaskSpace3DCost>(robot, 44);
   // task_3d_cost4->set_q_3d_weight(Eigen::Vector3d::Constant(100));
@@ -259,16 +254,16 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_velocity_upper);
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
-  const double T = 0.5;
+  const double T = 0.6;
   const int N = 20;
   const int max_num_impulse_phase = 4;
   const int num_proc = 4;
   const double t = 0;
   idocp::MPC<idocp::OCPSolver> mpc(robot, cost, constraints, T, N, max_num_impulse_phase, num_proc);
-  // robot.printRobotModel();
+  robot.printRobotModel();
 
   Eigen::VectorXd q(Eigen::VectorXd::Zero(robot.dimq()));
-  q << 0, 0, 0.4792, 0, 0, 0, 1, 
+  q <<  0, 0, 0.4792, 0, 0, 0, 1, 
        -0.1,  0.7, -1.0, 
        -0.1, -0.7,  1.0, 
         0.1,  0.7, -1.0, 
@@ -283,22 +278,22 @@ int main(int argc, char *argv[]) {
   contact_status.setContactPoints(contact_points);
   mpc.getSolverHandle()->setContactStatusUniformly(contact_status);
 
-  auto contact_status_next = robot.createContactStatus();
-  contact_status_next.setContactPoints(contact_points);
-  contact_status_next.activateContacts({1, 2, 3});
-  constexpr double switchig_time = 0.37;
-  mpc.getSolverHandle()->pushBackContactStatus(contact_status_next, switchig_time, 0);
+  // auto contact_status_next = robot.createContactStatus();
+  // contact_status_next.setContactPoints(contact_points);
+  // contact_status_next.activateContacts({1, 2, 3});
+  // constexpr double switchig_time = 0.5;
+  // mpc.getSolverHandle()->pushBackContactStatus(contact_status_next, switchig_time, 0);
 
   mpc.initializeSolution(t, q, v, 100);
-  mpc.computeKKTResidual(t, q, v);
-  std::cout << mpc.KKTError() << std::endl;
-  // mpc.getSolverHandle()->printSolution("end-effector", {14, 24, 34, 44});
+  mpc.getSolverHandle()->printSolution("end-effector", {14, 24, 34, 44});
   const std::string path_to_raisim_activation_key = argv[1];
   idocp::QuadrupedSimulator<idocp::OCPSolver> simulator(path_to_raisim_activation_key, 
                                                         path_to_urdf_for_raisim, 
-                                                        "../sim_result", "jumping");
+                                                        "../sim_result", "anymal");
   constexpr bool visualization = true;
   constexpr bool video_recording = false;
-  simulator.run<MPCCallbackTrotting>(mpc, 2, 0.0025, 0, q, v, visualization, video_recording);
+  simulator.run<MPCCallbackTrotting>(mpc, 1, 0.0025, 0, q, v, visualization, video_recording);
+  // simulator.run<MPCCallbackStanding>(mpc, 0.75, 0.0025, 0, q, v, visualization, video_recording);
+  mpc.getSolverHandle()->printSolution("end-effector", {14, 24, 34, 44});
   return 0;
 }

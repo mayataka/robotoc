@@ -192,7 +192,7 @@ void RiccatiRecursionTest::testForwardRiccatiRecursionParallel(const Robot& robo
   auto kkt_matrix_ref = kkt_matrix; 
   auto kkt_residual_ref = kkt_residual; 
   riccati_recursion.forwardRiccatiRecursionParallel(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, constraint_factorization);
-  const bool exist_state_constraint = ocp_discretizer.existImpulse();
+  const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
   for (int i=0; i<N; ++i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
       const int impulse_index = ocp_discretizer.impulseIndex(i);
@@ -249,7 +249,7 @@ void RiccatiRecursionTest::testForwardStateConstraintFactorization(const Robot& 
   auto kkt_matrix_ref = kkt_matrix; 
   auto kkt_residual_ref = kkt_residual; 
   riccati_recursion.forwardStateConstraintFactorization(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
-  const bool exist_state_constraint = ocp_discretizer.existImpulse();
+  const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
   for (int i=0; i<N; ++i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
       const int impulse_index = ocp_discretizer.impulseIndex(i);
@@ -421,7 +421,7 @@ void RiccatiRecursionTest::testForwardRiccatiRecursion(const Robot& robot) const
   }
   auto d_ref = d;
   riccati_recursion.forwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization, d);
-  const bool exist_state_constraint = ocp_discretizer.existImpulse();
+  const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
   for (int i=0; i<N; ++i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
       const int impulse_index = ocp_discretizer.impulseIndex(i);

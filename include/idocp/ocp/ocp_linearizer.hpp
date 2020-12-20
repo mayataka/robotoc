@@ -77,6 +77,8 @@ public:
 
   double KKTError(const OCP& ocp, const KKTResidual& kkt_residual);
 
+  void printKKTError() const;
+
   void integrateSolution(OCP& ocp, const std::vector<Robot>& robots,
                          const KKTMatrix& kkt_matrix,
                          const KKTResidual& kkt_residual,

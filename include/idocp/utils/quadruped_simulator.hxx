@@ -77,7 +77,8 @@ inline void QuadrupedSimulator<OCPSolverType>::run(
   std::chrono::system_clock::time_point start_clock, end_clock;
   double CPU_time_total_in_sec = 0;
   MPCCallbackType mpc_callback(robot);
-  for (double t=0; t<simulation_time_in_sec; t+=sampling_period_in_sec) {
+  mpc_callback.init(simulation_start_time_in_sec, q, v, mpc);
+  for (double t=simulation_start_time_in_sec; t<simulation_time_in_sec; t+=sampling_period_in_sec) {
     raisim_robot->setGeneralizedForce(u_raisim);
     raisim_world.integrate();
     if (visualization) {

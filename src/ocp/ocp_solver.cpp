@@ -45,7 +45,7 @@ OCPSolver::OCPSolver(const Robot& robot,
   for (auto& e : s_.impulse) { robot.normalizeConfiguration(e.q); }
   for (auto& e : s_.aux)     { robot.normalizeConfiguration(e.q); }
   for (auto& e : s_.lift)    { robot.normalizeConfiguration(e.q); }
-  initConstraints(0);
+  initConstraints();
 }
 
 
@@ -57,8 +57,7 @@ OCPSolver::~OCPSolver() {
 }
 
 
-void OCPSolver::initConstraints(const double t) {
-  ocp_.discretize(contact_sequence_, t);
+void OCPSolver::initConstraints() {
   ocp_linearizer_.initConstraints(ocp_, robots_, contact_sequence_, s_);
 }
 
@@ -81,6 +80,60 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   ocp_linearizer_.integrateSolution(ocp_, robots_, kkt_matrix_, kkt_residual_, 
                                     primal_step_size, dual_step_size, d_, s_);
 } 
+
+
+void OCPSolver::warmStartSolution(const double t_prev, const double t) {
+  std::vector<int> time_stage_before_lift;
+  ocp_.discretize(contact_sequence_, t);
+  for (int i=0; i<ocp_.discrete().numLiftStages(); ++i) {
+    const int time_stage_before_lift = ocp_.discrete().timeStageBeforeLift(i);
+    const double dt = ocp_.discrete().dtau(time_stage_before_lift);
+    const double dt_lift = ocp_.discrete().dtau_lift(i);
+    const double prev_rate = dt_lift / (dt + dt_lift);
+    const double next_rate = dt / (dt + dt_lift);
+    // s_.lift[i].q = (prev_rate * s_[time_stage_before_lift].q + next_rate * s_[time_stage_before_lift+1].q);
+    // robots_[0].normalizeConfiguration(s_.lift[i].q);
+    // s_.lift[i].v = (prev_rate * s_[time_stage_before_lift].v + next_rate * s_[time_stage_before_lift+1].v);
+    // s_.lift[i].a = (prev_rate * s_[time_stage_before_lift].a + next_rate * s_[time_stage_before_lift+1].a);
+    // s_[time_stage_before_lift].set_f_vector();
+    // s_[time_stage_before_lift+1].set_f_vector();
+    // for (int j=0; j<robots_[0].maxPointContacts(); ++j) {
+    //   s_.lift[i].f[j] = (prev_rate * s_[time_stage_before_lift].f[j] + next_rate * s_[time_stage_before_lift+1].f[j]);
+    // }
+    // s_.lift[i].set_f_stack();
+    // s_.lift[i].u = (prev_rate * s_[time_stage_before_lift].u + next_rate * s_[time_stage_before_lift+1].u);
+    // s_.lift[i].lmd = (prev_rate * s_[time_stage_before_lift].lmd + next_rate * s_[time_stage_before_lift+1].lmd);
+    // s_.lift[i].gmm = (prev_rate * s_[time_stage_before_lift].gmm + next_rate * s_[time_stage_before_lift+1].gmm);
+    // s_.lift[i].beta = (prev_rate * s_[time_stage_before_lift].beta + next_rate * s_[time_stage_before_lift+1].beta);
+    // s_[time_stage_before_lift].set_mu_vector();
+    // s_[time_stage_before_lift+1].set_mu_vector();
+    // for (int j=0; j<robots_[0].maxPointContacts(); ++j) {
+    //   s_.lift[i].mu[j] = (prev_rate * s_[time_stage_before_lift].mu[j] + next_rate * s_[time_stage_before_lift+1].mu[j]);
+    // }
+    // s_.lift[i].set_mu_stack();
+    s_.lift[i].copy(s_[time_stage_before_lift+1]);
+  }
+
+  // std::vector<int> time_stage_before_impulse_prev, time_stage_before_lift_prev;
+  // ocp_.discretize(contact_sequence_, t_prev);
+  // for (int i=0; i<ocp_.discrete().numImpulseStages(); ++i) {
+  //   time_stage_before_impulse_prev.push_back(
+  //       ocp_.discrete().timeStageBeforeImpulse());
+  // }
+  // for (int i=0; i<ocp_.discrete().numLiftStages(); ++i) {
+  //   time_stage_before_lift_prev.push_back(
+  //       ocp_.discrete().timeStageBeforeLift());
+  // }
+  // std::vector<int> time_stage_before_impulse, time_stage_before_lift;
+  // ocp_.discretize(contact_sequence_, t);
+  // for (int i=0; i<ocp_.discrete().numImpulseStages(); ++i) {
+  //   time_stage_before_impulse.push_back(
+  //       ocp_.discrete().timeStageBeforeImpulse());
+  // }
+  // for (int i=0; i<ocp_.discrete().numLiftStages(); ++i) {
+  //   time_stage_before_lift.push_back(ocp_.discrete().timeStageBeforeLift());
+  // }
+}
 
 
 const SplitSolution& OCPSolver::getSolution(const int stage) const {
@@ -124,7 +177,7 @@ bool OCPSolver::setStateTrajectory(const double t, const Eigen::VectorXd& q,
     e.v = v;
     e.q = q_normalized;
   }
-  initConstraints(t);
+  initConstraints();
   return isCurrentSolutionFeasible();
 }
 

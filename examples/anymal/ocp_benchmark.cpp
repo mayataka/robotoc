@@ -53,7 +53,7 @@ int main () {
   joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 0.0));
+  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 0.001));
   cost->push_back(joint_cost);
   // auto configuration_cost = std::make_shared<idocp::TimeVaryingConfigurationCost>(robot);
   // configuration_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
@@ -105,10 +105,10 @@ int main () {
   constraints->push_back(joint_velocity_upper);
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
-  const double T = 1;
+  const double T = 0.5;
   const int N = 20;
   const int max_num_impulse_phase = 5;
-  const int num_proc = 4;
+  const int num_proc = 1;
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   q << 0, 0, 0.4792, 0, 0, 0, 1, 
@@ -126,18 +126,24 @@ int main () {
                                                           robot, cost, constraints, T, N, 
                                                           max_num_impulse_phase, num_proc);
   auto contact_status = robot.createContactStatus();
-  contact_status.activateContacts({0, 1});
+  // contact_status.activateContacts({0, 3});
+  contact_status.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q);
   robot.setContactPoints(contact_status);
   ocp_benchmarker.getSolverHandle()->setContactStatusUniformly(contact_status);
   auto contact_status_next = robot.createContactStatus();
-  contact_status_next.activateContacts({0, 1, 2, 3});
+  // contact_status_next.activateContacts({0, 1, 2, 3});
+  contact_status_next.activateContacts({1, 2});
   robot.updateFrameKinematics(q);
   robot.setContactPoints(contact_status_next);
-  const double switching_time = 0.175;
+  const double switching_time = 0.18;
   ocp_benchmarker.getSolverHandle()->pushBackContactStatus(contact_status_next, switching_time, t);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   ocp_benchmarker.testConvergence(t, q, v, 50, false);
+  ocp_benchmarker.testConvergence(t, q, v, 10, false);
+  const double t_next = t + 0.025;
+  ocp_benchmarker.getSolverHandle()->warmStartSolution(t, t_next);
+  ocp_benchmarker.testConvergence(t_next, q, v, 10, false);
   // ocp_benchmarker.testCPUTime(t, q, v, 1000);
   // ocp_benchmarker.getSolverHandle()->printSolution("q");
   // ocp_benchmarker.getSolverHandle()->printSolution("v");

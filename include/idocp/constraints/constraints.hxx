@@ -145,39 +145,35 @@ inline bool Constraints::isFeasible_impl(
 
 
 inline void Constraints::setSlackAndDual(Robot& robot, ConstraintsData& data, 
-                                         const double dtau, 
                                          const SplitSolution& s) const {
   if (data.isPositionLevelValid()) {
     setSlackAndDual_impl(position_level_constraints_, robot, 
-                         data.position_level_data, dtau, s);
+                         data.position_level_data, s);
   }
   if (data.isVelocityLevelValid()) {
     setSlackAndDual_impl(velocity_level_constraints_, robot, 
-                         data.velocity_level_data, dtau, s);
+                         data.velocity_level_data, s);
   }
   setSlackAndDual_impl(acceleration_level_constraints_, robot,
-                       data.acceleration_level_data, dtau, s);
+                       data.acceleration_level_data, s);
 }
 
 
 inline void Constraints::setSlackAndDual_impl(
     const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const double dtau, 
-    const SplitSolution& s) {
+    std::vector<ConstraintComponentData>& data, const SplitSolution& s) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->setSlackAndDual(robot, data[i], dtau, s);
+    constraints[i]->setSlackAndDual(robot, data[i], s);
   }
 }
 
 
-inline void Constraints::augmentDualResidual(Robot& robot, 
-                                             ConstraintsData& data, 
-                                             const double dtau, 
-                                             const SplitSolution& s,
-                                             SplitKKTResidual& kkt_residual) const {
+inline void Constraints::augmentDualResidual(
+    Robot& robot, ConstraintsData& data, const double dtau, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (data.isPositionLevelValid()) {
     augmentDualResidual_impl(position_level_constraints_, robot, 
                              data.position_level_data, dtau, s, kkt_residual);
@@ -242,30 +238,30 @@ inline void Constraints::condenseSlackAndDual_impl(
 
 
 inline void Constraints::computeSlackAndDualDirection(
-    Robot& robot, ConstraintsData& data, const double dtau, 
-    const SplitSolution& s, const SplitDirection& d) const {
+    Robot& robot, ConstraintsData& data, const SplitSolution& s, 
+    const SplitDirection& d) const {
   if (data.isPositionLevelValid()) {
     computeSlackAndDualDirection_impl(position_level_constraints_, robot, 
-                                      data.position_level_data, dtau, s, d);
+                                      data.position_level_data, s, d);
   }
   if (data.isVelocityLevelValid()) {
     computeSlackAndDualDirection_impl(velocity_level_constraints_, robot, 
-                                      data.velocity_level_data, dtau, s, d);
+                                      data.velocity_level_data, s, d);
   }
   computeSlackAndDualDirection_impl(acceleration_level_constraints_, robot, 
-                                    data.acceleration_level_data, dtau, s, d);
+                                    data.acceleration_level_data, s, d);
 }
 
 
 inline void Constraints::computeSlackAndDualDirection_impl(
     const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const double dtau, 
-    const SplitSolution& s, const SplitDirection& d) {
+    std::vector<ConstraintComponentData>& data, const SplitSolution& s, 
+    const SplitDirection& d) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->computeSlackAndDualDirection(robot, data[i], dtau, s, d);
+    constraints[i]->computeSlackAndDualDirection(robot, data[i], s, d);
   }
 }
 
@@ -412,7 +408,9 @@ inline void Constraints::updateDual_impl(
 }
 
 
-inline double Constraints::costSlackBarrier(const ConstraintsData& data) const {
+inline double Constraints::costSlackBarrier(const ConstraintsData& data,
+                                            const double dtau) const {
+  assert(dtau > 0);
   double cost = 0;
   if (data.isPositionLevelValid()) {
     cost += costSlackBarrier_impl(position_level_constraints_, 
@@ -424,7 +422,7 @@ inline double Constraints::costSlackBarrier(const ConstraintsData& data) const {
   }
   cost += costSlackBarrier_impl(acceleration_level_constraints_, 
                                 data.acceleration_level_data);
-  return cost;
+  return dtau * cost;
 }
 
 
@@ -443,7 +441,9 @@ inline double Constraints::costSlackBarrier_impl(
 
 
 inline double Constraints::costSlackBarrier(const ConstraintsData& data, 
+                                            const double dtau,
                                             const double step_size) const {
+  assert(dtau > 0);
   assert(step_size >= 0);
   assert(step_size <= 1);
   double cost = 0;
@@ -457,7 +457,7 @@ inline double Constraints::costSlackBarrier(const ConstraintsData& data,
   }
   cost += costSlackBarrier_impl(acceleration_level_constraints_, 
                                 data.acceleration_level_data, step_size);
-  return cost;
+  return dtau * cost;
 }
 
 
@@ -476,36 +476,34 @@ inline double Constraints::costSlackBarrier_impl(
 
 
 inline void Constraints::computePrimalAndDualResidual(
-    Robot& robot, ConstraintsData& data, const double dtau, 
-    const SplitSolution& s) const {
+    Robot& robot, ConstraintsData& data, const SplitSolution& s) const {
   if (data.isPositionLevelValid()) {
     computePrimalAndDualResidual_impl(position_level_constraints_, robot, 
-                                      data.position_level_data, dtau, s);
+                                      data.position_level_data, s);
   }
   if (data.isVelocityLevelValid()) {
     computePrimalAndDualResidual_impl(velocity_level_constraints_, robot, 
-                                      data.velocity_level_data, dtau, s);
+                                      data.velocity_level_data, s);
   }
   computePrimalAndDualResidual_impl(acceleration_level_constraints_, robot, 
-                                    data.acceleration_level_data, dtau, s);
+                                    data.acceleration_level_data, s);
 }
 
 
 inline void Constraints::computePrimalAndDualResidual_impl(
     const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const double dtau, 
-    const SplitSolution& s) {
+    std::vector<ConstraintComponentData>& data, const SplitSolution& s) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->computePrimalAndDualResidual(robot, data[i], dtau, s);
+    constraints[i]->computePrimalAndDualResidual(robot, data[i], s);
   }
 }
 
 
-inline double Constraints::l1NormPrimalResidual(
-    const ConstraintsData& data) const {
+inline double Constraints::l1NormPrimalResidual(const ConstraintsData& data, 
+                                                const double dtau) const {
   double l1_norm = 0;
   if (data.isPositionLevelValid()) {
     l1_norm += l1NormPrimalResidual_impl(position_level_constraints_, 
@@ -517,7 +515,7 @@ inline double Constraints::l1NormPrimalResidual(
   }
   l1_norm += l1NormPrimalResidual_impl(acceleration_level_constraints_, 
                                        data.acceleration_level_data);
-  return l1_norm;
+  return dtau * l1_norm;
 }
 
 
@@ -536,7 +534,7 @@ inline double Constraints::l1NormPrimalResidual_impl(
 
 
 inline double Constraints::squaredNormPrimalAndDualResidual(
-    const ConstraintsData& data) const {
+    const ConstraintsData& data, const double dtau) const {
   double squared_norm = 0;
   if (data.isPositionLevelValid()) {
     squared_norm += squaredNormPrimalAndDualResidual_impl(
@@ -548,7 +546,7 @@ inline double Constraints::squaredNormPrimalAndDualResidual(
   }
   squared_norm += squaredNormPrimalAndDualResidual_impl(
       acceleration_level_constraints_, data.acceleration_level_data);
-  return squared_norm;
+  return dtau * squared_norm;
 }
 
 

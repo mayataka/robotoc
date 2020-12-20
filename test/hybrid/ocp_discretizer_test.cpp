@@ -70,7 +70,7 @@ void OCPDiscretizerTest::testConstructor(const Robot& robot) const {
   EXPECT_EQ(ocp_discrertizer.N(), N);
   EXPECT_EQ(ocp_discrertizer.numImpulseStages(), 0);
   EXPECT_EQ(ocp_discrertizer.numLiftStages(), 0);
-  EXPECT_FALSE(ocp_discrertizer.existImpulse());
+  EXPECT_FALSE(ocp_discrertizer.existStateConstraint());
   for (int i=0; i<=N; ++i) {
     EXPECT_EQ(ocp_discrertizer.contactPhase(i), 0);
   }
@@ -87,7 +87,20 @@ void OCPDiscretizerTest::testDiscretizeOCP(const Robot& robot) const {
   EXPECT_EQ(ocp_discrertizer.N(), N);
   EXPECT_EQ(ocp_discrertizer.numImpulseStages(), contact_sequence.numImpulseEvents());
   EXPECT_EQ(ocp_discrertizer.numLiftStages(), contact_sequence.numLiftEvents());
-  EXPECT_EQ(ocp_discrertizer.existImpulse(), (contact_sequence.numImpulseEvents() > 0));
+  if (ocp_discrertizer.numImpulseStages() >= 2) {
+    EXPECT_TRUE(ocp_discrertizer.existStateConstraint());
+  }
+  else if (ocp_discrertizer.numImpulseStages() == 1) {
+    if (ocp_discrertizer.timeStageBeforeImpulse(0) > 0) {
+      EXPECT_TRUE(ocp_discrertizer.existStateConstraint());
+    }
+    else {
+      EXPECT_FALSE(ocp_discrertizer.existStateConstraint());
+    }
+  }
+  else {
+    EXPECT_FALSE(ocp_discrertizer.existStateConstraint());
+  }
   std::vector<double> impulse_time, lift_time;
   std::vector<int> time_stage_before_impulse, time_stage_before_lift;
   for (int i=0; i<contact_sequence.numImpulseEvents(); ++i) {

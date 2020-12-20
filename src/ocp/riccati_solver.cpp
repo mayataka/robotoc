@@ -61,7 +61,7 @@ void RiccatiSolver::computeNewtonDirection(
                                                      ocp.discrete(),
                                                      kkt_matrix, kkt_residual,
                                                      constraint_factorization_);
-  const bool exist_state_constraint = ocp.discrete().existImpulse();
+  const bool exist_state_constraint = ocp.discrete().existStateConstraint();
   if (exist_state_constraint) {
     riccati_recursion_.forwardStateConstraintFactorization(
         riccati_factorizer_, ocp.discrete(), kkt_matrix, kkt_residual, 

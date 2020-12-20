@@ -80,7 +80,9 @@ public:
 
   bool isTimeStageAfterLift(const int time_stage) const;
 
-  bool existImpulse() const;
+  bool isTimeStageValid(const int time_stage) const;
+
+  bool existStateConstraint() const;
 
   double t(const int time_stage) const;
 

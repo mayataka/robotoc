@@ -75,9 +75,9 @@ void ContactNormalForceTest::testSetSlackAndDual(Robot& robot, const ContactStat
   ConstraintComponentData data(limit.dimc()), data_ref(limit.dimc());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
-  limit.setSlackAndDual(robot, data, dtau, s);
+  limit.setSlackAndDual(robot, data, s);
   for (int i=0; i<contact_status.maxPointContacts(); ++i) {
-    data_ref.slack.coeffRef(i) = dtau * s.f[i].coeff(2);
+    data_ref.slack.coeffRef(i) = s.f[i].coeff(2);
   }
   pdipm::SetSlackAndDualPositive(barrier, data_ref);
   EXPECT_TRUE(data.slack.isApprox(data_ref.slack));
@@ -90,7 +90,7 @@ void ContactNormalForceTest::testAugmentDualResidual(Robot& robot, const Contact
   ConstraintComponentData data(limit.dimc());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
-  limit.setSlackAndDual(robot, data, dtau, s);
+  limit.setSlackAndDual(robot, data, s);
   ConstraintComponentData data_ref = data;
   SplitKKTResidual kkt_res(robot);
   kkt_res.setContactStatus(contact_status);
@@ -116,11 +116,11 @@ void ContactNormalForceTest::testComputePrimalAndDualResidual(Robot& robot, cons
   data.slack.setRandom();
   data.dual.setRandom();
   ConstraintComponentData data_ref = data;
-  limit.computePrimalAndDualResidual(robot, data, dtau, s);
+  limit.computePrimalAndDualResidual(robot, data, s);
   int dimf_stack = 0;
   for (int i=0; i<contact_status.maxPointContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
-      data_ref.residual.coeffRef(i) = - dtau * s.f[i].coeff(2) + data_ref.slack.coeff(i);
+      data_ref.residual.coeffRef(i) = - s.f[i].coeff(2) + data_ref.slack.coeff(i);
       data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
     }
   }
@@ -134,7 +134,7 @@ void ContactNormalForceTest::testCondenseSlackAndDual(Robot& robot, const Contac
   ConstraintComponentData data(limit.dimc());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
-  limit.setSlackAndDual(robot, data, dtau, s);
+  limit.setSlackAndDual(robot, data, s);
   ConstraintComponentData data_ref = data;
   SplitKKTMatrix kkt_mat(robot);
   kkt_mat.setContactStatus(contact_status);
@@ -148,7 +148,7 @@ void ContactNormalForceTest::testCondenseSlackAndDual(Robot& robot, const Contac
   int dimf_stack = 0;
   for (int i=0; i<contact_status.maxPointContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
-      data_ref.residual.coeffRef(i) = - dtau * s.f[i].coeff(2) + data_ref.slack.coeff(i);
+      data_ref.residual.coeffRef(i) = - s.f[i].coeff(2) + data_ref.slack.coeff(i);
       data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
       dimf_stack += 3;
     }
@@ -160,7 +160,7 @@ void ContactNormalForceTest::testCondenseSlackAndDual(Robot& robot, const Contac
           -= dtau * (data_ref.dual.coeff(i)*data_ref.residual.coeff(i)-data_ref.duality.coeff(i)) 
                   / data_ref.slack.coeff(i);
       kkt_mat_ref.Qff().diagonal().segment<3>(dimf_stack).coeffRef(2)
-          += dtau * dtau * data_ref.dual.coeff(i) / data_ref.slack.coeff(i);
+          += dtau * data_ref.dual.coeff(i) / data_ref.slack.coeff(i);
       dimf_stack += 3;
     }
   }
@@ -174,16 +174,16 @@ void ContactNormalForceTest::testComputeSlackAndDualDirection(Robot& robot, cons
   ConstraintComponentData data(limit.dimc());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
-  limit.setSlackAndDual(robot, data, dtau, s);
+  limit.setSlackAndDual(robot, data, s);
   data.residual.setRandom();
   data.duality.setRandom();
   ConstraintComponentData data_ref = data;
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
-  limit.computeSlackAndDualDirection(robot, data, dtau, s, d);
+  limit.computeSlackAndDualDirection(robot, data, s, d);
   int dimf_stack = 0;
   for (int i=0; i<contact_status.maxPointContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
-      data_ref.dslack.coeffRef(i) = dtau * d.df().segment<3>(dimf_stack).coeff(2) - data_ref.residual.coeff(i);
+      data_ref.dslack.coeffRef(i) = d.df().segment<3>(dimf_stack).coeff(2) - data_ref.residual.coeff(i);
       data_ref.ddual.coeffRef(i) = - (data_ref.dual.coeff(i)*data_ref.dslack.coeff(i)+data_ref.duality.coeff(i))
                                       / data_ref.slack.coeff(i);
       dimf_stack += 3;

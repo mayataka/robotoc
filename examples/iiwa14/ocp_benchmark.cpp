@@ -23,12 +23,15 @@ void BenchmarkWithoutContacts() {
   srand((unsigned int) time(0));
   const std::string urdf_file_name = "../urdf/iiwa14.urdf";
   idocp::Robot robot(urdf_file_name);
+  robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 200));
   auto cost = std::make_shared<idocp::CostFunction>();
   auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
+  joint_cost->set_q_ref(Eigen::VectorXd::Constant(robot.dimv(), 5));
+  joint_cost->set_v_ref(Eigen::VectorXd::Constant(robot.dimv(), 9));
   joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   joint_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
-  joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
-  joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
+  joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
+  joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
   joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
   cost->push_back(joint_cost);
@@ -38,12 +41,13 @@ void BenchmarkWithoutContacts() {
   const int N = 20;
   const int num_proc = 4;
   const double t = 0;
-  const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
-  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  const Eigen::VectorXd q = Eigen::VectorXd::Constant(robot.dimq(), -2);
+  const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
   idocp::OCPBenchmarker<idocp::OCPSolver> ocp_benchmarker("OCP for iiwa14 without contacts",
                                                           robot, cost, constraints, T, N, 0, num_proc);
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
-  ocp_benchmarker.testConvergence(t, q, v, 20, false);
+  ocp_benchmarker.testConvergence(t, q, v, 50, false);
+  ocp_benchmarker.getSolverHandle()->printSolution();
   // ocp_benchmarker.testCPUTime(t, q, v, 10000);
   // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for iiwa14 without contacts",
   //                                                           robot, cost, constraints, T, N, num_proc);

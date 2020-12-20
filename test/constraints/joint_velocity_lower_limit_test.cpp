@@ -66,8 +66,8 @@ void JointVelocityLowerLimitTest::testSetSlackAndDual(Robot& robot) const {
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   const Eigen::VectorXd vmin = - robot.jointVelocityLimit();
-  limit.setSlackAndDual(robot, data, dtau, s);
-  data_ref.slack = dtau * (-vmin+s.v.tail(dimc));
+  limit.setSlackAndDual(robot, data, s);
+  data_ref.slack = -vmin + s.v.tail(dimc);
   pdipm::SetSlackAndDualPositive(barrier, data_ref);
   EXPECT_TRUE(data.slack.isApprox(data_ref.slack));
   EXPECT_TRUE(data.dual.isApprox(data_ref.dual));
@@ -79,7 +79,7 @@ void JointVelocityLowerLimitTest::testAugmentDualResidual(Robot& robot) const {
   ConstraintComponentData data(limit.dimc());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
-  limit.setSlackAndDual(robot, data, dtau, s);
+  limit.setSlackAndDual(robot, data, s);
   ConstraintComponentData data_ref = data;
   SplitKKTResidual kkt_res(robot);
   kkt_res.lv().setRandom();
@@ -99,8 +99,8 @@ void JointVelocityLowerLimitTest::testComputePrimalAndDualResidual(Robot& robot)
   data.slack.setRandom();
   data.dual.setRandom();
   ConstraintComponentData data_ref = data;
-  limit.computePrimalAndDualResidual(robot, data, dtau, s);
-  data_ref.residual = dtau * (- s.v.tail(dimc) + vmin) + data_ref.slack;
+  limit.computePrimalAndDualResidual(robot, data, s);
+  data_ref.residual = - s.v.tail(dimc) + vmin + data_ref.slack;
   pdipm::ComputeDuality(barrier, data_ref);
   EXPECT_TRUE(data_ref.residual.isApprox(data.residual));
   EXPECT_TRUE(data_ref.duality.isApprox(data.duality));
@@ -113,7 +113,7 @@ void JointVelocityLowerLimitTest::testCondenseSlackAndDual(Robot& robot) const {
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   const Eigen::VectorXd vmin = - robot.jointVelocityLimit();
-  limit.setSlackAndDual(robot, data, dtau, s);
+  limit.setSlackAndDual(robot, data, s);
   ConstraintComponentData data_ref = data;
   SplitKKTMatrix kkt_mat(robot);
   kkt_mat.Qvv().setRandom();
@@ -122,13 +122,13 @@ void JointVelocityLowerLimitTest::testCondenseSlackAndDual(Robot& robot) const {
   SplitKKTMatrix kkt_mat_ref = kkt_mat;
   SplitKKTResidual kkt_res_ref = kkt_res;
   limit.condenseSlackAndDual(robot, data, dtau, s, kkt_mat, kkt_res);
-  data_ref.residual = dtau * (- s.v.tail(dimc) + vmin) + data_ref.slack;
+  data_ref.residual = - s.v.tail(dimc) + vmin + data_ref.slack;
   pdipm::ComputeDuality(barrier, data_ref);
   kkt_res_ref.lv().tail(dimc).array() 
       -= dtau * (data_ref.dual.array()*data_ref.residual.array()-data_ref.duality.array()) 
                / data_ref.slack.array();
   kkt_mat_ref.Qvv().diagonal().tail(dimc).array() 
-      += dtau * dtau * data_ref.dual.array() / data_ref.slack.array();
+      += dtau * data_ref.dual.array() / data_ref.slack.array();
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 }
@@ -140,13 +140,13 @@ void JointVelocityLowerLimitTest::testComputeSlackAndDualDirection(Robot& robot)
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   const Eigen::VectorXd vmin = - robot.jointVelocityLimit();
-  limit.setSlackAndDual(robot, data, dtau, s);
+  limit.setSlackAndDual(robot, data, s);
   data.residual.setRandom();
   data.duality.setRandom();
   ConstraintComponentData data_ref = data;
   const SplitDirection d = SplitDirection::Random(robot);
-  limit.computeSlackAndDualDirection(robot, data, dtau, s, d);
-  data_ref.dslack = dtau * d.dv().tail(dimc) - data_ref.residual;
+  limit.computeSlackAndDualDirection(robot, data, s, d);
+  data_ref.dslack = d.dv().tail(dimc) - data_ref.residual;
   pdipm::ComputeDualDirection(data_ref);
   EXPECT_TRUE(data.dslack.isApprox(data_ref.dslack));
   EXPECT_TRUE(data.ddual.isApprox(data_ref.ddual));

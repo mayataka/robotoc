@@ -99,7 +99,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   constraint_factorization.setConstraintStatus(contact_sequence);
   riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
   riccati_recursion.backwardRiccatiRecursion(factorizer, ocp.discrete(), kkt_matrix, kkt_residual, factorization);
-  if (ocp.discrete().existImpulse()) {
+  if (ocp.discrete().existStateConstraint()) {
     riccati_recursion.forwardStateConstraintFactorization(
         factorizer, ocp.discrete(), kkt_matrix, kkt_residual, factorization);
     riccati_recursion.backwardStateConstraintFactorization(
@@ -113,7 +113,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   robot.subtractConfiguration(q, s[0].q, d_ref[0].dq());
   d_ref[0].dv() = v - s[0].v;
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
-  if (ocp.discrete().existImpulse()) {
+  if (ocp.discrete().existStateConstraint()) {
     constraint_factorizer.computeLagrangeMultiplierDirection(
         ocp.discrete(), factorization, constraint_factorization, d);
     constraint_factorizer.aggregateLagrangeMultiplierDirection(
@@ -132,7 +132,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   const double primal_step_size = direction_calculator.maxPrimalStepSize();
   const double dual_step_size = direction_calculator.maxDualStepSize();
   const Eigen::VectorXd dx0 = d_ref[0].dx();
-  const bool exist_state_constraint = ocp.discrete().existImpulse();
+  const bool exist_state_constraint = ocp.discrete().existStateConstraint();
   double primal_step_size_ref = 1;
   double dual_step_size_ref = 1;
   auto robot_ref = robot;

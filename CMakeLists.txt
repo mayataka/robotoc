@@ -38,6 +38,7 @@ add_library(
   src/cost/time_varying_configuration_cost.cpp
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
+  src/cost/time_varying_task_space_3d_cost.cpp
   src/cost/impulse_cost_function.cpp
   src/cost/impulse_cost_function_component_base.cpp
   src/cost/joint_space_impulse_cost.cpp

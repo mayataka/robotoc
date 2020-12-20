@@ -44,7 +44,6 @@ public:
                   const SplitSolution& s) const override;
 
   void setSlackAndDual(Robot& robot, ConstraintComponentData& data, 
-                       const double dtau, 
                        const SplitSolution& s) const override;
 
   void augmentDualResidual(Robot& robot, ConstraintComponentData& data, 
@@ -57,11 +56,10 @@ public:
                             SplitKKTResidual& kkt_residual) const override;
 
   void computeSlackAndDualDirection(Robot& robot, ConstraintComponentData& data, 
-                                    const double dtau, const SplitSolution& s,
+                                    const SplitSolution& s,
                                     const SplitDirection& d) const override; 
 
   void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
-                                    const double dtau, 
                                     const SplitSolution& s) const override;
 
   int dimc() const override;

@@ -47,11 +47,9 @@ bool ContactNormalForce::isFeasible(Robot& robot, ConstraintComponentData& data,
 
 
 void ContactNormalForce::setSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  assert(dtau > 0);
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
   for (int i=0; i<robot.maxPointContacts(); ++i) {
-    data.slack.coeffRef(i) = dtau * s.f[i].coeff(2);
+    data.slack.coeffRef(i) = s.f[i].coeff(2);
   }
   setSlackAndDualPositive(data);
 }
@@ -81,8 +79,8 @@ void ContactNormalForce::condenseSlackAndDual(
     if (s.isContactActive(i)) {
       const double dual_per_slack = data.dual.coeff(i) / data.slack.coeff(i);
       kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack+2) 
-          += dtau * dtau * data.dual.coeff(i) / data.slack.coeff(i);
-      data.residual.coeffRef(i) = - dtau * s.f[i].coeff(2) + data.slack.coeff(i);
+          += dtau * data.dual.coeff(i) / data.slack.coeff(i);
+      data.residual.coeffRef(i) = - s.f[i].coeff(2) + data.slack.coeff(i);
       data.duality.coeffRef(i) = computeDuality(data.slack.coeff(i), 
                                                 data.dual.coeff(i));
       kkt_residual.lf().coeffRef(dimf_stack+2) 
@@ -95,13 +93,13 @@ void ContactNormalForce::condenseSlackAndDual(
 
 
 void ContactNormalForce::computeSlackAndDualDirection(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, const SplitDirection& d) const {
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
+    const SplitDirection& d) const {
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       data.dslack.coeffRef(i) 
-          = dtau * d.df().coeff(dimf_stack+2) - data.residual.coeff(i);
+          = d.df().coeff(dimf_stack+2) - data.residual.coeff(i);
       data.ddual.coeffRef(i) = computeDualDirection(data.slack.coeff(i), 
                                                     data.dual.coeff(i), 
                                                     data.dslack.coeff(i), 
@@ -120,11 +118,10 @@ void ContactNormalForce::computeSlackAndDualDirection(
 
 
 void ContactNormalForce::computePrimalAndDualResidual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
-      data.residual.coeffRef(i) = - dtau * s.f[i].coeff(2) + data.slack.coeff(i);
+      data.residual.coeffRef(i) = - s.f[i].coeff(2) + data.slack.coeff(i);
       data.duality.coeffRef(i) = computeDuality(data.slack.coeff(i), 
                                                 data.dual.coeff(i));
     }

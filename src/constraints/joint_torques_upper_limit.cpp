@@ -48,10 +48,8 @@ bool JointTorquesUpperLimit::isFeasible(Robot& robot,
 
 
 void JointTorquesUpperLimit::setSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  assert(dtau > 0);
-  data.slack = dtau * (umax_-s.u);
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  data.slack = umax_ - s.u;
   setSlackAndDualPositive(data);
 }
 
@@ -59,6 +57,7 @@ void JointTorquesUpperLimit::setSlackAndDual(
 void JointTorquesUpperLimit::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  assert(dtau > 0);
   kkt_residual.lu().noalias() += dtau * data.dual;
 }
 
@@ -67,9 +66,10 @@ void JointTorquesUpperLimit::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
+  assert(dtau > 0);
   kkt_matrix.Quu().diagonal().array()
-      += dtau * dtau * data.dual.array() / data.slack.array();
-  computePrimalAndDualResidual(robot, data, dtau, s);
+      += dtau * data.dual.array() / data.slack.array();
+  computePrimalAndDualResidual(robot, data, s);
   kkt_residual.lu().array() 
       += dtau * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
@@ -77,17 +77,16 @@ void JointTorquesUpperLimit::condenseSlackAndDual(
 
 
 void JointTorquesUpperLimit::computeSlackAndDualDirection(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, const SplitDirection& d) const {
-  data.dslack = - dtau * d.du() - data.residual;
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
+    const SplitDirection& d) const {
+  data.dslack = - d.du() - data.residual;
   computeDualDirection(data);
 }
 
 
 void JointTorquesUpperLimit::computePrimalAndDualResidual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  data.residual = dtau * (s.u-umax_) + data.slack;
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  data.residual = s.u - umax_ + data.slack;
   computeDuality(data);
 }
 

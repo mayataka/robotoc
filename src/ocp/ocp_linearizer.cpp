@@ -49,12 +49,10 @@ void OCPLinearizer::initConstraints(OCP& ocp, std::vector<Robot>& robots,
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
-      ocp[i].initConstraints(robots[omp_get_thread_num()], i, 
-                             ocp.discrete().dtau(i), s[i]);
+      ocp[i].initConstraints(robots[omp_get_thread_num()], i, s[i]);
     }
     else if (i == N_) {
-      ocp.terminal.initConstraints(robots[omp_get_thread_num()], N_, 
-                                   ocp.discrete().dtau(N_), s[N_]);
+      ocp.terminal.initConstraints(robots[omp_get_thread_num()], N_, s[N_]);
     }
     else if (i < N_+1+N_impulse) {
       const int impulse_index  = i - (N_+1);
@@ -63,15 +61,13 @@ void OCPLinearizer::initConstraints(OCP& ocp, std::vector<Robot>& robots,
     }
     else if (i < N_+1+2*N_impulse) {
       const int impulse_index  = i - (N_+1+N_impulse);
-      ocp.aux[impulse_index].initConstraints(
-          robots[omp_get_thread_num()], 0, 
-          ocp.discrete().dtau_aux(impulse_index), s.aux[impulse_index]);
+      ocp.aux[impulse_index].initConstraints(robots[omp_get_thread_num()], 0, 
+                                             s.aux[impulse_index]);
     }
     else {
       const int lift_index = i - (N_+1+2*N_impulse);
-      ocp.lift[lift_index].initConstraints(
-          robots[omp_get_thread_num()], 0, 
-          ocp.discrete().dtau_lift(lift_index), s.lift[lift_index]);
+      ocp.lift[lift_index].initConstraints(robots[omp_get_thread_num()], 0, 
+                                           s.lift[lift_index]);
     }
   }
 }
@@ -139,6 +135,7 @@ double OCPLinearizer::KKTError(const OCP& ocp,
               ocp.discrete().dtau_lift(lift_index));
     }
   }
+  std::cout << "KKT error = " << kkt_error_.head(N_all).transpose() << std::endl;
   return std::sqrt(kkt_error_.head(N_all).sum());
 }
 

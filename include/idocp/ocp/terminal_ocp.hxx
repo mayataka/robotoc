@@ -41,10 +41,8 @@ inline bool TerminalOCP::isFeasible(Robot& robot, const SplitSolution& s) {
 
 
 inline void TerminalOCP::initConstraints(Robot& robot, const int time_step, 
-                                         const double dtau, 
                                          const SplitSolution& s) {
   assert(time_step >= 0);
-  assert(dtau > 0);
   // TODO: add inequality constraints at the terminal OCP.
 }
 

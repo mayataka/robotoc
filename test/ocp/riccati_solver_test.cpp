@@ -117,7 +117,7 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   riccati_recursion.forwardRiccatiRecursionParallel(riccati_factorizer, ocp_ref.discrete(),
                                                     kkt_matrix_ref, kkt_residual_ref,
                                                     constraint_factorization);
-  if (ocp_ref.discrete().existImpulse()) {
+  if (ocp_ref.discrete().existStateConstraint()) {
     riccati_recursion.forwardStateConstraintFactorization(
         riccati_factorizer, ocp_ref.discrete(), kkt_matrix_ref, kkt_residual_ref, 
         riccati_factorization);
@@ -126,7 +126,7 @@ void RiccatiSolverTest::test(const Robot& robot) const {
         constraint_factorization);
   }
   direction_calculator.computeInitialStateDirection(robots_ref, q, v, s, d_ref);
-  if (ocp_ref.discrete().existImpulse()) {
+  if (ocp_ref.discrete().existStateConstraint()) {
     constraint_factorizer.computeLagrangeMultiplierDirection(
         ocp_ref.discrete(), riccati_factorization, constraint_factorization, d_ref);
     constraint_factorizer.aggregateLagrangeMultiplierDirection(

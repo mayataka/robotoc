@@ -93,7 +93,7 @@ void RiccatiRecursion::forwardRiccatiRecursionParallel(
   const int N_impulse = ocp_discretizer.numImpulseStages();
   const int N_lift = ocp_discretizer.numLiftStages();
   const int N_all = N_ + 2*N_impulse + N_lift;
-  const bool exist_state_constraint = ocp_discretizer.existImpulse();
+  const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
   #pragma omp parallel for num_threads(nproc_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
@@ -133,7 +133,7 @@ void RiccatiRecursion::forwardStateConstraintFactorization(
     const OCPDiscretizer& ocp_discretizer, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, 
     RiccatiFactorization& riccati_factorization) {
-  const bool exist_state_constraint = ocp_discretizer.existImpulse();
+  const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
   riccati_factorizer[0].forwardStateConstraintFactorizationInitial(
       riccati_factorization[0]);
   for (int i=0; i<N_; ++i) {
@@ -231,7 +231,7 @@ void RiccatiRecursion::forwardRiccatiRecursion(
     const OCPDiscretizer& ocp_discretizer, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, 
     const RiccatiFactorization& riccati_factorization, Direction& d) {
-  const bool exist_state_constraint = ocp_discretizer.existImpulse();
+  const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
   for (int i=0; i<N_; ++i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
       const int impulse_idx = ocp_discretizer.impulseIndex(i);
