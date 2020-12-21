@@ -16,7 +16,7 @@ namespace idocp {
 
 class ContactDynamics {
 public:
-  ContactDynamics(const Robot& robot);
+  ContactDynamics(const Robot& robot, const double baumgarte_time_step);
 
   ContactDynamics();
 
@@ -42,7 +42,7 @@ public:
 
   static void linearizeContactConstraint(Robot& robot, 
                                          const ContactStatus& contact_status, 
-                                         const double dtau, 
+                                         const double baumgarte_time_step, 
                                          ContactDynamicsData& data);
 
   void condenseContactDynamics(Robot& robot, 
@@ -89,6 +89,7 @@ public:
 private:
   ContactDynamicsData data_;
   bool has_floating_base_, has_active_contacts_;
+  double baumgarte_time_step_;
   static constexpr int kDimFloatingBase = 6;
 
   void setContactStatus(const ContactStatus& contact_status);

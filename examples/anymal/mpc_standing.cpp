@@ -29,59 +29,29 @@
 #include "idocp/utils/quadruped_simulator.hpp"
 
 
-class MPCCallbackTrotting {
+class MPCCallbackStanding {
 public:
-  MPCCallbackTrotting(const idocp::Robot& robot)
+  MPCCallbackStanding(const idocp::Robot& robot)
     : robot_(robot),
-      contact_points_init_(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
-      contact_points_even_(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
-      contact_points_odd_(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
-      contact_status_init_(robot.createContactStatus()),
-      contact_status_even_(robot.createContactStatus()),
-      contact_status_odd_(robot.createContactStatus()),
-      steps_(0),
-      step_time_(),
-      contact_frames_({14, 24, 34, 44}) {
-    contact_status_even_.activateContacts({0, 1});
-    contact_status_odd_.activateContacts({2, 3});
-  } 
+      contact_points_(robot.maxPointContacts(), Eigen::Vector3d::Zero()) {} 
 
   template <typename OCPSolverType>
   void init(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-            idocp::MPC<OCPSolverType>& mpc) {
-    step_time_.push_back(t+t_start);
-  }
+            idocp::MPC<OCPSolverType>& mpc) {}
 
   template <typename OCPSolverType>
   void callback(const double t, const Eigen::VectorXd& q, 
                 const Eigen::VectorXd& v, idocp::MPC<OCPSolverType>& mpc) {
     robot_.updateFrameKinematics(q);
-    robot_.getContactPoints(contact_points_even_);
-    mpc.getSolverHandle()->setContactPoints(0, contact_points_even_);
-    if (t <= 0.37) {
-      mpc.getSolverHandle()->setContactPoints(1, contact_points_even_);
-    }
-    if (0.37 <= t) {
-      mpc.getSolverHandle()->popFrontDiscreteEvent();
-    }
-    mpc.getSolverHandle()->warmStartSolution(t-0.025, t);
-    mpc.computeKKTResidual(t, q, v);
-    std::cout << "kkt error at time " << t << ": " << mpc.KKTError() << std::endl;
+    robot_.getContactPoints(contact_points_);
+    mpc.getSolverHandle()->setContactPoints(0, contact_points_);
   }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   idocp::Robot robot_;
-  std::vector<Eigen::Vector3d> contact_points_init_, contact_points_even_, contact_points_odd_;
-  idocp::ContactStatus contact_status_init_, contact_status_even_, contact_status_odd_;
-  int steps_;
-  std::deque<double> step_time_;
-  static constexpr double kPeriod = 0.5;
-  static constexpr double kStepLength = 0.15;
-  static constexpr double kT = 0.51;
-  static constexpr double t_start = 0.5;
-  std::vector<int> contact_frames_;
+  std::vector<Eigen::Vector3d> contact_points_;
 };
 
 
@@ -244,9 +214,9 @@ int main(int argc, char *argv[]) {
 
   auto contact_status_next = robot.createContactStatus();
   contact_status_next.setContactPoints(contact_points);
-  contact_status_next.activateContacts({1, 2});
-  constexpr double switchig_time = 0.37;
-  mpc.getSolverHandle()->pushBackContactStatus(contact_status_next, switchig_time, 0);
+  contact_status_next.activateContacts({1, 2, 3});
+  // constexpr double switchig_time = 0.37;
+  // mpc.getSolverHandle()->pushBackContactStatus(contact_status_next, switchig_time, 0);
 
   mpc.initializeSolution(t, q, v, 100);
   mpc.computeKKTResidual(t, q, v);
@@ -254,9 +224,9 @@ int main(int argc, char *argv[]) {
   const std::string path_to_raisim_activation_key = argv[1];
   idocp::QuadrupedSimulator<idocp::OCPSolver> simulator(path_to_raisim_activation_key, 
                                                         path_to_urdf_for_raisim, 
-                                                        "../sim_result", "trotting");
+                                                        "../sim_result", "standing");
   constexpr bool visualization = true;
   constexpr bool video_recording = false;
-  simulator.run<MPCCallbackTrotting>(mpc, 2, 0.0025, 0, q, v, visualization, video_recording);
+  simulator.run<MPCCallbackStanding>(mpc, 2, 0.0025, 0, q, v, visualization, video_recording);
   return 0;
 }

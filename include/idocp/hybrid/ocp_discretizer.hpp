@@ -10,7 +10,8 @@ namespace idocp {
 
 class OCPDiscretizer {
 public:
-  OCPDiscretizer(const double T, const int N, const int max_events);
+  OCPDiscretizer(const double T, const int N, const int max_events, 
+                 const double sampling_period=0);
 
   ///
   /// @brief Default constructor. 
@@ -42,6 +43,7 @@ public:
   ///
   OCPDiscretizer& operator=(OCPDiscretizer&&) noexcept = default;
 
+  template <bool UseContinuationMethod=false>
   void discretizeOCP(const ContactSequence& contact_sequence, const double t);
 
   int N() const;
@@ -52,9 +54,9 @@ public:
 
   int contactPhase(const int time_stage) const;
 
-  int impulseIndex(const int time_stage_before_impulse) const;
+  int impulseIndexAfterTimeStage(const int time_stage) const;
 
-  int liftIndex(const int time_stage_before_lift) const;
+  int liftIndexAfterTimeStage(const int time_stage) const;
 
   int timeStageBeforeImpulse(const int impulse_index) const;
 
@@ -80,8 +82,6 @@ public:
 
   bool isTimeStageAfterLift(const int time_stage) const;
 
-  bool isTimeStageValid(const int time_stage) const;
-
   bool existStateConstraint() const;
 
   double t(const int time_stage) const;
@@ -97,7 +97,7 @@ public:
   double dtau_lift(const int lift_index) const;
 
 private:
-  double T_;
+  double T_, sampling_period_;
   int N_, max_events_, num_impulse_stages_, num_lift_stages_;
   std::vector<int> contact_phase_index_from_time_stage_, 
                    impulse_index_from_time_stage_, lift_index_from_time_stage_, 
@@ -105,7 +105,7 @@ private:
   std::vector<bool> is_time_stage_before_impulse_, is_time_stage_before_lift_;
   std::vector<double> t_, t_impulse_, t_lift_, dtau_, dtau_aux_, dtau_lift_;
 
-  static constexpr double kMinDiscretizationSize
+  static constexpr double kMindtau
       = std::sqrt(std::numeric_limits<double>::epsilon());
 
   void countImpulseEvents(const ContactSequence& contact_sequence, 
@@ -117,6 +117,7 @@ private:
 
   void countIsTimeStageBeforeEvents(const ContactSequence& contact_sequence);
 
+  template <bool UseContinuationMethod>
   void countTime(const ContactSequence& contact_sequence, const double t);
 
 };

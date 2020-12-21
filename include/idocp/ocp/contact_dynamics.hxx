@@ -3,21 +3,35 @@
 
 #include "idocp/ocp/contact_dynamics.hpp"
 
-#include <assert.h>
+#include <stdexcept>
+#include <cassert>
 
 namespace idocp {
 
-inline ContactDynamics::ContactDynamics(const Robot& robot) 
+inline ContactDynamics::ContactDynamics(const Robot& robot, 
+                                        const double baumgarte_time_step) 
   : data_(robot),
     has_floating_base_(robot.hasFloatingBase()),
-    has_active_contacts_(false) {
+    has_active_contacts_(false),
+    baumgarte_time_step_(baumgarte_time_step) {
+  try {
+    if (baumgarte_time_step <= 0) {
+      throw std::out_of_range(  
+          "invalid value: baumgarte_time_step must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
 inline ContactDynamics::ContactDynamics() 
   : data_(),
     has_floating_base_(false),
-    has_active_contacts_(false) {
+    has_active_contacts_(false),
+    baumgarte_time_step_(0) {
 }
 
 
@@ -31,7 +45,7 @@ inline void ContactDynamics::linearizeContactDynamics(
   assert(dtau > 0);
   setContactStatus(contact_status);
   linearizeInverseDynamics(robot, contact_status, s, data_);
-  linearizeContactConstraint(robot, contact_status, dtau, data_);
+  linearizeContactConstraint(robot, contact_status, baumgarte_time_step_, data_);
   // augment inverse dynamics constraint
   kkt_residual.lq().noalias() += dtau * data_.dIDdq().transpose() * s.beta;
   kkt_residual.lv().noalias() += dtau * data_.dIDdv().transpose() * s.beta;
@@ -80,13 +94,13 @@ inline void ContactDynamics::linearizeInverseDynamics(
 
 
 inline void ContactDynamics::linearizeContactConstraint(
-    Robot& robot, const ContactStatus& contact_status, const double dtau, 
-    ContactDynamicsData& data) {
-  assert(dtau > 0);
-  robot.computeBaumgarteResidual(contact_status, dtau, 
+    Robot& robot, const ContactStatus& contact_status, 
+    const double baumgarte_time_step, ContactDynamicsData& data) {
+  assert(baumgarte_time_step > 0);
+  robot.computeBaumgarteResidual(contact_status, baumgarte_time_step, 
                                  contact_status.contactPoints(), data.C());
-  robot.computeBaumgarteDerivatives(contact_status, dtau, data.dCdq(), 
-                                    data.dCdv(), data.dCda());
+  robot.computeBaumgarteDerivatives(contact_status, baumgarte_time_step, 
+                                    data.dCdq(), data.dCdv(), data.dCda());
 }
 
 
@@ -240,7 +254,7 @@ inline void ContactDynamics::computeContactDynamicsResidual(
   else {
     data_.ID_full().noalias() -= s.u;
   }
-  robot.computeBaumgarteResidual(contact_status, dtau, 
+  robot.computeBaumgarteResidual(contact_status, baumgarte_time_step_, 
                                  contact_status.contactPoints(), data_.C());
 }
 

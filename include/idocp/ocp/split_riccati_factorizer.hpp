@@ -13,6 +13,9 @@
 #include "idocp/ocp/backward_riccati_recursion_factorizer.hpp"
 #include "idocp/ocp/forward_riccati_recursion_factorizer.hpp"
 
+#include <limits>
+#include <cmath>
+
 
 namespace idocp {
 
@@ -183,9 +186,11 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  bool has_floating_base_, exist_state_constraint;
+  bool has_floating_base_, is_dtau_sufficiently_positive_;
   int dimv_, dimu_;
   static constexpr int kDimFloatingBase = 6;
+  static constexpr double kMindtau
+      = std::sqrt(std::numeric_limits<double>::epsilon());
   Eigen::LLT<Eigen::MatrixXd> llt_;
   LQRStateFeedbackPolicy lqr_policy_;
   BackwardRiccatiRecursionFactorizer backward_recursion_;

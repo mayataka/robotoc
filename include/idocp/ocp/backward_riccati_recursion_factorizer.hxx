@@ -36,14 +36,15 @@ inline BackwardRiccatiRecursionFactorizer::BackwardRiccatiRecursionFactorizer()
 }
 
 
-inline BackwardRiccatiRecursionFactorizer::~BackwardRiccatiRecursionFactorizer() {
+inline BackwardRiccatiRecursionFactorizer::
+~BackwardRiccatiRecursionFactorizer() {
 }
 
 
 inline void BackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
     const SplitRiccatiFactorization& riccati_next, const double dtau, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   if (has_floating_base_) {
     AtPqq_.noalias() = kkt_matrix.Fqq().transpose() * riccati_next.Pqq;
     AtPqq_.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.Pqv.transpose();
@@ -79,7 +80,7 @@ inline void BackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
   // Factorize H
   kkt_matrix.Qqu().noalias() += AtPqv_ * kkt_matrix.Fvu();
   kkt_matrix.Qvu().noalias() += AtPvv_ * kkt_matrix.Fvu();
-  
+  // Factorize G
   kkt_matrix.Quu().noalias() += BtPv_ * kkt_matrix.Fvu();
   // Factorize vector term
   kkt_residual.lu().noalias() += BtPq_ * kkt_residual.Fq();
@@ -93,7 +94,7 @@ inline void BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const LQRStateFeedbackPolicy& lqr_policy, const double dtau, 
     SplitRiccatiFactorization& riccati) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   riccati.Pqq = kkt_matrix.Qqq();
   riccati.Pqv = kkt_matrix.Qqv();
   riccati.Pvv = kkt_matrix.Qvv();

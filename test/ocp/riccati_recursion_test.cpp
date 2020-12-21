@@ -126,7 +126,7 @@ void RiccatiRecursionTest::testBackwardRiccatiRecursion(const Robot& robot) cons
   riccati_recursion.backwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
   for (int i=N-1; i>=0; --i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = ocp_discretizer.impulseIndex(i);
+      const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
       const double dt = ocp_discretizer.dtau(i);
       const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
       ASSERT_TRUE(dt >= 0);
@@ -144,7 +144,7 @@ void RiccatiRecursionTest::testBackwardRiccatiRecursion(const Robot& robot) cons
           kkt_residual_ref[i], factorization_ref[i]);
     }
     else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp_discretizer.liftIndex(i);
+      const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
       const double dt = ocp_discretizer.dtau(i);
       const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
       ASSERT_TRUE(dt >= 0);
@@ -195,7 +195,7 @@ void RiccatiRecursionTest::testForwardRiccatiRecursionParallel(const Robot& robo
   const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
   for (int i=0; i<N; ++i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = ocp_discretizer.impulseIndex(i);
+      const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
       constraint_factorization_ref.Eq(impulse_index) = kkt_matrix_ref.impulse[impulse_index].Pq();
       constraint_factorization_ref.e(impulse_index) = kkt_residual_ref.impulse[impulse_index].P();
       constraint_factorization_ref.T_impulse(impulse_index, impulse_index).topRows(robot.dimv())
@@ -209,7 +209,7 @@ void RiccatiRecursionTest::testForwardRiccatiRecursionParallel(const Robot& robo
           exist_state_constraint);
     }
     else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp_discretizer.liftIndex(i);
+      const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
       factorizer_ref[i].forwardRiccatiRecursionParallel(
           kkt_matrix_ref[i], kkt_residual_ref[i], 
           exist_state_constraint);
@@ -252,7 +252,7 @@ void RiccatiRecursionTest::testForwardStateConstraintFactorization(const Robot& 
   const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
   for (int i=0; i<N; ++i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = ocp_discretizer.impulseIndex(i);
+      const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
       const double dt = ocp_discretizer.dtau(i);
       const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
       ASSERT_TRUE(dt >= 0);
@@ -272,7 +272,7 @@ void RiccatiRecursionTest::testForwardStateConstraintFactorization(const Robot& 
           dt_aux, factorization_ref[i+1], exist_state_constraint);
     }
     else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp_discretizer.liftIndex(i);
+      const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
       const double dt = ocp_discretizer.dtau(i);
       const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
       ASSERT_TRUE(dt >= 0);
@@ -345,7 +345,7 @@ void RiccatiRecursionTest::testBackwardStateConstraintFactorization(const Robot&
         constraint_factorization_ref.T(constraint_index, time_stage_before_constraint));
     for (int i=time_stage_before_constraint-1; i>=0; --i) {
       if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-        const int impulse_index = ocp_discretizer.impulseIndex(i);
+        const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
         const double dt = ocp_discretizer.dtau(i);
         const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
         factorizer_ref.aux[impulse_index].backwardStateConstraintFactorization(
@@ -362,7 +362,7 @@ void RiccatiRecursionTest::testBackwardStateConstraintFactorization(const Robot&
             constraint_factorization_ref.T(constraint_index, i));
       }
       else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-        const int lift_index = ocp_discretizer.liftIndex(i);
+        const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
         const double dt = ocp_discretizer.dtau(i);
         const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
         factorizer_ref.lift[lift_index].backwardStateConstraintFactorization(
@@ -424,7 +424,7 @@ void RiccatiRecursionTest::testForwardRiccatiRecursion(const Robot& robot) const
   const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
   for (int i=0; i<N; ++i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = ocp_discretizer.impulseIndex(i);
+      const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
       const double dt = ocp_discretizer.dtau(i);
       const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
       factorizer_ref[i].forwardRiccatiRecursion(
@@ -438,7 +438,7 @@ void RiccatiRecursionTest::testForwardRiccatiRecursion(const Robot& robot) const
           factorization_ref[i+1], d_ref.aux[impulse_index], dt_aux, d_ref[i+1], exist_state_constraint);
     }
     else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp_discretizer.liftIndex(i);
+      const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
       const double dt = ocp_discretizer.dtau(i);
       const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
       factorizer_ref[i].forwardRiccatiRecursion(

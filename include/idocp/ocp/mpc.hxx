@@ -52,11 +52,9 @@ inline void MPC<OCPSolver>::initializeSolution(const double t,
 
 
 template <typename OCPSolverType>
-inline void MPC<OCPSolverType>::updateSolution(const double t, 
-                                         const Eigen::VectorXd& q, 
-                                         const Eigen::VectorXd& v,
-                                         const int max_iter,
-                                         const double KKT_tol) {
+inline void MPC<OCPSolverType>::updateSolution(
+    const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v,
+    const int max_iter, const double KKT_tol) {
   for (int i=0; i<max_iter; ++i) {
     ocp_solver_.updateSolution(t, q, v, false);
     if (KKT_tol > 0) {
@@ -66,6 +64,15 @@ inline void MPC<OCPSolverType>::updateSolution(const double t,
       }
     }
   }
+}
+
+
+template <typename OCPSolverType>
+inline void MPC<OCPSolverType>::updateSolutionWithContinuationMethod(
+    const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+    const double sampling_period) {
+  assert(sampling_period > 0);
+  ocp_solver_.updateSolution(t, q, v, false);
 }
 
 

@@ -141,8 +141,8 @@ int main () {
   ocp_benchmarker.setInitialGuessSolution(t, q, v);
   ocp_benchmarker.testConvergence(t, q, v, 50, false);
   ocp_benchmarker.testConvergence(t, q, v, 10, false);
-  const double t_next = t + 0.025;
-  ocp_benchmarker.getSolverHandle()->warmStartSolution(t, t_next);
+  const double t_next = t + 0.001;
+  // ocp_benchmarker.getSolverHandle()->warmStartSolution(t, t_next);
   ocp_benchmarker.testConvergence(t_next, q, v, 10, false);
   // ocp_benchmarker.testCPUTime(t, q, v, 1000);
   // ocp_benchmarker.getSolverHandle()->printSolution("q");

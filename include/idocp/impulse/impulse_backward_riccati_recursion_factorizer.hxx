@@ -5,8 +5,8 @@
 
 namespace idocp {
 
-inline ImpulseBackwardRiccatiRecursionFactorizer::ImpulseBackwardRiccatiRecursionFactorizer(
-    const Robot& robot) 
+inline ImpulseBackwardRiccatiRecursionFactorizer::
+ImpulseBackwardRiccatiRecursionFactorizer(const Robot& robot) 
   : has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()),
     AtPqq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
@@ -16,7 +16,8 @@ inline ImpulseBackwardRiccatiRecursionFactorizer::ImpulseBackwardRiccatiRecursio
 }
 
 
-inline ImpulseBackwardRiccatiRecursionFactorizer::ImpulseBackwardRiccatiRecursionFactorizer() 
+inline ImpulseBackwardRiccatiRecursionFactorizer::
+ImpulseBackwardRiccatiRecursionFactorizer() 
   : has_floating_base_(false),
     dimv_(0),
     AtPqq_(),
@@ -26,7 +27,8 @@ inline ImpulseBackwardRiccatiRecursionFactorizer::ImpulseBackwardRiccatiRecursio
 }
 
 
-inline ImpulseBackwardRiccatiRecursionFactorizer::~ImpulseBackwardRiccatiRecursionFactorizer() {
+inline ImpulseBackwardRiccatiRecursionFactorizer::
+~ImpulseBackwardRiccatiRecursionFactorizer() {
 }
 
 
@@ -62,11 +64,11 @@ inline void ImpulseBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
 }
 
 
-inline void ImpulseBackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
-    const SplitRiccatiFactorization& riccati_next, 
-    const ImpulseSplitKKTMatrix& kkt_matrix, 
-    const ImpulseSplitKKTResidual& kkt_residual, 
-    SplitRiccatiFactorization& riccati) {
+inline void ImpulseBackwardRiccatiRecursionFactorizer::
+factorizeRiccatiFactorization(const SplitRiccatiFactorization& riccati_next, 
+                              const ImpulseSplitKKTMatrix& kkt_matrix, 
+                              const ImpulseSplitKKTResidual& kkt_residual, 
+                              SplitRiccatiFactorization& riccati) {
   riccati.Pqq = kkt_matrix.Qqq();
   riccati.Pqv = kkt_matrix.Qqv();
   riccati.Pvv = kkt_matrix.Qvv();

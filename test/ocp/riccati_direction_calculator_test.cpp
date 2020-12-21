@@ -138,7 +138,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   auto robot_ref = robot;
   for (int i=0; i<N; ++i) {
     if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = ocp.discrete().impulseIndex(i);
+      const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
       const double dt = ocp.discrete().dtau(i);
       const double dt_aux = ocp.discrete().dtau_aux(impulse_index);
       ASSERT_TRUE(dt >= 0);
@@ -177,7 +177,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
         dual_step_size_ref = ocp_ref.aux[impulse_index].maxDualStepSize();
     }
     else if (ocp.discrete().isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp.discrete().liftIndex(i);
+      const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
       const double dt = ocp.discrete().dtau(i);
       const double dt_lift = ocp.discrete().dtau_lift(lift_index);
       ASSERT_TRUE(dt >= 0);

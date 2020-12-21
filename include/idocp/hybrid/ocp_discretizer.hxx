@@ -5,12 +5,15 @@
 
 #include <cmath>
 #include <cassert>
+#include <stdexcept>
 
 namespace idocp {
 
 inline OCPDiscretizer::OCPDiscretizer(const double T, const int N, 
-                                      const int max_events) 
+                                      const int max_events, 
+                                      const double sampling_period) 
   : T_(T),
+    sampling_period_(sampling_period),
     N_(N),
     max_events_(max_events),
     num_impulse_stages_(0),
@@ -28,11 +31,22 @@ inline OCPDiscretizer::OCPDiscretizer(const double T, const int N,
     dtau_(N+1, (double)(T/N)),
     dtau_aux_(max_events, 0),
     dtau_lift_(max_events, 0) {
+  try {
+    if (sampling_period < 0) {
+      throw std::out_of_range(
+          "invalid value: sampling_period must be non-negative!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
-inline OCPDiscretizer::OCPDiscretizer() 
+inline OCPDiscretizer::OCPDiscretizer()
   : T_(0),
+    sampling_period_(0),
     N_(0),
     max_events_(0),
     num_impulse_stages_(0),
@@ -57,13 +71,14 @@ inline OCPDiscretizer::~OCPDiscretizer() {
 }
 
 
+template <bool UseContinuationMethod>
 inline void OCPDiscretizer::discretizeOCP(
     const ContactSequence& contact_sequence, const double t) {
   countImpulseEvents(contact_sequence, t);
   countLiftEvents(contact_sequence, t);
   countIsTimeStageBeforeEvents(contact_sequence);
   countContactPhase(contact_sequence);
-  countTime(contact_sequence, t);
+  countTime<UseContinuationMethod>(contact_sequence, t);
 }
 
 
@@ -89,19 +104,18 @@ inline int OCPDiscretizer::contactPhase(const int time_stage) const {
 }
 
 
-inline int OCPDiscretizer::impulseIndex(
-    const int time_stage_before_impulse) const {
-  assert(time_stage_before_impulse >= 0);
-  assert(time_stage_before_impulse <= N_);
-  return impulse_index_from_time_stage_[time_stage_before_impulse];
+inline int OCPDiscretizer::impulseIndexAfterTimeStage(
+    const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage <= N_);
+  return impulse_index_from_time_stage_[time_stage];
 }
 
 
-inline int OCPDiscretizer::liftIndex(
-    const int time_stage_before_lift) const {
-  assert(time_stage_before_lift >= 0);
-  assert(time_stage_before_lift <= N_);
-  return lift_index_from_time_stage_[time_stage_before_lift];
+inline int OCPDiscretizer::liftIndexAfterTimeStage(const int time_stage) const {
+  assert(time_stage >= 0);
+  assert(time_stage <= N_);
+  return lift_index_from_time_stage_[time_stage];
 }
 
 
@@ -180,18 +194,6 @@ inline bool OCPDiscretizer::isTimeStageAfterLift(const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage <= N_);
   return is_time_stage_before_lift_[time_stage-1];
-}
-
-
-inline bool OCPDiscretizer::isTimeStageValid(const int time_stage) const {
-  assert(time_stage >= 0);
-  assert(time_stage <= N_);
-  if (dtau_[time_stage] < kMinDiscretizationSize) {
-    return false;
-  }
-  else {
-    return true;
-  }
 }
 
 
@@ -334,8 +336,30 @@ inline void OCPDiscretizer::countContactPhase(
 }
 
 
-inline void OCPDiscretizer::countTime(const ContactSequence& contact_sequence, 
-                                      const double t) {
+template <>
+inline void OCPDiscretizer::countTime<true>(
+    const ContactSequence& contact_sequence, const double t) {
+  const double dt = T_ / N_;
+  for (int i=0; i<=N_; ++i) {
+    t_[i] = t + i * dt;
+    dtau_[i] = dt;
+  }
+  for (int i=0; i<num_impulse_stages_; ++i) {
+    dtau_[timeStageBeforeImpulse(i)] 
+        = t_impulse_[i] - dt * timeStageBeforeImpulse(i) - sampling_period_;
+    dtau_aux_[i] = dt - dtau_[timeStageBeforeImpulse(i)] + sampling_period_;
+  }
+  for (int i=0; i<num_lift_stages_; ++i) {
+    dtau_[timeStageBeforeLift(i)] 
+        = t_lift_[i] - dt * timeStageBeforeLift(i) - sampling_period_;
+    dtau_lift_[i] = dt - dtau_[timeStageBeforeLift(i)] + sampling_period_;
+  }
+}
+
+
+template <>
+inline void OCPDiscretizer::countTime<false>(
+    const ContactSequence& contact_sequence, const double t) {
   const double dt = T_ / N_;
   for (int i=0; i<=N_; ++i) {
     t_[i] = t + i * dt;

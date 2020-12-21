@@ -84,6 +84,10 @@ public:
                       const Eigen::VectorXd& v, const int max_iter=1,
                       const double KKT_tol=-1);
 
+  void updateSolutionWithContinuationMethod(
+      const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+      const double sampling_period);
+
   ///
   /// @brief Get the contorl input torques of the initial stage.
   /// @param[out] u The control input torques. Size must be Robot::dimu().

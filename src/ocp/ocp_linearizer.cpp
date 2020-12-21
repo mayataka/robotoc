@@ -9,6 +9,7 @@ namespace idocp{
 OCPLinearizer::OCPLinearizer(const int N, const int max_num_impulse, 
                              const int num_proc) 
   : N_(N),
+    max_num_impulse_(max_num_impulse),
     num_proc_(num_proc),
     kkt_error_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)) {
   try {
@@ -31,6 +32,7 @@ OCPLinearizer::OCPLinearizer(const int N, const int max_num_impulse,
 
 OCPLinearizer::OCPLinearizer()
   : N_(0),
+    max_num_impulse_(0),
     num_proc_(0),
     kkt_error_() {
 }
@@ -43,8 +45,8 @@ OCPLinearizer::~OCPLinearizer() {
 void OCPLinearizer::initConstraints(OCP& ocp, std::vector<Robot>& robots, 
                                     const ContactSequence& contact_sequence, 
                                     const Solution& s) const {
-  const int N_impulse = ocp.discrete().numImpulseStages();
-  const int N_lift = ocp.discrete().numLiftStages();
+  const int N_impulse = max_num_impulse_;
+  const int N_lift = max_num_impulse_;
   const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_all; ++i) {
@@ -135,7 +137,7 @@ double OCPLinearizer::KKTError(const OCP& ocp,
               ocp.discrete().dtau_lift(lift_index));
     }
   }
-  std::cout << "KKT error = " << kkt_error_.head(N_all).transpose() << std::endl;
+  // std::cout << "KKT error = " << kkt_error_.head(N_all).transpose() << std::endl;
   return std::sqrt(kkt_error_.head(N_all).sum());
 }
 
@@ -156,18 +158,20 @@ void OCPLinearizer::integrateSolution(OCP& ocp,
     if (i < N_) {
       if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
         ocp[i].computeCondensedDualDirection(
-            robots[omp_get_thread_num()], ocp.discrete().dtau(i), kkt_matrix[i], 
-            kkt_residual[i], d.impulse[ocp.discrete().impulseIndex(i)], d[i]);
+            robots[omp_get_thread_num()], ocp.discrete().dtau(i), 
+            kkt_matrix[i], kkt_residual[i], 
+            d.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)], d[i]);
       }
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
         ocp[i].computeCondensedDualDirection(
-            robots[omp_get_thread_num()], ocp.discrete().dtau(i), kkt_matrix[i], 
-            kkt_residual[i], d.lift[ocp.discrete().liftIndex(i)], d[i]);
+            robots[omp_get_thread_num()], ocp.discrete().dtau(i), 
+            kkt_matrix[i], kkt_residual[i], 
+            d.lift[ocp.discrete().liftIndexAfterTimeStage(i)], d[i]);
       }
       else {
         ocp[i].computeCondensedDualDirection(
-            robots[omp_get_thread_num()], ocp.discrete().dtau(i), kkt_matrix[i], 
-            kkt_residual[i], d[i+1], d[i]);
+            robots[omp_get_thread_num()], ocp.discrete().dtau(i), 
+            kkt_matrix[i], kkt_residual[i], d[i+1], d[i]);
       }
       ocp[i].updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
                           d[i], s[i]);

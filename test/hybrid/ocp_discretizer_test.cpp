@@ -161,18 +161,18 @@ void OCPDiscretizerTest::testDiscretizeOCP(const Robot& robot) const {
   }
   for (int i=0; i<=N; ++i) {
     if (ocp_discrertizer.isTimeStageBeforeImpulse(i)) {
-      EXPECT_EQ(ocp_discrertizer.timeStageBeforeImpulse(ocp_discrertizer.impulseIndex(i)), i);
+      EXPECT_EQ(ocp_discrertizer.timeStageBeforeImpulse(ocp_discrertizer.impulseIndexAfterTimeStage(i)), i);
     }
     else {
-      EXPECT_EQ(ocp_discrertizer.impulseIndex(i), -1);
+      EXPECT_EQ(ocp_discrertizer.impulseIndexAfterTimeStage(i), -1);
     }
   }
   for (int i=0; i<=N; ++i) {
     if (ocp_discrertizer.isTimeStageBeforeLift(i)) {
-      EXPECT_EQ(ocp_discrertizer.timeStageBeforeLift(ocp_discrertizer.liftIndex(i)), i);
+      EXPECT_EQ(ocp_discrertizer.timeStageBeforeLift(ocp_discrertizer.liftIndexAfterTimeStage(i)), i);
     }
     else {
-      EXPECT_EQ(ocp_discrertizer.liftIndex(i), -1);
+      EXPECT_EQ(ocp_discrertizer.liftIndexAfterTimeStage(i), -1);
     }
   }
   const double dt = T/N;

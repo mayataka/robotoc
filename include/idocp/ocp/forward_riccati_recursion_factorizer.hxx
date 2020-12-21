@@ -30,7 +30,7 @@ inline void ForwardRiccatiRecursionFactorizer::factorizeStateTransition(
     const SplitRiccatiFactorization& riccati, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, const double dtau,
     SplitRiccatiFactorization& riccati_next) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   if (has_floating_base_) {
     riccati_next.Pi.topRows(dimv_).noalias()
         = kkt_matrix.Fqq() * riccati.Pi.topRows(dimv_);
@@ -57,10 +57,12 @@ inline void ForwardRiccatiRecursionFactorizer::factorizeStateTransition(
 }
 
 
-inline void ForwardRiccatiRecursionFactorizer::factorizeStateConstraintFactorization(
-    const SplitRiccatiFactorization& riccati, const SplitKKTMatrix& kkt_matrix, 
-    const double dtau, SplitRiccatiFactorization& riccati_next) {
-  assert(dtau > 0);
+inline void ForwardRiccatiRecursionFactorizer::
+factorizeStateConstraintFactorization(const SplitRiccatiFactorization& riccati, 
+                                      const SplitKKTMatrix& kkt_matrix, 
+                                      const double dtau, 
+                                      SplitRiccatiFactorization& riccati_next) {
+  assert(dtau >= 0);
   if (has_floating_base_) {
     NApBKt_.leftCols(dimv_).noalias() 
         = riccati.N.leftCols(dimv_) * kkt_matrix.Fqq().transpose();

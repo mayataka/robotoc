@@ -90,17 +90,17 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
       q_prev = q;
     }
     else if (ocp_ref.discrete().isTimeStageBeforeImpulse(i-1)) {
-      q_prev = s.aux[ocp_ref.discrete().impulseIndex(i-1)].q;
+      q_prev = s.aux[ocp_ref.discrete().impulseIndexAfterTimeStage(i-1)].q;
     }
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i-1)) {
-      q_prev = s.lift[ocp_ref.discrete().liftIndex(i-1)].q;
+      q_prev = s.lift[ocp_ref.discrete().liftIndexAfterTimeStage(i-1)].q;
     }
     else {
       q_prev = s[i-1].q;
     }
     if (ocp_ref.discrete().isTimeStageBeforeImpulse(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
-      const int impulse_index = ocp_ref.discrete().impulseIndex(i);
+      const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i);
       const double ti = ocp_ref.discrete().t(i);
       const double t_impulse = ocp_ref.discrete().t_impulse(impulse_index);
       const double dt = ocp_ref.discrete().dtau(i);
@@ -128,7 +128,7 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
     }
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
-      const int lift_index = ocp_ref.discrete().liftIndex(i);
+      const int lift_index = ocp_ref.discrete().liftIndexAfterTimeStage(i);
       const double ti = ocp_ref.discrete().t(i);
       const double t_lift = ocp_ref.discrete().t_lift(lift_index);
       const double dt = ocp_ref.discrete().dtau(i);
@@ -193,17 +193,17 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
       q_prev = q;
     }
     else if (ocp_ref.discrete().isTimeStageBeforeImpulse(i-1)) {
-      q_prev = s.aux[ocp_ref.discrete().impulseIndex(i-1)].q;
+      q_prev = s.aux[ocp_ref.discrete().impulseIndexAfterTimeStage(i-1)].q;
     }
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i-1)) {
-      q_prev = s.lift[ocp_ref.discrete().liftIndex(i-1)].q;
+      q_prev = s.lift[ocp_ref.discrete().liftIndexAfterTimeStage(i-1)].q;
     }
     else {
       q_prev = s[i-1].q;
     }
     if (ocp_ref.discrete().isTimeStageBeforeImpulse(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
-      const int impulse_index = ocp_ref.discrete().impulseIndex(i);
+      const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i);
       const double ti = ocp_ref.discrete().t(i);
       const double t_impulse = ocp_ref.discrete().t_impulse(impulse_index);
       const double dt = ocp_ref.discrete().dtau(i);
@@ -235,7 +235,7 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
     }
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i)) {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
-      const int lift_index = ocp_ref.discrete().liftIndex(i);
+      const int lift_index = ocp_ref.discrete().liftIndexAfterTimeStage(i);
       const double ti = ocp_ref.discrete().t(i);
       const double t_lift = ocp_ref.discrete().t_lift(lift_index);
       const double dt = ocp_ref.discrete().dtau(i);
@@ -314,7 +314,7 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto robot_ref = robot;
   for (int i=0; i<N; ++i) {
     if (ocp_ref.discrete().isTimeStageBeforeImpulse(i)) {
-      const int impulse_index = ocp_ref.discrete().impulseIndex(i);
+      const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i);
       const double dt = ocp_ref.discrete().dtau(i);
       const double dt_aux = ocp_ref.discrete().dtau_aux(impulse_index);
       ASSERT_TRUE(dt >= 0);
@@ -342,7 +342,7 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
       ocp_ref.aux[impulse_index].updateDual(dual_step_size);
     }
     else if (ocp_ref.discrete().isTimeStageBeforeLift(i)) {
-      const int lift_index = ocp_ref.discrete().liftIndex(i);
+      const int lift_index = ocp_ref.discrete().liftIndexAfterTimeStage(i);
       const double dt = ocp_ref.discrete().dtau(i);
       const double dt_lift = ocp_ref.discrete().dtau_lift(lift_index);
       ASSERT_TRUE(dt >= 0);

@@ -108,7 +108,7 @@ inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
             contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
             ocp.discrete().t(i), ocp.discrete().dtau(i), 
             q_prev(ocp.discrete(), q, s, i), 
-            s[i], s.impulse[ocp.discrete().impulseIndex(i)], 
+            s[i], s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)], 
             kkt_matrix[i], kkt_residual[i]);
       }
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
@@ -117,7 +117,8 @@ inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
             contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
             ocp.discrete().t(i), ocp.discrete().dtau(i), 
             q_prev(ocp.discrete(), q, s, i), s[i], 
-            s.lift[ocp.discrete().liftIndex(i)], kkt_matrix[i], kkt_residual[i]);
+            s.lift[ocp.discrete().liftIndexAfterTimeStage(i)], 
+            kkt_matrix[i], kkt_residual[i]);
       }
       else {
         Algorithm::run(
@@ -185,10 +186,10 @@ inline const Eigen::VectorXd& OCPLinearizer::q_prev(
     return q;
   }
   else if (discretizer.isTimeStageBeforeImpulse(time_stage-1)) {
-    return s.aux[discretizer.impulseIndex(time_stage-1)].q;
+    return s.aux[discretizer.impulseIndexAfterTimeStage(time_stage-1)].q;
   }
   else if (discretizer.isTimeStageBeforeLift(time_stage-1)) {
-    return s.lift[discretizer.liftIndex(time_stage-1)].q;
+    return s.lift[discretizer.liftIndexAfterTimeStage(time_stage-1)].q;
   }
   else {
     return s[time_stage-1].q;

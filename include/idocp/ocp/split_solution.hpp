@@ -209,11 +209,23 @@ public:
   ///
   void integrate(const Robot& robot, const double step_size, 
                  const SplitDirection& d);
+
   ///
   /// @brief Copy other split solution without reallocating memory.
   /// @param[in] other Other split solution.
   ///
   void copy(const SplitSolution& other);
+
+  ///
+  /// @brief Interpolate this solution as s = (l2 * s1 + l1 * s2) / (l1 + l2).
+  /// @param[in] robot Robot model.
+  /// @param[in] s1 Split solution.
+  /// @param[in] s2 Split solution.
+  /// @param[in] l1 Must be positive.
+  /// @param[in] l2 Must be positive.
+  ///
+  void interpolate(const Robot& robot, const SplitSolution& s1, 
+                   const SplitSolution& s2, const double l1, const double l2);
 
   ///
   /// @brief Return true if two SplitSolution have the same value and false if 

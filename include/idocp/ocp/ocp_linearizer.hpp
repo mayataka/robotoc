@@ -102,7 +102,7 @@ private:
                    const Solution& s, KKTMatrix& kkt_matrix, 
                    KKTResidual& kkt_residual) const;
 
-  int N_, num_proc_;
+  int N_, max_num_impulse_, num_proc_;
   Eigen::VectorXd kkt_error_;
 };
 

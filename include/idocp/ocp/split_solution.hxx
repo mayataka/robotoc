@@ -214,6 +214,37 @@ inline void SplitSolution::copy(const SplitSolution& other) {
 }
 
 
+inline void SplitSolution::interpolate(const Robot& robot, 
+                                       const SplitSolution& s1, 
+                                       const SplitSolution& s2, const double l1, 
+                                       const double l2) {
+  assert(l1 > 0);
+  assert(l2 > 0);
+  lmd          = (l2 * s1.lmd + l1 * s2.lmd) / (l1 + l2);
+  gmm          = (l2 * s1.gmm + l1 * s2.gmm) / (l1 + l2);
+  Eigen::VectorXd dq(robot.dimv());
+  robot.subtractConfiguration(s1.q, s2.q, dq);
+  robot.integrateConfiguration(s1.q, dq, (l1/(l1+l2)), q);
+  v            = (l2 * s1.v + l1 * s2.v) / (l1 + l2);
+  a            = (l2 * s1.a + l1 * s2.a) / (l1 + l2);
+  u            = (l2 * s1.u + l1 * s2.u) / (l1 + l2);
+  beta         = (l2 * s1.beta + l1 * s2.beta) / (l1 + l2);
+  if (has_floating_base_) {
+    u_passive  = (l2 * s1.u_passive + l1 * s2.u_passive) / (l1 + l2);
+    nu_passive = (l2 * s1.nu_passive + l1 * s2.nu_passive) / (l1 + l2);
+  }
+  if (has_active_contacts_) {
+    const int max_point_contacts = f.size();
+    for (int i=0; i<max_point_contacts; ++i) {
+      f[i]     = (l2 * s1.f[i] + l1 * s2.f[i]) / (l1 + l2);
+      mu[i]    = (l2 * s1.mu[i] + l1 * s2.mu[i]) / (l1 + l2);
+    }
+    set_f_stack();
+    set_mu_stack();
+  }
+}
+
+
 inline bool SplitSolution::isApprox(const SplitSolution& other) const {
   if (!lmd.isApprox(other.lmd)) {
     return false;

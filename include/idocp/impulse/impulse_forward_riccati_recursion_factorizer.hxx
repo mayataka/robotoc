@@ -7,22 +7,24 @@
 
 namespace idocp {
 
-inline ImpulseForwardRiccatiRecursionFactorizer::ImpulseForwardRiccatiRecursionFactorizer(
-    const Robot& robot) 
+inline ImpulseForwardRiccatiRecursionFactorizer::
+ImpulseForwardRiccatiRecursionFactorizer(const Robot& robot) 
   : has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()),
     NApBKt_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())) {
 }
 
 
-inline ImpulseForwardRiccatiRecursionFactorizer::ImpulseForwardRiccatiRecursionFactorizer() 
+inline ImpulseForwardRiccatiRecursionFactorizer::
+ImpulseForwardRiccatiRecursionFactorizer() 
   : has_floating_base_(false),
     dimv_(0),
     NApBKt_() {
 }
 
 
-inline ImpulseForwardRiccatiRecursionFactorizer::~ImpulseForwardRiccatiRecursionFactorizer() {
+inline ImpulseForwardRiccatiRecursionFactorizer::
+~ImpulseForwardRiccatiRecursionFactorizer() {
 }
 
 
@@ -53,7 +55,8 @@ inline void ImpulseForwardRiccatiRecursionFactorizer::factorizeStateTransition(
 }
 
 
-inline void ImpulseForwardRiccatiRecursionFactorizer::factorizeStateConstraintFactorization(
+inline void ImpulseForwardRiccatiRecursionFactorizer::
+factorizeStateConstraintFactorization(
     const SplitRiccatiFactorization& riccati, 
     const ImpulseSplitKKTMatrix& kkt_matrix, 
     SplitRiccatiFactorization& riccati_next) {

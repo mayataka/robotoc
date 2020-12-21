@@ -94,10 +94,10 @@ public:
       const OCPDiscretizer& ocp_discretizer, 
       const RiccatiFactorization& factorization, const int time_stage) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(time_stage)) {
-      return factorization.impulse[ocp_discretizer.impulseIndex(time_stage)];
+      return factorization.impulse[ocp_discretizer.impulseIndexAfterTimeStage(time_stage)];
     }
     else if (ocp_discretizer.isTimeStageBeforeLift(time_stage)) {
-      return factorization.lift[ocp_discretizer.liftIndex(time_stage)];
+      return factorization.lift[ocp_discretizer.liftIndexAfterTimeStage(time_stage)];
     }
     else {
       return factorization[time_stage+1];

@@ -9,12 +9,13 @@ namespace idocp {
 
 inline SplitOCP::SplitOCP(const Robot& robot, 
                           const std::shared_ptr<CostFunction>& cost,
-                          const std::shared_ptr<Constraints>& constraints) 
+                          const std::shared_ptr<Constraints>& constraints, 
+                          const double dtau) 
   : cost_(cost),
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
     constraints_data_(constraints->createConstraintsData(robot)),
-    contact_dynamics_(robot),
+    contact_dynamics_(robot, dtau),
     has_floating_base_(robot.hasFloatingBase()),
     use_kinematics_(false) {
   if (cost_->useKinematics() || constraints_->useKinematics() 
@@ -177,13 +178,15 @@ inline double SplitOCP::squaredNormKKTResidual(
   error += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dtau);
   error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_, dtau);
-  std::cout << "SplitOCP: lx = " << kkt_residual.lx().squaredNorm() << std::endl;
-  std::cout << "SplitOCP: la = " << kkt_residual.la.squaredNorm() << std::endl;
-  std::cout << "SplitOCP: lf = " << kkt_residual.lf().squaredNorm() << std::endl;
-  std::cout << "SplitOCP: lu = " << kkt_residual.lu().squaredNorm() << std::endl;
-  std::cout << "SplitOCP: F = " << stateequation::SquaredNormStateEuqationResidual(kkt_residual) << std::endl;
-  std::cout << "SplitOCP: ID = " << contact_dynamics_.squaredNormContactDynamicsResidual(dtau) << std::endl;
-  std::cout << "SplitOCP: g = " << constraints_->squaredNormPrimalAndDualResidual(constraints_data_, dtau) << std::endl;
+  // std::cout << "SplitOCP: lq = " << kkt_residual.lq().squaredNorm() << std::endl;
+  // std::cout << "SplitOCP: lv = " << kkt_residual.lv().squaredNorm() << std::endl;
+  // std::cout << "SplitOCP: la = " << kkt_residual.la.squaredNorm() << std::endl;
+  // std::cout << "SplitOCP: lf = " << kkt_residual.lf().squaredNorm() << std::endl;
+  // std::cout << "SplitOCP: lu = " << kkt_residual.lu().squaredNorm() << std::endl;
+  // std::cout << "SplitOCP: Fq = " << kkt_residual.Fq().squaredNorm() << std::endl;
+  // std::cout << "SplitOCP: Fv = " << kkt_residual.Fv().squaredNorm() << std::endl;
+  // std::cout << "SplitOCP: ID = " << contact_dynamics_.squaredNormContactDynamicsResidual(dtau) << std::endl;
+  // std::cout << "SplitOCP: g = " << constraints_->squaredNormPrimalAndDualResidual(constraints_data_, dtau) << std::endl;
   return error;
 }
 
