@@ -52,7 +52,7 @@ void ContactDistance::setSlackAndDual(Robot& robot,
                                       ConstraintComponentData& data, 
                                       const double dtau, 
                                       const SplitSolution& s) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   Eigen::Vector3d end_effector_position = Eigen::Vector3d::Zero();
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     robot.computeContactResidual(i, end_effector_position);
@@ -67,7 +67,7 @@ void ContactDistance::augmentDualResidual(Robot& robot,
                                           const double dtau, 
                                           const SplitSolution& s, 
                                           SplitKKTResidual& kkt_residual) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   int dimf_stack = 0;
   Eigen::MatrixXd end_effector_Jacobian = Eigen::MatrixXd::Zero(s.dimf(), 
                                                                 robot.dimv());
@@ -87,7 +87,7 @@ void ContactDistance::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   Eigen::MatrixXd end_effector_Jacobian = Eigen::MatrixXd::Zero(3, robot.dimv());
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (!robot.is_contact_active(i)) {

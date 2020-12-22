@@ -410,7 +410,7 @@ inline void Constraints::updateDual_impl(
 
 inline double Constraints::costSlackBarrier(const ConstraintsData& data,
                                             const double dtau) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   double cost = 0;
   if (data.isPositionLevelValid()) {
     cost += costSlackBarrier_impl(position_level_constraints_, 
@@ -443,7 +443,7 @@ inline double Constraints::costSlackBarrier_impl(
 inline double Constraints::costSlackBarrier(const ConstraintsData& data, 
                                             const double dtau,
                                             const double step_size) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(step_size >= 0);
   assert(step_size <= 1);
   double cost = 0;
@@ -546,7 +546,7 @@ inline double Constraints::squaredNormPrimalAndDualResidual(
   }
   squared_norm += squaredNormPrimalAndDualResidual_impl(
       acceleration_level_constraints_, data.acceleration_level_data);
-  return dtau * squared_norm;
+  return dtau * dtau * squared_norm;
 }
 
 

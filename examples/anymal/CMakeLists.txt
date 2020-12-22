@@ -24,19 +24,37 @@ option(SIM_MPC "Performs MPC simulation using RaiSim" OFF)
 if (SIM_MPC)
   find_package(raisim CONFIG REQUIRED)
   find_package(raisimOgre CONFIG REQUIRED)
+
   add_executable(
-    mpc_simulation
-    mpc_simulation.cpp
+    mpc_standing
+    mpc_standing.cpp
   )
   target_link_libraries(
-    mpc_simulation
+    mpc_standing
     PRIVATE
     idocp::idocp
     raisim::raisim
     raisim::raisimOgre
   )
   target_include_directories(
-    mpc_simulation
+    mpc_standing
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+  )
+
+  add_executable(
+    mpc_trotting
+    mpc_trotting.cpp
+  )
+  target_link_libraries(
+    mpc_trotting
+    PRIVATE
+    idocp::idocp
+    raisim::raisim
+    raisim::raisimOgre
+  )
+  target_include_directories(
+    mpc_trotting
     PRIVATE
     ${IDOCP_INCLUDE_DIR}
   )

@@ -19,7 +19,7 @@
 namespace idocp {
 
 struct MPCCallbackEmpty {
-  MPCCallbackEmpty(const Robot& robot) {} 
+  MPCCallbackEmpty() {} 
 
   template <typename OCPSolverType>
   void init(const double t, const Eigen::VectorXd& q, 
@@ -39,8 +39,9 @@ public:
                      const std::string& save_dir_path, 
                      const std::string& save_file_name);
 
-  template <typename MPCCallBackType = MPCCallbackEmpty>
-  void run(MPC<OCPSolverType>& mpc, const double simulation_time_in_sec, 
+  template <typename MPCCallBackType>
+  void run(MPC<OCPSolverType>& mpc, MPCCallBackType& mpc_callback,
+           const double simulation_time_in_sec, 
            const double sampling_period_in_sec, 
            const double simulation_start_time_in_sec, 
            const Eigen::VectorXd& q_initial, const Eigen::VectorXd& v_initial,
@@ -55,6 +56,8 @@ private:
 
 
 namespace raisimadapter {
+  std::string GetCurrentWorkingDirectory();
+
   void SetupRaisimOgre(raisim::World& world);
 
   void RaiSimOgreCallback();

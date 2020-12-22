@@ -5,6 +5,8 @@
 
 #include <chrono>
 #include <stdexcept>
+#include <unistd.h>
+#include <cstring>
 
 namespace idocp {
 
@@ -22,10 +24,10 @@ inline QuadrupedSimulator<OCPSolverType>::QuadrupedSimulator(
 
 
 template <typename OCPSolverType>
-template <typename MPCCallbackType>
+template <typename MPCCallBackType>
 inline void QuadrupedSimulator<OCPSolverType>::run(
-    MPC<OCPSolverType>& mpc, const double simulation_time_in_sec, 
-    const double sampling_period_in_sec, 
+    MPC<OCPSolverType>& mpc, MPCCallBackType& mpc_callback, 
+    const double simulation_time_in_sec, const double sampling_period_in_sec, 
     const double simulation_start_time_in_sec, 
     const Eigen::VectorXd& q_initial, const Eigen::VectorXd& v_initial, 
     const bool visualization, const bool recording) {
@@ -49,7 +51,8 @@ inline void QuadrupedSimulator<OCPSolverType>::run(
   }
   raisim::World::setActivationKey(path_to_raisim_activation_key_);
   raisim::World raisim_world;
-  auto raisim_robot = raisim_world.addArticulatedSystem(path_to_urdf_for_raisim_, "");
+  auto raisim_robot = raisim_world.addArticulatedSystem(
+      raisimadapter::GetCurrentWorkingDirectory()+path_to_urdf_for_raisim_, "");
   auto raisim_ground = raisim_world.addGround();
   raisim_world.setTimeStep(sampling_period_in_sec);
   raisim_world.setERP(0.2, 0.2);
@@ -76,7 +79,6 @@ inline void QuadrupedSimulator<OCPSolverType>::run(
   }
   std::chrono::system_clock::time_point start_clock, end_clock;
   double CPU_time_total_in_sec = 0;
-  MPCCallbackType mpc_callback(robot);
   mpc_callback.init(simulation_start_time_in_sec, q, v, mpc);
   for (double t=simulation_start_time_in_sec; t<simulation_time_in_sec; t+=sampling_period_in_sec) {
     raisim_robot->setGeneralizedForce(u_raisim);
@@ -86,10 +88,10 @@ inline void QuadrupedSimulator<OCPSolverType>::run(
     }
     raisim_robot->getState(q_raisim, v_raisim);
     raisimadapter::rai2pino(robot, q_raisim, v_raisim, q, v);
+    mpc_callback.callback(t, q, v, mpc);
     mpc.computeKKTResidual(t, q, v);
     data_saver_.save(q, v, u, mpc.KKTError());
     start_clock = std::chrono::system_clock::now();
-    mpc_callback.callback(t, q, v, mpc);
     mpc.updateSolution(t, q, v);
     mpc.getControlInput(u);
     raisimadapter::pino2rai(u, u_raisim);
@@ -116,6 +118,14 @@ inline void QuadrupedSimulator<OCPSolverType>::run(
     vis->stopRecordingVideoAndSave();
   }
   vis->closeApp();
+}
+
+
+inline std::string raisimadapter::GetCurrentWorkingDirectory() {
+  constexpr int PAHT_MAX = 255;
+  char cwd[PAHT_MAX];
+  getcwd(cwd, PAHT_MAX);
+  return std::string(cwd, strlen(cwd));
 }
 
 

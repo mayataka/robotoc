@@ -91,7 +91,19 @@ public:
                       const Eigen::VectorXd& v, 
                       const bool use_line_search=false);
 
-  void warmStartSolution(const double t_prev, const double t);
+  ///
+  /// @brief Updates the solution by computing the primal-dual Newon direction.
+  /// @param[in] t Initial time of the horizon. Current time in MPC. 
+  /// @param[in] q Initial configuration. Size must be Robot::dimq().
+  /// @param[in] v Initial velocity. Size must be Robot::dimv().
+  /// @param[in] sampling_period Sampling period. Must be positive.
+  ///
+  void updateSolutionWithContinuationMethod(const double t, 
+                                            const Eigen::VectorXd& q, 
+                                            const Eigen::VectorXd& v, 
+                                            const double sampling_period);
+
+  void shiftSolution();
 
   ///
   /// @brief Get the const reference to the split solution of a time stage. 
@@ -210,6 +222,8 @@ private:
   Direction d_;
   // LineSearch line_search_;
   int N_, num_proc_;
+
+  void discretizeSolution();
 
 };
 

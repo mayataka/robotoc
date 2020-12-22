@@ -274,8 +274,7 @@ void SplitRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) const 
 
 
 void SplitRiccatiFactorizerTest::testNearZeroDtau(const Robot& robot) const {
-  const double dtau_near_zero 
-      = std::abs(Eigen::VectorXd::Random(1).coeff(0)) * std::sqrt(std::numeric_limits<double>::epsilon());
+  const double dtau_near_zero = std::abs(Eigen::VectorXd::Random(1).coeff(0)) * std::numeric_limits<double>::epsilon();
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   SplitRiccatiFactorization riccati_next = createRiccatiFactorization(robot);

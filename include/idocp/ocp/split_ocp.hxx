@@ -62,7 +62,7 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
                                    const SplitSolutionType& s_next,
                                    SplitKKTMatrix& kkt_matrix, 
                                    SplitKKTResidual& kkt_residual) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(q_prev.size() == robot.dimq());
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
@@ -102,7 +102,7 @@ inline void SplitOCP::computeCondensedDualDirection(
     const Robot& robot, const double dtau, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, const SplitDirectionType& d_next, 
     SplitDirection& d) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   contact_dynamics_.computeCondensedDualDirection(robot, dtau, kkt_matrix,
                                                   kkt_residual, 
                                                   d_next.dgmm(), d);
@@ -146,7 +146,7 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
                                          const SplitSolutionType& s_next, 
                                          SplitKKTMatrix& kkt_matrix,
                                          SplitKKTResidual& kkt_residual) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   kkt_residual.setZero();
@@ -177,16 +177,8 @@ inline double SplitOCP::squaredNormKKTResidual(
   error += kkt_residual.lu().squaredNorm();
   error += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dtau);
-  error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_, dtau);
-  // std::cout << "SplitOCP: lq = " << kkt_residual.lq().squaredNorm() << std::endl;
-  // std::cout << "SplitOCP: lv = " << kkt_residual.lv().squaredNorm() << std::endl;
-  // std::cout << "SplitOCP: la = " << kkt_residual.la.squaredNorm() << std::endl;
-  // std::cout << "SplitOCP: lf = " << kkt_residual.lf().squaredNorm() << std::endl;
-  // std::cout << "SplitOCP: lu = " << kkt_residual.lu().squaredNorm() << std::endl;
-  // std::cout << "SplitOCP: Fq = " << kkt_residual.Fq().squaredNorm() << std::endl;
-  // std::cout << "SplitOCP: Fv = " << kkt_residual.Fv().squaredNorm() << std::endl;
-  // std::cout << "SplitOCP: ID = " << contact_dynamics_.squaredNormContactDynamicsResidual(dtau) << std::endl;
-  // std::cout << "SplitOCP: g = " << constraints_->squaredNormPrimalAndDualResidual(constraints_data_, dtau) << std::endl;
+  error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_, 
+                                                          dtau);
   return error;
 }
 
@@ -194,7 +186,7 @@ inline double SplitOCP::squaredNormKKTResidual(
 inline double SplitOCP::stageCost(Robot& robot, const double t,  
                                   const double dtau, const SplitSolution& s, 
                                   const double primal_step_size) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(primal_step_size >= 0);
   assert(primal_step_size <= 1);
   if (use_kinematics_) {
@@ -227,7 +219,7 @@ inline double SplitOCP::constraintViolation(Robot& robot,
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   stateequation::ComputeForwardEulerResidual(robot, dtau, s, q_next, v_next, 
                                              kkt_residual);
-  contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, dtau, s);
+  contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, s);
   double violation = 0;
   violation += stateequation::L1NormStateEuqationResidual(kkt_residual);
   violation += constraints_->l1NormPrimalResidual(constraints_data_, dtau);

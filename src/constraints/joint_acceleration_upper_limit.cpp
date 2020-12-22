@@ -59,7 +59,7 @@ void JointAccelerationUpperLimit::setSlackAndDual(
 void JointAccelerationUpperLimit::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   kkt_residual.la.tail(dimc_).noalias() += dtau * data.dual;
 }
 
@@ -68,7 +68,7 @@ void JointAccelerationUpperLimit::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   kkt_matrix.Qaa().diagonal().tail(dimc_).array()
       += dtau * data.dual.array() / data.slack.array();
   computePrimalAndDualResidual(robot, data, s);

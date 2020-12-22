@@ -58,7 +58,7 @@ inline CostFunctionData CostFunction::createCostFunctionData(
 inline double CostFunction::l(Robot& robot, CostFunctionData& data, 
                               const double t, const double dtau, 
                               const SplitSolution& s) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   double l = 0;
   for (const auto cost : costs_) {
     l += cost->l(robot, data, t, dtau, s);
@@ -81,7 +81,7 @@ inline void CostFunction::computeStageCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const double dtau, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   for (const auto cost : costs_) {
     cost->lq(robot, data, t, dtau, s, kkt_residual);
     cost->lv(robot, data, t, dtau, s, kkt_residual);
@@ -97,7 +97,7 @@ inline void CostFunction::computeStageCostDerivatives(
 inline void CostFunction::computeStageCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const double dtau, const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   for (const auto cost : costs_) {
     cost->lqq(robot, data, t, dtau, s, kkt_matrix);
     cost->lvv(robot, data, t, dtau, s, kkt_matrix);

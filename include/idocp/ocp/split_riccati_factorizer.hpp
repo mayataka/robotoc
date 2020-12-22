@@ -189,8 +189,9 @@ private:
   bool has_floating_base_, is_dtau_sufficiently_positive_;
   int dimv_, dimu_;
   static constexpr int kDimFloatingBase = 6;
-  static constexpr double kMindtau
-      = std::sqrt(std::numeric_limits<double>::epsilon());
+  static constexpr double kMindtau = std::numeric_limits<double>::epsilon();
+//   static constexpr double kMindtau
+//       = std::sqrt(std::numeric_limits<double>::epsilon());
   Eigen::LLT<Eigen::MatrixXd> llt_;
   LQRStateFeedbackPolicy lqr_policy_;
   BackwardRiccatiRecursionFactorizer backward_recursion_;

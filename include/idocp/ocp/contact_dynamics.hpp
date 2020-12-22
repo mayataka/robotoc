@@ -11,6 +11,9 @@
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/contact_dynamics_data.hpp"
 
+#include <limits>
+#include <cmath>
+
 
 namespace idocp {
 
@@ -77,7 +80,6 @@ public:
 
   void computeContactDynamicsResidual(Robot& robot, 
                                       const ContactStatus& contact_status,
-                                      const double dtau, 
                                       const SplitSolution& s);
 
   double l1NormContactDynamicsResidual(const double dtau) const;
@@ -91,6 +93,9 @@ private:
   bool has_floating_base_, has_active_contacts_;
   double baumgarte_time_step_;
   static constexpr int kDimFloatingBase = 6;
+  static constexpr double kMindtau = std::numeric_limits<double>::epsilon();
+  // static constexpr double kMindtau
+  //     = std::sqrt(std::numeric_limits<double>::epsilon());
 
   void setContactStatus(const ContactStatus& contact_status);
 

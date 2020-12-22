@@ -50,7 +50,7 @@ bool TerminalParNMPC::isFeasible(Robot& robot, const SplitSolution& s) {
 void TerminalParNMPC::initConstraints(Robot& robot, const int time_step, 
                                    const double dtau, const SplitSolution& s) {
   assert(time_step >= 0);
-  assert(dtau > 0);
+  assert(dtau >= 0);
   constraints_data_ = constraints_->createConstraintsData(robot, time_step);
   constraints_->setSlackAndDual(robot, constraints_data_, dtau, s);
 }
@@ -62,7 +62,7 @@ void TerminalParNMPC::linearizeOCP(Robot& robot,
                                    const Eigen::VectorXd& q_prev, 
                                    const Eigen::VectorXd& v_prev, 
                                    const SplitSolution& s) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   setContactStatusForKKT(contact_status);
@@ -176,7 +176,7 @@ void TerminalParNMPC::updatePrimal(Robot& robot, const double primal_step_size,
                                    SplitSolution& s) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
-  assert(dtau > 0);
+  assert(dtau >= 0);
   s.integrate(robot, primal_step_size, d);
   constraints_->updateSlack(constraints_data_, primal_step_size);
 }
@@ -189,7 +189,7 @@ void TerminalParNMPC::computeKKTResidual(Robot& robot,
                                          const Eigen::VectorXd& v_prev, 
                                          const SplitSolution& s, 
                                          const SplitSolution& s_next) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   setContactStatusForKKT(contact_status);

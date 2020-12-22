@@ -43,16 +43,6 @@ RiccatiDirectionCalculator::~RiccatiDirectionCalculator() {
 }
 
 
-void RiccatiDirectionCalculator::computeInitialStateDirection(
-    const std::vector<Robot>& robots, const Eigen::VectorXd& q, 
-    const Eigen::VectorXd& v, const Solution& s, Direction& d) {
-  assert(q.size() == robots[0].dimq());
-  assert(v.size() == robots[0].dimv());
-  robots[0].subtractConfiguration(q, s[0].q, d[0].dq());
-  d[0].dv() = v - s[0].v;
-}
-
-
 void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
     OCP& ocp, std::vector<Robot>& robots, const RiccatiFactorizer& factorizer, 
     const RiccatiFactorization& factorization, const Solution& s, Direction& d) {

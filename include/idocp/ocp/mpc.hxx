@@ -72,7 +72,7 @@ inline void MPC<OCPSolverType>::updateSolutionWithContinuationMethod(
     const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
     const double sampling_period) {
   assert(sampling_period > 0);
-  ocp_solver_.updateSolution(t, q, v, false);
+  ocp_solver_.updateSolutionWithContinuationMethod(t, q, v, sampling_period);
 }
 
 

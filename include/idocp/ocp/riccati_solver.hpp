@@ -78,13 +78,16 @@ public:
   /// @param[in, out] d Direction. 
   /// @param[in, out] kkt_matrix KKT matrix. 
   /// @param[in, out] kkt_residual KKT residual. 
+  /// @param[in] sampling_period Sampling period. Default is 0.
   /// 
+  template <bool UseContinuationMethod=false>
   void computeNewtonDirection(OCP& ocp, std::vector<Robot>& robots, 
                               const ContactSequence& contact_sequence,
                               const Eigen::VectorXd& q, 
                               const Eigen::VectorXd& v, const Solution& s, 
                               Direction& d, KKTMatrix& kkt_matrix, 
-                              KKTResidual& kkt_residual);
+                              KKTResidual& kkt_residual,
+                              const double sampling_period=0);
 
   ///
   /// @brief Computes the maximum step size computed from the primal variables. 
@@ -121,5 +124,7 @@ private:
 };
 
 } // namespace idocp 
+
+#include "idocp/ocp/riccati_solver.hxx"
 
 #endif // IDOCP_RICCATI_SOLVER_HPP_ 

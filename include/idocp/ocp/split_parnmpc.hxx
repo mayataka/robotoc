@@ -46,7 +46,7 @@ inline void SplitParNMPC::initConstraints(Robot& robot, const int time_step,
                                           const double dtau, 
                                           const SplitSolution& s) {
   assert(time_step >= 0);
-  assert(dtau > 0);
+  assert(dtau >= 0);
   constraints_data_ = constraints_->createConstraintsData(robot, time_step);
   constraints_->setSlackAndDual(robot, constraints_data_, dtau, s);
 }
@@ -62,7 +62,7 @@ inline void SplitParNMPC::linearizeOCP(Robot& robot,
                                        const SplitSolutionType& s_next, 
                                        SplitKKTMatrix& kkt_matrix, 
                                        SplitKKTResidual& kkt_residual) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   kkt_matrix.setContactStatus(contact_status);
@@ -145,7 +145,7 @@ inline void SplitParNMPC::computeCondensedPrimalDirection(
 inline void SplitParNMPC::computeCondensedDualDirection(
     const Robot& robot, const double dtau, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, SplitDirection& d) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   contact_dynamics_.computeCondensedDualDirection(robot, dtau, kkt_matrix,
                                                   kkt_residual, d.dgmm(), d);
 }
@@ -180,7 +180,7 @@ inline void SplitParNMPC::updatePrimal(
     const SplitDirection& d, SplitSolution& s) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
-  assert(dtau > 0);
+  assert(dtau >= 0);
   s.integrate(robot, primal_step_size, d);
   constraints_->updateSlack(constraints_data_, primal_step_size);
 }
@@ -200,7 +200,7 @@ inline void SplitParNMPC::computeKKTResidual(
     const Eigen::VectorXd& v_prev, const SplitSolution& s, 
     const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   kkt_matrix.setContactStatus(contact_status);
@@ -240,7 +240,7 @@ inline double SplitParNMPC::squaredNormKKTResidual(const double dtau) const {
 inline double SplitParNMPC::stageCost(Robot& robot, const double t, 
                                       const double dtau, const SplitSolution& s,
                                       const double primal_step_size) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(primal_step_size >= 0);
   assert(primal_step_size <= 1);
   if (use_kinematics_) {

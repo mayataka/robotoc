@@ -58,7 +58,7 @@ void ContactNormalForce::setSlackAndDual(
 void ContactNormalForce::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
@@ -73,7 +73,7 @@ void ContactNormalForce::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {

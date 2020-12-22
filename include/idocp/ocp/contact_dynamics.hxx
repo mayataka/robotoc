@@ -42,7 +42,7 @@ inline ContactDynamics::~ContactDynamics() {
 inline void ContactDynamics::linearizeContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dtau, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) { 
-  assert(dtau > 0);
+  assert(dtau >= 0);
   setContactStatus(contact_status);
   linearizeInverseDynamics(robot, contact_status, s, data_);
   linearizeContactConstraint(robot, contact_status, baumgarte_time_step_, data_);
@@ -107,7 +107,7 @@ inline void ContactDynamics::linearizeContactConstraint(
 inline void ContactDynamics::condenseContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dtau,
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   robot.computeMJtJinv(data_.dIDda, data_.dCda(), data_.MJtJinv());
   condensing(robot, dtau, data_, kkt_matrix, kkt_residual);
 }
@@ -181,7 +181,7 @@ inline void ContactDynamics::computeCondensedDualDirection(
     const Robot& robot, const double dtau, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, 
     const Eigen::MatrixBase<VectorType>& dgmm, SplitDirection& d) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(dgmm.size() == robot.dimv());
   expansionDual(robot, dtau, data_, kkt_matrix, kkt_residual, dgmm, d);
 }
@@ -215,34 +215,43 @@ inline void ContactDynamics::expansionDual(
     const Robot& robot, const double dtau, ContactDynamicsData& data, 
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const Eigen::MatrixBase<VectorType>& dgmm, SplitDirection& d) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(dgmm.size() == robot.dimv());
-  const int dimv = robot.dimv();
-  if (robot.hasFloatingBase()) {
-    d.dnu_passive = kkt_residual.lu_passive;
-    d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topLeft() * d.du_passive;
-    d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topRight() * d.du();
-    d.dnu_passive.noalias() += kkt_matrix.Qxu_passive().transpose() * d.dx();
-    d.dnu_passive.noalias() 
-        += dtau * data.MJtJinv().topLeftCorner(kDimFloatingBase, dimv) * dgmm;
-    d.dnu_passive.array() *= - (1/dtau);
-  }
-  data.laf().noalias() += data.Qafqv() * d.dx();
-  if (robot.hasFloatingBase()) {
-    data.laf().noalias() += data.Qafu_passive() * d.du_passive;
-    data.laf().noalias() += data.Qafu() * d.du();
+  if (dtau >= kMindtau) {
+    const int dimv = robot.dimv();
+    if (robot.hasFloatingBase()) {
+      d.dnu_passive = kkt_residual.lu_passive;
+      d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topLeft() * d.du_passive;
+      d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topRight() * d.du();
+      d.dnu_passive.noalias() += kkt_matrix.Qxu_passive().transpose() * d.dx();
+      d.dnu_passive.noalias() 
+          += dtau * data.MJtJinv().topLeftCorner(kDimFloatingBase, dimv) * dgmm;
+      d.dnu_passive.array() *= - (1/dtau);
+    }
+    data.laf().noalias() += data.Qafqv() * d.dx();
+    if (robot.hasFloatingBase()) {
+      data.laf().noalias() += data.Qafu_passive() * d.du_passive;
+      data.laf().noalias() += data.Qafu() * d.du();
+    }
+    else {
+      data.laf().noalias() += data.Qafu() * d.du();
+    }
+    data.la().noalias() += dtau * dgmm;
+    d.dbetamu().noalias() = - data.MJtJinv() * data.laf() * (1/dtau);
   }
   else {
-    data.laf().noalias() += data.Qafu() * d.du();
+    // In this case (dtau < kMindtau) we regard dtau as zero. Then we set the 
+    // directions of the dual variables zero because they are undefined.
+    if (robot.hasFloatingBase()) {
+      d.dnu_passive.setZero();
+    }
+    d.dbetamu().setZero();
   }
-  data.la().noalias() += dtau * dgmm;
-  d.dbetamu().noalias() = - data.MJtJinv() * data.laf() * (1/dtau);
 }
 
 
 inline void ContactDynamics::computeContactDynamicsResidual(
-    Robot& robot, const ContactStatus& contact_status, const double dtau,
-    const SplitSolution& s) {
+    Robot& robot, const ContactStatus& contact_status, const SplitSolution& s) {
   setContactStatus(contact_status);
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data_.ID_full());
@@ -261,7 +270,7 @@ inline void ContactDynamics::computeContactDynamicsResidual(
 
 inline double ContactDynamics::l1NormContactDynamicsResidual(
     const double dtau) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   if (has_floating_base_) {
     return (dtau * (data_.IDC().lpNorm<1>() + data_.u_passive.lpNorm<1>()));
   }
@@ -273,7 +282,7 @@ inline double ContactDynamics::l1NormContactDynamicsResidual(
 
 inline double ContactDynamics::squaredNormContactDynamicsResidual(
     const double dtau) const {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   if (has_floating_base_) {
     return (dtau * dtau * (data_.IDC().squaredNorm() 
                             + data_.u_passive.squaredNorm()));

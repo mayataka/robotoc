@@ -268,7 +268,7 @@ void SplitOCPTest::testCostAndConstraintViolation(
   stateequation::ComputeForwardEulerResidual(robot, dtau, s, s_next.q, 
                                              s_next.v, kkt_residual_ref);
   ContactDynamics cd(robot, baumgarte_time_step);
-  cd.computeContactDynamicsResidual(robot, contact_status, dtau, s);
+  cd.computeContactDynamicsResidual(robot, contact_status, s);
   double constraint_violation_ref = 0;
   constraint_violation_ref += constraints->l1NormPrimalResidual(constraints_data, dtau);
   constraint_violation_ref += stateequation::L1NormStateEuqationResidual(kkt_residual_ref);

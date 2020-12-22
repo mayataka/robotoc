@@ -432,7 +432,7 @@ void ContactDynamicsTest::testComputeResidual(Robot& robot, const ContactStatus&
   ContactDynamics cd(robot, baumgarte_time_step);
   robot.updateKinematics(s.q, s.v, s.a);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
-  cd.computeContactDynamicsResidual(robot, contact_status, dtau, s);
+  cd.computeContactDynamicsResidual(robot, contact_status, s);
   const double l1norm = cd.l1NormContactDynamicsResidual(dtau);
   const double squarednorm = cd.squaredNormContactDynamicsResidual(dtau);
   ContactDynamicsData data(robot);

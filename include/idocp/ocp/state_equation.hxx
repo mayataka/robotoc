@@ -14,7 +14,7 @@ inline void LinearizeForwardEuler(
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
     const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   ComputeForwardEulerResidual(robot, dtau, s, s_next.q, s_next.v, kkt_residual);
   if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq());
@@ -38,7 +38,7 @@ inline void LinearizeBackwardEuler(
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
     const SplitSolution& s, const SplitSolutionType& s_next,
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   ComputeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, kkt_residual);
@@ -64,7 +64,7 @@ inline void LinearizeBackwardEulerTerminal(
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   ComputeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, kkt_residual);
@@ -87,7 +87,7 @@ inline void ComputeForwardEulerResidual(
     const Eigen::MatrixBase<ConfigVectorType>& q_next, 
     const Eigen::MatrixBase<TangentVectorType>& v_next, 
     SplitKKTResidual& kkt_residual) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
   robot.subtractConfiguration(s.q, q_next, kkt_residual.Fq());
@@ -102,7 +102,7 @@ inline void ComputeBackwardEulerResidual(
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) {
-  assert(dtau > 0);
+  assert(dtau >= 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   robot.subtractConfiguration(q_prev, s.q, kkt_residual.Fq());

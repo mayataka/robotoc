@@ -39,6 +39,7 @@ add_library(
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
   src/cost/time_varying_task_space_3d_cost.cpp
+  src/cost/foot_step_trotting_cost.cpp
   src/cost/impulse_cost_function.cpp
   src/cost/impulse_cost_function_component_base.cpp
   src/cost/joint_space_impulse_cost.cpp
@@ -121,8 +122,8 @@ add_library(
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp
   src/utils/simulation_data_saver.cpp
-  src/utils/runge_kutta.cpp
-  src/utils/manipulator_simulator.cpp
+  # src/utils/runge_kutta.cpp
+  # src/utils/manipulator_simulator.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

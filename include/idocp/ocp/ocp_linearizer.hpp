@@ -95,6 +95,9 @@ public:
 
 private:
 
+  static constexpr double kMindtau
+      = std::sqrt(std::numeric_limits<double>::epsilon());
+
   template <typename Algorithm>
   void runParallel(OCP& ocp, std::vector<Robot>& robots,
                    const ContactSequence& contact_sequence,

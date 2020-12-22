@@ -55,11 +55,11 @@ private:
 };
 
 
+
 int main(int argc, char *argv[]) {
   srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
   const std::string path_to_urdf = "../anymal/anymal.urdf";
-  const std::string path_to_urdf_for_raisim = "/home/sotaro/src/idocp/examples/anymal/anymal/anymal_for_raisim.urdf";
   idocp::Robot robot(path_to_urdf, contact_frames);
   auto cost = std::make_shared<idocp::CostFunction>();
   Eigen::VectorXd q_ref(Eigen::VectorXd::Zero(robot.dimq()));
@@ -70,16 +70,6 @@ int main(int argc, char *argv[]) {
            0.1, -0.7,  1.0;
   robot.normalizeConfiguration(q_ref);
   Eigen::VectorXd v_ref(Eigen::VectorXd::Zero(robot.dimv()));
-  // v_ref <<  0.3, 0, 0, 0, 0, 0, 
-  //           0,  0,  -1,
-  //           0,  0,  0,
-  //           0,  0,  0,
-  //           0, -0,   1;
-  // v_ref << 0, 0, 0, 0, 4*M_PI, 0, 
-  //           0,  0,  0,
-  //           0,  0,  0,
-  //           0,  0,  0,
-  //           0,  0,  0;
   Eigen::VectorXd q_weight(Eigen::VectorXd::Zero(robot.dimv()));
   q_weight << 10, 10, 10, 10, 10, 10, 
                1, 1, 1,
@@ -222,11 +212,13 @@ int main(int argc, char *argv[]) {
   mpc.computeKKTResidual(t, q, v);
   std::cout << mpc.KKTError() << std::endl;
   const std::string path_to_raisim_activation_key = argv[1];
+  const std::string path_to_urdf_for_raisim = "../anymal/anymal_for_raisim.urdf";
   idocp::QuadrupedSimulator<idocp::OCPSolver> simulator(path_to_raisim_activation_key, 
                                                         path_to_urdf_for_raisim, 
                                                         "../sim_result", "standing");
   constexpr bool visualization = true;
   constexpr bool video_recording = false;
-  simulator.run<MPCCallbackStanding>(mpc, 2, 0.0025, 0, q, v, visualization, video_recording);
+  MPCCallbackStanding mpc_callback(robot);
+  simulator.run(mpc, mpc_callback, 2, 0.0025, 0, q, v, visualization, video_recording);
   return 0;
 }
