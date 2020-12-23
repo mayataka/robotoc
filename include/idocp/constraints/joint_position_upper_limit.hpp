@@ -33,12 +33,14 @@ public:
   JointPositionUpperLimit(JointPositionUpperLimit&&) noexcept = default;
 
   // Use default move assign coperator.
-  JointPositionUpperLimit& operator=(JointPositionUpperLimit&&) noexcept 
-      = default;
+  JointPositionUpperLimit& operator=(
+      JointPositionUpperLimit&&) noexcept = default;
 
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;
+
+  void allocateExtraData(ConstraintComponentData& data) const {}
 
   bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                   const SplitSolution& s) const override;

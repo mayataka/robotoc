@@ -40,6 +40,8 @@ public:
   bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                   const SplitSolution& s) const override;
 
+  void allocateExtraData(ConstraintComponentData& data) const {}
+
   void setSlackAndDual(Robot& robot, ConstraintComponentData& data, 
                        const SplitSolution& s) const override;
 
@@ -63,6 +65,7 @@ public:
 
 private:
   int dimc_;
+  double fraction_to_boundary_rate_;
 
 };
 

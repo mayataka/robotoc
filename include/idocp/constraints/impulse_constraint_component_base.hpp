@@ -40,23 +40,26 @@ public:
   ///
   /// @brief Default copy constructor. 
   ///
-  ImpulseConstraintComponentBase(const ImpulseConstraintComponentBase&) = default;
+  ImpulseConstraintComponentBase(
+      const ImpulseConstraintComponentBase&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  ImpulseConstraintComponentBase& operator=(const ImpulseConstraintComponentBase&) = default;
+  ImpulseConstraintComponentBase& operator=(
+      const ImpulseConstraintComponentBase&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  ImpulseConstraintComponentBase(ImpulseConstraintComponentBase&&) noexcept = default;
+  ImpulseConstraintComponentBase(
+      ImpulseConstraintComponentBase&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  ImpulseConstraintComponentBase& operator=(ImpulseConstraintComponentBase&&) noexcept 
-      = default;
+  ImpulseConstraintComponentBase& operator=(
+      ImpulseConstraintComponentBase&&) noexcept = default;
 
   ///
   /// @brief Check the kinematics level of the constraint component.

@@ -23,6 +23,7 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
+#include "idocp/constraints/contact_normal_force.hpp"
 
 #include "idocp/utils/joint_constraints_factory.hpp"
 #include "idocp/utils/ocp_benchmarker.hpp"
@@ -97,14 +98,17 @@ int main () {
   auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
   auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
   auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
-  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
-  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  auto joint_torques_lower  = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper  = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  auto contact_normal_force = std::make_shared<idocp::ContactNormalForce>(robot);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
   constraints->push_back(joint_velocity_upper);
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
+  // constraints->push_back(contact_normal_force);
+
   const double T = 0.5;
   const int N = 20;
   const int max_num_impulse_phase = 4;
@@ -145,7 +149,7 @@ int main () {
   const double t_next = t + 0.0025 + dtau_near_zero;
   ocp_benchmarker.testConvergence(t_next, q, v, 5, false);
   // ocp_benchmarker.testCPUTime(t, q, v, 1000);
-  // ocp_benchmarker.getSolverHandle()->printSolution("q");
+  ocp_benchmarker.getSolverHandle()->printSolution("f");
   // ocp_benchmarker.getSolverHandle()->printSolution("v");
   // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
   //                                                           robot, cost, constraints, T, N, num_proc);

@@ -39,7 +39,8 @@ add_library(
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
   src/cost/time_varying_task_space_3d_cost.cpp
-  src/cost/foot_step_trotting_cost.cpp
+  src/cost/trotting_configuration_cost.cpp
+  src/cost/trotting_foot_step_cost.cpp
   src/cost/impulse_cost_function.cpp
   src/cost/impulse_cost_function_component_base.cpp
   src/cost/joint_space_impulse_cost.cpp
@@ -60,6 +61,7 @@ add_library(
   src/constraints/joint_torques_lower_limit.cpp
   src/constraints/friction_cone.cpp
   src/constraints/contact_normal_force.cpp
+  src/constraints/contact_distance.cpp
   src/constraints/impulse_constraints.cpp
   src/constraints/impulse_constraint_component_base.cpp
   src/constraints/impulse_friction_cone.cpp

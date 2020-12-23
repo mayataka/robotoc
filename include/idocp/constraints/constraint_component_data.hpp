@@ -1,6 +1,8 @@
 #ifndef IDOCP_CONSTRAINT_COMPONENT_DATA_HPP_
 #define IDOCP_CONSTRAINT_COMPONENT_DATA_HPP_
 
+#include <vector>
+
 #include "Eigen/Core"
 
 
@@ -86,6 +88,10 @@ public:
   /// ConstraintComponentData::dimc(). 
   ///
   Eigen::VectorXd ddual;
+
+  std::vector<Eigen::MatrixXd> J_vec;
+
+  Eigen::MatrixXd J;
 
   ///
   /// @brief Dimension of the constraint. 

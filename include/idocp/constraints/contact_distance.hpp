@@ -1,8 +1,6 @@
 #ifndef IDOCP_CONTACT_DISTANCE_HPP_
 #define IDOCP_CONTACT_DISTANCE_HPP_
 
-#include "Eigen/Core"
-
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
@@ -39,6 +37,8 @@ public:
 
   KinematicsLevel kinematicsLevel() const override;
 
+  void allocateExtraData(ConstraintComponentData& data) const;
+
   bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                   const SplitSolution& s) const override;
 
@@ -49,34 +49,24 @@ public:
                            const double dtau, const SplitSolution& s,
                            SplitKKTResidual& kkt_residual) const override;
 
-  void augmentDualResidual(const Robot& robot, ConstraintComponentData& data, 
-                           const double dtau, const Eigen::VectorXd& u,
-                           Eigen::VectorXd& lu) const override {}
-
   void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data, 
-                            const SplitSolution& s,
+                            const double dtau, const SplitSolution& s,
                             SplitKKTMatrix& kkt_matrix,
                             SplitKKTResidual& kkt_residual) const override;
 
-  void condenseSlackAndDual(const Robot& robot, ConstraintComponentData& data, 
-                            const double dtau, const Eigen::VectorXd& u,
-                            Eigen::MatrixXd& Quu, 
-                            Eigen::VectorXd& lu) const override {}
-
   void computeSlackAndDualDirection(Robot& robot, ConstraintComponentData& data, 
-                                    const double dtau, const SplitSolution& s,
+                                    const SplitSolution& s,
                                     const SplitDirection& d) const override; 
 
   void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
-                                    const double dtau, 
                                     const SplitSolution& s) const override;
   
   int dimc() const override;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
-
 private:
-  int dimc_;
+  int dimv_, dimc_;
+  std::vector<int> contact_frames_;
+  double fraction_to_boundary_rate_;
 
 };
 

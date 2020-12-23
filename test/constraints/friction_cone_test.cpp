@@ -26,6 +26,7 @@ protected:
     barrier = 1.0e-04;
     dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
     mu = 0.8;
+    fraction_to_boundary_rate = 0.995;
   }
 
   virtual void TearDown() {
@@ -39,7 +40,7 @@ protected:
   void testCondenseSlackAndDual(Robot& robot, const ContactStatus& contact_status) const;
   void testComputeSlackAndDualDirection(Robot& robot, const ContactStatus& contact_status) const;
 
-  double barrier, dtau, mu;
+  double barrier, dtau, mu, fraction_to_boundary_rate;
   std::string fixed_base_urdf, floating_base_urdf;
 };
 
@@ -225,9 +226,9 @@ void FrictionConeTest::testComputeSlackAndDualDirection(Robot& robot, const Cont
     }
     else {
       data_ref.slack.coeffRef(i) = 1.0;
-      data_ref.dslack.coeffRef(i) = 1.0;
+      data_ref.dslack.coeffRef(i) = fraction_to_boundary_rate;
       data_ref.dual.coeffRef(i) = 1.0;
-      data_ref.ddual.coeffRef(i) = 1.0;
+      data_ref.ddual.coeffRef(i) = fraction_to_boundary_rate;
     }
   }
   EXPECT_TRUE(data.slack.isApprox(data_ref.slack));

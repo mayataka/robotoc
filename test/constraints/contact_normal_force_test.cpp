@@ -25,6 +25,7 @@ protected:
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     barrier = 1.0e-04;
     dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    fraction_to_boundary_rate = 0.995;
   }
 
   virtual void TearDown() {
@@ -38,7 +39,7 @@ protected:
   void testCondenseSlackAndDual(Robot& robot, const ContactStatus& contact_status) const;
   void testComputeSlackAndDualDirection(Robot& robot, const ContactStatus& contact_status) const;
 
-  double barrier, dtau;
+  double barrier, dtau, fraction_to_boundary_rate;
   std::string fixed_base_urdf, floating_base_urdf;
 };
 
@@ -58,7 +59,9 @@ void ContactNormalForceTest::testIsFeasible(Robot& robot, const ContactStatus& c
   s.setContactStatus(contact_status);
   s.f_stack().setZero();
   s.set_f_vector();
-  EXPECT_TRUE(limit.isFeasible(robot, data, s));
+  if (contact_status.hasActiveContacts()) {
+    EXPECT_FALSE(limit.isFeasible(robot, data, s));
+  }
   s.f_stack().setConstant(1.0);
   s.set_f_vector();
   EXPECT_TRUE(limit.isFeasible(robot, data, s));
@@ -190,9 +193,9 @@ void ContactNormalForceTest::testComputeSlackAndDualDirection(Robot& robot, cons
     }
     else {
       data_ref.slack.coeffRef(i) = 1.0;
-      data_ref.dslack.coeffRef(i) = 1.0;
+      data_ref.dslack.coeffRef(i) = fraction_to_boundary_rate;
       data_ref.dual.coeffRef(i) = 1.0;
-      data_ref.ddual.coeffRef(i) = 1.0;
+      data_ref.ddual.coeffRef(i) = fraction_to_boundary_rate;
     }
   }
   EXPECT_TRUE(data.slack.isApprox(data_ref.slack));

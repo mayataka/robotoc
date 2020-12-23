@@ -1,4 +1,4 @@
-#include "idocp/cost/foot_step_trotting_cost.hpp"
+#include "idocp/cost/trotting_foot_step_cost.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -6,7 +6,7 @@
 
 namespace idocp {
 
-FootStepTrottingCost::FootStepTrottingCost(const Robot& robot, 
+TrottingFootStepCost::TrottingFootStepCost(const Robot& robot, 
                                            const int frame_id)
   : CostFunctionComponentBase(),
     frame_id_(frame_id),
@@ -20,7 +20,7 @@ FootStepTrottingCost::FootStepTrottingCost(const Robot& robot,
 }
 
 
-FootStepTrottingCost::FootStepTrottingCost()
+TrottingFootStepCost::TrottingFootStepCost()
   : CostFunctionComponentBase(),
     frame_id_(0),
     t_start_(0),
@@ -33,16 +33,16 @@ FootStepTrottingCost::FootStepTrottingCost()
 }
 
 
-FootStepTrottingCost::~FootStepTrottingCost() {
+TrottingFootStepCost::~TrottingFootStepCost() {
 }
 
 
-bool FootStepTrottingCost::useKinematics() const {
+bool TrottingFootStepCost::useKinematics() const {
   return true;
 }
 
 
-void FootStepTrottingCost::set_q_3d_ref(const Eigen::Vector3d& q_3d_ref_init,
+void TrottingFootStepCost::set_q_3d_ref(const Eigen::Vector3d& q_3d_ref_init,
                                         const double step_length, 
                                         const double step_height) {
   try {
@@ -65,7 +65,7 @@ void FootStepTrottingCost::set_q_3d_ref(const Eigen::Vector3d& q_3d_ref_init,
 }
 
 
-void FootStepTrottingCost::set_period(const double t_start, 
+void TrottingFootStepCost::set_period(const double t_start, 
                                       const double t_period) {
   try {
     if (t_period <= 0) {
@@ -82,18 +82,18 @@ void FootStepTrottingCost::set_period(const double t_start,
 }
 
 
-void FootStepTrottingCost::set_q_3d_weight(const Eigen::Vector3d& q_3d_weight) {
+void TrottingFootStepCost::set_q_3d_weight(const Eigen::Vector3d& q_3d_weight) {
   q_3d_weight_ = q_3d_weight;
 }
 
 
-void FootStepTrottingCost::set_qf_3d_weight(
+void TrottingFootStepCost::set_qf_3d_weight(
     const Eigen::Vector3d& qf_3d_weight) {
   qf_3d_weight_ = qf_3d_weight;
 }
 
 
-double FootStepTrottingCost::l(Robot& robot, CostFunctionData& data, 
+double TrottingFootStepCost::l(Robot& robot, CostFunctionData& data, 
                                const double t, const double dtau, 
                                const SplitSolution& s) const {
   double l = 0;
@@ -103,7 +103,7 @@ double FootStepTrottingCost::l(Robot& robot, CostFunctionData& data,
 }
 
 
-double FootStepTrottingCost::phi(Robot& robot, CostFunctionData& data, 
+double TrottingFootStepCost::phi(Robot& robot, CostFunctionData& data, 
                                  const double t, const SplitSolution& s) const {
   double phi = 0;
   data.diff_3d = robot.framePosition(frame_id_) - q_3d_ref(t);
@@ -112,7 +112,7 @@ double FootStepTrottingCost::phi(Robot& robot, CostFunctionData& data,
 }
 
 
-void FootStepTrottingCost::lq(Robot& robot, CostFunctionData& data, 
+void TrottingFootStepCost::lq(Robot& robot, CostFunctionData& data, 
                               const double t, const double dtau, 
                               const SplitSolution& s, 
                               SplitKKTResidual& kkt_residual) const {
@@ -125,7 +125,7 @@ void FootStepTrottingCost::lq(Robot& robot, CostFunctionData& data,
 }
 
 
-void FootStepTrottingCost::lqq(Robot& robot, CostFunctionData& data, 
+void TrottingFootStepCost::lqq(Robot& robot, CostFunctionData& data, 
                                const double t, const double dtau, 
                                const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const {
@@ -137,7 +137,7 @@ void FootStepTrottingCost::lqq(Robot& robot, CostFunctionData& data,
 }
 
 
-void FootStepTrottingCost::phiq(Robot& robot, CostFunctionData& data, 
+void TrottingFootStepCost::phiq(Robot& robot, CostFunctionData& data, 
                                 const double t, const SplitSolution& s,
                                 SplitKKTResidual& kkt_residual) const {
   data.diff_3d = robot.framePosition(frame_id_) - q_3d_ref(t);
@@ -149,7 +149,7 @@ void FootStepTrottingCost::phiq(Robot& robot, CostFunctionData& data,
 }
 
 
-void FootStepTrottingCost::phiqq(Robot& robot, CostFunctionData& data, 
+void TrottingFootStepCost::phiqq(Robot& robot, CostFunctionData& data, 
                                  const double t, const SplitSolution& s,
                                  SplitKKTMatrix& kkt_matrix) const {
     robot.getFrameJacobian(frame_id_, data.J_6d);

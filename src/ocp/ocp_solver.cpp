@@ -380,6 +380,7 @@ void OCPSolver::printSolution(const std::string& name,
       for (int j=0; j<s_[i].f.size(); ++j) {
         std::cout << s_[i].f[j].transpose() << "; ";
       }
+      std::cout << std::endl;
     }
   }
   if (name == "u") {

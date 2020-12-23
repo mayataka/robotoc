@@ -33,12 +33,14 @@ public:
   JointVelocityLowerLimit(JointVelocityLowerLimit&&) noexcept = default;
 
   // Use default move assign coperator.
-  JointVelocityLowerLimit& operator=(JointVelocityLowerLimit&&) noexcept 
-      = default;
+  JointVelocityLowerLimit& operator=(
+      JointVelocityLowerLimit&&) noexcept = default;
 
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;
+
+  void allocateExtraData(ConstraintComponentData& data) const {}
 
   bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                   const SplitSolution& s) const override;

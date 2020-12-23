@@ -88,19 +88,22 @@ inline ConstraintsData Constraints::createConstraintsData(
   ConstraintsData data(time_stage);
   if (data.isPositionLevelValid()) {
     for (const auto constraint : position_level_constraints_) {
-      data.position_level_data.push_back(ConstraintComponentData(
-          constraint->dimc()));
+      auto component_data = ConstraintComponentData(constraint->dimc());
+      constraint->allocateExtraData(component_data);
+      data.position_level_data.push_back(component_data);
     }
   }
   if (data.isVelocityLevelValid()) {
     for (const auto constraint : velocity_level_constraints_) {
-      data.velocity_level_data.push_back(ConstraintComponentData(
-          constraint->dimc()));
+      auto component_data = ConstraintComponentData(constraint->dimc());
+      constraint->allocateExtraData(component_data);
+      data.velocity_level_data.push_back(component_data);
     }
   }
   for (const auto constraint : acceleration_level_constraints_) {
-    data.acceleration_level_data.push_back(ConstraintComponentData(
-        constraint->dimc()));
+    auto component_data = ConstraintComponentData(constraint->dimc());
+    constraint->allocateExtraData(component_data);
+    data.acceleration_level_data.push_back(component_data);
   }
   return data;
 }

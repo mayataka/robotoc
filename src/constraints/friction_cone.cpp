@@ -9,13 +9,15 @@ namespace idocp {
 FrictionCone::FrictionCone(const Robot& robot, const double barrier,
                            const double fraction_to_boundary_rate)
   : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
-    dimc_(robot.maxPointContacts()) {
+    dimc_(robot.maxPointContacts()),
+    fraction_to_boundary_rate_(fraction_to_boundary_rate) {
 }
 
 
 FrictionCone::FrictionCone()
   : ConstraintComponentBase(),
-    dimc_(0) {
+    dimc_(0),
+    fraction_to_boundary_rate_(0) {
 }
 
 
@@ -138,11 +140,10 @@ void FrictionCone::computeSlackAndDualDirection(
       dimf_stack += 3;
     }
     else {
-      // Set 1.0 to make the fraction-to-boundary rule easy.
-      data.slack.coeffRef(i) = 1.0;
-      data.dslack.coeffRef(i) = 1.0;
-      data.dual.coeffRef(i) = 1.0;
-      data.ddual.coeffRef(i) = 1.0;
+      data.slack.coeffRef(i)  = 1.0;
+      data.dslack.coeffRef(i) = fraction_to_boundary_rate_;
+      data.dual.coeffRef(i)   = 1.0;
+      data.ddual.coeffRef(i)  = fraction_to_boundary_rate_;
     }
   }
 }

@@ -26,8 +26,8 @@ void BenchmarkWithoutContacts() {
   robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 200));
   auto cost = std::make_shared<idocp::CostFunction>();
   auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
-  joint_cost->set_q_ref(Eigen::VectorXd::Constant(robot.dimv(), 5));
-  joint_cost->set_v_ref(Eigen::VectorXd::Constant(robot.dimv(), 9));
+  joint_cost->set_q_ref(Eigen::VectorXd::Constant(robot.dimv(), -5));
+  joint_cost->set_v_ref(Eigen::VectorXd::Constant(robot.dimv(), -9));
   joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   joint_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
@@ -41,7 +41,7 @@ void BenchmarkWithoutContacts() {
   const int N = 20;
   const int num_proc = 4;
   const double t = 0;
-  const Eigen::VectorXd q = Eigen::VectorXd::Constant(robot.dimq(), -2);
+  const Eigen::VectorXd q = Eigen::VectorXd::Constant(robot.dimq(), 2);
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
   idocp::OCPBenchmarker<idocp::OCPSolver> ocp_benchmarker("OCP for iiwa14 without contacts",
                                                           robot, cost, constraints, T, N, 0, num_proc);

@@ -16,6 +16,8 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc)
     duality(Eigen::VectorXd::Zero(dimc)),
     dslack(Eigen::VectorXd::Zero(dimc)),
     ddual(Eigen::VectorXd::Zero(dimc)),
+    J_vec(),
+    J(),
     dimc_(dimc) {
   try {
     if (dimc < 0) {
@@ -36,6 +38,8 @@ inline ConstraintComponentData::ConstraintComponentData()
     duality(),
     dslack(),
     ddual(),
+    J_vec(),
+    J(),
     dimc_(0) {
 }
 

@@ -28,18 +28,21 @@ public:
   JointAccelerationUpperLimit(const JointAccelerationUpperLimit&) = default;
 
   // Use default copy coperator.
-  JointAccelerationUpperLimit& operator=(const JointAccelerationUpperLimit&) = default;
+  JointAccelerationUpperLimit& operator=(
+      const JointAccelerationUpperLimit&) = default;
 
   // Use default move constructor.
   JointAccelerationUpperLimit(JointAccelerationUpperLimit&&) noexcept = default;
 
   // Use default move assign coperator.
-  JointAccelerationUpperLimit& operator=(JointAccelerationUpperLimit&&) noexcept 
-      = default;
+  JointAccelerationUpperLimit& operator=(
+      JointAccelerationUpperLimit&&) noexcept = default;
 
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;
+
+  void allocateExtraData(ConstraintComponentData& data) const {}
 
   bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                   const SplitSolution& s) const override;

@@ -1,5 +1,5 @@
-#ifndef IDOCP_FOOT_STEP_TROTTING_COST_HPP_
-#define IDOCP_FOOT_STEP_TROTTING_COST_HPP_
+#ifndef IDOCP_TROTTING_FOOT_STEP_COST_HPP_
+#define IDOCP_TROTTING_FOOT_STEP_COST_HPP_
 
 #include <cmath>
 
@@ -15,26 +15,26 @@
 
 namespace idocp {
 
-class FootStepTrottingCost final : public CostFunctionComponentBase {
+class TrottingFootStepCost final : public CostFunctionComponentBase {
 public:
 
-  FootStepTrottingCost(const Robot& robot, const int foot_frame_id);
+  TrottingFootStepCost(const Robot& robot, const int foot_frame_id);
 
-  FootStepTrottingCost();
+  TrottingFootStepCost();
 
-  ~FootStepTrottingCost();
+  ~TrottingFootStepCost();
 
   // Use defalut copy constructor.
-  FootStepTrottingCost(const FootStepTrottingCost&) = default;
+  TrottingFootStepCost(const TrottingFootStepCost&) = default;
 
   // Use defalut copy operator.
-  FootStepTrottingCost& operator=(const FootStepTrottingCost&) = default;
+  TrottingFootStepCost& operator=(const TrottingFootStepCost&) = default;
 
   // Use defalut move constructor.
-  FootStepTrottingCost(FootStepTrottingCost&&) noexcept = default;
+  TrottingFootStepCost(TrottingFootStepCost&&) noexcept = default;
 
   // Use defalut copy operator.
-  FootStepTrottingCost& operator=(FootStepTrottingCost&&) noexcept = default;
+  TrottingFootStepCost& operator=(TrottingFootStepCost&&) noexcept = default;
 
   bool useKinematics() const override;
 
@@ -119,14 +119,14 @@ private:
 
   Eigen::Vector3d q_3d_ref(const double t) const {
     if (t > t_start_) {
-      const int phase = std::floor((t-t_start_)/t_period_) + 1;
+      const int steps = std::floor((t-t_start_)/t_period_);
       Eigen::Vector3d q_3d_ref_vec(q_3d_ref_init_);
-      if (phase % 2 == 0) {
-        q_3d_ref_vec.coeffRef(0) += (phase/2) * step_length_;
+      if (steps % 2 == 0) {
+        // q_3d_ref_vec.coeffRef(0) += (steps/2 + 1) * step_length_;
+        q_3d_ref_vec.coeffRef(2) += step_height_;
       }
       else {
-        q_3d_ref_vec.coeffRef(0) += ((phase-1)/2 + 1) * step_length_;
-        q_3d_ref_vec.coeffRef(2) += step_height_;
+        // q_3d_ref_vec.coeffRef(0) += ((steps-1)/2 + 1) * step_length_;
       }
       return q_3d_ref_vec;
     }
@@ -139,4 +139,4 @@ private:
 
 } // namespace idocp
 
-#endif // IDOCP_FOOT_STEP_TROTTING_COST_HPP_ 
+#endif // IDOCP_TROTTING_FOOT_STEP_COST_HPP_ 

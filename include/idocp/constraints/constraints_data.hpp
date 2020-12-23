@@ -75,6 +75,7 @@ public:
 
 private:
   bool is_position_level_valid_, is_velocity_level_valid_;
+
 };
   
 } // namespace idocp
