@@ -11,7 +11,7 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
-#include "idocp/cost/impulse_cost_function.hpp"
+#include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/impulse_constraints.hpp"
 #include "idocp/impulse/impulse_state_equation.hpp"
@@ -33,8 +33,7 @@ public:
   /// @param[in] cost Shared ptr to the impulse cost function.
   /// @param[in] constraints Shared ptr to the impulse constraints.
   ///
-  ImpulseSplitOCP(const Robot& robot, 
-                  const std::shared_ptr<ImpulseCostFunction>& cost,
+  ImpulseSplitOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
                   const std::shared_ptr<ImpulseConstraints>& constraints);
 
   ///
@@ -233,7 +232,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  std::shared_ptr<ImpulseCostFunction> cost_;
+  std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;
   std::shared_ptr<ImpulseConstraints> constraints_;
   ConstraintsData constraints_data_;

@@ -81,7 +81,7 @@ inline double TerminalOCP::terminalCost(Robot& robot, const double t,
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v);
   }
-  return cost_->phi(robot, cost_data_, t, s);
+  return cost_->computeTerminalCost(robot, cost_data_, t, s);
 }
 
 

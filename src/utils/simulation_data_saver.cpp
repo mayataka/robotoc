@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+
 namespace idocp {
 
 SimulationDataSaver::SimulationDataSaver(const std::string& save_dir_path, 

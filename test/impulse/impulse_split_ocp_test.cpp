@@ -13,10 +13,10 @@
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
-#include "idocp/cost/impulse_cost_function.hpp"
+#include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
-#include "idocp/cost/joint_space_impulse_cost.hpp"
-#include "idocp/cost/impulse_force_cost.hpp"
+#include "idocp/cost/configuration_space_cost.hpp"
+#include "idocp/cost/contact_force_cost.hpp"
 #include "idocp/constraints/impulse_constraints.hpp"
 #include "idocp/constraints/impulse_normal_force.hpp"
 
@@ -34,7 +34,7 @@ protected:
   virtual void TearDown() {
   }
 
-  static std::shared_ptr<ImpulseCostFunction> createCost(const Robot& robot);
+  static std::shared_ptr<CostFunction> createCost(const Robot& robot);
 
   static std::shared_ptr<ImpulseConstraints> createConstraints(const Robot& robot);
 
@@ -44,19 +44,19 @@ protected:
 
   static void testLinearizeOCP(
       Robot& robot, const ImpulseStatus& impulse_status, 
-      const std::shared_ptr<ImpulseCostFunction>& cost,
+      const std::shared_ptr<CostFunction>& cost,
       const std::shared_ptr<ImpulseConstraints>& constraints, 
       const bool is_state_constraint_valid);
 
   static void testComputeKKTResidual(
       Robot& robot, const ImpulseStatus& impulse_status, 
-      const std::shared_ptr<ImpulseCostFunction>& cost,
+      const std::shared_ptr<CostFunction>& cost,
       const std::shared_ptr<ImpulseConstraints>& constraints,
       const bool is_state_constraint_valid);
 
   static void testCostAndConstraintViolation(
       Robot& robot, const ImpulseStatus& impulse_status, 
-      const std::shared_ptr<ImpulseCostFunction>& cost,
+      const std::shared_ptr<CostFunction>& cost,
       const std::shared_ptr<ImpulseConstraints>& constraints,
       const bool is_state_constraint_valid);
 
@@ -64,30 +64,28 @@ protected:
 };
 
 
-std::shared_ptr<ImpulseCostFunction> ImpulseSplitOCPTest::createCost(const Robot& robot) {
-  auto joint_cost = std::make_shared<JointSpaceImpulseCost>(robot);
+std::shared_ptr<CostFunction> ImpulseSplitOCPTest::createCost(const Robot& robot) {
+  auto config_cost = std::make_shared<ConfigurationSpaceCost>(robot);
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
   Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_ref);
   const Eigen::VectorXd v_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd dv_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  const Eigen::VectorXd dv_ref = Eigen::VectorXd::Random(robot.dimv());
-  joint_cost->set_q_weight(q_weight);
-  joint_cost->set_q_ref(q_ref);
-  joint_cost->set_v_weight(v_weight);
-  joint_cost->set_v_ref(v_ref);
-  joint_cost->set_dv_weight(dv_weight);
-  joint_cost->set_dv_ref(dv_ref);
-  auto impulse_force_cost = std::make_shared<idocp::ImpulseForceCost>(robot);
+  config_cost->set_q_weight(q_weight);
+  config_cost->set_q_ref(q_ref);
+  config_cost->set_v_weight(v_weight);
+  config_cost->set_v_ref(v_ref);
+  config_cost->set_dvi_weight(dv_weight);
+  auto contact_force_cost = std::make_shared<idocp::ContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Constant(0.001));
   }
-  impulse_force_cost->set_f_weight(f_weight);
-  auto cost = std::make_shared<ImpulseCostFunction>();
-  cost->push_back(joint_cost);
-  cost->push_back(impulse_force_cost);
+  contact_force_cost->set_f_weight(f_weight);
+  auto cost = std::make_shared<CostFunction>();
+  cost->push_back(config_cost);
+  cost->push_back(contact_force_cost);
   return cost;
 }
 
@@ -114,7 +112,7 @@ ImpulseSplitSolution ImpulseSplitOCPTest::generateFeasibleSolution(
 
 void ImpulseSplitOCPTest::testLinearizeOCP(
     Robot& robot, const ImpulseStatus& impulse_status, 
-    const std::shared_ptr<ImpulseCostFunction>& cost,
+    const std::shared_ptr<CostFunction>& cost,
     const std::shared_ptr<ImpulseConstraints>& constraints,
     const bool is_state_constraint_valid) {
   const SplitSolution s_prev = SplitSolution::Random(robot);
@@ -135,8 +133,8 @@ void ImpulseSplitOCPTest::testLinearizeOCP(
   constraints->setSlackAndDual(robot, constraints_data, s);
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
-  cost->computeStageCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
-  cost->computeStageCostHessian(robot, cost_data, t, s, kkt_matrix_ref);
+  cost->computeImpulseCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
+  cost->computeImpulseCostHessian(robot, cost_data, t, s, kkt_matrix_ref);
   constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
   stateequation::LinearizeImpulseForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
@@ -170,7 +168,7 @@ void ImpulseSplitOCPTest::testLinearizeOCP(
 
 void ImpulseSplitOCPTest::testComputeKKTResidual(
     Robot& robot, const ImpulseStatus& impulse_status, 
-    const std::shared_ptr<ImpulseCostFunction>& cost,
+    const std::shared_ptr<CostFunction>& cost,
     const std::shared_ptr<ImpulseConstraints>& constraints, 
     const bool is_state_constraint_valid) {
   const SplitSolution s_prev = SplitSolution::Random(robot);
@@ -192,7 +190,7 @@ void ImpulseSplitOCPTest::testComputeKKTResidual(
   constraints->setSlackAndDual(robot, constraints_data, s);
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
-  cost->computeStageCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
+  cost->computeImpulseCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
   constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
   stateequation::LinearizeImpulseForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamicsForwardEuler id(robot);
@@ -212,7 +210,7 @@ void ImpulseSplitOCPTest::testComputeKKTResidual(
 
 void ImpulseSplitOCPTest::testCostAndConstraintViolation(
     Robot& robot, const ImpulseStatus& impulse_status, 
-    const std::shared_ptr<ImpulseCostFunction>& cost,
+    const std::shared_ptr<CostFunction>& cost,
     const std::shared_ptr<ImpulseConstraints>& constraints,
     const bool is_state_constraint_valid) {
   const SplitSolution s_prev = SplitSolution::Random(robot);
@@ -235,7 +233,7 @@ void ImpulseSplitOCPTest::testCostAndConstraintViolation(
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
   double stage_cost_ref = 0;
-  stage_cost_ref += cost->l(robot, cost_data, t, s);
+  stage_cost_ref += cost->computeImpulseCost(robot, cost_data, t, s);
   stage_cost_ref += constraints->costSlackBarrier(constraints_data, step_size);
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);

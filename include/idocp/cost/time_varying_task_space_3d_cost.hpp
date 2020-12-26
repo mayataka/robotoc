@@ -44,74 +44,53 @@ public:
 
   void set_qf_3d_weight(const Eigen::Vector3d& qf_3d_weight);
 
-  double l(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s) const override;
+  void set_qi_3d_weight(const Eigen::Vector3d& qi_3d_weight);
 
-  double phi(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s) const override; 
+  double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
+                          const double dtau, 
+                          const SplitSolution& s) const override;
 
-  void lq(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          SplitKKTResidual& kkt_residual) const override;
+  double computeTerminalCost(Robot& robot, CostFunctionData& data, 
+                             const double t, 
+                             const SplitSolution& s) const override;
 
-  void lv(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          SplitKKTResidual& kkt_residual) const override {}
+  double computeImpulseCost(Robot& robot, CostFunctionData& data, 
+                            const double t, 
+                            const ImpulseSplitSolution& s) const override;
 
-  void la(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s,
-          SplitKKTResidual& kkt_residual) const override {}
+  void computeStageCostDerivatives(
+      Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+      const SplitSolution& s, SplitKKTResidual& kkt_residual) const override;
 
-  void lf(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          SplitKKTResidual& kkt_residual) const override {}
+  void computeTerminalCostDerivatives(
+      Robot& robot, CostFunctionData& data, const double t, 
+      const SplitSolution& s, SplitKKTResidual& kkt_residual) const override;
 
-  void lu(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          SplitKKTResidual& kkt_residual) const override {}
+  void computeImpulseCostDerivatives(
+      Robot& robot, CostFunctionData& data, const double t, 
+      const ImpulseSplitSolution& s, 
+      ImpulseSplitKKTResidual& kkt_residual) const;
 
-  void lqq(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           SplitKKTMatrix& kkt_matrix) const override;
+  void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
+                               const double t, const double dtau, 
+                               const SplitSolution& s, 
+                               SplitKKTMatrix& kkt_matrix) const override;
 
-  void lvv(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           SplitKKTMatrix& kkt_matrix) const override {}
+  void computeTerminalCostHessian(Robot& robot, CostFunctionData& data, 
+                                  const double t, const SplitSolution& s, 
+                                  SplitKKTMatrix& kkt_matrix) const override;
 
-  void laa(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           SplitKKTMatrix& kkt_matrix) const override {}
-
-  void lff(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           SplitKKTMatrix& kkt_matrix) const override {}
-
-  void luu(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           SplitKKTMatrix& kkt_matrix) const override {}
-
-  void phiq(Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, 
-            SplitKKTResidual& kkt_residual) const override;
-
-  void phiv(Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, 
-            SplitKKTResidual& kkt_residual) const override {}
-
-  void phiqq(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s, 
-             SplitKKTMatrix& kkt_matrix) const override;
-
-  void phivv(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s, 
-             SplitKKTMatrix& kkt_matrix) const override {}
+  void computeImpulseCostHessian(
+      Robot& robot, CostFunctionData& data, const double t, 
+      const ImpulseSplitSolution& s, 
+      ImpulseSplitKKTMatrix& kkt_matrix) const override;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int frame_id_;
   double t0_;
-  Eigen::Vector3d q0_, v0_, q_3d_weight_, qf_3d_weight_;
+  Eigen::Vector3d q0_, v0_, q_3d_weight_, qf_3d_weight_, qi_3d_weight_;
 
 };
 

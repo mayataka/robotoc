@@ -1,4 +1,4 @@
-add_test_macro(discrete_event_test)
-add_test_macro(collision_checker_test)
-add_test_macro(contact_sequence_test)
-add_test_macro(ocp_discretizer_test)
+add_idocp_test(discrete_event_test)
+add_idocp_test(collision_checker_test)
+add_idocp_test(contact_sequence_test)
+add_idocp_test(ocp_discretizer_test)

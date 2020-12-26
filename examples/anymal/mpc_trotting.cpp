@@ -66,17 +66,28 @@ public:
   template <typename OCPSolverType>
   void init(const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
             idocp::MPC<OCPSolverType>& mpc) {
-    // config_cost_->set_ref(kStart, kPeriod, q, kStepLength, 0.3, 0.5, 0.3, 0.5);
-    config_cost_->set_ref(kStart, kPeriod, q, kStepLength, 0, 0, 0, 0);
-    robot_.updateFrameKinematics(q);
-    LF_foot_cost_->set_q_3d_ref(robot_.framePosition(14), kStepLength, kStepHeight);
-    LH_foot_cost_->set_q_3d_ref(robot_.framePosition(24), kStepLength, kStepHeight);
-    RF_foot_cost_->set_q_3d_ref(robot_.framePosition(34), kStepLength, kStepHeight);
-    RH_foot_cost_->set_q_3d_ref(robot_.framePosition(44), kStepLength, kStepHeight);
-    LF_foot_cost_->set_period(kStart, kPeriod);
-    LH_foot_cost_->set_period(kStart+kPeriod, kPeriod);
-    RF_foot_cost_->set_period(kStart+kPeriod, kPeriod);
-    RH_foot_cost_->set_period(kStart, kPeriod);
+    idocp::TrottingSwingAnglePattern pattern;
+    pattern.front_swing_thigh  =  0.25;
+    pattern.front_swing_knee   =  -0.5;
+    pattern.front_stance_thigh =  0;
+    pattern.front_stance_knee  =  0;
+    pattern.hip_swing_thigh    =  0;
+    pattern.hip_swing_knee     =  0;
+    pattern.hip_stance_thigh   =  -0.5;
+    pattern.hip_stance_knee    =  1.0;
+    Eigen::VectorXd q_ref = q;
+    q_ref.coeffRef(2) = 0.3;
+    config_cost_->set_ref(kStart, kPeriod, q_ref, kStepLength, pattern);
+    // config_cost_->set_ref(kStart, kPeriod, q, kStepLength, 0, 0, 0, 0);
+    // robot_.updateFrameKinematics(q);
+    // LF_foot_cost_->set_q_3d_ref(robot_.framePosition(14), kStepLength, kStepHeight);
+    // LH_foot_cost_->set_q_3d_ref(robot_.framePosition(24), kStepLength, kStepHeight);
+    // RF_foot_cost_->set_q_3d_ref(robot_.framePosition(34), kStepLength, kStepHeight);
+    // RH_foot_cost_->set_q_3d_ref(robot_.framePosition(44), kStepLength, kStepHeight);
+    // LF_foot_cost_->set_period(kStart, kPeriod);
+    // LH_foot_cost_->set_period(kStart+kPeriod, kPeriod);
+    // RF_foot_cost_->set_period(kStart+kPeriod, kPeriod);
+    // RH_foot_cost_->set_period(kStart, kPeriod);
   }
 
   template <typename OCPSolverType>
@@ -144,7 +155,7 @@ public:
     for (auto& e : contact_points_even_) {
       e.coeffRef(0) += kStepLength;
     }
-    for (int i=0; i<100; ++i) {
+    for (int i=0; i<10; ++i) {
       mpc.updateSolution(t, q, v);
     }
     mpc.computeKKTResidual(t, q, v);
@@ -167,7 +178,8 @@ private:
   int steps_;
   std::deque<double> step_times_, future_step_times_;
   static constexpr double kPeriod = 0.5;
-  static constexpr double kStepLength = 0.15;
+  // static constexpr double kStepLength = 0.15;
+  static constexpr double kStepLength = 0.075;
   static constexpr double kStepHeight = 0.1;
   static constexpr double kT = 0.5;
   static constexpr double kStart = 1.0;
@@ -183,7 +195,7 @@ int main(int argc, char *argv[]) {
   idocp::Robot robot(path_to_urdf, contact_frames);
   auto cost = std::make_shared<idocp::CostFunction>();
   Eigen::VectorXd q_ref(Eigen::VectorXd::Zero(robot.dimq()));
-  q_ref <<  0, 0, 0.3792, 0, 0, 0, 1, 
+  q_ref <<  0, 0, 0.4792, 0, 0, 0, 1, 
            -0.1,  0.7, -1.0, 
            -0.1, -0.7,  1.0, 
             0.1,  0.7, -1.0, 
@@ -230,7 +242,7 @@ int main(int argc, char *argv[]) {
   auto LH_foot_cost = std::make_shared<idocp::TrottingFootStepCost>(robot, 24);
   auto RF_foot_cost = std::make_shared<idocp::TrottingFootStepCost>(robot, 34);
   auto RH_foot_cost = std::make_shared<idocp::TrottingFootStepCost>(robot, 44);
-  const double weight = 0;
+  const double weight = 10;
   LF_foot_cost->set_q_3d_weight(Eigen::Vector3d::Constant(weight));
   LF_foot_cost->set_qf_3d_weight(Eigen::Vector3d::Constant(weight));
   LH_foot_cost->set_q_3d_weight(Eigen::Vector3d::Constant(weight));
@@ -239,10 +251,10 @@ int main(int argc, char *argv[]) {
   RF_foot_cost->set_qf_3d_weight(Eigen::Vector3d::Constant(weight));
   RH_foot_cost->set_q_3d_weight(Eigen::Vector3d::Constant(weight));
   RH_foot_cost->set_qf_3d_weight(Eigen::Vector3d::Constant(weight));
-  cost->push_back(LF_foot_cost);
-  cost->push_back(LH_foot_cost);
-  cost->push_back(RF_foot_cost);
-  cost->push_back(RH_foot_cost);
+  // cost->push_back(LF_foot_cost);
+  // cost->push_back(LH_foot_cost);
+  // cost->push_back(RF_foot_cost);
+  // cost->push_back(RH_foot_cost);
 
   auto contact_cost = std::make_shared<idocp::ContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight, f_ref;
@@ -259,8 +271,8 @@ int main(int argc, char *argv[]) {
   contact_cost->set_f_ref(f_ref);
   cost->push_back(contact_cost);
   auto impulse_configuration_cost = std::make_shared<idocp::ImpulseTimeVaryingConfigurationCost>(robot);
-  impulse_configuration_cost->set_q_weight(q_weight);
-  impulse_configuration_cost->set_ref(0, q_ref, v_ref);
+  // impulse_configuration_cost->set_q_weight(q_weight);
+  // impulse_configuration_cost->set_ref(0, q_ref, v_ref);
   impulse_configuration_cost->set_v_weight(v_weight);
   impulse_configuration_cost->set_dv_weight(a_weight);
   cost->push_back(impulse_configuration_cost);
@@ -284,8 +296,8 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_velocity_upper);
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
-  constraints->push_back(contact_normal_force);
-  constraints->push_back(contact_distance);
+  // constraints->push_back(contact_normal_force);
+  // constraints->push_back(contact_distance);
   const double T = 0.5;
   const int N = 20;
   const int max_num_impulse_phase = 2;

@@ -173,12 +173,14 @@ int main(int argc, char *argv[]) {
   auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  auto contact_normal_force = std::make_shared<idocp::ContactNormalForce>(robot);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
   constraints->push_back(joint_velocity_upper);
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
+  constraints->push_back(contact_normal_force);
   const double T = 0.5;
   const int N = 20;
   const int max_num_impulse_phase = 4;
@@ -219,6 +221,6 @@ int main(int argc, char *argv[]) {
   constexpr bool visualization = true;
   constexpr bool video_recording = false;
   MPCCallbackStanding mpc_callback(robot);
-  simulator.run(mpc, mpc_callback, 2, 0.0025, 0, q, v, visualization, video_recording);
+  simulator.run(mpc, mpc_callback, 10, 0.0025, 0, q, v, visualization, video_recording);
   return 0;
 }

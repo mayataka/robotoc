@@ -1,7 +1,7 @@
 #ifndef IDOCP_UNCONSTRAINED_DYNAMICS_HXX_
 #define IDOCP_UNCONSTRAINED_DYNAMICS_HXX_
 
-#include "idocp/ocp/unconstrained_dynamics.hpp"
+#include "idocp/unconstrained/unconstrained_dynamics.hpp"
 
 #include <stdexcept>
 #include <cassert>

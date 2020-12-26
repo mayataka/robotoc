@@ -22,9 +22,7 @@ if(OpenMP_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 # build idocp 
-add_library(
-  ${PROJECT_NAME} 
-  SHARED
+set(IDOCP_SOURCE_FILES ${IDOCP_SOURCE_FILES} 
   src/robot/robot.cpp
   src/robot/floating_base.cpp
   src/robot/point_contact.cpp
@@ -33,19 +31,14 @@ add_library(
   src/cost/cost_function.cpp
   src/cost/cost_function_data.cpp
   src/cost/cost_function_component_base.cpp
-  src/cost/joint_space_cost.cpp
+  src/cost/configuration_space_cost.cpp
+  src/cost/time_varying_configuration_space_cost.cpp
   src/cost/contact_force_cost.cpp
-  src/cost/time_varying_configuration_cost.cpp
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
   src/cost/time_varying_task_space_3d_cost.cpp
   src/cost/trotting_configuration_cost.cpp
   src/cost/trotting_foot_step_cost.cpp
-  src/cost/impulse_cost_function.cpp
-  src/cost/impulse_cost_function_component_base.cpp
-  src/cost/joint_space_impulse_cost.cpp
-  src/cost/impulse_time_varying_configuration_cost.cpp
-  src/cost/impulse_force_cost.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
   src/constraints/constraints_data.cpp
@@ -80,8 +73,6 @@ add_library(
   src/impulse/impulse_split_riccati_factorizer.cpp
   src/impulse/impulse_dynamics_backward_euler_data.cpp
   src/impulse/impulse_dynamics_backward_euler.cpp
-  # src/impulse/split_impulse_parnmpc.cpp
-  # src/impulse/impulse_split_backward_correction.cpp
   src/hybrid/discrete_event.cpp
   src/hybrid/contact_sequence.cpp
   src/hybrid/ocp_discretizer.cpp
@@ -93,7 +84,6 @@ add_library(
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
-  # src/ocp/unconstrained_dynamics.cpp
   src/ocp/contact_dynamics_data.cpp
   src/ocp/contact_dynamics.cpp
   src/ocp/split_ocp.cpp
@@ -112,20 +102,25 @@ add_library(
   src/ocp/riccati_direction_calculator.cpp
   src/ocp/riccati_solver.cpp
   src/ocp/ocp_solver.cpp
-  # src/line_search/split_temporary_solution.cpp
-  # src/line_search/line_search_filter.cpp
-
-  # src/ocp/split_parnmpc.cpp
-  # src/ocp/terminal_parnmpc.cpp
-  # src/ocp/split_backward_correction.cpp
-  # src/ocp/backward_correction.cpp
-  # src/ocp/parnmpc.cpp
-  # src/ocp/mpc.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp
   src/utils/simulation_data_saver.cpp
-  # src/utils/runge_kutta.cpp
-  # src/utils/manipulator_simulator.cpp
+)
+if (BUILD_WITH_RAISIM) 
+  # find raisim and raisimOgre
+  find_package(raisim CONFIG REQUIRED)
+  find_package(raisimOgre CONFIG REQUIRED)
+  list(APPEND IDOCP_SOURCE_FILES ${IDOCP_SOURCE_FILES}
+    src/utils/helper.cpp
+    src/utils/csv_to_eigen.cpp
+    src/utils/trajectory_viewer.cpp
+    # src/utils/quadruped_simulator.cpp
+  )
+endif() # end if (BUILD_WITH_RAISIM)
+add_library(
+  ${PROJECT_NAME} 
+  SHARED
+  ${IDOCP_SOURCE_FILES}
 )
 target_link_libraries(
   ${PROJECT_NAME} 
@@ -144,6 +139,20 @@ target_include_directories(
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
+if (BUILD_WITH_RAISIM) 
+  target_link_libraries(
+    ${PROJECT_NAME} 
+    PUBLIC 
+    ${raisim_LIBRARIES}
+    ${raisimOgre_LIBRARIES}
+  )
+  target_include_directories(
+    ${PROJECT_NAME} 
+    PUBLIC
+    ${raisim_INCLUDE_DIRS}
+    ${raisimOgre_INCLUDE_DIRS}
+  )
+endif() # end if (BUILD_WITH_RAISIM)
 
 #############
 ## Testing ##

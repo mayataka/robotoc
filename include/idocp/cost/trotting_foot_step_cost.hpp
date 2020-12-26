@@ -41,99 +41,91 @@ public:
   void set_q_3d_ref(const Eigen::Vector3d& q_3d_ref_init, 
                     const double step_length, const double step_height);
 
-  void set_period(const double t_start, const double t_period);
+  void set_period(const double t_start, const double t_period, 
+                  const bool is_initial_step);
 
   void set_q_3d_weight(const Eigen::Vector3d& q_3d_weight);
 
   void set_qf_3d_weight(const Eigen::Vector3d& qf_3d_weight);
 
-  double l(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s) const override;
+  void set_qi_3d_weight(const Eigen::Vector3d& qi_3d_weight);
 
-  double phi(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s) const override; 
+  double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
+                          const double dtau, const SplitSolution& s) const;
 
-  void lq(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          SplitKKTResidual& kkt_residual) const override;
+  double computeTerminalCost(Robot& robot, CostFunctionData& data, 
+                             const double t, const SplitSolution& s) const;
 
-  void lv(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          SplitKKTResidual& kkt_residual) const override {}
+  double computeImpulseCost(Robot& robot, CostFunctionData& data, 
+                            const double t, 
+                            const ImpulseSplitSolution& s) const;
 
-  void la(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s,
-          SplitKKTResidual& kkt_residual) const override {}
+  void computeStageCostDerivatives(Robot& robot, CostFunctionData& data, 
+                                   const double t, const double dtau, 
+                                   const SplitSolution& s, 
+                                   SplitKKTResidual& kkt_residual) const;
 
-  void lf(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          SplitKKTResidual& kkt_residual) const override {}
+  void computeTerminalCostDerivatives(Robot& robot, CostFunctionData& data, 
+                                      const double t, const SplitSolution& s, 
+                                      SplitKKTResidual& kkt_residual) const;
 
-  void lu(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          SplitKKTResidual& kkt_residual) const override {}
+  void computeImpulseCostDerivatives(Robot& robot, CostFunctionData& data, 
+                                     const double t, 
+                                     const ImpulseSplitSolution& s, 
+                                     ImpulseSplitKKTResidual& kkt_residual) const;
 
-  void lqq(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           SplitKKTMatrix& kkt_matrix) const override;
+  void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
+                               const double t, const double dtau, 
+                               const SplitSolution& s, 
+                               SplitKKTMatrix& kkt_matrix) const;
 
-  void lvv(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           SplitKKTMatrix& kkt_matrix) const override {}
+  void computeTerminalCostHessian(Robot& robot, CostFunctionData& data, 
+                                  const double t, const SplitSolution& s, 
+                                  SplitKKTMatrix& kkt_matrix) const;
 
-  void laa(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           SplitKKTMatrix& kkt_matrix) const override {}
+  void computeImpulseCostHessian(Robot& robot, CostFunctionData& data, 
+                                 const double t, const ImpulseSplitSolution& s, 
+                                 ImpulseSplitKKTMatrix& kkt_matrix) const;
 
-  void lff(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           SplitKKTMatrix& kkt_matrix) const override {}
-
-  void luu(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           SplitKKTMatrix& kkt_matrix) const override {}
-
-  void phiq(Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, 
-            SplitKKTResidual& kkt_residual) const override;
-
-  void phiv(Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, 
-            SplitKKTResidual& kkt_residual) const override {}
-
-  void phiqq(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s, 
-             SplitKKTMatrix& kkt_matrix) const override;
-
-  void phivv(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s, 
-             SplitKKTMatrix& kkt_matrix) const override {}
+  Eigen::Vector3d q_3d_ref(const double t) const {
+    if (is_initial_step_) {
+      if (t > t_start_+t_period_) {
+        const int steps = std::floor((t-t_start_-t_period_)/t_period_) + 1;
+        Eigen::Vector3d q_3d_ref_vec(q_3d_ref_init_);
+        q_3d_ref_vec.coeffRef(0) += (steps+0.5) * step_length_;
+        q_3d_ref_vec.coeffRef(2) += step_height_;
+      }
+      else if (t > t_start_) {
+        Eigen::Vector3d q_3d_ref_vec(q_3d_ref_init_);
+        q_3d_ref_vec.coeffRef(0) += 0.5 * step_length_;
+        q_3d_ref_vec.coeffRef(2) += step_height_;
+        return q_3d_ref_vec;
+      }
+      else {
+        return q_3d_ref_init_;
+      }
+    }
+    else {
+      if (t > t_start_) {
+        const int steps = std::floor((t-t_start_)/t_period_) + 1;
+        Eigen::Vector3d q_3d_ref_vec(q_3d_ref_init_);
+        q_3d_ref_vec.coeffRef(0) += steps * step_length_;
+        q_3d_ref_vec.coeffRef(2) += step_height_;
+        return q_3d_ref_vec;
+      }
+      else {
+        return q_3d_ref_init_;
+      }
+    }
+  }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int frame_id_;
   double t_start_, t_period_, step_length_, step_height_;
-  Eigen::Vector3d q_3d_ref_init_, q_3d_weight_, qf_3d_weight_;
-
-
-  Eigen::Vector3d q_3d_ref(const double t) const {
-    if (t > t_start_) {
-      const int steps = std::floor((t-t_start_)/t_period_);
-      Eigen::Vector3d q_3d_ref_vec(q_3d_ref_init_);
-      if (steps % 2 == 0) {
-        // q_3d_ref_vec.coeffRef(0) += (steps/2 + 1) * step_length_;
-        q_3d_ref_vec.coeffRef(2) += step_height_;
-      }
-      else {
-        // q_3d_ref_vec.coeffRef(0) += ((steps-1)/2 + 1) * step_length_;
-      }
-      return q_3d_ref_vec;
-    }
-    else {
-      return q_3d_ref_init_;
-    }
-  }
+  bool is_initial_step_;
+  Eigen::Vector3d q_3d_ref_init_, q_3d_weight_, qf_3d_weight_, qi_3d_weight_;
 
 };
 

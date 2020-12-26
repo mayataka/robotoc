@@ -77,6 +77,6 @@ private:
 
 } // namespace idocp 
 
-#include "idocp/ocp/unconstrained_dynamics.hxx"
+#include "idocp/unconstrained/unconstrained_dynamics.hxx"
 
 #endif // IDOCP_UNCONSTRAINED_DYNAMICS_HPP_ 

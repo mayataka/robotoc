@@ -193,7 +193,7 @@ inline double SplitOCP::stageCost(Robot& robot, const double t,
     robot.updateKinematics(s.q, s.v, s.a);
   }
   double cost = 0;
-  cost += cost_->l(robot, cost_data_, t, dtau, s);
+  cost += cost_->computeStageCost(robot, cost_data_, t, dtau, s);
   if (primal_step_size > 0) {
     cost += constraints_->costSlackBarrier(constraints_data_, dtau, 
                                            primal_step_size);

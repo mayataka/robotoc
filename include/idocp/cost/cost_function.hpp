@@ -8,8 +8,6 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function_component_base.hpp"
-#include "idocp/cost/impulse_cost_function_component_base.hpp"
-#include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
@@ -30,8 +28,6 @@ class CostFunction {
 public:
   using CostFunctionComponentBasePtr 
       = std::shared_ptr<CostFunctionComponentBase>;
-  using ImpulseCostFunctionComponentBasePtr 
-      = std::shared_ptr<ImpulseCostFunctionComponentBase>;
 
   ///
   /// @brief Default constructor. 
@@ -71,15 +67,6 @@ public:
   void push_back(const CostFunctionComponentBasePtr& cost);
 
   ///
-  /// @brief Append a cost function component to the cost function.
-  /// @param[in] cost shared pointer to the cost function component appended 
-  /// to the cost.
-  ///
-  void push_back(const ImpulseCostFunctionComponentBasePtr& cost);
-
-  std::shared_ptr<ImpulseCostFunction> getImpulseCostFunction();
-
-  ///
   /// @brief Clear cost function by removing all components.
   ///
   void clear();
@@ -109,8 +96,8 @@ public:
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
-  double l(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s) const;
+  double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
+                          const double dtau, const SplitSolution& s) const;
 
   ///
   /// @brief Computes and returns terminal cost. 
@@ -120,8 +107,20 @@ public:
   /// @param[in] s Split solution.
   /// @return Terminal cost.
   ///
-  double phi(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s) const;
+  double computeTerminalCost(Robot& robot, CostFunctionData& data,
+                             const double t, const SplitSolution& s) const;
+
+  ///
+  /// @brief Computes and returns stage cost. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Cost function data.
+  /// @param[in] t Time.
+  /// @param[in] s Split solution.
+  /// @return Stage cost.
+  ///
+  double computeImpulseCost(Robot& robot, CostFunctionData& data, 
+                            const double t, 
+                            const ImpulseSplitSolution& s) const;
 
   ///
   /// @brief Computes the partial derivatives of the stage cost with respect
@@ -140,6 +139,37 @@ public:
                                    SplitKKTResidual& kkt_residual) const;
 
   ///
+  /// @brief Computes the partial derivatives of the terminal cost with respect
+  /// to the configuration and velocity. 
+  /// @param[in] robot Robot modol.
+  /// @param[in] data Cost function data.
+  /// @param[in] t Time.
+  /// @param[in] s Split solution.
+  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
+  /// added to this data.
+  ///
+  void computeTerminalCostDerivatives(Robot& robot, CostFunctionData& data, 
+                                      const double t, const SplitSolution& s, 
+                                      SplitKKTResidual& kkt_residual) const;
+
+
+  ///
+  /// @brief Computes the partial derivatives of the stage cost with respect
+  /// to the configuration, velocity, acceleration, and contact forces. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Cost function data.
+  /// @param[in] t Time.
+  /// @param[in] s Split solution.
+  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
+  /// added to this data.
+  ///
+  void computeImpulseCostDerivatives(Robot& robot, CostFunctionData& data, 
+                                     const double t, 
+                                     const ImpulseSplitSolution& s, 
+                                     ImpulseSplitKKTResidual& kkt_residual) const;
+
+
+  ///
   /// @brief Computes the Hessians of the stage cost with respect
   /// to the configuration, velocity, acceleration, and contact forces. 
   /// @param[in] robot Robot model.
@@ -156,20 +186,6 @@ public:
                                SplitKKTMatrix& kkt_matrix) const;
 
   ///
-  /// @brief Computes the partial derivatives of the terminal cost with respect
-  /// to the configuration and velocity. 
-  /// @param[in] robot Robot modol.
-  /// @param[in] data Cost function data.
-  /// @param[in] t Time.
-  /// @param[in] s Split solution.
-  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
-  /// added to this data.
-  ///
-  void computeTerminalCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                      const double t, const SplitSolution& s, 
-                                      SplitKKTResidual& kkt_residual) const;
-
-  ///
   /// @brief Computes the Hessians of the terminal cost with respect
   /// to the configuration and velocity. 
   /// @param[in] robot Robot model.
@@ -183,10 +199,36 @@ public:
                                   const double t, const SplitSolution& s, 
                                   SplitKKTMatrix& kkt_matrix) const;
 
+  ///
+  /// @brief Computes the Hessians of the stage cost with respect
+  /// to the configuration, velocity, acceleration, and contact forces. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Cost function data.
+  /// @param[in] t Time.
+  /// @param[in] s Split solution.
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
+  /// data.
+  ///
+  void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
+                               const double t, const ImpulseSplitSolution& s, 
+                               ImpulseSplitKKTMatrix& kkt_matrix) const;
+
+  ///
+  /// @brief Computes the Hessians of the stage cost with respect
+  /// to the configuration. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Cost function data.
+  /// @param[in] t Time.
+  /// @param[in] s Split solution.
+  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
+  /// data.
+  ///
+  void computeImpulseCostHessian(Robot& robot, CostFunctionData& data, 
+                                 const double t, const ImpulseSplitSolution& s, 
+                                 ImpulseSplitKKTMatrix& kkt_matrix) const; 
 
 private:
   std::vector<CostFunctionComponentBasePtr> costs_;
-  std::shared_ptr<ImpulseCostFunction> impulse_cost_function_;
 
 };
 

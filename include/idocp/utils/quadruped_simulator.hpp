@@ -18,20 +18,19 @@
 
 namespace idocp {
 
-struct MPCCallbackEmpty {
-  MPCCallbackEmpty() {} 
+class MPCCallbackBase {
+  MPCCallbackBase() {} 
+  virtual ~MPCCallbackBase() = 0;
 
-  template <typename OCPSolverType>
-  void init(const double t, const Eigen::VectorXd& q, 
-            const Eigen::VectorXd& v, MPC<OCPSolverType>& mpc) {}
+  virtual void init(const double t, const Eigen::VectorXd& q, 
+                    const Eigen::VectorXd& v, 
+                    OCPSolver& ocp_solver) {}
 
-  template <typename OCPSolverType>
-  void callback(const double t, const Eigen::VectorXd& q, 
-                const Eigen::VectorXd& v, MPC<OCPSolverType>& mpc) {}
+  virtual void callback(const double t, const Eigen::VectorXd& q, 
+                        const Eigen::VectorXd& v, OCPSolverType& ocp_solver) {}
 };
 
 
-template <typename OCPSolverType>
 class QuadrupedSimulator {
 public:
   QuadrupedSimulator(const std::string& path_to_raisim_activation_key,
@@ -39,13 +38,16 @@ public:
                      const std::string& save_dir_path, 
                      const std::string& save_file_name);
 
-  template <typename MPCCallBackType>
-  void run(MPC<OCPSolverType>& mpc, MPCCallBackType& mpc_callback,
+  void run(OCPSolver& ocp_solver, std::shared_ptr<MPCCallBackBase>& callback,
            const double simulation_time_in_sec, 
            const double sampling_period_in_sec, 
            const double simulation_start_time_in_sec, 
            const Eigen::VectorXd& q_initial, const Eigen::VectorXd& v_initial,
            const bool visualization=false, const bool recording=false);
+
+  static void SetupRaisimOgre(raisim::World& world);
+
+  static void RaiSimOgreCallback();
 
 private:
   SimulationDataSaver data_saver_;
@@ -53,26 +55,6 @@ private:
               save_dir_path_, save_file_name_;
 
 };
-
-
-namespace raisimadapter {
-  std::string GetCurrentWorkingDirectory();
-
-  void SetupRaisimOgre(raisim::World& world);
-
-  void RaiSimOgreCallback();
-
-  void pino2rai(Robot& robot, const Eigen::VectorXd& q_pino, 
-                const Eigen::VectorXd& v_pino, Eigen::VectorXd& q_raisim, 
-                Eigen::VectorXd& v_raisim);
-
-  void pino2rai(const Eigen::VectorXd& u_pinocchio, Eigen::VectorXd& u_raisim);
-
-  void rai2pino(Robot& robot, const Eigen::VectorXd& q_raisim, 
-                const Eigen::VectorXd& v_raisim, Eigen::VectorXd& q_pinocchio, 
-                Eigen::VectorXd& v_pinocchio);
-
-} // namespace raisimadapter
 
 } // namespace idocp
 

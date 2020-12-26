@@ -1,7 +1,5 @@
-#ifndef IDOCP_TROTTING_CONFIGURATION_COST_HPP_
-#define IDOCP_TROTTING_CONFIGURATION_COST_HPP_
-
-#include <cmath>
+#ifndef IDOCP_CONFIGURATION_SPACE_COST_HPP_
+#define IDOCP_CONFIGURATION_SPACE_COST_HPP_
 
 #include "Eigen/Core"
 
@@ -11,56 +9,52 @@
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_solution.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace idocp {
 
-struct TrottingSwingAnglePattern {
-  double front_swing_thigh;
-  double front_swing_knee; 
-  double front_stance_thigh; 
-  double front_stance_knee; 
-  double hip_swing_thigh;
-  double hip_swing_knee;
-  double hip_stance_thigh;
-  double hip_stance_knee;
-};
-
-
-class TrottingConfigurationCost final : public CostFunctionComponentBase {
+class ConfigurationSpaceCost final : public CostFunctionComponentBase {
 public:
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
 
-  TrottingConfigurationCost(const Robot& robot);
+  ConfigurationSpaceCost(const Robot& robot);
 
-  TrottingConfigurationCost();
+  ConfigurationSpaceCost();
 
-  ~TrottingConfigurationCost();
+  ~ConfigurationSpaceCost();
 
   // Use defalut copy constructor.
-  TrottingConfigurationCost(const TrottingConfigurationCost&) = default;
+  ConfigurationSpaceCost(const ConfigurationSpaceCost&) = default;
 
   // Use defalut copy operator.
-  TrottingConfigurationCost& operator=(
-      const TrottingConfigurationCost&) = default;
+  ConfigurationSpaceCost& operator=(const ConfigurationSpaceCost&) = default;
 
   // Use defalut move constructor.
-  TrottingConfigurationCost(TrottingConfigurationCost&&) noexcept = default;
+  ConfigurationSpaceCost(ConfigurationSpaceCost&&) noexcept = default;
 
-  // Use defalut copy operator.
-  TrottingConfigurationCost& operator=(
-      TrottingConfigurationCost&&) noexcept = default;
+  // Use defalut move assign operator.
+  ConfigurationSpaceCost& operator=(ConfigurationSpaceCost&&) noexcept = default;
 
   bool useKinematics() const override;
 
-  void set_ref(const double t_start, const double t_period, 
-               const Eigen::VectorXd& q_standing, const double step_length,
-               const TrottingSwingAnglePattern& pattern);
+  void set_q_ref(const Eigen::VectorXd& q_ref);
+
+  void set_v_ref(const Eigen::VectorXd& v_ref);
+
+  void set_u_ref(const Eigen::VectorXd& u_ref);
 
   void set_q_weight(const Eigen::VectorXd& q_weight);
 
   void set_v_weight(const Eigen::VectorXd& v_weight);
 
   void set_a_weight(const Eigen::VectorXd& a_weight);
+
+  void set_u_weight(const Eigen::VectorXd& u_weight);
+
+  void set_u_passive_weight(const Vector6d& u_passive_weight);
 
   void set_qf_weight(const Eigen::VectorXd& qf_weight);
 
@@ -112,37 +106,14 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int dimq_, dimv_;
-  double t_start_, t_period_, step_length_, v_com_;
-  Eigen::VectorXd q_standing_, q_even_step_, q_odd_step_, v_ref_, q_weight_, 
-                  v_weight_, a_weight_, qf_weight_, vf_weight_, qi_weight_, 
-                  vi_weight_, dvi_weight_;
-
-
-  void update_q_ref(const double t, Eigen::VectorXd& q_ref) const {
-    assert(q_ref.size() == dimq_);
-    if (t > t_start_+t_period_) {
-      const int steps = std::floor((t-t_start_-t_period_)/t_period_);
-      if (steps % 2 == 0) {
-        q_ref = q_even_step_;
-        q_ref.coeffRef(0) += (steps + 0.5) * step_length_;
-      }
-      else {
-        q_ref = q_odd_step_;
-        q_ref.coeffRef(0) += (steps + 0.5) * step_length_;
-      }
-    }
-    else if (t > t_start_) {
-      q_ref = q_even_step_;
-      q_ref.coeffRef(0) += 0.5 * step_length_;
-    }
-    else {
-      q_ref = q_standing_;
-    }
-  }
-
+  int dimq_, dimv_, dimu_;
+  Eigen::VectorXd q_ref_, v_ref_, u_ref_, q_weight_, v_weight_, a_weight_, 
+                  u_weight_, qf_weight_, vf_weight_, qi_weight_, vi_weight_, 
+                  dvi_weight_;
+  Vector6d u_passive_weight_;
 };
 
 } // namespace idocp
 
-#endif // IDOCP_TROTTING_CONFIGURATION_COST_HPP_ 
+
+#endif // IDOCP_CONFIGURATION_SPACE_COST_HPP_ 

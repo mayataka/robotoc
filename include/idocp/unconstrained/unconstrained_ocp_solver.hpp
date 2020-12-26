@@ -1,5 +1,5 @@
-#ifndef IDOCP_OCP_SOLVER_HPP_
-#define IDOCP_OCP_SOLVER_HPP_
+#ifndef IDOCP_UNCONSTRAINED_OCP_SOLVER_HPP_
+#define IDOCP_UNCONSTRAINED_OCP_SOLVER_HPP_
 
 #include <vector>
 #include <memory>
@@ -26,7 +26,7 @@ namespace idocp {
 /// @class OCPSolver
 /// @brief Optimal control problem solver by Riccati recursion. 
 ///
-class OCPSolver {
+class UnconstrainedOCPSolver {
 public:
   ///
   /// @brief Construct optimal control problem solver.
@@ -38,39 +38,41 @@ public:
   /// @param[in] num_proc Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  OCPSolver(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-            const std::shared_ptr<Constraints>& constraints, const double T, 
-            const int N, const int max_num_impulse=0, const int num_proc=1);
+  UnconstrainedOCPSolver(const Robot& robot, 
+                         const std::shared_ptr<CostFunction>& cost,
+                         const std::shared_ptr<Constraints>& constraints, 
+                         const double T, const int N, const int num_proc=1);
 
   ///
   /// @brief Default constructor. 
   ///
-  OCPSolver();
+  UnconstrainedOCPSolver();
 
   ///
   /// @brief Destructor. 
   ///
-  ~OCPSolver();
+  ~UnconstrainedOCPSolver();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  OCPSolver(const OCPSolver&) = default;
+  UnconstrainedOCPSolver(const UnconstrainedOCPSolver&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  OCPSolver& operator=(const OCPSolver&) = default;
+  UnconstrainedOCPSolver& operator=(const UnconstrainedOCPSolver&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  OCPSolver(OCPSolver&&) noexcept = default;
+  UnconstrainedOCPSolver(UnconstrainedOCPSolver&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  OCPSolver& operator=(OCPSolver&&) noexcept = default;
+  UnconstrainedOCPSolver& operator=(
+      UnconstrainedOCPSolver&&) noexcept = default;
 
   ///
   /// @brief Initializes the inequality constraints, i.e., set slack variables 
@@ -90,20 +92,6 @@ public:
   void updateSolution(const double t, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v, 
                       const bool use_line_search=false);
-
-  ///
-  /// @brief Updates the solution by computing the primal-dual Newon direction.
-  /// @param[in] t Initial time of the horizon. Current time in MPC. 
-  /// @param[in] q Initial configuration. Size must be Robot::dimq().
-  /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] sampling_period Sampling period. Must be positive.
-  ///
-  void updateSolutionWithContinuationMethod(const double t, 
-                                            const Eigen::VectorXd& q, 
-                                            const Eigen::VectorXd& v, 
-                                            const double sampling_period);
-
-  void shiftSolution();
 
   ///
   /// @brief Get the const reference to the split solution of a time stage. 
@@ -134,31 +122,6 @@ public:
   ///
   bool setStateTrajectory(const double t, const Eigen::VectorXd& q, 
                           const Eigen::VectorXd& v);
-
-  void setContactStatusUniformly(const ContactStatus& contact_status);
-
-  void pushBackContactStatus(const ContactStatus& contact_status, 
-                             const double switching_time,
-                             const double t);
-
-  void shiftImpulse(const int impulse_index, const double impulse_time);
-
-  void shiftLift(const int lift_index, const double lift_time);
-
-  void setContactPoints(const int contact_phase, 
-                        const std::vector<Eigen::Vector3d>& contact_points);
-
-  ///
-  /// @brief Pop back the discrete event. Contact status after discrete event 
-  /// is also removed. 
-  ///
-  void popBackDiscreteEvent();
-
-  ///
-  /// @brief Pop front the discrete event. Contact status before the front 
-  /// discrete event is also removed. 
-  ///
-  void popFrontDiscreteEvent();
 
   ///
   /// @brief Clear the line search filter. 
@@ -208,20 +171,10 @@ public:
   void printSolution(const std::string& name="all", 
                      const std::vector<int> frames={}) const;
 
-  ///
-  /// @brief Save the variable into file. 
-  /// @param[in] name Name of the printed variable. 
-  /// @param[in] frame_id Index of the end-effector frames. Only used if 
-  /// name == "end-effector". Default is {} (do not specify any frames).
-  ///
-  void saveSolution(const std::string& path_to_file,
-                    const std::string& name) const;
-
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   std::vector<Robot> robots_;
-  ContactSequence contact_sequence_;
   OCPLinearizer ocp_linearizer_;
   RiccatiSolver riccati_solver_;
   OCP ocp_;
@@ -239,4 +192,4 @@ private:
 } // namespace idocp 
 
 
-#endif // IDOCP_OCP_SOLVER_HPP_ 
+#endif // IDOCP_UNCONSTRAINED_OCP_SOLVER_HPP_ 

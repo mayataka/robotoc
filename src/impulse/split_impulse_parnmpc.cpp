@@ -6,7 +6,7 @@
 namespace idocp {
 
 SplitImpulseParNMPC::SplitImpulseParNMPC(
-    const Robot& robot, const std::shared_ptr<ImpulseCostFunction>& cost, 
+    const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<ImpulseConstraints>& constraints) 
   : cost_(cost),
     cost_data_(robot),

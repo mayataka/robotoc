@@ -135,7 +135,7 @@ public:
     : data(N, SplitOCP(robot, cost, constraints, (T/N))), 
       aux(N_impulse, SplitOCP(robot, cost, constraints, (T/N))), 
       lift(N_impulse, SplitOCP(robot, cost, constraints, (T/N))),
-      impulse(N_impulse, ImpulseSplitOCP(robot, cost->getImpulseCostFunction(), 
+      impulse(N_impulse, ImpulseSplitOCP(robot, cost, 
                                          constraints->getImpulseConstraints())),
       terminal(TerminalOCP(robot, cost, constraints)),
       discretizer_(T, N, N_impulse) {

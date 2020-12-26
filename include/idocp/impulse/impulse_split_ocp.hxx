@@ -8,7 +8,7 @@
 namespace idocp {
 
 inline ImpulseSplitOCP::ImpulseSplitOCP(
-    const Robot& robot, const std::shared_ptr<ImpulseCostFunction>& cost, 
+    const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<ImpulseConstraints>& constraints) 
   : cost_(cost),
     cost_data_(cost->createCostFunctionData(robot)),
@@ -56,14 +56,14 @@ inline void ImpulseSplitOCP::linearizeOCP(
   // condensing the impulse dynamics
   kkt_residual.setZero();
   kkt_matrix.setZero();
-  cost_->computeStageCostDerivatives(robot, cost_data_, t, s, kkt_residual);
+  cost_->computeImpulseCostDerivatives(robot, cost_data_, t, s, kkt_residual);
   constraints_->augmentDualResidual(robot, constraints_data_, s, kkt_residual);
   stateequation::LinearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
                                               kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s,
                                              kkt_matrix, kkt_residual,
                                              is_state_constraint_valid);
-  cost_->computeStageCostHessian(robot, cost_data_, t, s, kkt_matrix);
+  cost_->computeImpulseCostHessian(robot, cost_data_, t, s, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, s, kkt_matrix, 
                                      kkt_residual);
   impulse_dynamics_.condenseImpulseDynamics(robot, impulse_status, 
@@ -128,7 +128,7 @@ inline void ImpulseSplitOCP::computeKKTResidual(
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.setZero();
   robot.updateKinematics(s.q, s.v+s.dv);
-  cost_->computeStageCostDerivatives(robot, cost_data_, t, s, kkt_residual);
+  cost_->computeImpulseCostDerivatives(robot, cost_data_, t, s, kkt_residual);
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   constraints_->augmentDualResidual(robot, constraints_data_, s, kkt_residual);
   stateequation::LinearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
@@ -161,7 +161,7 @@ inline double ImpulseSplitOCP::stageCost(Robot& robot, const double t,
   assert(primal_step_size <= 1);
   robot.updateKinematics(s.q, s.v+s.dv);
   double cost = 0;
-  cost += cost_->l(robot, cost_data_, t, s);
+  cost += cost_->computeImpulseCost(robot, cost_data_, t, s);
   if (primal_step_size > 0) {
     cost += constraints_->costSlackBarrier(constraints_data_, primal_step_size);
   }

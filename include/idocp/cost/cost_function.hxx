@@ -6,8 +6,7 @@
 namespace idocp {
 
 inline CostFunction::CostFunction()
-  : costs_(),
-    impulse_cost_function_(std::make_shared<ImpulseCostFunction>()) {
+  : costs_() {
 }
 
 
@@ -20,21 +19,8 @@ inline void CostFunction::push_back(const CostFunctionComponentBasePtr& cost) {
 }
 
 
-inline void CostFunction::push_back(
-    const ImpulseCostFunctionComponentBasePtr& cost) {
-  impulse_cost_function_->push_back(cost);
-}
-
-
-inline std::shared_ptr<ImpulseCostFunction> 
-CostFunction::getImpulseCostFunction() {
-  return impulse_cost_function_;
-}
-
-
 inline void CostFunction::clear() {
   costs_.clear();
-  impulse_cost_function_->clear();
 }
 
 
@@ -55,57 +41,46 @@ inline CostFunctionData CostFunction::createCostFunctionData(
 }
 
 
-inline double CostFunction::l(Robot& robot, CostFunctionData& data, 
-                              const double t, const double dtau, 
-                              const SplitSolution& s) const {
+inline double CostFunction::computeStageCost(
+    Robot& robot,  CostFunctionData& data, const double t, const double dtau, 
+    const SplitSolution& s) const {
   assert(dtau >= 0);
   double l = 0;
   for (const auto cost : costs_) {
-    l += cost->l(robot, data, t, dtau, s);
+    l += cost->computeStageCost(robot, data, t, dtau, s);
   }
   return l;
 }
 
 
-inline double CostFunction::phi(Robot& robot, CostFunctionData& data, 
-                                const double t, const SplitSolution& s) const {
-  double phi = 0;
+inline double CostFunction::computeTerminalCost(
+    Robot& robot, CostFunctionData& data, const double t, 
+    const SplitSolution& s) const {
+  double l = 0;
   for (const auto cost : costs_) {
-    phi += cost->phi(robot, data, t, s);
+    l += cost->computeTerminalCost(robot, data, t, s);
   }
-  return phi;
+  return l;
+}
+
+
+inline double CostFunction::computeImpulseCost(
+    Robot& robot, CostFunctionData& data, const double t, 
+    const ImpulseSplitSolution& s) const {
+  double l = 0;
+  for (const auto cost : costs_) {
+    l += cost->computeImpulseCost(robot, data, t, s);
+  }
+  return l;
 }
 
 
 inline void CostFunction::computeStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const double dtau, const SplitSolution& s, 
-    SplitKKTResidual& kkt_residual) const {
+    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   assert(dtau >= 0);
   for (const auto cost : costs_) {
-    cost->lq(robot, data, t, dtau, s, kkt_residual);
-    cost->lv(robot, data, t, dtau, s, kkt_residual);
-    cost->la(robot, data, t, dtau, s, kkt_residual);
-    if (s.dimf() > 0) {
-      cost->lf(robot, data, t, dtau, s, kkt_residual);
-    }
-    cost->lu(robot, data, t, dtau, s, kkt_residual);
-  }
-}
-
-
-inline void CostFunction::computeStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const double dtau, const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  assert(dtau >= 0);
-  for (const auto cost : costs_) {
-    cost->lqq(robot, data, t, dtau, s, kkt_matrix);
-    cost->lvv(robot, data, t, dtau, s, kkt_matrix);
-    cost->laa(robot, data, t, dtau, s, kkt_matrix);
-    if (s.dimf() > 0) {
-      cost->lff(robot, data, t, dtau, s, kkt_matrix);
-    }
-    cost->luu(robot, data, t, dtau, s, kkt_matrix);
+    cost->computeStageCostDerivatives(robot, data, t, dtau, s, kkt_residual);
   }
 }
 
@@ -114,8 +89,27 @@ inline void CostFunction::computeTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   for (const auto cost : costs_) {
-    cost->phiq(robot, data, t, s, kkt_residual);
-    cost->phiv(robot, data, t, s, kkt_residual);
+    cost->computeTerminalCostDerivatives(robot, data, t, s, kkt_residual);
+  }
+}
+
+
+inline void CostFunction::computeImpulseCostDerivatives(
+    Robot& robot, CostFunctionData& data, const double t, 
+    const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTResidual& kkt_residual) const {
+  for (const auto cost : costs_) {
+    cost->computeImpulseCostDerivatives(robot, data, t, s, kkt_residual);
+  }
+}
+
+
+inline void CostFunction::computeStageCostHessian(
+    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+  assert(dtau >= 0);
+  for (const auto cost : costs_) {
+    cost->computeStageCostHessian(robot, data, t, dtau, s, kkt_matrix);
   }
 }
 
@@ -124,8 +118,16 @@ inline void CostFunction::computeTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   for (const auto cost : costs_) {
-    cost->phiqq(robot, data, t, s, kkt_matrix);
-    cost->phivv(robot, data, t, s, kkt_matrix);
+    cost->computeTerminalCostHessian(robot, data, t, s, kkt_matrix);
+  }
+}
+
+
+inline void CostFunction::computeImpulseCostHessian(
+    Robot& robot, CostFunctionData& data, const double t, 
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
+  for (const auto cost : costs_) {
+    cost->computeImpulseCostHessian(robot, data, t, s, kkt_matrix);
   }
 }
 

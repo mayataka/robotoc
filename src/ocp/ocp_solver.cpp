@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <cassert>
+#include <fstream>
 
 
 namespace idocp {
@@ -398,6 +399,58 @@ void OCPSolver::printSolution(const std::string& name,
       }
     }
   }
+}
+
+
+void OCPSolver::saveSolution(const std::string& path_to_file, 
+                             const std::string& name) const {
+  std::ofstream file(path_to_file);
+  if (name == "q") {
+    const int dimq = robots_[0].dimq();
+    for (int i=0; i<=N_; ++i) {
+      for (int j=0; j<dimq; ++j) {
+        file << s_[i].q.coeff(j) << " ";
+      }
+      file << "\n";
+    }
+  }
+  if (name == "v") {
+    const int dimv = robots_[0].dimv();
+    for (int i=0; i<=N_; ++i) {
+      for (int j=0; j<dimv; ++j) {
+        file << s_[i].v.coeff(j) << " ";
+      }
+      file << "\n";
+    }
+  }
+  if (name == "a") {
+    const int dimv = robots_[0].dimv();
+    for (int i=0; i<=N_; ++i) {
+      for (int j=0; j<dimv; ++j) {
+        file << s_[i].a.coeff(j) << " ";
+      }
+      file << "\n";
+    }
+  }
+  if (name == "f") {
+    for (int i=0; i<N_; ++i) {
+      const int dimf = s_[i].f_stack().size();
+      for (int j=0; j<dimf; ++j) {
+        file << s_[i].f_stack().coeff(j) << " ";
+      }
+      file << "\n";
+    }
+  }
+  if (name == "u") {
+    const int dimu = robots_[0].dimu();
+    for (int i=0; i<N_; ++i) {
+      for (int j=0; j<dimu; ++j) {
+        file << s_[i].u.coeff(j) << " ";
+      }
+      file << "\n";
+    }
+  }
+  file.close();
 }
 
 

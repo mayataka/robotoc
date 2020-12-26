@@ -35,7 +35,7 @@ public:
   /// @param[in] constraints Shared ptr to the constraints.
   ///
   SplitImpulseParNMPC(const Robot& robot, 
-                      const std::shared_ptr<ImpulseCostFunction>& cost,
+                      const std::shared_ptr<CostFunction>& cost,
                       const std::shared_ptr<ImpulseConstraints>& constraints);
 
   ///
@@ -312,7 +312,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  std::shared_ptr<ImpulseCostFunction> cost_;
+  std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;
   std::shared_ptr<ImpulseConstraints> constraints_;
   ConstraintsData constraints_data_;

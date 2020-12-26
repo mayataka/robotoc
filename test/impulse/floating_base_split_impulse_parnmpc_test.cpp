@@ -80,7 +80,7 @@ protected:
     joint_cost->set_dv_ref(dv_ref);
     impulse_cost->set_f_weight(f_weight);
     impulse_cost->set_f_ref(f_ref);
-    cost = std::make_shared<ImpulseCostFunction>();
+    cost = std::make_shared<CostFunction>();
     cost->push_back(joint_cost);
     cost->push_back(impulse_cost);
     cost_data = CostFunctionData(robot);
@@ -99,7 +99,7 @@ protected:
   std::string urdf;
   Robot robot;
   ContactStatus contact_status;
-  std::shared_ptr<ImpulseCostFunction> cost;
+  std::shared_ptr<CostFunction> cost;
   CostFunctionData cost_data;
   std::shared_ptr<ImpulseConstraints> constraints;
   ConstraintsData constraints_data;
@@ -122,7 +122,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, isFeasible) {
 
 
 TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormStateEquation) {
-  auto empty_cost = std::make_shared<ImpulseCostFunction>();
+  auto empty_cost = std::make_shared<CostFunction>();
   auto empty_constraints = std::make_shared<ImpulseConstraints>();
   SplitImpulseParNMPC parnmpc(robot, empty_cost, empty_constraints);
   parnmpc.initConstraints(robot, s);
@@ -151,7 +151,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormStateEquation) {
 
 
 TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormStateEquationAndRobotDynamics) {
-  auto empty_cost = std::make_shared<ImpulseCostFunction>();
+  auto empty_cost = std::make_shared<CostFunction>();
   auto empty_constraints = std::make_shared<ImpulseConstraints>();
   SplitImpulseParNMPC parnmpc(robot, empty_cost, empty_constraints);
   parnmpc.initConstraints(robot, s);
@@ -195,7 +195,7 @@ TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormStateEquationAndRobotDynamics) 
 
 
 TEST_F(FloatingBaseSplitParNMPCTest, KKTErrorNormEmptyCost) {
-  auto empty_cost = std::make_shared<ImpulseCostFunction>();
+  auto empty_cost = std::make_shared<CostFunction>();
   SplitImpulseParNMPC parnmpc(robot, empty_cost, constraints);
   parnmpc.initConstraints(robot, s);
   constraints->setSlackAndDual(robot, constraints_data, s);

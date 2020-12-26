@@ -1,7 +1,5 @@
-#ifndef IDOCP_TROTTING_CONFIGURATION_COST_HPP_
-#define IDOCP_TROTTING_CONFIGURATION_COST_HPP_
-
-#include <cmath>
+#ifndef IDOCP_TIME_VARYING_CONFIGURATION_SPACE_COST_HPP_
+#define IDOCP_TIME_VARYING_CONFIGURATION_SPACE_COST_HPP_
 
 #include "Eigen/Core"
 
@@ -15,46 +13,34 @@
 
 namespace idocp {
 
-struct TrottingSwingAnglePattern {
-  double front_swing_thigh;
-  double front_swing_knee; 
-  double front_stance_thigh; 
-  double front_stance_knee; 
-  double hip_swing_thigh;
-  double hip_swing_knee;
-  double hip_stance_thigh;
-  double hip_stance_knee;
-};
-
-
-class TrottingConfigurationCost final : public CostFunctionComponentBase {
+class TimeVaryingConfigurationSpaceCost final : public CostFunctionComponentBase {
 public:
+  TimeVaryingConfigurationSpaceCost(const Robot& robot);
 
-  TrottingConfigurationCost(const Robot& robot);
+  TimeVaryingConfigurationSpaceCost();
 
-  TrottingConfigurationCost();
-
-  ~TrottingConfigurationCost();
+  ~TimeVaryingConfigurationSpaceCost();
 
   // Use defalut copy constructor.
-  TrottingConfigurationCost(const TrottingConfigurationCost&) = default;
+  TimeVaryingConfigurationSpaceCost(
+      const TimeVaryingConfigurationSpaceCost&) = default;
 
   // Use defalut copy operator.
-  TrottingConfigurationCost& operator=(
-      const TrottingConfigurationCost&) = default;
+  TimeVaryingConfigurationSpaceCost& operator=(
+      const TimeVaryingConfigurationSpaceCost&) = default;
 
   // Use defalut move constructor.
-  TrottingConfigurationCost(TrottingConfigurationCost&&) noexcept = default;
+  TimeVaryingConfigurationSpaceCost(
+      TimeVaryingConfigurationSpaceCost&&) noexcept = default;
 
-  // Use defalut copy operator.
-  TrottingConfigurationCost& operator=(
-      TrottingConfigurationCost&&) noexcept = default;
+  // Use defalut move assign operator.
+  TimeVaryingConfigurationSpaceCost& operator=(
+      TimeVaryingConfigurationSpaceCost&&) noexcept = default;
 
   bool useKinematics() const override;
 
-  void set_ref(const double t_start, const double t_period, 
-               const Eigen::VectorXd& q_standing, const double step_length,
-               const TrottingSwingAnglePattern& pattern);
+  void set_ref(const double t0, const Eigen::VectorXd q0, 
+               const Eigen::VectorXd v0);
 
   void set_q_weight(const Eigen::VectorXd& q_weight);
 
@@ -113,36 +99,12 @@ public:
 
 private:
   int dimq_, dimv_;
-  double t_start_, t_period_, step_length_, v_com_;
-  Eigen::VectorXd q_standing_, q_even_step_, q_odd_step_, v_ref_, q_weight_, 
-                  v_weight_, a_weight_, qf_weight_, vf_weight_, qi_weight_, 
-                  vi_weight_, dvi_weight_;
-
-
-  void update_q_ref(const double t, Eigen::VectorXd& q_ref) const {
-    assert(q_ref.size() == dimq_);
-    if (t > t_start_+t_period_) {
-      const int steps = std::floor((t-t_start_-t_period_)/t_period_);
-      if (steps % 2 == 0) {
-        q_ref = q_even_step_;
-        q_ref.coeffRef(0) += (steps + 0.5) * step_length_;
-      }
-      else {
-        q_ref = q_odd_step_;
-        q_ref.coeffRef(0) += (steps + 0.5) * step_length_;
-      }
-    }
-    else if (t > t_start_) {
-      q_ref = q_even_step_;
-      q_ref.coeffRef(0) += 0.5 * step_length_;
-    }
-    else {
-      q_ref = q_standing_;
-    }
-  }
+  double t0_;
+  Eigen::VectorXd q0_, v0_, q_weight_, v_weight_, a_weight_, qf_weight_, 
+                  vf_weight_, qi_weight_, vi_weight_, dvi_weight_;
 
 };
 
 } // namespace idocp
 
-#endif // IDOCP_TROTTING_CONFIGURATION_COST_HPP_ 
+#endif // IDOCP_TIME_VARYING_CONFIGURATION_SPACE_COST_HPP_ 
