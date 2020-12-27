@@ -38,12 +38,6 @@ bool TaskSpace6DCost::useKinematics() const {
 }
 
 
-void TaskSpace6DCost::set_q_6d_ref(const pinocchio::SE3& SE3_ref) {
-  SE3_ref_ = SE3_ref;
-  SE3_ref_inv_ = SE3_ref_.inverse();
-}
-
-
 void TaskSpace6DCost::set_q_6d_ref(const Eigen::Vector3d& position_ref, 
                                    const Eigen::Matrix3d& rotation_mat_ref) {
   SE3_ref_ = pinocchio::SE3(rotation_mat_ref, position_ref);
@@ -58,20 +52,10 @@ void TaskSpace6DCost::set_q_6d_weight(const Eigen::Vector3d& position_weight,
 }
 
 
-void TaskSpace6DCost::set_q_6d_weight(const Vector6d& q_6d_weight) {
-  q_6d_weight_ = q_6d_weight;
-}
-
-
 void TaskSpace6DCost::set_qf_6d_weight(const Eigen::Vector3d& position_weight, 
                                        const Eigen::Vector3d& rotation_weight) {
   qf_6d_weight_.template head<3>() = rotation_weight;
   qf_6d_weight_.template tail<3>() = position_weight;
-}
-
-
-void TaskSpace6DCost::set_qf_6d_weight(const Vector6d& qf_6d_weight) {
-  qf_6d_weight_ = qf_6d_weight;
 }
 
 
@@ -80,13 +64,8 @@ void TaskSpace6DCost::set_qi_6d_weight(const Eigen::Vector3d& position_weight,
   qi_6d_weight_.template head<3>() = rotation_weight;
   qi_6d_weight_.template tail<3>() = position_weight;
 }
-
-
-void TaskSpace6DCost::set_qi_6d_weight(const Vector6d& qi_6d_weight) {
-  qi_6d_weight_ = qi_6d_weight;
-}
-
  
+
 double TaskSpace6DCost::computeStageCost(Robot& robot, CostFunctionData& data, 
                                          const double t, const double dtau, 
                                          const SplitSolution& s) const {
@@ -102,22 +81,22 @@ double TaskSpace6DCost::computeTerminalCost(Robot& robot,
                                             CostFunctionData& data, 
                                             const double t, 
                                             const SplitSolution& s) const {
-  double phi = 0;
+  double l = 0;
   data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
   data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
-  phi += (qf_6d_weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
-  return 0.5 * phi;
+  l += (qf_6d_weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
+  return 0.5 * l;
 }
 
 
 double TaskSpace6DCost::computeImpulseCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s) const {
-  double phi = 0;
+  double l = 0;
   data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
   data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
-  phi += (qi_6d_weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
-  return 0.5 * phi;
+  l += (qi_6d_weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
+  return 0.5 * l;
 }
 
 

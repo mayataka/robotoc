@@ -41,25 +41,17 @@ public:
 
   bool useKinematics() const override;
 
-  void set_q_6d_ref(const pinocchio::SE3& SE3_ref);
-
   void set_q_6d_ref(const Eigen::Vector3d& position_ref, 
                     const Eigen::Matrix3d& rotation_mat_ref);
 
   void set_q_6d_weight(const Eigen::Vector3d& position_weight, 
                        const Eigen::Vector3d& rotation_weight);
 
-  void set_q_6d_weight(const Vector6d& q_6d_weight);
-
   void set_qf_6d_weight(const Eigen::Vector3d& position_weight, 
                         const Eigen::Vector3d& rotation_weight);
 
-  void set_qf_6d_weight(const Vector6d& q_6d_weight);
-
   void set_qi_6d_weight(const Eigen::Vector3d& position_weight, 
                         const Eigen::Vector3d& rotation_weight);
-
-  void set_qi_6d_weight(const Vector6d& q_6d_weight);
 
   double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
                           const double dtau, 

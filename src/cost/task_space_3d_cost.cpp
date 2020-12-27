@@ -49,6 +49,11 @@ void TaskSpace3DCost::set_qf_3d_weight(const Eigen::Vector3d& qf_3d_weight) {
 }
 
 
+void TaskSpace3DCost::set_qi_3d_weight(const Eigen::Vector3d& qi_3d_weight) {
+  qi_3d_weight_ = qi_3d_weight;
+}
+
+
 double TaskSpace3DCost::computeStageCost(Robot& robot, CostFunctionData& data, 
                                          const double t, const double dtau, 
                                          const SplitSolution& s) const {
@@ -147,7 +152,7 @@ void TaskSpace3DCost::computeImpulseCostHessian(
     data.J_3d.noalias() 
         = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
     kkt_matrix.Qqq().noalias()
-        += data.J_3d.transpose() * qf_3d_weight_.asDiagonal() * data.J_3d;
+        += data.J_3d.transpose() * qi_3d_weight_.asDiagonal() * data.J_3d;
 }
 
 } // namespace idocp

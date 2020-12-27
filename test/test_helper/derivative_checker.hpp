@@ -15,13 +15,19 @@ class DerivativeChecker {
 public:
   explicit DerivativeChecker(const Robot& robot, 
                              const double finite_diff=1.0e-08, 
-                             const double test_tol=0.0001);
+                             const double test_tol=1.0e-04);
 
   ~DerivativeChecker();
 
   void setFiniteDifference(const double finite_diff=1.0e-08);
 
-  void setTestTolerance(const double test_tol=1.0e-08);
+  void setTestTolerance(const double test_tol=1.0e-04);
+
+  bool checkFirstOrderStageCostDerivatives(
+      const std::shared_ptr<CostFunctionComponentBase>& cost);
+
+  bool checkSecondOrderStageCostDerivatives(
+      const std::shared_ptr<CostFunctionComponentBase>& cost);
 
   bool checkFirstOrderStageCostDerivatives(
       const std::shared_ptr<CostFunctionComponentBase>& cost, 
@@ -35,6 +41,12 @@ public:
       const std::shared_ptr<CostFunctionComponentBase>& cost);
 
   bool checkSecondOrderTerminalCostDerivatives(
+      const std::shared_ptr<CostFunctionComponentBase>& cost);
+
+  bool checkFirstOrderImpulseCostDerivatives(
+      const std::shared_ptr<CostFunctionComponentBase>& cost);
+
+  bool checkSecondOrderImpulseCostDerivatives(
       const std::shared_ptr<CostFunctionComponentBase>& cost);
 
   bool checkFirstOrderImpulseCostDerivatives(

@@ -44,6 +44,8 @@ public:
 
   void set_qf_3d_weight(const Eigen::Vector3d& qf_3d_weight);
 
+  void set_qi_3d_weight(const Eigen::Vector3d& qi_3d_weight);
+
   double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
                           const double dtau, 
                           const SplitSolution& s) const override;
