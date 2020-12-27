@@ -9,7 +9,7 @@
 // #include "idocp/ocp/parnmpc.hpp"
 #include "idocp/ocp/ocp_solver.hpp"
 #include "idocp/cost/cost_function.hpp"
-#include "idocp/cost/joint_space_cost.hpp"
+#include "idocp/cost/configuration_space_cost.hpp"
 #include "idocp/cost/contact_force_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
 
@@ -25,16 +25,16 @@ void BenchmarkWithoutContacts() {
   idocp::Robot robot(urdf_file_name);
   robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 200));
   auto cost = std::make_shared<idocp::CostFunction>();
-  auto joint_cost = std::make_shared<idocp::JointSpaceCost>(robot);
-  joint_cost->set_q_ref(Eigen::VectorXd::Constant(robot.dimv(), -5));
-  joint_cost->set_v_ref(Eigen::VectorXd::Constant(robot.dimv(), -9));
-  joint_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
-  joint_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
-  joint_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
-  joint_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
-  joint_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  joint_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
-  cost->push_back(joint_cost);
+  auto config_cost = std::make_shared<idocp::ConfigurationSpaceCost>(robot);
+  config_cost->set_q_ref(Eigen::VectorXd::Constant(robot.dimv(), -5));
+  config_cost->set_v_ref(Eigen::VectorXd::Constant(robot.dimv(), -9));
+  config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
+  config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
+  config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
+  config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
+  config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  config_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
+  cost->push_back(config_cost);
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
   const double T = 1;

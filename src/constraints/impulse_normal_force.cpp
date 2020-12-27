@@ -9,13 +9,15 @@ namespace idocp {
 ImpulseNormalForce::ImpulseNormalForce(const Robot& robot, const double barrier,
                                        const double fraction_to_boundary_rate)
   : ImpulseConstraintComponentBase(barrier, fraction_to_boundary_rate),
-    dimc_(robot.maxPointContacts()) {
+    dimc_(robot.maxPointContacts()),
+    fraction_to_boundary_rate_(fraction_to_boundary_rate) {
 }
 
 
 ImpulseNormalForce::ImpulseNormalForce()
   : ImpulseConstraintComponentBase(),
-    dimc_(0) {
+    dimc_(0),
+    fraction_to_boundary_rate_(0) {
 }
 
 
@@ -101,11 +103,12 @@ void ImpulseNormalForce::computeSlackAndDualDirection(
       dimf_stack += 3;
     }
     else {
-      // Set 1.0 to make the fraction-to-boundary rule easy.
-      data.slack.coeffRef(i) = 1.0;
-      data.dslack.coeffRef(i) = 1.0;
-      data.dual.coeffRef(i) = 1.0;
-      data.ddual.coeffRef(i) = 1.0;
+      data.residual.coeffRef(i) = 0;
+      data.duality.coeffRef(i)  = 0;
+      data.slack.coeffRef(i)    = 1.0;
+      data.dslack.coeffRef(i)   = fraction_to_boundary_rate_;
+      data.dual.coeffRef(i)     = 1.0;
+      data.ddual.coeffRef(i)    = fraction_to_boundary_rate_;
     }
   }
 }
@@ -117,8 +120,12 @@ void ImpulseNormalForce::computePrimalAndDualResidual(
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       data.residual.coeffRef(i) = - s.f[i].coeff(2) + data.slack.coeff(i);
-      data.duality.coeffRef(i) = computeDuality(data.slack.coeff(i), 
-                                                data.dual.coeff(i));
+      data.duality.coeffRef(i)  = computeDuality(data.slack.coeff(i), 
+                                                 data.dual.coeff(i));
+    }
+    else {
+      data.residual.coeffRef(i) = 0;
+      data.duality.coeffRef(i)  = 0;
     }
   }
 }

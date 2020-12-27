@@ -16,24 +16,37 @@ namespace idocp {
 class ConstraintsData {
 public:
   ConstraintsData(const int time_stage) {
-    assert(time_stage >= 0);
     if (time_stage >= 2) {
-      is_position_level_valid_ = true;
-      is_velocity_level_valid_ = true;
+      is_position_level_valid_     = true;
+      is_velocity_level_valid_     = true;
+      is_acceleration_level_valid_ = true;
+      is_impulse_level_valid_      = false;
     }
     else if (time_stage == 1) {
-      is_position_level_valid_ = false;
-      is_velocity_level_valid_ = true;
+      is_position_level_valid_     = false;
+      is_velocity_level_valid_     = true;
+      is_acceleration_level_valid_ = true;
+      is_impulse_level_valid_      = false;
     }
     else if (time_stage == 0) {
-      is_position_level_valid_ = false;
-      is_velocity_level_valid_ = false;
+      is_position_level_valid_     = false;
+      is_velocity_level_valid_     = false;
+      is_acceleration_level_valid_ = true;
+      is_impulse_level_valid_      = false;
+    }
+    else if (time_stage <= -1) {
+      is_position_level_valid_     = false;
+      is_velocity_level_valid_     = false;
+      is_acceleration_level_valid_ = false;
+      is_impulse_level_valid_      = true;
     }
   }
 
   ConstraintsData() 
     : is_position_level_valid_(false), 
-      is_velocity_level_valid_(false) {
+      is_velocity_level_valid_(false),
+      is_acceleration_level_valid_(false),
+      is_impulse_level_valid_(false) {
   }
 
   ///
@@ -69,12 +82,22 @@ public:
     return is_velocity_level_valid_;
   }
 
+  bool isAccelerationLevelValid() const {
+    return is_acceleration_level_valid_;
+  }
+
+  bool isImpulseLevelValid() const {
+    return is_impulse_level_valid_;
+  }
+
   std::vector<ConstraintComponentData> position_level_data;
   std::vector<ConstraintComponentData> velocity_level_data;
   std::vector<ConstraintComponentData> acceleration_level_data;
+  std::vector<ConstraintComponentData> impulse_level_data;
 
 private:
-  bool is_position_level_valid_, is_velocity_level_valid_;
+  bool is_position_level_valid_, is_velocity_level_valid_, 
+       is_acceleration_level_valid_, is_impulse_level_valid_;
 
 };
   

@@ -69,8 +69,7 @@ void JointVelocityLowerLimitTest::testSetSlackAndDual(Robot& robot) const {
   limit.setSlackAndDual(robot, data, s);
   data_ref.slack = -vmin + s.v.tail(dimc);
   pdipm::SetSlackAndDualPositive(barrier, data_ref);
-  EXPECT_TRUE(data.slack.isApprox(data_ref.slack));
-  EXPECT_TRUE(data.dual.isApprox(data_ref.dual));
+  EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 
@@ -102,8 +101,7 @@ void JointVelocityLowerLimitTest::testComputePrimalAndDualResidual(Robot& robot)
   limit.computePrimalAndDualResidual(robot, data, s);
   data_ref.residual = - s.v.tail(dimc) + vmin + data_ref.slack;
   pdipm::ComputeDuality(barrier, data_ref);
-  EXPECT_TRUE(data_ref.residual.isApprox(data.residual));
-  EXPECT_TRUE(data_ref.duality.isApprox(data.duality));
+  EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 
@@ -148,8 +146,7 @@ void JointVelocityLowerLimitTest::testComputeSlackAndDualDirection(Robot& robot)
   limit.computeSlackAndDualDirection(robot, data, s, d);
   data_ref.dslack = d.dv().tail(dimc) - data_ref.residual;
   pdipm::ComputeDualDirection(data_ref);
-  EXPECT_TRUE(data.dslack.isApprox(data_ref.dslack));
-  EXPECT_TRUE(data.ddual.isApprox(data_ref.ddual));
+  EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 

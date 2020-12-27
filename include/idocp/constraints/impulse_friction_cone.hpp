@@ -37,6 +37,8 @@ public:
 
   KinematicsLevel kinematicsLevel() const override;
 
+  void allocateExtraData(ConstraintComponentData& data) const {}
+
   bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                   const ImpulseSplitSolution& s) const override;
 
@@ -73,6 +75,7 @@ public:
 
 private:
   int dimc_;
+  double fraction_to_boundary_rate_;
 
 };
 

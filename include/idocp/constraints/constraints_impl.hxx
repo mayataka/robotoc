@@ -8,17 +8,16 @@
 namespace idocp {
 namespace constraintsimpl {
 
-template <typename ConstraintComponentBaseType>
-inline void clear(
-    std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints) {
+template <typename ConstraintComponentBaseTypePtr>
+inline void clear(std::vector<ConstraintComponentBaseTypePtr>& constraints) {
   constraints.clear();
 }
 
 
-template <typename ConstraintComponentBaseType>
+template <typename ConstraintComponentBaseTypePtr>
 inline bool useKinematics(
-    const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints) {
-  for (const auto constraint : constraints) {
+   const std::vector<ConstraintComponentBaseTypePtr>& constraints) {
+  for (const auto& constraint : constraints) {
     if (constraint->useKinematics()) {
       return true;
     }
@@ -27,9 +26,22 @@ inline bool useKinematics(
 }
 
 
-template <typename ConstraintComponentBaseType, typename SplitSolutionType>
+template <typename ConstraintComponentBaseTypePtr>
+inline bool createConstraintsData(
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
+    std::vector<ConstraintComponentData>& data) {
+  data.clear();
+  for (const auto& constraint : constraints) {
+    auto component_data = ConstraintComponentData(constraint->dimc());
+    constraint->allocateExtraData(component_data);
+    data.push_back(component_data);
+  }
+}
+
+
+template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
 inline bool isFeasible(
-    const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const SplitSolutionType& s) {
   assert(constraints.size() == data.size());
@@ -45,23 +57,11 @@ inline bool isFeasible(
 }
 
 
+template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
 inline void setSlackAndDual(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const double dtau, const SplitSolution& s) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->setSlackAndDual(robot, data[i], dtau, s);
-  }
-}
-
-
-inline void setSlackAndDual(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const ImpulseSplitSolution& s) {
+   const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+   Robot& robot, std::vector<ConstraintComponentData>& data, 
+   const SplitSolutionType& s) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -72,9 +72,9 @@ inline void setSlackAndDual(
 
 
 inline void augmentDualResidual(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const double dtau, const SplitSolution& s, SplitKKTResidual& kkt_residual) {
+   const std::vector<ConstraintComponentBasePtr>& constraints,
+   Robot& robot, std::vector<ConstraintComponentData>& data, 
+   const double dtau, const SplitSolution& s, SplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -85,9 +85,9 @@ inline void augmentDualResidual(
 
 
 inline void augmentDualResidual(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) {
+   const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
+   Robot& robot, std::vector<ConstraintComponentData>& data, 
+   const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -98,9 +98,9 @@ inline void augmentDualResidual(
 
 
 inline void condenseSlackAndDual(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const double dtau, const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
+    std::vector<ConstraintComponentData>& data, const double dtau, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
@@ -113,7 +113,7 @@ inline void condenseSlackAndDual(
 
 
 inline void condenseSlackAndDual(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual) {
@@ -127,9 +127,24 @@ inline void condenseSlackAndDual(
 }
 
 
-template <typename ConstraintComponentBaseType>
+template <typename ConstraintComponentBaseTypePtr, 
+          typename SplitSolutionType, typename SplitDirectionType>
+inline void computeSlackAndDualDirection(
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
+    Robot& robot, std::vector<ConstraintComponentData>& data, 
+    const SplitSolutionType& s, const SplitDirectionType& d) {
+  assert(constraints.size() == data.size());
+  for (int i=0; i<constraints.size(); ++i) {
+    assert(data[i].dimc() == constraints[i]->dimc());
+    assert(data[i].checkDimensionalConsistency());
+    constraints[i]->computeSlackAndDualDirection(robot, data[i], s, d);
+  }
+}
+
+
+template <typename ConstraintComponentBaseTypePtr>
 inline double maxSlackStepSize(
-    const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double min_step_size = 1;
@@ -145,9 +160,9 @@ inline double maxSlackStepSize(
 }
 
 
-template <typename ConstraintComponentBaseType>
+template <typename ConstraintComponentBaseTypePtr>
 inline double maxDualStepSize(
-    const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double min_step_size = 1;
@@ -163,36 +178,27 @@ inline double maxDualStepSize(
 }
 
 
-template <typename ConstraintComponentBaseType>
-inline void updateSlack(
-    const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
-    std::vector<ConstraintComponentData>& data, const double step_size) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->updateSlack(data[i], step_size);
+inline void updateSlack(std::vector<ConstraintComponentData>& data, 
+                        const double step_size) {
+  assert(step_size > 0);
+  for (auto& e : data) {
+    e.slack.noalias() += step_size * e.dslack;
   }
 }
 
 
-template <typename ConstraintComponentBaseType>
-inline void updateDual(
-    const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
-    std::vector<ConstraintComponentData>& data, const double step_size) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->updateDual(data[i], step_size);
+inline void updateDual(std::vector<ConstraintComponentData>& data, 
+                       const double step_size) {
+  assert(step_size > 0);
+  for (auto& e : data) {
+    e.dual.noalias() += step_size * e.ddual;
   }
 }
 
 
-
-template <typename ConstraintComponentBaseType>
+template <typename ConstraintComponentBaseTypePtr>
 inline double costSlackBarrier(
-    const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
+   const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double cost = 0;
@@ -205,9 +211,9 @@ inline double costSlackBarrier(
 }
 
 
-template <typename ConstraintComponentBaseType>
+template <typename ConstraintComponentBaseTypePtr>
 inline double costSlackBarrier(
-    const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
+   const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     const std::vector<ConstraintComponentData>& data, const double step_size) {
   assert(constraints.size() == data.size());
   double cost = 0;
@@ -220,23 +226,11 @@ inline double costSlackBarrier(
 }
 
 
+template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
 inline void computePrimalAndDualResidual(
-    const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const double dtau, const SplitSolution& s) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->computePrimalAndDualResidual(robot, data[i], dtau, s);
-  }
-}
-
-
-inline void computePrimalAndDualResidual(
-    const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const ImpulseSplitSolution& s) {
+    const SplitSolutionType& s) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
@@ -246,9 +240,9 @@ inline void computePrimalAndDualResidual(
 }
 
 
-template <typename ConstraintComponentBaseType>
-inline double Constraints::l1NormPrimalResidual(
-    const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
+template <typename ConstraintComponentBaseTypePtr>
+inline double l1NormPrimalResidual(
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double l1_norm = 0;
@@ -261,16 +255,36 @@ inline double Constraints::l1NormPrimalResidual(
 }
 
 
-template <typename ConstraintComponentBaseType>
-inline double Constraints::squaredNormPrimalAndDualResidual(
-    const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
+template <typename ConstraintComponentBaseTypePtr>
+inline double squaredNormPrimalAndDualResidual(
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     const std::vector<ConstraintComponentData>& data) {
   assert(constraints.size() == data.size());
   double squared_norm = 0;
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    squared_norm += constraints[i]->squaredNormPrimalAndDualResidual(data[i]);
+    squared_norm += data[i].residual.squaredNorm() + data[i].duality.squaredNorm();
+  }
+  return squared_norm;
+}
+
+
+inline double l1NormPrimalResidual(
+    const std::vector<ConstraintComponentData>& data) {
+  double l1_norm = 0;
+  for (const auto& e : data) {
+    l1_norm += e.residual.lpNorm<1>();
+  }
+  return l1_norm;
+}
+
+
+inline double squaredNormPrimalAndDualResidual(
+    const std::vector<ConstraintComponentData>& data) {
+  double squared_norm = 0;
+  for (const auto& e : data) {
+    squared_norm += e.residual.squaredNorm() + e.duality.squaredNorm();
   }
   return squared_norm;
 }

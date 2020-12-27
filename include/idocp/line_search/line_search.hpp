@@ -9,7 +9,6 @@
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/cost/impulse_cost_function.hpp"
-#include "idocp/constraints/impulse_constraints.hpp"
 #include "idocp/ocp/contact_sequence.hpp"
 #include "idocp/ocp/split_ocp.hpp"
 #include "idocp/impulse/impulse_split_ocp.hpp"

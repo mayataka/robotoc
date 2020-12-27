@@ -40,9 +40,9 @@ KinematicsLevel ContactDistance::kinematicsLevel() const {
 
 
 void ContactDistance::allocateExtraData(ConstraintComponentData& data) const {
-  data.J_vec.clear();
+  data.J.clear();
   for (int i=0; i<dimc_; ++i) {
-    data.J_vec.push_back(Eigen::MatrixXd::Zero(6, dimv_));
+    data.J.push_back(Eigen::MatrixXd::Zero(6, dimv_));
   }
 }
 
@@ -77,9 +77,9 @@ void ContactDistance::augmentDualResidual(
   assert(dtau >= 0);
   for (int i=0; i<dimc_; ++i) {
     if (!s.isContactActive(i)) {
-      robot.getFrameJacobian(contact_frames_[i], data.J_vec[i]);
+      robot.getFrameJacobian(contact_frames_[i], data.J[i]);
       kkt_residual.lq().noalias() 
-          -= dtau * data.dual.coeff(i) * data.J_vec[i].row(2);
+          -= dtau * data.dual.coeff(i) * data.J[i].row(2);
     }
   }
 }
@@ -94,7 +94,7 @@ void ContactDistance::condenseSlackAndDual(
     if (!s.isContactActive(i)) {
       kkt_matrix.Qqq().noalias()
           += (dtau * data.dual.coeff(i) / data.slack.coeff(i))
-              * data.J_vec[i].row(2).transpose() * data.J_vec[i].row(2);
+              * data.J[i].row(2).transpose() * data.J[i].row(2);
       data.residual.coeffRef(i) 
           = - robot.framePosition(contact_frames_[i]).coeff(2) 
               + data.slack.coeff(i);
@@ -103,7 +103,7 @@ void ContactDistance::condenseSlackAndDual(
       kkt_residual.lq().noalias()
           -= (dtau * (data.dual.coeff(i)*data.residual.coeff(i)-data.duality.coeff(i)) 
                   / data.slack.coeff(i))
-              * data.J_vec[i].row(2);
+              * data.J[i].row(2);
     }
   }
 }
@@ -115,17 +115,19 @@ void ContactDistance::computeSlackAndDualDirection(
   for (int i=0; i<dimc_; ++i) {
     if (!s.isContactActive(i)) {
       data.dslack.coeffRef(i) 
-          = data.J_vec[i].row(2).dot(d.dq()) - data.residual.coeff(i);
+          = data.J[i].row(2).dot(d.dq()) - data.residual.coeff(i);
       data.ddual.coeffRef(i) = computeDualDirection(data.slack.coeff(i), 
                                                     data.dual.coeff(i), 
                                                     data.dslack.coeff(i), 
                                                     data.duality.coeff(i));
     }
     else {
-      data.slack.coeffRef(i)  = 1.0;
-      data.dslack.coeffRef(i) = fraction_to_boundary_rate_;
-      data.dual.coeffRef(i)   = 1.0;
-      data.ddual.coeffRef(i)  = fraction_to_boundary_rate_;
+      data.residual.coeffRef(i)  = 0;
+      data.duality.coeffRef(i)   = 0;
+      data.slack.coeffRef(i)     = 1.0;
+      data.dslack.coeffRef(i)    = fraction_to_boundary_rate_;
+      data.dual.coeffRef(i)      = 1.0;
+      data.ddual.coeffRef(i)     = fraction_to_boundary_rate_;
     }
   }
 }

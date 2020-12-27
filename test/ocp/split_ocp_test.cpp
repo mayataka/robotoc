@@ -225,7 +225,7 @@ void SplitOCPTest::testComputeKKTResidual(
                          + kkt_residual_ref.lf().squaredNorm()
                          + kkt_residual_ref.lu().squaredNorm()
                          + cd.squaredNormContactDynamicsResidual(dtau)
-                         + constraints->squaredNormPrimalAndDualResidual(constraints_data, dtau);
+                         + dtau * dtau * constraints->squaredNormPrimalAndDualResidual(constraints_data);
   if (robot.hasFloatingBase()) {
     kkt_error_ref += kkt_residual_ref.lu_passive.squaredNorm();
   }
@@ -260,7 +260,7 @@ void SplitOCPTest::testCostAndConstraintViolation(
   robot.updateKinematics(s.q, s.v, s.a);
   double stage_cost_ref = 0;
   stage_cost_ref += cost->computeStageCost(robot, cost_data, t, dtau, s);
-  stage_cost_ref += constraints->costSlackBarrier(constraints_data, dtau, step_size);
+  stage_cost_ref += dtau * constraints->costSlackBarrier(constraints_data, step_size);
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
   stateequation::ComputeForwardEulerResidual(robot, dtau, s, s_next.q, 
@@ -268,7 +268,7 @@ void SplitOCPTest::testCostAndConstraintViolation(
   ContactDynamics cd(robot, baumgarte_time_step);
   cd.computeContactDynamicsResidual(robot, contact_status, s);
   double constraint_violation_ref = 0;
-  constraint_violation_ref += constraints->l1NormPrimalResidual(constraints_data, dtau);
+  constraint_violation_ref += dtau * constraints->l1NormPrimalResidual(constraints_data);
   constraint_violation_ref += stateequation::L1NormStateEuqationResidual(kkt_residual_ref);
   constraint_violation_ref += cd.l1NormContactDynamicsResidual(dtau);
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);

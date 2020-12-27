@@ -41,8 +41,10 @@ set(IDOCP_SOURCE_FILES ${IDOCP_SOURCE_FILES}
   src/cost/trotting_foot_step_cost.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
+  src/constraints/constraints_impl.cpp
   src/constraints/constraints_data.cpp
   src/constraints/constraint_component_base.cpp
+  src/constraints/impulse_constraint_component_base.cpp
   src/constraints/constraint_component_data.cpp
   src/constraints/joint_position_upper_limit.cpp
   src/constraints/joint_position_lower_limit.cpp
@@ -55,8 +57,6 @@ set(IDOCP_SOURCE_FILES ${IDOCP_SOURCE_FILES}
   src/constraints/friction_cone.cpp
   src/constraints/contact_normal_force.cpp
   src/constraints/contact_distance.cpp
-  src/constraints/impulse_constraints.cpp
-  src/constraints/impulse_constraint_component_base.cpp
   src/constraints/impulse_friction_cone.cpp
   src/constraints/impulse_normal_force.cpp
   src/impulse/dynamic_schur_complement.cpp

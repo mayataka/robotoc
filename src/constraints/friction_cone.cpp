@@ -140,10 +140,12 @@ void FrictionCone::computeSlackAndDualDirection(
       dimf_stack += 3;
     }
     else {
-      data.slack.coeffRef(i)  = 1.0;
-      data.dslack.coeffRef(i) = fraction_to_boundary_rate_;
-      data.dual.coeffRef(i)   = 1.0;
-      data.ddual.coeffRef(i)  = fraction_to_boundary_rate_;
+      data.residual.coeffRef(i) = 0;
+      data.duality.coeffRef(i)  = 0;
+      data.slack.coeffRef(i)    = 1.0;
+      data.dslack.coeffRef(i)   = fraction_to_boundary_rate_;
+      data.dual.coeffRef(i)     = 1.0;
+      data.ddual.coeffRef(i)    = fraction_to_boundary_rate_;
     }
   }
 }
@@ -156,8 +158,12 @@ void FrictionCone::computePrimalAndDualResidual(
       const double mu = robot.frictionCoefficient(i);
       data.residual.coeffRef(i) = frictionConeResidual(mu, s.f[i]) 
                                   + data.slack.coeff(i);
-      data.duality.coeffRef(i) = computeDuality(data.slack.coeff(i), 
-                                                data.dual.coeff(i));
+      data.duality.coeffRef(i)  = computeDuality(data.slack.coeff(i), 
+                                                 data.dual.coeff(i));
+    }
+    else {
+      data.residual.coeffRef(i) = 0;
+      data.duality.coeffRef(i)  = 0;
     }
   }
 }

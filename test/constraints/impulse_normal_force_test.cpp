@@ -24,6 +24,7 @@ protected:
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     barrier = 1.0e-04;
+    fraction_to_boundary_rate = 0.995;
   }
 
   virtual void TearDown() {
@@ -37,7 +38,7 @@ protected:
   void testCondenseSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const;
   void testComputeSlackAndDualDirection(Robot& robot, const ImpulseStatus& impulse_status) const;
 
-  double barrier;
+  double barrier, fraction_to_boundary_rate;
   std::string fixed_base_urdf, floating_base_urdf;
 };
 
@@ -78,8 +79,7 @@ void ImpulseNormalForceTest::testSetSlackAndDual(Robot& robot, const ImpulseStat
     data_ref.slack.coeffRef(i) = s.f[i].coeff(2);
   }
   pdipm::SetSlackAndDualPositive(barrier, data_ref);
-  EXPECT_TRUE(data.slack.isApprox(data_ref.slack));
-  EXPECT_TRUE(data.dual.isApprox(data_ref.dual));
+  EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 
@@ -122,8 +122,7 @@ void ImpulseNormalForceTest::testComputePrimalAndDualResidual(Robot& robot, cons
       data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
     }
   }
-  EXPECT_TRUE(data_ref.residual.isApprox(data.residual));
-  EXPECT_TRUE(data_ref.duality.isApprox(data.duality));
+  EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 
@@ -187,16 +186,15 @@ void ImpulseNormalForceTest::testComputeSlackAndDualDirection(Robot& robot, cons
       dimf_stack += 3;
     }
     else {
-      data_ref.slack.coeffRef(i) = 1.0;
-      data_ref.dslack.coeffRef(i) = 1.0;
-      data_ref.dual.coeffRef(i) = 1.0;
-      data_ref.ddual.coeffRef(i) = 1.0;
+      data_ref.residual.coeffRef(i) = 0;
+      data_ref.duality.coeffRef(i)  = 0;
+      data_ref.slack.coeffRef(i)    = 1.0;
+      data_ref.dslack.coeffRef(i)   = fraction_to_boundary_rate;
+      data_ref.dual.coeffRef(i)     = 1.0;
+      data_ref.ddual.coeffRef(i)    = fraction_to_boundary_rate;
     }
   }
-  EXPECT_TRUE(data.slack.isApprox(data_ref.slack));
-  EXPECT_TRUE(data.dual.isApprox(data_ref.dual));
-  EXPECT_TRUE(data.dslack.isApprox(data_ref.dslack));
-  EXPECT_TRUE(data.ddual.isApprox(data_ref.ddual));
+  EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 

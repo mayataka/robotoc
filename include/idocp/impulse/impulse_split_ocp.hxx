@@ -9,11 +9,11 @@ namespace idocp {
 
 inline ImpulseSplitOCP::ImpulseSplitOCP(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<ImpulseConstraints>& constraints) 
+    const std::shared_ptr<Constraints>& constraints) 
   : cost_(cost),
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
-    constraints_data_(constraints->createConstraintsData(robot)),
+    constraints_data_(constraints->createConstraintsData(robot, -1)),
     impulse_dynamics_(robot) {
 }
 
@@ -39,7 +39,7 @@ inline bool ImpulseSplitOCP::isFeasible(Robot& robot,
 
 inline void ImpulseSplitOCP::initConstraints(Robot& robot,
                                              const ImpulseSplitSolution& s) { 
-  constraints_data_ = constraints_->createConstraintsData(robot);
+  constraints_data_ = constraints_->createConstraintsData(robot, -1);
   constraints_->setSlackAndDual(robot, constraints_data_, s);
 }
 

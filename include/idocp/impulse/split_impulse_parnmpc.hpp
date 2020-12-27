@@ -14,7 +14,6 @@
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
-#include "idocp/constraints/impulse_constraints.hpp"
 #include "idocp/impulse/impulse_state_equation.hpp"
 #include "idocp/impulse/impulse_dynamics_backward_euler.hpp"
 #include "idocp/ocp/split_direction.hpp"

@@ -80,8 +80,7 @@ void ContactDistanceTest::testSetSlackAndDual(Robot& robot, const ContactStatus&
     data_ref.slack.coeffRef(i) = robot.framePosition(robot.contactFramesIndices()[i]).coeff(2);
   }
   pdipm::SetSlackAndDualPositive(barrier, data_ref);
-  EXPECT_TRUE(data.slack.isApprox(data_ref.slack));
-  EXPECT_TRUE(data.dual.isApprox(data_ref.dual));
+  EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 
@@ -129,8 +128,7 @@ void ContactDistanceTest::testComputePrimalAndDualResidual(Robot& robot, const C
       data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
     }
   }
-  EXPECT_TRUE(data_ref.residual.isApprox(data.residual));
-  EXPECT_TRUE(data_ref.duality.isApprox(data.duality));
+  EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 
@@ -204,16 +202,15 @@ void ContactDistanceTest::testComputeSlackAndDualDirection(Robot& robot, const C
                                       / data_ref.slack.coeff(i);
     }
     else {
-      data_ref.slack.coeffRef(i) = 1.0;
-      data_ref.dslack.coeffRef(i) = fraction_to_boundary_rate;
-      data_ref.dual.coeffRef(i) = 1.0;
-      data_ref.ddual.coeffRef(i) = fraction_to_boundary_rate;
+      data_ref.residual.coeffRef(i) = 0;
+      data_ref.duality.coeffRef(i)  = 0;
+      data_ref.slack.coeffRef(i)    = 1.0;
+      data_ref.dslack.coeffRef(i)   = fraction_to_boundary_rate;
+      data_ref.dual.coeffRef(i)     = 1.0;
+      data_ref.ddual.coeffRef(i)    = fraction_to_boundary_rate;
     }
   }
-  EXPECT_TRUE(data.slack.isApprox(data_ref.slack));
-  EXPECT_TRUE(data.dual.isApprox(data_ref.dual));
-  EXPECT_TRUE(data.dslack.isApprox(data_ref.dslack));
-  EXPECT_TRUE(data.ddual.isApprox(data_ref.ddual));
+  EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 

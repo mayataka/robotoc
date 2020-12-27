@@ -14,7 +14,7 @@ inline SplitOCP::SplitOCP(const Robot& robot,
   : cost_(cost),
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
-    constraints_data_(constraints->createConstraintsData(robot)),
+    constraints_data_(constraints->createConstraintsData(robot, 0)),
     contact_dynamics_(robot, dtau),
     has_floating_base_(robot.hasFloatingBase()),
     use_kinematics_(false) {
@@ -177,8 +177,7 @@ inline double SplitOCP::squaredNormKKTResidual(
   error += kkt_residual.lu().squaredNorm();
   error += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dtau);
-  error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_, 
-                                                          dtau);
+  error += dtau * dtau * constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
   return error;
 }
 
@@ -195,11 +194,11 @@ inline double SplitOCP::stageCost(Robot& robot, const double t,
   double cost = 0;
   cost += cost_->computeStageCost(robot, cost_data_, t, dtau, s);
   if (primal_step_size > 0) {
-    cost += constraints_->costSlackBarrier(constraints_data_, dtau, 
-                                           primal_step_size);
+    cost += dtau * constraints_->costSlackBarrier(constraints_data_, 
+                                                  primal_step_size);
   }
   else {
-    cost += constraints_->costSlackBarrier(constraints_data_, dtau);
+    cost += dtau * constraints_->costSlackBarrier(constraints_data_);
   }
   return cost;
 }
@@ -222,8 +221,8 @@ inline double SplitOCP::constraintViolation(Robot& robot,
   contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, s);
   double violation = 0;
   violation += stateequation::L1NormStateEuqationResidual(kkt_residual);
-  violation += constraints_->l1NormPrimalResidual(constraints_data_, dtau);
   violation += contact_dynamics_.l1NormContactDynamicsResidual(dtau);
+  violation += dtau * constraints_->l1NormPrimalResidual(constraints_data_);
   return violation;
 }
 

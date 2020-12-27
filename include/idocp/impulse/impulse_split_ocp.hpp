@@ -13,7 +13,8 @@
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
-#include "idocp/constraints/impulse_constraints.hpp"
+#include "idocp/constraints/constraints.hpp"
+#include "idocp/constraints/constraints_data.hpp"
 #include "idocp/impulse/impulse_state_equation.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
 #include "idocp/ocp/split_direction.hpp"
@@ -30,11 +31,11 @@ public:
   ///
   /// @brief Construct a split optimal control problem.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] cost Shared ptr to the impulse cost function.
-  /// @param[in] constraints Shared ptr to the impulse constraints.
+  /// @param[in] cost Shared ptr to the cost function.
+  /// @param[in] constraints Shared ptr to the constraints.
   ///
   ImpulseSplitOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-                  const std::shared_ptr<ImpulseConstraints>& constraints);
+                  const std::shared_ptr<Constraints>& constraints);
 
   ///
   /// @brief Default constructor.  
@@ -234,7 +235,7 @@ public:
 private:
   std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;
-  std::shared_ptr<ImpulseConstraints> constraints_;
+  std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   ImpulseDynamicsForwardEuler impulse_dynamics_;
 

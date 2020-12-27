@@ -22,111 +22,110 @@
 namespace idocp {
 namespace constraintsimpl {
 
-template <typename ConstraintComponentBaseType>
-void clear(std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints);
+using ConstraintComponentBasePtr = std::shared_ptr<ConstraintComponentBase>;
+using ImpulseConstraintComponentBasePtr 
+  = std::shared_ptr<ImpulseConstraintComponentBase>;
 
-template <typename ConstraintComponentBaseType>
+template <typename ConstraintComponentBaseTypePtr>
+void clear(std::vector<ConstraintComponentBaseTypePtr>& constraints);
+
+template <typename ConstraintComponentBaseTypePtr>
 bool useKinematics(
-   const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints);
+   const std::vector<ConstraintComponentBaseTypePtr>& constraints);
 
-template <typename ConstraintComponentBaseType, typename SplitSolutionType>
-bool isFeasible(
-   const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const SplitSolutionType& s);
+template <typename ConstraintComponentBaseTypePtr>
+bool createConstraintsData(
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
+    std::vector<ConstraintComponentData>& data);
 
+template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
+bool isFeasible(const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+                Robot& robot, std::vector<ConstraintComponentData>& data, 
+                const SplitSolutionType& s);
+
+template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
 void setSlackAndDual(
-   const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const double dtau, const SplitSolution& s);
-
-void setSlackAndDual(
-   const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const ImpulseSplitSolution& s);
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    Robot& robot, std::vector<ConstraintComponentData>& data, 
+    const SplitSolutionType& s);
 
 void augmentDualResidual(
-   const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const double dtau, const SplitSolution& s, SplitKKTResidual& kkt_residual);
+    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
+    std::vector<ConstraintComponentData>& data, const double dtau, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual);
 
 void augmentDualResidual(
-   const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual);
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
+    Robot& robot, std::vector<ConstraintComponentData>& data, 
+    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual);
 
 void condenseSlackAndDual(
-   const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const double dtau, const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-   SplitKKTResidual& kkt_residual);
+    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
+    std::vector<ConstraintComponentData>& data, const double dtau, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual);
 
 void condenseSlackAndDual(
-   const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
-   ImpulseSplitKKTResidual& kkt_residual);
+    const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
+    Robot& robot, std::vector<ConstraintComponentData>& data, 
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual);
 
+template <typename ConstraintComponentBaseTypePtr, 
+          typename SplitSolutionType, typename SplitDirectionType>
 void computeSlackAndDualDirection(
-   const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const double dtau, const SplitSolution& s, const SplitDirection& d);
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    Robot& robot, std::vector<ConstraintComponentData>& data, 
+    const SplitSolutionType& s, const SplitDirectionType& d);
 
-void computeSlackAndDualDirection(
-   const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const ImpulseSplitSolution& s, const ImpulseSplitDirection& d);
-
-template <typename ConstraintComponentBaseType>
+template <typename ConstraintComponentBaseTypePtr>
 double maxSlackStepSize(
-   const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
-   const std::vector<ConstraintComponentData>& data);
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    const std::vector<ConstraintComponentData>& data);
 
-template <typename ConstraintComponentBaseType>
+template <typename ConstraintComponentBaseTypePtr>
 double maxDualStepSize(
-   const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
-   const std::vector<ConstraintComponentData>& data);
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    const std::vector<ConstraintComponentData>& data);
 
-template <typename ConstraintComponentBaseType>
-void updateSlack(
-   const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
-   std::vector<ConstraintComponentData>& data, const double step_size);
+void updateSlack(std::vector<ConstraintComponentData>& data, 
+                 const double step_size);
 
-template <typename ConstraintComponentBaseType>
-void updateDual(
-   const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
-   std::vector<ConstraintComponentData>& data, const double step_size);
+void updateDual(std::vector<ConstraintComponentData>& data, 
+                const double step_size);
 
-template <typename ConstraintComponentBaseType>
+template <typename ConstraintComponentBaseTypePtr>
 double costSlackBarrier(
-   const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
-   const std::vector<ConstraintComponentData>& data);
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    const std::vector<ConstraintComponentData>& data);
 
-template <typename ConstraintComponentBaseType>
+template <typename ConstraintComponentBaseTypePtr>
 double costSlackBarrier(
-   const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
-   const std::vector<ConstraintComponentData>& data, 
-   const double step_size);
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    const std::vector<ConstraintComponentData>& data, 
+    const double step_size);
 
+template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
 void computePrimalAndDualResidual(
-   const std::vector<std::shared_ptr<ConstraintComponentBase>>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const double dtau, const SplitSolution& s);
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    Robot& robot, std::vector<ConstraintComponentData>& data, 
+    const SplitSolutionType& s);
 
-void computePrimalAndDualResidual(
-   const std::vector<std::shared_ptr<ImpulseConstraintComponentBase>>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const ImpulseSplitSolution& s);
-
-template <typename ConstraintComponentBaseType>
+template <typename ConstraintComponentBaseTypePtr>
 double l1NormPrimalResidual(
-   const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
-   const std::vector<ConstraintComponentData>& data);
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    const std::vector<ConstraintComponentData>& data);
 
-template <typename ConstraintComponentBaseType>
+template <typename ConstraintComponentBaseTypePtr>
 double squaredNormPrimalAndDualResidual(
-   const std::vector<std::shared_ptr<ConstraintComponentBaseType>>& constraints,
-   const std::vector<ConstraintComponentData>& data);
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    const std::vector<ConstraintComponentData>& data);
+
+
+double l1NormPrimalResidual(const std::vector<ConstraintComponentData>& data);
+
+double squaredNormPrimalAndDualResidual(
+    const std::vector<ConstraintComponentData>& data);
 
 } // namespace constraintsimpl
 } // namespace idocp

@@ -3,13 +3,16 @@
 
 #include <cassert>
 
+#include "idocp/constraints/constraints_impl.hpp"
+
+
 namespace idocp {
 
 inline Constraints::Constraints() 
   : position_level_constraints_(),
     velocity_level_constraints_(),
     acceleration_level_constraints_(),
-    impulse_constraints_(std::make_shared<ImpulseConstraints>()) {
+    impulse_level_constraints_() {
 }
 
 
@@ -33,50 +36,30 @@ inline void Constraints::push_back(
 
 inline void Constraints::push_back(
     const ImpulseConstraintComponentBasePtr& constraint) {
-  impulse_constraints_->push_back(constraint);
-}
-
-
-inline std::shared_ptr<ImpulseConstraints> 
-Constraints::getImpulseConstraints() {
-  return impulse_constraints_;
+  if (constraint->kinematicsLevel() == KinematicsLevel::AccelerationLevel) {
+    // Only the acceleration level constraints are valid at impulse stage.
+    impulse_level_constraints_.push_back(constraint); 
+  }
 }
 
 
 inline void Constraints::clear() {
-  clear_impl(position_level_constraints_);
-  clear_impl(velocity_level_constraints_);
-  clear_impl(acceleration_level_constraints_);
-  impulse_constraints_->clear();
-}
-
-
-inline void Constraints::clear_impl(
-    std::vector<ConstraintComponentBasePtr>& constraints) {
-  constraints.clear();
+  constraintsimpl::clear(position_level_constraints_);
+  constraintsimpl::clear(velocity_level_constraints_);
+  constraintsimpl::clear(acceleration_level_constraints_);
+  constraintsimpl::clear(impulse_level_constraints_);
 }
 
 
 inline bool Constraints::useKinematics() const {
-  if (useKinematics_impl(position_level_constraints_)) {
+  if (constraintsimpl::useKinematics(position_level_constraints_)) {
     return true;
   }
-  if (useKinematics_impl(velocity_level_constraints_)) {
+  if (constraintsimpl::useKinematics(velocity_level_constraints_)) {
     return true;
   }
-  if (useKinematics_impl(acceleration_level_constraints_)) {
+  if (constraintsimpl::useKinematics(acceleration_level_constraints_)) {
     return true;
-  }
-  return false;
-}
-
-
-inline bool Constraints::useKinematics_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints) {
-  for (const auto constraint : constraints) {
-    if (constraint->useKinematics()) {
-      return true;
-    }
   }
   return false;
 }
@@ -84,26 +67,22 @@ inline bool Constraints::useKinematics_impl(
 
 inline ConstraintsData Constraints::createConstraintsData(
     const Robot& robot, const int time_stage) const {
-  assert(time_stage >= 0);
   ConstraintsData data(time_stage);
   if (data.isPositionLevelValid()) {
-    for (const auto constraint : position_level_constraints_) {
-      auto component_data = ConstraintComponentData(constraint->dimc());
-      constraint->allocateExtraData(component_data);
-      data.position_level_data.push_back(component_data);
-    }
+    constraintsimpl::createConstraintsData(position_level_constraints_, 
+                                           data.position_level_data);
   }
   if (data.isVelocityLevelValid()) {
-    for (const auto constraint : velocity_level_constraints_) {
-      auto component_data = ConstraintComponentData(constraint->dimc());
-      constraint->allocateExtraData(component_data);
-      data.velocity_level_data.push_back(component_data);
-    }
+    constraintsimpl::createConstraintsData(velocity_level_constraints_, 
+                                           data.velocity_level_data);
   }
-  for (const auto constraint : acceleration_level_constraints_) {
-    auto component_data = ConstraintComponentData(constraint->dimc());
-    constraint->allocateExtraData(component_data);
-    data.acceleration_level_data.push_back(component_data);
+  if (data.isAccelerationLevelValid()) {
+    constraintsimpl::createConstraintsData(acceleration_level_constraints_, 
+                                           data.acceleration_level_data);
+  }
+  if (data.isImpulseLevelValid()) {
+    constraintsimpl::createConstraintsData(impulse_level_constraints_, 
+                                           data.impulse_level_data);
   }
   return data;
 }
@@ -112,34 +91,32 @@ inline ConstraintsData Constraints::createConstraintsData(
 inline bool Constraints::isFeasible(Robot& robot, ConstraintsData& data, 
                                     const SplitSolution& s) const {
   if (data.isPositionLevelValid()) {
-    if (!isFeasible_impl(position_level_constraints_, robot, 
-                         data.position_level_data, s)) {
+    if (!constraintsimpl::isFeasible(position_level_constraints_, robot, 
+                                     data.position_level_data, s)) {
       return false;
     }
   }
   if (data.isVelocityLevelValid()) {
-    if (!isFeasible_impl(velocity_level_constraints_, robot, 
-                         data.velocity_level_data, s)) {
+    if (!constraintsimpl::isFeasible(velocity_level_constraints_, robot, 
+                                     data.velocity_level_data, s)) {
       return false;
     }
   }
-  if (!isFeasible_impl(acceleration_level_constraints_, robot, 
-                       data.acceleration_level_data, s)) {
-    return false;
+  if (data.isAccelerationLevelValid()) {
+    if (!constraintsimpl::isFeasible(acceleration_level_constraints_, robot, 
+                                     data.acceleration_level_data, s)) {
+      return false;
+    }
   }
   return true;
 }
 
 
-inline bool Constraints::isFeasible_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const SplitSolution& s) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    bool feasible = constraints[i]->isFeasible(robot, data[i], s);
-    if (!feasible) {
+inline bool Constraints::isFeasible(Robot& robot, ConstraintsData& data, 
+                                    const ImpulseSplitSolution& s) const {
+  if (data.isImpulseLevelValid()) {
+    if (!constraintsimpl::isFeasible(impulse_level_constraints_, robot, 
+                                     data.impulse_level_data, s)) {
       return false;
     }
   }
@@ -150,26 +127,25 @@ inline bool Constraints::isFeasible_impl(
 inline void Constraints::setSlackAndDual(Robot& robot, ConstraintsData& data, 
                                          const SplitSolution& s) const {
   if (data.isPositionLevelValid()) {
-    setSlackAndDual_impl(position_level_constraints_, robot, 
-                         data.position_level_data, s);
+    constraintsimpl::setSlackAndDual(position_level_constraints_, robot, 
+                                     data.position_level_data, s);
   }
   if (data.isVelocityLevelValid()) {
-    setSlackAndDual_impl(velocity_level_constraints_, robot, 
-                         data.velocity_level_data, s);
+    constraintsimpl::setSlackAndDual(velocity_level_constraints_, robot, 
+                                     data.velocity_level_data, s);
   }
-  setSlackAndDual_impl(acceleration_level_constraints_, robot,
-                       data.acceleration_level_data, s);
+  if (data.isAccelerationLevelValid()) {
+    constraintsimpl::setSlackAndDual(acceleration_level_constraints_, robot,
+                                     data.acceleration_level_data, s);
+  }
 }
 
 
-inline void Constraints::setSlackAndDual_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const SplitSolution& s) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->setSlackAndDual(robot, data[i], s);
+inline void Constraints::setSlackAndDual(Robot& robot, ConstraintsData& data, 
+                                         const ImpulseSplitSolution& s) const {
+  if (data.isImpulseLevelValid()) {
+    constraintsimpl::setSlackAndDual(impulse_level_constraints_, robot,
+                                     data.impulse_level_data, s);
   }
 }
 
@@ -178,64 +154,64 @@ inline void Constraints::augmentDualResidual(
     Robot& robot, ConstraintsData& data, const double dtau, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (data.isPositionLevelValid()) {
-    augmentDualResidual_impl(position_level_constraints_, robot, 
-                             data.position_level_data, dtau, s, kkt_residual);
-  }
-  if (data.isVelocityLevelValid()) {
-    augmentDualResidual_impl(velocity_level_constraints_, robot, 
-                             data.velocity_level_data, dtau, s, kkt_residual);
-  }
-  augmentDualResidual_impl(acceleration_level_constraints_, robot, 
-                           data.acceleration_level_data, dtau, s, kkt_residual);
-}
-
-
-inline void Constraints::augmentDualResidual_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const double dtau, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->augmentDualResidual(robot, data[i], dtau, s, kkt_residual);
-  }
-}
-
-
-inline void Constraints::condenseSlackAndDual(Robot& robot,
-                                              ConstraintsData& data, 
-                                              const double dtau, 
-                                              const SplitSolution& s,
-                                              SplitKKTMatrix& kkt_matrix, 
-                                              SplitKKTResidual& kkt_residual) const {
-  if (data.isPositionLevelValid()) {
-    condenseSlackAndDual_impl(position_level_constraints_, robot,
-                              data.position_level_data, dtau, s, kkt_matrix,
-                              kkt_residual);
-  }
-  if (data.isVelocityLevelValid()) {
-    condenseSlackAndDual_impl(velocity_level_constraints_, robot,
-                              data.velocity_level_data, dtau, s, kkt_matrix,
-                              kkt_residual);
-  }
-  condenseSlackAndDual_impl(acceleration_level_constraints_, robot,
-                            data.acceleration_level_data, dtau, s, kkt_matrix,
-                            kkt_residual);
-}
-
-
-inline void Constraints::condenseSlackAndDual_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const double dtau, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->condenseSlackAndDual(robot, data[i], dtau, s, kkt_matrix, 
+    constraintsimpl::augmentDualResidual(position_level_constraints_, robot, 
+                                         data.position_level_data, dtau, s, 
                                          kkt_residual);
+  }
+  if (data.isVelocityLevelValid()) {
+    constraintsimpl::augmentDualResidual(velocity_level_constraints_, robot, 
+                                         data.velocity_level_data, dtau, s, 
+                                         kkt_residual);
+  }
+  if (data.isAccelerationLevelValid()) {
+    constraintsimpl::augmentDualResidual(acceleration_level_constraints_, robot, 
+                                         data.acceleration_level_data, dtau, s, 
+                                         kkt_residual);
+  }
+}
+
+
+inline void Constraints::augmentDualResidual(
+    Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s,
+    ImpulseSplitKKTResidual& kkt_residual) const {
+  if (data.isImpulseLevelValid()) {
+    constraintsimpl::augmentDualResidual(impulse_level_constraints_, robot, 
+                                         data.impulse_level_data, s, 
+                                         kkt_residual);
+  }
+}
+
+
+inline void Constraints::condenseSlackAndDual(
+    Robot& robot, ConstraintsData& data, const double dtau, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) const {
+  if (data.isPositionLevelValid()) {
+    constraintsimpl::condenseSlackAndDual(position_level_constraints_, robot,
+                                          data.position_level_data, dtau, s, 
+                                          kkt_matrix, kkt_residual);
+  }
+  if (data.isVelocityLevelValid()) {
+    constraintsimpl::condenseSlackAndDual(velocity_level_constraints_, robot,
+                                          data.velocity_level_data, dtau, s, 
+                                          kkt_matrix, kkt_residual);
+  }
+  if (data.isAccelerationLevelValid()) {
+    constraintsimpl::condenseSlackAndDual(acceleration_level_constraints_, robot,
+                                          data.acceleration_level_data, dtau, s, 
+                                          kkt_matrix, kkt_residual);
+  }
+}
+
+
+inline void Constraints::condenseSlackAndDual(
+    Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) const {
+  if (data.isImpulseLevelValid()) {
+    constraintsimpl::condenseSlackAndDual(impulse_level_constraints_, robot,
+                                          data.impulse_level_data, s, 
+                                          kkt_matrix, kkt_residual);
   }
 }
 
@@ -244,27 +220,27 @@ inline void Constraints::computeSlackAndDualDirection(
     Robot& robot, ConstraintsData& data, const SplitSolution& s, 
     const SplitDirection& d) const {
   if (data.isPositionLevelValid()) {
-    computeSlackAndDualDirection_impl(position_level_constraints_, robot, 
-                                      data.position_level_data, s, d);
+    constraintsimpl::computeSlackAndDualDirection(
+        position_level_constraints_, robot, data.position_level_data, s, d);
   }
   if (data.isVelocityLevelValid()) {
-    computeSlackAndDualDirection_impl(velocity_level_constraints_, robot, 
-                                      data.velocity_level_data, s, d);
+    constraintsimpl::computeSlackAndDualDirection(
+        velocity_level_constraints_, robot, data.velocity_level_data, s, d);
   }
-  computeSlackAndDualDirection_impl(acceleration_level_constraints_, robot, 
-                                    data.acceleration_level_data, s, d);
+  if (data.isAccelerationLevelValid()) {
+    constraintsimpl::computeSlackAndDualDirection(
+        acceleration_level_constraints_, robot, data.acceleration_level_data, 
+        s, d);
+  }
 }
 
 
-inline void Constraints::computeSlackAndDualDirection_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const SplitSolution& s, 
-    const SplitDirection& d) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->computeSlackAndDualDirection(robot, data[i], s, d);
+inline void Constraints::computeSlackAndDualDirection(
+    Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s, 
+    const ImpulseSplitDirection& d) const {
+  if (data.isImpulseLevelValid()) {
+    constraintsimpl::computeSlackAndDualDirection(
+        impulse_level_constraints_, robot, data.impulse_level_data, s, d);
   }
 }
 
@@ -272,37 +248,29 @@ inline void Constraints::computeSlackAndDualDirection_impl(
 inline double Constraints::maxSlackStepSize(const ConstraintsData& data) const {
   double min_step_size = 1;
   if (data.isPositionLevelValid()) {
-    const double step_size = maxSlackStepSize_impl(position_level_constraints_,
-                                                   data.position_level_data);
+    const double step_size = constraintsimpl::maxSlackStepSize(
+        position_level_constraints_, data.position_level_data);
     if (step_size < min_step_size) {
       min_step_size = step_size;
     }
   }
   if (data.isVelocityLevelValid()) {
-    const double step_size = maxSlackStepSize_impl(velocity_level_constraints_,
-                                                   data.velocity_level_data);
+    const double step_size = constraintsimpl::maxSlackStepSize(
+        velocity_level_constraints_, data.velocity_level_data);
     if (step_size < min_step_size) {
       min_step_size = step_size;
     }
   }
-  const double step_size = maxSlackStepSize_impl(acceleration_level_constraints_,
-                                                 data.acceleration_level_data);
-  if (step_size < min_step_size) {
-    min_step_size = step_size;
+  if (data.isAccelerationLevelValid()) {
+    const double step_size = constraintsimpl::maxSlackStepSize(
+        acceleration_level_constraints_, data.acceleration_level_data);
+    if (step_size < min_step_size) {
+      min_step_size = step_size;
+    }
   }
-  return min_step_size;
-}
-
-
-inline double Constraints::maxSlackStepSize_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints,
-    const std::vector<ConstraintComponentData>& data) {
-  assert(constraints.size() == data.size());
-  double min_step_size = 1;
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    const double step_size = constraints[i]->maxSlackStepSize(data[i]);
+  if (data.isImpulseLevelValid()) {
+    const double step_size = constraintsimpl::maxSlackStepSize(
+        impulse_level_constraints_, data.impulse_level_data);
     if (step_size < min_step_size) {
       min_step_size = step_size;
     }
@@ -314,37 +282,29 @@ inline double Constraints::maxSlackStepSize_impl(
 inline double Constraints::maxDualStepSize(const ConstraintsData& data) const {
   double min_step_size = 1;
   if (data.isPositionLevelValid()) {
-    const double step_size = maxDualStepSize_impl(position_level_constraints_,
-                                                  data.position_level_data);
+    const double step_size = constraintsimpl::maxDualStepSize(
+        position_level_constraints_, data.position_level_data);
     if (step_size < min_step_size) {
       min_step_size = step_size;
     }
   }
   if (data.isVelocityLevelValid()) {
-    const double step_size = maxDualStepSize_impl(velocity_level_constraints_,
-                                                  data.velocity_level_data);
+    const double step_size = constraintsimpl::maxDualStepSize(
+        velocity_level_constraints_, data.velocity_level_data);
     if (step_size < min_step_size) {
       min_step_size = step_size;
     }
   }
-  const double step_size = maxDualStepSize_impl(acceleration_level_constraints_,
-                                                data.acceleration_level_data);
-  if (step_size < min_step_size) {
-    min_step_size = step_size;
+  if (data.isAccelerationLevelValid()) {
+    const double step_size = constraintsimpl::maxDualStepSize(
+        acceleration_level_constraints_, data.acceleration_level_data);
+    if (step_size < min_step_size) {
+      min_step_size = step_size;
+    }
   }
-  return min_step_size;
-}
-
-
-inline double Constraints::maxDualStepSize_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints,
-    const std::vector<ConstraintComponentData>& data) {
-  assert(constraints.size() == data.size());
-  double min_step_size = 1;
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    const double step_size = constraints[i]->maxDualStepSize(data[i]);
+  if (data.isImpulseLevelValid()) {
+    const double step_size = constraintsimpl::maxDualStepSize(
+        impulse_level_constraints_, data.impulse_level_data);
     if (step_size < min_step_size) {
       min_step_size = step_size;
     }
@@ -354,125 +314,89 @@ inline double Constraints::maxDualStepSize_impl(
 
 
 inline void Constraints::updateSlack(ConstraintsData& data, 
-                                     const double step_size) const {
+                                     const double step_size) {
   assert(step_size >= 0);
   assert(step_size <= 1);
   if (data.isPositionLevelValid()) {
-    updateSlack_impl(position_level_constraints_, data.position_level_data, 
-                     step_size);
+    constraintsimpl::updateSlack(data.position_level_data, step_size);
   }
   if (data.isVelocityLevelValid()) {
-    updateSlack_impl(velocity_level_constraints_, data.velocity_level_data, 
-                     step_size);
+    constraintsimpl::updateSlack(data.velocity_level_data, step_size);
   }
-  updateSlack_impl(acceleration_level_constraints_, data.acceleration_level_data, 
-                   step_size);
-}
-
-
-inline void Constraints::updateSlack_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints,
-    std::vector<ConstraintComponentData>& data, const double step_size) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->updateSlack(data[i], step_size);
+  if (data.isAccelerationLevelValid()) {
+    constraintsimpl::updateSlack(data.acceleration_level_data, step_size);
+  }
+  if (data.isImpulseLevelValid()) {
+    constraintsimpl::updateSlack(data.impulse_level_data, step_size);
   }
 }
 
 
 inline void Constraints::updateDual(ConstraintsData& data, 
-                                    const double step_size) const {
+                                    const double step_size) {
   assert(step_size >= 0);
   assert(step_size <= 1);
   if (data.isPositionLevelValid()) {
-    updateDual_impl(position_level_constraints_, data.position_level_data, 
-                    step_size);
+    constraintsimpl::updateDual(data.position_level_data, step_size);
   }
   if (data.isVelocityLevelValid()) {
-    updateDual_impl(velocity_level_constraints_, data.velocity_level_data, 
-                    step_size);
+    constraintsimpl::updateDual(data.velocity_level_data, step_size);
   }
-  updateDual_impl(acceleration_level_constraints_, data.acceleration_level_data, 
-                  step_size);
-}
-
-
-inline void Constraints::updateDual_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints,
-    std::vector<ConstraintComponentData>& data, const double step_size) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->updateDual(data[i], step_size);
+  if (data.isAccelerationLevelValid()) {
+    constraintsimpl::updateDual(data.acceleration_level_data, step_size);
+  }
+  if (data.isImpulseLevelValid()) {
+    constraintsimpl::updateDual(data.impulse_level_data, step_size);
   }
 }
 
 
-inline double Constraints::costSlackBarrier(const ConstraintsData& data,
-                                            const double dtau) const {
-  assert(dtau >= 0);
+inline double Constraints::costSlackBarrier(const ConstraintsData& data) const {
   double cost = 0;
   if (data.isPositionLevelValid()) {
-    cost += costSlackBarrier_impl(position_level_constraints_, 
-                                  data.position_level_data);
+    cost += constraintsimpl::costSlackBarrier(position_level_constraints_, 
+                                              data.position_level_data);
   }
   if (data.isVelocityLevelValid()) {
-    cost += costSlackBarrier_impl(velocity_level_constraints_, 
-                                  data.velocity_level_data);
+    cost += constraintsimpl::costSlackBarrier(velocity_level_constraints_, 
+                                              data.velocity_level_data);
   }
-  cost += costSlackBarrier_impl(acceleration_level_constraints_, 
-                                data.acceleration_level_data);
-  return dtau * cost;
-}
-
-
-inline double Constraints::costSlackBarrier_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints,
-    const std::vector<ConstraintComponentData>& data) {
-  assert(constraints.size() == data.size());
-  double cost = 0;
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    cost += constraints[i]->costSlackBarrier(data[i]);
+  if (data.isAccelerationLevelValid()) {
+    cost += constraintsimpl::costSlackBarrier(acceleration_level_constraints_, 
+                                              data.acceleration_level_data);
+  }
+  if (data.isImpulseLevelValid()) {
+    cost += constraintsimpl::costSlackBarrier(impulse_level_constraints_, 
+                                              data.impulse_level_data);
   }
   return cost;
 }
 
 
 inline double Constraints::costSlackBarrier(const ConstraintsData& data, 
-                                            const double dtau,
                                             const double step_size) const {
-  assert(dtau >= 0);
   assert(step_size >= 0);
   assert(step_size <= 1);
   double cost = 0;
   if (data.isPositionLevelValid()) {
-    cost += costSlackBarrier_impl(position_level_constraints_, 
-                                  data.position_level_data, step_size);
+    cost += constraintsimpl::costSlackBarrier(position_level_constraints_, 
+                                              data.position_level_data, 
+                                              step_size);
   }
   if (data.isVelocityLevelValid()) {
-    cost += costSlackBarrier_impl(velocity_level_constraints_, 
-                                  data.velocity_level_data, step_size);
+    cost += constraintsimpl::costSlackBarrier(velocity_level_constraints_, 
+                                              data.velocity_level_data, 
+                                              step_size);
   }
-  cost += costSlackBarrier_impl(acceleration_level_constraints_, 
-                                data.acceleration_level_data, step_size);
-  return dtau * cost;
-}
-
-
-inline double Constraints::costSlackBarrier_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints,
-    const std::vector<ConstraintComponentData>& data, const double step_size) {
-  assert(constraints.size() == data.size());
-  double cost = 0;
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    cost += constraints[i]->costSlackBarrier(data[i], step_size);
+  if (data.isAccelerationLevelValid()) {
+    cost += constraintsimpl::costSlackBarrier(acceleration_level_constraints_, 
+                                              data.acceleration_level_data, 
+                                              step_size);
+  }
+  if (data.isImpulseLevelValid()) {
+    cost += constraintsimpl::costSlackBarrier(impulse_level_constraints_, 
+                                              data.impulse_level_data, 
+                                              step_size);
   }
   return cost;
 }
@@ -481,87 +405,66 @@ inline double Constraints::costSlackBarrier_impl(
 inline void Constraints::computePrimalAndDualResidual(
     Robot& robot, ConstraintsData& data, const SplitSolution& s) const {
   if (data.isPositionLevelValid()) {
-    computePrimalAndDualResidual_impl(position_level_constraints_, robot, 
-                                      data.position_level_data, s);
+    constraintsimpl::computePrimalAndDualResidual(
+        position_level_constraints_, robot, data.position_level_data, s);
   }
   if (data.isVelocityLevelValid()) {
-    computePrimalAndDualResidual_impl(velocity_level_constraints_, robot, 
-                                      data.velocity_level_data, s);
+    constraintsimpl::computePrimalAndDualResidual(
+        velocity_level_constraints_, robot, data.velocity_level_data, s);
   }
-  computePrimalAndDualResidual_impl(acceleration_level_constraints_, robot, 
-                                    data.acceleration_level_data, s);
-}
-
-
-inline void Constraints::computePrimalAndDualResidual_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const SplitSolution& s) {
-  assert(constraints.size() == data.size());
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    constraints[i]->computePrimalAndDualResidual(robot, data[i], s);
+  if (data.isAccelerationLevelValid()) {
+    constraintsimpl::computePrimalAndDualResidual(
+        acceleration_level_constraints_, robot, data.acceleration_level_data, s);
   }
 }
 
 
-inline double Constraints::l1NormPrimalResidual(const ConstraintsData& data, 
-                                                const double dtau) const {
+inline void Constraints::computePrimalAndDualResidual(
+    Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s) const {
+  if (data.isImpulseLevelValid()) {
+    constraintsimpl::computePrimalAndDualResidual(
+        impulse_level_constraints_, robot, data.impulse_level_data, s);
+  }
+}
+
+
+inline double Constraints::l1NormPrimalResidual(
+    const ConstraintsData& data) {
   double l1_norm = 0;
   if (data.isPositionLevelValid()) {
-    l1_norm += l1NormPrimalResidual_impl(position_level_constraints_, 
-                                         data.position_level_data);
+    l1_norm += constraintsimpl::l1NormPrimalResidual(data.position_level_data);
   }
   if (data.isVelocityLevelValid()) {
-    l1_norm += l1NormPrimalResidual_impl(velocity_level_constraints_, 
-                                         data.velocity_level_data);
+    l1_norm += constraintsimpl::l1NormPrimalResidual(data.velocity_level_data);
   }
-  l1_norm += l1NormPrimalResidual_impl(acceleration_level_constraints_, 
-                                       data.acceleration_level_data);
-  return dtau * l1_norm;
-}
-
-
-inline double Constraints::l1NormPrimalResidual_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints,
-    const std::vector<ConstraintComponentData>& data) {
-  assert(constraints.size() == data.size());
-  double l1_norm = 0;
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    l1_norm += constraints[i]->l1NormPrimalResidual(data[i]);
+  if (data.isAccelerationLevelValid()) {
+    l1_norm += constraintsimpl::l1NormPrimalResidual(data.acceleration_level_data);
+  }
+  if (data.isImpulseLevelValid()) {
+    l1_norm += constraintsimpl::l1NormPrimalResidual(data.impulse_level_data);
   }
   return l1_norm;
 }
 
 
 inline double Constraints::squaredNormPrimalAndDualResidual(
-    const ConstraintsData& data, const double dtau) const {
+    const ConstraintsData& data) {
   double squared_norm = 0;
   if (data.isPositionLevelValid()) {
-    squared_norm += squaredNormPrimalAndDualResidual_impl(
-        position_level_constraints_, data.position_level_data);
+    squared_norm += constraintsimpl::squaredNormPrimalAndDualResidual(
+        data.position_level_data);
   }
   if (data.isVelocityLevelValid()) {
-    squared_norm += squaredNormPrimalAndDualResidual_impl(
-        velocity_level_constraints_, data.velocity_level_data);
+    squared_norm += constraintsimpl::squaredNormPrimalAndDualResidual(
+        data.velocity_level_data);
   }
-  squared_norm += squaredNormPrimalAndDualResidual_impl(
-      acceleration_level_constraints_, data.acceleration_level_data);
-  return dtau * dtau * squared_norm;
-}
-
-
-inline double Constraints::squaredNormPrimalAndDualResidual_impl(
-    const std::vector<ConstraintComponentBasePtr>& constraints,
-    const std::vector<ConstraintComponentData>& data) {
-  assert(constraints.size() == data.size());
-  double squared_norm = 0;
-  for (int i=0; i<constraints.size(); ++i) {
-    assert(data[i].dimc() == constraints[i]->dimc());
-    assert(data[i].checkDimensionalConsistency());
-    squared_norm += constraints[i]->squaredNormPrimalAndDualResidual(data[i]);
+  if (data.isAccelerationLevelValid()) {
+    squared_norm += constraintsimpl::squaredNormPrimalAndDualResidual(
+        data.acceleration_level_data);
+  }
+  if (data.isImpulseLevelValid()) {
+    squared_norm += constraintsimpl::squaredNormPrimalAndDualResidual(
+        data.impulse_level_data);
   }
   return squared_norm;
 }

@@ -89,9 +89,7 @@ public:
   ///
   Eigen::VectorXd ddual;
 
-  std::vector<Eigen::MatrixXd> J_vec;
-
-  Eigen::MatrixXd J;
+  std::vector<Eigen::MatrixXd> J;
 
   ///
   /// @brief Dimension of the constraint. 
@@ -105,6 +103,13 @@ public:
   /// @return Dimension of the constraint. 
   ///
   bool checkDimensionalConsistency() const;
+
+  ///
+  /// @brief Chech the equivalence of two ConstraintComponentData.
+  /// @param[in] other Other object.
+  /// @return true if this and other is same. false otherwise.
+  ///
+  bool isApprox(const ConstraintComponentData& other) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
 

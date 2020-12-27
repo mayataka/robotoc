@@ -17,7 +17,6 @@
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_impulse_cost.hpp"
 #include "idocp/cost/impulse_force_cost.hpp"
-#include "idocp/constraints/impulse_constraints.hpp"
 
 
 namespace idocp {
