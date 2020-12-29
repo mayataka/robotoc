@@ -65,10 +65,17 @@ inline void UnconstrainedDynamics::linearizeUnconstrainedDynamics(
 }
 
 
+template <typename MatrixType1, typename MatrixType2>
 inline void UnconstrainedDynamics::condenseUnconstrainedDynamics(
     Robot& robot, const double dtau, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
+    const Eigen::MatrixBase<MatrixType1>& Qaq, 
+    const Eigen::MatrixBase<MatrixType2>& Qav) {
   assert(dtau >= 0);
+  assert(Qaq.rows() == dimv_);
+  assert(Qaq.cols() == dimv_);
+  assert(Qav.rows() == dimv_);
+  assert(Qav.cols() == dimv_);
   lu_condensed_.noalias() = kkt_residual.lu() 
           + kkt_matrix.Quu().diagonal().asDiagonal() * ID_;
   // condense KKT residual
@@ -81,8 +88,10 @@ inline void UnconstrainedDynamics::condenseUnconstrainedDynamics(
   kkt_matrix.Qaa().noalias() += dID_da_.transpose() * Quu_dID_da_;
   Quu_dID_dq_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * dID_dq_;
   Quu_dID_dv_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * dID_dv_;
-  kkt_matrix.Qaq().noalias() += dID_da_.transpose() * Quu_dID_dq_;
-  kkt_matrix.Qav().noalias() += dID_da_.transpose() * Quu_dID_dv_;
+  const_cast<Eigen::MatrixBase<MatrixType1>&> (Qaq).noalias() 
+      += dID_da_.transpose() * Quu_dID_dq_;
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (Qav).noalias() 
+      += dID_da_.transpose() * Quu_dID_dv_;
   kkt_matrix.Qqq().noalias() += dID_dq_.transpose() * Quu_dID_dq_;
   kkt_matrix.Qqv().noalias() += dID_dq_.transpose() * Quu_dID_dv_;
   kkt_matrix.Qvv().noalias() += dID_dv_.transpose() * Quu_dID_dv_;
@@ -118,6 +127,21 @@ inline double UnconstrainedDynamics::squaredNormUnconstrainedDynamicsResidual(
     const double dtau) const {
   assert(dtau >= 0);
   return (dtau * dtau * ID_.squaredNorm());
+}
+
+
+template <typename MatrixType1, typename MatrixType2>
+inline void UnconstrainedDynamics::getStateFeedbackGain(
+    const Eigen::MatrixBase<MatrixType1>& Ka,
+    const Eigen::MatrixBase<MatrixType2>& Ku) const {
+  assert(Ka.rows() == dimv_);
+  assert(Ka.cols() == 2*dimv_);
+  assert(Ku.rows() == dimv_);
+  assert(Ku.cols() == 2*dimv_);
+  getStateFeedbackGain(
+    Ka.leftCols(dimv_), Ka.rightCols(dimv_),
+    const_cast<Eigen::MatrixBase<MatrixType2>&>(Ku).leftCols(dimv_),
+    const_cast<Eigen::MatrixBase<MatrixType2>&>(Ku).rightCols(dimv_));
 }
 
 

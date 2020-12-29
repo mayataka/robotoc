@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.1)
 project(idocp CXX)
 set(CMAKE_CXX_STANDARD 11)
 
-###########
-## Build ##
-###########
+#################
+## Build idocp ##
+#################
 if(NOT CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "WARNING: CMAKE_BUILD_TYPE not set to Release, which can decrease performance significantly")
 endif()
@@ -114,7 +114,7 @@ add_library(
 )
 target_link_libraries(
   ${PROJECT_NAME} 
-  PUBLIC 
+  PUBLIC
   pthread
   ${Boost_LIBRARIES}
   ${PINOCCHIO_LIBRARIES}
@@ -129,24 +129,31 @@ target_include_directories(
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-if (BUILD_WITH_VIEWER) 
+
+##################
+## Build viewer ##
+##################
+if (BUILD_VIEWER) 
+  # find pinocchio-gepetto-viewer
   find_package(pinocchio-gepetto-viewer REQUIRED)
+  set(pinocchio-gepetto-viewer_LIBDIR ${pinocchio-gepetto-viewer_DIR}/../..)
+  set(pinocchio-gepetto-viewer_LIBRARIES ${pinocchio-gepetto-viewer_LIBDIR}/libpinocchio-gepetto-viewer.so)
   target_sources(
     ${PROJECT_NAME} 
-    PUBLIC 
-    trajectory_viewer.cpp
+    PRIVATE
+    src/utils/trajectory_viewer.cpp
   )
   target_link_libraries(
     ${PROJECT_NAME} 
-    PUBLIC 
-    ${PINOCCHIO-GEPETTO-VIEWER_LIBRARIES}
+    PUBLIC
+    ${pinocchio-gepetto-viewer_LIBRARIES}
   )
   target_include_directories(
     ${PROJECT_NAME} 
     PUBLIC
-    ${PINOCCHIO-GEPETTO-VIEWER_INCLUDE_DIRS}
+    ${pinocchio-gepetto-viewer_INCLUDE_DIRS}
   )
-endif() # end if (BUILD_WITH_RAISIM)
+endif() # end if (BUILD_VIEWER)
 
 #############
 ## Testing ##

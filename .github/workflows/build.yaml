@@ -19,7 +19,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install build-essential
           sudo apt install libeigen3-dev
-      - name: Install pinocchio for ubuntu 18.04
+      - name: Install pinocchio and gepetto-viewer-corba for ubuntu 18.04
         if: matrix.os == 'ubuntu-18.04'
         run: |
           sudo apt install -qqy lsb-release gnupg2 curl
@@ -27,7 +27,8 @@ jobs:
           curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add 
           sudo apt update
           sudo apt install -qqy robotpkg-py27-pinocchio
-      - name: Install pinocchio for ubuntu 20.04
+          sudo apt install -qqy robotpkg-py27-qt4-gepetto-viewer-corba
+      - name: Install pinocchio and gepetto-viewer-corba for ubuntu 20.04
         if: matrix.os == 'ubuntu-20.04'
         run: |
           sudo apt install -qqy lsb-release gnupg2 curl
@@ -35,6 +36,16 @@ jobs:
           curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add 
           sudo apt update
           sudo apt install -qqy robotpkg-py38-pinocchio
+          sudo apt install -qqy robotpkg-py38-qt4-gepetto-viewer-corba
+      - name: Install pinocchio-gepetto-viewer
+          git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libSM.so.6 /usr/lib/x86_64-linux-gnu/libSM.so
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libICE.so.6 /usr/lib/x86_64-linux-gnu/libICE.so
+          make
+          sudo make install
       - name: Install lcov
         run: |
           sudo apt-get update -y
@@ -49,7 +60,7 @@ jobs:
           export PYTHONPATH=/opt/openrobots/lib/python3.8/site-packages:$PYTHONPATH
           export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
           mkdir -p build  && cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Debug -DTESTING=True
+          cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_VIEWER=True -DTESTING=True 
           cmake --build . --config Debug -j2
           ctest --output-on-failure
       - name: Collect and upload coverage to Codecov

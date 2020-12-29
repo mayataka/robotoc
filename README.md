@@ -4,8 +4,8 @@
 [![codecov](https://codecov.io/gh/mayataka/idocp/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/idocp)
 
 ## Features for efficient optimal control 
-- Solves the optimal control problem for rigid body systems based on inverse dynamics.
-- Sparsity-exploiting Riccati recursion / Parallel Newton's method (ParNMPC)  for computing the Newton direction.
+- Solves the optimal control problem (OCP) for rigid body systems with contacts based on inverse dynamics and event-driven scheme.
+- Riccati recursion / Parallel Newton's method (ParNMPC) for solving the KKT system.
 - Primal-dual interior point method for inequality constraints.
 - Filter line-search method.
 - Very fast computation of rigid body dynamics and its sensitivities thanks to [pinocchio](https://github.com/stack-of-tasks/pinocchio).
@@ -15,7 +15,7 @@
 - gcc, CMake
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  
 - [pinocchio](https://github.com/stack-of-tasks/pinocchio) (instruction for installation is found [here](https://stack-of-tasks.github.io/pinocchio/download.html))
-- (Optional to simulate MPC for quadrupeds) [raisimLib](https://github.com/raisimTech/raisimLib), [raisimOgre](https://github.com/raisimTech/raisimOgre), and [raisim's license](http://raisim.com/sections/License.html).
+- [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) (Optional to visualization of the solution trajectory) 
 
 ## Installation 
 1. Install latest stable version of Eigen3 by 
@@ -42,6 +42,21 @@ make -j$(nproc)
 sudo make install
 ```
 
+6. If you want to visualize the solution trajectory of the OCP, first install [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) and [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), e.g., by
+```
+sudo apt update && sudo apt install robotpkg-py27-qt4-gepetto-viewer-corba 
+git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+sudo ln -s /usr/lib/x86_64-linux-gnu/libSM.so.6 /usr/lib/x86_64-linux-gnu/libSM.so
+sudo ln -s /usr/lib/x86_64-linux-gnu/libICE.so.6 /usr/lib/x86_64-linux-gnu/libICE.so
+sudo make install
+```
+and configure the build of `idocp` as 
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=False -DBUILD_VIEWER=True
+```
+
 ## Usage
 You can link your exectables to `idocp` by writing `CMakeLists.txt` as
 ```
@@ -63,39 +78,8 @@ target_include_directories(
 )
 ```
 
-## Simulation of Contact Dynamics 
-
-Class `idocp::QuadrupedSimulator` provides quadruped simulation for MPC utilizing RaiSim.
-Note that RaiSim currently supports only for academic use.
-First, install [raisimLib](https://github.com/raisimTech/raisimLib) and [raisimOgre](https://github.com/raisimTech/raisimOgre) into ${RAISIM_LOCAL_BUILD_DIR} (arbitrary directory) by following the install instructions ([raisimLib](http://raisim.com/sections/Installation.html), [raisimOgre](https://github.com/raisimTech/raisimOgre)).
-Then you can build the simulation by writing `CMakeLists.txt` as
-```
-find_package(idocp REQUIRED)
-find_package(raisim CONFIG REQUIRED)
-find_package(raisimOgre CONFIG REQUIRED)
-
-add_executable(
-    YOUR_EXECTABLE
-    YOUR_EXECTABLE.cpp
-)
-target_link_libraries(
-    YOUR_EXECTABLE
-    PRIVATE
-    idocp::idocp
-    raisim::raisim
-    raisim::raisimOgre
-)
-target_include_directories(
-    YOUR_EXECTABLE
-    PRIVATE
-    ${IDOCP_INCLUDE_DIR}
-)
-```
-And build exectables as (assume ${RAISIM_LOCAL_BUILD_DIR} is ~/raisim_build)
-```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=~/raisim_build
-make
-```
+## MPC Simulation 
+Simulation of the MPC of systems with rigid contacts are provided in [idocp-sim](https://github.com/mayataka/idocp-sim).
 
 
 ## Related publications

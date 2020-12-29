@@ -1,5 +1,5 @@
-#ifndef IDOCP_UNCONSTRAINED_OCP_SOLVER_HPP_
-#define IDOCP_UNCONSTRAINED_OCP_SOLVER_HPP_
+#ifndef IDOCP_UNOCP_SOLVER_HPP_
+#define IDOCP_UNOCP_SOLVER_HPP_
 
 #include <vector>
 #include <memory>
@@ -11,22 +11,17 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
-#include "idocp/ocp/ocp_linearizer.hpp"
-#include "idocp/ocp/riccati_solver.hpp"
-// #include "idocp/line_search/line_search_filter.hpp"
 
 
 namespace idocp {
 
 ///
-/// @class OCPSolver
-/// @brief Optimal control problem solver by Riccati recursion. 
+/// @class UnOCPSolver
+/// @brief Optimal control problem solver by Riccati recursion for 
+/// "unconstrained" rigid-body systems. "Unconstrained" means the system never
+/// has floating base or contacts.
 ///
-class UnconstrainedOCPSolver {
+class UnOCPSolver {
 public:
   ///
   /// @brief Construct optimal control problem solver.
@@ -38,41 +33,39 @@ public:
   /// @param[in] num_proc Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  UnconstrainedOCPSolver(const Robot& robot, 
-                         const std::shared_ptr<CostFunction>& cost,
-                         const std::shared_ptr<Constraints>& constraints, 
-                         const double T, const int N, const int num_proc=1);
+  UnOCPSolver(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+              const std::shared_ptr<Constraints>& constraints, const double T, 
+              const int N, const int num_proc=1);
 
   ///
   /// @brief Default constructor. 
   ///
-  UnconstrainedOCPSolver();
+  UnOCPSolver();
 
   ///
   /// @brief Destructor. 
   ///
-  ~UnconstrainedOCPSolver();
+  ~UnOCPSolver();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  UnconstrainedOCPSolver(const UnconstrainedOCPSolver&) = default;
+  UnOCPSolver(const UnOCPSolver&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  UnconstrainedOCPSolver& operator=(const UnconstrainedOCPSolver&) = default;
+  UnOCPSolver& operator=(const UnOCPSolver&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  UnconstrainedOCPSolver(UnconstrainedOCPSolver&&) noexcept = default;
+  UnOCPSolver(UnOCPSolver&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  UnconstrainedOCPSolver& operator=(
-      UnconstrainedOCPSolver&&) noexcept = default;
+  UnOCPSolver& operator=(UnOCPSolver&&) noexcept = default;
 
   ///
   /// @brief Initializes the inequality constraints, i.e., set slack variables 
@@ -192,4 +185,4 @@ private:
 } // namespace idocp 
 
 
-#endif // IDOCP_UNCONSTRAINED_OCP_SOLVER_HPP_ 
+#endif // IDOCP_UNOCP_SOLVER_HPP_ 

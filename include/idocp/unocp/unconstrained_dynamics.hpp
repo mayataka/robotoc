@@ -28,10 +28,12 @@ public:
 
   UnconstrainedDynamics& operator=(UnconstrainedDynamics&&) noexcept = default;
 
-  void linearizeUnconstrainedDynamics(Robot& robot, const double dtau, 
-                                      const SplitSolution& s, 
-                                      SplitKKTMatrix& kkt_matrix, 
-                                      SplitKKTResidual& kkt_residual);
+  template <typename MatrixType1, typename MatrixType2>
+  void linearizeUnconstrainedDynamics(
+      Robot& robot, const double dtau, const SplitSolution& s, 
+      SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
+      const Eigen::MatrixBase<MatrixType1>& Qaq, 
+      const Eigen::MatrixBase<MatrixType2>& Qav);
 
   void condenseUnconstrainedDynamics(Robot& robot, const double dtau, 
                                      const SplitSolution& s, 
@@ -51,8 +53,8 @@ public:
   double squaredNormUnconstrainedDynamicsResidual(const double dtau) const;
 
   template <typename MatrixType1, typename MatrixType2>
-  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Kax,
-                            const Eigen::MatrixBase<MatrixType2>& Kux) const;
+  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Ka,
+                            const Eigen::MatrixBase<MatrixType2>& Ku) const;
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4>
