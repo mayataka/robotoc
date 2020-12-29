@@ -1,24 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- =================================================================================== -->
+<!--   Copyright 2019 ANYbotics, https://www.anybotics.com                               -->
+<!-- =================================================================================== -->
+<!-- This file contains the description of the ANYmal B robot. -->
 <robot name="anymal"
     xmlns:xacro="http://www.ros.org/wiki/xacro">  
+    <!-- Material for the visual primitives -->  
     <material name="anymal_material">    
         <color rgba="0.7 0.7 0.7 1.0"/>  
     </material>  
 
     <link name="world"/>
-
     <joint name="floating" type="floating">
         <origin rpy="0 0 0" xyz="0 0 0"/>      
         <parent link="world"/>
         <child link="base"/>
     </joint>
 
-
+    <!-- Base link -->  
     <link name="base">    
         <visual>      
             <origin rpy="0 0 0" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_base.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_base.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -94,7 +98,7 @@
         <visual>      
             <origin rpy="0 0 0.0" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_hip_l.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_hip_l.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -131,7 +135,7 @@
         <visual>      
             <origin rpy="0 0 0.0" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_thigh_l.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_thigh_l.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -175,7 +179,7 @@
         <visual>      
             <origin rpy="0 0 0.0" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_shank_l.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_shank_l.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -211,7 +215,7 @@
         <visual>      
             <origin rpy="0 0 0.0" xyz="0 0 0.032"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_foot.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_foot.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -237,9 +241,9 @@
     <!-- Foot link -->  
     <link name="LF_FOOT">    
         <collision>      
-            <origin xyz="0 0 0.0"/>      
+            <origin xyz="0 0 0.02325"/>      
             <geometry>        
-                <sphere radius="0.00001"/>      
+                <sphere radius="0.031"/>      
             </geometry>    
         </collision>  
     </link>  
@@ -254,7 +258,7 @@
         <visual>      
             <origin rpy="0 0 0.0" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_hip_r.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_hip_r.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -291,7 +295,7 @@
         <visual>      
             <origin rpy="0 0 0.0" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_thigh_r.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_thigh_r.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -335,7 +339,7 @@
         <visual>      
             <origin rpy="0 0 0.0" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_shank_r.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_shank_r.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -371,7 +375,7 @@
         <visual>      
             <origin rpy="0 0 0.0" xyz="0 0 0.032"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_foot.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_foot.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -397,9 +401,9 @@
     <!-- Foot link -->  
     <link name="RF_FOOT">    
         <collision>      
-            <origin xyz="0 0 0.0"/>      
+            <origin xyz="0 0 0.02325"/>      
             <geometry>        
-                <sphere radius="0.00001"/>      
+                <sphere radius="0.031"/>      
             </geometry>    
         </collision>  
     </link>  
@@ -414,7 +418,7 @@
         <visual>      
             <origin rpy="0 0 -3.14159265359" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_hip_r.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_hip_r.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -451,7 +455,7 @@
         <visual>      
             <origin rpy="0 0 -3.14159265359" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_thigh_r.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_thigh_r.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -495,7 +499,7 @@
         <visual>      
             <origin rpy="0 0 -3.14159265359" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_shank_r.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_shank_r.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -531,7 +535,7 @@
         <visual>      
             <origin rpy="0 0 -3.14159265359" xyz="0 0 0.032"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_foot.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_foot.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -557,9 +561,9 @@
     <!-- Foot link -->  
     <link name="LH_FOOT">    
         <collision>      
-            <origin xyz="0 0 0.0"/>      
+            <origin xyz="0 0 0.02325"/>      
             <geometry>        
-                <sphere radius="0.00001"/>      
+                <sphere radius="0.031"/>      
             </geometry>    
         </collision>  
     </link>  
@@ -574,7 +578,7 @@
         <visual>      
             <origin rpy="0 0 -3.14159265359" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_hip_l.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_hip_l.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -611,7 +615,7 @@
         <visual>      
             <origin rpy="0 0 -3.14159265359" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_thigh_l.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_thigh_l.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -655,7 +659,7 @@
         <visual>      
             <origin rpy="0 0 -3.14159265359" xyz="0 0 0"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_shank_l.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_shank_l.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -691,7 +695,7 @@
         <visual>      
             <origin rpy="0 0 -3.14159265359" xyz="0 0 0.032"/>      
             <geometry>        
-                <mesh filename="meshes/anymal_foot.dae" scale="0.001 0.001     0.001"/>      
+                <mesh filename="package://anymal_b_simple_description/meshes/anymal_foot.dae" scale="0.001 0.001     0.001"/>      
             </geometry>      
             <material name="anymal_material"/>    
         </visual>    
@@ -717,9 +721,9 @@
     <!-- Foot link -->  
     <link name="RH_FOOT">    
         <collision>      
-            <origin xyz="0 0 0.0"/>      
+            <origin xyz="0 0 0.02325"/>      
             <geometry>        
-                <sphere radius="0.00001"/>      
+                <sphere radius="0.031"/>      
             </geometry>    
         </collision>  
     </link>  
@@ -730,134 +734,4 @@
         <mu1>0.8</mu1>    
         <mu2>0.8</mu2>  
     </gazebo>  
-
-
-    <gazebo>
-        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-            <robotNamespace>/anymal</robotNamespace>
-            <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
-            <controlPeriod>0.001</controlPeriod>
-        </plugin>
-    </gazebo>
-    <transmission name="LF_HAA_TRANS">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="LF_HAA">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="LF_HAA_MOTOR">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="LF_HFE_TRANS">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="LF_HFE">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="LF_HFE_MOTOR">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="LF_KFE_TRANS">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="LF_KFE">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="LF_KFE_MOTOR">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="RF_HAA_TRANS">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="RF_HAA">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="RF_HAA_MOTOR">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="RF_HFE_TRANS">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="RF_HFE">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="RF_HFE_MOTOR">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="RF_KFE_TRANS">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="RF_KFE">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="RF_KFE_MOTOR">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="LH_HAA_TRANS">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="LH_HAA">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="LH_HAA_MOTOR">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="LH_HFE_TRANS">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="LH_HFE">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="LH_HFE_MOTOR">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="LH_KFE_TRANS">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="LH_KFE">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="LH_KFE_MOTOR">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="RH_HAA_TRANS">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="RH_HAA">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="RH_HAA_MOTOR">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="RH_HFE_TRANS">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="RH_HFE">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="RH_HFE_MOTOR">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="RH_KFE_TRANS">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="RH_KFE">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="RH_KFE_MOTOR">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-
 </robot>

@@ -1,4 +1,4 @@
-#include "idocp/cost/trotting_configuration_cost.hpp"
+#include "idocp/cost/trotting_configuration_space_cost.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -6,7 +6,8 @@
 
 namespace idocp {
 
-TrottingConfigurationCost::TrottingConfigurationCost(const Robot& robot) 
+TrottingConfigurationSpaceCost::TrottingConfigurationSpaceCost(
+    const Robot& robot) 
   : dimq_(robot.dimq()),
     dimv_(robot.dimv()),
     t_start_(0), 
@@ -14,18 +15,17 @@ TrottingConfigurationCost::TrottingConfigurationCost(const Robot& robot)
     step_length_(0), 
     v_com_(0),
     q_standing_(Eigen::VectorXd::Zero(robot.dimq())),
-    q_even_step_(Eigen::VectorXd::Zero(robot.dimq())),
-    q_odd_step_(Eigen::VectorXd::Zero(robot.dimq())),
     v_ref_(Eigen::VectorXd::Zero(robot.dimv())),
     q_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     v_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     a_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     qf_weight_(Eigen::VectorXd::Zero(robot.dimv())),
-    vf_weight_(Eigen::VectorXd::Zero(robot.dimv())) {
+    vf_weight_(Eigen::VectorXd::Zero(robot.dimv())), 
+    swing_angles_() {
 }
 
 
-TrottingConfigurationCost::TrottingConfigurationCost()
+TrottingConfigurationSpaceCost::TrottingConfigurationSpaceCost()
   : dimq_(0),
     dimv_(0),
     t_start_(0), 
@@ -33,30 +33,29 @@ TrottingConfigurationCost::TrottingConfigurationCost()
     step_length_(0), 
     v_com_(0),
     q_standing_(),
-    q_even_step_(),
-    q_odd_step_(),
     v_ref_(),
     q_weight_(),
     v_weight_(),
     a_weight_(),
     qf_weight_(),
-    vf_weight_() {
+    vf_weight_(),
+    swing_angles_() {
 }
 
 
-TrottingConfigurationCost::~TrottingConfigurationCost() {
+TrottingConfigurationSpaceCost::~TrottingConfigurationSpaceCost() {
 }
 
 
-bool TrottingConfigurationCost::useKinematics() const {
+bool TrottingConfigurationSpaceCost::useKinematics() const {
   return false;
 }
 
 
-void TrottingConfigurationCost::set_ref(
+void TrottingConfigurationSpaceCost::set_ref(
     const double t_start, const double t_period, 
     const Eigen::VectorXd& q_standing, const double step_length,
-    const TrottingSwingAnglePattern& pattern) {
+    const TrottingSwingAngles& swing_angles) {
   try {
     if (q_standing.size() != dimq_) {
       throw std::invalid_argument(
@@ -78,36 +77,16 @@ void TrottingConfigurationCost::set_ref(
   t_start_ = t_start;
   t_period_ = t_period;
   q_standing_ = q_standing;
-  q_even_step_ = q_standing;
-  q_even_step_.coeffRef( 8) += pattern.front_swing_thigh;
-  q_even_step_.coeffRef( 9) += pattern.front_swing_knee;
-  q_even_step_.coeffRef(11) += pattern.hip_stance_thigh;
-  q_even_step_.coeffRef(12) += pattern.hip_stance_knee;
-  q_even_step_.coeffRef(14) += pattern.front_stance_thigh;
-  q_even_step_.coeffRef(15) += pattern.front_stance_knee;
-  q_even_step_.coeffRef(17) += pattern.hip_swing_thigh;
-  q_even_step_.coeffRef(18) += pattern.hip_swing_knee;
-  q_odd_step_ = q_standing;
-  q_odd_step_.coeffRef( 8) += pattern.front_stance_thigh;
-  q_odd_step_.coeffRef( 9) += pattern.front_stance_knee; 
-  q_odd_step_.coeffRef(11) += pattern.hip_swing_thigh;
-  q_odd_step_.coeffRef(12) += pattern.hip_swing_knee;
-  q_odd_step_.coeffRef(14) += pattern.front_swing_thigh; 
-  q_odd_step_.coeffRef(15) += pattern.front_swing_knee;
-  q_odd_step_.coeffRef(17) += pattern.hip_stance_thigh; 
-  q_odd_step_.coeffRef(18) += pattern.hip_stance_knee; 
-
   step_length_ = step_length;
-  v_com_ = step_length_ / t_period_;
+  v_com_ = step_length / t_period;
   v_ref_.setZero();
   v_ref_.coeffRef(0) = v_com_;
-  std::cout << "q_standing = " << q_standing_.transpose() << std::endl;
-  std::cout << "q_even_step = " << q_even_step_.transpose() << std::endl;
-  std::cout << "q_odd_step = " << q_odd_step_.transpose() << std::endl;
+  swing_angles_ = swing_angles;
 }
 
 
-void TrottingConfigurationCost::set_q_weight(const Eigen::VectorXd& q_weight) {
+void TrottingConfigurationSpaceCost::set_q_weight(
+    const Eigen::VectorXd& q_weight) {
   try {
     if (q_weight.size() != dimv_) {
       throw std::invalid_argument(
@@ -122,7 +101,8 @@ void TrottingConfigurationCost::set_q_weight(const Eigen::VectorXd& q_weight) {
 }
 
 
-void TrottingConfigurationCost::set_v_weight(const Eigen::VectorXd& v_weight) {
+void TrottingConfigurationSpaceCost::set_v_weight(
+    const Eigen::VectorXd& v_weight) {
   try {
     if (v_weight.size() != dimv_) {
       throw std::invalid_argument(
@@ -137,7 +117,8 @@ void TrottingConfigurationCost::set_v_weight(const Eigen::VectorXd& v_weight) {
 }
 
 
-void TrottingConfigurationCost::set_a_weight(const Eigen::VectorXd& a_weight) {
+void TrottingConfigurationSpaceCost::set_a_weight(
+    const Eigen::VectorXd& a_weight) {
   try {
     if (a_weight.size() != dimv_) {
       throw std::invalid_argument(
@@ -152,7 +133,7 @@ void TrottingConfigurationCost::set_a_weight(const Eigen::VectorXd& a_weight) {
 }
 
 
-void TrottingConfigurationCost::set_qf_weight(
+void TrottingConfigurationSpaceCost::set_qf_weight(
     const Eigen::VectorXd& qf_weight) {
   try {
     if (qf_weight.size() != dimv_) {
@@ -168,7 +149,7 @@ void TrottingConfigurationCost::set_qf_weight(
 }
 
 
-void TrottingConfigurationCost::set_vf_weight(
+void TrottingConfigurationSpaceCost::set_vf_weight(
     const Eigen::VectorXd& vf_weight) {
   try {
     if (vf_weight.size() != dimv_) {
@@ -184,7 +165,55 @@ void TrottingConfigurationCost::set_vf_weight(
 }
 
 
-double TrottingConfigurationCost::computeStageCost(
+void TrottingConfigurationSpaceCost::set_qi_weight(
+    const Eigen::VectorXd& qi_weight) {
+  try {
+    if (qi_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: qi_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  qi_weight_ = qi_weight;
+}
+
+
+void TrottingConfigurationSpaceCost::set_vi_weight(
+    const Eigen::VectorXd& vi_weight) {
+  try {
+    if (vi_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: vi_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  vi_weight_ = vi_weight;
+}
+
+
+void TrottingConfigurationSpaceCost::set_dvi_weight(
+    const Eigen::VectorXd& dvi_weight) {
+  try {
+    if (dvi_weight.size() != dimv_) {
+      throw std::invalid_argument(
+          "invalid size: dvi_weight.size() must be " + std::to_string(dimv_) + "!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  dvi_weight_ = dvi_weight;
+}
+
+
+double TrottingConfigurationSpaceCost::computeStageCost(
     Robot& robot, CostFunctionData& data, const double t, const double dtau, 
     const SplitSolution& s) const {
   double l = 0;
@@ -202,7 +231,7 @@ double TrottingConfigurationCost::computeStageCost(
 }
 
 
-double TrottingConfigurationCost::computeTerminalCost(
+double TrottingConfigurationSpaceCost::computeTerminalCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s) const {
   double l = 0;
@@ -219,7 +248,7 @@ double TrottingConfigurationCost::computeTerminalCost(
 }
 
 
-double TrottingConfigurationCost::computeImpulseCost(
+double TrottingConfigurationSpaceCost::computeImpulseCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s) const {
   double l = 0;
@@ -232,11 +261,12 @@ double TrottingConfigurationCost::computeImpulseCost(
     l += (qi_weight_.array()*(s.q-data.q_ref).array()*(s.q-data.q_ref).array()).sum();
   }
   l += (vi_weight_.array()*(s.v-v_ref_).array()*(s.v-v_ref_).array()).sum();
+  l += (dvi_weight_.array()*s.dv.array()*s.dv.array()).sum();
   return 0.5 * l;
 }
 
 
-void TrottingConfigurationCost::computeStageCostDerivatives(
+void TrottingConfigurationSpaceCost::computeStageCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, const double dtau, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   update_q_ref(t, data.q_ref);
@@ -256,7 +286,7 @@ void TrottingConfigurationCost::computeStageCostDerivatives(
 }
 
 
-void TrottingConfigurationCost::computeTerminalCostDerivatives(
+void TrottingConfigurationSpaceCost::computeTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   update_q_ref(t, data.q_ref);
@@ -275,7 +305,7 @@ void TrottingConfigurationCost::computeTerminalCostDerivatives(
 }
 
 
-void TrottingConfigurationCost::computeImpulseCostDerivatives(
+void TrottingConfigurationSpaceCost::computeImpulseCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
@@ -296,7 +326,7 @@ void TrottingConfigurationCost::computeImpulseCostDerivatives(
 }
 
 
-void TrottingConfigurationCost::computeStageCostHessian(
+void TrottingConfigurationSpaceCost::computeStageCostHessian(
     Robot& robot, CostFunctionData& data, const double t, const double dtau, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
@@ -313,7 +343,7 @@ void TrottingConfigurationCost::computeStageCostHessian(
 }
 
 
-void TrottingConfigurationCost::computeTerminalCostHessian(
+void TrottingConfigurationSpaceCost::computeTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
@@ -329,7 +359,7 @@ void TrottingConfigurationCost::computeTerminalCostHessian(
 }
 
 
-void TrottingConfigurationCost::computeImpulseCostHessian(
+void TrottingConfigurationSpaceCost::computeImpulseCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {

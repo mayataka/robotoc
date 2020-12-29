@@ -1,28 +1,28 @@
-#ifndef IDOCP_UTILS_MANIPULATOR_SIMULATOR_HXX_
-#define IDOCP_UTILS_MANIPULATOR_SIMULATOR_HXX_
+#ifndef IDOCP_UTILS_MPC_SIMULATOR_HXX_
+#define IDOCP_UTILS_MPC_SIMULATOR_HXX_
 
-#include "idocp/utils/manipulator_simulator.hpp"
+#include "idocp/utils/mpc_simulator.hpp"
 
 #include <chrono>
 #include <stdexcept>
 
 namespace idocp {
 
-inline ManipulatorSimulator::ManipulatorSimulator(
-    Robot& robot, const std::string& save_dir_path, 
-    const std::string& save_file_name)
+inline MPCSimulator::MPCSimulator(Robot& robot, 
+                                  const std::string& path_to_save_dir, 
+                                  const std::string& save_file_name)
   : runge_kutta_(robot),
-    data_saver_(save_dir_path, save_file_name) {
+    data_saver_(path_to_save_dir, save_file_name) {
 }
 
 
 template<typename OCPTypeDerived>
-inline void ManipulatorSimulator::run(MPC<OCPTypeDerived>& mpc, 
-                                      const double simulation_time_in_sec, 
-                                      const double sampling_period_in_sec, 
-                                      const double simulation_start_time_in_sec, 
-                                      const Eigen::VectorXd& q_initial, 
-                                      const Eigen::VectorXd& v_initial) {
+inline void MPCSimulator::run(MPC<OCPTypeDerived>& mpc, 
+                              const double simulation_time_in_sec, 
+                              const double sampling_period_in_sec, 
+                              const double simulation_start_time_in_sec, 
+                              const Eigen::VectorXd& q_initial, 
+                              const Eigen::VectorXd& v_initial) {
   try {
     if (simulation_time_in_sec <= 0) {
       throw std::out_of_range(
@@ -81,4 +81,4 @@ inline void ManipulatorSimulator::run(MPC<OCPTypeDerived>& mpc,
 
 } // namespace idocp
 
-#endif // IDOCP_UTILS_MANIPULATOR_SIMULATOR_HXX_ 
+#endif // IDOCP_UTILS_MPC_SIMULATOR_HXX_ 

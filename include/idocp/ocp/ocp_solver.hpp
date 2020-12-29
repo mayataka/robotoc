@@ -116,6 +116,14 @@ public:
   const SplitSolution& getSolution(const int stage) const;
 
   ///
+  /// @brief Get the solution vector. This function is not suitable for 
+  /// real-time application, e.g., MPC, since this function reconstructs the 
+  /// solution vector object.
+  /// @param[in] name Name of the printed variable. 
+  ///
+  std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
+
+  ///
   /// @brief Gets the state-feedback gain for the control input torques.
   /// @param[in] stage Time stage of interest. Must be more than 0 and less 
   /// than N-1.

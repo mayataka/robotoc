@@ -1,5 +1,5 @@
-#ifndef IDOCP_TROTTING_CONFIGURATION_COST_HPP_
-#define IDOCP_TROTTING_CONFIGURATION_COST_HPP_
+#ifndef IDOCP_TROTTING_CONFIGURATION_SPACE_COST_HPP_
+#define IDOCP_TROTTING_CONFIGURATION_SPACE_COST_HPP_
 
 #include <cmath>
 
@@ -15,7 +15,7 @@
 
 namespace idocp {
 
-struct TrottingSwingAnglePattern {
+struct TrottingSwingAngles {
   double front_swing_thigh;
   double front_swing_knee; 
   double front_stance_thigh; 
@@ -24,37 +24,43 @@ struct TrottingSwingAnglePattern {
   double hip_swing_knee;
   double hip_stance_thigh;
   double hip_stance_knee;
+
+  TrottingSwingAngles()
+    : front_swing_thigh(0), front_swing_knee(0),
+      front_stance_thigh(0), front_stance_knee(0), 
+      hip_swing_thigh(0), hip_swing_knee(0),
+      hip_stance_thigh(0), hip_stance_knee(0) {}
 };
 
 
-class TrottingConfigurationCost final : public CostFunctionComponentBase {
+class TrottingConfigurationSpaceCost final : public CostFunctionComponentBase {
 public:
 
-  TrottingConfigurationCost(const Robot& robot);
+  TrottingConfigurationSpaceCost(const Robot& robot);
 
-  TrottingConfigurationCost();
+  TrottingConfigurationSpaceCost();
 
-  ~TrottingConfigurationCost();
+  ~TrottingConfigurationSpaceCost();
 
   // Use defalut copy constructor.
-  TrottingConfigurationCost(const TrottingConfigurationCost&) = default;
+  TrottingConfigurationSpaceCost(const TrottingConfigurationSpaceCost&) = default;
 
   // Use defalut copy operator.
-  TrottingConfigurationCost& operator=(
-      const TrottingConfigurationCost&) = default;
+  TrottingConfigurationSpaceCost& operator=(
+      const TrottingConfigurationSpaceCost&) = default;
 
   // Use defalut move constructor.
-  TrottingConfigurationCost(TrottingConfigurationCost&&) noexcept = default;
+  TrottingConfigurationSpaceCost(TrottingConfigurationSpaceCost&&) noexcept = default;
 
   // Use defalut copy operator.
-  TrottingConfigurationCost& operator=(
-      TrottingConfigurationCost&&) noexcept = default;
+  TrottingConfigurationSpaceCost& operator=(
+      TrottingConfigurationSpaceCost&&) noexcept = default;
 
   bool useKinematics() const override;
 
   void set_ref(const double t_start, const double t_period, 
                const Eigen::VectorXd& q_standing, const double step_length,
-               const TrottingSwingAnglePattern& pattern);
+               const TrottingSwingAngles& swing_angles);
 
   void set_q_weight(const Eigen::VectorXd& q_weight);
 
@@ -114,27 +120,45 @@ public:
 private:
   int dimq_, dimv_;
   double t_start_, t_period_, step_length_, v_com_;
-  Eigen::VectorXd q_standing_, q_even_step_, q_odd_step_, v_ref_, q_weight_, 
-                  v_weight_, a_weight_, qf_weight_, vf_weight_, qi_weight_, 
-                  vi_weight_, dvi_weight_;
+  Eigen::VectorXd q_standing_, v_ref_, q_weight_, v_weight_, a_weight_, 
+                  qf_weight_, vf_weight_, qi_weight_, vi_weight_, dvi_weight_;
+  TrottingSwingAngles swing_angles_;
 
 
   void update_q_ref(const double t, Eigen::VectorXd& q_ref) const {
     assert(q_ref.size() == dimq_);
-    if (t > t_start_+t_period_) {
-      const int steps = std::floor((t-t_start_-t_period_)/t_period_);
+    if (t > t_start_) {
+      const double tau = t - t_start_;
+      const int steps = std::floor(tau/t_period_);
+      const double tau_step = tau - steps * t_period_;
+      const double rate = tau_step / t_period_;
+      const double sin = std::sin(M_PI*rate);
+      const double sin2 = std::sin(M_PI_2*rate);
       if (steps % 2 == 0) {
-        q_ref = q_even_step_;
-        q_ref.coeffRef(0) += (steps + 0.5) * step_length_;
+        q_ref = q_standing_;
+        q_ref.coeffRef( 0) += (steps + rate) * step_length_;
+        // q_ref.coeffRef( 8) -= swing_angles_.front_swing_thigh;
+        q_ref.coeffRef( 9) -= sin2 * swing_angles_.front_swing_knee;
+        // q_ref.coeffRef(11) += rate * swing_angles_.hip_stance_thigh;
+        // q_ref.coeffRef(12) += rate * swing_angles_.hip_stance_knee;
+        // q_ref.coeffRef(14) += rate * swing_angles_.front_stance_thigh;
+        // q_ref.coeffRef(15) -= rate * swing_angles_.front_stance_knee;
+        // q_ref.coeffRef(17) += rate * swing_angles_.hip_swing_thigh;
+        q_ref.coeffRef(18) += sin2 * swing_angles_.hip_swing_knee;
       }
       else {
-        q_ref = q_odd_step_;
-        q_ref.coeffRef(0) += (steps + 0.5) * step_length_;
+        q_ref = q_standing_;
+        q_ref.coeffRef( 0) += (steps + rate) * step_length_;
+        // q_ref.coeffRef( 8) += rate * swing_angles_.front_stance_thigh;
+        // q_ref.coeffRef( 9) += rate * swing_angles_.front_stance_knee;
+        // q_ref.coeffRef(11) -= rate * swing_angles_.hip_swing_thigh;
+        q_ref.coeffRef(12) += sin2 * swing_angles_.hip_swing_knee;
+        // q_ref.coeffRef(14) += rate * swing_angles_.front_swing_thigh;
+        // q_ref.coeffRef(15) += rate * swing_angles_.front_swing_knee;
+        q_ref.coeffRef(15) -= sin2 * swing_angles_.front_swing_knee;
+        // q_ref.coeffRef(17) += rate * swing_angles_.hip_stance_thigh;
+        // q_ref.coeffRef(18) -= rate * swing_angles_.hip_stance_knee;
       }
-    }
-    else if (t > t_start_) {
-      q_ref = q_even_step_;
-      q_ref.coeffRef(0) += 0.5 * step_length_;
     }
     else {
       q_ref = q_standing_;
@@ -145,4 +169,4 @@ private:
 
 } // namespace idocp
 
-#endif // IDOCP_TROTTING_CONFIGURATION_COST_HPP_ 
+#endif // IDOCP_TROTTING_CONFIGURATION_SPACE_COST_HPP_ 

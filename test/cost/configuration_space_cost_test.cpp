@@ -14,7 +14,7 @@
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
-#include "derivative_checker.hpp"
+#include "idocp/utils/derivative_checker.hpp"
 
 
 namespace idocp {

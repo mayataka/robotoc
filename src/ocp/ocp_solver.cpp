@@ -118,6 +118,38 @@ const SplitSolution& OCPSolver::getSolution(const int stage) const {
 }
 
 
+std::vector<Eigen::VectorXd> OCPSolver::getSolution(
+    const std::string& name) const {
+  std::vector<Eigen::VectorXd> sol;
+  if (name == "q") {
+    for (int i=0; i<=N_; ++i) {
+      sol.push_back(s_[i].q);
+    }
+  }
+  if (name == "v") {
+    for (int i=0; i<=N_; ++i) {
+      sol.push_back(s_[i].v);
+    }
+  }
+  if (name == "a") {
+    for (int i=0; i<N_; ++i) {
+      sol.push_back(s_[i].a);
+    }
+  }
+  if (name == "f") {
+    for (int i=0; i<N_; ++i) {
+      sol.push_back(s_[i].f_stack());
+    }
+  }
+  if (name == "u") {
+    for (int i=0; i<N_; ++i) {
+      sol.push_back(s_[i].u);
+    }
+  }
+  return sol;
+}
+
+
 void OCPSolver::getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq, 
                                      Eigen::MatrixXd& Kv) const {
   assert(time_stage >= 0);

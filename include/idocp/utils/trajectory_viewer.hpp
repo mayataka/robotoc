@@ -3,23 +3,20 @@
 
 #include "Eigen/Core"
 
+#include "pinocchio/gepetto/viewer.hpp"
 
 namespace idocp {
 
 class TrajectoryViewer {
 public:
-  TrajectoryViewer(const std::string& path_to_raisim_activation_key,
-                   const std::string& path_to_urdf_for_raisim);
+  TrajectoryViewer(const std::string& path_to_urdf);
 
-  void display(const std::string& path_to_data, 
+  void display(const std::vector<Eigen::VectorXd>& q_traj, 
                const double sampling_period_in_sec, const bool recording=false,
                const std::string& path_to_save_file="");
 
-  static void RaiSimOgreCallback();
-
 private:
-  std::string path_to_raisim_activation_key_, path_to_urdf_for_raisim_;
-
+  
 };
 
 } // namespace idocp

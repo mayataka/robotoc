@@ -189,4 +189,14 @@ void Robot::printRobotModel() const {
   std::cout << "--------------------------------------- " << std::endl;
 }
 
+
+pinocchio::Model Robot::getPinocchioModel() const {
+  return model_;
+}
+
+
+pinocchio::Data Robot::getPinocchioData() const {
+  return data_;
+}
+
 } // namespace idocp 

@@ -1,21 +1,25 @@
 #include <string>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/cost/time_varying_configuration_space_cost.hpp"
+#include "idocp/cost/trotting_foot_height_cost.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_solution.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 #include "idocp/utils/derivative_checker.hpp"
 
 
 namespace idocp {
 
-class TimeVaryingConfigurationSpaceCostTest : public ::testing::Test {
+class ConfigurationSpaceCostTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -38,7 +42,7 @@ protected:
 };
 
 
-void TimeVaryingConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
+void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   const int dimq = robot.dimq();
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
@@ -57,19 +61,20 @@ void TimeVaryingConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd v_weight = Eigen::VectorXd::Random(dimv); 
   const Eigen::VectorXd a_weight = Eigen::VectorXd::Random(dimv);
-  const double t0 = Eigen::VectorXd::Random(1)[0];
-  const Eigen::VectorXd q0 = robot.generateFeasibleConfiguration();
-  const Eigen::VectorXd v0 = Eigen::VectorXd::Random(dimv); 
-  auto cost = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot);
+  const Eigen::VectorXd u_weight = Eigen::VectorXd::Random(dimu);
+  const Eigen::VectorXd q_ref = robot.generateFeasibleConfiguration();
+  const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
+  const Eigen::VectorXd u_ref = Eigen::VectorXd::Random(dimu);
+  auto cost = std::make_shared<ConfigurationSpaceCost>(robot);
   CostFunctionData data(robot);
   EXPECT_FALSE(cost->useKinematics());
   cost->set_q_weight(q_weight);
   cost->set_v_weight(v_weight);
   cost->set_a_weight(a_weight);
-  cost->set_ref(t0, q0, v0);
-  Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
-  const Eigen::VectorXd v_ref = v0;
-  robot.integrateConfiguration(q0, v0, (t-t0), q_ref);
+  cost->set_u_weight(u_weight);
+  cost->set_q_ref(q_ref);
+  cost->set_v_ref(v_ref);
+  cost->set_u_ref(u_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   if (robot.hasFloatingBase()) {
@@ -81,7 +86,8 @@ void TimeVaryingConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   const double cost_ref = 0.5 * dtau 
                            * ((q_weight.array()*q_diff.array()*q_diff.array()).sum()
                             + (v_weight.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum()
-                            + (a_weight.array()*s.a.array()*s.a.array()).sum());
+                            + (a_weight.array()*s.a.array()*s.a.array()).sum()
+                            + (u_weight.array()* (s.u-u_ref).array()*(s.u-u_ref).array()).sum());
   EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dtau, s), cost_ref);
   cost->computeStageCostDerivatives(robot, data, t, dtau, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
@@ -94,6 +100,7 @@ void TimeVaryingConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   }
   kkt_res_ref.lv() += dtau * v_weight.asDiagonal() * (s.v-v_ref);
   kkt_res_ref.la += dtau * a_weight.asDiagonal() * s.a;
+  kkt_res_ref.lu() += dtau * u_weight.asDiagonal() * (s.u-u_ref);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   cost->computeStageCostHessian(robot, data, t, dtau, s, kkt_mat);
   if (robot.hasFloatingBase()) {
@@ -104,6 +111,7 @@ void TimeVaryingConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   }
   kkt_mat_ref.Qvv() += dtau * v_weight.asDiagonal();
   kkt_mat_ref.Qaa() += dtau * a_weight.asDiagonal();
+  kkt_mat_ref.Quu() += dtau * u_weight.asDiagonal();
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
   EXPECT_TRUE(derivative_checker.checkFirstOrderStageCostDerivatives(cost));
@@ -117,7 +125,7 @@ void TimeVaryingConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
 }
 
 
-void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const {
+void ConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const {
   const int dimq = robot.dimq();
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_mat(robot);
@@ -130,18 +138,15 @@ void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const
   SplitKKTResidual kkt_res_ref = kkt_res;
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(dimv);
-  const double t0 = Eigen::VectorXd::Random(1)[0];
-  const Eigen::VectorXd q0 = robot.generateFeasibleConfiguration();
-  const Eigen::VectorXd v0 = Eigen::VectorXd::Random(dimv); 
-  auto cost = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot);
+  const Eigen::VectorXd q_ref = robot.generateFeasibleConfiguration();
+  const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
+  auto cost = std::make_shared<ConfigurationSpaceCost>(robot);
   CostFunctionData data(robot);
   EXPECT_FALSE(cost->useKinematics());
   cost->set_qf_weight(qf_weight);
   cost->set_vf_weight(vf_weight);
-  cost->set_ref(t0, q0, v0);
-  Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
-  const Eigen::VectorXd v_ref = v0;
-  robot.integrateConfiguration(q0, v0, (t-t0), q_ref);
+  cost->set_q_ref(q_ref);
+  cost->set_v_ref(v_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   if (robot.hasFloatingBase()) {
@@ -185,7 +190,7 @@ void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const
 }
 
 
-void TimeVaryingConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
+void ConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
   const int dimq = robot.dimq();
   const int dimv = robot.dimv();
   ImpulseSplitKKTMatrix kkt_mat(robot);
@@ -201,19 +206,16 @@ void TimeVaryingConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const 
   const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd vi_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd dvi_weight = Eigen::VectorXd::Random(dimv);
-  const double t0 = Eigen::VectorXd::Random(1)[0];
-  const Eigen::VectorXd q0 = robot.generateFeasibleConfiguration();
-  const Eigen::VectorXd v0 = Eigen::VectorXd::Random(dimv); 
-  auto cost = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot);
+  const Eigen::VectorXd q_ref = robot.generateFeasibleConfiguration();
+  const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
+  auto cost = std::make_shared<ConfigurationSpaceCost>(robot);
   CostFunctionData data(robot);
   EXPECT_FALSE(cost->useKinematics());
   cost->set_qi_weight(qi_weight);
   cost->set_vi_weight(vi_weight);
   cost->set_dvi_weight(dvi_weight);
-  cost->set_ref(t0, q0, v0);
-  Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
-  const Eigen::VectorXd v_ref = v0;
-  robot.integrateConfiguration(q0, v0, (t-t0), q_ref);
+  cost->set_q_ref(q_ref);
+  cost->set_v_ref(v_ref);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   if (robot.hasFloatingBase()) {
@@ -260,7 +262,7 @@ void TimeVaryingConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const 
 }
 
 
-TEST_F(TimeVaryingConfigurationSpaceCostTest, fixedBase) {
+TEST_F(ConfigurationSpaceCostTest, fixedBase) {
   Robot robot(fixed_base_urdf);
   testStageCost(robot);
   testTerminalCost(robot);
@@ -268,7 +270,7 @@ TEST_F(TimeVaryingConfigurationSpaceCostTest, fixedBase) {
 }
 
 
-TEST_F(TimeVaryingConfigurationSpaceCostTest, floatingBase) {
+TEST_F(ConfigurationSpaceCostTest, floatingBase) {
   Robot robot(floating_base_urdf);
   testStageCost(robot);
   testTerminalCost(robot);

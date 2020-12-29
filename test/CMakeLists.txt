@@ -6,7 +6,6 @@ add_library(
   test_helper
   SHARED
   ${CMAKE_CURRENT_SOURCE_DIR}/test_helper/test_helper.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_helper/derivative_checker.cpp
 )
 target_include_directories(
   test_helper

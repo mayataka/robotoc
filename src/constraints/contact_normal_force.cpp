@@ -81,13 +81,9 @@ void ContactNormalForce::condenseSlackAndDual(
     if (s.isContactActive(i)) {
       kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack+2) 
           += dtau * data.dual.coeff(i) / data.slack.coeff(i);
-      dimf_stack += 3;
-    }
-  }
-  computePrimalAndDualResidual(robot, data, s);
-  dimf_stack = 0;
-  for (int i=0; i<dimc_; ++i) {
-    if (s.isContactActive(i)) {
+      data.residual.coeffRef(i) = - s.f[i].coeff(2) + data.slack.coeff(i);
+      data.duality.coeffRef(i) = computeDuality(data.slack.coeff(i), 
+                                                data.dual.coeff(i));
       kkt_residual.lf().coeffRef(dimf_stack+2) 
           -= dtau * (data.dual.coeff(i)*data.residual.coeff(i)-data.duality.coeff(i)) 
                   / data.slack.coeff(i);

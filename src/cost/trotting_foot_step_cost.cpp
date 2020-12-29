@@ -14,8 +14,9 @@ TrottingFootStepCost::TrottingFootStepCost(const Robot& robot,
     t_period_(0),
     step_length_(0),
     step_height_(0),
-    is_initial_step_(false),
+    is_initial_foot_step_(false),
     q_3d_ref_init_(Eigen::Vector3d::Zero()),
+    q_3d_weight_(Eigen::Vector3d::Zero()),
     qf_3d_weight_(Eigen::Vector3d::Zero()),
     qi_3d_weight_(Eigen::Vector3d::Zero()) {
 }
@@ -28,8 +29,9 @@ TrottingFootStepCost::TrottingFootStepCost()
     t_period_(0),
     step_length_(0),
     step_height_(0),
-    is_initial_step_(false),
+    is_initial_foot_step_(false),
     q_3d_ref_init_(),
+    q_3d_weight_(),
     qf_3d_weight_(),
     qi_3d_weight_() {
 }
@@ -44,9 +46,10 @@ bool TrottingFootStepCost::useKinematics() const {
 }
 
 
-void TrottingFootStepCost::set_q_3d_ref(const Eigen::Vector3d& q_3d_ref_init,
-                                        const double step_length, 
-                                        const double step_height) {
+void TrottingFootStepCost::set_ref(Robot& robot, 
+                                   const Eigen::VectorXd& q_standing, 
+                                   const double step_length, 
+                                   const double step_height) {
   try {
     if (step_length <= 0) {
       throw std::invalid_argument(
@@ -61,7 +64,8 @@ void TrottingFootStepCost::set_q_3d_ref(const Eigen::Vector3d& q_3d_ref_init,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  q_3d_ref_init_ = q_3d_ref_init;
+  robot.updateFrameKinematics(q_standing);
+  q_3d_ref_init_ = robot.framePosition(frame_id_);
   step_length_ = step_length;
   step_height_= step_height;
 }
@@ -69,7 +73,7 @@ void TrottingFootStepCost::set_q_3d_ref(const Eigen::Vector3d& q_3d_ref_init,
 
 void TrottingFootStepCost::set_period(const double t_start, 
                                       const double t_period, 
-                                      const bool is_initial_step) {
+                                      const bool is_initial_foot_step) {
   try {
     if (t_period <= 0) {
       throw std::invalid_argument(
@@ -82,7 +86,7 @@ void TrottingFootStepCost::set_period(const double t_start,
   }
   t_start_ = t_start;
   t_period_ = t_period;
-  is_initial_step_ = is_initial_step;
+  is_initial_foot_step_ = is_initial_foot_step;
 }
 
 
@@ -106,30 +110,24 @@ void TrottingFootStepCost::set_qi_3d_weight(
 double TrottingFootStepCost::computeStageCost(
     Robot& robot, CostFunctionData& data, const double t, const double dtau, 
     const SplitSolution& s) const {
-  double l = 0;
   data.diff_3d = robot.framePosition(frame_id_) - q_3d_ref(t);
-  l += (q_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * dtau * l;
+  return 0.5 * dtau * (q_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
 }
 
 
 double TrottingFootStepCost::computeTerminalCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s) const {
-  double l = 0;
   data.diff_3d = robot.framePosition(frame_id_) - q_3d_ref(t);
-  l += (qf_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * l;
+  return 0.5 * (qf_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
 }
 
 
 double TrottingFootStepCost::computeImpulseCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s) const {
-  double l = 0;
   data.diff_3d = robot.framePosition(frame_id_) - q_3d_ref(t);
-  l += (qi_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * l;
+  return 0.5 * (qi_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
 }
 
 
