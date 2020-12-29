@@ -11,7 +11,8 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-
+#include "idocp/unocp/split_unocp.hpp"
+#include "idocp/ocp/terminal_ocp.hpp"
 
 namespace idocp {
 
@@ -168,17 +169,14 @@ public:
 
 private:
   std::vector<Robot> robots_;
-  OCPLinearizer ocp_linearizer_;
-  RiccatiSolver riccati_solver_;
-  OCP ocp_;
-  KKTMatrix kkt_matrix_;
-  KKTResidual kkt_residual_;
-  Solution s_;
-  Direction d_;
-  // LineSearch line_search_;
+  std::vector<UnOCP> split_ocps_;
+  TerminalOCP terminal_ocp_;
+  std::vector<SplitKKTMatrix> kkt_matrix_;
+  std::vector<SplitKKTResidual> kkt_matrix_;
+  std::vector<SplitSolution> s_;
+  std::vector<SplitDirection > d_;
   int N_, num_proc_;
-
-  void discretizeSolution();
+  const double T_, dtau_;
 
 };
 

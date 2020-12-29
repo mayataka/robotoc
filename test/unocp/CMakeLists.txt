@@ -1,0 +1,2 @@
+add_idocp_test(unconstrained_dynamics_test)
+add_idocp_test(split_unocp_test)

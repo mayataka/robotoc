@@ -76,6 +76,7 @@ add_library(
   src/impulse/impulse_split_riccati_factorizer.cpp
   src/impulse/impulse_dynamics_backward_euler_data.cpp
   src/impulse/impulse_dynamics_backward_euler.cpp
+  # src/impulse/impulse_split_parnmpc.cpp
   src/hybrid/discrete_event.cpp
   src/hybrid/contact_sequence.cpp
   src/hybrid/ocp_discretizer.cpp
@@ -105,6 +106,9 @@ add_library(
   src/ocp/riccati_direction_calculator.cpp
   src/ocp/riccati_solver.cpp
   src/ocp/ocp_solver.cpp
+  src/unocp/unconstrained_dynamics.cpp
+  src/unocp/split_unocp.cpp
+  # src/unocp/unocp_solver.cpp
   src/utils/derivative_checker.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp

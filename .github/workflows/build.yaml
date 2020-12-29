@@ -38,13 +38,13 @@ jobs:
           sudo apt install -qqy robotpkg-py38-pinocchio
           sudo apt install -qqy robotpkg-py38-qt4-gepetto-viewer-corba
       - name: Install pinocchio-gepetto-viewer
+        run: |
           git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
           mkdir build
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release
           sudo ln -s /usr/lib/x86_64-linux-gnu/libSM.so.6 /usr/lib/x86_64-linux-gnu/libSM.so
           sudo ln -s /usr/lib/x86_64-linux-gnu/libICE.so.6 /usr/lib/x86_64-linux-gnu/libICE.so
-          make
           sudo make install
       - name: Install lcov
         run: |

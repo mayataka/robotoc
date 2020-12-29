@@ -1,7 +1,7 @@
 #ifndef IDOCP_UNCONSTRAINED_DYNAMICS_HXX_
 #define IDOCP_UNCONSTRAINED_DYNAMICS_HXX_
 
-#include "idocp/unconstrained/unconstrained_dynamics.hpp"
+#include "idocp/unocp/unconstrained_dynamics.hpp"
 
 #include <stdexcept>
 #include <cassert>
@@ -54,7 +54,7 @@ inline UnconstrainedDynamics::~UnconstrainedDynamics() {
 
 inline void UnconstrainedDynamics::linearizeUnconstrainedDynamics(
     Robot& robot, const double dtau, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) { 
+    SplitKKTResidual& kkt_residual) { 
   assert(dtau >= 0);
   linearizeInverseDynamics(robot, s);
   // augment inverse dynamics constraint
@@ -67,9 +67,8 @@ inline void UnconstrainedDynamics::linearizeUnconstrainedDynamics(
 
 template <typename MatrixType1, typename MatrixType2>
 inline void UnconstrainedDynamics::condenseUnconstrainedDynamics(
-    Robot& robot, const double dtau, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
-    const Eigen::MatrixBase<MatrixType1>& Qaq, 
+    Robot& robot, const double dtau, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual, const Eigen::MatrixBase<MatrixType1>& Qaq, 
     const Eigen::MatrixBase<MatrixType2>& Qav) {
   assert(dtau >= 0);
   assert(Qaq.rows() == dimv_);
@@ -79,19 +78,16 @@ inline void UnconstrainedDynamics::condenseUnconstrainedDynamics(
   lu_condensed_.noalias() = kkt_residual.lu() 
           + kkt_matrix.Quu().diagonal().asDiagonal() * ID_;
   // condense KKT residual
-  kkt_residual.la.noalias() += dID_da_.transpose() * lu_condensed_;
   kkt_residual.lq().noalias() += dID_dq_.transpose() * lu_condensed_;
   kkt_residual.lv().noalias() += dID_dv_.transpose() * lu_condensed_;
-  kkt_residual.lu().noalias() -= dtau * s.beta;   
+  kkt_residual.la.noalias()   += dID_da_.transpose() * lu_condensed_;
   // condense KKT Hessian
   Quu_dID_da_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * dID_da_;
   kkt_matrix.Qaa().noalias() += dID_da_.transpose() * Quu_dID_da_;
   Quu_dID_dq_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * dID_dq_;
   Quu_dID_dv_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * dID_dv_;
-  const_cast<Eigen::MatrixBase<MatrixType1>&> (Qaq).noalias() 
-      += dID_da_.transpose() * Quu_dID_dq_;
-  const_cast<Eigen::MatrixBase<MatrixType2>&> (Qav).noalias() 
-      += dID_da_.transpose() * Quu_dID_dv_;
+  const_cast<Eigen::MatrixBase<MatrixType1>&> (Qaq).noalias() = dID_da_.transpose() * Quu_dID_dq_;
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (Qav).noalias() = dID_da_.transpose() * Quu_dID_dv_;
   kkt_matrix.Qqq().noalias() += dID_dq_.transpose() * Quu_dID_dq_;
   kkt_matrix.Qqv().noalias() += dID_dq_.transpose() * Quu_dID_dv_;
   kkt_matrix.Qvv().noalias() += dID_dv_.transpose() * Quu_dID_dv_;

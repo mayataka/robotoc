@@ -28,17 +28,16 @@ public:
 
   UnconstrainedDynamics& operator=(UnconstrainedDynamics&&) noexcept = default;
 
-  template <typename MatrixType1, typename MatrixType2>
-  void linearizeUnconstrainedDynamics(
-      Robot& robot, const double dtau, const SplitSolution& s, 
-      SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
-      const Eigen::MatrixBase<MatrixType1>& Qaq, 
-      const Eigen::MatrixBase<MatrixType2>& Qav);
+  void linearizeUnconstrainedDynamics(Robot& robot, const double dtau, 
+                                      const SplitSolution& s, 
+                                      SplitKKTResidual& kkt_residual);
 
+  template <typename MatrixType1, typename MatrixType2>
   void condenseUnconstrainedDynamics(Robot& robot, const double dtau, 
-                                     const SplitSolution& s, 
                                      SplitKKTMatrix& kkt_matrix, 
-                                     SplitKKTResidual& kkt_residual);
+                                     SplitKKTResidual& kkt_residual,
+                                     const Eigen::MatrixBase<MatrixType1>& Qaq, 
+                                     const Eigen::MatrixBase<MatrixType2>& Qav);
   
   void computeCondensedDirection(const double dtau, 
                                  const SplitKKTMatrix& kkt_matrix, 
@@ -79,6 +78,6 @@ private:
 
 } // namespace idocp 
 
-#include "idocp/unconstrained/unconstrained_dynamics.hxx"
+#include "idocp/unocp/unconstrained_dynamics.hxx"
 
 #endif // IDOCP_UNCONSTRAINED_DYNAMICS_HPP_ 
