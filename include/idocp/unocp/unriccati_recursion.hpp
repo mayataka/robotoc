@@ -1,11 +1,13 @@
 #ifndef IDOCP_UNRICCATI_RECURSION_HPP_
 #define IDOCP_UNRICCATI_RECURSION_HPP_
 
+#include <vector>
+
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/split_riccati_factorization.hpp"
-
+#include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/unocp/split_unriccati_factorizer.hpp"
 
 namespace idocp {
 
@@ -22,7 +24,7 @@ public:
   /// @param[in] nproc Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  UnRiccatiRecursion(const Robot& robot, const int N);
+  UnRiccatiRecursion(const Robot& robot, const double T, const int N);
 
   ///
   /// @brief Default constructor. 
@@ -56,47 +58,39 @@ public:
 
   ///
   /// @brief Performs the backward Riccati recursion for the terminal stage. 
-  /// @param[in] kkt_matrix KKT matrix. 
-  /// @param[in] kkt_residual KKT residual. 
+  /// @param[in] terminal_kkt_matrix KKT matrix at the terminal stage. 
+  /// @param[in] terminal_kkt_residual KKT residual at the terminal stage. 
   /// @param[out] riccati_factorization Riccati factorization. 
   ///
   void backwardRiccatiRecursionTerminal(
-      const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+      const SplitKKTMatrix& terminal_kkt_matrix, 
+      const SplitKKTResidual& terminal_kkt_residual,
       RiccatiFactorization& riccati_factorization) const;
 
   ///
   /// @brief Performs the backward Riccati recursion. Call 
   /// RiccatiRecursion::backwardRiccatiRecursionTerminal() before calling this
   /// function.
-  /// @param[in, out] riccati_factorizer Riccati factorizer. 
-  /// @param[in] ocp_discretizer OCP discretizer.
-  /// @param[in] kkt_matrix KKT matrix. 
-  /// @param[in] kkt_residual KKT residual. 
-  /// @param[out] riccati_factorization Riccati factorization. 
+  /// @param[in, out] unkkt_matrix KKT matrix. 
+  /// @param[in, out] unkkt_residual KKT residual. 
   ///
-  void backwardRiccatiRecursion(
-      const RiccatiFactorization& riccati_factorization_next, 
-      UnKKTMatrix& kkt_matrix, UnKKTResidual& kkt_residual, 
-      RiccatiFactorization& riccati_factorization);
+  void backwardRiccatiRecursion(UnKKTMatrix& unkkt_matrix, 
+                                UnKKTResidual& unkkt_residual,
+                                RiccatiFactorization& ricccati_factorization);
 
   ///
   /// @brief Performs the forward Riccati recursion.
-  /// @param[in] riccati_factorizer Riccati factorizer. 
-  /// @param[in] ocp_discretizer OCP discretizer.
-  /// @param[in] kkt_matrix KKT matrix. 
-  /// @param[in] kkt_residual KKT residual. 
-  /// @param[in] riccati_factorization Riccati factorization. 
+  /// @param[in] unkkt_residual KKT residual. 
   /// @param[in, out] d Split direction. d[0].dx() must be computed before 
   /// calling this function.
   ///
-  void forwardRiccatiRecursion(
-      const RiccatiFactorizer& riccati_factorizer,
-      const OCPDiscretizer& ocp_discretizer, const KKTMatrix& kkt_matrix, 
-      const KKTResidual& kkt_residual, 
-      const RiccatiFactorization& riccati_factorization, Direction& d);
+  void forwardRiccatiRecursion(const UnKKTResidual& unkkt_residual, 
+                               Direction& d) const;
 
 private:
-  int N_, nproc_, dimv_;
+  int N_;
+  double T_, dtau_;
+  std::vector<SplitUnRiccatiFactorizer> factorizer_;
 
 };
 

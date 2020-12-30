@@ -91,18 +91,6 @@ public:
                       const Eigen::VectorXd& v, 
                       const bool use_line_search=false);
 
-  ///
-  /// @brief Updates the solution by computing the primal-dual Newon direction.
-  /// @param[in] t Initial time of the horizon. Current time in MPC. 
-  /// @param[in] q Initial configuration. Size must be Robot::dimq().
-  /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] sampling_period Sampling period. Must be positive.
-  ///
-  void updateSolutionWithContinuationMethod(const double t, 
-                                            const Eigen::VectorXd& q, 
-                                            const Eigen::VectorXd& v, 
-                                            const double sampling_period);
-
   void shiftSolution();
 
   ///
@@ -114,14 +102,6 @@ public:
   /// @return Const reference to the split solution of the specified time stage.
   ///
   const SplitSolution& getSolution(const int stage) const;
-
-  ///
-  /// @brief Get the solution vector. This function is not suitable for 
-  /// real-time application, e.g., MPC, since this function reconstructs the 
-  /// solution vector object.
-  /// @param[in] name Name of the printed variable. 
-  ///
-  std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
 
   ///
   /// @brief Gets the state-feedback gain for the control input torques.
@@ -205,6 +185,14 @@ public:
   /// @return Robot model.
   ///
   Robot createRobot() const;
+
+  ///
+  /// @brief Get the solution vector. This function is not suitable for 
+  /// real-time application, e.g., MPC, since this function reconstructs the 
+  /// solution vector object.
+  /// @param[in] name Name of the printed variable. 
+  ///
+  std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
 
   ///
   /// @brief Prints the variable into console. 

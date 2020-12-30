@@ -9,12 +9,12 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_direction.hpp"
 #include "idocp/unocp/split_unkkt_residual.hpp"
 #include "idocp/unocp/split_unkkt_matrix.hpp"
 #include "idocp/unocp/split_unocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
+#include "idocp/unocp/unriccati_recursion.hpp"
+#include "idocp/hybrid/hybrid_container.hpp"
 
 
 namespace idocp {
@@ -159,6 +159,14 @@ public:
   Robot createRobot() const;
 
   ///
+  /// @brief Get the solution vector. This function is not suitable for 
+  /// real-time application, e.g., MPC, since this function reconstructs the 
+  /// solution vector object.
+  /// @param[in] name Name of the printed variable. 
+  ///
+  std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
+
+  ///
   /// @brief Prints the variable into console. 
   /// @param[in] name Name of the printed variable. Default is "all" 
   /// (print all variables).
@@ -168,18 +176,32 @@ public:
   void printSolution(const std::string& name="all", 
                      const std::vector<int> frames={}) const;
 
+  ///
+  /// @brief Save the variable into file. 
+  /// @param[in] name Name of the printed variable. 
+  /// @param[in] frame_id Index of the end-effector frames. Only used if 
+  /// name == "end-effector". Default is {} (do not specify any frames).
+  ///
+  void saveSolution(const std::string& path_to_file,
+                    const std::string& name) const;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   std::vector<Robot> robots_;
-  std::vector<UnOCP> split_ocps_;
+  std::vector<SplitUnOCP> ocp_;
   TerminalOCP terminal_ocp_;
+  UnRiccatiRecursion riccati_recursion_;
+  SplitKKTMatrix terminal_kkt_matrix_;
+  SplitKKTResidual terminal_kkt_residual_;
   std::vector<SplitUnKKTMatrix> unkkt_matrix_;
   std::vector<SplitUnKKTResidual> unkkt_residual_;
-  std::vector<SplitSolution> s_;
-  std::vector<SplitDirection > d_;
+  Solution s_;
+  Direction d_;
+  RiccatiFactorization riccati_factorization_;
   int N_, num_proc_;
-  const double T_, dtau_;
+  double T_, dtau_;
+  Eigen::VectorXd primal_step_size_, dual_step_size_, kkt_error_;
 
 };
 

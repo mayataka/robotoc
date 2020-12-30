@@ -1,6 +1,8 @@
 #ifndef IDOCP_SPLIT_UNKKT_MATRIX_HPP_
 #define IDOCP_SPLIT_UNKKT_MATRIX_HPP_
 
+#include <vector>
+
 #include "Eigen/Core"
 #include "Eigen/LU"
 
@@ -8,6 +10,9 @@
 
 
 namespace idocp {
+
+class SplitUnKKTMatrix;
+using UnKKTMatrix = std::vector<SplitUnKKTMatrix>;
 
 ///
 /// @class SplitUnKKTMatrix

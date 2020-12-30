@@ -110,9 +110,12 @@ add_library(
   src/unocp/split_unkkt_matrix.cpp
   src/unocp/unconstrained_dynamics.cpp
   src/unocp/split_unocp.cpp
+  src/unocp/backward_unriccati_recursion_factorizer.cpp
+  src/unocp/split_unriccati_factorizer.cpp
+  src/unocp/unriccati_recursion.cpp
+  src/unocp/unocp_solver.cpp
   src/unocp/split_unparnmpc.cpp
   src/unocp/terminal_unparnmpc.cpp
-  # src/unocp/unocp_solver.cpp
   src/utils/derivative_checker.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp

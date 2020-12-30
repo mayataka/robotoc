@@ -77,6 +77,7 @@ inline void UnconstrainedDynamics::condenseUnconstrainedDynamics(
   unkkt_residual.lq().noalias() += dID_dq_.transpose() * lu_condensed_;
   unkkt_residual.lv().noalias() += dID_dv_.transpose() * lu_condensed_;
   unkkt_residual.la().noalias() += dID_da_.transpose() * lu_condensed_;
+  unkkt_residual.Fx() = kkt_residual.Fx();
   // condense KKT Hessian
   Quu_dID_dq_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * dID_dq_;
   Quu_dID_dv_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * dID_dv_;

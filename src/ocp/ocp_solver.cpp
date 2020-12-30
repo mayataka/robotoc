@@ -85,25 +85,6 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
 } 
 
 
-void OCPSolver::updateSolutionWithContinuationMethod(
-    const double t, const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
-    const double sampling_period) {
-  assert(q.size() == robots_[0].dimq());
-  assert(v.size() == robots_[0].dimv());
-  ocp_.discretize(contact_sequence_, t); 
-  discretizeSolution();
-  ocp_linearizer_.linearizeOCP(ocp_, robots_, contact_sequence_, q, v, s_, 
-                               kkt_matrix_, kkt_residual_);
-  riccati_solver_.computeNewtonDirection<true>(ocp_, robots_, contact_sequence_, 
-                                               q, v, s_, d_, kkt_matrix_, 
-                                               kkt_residual_, sampling_period);
-  const double primal_step_size = riccati_solver_.maxPrimalStepSize();
-  const double dual_step_size = riccati_solver_.maxDualStepSize();
-  ocp_linearizer_.integrateSolution(ocp_, robots_, kkt_matrix_, kkt_residual_, 
-                                    primal_step_size, dual_step_size, d_, s_);
-} 
-
-
 void OCPSolver::shiftSolution() {
   for (int i=0; i<N_; ++i) {
     s_[i].copy(s_[i+1]);
@@ -116,39 +97,6 @@ const SplitSolution& OCPSolver::getSolution(const int stage) const {
   assert(stage <= N_);
   return s_[stage];
 }
-
-
-std::vector<Eigen::VectorXd> OCPSolver::getSolution(
-    const std::string& name) const {
-  std::vector<Eigen::VectorXd> sol;
-  if (name == "q") {
-    for (int i=0; i<=N_; ++i) {
-      sol.push_back(s_[i].q);
-    }
-  }
-  if (name == "v") {
-    for (int i=0; i<=N_; ++i) {
-      sol.push_back(s_[i].v);
-    }
-  }
-  if (name == "a") {
-    for (int i=0; i<N_; ++i) {
-      sol.push_back(s_[i].a);
-    }
-  }
-  if (name == "f") {
-    for (int i=0; i<N_; ++i) {
-      sol.push_back(s_[i].f_stack());
-    }
-  }
-  if (name == "u") {
-    for (int i=0; i<N_; ++i) {
-      sol.push_back(s_[i].u);
-    }
-  }
-  return sol;
-}
-
 
 void OCPSolver::getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq, 
                                      Eigen::MatrixXd& Kv) const {
@@ -372,6 +320,38 @@ bool OCPSolver::isCurrentSolutionFeasible() {
 
 Robot OCPSolver::createRobot() const {
   return robots_[0];
+}
+
+
+std::vector<Eigen::VectorXd> OCPSolver::getSolution(
+    const std::string& name) const {
+  std::vector<Eigen::VectorXd> sol;
+  if (name == "q") {
+    for (int i=0; i<=N_; ++i) {
+      sol.push_back(s_[i].q);
+    }
+  }
+  if (name == "v") {
+    for (int i=0; i<=N_; ++i) {
+      sol.push_back(s_[i].v);
+    }
+  }
+  if (name == "a") {
+    for (int i=0; i<N_; ++i) {
+      sol.push_back(s_[i].a);
+    }
+  }
+  if (name == "f") {
+    for (int i=0; i<N_; ++i) {
+      sol.push_back(s_[i].f_stack());
+    }
+  }
+  if (name == "u") {
+    for (int i=0; i<N_; ++i) {
+      sol.push_back(s_[i].u);
+    }
+  }
+  return sol;
 }
 
 

@@ -101,6 +101,7 @@ TEST_F(UnconstrainedDynamicsTest, condenseUnconstrainedDynamics) {
   unkkt_residual_ref.lq() = kkt_residual.lq() + dIDdq.transpose() * lu_condensed;
   unkkt_residual_ref.lv() = kkt_residual.lv() + dIDdv.transpose() * lu_condensed;
   unkkt_residual_ref.la() = kkt_residual.la   + dIDda.transpose() * lu_condensed;
+  unkkt_residual_ref.Fx() = kkt_residual.Fx();
   unkkt_matrix_ref.Qqq() = kkt_matrix.Qqq();
   unkkt_matrix_ref.Qvv() = kkt_matrix.Qvv();
   unkkt_matrix_ref.Qaa() = kkt_matrix.Qaa();

@@ -1,12 +1,17 @@
 #ifndef IDOCP_SPLIT_UNKKT_RESIDUAL_HPP_ 
 #define IDOCP_SPLIT_UNKKT_RESIDUAL_HPP_
 
+#include <vector>
+
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 
 
 namespace idocp {
+
+class SplitUnKKTResidual;
+using UnKKTResidual = std::vector<SplitUnKKTResidual>;
 
 ///
 /// @brief KKT residual split into each time stage. 
@@ -48,6 +53,42 @@ public:
   /// @brief Use default move assign operator. 
   ///
   SplitUnKKTResidual& operator=(SplitUnKKTResidual&&) noexcept = default;
+
+  ///
+  /// @brief Residual with respect of the state equation.
+  /// @return Reference to the residual of the state equation. Size is 
+  /// Robot::dimv().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> Fq();
+
+  ///
+  /// @brief const version of SplitUnKKTResidual::Fq().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> Fq() const;
+
+  ///
+  /// @brief Residual with respect of the state equation.
+  /// @return Reference to the residual of the state equation. Size is 
+  /// Robot::dimv().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> Fv();
+
+  ///
+  /// @brief const version of SplitUnKKTResidual::Fv().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> Fv() const;
+
+  ///
+  /// @brief Residual with respect of the state equation.
+  /// @return Reference to the residual of the state equation. Size is 
+  /// Robot::dimv().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> Fx();
+
+  ///
+  /// @brief const version of SplitUnKKTResidual::Fx().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> Fx() const;
 
   ///
   /// @brief Residual with respect to the acceleration.
