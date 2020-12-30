@@ -35,11 +35,10 @@ cd idocp
 5. Build and install `idocp` as
 
 ```
-mkdir build
-cd build
+mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=False
 make -j$(nproc)
-sudo make install
+make install
 ```
 
 6. If you want to visualize the solution trajectory of the OCP, first install [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) and [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), e.g., by
@@ -48,11 +47,9 @@ sudo apt update && sudo apt install robotpkg-py27-qt4-gepetto-viewer-corba
 git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-sudo ln -s /usr/lib/x86_64-linux-gnu/libSM.so.6 /usr/lib/x86_64-linux-gnu/libSM.so
-sudo ln -s /usr/lib/x86_64-linux-gnu/libICE.so.6 /usr/lib/x86_64-linux-gnu/libICE.so
-sudo make install
+make install
 ```
-and configure the build of `idocp` as 
+and change the CMake configuration of `idocp` as 
 ```
 cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=False -DBUILD_VIEWER=True
 ```

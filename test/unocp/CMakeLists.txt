@@ -1,2 +1,4 @@
 add_idocp_test(unconstrained_dynamics_test)
 add_idocp_test(split_unocp_test)
+add_idocp_test(split_unparnmpc_test)
+add_idocp_test(terminal_unparnmpc_test)

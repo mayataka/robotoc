@@ -46,9 +46,9 @@ inline void BackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(dtau >= 0);
   if (has_floating_base_) {
-    AtPqq_.noalias() = kkt_matrix.Fqq().transpose() * riccati_next.Pqq;
+    AtPqq_.noalias() =  kkt_matrix.Fqq().transpose() * riccati_next.Pqq;
     AtPqq_.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.Pqv.transpose();
-    AtPqv_.noalias() = kkt_matrix.Fqq().transpose() * riccati_next.Pqv;
+    AtPqv_.noalias() =  kkt_matrix.Fqq().transpose() * riccati_next.Pqv;
     AtPqv_.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.Pvv;
   }
   else {

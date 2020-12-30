@@ -27,7 +27,7 @@ inline bool useKinematics(
 
 
 template <typename ConstraintComponentBaseTypePtr>
-inline bool createConstraintsData(
+inline void createConstraintsData(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
     std::vector<ConstraintComponentData>& data) {
   data.clear();

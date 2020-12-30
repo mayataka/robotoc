@@ -8,6 +8,8 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/unocp/split_unkkt_residual.hpp"
+#include "idocp/unocp/split_unkkt_matrix.hpp"
 
 
 namespace idocp {
@@ -32,13 +34,11 @@ public:
                                       const SplitSolution& s, 
                                       SplitKKTResidual& kkt_residual);
 
-  template <typename MatrixType1, typename MatrixType2>
-  void condenseUnconstrainedDynamics(Robot& robot, const double dtau, 
-                                     SplitKKTMatrix& kkt_matrix, 
-                                     SplitKKTResidual& kkt_residual,
-                                     const Eigen::MatrixBase<MatrixType1>& Qaq, 
-                                     const Eigen::MatrixBase<MatrixType2>& Qav);
-  
+  void condenseUnconstrainedDynamics(const SplitKKTMatrix& kkt_matrix, 
+                                     const SplitKKTResidual& kkt_residual,
+                                     SplitUnKKTMatrix& unkkt_matrix, 
+                                     SplitUnKKTResidual& unkkt_residual);
+
   void computeCondensedDirection(const double dtau, 
                                  const SplitKKTMatrix& kkt_matrix, 
                                  const SplitKKTResidual& kkt_residual, 

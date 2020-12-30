@@ -11,16 +11,19 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
+#include "idocp/unocp/split_unkkt_residual.hpp"
+#include "idocp/unocp/split_unkkt_matrix.hpp"
 #include "idocp/unocp/split_unocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
+
 
 namespace idocp {
 
 ///
 /// @class UnOCPSolver
 /// @brief Optimal control problem solver by Riccati recursion for 
-/// "unconstrained" rigid-body systems. "Unconstrained" means the system never
-/// has floating base or contacts.
+/// "unconstrained" rigid-body systems. "Unconstrained" means that the system 
+/// does not have either a floating base or any contacts.
 ///
 class UnOCPSolver {
 public:
@@ -171,8 +174,8 @@ private:
   std::vector<Robot> robots_;
   std::vector<UnOCP> split_ocps_;
   TerminalOCP terminal_ocp_;
-  std::vector<SplitKKTMatrix> kkt_matrix_;
-  std::vector<SplitKKTResidual> kkt_matrix_;
+  std::vector<SplitUnKKTMatrix> unkkt_matrix_;
+  std::vector<SplitUnKKTResidual> unkkt_residual_;
   std::vector<SplitSolution> s_;
   std::vector<SplitDirection > d_;
   int N_, num_proc_;

@@ -34,7 +34,7 @@ bool useKinematics(
    const std::vector<ConstraintComponentBaseTypePtr>& constraints);
 
 template <typename ConstraintComponentBaseTypePtr>
-bool createConstraintsData(
+void createConstraintsData(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
     std::vector<ConstraintComponentData>& data);
 

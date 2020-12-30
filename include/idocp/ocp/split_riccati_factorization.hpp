@@ -17,41 +17,33 @@ public:
   ///
   /// @brief Allocate Riccati factorization matrix and vector.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] exist_state_constraint Flags for allocating matrices related 
+  /// to state-only constraints. Default is true.
   ///
-  SplitRiccatiFactorization(const Robot& robot)
+  SplitRiccatiFactorization(const Robot& robot, 
+                            const bool exist_state_constraint=true)
     : Pqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Pqv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Pvq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Pvv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       sq(Eigen::VectorXd::Zero(robot.dimv())),
       sv(Eigen::VectorXd::Zero(robot.dimv())),
-      Pi(Eigen::MatrixXd::Identity(2*robot.dimv(), 2*robot.dimv())),
-      pi(Eigen::VectorXd::Zero(2*robot.dimv())),
-      N(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
-      n(Eigen::VectorXd::Zero(2*robot.dimv())) {
+      Pi(),
+      pi(),
+      N(),
+      n() {
+    if (exist_state_constraint) {
+      const int dimx = 2*robot.dimv();
+      Pi.resize(dimx, dimx);
+      Pi.setIdentity();
+      pi.resize(dimx);
+      pi.setZero();
+      N.resize(dimx, dimx);
+      N.setZero();
+      n.resize(dimx);
+      n.setZero();
+    }
   }
-    // : Pqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    //   Pqv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    //   Pvq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    //   Pvv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    //   sq(Eigen::VectorXd::Zero(robot.dimv())),
-    //   sv(Eigen::VectorXd::Zero(robot.dimv())),
-    //   Pi(),
-    //   pi(),
-    //   N(),
-    //   n() {
-    // if (robot.maxPointContacts() > 0) {
-    //   const int dimx = 2*robot.dimv();
-    //   Pi.resize(dimx, dimx);
-    //   Pi.setIdentity();
-    //   pi.resize(dimx);
-    //   pi.setZero();
-    //   N.resize(dimx, dimx);
-    //   N.setZero();
-    //   n.resize(dimx);
-    //   n.setZero();
-    // }
-  // }
 
   ///
   /// @brief Default constructor. 

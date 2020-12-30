@@ -106,8 +106,12 @@ add_library(
   src/ocp/riccati_direction_calculator.cpp
   src/ocp/riccati_solver.cpp
   src/ocp/ocp_solver.cpp
+  src/unocp/split_unkkt_residual.cpp
+  src/unocp/split_unkkt_matrix.cpp
   src/unocp/unconstrained_dynamics.cpp
   src/unocp/split_unocp.cpp
+  src/unocp/split_unparnmpc.cpp
+  src/unocp/terminal_unparnmpc.cpp
   # src/unocp/unocp_solver.cpp
   src/utils/derivative_checker.cpp
   src/utils/joint_constraints_factory.cpp

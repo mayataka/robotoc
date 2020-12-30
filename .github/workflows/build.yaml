@@ -27,7 +27,7 @@ jobs:
           curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add 
           sudo apt update
           sudo apt install -qqy robotpkg-py27-pinocchio
-          sudo apt install -qqy robotpkg-py27-qt4-gepetto-viewer-corba
+          sudo apt install -qqy robotpkg-py27-qt5-gepetto-viewer-corba
       - name: Install pinocchio and gepetto-viewer-corba for ubuntu 20.04
         if: matrix.os == 'ubuntu-20.04'
         run: |
@@ -36,16 +36,22 @@ jobs:
           curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add 
           sudo apt update
           sudo apt install -qqy robotpkg-py38-pinocchio
-          sudo apt install -qqy robotpkg-py38-qt4-gepetto-viewer-corba
+          sudo apt install -qqy robotpkg-py38-qt5-gepetto-viewer-corba
       - name: Install pinocchio-gepetto-viewer
         run: |
+          export PATH=/opt/openrobots/bin:$PATH >> ~/.bashrc
+          export PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH 
+          export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH 
+          export PYTHONPATH=/opt/openrobots/lib/python2.7/site-packages:$PYTHONPATH 
+          export PYTHONPATH=/opt/openrobots/lib/python3.8/site-packages:$PYTHONPATH 
+          export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH 
           git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
+          cd pinocchio-gepetto-viewer
           mkdir build
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libSM.so.6 /usr/lib/x86_64-linux-gnu/libSM.so
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libICE.so.6 /usr/lib/x86_64-linux-gnu/libICE.so
           sudo make install
+          cd ../..
       - name: Install lcov
         run: |
           sudo apt-get update -y
@@ -53,12 +59,12 @@ jobs:
           sudo apt-get install -y valgrind
       - name: Build and run test 
         run: |
-          export PATH=/opt/openrobots/bin:$PATH
-          export PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH
-          export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH
-          export PYTHONPATH=/opt/openrobots/lib/python2.7/site-packages:$PYTHONPATH
-          export PYTHONPATH=/opt/openrobots/lib/python3.8/site-packages:$PYTHONPATH
-          export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
+          export PATH=/opt/openrobots/bin:$PATH >> ~/.bashrc
+          export PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH 
+          export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH 
+          export PYTHONPATH=/opt/openrobots/lib/python2.7/site-packages:$PYTHONPATH 
+          export PYTHONPATH=/opt/openrobots/lib/python3.8/site-packages:$PYTHONPATH 
+          export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH 
           mkdir -p build  && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_VIEWER=True -DTESTING=True 
           cmake --build . --config Debug -j2

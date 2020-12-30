@@ -1,5 +1,5 @@
-#ifndef IDOCP_SPLIT_UNOCP_HPP_
-#define IDOCP_SPLIT_UNOCP_HPP_
+#ifndef IDOCP_SPLIT_UNPARNMPC_HPP_
+#define IDOCP_SPLIT_UNPARNMPC_HPP_
 
 #include <memory>
 
@@ -23,10 +23,10 @@
 namespace idocp {
 
 ///
-/// @class SplitUnOCP
+/// @class SplitUnParNMPC
 /// @brief Split unconstrained optimal control problem of a single stage. 
 ///
-class SplitUnOCP {
+class SplitUnParNMPC {
 public:
   ///
   /// @brief Construct a split optimal control problem.
@@ -34,38 +34,38 @@ public:
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   ///
-  SplitUnOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-             const std::shared_ptr<Constraints>& constraints);
+  SplitUnParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+                 const std::shared_ptr<Constraints>& constraints);
 
   ///
   /// @brief Default constructor.  
   ///
-  SplitUnOCP();
+  SplitUnParNMPC();
 
   ///
   /// @brief Destructor. 
   ///
-  ~SplitUnOCP();
+  ~SplitUnParNMPC();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  SplitUnOCP(const SplitUnOCP&) = default;
+  SplitUnParNMPC(const SplitUnParNMPC&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  SplitUnOCP& operator=(const SplitUnOCP&) = default;
+  SplitUnParNMPC& operator=(const SplitUnParNMPC&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  SplitUnOCP(SplitUnOCP&&) noexcept = default;
+  SplitUnParNMPC(SplitUnParNMPC&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  SplitUnOCP& operator=(SplitUnOCP&&) noexcept = default;
+  SplitUnParNMPC& operator=(SplitUnParNMPC&&) noexcept = default;
 
   ///
   /// @brief Check whether the solution is feasible under inequality constraints.
@@ -90,15 +90,17 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
-  /// @param[in] q_prev Configuration of the previous stage.
+  /// @param[in] q_prev Configuration at the previous stage.
+  /// @param[in] v_prev Velocity at the previous stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
   /// @param[out] unkkt_matrix Condensed KKT matrix of this stage.
   /// @param[out] unkkt_residual Condensed KKT residual of this stage.
   ///
   void linearizeOCP(Robot& robot, const double t, const double dtau, 
-                    const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                    const SplitSolution& s_next, SplitUnKKTMatrix& unkkt_matrix,
+                    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
+                    const SplitSolution& s, const SplitSolution& s_next, 
+                    SplitUnKKTMatrix& unkkt_matrix,
                     SplitUnKKTResidual& unkkt_residual);
 
   ///
@@ -152,17 +154,19 @@ public:
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @param[in] q_prev Configuration of the previous stage.
+  /// @param[in] v_prev Velocity at the previous stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
   ///
   void computeKKTResidual(Robot& robot, const double t, const double dtau, 
-                          const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                          const SplitSolution& s_next);
+                          const Eigen::VectorXd& q_prev, 
+                          const Eigen::VectorXd& v_prev, 
+                          const SplitSolution& s, const SplitSolution& s_next);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
-  /// this function, SplitUnOCP::linearizeOCP() or 
-  /// SplitUnOCP::computeKKTResidual() must be called.
+  /// this function, SplitUnParNMPC::linearizeOCP() or 
+  /// SplitUnParNMPC::computeKKTResidual() must be called.
   /// @return The squared norm of the kKT residual.
   ///
   double squaredNormKKTResidual(const double dtau) const;
@@ -185,15 +189,15 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] q_prev Configuration of the previous stage.
+  /// @param[in] v_prev Velocity at the previous stage.
   /// @param[in] s Split solution of this stage.
-  /// @param[in] q_next Configuration at the next stage.
-  /// @param[in] v_next Generaized velocity at the next stage.
   /// @return Constraint violation of this stage.
   ///
   double constraintViolation(Robot& robot,  const double t, const double dtau, 
-                             const SplitSolution& s, 
-                             const Eigen::VectorXd& q_next,
-                             const Eigen::VectorXd& v_next);
+                             const Eigen::VectorXd& q_prev, 
+                             const Eigen::VectorXd& v_prev, 
+                             const SplitSolution& s);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -212,6 +216,6 @@ private:
 
 } // namespace idocp
 
-#include "idocp/unocp/split_unocp.hxx"
+#include "idocp/unocp/split_unparnmpc.hxx"
 
-#endif // IDOCP_SPLIT_UNOCP_HPP_
+#endif // IDOCP_SPLIT_UNPARNMPC_HPP_ 
