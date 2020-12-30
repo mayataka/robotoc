@@ -5,7 +5,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/unocp/unocp_solver.hpp"
+#include "idocp/unocp/unparnmpc_solver.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/configuration_space_cost.hpp"
 #include "idocp/cost/task_space_6d_cost.hpp"
@@ -41,25 +41,26 @@ int main() {
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
 
-  // Create the OCP solver for unconstrained rigid-body systems.
+  // Create the ParNMPC solver for unconstrained rigid-body systems.
   const double T = 1;
   const int N = 20;
   const int num_proc = 4;
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  idocp::UnOCPSolver ocp_solver(robot, cost, constraints, T, N, num_proc);
+  idocp::UnParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, num_proc);
 
   // Solves the OCP.
-  ocp_solver.setStateTrajectory(t, q, v);
-  ocp_solver.computeKKTResidual(t, q, v);
+  parnmpc_solver.setStateTrajectory(t, q, v);
+  parnmpc_solver.computeKKTResidual(t, q, v);
   std::cout << "Initial KKT error = " << ocp_solver.KKTError() << std::endl;
+  parnmpc_solver.initBackwardCorrection(t);
   const int itr = 30;
   for (int i=0; i<itr; ++i) {
-    ocp_solver.updateSolution(t, q, v);
-    ocp_solver.computeKKTResidual(t, q, v);
+    parnmpc_solver.updateSolution(t, q, v);
+    parnmpc_solver.computeKKTResidual(t, q, v);
     std::cout << "KKT error after " << i << " iterations = " << ocp_solver.KKTError() << std::endl;
   }
-  ocp_solver.printSolution("end-effector", {end_effector_frame_id});
+  parnmpc_solver.printSolution("end-effector", {end_effector_frame_id});
   return 0;
 }

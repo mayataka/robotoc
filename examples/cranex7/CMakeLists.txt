@@ -34,3 +34,33 @@ target_include_directories(
     PRIVATE
     ${IDOCP_INCLUDE_DIR}
 )
+
+add_executable(
+    cranex7_task_space_3d_parnmpc
+    cranex7_task_space_3d_parnmpc.cpp
+)
+target_link_libraries(
+    cranex7_task_space_3d_parnmpc
+    PRIVATE
+    idocp::idocp
+)
+target_include_directories(
+    cranex7_task_space_3d_parnmpc
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+)
+
+add_executable(
+    cranex7_task_space_6d_parnmpc
+    cranex7_task_space_6d_parnmpc.cpp
+)
+target_link_libraries(
+    cranex7_task_space_6d_parnmpc
+    PRIVATE
+    idocp::idocp
+)
+target_include_directories(
+    cranex7_task_space_6d_parnmpc
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+)

@@ -39,7 +39,7 @@ UnRiccatiRecursion::~UnRiccatiRecursion() {
 void UnRiccatiRecursion::backwardRiccatiRecursionTerminal(
     const SplitKKTMatrix& terminal_kkt_matrix, 
     const SplitKKTResidual& terminal_kkt_residual,
-    RiccatiFactorization& riccati_factorization) const {
+    UnRiccatiFactorization& riccati_factorization) const {
   riccati_factorization[N_].Pqq = terminal_kkt_matrix.Qqq();
   riccati_factorization[N_].Pvv = terminal_kkt_matrix.Qvv();
   riccati_factorization[N_].sq = - terminal_kkt_residual.lq();
@@ -49,7 +49,7 @@ void UnRiccatiRecursion::backwardRiccatiRecursionTerminal(
 
 void UnRiccatiRecursion::backwardRiccatiRecursion(
     UnKKTMatrix& unkkt_matrix, UnKKTResidual& unkkt_residual, 
-    RiccatiFactorization& riccati_factorization) {
+    UnRiccatiFactorization& riccati_factorization) {
   for (int i=N_-1; i>=0; --i) {
     factorizer_[i].backwardRiccatiRecursion(
         riccati_factorization[i+1], dtau_, 
@@ -58,7 +58,7 @@ void UnRiccatiRecursion::backwardRiccatiRecursion(
 }
 
 void UnRiccatiRecursion::forwardRiccatiRecursion( 
-    const UnKKTResidual& unkkt_residual, Direction& d) const {
+    const UnKKTResidual& unkkt_residual, UnDirection& d) const {
   for (int i=0; i<N_; ++i) {
     factorizer_[i].forwardRiccatiRecursion(unkkt_residual[i], d[i], dtau_, 
                                            d[i+1]);

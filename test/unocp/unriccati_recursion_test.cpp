@@ -8,8 +8,8 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/unocp/split_unkkt_matrix.hpp"
 #include "idocp/unocp/split_unkkt_residual.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/unocp/split_unriccati_factorizer.hpp"
+#include "idocp/unocp/unconstrained_container.hpp"
 #include "idocp/unocp/unriccati_recursion.hpp"
 
 
@@ -27,10 +27,10 @@ protected:
     T = 1;
     dtau = T / N;
 
-    unkkt_matrix = std::vector<SplitUnKKTMatrix>(N+1, robot);
-    unkkt_residual = std::vector<SplitUnKKTResidual>(N+1, robot);
-    d = Direction(robot, N);
-    riccati_factorization = RiccatiFactorization(robot, N);
+    unkkt_matrix = UnKKTMatrix(N+1, robot);
+    unkkt_residual = UnKKTResidual(N+1, robot);
+    d = UnDirection(N+1, robot);
+    riccati_factorization = UnRiccatiFactorization(N+1, robot);
     for (int i=0; i<=N; ++i) {
       Eigen::MatrixXd seed = Eigen::MatrixXd::Random(3*dimv, 3*dimv);
       unkkt_matrix[i].Q = seed * seed.transpose();
@@ -62,19 +62,19 @@ protected:
   Robot robot;
   int N, dimv;
   double T, dtau;
-  std::vector<SplitUnKKTMatrix> unkkt_matrix;
-  std::vector<SplitUnKKTResidual> unkkt_residual;
+  UnKKTMatrix unkkt_matrix;
+  UnKKTResidual unkkt_residual;
   SplitKKTMatrix terminal_kkt_matrix;
   SplitKKTResidual terminal_kkt_residual;
-  Direction d;
-  RiccatiFactorization riccati_factorization;
+  UnDirection d;
+  UnRiccatiFactorization riccati_factorization;
 };
 
 
 TEST_F(UnRiccatiRecursionTest, test) {
-  RiccatiFactorization riccati_factorization_ref = riccati_factorization;
-  std::vector<SplitUnKKTMatrix> unkkt_matrix_ref = unkkt_matrix;
-  std::vector<SplitUnKKTResidual> unkkt_residual_ref = unkkt_residual;
+  UnRiccatiFactorization riccati_factorization_ref = riccati_factorization;
+  UnKKTMatrix unkkt_matrix_ref = unkkt_matrix;
+  UnKKTResidual unkkt_residual_ref = unkkt_residual;
   SplitKKTMatrix terminal_kkt_matrix_ref = terminal_kkt_matrix;
   SplitKKTResidual terminal_kkt_residual_ref = terminal_kkt_residual;
   UnRiccatiRecursion riccati_recursion(robot, T, N);
@@ -88,7 +88,7 @@ TEST_F(UnRiccatiRecursionTest, test) {
   EXPECT_TRUE(riccati_factorization[N].isApprox(riccati_factorization_ref[N]));
   riccati_recursion.backwardRiccatiRecursion(unkkt_matrix, unkkt_residual, 
                                              riccati_factorization);
-  std::vector<SplitUnRiccatiFactorizer> factorizer(N, SplitUnRiccatiFactorizer(robot));
+  UnRiccatiFactorizer factorizer(N, SplitUnRiccatiFactorizer(robot));
   for (int i=N-1; i>=0; --i) {
     factorizer[i].backwardRiccatiRecursion(
         riccati_factorization_ref[i+1], dtau, 
@@ -101,7 +101,7 @@ TEST_F(UnRiccatiRecursionTest, test) {
   }
   d[0].dq().setRandom();
   d[0].dv().setRandom();
-  Direction d_ref = d;
+  UnDirection d_ref = d;
   riccati_recursion.forwardRiccatiRecursion(unkkt_residual, d);
   for (int i=0; i<N; ++i) {
     factorizer[i].forwardRiccatiRecursion(unkkt_residual_ref[i], d_ref[i],  

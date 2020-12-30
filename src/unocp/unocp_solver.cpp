@@ -13,16 +13,15 @@ UnOCPSolver::UnOCPSolver(const Robot& robot,
                          const std::shared_ptr<Constraints>& constraints, 
                          const double T, const int N, const int num_proc)
   : robots_(num_proc, robot),
-    ocp_(N, SplitUnOCP(robot, cost, constraints)),
-    terminal_ocp_(robot, cost, constraints),
+    ocp_(robot, cost, constraints, N),
     riccati_recursion_(robot, T, N),
     terminal_kkt_matrix_(robot),
     terminal_kkt_residual_(robot),
     unkkt_matrix_(N+1, SplitUnKKTMatrix(robot)),
     unkkt_residual_(N+1, SplitUnKKTResidual(robot)),
-    s_(robot, N),
-    d_(robot, N),
-    riccati_factorization_(robot, N),
+    s_(N+1, SplitSolution(robot)),
+    d_(N+1, SplitDirection(robot)),
+    riccati_factorization_(N+1, SplitRiccatiFactorization(robot)),
     N_(N),
     num_proc_(num_proc),
     T_(T),
@@ -82,7 +81,7 @@ void UnOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                            unkkt_matrix_[i], unkkt_residual_[i]);
     }
     else {
-      terminal_ocp_.linearizeOCP(robots_[omp_get_thread_num()], t+T_, s_[N_],
+      ocp_.terminal.linearizeOCP(robots_[omp_get_thread_num()], t+T_, s_[N_],
                                  terminal_kkt_matrix_, terminal_kkt_residual_);
     }
   }
@@ -114,13 +113,13 @@ void UnOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
       ocp_[i].updatePrimal(robots_[omp_get_thread_num()], primal_step_size, 
-                          d_[i], s_[i]);
+                           d_[i], s_[i]);
       ocp_[i].updateDual(dual_step_size);
     }
     else {
-      terminal_ocp_.updatePrimal(robots_[omp_get_thread_num()],  
+      ocp_.terminal.updatePrimal(robots_[omp_get_thread_num()],  
                                  primal_step_size, d_[i], s_[i]);
-      terminal_ocp_.updateDual(dual_step_size);
+      ocp_.terminal.updateDual(dual_step_size);
     }
   }
 } 
@@ -150,7 +149,7 @@ bool UnOCPSolver::setStateTrajectory(const double t, const Eigen::VectorXd& q,
                                      const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  for (auto& e : s_.data) {
+  for (auto& e : s_) {
     e.v = v;
     e.q = q;
   }
@@ -168,11 +167,11 @@ double UnOCPSolver::KKTError() {
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
-      kkt_error_.coeffRef(i) = ocp_[0].squaredNormKKTResidual(dtau_);
+      kkt_error_.coeffRef(i) = ocp_[i].squaredNormKKTResidual(dtau_);
     }
     else {
       kkt_error_.coeffRef(N_) 
-          = terminal_ocp_.squaredNormKKTResidual(terminal_kkt_residual_);
+          = ocp_.terminal.squaredNormKKTResidual(terminal_kkt_residual_);
     }
   }
   return std::sqrt(kkt_error_.sum());
@@ -194,7 +193,7 @@ void UnOCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
                                  s_[i-1].q, s_[i], s_[i+1]);
     }
     else {
-      terminal_ocp_.computeKKTResidual(robots_[omp_get_thread_num()], t+T_, 
+      ocp_.terminal.computeKKTResidual(robots_[omp_get_thread_num()], t+T_, 
                                        s_[N_], terminal_kkt_residual_);
     }
   }
@@ -313,7 +312,7 @@ void UnOCPSolver::saveSolution(const std::string& path_to_file,
   }
   if (name == "a") {
     const int dimv = robots_[0].dimv();
-    for (int i=0; i<=N_; ++i) {
+    for (int i=0; i<N_; ++i) {
       for (int j=0; j<dimv; ++j) {
         file << s_[i].a.coeff(j) << " ";
       }

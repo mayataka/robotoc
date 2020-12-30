@@ -14,11 +14,11 @@
 
 
 int main() {
-  // Create robot
+  // Create a robot
   const std::string path_to_urdf = "../urdf/crane_x7.urdf";
   idocp::Robot robot(path_to_urdf);
 
-  // Create cost function
+  // Create a cost function
   auto cost = std::make_shared<idocp::CostFunction>();
   auto config_cost = std::make_shared<idocp::ConfigurationSpaceCost>(robot);
   config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
@@ -40,7 +40,7 @@ int main() {
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
 
-  // Create OCP solver for unconstrained rigid-body systems.
+  // Create the OCP solver for unconstrained rigid-body systems.
   const double T = 1;
   const int N = 20;
   const int num_proc = 4;
@@ -49,6 +49,7 @@ int main() {
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
   idocp::UnOCPSolver ocp_solver(robot, cost, constraints, T, N, num_proc);
 
+  // Solves the OCP.
   ocp_solver.setStateTrajectory(t, q, v);
   ocp_solver.computeKKTResidual(t, q, v);
   std::cout << "Initial KKT error = " << ocp_solver.KKTError() << std::endl;

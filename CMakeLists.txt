@@ -116,6 +116,9 @@ add_library(
   src/unocp/unocp_solver.cpp
   src/unocp/split_unparnmpc.cpp
   src/unocp/terminal_unparnmpc.cpp
+  src/unocp/split_unbackward_correction.cpp
+  src/unocp/unbackward_correction.cpp
+  src/unocp/unparnmpc_solver.cpp
   src/utils/derivative_checker.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp

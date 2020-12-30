@@ -220,6 +220,21 @@ inline double TerminalUnParNMPC::constraintViolation(
   return violation;
 }
 
+
+template <typename MatrixType>
+inline void TerminalUnParNMPC::computeTerminalCostHessian(
+    Robot& robot, const double t, const SplitSolution& s, 
+    const Eigen::MatrixBase<MatrixType>& Qxx) {
+  assert(Qxx.rows() == 2*robot.dimv());
+  assert(Qxx.cols() == 2*robot.dimv());
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q, s.v, s.a);
+  }
+  kkt_matrix_.Qxx().setZero();
+  cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
+  const_cast<Eigen::MatrixBase<MatrixType>&>(Qxx) = kkt_matrix_.Qxx();
+}
+
 } // namespace idocp
 
 #endif // IDOCP_TERMINAL_UNPARNMPC_HXX_ 

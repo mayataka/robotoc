@@ -11,9 +11,6 @@
 
 namespace idocp {
 
-class SplitUnKKTMatrix;
-using UnKKTMatrix = std::vector<SplitUnKKTMatrix>;
-
 ///
 /// @class SplitUnKKTMatrix
 /// @brief The KKT matrix split into a time stage.
@@ -244,8 +241,9 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::LLT<Eigen::MatrixXd> llt_Q_, llt_Fx_;
-  int dimv_, dimx_, dimKKT_;
+  Eigen::LLT<Eigen::MatrixXd> llt_Q_, llt_S_;
+  Eigen::MatrixXd FQinv_, S_;
+  int dimv_, dimx_, dimQ_, dimKKT_;
 
 };
 

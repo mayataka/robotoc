@@ -196,6 +196,11 @@ public:
                              const Eigen::VectorXd& v_prev, 
                              const SplitSolution& s);
 
+  template <typename MatrixType>
+  void computeTerminalCostHessian(Robot& robot, const double t, 
+                                  const SplitSolution& s, 
+                                  const Eigen::MatrixBase<MatrixType>& Qxx);
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

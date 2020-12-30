@@ -10,9 +10,6 @@
 
 namespace idocp {
 
-class SplitUnKKTResidual;
-using UnKKTResidual = std::vector<SplitUnKKTResidual>;
-
 ///
 /// @brief KKT residual split into each time stage. 
 ///

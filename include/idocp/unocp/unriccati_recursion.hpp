@@ -6,7 +6,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/unocp/unconstrained_container.hpp"
 #include "idocp/unocp/split_unriccati_factorizer.hpp"
 
 namespace idocp {
@@ -65,7 +65,7 @@ public:
   void backwardRiccatiRecursionTerminal(
       const SplitKKTMatrix& terminal_kkt_matrix, 
       const SplitKKTResidual& terminal_kkt_residual,
-      RiccatiFactorization& riccati_factorization) const;
+      UnRiccatiFactorization& riccati_factorization) const;
 
   ///
   /// @brief Performs the backward Riccati recursion. Call 
@@ -76,21 +76,21 @@ public:
   ///
   void backwardRiccatiRecursion(UnKKTMatrix& unkkt_matrix, 
                                 UnKKTResidual& unkkt_residual,
-                                RiccatiFactorization& ricccati_factorization);
+                                UnRiccatiFactorization& ricccati_factorization);
 
   ///
   /// @brief Performs the forward Riccati recursion.
   /// @param[in] unkkt_residual KKT residual. 
-  /// @param[in, out] d Split direction. d[0].dx() must be computed before 
+  /// @param[in, out] d Direction. d[0].dx() must be computed before 
   /// calling this function.
   ///
   void forwardRiccatiRecursion(const UnKKTResidual& unkkt_residual, 
-                               Direction& d) const;
+                               UnDirection& d) const;
 
 private:
   int N_;
   double T_, dtau_;
-  std::vector<SplitUnRiccatiFactorizer> factorizer_;
+  UnRiccatiFactorizer factorizer_;
 
 };
 

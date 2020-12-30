@@ -1,5 +1,5 @@
-#ifndef IDOCP_UNOCP_SOLVER_HPP_
-#define IDOCP_UNOCP_SOLVER_HPP_
+#ifndef IDOCP_UNPARNMPC_SOLVER_HPP_
+#define IDOCP_UNPARNMPC_SOLVER_HPP_
 
 #include <vector>
 #include <memory>
@@ -9,19 +9,19 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/unocp/unriccati_recursion.hpp"
+#include "idocp/unocp/unbackward_correction.hpp"
 #include "idocp/unocp/unconstrained_container.hpp"
 
 
 namespace idocp {
 
 ///
-/// @class UnOCPSolver
+/// @class UnParNMPCSolver
 /// @brief Optimal control problem solver by Riccati recursion for 
 /// "unconstrained" rigid-body systems. "Unconstrained" means that the system 
 /// does not have either a floating base or any contacts.
 ///
-class UnOCPSolver {
+class UnParNMPCSolver {
 public:
   ///
   /// @brief Construct optimal control problem solver.
@@ -33,39 +33,39 @@ public:
   /// @param[in] num_proc Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  UnOCPSolver(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-              const std::shared_ptr<Constraints>& constraints, const double T, 
-              const int N, const int num_proc=1);
+  UnParNMPCSolver(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+                  const std::shared_ptr<Constraints>& constraints, 
+                  const double T, const int N, const int num_proc=1);
 
   ///
   /// @brief Default constructor. 
   ///
-  UnOCPSolver();
+  UnParNMPCSolver();
 
   ///
   /// @brief Destructor. 
   ///
-  ~UnOCPSolver();
+  ~UnParNMPCSolver();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  UnOCPSolver(const UnOCPSolver&) = default;
+  UnParNMPCSolver(const UnParNMPCSolver&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  UnOCPSolver& operator=(const UnOCPSolver&) = default;
+  UnParNMPCSolver& operator=(const UnParNMPCSolver&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  UnOCPSolver(UnOCPSolver&&) noexcept = default;
+  UnParNMPCSolver(UnParNMPCSolver&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  UnOCPSolver& operator=(UnOCPSolver&&) noexcept = default;
+  UnParNMPCSolver& operator=(UnParNMPCSolver&&) noexcept = default;
 
   ///
   /// @brief Initializes the inequality constraints, i.e., set slack variables 
@@ -73,6 +73,8 @@ public:
   /// current solution.
   ///
   void initConstraints();
+
+  void initBackwardCorrection(const double t);
 
   ///
   /// @brief Updates the solution by computing the primal-dual Newon direction.
@@ -185,22 +187,19 @@ public:
 
 private:
   std::vector<Robot> robots_;
-  UnOCP ocp_;
-  UnRiccatiRecursion riccati_recursion_;
-  SplitKKTMatrix terminal_kkt_matrix_;
-  SplitKKTResidual terminal_kkt_residual_;
+  UnParNMPC parnmpc_;
+  UnBackwardCorrection backward_correction_;
   UnKKTMatrix unkkt_matrix_;
   UnKKTResidual unkkt_residual_;
   UnSolution s_;
   UnDirection d_;
-  UnRiccatiFactorization riccati_factorization_;
   int N_, num_proc_;
   double T_, dtau_;
-  Eigen::VectorXd primal_step_size_, dual_step_size_, kkt_error_;
+  Eigen::VectorXd kkt_error_;
 
 };
 
 } // namespace idocp 
 
 
-#endif // IDOCP_UNOCP_SOLVER_HPP_ 
+#endif // IDOCP_UNPARNMPC_SOLVER_HPP_ 
