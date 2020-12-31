@@ -337,7 +337,7 @@ void ParNMPC::deactivateContacts(const std::vector<int>& contact_indices,
 
 void ParNMPC::setContactPoint(
     const std::vector<Eigen::Vector3d>& contact_points) {
-  assert(contact_points.size() == robots_[0].max_point_contacts());
+  assert(contact_points.size() == robots_[0].maxPointContacts());
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<robots_.size(); ++i) {
     robots_[i].setContactPoints(contact_points);

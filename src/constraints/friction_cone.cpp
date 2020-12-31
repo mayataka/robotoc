@@ -1,7 +1,7 @@
 #include "idocp/constraints/friction_cone.hpp"
 
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
@@ -9,13 +9,15 @@ namespace idocp {
 FrictionCone::FrictionCone(const Robot& robot, const double barrier,
                            const double fraction_to_boundary_rate)
   : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
-    dimc_(robot.max_point_contacts()) {
+    dimc_(robot.maxPointContacts()),
+    fraction_to_boundary_rate_(fraction_to_boundary_rate) {
 }
 
 
 FrictionCone::FrictionCone()
   : ConstraintComponentBase(),
-    dimc_(0) {
+    dimc_(0),
+    fraction_to_boundary_rate_(0) {
 }
 
 
@@ -35,10 +37,10 @@ KinematicsLevel FrictionCone::kinematicsLevel() const {
 
 bool FrictionCone::isFeasible(Robot& robot, ConstraintComponentData& data, 
                               const SplitSolution& s) const {
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const double mu = robot.frictionCoefficient(i);
-      if (frictionConeResidual(mu, s.f[i]) < 0) {
+      if (frictionConeResidual(mu, s.f[i]) > 0) {
         return false;
       }
     }
@@ -48,12 +50,10 @@ bool FrictionCone::isFeasible(Robot& robot, ConstraintComponentData& data,
 
 
 void FrictionCone::setSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  assert(dtau > 0);
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     const double mu = robot.frictionCoefficient(i);
-    data.slack.coeffRef(i) = dtau * frictionConeResidual(mu, s.f[i]);
+    data.slack.coeffRef(i) = - frictionConeResidual(mu, s.f[i]);
   }
   setSlackAndDualPositive(data);
 }
@@ -61,18 +61,18 @@ void FrictionCone::setSlackAndDual(
 
 void FrictionCone::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTResidual& kkt_residual) const {
-  assert(dtau > 0);
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  assert(dtau >= 0);
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const double mu = robot.frictionCoefficient(i);
-      const double fx = 2 * dtau * s.f[i].coeff(0);
-      const double fy = 2 * dtau * s.f[i].coeff(1);
-      const double fz = - 2 * dtau * mu * mu * s.f[i].coeff(2);
-      kkt_residual.lf().coeffRef(dimf_stack  ) += fx * data.dual.coeff(i);
-      kkt_residual.lf().coeffRef(dimf_stack+1) += fy * data.dual.coeff(i);
-      kkt_residual.lf().coeffRef(dimf_stack+2) += fz * data.dual.coeff(i);
+      const double gx = 2 * dtau * s.f[i].coeff(0);
+      const double gy = 2 * dtau * s.f[i].coeff(1);
+      const double gz = - 2 * dtau * mu * mu * s.f[i].coeff(2);
+      kkt_residual.lf().coeffRef(dimf_stack  ) += gx * data.dual.coeff(i);
+      kkt_residual.lf().coeffRef(dimf_stack+1) += gy * data.dual.coeff(i);
+      kkt_residual.lf().coeffRef(dimf_stack+2) += gz * data.dual.coeff(i);
       dimf_stack += 3;
     }
   }
@@ -81,45 +81,38 @@ void FrictionCone::augmentDualResidual(
 
 void FrictionCone::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
-  assert(dtau > 0);
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) const {
+  assert(dtau >= 0);
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const double mu = robot.frictionCoefficient(i);
-      const double fx = 2 * dtau * s.f[i].coeff(0);
-      const double fy = 2 * dtau * s.f[i].coeff(1);
-      const double fz = - 2 * dtau * mu * mu * s.f[i].coeff(2);
+      const double gx = 2 * s.f[i].coeff(0);
+      const double gy = 2 * s.f[i].coeff(1);
+      const double gz = - 2 * mu * mu * s.f[i].coeff(2);
       const double dual_per_slack = data.dual.coeff(i) / data.slack.coeff(i);
-      kkt_matrix.Qff().coeffRef(dimf_stack  , dimf_stack  ) 
-          = dual_per_slack * fx * fx;
-      kkt_matrix.Qff().coeffRef(dimf_stack  , dimf_stack+1) 
-          = dual_per_slack * fx * fy;
-      kkt_matrix.Qff().coeffRef(dimf_stack  , dimf_stack+2) 
-          = dual_per_slack * fx * fz;
-      kkt_matrix.Qff().coeffRef(dimf_stack+1, dimf_stack  ) 
-          = dual_per_slack * fy * fx;
-      kkt_matrix.Qff().coeffRef(dimf_stack+1, dimf_stack+1) 
-          = dual_per_slack * fy * fy;
-      kkt_matrix.Qff().coeffRef(dimf_stack+1, dimf_stack+2) 
-          = dual_per_slack * fy * fz;
-      kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack  ) 
-          = dual_per_slack * fz * fx;
-      kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack+1) 
-          = dual_per_slack * fz * fy;
-      kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack+2) 
-          = dual_per_slack * fz * fz;
-      data.residual.coeffRef(i) = - dtau * frictionConeResidual(mu, s.f[i]) 
+      const double dtau_dual_per_slack = dtau * dual_per_slack;
+      kkt_matrix.Qff().coeffRef(dimf_stack  , dimf_stack  ) += dtau_dual_per_slack * gx * gx;
+      kkt_matrix.Qff().coeffRef(dimf_stack  , dimf_stack+1) += dtau_dual_per_slack * gx * gy;
+      kkt_matrix.Qff().coeffRef(dimf_stack  , dimf_stack+2) += dtau_dual_per_slack * gx * gz;
+      kkt_matrix.Qff().coeffRef(dimf_stack+1, dimf_stack  ) += dtau_dual_per_slack * gy * gx;
+      kkt_matrix.Qff().coeffRef(dimf_stack+1, dimf_stack+1) += dtau_dual_per_slack * gy * gy;
+      kkt_matrix.Qff().coeffRef(dimf_stack+1, dimf_stack+2) += dtau_dual_per_slack * gy * gz;
+      kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack  ) += dtau_dual_per_slack * gz * gx;
+      kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack+1) += dtau_dual_per_slack * gz * gy;
+      kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack+2) += dtau_dual_per_slack * gz * gz;
+      data.residual.coeffRef(i) = frictionConeResidual(mu, s.f[i]) 
                                   + data.slack.coeff(i);
       data.duality.coeffRef(i) = computeDuality(data.slack.coeff(i), 
                                                 data.dual.coeff(i));
       const double coeff 
           = (data.dual.coeff(i)*data.residual.coeff(i)-data.duality.coeff(i)) 
             / data.slack.coeff(i);
-      kkt_residual.lf().coeffRef(dimf_stack  ) = fx * coeff;
-      kkt_residual.lf().coeffRef(dimf_stack+1) = fy * coeff; 
-      kkt_residual.lf().coeffRef(dimf_stack+2) = fz * coeff;
+      const double dtau_coeff = dtau * coeff;
+      kkt_residual.lf().coeffRef(dimf_stack  ) += gx * dtau_coeff;
+      kkt_residual.lf().coeffRef(dimf_stack+1) += gy * dtau_coeff; 
+      kkt_residual.lf().coeffRef(dimf_stack+2) += gz * dtau_coeff;
       dimf_stack += 3;
     }
   }
@@ -127,18 +120,18 @@ void FrictionCone::condenseSlackAndDual(
 
 
 void FrictionCone::computeSlackAndDualDirection(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, const SplitDirection& d) const {
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
+    const SplitDirection& d) const {
   int dimf_stack = 0;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const double mu = robot.frictionCoefficient(i);
-      const double fx = 2 * dtau * s.f[i].coeff(0);
-      const double fy = 2 * dtau * s.f[i].coeff(1);
-      const double fz = - 2 * dtau * mu * mu * s.f[i].coeff(2);
-      data.dslack.coeffRef(i) = - fx * d.df().coeff(dimf_stack  )
-                                - fy * d.df().coeff(dimf_stack+1)
-                                - fz * d.df().coeff(dimf_stack+2)
+      const double gx = 2 * s.f[i].coeff(0);
+      const double gy = 2 * s.f[i].coeff(1);
+      const double gz = - 2 * mu * mu * s.f[i].coeff(2);
+      data.dslack.coeffRef(i) = - gx * d.df().coeff(dimf_stack  )
+                                - gy * d.df().coeff(dimf_stack+1)
+                                - gz * d.df().coeff(dimf_stack+2)
                                 - data.residual.coeff(i);
       data.ddual.coeffRef(i) = computeDualDirection(data.slack.coeff(i), 
                                                     data.dual.coeff(i), 
@@ -147,28 +140,30 @@ void FrictionCone::computeSlackAndDualDirection(
       dimf_stack += 3;
     }
     else {
-      data.slack.coeffRef(i) = 1;
-      data.dslack.coeffRef(i) = 1;
-      data.dual.coeffRef(i) = 1;
-      data.ddual.coeffRef(i) = 1;
+      data.residual.coeffRef(i) = 0;
+      data.duality.coeffRef(i)  = 0;
+      data.slack.coeffRef(i)    = 1.0;
+      data.dslack.coeffRef(i)   = fraction_to_boundary_rate_;
+      data.dual.coeffRef(i)     = 1.0;
+      data.ddual.coeffRef(i)    = fraction_to_boundary_rate_;
     }
   }
 }
 
 
 void FrictionCone::computePrimalAndDualResidual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const double mu = robot.frictionCoefficient(i);
-      const double fx = 2 * dtau * s.f[i].coeff(0);
-      const double fy = 2 * dtau * s.f[i].coeff(1);
-      const double fz = - 2 * dtau * mu * mu * s.f[i].coeff(2);
-      data.residual.coeffRef(i) = - dtau * frictionConeResidual(mu, s.f[i]) 
+      data.residual.coeffRef(i) = frictionConeResidual(mu, s.f[i]) 
                                   + data.slack.coeff(i);
-      data.duality.coeffRef(i) = computeDuality(data.slack.coeff(i), 
-                                                data.dual.coeff(i));
+      data.duality.coeffRef(i)  = computeDuality(data.slack.coeff(i), 
+                                                 data.dual.coeff(i));
+    }
+    else {
+      data.residual.coeffRef(i) = 0;
+      data.duality.coeffRef(i)  = 0;
     }
   }
 }

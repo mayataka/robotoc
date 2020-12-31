@@ -1,14 +1,12 @@
 #ifndef IDOCP_IMPULSE_CONSTRAINT_COMPONENT_BASE_HPP_
 #define IDOCP_IMPULSE_CONSTRAINT_COMPONENT_BASE_HPP_
 
-#include "Eigen/Core"
-
 #include "idocp/robot/robot.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/constraints/constraint_component_data.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/constraints/constraint_component_base.hpp"
 
 
@@ -42,37 +40,38 @@ public:
   ///
   /// @brief Default copy constructor. 
   ///
-  ImpulseConstraintComponentBase(const ImpulseConstraintComponentBase&) = default;
+  ImpulseConstraintComponentBase(
+      const ImpulseConstraintComponentBase&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  ImpulseConstraintComponentBase& operator=(const ImpulseConstraintComponentBase&) = default;
+  ImpulseConstraintComponentBase& operator=(
+      const ImpulseConstraintComponentBase&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  ImpulseConstraintComponentBase(ImpulseConstraintComponentBase&&) noexcept = default;
+  ImpulseConstraintComponentBase(
+      ImpulseConstraintComponentBase&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  ImpulseConstraintComponentBase& operator=(ImpulseConstraintComponentBase&&) noexcept 
-      = default;
-
-  ///
-  /// @brief Check if the constraints component requres kinematics of robot 
-  /// model.
-  /// @return true if the constraints component requres kinematics of 
-  /// Robot model. false if not.
-  ///
-  virtual bool useKinematics() const = 0;
+  ImpulseConstraintComponentBase& operator=(
+      ImpulseConstraintComponentBase&&) noexcept = default;
 
   ///
   /// @brief Check the kinematics level of the constraint component.
   /// @return Kinematics level of the constraint component.
   ///
   virtual KinematicsLevel kinematicsLevel() const = 0;
+
+  ///
+  /// @brief Allocate extra memory in data.
+  /// @param[in] data Constraint component data.
+  ///
+  virtual void allocateExtraData(ConstraintComponentData& data) const = 0;
 
   ///
   /// @brief Check whether the current solution s is feasible or not. 
@@ -107,9 +106,10 @@ public:
   /// @param[in] s Split solution.
   /// @param[out] kkt_residual KKT residual.
   ///
-  virtual void augmentDualResidual(Robot& robot, ConstraintComponentData& data,
-                                   const ImpulseSplitSolution& s,
-                                   ImpulseKKTResidual& kkt_residual) const = 0;
+  virtual void augmentDualResidual(
+      Robot& robot, ConstraintComponentData& data, 
+      const ImpulseSplitSolution& s,
+      ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Consense slack and dual of the constraints and factorize condensed
@@ -126,10 +126,10 @@ public:
   /// @param[out] kkt_residual KKT residual. The condensed residual are added 
   /// to this data.
   ///
-  virtual void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data,
-                                    const ImpulseSplitSolution& s, 
-                                    ImpulseKKTMatrix& kkt_matrix,
-                                    ImpulseKKTResidual& kkt_residual) const = 0;
+  virtual void condenseSlackAndDual(
+      Robot& robot, ConstraintComponentData& data,
+      const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+      ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///
   /// @brief Compute directions of slack and dual.
@@ -274,6 +274,20 @@ protected:
   /// duality, and the direction of the slack.
   ///
   virtual void computeDualDirection(ConstraintComponentData& data) const final;
+
+  ///
+  /// @brief Computes the duality residual between the slack and dual variables.
+  ///
+  virtual double computeDuality(const double slack, 
+                                const double dual) const final;
+
+  ///
+  /// @brief Computes the direction of the dual variable from slack, residual,
+  /// duality, and the direction of the slack.
+  ///
+  virtual double computeDualDirection(const double slack, const double dual,
+                                      const double dslack, 
+                                      const double duality) const final;
 
 private:
   double barrier_, fraction_to_boundary_rate_;

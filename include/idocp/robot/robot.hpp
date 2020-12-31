@@ -13,6 +13,7 @@
 #include "idocp/robot/point_contact.hpp"
 #include "idocp/robot/floating_base.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
 
 
 namespace idocp {
@@ -156,9 +157,23 @@ public:
                         const Eigen::MatrixBase<TangentVectorType1>& v, 
                         const Eigen::MatrixBase<TangentVectorType2>& a);
 
+  ///
+  /// @brief Updates the kinematics of the robot. The frame placements, frame 
+  /// velocity, and the relevant Jacobians are calculated. 
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
+  ///
   template <typename ConfigVectorType, typename TangentVectorType>
   void updateKinematics(const Eigen::MatrixBase<ConfigVectorType>& q, 
                         const Eigen::MatrixBase<TangentVectorType>& v);
+
+  ///
+  /// @brief Updates the frame kinematics of the robot. The frame placements 
+  /// are calculated. 
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  ///
+  template <typename ConfigVectorType>
+  void updateFrameKinematics(const Eigen::MatrixBase<ConfigVectorType>& q);
 
   ///
   /// @brief Returns the position of the frame. Before calling this function, 
@@ -201,29 +216,15 @@ public:
   /// @param[in] contact_status Current contact status.
   /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
   /// Must be positive.
+  /// @param[in] contact_points Contact points. Size must be 
+  /// Robot::maxPointContacts(). 
   /// @param[out] baumgarte_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
   void computeBaumgarteResidual(
       const ContactStatus& contact_status, const double time_step,
-      const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
-
-  ///
-  /// @brief Computes the residual of the contact constriants represented by 
-  /// Baumgarte's stabilization method multiplied by coeff. Before calling this 
-  /// function, updateKinematics() must be called.
-  /// @param[in] contact_status Current contact status.
-  /// @param[in] coeff The coefficient that is multiplied to the result.
-  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
-  /// Must be positive.
-  /// @param[out] baumgarte_residual 3-dimensional vector where the result is 
-  /// stored. Size must be at least 3.
-  ///
-  template <typename VectorType>
-  void computeBaumgarteResidual(
-      const ContactStatus& contact_status, const double coeff, 
-      const double time_step,
+      const std::vector<Eigen::Vector3d>& contact_points,
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
   ///
@@ -251,49 +252,21 @@ public:
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
 
   ///
-  /// @brief Computes the partial derivatives of the contact constriants 
-  /// represented by the Baumgarte's stabilization method. The result is 
-  /// multiplied by coeff. Before calling this function, updateKinematics() 
-  /// must be called. 
-  /// @param[in] contact_status Current contact status.
-  /// @param[in] coeff The coefficient that is multiplied to the resultant 
-  /// Jacobians.
-  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
-  /// Must be positive.
-  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
-  /// with respect to the configuaration. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
-  /// @param[out] baumgarte_partial_dv The result of the partial derivative  
-  /// with respect to the velocity. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
-  /// @param[out] baumgarte_partial_da The result of the partial derivative  
-  /// with respect to the acceleration. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
-  ///
-  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void computeBaumgarteDerivatives(
-      const ContactStatus& contact_status, const double coeff, 
-      const double time_step,
-      const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
-      const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
-      const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
-
-  ///
-  /// @brief Computes the residual of the contact velocity. Before calling this  
+  /// @brief Computes the residual of the impulse velocity. Before calling this  
   /// function, updateKinematics() must be called.
-  /// @param[in] contact_status Current contact status.
+  /// @param[in] impulse_status Impulse status.
   /// @param[out] velocity_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
-  void computeContactVelocityResidual(
-      const ContactStatus& contact_status, 
+  void computeImpulseVelocityResidual(
+      const ImpulseStatus& impulse_status, 
       const Eigen::MatrixBase<VectorType>& velocity_residual) const;
 
   ///
-  /// @brief Computes the partial derivatives of the contact velocity 
+  /// @brief Computes the partial derivatives of the impulse velocity.
   /// Before calling this function, updateKinematics() must be called. 
-  /// @param[in] contact_status Current contact status.
+  /// @param[in] impulse_status Impulse status.
   /// @param[out] velocity_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
@@ -302,88 +275,98 @@ public:
   /// be Robot::dimv().
   ///
   template <typename MatrixType1, typename MatrixType2>
-  void computeContactVelocityDerivatives(
-      const ContactStatus& contact_status, 
+  void computeImpulseVelocityDerivatives(
+      const ImpulseStatus& impulse_status, 
       const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv);
 
   ///
-  /// @brief Computes the residual of the contact position constriants.
-  /// Before calling this function, updateKinematics() must be called.
-  /// @param[in] contact_status Current contact status.
+  /// @brief Computes the residual of the implse condition, i.e, contact 
+  /// position constriants at the impulse. Before calling this function, 
+  /// updateKinematics() must be called.
+  /// @param[in] impulse_status Impulse status.
+  /// @param[in] contact_points Contact points. Size must be 
+  /// Robot::maxPointContacts(). 
   /// @param[out] contact_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
-  void computeContactResidual(
-      const ContactStatus& contact_status, 
+  void computeImpulseConditionResidual(
+      const ImpulseStatus& impulse_status, 
+      const std::vector<Eigen::Vector3d>& contact_points,
       const Eigen::MatrixBase<VectorType>& contact_residual) const;
 
   ///
-  /// @brief Computes the residual of the contact position constriants.
-  /// Before calling this function, updateKinematics() must be called.
-  /// @param[in] contact_status Current contact status.
+  /// @brief Computes the residual of the implse condition, i.e, contact 
+  /// position constriants at the impulse. Before calling this function, 
+  /// updateKinematics() must be called.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] coeff The coefficient that is multiplied to the result.
   /// @param[out] contact_residual 3-dimensional vector where the result is 
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
-  void computeContactResidual(
-      const ContactStatus& contact_status, const double coeff,
+  void computeImpulseConditionResidual(
+      const ImpulseStatus& impulse_status, const double coeff,
       const Eigen::MatrixBase<VectorType>& contact_residual) const;
 
   ///
-  /// @brief Computes the partial derivatives of the contact position 
-  /// constriants with respect to the configuration. 
-  /// Before calling this function, updateKinematics() must be called. 
-  /// @param[in] contact_status Current contact status.
+  /// @brief Computes the residual of the implse condition, i.e, contact 
+  /// position constriants at the impulse. Before calling this function, 
+  /// updateKinematics() must be called.
+  /// @param[in] impulse_status Impulse status.
+  /// @param[in] coeff The coefficient that is multiplied to the result.
+  /// @param[in] contact_points Contact points. Size must be 
+  /// Robot::maxPointContacts(). 
+  /// @param[out] contact_residual 3-dimensional vector where the result is 
+  /// stored. Size must be at least 3.
+  ///
+  template <typename VectorType>
+  void computeImpulseConditionResidual(
+      const ImpulseStatus& impulse_status, const double coeff,
+      const std::vector<Eigen::Vector3d>& contact_points,
+      const Eigen::MatrixBase<VectorType>& contact_residual) const;
+
+  ///
+  /// @brief Computes the partial derivative of the implse condition, i.e, 
+  /// contact  position constriants at the impulse. Before calling this  
+  /// function, updateKinematics() must be called.
+  /// @param[in] impulse_status Impulse status.
   /// @param[out] contact_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
   ///
   template <typename MatrixType>
-  void computeContactDerivative(
-      const ContactStatus& contact_status, 
+  void computeImpulseConditionDerivative(
+      const ImpulseStatus& impulse_status, 
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 
   ///
-  /// @brief Computes the partial derivatives of the contact position 
-  /// constriants with respect to the configuration. 
-  /// Before calling this function, updateKinematics() must be called. 
-  /// @param[in] contact_status Current contact status.
+  /// @brief Computes the partial derivative of the implse condition, i.e, 
+  /// contact  position constriants at the impulse. Before calling this  
+  /// function, updateKinematics() must be called.
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] coeff The coefficient that is multiplied to the result.
   /// @param[out] contact_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
   ///
   template <typename MatrixType>
-  void computeContactDerivative(
-      const ContactStatus& contact_status, const double coeff,
+  void computeImpulseConditionDerivative(
+      const ImpulseStatus& impulse_status, const double coeff,
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
-
-  ///
-  /// @brief Sets the contact points.
-  /// @param[in] contact_points Collection of contact points. Size must be 
-  /// Robot::max_point_contacts().
-  /// 
-  void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
-
-  ///
-  /// @brief Sets all the contact points by using current kinematics.
-  /// 
-  void setContactPointsByCurrentKinematics();
 
   ///
   /// @brief Sets the friction coefficient.
   /// @param[in] friction_coefficient Friction coefficient of each contact.  
-  /// Size must be Robot::max_point_contacts(). Each element must be positive.
+  /// Size must be Robot::maxPointContacts(). Each element must be positive.
   /// 
   void setFrictionCoefficient(const std::vector<double>& friction_coefficient);
 
   ///
   /// @brief Returns the friction coefficient of a contact.
   /// @param[in] contact_index Index of the contact. Must be nonnegative.
-  /// Must be less than Robot::max_point_contacts().
+  /// Must be less than Robot::maxPointContacts().
   /// @return Friction coefficient of the contact of contact_index.
   /// 
   double frictionCoefficient(const int contact_index) const;
@@ -391,7 +374,7 @@ public:
   ///
   /// @brief Sets the coefficient of the restitution of each contact.
   /// @param[in] restitution_coefficient Coefficient of the restitution of 
-  /// each contact. Size must be Robot::max_point_contacts(). 
+  /// each contact. Size must be Robot::maxPointContacts(). 
   /// Each element must be positive.
   /// 
   void setRestitutionCoefficient(
@@ -400,19 +383,27 @@ public:
   ///
   /// @brief Returns the coefficient of the restitution of each contact.
   /// @param[in] contact_index Index of the contact. Must be nonnegative.
-  /// Must be less than Robot::max_point_contacts().
+  /// Must be less than Robot::maxPointContacts().
   /// @return Coefficient of the restitution of the contact of contact_index.
   /// 
   double restitutionCoefficient(const int contact_index) const;
 
   ///
-  /// @brief Set contact forces for each active contacts. Before calling this 
-  /// function, update contact status by calling setContactStatus().
+  /// @brief Set contact forces for each active contacts.  
   /// @param[in] contact_status Current contact status.
   /// @param[in] f The stack of the contact forces represented in the local 
-  /// coordinate of the contact frame. Size must be Robot::max_point_contacts(). 
+  /// coordinate of the contact frame. Size must be Robot::maxPointContacts(). 
   /// 
   void setContactForces(const ContactStatus& contact_status, 
+                        const std::vector<Eigen::Vector3d>& f);
+
+  ///
+  /// @brief Set impulse forces for each active impulse. 
+  /// @param[in] impulse_status Current contact status.
+  /// @param[in] f The stack of the impulse forces represented in the local 
+  /// coordinate of the contact frame. Size must be Robot::maxPointContacts(). 
+  /// 
+  void setImpulseForces(const ImpulseStatus& impulse_status, 
                         const std::vector<Eigen::Vector3d>& f);
 
   ///
@@ -534,8 +525,7 @@ public:
   /// (Robot::dimv() + ContactStatus::dimf()).
   ///   
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void computeMJtJinv(const ContactStatus& contact_status,
-                      const Eigen::MatrixBase<MatrixType1>& M, 
+  void computeMJtJinv(const Eigen::MatrixBase<MatrixType1>& M, 
                       const Eigen::MatrixBase<MatrixType2>& J,
                       const Eigen::MatrixBase<MatrixType3>& MJtJinv);
 
@@ -561,11 +551,9 @@ public:
 
   ///
   /// @brief Generates feasible configuration randomly.
-  /// @param[out] q The random configuration. Size must be Robot::dimq().
+  /// @return The random configuration. Size is Robot::dimq().
   ///
-  template <typename ConfigVectorType>
-  void generateFeasibleConfiguration(
-      const Eigen::MatrixBase<ConfigVectorType>& q) const;
+  Eigen::VectorXd generateFeasibleConfiguration() const;
 
   ///
   /// @brief Normalizes a configuration vector.
@@ -642,6 +630,13 @@ public:
   int dimv() const;
 
   ///
+  /// @brief Returns the dimensiton of the velocity, i.e, tangent space.
+  /// @return The dimensiton of the velocity, i.e, the dimension of the tangent 
+  /// space of the configuration space.
+  /// 
+  int dimu() const;
+
+  ///
   /// @brief Returns the maximum dimension of the contacts.
   /// @return The maximum dimension of the contacts.
   /// 
@@ -659,13 +654,13 @@ public:
   /// @brief Returns true if the robot has a floating base and false if not.
   /// @returns true if the robot has a floating base and false if not.
   /// 
-  bool has_floating_base() const;
+  bool hasFloatingBase() const;
 
   ///
   /// @brief Returns the maximum number of the contacts.
   /// @return The maximum number of the contacts.
   /// 
-  int max_point_contacts() const;
+  int maxPointContacts() const;
 
   ///
   /// @brief Prints the robot model into console.
@@ -678,6 +673,50 @@ public:
   /// 
   void initializeJointLimits();
 
+  ///
+  /// @brief Retruns the indices of the contact frames. 
+  /// @return Indices of the contact frames.
+  /// 
+  std::vector<int> contactFramesIndices() const;
+
+  ///
+  /// @brief Creates a ContactStatus that has consisitent size. 
+  /// @return ContactStatus that has consisitent size.
+  /// 
+  ContactStatus createContactStatus() const;
+
+  ///
+  /// @brief Creates a ImpulseStatus that has consisitent size. 
+  /// @return ImpulseStatus that has consisitent size.
+  /// 
+  ImpulseStatus createImpulseStatus() const;
+
+  ///
+  /// @brief Set contact points in contact_status using current kinematics. 
+  /// Call Robot::updateFrameKinematics() before calling this function.
+  /// @param[out] contact_status ContactStatus or ImpulseStatus.
+  /// 
+  template <typename ContactStatusType>
+  void setContactPoints(ContactStatusType& contact_status) const;
+
+  ///
+  /// @brief Get contact points in contact_status using current kinematics. 
+  /// Call Robot::updateFrameKinematics() before calling this function.
+  /// @param[out] contact_points Contact points. Size must be 
+  /// robot::maxPointContacts().
+  /// 
+  void getContactPoints(std::vector<Eigen::Vector3d>& contact_points) const;
+
+  ///
+  /// @brief Get the pinocchio::Model.
+  /// 
+  pinocchio::Model getPinocchioModel() const;
+
+  /// 
+  /// @brief Get the pinocchio::Data.
+  /// 
+  pinocchio::Data getPinocchioData() const;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
@@ -686,7 +725,7 @@ private:
   FloatingBase floating_base_;
   std::vector<PointContact> point_contacts_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
-  int dimq_, dimv_, max_dimf_, dimf_, num_active_contacts_;
+  int dimq_, dimv_, dimu_, max_dimf_, dimf_, num_active_contacts_;
   bool has_active_contacts_;
   std::vector<bool> is_each_contact_active_;
   Eigen::MatrixXd dimpulse_dv_; /// @brief used in RNEAImpulseDerivatives

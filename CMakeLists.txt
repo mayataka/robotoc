@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.1)
 project(idocp CXX)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 
-###########
-## Build ##
-###########
+#################
+## Build idocp ##
+#################
 if(NOT CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "WARNING: CMAKE_BUILD_TYPE not set to Release, which can decrease performance significantly")
 endif()
@@ -29,21 +29,25 @@ add_library(
   src/robot/floating_base.cpp
   src/robot/point_contact.cpp
   src/robot/contact_status.cpp
+  src/robot/impulse_status.cpp
   src/cost/cost_function.cpp
   src/cost/cost_function_data.cpp
   src/cost/cost_function_component_base.cpp
-  src/cost/joint_space_cost.cpp
+  src/cost/configuration_space_cost.cpp
+  src/cost/time_varying_configuration_space_cost.cpp
   src/cost/contact_force_cost.cpp
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
-  src/cost/impulse_cost_function.cpp
-  src/cost/impulse_cost_function_component_base.cpp
-  src/cost/joint_space_impulse_cost.cpp
-  src/cost/impulse_force_cost.cpp
+  src/cost/time_varying_task_space_3d_cost.cpp
+  src/cost/trotting_configuration_space_cost.cpp
+  src/cost/trotting_foot_step_cost.cpp
+  src/cost/trotting_foot_height_cost.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
+  src/constraints/constraints_impl.cpp
   src/constraints/constraints_data.cpp
   src/constraints/constraint_component_base.cpp
+  src/constraints/impulse_constraint_component_base.cpp
   src/constraints/constraint_component_data.cpp
   src/constraints/joint_position_upper_limit.cpp
   src/constraints/joint_position_lower_limit.cpp
@@ -55,46 +59,77 @@ add_library(
   src/constraints/joint_torques_lower_limit.cpp
   src/constraints/friction_cone.cpp
   src/constraints/contact_normal_force.cpp
-  src/constraints/impulse_constraints.cpp
-  src/constraints/impulse_constraint_component_base.cpp
-  src/impulse/impulse_kkt_residual.cpp
-  src/impulse/impulse_kkt_matrix.cpp
+  src/constraints/contact_distance.cpp
+  src/constraints/impulse_friction_cone.cpp
+  src/constraints/impulse_normal_force.cpp
+  src/impulse/dynamic_schur_complement.cpp
+  src/impulse/impulse_split_kkt_residual.cpp
+  src/impulse/impulse_split_kkt_matrix.cpp
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp
   src/impulse/impulse_state_equation.cpp
+  src/impulse/impulse_dynamics_forward_euler_data.cpp
   src/impulse/impulse_dynamics_forward_euler.cpp
+  src/impulse/impulse_split_ocp.cpp
+  src/impulse/impulse_backward_riccati_recursion_factorizer.cpp
+  src/impulse/impulse_forward_riccati_recursion_factorizer.cpp
+  src/impulse/impulse_split_riccati_factorizer.cpp
+  src/impulse/impulse_dynamics_backward_euler_data.cpp
   src/impulse/impulse_dynamics_backward_euler.cpp
-  src/impulse/impulse_riccati_matrix_factorizer.cpp
-  src/impulse/split_impulse_ocp.cpp
-  src/impulse/split_impulse_parnmpc.cpp
+  # src/impulse/impulse_split_parnmpc.cpp
+  src/hybrid/discrete_event.cpp
+  src/hybrid/contact_sequence.cpp
+  src/hybrid/ocp_discretizer.cpp
+  src/hybrid/hybrid_container.cpp
+  src/hybrid/collision_checker.cpp
   src/ocp/schur_complement.cpp
-  src/ocp/kkt_residual.cpp
-  src/ocp/kkt_matrix.cpp
+  src/ocp/split_kkt_residual.cpp
+  src/ocp/split_kkt_matrix.cpp
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
-  src/ocp/robot_dynamics.cpp
-  src/ocp/line_search_filter.cpp
-  src/ocp/riccati_factorization.cpp
-  src/ocp/riccati_gain.cpp
-  src/ocp/riccati_matrix_factorizer.cpp
-  src/ocp/riccati_matrix_inverter.cpp
-  src/ocp/terminal_ocp.cpp
+  src/ocp/contact_dynamics_data.cpp
+  src/ocp/contact_dynamics.cpp
   src/ocp/split_ocp.cpp
-  src/ocp/contact_sequence.cpp
-  src/ocp/ocp.cpp
-  src/ocp/split_parnmpc.cpp
-  src/ocp/parnmpc.cpp
-  src/ocp/mpc.cpp
+  src/ocp/terminal_ocp.cpp
+  src/ocp/ocp_linearizer.cpp
+  src/ocp/split_riccati_factorization.cpp
+  src/ocp/backward_riccati_recursion_factorizer.cpp
+  src/ocp/forward_riccati_recursion_factorizer.cpp
+  src/ocp/lqr_state_feedback_policy.cpp
+  src/ocp/split_riccati_factorizer.cpp
+  src/ocp/riccati_recursion.cpp
+  src/ocp/split_state_constraint_riccati_factorization.cpp
+  src/ocp/state_constraint_riccati_factorization.cpp
+  src/ocp/state_constraint_riccati_lp_factorizer.cpp
+  src/ocp/state_constraint_riccati_factorizer.cpp
+  src/ocp/riccati_direction_calculator.cpp
+  src/ocp/riccati_solver.cpp
+  src/ocp/ocp_solver.cpp
+  src/unocp/split_unkkt_residual.cpp
+  src/unocp/split_unkkt_matrix.cpp
+  src/unocp/unconstrained_container.cpp
+  src/unocp/unconstrained_dynamics.cpp
+  src/unocp/split_unocp.cpp
+  src/unocp/backward_unriccati_recursion_factorizer.cpp
+  src/unocp/split_unriccati_factorizer.cpp
+  src/unocp/unriccati_recursion.cpp
+  src/unocp/unocp_solver.cpp
+  src/unocp/split_unparnmpc.cpp
+  src/unocp/terminal_unparnmpc.cpp
+  src/unocp/split_unbackward_correction.cpp
+  src/unocp/unbackward_correction.cpp
+  src/unocp/unparnmpc_solver.cpp
+  src/utils/derivative_checker.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp
-  src/utils/runge_kutta.cpp
   src/utils/simulation_data_saver.cpp
-  src/utils/manipulator_simulator.cpp
+  src/utils/runge_kutta.cpp
+  src/utils/mpc_simulator.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 
-  PUBLIC 
+  PUBLIC
   pthread
   ${Boost_LIBRARIES}
   ${PINOCCHIO_LIBRARIES}
@@ -109,6 +144,31 @@ target_include_directories(
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
+
+##################
+## Build viewer ##
+##################
+if (BUILD_VIEWER) 
+  # find pinocchio-gepetto-viewer
+  find_package(pinocchio-gepetto-viewer REQUIRED)
+  set(pinocchio-gepetto-viewer_LIBDIR ${pinocchio-gepetto-viewer_DIR}/../..)
+  set(pinocchio-gepetto-viewer_LIBRARIES ${pinocchio-gepetto-viewer_LIBDIR}/libpinocchio-gepetto-viewer.so)
+  target_sources(
+    ${PROJECT_NAME} 
+    PRIVATE
+    src/utils/trajectory_viewer.cpp
+  )
+  target_link_libraries(
+    ${PROJECT_NAME} 
+    PUBLIC
+    ${pinocchio-gepetto-viewer_LIBRARIES}
+  )
+  target_include_directories(
+    ${PROJECT_NAME} 
+    PUBLIC
+    ${pinocchio-gepetto-viewer_INCLUDE_DIRS}
+  )
+endif() # end if (BUILD_VIEWER)
 
 #############
 ## Testing ##

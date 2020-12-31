@@ -3,12 +3,19 @@
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
-#include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/riccati_matrix_inverter.hpp"
-#include "idocp/ocp/riccati_gain.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/ocp/split_riccati_factorization.hpp"
+#include "idocp/ocp/split_riccati_factorizer.hpp"
+#include "idocp/ocp/riccati_recursion.hpp"
+#include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/hybrid/ocp_discretizer.hpp"
 
+#include "test_helper.hpp"
 
 namespace idocp {
 
@@ -17,477 +24,461 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    fixed_base_urdf_ = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf_ = "../urdf/anymal/anymal.urdf";
-    fixed_base_robot_ = Robot(fixed_base_urdf_);
-    floating_base_robot_ = Robot(floating_base_urdf_);
-    dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
+    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
+    floating_base_urdf = "../urdf/anymal/anymal.urdf";
+    fixed_base_robot = Robot(fixed_base_urdf, {18});
+    floating_base_robot = Robot(floating_base_urdf, {14, 24, 34, 44});
+    N = 20;
+    max_num_impulse = 5;
+    nproc = 4;
+    T = 1;
+    t = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dtau = T / N;
   }
 
   virtual void TearDown() {
   }
 
-  double dtau_;
-  std::string fixed_base_urdf_, floating_base_urdf_;
-  Robot fixed_base_robot_, floating_base_robot_;
+  KKTMatrix createKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence) const;
+  KKTResidual createKKTResidual(const Robot& robot, const ContactSequence& contact_sequence) const;
+  ContactSequence createContactSequence(const Robot& robot) const;
+
+  void testIsConstraintFactorizationSame(const StateConstraintRiccatiFactorization& lhs, 
+                                         const StateConstraintRiccatiFactorization& rhs) const;
+
+  void testBackwardRiccatiRecursion(const Robot& robot) const;
+  void testForwardRiccatiRecursionParallel(const Robot& robot) const;
+  void testForwardStateConstraintFactorization(const Robot& robot) const;
+  void testBackwardStateConstraintFactorization(const Robot& robot) const;
+  void testAggregateLagrangeMultiplierDirection(const Robot& robot) const;
+  void testForwardRiccatiRecursion(const Robot& robot) const;
+
+  int N, max_num_impulse, nproc;
+  double T, t, dtau;
+  std::string fixed_base_urdf, floating_base_urdf;
+  Robot fixed_base_robot, floating_base_robot;
 };
 
 
-TEST_F(RiccatiRecursionTest, fixed_base_without_contacts) {
-  const int dimv = fixed_base_robot_.dimv();
-  const int dimaf = fixed_base_robot_.dimv();
-  const int dimf = 0;
-  const int dimc = 0;
-  Eigen::MatrixXd Qqa = Eigen::MatrixXd::Random(dimv, dimv);
-  Eigen::MatrixXd Qva = Eigen::MatrixXd::Random(dimv, dimv);
-  Eigen::MatrixXd Qaa = Eigen::MatrixXd::Random(dimv, dimv);
-  Eigen::VectorXd la = Eigen::VectorXd::Random(dimv);
-  Eigen::MatrixXd Kaq = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd Kav = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::VectorXd ka = Eigen::VectorXd::Zero(dimv);
-  Qaa.triangularView<Eigen::StrictlyLower>() 
-      = Qaa.transpose().triangularView<Eigen::StrictlyLower>();
-  // Makes Qaa semi positive define
-  Qaa = Qaa * Qaa.transpose();
-  // Adds identity matrix to make Qaa sufficiently positive define
-  Qaa.noalias() += Eigen::MatrixXd::Identity(dimv, dimv);
-  while (Qaa.determinant() == 0) {
-    Qaa = Eigen::MatrixXd::Random(dimv, dimv);
-    Qaa.triangularView<Eigen::StrictlyLower>() 
-        = Qaa.transpose().triangularView<Eigen::StrictlyLower>();
-    Qaa = Qaa * Qaa.transpose();
-    Qaa.noalias() += Eigen::MatrixXd::Identity(dimv, dimv);
-  }
-  RiccatiMatrixInverter inverter(fixed_base_robot_);
-  Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
-  G = Qaa;
-  Eigen::MatrixXd Caf = Eigen::MatrixXd::Zero(dimc, dimv+dimf);
-  Eigen::MatrixXd Ginv = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
-  inverter.invert(G, Caf, Ginv);
-  Eigen::MatrixXd Qafqv = Eigen::MatrixXd::Zero(dimv+dimf, 2*dimv);
-  Qafqv.topLeftCorner(dimv, dimv) = Qqa.transpose();
-  Qafqv.topRightCorner(dimv, dimv) = Qva.transpose();
-  Eigen::MatrixXd Cqv = Eigen::MatrixXd::Zero(dimc, 2*dimv);
-  RiccatiGain gain(fixed_base_robot_);
-  gain.computeFeedbackGain(Ginv, Qafqv, Cqv);
-  Eigen::VectorXd laf = Eigen::VectorXd::Zero(dimv);
-  laf.head(dimv) = la;
-  Eigen::VectorXd C = Eigen::VectorXd::Zero(dimc);
-  gain.computeFeedforward(Ginv, laf, C);
-  const Eigen::MatrixXd Qaa_inv = Qaa.inverse();
-  const Eigen::MatrixXd Kaq_ref = - Qaa_inv * Qqa.transpose();
-  const Eigen::MatrixXd Kav_ref = - Qaa_inv * Qva.transpose();
-  const Eigen::VectorXd ka_ref = - Qaa_inv * la;
-  EXPECT_TRUE(gain.Kaq().isApprox(Kaq_ref));
-  EXPECT_TRUE(gain.Kav().isApprox(Kav_ref));
-  EXPECT_TRUE(gain.ka().isApprox(ka_ref));
-  std::cout << "Kaq error:" << std::endl;
-  std::cout << gain.Kaq() - Kaq_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kav error:" << std::endl;
-  std::cout << gain.Kav() - Kav_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "ka error:" << std::endl;
-  std::cout << gain.ka() - ka_ref << std::endl;
-  std::cout << std::endl;
+KKTMatrix RiccatiRecursionTest::createKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence) const {
+  return testhelper::CreateKKTMatrix(robot, contact_sequence, N, max_num_impulse);
 }
 
 
-TEST_F(RiccatiRecursionTest, fixed_base_with_contacts) {
-  std::vector<int> contact_frames = {18};
-  fixed_base_robot_ = Robot(fixed_base_urdf_, contact_frames);
-  ContactStatus contact_status(contact_frames.size());
-  contact_status.setContactStatus({true});
-  const int dimv = fixed_base_robot_.dimv();
-  const int dimaf = fixed_base_robot_.dimv() + contact_status.dimf();
-  const int dimf = contact_status.dimf();
-  const int dimc = fixed_base_robot_.dim_passive() + contact_status.dimf();
-  ASSERT_EQ(dimf, 3);
-  ASSERT_EQ(dimc, 3);
-  Eigen::MatrixXd gen_mat = Eigen::MatrixXd::Random(dimv+dimf, dimv+dimf);
-  gen_mat.triangularView<Eigen::StrictlyLower>() 
-      = gen_mat.transpose().triangularView<Eigen::StrictlyLower>();
-  // Makes pos_mat semi positive define
-  Eigen::MatrixXd pos_mat = gen_mat * gen_mat.transpose();
-  // Adds identity matrix to make pos_mat sufficiently positive define
-  pos_mat.noalias() += Eigen::MatrixXd::Identity(dimv+dimf, dimv+dimf);
-  while (pos_mat.determinant() == 0) {
-    gen_mat = Eigen::MatrixXd::Random(dimv+dimf, dimv+dimf);
-    gen_mat.triangularView<Eigen::StrictlyLower>() 
-        = gen_mat.transpose().triangularView<Eigen::StrictlyLower>();
-    pos_mat = gen_mat * gen_mat.transpose();
-    pos_mat.noalias() += Eigen::MatrixXd::Identity(dimv+dimf, dimv+dimf);
-  }
-  Eigen::MatrixXd Qqa = Eigen::MatrixXd::Random(dimv, dimv);
-  Eigen::MatrixXd Qva = Eigen::MatrixXd::Random(dimv, dimv);
-  Eigen::MatrixXd Qaa = pos_mat.block(0, 0, dimv, dimv);
-  Eigen::MatrixXd Qqf = Eigen::MatrixXd::Random(dimv, dimf);
-  Eigen::MatrixXd Qvf = Eigen::MatrixXd::Random(dimv, dimf);
-  Eigen::MatrixXd Qaf = pos_mat.block(0, dimv, dimv, dimf);
-  Eigen::MatrixXd Qff = pos_mat.block(dimv, dimv, dimf, dimf);
-  Eigen::MatrixXd Cq = Eigen::MatrixXd::Random(dimf, dimv);
-  Eigen::MatrixXd Cv = Eigen::MatrixXd::Random(dimf, dimv);
-  Eigen::MatrixXd Ca = Eigen::MatrixXd::Random(dimf, dimv);
-  Eigen::VectorXd la = Eigen::VectorXd::Random(dimv);
-  Eigen::VectorXd lf = Eigen::VectorXd::Random(dimf);
-  Eigen::VectorXd C_res = Eigen::VectorXd::Random(dimf);
-  Eigen::MatrixXd Kaq = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd Kav = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd Kfq = Eigen::MatrixXd::Zero(dimf, dimv);
-  Eigen::MatrixXd Kfv = Eigen::MatrixXd::Zero(dimf, dimv);
-  Eigen::MatrixXd Kmuq = Eigen::MatrixXd::Zero(dimf, dimv);
-  Eigen::MatrixXd Kmuv = Eigen::MatrixXd::Zero(dimf, dimv);
-  Eigen::VectorXd ka = Eigen::VectorXd::Zero(dimv);
-  Eigen::VectorXd kf = Eigen::VectorXd::Zero(dimf);
-  Eigen::VectorXd kmu = Eigen::VectorXd::Zero(dimf);
-  Eigen::MatrixXd M = Eigen::MatrixXd::Zero(dimv+2*dimf, dimv+2*dimf);
-  M.block(0, 0, dimv+dimf, dimv+dimf) = pos_mat;
-  M.block(0, dimv+dimf, dimv, dimf) = Ca.transpose();
-  M.block(dimv+dimf, 0, dimf, dimv) = Ca;
-  M.triangularView<Eigen::StrictlyLower>() 
-      = M.transpose().triangularView<Eigen::StrictlyLower>();
-  const Eigen::MatrixXd Minv = M.inverse();
-  const Eigen::MatrixXd Kaq_ref =  - Minv.block(        0,         0, dimv, dimv) * Qqa.transpose()
-                                   - Minv.block(        0,      dimv, dimv, dimf) * Qqf.leftCols(dimf).transpose()
-                                   - Minv.block(        0, dimv+dimf, dimv, dimc) * Cq.topRows(dimc);
-  const Eigen::MatrixXd Kav_ref =  - Minv.block(        0,         0, dimv, dimv) * Qva.transpose()
-                                   - Minv.block(        0,      dimv, dimv, dimf) * Qvf.leftCols(dimf).transpose()
-                                   - Minv.block(        0, dimv+dimf, dimv, dimc) * Cv.topRows(dimc);
-  const Eigen::MatrixXd Kfq_ref =  - Minv.block(     dimv,         0, dimf, dimv) * Qqa.transpose()
-                                   - Minv.block(     dimv,      dimv, dimf, dimf) * Qqf.leftCols(dimf).transpose()
-                                   - Minv.block(     dimv, dimv+dimf, dimf, dimc) * Cq.topRows(dimc);
-  const Eigen::MatrixXd Kfv_ref =  - Minv.block(     dimv,         0, dimf, dimv) * Qva.transpose()
-                                   - Minv.block(     dimv,      dimv, dimf, dimf) * Qvf.leftCols(dimf).transpose()
-                                   - Minv.block(     dimv, dimv+dimf, dimf, dimc) * Cv.topRows(dimc);
-  const Eigen::MatrixXd Kmuq_ref = - Minv.block(dimv+dimf,         0, dimc, dimv) * Qqa.transpose()
-                                   - Minv.block(dimv+dimf,      dimv, dimc, dimf) * Qqf.leftCols(dimf).transpose()
-                                   - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * Cq.topRows(dimc);
-  const Eigen::MatrixXd Kmuv_ref = - Minv.block(dimv+dimf,         0, dimc, dimv) * Qva.transpose()
-                                   - Minv.block(dimv+dimf,      dimv, dimc, dimf) * Qvf.leftCols(dimf).transpose()
-                                   - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * Cv.topRows(dimc);
-  const Eigen::VectorXd ka_ref =   - Minv.block(        0,         0, dimv, dimv) * la
-                                   - Minv.block(        0,      dimv, dimv, dimf) * lf.head(dimf)
-                                   - Minv.block(        0, dimv+dimf, dimv, dimc) * C_res.head(dimc);
-  const Eigen::VectorXd kf_ref =   - Minv.block(     dimv,         0, dimf, dimv) * la
-                                   - Minv.block(     dimv,      dimv, dimf, dimf) * lf.head(dimf)
-                                   - Minv.block(     dimv, dimv+dimf, dimf, dimc) * C_res.head(dimc);
-  const Eigen::VectorXd kmu_ref =  - Minv.block(dimv+dimf,         0, dimc, dimv) * la
-                                   - Minv.block(dimv+dimf,      dimv, dimc, dimf) * lf.head(dimf)
-                                   - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * C_res.head(dimc);
-  RiccatiMatrixInverter inverter(fixed_base_robot_);
-  inverter.setContactStatus(contact_status);
-  Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
-  G = M.topLeftCorner(dimv+dimf, dimv+dimf);
-  Eigen::MatrixXd Caf = Eigen::MatrixXd::Zero(dimc, dimv+dimf);
-  Caf.leftCols(dimv) = Ca;
-  Eigen::MatrixXd Ginv = Eigen::MatrixXd::Zero(dimv+dimf+dimc, dimv+dimf+dimc);
-  inverter.invert(G, Caf, Ginv);
-  Eigen::MatrixXd Qafqv = Eigen::MatrixXd::Zero(dimv+dimf, 2*dimv);
-  Qafqv.topLeftCorner(dimv, dimv) = Qqa.transpose();
-  Qafqv.topRightCorner(dimv, dimv) = Qva.transpose();
-  Qafqv.bottomLeftCorner(dimf, dimv) = Qqf.transpose();
-  Qafqv.bottomRightCorner(dimf, dimv) = Qvf.transpose();
-  Eigen::MatrixXd Cqv = Eigen::MatrixXd::Zero(dimc, 2*dimv);
-  Cqv.leftCols(dimv) = Cq;
-  Cqv.rightCols(dimv) = Cv;
-  RiccatiGain gain(fixed_base_robot_);
-  gain.setContactStatus(contact_status);
-  gain.computeFeedbackGain(Ginv, Qafqv, Cqv);
-  Eigen::VectorXd laf = Eigen::VectorXd::Zero(dimv+dimf);
-  laf.head(dimv) = la;
-  laf.tail(dimf) = lf;
-  Eigen::VectorXd C = C_res;
-  gain.computeFeedforward(Ginv, laf, C);
-  EXPECT_TRUE(gain.Kaq().isApprox(Kaq_ref));
-  EXPECT_TRUE(gain.Kav().isApprox(Kav_ref));
-  EXPECT_TRUE(gain.Kfq().isApprox(Kfq_ref));
-  EXPECT_TRUE(gain.Kfv().isApprox(Kfv_ref));
-  EXPECT_TRUE(gain.Kmuq().isApprox(Kmuq_ref));
-  EXPECT_TRUE(gain.Kmuv().isApprox(Kmuv_ref));
-  EXPECT_TRUE(gain.ka().isApprox(ka_ref));
-  EXPECT_TRUE(gain.kf().isApprox(kf_ref));
-  EXPECT_TRUE(gain.kmu().isApprox(kmu_ref));
-  std::cout << "Kaq error:" << std::endl;
-  std::cout << gain.Kaq() - Kaq_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kav error:" << std::endl;
-  std::cout << gain.Kav() - Kav_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kfq error:" << std::endl;
-  std::cout << gain.Kfq() - Kfq_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kfv error:" << std::endl;
-  std::cout << gain.Kfv() - Kfv_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kmuq error:" << std::endl;
-  std::cout << gain.Kmuq() - Kmuq_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kmuv error:" << std::endl;
-  std::cout << gain.Kmuv() - Kmuv_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "ka error:" << std::endl;
-  std::cout << gain.ka() - ka_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "kf error:" << std::endl;
-  std::cout << gain.kf() - kf_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "kmu error:" << std::endl;
-  std::cout << gain.kmu() - kmu_ref << std::endl;
-  std::cout << std::endl;
+KKTResidual RiccatiRecursionTest::createKKTResidual(const Robot& robot, const ContactSequence& contact_sequence) const {
+  return testhelper::CreateKKTResidual(robot, contact_sequence, N, max_num_impulse);
 }
 
 
-TEST_F(RiccatiRecursionTest, floating_base_without_contacts) {
-  const int dimv = floating_base_robot_.dimv();
-  const int dimaf = floating_base_robot_.dimv();
-  const int dimf = 0;
-  const int dimc = floating_base_robot_.dim_passive();
-  ASSERT_EQ(dimf, 0);
-  ASSERT_EQ(dimc, 6);
-  Eigen::MatrixXd gen_mat = Eigen::MatrixXd::Random(dimv, dimv);
-  gen_mat.triangularView<Eigen::StrictlyLower>() 
-      = gen_mat.transpose().triangularView<Eigen::StrictlyLower>();
-  // Makes pos_mat semi positive define
-  Eigen::MatrixXd pos_mat = gen_mat * gen_mat.transpose();
-  // Adds identity matrix to make pos_mat sufficiently positive define
-  pos_mat.noalias() += Eigen::MatrixXd::Identity(dimv, dimv);
-  while (pos_mat.determinant() == 0) {
-    gen_mat = Eigen::MatrixXd::Random(dimv, dimv);
-    gen_mat.triangularView<Eigen::StrictlyLower>() 
-        = gen_mat.transpose().triangularView<Eigen::StrictlyLower>();
-    pos_mat = gen_mat * gen_mat.transpose();
-    pos_mat.noalias() += Eigen::MatrixXd::Identity(dimv, dimv);
-  }
-  Eigen::MatrixXd Qqa = Eigen::MatrixXd::Random(dimv, dimv);
-  Eigen::MatrixXd Qva = Eigen::MatrixXd::Random(dimv, dimv);
-  Eigen::MatrixXd Qaa = pos_mat.block(0, 0, dimv, dimv);
-  Eigen::MatrixXd Cq = Eigen::MatrixXd::Random(dimc, dimv);
-  Eigen::MatrixXd Cv = Eigen::MatrixXd::Random(dimc, dimv);
-  Eigen::MatrixXd Ca = Eigen::MatrixXd::Random(dimc, dimv);
-  Eigen::VectorXd la = Eigen::VectorXd::Random(dimv);
-  Eigen::VectorXd C_res = Eigen::VectorXd::Random(dimc);
-  Eigen::MatrixXd Kaq = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd Kav = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd Kmuq = Eigen::MatrixXd::Zero(dimc, dimv);
-  Eigen::MatrixXd Kmuv = Eigen::MatrixXd::Zero(dimc, dimv);
-  Eigen::VectorXd ka = Eigen::VectorXd::Zero(dimv);
-  Eigen::VectorXd kmu = Eigen::VectorXd::Zero(dimc);
-  Eigen::MatrixXd M = Eigen::MatrixXd::Zero(dimv+dimc, dimv+dimc);
-  M.block(0, 0, dimv, dimv) = pos_mat;
-  M.block(0, dimv, dimv, dimc) = Ca.transpose();
-  M.block(dimv, 0, dimc, dimv) = Ca;
-  M.triangularView<Eigen::StrictlyLower>() 
-      = M.transpose().triangularView<Eigen::StrictlyLower>();
-  const Eigen::MatrixXd Minv = M.inverse();
-  const Eigen::MatrixXd Kaq_ref =  - Minv.block(   0,    0, dimv, dimv) * Qqa.transpose()
-                                   - Minv.block(   0, dimv, dimv, dimc) * Cq;
-  const Eigen::MatrixXd Kav_ref =  - Minv.block(   0,    0, dimv, dimv) * Qva.transpose()
-                                   - Minv.block(   0, dimv, dimv, dimc) * Cv;
-  const Eigen::MatrixXd Kmuq_ref = - Minv.block(dimv,    0, dimc, dimv) * Qqa.transpose()
-                                   - Minv.block(dimv, dimv, dimc, dimc) * Cq;
-  const Eigen::MatrixXd Kmuv_ref = - Minv.block(dimv,    0, dimc, dimv) * Qva.transpose()
-                                   - Minv.block(dimv, dimv, dimc, dimc) * Cv;
-  const Eigen::VectorXd ka_ref =   - Minv.block(   0,    0, dimv, dimv) * la
-                                   - Minv.block(   0, dimv, dimv, dimc) * C_res;
-  const Eigen::VectorXd kmu_ref =  - Minv.block(dimv,    0, dimc, dimv) * la
-                                   - Minv.block(dimv, dimv, dimc, dimc) * C_res;
-  RiccatiMatrixInverter inverter(floating_base_robot_);
-  Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
-  G = M.topLeftCorner(dimv+dimf, dimv+dimf);
-  Eigen::MatrixXd Caf = Eigen::MatrixXd::Zero(dimc, dimv+dimf);
-  Caf.leftCols(dimv) = Ca;
-  Eigen::MatrixXd Ginv = Eigen::MatrixXd::Zero(dimv+dimf+dimc, dimv+dimf+dimc);
-  inverter.invert(G, Caf, Ginv);
-  Eigen::MatrixXd Qafqv = Eigen::MatrixXd::Zero(dimv+dimf, 2*dimv);
-  Qafqv.topLeftCorner(dimv, dimv) = Qqa.transpose();
-  Qafqv.topRightCorner(dimv, dimv) = Qva.transpose();
-  Eigen::MatrixXd Cqv = Eigen::MatrixXd::Zero(dimc, 2*dimv);
-  Cqv.leftCols(dimv) = Cq;
-  Cqv.rightCols(dimv) = Cv;
-  RiccatiGain gain(floating_base_robot_);
-  gain.computeFeedbackGain(Ginv, Qafqv, Cqv);
-  Eigen::VectorXd laf = Eigen::VectorXd::Zero(dimv+dimf);
-  laf.head(dimv) = la;
-  Eigen::VectorXd C = C_res;
-  gain.computeFeedforward(Ginv, laf, C);
-  EXPECT_TRUE(gain.Kaq().isApprox(Kaq_ref));
-  EXPECT_TRUE(gain.Kav().isApprox(Kav_ref));
-  EXPECT_TRUE(gain.Kmuq().isApprox(Kmuq_ref));
-  EXPECT_TRUE(gain.Kmuv().isApprox(Kmuv_ref));
-  EXPECT_TRUE(gain.ka().isApprox(ka_ref));
-  EXPECT_TRUE(gain.kmu().isApprox(kmu_ref));
-  std::cout << "Kaq error:" << std::endl;
-  std::cout << gain.Kaq() - Kaq_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kav error:" << std::endl;
-  std::cout << gain.Kav() - Kav_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kmuq error:" << std::endl;
-  std::cout << gain.Kmuq() - Kmuq_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kmuv error:" << std::endl;
-  std::cout << gain.Kmuv() - Kmuv_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "ka error:" << std::endl;
-  std::cout << gain.ka() - ka_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "kmu error:" << std::endl;
-  std::cout << gain.kmu() - kmu_ref << std::endl;
-  std::cout << std::endl;
+ContactSequence RiccatiRecursionTest::createContactSequence(const Robot& robot) const {
+  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dtau);
 }
 
 
-TEST_F(RiccatiRecursionTest, floating_base_with_contacts) {
-  const std::vector<int> contact_frames = {14, 24, 34, 44};
-  floating_base_robot_ = Robot(floating_base_urdf_, contact_frames);
-  ContactStatus contact_status(contact_frames.size());
-  std::vector<bool> active_contacts;
-  std::random_device rnd;
-  for (int i=0; i<contact_frames.size(); ++i) {
-    active_contacts.push_back(rnd()%2==0);
+void RiccatiRecursionTest::testIsConstraintFactorizationSame(
+    const StateConstraintRiccatiFactorization& lhs, 
+    const StateConstraintRiccatiFactorization& rhs) const {
+  EXPECT_TRUE(lhs.ENT().isApprox(rhs.ENT()));
+  EXPECT_TRUE(lhs.e().isApprox(rhs.e()));
+  EXPECT_TRUE(lhs.dxi().isApprox(rhs.dxi()));
+  for (int constraint_index=0; constraint_index<max_num_impulse; ++constraint_index) {
+    for (int i=0; i<N; ++i) {
+      EXPECT_TRUE(lhs.T(constraint_index, i).isApprox(rhs.T(constraint_index, i)));
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_TRUE(lhs.T_impulse(constraint_index, i).isApprox(rhs.T_impulse(constraint_index, i)));
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_TRUE(lhs.T_aux(constraint_index, i).isApprox(rhs.T_aux(constraint_index, i)));
+    }
+    for (int i=0; i<max_num_impulse; ++i) {
+      EXPECT_TRUE(lhs.T_lift(constraint_index, i).isApprox(rhs.T_lift(constraint_index, i)));
+    }
   }
-  contact_status.setContactStatus(active_contacts);
-  const int dimv = floating_base_robot_.dimv();
-  const int dimaf = floating_base_robot_.dimv() + contact_status.dimf();
-  const int dimf = contact_status.dimf();
-  const int dimc = floating_base_robot_.dim_passive() + contact_status.dimf();
-  const int max_dimf = floating_base_robot_.max_dimf();
-  const int max_dimc = max_dimf + floating_base_robot_.dim_passive();
-  const int dim_passive = floating_base_robot_.dim_passive();
-  Eigen::MatrixXd gen_mat = Eigen::MatrixXd::Random(dimv+max_dimf, dimv+max_dimf);
-  gen_mat.triangularView<Eigen::StrictlyLower>() 
-      = gen_mat.transpose().triangularView<Eigen::StrictlyLower>();
-  // Makes pos_mat semi positive define
-  Eigen::MatrixXd pos_mat = gen_mat * gen_mat.transpose();
-  // Adds identity matrix to make pos_mat sufficiently positive define
-  pos_mat.noalias() += Eigen::MatrixXd::Identity(dimv+max_dimf, dimv+max_dimf);
-  while (pos_mat.determinant() == 0) {
-    gen_mat = Eigen::MatrixXd::Random(dimv+max_dimf, dimv+max_dimf);
-    gen_mat.triangularView<Eigen::StrictlyLower>() 
-        = gen_mat.transpose().triangularView<Eigen::StrictlyLower>();
-    pos_mat = gen_mat * gen_mat.transpose();
-    pos_mat.noalias() += Eigen::MatrixXd::Identity(dimv+max_dimf, dimv+max_dimf);
+}
+
+
+void RiccatiRecursionTest::testBackwardRiccatiRecursion(const Robot& robot) const {
+  const auto contact_sequence = createContactSequence(robot);
+  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+  ocp_discretizer.discretizeOCP(contact_sequence, t);
+  auto kkt_matrix = createKKTMatrix(robot, contact_sequence);
+  auto kkt_residual= createKKTResidual(robot, contact_sequence);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
+  RiccatiRecursion riccati_recursion(robot, N, nproc);
+  riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
+  EXPECT_TRUE(factorization[N].Pqq.isApprox(kkt_matrix[N].Qqq()));
+  EXPECT_TRUE(factorization[N].Pqv.isZero());
+  EXPECT_TRUE(factorization[N].Pvq.isZero());
+  EXPECT_TRUE(factorization[N].Pvv.isApprox(kkt_matrix[N].Qvv()));
+  EXPECT_TRUE(factorization[N].sq.isApprox(-1*kkt_residual[N].lq()));
+  EXPECT_TRUE(factorization[N].sv.isApprox(-1*kkt_residual[N].lv()));
+  const SplitRiccatiFactorization riccati_factorization_default = SplitRiccatiFactorization(robot);
+  for (int i=N-1; i>=0; --i) { EXPECT_TRUE(factorization[i].isApprox(riccati_factorization_default)); }
+  for (int i=0; i<max_num_impulse; ++i) { EXPECT_TRUE(factorization.impulse[i].isApprox(riccati_factorization_default)); }
+  for (int i=0; i<max_num_impulse; ++i) { EXPECT_TRUE(factorization.aux[i].isApprox(riccati_factorization_default)); }
+  for (int i=0; i<max_num_impulse; ++i) { EXPECT_TRUE(factorization.lift[i].isApprox(riccati_factorization_default)); }
+  auto factorization_ref = factorization;
+  auto kkt_matrix_ref = kkt_matrix; 
+  auto kkt_residual_ref = kkt_residual; 
+  RiccatiFactorizer factorizer(robot, N, max_num_impulse);
+  auto factorizer_ref = factorizer;
+  riccati_recursion.backwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
+  for (int i=N-1; i>=0; --i) {
+    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
+      const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
+      const double dt = ocp_discretizer.dtau(i);
+      const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
+      ASSERT_TRUE(dt >= 0);
+      ASSERT_TRUE(dt <= dtau);
+      ASSERT_TRUE(dt_aux >= 0);
+      ASSERT_TRUE(dt_aux <= dtau);
+      factorizer_ref.aux[impulse_index].backwardRiccatiRecursion(
+          factorization_ref[i+1], dt_aux, kkt_matrix_ref.aux[impulse_index], 
+          kkt_residual_ref.aux[impulse_index], factorization_ref.aux[impulse_index]);
+      factorizer_ref.impulse[impulse_index].backwardRiccatiRecursion(
+          factorization_ref.aux[impulse_index], kkt_matrix_ref.impulse[impulse_index], 
+          kkt_residual_ref.impulse[impulse_index], factorization_ref.impulse[impulse_index]);
+      factorizer_ref[i].backwardRiccatiRecursion(
+          factorization_ref.impulse[impulse_index], dt, kkt_matrix_ref[i], 
+          kkt_residual_ref[i], factorization_ref[i]);
+    }
+    else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
+      const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
+      const double dt = ocp_discretizer.dtau(i);
+      const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
+      ASSERT_TRUE(dt >= 0);
+      ASSERT_TRUE(dt <= dtau);
+      ASSERT_TRUE(dt_lift >= 0);
+      ASSERT_TRUE(dt_lift <= dtau);
+      factorizer_ref.lift[lift_index].backwardRiccatiRecursion(
+          factorization_ref[i+1], dt_lift, kkt_matrix_ref.lift[lift_index], 
+          kkt_residual_ref.lift[lift_index], factorization_ref.lift[lift_index]);
+      factorizer_ref[i].backwardRiccatiRecursion(
+          factorization_ref.lift[lift_index], dt, kkt_matrix_ref[i], 
+          kkt_residual_ref[i], factorization_ref[i]);
+    }
+    else {
+      factorizer_ref[i].backwardRiccatiRecursion(
+          factorization_ref[i+1], dtau, kkt_matrix_ref[i], 
+          kkt_residual_ref[i], factorization_ref[i]);
+    }
   }
-  Eigen::MatrixXd Qqa = Eigen::MatrixXd::Random(dimv, dimv);
-  Eigen::MatrixXd Qva = Eigen::MatrixXd::Random(dimv, dimv);
-  Eigen::MatrixXd Qaa = pos_mat.block(0, 0, dimv, dimv);
-  Eigen::MatrixXd Qqf = Eigen::MatrixXd::Random(dimv, max_dimf);
-  Eigen::MatrixXd Qvf = Eigen::MatrixXd::Random(dimv, max_dimf);
-  Eigen::MatrixXd Qaf = pos_mat.block(0, dimv, dimv, max_dimf);
-  Eigen::MatrixXd Qff = pos_mat.block(dimv, dimv, max_dimf, max_dimf);
-  Eigen::MatrixXd Cq = Eigen::MatrixXd::Random(max_dimc, dimv);
-  Eigen::MatrixXd Cv = Eigen::MatrixXd::Random(max_dimc, dimv);
-  Eigen::MatrixXd Ca = Eigen::MatrixXd::Random(max_dimc, dimv);
-  Eigen::MatrixXd Cf = Eigen::MatrixXd::Random(dim_passive, max_dimf);
-  Eigen::VectorXd la = Eigen::VectorXd::Random(dimv);
-  Eigen::VectorXd lf = Eigen::VectorXd::Random(max_dimf);
-  Eigen::VectorXd C_res = Eigen::VectorXd::Random(max_dimc);
-  Eigen::MatrixXd Kaq = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd Kav = Eigen::MatrixXd::Zero(dimv, dimv);
-  Eigen::MatrixXd Kfq = Eigen::MatrixXd::Zero(max_dimf, dimv);
-  Eigen::MatrixXd Kfv = Eigen::MatrixXd::Zero(max_dimf, dimv);
-  Eigen::MatrixXd Kmuq = Eigen::MatrixXd::Zero(max_dimc, dimv);
-  Eigen::MatrixXd Kmuv = Eigen::MatrixXd::Zero(max_dimc, dimv);
-  Eigen::VectorXd ka = Eigen::VectorXd::Zero(dimv);
-  Eigen::VectorXd kf = Eigen::VectorXd::Zero(max_dimf);
-  Eigen::VectorXd kmu = Eigen::VectorXd::Zero(max_dimc);
-  Eigen::MatrixXd M = Eigen::MatrixXd::Zero(dimv+dimf+dimc, dimv+dimf+dimc);
-  M.block(0, 0, dimv+dimf, dimv+dimf) = pos_mat.topLeftCorner(dimv+dimf, dimv+dimf);
-  M.block(0, dimv+dimf, dimv, dimc) = Ca.topRows(dimc).transpose();
-  Eigen::MatrixXd Cf_block = Eigen::MatrixXd::Zero(dimc, dimf);
-  Cf_block.bottomRows(dim_passive) = Cf.leftCols(dimf);
-  M.block(dimv, dimv+dimf, dimf, dimc) = Cf_block.transpose();
-  M.triangularView<Eigen::StrictlyLower>() 
-      = M.transpose().triangularView<Eigen::StrictlyLower>();
-  const Eigen::MatrixXd Minv = M.inverse();
-  const Eigen::MatrixXd Kaq_ref =  - Minv.block(        0,         0, dimv, dimv) * Qqa.transpose()
-                                   - Minv.block(        0,      dimv, dimv, dimf) * Qqf.leftCols(dimf).transpose()
-                                   - Minv.block(        0, dimv+dimf, dimv, dimc) * Cq.topRows(dimc);
-  const Eigen::MatrixXd Kav_ref =  - Minv.block(        0,         0, dimv, dimv) * Qva.transpose()
-                                   - Minv.block(        0,      dimv, dimv, dimf) * Qvf.leftCols(dimf).transpose()
-                                   - Minv.block(        0, dimv+dimf, dimv, dimc) * Cv.topRows(dimc);
-  const Eigen::MatrixXd Kfq_ref =  - Minv.block(     dimv,         0, dimf, dimv) * Qqa.transpose()
-                                   - Minv.block(     dimv,      dimv, dimf, dimf) * Qqf.leftCols(dimf).transpose()
-                                   - Minv.block(     dimv, dimv+dimf, dimf, dimc) * Cq.topRows(dimc);
-  const Eigen::MatrixXd Kfv_ref =  - Minv.block(     dimv,         0, dimf, dimv) * Qva.transpose()
-                                   - Minv.block(     dimv,      dimv, dimf, dimf) * Qvf.leftCols(dimf).transpose()
-                                   - Minv.block(     dimv, dimv+dimf, dimf, dimc) * Cv.topRows(dimc);
-  const Eigen::MatrixXd Kmuq_ref = - Minv.block(dimv+dimf,         0, dimc, dimv) * Qqa.transpose()
-                                   - Minv.block(dimv+dimf,      dimv, dimc, dimf) * Qqf.leftCols(dimf).transpose()
-                                   - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * Cq.topRows(dimc);
-  const Eigen::MatrixXd Kmuv_ref = - Minv.block(dimv+dimf,         0, dimc, dimv) * Qva.transpose()
-                                   - Minv.block(dimv+dimf,      dimv, dimc, dimf) * Qvf.leftCols(dimf).transpose()
-                                   - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * Cv.topRows(dimc);
-  const Eigen::VectorXd ka_ref =   - Minv.block(        0,         0, dimv, dimv) * la
-                                   - Minv.block(        0,      dimv, dimv, dimf) * lf.head(dimf)
-                                   - Minv.block(        0, dimv+dimf, dimv, dimc) * C_res.head(dimc);
-  const Eigen::VectorXd kf_ref =   - Minv.block(     dimv,         0, dimf, dimv) * la
-                                   - Minv.block(     dimv,      dimv, dimf, dimf) * lf.head(dimf)
-                                   - Minv.block(     dimv, dimv+dimf, dimf, dimc) * C_res.head(dimc);
-  const Eigen::VectorXd kmu_ref =  - Minv.block(dimv+dimf,         0, dimc, dimv) * la
-                                   - Minv.block(dimv+dimf,      dimv, dimc, dimf) * lf.head(dimf)
-                                   - Minv.block(dimv+dimf, dimv+dimf, dimc, dimc) * C_res.head(dimc);
-  RiccatiMatrixInverter inverter(floating_base_robot_);
-  inverter.setContactStatus(contact_status);
-  Eigen::MatrixXd G = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
-  G = M.topLeftCorner(dimv+dimf, dimv+dimf);
-  Eigen::MatrixXd Caf = Eigen::MatrixXd::Zero(dimc, dimv+dimf);
-  Caf.leftCols(dimv) = Ca.topRows(dimc);
-  Caf.rightCols(dimf) = Cf_block;
-  Eigen::MatrixXd Ginv = Eigen::MatrixXd::Zero(dimv+dimf+dimc, dimv+dimf+dimc);
-  inverter.invert(G, Caf, Ginv);
-  Eigen::MatrixXd Qafqv = Eigen::MatrixXd::Zero(dimv+dimf, 2*dimv);
-  Qafqv.topLeftCorner(dimv, dimv) = Qqa.transpose();
-  Qafqv.topRightCorner(dimv, dimv) = Qva.transpose();
-  Qafqv.bottomLeftCorner(dimf, dimv) = Qqf.leftCols(dimf).transpose();
-  Qafqv.bottomRightCorner(dimf, dimv) = Qvf.leftCols(dimf).transpose();
-  Eigen::MatrixXd Cqv = Eigen::MatrixXd::Zero(dimc, 2*dimv);
-  Cqv.leftCols(dimv) = Cq.topRows(dimc);
-  Cqv.rightCols(dimv) = Cv.topRows(dimc);
-  RiccatiGain gain(floating_base_robot_);
-  gain.setContactStatus(contact_status);
-  gain.computeFeedbackGain(Ginv, Qafqv, Cqv);
-  Eigen::VectorXd laf = Eigen::VectorXd::Zero(dimv+dimf);
-  laf.head(dimv) = la;
-  laf.tail(dimf) = lf.head(dimf);
-  Eigen::VectorXd C = C_res.head(dimc);
-  gain.computeFeedforward(Ginv, laf, C);
-  EXPECT_TRUE(gain.Kaq().isApprox(Kaq_ref));
-  EXPECT_TRUE(gain.Kav().isApprox(Kav_ref));
-  EXPECT_TRUE(gain.Kfq().isApprox(Kfq_ref));
-  EXPECT_TRUE(gain.Kfv().isApprox(Kfv_ref));
-  EXPECT_TRUE(gain.Kmuq().isApprox(Kmuq_ref));
-  EXPECT_TRUE(gain.Kmuv().isApprox(Kmuv_ref));
-  EXPECT_TRUE(gain.ka().isApprox(ka_ref));
-  EXPECT_TRUE(gain.kf().isApprox(kf_ref));
-  EXPECT_TRUE(gain.kmu().isApprox(kmu_ref));
-  std::cout << "Kaq error:" << std::endl;
-  std::cout << gain.Kaq() - Kaq_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kav error:" << std::endl;
-  std::cout << gain.Kav() - Kav_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kfq error:" << std::endl;
-  std::cout << gain.Kfq() - Kfq_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kfv error:" << std::endl;
-  std::cout << gain.Kfv() - Kfv_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kmuq error:" << std::endl;
-  std::cout << gain.Kmuq() - Kmuq_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "Kmuv error:" << std::endl;
-  std::cout << gain.Kmuv() - Kmuv_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "ka error:" << std::endl;
-  std::cout << gain.ka() - ka_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "kf error:" << std::endl;
-  std::cout << gain.kf() - kf_ref << std::endl;
-  std::cout << std::endl;
-  std::cout << "kmu error:" << std::endl;
-  std::cout << gain.kmu() - kmu_ref << std::endl;
-  std::cout << std::endl;
+  EXPECT_TRUE(testhelper::IsApprox(factorization, factorization_ref));
+  EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
+  EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));
+  EXPECT_FALSE(testhelper::HasNaN(factorization));
+  EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
+  EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
+}
+
+
+void RiccatiRecursionTest::testForwardRiccatiRecursionParallel(const Robot& robot) const {
+  const auto contact_sequence = createContactSequence(robot);
+  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+  ocp_discretizer.discretizeOCP(contact_sequence, t);
+  auto kkt_matrix = createKKTMatrix(robot, contact_sequence);
+  auto kkt_residual= createKKTResidual(robot, contact_sequence);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
+  RiccatiRecursion riccati_recursion(robot, N, nproc);
+  riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
+  RiccatiFactorizer factorizer(robot, N, max_num_impulse);
+  riccati_recursion.backwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
+  StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
+  constraint_factorization.setConstraintStatus(contact_sequence);
+  auto constraint_factorization_ref = constraint_factorization;
+  auto factorizer_ref = factorizer;
+  auto factorization_ref = factorization;
+  auto kkt_matrix_ref = kkt_matrix; 
+  auto kkt_residual_ref = kkt_residual; 
+  riccati_recursion.forwardRiccatiRecursionParallel(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, constraint_factorization);
+  const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
+  for (int i=0; i<N; ++i) {
+    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
+      const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
+      constraint_factorization_ref.Eq(impulse_index) = kkt_matrix_ref.impulse[impulse_index].Pq();
+      constraint_factorization_ref.e(impulse_index) = kkt_residual_ref.impulse[impulse_index].P();
+      constraint_factorization_ref.T_impulse(impulse_index, impulse_index).topRows(robot.dimv())
+          = kkt_matrix_ref.impulse[impulse_index].Pq().transpose();
+      constraint_factorization_ref.T_impulse(impulse_index, impulse_index).bottomRows(robot.dimv()).setZero();
+      factorizer_ref[i].forwardRiccatiRecursionParallel(
+          kkt_matrix_ref[i], kkt_residual_ref[i], 
+          exist_state_constraint);
+      factorizer_ref.aux[impulse_index].forwardRiccatiRecursionParallel(
+          kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index], 
+          exist_state_constraint);
+    }
+    else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
+      const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
+      factorizer_ref[i].forwardRiccatiRecursionParallel(
+          kkt_matrix_ref[i], kkt_residual_ref[i], 
+          exist_state_constraint);
+      factorizer_ref.lift[lift_index].forwardRiccatiRecursionParallel(
+          kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
+          exist_state_constraint);
+    }
+    else {
+      factorizer_ref[i].forwardRiccatiRecursionParallel(
+          kkt_matrix_ref[i], kkt_residual_ref[i], 
+          exist_state_constraint);
+    }
+  }
+  EXPECT_TRUE(testhelper::IsApprox(factorization, factorization_ref));
+  EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
+  EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));
+  EXPECT_FALSE(testhelper::HasNaN(factorization));
+  EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
+  EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
+  testIsConstraintFactorizationSame(constraint_factorization, constraint_factorization_ref);
+}
+
+
+void RiccatiRecursionTest::testForwardStateConstraintFactorization(const Robot& robot) const {
+  const auto contact_sequence = createContactSequence(robot);
+  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+  ocp_discretizer.discretizeOCP(contact_sequence, t);
+  auto kkt_matrix = createKKTMatrix(robot, contact_sequence);
+  auto kkt_residual= createKKTResidual(robot, contact_sequence);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
+  RiccatiRecursion riccati_recursion(robot, N, nproc);
+  riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
+  RiccatiFactorizer factorizer(robot, N, max_num_impulse);
+  riccati_recursion.backwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
+  auto factorizer_ref = factorizer;
+  auto factorization_ref = factorization;
+  auto kkt_matrix_ref = kkt_matrix; 
+  auto kkt_residual_ref = kkt_residual; 
+  riccati_recursion.forwardStateConstraintFactorization(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
+  const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
+  for (int i=0; i<N; ++i) {
+    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
+      const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
+      const double dt = ocp_discretizer.dtau(i);
+      const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
+      ASSERT_TRUE(dt >= 0);
+      ASSERT_TRUE(dt <= dtau);
+      ASSERT_TRUE(dt_aux >= 0);
+      ASSERT_TRUE(dt_aux <= dtau);
+      factorizer_ref[i].forwardStateConstraintFactorization(
+          factorization_ref[i], kkt_matrix_ref[i], kkt_residual_ref[i], 
+          dt, factorization_ref.impulse[impulse_index], exist_state_constraint);
+      factorizer_ref.impulse[impulse_index].forwardStateConstraintFactorization(
+          factorization_ref.impulse[impulse_index], 
+          kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index], 
+          factorization_ref.aux[impulse_index], exist_state_constraint);
+      factorizer_ref.aux[impulse_index].forwardStateConstraintFactorization(
+          factorization_ref.aux[impulse_index],
+          kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index], 
+          dt_aux, factorization_ref[i+1], exist_state_constraint);
+    }
+    else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
+      const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
+      const double dt = ocp_discretizer.dtau(i);
+      const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
+      ASSERT_TRUE(dt >= 0);
+      ASSERT_TRUE(dt <= dtau);
+      ASSERT_TRUE(dt_lift >= 0);
+      ASSERT_TRUE(dt_lift <= dtau);
+      factorizer_ref[i].forwardStateConstraintFactorization(
+          factorization_ref[i], kkt_matrix_ref[i], kkt_residual_ref[i], 
+          dt, factorization_ref.lift[lift_index], exist_state_constraint);
+      factorizer_ref.lift[lift_index].forwardStateConstraintFactorization(
+          factorization_ref.lift[lift_index], kkt_matrix_ref.lift[lift_index], 
+          kkt_residual_ref.lift[lift_index], dt_lift, factorization_ref[i+1], 
+          exist_state_constraint);
+    }
+    else {
+      factorizer_ref[i].forwardStateConstraintFactorization(
+          factorization_ref[i], kkt_matrix_ref[i], kkt_residual_ref[i], 
+          dtau, factorization_ref[i+1], exist_state_constraint);
+    }
+  }
+  EXPECT_TRUE(testhelper::IsApprox(factorization, factorization_ref));
+  EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
+  EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));
+  EXPECT_FALSE(testhelper::HasNaN(factorization));
+  EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
+  EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
+}
+
+
+void RiccatiRecursionTest::testBackwardStateConstraintFactorization(const Robot& robot) const {
+  const auto contact_sequence = createContactSequence(robot);
+  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+  ocp_discretizer.discretizeOCP(contact_sequence, t);
+  auto kkt_matrix = createKKTMatrix(robot, contact_sequence);
+  auto kkt_residual= createKKTResidual(robot, contact_sequence);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
+  RiccatiRecursion riccati_recursion(robot, N, nproc);
+  riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
+  RiccatiFactorizer factorizer(robot, N, max_num_impulse);
+  riccati_recursion.backwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
+  StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
+  constraint_factorization.setConstraintStatus(contact_sequence);
+  riccati_recursion.forwardRiccatiRecursionParallel(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, constraint_factorization);
+  riccati_recursion.forwardStateConstraintFactorization(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
+  auto constraint_factorization_ref = constraint_factorization;
+  auto factorizer_ref = factorizer;
+  auto factorization_ref = factorization;
+  auto kkt_matrix_ref = kkt_matrix; 
+  auto kkt_residual_ref = kkt_residual; 
+  riccati_recursion.backwardStateConstraintFactorization(factorizer, ocp_discretizer, kkt_matrix, constraint_factorization);
+  const int num_constraint = ocp_discretizer.numImpulseStages();
+  for (int constraint_index=0; constraint_index<num_constraint; ++constraint_index) {
+    ASSERT_FALSE(constraint_factorization.Eq(constraint_index).isZero());
+    ASSERT_FALSE(constraint_factorization.e(constraint_index).isZero());
+    ASSERT_FALSE(constraint_factorization.T_impulse(constraint_index, constraint_index).isZero());
+    ASSERT_TRUE(constraint_factorization.Eq(constraint_index).isApprox(kkt_matrix.impulse[constraint_index].Pq()));
+    ASSERT_TRUE(constraint_factorization.e(constraint_index).isApprox(kkt_residual.impulse[constraint_index].P()));
+    const int dimv = robot.dimv();
+    ASSERT_TRUE((constraint_factorization.T_impulse(constraint_index, constraint_index).topRows(dimv)).isApprox(kkt_matrix.impulse[constraint_index].Pq().transpose()));
+    ASSERT_TRUE((constraint_factorization.T_impulse(constraint_index, constraint_index).bottomRows(dimv)).isZero());
+  }
+  for (int constraint_index=0; constraint_index<num_constraint; ++constraint_index) {
+    const int time_stage_before_constraint = ocp_discretizer.timeStageBeforeImpulse(constraint_index);
+    const double dtau_constraint = ocp_discretizer.dtau(time_stage_before_constraint);
+    ASSERT_TRUE(dtau_constraint >= 0);
+    ASSERT_TRUE(dtau_constraint <= dtau);
+    factorizer_ref[time_stage_before_constraint].backwardStateConstraintFactorization(
+        constraint_factorization_ref.T_impulse(constraint_index, constraint_index), 
+        kkt_matrix[time_stage_before_constraint], dtau_constraint, 
+        constraint_factorization_ref.T(constraint_index, time_stage_before_constraint));
+    for (int i=time_stage_before_constraint-1; i>=0; --i) {
+      if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
+        const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
+        const double dt = ocp_discretizer.dtau(i);
+        const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
+        factorizer_ref.aux[impulse_index].backwardStateConstraintFactorization(
+            constraint_factorization_ref.T(constraint_index, i+1),
+            kkt_matrix_ref.aux[impulse_index], dt_aux, 
+            constraint_factorization_ref.T_aux(constraint_index, impulse_index));
+        factorizer_ref.impulse[impulse_index].backwardStateConstraintFactorization(
+            constraint_factorization_ref.T_aux(constraint_index, impulse_index),
+            kkt_matrix_ref.impulse[impulse_index], 
+            constraint_factorization_ref.T_impulse(constraint_index, impulse_index));
+        factorizer_ref[i].backwardStateConstraintFactorization(
+            constraint_factorization_ref.T_impulse(constraint_index, impulse_index),
+            kkt_matrix_ref[i], dt, 
+            constraint_factorization_ref.T(constraint_index, i));
+      }
+      else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
+        const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
+        const double dt = ocp_discretizer.dtau(i);
+        const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
+        factorizer_ref.lift[lift_index].backwardStateConstraintFactorization(
+            constraint_factorization_ref.T(constraint_index, i+1), 
+            kkt_matrix_ref.lift[lift_index], dt_lift, 
+            constraint_factorization_ref.T_lift(constraint_index, lift_index));
+        factorizer_ref[i].backwardStateConstraintFactorization(
+            constraint_factorization_ref.T_lift(constraint_index, lift_index), 
+            kkt_matrix_ref[i], dt, constraint_factorization_ref.T(constraint_index, i));
+      }
+      else {
+        factorizer_ref[i].backwardStateConstraintFactorization(
+            constraint_factorization_ref.T(constraint_index, i+1), 
+            kkt_matrix_ref[i], dtau, constraint_factorization_ref.T(constraint_index, i));
+      }
+    }
+  }
+  EXPECT_TRUE(testhelper::IsApprox(factorization, factorization_ref));
+  EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
+  EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));
+  EXPECT_FALSE(testhelper::HasNaN(factorization));
+  EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
+  EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
+  testIsConstraintFactorizationSame(constraint_factorization, constraint_factorization_ref);
+}
+
+
+void RiccatiRecursionTest::testForwardRiccatiRecursion(const Robot& robot) const {
+  const auto contact_sequence = createContactSequence(robot);
+  OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+  ocp_discretizer.discretizeOCP(contact_sequence, t);
+  auto kkt_matrix = createKKTMatrix(robot, contact_sequence);
+  auto kkt_residual= createKKTResidual(robot, contact_sequence);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
+  RiccatiRecursion riccati_recursion(robot, N, nproc);
+  riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
+  RiccatiFactorizer factorizer(robot, N, max_num_impulse);
+  riccati_recursion.backwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
+  StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
+  constraint_factorization.setConstraintStatus(contact_sequence);
+  riccati_recursion.forwardRiccatiRecursionParallel(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, constraint_factorization);
+  riccati_recursion.forwardStateConstraintFactorization(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization);
+  riccati_recursion.backwardStateConstraintFactorization(factorizer, ocp_discretizer, kkt_matrix, constraint_factorization);
+  auto factorizer_ref = factorizer;
+  auto factorization_ref = factorization;
+  auto kkt_matrix_ref = kkt_matrix; 
+  auto kkt_residual_ref = kkt_residual; 
+  Direction d(robot, N, max_num_impulse);
+  for (int i=0; i<=N; ++i) {
+    d[i].dx().setRandom();
+  }
+  for (int i=0; i<max_num_impulse; ++i) {
+    d.impulse[i].dx().setRandom();
+    d.aux[i].dx().setRandom();
+    d.lift[i].dx().setRandom();
+  }
+  auto d_ref = d;
+  riccati_recursion.forwardRiccatiRecursion(factorizer, ocp_discretizer, kkt_matrix, kkt_residual, factorization, d);
+  const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
+  for (int i=0; i<N; ++i) {
+    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
+      const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
+      const double dt = ocp_discretizer.dtau(i);
+      const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
+      factorizer_ref[i].forwardRiccatiRecursion(
+          kkt_matrix_ref[i], kkt_residual_ref[i], factorization_ref.impulse[impulse_index], 
+          d_ref[i], dt, d_ref.impulse[impulse_index], exist_state_constraint);
+      factorizer_ref.impulse[impulse_index].forwardRiccatiRecursion(
+          kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index], 
+          d_ref.impulse[impulse_index], d_ref.aux[impulse_index]);
+      factorizer_ref.aux[impulse_index].forwardRiccatiRecursion(
+          kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index], 
+          factorization_ref[i+1], d_ref.aux[impulse_index], dt_aux, d_ref[i+1], exist_state_constraint);
+    }
+    else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
+      const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
+      const double dt = ocp_discretizer.dtau(i);
+      const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
+      factorizer_ref[i].forwardRiccatiRecursion(
+          kkt_matrix_ref[i], kkt_residual_ref[i], factorization_ref.lift[lift_index], 
+          d_ref[i], dt, d_ref.lift[lift_index], exist_state_constraint);
+      factorizer_ref.lift[lift_index].forwardRiccatiRecursion(
+          kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
+          factorization_ref[i+1], d_ref.lift[lift_index], dt_lift, d_ref[i+1], exist_state_constraint);
+    }
+    else {
+      factorizer_ref[i].forwardRiccatiRecursion(
+          kkt_matrix_ref[i], kkt_residual_ref[i], factorization_ref[i+1], 
+          d_ref[i], dtau, d_ref[i+1], exist_state_constraint);
+    }
+  }
+  EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
+  EXPECT_TRUE(testhelper::IsApprox(factorization, factorization_ref));
+  EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
+  EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));
+  EXPECT_FALSE(testhelper::HasNaN(factorization));
+  EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
+  EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
+}
+
+
+TEST_F(RiccatiRecursionTest, fixedBase) {
+  testBackwardRiccatiRecursion(fixed_base_robot);
+  testForwardRiccatiRecursionParallel(fixed_base_robot);
+  testForwardStateConstraintFactorization(fixed_base_robot);
+  testBackwardStateConstraintFactorization(fixed_base_robot);
+  testForwardRiccatiRecursion(fixed_base_robot);
+}
+
+
+TEST_F(RiccatiRecursionTest, floating_base) {
+  testBackwardRiccatiRecursion(floating_base_robot);
+  testForwardRiccatiRecursionParallel(floating_base_robot);
+  testForwardStateConstraintFactorization(floating_base_robot);
+  testBackwardStateConstraintFactorization(floating_base_robot);
+  testForwardRiccatiRecursion(floating_base_robot);
 }
 
 } // namespace idocp

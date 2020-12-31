@@ -1,6 +1,6 @@
 #include "idocp/constraints/joint_acceleration_upper_limit.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
@@ -50,46 +50,45 @@ bool JointAccelerationUpperLimit::isFeasible(Robot& robot,
 
 
 void JointAccelerationUpperLimit::setSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  assert(dtau > 0);
-  data.slack = dtau * (amax_-s.a.tail(dimc_));
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  data.slack = amax_ - s.a.tail(dimc_);
   setSlackAndDualPositive(data);
 }
 
 
 void JointAccelerationUpperLimit::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTResidual& kkt_residual) const {
-  kkt_residual.la().tail(dimc_).noalias() += dtau * data.dual;
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  assert(dtau >= 0);
+  kkt_residual.la.tail(dimc_).noalias() += dtau * data.dual;
 }
 
 
 void JointAccelerationUpperLimit::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) const {
+  assert(dtau >= 0);
   kkt_matrix.Qaa().diagonal().tail(dimc_).array()
-      += dtau * dtau * data.dual.array() / data.slack.array();
-  computePrimalAndDualResidual(robot, data, dtau, s);
-  kkt_residual.la().tail(dimc_).array() 
+      += dtau * data.dual.array() / data.slack.array();
+  computePrimalAndDualResidual(robot, data, s);
+  kkt_residual.la.tail(dimc_).array() 
       += dtau * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
 }
 
 
 void JointAccelerationUpperLimit::computeSlackAndDualDirection(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, const SplitDirection& d) const {
-  data.dslack = - dtau * d.da().tail(dimc_) - data.residual;
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
+    const SplitDirection& d) const {
+  data.dslack = - d.da().tail(dimc_) - data.residual;
   computeDualDirection(data);
 }
 
 
 void JointAccelerationUpperLimit::computePrimalAndDualResidual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  data.residual = dtau * (s.a.tail(dimc_)-amax_) + data.slack;
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  data.residual = s.a.tail(dimc_) - amax_ + data.slack;
   computeDuality(data);
 }
 

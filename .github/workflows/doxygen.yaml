@@ -1,0 +1,30 @@
+name: doxygen 
+
+on:
+  push:
+    branches:
+      - master 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Build Doxygen 
+        uses: mattnotmitt/doxygen-action@v1.1.0
+        with:
+          doxyfile-path: ./Doxyfile
+          working-directory: ./doc
+
+      - name: Deploy on GitHub Pages 
+        uses: peaceiris/actions-gh-pages@v3.6.4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages 
+          publish_dir: ./doc/html
+          enable_jekyll: false
+          allow_empty_commit: false
+          force_orphan: true

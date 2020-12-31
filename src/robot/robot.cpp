@@ -1,8 +1,6 @@
 #include "idocp/robot/robot.hpp"
 
-#include <limits>
 #include <stdexcept>
-#include <assert.h>
 
 
 namespace idocp {
@@ -17,6 +15,7 @@ Robot::Robot(const std::string& path_to_urdf)
     fjoint_(),
     dimq_(0),
     dimv_(0),
+    dimu_(0),
     max_dimf_(0),
     dimpulse_dv_(),
     joint_effort_limit_(),
@@ -33,6 +32,7 @@ Robot::Robot(const std::string& path_to_urdf)
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
+  dimu_ = model_.nv - floating_base_.dim_passive();
   dimpulse_dv_.resize(dimv_, dimv_);
   dimpulse_dv_.setZero();
   initializeJointLimits();
@@ -50,6 +50,7 @@ Robot::Robot(const std::string& path_to_urdf,
     fjoint_(),
     dimq_(0),
     dimv_(0),
+    dimu_(0),
     max_dimf_(0),
     dimpulse_dv_(),
     joint_effort_limit_(),
@@ -71,6 +72,7 @@ Robot::Robot(const std::string& path_to_urdf,
   floating_base_ = FloatingBase(model_);
   dimq_ = model_.nq;
   dimv_ = model_.nv;
+  dimu_ = model_.nv - floating_base_.dim_passive();
   data_.JMinvJt.resize(max_dimf_, max_dimf_);
   data_.JMinvJt.setZero();
   data_.sDUiJt.resize(dimv_, max_dimf_);
@@ -90,6 +92,7 @@ Robot::Robot()
     fjoint_(),
     dimq_(0),
     dimv_(0),
+    dimu_(0),
     max_dimf_(0),
     dimpulse_dv_(),
     joint_effort_limit_(),
@@ -184,6 +187,16 @@ void Robot::printRobotModel() const {
   std::cout << "upperPositionLimit = [" << model_.upperPositionLimit.transpose() 
             << "]" << std::endl;
   std::cout << "--------------------------------------- " << std::endl;
+}
+
+
+pinocchio::Model Robot::getPinocchioModel() const {
+  return model_;
+}
+
+
+pinocchio::Data Robot::getPinocchioData() const {
+  return data_;
 }
 
 } // namespace idocp 

@@ -1,1 +1,0 @@
-#include "idocp/cost/impulse_cost_function.hpp"

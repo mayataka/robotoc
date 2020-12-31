@@ -10,8 +10,8 @@
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/constraints/pdipm.hpp"
 #include "idocp/constraints/friction_cone.hpp"
 
@@ -21,200 +21,274 @@ class FrictionConeTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    const std::string urdf = "../urdf/anymal/anymal.urdf";
-    contact_frames = {14, 24, 34, 44};
-    robot = Robot(urdf, contact_frames);
-    for (int i=0; i<contact_frames.size(); ++i) {
-      is_contact_active.push_back(rnd()%2==0);
-    }
-    for (int i=0; i<contact_frames.size(); ++i) {
-      if (is_contact_active[i]) {
-        active_contact_indices.push_back(i);
-      }
-    }
-    contact_status = ContactStatus(robot.max_point_contacts());
-    contact_status.setContactStatus(is_contact_active);
+    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
+    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     barrier = 1.0e-04;
-    fraction_to_boundary_rate = 0.995;
     dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
     mu = 0.8;
-    data = ConstraintComponentData(contact_frames.size());
-    data_ref = ConstraintComponentData(contact_frames.size());
-    s = SplitSolution::Random(robot, contact_status);
-    d = SplitDirection::Random(robot, contact_status);
-    kkt_residual = KKTResidual(robot);
-    kkt_matrix = KKTMatrix(robot);
-    kkt_residual.setContactStatus(contact_status);
-    kkt_matrix.setContactStatus(contact_status);
+    fraction_to_boundary_rate = 0.995;
   }
 
   virtual void TearDown() {
   }
 
-  double barrier, fraction_to_boundary_rate, dtau, mu;
-  Eigen::VectorXd slack, dual, dslack, ddual;
-  Robot robot;
-  ContactStatus contact_status;
-  std::vector<int> contact_frames, active_contact_indices;
-  std::vector<bool> is_contact_active;
-  ConstraintComponentData data, data_ref;
-  SplitSolution s;
-  SplitDirection d;
-  KKTResidual kkt_residual;
-  KKTMatrix kkt_matrix;
+  void testKinematics(Robot& robot, const ContactStatus& contact_status) const;
+  void testIsFeasible(Robot& robot, const ContactStatus& contact_status) const;
+  void testSetSlackAndDual(Robot& robot, const ContactStatus& contact_status) const;
+  void testAugmentDualResidual(Robot& robot, const ContactStatus& contact_status) const;
+  void testComputePrimalAndDualResidual(Robot& robot, const ContactStatus& contact_status) const;
+  void testCondenseSlackAndDual(Robot& robot, const ContactStatus& contact_status) const;
+  void testComputeSlackAndDualDirection(Robot& robot, const ContactStatus& contact_status) const;
+
+  double barrier, dtau, mu, fraction_to_boundary_rate;
+  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
-TEST_F(FrictionConeTest, isFeasible) {
-  FrictionCone friction_cone(robot); 
-  contact_status.activateContact(0);
+void FrictionConeTest::testKinematics(Robot& robot, const ContactStatus& contact_status) const {
+  FrictionCone limit(robot); 
+  EXPECT_FALSE(limit.useKinematics());
+  EXPECT_TRUE(limit.kinematicsLevel() == KinematicsLevel::AccelerationLevel);
+}
+
+
+void FrictionConeTest::testIsFeasible(Robot& robot, const ContactStatus& contact_status) const {
+  FrictionCone limit(robot); 
+  ConstraintComponentData data(limit.dimc());
+  EXPECT_EQ(limit.dimc(), contact_status.maxPointContacts());
+  SplitSolution s(robot);
   s.setContactStatus(contact_status);
-  for (int i=0; i<contact_frames.size(); ++i) {
-    s.f[i].coeffRef(0) = 0;
-    s.f[i].coeffRef(1) = 0;
-    s.f[i].coeffRef(2) = 1;
+  s.f_stack().setZero();
+  s.set_f_vector();
+  EXPECT_TRUE(limit.isFeasible(robot, data, s));
+  if (contact_status.hasActiveContacts()) {
+    s.f_stack().setConstant(1.0);
+    s.set_f_vector();
+    EXPECT_FALSE(limit.isFeasible(robot, data, s));
+    s.f_stack().setRandom();
+    s.set_f_vector();
+    bool feasible = true;
+    for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+      if (contact_status.isContactActive(i)) {
+        if (FrictionCone::frictionConeResidual(robot.frictionCoefficient(i), s.f[i]) > 0) {
+          feasible = false;
+        }
+      }
+    }
+    EXPECT_EQ(limit.isFeasible(robot, data, s), feasible);
   }
-  EXPECT_FALSE(friction_cone.isFeasible(robot, data, s));
-  for (int i=0; i<contact_frames.size(); ++i) {
-    s.f[i].coeffRef(0) = 1;
-    s.f[i].coeffRef(1) = 1;
-    s.f[i].coeffRef(2) = 0;
+}
+
+
+void FrictionConeTest::testSetSlackAndDual(Robot& robot, const ContactStatus& contact_status) const {
+  FrictionCone limit(robot); 
+  ConstraintComponentData data(limit.dimc()), data_ref(limit.dimc());
+  const int dimc = limit.dimc();
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  limit.setSlackAndDual(robot, data, s);
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    data_ref.slack.coeffRef(i) = - FrictionCone::frictionConeResidual(robot.frictionCoefficient(i), s.f[i]);
   }
-  EXPECT_TRUE(friction_cone.isFeasible(robot, data, s));
+  pdipm::SetSlackAndDualPositive(barrier, data_ref);
+  EXPECT_TRUE(data.isApprox(data_ref));
+}
+
+
+void FrictionConeTest::testAugmentDualResidual(Robot& robot, const ContactStatus& contact_status) const {
+  FrictionCone limit(robot); 
+  ConstraintComponentData data(limit.dimc());
+  const int dimc = limit.dimc();
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  limit.setSlackAndDual(robot, data, s);
+  ConstraintComponentData data_ref = data;
+  SplitKKTResidual kkt_res(robot);
+  kkt_res.setContactStatus(contact_status);
+  kkt_res.lf().setRandom();
+  SplitKKTResidual kkt_res_ref = kkt_res;
+  limit.augmentDualResidual(robot, data, dtau, s, kkt_res);
+  int dimf_stack = 0;
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      const double mu = robot.frictionCoefficient(i);
+      Eigen::Vector3d gf;
+      gf(0) = 2 * dtau * s.f[i].coeff(0);
+      gf(1) = 2 * dtau * s.f[i].coeff(1);
+      gf(2) = - 2 * dtau * mu * mu * s.f[i].coeff(2);
+      kkt_res_ref.lf().segment<3>(dimf_stack) += gf * data_ref.dual(i);
+      dimf_stack += 3;
+    }
+  }
+  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
+}
+
+
+void FrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, const ContactStatus& contact_status) const {
+  FrictionCone limit(robot); 
+  const int dimc = limit.dimc();
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  ConstraintComponentData data(limit.dimc());
+  data.slack.setRandom();
+  data.dual.setRandom();
+  ConstraintComponentData data_ref = data;
+  limit.computePrimalAndDualResidual(robot, data, s);
+  int dimf_stack = 0;
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      const double mu = robot.frictionCoefficient(i);
+      const double fx = s.f[i].coeff(0);
+      const double fy = s.f[i].coeff(1);
+      const double fz = s.f[i].coeff(2);
+      const double cone = fx*fx + fy*fy - mu*mu*fz*fz;
+      data_ref.residual.coeffRef(i) = cone + data_ref.slack.coeff(i);
+      data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
+      dimf_stack += 3;
+    }
+  }
+  EXPECT_TRUE(data.isApprox(data_ref));
+}
+
+
+void FrictionConeTest::testCondenseSlackAndDual(Robot& robot, const ContactStatus& contact_status) const {
+  FrictionCone limit(robot); 
+  ConstraintComponentData data(limit.dimc());
+  const int dimc = limit.dimc();
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  limit.setSlackAndDual(robot, data, s);
+  ConstraintComponentData data_ref = data;
+  SplitKKTMatrix kkt_mat(robot);
+  kkt_mat.setContactStatus(contact_status);
+  kkt_mat.Qff().setRandom();
+  SplitKKTResidual kkt_res(robot);
+  kkt_res.setContactStatus(contact_status);
+  kkt_res.lf().setRandom();
+  SplitKKTMatrix kkt_mat_ref = kkt_mat;
+  SplitKKTResidual kkt_res_ref = kkt_res;
+  limit.condenseSlackAndDual(robot, data, dtau, s, kkt_mat, kkt_res);
+  int dimf_stack = 0;
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      const double mu = robot.frictionCoefficient(i);
+      const double fx = s.f[i].coeff(0);
+      const double fy = s.f[i].coeff(1);
+      const double fz = s.f[i].coeff(2);
+      const double cone = fx*fx + fy*fy - mu*mu*fz*fz;
+      data_ref.residual.coeffRef(i) = cone + data_ref.slack.coeff(i);
+      data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
+      dimf_stack += 3;
+    }
+  }
+  dimf_stack = 0;
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      const double mu = robot.frictionCoefficient(i);
+      Eigen::Vector3d gf;
+      gf(0) = 2 * s.f[i].coeff(0);
+      gf(1) = 2 * s.f[i].coeff(1);
+      gf(2) = - 2 * mu * mu * s.f[i].coeff(2);
+      kkt_res_ref.lf().segment<3>(dimf_stack) 
+          += dtau * gf * (data_ref.dual.coeff(i)*data_ref.residual.coeff(i)-data_ref.duality.coeff(i)) 
+                  / data_ref.slack.coeff(i);
+      kkt_mat_ref.Qff().block<3, 3>(dimf_stack, dimf_stack)
+          += dtau * gf * gf.transpose() * data_ref.dual.coeff(i) / data_ref.slack.coeff(i);
+      dimf_stack += 3;
+    }
+  }
+  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+}
+
+
+void FrictionConeTest::testComputeSlackAndDualDirection(Robot& robot, const ContactStatus& contact_status) const {
+  FrictionCone limit(robot); 
+  ConstraintComponentData data(limit.dimc());
+  const int dimc = limit.dimc();
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  limit.setSlackAndDual(robot, data, s);
+  data.residual.setRandom();
+  data.duality.setRandom();
+  ConstraintComponentData data_ref = data;
+  const SplitDirection d = SplitDirection::Random(robot, contact_status);
+  limit.computeSlackAndDualDirection(robot, data, s, d);
+  int dimf_stack = 0;
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      const double mu = robot.frictionCoefficient(i);
+      Eigen::Vector3d gf;
+      gf(0) = 2 * s.f[i].coeff(0);
+      gf(1) = 2 * s.f[i].coeff(1);
+      gf(2) = - 2 * mu * mu * s.f[i].coeff(2);
+      data_ref.dslack.coeffRef(i) = - gf.dot(d.df().segment<3>(dimf_stack)) - data_ref.residual.coeff(i);
+      data_ref.ddual.coeffRef(i) = - (data_ref.dual.coeff(i)*data_ref.dslack.coeff(i)+data_ref.duality.coeff(i))
+                                      / data_ref.slack.coeff(i);
+      dimf_stack += 3;
+    }
+    else {
+      data_ref.residual.coeffRef(i) = 0;
+      data_ref.duality.coeffRef(i)  = 0;
+      data_ref.slack.coeffRef(i)    = 1.0;
+      data_ref.dslack.coeffRef(i)   = fraction_to_boundary_rate;
+      data_ref.dual.coeffRef(i)     = 1.0;
+      data_ref.ddual.coeffRef(i)    = fraction_to_boundary_rate;
+    }
+  }
+  EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 
 TEST_F(FrictionConeTest, frictionConeResidual) {
-  FrictionCone friction_cone(robot); 
-  const double res = friction_cone.frictionConeResidual(mu, s.f[0]);
-  const double fx = s.f[0].coeff(0);
-  const double fy = s.f[0].coeff(1);
-  const double fz = s.f[0].coeff(2);
-  const double res_ref = fx * fx + fy * fy - mu * mu * fz * fz;
-  EXPECT_DOUBLE_EQ(res, res_ref);
+  const double mu = 0.8;
+  const Eigen::Vector3d f = Eigen::Vector3d::Random();
+  const double fx = f(0);
+  const double fy = f(1);
+  const double fz = f(2);
+  const double cone_ref = fx*fx + fy*fy - mu*mu*fz*fz;
+  EXPECT_DOUBLE_EQ(cone_ref, FrictionCone::frictionConeResidual(mu, f));
 }
 
 
-TEST_F(FrictionConeTest, setSlackAndDual) {
-  FrictionCone friction_cone(robot); 
-  for (int i=0; i<contact_frames.size(); ++i) {
-    s.f[i].fill(1);
-  }
-  EXPECT_TRUE(friction_cone.isFeasible(robot, data, s));
-  friction_cone.setSlackAndDual(robot, data, dtau, s);
-  for (int i=0; i<contact_frames.size(); ++i) {
-    EXPECT_DOUBLE_EQ(data.slack.coeff(i), dtau*(1+1-mu*mu));
-    EXPECT_TRUE(data.dual.coeff(i) > 0);
-  }
+TEST_F(FrictionConeTest, fixedBase) {
+  const std::vector<int> frames = {18};
+  Robot robot(fixed_base_urdf, frames);
+  ContactStatus contact_status = robot.createContactStatus();
+  contact_status.setContactStatus({false});
+  testKinematics(robot, contact_status);
+  testIsFeasible(robot, contact_status);
+  testSetSlackAndDual(robot, contact_status);
+  testAugmentDualResidual(robot, contact_status);
+  testComputePrimalAndDualResidual(robot, contact_status);
+  testCondenseSlackAndDual(robot, contact_status);
+  testComputeSlackAndDualDirection(robot, contact_status);
+  contact_status.setContactStatus({true});
+  testKinematics(robot, contact_status);
+  testIsFeasible(robot, contact_status);
+  testSetSlackAndDual(robot, contact_status);
+  testAugmentDualResidual(robot, contact_status);
+  testComputePrimalAndDualResidual(robot, contact_status);
+  testCondenseSlackAndDual(robot, contact_status);
+  testComputeSlackAndDualDirection(robot, contact_status);
 }
 
 
-TEST_F(FrictionConeTest, augmentDualResidual) {
-  FrictionCone friction_cone(robot); 
-  friction_cone.augmentDualResidual(robot, data, dtau, s, kkt_residual);
-  EXPECT_TRUE(kkt_residual.lf().isZero());
-  data.dual = Eigen::VectorXd::Random(data.dual.size()).array().abs();
-  friction_cone.augmentDualResidual(robot, data, dtau, s, kkt_residual);
-  Eigen::MatrixXd gf = Eigen::MatrixXd::Zero(active_contact_indices.size(), contact_status.dimf());
-  Eigen::VectorXd dual_active = Eigen::VectorXd::Zero(active_contact_indices.size());
-  for (int i=0; i<active_contact_indices.size(); ++i) {
-    const double fx = s.f[active_contact_indices[i]].coeff(0);
-    const double fy = s.f[active_contact_indices[i]].coeff(1);
-    const double fz = s.f[active_contact_indices[i]].coeff(2);
-    const double mu = 0.8;
-    gf.row(i).coeffRef(3*i+0) = 2 * dtau * fx;
-    gf.row(i).coeffRef(3*i+1) = 2 * dtau * fy;
-    gf.row(i).coeffRef(3*i+2) = - 2 * mu * mu * dtau * fz;
-    dual_active.coeffRef(i) = data.dual(active_contact_indices[i]);
-  }
-  std::cout << gf << std::endl;
-  Eigen::VectorXd lf_ref = Eigen::VectorXd::Zero(contact_status.dimf());
-  lf_ref = gf.transpose() * dual_active;
-  EXPECT_TRUE(kkt_residual.lf().isApprox(lf_ref));
-}
-
-
-TEST_F(FrictionConeTest, condenseSlackAndDual) {
-  FrictionCone friction_cone(robot); 
-  data.slack = Eigen::VectorXd::Random(data.slack.size()).array().abs();
-  data.dual = Eigen::VectorXd::Random(data.dual.size()).array().abs();
-  friction_cone.augmentDualResidual(robot, data, dtau, s, kkt_residual);
-  kkt_residual.setZero();
-  friction_cone.condenseSlackAndDual(robot, data, dtau, s, kkt_matrix, kkt_residual);
-  Eigen::MatrixXd gf = Eigen::MatrixXd::Zero(active_contact_indices.size(), contact_status.dimf());
-  Eigen::VectorXd slack_active = Eigen::VectorXd::Zero(active_contact_indices.size());
-  Eigen::VectorXd dual_active = Eigen::VectorXd::Zero(active_contact_indices.size());
-  Eigen::VectorXd residual_active = Eigen::VectorXd::Zero(active_contact_indices.size());
-  Eigen::VectorXd duality_active = Eigen::VectorXd::Zero(active_contact_indices.size());
-  for (int i=0; i<active_contact_indices.size(); ++i) {
-    const double fx = s.f[active_contact_indices[i]].coeff(0);
-    const double fy = s.f[active_contact_indices[i]].coeff(1);
-    const double fz = s.f[active_contact_indices[i]].coeff(2);
-    const double mu = 0.8;
-    gf.row(i).coeffRef(3*i+0) = 2 * dtau * fx;
-    gf.row(i).coeffRef(3*i+1) = 2 * dtau * fy;
-    gf.row(i).coeffRef(3*i+2) = - 2 * mu * mu * dtau * fz;
-    slack_active.coeffRef(i) = data.slack(active_contact_indices[i]);
-    dual_active.coeffRef(i) = data.dual(active_contact_indices[i]);
-    residual_active.coeffRef(i) = - dtau * (fx*fx+fy*fy-mu*mu*fz*fz) + slack_active.coeff(i);
-    duality_active.coeffRef(i) = slack_active.coeff(i) * dual_active.coeff(i) - barrier;
-  }
-  Eigen::VectorXd dual_per_slack = Eigen::VectorXd::Zero(active_contact_indices.size());
-  dual_per_slack.array() = dual_active.array() / slack_active.array();
-  Eigen::MatrixXd Qff_ref = gf.transpose() * dual_per_slack.asDiagonal() * gf;
-  EXPECT_TRUE(Qff_ref.isApprox(kkt_matrix.Qff()));
-  Eigen::VectorXd condensed_residual = Eigen::VectorXd::Zero(active_contact_indices.size());
-  condensed_residual.array() 
-      = (dual_active.array() * residual_active.array() - duality_active.array())
-        / slack_active.array();
-  Eigen::VectorXd lf_ref = gf.transpose() * condensed_residual;
-  EXPECT_TRUE(lf_ref.isApprox(kkt_residual.lf()));
-  std::cout << lf_ref.transpose() << std::endl;
-  std::cout << kkt_residual.lf().transpose() << std::endl;
-}
-
-
-TEST_F(FrictionConeTest, computeSlackAndDualDirection) {
-  FrictionCone friction_cone(robot); 
-  data.slack = Eigen::VectorXd::Random(data.slack.size()).array().abs();
-  data.dual = Eigen::VectorXd::Random(data.dual.size()).array().abs();
-  data.residual = Eigen::VectorXd::Random(data.dual.size());
-  data.duality = Eigen::VectorXd::Random(data.dual.size());
-  friction_cone.augmentDualResidual(robot, data, dtau, s, kkt_residual);
-  friction_cone.condenseSlackAndDual(robot, data, dtau, s, kkt_matrix, kkt_residual);
-  friction_cone.computeSlackAndDualDirection(robot, data, dtau, s, d);
-  Eigen::MatrixXd gf = Eigen::MatrixXd::Zero(active_contact_indices.size(), contact_status.dimf());
-  ConstraintComponentData data_ref(active_contact_indices.size());
-  for (int i=0; i<active_contact_indices.size(); ++i) {
-    const double fx = s.f[active_contact_indices[i]].coeff(0);
-    const double fy = s.f[active_contact_indices[i]].coeff(1);
-    const double fz = s.f[active_contact_indices[i]].coeff(2);
-    const double mu = 0.8;
-    gf.row(i).coeffRef(3*i+0) = 2 * dtau * fx;
-    gf.row(i).coeffRef(3*i+1) = 2 * dtau * fy;
-    gf.row(i).coeffRef(3*i+2) = - 2 * mu * mu * dtau * fz;
-    data_ref.slack.coeffRef(i) = data.slack(active_contact_indices[i]);
-    data_ref.dual.coeffRef(i) = data.dual(active_contact_indices[i]);
-    data_ref.residual.coeffRef(i) = - dtau * (fx*fx+fy*fy-mu*mu*fz*fz) + data_ref.slack.coeff(i);
-    data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
-  }
-  data_ref.dslack = - gf * d.df() - data_ref.residual;
-  pdipm::ComputeDualDirection(data_ref);
-  Eigen::VectorXd dslack_ref = Eigen::VectorXd::Ones(robot.max_point_contacts());
-  Eigen::VectorXd ddual_ref = Eigen::VectorXd::Ones(robot.max_point_contacts());
-  for (int i=0; i<active_contact_indices.size(); ++i) {
-    dslack_ref.coeffRef(active_contact_indices[i]) = data_ref.dslack.coeff(i);
-    ddual_ref.coeffRef(active_contact_indices[i]) = data_ref.ddual.coeff(i);
-  }
-  EXPECT_TRUE(dslack_ref.isApprox(data.dslack));
-  EXPECT_TRUE(ddual_ref.isApprox(data.ddual));
-}
-
-
-TEST_F(FrictionConeTest, dimc) {
-  FrictionCone friction_cone(robot); 
-  EXPECT_EQ(friction_cone.dimc(), contact_frames.size());
+TEST_F(FrictionConeTest, floatingBase) {
+  const std::vector<int> frames = {14, 24, 34, 44};
+  Robot robot(floating_base_urdf, frames);
+  ContactStatus contact_status = robot.createContactStatus();
+  contact_status.setContactStatus({false, false, false, false});
+  testKinematics(robot, contact_status);
+  testIsFeasible(robot, contact_status);
+  testSetSlackAndDual(robot, contact_status);
+  testAugmentDualResidual(robot, contact_status);
+  testComputePrimalAndDualResidual(robot, contact_status);
+  testCondenseSlackAndDual(robot, contact_status);
+  testComputeSlackAndDualDirection(robot, contact_status);
+  contact_status.setRandom();
+  testKinematics(robot, contact_status);
+  testIsFeasible(robot, contact_status);
+  testSetSlackAndDual(robot, contact_status);
+  testAugmentDualResidual(robot, contact_status);
+  testComputePrimalAndDualResidual(robot, contact_status);
+  testCondenseSlackAndDual(robot, contact_status);
+  testComputeSlackAndDualDirection(robot, contact_status);
 }
 
 } // namespace idocp

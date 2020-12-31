@@ -9,8 +9,8 @@
 #include "idocp/cost/cost_function_component_base.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -41,69 +41,55 @@ public:
 
   void set_f_weight(const std::vector<Eigen::Vector3d>& f_weight);
 
-  double l(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s) const override;
+  void set_fi_ref(const std::vector<Eigen::Vector3d>& fi_ref);
 
-  double phi(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s) const override; 
+  void set_fi_weight(const std::vector<Eigen::Vector3d>& fi_weight);
 
-  void lq(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const override {}
+  double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
+                          const double dtau, 
+                          const SplitSolution& s) const override;
 
-  void lv(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const override {}
+  double computeTerminalCost(Robot& robot, CostFunctionData& data, 
+                             const double t, 
+                             const SplitSolution& s) const override;
 
-  void la(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s,
-          KKTResidual& kkt_residual) const override {}
+  double computeImpulseCost(Robot& robot, CostFunctionData& data, 
+                            const double t, 
+                            const ImpulseSplitSolution& s) const override;
 
-  void lf(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const SplitSolution& s, 
-          KKTResidual& kkt_residual) const override;
+  void computeStageCostDerivatives(
+      Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+      const SplitSolution& s, SplitKKTResidual& kkt_residual) const override;
 
-  void lqq(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override {}
+  void computeTerminalCostDerivatives(
+      Robot& robot, CostFunctionData& data, const double t, 
+      const SplitSolution& s, SplitKKTResidual& kkt_residual) const override {}
 
-  void lvv(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override {}
+  void computeImpulseCostDerivatives(
+      Robot& robot, CostFunctionData& data, const double t, 
+      const ImpulseSplitSolution& s, 
+      ImpulseSplitKKTResidual& kkt_residual) const;
 
-  void laa(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override {}
+  void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
+                               const double t, const double dtau, 
+                               const SplitSolution& s, 
+                               SplitKKTMatrix& kkt_matrix) const override;
 
-  void lff(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const SplitSolution& s, 
-           KKTMatrix& kkt_matrix) const override;
+  void computeTerminalCostHessian(Robot& robot, CostFunctionData& data, 
+                                  const double t, const SplitSolution& s, 
+                                  SplitKKTMatrix& kkt_matrix) const override {}
 
-  void phiq(Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, KKTResidual& kkt_residual) const override {}
+  void computeImpulseCostHessian(
+      Robot& robot, CostFunctionData& data, const double t, 
+      const ImpulseSplitSolution& s, 
+      ImpulseSplitKKTMatrix& kkt_matrix) const override;
 
-  void phiv(Robot& robot, CostFunctionData& data, const double t, 
-            const SplitSolution& s, KKTResidual& kkt_residual) const override {}
-
-  void phiqq(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s, KKTMatrix& kkt_matrix) const override {}
-
-  void phivv(Robot& robot, CostFunctionData& data, const double t, 
-             const SplitSolution& s, KKTMatrix& kkt_matrix) const override {}
-
-  void lu(Robot& robot, CostFunctionData& data, const double t, 
-          const double dtau, const Eigen::VectorXd& u, 
-          Eigen::VectorXd& lu) const override {}
-
-  void luu(Robot& robot, CostFunctionData& data, const double t, 
-           const double dtau, const Eigen::VectorXd& u, 
-           Eigen::MatrixXd& Quu) const override {}
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int max_point_contacts_, max_dimf_;
-  std::vector<Eigen::Vector3d> f_ref_, f_weight_;
+  std::vector<Eigen::Vector3d> f_ref_, f_weight_, fi_ref_, fi_weight_;
 
 };
 

@@ -1,9 +1,39 @@
-cmake_minimum_required(VERSION 3.5)
-project(iiwa14 CXX)
+cmake_minimum_required(VERSION 3.1)
+project(idocp_examples_iiwa14 CXX)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 
 find_package(idocp REQUIRED)
+
+add_executable(
+    unocp_benchmark
+    unocp_benchmark.cpp
+)
+target_link_libraries(
+    unocp_benchmark
+    PRIVATE
+    idocp::idocp
+)
+target_include_directories(
+    unocp_benchmark
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+)
+
+add_executable(
+    unparnmpc_benchmark
+    unparnmpc_benchmark.cpp
+)
+target_link_libraries(
+    unparnmpc_benchmark
+    PRIVATE
+    idocp::idocp
+)
+target_include_directories(
+    unparnmpc_benchmark
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+)
 
 add_executable(
     ocp_benchmark
@@ -16,21 +46,6 @@ target_link_libraries(
 )
 target_include_directories(
     ocp_benchmark
-    PRIVATE
-    ${IDOCP_INCLUDE_DIR}
-)
-
-add_executable(
-    mpc_simulation
-    mpc_simulation.cpp
-)
-target_link_libraries(
-    mpc_simulation
-    PRIVATE
-    idocp::idocp
-)
-target_include_directories(
-    mpc_simulation
     PRIVATE
     ${IDOCP_INCLUDE_DIR}
 )

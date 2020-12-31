@@ -7,8 +7,8 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_dynamics_backward_euler.hpp"
@@ -43,13 +43,13 @@ TEST_F(ImpulseDynamicsBackwardEulerTest, linearizeImpulseDynamicsBackwardEulerFi
   std::vector<bool> is_contact_active = {true};
   contact_status.setContactStatus(is_contact_active);
   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, contact_status);
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  ImpulseKKTResidual kkt_residual_ref(robot);
+  ImpulseSplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  ImpulseKKTMatrix kkt_matrix_ref(robot);
+  ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   kkt_residual.lq() = Eigen::VectorXd::Random(robot.dimv());
   kkt_residual.lv() = Eigen::VectorXd::Random(robot.dimv());
@@ -103,13 +103,13 @@ TEST_F(ImpulseDynamicsBackwardEulerTest, condenseImpulseDynamicsBackwardEulerFix
   std::vector<bool> is_contact_active = {true};
   contact_status.setContactStatus(is_contact_active);
   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, contact_status);
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  ImpulseKKTResidual kkt_residual_ref(robot);
+  ImpulseSplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  ImpulseKKTMatrix kkt_matrix_ref(robot);
+  ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   const Eigen::VectorXd Qdvdv_diag = Eigen::VectorXd::Random(robot.dimv()).array().abs();
   const Eigen::MatrixXd Qdvdv_ref = Qdvdv_diag.asDiagonal();
@@ -198,13 +198,13 @@ TEST_F(ImpulseDynamicsBackwardEulerTest, computeImpulseDynamicsResidualFixedBase
   std::vector<bool> is_contact_active = {true};
   contact_status.setContactStatus(is_contact_active);
   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, contact_status);
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  ImpulseKKTResidual kkt_residual_ref(robot);
+  ImpulseSplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  ImpulseKKTMatrix kkt_matrix_ref(robot);
+  ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   ImpulseDynamicsBackwardEuler id(robot);
   robot.updateKinematics(s.q, s.v);
@@ -239,13 +239,13 @@ TEST_F(ImpulseDynamicsBackwardEulerTest, linearizeImpulseDynamicsBackwardEulerFl
     contact_status.activateContact(0);
   }
   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, contact_status);
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  ImpulseKKTResidual kkt_residual_ref(robot);
+  ImpulseSplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  ImpulseKKTMatrix kkt_matrix_ref(robot);
+  ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   kkt_residual.lq() = Eigen::VectorXd::Random(robot.dimv());
   kkt_residual.lv() = Eigen::VectorXd::Random(robot.dimv());
@@ -305,13 +305,13 @@ TEST_F(ImpulseDynamicsBackwardEulerTest, condenseImpulseDynamicsBackwardEulerFlo
     contact_status.activateContact(0);
   }
   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, contact_status);
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  ImpulseKKTResidual kkt_residual_ref(robot);
+  ImpulseSplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  ImpulseKKTMatrix kkt_matrix_ref(robot);
+  ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   const Eigen::VectorXd Qdvdv_diag = Eigen::VectorXd::Random(robot.dimv()).array().abs();
   const Eigen::MatrixXd Qdvdv_ref = Qdvdv_diag.asDiagonal();
@@ -404,13 +404,13 @@ TEST_F(ImpulseDynamicsBackwardEulerTest, computeImpulseDynamicsBackwardEulerResi
   }
   contact_status.setContactStatus(is_contact_active);
   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, contact_status);
-  ImpulseKKTResidual kkt_residual(robot);
+  ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  ImpulseKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setContactStatus(contact_status);
-  ImpulseKKTResidual kkt_residual_ref(robot);
+  ImpulseSplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
-  ImpulseKKTMatrix kkt_matrix_ref(robot);
+  ImpulseSplitKKTMatrix kkt_matrix_ref(robot);
   kkt_matrix_ref.setContactStatus(contact_status);
   ImpulseDynamicsBackwardEuler id(robot);
   robot.updateKinematics(s.q, s.v);

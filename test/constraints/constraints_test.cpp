@@ -10,8 +10,8 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/constraints/joint_position_lower_limit.hpp"
@@ -22,6 +22,8 @@
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
 #include "idocp/constraints/joint_acceleration_lower_limit.hpp"
 #include "idocp/constraints/joint_acceleration_upper_limit.hpp"
+#include "idocp/constraints/contact_normal_force.hpp"
+#include "idocp/constraints/friction_cone.hpp"
 #include "idocp/constraints/pdipm.hpp"
 
 namespace idocp {
@@ -30,37 +32,55 @@ class ConstraintsTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    fixed_base_urdf_ = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf_ = "../urdf/anymal/anymal.urdf";
-    fixed_base_robot_ = Robot(fixed_base_urdf_);
-    floating_base_robot_ = Robot(floating_base_urdf_);
-    barrier_ = 1.0e-04;
-    dtau_ = std::abs(Eigen::VectorXd::Random(1)[0]);
-    amin_fixed = Eigen::VectorXd::Constant(fixed_base_robot_.dimv(), -10);
-    amax_fixed = Eigen::VectorXd::Constant(fixed_base_robot_.dimv(), 10);
-    amin_floating = Eigen::VectorXd::Constant(floating_base_robot_.dimv()-floating_base_robot_.dim_passive(), -10);
+    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
+    floating_base_urdf = "../urdf/anymal/anymal.urdf";
+    barrier = 1.0e-04;
+    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    mu = 0.8;
+    fixed_base_robot = Robot(fixed_base_urdf);
+    floating_base_robot = Robot(floating_base_urdf);
+    amin_fixed = Eigen::VectorXd::Constant(fixed_base_robot.dimu(), -10);
+    amax_fixed = Eigen::VectorXd::Constant(fixed_base_robot.dimu(), 10);
+    amin_floating = Eigen::VectorXd::Constant(floating_base_robot.dimu(), -10);
+    amax_floating = Eigen::VectorXd::Constant(floating_base_robot.dimu(), 10);
   }
 
   virtual void TearDown() {
   }
 
-  double barrier_, dtau_;
-  std::string fixed_base_urdf_, floating_base_urdf_;
-  Robot fixed_base_robot_, floating_base_robot_;
-  Eigen::VectorXd amin_fixed, amax_fixed, amin_floating;
+  std::shared_ptr<Constraints> createConstraints(Robot& robot) const;
+  void timeStage0(Robot& robot, const ContactStatus& contact_status) const;
+  void timeStage1(Robot& robot, const ContactStatus& contact_status) const;
+  void timeStage2(Robot& robot, const ContactStatus& contact_status) const;
+
+  double barrier, dtau, mu;
+  std::string fixed_base_urdf, floating_base_urdf;
+  Robot fixed_base_robot, floating_base_robot;
+  Eigen::VectorXd amin_fixed, amax_fixed, amin_floating, amax_floating;
 };
 
 
-TEST_F(ConstraintsTest, timestage0) {
+std::shared_ptr<Constraints> ConstraintsTest::createConstraints(Robot& robot) const {
+  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
+  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
+  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
+  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  Eigen::VectorXd amin, amax;
+  if (robot.hasFloatingBase()) {
+    amin = amin_floating;
+    amax = amax_floating;
+  }
+  else {
+    amin = amin_fixed;
+    amax = amax_fixed;
+  }
+  auto joint_accel_lower = std::make_shared<idocp::JointAccelerationLowerLimit>(robot, amin);
+  auto joint_accel_upper = std::make_shared<idocp::JointAccelerationUpperLimit>(robot, amax);
+  auto contact_normal_force = std::make_shared<idocp::ContactNormalForce>(robot);
+  auto friction_cone = std::make_shared<idocp::FrictionCone>(robot);
   auto constraints = std::make_shared<Constraints>();
-  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(fixed_base_robot_);
-  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(fixed_base_robot_);
-  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(fixed_base_robot_);
-  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(fixed_base_robot_);
-  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(fixed_base_robot_);
-  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(fixed_base_robot_);
-  auto joint_accel_lower = std::make_shared<idocp::JointAccelerationLowerLimit>(fixed_base_robot_, amin_fixed);
-  auto joint_accel_upper = std::make_shared<idocp::JointAccelerationUpperLimit>(fixed_base_robot_, amax_fixed);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -69,132 +89,159 @@ TEST_F(ConstraintsTest, timestage0) {
   constraints->push_back(joint_torques_upper);
   constraints->push_back(joint_accel_lower);
   constraints->push_back(joint_accel_upper);
-  const int time_stage = 0;
-  auto data = constraints->createConstraintsData(fixed_base_robot_, time_stage);
-  EXPECT_TRUE(data.position_level_data.empty());
-  EXPECT_TRUE(data.velocity_level_data.empty());
-  EXPECT_FALSE(data.acceleration_level_data.empty());
-  EXPECT_EQ(data.acceleration_level_data.size(), 4);
-  SplitSolution s = SplitSolution::Random(fixed_base_robot_);
-  SplitDirection d = SplitDirection::Random(fixed_base_robot_);
-  KKTMatrix kkt_matrix(fixed_base_robot_);
-  KKTResidual kkt_residual(fixed_base_robot_);
-  constraints->setSlackAndDual(fixed_base_robot_, data, dtau_, s);
-  constraints->augmentDualResidual(fixed_base_robot_, data, dtau_, s, kkt_residual);
-  constraints->augmentDualResidual(fixed_base_robot_, data, dtau_, s.u, kkt_residual.lu);
-  EXPECT_TRUE(kkt_residual.lq().isZero());
-  EXPECT_TRUE(kkt_residual.lv().isZero());
-  EXPECT_FALSE(kkt_residual.la().isZero());
-  EXPECT_FALSE(kkt_residual.lu.isZero());
-  constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s, kkt_matrix, kkt_residual);
-  constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s.u, kkt_matrix.Quu, kkt_residual.lu);
-  EXPECT_TRUE(kkt_matrix.Qqq().isZero());
-  EXPECT_TRUE(kkt_matrix.Qvv().isZero());
-  EXPECT_FALSE(kkt_matrix.Qaa().isZero());
-  EXPECT_FALSE(kkt_matrix.Quu.isZero());
-  EXPECT_TRUE(kkt_residual.lq().isZero());
-  EXPECT_TRUE(kkt_residual.lv().isZero());
-  EXPECT_FALSE(kkt_residual.la().isZero());
-  EXPECT_FALSE(kkt_residual.lu.isZero());
+  constraints->push_back(contact_normal_force);
+  constraints->push_back(friction_cone);
+  return constraints;  
 }
 
 
-TEST_F(ConstraintsTest, timestage1) {
-  auto constraints = std::make_shared<Constraints>();
-  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(fixed_base_robot_);
-  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(fixed_base_robot_);
-  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(fixed_base_robot_);
-  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(fixed_base_robot_);
-  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(fixed_base_robot_);
-  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(fixed_base_robot_);
-  auto joint_accel_lower = std::make_shared<idocp::JointAccelerationLowerLimit>(fixed_base_robot_, amin_fixed);
-  auto joint_accel_upper = std::make_shared<idocp::JointAccelerationUpperLimit>(fixed_base_robot_, amax_fixed);
-  constraints->push_back(joint_position_lower);
-  constraints->push_back(joint_position_upper);
-  constraints->push_back(joint_velocity_lower);
-  constraints->push_back(joint_velocity_upper);
-  constraints->push_back(joint_torques_lower);
-  constraints->push_back(joint_torques_upper);
-  constraints->push_back(joint_accel_lower);
-  constraints->push_back(joint_accel_upper);
+void ConstraintsTest::timeStage0(Robot& robot, const ContactStatus& contact_status) const {
+  const int time_stage = 0;
+  auto constraints = createConstraints(robot);
+  auto data = constraints->createConstraintsData(robot, time_stage);
+  EXPECT_TRUE(data.position_level_data.empty());
+  EXPECT_TRUE(data.velocity_level_data.empty());
+  EXPECT_FALSE(data.acceleration_level_data.empty());
+  EXPECT_EQ(data.acceleration_level_data.size(), 6);
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  const SplitDirection d = SplitDirection::Random(robot, contact_status);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
+  kkt_matrix.setContactStatus(contact_status);
+  kkt_residual.setContactStatus(contact_status);
+  constraints->setSlackAndDual(robot, data, s);
+  constraints->augmentDualResidual(robot, data, dtau, s, kkt_residual);
+  EXPECT_TRUE(kkt_residual.lq().isZero());
+  EXPECT_TRUE(kkt_residual.lv().isZero());
+  EXPECT_FALSE(kkt_residual.la.isZero());
+  EXPECT_FALSE(kkt_residual.lu().isZero());
+  if (contact_status.hasActiveContacts()) {
+    EXPECT_FALSE(kkt_residual.lf().isZero());
+  }
+  constraints->condenseSlackAndDual(robot, data, dtau, s, kkt_matrix, kkt_residual);
+  EXPECT_TRUE(kkt_matrix.Qqq().isZero());
+  EXPECT_TRUE(kkt_matrix.Qvv().isZero());
+  EXPECT_FALSE(kkt_matrix.Qaa().isZero());
+  EXPECT_FALSE(kkt_matrix.Quu().isZero());
+  EXPECT_TRUE(kkt_residual.lq().isZero());
+  EXPECT_TRUE(kkt_residual.lv().isZero());
+  EXPECT_FALSE(kkt_residual.la.isZero());
+  EXPECT_FALSE(kkt_residual.lu().isZero());
+  if (contact_status.hasActiveContacts()) {
+    EXPECT_FALSE(kkt_residual.lf().isZero());
+    EXPECT_FALSE(kkt_matrix.Qff().isZero());
+  }
+}
+
+
+void ConstraintsTest::timeStage1(Robot& robot, const ContactStatus& contact_status) const {
   const int time_stage = 1;
-  auto data = constraints->createConstraintsData(fixed_base_robot_, time_stage);
+  auto constraints = createConstraints(robot);
+  auto data = constraints->createConstraintsData(robot, time_stage);
   EXPECT_TRUE(data.position_level_data.empty());
   EXPECT_FALSE(data.velocity_level_data.empty());
   EXPECT_FALSE(data.acceleration_level_data.empty());
   EXPECT_EQ(data.velocity_level_data.size(), 2);
-  EXPECT_EQ(data.acceleration_level_data.size(), 4);
-  SplitSolution s = SplitSolution::Random(fixed_base_robot_);
-  SplitDirection d = SplitDirection::Random(fixed_base_robot_);
-  KKTMatrix kkt_matrix(fixed_base_robot_);
-  KKTResidual kkt_residual(fixed_base_robot_);
-  constraints->setSlackAndDual(fixed_base_robot_, data, dtau_, s);
-  constraints->augmentDualResidual(fixed_base_robot_, data, dtau_, s, kkt_residual);
-  constraints->augmentDualResidual(fixed_base_robot_, data, dtau_, s.u, kkt_residual.lu);
+  EXPECT_EQ(data.acceleration_level_data.size(), 6);
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  const SplitDirection d = SplitDirection::Random(robot, contact_status);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
+  kkt_matrix.setContactStatus(contact_status);
+  kkt_residual.setContactStatus(contact_status);
+  constraints->setSlackAndDual(robot, data, s);
+  constraints->augmentDualResidual(robot, data, dtau, s, kkt_residual);
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
-  EXPECT_FALSE(kkt_residual.la().isZero());
-  EXPECT_FALSE(kkt_residual.lu.isZero());
-  constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s, kkt_matrix, kkt_residual);
-  constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s.u, kkt_matrix.Quu, kkt_residual.lu);
+  EXPECT_FALSE(kkt_residual.la.isZero());
+  EXPECT_FALSE(kkt_residual.lu().isZero());
+  if (contact_status.hasActiveContacts()) {
+    EXPECT_FALSE(kkt_residual.lf().isZero());
+  }
+  constraints->condenseSlackAndDual(robot, data, dtau, s, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
   EXPECT_FALSE(kkt_matrix.Qvv().isZero());
   EXPECT_FALSE(kkt_matrix.Qaa().isZero());
-  EXPECT_FALSE(kkt_matrix.Quu.isZero());
+  EXPECT_FALSE(kkt_matrix.Quu().isZero());
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
-  EXPECT_FALSE(kkt_residual.la().isZero());
-  EXPECT_FALSE(kkt_residual.lu.isZero());
+  EXPECT_FALSE(kkt_residual.la.isZero());
+  EXPECT_FALSE(kkt_residual.lu().isZero());
+  if (contact_status.hasActiveContacts()) {
+    EXPECT_FALSE(kkt_residual.lf().isZero());
+    EXPECT_FALSE(kkt_matrix.Qff().isZero());
+  }
 }
 
 
-TEST_F(ConstraintsTest, timestage2) {
-  auto constraints = std::make_shared<Constraints>();
-  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(fixed_base_robot_);
-  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(fixed_base_robot_);
-  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(fixed_base_robot_);
-  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(fixed_base_robot_);
-  auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(fixed_base_robot_);
-  auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(fixed_base_robot_);
-  auto joint_accel_lower = std::make_shared<idocp::JointAccelerationLowerLimit>(fixed_base_robot_, amin_fixed);
-  auto joint_accel_upper = std::make_shared<idocp::JointAccelerationUpperLimit>(fixed_base_robot_, amax_fixed);
-  constraints->push_back(joint_position_lower);
-  constraints->push_back(joint_position_upper);
-  constraints->push_back(joint_velocity_lower);
-  constraints->push_back(joint_velocity_upper);
-  constraints->push_back(joint_torques_lower);
-  constraints->push_back(joint_torques_upper);
-  constraints->push_back(joint_accel_lower);
-  constraints->push_back(joint_accel_upper);
+void ConstraintsTest::timeStage2(Robot& robot, const ContactStatus& contact_status) const {
   const int time_stage = 2;
-  auto data = constraints->createConstraintsData(fixed_base_robot_, time_stage);
+  auto constraints = createConstraints(robot);
+  auto data = constraints->createConstraintsData(robot, time_stage);
   EXPECT_FALSE(data.position_level_data.empty());
   EXPECT_FALSE(data.velocity_level_data.empty());
   EXPECT_FALSE(data.acceleration_level_data.empty());
   EXPECT_EQ(data.position_level_data.size(), 2);
   EXPECT_EQ(data.velocity_level_data.size(), 2);
-  EXPECT_EQ(data.acceleration_level_data.size(), 4);
-  SplitSolution s = SplitSolution::Random(fixed_base_robot_);
-  SplitDirection d = SplitDirection::Random(fixed_base_robot_);
-  KKTMatrix kkt_matrix(fixed_base_robot_);
-  KKTResidual kkt_residual(fixed_base_robot_);
-  constraints->setSlackAndDual(fixed_base_robot_, data, dtau_, s);
-  constraints->augmentDualResidual(fixed_base_robot_, data, dtau_, s, kkt_residual);
-  constraints->augmentDualResidual(fixed_base_robot_, data, dtau_, s.u, kkt_residual.lu);
+  EXPECT_EQ(data.acceleration_level_data.size(), 6);
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  const SplitDirection d = SplitDirection::Random(robot, contact_status);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
+  kkt_matrix.setContactStatus(contact_status);
+  kkt_residual.setContactStatus(contact_status);
+  constraints->setSlackAndDual(robot, data, s);
+  constraints->augmentDualResidual(robot, data, dtau, s, kkt_residual);
   EXPECT_FALSE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
-  EXPECT_FALSE(kkt_residual.la().isZero());
-  EXPECT_FALSE(kkt_residual.lu.isZero());
-  constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s, kkt_matrix, kkt_residual);
-  constraints->condenseSlackAndDual(fixed_base_robot_, data, dtau_, s.u, kkt_matrix.Quu, kkt_residual.lu);
+  EXPECT_FALSE(kkt_residual.la.isZero());
+  EXPECT_FALSE(kkt_residual.lu().isZero());
+  if (contact_status.hasActiveContacts()) {
+    EXPECT_FALSE(kkt_residual.lf().isZero());
+  }
+  constraints->condenseSlackAndDual(robot, data, dtau, s, kkt_matrix, kkt_residual);
   EXPECT_FALSE(kkt_matrix.Qqq().isZero());
   EXPECT_FALSE(kkt_matrix.Qvv().isZero());
   EXPECT_FALSE(kkt_matrix.Qaa().isZero());
-  EXPECT_FALSE(kkt_matrix.Quu.isZero());
+  EXPECT_FALSE(kkt_matrix.Quu().isZero());
   EXPECT_FALSE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
-  EXPECT_FALSE(kkt_residual.la().isZero());
-  EXPECT_FALSE(kkt_residual.lu.isZero());
+  EXPECT_FALSE(kkt_residual.la.isZero());
+  EXPECT_FALSE(kkt_residual.lu().isZero());
+  if (contact_status.hasActiveContacts()) {
+    EXPECT_FALSE(kkt_residual.lf().isZero());
+    EXPECT_FALSE(kkt_matrix.Qff().isZero());
+  }
+}
+
+
+TEST_F(ConstraintsTest, fixedBase) {
+  const std::vector<int> frames = {18};
+  Robot robot(fixed_base_urdf, frames);
+  ContactStatus contact_status(frames.size());
+  contact_status.setContactStatus({false});
+  timeStage0(robot, contact_status);
+  timeStage1(robot, contact_status);
+  timeStage2(robot, contact_status);
+  contact_status.setContactStatus({true});
+  timeStage0(robot, contact_status);
+  timeStage1(robot, contact_status);
+  timeStage2(robot, contact_status);
+}
+
+
+TEST_F(ConstraintsTest, floatingBase) {
+  const std::vector<int> frames = {14, 24, 34, 44};
+  Robot robot(floating_base_urdf, frames);
+  ContactStatus contact_status(frames.size());
+  contact_status.setContactStatus({false, false, false, false});
+  timeStage0(robot, contact_status);
+  timeStage1(robot, contact_status);
+  timeStage2(robot, contact_status);
+  contact_status.setRandom();
+  timeStage0(robot, contact_status);
+  timeStage1(robot, contact_status);
+  timeStage2(robot, contact_status);
 }
 
 } // namespace idocp

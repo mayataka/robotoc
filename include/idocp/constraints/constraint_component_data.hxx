@@ -16,6 +16,7 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc)
     duality(Eigen::VectorXd::Zero(dimc)),
     dslack(Eigen::VectorXd::Zero(dimc)),
     ddual(Eigen::VectorXd::Zero(dimc)),
+    J(),
     dimc_(dimc) {
   try {
     if (dimc < 0) {
@@ -36,6 +37,7 @@ inline ConstraintComponentData::ConstraintComponentData()
     duality(),
     dslack(),
     ddual(),
+    J(),
     dimc_(0) {
 }
 
@@ -66,6 +68,30 @@ inline bool ConstraintComponentData::checkDimensionalConsistency() const {
     return false;
   }
   if (ddual.size() != dimc_) {
+    return false;
+  }
+  return true;
+}
+
+
+inline bool ConstraintComponentData::isApprox(
+    const ConstraintComponentData& other) const {
+  if (!slack.isApprox(other.slack)) {
+    return false;
+  }
+  if (!dual.isApprox(other.dual)) {
+    return false;
+  }
+  if (!residual.isApprox(other.residual)) {
+    return false;
+  }
+  if (!duality.isApprox(other.duality)) {
+    return false;
+  }
+  if (!dslack.isApprox(other.dslack)) {
+    return false;
+  }
+  if (!ddual.isApprox(other.ddual)) {
     return false;
   }
   return true;

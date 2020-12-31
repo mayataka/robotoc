@@ -13,7 +13,7 @@ namespace idocp {
 /// @brief Composed of data used to compute the cost function and its 
 /// derivatives. 
 ///
-class CostFunctionData {
+struct CostFunctionData {
 public:
   ///
   /// @brief Constructor. 
@@ -54,10 +54,17 @@ public:
   ///
   /// @brief Vector used for computing the difference of the configurations in
   /// JointSpaceCost. 
-  /// Be allocated only when Robot::has_floating_base() is true. Then the size 
+  /// Be allocated only when Robot::hasFloatingBase() is true. Then the size 
   /// is Robot::dimv().
   ///
   Eigen::VectorXd qdiff;
+
+  ///
+  /// @brief Vector used for computing the time-varying reference configuration 
+  /// in TimeVaryingConfigurationCost. 
+  /// The size is Robot::dimq().
+  ///
+  Eigen::VectorXd q_ref;
 
   ///
   /// @brief Vector used for computing the difference of the position of the 
@@ -85,7 +92,7 @@ public:
   ///
   /// @brief Jacobian of the difference of the configurations used in 
   /// JointSpaceCost. 
-  /// Be allocated only when Robot::has_floating_base() is true. Then the size 
+  /// Be allocated only when Robot::hasFloatingBase() is true. Then the size 
   /// is Robot::dimv() x Robot::dimv().
   ///
   Eigen::MatrixXd J_qdiff;

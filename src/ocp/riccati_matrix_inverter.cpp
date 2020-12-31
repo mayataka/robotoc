@@ -1,1 +1,0 @@
-#include "idocp/ocp/riccati_matrix_inverter.hpp"

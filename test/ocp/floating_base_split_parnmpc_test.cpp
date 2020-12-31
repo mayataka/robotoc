@@ -9,8 +9,8 @@
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/split_parnmpc.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_cost.hpp"
@@ -36,7 +36,7 @@ protected:
     for (const auto frame : contact_frames) {
       is_contact_active.push_back(rnd()%2==0);
     }
-    contact_status = ContactStatus(robot.max_point_contacts());
+    contact_status = ContactStatus(robot.maxPointContacts());
     contact_status.setContactStatus(is_contact_active);
     s = SplitSolution::Random(robot, contact_status);
     s_prev = SplitSolution::Random(robot, contact_status);
@@ -68,7 +68,7 @@ protected:
     const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
     const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
     std::vector<Eigen::Vector3d> f_weight, f_ref;
-    for (int i=0; i<robot.max_point_contacts(); ++i) {
+    for (int i=0; i<robot.maxPointContacts(); ++i) {
       f_weight.push_back(Eigen::Vector3d::Random());
       f_ref.push_back(Eigen::Vector3d::Random());
     }
@@ -98,8 +98,8 @@ protected:
     constraints->push_back(velocity_lower_limit); 
     constraints->push_back(velocity_upper_limit);
     constraints_data = constraints->createConstraintsData(robot, 2);
-    kkt_matrix = KKTMatrix(robot);
-    kkt_residual = KKTResidual(robot);
+    kkt_matrix = SplitKKTMatrix(robot);
+    kkt_residual = SplitKKTResidual(robot);
     kkt_matrix.setContactStatus(contact_status);
     kkt_residual.setContactStatus(contact_status);
     robot_dynamics = RobotDynamics(robot);
@@ -118,8 +118,8 @@ protected:
   ConstraintsData constraints_data;
   SplitSolution s, s_prev, s_next, s_tmp, s_old, s_new;
   SplitDirection d, d_prev;
-  KKTMatrix kkt_matrix;
-  KKTResidual kkt_residual;
+  SplitKKTMatrix kkt_matrix;
+  SplitKKTResidual kkt_residual;
   RobotDynamics robot_dynamics;
   Eigen::VectorXd q_prev, v_prev, dq_prev, dv_prev;
 };

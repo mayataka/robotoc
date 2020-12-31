@@ -1,0 +1,1 @@
+#include "idocp/ocp/contact_dynamics.hpp"

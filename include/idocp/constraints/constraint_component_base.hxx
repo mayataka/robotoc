@@ -19,6 +19,7 @@ inline void ConstraintComponentBase::setFractionToBoundaryRate(
   fraction_to_boundary_rate_ = fraction_to_boundary_rate;
 }
 
+
 inline double ConstraintComponentBase::l1NormPrimalResidual(
     const ConstraintComponentData& data) const {
   return data.residual.lpNorm<1>();

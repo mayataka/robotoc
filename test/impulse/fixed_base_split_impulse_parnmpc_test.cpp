@@ -11,13 +11,12 @@
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/impulse/split_impulse_parnmpc.hpp"
-#include "idocp/impulse/impulse_kkt_residual.hpp"
-#include "idocp/impulse/impulse_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/cost/impulse_cost_function.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/cost/joint_space_impulse_cost.hpp"
 #include "idocp/cost/impulse_force_cost.hpp"
-#include "idocp/constraints/impulse_constraints.hpp"
 
 
 namespace idocp {
@@ -31,7 +30,7 @@ protected:
     robot = Robot(urdf, contact_frames);
     std::random_device rnd;
     std::vector<bool> is_contact_active = {true};
-    contact_status = ContactStatus(robot.max_point_contacts());
+    contact_status = ContactStatus(robot.maxPointContacts());
     contact_status.setContactStatus(is_contact_active);
     s = ImpulseSplitSolution::Random(robot, contact_status);
     s_prev = SplitSolution::Random(robot, contact_status);
@@ -62,7 +61,7 @@ protected:
     const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
     const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
     std::vector<Eigen::Vector3d> f_weight, f_ref;
-    for (int i=0; i<robot.max_point_contacts(); ++i) {
+    for (int i=0; i<robot.maxPointContacts(); ++i) {
       f_weight.push_back(Eigen::Vector3d::Random());
       f_ref.push_back(Eigen::Vector3d::Random());
     }
@@ -74,13 +73,13 @@ protected:
     joint_cost->set_dv_ref(dv_ref);
     impulse_cost->set_f_weight(f_weight);
     impulse_cost->set_f_ref(f_ref);
-    cost = std::make_shared<ImpulseCostFunction>();
+    cost = std::make_shared<CostFunction>();
     cost->push_back(joint_cost);
     cost->push_back(impulse_cost);
     cost_data = CostFunctionData(robot);
     constraints = std::make_shared<ImpulseConstraints>();
-    kkt_matrix = ImpulseKKTMatrix(robot);
-    kkt_residual = ImpulseKKTResidual(robot);
+    kkt_matrix = ImpulseSplitKKTMatrix(robot);
+    kkt_residual = ImpulseSplitKKTResidual(robot);
     kkt_matrix.setContactStatus(contact_status);
     kkt_residual.setContactStatus(contact_status);
     impulse_dynamics = ImpulseDynamicsBackwardEuler(robot);
@@ -93,7 +92,7 @@ protected:
   std::string urdf;
   Robot robot;
   ContactStatus contact_status;
-  std::shared_ptr<ImpulseCostFunction> cost;
+  std::shared_ptr<CostFunction> cost;
   CostFunctionData cost_data;
   std::shared_ptr<ImpulseConstraints> constraints;
   ConstraintsData constraints_data;
@@ -101,8 +100,8 @@ protected:
   SplitSolution s_prev, s_prev_new, s_next, s_next_new;
   ImpulseSplitDirection d, d_ref;
   SplitDirection d_prev;
-  ImpulseKKTMatrix kkt_matrix;
-  ImpulseKKTResidual kkt_residual;
+  ImpulseSplitKKTMatrix kkt_matrix;
+  ImpulseSplitKKTResidual kkt_residual;
   ImpulseDynamicsBackwardEuler impulse_dynamics;
   Eigen::VectorXd q_prev, v_prev, dq_prev, dv_prev;
 };
@@ -116,7 +115,7 @@ TEST_F(FixedBaseSplitParNMPCTest, isFeasible) {
 
 
 TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormStateEquation) {
-  auto empty_cost = std::make_shared<ImpulseCostFunction>();
+  auto empty_cost = std::make_shared<CostFunction>();
   auto empty_constraints = std::make_shared<ImpulseConstraints>();
   SplitImpulseParNMPC parnmpc(robot, empty_cost, empty_constraints);
   parnmpc.initConstraints(robot, s);
@@ -148,7 +147,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormStateEquation) {
 
 
 TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormStateEquationAndRobotDynamics) {
-  auto empty_cost = std::make_shared<ImpulseCostFunction>();
+  auto empty_cost = std::make_shared<CostFunction>();
   auto empty_constraints = std::make_shared<ImpulseConstraints>();
   SplitImpulseParNMPC parnmpc(robot, empty_cost, empty_constraints);
   parnmpc.initConstraints(robot, s);
@@ -195,7 +194,7 @@ TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormStateEquationAndRobotDynamics) {
 
 
 TEST_F(FixedBaseSplitParNMPCTest, KKTErrorNormEmptyCost) {
-  auto empty_cost = std::make_shared<ImpulseCostFunction>();
+  auto empty_cost = std::make_shared<CostFunction>();
   SplitImpulseParNMPC parnmpc(robot, empty_cost, constraints);
   parnmpc.initConstraints(robot, s);
   constraints->setSlackAndDual(robot, constraints_data, s);

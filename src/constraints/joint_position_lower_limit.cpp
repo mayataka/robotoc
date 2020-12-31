@@ -1,6 +1,6 @@
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
@@ -50,28 +50,28 @@ bool JointPositionLowerLimit::isFeasible(Robot& robot,
 
 
 void JointPositionLowerLimit::setSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  assert(dtau > 0);
-  data.slack = dtau * (s.q.tail(dimc_)-qmin_);
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  data.slack = s.q.tail(dimc_) - qmin_;
   setSlackAndDualPositive(data);
 }
 
 
 void JointPositionLowerLimit::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTResidual& kkt_residual) const {
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  assert(dtau >= 0);
   kkt_residual.lq().tail(dimc_).noalias() -= dtau * data.dual;
 }
 
 
 void JointPositionLowerLimit::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, KKTMatrix& kkt_matrix, 
-    KKTResidual& kkt_residual) const {
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) const {
+  assert(dtau >= 0);
   kkt_matrix.Qqq().diagonal().tail(dimc_).array()
-      += dtau * dtau * data.dual.array() / data.slack.array();
-  computePrimalAndDualResidual(robot, data, dtau, s);
+      += dtau * data.dual.array() / data.slack.array();
+  computePrimalAndDualResidual(robot, data, s);
   kkt_residual.lq().tail(dimc_).array() 
       -= dtau * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
@@ -79,17 +79,16 @@ void JointPositionLowerLimit::condenseSlackAndDual(
 
 
 void JointPositionLowerLimit::computeSlackAndDualDirection(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s, const SplitDirection& d) const {
-  data.dslack = dtau * d.dq().tail(dimc_) - data.residual;
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
+    const SplitDirection& d) const {
+  data.dslack = d.dq().tail(dimc_) - data.residual;
   computeDualDirection(data);
 }
 
 
 void JointPositionLowerLimit::computePrimalAndDualResidual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
-    const SplitSolution& s) const {
-  data.residual = dtau * (qmin_-s.q.tail(dimc_)) + data.slack;
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  data.residual = qmin_ - s.q.tail(dimc_) + data.slack;
   computeDuality(data);
 }
 

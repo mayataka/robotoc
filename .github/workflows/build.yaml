@@ -1,0 +1,78 @@
+name: build
+
+on: 
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Install build-essential
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential
+          sudo apt install libeigen3-dev
+      - name: Install pinocchio and gepetto-viewer-corba for ubuntu 18.04
+        if: matrix.os == 'ubuntu-18.04'
+        run: |
+          sudo apt install -qqy lsb-release gnupg2 curl
+          echo "deb [arch=amd64] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg" | sudo tee /etc/apt/sources.list.d/robotpkg.list
+          curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add 
+          sudo apt update
+          sudo apt install -qqy robotpkg-py27-pinocchio
+          sudo apt install -qqy robotpkg-py27-qt5-gepetto-viewer-corba
+      - name: Install pinocchio and gepetto-viewer-corba for ubuntu 20.04
+        if: matrix.os == 'ubuntu-20.04'
+        run: |
+          sudo apt install -qqy lsb-release gnupg2 curl
+          echo "deb [arch=amd64] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg" | sudo tee /etc/apt/sources.list.d/robotpkg.list
+          curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add 
+          sudo apt update
+          sudo apt install -qqy robotpkg-py38-pinocchio
+          sudo apt install -qqy robotpkg-py38-qt5-gepetto-viewer-corba
+      - name: Install pinocchio-gepetto-viewer
+        run: |
+          export PATH=/opt/openrobots/bin:$PATH >> ~/.bashrc
+          export PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH 
+          export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH 
+          export PYTHONPATH=/opt/openrobots/lib/python2.7/site-packages:$PYTHONPATH 
+          export PYTHONPATH=/opt/openrobots/lib/python3.8/site-packages:$PYTHONPATH 
+          export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH 
+          git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
+          cd pinocchio-gepetto-viewer
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          sudo make install
+          cd ../..
+      - name: Install lcov
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y lcov
+          sudo apt-get install -y valgrind
+      - name: Build and run test 
+        run: |
+          export PATH=/opt/openrobots/bin:$PATH >> ~/.bashrc
+          export PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH 
+          export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH 
+          export PYTHONPATH=/opt/openrobots/lib/python2.7/site-packages:$PYTHONPATH 
+          export PYTHONPATH=/opt/openrobots/lib/python3.8/site-packages:$PYTHONPATH 
+          export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH 
+          mkdir -p build  && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_VIEWER=True -DTESTING=True 
+          cmake --build . --config Debug -j2
+          ctest --output-on-failure
+      - name: Collect and upload coverage to Codecov
+        if: 'success()'
+        run: |
+          lcov --capture --directory . --output-file coverage.info
+          lcov --remove coverage.info '/usr/*' '/opt/*' '"${HOME}"/.cache/*' '*/googletest/*' '*/test/*' '*/c++/*' '*/pinocchio/*' --output-file coverage.info
+          lcov --list coverage.info
+          bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"

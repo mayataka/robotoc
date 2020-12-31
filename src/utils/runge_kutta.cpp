@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+
 namespace idocp {
 
 RungeKutta::RungeKutta(const Robot& robot)

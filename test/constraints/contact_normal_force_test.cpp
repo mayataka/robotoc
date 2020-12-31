@@ -10,8 +10,8 @@
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/kkt_matrix.hpp"
-#include "idocp/ocp/kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/constraints/pdipm.hpp"
 #include "idocp/constraints/contact_normal_force.hpp"
 
@@ -21,149 +21,230 @@ class ContactNormalForceTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    const std::string urdf = "../urdf/anymal/anymal.urdf";
-    contact_frames = {14, 24, 34, 44};
-    robot = Robot(urdf, contact_frames);
-    for (int i=0; i<contact_frames.size(); ++i) {
-      is_contact_active.push_back(rnd()%2==0);
-    }
-    for (int i=0; i<contact_frames.size(); ++i) {
-      if (is_contact_active[i]) {
-        active_contact_indices.push_back(i);
-      }
-    }
-    contact_status = ContactStatus(robot.max_point_contacts());
-    contact_status.setContactStatus(is_contact_active);
+    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
+    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     barrier = 1.0e-04;
-    fraction_to_boundary_rate = 0.995;
     dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
-    mu = 0.8;
-    data = ConstraintComponentData(contact_frames.size());
-    data_ref = ConstraintComponentData(contact_frames.size());
-    s = SplitSolution::Random(robot, contact_status);
-    d = SplitDirection::Random(robot, contact_status);
-    kkt_residual = KKTResidual(robot);
-    kkt_matrix = KKTMatrix(robot);
-    kkt_residual.setContactStatus(contact_status);
-    kkt_matrix.setContactStatus(contact_status);
+    fraction_to_boundary_rate = 0.995;
   }
 
   virtual void TearDown() {
   }
 
-  double barrier, fraction_to_boundary_rate, dtau, mu;
-  Eigen::VectorXd slack, dual, dslack, ddual;
-  Robot robot;
-  ContactStatus contact_status;
-  std::vector<int> contact_frames, active_contact_indices;
-  std::vector<bool> is_contact_active;
-  ConstraintComponentData data, data_ref;
-  SplitSolution s;
-  SplitDirection d;
-  KKTResidual kkt_residual;
-  KKTMatrix kkt_matrix;
+  void testKinematics(Robot& robot, const ContactStatus& contact_status) const;
+  void testIsFeasible(Robot& robot, const ContactStatus& contact_status) const;
+  void testSetSlackAndDual(Robot& robot, const ContactStatus& contact_status) const;
+  void testAugmentDualResidual(Robot& robot, const ContactStatus& contact_status) const;
+  void testComputePrimalAndDualResidual(Robot& robot, const ContactStatus& contact_status) const;
+  void testCondenseSlackAndDual(Robot& robot, const ContactStatus& contact_status) const;
+  void testComputeSlackAndDualDirection(Robot& robot, const ContactStatus& contact_status) const;
+
+  double barrier, dtau, fraction_to_boundary_rate;
+  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
-TEST_F(ContactNormalForceTest, isFeasible) {
-  ContactNormalForce contact_normal_force(robot); 
-  is_contact_active[0] = true;
-  for (int i=0; i<contact_frames.size(); ++i) {
-    s.f[i].coeffRef(2) = -1;
-  }
-  EXPECT_FALSE(contact_normal_force.isFeasible(robot, data, s));
-  for (int i=0; i<contact_frames.size(); ++i) {
-    s.f[i].coeffRef(2) = 1;
-  }
-  EXPECT_TRUE(contact_normal_force.isFeasible(robot, data, s));
+void ContactNormalForceTest::testKinematics(Robot& robot, const ContactStatus& contact_status) const {
+  ContactNormalForce limit(robot); 
+  EXPECT_FALSE(limit.useKinematics());
+  EXPECT_TRUE(limit.kinematicsLevel() == KinematicsLevel::AccelerationLevel);
 }
 
 
-TEST_F(ContactNormalForceTest, setSlackAndDual) {
-  ContactNormalForce contact_normal_force(robot); 
-  for (int i=0; i<contact_frames.size(); ++i) {
-    s.f[i].coeffRef(2) = 1;
+void ContactNormalForceTest::testIsFeasible(Robot& robot, const ContactStatus& contact_status) const {
+  ContactNormalForce limit(robot); 
+  ConstraintComponentData data(limit.dimc());
+  EXPECT_EQ(limit.dimc(), contact_status.maxPointContacts());
+  SplitSolution s(robot);
+  s.setContactStatus(contact_status);
+  s.f_stack().setZero();
+  s.set_f_vector();
+  if (contact_status.hasActiveContacts()) {
+    EXPECT_FALSE(limit.isFeasible(robot, data, s));
   }
-  EXPECT_TRUE(contact_normal_force.isFeasible(robot, data, s));
-  contact_normal_force.setSlackAndDual(robot, data, dtau, s);
-  for (int i=0; i<contact_frames.size(); ++i) {
-    EXPECT_DOUBLE_EQ(data.slack.coeff(i), dtau*s.f[i].coeffRef(2));
-    EXPECT_TRUE(data.dual.coeff(i) > 0);
-  }
-}
-
-
-TEST_F(ContactNormalForceTest, augmentDualResidual) {
-  ContactNormalForce contact_normal_force(robot); 
-  contact_normal_force.augmentDualResidual(robot, data, dtau, s, kkt_residual);
-  EXPECT_TRUE(kkt_residual.lf().isZero());
-  data.dual.fill(0.1);
-  contact_normal_force.augmentDualResidual(robot, data, dtau, s, kkt_residual);
-  for (int i=0; i<active_contact_indices.size(); ++i) {
-    EXPECT_DOUBLE_EQ(kkt_residual.lf().coeff(3*i  ), 0);
-    EXPECT_DOUBLE_EQ(kkt_residual.lf().coeff(3*i+1), 0);
-    EXPECT_DOUBLE_EQ(kkt_residual.lf().coeff(3*i+2), -0.1*dtau);
+  s.f_stack().setConstant(1.0);
+  s.set_f_vector();
+  EXPECT_TRUE(limit.isFeasible(robot, data, s));
+  if (contact_status.hasActiveContacts()) {
+    s.f_stack().setConstant(-1.0);
+    s.set_f_vector();
+    EXPECT_FALSE(limit.isFeasible(robot, data, s));
   }
 }
 
 
-TEST_F(ContactNormalForceTest, condenseSlackAndDual) {
-  ContactNormalForce contact_normal_force(robot); 
-  const double slack = 0.3;
-  const double dual = 0.2;
-  data.slack.fill(slack);
-  data.dual.fill(dual);
-  contact_normal_force.condenseSlackAndDual(robot, data, dtau, s, kkt_matrix, kkt_residual);
-  Eigen::MatrixXd Qff_ref = Eigen::MatrixXd::Zero(contact_status.dimf(), contact_status.dimf());
-  Eigen::VectorXd lf_ref = Eigen::VectorXd::Zero(contact_status.dimf());
-  for (int i=0; i<active_contact_indices.size(); ++i) {
-    Qff_ref.coeffRef(3*i+2, 3*i+2) = dtau * dtau * dual / slack;
-    const double residual = - dtau * s.f[active_contact_indices[i]].coeff(2) + data.slack.coeff(active_contact_indices[i]);
-    const double duality = slack * dual - barrier;
-    EXPECT_DOUBLE_EQ(residual, data.residual.coeff(active_contact_indices[i]));
-    EXPECT_DOUBLE_EQ(duality, data.duality.coeff(active_contact_indices[i]));
-    lf_ref.coeffRef(3*i+2) = - dtau * (dual * residual - duality) / slack;
+void ContactNormalForceTest::testSetSlackAndDual(Robot& robot, const ContactStatus& contact_status) const {
+  ContactNormalForce limit(robot); 
+  ConstraintComponentData data(limit.dimc()), data_ref(limit.dimc());
+  const int dimc = limit.dimc();
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  limit.setSlackAndDual(robot, data, s);
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    data_ref.slack.coeffRef(i) = s.f[i].coeff(2);
   }
-  EXPECT_TRUE(Qff_ref.isApprox(kkt_matrix.Qff()));
-  EXPECT_TRUE(lf_ref.isApprox(kkt_residual.lf()));
+  pdipm::SetSlackAndDualPositive(barrier, data_ref);
+  EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 
-TEST_F(ContactNormalForceTest, computeSlackAndDualDirection) {
-  ContactNormalForce contact_normal_force(robot); 
-  data.slack = Eigen::VectorXd::Random(data.slack.size()).array().abs();
-  data.dual = Eigen::VectorXd::Random(data.dual.size()).array().abs();
-  data.residual = Eigen::VectorXd::Random(data.dual.size());
-  data.duality = Eigen::VectorXd::Random(data.dual.size());
-  contact_normal_force.augmentDualResidual(robot, data, dtau, s, kkt_residual);
-  contact_normal_force.condenseSlackAndDual(robot, data, dtau, s, kkt_matrix, kkt_residual);
-  contact_normal_force.computeSlackAndDualDirection(robot, data, dtau, s, d);
-  Eigen::MatrixXd gf = Eigen::MatrixXd::Zero(active_contact_indices.size(), contact_status.dimf());
-  ConstraintComponentData data_ref(active_contact_indices.size());
-  for (int i=0; i<active_contact_indices.size(); ++i) {
-    gf.row(i).coeffRef(3*i+2) = - dtau;
-    data_ref.slack.coeffRef(i) = data.slack(active_contact_indices[i]);
-    data_ref.dual.coeffRef(i) = data.dual(active_contact_indices[i]);
-    data_ref.residual.coeffRef(i) = - dtau * s.f[active_contact_indices[i]].coeff(2) + data_ref.slack.coeff(i);
-    data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
+void ContactNormalForceTest::testAugmentDualResidual(Robot& robot, const ContactStatus& contact_status) const {
+  ContactNormalForce limit(robot); 
+  ConstraintComponentData data(limit.dimc());
+  const int dimc = limit.dimc();
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  limit.setSlackAndDual(robot, data, s);
+  ConstraintComponentData data_ref = data;
+  SplitKKTResidual kkt_res(robot);
+  kkt_res.setContactStatus(contact_status);
+  kkt_res.lf().setRandom();
+  SplitKKTResidual kkt_res_ref = kkt_res;
+  limit.augmentDualResidual(robot, data, dtau, s, kkt_res);
+  int dimf_stack = 0;
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      kkt_res_ref.lf().segment<3>(dimf_stack).coeffRef(2) -= dtau * data_ref.dual.coeff(i);
+      dimf_stack += 3;
+    }
   }
-  data_ref.dslack = - gf * d.df() - data_ref.residual;
-  pdipm::ComputeDualDirection(data_ref);
-  Eigen::VectorXd dslack_ref = Eigen::VectorXd::Ones(robot.max_point_contacts());
-  Eigen::VectorXd ddual_ref = Eigen::VectorXd::Ones(robot.max_point_contacts());
-  for (int i=0; i<active_contact_indices.size(); ++i) {
-    dslack_ref.coeffRef(active_contact_indices[i]) = data_ref.dslack.coeff(i);
-    ddual_ref.coeffRef(active_contact_indices[i]) = data_ref.ddual.coeff(i);
-  }
-  EXPECT_TRUE(dslack_ref.isApprox(data.dslack));
-  EXPECT_TRUE(ddual_ref.isApprox(data.ddual));
+  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
 }
 
 
-TEST_F(ContactNormalForceTest, dimc) {
-  ContactNormalForce contact_normal_force(robot); 
-  EXPECT_EQ(contact_normal_force.dimc(), contact_frames.size());
+void ContactNormalForceTest::testComputePrimalAndDualResidual(Robot& robot, const ContactStatus& contact_status) const {
+  ContactNormalForce limit(robot); 
+  const int dimc = limit.dimc();
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  ConstraintComponentData data(limit.dimc());
+  data.slack.setRandom();
+  data.dual.setRandom();
+  ConstraintComponentData data_ref = data;
+  limit.computePrimalAndDualResidual(robot, data, s);
+  int dimf_stack = 0;
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      data_ref.residual.coeffRef(i) = - s.f[i].coeff(2) + data_ref.slack.coeff(i);
+      data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
+    }
+  }
+  EXPECT_TRUE(data.isApprox(data_ref));
+}
+
+
+void ContactNormalForceTest::testCondenseSlackAndDual(Robot& robot, const ContactStatus& contact_status) const {
+  ContactNormalForce limit(robot); 
+  ConstraintComponentData data(limit.dimc());
+  const int dimc = limit.dimc();
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  limit.setSlackAndDual(robot, data, s);
+  ConstraintComponentData data_ref = data;
+  SplitKKTMatrix kkt_mat(robot);
+  kkt_mat.setContactStatus(contact_status);
+  kkt_mat.Qff().setRandom();
+  SplitKKTResidual kkt_res(robot);
+  kkt_res.setContactStatus(contact_status);
+  kkt_res.lf().setRandom();
+  SplitKKTMatrix kkt_mat_ref = kkt_mat;
+  SplitKKTResidual kkt_res_ref = kkt_res;
+  limit.condenseSlackAndDual(robot, data, dtau, s, kkt_mat, kkt_res);
+  int dimf_stack = 0;
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      data_ref.residual.coeffRef(i) = - s.f[i].coeff(2) + data_ref.slack.coeff(i);
+      data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
+      dimf_stack += 3;
+    }
+  }
+  dimf_stack = 0;
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      kkt_res_ref.lf().segment<3>(dimf_stack).coeffRef(2) 
+          -= dtau * (data_ref.dual.coeff(i)*data_ref.residual.coeff(i)-data_ref.duality.coeff(i)) 
+                  / data_ref.slack.coeff(i);
+      kkt_mat_ref.Qff().diagonal().segment<3>(dimf_stack).coeffRef(2)
+          += dtau * data_ref.dual.coeff(i) / data_ref.slack.coeff(i);
+      dimf_stack += 3;
+    }
+  }
+  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+}
+
+
+void ContactNormalForceTest::testComputeSlackAndDualDirection(Robot& robot, const ContactStatus& contact_status) const {
+  ContactNormalForce limit(robot); 
+  ConstraintComponentData data(limit.dimc());
+  const int dimc = limit.dimc();
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  limit.setSlackAndDual(robot, data, s);
+  data.residual.setRandom();
+  data.duality.setRandom();
+  ConstraintComponentData data_ref = data;
+  const SplitDirection d = SplitDirection::Random(robot, contact_status);
+  limit.computeSlackAndDualDirection(robot, data, s, d);
+  int dimf_stack = 0;
+  for (int i=0; i<contact_status.maxPointContacts(); ++i) {
+    if (contact_status.isContactActive(i)) {
+      data_ref.dslack.coeffRef(i) = d.df().segment<3>(dimf_stack).coeff(2) - data_ref.residual.coeff(i);
+      data_ref.ddual.coeffRef(i) = - (data_ref.dual.coeff(i)*data_ref.dslack.coeff(i)+data_ref.duality.coeff(i))
+                                      / data_ref.slack.coeff(i);
+      dimf_stack += 3;
+    }
+    else {
+      data_ref.residual.coeffRef(i) = 0;
+      data_ref.duality.coeffRef(i)  = 0;
+      data_ref.slack.coeffRef(i)    = 1.0;
+      data_ref.dslack.coeffRef(i)   = fraction_to_boundary_rate;
+      data_ref.dual.coeffRef(i)     = 1.0;
+      data_ref.ddual.coeffRef(i)    = fraction_to_boundary_rate;
+    }
+  }
+  EXPECT_TRUE(data.isApprox(data_ref));
+}
+
+
+TEST_F(ContactNormalForceTest, fixedBase) {
+  const std::vector<int> frames = {18};
+  Robot robot(fixed_base_urdf, frames);
+  ContactStatus contact_status = robot.createContactStatus();
+  contact_status.setContactStatus({false});
+  testKinematics(robot, contact_status);
+  testIsFeasible(robot, contact_status);
+  testSetSlackAndDual(robot, contact_status);
+  testAugmentDualResidual(robot, contact_status);
+  testComputePrimalAndDualResidual(robot, contact_status);
+  testCondenseSlackAndDual(robot, contact_status);
+  testComputeSlackAndDualDirection(robot, contact_status);
+  contact_status.setContactStatus({true});
+  testKinematics(robot, contact_status);
+  testIsFeasible(robot, contact_status);
+  testSetSlackAndDual(robot, contact_status);
+  testAugmentDualResidual(robot, contact_status);
+  testComputePrimalAndDualResidual(robot, contact_status);
+  testCondenseSlackAndDual(robot, contact_status);
+  testComputeSlackAndDualDirection(robot, contact_status);
+}
+
+
+TEST_F(ContactNormalForceTest, floatingBase) {
+  const std::vector<int> frames = {14, 24, 34, 44};
+  Robot robot(floating_base_urdf, frames);
+  ContactStatus contact_status = robot.createContactStatus();
+  contact_status.setContactStatus({false, false, false, false});
+  testKinematics(robot, contact_status);
+  testIsFeasible(robot, contact_status);
+  testSetSlackAndDual(robot, contact_status);
+  testAugmentDualResidual(robot, contact_status);
+  testComputePrimalAndDualResidual(robot, contact_status);
+  testCondenseSlackAndDual(robot, contact_status);
+  testComputeSlackAndDualDirection(robot, contact_status);
+  contact_status.setRandom();
+  testKinematics(robot, contact_status);
+  testIsFeasible(robot, contact_status);
+  testSetSlackAndDual(robot, contact_status);
+  testAugmentDualResidual(robot, contact_status);
+  testComputePrimalAndDualResidual(robot, contact_status);
+  testCondenseSlackAndDual(robot, contact_status);
+  testComputeSlackAndDualDirection(robot, contact_status);
 }
 
 } // namespace idocp

@@ -4,16 +4,20 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/robot/contact_status.hpp"
 
 
 namespace idocp {
 
 ///
 /// @class SplitDirection
-/// @brief Newton direction split into each time stage. 
+/// @brief Newton direction of SplitSolution. 
 ///
 class SplitDirection {
 public:
+
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+
   ///
   /// @brief Construct a split solution.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -21,7 +25,7 @@ public:
   SplitDirection(const Robot& robot);
 
   ///
-  /// @brief Default constructor. Does not construct any datas. 
+  /// @brief Default constructor.  
   ///
   SplitDirection();
 
@@ -58,140 +62,181 @@ public:
   void setContactStatus(const ContactStatus& contact_status);
 
   ///
-  /// @brief Returns the stack of Newton directions. Size is 
-  /// SplitDirection::dimKKT().
-  /// @return Reference to the stack of Newton directions.
+  /// @brief Set contact status, i.e., set dimension of the contact.
+  /// @param[in] dimf Total dimension of the contact.
   ///
-  Eigen::VectorBlock<Eigen::VectorXd> split_direction();
+  void setContactStatusByDimension(const int dimf);
 
   ///
-  /// @brief Returns the Newton direction of lmd. Size is Robot::dimv().
-  /// @return Reference to the Newton direction of lmd.
+  /// @brief Returns the Newton direction of SplitSolution::lmd and 
+  /// SplitSolution::gmm. Size is 2 * Robot::dimv().
+  /// @return Reference to the Newton direction of SplitSolution::lmd and 
+  /// SplitSolution::gmm.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dlmdgmm();
+
+  ///
+  /// @brief Const verison of SplitDirection::dlmdgmm().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> dlmdgmm() const;
+
+  ///
+  /// @brief Returns the Newton direction of SplitSolution::lmd. Size is 
+  /// Robot::dimv().
+  /// @return Reference to the Newton direction of SplitSolution::lmd.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dlmd();
 
   ///
-  /// @brief Returns the Newton direction of gmm. Size is Robot::dimv().
-  /// @return Reference to the Newton direction of gmm.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> dgmm();
-
-  ///
-  /// @brief Returns the Newton direction of mu_stack. Size is 
-  /// Robot::dim_passive() + Robot::dimf().
-  /// @return Reference to the Newton direction of mu_stack.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> dmu();
-
-  ///
-  /// @brief Returns the Newton direction of a. Size is Robot::dimv().
-  /// @return Reference to the Newton direction of a.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> da();
-
-  ///
-  /// @brief Returns the Newton direction of f_stack. Size is Robot::dimf().
-  /// @return Reference to the Newton direction of f_stack.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> df();
-
-  ///
-  /// @brief Returns the Newton direction of q. Size is Robot::dimv().
-  /// @return Reference to the Newton direction of q.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> dq();
-
-  ///
-  /// @brief Returns the Newton direction of v. Size is Robot::dimv().
-  /// @return Reference to the Newton direction of v.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> dv();
-
-  ///
-  /// @brief Returns the Newton direction of q and v. Size is 2 * Robot::dimv().
-  /// @return Reference to the Newton direction of q and v.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> dx();
-
-  ///
-  /// @brief Returns the stack of Newton directions. Size is 
-  /// SplitDirection::dimKKT().
-  /// @return Const reference to the stack of Newton directions.
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> split_direction() const;
-
-  ///
-  /// @brief Returns the Newton direction of lmd. Size is Robot::dimv().
-  /// @return Const reference to the Newton direction of lmd.
+  /// @brief Const version of SplitDirection::dlmd().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dlmd() const;
 
   ///
-  /// @brief Returns the Newton direction of gmm. Size is Robot::dimv().
-  /// @return Const reference to the Newton direction of gmm.
+  /// @brief Returns the Newton direction of SplitSolution::gmm. Size is 
+  /// Robot::dimv().
+  /// @return Reference to the Newton direction of SplitSolution::gmm.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dgmm();
+
+  ///
+  /// @brief Const version of SplitDirection::dgmm().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dgmm() const;
 
   ///
-  /// @brief Returns the Newton direction of mu_stack. Size is 
-  /// Robot::dim_passive() + Robot::dimf().
-  /// @return Const reference to the Newton direction of mu_stack.
+  /// @brief Returns the Newton direction of SplitSolution::u. Size is 
+  /// Robot::dimu().
+  /// @return Reference to the Newton direction of SplitSolution::u.
   ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> dmu() const;
+  Eigen::VectorBlock<Eigen::VectorXd> du();
 
   ///
-  /// @brief Returns the Newton direction of a. Size is Robot::dimv().
-  /// @return Const reference to the Newton direction of a.
+  /// @brief Const version of SplitDirection::du().
   ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> da() const;
+  const Eigen::VectorBlock<const Eigen::VectorXd> du() const;
 
   ///
-  /// @brief Returns the Newton direction of f_stack. Size is Robot::dimf().
-  /// @return Const reference to the Newton direction of f_stack.
+  /// @brief Returns the Newton direction of SplitSolution::q. Size is 
+  /// Robot::dimv().
+  /// @return Reference to the Newton direction of SplitSolution::q.
   ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> df() const;
+  Eigen::VectorBlock<Eigen::VectorXd> dq();
 
   ///
-  /// @brief Returns the Newton direction of q. Size is Robot::dimv().
-  /// @return Const reference to the Newton direction of q.
+  /// @brief Const version of SplitDirection::dq().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dq() const;
 
   ///
-  /// @brief Returns the Newton direction of v. Size is Robot::dimv().
-  /// @return Const reference to the Newton direction of v.
+  /// @brief Returns the Newton direction of SplitSolution::gmm. Size is 
+  /// Robot::dimv().
+  /// @return Reference to the Newton direction of SplitSolution::gmm.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dv();
+
+  ///
+  /// @brief Const version of SplitDirection::dv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dv() const;
 
   ///
-  /// @brief Returns the Newton direction of q and v. Size is 2 * Robot::dimv().
-  /// @return Const reference to the Newton direction of q and v.
+  /// @brief Returns the Newton direction of SplitSolution::q and 
+  /// SplitSolution::v. Size is 2 * Robot::dimv().
+  /// @return Reference to the Newton direction of SplitSolution::q and 
+  /// SplitSolution::v.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dx();
+
+  ///
+  /// @brief Const version of SplitDirection::dx().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dx() const;
 
   ///
-  /// @brief Set the all alements of the direction to zero.
+  /// @brief Returns the Newton direction of SplitSolution::a and 
+  /// SplitSolution::f. Size is ContactStatus::dimf() + Robot::dimv().
+  /// @return Reference to the Newton direction of SplitSolution::a and 
+  /// SplitSolution::f.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> daf();
+
+  ///
+  /// @brief Const version of SplitDirection::daf().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> daf() const;
+
+  ///
+  /// @brief Returns the Newton direction of SplitSolution::a. Size is 
+  /// Robot::dimv().
+  /// @return Reference to the Newton direction of SplitSolution::a.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> da();
+
+  ///
+  /// @brief Const version of SplitDirection::da().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> da() const;
+
+  ///
+  /// @brief Returns the Newton direction of SplitSolution::f_stack(). Size is 
+  /// ContactStatus::dimf().
+  /// @return Reference to the Newton direction of SplitSolution::f_stack().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> df();
+
+  ///
+  /// @brief Const version of SplitDirection::df().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> df() const;
+
+  ///
+  /// @brief Returns the Newton direction of SplitSolution::beta and 
+  /// SplitSolution::mu_stack(). Size is Robot::dimv() + SplitSolution::dimf().
+  /// @return Reference to the Newton direction of SplitSolution::beta and 
+  /// SplitSolution::mu_stack().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dbetamu();
+
+  ///
+  /// @brief Const version of SplitDirection::dbetamu(). 
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> dbetamu() const;
+
+  ///
+  /// @brief Returns the Newton direction of SplitSolution::beta. Size 
+  /// is Robot::dimv().
+  /// @return Reference to the Newton direction of SplitSolution::beta.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dbeta();
+
+  ///
+  /// @brief Const version of SplitDirection::dbeta().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> dbeta() const;
+
+  ///
+  /// @brief Returns the Newton direction of SplitSolution::mu_stack(). Size is 
+  /// SplitSolution::dimf().
+  /// @return Reference to the Newton direction of SplitSolution::mu_stack().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dmu();
+
+  ///
+  /// @brief Const version of SplitDirection::dmu().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> dmu() const;
+
+  ///
+  /// @brief Set the all directions zero.
   ///
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the KKT at the current contact status.
-  /// @return Dimension of the KKT at the current contact status.
+  /// @brief Returns the dimension of the condensed KKT conditions.
+  /// @return Dimension of the condensed KKT conditions.
   ///
   int dimKKT() const;
-
-  ///
-  /// @brief Returns the maximum dimension of the KKT.
-  /// @return Maximum dimension of the KKT at the current contact status.
-  ///
-  int max_dimKKT() const;
-
-  ///
-  /// @brief Returns the dimension of equality constraint at the current 
-  /// contact status.
-  /// @return Dimension of equality constraint.
-  ///
-  int dimc() const;
 
   ///
   /// @brief Returns the dimension of the stack of contact forces at the current 
@@ -200,11 +245,35 @@ public:
   ///
   int dimf() const;
 
-  /// @brief Newton direction of u.
-  Eigen::VectorXd du;
+  /// @brief Stack of the Newton direction composed of SplitDirection::dlmd(), 
+  /// SplitDirection::dgmm(), SplitDirection::du(), SplitDirection::dq(), 
+  /// and SplitDirection::dv(). Size is 4 * Robot::dimv() + Robot::dimu().
+  Eigen::VectorXd split_direction;
 
-  /// @brief Newton direction of beta.
-  Eigen::VectorXd dbeta;
+  /// @brief Newton direction of SplitSolution::u_passive. Size is 6.
+  Vector6d du_passive;
+
+  /// @brief Newton direction of SplitSolution::nu_passive. Size is 6.
+  Vector6d dnu_passive;
+
+  ///
+  /// @brief Return true if two SplitDirection have the same values and false if 
+  /// not. 
+  /// @param[in] other Split direction that is compared with this object.
+  ///
+  bool isApprox(const SplitDirection& other) const;
+
+  ///
+  /// @brief Set each component vector by random value based on the current 
+  /// contact status. 
+  ///
+  void setRandom();
+
+  ///
+  /// @brief Set each component vector by random value. Contact status is reset.
+  /// @param[in] contact_status Contact status.
+  ///
+  void setRandom(const ContactStatus& contact_status);
 
   ///
   /// @brief Generates split direction filled randomly.
@@ -225,29 +294,9 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  /// @brief Stack of the Newton directions.
-  Eigen::VectorXd split_direction_;
-
-  /// @brief Dimension of velocity v.
-  int dimv_;
-
-  /// @brief Dimension of state x.
-  int dimx_;
-
-  /// @brief Dimension of passive joints. 
-  int dim_passive_;
-
-  /// @brief Dimension of contact forces at the current contact status. 
-  int dimf_;
-
-  /// @brief Dimension of equality constraints at the current contact status. 
-  int dimc_;
-
-  /// @brief Dimension of the split KKT system. 
-  int dimKKT_;
-
-  /// @brief Maximum dimension of the split KKT system. 
-  int max_dimKKT_;
+  Eigen::VectorXd daf_full_, dbetamu_full_;
+  int dimv_, dimu_, dimx_, dimf_, dimKKT_;
+  bool has_floating_base_;
 
 };
 

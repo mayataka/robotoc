@@ -7,6 +7,7 @@ namespace idocp {
 
 inline CostFunctionData::CostFunctionData(const Robot& robot) 
   : qdiff(),
+    q_ref(Eigen::VectorXd::Zero(robot.dimq())),
     diff_3d(Eigen::VectorXd::Zero(3)),
     diff_6d(Eigen::VectorXd::Zero(6)),
     diff_SE3(pinocchio::SE3(Eigen::Matrix3d::Identity(), 
@@ -16,7 +17,7 @@ inline CostFunctionData::CostFunctionData(const Robot& robot)
     J_3d(Eigen::MatrixXd::Zero(3, robot.dimv())),
     J_66(Eigen::MatrixXd::Zero(6, 6)),
     JJ_6d(Eigen::MatrixXd::Zero(6, robot.dimv())) {
-  if (robot.has_floating_base()) {
+  if (robot.hasFloatingBase()) {
     qdiff.resize(robot.dimv());
     qdiff.setZero();
     J_qdiff.resize(robot.dimv(), robot.dimv());
@@ -27,6 +28,7 @@ inline CostFunctionData::CostFunctionData(const Robot& robot)
 
 inline CostFunctionData::CostFunctionData() 
   : qdiff(),
+    q_ref(),
     diff_3d(),
     diff_6d(),
     diff_SE3(),

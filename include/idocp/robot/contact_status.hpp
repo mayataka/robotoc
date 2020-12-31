@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "Eigen/Core"
+
 
 namespace idocp {
 
@@ -17,6 +19,13 @@ public:
   /// @param[in] max_point_contacts Maximum number of the point contacts. 
   ///
   ContactStatus(const int max_point_contacts);
+
+  ///
+  /// @brief Constructor. 
+  /// @param[in] is_contact_active Vector containing bool representing that each 
+  /// point contact is active or not. 
+  ///
+  ContactStatus(const std::vector<bool>& is_contact_active);
 
   ///
   /// @brief Default constructor. 
@@ -49,6 +58,16 @@ public:
   ContactStatus& operator=(ContactStatus&&) noexcept = default;
 
   ///
+  /// @brief Define comparison operator. 
+  ///
+  bool operator==(const ContactStatus& other) const;
+
+  ///
+  /// @brief Define comparison operator. 
+  ///
+  bool operator!=(const ContactStatus& other) const;
+
+  ///
   /// @brief Return true if a contact is active and false if not.
   /// @param[in] contact_index Index of a contact of interedted. 
   /// @return true if a contact is active and false if not. 
@@ -73,22 +92,28 @@ public:
   ///
   int dimf() const;
 
-  ///
-  /// @brief Return the number of the active contacts.
-  /// @return The number of the active contacts. 
-  ///
-  int num_active_contacts() const;
+  // ///
+  // /// @brief Return the number of the active contacts.
+  // /// @return The number of the active contacts. 
+  // ///
+  // int num_active_contacts() const;
 
   ///
   /// @brief Return the maximum number of the contacts.
   /// @return The maximum number of the contacts. 
   ///
-  int max_point_contacts() const;
+  int maxPointContacts() const;
+
+  ///
+  /// @brief Set from other contact status that has the same size.
+  /// @param[in] other Other contact status. 
+  ///
+  void set(const ContactStatus& other);
 
   ///
   /// @brief Set the contact status.
   /// @param[in] is_contact_active Contact status. Size must be 
-  /// ContactStatus::max_point_contacts();
+  /// ContactStatus::maxPointContacts();
   ///
   void setContactStatus(const std::vector<bool>& is_contact_active);
 
@@ -116,9 +141,45 @@ public:
   ///
   void deactivateContacts(const std::vector<int>& contact_indices);
 
+  ///
+  /// @brief Set a contact point.
+  /// @param[in] contact_index Index of the contact.
+  /// @param[in] contact_point Contact point.
+  ///
+  void setContactPoint(const int contact_index, 
+                       const Eigen::Vector3d& contact_point);
+
+  ///
+  /// @brief Set contact points.
+  /// @param[in] contact_points Contact points. Size must be 
+  /// ContactStatus::maxPointContacts().
+  ///
+  void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
+
+  ///
+  /// @brief Get contact point.
+  /// @param[in] contact_indices Indices of the contacts that are activated.
+  /// @return const reference to the contact points. 
+  ///
+  const Eigen::Vector3d& contactPoint(const int contact_index) const;
+
+  ///
+  /// @brief Get contact points.
+  /// @return const reference to the vector of contact points. 
+  ///
+  const std::vector<Eigen::Vector3d>& contactPoints() const;
+
+  ///
+  /// @brief Fill contact status randomly.
+  ///
+  void setRandom();
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 private:
   std::vector<bool> is_contact_active_;
-  int dimf_, max_point_contacts_, num_active_contacts_;
+  std::vector<Eigen::Vector3d> contact_points_;
+  int dimf_, max_point_contacts_;
   bool has_active_contacts_;
 
   void set_has_active_contacts();

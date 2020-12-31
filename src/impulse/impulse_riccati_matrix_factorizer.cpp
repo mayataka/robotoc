@@ -1,1 +1,0 @@
-#include "idocp/impulse/impulse_riccati_matrix_factorizer.hpp"

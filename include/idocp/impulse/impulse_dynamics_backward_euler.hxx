@@ -3,40 +3,20 @@
 
 #include "idocp/impulse/impulse_dynamics_backward_euler.hpp"
 
-#include "pinocchio/algorithm/cholesky.hpp"
-
 #include <assert.h>
 
 namespace idocp {
 
 inline ImpulseDynamicsBackwardEuler::ImpulseDynamicsBackwardEuler(
     const Robot& robot) 
-  : dImD_dq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    dImD_ddv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    dImD_df_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
-    Minv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    MinvImDq_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    MinvImDf_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
-    Qdvq_condensed_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Qdvf_condensed_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
-    MinvImD_(Eigen::VectorXd::Zero(robot.dimv())),
-    ldv_condensed_(Eigen::VectorXd::Zero(robot.dimv())),
+  : data_(robot),
     dimv_(robot.dimv()),
     dimf_(0) {
 }
 
 
 inline ImpulseDynamicsBackwardEuler::ImpulseDynamicsBackwardEuler() 
-  : dImD_dq_(), 
-    dImD_ddv_(), 
-    dImD_df_full_(), 
-    Minv_(), 
-    MinvImDq_(), 
-    MinvImDf_full_(), 
-    Qdvq_condensed_(), 
-    Qdvf_condensed_full_(),
-    MinvImD_(), 
-    ldv_condensed_(),
+  : data_(), 
     dimv_(0), 
     dimf_(0) {
 }
@@ -47,140 +27,137 @@ inline ImpulseDynamicsBackwardEuler::~ImpulseDynamicsBackwardEuler() {
 
 
 inline void ImpulseDynamicsBackwardEuler::linearizeImpulseDynamics(
-    Robot& robot, const ContactStatus& contact_status,  
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual) { 
-  assert(contact_status.hasActiveContacts());
-  setContactStatus(contact_status);
-  linearizeInverseImpulseDynamics(robot, contact_status, s, kkt_residual);
-  linearizeContactConstraint(robot, contact_status, kkt_matrix, kkt_residual);
-  // augment inverse dynamics constraint
-  kkt_residual.lq().noalias() += dImD_dq_.transpose() * s.beta;
-  kkt_residual.ldv.noalias() += dImD_ddv_.transpose() * s.beta;
-  kkt_residual.lf().noalias() += dImD_df_().transpose() * s.beta;
-  // augment contact constraint
-  kkt_residual.lq().noalias() += kkt_matrix.Cq().transpose() * s.mu_stack();
-  kkt_residual.lv().noalias() += kkt_matrix.Cv().transpose() * s.mu_stack();
-  kkt_residual.ldv.noalias() += kkt_matrix.Cv().transpose() * s.mu_stack();
-}
-
-
-inline void ImpulseDynamicsBackwardEuler::condenseImpulseDynamics(
-    Robot& robot, const ContactStatus& contact_status, 
-    const ImpulseSplitSolution& s, ImpulseKKTMatrix& kkt_matrix, 
-    ImpulseKKTResidual& kkt_residual) {
-  assert(contact_status.hasActiveContacts());
-  linearizeImpulseDynamics(robot, contact_status, s, kkt_matrix, kkt_residual);
-  robot.computeMinv(dImD_ddv_, Minv_);
-  MinvImDq_.noalias() = Minv_ * dImD_dq_;
-  MinvImDf_().noalias() = Minv_ * dImD_df_();
-  MinvImD_.noalias() = Minv_ * kkt_residual.dv_res;
-  Qdvq_condensed_.noalias() 
-      = (- kkt_matrix.Qdvdv.diagonal()).asDiagonal() * MinvImDq_;
-  Qdvf_condensed_().noalias() 
-      = (- kkt_matrix.Qdvdv.diagonal()).asDiagonal() * MinvImDf_();
-  ldv_condensed_.noalias() 
-      = kkt_residual.ldv - kkt_matrix.Qdvdv.diagonal().asDiagonal() * MinvImD_;
-  kkt_matrix.Qqq().noalias() -= MinvImDq_.transpose() * Qdvq_condensed_;
-  kkt_matrix.Qqf().noalias() -= MinvImDq_.transpose() * Qdvf_condensed_();
-  kkt_residual.lq().noalias() -= MinvImDq_.transpose() * ldv_condensed_;
-  kkt_matrix.Qff().noalias() -= MinvImDf_().transpose() * Qdvf_condensed_();
-  kkt_residual.lf().noalias() -= MinvImDf_().transpose() * ldv_condensed_;
-  kkt_matrix.Fvq = - MinvImDq_;
-  kkt_matrix.Fvf() = - MinvImDf_();
-  kkt_residual.Fv().noalias() -= MinvImD_;
-}
-
-
-inline void ImpulseDynamicsBackwardEuler::computeCondensedDirection(
-    const ImpulseKKTMatrix& kkt_matrix, const ImpulseKKTResidual& kkt_residual, 
-    ImpulseSplitDirection& d) const {
-  d.ddv = - MinvImDq_ * d.dq() - MinvImDf_() * d.df() - MinvImD_;
-  d.dbeta = - Minv_ * Qdvq_condensed_ * d.dq() 
-            - Minv_ * Qdvf_condensed_() * d.df()
-            - Minv_ * d.dgmm() - Minv_ * ldv_condensed_;
-}
-
-
-inline void ImpulseDynamicsBackwardEuler::computeImpulseDynamicsResidual(
-    Robot& robot, const ContactStatus& contact_status,  
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) {
-  robot.setContactForces(contact_status, s.f);
-  robot.RNEAImpulse(s.q, s.dv, kkt_residual.dv_res);
-  robot.computeContactVelocityResidual(contact_status, kkt_residual.C());
+    Robot& robot, const ImpulseStatus& impulse_status,  
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) {
+  setImpulseStatus(impulse_status);
+  linearizeInverseImpulseDynamics(robot, impulse_status, s, data_);
+  linearizeImpulseVelocityConstraint(robot, impulse_status, kkt_matrix, 
+                                     kkt_residual);
+  linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix, 
+                                     kkt_residual);
+  // augment inverse impulse dynamics constraint
+  kkt_residual.lq().noalias() += data_.dImDdq.transpose() * s.beta;
+  kkt_residual.ldv.noalias() += data_.dImDddv.transpose() * s.beta;
+  // We use an equivalence dmIDdf().transpose() = - Vv() to avoid
+  // redundant calculation of dImDdf().
+  kkt_residual.lf().noalias() -= kkt_matrix.Vv() * s.beta;
+  // augment impulse velocity constraint
+  kkt_residual.lq().noalias() += kkt_matrix.Vq().transpose() * s.mu_stack();
+  kkt_residual.lv().noalias() += kkt_matrix.Vv().transpose() * s.mu_stack();
+  // augment impulse position constraint
+  kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.xi_stack();
 }
 
 
 inline void ImpulseDynamicsBackwardEuler::linearizeInverseImpulseDynamics(
-    Robot& robot, const ContactStatus& contact_status, 
-    const ImpulseSplitSolution& s, ImpulseKKTResidual& kkt_residual) {
-  robot.setContactForces(contact_status, s.f);
-  robot.RNEAImpulse(s.q, s.dv, kkt_residual.dv_res);
-  robot.RNEAImpulseDerivatives(s.q, s.dv, dImD_dq_, dImD_ddv_);
-  robot.dRNEAPartialdFext(contact_status, dImD_df_full_);
+    Robot& robot, const ImpulseStatus& impulse_status, 
+    const ImpulseSplitSolution& s, ImpulseDynamicsBackwardEulerData& data) {
+  robot.setImpulseForces(impulse_status, s.f);
+  robot.RNEAImpulse(s.q, s.dv, data.ImD);
+  robot.RNEAImpulseDerivatives(s.q, s.dv, data.dImDdq, data.dImDddv);
 }
 
 
-inline void ImpulseDynamicsBackwardEuler::linearizeContactConstraint(
-    Robot& robot, const ContactStatus& contact_status, 
-    ImpulseKKTMatrix& kkt_matrix, ImpulseKKTResidual& kkt_residual) {
-  robot.computeContactVelocityResidual(contact_status, kkt_residual.C());
-  robot.computeContactVelocityDerivatives(contact_status, kkt_matrix.Cq(),
-                                          kkt_matrix.Cv());
+inline void ImpulseDynamicsBackwardEuler::linearizeImpulseVelocityConstraint(
+    Robot& robot, const ImpulseStatus& impulse_status, 
+    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
+  robot.computeImpulseVelocityResidual(impulse_status, kkt_residual.V());
+  robot.computeImpulseVelocityDerivatives(impulse_status, kkt_matrix.Vq(), 
+                                          kkt_matrix.Vv());
+}
+
+
+inline void ImpulseDynamicsBackwardEuler::linearizeImpulsePositionConstraint(
+      Robot& robot, const ImpulseStatus& impulse_status, 
+      ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
+  robot.computeImpulseConditionResidual(impulse_status,
+                                        impulse_status.contactPoints(),
+                                        kkt_residual.P());
+  robot.computeImpulseConditionDerivative(impulse_status, kkt_matrix.Pq());
+}
+
+
+inline void ImpulseDynamicsBackwardEuler::condenseImpulseDynamics(
+    Robot& robot, const ImpulseStatus& impulse_status, 
+    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
+  robot.computeMinv(data_.dImDddv, data_.Minv);
+  condensing(robot, data_, kkt_matrix, kkt_residual);
+}
+
+
+inline void ImpulseDynamicsBackwardEuler::condensing(
+    const Robot& robot, ImpulseDynamicsBackwardEulerData& data, 
+    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
+  const int dimv = robot.dimv();
+  kkt_matrix.Fvq().noalias() = data.Minv * data.dImDdq;
+  kkt_matrix.Fvf().noalias() = - data.Minv * kkt_matrix.Vv().transpose(); // this is Minv_dImDdf
+  data.Minv_ImD.noalias() = data.Minv * data.ImD;
+  data.Qdvq.noalias() 
+    = (- kkt_matrix.Qdvdv().diagonal()).asDiagonal() * kkt_matrix.Fvq();
+  data.Qdvf().noalias() 
+    = (- kkt_matrix.Qdvdv().diagonal()).asDiagonal() * kkt_matrix.Fvf();
+  data.ldv.noalias() 
+    = (- kkt_matrix.Qdvdv().diagonal()).asDiagonal() * data.Minv_ImD;
+  kkt_matrix.Qqq().noalias() -= kkt_matrix.Fvq().transpose() * data.Qdvq;
+  kkt_matrix.Qqf().noalias() -= kkt_matrix.Fvq().transpose() * data.Qdvf();
+  kkt_matrix.Qff().noalias() -= kkt_matrix.Fvf().transpose() * data.Qdvf();
+  kkt_residual.lq().noalias() -= kkt_matrix.Fvq().transpose() * data.ldv;
+  kkt_residual.lf().noalias() -= kkt_matrix.Fvf().transpose() * data.ldv;
+  kkt_matrix.Fvv() = - Eigen::MatrixXd::Identity(dimv, dimv);
+  kkt_residual.Fv().noalias() -= data.Minv_ImD;
+}
+
+
+inline void ImpulseDynamicsBackwardEuler::computeCondensedPrimalDirection(
+    const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitDirection& d) const {
+  d.ddv() = - data_.Minv_ImD;
+  d.ddv().noalias() -= kkt_matrix.Fvq() * d.dq();
+  d.ddv().noalias() -= kkt_matrix.Fvf() * d.df();
+}
+
+
+inline void ImpulseDynamicsBackwardEuler::computeCondensedDualDirection(
+    const Robot& robot, ImpulseSplitDirection& d) {
+  data_.ldv.noalias() += data_.Qdvq * d.dq();
+  data_.ldv.noalias() += data_.Qdvf() * d.df();
+  data_.ldv.noalias() += d.dgmm();
+  d.dbeta().noalias() = - data_.Minv * data_.ldv;
+}
+
+
+inline void ImpulseDynamicsBackwardEuler::computeImpulseDynamicsResidual(
+    Robot& robot, const ImpulseStatus& impulse_status,
+    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) {
+  setImpulseStatus(impulse_status);
+  robot.setImpulseForces(impulse_status, s.f);
+  robot.RNEAImpulse(s.q, s.dv, data_.ImD);
+  robot.computeImpulseVelocityResidual(impulse_status, kkt_residual.V());
+  robot.computeImpulseConditionResidual(impulse_status, 
+                                        impulse_status.contactPoints(), 
+                                        kkt_residual.P());
 }
 
 
 inline double ImpulseDynamicsBackwardEuler::l1NormImpulseDynamicsResidual(
-    const ImpulseKKTResidual& kkt_residual) {
-  return (kkt_residual.dv_res.lpNorm<1>() + kkt_residual.C().lpNorm<1>());
+    const ImpulseSplitKKTResidual& kkt_residual) const {
+  return (data_.ImD.lpNorm<1>() + kkt_residual.V().lpNorm<1>() 
+                                + kkt_residual.P().lpNorm<1>());
 }
 
 
 inline double ImpulseDynamicsBackwardEuler::squaredNormImpulseDynamicsResidual(
-    const ImpulseKKTResidual& kkt_residual) {
-  return (kkt_residual.dv_res.squaredNorm() + kkt_residual.C().squaredNorm());
+    const ImpulseSplitKKTResidual& kkt_residual) const {
+  return (data_.ImD.squaredNorm() + kkt_residual.V().squaredNorm() 
+                                  + kkt_residual.P().squaredNorm());
 }
 
 
-inline void ImpulseDynamicsBackwardEuler::setContactStatus(
-    const ContactStatus& contact_status) {
-  dimf_ = contact_status.dimf();
+inline void ImpulseDynamicsBackwardEuler::setImpulseStatus(
+    const ImpulseStatus& impulse_status) {
+  data_.setImpulseStatus(impulse_status);
 }
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseDynamicsBackwardEuler::dImD_df_() {
-  return dImD_df_full_.topLeftCorner(dimv_, dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsBackwardEuler::dImD_df_() const {
-  return dImD_df_full_.topLeftCorner(dimv_, dimf_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseDynamicsBackwardEuler::MinvImDf_() {
-  return MinvImDf_full_.topLeftCorner(dimv_, dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsBackwardEuler::MinvImDf_() const {
-  return MinvImDf_full_.topLeftCorner(dimv_, dimf_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> 
-ImpulseDynamicsBackwardEuler::Qdvf_condensed_() {
-  return Qdvf_condensed_full_.topLeftCorner(dimv_, dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsBackwardEuler::Qdvf_condensed_() const {
-  return Qdvf_condensed_full_.topLeftCorner(dimv_, dimf_);
-}
-
 
 } // namespace idocp 
 

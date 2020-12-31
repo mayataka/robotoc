@@ -54,8 +54,7 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithoutContact) {
   // auto contact_cost = std::make_shared<ContactCost>(robot);
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
-  Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
-  robot.generateFeasibleConfiguration(q_ref);
+  const Eigen::VectorXd q_ref = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v_weight = Eigen::VectorXd::Constant(robot.dimv(), 1);
   const Eigen::VectorXd vf_weight = Eigen::VectorXd::Constant(robot.dimv(), 1);
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(robot.dimv());
@@ -64,7 +63,7 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithoutContact) {
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Zero(robot.dimv());
   std::vector<Eigen::Vector3d> f_weight, f_ref;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Constant(0.01));
     f_ref.push_back(Eigen::Vector3d::Zero());
   }
@@ -95,8 +94,7 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithoutContact) {
   constraints->push_back(velocity_upper_limit);
   constraints->push_back(torques_lower_limit); 
   constraints->push_back(torques_upper_limit);
-  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
-  robot.generateFeasibleConfiguration(q);
+  const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   ParNMPC parnmpc(robot, cost, constraints, T_, N_, 1);
   ParNMPC parnmpc_ref(robot, cost, constraints, T_, N_, 2);
@@ -123,8 +121,7 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithContact) {
   // auto contact_cost = std::make_shared<ContactCost>(robot);
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
-  Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
-  robot.generateFeasibleConfiguration(q_ref);
+  const Eigen::VectorXd q_ref = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v_weight = Eigen::VectorXd::Constant(robot.dimv(), 1);
   const Eigen::VectorXd vf_weight = Eigen::VectorXd::Constant(robot.dimv(), 1);
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(robot.dimv());
@@ -133,7 +130,7 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithContact) {
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Zero(robot.dimv());
   std::vector<Eigen::Vector3d> f_weight, f_ref;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Constant(0.01));
     f_ref.push_back(Eigen::Vector3d::Zero());
   }
@@ -164,9 +161,8 @@ TEST_F(ParNMPCTest, updateSolutionFixedBaseWithContact) {
   constraints->push_back(velocity_upper_limit);
   constraints->push_back(torques_lower_limit); 
   constraints->push_back(torques_upper_limit);
-  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
-  robot.generateFeasibleConfiguration(q);
-  Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   ParNMPC parnmpc(robot, cost, constraints, T_, N_, 1);
   if (contact_status[0]) {
     parnmpc.activateContact(0, 0, N_);
@@ -201,8 +197,7 @@ TEST_F(ParNMPCTest, floating_base) {
   // std::shared_ptr<ContactCost> contact_cost = std::make_shared<ContactCost>(robot);
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Constant(robot.dimv(), 10);
-  Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
-  robot.generateFeasibleConfiguration(q_ref);
+  const Eigen::VectorXd q_ref = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v_weight = Eigen::VectorXd::Constant(robot.dimv(), 1);
   const Eigen::VectorXd vf_weight = Eigen::VectorXd::Constant(robot.dimv(), 1);
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(robot.dimv());
@@ -211,7 +206,7 @@ TEST_F(ParNMPCTest, floating_base) {
   const Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimv(), 0.01);
   const Eigen::VectorXd u_ref = Eigen::VectorXd::Constant(robot.dimv(), 0.1);
   std::vector<Eigen::Vector3d> f_weight, f_ref;
-  for (int i=0; i<robot.max_point_contacts(); ++i) {
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
     f_weight.push_back(Eigen::Vector3d::Constant(0.01));
     f_ref.push_back(Eigen::Vector3d::Zero());
   }
@@ -242,9 +237,8 @@ TEST_F(ParNMPCTest, floating_base) {
   constraints->push_back(velocity_upper_limit);
   constraints->push_back(torques_lower_limit); 
   constraints->push_back(torques_upper_limit);
-  Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
-  robot.generateFeasibleConfiguration(q);
-  Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   ParNMPC parnmpc(robot, cost, constraints, T_, N_, 1);
   for (int i=0; i<contact_status.size(); ++i) {
     if (contact_status[i]) {

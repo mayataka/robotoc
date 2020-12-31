@@ -14,7 +14,7 @@ public:
   ///
   /// @brief Construct a KKT matrix.
   ///
-  SchurComplement(const int max_dimA, const int max_dimD);
+  SchurComplement(const int dimA, const int dimD);
 
   ///
   /// @brief Default constructor. 
@@ -47,21 +47,28 @@ public:
   SchurComplement& operator=(SchurComplement&&) noexcept = default;
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void invertWithZeroBottomRightCorner(const int dimA, const int dimD, 
-                                       const Eigen::MatrixBase<MatrixType1>& A, 
+  void invertWithZeroBottomRightCorner(const Eigen::MatrixBase<MatrixType1>& A, 
                                        const Eigen::MatrixBase<MatrixType2>& C, 
                                        const Eigen::MatrixBase<MatrixType3>& Minv);
 
+  template <typename MatrixType1, typename MatrixType2>
+  void invertWithZeroBottomRightCorner(const Eigen::MatrixBase<MatrixType1>& C, 
+                                       const Eigen::MatrixBase<MatrixType2>& Minv);
+
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void invertWithZeroTopLeftCorner(const int dimA, const int dimD,
-                                   const Eigen::MatrixBase<MatrixType1>& B,
+  void invertWithZeroTopLeftCorner(const Eigen::MatrixBase<MatrixType1>& B,
                                    const Eigen::MatrixBase<MatrixType2>& D,
                                    const Eigen::MatrixBase<MatrixType3>& Minv);
+
+  template <typename MatrixType1, typename MatrixType2>
+  void invertWithZeroTopLeftCorner(const Eigen::MatrixBase<MatrixType1>& B,
+                                   const Eigen::MatrixBase<MatrixType2>& Minv);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int max_dimA_, max_dimD_;
+  int dimA_, dimD_;
+  Eigen::LLT<Eigen::MatrixXd> llt_Ainv_, llt_Dinv_;
   Eigen::MatrixXd SA_, SD_, CAinv_, BDinv_;
 
 };
