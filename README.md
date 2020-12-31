@@ -87,6 +87,7 @@ where "unconstrained" rigid-body systems are systems without any contacts or a f
 ## Examples
 Examples are found in examples directory.
 The following animation is the solution trajectory of the `idocp::OCPSolver` for a quadruped trotting problem.
+
 ![anymal_trotting](https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_trotting.gif)
 
 
