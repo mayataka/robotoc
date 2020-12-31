@@ -54,7 +54,13 @@ UnParNMPCSolver::~UnParNMPCSolver() {
 void UnParNMPCSolver::initConstraints() {
   #pragma omp parallel for num_threads(num_proc_)
   for (int i=0; i<N_; ++i) {
-    parnmpc_[i].initConstraints(robots_[omp_get_thread_num()], i+1, s_[i]);
+    if (i < N_-1) {
+      parnmpc_[i].initConstraints(robots_[omp_get_thread_num()], i+1, s_[i]);
+    }
+    else {
+      parnmpc_.terminal.initConstraints(robots_[omp_get_thread_num()], i+1, 
+                                        s_[i]);
+    }
   }
 }
 
@@ -139,7 +145,7 @@ double UnParNMPCSolver::KKTError() {
       kkt_error_.coeffRef(i) = parnmpc_[i].squaredNormKKTResidual(dtau_);
     }
     else {
-      kkt_error_.coeffRef(N_-1) = parnmpc_.terminal.squaredNormKKTResidual(dtau_);
+      kkt_error_.coeffRef(i) = parnmpc_.terminal.squaredNormKKTResidual(dtau_);
     }
   }
   return std::sqrt(kkt_error_.sum());
@@ -171,10 +177,19 @@ void UnParNMPCSolver::computeKKTResidual(const double t,
 
 bool UnParNMPCSolver::isCurrentSolutionFeasible() {
   for (int i=0; i<N_; ++i) {
-    const bool feasible = parnmpc_[i].isFeasible(robots_[0], s_[i]);
-    if (!feasible) {
-      std::cout << "INFEASIBLE at time stage " << i << std::endl;
-      return false;
+    if (i < N_-1) {
+      const bool feasible = parnmpc_[i].isFeasible(robots_[0], s_[i]);
+      if (!feasible) {
+        std::cout << "INFEASIBLE at time stage " << i << std::endl;
+        return false;
+      }
+    }
+    else {
+      const bool feasible = parnmpc_.terminal.isFeasible(robots_[0], s_[i]);
+      if (!feasible) {
+        std::cout << "INFEASIBLE at time stage " << i << std::endl;
+        return false;
+      }
     }
   }
   return true;

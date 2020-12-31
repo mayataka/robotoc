@@ -16,12 +16,17 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
+#include "idocp/utils/ocp_benchmarker.hpp"
+
+#define ENABLE_VIEWER
+#ifdef ENABLE_VIEWER
+#include "idocp/utils/trajectory_viewer.hpp"
+#endif 
 
 
 int main(int argc, char *argv[]) {
-  srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  const std::string path_to_urdf = "../urdf/anymal.urdf";
+  const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
   idocp::Robot robot(path_to_urdf, contact_frames);
 
   const double step_length = 0.15;
@@ -104,7 +109,7 @@ int main(int argc, char *argv[]) {
 
   const int num_proc = 4;
   const double t = 0;
-  idocp::OCPSolver ocp(robot, cost, constraints, T, N, max_num_impulse_phase, num_proc);
+  idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase, num_proc);
 
   robot.updateFrameKinematics(q_standing);
   std::vector<Eigen::Vector3d> contact_points(robot.maxPointContacts(), Eigen::Vector3d::Zero());
@@ -112,32 +117,32 @@ int main(int argc, char *argv[]) {
   auto contact_status_initial = robot.createContactStatus();
   contact_status_initial.activateContacts({0, 1, 2, 3});
   contact_status_initial.setContactPoints(contact_points);
-  ocp.setContactStatusUniformly(contact_status_initial);
+  ocp_solver.setContactStatusUniformly(contact_status_initial);
 
   auto contact_status_even = robot.createContactStatus();
   contact_status_even.activateContacts({1, 2});
   contact_status_even.setContactPoints(contact_points);
-  ocp.pushBackContactStatus(contact_status_even, t_start, t);
+  ocp_solver.pushBackContactStatus(contact_status_even, t_start, t);
 
   auto contact_status_odd = robot.createContactStatus();
   contact_points[0].coeffRef(0) += 0.5 * step_length;
   contact_points[3].coeffRef(0) += 0.5 * step_length;
   contact_status_odd.activateContacts({0, 3});
   contact_status_odd.setContactPoints(contact_points);
-  ocp.pushBackContactStatus(contact_status_odd, t_start+t_period, t);
+  ocp_solver.pushBackContactStatus(contact_status_odd, t_start+t_period, t);
 
   for (int i=2; i<=max_num_impulse_phase; ++i) {
     if (i % 2 == 0) {
       contact_points[1].coeffRef(0) += step_length;
       contact_points[2].coeffRef(0) += step_length;
       contact_status_even.setContactPoints(contact_points);
-      ocp.pushBackContactStatus(contact_status_even, t_start+i*t_period, t);
+      ocp_solver.pushBackContactStatus(contact_status_even, t_start+i*t_period, t);
     }
     else {
       contact_points[0].coeffRef(0) += step_length;
       contact_points[3].coeffRef(0) += step_length;
       contact_status_odd.setContactPoints(contact_points);
-      ocp.pushBackContactStatus(contact_status_odd, t_start+i*t_period, t);
+      ocp_solver.pushBackContactStatus(contact_status_odd, t_start+i*t_period, t);
     }
   }
 
@@ -149,17 +154,16 @@ int main(int argc, char *argv[]) {
         0.1, -0.7,  1.0; // RH
   Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 
-  ocp.setStateTrajectory(t, q, v);
-  ocp.computeKKTResidual(t, q, v);
-  std::cout << "Initial KKT error = " << ocp.KKTError() << std::endl;
-  for (int i=0; i<50; ++i) {
-    ocp.updateSolution(t, q, v);
-  }
-  ocp.computeKKTResidual(t, q, v);
-  std::cout << "KKT error after iterations = " << ocp.KKTError() << std::endl;
+  ocp_solver.setStateTrajectory(t, q, v);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 20, false);
+  ocp_solver.printSolution("end-effector", robot.contactFramesIndices());
 
-  const std::string path_to_result = "../sim_result/anymal_traj.dat";
-  ocp.saveSolution(path_to_result, "q");
+#ifdef ENABLE_VIEWER
+  const std::string pkg_search_path = argv[1];
+  idocp::TrajectoryViewer viewer(pkg_search_path, path_to_urdf);
+  const double dt = T/N;
+  viewer.display(ocp_solver.getSolution("q"), dt);
+#endif 
 
   return 0;
 }

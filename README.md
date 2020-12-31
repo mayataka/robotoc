@@ -75,8 +75,23 @@ target_include_directories(
 )
 ```
 
+The following four solvers are provided:
+- `idocp::UnOCPSolver` : Solves the OCP for "unconstrained" rigid-body systems by using Riccati recursion.
+- `idocp::UnParNMPCSolver` : Solves the OCP for "unconstrained" rigid-body systems by using ParNMPC algorithm.
+- `idocp::OCPSolver` : Solves the OCP for rigid-body systems by using Riccati recursion.
+- `idocp::ParNMPCSolver` (coming soon) : Solves the OCP for rigid-body systems by using ParNMPC algorithm.
+
+where "unconstrained" rigid-body systems are systems without any contacts or a floating-base.
+
+
+## Examples
+Examples are found in examples directory.
+The following animation is the solution trajectory of the `idocp::OCPSolver` for quadruped trotting problem.
+![anymal_trotting](https://user-images.githubusercontent.com/33686357/103411955-5230e800-4bb6-11eb-8c43-3371a740ce9f.gif)
+
+
 ## MPC Simulation 
-Simulation of the MPC of systems with rigid contacts are provided in [idocp-sim](https://github.com/mayataka/idocp-sim).
+Simulation of the MPC of systems with rigid contacts are shown in [idocp-sim](https://github.com/mayataka/idocp-sim).
 
 
 ## Related publications

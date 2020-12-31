@@ -76,6 +76,7 @@ inline void TerminalUnParNMPC::linearizeOCP(Robot& robot, const double t,
                                             SplitUnKKTResidual& unkkt_residual) {
   assert(dtau >= 0);
   assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
@@ -106,6 +107,7 @@ inline void TerminalUnParNMPC::computeCondensedDirection(Robot& robot,
                                                          const double dtau, 
                                                          const SplitSolution& s, 
                                                          SplitDirection& d) {
+  assert(dtau >= 0);
   unconstrained_dynamics_.computeCondensedDirection(dtau, kkt_matrix_, 
                                                     kkt_residual_, d);
   constraints_->computeSlackAndDualDirection(robot, constraints_data_, s, d);
@@ -147,6 +149,7 @@ inline void TerminalUnParNMPC::computeKKTResidual(Robot& robot, const double t,
                                                   const SplitSolution& s) {
   assert(dtau >= 0);
   assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
@@ -205,6 +208,9 @@ inline double TerminalUnParNMPC::constraintViolation(
     Robot& robot, const double t, const double dtau, 
     const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
     const SplitSolution& s) {
+  assert(dtau >= 0);
+  assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }

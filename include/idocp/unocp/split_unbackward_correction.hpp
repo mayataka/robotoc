@@ -91,6 +91,9 @@ public:
                                const SplitSolution& s_new, 
                                SplitDirection& d);
 
+
+  void printKKTMatInv() const;
+
 private:
   int dimv_, dimx_, dimKKT_;
   Eigen::MatrixXd KKT_mat_inv_;

@@ -170,7 +170,6 @@ inline void SplitUnKKTMatrix::invert(
     const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse) {
   assert(KKT_matrix_inverse.rows() == dimKKT_);
   assert(KKT_matrix_inverse.cols() == dimKKT_);
-  symmetrize();
   llt_Q_.compute(Q);
   assert(llt_Q_.info() == Eigen::Success);
   const_cast<Eigen::MatrixBase<MatrixType>&> (KKT_matrix_inverse).bottomRightCorner(dimQ_, dimQ_).noalias()

@@ -68,7 +68,7 @@ TEST_F(SplitUnBackwardCorrectionTest, test) {
   d_ref.split_direction = KKT_mat_inv * unkkt_residual.KKT_residual;
   s_new_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_ref.gmm = s.gmm - d_ref.dgmm();
-  s_new_ref.a   = s.a - d_ref.da();
+  s_new_ref.a   = s.a - d_ref.du();
   s_new_ref.q   = s.q - d_ref.dq();
   s_new_ref.v   = s.v - d_ref.dv();
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
@@ -91,7 +91,7 @@ TEST_F(SplitUnBackwardCorrectionTest, test) {
   corr.backwardCorrectionParallel(d, s_new);
   d_ref.split_direction.tail(dimKKT-dimx)
       = KKT_mat_inv.block(dimx, dimKKT-dimx, dimKKT-dimx, dimx) * x_res;
-  s_new_ref.a -= d_ref.da();
+  s_new_ref.a -= d_ref.du();
   s_new_ref.q -= d_ref.dq();
   s_new_ref.v -= d_ref.dv();
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
@@ -110,7 +110,7 @@ TEST_F(SplitUnBackwardCorrectionTest, test) {
       = KKT_mat_inv.topLeftCorner(dimKKT-dimx, dimx) * x_res;
   s_new_ref.lmd -= d_ref.dlmd();
   s_new_ref.gmm -= d_ref.dgmm();
-  s_new_ref.a   -= d_ref.da();
+  s_new_ref.a   -= d_ref.du();
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
   EXPECT_TRUE(d.isApprox(d_ref));
 
@@ -138,7 +138,7 @@ TEST_F(SplitUnBackwardCorrectionTest, testTerminal) {
   d_ref.split_direction = KKT_mat_inv * unkkt_residual.KKT_residual;
   s_new_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_ref.gmm = s.gmm - d_ref.dgmm();
-  s_new_ref.a   = s.a - d_ref.da();
+  s_new_ref.a   = s.a - d_ref.du();
   s_new_ref.q   = s.q - d_ref.dq();
   s_new_ref.v   = s.v - d_ref.dv();
   EXPECT_TRUE(s_new.isApprox(s_new_ref));

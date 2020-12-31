@@ -18,15 +18,13 @@
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
 #include "idocp/constraints/contact_normal_force.hpp"
-
 #include "idocp/utils/joint_constraints_factory.hpp"
 #include "idocp/utils/ocp_benchmarker.hpp"
 
 
 int main () {
-  srand((unsigned int) time(0));
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  const std::string urdf_file_name = "../urdf/anymal.urdf";
+  const std::string urdf_file_name = "../anymal_b_simple_description/urdf/anymal.urdf";
   idocp::Robot robot(urdf_file_name, contact_frames);
   auto cost = std::make_shared<idocp::CostFunction>();
   Eigen::VectorXd q_ref(robot.dimq());
@@ -96,24 +94,16 @@ int main () {
        0.0, 0.0, 0.0, 
        0.0, 0.0, 0.0,
        0.0, 0.0, 0.0;
-  idocp::OCPBenchmarker<idocp::OCPSolver> ocp_benchmarker("OCP for anymal with contacts",
-                                                          robot, cost, constraints, T, N, 
-                                                          max_num_impulse_phase, num_proc);
+  idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, 
+                              max_num_impulse_phase, num_proc);
   auto contact_status = robot.createContactStatus();
   contact_status.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q);
   robot.setContactPoints(contact_status);
-  ocp_benchmarker.getSolverHandle()->setContactStatusUniformly(contact_status);
-  ocp_benchmarker.setInitialGuessSolution(t, q, v);
-  ocp_benchmarker.testConvergence(t, q, v, 20, false);
-  ocp_benchmarker.testCPUTime(t, q, v, 1000);
-  // ocp_benchmarker.getSolverHandle()->printSolution("v");
-  // idocp::OCPBenchmarker<idocp::ParNMPC> parnmpc_benchmarker("ParNMPC for anymal with contacts",
-  //                                                           robot, cost, constraints, T, N, num_proc);
-  // parnmpc_benchmarker.setInitialGuessSolution(t, q, v);
-  // parnmpc_benchmarker.getSolverHandle()->activateContacts({0, 1, 2, 3}, 0, N);
-  // parnmpc_benchmarker.testConvergence(t, q, v, 20, false);
-  // parnmpc_benchmarker.testCPUTime(t, q, v);
+  ocp_solver.setContactStatusUniformly(contact_status);
+  ocp_solver.setStateTrajectory(t, q, v);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 20, false);
+  idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 5000, false);
 
   return 0;
 }

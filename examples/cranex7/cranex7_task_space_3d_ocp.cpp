@@ -12,6 +12,7 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/utils/joint_constraints_factory.hpp"
 #include "idocp/utils/ocp_benchmarker.hpp"
+#include "idocp/utils/trajectory_viewer.hpp"
 
 
 int main() {
@@ -27,7 +28,6 @@ int main() {
   config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  config_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.001));
   const int end_effector_frame_id = 26;
   auto task_3d_cost = std::make_shared<idocp::TaskSpace3DCost>(robot, end_effector_frame_id);
   task_3d_cost->set_q_3d_weight(Eigen::Vector3d::Constant(1000));
@@ -41,7 +41,6 @@ int main() {
   // Create constraints
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
-  // auto constraints = std::make_shared<idocp::Constraints>();
 
   // Create the OCP solver for unconstrained rigid-body systems.
   const double T = 1;
@@ -54,10 +53,10 @@ int main() {
 
   // Solves the OCP.
   ocp_solver.setStateTrajectory(t, q, v);
-  const int num_iteration = 1;
+  const int num_iteration = 30;
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);
-  // ocp_solver.printSolution("end-effector", {end_effector_frame_id});
+  ocp_solver.printSolution("end-effector", {end_effector_frame_id});
 
   return 0;
 }

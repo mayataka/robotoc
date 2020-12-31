@@ -12,15 +12,14 @@ namespace idocp {
 
 class TrajectoryViewer {
 public:
-  TrajectoryViewer(const std::string& path_to_description_pkg, 
+  TrajectoryViewer(const std::string& description_pkg_serach_path, 
                    const std::string& path_to_urdf);
 
   void display(const std::vector<Eigen::VectorXd>& q_traj, 
-               const double sampling_period_in_sec, const bool recording=false,
-               const std::string& path_to_save_file="");
+               const double sampling_period_in_sec);
 
 private:
-  std::string path_to_description_pkg_, path_to_urdf_;
+  std::string description_pkg_serach_path_, path_to_urdf_;
   
 };
 

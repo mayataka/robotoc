@@ -17,7 +17,7 @@ namespace idocp {
 
 ///
 /// @class UnParNMPCSolver
-/// @brief Optimal control problem solver by Riccati recursion for 
+/// @brief Optimal control problem solver by ParNMPC algorithm for 
 /// "unconstrained" rigid-body systems. "Unconstrained" means that the system 
 /// does not have either a floating base or any contacts.
 ///

@@ -116,10 +116,10 @@ void UnBackwardCorrection::backwardCorrection(std::vector<Robot>& robots,
   for (int i=0; i<N_; ++i) {
     if (i > 0) {
       corrector_[i].forwardCorrectionParallel(d[i], s_new_[i]);
-      aux_mat_[i] = corrector_[i].auxMat();
+      aux_mat_[i] = - corrector_[i].auxMat();
     }
     SplitUnBackwardCorrection::computeDirection(s[i], s_new_[i], d[i]);
-    if (i <N_-1) {
+    if (i < N_-1) {
       parnmpc[i].computeCondensedDirection(robots[omp_get_thread_num()],
                                            dtau_, s[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc[i].maxPrimalStepSize();

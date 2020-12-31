@@ -39,13 +39,7 @@ inline void SplitUnBackwardCorrection::coarseUpdate(
   assert(aux_mat_next.rows() == dimx_);
   assert(aux_mat_next.cols() == dimx_);
   unkkt_matrix.Qxx().noalias() += aux_mat_next;
-  unkkt_matrix.invert(dtau , KKT_mat_inv_);
-  d.split_direction.noalias() = KKT_mat_inv_ * unkkt_residual.KKT_residual;
-  s_new.lmd = s.lmd - d.dlmd();
-  s_new.gmm = s.gmm - d.dgmm();
-  s_new.a   = s.a - d.da();
-  s_new.q   = s.q - d.dq();
-  s_new.v   = s.v - d.dv();
+  coarseUpdate(dtau, unkkt_matrix, unkkt_residual, s, d, s_new);
 }
 
 
@@ -53,13 +47,22 @@ inline void SplitUnBackwardCorrection::coarseUpdate(
     const double dtau, SplitUnKKTMatrix& unkkt_matrix, 
     const SplitUnKKTResidual& unkkt_residual, const SplitSolution& s, 
     SplitDirection& d, SplitSolution& s_new) {
+  unkkt_matrix.Qvq() = unkkt_matrix.Qqv().transpose();
+  unkkt_matrix.Qxa() = unkkt_matrix.Qax().transpose();
   unkkt_matrix.invert(dtau , KKT_mat_inv_);
   d.split_direction.noalias() = KKT_mat_inv_ * unkkt_residual.KKT_residual;
   s_new.lmd = s.lmd - d.dlmd();
   s_new.gmm = s.gmm - d.dgmm();
-  s_new.a   = s.a - d.da();
+  // In the unconstrained backward correction, we regard d.du as d.da.
+  s_new.a   = s.a - d.du(); 
   s_new.q   = s.q - d.dq();
   s_new.v   = s.v - d.dv();
+}
+
+
+inline void SplitUnBackwardCorrection::printKKTMatInv() const {
+  std::cout << "KKT_mat_inv_" << std::endl;
+  std::cout << KKT_mat_inv_ << std::endl;
 }
 
 
@@ -84,7 +87,8 @@ inline void SplitUnBackwardCorrection::backwardCorrectionParallel(
     SplitDirection& d, SplitSolution& s_new) const {
   d.split_direction.tail(dimKKT_-dimx_).noalias()
       = KKT_mat_inv_.block(dimx_, dimKKT_-dimx_, dimKKT_-dimx_, dimx_) * x_res_;
-  s_new.a.noalias() -= d.da();
+  // In the unconstrained backward correction, we regard d.du as d.da.
+  s_new.a.noalias() -= d.du();
   s_new.q.noalias() -= d.dq();
   s_new.v.noalias() -= d.dv();
 }
@@ -107,7 +111,8 @@ inline void SplitUnBackwardCorrection::forwardCorrectionParallel(
       = KKT_mat_inv_.topLeftCorner(dimKKT_-dimx_, dimx_) * x_res_;
   s_new.lmd.noalias() -= d.dlmd();
   s_new.gmm.noalias() -= d.dgmm();
-  s_new.a.noalias()   -= d.da();
+  // In the unconstrained backward correction, we regard d.du as d.da.
+  s_new.a.noalias()   -= d.du();
 }
 
 
