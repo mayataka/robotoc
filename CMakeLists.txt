@@ -108,6 +108,7 @@ add_library(
   src/ocp/ocp_solver.cpp
   src/unocp/split_unkkt_residual.cpp
   src/unocp/split_unkkt_matrix.cpp
+  src/unocp/unconstrained_container.cpp
   src/unocp/unconstrained_dynamics.cpp
   src/unocp/split_unocp.cpp
   src/unocp/backward_unriccati_recursion_factorizer.cpp

@@ -111,7 +111,7 @@ public:
   ///
   UnParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
             const std::shared_ptr<Constraints>& constraints, const int N) 
-    : data(N, SplitUnParNMPC(robot, cost, constraints)), 
+    : data(N-1, SplitUnParNMPC(robot, cost, constraints)), 
       terminal(TerminalUnParNMPC(robot, cost, constraints)) {
   }
 

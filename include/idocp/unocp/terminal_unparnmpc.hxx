@@ -19,8 +19,7 @@ inline TerminalUnParNMPC::TerminalUnParNMPC(
     use_kinematics_(false),
     kkt_matrix_(robot),
     kkt_residual_(robot) {
-  if (cost_->useKinematics() || constraints_->useKinematics() 
-                             || robot.maxPointContacts() > 0) {
+  if (cost_->useKinematics() || constraints_->useKinematics()) {
     use_kinematics_ = true;
   }
   try {

@@ -73,7 +73,7 @@ void UnParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                     unkkt_residual_, s_, d_);
   backward_correction_.backwardCorrection(robots_, parnmpc_, s_, d_);
   const double primal_step_size = backward_correction_.primalStepSize();
-  const double dual_step_size = backward_correction_.dualStepSize();
+  const double dual_step_size   = backward_correction_.dualStepSize();
   if (use_line_search) {
     // TODO: add filter line search method to choose primal_step_size
   }
@@ -152,7 +152,7 @@ void UnParNMPCSolver::computeKKTResidual(const double t,
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<=N_; ++i) {
+  for (int i=0; i<N_; ++i) {
     if (i == 0) {
       parnmpc_[0].computeKKTResidual(robots_[omp_get_thread_num()], t+dtau_,   
                                      dtau_, q, v, s_[0], s_[1]);

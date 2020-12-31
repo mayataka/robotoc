@@ -58,9 +58,9 @@ inline void UnconstrainedDynamics::linearizeUnconstrainedDynamics(
   assert(dtau >= 0);
   linearizeInverseDynamics(robot, s);
   // augment inverse dynamics constraint
-  kkt_residual.la.noalias() += dtau * dID_da_.transpose() * s.beta;
   kkt_residual.lq().noalias() += dtau * dID_dq_.transpose() * s.beta;
   kkt_residual.lv().noalias() += dtau * dID_dv_.transpose() * s.beta;
+  kkt_residual.la.noalias()   += dtau * dID_da_.transpose() * s.beta;
   kkt_residual.lu().noalias() -= dtau * s.beta; 
 }
 

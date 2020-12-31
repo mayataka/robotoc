@@ -17,8 +17,8 @@ UnOCPSolver::UnOCPSolver(const Robot& robot,
     riccati_recursion_(robot, T, N),
     terminal_kkt_matrix_(robot),
     terminal_kkt_residual_(robot),
-    unkkt_matrix_(N+1, SplitUnKKTMatrix(robot)),
-    unkkt_residual_(N+1, SplitUnKKTResidual(robot)),
+    unkkt_matrix_(N, SplitUnKKTMatrix(robot)),
+    unkkt_residual_(N, SplitUnKKTResidual(robot)),
     s_(N+1, SplitSolution(robot)),
     d_(N+1, SplitDirection(robot)),
     riccati_factorization_(N+1, SplitRiccatiFactorization(robot)),
@@ -58,8 +58,13 @@ UnOCPSolver::~UnOCPSolver() {
 
 void UnOCPSolver::initConstraints() {
   #pragma omp parallel for num_threads(num_proc_)
-  for (int i=0; i<N_; ++i) {
-    ocp_[i].initConstraints(robots_[omp_get_thread_num()], i, s_[i]);
+  for (int i=0; i<=N_; ++i) {
+    if (i < N_) {
+      ocp_[i].initConstraints(robots_[omp_get_thread_num()], i, s_[i]);
+    }
+    else {
+      ocp_.terminal.initConstraints(robots_[omp_get_thread_num()], N_, s_[N_]);
+    }
   }
 }
 
@@ -101,11 +106,11 @@ void UnOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
       ocp_[i].computeCondensedDirection(robots_[omp_get_thread_num()], dtau_,
                                         s_[i], d_[i]);
       primal_step_size_.coeffRef(i) = ocp_[i].maxPrimalStepSize();
-      dual_step_size_.coeffRef(i) = ocp_[i].maxPrimalStepSize();
+      dual_step_size_.coeffRef(i)   = ocp_[i].maxDualStepSize();
     }
   }
   const double primal_step_size = primal_step_size_.minCoeff();
-  const double dual_step_size = dual_step_size_.minCoeff();
+  const double dual_step_size   = dual_step_size_.minCoeff();
   if (use_line_search) {
     // TODO: add filter line search method to choose primal_step_size
   }
@@ -118,7 +123,7 @@ void UnOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
     }
     else {
       ocp_.terminal.updatePrimal(robots_[omp_get_thread_num()],  
-                                 primal_step_size, d_[i], s_[i]);
+                                 primal_step_size, d_[N_], s_[N_]);
       ocp_.terminal.updateDual(dual_step_size);
     }
   }
