@@ -39,11 +39,11 @@ public:
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
   /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
   /// Must be non-negative. Default is 0.
-  /// @param[in] num_proc Number of the threads in solving the optimal control 
+  /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
   RiccatiDirectionCalculator(const int N, const int max_num_impulse, 
-                             const int num_proc);
+                             const int nthreads);
 
   ///
   /// @brief Default constructor. 
@@ -98,7 +98,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int N_, num_proc_, N_all_;
+  int N_, nthreads_, N_all_;
   Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 
 };

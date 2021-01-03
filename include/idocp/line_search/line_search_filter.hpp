@@ -13,15 +13,30 @@ namespace idocp {
 ///
 class LineSearchFilter {
 public:
-  LineSearchFilter();
+  LineSearchFilter(const double cost_reduction_rate=0.005, 
+                   const double constraints_reduction_rate=0.005);
 
   ~LineSearchFilter();
 
-  // Use default copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   LineSearchFilter(const LineSearchFilter&) = default;
 
-  // Use default copy operator.
+  ///
+  /// @brief Default copy assign operator. 
+  ///
   LineSearchFilter& operator=(const LineSearchFilter&) = default;
+
+  ///
+  /// @brief Default move constructor. 
+  ///
+  LineSearchFilter(LineSearchFilter&&) noexcept = default;
+
+  ///
+  /// @brief Default move assign operator. 
+  ///
+  LineSearchFilter& operator=(LineSearchFilter&&) noexcept = default;
 
   bool isAccepted(const double cost, const double constraint_violation);
 

@@ -80,7 +80,7 @@ int main () {
   const double T = 0.5;
   const int N = 20;
   const int max_num_impulse_phase = 4;
-  const int num_proc = 4;
+  const int nthreads = 4;
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   q << 0, 0, 0.4792, 0, 0, 0, 1, 
@@ -95,7 +95,7 @@ int main () {
        0.0, 0.0, 0.0,
        0.0, 0.0, 0.0;
   idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, 
-                              max_num_impulse_phase, num_proc);
+                              max_num_impulse_phase, nthreads);
   auto contact_status = robot.createContactStatus();
   contact_status.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q);

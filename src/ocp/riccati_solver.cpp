@@ -6,13 +6,13 @@
 namespace idocp {
 
 RiccatiSolver::RiccatiSolver(const Robot& robot, const int N, 
-                             const int max_num_impulse, const int num_proc) 
-  : riccati_recursion_(robot, N, num_proc),
+                             const int max_num_impulse, const int nthreads) 
+  : riccati_recursion_(robot, N, nthreads),
     riccati_factorizer_(robot, N, max_num_impulse),
     riccati_factorization_(robot, N, max_num_impulse),
-    constraint_factorizer_(robot, N, max_num_impulse, num_proc),
+    constraint_factorizer_(robot, N, max_num_impulse, nthreads),
     constraint_factorization_(robot, N, max_num_impulse),
-    direction_calculator_(N, max_num_impulse, num_proc) {
+    direction_calculator_(N, max_num_impulse, nthreads) {
   try {
     if (N <= 0) {
       throw std::out_of_range("invalid value: N must be positive!");
@@ -20,8 +20,8 @@ RiccatiSolver::RiccatiSolver(const Robot& robot, const int N,
     if (max_num_impulse < 0) {
       throw std::out_of_range("invalid value: max_num_impulse must be non-negative!");
     }
-    if (num_proc <= 0) {
-      throw std::out_of_range("invalid value: num_proc must be positive!");
+    if (nthreads <= 0) {
+      throw std::out_of_range("invalid value: nthreads must be positive!");
     }
   }
   catch(const std::exception& e) {

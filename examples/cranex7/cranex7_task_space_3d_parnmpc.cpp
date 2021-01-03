@@ -44,11 +44,11 @@ int main() {
   // Creates the ParNMPC solver for unconstrained rigid-body systems.
   const double T = 1;
   const int N = 20;
-  const int num_proc = 4;
+  const int nthreads = 4;
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  idocp::UnParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, num_proc);
+  idocp::UnParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, nthreads);
 
   // Solves the OCP.
   parnmpc_solver.setStateTrajectory(t, q, v);

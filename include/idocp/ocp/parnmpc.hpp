@@ -31,12 +31,12 @@ public:
   /// @param[in] constraints Shared ptr to the constraints.
   /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] num_proc Number of the threads in solving the OCP. Must be 
+  /// @param[in] nthreads Number of the threads in solving the OCP. Must be 
   /// positive. Default is 1.
   ///
   ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
           const std::shared_ptr<Constraints>& constraints, 
-          const double T, const int N, const int num_proc=1);
+          const double T, const int N, const int nthreads=1);
 
   ///
   /// @brief Default constructor. Does not construct any datas. 
@@ -231,7 +231,7 @@ private:
   ContactSequence contact_sequence_;
   LineSearchFilter filter_;
   double T_, dtau_, step_size_reduction_rate_, min_step_size_;
-  int N_, num_proc_;
+  int N_, nthreads_;
   std::vector<SplitSolution> s_, s_new_;
   std::vector<SplitDirection> d_;
   std::vector<Eigen::MatrixXd> aux_mat_old_;

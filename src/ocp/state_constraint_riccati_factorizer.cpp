@@ -6,11 +6,12 @@
 namespace idocp {
 
 StateConstraintRiccatiFactorizer::StateConstraintRiccatiFactorizer(
-    const Robot& robot, const int N, const int max_num_impulse, const int nproc) 
+    const Robot& robot, const int N, const int max_num_impulse, 
+    const int nthreads) 
   : ldlt_(Eigen::LDLT<Eigen::MatrixXd>()),
     lp_factorizer_(max_num_impulse, StateConstraintRiccatiLPFactorizer(robot)),
     N_(N),
-    nproc_(nproc) { 
+    nthreads_(nthreads) { 
 }
 
 
@@ -18,7 +19,7 @@ StateConstraintRiccatiFactorizer::StateConstraintRiccatiFactorizer()
   : ldlt_(),
     lp_factorizer_(),
     N_(0),
-    nproc_(0) { 
+    nthreads_(0) { 
 }
 
 
@@ -32,7 +33,7 @@ void StateConstraintRiccatiFactorizer::computeLagrangeMultiplierDirection(
     StateConstraintRiccatiFactorization& constraint_factorization,
     Direction& d) {
   const int num_impulse = ocp_discretizer.numImpulseStages();
-  #pragma omp parallel for num_threads(nproc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<num_impulse; ++i) {
     lp_factorizer_[i].factorizeLinearProblem(ocp_discretizer, 
                                              riccati_factorization.impulse[i], 
@@ -58,7 +59,7 @@ void StateConstraintRiccatiFactorizer::aggregateLagrangeMultiplierDirection(
   const int N_impulse = ocp_discretizer.numImpulseStages();
   const int N_lift = ocp_discretizer.numLiftStages();
   const int N_all = N_ + 2*N_impulse + N_lift;
-  #pragma omp parallel for num_threads(nproc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
       riccati_factorization[i].n.setZero();

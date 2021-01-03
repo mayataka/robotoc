@@ -26,7 +26,7 @@ protected:
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N = 20;
     max_num_impulse = 5;
-    nproc = 4;
+    nthreads = 4;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     dtau = T / N;
@@ -43,7 +43,7 @@ protected:
   void test(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  int N, max_num_impulse, nproc;
+  int N, max_num_impulse, nthreads;
   double T, t, dtau;
 };
 
@@ -75,12 +75,12 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
-  OCPLinearizer linearizer(N, max_num_impulse, nproc);
-  std::vector<Robot> robots(nproc, robot);
+  OCPLinearizer linearizer(N, max_num_impulse, nthreads);
+  std::vector<Robot> robots(nthreads, robot);
   linearizer.initConstraints(ocp, robots, contact_sequence, s);
   linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
-  RiccatiRecursion riccati_recursion(robot, N, nproc);
-  StateConstraintRiccatiFactorizer constraint_factorizer(robot, N, max_num_impulse, nproc);
+  RiccatiRecursion riccati_recursion(robot, N, nthreads);
+  StateConstraintRiccatiFactorizer constraint_factorizer(robot, N, max_num_impulse, nthreads);
   RiccatiFactorization factorization(robot, N, max_num_impulse);
   RiccatiFactorizer factorizer(robot, N, max_num_impulse);
   StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
@@ -114,7 +114,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
   d_ref = d;
   auto ocp_ref = ocp;
-  RiccatiDirectionCalculator direction_calculator(N, max_num_impulse, nproc);
+  RiccatiDirectionCalculator direction_calculator(N, max_num_impulse, nthreads);
   direction_calculator.computeNewtonDirectionFromRiccatiFactorization(
       ocp, robots, factorizer, factorization, s, d);
   const double primal_step_size = direction_calculator.maxPrimalStepSize();

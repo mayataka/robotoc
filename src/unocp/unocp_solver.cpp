@@ -11,10 +11,11 @@ namespace idocp {
 UnOCPSolver::UnOCPSolver(const Robot& robot, 
                          const std::shared_ptr<CostFunction>& cost, 
                          const std::shared_ptr<Constraints>& constraints, 
-                         const double T, const int N, const int num_proc)
-  : robots_(num_proc, robot),
+                         const double T, const int N, const int nthreads)
+  : robots_(nthreads, robot),
     ocp_(robot, cost, constraints, N),
     riccati_recursion_(robot, T, N),
+    line_search_(robot, T, N, nthreads),
     terminal_kkt_matrix_(robot),
     terminal_kkt_residual_(robot),
     unkkt_matrix_(N, SplitUnKKTMatrix(robot)),
@@ -23,7 +24,7 @@ UnOCPSolver::UnOCPSolver(const Robot& robot,
     d_(N+1, SplitDirection(robot)),
     riccati_factorization_(N+1, SplitRiccatiFactorization(robot)),
     N_(N),
-    num_proc_(num_proc),
+    nthreads_(nthreads),
     T_(T),
     dtau_(T/N),
     primal_step_size_(Eigen::VectorXd::Zero(N)), 
@@ -36,8 +37,8 @@ UnOCPSolver::UnOCPSolver(const Robot& robot,
     if (N <= 0) {
       throw std::out_of_range("invalid value: N must be positive!");
     }
-    if (num_proc <= 0) {
-      throw std::out_of_range("invalid value: num_proc must be positive!");
+    if (nthreads <= 0) {
+      throw std::out_of_range("invalid value: nthreads must be positive!");
     }
   }
   catch(const std::exception& e) {
@@ -57,7 +58,7 @@ UnOCPSolver::~UnOCPSolver() {
 
 
 void UnOCPSolver::initConstraints() {
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
       ocp_[i].initConstraints(robots_[omp_get_thread_num()], i, s_[i]);
@@ -74,7 +75,7 @@ void UnOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                  const bool use_line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i == 0) {
       ocp_[0].linearizeOCP(robots_[omp_get_thread_num()], t, dtau_, q, 
@@ -98,7 +99,7 @@ void UnOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   d_[0].dq() = q - s_[0].q;
   d_[0].dv() = v - s_[0].v;
   riccati_recursion_.forwardRiccatiRecursion(unkkt_residual_, d_);
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     SplitUnRiccatiFactorizer::computeCostateDirection(riccati_factorization_[i], 
                                                       d_[i]);
@@ -109,12 +110,14 @@ void UnOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
       dual_step_size_.coeffRef(i)   = ocp_[i].maxDualStepSize();
     }
   }
-  const double primal_step_size = primal_step_size_.minCoeff();
+  double primal_step_size = primal_step_size_.minCoeff();
   const double dual_step_size   = dual_step_size_.minCoeff();
   if (use_line_search) {
-    // TODO: add filter line search method to choose primal_step_size
+    const double max_primal_step_size = primal_step_size;
+    primal_step_size = line_search_.computeStepSize(ocp_, robots_, t, q, v, 
+                                                    s_, d_, max_primal_step_size);
   }
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
       ocp_[i].updatePrimal(robots_[omp_get_thread_num()], primal_step_size, 
@@ -164,12 +167,12 @@ bool UnOCPSolver::setStateTrajectory(const double t, const Eigen::VectorXd& q,
 
 
 void UnOCPSolver::clearLineSearchFilter() {
-  // filter_.clear();
+  line_search_.clearFilter();
 }
 
 
 double UnOCPSolver::KKTError() {
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
       kkt_error_.coeffRef(i) = ocp_[i].squaredNormKKTResidual(dtau_);
@@ -187,7 +190,7 @@ void UnOCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
                                      const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i == 0) {
       ocp_[0].computeKKTResidual(robots_[omp_get_thread_num()], t, dtau_,  

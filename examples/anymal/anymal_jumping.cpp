@@ -107,9 +107,9 @@ int main(int argc, char *argv[]) {
   const int N = 100;
   const int max_num_impulse_phase = 3;
 
-  const int num_proc = 4;
+  const int nthreads = 4;
   const double t = 0;
-  idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase, num_proc);
+  idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase, nthreads);
 
   robot.updateFrameKinematics(q_standing);
   std::vector<Eigen::Vector3d> contact_points(robot.maxPointContacts(), Eigen::Vector3d::Zero());

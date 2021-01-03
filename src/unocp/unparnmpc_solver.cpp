@@ -11,16 +11,17 @@ namespace idocp {
 UnParNMPCSolver::UnParNMPCSolver(const Robot& robot, 
                                  const std::shared_ptr<CostFunction>& cost, 
                                  const std::shared_ptr<Constraints>& constraints, 
-                                 const double T, const int N, const int num_proc)
-  : robots_(num_proc, robot),
+                                 const double T, const int N, const int nthreads)
+  : robots_(nthreads, robot),
     parnmpc_(robot, cost, constraints, N),
-    backward_correction_(robot, T, N, num_proc),
+    backward_correction_(robot, T, N, nthreads),
+    line_search_(robot, T, N, nthreads),
     unkkt_matrix_(N, SplitUnKKTMatrix(robot)),
     unkkt_residual_(N, SplitUnKKTResidual(robot)),
     s_(N, SplitSolution(robot)),
     d_(N, SplitDirection(robot)),
     N_(N),
-    num_proc_(num_proc),
+    nthreads_(nthreads),
     T_(T),
     dtau_(T/N),
     kkt_error_(Eigen::VectorXd::Zero(N)) {
@@ -31,8 +32,8 @@ UnParNMPCSolver::UnParNMPCSolver(const Robot& robot,
     if (N <= 0) {
       throw std::out_of_range("invalid value: N must be positive!");
     }
-    if (num_proc <= 0) {
-      throw std::out_of_range("invalid value: num_proc must be positive!");
+    if (nthreads <= 0) {
+      throw std::out_of_range("invalid value: nthreads must be positive!");
     }
   }
   catch(const std::exception& e) {
@@ -52,7 +53,7 @@ UnParNMPCSolver::~UnParNMPCSolver() {
 
 
 void UnParNMPCSolver::initConstraints() {
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     if (i < N_-1) {
       parnmpc_[i].initConstraints(robots_[omp_get_thread_num()], i+1, s_[i]);
@@ -78,12 +79,14 @@ void UnParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   backward_correction_.coarseUpdate(robots_, parnmpc_, t, q, v, unkkt_matrix_,
                                     unkkt_residual_, s_, d_);
   backward_correction_.backwardCorrection(robots_, parnmpc_, s_, d_);
-  const double primal_step_size = backward_correction_.primalStepSize();
+  double primal_step_size = backward_correction_.primalStepSize();
   const double dual_step_size   = backward_correction_.dualStepSize();
   if (use_line_search) {
-    // TODO: add filter line search method to choose primal_step_size
+    const double max_primal_step_size = primal_step_size;
+    primal_step_size = line_search_.computeStepSize(parnmpc_, robots_, t, q, v, 
+                                                    s_, d_, max_primal_step_size);
   }
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     if (i < N_-1) {
       parnmpc_[i].updatePrimal(robots_[omp_get_thread_num()], primal_step_size, 
@@ -134,12 +137,12 @@ bool UnParNMPCSolver::setStateTrajectory(const double t,
 
 
 void UnParNMPCSolver::clearLineSearchFilter() {
-  // filter_.clear();
+  line_search_.clearFilter();
 }
 
 
 double UnParNMPCSolver::KKTError() {
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     if (i < N_-1) {
       kkt_error_.coeffRef(i) = parnmpc_[i].squaredNormKKTResidual(dtau_);
@@ -157,7 +160,7 @@ void UnParNMPCSolver::computeKKTResidual(const double t,
                                          const Eigen::VectorXd& v) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     if (i == 0) {
       parnmpc_[0].computeKKTResidual(robots_[omp_get_thread_num()], t+dtau_,   

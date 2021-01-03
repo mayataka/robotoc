@@ -113,9 +113,9 @@ int main(int argc, char *argv[]) {
   const int N = 140;
   const int max_num_impulse_phase = (steps+3)*2;
 
-  const int num_proc = 4;
+  const int nthreads = 4;
   const double t = 0;
-  idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase, num_proc);
+  idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase, nthreads);
 
   robot.updateFrameKinematics(q_standing);
   std::vector<Eigen::Vector3d> contact_points(robot.maxPointContacts(), Eigen::Vector3d::Zero());
@@ -227,7 +227,7 @@ int main(int argc, char *argv[]) {
     const std::string pkg_search_path = argv[1];
     idocp::TrajectoryViewer viewer(pkg_search_path, path_to_urdf);
     const double dt = T/N;
-    viewer.display(ocp_solver.getSolution("q"), 0.9*dt);
+    viewer.display(ocp_solver.getSolution("q"), dt);
   }
 #endif 
 

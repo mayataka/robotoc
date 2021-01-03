@@ -26,7 +26,7 @@ protected:
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     T = 1;
     dtau = T / N;
-    nproc = 4;
+    nthreads = 4;
   }
 
   virtual void TearDown() {
@@ -37,7 +37,7 @@ protected:
   void testAggregateLagrangeMultiplierDirection(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  int N, max_num_impulse, nproc;
+  int N, max_num_impulse, nthreads;
   double t, T, dtau;
 };
 
@@ -76,7 +76,7 @@ void StateConstraintRiccatiFactorizerTest::testComputeLagrangeMultiplierDirectio
     d.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
     d.impulse[i].dxi().setRandom();
   }
-  StateConstraintRiccatiFactorizer factorizer(robot, N, max_num_impulse, nproc);
+  StateConstraintRiccatiFactorizer factorizer(robot, N, max_num_impulse, nthreads);
   auto riccati_factorization_ref = riccati_factorization;
   auto constraint_factorization_ref = constraint_factorization;
   auto d_ref = d;
@@ -138,7 +138,7 @@ void StateConstraintRiccatiFactorizerTest::testAggregateLagrangeMultiplierDirect
   for (int i=0; i<num_lift; ++i) {
     factorization.lift[i].n.setRandom();
   }
-  StateConstraintRiccatiFactorizer factorizer(robot, N, max_num_impulse, nproc);
+  StateConstraintRiccatiFactorizer factorizer(robot, N, max_num_impulse, nthreads);
   auto factorization_ref = factorization;
   OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
   ocp_discretizer.discretizeOCP(contact_sequence, t);

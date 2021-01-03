@@ -93,13 +93,13 @@ inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
                                        const Eigen::VectorXd& v, 
                                        const Solution& s, KKTMatrix& kkt_matrix,
                                        KKTResidual& kkt_residual) const {
-  assert(robots.size() == num_proc_);
+  assert(robots.size() == nthreads_);
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
   const int N_impulse = ocp.discrete().numImpulseStages();
   const int N_lift = ocp.discrete().numLiftStages();
   const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
       if (ocp.discrete().isTimeStageBeforeImpulse(i)) {

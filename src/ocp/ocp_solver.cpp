@@ -11,19 +11,19 @@ OCPSolver::OCPSolver(const Robot& robot,
                      const std::shared_ptr<CostFunction>& cost, 
                      const std::shared_ptr<Constraints>& constraints, 
                      const double T, const int N, const int max_num_impulse, 
-                     const int num_proc)
-  : robots_(num_proc, robot),
+                     const int nthreads)
+  : robots_(nthreads, robot),
     contact_sequence_(robot, N),
-    ocp_linearizer_(N, max_num_impulse, num_proc),
-    riccati_solver_(robot, N, max_num_impulse, num_proc),
+    ocp_linearizer_(N, max_num_impulse, nthreads),
+    riccati_solver_(robot, N, max_num_impulse, nthreads),
+    line_search_(robot, N, max_num_impulse, nthreads),
     ocp_(robot, cost, constraints, T, N, max_num_impulse),
     kkt_matrix_(robot, N, max_num_impulse),
     kkt_residual_(robot, N, max_num_impulse),
     s_(robot, N, max_num_impulse),
     d_(robot, N, max_num_impulse),
-    // line_search_(),
     N_(N),
-    num_proc_(num_proc) {
+    nthreads_(nthreads) {
   try {
     if (T <= 0) {
       throw std::out_of_range("invalid value: T must be positive!");
@@ -34,8 +34,8 @@ OCPSolver::OCPSolver(const Robot& robot,
     if (max_num_impulse < 0) {
       throw std::out_of_range("invalid value: max_num_impulse must be non-negative!");
     }
-    if (num_proc <= 0) {
-      throw std::out_of_range("invalid value: num_proc must be positive!");
+    if (nthreads <= 0) {
+      throw std::out_of_range("invalid value: nthreads must be positive!");
     }
   }
   catch(const std::exception& e) {
@@ -78,7 +78,10 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   double primal_step_size = riccati_solver_.maxPrimalStepSize();
   const double dual_step_size = riccati_solver_.maxDualStepSize();
   if (use_line_search) {
-    // TODO: add filter line search method to choose primal_step_size
+    const double max_primal_step_size = primal_step_size;
+    primal_step_size = line_search_.computeStepSize(ocp_, robots_, 
+                                                    contact_sequence_, q, v, 
+                                                    s_, d_, max_primal_step_size);
   }
   ocp_linearizer_.integrateSolution(ocp_, robots_, kkt_matrix_, kkt_residual_, 
                                     primal_step_size, dual_step_size, d_, s_);
@@ -265,7 +268,7 @@ void OCPSolver::popFrontDiscreteEvent() {
 
 
 void OCPSolver::clearLineSearchFilter() {
-  // filter_.clear();
+  line_search_.clearFilter();
 }
 
 

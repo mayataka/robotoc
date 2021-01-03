@@ -1,70 +1,55 @@
 #include "idocp/line_search/line_search.hpp"
 
+#include <stdexcept>
 #include <cassert>
 
 
 namespace idocp {
 
-
-LineSearch::LineSearch(const int N, const int max_num_impulse, 
-                       const int num_proc) 
+LineSearch::LineSearch(const Robot& robot, const int N, 
+                       const int max_num_impulse, const int nthreads, 
+                       const double step_size_reduction_rate,
+                       const double min_step_size) 
   : filter_(),
-    max_num_impulse_(max_num_impulse),
-    num_proc_(num_proc) {
+    N_(N), 
+    max_num_impulse_(max_num_impulse), 
+    nthreads_(nthreads),
+    step_size_reduction_rate_(step_size_reduction_rate), 
+    min_step_size_(min_step_size),
+    costs_(Eigen::VectorXd::Zero(N+1)), 
+    costs_impulse_(Eigen::VectorXd::Zero(max_num_impulse)), 
+    costs_aux_(Eigen::VectorXd::Zero(max_num_impulse)), 
+    costs_lift_(Eigen::VectorXd::Zero(max_num_impulse)), 
+    violations_(Eigen::VectorXd::Zero(N)), 
+    violations_impulse_(Eigen::VectorXd::Zero(max_num_impulse)), 
+    violations_aux_(Eigen::VectorXd::Zero(max_num_impulse)), 
+    violations_lift_(Eigen::VectorXd::Zero(max_num_impulse)),
+    s_try_(robot, N, max_num_impulse), 
+    kkt_residual_(robot, N, max_num_impulse) {
 }
 
 
-std::pair<double, double> LineSearch::computeStepSize(
-    HybridOCP& split_ocps, std::vector<Robot>& robot,
-    const ContactSequence& contact_sequence, const double t, 
-    const Eigen::VectorXd& q, const Eigen::VectorXd& v, const Solution& s, 
-    const Diretion& d) {
-  // If filter is empty, augment the current solution to the filter.
-  if (filter_.isEmpty()) {
-    #pragma omp parallel for num_threads(num_proc_)
-    for (int i=0; i<=N_; ++i) {
-      if (i < N_) {
-        const int robot_id = omp_get_thread_num();
-        costs_.coeffRef(i) = split_ocps_[i].stageCost(robots_[robot_id], t+i*dtau_, dtau_, s_[i]);
-        violations_.coeffRef(i) = split_ocps_[i].constraintViolation(
-            robots_[robot_id], contact_sequence_.contactStatus(i), t+i*dtau_, 
-            dtau_, s_[i], s_[i+1].q, s_[i+1].v);
-      }
-      else {
-        const int robot_id = omp_get_thread_num();
-        costs_.coeffRef(N_) = terminal_ocp_.terminalCost(robots_[robot_id], t+T_, s_[N_]);
-      }
-    }
-    filter_.augment(costs_.sum(), violations_.sum());
-  }
-  while (primal_step_size > min_step_size_) {
-    #pragma omp parallel for num_threads(num_proc_)
-    for (int i=0; i<=N_; ++i) {
-      if (i < N_) {
-        const int robot_id = omp_get_thread_num();
-        s_tmp_[i].setTemporarySolution(robots_[robot_id], contact_sequence_.contactStatus(i), 
-                                        primal_step_size, s_[i], d_[i], s_[i+1], d_[i+1]);
-        costs_.coeffRef(i) = split_ocps_[i].stageCost(robots_[robot_id], t+i*dtau_, dtau_, 
-                                                      s_tmp_[i].splitSolution(), 
-                                                      primal_step_size);
-        violations_.coeffRef(i) = split_ocps_[i].constraintViolation(
-            robots_[robot_id], contact_sequence_.contactStatus(i), t+i*dtau_, 
-            dtau_, s_tmp_[i].splitSolution(), s_tmp_[i].q_next(), s_tmp_[i].v_next());
-      }
-      else {
-        const int robot_id = omp_get_thread_num();
-        s_tmp_[N_].setTemporarySolution(robots_[robot_id], primal_step_size, s_[N_], d_[N_]);
-        costs_.coeffRef(N_) = terminal_ocp_.terminalCost(robots_[robot_id], t+T_, s_tmp_[N_].splitSolution());
-      }
-    }
-    const double cost_sum = costs_.sum();
-    const double violation_sum = violations_.sum();
-    if (filter_.isAccepted(cost_sum, violation_sum)) {
-      filter_.augment(cost_sum, violation_sum);
-      break;
-    }
-    primal_step_size *= step_size_reduction_rate_;
-  }
+LineSearch::LineSearch() 
+  : filter_(),
+    N_(0), 
+    max_num_impulse_(0), 
+    nthreads_(0),
+    step_size_reduction_rate_(0), 
+    min_step_size_(0),
+    costs_(), 
+    costs_impulse_(), 
+    costs_aux_(), 
+    costs_lift_(), 
+    violations_(), 
+    violations_impulse_(), 
+    violations_aux_(), 
+    violations_lift_(),
+    s_try_(), 
+    kkt_residual_() {
+}
+
+
+LineSearch::~LineSearch() {
 }
 
 
@@ -74,7 +59,153 @@ void LineSearch::clearFilter() {
 
 
 bool LineSearch::isFilterEmpty() const {
-  return filter_.empty();
+  return filter_.isEmpty();
+}
+
+
+void LineSearch::computeCostAndViolation(
+    OCP& ocp, std::vector<Robot>& robots, 
+    const ContactSequence& contact_sequence, const Eigen::VectorXd& q, 
+    const Eigen::VectorXd& v, const Solution& s, 
+    const double primal_step_size) {
+  assert(robots.size() == nthreads_);
+  assert(q.size() == robots[0].dimq());
+  assert(v.size() == robots[0].dimv());
+  const int N_impulse = ocp.discrete().numImpulseStages();
+  const int N_lift = ocp.discrete().numLiftStages();
+  const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
+  clearCosts();
+  clearViolations();
+  #pragma omp parallel for num_threads(nthreads_)
+  for (int i=0; i<N_all; ++i) {
+    if (i < N_) {
+      costs_.coeffRef(i) = ocp[i].stageCost(robots[omp_get_thread_num()], 
+                                            ocp.discrete().t(i), 
+                                            ocp.discrete().dtau(i), s[i], 
+                                            primal_step_size);
+      if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
+        violations_.coeffRef(i) = ocp[i].constraintViolation(
+            robots[omp_get_thread_num()], 
+            contact_sequence.contactStatus(ocp.discrete().contactPhase(i)),
+            ocp.discrete().t(i), ocp.discrete().dtau(i), s[i], 
+            s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)].q,
+            s.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)].v,
+            kkt_residual_[i]);
+      }
+      else if (ocp.discrete().isTimeStageBeforeLift(i)) {
+        violations_.coeffRef(i) = ocp[i].constraintViolation(
+            robots[omp_get_thread_num()], 
+            contact_sequence.contactStatus(ocp.discrete().contactPhase(i)),
+            ocp.discrete().t(i), ocp.discrete().dtau(i), s[i], 
+            s.lift[ocp.discrete().liftIndexAfterTimeStage(i)].q,
+            s.lift[ocp.discrete().liftIndexAfterTimeStage(i)].v,
+            kkt_residual_[i]);
+      }
+      else {
+        violations_.coeffRef(i) = ocp[i].constraintViolation(
+            robots[omp_get_thread_num()], 
+            contact_sequence.contactStatus(ocp.discrete().contactPhase(i)),
+            ocp.discrete().t(i), ocp.discrete().dtau(i), s[i], 
+            s[i+1].q, s[i+1].v, kkt_residual_[i]);
+      }
+    }
+    else if (i == N_) {
+      costs_.coeffRef(i) = ocp.terminal.terminalCost(robots[omp_get_thread_num()], 
+                                                     ocp.discrete().t(i), s[i]);
+    }
+    else if (i < N_+1+N_impulse) {
+      const int impulse_index = i - (N_+1);
+      const int time_stage_before_impulse 
+          = ocp.discrete().timeStageBeforeImpulse(impulse_index);
+      const bool is_state_constraint_valid = (time_stage_before_impulse > 0);
+      costs_impulse_.coeffRef(impulse_index) 
+          = ocp.impulse[impulse_index].stageCost(
+              robots[omp_get_thread_num()], 
+              ocp.discrete().t_impulse(impulse_index), s.impulse[impulse_index],
+              primal_step_size);
+      violations_impulse_.coeffRef(impulse_index) 
+          = ocp.impulse[impulse_index].constraintViolation(
+              robots[omp_get_thread_num()], 
+              contact_sequence.impulseStatus(impulse_index), 
+              ocp.discrete().t_impulse(impulse_index), s.impulse[impulse_index],
+              s.aux[impulse_index].q, s.aux[impulse_index].v,
+              kkt_residual_.impulse[impulse_index], is_state_constraint_valid);
+    }
+    else if (i < N_+1+2*N_impulse) {
+      const int impulse_index  = i - (N_+1+N_impulse);
+      const int time_stage_after_impulse 
+          = ocp.discrete().timeStageAfterImpulse(impulse_index);
+      costs_aux_.coeffRef(impulse_index) = ocp.aux[impulse_index].stageCost(
+              robots[omp_get_thread_num()], 
+              ocp.discrete().t_impulse(impulse_index),
+              ocp.discrete().dtau_aux(impulse_index), s.aux[impulse_index],
+              primal_step_size);
+      violations_aux_.coeffRef(impulse_index) 
+          = ocp.aux[impulse_index].constraintViolation(
+              robots[omp_get_thread_num()], 
+              contact_sequence.contactStatus(
+                  ocp.discrete().contactPhaseAfterImpulse(impulse_index)), 
+              ocp.discrete().t_impulse(impulse_index), 
+              ocp.discrete().dtau_aux(impulse_index), s.aux[impulse_index],
+              s[time_stage_after_impulse].q, s[time_stage_after_impulse].v,
+              kkt_residual_.aux[impulse_index]);
+    }
+    else {
+      const int lift_index = i - (N_+1+2*N_impulse);
+      const int time_stage_after_lift
+          = ocp.discrete().timeStageAfterLift(lift_index);
+      costs_lift_.coeffRef(lift_index) = ocp.lift[lift_index].stageCost(
+              robots[omp_get_thread_num()], ocp.discrete().t_lift(lift_index), 
+              ocp.discrete().dtau_lift(lift_index), s.lift[lift_index], 
+              primal_step_size);
+      violations_lift_.coeffRef(lift_index) 
+          = ocp.lift[lift_index].constraintViolation(
+              robots[omp_get_thread_num()], 
+              contact_sequence.contactStatus(
+                  ocp.discrete().contactPhaseAfterLift(lift_index)), 
+              ocp.discrete().t_lift(lift_index), 
+              ocp.discrete().dtau_lift(lift_index), s.lift[lift_index],
+              s[time_stage_after_lift].q, s[time_stage_after_lift].v,
+              kkt_residual_.lift[lift_index]);
+    }
+  }
+}
+
+
+void LineSearch::computeTrySolution(const OCP& ocp, 
+                                    const std::vector<Robot>& robots, 
+                                    const Solution& s, const Direction& d, 
+                                    const double step_size) {
+  assert(robots.size() == nthreads_);
+  assert(step_size > 0);
+  assert(step_size <= 1);
+  const int N_impulse = ocp.discrete().numImpulseStages();
+  const int N_lift = ocp.discrete().numLiftStages();
+  const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
+  #pragma omp parallel for num_threads(nthreads_)
+  for (int i=0; i<N_all; ++i) {
+    if (i <= N_) {
+      computeTrySolution(robots[omp_get_thread_num()], s[i], d[i], step_size, 
+                         s_try_[i]);
+    }
+    else if (i < N_+1+N_impulse) {
+      const int impulse_index = i - (N_+1);
+      computeTrySolution(robots[omp_get_thread_num()], s.impulse[impulse_index], 
+                         d.impulse[impulse_index], step_size, 
+                         s_try_.impulse[impulse_index]);
+    }
+    else if (i < N_+1+2*N_impulse) {
+      const int impulse_index  = i - (N_+1+N_impulse);
+      computeTrySolution(robots[omp_get_thread_num()], s.aux[impulse_index], 
+                         d.aux[impulse_index], step_size, 
+                         s_try_.aux[impulse_index]);
+    }
+    else {
+      const int lift_index = i - (N_+1+2*N_impulse);
+      computeTrySolution(robots[omp_get_thread_num()], s.lift[lift_index], 
+                         d.lift[lift_index], step_size, s_try_.lift[lift_index]);
+    }
+  }
 }
 
 } // namespace idocp

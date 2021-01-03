@@ -7,16 +7,16 @@
 namespace idocp {
 
 RiccatiRecursion::RiccatiRecursion(const Robot& robot, const int N, 
-                                   const int nproc)
+                                   const int nthreads)
   : N_(N),
-    nproc_(nproc),
+    nthreads_(nthreads),
     dimv_(robot.dimv()) {
   try {
     if (N <= 0) {
       throw std::out_of_range("invalid value: N must be positive!");
     }
-    if (nproc <= 0) {
-      throw std::out_of_range("invalid value: nproc must be positive!");
+    if (nthreads <= 0) {
+      throw std::out_of_range("invalid value: nthreads must be positive!");
     }
   }
   catch(const std::exception& e) {
@@ -28,7 +28,7 @@ RiccatiRecursion::RiccatiRecursion(const Robot& robot, const int N,
 
 RiccatiRecursion::RiccatiRecursion()
   : N_(0),
-    nproc_(0),
+    nthreads_(0),
     dimv_(0) {
 }
 
@@ -94,7 +94,7 @@ void RiccatiRecursion::forwardRiccatiRecursionParallel(
   const int N_lift = ocp_discretizer.numLiftStages();
   const int N_all = N_ + 2*N_impulse + N_lift;
   const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
-  #pragma omp parallel for num_threads(nproc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
       riccati_factorizer[i].forwardRiccatiRecursionParallel(
@@ -179,7 +179,7 @@ void RiccatiRecursion::backwardStateConstraintFactorization(
     const OCPDiscretizer& ocp_discretizer, const KKTMatrix& kkt_matrix, 
     StateConstraintRiccatiFactorization& constraint_factorization) const {
   const int num_constraint = ocp_discretizer.numImpulseStages();
-  #pragma omp parallel for num_threads(nproc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int constraint_idx=0; constraint_idx<num_constraint; ++constraint_idx) {
     const int time_stage_before_constraint 
         = ocp_discretizer.timeStageBeforeImpulse(constraint_idx);
