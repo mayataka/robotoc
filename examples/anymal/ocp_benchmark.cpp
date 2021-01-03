@@ -23,7 +23,7 @@
 
 
 int main () {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
+  std::vector<int> contact_frames = {14, 24, 34, 44}; // LF, LH, RF, RH
   const std::string urdf_file_name = "../anymal_b_simple_description/urdf/anymal.urdf";
   idocp::Robot robot(urdf_file_name, contact_frames);
   auto cost = std::make_shared<idocp::CostFunction>();

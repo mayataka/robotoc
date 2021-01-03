@@ -39,8 +39,8 @@ public:
 
   bool useKinematics() const override;
 
-  void set_ref(const double t0, const Eigen::VectorXd q0, 
-               const Eigen::VectorXd v0);
+  void set_ref(const Robot& robot, const double t_begin, const double t_end, 
+               const Eigen::VectorXd q_begin, const Eigen::VectorXd v);
 
   void set_q_weight(const Eigen::VectorXd& q_weight);
 
@@ -97,11 +97,34 @@ public:
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+
+  void set_q_ref(const Robot& robot, const double t, 
+                 Eigen::VectorXd& q_ref) const {
+    if (t > t_begin_ && t < t_end_) {
+      robot.integrateConfiguration(q_begin_, v_ref_, t-t_begin_, q_ref);
+    }
+    else if (t <= t_begin_) {
+      q_ref = q_begin_;
+    }
+    else {
+      q_ref = q_end_;
+    }
+  }
+
+  Eigen::VectorXd v_ref(const double t) const {
+    if (t > t_begin_ && t < t_end_) {
+      return v_ref_;
+    }
+    else {
+      return Eigen::VectorXd::Zero(dimv_);
+    }
+  }
+
 private:
   int dimq_, dimv_;
-  double t0_;
-  Eigen::VectorXd q0_, v0_, q_weight_, v_weight_, a_weight_, qf_weight_, 
-                  vf_weight_, qi_weight_, vi_weight_, dvi_weight_;
+  double t_begin_, t_end_;
+  Eigen::VectorXd q_begin_, q_end_, v_ref_, q_weight_, v_weight_, a_weight_,  
+                  qf_weight_, vf_weight_, qi_weight_, vi_weight_, dvi_weight_;
 
 };
 

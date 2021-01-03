@@ -18,14 +18,13 @@
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
 #include "idocp/utils/ocp_benchmarker.hpp"
 
-#define ENABLE_VIEWER
 #ifdef ENABLE_VIEWER
 #include "idocp/utils/trajectory_viewer.hpp"
 #endif 
 
 
 int main(int argc, char *argv[]) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
+  std::vector<int> contact_frames = {14, 24, 34, 44}; // LF, LH, RF, RH
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
   idocp::Robot robot(path_to_urdf, contact_frames);
 
@@ -35,7 +34,7 @@ int main(int argc, char *argv[]) {
 
   auto cost = std::make_shared<idocp::CostFunction>();
   Eigen::VectorXd q_standing(Eigen::VectorXd::Zero(robot.dimq()));
-  q_standing << 0, 0, 0.497, 0, 0, 0, 1, 
+  q_standing << 0, 0, 0.4792, 0, 0, 0, 1, 
                 -0.1,  0.7, -1.0, 
                 -0.1, -0.7,  1.0, 
                  0.1,  0.7, -1.0, 
@@ -60,8 +59,8 @@ int main(int argc, char *argv[]) {
               0.01, 0.01, 0.01;
 
   idocp::TrottingSwingAngles swing_angles;
-  swing_angles.front_swing_knee   = 1.2; 
-  swing_angles.hip_swing_knee     = 1.2;
+  swing_angles.front_swing_knee   = 1.7; 
+  swing_angles.hip_swing_knee     = 1.7;
   auto config_cost = std::make_shared<idocp::TrottingConfigurationSpaceCost>(robot);
   config_cost->set_ref(t_start, t_period, q_standing, step_length, swing_angles);
   config_cost->set_q_weight(q_weight);
@@ -103,7 +102,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
 
-  const double T = 6.05;
+  const double T = 6.05; // t_start + max_num_impulse_phase * t_period + 0.05;
   const int N = 240;
   const int max_num_impulse_phase = 11;
 
@@ -159,10 +158,16 @@ int main(int argc, char *argv[]) {
   ocp_solver.printSolution("end-effector", robot.contactFramesIndices());
 
 #ifdef ENABLE_VIEWER
-  const std::string pkg_search_path = argv[1];
-  idocp::TrajectoryViewer viewer(pkg_search_path, path_to_urdf);
-  const double dt = T/N;
-  viewer.display(ocp_solver.getSolution("q"), dt);
+  if (argc != 2) {
+    std::cout << "Invalid argment!" << std::endl;
+    std::cout << "Package serach path must be specified as the second argment!" << std::endl;
+  }
+  else {
+    const std::string pkg_search_path = argv[1];
+    idocp::TrajectoryViewer viewer(pkg_search_path, path_to_urdf);
+    const double dt = T/N;
+    viewer.display(ocp_solver.getSolution("q"), dt);
+  }
 #endif 
 
   return 0;

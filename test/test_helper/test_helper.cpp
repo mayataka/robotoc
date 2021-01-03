@@ -85,8 +85,9 @@ std::shared_ptr<CostFunction> CreateCost(const Robot& robot) {
   contact_force_cost->set_f_weight(f_weight);
   contact_force_cost->set_fi_weight(fi_weight);
   auto time_varying_config_cost = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot);
-  const double t0 = Eigen::VectorXd::Random(1)[0];
-  time_varying_config_cost->set_ref(t0, q_ref, v_ref);
+  const double t_begin = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double t_end = t_begin + std::abs(Eigen::VectorXd::Random(1)[0]);
+  time_varying_config_cost->set_ref(robot, t_begin, t_end, q_ref, v_ref);
   time_varying_config_cost->set_q_weight(q_weight);
   time_varying_config_cost->set_v_weight(v_weight);
   time_varying_config_cost->set_a_weight(a_weight);

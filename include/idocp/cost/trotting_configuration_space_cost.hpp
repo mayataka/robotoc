@@ -140,9 +140,9 @@ private:
         // q_ref.coeffRef( 8) -= swing_angles_.front_swing_thigh;
         q_ref.coeffRef( 9) -= sin2 * swing_angles_.front_swing_knee;
         // q_ref.coeffRef(11) += rate * swing_angles_.hip_stance_thigh;
-        // q_ref.coeffRef(12) += rate * swing_angles_.hip_stance_knee;
+        q_ref.coeffRef(12) -= sin2 * swing_angles_.hip_stance_knee;
         // q_ref.coeffRef(14) += rate * swing_angles_.front_stance_thigh;
-        // q_ref.coeffRef(15) -= rate * swing_angles_.front_stance_knee;
+        q_ref.coeffRef(15) += sin2 * swing_angles_.front_stance_knee;
         // q_ref.coeffRef(17) += rate * swing_angles_.hip_swing_thigh;
         q_ref.coeffRef(18) += sin2 * swing_angles_.hip_swing_knee;
       }
@@ -150,14 +150,14 @@ private:
         q_ref = q_standing_;
         q_ref.coeffRef( 0) += (steps + rate) * step_length_;
         // q_ref.coeffRef( 8) += rate * swing_angles_.front_stance_thigh;
-        // q_ref.coeffRef( 9) += rate * swing_angles_.front_stance_knee;
+        q_ref.coeffRef( 9) += sin2 * swing_angles_.front_stance_knee;
         // q_ref.coeffRef(11) -= rate * swing_angles_.hip_swing_thigh;
         q_ref.coeffRef(12) += sin2 * swing_angles_.hip_swing_knee;
         // q_ref.coeffRef(14) += rate * swing_angles_.front_swing_thigh;
         // q_ref.coeffRef(15) += rate * swing_angles_.front_swing_knee;
         q_ref.coeffRef(15) -= sin2 * swing_angles_.front_swing_knee;
         // q_ref.coeffRef(17) += rate * swing_angles_.hip_stance_thigh;
-        // q_ref.coeffRef(18) -= rate * swing_angles_.hip_stance_knee;
+        q_ref.coeffRef(18) -= sin2 * swing_angles_.hip_stance_knee;
       }
     }
     else {
