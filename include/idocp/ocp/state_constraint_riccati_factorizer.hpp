@@ -25,11 +25,11 @@ public:
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
   /// @param[in] max_num_impulse Maximum number of impulse phases over the 
   /// horizon.
-  /// @param[in] nproc Number of threads used in this class.
+  /// @param[in] nthreads Number of threads used in this class.
   ///
   StateConstraintRiccatiFactorizer(const Robot& robot, const int N,
                                    const int max_num_impulse, 
-                                   const int nproc);
+                                   const int nthreads);
 
   ///
   /// @brief Default constructor. 
@@ -96,7 +96,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int N_, nproc_;
+  int N_, nthreads_;
   Eigen::LDLT<Eigen::MatrixXd> ldlt_;
   std::vector<StateConstraintRiccatiLPFactorizer> lp_factorizer_;
 

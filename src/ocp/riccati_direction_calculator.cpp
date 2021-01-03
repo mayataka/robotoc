@@ -8,9 +8,9 @@
 namespace idocp {
 
 RiccatiDirectionCalculator::RiccatiDirectionCalculator(
-    const int N, const int max_num_impulse, const int num_proc) 
+    const int N, const int max_num_impulse, const int nthreads) 
   : N_(N),
-    num_proc_(num_proc),
+    nthreads_(nthreads),
     max_primal_step_sizes_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)), 
     max_dual_step_sizes_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)) {
   try {
@@ -20,8 +20,8 @@ RiccatiDirectionCalculator::RiccatiDirectionCalculator(
     if (max_num_impulse < 0) {
       throw std::out_of_range("invalid value: max_num_impulse must be non-negative!");
     }
-    if (num_proc <= 0) {
-      throw std::out_of_range("invalid value: num_proc must be positive!");
+    if (nthreads <= 0) {
+      throw std::out_of_range("invalid value: nthreads must be positive!");
     }
   }
   catch(const std::exception& e) {
@@ -33,7 +33,7 @@ RiccatiDirectionCalculator::RiccatiDirectionCalculator(
 
 RiccatiDirectionCalculator::RiccatiDirectionCalculator()
   : N_(0),
-    num_proc_(0),
+    nthreads_(0),
     max_primal_step_sizes_(), 
     max_dual_step_sizes_() {
 }
@@ -46,12 +46,12 @@ RiccatiDirectionCalculator::~RiccatiDirectionCalculator() {
 void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
     OCP& ocp, std::vector<Robot>& robots, const RiccatiFactorizer& factorizer, 
     const RiccatiFactorization& factorization, const Solution& s, Direction& d) {
-  assert(robots.size() == num_proc_);
+  assert(robots.size() == nthreads_);
   const int N_impulse = ocp.discrete().numImpulseStages();
   const int N_lift = ocp.discrete().numLiftStages();
   N_all_ = N_ + 1 + 2 * N_impulse + N_lift;
   const bool exist_state_constraint = ocp.discrete().existStateConstraint();
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all_; ++i) {
     if (i < N_) {
       SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d[i], 

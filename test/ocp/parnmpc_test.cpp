@@ -33,7 +33,7 @@ protected:
     t_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     T_ = std::abs(Eigen::VectorXd::Random(1)[0]);
     N_ = 10;
-    num_proc_ = 1;
+    nthreads_ = 1;
     dtau_ = T_ / N_;
   }
 
@@ -41,7 +41,7 @@ protected:
   }
 
   double dtau_, t_, T_;
-  int N_, num_proc_;
+  int N_, nthreads_;
   std::string fixed_base_urdf_, floating_base_urdf_;
 };
 

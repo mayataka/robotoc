@@ -66,7 +66,7 @@ public:
   /// @brief Default move assign operator. 
   ///
   SplitImpulseParNMPC& operator=(SplitImpulseParNMPC&&) noexcept = default;
- 
+
   ///
   /// @brief Check whether the solution is feasible under inequality constraints.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.

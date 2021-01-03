@@ -17,7 +17,7 @@
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 #include "idocp/ocp/riccati_solver.hpp"
-// #include "idocp/line_search/line_search_filter.hpp"
+#include "idocp/line_search/line_search.hpp"
 
 
 namespace idocp {
@@ -35,12 +35,12 @@ public:
   /// @param[in] constraints Shared ptr to the constraints.
   /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] num_proc Number of the threads in solving the optimal control 
+  /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
   OCPSolver(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
             const std::shared_ptr<Constraints>& constraints, const double T, 
-            const int N, const int max_num_impulse=0, const int num_proc=1);
+            const int N, const int max_num_impulse=0, const int nthreads=1);
 
   ///
   /// @brief Default constructor. 
@@ -220,13 +220,13 @@ private:
   ContactSequence contact_sequence_;
   OCPLinearizer ocp_linearizer_;
   RiccatiSolver riccati_solver_;
+  LineSearch line_search_;
   OCP ocp_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
   Solution s_;
   Direction d_;
-  // LineSearch line_search_;
-  int N_, num_proc_;
+  int N_, nthreads_;
 
   void discretizeSolution();
 

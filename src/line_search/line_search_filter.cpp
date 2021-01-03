@@ -1,16 +1,29 @@
 #include "idocp/line_search/line_search_filter.hpp"
 
 #include <cassert>
+#include <stdexcept>
+#include <iostream>
 
 
 namespace idocp {
 
-LineSearchFilter::LineSearchFilter() 
+LineSearchFilter::LineSearchFilter(const double cost_reduction_rate, 
+                                   const double constraints_reduction_rate) 
   : filter_(),
-    cost_reduction_rate_(0.005),
-    constraints_reduction_rate_(0.005) {
-  assert(cost_reduction_rate_);
-  assert(constraints_reduction_rate_);
+    cost_reduction_rate_(cost_reduction_rate),
+    constraints_reduction_rate_(constraints_reduction_rate) {
+  try {
+    if (cost_reduction_rate_ <= 0) {
+      throw std::out_of_range("invalid value: cost_reduction_rate must be positive!");
+    }
+    if (constraints_reduction_rate_ <= 0) {
+      throw std::out_of_range("invalid value: constraints_reduction_rate must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
 }
 
 
@@ -20,6 +33,7 @@ LineSearchFilter::~LineSearchFilter() {
 
 bool LineSearchFilter::isAccepted(const double cost, 
                                   const double constraint_violation) {
+  assert(constraint_violation >= 0);
   if (!filter_.empty()) {
     for (auto pair : filter_) {
       if (cost >= pair.first && constraint_violation >= pair.second) {
@@ -33,6 +47,7 @@ bool LineSearchFilter::isAccepted(const double cost,
 
 void LineSearchFilter::augment(const double cost, 
                                const double constraint_violation) {
+  assert(constraint_violation >= 0);
   if (!filter_.empty()) {
     std::vector<std::pair<double, double>>::iterator it = filter_.begin();
     while (it != filter_.end()) {

@@ -120,6 +120,9 @@ add_library(
   src/unocp/split_unbackward_correction.cpp
   src/unocp/unbackward_correction.cpp
   src/unocp/unparnmpc_solver.cpp
+  src/line_search/line_search_filter.cpp
+  src/line_search/line_search.cpp
+  src/line_search/unline_search.cpp
   src/utils/derivative_checker.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp

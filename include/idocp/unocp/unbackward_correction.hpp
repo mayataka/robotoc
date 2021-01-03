@@ -27,11 +27,11 @@ public:
   /// @brief Construct factorizer.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] nproc Number of the threads in solving the optimal control 
+  /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
   UnBackwardCorrection(const Robot& robot, const double T, const int N, 
-                       const int num_proc);
+                       const int nthreads);
 
   ///
   /// @brief Default constructor. 
@@ -80,7 +80,7 @@ public:
   double dualStepSize() const;
 
 private:
-  int N_, num_proc_;
+  int N_, nthreads_;
   double T_, dtau_;
   UnBackwardCorrector corrector_;
   UnSolution s_new_;

@@ -7,10 +7,10 @@
 namespace idocp{
 
 OCPLinearizer::OCPLinearizer(const int N, const int max_num_impulse, 
-                             const int num_proc) 
+                             const int nthreads) 
   : N_(N),
     max_num_impulse_(max_num_impulse),
-    num_proc_(num_proc),
+    nthreads_(nthreads),
     kkt_error_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)) {
   try {
     if (N <= 0) {
@@ -19,8 +19,8 @@ OCPLinearizer::OCPLinearizer(const int N, const int max_num_impulse,
     if (max_num_impulse < 0) {
       throw std::out_of_range("invalid value: max_num_impulse must be non-negative!");
     }
-    if (num_proc <= 0) {
-      throw std::out_of_range("invalid value: num_proc must be positive!");
+    if (nthreads <= 0) {
+      throw std::out_of_range("invalid value: nthreads must be positive!");
     }
   }
   catch(const std::exception& e) {
@@ -33,7 +33,7 @@ OCPLinearizer::OCPLinearizer(const int N, const int max_num_impulse,
 OCPLinearizer::OCPLinearizer()
   : N_(0),
     max_num_impulse_(0),
-    num_proc_(0),
+    nthreads_(0),
     kkt_error_() {
 }
 
@@ -48,7 +48,7 @@ void OCPLinearizer::initConstraints(OCP& ocp, std::vector<Robot>& robots,
   const int N_impulse = max_num_impulse_;
   const int N_lift = max_num_impulse_;
   const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
       ocp[i].initConstraints(robots[omp_get_thread_num()], i, s[i]);
@@ -102,7 +102,7 @@ double OCPLinearizer::KKTError(const OCP& ocp,
   const int N_impulse = ocp.discrete().numImpulseStages();
   const int N_lift = ocp.discrete().numLiftStages();
   const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
       kkt_error_.coeffRef(i) 
@@ -148,11 +148,11 @@ void OCPLinearizer::integrateSolution(OCP& ocp,
                                       const double primal_step_size, 
                                       const double dual_step_size, 
                                       Direction& d, Solution& s) const {
-  assert(robots.size() == num_proc_);
+  assert(robots.size() == nthreads_);
   const int N_impulse = ocp.discrete().numImpulseStages();
   const int N_lift = ocp.discrete().numLiftStages();
   const int N_all = N_ + 1 + 2 * N_impulse + N_lift;
-  #pragma omp parallel for num_threads(num_proc_)
+  #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N_) {
       if (ocp.discrete().isTimeStageBeforeImpulse(i)) {

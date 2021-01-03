@@ -1,0 +1,3 @@
+add_idocp_test(line_search_filter_test)
+add_idocp_test(line_search_test)
+add_idocp_test(unline_search_test)

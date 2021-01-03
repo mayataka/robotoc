@@ -25,7 +25,7 @@ public:
   /// @brief Construct factorizer.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] nproc Number of the threads in solving the optimal control 
+  /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
   SplitUnBackwardCorrection(const Robot& robot);

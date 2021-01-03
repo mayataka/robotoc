@@ -33,6 +33,11 @@ Solution CreateSolution(const Robot& robot, const int N, const int max_num_impul
 Solution CreateSolution(const Robot& robot, const ContactSequence& contact_sequence, 
                         const double T, const int N, const int max_num_impulse, const double t);
 
+Direction CreateDirection(const Robot& robot, const int N, const int max_num_impulse=0);
+
+Direction CreateDirection(const Robot& robot, const ContactSequence& contact_sequence, 
+                          const double T, const int N, const int max_num_impulse, const double t);
+
 KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence, 
                           const int N, const int max_num_impulse);
 

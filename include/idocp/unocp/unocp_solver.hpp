@@ -11,6 +11,7 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/unocp/unriccati_recursion.hpp"
 #include "idocp/unocp/unconstrained_container.hpp"
+#include "idocp/line_search/unline_search.hpp"
 
 
 namespace idocp {
@@ -30,12 +31,12 @@ public:
   /// @param[in] constraints Shared ptr to the constraints.
   /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] num_proc Number of the threads in solving the optimal control 
+  /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
   UnOCPSolver(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
               const std::shared_ptr<Constraints>& constraints, const double T, 
-              const int N, const int num_proc=1);
+              const int N, const int nthreads=1);
 
   ///
   /// @brief Default constructor. 
@@ -187,6 +188,7 @@ private:
   std::vector<Robot> robots_;
   UnOCP ocp_;
   UnRiccatiRecursion riccati_recursion_;
+  UnLineSearch line_search_;
   SplitKKTMatrix terminal_kkt_matrix_;
   SplitKKTResidual terminal_kkt_residual_;
   UnKKTMatrix unkkt_matrix_;
@@ -194,7 +196,7 @@ private:
   UnSolution s_;
   UnDirection d_;
   UnRiccatiFactorization riccati_factorization_;
-  int N_, num_proc_;
+  int N_, nthreads_;
   double T_, dtau_;
   Eigen::VectorXd primal_step_size_, dual_step_size_, kkt_error_;
 

@@ -29,11 +29,11 @@ public:
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
   /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
   /// Must be non-negative. Default is 0.
-  /// @param[in] num_proc Number of the threads in solving the optimal control 
+  /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
   RiccatiSolver(const Robot& robot, const int N, const int max_num_impulse, 
-                const int num_proc);
+                const int nthreads);
 
   ///
   /// @brief Default constructor. 

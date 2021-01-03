@@ -24,7 +24,7 @@ protected:
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N = 20;
     max_num_impulse = 5;
-    nproc = 4;
+    nthreads = 4;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     dtau = T / N;
@@ -42,7 +42,7 @@ protected:
   void testIntegrateSolution(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  int N, max_num_impulse, nproc;
+  int N, max_num_impulse, nthreads;
   double T, t, dtau;
   std::shared_ptr<CostFunction> cost;
   std::shared_ptr<Constraints> constraints;
@@ -68,7 +68,7 @@ ContactSequence OCPLinearizerTest::createContactSequence(const Robot& robot) con
 void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  OCPLinearizer linearizer(N, max_num_impulse, nproc);
+  OCPLinearizer linearizer(N, max_num_impulse, nthreads);
   const auto contact_sequence = createContactSequence(robot);
   auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
@@ -77,7 +77,7 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
-  std::vector<Robot> robots(nproc, robot);
+  std::vector<Robot> robots(nthreads, robot);
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   auto ocp_ref = ocp;
@@ -169,7 +169,7 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
 void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  OCPLinearizer linearizer(N, max_num_impulse, nproc);
+  OCPLinearizer linearizer(N, max_num_impulse, nthreads);
   const auto contact_sequence = createContactSequence(robot);
   auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
@@ -178,7 +178,7 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
-  std::vector<Robot> robots(nproc, robot);
+  std::vector<Robot> robots(nthreads, robot);
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   auto ocp_ref = ocp;
@@ -281,21 +281,21 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
 void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  OCPLinearizer linearizer(N, max_num_impulse, nproc);
+  OCPLinearizer linearizer(N, max_num_impulse, nthreads);
   const auto contact_sequence = createContactSequence(robot);
   auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
   auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  std::vector<Robot> robots(nproc, robot);
+  std::vector<Robot> robots(nthreads, robot);
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   linearizer.initConstraints(ocp, robots, contact_sequence, s);
   linearizer.linearizeOCP(ocp, robots, contact_sequence, 
                           q, v, s, kkt_matrix, kkt_residual);
   Direction d(robot, N, max_num_impulse);
-  RiccatiSolver riccati_solver(robots[0], N, max_num_impulse, nproc);
+  RiccatiSolver riccati_solver(robots[0], N, max_num_impulse, nthreads);
   riccati_solver.computeNewtonDirection(ocp, robots, contact_sequence, q, v, s, d, 
                                         kkt_matrix, kkt_residual);
   const double primal_step_size = riccati_solver.maxPrimalStepSize();
