@@ -3,6 +3,8 @@
 [![build](https://github.com/mayataka/idocp/workflows/build/badge.svg?branch=master)](https://github.com/mayataka/idocp/actions?query=workflow%3Abuild)
 [![codecov](https://codecov.io/gh/mayataka/idocp/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/idocp)
 
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_running_minimal.gif" width="600">
+
 ## Features for efficient optimal control 
 - Solves the optimal control problem (OCP) for rigid body systems with contacts based on inverse dynamics and event-driven scheme.
 - Riccati recursion / Parallel Newton's method (ParNMPC) for solving the KKT system.
@@ -43,7 +45,7 @@ make install
 
 6. If you want to visualize the solution trajectory of the OCP, first install [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) and [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), e.g., by
 ```
-sudo apt update && sudo apt install robotpkg-py27-qt4-gepetto-viewer-corba 
+sudo apt update && sudo apt install robotpkg-py38-qt5-gepetto-viewer-corba 
 git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
@@ -85,10 +87,20 @@ where "unconstrained" rigid-body systems are systems without any contacts or a f
 
 
 ## Examples
-Examples are found in examples directory.
-The following animation is the solution trajectory of the `idocp::OCPSolver` for a quadruped trotting problem.
+Examples are found in `examples` directory.
+The following animations are the solution trajectory of the `idocp::OCPSolver` for a quadruped.
 
-![anymal_trotting](https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_trotting.gif)
+- Trotting (`anymal_trotting.cpp`)
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_trotting.gif" width="300">
+
+- Jumping (`anymal_jumping.cpp`)
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_jumping.gif" width="300">
+
+- Running (`anymal_running.cpp`)
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_running.gif" width="600">
 
 
 ## MPC Simulation 

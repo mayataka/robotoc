@@ -125,7 +125,6 @@ add_library(
   src/utils/ocp_benchmarker.cpp
   src/utils/simulation_data_saver.cpp
   src/utils/runge_kutta.cpp
-  src/utils/mpc_simulator.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

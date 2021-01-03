@@ -57,7 +57,8 @@ void TimeVaryingConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd v_weight = Eigen::VectorXd::Random(dimv); 
   const Eigen::VectorXd a_weight = Eigen::VectorXd::Random(dimv);
-  const double t0 = Eigen::VectorXd::Random(1)[0];
+  const double t_begin = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double t_end = t_begin + std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q0 = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v0 = Eigen::VectorXd::Random(dimv); 
   auto cost = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot);
@@ -66,10 +67,21 @@ void TimeVaryingConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   cost->set_q_weight(q_weight);
   cost->set_v_weight(v_weight);
   cost->set_a_weight(a_weight);
-  cost->set_ref(t0, q0, v0);
-  Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
-  const Eigen::VectorXd v_ref = v0;
-  robot.integrateConfiguration(q0, v0, (t-t0), q_ref);
+  cost->set_ref(robot, t_begin, t_end, q0, v0);
+  Eigen::VectorXd q_ref = q0;
+  Eigen::VectorXd v_ref = Eigen::VectorXd::Zero(dimv);
+  if (t > t_begin && t < t_end) {
+    robot.integrateConfiguration(q0, v0, (t-t_begin), q_ref);
+    v_ref = v0;
+  }
+  else if (t <= t_begin) {
+    q_ref = q0;
+    v_ref.setZero();
+  }
+  else {
+    robot.integrateConfiguration(q0, v0, (t_end-t_begin), q_ref);
+    v_ref.setZero();
+  }
   const SplitSolution s = SplitSolution::Random(robot);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   if (robot.hasFloatingBase()) {
@@ -130,7 +142,8 @@ void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const
   SplitKKTResidual kkt_res_ref = kkt_res;
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd vf_weight = Eigen::VectorXd::Random(dimv);
-  const double t0 = Eigen::VectorXd::Random(1)[0];
+  const double t_begin = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double t_end = t_begin + std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q0 = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v0 = Eigen::VectorXd::Random(dimv); 
   auto cost = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot);
@@ -138,10 +151,21 @@ void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const
   EXPECT_FALSE(cost->useKinematics());
   cost->set_qf_weight(qf_weight);
   cost->set_vf_weight(vf_weight);
-  cost->set_ref(t0, q0, v0);
-  Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
-  const Eigen::VectorXd v_ref = v0;
-  robot.integrateConfiguration(q0, v0, (t-t0), q_ref);
+  cost->set_ref(robot, t_begin, t_end, q0, v0);
+  Eigen::VectorXd q_ref = q0;
+  Eigen::VectorXd v_ref = Eigen::VectorXd::Zero(dimv);
+  if (t > t_begin && t < t_end) {
+    robot.integrateConfiguration(q0, v0, (t-t_begin), q_ref);
+    v_ref = v0;
+  }
+  else if (t <= t_begin) {
+    q_ref = q0;
+    v_ref.setZero();
+  }
+  else {
+    robot.integrateConfiguration(q0, v0, (t_end-t_begin), q_ref);
+    v_ref.setZero();
+  }
   const SplitSolution s = SplitSolution::Random(robot);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   if (robot.hasFloatingBase()) {
@@ -201,7 +225,8 @@ void TimeVaryingConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const 
   const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd vi_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd dvi_weight = Eigen::VectorXd::Random(dimv);
-  const double t0 = Eigen::VectorXd::Random(1)[0];
+  const double t_begin = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double t_end = t_begin + std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q0 = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v0 = Eigen::VectorXd::Random(dimv); 
   auto cost = std::make_shared<TimeVaryingConfigurationSpaceCost>(robot);
@@ -210,10 +235,21 @@ void TimeVaryingConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const 
   cost->set_qi_weight(qi_weight);
   cost->set_vi_weight(vi_weight);
   cost->set_dvi_weight(dvi_weight);
-  cost->set_ref(t0, q0, v0);
-  Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(dimq);
-  const Eigen::VectorXd v_ref = v0;
-  robot.integrateConfiguration(q0, v0, (t-t0), q_ref);
+  cost->set_ref(robot, t_begin, t_end, q0, v0);
+  Eigen::VectorXd q_ref = q0;
+  Eigen::VectorXd v_ref = Eigen::VectorXd::Zero(dimv);
+  if (t > t_begin && t < t_end) {
+    robot.integrateConfiguration(q0, v0, (t-t_begin), q_ref);
+    v_ref = v0;
+  }
+  else if (t <= t_begin) {
+    q_ref = q0;
+    v_ref.setZero();
+  }
+  else {
+    robot.integrateConfiguration(q0, v0, (t_end-t_begin), q_ref);
+    v_ref.setZero();
+  }
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   Eigen::VectorXd q_diff = Eigen::VectorXd::Zero(dimv); 
   if (robot.hasFloatingBase()) {
