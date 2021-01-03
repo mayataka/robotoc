@@ -17,7 +17,7 @@
 - gcc, CMake
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  
 - [pinocchio](https://github.com/stack-of-tasks/pinocchio) (instruction for installation is found [here](https://stack-of-tasks.github.io/pinocchio/download.html))
-- [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) (Optional to visualization of the solution trajectory) 
+- [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) (Optional to visualize the solution trajectory) 
 
 ## Installation 
 1. Install latest stable version of Eigen3 by 
@@ -88,7 +88,7 @@ where "unconstrained" rigid-body systems are systems without any contacts or a f
 
 ## Examples
 Examples are found in `examples` directory.
-The following animations are the solution trajectory of the `idocp::OCPSolver` for a quadruped.
+The following animations are the solution trajectory of the `idocp::OCPSolver` for a quadruped ANYmal.
 
 - Trotting (`anymal_trotting.cpp`)
 

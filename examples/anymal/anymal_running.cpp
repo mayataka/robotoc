@@ -227,7 +227,7 @@ int main(int argc, char *argv[]) {
     const std::string pkg_search_path = argv[1];
     idocp::TrajectoryViewer viewer(pkg_search_path, path_to_urdf);
     const double dt = T/N;
-    viewer.display(ocp_solver.getSolution("q"), 0.9*dt);
+    viewer.display(ocp_solver.getSolution("q"), dt);
   }
 #endif 
 
