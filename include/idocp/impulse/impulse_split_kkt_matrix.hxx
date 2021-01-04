@@ -8,28 +8,39 @@
 
 namespace idocp {
 
-inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix(const Robot& robot) 
+inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix(const Robot& robot, 
+                                                    const bool is_forward_euler) 
   : Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    schur_complement_(2*robot.dimv()+2*robot.max_dimf(),  
-                      2*robot.dimv()+robot.max_dimf()),
-    FC_(Eigen::MatrixXd::Zero(2*robot.dimv()+2*robot.max_dimf(), 
+    inverter_(),
+    FC_(Eigen::MatrixXd::Zero(2*robot.dimv()+robot.max_dimf(), 
                               2*robot.dimv()+robot.max_dimf())),
+    Pq_full_(),
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv()+robot.max_dimf(), 
                              3*robot.dimv()+robot.max_dimf())),
+    is_forward_euler_(is_forward_euler),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dimf_(0), 
     q_begin_(robot.dimv()),
     v_begin_(2*robot.dimv()),
     dimKKT_(4*robot.dimv()) {
+  if (is_forward_euler) {
+    Pq_full_.resize(robot.max_dimf(), robot.dimv());
+    Pq_full_.setZero();
+  }
+  else {
+    inverter_ = ImpulseSplitKKTMatrixInverter(robot.dimv(), robot.max_dimf());
+  }
 }
 
 
 inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix() 
   : Fqq_prev(),
-    schur_complement_(),
+    inverter_(),
     FC_(),
+    Pq_full_(),
     Q_(),
+    is_forward_euler_(true),
     dimv_(0), 
     dimx_(0), 
     dimf_(0), 
@@ -48,7 +59,7 @@ inline void ImpulseSplitKKTMatrix::setImpulseStatus(
   dimf_ = impulse_status.dimf();
   q_begin_ = dimv_ + dimf_;
   v_begin_ = 2*dimv_ + dimf_;
-  dimKKT_ = 4*dimv_ + 3*dimf_;
+  dimKKT_ = 4*dimv_ + 2*dimf_;
 }
 
 
@@ -141,35 +152,37 @@ ImpulseSplitKKTMatrix::Fxx() const {
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Pq() {
-  return FC_.block(dimx_, dimf_, dimf_, dimv_);
+  assert(is_forward_euler_);
+  return Pq_full_.topLeftCorner(dimf_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Pq() const {
-  return FC_.block(dimx_, dimf_, dimf_, dimv_);
+  assert(is_forward_euler_);
+  return Pq_full_.topLeftCorner(dimf_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Vq() {
-  return FC_.block(dimx_+dimf_, dimf_, dimf_, dimv_);
+  return FC_.block(dimx_, dimf_, dimf_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Vq() const {
-  return FC_.block(dimx_+dimf_, dimf_, dimf_, dimv_);
+  return FC_.block(dimx_, dimf_, dimf_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Vv() {
-  return FC_.block(dimx_+dimf_, dimf_+dimv_, dimf_, dimv_);
+  return FC_.block(dimx_, dimf_+dimv_, dimf_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Vv() const {
-  return FC_.block(dimx_+dimf_, dimf_+dimv_, dimf_, dimv_);
+  return FC_.block(dimx_, dimf_+dimv_, dimf_, dimv_);
 }
 
 
@@ -314,18 +327,24 @@ inline void ImpulseSplitKKTMatrix::symmetrize() {
 template <typename MatrixType>
 inline void ImpulseSplitKKTMatrix::invert(
     const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse) {
+  assert(!is_forward_euler_);
   assert(KKT_matrix_inverse.rows() == dimKKT_);
   assert(KKT_matrix_inverse.cols() == dimKKT_);
-  schur_complement_.invertWithZeroTopLeftCorner(
-      FC_.topLeftCorner(dimx_+2*dimf_, dimx_+dimf_), 
-      Q_.block(dimv_, dimv_, dimx_+dimf_, dimx_+dimf_), 
-      const_cast<Eigen::MatrixBase<MatrixType>&>(KKT_matrix_inverse));
+  if (!is_forward_euler_) {
+    inverter_.invert(
+        FC_.topLeftCorner(dimx_+dimf_, dimx_+dimf_), 
+        Q_.block(dimv_, dimv_, dimx_+dimf_, dimx_+dimf_), 
+        const_cast<Eigen::MatrixBase<MatrixType>&>(KKT_matrix_inverse));
+  }
 }
 
 
 inline void ImpulseSplitKKTMatrix::setZero() {
   Fqq_prev.setZero();
   FC_.setZero();
+  if (is_forward_euler_) {
+    Pq_full_.setZero();
+  }
   Q_.setZero();
 }
 
@@ -344,7 +363,9 @@ inline bool ImpulseSplitKKTMatrix::isApprox(
     const ImpulseSplitKKTMatrix& other) const {
   if (!Fxf().isApprox(other.Fxf())) return false;
   if (!Fxx().isApprox(other.Fxx())) return false;
-  if (!Pq().isApprox(other.Pq())) return false;
+  if (is_forward_euler_) {
+    if (!Pq().isApprox(other.Pq())) return false;
+  }
   if (!Vq().isApprox(other.Vq())) return false;
   if (!Vv().isApprox(other.Vv())) return false;
   if (!Qdvdvff().isApprox(other.Qdvdvff())) return false;
@@ -358,6 +379,9 @@ inline bool ImpulseSplitKKTMatrix::isApprox(
 inline bool ImpulseSplitKKTMatrix::hasNaN() const {
   if (Fqq_prev.hasNaN()) return true;
   if (FC_.hasNaN()) return true;
+  if (is_forward_euler_) {
+    if (Pq_full_.hasNaN()) return true;
+  }
   if (Q_.hasNaN()) return true;
   return false;
 }

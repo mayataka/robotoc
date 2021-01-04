@@ -5,7 +5,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/impulse_status.hpp"
-#include "idocp/impulse/dynamic_schur_complement.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix_inverter.hpp"
 
 
 namespace idocp {
@@ -19,8 +19,11 @@ public:
   ///
   /// @brief Construct a KKT matrix.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] is_forward_euler Choose discretization method. If true, the 
+  /// forward Euler method is used and if false, the backward Euler method is 
+  /// used. Default is true.
   ///
-  ImpulseSplitKKTMatrix(const Robot& robot);
+  ImpulseSplitKKTMatrix(const Robot& robot, const bool is_forward_euler=true);
 
   ///
   /// @brief Default constructor. 
@@ -401,12 +404,10 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  DynamicSchurComplement schur_complement_;
-  Eigen::MatrixXd FC_, Q_;
-  bool has_floating_base_;
-  int dimv_, dimx_, dimu_, dim_passive_, dimf_, dimp_, u_begin_, q_begin_, 
-      v_begin_, dimKKT_;
-  static constexpr int kDimFloatingBase = 6;
+  ImpulseSplitKKTMatrixInverter inverter_;
+  Eigen::MatrixXd FC_, Pq_full_, Q_;
+  bool is_forward_euler_;
+  int dimv_, dimx_, dimf_, q_begin_, v_begin_, dimKKT_;
 
 };
 

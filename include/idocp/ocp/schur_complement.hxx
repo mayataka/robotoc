@@ -61,6 +61,7 @@ inline void SchurComplement::invertWithZeroBottomRightCorner(
   assert(Minv.rows() == dimA_+dimD_);
   assert(Minv.cols() == dimA_+dimD_);
   llt_Ainv_.compute(A);
+  assert(llt_Ainv_.info() == Eigen::Success);
   const_cast<Eigen::MatrixBase<MatrixType3>&>(Minv)
       .topLeftCorner(dimA_, dimA_).noalias()
       = llt_Ainv_.solve(Eigen::MatrixXd::Identity(dimA_, dimA_));
@@ -80,6 +81,7 @@ inline void SchurComplement::invertWithZeroBottomRightCorner(
   CAinv_.noalias() = C * Minv.topLeftCorner(dimA_, dimA_);
   SA_.noalias() = CAinv_ * C.transpose();
   llt_Dinv_.compute(SA_);
+  assert(llt_Dinv_.info() == Eigen::Success);
   const_cast<Eigen::MatrixBase<MatrixType2>&>(Minv)
       .bottomRightCorner(dimD_, dimD_).noalias()
       = - llt_Dinv_.solve(Eigen::MatrixXd::Identity(dimD_, dimD_));
@@ -107,6 +109,7 @@ inline void SchurComplement::invertWithZeroTopLeftCorner(
   assert(Minv.rows() == dimA_+dimD_);
   assert(Minv.cols() == dimA_+dimD_);
   llt_Dinv_.compute(D);
+  assert(llt_Dinv_.info() == Eigen::Success);
   const_cast<Eigen::MatrixBase<MatrixType3>&>(Minv)
       .bottomRightCorner(dimD_, dimD_).noalias()
       = llt_Dinv_.solve(Eigen::MatrixXd::Identity(dimD_, dimD_));
@@ -126,6 +129,7 @@ inline void SchurComplement::invertWithZeroTopLeftCorner(
   BDinv_.noalias() = B * Minv.bottomRightCorner(dimD_, dimD_);
   SD_.noalias() = BDinv_ * B.transpose();
   llt_Ainv_.compute(SD_);
+  assert(llt_Ainv_.info() == Eigen::Success);
   const_cast<Eigen::MatrixBase<MatrixType2>&>(Minv)
       .topLeftCorner(dimA_, dimA_).noalias()
       = - llt_Ainv_.solve(Eigen::MatrixXd::Identity(dimA_, dimA_));

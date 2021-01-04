@@ -95,14 +95,14 @@ void LineSearchTest::test(const Robot& robot) const {
   linearizer.initConstraints(ocp, robots, contact_sequence, s);
   LineSearch line_search(robot, N, max_num_impulse, nthreads);
   EXPECT_TRUE(line_search.isFilterEmpty());
-  double max_primal_step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
-  while (max_primal_step_size <= min_step_size) {
-    max_primal_step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
-  }
+  const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
   const double step_size = line_search.computeStepSize(ocp, robots, contact_sequence, q, v, s, d, max_primal_step_size);
   EXPECT_TRUE(step_size <= max_primal_step_size);
   EXPECT_TRUE(step_size >= min_step_size);
   EXPECT_FALSE(line_search.isFilterEmpty());
+  const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
+  EXPECT_DOUBLE_EQ(line_search.computeStepSize(ocp, robots, contact_sequence, q, v, s, d, very_small_max_primal_step_size),
+                   min_step_size);
 }
 
 

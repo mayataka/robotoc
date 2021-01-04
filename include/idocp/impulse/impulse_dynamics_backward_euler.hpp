@@ -48,10 +48,6 @@ public:
       Robot& robot, const ImpulseStatus& impulse_status, 
       ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual);
 
-  static void linearizeImpulsePositionConstraint(
-      Robot& robot, const ImpulseStatus& impulse_status, 
-      ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual);
-
   void condenseImpulseDynamics(Robot& robot, 
                                const ImpulseStatus& impulse_status,  
                                ImpulseSplitKKTMatrix& kkt_matrix, 

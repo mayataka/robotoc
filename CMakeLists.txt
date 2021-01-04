@@ -62,11 +62,11 @@ add_library(
   src/constraints/contact_distance.cpp
   src/constraints/impulse_friction_cone.cpp
   src/constraints/impulse_normal_force.cpp
-  src/impulse/dynamic_schur_complement.cpp
-  src/impulse/impulse_split_kkt_residual.cpp
-  src/impulse/impulse_split_kkt_matrix.cpp
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp
+  src/impulse/impulse_split_kkt_residual.cpp
+  src/impulse/impulse_split_kkt_matrix_inverter.cpp
+  src/impulse/impulse_split_kkt_matrix.cpp
   src/impulse/impulse_state_equation.cpp
   src/impulse/impulse_dynamics_forward_euler_data.cpp
   src/impulse/impulse_dynamics_forward_euler.cpp
@@ -76,7 +76,6 @@ add_library(
   src/impulse/impulse_split_riccati_factorizer.cpp
   src/impulse/impulse_dynamics_backward_euler_data.cpp
   src/impulse/impulse_dynamics_backward_euler.cpp
-  # src/impulse/impulse_split_parnmpc.cpp
   src/hybrid/discrete_event.cpp
   src/hybrid/contact_sequence.cpp
   src/hybrid/ocp_discretizer.cpp

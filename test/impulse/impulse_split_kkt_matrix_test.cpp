@@ -33,13 +33,14 @@ protected:
 
 
 void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus& impulse_status) {
-  ImpulseSplitKKTMatrix matrix(robot);
+  const bool is_forward_euler = true; // forward Euler
+  ImpulseSplitKKTMatrix matrix(robot, is_forward_euler);
   matrix.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dimf = impulse_status.dimf();
   EXPECT_EQ(matrix.dimf(), dimf);
-  EXPECT_EQ(matrix.dimKKT(), 4*dimv+3*dimf);
+  EXPECT_EQ(matrix.dimKKT(), 4*dimv+2*dimf);
   EXPECT_EQ(matrix.Fqf().rows(), dimv);
   EXPECT_EQ(matrix.Fqf().cols(), dimf);
   EXPECT_EQ(matrix.Fqq().rows(), dimv);
@@ -145,7 +146,8 @@ void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus
 
 
 void SplitImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status) {
-  ImpulseSplitKKTMatrix matrix(robot);
+  const bool is_forward_euler = true; // forward Euler
+  ImpulseSplitKKTMatrix matrix(robot, is_forward_euler);
   matrix.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimf();
@@ -236,47 +238,61 @@ void SplitImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseSt
 
 
 void SplitImpulseKKTMatrixTest::testInverse(const Robot& robot, const ImpulseStatus& impulse_status) {
-  // ImpulseSplitKKTMatrix matrix(robot);
-  // matrix.setImpulseStatus(impulse_status);
-  // const int dimv = robot.dimv();
-  // const int dimx = 2*robot.dimv();
-  // const int dimf = impulse_status.dimf();
-  // const int dimQ = 2*dimv + dimf;
-  // const int dimKKT = 4*dimv + 3*dimf;
-  // const Eigen::MatrixXd KKT_seed_mat = Eigen::MatrixXd::Random(dimKKT, dimKKT);
-  // Eigen::MatrixXd KKT_mat = KKT_seed_mat * KKT_seed_mat.transpose() + Eigen::MatrixXd::Identity(dimKKT, dimKKT);
-  // KKT_mat.topLeftCorner(dimx+2*dimf, dimx+2*dimf).setZero();
-  // matrix.Fqf() = KKT_mat.block(               0,      dimx+2*dimf, dimv, dimf);
-  // matrix.Fqq() = KKT_mat.block(               0,      dimx+3*dimf, dimv, dimv);
-  // matrix.Fqv() = KKT_mat.block(               0, dimx+3*dimf+dimv, dimv, dimv);
-  // matrix.Fqf() = KKT_mat.block(            dimv,      dimx+2*dimf, dimv, dimf);
-  // matrix.Fqq() = KKT_mat.block(            dimv,      dimx+3*dimf, dimv, dimv);
-  // matrix.Fqv() = KKT_mat.block(            dimv, dimx+3*dimf+dimv, dimv, dimv);
-  // KKT_mat.block(                           dimx,      dimx+2*dimf, dimf, dimf).setZero(); // Pf
-  // matrix.Pq()  = KKT_mat.block(            dimx,      dimx+3*dimf, dimf, dimv);
-  // KKT_mat.block(                           dimx, dimx+3*dimf+dimv, dimf, dimv).setZero(); // Pv
-  // KKT_mat.block(                      dimx+dimf,      dimx+2*dimf, dimf, dimf).setZero(); // Vf
-  // matrix.Vq()  = KKT_mat.block(       dimx+dimf,      dimx+3*dimf, dimf, dimv);
-  // matrix.Vv()  = KKT_mat.block(       dimx+dimf, dimx+3*dimf+dimv, dimf, dimv);
-  // matrix.Qff() = KKT_mat.block(     dimx+2*dimf,      dimx+2*dimf, dimf, dimf);
-  // matrix.Qfq() = KKT_mat.block(     dimx+2*dimf,      dimx+3*dimf, dimf, dimv);
-  // matrix.Qfv() = KKT_mat.block(     dimx+2*dimf, dimx+3*dimf+dimv, dimf, dimv);
-  // matrix.Qqf() = KKT_mat.block(     dimx+3*dimf,      dimx+2*dimf, dimv, dimf);
-  // matrix.Qqq() = KKT_mat.block(     dimx+3*dimf,      dimx+3*dimf, dimv, dimv);
-  // matrix.Qqv() = KKT_mat.block(     dimx+3*dimf, dimx+3*dimf+dimv, dimv, dimv);
-  // matrix.Qvf() = KKT_mat.block(dimx+3*dimf+dimv,      dimx+2*dimf, dimv, dimf);
-  // matrix.Qvq() = KKT_mat.block(dimx+3*dimf+dimv,      dimx+3*dimf, dimv, dimv);
-  // matrix.Qvv() = KKT_mat.block(dimx+3*dimf+dimv, dimx+3*dimf+dimv, dimv, dimv);
-  // KKT_mat.template triangularView<Eigen::StrictlyLower>() 
-  //     = KKT_mat.transpose().template triangularView<Eigen::StrictlyLower>();
-  // const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat.inverse();
-  // matrix.symmetrize();
-  // Eigen::MatrixXd KKT_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
-  // matrix.invert(KKT_mat_inv);
-  // EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref));
-  // EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity());
-  // std::cout << KKT_mat << std::endl;
-  // std::cout << KKT_mat_inv_ref << std::endl;
+  const bool is_forward_euler = false; // backward Euler
+  ImpulseSplitKKTMatrix matrix(robot, is_forward_euler);
+  matrix.setImpulseStatus(impulse_status);
+  const int dimv = robot.dimv();
+  const int dimx = 2*robot.dimv();
+  const int dimf = impulse_status.dimf();
+  const int dimQ = 2*dimv + dimf;
+  const int dimKKT = 4*dimv + 2*dimf;
+  const Eigen::MatrixXd KKT_seed_mat = Eigen::MatrixXd::Random(dimKKT, dimKKT);
+  Eigen::MatrixXd KKT_mat = KKT_seed_mat * KKT_seed_mat.transpose() + Eigen::MatrixXd::Identity(dimKKT, dimKKT);
+  KKT_mat.topLeftCorner(dimx+dimf, dimx+dimf).setZero();
+  KKT_mat.block(               0,        dimx+dimf, dimv, dimf).setZero(); // Fqf
+  if (robot.hasFloatingBase()) {
+    const Eigen::MatrixXd Fqq = Eigen::MatrixXd::Zero(dimv, dimv);
+    robot.dSubtractdConfigurationMinus(robot.generateFeasibleConfiguration(), 
+                                       robot.generateFeasibleConfiguration(), Fqq);
+    KKT_mat.block(               0,      dimx+2*dimf, dimv, dimv) = Fqq; // Fqq
+  }
+  else {
+    KKT_mat.block(               0,      dimx+2*dimf, dimv, dimv) = - Eigen::MatrixXd::Identity(dimv, dimv); // Fqq
+  }
+  KKT_mat.block(               0, dimx+2*dimf+dimv, dimv, dimv).setZero(); // Fqv
+  KKT_mat.block(            dimv, dimx+2*dimf+dimv, dimv, dimv) = - Eigen::MatrixXd::Identity(dimv, dimv); // Fvv
+  matrix.Fqf() = KKT_mat.block(               0,        dimx+dimf, dimv, dimf);
+  matrix.Fqq() = KKT_mat.block(               0,      dimx+2*dimf, dimv, dimv);
+  matrix.Fqv() = KKT_mat.block(               0, dimx+2*dimf+dimv, dimv, dimv);
+  matrix.Fvf() = KKT_mat.block(            dimv,        dimx+dimf, dimv, dimf);
+  matrix.Fvq() = KKT_mat.block(            dimv,      dimx+2*dimf, dimv, dimv);
+  matrix.Fvv() = KKT_mat.block(            dimv, dimx+2*dimf+dimv, dimv, dimv);
+  KKT_mat.block(                           dimx,        dimx+dimf, dimf, dimf).setZero(); // Vf
+  matrix.Vq()  = KKT_mat.block(            dimx,      dimx+2*dimf, dimf, dimv);
+  matrix.Vv()  = KKT_mat.block(            dimx, dimx+2*dimf+dimv, dimf, dimv);
+  matrix.Qff() = KKT_mat.block(       dimx+dimf,        dimx+dimf, dimf, dimf);
+  matrix.Qfq() = KKT_mat.block(       dimx+dimf,      dimx+2*dimf, dimf, dimv);
+  matrix.Qfv() = KKT_mat.block(       dimx+dimf, dimx+2*dimf+dimv, dimf, dimv);
+  matrix.Qqf() = KKT_mat.block(     dimx+2*dimf,        dimx+dimf, dimv, dimf);
+  matrix.Qqq() = KKT_mat.block(     dimx+2*dimf,      dimx+2*dimf, dimv, dimv);
+  matrix.Qqv() = KKT_mat.block(     dimx+2*dimf, dimx+2*dimf+dimv, dimv, dimv);
+  matrix.Qvf() = KKT_mat.block(dimx+2*dimf+dimv,        dimx+dimf, dimv, dimf);
+  matrix.Qvq() = KKT_mat.block(dimx+2*dimf+dimv,      dimx+2*dimf, dimv, dimv);
+  matrix.Qvv() = KKT_mat.block(dimx+2*dimf+dimv, dimx+2*dimf+dimv, dimv, dimv);
+  KKT_mat.template triangularView<Eigen::StrictlyLower>() 
+      = KKT_mat.transpose().template triangularView<Eigen::StrictlyLower>();
+  const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat.inverse();
+  matrix.symmetrize();
+  Eigen::MatrixXd KKT_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
+  matrix.invert(KKT_mat_inv);
+  if (robot.hasFloatingBase()) {
+    EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-06));
+    EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-06));
+  }
+  else {
+    EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-08));
+    EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-08));
+  }
 }
 
 
