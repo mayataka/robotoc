@@ -58,7 +58,7 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, fixedBase) {
   inverter.invert(FC, Q, KKT_mat_inv);
   const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat.inverse();
   EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-08));
-  EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-08));
+  EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-06));
 }
 
 
@@ -101,7 +101,7 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, floatingBase) {
   Eigen::MatrixXd KKT_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
   inverter.invert(FC, Q, KKT_mat_inv);
   const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat.inverse();
-  EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-06));
+  EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-08));
   EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-06));
 }
 

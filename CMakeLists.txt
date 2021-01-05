@@ -76,6 +76,7 @@ add_library(
   src/impulse/impulse_split_riccati_factorizer.cpp
   src/impulse/impulse_dynamics_backward_euler_data.cpp
   src/impulse/impulse_dynamics_backward_euler.cpp
+  src/impulse/impulse_split_parnmpc.cpp
   src/hybrid/discrete_event.cpp
   src/hybrid/contact_sequence.cpp
   src/hybrid/ocp_discretizer.cpp

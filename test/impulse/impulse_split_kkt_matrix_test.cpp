@@ -286,12 +286,12 @@ void SplitImpulseKKTMatrixTest::testInverse(const Robot& robot, const ImpulseSta
   Eigen::MatrixXd KKT_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
   matrix.invert(KKT_mat_inv);
   if (robot.hasFloatingBase()) {
-    EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-06));
+    EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-08));
     EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-06));
   }
   else {
     EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-08));
-    EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-08));
+    EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-06));
   }
 }
 
