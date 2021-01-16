@@ -85,6 +85,7 @@ add_library(
   src/ocp/schur_complement.cpp
   src/ocp/split_kkt_residual.cpp
   src/ocp/split_kkt_matrix.cpp
+  src/ocp/split_kkt_matrix_inverter.cpp
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
@@ -110,6 +111,7 @@ add_library(
   src/ocp/pre_impulse_split_kkt_matrix.cpp
   src/ocp/split_parnmpc.cpp
   src/ocp/terminal_parnmpc.cpp
+  src/ocp/split_backward_correction.cpp
   src/unocp/split_unkkt_residual.cpp
   src/unocp/split_unkkt_matrix.cpp
   src/unocp/split_unkkt_matrix_inverter.cpp
