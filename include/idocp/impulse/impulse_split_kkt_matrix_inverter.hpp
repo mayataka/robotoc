@@ -51,12 +51,12 @@ public:
       ImpulseSplitKKTMatrixInverter&&) noexcept = default;
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void invert(const Eigen::MatrixBase<MatrixType1>& FC,
+  void invert(const Eigen::MatrixBase<MatrixType1>& Jac,
               const Eigen::MatrixBase<MatrixType2>& Q,
               const Eigen::MatrixBase<MatrixType3>& KKT_mat_inv);
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void multiplyFC(const Eigen::MatrixBase<MatrixType1>& FC, 
+  void multiplyJac(const Eigen::MatrixBase<MatrixType1>& Jac, 
                   const Eigen::MatrixBase<MatrixType2>& mat, 
                   const Eigen::MatrixBase<MatrixType3>& res);
 
@@ -65,7 +65,7 @@ public:
 private:
   int dimv_, max_dimf_;
   bool has_floating_base_;
-  Eigen::MatrixXd S_, FC_Qinv_;
+  Eigen::MatrixXd S_, Jac_Qinv_;
   Eigen::LLT<Eigen::MatrixXd> llt_;
 
 };

@@ -286,38 +286,38 @@ void SplitKKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& c
 }
 
 
-void SplitKKTMatrixTest::testInverse(const Robot& robot) {
-  SplitKKTMatrix matrix(robot);
-  const int dimv = robot.dimv();
-  const int dimu = robot.dimu();
-  const int dimx = 2*robot.dimv();
-  const int dimQ = 2*robot.dimv() + robot.dimu();
-  const int dimKKT = 4*robot.dimv() + robot.dimu();
-  const Eigen::MatrixXd KKT_seed_mat = Eigen::MatrixXd::Random(dimKKT, dimKKT);
-  Eigen::MatrixXd KKT_mat = KKT_seed_mat * KKT_seed_mat.transpose() + Eigen::MatrixXd::Identity(dimKKT, dimKKT);
-  KKT_mat.topLeftCorner(dimx, dimx).setZero();
-  matrix.Fqu() = KKT_mat.block(             0,           dimx, dimv, dimu);
-  matrix.Fqq() = KKT_mat.block(             0,      dimx+dimu, dimv, dimv);
-  matrix.Fqv() = KKT_mat.block(             0, dimx+dimu+dimv, dimv, dimv);
-  matrix.Fvu() = KKT_mat.block(          dimv,           dimx, dimv, dimu);
-  matrix.Fvq() = KKT_mat.block(          dimv,      dimx+dimu, dimv, dimv);
-  matrix.Fvv() = KKT_mat.block(          dimv, dimx+dimu+dimv, dimv, dimv);
-  matrix.Quu() = KKT_mat.block(          dimx,           dimx, dimu, dimu);
-  matrix.Quq() = KKT_mat.block(          dimx,      dimx+dimu, dimu, dimv);
-  matrix.Quv() = KKT_mat.block(          dimx, dimx+dimu+dimv, dimu, dimv);
-  matrix.Qqu() = KKT_mat.block(     dimx+dimu,           dimx, dimv, dimu);
-  matrix.Qqq() = KKT_mat.block(     dimx+dimu,      dimx+dimu, dimv, dimv);
-  matrix.Qqv() = KKT_mat.block(     dimx+dimu, dimx+dimu+dimv, dimv, dimv);
-  matrix.Qvu() = KKT_mat.block(dimx+dimu+dimv,           dimx, dimv, dimu);
-  matrix.Qvq() = KKT_mat.block(dimx+dimu+dimv,      dimx+dimu, dimv, dimv);
-  matrix.Qvv() = KKT_mat.block(dimx+dimu+dimv, dimx+dimu+dimv, dimv, dimv);
-  matrix.symmetrize();
-  Eigen::MatrixXd KKT_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
-  matrix.invert(KKT_mat_inv);
-  const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat.inverse();
-  EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref));
-  EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity());
-}
+// void SplitKKTMatrixTest::testInverse(const Robot& robot) {
+//   SplitKKTMatrix matrix(robot);
+//   const int dimv = robot.dimv();
+//   const int dimu = robot.dimu();
+//   const int dimx = 2*robot.dimv();
+//   const int dimQ = 2*robot.dimv() + robot.dimu();
+//   const int dimKKT = 4*robot.dimv() + robot.dimu();
+//   const Eigen::MatrixXd KKT_seed_mat = Eigen::MatrixXd::Random(dimKKT, dimKKT);
+//   Eigen::MatrixXd KKT_mat = KKT_seed_mat * KKT_seed_mat.transpose() + Eigen::MatrixXd::Identity(dimKKT, dimKKT);
+//   KKT_mat.topLeftCorner(dimx, dimx).setZero();
+//   matrix.Fqu() = KKT_mat.block(             0,           dimx, dimv, dimu);
+//   matrix.Fqq() = KKT_mat.block(             0,      dimx+dimu, dimv, dimv);
+//   matrix.Fqv() = KKT_mat.block(             0, dimx+dimu+dimv, dimv, dimv);
+//   matrix.Fvu() = KKT_mat.block(          dimv,           dimx, dimv, dimu);
+//   matrix.Fvq() = KKT_mat.block(          dimv,      dimx+dimu, dimv, dimv);
+//   matrix.Fvv() = KKT_mat.block(          dimv, dimx+dimu+dimv, dimv, dimv);
+//   matrix.Quu() = KKT_mat.block(          dimx,           dimx, dimu, dimu);
+//   matrix.Quq() = KKT_mat.block(          dimx,      dimx+dimu, dimu, dimv);
+//   matrix.Quv() = KKT_mat.block(          dimx, dimx+dimu+dimv, dimu, dimv);
+//   matrix.Qqu() = KKT_mat.block(     dimx+dimu,           dimx, dimv, dimu);
+//   matrix.Qqq() = KKT_mat.block(     dimx+dimu,      dimx+dimu, dimv, dimv);
+//   matrix.Qqv() = KKT_mat.block(     dimx+dimu, dimx+dimu+dimv, dimv, dimv);
+//   matrix.Qvu() = KKT_mat.block(dimx+dimu+dimv,           dimx, dimv, dimu);
+//   matrix.Qvq() = KKT_mat.block(dimx+dimu+dimv,      dimx+dimu, dimv, dimv);
+//   matrix.Qvv() = KKT_mat.block(dimx+dimu+dimv, dimx+dimu+dimv, dimv, dimv);
+//   matrix.symmetrize();
+//   Eigen::MatrixXd KKT_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
+//   matrix.invert(KKT_mat_inv);
+//   const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat.inverse();
+//   EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref));
+//   EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity());
+// }
 
 
 TEST_F(SplitKKTMatrixTest, fixedBase) {
@@ -331,7 +331,6 @@ TEST_F(SplitKKTMatrixTest, fixedBase) {
   contact_status.setContactStatus({true});
   testSize(robot, contact_status);
   testIsApprox(robot, contact_status);
-  testInverse(robot);
 }
 
 
@@ -351,7 +350,6 @@ TEST_F(SplitKKTMatrixTest, floatingBase) {
   contact_status.setContactStatus(is_contact_active);
   testSize(robot, contact_status);
   testIsApprox(robot, contact_status);
-  testInverse(robot);
 }
 
 } // namespace idocp

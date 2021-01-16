@@ -5,7 +5,6 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/impulse_status.hpp"
-#include "idocp/impulse/impulse_split_kkt_matrix_inverter.hpp"
 
 
 namespace idocp {
@@ -19,11 +18,8 @@ public:
   ///
   /// @brief Construct a KKT matrix.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] is_forward_euler Choose discretization method. If true, the 
-  /// forward Euler method is used and if false, the backward Euler method is 
-  /// used. Default is true.
   ///
-  ImpulseSplitKKTMatrix(const Robot& robot, const bool is_forward_euler=true);
+  ImpulseSplitKKTMatrix(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
@@ -359,12 +355,28 @@ public:
   void symmetrize();
 
   ///
-  /// @brief Invert the KKT matrix. 
-  /// @param[out] KKT_matrix_inverse Inverse of the KKT matrix. Size must 
-  /// be ImpulseSplitKKTMatrix::dimKKT() x ImpulseSplitKKTMatrix::dimKKT().
+  /// @brief Hessian of the Lagrangian with respect to primal variables. 
+  /// @return Reference to the Hessian. Size is 
+  /// Robot::dimv() + ImpulseStatus::dimf() x Robot::dimv() + ImpulseStatus::dimf().
   ///
-  template <typename MatrixType>
-  void invert(const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse);
+  Eigen::Block<Eigen::MatrixXd> Qss();
+
+  ///
+  /// @brief const version of ImpulseSplitKKTMatrix::Qss().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qss() const;
+
+  ///
+  /// @brief Constraint Jacobian. 
+  /// @return Reference to the Jacobian. Size is 
+  /// Robot::dimv() + ImpulseStatus::dimf() x Robot::dimv() + ImpulseStatus::dimf().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Jac();
+
+  ///
+  /// @brief const version of ImpulseSplitKKTMatrix::Jac().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Jac() const;
 
   ///
   /// @brief Set the all components zero.
@@ -404,9 +416,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  ImpulseSplitKKTMatrixInverter inverter_;
   Eigen::MatrixXd FC_, Pq_full_, Q_;
-  bool is_forward_euler_;
   int dimv_, dimx_, dimf_, q_begin_, v_begin_, dimKKT_;
 
 };

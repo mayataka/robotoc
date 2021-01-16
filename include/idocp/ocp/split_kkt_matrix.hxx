@@ -10,7 +10,6 @@ namespace idocp {
 
 inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot) 
   : Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    schur_complement_(2*robot.dimv(), 2*robot.dimv()+robot.dimu()),
     F_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv()+robot.dimu())),
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv(), 3*robot.dimv())),
     Qaaff_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
@@ -30,7 +29,6 @@ inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
 
 inline SplitKKTMatrix::SplitKKTMatrix() 
   : Fqq_prev(),
-    schur_complement_(),
     F_(),
     Q_(),
     Qaaff_full_(),
@@ -463,20 +461,29 @@ inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qff() const {
 }
 
 
-inline void SplitKKTMatrix::symmetrize() {
-  Q_.template triangularView<Eigen::StrictlyLower>() 
-      = Q_.transpose().template triangularView<Eigen::StrictlyLower>();
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qss() {
+  return Q_.bottomRightCorner(dimx_+dimu_, dimx_+dimu_);
 }
 
 
-template <typename MatrixType>
-inline void SplitKKTMatrix::invert(
-    const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse) {
-  assert(KKT_matrix_inverse.rows() == dimKKT_);
-  assert(KKT_matrix_inverse.cols() == dimKKT_);
-  schur_complement_.invertWithZeroTopLeftCorner(
-      F_, Q_.bottomRightCorner(dimx_+dimu_, dimx_+dimu_), 
-      const_cast<Eigen::MatrixBase<MatrixType>&>(KKT_matrix_inverse));
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qss() const {
+  return Q_.bottomRightCorner(dimx_+dimu_, dimx_+dimu_);
+}
+
+
+inline Eigen::MatrixXd& SplitKKTMatrix::Jac() {
+  return F_;
+}
+
+
+inline const Eigen::MatrixXd& SplitKKTMatrix::Jac() const {
+  return F_;
+}
+
+
+inline void SplitKKTMatrix::symmetrize() {
+  Q_.template triangularView<Eigen::StrictlyLower>() 
+      = Q_.transpose().template triangularView<Eigen::StrictlyLower>();
 }
 
 

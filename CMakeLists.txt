@@ -108,6 +108,7 @@ add_library(
   src/ocp/ocp_solver.cpp
   src/unocp/split_unkkt_residual.cpp
   src/unocp/split_unkkt_matrix.cpp
+  src/unocp/split_unkkt_matrix_inverter.cpp
   src/unocp/unconstrained_container.cpp
   src/unocp/unconstrained_dynamics.cpp
   src/unocp/split_unocp.cpp
@@ -126,8 +127,6 @@ add_library(
   src/utils/derivative_checker.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp
-  src/utils/simulation_data_saver.cpp
-  src/utils/runge_kutta.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

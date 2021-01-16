@@ -1,4 +1,5 @@
 add_idocp_test(split_unkkt_matrix_test)
+add_idocp_test(split_unkkt_matrix_inverter_test)
 add_idocp_test(unconstrained_dynamics_test)
 add_idocp_test(split_unocp_test)
 add_idocp_test(backward_unriccati_recursion_factorizer_test)

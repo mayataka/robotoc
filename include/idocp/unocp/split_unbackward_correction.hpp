@@ -11,6 +11,7 @@
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/unocp/split_unkkt_matrix.hpp"
 #include "idocp/unocp/split_unkkt_residual.hpp"
+#include "idocp/unocp/split_unkkt_matrix_inverter.hpp"
 
 
 namespace idocp {
@@ -91,11 +92,9 @@ public:
                                const SplitSolution& s_new, 
                                SplitDirection& d);
 
-
-  void printKKTMatInv() const;
-
 private:
   int dimv_, dimx_, dimKKT_;
+  SplitUnKKTMatrixInverter kkt_mat_inverter_;
   Eigen::MatrixXd KKT_mat_inv_;
   Eigen::VectorXd x_res_, dx_;
 
