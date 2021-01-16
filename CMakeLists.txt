@@ -106,6 +106,10 @@ add_library(
   src/ocp/riccati_direction_calculator.cpp
   src/ocp/riccati_solver.cpp
   src/ocp/ocp_solver.cpp
+  src/ocp/pre_impulse_split_kkt_residual.cpp
+  src/ocp/pre_impulse_split_kkt_matrix.cpp
+  src/ocp/split_parnmpc.cpp
+  src/ocp/terminal_parnmpc.cpp
   src/unocp/split_unkkt_residual.cpp
   src/unocp/split_unkkt_matrix.cpp
   src/unocp/split_unkkt_matrix_inverter.cpp
