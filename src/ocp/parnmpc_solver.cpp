@@ -63,9 +63,14 @@ void ParNMPCSolver::initConstraints() {
 }
 
 
+void ParNMPCSolver::initBackwardCorrection(const double t) {
+  backward_correction_.initAuxMat(parnmpc_, robots_, t, s_, kkt_matrix_);
+}
+
+
 void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q, 
-                               const Eigen::VectorXd& v, 
-                               const bool use_line_search) {
+                                   const Eigen::VectorXd& v, 
+                                   const bool use_line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   backward_correction_.coarseUpdate(parnmpc_, robots_, contact_sequence_, 
@@ -80,19 +85,9 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                                     contact_sequence_, q, v, 
                                                     s_, d_, max_primal_step_size);
   }
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_; ++i) {
-    if (i < N_-1) {
-      parnmpc_[i].updatePrimal(robots_[omp_get_thread_num()], primal_step_size, 
-                               d_[i], s_[i]);
-      parnmpc_[i].updateDual(dual_step_size);
-    }
-    else {
-      parnmpc_.terminal.updatePrimal(robots_[omp_get_thread_num()],  
-                                     primal_step_size, d_[i], s_[i]);
-      parnmpc_.terminal.updateDual(dual_step_size);
-    }
-  }
+  parnmpc_linearizer_.integrateSolution(parnmpc_, robots_, kkt_matrix_, 
+                                        kkt_residual_, primal_step_size, 
+                                        dual_step_size, d_, s_);
 } 
 
 

@@ -100,10 +100,11 @@ int main () {
   contact_status.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q);
   robot.setContactPoints(contact_status);
-  ocp_solver.setContactStatusUniformly(contact_status);
-  ocp_solver.setStateTrajectory(t, q, v);
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 20, false);
-  idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 5000, false);
+  parnmpc_solver.setContactStatusUniformly(contact_status);
+  parnmpc_solver.setStateTrajectory(t, q, v);
+  parnmpc_solver.initBackwardCorrection(t);
+  idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 20, false);
+  idocp::ocpbenchmarker::CPUTime(parnmpc_solver, t, q, v, 5000, false);
 
   return 0;
 }

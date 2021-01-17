@@ -79,6 +79,8 @@ public:
   ///
   void initConstraints();
 
+  void initBackwardCorrection(const double t);
+
   ///
   /// @brief Updates the solution by computing the primal-dual Newon direction.
   /// @param[in] t Initial time of the horizon. Current time in MPC. 
