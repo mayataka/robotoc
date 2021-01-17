@@ -214,9 +214,6 @@ double ParNMPCLinearizer::KKTError(const ParNMPC& parnmpc,
               parnmpc.discrete().dtau_lift(lift_index));
     }
   }
-  std::cout << "kkt_error_.head(N_all)" << std::endl;
-  std::cout << kkt_error_.head(N_all).transpose() << std::endl;
-  std::cout << std::endl;
   return std::sqrt(kkt_error_.head(N_all).sum());
 }
 

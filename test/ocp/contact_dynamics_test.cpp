@@ -212,7 +212,7 @@ void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& cont
   data_ref.MJtJinv_IDC().setZero();
   data_ref.laf().setZero();
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
-  ContactDynamics::condensing(robot, dtau, data, kkt_matrix, kkt_residual);
+  ContactDynamics::condensingForwardEuler(robot, dtau, data, kkt_matrix, kkt_residual);
   data_ref.MJtJinv_dIDCdqv() = data_ref.MJtJinv() * data_ref.dIDCdqv();
   data_ref.MJtJinv_IDC() = data_ref.MJtJinv() * data_ref.IDC();
   data_ref.Qafqv() = - kkt_matrix_ref.Qaaff() * data_ref.MJtJinv_dIDCdqv();
@@ -401,7 +401,7 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
   ContactDynamics cd(robot, baumgarte_time_step), cd_ref(robot, baumgarte_time_step);
   const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
   cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_residual);
-  cd.condenseContactDynamics(robot, contact_status, dtau, kkt_matrix, kkt_residual);
+  cd.condenseContactDynamicsForwardEuler(robot, contact_status, dtau, kkt_matrix, kkt_residual);
   ContactDynamicsData data_ref(robot);
   data_ref.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -412,7 +412,7 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
   ContactDynamics::linearizeInverseDynamics(robot, contact_status, s, data_ref);
   ContactDynamics::linearizeContactConstraint(robot, contact_status, baumgarte_time_step, data_ref);
   robot.computeMJtJinv(data_ref.dIDda, data_ref.dCda(), data_ref.MJtJinv());
-  ContactDynamics::condensing(robot, dtau, data_ref, kkt_matrix_ref, kkt_residual_ref);
+  ContactDynamics::condensingForwardEuler(robot, dtau, data_ref, kkt_matrix_ref, kkt_residual_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   SplitDirection d = SplitDirection::Random(robot, contact_status);

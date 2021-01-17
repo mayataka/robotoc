@@ -75,31 +75,8 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(v.size() == robots_[0].dimv());
   backward_correction_.coarseUpdate(parnmpc_, robots_, contact_sequence_, 
                                     t, q, v, kkt_matrix_, kkt_residual_, s_, d_);
-
-  std::cout << "after coarse update" << std::endl;
-  for (int i=0; i<N_; ++i) {
-    std::cout << "dlmd[" << i << "] = " << d_[i].dlmd().transpose() << std::endl;
-    std::cout << "dgmm[" << i << "] = " << d_[i].dgmm().transpose() << std::endl;
-    std::cout << "du[" << i << "] = " << d_[i].du().transpose() << std::endl;
-    std::cout << "dq[" << i << "] = " << d_[i].dq().transpose() << std::endl;
-    std::cout << "dv[" << i << "] = " << d_[i].dv().transpose() << std::endl;
-    std::cout << "da[" << i << "] = " << d_[i].da().transpose() << std::endl;
-  }
-
   backward_correction_.backwardCorrection(parnmpc_, robots_, kkt_matrix_, 
                                           kkt_residual_, s_, d_);
-
-  std::cout << "after backward correction" << std::endl;
-  for (int i=0; i<N_; ++i) {
-    std::cout << "dlmd[" << i << "] = " << d_[i].dlmd().transpose() << std::endl;
-    std::cout << "dgmm[" << i << "] = " << d_[i].dgmm().transpose() << std::endl;
-    std::cout << "du[" << i << "] = " << d_[i].du().transpose() << std::endl;
-    std::cout << "dq[" << i << "] = " << d_[i].dq().transpose() << std::endl;
-    std::cout << "dv[" << i << "] = " << d_[i].dv().transpose() << std::endl;
-    std::cout << "da[" << i << "] = " << d_[i].da().transpose() << std::endl;
-  }
-
-
   double primal_step_size = backward_correction_.primalStepSize();
   const double dual_step_size   = backward_correction_.dualStepSize();
   if (use_line_search) {
@@ -111,8 +88,6 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   parnmpc_linearizer_.integrateSolution(parnmpc_, robots_, kkt_matrix_, 
                                         kkt_residual_, primal_step_size, 
                                         dual_step_size, d_, s_);
-  std::cout << "primal step size = " << primal_step_size << std::endl;
-  std::cout << "dual step size = " << dual_step_size << std::endl;
 } 
 
 

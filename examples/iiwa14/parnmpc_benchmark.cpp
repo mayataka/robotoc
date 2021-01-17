@@ -48,13 +48,12 @@ int main() {
   // Solves the OCP.
   parnmpc_solver.setStateTrajectory(t, q, v);
   parnmpc_solver.initBackwardCorrection(t);
-  // const int num_iteration = 100;
-  const int num_iteration = 1;
+  const int num_iteration = 100;
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, num_iteration, line_search);
-  // const int num_iteration_CPU = 10000;
-  // idocp::ocpbenchmarker::CPUTime(parnmpc_solver, t, q, v, num_iteration_CPU, line_search);
-  // parnmpc_solver.printSolution();
+  const int num_iteration_CPU = 10000;
+  idocp::ocpbenchmarker::CPUTime(parnmpc_solver, t, q, v, num_iteration_CPU, line_search);
+  parnmpc_solver.printSolution();
 
   return 0;
 }

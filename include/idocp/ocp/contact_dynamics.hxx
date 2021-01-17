@@ -104,19 +104,18 @@ inline void ContactDynamics::linearizeContactConstraint(
 }
 
 
-inline void ContactDynamics::condenseContactDynamics(
+inline void ContactDynamics::condenseContactDynamicsForwardEuler(
     Robot& robot, const ContactStatus& contact_status, const double dtau,
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(dtau >= 0);
   robot.computeMJtJinv(data_.dIDda, data_.dCda(), data_.MJtJinv());
-  condensing(robot, dtau, data_, kkt_matrix, kkt_residual);
+  condensingForwardEuler(robot, dtau, data_, kkt_matrix, kkt_residual);
 }
 
 
-inline void ContactDynamics::condensing(const Robot& robot, const double dtau, 
-                                        ContactDynamicsData& data, 
-                                        SplitKKTMatrix& kkt_matrix, 
-                                        SplitKKTResidual& kkt_residual) {
+inline void ContactDynamics::condensingForwardEuler(
+    const Robot& robot, const double dtau, ContactDynamicsData& data, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dim_passive = robot.dim_passive();
@@ -168,6 +167,72 @@ inline void ContactDynamics::condensing(const Robot& robot, const double dtau,
     kkt_residual.Fv().noalias() -= dtau * data.MJtJinv_IDC().head(dimv);
   }
 }
+
+
+inline void ContactDynamics::condenseContactDynamicsBackwardEuler(
+    Robot& robot, const ContactStatus& contact_status, const double dtau,
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
+  assert(dtau >= 0);
+  robot.computeMJtJinv(data_.dIDda, data_.dCda(), data_.MJtJinv());
+  condensingBackwardEuler(robot, dtau, data_, kkt_matrix, kkt_residual);
+}
+
+
+inline void ContactDynamics::condensingBackwardEuler(
+    const Robot& robot, const double dtau, ContactDynamicsData& data, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
+  const int dimv = robot.dimv();
+  const int dimu = robot.dimu();
+  const int dim_passive = robot.dim_passive();
+  data.MJtJinv_dIDCdqv().noalias() = data.MJtJinv() * data.dIDCdqv();
+  data.MJtJinv_IDC().noalias() = data.MJtJinv() * data.IDC();
+  data.Qafqv().noalias() 
+      = (- kkt_matrix.Qaaff().diagonal()).asDiagonal() * data.MJtJinv_dIDCdqv();
+  data.Qafu_full().noalias() 
+      = kkt_matrix.Qaaff().diagonal().asDiagonal() 
+          * data.MJtJinv().leftCols(dimv);
+  data.la() = kkt_residual.la;
+  data.lf() = - kkt_residual.lf();
+  data.laf().noalias() 
+      -= kkt_matrix.Qaaff().diagonal().asDiagonal() * data.MJtJinv_IDC();
+  kkt_matrix.Qxx().noalias() 
+      -= data.MJtJinv_dIDCdqv().transpose() * data.Qafqv();
+  kkt_matrix.Qxu_full().noalias() 
+      -= data.MJtJinv_dIDCdqv().transpose() * data.Qafu_full();
+  kkt_residual.lx().noalias() 
+      -= data.MJtJinv_dIDCdqv().transpose() * data.laf();
+  if (robot.hasFloatingBase()) {
+    kkt_matrix.Quu_full().noalias() 
+        += data.MJtJinv().topRows(dimv) * data.Qafu_full();
+    kkt_residual.lu_passive.noalias() 
+        += data.MJtJinv().template topRows<kDimFloatingBase>() * data.laf();
+    kkt_residual.lu().noalias() 
+        += data.MJtJinv().middleRows(kDimFloatingBase, dimu) * data.laf();
+    kkt_residual.lu().noalias() 
+        -= kkt_matrix.Quu_passive_bottomLeft() * data.u_passive;
+    kkt_residual.lx().noalias() -= kkt_matrix.Qxu_passive() * data.u_passive;
+  }
+  else {
+    kkt_matrix.Quu().noalias() += data.MJtJinv().topRows(dimv) * data.Qafu();
+    kkt_residual.lu().noalias() += data.MJtJinv().topRows(dimv) * data.laf();
+  }
+  kkt_matrix.Fvq() = - dtau * data.MJtJinv_dIDCdqv().topLeftCorner(dimv, dimv);
+  kkt_matrix.Fvv().noalias() 
+      = - Eigen::MatrixXd::Identity(dimv, dimv) 
+          - dtau * data.MJtJinv_dIDCdqv().topRightCorner(dimv, dimv);
+  if (robot.hasFloatingBase()) {
+    kkt_matrix.Fvu() = dtau * data.MJtJinv().block(0, dim_passive, dimv, dimu);
+    kkt_residual.Fv().noalias() 
+        -= dtau * data.MJtJinv().topLeftCorner(dimv, dim_passive) 
+                * data.u_passive;
+    kkt_residual.Fv().noalias() -= dtau * data.MJtJinv_IDC().head(dimv);
+  }
+  else {
+    kkt_matrix.Fvu() = dtau * data.MJtJinv().topLeftCorner(dimv, dimv);
+    kkt_residual.Fv().noalias() -= dtau * data.MJtJinv_IDC().head(dimv);
+  }
+}
+
 
 
 inline void ContactDynamics::computeCondensedPrimalDirection(

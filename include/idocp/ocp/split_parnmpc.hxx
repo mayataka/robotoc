@@ -81,8 +81,9 @@ inline void SplitParNMPC::linearizeOCP(Robot& robot,
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
                                      kkt_matrix, kkt_residual);
-  contact_dynamics_.condenseContactDynamics(robot, contact_status, dtau, 
-                                            kkt_matrix, kkt_residual);
+  contact_dynamics_.condenseContactDynamicsBackwardEuler(robot, contact_status, 
+                                                         dtau, kkt_matrix, 
+                                                         kkt_residual);
 }
 
 
