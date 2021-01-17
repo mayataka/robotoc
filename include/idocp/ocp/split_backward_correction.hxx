@@ -36,22 +36,24 @@ inline SplitBackwardCorrection::~SplitBackwardCorrection() {
 
 template <typename MatrixType>
 inline void SplitBackwardCorrection::coarseUpdate(
-    const Robot& robot, const Eigen::MatrixBase<MatrixType>& aux_mat_next,
+    const Robot& robot, const double dtau, 
+    const Eigen::MatrixBase<MatrixType>& aux_mat_next,
     SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const SplitSolution& s, SplitDirection& d, SplitSolution& s_new) {
   assert(aux_mat_next.rows() == dimx_);
   assert(aux_mat_next.cols() == dimx_);
   kkt_matrix.Qxx().noalias() += aux_mat_next;
-  coarseUpdate(robot, kkt_matrix, kkt_residual, s, d, s_new);
+  coarseUpdate(robot, dtau, kkt_matrix, kkt_residual, s, d, s_new);
 }
 
 
 inline void SplitBackwardCorrection::coarseUpdate(
-    const Robot& robot, SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
-    const SplitSolution& s, SplitDirection& d, SplitSolution& s_new) {
+    const Robot& robot, const double dtau, SplitKKTMatrix& kkt_matrix, 
+    const SplitKKTResidual& kkt_residual, const SplitSolution& s, 
+    SplitDirection& d, SplitSolution& s_new) {
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   kkt_matrix.Qux() = kkt_matrix.Qxu().transpose();
-  kkt_mat_inverter_.invert(kkt_matrix.Jac(), kkt_matrix.Qss(), KKT_mat_inv_);
+  kkt_mat_inverter_.invert(dtau, kkt_matrix.Jac(), kkt_matrix.Qss(), KKT_mat_inv_);
   d.split_direction.noalias() = KKT_mat_inv_ * kkt_residual.KKT_residual;
   s_new.lmd = s.lmd - d.dlmd();
   s_new.gmm = s.gmm - d.dgmm();

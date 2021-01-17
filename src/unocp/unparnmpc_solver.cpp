@@ -78,7 +78,30 @@ void UnParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(v.size() == robots_[0].dimv());
   backward_correction_.coarseUpdate(robots_, parnmpc_, t, q, v, unkkt_matrix_,
                                     unkkt_residual_, s_, d_);
+
+  std::cout << "after coarse update" << std::endl;
+  for (int i=0; i<N_; ++i) {
+    std::cout << "dlmd[" << i << "] = " << d_[i].dlmd().transpose() << std::endl;
+    std::cout << "dgmm[" << i << "] = " << d_[i].dgmm().transpose() << std::endl;
+    std::cout << "du[" << i << "] = " << d_[i].du().transpose() << std::endl;
+    std::cout << "dq[" << i << "] = " << d_[i].dq().transpose() << std::endl;
+    std::cout << "dv[" << i << "] = " << d_[i].dv().transpose() << std::endl;
+    std::cout << "da[" << i << "] = " << d_[i].da().transpose() << std::endl;
+  }
+
   backward_correction_.backwardCorrection(robots_, parnmpc_, s_, d_);
+
+  std::cout << "after backward correction" << std::endl;
+  for (int i=0; i<N_; ++i) {
+    std::cout << "dlmd[" << i << "] = " << d_[i].dlmd().transpose() << std::endl;
+    std::cout << "dgmm[" << i << "] = " << d_[i].dgmm().transpose() << std::endl;
+    std::cout << "du[" << i << "] = " << d_[i].du().transpose() << std::endl;
+    std::cout << "dq[" << i << "] = " << d_[i].dq().transpose() << std::endl;
+    std::cout << "dv[" << i << "] = " << d_[i].dv().transpose() << std::endl;
+    std::cout << "da[" << i << "] = " << d_[i].da().transpose() << std::endl;
+  }
+
+
   double primal_step_size = backward_correction_.primalStepSize();
   const double dual_step_size   = backward_correction_.dualStepSize();
   if (use_line_search) {
@@ -151,6 +174,9 @@ double UnParNMPCSolver::KKTError() {
       kkt_error_.coeffRef(i) = parnmpc_.terminal.squaredNormKKTResidual(dtau_);
     }
   }
+  std::cout << "kkt_error_" << std::endl;
+  std::cout << kkt_error_.transpose() << std::endl;
+  std::cout << std::endl;
   return std::sqrt(kkt_error_.sum());
 }
 

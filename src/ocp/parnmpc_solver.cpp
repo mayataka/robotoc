@@ -15,7 +15,7 @@ ParNMPCSolver::ParNMPCSolver(const Robot& robot,
   : robots_(nthreads, robot),
     contact_sequence_(robot, N),
     parnmpc_linearizer_(N, max_num_impulse, nthreads),
-    backward_correction_(robot, T, N, max_num_impulse, nthreads),
+    backward_correction_(robot, N, max_num_impulse, nthreads),
     line_search_(robot, N, max_num_impulse, nthreads),
     parnmpc_(robot, cost, constraints, T, N, max_num_impulse),
     kkt_matrix_(robot, N, max_num_impulse),
@@ -75,8 +75,31 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(v.size() == robots_[0].dimv());
   backward_correction_.coarseUpdate(parnmpc_, robots_, contact_sequence_, 
                                     t, q, v, kkt_matrix_, kkt_residual_, s_, d_);
+
+  std::cout << "after coarse update" << std::endl;
+  for (int i=0; i<N_; ++i) {
+    std::cout << "dlmd[" << i << "] = " << d_[i].dlmd().transpose() << std::endl;
+    std::cout << "dgmm[" << i << "] = " << d_[i].dgmm().transpose() << std::endl;
+    std::cout << "du[" << i << "] = " << d_[i].du().transpose() << std::endl;
+    std::cout << "dq[" << i << "] = " << d_[i].dq().transpose() << std::endl;
+    std::cout << "dv[" << i << "] = " << d_[i].dv().transpose() << std::endl;
+    std::cout << "da[" << i << "] = " << d_[i].da().transpose() << std::endl;
+  }
+
   backward_correction_.backwardCorrection(parnmpc_, robots_, kkt_matrix_, 
                                           kkt_residual_, s_, d_);
+
+  std::cout << "after backward correction" << std::endl;
+  for (int i=0; i<N_; ++i) {
+    std::cout << "dlmd[" << i << "] = " << d_[i].dlmd().transpose() << std::endl;
+    std::cout << "dgmm[" << i << "] = " << d_[i].dgmm().transpose() << std::endl;
+    std::cout << "du[" << i << "] = " << d_[i].du().transpose() << std::endl;
+    std::cout << "dq[" << i << "] = " << d_[i].dq().transpose() << std::endl;
+    std::cout << "dv[" << i << "] = " << d_[i].dv().transpose() << std::endl;
+    std::cout << "da[" << i << "] = " << d_[i].da().transpose() << std::endl;
+  }
+
+
   double primal_step_size = backward_correction_.primalStepSize();
   const double dual_step_size   = backward_correction_.dualStepSize();
   if (use_line_search) {
@@ -88,6 +111,8 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   parnmpc_linearizer_.integrateSolution(parnmpc_, robots_, kkt_matrix_, 
                                         kkt_residual_, primal_step_size, 
                                         dual_step_size, d_, s_);
+  std::cout << "primal step size = " << primal_step_size << std::endl;
+  std::cout << "dual step size = " << dual_step_size << std::endl;
 } 
 
 
@@ -291,12 +316,17 @@ void ParNMPCSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
 
 
 bool ParNMPCSolver::isCurrentSolutionFeasible() {
-  for (int i=0; i<N_; ++i) {
+  for (int i=0; i<N_-1; ++i) {
     const bool feasible = parnmpc_[i].isFeasible(robots_[0], s_[i]);
     if (!feasible) {
       std::cout << "INFEASIBLE at time stage " << i << std::endl;
       return false;
     }
+  }
+  const bool feasible = parnmpc_.terminal.isFeasible(robots_[0], s_[N_-1]);
+  if (!feasible) {
+    std::cout << "INFEASIBLE at the terminal stage" << std::endl;
+    return false;
   }
   const int num_impulse = contact_sequence_.numImpulseEvents();
   for (int i=0; i<num_impulse; ++i) {

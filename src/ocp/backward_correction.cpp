@@ -6,14 +6,13 @@
 
 namespace idocp {
 
-BackwardCorrection::BackwardCorrection(const Robot& robot, const double T, 
-                                       const int N, const int max_num_impulse, 
+BackwardCorrection::BackwardCorrection(const Robot& robot, const int N, 
+                                       const int max_num_impulse, 
                                        const int nthreads)
   : N_(N),
     max_num_impulse_(max_num_impulse),
     nthreads_(nthreads),
-    T_(T),
-    dtau_(T/N),
+    N_all_(N),
     corrector_(robot, N, max_num_impulse),
     s_new_(robot, N, max_num_impulse),
     aux_mat_(N, Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
@@ -23,9 +22,6 @@ BackwardCorrection::BackwardCorrection(const Robot& robot, const double T,
     primal_step_sizes_(Eigen::VectorXd::Zero(N+3*max_num_impulse)),
     dual_step_sizes_(Eigen::VectorXd::Zero(N+3*max_num_impulse)) {
   try {
-    if (T <= 0) {
-      throw std::out_of_range("invalid value: T must be positive!");
-    }
     if (N <= 0) {
       throw std::out_of_range("invalid value: N must be positive!");
     }
@@ -47,8 +43,7 @@ BackwardCorrection::BackwardCorrection()
   : N_(0),
     max_num_impulse_(0),
     nthreads_(0),
-    T_(0),
-    dtau_(0),
+    N_all_(0),
     corrector_(),
     s_new_(),
     aux_mat_(),
@@ -67,8 +62,9 @@ BackwardCorrection::~BackwardCorrection() {
 void BackwardCorrection::initAuxMat(ParNMPC& parnmpc, 
                                     std::vector<Robot>& robots, const double t, 
                                     const Solution& s, KKTMatrix& kkt_matrix) {
-  parnmpc.terminal.computeTerminalCostHessian(robots[0], t+T_, s[N_-1], 
-                                              kkt_matrix[N_-1]);
+  parnmpc.terminal.computeTerminalCostHessian(robots[0], 
+                                              parnmpc.discrete().t(N_-1), 
+                                              s[N_-1], kkt_matrix[N_-1]);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     aux_mat_[i] = kkt_matrix[N_-1].Qxx();
@@ -90,8 +86,10 @@ void BackwardCorrection::coarseUpdate(ParNMPC& parnmpc,
       parnmpc[i].linearizeOCP(
           robots[omp_get_thread_num()], 
           contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)), 
-          t+dtau_, dtau_, q, v, s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
-      corrector_[i].coarseUpdate(robots[omp_get_thread_num()], aux_mat_[i+1], 
+          parnmpc.discrete().t(i), parnmpc.discrete().dtau(i),
+          q, v, s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
+      corrector_[i].coarseUpdate(robots[omp_get_thread_num()], 
+                                 parnmpc.discrete().dtau(i), aux_mat_[i+1], 
                                  kkt_matrix[i], kkt_residual[i], 
                                  s[i], d[i], s_new_[i]);
     }
@@ -99,9 +97,10 @@ void BackwardCorrection::coarseUpdate(ParNMPC& parnmpc,
       parnmpc[i].linearizeOCP(
           robots[omp_get_thread_num()], 
           contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)), 
-          t+(i+1)*dtau_, dtau_, s[i-1].q, s[i-1].v, s[i], s[i+1], 
-          kkt_matrix[i], kkt_residual[i]);
-      corrector_[i].coarseUpdate(robots[omp_get_thread_num()], aux_mat_[i+1], 
+          parnmpc.discrete().t(i), parnmpc.discrete().dtau(i),
+          s[i-1].q, s[i-1].v, s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
+      corrector_[i].coarseUpdate(robots[omp_get_thread_num()], 
+                                 parnmpc.discrete().dtau(i), aux_mat_[i+1], 
                                  kkt_matrix[i], kkt_residual[i], 
                                  s[i], d[i], s_new_[i]);
     }
@@ -109,8 +108,10 @@ void BackwardCorrection::coarseUpdate(ParNMPC& parnmpc,
       parnmpc.terminal.linearizeOCP(
           robots[omp_get_thread_num()], 
           contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)),  
-          t+T_, dtau_, s[i-1].q, s[i-1].v, s[i], kkt_matrix[i], kkt_residual[i]);
-      corrector_[i].coarseUpdate(robots[omp_get_thread_num()], kkt_matrix[i], 
+          parnmpc.discrete().t(i), parnmpc.discrete().dtau(i),
+          s[i-1].q, s[i-1].v, s[i], kkt_matrix[i], kkt_residual[i]);
+      corrector_[i].coarseUpdate(robots[omp_get_thread_num()], 
+                                 parnmpc.discrete().dtau(i), kkt_matrix[i], 
                                  kkt_residual[i], s[i], d[i], s_new_[i]);
     }
   }
@@ -144,33 +145,37 @@ void BackwardCorrection::backwardCorrection(ParNMPC& parnmpc,
                                               s[i], s_new_[i], d[i]);
     if (i < N_-1) {
       parnmpc[i].computeCondensedPrimalDirection(robots[omp_get_thread_num()], 
-                                                 dtau_, s[i], d[i]);
+                                                 parnmpc.discrete().dtau(i), 
+                                                 s[i], d[i]);
       parnmpc[i].computeCondensedDualDirection(robots[omp_get_thread_num()], 
-                                               dtau_, kkt_matrix[i], 
-                                               kkt_residual[i], d[i]);
+                                               parnmpc.discrete().dtau(i), 
+                                               kkt_matrix[i], kkt_residual[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc[i].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   = parnmpc[i].maxDualStepSize();
     }
     else {
       parnmpc.terminal.computeCondensedPrimalDirection(
-          robots[omp_get_thread_num()], dtau_, s[i], d[i]);
+          robots[omp_get_thread_num()], parnmpc.discrete().dtau(i), s[i], d[i]);
       parnmpc.terminal.computeCondensedDualDirection(
-          robots[omp_get_thread_num()], dtau_, kkt_matrix[i], 
-          kkt_residual[i], d[i]);
+          robots[omp_get_thread_num()], parnmpc.discrete().dtau(i), 
+          kkt_matrix[i], kkt_residual[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc.terminal.maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   = parnmpc.terminal.maxDualStepSize();
     }
   }
+  const int N_impulse = parnmpc.discrete().numImpulseStages();
+  const int N_lift = parnmpc.discrete().numLiftStages();
+  N_all_ = N_ + 2 * N_impulse + N_lift;
 }
 
 
 double BackwardCorrection::primalStepSize() const {
-  return primal_step_sizes_.minCoeff();
+  return primal_step_sizes_.head(N_all_).minCoeff();
 }
 
 
 double BackwardCorrection::dualStepSize() const {
-  return dual_step_sizes_.minCoeff();
+  return dual_step_sizes_.head(N_all_).minCoeff();
 }
 
 } // namespace idocp

@@ -208,7 +208,7 @@ void LineSearch::computeCostAndViolation(
           contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)),
           parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
           q_prev(parnmpc.discrete(), q, s, i), 
-          v_prev(parnmpc.discrete(), q, s, i), s[i], kkt_residual_[i]);
+          v_prev(parnmpc.discrete(), v, s, i), s[i], kkt_residual_[i]);
     }
     else if (i == N_-1) {
       costs_.coeffRef(i) = parnmpc.terminal.stageCost(
@@ -219,7 +219,7 @@ void LineSearch::computeCostAndViolation(
           contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)),
           parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
           q_prev(parnmpc.discrete(), q, s, i), 
-          v_prev(parnmpc.discrete(), q, s, i), s[i], kkt_residual_[i]);
+          v_prev(parnmpc.discrete(), v, s, i), s[i], kkt_residual_[i]);
     }
     else if (i < N_+N_impulse) {
       const int impulse_index = i - N_;

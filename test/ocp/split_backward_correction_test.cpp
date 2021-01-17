@@ -52,8 +52,6 @@ SplitKKTMatrix SplitBackwardCorrectionTest::createKKTMatrix(const Robot& robot) 
   kkt_matrix.Qvq().setZero();
   kkt_matrix.Quq().setZero();
   kkt_matrix.Quv().setZero();
-  kkt_matrix.Fqq() = - Eigen::MatrixXd::Identity(dimv, dimv);
-  kkt_matrix.Fqv() = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
   if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
   }
@@ -91,14 +89,14 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
   SplitSolution s_new_ref = s_new;
   SplitDirection d = SplitDirection::Random(robot);
   SplitDirection d_ref = d;
-  corr.coarseUpdate(robot, aux_mat_next, kkt_matrix, kkt_residual, s, d, s_new);
+  corr.coarseUpdate(robot, dtau, aux_mat_next, kkt_matrix, kkt_residual, s, d, s_new);
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
   kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
   kkt_matrix_ref.Qux() = kkt_matrix_ref.Qxu().transpose();
   kkt_matrix_ref.Qxx() += aux_mat_next;
   SplitKKTMatrixInverter inverter(robot);
-  inverter.invert(kkt_matrix.Jac(), kkt_matrix.Qss(), KKT_mat_inv);
+  inverter.invert(dtau, kkt_matrix.Jac(), kkt_matrix.Qss(), KKT_mat_inv);
   d_ref.split_direction = KKT_mat_inv * kkt_residual.KKT_residual;
   s_new_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_ref.gmm = s.gmm - d_ref.dgmm();
@@ -173,13 +171,13 @@ void SplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
   SplitSolution s_new_ref = s_new;
   SplitDirection d = SplitDirection::Random(robot);
   SplitDirection d_ref = d;
-  corr.coarseUpdate(robot, kkt_matrix, kkt_residual, s, d, s_new);
+  corr.coarseUpdate(robot, dtau, kkt_matrix, kkt_residual, s, d, s_new);
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
   kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
   kkt_matrix_ref.Qux() = kkt_matrix_ref.Qxu().transpose();
   SplitKKTMatrixInverter inverter(robot);
-  inverter.invert(kkt_matrix_ref.Jac(), kkt_matrix_ref.Qss(), KKT_mat_inv);
+  inverter.invert(dtau, kkt_matrix_ref.Jac(), kkt_matrix_ref.Qss(), KKT_mat_inv);
   d_ref.split_direction = KKT_mat_inv * kkt_residual.KKT_residual;
   s_new_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_ref.gmm = s.gmm - d_ref.dgmm();
@@ -200,7 +198,7 @@ TEST_F(SplitBackwardCorrectionTest, fixedBase) {
 
 TEST_F(SplitBackwardCorrectionTest, floating_base) {
   test(floating_base_robot);
-  // testTerminal(floating_base_robot);
+  testTerminal(floating_base_robot);
 }
 
 } // namespace idocp

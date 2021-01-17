@@ -49,21 +49,23 @@ public:
   SplitKKTMatrixInverter& operator=(SplitKKTMatrixInverter&&) noexcept = default;
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void invert(const Eigen::MatrixBase<MatrixType1>& Jac, 
+  void invert(const double dtau, const Eigen::MatrixBase<MatrixType1>& Jac, 
               const Eigen::MatrixBase<MatrixType2>& Q, 
               const Eigen::MatrixBase<MatrixType3>& KKT_mat_inv);
 
-  template <typename MatrixType1, typename MatrixType2>
-  void invert(const Eigen::MatrixBase<MatrixType1>& Jac, 
-              const Eigen::MatrixBase<MatrixType2>& KKT_mat_inv);
+  template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
+  void multiplyJac(const double dtau, const Eigen::MatrixBase<MatrixType1>& Jac, 
+                  const Eigen::MatrixBase<MatrixType2>& mat, 
+                  const Eigen::MatrixBase<MatrixType3>& res);
 
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int dimx_, dimQ_, dimKKT_;
+  int dimv_, dimu_, dimx_, dimQ_, dimKKT_;
+  bool has_floating_base_;
   Eigen::LLT<Eigen::MatrixXd> llt_Q_, llt_F_;
-  Eigen::MatrixXd S_, FQinv_;
+  Eigen::MatrixXd S_, Jac_Qinv_;
 
 };
 

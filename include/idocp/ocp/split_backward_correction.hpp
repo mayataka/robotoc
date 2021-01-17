@@ -62,14 +62,15 @@ public:
   SplitBackwardCorrection& operator=(SplitBackwardCorrection&&) noexcept = default;
 
   template <typename MatrixType>
-  void coarseUpdate(const Robot& robot, 
+  void coarseUpdate(const Robot& robot, const double dtau,
                     const Eigen::MatrixBase<MatrixType>& aux_mat_next,
                     SplitKKTMatrix& kkt_matrix, 
                     const SplitKKTResidual& kkt_residual,
                     const SplitSolution& s, SplitDirection& d, 
                     SplitSolution& s_new);
 
-  void coarseUpdate(const Robot& robot, SplitKKTMatrix& kkt_matrix, 
+  void coarseUpdate(const Robot& robot, const double dtau, 
+                    SplitKKTMatrix& kkt_matrix, 
                     const SplitKKTResidual& kkt_residual,
                     const SplitSolution& s, SplitDirection& d, 
                     SplitSolution& s_new);

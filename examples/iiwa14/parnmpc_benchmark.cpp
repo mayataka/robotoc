@@ -36,25 +36,25 @@ int main() {
   idocp::JointConstraintsFactory constraints_factory(robot);
   auto constraints = constraints_factory.create();
 
-  // Create the OCP solver for unconstrained rigid-body systems.
+  // Create the ParNMPC solver for rigid-body systems.
   const double T = 1;
   const int N = 20;
   const int nthreads = 4;
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Constant(robot.dimq(), 2);
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-
   idocp::ParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, 0, nthreads);
 
   // Solves the OCP.
   parnmpc_solver.setStateTrajectory(t, q, v);
   parnmpc_solver.initBackwardCorrection(t);
-  const int num_iteration = 50;
+  // const int num_iteration = 100;
+  const int num_iteration = 1;
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, num_iteration, line_search);
-  const int num_iteration_CPU = 10000;
-  idocp::ocpbenchmarker::CPUTime(parnmpc_solver, t, q, v, num_iteration_CPU, line_search);
-  parnmpc_solver.printSolution();
+  // const int num_iteration_CPU = 10000;
+  // idocp::ocpbenchmarker::CPUTime(parnmpc_solver, t, q, v, num_iteration_CPU, line_search);
+  // parnmpc_solver.printSolution();
 
   return 0;
 }

@@ -11,6 +11,7 @@ RiccatiDirectionCalculator::RiccatiDirectionCalculator(
     const int N, const int max_num_impulse, const int nthreads) 
   : N_(N),
     nthreads_(nthreads),
+    N_all_(N+1),
     max_primal_step_sizes_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)), 
     max_dual_step_sizes_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)) {
   try {
@@ -34,6 +35,7 @@ RiccatiDirectionCalculator::RiccatiDirectionCalculator(
 RiccatiDirectionCalculator::RiccatiDirectionCalculator()
   : N_(0),
     nthreads_(0),
+    N_all_(0),
     max_primal_step_sizes_(), 
     max_dual_step_sizes_() {
 }

@@ -96,7 +96,7 @@ void ParNMPCLinearizer::computeKKTResidual(
             contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)), 
             parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
             q_prev(parnmpc.discrete(), q, s, i), 
-            v_prev(parnmpc.discrete(), q, s, i), 
+            v_prev(parnmpc.discrete(), v, s, i), 
             s[i], s.impulse[parnmpc.discrete().impulseIndexAfterTimeStage(i)], 
             kkt_matrix[i], kkt_residual[i]);
       }
@@ -106,9 +106,8 @@ void ParNMPCLinearizer::computeKKTResidual(
             contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)), 
             parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
             q_prev(parnmpc.discrete(), q, s, i), 
-            v_prev(parnmpc.discrete(), q, s, i), 
-            s[i], 
-            s.lift[parnmpc.discrete().liftIndexAfterTimeStage(i)], 
+            v_prev(parnmpc.discrete(), v, s, i), 
+            s[i], s.lift[parnmpc.discrete().liftIndexAfterTimeStage(i)], 
             kkt_matrix[i], kkt_residual[i]);
       }
       else {
@@ -117,7 +116,7 @@ void ParNMPCLinearizer::computeKKTResidual(
             contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)), 
             parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
             q_prev(parnmpc.discrete(), q, s, i), 
-            v_prev(parnmpc.discrete(), q, s, i), 
+            v_prev(parnmpc.discrete(), v, s, i), 
             s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
       }
     }
@@ -127,7 +126,7 @@ void ParNMPCLinearizer::computeKKTResidual(
           contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)), 
           parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
           q_prev(parnmpc.discrete(), q, s, i), 
-          v_prev(parnmpc.discrete(), q, s, i), 
+          v_prev(parnmpc.discrete(), v, s, i), 
           s[i], kkt_matrix[i], kkt_residual[i]);
     }
     else if (i < N_+N_impulse) {
@@ -215,6 +214,9 @@ double ParNMPCLinearizer::KKTError(const ParNMPC& parnmpc,
               parnmpc.discrete().dtau_lift(lift_index));
     }
   }
+  std::cout << "kkt_error_.head(N_all)" << std::endl;
+  std::cout << kkt_error_.head(N_all).transpose() << std::endl;
+  std::cout << std::endl;
   return std::sqrt(kkt_error_.head(N_all).sum());
 }
 

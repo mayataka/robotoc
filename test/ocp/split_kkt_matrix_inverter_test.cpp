@@ -19,18 +19,20 @@ protected:
     std::random_device rnd;
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
+    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
   }
 
-  static void test(const Robot& robot);
+  void test(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
+  double dtau;
 };
 
 
-void SplitKKTMatrixInverterTest::test(const Robot& robot) {
+void SplitKKTMatrixInverterTest::test(const Robot& robot) const {
   SplitKKTMatrix matrix(robot);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
@@ -40,6 +42,12 @@ void SplitKKTMatrixInverterTest::test(const Robot& robot) {
   const Eigen::MatrixXd KKT_seed_mat = Eigen::MatrixXd::Random(dimKKT, dimKKT);
   Eigen::MatrixXd KKT_mat = KKT_seed_mat * KKT_seed_mat.transpose() + Eigen::MatrixXd::Identity(dimKKT, dimKKT);
   KKT_mat.topLeftCorner(dimx, dimx).setZero();
+  KKT_mat.topRows(dimv).setZero();
+  auto q_prev = robot.generateFeasibleConfiguration();
+  auto q_next = robot.generateFeasibleConfiguration();
+  robot.dSubtractdConfigurationMinus(q_prev, q_next, KKT_mat.block(0, dimx+dimu, dimv, dimv));
+  KKT_mat.block(             0, dimx+dimu+dimv, dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
+  KKT_mat.bottomLeftCorner(dimQ, dimx) = KKT_mat.topRightCorner(dimx, dimQ).transpose();
   matrix.Fqu() = KKT_mat.block(             0,           dimx, dimv, dimu);
   matrix.Fqq() = KKT_mat.block(             0,      dimx+dimu, dimv, dimv);
   matrix.Fqv() = KKT_mat.block(             0, dimx+dimu+dimv, dimv, dimv);
@@ -55,10 +63,9 @@ void SplitKKTMatrixInverterTest::test(const Robot& robot) {
   matrix.Qvu() = KKT_mat.block(dimx+dimu+dimv,           dimx, dimv, dimu);
   matrix.Qvq() = KKT_mat.block(dimx+dimu+dimv,      dimx+dimu, dimv, dimv);
   matrix.Qvv() = KKT_mat.block(dimx+dimu+dimv, dimx+dimu+dimv, dimv, dimv);
-  matrix.symmetrize();
   Eigen::MatrixXd KKT_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
   SplitKKTMatrixInverter inverter(robot);
-  inverter.invert(matrix.Jac(), matrix.Qss(), KKT_mat_inv);
+  inverter.invert(dtau, matrix.Jac(), matrix.Qss(), KKT_mat_inv);
   const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat.inverse();
   EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref));
   EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity());

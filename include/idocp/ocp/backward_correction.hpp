@@ -28,8 +28,8 @@ public:
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  BackwardCorrection(const Robot& robot, const double T, const int N, 
-                     const int max_num_impulse, const int nthreads);
+  BackwardCorrection(const Robot& robot, const int N, const int max_num_impulse, 
+                     const int nthreads);
 
   ///
   /// @brief Default constructor. 
@@ -80,8 +80,7 @@ public:
   double dualStepSize() const;
 
 private:
-  int N_, max_num_impulse_, nthreads_;
-  double T_, dtau_;
+  int N_, max_num_impulse_, nthreads_, N_all_;
   BackwardCorrector corrector_;
   Solution s_new_;
   std::vector<Eigen::MatrixXd> aux_mat_, aux_mat_impulse_, aux_mat_aux_, 
