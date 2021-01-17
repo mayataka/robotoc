@@ -41,7 +41,8 @@ public:
   ///
   /// @brief Default copy operator. 
   ///
-  SplitUnKKTMatrixInverter& operator=(const SplitUnKKTMatrixInverter&) = default;
+  SplitUnKKTMatrixInverter& operator=(
+      const SplitUnKKTMatrixInverter&) = default;
  
   ///
   /// @brief Default move constructor. 
@@ -51,7 +52,8 @@ public:
   ///
   /// @brief Default move assign operator. 
   ///
-  SplitUnKKTMatrixInverter& operator=(SplitUnKKTMatrixInverter&&) noexcept = default;
+  SplitUnKKTMatrixInverter& operator=(
+      SplitUnKKTMatrixInverter&&) noexcept = default;
 
   ///
   /// @brief Invert the split KKT matrix. 

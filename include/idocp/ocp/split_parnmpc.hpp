@@ -17,8 +17,6 @@
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/ocp/state_equation.hpp"
 #include "idocp/ocp/contact_dynamics.hpp"
-#include "idocp/ocp/pre_impulse_split_kkt_matrix.hpp"
-#include "idocp/ocp/pre_impulse_split_kkt_residual.hpp"
 
 
 namespace idocp {
@@ -108,12 +106,6 @@ public:
                     const Eigen::VectorXd& v_prev, 
                     const SplitSolution& s, const SplitSolutionType& s_next, 
                     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
-
-  void linearizePreImpulseCondition(
-      Robot& robot, const ImpulseStatus& impulse_status, 
-      const ImpulseSplitSolution& s_next, SplitKKTResidual& kkt_residual,
-      PreImpulseSplitKKTMatrix& pre_kkt_matrix, 
-      PreImpulseSplitKKTResidual& pre_kkt_residual);
 
   ///
   /// @brief Computes the Newton direction of the condensed primal variables  

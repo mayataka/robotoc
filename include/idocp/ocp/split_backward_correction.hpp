@@ -62,13 +62,14 @@ public:
   SplitBackwardCorrection& operator=(SplitBackwardCorrection&&) noexcept = default;
 
   template <typename MatrixType>
-  void coarseUpdate(const Eigen::MatrixBase<MatrixType>& aux_mat_next,
-                    const double dtau, SplitKKTMatrix& kkt_matrix, 
+  void coarseUpdate(const Robot& robot, 
+                    const Eigen::MatrixBase<MatrixType>& aux_mat_next,
+                    SplitKKTMatrix& kkt_matrix, 
                     const SplitKKTResidual& kkt_residual,
                     const SplitSolution& s, SplitDirection& d, 
                     SplitSolution& s_new);
 
-  void coarseUpdate(const double dtau, SplitKKTMatrix& kkt_matrix, 
+  void coarseUpdate(const Robot& robot, SplitKKTMatrix& kkt_matrix, 
                     const SplitKKTResidual& kkt_residual,
                     const SplitSolution& s, SplitDirection& d, 
                     SplitSolution& s_new);
@@ -79,18 +80,17 @@ public:
                                 const SplitSolution& s_new_next,
                                 SplitSolution& s_new);
 
-  void backwardCorrectionParallel(SplitDirection& d, 
+  void backwardCorrectionParallel(const Robot& robot, SplitDirection& d, 
                                   SplitSolution& s_new) const;
 
-  void forwardCorrectionSerial(const SplitSolution& s_prev, 
+  void forwardCorrectionSerial(const Robot& robot, const SplitSolution& s_prev, 
                                const SplitSolution& s_new_prev,
                                SplitSolution& s_new);
 
   void forwardCorrectionParallel(SplitDirection& d, SplitSolution& s_new) const;
 
-  static void computeDirection(const SplitSolution& s, 
-                               const SplitSolution& s_new, 
-                               SplitDirection& d);
+  static void computeDirection(const Robot& robot, const SplitSolution& s, 
+                               const SplitSolution& s_new, SplitDirection& d);
 
 private:
   int dimv_, dimx_, dimKKT_;
@@ -102,6 +102,6 @@ private:
 
 } // namespace idocp
 
-#include "idocp/unocp/split_backward_correction.hxx"
+#include "idocp/ocp/split_backward_correction.hxx"
 
 #endif // IDOCP_SPLIT_BACKWARD_CORRECTION_HPP_ 

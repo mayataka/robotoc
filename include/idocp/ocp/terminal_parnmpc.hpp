@@ -223,6 +223,10 @@ public:
                              const SplitSolution& s,
                              SplitKKTResidual& kkt_residual);
 
+  void computeTerminalCostHessian(Robot& robot, const double t, 
+                                  const SplitSolution& s, 
+                                  SplitKKTMatrix& kkt_matrix);
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

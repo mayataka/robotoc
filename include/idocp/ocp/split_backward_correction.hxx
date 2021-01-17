@@ -10,9 +10,10 @@ namespace idocp {
 inline SplitBackwardCorrection::SplitBackwardCorrection(const Robot& robot) 
   : dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
-    dimKKT_(5*robot.dimv()),
+    dimKKT_(4*robot.dimv()+robot.dimu()),
     kkt_mat_inverter_(robot),
-    KKT_mat_inv_(Eigen::MatrixXd::Zero(5*robot.dimv(), 5*robot.dimv())),
+    KKT_mat_inv_(Eigen::MatrixXd::Zero(4*robot.dimv()+robot.dimu(), 
+                                       4*robot.dimv()+robot.dimu())),
     x_res_(Eigen::VectorXd::Zero(2*robot.dimv())),
     dx_(Eigen::VectorXd::Zero(2*robot.dimv())) {
 }
@@ -35,28 +36,27 @@ inline SplitBackwardCorrection::~SplitBackwardCorrection() {
 
 template <typename MatrixType>
 inline void SplitBackwardCorrection::coarseUpdate(
-    const Eigen::MatrixBase<MatrixType>& aux_mat_next, const double dtau,
+    const Robot& robot, const Eigen::MatrixBase<MatrixType>& aux_mat_next,
     SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const SplitSolution& s, SplitDirection& d, SplitSolution& s_new) {
   assert(aux_mat_next.rows() == dimx_);
   assert(aux_mat_next.cols() == dimx_);
   kkt_matrix.Qxx().noalias() += aux_mat_next;
-  coarseUpdate(dtau, kkt_matrix, kkt_residual, s, d, s_new);
+  coarseUpdate(robot, kkt_matrix, kkt_residual, s, d, s_new);
 }
 
 
 inline void SplitBackwardCorrection::coarseUpdate(
-    const double dtau, SplitKKTMatrix& kkt_matrix, 
-    const SplitKKTResidual& kkt_residual, const SplitSolution& s, 
-    SplitDirection& d, SplitSolution& s_new) {
+    const Robot& robot, SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
+    const SplitSolution& s, SplitDirection& d, SplitSolution& s_new) {
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
-  kkt_matrix.Qxu() = kkt_matrix.Qux().transpose();
-  kkt_mat_inverter_.invert(kkt_matrix.Jac(), kkt_matrix.Q(), KKT_mat_inv_);
-  d.split_direction.noalias() = KKT_mat_inv_ * unkkt_residual.KKT_residual;
+  kkt_matrix.Qux() = kkt_matrix.Qxu().transpose();
+  kkt_mat_inverter_.invert(kkt_matrix.Jac(), kkt_matrix.Qss(), KKT_mat_inv_);
+  d.split_direction.noalias() = KKT_mat_inv_ * kkt_residual.KKT_residual;
   s_new.lmd = s.lmd - d.dlmd();
   s_new.gmm = s.gmm - d.dgmm();
   s_new.u   = s.u - d.du(); 
-  s_new.q   = s.q - d.dq();
+  robot.integrateConfiguration(s.q, d.dq(), -1, s_new.q);
   s_new.v   = s.v - d.dv();
 }
 
@@ -79,22 +79,22 @@ inline void SplitBackwardCorrection::backwardCorrectionSerial(
 
 
 inline void SplitBackwardCorrection::backwardCorrectionParallel(
-    SplitDirection& d, SplitSolution& s_new) const {
+    const Robot& robot, SplitDirection& d, SplitSolution& s_new) const {
   d.split_direction.tail(dimKKT_-dimx_).noalias()
       = KKT_mat_inv_.block(dimx_, dimKKT_-dimx_, dimKKT_-dimx_, dimx_) * x_res_;
   s_new.u.noalias() -= d.du();
-  s_new.q.noalias() -= d.dq();
+  robot.integrateConfiguration(d.dq(), -1, s_new.q);
   s_new.v.noalias() -= d.dv();
 }
 
 
 inline void SplitBackwardCorrection::forwardCorrectionSerial(
-    const SplitSolution& s_prev, const SplitSolution& s_new_prev, 
-    SplitSolution& s_new) {
-  x_res_.head(dimv_) = s_new_prev.q - s_prev.q;
+    const Robot& robot, const SplitSolution& s_prev, 
+    const SplitSolution& s_new_prev, SplitSolution& s_new) {
+  robot.subtractConfiguration(s_new_prev.q, s_prev.q, x_res_.head(dimv_));
   x_res_.tail(dimv_) = s_new_prev.v - s_prev.v;
   dx_.noalias() = KKT_mat_inv_.block(dimKKT_-dimx_, 0, dimx_, dimx_) * x_res_;
-  s_new.q.noalias() -= dx_.head(dimv_);
+  robot.integrateConfiguration(dx_.head(dimv_), -1, s_new.q);
   s_new.v.noalias() -= dx_.tail(dimv_);
 }
 
@@ -110,12 +110,12 @@ inline void SplitBackwardCorrection::forwardCorrectionParallel(
 
 
 inline void SplitBackwardCorrection::computeDirection(
-    const SplitSolution& s, const SplitSolution& s_new, 
+    const Robot& robot, const SplitSolution& s, const SplitSolution& s_new, 
     SplitDirection& d) {
   d.dlmd() = s_new.lmd - s.lmd;
   d.dgmm() = s_new.gmm - s.gmm;
   d.du()   = s_new.u - s.u;
-  d.dq()   = s_new.q - s.q;
+  robot.subtractConfiguration(s_new.q, s.q, d.dq());
   d.dv()   = s_new.v - s.v;
 }
 

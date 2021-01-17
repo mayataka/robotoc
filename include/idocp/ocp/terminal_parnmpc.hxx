@@ -218,4 +218,15 @@ inline double TerminalParNMPC::constraintViolation(
   return violation;
 }
 
+
+inline void TerminalParNMPC::computeTerminalCostHessian(
+    Robot& robot, const double t, const SplitSolution& s, 
+    SplitKKTMatrix& kkt_matrix) {
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q, s.v, s.a);
+  }
+  kkt_matrix.Qxx().setZero();
+  cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix);
+}
+
 } // namespace idocp

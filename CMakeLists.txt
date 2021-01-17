@@ -82,7 +82,6 @@ add_library(
   src/hybrid/ocp_discretizer.cpp
   src/hybrid/hybrid_container.cpp
   src/hybrid/collision_checker.cpp
-  src/ocp/schur_complement.cpp
   src/ocp/split_kkt_residual.cpp
   src/ocp/split_kkt_matrix.cpp
   src/ocp/split_kkt_matrix_inverter.cpp
@@ -107,8 +106,6 @@ add_library(
   src/ocp/riccati_direction_calculator.cpp
   src/ocp/riccati_solver.cpp
   src/ocp/ocp_solver.cpp
-  src/ocp/pre_impulse_split_kkt_residual.cpp
-  src/ocp/pre_impulse_split_kkt_matrix.cpp
   src/ocp/split_parnmpc.cpp
   src/ocp/terminal_parnmpc.cpp
   src/ocp/split_backward_correction.cpp

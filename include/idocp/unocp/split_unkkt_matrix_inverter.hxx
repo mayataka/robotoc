@@ -36,7 +36,7 @@ inline SplitUnKKTMatrixInverter::~SplitUnKKTMatrixInverter() {
 }
 
 
-  template <typename MatrixType1, typename MatrixType2>
+template <typename MatrixType1, typename MatrixType2>
 inline void SplitUnKKTMatrixInverter::invert(
     const double dtau, const Eigen::MatrixBase<MatrixType1>& Q,
     const Eigen::MatrixBase<MatrixType2>& KKT_matrix_inverse) {

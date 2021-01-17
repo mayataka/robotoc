@@ -53,8 +53,7 @@ inline void SplitKKTMatrixInverter::invert(
   const_cast<Eigen::MatrixBase<MatrixType3>&>(KKT_mat_inv)
       .bottomRightCorner(dimQ_, dimQ_).noalias()
       = llt_Q_.solve(Eigen::MatrixXd::Identity(dimQ_, dimQ_));
-  invert( 
-      Jac, const_cast<Eigen::MatrixBase<MatrixType3>&>(KKT_mat_inv));
+  invert(Jac, const_cast<Eigen::MatrixBase<MatrixType3>&>(KKT_mat_inv));
 }
 
 

@@ -1,5 +1,4 @@
 #include "idocp/ocp/split_parnmpc.hpp"
-#include "idocp/impulse/impulse_dynamics_backward_euler.hpp"
 
 #include <cassert>
 
@@ -84,19 +83,6 @@ inline void SplitParNMPC::linearizeOCP(Robot& robot,
                                      kkt_matrix, kkt_residual);
   contact_dynamics_.condenseContactDynamics(robot, contact_status, dtau, 
                                             kkt_matrix, kkt_residual);
-}
-
-
-inline void SplitParNMPC::linearizePreImpulseCondition(
-    Robot& robot, const ImpulseStatus& impulse_status, 
-    const ImpulseSplitSolution& s_next, SplitKKTResidual& kkt_residual,
-    PreImpulseSplitKKTMatrix& pre_kkt_matrix, 
-    PreImpulseSplitKKTResidual& pre_kkt_residual) {
-  pre_kkt_matrix.setImpulseStatus(impulse_status);
-  pre_kkt_residual.setImpulseStatus(impulse_status);
-  ImpulseDynamicsBackwardEuler::linearizeImpulsePositionConstraint(
-    robot, impulse_status, s_next, pre_kkt_matrix, pre_kkt_residual, 
-    kkt_residual);
 }
 
 

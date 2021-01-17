@@ -64,19 +64,6 @@ inline void ImpulseDynamicsBackwardEuler::linearizeImpulseVelocityConstraint(
 }
 
 
-inline void ImpulseDynamicsBackwardEuler::linearizeImpulsePositionConstraint(
-      Robot& robot, const ImpulseStatus& impulse_status, 
-      const ImpulseSplitSolution& s, PreImpulseSplitKKTMatrix& pre_kkt_matrix, 
-      PreImpulseSplitKKTResidual& pre_kkt_residual, 
-      SplitKKTResidual& kkt_residual) {
-  robot.computeImpulseConditionResidual(impulse_status,
-                                        impulse_status.contactPoints(),
-                                        pre_kkt_residual.P());
-  robot.computeImpulseConditionDerivative(impulse_status, pre_kkt_matrix.Pq());
-  kkt_residual.lq().noalias() += pre_kkt_matrix.Pq().transpose() * s.mu_stack();
-}
-
-
 inline void ImpulseDynamicsBackwardEuler::condenseImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
@@ -133,15 +120,6 @@ inline void ImpulseDynamicsBackwardEuler::computeImpulseDynamicsResidual(
   robot.setImpulseForces(impulse_status, s.f);
   robot.RNEAImpulse(s.q, s.dv, data_.ImD);
   robot.computeImpulseVelocityResidual(impulse_status, kkt_residual.V());
-}
-
-
-inline void ImpulseDynamicsBackwardEuler::computeImpulsePositionResidual(
-      Robot& robot, const ImpulseStatus& impulse_status, 
-      PreImpulseSplitKKTResidual& kkt_residual) {
-  robot.computeImpulseConditionResidual(impulse_status,
-                                        impulse_status.contactPoints(),
-                                        kkt_residual.P());
 }
 
 

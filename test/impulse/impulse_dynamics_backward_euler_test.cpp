@@ -13,7 +13,6 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_dynamics_backward_euler.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/schur_complement.hpp"
 
 
 namespace idocp {
