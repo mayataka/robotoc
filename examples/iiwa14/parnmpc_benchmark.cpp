@@ -43,7 +43,8 @@ int main() {
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Constant(robot.dimq(), 2);
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  idocp::OCPSolver parnmpc_solver(robot, cost, constraints, T, N, 0, nthreads);
+
+  idocp::ParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, 0, nthreads);
 
   // Solves the OCP.
   parnmpc_solver.setStateTrajectory(t, q, v);

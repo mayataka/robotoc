@@ -80,7 +80,7 @@ int main () {
   const double T = 0.5;
   const int N = 20;
   const int max_num_impulse_phase = 4;
-  const int nthreads = 4;
+  const int nthreads = 6;
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   q << 0, 0, 0.4792, 0, 0, 0, 1, 

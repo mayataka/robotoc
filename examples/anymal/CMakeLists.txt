@@ -21,6 +21,21 @@ target_include_directories(
 )
 
 add_executable(
+    parnmpc_benchmark
+    parnmpc_benchmark.cpp
+)
+target_link_libraries(
+    parnmpc_benchmark
+    PRIVATE
+    idocp::idocp
+)
+target_include_directories(
+    parnmpc_benchmark
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+)
+
+add_executable(
     anymal_trotting
     anymal_trotting.cpp
 )

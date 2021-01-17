@@ -51,7 +51,7 @@ void ParNMPCLinearizer::initConstraints(ParNMPC& parnmpc,
   const int N_all = N_ + 2 * N_impulse + N_lift;
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
-    if (i < N_) {
+    if (i < N_-1) {
       parnmpc[i].initConstraints(robots[omp_get_thread_num()], i+1, s[i]);
     }
     else if (i == N_-1) {
@@ -89,7 +89,7 @@ void ParNMPCLinearizer::computeKKTResidual(
   const int N_all = N_ + 2 * N_impulse + N_lift;
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
-    if (i < N_) {
+    if (i < N_-1) {
       if (parnmpc.discrete().isTimeStageBeforeImpulse(i)) {
         parnmpc[i].computeKKTResidual(
             robots[omp_get_thread_num()], 
@@ -182,10 +182,15 @@ double ParNMPCLinearizer::KKTError(const ParNMPC& parnmpc,
   const int N_all = N_ + 2 * N_impulse + N_lift;
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
-    if (i < N_) {
+    if (i < N_-1) {
       kkt_error_.coeffRef(i) 
           = parnmpc[i].squaredNormKKTResidual(kkt_residual[i], 
                                               parnmpc.discrete().dtau(i));
+    }
+    else if (i == N_-1) {
+      kkt_error_.coeffRef(i) 
+          = parnmpc.terminal.squaredNormKKTResidual(
+              kkt_residual[i], parnmpc.discrete().dtau(i));
     }
     else if (i < N_+N_impulse) {
       const int impulse_index  = i - N_;
@@ -228,7 +233,7 @@ void ParNMPCLinearizer::integrateSolution(ParNMPC& parnmpc,
   const int N_all = N_ + 2 * N_impulse + N_lift;
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
-    if (i < N_) {
+    if (i < N_-1) {
       parnmpc[i].updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
                               d[i], s[i]);
       parnmpc[i].updateDual(dual_step_size);
