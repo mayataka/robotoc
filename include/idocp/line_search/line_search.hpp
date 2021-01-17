@@ -121,6 +121,16 @@ private:
                           const Solution& s, const Direction& d, 
                           const double step_size);
 
+  void computeCostAndViolation(ParNMPC& parnmpc, std::vector<Robot>& robots,
+                               const ContactSequence& contact_sequence, 
+                               const Eigen::VectorXd& q, 
+                               const Eigen::VectorXd& v, const Solution& s,
+                               const double primal_step_size_for_barrier=0);
+
+  void computeTrySolution(const ParNMPC& parnmpc, 
+                          const std::vector<Robot>& robots, const Solution& s, 
+                          const Direction& d, const double step_size);
+
   static void computeTrySolution(const Robot& robot, const SplitSolution& s, 
                                  const SplitDirection& d, 
                                  const double step_size, 
@@ -171,6 +181,46 @@ private:
   double totalViolations() const {
     return (violations_.sum()+violations_impulse_.sum()+violations_aux_.sum()
             +violations_lift_.sum());
+  }
+
+  static const Eigen::VectorXd& q_prev(const OCPDiscretizer& discretizer, 
+                                       const Eigen::VectorXd& q, 
+                                       const Solution& s, 
+                                       const int time_stage) {
+    assert(time_stage >= 0);
+    assert(time_stage <= discretizer.N());
+    if (time_stage == 0) {
+      return q;
+    }
+    else if (discretizer.isTimeStageBeforeImpulse(time_stage-1)) {
+      return s.aux[discretizer.impulseIndexAfterTimeStage(time_stage-1)].q;
+    }
+    else if (discretizer.isTimeStageBeforeLift(time_stage-1)) {
+      return s.lift[discretizer.liftIndexAfterTimeStage(time_stage-1)].q;
+    }
+    else {
+      return s[time_stage-1].q;
+    }
+  }
+
+  static const Eigen::VectorXd& v_prev(const OCPDiscretizer& discretizer, 
+                                       const Eigen::VectorXd& v, 
+                                       const Solution& s, 
+                                       const int time_stage) {
+    assert(time_stage >= 0);
+    assert(time_stage <= discretizer.N());
+    if (time_stage == 0) {
+      return v;
+    }
+    else if (discretizer.isTimeStageBeforeImpulse(time_stage-1)) {
+      return s.aux[discretizer.impulseIndexAfterTimeStage(time_stage-1)].v;
+    }
+    else if (discretizer.isTimeStageBeforeLift(time_stage-1)) {
+      return s.lift[discretizer.liftIndexAfterTimeStage(time_stage-1)].v;
+    }
+    else {
+      return s[time_stage-1].v;
+    }
   }
 
 };

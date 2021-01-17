@@ -114,7 +114,7 @@ inline double SplitParNMPC::maxDualStepSize() {
 }
 
 
-inline void SplitParNMPC::updatePrimal(Robot& robot, 
+inline void SplitParNMPC::updatePrimal(const Robot& robot, 
                                        const double primal_step_size, 
                                        const SplitDirection& d, 
                                        SplitSolution& s) {

@@ -108,7 +108,10 @@ add_library(
   src/ocp/ocp_solver.cpp
   src/ocp/split_parnmpc.cpp
   src/ocp/terminal_parnmpc.cpp
+  src/ocp/parnmpc_linearizer.cpp
   src/ocp/split_backward_correction.cpp
+  src/ocp/backward_correction.cpp
+  src/ocp/parnmpc_solver.cpp
   src/unocp/split_unkkt_residual.cpp
   src/unocp/split_unkkt_matrix.cpp
   src/unocp/split_unkkt_matrix_inverter.cpp

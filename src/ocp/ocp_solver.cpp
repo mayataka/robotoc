@@ -440,7 +440,7 @@ void OCPSolver::saveSolution(const std::string& path_to_file,
   }
   if (name == "a") {
     const int dimv = robots_[0].dimv();
-    for (int i=0; i<=N_; ++i) {
+    for (int i=0; i<N_; ++i) {
       for (int j=0; j<dimv; ++j) {
         file << s_[i].a.coeff(j) << " ";
       }

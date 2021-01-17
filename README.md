@@ -81,7 +81,7 @@ The following four solvers are provided:
 - `idocp::UnOCPSolver` : Solves the OCP for "unconstrained" rigid-body systems by using Riccati recursion.
 - `idocp::UnParNMPCSolver` : Solves the OCP for "unconstrained" rigid-body systems by using ParNMPC algorithm.
 - `idocp::OCPSolver` : Solves the OCP for rigid-body systems by using Riccati recursion.
-- `idocp::ParNMPCSolver` (coming soon) : Solves the OCP for rigid-body systems by using ParNMPC algorithm.
+- `idocp::ParNMPCSolver` (only tentative implementation in the current version) : Solves the OCP for rigid-body systems by using ParNMPC algorithm.
 
 where "unconstrained" rigid-body systems are systems without any contacts or a floating-base.
 

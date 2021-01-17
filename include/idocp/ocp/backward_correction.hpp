@@ -61,17 +61,18 @@ public:
   ///
   BackwardCorrection& operator=(BackwardCorrection&&) noexcept = default;
 
-  void initAuxMat(std::vector<Robot>& robots, ParNMPC& parnmpc, 
+  void initAuxMat(ParNMPC& parnmpc, std::vector<Robot>& robots, 
                   const double t, const Solution& s, KKTMatrix& kkt_matrix);
 
-  void coarseUpdate(std::vector<Robot>& robots, 
-                    const ContactSequence& contact_sequence, ParNMPC& parnmpc, 
+  void coarseUpdate(ParNMPC& parnmpc, std::vector<Robot>& robots, 
+                    const ContactSequence& contact_sequence, 
                     const double t, const Eigen::VectorXd& q, 
                     const Eigen::VectorXd& v, KKTMatrix& kkt_matrix, 
-                    KKTResidual& kkt_residual,
-                    const Solution& s, Direction& d);
+                    KKTResidual& kkt_residual, const Solution& s, Direction& d);
 
-  void backwardCorrection(std::vector<Robot>& robots, ParNMPC& parnmpc, 
+  void backwardCorrection(ParNMPC& parnmpc, std::vector<Robot>& robots, 
+                          const KKTMatrix& kkt_matrix, 
+                          const KKTResidual& kkt_residual, 
                           const Solution& s, Direction& d);
 
   double primalStepSize() const;

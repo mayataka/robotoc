@@ -64,8 +64,8 @@ BackwardCorrection::~BackwardCorrection() {
 }
 
 
-void BackwardCorrection::initAuxMat(std::vector<Robot>& robots, 
-                                    ParNMPC& parnmpc, const double t, 
+void BackwardCorrection::initAuxMat(ParNMPC& parnmpc, 
+                                    std::vector<Robot>& robots, const double t, 
                                     const Solution& s, KKTMatrix& kkt_matrix) {
   parnmpc.terminal.computeTerminalCostHessian(robots[0], t+T_, s[N_-1], 
                                               kkt_matrix[N_-1]);
@@ -76,10 +76,10 @@ void BackwardCorrection::initAuxMat(std::vector<Robot>& robots,
 }
 
 
-void BackwardCorrection::coarseUpdate(std::vector<Robot>& robots, 
+void BackwardCorrection::coarseUpdate(ParNMPC& parnmpc, 
+                                      std::vector<Robot>& robots, 
                                       const ContactSequence& contact_sequence, 
-                                      ParNMPC& parnmpc, const double t, 
-                                      const Eigen::VectorXd& q, 
+                                      const double t, const Eigen::VectorXd& q, 
                                       const Eigen::VectorXd& v,
                                       KKTMatrix& kkt_matrix, 
                                       KKTResidual& kkt_residual,
@@ -117,9 +117,11 @@ void BackwardCorrection::coarseUpdate(std::vector<Robot>& robots,
 }
 
 
-void BackwardCorrection::backwardCorrection(std::vector<Robot>& robots, 
-                                            ParNMPC& parnmpc, const Solution& s, 
-                                            Direction& d) {
+void BackwardCorrection::backwardCorrection(ParNMPC& parnmpc, 
+                                            std::vector<Robot>& robots, 
+                                            const KKTMatrix& kkt_matrix, 
+                                            const KKTResidual& kkt_residual,
+                                            const Solution& s, Direction& d) {
   for (int i=N_-2; i>=0; --i) {
     corrector_[i].backwardCorrectionSerial(s[i+1], s_new_[i+1], s_new_[i]);
   }

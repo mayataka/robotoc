@@ -15,6 +15,7 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/ocp/parnmpc_linearizer.hpp"
 #include "idocp/ocp/backward_correction.hpp"
 #include "idocp/line_search/line_search.hpp"
 
@@ -217,8 +218,9 @@ public:
 private:
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
+  ParNMPCLinearizer parnmpc_linearizer_;
   BackwardCorrection backward_correction_;
-  // LineSearch line_search_;
+  LineSearch line_search_;
   ParNMPC parnmpc_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;

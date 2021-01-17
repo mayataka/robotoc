@@ -6,7 +6,6 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/ocp/schur_complement.hpp"
 
 
 namespace idocp {

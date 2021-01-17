@@ -114,10 +114,10 @@ inline double TerminalParNMPC::maxDualStepSize() {
 }
 
 
-inline void TerminalParNMPC::updatePrimal(Robot& robot, 
-                                       const double primal_step_size, 
-                                       const SplitDirection& d, 
-                                       SplitSolution& s) {
+inline void TerminalParNMPC::updatePrimal(const Robot& robot, 
+                                          const double primal_step_size, 
+                                          const SplitDirection& d, 
+                                          SplitSolution& s) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
   s.integrate(robot, primal_step_size, d);
