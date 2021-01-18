@@ -81,6 +81,7 @@ add_library(
   src/hybrid/discrete_event.cpp
   src/hybrid/contact_sequence.cpp
   src/hybrid/ocp_discretizer.cpp
+  src/hybrid/parnmpc_discretizer.cpp
   src/hybrid/hybrid_container.cpp
   src/hybrid/collision_checker.cpp
   src/ocp/split_kkt_residual.cpp
