@@ -198,7 +198,7 @@ void LineSearch::computeCostAndViolation(
           parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), q, v, s[i], 
           kkt_residual_[i]);
     }
-    else if (i < N_) {
+    else if (i < N_-1) {
       costs_.coeffRef(i) = parnmpc[i].stageCost(robots[omp_get_thread_num()], 
                                                 parnmpc.discrete().t(i), 
                                                 parnmpc.discrete().dtau(i), 

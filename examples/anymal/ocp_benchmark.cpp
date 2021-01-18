@@ -17,7 +17,6 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
-#include "idocp/constraints/contact_normal_force.hpp"
 #include "idocp/utils/joint_constraints_factory.hpp"
 #include "idocp/utils/ocp_benchmarker.hpp"
 
@@ -46,7 +45,6 @@ int main () {
   config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 1));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  config_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimu(), 0.001));
   auto contact_cost = std::make_shared<idocp::ContactForceCost>(robot);
   std::vector<Eigen::Vector3d> f_weight, f_ref;
   for (int i=0; i<contact_frames.size(); ++i) {
@@ -68,14 +66,12 @@ int main () {
   auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
-  auto contact_normal_force = std::make_shared<idocp::ContactNormalForce>(robot);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
   constraints->push_back(joint_velocity_upper);
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
-  constraints->push_back(contact_normal_force);
 
   const double T = 0.5;
   const int N = 20;

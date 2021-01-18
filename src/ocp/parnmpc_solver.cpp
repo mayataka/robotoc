@@ -104,6 +104,7 @@ const SplitSolution& ParNMPCSolver::getSolution(const int stage) const {
   return s_[stage];
 }
 
+
 void ParNMPCSolver::getStateFeedbackGain(const int time_stage, 
                                          Eigen::MatrixXd& Kq, 
                                          Eigen::MatrixXd& Kv) const {

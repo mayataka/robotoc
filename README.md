@@ -6,8 +6,8 @@
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_running_minimal.gif" width="600">
 
 ## Features for efficient optimal control 
-- Solves the optimal control problem (OCP) for rigid body systems with contacts based on inverse dynamics and event-driven scheme.
-- Riccati recursion / Parallel Newton's method (ParNMPC) for solving the KKT system.
+- Solves the event-driven optimal control problem (OCP) for rigid body systems with contacts based on inverse dynamics.
+- Riccati recursion / Parallel Newton's method (ParNMPC) for solving the condensed KKT system.
 - Primal-dual interior point method for inequality constraints.
 - Filter line-search method.
 - Very fast computation of rigid body dynamics and its sensitivities thanks to [pinocchio](https://github.com/stack-of-tasks/pinocchio).
