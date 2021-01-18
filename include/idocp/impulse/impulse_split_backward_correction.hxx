@@ -11,9 +11,13 @@ inline ImpulseSplitBackwardCorrection::ImpulseSplitBackwardCorrection(
       const Robot& robot) 
   : dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
+    dimf_(0),
     dimKKT_(5*robot.dimv()),
+    kkt_mat_inverter_(robot.dimv(), robot.max_dimf()),
     KKT_mat_inv_(Eigen::MatrixXd::Zero(4*robot.dimv()+2*robot.max_dimf(), 
                                        4*robot.dimv()+2*robot.max_dimf())),
+    split_direction_full_(
+        Eigen::VectorXd::Zero(4*robot.dimv()+2*robot.max_dimf())),
     x_res_(Eigen::VectorXd::Zero(2*robot.dimv())),
     dx_(Eigen::VectorXd::Zero(2*robot.dimv())) {
 }
@@ -22,8 +26,11 @@ inline ImpulseSplitBackwardCorrection::ImpulseSplitBackwardCorrection(
 inline ImpulseSplitBackwardCorrection::ImpulseSplitBackwardCorrection() 
   : dimv_(0),
     dimx_(0),
+    dimf_(0),
     dimKKT_(0),
+    kkt_mat_inverter_(),
     KKT_mat_inv_(),
+    split_direction_full_(),
     x_res_(),
     dx_() {
 }
@@ -38,21 +45,22 @@ inline void ImpulseSplitBackwardCorrection::coarseUpdate(
     const Eigen::MatrixBase<MatrixType>& aux_mat_next, 
     ImpulseSplitKKTMatrix& kkt_matrix, 
     const ImpulseSplitKKTResidual& kkt_residual, 
-    const ImpulseSplitSolution& s, ImpulseSplitDirection& d, 
-    ImpulseSplitSolution& s_new) {
+    const ImpulseSplitSolution& s, ImpulseSplitSolution& s_new) {
   assert(aux_mat_next.rows() == dimx_);
   assert(aux_mat_next.cols() == dimx_);
   kkt_matrix.Qxx().noalias() += aux_mat_next;
+  dimf_ = s.dimf();
   dimKKT_ = kkt_matrix.dimKKT();
-  kkt_matrix.invert(KKT_mat_inv_.topLeftCorner(dimKKT_, dimKKT_));
-  d.split_direction().noalias() = KKT_mat_inv_.topLeftCorner(dimKKT_, dimKKT_) 
-                                    * kkt_residual.KKT_residual();
-  s_new.lmd        = s.lmd - d.dlmd();
-  s_new.gmm        = s.gmm - d.dgmm();
-  s_new.mu_stack() = s.mu - d.dmu(); 
-  s_new.f_stack()  = s.f  - d.df(); 
-  s_new.q          = s.q  - d.dq();
-  s_new.v          = s.v  - d.dv();
+  kkt_mat_inverter_.invert(kkt_matrix.Jac(), kkt_matrix.Qss(), 
+                           KKT_mat_inv_.topLeftCorner(dimKKT_, dimKKT_));
+  split_direction().noalias() = KKT_mat_inv_.topLeftCorner(dimKKT_, dimKKT_) 
+                                  * kkt_residual.KKT_residual();
+  s_new.lmd        = s.lmd         - dlmd();
+  s_new.gmm        = s.gmm         - dgmm();
+  s_new.mu_stack() = s.mu_stack()  - dmu(); 
+  s_new.f_stack()  = s.f_stack()   - df(); 
+  s_new.q          = s.q           - dq();
+  s_new.v          = s.v           - dv();
 }
 
 
@@ -74,13 +82,13 @@ inline void ImpulseSplitBackwardCorrection::backwardCorrectionSerial(
 
 
 inline void ImpulseSplitBackwardCorrection::backwardCorrectionParallel(
-    ImpulseSplitDirection& d, ImpulseSplitSolution& s_new) const {
-  d.split_direction().tail(dimKKT_-dimx_).noalias()
+    ImpulseSplitSolution& s_new) {
+  split_direction().tail(dimKKT_-dimx_).noalias()
       = KKT_mat_inv_.block(dimx_, dimKKT_-dimx_, dimKKT_-dimx_, dimx_) * x_res_;
-  s_new.mu_stack().noalias() -= d.dmu();
-  s_new.f_stack().noalias()  -= d.df();
-  s_new.q.noalias()          -= d.dq();
-  s_new.v.noalias()          -= d.dv();
+  s_new.mu_stack().noalias() -= dmu();
+  s_new.f_stack().noalias()  -= df();
+  s_new.q.noalias()          -= dq();
+  s_new.v.noalias()          -= dv();
 }
 
 
@@ -96,13 +104,13 @@ inline void ImpulseSplitBackwardCorrection::forwardCorrectionSerial(
 
 
 inline void ImpulseSplitBackwardCorrection::forwardCorrectionParallel(
-    ImpulseSplitDirection& d, ImpulseSplitSolution& s_new) const {
-  d.split_direction().head(dimKKT_-dimx_).noalias()
+    ImpulseSplitSolution& s_new) {
+  split_direction().head(dimKKT_-dimx_).noalias()
       = KKT_mat_inv_.topLeftCorner(dimKKT_-dimx_, dimx_) * x_res_;
-  s_new.lmd.noalias()        -= d.dlmd();
-  s_new.gmm.noalias()        -= d.dgmm();
-  s_new.mu_stack().noalias() -= d.dmu();
-  s_new.f_stack().noalias()  -= d.df();
+  s_new.lmd.noalias()        -= dlmd();
+  s_new.gmm.noalias()        -= dgmm();
+  s_new.mu_stack().noalias() -= dmu();
+  s_new.f_stack().noalias()  -= df();
 }
 
 
@@ -115,6 +123,48 @@ inline void ImpulseSplitBackwardCorrection::computeDirection(
   d.df()   = s_new.f_stack() - s.f_stack();
   d.dq()   = s_new.q - s.q;
   d.dv()   = s_new.v - s.v;
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> 
+ImpulseSplitBackwardCorrection::split_direction() {
+  return split_direction_full_.head(dimKKT_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> 
+ImpulseSplitBackwardCorrection::dlmd() {
+  return split_direction_full_.head(dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> 
+ImpulseSplitBackwardCorrection::dgmm() {
+  return split_direction_full_.segment(dimv_, dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> 
+ImpulseSplitBackwardCorrection::dmu() {
+  return split_direction_full_.segment(2*dimv_, dimf_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> 
+ImpulseSplitBackwardCorrection::df() {
+  return split_direction_full_.segment(2*dimv_+dimf_, dimf_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> 
+ImpulseSplitBackwardCorrection::dq() {
+  return split_direction_full_.segment(2*dimv_+2*dimf_, dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> 
+ImpulseSplitBackwardCorrection::dv() {
+  return split_direction_full_.segment(3*dimv_+2*dimf_, dimv_);
 }
 
 } // namespace idocp

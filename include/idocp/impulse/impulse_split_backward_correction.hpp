@@ -12,6 +12,7 @@
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix_inverter.hpp"
 
 
 namespace idocp {
@@ -69,8 +70,7 @@ public:
   void coarseUpdate(const Eigen::MatrixBase<MatrixType>& aux_mat_next,
                     ImpulseSplitKKTMatrix& kkt_matrix, 
                     const ImpulseSplitKKTResidual& kkt_residual,
-                    const ImpulseSplitSolution& s, ImpulseSplitDirection& d, 
-                    ImpulseSplitSolution& s_new);
+                    const ImpulseSplitSolution& s, ImpulseSplitSolution& s_new);
 
   const Eigen::Block<const Eigen::MatrixXd> auxMat() const;
 
@@ -78,24 +78,37 @@ public:
                                 const SplitSolution& s_new_next,
                                 ImpulseSplitSolution& s_new);
 
-  void backwardCorrectionParallel(ImpulseSplitDirection& d, 
-                                  ImpulseSplitSolution& s_new) const;
+  void backwardCorrectionParallel(ImpulseSplitSolution& s_new);
 
   void forwardCorrectionSerial(const SplitSolution& s_prev, 
                                const SplitSolution& s_new_prev,
                                ImpulseSplitSolution& s_new);
 
-  void forwardCorrectionParallel(ImpulseSplitDirection& d, 
-                                 ImpulseSplitSolution& s_new) const;
+  void forwardCorrectionParallel(ImpulseSplitSolution& s_new);
 
   static void computeDirection(const ImpulseSplitSolution& s, 
                                const ImpulseSplitSolution& s_new, 
                                ImpulseSplitDirection& d);
 
 private:
-  int dimv_, dimx_, dimKKT_;
+  int dimv_, dimx_, dimf_, dimKKT_;
+  ImpulseSplitKKTMatrixInverter kkt_mat_inverter_;
   Eigen::MatrixXd KKT_mat_inv_;
-  Eigen::VectorXd x_res_, dx_;
+  Eigen::VectorXd split_direction_full_, x_res_, dx_;
+
+  Eigen::VectorBlock<Eigen::VectorXd> split_direction();
+
+  Eigen::VectorBlock<Eigen::VectorXd> dlmd();
+
+  Eigen::VectorBlock<Eigen::VectorXd> dgmm();
+
+  Eigen::VectorBlock<Eigen::VectorXd> dmu();
+
+  Eigen::VectorBlock<Eigen::VectorXd> df();
+
+  Eigen::VectorBlock<Eigen::VectorXd> dq();
+
+  Eigen::VectorBlock<Eigen::VectorXd> dv();
 
 };
 

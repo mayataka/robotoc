@@ -9,6 +9,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/hybrid/parnmpc_discretizer.hpp"
 
 
 namespace idocp {
@@ -80,14 +81,13 @@ public:
                          const double dual_step_size,
                          const Direction& d, Solution& s) const;
 
-  static const Eigen::VectorXd& q_prev(const OCPDiscretizer& ocp_discretizer, 
-                                       const Eigen::VectorXd& q, 
-                                       const Solution& s, const int time_stage);
+  static const Eigen::VectorXd& q_prev(
+      const ParNMPCDiscretizer& parnmpc_discretizer, const Eigen::VectorXd& q, 
+      const Solution& s, const int time_stage);
 
-  static const Eigen::VectorXd& v_prev(const OCPDiscretizer& ocp_discretizer, 
-                                       const Eigen::VectorXd& v, 
-                                       const Solution& s, const int time_stage);
-
+  static const Eigen::VectorXd& v_prev(
+      const ParNMPCDiscretizer& parnmpc_discretizer, const Eigen::VectorXd& v, 
+      const Solution& s, const int time_stage);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

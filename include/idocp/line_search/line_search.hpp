@@ -183,7 +183,8 @@ private:
             +violations_lift_.sum());
   }
 
-  static const Eigen::VectorXd& q_prev(const OCPDiscretizer& discretizer, 
+  template <typename DiscretizerType>
+  static const Eigen::VectorXd& q_prev(const DiscretizerType& discretizer, 
                                        const Eigen::VectorXd& q, 
                                        const Solution& s, 
                                        const int time_stage) {
@@ -203,7 +204,8 @@ private:
     }
   }
 
-  static const Eigen::VectorXd& v_prev(const OCPDiscretizer& discretizer, 
+  template <typename DiscretizerType>
+  static const Eigen::VectorXd& v_prev(const DiscretizerType& discretizer, 
                                        const Eigen::VectorXd& v, 
                                        const Solution& s, 
                                        const int time_stage) {

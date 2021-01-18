@@ -11,7 +11,7 @@
 namespace idocp {
 
 inline const Eigen::VectorXd& ParNMPCLinearizer::q_prev(
-    const OCPDiscretizer& discretizer, const Eigen::VectorXd& q, 
+    const ParNMPCDiscretizer& discretizer, const Eigen::VectorXd& q, 
     const Solution& s, const int time_stage) {
   assert(time_stage >= 0);
   assert(time_stage <= discretizer.N());
@@ -31,7 +31,7 @@ inline const Eigen::VectorXd& ParNMPCLinearizer::q_prev(
 
 
 inline const Eigen::VectorXd& ParNMPCLinearizer::v_prev(
-    const OCPDiscretizer& discretizer, const Eigen::VectorXd& v, 
+    const ParNMPCDiscretizer& discretizer, const Eigen::VectorXd& v, 
     const Solution& s, const int time_stage) {
   assert(time_stage >= 0);
   assert(time_stage <= discretizer.N());
