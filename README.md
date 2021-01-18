@@ -88,17 +88,28 @@ where "unconstrained" rigid-body systems are systems without any contacts or a f
 
 ## Examples
 Examples are found in `examples` directory.
+The following animations are the solution trajectory of the `idocp::UnOCPSolver` for a robot manipulator iiwa14.
+
+- Configuration-space optimal control (`iiwa14/config_space_ocp.cpp`)
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/iiwa14_config_ocp.gif" width="200">
+
+- Task-space optimal control (`iiwa14/task_space_ocp.cpp`)
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/iiwa14_task_ocp.gif" width="200">
+
 The following animations are the solution trajectory of the `idocp::OCPSolver` for a quadruped ANYmal.
 
-- Trotting (`anymal_trotting.cpp`)
+
+- Trotting (`anymal/anymal_trotting.cpp`)
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_trotting.gif" width="300">
 
-- Jumping (`anymal_jumping.cpp`)
+- Jumping (`anymal/anymal_jumping.cpp`)
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_jumping.gif" width="300">
 
-- Running (`anymal_running.cpp`)
+- Running (`anymal/anymal_running.cpp`)
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_running.gif" width="600">
 

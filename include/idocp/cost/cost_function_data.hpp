@@ -67,6 +67,14 @@ public:
   Eigen::VectorXd q_ref;
 
   ///
+  /// @brief Vector used for set the reference position of the end-effector in 
+  /// TimeVaryingTaskSpace3DCost. 
+  /// Be allocated only when CostFunction has TimeVaryingTaskSpace3DCost. Then 
+  /// the size is 3.
+  ///
+  Eigen::VectorXd q_3d_ref;
+
+  ///
   /// @brief Vector used for computing the difference of the position of the 
   /// end-effector in TaskSpace3DCost. 
   /// Be allocated only when CostFunction has TaskSpace3DCost. Then the size 
@@ -81,6 +89,18 @@ public:
   /// is 6.
   ///
   Eigen::VectorXd diff_6d;
+
+  ///
+  /// @brief Vector used for computing the reference SE3 of the end-effector in 
+  /// TimeVaryingTaskSpace6DCost. 
+  ///
+  pinocchio::SE3 SE3_ref;
+
+  ///
+  /// @brief Vector used for computing the inverse of the reference SE3 of the 
+  /// end-effector in TimeVaryingTaskSpace6DCost. 
+  ///
+  pinocchio::SE3 SE3_ref_inv;
 
   ///
   /// @brief Vector used for computing the difference of the SE3 of the 

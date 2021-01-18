@@ -1,9 +1,10 @@
-#ifndef IDOCP_TIME_VARYING_TASK_SPACE_3D_COST_HPP_
-#define IDOCP_TIME_VARYING_TASK_SPACE_3D_COST_HPP_
+#ifndef IDOCP_TIME_VARYING_TASK_SPACE_6D_COST_HPP_
+#define IDOCP_TIME_VARYING_TASK_SPACE_6D_COST_HPP_
 
 #include <memory>
 
 #include "Eigen/Core"
+#include "pinocchio/spatial/se3.hpp"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function_component_base.hpp"
@@ -11,65 +12,73 @@
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_solution.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 
 
 namespace idocp {
 
-class TimeVaryingTaskSpace3DRefBase {
+class TimeVaryingTaskSpace6DRefBase {
 public:
-  TimeVaryingTaskSpace3DRefBase() {}
+  TimeVaryingTaskSpace6DRefBase() {}
 
-  virtual ~TimeVaryingTaskSpace3DRefBase() {}
+  virtual ~TimeVaryingTaskSpace6DRefBase() {}
 
-  TimeVaryingTaskSpace3DRefBase(const TimeVaryingTaskSpace3DRefBase&) = default;
+  TimeVaryingTaskSpace6DRefBase(const TimeVaryingTaskSpace6DRefBase&) = default;
 
-  TimeVaryingTaskSpace3DRefBase& operator=(
-      const TimeVaryingTaskSpace3DRefBase&) = default;
+  TimeVaryingTaskSpace6DRefBase& operator=(
+      const TimeVaryingTaskSpace6DRefBase&) = default;
 
-  TimeVaryingTaskSpace3DRefBase(
-      TimeVaryingTaskSpace3DRefBase &&) noexcept = default;
+  TimeVaryingTaskSpace6DRefBase(
+      TimeVaryingTaskSpace6DRefBase &&) noexcept = default;
 
-  TimeVaryingTaskSpace3DRefBase& operator=(
-      TimeVaryingTaskSpace3DRefBase&&) noexcept = default;
+  TimeVaryingTaskSpace6DRefBase& operator=(
+      TimeVaryingTaskSpace6DRefBase&&) noexcept = default;
 
-  virtual void compute_q_3d_ref(const double t, 
-                                Eigen::VectorXd& q_3d_ref) const = 0;
+  virtual void compute_q_6d_ref(const double t, 
+                                pinocchio::SE3& se3_ref) const = 0;
 };
 
 
-class TimeVaryingTaskSpace3DCost final : public CostFunctionComponentBase {
+class TimeVaryingTaskSpace6DCost final : public CostFunctionComponentBase {
 public:
-  TimeVaryingTaskSpace3DCost(
-      const Robot& robot, const int frame_id, 
-      const std::shared_ptr<TimeVaryingTaskSpace3DRefBase>& ref);
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
 
-  TimeVaryingTaskSpace3DCost();
+  TimeVaryingTaskSpace6DCost(
+      const Robot& robot, const int frame_id,
+      const std::shared_ptr<TimeVaryingTaskSpace6DRefBase>& ref);
 
-  ~TimeVaryingTaskSpace3DCost();
+  TimeVaryingTaskSpace6DCost();
+
+  ~TimeVaryingTaskSpace6DCost();
 
   // Use defalut copy constructor.
-  TimeVaryingTaskSpace3DCost(const TimeVaryingTaskSpace3DCost&) = default;
+  TimeVaryingTaskSpace6DCost(const TimeVaryingTaskSpace6DCost&) = default;
 
   // Use defalut copy operator.
-  TimeVaryingTaskSpace3DCost& operator=(
-      const TimeVaryingTaskSpace3DCost&) = default;
+  TimeVaryingTaskSpace6DCost& operator=(
+      const TimeVaryingTaskSpace6DCost&) = default;
 
   // Use defalut move constructor.
-  TimeVaryingTaskSpace3DCost(TimeVaryingTaskSpace3DCost&&) noexcept = default;
+  TimeVaryingTaskSpace6DCost(TimeVaryingTaskSpace6DCost&&) noexcept = default;
 
   // Use defalut copy operator.
-  TimeVaryingTaskSpace3DCost& operator=(
-      TimeVaryingTaskSpace3DCost&&) noexcept = default;
+  TimeVaryingTaskSpace6DCost& operator=(
+      TimeVaryingTaskSpace6DCost&&) noexcept = default;
 
   bool useKinematics() const override;
 
-  void set_ref(const std::shared_ptr<TimeVaryingTaskSpace3DRefBase>& ref);
+  void set_ref(const std::shared_ptr<TimeVaryingTaskSpace6DRefBase>& ref);
 
-  void set_q_3d_weight(const Eigen::Vector3d& q_3d_weight);
+  void set_q_6d_weight(const Eigen::Vector3d& position_weight, 
+                       const Eigen::Vector3d& rotation_weight);
 
-  void set_qf_3d_weight(const Eigen::Vector3d& qf_3d_weight);
+  void set_qf_6d_weight(const Eigen::Vector3d& position_weight, 
+                        const Eigen::Vector3d& rotation_weight);
 
-  void set_qi_3d_weight(const Eigen::Vector3d& qi_3d_weight);
+  void set_qi_6d_weight(const Eigen::Vector3d& position_weight, 
+                        const Eigen::Vector3d& rotation_weight);
 
   double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
                           const double dtau, 
@@ -114,12 +123,12 @@ public:
 
 private:
   int frame_id_;
-  std::shared_ptr<TimeVaryingTaskSpace3DRefBase> ref_;
-  Eigen::Vector3d q_3d_weight_, qf_3d_weight_, qi_3d_weight_;
+  std::shared_ptr<TimeVaryingTaskSpace6DRefBase> ref_;
+  Eigen::VectorXd q_6d_weight_, qf_6d_weight_, qi_6d_weight_;
 
 };
 
 } // namespace idocp
 
 
-#endif // IDOCP_TIME_VARYING_TASK_SPACE_3D_COST_HPP_ 
+#endif // IDOCP_TIME_VARYING_TASK_SPACE_6D_COST_HPP_ 

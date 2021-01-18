@@ -64,3 +64,48 @@ target_include_directories(
     PRIVATE
     ${IDOCP_INCLUDE_DIR}
 )
+
+add_executable(
+    config_space_ocp
+    config_space_ocp.cpp
+)
+target_link_libraries(
+    config_space_ocp
+    PRIVATE
+    idocp::idocp
+)
+target_include_directories(
+    config_space_ocp
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+)
+if (ENABLE_VIEWER)
+    target_compile_definitions(
+        config_space_ocp
+        PRIVATE
+        ENABLE_VIEWER    
+    )
+endif()
+
+
+add_executable(
+    task_space_ocp
+    task_space_ocp.cpp
+)
+target_link_libraries(
+    task_space_ocp
+    PRIVATE
+    idocp::idocp
+)
+target_include_directories(
+    task_space_ocp
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+)
+if (ENABLE_VIEWER)
+    target_compile_definitions(
+        task_space_ocp
+        PRIVATE
+        ENABLE_VIEWER    
+    )
+endif()

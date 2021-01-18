@@ -39,6 +39,7 @@ add_library(
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
   src/cost/time_varying_task_space_3d_cost.cpp
+  src/cost/time_varying_task_space_6d_cost.cpp
   src/cost/trotting_configuration_space_cost.cpp
   src/cost/trotting_foot_step_cost.cpp
   src/cost/trotting_foot_height_cost.cpp
