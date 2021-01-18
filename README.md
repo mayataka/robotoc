@@ -92,11 +92,11 @@ The following animations are the solution trajectory of the `idocp::UnOCPSolver`
 
 - Configuration-space optimal control (`iiwa14/config_space_ocp.cpp`)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/iiwa14_config_ocp.gif" width="200">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/iiwa14_config_ocp.gif" width="170">
 
 - Task-space optimal control (`iiwa14/task_space_ocp.cpp`)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/iiwa14_task_ocp.gif" width="200">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/iiwa14_task_ocp.gif" width="170">
 
 The following animations are the solution trajectory of the `idocp::OCPSolver` for a quadruped ANYmal.
 
