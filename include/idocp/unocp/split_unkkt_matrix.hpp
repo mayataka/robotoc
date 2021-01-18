@@ -203,16 +203,6 @@ public:
   void symmetrize();
 
   ///
-  /// @brief Invert the split KKT matrix. 
-  /// @param[in] dtau Discretization size of the optimal control problem.
-  /// @param[out] KKT_matrix_inverse Inverse of the KKT matrix. Size must 
-  /// be SplitUnKKTMatrix::dimKKT() x SplitUnKKTMatrix::dimKKT().
-  ///
-  template <typename MatrixType>
-  void invert(const double dtau,  
-              const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse);
-
-  ///
   /// @brief Set the all components zero.
   ///
   void setZero();
@@ -241,9 +231,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::LLT<Eigen::MatrixXd> llt_Q_, llt_S_;
-  Eigen::MatrixXd FQinv_, S_;
-  int dimv_, dimx_, dimQ_, dimKKT_;
+  int dimv_, dimx_, dimKKT_;
 
 };
 

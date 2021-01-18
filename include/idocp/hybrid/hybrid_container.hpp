@@ -6,6 +6,9 @@
 #include "idocp/ocp/split_ocp.hpp"
 #include "idocp/impulse/impulse_split_ocp.hpp"
 #include "idocp/ocp/terminal_ocp.hpp"
+#include "idocp/ocp/split_parnmpc.hpp"
+#include "idocp/impulse/impulse_split_parnmpc.hpp"
+#include "idocp/ocp/terminal_parnmpc.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/ocp/split_solution.hpp"
@@ -19,6 +22,7 @@
 #include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/split_riccati_factorizer.hpp"
 #include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
+#include "idocp/ocp/split_backward_correction.hpp"
 #include "idocp/hybrid/ocp_discretizer.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 
@@ -37,6 +41,7 @@ using KKTMatrix = hybrid_container<SplitKKTMatrix, ImpulseSplitKKTMatrix>;
 using KKTResidual = hybrid_container<SplitKKTResidual, ImpulseSplitKKTResidual>;
 using RiccatiFactorization = hybrid_container<SplitRiccatiFactorization, SplitRiccatiFactorization>;
 using RiccatiFactorizer = hybrid_container<SplitRiccatiFactorizer, ImpulseSplitRiccatiFactorizer>; 
+using BackwardCorrector = hybrid_container<SplitBackwardCorrection, SplitBackwardCorrection>;
 
 ///
 /// @class hybrid_container
@@ -202,6 +207,97 @@ public:
   std::vector<SplitOCP> data, aux, lift;
   std::vector<ImpulseSplitOCP> impulse;
   TerminalOCP terminal;
+
+private:
+  OCPDiscretizer discretizer_;
+
+};
+
+
+class ParNMPC {
+public:
+  ///
+  /// @brief Construct only the standard data. 
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] cost Shared ptr to the cost function.
+  /// @param[in] constraints Shared ptr to the constraints.
+  /// @param[in] T length of the horzion.
+  /// @param[in] N number of the standard data.
+  /// @param[in] N_impulse number of the impulse data. Default is 0.
+  ///
+  ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
+          const std::shared_ptr<Constraints>& constraints, const double T, 
+          const int N, const int N_impulse=0) 
+    : data(N-1, SplitParNMPC(robot, cost, constraints, (T/N))), 
+      aux(N_impulse, SplitParNMPC(robot, cost, constraints, (T/N))), 
+      lift(N_impulse, SplitParNMPC(robot, cost, constraints, (T/N))),
+      impulse(N_impulse, ImpulseSplitParNMPC(robot, cost, constraints)),
+      terminal(TerminalParNMPC(robot, cost, constraints, (T/N))),
+      discretizer_(T, N, N_impulse) {
+  }
+
+  ///
+  /// @brief Default Constructor.
+  ///
+  ParNMPC() 
+    : data(), 
+      aux(),
+      lift(),
+      impulse(),
+      terminal(),
+      discretizer_() {
+  }
+
+  ///
+  /// @brief Default copy constructor. 
+  ///
+  ParNMPC(const ParNMPC&) = default;
+
+  ///
+  /// @brief Default copy assign operator. 
+  ///
+  ParNMPC& operator=(const ParNMPC&) = default;
+
+  ///
+  /// @brief Default move constructor. 
+  ///
+  ParNMPC(ParNMPC&&) noexcept = default;
+
+  ///
+  /// @brief Default move assign operator. 
+  ///
+  ParNMPC& operator=(ParNMPC&&) noexcept = default;
+
+  ///
+  /// @brief Overload operator[] to access the standard data, i.e., 
+  /// hybrid_container::data as std::vector. 
+  ///
+  SplitParNMPC& operator[] (const int i) {
+    assert(i >= 0);
+    assert(i < data.size());
+    return data[i];
+  }
+
+  ///
+  /// @brief const version of hybrid_container::operator[]. 
+  ///
+  const SplitParNMPC& operator[] (const int i) const {
+    assert(i >= 0);
+    assert(i < data.size());
+    return data[i];
+  }
+
+  void discretize(const ContactSequence& contact_sequence, const double t) {
+    discretizer_.discretizeOCP(contact_sequence, t);
+  }
+
+  const OCPDiscretizer& discrete() const {
+    return discretizer_;
+  }
+
+  std::vector<SplitParNMPC> data, aux, lift;
+  std::vector<ImpulseSplitParNMPC> impulse;
+  TerminalParNMPC terminal;
 
 private:
   OCPDiscretizer discretizer_;

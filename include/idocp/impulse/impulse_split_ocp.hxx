@@ -50,6 +50,7 @@ inline void ImpulseSplitOCP::linearizeOCP(
     const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual, 
     const bool is_state_constraint_valid) {
+  assert(q_prev.size() == robot.dimq());
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_residual.setImpulseStatus(impulse_status);
   robot.updateKinematics(s.q, s.v+s.dv);
@@ -177,6 +178,8 @@ inline double ImpulseSplitOCP::constraintViolation(
     const ImpulseSplitSolution& s, const Eigen::VectorXd& q_next, 
     const Eigen::VectorXd& v_next, ImpulseSplitKKTResidual& kkt_residual,
     const bool is_state_constraint_valid) {
+  assert(q_next.size() == robot.dimq());
+  assert(v_next.size() == robot.dimv());
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.setZero();
   robot.updateKinematics(s.q, s.v+s.dv);

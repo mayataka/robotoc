@@ -79,11 +79,14 @@ TEST_F(UnLineSearchTest, UnOCP) {
   }
   UnLineSearch line_search(robot, T, N, nthreads);
   EXPECT_TRUE(line_search.isFilterEmpty());
-  const double max_primal_step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
   const double step_size = line_search.computeStepSize(ocp, robots, t, q, v, s, d, max_primal_step_size);
   EXPECT_TRUE(step_size <= max_primal_step_size);
   EXPECT_TRUE(step_size >= min_step_size);
   EXPECT_FALSE(line_search.isFilterEmpty());
+  const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
+  EXPECT_DOUBLE_EQ(line_search.computeStepSize(ocp, robots, t, q, v, s, d, very_small_max_primal_step_size),
+                   min_step_size);
 }
 
 
@@ -102,11 +105,14 @@ TEST_F(UnLineSearchTest, UnParNMPC) {
   parnmpc.terminal.initConstraints(robot, N, s[N-1]);
   UnLineSearch line_search(robot, T, N, nthreads);
   EXPECT_TRUE(line_search.isFilterEmpty());
-  const double max_primal_step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
   const double step_size = line_search.computeStepSize(parnmpc, robots, t, q, v, s, d, max_primal_step_size);
   EXPECT_TRUE(step_size <= max_primal_step_size);
   EXPECT_TRUE(step_size >= min_step_size);
   EXPECT_FALSE(line_search.isFilterEmpty());
+  const double very_small_max_primal_step_size = min_step_size * std::abs(Eigen::VectorXd::Random(1)[0]);
+  EXPECT_DOUBLE_EQ(line_search.computeStepSize(parnmpc, robots, t, q, v, s, d, very_small_max_primal_step_size),
+                   min_step_size);
 }
 
 } // namespace idocp

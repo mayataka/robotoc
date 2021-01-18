@@ -11,6 +11,7 @@ inline SplitUnBackwardCorrection::SplitUnBackwardCorrection(const Robot& robot)
   : dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
     dimKKT_(5*robot.dimv()),
+    kkt_mat_inverter_(robot),
     KKT_mat_inv_(Eigen::MatrixXd::Zero(5*robot.dimv(), 5*robot.dimv())),
     x_res_(Eigen::VectorXd::Zero(2*robot.dimv())),
     dx_(Eigen::VectorXd::Zero(2*robot.dimv())) {
@@ -21,6 +22,7 @@ inline SplitUnBackwardCorrection::SplitUnBackwardCorrection()
   : dimv_(),
     dimx_(),
     dimKKT_(),
+    kkt_mat_inverter_(),
     KKT_mat_inv_(),
     x_res_(),
     dx_() {
@@ -49,7 +51,7 @@ inline void SplitUnBackwardCorrection::coarseUpdate(
     SplitDirection& d, SplitSolution& s_new) {
   unkkt_matrix.Qvq() = unkkt_matrix.Qqv().transpose();
   unkkt_matrix.Qxa() = unkkt_matrix.Qax().transpose();
-  unkkt_matrix.invert(dtau , KKT_mat_inv_);
+  kkt_mat_inverter_.invert(dtau, unkkt_matrix.Q, KKT_mat_inv_);
   d.split_direction.noalias() = KKT_mat_inv_ * unkkt_residual.KKT_residual;
   s_new.lmd = s.lmd - d.dlmd();
   s_new.gmm = s.gmm - d.dgmm();
@@ -57,12 +59,6 @@ inline void SplitUnBackwardCorrection::coarseUpdate(
   s_new.a   = s.a - d.du(); 
   s_new.q   = s.q - d.dq();
   s_new.v   = s.v - d.dv();
-}
-
-
-inline void SplitUnBackwardCorrection::printKKTMatInv() const {
-  std::cout << "KKT_mat_inv_" << std::endl;
-  std::cout << KKT_mat_inv_ << std::endl;
 }
 
 

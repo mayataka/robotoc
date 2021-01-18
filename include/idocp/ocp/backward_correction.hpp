@@ -1,19 +1,35 @@
 #ifndef IDOCP_BACKWARD_CORRECTION_HPP_
 #define IDOCP_BACKWARD_CORRECTION_HPP_
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
+#include <vector>
 
 #include "Eigen/Core"
+#include "Eigen/LU"
+
+#include "idocp/robot/robot.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_backward_correction.hpp"
+#include "idocp/hybrid/hybrid_container.hpp"
+
 
 namespace idocp {
 
+///
+/// @class BackwardCorrection
+/// @brief Backward correction.
+///
 class BackwardCorrection {
 public:
-  BackwardCorrection(const Robot& robot);
+  ///
+  /// @brief Construct factorizer.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  /// @param[in] nthreads Number of the threads in solving the optimal control 
+  /// problem. Must be positive. Default is 1.
+  ///
+  BackwardCorrection(const Robot& robot, const int N, const int max_num_impulse, 
+                     const int nthreads);
 
   ///
   /// @brief Default constructor. 
@@ -24,14 +40,14 @@ public:
   /// @brief Destructor. 
   ///
   ~BackwardCorrection();
-
+ 
   ///
   /// @brief Default copy constructor. 
   ///
   BackwardCorrection(const BackwardCorrection&) = default;
 
   ///
-  /// @brief Default copy assign operator. 
+  /// @brief Default copy operator. 
   ///
   BackwardCorrection& operator=(const BackwardCorrection&) = default;
 
@@ -45,45 +61,34 @@ public:
   ///
   BackwardCorrection& operator=(BackwardCorrection&&) noexcept = default;
 
-  void coarseUpdate(const Robot& robot, const SplitSolution& s, 
-                    SplitDirection& d, SplitKKTMatrix& kkt_matrix, 
-                    const SplitKKTResidual& kkt_residual,
-                    SplitSolution& s_new_coarse);
+  void initAuxMat(ParNMPC& parnmpc, std::vector<Robot>& robots, 
+                  const double t, const Solution& s, KKTMatrix& kkt_matrix);
 
-  template <typename SplitSolutionType>
-  void backwardCorrectionSerial(const SplitSolutionType& s_next,
-                                const SplitSolutionType& s_new_next,
-                                SplitSolution& s_new);
+  void coarseUpdate(ParNMPC& parnmpc, std::vector<Robot>& robots, 
+                    const ContactSequence& contact_sequence, 
+                    const double t, const Eigen::VectorXd& q, 
+                    const Eigen::VectorXd& v, KKTMatrix& kkt_matrix, 
+                    KKTResidual& kkt_residual, const Solution& s, Direction& d);
 
-  void backwardCorrectionParallel(const Robot& robot, SplitDirection& d,
-                                  SplitSolution& s_new) const;
+  void backwardCorrection(ParNMPC& parnmpc, std::vector<Robot>& robots, 
+                          const KKTMatrix& kkt_matrix, 
+                          const KKTResidual& kkt_residual, 
+                          const Solution& s, Direction& d);
 
-  template <typename SplitSolutionType>
-  void forwardCorrectionSerial(const Robot& robot, 
-                               const SplitSolutionType& s_prev,
-                               const SplitSolutionType& s_new_prev, 
-                               SplitSolution& s_new);
+  double primalStepSize() const;
 
-  void forwardCorrectionParallel(SplitDirection& d, 
-                                 SplitSolution& s_new) const;
-
-  static void computeDirection(const Robot& robot, const SplitSolution& s, 
-                               const SplitSolution& s_new, SplitDirection& d);
-
-  template <typename MatrixType>
-  void getAuxiliaryMatrix(const Eigen::MatrixBase<MatrixType>& aux_mat) const;
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  double dualStepSize() const;
 
 private:
-  Eigen::VectorXd x_res_, dx_;
-  Eigen::MatrixXd kkt_matrix_inverse_;
-  int dimv_, dimx_, dimKKT_;
+  int N_, max_num_impulse_, nthreads_, N_all_;
+  BackwardCorrector corrector_;
+  Solution s_new_;
+  std::vector<Eigen::MatrixXd> aux_mat_, aux_mat_impulse_, aux_mat_aux_, 
+                               aux_mat_lift_;
+  Eigen::VectorXd primal_step_sizes_, dual_step_sizes_;
 
 };
 
 } // namespace idocp
-
-#include "idocp/ocp/backward_correction.hxx"
 
 #endif // IDOCP_BACKWARD_CORRECTION_HPP_ 

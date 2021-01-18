@@ -6,7 +6,6 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/ocp/schur_complement.hpp"
 
 
 namespace idocp {
@@ -548,17 +547,34 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qff() const;
 
   ///
+  /// @brief Hessian of the Lagrangian with respect to primal variables. 
+  /// @return Reference to the Hessian. Size is 
+  /// 2 * Robot::dimv() + Robot::dimu() x 2 * Robot::dimv() + Robot::dimu().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qss();
+
+  ///
+  /// @brief const version of ImpulseSplitKKTMatrix::Qss().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qss() const;
+
+  ///
+  /// @brief Constraint Jacobian. 
+  /// @return Reference to the Jacobian. Size is 
+  /// 2 * Robot::dimv() x 2 * Robot::dimv() + Robot::dimu().
+  ///
+  Eigen::MatrixXd& Jac();
+
+  ///
+  /// @brief const version of ImpulseSplitKKTMatrix::Jac().
+  ///
+  const Eigen::MatrixXd& Jac() const;
+
+
+  ///
   /// @brief Symmetrize the Hessian for matrix inversion. 
   ///
   void symmetrize();
-
-  ///
-  /// @brief Invert the split KKT matrix. 
-  /// @param[out] KKT_matrix_inverse Inverse of the KKT matrix. Size must 
-  /// be SplitKKTMatrix::dimKKT() x SplitKKTMatrix::dimKKT().
-  ///
-  template <typename MatrixType>
-  void invert(const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse);
 
   ///
   /// @brief Set the all components zero.
@@ -598,7 +614,6 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  SchurComplement schur_complement_;
   Eigen::MatrixXd F_, Q_, Qaaff_full_;
   bool has_floating_base_;
   int dimv_, dimx_, dimu_, dim_passive_, dimf_, u_begin_, q_begin_, v_begin_, dimKKT_;

@@ -10,6 +10,7 @@
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_dynamics_backward_euler_data.hpp"
+#include "idocp/ocp/split_kkt_residual.hpp"
 
 
 namespace idocp {
@@ -45,10 +46,6 @@ public:
       const ImpulseSplitSolution& s, ImpulseDynamicsBackwardEulerData& data);
 
   static void linearizeImpulseVelocityConstraint(
-      Robot& robot, const ImpulseStatus& impulse_status, 
-      ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual);
-
-  static void linearizeImpulsePositionConstraint(
       Robot& robot, const ImpulseStatus& impulse_status, 
       ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual);
 

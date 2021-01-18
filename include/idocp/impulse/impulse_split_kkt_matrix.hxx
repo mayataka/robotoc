@@ -10,10 +10,9 @@ namespace idocp {
 
 inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix(const Robot& robot) 
   : Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    schur_complement_(2*robot.dimv()+2*robot.max_dimf(),  
-                      2*robot.dimv()+robot.max_dimf()),
-    FC_(Eigen::MatrixXd::Zero(2*robot.dimv()+2*robot.max_dimf(), 
+    FC_(Eigen::MatrixXd::Zero(2*robot.dimv()+robot.max_dimf(), 
                               2*robot.dimv()+robot.max_dimf())),
+    Pq_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv()+robot.max_dimf(), 
                              3*robot.dimv()+robot.max_dimf())),
     dimv_(robot.dimv()), 
@@ -27,8 +26,8 @@ inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix(const Robot& robot)
 
 inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix() 
   : Fqq_prev(),
-    schur_complement_(),
     FC_(),
+    Pq_full_(),
     Q_(),
     dimv_(0), 
     dimx_(0), 
@@ -48,7 +47,7 @@ inline void ImpulseSplitKKTMatrix::setImpulseStatus(
   dimf_ = impulse_status.dimf();
   q_begin_ = dimv_ + dimf_;
   v_begin_ = 2*dimv_ + dimf_;
-  dimKKT_ = 4*dimv_ + 3*dimf_;
+  dimKKT_ = 4*dimv_ + 2*dimf_;
 }
 
 
@@ -141,35 +140,35 @@ ImpulseSplitKKTMatrix::Fxx() const {
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Pq() {
-  return FC_.block(dimx_, dimf_, dimf_, dimv_);
+  return Pq_full_.topLeftCorner(dimf_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Pq() const {
-  return FC_.block(dimx_, dimf_, dimf_, dimv_);
+  return Pq_full_.topLeftCorner(dimf_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Vq() {
-  return FC_.block(dimx_+dimf_, dimf_, dimf_, dimv_);
+  return FC_.block(dimx_, dimf_, dimf_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Vq() const {
-  return FC_.block(dimx_+dimf_, dimf_, dimf_, dimv_);
+  return FC_.block(dimx_, dimf_, dimf_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Vv() {
-  return FC_.block(dimx_+dimf_, dimf_+dimv_, dimf_, dimv_);
+  return FC_.block(dimx_, dimf_+dimv_, dimf_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Vv() const {
-  return FC_.block(dimx_+dimf_, dimf_+dimv_, dimf_, dimv_);
+  return FC_.block(dimx_, dimf_+dimv_, dimf_, dimv_);
 }
 
 
@@ -305,27 +304,38 @@ ImpulseSplitKKTMatrix::Qxx() const {
 }
 
 
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qss() {
+  return Q_.block(dimv_, dimv_, dimx_+dimf_, dimx_+dimf_); 
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Qss() const {
+  return Q_.block(dimv_, dimv_, dimx_+dimf_, dimx_+dimf_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Jac() {
+  return FC_.topLeftCorner(dimx_+dimf_, dimx_+dimf_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> 
+ImpulseSplitKKTMatrix::Jac() const {
+  return FC_.topLeftCorner(dimx_+dimf_, dimx_+dimf_); 
+}
+
+
 inline void ImpulseSplitKKTMatrix::symmetrize() {
   Q_.template triangularView<Eigen::StrictlyLower>() 
       = Q_.transpose().template triangularView<Eigen::StrictlyLower>();
 }
 
 
-template <typename MatrixType>
-inline void ImpulseSplitKKTMatrix::invert(
-    const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse) {
-  assert(KKT_matrix_inverse.rows() == dimKKT_);
-  assert(KKT_matrix_inverse.cols() == dimKKT_);
-  schur_complement_.invertWithZeroTopLeftCorner(
-      FC_.topLeftCorner(dimx_+2*dimf_, dimx_+dimf_), 
-      Q_.block(dimv_, dimv_, dimx_+dimf_, dimx_+dimf_), 
-      const_cast<Eigen::MatrixBase<MatrixType>&>(KKT_matrix_inverse));
-}
-
-
 inline void ImpulseSplitKKTMatrix::setZero() {
   Fqq_prev.setZero();
   FC_.setZero();
+  Pq_full_.setZero();
   Q_.setZero();
 }
 
@@ -358,6 +368,7 @@ inline bool ImpulseSplitKKTMatrix::isApprox(
 inline bool ImpulseSplitKKTMatrix::hasNaN() const {
   if (Fqq_prev.hasNaN()) return true;
   if (FC_.hasNaN()) return true;
+  if (Pq_full_.hasNaN()) return true;
   if (Q_.hasNaN()) return true;
   return false;
 }

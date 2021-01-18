@@ -49,3 +49,18 @@ target_include_directories(
     PRIVATE
     ${IDOCP_INCLUDE_DIR}
 )
+
+add_executable(
+    parnmpc_benchmark
+    parnmpc_benchmark.cpp
+)
+target_link_libraries(
+    parnmpc_benchmark
+    PRIVATE
+    idocp::idocp
+)
+target_include_directories(
+    parnmpc_benchmark
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+)

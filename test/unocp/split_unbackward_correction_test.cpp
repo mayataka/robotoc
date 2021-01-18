@@ -7,6 +7,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/unocp/split_unkkt_matrix.hpp"
 #include "idocp/unocp/split_unkkt_residual.hpp"
+#include "idocp/unocp/split_unkkt_matrix_inverter.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/unocp/split_unbackward_correction.hpp"
@@ -64,7 +65,8 @@ TEST_F(SplitUnBackwardCorrectionTest, test) {
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(5*dimv, 5*dimv));
   unkkt_matrix_ref.Qxx() += aux_mat_next;
-  unkkt_matrix_ref.invert(dtau, KKT_mat_inv);
+  SplitUnKKTMatrixInverter inverter(robot);
+  inverter.invert(dtau, unkkt_matrix_ref.Q, KKT_mat_inv);
   d_ref.split_direction = KKT_mat_inv * unkkt_residual.KKT_residual;
   s_new_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_ref.gmm = s.gmm - d_ref.dgmm();
@@ -134,7 +136,8 @@ TEST_F(SplitUnBackwardCorrectionTest, testTerminal) {
   corr.coarseUpdate(dtau, unkkt_matrix, unkkt_residual, s, d, s_new);
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(5*dimv, 5*dimv));
-  unkkt_matrix_ref.invert(dtau, KKT_mat_inv);
+  SplitUnKKTMatrixInverter inverter(robot);
+  inverter.invert(dtau, unkkt_matrix_ref.Q, KKT_mat_inv);
   d_ref.split_direction = KKT_mat_inv * unkkt_residual.KKT_residual;
   s_new_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_ref.gmm = s.gmm - d_ref.dgmm();

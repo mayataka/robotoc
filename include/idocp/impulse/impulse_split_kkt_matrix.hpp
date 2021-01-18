@@ -5,7 +5,6 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/impulse_status.hpp"
-#include "idocp/impulse/dynamic_schur_complement.hpp"
 
 
 namespace idocp {
@@ -356,12 +355,28 @@ public:
   void symmetrize();
 
   ///
-  /// @brief Invert the KKT matrix. 
-  /// @param[out] KKT_matrix_inverse Inverse of the KKT matrix. Size must 
-  /// be ImpulseSplitKKTMatrix::dimKKT() x ImpulseSplitKKTMatrix::dimKKT().
+  /// @brief Hessian of the Lagrangian with respect to primal variables. 
+  /// @return Reference to the Hessian. Size is 
+  /// Robot::dimv() + ImpulseStatus::dimf() x Robot::dimv() + ImpulseStatus::dimf().
   ///
-  template <typename MatrixType>
-  void invert(const Eigen::MatrixBase<MatrixType>& KKT_matrix_inverse);
+  Eigen::Block<Eigen::MatrixXd> Qss();
+
+  ///
+  /// @brief const version of ImpulseSplitKKTMatrix::Qss().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qss() const;
+
+  ///
+  /// @brief Constraint Jacobian. 
+  /// @return Reference to the Jacobian. Size is 
+  /// Robot::dimv() + ImpulseStatus::dimf() x Robot::dimv() + ImpulseStatus::dimf().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Jac();
+
+  ///
+  /// @brief const version of ImpulseSplitKKTMatrix::Jac().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Jac() const;
 
   ///
   /// @brief Set the all components zero.
@@ -401,12 +416,8 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  DynamicSchurComplement schur_complement_;
-  Eigen::MatrixXd FC_, Q_;
-  bool has_floating_base_;
-  int dimv_, dimx_, dimu_, dim_passive_, dimf_, dimp_, u_begin_, q_begin_, 
-      v_begin_, dimKKT_;
-  static constexpr int kDimFloatingBase = 6;
+  Eigen::MatrixXd FC_, Pq_full_, Q_;
+  int dimv_, dimx_, dimf_, q_begin_, v_begin_, dimKKT_;
 
 };
 

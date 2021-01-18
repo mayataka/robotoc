@@ -62,11 +62,11 @@ add_library(
   src/constraints/contact_distance.cpp
   src/constraints/impulse_friction_cone.cpp
   src/constraints/impulse_normal_force.cpp
-  src/impulse/dynamic_schur_complement.cpp
-  src/impulse/impulse_split_kkt_residual.cpp
-  src/impulse/impulse_split_kkt_matrix.cpp
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp
+  src/impulse/impulse_split_kkt_residual.cpp
+  src/impulse/impulse_split_kkt_matrix_inverter.cpp
+  src/impulse/impulse_split_kkt_matrix.cpp
   src/impulse/impulse_state_equation.cpp
   src/impulse/impulse_dynamics_forward_euler_data.cpp
   src/impulse/impulse_dynamics_forward_euler.cpp
@@ -76,15 +76,15 @@ add_library(
   src/impulse/impulse_split_riccati_factorizer.cpp
   src/impulse/impulse_dynamics_backward_euler_data.cpp
   src/impulse/impulse_dynamics_backward_euler.cpp
-  # src/impulse/impulse_split_parnmpc.cpp
+  src/impulse/impulse_split_parnmpc.cpp
   src/hybrid/discrete_event.cpp
   src/hybrid/contact_sequence.cpp
   src/hybrid/ocp_discretizer.cpp
   src/hybrid/hybrid_container.cpp
   src/hybrid/collision_checker.cpp
-  src/ocp/schur_complement.cpp
   src/ocp/split_kkt_residual.cpp
   src/ocp/split_kkt_matrix.cpp
+  src/ocp/split_kkt_matrix_inverter.cpp
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
@@ -106,8 +106,15 @@ add_library(
   src/ocp/riccati_direction_calculator.cpp
   src/ocp/riccati_solver.cpp
   src/ocp/ocp_solver.cpp
+  src/ocp/split_parnmpc.cpp
+  src/ocp/terminal_parnmpc.cpp
+  src/ocp/parnmpc_linearizer.cpp
+  src/ocp/split_backward_correction.cpp
+  src/ocp/backward_correction.cpp
+  src/ocp/parnmpc_solver.cpp
   src/unocp/split_unkkt_residual.cpp
   src/unocp/split_unkkt_matrix.cpp
+  src/unocp/split_unkkt_matrix_inverter.cpp
   src/unocp/unconstrained_container.cpp
   src/unocp/unconstrained_dynamics.cpp
   src/unocp/split_unocp.cpp
@@ -126,8 +133,6 @@ add_library(
   src/utils/derivative_checker.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp
-  src/utils/simulation_data_saver.cpp
-  src/utils/runge_kutta.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 

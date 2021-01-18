@@ -110,7 +110,7 @@ private:
 };
 
 } // namespace idocp 
-;
+
 #include "idocp/ocp/ocp_linearizer.hxx"
 
 #endif // IDOCP_OCP_LINEARIZER_HPP_
