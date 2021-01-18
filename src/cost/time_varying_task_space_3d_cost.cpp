@@ -5,13 +5,12 @@
 
 namespace idocp {
 
-TimeVaryingTaskSpace3DCost::TimeVaryingTaskSpace3DCost(const Robot& robot, 
-                                                       const int frame_id)
+TimeVaryingTaskSpace3DCost::TimeVaryingTaskSpace3DCost(
+    const Robot& robot, const int frame_id, 
+    const std::shared_ptr<TimeVaryingTaskSpace3DRefBase>& ref) 
   : CostFunctionComponentBase(),
     frame_id_(frame_id),
-    t0_(0),
-    q0_(Eigen::Vector3d::Zero()),
-    v0_(Eigen::Vector3d::Zero()),
+    ref_(ref),
     q_3d_weight_(Eigen::Vector3d::Zero()),
     qf_3d_weight_(Eigen::Vector3d::Zero()),
     qi_3d_weight_(Eigen::Vector3d::Zero()) {
@@ -21,9 +20,7 @@ TimeVaryingTaskSpace3DCost::TimeVaryingTaskSpace3DCost(const Robot& robot,
 TimeVaryingTaskSpace3DCost::TimeVaryingTaskSpace3DCost()
   : CostFunctionComponentBase(),
     frame_id_(),
-    t0_(0),
-    q0_(),
-    v0_(),
+    ref_(),
     q_3d_weight_(),
     qf_3d_weight_(),
     qi_3d_weight_() {
@@ -39,12 +36,9 @@ bool TimeVaryingTaskSpace3DCost::useKinematics() const {
 }
 
 
-void TimeVaryingTaskSpace3DCost::set_ref(const double t0, 
-                                         const Eigen::Vector3d& q0, 
-                                         const Eigen::Vector3d& v0) {
-  t0_ = t0;
-  q0_ = q0;
-  v0_ = v0;
+void TimeVaryingTaskSpace3DCost::set_ref(
+    const std::shared_ptr<TimeVaryingTaskSpace3DRefBase>& ref) {
+  ref_ = ref;
 }
 
 
@@ -70,7 +64,8 @@ double TimeVaryingTaskSpace3DCost::computeStageCost(
     Robot& robot, CostFunctionData& data, const double t, const double dtau, 
     const SplitSolution& s) const {
   double l = 0;
-  data.diff_3d = robot.framePosition(frame_id_) - (q0_+(t-t0_)*v0_);
+  ref_->compute_q_3d_ref(t, data.q_3d_ref);
+  data.diff_3d = robot.framePosition(frame_id_) - data.q_3d_ref;
   l += (q_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
   return 0.5 * dtau * l;
 }
@@ -80,7 +75,8 @@ double TimeVaryingTaskSpace3DCost::computeTerminalCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s) const {
   double l = 0;
-  data.diff_3d = robot.framePosition(frame_id_) - (q0_+(t-t0_)*v0_);
+  ref_->compute_q_3d_ref(t, data.q_3d_ref);
+  data.diff_3d = robot.framePosition(frame_id_) - data.q_3d_ref;
   l += (qf_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
   return 0.5 * l;
 }
@@ -90,7 +86,8 @@ double TimeVaryingTaskSpace3DCost::computeImpulseCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s) const {
   double l = 0;
-  data.diff_3d = robot.framePosition(frame_id_) - (q0_+(t-t0_)*v0_);
+  ref_->compute_q_3d_ref(t, data.q_3d_ref);
+  data.diff_3d = robot.framePosition(frame_id_) - data.q_3d_ref;
   l += (qi_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
   return 0.5 * l;
 }
@@ -99,7 +96,8 @@ double TimeVaryingTaskSpace3DCost::computeImpulseCost(
 void TimeVaryingTaskSpace3DCost::computeStageCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, const double dtau, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  data.diff_3d = robot.framePosition(frame_id_) - (q0_+(t-t0_)*v0_);
+  ref_->compute_q_3d_ref(t, data.q_3d_ref);
+  data.diff_3d = robot.framePosition(frame_id_) - data.q_3d_ref;
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
       = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
@@ -111,7 +109,8 @@ void TimeVaryingTaskSpace3DCost::computeStageCostDerivatives(
 void TimeVaryingTaskSpace3DCost::computeTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  data.diff_3d = robot.framePosition(frame_id_) - (q0_+(t-t0_)*v0_);
+  ref_->compute_q_3d_ref(t, data.q_3d_ref);
+  data.diff_3d = robot.framePosition(frame_id_) - data.q_3d_ref;
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
       = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
@@ -124,7 +123,8 @@ void TimeVaryingTaskSpace3DCost::computeImpulseCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
-  data.diff_3d = robot.framePosition(frame_id_) - (q0_+(t-t0_)*v0_);
+  ref_->compute_q_3d_ref(t, data.q_3d_ref);
+  data.diff_3d = robot.framePosition(frame_id_) - data.q_3d_ref;
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
       = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();

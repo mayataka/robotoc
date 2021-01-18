@@ -12,24 +12,31 @@
 #include "idocp/utils/joint_constraints_factory.hpp"
 #include "idocp/utils/ocp_benchmarker.hpp"
 
+#ifdef ENABLE_VIEWER
+#include "idocp/utils/trajectory_viewer.hpp"
+#endif 
 
-int main() {
+
+int main(int argc, char *argv[]) {
   // Create a robot.
   const std::string path_to_urdf = "../iiwa_description/urdf/iiwa14.urdf";
   idocp::Robot robot(path_to_urdf);
 
+  // Change the limits from the default parameters.
+  robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 50));
+  robot.setJointVelocityLimit(Eigen::VectorXd::Constant(robot.dimv(), M_PI_2));
+
   // Create a cost function.
-  robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 200));
   auto cost = std::make_shared<idocp::CostFunction>();
   auto config_cost = std::make_shared<idocp::ConfigurationSpaceCost>(robot);
-  config_cost->set_q_ref(Eigen::VectorXd::Constant(robot.dimv(), -5));
-  config_cost->set_v_ref(Eigen::VectorXd::Constant(robot.dimv(), -9));
+  Eigen::VectorXd q_ref(Eigen::VectorXd::Zero(robot.dimq()));
+  q_ref << 0, M_PI_2, 0, M_PI_2, 0, M_PI_2, 0;
+  config_cost->set_q_ref(q_ref);
   config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
   config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 10));
-  config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
-  config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
+  config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  config_cost->set_u_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0));
   cost->push_back(config_cost);
 
   // Create joint constraints.
@@ -37,22 +44,36 @@ int main() {
   auto constraints = constraints_factory.create();
 
   // Create the OCP solver for unconstrained rigid-body systems.
-  const double T = 1;
-  const int N = 20;
+  const double T = 3;
+  const int N = 60;
   const int nthreads = 4;
   const double t = 0;
-  const Eigen::VectorXd q = Eigen::VectorXd::Constant(robot.dimq(), 2);
+  Eigen::VectorXd q(Eigen::VectorXd::Zero(robot.dimq()));
+  q << M_PI_2, 0, M_PI_2, 0, M_PI_2, 0, M_PI_2;
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
   idocp::UnOCPSolver ocp_solver(robot, cost, constraints, T, N, nthreads);
 
   // Solves the OCP.
   ocp_solver.setStateTrajectory(t, q, v);
-  const int num_iteration = 50;
+  const int num_iteration = 30;
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);
-  const int num_iteration_CPU = 10000;
-  idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, num_iteration_CPU, line_search);
-  ocp_solver.printSolution();
+  ocp_solver.printSolution("q");
+  ocp_solver.printSolution("v");
+  ocp_solver.printSolution("u");
+
+#ifdef ENABLE_VIEWER
+  if (argc != 2) {
+    std::cout << "Invalid argment!" << std::endl;
+    std::cout << "Package serach path must be specified as the second argment!" << std::endl;
+  }
+  else {
+    const std::string pkg_search_path = argv[1];
+    idocp::TrajectoryViewer viewer(pkg_search_path, path_to_urdf);
+    const double dt = T/N;
+    viewer.display(ocp_solver.getSolution("q"), dt);
+  }
+#endif 
 
   return 0;
 }

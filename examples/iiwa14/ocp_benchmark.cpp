@@ -15,8 +15,8 @@
 
 int main() {
   // Create a robot.
-  const std::string urdf_file_name = "../urdf/iiwa14.urdf";
-  idocp::Robot robot(urdf_file_name);
+  const std::string path_to_urdf = "../iiwa_description/urdf/iiwa14.urdf";
+  idocp::Robot robot(path_to_urdf);
 
   // Create a cost function.
   robot.setJointEffortLimit(Eigen::VectorXd::Constant(robot.dimu(), 200));
