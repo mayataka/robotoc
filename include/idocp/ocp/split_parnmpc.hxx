@@ -1,4 +1,5 @@
 #include "idocp/ocp/split_parnmpc.hpp"
+#include "idocp/impulse/impulse_dynamics_backward_euler.hpp"
 
 #include <cassert>
 
@@ -87,6 +88,26 @@ inline void SplitParNMPC::linearizeOCP(Robot& robot,
 }
 
 
+inline void SplitParNMPC::linearizeOCP(Robot& robot, 
+                                       const ContactStatus& contact_status, 
+                                       const ImpulseStatus& impulse_status, 
+                                       const double t, const double dtau, 
+                                       const Eigen::VectorXd& q_prev, 
+                                       const Eigen::VectorXd& v_prev, 
+                                       const SplitSolution& s, 
+                                       const ImpulseSplitSolution& s_next, 
+                                       SplitKKTMatrix& kkt_matrix, 
+                                       SplitKKTResidual& kkt_residual) {
+  linearizeOCP(robot, contact_status, t, dtau, q_prev, v_prev, s, s_next, 
+               kkt_matrix, kkt_residual);
+  kkt_matrix.setImpulseStatus(impulse_status);
+  kkt_residual.setImpulseStatus(impulse_status);
+  ImpulseDynamicsBackwardEuler::linearizeImpulseCondition(robot, impulse_status,
+                                                          s_next, kkt_matrix, 
+                                                          kkt_residual);
+}
+
+
 inline void SplitParNMPC::computeCondensedPrimalDirection(
     Robot& robot, const double dtau, const SplitSolution& s, 
     SplitDirection& d) {
@@ -161,6 +182,22 @@ inline void SplitParNMPC::computeKKTResidual(
 }
 
 
+inline void SplitParNMPC::computeKKTResidual(
+    Robot& robot, const ContactStatus& contact_status, 
+    const ImpulseStatus& impulse_status, const double t, const double dtau, 
+    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
+    const SplitSolution& s, const ImpulseSplitSolution& s_next, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
+  computeKKTResidual(robot, contact_status, t, dtau, q_prev, v_prev, s, s_next, 
+                     kkt_matrix, kkt_residual);
+  kkt_matrix.setImpulseStatus(impulse_status);
+  kkt_residual.setImpulseStatus(impulse_status);
+  ImpulseDynamicsBackwardEuler::linearizeImpulseCondition(robot, impulse_status,
+                                                          s_next, kkt_matrix, 
+                                                          kkt_residual);
+}
+
+
 inline double SplitParNMPC::squaredNormKKTResidual(
     const SplitKKTResidual& kkt_residual, const double dtau) const {
   double error = 0;
@@ -174,6 +211,8 @@ inline double SplitParNMPC::squaredNormKKTResidual(
   error += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dtau);
   error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
+  error += ImpulseDynamicsBackwardEuler::squaredNormImpulseConditionResidual(
+      kkt_residual);
   return error;
 }
 
@@ -216,6 +255,22 @@ inline double SplitParNMPC::constraintViolation(
   violation += stateequation::L1NormStateEuqationResidual(kkt_residual);
   violation += contact_dynamics_.l1NormContactDynamicsResidual(dtau);
   violation += dtau * constraints_->l1NormPrimalResidual(constraints_data_);
+  return violation;
+}
+
+
+inline double SplitParNMPC::constraintViolation(
+    Robot& robot, const ContactStatus& contact_status, 
+    const ImpulseStatus& impulse_status, const double t, const double dtau, 
+    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) {
+  double violation = constraintViolation(robot, contact_status, t, dtau,  
+                                         q_prev, v_prev, s, kkt_residual);
+  ImpulseDynamicsBackwardEuler::computeImpulseConditionResidual(robot, 
+                                                                impulse_status, 
+                                                                kkt_residual);
+  violation += ImpulseDynamicsBackwardEuler::l1NormImpulseConditionResidual(
+      kkt_residual);
   return violation;
 }
 

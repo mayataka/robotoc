@@ -64,6 +64,18 @@ inline void ImpulseDynamicsBackwardEuler::linearizeImpulseVelocityConstraint(
 }
 
 
+inline void ImpulseDynamicsBackwardEuler::linearizeImpulseCondition(
+    Robot& robot, const ImpulseStatus& impulse_status, 
+    const ImpulseSplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
+  robot.computeImpulseConditionResidual(impulse_status,
+                                        impulse_status.contactPoints(),
+                                        kkt_residual.P());
+  robot.computeImpulseConditionDerivative(impulse_status, kkt_matrix.Pq());
+  kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.mu_stack();
+}
+
+
 inline void ImpulseDynamicsBackwardEuler::condenseImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
@@ -124,6 +136,15 @@ inline void ImpulseDynamicsBackwardEuler::computeImpulseDynamicsResidual(
 }
 
 
+inline void ImpulseDynamicsBackwardEuler::computeImpulseConditionResidual(
+    Robot& robot, const ImpulseStatus& impulse_status,
+    SplitKKTResidual& kkt_residual) {
+  robot.computeImpulseConditionResidual(impulse_status,
+                                        impulse_status.contactPoints(),
+                                        kkt_residual.P());
+}
+
+
 inline double ImpulseDynamicsBackwardEuler::l1NormImpulseDynamicsResidual(
     const ImpulseSplitKKTResidual& kkt_residual) const {
   return (data_.ImD.lpNorm<1>() + kkt_residual.V().lpNorm<1>());
@@ -133,6 +154,18 @@ inline double ImpulseDynamicsBackwardEuler::l1NormImpulseDynamicsResidual(
 inline double ImpulseDynamicsBackwardEuler::squaredNormImpulseDynamicsResidual(
     const ImpulseSplitKKTResidual& kkt_residual) const {
   return (data_.ImD.squaredNorm() + kkt_residual.V().squaredNorm());
+}
+
+
+inline double ImpulseDynamicsBackwardEuler::l1NormImpulseConditionResidual(
+    const SplitKKTResidual& kkt_residual) {
+  return kkt_residual.P().lpNorm<1>();
+}
+
+
+inline double ImpulseDynamicsBackwardEuler::squaredNormImpulseConditionResidual(
+    const SplitKKTResidual& kkt_residual) {
+  return kkt_residual.P().squaredNorm();
 }
 
 

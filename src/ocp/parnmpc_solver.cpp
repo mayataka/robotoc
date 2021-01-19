@@ -74,7 +74,7 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   backward_correction_.coarseUpdate(parnmpc_, robots_, contact_sequence_, 
-                                    t, q, v, kkt_matrix_, kkt_residual_, s_, d_);
+                                    t, q, v, s_, kkt_matrix_, kkt_residual_);
   backward_correction_.backwardCorrection(parnmpc_, robots_, kkt_matrix_, 
                                           kkt_residual_, s_, d_);
   double primal_step_size = backward_correction_.primalStepSize();

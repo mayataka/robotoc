@@ -67,8 +67,8 @@ public:
   void coarseUpdate(ParNMPC& parnmpc, std::vector<Robot>& robots, 
                     const ContactSequence& contact_sequence, 
                     const double t, const Eigen::VectorXd& q, 
-                    const Eigen::VectorXd& v, KKTMatrix& kkt_matrix, 
-                    KKTResidual& kkt_residual, const Solution& s, Direction& d);
+                    const Eigen::VectorXd& v, const Solution& s,
+                    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
   void backwardCorrection(ParNMPC& parnmpc, std::vector<Robot>& robots, 
                           const KKTMatrix& kkt_matrix, 

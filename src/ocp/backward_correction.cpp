@@ -77,9 +77,8 @@ void BackwardCorrection::coarseUpdate(ParNMPC& parnmpc,
                                       const ContactSequence& contact_sequence, 
                                       const double t, const Eigen::VectorXd& q, 
                                       const Eigen::VectorXd& v,
-                                      KKTMatrix& kkt_matrix, 
-                                      KKTResidual& kkt_residual,
-                                      const Solution& s, Direction& d) {
+                                      const Solution& s, KKTMatrix& kkt_matrix, 
+                                      KKTResidual& kkt_residual) {
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     if (i == 0) {
@@ -91,7 +90,7 @@ void BackwardCorrection::coarseUpdate(ParNMPC& parnmpc,
       corrector_[i].coarseUpdate(robots[omp_get_thread_num()], 
                                  parnmpc.discrete().dtau(i), aux_mat_[i+1], 
                                  kkt_matrix[i], kkt_residual[i], 
-                                 s[i], d[i], s_new_[i]);
+                                 s[i], s_new_[i]);
     }
     else if (i < N_-1) {
       parnmpc[i].linearizeOCP(
@@ -102,7 +101,7 @@ void BackwardCorrection::coarseUpdate(ParNMPC& parnmpc,
       corrector_[i].coarseUpdate(robots[omp_get_thread_num()], 
                                  parnmpc.discrete().dtau(i), aux_mat_[i+1], 
                                  kkt_matrix[i], kkt_residual[i], 
-                                 s[i], d[i], s_new_[i]);
+                                 s[i], s_new_[i]);
     }
     else {
       parnmpc.terminal.linearizeOCP(
@@ -112,7 +111,7 @@ void BackwardCorrection::coarseUpdate(ParNMPC& parnmpc,
           s[i-1].q, s[i-1].v, s[i], kkt_matrix[i], kkt_residual[i]);
       corrector_[i].coarseUpdate(robots[omp_get_thread_num()], 
                                  parnmpc.discrete().dtau(i), kkt_matrix[i], 
-                                 kkt_residual[i], s[i], d[i], s_new_[i]);
+                                 kkt_residual[i], s[i], s_new_[i]);
     }
   }
 }
@@ -129,7 +128,7 @@ void BackwardCorrection::backwardCorrection(ParNMPC& parnmpc,
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=N_-2; i>=0; --i) {
     corrector_[i].backwardCorrectionParallel(robots[omp_get_thread_num()], 
-                                             d[i], s_new_[i]);
+                                             s_new_[i]);
   }
   for (int i=1; i<N_; ++i) {
     corrector_[i].forwardCorrectionSerial(robots[0], s[i-1], s_new_[i-1], 
@@ -138,7 +137,7 @@ void BackwardCorrection::backwardCorrection(ParNMPC& parnmpc,
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     if (i > 0) {
-      corrector_[i].forwardCorrectionParallel(d[i], s_new_[i]);
+      corrector_[i].forwardCorrectionParallel(s_new_[i]);
       aux_mat_[i] = - corrector_[i].auxMat();
     }
     SplitBackwardCorrection::computeDirection(robots[omp_get_thread_num()], 

@@ -35,6 +35,7 @@ protected:
   SplitKKTResidual createKKTResidual(const Robot& robot) const;
 
   void test(const Robot& robot) const;
+  void testWithImpulse(const Robot& robot) const;
   void testTerminal(const Robot& robot) const;
 
   double dtau;
@@ -89,7 +90,7 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
   SplitSolution s_new_ref = s_new;
   SplitDirection d = SplitDirection::Random(robot);
   SplitDirection d_ref = d;
-  corr.coarseUpdate(robot, dtau, aux_mat_next, kkt_matrix, kkt_residual, s, d, s_new);
+  corr.coarseUpdate(robot, dtau, aux_mat_next, kkt_matrix, kkt_residual, s, s_new);
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
   kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
@@ -104,7 +105,6 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
   robot.integrateConfiguration(s.q, d_ref.dq(), -1, s_new_ref.q);
   s_new_ref.v   = s.v - d_ref.dv();
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
-  EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_TRUE(corr.auxMat().isApprox(KKT_mat_inv.topLeftCorner(dimx, dimx)));
 
   const SplitSolution s_prev = SplitSolution::Random(robot);
@@ -120,14 +120,13 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
   s_new_ref.gmm -= dx.tail(dimv);
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
 
-  corr.backwardCorrectionParallel(robot, d, s_new);
+  corr.backwardCorrectionParallel(robot, s_new);
   d_ref.splitDirection().tail(dimKKT-dimx)
       = KKT_mat_inv.block(dimx, dimKKT-dimx, dimKKT-dimx, dimx) * x_res;
   s_new_ref.u -= d_ref.du();
   robot.integrateConfiguration(d_ref.dq(), -1, s_new_ref.q);
   s_new_ref.v -= d_ref.dv();
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
-  EXPECT_TRUE(d.isApprox(d_ref));
 
   corr.forwardCorrectionSerial(robot, s_prev, s_new_prev, s_new);
   robot.subtractConfiguration(s_new_prev.q, s_prev.q, x_res.head(dimv));
@@ -137,14 +136,13 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
   s_new_ref.v -= dx.tail(dimv);
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
 
-  corr.forwardCorrectionParallel(d, s_new);
+  corr.forwardCorrectionParallel(s_new);
   d_ref.splitDirection().head(dimKKT-dimx).noalias()
       = KKT_mat_inv.topLeftCorner(dimKKT-dimx, dimx) * x_res;
   s_new_ref.lmd -= d_ref.dlmd();
   s_new_ref.gmm -= d_ref.dgmm();
   s_new_ref.u   -= d_ref.du();
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
-  EXPECT_TRUE(d.isApprox(d_ref));
 
   corr.computeDirection(robot, s, s_new, d);
   d_ref.dlmd() = s_new_ref.lmd - s.lmd;
@@ -171,7 +169,7 @@ void SplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
   SplitSolution s_new_ref = s_new;
   SplitDirection d = SplitDirection::Random(robot);
   SplitDirection d_ref = d;
-  corr.coarseUpdate(robot, dtau, kkt_matrix, kkt_residual, s, d, s_new);
+  corr.coarseUpdate(robot, dtau, kkt_matrix, kkt_residual, s, s_new);
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
   kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
@@ -185,19 +183,20 @@ void SplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
   robot.integrateConfiguration(s.q, d_ref.dq(), -1, s_new_ref.q);
   s_new_ref.v   = s.v - d_ref.dv();
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
-  EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_TRUE(corr.auxMat().isApprox(KKT_mat_inv.topLeftCorner(dimx, dimx)));
 }
 
 
 TEST_F(SplitBackwardCorrectionTest, fixedBase) {
   test(fixed_base_robot);
+  testWithImpulse(fixed_base_robot);
   testTerminal(fixed_base_robot);
 }
 
 
 TEST_F(SplitBackwardCorrectionTest, floating_base) {
   test(floating_base_robot);
+  testWithImpulse(floating_base_robot);
   testTerminal(floating_base_robot);
 }
 

@@ -78,6 +78,7 @@ add_library(
   src/impulse/impulse_dynamics_backward_euler_data.cpp
   src/impulse/impulse_dynamics_backward_euler.cpp
   src/impulse/impulse_split_parnmpc.cpp
+  src/impulse/impulse_split_backward_correction_data.cpp
   src/impulse/impulse_split_backward_correction.cpp
   src/hybrid/discrete_event.cpp
   src/hybrid/contact_sequence.cpp
@@ -112,6 +113,7 @@ add_library(
   src/ocp/split_parnmpc.cpp
   src/ocp/terminal_parnmpc.cpp
   src/ocp/parnmpc_linearizer.cpp
+  src/ocp/split_backward_correction_data.cpp
   src/ocp/split_backward_correction.cpp
   src/ocp/backward_correction.cpp
   src/ocp/parnmpc_solver.cpp

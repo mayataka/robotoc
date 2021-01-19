@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "Eigen/Core"
-#include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/impulse/impulse_split_solution.hpp"
@@ -13,6 +12,7 @@
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix_inverter.hpp"
+#include "idocp/impulse/impulse_split_backward_correction_data.hpp"
 
 
 namespace idocp {
@@ -67,7 +67,8 @@ public:
       ImpulseSplitBackwardCorrection&&) noexcept = default;
 
   template <typename MatrixType>
-  void coarseUpdate(const Eigen::MatrixBase<MatrixType>& aux_mat_next,
+  void coarseUpdate(const Robot& robot, 
+                    const Eigen::MatrixBase<MatrixType>& aux_mat_next,
                     ImpulseSplitKKTMatrix& kkt_matrix, 
                     const ImpulseSplitKKTResidual& kkt_residual,
                     const ImpulseSplitSolution& s, ImpulseSplitSolution& s_new);
@@ -78,37 +79,25 @@ public:
                                 const SplitSolution& s_new_next,
                                 ImpulseSplitSolution& s_new);
 
-  void backwardCorrectionParallel(ImpulseSplitSolution& s_new);
+  void backwardCorrectionParallel(const Robot& robot, 
+                                  ImpulseSplitSolution& s_new);
 
-  void forwardCorrectionSerial(const SplitSolution& s_prev, 
+  void forwardCorrectionSerial(const Robot& robot, const SplitSolution& s_prev, 
                                const SplitSolution& s_new_prev,
                                ImpulseSplitSolution& s_new);
 
   void forwardCorrectionParallel(ImpulseSplitSolution& s_new);
 
-  static void computeDirection(const ImpulseSplitSolution& s, 
+  static void computeDirection(const Robot& robot, 
+                               const ImpulseSplitSolution& s, 
                                const ImpulseSplitSolution& s_new, 
                                ImpulseSplitDirection& d);
 
 private:
-  int dimv_, dimx_, dimf_, dimKKT_;
+  int dimv_, dimx_, dimKKT_;
   ImpulseSplitKKTMatrixInverter kkt_mat_inverter_;
-  Eigen::MatrixXd KKT_mat_inv_;
-  Eigen::VectorXd split_direction_full_, x_res_, dx_;
-
-  Eigen::VectorBlock<Eigen::VectorXd> split_direction();
-
-  Eigen::VectorBlock<Eigen::VectorXd> dlmd();
-
-  Eigen::VectorBlock<Eigen::VectorXd> dgmm();
-
-  Eigen::VectorBlock<Eigen::VectorXd> dmu();
-
-  Eigen::VectorBlock<Eigen::VectorXd> df();
-
-  Eigen::VectorBlock<Eigen::VectorXd> dq();
-
-  Eigen::VectorBlock<Eigen::VectorXd> dv();
+  ImpulseSplitBackwardCorrectionData data_;
+  Eigen::VectorXd x_res_, dx_;
 
 };
 
