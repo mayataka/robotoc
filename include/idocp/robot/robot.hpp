@@ -530,26 +530,6 @@ public:
                       const Eigen::MatrixBase<MatrixType3>& MJtJinv);
 
   ///
-  /// @brief Computes the state equation, i.e., the velocity and forward 
-  /// dynamics.
-  /// @param[in] q Configuration. Size must be Robot::dimq().
-  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
-  /// @param[in] tau Generalized acceleration. Size must be Robot::dimv().
-  /// @param[out] dq The resultant generalized velocity. Size must be 
-  /// Robot::dimv().
-  /// @param[out] dv The resultant generalized acceleration. Size must be 
-  /// Robot::dimv().
-  ///
-  template <typename ConfigVectorType, typename TangentVectorType1, 
-            typename TangentVectorType2, typename TangentVectorType3,
-            typename TangentVectorType4>
-  void stateEquation(const Eigen::MatrixBase<ConfigVectorType>& q, 
-                     const Eigen::MatrixBase<TangentVectorType1>& v, 
-                     const Eigen::MatrixBase<TangentVectorType2>& tau, 
-                     const Eigen::MatrixBase<TangentVectorType3>& dq,
-                     const Eigen::MatrixBase<TangentVectorType4>& dv);
-
-  ///
   /// @brief Generates feasible configuration randomly.
   /// @return The random configuration. Size is Robot::dimq().
   ///

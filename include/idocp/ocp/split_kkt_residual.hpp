@@ -5,6 +5,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
 
 
 namespace idocp {
@@ -54,11 +55,21 @@ public:
   SplitKKTResidual& operator=(SplitKKTResidual&&) noexcept = default;
 
   ///
-  /// @brief Set contact status from robot model, i.e., set dimension of the 
-  /// contacts and equality constraints.
+  /// @brief Set contact status, i.e., set dimension of the contact.
   /// @param[in] contact_status Contact status.
   ///
   void setContactStatus(const ContactStatus& contact_status);
+
+  ///
+  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Set impulse status, i.e., set dimension of the impulse, to zero.
+  ///
+  void setImpulseStatus();
 
   ///
   /// @brief Residual with respect to q transition.
@@ -101,6 +112,18 @@ public:
   /// Size is 2 * Robot::dimv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> Fx() const;
+
+  ///
+  /// @brief Residual with respect to impulse condition constraint.
+  /// @return Reference to the impulse condition constraint.
+  /// Size is ImpulseStatus::dimf().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> P();
+
+  ///
+  /// @brief const version of SplitKKTResidual::P().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> P() const;
 
   ///
   /// @brief Residual with respect to acceleration and the stack of the 
@@ -160,6 +183,10 @@ public:
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lx() const;
 
+  Eigen::VectorBlock<Eigen::VectorXd> splitKKTResidual();
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> splitKKTResidual() const;
+
   ///
   /// @brief Residual with respect to the stack of the contact forces f.
   /// @return Reference to the residual with respect to the stack of the  
@@ -205,9 +232,6 @@ public:
   ///
   bool hasNaN() const;
 
-  /// @brief KKT residual.
-  Eigen::VectorXd KKT_residual;
-
   /// @brief Residual with respect to control input torques u.
   Eigen::VectorXd la;
 
@@ -217,8 +241,9 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd lf_full_;
-  int dimv_, dimx_, dimu_, dim_passive_, dimf_, dimKKT_;
+  Eigen::VectorXd kkt_residual_full_, lf_full_;
+  int dimv_, dimx_, dimu_, dim_passive_, dimf_, dimi_, dimKKT_,
+      lu_begin_, lq_begin_, lv_begin_;
   bool has_floating_base_;
 
 };

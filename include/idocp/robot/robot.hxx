@@ -613,32 +613,6 @@ inline void Robot::computeMJtJinv(
 }
 
 
-template <typename ConfigVectorType, typename TangentVectorType1, 
-          typename TangentVectorType2, typename TangentVectorType3,
-          typename TangentVectorType4>
-inline void Robot::stateEquation(
-    const Eigen::MatrixBase<ConfigVectorType>& q, 
-    const Eigen::MatrixBase<TangentVectorType1>& v, 
-    const Eigen::MatrixBase<TangentVectorType2>& tau, 
-    const Eigen::MatrixBase<TangentVectorType3>& dq, 
-    const Eigen::MatrixBase<TangentVectorType4>& dv) {
-  assert(q.size() == dimq_);
-  assert(v.size() == dimv_);
-  assert(tau.size() == dimv_);
-  assert(dq.size() == dimv_);
-  assert(dv.size() == dimv_);
-  const_cast<Eigen::MatrixBase<TangentVectorType3>&> (dq) = v;
-  if (point_contacts_.empty()) {
-    const_cast<Eigen::MatrixBase<TangentVectorType3>&> (dv)
-        = pinocchio::aba(model_, data_, q, v, tau);
-  }
-  else {
-    const_cast<Eigen::MatrixBase<TangentVectorType3>&> (dv)
-        = pinocchio::aba(model_, data_, q, v, tau, fjoint_);
-  }
-}
-
-
 inline Eigen::VectorXd Robot::generateFeasibleConfiguration() const {
   Eigen::VectorXd q_min = model_.lowerPositionLimit;
   Eigen::VectorXd q_max = model_.upperPositionLimit;

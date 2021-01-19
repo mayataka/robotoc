@@ -151,7 +151,7 @@ void ImpulseDynamicsBackwardEulerTest::testCondensing(Robot& robot, const Impuls
   data_ref.Qdvf() = - kkt_matrix_ref.Qdvdv() * Minv_dImDdf;
   data_ref.ldv    = - kkt_matrix_ref.Qdvdv() * data_ref.Minv_ImD;
   kkt_matrix_ref.Qqq()  -= Minv_dImDdq.transpose() * data_ref.Qdvq;
-  kkt_matrix_ref.Qqf()  -= Minv_dImDdq.transpose() * data_ref.Qdvf();
+  kkt_matrix_ref.Qfq().transpose()  -= Minv_dImDdq.transpose() * data_ref.Qdvf();
   kkt_matrix_ref.Qff()  -= Minv_dImDdf.transpose() * data_ref.Qdvf();
   kkt_residual_ref.lq() -= Minv_dImDdq.transpose() * data_ref.ldv;
   kkt_residual_ref.lf() -= Minv_dImDdf.transpose() * data_ref.ldv;

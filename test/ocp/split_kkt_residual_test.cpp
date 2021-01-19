@@ -39,7 +39,7 @@ void SplitKKTResidualTest::testSize(const Robot& robot,
   const int dimf = contact_status.dimf();
   EXPECT_EQ(kkt_residual.dimf(), dimf);
   EXPECT_EQ(kkt_residual.dimKKT(), 4*dimv+dimu);
-  EXPECT_EQ(kkt_residual.KKT_residual.size(), 4*dimv+dimu);
+  EXPECT_EQ(kkt_residual.splitKKTResidual().size(), 4*dimv+dimu);
   EXPECT_EQ(kkt_residual.Fq().size(), dimv);
   EXPECT_EQ(kkt_residual.Fv().size(), dimv);
   EXPECT_EQ(kkt_residual.lu().size(), dimu);
@@ -50,17 +50,17 @@ void SplitKKTResidualTest::testSize(const Robot& robot,
   EXPECT_EQ(kkt_residual.dimf(), contact_status.dimf());
   EXPECT_EQ(kkt_residual.la.size(), dimv);
   EXPECT_EQ(kkt_residual.lu_passive.size(), 6);
-  kkt_residual.KKT_residual = Eigen::VectorXd::Random(kkt_residual.dimKKT());
+  kkt_residual.splitKKTResidual() = Eigen::VectorXd::Random(kkt_residual.dimKKT());
   const Eigen::VectorXd la_ref = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd lf_ref = Eigen::VectorXd::Random(contact_status.dimf());
   kkt_residual.la = la_ref;
   kkt_residual.lf() = lf_ref;
-  const Eigen::VectorXd Fq_ref = kkt_residual.KKT_residual.segment(0, dimv);
-  const Eigen::VectorXd Fv_ref = kkt_residual.KKT_residual.segment(dimv, dimv);
-  const Eigen::VectorXd lu_ref = kkt_residual.KKT_residual.segment(2*dimv, dimu);
-  const Eigen::VectorXd lq_ref = kkt_residual.KKT_residual.segment(2*dimv+dimu, dimv);
-  const Eigen::VectorXd lv_ref = kkt_residual.KKT_residual.segment(3*dimv+dimu, dimv);
-  const Eigen::VectorXd lx_ref = kkt_residual.KKT_residual.segment(2*dimv+dimu, 2*dimv);
+  const Eigen::VectorXd Fq_ref = kkt_residual.splitKKTResidual().segment(0, dimv);
+  const Eigen::VectorXd Fv_ref = kkt_residual.splitKKTResidual().segment(dimv, dimv);
+  const Eigen::VectorXd lu_ref = kkt_residual.splitKKTResidual().segment(2*dimv, dimu);
+  const Eigen::VectorXd lq_ref = kkt_residual.splitKKTResidual().segment(2*dimv+dimu, dimv);
+  const Eigen::VectorXd lv_ref = kkt_residual.splitKKTResidual().segment(3*dimv+dimu, dimv);
+  const Eigen::VectorXd lx_ref = kkt_residual.splitKKTResidual().segment(2*dimv+dimu, 2*dimv);
   EXPECT_TRUE(kkt_residual.Fq().isApprox(Fq_ref));
   EXPECT_TRUE(kkt_residual.Fv().isApprox(Fv_ref));
   EXPECT_TRUE(kkt_residual.lu().isApprox(lu_ref));
@@ -71,7 +71,7 @@ void SplitKKTResidualTest::testSize(const Robot& robot,
   EXPECT_TRUE(kkt_residual.lf().isApprox(lf_ref));
   SplitKKTResidual kkt_residual_ref = kkt_residual;
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
-  kkt_residual_ref.KKT_residual.setRandom();
+  kkt_residual_ref.splitKKTResidual().setRandom();
   EXPECT_FALSE(kkt_residual.isApprox(kkt_residual_ref));
 }
 
@@ -80,7 +80,7 @@ void SplitKKTResidualTest::testIsApprox(const Robot& robot,
                                         const ContactStatus& contact_status) {
   SplitKKTResidual kkt_residual(robot);
   kkt_residual.setContactStatus(contact_status);
-  kkt_residual.KKT_residual.setRandom();
+  kkt_residual.splitKKTResidual().setRandom();
   kkt_residual.la.setRandom();
   kkt_residual.lf().setRandom();
   SplitKKTResidual kkt_residual_ref = kkt_residual;
@@ -137,7 +137,7 @@ void SplitKKTResidualTest::testIsApprox(const Robot& robot,
   }
   kkt_residual_ref = kkt_residual;
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
-  kkt_residual_ref.KKT_residual.setRandom();
+  kkt_residual_ref.splitKKTResidual().setRandom();
   EXPECT_FALSE(kkt_residual.isApprox(kkt_residual_ref));
 }
 

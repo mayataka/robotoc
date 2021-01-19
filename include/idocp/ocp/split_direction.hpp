@@ -5,6 +5,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
 
 
 namespace idocp {
@@ -55,8 +56,7 @@ public:
   SplitDirection& operator=(SplitDirection&&) noexcept = default;
 
   ///
-  /// @brief Set contact status from robot model, i.e., set dimension of the 
-  /// contacts and equality constraints.
+  /// @brief Set contact status, i.e., set dimension of the contact.
   /// @param[in] contact_status Contact status.
   ///
   void setContactStatus(const ContactStatus& contact_status);
@@ -66,6 +66,23 @@ public:
   /// @param[in] dimf Total dimension of the contact.
   ///
   void setContactStatusByDimension(const int dimf);
+
+  ///
+  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @param[in] dimi Total dimension of the impulse.
+  ///
+  void setImpulseStatusByDimension(const int dimi);
+
+  ///
+  /// @brief Set impulse status, i.e., set dimension of the impulse, to zero.
+  ///
+  void setImpulseStatus();
 
   ///
   /// @brief Returns the Newton direction of SplitSolution::lmd and 
@@ -103,6 +120,19 @@ public:
   /// @brief Const version of SplitDirection::dgmm().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dgmm() const;
+
+  ///
+  /// @brief Returns the Newton direction of ImpulseSplitSolution::xi_stack(). 
+  /// Size is ImpulseSplitSolution::dimf().
+  /// @return Reference to the Newton direction of 
+  /// ImpulseSplitSolution::xi_stack().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dxi();
+
+  ///
+  /// @brief Const version of SplitDirection::dxi().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> dxi() const;
 
   ///
   /// @brief Returns the Newton direction of SplitSolution::u. Size is 
@@ -152,6 +182,10 @@ public:
   /// @brief Const version of SplitDirection::dx().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dx() const;
+
+  Eigen::VectorBlock<Eigen::VectorXd> splitDirection();
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> splitDirection() const;
 
   ///
   /// @brief Returns the Newton direction of SplitSolution::a and 
@@ -245,11 +279,6 @@ public:
   ///
   int dimf() const;
 
-  /// @brief Stack of the Newton direction composed of SplitDirection::dlmd(), 
-  /// SplitDirection::dgmm(), SplitDirection::du(), SplitDirection::dq(), 
-  /// and SplitDirection::dv(). Size is 4 * Robot::dimv() + Robot::dimu().
-  Eigen::VectorXd split_direction;
-
   /// @brief Newton direction of SplitSolution::u_passive. Size is 6.
   Vector6d du_passive;
 
@@ -294,8 +323,9 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd daf_full_, dbetamu_full_;
-  int dimv_, dimu_, dimx_, dimf_, dimKKT_;
+  Eigen::VectorXd split_direction_full_, daf_full_, dbetamu_full_;
+  int dimv_, dimu_, dimx_, dimf_, dimi_, dimKKT_, 
+      du_begin_, dq_begin_, dv_begin_;
   bool has_floating_base_;
 
 };

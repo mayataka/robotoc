@@ -5,18 +5,19 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/ocp/split_kkt_matrix_inverter.hpp"
-#include "idocp/ocp/split_direction.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix_inverter.hpp"
 #include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_backward_correction.hpp"
+#include "idocp/impulse/impulse_split_solution.hpp"
+#include "idocp/impulse/impulse_split_direction.hpp"
+#include "idocp/impulse/impulse_split_backward_correction.hpp"
 
 #include "test_helper.hpp"
 
 namespace idocp {
 
-class SplitBackwardCorrectionTest : public ::testing::Test {
+class ImpulseSplitBackwardCorrectionTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((signed int) time(0));
@@ -43,35 +44,30 @@ protected:
 };
 
 
-SplitKKTMatrix SplitBackwardCorrectionTest::createKKTMatrix(const Robot& robot) const {
+SplitKKTMatrix ImpulseSplitBackwardCorrectionTest::createKKTMatrix(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(2*dimv+dimu, 2*dimv+dimu);
-  SplitKKTMatrix kkt_matrix(robot);
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.Qss() = seed * seed.transpose();
-  kkt_matrix.Qvq().setZero();
-  kkt_matrix.Quq().setZero();
-  kkt_matrix.Quv().setZero();
   if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
   }
+  kkt_matrix.Fvf().setRandom();
   kkt_matrix.Fvq().setRandom();
   kkt_matrix.Fvv().setRandom();
-  kkt_matrix.Fvu().setRandom();
   return kkt_matrix;
 }
 
 
-SplitKKTResidual SplitBackwardCorrectionTest::createKKTResidual(const Robot& robot) const {
+SplitKKTResidual ImpulseSplitBackwardCorrectionTest::createKKTResidual(const Robot& robot) const {
   SplitKKTResidual kkt_residual(robot);
-  kkt_residual.lx().setRandom();
-  kkt_residual.lu().setRandom();
-  kkt_residual.Fx().setRandom();
+  kkt_residual.KKT_residual().setRandom();
   return kkt_residual;
 }
 
 
-void SplitBackwardCorrectionTest::test(const Robot& robot) const {
+void ImpulseSplitBackwardCorrectionTest::test(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const int dimKKT = 4*robot.dimv() + robot.dimu();
@@ -83,7 +79,7 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
 
   Eigen::MatrixXd aux_mat_seed(Eigen::MatrixXd::Random(dimx, dimx));
   const Eigen::MatrixXd aux_mat_next = aux_mat_seed * aux_mat_seed.transpose();
-  SplitBackwardCorrection corr(robot);
+  ImpulseSplitBackwardCorrection corr(robot);
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_new = SplitSolution::Random(robot);
   SplitSolution s_new_ref = s_new;
@@ -97,7 +93,7 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
   kkt_matrix_ref.Qxx() += aux_mat_next;
   SplitKKTMatrixInverter inverter(robot);
   inverter.invert(dtau, kkt_matrix.Jac(), kkt_matrix.Qss(), KKT_mat_inv);
-  d_ref.splitDirection() = KKT_mat_inv * kkt_residual.splitKKTResidual();
+  d_ref.splitDirection() = KKT_mat_inv * kkt_residual.KKT_residual;
   s_new_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_ref.gmm = s.gmm - d_ref.dgmm();
   s_new_ref.u   = s.u - d_ref.du();
@@ -156,7 +152,7 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
 }
 
 
-void SplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
+void ImpulseSplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const int dimKKT = 4*robot.dimv() + robot.dimu();
@@ -165,7 +161,7 @@ void SplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual = createKKTResidual(robot);
   auto kkt_residual_ref = kkt_residual;
-  SplitBackwardCorrection corr(robot);
+  ImpulseSplitBackwardCorrection corr(robot);
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_new = SplitSolution::Random(robot);
   SplitSolution s_new_ref = s_new;
@@ -178,7 +174,7 @@ void SplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
   kkt_matrix_ref.Qux() = kkt_matrix_ref.Qxu().transpose();
   SplitKKTMatrixInverter inverter(robot);
   inverter.invert(dtau, kkt_matrix_ref.Jac(), kkt_matrix_ref.Qss(), KKT_mat_inv);
-  d_ref.splitDirection() = KKT_mat_inv * kkt_residual.splitKKTResidual();
+  d_ref.splitDirection() = KKT_mat_inv * kkt_residual.KKT_residual;
   s_new_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_ref.gmm = s.gmm - d_ref.dgmm();
   s_new_ref.u   = s.u - d_ref.du();
@@ -190,13 +186,13 @@ void SplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
 }
 
 
-TEST_F(SplitBackwardCorrectionTest, fixedBase) {
+TEST_F(ImpulseSplitBackwardCorrectionTest, fixedBase) {
   test(fixed_base_robot);
   testTerminal(fixed_base_robot);
 }
 
 
-TEST_F(SplitBackwardCorrectionTest, floating_base) {
+TEST_F(ImpulseSplitBackwardCorrectionTest, floating_base) {
   test(floating_base_robot);
   testTerminal(floating_base_robot);
 }

@@ -54,7 +54,7 @@ inline void SplitBackwardCorrection::coarseUpdate(
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   kkt_matrix.Qux() = kkt_matrix.Qxu().transpose();
   kkt_mat_inverter_.invert(dtau, kkt_matrix.Jac(), kkt_matrix.Qss(), KKT_mat_inv_);
-  d.split_direction.noalias() = KKT_mat_inv_ * kkt_residual.KKT_residual;
+  d.splitDirection().noalias() = KKT_mat_inv_ * kkt_residual.splitKKTResidual();
   s_new.lmd = s.lmd - d.dlmd();
   s_new.gmm = s.gmm - d.dgmm();
   s_new.u   = s.u - d.du(); 
@@ -82,7 +82,7 @@ inline void SplitBackwardCorrection::backwardCorrectionSerial(
 
 inline void SplitBackwardCorrection::backwardCorrectionParallel(
     const Robot& robot, SplitDirection& d, SplitSolution& s_new) const {
-  d.split_direction.tail(dimKKT_-dimx_).noalias()
+  d.splitDirection().tail(dimKKT_-dimx_).noalias()
       = KKT_mat_inv_.block(dimx_, dimKKT_-dimx_, dimKKT_-dimx_, dimx_) * x_res_;
   s_new.u.noalias() -= d.du();
   robot.integrateConfiguration(d.dq(), -1, s_new.q);
@@ -103,7 +103,7 @@ inline void SplitBackwardCorrection::forwardCorrectionSerial(
 
 inline void SplitBackwardCorrection::forwardCorrectionParallel(
     SplitDirection& d, SplitSolution& s_new) const {
-  d.split_direction.head(dimKKT_-dimx_).noalias()
+  d.splitDirection().head(dimKKT_-dimx_).noalias()
       = KKT_mat_inv_.topLeftCorner(dimKKT_-dimx_, dimx_) * x_res_;
   s_new.lmd.noalias() -= d.dlmd();
   s_new.gmm.noalias() -= d.dgmm();

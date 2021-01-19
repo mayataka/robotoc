@@ -71,7 +71,7 @@ void SplitDirectionTest::testSize(const Robot& robot,
   EXPECT_EQ(d.dimf(), dimf);
   EXPECT_EQ(d.dimKKT(), 4*dimv+dimu);
   const Eigen::VectorXd split_direction = Eigen::VectorXd::Random(d.dimKKT());
-  d.split_direction = split_direction;
+  d.splitDirection() = split_direction;
   const Eigen::VectorXd dlmd = split_direction.segment(0,  dimv);
   const Eigen::VectorXd dgmm = split_direction.segment(dimv,  dimv);
   const Eigen::VectorXd du = split_direction.segment(2*dimv,  dimu);
@@ -101,7 +101,7 @@ void SplitDirectionTest::testSize(const Robot& robot,
   EXPECT_TRUE(d.dbetamu().head(dimv).isApprox(d.dbeta()));
   EXPECT_TRUE(d.dbetamu().tail(dimf).isApprox(d.dmu()));
   d.setZero();
-  EXPECT_TRUE(d.split_direction.isZero());
+  EXPECT_TRUE(d.splitDirection().isZero());
   EXPECT_TRUE(d.dlmd().isZero());
   EXPECT_TRUE(d.dgmm().isZero());
   EXPECT_TRUE(d.du().isZero());
@@ -117,7 +117,7 @@ void SplitDirectionTest::testSize(const Robot& robot,
   EXPECT_TRUE(d.du_passive.isZero());
   EXPECT_TRUE(d.dnu_passive.isZero());
   d.setRandom();
-  EXPECT_FALSE(d.split_direction.isZero());
+  EXPECT_FALSE(d.splitDirection().isZero());
   EXPECT_FALSE(d.dlmd().isZero());
   EXPECT_FALSE(d.dgmm().isZero());
   EXPECT_FALSE(d.du().isZero());
@@ -159,7 +159,7 @@ void SplitDirectionTest::testSize(const Robot& robot,
   EXPECT_EQ(d_random.dmu().size(), dimf);
   EXPECT_EQ(d_random.dimf(), dimf);
   EXPECT_EQ(d_random.dimKKT(), 4*dimv+dimu);
-  EXPECT_FALSE(d_random.split_direction.isZero());
+  EXPECT_FALSE(d_random.splitDirection().isZero());
   EXPECT_FALSE(d_random.dlmd().isZero());
   EXPECT_FALSE(d_random.dgmm().isZero());
   EXPECT_FALSE(d_random.du().isZero());
