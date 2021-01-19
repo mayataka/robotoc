@@ -279,6 +279,13 @@ public:
   ///
   int dimf() const;
 
+  ///
+  /// @brief Returns the dimension of the stack of impulse forces at the current 
+  /// impulse status.
+  /// @return Dimension of the stack of impulse forces.
+  ///
+  int dimi() const;
+
   /// @brief Newton direction of SplitSolution::u_passive. Size is 6.
   Vector6d du_passive;
 

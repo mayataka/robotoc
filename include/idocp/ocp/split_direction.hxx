@@ -275,6 +275,11 @@ inline int SplitDirection::dimf() const {
 }
 
 
+inline int SplitDirection::dimi() const {
+  return dimi_;
+}
+
+
 inline bool SplitDirection::isApprox(const SplitDirection& other) const {
   if (!splitDirection().isApprox(other.splitDirection())) {
     return false;

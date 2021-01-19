@@ -220,6 +220,13 @@ public:
   int dimf() const;
 
   ///
+  /// @brief Returns the dimension of the stack of impulse forces at the current 
+  /// impulse status.
+  /// @return Dimension of the stack of impulse forces.
+  ///
+  int dimi() const;
+
+  ///
   /// @brief Chech the equivalence of two SplitKKTResidual.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.

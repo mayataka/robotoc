@@ -45,8 +45,8 @@ make install
 
 6. If you want to visualize the solution trajectory of the OCP, first install [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) and [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), e.g., by
 ```
-sudo apt update && sudo apt install robotpkg-py38-qt5-gepetto-viewer-corba 
-git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
+sudo apt update && sudo apt install robotpkg-py38-qt5-gepetto-viewer-corba -y
+git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive && cd pinocchio-gepetto-viewer
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make install

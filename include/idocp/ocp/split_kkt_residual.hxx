@@ -202,6 +202,11 @@ inline int SplitKKTResidual::dimf() const {
 }
 
 
+inline int SplitKKTResidual::dimi() const {
+  return dimi_;
+}
+
+
 inline bool SplitKKTResidual::isApprox(const SplitKKTResidual& other) const {
   if (!splitKKTResidual().isApprox(other.splitKKTResidual())) return false;
   if (!la.isApprox(other.la)) return false;
