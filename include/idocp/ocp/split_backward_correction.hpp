@@ -64,14 +64,14 @@ public:
   ///
   SplitBackwardCorrection& operator=(SplitBackwardCorrection&&) noexcept = default;
 
-  template <typename MatrixType>
-  void coarseUpdate(const Robot& robot, const double dtau,
-                    const Eigen::MatrixBase<MatrixType>& aux_mat_next,
+  void coarseUpdate(const Robot& robot, const double dtau, 
                     SplitKKTMatrix& kkt_matrix, 
                     const SplitKKTResidual& kkt_residual,
                     const SplitSolution& s, SplitSolution& s_new);
 
-  void coarseUpdate(const Robot& robot, const double dtau, 
+  template <typename MatrixType>
+  void coarseUpdate(const Robot& robot, const double dtau,
+                    const Eigen::MatrixBase<MatrixType>& aux_mat_next,
                     SplitKKTMatrix& kkt_matrix, 
                     const SplitKKTResidual& kkt_residual,
                     const SplitSolution& s, SplitSolution& s_new);
@@ -86,14 +86,17 @@ public:
 
   const Eigen::Block<const Eigen::MatrixXd> auxMat() const;
 
-  void backwardCorrectionSerial(const SplitSolution& s_next, 
-                                const SplitSolution& s_new_next,
+  template <typename SplitSolutionType>
+  void backwardCorrectionSerial(const SplitSolutionType& s_next, 
+                                const SplitSolutionType& s_new_next,
                                 SplitSolution& s_new);
 
   void backwardCorrectionParallel(const Robot& robot, SplitSolution& s_new);
 
-  void forwardCorrectionSerial(const Robot& robot, const SplitSolution& s_prev, 
-                               const SplitSolution& s_new_prev,
+  template <typename SplitSolutionType>
+  void forwardCorrectionSerial(const Robot& robot, 
+                               const SplitSolutionType& s_prev, 
+                               const SplitSolutionType& s_new_prev,
                                SplitSolution& s_new);
 
   void forwardCorrectionParallel(SplitSolution& s_new);
@@ -103,9 +106,9 @@ public:
                                SplitDirection& d);
 
   void computeDirection(const Robot& robot, const SplitSolution& s, 
+                        const SplitSolution& s_new, SplitDirection& d, 
                         const ImpulseSplitSolution& s_next,
-                        const SplitSolution& s_new,
-                        SplitDirection& d, ImpulseSplitDirection& d_next) const;
+                        ImpulseSplitDirection& d_next) const;
 
 private:
   int dimv_, dimx_, dimu_, dimKKT_;

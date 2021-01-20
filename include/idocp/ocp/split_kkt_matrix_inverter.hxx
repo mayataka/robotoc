@@ -124,7 +124,7 @@ inline void SplitKKTMatrixInverter::invert(
   assert(KKT_mat_inv.cols() == dimKKT_+Pq.rows());
   llt_Q_.compute(Q);
   assert(llt_Q_.info() == Eigen::Success);
-  const_cast<Eigen::MatrixBase<MatrixType3>&>(KKT_mat_inv)
+  const_cast<Eigen::MatrixBase<MatrixType4>&>(KKT_mat_inv)
       .bottomRightCorner(dimQ_, dimQ_).noalias()
       = llt_Q_.solve(Eigen::MatrixXd::Identity(dimQ_, dimQ_));
   dimf_ = Pq.rows();
@@ -134,16 +134,16 @@ inline void SplitKKTMatrixInverter::invert(
   multiplyFPq(dtau, F, Pq, Jac_Qinv().transpose(), S());
   llt_FPq_.compute(S());
   assert(llt_FPq_.info() == Eigen::Success);
-  const_cast<Eigen::MatrixBase<MatrixType3>&>(KKT_mat_inv)
+  const_cast<Eigen::MatrixBase<MatrixType4>&>(KKT_mat_inv)
       .topLeftCorner(dims, dims).noalias()
       = - llt_FPq_.solve(Eigen::MatrixXd::Identity(dims, dims));
-  const_cast<Eigen::MatrixBase<MatrixType3>&>(KKT_mat_inv)
+  const_cast<Eigen::MatrixBase<MatrixType4>&>(KKT_mat_inv)
       .topRightCorner(dims, dimQ_).noalias()
-      = - KKT_mat_inv.topLeftCorner(dims, dimx_) * Jac_Qinv();
-  const_cast<Eigen::MatrixBase<MatrixType3>&>(KKT_mat_inv).bottomLeftCorner(dimQ_, dims)
+      = - KKT_mat_inv.topLeftCorner(dims, dims) * Jac_Qinv();
+  const_cast<Eigen::MatrixBase<MatrixType4>&>(KKT_mat_inv).bottomLeftCorner(dimQ_, dims)
       = KKT_mat_inv.topRightCorner(dims, dimQ_).transpose();
   Jac_Qinv().noalias() = S() * KKT_mat_inv.topRightCorner(dims, dimQ_);
-  const_cast<Eigen::MatrixBase<MatrixType3>&>(KKT_mat_inv)
+  const_cast<Eigen::MatrixBase<MatrixType4>&>(KKT_mat_inv)
       .bottomRightCorner(dimQ_, dimQ_).noalias()
       -= KKT_mat_inv.topRightCorner(dims, dimQ_).transpose() * Jac_Qinv();
 }
@@ -171,7 +171,7 @@ inline void SplitKKTMatrixInverter::multiplyFPq(
   }
   const_cast<Eigen::MatrixBase<MatrixType4>&>(res).topRows(dimv_).noalias()
       += dtau * mat.bottomRows(dimv_);
-  const_cast<Eigen::MatrixBase<MatrixType4>&>(res).middleRows(dimu_, dimv_).noalias()
+  const_cast<Eigen::MatrixBase<MatrixType4>&>(res).middleRows(dimv_, dimv_).noalias()
       = F.bottomRows(dimv_) * mat;
   const_cast<Eigen::MatrixBase<MatrixType4>&>(res).bottomRows(dimf).noalias()
       = Pq * mat.middleRows(dimu_, dimv_);

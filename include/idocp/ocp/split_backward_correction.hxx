@@ -37,19 +37,6 @@ inline SplitBackwardCorrection::~SplitBackwardCorrection() {
 }
 
 
-template <typename MatrixType>
-inline void SplitBackwardCorrection::coarseUpdate(
-    const Robot& robot, const double dtau, 
-    const Eigen::MatrixBase<MatrixType>& aux_mat_next,
-    SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
-    const SplitSolution& s, SplitSolution& s_new) {
-  assert(aux_mat_next.rows() == dimx_);
-  assert(aux_mat_next.cols() == dimx_);
-  kkt_matrix.Qxx().noalias() += aux_mat_next;
-  coarseUpdate(robot, dtau, kkt_matrix, kkt_residual, s, s_new);
-}
-
-
 inline void SplitBackwardCorrection::coarseUpdate(
     const Robot& robot, const double dtau, SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, const SplitSolution& s, 
@@ -68,6 +55,19 @@ inline void SplitBackwardCorrection::coarseUpdate(
   s_new.u   = s.u   - data_.du(); 
   robot.integrateConfiguration(s.q, data_.dq(), -1, s_new.q);
   s_new.v   = s.v   - data_.dv();
+}
+
+
+template <typename MatrixType>
+inline void SplitBackwardCorrection::coarseUpdate(
+    const Robot& robot, const double dtau, 
+    const Eigen::MatrixBase<MatrixType>& aux_mat_next,
+    SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
+    const SplitSolution& s, SplitSolution& s_new) {
+  assert(aux_mat_next.rows() == dimx_);
+  assert(aux_mat_next.cols() == dimx_);
+  kkt_matrix.Qxx().noalias() += aux_mat_next;
+  coarseUpdate(robot, dtau, kkt_matrix, kkt_residual, s, s_new);
 }
 
 
@@ -105,8 +105,9 @@ SplitBackwardCorrection::auxMat() const {
 }
 
 
+template <typename SplitSolutionType>
 inline void SplitBackwardCorrection::backwardCorrectionSerial(
-    const SplitSolution& s_next, const SplitSolution& s_new_next,
+    const SplitSolutionType& s_next, const SplitSolutionType& s_new_next,
     SplitSolution& s_new) {
   x_res_.head(dimv_) = s_new_next.lmd - s_next.lmd;
   x_res_.tail(dimv_) = s_new_next.gmm - s_next.gmm;
@@ -131,9 +132,10 @@ inline void SplitBackwardCorrection::backwardCorrectionParallel(
 }
 
 
+template <typename SplitSolutionType>
 inline void SplitBackwardCorrection::forwardCorrectionSerial(
-    const Robot& robot, const SplitSolution& s_prev, 
-    const SplitSolution& s_new_prev, SplitSolution& s_new) {
+    const Robot& robot, const SplitSolutionType& s_prev, 
+    const SplitSolutionType& s_new_prev, SplitSolution& s_new) {
   robot.subtractConfiguration(s_new_prev.q, s_prev.q, x_res_.head(dimv_));
   x_res_.tail(dimv_) = s_new_prev.v - s_prev.v;
   dx_.noalias() 
@@ -168,9 +170,9 @@ inline void SplitBackwardCorrection::computeDirection(
 
 
 inline void SplitBackwardCorrection::computeDirection(
-    const Robot& robot, const SplitSolution& s, 
-    const ImpulseSplitSolution& s_next, const SplitSolution& s_new,
-    SplitDirection& d, ImpulseSplitDirection& d_next) const {
+    const Robot& robot, const SplitSolution& s, const SplitSolution& s_new, 
+    SplitDirection& d, const ImpulseSplitSolution& s_next, 
+    ImpulseSplitDirection& d_next) const {
   computeDirection(robot, s, s_new, d);
   d_next.dxi() = data_.xi_stack() - s_next.xi_stack();
 }
