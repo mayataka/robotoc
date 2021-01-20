@@ -72,8 +72,6 @@ public:
 
   double KKTError(const ParNMPC& parnmpc, const KKTResidual& kkt_residual);
 
-  void printKKTError() const;
-
   void integrateSolution(ParNMPC& parnmpc, const std::vector<Robot>& robots,
                          const KKTMatrix& kkt_matrix,
                          const KKTResidual& kkt_residual,

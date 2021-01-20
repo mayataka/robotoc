@@ -46,7 +46,7 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, fixedBase) {
   KKT_mat.block(            dimx,        dimx+dimf, dimf, dimf).setZero(); // Vf
   KKT_mat.template triangularView<Eigen::StrictlyLower>() 
       = KKT_mat.transpose().template triangularView<Eigen::StrictlyLower>();
-  ImpulseSplitKKTMatrixInverter inverter(robot.dimv(), robot.max_dimf());
+  ImpulseSplitKKTMatrixInverter inverter(robot);
   const Eigen::MatrixXd FC = KKT_mat.topRightCorner(dimQ, dimQ);
   const Eigen::MatrixXd multiplied_mat = Eigen::MatrixXd::Random(dimQ, dimQ);
   Eigen::MatrixXd res = Eigen::MatrixXd::Zero(dimQ, dimQ);
@@ -65,13 +65,16 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, fixedBase) {
 TEST_F(ImpulseSplitKKTMatrixInverterTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
-  ImpulseStatus impulse_status(contact_frames.size());
-  std::vector<bool> is_impulse_active;
+  auto impulse_status = robot.createImpulseStatus();
   std::random_device rnd;
-  for (const auto frame : contact_frames) {
-    is_impulse_active.push_back(rnd()%2==0);
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
+    if (rnd() % 2 == 0) {
+      impulse_status.activateImpulse(i);
+    }
   }
-  impulse_status.setImpulseStatus(is_impulse_active);
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
+  }
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const int dimf = impulse_status.dimf();
@@ -90,7 +93,7 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, floatingBase) {
   KKT_mat.block(            dimx,        dimx+dimf, dimf, dimf).setZero(); // Vf
   KKT_mat.template triangularView<Eigen::StrictlyLower>() 
       = KKT_mat.transpose().template triangularView<Eigen::StrictlyLower>();
-  ImpulseSplitKKTMatrixInverter inverter(robot.dimv(), robot.max_dimf());
+  ImpulseSplitKKTMatrixInverter inverter(robot);
   const Eigen::MatrixXd FC = KKT_mat.topRightCorner(dimQ, dimQ);
   const Eigen::MatrixXd multiplied_mat = Eigen::MatrixXd::Random(dimQ, dimQ);
   Eigen::MatrixXd res = Eigen::MatrixXd::Zero(dimQ, dimQ);

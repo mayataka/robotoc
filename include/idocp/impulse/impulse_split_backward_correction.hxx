@@ -11,8 +11,8 @@ inline ImpulseSplitBackwardCorrection::ImpulseSplitBackwardCorrection(
       const Robot& robot) 
   : dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
-    dimKKT_(5*robot.dimv()),
-    kkt_mat_inverter_(robot.dimv(), robot.max_dimf()),
+    dimKKT_(4*robot.dimv()),
+    kkt_mat_inverter_(robot),
     data_(robot),
     x_res_(Eigen::VectorXd::Zero(2*robot.dimv())),
     dx_(Eigen::VectorXd::Zero(2*robot.dimv())) {
@@ -48,7 +48,7 @@ inline void ImpulseSplitBackwardCorrection::coarseUpdate(
   kkt_mat_inverter_.invert(kkt_matrix.Jac(), kkt_matrix.Qss(), 
                            data_.KKT_mat_inv());
   data_.splitDirection().noalias() 
-      = data_.KKT_mat_inv() * kkt_residual.KKT_residual();
+      = data_.KKT_mat_inv() * kkt_residual.splitKKTResidual();
   s_new.lmd        = s.lmd         - data_.dlmd();
   s_new.gmm        = s.gmm         - data_.dgmm();
   s_new.mu_stack() = s.mu_stack()  - data_.dmu(); 
@@ -91,7 +91,7 @@ inline void ImpulseSplitBackwardCorrection::backwardCorrectionParallel(
 inline void ImpulseSplitBackwardCorrection::forwardCorrectionSerial(
     const Robot& robot, const SplitSolution& s_prev, 
     const SplitSolution& s_new_prev, ImpulseSplitSolution& s_new) {
-  x_res_.head(dimv_) = s_new_prev.q - s_prev.q;
+  robot.subtractConfiguration(s_new_prev.q, s_prev.q, x_res_.head(dimv_));
   x_res_.tail(dimv_) = s_new_prev.v - s_prev.v;
   dx_.noalias() 
       = data_.KKT_mat_inv().block(dimKKT_-dimx_, 0, dimx_, dimx_) * x_res_;

@@ -185,9 +185,9 @@ public:
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> P() const;
 
-  Eigen::VectorBlock<Eigen::VectorXd> KKT_residual();
+  Eigen::VectorBlock<Eigen::VectorXd> splitKKTResidual();
 
-  const Eigen::VectorBlock<const Eigen::VectorXd> KKT_residual() const;
+  const Eigen::VectorBlock<const Eigen::VectorXd> splitKKTResidual() const;
 
   ///
   /// @brief Set the KKT residual zero.

@@ -26,81 +26,100 @@ protected:
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     fixed_base_robot = Robot(fixed_base_urdf, {18});
     floating_base_robot = Robot(floating_base_urdf, {14, 24, 34, 44});
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
   }
 
-  SplitKKTMatrix createKKTMatrix(const Robot& robot) const;
-  SplitKKTResidual createKKTResidual(const Robot& robot) const;
+  ImpulseSplitKKTMatrix createKKTMatrix(const Robot& robot, const ImpulseStatus& impulse_status) const;
+  ImpulseSplitKKTResidual createKKTResidual(const Robot& robot, const ImpulseStatus& impulse_status) const;
 
   void test(const Robot& robot) const;
   void testTerminal(const Robot& robot) const;
 
-  double dtau;
   std::string fixed_base_urdf, floating_base_urdf;
   Robot fixed_base_robot, floating_base_robot;
 };
 
 
-SplitKKTMatrix ImpulseSplitBackwardCorrectionTest::createKKTMatrix(const Robot& robot) const {
+ImpulseSplitKKTMatrix ImpulseSplitBackwardCorrectionTest::createKKTMatrix(
+    const Robot& robot, const ImpulseStatus& impulse_status) const {
   const int dimv = robot.dimv();
-  const int dimu = robot.dimu();
-  Eigen::MatrixXd seed = Eigen::MatrixXd::Random(2*dimv+dimu, 2*dimv+dimu);
+  const int dimx = 2*robot.dimv();
+  const int dimi = impulse_status.dimf();
+  Eigen::MatrixXd seed = Eigen::MatrixXd::Random(2*dimv+dimi, 2*dimv+dimi);
   ImpulseSplitKKTMatrix kkt_matrix(robot);
+  kkt_matrix.setImpulseStatus(impulse_status);
   kkt_matrix.Qss() = seed * seed.transpose();
   if (robot.hasFloatingBase()) {
-    kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
+    robot.dSubtractdConfigurationMinus(robot.generateFeasibleConfiguration(), 
+                                       robot.generateFeasibleConfiguration(), kkt_matrix.Fqq());
   }
   kkt_matrix.Fvf().setRandom();
   kkt_matrix.Fvq().setRandom();
   kkt_matrix.Fvv().setRandom();
+  kkt_matrix.Vq().setRandom();
+  kkt_matrix.Vv().setRandom();
   return kkt_matrix;
 }
 
 
-SplitKKTResidual ImpulseSplitBackwardCorrectionTest::createKKTResidual(const Robot& robot) const {
-  SplitKKTResidual kkt_residual(robot);
-  kkt_residual.KKT_residual().setRandom();
+ImpulseSplitKKTResidual ImpulseSplitBackwardCorrectionTest::createKKTResidual(
+    const Robot& robot, const ImpulseStatus& impulse_status) const {
+  ImpulseSplitKKTResidual kkt_residual(robot);
+  kkt_residual.setImpulseStatus(impulse_status);
+  kkt_residual.splitKKTResidual().setRandom();
   return kkt_residual;
 }
 
 
 void ImpulseSplitBackwardCorrectionTest::test(const Robot& robot) const {
+  auto impulse_status = robot.createImpulseStatus();
+  if (robot.hasFloatingBase()) {
+    std::random_device rnd;
+    for (int i=0; i<robot.maxPointContacts(); ++i) {
+      if (rnd() % 2 == 0) {
+        impulse_status.activateImpulse(i);
+      }
+    }
+    if (!impulse_status.hasActiveImpulse()) {
+      impulse_status.activateImpulse(0);
+    }
+  }
+  else {
+    impulse_status.activateImpulse(0);
+  }
+
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
-  const int dimKKT = 4*robot.dimv() + robot.dimu();
+  const int dimi = impulse_status.dimf();
+  const int dimKKT = 4*robot.dimv() + 2*dimi;
 
-  auto kkt_matrix = createKKTMatrix(robot);
+  auto kkt_matrix = createKKTMatrix(robot, impulse_status);
   auto kkt_matrix_ref = kkt_matrix;
-  auto kkt_residual = createKKTResidual(robot);
+  auto kkt_residual = createKKTResidual(robot, impulse_status);
   auto kkt_residual_ref = kkt_residual;
 
   Eigen::MatrixXd aux_mat_seed(Eigen::MatrixXd::Random(dimx, dimx));
   const Eigen::MatrixXd aux_mat_next = aux_mat_seed * aux_mat_seed.transpose();
   ImpulseSplitBackwardCorrection corr(robot);
-  SplitSolution s = SplitSolution::Random(robot);
-  SplitSolution s_new = SplitSolution::Random(robot);
-  SplitSolution s_new_ref = s_new;
-  SplitDirection d = SplitDirection::Random(robot);
-  SplitDirection d_ref = d;
-  corr.coarseUpdate(robot, dtau, aux_mat_next, kkt_matrix, kkt_residual, s, d, s_new);
+  ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
+  ImpulseSplitSolution s_new = ImpulseSplitSolution::Random(robot, impulse_status);
+  ImpulseSplitSolution s_new_ref = s_new;
+  corr.coarseUpdate(robot, aux_mat_next, kkt_matrix, kkt_residual, s, s_new);
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
-  kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
-  kkt_matrix_ref.Qux() = kkt_matrix_ref.Qxu().transpose();
+  ImpulseSplitKKTMatrixInverter inverter(robot);
   kkt_matrix_ref.Qxx() += aux_mat_next;
-  SplitKKTMatrixInverter inverter(robot);
-  inverter.invert(dtau, kkt_matrix.Jac(), kkt_matrix.Qss(), KKT_mat_inv);
-  d_ref.splitDirection() = KKT_mat_inv * kkt_residual.KKT_residual;
-  s_new_ref.lmd = s.lmd - d_ref.dlmd();
-  s_new_ref.gmm = s.gmm - d_ref.dgmm();
-  s_new_ref.u   = s.u - d_ref.du();
-  robot.integrateConfiguration(s.q, d_ref.dq(), -1, s_new_ref.q);
-  s_new_ref.v   = s.v - d_ref.dv();
+  inverter.invert(kkt_matrix_ref.Jac(), kkt_matrix_ref.Qss(), KKT_mat_inv);
+  Eigen::VectorXd d0_ref = KKT_mat_inv * kkt_residual.splitKKTResidual();
+  s_new_ref.lmd = s.lmd - d0_ref.head(dimv);
+  s_new_ref.gmm = s.gmm - d0_ref.segment(dimv, dimv);
+  s_new_ref.mu_stack() = s.mu_stack() - d0_ref.segment(dimx, dimi);
+  s_new_ref.f_stack()  = s.f_stack()  - d0_ref.segment(dimx+dimi, dimi);
+  robot.integrateConfiguration(s.q, d0_ref.segment(dimx+2*dimi, dimv), -1, s_new_ref.q);
+  s_new_ref.v   = s.v - d0_ref.segment(dimx+2*dimi+dimv, dimv);
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
-  EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_TRUE(corr.auxMat().isApprox(KKT_mat_inv.topLeftCorner(dimx, dimx)));
 
   const SplitSolution s_prev = SplitSolution::Random(robot);
@@ -116,14 +135,14 @@ void ImpulseSplitBackwardCorrectionTest::test(const Robot& robot) const {
   s_new_ref.gmm -= dx.tail(dimv);
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
 
-  corr.backwardCorrectionParallel(robot, d, s_new);
-  d_ref.splitDirection().tail(dimKKT-dimx)
+  corr.backwardCorrectionParallel(robot, s_new);
+  d0_ref.tail(dimKKT-dimx)
       = KKT_mat_inv.block(dimx, dimKKT-dimx, dimKKT-dimx, dimx) * x_res;
-  s_new_ref.u -= d_ref.du();
-  robot.integrateConfiguration(d_ref.dq(), -1, s_new_ref.q);
-  s_new_ref.v -= d_ref.dv();
+  s_new_ref.mu_stack() -= d0_ref.segment(dimx, dimi);
+  s_new_ref.f_stack()  -= d0_ref.segment(dimx+dimi, dimi);
+  robot.integrateConfiguration(d0_ref.segment(dimx+2*dimi, dimv), -1, s_new_ref.q);
+  s_new_ref.v -= d0_ref.segment(dimx+2*dimi+dimv, dimv);
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
-  EXPECT_TRUE(d.isApprox(d_ref));
 
   corr.forwardCorrectionSerial(robot, s_prev, s_new_prev, s_new);
   robot.subtractConfiguration(s_new_prev.q, s_prev.q, x_res.head(dimv));
@@ -133,68 +152,35 @@ void ImpulseSplitBackwardCorrectionTest::test(const Robot& robot) const {
   s_new_ref.v -= dx.tail(dimv);
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
 
-  corr.forwardCorrectionParallel(d, s_new);
-  d_ref.splitDirection().head(dimKKT-dimx).noalias()
+  corr.forwardCorrectionParallel(s_new);
+  d0_ref.head(dimKKT-dimx).noalias()
       = KKT_mat_inv.topLeftCorner(dimKKT-dimx, dimx) * x_res;
-  s_new_ref.lmd -= d_ref.dlmd();
-  s_new_ref.gmm -= d_ref.dgmm();
-  s_new_ref.u   -= d_ref.du();
+  s_new_ref.lmd -= d0_ref.head(dimv);
+  s_new_ref.gmm -= d0_ref.segment(dimv, dimv);
+  s_new_ref.mu_stack()-= d0_ref.segment(dimx, dimi);
+  s_new_ref.f_stack() -= d0_ref.segment(dimx+dimi, dimi);
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
-  EXPECT_TRUE(d.isApprox(d_ref));
 
+  ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
+  ImpulseSplitDirection d_ref = d;
   corr.computeDirection(robot, s, s_new, d);
   d_ref.dlmd() = s_new_ref.lmd - s.lmd;
   d_ref.dgmm() = s_new_ref.gmm - s.gmm;
-  d_ref.du() = s_new_ref.u - s.u;
+  d_ref.dmu()  = s_new_ref.mu_stack() - s.mu_stack();
+  d_ref.df()   = s_new_ref.f_stack() - s.f_stack();
   robot.subtractConfiguration(s_new_ref.q, s.q, d_ref.dq());
-  d_ref.dv() = s_new_ref.v - s.v;
+  d_ref.dv()   = s_new_ref.v - s.v;
   EXPECT_TRUE(d.isApprox(d_ref));
-}
-
-
-void ImpulseSplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
-  const int dimv = robot.dimv();
-  const int dimx = 2*robot.dimv();
-  const int dimKKT = 4*robot.dimv() + robot.dimu();
-
-  auto kkt_matrix = createKKTMatrix(robot);
-  auto kkt_matrix_ref = kkt_matrix;
-  auto kkt_residual = createKKTResidual(robot);
-  auto kkt_residual_ref = kkt_residual;
-  ImpulseSplitBackwardCorrection corr(robot);
-  SplitSolution s = SplitSolution::Random(robot);
-  SplitSolution s_new = SplitSolution::Random(robot);
-  SplitSolution s_new_ref = s_new;
-  SplitDirection d = SplitDirection::Random(robot);
-  SplitDirection d_ref = d;
-  corr.coarseUpdate(robot, dtau, kkt_matrix, kkt_residual, s, d, s_new);
-
-  Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
-  kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
-  kkt_matrix_ref.Qux() = kkt_matrix_ref.Qxu().transpose();
-  SplitKKTMatrixInverter inverter(robot);
-  inverter.invert(dtau, kkt_matrix_ref.Jac(), kkt_matrix_ref.Qss(), KKT_mat_inv);
-  d_ref.splitDirection() = KKT_mat_inv * kkt_residual.KKT_residual;
-  s_new_ref.lmd = s.lmd - d_ref.dlmd();
-  s_new_ref.gmm = s.gmm - d_ref.dgmm();
-  s_new_ref.u   = s.u - d_ref.du();
-  robot.integrateConfiguration(s.q, d_ref.dq(), -1, s_new_ref.q);
-  s_new_ref.v   = s.v - d_ref.dv();
-  EXPECT_TRUE(s_new.isApprox(s_new_ref));
-  EXPECT_TRUE(d.isApprox(d_ref));
-  EXPECT_TRUE(corr.auxMat().isApprox(KKT_mat_inv.topLeftCorner(dimx, dimx)));
 }
 
 
 TEST_F(ImpulseSplitBackwardCorrectionTest, fixedBase) {
   test(fixed_base_robot);
-  testTerminal(fixed_base_robot);
 }
 
 
 TEST_F(ImpulseSplitBackwardCorrectionTest, floating_base) {
   test(floating_base_robot);
-  testTerminal(floating_base_robot);
 }
 
 } // namespace idocp

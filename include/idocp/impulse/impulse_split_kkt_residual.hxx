@@ -148,13 +148,13 @@ ImpulseSplitKKTResidual::P() const {
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseSplitKKTResidual::KKT_residual() {
+ImpulseSplitKKTResidual::splitKKTResidual() {
   return KKT_residual_full_.head(dimKKT_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitKKTResidual::KKT_residual() const {
+ImpulseSplitKKTResidual::splitKKTResidual() const {
   return KKT_residual_full_.head(dimKKT_);
 }
 
@@ -178,7 +178,7 @@ inline int ImpulseSplitKKTResidual::dimf() const {
 
 inline bool ImpulseSplitKKTResidual::isApprox(
     const ImpulseSplitKKTResidual& other) const {
-  if (!KKT_residual().isApprox(other.KKT_residual())) return false;
+  if (!splitKKTResidual().isApprox(other.splitKKTResidual())) return false;
   if (!ldv.isApprox(other.ldv)) return false;
   if (dimf_ > 0) {
     if (!P().isApprox(other.P())) return false;

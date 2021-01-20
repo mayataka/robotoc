@@ -91,8 +91,6 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_new = SplitSolution::Random(robot);
   SplitSolution s_new_ref = s_new;
-  SplitDirection d = SplitDirection::Random(robot);
-  SplitDirection d_ref = d;
   corr.coarseUpdate(robot, dtau, aux_mat_next, kkt_matrix, kkt_residual, s, s_new);
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
@@ -123,6 +121,7 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
   s_new_ref.gmm -= dx.tail(dimv);
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
 
+  corr.backwardCorrectionParallel(robot, s_new);
   d0_ref.tail(dimKKT-dimx)
       = KKT_mat_inv.block(dimx, dimKKT-dimx, dimKKT-dimx, dimx) * x_res;
   s_new_ref.u -= d0_ref.segment(dimx, dimu);
@@ -139,7 +138,7 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
   EXPECT_TRUE(s_new.isApprox(s_new_ref));
 
   corr.forwardCorrectionParallel(s_new);
-  d0_ref.head(dimKKT-dimx).noalias()
+  d0_ref.head(dimKKT-dimx)
       = KKT_mat_inv.topLeftCorner(dimKKT-dimx, dimx) * x_res;
   s_new_ref.lmd -= d0_ref.head(dimv);
   s_new_ref.gmm -= d0_ref.segment(dimv, dimv);
@@ -282,8 +281,6 @@ void SplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_new = SplitSolution::Random(robot);
   SplitSolution s_new_ref = s_new;
-  SplitDirection d = SplitDirection::Random(robot);
-  SplitDirection d_ref = d;
   corr.coarseUpdate(robot, dtau, kkt_matrix, kkt_residual, s, s_new);
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
