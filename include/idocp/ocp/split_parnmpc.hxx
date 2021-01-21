@@ -211,6 +211,9 @@ inline void SplitParNMPC::computeKKTResidual(
     const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
     const SplitSolution& s, const ImpulseSplitSolution& s_next, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
+  assert(dtau >= 0);
+  assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   kkt_matrix.setImpulseStatus(impulse_status);

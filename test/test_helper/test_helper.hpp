@@ -12,6 +12,7 @@
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/ocp_discretizer.hpp"
+#include "idocp/hybrid/parnmpc_discretizer.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 
@@ -31,7 +32,8 @@ std::shared_ptr<Constraints> CreateConstraints(const Robot& robot);
 Solution CreateSolution(const Robot& robot, const int N, const int max_num_impulse=0);
 
 Solution CreateSolution(const Robot& robot, const ContactSequence& contact_sequence, 
-                        const double T, const int N, const int max_num_impulse, const double t);
+                        const double T, const int N, const int max_num_impulse, const double t, 
+                        const bool is_parnmpc=false);
 
 Direction CreateDirection(const Robot& robot, const int N, const int max_num_impulse=0);
 

@@ -112,7 +112,7 @@ void OCPDiscretizerTest::testDiscretizeOCP(const Robot& robot) const {
     time_stage_before_lift.push_back(std::floor(lift_time[i]/dtau));
   }
   for (int i=0; i<contact_sequence.numImpulseEvents(); ++i) {
-    EXPECT_DOUBLE_EQ(time_stage_before_impulse[i], ocp_discretizer.timeStageBeforeImpulse(i));
+    EXPECT_EQ(time_stage_before_impulse[i], ocp_discretizer.timeStageBeforeImpulse(i));
     EXPECT_DOUBLE_EQ(impulse_time[i], ocp_discretizer.t_impulse(i));
     EXPECT_DOUBLE_EQ(impulse_time[i]-time_stage_before_impulse[i]*dtau, ocp_discretizer.dtau(time_stage_before_impulse[i]));
     EXPECT_DOUBLE_EQ(ocp_discretizer.dtau(time_stage_before_impulse[i])+ocp_discretizer.dtau_aux(i), dtau);
@@ -120,7 +120,7 @@ void OCPDiscretizerTest::testDiscretizeOCP(const Robot& robot) const {
     // std::cout << (time_stage_before_impulse[i]+1)*dtau-ocp_discretizer.t_impulse(i) - ocp_discretizer.dtau_aux(i) << std::endl;
   }
   for (int i=0; i<contact_sequence.numLiftEvents(); ++i) {
-    EXPECT_DOUBLE_EQ(time_stage_before_lift[i], ocp_discretizer.timeStageBeforeLift(i));
+    EXPECT_EQ(time_stage_before_lift[i], ocp_discretizer.timeStageBeforeLift(i));
     EXPECT_DOUBLE_EQ(lift_time[i], ocp_discretizer.t_lift(i));
     EXPECT_DOUBLE_EQ(lift_time[i]-time_stage_before_lift[i]*dtau, ocp_discretizer.dtau(time_stage_before_lift[i]));
     EXPECT_DOUBLE_EQ(ocp_discretizer.dtau(time_stage_before_lift[i])+ocp_discretizer.dtau_lift(i), dtau);

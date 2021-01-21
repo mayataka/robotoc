@@ -24,7 +24,7 @@ protected:
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N = 20;
     max_num_impulse = 5;
-    nthreads = 4;
+    nthreads = 1;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     dtau = T / N;
@@ -55,7 +55,7 @@ Solution ParNMPCLinearizerTest::createSolution(const Robot& robot) const {
 
 
 Solution ParNMPCLinearizerTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
-  return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
+  return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t, true);
 }
 
 
@@ -66,7 +66,8 @@ ContactSequence ParNMPCLinearizerTest::createContactSequence(const Robot& robot)
 
 void ParNMPCLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
-  auto constraints = testhelper::CreateConstraints(robot);
+  // auto constraints = testhelper::CreateConstraints(robot);
+  auto constraints = std::make_shared<Constraints>();
   ParNMPCLinearizer linearizer(N, max_num_impulse, nthreads);
   const auto contact_sequence = createContactSequence(robot);
   auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
@@ -82,7 +83,7 @@ void ParNMPCLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   auto parnmpc_ref = parnmpc;
   linearizer.initConstraints(parnmpc, robots, contact_sequence, s);
   linearizer.computeKKTResidual(parnmpc, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
-  const double kkt_error = linearizer.KKTError(parnmpc, kkt_residual);
+  // const double kkt_error = linearizer.KKTError(parnmpc, kkt_residual);
   // auto robot_ref = robot;
   // double kkt_error_ref = 0;
   // for (int i=0; i<N; ++i) {
