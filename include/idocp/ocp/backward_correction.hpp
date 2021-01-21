@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "Eigen/Core"
-#include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
@@ -62,13 +61,13 @@ public:
   BackwardCorrection& operator=(BackwardCorrection&&) noexcept = default;
 
   void initAuxMat(ParNMPC& parnmpc, std::vector<Robot>& robots, 
-                  const double t, const Solution& s, KKTMatrix& kkt_matrix);
+                  const Solution& s, KKTMatrix& kkt_matrix);
 
   void coarseUpdate(ParNMPC& parnmpc, std::vector<Robot>& robots, 
                     const ContactSequence& contact_sequence, 
-                    const double t, const Eigen::VectorXd& q, 
-                    const Eigen::VectorXd& v, const Solution& s,
-                    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
+                    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
+                    const Solution& s, KKTMatrix& kkt_matrix, 
+                    KKTResidual& kkt_residual);
 
   void backwardCorrection(ParNMPC& parnmpc, std::vector<Robot>& robots, 
                           const KKTMatrix& kkt_matrix, 
@@ -78,6 +77,50 @@ public:
   double primalStepSize() const;
 
   double dualStepSize() const;
+
+  static const Eigen::VectorXd& q_prev(const ParNMPCDiscretizer& discretizer, 
+                                       const Eigen::VectorXd& q, 
+                                       const Solution& s, 
+                                       const int time_stage) {
+    assert(time_stage >= 0);
+    assert(time_stage < discretizer.N());
+    if (discretizer.isTimeStageAfterImpulse(time_stage)) {
+      return s.impulse[discretizer.impulseIndexBeforeTimeStage(time_stage)].q;
+    }
+    else if (discretizer.isTimeStageAfterLift(time_stage)) {
+      return s.lift[discretizer.liftIndexBeforeTimeStage(time_stage)].q;
+    }
+    else if (time_stage > 0) {
+      return s[time_stage-1].q;
+    }
+    else { 
+      assert(time_stage == 0);
+      return q;
+    }
+  }
+
+  static const Eigen::VectorXd& v_prev(const ParNMPCDiscretizer& discretizer, 
+                                       const Eigen::VectorXd& v, 
+                                       const Solution& s, 
+                                       const int time_stage) {
+    assert(time_stage >= 0);
+    assert(time_stage < discretizer.N());
+    if (discretizer.isTimeStageAfterImpulse(time_stage)) {
+      return s.impulse[discretizer.impulseIndexBeforeTimeStage(time_stage)].v;
+    }
+    else if (discretizer.isTimeStageAfterLift(time_stage)) {
+      return s.lift[discretizer.liftIndexBeforeTimeStage(time_stage)].v;
+    }
+    else if (time_stage > 0) {
+      return s[time_stage-1].v;
+    }
+    else { 
+      assert(time_stage == 0);
+      return v;
+    }
+  }
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int N_, max_num_impulse_, nthreads_, N_all_;

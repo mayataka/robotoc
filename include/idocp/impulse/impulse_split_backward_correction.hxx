@@ -40,6 +40,10 @@ inline void ImpulseSplitBackwardCorrection::coarseUpdate(
     ImpulseSplitKKTMatrix& kkt_matrix, 
     const ImpulseSplitKKTResidual& kkt_residual, 
     const ImpulseSplitSolution& s, ImpulseSplitSolution& s_new) {
+  std::cout << "in ImpulseSplitBackwardCorrection::coarseUpdate" << std::endl;
+  std::cout << "dimx_ = " << dimx_ << std::endl;
+  std::cout << "aux_mat_next.rows() = " << aux_mat_next.rows() << std::endl;
+  std::cout << "aux_mat_next.cols() = " << aux_mat_next.cols() << std::endl;
   assert(aux_mat_next.rows() == dimx_);
   assert(aux_mat_next.cols() == dimx_);
   data_.setImpulseStatus(s.dimf());

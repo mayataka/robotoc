@@ -12,7 +12,7 @@ inline ImpulseSplitBackwardCorrectionData::ImpulseSplitBackwardCorrectionData(
   : dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
     dimf_(0),
-    dimKKT_(5*robot.dimv()),
+    dimKKT_(4*robot.dimv()),
     df_begin_(2*robot.dimv()), 
     dq_begin_(2*robot.dimv()), 
     dv_begin_(3*robot.dimv()),

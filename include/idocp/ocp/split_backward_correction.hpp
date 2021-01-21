@@ -105,10 +105,8 @@ public:
                                const SplitSolution& s_new, 
                                SplitDirection& d);
 
-  void computeDirection(const Robot& robot, const SplitSolution& s, 
-                        const SplitSolution& s_new, SplitDirection& d, 
-                        const ImpulseSplitSolution& s_next,
-                        ImpulseSplitDirection& d_next) const;
+  void computeDirection(const ImpulseSplitSolution& s,
+                        ImpulseSplitDirection& d) const;
 
 private:
   int dimv_, dimx_, dimu_, dimKKT_;

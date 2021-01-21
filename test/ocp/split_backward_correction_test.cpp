@@ -253,16 +253,18 @@ void SplitBackwardCorrectionTest::testWithImpulse(const Robot& robot) const {
 
   SplitDirection d = SplitDirection::Random(robot);
   SplitDirection d_ref = d;
-  ImpulseSplitDirection d_next = ImpulseSplitDirection::Random(robot, impulse_status);
-  ImpulseSplitDirection d_next_ref = d_next;
-  corr.computeDirection(robot, s, s_new, d, s_next, d_next);
+  corr.computeDirection(robot, s, s_new, d);
   d_ref.dlmd() = s_new_ref.lmd - s.lmd;
   d_ref.dgmm() = s_new_ref.gmm - s.gmm;
   d_ref.du() = s_new_ref.u - s.u;
-  d_next_ref.dxi() = xi_new - s_next.xi_stack();
   robot.subtractConfiguration(s_new_ref.q, s.q, d_ref.dq());
   d_ref.dv() = s_new_ref.v - s.v;
   EXPECT_TRUE(d.isApprox(d_ref));
+
+  ImpulseSplitDirection d_next = ImpulseSplitDirection::Random(robot, impulse_status);
+  ImpulseSplitDirection d_next_ref = d_next;
+  corr.computeDirection(s_next, d_next);
+  d_next_ref.dxi() = xi_new - s_next.xi_stack();
   EXPECT_TRUE(d_next.isApprox(d_next_ref));
 }
 

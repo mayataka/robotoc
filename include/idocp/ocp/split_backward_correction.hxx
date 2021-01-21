@@ -170,11 +170,8 @@ inline void SplitBackwardCorrection::computeDirection(
 
 
 inline void SplitBackwardCorrection::computeDirection(
-    const Robot& robot, const SplitSolution& s, const SplitSolution& s_new, 
-    SplitDirection& d, const ImpulseSplitSolution& s_next, 
-    ImpulseSplitDirection& d_next) const {
-  computeDirection(robot, s, s_new, d);
-  d_next.dxi() = data_.xi_stack() - s_next.xi_stack();
+    const ImpulseSplitSolution& s, ImpulseSplitDirection& d) const {
+  d.dxi() = data_.xi_stack() - s.xi_stack();
 }
 
 } // namespace idocp

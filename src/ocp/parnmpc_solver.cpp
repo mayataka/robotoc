@@ -64,7 +64,8 @@ void ParNMPCSolver::initConstraints() {
 
 
 void ParNMPCSolver::initBackwardCorrection(const double t) {
-  backward_correction_.initAuxMat(parnmpc_, robots_, t, s_, kkt_matrix_);
+  parnmpc_.discretize(contact_sequence_, t);
+  backward_correction_.initAuxMat(parnmpc_, robots_, s_, kkt_matrix_);
 }
 
 
@@ -73,8 +74,9 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                    const bool use_line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
+  parnmpc_.discretize(contact_sequence_, t);
   backward_correction_.coarseUpdate(parnmpc_, robots_, contact_sequence_, 
-                                    t, q, v, s_, kkt_matrix_, kkt_residual_);
+                                    q, v, s_, kkt_matrix_, kkt_residual_);
   backward_correction_.backwardCorrection(parnmpc_, robots_, kkt_matrix_, 
                                           kkt_residual_, s_, d_);
   double primal_step_size = backward_correction_.primalStepSize();
