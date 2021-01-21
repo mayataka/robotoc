@@ -55,7 +55,7 @@ void ParNMPCLinearizer::initConstraints(ParNMPC& parnmpc,
       parnmpc[i].initConstraints(robots[omp_get_thread_num()], i+1, s[i]);
     }
     else if (i == N_-1) {
-      parnmpc.terminal.initConstraints(robots[omp_get_thread_num()], N_, s[N_]);
+      parnmpc.terminal.initConstraints(robots[omp_get_thread_num()], N_, s[i]);
     }
     else if (i < N_+N_impulse) {
       const int impulse_index  = i - N_;
