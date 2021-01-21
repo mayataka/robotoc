@@ -6,8 +6,10 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
 #include "idocp/ocp/split_parnmpc.hpp"
 #include "idocp/ocp/split_solution.hpp"
+#include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
@@ -50,13 +52,31 @@ protected:
       const std::shared_ptr<CostFunction>& cost,
       const std::shared_ptr<Constraints>& constraints) const;
 
+  void testLinearizeOCP(
+      Robot& robot, const ContactStatus& contact_status, 
+      const ImpulseStatus& impulse_status,
+      const std::shared_ptr<CostFunction>& cost,
+      const std::shared_ptr<Constraints>& constraints) const;
+
   void testComputeKKTResidual(
+      Robot& robot, const ContactStatus& contact_status, 
+      const std::shared_ptr<CostFunction>& cost,
+      const std::shared_ptr<Constraints>& constraints) const;
+
+  void testComputeKKTResidual(
+      Robot& robot, const ContactStatus& contact_status, 
+      const ImpulseStatus& impulse_status,
+      const std::shared_ptr<CostFunction>& cost,
+      const std::shared_ptr<Constraints>& constraints) const;
+
+  void testCostAndConstraintViolation(
       Robot& robot, const ContactStatus& contact_status, 
       const std::shared_ptr<CostFunction>& cost,
       const std::shared_ptr<Constraints>& constraints) const;
 
   void testCostAndConstraintViolation(
       Robot& robot, const ContactStatus& contact_status, 
+      const ImpulseStatus& impulse_status,
       const std::shared_ptr<CostFunction>& cost,
       const std::shared_ptr<Constraints>& constraints) const;
 
@@ -189,6 +209,67 @@ void SplitParNMPCTest::testLinearizeOCP(
 }
 
 
+void SplitParNMPCTest::testLinearizeOCP(
+    Robot& robot, const ContactStatus& contact_status, 
+    const ImpulseStatus& impulse_status,
+    const std::shared_ptr<CostFunction>& cost,
+    const std::shared_ptr<Constraints>& constraints) const {
+  const SplitSolution s_prev = SplitSolution::Random(robot, contact_status);
+  const SplitSolution s = generateFeasibleSolution(robot, contact_status, constraints);
+  const ImpulseSplitSolution s_next = ImpulseSplitSolution::Random(robot, impulse_status);
+  SplitParNMPC ocp(robot, cost, constraints, baumgarte_time_step);
+  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+  ocp.initConstraints(robot, 10, s);
+  const int dimv = robot.dimv();
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
+  ocp.linearizeOCP(robot, contact_status, impulse_status, t, dtau, s_prev.q, s_prev.v, s, s_next, kkt_matrix, kkt_residual);
+  SplitKKTMatrix kkt_matrix_ref(robot);
+  kkt_matrix_ref.setContactStatus(contact_status);
+  kkt_matrix_ref.setImpulseStatus(impulse_status);
+  SplitKKTResidual kkt_residual_ref(robot);
+  kkt_residual_ref.setContactStatus(contact_status);
+  kkt_residual_ref.setImpulseStatus(impulse_status);
+  auto cost_data = cost->createCostFunctionData(robot);
+  auto constraints_data = constraints->createConstraintsData(robot, 10);
+  constraints->setSlackAndDual(robot, constraints_data, s);
+  robot.updateKinematics(s.q, s.v, s.a);
+  cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual_ref);
+  cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix_ref);
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual_ref);
+  constraints->condenseSlackAndDual(robot, constraints_data, dtau, s, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::LinearizeBackwardEuler(robot, dtau, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  ContactDynamics cd(robot, baumgarte_time_step);
+  robot.updateKinematics(s.q, s.v, s.a);
+  cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_residual_ref);
+  ImpulseDynamicsBackwardEuler::linearizeImpulseCondition(robot, impulse_status,
+                                                          s_next, kkt_matrix_ref, 
+                                                          kkt_residual_ref);
+  cd.condenseContactDynamicsBackwardEuler(robot, contact_status, dtau, kkt_matrix_ref, kkt_residual_ref);
+  EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
+  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
+  SplitDirection d = SplitDirection::Random(robot, contact_status);
+  auto d_ref = d;
+  ocp.computeCondensedPrimalDirection(robot, dtau, s, d);
+  cd.computeCondensedPrimalDirection(robot, d_ref);
+  constraints->computeSlackAndDualDirection(robot, constraints_data, s, d_ref);
+  EXPECT_TRUE(d.isApprox(d_ref));
+  EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
+  EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));
+  ocp.computeCondensedDualDirection(robot, dtau, kkt_matrix, kkt_residual, d);
+  cd.computeCondensedDualDirection(robot, dtau, kkt_matrix, kkt_residual, d.dgmm(), d_ref);
+  EXPECT_TRUE(d.isApprox(d_ref));
+  const double step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
+  auto s_updated = s;
+  auto s_updated_ref = s;
+  ocp.updatePrimal(robot, step_size, d, s_updated);
+  s_updated_ref.integrate(robot, step_size, d);
+  constraints->updateSlack(constraints_data, step_size);
+  EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
+}
+
+
 void SplitParNMPCTest::testComputeKKTResidual(
     Robot& robot, const ContactStatus& contact_status, 
     const std::shared_ptr<CostFunction>& cost,
@@ -234,6 +315,58 @@ void SplitParNMPCTest::testComputeKKTResidual(
 }
 
 
+void SplitParNMPCTest::testComputeKKTResidual(
+    Robot& robot, const ContactStatus& contact_status, 
+    const ImpulseStatus& impulse_status,
+    const std::shared_ptr<CostFunction>& cost,
+    const std::shared_ptr<Constraints>& constraints) const {
+  const SplitSolution s_prev = SplitSolution::Random(robot, contact_status);
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  const ImpulseSplitSolution s_next = ImpulseSplitSolution::Random(robot, impulse_status);
+  SplitParNMPC ocp(robot, cost, constraints, baumgarte_time_step);
+  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+  ocp.initConstraints(robot, 10, s);
+  SplitKKTMatrix kkt_matrix(robot);
+  SplitKKTResidual kkt_residual(robot);
+  ocp.computeKKTResidual(robot, contact_status, impulse_status, t, dtau, s_prev.q, s_prev.v, s, s_next, kkt_matrix, kkt_residual);
+  const double kkt_error = ocp.squaredNormKKTResidual(kkt_residual, dtau);
+  SplitKKTMatrix kkt_matrix_ref(robot);
+  kkt_matrix_ref.setContactStatus(contact_status);
+  kkt_matrix_ref.setImpulseStatus(impulse_status);
+  SplitKKTResidual kkt_residual_ref(robot);
+  kkt_residual_ref.setContactStatus(contact_status);
+  kkt_residual_ref.setImpulseStatus(impulse_status);
+  auto cost_data = cost->createCostFunctionData(robot);
+  auto constraints_data = constraints->createConstraintsData(robot, 10);
+  constraints->setSlackAndDual(robot, constraints_data, s);
+  robot.updateKinematics(s.q, s.v, s.a);
+  cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual_ref);
+  constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual_ref);
+  stateequation::LinearizeBackwardEuler(robot, dtau, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  ContactDynamics cd(robot, baumgarte_time_step);
+  robot.updateKinematics(s.q, s.v, s.a);
+  cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_residual_ref);
+  ImpulseDynamicsBackwardEuler::linearizeImpulseCondition(robot, impulse_status,
+                                                          s_next, kkt_matrix_ref, 
+                                                          kkt_residual_ref);
+  double kkt_error_ref = kkt_residual_ref.Fx().squaredNorm()
+                         + kkt_residual_ref.lx().squaredNorm()
+                         + kkt_residual_ref.la.squaredNorm()
+                         + kkt_residual_ref.lf().squaredNorm()
+                         + kkt_residual_ref.lu().squaredNorm()
+                         + cd.squaredNormContactDynamicsResidual(dtau)
+                         + ImpulseDynamicsBackwardEuler::squaredNormImpulseConditionResidual(kkt_residual_ref)
+                         + dtau * dtau * constraints->squaredNormPrimalAndDualResidual(constraints_data);
+  if (robot.hasFloatingBase()) {
+    kkt_error_ref += kkt_residual_ref.lu_passive.squaredNorm();
+  }
+  EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
+  EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
+  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
+}
+
+
 void SplitParNMPCTest::testCostAndConstraintViolation(
     Robot& robot, const ContactStatus& contact_status, 
     const std::shared_ptr<CostFunction>& cost,
@@ -249,8 +382,6 @@ void SplitParNMPCTest::testCostAndConstraintViolation(
   const double stage_cost = ocp.stageCost(robot, t, dtau, s, step_size);
   SplitKKTResidual kkt_residual(robot);
   const double constraint_violation = ocp.constraintViolation(robot, contact_status, t, dtau, s_prev.q, s_prev.v, s, kkt_residual);
-  SplitKKTMatrix kkt_matrix_ref(robot);
-  kkt_matrix_ref.setContactStatus(contact_status);
   SplitKKTResidual kkt_residual_ref(robot);
   kkt_residual_ref.setContactStatus(contact_status);
   auto cost_data = cost->createCostFunctionData(robot);
@@ -274,6 +405,50 @@ void SplitParNMPCTest::testCostAndConstraintViolation(
 }
 
 
+void SplitParNMPCTest::testCostAndConstraintViolation(
+    Robot& robot, const ContactStatus& contact_status, 
+    const ImpulseStatus& impulse_status,
+    const std::shared_ptr<CostFunction>& cost,
+    const std::shared_ptr<Constraints>& constraints) const {
+  const SplitSolution s_prev = SplitSolution::Random(robot, contact_status);
+  const SplitSolution s = SplitSolution::Random(robot, contact_status);
+  const SplitDirection d = SplitDirection::Random(robot, contact_status);
+  SplitParNMPC ocp(robot, cost, constraints, baumgarte_time_step);
+  const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double step_size = 0.3;
+  ocp.initConstraints(robot, 10, s);
+  const double stage_cost = ocp.stageCost(robot, t, dtau, s, step_size);
+  SplitKKTResidual kkt_residual(robot);
+  const double constraint_violation = ocp.constraintViolation(robot, contact_status, impulse_status, t, dtau, s_prev.q, s_prev.v, s, kkt_residual);
+  SplitKKTResidual kkt_residual_ref(robot);
+  kkt_residual_ref.setContactStatus(contact_status);
+  kkt_residual_ref.setImpulseStatus(impulse_status);
+  auto cost_data = cost->createCostFunctionData(robot);
+  auto constraints_data = constraints->createConstraintsData(robot, 10);
+  constraints->setSlackAndDual(robot, constraints_data, s);
+  robot.updateKinematics(s.q, s.v, s.a);
+  double stage_cost_ref = 0;
+  stage_cost_ref += cost->computeStageCost(robot, cost_data, t, dtau, s);
+  stage_cost_ref += dtau * constraints->costSlackBarrier(constraints_data, step_size);
+  EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
+  constraints->computePrimalAndDualResidual(robot, constraints_data, s);
+  stateequation::ComputeBackwardEulerResidual(robot, dtau, s_prev.q, s_prev.v, s, kkt_residual_ref);
+  ContactDynamics cd(robot, baumgarte_time_step);
+  cd.computeContactDynamicsResidual(robot, contact_status, s);
+  ImpulseDynamicsBackwardEuler::computeImpulseConditionResidual(robot, 
+                                                                impulse_status, 
+                                                                kkt_residual_ref);
+  double constraint_violation_ref = 0;
+  constraint_violation_ref += dtau * constraints->l1NormPrimalResidual(constraints_data);
+  constraint_violation_ref += stateequation::L1NormStateEuqationResidual(kkt_residual_ref);
+  constraint_violation_ref += cd.l1NormContactDynamicsResidual(dtau);
+  constraint_violation_ref += ImpulseDynamicsBackwardEuler::l1NormImpulseConditionResidual(kkt_residual_ref);
+  EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
+  EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
+}
+
+
 TEST_F(SplitParNMPCTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   ContactStatus contact_status(contact_frames.size());
@@ -291,6 +466,11 @@ TEST_F(SplitParNMPCTest, fixedBase) {
   testLinearizeOCP(robot, contact_status, cost, constraints);
   testComputeKKTResidual(robot, contact_status, cost, constraints);
   testCostAndConstraintViolation(robot, contact_status, cost, constraints);
+  auto impulse_status = robot.createImpulseStatus();
+  impulse_status.activateImpulse(0);
+  testLinearizeOCP(robot, contact_status, impulse_status, cost, constraints);
+  testComputeKKTResidual(robot, contact_status, impulse_status, cost, constraints);
+  testCostAndConstraintViolation(robot, contact_status, impulse_status, cost, constraints);
 }
 
 
@@ -312,13 +492,25 @@ TEST_F(SplitParNMPCTest, floatingBase) {
   for (const auto frame : contact_frames) {
     is_contact_active.push_back(rnd()%2==0);
   }
+  contact_status.setContactStatus(is_contact_active);
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
-  contact_status.setContactStatus(is_contact_active);
   testLinearizeOCP(robot, contact_status, cost, constraints);
   testComputeKKTResidual(robot, contact_status, cost, constraints);
   testCostAndConstraintViolation(robot, contact_status, cost, constraints);
+  auto impulse_status = robot.createImpulseStatus();
+  std::vector<bool> is_impulse_active;
+  for (const auto frame : contact_frames) {
+    is_impulse_active.push_back(rnd()%2==0);
+  }
+  impulse_status.setImpulseStatus(is_impulse_active);
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
+  }
+  testLinearizeOCP(robot, contact_status, impulse_status, cost, constraints);
+  testComputeKKTResidual(robot, contact_status, impulse_status, cost, constraints);
+  testCostAndConstraintViolation(robot, contact_status, impulse_status, cost, constraints);
 }
 
 } // namespace idocp
