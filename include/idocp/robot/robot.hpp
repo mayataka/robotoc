@@ -144,6 +144,11 @@ public:
       const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
       const Eigen::MatrixBase<MatrixType>& dSubtract_dqminus) const;
 
+  template <typename MatrixType1, typename MatrixType2>
+  static void dSubtractdConfigurationInverse(
+      const Eigen::MatrixBase<MatrixType1>& dSubtract_dq,
+      const Eigen::MatrixBase<MatrixType2>& dSubtract_dq_inv);
+
   ///
   /// @brief Updates the kinematics of the robot. The frame placements, frame 
   /// velocity, frame acceleration, and the relevant Jacobians are calculated. 

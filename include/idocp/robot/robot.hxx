@@ -116,6 +116,21 @@ inline void Robot::dSubtractdConfigurationMinus(
 }
 
 
+template <typename MatrixType1, typename MatrixType2>
+inline void Robot::dSubtractdConfigurationInverse(
+    const Eigen::MatrixBase<MatrixType1>& dSubtract_dq,
+    const Eigen::MatrixBase<MatrixType2>& dSubtract_dq_inv) {
+  const_cast<Eigen::MatrixBase<MatrixType2>&>(dSubtract_dq_inv).template topLeftCorner<3, 3>().noalias()
+      = dSubtract_dq.template topLeftCorner<3, 3>().inverse();
+  const_cast<Eigen::MatrixBase<MatrixType2>&>(dSubtract_dq_inv).template block<3, 3>(3, 3).noalias()
+      = dSubtract_dq.template block<3, 3>(3, 3).inverse();
+  const_cast<Eigen::MatrixBase<MatrixType2>&>(dSubtract_dq_inv).template block<3, 3>(0, 3).noalias()
+      = - dSubtract_dq_inv.template topLeftCorner<3, 3>() 
+          * dSubtract_dq.template block<3, 3>(0, 3)
+          * dSubtract_dq_inv.template block<3, 3>(3, 3);
+}
+
+
 inline const Eigen::Vector3d& Robot::framePosition(const int frame_id) const {
   return data_.oMf[frame_id].translation();
 }
