@@ -17,6 +17,8 @@ inline void LinearizeImpulseForwardEuler(
   if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq());
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
+    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
+                                         kkt_matrix.Fqq_prev_inv);
     kkt_residual.lq().noalias() += kkt_matrix.Fqq().transpose() * s_next.lmd 
                                     + kkt_matrix.Fqq_prev.transpose() * s.lmd;
   }

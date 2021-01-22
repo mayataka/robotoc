@@ -644,6 +644,10 @@ public:
   /// configuration of the previous time step q_prev.
   Eigen::MatrixXd Fqq_prev;
 
+  /// @brief Derivative of the state equation with respect to the 
+  /// configuration of the previous time step q_prev.
+  Eigen::MatrixXd Fqq_prev_inv;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

@@ -18,7 +18,8 @@ inline BackwardRiccatiRecursionFactorizer::BackwardRiccatiRecursionFactorizer(
     AtPvv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     BtPq_(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())),
     BtPv_(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())),
-    GK_(Eigen::MatrixXd::Zero(robot.dimu(), 2*robot.dimv())) {
+    GK_(Eigen::MatrixXd::Zero(robot.dimu(), 2*robot.dimv())),
+    Fqqinv_(Eigen::MatrixXd::Zero(robot.dim_passive(), robot.dim_passive())) {
 }
 
 
@@ -32,7 +33,8 @@ inline BackwardRiccatiRecursionFactorizer::BackwardRiccatiRecursionFactorizer()
     AtPvv_(),
     BtPq_(),
     BtPv_(),
-    GK_() {
+    GK_(),
+    Fqqinv_() {
 }
 
 

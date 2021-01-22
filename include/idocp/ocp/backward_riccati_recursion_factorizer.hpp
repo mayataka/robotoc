@@ -96,7 +96,7 @@ private:
   bool has_floating_base_;
   int dimv_, dimu_;
   static constexpr int kDimFloatingBase = 6;
-  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, BtPq_, BtPv_, GK_;
+  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, BtPq_, BtPv_, GK_, Fqqinv_;
 
 };
 

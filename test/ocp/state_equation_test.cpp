@@ -76,6 +76,7 @@ TEST_F(StateEquationTest, forwardEulerFloatingBase) {
   EXPECT_TRUE(kkt_residual.la.isApprox((dtau*s_next.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dq));
   EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
+  EXPECT_TRUE((kkt_matrix.Fqq_prev_inv*kkt_matrix.Fqq_prev.topLeftCorner(6, 6)).isIdentity());
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
                    stateequation::L1NormStateEuqationResidual(kkt_residual));
   EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), 
