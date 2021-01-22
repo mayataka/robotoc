@@ -192,29 +192,52 @@ Direction CreateDirection(const Robot& robot, const int N, const int max_num_imp
 
 
 Direction CreateDirection(const Robot& robot, const ContactSequence& contact_sequence, 
-                          const double T, const int N, const int max_num_impulse, const double t) {
+                          const double T, const int N, const int max_num_impulse, const double t,
+                          const bool is_parnmpc) {
   if (robot.maxPointContacts() == 0) {
     return CreateDirection(robot, N, max_num_impulse);
   }
   else {
-    OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
-    ocp_discretizer.discretizeOCP(contact_sequence, t);
-    Direction d(robot, N, max_num_impulse);
-    for (int i=0; i<=N; ++i) {
-      d[i].setRandom(contact_sequence.contactStatus(ocp_discretizer.contactPhase(i)));
+    if (is_parnmpc) {
+      ParNMPCDiscretizer parnmpc_discretizer(T, N, max_num_impulse);
+      parnmpc_discretizer.discretizeOCP(contact_sequence, t);
+      Direction d(robot, N, max_num_impulse);
+      for (int i=0; i<N; ++i) {
+        d[i].setRandom(contact_sequence.contactStatus(parnmpc_discretizer.contactPhase(i)));
+      }
+      const int num_impulse = contact_sequence.numImpulseEvents();
+      for (int i=0; i<num_impulse; ++i) {
+        d.impulse[i].setRandom(contact_sequence.impulseStatus(i));
+      }
+      for (int i=0; i<num_impulse; ++i) {
+        d.aux[i].setRandom(contact_sequence.contactStatus(parnmpc_discretizer.contactPhaseBeforeImpulse(i)));
+      }
+      const int num_lift = contact_sequence.numLiftEvents();
+      for (int i=0; i<num_lift; ++i) {
+        d.lift[i].setRandom(contact_sequence.contactStatus(parnmpc_discretizer.contactPhaseBeforeLift(i)));
+      }
+      return d;
     }
-    const int num_impulse = contact_sequence.numImpulseEvents();
-    for (int i=0; i<num_impulse; ++i) {
-      d.impulse[i].setRandom(contact_sequence.impulseStatus(i));
+    else {
+      OCPDiscretizer ocp_discretizer(T, N, max_num_impulse);
+      ocp_discretizer.discretizeOCP(contact_sequence, t);
+      Direction d(robot, N, max_num_impulse);
+      for (int i=0; i<=N; ++i) {
+        d[i].setRandom(contact_sequence.contactStatus(ocp_discretizer.contactPhase(i)));
+      }
+      const int num_impulse = contact_sequence.numImpulseEvents();
+      for (int i=0; i<num_impulse; ++i) {
+        d.impulse[i].setRandom(contact_sequence.impulseStatus(i));
+      }
+      for (int i=0; i<num_impulse; ++i) {
+        d.aux[i].setRandom(contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterImpulse(i)));
+      }
+      const int num_lift = contact_sequence.numLiftEvents();
+      for (int i=0; i<num_lift; ++i) {
+        d.lift[i].setRandom(contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterLift(i)));
+      }
+      return d;
     }
-    for (int i=0; i<num_impulse; ++i) {
-      d.aux[i].setRandom(contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterImpulse(i)));
-    }
-    const int num_lift = contact_sequence.numLiftEvents();
-    for (int i=0; i<num_lift; ++i) {
-      d.lift[i].setRandom(contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterLift(i)));
-    }
-    return d;
   }
 }
 

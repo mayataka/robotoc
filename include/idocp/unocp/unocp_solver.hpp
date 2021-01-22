@@ -150,12 +150,6 @@ public:
   bool isCurrentSolutionFeasible();
 
   ///
-  /// @brief Creates robot model.
-  /// @return Robot model.
-  ///
-  Robot createRobot() const;
-
-  ///
   /// @brief Get the solution vector. This function is not suitable for 
   /// real-time application, e.g., MPC, since this function reconstructs the 
   /// solution vector object.

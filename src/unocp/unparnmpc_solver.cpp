@@ -199,11 +199,6 @@ bool UnParNMPCSolver::isCurrentSolutionFeasible() {
 }
 
 
-Robot UnParNMPCSolver::createRobot() const {
-  return robots_[0];
-}
-
-
 std::vector<Eigen::VectorXd> UnParNMPCSolver::getSolution(
     const std::string& name) const {
   std::vector<Eigen::VectorXd> sol;

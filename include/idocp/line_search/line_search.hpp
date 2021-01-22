@@ -183,8 +183,7 @@ private:
             +violations_lift_.sum());
   }
 
-  template <typename DiscretizerType>
-  static const Eigen::VectorXd& q_prev(const DiscretizerType& discretizer, 
+  static const Eigen::VectorXd& q_prev(const OCPDiscretizer& discretizer, 
                                        const Eigen::VectorXd& q, 
                                        const Solution& s, 
                                        const int time_stage) {
@@ -204,8 +203,7 @@ private:
     }
   }
 
-  template <typename DiscretizerType>
-  static const Eigen::VectorXd& v_prev(const DiscretizerType& discretizer, 
+  static const Eigen::VectorXd& v_prev(const OCPDiscretizer& discretizer, 
                                        const Eigen::VectorXd& v, 
                                        const Solution& s, 
                                        const int time_stage) {
@@ -222,6 +220,48 @@ private:
     }
     else {
       return s[time_stage-1].v;
+    }
+  }
+
+  static const Eigen::VectorXd& q_prev(const ParNMPCDiscretizer& discretizer, 
+                                       const Eigen::VectorXd& q, 
+                                       const Solution& s, 
+                                       const int time_stage) {
+    assert(time_stage >= 0);
+    assert(time_stage < discretizer.N());
+    if (discretizer.isTimeStageAfterImpulse(time_stage)) {
+      return s.impulse[discretizer.impulseIndexBeforeTimeStage(time_stage)].q;
+    }
+    else if (discretizer.isTimeStageAfterLift(time_stage)) {
+      return s.lift[discretizer.liftIndexBeforeTimeStage(time_stage)].q;
+    }
+    else if (time_stage > 0) {
+      return s[time_stage-1].q;
+    }
+    else { 
+      assert(time_stage == 0);
+      return q;
+    }
+  }
+
+  static const Eigen::VectorXd& v_prev(const ParNMPCDiscretizer& discretizer, 
+                                       const Eigen::VectorXd& v, 
+                                       const Solution& s, 
+                                       const int time_stage) {
+    assert(time_stage >= 0);
+    assert(time_stage < discretizer.N());
+    if (discretizer.isTimeStageAfterImpulse(time_stage)) {
+      return s.impulse[discretizer.impulseIndexBeforeTimeStage(time_stage)].v;
+    }
+    else if (discretizer.isTimeStageAfterLift(time_stage)) {
+      return s.lift[discretizer.liftIndexBeforeTimeStage(time_stage)].v;
+    }
+    else if (time_stage > 0) {
+      return s[time_stage-1].v;
+    }
+    else { 
+      assert(time_stage == 0);
+      return v;
     }
   }
 

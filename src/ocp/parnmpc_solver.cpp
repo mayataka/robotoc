@@ -76,6 +76,7 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   parnmpc_.discretize(contact_sequence_, t);
+  discretizeSolution();
   backward_correction_solver_.coarseUpdate(parnmpc_, backward_correction_, 
                                            robots_, contact_sequence_, q, v, s_, 
                                            kkt_matrix_, kkt_residual_);
@@ -345,11 +346,6 @@ bool ParNMPCSolver::isCurrentSolutionFeasible() {
 }
 
 
-Robot ParNMPCSolver::createRobot() const {
-  return robots_[0];
-}
-
-
 std::vector<Eigen::VectorXd> ParNMPCSolver::getSolution(
     const std::string& name) const {
   std::vector<Eigen::VectorXd> sol;
@@ -500,12 +496,12 @@ void ParNMPCSolver::discretizeSolution() {
     s_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
     s_.aux[i].setContactStatus(
         contact_sequence_.contactStatus(
-            parnmpc_.discrete().contactPhaseAfterImpulse(i)));
+            parnmpc_.discrete().contactPhaseBeforeImpulse(i)));
   }
   for (int i=0; i<parnmpc_.discrete().numLiftStages(); ++i) {
     s_.lift[i].setContactStatus(
         contact_sequence_.contactStatus(
-            parnmpc_.discrete().contactPhaseAfterLift(i)));
+            parnmpc_.discrete().contactPhaseBeforeLift(i)));
   }
 }
 

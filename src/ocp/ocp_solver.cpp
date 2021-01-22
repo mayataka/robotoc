@@ -321,11 +321,6 @@ bool OCPSolver::isCurrentSolutionFeasible() {
 }
 
 
-Robot OCPSolver::createRobot() const {
-  return robots_[0];
-}
-
-
 std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     const std::string& name) const {
   std::vector<Eigen::VectorXd> sol;
