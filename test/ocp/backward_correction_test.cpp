@@ -24,7 +24,7 @@ protected:
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N = 20;
     max_num_impulse = 5;
-    nthreads = 4;
+    nthreads = 1;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     dtau = T / N;
@@ -81,8 +81,18 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
   linearizer.initConstraints(parnmpc, robots, contact_sequence, s);
   auto parnmpc_ref = parnmpc;
   BackwardCorrection back_corr(robot, N, max_num_impulse, nthreads);
+  back_corr.initAuxMat(parnmpc, robots, s, kkt_matrix);
   back_corr.coarseUpdate(parnmpc, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
-  Robot robot_ref = robot;
+
+  auto robot_ref = robot;
+  auto s_new_ref = s;
+  const int dimv = robot.dimv();
+  const int dimx = 2*robot.dimv();
+  parnmpc_ref.terminal.computeTerminalCostHessian(robot_ref, parnmpc_ref.discrete().t(N-1),
+                                                  s[N-1], kkt_matrix_ref[N-1]);
+  const Eigen::MatrixXd aux_mat = kkt_matrix_ref[N-1].Qxx();
+  BackwardCorrector corr_ref(robot, N, max_num_impulse);
+
   for (int i=0; i<N; ++i) {
     Eigen::VectorXd q_prev, v_prev;
     if (parnmpc_ref.discrete().isTimeStageAfterImpulse(i)) {
@@ -108,6 +118,8 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
           robot_ref, contact_sequence.contactStatus(contact_phase), 
           parnmpc_ref.discrete().t(i), dt, q_prev, v_prev,
           s[i], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      corr_ref[i].coarseUpdate(robot_ref, dt, kkt_matrix_ref[i], 
+                               kkt_residual_ref[i], s[i], s_new_ref[i]);
     }
     else if (parnmpc_ref.discrete().isTimeStageBeforeImpulse(i)) {
       const int contact_phase = parnmpc_ref.discrete().contactPhase(i);
@@ -123,16 +135,26 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
       parnmpc_ref[i].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase), ti, dt, 
           q_prev, v_prev, s[i], s.aux[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      corr_ref[i].coarseUpdate(robot_ref, dt, aux_mat, kkt_matrix_ref[i], 
+                               kkt_residual_ref[i], s[i], s_new_ref[i]);
       parnmpc_ref.aux[impulse_index].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase), 
           contact_sequence.impulseStatus(impulse_index), t_impulse, dt_aux, 
           s[i].q, s[i].v, s.aux[impulse_index], s.impulse[impulse_index], 
           kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
+      corr_ref.aux[impulse_index].coarseUpdate(
+          robot_ref, dt_aux, aux_mat, kkt_matrix_ref.aux[impulse_index], 
+          kkt_residual_ref.aux[impulse_index], s.aux[impulse_index], 
+          s.impulse[impulse_index], s_new_ref.aux[impulse_index]);
       parnmpc_ref.impulse[impulse_index].linearizeOCP(
           robot_ref, contact_sequence.impulseStatus(impulse_index), t_impulse, 
           s.aux[impulse_index].q, s.aux[impulse_index].v, 
           s.impulse[impulse_index], s[i+1], 
           kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index]);
+      corr_ref.impulse[impulse_index].coarseUpdate(
+          robot_ref, aux_mat, kkt_matrix_ref.impulse[impulse_index], 
+          kkt_residual_ref.impulse[impulse_index], s.impulse[impulse_index], 
+          s_new_ref.impulse[impulse_index]);
     }
     else if (parnmpc_ref.discrete().isTimeStageBeforeLift(i)) {
       const int contact_phase = parnmpc_ref.discrete().contactPhase(i);
@@ -148,10 +170,16 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
       parnmpc_ref[i].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase), ti, dt, 
           q_prev, v_prev, s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      corr_ref[i].coarseUpdate(robot_ref, dt, aux_mat, kkt_matrix_ref[i], 
+                               kkt_residual_ref[i], s[i], s_new_ref[i]);
       parnmpc_ref.lift[lift_index].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase), t_lift, dt_lift, 
           s[i].q, s[i].v, s.lift[lift_index], s[i+1], 
           kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
+      corr_ref.lift[lift_index].coarseUpdate(
+          robot_ref, dt_lift, aux_mat, kkt_matrix_ref.lift[lift_index], 
+          kkt_residual_ref.lift[lift_index], s.lift[lift_index], 
+          s_new_ref.lift[lift_index]);
     }
     else {
       const int contact_phase = parnmpc_ref.discrete().contactPhase(i);
@@ -160,6 +188,8 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
           robot_ref, contact_sequence.contactStatus(contact_phase), 
           parnmpc_ref.discrete().t(i), dt, q_prev, v_prev,
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
+      corr_ref[i].coarseUpdate(robot_ref, dt, aux_mat, kkt_matrix_ref[i], 
+                               kkt_residual_ref[i], s[i], s_new_ref[i]);
     }
   }
   // Discrete events before s[0]. (between s[0] and q, v).
@@ -174,11 +204,19 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
         robot_ref, contact_sequence.contactStatus(contact_phase), 
         t_impulse, dt_aux, q, v, s.aux[impulse_index], s.impulse[impulse_index], 
         kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
+    corr_ref.aux[impulse_index].coarseUpdate(
+        robot_ref, dt_aux, aux_mat, kkt_matrix_ref.aux[impulse_index], 
+        kkt_residual_ref.aux[impulse_index], s.aux[impulse_index], 
+        s_new_ref.aux[impulse_index]);
     parnmpc_ref.impulse[impulse_index].linearizeOCP(
         robot_ref, contact_sequence.impulseStatus(impulse_index), t_impulse, 
         s.aux[impulse_index].q, s.aux[impulse_index].v, 
         s.impulse[impulse_index], s[0], 
         kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index]);
+    corr_ref.impulse[impulse_index].coarseUpdate(
+        robot_ref, aux_mat, kkt_matrix_ref.impulse[impulse_index], 
+        kkt_residual_ref.impulse[impulse_index], s.impulse[impulse_index], 
+        s_new_ref.impulse[impulse_index]);
   }
   else if (parnmpc_ref.discrete().isTimeStageAfterLift(0)) {
     const int contact_phase = parnmpc_ref.discrete().contactPhase(-1);
@@ -191,10 +229,10 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
         robot_ref, contact_sequence.contactStatus(contact_phase), t_lift, dt_lift, 
         q, v, s.lift[lift_index], s[0], 
         kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
-  }
-  for (int i=0; i<N; ++i) {
-    std::cout << "i = " << i << std::endl;
-    EXPECT_TRUE(kkt_matrix[i].isApprox(kkt_matrix_ref[i]));
+    corr_ref.lift[lift_index].coarseUpdate(
+        robot_ref, dt_lift, aux_mat, kkt_matrix_ref.lift[lift_index], 
+        kkt_residual_ref.lift[lift_index], s.lift[lift_index], 
+        s_new_ref.lift[lift_index]);
   }
 
   EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));

@@ -68,25 +68,26 @@ void BackwardCorrection::initAuxMat(ParNMPC& parnmpc,
   parnmpc.terminal.computeTerminalCostHessian(robots[0], 
                                               parnmpc.discrete().t(N_-1), 
                                               s[N_-1], kkt_matrix[N_-1]);
+  const auto& Qxx = kkt_matrix[N_-1].Qxx();
   const int N_impulse = parnmpc.discrete().numImpulseStages();
   const int N_lift = parnmpc.discrete().numLiftStages();
   N_all_ = N_ + 2 * N_impulse + N_lift;
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all_; ++i) {
     if (i < N_) {
-      aux_mat_[i] = kkt_matrix[N_-1].Qxx();
+      aux_mat_[i] = Qxx;
     }
     else if (i < N_+N_impulse) {
       const int impulse_index = i - N_;
-      aux_mat_impulse_[impulse_index] = kkt_matrix[N_-1].Qxx();
+      aux_mat_impulse_[impulse_index] = Qxx;
     }
     else if (i < N_+2*N_impulse) {
       const int impulse_index = i - N_ - N_impulse;
-      aux_mat_aux_[impulse_index] = kkt_matrix[N_-1].Qxx();
+      aux_mat_aux_[impulse_index] = Qxx;
     }
     else {
       const int lift_index = i - N_ - 2*N_impulse;
-      aux_mat_lift_[lift_index] = kkt_matrix[N_-1].Qxx();
+      aux_mat_lift_[lift_index] = Qxx;
     }
   }
 }
@@ -174,12 +175,12 @@ void BackwardCorrection::coarseUpdate(ParNMPC& parnmpc,
           s.aux[impulse_index].v, s.impulse[impulse_index], 
           s[time_stage_after_impulse], kkt_matrix.impulse[impulse_index], 
           kkt_residual.impulse[impulse_index]);
-      corrector_.impulse[i].coarseUpdate(robots[omp_get_thread_num()], 
-                                         aux_mat_[time_stage_after_impulse], 
-                                         kkt_matrix.impulse[impulse_index], 
-                                         kkt_residual.impulse[impulse_index], 
-                                         s.impulse[impulse_index], 
-                                         s_new_.impulse[impulse_index]);
+      s_new_.impulse[impulse_index].setImpulseStatus(
+          contact_sequence.impulseStatus(impulse_index));
+      corrector_.impulse[impulse_index].coarseUpdate(
+          robots[omp_get_thread_num()], aux_mat_[time_stage_after_impulse], 
+          kkt_matrix.impulse[impulse_index], kkt_residual.impulse[impulse_index], 
+          s.impulse[impulse_index], s_new_.impulse[impulse_index]);
     }
     else if (i < N_+2*N_impulse) {
       const int impulse_index  = i - (N_+N_impulse);
@@ -196,6 +197,12 @@ void BackwardCorrection::coarseUpdate(ParNMPC& parnmpc,
             s[time_stage_before_impulse].q, s[time_stage_before_impulse].v, 
             s.aux[impulse_index], s.impulse[impulse_index], 
             kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
+        corrector_.aux[impulse_index].coarseUpdate(
+            robots[omp_get_thread_num()], 
+            parnmpc.discrete().dtau_aux(impulse_index), 
+            aux_mat_impulse_[impulse_index], kkt_matrix.aux[impulse_index], 
+            kkt_residual.aux[impulse_index], s.aux[impulse_index], 
+            s.impulse[impulse_index], s_new_.aux[impulse_index]);
       }
       else {
         assert(time_stage_before_impulse == -1);
@@ -207,14 +214,13 @@ void BackwardCorrection::coarseUpdate(ParNMPC& parnmpc,
             parnmpc.discrete().dtau_aux(impulse_index), 
             q, v, s.aux[impulse_index], s.impulse[impulse_index], 
             kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
+        corrector_.aux[impulse_index].coarseUpdate(
+            robots[omp_get_thread_num()], 
+            parnmpc.discrete().dtau_aux(impulse_index), 
+            aux_mat_impulse_[impulse_index], kkt_matrix.aux[impulse_index], 
+            kkt_residual.aux[impulse_index], s.aux[impulse_index], 
+            s_new_.aux[impulse_index]);
       }
-      corrector_.aux[i].coarseUpdate(robots[omp_get_thread_num()], 
-                                     parnmpc.discrete().dtau_aux(impulse_index), 
-                                     aux_mat_impulse_[impulse_index], 
-                                     kkt_matrix.aux[impulse_index], 
-                                     kkt_residual.aux[impulse_index], 
-                                     s.aux[impulse_index], 
-                                     s_new_.aux[impulse_index]);
     }
     else {
       const int lift_index = i - (N_+2*N_impulse);
@@ -242,13 +248,11 @@ void BackwardCorrection::coarseUpdate(ParNMPC& parnmpc,
             q, v, s.lift[lift_index], s[time_stage_before_lift+1], 
             kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
       }
-      corrector_.lift[i].coarseUpdate(robots[omp_get_thread_num()], 
-                                      parnmpc.discrete().dtau_lift(lift_index), 
-                                      aux_mat_[time_stage_before_lift+1], 
-                                      kkt_matrix.lift[lift_index], 
-                                      kkt_residual.lift[lift_index], 
-                                      s.lift[lift_index], 
-                                      s_new_.lift[lift_index]);
+      corrector_.lift[lift_index].coarseUpdate(
+          robots[omp_get_thread_num()], parnmpc.discrete().dtau_lift(lift_index), 
+          aux_mat_[time_stage_before_lift+1], kkt_matrix.lift[lift_index], 
+          kkt_residual.lift[lift_index], s.lift[lift_index], 
+          s_new_.lift[lift_index]);
     }
   }
 }
