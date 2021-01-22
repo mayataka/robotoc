@@ -411,6 +411,7 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
       const int impulse_index = i - N_;
       corr.impulse[impulse_index].forwardCorrectionParallel(
           s_new_.impulse[impulse_index]);
+      aux_mat_impulse_[impulse_index] = - corr.impulse[impulse_index].auxMat();
       ImpulseSplitBackwardCorrection::computeDirection(
           robots[omp_get_thread_num()], s.impulse[impulse_index], 
           s_new_.impulse[impulse_index], d.impulse[impulse_index]);
@@ -429,6 +430,7 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
       if (parnmpc.discrete().timeStageBeforeImpulse(impulse_index) >= 0) {
         corr.aux[impulse_index].forwardCorrectionParallel(
             s_new_.aux[impulse_index]);
+        aux_mat_aux_[impulse_index] = - corr.aux[impulse_index].auxMat();
       }
       SplitBackwardCorrection::computeDirection(robots[omp_get_thread_num()], 
                                                 s.aux[impulse_index], 
@@ -451,6 +453,7 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
       if (parnmpc.discrete().timeStageBeforeLift(lift_index) >= 0) {
         corr.lift[lift_index].forwardCorrectionParallel(
             s_new_.lift[lift_index]);
+        aux_mat_lift_[lift_index] = - corr.lift[lift_index].auxMat();
       }
       SplitBackwardCorrection::computeDirection(robots[omp_get_thread_num()], 
                                                 s.lift[lift_index], 

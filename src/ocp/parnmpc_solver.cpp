@@ -432,6 +432,23 @@ void ParNMPCSolver::printSolution(const std::string& name,
       }
     }
   }
+  if (name == "dual") {
+    for (int i=0; i<N_; ++i) {
+      std::cout << "mu[" << i << "] = " << s_[i].mu_stack().transpose() << std::endl;
+    }
+    for (int i=0; i<parnmpc_.discrete().numImpulseStages(); ++i) {
+      std::cout << "mu.impulse[" << i << "] = " << s_.impulse[i].mu_stack().transpose() << std::endl;
+    }
+    for (int i=0; i<parnmpc_.discrete().numImpulseStages(); ++i) {
+      std::cout << "xi.impulse[" << i << "] = " << s_.impulse[i].xi_stack().transpose() << std::endl;
+    }
+    for (int i=0; i<parnmpc_.discrete().numImpulseStages(); ++i) {
+      std::cout << "mu.aux[" << i << "] = " << s_.aux[i].mu_stack().transpose() << std::endl;
+    }
+    for (int i=0; i<parnmpc_.discrete().numLiftStages(); ++i) {
+      std::cout << "mu.lift[" << i << "] = " << s_.lift[i].mu_stack().transpose() << std::endl;
+    }
+  }
 }
 
 

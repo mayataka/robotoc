@@ -73,7 +73,7 @@ public:
 
   double KKTError(const ParNMPC& parnmpc, const KKTResidual& kkt_residual);
 
-  void integrateSolution(ParNMPC& parnmpc, BackwardCorrection& corr,
+  void integrateSolution(ParNMPC& parnmpc, const BackwardCorrection& corr,
                          const std::vector<Robot>& robots,
                          const KKTMatrix& kkt_matrix,
                          const KKTResidual& kkt_residual,

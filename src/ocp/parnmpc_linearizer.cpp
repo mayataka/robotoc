@@ -245,7 +245,7 @@ double ParNMPCLinearizer::KKTError(const ParNMPC& parnmpc,
 
 
 void ParNMPCLinearizer::integrateSolution(ParNMPC& parnmpc, 
-                                          BackwardCorrection& corr,
+                                          const BackwardCorrection& corr,
                                           const std::vector<Robot>& robots, 
                                           const KKTMatrix& kkt_matrix, 
                                           const KKTResidual& kkt_residual, 

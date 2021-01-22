@@ -27,7 +27,7 @@ protected:
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N = 20;
     max_num_impulse = 5;
-    nthreads = 1;
+    nthreads = 4;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     dtau = T / N;
