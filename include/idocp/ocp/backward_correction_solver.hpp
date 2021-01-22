@@ -1,24 +1,22 @@
-#ifndef IDOCP_BACKWARD_CORRECTION_HPP_
-#define IDOCP_BACKWARD_CORRECTION_HPP_
+#ifndef IDOCP_BACKWARD_CORRECTION_SOLVER_HPP_
+#define IDOCP_BACKWARD_CORRECTION_SOLVER_HPP_
 
 #include <vector>
 
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/ocp/split_backward_correction.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/hybrid/parnmpc_discretizer.hpp"
 
 
 namespace idocp {
 
 ///
-/// @class BackwardCorrection
+/// @class BackwardCorrectionSolver
 /// @brief Backward correction.
 ///
-class BackwardCorrection {
+class BackwardCorrectionSolver {
 public:
   ///
   /// @brief Construct factorizer.
@@ -27,52 +25,67 @@ public:
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  BackwardCorrection(const Robot& robot, const int N, const int max_num_impulse, 
-                     const int nthreads);
+  BackwardCorrectionSolver(const Robot& robot, const int N, 
+                           const int max_num_impulse, const int nthreads);
 
   ///
   /// @brief Default constructor. 
   ///
-  BackwardCorrection();
+  BackwardCorrectionSolver();
 
   ///
   /// @brief Destructor. 
   ///
-  ~BackwardCorrection();
+  ~BackwardCorrectionSolver();
  
   ///
   /// @brief Default copy constructor. 
   ///
-  BackwardCorrection(const BackwardCorrection&) = default;
+  BackwardCorrectionSolver(const BackwardCorrectionSolver&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  BackwardCorrection& operator=(const BackwardCorrection&) = default;
+  BackwardCorrectionSolver& operator=(
+      const BackwardCorrectionSolver&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  BackwardCorrection(BackwardCorrection&&) noexcept = default;
+  BackwardCorrectionSolver(BackwardCorrectionSolver&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  BackwardCorrection& operator=(BackwardCorrection&&) noexcept = default;
+  BackwardCorrectionSolver& operator=(
+      BackwardCorrectionSolver&&) noexcept = default;
 
   void initAuxMat(ParNMPC& parnmpc, std::vector<Robot>& robots, 
                   const Solution& s, KKTMatrix& kkt_matrix);
 
-  void coarseUpdate(ParNMPC& parnmpc, std::vector<Robot>& robots, 
+  void coarseUpdate(ParNMPC& parnmpc, BackwardCorrection& corr, 
+                    std::vector<Robot>& robots, 
                     const ContactSequence& contact_sequence, 
                     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                     const Solution& s, KKTMatrix& kkt_matrix, 
                     KKTResidual& kkt_residual);
 
-  void backwardCorrection(ParNMPC& parnmpc, std::vector<Robot>& robots, 
-                          const KKTMatrix& kkt_matrix, 
-                          const KKTResidual& kkt_residual, 
-                          const Solution& s, Direction& d);
+  void backwardCorrectionSerial(const ParNMPC& parnmpc, 
+                                BackwardCorrection& corr, const Solution& s);
+
+  void backwardCorrectionParallel(const ParNMPC& parnmpc, 
+                                  BackwardCorrection& corr,
+                                  const std::vector<Robot>& robots);
+
+  void forwardCorrectionSerial(const ParNMPC& parnmpc, BackwardCorrection& corr, 
+                               const std::vector<Robot>& robots, 
+                               const Solution& s);
+
+  void forwardCorrectionParallel(ParNMPC& parnmpc, BackwardCorrection& corr, 
+                                 std::vector<Robot>& robots, 
+                                 const KKTMatrix& kkt_matrix, 
+                                 const KKTResidual& kkt_residual, 
+                                 const Solution& s, Direction& d);
 
   double primalStepSize() const;
 
@@ -124,7 +137,6 @@ public:
 
 private:
   int N_, max_num_impulse_, nthreads_, N_all_;
-  BackwardCorrector corrector_;
   Solution s_new_;
   std::vector<Eigen::MatrixXd> aux_mat_, aux_mat_impulse_, aux_mat_aux_, 
                                aux_mat_lift_;
@@ -134,4 +146,4 @@ private:
 
 } // namespace idocp
 
-#endif // IDOCP_BACKWARD_CORRECTION_HPP_ 
+#endif // IDOCP_BACKWARD_CORRECTION_SOLVER_HPP_ 

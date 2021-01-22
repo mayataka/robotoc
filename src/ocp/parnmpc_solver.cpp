@@ -15,9 +15,10 @@ ParNMPCSolver::ParNMPCSolver(const Robot& robot,
   : robots_(nthreads, robot),
     contact_sequence_(robot, N),
     parnmpc_linearizer_(N, max_num_impulse, nthreads),
-    backward_correction_(robot, N, max_num_impulse, nthreads),
+    backward_correction_solver_(robot, N, max_num_impulse, nthreads),
     line_search_(robot, N, max_num_impulse, nthreads),
     parnmpc_(robot, cost, constraints, T, N, max_num_impulse),
+    backward_correction_(robot, N, max_num_impulse),
     kkt_matrix_(robot, N, max_num_impulse),
     kkt_residual_(robot, N, max_num_impulse),
     s_(robot, N, max_num_impulse),
@@ -65,7 +66,7 @@ void ParNMPCSolver::initConstraints() {
 
 void ParNMPCSolver::initBackwardCorrection(const double t) {
   parnmpc_.discretize(contact_sequence_, t);
-  backward_correction_.initAuxMat(parnmpc_, robots_, s_, kkt_matrix_);
+  backward_correction_solver_.initAuxMat(parnmpc_, robots_, s_, kkt_matrix_);
 }
 
 
@@ -75,12 +76,23 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   parnmpc_.discretize(contact_sequence_, t);
-  backward_correction_.coarseUpdate(parnmpc_, robots_, contact_sequence_, 
-                                    q, v, s_, kkt_matrix_, kkt_residual_);
-  backward_correction_.backwardCorrection(parnmpc_, robots_, kkt_matrix_, 
-                                          kkt_residual_, s_, d_);
-  double primal_step_size = backward_correction_.primalStepSize();
-  const double dual_step_size   = backward_correction_.dualStepSize();
+  backward_correction_solver_.coarseUpdate(parnmpc_, backward_correction_, 
+                                           robots_, contact_sequence_, q, v, s_, 
+                                           kkt_matrix_, kkt_residual_);
+  backward_correction_solver_.backwardCorrectionSerial(parnmpc_, 
+                                                       backward_correction_, s_);
+  backward_correction_solver_.backwardCorrectionParallel(parnmpc_, 
+                                                         backward_correction_, 
+                                                         robots_);
+  backward_correction_solver_.forwardCorrectionSerial(parnmpc_, 
+                                                      backward_correction_, 
+                                                      robots_, s_);
+  backward_correction_solver_.forwardCorrectionParallel(parnmpc_, 
+                                                        backward_correction_, 
+                                                        robots_, kkt_matrix_, 
+                                                        kkt_residual_, s_, d_);
+  double primal_step_size = backward_correction_solver_.primalStepSize();
+  const double dual_step_size   = backward_correction_solver_.dualStepSize();
   if (use_line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(parnmpc_, robots_, 

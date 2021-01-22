@@ -43,7 +43,7 @@ using KKTMatrix = hybrid_container<SplitKKTMatrix, ImpulseSplitKKTMatrix>;
 using KKTResidual = hybrid_container<SplitKKTResidual, ImpulseSplitKKTResidual>;
 using RiccatiFactorization = hybrid_container<SplitRiccatiFactorization, SplitRiccatiFactorization>;
 using RiccatiFactorizer = hybrid_container<SplitRiccatiFactorizer, ImpulseSplitRiccatiFactorizer>; 
-using BackwardCorrector = hybrid_container<SplitBackwardCorrection, ImpulseSplitBackwardCorrection>;
+using BackwardCorrection = hybrid_container<SplitBackwardCorrection, ImpulseSplitBackwardCorrection>;
 
 ///
 /// @class hybrid_container

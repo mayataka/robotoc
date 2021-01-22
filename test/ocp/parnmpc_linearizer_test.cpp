@@ -8,7 +8,7 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/ocp/backward_correction.hpp"
+#include "idocp/ocp/backward_correction_solver.hpp"
 #include "idocp/ocp/parnmpc_linearizer.hpp"
 
 #include "test_helper.hpp"

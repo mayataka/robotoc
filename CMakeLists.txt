@@ -115,7 +115,7 @@ add_library(
   src/ocp/parnmpc_linearizer.cpp
   src/ocp/split_backward_correction_data.cpp
   src/ocp/split_backward_correction.cpp
-  src/ocp/backward_correction.cpp
+  src/ocp/backward_correction_solver.cpp
   src/ocp/parnmpc_solver.cpp
   src/unocp/split_unkkt_residual.cpp
   src/unocp/split_unkkt_matrix.cpp

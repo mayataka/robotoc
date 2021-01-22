@@ -9,13 +9,13 @@
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/parnmpc_linearizer.hpp"
-#include "idocp/ocp/backward_correction.hpp"
+#include "idocp/ocp/backward_correction_solver.hpp"
 
 #include "test_helper.hpp"
 
 namespace idocp {
 
-class BackwardCorrectionTest : public ::testing::Test {
+class BackwardCorrectionSolverTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -38,6 +38,7 @@ protected:
   ContactSequence createContactSequence(const Robot& robot) const;
 
   void testCoarseUpdate(const Robot& robot) const;
+  void testBackwardCorrection(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
   int N, max_num_impulse, nthreads;
@@ -48,22 +49,22 @@ protected:
 
 
 
-Solution BackwardCorrectionTest::createSolution(const Robot& robot) const {
+Solution BackwardCorrectionSolverTest::createSolution(const Robot& robot) const {
   return testhelper::CreateSolution(robot, N, max_num_impulse);
 }
 
 
-Solution BackwardCorrectionTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
+Solution BackwardCorrectionSolverTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
   return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t, true);
 }
 
 
-ContactSequence BackwardCorrectionTest::createContactSequence(const Robot& robot) const {
+ContactSequence BackwardCorrectionSolverTest::createContactSequence(const Robot& robot) const {
   return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dtau);
 }
 
 
-void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
+void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
@@ -80,9 +81,11 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
   ParNMPCLinearizer linearizer(N, max_num_impulse, nthreads);
   linearizer.initConstraints(parnmpc, robots, contact_sequence, s);
   auto parnmpc_ref = parnmpc;
-  BackwardCorrection back_corr(robot, N, max_num_impulse, nthreads);
-  back_corr.initAuxMat(parnmpc, robots, s, kkt_matrix);
-  back_corr.coarseUpdate(parnmpc, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  BackwardCorrection corr(robot, N, max_num_impulse);
+  auto corr_ref = corr;
+  BackwardCorrectionSolver corr_solver(robot, N, max_num_impulse, nthreads);
+  corr_solver.initAuxMat(parnmpc, robots, s, kkt_matrix);
+  corr_solver.coarseUpdate(parnmpc, corr, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
 
   auto robot_ref = robot;
   auto s_new_ref = s;
@@ -91,7 +94,6 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
   parnmpc_ref.terminal.computeTerminalCostHessian(robot_ref, parnmpc_ref.discrete().t(N-1),
                                                   s[N-1], kkt_matrix_ref[N-1]);
   const Eigen::MatrixXd aux_mat = kkt_matrix_ref[N-1].Qxx();
-  BackwardCorrector corr_ref(robot, N, max_num_impulse);
 
   for (int i=0; i<N; ++i) {
     Eigen::VectorXd q_prev, v_prev;
@@ -244,7 +246,11 @@ void BackwardCorrectionTest::testCoarseUpdate(const Robot& robot) const {
 }
 
 
-TEST_F(BackwardCorrectionTest, fixedBase) {
+void BackwardCorrectionSolverTest::testBackwardCorrection(const Robot& robot) const {
+}
+
+
+TEST_F(BackwardCorrectionSolverTest, fixedBase) {
   Robot robot(fixed_base_urdf);
   testCoarseUpdate(robot);
   std::vector<int> contact_frames = {18};
@@ -253,7 +259,7 @@ TEST_F(BackwardCorrectionTest, fixedBase) {
 }
 
 
-TEST_F(BackwardCorrectionTest, floatingBase) {
+TEST_F(BackwardCorrectionSolverTest, floatingBase) {
   Robot robot(floating_base_urdf);
   testCoarseUpdate(robot);
   std::vector<int> contact_frames = {14, 24, 34, 44};
