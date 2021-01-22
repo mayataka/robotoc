@@ -260,7 +260,7 @@ void BackwardCorrectionSolver::backwardCorrectionSerial(
   for (int i=N_-2; i>=0; --i) {
     if (parnmpc.discrete().isTimeStageBeforeImpulse(i)) {
       const int impulse_index 
-          = parnmpc.discrete().impulseIndexBeforeTimeStage(i);
+          = parnmpc.discrete().impulseIndexAfterTimeStage(i);
       corr.impulse[impulse_index].backwardCorrectionSerial(
           s[i+1], s_new_[i+1], s_new_.impulse[impulse_index]);
       corr.aux[impulse_index].backwardCorrectionSerial(
@@ -270,7 +270,7 @@ void BackwardCorrectionSolver::backwardCorrectionSerial(
                                        s_new_.aux[impulse_index], s_new_[i]);
     }
     else if (parnmpc.discrete().isTimeStageBeforeLift(i)) {
-      const int lift_index = parnmpc.discrete().liftIndexBeforeTimeStage(i);
+      const int lift_index = parnmpc.discrete().liftIndexAfterTimeStage(i);
       corr.lift[lift_index].backwardCorrectionSerial(
           s[i+1], s_new_[i+1], s_new_.lift[lift_index]);
       corr[i].backwardCorrectionSerial(s.lift[lift_index], 
@@ -305,17 +305,17 @@ void BackwardCorrectionSolver::backwardCorrectionParallel(
                                          s_new_[i]);
     }
     else if (i < N_+N_impulse-1) {
-      const int impulse_index = i - N_;
+      const int impulse_index = i - (N_-1);
       corr.impulse[impulse_index].backwardCorrectionParallel(
           robots[omp_get_thread_num()], s_new_.impulse[impulse_index]);
     }
     else if (i < N_+2*N_impulse-1) {
-      const int impulse_index  = i - (N_+N_impulse);
+      const int impulse_index  = i - (N_-1+N_impulse);
       corr.aux[impulse_index].backwardCorrectionParallel(
           robots[omp_get_thread_num()], s_new_.aux[impulse_index]);
     }
     else {
-      const int lift_index = i - (N_+2*N_impulse);
+      const int lift_index = i - (N_-1+2*N_impulse);
       corr.lift[lift_index].backwardCorrectionParallel(
           robots[omp_get_thread_num()], s_new_.lift[lift_index]);
     }
@@ -377,7 +377,7 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
       if (i > 0) {
         corr[i].forwardCorrectionParallel(s_new_[i]);
       }
-      else if (parnmpc.discrete().isTimeStageAfterLift(0) 
+      else if (parnmpc.discrete().isTimeStageAfterImpulse(0) 
                 || parnmpc.discrete().isTimeStageAfterLift(0)) {
         corr[i].forwardCorrectionParallel(s_new_[i]);
       }
@@ -472,12 +472,12 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
 }
 
 
-double BackwardCorrectionSolver::primalStepSize() const {
+double BackwardCorrectionSolver::maxPrimalStepSize() const {
   return primal_step_sizes_.head(N_all_).minCoeff();
 }
 
 
-double BackwardCorrectionSolver::dualStepSize() const {
+double BackwardCorrectionSolver::maxDualStepSize() const {
   return dual_step_sizes_.head(N_all_).minCoeff();
 }
 

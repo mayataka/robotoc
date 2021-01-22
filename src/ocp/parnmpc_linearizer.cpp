@@ -245,13 +245,13 @@ double ParNMPCLinearizer::KKTError(const ParNMPC& parnmpc,
 
 
 void ParNMPCLinearizer::integrateSolution(ParNMPC& parnmpc, 
+                                          BackwardCorrection& corr,
                                           const std::vector<Robot>& robots, 
                                           const KKTMatrix& kkt_matrix, 
                                           const KKTResidual& kkt_residual, 
                                           const double primal_step_size, 
                                           const double dual_step_size, 
-                                          const Direction& d, 
-                                          Solution& s) const {
+                                          Direction& d, Solution& s) const {
   assert(robots.size() == nthreads_);
   const int N_impulse = parnmpc.discrete().numImpulseStages();
   const int N_lift = parnmpc.discrete().numLiftStages();
@@ -270,10 +270,17 @@ void ParNMPCLinearizer::integrateSolution(ParNMPC& parnmpc,
     }
     else if (i < N_+N_impulse) {
       const int impulse_index  = i - N_;
+      const bool is_position_constraint_valid 
+          = (parnmpc.discrete().timeStageBeforeImpulse(impulse_index) >= 0);
+      if (is_position_constraint_valid) {
+        corr.aux[impulse_index].computeDirection(s.impulse[impulse_index],
+                                                 d.impulse[impulse_index]);
+      }
       parnmpc.impulse[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
                                                   primal_step_size, 
                                                   d.impulse[impulse_index], 
-                                                  s.impulse[impulse_index]);
+                                                  s.impulse[impulse_index],
+                                                  is_position_constraint_valid);
       parnmpc.impulse[impulse_index].updateDual(dual_step_size);
     }
     else if (i < N_+2*N_impulse) {

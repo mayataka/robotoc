@@ -154,10 +154,18 @@ void ImpulseSplitParNMPCTest::testLinearizeOCP(
   const double step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
   auto s_updated = s;
   auto s_updated_ref = s;
-  ocp.updatePrimal(robot, step_size, d, s_updated);
-  s_updated_ref.integrate(robot, step_size, d, false);
-  constraints->updateSlack(constraints_data, step_size);
-  EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
+  {
+    ocp.updatePrimal(robot, step_size, d, s_updated, true);
+    s_updated_ref.integrate(robot, step_size, d, true);
+    constraints->updateSlack(constraints_data, step_size);
+    EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
+  }
+  {
+    ocp.updatePrimal(robot, step_size, d, s_updated, false);
+    s_updated_ref.integrate(robot, step_size, d, false);
+    constraints->updateSlack(constraints_data, step_size);
+    EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
+  }
 }
 
 

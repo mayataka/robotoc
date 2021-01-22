@@ -114,6 +114,7 @@ inline void ImpulseSplitBackwardCorrection::forwardCorrectionParallel(
 inline void ImpulseSplitBackwardCorrection::computeDirection(
     const Robot& robot, const ImpulseSplitSolution& s, 
     const ImpulseSplitSolution& s_new, ImpulseSplitDirection& d) {
+  d.setImpulseStatusByDimension(s.dimf());
   d.dlmd() = s_new.lmd - s.lmd;
   d.dgmm() = s_new.gmm - s.gmm;
   d.dmu()  = s_new.mu_stack() - s.mu_stack();

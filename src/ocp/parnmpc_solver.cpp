@@ -91,17 +91,17 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                                         backward_correction_, 
                                                         robots_, kkt_matrix_, 
                                                         kkt_residual_, s_, d_);
-  double primal_step_size = backward_correction_solver_.primalStepSize();
-  const double dual_step_size   = backward_correction_solver_.dualStepSize();
+  double primal_step_size = backward_correction_solver_.maxPrimalStepSize();
+  const double dual_step_size   = backward_correction_solver_.maxDualStepSize();
   if (use_line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(parnmpc_, robots_, 
                                                     contact_sequence_, q, v, 
                                                     s_, d_, max_primal_step_size);
   }
-  parnmpc_linearizer_.integrateSolution(parnmpc_, robots_, kkt_matrix_, 
-                                        kkt_residual_, primal_step_size, 
-                                        dual_step_size, d_, s_);
+  parnmpc_linearizer_.integrateSolution(parnmpc_, backward_correction_, robots_, 
+                                        kkt_matrix_, kkt_residual_, 
+                                        primal_step_size, dual_step_size, d_, s_);
 } 
 
 

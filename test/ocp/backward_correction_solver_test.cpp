@@ -24,7 +24,7 @@ protected:
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N = 20;
     max_num_impulse = 5;
-    nthreads = 1;
+    nthreads = 4;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     dtau = T / N;
@@ -247,24 +247,60 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
 
 
 void BackwardCorrectionSolverTest::testBackwardCorrection(const Robot& robot) const {
+  auto cost = testhelper::CreateCost(robot);
+  auto constraints = testhelper::CreateConstraints(robot);
+  const auto contact_sequence = createContactSequence(robot);
+  auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
+  auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
+  const auto s = createSolution(robot, contact_sequence);
+  const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
+  std::vector<Robot> robots(nthreads, robot);
+  auto parnmpc = ParNMPC(robot, cost, constraints, T, N, max_num_impulse);
+  parnmpc.discretize(contact_sequence, t);
+  ParNMPCLinearizer linearizer(N, max_num_impulse, nthreads);
+  linearizer.initConstraints(parnmpc, robots, contact_sequence, s);
+  auto parnmpc_ref = parnmpc;
+  BackwardCorrection corr(robot, N, max_num_impulse);
+  BackwardCorrectionSolver corr_solver(robot, N, max_num_impulse, nthreads);
+  corr_solver.initAuxMat(parnmpc, robots, s, kkt_matrix);
+  corr_solver.coarseUpdate(parnmpc, corr, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  auto corr_ref = corr;
+  auto robot_ref = robot;
+  auto s_new_ref = s;
+  const int dimv = robot.dimv();
+  const int dimx = 2*robot.dimv();
+  auto kkt_matrix_ref = kkt_matrix;
+  auto kkt_residual_ref = kkt_residual;
+
+  Direction d(robot, N, max_num_impulse);
+
+  corr_solver.backwardCorrectionSerial(parnmpc, corr, s);
+  corr_solver.backwardCorrectionParallel(parnmpc, corr, robots);
+  corr_solver.forwardCorrectionSerial(parnmpc, corr, robots, s);
+  corr_solver.forwardCorrectionParallel(parnmpc, corr, robots, kkt_matrix, kkt_residual, s, d);
 }
 
 
 TEST_F(BackwardCorrectionSolverTest, fixedBase) {
   Robot robot(fixed_base_urdf);
   testCoarseUpdate(robot);
+  testBackwardCorrection(robot);
   std::vector<int> contact_frames = {18};
   robot = Robot(fixed_base_urdf, contact_frames);
   testCoarseUpdate(robot);
+  testBackwardCorrection(robot);
 }
 
 
 TEST_F(BackwardCorrectionSolverTest, floatingBase) {
   Robot robot(floating_base_urdf);
   testCoarseUpdate(robot);
+  testBackwardCorrection(robot);
   std::vector<int> contact_frames = {14, 24, 34, 44};
   robot = Robot(floating_base_urdf, contact_frames);
   testCoarseUpdate(robot);
+  testBackwardCorrection(robot);
 }
 
 } // namespace idocp

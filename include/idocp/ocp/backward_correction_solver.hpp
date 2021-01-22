@@ -87,9 +87,9 @@ public:
                                  const KKTResidual& kkt_residual, 
                                  const Solution& s, Direction& d);
 
-  double primalStepSize() const;
+  double maxPrimalStepSize() const;
 
-  double dualStepSize() const;
+  double maxDualStepSize() const;
 
   static const Eigen::VectorXd& q_prev(const ParNMPCDiscretizer& discretizer, 
                                        const Eigen::VectorXd& q, 

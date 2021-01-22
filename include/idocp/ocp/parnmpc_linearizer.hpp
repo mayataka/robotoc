@@ -73,12 +73,13 @@ public:
 
   double KKTError(const ParNMPC& parnmpc, const KKTResidual& kkt_residual);
 
-  void integrateSolution(ParNMPC& parnmpc, const std::vector<Robot>& robots,
+  void integrateSolution(ParNMPC& parnmpc, BackwardCorrection& corr,
+                         const std::vector<Robot>& robots,
                          const KKTMatrix& kkt_matrix,
                          const KKTResidual& kkt_residual,
                          const double primal_step_size,
                          const double dual_step_size,
-                         const Direction& d, Solution& s) const;
+                         Direction& d, Solution& s) const;
 
   static const Eigen::VectorXd& q_prev(const ParNMPCDiscretizer& discretizer, 
                                        const Eigen::VectorXd& q, 

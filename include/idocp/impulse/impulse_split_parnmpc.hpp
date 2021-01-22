@@ -142,12 +142,6 @@ public:
   double maxDualStepSize();
 
   ///
-  /// @brief Updates dual variables of the inequality constraints.
-  /// @param[in] dual_step_size Dula step size of the OCP. 
-  ///
-  void updateDual(const double dual_step_size);
-
-  ///
   /// @brief Updates primal variables of this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] primal_step_size Primal step size of the OCP. 
@@ -155,7 +149,14 @@ public:
   /// @param[in, out] s Split solution of this stage.
   ///
   void updatePrimal(const Robot& robot, const double primal_step_size, 
-                    const ImpulseSplitDirection& d, ImpulseSplitSolution& s);
+                    const ImpulseSplitDirection& d, ImpulseSplitSolution& s,
+                    const bool is_position_constraint_valid);
+
+  ///
+  /// @brief Updates dual variables of the inequality constraints.
+  /// @param[in] dual_step_size Dula step size of the OCP. 
+  ///
+  void updateDual(const double dual_step_size);
 
   ///
   /// @brief Computes the KKT residual of the OCP at this stage.

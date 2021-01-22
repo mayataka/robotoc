@@ -227,7 +227,6 @@ void ParNMPCLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
 void ParNMPCLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  ParNMPCLinearizer linearizer(N, max_num_impulse, nthreads);
   const auto contact_sequence = createContactSequence(robot);
   auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
@@ -237,85 +236,82 @@ void ParNMPCLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   std::vector<Robot> robots(nthreads, robot);
   auto parnmpc = ParNMPC(robot, cost, constraints, T, N, max_num_impulse);
   parnmpc.discretize(contact_sequence, t);
+  ParNMPCLinearizer linearizer(N, max_num_impulse, nthreads);
   linearizer.initConstraints(parnmpc, robots, contact_sequence, s);
-  // Direction d(robot, N, max_num_impulse);
-  // RiccatiSolver riccati_solver(robots[0], N, max_num_impulse, nthreads);
-  // riccati_solver.computeNewtonDirection(ocp, robots, contact_sequence, q, v, s, d, 
-  //                                       kkt_matrix, kkt_residual);
-  // const double primal_step_size = riccati_solver.maxPrimalStepSize();
-  // const double dual_step_size = riccati_solver.maxDualStepSize();
-  // ASSERT_TRUE(primal_step_size > 0);
-  // ASSERT_TRUE(primal_step_size <= 1);
-  // ASSERT_TRUE(dual_step_size > 0);
-  // ASSERT_TRUE(dual_step_size <= 1);
-  // auto parnmpc_ref = ocp;
-  // auto s_ref = s;
-  // auto d_ref = d;
-  // auto kkt_matrix_ref = kkt_matrix;
-  // auto kkt_residual_ref = kkt_residual;
-  // linearizer.integrateSolution(ocp, robots, kkt_matrix, kkt_residual, 
-  //                              primal_step_size, dual_step_size, d, s);
-  // auto robot_ref = robot;
-  // for (int i=0; i<N; ++i) {
-  //   if (parnmpc_ref.discrete().isTimeStageBeforeImpulse(i)) {
-  //     const int impulse_index = parnmpc_ref.discrete().impulseIndexAfterTimeStage(i);
-  //     const double dt = parnmpc_ref.discrete().dtau(i);
-  //     const double dt_aux = parnmpc_ref.discrete().dtau_aux(impulse_index);
-  //     ASSERT_TRUE(dt >= 0);
-  //     ASSERT_TRUE(dt <= dtau);
-  //     ASSERT_TRUE(dt_aux >= 0);
-  //     ASSERT_TRUE(dt_aux <= dtau);
-  //     const bool is_state_constraint_valid = (i > 0);
-  //     parnmpc_ref[i].computeCondensedDualDirection(
-  //         robot_ref, dt, kkt_matrix_ref[i], kkt_residual_ref[i], 
-  //         d_ref.impulse[impulse_index], d_ref[i]);
-  //     parnmpc_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
-  //     parnmpc_ref[i].updateDual(dual_step_size);
-  //     parnmpc_ref.impulse[impulse_index].computeCondensedDualDirection(
-  //         robot_ref, kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index], 
-  //         d_ref.aux[impulse_index], d_ref.impulse[impulse_index]);
-  //     parnmpc_ref.impulse[impulse_index].updatePrimal(
-  //         robot_ref, primal_step_size, d_ref.impulse[impulse_index], s_ref.impulse[impulse_index],
-  //         is_state_constraint_valid);
-  //     parnmpc_ref.impulse[impulse_index].updateDual(dual_step_size);
-  //     parnmpc_ref.aux[impulse_index].computeCondensedDualDirection(
-  //         robot_ref, dt_aux, kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index],
-  //         d_ref[i+1], d_ref.aux[impulse_index]);
-  //     parnmpc_ref.aux[impulse_index].updatePrimal(
-  //         robot_ref, primal_step_size, d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
-  //     parnmpc_ref.aux[impulse_index].updateDual(dual_step_size);
-  //   }
-  //   else if (parnmpc_ref.discrete().isTimeStageBeforeLift(i)) {
-  //     const int lift_index = parnmpc_ref.discrete().liftIndexAfterTimeStage(i);
-  //     const double dt = parnmpc_ref.discrete().dtau(i);
-  //     const double dt_lift = parnmpc_ref.discrete().dtau_lift(lift_index);
-  //     ASSERT_TRUE(dt >= 0);
-  //     ASSERT_TRUE(dt <= dtau);
-  //     ASSERT_TRUE(dt_lift >= 0);
-  //     ASSERT_TRUE(dt_lift <= dtau);
-  //     parnmpc_ref[i].computeCondensedDualDirection(
-  //         robot_ref, dt, kkt_matrix_ref[i], kkt_residual_ref[i], 
-  //         d_ref.lift[lift_index], d_ref[i]);
-  //     parnmpc_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
-  //     parnmpc_ref[i].updateDual(dual_step_size);
-  //     parnmpc_ref.lift[lift_index].computeCondensedDualDirection(
-  //         robot_ref, dt_lift, kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
-  //         d_ref[i+1], d_ref.lift[lift_index]);
-  //     parnmpc_ref.lift[lift_index].updatePrimal(robot_ref, primal_step_size, d_ref.lift[lift_index], s_ref.lift[lift_index]);
-  //     parnmpc_ref.lift[lift_index].updateDual(dual_step_size);
-  //   }
-  //   else {
-  //     const double dt = parnmpc_ref.discrete().dtau(i);
-  //     parnmpc_ref[i].computeCondensedDualDirection(
-  //         robot_ref, dtau, kkt_matrix_ref[i], kkt_residual_ref[i], d_ref[i+1], d_ref[i]);
-  //     parnmpc_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
-  //     parnmpc_ref[i].updateDual(dual_step_size);
-  //   }
-  // }
-  // parnmpc_ref.terminal.updatePrimal(robot_ref, primal_step_size, d_ref[N], s_ref[N]);
-  // parnmpc_ref.terminal.updateDual(dual_step_size);
-  // EXPECT_TRUE(testhelper::IsApprox(s, s_ref));
-  // EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
+  Direction d(robot, N, max_num_impulse);
+  BackwardCorrection corr(robot, N, max_num_impulse);
+  BackwardCorrectionSolver corr_solver(robot, N, max_num_impulse, nthreads);
+  corr_solver.initAuxMat(parnmpc, robots, s, kkt_matrix);
+  corr_solver.coarseUpdate(parnmpc, corr, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  corr_solver.backwardCorrectionSerial(parnmpc, corr, s);
+  corr_solver.backwardCorrectionParallel(parnmpc, corr, robots);
+  corr_solver.forwardCorrectionSerial(parnmpc, corr, robots, s);
+  corr_solver.forwardCorrectionParallel(parnmpc, corr, robots, kkt_matrix, kkt_residual, s, d);
+  const double primal_step_size = corr_solver.maxPrimalStepSize();
+  const double dual_step_size = corr_solver.maxDualStepSize();
+  ASSERT_TRUE(primal_step_size > 0);
+  ASSERT_TRUE(primal_step_size <= 1);
+  ASSERT_TRUE(dual_step_size > 0);
+  ASSERT_TRUE(dual_step_size <= 1);
+  auto parnmpc_ref = parnmpc;
+  auto corr_ref = corr;
+  auto s_ref = s;
+  auto d_ref = d;
+  linearizer.integrateSolution(parnmpc, corr, robots, kkt_matrix, kkt_residual, 
+                               primal_step_size, dual_step_size, d, s);
+  auto robot_ref = robot;
+  for (int i=0; i<N; ++i) {
+    if (i == N-1) {
+      parnmpc_ref.terminal.updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
+      parnmpc_ref.terminal.updateDual(dual_step_size);
+    }
+    else if (parnmpc_ref.discrete().isTimeStageBeforeImpulse(i)) {
+      const int impulse_index = parnmpc_ref.discrete().impulseIndexAfterTimeStage(i);
+      parnmpc_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
+      parnmpc_ref[i].updateDual(dual_step_size);
+      parnmpc_ref.aux[impulse_index].updatePrimal(robot_ref, primal_step_size, 
+                                                  d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
+      parnmpc_ref.aux[impulse_index].updateDual(dual_step_size);
+      corr_ref.aux[impulse_index].computeDirection(s_ref.impulse[impulse_index], d_ref.impulse[impulse_index]);
+      parnmpc_ref.impulse[impulse_index].updatePrimal(robot_ref, primal_step_size, 
+                                                      d_ref.impulse[impulse_index], s_ref.impulse[impulse_index],
+                                                      true);
+      parnmpc_ref.impulse[impulse_index].updateDual(dual_step_size);
+    }
+    else if (parnmpc_ref.discrete().isTimeStageBeforeLift(i)) {
+      const int lift_index = parnmpc_ref.discrete().liftIndexAfterTimeStage(i);
+      parnmpc_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
+      parnmpc_ref[i].updateDual(dual_step_size);
+      parnmpc_ref.lift[lift_index].updatePrimal(robot_ref, primal_step_size, 
+                                                d_ref.lift[lift_index], s_ref.lift[lift_index]);
+      parnmpc_ref.lift[lift_index].updateDual(dual_step_size);
+    }
+    else {
+      parnmpc_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
+      parnmpc_ref[i].updateDual(dual_step_size);
+    }
+  }
+  // Discrete events before s[0]. (between s[0] and q, v).
+  if (parnmpc_ref.discrete().isTimeStageAfterImpulse(0)) {
+    const int impulse_index = parnmpc_ref.discrete().impulseIndexBeforeTimeStage(0);
+    ASSERT_EQ(impulse_index, 0);
+    parnmpc_ref.aux[impulse_index].updatePrimal(robot_ref, primal_step_size, 
+                                                d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
+    parnmpc_ref.aux[impulse_index].updateDual(dual_step_size);
+    parnmpc_ref.impulse[impulse_index].updatePrimal(robot_ref, primal_step_size, 
+                                                    d_ref.impulse[impulse_index], s_ref.impulse[impulse_index],
+                                                    false);
+    parnmpc_ref.impulse[impulse_index].updateDual(dual_step_size);
+  }
+  else if (parnmpc_ref.discrete().isTimeStageAfterLift(0)) {
+    const int lift_index = parnmpc_ref.discrete().liftIndexBeforeTimeStage(0);
+    ASSERT_EQ(lift_index, 0);
+    parnmpc_ref.lift[lift_index].updatePrimal(robot_ref, primal_step_size, 
+                                              d_ref.lift[lift_index], s_ref.lift[lift_index]);
+    parnmpc_ref.lift[lift_index].updateDual(dual_step_size);
+  }
+  EXPECT_TRUE(testhelper::IsApprox(s, s_ref));
+  EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
 }
 
 
