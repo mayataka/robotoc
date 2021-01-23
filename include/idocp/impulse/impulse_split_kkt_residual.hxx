@@ -8,6 +8,7 @@ namespace idocp {
 
 inline ImpulseSplitKKTResidual::ImpulseSplitKKTResidual(const Robot& robot) 
   : ldv(Eigen::VectorXd::Zero(robot.dimv())),
+    Fq_prev(Vector6d::Zero()),
     KKT_residual_full_(Eigen::VectorXd::Zero(4*robot.dimv()+2*robot.max_dimf())),
     P_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
@@ -22,6 +23,7 @@ inline ImpulseSplitKKTResidual::ImpulseSplitKKTResidual(const Robot& robot)
 
 inline ImpulseSplitKKTResidual::ImpulseSplitKKTResidual() 
   : ldv(),
+    Fq_prev(Vector6d::Zero()),
     KKT_residual_full_(),
     P_full_(),
     dimv_(0), 

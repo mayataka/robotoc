@@ -181,7 +181,7 @@ void SplitParNMPCTest::testLinearizeOCP(
   cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix_ref);
   constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s, kkt_matrix_ref, kkt_residual_ref);
-  stateequation::LinearizeBackwardEuler(robot, dtau, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::linearizeBackwardEuler(robot, dtau, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot, baumgarte_time_step);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_residual_ref);
@@ -239,7 +239,7 @@ void SplitParNMPCTest::testLinearizeOCP(
   cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix_ref);
   constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s, kkt_matrix_ref, kkt_residual_ref);
-  stateequation::LinearizeBackwardEuler(robot, dtau, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::linearizeBackwardEuler(robot, dtau, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot, baumgarte_time_step);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_residual_ref);
@@ -295,7 +295,7 @@ void SplitParNMPCTest::testComputeKKTResidual(
   robot.updateKinematics(s.q, s.v, s.a);
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual_ref);
   constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual_ref);
-  stateequation::LinearizeBackwardEuler(robot, dtau, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::linearizeBackwardEuler(robot, dtau, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot, baumgarte_time_step);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_residual_ref);
@@ -343,7 +343,7 @@ void SplitParNMPCTest::testComputeKKTResidual(
   robot.updateKinematics(s.q, s.v, s.a);
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual_ref);
   constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual_ref);
-  stateequation::LinearizeBackwardEuler(robot, dtau, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::linearizeBackwardEuler(robot, dtau, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot, baumgarte_time_step);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_residual_ref);
@@ -393,12 +393,12 @@ void SplitParNMPCTest::testCostAndConstraintViolation(
   stage_cost_ref += dtau * constraints->costSlackBarrier(constraints_data, step_size);
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  stateequation::ComputeBackwardEulerResidual(robot, dtau, s_prev.q, s_prev.v, s, kkt_residual_ref);
+  stateequation::computeBackwardEulerResidual(robot, dtau, s_prev.q, s_prev.v, s, kkt_residual_ref);
   ContactDynamics cd(robot, baumgarte_time_step);
   cd.computeContactDynamicsResidual(robot, contact_status, s);
   double constraint_violation_ref = 0;
   constraint_violation_ref += dtau * constraints->l1NormPrimalResidual(constraints_data);
-  constraint_violation_ref += stateequation::L1NormStateEuqationResidual(kkt_residual_ref);
+  constraint_violation_ref += stateequation::l1NormStateEuqationResidual(kkt_residual_ref);
   constraint_violation_ref += cd.l1NormContactDynamicsResidual(dtau);
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -433,7 +433,7 @@ void SplitParNMPCTest::testCostAndConstraintViolation(
   stage_cost_ref += dtau * constraints->costSlackBarrier(constraints_data, step_size);
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  stateequation::ComputeBackwardEulerResidual(robot, dtau, s_prev.q, s_prev.v, s, kkt_residual_ref);
+  stateequation::computeBackwardEulerResidual(robot, dtau, s_prev.q, s_prev.v, s, kkt_residual_ref);
   ContactDynamics cd(robot, baumgarte_time_step);
   cd.computeContactDynamicsResidual(robot, contact_status, s);
   ImpulseDynamicsBackwardEuler::computeImpulseConditionResidual(robot, 
@@ -441,7 +441,7 @@ void SplitParNMPCTest::testCostAndConstraintViolation(
                                                                 kkt_residual_ref);
   double constraint_violation_ref = 0;
   constraint_violation_ref += dtau * constraints->l1NormPrimalResidual(constraints_data);
-  constraint_violation_ref += stateequation::L1NormStateEuqationResidual(kkt_residual_ref);
+  constraint_violation_ref += stateequation::l1NormStateEuqationResidual(kkt_residual_ref);
   constraint_violation_ref += cd.l1NormContactDynamicsResidual(dtau);
   constraint_violation_ref += ImpulseDynamicsBackwardEuler::l1NormImpulseConditionResidual(kkt_residual_ref);
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);

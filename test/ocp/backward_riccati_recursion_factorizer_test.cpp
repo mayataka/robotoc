@@ -58,6 +58,7 @@ SplitKKTMatrix BackwardRiccatiRecursionFactorizerTest::createKKTMatrix(const Rob
   kkt_matrix.Quu() = seed * seed.transpose();
   if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
+    kkt_matrix.Fqv().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
   }
   kkt_matrix.Fvq().setRandom();
   kkt_matrix.Fvv().setRandom();
@@ -106,23 +107,26 @@ void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   BackwardRiccatiRecursionFactorizer factorizer(robot);
   if (!robot.hasFloatingBase()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
+    ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   }
-  ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   factorizer.factorizeKKTMatrix(riccati_next, dtau, kkt_matrix, kkt_residual);
   if (!robot.hasFloatingBase()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
+    ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   }
-  ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
+  A.topLeftCorner(dimv, dimv).setIdentity();
   if (robot.hasFloatingBase()) {
-    A.topLeftCorner(dimv, dimv) = kkt_matrix_ref.Fqq();
-  }
-  else {
-    A.topLeftCorner(dimv, dimv).setIdentity();
+    A.topLeftCorner(robot.dim_passive(), robot.dim_passive()) 
+        = kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive());
   }
   A.topRightCorner(dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
-  A.bottomLeftCorner(dimv, dimv) = kkt_matrix_ref.Fvq();
-  A.bottomRightCorner(dimv, dimv) = kkt_matrix_ref.Fvv();
+  if (robot.hasFloatingBase()) {
+    A.topRightCorner(dimv, dimv).topLeftCorner(robot.dim_passive(), robot.dim_passive()) 
+        = kkt_matrix.Fqv().topLeftCorner(robot.dim_passive(), robot.dim_passive());
+  }
+  A.bottomLeftCorner(dimv, dimv) = kkt_matrix.Fvq();
+  A.bottomRightCorner(dimv, dimv) = kkt_matrix.Fvv();
   Eigen::MatrixXd B = Eigen::MatrixXd::Zero(2*dimv, dimu);
   B.bottomRows(dimv) = kkt_matrix_ref.Fvu();
   Eigen::MatrixXd P_next = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
@@ -149,13 +153,13 @@ void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   lqr_policy.k.setRandom();
   if (!robot.hasFloatingBase()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
+    ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   }
-  ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   factorizer.factorizeRiccatiFactorization(riccati_next, kkt_matrix, kkt_residual, lqr_policy, dtau, riccati);
   if (!robot.hasFloatingBase()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
+    ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   }
-  ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   const Eigen::MatrixXd P_ref = F_ref - lqr_policy.K.transpose() * G_ref * lqr_policy.K;
   const Eigen::VectorXd s_ref = A.transpose() * sx_next - A.transpose() * P_next * kkt_residual_ref.Fx() - kkt_residual_ref.lx() - H_ref * lqr_policy.k;
   EXPECT_TRUE(P_ref.topLeftCorner(dimv, dimv).isApprox(riccati.Pqq));

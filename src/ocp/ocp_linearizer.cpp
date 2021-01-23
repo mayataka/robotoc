@@ -144,7 +144,7 @@ double OCPLinearizer::KKTError(const OCP& ocp,
 void OCPLinearizer::integrateSolution(OCP& ocp, 
                                       const std::vector<Robot>& robots, 
                                       const KKTMatrix& kkt_matrix, 
-                                      const KKTResidual& kkt_residual, 
+                                      KKTResidual& kkt_residual, 
                                       const double primal_step_size, 
                                       const double dual_step_size, 
                                       Direction& d, Solution& s) const {
@@ -177,6 +177,9 @@ void OCPLinearizer::integrateSolution(OCP& ocp,
       ocp[i].updateDual(dual_step_size);
     }
     else if (i == N_) {
+      ocp.terminal.computeCondensedDualDirection(robots[omp_get_thread_num()], 
+                                                 kkt_matrix[N_], 
+                                                 kkt_residual[N_], d[N_]);
       ocp.terminal.updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
                                 d[N_], s[N_]);
       ocp.terminal.updateDual(dual_step_size);

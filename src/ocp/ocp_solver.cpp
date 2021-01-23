@@ -72,9 +72,8 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   discretizeSolution();
   ocp_linearizer_.linearizeOCP(ocp_, robots_, contact_sequence_, q, v, s_, 
                                kkt_matrix_, kkt_residual_);
-  riccati_solver_.computeNewtonDirection<false>(ocp_, robots_, contact_sequence_, 
-                                                q, v, s_, d_, kkt_matrix_, 
-                                                kkt_residual_);
+  riccati_solver_.computeNewtonDirection(ocp_, robots_, contact_sequence_, q, v, 
+                                         s_, d_, kkt_matrix_, kkt_residual_);
   double primal_step_size = riccati_solver_.maxPrimalStepSize();
   const double dual_step_size = riccati_solver_.maxDualStepSize();
   if (use_line_search) {

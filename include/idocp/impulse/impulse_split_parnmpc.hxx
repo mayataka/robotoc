@@ -1,3 +1,7 @@
+#ifndef IDOCP_IMPULSE_SPLIT_PARNMPC_HXX_
+#define IDOCP_IMPULSE_SPLIT_PARNMPC_HXX_
+
+
 #include "idocp/impulse/impulse_split_parnmpc.hpp"
 
 #include <cassert>
@@ -57,7 +61,7 @@ inline void ImpulseSplitParNMPC::linearizeOCP(
   kkt_matrix.setZero();
   cost_->computeImpulseCostDerivatives(robot, cost_data_, t, s, kkt_residual);
   constraints_->augmentDualResidual(robot, constraints_data_, s, kkt_residual);
-  stateequation::LinearizeImpulseBackwardEuler(robot, q_prev, v_prev, s, s_next, 
+  stateequation::linearizeImpulseBackwardEuler(robot, q_prev, v_prev, s, s_next, 
                                                kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s,
                                              kkt_matrix, kkt_residual);
@@ -126,7 +130,7 @@ inline void ImpulseSplitParNMPC::computeKKTResidual(
   cost_->computeImpulseCostDerivatives(robot, cost_data_, t, s, kkt_residual);
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   constraints_->augmentDualResidual(robot, constraints_data_, s, kkt_residual);
-  stateequation::LinearizeImpulseBackwardEuler(robot, q_prev, v_prev, s, s_next, 
+  stateequation::linearizeImpulseBackwardEuler(robot, q_prev, v_prev, s, s_next, 
                                                kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s,
                                              kkt_matrix, kkt_residual);
@@ -139,7 +143,7 @@ inline double ImpulseSplitParNMPC::squaredNormKKTResidual(
   error += kkt_residual.lx().squaredNorm();
   error += kkt_residual.ldv.squaredNorm();
   error += kkt_residual.lf().squaredNorm();
-  error += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
+  error += stateequation::squaredNormStateEuqationResidual(kkt_residual);
   error += impulse_dynamics_.squaredNormImpulseDynamicsResidual(kkt_residual);
   error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
   return error;
@@ -174,15 +178,17 @@ inline double ImpulseSplitParNMPC::constraintViolation(
   kkt_residual.setZero();
   robot.updateKinematics(s.q, s.v);
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  stateequation::ComputeImpulseBackwardEulerResidual(robot, q_prev, v_prev, s, 
+  stateequation::computeImpulseBackwardEulerResidual(robot, q_prev, v_prev, s, 
                                                      kkt_residual);
   impulse_dynamics_.computeImpulseDynamicsResidual(robot, impulse_status, s, 
                                                    kkt_residual);
   double violation = 0;
   violation += constraints_->l1NormPrimalResidual(constraints_data_);
-  violation += stateequation::L1NormStateEuqationResidual(kkt_residual);
+  violation += stateequation::l1NormStateEuqationResidual(kkt_residual);
   violation += impulse_dynamics_.l1NormImpulseDynamicsResidual(kkt_residual);
   return violation;
 }
 
 } // namespace idocp
+
+#endif // IDOCP_IMPULSE_SPLIT_PARNMPC_HXX_

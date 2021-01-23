@@ -40,7 +40,7 @@ public:
   /// @brief Destructor. 
   ///
   ~SplitRiccatiFactorizer();
- 
+
   ///
   /// @brief Default copy constructor. 
   ///

@@ -6,20 +6,6 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/split_ocp.hpp"
-#include "idocp/impulse/impulse_split_ocp.hpp"
-#include "idocp/ocp/terminal_ocp.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/split_kkt_matrix.hpp"
-#include "idocp/ocp/split_kkt_residual.hpp"
-#include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_split_direction.hpp"
-#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_split_kkt_residual.hpp"
-#include "idocp/ocp/split_riccati_factorization.hpp"
-#include "idocp/ocp/split_riccati_factorizer.hpp"
-#include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
@@ -77,11 +63,10 @@ public:
   RiccatiDirectionCalculator& operator=(
       RiccatiDirectionCalculator&&) noexcept = default;
 
-  template <bool UseContinuationMethod=false>
   static void computeInitialStateDirection(
       const std::vector<Robot>& robots, const Eigen::VectorXd& q, 
-      const Eigen::VectorXd& v, const Solution& s, Direction& d, 
-      const double sampling_period=0);
+      const Eigen::VectorXd& v, const KKTMatrix& kkt_matrix, const Solution& s, 
+      Direction& d);
 
   void computeNewtonDirectionFromRiccatiFactorization(
       OCP& ocp, std::vector<Robot>& robots, const RiccatiFactorizer& factorizer, 
@@ -93,7 +78,19 @@ public:
 
   static const SplitRiccatiFactorization& next_riccati_factorization(
       const OCPDiscretizer& ocp_discretizer, 
-      const RiccatiFactorization& factorization, const int time_stage);
+      const RiccatiFactorization& factorization, const int time_stage) {
+    assert(time_stage >= 0);
+    assert(time_stage < ocp_discretizer.N());
+    if (ocp_discretizer.isTimeStageBeforeImpulse(time_stage)) {
+        return factorization.impulse[ocp_discretizer.impulseIndexAfterTimeStage(time_stage)];
+    }
+    else if (ocp_discretizer.isTimeStageBeforeLift(time_stage)) {
+        return factorization.lift[ocp_discretizer.liftIndexAfterTimeStage(time_stage)];
+    }
+    else {
+        return factorization[time_stage+1];
+    }
+  }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -104,7 +101,5 @@ private:
 };
 
 } // namespace idocp 
-
-#include "idocp/ocp/riccati_direction_calculator.hxx"
 
 #endif // IDOCP_RICCATI_DIRECTION_CALCULATOR_HPP_ 

@@ -125,7 +125,7 @@ public:
   /// 
   void computeCondensedDualDirection(const Robot& robot, 
                                      const ImpulseSplitKKTMatrix& kkt_matrix, 
-                                     const ImpulseSplitKKTResidual& kkt_residual,
+                                     ImpulseSplitKKTResidual& kkt_residual,
                                      const SplitDirection& d_next, 
                                      ImpulseSplitDirection& d);
 

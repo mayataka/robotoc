@@ -113,7 +113,7 @@ void RiccatiSolverTest::test(const Robot& robot) const {
         riccati_factorizer, ocp_ref.discrete(), kkt_matrix_ref, 
         constraint_factorization);
   }
-  direction_calculator.computeInitialStateDirection(robots_ref, q, v, s, d_ref);
+  direction_calculator.computeInitialStateDirection(robots_ref, q, v, kkt_matrix_ref, s, d_ref);
   if (ocp_ref.discrete().existStateConstraint()) {
     constraint_factorizer.computeLagrangeMultiplierDirection(
         ocp_ref.discrete(), riccati_factorization, constraint_factorization, d_ref);

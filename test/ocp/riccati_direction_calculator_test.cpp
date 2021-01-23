@@ -97,9 +97,18 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   const int num_lift = ocp.discrete().numLiftStages();
   Direction d = Direction(robot, N, max_num_impulse);
   auto d_ref = d;
-  RiccatiDirectionCalculator::computeInitialStateDirection(robots, q, v, s, d);
-  robot.subtractConfiguration(q, s[0].q, d_ref[0].dq());
-  d_ref[0].dv() = v - s[0].v;
+  RiccatiDirectionCalculator::computeInitialStateDirection(robots, q, v, kkt_matrix, s, d);
+  if (robot.hasFloatingBase()) {
+    Eigen::VectorXd dq0(Eigen::VectorXd::Zero(robot.dimv()));
+    robot.subtractConfiguration(q, s[0].q, dq0);
+    d_ref[0].dq() = dq0;
+    d_ref[0].dq().head(6) = - kkt_matrix[0].Fqq_prev_inv * dq0.head(6);
+    d_ref[0].dv() = v - s[0].v;
+  }
+  else {
+    d_ref[0].dq() = q - s[0].q;
+    d_ref[0].dv() = v - s[0].v;
+  }
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
   if (ocp.discrete().existStateConstraint()) {
     constraint_factorizer.computeLagrangeMultiplierDirection(
@@ -214,6 +223,16 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
   EXPECT_DOUBLE_EQ(primal_step_size, primal_step_size_ref);
   EXPECT_DOUBLE_EQ(dual_step_size, dual_step_size_ref);
+  std::cout << "d_ref[0].dq() = " << d_ref[0].dq().transpose() << std::endl;
+  std::cout << "q = " << q.transpose() << std::endl;
+  std::cout << "s[0].q = " << s[0].q.transpose() << std::endl;
+  Eigen::VectorXd q0pd = s[0].q;  
+  robot.integrateConfiguration(d_ref[0].dq(), 1, q0pd);
+  std::cout << "s[0].q+d_ref[0].dq = " << q0pd.transpose() << std::endl;
+  Eigen::VectorXd qdiff0 = Eigen::VectorXd::Zero(robot.dimv());
+  robot.subtractConfiguration(q0pd, q, qdiff0);
+  std::cout << "(s[0].q+d_ref[0].dq) - q = " << qdiff0.transpose() << std::endl;
+
 }
 
 

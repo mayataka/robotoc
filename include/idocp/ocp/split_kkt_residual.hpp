@@ -245,6 +245,8 @@ public:
   /// @brief Residual with respect to control input torques u.
   Vector6d lu_passive;
 
+  Vector6d Fq_prev;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

@@ -131,7 +131,7 @@ public:
   template <typename SplitDirectionType>
   void computeCondensedDualDirection(const Robot& robot, const double dtau, 
                                      const SplitKKTMatrix& kkt_matrix, 
-                                     const SplitKKTResidual& kkt_residual,
+                                     SplitKKTResidual& kkt_residual,
                                      const SplitDirectionType& d_next,
                                      SplitDirection& d);
 

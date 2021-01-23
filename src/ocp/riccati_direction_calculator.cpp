@@ -45,6 +45,25 @@ RiccatiDirectionCalculator::~RiccatiDirectionCalculator() {
 }
 
 
+void RiccatiDirectionCalculator::computeInitialStateDirection(
+    const std::vector<Robot>& robots, const Eigen::VectorXd& q, 
+    const Eigen::VectorXd& v, const KKTMatrix& kkt_matrix, const Solution& s, 
+    Direction& d) {
+  assert(q.size() == robots[0].dimq());
+  assert(v.size() == robots[0].dimv());
+  if (robots[0].hasFloatingBase()) {
+    robots[0].subtractConfiguration(q, s[0].q, d[0].dq());
+    d[0].dq().template head<6>() 
+        = - kkt_matrix[0].Fqq_prev_inv * d[0].dq().template head<6>();
+    d[0].dv() = v - s[0].v;
+  }
+  else {
+    d[0].dq() = q - s[0].q;
+    d[0].dv() = v - s[0].v;
+  }
+}
+
+
 void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
     OCP& ocp, std::vector<Robot>& robots, const RiccatiFactorizer& factorizer, 
     const RiccatiFactorization& factorization, const Solution& s, Direction& d) {

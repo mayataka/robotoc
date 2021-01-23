@@ -18,8 +18,7 @@ inline BackwardRiccatiRecursionFactorizer::BackwardRiccatiRecursionFactorizer(
     AtPvv_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     BtPq_(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())),
     BtPv_(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimv())),
-    GK_(Eigen::MatrixXd::Zero(robot.dimu(), 2*robot.dimv())),
-    Fqqinv_(Eigen::MatrixXd::Zero(robot.dim_passive(), robot.dim_passive())) {
+    GK_(Eigen::MatrixXd::Zero(robot.dimu(), 2*robot.dimv())) {
 }
 
 
@@ -33,8 +32,7 @@ inline BackwardRiccatiRecursionFactorizer::BackwardRiccatiRecursionFactorizer()
     AtPvv_(),
     BtPq_(),
     BtPv_(),
-    GK_(),
-    Fqqinv_() {
+    GK_() {
 }
 
 
@@ -48,37 +46,62 @@ inline void BackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(dtau >= 0);
   if (has_floating_base_) {
-    AtPqq_.noalias() =  kkt_matrix.Fqq().transpose() * riccati_next.Pqq;
-    AtPqq_.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.Pqv.transpose();
-    AtPqv_.noalias() =  kkt_matrix.Fqq().transpose() * riccati_next.Pqv;
-    AtPqv_.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.Pvv;
+    AtPqq_.template topRows<6>().noalias() 
+        = kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
+            * riccati_next.Pqq.template topRows<6>();
+    AtPqq_.bottomRows(dimv_-6) = riccati_next.Pqq.bottomRows(dimv_-6);
+    AtPqv_.template topRows<6>().noalias() 
+        = kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
+            * riccati_next.Pqv.template topRows<6>();
+    AtPqv_.bottomRows(dimv_-6) = riccati_next.Pqv.bottomRows(dimv_-6);
+    AtPvq_.template topRows<6>().noalias() 
+        = kkt_matrix.Fqv().template topLeftCorner<6, 6>().transpose() 
+            * riccati_next.Pqq.template topRows<6>();
+    AtPvq_.bottomRows(dimv_-6) = dtau * riccati_next.Pqq.bottomRows(dimv_-6);
+    AtPvv_.template topRows<6>().noalias() 
+        = kkt_matrix.Fqv().template topLeftCorner<6, 6>().transpose() 
+            * riccati_next.Pqv.template topRows<6>();
+    AtPvv_.bottomRows(dimv_-6) = dtau * riccati_next.Pqv.bottomRows(dimv_-6);
   }
   else {
     AtPqq_ = riccati_next.Pqq;
-    AtPqq_.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.Pqv.transpose();
     AtPqv_ = riccati_next.Pqv;
-    AtPqv_.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.Pvv;
+    AtPvq_ = dtau * riccati_next.Pqq;
+    AtPvv_ = dtau * riccati_next.Pqv;
   }
-  AtPvq_ = dtau * riccati_next.Pqq;
+  AtPqq_.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.Pqv.transpose();
+  AtPqv_.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.Pvv;
   AtPvq_.noalias() += kkt_matrix.Fvv().transpose() * riccati_next.Pqv.transpose();
-  AtPvv_ = dtau * riccati_next.Pqv;
   AtPvv_.noalias() += kkt_matrix.Fvv().transpose() * riccati_next.Pvv;
+
   BtPq_.noalias() = kkt_matrix.Fvu().transpose() * riccati_next.Pqv.transpose();
   BtPv_.noalias() = kkt_matrix.Fvu().transpose() * riccati_next.Pvv;
   // Factorize F
   if (has_floating_base_) {
-    kkt_matrix.Qqq().noalias() += AtPqq_ * kkt_matrix.Fqq();
-    kkt_matrix.Qqq().noalias() += AtPqv_ * kkt_matrix.Fvq();
+    kkt_matrix.Qqq().template leftCols<6>().noalias() 
+        += AtPqq_.template leftCols<6>() 
+            * kkt_matrix.Fqq().template topLeftCorner<6, 6>();
+    kkt_matrix.Qqq().rightCols(dimv_-6).noalias() += AtPqq_.rightCols(dimv_-6);
+    kkt_matrix.Qqv().template leftCols<6>().noalias() 
+        += AtPqq_.template leftCols<6>() 
+            * kkt_matrix.Fqv().template topLeftCorner<6, 6>();
+    kkt_matrix.Qqv().rightCols(dimv_-6).noalias() 
+        += dtau * AtPqq_.rightCols(dimv_-6);
+    kkt_matrix.Qvv().template leftCols<6>().noalias() 
+        += AtPvq_.template leftCols<6>() 
+            * kkt_matrix.Fqv().template topLeftCorner<6, 6>();
+    kkt_matrix.Qvv().rightCols(dimv_-6).noalias() 
+        += dtau * AtPvq_.rightCols(dimv_-6);
   }
   else {
     kkt_matrix.Qqq().noalias() += AtPqq_;
-    kkt_matrix.Qqq().noalias() += AtPqv_ * kkt_matrix.Fvq();
+    kkt_matrix.Qqv().noalias() += dtau * AtPqq_;
+    kkt_matrix.Qvv().noalias() += dtau * AtPvq_;
   }
-  kkt_matrix.Qqv().noalias() += dtau * AtPqq_;
+  kkt_matrix.Qqq().noalias() += AtPqv_ * kkt_matrix.Fvq();
   kkt_matrix.Qqv().noalias() += AtPqv_ * kkt_matrix.Fvv();
-  kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
-  kkt_matrix.Qvv().noalias() += dtau * AtPvq_;
   kkt_matrix.Qvv().noalias() += AtPvv_ * kkt_matrix.Fvv();
+  kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   // Factorize H
   kkt_matrix.Qqu().noalias() += AtPqv_ * kkt_matrix.Fvu();
   kkt_matrix.Qvu().noalias() += AtPvv_ * kkt_matrix.Fvu();
@@ -112,14 +135,20 @@ inline void BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
   riccati.Pqq = 0.5 * (riccati.Pqq + riccati.Pqq.transpose()).eval();
   riccati.Pvv = 0.5 * (riccati.Pvv + riccati.Pvv.transpose()).eval();
   if (has_floating_base_) {
-    riccati.sq.noalias() = kkt_matrix.Fqq().transpose() * riccati_next.sq;
-    riccati.sq.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.sv;
+    riccati.sq.template head<6>().noalias() 
+        = kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
+            * riccati_next.sq.template head<6>();
+    riccati.sq.tail(dimv_-6) = riccati_next.sq.tail(dimv_-6);
+    riccati.sv.template head<6>().noalias() 
+        = kkt_matrix.Fqv().template topLeftCorner<6, 6>().transpose() 
+            * riccati_next.sq.template head<6>();
+    riccati.sv.tail(dimv_-6) = dtau * riccati_next.sq.tail(dimv_-6);
   }
   else {
     riccati.sq.noalias() = riccati_next.sq;
-    riccati.sq.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.sv;
+    riccati.sv.noalias() = dtau * riccati_next.sq;
   }
-  riccati.sv.noalias() = dtau * riccati_next.sq;
+  riccati.sq.noalias() += kkt_matrix.Fvq().transpose() * riccati_next.sv;
   riccati.sv.noalias() += kkt_matrix.Fvv().transpose() * riccati_next.sv;
   riccati.sq.noalias() -= AtPqq_ * kkt_residual.Fq();
   riccati.sq.noalias() -= AtPqv_ * kkt_residual.Fv();

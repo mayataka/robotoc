@@ -124,10 +124,10 @@ inline void Robot::dSubtractdConfigurationInverse(
       = dSubtract_dq.template topLeftCorner<3, 3>().inverse();
   const_cast<Eigen::MatrixBase<MatrixType2>&>(dSubtract_dq_inv).template block<3, 3>(3, 3).noalias()
       = dSubtract_dq.template block<3, 3>(3, 3).inverse();
+  mat_3d_.noalias() = dSubtract_dq.template block<3, 3>(0, 3) 
+                        * dSubtract_dq_inv.template block<3, 3>(3, 3);
   const_cast<Eigen::MatrixBase<MatrixType2>&>(dSubtract_dq_inv).template block<3, 3>(0, 3).noalias()
-      = - dSubtract_dq_inv.template topLeftCorner<3, 3>() 
-          * dSubtract_dq.template block<3, 3>(0, 3)
-          * dSubtract_dq_inv.template block<3, 3>(3, 3);
+      = - dSubtract_dq_inv.template topLeftCorner<3, 3>() * mat_3d_;
 }
 
 

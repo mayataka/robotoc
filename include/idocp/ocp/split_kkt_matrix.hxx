@@ -10,8 +10,8 @@ namespace idocp {
 
 inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot) 
   : Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Fqq_prev_inv(
-        Eigen::MatrixXd::Zero(robot.dim_passive(), robot.dim_passive())),
+    Fqq_inv(Matrix6d::Zero()),
+    Fqq_prev_inv(Matrix6d::Zero()),
     F_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv()+robot.dimu())),
     Pq_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv(), 3*robot.dimv())),
@@ -33,7 +33,8 @@ inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
 
 inline SplitKKTMatrix::SplitKKTMatrix() 
   : Fqq_prev(),
-    Fqq_prev_inv(),
+    Fqq_inv(Matrix6d::Zero()),
+    Fqq_prev_inv(Matrix6d::Zero()),
     F_(),
     Pq_full_(),
     Q_(),

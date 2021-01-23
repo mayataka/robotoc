@@ -15,6 +15,8 @@ namespace idocp {
 ///
 class ImpulseSplitKKTResidual {
 public:
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+
   ///
   /// @brief Construct a KKT residual.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -222,6 +224,8 @@ public:
 
   /// @brief Residual with respect to control input torques u.
   Eigen::VectorXd ldv;
+
+  Vector6d Fq_prev;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

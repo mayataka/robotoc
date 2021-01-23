@@ -89,7 +89,7 @@ inline void SplitUnParNMPC::linearizeOCP(Robot& robot, const double t,
                                      kkt_residual_);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual_);
-  stateequation::LinearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
+  stateequation::linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
                                         kkt_matrix_, kkt_residual_);
   unconstrained_dynamics_.linearizeUnconstrainedDynamics(robot, dtau, s, 
                                                          kkt_residual_);
@@ -158,7 +158,7 @@ inline void SplitUnParNMPC::computeKKTResidual(Robot& robot, const double t,
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual_);
-  stateequation::LinearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
+  stateequation::linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
                                         kkt_matrix_, kkt_residual_);
   unconstrained_dynamics_.linearizeUnconstrainedDynamics(robot, dtau, s, 
                                                          kkt_residual_);
@@ -170,7 +170,7 @@ inline double SplitUnParNMPC::squaredNormKKTResidual(const double dtau) const {
   error += kkt_residual_.lx().squaredNorm();
   error += kkt_residual_.la.squaredNorm();
   error += kkt_residual_.lu().squaredNorm();
-  error += stateequation::SquaredNormStateEuqationResidual(kkt_residual_);
+  error += stateequation::squaredNormStateEuqationResidual(kkt_residual_);
   error += unconstrained_dynamics_.squaredNormUnconstrainedDynamicsResidual(dtau);
   error += dtau * dtau * constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
   return error;
@@ -212,11 +212,11 @@ inline double SplitUnParNMPC::constraintViolation(Robot& robot, const double t,
     robot.updateKinematics(s.q, s.v, s.a);
   }
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  stateequation::ComputeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, 
+  stateequation::computeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, 
                                               kkt_residual_);
   unconstrained_dynamics_.computeUnconstrainedDynamicsResidual(robot, s);
   double violation = 0;
-  violation += stateequation::L1NormStateEuqationResidual(kkt_residual_);
+  violation += stateequation::l1NormStateEuqationResidual(kkt_residual_);
   violation += unconstrained_dynamics_.l1NormUnconstrainedDynamicsResidual(dtau);
   violation += dtau * constraints_->l1NormPrimalResidual(constraints_data_);
   return violation;

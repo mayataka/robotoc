@@ -156,7 +156,7 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
     }
   }
-  ocp_ref.terminal.linearizeOCP(robot_ref, t+T, s[N], kkt_matrix_ref[N], kkt_residual_ref[N]);
+  ocp_ref.terminal.linearizeOCP(robot_ref, t+T, s[N-1].q, s[N], kkt_matrix_ref[N], kkt_residual_ref[N]);
   EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
   EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));
   EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
@@ -266,7 +266,7 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
       kkt_error_ref += ocp_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dt);
     }
   }
-  ocp_ref.terminal.computeKKTResidual(robot_ref, t+T, s[N], kkt_residual_ref[N]);
+  ocp_ref.terminal.computeKKTResidual(robot_ref, t+T, s[N-1].q, s[N], kkt_matrix_ref[N], kkt_residual_ref[N]);
   kkt_error_ref += ocp_ref.terminal.squaredNormKKTResidual(kkt_residual_ref[N]);
   EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
   EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));
@@ -368,6 +368,8 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
       ocp_ref[i].updateDual(dual_step_size);
     }
   }
+  ocp_ref.terminal.computeCondensedDualDirection(
+      robot_ref, kkt_matrix_ref[N], kkt_residual_ref[N], d_ref[N]);
   ocp_ref.terminal.updatePrimal(robot_ref, primal_step_size, d_ref[N], s_ref[N]);
   ocp_ref.terminal.updateDual(dual_step_size);
   EXPECT_TRUE(testhelper::IsApprox(s, s_ref));

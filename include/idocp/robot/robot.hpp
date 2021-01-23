@@ -145,7 +145,7 @@ public:
       const Eigen::MatrixBase<MatrixType>& dSubtract_dqminus) const;
 
   template <typename MatrixType1, typename MatrixType2>
-  static void dSubtractdConfigurationInverse(
+  void dSubtractdConfigurationInverse(
       const Eigen::MatrixBase<MatrixType1>& dSubtract_dq,
       const Eigen::MatrixBase<MatrixType2>& dSubtract_dq_inv);
 
@@ -716,6 +716,7 @@ private:
   Eigen::MatrixXd dimpulse_dv_; /// @brief used in RNEAImpulseDerivatives
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,
                   lower_joint_position_limit_, upper_joint_position_limit_;
+  Eigen::Matrix3d mat_3d_;
 };
 
 } // namespace idocp

@@ -132,7 +132,7 @@ void ImpulseSplitParNMPCTest::testLinearizeOCP(
   cost->computeImpulseCostHessian(robot, cost_data, t, s, kkt_matrix_ref);
   constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
-  stateequation::LinearizeImpulseBackwardEuler(robot, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::linearizeImpulseBackwardEuler(robot, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamicsBackwardEuler id(robot);
   robot.updateKinematics(s.q, s.v);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref);
@@ -193,7 +193,7 @@ void ImpulseSplitParNMPCTest::testComputeKKTResidual(
   robot.updateKinematics(s.q, s.v);
   cost->computeImpulseCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
   constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
-  stateequation::LinearizeImpulseBackwardEuler(robot, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::linearizeImpulseBackwardEuler(robot, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamicsBackwardEuler id(robot);
   robot.updateKinematics(s.q, s.v);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref);
@@ -236,13 +236,13 @@ void ImpulseSplitParNMPCTest::testCostAndConstraintViolation(
   stage_cost_ref += constraints->costSlackBarrier(constraints_data, step_size);
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  stateequation::ComputeImpulseBackwardEulerResidual(robot, s_prev.q, s_prev.v, 
+  stateequation::computeImpulseBackwardEulerResidual(robot, s_prev.q, s_prev.v, 
                                                      s, kkt_residual_ref);
   ImpulseDynamicsBackwardEuler id(robot);
   id.computeImpulseDynamicsResidual(robot, impulse_status, s, kkt_residual_ref);
   double constraint_violation_ref = 0;
   constraint_violation_ref += constraints->l1NormPrimalResidual(constraints_data);
-  constraint_violation_ref += stateequation::L1NormStateEuqationResidual(kkt_residual_ref);
+  constraint_violation_ref += stateequation::l1NormStateEuqationResidual(kkt_residual_ref);
   constraint_violation_ref += id.l1NormImpulseDynamicsResidual(kkt_residual_ref);
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
 }
