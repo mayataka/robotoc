@@ -105,6 +105,7 @@ TEST_F(StateEquationTest, forwardEulerFloatingBase) {
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(Fqq_ref));
   EXPECT_TRUE(kkt_matrix.Fqv().isApprox(Fqv_ref));
   EXPECT_TRUE(kkt_residual.Fq().isApprox((Fq_ref)));
+  EXPECT_TRUE(kkt_matrix.Fqq_prev_inv.isApprox(dsubtract_dq_inv.topLeftCorner(robot.dim_passive(), robot.dim_passive())));
 }
 
 

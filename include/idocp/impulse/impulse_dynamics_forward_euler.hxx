@@ -99,12 +99,17 @@ inline void ImpulseDynamicsForwardEuler::condensing(
   data.MJtJinv_dImDCdqv().bottomRightCorner(dimf, dimv).noalias() 
       = data.MJtJinv().bottomRightCorner(dimf, dimf) * data.dCdv();
   data.MJtJinv_ImDC().noalias() = data.MJtJinv() * data.ImDC();
-  data.Qdvfqv().noalias() 
-      = (- kkt_matrix.Qdvdvff().diagonal()).asDiagonal() * data.MJtJinv_dImDCdqv();
+  data.Qdvfqv().topRows(dimv).noalias() 
+      = (- kkt_matrix.Qdvdv().diagonal()).asDiagonal() 
+          * data.MJtJinv_dImDCdqv().topRows(dimv);
+  data.Qdvfqv().bottomRows(dimf).noalias() 
+      = - kkt_matrix.Qff() * data.MJtJinv_dImDCdqv().bottomRows(dimf);
   data.ldv() = kkt_residual.ldv;
-  data.lf() = - kkt_residual.lf();
-  data.ldvf().noalias() 
-      -= kkt_matrix.Qdvdvff().diagonal().asDiagonal() * data.MJtJinv_ImDC();
+  data.lf()  = - kkt_residual.lf();
+  data.ldv().noalias() 
+      -= kkt_matrix.Qdvdv().diagonal().asDiagonal() 
+          * data.MJtJinv_ImDC().head(dimv);
+  data.lf().noalias() -= kkt_matrix.Qff() * data.MJtJinv_ImDC().tail(dimf);
   kkt_matrix.Qxx().noalias() 
       -= data.MJtJinv_dImDCdqv().transpose() * data.Qdvfqv();
   kkt_residual.lx().noalias() 

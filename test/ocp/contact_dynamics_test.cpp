@@ -33,7 +33,8 @@ protected:
   void testLinearizeInverseDynamics(Robot& robot, const ContactStatus& contact_status) const;
   void testLinearizeContactConstraints(Robot& robot, const ContactStatus& contact_status) const;
   void testLinearizeContactDynamics(Robot& robot, const ContactStatus& contact_status) const;
-  void testCondensing(Robot& robot, const ContactStatus& contact_status) const;
+  void testCondensingForwardEuler(Robot& robot, const ContactStatus& contact_status) const;
+  void testCondensingBackwardEuler(Robot& robot, const ContactStatus& contact_status) const;
   void testExpansionPrimal(Robot& robot, const ContactStatus& contact_status) const;
   void testExpansionDual(Robot& robot, const ContactStatus& contact_status) const;
   void testIntegration(Robot& robot, const ContactStatus& contact_status) const;
@@ -155,7 +156,7 @@ void ContactDynamicsTest::testLinearizeContactDynamics(Robot& robot, const Conta
 }  
 
 
-void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& contact_status) const {
+void ContactDynamicsTest::testCondensingForwardEuler(Robot& robot, const ContactStatus& contact_status) const {
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dim_passive = robot.dim_passive();
@@ -180,7 +181,9 @@ void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& cont
   kkt_matrix.Quu_full().setRandom();
   kkt_matrix.Quu_full().template triangularView<Eigen::StrictlyLower>()
       = kkt_matrix.Quu_full().transpose().template triangularView<Eigen::StrictlyLower>();
-  kkt_matrix.Qaaff().diagonal().setRandom();
+  kkt_matrix.Qaa().diagonal().setRandom();
+  const Eigen::MatrixXd Qff_seed = Eigen::MatrixXd::Random(dimf, dimf);
+  kkt_matrix.Qff() = Qff_seed * Qff_seed.transpose();
   if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(dim_passive, dim_passive).setRandom();
@@ -247,6 +250,120 @@ void ContactDynamicsTest::testCondensing(Robot& robot, const ContactStatus& cont
   Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*dimv, dimv+dimf);
   OOIO_mat.bottomLeftCorner(dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_matrix_ref.Fvv().setIdentity();
+  kkt_matrix_ref.Fxx() -= OOIO_mat * data_ref.MJtJinv_dIDCdqv();
+  const Eigen::MatrixXd Fxu_full = OOIO_mat * data_ref.MJtJinv() * IO_mat;
+  kkt_matrix_ref.Fxu() = Fxu_full.rightCols(dimu);
+  kkt_residual_ref.Fx() -= (OOIO_mat * data_ref.MJtJinv() * data_ref.IDC());
+  if (robot.hasFloatingBase()) {
+    kkt_residual_ref.Fx() -= Fxu_full.leftCols(dim_passive) * data_ref.u_passive;
+  }
+  EXPECT_TRUE(data_ref.MJtJinv().isApprox(data.MJtJinv()));
+  EXPECT_TRUE(data_ref.MJtJinv_dIDCdqv().isApprox(data.MJtJinv_dIDCdqv()));
+  EXPECT_TRUE(data_ref.MJtJinv_IDC().isApprox(data.MJtJinv_IDC()));
+  EXPECT_TRUE(data_ref.Qafqv().isApprox(data.Qafqv()));
+  EXPECT_TRUE(data_ref.Qafu_full().isApprox(data.Qafu_full()));
+  EXPECT_TRUE(data_ref.laf().isApprox(data.laf()));
+  EXPECT_TRUE(kkt_residual_ref.isApprox(kkt_residual));
+  EXPECT_TRUE(kkt_matrix_ref.isApprox(kkt_matrix));
+  EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
+  EXPECT_TRUE(kkt_matrix.Quu().isApprox(kkt_matrix.Quu().transpose()));
+}
+
+
+void ContactDynamicsTest::testCondensingBackwardEuler(Robot& robot, const ContactStatus& contact_status) const {
+  const int dimv = robot.dimv();
+  const int dimu = robot.dimu();
+  const int dim_passive = robot.dim_passive();
+  const int dimf = contact_status.dimf();
+  SplitKKTResidual kkt_residual(robot);
+  kkt_residual.setContactStatus(contact_status);
+  SplitKKTMatrix kkt_matrix(robot);
+  kkt_matrix.setContactStatus(contact_status);
+  kkt_residual.lx().setRandom();
+  kkt_residual.la.setRandom();
+  kkt_residual.lf().setRandom();
+  if (robot.hasFloatingBase()) {
+    kkt_residual.lu_passive.setRandom();
+  }
+  kkt_residual.lu().setRandom();
+  kkt_residual.Fx().setRandom();
+  kkt_matrix.Qxx().setRandom();
+  kkt_matrix.Qxx().template triangularView<Eigen::StrictlyLower>()
+      = kkt_matrix.Qxx().transpose().template triangularView<Eigen::StrictlyLower>();
+  kkt_matrix.Qxu_full().setRandom();
+  kkt_matrix.Qux_full() = kkt_matrix.Qxu_full().transpose();
+  kkt_matrix.Quu_full().setRandom();
+  kkt_matrix.Quu_full().template triangularView<Eigen::StrictlyLower>()
+      = kkt_matrix.Quu_full().transpose().template triangularView<Eigen::StrictlyLower>();
+  kkt_matrix.Qaa().diagonal().setRandom();
+  const Eigen::MatrixXd Qff_seed = Eigen::MatrixXd::Random(dimf, dimf);
+  kkt_matrix.Qff() = Qff_seed * Qff_seed.transpose();
+  if (robot.hasFloatingBase()) {
+    kkt_matrix.Fqq().setIdentity();
+    kkt_matrix.Fqq().topLeftCorner(dim_passive, dim_passive).setRandom();
+  }
+  SplitKKTResidual kkt_residual_ref = kkt_residual;
+  SplitKKTMatrix kkt_matrix_ref = kkt_matrix;
+  ContactDynamics cd(robot, baumgarte_time_step);
+  ContactDynamicsData data(robot);
+  data.setContactStatus(contact_status);
+  data.dIDda.setRandom();
+  if (robot.hasFloatingBase()) {
+    data.u_passive.setRandom();
+  }
+  data.dCda().setRandom();
+  data.dIDCdqv().setRandom();
+  data.MJtJinv().setRandom();
+  data.MJtJinv().template triangularView<Eigen::StrictlyLower>() 
+      = data.MJtJinv().transpose().template triangularView<Eigen::StrictlyLower>();
+  data.MJtJinv_dIDCdqv().setRandom();
+  data.Qafqv().setRandom();
+  data.Qafu_full().setRandom();
+  data.IDC().setRandom();
+  data.MJtJinv_IDC().setRandom();
+  data.laf().setRandom();
+  ContactDynamicsData data_ref = data;
+  data_ref.MJtJinv_dIDCdqv().setZero();
+  data_ref.Qafqv().setZero();
+  data_ref.Qafu_full().setZero();
+  data_ref.MJtJinv_IDC().setZero();
+  data_ref.laf().setZero();
+  const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+  ContactDynamics::condensingBackwardEuler(robot, dtau, data, kkt_matrix, kkt_residual);
+  data_ref.MJtJinv_dIDCdqv() = data_ref.MJtJinv() * data_ref.dIDCdqv();
+  data_ref.MJtJinv_IDC() = data_ref.MJtJinv() * data_ref.IDC();
+  data_ref.Qafqv() = - kkt_matrix_ref.Qaaff() * data_ref.MJtJinv_dIDCdqv();
+  Eigen::MatrixXd IO_mat = Eigen::MatrixXd::Zero(dimv+dimf, dimv);
+  IO_mat.topRows(dimv).setIdentity();
+  data_ref.Qafu_full() = kkt_matrix_ref.Qaaff() * data_ref.MJtJinv() * IO_mat;
+  data_ref.laf().head(dimv) = kkt_residual_ref.la;
+  data_ref.laf().tail(dimf) = - kkt_residual_ref.lf();
+  data_ref.laf() -= kkt_matrix_ref.Qaaff() * data_ref.MJtJinv() * data_ref.IDC();
+  kkt_matrix_ref.Qxx() -= data_ref.MJtJinv_dIDCdqv().transpose() * data_ref.Qafqv();
+  kkt_matrix_ref.Qxu_full() -= data_ref.MJtJinv_dIDCdqv().transpose() * data_ref.Qafu_full();
+  kkt_matrix_ref.Quu_full() += IO_mat.transpose() * data_ref.MJtJinv() * data_ref.Qafu_full();
+  kkt_residual_ref.lx() -= data_ref.MJtJinv_dIDCdqv().transpose() * data_ref.laf();
+  Eigen::VectorXd lu_full_ref = Eigen::VectorXd::Zero(dimv);
+  if (robot.hasFloatingBase()) {
+    lu_full_ref.head(dim_passive) = kkt_residual_ref.lu_passive;
+    lu_full_ref.tail(dimu) = kkt_residual_ref.lu();
+  }
+  else {
+    lu_full_ref = kkt_residual_ref.lu();
+  }
+  lu_full_ref += IO_mat.transpose() * data_ref.MJtJinv() * data_ref.laf();
+  if (robot.hasFloatingBase()) {
+    kkt_residual_ref.lu_passive = lu_full_ref.head(dim_passive);
+    kkt_residual_ref.lu() = lu_full_ref.tail(dimu);
+    kkt_residual_ref.lu() -= kkt_matrix_ref.Quu_passive_bottomLeft() * data_ref.u_passive;
+    kkt_residual_ref.lx() -= kkt_matrix_ref.Qxu_passive() * data_ref.u_passive;
+  }
+  else {
+    kkt_residual_ref.lu() = lu_full_ref;
+  }
+  Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*dimv, dimv+dimf);
+  OOIO_mat.bottomLeftCorner(dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
+  kkt_matrix_ref.Fvv() = - Eigen::MatrixXd::Identity(dimv, dimv); // BackwardEuler
   kkt_matrix_ref.Fxx() -= OOIO_mat * data_ref.MJtJinv_dIDCdqv();
   const Eigen::MatrixXd Fxu_full = OOIO_mat * data_ref.MJtJinv() * IO_mat;
   kkt_matrix_ref.Fxu() = Fxu_full.rightCols(dimu);
@@ -390,7 +507,9 @@ void ContactDynamicsTest::testIntegration(Robot& robot, const ContactStatus& con
   kkt_matrix.Quu_full().setRandom();
   kkt_matrix.Quu_full().template triangularView<Eigen::StrictlyLower>()
       = kkt_matrix.Quu_full().transpose().template triangularView<Eigen::StrictlyLower>();
-  kkt_matrix.Qaaff().diagonal().setRandom();
+  kkt_matrix.Qaa().diagonal().setRandom();
+  const Eigen::MatrixXd Qff_seed = Eigen::MatrixXd::Random(dimf, dimf);
+  kkt_matrix.Qff() = Qff_seed * Qff_seed.transpose();
   if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(dim_passive, dim_passive).setRandom();
@@ -471,7 +590,8 @@ TEST_F(ContactDynamicsTest, fixedBase) {
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
   testLinearizeContactDynamics(robot, contact_status);
-  testCondensing(robot, contact_status);
+  testCondensingForwardEuler(robot, contact_status);
+  testCondensingBackwardEuler(robot, contact_status);
   testExpansionPrimal(robot, contact_status);
   testExpansionDual(robot, contact_status);
   testIntegration(robot, contact_status);
@@ -480,7 +600,8 @@ TEST_F(ContactDynamicsTest, fixedBase) {
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
   testLinearizeContactDynamics(robot, contact_status);
-  testCondensing(robot, contact_status);
+  testCondensingForwardEuler(robot, contact_status);
+  testCondensingBackwardEuler(robot, contact_status);
   testExpansionPrimal(robot, contact_status);
   testExpansionDual(robot, contact_status);
   testIntegration(robot, contact_status);
@@ -499,7 +620,8 @@ TEST_F(ContactDynamicsTest, floatingBase) {
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
   testLinearizeContactDynamics(robot, contact_status);
-  testCondensing(robot, contact_status);
+  testCondensingForwardEuler(robot, contact_status);
+  testCondensingBackwardEuler(robot, contact_status);
   testExpansionPrimal(robot, contact_status);
   testExpansionDual(robot, contact_status);
   testIntegration(robot, contact_status);
@@ -511,7 +633,8 @@ TEST_F(ContactDynamicsTest, floatingBase) {
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
   testLinearizeContactDynamics(robot, contact_status);
-  testCondensing(robot, contact_status);
+  testCondensingForwardEuler(robot, contact_status);
+  testCondensingBackwardEuler(robot, contact_status);
   testExpansionPrimal(robot, contact_status);
   testExpansionDual(robot, contact_status);
   testIntegration(robot, contact_status);

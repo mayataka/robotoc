@@ -6,7 +6,7 @@
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_running_minimal.gif" width="600">
 
 ## Features for efficient optimal control for rigid body systems with contacts
-- Direct multiple-shooting based on inverse dynamics with novel condensing method dedicated for rigid body systems with contacts.
+- Direct multiple-shooting formulation based on inverse dynamics with novel condensing method dedicated for rigid body systems with contacts.
 - Riccati recursion / Parallel Newton's method (ParNMPC) for solving the condensed KKT system.
 - Primal-dual interior point method for inequality constraints.
 - Filter line-search method.

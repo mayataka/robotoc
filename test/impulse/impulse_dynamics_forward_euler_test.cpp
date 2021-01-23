@@ -161,7 +161,9 @@ void ImpulseDynamicsForwardEulerTest::testCondensing(Robot& robot, const Impulse
   kkt_matrix.Qxx().setRandom();
   kkt_matrix.Qxx().template triangularView<Eigen::StrictlyLower>()
       = kkt_matrix.Qxx().transpose().template triangularView<Eigen::StrictlyLower>();
-  kkt_matrix.Qdvdvff().diagonal().setRandom();
+  kkt_matrix.Qdvdv().diagonal().setRandom();
+  const Eigen::MatrixXd Qff_seed = Eigen::MatrixXd::Random(dimf, dimf);
+  kkt_matrix.Qff() = Qff_seed * Qff_seed.transpose();
   ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
   ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
   ImpulseDynamicsForwardEuler id(robot);
@@ -276,7 +278,9 @@ void ImpulseDynamicsForwardEulerTest::testIntegration(Robot& robot, const Impuls
   kkt_matrix.Qxx().setRandom();
   kkt_matrix.Qxx().template triangularView<Eigen::StrictlyLower>()
       = kkt_matrix.Qxx().transpose().template triangularView<Eigen::StrictlyLower>();
-  kkt_matrix.Qdvdvff().diagonal().setRandom();
+  kkt_matrix.Qdvdv().diagonal().setRandom();
+  const Eigen::MatrixXd Qff_seed = Eigen::MatrixXd::Random(dimf, dimf);
+  kkt_matrix.Qff() = Qff_seed * Qff_seed.transpose();
   if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();

@@ -96,6 +96,7 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFloatingBase) {
   Fq_ref.head(6) = - dsubtract_dq_inv.topLeftCorner(6, 6) * qdiff.head(6);
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(Fqq_ref));
   EXPECT_TRUE(kkt_residual.Fq().isApprox((Fq_ref)));
+  EXPECT_TRUE(kkt_matrix.Fqq_prev_inv.isApprox(dsubtract_dq_inv.topLeftCorner(robot.dim_passive(), robot.dim_passive())));
 }
 
 
