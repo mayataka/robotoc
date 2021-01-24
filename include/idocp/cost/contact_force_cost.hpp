@@ -39,6 +39,8 @@ public:
 
   void set_f_ref(const std::vector<Eigen::Vector3d>& f_ref);
 
+  void set_f_ref(const Robot& robot);
+
   void set_f_weight(const std::vector<Eigen::Vector3d>& f_weight);
 
   void set_fi_ref(const std::vector<Eigen::Vector3d>& fi_ref);

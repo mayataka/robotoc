@@ -756,6 +756,11 @@ inline void Robot::getContactPoints(
   }
 }
 
+
+inline double Robot::totalWeight() const {
+  return (- pinocchio::computeTotalMass(model_) * model_.gravity981.coeff(2));
+}
+
 } // namespace idocp
 
 #endif // IDOCP_ROBOT_HXX_ 

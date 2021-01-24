@@ -81,6 +81,8 @@ void ImpulseFrictionConeTest::testIsFeasible(Robot& robot, const ImpulseStatus& 
 void ImpulseFrictionConeTest::testSetSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone limit(robot); 
   ConstraintComponentData data(limit.dimc()), data_ref(limit.dimc());
+  limit.allocateExtraData(data);
+  limit.allocateExtraData(data_ref);
   const int dimc = limit.dimc();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   limit.setSlackAndDual(robot, data, s);
@@ -95,6 +97,7 @@ void ImpulseFrictionConeTest::testSetSlackAndDual(Robot& robot, const ImpulseSta
 void ImpulseFrictionConeTest::testAugmentDualResidual(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone limit(robot); 
   ConstraintComponentData data(limit.dimc());
+  limit.allocateExtraData(data);
   const int dimc = limit.dimc();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   limit.setSlackAndDual(robot, data, s);
@@ -112,6 +115,7 @@ void ImpulseFrictionConeTest::testAugmentDualResidual(Robot& robot, const Impuls
       gf(0) = 2 * s.f[i].coeff(0);
       gf(1) = 2 * s.f[i].coeff(1);
       gf(2) = - 2 * mu * mu * s.f[i].coeff(2);
+      EXPECT_TRUE(gf.isApprox(data.r[i]));
       kkt_res_ref.lf().segment<3>(dimf_stack) += gf * data_ref.dual(i);
       dimf_stack += 3;
     }
@@ -125,6 +129,7 @@ void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, con
   const int dimc = limit.dimc();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   ConstraintComponentData data(limit.dimc());
+  limit.allocateExtraData(data);
   data.slack.setRandom();
   data.dual.setRandom();
   ConstraintComponentData data_ref = data;
@@ -149,6 +154,7 @@ void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, con
 void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone limit(robot); 
   ConstraintComponentData data(limit.dimc());
+  limit.allocateExtraData(data);
   const int dimc = limit.dimc();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   limit.setSlackAndDual(robot, data, s);
@@ -159,6 +165,7 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, const Impul
   ImpulseSplitKKTResidual kkt_res(robot);
   kkt_res.setImpulseStatus(impulse_status);
   kkt_res.lf().setRandom();
+  limit.augmentDualResidual(robot, data, s, kkt_res);
   ImpulseSplitKKTMatrix kkt_mat_ref = kkt_mat;
   ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
   limit.condenseSlackAndDual(robot, data, s, kkt_mat, kkt_res);
@@ -183,6 +190,7 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, const Impul
       gf(0) = 2 * s.f[i].coeff(0);
       gf(1) = 2 * s.f[i].coeff(1);
       gf(2) = - 2 * mu * mu * s.f[i].coeff(2);
+      EXPECT_TRUE(gf.isApprox(data.r[i]));
       kkt_res_ref.lf().segment<3>(dimf_stack) 
           += gf * (data_ref.dual.coeff(i)*data_ref.residual.coeff(i)-data_ref.duality.coeff(i)) 
                 / data_ref.slack.coeff(i);
@@ -199,11 +207,20 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, const Impul
 void ImpulseFrictionConeTest::testComputeSlackAndDualDirection(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone limit(robot); 
   ConstraintComponentData data(limit.dimc());
+  limit.allocateExtraData(data);
   const int dimc = limit.dimc();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   limit.setSlackAndDual(robot, data, s);
   data.residual.setRandom();
   data.duality.setRandom();
+  ImpulseSplitKKTMatrix kkt_mat(robot);
+  kkt_mat.setImpulseStatus(impulse_status);
+  kkt_mat.Qff().setRandom();
+  ImpulseSplitKKTResidual kkt_res(robot);
+  kkt_res.setImpulseStatus(impulse_status);
+  kkt_res.lf().setRandom();
+  limit.augmentDualResidual(robot, data, s, kkt_res);
+  limit.condenseSlackAndDual(robot, data, s, kkt_mat, kkt_res);
   ConstraintComponentData data_ref = data;
   const ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
   limit.computeSlackAndDualDirection(robot, data, s, d);
@@ -215,6 +232,7 @@ void ImpulseFrictionConeTest::testComputeSlackAndDualDirection(Robot& robot, con
       gf(0) = 2 * s.f[i].coeff(0);
       gf(1) = 2 * s.f[i].coeff(1);
       gf(2) = - 2 * mu * mu * s.f[i].coeff(2);
+      EXPECT_TRUE(gf.isApprox(data.r[i]));
       data_ref.dslack.coeffRef(i) = - gf.dot(d.df().segment<3>(dimf_stack)) - data_ref.residual.coeff(i);
       data_ref.ddual.coeffRef(i) = - (data_ref.dual.coeff(i)*data_ref.dslack.coeff(i)+data_ref.duality.coeff(i))
                                       / data_ref.slack.coeff(i);

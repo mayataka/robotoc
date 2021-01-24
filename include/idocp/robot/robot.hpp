@@ -692,15 +692,7 @@ public:
   /// 
   void getContactPoints(std::vector<Eigen::Vector3d>& contact_points) const;
 
-  ///
-  /// @brief Get the pinocchio::Model.
-  /// 
-  pinocchio::Model getPinocchioModel() const;
-
-  /// 
-  /// @brief Get the pinocchio::Data.
-  /// 
-  pinocchio::Data getPinocchioData() const;
+  double totalWeight() const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

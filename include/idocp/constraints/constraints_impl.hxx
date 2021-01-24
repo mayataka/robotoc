@@ -289,6 +289,25 @@ inline double squaredNormPrimalAndDualResidual(
   return squared_norm;
 }
 
+
+template <typename ConstraintComponentBaseTypePtr>
+inline void setBarrier(std::vector<ConstraintComponentBaseTypePtr>& constraints, 
+                       const double barrier) {
+  for (auto& constraint : constraints) {
+    constraint->setBarrier(barrier);
+  }
+}
+
+
+template <typename ConstraintComponentBaseTypePtr>
+inline void setFractionToBoundaryRate(
+    std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    const double fraction_to_boundary_rate) {
+  for (auto& constraint : constraints) {
+    constraint->setFractionToBoundaryRate(fraction_to_boundary_rate);
+  }
+}
+
 } // namespace constraintsimpl
 } // namespace idocp
 

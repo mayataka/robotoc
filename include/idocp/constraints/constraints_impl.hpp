@@ -121,11 +121,19 @@ double squaredNormPrimalAndDualResidual(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     const std::vector<ConstraintComponentData>& data);
 
-
 double l1NormPrimalResidual(const std::vector<ConstraintComponentData>& data);
 
 double squaredNormPrimalAndDualResidual(
     const std::vector<ConstraintComponentData>& data);
+
+template <typename ConstraintComponentBaseTypePtr>
+void setBarrier(std::vector<ConstraintComponentBaseTypePtr>& constraints, 
+                const double barrier);
+
+template <typename ConstraintComponentBaseTypePtr>
+void setFractionToBoundaryRate(
+    std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    const double fraction_to_boundary_rate);
 
 } // namespace constraintsimpl
 } // namespace idocp

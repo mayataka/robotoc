@@ -135,6 +135,9 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf, const 
   EXPECT_TRUE(robot.jointVelocityLimit().isApprox(velocity_limit));
   EXPECT_TRUE(robot.lowerJointPositionLimit().isApprox(lower_position_limit));
   EXPECT_TRUE(robot.upperJointPositionLimit().isApprox(upper_position_limit));
+  pinocchio::Data data = pinocchio::Data(robot_ref);
+  const double weight_ref = - pinocchio::computeTotalMass(robot_ref) * pinocchio::Model::gravity981[2];
+  EXPECT_DOUBLE_EQ(weight_ref, robot.totalWeight());
 }
 
 

@@ -327,6 +327,19 @@ public:
   ///
   static double squaredNormPrimalAndDualResidual(const ConstraintsData& data);
 
+  ///
+  /// @brief Set the barrier parameter to all constraint components.
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  ///
+  void setBarrier(const double barrier);
+
+  ///
+  /// @brief Set the fraction to boundary rate to all constraint components.
+  /// @param[in] fraction_to_boundary_rate Must be larger than 0 and smaller 
+  /// than 1. Should be between 0.9 and 0.995.
+  ///
+  void setFractionToBoundaryRate(const double fraction_to_boundary_rate);
+
 private:
   std::vector<ConstraintComponentBasePtr> position_level_constraints_, 
                                           velocity_level_constraints_, 

@@ -52,6 +52,7 @@ void ContactForceCostTest::testStageCost(Robot& robot) const {
   EXPECT_FALSE(cost->useKinematics());
   cost->set_f_weight(f_weight);
   cost->set_f_ref(f_ref);
+  // cost->set_f_ref(robot);
   cost->set_fi_weight(fi_weight);
   cost->set_fi_ref(fi_ref);
   ContactStatus contact_status = robot.createContactStatus();
