@@ -113,8 +113,8 @@ inline void ImpulseDynamicsBackwardEuler::computeCondensedPrimalDirection(
     const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitDirection& d) const {
   d.ddv() = - data_.Minv_ImD;
-  d.ddv().noalias() -= kkt_matrix.Fvq() * d.dq();
-  d.ddv().noalias() -= kkt_matrix.Fvf() * d.df();
+  d.ddv().noalias() += kkt_matrix.Fvq() * d.dq();
+  d.ddv().noalias() += kkt_matrix.Fvf() * d.df();
 }
 
 

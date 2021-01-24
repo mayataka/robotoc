@@ -19,6 +19,8 @@ inline SplitKKTMatrixInverter::SplitKKTMatrixInverter(const Robot& robot)
     dimKKT_(4*robot.dimv()+robot.dimu()),
     dimf_(0),
     has_floating_base_(robot.hasFloatingBase()),
+    regularization_(false),
+    reg_(1.0e-09),
     llt_Q_(dimQ_),
     llt_F_(dimx_),
     llt_FPq_(),
@@ -37,6 +39,8 @@ inline SplitKKTMatrixInverter::SplitKKTMatrixInverter()
     dimKKT_(0),
     dimf_(0),
     has_floating_base_(false),
+    regularization_(false),
+    reg_(1.0e-09),
     llt_Q_(),
     llt_F_(),
     llt_FPq_(),
@@ -138,6 +142,9 @@ inline void SplitKKTMatrixInverter::invert(
   multiplyFPq(dtau, F, Pq, KKT_mat_inv.bottomRightCorner(dimQ_, dimQ_), 
               Jac_Qinv());
   multiplyFPq(dtau, F, Pq, Jac_Qinv().transpose(), S());
+  if (regularization_) {
+    S().diagonal().tail(dimf_).array() += reg_;
+  }
   llt_FPq_.compute(S());
   assert(llt_FPq_.info() == Eigen::Success);
   const_cast<Eigen::MatrixBase<MatrixType4>&>(KKT_mat_inv)
@@ -187,6 +194,18 @@ inline void SplitKKTMatrixInverter::multiplyFPq(
       = F.bottomRows(dimv_) * mat;
   const_cast<Eigen::MatrixBase<MatrixType4>&>(res).bottomRows(dimf).noalias()
       = Pq * mat.middleRows(dimu_, dimv_);
+}
+
+
+inline void SplitKKTMatrixInverter::enableRegularization(const double reg) {
+  assert(reg >= 0);
+  regularization_ = true;
+  reg_ = reg;
+}
+
+
+inline void SplitKKTMatrixInverter::disableRegularization() {
+  regularization_ = false;
 }
 
 

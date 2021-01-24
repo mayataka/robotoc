@@ -236,8 +236,8 @@ void ImpulseDynamicsBackwardEulerTest::testIntegration(Robot& robot, const Impul
   ImpulseSplitDirection d_ref = d;
   id.computeCondensedPrimalDirection(robot, kkt_matrix, d);
   d_ref.ddv()  = - data_ref.Minv_ImD;
-  d_ref.ddv() -= kkt_matrix_ref.Fvq() * d.dq();
-  d_ref.ddv() -= kkt_matrix_ref.Fvf() * d.df();
+  d_ref.ddv() += kkt_matrix_ref.Fvq() * d.dq();
+  d_ref.ddv() += kkt_matrix_ref.Fvf() * d.df();
   EXPECT_TRUE(d.isApprox(d_ref));
   id.computeCondensedDualDirection(robot, d);
   data_ref.ldv += data_ref.Qdvq * d_ref.dq();

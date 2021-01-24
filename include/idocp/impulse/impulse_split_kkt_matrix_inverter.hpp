@@ -62,11 +62,16 @@ public:
                   const Eigen::MatrixBase<MatrixType2>& mat, 
                   const Eigen::MatrixBase<MatrixType3>& res);
 
+  void enableRegularization(const double reg=1.0e-09);
+
+  void disableRegularization();
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int dimv_, max_dimf_, dimQ_;
-  bool has_floating_base_;
+  bool has_floating_base_, regularization_;
+  double reg_;
   Eigen::MatrixXd S_full_, Jac_Qinv_full_;
   Eigen::LLT<Eigen::MatrixXd> llt_;
 

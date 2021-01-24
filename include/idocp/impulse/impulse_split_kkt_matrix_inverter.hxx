@@ -15,6 +15,8 @@ inline ImpulseSplitKKTMatrixInverter::ImpulseSplitKKTMatrixInverter(
     max_dimf_(robot.max_dimf()),
     dimQ_(2*robot.dimv()),
     has_floating_base_(robot.hasFloatingBase()),
+    regularization_(false),
+    reg_(1.0e-09),
     S_full_(Eigen::MatrixXd::Zero(2*robot.dimv()+robot.max_dimf(), 
                                   2*robot.dimv()+robot.max_dimf())),
     Jac_Qinv_full_(Eigen::MatrixXd::Zero(2*robot.dimv()+robot.max_dimf(), 
@@ -28,6 +30,8 @@ inline ImpulseSplitKKTMatrixInverter::ImpulseSplitKKTMatrixInverter()
     max_dimf_(0),
     dimQ_(0),
     has_floating_base_(false),
+    regularization_(false),
+    reg_(1.0e-09),
     S_full_(),
     Jac_Qinv_full_(),
     llt_() {
@@ -60,6 +64,10 @@ inline void ImpulseSplitKKTMatrixInverter::invert(
       = llt_.solve(Eigen::MatrixXd::Identity(dimQ_, dimQ_));
   multiplyJac(Jac, KKT_mat_inv.bottomRightCorner(dimQ_, dimQ_), Jac_Qinv());
   multiplyJac(Jac, Jac_Qinv().transpose(), S());
+  if (regularization_) {
+    const int dimf = dimQ_ - 2*dimv_;
+    S().diagonal().tail(dimf).array() += reg_;
+  }
   llt_.compute(S());
   assert(llt_.info() == Eigen::Success);
   const_cast<Eigen::MatrixBase<MatrixType3>&>(KKT_mat_inv)
@@ -108,6 +116,19 @@ inline void ImpulseSplitKKTMatrixInverter::multiplyJac(
       -= mat.bottomRows(dimv_);
   const_cast<Eigen::MatrixBase<MatrixType3>&>(res).bottomRows(dimf).noalias()
       = Jac.block(2*dimv_, dimf, dimf, 2*dimv_) * mat.bottomRows(2*dimv_);
+}
+
+
+inline void ImpulseSplitKKTMatrixInverter::enableRegularization(
+    const double reg) {
+  assert(reg >= 0);
+  regularization_ = true;
+  reg_ = reg;
+}
+
+
+inline void ImpulseSplitKKTMatrixInverter::disableRegularization() {
+  regularization_ = false;
 }
 
 

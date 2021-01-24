@@ -571,6 +571,11 @@ void RobotTest::testMJtJinv(const std::string& path_to_urdf, pinocchio::Model& m
   const Eigen::MatrixXd MJtJinv_ref = MJtJ.inverse();
   EXPECT_TRUE(MJtJinv.isApprox(MJtJinv_ref));
   EXPECT_TRUE((MJtJinv*MJtJ).isIdentity());
+  Eigen::MatrixXd Minv = dRNEA_da;
+  robot.computeMinv(dRNEA_da, Minv);
+  EXPECT_TRUE((dRNEA_da*Minv).isIdentity());
+  EXPECT_TRUE((Minv*dRNEA_da).isIdentity());
+  std::cout << Minv << std::endl;
 }
 
 
