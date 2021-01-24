@@ -88,21 +88,22 @@ inline void ImpulseDynamicsBackwardEuler::condensing(
     const Robot& robot, ImpulseDynamicsBackwardEulerData& data, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
   const int dimv = robot.dimv();
-  kkt_matrix.Fvq().noalias() = data.Minv * data.dImDdq;
-  kkt_matrix.Fvf().noalias() = - data.Minv * kkt_matrix.Vv().transpose(); // this is Minv_dImDdf
+  kkt_matrix.Fvq().noalias() = - data.Minv * data.dImDdq; // this is - Minv_dImDdq
+  kkt_matrix.Fvf().noalias() = data.Minv * kkt_matrix.Vv().transpose(); // this is - Minv_dImDdf
   data.Minv_ImD.noalias() = data.Minv * data.ImD;
   data.Qdvq.noalias() 
-    = (- kkt_matrix.Qdvdv().diagonal()).asDiagonal() * kkt_matrix.Fvq();
+    = kkt_matrix.Qdvdv().diagonal().asDiagonal() * kkt_matrix.Fvq();
   data.Qdvf().noalias() 
-    = (- kkt_matrix.Qdvdv().diagonal()).asDiagonal() * kkt_matrix.Fvf();
+    = kkt_matrix.Qdvdv().diagonal().asDiagonal() * kkt_matrix.Fvf();
+  data.ldv = kkt_residual.ldv;
   data.ldv.noalias() 
-    = (- kkt_matrix.Qdvdv().diagonal()).asDiagonal() * data.Minv_ImD;
-  kkt_matrix.Qqq().noalias() -= kkt_matrix.Fvq().transpose() * data.Qdvq;
+    -= kkt_matrix.Qdvdv().diagonal().asDiagonal() * data.Minv_ImD;
+  kkt_matrix.Qqq().noalias() += kkt_matrix.Fvq().transpose() * data.Qdvq;
   kkt_matrix.Qfq().transpose().noalias() 
-        -= kkt_matrix.Fvq().transpose() * data.Qdvf();
-  kkt_matrix.Qff().noalias() -= kkt_matrix.Fvf().transpose() * data.Qdvf();
-  kkt_residual.lq().noalias() -= kkt_matrix.Fvq().transpose() * data.ldv;
-  kkt_residual.lf().noalias() -= kkt_matrix.Fvf().transpose() * data.ldv;
+        += kkt_matrix.Fvq().transpose() * data.Qdvf();
+  kkt_matrix.Qff().noalias() += kkt_matrix.Fvf().transpose() * data.Qdvf();
+  kkt_residual.lq().noalias() += kkt_matrix.Fvq().transpose() * data.ldv;
+  kkt_residual.lf().noalias() += kkt_matrix.Fvf().transpose() * data.ldv;
   kkt_matrix.Fvv() = - Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_residual.Fv().noalias() -= data.Minv_ImD;
 }

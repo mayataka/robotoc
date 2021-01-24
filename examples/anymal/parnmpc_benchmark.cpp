@@ -93,7 +93,7 @@ int main () {
   idocp::ParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, 
                                       max_num_impulse_phase, nthreads);
   auto contact_status = robot.createContactStatus();
-  // contact_status.activateContacts({0, 1, 2, 3});
+  contact_status.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q);
   robot.setContactPoints(contact_status);
   parnmpc_solver.setContactStatusUniformly(contact_status);

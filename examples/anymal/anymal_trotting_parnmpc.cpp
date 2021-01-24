@@ -59,23 +59,11 @@ int main(int argc, char *argv[]) {
               0.01, 0.01, 0.01,
               0.01, 0.01, 0.01;
 
-  // idocp::TrottingSwingAngles swing_angles;
-  // swing_angles.front_swing_knee   = 1.7; 
-  // swing_angles.hip_swing_knee     = 1.7;
-  // auto config_cost = std::make_shared<idocp::TrottingConfigurationSpaceCost>(robot);
-  // config_cost->set_ref(t_start, t_period, q_standing, step_length, swing_angles);
-  // config_cost->set_q_weight(q_weight);
-  // config_cost->set_qf_weight(q_weight);
-  // config_cost->set_qi_weight(q_weight);
-  // config_cost->set_v_weight(v_weight);
-  // config_cost->set_vf_weight(v_weight);
-  // config_cost->set_vi_weight(v_weight);
-  // config_cost->set_a_weight(a_weight);
-  // config_cost->set_dvi_weight(a_weight);
-  // cost->push_back(config_cost);
-
-  auto config_cost = std::make_shared<idocp::ConfigurationSpaceCost>(robot);
-  config_cost->set_q_ref(q_standing);
+  idocp::TrottingSwingAngles swing_angles;
+  swing_angles.front_swing_knee   = 1.7; 
+  swing_angles.hip_swing_knee     = 1.7;
+  auto config_cost = std::make_shared<idocp::TrottingConfigurationSpaceCost>(robot);
+  config_cost->set_ref(t_start, t_period, q_standing, step_length, swing_angles);
   config_cost->set_q_weight(q_weight);
   config_cost->set_qf_weight(q_weight);
   config_cost->set_qi_weight(q_weight);
@@ -115,13 +103,16 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
 
-  const double T = 6.05; // t_start + max_num_impulse_phase * t_period + 0.05;
-  const int N = 240;
+  // const double T = 6.05; // t_start + max_num_impulse_phase * t_period + 0.05;
+  // const int N = 240;
+  const double T = 1.05; // t_start + max_num_impulse_phase * t_period + 0.05;
+  const int N = 40;
   const int max_num_impulse_phase = 11;
 
   const int nthreads = 4;
   const double t = 0;
   idocp::ParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, max_num_impulse_phase, nthreads);
+
 
   robot.updateFrameKinematics(q_standing);
   std::vector<Eigen::Vector3d> contact_points(robot.maxPointContacts(), Eigen::Vector3d::Zero());
@@ -131,17 +122,17 @@ int main(int argc, char *argv[]) {
   contact_status_initial.setContactPoints(contact_points);
   parnmpc_solver.setContactStatusUniformly(contact_status_initial);
 
-  // auto contact_status_even = robot.createContactStatus();
-  // contact_status_even.activateContacts({1, 2});
-  // contact_status_even.setContactPoints(contact_points);
-  // parnmpc_solver.pushBackContactStatus(contact_status_even, t_start, t);
+  auto contact_status_even = robot.createContactStatus();
+  contact_status_even.activateContacts({1, 2});
+  contact_status_even.setContactPoints(contact_points);
+  parnmpc_solver.pushBackContactStatus(contact_status_even, t_start, t);
 
-  // auto contact_status_odd = robot.createContactStatus();
-  // contact_points[0].coeffRef(0) += 0.5 * step_length;
-  // contact_points[3].coeffRef(0) += 0.5 * step_length;
-  // contact_status_odd.activateContacts({0, 3});
-  // contact_status_odd.setContactPoints(contact_points);
-  // parnmpc_solver.pushBackContactStatus(contact_status_odd, t_start+t_period, t);
+  auto contact_status_odd = robot.createContactStatus();
+  contact_points[0].coeffRef(0) += 0.5 * step_length;
+  contact_points[3].coeffRef(0) += 0.5 * step_length;
+  contact_status_odd.activateContacts({0, 3});
+  contact_status_odd.setContactPoints(contact_points);
+  parnmpc_solver.pushBackContactStatus(contact_status_odd, t_start+t_period, t);
 
   // for (int i=2; i<=max_num_impulse_phase; ++i) {
   //   if (i % 2 == 0) {
@@ -168,7 +159,7 @@ int main(int argc, char *argv[]) {
 
   parnmpc_solver.setStateTrajectory(t, q, v);
   parnmpc_solver.initBackwardCorrection(t);
-  idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 10, false);
+  idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 50, false);
 
 #ifdef ENABLE_VIEWER
   if (argc != 2) {

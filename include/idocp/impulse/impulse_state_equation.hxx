@@ -66,7 +66,7 @@ inline void linearizeImpulseBackwardEuler(
   else {
     kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
   }
-  kkt_residual.lv().noalias() += - s.gmm + s_next.gmm;
+  kkt_residual.lv().noalias() += (- s.gmm + s_next.gmm);
   kkt_residual.ldv.noalias() += s.gmm;
 }
 
