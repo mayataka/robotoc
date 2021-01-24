@@ -14,20 +14,6 @@
 namespace idocp {
 namespace stateequation {
 
-void condenseImpulseForwardEuler(Robot& robot, 
-                                 ImpulseSplitKKTMatrix& kkt_matrix, 
-                                 ImpulseSplitKKTResidual& kkt_residual);
-
-template <typename TangentVectorType>
-void correctCostateDirectionImpulseForwardEuler(
-    const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix,
-    ImpulseSplitKKTResidual& kkt_residual,
-    const Eigen::MatrixBase<TangentVectorType>& dlmd);
-
-void condenseImpulseBackwardEuler(Robot& robot, 
-                                  ImpulseSplitKKTMatrix& kkt_matrix, 
-                                  ImpulseSplitKKTResidual& kkt_residual);
-
 template <typename ConfigVectorType>
 void linearizeImpulseForwardEuler(
     const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
@@ -35,12 +21,22 @@ void linearizeImpulseForwardEuler(
     ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual);
 
+void condenseImpulseForwardEuler(Robot& robot, 
+                                 ImpulseSplitKKTMatrix& kkt_matrix, 
+                                 ImpulseSplitKKTResidual& kkt_residual);
+
 template <typename ConfigVectorType, typename TangentVectorType>
 void linearizeImpulseBackwardEuler(
     const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
     const ImpulseSplitSolution& s, const SplitSolution& s_next, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual);
+
+template <typename ConfigVectorType>
+inline void condenseImpulseBackwardEuler(
+    Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual);
 
 template <typename ConfigVectorType, typename TangentVectorType>
 void computeImpulseForwardEulerResidual(

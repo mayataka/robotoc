@@ -93,8 +93,10 @@ inline void ImpulseSplitKKTMatrixInverter::multiplyJac(
   assert(res.rows() == dimQ);
   assert(res.cols() == dimQ);
   if (has_floating_base_) {
-    const_cast<Eigen::MatrixBase<MatrixType3>&>(res).topRows(dimv_).noalias()
-        = Jac.block(0, dimf, dimv_, dimv_) * mat.middleRows(dimf, dimv_);
+    const_cast<Eigen::MatrixBase<MatrixType3>&>(res).template topRows<6>().noalias()
+        = Jac.template block<6, 6>(0, dimf) * mat.template middleRows<6>(dimf);
+    const_cast<Eigen::MatrixBase<MatrixType3>&>(res).middleRows(6, dimv_-6)
+        = - mat.middleRows(dimf+6, dimv_-6);
   }
   else {
     const_cast<Eigen::MatrixBase<MatrixType3>&>(res).topRows(dimv_) 

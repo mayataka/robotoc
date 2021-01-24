@@ -63,6 +63,8 @@ inline void ImpulseSplitParNMPC::linearizeOCP(
   constraints_->augmentDualResidual(robot, constraints_data_, s, kkt_residual);
   stateequation::linearizeImpulseBackwardEuler(robot, q_prev, v_prev, s, s_next, 
                                                kkt_matrix, kkt_residual);
+  stateequation::condenseImpulseBackwardEuler(robot, q_prev, s, 
+                                              kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s,
                                              kkt_matrix, kkt_residual);
   cost_->computeImpulseCostHessian(robot, cost_data_, t, s, kkt_matrix);
@@ -83,8 +85,11 @@ inline void ImpulseSplitParNMPC::computeCondensedPrimalDirection(
 
 
 inline void ImpulseSplitParNMPC::computeCondensedDualDirection(
-    const Robot& robot, ImpulseSplitDirection& d) {
+    const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual, ImpulseSplitDirection& d) {
   impulse_dynamics_.computeCondensedDualDirection(robot, d);
+  stateequation::correctCostateDirectionBackwardEuler(robot, kkt_matrix, 
+                                                      kkt_residual, d.dlmd());
 }
 
  

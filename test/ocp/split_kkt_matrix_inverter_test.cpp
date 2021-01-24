@@ -48,6 +48,9 @@ void SplitKKTMatrixInverterTest::test(const Robot& robot) const {
   auto q_next = robot.generateFeasibleConfiguration();
   robot.dSubtractdConfigurationMinus(q_prev, q_next, KKT_mat.block(0, dimx+dimu, dimv, dimv));
   KKT_mat.block(             0, dimx+dimu+dimv, dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
+  if (robot.hasFloatingBase()) {
+    KKT_mat.block(             0, dimx+dimu+dimv, 6, 6).setRandom();
+  }
   KKT_mat.bottomLeftCorner(dimQ, dimx) = KKT_mat.topRightCorner(dimx, dimQ).transpose();
   matrix.Fqu() = KKT_mat.block(             0,           dimx, dimv, dimu);
   matrix.Fqq() = KKT_mat.block(             0,      dimx+dimu, dimv, dimv);
@@ -107,6 +110,9 @@ void SplitKKTMatrixInverterTest::testWithImpulse(const Robot& robot) const {
   auto q_next = robot.generateFeasibleConfiguration();
   robot.dSubtractdConfigurationMinus(q_prev, q_next, KKT_mat.block(0, dimx+dimi+dimu, dimv, dimv));
   KKT_mat.block(             0, dimx+dimi+dimu+dimv, dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
+  if (robot.hasFloatingBase()) {
+    KKT_mat.block(             0, dimx+dimi+dimu+dimv, 6, 6).setRandom();
+  }
   KKT_mat.block(          dimx,      dimx+dimi+dimu, dimi, dimv).setRandom();
   KKT_mat.bottomLeftCorner(dimQ, dimx+dimi) = KKT_mat.topRightCorner(dimx+dimi, dimQ).transpose();
   matrix.Fqu() = KKT_mat.block(                  0,           dimx+dimi, dimv, dimu);

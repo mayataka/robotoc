@@ -250,7 +250,6 @@ inline void ContactDynamics::condensingBackwardEuler(
 }
 
 
-
 inline void ContactDynamics::computeCondensedPrimalDirection(
     const Robot& robot, SplitDirection& d) {
   expansionPrimal(robot, data_, d);

@@ -79,6 +79,8 @@ inline void TerminalParNMPC::linearizeOCP(Robot& robot,
                                     kkt_residual);
   stateequation::linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
+  stateequation::condenseBackwardEuler(robot, dtau, q_prev, s, 
+                                       kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dtau, s, 
                                              kkt_residual);
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix);
@@ -102,10 +104,12 @@ inline void TerminalParNMPC::computeCondensedPrimalDirection(
 
 inline void TerminalParNMPC::computeCondensedDualDirection(
     const Robot& robot, const double dtau, const SplitKKTMatrix& kkt_matrix, 
-    const SplitKKTResidual& kkt_residual, SplitDirection& d) {
+    SplitKKTResidual& kkt_residual, SplitDirection& d) {
   assert(dtau >= 0);
   contact_dynamics_.computeCondensedDualDirection(robot, dtau, kkt_matrix,
                                                   kkt_residual, d.dgmm(), d);
+  stateequation::correctCostateDirectionBackwardEuler(robot, kkt_matrix, 
+                                                      kkt_residual, d.dlmd());
 }
 
 

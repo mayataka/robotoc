@@ -123,6 +123,8 @@ public:
   /// @param[in, out] d Split direction of this stage.
   /// 
   void computeCondensedDualDirection(const Robot& robot, 
+                                     const ImpulseSplitKKTMatrix& kkt_matrix, 
+                                     ImpulseSplitKKTResidual& kkt_residual,
                                      ImpulseSplitDirection& d);
 
   ///

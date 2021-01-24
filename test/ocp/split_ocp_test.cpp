@@ -182,7 +182,7 @@ void SplitOCPTest::testLinearizeOCP(
   cd.computeCondensedDualDirection(robot, dtau, kkt_matrix, kkt_residual, d_next.dgmm(), d_ref);
   Eigen::VectorXd dlmd_ref = d_ref.dlmd();
   if (robot.hasFloatingBase()) {
-    d_ref.dlmd().head(6) = - kkt_matrix_ref.Fqq_prev_inv * dlmd_ref.head(6);
+    d_ref.dlmd().head(6) = - kkt_matrix_ref.Fqq_prev_inv.transpose() * dlmd_ref.head(6);
   }
   EXPECT_TRUE(d.isApprox(d_ref));
   const double step_size = std::abs(Eigen::VectorXd::Random(1)[0]);

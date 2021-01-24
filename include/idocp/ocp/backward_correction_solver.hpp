@@ -84,7 +84,7 @@ public:
   void forwardCorrectionParallel(ParNMPC& parnmpc, BackwardCorrection& corr, 
                                  std::vector<Robot>& robots, 
                                  const KKTMatrix& kkt_matrix, 
-                                 const KKTResidual& kkt_residual, 
+                                 KKTResidual& kkt_residual, 
                                  const Solution& s, Direction& d);
 
   double maxPrimalStepSize() const;

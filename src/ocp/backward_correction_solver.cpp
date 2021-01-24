@@ -367,7 +367,7 @@ void BackwardCorrectionSolver::forwardCorrectionSerial(
 
 void BackwardCorrectionSolver::forwardCorrectionParallel(
     ParNMPC& parnmpc, BackwardCorrection& corr, std::vector<Robot>& robots, 
-    const KKTMatrix& kkt_matrix, const KKTResidual& kkt_residual, 
+    const KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, 
     const Solution& s, Direction& d) {
   const int N_impulse = parnmpc.discrete().numImpulseStages();
   const int N_lift = parnmpc.discrete().numLiftStages();
@@ -419,7 +419,8 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
           robots[omp_get_thread_num()], kkt_matrix.impulse[impulse_index], 
           s.impulse[impulse_index], d.impulse[impulse_index]);
       parnmpc.impulse[impulse_index].computeCondensedDualDirection(
-          robots[omp_get_thread_num()], d.impulse[impulse_index]);
+          robots[omp_get_thread_num()], kkt_matrix.impulse[impulse_index],
+          kkt_residual.impulse[impulse_index], d.impulse[impulse_index]);
       primal_step_sizes_.coeffRef(i) 
           = parnmpc.impulse[impulse_index].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   

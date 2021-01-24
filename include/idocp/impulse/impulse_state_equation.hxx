@@ -8,58 +8,6 @@
 namespace idocp {
 namespace stateequation {
 
-inline void condenseImpulseForwardEuler(Robot& robot, 
-                                        ImpulseSplitKKTMatrix& kkt_matrix, 
-                                        ImpulseSplitKKTResidual& kkt_residual) {
-  if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
-                                         kkt_matrix.Fqq_prev_inv);
-    kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
-        = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-    kkt_residual.Fq_prev = kkt_residual.Fq().template head<6>();
-    kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
-        = - kkt_matrix.Fqq_prev_inv 
-            * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
-    kkt_residual.Fq().template head<6>().noalias()
-        = - kkt_matrix.Fqq_prev_inv * kkt_residual.Fq_prev;
-  }
-}
-
-
-template <typename TangentVectorType>
-inline void correctCostateDirectionImpulseForwardEuler(
-    const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix,
-    ImpulseSplitKKTResidual& kkt_residual,
-    const Eigen::MatrixBase<TangentVectorType>& dlmd) {
-  if (robot.hasFloatingBase()) {
-    kkt_residual.Fq_prev.noalias() 
-        = kkt_matrix.Fqq_prev_inv * dlmd.template head<6>();
-    const_cast<Eigen::MatrixBase<TangentVectorType>&> (dlmd).template head<6>() 
-        = - kkt_residual.Fq_prev.template head<6>();
-  }
-}
-
-
-inline void condenseImpulseBackwardEuler(
-    Robot& robot, ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual) {
-  if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
-                                         kkt_matrix.Fqq_prev_inv);
-    kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
-        = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-    kkt_residual.Fq_prev.template head<6>() 
-        = kkt_residual.Fq().template head<6>();
-    kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
-        = - kkt_matrix.Fqq_prev_inv 
-            * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
-    kkt_residual.Fq().template head<6>().noalias()
-        = - kkt_matrix.Fqq_prev_inv 
-            * kkt_residual.Fq().template head<6>();
-  }
-}
-
-
 template <typename ConfigVectorType>
 inline void linearizeImpulseForwardEuler(
     const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
@@ -78,6 +26,24 @@ inline void linearizeImpulseForwardEuler(
   }
   kkt_residual.lv().noalias() += s_next.gmm - s.gmm;
   kkt_residual.ldv.noalias() += s_next.gmm;
+}
+
+
+inline void condenseImpulseForwardEuler(Robot& robot, 
+                                        ImpulseSplitKKTMatrix& kkt_matrix, 
+                                        ImpulseSplitKKTResidual& kkt_residual) {
+  if (robot.hasFloatingBase()) {
+    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
+                                         kkt_matrix.Fqq_prev_inv);
+    kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
+        = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
+    kkt_residual.Fq_prev = kkt_residual.Fq().template head<6>();
+    kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
+        = - kkt_matrix.Fqq_prev_inv 
+            * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
+    kkt_residual.Fq().template head<6>().noalias()
+        = - kkt_matrix.Fqq_prev_inv * kkt_residual.Fq_prev;
+  }
 }
 
 
@@ -102,6 +68,27 @@ inline void linearizeImpulseBackwardEuler(
   }
   kkt_residual.lv().noalias() += - s.gmm + s_next.gmm;
   kkt_residual.ldv.noalias() += s.gmm;
+}
+
+
+template <typename ConfigVectorType>
+inline void condenseImpulseBackwardEuler(
+    Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
+    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) {
+  if (robot.hasFloatingBase()) {
+    robot.dSubtractdConfigurationPlus(q_prev, s.q, kkt_matrix.Fqq_prev);
+    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
+                                         kkt_matrix.Fqq_prev_inv);
+    kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
+        = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
+    kkt_residual.Fq_prev = kkt_residual.Fq().template head<6>();
+    kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
+        = kkt_matrix.Fqq_prev_inv 
+            * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
+    kkt_residual.Fq().template head<6>().noalias()
+        = kkt_matrix.Fqq_prev_inv * kkt_residual.Fq_prev;
+  }
 }
 
 

@@ -94,15 +94,21 @@ inline void SplitKKTMatrixInverter::multiplyF(
   assert(F.rows() == dimx_);
   assert(F.cols() == dimQ_);
   if (has_floating_base_) {
-    const_cast<Eigen::MatrixBase<MatrixType3>&>(res).topRows(dimv_).noalias()
-        = F.block(0, dimu_, dimv_, dimv_) * mat.middleRows(dimu_, dimv_);
+    const_cast<Eigen::MatrixBase<MatrixType3>&>(res).template topRows<6>().noalias()
+        = F.template block<6, 6>(0, dimu_) * mat.template middleRows<6>(dimu_);
+    const_cast<Eigen::MatrixBase<MatrixType3>&>(res).middleRows(6, dimv_-6)
+        = - mat.middleRows(dimu_+6, dimv_-6);
+    const_cast<Eigen::MatrixBase<MatrixType3>&>(res).template topRows<6>().noalias()
+        += F.template block<6, 6>(0, dimu_+dimv_) * mat.template middleRows<6>(dimu_+dimv_);
+    const_cast<Eigen::MatrixBase<MatrixType3>&>(res).middleRows(6, dimv_-6).noalias()
+        += dtau * mat.middleRows(dimu_+dimv_+6, dimv_-6);
   }
   else {
     const_cast<Eigen::MatrixBase<MatrixType3>&>(res).topRows(dimv_) 
         = - mat.middleRows(dimu_, dimv_);
+    const_cast<Eigen::MatrixBase<MatrixType3>&>(res).topRows(dimv_).noalias()
+        += dtau * mat.bottomRows(dimv_);
   }
-  const_cast<Eigen::MatrixBase<MatrixType3>&>(res).topRows(dimv_).noalias()
-      += dtau * mat.bottomRows(dimv_);
   const_cast<Eigen::MatrixBase<MatrixType3>&>(res).bottomRows(dimv_).noalias()
       = F.bottomRows(dimv_) * mat;
 }
@@ -162,15 +168,21 @@ inline void SplitKKTMatrixInverter::multiplyFPq(
   assert(Pq.cols() == dimv_);
   const int dimf = Pq.rows();
   if (has_floating_base_) {
-    const_cast<Eigen::MatrixBase<MatrixType4>&>(res).topRows(dimv_).noalias()
-        = F.block(0, dimu_, dimv_, dimv_) * mat.middleRows(dimu_, dimv_);
+    const_cast<Eigen::MatrixBase<MatrixType4>&>(res).template topRows<6>().noalias()
+        = F.template block<6, 6>(0, dimu_) * mat.template middleRows<6>(dimu_);
+    const_cast<Eigen::MatrixBase<MatrixType4>&>(res).middleRows(6, dimv_-6)
+        = - mat.middleRows(dimu_+6, dimv_-6);
+    const_cast<Eigen::MatrixBase<MatrixType4>&>(res).template topRows<6>().noalias()
+        += F.template block<6, 6>(0, dimu_+dimv_) * mat.template middleRows<6>(dimu_+dimv_);
+    const_cast<Eigen::MatrixBase<MatrixType4>&>(res).middleRows(6, dimv_-6).noalias()
+        += dtau * mat.middleRows(dimu_+dimv_+6, dimv_-6);
   }
   else {
     const_cast<Eigen::MatrixBase<MatrixType4>&>(res).topRows(dimv_) 
         = - mat.middleRows(dimu_, dimv_);
+    const_cast<Eigen::MatrixBase<MatrixType4>&>(res).topRows(dimv_).noalias()
+        += dtau * mat.bottomRows(dimv_);
   }
-  const_cast<Eigen::MatrixBase<MatrixType4>&>(res).topRows(dimv_).noalias()
-      += dtau * mat.bottomRows(dimv_);
   const_cast<Eigen::MatrixBase<MatrixType4>&>(res).middleRows(dimv_, dimv_).noalias()
       = F.bottomRows(dimv_) * mat;
   const_cast<Eigen::MatrixBase<MatrixType4>&>(res).bottomRows(dimf).noalias()

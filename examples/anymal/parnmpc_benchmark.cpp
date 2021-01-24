@@ -75,8 +75,6 @@ int main () {
 
   const double T = 0.5;
   const int N = 20;
-  // const double T = 1.0;
-  // const int N = 60;
   const int max_num_impulse_phase = 4;
   const int nthreads = 6;
   const double t = 0;
