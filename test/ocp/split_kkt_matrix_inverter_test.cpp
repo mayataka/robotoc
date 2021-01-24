@@ -139,8 +139,9 @@ void SplitKKTMatrixInverterTest::testWithImpulse(const Robot& robot) const {
   EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-06));
   inverter.enableRegularization();
   inverter.invert(dtau, matrix.Jac(), matrix.Pq(), matrix.Qss(), KKT_mat_inv);
-  EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-08));
-  EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-06));
+  KKT_mat.block(dimx, dimx, dimi, dimi).diagonal().array() -= 1.0e-09;
+  const Eigen::MatrixXd KKT_mat_inv_ref_reg = KKT_mat.inverse();
+  EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref_reg, 1.0e-08));
 }
 
 
