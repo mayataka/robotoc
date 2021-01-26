@@ -72,7 +72,7 @@ inline void ImpulseDynamicsBackwardEuler::linearizeImpulseCondition(
                                         impulse_status.contactPoints(),
                                         kkt_residual.P());
   robot.computeImpulseConditionDerivative(impulse_status, kkt_matrix.Pq());
-  kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.mu_stack();
+  kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.xi_stack();
 }
 
 
