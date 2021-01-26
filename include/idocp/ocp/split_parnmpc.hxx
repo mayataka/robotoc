@@ -280,7 +280,8 @@ inline double SplitParNMPC::stageCost(Robot& robot, const double t,
   double cost = 0;
   cost += cost_->computeStageCost(robot, cost_data_, t, dtau, s);
   if (primal_step_size > 0) {
-    cost += dtau * constraints_->costSlackBarrier(constraints_data_, primal_step_size);
+    cost += dtau * constraints_->costSlackBarrier(constraints_data_, 
+                                                  primal_step_size);
   }
   else {
     cost += dtau * constraints_->costSlackBarrier(constraints_data_);

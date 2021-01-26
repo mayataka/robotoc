@@ -133,7 +133,7 @@ void ImpulseDynamicsBackwardEulerTest::testLinearizeImpulseCondition(Robot& robo
                                         impulse_status.contactPoints(),
                                         kkt_residual_ref.P());
   robot.computeImpulseConditionDerivative(impulse_status, kkt_matrix_ref.Pq());
-  kkt_residual_ref.lq() += kkt_matrix_ref.Pq().transpose() * s.mu_stack();
+  kkt_residual_ref.lq() += kkt_matrix_ref.Pq().transpose() * s.xi_stack();
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
 }
