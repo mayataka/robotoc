@@ -33,9 +33,9 @@ int main(int argc, char *argv[]) {
   const double additive_stride_hip = 0.2;
   const double t_start = 1.0;
 
-  const double t_front_swing = 0.15;
+  const double t_front_swing = 0.135;
   const double t_front_hip_swing = 0.05;
-  const double t_hip_swing = 0.20;
+  const double t_hip_swing = 0.165;
   const double t_period = t_front_swing + t_front_hip_swing + t_hip_swing;
   const int steps = 10;
 
@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
   Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 
   ocp_solver.setStateTrajectory(t, q, v);
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 500, false);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 350, false);
 
 
 #ifdef ENABLE_VIEWER
