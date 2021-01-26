@@ -15,6 +15,8 @@ namespace idocp {
 ///
 class ImpulseSplitKKTResidual {
 public:
+  using Vector6d = Eigen::Matrix<double, 6, 1>;
+
   ///
   /// @brief Construct a KKT residual.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -106,20 +108,6 @@ public:
   /// @return Reference to the residual with respect to q and v transition.
   /// Size is 2 * Robot::dimv().
   ///
-  Eigen::VectorBlock<Eigen::VectorXd> P();
-
-  ///
-  /// @brief Residual with respect to q and v transition.
-  /// @return Reference to the residual with respect to q and v transition.
-  /// Size is 2 * Robot::dimv().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> P() const;
-
-  ///
-  /// @brief Residual with respect to q and v transition.
-  /// @return Reference to the residual with respect to q and v transition.
-  /// Size is 2 * Robot::dimv().
-  ///
   Eigen::VectorBlock<Eigen::VectorXd> V();
 
   ///
@@ -128,6 +116,20 @@ public:
   /// Size is 2 * Robot::dimv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> V() const;
+
+  ///
+  /// @brief Residual with respect to the stack of the contact forces f.
+  /// @return Reference to the residual with respect to the stack of the  
+  /// contact forces f. Size is ImpulseSplitKKTResidual::dimf().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> lf();
+
+  ///
+  /// @brief Residual with respect to the stack of the contact forces f.
+  /// @return Reference to the residual with respect to the stack of the  
+  /// contact forces f. Size is ImpulseSplitKKTResidual::dimf().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
   ///
   /// @brief Residual with respect to configuration q.
@@ -172,18 +174,22 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> lx() const;
 
   ///
-  /// @brief Residual with respect to the stack of the contact forces f.
-  /// @return Reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is ImpulseSplitKKTResidual::dimf().
+  /// @brief Residual with respect to q and v transition.
+  /// @return Reference to the residual with respect to q and v transition.
+  /// Size is 2 * Robot::dimv().
   ///
-  Eigen::VectorBlock<Eigen::VectorXd> lf();
+  Eigen::VectorBlock<Eigen::VectorXd> P();
 
   ///
-  /// @brief Residual with respect to the stack of the contact forces f.
-  /// @return Reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is ImpulseSplitKKTResidual::dimf().
+  /// @brief Residual with respect to q and v transition.
+  /// @return Reference to the residual with respect to q and v transition.
+  /// Size is 2 * Robot::dimv().
   ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
+  const Eigen::VectorBlock<const Eigen::VectorXd> P() const;
+
+  Eigen::VectorBlock<Eigen::VectorXd> splitKKTResidual();
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> splitKKTResidual() const;
 
   ///
   /// @brief Set the KKT residual zero.
@@ -216,17 +222,16 @@ public:
   ///
   bool hasNaN() const;
 
-  /// @brief KKT residual.
-  Eigen::VectorXd KKT_residual;
-
   /// @brief Residual with respect to control input torques u.
   Eigen::VectorXd ldv;
+
+  Vector6d Fq_prev;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd P_full_, V_full_, lf_full_;
-  int dimv_, dimx_, dimf_, dimKKT_;
+  Eigen::VectorXd KKT_residual_full_, P_full_;
+  int dimv_, dimx_, dimf_, dimKKT_, lf_begin_, lq_begin_, lv_begin_;
 
 };
 

@@ -2,10 +2,10 @@
 #define IDOCP_SPLIT_KKT_MATRIX_HPP_
 
 #include "Eigen/Core"
-#include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
 
 
 namespace idocp {
@@ -16,6 +16,8 @@ namespace idocp {
 ///
 class SplitKKTMatrix {
 public:
+  using Matrix6d = Eigen::Matrix<double, 6, 6>;
+
   ///
   /// @brief Construct a KKT matrix.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -57,6 +59,17 @@ public:
   /// @param[in] contact_status Contact status.
   ///
   void setContactStatus(const ContactStatus& contact_status);
+
+  ///
+  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Set impulse status, i.e., set dimension of the impulse, to zero.
+  ///
+  void setImpulseStatus();
 
   ///
   /// @brief Jacobian of the state equation of the configuration with respect  
@@ -161,6 +174,21 @@ public:
   /// @brief const version of SplitKKTMatrix::Fxx().
   ///
   const Eigen::Block<const Eigen::MatrixXd> Fxx() const;
+
+  ///
+  /// @brief Jacobian of the contact position constraint related to impulse 
+  /// condition with respect to the configuration. 
+  /// ImpulseSplitKKTMatrix::setImpulseStatus() muset be called to set the impulse 
+  /// dimension before calling this function.
+  /// @return Reference to the block part of the Hessian. 
+  /// Size is ImpulseStatus::dimf() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Pq();
+
+  ///
+  /// @brief const version of SplitKKTMatrix::Pq().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Pq() const;
 
   ///
   /// @brief Hessian of the Lagrangian with respect to the control input torques 
@@ -595,6 +623,13 @@ public:
   int dimf() const;
 
   ///
+  /// @brief Returns the dimension of the stack of impulse forces at the current 
+  /// impulse status.
+  /// @return Dimension of the stack of impulse forces.
+  ///
+  int dimi() const;
+
+  ///
   /// @brief Chech the equivalence of two SplitKKTMatrix.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
@@ -611,12 +646,21 @@ public:
   /// configuration of the previous time step q_prev.
   Eigen::MatrixXd Fqq_prev;
 
+  /// @brief Inverse of the derivative of the state equation with respect to 
+  /// the configuration. 
+  Matrix6d Fqq_inv;
+
+  /// @brief Inverse of the derivative of the state equation with respect to 
+  /// the configuration of the previous time step q_prev.
+  Matrix6d Fqq_prev_inv;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::MatrixXd F_, Q_, Qaaff_full_;
+  Eigen::MatrixXd F_, Pq_full_, Q_, Qaaff_full_;
   bool has_floating_base_;
-  int dimv_, dimx_, dimu_, dim_passive_, dimf_, u_begin_, q_begin_, v_begin_, dimKKT_;
+  int dimv_, dimx_, dimu_, dim_passive_, dimf_, dimi_, dimKKT_,
+      u_begin_, q_begin_, v_begin_;
   static constexpr int kDimFloatingBase = 6;
 
 };

@@ -16,11 +16,12 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc)
     duality(Eigen::VectorXd::Zero(dimc)),
     dslack(Eigen::VectorXd::Zero(dimc)),
     ddual(Eigen::VectorXd::Zero(dimc)),
+    r(),
     J(),
     dimc_(dimc) {
   try {
-    if (dimc < 0) {
-      throw std::out_of_range("invalid argment: dimc must not be negative");
+    if (dimc <= 0) {
+      throw std::out_of_range("invalid argment: dimc must be positive!");
     }
   }
   catch(const std::exception& e) {
@@ -37,6 +38,7 @@ inline ConstraintComponentData::ConstraintComponentData()
     duality(),
     dslack(),
     ddual(),
+    r(),
     J(),
     dimc_(0) {
 }

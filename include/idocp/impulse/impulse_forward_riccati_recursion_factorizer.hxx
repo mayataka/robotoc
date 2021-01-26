@@ -34,8 +34,10 @@ inline void ImpulseForwardRiccatiRecursionFactorizer::factorizeStateTransition(
     const ImpulseSplitKKTResidual& kkt_residual,
     SplitRiccatiFactorization& riccati_next) {
   if (has_floating_base_) {
-    riccati_next.Pi.topRows(dimv_).noalias()
-        = kkt_matrix.Fqq() * riccati.Pi.topRows(dimv_);
+    riccati_next.Pi.template topRows<6>().noalias() 
+        = kkt_matrix.Fqq().template topLeftCorner<6, 6>() 
+            * riccati.Pi.template topRows<6>();
+    riccati_next.Pi.middleRows(6, dimv_-6) = riccati.Pi.middleRows(6, dimv_-6);
   }
   else {
     riccati_next.Pi.topRows(dimv_) = riccati.Pi.topRows(dimv_);
@@ -44,8 +46,11 @@ inline void ImpulseForwardRiccatiRecursionFactorizer::factorizeStateTransition(
       = kkt_matrix.Fxx().bottomRows(dimv_) * riccati.Pi;
   riccati_next.pi = kkt_residual.Fx();
   if (has_floating_base_) {
-    riccati_next.pi.head(dimv_).noalias() 
-        += kkt_matrix.Fqq() * riccati.pi.head(dimv_);
+    riccati_next.pi.template head<6>().noalias() 
+        += kkt_matrix.Fqq().template topLeftCorner<6, 6>() 
+            * riccati.pi.template head<6>();
+    riccati_next.pi.segment(6, dimv_-6).noalias() 
+        += riccati.pi.segment(6, dimv_-6);
   }
   else {
     riccati_next.pi.head(dimv_).noalias() += riccati.pi.head(dimv_);
@@ -61,17 +66,21 @@ factorizeStateConstraintFactorization(
     const ImpulseSplitKKTMatrix& kkt_matrix, 
     SplitRiccatiFactorization& riccati_next) {
   if (has_floating_base_) {
-    NApBKt_.leftCols(dimv_).noalias() 
-        = riccati.N.leftCols(dimv_) * kkt_matrix.Fqq().transpose();
+    NApBKt_.template leftCols<6>().noalias() 
+        = riccati.N.template leftCols<6>() 
+            * kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose();
+    NApBKt_.middleCols(6, dimv_-6) = riccati.N.middleCols(6, dimv_-6);
   }
   else {
-    NApBKt_.leftCols(dimv_).noalias() = riccati.N.leftCols(dimv_);
+    NApBKt_.leftCols(dimv_) = riccati.N.leftCols(dimv_);
   }
   NApBKt_.rightCols(dimv_).noalias() 
       = riccati.N * kkt_matrix.Fxx().bottomRows(dimv_).transpose();
   if (has_floating_base_) {
-    riccati_next.N.topRows(dimv_).noalias()
-        = kkt_matrix.Fqq() * NApBKt_.topRows(dimv_);
+    riccati_next.N.template topRows<6>().noalias() 
+        = kkt_matrix.Fqq().template topLeftCorner<6, 6>() 
+            * NApBKt_.template topRows<6>();
+    riccati_next.N.middleRows(6, dimv_-6) = NApBKt_.middleRows(6, dimv_-6);
   }
   else {
     riccati_next.N.topRows(dimv_) = NApBKt_.topRows(dimv_);

@@ -15,6 +15,8 @@ namespace idocp {
 ///
 class ImpulseSplitKKTMatrix {
 public:
+  using Matrix6d = Eigen::Matrix<double, 6, 6>;
+
   ///
   /// @brief Construct a KKT matrix.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -412,6 +414,14 @@ public:
   /// @brief Derivative of the state equation with respect to the 
   /// configuration of the previous time step q_prev.
   Eigen::MatrixXd Fqq_prev;
+
+  /// @brief Inverse of the derivative of the state equation with respect to 
+  /// the configuration of the previous time step q_prev.
+  Matrix6d Fqq_inv;
+
+  /// @brief Inverse of the derivative of the state equation with respect to 
+  /// the configuration of the previous time step q_prev.
+  Matrix6d Fqq_prev_inv;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

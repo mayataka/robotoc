@@ -48,6 +48,7 @@ inline void TerminalOCP::initConstraints(Robot& robot, const int time_step,
 
 
 inline void TerminalOCP::linearizeOCP(Robot& robot, const double t, 
+                                      const Eigen::VectorXd& q_prev,
                                       const SplitSolution& s,
                                       SplitKKTMatrix& kkt_matrix, 
                                       SplitKKTResidual& kkt_residual) {
@@ -56,8 +57,9 @@ inline void TerminalOCP::linearizeOCP(Robot& robot, const double t,
     robot.updateKinematics(s.q, s.v);
   }
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual);
-  kkt_residual.lq().noalias() -= s.lmd;
-  kkt_residual.lv().noalias() -= s.gmm;
+  stateequation::linearizeForwardEulerTerminal(robot, q_prev, s, 
+                                               kkt_matrix, kkt_residual);
+  stateequation::condenseForwardEulerTerminal(robot, kkt_matrix);
   kkt_matrix.Qqq().setZero();
   kkt_matrix.Qvv().setZero();
   cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix);
@@ -85,6 +87,19 @@ inline double TerminalOCP::terminalCost(Robot& robot, const double t,
 }
 
 
+inline void TerminalOCP::computeCondensedPrimalDirection(
+    Robot& robot, const SplitSolution& s, SplitDirection& d) {
+}
+
+
+inline void TerminalOCP::computeCondensedDualDirection(
+    const Robot& robot, const SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual, SplitDirection& d) {
+  stateequation::correctCostateDirectionForwardEuler(robot, kkt_matrix, 
+                                                     kkt_residual, d.dlmd());
+}
+
+
 inline void TerminalOCP::updatePrimal(const Robot& robot, 
                                       const double step_size, 
                                       const SplitDirection& d, 
@@ -106,17 +121,18 @@ inline void TerminalOCP::updateDual(const double step_size) {
 
 
 inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,  
+                                            const Eigen::VectorXd& q_prev,
                                             const SplitSolution& s,
+                                            SplitKKTMatrix& kkt_matrix,
                                             SplitKKTResidual& kkt_residual) {
-
   kkt_residual.lx().setZero();
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v);
   }
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, 
                                         kkt_residual);
-  kkt_residual.lq().noalias() -= s.lmd;
-  kkt_residual.lv().noalias() -= s.gmm;
+  stateequation::linearizeForwardEulerTerminal(robot, q_prev, s, 
+                                               kkt_matrix, kkt_residual);
 }
 
 

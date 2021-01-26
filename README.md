@@ -5,8 +5,8 @@
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_running_minimal.gif" width="600">
 
-## Features for efficient optimal control 
-- Solves the event-driven optimal control problem (OCP) for rigid body systems with contacts based on inverse dynamics.
+## Features for efficient optimal control for rigid body systems with contacts
+- Direct multiple-shooting formulation based on inverse dynamics with novel condensing method dedicated for rigid body systems with contacts.
 - Riccati recursion / Parallel Newton's method (ParNMPC) for solving the condensed KKT system.
 - Primal-dual interior point method for inequality constraints.
 - Filter line-search method.
@@ -45,8 +45,8 @@ make install
 
 6. If you want to visualize the solution trajectory of the OCP, first install [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) and [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), e.g., by
 ```
-sudo apt update && sudo apt install robotpkg-py38-qt5-gepetto-viewer-corba 
-git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
+sudo apt update && sudo apt install robotpkg-py38-qt5-gepetto-viewer-corba -y
+git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive && cd pinocchio-gepetto-viewer
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make install
@@ -81,7 +81,7 @@ The following four solvers are provided:
 - `idocp::UnOCPSolver` : Solves the OCP for "unconstrained" rigid-body systems by using Riccati recursion.
 - `idocp::UnParNMPCSolver` : Solves the OCP for "unconstrained" rigid-body systems by using ParNMPC algorithm.
 - `idocp::OCPSolver` : Solves the OCP for rigid-body systems by using Riccati recursion.
-- `idocp::ParNMPCSolver` (only tentative implementation in the current version) : Solves the OCP for rigid-body systems by using ParNMPC algorithm.
+- `idocp::ParNMPCSolver` : Solves the OCP for rigid-body systems by using ParNMPC algorithm.
 
 where "unconstrained" rigid-body systems are systems without any contacts or a floating-base.
 

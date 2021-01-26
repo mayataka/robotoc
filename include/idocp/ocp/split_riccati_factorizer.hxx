@@ -123,17 +123,25 @@ inline void SplitRiccatiFactorizer::backwardStateConstraintFactorization(
   assert(T_next.rows() == T.rows());
   assert(dtau >= 0);
   if (has_floating_base_) {
-    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_).noalias() 
-        = kkt_matrix.Fqq().transpose() * T_next.topRows(dimv_);
+    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).template topRows<6>().noalias() 
+        = kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
+            * T_next.template topRows<6>();
+    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).middleRows(6, dimv_-6)
+        = T_next.middleRows(6, dimv_-6);
+    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).template middleRows<6>(dimv_).noalias() 
+        = kkt_matrix.Fqv().template topLeftCorner<6, 6>().transpose() 
+            * T_next.template topRows<6>();
+    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_-6)
+        = dtau * T_next.middleRows(6, dimv_-6);
   }
   else {
     const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_) 
         = T_next.topRows(dimv_);
+    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_)
+        = dtau * T_next.topRows(dimv_);
   }
   const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_).noalias()
       += kkt_matrix.Fvq().transpose() * T_next.bottomRows(dimv_);
-  const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_)
-      = dtau * T_next.topRows(dimv_);
   const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_).noalias() 
       +=  kkt_matrix.Fvv().transpose() * T_next.bottomRows(dimv_);
 }
@@ -148,12 +156,21 @@ inline void SplitRiccatiFactorizer::forwardRiccatiRecursion(
   assert(dtau >= 0);
   d_next.dx() = kkt_residual.Fx();
   if (has_floating_base_) {
-    d_next.dq().noalias() += kkt_matrix.Fqq() * d.dq();
+    // d_next.dq().noalias() += kkt_matrix.Fqq() * d.dq();
+    d_next.dq().template head<6>().noalias() 
+        += kkt_matrix.Fqq().template topLeftCorner<6, 6>() 
+            * d.dq().template head<6>();
+    d_next.dq().tail(dimv_-6).noalias() += d.dq().tail(dimv_-6);
+    // d_next.dq().noalias() += kkt_matrix.Fqv() * d.dv();
+    d_next.dq().template head<6>().noalias() 
+        += kkt_matrix.Fqv().template topLeftCorner<6, 6>() 
+            * d.dv().template head<6>();
+    d_next.dq().tail(dimv_-6).noalias() += dtau * d.dv().tail(dimv_-6);
   }
   else {
     d_next.dq().noalias() += d.dq();
+    d_next.dq().noalias() += dtau * d.dv();
   }
-  d_next.dq().noalias() += dtau * d.dv();
   d_next.dv().noalias() += kkt_matrix.Fvq() * d.dq();
   d_next.dv().noalias() += kkt_matrix.Fvv() * d.dv();
   if (exist_state_constraint && is_dtau_sufficiently_positive_) {
@@ -165,10 +182,10 @@ inline void SplitRiccatiFactorizer::forwardRiccatiRecursion(
 inline void SplitRiccatiFactorizer::computeCostateDirection(
     const SplitRiccatiFactorization& riccati, SplitDirection& d,
     const bool exist_state_constraint) {
-  d.dlmd().noalias() = riccati.Pqq * d.dq();
+  d.dlmd().noalias()  = riccati.Pqq * d.dq();
   d.dlmd().noalias() += riccati.Pqv * d.dv();
   d.dlmd().noalias() -= riccati.sq;
-  d.dgmm().noalias() = riccati.Pqv.transpose() * d.dq();
+  d.dgmm().noalias()  = riccati.Pqv.transpose() * d.dq();
   d.dgmm().noalias() += riccati.Pvv * d.dv();
   d.dgmm().noalias() -= riccati.sv;
   if (exist_state_constraint) {
@@ -181,7 +198,7 @@ inline void SplitRiccatiFactorizer::computeControlInputDirection(
     const SplitRiccatiFactorization& riccati_next, SplitDirection& d,
     const bool exist_state_constraint) const {
   if (is_dtau_sufficiently_positive_) {
-    d.du().noalias() = lqr_policy_.K * d.dx();
+    d.du().noalias()  = lqr_policy_.K * d.dx();
     d.du().noalias() += lqr_policy_.k;
     if (exist_state_constraint) {
       d.du().noalias() -= GinvBt_ * riccati_next.n.tail(dimv_);

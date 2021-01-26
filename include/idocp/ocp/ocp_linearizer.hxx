@@ -25,10 +25,10 @@ struct LinearizeOCP {
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot, 
-                         const double t, const SplitSolution& s, 
-                         SplitKKTMatrix& kkt_matrix, 
+                         const double t, const Eigen::VectorXd& q_prev, 
+                         const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
                          SplitKKTResidual& kkt_residual) {
-    terminal_ocp.linearizeOCP(robot, t, s, kkt_matrix, kkt_residual);
+    terminal_ocp.linearizeOCP(robot, t, q_prev, s, kkt_matrix, kkt_residual);
   }
 
   static inline void run(ImpulseSplitOCP& impulse_split_ocp, Robot& robot, 
@@ -60,10 +60,10 @@ struct ComputeKKTResidual {
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot,  
-                         const double t, const SplitSolution& s, 
-                         SplitKKTMatrix& kkt_matrix, 
+                         const double t, const Eigen::VectorXd& q_prev,
+                         const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
                          SplitKKTResidual& kkt_residual) {
-    terminal_ocp.computeKKTResidual(robot, t, s, kkt_residual);
+    terminal_ocp.computeKKTResidual(robot, t, q_prev, s, kkt_matrix, kkt_residual);
   }
 
   static inline void run(ImpulseSplitOCP& impulse_split_ocp, Robot& robot, 
@@ -131,8 +131,8 @@ inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
     }
     else if (i == N_) {
       Algorithm::run(ocp.terminal, robots[omp_get_thread_num()], 
-                     ocp.discrete().t(N_), s[N_], 
-                     kkt_matrix[N_], kkt_residual[N_]);
+                     ocp.discrete().t(N_), q_prev(ocp.discrete(), q, s, N_), 
+                     s[N_], kkt_matrix[N_], kkt_residual[N_]);
     }
     else if (i < N_+1+N_impulse) {
       const int impulse_index  = i - (N_+1);

@@ -19,8 +19,8 @@ inline OCPDiscretizer::OCPDiscretizer(const double T, const int N,
     num_impulse_stages_(0),
     num_lift_stages_(0),
     contact_phase_index_from_time_stage_(N+1, 0), 
-    impulse_index_from_time_stage_(N+1, -1), 
-    lift_index_from_time_stage_(N+1, -1), 
+    impulse_index_after_time_stage_(N+1, -1), 
+    lift_index_after_time_stage_(N+1, -1), 
     time_stage_before_impulse_(max_events, -1), 
     time_stage_before_lift_(max_events, -1),
     is_time_stage_before_impulse_(N+1, false),
@@ -52,8 +52,8 @@ inline OCPDiscretizer::OCPDiscretizer()
     num_impulse_stages_(0),
     num_lift_stages_(0),
     contact_phase_index_from_time_stage_(), 
-    impulse_index_from_time_stage_(), 
-    lift_index_from_time_stage_(), 
+    impulse_index_after_time_stage_(), 
+    lift_index_after_time_stage_(), 
     time_stage_before_impulse_(), 
     time_stage_before_lift_(),
     is_time_stage_before_impulse_(),
@@ -78,7 +78,7 @@ inline void OCPDiscretizer::discretizeOCP(
   countLiftEvents(contact_sequence, t);
   countIsTimeStageBeforeEvents(contact_sequence);
   countContactPhase(contact_sequence);
-  countTime<UseContinuationMethod>(contact_sequence, t);
+  countTime(contact_sequence, t);
 }
 
 
@@ -108,14 +108,14 @@ inline int OCPDiscretizer::impulseIndexAfterTimeStage(
     const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage <= N_);
-  return impulse_index_from_time_stage_[time_stage];
+  return impulse_index_after_time_stage_[time_stage];
 }
 
 
 inline int OCPDiscretizer::liftIndexAfterTimeStage(const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage <= N_);
-  return lift_index_from_time_stage_[time_stage];
+  return lift_index_after_time_stage_[time_stage];
 }
 
 
@@ -179,7 +179,7 @@ inline bool OCPDiscretizer::isTimeStageAfterImpulse(
     const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage <= N_);
-  return is_time_stage_before_impulse_[time_stage-1];
+  return isTimeStageBeforeImpulse(time_stage-1);
 }
 
 
@@ -193,7 +193,7 @@ inline bool OCPDiscretizer::isTimeStageBeforeLift(const int time_stage) const {
 inline bool OCPDiscretizer::isTimeStageAfterLift(const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage <= N_);
-  return is_time_stage_before_lift_[time_stage-1];
+  return isTimeStageBeforeLift(time_stage-1);
 }
 
 
@@ -259,8 +259,8 @@ inline double OCPDiscretizer::dtau_lift(const int lift_index) const {
 
 inline void OCPDiscretizer::countImpulseEvents(
     const ContactSequence& contact_sequence, const double t) {
-  for (auto& e : impulse_index_from_time_stage_) { e = -1; }
-  for (auto& e : time_stage_before_impulse_)     { e = -1; }
+  for (auto& e : impulse_index_after_time_stage_) { e = -1; }
+  for (auto& e : time_stage_before_impulse_)      { e = -1; }
   num_impulse_stages_ = contact_sequence.numImpulseEvents();
   assert(num_impulse_stages_ <= max_events_);
   const double dt = T_ / N_;
@@ -268,7 +268,7 @@ inline void OCPDiscretizer::countImpulseEvents(
     t_impulse_[impulse_index] = contact_sequence.impulseTime(impulse_index) - t;
     time_stage_before_impulse_[impulse_index] 
         = std::floor(t_impulse_[impulse_index]/dt);
-    impulse_index_from_time_stage_[time_stage_before_impulse_[impulse_index]] 
+    impulse_index_after_time_stage_[time_stage_before_impulse_[impulse_index]] 
         = impulse_index;
   }
 }
@@ -276,15 +276,15 @@ inline void OCPDiscretizer::countImpulseEvents(
 
 inline void OCPDiscretizer::countLiftEvents(
     const ContactSequence& contact_sequence, const double t) {
-  for (auto& e : lift_index_from_time_stage_) { e = -1; }
-  for (auto& e : time_stage_before_lift_)     { e = -1; }
+  for (auto& e : lift_index_after_time_stage_) { e = -1; }
+  for (auto& e : time_stage_before_lift_)      { e = -1; }
   num_lift_stages_ = contact_sequence.numLiftEvents();
   assert(num_lift_stages_ <=  max_events_);
   const double dt = T_ / N_;
   for (int lift_index=0; lift_index<num_lift_stages_; ++lift_index) {
     t_lift_[lift_index] = contact_sequence.liftTime(lift_index) - t;
     time_stage_before_lift_[lift_index] = std::floor(t_lift_[lift_index]/dt);
-    lift_index_from_time_stage_[time_stage_before_lift_[lift_index]] 
+    lift_index_after_time_stage_[time_stage_before_lift_[lift_index]] 
         = lift_index;
   }
 }
@@ -336,30 +336,8 @@ inline void OCPDiscretizer::countContactPhase(
 }
 
 
-template <>
-inline void OCPDiscretizer::countTime<true>(
-    const ContactSequence& contact_sequence, const double t) {
-  const double dt = T_ / N_;
-  for (int i=0; i<=N_; ++i) {
-    t_[i] = t + i * dt;
-    dtau_[i] = dt;
-  }
-  for (int i=0; i<num_impulse_stages_; ++i) {
-    dtau_[timeStageBeforeImpulse(i)] 
-        = t_impulse_[i] - dt * timeStageBeforeImpulse(i) - sampling_period_;
-    dtau_aux_[i] = dt - dtau_[timeStageBeforeImpulse(i)] + sampling_period_;
-  }
-  for (int i=0; i<num_lift_stages_; ++i) {
-    dtau_[timeStageBeforeLift(i)] 
-        = t_lift_[i] - dt * timeStageBeforeLift(i) - sampling_period_;
-    dtau_lift_[i] = dt - dtau_[timeStageBeforeLift(i)] + sampling_period_;
-  }
-}
-
-
-template <>
-inline void OCPDiscretizer::countTime<false>(
-    const ContactSequence& contact_sequence, const double t) {
+inline void OCPDiscretizer::countTime(const ContactSequence& contact_sequence, 
+                                      const double t) {
   const double dt = T_ / N_;
   for (int i=0; i<=N_; ++i) {
     t_[i] = t + i * dt;

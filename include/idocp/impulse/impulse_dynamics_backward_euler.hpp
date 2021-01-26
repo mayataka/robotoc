@@ -11,6 +11,7 @@
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_dynamics_backward_euler_data.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/ocp/split_kkt_matrix.hpp"
 
 
 namespace idocp {
@@ -49,6 +50,11 @@ public:
       Robot& robot, const ImpulseStatus& impulse_status, 
       ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual);
 
+  static void linearizeImpulseCondition(
+      Robot& robot, const ImpulseStatus& impulse_status, 
+      const ImpulseSplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+      SplitKKTResidual& kkt_residual);
+
   void condenseImpulseDynamics(Robot& robot, 
                                const ImpulseStatus& impulse_status,  
                                ImpulseSplitKKTMatrix& kkt_matrix, 
@@ -71,11 +77,21 @@ public:
                                       const ImpulseSplitSolution& s, 
                                       ImpulseSplitKKTResidual& kkt_residual);
 
+  static void computeImpulseConditionResidual(
+      Robot& robot, const ImpulseStatus& impulse_status,
+      SplitKKTResidual& kkt_residual);
+
   double l1NormImpulseDynamicsResidual(
       const ImpulseSplitKKTResidual& kkt_residual) const;
 
   double squaredNormImpulseDynamicsResidual(
       const ImpulseSplitKKTResidual& kkt_residual) const;
+
+  static double l1NormImpulseConditionResidual(
+      const SplitKKTResidual& kkt_residual);
+
+  static double squaredNormImpulseConditionResidual(
+      const SplitKKTResidual& kkt_residual);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

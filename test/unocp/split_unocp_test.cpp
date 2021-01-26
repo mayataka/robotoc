@@ -113,7 +113,7 @@ TEST_F(SplitUnOCPTest, linearizeOCP) {
   cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix_ref);
   constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dtau, s, kkt_matrix_ref, kkt_residual_ref);
-  stateequation::LinearizeForwardEuler(robot, dtau, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::linearizeForwardEuler(robot, dtau, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   UnconstrainedDynamics ud(robot);
   ud.linearizeUnconstrainedDynamics(robot, dtau, s, kkt_residual_ref);
   ud.condenseUnconstrainedDynamics(kkt_matrix_ref, kkt_residual_ref, unkkt_matrix_ref, unkkt_residual_ref);
@@ -156,14 +156,14 @@ TEST_F(SplitUnOCPTest, computeKKTResidual) {
   cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
   constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual_ref);
-  stateequation::LinearizeForwardEuler(robot, dtau, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::linearizeForwardEuler(robot, dtau, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   UnconstrainedDynamics ud(robot);
   ud.linearizeUnconstrainedDynamics(robot, dtau, s, kkt_residual_ref);
   double kkt_error_ref = 0;
   kkt_error_ref += kkt_residual_ref.lx().squaredNorm();
   kkt_error_ref += kkt_residual_ref.la.squaredNorm();
   kkt_error_ref += kkt_residual_ref.lu().squaredNorm();
-  kkt_error_ref += stateequation::SquaredNormStateEuqationResidual(kkt_residual_ref);
+  kkt_error_ref += stateequation::squaredNormStateEuqationResidual(kkt_residual_ref);
   kkt_error_ref += ud.squaredNormUnconstrainedDynamicsResidual(dtau);
   kkt_error_ref += dtau * dtau * constraints->squaredNormPrimalAndDualResidual(constraints_data);
   EXPECT_DOUBLE_EQ(kkt_error_ref, ocp.squaredNormKKTResidual(dtau));
@@ -191,13 +191,13 @@ TEST_F(SplitUnOCPTest, costAndConstraintViolation) {
   stage_cost_ref += dtau * constraints->costSlackBarrier(constraints_data, step_size);
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  stateequation::ComputeForwardEulerResidual(robot, dtau, s, s_next.q, 
+  stateequation::computeForwardEulerResidual(robot, dtau, s, s_next.q, 
                                              s_next.v, kkt_residual_ref);
   UnconstrainedDynamics cd(robot);
   cd.computeUnconstrainedDynamicsResidual(robot, s);
   double constraint_violation_ref = 0;
   constraint_violation_ref += dtau * constraints->l1NormPrimalResidual(constraints_data);
-  constraint_violation_ref += stateequation::L1NormStateEuqationResidual(kkt_residual_ref);
+  constraint_violation_ref += stateequation::l1NormStateEuqationResidual(kkt_residual_ref);
   constraint_violation_ref += cd.l1NormUnconstrainedDynamicsResidual(dtau);
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
 }

@@ -135,6 +135,9 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf, const 
   EXPECT_TRUE(robot.jointVelocityLimit().isApprox(velocity_limit));
   EXPECT_TRUE(robot.lowerJointPositionLimit().isApprox(lower_position_limit));
   EXPECT_TRUE(robot.upperJointPositionLimit().isApprox(upper_position_limit));
+  pinocchio::Data data = pinocchio::Data(robot_ref);
+  const double weight_ref = - pinocchio::computeTotalMass(robot_ref) * pinocchio::Model::gravity981[2];
+  EXPECT_DOUBLE_EQ(weight_ref, robot.totalWeight());
 }
 
 
@@ -184,6 +187,20 @@ void RobotTest::testSubtractConfigurationDerivatives(const std::string& path_to_
   pinocchio::dDifference(model, q_minus, q_plus, dSubdq_minus_ref, pinocchio::ARG0);
   EXPECT_TRUE(dSubdq_plus.isApprox(dSubdq_plus_ref));
   EXPECT_TRUE(dSubdq_minus.isApprox(dSubdq_minus_ref));
+  Eigen::MatrixXd dSubdq_plus_inv =  Eigen::MatrixXd::Zero(model.nv, model.nv);
+  Eigen::MatrixXd dSubdq_minus_inv =  Eigen::MatrixXd::Zero(model.nv, model.nv);
+  if (robot.hasFloatingBase()) {
+    robot.dSubtractdConfigurationInverse(dSubdq_plus, dSubdq_plus_inv);
+    robot.dSubtractdConfigurationInverse(dSubdq_minus, dSubdq_minus_inv);
+    EXPECT_TRUE((dSubdq_plus.topLeftCorner(6, 6)*dSubdq_plus_inv.topLeftCorner(6, 6)).isIdentity());
+    EXPECT_TRUE((dSubdq_minus.topLeftCorner(6, 6)*dSubdq_minus_inv.topLeftCorner(6, 6)).isIdentity());
+    std::cout << dSubdq_plus << std::endl;
+    std::cout << dSubdq_plus_inv << std::endl;
+    std::cout << dSubdq_plus * dSubdq_plus_inv  << std::endl;
+    std::cout << dSubdq_minus << std::endl;
+    std::cout << dSubdq_minus_inv << std::endl;
+    std::cout << dSubdq_minus * dSubdq_minus_inv << std::endl;
+  }
 }
 
 
@@ -554,6 +571,11 @@ void RobotTest::testMJtJinv(const std::string& path_to_urdf, pinocchio::Model& m
   const Eigen::MatrixXd MJtJinv_ref = MJtJ.inverse();
   EXPECT_TRUE(MJtJinv.isApprox(MJtJinv_ref));
   EXPECT_TRUE((MJtJinv*MJtJ).isIdentity());
+  Eigen::MatrixXd Minv = dRNEA_da;
+  robot.computeMinv(dRNEA_da, Minv);
+  EXPECT_TRUE((dRNEA_da*Minv).isIdentity());
+  EXPECT_TRUE((Minv*dRNEA_da).isIdentity());
+  std::cout << Minv << std::endl;
 }
 
 

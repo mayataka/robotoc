@@ -59,8 +59,11 @@ inline void ImpulseSplitRiccatiFactorizer::backwardStateConstraintFactorization(
   assert(T_next.rows() == T.rows());
   assert(T_next.rows() == T.rows());
   if (has_floating_base_) {
-    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_).noalias() 
-        = kkt_matrix.Fqq().transpose() * T_next.topRows(dimv_);
+    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).template topRows<6>().noalias() 
+        = kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
+            * T_next.template topRows<6>();
+    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).middleRows(6, dimv_-6)
+        = T_next.middleRows(6, dimv_-6);
   }
   else {
     const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_) 
@@ -79,7 +82,10 @@ inline void ImpulseSplitRiccatiFactorizer::forwardRiccatiRecursion(
     const ImpulseSplitDirection& d, SplitDirection& d_next) const {
   d_next.dx() = kkt_residual.Fx();
   if (has_floating_base_) {
-    d_next.dq().noalias() += kkt_matrix.Fqq() * d.dq();
+    d_next.dq().template head<6>().noalias() 
+        += kkt_matrix.Fqq().template topLeftCorner<6, 6>() 
+            * d.dq().template head<6>();
+    d_next.dq().tail(dimv_-6).noalias() += d.dq().tail(dimv_-6);
   }
   else {
     d_next.dq().noalias() += d.dq();
@@ -92,10 +98,10 @@ inline void ImpulseSplitRiccatiFactorizer::forwardRiccatiRecursion(
 inline void ImpulseSplitRiccatiFactorizer::computeCostateDirection(
     const SplitRiccatiFactorization& riccati, ImpulseSplitDirection& d,
     const bool exist_state_constraint) {
-  d.dlmd().noalias() = riccati.Pqq * d.dq();
+  d.dlmd().noalias()  = riccati.Pqq * d.dq();
   d.dlmd().noalias() += riccati.Pqv * d.dv();
   d.dlmd().noalias() -= riccati.sq;
-  d.dgmm().noalias() = riccati.Pqv.transpose() * d.dq();
+  d.dgmm().noalias()  = riccati.Pqv.transpose() * d.dq();
   d.dgmm().noalias() += riccati.Pvv * d.dv();
   d.dgmm().noalias() -= riccati.sv;
   if (exist_state_constraint) {

@@ -16,7 +16,7 @@
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/ocp/parnmpc_linearizer.hpp"
-#include "idocp/ocp/backward_correction.hpp"
+#include "idocp/ocp/backward_correction_solver.hpp"
 #include "idocp/line_search/line_search.hpp"
 
 
@@ -93,8 +93,6 @@ public:
                       const Eigen::VectorXd& v, 
                       const bool use_line_search=false);
 
-  void shiftSolution();
-
   ///
   /// @brief Get the const reference to the split solution of a time stage. 
   /// For example, you can get the const reference to the control input torques 
@@ -130,10 +128,6 @@ public:
   void pushBackContactStatus(const ContactStatus& contact_status, 
                              const double switching_time,
                              const double t);
-
-  void shiftImpulse(const int impulse_index, const double impulse_time);
-
-  void shiftLift(const int lift_index, const double lift_time);
 
   void setContactPoints(const int contact_phase, 
                         const std::vector<Eigen::Vector3d>& contact_points);
@@ -183,12 +177,6 @@ public:
   bool isCurrentSolutionFeasible();
 
   ///
-  /// @brief Creates robot model.
-  /// @return Robot model.
-  ///
-  Robot createRobot() const;
-
-  ///
   /// @brief Get the solution vector. This function is not suitable for 
   /// real-time application, e.g., MPC, since this function reconstructs the 
   /// solution vector object.
@@ -221,9 +209,10 @@ private:
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
   ParNMPCLinearizer parnmpc_linearizer_;
-  BackwardCorrection backward_correction_;
+  BackwardCorrectionSolver backward_correction_solver_;
   LineSearch line_search_;
   ParNMPC parnmpc_;
+  BackwardCorrection backward_correction_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
   Solution s_;

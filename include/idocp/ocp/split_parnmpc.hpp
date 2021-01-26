@@ -7,6 +7,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
@@ -107,6 +108,13 @@ public:
                     const SplitSolution& s, const SplitSolutionType& s_next, 
                     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
 
+  void linearizeOCP(Robot& robot, const ContactStatus& contact_status, 
+                    const ImpulseStatus& impulse_status, const double t, 
+                    const double dtau, const Eigen::VectorXd& q_prev, 
+                    const Eigen::VectorXd& v_prev, const SplitSolution& s, 
+                    const ImpulseSplitSolution& s_next, 
+                    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
+
   ///
   /// @brief Computes the Newton direction of the condensed primal variables  
   /// at this stage.
@@ -131,7 +139,7 @@ public:
   /// 
   void computeCondensedDualDirection(const Robot& robot, const double dtau, 
                                      const SplitKKTMatrix& kkt_matrix, 
-                                     const SplitKKTResidual& kkt_residual,
+                                     SplitKKTResidual& kkt_residual,
                                      SplitDirection& d);
 
   ///
@@ -188,6 +196,14 @@ public:
                           SplitKKTMatrix& kkt_matrix, 
                           SplitKKTResidual& kkt_residual);
 
+  void computeKKTResidual(Robot& robot, const ContactStatus& contact_status, 
+                          const ImpulseStatus& impulse_status, const double t, 
+                          const double dtau, const Eigen::VectorXd& q_prev, 
+                          const Eigen::VectorXd& v_prev, const SplitSolution& s, 
+                          const ImpulseSplitSolution& s_next, 
+                          SplitKKTMatrix& kkt_matrix, 
+                          SplitKKTResidual& kkt_residual);
+
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
   /// this function, SplitOCP::linearizeOCP or SplitOCP::computeKKTResidual
@@ -225,6 +241,14 @@ public:
   /// @param[in, out] kkt_residual KKT residual of this stage.
   ///
   double constraintViolation(Robot& robot, const ContactStatus& contact_status, 
+                             const double t, const double dtau, 
+                             const Eigen::VectorXd& q_prev,
+                             const Eigen::VectorXd& v_prev,
+                             const SplitSolution& s,
+                             SplitKKTResidual& kkt_residual);
+
+  double constraintViolation(Robot& robot, const ContactStatus& contact_status, 
+                             const ImpulseStatus& impulse_status, 
                              const double t, const double dtau, 
                              const Eigen::VectorXd& q_prev,
                              const Eigen::VectorXd& v_prev,

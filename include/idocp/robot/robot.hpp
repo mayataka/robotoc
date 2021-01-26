@@ -144,6 +144,11 @@ public:
       const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
       const Eigen::MatrixBase<MatrixType>& dSubtract_dqminus) const;
 
+  template <typename MatrixType1, typename MatrixType2>
+  void dSubtractdConfigurationInverse(
+      const Eigen::MatrixBase<MatrixType1>& dSubtract_dq,
+      const Eigen::MatrixBase<MatrixType2>& dSubtract_dq_inv);
+
   ///
   /// @brief Updates the kinematics of the robot. The frame placements, frame 
   /// velocity, frame acceleration, and the relevant Jacobians are calculated. 
@@ -530,26 +535,6 @@ public:
                       const Eigen::MatrixBase<MatrixType3>& MJtJinv);
 
   ///
-  /// @brief Computes the state equation, i.e., the velocity and forward 
-  /// dynamics.
-  /// @param[in] q Configuration. Size must be Robot::dimq().
-  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
-  /// @param[in] tau Generalized acceleration. Size must be Robot::dimv().
-  /// @param[out] dq The resultant generalized velocity. Size must be 
-  /// Robot::dimv().
-  /// @param[out] dv The resultant generalized acceleration. Size must be 
-  /// Robot::dimv().
-  ///
-  template <typename ConfigVectorType, typename TangentVectorType1, 
-            typename TangentVectorType2, typename TangentVectorType3,
-            typename TangentVectorType4>
-  void stateEquation(const Eigen::MatrixBase<ConfigVectorType>& q, 
-                     const Eigen::MatrixBase<TangentVectorType1>& v, 
-                     const Eigen::MatrixBase<TangentVectorType2>& tau, 
-                     const Eigen::MatrixBase<TangentVectorType3>& dq,
-                     const Eigen::MatrixBase<TangentVectorType4>& dv);
-
-  ///
   /// @brief Generates feasible configuration randomly.
   /// @return The random configuration. Size is Robot::dimq().
   ///
@@ -707,15 +692,7 @@ public:
   /// 
   void getContactPoints(std::vector<Eigen::Vector3d>& contact_points) const;
 
-  ///
-  /// @brief Get the pinocchio::Model.
-  /// 
-  pinocchio::Model getPinocchioModel() const;
-
-  /// 
-  /// @brief Get the pinocchio::Data.
-  /// 
-  pinocchio::Data getPinocchioData() const;
+  double totalWeight() const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -731,6 +708,7 @@ private:
   Eigen::MatrixXd dimpulse_dv_; /// @brief used in RNEAImpulseDerivatives
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,
                   lower_joint_position_limit_, upper_joint_position_limit_;
+  Eigen::Matrix3d mat_3d_;
 };
 
 } // namespace idocp

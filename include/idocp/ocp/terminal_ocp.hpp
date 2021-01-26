@@ -14,6 +14,7 @@
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
+#include "idocp/ocp/state_equation.hpp"
 
 
 namespace idocp {
@@ -84,12 +85,14 @@ public:
   /// solution for Newton's method, i.e, computes KKT residual and Hessian.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of the terminal stage. 
+  /// @param[in] q_prev Configuration of the previous stage.
   /// @param[in] s Split solution of the terminal stage.
   /// @param[out] kkt_matrix KKT matrix of this stage.
   /// @param[out] kkt_residual KKT residual of this stage.
   ///
-  void linearizeOCP(Robot& robot, const double t, const SplitSolution& s,
-                    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
+  void linearizeOCP(Robot& robot, const double t, const Eigen::VectorXd& q_prev, 
+                    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+                    SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -118,6 +121,30 @@ public:
   double terminalCost(Robot& robot, const double t, const SplitSolution& s);
 
   ///
+  /// @brief Computes the Newton direction of the condensed primal variables  
+  /// at this stage.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in, out] d Split direction of this stage.
+  /// 
+  void computeCondensedPrimalDirection(Robot& robot, const SplitSolution& s, 
+                                       SplitDirection& d);
+
+  ///
+  /// @brief Computes the Newton direction of the condensed dual variables 
+  /// at this stage.
+  /// @tparam SplitDirectionType Type of the split direction at the next stage.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] kkt_matrix KKT matrix of this stage.
+  /// @param[in] kkt_residual KKT residual of this stage.
+  /// @param[in, out] d Split direction of this stage.
+  /// 
+  void computeCondensedDualDirection(const Robot& robot, 
+                                     const SplitKKTMatrix& kkt_matrix, 
+                                     SplitKKTResidual& kkt_residual,
+                                     SplitDirection& d);
+
+  ///
   /// @brief Updates primal variables of this stage.
   /// TerminalOCP::computeCondensedPrimalDirection() must be called before
   /// calling this function.
@@ -141,10 +168,13 @@ public:
   /// @brief Computes the KKT residual of the OCP at this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
+  /// @param[in] q_prev Configuration of the previous stage.
   /// @param[in] s Split solution of this stage.
   /// @param[out] kkt_residual KKT residual of this stage.
   ///
-  void computeKKTResidual(Robot& robot, const double t, const SplitSolution& s,
+  void computeKKTResidual(Robot& robot, const double t, 
+                          const Eigen::VectorXd& q_prev, const SplitSolution& s,
+                          SplitKKTMatrix& kkt_matrix, 
                           SplitKKTResidual& kkt_residual);
 
   ///

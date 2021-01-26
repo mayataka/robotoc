@@ -3,12 +3,14 @@
 
 #include <vector>
 #include <memory>
+#include <cassert>
 
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/hybrid/parnmpc_discretizer.hpp"
 
 
 namespace idocp {
@@ -71,23 +73,55 @@ public:
 
   double KKTError(const ParNMPC& parnmpc, const KKTResidual& kkt_residual);
 
-  void printKKTError() const;
-
-  void integrateSolution(ParNMPC& parnmpc, const std::vector<Robot>& robots,
+  void integrateSolution(ParNMPC& parnmpc, const BackwardCorrection& corr,
+                         const std::vector<Robot>& robots,
                          const KKTMatrix& kkt_matrix,
                          const KKTResidual& kkt_residual,
                          const double primal_step_size,
                          const double dual_step_size,
-                         const Direction& d, Solution& s) const;
+                         Direction& d, Solution& s) const;
 
-  static const Eigen::VectorXd& q_prev(const OCPDiscretizer& ocp_discretizer, 
+  static const Eigen::VectorXd& q_prev(const ParNMPCDiscretizer& discretizer, 
                                        const Eigen::VectorXd& q, 
-                                       const Solution& s, const int time_stage);
+                                       const Solution& s, 
+                                       const int time_stage) {
+    assert(time_stage >= 0);
+    assert(time_stage < discretizer.N());
+    if (discretizer.isTimeStageAfterImpulse(time_stage)) {
+      return s.impulse[discretizer.impulseIndexBeforeTimeStage(time_stage)].q;
+    }
+    else if (discretizer.isTimeStageAfterLift(time_stage)) {
+      return s.lift[discretizer.liftIndexBeforeTimeStage(time_stage)].q;
+    }
+    else if (time_stage > 0) {
+      return s[time_stage-1].q;
+    }
+    else { 
+      assert(time_stage == 0);
+      return q;
+    }
+  }
 
-  static const Eigen::VectorXd& v_prev(const OCPDiscretizer& ocp_discretizer, 
+  static const Eigen::VectorXd& v_prev(const ParNMPCDiscretizer& discretizer, 
                                        const Eigen::VectorXd& v, 
-                                       const Solution& s, const int time_stage);
-
+                                       const Solution& s, 
+                                       const int time_stage) {
+    assert(time_stage >= 0);
+    assert(time_stage < discretizer.N());
+    if (discretizer.isTimeStageAfterImpulse(time_stage)) {
+      return s.impulse[discretizer.impulseIndexBeforeTimeStage(time_stage)].v;
+    }
+    else if (discretizer.isTimeStageAfterLift(time_stage)) {
+      return s.lift[discretizer.liftIndexBeforeTimeStage(time_stage)].v;
+    }
+    else if (time_stage > 0) {
+      return s[time_stage-1].v;
+    }
+    else { 
+      assert(time_stage == 0);
+      return v;
+    }
+  }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -102,7 +136,5 @@ private:
 };
 
 } // namespace idocp 
-
-#include "idocp/ocp/parnmpc_linearizer.hxx"
 
 #endif // IDOCP_PARNMPC_LINEARIZER_HPP_ 

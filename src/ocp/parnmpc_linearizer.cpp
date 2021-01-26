@@ -55,7 +55,7 @@ void ParNMPCLinearizer::initConstraints(ParNMPC& parnmpc,
       parnmpc[i].initConstraints(robots[omp_get_thread_num()], i+1, s[i]);
     }
     else if (i == N_-1) {
-      parnmpc.terminal.initConstraints(robots[omp_get_thread_num()], N_, s[N_]);
+      parnmpc.terminal.initConstraints(robots[omp_get_thread_num()], N_, s[i]);
     }
     else if (i < N_+N_impulse) {
       const int impulse_index  = i - N_;
@@ -97,7 +97,7 @@ void ParNMPCLinearizer::computeKKTResidual(
             parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
             q_prev(parnmpc.discrete(), q, s, i), 
             v_prev(parnmpc.discrete(), v, s, i), 
-            s[i], s.impulse[parnmpc.discrete().impulseIndexAfterTimeStage(i)], 
+            s[i], s.aux[parnmpc.discrete().impulseIndexAfterTimeStage(i)], 
             kkt_matrix[i], kkt_residual[i]);
       }
       else if (parnmpc.discrete().isTimeStageBeforeLift(i)) {
@@ -130,45 +130,71 @@ void ParNMPCLinearizer::computeKKTResidual(
           s[i], kkt_matrix[i], kkt_residual[i]);
     }
     else if (i < N_+N_impulse) {
-      const int impulse_index  = i - N_;
-      const int time_stage_before_impulse 
-          = parnmpc.discrete().timeStageBeforeImpulse(impulse_index);
+      const int impulse_index = i - N_;
+      const int time_stage_after_impulse 
+          = parnmpc.discrete().timeStageAfterImpulse(impulse_index);
       parnmpc.impulse[impulse_index].computeKKTResidual(
           robots[omp_get_thread_num()], 
           contact_sequence.impulseStatus(impulse_index), 
-          parnmpc.discrete().t_impulse(impulse_index), 
-          s[time_stage_before_impulse].q, s[time_stage_before_impulse].v, 
-          s.impulse[impulse_index], s.aux[impulse_index], 
-          kkt_matrix.impulse[impulse_index], 
+          parnmpc.discrete().t_impulse(impulse_index), s.aux[impulse_index].q, 
+          s.aux[impulse_index].v, s.impulse[impulse_index], 
+          s[time_stage_after_impulse], kkt_matrix.impulse[impulse_index], 
           kkt_residual.impulse[impulse_index]);
     }
     else if (i < N_+2*N_impulse) {
       const int impulse_index  = i - (N_+N_impulse);
-      const int time_stage_after_impulse 
-          = parnmpc.discrete().timeStageAfterImpulse(impulse_index);
-      parnmpc.aux[impulse_index].computeKKTResidual(
-          robots[omp_get_thread_num()], 
-          contact_sequence.contactStatus(
-              parnmpc.discrete().contactPhaseAfterImpulse(impulse_index)), 
-          parnmpc.discrete().t_impulse(impulse_index), 
-          parnmpc.discrete().dtau_aux(impulse_index), 
-          s.impulse[impulse_index].q, s.impulse[impulse_index].v, 
-          s.aux[impulse_index], s[time_stage_after_impulse], 
-          kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
+      const int time_stage_before_impulse 
+          = parnmpc.discrete().timeStageBeforeImpulse(impulse_index);
+      if (time_stage_before_impulse >= 0) {
+        parnmpc.aux[impulse_index].computeKKTResidual(
+            robots[omp_get_thread_num()], 
+            contact_sequence.contactStatus(
+                parnmpc.discrete().contactPhaseBeforeImpulse(impulse_index)), 
+            contact_sequence.impulseStatus(impulse_index),
+            parnmpc.discrete().t_impulse(impulse_index), 
+            parnmpc.discrete().dtau_aux(impulse_index), 
+            s[time_stage_before_impulse].q, s[time_stage_before_impulse].v, 
+            s.aux[impulse_index], s.impulse[impulse_index], 
+            kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
+      }
+      else {
+        assert(time_stage_before_impulse == -1);
+        parnmpc.aux[impulse_index].computeKKTResidual(
+            robots[omp_get_thread_num()], 
+            contact_sequence.contactStatus(
+                parnmpc.discrete().contactPhaseBeforeImpulse(impulse_index)), 
+            parnmpc.discrete().t_impulse(impulse_index), 
+            parnmpc.discrete().dtau_aux(impulse_index), 
+            q, v, s.aux[impulse_index], s.impulse[impulse_index], 
+            kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
+      }
     }
     else {
       const int lift_index = i - (N_+2*N_impulse);
-      const int time_stage_after_lift
-          = parnmpc.discrete().timeStageAfterLift(lift_index);
-      parnmpc.lift[lift_index].computeKKTResidual(
-          robots[omp_get_thread_num()], 
-          contact_sequence.contactStatus(
-              parnmpc.discrete().contactPhaseAfterLift(lift_index)), 
-          parnmpc.discrete().t_lift(lift_index), 
-          parnmpc.discrete().dtau_lift(lift_index), 
-          s[time_stage_after_lift-1].q, s[time_stage_after_lift-1].v, 
-          s.lift[lift_index], s[time_stage_after_lift], 
-          kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
+      const int time_stage_before_lift
+          = parnmpc.discrete().timeStageBeforeLift(lift_index);
+      if (time_stage_before_lift >= 0) {
+        parnmpc.lift[lift_index].computeKKTResidual(
+            robots[omp_get_thread_num()], 
+            contact_sequence.contactStatus(
+                parnmpc.discrete().contactPhaseBeforeLift(lift_index)), 
+            parnmpc.discrete().t_lift(lift_index), 
+            parnmpc.discrete().dtau_lift(lift_index), 
+            s[time_stage_before_lift].q, s[time_stage_before_lift].v, 
+            s.lift[lift_index], s[time_stage_before_lift+1], 
+            kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
+      }
+      else {
+        assert(time_stage_before_lift == -1);
+        parnmpc.lift[lift_index].computeKKTResidual(
+            robots[omp_get_thread_num()], 
+            contact_sequence.contactStatus(
+                parnmpc.discrete().contactPhaseBeforeLift(lift_index)), 
+            parnmpc.discrete().t_lift(lift_index), 
+            parnmpc.discrete().dtau_lift(lift_index), 
+            q, v, s.lift[lift_index], s[time_stage_before_lift+1], 
+            kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
+      }
     }
   }
 }
@@ -219,13 +245,13 @@ double ParNMPCLinearizer::KKTError(const ParNMPC& parnmpc,
 
 
 void ParNMPCLinearizer::integrateSolution(ParNMPC& parnmpc, 
+                                          const BackwardCorrection& corr,
                                           const std::vector<Robot>& robots, 
                                           const KKTMatrix& kkt_matrix, 
                                           const KKTResidual& kkt_residual, 
                                           const double primal_step_size, 
                                           const double dual_step_size, 
-                                          const Direction& d, 
-                                          Solution& s) const {
+                                          Direction& d, Solution& s) const {
   assert(robots.size() == nthreads_);
   const int N_impulse = parnmpc.discrete().numImpulseStages();
   const int N_lift = parnmpc.discrete().numLiftStages();
@@ -244,10 +270,17 @@ void ParNMPCLinearizer::integrateSolution(ParNMPC& parnmpc,
     }
     else if (i < N_+N_impulse) {
       const int impulse_index  = i - N_;
+      const bool is_position_constraint_valid 
+          = (parnmpc.discrete().timeStageBeforeImpulse(impulse_index) >= 0);
+      if (is_position_constraint_valid) {
+        corr.aux[impulse_index].computeDirection(s.impulse[impulse_index],
+                                                 d.impulse[impulse_index]);
+      }
       parnmpc.impulse[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
                                                   primal_step_size, 
                                                   d.impulse[impulse_index], 
-                                                  s.impulse[impulse_index]);
+                                                  s.impulse[impulse_index],
+                                                  is_position_constraint_valid);
       parnmpc.impulse[impulse_index].updateDual(dual_step_size);
     }
     else if (i < N_+2*N_impulse) {

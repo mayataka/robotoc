@@ -132,7 +132,8 @@ void ImpulseSplitParNMPCTest::testLinearizeOCP(
   cost->computeImpulseCostHessian(robot, cost_data, t, s, kkt_matrix_ref);
   constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
-  stateequation::LinearizeImpulseBackwardEuler(robot, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::linearizeImpulseBackwardEuler(robot, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::condenseImpulseBackwardEuler(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamicsBackwardEuler id(robot);
   robot.updateKinematics(s.q, s.v);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref);
@@ -148,16 +149,28 @@ void ImpulseSplitParNMPCTest::testLinearizeOCP(
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
   EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));
-  ocp.computeCondensedDualDirection(robot, d);
+  ocp.computeCondensedDualDirection(robot, kkt_matrix, kkt_residual, d);
   id.computeCondensedDualDirection(robot, d_ref);
+  Eigen::VectorXd dlmd_ref = d_ref.dlmd();
+  if (robot.hasFloatingBase()) {
+    d_ref.dlmd().head(6) = kkt_matrix_ref.Fqq_inv.transpose() * dlmd_ref.head(6);
+  }
   EXPECT_TRUE(d.isApprox(d_ref));
   const double step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
   auto s_updated = s;
   auto s_updated_ref = s;
-  ocp.updatePrimal(robot, step_size, d, s_updated);
-  s_updated_ref.integrate(robot, step_size, d, false);
-  constraints->updateSlack(constraints_data, step_size);
-  EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
+  {
+    ocp.updatePrimal(robot, step_size, d, s_updated, true);
+    s_updated_ref.integrate(robot, step_size, d, true);
+    constraints->updateSlack(constraints_data, step_size);
+    EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
+  }
+  {
+    ocp.updatePrimal(robot, step_size, d, s_updated, false);
+    s_updated_ref.integrate(robot, step_size, d, false);
+    constraints->updateSlack(constraints_data, step_size);
+    EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
+  }
 }
 
 
@@ -185,7 +198,7 @@ void ImpulseSplitParNMPCTest::testComputeKKTResidual(
   robot.updateKinematics(s.q, s.v);
   cost->computeImpulseCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
   constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
-  stateequation::LinearizeImpulseBackwardEuler(robot, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::linearizeImpulseBackwardEuler(robot, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamicsBackwardEuler id(robot);
   robot.updateKinematics(s.q, s.v);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref);
@@ -228,13 +241,13 @@ void ImpulseSplitParNMPCTest::testCostAndConstraintViolation(
   stage_cost_ref += constraints->costSlackBarrier(constraints_data, step_size);
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  stateequation::ComputeImpulseBackwardEulerResidual(robot, s_prev.q, s_prev.v, 
+  stateequation::computeImpulseBackwardEulerResidual(robot, s_prev.q, s_prev.v, 
                                                      s, kkt_residual_ref);
   ImpulseDynamicsBackwardEuler id(robot);
   id.computeImpulseDynamicsResidual(robot, impulse_status, s, kkt_residual_ref);
   double constraint_violation_ref = 0;
   constraint_violation_ref += constraints->l1NormPrimalResidual(constraints_data);
-  constraint_violation_ref += stateequation::L1NormStateEuqationResidual(kkt_residual_ref);
+  constraint_violation_ref += stateequation::l1NormStateEuqationResidual(kkt_residual_ref);
   constraint_violation_ref += id.l1NormImpulseDynamicsResidual(kkt_residual_ref);
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
 }

@@ -187,18 +187,7 @@ void LineSearch::computeCostAndViolation(
   clearViolations();
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
-    if (i == 0) {
-      costs_.coeffRef(i) = parnmpc[i].stageCost(robots[omp_get_thread_num()], 
-                                                parnmpc.discrete().t(i), 
-                                                parnmpc.discrete().dtau(i), 
-                                                s[i], primal_step_size);
-      violations_.coeffRef(i) = parnmpc[i].constraintViolation(
-          robots[omp_get_thread_num()], 
-          contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)),
-          parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), q, v, s[i], 
-          kkt_residual_[i]);
-    }
-    else if (i < N_-1) {
+    if (i < N_-1) {
       costs_.coeffRef(i) = parnmpc[i].stageCost(robots[omp_get_thread_num()], 
                                                 parnmpc.discrete().t(i), 
                                                 parnmpc.discrete().dtau(i), 
@@ -223,8 +212,8 @@ void LineSearch::computeCostAndViolation(
     }
     else if (i < N_+N_impulse) {
       const int impulse_index = i - N_;
-      const int time_stage_before_impulse 
-          = parnmpc.discrete().timeStageBeforeImpulse(impulse_index);
+      const int time_stage_after_impulse 
+          = parnmpc.discrete().timeStageAfterImpulse(impulse_index);
       costs_impulse_.coeffRef(impulse_index) 
           = parnmpc.impulse[impulse_index].stageCost(
               robots[omp_get_thread_num()], 
@@ -235,44 +224,74 @@ void LineSearch::computeCostAndViolation(
               robots[omp_get_thread_num()], 
               contact_sequence.impulseStatus(impulse_index), 
               parnmpc.discrete().t_impulse(impulse_index), 
-              s[time_stage_before_impulse].q, s[time_stage_before_impulse].v,
+              s.aux[impulse_index].q, s.aux[impulse_index].v, 
               s.impulse[impulse_index], kkt_residual_.impulse[impulse_index]);
     }
     else if (i < N_+2*N_impulse) {
       const int impulse_index  = i - (N_+N_impulse);
-      costs_aux_.coeffRef(impulse_index) = parnmpc.aux[impulse_index].stageCost(
+      const int time_stage_before_impulse 
+          = parnmpc.discrete().timeStageBeforeImpulse(impulse_index);
+      costs_aux_.coeffRef(impulse_index) 
+          = parnmpc.aux[impulse_index].stageCost(
               robots[omp_get_thread_num()], 
-              parnmpc.discrete().t_impulse(impulse_index),
-              parnmpc.discrete().dtau_aux(impulse_index), s.aux[impulse_index],
-              primal_step_size);
-      violations_aux_.coeffRef(impulse_index) 
-          = parnmpc.aux[impulse_index].constraintViolation(
-              robots[omp_get_thread_num()], 
-              contact_sequence.contactStatus(
-                  parnmpc.discrete().contactPhaseAfterImpulse(impulse_index)), 
               parnmpc.discrete().t_impulse(impulse_index), 
               parnmpc.discrete().dtau_aux(impulse_index), 
-              s.impulse[impulse_index].q, s[impulse_index].v,
-              s.aux[impulse_index], kkt_residual_.aux[impulse_index]);
+              s.aux[impulse_index], primal_step_size);
+      if (time_stage_before_impulse >= 0) {
+        violations_aux_.coeffRef(impulse_index) 
+            = parnmpc.aux[impulse_index].constraintViolation(
+                robots[omp_get_thread_num()], 
+                contact_sequence.contactStatus(
+                    parnmpc.discrete().contactPhaseBeforeImpulse(impulse_index)), 
+                contact_sequence.impulseStatus(impulse_index), 
+                parnmpc.discrete().t_impulse(impulse_index), 
+                parnmpc.discrete().dtau_aux(impulse_index), 
+                s[time_stage_before_impulse].q, s[time_stage_before_impulse].v, 
+                s.aux[impulse_index], kkt_residual_.aux[impulse_index]);
+      }
+      else {
+        assert(time_stage_before_impulse == -1);
+        violations_aux_.coeffRef(impulse_index) 
+            = parnmpc.aux[impulse_index].constraintViolation(
+                robots[omp_get_thread_num()], 
+                contact_sequence.contactStatus(
+                    parnmpc.discrete().contactPhaseBeforeImpulse(impulse_index)), 
+                parnmpc.discrete().t_impulse(impulse_index), 
+                parnmpc.discrete().dtau_aux(impulse_index), 
+                q, v, s.aux[impulse_index], kkt_residual_.aux[impulse_index]);
+      }
     }
     else {
       const int lift_index = i - (N_+2*N_impulse);
       const int time_stage_before_lift
           = parnmpc.discrete().timeStageBeforeLift(lift_index);
       costs_lift_.coeffRef(lift_index) = parnmpc.lift[lift_index].stageCost(
-              robots[omp_get_thread_num()], 
-              parnmpc.discrete().t_lift(lift_index), 
-              parnmpc.discrete().dtau_lift(lift_index), s.lift[lift_index], 
-              primal_step_size);
-      violations_lift_.coeffRef(lift_index) 
-          = parnmpc.lift[lift_index].constraintViolation(
-              robots[omp_get_thread_num()], 
-              contact_sequence.contactStatus(
-                  parnmpc.discrete().contactPhaseAfterLift(lift_index)), 
-              parnmpc.discrete().t_lift(lift_index), 
-              parnmpc.discrete().dtau_lift(lift_index), 
-              s[time_stage_before_lift].q, s[time_stage_before_lift].v,
-              s.lift[lift_index], kkt_residual_.lift[lift_index]);
+          robots[omp_get_thread_num()], 
+          parnmpc.discrete().t_lift(lift_index), 
+          parnmpc.discrete().dtau_lift(lift_index), s.lift[lift_index], 
+          primal_step_size);
+      if (time_stage_before_lift >= 0) {
+        violations_lift_.coeffRef(lift_index) 
+            = parnmpc.lift[lift_index].constraintViolation(
+                robots[omp_get_thread_num()], 
+                contact_sequence.contactStatus(
+                    parnmpc.discrete().contactPhaseBeforeLift(lift_index)), 
+                parnmpc.discrete().t_lift(lift_index), 
+                parnmpc.discrete().dtau_lift(lift_index), 
+                s[time_stage_before_lift].q, s[time_stage_before_lift].v, 
+                s.lift[lift_index], kkt_residual_.lift[lift_index]);
+      }
+      else {
+        assert(time_stage_before_lift == -1);
+        violations_lift_.coeffRef(lift_index) 
+            = parnmpc.lift[lift_index].constraintViolation(
+                robots[omp_get_thread_num()], 
+                contact_sequence.contactStatus(
+                    parnmpc.discrete().contactPhaseBeforeLift(lift_index)), 
+                parnmpc.discrete().t_lift(lift_index), 
+                parnmpc.discrete().dtau_lift(lift_index), q, v, 
+                s.lift[lift_index], kkt_residual_.lift[lift_index]);
+      }
     }
   }
 }
@@ -332,19 +351,19 @@ void LineSearch::computeTrySolution(const ParNMPC& parnmpc,
                          s_try_[i]);
     }
     else if (i < N_+N_impulse) {
-      const int impulse_index = i - (N_+1);
+      const int impulse_index = i - N_;
       computeTrySolution(robots[omp_get_thread_num()], s.impulse[impulse_index], 
                          d.impulse[impulse_index], step_size, 
                          s_try_.impulse[impulse_index]);
     }
     else if (i < N_+2*N_impulse) {
-      const int impulse_index  = i - (N_+1+N_impulse);
+      const int impulse_index  = i - (N_+N_impulse);
       computeTrySolution(robots[omp_get_thread_num()], s.aux[impulse_index], 
                          d.aux[impulse_index], step_size, 
                          s_try_.aux[impulse_index]);
     }
     else {
-      const int lift_index = i - (N_+1+2*N_impulse);
+      const int lift_index = i - (N_+2*N_impulse);
       computeTrySolution(robots[omp_get_thread_num()], s.lift[lift_index], 
                          d.lift[lift_index], step_size, s_try_.lift[lift_index]);
     }

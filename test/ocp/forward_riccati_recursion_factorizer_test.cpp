@@ -57,6 +57,7 @@ SplitKKTMatrix ForwardRiccatiRecursionFactorizerTest::createKKTMatrix(const Robo
   kkt_matrix.Quu() = seed * seed.transpose();
   if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
+    kkt_matrix.Fqv().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
   }
   kkt_matrix.Fvq().setRandom();
   kkt_matrix.Fvv().setRandom();
@@ -100,18 +101,21 @@ void ForwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   const SplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
   if (!robot.hasFloatingBase()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
+    ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   }
-  ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   const SplitKKTResidual kkt_residual = createKKTResidual(robot);
   ForwardRiccatiRecursionFactorizer factorizer(robot);
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
+  A.topLeftCorner(dimv, dimv).setIdentity();
   if (robot.hasFloatingBase()) {
-    A.topLeftCorner(dimv, dimv) = kkt_matrix.Fqq();
-  }
-  else {
-    A.topLeftCorner(dimv, dimv).setIdentity();
+    A.topLeftCorner(robot.dim_passive(), robot.dim_passive()) 
+        = kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive());
   }
   A.topRightCorner(dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
+  if (robot.hasFloatingBase()) {
+    A.topRightCorner(dimv, dimv).topLeftCorner(robot.dim_passive(), robot.dim_passive()) 
+        = kkt_matrix.Fqv().topLeftCorner(robot.dim_passive(), robot.dim_passive());
+  }
   A.bottomLeftCorner(dimv, dimv) = kkt_matrix.Fvq();
   A.bottomRightCorner(dimv, dimv) = kkt_matrix.Fvv();
   Eigen::MatrixXd B = Eigen::MatrixXd::Zero(2*dimv, dimu);
@@ -126,6 +130,7 @@ void ForwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   factorizer.factorizeStateConstraintFactorization(riccati, kkt_matrix, dtau, riccati_next);
   riccati_next_ref.N = A * riccati.N * A.transpose();
   EXPECT_TRUE(riccati_next.N.isApprox(riccati_next_ref.N));
+  std::cout << riccati_next_ref.N - riccati_next.N << std::endl;
 }
 
 

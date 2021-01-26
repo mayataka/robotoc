@@ -78,9 +78,12 @@ add_library(
   src/impulse/impulse_dynamics_backward_euler_data.cpp
   src/impulse/impulse_dynamics_backward_euler.cpp
   src/impulse/impulse_split_parnmpc.cpp
+  src/impulse/impulse_split_backward_correction_data.cpp
+  src/impulse/impulse_split_backward_correction.cpp
   src/hybrid/discrete_event.cpp
   src/hybrid/contact_sequence.cpp
   src/hybrid/ocp_discretizer.cpp
+  src/hybrid/parnmpc_discretizer.cpp
   src/hybrid/hybrid_container.cpp
   src/hybrid/collision_checker.cpp
   src/ocp/split_kkt_residual.cpp
@@ -110,8 +113,9 @@ add_library(
   src/ocp/split_parnmpc.cpp
   src/ocp/terminal_parnmpc.cpp
   src/ocp/parnmpc_linearizer.cpp
+  src/ocp/split_backward_correction_data.cpp
   src/ocp/split_backward_correction.cpp
-  src/ocp/backward_correction.cpp
+  src/ocp/backward_correction_solver.cpp
   src/ocp/parnmpc_solver.cpp
   src/unocp/split_unkkt_residual.cpp
   src/unocp/split_unkkt_matrix.cpp

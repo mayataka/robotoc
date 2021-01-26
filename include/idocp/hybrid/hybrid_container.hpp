@@ -23,7 +23,9 @@
 #include "idocp/ocp/split_riccati_factorizer.hpp"
 #include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
 #include "idocp/ocp/split_backward_correction.hpp"
+#include "idocp/impulse/impulse_split_backward_correction.hpp"
 #include "idocp/hybrid/ocp_discretizer.hpp"
+#include "idocp/hybrid/parnmpc_discretizer.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 
 #include <vector>
@@ -41,7 +43,7 @@ using KKTMatrix = hybrid_container<SplitKKTMatrix, ImpulseSplitKKTMatrix>;
 using KKTResidual = hybrid_container<SplitKKTResidual, ImpulseSplitKKTResidual>;
 using RiccatiFactorization = hybrid_container<SplitRiccatiFactorization, SplitRiccatiFactorization>;
 using RiccatiFactorizer = hybrid_container<SplitRiccatiFactorizer, ImpulseSplitRiccatiFactorizer>; 
-using BackwardCorrector = hybrid_container<SplitBackwardCorrection, SplitBackwardCorrection>;
+using BackwardCorrection = hybrid_container<SplitBackwardCorrection, ImpulseSplitBackwardCorrection>;
 
 ///
 /// @class hybrid_container
@@ -291,7 +293,7 @@ public:
     discretizer_.discretizeOCP(contact_sequence, t);
   }
 
-  const OCPDiscretizer& discrete() const {
+  const ParNMPCDiscretizer& discrete() const {
     return discretizer_;
   }
 
@@ -300,7 +302,7 @@ public:
   TerminalParNMPC terminal;
 
 private:
-  OCPDiscretizer discretizer_;
+  ParNMPCDiscretizer discretizer_;
 
 };
 

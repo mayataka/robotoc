@@ -116,6 +116,21 @@ inline void Robot::dSubtractdConfigurationMinus(
 }
 
 
+template <typename MatrixType1, typename MatrixType2>
+inline void Robot::dSubtractdConfigurationInverse(
+    const Eigen::MatrixBase<MatrixType1>& dSubtract_dq,
+    const Eigen::MatrixBase<MatrixType2>& dSubtract_dq_inv) {
+  const_cast<Eigen::MatrixBase<MatrixType2>&>(dSubtract_dq_inv).template topLeftCorner<3, 3>().noalias()
+      = dSubtract_dq.template topLeftCorner<3, 3>().inverse();
+  const_cast<Eigen::MatrixBase<MatrixType2>&>(dSubtract_dq_inv).template block<3, 3>(3, 3).noalias()
+      = dSubtract_dq.template block<3, 3>(3, 3).inverse();
+  mat_3d_.noalias() = dSubtract_dq.template block<3, 3>(0, 3) 
+                        * dSubtract_dq_inv.template block<3, 3>(3, 3);
+  const_cast<Eigen::MatrixBase<MatrixType2>&>(dSubtract_dq_inv).template block<3, 3>(0, 3).noalias()
+      = - dSubtract_dq_inv.template topLeftCorner<3, 3>() * mat_3d_;
+}
+
+
 inline const Eigen::Vector3d& Robot::framePosition(const int frame_id) const {
   return data_.oMf[frame_id].translation();
 }
@@ -613,32 +628,6 @@ inline void Robot::computeMJtJinv(
 }
 
 
-template <typename ConfigVectorType, typename TangentVectorType1, 
-          typename TangentVectorType2, typename TangentVectorType3,
-          typename TangentVectorType4>
-inline void Robot::stateEquation(
-    const Eigen::MatrixBase<ConfigVectorType>& q, 
-    const Eigen::MatrixBase<TangentVectorType1>& v, 
-    const Eigen::MatrixBase<TangentVectorType2>& tau, 
-    const Eigen::MatrixBase<TangentVectorType3>& dq, 
-    const Eigen::MatrixBase<TangentVectorType4>& dv) {
-  assert(q.size() == dimq_);
-  assert(v.size() == dimv_);
-  assert(tau.size() == dimv_);
-  assert(dq.size() == dimv_);
-  assert(dv.size() == dimv_);
-  const_cast<Eigen::MatrixBase<TangentVectorType3>&> (dq) = v;
-  if (point_contacts_.empty()) {
-    const_cast<Eigen::MatrixBase<TangentVectorType3>&> (dv)
-        = pinocchio::aba(model_, data_, q, v, tau);
-  }
-  else {
-    const_cast<Eigen::MatrixBase<TangentVectorType3>&> (dv)
-        = pinocchio::aba(model_, data_, q, v, tau, fjoint_);
-  }
-}
-
-
 inline Eigen::VectorXd Robot::generateFeasibleConfiguration() const {
   Eigen::VectorXd q_min = model_.lowerPositionLimit;
   Eigen::VectorXd q_max = model_.upperPositionLimit;
@@ -765,6 +754,11 @@ inline void Robot::getContactPoints(
   for (int i=0; i<point_contacts_.size(); ++i) {
     contact_points[i] = point_contacts_[i].contactPoint(data_);
   }
+}
+
+
+inline double Robot::totalWeight() const {
+  return (- pinocchio::computeTotalMass(model_) * model_.gravity981.coeff(2));
 }
 
 } // namespace idocp

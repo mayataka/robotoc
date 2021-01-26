@@ -80,8 +80,7 @@ public:
   void printKKTError() const;
 
   void integrateSolution(OCP& ocp, const std::vector<Robot>& robots,
-                         const KKTMatrix& kkt_matrix,
-                         const KKTResidual& kkt_residual,
+                         const KKTMatrix& kkt_matrix, KKTResidual& kkt_residual,
                          const double primal_step_size,
                          const double dual_step_size,
                          Direction& d, Solution& s) const;

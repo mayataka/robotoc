@@ -15,9 +15,10 @@ ParNMPCSolver::ParNMPCSolver(const Robot& robot,
   : robots_(nthreads, robot),
     contact_sequence_(robot, N),
     parnmpc_linearizer_(N, max_num_impulse, nthreads),
-    backward_correction_(robot, N, max_num_impulse, nthreads),
+    backward_correction_solver_(robot, N, max_num_impulse, nthreads),
     line_search_(robot, N, max_num_impulse, nthreads),
     parnmpc_(robot, cost, constraints, T, N, max_num_impulse),
+    backward_correction_(robot, N, max_num_impulse),
     kkt_matrix_(robot, N, max_num_impulse),
     kkt_residual_(robot, N, max_num_impulse),
     s_(robot, N, max_num_impulse),
@@ -64,7 +65,8 @@ void ParNMPCSolver::initConstraints() {
 
 
 void ParNMPCSolver::initBackwardCorrection(const double t) {
-  backward_correction_.initAuxMat(parnmpc_, robots_, t, s_, kkt_matrix_);
+  parnmpc_.discretize(contact_sequence_, t);
+  backward_correction_solver_.initAuxMat(parnmpc_, robots_, s_, kkt_matrix_);
 }
 
 
@@ -73,29 +75,35 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                    const bool use_line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
-  backward_correction_.coarseUpdate(parnmpc_, robots_, contact_sequence_, 
-                                    t, q, v, kkt_matrix_, kkt_residual_, s_, d_);
-  backward_correction_.backwardCorrection(parnmpc_, robots_, kkt_matrix_, 
-                                          kkt_residual_, s_, d_);
-  double primal_step_size = backward_correction_.primalStepSize();
-  const double dual_step_size   = backward_correction_.dualStepSize();
+  parnmpc_.discretize(contact_sequence_, t);
+  discretizeSolution();
+  backward_correction_solver_.coarseUpdate(parnmpc_, backward_correction_, 
+                                           robots_, contact_sequence_, q, v, s_, 
+                                           kkt_matrix_, kkt_residual_);
+  backward_correction_solver_.backwardCorrectionSerial(parnmpc_, 
+                                                       backward_correction_, s_);
+  backward_correction_solver_.backwardCorrectionParallel(parnmpc_, 
+                                                         backward_correction_, 
+                                                         robots_);
+  backward_correction_solver_.forwardCorrectionSerial(parnmpc_, 
+                                                      backward_correction_, 
+                                                      robots_, s_);
+  backward_correction_solver_.forwardCorrectionParallel(parnmpc_, 
+                                                        backward_correction_, 
+                                                        robots_, kkt_matrix_, 
+                                                        kkt_residual_, s_, d_);
+  double primal_step_size = backward_correction_solver_.maxPrimalStepSize();
+  const double dual_step_size   = backward_correction_solver_.maxDualStepSize();
   if (use_line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(parnmpc_, robots_, 
                                                     contact_sequence_, q, v, 
                                                     s_, d_, max_primal_step_size);
   }
-  parnmpc_linearizer_.integrateSolution(parnmpc_, robots_, kkt_matrix_, 
-                                        kkt_residual_, primal_step_size, 
-                                        dual_step_size, d_, s_);
+  parnmpc_linearizer_.integrateSolution(parnmpc_, backward_correction_, robots_, 
+                                        kkt_matrix_, kkt_residual_, 
+                                        primal_step_size, dual_step_size, d_, s_);
 } 
-
-
-void ParNMPCSolver::shiftSolution() {
-  for (int i=0; i<N_; ++i) {
-    s_[i].copy(s_[i+1]);
-  }
-}
 
 
 const SplitSolution& ParNMPCSolver::getSolution(const int stage) const {
@@ -166,15 +174,17 @@ void ParNMPCSolver::pushBackContactStatus(const ContactStatus& contact_status,
     const int last_impulse_index = contact_sequence_.numImpulseEvents() - 1;
     const int time_stage_before_last_impulse 
         = parnmpc_.discrete().timeStageBeforeImpulse(last_impulse_index);
-    s_.impulse[last_impulse_index].copyPartial(
-        s_[time_stage_before_last_impulse]);
-    s_.impulse[last_impulse_index].setImpulseStatus(
-        contact_sequence_.impulseStatus(last_impulse_index));
-    s_.aux[last_impulse_index].copy(
-        s_[time_stage_before_last_impulse]);
+    if (time_stage_before_last_impulse >= 0) {
+      s_.impulse[last_impulse_index].copyPartial(
+          s_[time_stage_before_last_impulse]);
+      s_.aux[last_impulse_index].copy(
+          s_[time_stage_before_last_impulse]);
+    }
     s_.aux[last_impulse_index].setContactStatus(
         contact_sequence_.contactStatus(
-            parnmpc_.discrete().contactPhaseAfterImpulse(last_impulse_index)));
+            parnmpc_.discrete().contactPhaseBeforeImpulse(last_impulse_index)));
+    s_.impulse[last_impulse_index].setImpulseStatus(
+        contact_sequence_.impulseStatus(last_impulse_index));
     const int last_contact_phase = contact_sequence_.numContactPhases() - 1;
     for (int i=time_stage_before_last_impulse+1; i<N_; ++i) {
       s_[i].setContactStatus(contact_sequence_.contactStatus(last_contact_phase));
@@ -184,26 +194,17 @@ void ParNMPCSolver::pushBackContactStatus(const ContactStatus& contact_status,
     const int last_lift_index = contact_sequence_.numLiftEvents() - 1;
     const int time_stage_before_last_lift 
         = parnmpc_.discrete().timeStageBeforeLift(last_lift_index);
-    s_.lift[last_lift_index].copy(s_[time_stage_before_last_lift]);
+    if (time_stage_before_last_lift >= 0) {
+      s_.lift[last_lift_index].copy(s_[time_stage_before_last_lift]);
+    }
     s_.lift[last_lift_index].setContactStatus(
         contact_sequence_.contactStatus(
-            parnmpc_.discrete().contactPhaseAfterLift(last_lift_index)));
+            parnmpc_.discrete().contactPhaseBeforeLift(last_lift_index)));
     const int last_contact_phase = contact_sequence_.numContactPhases() - 1;
     for (int i=time_stage_before_last_lift+1; i<N_; ++i) {
       s_[i].setContactStatus(contact_sequence_.contactStatus(last_contact_phase));
     }
   }
-}
-
-
-void ParNMPCSolver::shiftImpulse(const int impulse_index, 
-                                 const double impulse_time) {
-  contact_sequence_.shiftImpulseEvent(impulse_index, impulse_time);
-}
-
-
-void ParNMPCSolver::shiftLift(const int lift_index, const double lift_time) {
-  contact_sequence_.shiftLiftEvent(lift_index, lift_time);
 }
 
 
@@ -331,11 +332,6 @@ bool ParNMPCSolver::isCurrentSolutionFeasible() {
 }
 
 
-Robot ParNMPCSolver::createRobot() const {
-  return robots_[0];
-}
-
-
 std::vector<Eigen::VectorXd> ParNMPCSolver::getSolution(
     const std::string& name) const {
   std::vector<Eigen::VectorXd> sol;
@@ -422,6 +418,23 @@ void ParNMPCSolver::printSolution(const std::string& name,
       }
     }
   }
+  if (name == "dual") {
+    for (int i=0; i<N_; ++i) {
+      std::cout << "mu[" << i << "] = " << s_[i].mu_stack().transpose() << std::endl;
+    }
+    for (int i=0; i<parnmpc_.discrete().numImpulseStages(); ++i) {
+      std::cout << "mu.impulse[" << i << "] = " << s_.impulse[i].mu_stack().transpose() << std::endl;
+    }
+    for (int i=0; i<parnmpc_.discrete().numImpulseStages(); ++i) {
+      std::cout << "xi.impulse[" << i << "] = " << s_.impulse[i].xi_stack().transpose() << std::endl;
+    }
+    for (int i=0; i<parnmpc_.discrete().numImpulseStages(); ++i) {
+      std::cout << "mu.aux[" << i << "] = " << s_.aux[i].mu_stack().transpose() << std::endl;
+    }
+    for (int i=0; i<parnmpc_.discrete().numLiftStages(); ++i) {
+      std::cout << "mu.lift[" << i << "] = " << s_.lift[i].mu_stack().transpose() << std::endl;
+    }
+  }
 }
 
 
@@ -486,12 +499,12 @@ void ParNMPCSolver::discretizeSolution() {
     s_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
     s_.aux[i].setContactStatus(
         contact_sequence_.contactStatus(
-            parnmpc_.discrete().contactPhaseAfterImpulse(i)));
+            parnmpc_.discrete().contactPhaseBeforeImpulse(i)));
   }
   for (int i=0; i<parnmpc_.discrete().numLiftStages(); ++i) {
     s_.lift[i].setContactStatus(
         contact_sequence_.contactStatus(
-            parnmpc_.discrete().contactPhaseAfterLift(i)));
+            parnmpc_.discrete().contactPhaseBeforeLift(i)));
   }
 }
 

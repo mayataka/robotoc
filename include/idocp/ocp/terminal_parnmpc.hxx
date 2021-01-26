@@ -1,3 +1,7 @@
+#ifndef IDOCP_TERMINAL_PARNMPC_HXX_
+#define IDOCP_TERMINAL_PARNMPC_HXX_
+
+
 #include "idocp/ocp/terminal_parnmpc.hpp"
 
 #include <cassert>
@@ -73,8 +77,10 @@ inline void TerminalParNMPC::linearizeOCP(Robot& robot,
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual);
-  stateequation::LinearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
+  stateequation::linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
+  stateequation::condenseBackwardEuler(robot, dtau, q_prev, s, 
+                                       kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dtau, s, 
                                              kkt_residual);
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix);
@@ -98,10 +104,12 @@ inline void TerminalParNMPC::computeCondensedPrimalDirection(
 
 inline void TerminalParNMPC::computeCondensedDualDirection(
     const Robot& robot, const double dtau, const SplitKKTMatrix& kkt_matrix, 
-    const SplitKKTResidual& kkt_residual, SplitDirection& d) {
+    SplitKKTResidual& kkt_residual, SplitDirection& d) {
   assert(dtau >= 0);
   contact_dynamics_.computeCondensedDualDirection(robot, dtau, kkt_matrix,
                                                   kkt_residual, d.dgmm(), d);
+  stateequation::correctCostateDirectionBackwardEuler(robot, kkt_matrix, 
+                                                      kkt_residual, d.dlmd());
 }
 
 
@@ -153,7 +161,7 @@ inline void TerminalParNMPC::computeKKTResidual(
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual);
-  stateequation::LinearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
+  stateequation::linearizeBackwardEulerTerminal(robot, dtau, q_prev, v_prev, s, 
                                                 kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dtau, s, 
                                              kkt_residual);
@@ -170,7 +178,7 @@ inline double TerminalParNMPC::squaredNormKKTResidual(
     error += kkt_residual.lu_passive.squaredNorm();
   }
   error += kkt_residual.lu().squaredNorm();
-  error += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
+  error += stateequation::squaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dtau);
   error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
   return error;
@@ -209,11 +217,11 @@ inline double TerminalParNMPC::constraintViolation(
     robot.updateKinematics(s.q, s.v, s.a);
   }
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  stateequation::ComputeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, 
+  stateequation::computeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, 
                                               kkt_residual);
   contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, s);
   double violation = 0;
-  violation += stateequation::L1NormStateEuqationResidual(kkt_residual);
+  violation += stateequation::l1NormStateEuqationResidual(kkt_residual);
   violation += contact_dynamics_.l1NormContactDynamicsResidual(dtau);
   violation += dtau * constraints_->l1NormPrimalResidual(constraints_data_);
   return violation;
@@ -231,3 +239,5 @@ inline void TerminalParNMPC::computeTerminalCostHessian(
 }
 
 } // namespace idocp
+
+#endif // IDOCP_TERMINAL_PARNMPC_HXX_ 

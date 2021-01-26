@@ -89,6 +89,16 @@ public:
   ///
   Eigen::VectorXd ddual;
 
+  ///
+  /// @brief std vector of Eigen::VectorXd used to store residual temporaly. 
+  /// Only be allocated in ConstraintComponentBase::allocateExtraData().
+  ///
+  std::vector<Eigen::VectorXd> r;
+
+  ///
+  /// @brief std vector of Eigen::MatrixXd used to store Jacobian temporaly. 
+  /// Only be allocated in ConstraintComponentBase::allocateExtraData().
+  ///
   std::vector<Eigen::MatrixXd> J;
 
   ///

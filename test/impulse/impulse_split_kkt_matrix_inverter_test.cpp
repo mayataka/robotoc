@@ -46,7 +46,7 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, fixedBase) {
   KKT_mat.block(            dimx,        dimx+dimf, dimf, dimf).setZero(); // Vf
   KKT_mat.template triangularView<Eigen::StrictlyLower>() 
       = KKT_mat.transpose().template triangularView<Eigen::StrictlyLower>();
-  ImpulseSplitKKTMatrixInverter inverter(robot.dimv(), robot.max_dimf());
+  ImpulseSplitKKTMatrixInverter inverter(robot);
   const Eigen::MatrixXd FC = KKT_mat.topRightCorner(dimQ, dimQ);
   const Eigen::MatrixXd multiplied_mat = Eigen::MatrixXd::Random(dimQ, dimQ);
   Eigen::MatrixXd res = Eigen::MatrixXd::Zero(dimQ, dimQ);
@@ -59,19 +59,27 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, fixedBase) {
   const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat.inverse();
   EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-08));
   EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-06));
+  inverter.enableRegularization();
+  inverter.invert(FC, Q, KKT_mat_inv);
+  KKT_mat.block(dimx, dimx, dimf, dimf).diagonal().array() -= 1.0e-09;
+  const Eigen::MatrixXd KKT_mat_inv_ref_reg = KKT_mat.inverse();
+  EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref_reg, 1.0e-08));
 }
 
 
 TEST_F(ImpulseSplitKKTMatrixInverterTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
-  ImpulseStatus impulse_status(contact_frames.size());
-  std::vector<bool> is_impulse_active;
+  auto impulse_status = robot.createImpulseStatus();
   std::random_device rnd;
-  for (const auto frame : contact_frames) {
-    is_impulse_active.push_back(rnd()%2==0);
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
+    if (rnd() % 2 == 0) {
+      impulse_status.activateImpulse(i);
+    }
   }
-  impulse_status.setImpulseStatus(is_impulse_active);
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
+  }
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const int dimf = impulse_status.dimf();
@@ -90,7 +98,7 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, floatingBase) {
   KKT_mat.block(            dimx,        dimx+dimf, dimf, dimf).setZero(); // Vf
   KKT_mat.template triangularView<Eigen::StrictlyLower>() 
       = KKT_mat.transpose().template triangularView<Eigen::StrictlyLower>();
-  ImpulseSplitKKTMatrixInverter inverter(robot.dimv(), robot.max_dimf());
+  ImpulseSplitKKTMatrixInverter inverter(robot);
   const Eigen::MatrixXd FC = KKT_mat.topRightCorner(dimQ, dimQ);
   const Eigen::MatrixXd multiplied_mat = Eigen::MatrixXd::Random(dimQ, dimQ);
   Eigen::MatrixXd res = Eigen::MatrixXd::Zero(dimQ, dimQ);
@@ -103,6 +111,11 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, floatingBase) {
   const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat.inverse();
   EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-08));
   EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-06));
+  inverter.enableRegularization();
+  inverter.invert(FC, Q, KKT_mat_inv);
+  KKT_mat.block(dimx, dimx, dimf, dimf).diagonal().array() -= 1.0e-09;
+  const Eigen::MatrixXd KKT_mat_inv_ref_reg = KKT_mat.inverse();
+  EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref_reg, 1.0e-08));
 }
 
 } // namespace idocp

@@ -140,6 +140,7 @@ void ImpulseSplitRiccatiFactorizerTest::testForwardStateConstraintFactorization(
   riccati_next_ref.Pi = kkt_matrix_ref.Fxx() * riccati_ref.Pi;
   riccati_next_ref.pi = kkt_residual_ref.Fx() + kkt_matrix_ref.Fxx() * riccati_ref.pi;
   riccati_next_ref.N = kkt_matrix_ref.Fxx() * riccati_ref.N * kkt_matrix_ref.Fxx().transpose();
+  std::cout << (riccati_next_ref.pi - riccati_next.pi).transpose() << std::endl;
   EXPECT_TRUE(riccati_next.Pi.isApprox(riccati_next_ref.Pi));
   EXPECT_TRUE(riccati_next.pi.isApprox(riccati_next_ref.pi));
   EXPECT_TRUE(riccati_next.N.isApprox(riccati_next_ref.N));

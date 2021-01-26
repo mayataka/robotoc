@@ -37,6 +37,17 @@ bool ContactForceCost::useKinematics() const {
 }
 
 
+void ContactForceCost::set_f_ref(const Robot& robot) {
+  const double weight_per_contact 
+      = robot.totalWeight() / robot.maxPointContacts();
+  for (auto& f_ref : f_ref_) {
+    f_ref.coeffRef(0) = 0;
+    f_ref.coeffRef(1) = 0;
+    f_ref.coeffRef(2) = weight_per_contact;
+  }
+}
+
+
 void ContactForceCost::set_f_ref(const std::vector<Eigen::Vector3d>& f_ref) {
   try {
     if (f_ref.size() != max_point_contacts_) {

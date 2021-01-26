@@ -87,7 +87,8 @@ void UnOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                            unkkt_matrix_[i], unkkt_residual_[i]);
     }
     else {
-      ocp_.terminal.linearizeOCP(robots_[omp_get_thread_num()], t+T_, s_[N_],
+      ocp_.terminal.linearizeOCP(robots_[omp_get_thread_num()], t+T_, 
+                                 s_[N_-1].q, s_[N_], 
                                  terminal_kkt_matrix_, terminal_kkt_residual_);
     }
   }
@@ -202,7 +203,8 @@ void UnOCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
     }
     else {
       ocp_.terminal.computeKKTResidual(robots_[omp_get_thread_num()], t+T_, 
-                                       s_[N_], terminal_kkt_residual_);
+                                       s_[N_-1].q, s_[N_], terminal_kkt_matrix_, 
+                                       terminal_kkt_residual_);
     }
   }
 }
@@ -217,11 +219,6 @@ bool UnOCPSolver::isCurrentSolutionFeasible() {
     }
   }
   return true;
-}
-
-
-Robot UnOCPSolver::createRobot() const {
-  return robots_[0];
 }
 
 

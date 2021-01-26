@@ -67,7 +67,7 @@ jobs:
           export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH 
           mkdir -p build  && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_VIEWER=True -DTESTING=True 
-          cmake --build . --config Debug -j2
+          cmake --build . --config Debug 
           ctest --output-on-failure
       - name: Collect and upload coverage to Codecov
         if: 'success()'

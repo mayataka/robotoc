@@ -4,6 +4,8 @@
 #include "Eigen/Dense"
 #include "Eigen/LU"
 
+#include "idocp/robot/robot.hpp"
+
 
 namespace idocp {
 ///
@@ -15,7 +17,7 @@ public:
   ///
   /// @brief Construct a Schur complement.
   ///
-  ImpulseSplitKKTMatrixInverter(const int dimv, const int max_dimf);
+  ImpulseSplitKKTMatrixInverter(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
@@ -60,13 +62,26 @@ public:
                   const Eigen::MatrixBase<MatrixType2>& mat, 
                   const Eigen::MatrixBase<MatrixType3>& res);
 
+  void enableRegularization(const double reg=1.0e-09);
+
+  void disableRegularization();
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int dimv_, max_dimf_;
-  bool has_floating_base_;
-  Eigen::MatrixXd S_, Jac_Qinv_;
+  int dimv_, max_dimf_, dimQ_;
+  bool has_floating_base_, regularization_;
+  double reg_;
+  Eigen::MatrixXd S_full_, Jac_Qinv_full_;
   Eigen::LLT<Eigen::MatrixXd> llt_;
+
+  Eigen::Block<Eigen::MatrixXd> S();
+
+  const Eigen::Block<const Eigen::MatrixXd> S() const;
+
+  Eigen::Block<Eigen::MatrixXd> Jac_Qinv();
+
+  const Eigen::Block<const Eigen::MatrixXd> Jac_Qinv() const;
 
 };
 

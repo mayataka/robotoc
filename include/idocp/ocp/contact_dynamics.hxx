@@ -119,17 +119,25 @@ inline void ContactDynamics::condensingForwardEuler(
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dim_passive = robot.dim_passive();
+  const int dimf = kkt_matrix.dimf();
   data.MJtJinv_dIDCdqv().noalias() = data.MJtJinv() * data.dIDCdqv();
   data.MJtJinv_IDC().noalias() = data.MJtJinv() * data.IDC();
-  data.Qafqv().noalias() 
-      = (- kkt_matrix.Qaaff().diagonal()).asDiagonal() * data.MJtJinv_dIDCdqv();
-  data.Qafu_full().noalias() 
-      = kkt_matrix.Qaaff().diagonal().asDiagonal() 
-          * data.MJtJinv().leftCols(dimv);
+  data.Qafqv().topRows(dimv).noalias() 
+      = (- kkt_matrix.Qaa().diagonal()).asDiagonal() 
+          * data.MJtJinv_dIDCdqv().topRows(dimv);
+  data.Qafqv().bottomRows(dimf).noalias() 
+      = - kkt_matrix.Qff() * data.MJtJinv_dIDCdqv().bottomRows(dimf);
+  data.Qafu_full().topRows(dimv).noalias() 
+      = kkt_matrix.Qaa().diagonal().asDiagonal() 
+          * data.MJtJinv().leftCols(dimv).topRows(dimv);
+  data.Qafu_full().bottomRows(dimf).noalias() 
+      = kkt_matrix.Qff() * data.MJtJinv().leftCols(dimv).bottomRows(dimf);
   data.la() = kkt_residual.la;
   data.lf() = - kkt_residual.lf();
-  data.laf().noalias() 
-      -= kkt_matrix.Qaaff().diagonal().asDiagonal() * data.MJtJinv_IDC();
+  data.la().noalias() 
+      -= kkt_matrix.Qaa().diagonal().asDiagonal() * data.MJtJinv_IDC().head(dimv);
+  data.lf().noalias() 
+      -= kkt_matrix.Qff() * data.MJtJinv_IDC().tail(dimf);
   kkt_matrix.Qxx().noalias() 
       -= data.MJtJinv_dIDCdqv().transpose() * data.Qafqv();
   kkt_matrix.Qxu_full().noalias() 
@@ -184,17 +192,25 @@ inline void ContactDynamics::condensingBackwardEuler(
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dim_passive = robot.dim_passive();
+  const int dimf = kkt_matrix.dimf();
   data.MJtJinv_dIDCdqv().noalias() = data.MJtJinv() * data.dIDCdqv();
   data.MJtJinv_IDC().noalias() = data.MJtJinv() * data.IDC();
-  data.Qafqv().noalias() 
-      = (- kkt_matrix.Qaaff().diagonal()).asDiagonal() * data.MJtJinv_dIDCdqv();
-  data.Qafu_full().noalias() 
-      = kkt_matrix.Qaaff().diagonal().asDiagonal() 
-          * data.MJtJinv().leftCols(dimv);
+  data.Qafqv().topRows(dimv).noalias() 
+      = (- kkt_matrix.Qaa().diagonal()).asDiagonal() 
+          * data.MJtJinv_dIDCdqv().topRows(dimv);
+  data.Qafqv().bottomRows(dimf).noalias() 
+      = - kkt_matrix.Qff() * data.MJtJinv_dIDCdqv().bottomRows(dimf);
+  data.Qafu_full().topRows(dimv).noalias() 
+      = kkt_matrix.Qaa().diagonal().asDiagonal() 
+          * data.MJtJinv().leftCols(dimv).topRows(dimv);
+  data.Qafu_full().bottomRows(dimf).noalias() 
+      = kkt_matrix.Qff() * data.MJtJinv().leftCols(dimv).bottomRows(dimf);
   data.la() = kkt_residual.la;
   data.lf() = - kkt_residual.lf();
-  data.laf().noalias() 
-      -= kkt_matrix.Qaaff().diagonal().asDiagonal() * data.MJtJinv_IDC();
+  data.la().noalias() 
+      -= kkt_matrix.Qaa().diagonal().asDiagonal() * data.MJtJinv_IDC().head(dimv);
+  data.lf().noalias() 
+      -= kkt_matrix.Qff() * data.MJtJinv_IDC().tail(dimf);
   kkt_matrix.Qxx().noalias() 
       -= data.MJtJinv_dIDCdqv().transpose() * data.Qafqv();
   kkt_matrix.Qxu_full().noalias() 
@@ -232,7 +248,6 @@ inline void ContactDynamics::condensingBackwardEuler(
     kkt_residual.Fv().noalias() -= dtau * data.MJtJinv_IDC().head(dimv);
   }
 }
-
 
 
 inline void ContactDynamics::computeCondensedPrimalDirection(

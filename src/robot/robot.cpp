@@ -21,7 +21,8 @@ Robot::Robot(const std::string& path_to_urdf)
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
-    upper_joint_position_limit_() {
+    upper_joint_position_limit_(),
+    mat_3d_(Eigen::Matrix3d::Zero()) {
   pinocchio::urdf::buildModel(path_to_urdf, model_);
   impulse_model_ = model_;
   impulse_model_.gravity.linear().setZero();
@@ -56,7 +57,8 @@ Robot::Robot(const std::string& path_to_urdf,
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
-    upper_joint_position_limit_() {
+    upper_joint_position_limit_(),
+    mat_3d_(Eigen::Matrix3d::Zero()) {
   pinocchio::urdf::buildModel(path_to_urdf, model_);
   impulse_model_ = model_;
   impulse_model_.gravity.linear().setZero();
@@ -98,7 +100,8 @@ Robot::Robot()
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
-    upper_joint_position_limit_() {
+    upper_joint_position_limit_(),
+    mat_3d_() {
 }
 
 
@@ -187,16 +190,6 @@ void Robot::printRobotModel() const {
   std::cout << "upperPositionLimit = [" << model_.upperPositionLimit.transpose() 
             << "]" << std::endl;
   std::cout << "--------------------------------------- " << std::endl;
-}
-
-
-pinocchio::Model Robot::getPinocchioModel() const {
-  return model_;
-}
-
-
-pinocchio::Data Robot::getPinocchioData() const {
-  return data_;
 }
 
 } // namespace idocp 

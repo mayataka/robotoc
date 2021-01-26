@@ -64,6 +64,18 @@ inline void ImpulseDynamicsBackwardEuler::linearizeImpulseVelocityConstraint(
 }
 
 
+inline void ImpulseDynamicsBackwardEuler::linearizeImpulseCondition(
+    Robot& robot, const ImpulseStatus& impulse_status, 
+    const ImpulseSplitSolution& s, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
+  robot.computeImpulseConditionResidual(impulse_status,
+                                        impulse_status.contactPoints(),
+                                        kkt_residual.P());
+  robot.computeImpulseConditionDerivative(impulse_status, kkt_matrix.Pq());
+  kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.mu_stack();
+}
+
+
 inline void ImpulseDynamicsBackwardEuler::condenseImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
@@ -76,20 +88,22 @@ inline void ImpulseDynamicsBackwardEuler::condensing(
     const Robot& robot, ImpulseDynamicsBackwardEulerData& data, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
   const int dimv = robot.dimv();
-  kkt_matrix.Fvq().noalias() = data.Minv * data.dImDdq;
-  kkt_matrix.Fvf().noalias() = - data.Minv * kkt_matrix.Vv().transpose(); // this is Minv_dImDdf
+  kkt_matrix.Fvq().noalias() = - data.Minv * data.dImDdq; // this is - Minv_dImDdq
+  kkt_matrix.Fvf().noalias() = data.Minv * kkt_matrix.Vv().transpose(); // this is - Minv_dImDdf
   data.Minv_ImD.noalias() = data.Minv * data.ImD;
   data.Qdvq.noalias() 
-    = (- kkt_matrix.Qdvdv().diagonal()).asDiagonal() * kkt_matrix.Fvq();
+    = kkt_matrix.Qdvdv().diagonal().asDiagonal() * kkt_matrix.Fvq();
   data.Qdvf().noalias() 
-    = (- kkt_matrix.Qdvdv().diagonal()).asDiagonal() * kkt_matrix.Fvf();
+    = kkt_matrix.Qdvdv().diagonal().asDiagonal() * kkt_matrix.Fvf();
+  data.ldv = kkt_residual.ldv;
   data.ldv.noalias() 
-    = (- kkt_matrix.Qdvdv().diagonal()).asDiagonal() * data.Minv_ImD;
-  kkt_matrix.Qqq().noalias() -= kkt_matrix.Fvq().transpose() * data.Qdvq;
-  kkt_matrix.Qqf().noalias() -= kkt_matrix.Fvq().transpose() * data.Qdvf();
-  kkt_matrix.Qff().noalias() -= kkt_matrix.Fvf().transpose() * data.Qdvf();
-  kkt_residual.lq().noalias() -= kkt_matrix.Fvq().transpose() * data.ldv;
-  kkt_residual.lf().noalias() -= kkt_matrix.Fvf().transpose() * data.ldv;
+    -= kkt_matrix.Qdvdv().diagonal().asDiagonal() * data.Minv_ImD;
+  kkt_matrix.Qqq().noalias() += kkt_matrix.Fvq().transpose() * data.Qdvq;
+  kkt_matrix.Qfq().transpose().noalias() 
+        += kkt_matrix.Fvq().transpose() * data.Qdvf();
+  kkt_matrix.Qff().noalias() += kkt_matrix.Fvf().transpose() * data.Qdvf();
+  kkt_residual.lq().noalias() += kkt_matrix.Fvq().transpose() * data.ldv;
+  kkt_residual.lf().noalias() += kkt_matrix.Fvf().transpose() * data.ldv;
   kkt_matrix.Fvv() = - Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_residual.Fv().noalias() -= data.Minv_ImD;
 }
@@ -99,8 +113,8 @@ inline void ImpulseDynamicsBackwardEuler::computeCondensedPrimalDirection(
     const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitDirection& d) const {
   d.ddv() = - data_.Minv_ImD;
-  d.ddv().noalias() -= kkt_matrix.Fvq() * d.dq();
-  d.ddv().noalias() -= kkt_matrix.Fvf() * d.df();
+  d.ddv().noalias() += kkt_matrix.Fvq() * d.dq();
+  d.ddv().noalias() += kkt_matrix.Fvf() * d.df();
 }
 
 
@@ -123,6 +137,15 @@ inline void ImpulseDynamicsBackwardEuler::computeImpulseDynamicsResidual(
 }
 
 
+inline void ImpulseDynamicsBackwardEuler::computeImpulseConditionResidual(
+    Robot& robot, const ImpulseStatus& impulse_status,
+    SplitKKTResidual& kkt_residual) {
+  robot.computeImpulseConditionResidual(impulse_status,
+                                        impulse_status.contactPoints(),
+                                        kkt_residual.P());
+}
+
+
 inline double ImpulseDynamicsBackwardEuler::l1NormImpulseDynamicsResidual(
     const ImpulseSplitKKTResidual& kkt_residual) const {
   return (data_.ImD.lpNorm<1>() + kkt_residual.V().lpNorm<1>());
@@ -132,6 +155,18 @@ inline double ImpulseDynamicsBackwardEuler::l1NormImpulseDynamicsResidual(
 inline double ImpulseDynamicsBackwardEuler::squaredNormImpulseDynamicsResidual(
     const ImpulseSplitKKTResidual& kkt_residual) const {
   return (data_.ImD.squaredNorm() + kkt_residual.V().squaredNorm());
+}
+
+
+inline double ImpulseDynamicsBackwardEuler::l1NormImpulseConditionResidual(
+    const SplitKKTResidual& kkt_residual) {
+  return kkt_residual.P().lpNorm<1>();
+}
+
+
+inline double ImpulseDynamicsBackwardEuler::squaredNormImpulseConditionResidual(
+    const SplitKKTResidual& kkt_residual) {
+  return kkt_residual.P().squaredNorm();
 }
 
 

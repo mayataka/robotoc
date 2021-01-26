@@ -72,9 +72,8 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   discretizeSolution();
   ocp_linearizer_.linearizeOCP(ocp_, robots_, contact_sequence_, q, v, s_, 
                                kkt_matrix_, kkt_residual_);
-  riccati_solver_.computeNewtonDirection<false>(ocp_, robots_, contact_sequence_, 
-                                                q, v, s_, d_, kkt_matrix_, 
-                                                kkt_residual_);
+  riccati_solver_.computeNewtonDirection(ocp_, robots_, contact_sequence_, q, v, 
+                                         s_, d_, kkt_matrix_, kkt_residual_);
   double primal_step_size = riccati_solver_.maxPrimalStepSize();
   const double dual_step_size = riccati_solver_.maxDualStepSize();
   if (use_line_search) {
@@ -88,18 +87,12 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
 } 
 
 
-void OCPSolver::shiftSolution() {
-  for (int i=0; i<N_; ++i) {
-    s_[i].copy(s_[i+1]);
-  }
-}
-
-
 const SplitSolution& OCPSolver::getSolution(const int stage) const {
   assert(stage >= 0);
   assert(stage <= N_);
   return s_[stage];
 }
+
 
 void OCPSolver::getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq, 
                                      Eigen::MatrixXd& Kv) const {
@@ -188,17 +181,6 @@ void OCPSolver::pushBackContactStatus(const ContactStatus& contact_status,
       s_[i].setContactStatus(contact_sequence_.contactStatus(last_contact_phase));
     }
   }
-}
-
-
-void OCPSolver::shiftImpulse(const int impulse_index, 
-                             const double impulse_time) {
-  contact_sequence_.shiftImpulseEvent(impulse_index, impulse_time);
-}
-
-
-void OCPSolver::shiftLift(const int lift_index, const double lift_time) {
-  contact_sequence_.shiftLiftEvent(lift_index, lift_time);
 }
 
 
@@ -318,11 +300,6 @@ bool OCPSolver::isCurrentSolutionFeasible() {
     }
   }
   return true;
-}
-
-
-Robot OCPSolver::createRobot() const {
-  return robots_[0];
 }
 
 

@@ -114,6 +114,7 @@ void ImpulseForwardRiccatiRecursionFactorizerTest::test(const Robot& robot) {
   factorizer.factorizeStateTransition(riccati, kkt_matrix, kkt_residual, riccati_next);
   riccati_next_ref.Pi = A * riccati.Pi;
   riccati_next_ref.pi = A * riccati.pi + kkt_residual.Fx();
+  std::cout << (riccati_next_ref.pi - riccati_next.pi).transpose() << std::endl;
   EXPECT_TRUE(riccati_next.Pi.isApprox(riccati_next_ref.Pi));
   EXPECT_TRUE(riccati_next.pi.isApprox(riccati_next_ref.pi));
   factorizer.factorizeStateConstraintFactorization(riccati, kkt_matrix, riccati_next);

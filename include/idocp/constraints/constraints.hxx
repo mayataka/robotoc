@@ -469,6 +469,27 @@ inline double Constraints::squaredNormPrimalAndDualResidual(
   return squared_norm;
 }
 
+
+inline void Constraints::setBarrier(const double barrier) {
+  constraintsimpl::setBarrier(position_level_constraints_, barrier);
+  constraintsimpl::setBarrier(velocity_level_constraints_, barrier);
+  constraintsimpl::setBarrier(acceleration_level_constraints_, barrier);
+  constraintsimpl::setBarrier(impulse_level_constraints_, barrier);
+}
+
+
+inline void Constraints::setFractionToBoundaryRate(
+    const double fraction_to_boundary_rate) {
+  constraintsimpl::setFractionToBoundaryRate(position_level_constraints_, 
+                                             fraction_to_boundary_rate);
+  constraintsimpl::setFractionToBoundaryRate(velocity_level_constraints_, 
+                                             fraction_to_boundary_rate);
+  constraintsimpl::setFractionToBoundaryRate(acceleration_level_constraints_, 
+                                             fraction_to_boundary_rate);
+  constraintsimpl::setFractionToBoundaryRate(impulse_level_constraints_, 
+                                             fraction_to_boundary_rate);
+}
+
 } // namespace idocp
 
 #endif // IDOCP_CONSTRAINTS_HXX_

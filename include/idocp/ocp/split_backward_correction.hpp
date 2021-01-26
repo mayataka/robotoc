@@ -9,9 +9,12 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_direction.hpp"
+#include "idocp/impulse/impulse_split_solution.hpp"
+#include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_kkt_matrix_inverter.hpp"
+#include "idocp/ocp/split_backward_correction_data.hpp"
 
 
 namespace idocp {
@@ -61,42 +64,55 @@ public:
   ///
   SplitBackwardCorrection& operator=(SplitBackwardCorrection&&) noexcept = default;
 
+  void coarseUpdate(const Robot& robot, const double dtau, 
+                    SplitKKTMatrix& kkt_matrix, 
+                    const SplitKKTResidual& kkt_residual,
+                    const SplitSolution& s, SplitSolution& s_new);
+
   template <typename MatrixType>
   void coarseUpdate(const Robot& robot, const double dtau,
                     const Eigen::MatrixBase<MatrixType>& aux_mat_next,
                     SplitKKTMatrix& kkt_matrix, 
                     const SplitKKTResidual& kkt_residual,
-                    const SplitSolution& s, SplitDirection& d, 
-                    SplitSolution& s_new);
+                    const SplitSolution& s, SplitSolution& s_new);
 
-  void coarseUpdate(const Robot& robot, const double dtau, 
+  template <typename MatrixType>
+  void coarseUpdate(const Robot& robot, const double dtau,
+                    const Eigen::MatrixBase<MatrixType>& aux_mat_next,
                     SplitKKTMatrix& kkt_matrix, 
                     const SplitKKTResidual& kkt_residual,
-                    const SplitSolution& s, SplitDirection& d, 
+                    const SplitSolution& s, const ImpulseSplitSolution& s_next, 
                     SplitSolution& s_new);
 
   const Eigen::Block<const Eigen::MatrixXd> auxMat() const;
 
-  void backwardCorrectionSerial(const SplitSolution& s_next, 
-                                const SplitSolution& s_new_next,
+  template <typename SplitSolutionType>
+  void backwardCorrectionSerial(const SplitSolutionType& s_next, 
+                                const SplitSolutionType& s_new_next,
                                 SplitSolution& s_new);
 
-  void backwardCorrectionParallel(const Robot& robot, SplitDirection& d, 
-                                  SplitSolution& s_new) const;
+  void backwardCorrectionParallel(const Robot& robot, SplitSolution& s_new);
 
-  void forwardCorrectionSerial(const Robot& robot, const SplitSolution& s_prev, 
-                               const SplitSolution& s_new_prev,
+  template <typename SplitSolutionType>
+  void forwardCorrectionSerial(const Robot& robot, 
+                               const SplitSolutionType& s_prev, 
+                               const SplitSolutionType& s_new_prev,
                                SplitSolution& s_new);
 
-  void forwardCorrectionParallel(SplitDirection& d, SplitSolution& s_new) const;
+  void forwardCorrectionParallel(SplitSolution& s_new);
 
   static void computeDirection(const Robot& robot, const SplitSolution& s, 
-                               const SplitSolution& s_new, SplitDirection& d);
+                               const SplitSolution& s_new, 
+                               SplitDirection& d);
+
+  void computeDirection(const ImpulseSplitSolution& s,
+                        ImpulseSplitDirection& d) const;
 
 private:
-  int dimv_, dimx_, dimKKT_;
+  int dimv_, dimx_, dimu_, dimKKT_;
+  bool is_impulse_condition_valid_;
   SplitKKTMatrixInverter kkt_mat_inverter_;
-  Eigen::MatrixXd KKT_mat_inv_;
+  SplitBackwardCorrectionData data_;
   Eigen::VectorXd x_res_, dx_;
 
 };

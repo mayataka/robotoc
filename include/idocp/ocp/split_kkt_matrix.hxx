@@ -10,7 +10,10 @@ namespace idocp {
 
 inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot) 
   : Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Fqq_inv(Matrix6d::Zero()),
+    Fqq_prev_inv(Matrix6d::Zero()),
     F_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv()+robot.dimu())),
+    Pq_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv(), 3*robot.dimv())),
     Qaaff_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
                                       robot.dimv()+robot.max_dimf())),
@@ -20,16 +23,20 @@ inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
     dimu_(robot.dimu()), 
     dim_passive_(robot.dim_passive()),
     dimf_(0), 
+    dimi_(0), 
+    dimKKT_(4*robot.dimv()+robot.dimu()),
     u_begin_(robot.dim_passive()),
     q_begin_(robot.dimv()),
-    v_begin_(2*robot.dimv()),
-    dimKKT_(4*robot.dimv()+robot.dimu()) {
+    v_begin_(2*robot.dimv()) {
 }
 
 
 inline SplitKKTMatrix::SplitKKTMatrix() 
   : Fqq_prev(),
+    Fqq_inv(Matrix6d::Zero()),
+    Fqq_prev_inv(Matrix6d::Zero()),
     F_(),
+    Pq_full_(),
     Q_(),
     Qaaff_full_(),
     has_floating_base_(false),
@@ -38,10 +45,11 @@ inline SplitKKTMatrix::SplitKKTMatrix()
     dimu_(0), 
     dim_passive_(0),
     dimf_(0), 
+    dimi_(0), 
+    dimKKT_(0),
     u_begin_(0),
     q_begin_(0),
-    v_begin_(0),
-    dimKKT_(0) {
+    v_begin_(0) {
 }
 
 
@@ -52,6 +60,19 @@ inline SplitKKTMatrix::~SplitKKTMatrix() {
 inline void SplitKKTMatrix::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
+}
+
+
+inline void SplitKKTMatrix::setImpulseStatus(
+    const ImpulseStatus& impulse_status) {
+  dimi_ = impulse_status.dimf();
+  dimKKT_ = 2*dimx_ + dimu_ + dimi_;
+}
+
+
+inline void SplitKKTMatrix::setImpulseStatus() {
+  dimi_ = 0;
+  dimKKT_ = 2*dimx_ + dimu_;
 }
 
 
@@ -132,6 +153,16 @@ inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Fxx() {
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Fxx() const {
   return F_.block(0, dimu_, dimx_, dimx_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Pq() {
+  return Pq_full_.topLeftCorner(dimi_, dimv_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Pq() const {
+  return Pq_full_.topLeftCorner(dimi_, dimv_);
 }
 
 
@@ -490,6 +521,7 @@ inline void SplitKKTMatrix::symmetrize() {
 inline void SplitKKTMatrix::setZero() {
   Fqq_prev.setZero();
   F_.setZero();
+  Pq_full_.setZero();
   Q_.setZero();
   Qaaff_full_.setZero();
 }
@@ -505,9 +537,15 @@ inline int SplitKKTMatrix::dimf() const {
 }
 
 
+inline int SplitKKTMatrix::dimi() const {
+  return dimi_;
+}
+
+
 inline bool SplitKKTMatrix::isApprox(const SplitKKTMatrix& other) const {
-  if (!Fxu().isApprox(other.Fxu())) return false;
-  if (!Fxx().isApprox(other.Fxx())) return false;
+  if (!Fqq_prev.isApprox(other.Fqq_prev)) return false;
+  if (!Jac().isApprox(other.Jac())) return false;
+  if (!Pq().isApprox(other.Pq())) return false;
   if (!Quu_full().isApprox(other.Quu_full())) return false;
   if (!Qux_full().isApprox(other.Qux_full())) return false;
   if (!Qxu_full().isApprox(other.Qxu_full())) return false;
@@ -520,6 +558,7 @@ inline bool SplitKKTMatrix::isApprox(const SplitKKTMatrix& other) const {
 inline bool SplitKKTMatrix::hasNaN() const {
   if (Fqq_prev.hasNaN()) return true;
   if (F_.hasNaN()) return true;
+  if (Pq_full_.hasNaN()) return true;
   if (Q_.hasNaN()) return true;
   if (Qaaff_full_.hasNaN()) return true;
   return false;

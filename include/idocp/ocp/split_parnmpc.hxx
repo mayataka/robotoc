@@ -1,4 +1,8 @@
+#ifndef IDOCP_SPLIT_PARNMPC_HXX_ 
+#define IDOCP_SPLIT_PARNMPC_HXX_
+
 #include "idocp/ocp/split_parnmpc.hpp"
+#include "idocp/impulse/impulse_dynamics_backward_euler.hpp"
 
 #include <cassert>
 
@@ -65,6 +69,8 @@ inline void SplitParNMPC::linearizeOCP(Robot& robot,
   assert(v_prev.size() == robot.dimv());
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setImpulseStatus();
+  kkt_residual.setImpulseStatus();
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
@@ -74,10 +80,56 @@ inline void SplitParNMPC::linearizeOCP(Robot& robot,
                                      kkt_residual);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual);
-  stateequation::LinearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
+  stateequation::linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);
+  stateequation::condenseBackwardEuler(robot, dtau, q_prev, s, 
+                                       kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dtau, s, 
                                              kkt_residual);
+  cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix);
+  constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
+                                     kkt_matrix, kkt_residual);
+  contact_dynamics_.condenseContactDynamicsBackwardEuler(robot, contact_status, 
+                                                         dtau, kkt_matrix, 
+                                                         kkt_residual);
+}
+
+
+inline void SplitParNMPC::linearizeOCP(Robot& robot, 
+                                       const ContactStatus& contact_status, 
+                                       const ImpulseStatus& impulse_status, 
+                                       const double t, const double dtau, 
+                                       const Eigen::VectorXd& q_prev, 
+                                       const Eigen::VectorXd& v_prev, 
+                                       const SplitSolution& s, 
+                                       const ImpulseSplitSolution& s_next, 
+                                       SplitKKTMatrix& kkt_matrix, 
+                                       SplitKKTResidual& kkt_residual) {
+  assert(dtau >= 0);
+  assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
+  kkt_matrix.setContactStatus(contact_status);
+  kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setImpulseStatus(impulse_status);
+  kkt_residual.setImpulseStatus(impulse_status);
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q, s.v, s.a);
+  }
+  kkt_matrix.setZero();
+  kkt_residual.setZero();
+  cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
+                                     kkt_residual);
+  constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
+                                    kkt_residual);
+  stateequation::linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
+                                        kkt_matrix, kkt_residual);
+  stateequation::condenseBackwardEuler(robot, dtau, q_prev, s, 
+                                       kkt_matrix, kkt_residual);
+  contact_dynamics_.linearizeContactDynamics(robot, contact_status, dtau, s, 
+                                             kkt_residual);
+  ImpulseDynamicsBackwardEuler::linearizeImpulseCondition(robot, impulse_status,
+                                                          s_next, kkt_matrix, 
+                                                          kkt_residual);
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
                                      kkt_matrix, kkt_residual);
@@ -98,10 +150,12 @@ inline void SplitParNMPC::computeCondensedPrimalDirection(
 
 inline void SplitParNMPC::computeCondensedDualDirection(
     const Robot& robot, const double dtau, const SplitKKTMatrix& kkt_matrix, 
-    const SplitKKTResidual& kkt_residual, SplitDirection& d) {
+    SplitKKTResidual& kkt_residual, SplitDirection& d) {
   assert(dtau >= 0);
   contact_dynamics_.computeCondensedDualDirection(robot, dtau, kkt_matrix,
                                                   kkt_residual, d.dgmm(), d);
+  stateequation::correctCostateDirectionBackwardEuler(robot, kkt_matrix, 
+                                                      kkt_residual, d.dlmd());
 }
 
 
@@ -145,6 +199,8 @@ inline void SplitParNMPC::computeKKTResidual(
   assert(v_prev.size() == robot.dimv());
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setImpulseStatus();
+  kkt_residual.setImpulseStatus();
   kkt_residual.setZero();
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
@@ -154,10 +210,42 @@ inline void SplitParNMPC::computeKKTResidual(
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
                                     kkt_residual);
-  stateequation::LinearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
+  stateequation::linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dtau, s, 
                                              kkt_residual);
+}
+
+
+inline void SplitParNMPC::computeKKTResidual(
+    Robot& robot, const ContactStatus& contact_status, 
+    const ImpulseStatus& impulse_status, const double t, const double dtau, 
+    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
+    const SplitSolution& s, const ImpulseSplitSolution& s_next, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
+  assert(dtau >= 0);
+  assert(q_prev.size() == robot.dimq());
+  assert(v_prev.size() == robot.dimv());
+  kkt_matrix.setContactStatus(contact_status);
+  kkt_residual.setContactStatus(contact_status);
+  kkt_matrix.setImpulseStatus(impulse_status);
+  kkt_residual.setImpulseStatus(impulse_status);
+  kkt_residual.setZero();
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q, s.v, s.a);
+  }
+  cost_->computeStageCostDerivatives(robot, cost_data_, t, dtau, s, 
+                                     kkt_residual);
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
+  constraints_->augmentDualResidual(robot, constraints_data_, dtau, s,
+                                    kkt_residual);
+  stateequation::linearizeBackwardEuler(robot, dtau, q_prev, v_prev, s, s_next, 
+                                        kkt_matrix, kkt_residual);
+  contact_dynamics_.linearizeContactDynamics(robot, contact_status, dtau, s, 
+                                             kkt_residual);
+  ImpulseDynamicsBackwardEuler::linearizeImpulseCondition(robot, impulse_status,
+                                                          s_next, kkt_matrix, 
+                                                          kkt_residual);
 }
 
 
@@ -171,9 +259,11 @@ inline double SplitParNMPC::squaredNormKKTResidual(
     error += kkt_residual.lu_passive.squaredNorm();
   }
   error += kkt_residual.lu().squaredNorm();
-  error += stateequation::SquaredNormStateEuqationResidual(kkt_residual);
+  error += stateequation::squaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dtau);
   error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
+  error += ImpulseDynamicsBackwardEuler::squaredNormImpulseConditionResidual(
+      kkt_residual);
   return error;
 }
 
@@ -205,18 +295,48 @@ inline double SplitParNMPC::constraintViolation(
     const Eigen::VectorXd& v_prev, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) {
   kkt_residual.setContactStatus(contact_status);
+  kkt_residual.setImpulseStatus();
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v, s.a);
   }
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  stateequation::ComputeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, 
+  stateequation::computeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, 
                                               kkt_residual);
   contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, s);
   double violation = 0;
-  violation += stateequation::L1NormStateEuqationResidual(kkt_residual);
+  violation += stateequation::l1NormStateEuqationResidual(kkt_residual);
   violation += contact_dynamics_.l1NormContactDynamicsResidual(dtau);
   violation += dtau * constraints_->l1NormPrimalResidual(constraints_data_);
   return violation;
 }
 
+
+inline double SplitParNMPC::constraintViolation(
+    Robot& robot, const ContactStatus& contact_status, 
+    const ImpulseStatus& impulse_status, const double t, const double dtau, 
+    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) {
+  kkt_residual.setContactStatus(contact_status);
+  kkt_residual.setImpulseStatus(impulse_status);
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q, s.v, s.a);
+  }
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
+  stateequation::computeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, 
+                                              kkt_residual);
+  contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, s);
+  ImpulseDynamicsBackwardEuler::computeImpulseConditionResidual(robot, 
+                                                                impulse_status, 
+                                                                kkt_residual);
+  double violation = 0;
+  violation += stateequation::l1NormStateEuqationResidual(kkt_residual);
+  violation += contact_dynamics_.l1NormContactDynamicsResidual(dtau);
+  violation += dtau * constraints_->l1NormPrimalResidual(constraints_data_);
+  violation += ImpulseDynamicsBackwardEuler::l1NormImpulseConditionResidual(
+      kkt_residual);
+  return violation;
+}
+
 } // namespace idocp
+
+#endif // IDOCP_SPLIT_PARNMPC_HXX_

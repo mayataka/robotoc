@@ -44,7 +44,7 @@ inline void Convergence(OCPSolverType& ocp_solver, const double t,
   for (int i=0; i<num_iteration; ++i) {
     ocp_solver.updateSolution(t, q, v, line_search);
     ocp_solver.computeKKTResidual(t, q, v);
-    std::cout << "KKT error at iteration " << i << " = " 
+    std::cout << "KKT error after iteration " << i+1 << " = " 
               << ocp_solver.KKTError() << std::endl;
   }
   std::cout << "-----------------------------------" << std::endl;
