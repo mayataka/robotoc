@@ -77,7 +77,8 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
                                     kkt_residual);
   stateequation::linearizeForwardEuler(robot, dtau, q_prev, s, s_next, 
                                        kkt_matrix, kkt_residual);
-  stateequation::condenseForwardEuler(robot, dtau, kkt_matrix, kkt_residual);
+  stateequation::condenseForwardEuler(robot, dtau, s, s_next.q, 
+                                      kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dtau, s, 
                                              kkt_residual);
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix);

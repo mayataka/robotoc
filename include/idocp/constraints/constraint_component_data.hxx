@@ -20,8 +20,8 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc)
     J(),
     dimc_(dimc) {
   try {
-    if (dimc < 0) {
-      throw std::out_of_range("invalid argment: dimc must not be negative");
+    if (dimc <= 0) {
+      throw std::out_of_range("invalid argment: dimc must be positive!");
     }
   }
   catch(const std::exception& e) {

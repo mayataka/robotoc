@@ -138,7 +138,7 @@ void ImpulseSplitOCPTest::testLinearizeOCP(
   constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
   stateequation::linearizeImpulseForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
-  stateequation::condenseImpulseForwardEuler(robot, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::condenseImpulseForwardEuler(robot, s, s_next.q, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamicsForwardEuler id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref, is_state_constraint_valid );

@@ -100,18 +100,3 @@ if (ENABLE_VIEWER)
         ENABLE_VIEWER    
     )
 endif()
-
-add_executable(
-    anymal_trotting_parnmpc
-    anymal_trotting_parnmpc.cpp
-)
-target_link_libraries(
-    anymal_trotting_parnmpc
-    PRIVATE
-    idocp::idocp
-)
-target_include_directories(
-    anymal_trotting_parnmpc
-    PRIVATE
-    ${IDOCP_INCLUDE_DIR}
-)

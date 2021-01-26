@@ -91,8 +91,6 @@ public:
                       const Eigen::VectorXd& v, 
                       const bool use_line_search=false);
 
-  void shiftSolution();
-
   ///
   /// @brief Get the const reference to the split solution of a time stage. 
   /// For example, you can get the const reference to the control input torques 
@@ -128,10 +126,6 @@ public:
   void pushBackContactStatus(const ContactStatus& contact_status, 
                              const double switching_time,
                              const double t);
-
-  void shiftImpulse(const int impulse_index, const double impulse_time);
-
-  void shiftLift(const int lift_index, const double lift_time);
 
   void setContactPoints(const int contact_phase, 
                         const std::vector<Eigen::Vector3d>& contact_points);

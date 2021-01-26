@@ -61,7 +61,8 @@ inline void ImpulseSplitOCP::linearizeOCP(
   constraints_->augmentDualResidual(robot, constraints_data_, s, kkt_residual);
   stateequation::linearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
                                               kkt_matrix, kkt_residual);
-  stateequation::condenseImpulseForwardEuler(robot, kkt_matrix, kkt_residual);
+  stateequation::condenseImpulseForwardEuler(robot, s, s_next.q, 
+                                             kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s,
                                              kkt_matrix, kkt_residual,
                                              is_state_constraint_valid);

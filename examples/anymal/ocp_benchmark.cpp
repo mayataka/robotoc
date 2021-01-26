@@ -98,7 +98,7 @@ int main () {
   robot.setContactPoints(contact_status);
   ocp_solver.setContactStatusUniformly(contact_status);
   ocp_solver.setStateTrajectory(t, q, v);
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 20, false);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 10, false);
   idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 5000, false);
 
   return 0;

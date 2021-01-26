@@ -417,6 +417,10 @@ public:
 
   /// @brief Inverse of the derivative of the state equation with respect to 
   /// the configuration of the previous time step q_prev.
+  Matrix6d Fqq_inv;
+
+  /// @brief Inverse of the derivative of the state equation with respect to 
+  /// the configuration of the previous time step q_prev.
   Matrix6d Fqq_prev_inv;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

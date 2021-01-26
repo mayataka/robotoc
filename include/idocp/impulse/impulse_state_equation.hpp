@@ -21,9 +21,12 @@ void linearizeImpulseForwardEuler(
     ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual);
 
-void condenseImpulseForwardEuler(Robot& robot, 
-                                 ImpulseSplitKKTMatrix& kkt_matrix, 
-                                 ImpulseSplitKKTResidual& kkt_residual);
+template <typename ConfigVectorType>
+void condenseImpulseForwardEuler(
+    Robot& robot, const ImpulseSplitSolution& s, 
+    const Eigen::MatrixBase<ConfigVectorType>& q_next, 
+    ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual);
 
 template <typename ConfigVectorType, typename TangentVectorType>
 void linearizeImpulseBackwardEuler(

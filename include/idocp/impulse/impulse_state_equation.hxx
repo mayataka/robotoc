@@ -18,8 +18,14 @@ inline void linearizeImpulseForwardEuler(
   if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq());
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
-    kkt_residual.lq().noalias() += kkt_matrix.Fqq().transpose() * s_next.lmd 
-                                    + kkt_matrix.Fqq_prev.transpose() * s.lmd;
+    kkt_residual.lq().template head<6>().noalias() 
+        += kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
+              * s_next.lmd.template head<6>();
+    kkt_residual.lq().template head<6>().noalias() 
+        += kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>().transpose() 
+              * s.lmd.template head<6>();
+    kkt_residual.lq().tail(robot.dimv()-6).noalias() 
+        += s_next.lmd.tail(robot.dimv()-6) - s.lmd.tail(robot.dimv()-6);
   }
   else {
     kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
@@ -29,20 +35,26 @@ inline void linearizeImpulseForwardEuler(
 }
 
 
-inline void condenseImpulseForwardEuler(Robot& robot, 
-                                        ImpulseSplitKKTMatrix& kkt_matrix, 
-                                        ImpulseSplitKKTResidual& kkt_residual) {
+template <typename ConfigVectorType>
+inline void condenseImpulseForwardEuler(
+    Robot& robot, const ImpulseSplitSolution& s, 
+    const Eigen::MatrixBase<ConfigVectorType>& q_next, 
+    ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual) {
   if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
                                          kkt_matrix.Fqq_prev_inv);
+    robot.dSubtractdConfigurationMinus(s.q, q_next, kkt_matrix.Fqq_prev);
+    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
+                                         kkt_matrix.Fqq_inv);
     kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
         = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
     kkt_residual.Fq_prev = kkt_residual.Fq().template head<6>();
     kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
-        = - kkt_matrix.Fqq_prev_inv 
+        = - kkt_matrix.Fqq_inv 
             * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
     kkt_residual.Fq().template head<6>().noalias()
-        = - kkt_matrix.Fqq_prev_inv * kkt_residual.Fq_prev;
+        = - kkt_matrix.Fqq_inv * kkt_residual.Fq_prev;
   }
 }
 
@@ -59,9 +71,14 @@ inline void linearizeImpulseBackwardEuler(
   if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq());
     robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq_prev);
-    kkt_residual.lq().noalias() 
-        += kkt_matrix.Fqq_prev.transpose() * s_next.lmd
-            + kkt_matrix.Fqq().transpose() * s.lmd;
+    kkt_residual.lq().template head<6>().noalias() 
+        += kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>().transpose() 
+              * s_next.lmd.template head<6>();
+    kkt_residual.lq().template head<6>().noalias() 
+        += kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
+              * s.lmd.template head<6>();
+    kkt_residual.lq().tail(robot.dimv()-6).noalias() 
+        += s_next.lmd.tail(robot.dimv()-6) - s.lmd.tail(robot.dimv()-6);
   }
   else {
     kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
@@ -79,15 +96,15 @@ inline void condenseImpulseBackwardEuler(
   if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(q_prev, s.q, kkt_matrix.Fqq_prev);
     robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
-                                         kkt_matrix.Fqq_prev_inv);
+                                         kkt_matrix.Fqq_inv);
     kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
         = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
     kkt_residual.Fq_prev = kkt_residual.Fq().template head<6>();
     kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
-        = kkt_matrix.Fqq_prev_inv 
+        = kkt_matrix.Fqq_inv 
             * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
     kkt_residual.Fq().template head<6>().noalias()
-        = kkt_matrix.Fqq_prev_inv * kkt_residual.Fq_prev;
+        = kkt_matrix.Fqq_inv * kkt_residual.Fq_prev;
   }
 }
 

@@ -87,18 +87,12 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
 } 
 
 
-void OCPSolver::shiftSolution() {
-  for (int i=0; i<N_; ++i) {
-    s_[i].copy(s_[i+1]);
-  }
-}
-
-
 const SplitSolution& OCPSolver::getSolution(const int stage) const {
   assert(stage >= 0);
   assert(stage <= N_);
   return s_[stage];
 }
+
 
 void OCPSolver::getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq, 
                                      Eigen::MatrixXd& Kv) const {
@@ -187,17 +181,6 @@ void OCPSolver::pushBackContactStatus(const ContactStatus& contact_status,
       s_[i].setContactStatus(contact_sequence_.contactStatus(last_contact_phase));
     }
   }
-}
-
-
-void OCPSolver::shiftImpulse(const int impulse_index, 
-                             const double impulse_time) {
-  contact_sequence_.shiftImpulseEvent(impulse_index, impulse_time);
-}
-
-
-void OCPSolver::shiftLift(const int lift_index, const double lift_time) {
-  contact_sequence_.shiftLiftEvent(lift_index, lift_time);
 }
 
 
