@@ -14,19 +14,19 @@
 
 ## Requirements
 - Ubuntu 18.04 or 20.04
-- gcc, CMake
+- gcc (at least C++11 is required), CMake (at least version 3.1)
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  
 - [pinocchio](https://github.com/stack-of-tasks/pinocchio) (instruction for installation is found [here](https://stack-of-tasks.github.io/pinocchio/download.html))
 - [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) (Optional to visualize the solution trajectory) 
 
 ## Installation 
-1. Install latest stable version of Eigen3 by 
+1. Install the latest stable version of Eigen3 by 
 
 ```
 sudo apt install libeigen3-dev
 ```
 
-2. Install latest stable version of pinocchio by following the [instruction](https://stack-of-tasks.github.io/pinocchio/download.html)
+2. Install the latest stable version of pinocchio by following the [instruction](https://stack-of-tasks.github.io/pinocchio/download.html)
 3. Clone this repository and change directory as
 
 ```
@@ -88,7 +88,7 @@ where "unconstrained" rigid-body systems are systems without any contacts or a f
 
 ## Examples
 Examples are found in `examples` directory.
-The following animations are the solution trajectory of the `idocp::UnOCPSolver` for a robot manipulator iiwa14.
+The following animations are the solution trajectory of the `idocp::UnOCPSolver` for a robot manipulator iiwa14 under inequality constraints (joint angle limits, joint velocity limits, and joint torques limits).
 
 - Configuration-space optimal control (`iiwa14/config_space_ocp.cpp`)
 
@@ -98,7 +98,7 @@ The following animations are the solution trajectory of the `idocp::UnOCPSolver`
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/iiwa14_task_ocp.gif" width="170">
 
-The following animations are the solution trajectory of the `idocp::OCPSolver` for a quadruped ANYmal.
+The following animations are the solution trajectory of the `idocp::OCPSolver` for a quadruped ANYmal under inequality constraints (joint angle limits, joint velocity limits, joint torques limits, and friction cones).
 
 
 - Trotting (`anymal/anymal_trotting.cpp`)

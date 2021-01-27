@@ -106,30 +106,59 @@ void OCPSolver::getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq,
 }
 
 
-bool OCPSolver::setStateTrajectory(const double t, const Eigen::VectorXd& q, 
-                                   const Eigen::VectorXd& v) {
-  assert(q.size() == robots_[0].dimq());
-  assert(v.size() == robots_[0].dimv());
-  Eigen::VectorXd q_normalized = q;
-  robots_[0].normalizeConfiguration(q_normalized);
-  for (auto& e : s_.data) {
-    e.v = v;
-    e.q = q_normalized;
+void OCPSolver::setSolution(const std::string& name, 
+                            const Eigen::VectorXd& value) {
+  try {
+    if (name == "q") {
+      for (auto& e : s_.data)    { e.q = value; }
+      for (auto& e : s_.impulse) { e.q = value; }
+      for (auto& e : s_.aux)     { e.q = value; }
+      for (auto& e : s_.lift)    { e.q = value; }
+    }
+    else if (name == "v") {
+      for (auto& e : s_.data)    { e.v = value; }
+      for (auto& e : s_.impulse) { e.v = value; }
+      for (auto& e : s_.aux)     { e.v = value; }
+      for (auto& e : s_.lift)    { e.v = value; }
+    }
+    else if (name == "a") {
+      for (auto& e : s_.data)    { e.a  = value; }
+      for (auto& e : s_.impulse) { e.dv = value; }
+      for (auto& e : s_.aux)     { e.a  = value; }
+      for (auto& e : s_.lift)    { e.a  = value; }
+    }
+    else if (name == "f") {
+      for (auto& e : s_.data) { 
+        for (auto& ef : e.f) { ef = value; } 
+        e.set_f_stack(); 
+      }
+      for (auto& e : s_.impulse) { 
+        for (auto& ef : e.f) { ef = value; } 
+        e.set_f_stack(); 
+      }
+      for (auto& e : s_.aux) { 
+        for (auto& ef : e.f) { ef = value; } 
+        e.set_f_stack(); 
+      }
+      for (auto& e : s_.lift) { 
+        for (auto& ef : e.f) { ef = value; } 
+        e.set_f_stack(); 
+      }
+    }
+    else if (name == "u") {
+      for (auto& e : s_.data)    { e.u = value; }
+      for (auto& e : s_.aux)     { e.u = value; }
+      for (auto& e : s_.lift)    { e.u = value; }
+    }
+    else {
+      throw std::invalid_argument("invalid arugment: name must be q, v, a, f, or u!");
+    }
   }
-  for (auto& e : s_.impulse) {
-    e.v = v;
-    e.q = q_normalized;
-  }
-  for (auto& e : s_.aux) {
-    e.v = v;
-    e.q = q_normalized;
-  }
-  for (auto& e : s_.lift) {
-    e.v = v;
-    e.q = q_normalized;
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
   initConstraints();
-  return isCurrentSolutionFeasible();
 }
 
 

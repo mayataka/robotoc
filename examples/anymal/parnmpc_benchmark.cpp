@@ -17,14 +17,18 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
-#include "idocp/utils/joint_constraints_factory.hpp"
+#include "idocp/constraints/friction_cone.hpp"
+
 #include "idocp/utils/ocp_benchmarker.hpp"
 
 
 int main () {
+  // Create a robot with contacts.
   std::vector<int> contact_frames = {14, 24, 34, 44}; // LF, LH, RF, RH
   const std::string urdf_file_name = "../anymal_b_simple_description/urdf/anymal.urdf";
   idocp::Robot robot(urdf_file_name, contact_frames);
+
+  // Create a cost function.
   auto cost = std::make_shared<idocp::CostFunction>();
   Eigen::VectorXd q_ref(robot.dimq());
   q_ref << 0, 0, 0.4792, 0, 0, 0, 1, 
@@ -59,6 +63,8 @@ int main () {
   contact_cost->set_f_ref(f_ref);
   cost->push_back(config_cost);
   cost->push_back(contact_cost);
+
+  // Create inequality constraints.
   auto constraints = std::make_shared<idocp::Constraints>();
   auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
   auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
@@ -66,17 +72,25 @@ int main () {
   auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower  = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper  = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  const double mu = 0.7;
+  auto friction_cone         = std::make_shared<idocp::FrictionCone>(robot, mu);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
   constraints->push_back(joint_velocity_upper);
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
+  constraints->push_back(friction_cone);
 
+  // Create ParNMPCSolver
   const double T = 0.5;
   const int N = 20;
   const int max_num_impulse_phase = 4;
   const int nthreads = 4;
+  idocp::ParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, 
+                                      max_num_impulse_phase, nthreads);
+
+  // Initial time and initial state
   const double t = 0;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   q << 0, 0, 0.4792, 0, 0, 0, 1, 
@@ -90,15 +104,20 @@ int main () {
        0.0, 0.0, 0.0, 
        0.0, 0.0, 0.0,
        0.0, 0.0, 0.0;
-  idocp::ParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, 
-                                      max_num_impulse_phase, nthreads);
+
+  // Initialize ParNMPCSolver
   auto contact_status = robot.createContactStatus();
   contact_status.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q);
   robot.setContactPoints(contact_status);
   parnmpc_solver.setContactStatusUniformly(contact_status);
-  parnmpc_solver.setStateTrajectory(t, q, v);
+  parnmpc_solver.setSolution("q", q);
+  parnmpc_solver.setSolution("v", v);
+  Eigen::Vector3d f_init;
+  f_init << 0, 0, 0.25*robot.totalWeight();
+  parnmpc_solver.setSolution("f", f_init);
   parnmpc_solver.initBackwardCorrection(t);
+
   idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 20, false);
   idocp::ocpbenchmarker::CPUTime(parnmpc_solver, t, q, v, 5000, false);
 

@@ -16,7 +16,8 @@ namespace idocp {
 
 class FrictionCone final : public ConstraintComponentBase {
 public:
-  FrictionCone(const Robot& robot, const double barrier=1.0e-04,
+  FrictionCone(const Robot& robot, const double mu, 
+               const double barrier=1.0e-04,
                const double fraction_to_boundary_rate=0.995);
 
   FrictionCone();
@@ -34,6 +35,8 @@ public:
 
   // Use default move assign coperator.
   FrictionCone& operator=(FrictionCone&&) noexcept = default;
+
+  void setFrictionCoefficient(const double mu);
 
   bool useKinematics() const override;
 
@@ -72,9 +75,13 @@ public:
             - mu*mu*f.coeff(2)*f.coeff(2));
   }
 
+  static double normalForceResidual(const Eigen::Vector3d& f) {
+    return (- f.coeff(2));
+  }
+
 private:
   int dimc_;
-  double fraction_to_boundary_rate_;
+  double mu_;
 
 };
 

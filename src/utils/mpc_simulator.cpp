@@ -1,1 +1,0 @@
-#include "idocp/utils/mpc_simulator.hpp"

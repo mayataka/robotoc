@@ -16,6 +16,7 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
+
 #include "idocp/utils/ocp_benchmarker.hpp"
 
 #ifdef ENABLE_VIEWER
@@ -88,13 +89,13 @@ int main(int argc, char *argv[]) {
   contact_cost->set_f_ref(f_ref);
   cost->push_back(contact_cost);
 
-  auto constraints          = std::make_shared<idocp::Constraints>();
-  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
-  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
-  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
-  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
-  auto joint_torques_lower  = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
-  auto joint_torques_upper  = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  auto constraints           = std::make_shared<idocp::Constraints>();
+  auto joint_position_lower  = std::make_shared<idocp::JointPositionLowerLimit>(robot);
+  auto joint_position_upper  = std::make_shared<idocp::JointPositionUpperLimit>(robot);
+  auto joint_velocity_lower  = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
+  auto joint_velocity_upper  = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower   = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper   = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -138,9 +139,12 @@ int main(int argc, char *argv[]) {
         0.1, -0.7,  1.0; // RH
   Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 
-  parnmpc_solver.setStateTrajectory(t, q, v);
+  parnmpc_solver.setSolution("q", q);
+  parnmpc_solver.setSolution("v", v);
+  Eigen::Vector3d f_init;
+  f_init << 0, 0, 0.25*robot.totalWeight();
+  parnmpc_solver.setSolution("f", f_init);
   idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 100, false);
-  parnmpc_solver.printSolution("end-effector", robot.contactFramesIndices());
 
 #ifdef ENABLE_VIEWER
   if (argc != 2) {

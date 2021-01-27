@@ -1,5 +1,7 @@
-#ifndef IDOCP_CONTACT_NORMAL_FORCE_HPP_
-#define IDOCP_CONTACT_NORMAL_FORCE_HPP_
+#ifndef IDOCP_LINEARIZED_FRICTION_CONE_HPP_
+#define IDOCP_LINEARIZED_FRICTION_CONE_HPP_
+
+#include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_solution.hpp"
@@ -12,35 +14,38 @@
 
 namespace idocp {
 
-class ContactNormalForce final : public ConstraintComponentBase {
+class LinearizedFrictionCone final : public ConstraintComponentBase {
 public:
-  ContactNormalForce(const Robot& robot, const double barrier=1.0e-04,
-                     const double fraction_to_boundary_rate=0.995);
+  LinearizedFrictionCone(const Robot& robot, const double mu, 
+                         const double barrier=1.0e-04,
+                         const double fraction_to_boundary_rate=0.995);
 
-  ContactNormalForce();
+  LinearizedFrictionCone();
 
-  ~ContactNormalForce();
+  ~LinearizedFrictionCone();
 
   // Use default copy constructor.
-  ContactNormalForce(const ContactNormalForce&) = default;
+  LinearizedFrictionCone(const LinearizedFrictionCone&) = default;
 
   // Use default copy coperator.
-  ContactNormalForce& operator=(const ContactNormalForce&) = default;
+  LinearizedFrictionCone& operator=(const LinearizedFrictionCone&) = default;
 
   // Use default move constructor.
-  ContactNormalForce(ContactNormalForce&&) noexcept = default;
+  LinearizedFrictionCone(LinearizedFrictionCone&&) noexcept = default;
 
   // Use default move assign coperator.
-  ContactNormalForce& operator=(ContactNormalForce&&) noexcept = default;
+  LinearizedFrictionCone& operator=(LinearizedFrictionCone&&) noexcept = default;
+
+  void setFrictionCoefficient(const double mu);
 
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;
 
+  void allocateExtraData(ConstraintComponentData& data) const;
+
   bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                   const SplitSolution& s) const override;
-
-  void allocateExtraData(ConstraintComponentData& data) const {}
 
   void setSlackAndDual(Robot& robot, ConstraintComponentData& data, 
                        const SplitSolution& s) const override;
@@ -60,15 +65,29 @@ public:
 
   void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
                                     const SplitSolution& s) const override;
-  
+
   int dimc() const override;
+
+  static Eigen::Vector2d frictionConeResidual(const double mu, 
+                                              const Eigen::Vector3d& f) {
+    assert(mu > 0);
+    Eigen::Vector2d res;
+    res.coeffRef(0) = f.coeff(0) - mu * f.coeff(2) / std::sqrt(2);
+    res.coeffRef(1) = f.coeff(1) - mu * f.coeff(2) / std::sqrt(2);
+    return res;
+  }
+
+  static double normalForceResidual(const Eigen::Vector3d& f) {
+    return (- f.coeff(2));
+  }
 
 private:
   int dimc_;
-  double fraction_to_boundary_rate_;
+  double mu_;
+  Eigen::Matrix3d Jac;
 
 };
 
 } // namespace idocp
 
-#endif // IDOCP_CONTACT_NORMAL_FORCE_HPP_ 
+#endif // IDOCP_LINEARIZED_FRICTION_CONE_HPP_ 

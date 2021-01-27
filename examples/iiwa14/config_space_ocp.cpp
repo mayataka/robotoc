@@ -54,13 +54,11 @@ int main(int argc, char *argv[]) {
   idocp::UnOCPSolver ocp_solver(robot, cost, constraints, T, N, nthreads);
 
   // Solves the OCP.
-  ocp_solver.setStateTrajectory(t, q, v);
+  ocp_solver.setSolution("q", q);
+  ocp_solver.setSolution("v", v);
   const int num_iteration = 30;
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);
-  ocp_solver.printSolution("q");
-  ocp_solver.printSolution("v");
-  ocp_solver.printSolution("u");
 
 #ifdef ENABLE_VIEWER
   if (argc != 2) {

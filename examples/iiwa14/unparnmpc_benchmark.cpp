@@ -46,14 +46,14 @@ int main() {
   idocp::UnParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, nthreads);
 
   // Solves the OCP.
-  parnmpc_solver.setStateTrajectory(t, q, v);
+  parnmpc_solver.setSolution("q", q);
+  parnmpc_solver.setSolution("v", v);
   parnmpc_solver.initBackwardCorrection(t);
   const int num_iteration = 100;
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, num_iteration, line_search);
   const int num_iteration_CPU = 10000;
   idocp::ocpbenchmarker::CPUTime(parnmpc_solver, t, q, v, num_iteration_CPU, line_search);
-  parnmpc_solver.printSolution();
 
   return 0;
 }
