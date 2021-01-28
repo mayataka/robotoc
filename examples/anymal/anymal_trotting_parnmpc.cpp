@@ -75,18 +75,15 @@ int main(int argc, char *argv[]) {
   cost->push_back(config_cost);
 
   auto contact_cost = std::make_shared<idocp::ContactForceCost>(robot);
-  std::vector<Eigen::Vector3d> f_weight, f_ref;
+  std::vector<Eigen::Vector3d> f_weight;
   for (int i=0; i<contact_frames.size(); ++i) {
     Eigen::Vector3d fw; 
     fw << 0.001, 0.001, 0.001;
     f_weight.push_back(fw);
-    Eigen::Vector3d fr; 
-    fr << 0, 0, 70;
-    f_ref.push_back(fr);
   }
   contact_cost->set_f_weight(f_weight);
   contact_cost->set_fi_weight(f_weight);
-  contact_cost->set_f_ref(f_ref);
+  contact_cost->set_f_ref(robot);
   cost->push_back(contact_cost);
 
   auto constraints           = std::make_shared<idocp::Constraints>();
@@ -144,7 +141,10 @@ int main(int argc, char *argv[]) {
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   parnmpc_solver.setSolution("f", f_init);
-  idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 100, false);
+  parnmpc_solver.initBackwardCorrection(t);
+
+  const bool line_search = false;
+  idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 200, line_search);
 
 #ifdef ENABLE_VIEWER
   if (argc != 2) {
