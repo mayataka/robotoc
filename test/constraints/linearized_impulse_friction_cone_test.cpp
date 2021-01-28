@@ -172,6 +172,7 @@ void LinearizedImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, c
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
       LinearizedImpulseFrictionCone::frictionConeResidual(mu, s.f[i], data_ref.residual.segment(5*i, 5));
+      data_ref.residual.segment(5*i, 5) += data_ref.slack.segment(5*i, 5);
       for (int j=0; j<5; ++j) {
         data_ref.duality(5*i+j) = data_ref.slack(5*i+j) * data_ref.dual(5*i+j) - barrier;
       }
