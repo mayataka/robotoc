@@ -167,8 +167,6 @@ int main(int argc, char *argv[]) {
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 25, line_search);
 
-  ocp_solver.printSolution("f");
-
 #ifdef ENABLE_VIEWER
   if (argc != 2) {
     std::cout << "Invalid argment!" << std::endl;
