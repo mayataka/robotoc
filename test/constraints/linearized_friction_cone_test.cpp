@@ -143,6 +143,7 @@ void LinearizedFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, 
   for (int i=0; i<contact_status.maxPointContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
       LinearizedFrictionCone::frictionConeResidual(mu, s.f[i], data_ref.residual.segment(5*i, 5));
+      data_ref.residual.segment(5*i, 5) += data_ref.slack.segment(5*i, 5);
       for (int j=0; j<5; ++j) {
         data_ref.duality(5*i+j) = data_ref.slack(5*i+j) * data_ref.dual(5*i+j) - barrier;
       }

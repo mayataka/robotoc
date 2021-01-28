@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cassert>
+#include <stdexcept>
 
 
 namespace idocp {
@@ -185,6 +186,8 @@ void LinearizedImpulseFrictionCone::computePrimalAndDualResidual(
     if (s.isImpulseActive(i)) {
       const int idx = 5*i;
       frictionConeResidual(mu_, s.f[i], data.residual.template segment<5>(idx));
+      data.residual.template segment<5>(idx).noalias()
+          += data.slack.template segment<5>(idx);
       for (int j=0; j<5; ++j) {
         data.duality.coeffRef(idx+j) = computeDuality(data.slack.coeff(idx+j), 
                                                       data.dual.coeff(idx+j));
