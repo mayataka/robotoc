@@ -11,8 +11,7 @@ ContactDistance::ContactDistance(const Robot& robot, const double barrier,
   : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
     dimv_(robot.dimv()),
     dimc_(robot.maxPointContacts()),
-    contact_frames_(robot.contactFramesIndices()),
-    fraction_to_boundary_rate_(fraction_to_boundary_rate) {
+    contact_frames_(robot.contactFramesIndices()) {
 }
 
 
@@ -20,8 +19,7 @@ ContactDistance::ContactDistance()
   : ConstraintComponentBase(),
     dimv_(0),
     dimc_(0),
-    contact_frames_(),
-    fraction_to_boundary_rate_(0) {
+    contact_frames_() {
 }
 
 
@@ -112,6 +110,13 @@ void ContactDistance::condenseSlackAndDual(
 void ContactDistance::computeSlackAndDualDirection(
     Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
     const SplitDirection& d) const {
+  // Because data.slack(i) and data.dual(i) are always positive,  
+  // - fraction_rate * (slack.coeff(i)/dslack.coeff(i)) and 
+  // - fraction_rate * (dual.coeff(i)/ddual.coeff(i))  
+  // at the inactive constraint index i are always negative, 
+  // and therefore do not affect to step size.
+  data.dslack.fill(1.0);
+  data.ddual.fill(1.0);
   for (int i=0; i<dimc_; ++i) {
     if (!s.isContactActive(i)) {
       data.dslack.coeffRef(i) 
@@ -121,20 +126,14 @@ void ContactDistance::computeSlackAndDualDirection(
                                                     data.dslack.coeff(i), 
                                                     data.duality.coeff(i));
     }
-    else {
-      data.residual.coeffRef(i)  = 0;
-      data.duality.coeffRef(i)   = 0;
-      data.slack.coeffRef(i)     = 1.0;
-      data.dslack.coeffRef(i)    = fraction_to_boundary_rate_;
-      data.dual.coeffRef(i)      = 1.0;
-      data.ddual.coeffRef(i)     = fraction_to_boundary_rate_;
-    }
   }
 }
 
 
 void ContactDistance::computePrimalAndDualResidual(
     Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  data.residual.setZero();
+  data.duality.setZero();
   robot.updateFrameKinematics(s.q);
   for (int i=0; i<dimc_; ++i) {
     if (!s.isContactActive(i)) {

@@ -11,9 +11,9 @@ LinearizedFrictionCone::LinearizedFrictionCone(
     const Robot& robot, const double mu, const double barrier,
     const double fraction_to_boundary_rate)
   : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
-    dimc_(3*robot.maxPointContacts()),
+    dimc_(5*robot.maxPointContacts()),
     mu_(mu),
-    Jac(Eigen::Matrix3d::Zero()) {
+    Jac_() {
   try {
     if (mu <= 0) {
       throw std::out_of_range("invalid value: mu must be positive!");
@@ -23,9 +23,11 @@ LinearizedFrictionCone::LinearizedFrictionCone(
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  Jac << 0, 0, -1,
-         1, 0, -(mu/std::sqrt(2)),
-         0, 1, -(mu/std::sqrt(2));
+  Jac_ <<  0,  0, -1, 
+           1,  0, -(mu/std::sqrt(2)),
+          -1,  0, -(mu/std::sqrt(2)),
+           0,  1, -(mu/std::sqrt(2)),
+           0, -1, -(mu/std::sqrt(2));
 }
 
 
@@ -33,7 +35,7 @@ LinearizedFrictionCone::LinearizedFrictionCone()
   : ConstraintComponentBase(),
     dimc_(0),
     mu_(0),
-    Jac() {
+    Jac_() {
 }
 
 
@@ -52,14 +54,16 @@ void LinearizedFrictionCone::setFrictionCoefficient(const double mu) {
     std::exit(EXIT_FAILURE);
   }
   mu_ = mu;
-  Jac << 0, 0, -1,
-         1, 0, -(mu/std::sqrt(2)),
-         0, 1, -(mu/std::sqrt(2));
+  Jac_ <<  0,  0, -1, 
+           1,  0, -(mu/std::sqrt(2)),
+          -1,  0, -(mu/std::sqrt(2)),
+           0,  1, -(mu/std::sqrt(2)),
+           0, -1, -(mu/std::sqrt(2));
 }
 
 
 bool LinearizedFrictionCone::useKinematics() const {
-  return true;
+  return false;
 }
 
 
@@ -72,11 +76,11 @@ void LinearizedFrictionCone::allocateExtraData(
     ConstraintComponentData& data) const {
   data.r.clear();
   for (int i=0; i<dimc_; ++i) {
-    data.r.push_back(Eigen::VectorXd::Zero(3));
+    data.r.push_back(Eigen::VectorXd::Zero(5));
   }
   data.J.clear();
   for (int i=0; i<dimc_; ++i) {
-    data.J.push_back(Eigen::MatrixXd::Zero(3, 3));
+    data.J.push_back(Eigen::MatrixXd::Zero(5, 3));
   }
 }
 
@@ -86,10 +90,8 @@ bool LinearizedFrictionCone::isFeasible(Robot& robot,
                                         const SplitSolution& s) const {
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
-      if (frictionConeResidual(mu_, s.f[i]).minCoeff() > 0) {
-        return false;
-      }
-      if (normalForceResidual(s.f[i]) > 0) {
+      frictionConeResidual(mu_, s.f[i], data.residual.template segment<5>(5*i));
+      if (data.residual.maxCoeff() > 0) {
         return false;
       }
     }
@@ -102,10 +104,9 @@ void LinearizedFrictionCone::setSlackAndDual(Robot& robot,
                                              ConstraintComponentData& data, 
                                              const SplitSolution& s) const {
   for (int i=0; i<robot.maxPointContacts(); ++i) {
-    const int idx = 3*i;
-    data.slack.coeffRef(idx) = - normalForceResidual(s.f[i]);
-    data.slack.template segment<2>(idx+1) 
-        = - frictionConeResidual(mu_, s.f[i]);
+    frictionConeResidual(mu_, s.f[i], data.residual.template segment<5>(5*i));
+    data.slack.template segment<5>(5*i)
+        = - data.residual.template segment<5>(5*i);
   }
   setSlackAndDualPositive(data);
 }
@@ -119,7 +120,7 @@ void LinearizedFrictionCone::augmentDualResidual(
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
-          += dtau * Jac.transpose() * data.dual.template segment<3>(3*i);
+          += dtau * Jac_.transpose() * data.dual.template segment<5>(5*i);
       dimf_stack += 3;
     }
   }
@@ -135,19 +136,19 @@ void LinearizedFrictionCone::condenseSlackAndDual(
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
-      const int idx = 3*i;
+      const int idx = 5*i;
       data.r[i].array() 
-          = (data.dual.template segment<3>(idx).array()
-              *data.residual.template segment<3>(idx).array()
-              -data.duality.template segment<3>(idx).array())
-              / data.slack.template segment<3>(idx).array();
+          = (data.dual.template segment<5>(idx).array()
+              *data.residual.template segment<5>(idx).array()
+              -data.duality.template segment<5>(idx).array())
+              / data.slack.template segment<5>(idx).array();
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
-          += dtau * Jac.transpose() * data.r[i];
-      data.r[i].array() = data.dual.template segment<3>(idx).array() 
-                          / data.slack.template segment<3>(idx).array();
-      data.J[i].noalias() = data.r[i].asDiagonal() * Jac;
+          += dtau * Jac_.transpose() * data.r[i];
+      data.r[i].array() = data.dual.template segment<5>(idx).array() 
+                          / data.slack.template segment<5>(idx).array();
+      data.J[i].noalias() = data.r[i].asDiagonal() * Jac_;
       kkt_matrix.Qff().template block<3, 3>(dimf_stack, dimf_stack).noalias()
-          += dtau * Jac.transpose() * data.J[i];
+          += dtau * Jac_.transpose() * data.J[i];
       dimf_stack += 3;
     }
   }
@@ -167,11 +168,11 @@ void LinearizedFrictionCone::computeSlackAndDualDirection(
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
-      const int idx = 3*i;
-      data.dslack.template segment<3>(idx).noalias()
-          = - Jac * d.df().segment<3>(dimf_stack) 
-              - data.residual.template segment<3>(idx);
-      for (int j=0; j<3; ++j) {
+      const int idx = 5*i;
+      data.dslack.template segment<5>(idx).noalias()
+          = - Jac_ * d.df().segment<3>(dimf_stack) 
+              - data.residual.template segment<5>(idx);
+      for (int j=0; j<5; ++j) {
         data.ddual.coeffRef(idx+j) = computeDualDirection(data.slack.coeff(idx+j), 
                                                           data.dual.coeff(idx+j), 
                                                           data.dslack.coeff(idx+j), 
@@ -189,13 +190,9 @@ void LinearizedFrictionCone::computePrimalAndDualResidual(
   data.duality.setZero();
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
-      const int idx = 3*i;
-      data.residual.coeffRef(idx) = normalForceResidual(s.f[i]) 
-                                      + data.slack.coeff(idx);
-      data.residual.template segment<2>(idx+1) 
-          = frictionConeResidual(mu_, s.f[i]) 
-              + data.slack.template segment<2>(idx+1);
-      for (int j=0; j<3; ++j) {
+      const int idx = 5*i;
+      frictionConeResidual(mu_, s.f[i], data.residual.template segment<5>(idx));
+      for (int j=0; j<5; ++j) {
         data.duality.coeffRef(idx+j) = computeDuality(data.slack.coeff(idx+j), 
                                                       data.dual.coeff(idx+j));
       }

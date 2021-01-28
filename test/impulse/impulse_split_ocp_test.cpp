@@ -18,7 +18,7 @@
 #include "idocp/cost/configuration_space_cost.hpp"
 #include "idocp/cost/contact_force_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/constraints/impulse_normal_force.hpp"
+#include "idocp/constraints/impulse_friction_cone.hpp"
 
 
 namespace idocp {
@@ -91,9 +91,9 @@ std::shared_ptr<CostFunction> ImpulseSplitOCPTest::createCost(const Robot& robot
 
 
 std::shared_ptr<Constraints> ImpulseSplitOCPTest::createConstraints(const Robot& robot) {
-  auto impulse_normal_force = std::make_shared<ImpulseNormalForce>(robot);
+  auto impulse_friction_cone = std::make_shared<ImpulseFrictionCone>(robot, 0.8);
   auto constraints = std::make_shared<Constraints>();
-  constraints->push_back(impulse_normal_force);
+  constraints->push_back(impulse_friction_cone);
   return constraints;
 }
 

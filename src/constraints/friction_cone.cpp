@@ -51,7 +51,7 @@ void FrictionCone::setFrictionCoefficient(const double mu) {
 
 
 bool FrictionCone::useKinematics() const {
-  return true;
+  return false;
 }
 
 

@@ -88,7 +88,7 @@ where "unconstrained" rigid-body systems are systems without any contacts or a f
 
 ## Examples
 Examples are found in `examples` directory.
-The following animations are the solution trajectory of the `idocp::UnOCPSolver` for a robot manipulator iiwa14 under inequality constraints (joint angle limits, joint velocity limits, and joint torques limits).
+The following animations are the solution trajectory of the `idocp::UnOCPSolver` for a robot manipulator iiwa14.
 
 - Configuration-space optimal control (`iiwa14/config_space_ocp.cpp`)
 
@@ -98,7 +98,7 @@ The following animations are the solution trajectory of the `idocp::UnOCPSolver`
 
 <img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/iiwa14_task_ocp.gif" width="170">
 
-The following animations are the solution trajectory of the `idocp::OCPSolver` for a quadruped ANYmal under inequality constraints (joint angle limits, joint velocity limits, joint torques limits, and friction cones).
+The following animations are the solution trajectory of the `idocp::OCPSolver` for a quadruped ANYmal.
 
 
 - Trotting (`anymal/anymal_trotting.cpp`)

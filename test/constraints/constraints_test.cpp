@@ -22,7 +22,6 @@
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
 #include "idocp/constraints/joint_acceleration_lower_limit.hpp"
 #include "idocp/constraints/joint_acceleration_upper_limit.hpp"
-#include "idocp/constraints/contact_normal_force.hpp"
 #include "idocp/constraints/friction_cone.hpp"
 #include "idocp/constraints/pdipm.hpp"
 
@@ -78,8 +77,7 @@ std::shared_ptr<Constraints> ConstraintsTest::createConstraints(Robot& robot) co
   }
   auto joint_accel_lower = std::make_shared<idocp::JointAccelerationLowerLimit>(robot, amin);
   auto joint_accel_upper = std::make_shared<idocp::JointAccelerationUpperLimit>(robot, amax);
-  auto contact_normal_force = std::make_shared<idocp::ContactNormalForce>(robot);
-  auto friction_cone = std::make_shared<idocp::FrictionCone>(robot);
+  auto friction_cone = std::make_shared<idocp::FrictionCone>(robot, 0.7);
   auto constraints = std::make_shared<Constraints>();
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
@@ -89,7 +87,6 @@ std::shared_ptr<Constraints> ConstraintsTest::createConstraints(Robot& robot) co
   constraints->push_back(joint_torques_upper);
   constraints->push_back(joint_accel_lower);
   constraints->push_back(joint_accel_upper);
-  constraints->push_back(contact_normal_force);
   constraints->push_back(friction_cone);
   return constraints;  
 }
@@ -102,7 +99,7 @@ void ConstraintsTest::timeStage0(Robot& robot, const ContactStatus& contact_stat
   EXPECT_TRUE(data.position_level_data.empty());
   EXPECT_TRUE(data.velocity_level_data.empty());
   EXPECT_FALSE(data.acceleration_level_data.empty());
-  EXPECT_EQ(data.acceleration_level_data.size(), 6);
+  EXPECT_EQ(data.acceleration_level_data.size(), 5);
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitKKTMatrix kkt_matrix(robot);
@@ -142,7 +139,7 @@ void ConstraintsTest::timeStage1(Robot& robot, const ContactStatus& contact_stat
   EXPECT_FALSE(data.velocity_level_data.empty());
   EXPECT_FALSE(data.acceleration_level_data.empty());
   EXPECT_EQ(data.velocity_level_data.size(), 2);
-  EXPECT_EQ(data.acceleration_level_data.size(), 6);
+  EXPECT_EQ(data.acceleration_level_data.size(), 5);
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitKKTMatrix kkt_matrix(robot);
@@ -183,7 +180,7 @@ void ConstraintsTest::timeStage2(Robot& robot, const ContactStatus& contact_stat
   EXPECT_FALSE(data.acceleration_level_data.empty());
   EXPECT_EQ(data.position_level_data.size(), 2);
   EXPECT_EQ(data.velocity_level_data.size(), 2);
-  EXPECT_EQ(data.acceleration_level_data.size(), 6);
+  EXPECT_EQ(data.acceleration_level_data.size(), 5);
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitKKTMatrix kkt_matrix(robot);

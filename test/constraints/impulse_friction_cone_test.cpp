@@ -24,7 +24,7 @@ protected:
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     barrier = 1.0e-04;
-    mu = 0.8;
+    mu = 0.7;
     fraction_to_boundary_rate = 0.995;
   }
 
@@ -45,15 +45,15 @@ protected:
 
 
 void ImpulseFrictionConeTest::testKinematics(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone limit(robot); 
+  ImpulseFrictionCone limit(robot, mu); 
   EXPECT_TRUE(limit.kinematicsLevel() == KinematicsLevel::AccelerationLevel);
 }
 
 
 void ImpulseFrictionConeTest::testIsFeasible(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone limit(robot); 
+  ImpulseFrictionCone limit(robot, mu); 
   ConstraintComponentData data(limit.dimc());
-  EXPECT_EQ(limit.dimc(), impulse_status.maxPointContacts());
+  EXPECT_EQ(limit.dimc(), 2*impulse_status.maxPointContacts());
   ImpulseSplitSolution s(robot);
   s.setImpulseStatus(impulse_status);
   s.f_stack().setZero();
@@ -68,7 +68,10 @@ void ImpulseFrictionConeTest::testIsFeasible(Robot& robot, const ImpulseStatus& 
     bool feasible = true;
     for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
       if (impulse_status.isImpulseActive(i)) {
-        if (ImpulseFrictionCone::frictionConeResidual(robot.frictionCoefficient(i), s.f[i]) > 0) {
+        if (ImpulseFrictionCone::normalForceResidual(s.f[i]) > 0) {
+          feasible = false;
+        }
+        if (ImpulseFrictionCone::frictionConeResidual(mu, s.f[i]) > 0) {
           feasible = false;
         }
       }
@@ -79,7 +82,7 @@ void ImpulseFrictionConeTest::testIsFeasible(Robot& robot, const ImpulseStatus& 
 
 
 void ImpulseFrictionConeTest::testSetSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone limit(robot); 
+  ImpulseFrictionCone limit(robot, mu); 
   ConstraintComponentData data(limit.dimc()), data_ref(limit.dimc());
   limit.allocateExtraData(data);
   limit.allocateExtraData(data_ref);
@@ -87,7 +90,8 @@ void ImpulseFrictionConeTest::testSetSlackAndDual(Robot& robot, const ImpulseSta
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   limit.setSlackAndDual(robot, data, s);
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
-    data_ref.slack.coeffRef(i) = - ImpulseFrictionCone::frictionConeResidual(robot.frictionCoefficient(i), s.f[i]);
+    data_ref.slack(2*i)   = - ImpulseFrictionCone::normalForceResidual(s.f[i]);
+    data_ref.slack(2*i+1) = - ImpulseFrictionCone::frictionConeResidual(mu, s.f[i]);
   }
   pdipm::SetSlackAndDualPositive(barrier, data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));
@@ -95,7 +99,7 @@ void ImpulseFrictionConeTest::testSetSlackAndDual(Robot& robot, const ImpulseSta
 
 
 void ImpulseFrictionConeTest::testAugmentDualResidual(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone limit(robot); 
+  ImpulseFrictionCone limit(robot, mu); 
   ConstraintComponentData data(limit.dimc());
   limit.allocateExtraData(data);
   const int dimc = limit.dimc();
@@ -110,13 +114,13 @@ void ImpulseFrictionConeTest::testAugmentDualResidual(Robot& robot, const Impuls
   int dimf_stack = 0;
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      const double mu = robot.frictionCoefficient(i);
+      kkt_res_ref.lf().coeffRef(dimf_stack+2) -= data_ref.dual(2*i);
       Eigen::Vector3d gf;
       gf(0) = 2 * s.f[i].coeff(0);
       gf(1) = 2 * s.f[i].coeff(1);
       gf(2) = - 2 * mu * mu * s.f[i].coeff(2);
       EXPECT_TRUE(gf.isApprox(data.r[i]));
-      kkt_res_ref.lf().segment<3>(dimf_stack) += gf * data_ref.dual(i);
+      kkt_res_ref.lf().segment<3>(dimf_stack) += gf * data_ref.dual(2*i+1);
       dimf_stack += 3;
     }
   }
@@ -125,7 +129,7 @@ void ImpulseFrictionConeTest::testAugmentDualResidual(Robot& robot, const Impuls
 
 
 void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone limit(robot); 
+  ImpulseFrictionCone limit(robot, mu); 
   const int dimc = limit.dimc();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   ConstraintComponentData data(limit.dimc());
@@ -134,17 +138,12 @@ void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, con
   data.dual.setRandom();
   ConstraintComponentData data_ref = data;
   limit.computePrimalAndDualResidual(robot, data, s);
-  int dimf_stack = 0;
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      const double mu = robot.frictionCoefficient(i);
-      const double fx = s.f[i].coeff(0);
-      const double fy = s.f[i].coeff(1);
-      const double fz = s.f[i].coeff(2);
-      const double cone = fx*fx + fy*fy - mu*mu*fz*fz;
-      data_ref.residual.coeffRef(i) = cone + data_ref.slack.coeff(i);
-      data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
-      dimf_stack += 3;
+      data_ref.residual(2*i)   = ImpulseFrictionCone::normalForceResidual(s.f[i]) + data_ref.slack(2*i);
+      data_ref.residual(2*i+1) = ImpulseFrictionCone::frictionConeResidual(mu, s.f[i]) + data_ref.slack(2*i+1);
+      data_ref.duality(2*i)   = data_ref.slack(2*i)   * data_ref.dual(2*i)   - barrier;
+      data_ref.duality(2*i+1) = data_ref.slack(2*i+1) * data_ref.dual(2*i+1) - barrier;
     }
   }
   EXPECT_TRUE(data.isApprox(data_ref));
@@ -152,7 +151,7 @@ void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, con
 
 
 void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone limit(robot); 
+  ImpulseFrictionCone limit(robot, mu); 
   ConstraintComponentData data(limit.dimc());
   limit.allocateExtraData(data);
   const int dimc = limit.dimc();
@@ -169,33 +168,32 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, const Impul
   ImpulseSplitKKTMatrix kkt_mat_ref = kkt_mat;
   ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
   limit.condenseSlackAndDual(robot, data, s, kkt_mat, kkt_res);
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+    if (impulse_status.isImpulseActive(i)) {
+      data_ref.residual(2*i)   = ImpulseFrictionCone::normalForceResidual(s.f[i]) + data_ref.slack(2*i);
+      data_ref.residual(2*i+1) = ImpulseFrictionCone::frictionConeResidual(mu, s.f[i]) + data_ref.slack(2*i+1);
+      data_ref.duality(2*i)   = data_ref.slack(2*i)   * data_ref.dual(2*i)   - barrier;
+      data_ref.duality(2*i+1) = data_ref.slack(2*i+1) * data_ref.dual(2*i+1) - barrier;
+    }
+  }
   int dimf_stack = 0;
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      const double mu = robot.frictionCoefficient(i);
-      const double fx = s.f[i].coeff(0);
-      const double fy = s.f[i].coeff(1);
-      const double fz = s.f[i].coeff(2);
-      const double cone = fx*fx + fy*fy - mu*mu*fz*fz;
-      data_ref.residual.coeffRef(i) = cone + data_ref.slack.coeff(i);
-      data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
-      dimf_stack += 3;
-    }
-  }
-  dimf_stack = 0;
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
-      const double mu = robot.frictionCoefficient(i);
+      kkt_res_ref.lf().coeffRef(dimf_stack+2) 
+          -= (data_ref.dual(2*i)*data_ref.residual(2*i)-data_ref.duality(2*i)) 
+                  / data_ref.slack(2*i);
+      kkt_mat_ref.Qff().coeffRef(dimf_stack+2, dimf_stack+2)
+          += data_ref.dual(2*i) / data_ref.slack(2*i);
       Eigen::Vector3d gf;
       gf(0) = 2 * s.f[i].coeff(0);
       gf(1) = 2 * s.f[i].coeff(1);
       gf(2) = - 2 * mu * mu * s.f[i].coeff(2);
       EXPECT_TRUE(gf.isApprox(data.r[i]));
       kkt_res_ref.lf().segment<3>(dimf_stack) 
-          += gf * (data_ref.dual.coeff(i)*data_ref.residual.coeff(i)-data_ref.duality.coeff(i)) 
-                / data_ref.slack.coeff(i);
+          += gf * (data_ref.dual(2*i+1)*data_ref.residual(2*i+1)-data_ref.duality(2*i+1)) 
+                  / data_ref.slack(2*i+1);
       kkt_mat_ref.Qff().block<3, 3>(dimf_stack, dimf_stack)
-          += gf * gf.transpose() * data_ref.dual.coeff(i) / data_ref.slack.coeff(i);
+          += gf * gf.transpose() * data_ref.dual(2*i+1) / data_ref.slack(2*i+1);
       dimf_stack += 3;
     }
   }
@@ -205,7 +203,7 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, const Impul
 
 
 void ImpulseFrictionConeTest::testComputeSlackAndDualDirection(Robot& robot, const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone limit(robot); 
+  ImpulseFrictionCone limit(robot, mu); 
   ConstraintComponentData data(limit.dimc());
   limit.allocateExtraData(data);
   const int dimc = limit.dimc();
@@ -224,30 +222,34 @@ void ImpulseFrictionConeTest::testComputeSlackAndDualDirection(Robot& robot, con
   ConstraintComponentData data_ref = data;
   const ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
   limit.computeSlackAndDualDirection(robot, data, s, d);
+  data_ref.dslack.fill(1.0);
+  data_ref.ddual.fill(1.0);
   int dimf_stack = 0;
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      const double mu = robot.frictionCoefficient(i);
+      data_ref.dslack(2*i) = d.df().coeff(dimf_stack+2) - data_ref.residual(2*i);
+      data_ref.ddual(2*i)  = - (data_ref.dual(2*i)*data_ref.dslack(2*i)+data_ref.duality(2*i))
+                                      / data_ref.slack(2*i);
       Eigen::Vector3d gf;
       gf(0) = 2 * s.f[i].coeff(0);
       gf(1) = 2 * s.f[i].coeff(1);
       gf(2) = - 2 * mu * mu * s.f[i].coeff(2);
       EXPECT_TRUE(gf.isApprox(data.r[i]));
-      data_ref.dslack.coeffRef(i) = - gf.dot(d.df().segment<3>(dimf_stack)) - data_ref.residual.coeff(i);
-      data_ref.ddual.coeffRef(i) = - (data_ref.dual.coeff(i)*data_ref.dslack.coeff(i)+data_ref.duality.coeff(i))
-                                      / data_ref.slack.coeff(i);
+      data_ref.dslack(2*i+1) = - gf.dot(d.df().segment<3>(dimf_stack)) - data_ref.residual(2*i+1);
+      data_ref.ddual(2*i+1) = - (data_ref.dual(2*i+1)*data_ref.dslack(2*i+1)+data_ref.duality(2*i+1))
+                                      / data_ref.slack(2*i+1);
       dimf_stack += 3;
-    }
-    else {
-      data_ref.residual.coeffRef(i) = 0;
-      data_ref.duality.coeffRef(i)  = 0;
-      data_ref.slack.coeffRef(i)    = 1.0;
-      data_ref.dslack.coeffRef(i)   = fraction_to_boundary_rate;
-      data_ref.dual.coeffRef(i)     = 1.0;
-      data_ref.ddual.coeffRef(i)    = fraction_to_boundary_rate;
     }
   }
   EXPECT_TRUE(data.isApprox(data_ref));
+}
+
+
+TEST_F(ImpulseFrictionConeTest, normalForceResidual) {
+  const Eigen::Vector3d f = Eigen::Vector3d::Random();
+  const double fz = f(2);
+  const double normal_ref = - fz;
+  EXPECT_DOUBLE_EQ(normal_ref, ImpulseFrictionCone::normalForceResidual(f));
 }
 
 

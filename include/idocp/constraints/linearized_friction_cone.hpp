@@ -68,23 +68,28 @@ public:
 
   int dimc() const override;
 
-  static Eigen::Vector2d frictionConeResidual(const double mu, 
-                                              const Eigen::Vector3d& f) {
+  template <typename VectorType>
+  static void frictionConeResidual(const double mu, const Eigen::Vector3d& f,
+                                   const Eigen::MatrixBase<VectorType>& res) {
     assert(mu > 0);
-    Eigen::Vector2d res;
-    res.coeffRef(0) = f.coeff(0) - mu * f.coeff(2) / std::sqrt(2);
-    res.coeffRef(1) = f.coeff(1) - mu * f.coeff(2) / std::sqrt(2);
-    return res;
+    assert(res.size() == 5);
+    const_cast<Eigen::MatrixBase<VectorType>&>(res).coeffRef(0) = - f.coeff(2);
+    const_cast<Eigen::MatrixBase<VectorType>&>(res).coeffRef(1) 
+        = f.coeff(0) - mu * f.coeff(2) / std::sqrt(2);
+    const_cast<Eigen::MatrixBase<VectorType>&>(res).coeffRef(2) 
+        = - f.coeff(0) - mu * f.coeff(2) / std::sqrt(2);
+    const_cast<Eigen::MatrixBase<VectorType>&>(res).coeffRef(3) 
+        = f.coeff(1) - mu * f.coeff(2) / std::sqrt(2);
+    const_cast<Eigen::MatrixBase<VectorType>&>(res).coeffRef(4) 
+        = - f.coeff(1) - mu * f.coeff(2) / std::sqrt(2);
   }
 
-  static double normalForceResidual(const Eigen::Vector3d& f) {
-    return (- f.coeff(2));
-  }
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
 
 private:
   int dimc_;
   double mu_;
-  Eigen::Matrix3d Jac;
+  Eigen::Matrix<double, 5, 3> Jac_;
 
 };
 
