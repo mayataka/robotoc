@@ -46,13 +46,13 @@ int main() {
   idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, 0, nthreads);
 
   // Solves the OCP.
-  ocp_solver.setStateTrajectory(t, q, v);
+  ocp_solver.setSolution("q", q);
+  ocp_solver.setSolution("v", v);
   const int num_iteration = 50;
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);
   const int num_iteration_CPU = 10000;
   idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, num_iteration_CPU, line_search);
-  ocp_solver.printSolution();
 
   return 0;
 }

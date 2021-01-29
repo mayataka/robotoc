@@ -66,7 +66,6 @@ public:
 private:
   int dimv_, dimc_;
   std::vector<int> contact_frames_;
-  double fraction_to_boundary_rate_;
 
 };
 

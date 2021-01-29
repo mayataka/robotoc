@@ -122,6 +122,8 @@ void ContactDistanceTest::testComputePrimalAndDualResidual(Robot& robot, const C
   ConstraintComponentData data_ref = data;
   limit.computePrimalAndDualResidual(robot, data, s);
   robot.updateFrameKinematics(s.q);
+  data_ref.residual.setZero();
+  data_ref.duality.setZero();
   for (int i=0; i<dimc; ++i) {
     if (!contact_status.isContactActive(i)) {
       data_ref.residual.coeffRef(i) = - robot.framePosition(robot.contactFramesIndices()[i]).coeff(2) + data_ref.slack.coeff(i);
@@ -191,6 +193,8 @@ void ContactDistanceTest::testComputeSlackAndDualDirection(Robot& robot, const C
   const SplitDirection d = SplitDirection::Random(robot, contact_status);
   limit.computeSlackAndDualDirection(robot, data, s, d);
   std::vector<Eigen::MatrixXd> J(dimc, Eigen::MatrixXd::Zero(6, robot.dimv()));
+  data_ref.dslack.fill(1.0);
+  data_ref.ddual.fill(1.0);
   for (int i=0; i<dimc; ++i) {
     robot.getFrameJacobian(robot.contactFramesIndices()[i], J[i]);
   }
@@ -200,14 +204,6 @@ void ContactDistanceTest::testComputeSlackAndDualDirection(Robot& robot, const C
       data_ref.dslack.coeffRef(i) = Jrow2.dot(d.dq()) - data_ref.residual.coeff(i);
       data_ref.ddual.coeffRef(i) = - (data_ref.dual.coeff(i)*data_ref.dslack.coeff(i)+data_ref.duality.coeff(i))
                                       / data_ref.slack.coeff(i);
-    }
-    else {
-      data_ref.residual.coeffRef(i) = 0;
-      data_ref.duality.coeffRef(i)  = 0;
-      data_ref.slack.coeffRef(i)    = 1.0;
-      data_ref.dslack.coeffRef(i)   = fraction_to_boundary_rate;
-      data_ref.dual.coeffRef(i)     = 1.0;
-      data_ref.ddual.coeffRef(i)    = fraction_to_boundary_rate;
     }
   }
   EXPECT_TRUE(data.isApprox(data_ref));

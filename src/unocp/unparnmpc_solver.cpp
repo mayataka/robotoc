@@ -122,18 +122,32 @@ void UnParNMPCSolver::getStateFeedbackGain(const int time_stage,
 }
 
 
-bool UnParNMPCSolver::setStateTrajectory(const double t, 
-                                         const Eigen::VectorXd& q, 
-                                         const Eigen::VectorXd& v) {
-  assert(q.size() == robots_[0].dimq());
-  assert(v.size() == robots_[0].dimv());
-  for (auto& e : s_) {
-    e.v = v;
-    e.q = q;
+void UnParNMPCSolver::setSolution(const std::string& name, 
+                                  const Eigen::VectorXd& value) {
+  try {
+    if (name == "q") {
+      for (auto& e : s_) { e.q = value; }
+    }
+    else if (name == "v") {
+      for (auto& e : s_) { e.v = value; }
+    }
+    else if (name == "a") {
+      for (auto& e : s_) { e.a  = value; }
+    }
+    else if (name == "u") {
+      for (auto& e : s_) { e.u = value; }
+    }
+    else {
+      throw std::invalid_argument("invalid arugment: name must be q, v, a, or u!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
   }
   initConstraints();
-  return isCurrentSolutionFeasible();
 }
+
 
 
 void UnParNMPCSolver::clearLineSearchFilter() {

@@ -16,6 +16,8 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
+#include "idocp/constraints/friction_cone.hpp"
+#include "idocp/constraints/impulse_friction_cone.hpp"
 
 #include "idocp/utils/ocp_benchmarker.hpp"
 
@@ -32,7 +34,7 @@ int main(int argc, char *argv[]) {
   const double jump_length = 0.25;
   const double t_start = 1.0;
   const double t_jumping = 0.15;
-  const double t_ground = 0.85;
+  const double t_ground = 1.0;
 
   auto cost = std::make_shared<idocp::CostFunction>();
   Eigen::VectorXd q_standing(Eigen::VectorXd::Zero(robot.dimq()));
@@ -89,19 +91,24 @@ int main(int argc, char *argv[]) {
   contact_cost->set_f_ref(f_ref);
   cost->push_back(contact_cost);
 
-  auto constraints          = std::make_shared<idocp::Constraints>();
-  auto joint_position_lower = std::make_shared<idocp::JointPositionLowerLimit>(robot);
-  auto joint_position_upper = std::make_shared<idocp::JointPositionUpperLimit>(robot);
-  auto joint_velocity_lower = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
-  auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
-  auto joint_torques_lower  = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
-  auto joint_torques_upper  = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  auto constraints           = std::make_shared<idocp::Constraints>();
+  auto joint_position_lower  = std::make_shared<idocp::JointPositionLowerLimit>(robot);
+  auto joint_position_upper  = std::make_shared<idocp::JointPositionUpperLimit>(robot);
+  auto joint_velocity_lower  = std::make_shared<idocp::JointVelocityLowerLimit>(robot);
+  auto joint_velocity_upper  = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
+  auto joint_torques_lower   = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
+  auto joint_torques_upper   = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  const double mu = 0.7;
+  auto friction_cone         = std::make_shared<idocp::FrictionCone>(robot, mu);
+  auto impulse_friction_cone = std::make_shared<idocp::ImpulseFrictionCone>(robot, mu);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
   constraints->push_back(joint_velocity_upper);
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
+  constraints->push_back(friction_cone);
+  constraints->push_back(impulse_friction_cone);
 
   const double T = 5; 
   const int N = 100;
@@ -142,9 +149,14 @@ int main(int argc, char *argv[]) {
         0.1, -0.7,  1.0; // RH
   Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 
-  ocp_solver.setStateTrajectory(t, q, v);
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 150, false);
-  ocp_solver.printSolution("end-effector", robot.contactFramesIndices());
+  ocp_solver.setSolution("q", q);
+  ocp_solver.setSolution("v", v);
+  Eigen::Vector3d f_init;
+  f_init << 0, 0, 0.25*robot.totalWeight();
+  ocp_solver.setSolution("f", f_init);
+
+  const bool line_search = true;
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 150, line_search);
 
 #ifdef ENABLE_VIEWER
   if (argc != 2) {

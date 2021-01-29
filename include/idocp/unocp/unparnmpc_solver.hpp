@@ -111,13 +111,7 @@ public:
   void getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq, 
                             Eigen::MatrixXd& Kv) const;
 
-  ///
-  /// @brief Sets the configuration and velocity over the horizon uniformly. 
-  /// @param[in] q Configuration. Size must be Robot::dimq().
-  /// @param[in] v Velocity. Size must be Robot::dimv().
-  ///
-  bool setStateTrajectory(const double t, const Eigen::VectorXd& q, 
-                          const Eigen::VectorXd& v);
+  void setSolution(const std::string& name, const Eigen::VectorXd& value);
 
   ///
   /// @brief Clear the line search filter. 

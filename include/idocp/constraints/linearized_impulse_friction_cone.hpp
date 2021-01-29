@@ -1,5 +1,5 @@
-#ifndef IDOCP_IMPULSE_FRICTION_CONE_HPP_
-#define IDOCP_IMPULSE_FRICTION_CONE_HPP_
+#ifndef IDOCP_LINEARIZED_IMPULSE_FRICTION_CONE_HPP_
+#define IDOCP_LINEARIZED_IMPULSE_FRICTION_CONE_HPP_
 
 #include "Eigen/Core"
 
@@ -14,27 +14,30 @@
 
 namespace idocp {
 
-class ImpulseFrictionCone final : public ImpulseConstraintComponentBase {
+class LinearizedImpulseFrictionCone final : public ImpulseConstraintComponentBase {
 public:
-  ImpulseFrictionCone(const Robot& robot, const double mu, 
-                      const double barrier=1.0e-04,
-                      const double fraction_to_boundary_rate=0.995);
+  LinearizedImpulseFrictionCone(const Robot& robot, const double mu, 
+                                const double barrier=1.0e-04,
+                                const double fraction_to_boundary_rate=0.995);
 
-  ImpulseFrictionCone();
+  LinearizedImpulseFrictionCone();
 
-  ~ImpulseFrictionCone();
+  ~LinearizedImpulseFrictionCone();
 
   // Use default copy constructor.
-  ImpulseFrictionCone(const ImpulseFrictionCone&) = default;
+  LinearizedImpulseFrictionCone(const LinearizedImpulseFrictionCone&) = default;
 
   // Use default copy coperator.
-  ImpulseFrictionCone& operator=(const ImpulseFrictionCone&) = default;
+  LinearizedImpulseFrictionCone& operator=(
+      const LinearizedImpulseFrictionCone&) = default;
 
   // Use default move constructor.
-  ImpulseFrictionCone(ImpulseFrictionCone&&) noexcept = default;
+  LinearizedImpulseFrictionCone(
+      LinearizedImpulseFrictionCone&&) noexcept = default;
 
   // Use default move assign coperator.
-  ImpulseFrictionCone& operator=(ImpulseFrictionCone&&) noexcept = default;
+  LinearizedImpulseFrictionCone& operator=(
+      LinearizedImpulseFrictionCone&&) noexcept = default;
 
   void setFrictionCoefficient(const double mu);
 
@@ -66,15 +69,20 @@ public:
   
   int dimc() const override;
 
-  static double frictionConeResidual(const double mu, 
-                                     const Eigen::Vector3d& f) {
+  template <typename VectorType>
+  static void frictionConeResidual(const double mu, const Eigen::Vector3d& f,
+                                   const Eigen::MatrixBase<VectorType>& res) {
     assert(mu > 0);
-    return (f.coeff(0)*f.coeff(0) + f.coeff(1)*f.coeff(1)
-            - mu*mu*f.coeff(2)*f.coeff(2));
-  }
-
-  static double normalForceResidual(const Eigen::Vector3d& f) {
-    return (- f.coeff(2));
+    assert(res.size() == 5);
+    const_cast<Eigen::MatrixBase<VectorType>&>(res).coeffRef(0) = - f.coeff(2);
+    const_cast<Eigen::MatrixBase<VectorType>&>(res).coeffRef(1) 
+        = f.coeff(0) - mu * f.coeff(2) / std::sqrt(2);
+    const_cast<Eigen::MatrixBase<VectorType>&>(res).coeffRef(2) 
+        = - f.coeff(0) - mu * f.coeff(2) / std::sqrt(2);
+    const_cast<Eigen::MatrixBase<VectorType>&>(res).coeffRef(3) 
+        = f.coeff(1) - mu * f.coeff(2) / std::sqrt(2);
+    const_cast<Eigen::MatrixBase<VectorType>&>(res).coeffRef(4) 
+        = - f.coeff(1) - mu * f.coeff(2) / std::sqrt(2);
   }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
@@ -82,9 +90,10 @@ public:
 private:
   int dimc_;
   double mu_;
+  Eigen::Matrix<double, 5, 3> Jac_;
 
 };
 
 } // namespace idocp
 
-#endif // IDOCP_IMPULSE_FRICTION_CONE_HPP_ 
+#endif // IDOCP_LINEARIZED_IMPULSE_FRICTION_CONE_HPP_ 

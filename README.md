@@ -14,19 +14,19 @@
 
 ## Requirements
 - Ubuntu 18.04 or 20.04
-- gcc, CMake
+- gcc (at least C++11 is required), CMake (at least version 3.1)
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  
 - [pinocchio](https://github.com/stack-of-tasks/pinocchio) (instruction for installation is found [here](https://stack-of-tasks.github.io/pinocchio/download.html))
 - [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) (Optional to visualize the solution trajectory) 
 
 ## Installation 
-1. Install latest stable version of Eigen3 by 
+1. Install the latest stable version of Eigen3 by 
 
 ```
 sudo apt install libeigen3-dev
 ```
 
-2. Install latest stable version of pinocchio by following the [instruction](https://stack-of-tasks.github.io/pinocchio/download.html)
+2. Install the latest stable version of pinocchio by following the [instruction](https://stack-of-tasks.github.io/pinocchio/download.html)
 3. Clone this repository and change directory as
 
 ```
