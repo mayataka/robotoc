@@ -9,12 +9,13 @@ namespace idocp {
 
 inline ImpulseSplitOCP::ImpulseSplitOCP(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints) 
+    const std::shared_ptr<Constraints>& constraints,
+    const double penalty) 
   : cost_(cost),
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
     constraints_data_(constraints->createConstraintsData(robot, -1)),
-    impulse_dynamics_(robot) {
+    impulse_dynamics_(robot, penalty) {
 }
 
 

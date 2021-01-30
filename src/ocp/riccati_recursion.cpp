@@ -133,44 +133,44 @@ void RiccatiRecursion::forwardStateConstraintFactorization(
     const OCPDiscretizer& ocp_discretizer, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, 
     RiccatiFactorization& riccati_factorization) {
-  const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
-  riccati_factorizer[0].forwardStateConstraintFactorizationInitial(
-      riccati_factorization[0]);
-  for (int i=0; i<N_; ++i) {
-    if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-      const int impulse_idx = ocp_discretizer.impulseIndexAfterTimeStage(i);
-      riccati_factorizer[i].forwardStateConstraintFactorization(
-          riccati_factorization[i], kkt_matrix[i], kkt_residual[i],
-          ocp_discretizer.dtau(i), riccati_factorization.impulse[impulse_idx],
-          exist_state_constraint);
-      riccati_factorizer.impulse[impulse_idx].forwardStateConstraintFactorization(
-          riccati_factorization.impulse[impulse_idx],
-          kkt_matrix.impulse[impulse_idx], kkt_residual.impulse[impulse_idx],
-          riccati_factorization.aux[impulse_idx], exist_state_constraint);
-      riccati_factorizer.aux[impulse_idx].forwardStateConstraintFactorization(
-          riccati_factorization.aux[impulse_idx],
-          kkt_matrix.aux[impulse_idx], kkt_residual.aux[impulse_idx],
-          ocp_discretizer.dtau_aux(impulse_idx), 
-          riccati_factorization[i+1], exist_state_constraint);
-    }
-    else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-      const int lift_idx = ocp_discretizer.liftIndexAfterTimeStage(i);
-      riccati_factorizer[i].forwardStateConstraintFactorization(
-          riccati_factorization[i], kkt_matrix[i], kkt_residual[i], 
-          ocp_discretizer.dtau(i), riccati_factorization.lift[lift_idx], 
-          exist_state_constraint);
-      riccati_factorizer.lift[lift_idx].forwardStateConstraintFactorization(
-          riccati_factorization.lift[lift_idx], kkt_matrix.lift[lift_idx], 
-          kkt_residual.lift[lift_idx], ocp_discretizer.dtau_lift(lift_idx), 
-          riccati_factorization[i+1], exist_state_constraint);
-    }
-    else {
-      riccati_factorizer[i].forwardStateConstraintFactorization(
-        riccati_factorization[i], kkt_matrix[i], kkt_residual[i], 
-        ocp_discretizer.dtau(i), riccati_factorization[i+1], 
-        exist_state_constraint);
-    }
-  }
+  // const bool exist_state_constraint = ocp_discretizer.existStateConstraint();
+  // riccati_factorizer[0].forwardStateConstraintFactorizationInitial(
+  //     riccati_factorization[0]);
+  // for (int i=0; i<N_; ++i) {
+  //   if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
+  //     const int impulse_idx = ocp_discretizer.impulseIndexAfterTimeStage(i);
+  //     riccati_factorizer[i].forwardStateConstraintFactorization(
+  //         riccati_factorization[i], kkt_matrix[i], kkt_residual[i],
+  //         ocp_discretizer.dtau(i), riccati_factorization.impulse[impulse_idx],
+  //         exist_state_constraint);
+  //     riccati_factorizer.impulse[impulse_idx].forwardStateConstraintFactorization(
+  //         riccati_factorization.impulse[impulse_idx],
+  //         kkt_matrix.impulse[impulse_idx], kkt_residual.impulse[impulse_idx],
+  //         riccati_factorization.aux[impulse_idx], exist_state_constraint);
+  //     riccati_factorizer.aux[impulse_idx].forwardStateConstraintFactorization(
+  //         riccati_factorization.aux[impulse_idx],
+  //         kkt_matrix.aux[impulse_idx], kkt_residual.aux[impulse_idx],
+  //         ocp_discretizer.dtau_aux(impulse_idx), 
+  //         riccati_factorization[i+1], exist_state_constraint);
+  //   }
+  //   else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
+  //     const int lift_idx = ocp_discretizer.liftIndexAfterTimeStage(i);
+  //     riccati_factorizer[i].forwardStateConstraintFactorization(
+  //         riccati_factorization[i], kkt_matrix[i], kkt_residual[i], 
+  //         ocp_discretizer.dtau(i), riccati_factorization.lift[lift_idx], 
+  //         exist_state_constraint);
+  //     riccati_factorizer.lift[lift_idx].forwardStateConstraintFactorization(
+  //         riccati_factorization.lift[lift_idx], kkt_matrix.lift[lift_idx], 
+  //         kkt_residual.lift[lift_idx], ocp_discretizer.dtau_lift(lift_idx), 
+  //         riccati_factorization[i+1], exist_state_constraint);
+  //   }
+  //   else {
+  //     riccati_factorizer[i].forwardStateConstraintFactorization(
+  //       riccati_factorization[i], kkt_matrix[i], kkt_residual[i], 
+  //       ocp_discretizer.dtau(i), riccati_factorization[i+1], 
+  //       exist_state_constraint);
+  //   }
+  // }
 }
 
 
@@ -178,51 +178,51 @@ void RiccatiRecursion::backwardStateConstraintFactorization(
     const RiccatiFactorizer& riccati_factorizer, 
     const OCPDiscretizer& ocp_discretizer, const KKTMatrix& kkt_matrix, 
     StateConstraintRiccatiFactorization& constraint_factorization) const {
-  const int num_constraint = ocp_discretizer.numImpulseStages();
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int constraint_idx=0; constraint_idx<num_constraint; ++constraint_idx) {
-    const int time_stage_before_constraint 
-        = ocp_discretizer.timeStageBeforeImpulse(constraint_idx);
-    riccati_factorizer[time_stage_before_constraint].backwardStateConstraintFactorization(
-        constraint_factorization.T_impulse(constraint_idx, constraint_idx), 
-        kkt_matrix[time_stage_before_constraint], 
-        ocp_discretizer.dtau(time_stage_before_constraint), 
-        constraint_factorization.T(constraint_idx, time_stage_before_constraint));
-    for (int i=time_stage_before_constraint-1; i>=0; --i) {
-      if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
-        const int impulse_idx = ocp_discretizer.impulseIndexAfterTimeStage(i);
-        riccati_factorizer.aux[impulse_idx].backwardStateConstraintFactorization(
-            constraint_factorization.T(constraint_idx, i+1), 
-            kkt_matrix.aux[impulse_idx], ocp_discretizer.dtau_aux(impulse_idx), 
-            constraint_factorization.T_aux(constraint_idx, impulse_idx));
-        riccati_factorizer.impulse[impulse_idx].backwardStateConstraintFactorization(
-            constraint_factorization.T_aux(constraint_idx, impulse_idx), 
-            kkt_matrix.impulse[impulse_idx], 
-            constraint_factorization.T_impulse(constraint_idx, impulse_idx));
-        riccati_factorizer[i].backwardStateConstraintFactorization(
-            constraint_factorization.T_impulse(constraint_idx, impulse_idx), 
-            kkt_matrix[i], ocp_discretizer.dtau(i), 
-            constraint_factorization.T(constraint_idx, i));
-      }
-      else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
-        const int lift_idx = ocp_discretizer.liftIndexAfterTimeStage(i);
-        riccati_factorizer.lift[lift_idx].backwardStateConstraintFactorization(
-            constraint_factorization.T(constraint_idx, i+1), 
-            kkt_matrix.lift[lift_idx], ocp_discretizer.dtau_lift(lift_idx), 
-            constraint_factorization.T_lift(constraint_idx, lift_idx));
-        riccati_factorizer[i].backwardStateConstraintFactorization(
-            constraint_factorization.T_lift(constraint_idx, lift_idx), 
-            kkt_matrix[i], ocp_discretizer.dtau(i), 
-            constraint_factorization.T(constraint_idx, i));
-      }
-      else {
-        riccati_factorizer[i].backwardStateConstraintFactorization(
-            constraint_factorization.T(constraint_idx, i+1), 
-            kkt_matrix[i], ocp_discretizer.dtau(i), 
-            constraint_factorization.T(constraint_idx, i));
-      }
-    }
-  }
+  // const int num_constraint = ocp_discretizer.numImpulseStages();
+  // #pragma omp parallel for num_threads(nthreads_)
+  // for (int constraint_idx=0; constraint_idx<num_constraint; ++constraint_idx) {
+  //   const int time_stage_before_constraint 
+  //       = ocp_discretizer.timeStageBeforeImpulse(constraint_idx);
+  //   riccati_factorizer[time_stage_before_constraint].backwardStateConstraintFactorization(
+  //       constraint_factorization.T_impulse(constraint_idx, constraint_idx), 
+  //       kkt_matrix[time_stage_before_constraint], 
+  //       ocp_discretizer.dtau(time_stage_before_constraint), 
+  //       constraint_factorization.T(constraint_idx, time_stage_before_constraint));
+  //   for (int i=time_stage_before_constraint-1; i>=0; --i) {
+  //     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
+  //       const int impulse_idx = ocp_discretizer.impulseIndexAfterTimeStage(i);
+  //       riccati_factorizer.aux[impulse_idx].backwardStateConstraintFactorization(
+  //           constraint_factorization.T(constraint_idx, i+1), 
+  //           kkt_matrix.aux[impulse_idx], ocp_discretizer.dtau_aux(impulse_idx), 
+  //           constraint_factorization.T_aux(constraint_idx, impulse_idx));
+  //       riccati_factorizer.impulse[impulse_idx].backwardStateConstraintFactorization(
+  //           constraint_factorization.T_aux(constraint_idx, impulse_idx), 
+  //           kkt_matrix.impulse[impulse_idx], 
+  //           constraint_factorization.T_impulse(constraint_idx, impulse_idx));
+  //       riccati_factorizer[i].backwardStateConstraintFactorization(
+  //           constraint_factorization.T_impulse(constraint_idx, impulse_idx), 
+  //           kkt_matrix[i], ocp_discretizer.dtau(i), 
+  //           constraint_factorization.T(constraint_idx, i));
+  //     }
+  //     else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
+  //       const int lift_idx = ocp_discretizer.liftIndexAfterTimeStage(i);
+  //       riccati_factorizer.lift[lift_idx].backwardStateConstraintFactorization(
+  //           constraint_factorization.T(constraint_idx, i+1), 
+  //           kkt_matrix.lift[lift_idx], ocp_discretizer.dtau_lift(lift_idx), 
+  //           constraint_factorization.T_lift(constraint_idx, lift_idx));
+  //       riccati_factorizer[i].backwardStateConstraintFactorization(
+  //           constraint_factorization.T_lift(constraint_idx, lift_idx), 
+  //           kkt_matrix[i], ocp_discretizer.dtau(i), 
+  //           constraint_factorization.T(constraint_idx, i));
+  //     }
+  //     else {
+  //       riccati_factorizer[i].backwardStateConstraintFactorization(
+  //           constraint_factorization.T(constraint_idx, i+1), 
+  //           kkt_matrix[i], ocp_discretizer.dtau(i), 
+  //           constraint_factorization.T(constraint_idx, i));
+  //     }
+  //   }
+  // }
 }
 
 

@@ -138,11 +138,11 @@ public:
   ///
   OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
       const std::shared_ptr<Constraints>& constraints, const double T, 
-      const int N, const int N_impulse=0) 
+      const int N, const int N_impulse, const double penalty) 
     : data(N, SplitOCP(robot, cost, constraints, (T/N))), 
       aux(N_impulse, SplitOCP(robot, cost, constraints, (T/N))), 
       lift(N_impulse, SplitOCP(robot, cost, constraints, (T/N))),
-      impulse(N_impulse, ImpulseSplitOCP(robot, cost, constraints)),
+      impulse(N_impulse, ImpulseSplitOCP(robot, cost, constraints, penalty)),
       terminal(TerminalOCP(robot, cost, constraints)),
       discretizer_(T, N, N_impulse) {
   }

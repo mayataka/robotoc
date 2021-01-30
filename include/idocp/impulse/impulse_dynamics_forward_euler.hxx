@@ -8,13 +8,15 @@
 namespace idocp {
 
 inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler(
-    const Robot& robot) 
-  : data_(robot) {
+    const Robot& robot, const double penalty) 
+  : data_(robot),
+    penalty_(penalty) {
 }
 
 
 inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler() 
-  : data_() {
+  : data_(),
+    penalty_(1.e04) {
 }
 
 
@@ -45,7 +47,8 @@ inline void ImpulseDynamicsForwardEuler::linearizeImpulseDynamics(
   if (is_state_constraint_valid) {
     linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix, 
                                        kkt_residual);
-    kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.xi_stack();
+    kkt_residual.lq().noalias() 
+        += penalty_ * kkt_matrix.Pq().transpose() * kkt_residual.P();
   }
 }
 
@@ -83,6 +86,8 @@ inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
   robot.computeMJtJinv(data_.dImDddv, data_.dCdv(), data_.MJtJinv());
   condensing(robot, impulse_status, data_, kkt_matrix, kkt_residual);
+  kkt_matrix.Qqq().noalias() 
+      += penalty_ * kkt_matrix.Pq().transpose() * kkt_matrix.Pq();
 }
 
 
@@ -178,24 +183,14 @@ inline void ImpulseDynamicsForwardEuler::computeImpulseDynamicsResidual(
 inline double ImpulseDynamicsForwardEuler::l1NormImpulseDynamicsResidual(
     const ImpulseSplitKKTResidual& kkt_residual,
     const bool is_state_constraint_valid) const {
-  if (is_state_constraint_valid) {
-    return (data_.ImDC().lpNorm<1>() + kkt_residual.P().lpNorm<1>());
-  }
-  else {
-    return data_.ImDC().lpNorm<1>();
-  }
+  return data_.ImDC().lpNorm<1>();
 }
 
 
 inline double ImpulseDynamicsForwardEuler::squaredNormImpulseDynamicsResidual(
     const ImpulseSplitKKTResidual& kkt_residual,
     const bool is_state_constraint_valid) const {
-  if (is_state_constraint_valid) {
-    return (data_.ImDC().squaredNorm() + kkt_residual.P().squaredNorm());
-  }
-  else {
-    return data_.ImDC().squaredNorm();
-  }
+  return (data_.ImDC().squaredNorm() + kkt_residual.P().squaredNorm());
 }
 
 

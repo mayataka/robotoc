@@ -40,7 +40,8 @@ public:
   ///
   OCPSolver(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
             const std::shared_ptr<Constraints>& constraints, const double T, 
-            const int N, const int max_num_impulse=0, const int nthreads=1);
+            const int N, const int max_num_impulse=0, const int nthreads=1,
+            const double penalty=1.0e04);
 
   ///
   /// @brief Default constructor. 

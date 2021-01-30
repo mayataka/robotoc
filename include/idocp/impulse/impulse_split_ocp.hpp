@@ -35,7 +35,8 @@ public:
   /// @param[in] constraints Shared ptr to the constraints.
   ///
   ImpulseSplitOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-                  const std::shared_ptr<Constraints>& constraints);
+                  const std::shared_ptr<Constraints>& constraints, 
+                  const double penalty);
 
   ///
   /// @brief Default constructor.  

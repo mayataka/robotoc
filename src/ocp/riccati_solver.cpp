@@ -61,23 +61,8 @@ void RiccatiSolver::computeNewtonDirection(
                                                      ocp.discrete(),
                                                      kkt_matrix, kkt_residual,
                                                      constraint_factorization_);
-  const bool exist_state_constraint = ocp.discrete().existStateConstraint();
-  if (exist_state_constraint) {
-    riccati_recursion_.forwardStateConstraintFactorization(
-        riccati_factorizer_, ocp.discrete(), kkt_matrix, kkt_residual, 
-        riccati_factorization_);
-    riccati_recursion_.backwardStateConstraintFactorization(
-        riccati_factorizer_, ocp.discrete(), kkt_matrix, 
-        constraint_factorization_);
-  }
   direction_calculator_.computeInitialStateDirection(robots, q, v, kkt_matrix, 
                                                      s, d);
-  if (exist_state_constraint) {
-    constraint_factorizer_.computeLagrangeMultiplierDirection(
-        ocp.discrete(), riccati_factorization_, constraint_factorization_, d);
-    constraint_factorizer_.aggregateLagrangeMultiplierDirection(
-       constraint_factorization_,  ocp.discrete(), d, riccati_factorization_);
-  }
   riccati_recursion_.forwardRiccatiRecursion(
       riccati_factorizer_, ocp.discrete(), kkt_matrix, kkt_residual, 
       riccati_factorization_, d);

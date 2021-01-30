@@ -73,14 +73,14 @@ inline void SplitRiccatiFactorizer::forwardRiccatiRecursionParallel(
     kkt_matrix.Fxx().bottomRows(dimv_).noalias() 
         += kkt_matrix.Fvu() * lqr_policy_.K;
     kkt_residual.Fx().tail(dimv_).noalias() += kkt_matrix.Fvu() * lqr_policy_.k;
-    if (exist_state_constraint) {
-      GinvBt_ = llt_.solve(kkt_matrix.Fvu().transpose());
-      BGinvBt_.noalias() = kkt_matrix.Fvu() * GinvBt_;
-    }
+    // if (exist_state_constraint) {
+    //   GinvBt_ = llt_.solve(kkt_matrix.Fvu().transpose());
+    //   BGinvBt_.noalias() = kkt_matrix.Fvu() * GinvBt_;
+    // }
   }
   else {
-    GinvBt_.setZero();
-    BGinvBt_.setZero();
+    // GinvBt_.setZero();
+    // BGinvBt_.setZero();
   }
 }
 
@@ -99,18 +99,18 @@ inline void SplitRiccatiFactorizer::forwardStateConstraintFactorization(
     const double dtau, SplitRiccatiFactorization& riccati_next, 
     const bool exist_state_constraint) {
   assert(dtau >= 0);
-  forward_recursion_.factorizeStateTransition(riccati, kkt_matrix, 
-                                              kkt_residual, dtau, 
-                                              riccati_next);
-  if (exist_state_constraint) {
-    forward_recursion_.factorizeStateConstraintFactorization(riccati, 
-                                                             kkt_matrix, dtau, 
-                                                             riccati_next);
-    if (is_dtau_sufficiently_positive_) {
-      assert(dtau >= kMindtau);
-      riccati_next.N.bottomRightCorner(dimv_, dimv_).noalias() += BGinvBt_;
-    }
-  }
+  // forward_recursion_.factorizeStateTransition(riccati, kkt_matrix, 
+  //                                             kkt_residual, dtau, 
+  //                                             riccati_next);
+  // if (exist_state_constraint) {
+  //   forward_recursion_.factorizeStateConstraintFactorization(riccati, 
+  //                                                            kkt_matrix, dtau, 
+  //                                                            riccati_next);
+  //   if (is_dtau_sufficiently_positive_) {
+  //     assert(dtau >= kMindtau);
+  //     riccati_next.N.bottomRightCorner(dimv_, dimv_).noalias() += BGinvBt_;
+  //   }
+  // }
 }
 
 
@@ -119,31 +119,31 @@ inline void SplitRiccatiFactorizer::backwardStateConstraintFactorization(
     const Eigen::MatrixBase<MatrixType1>& T_next, 
     const SplitKKTMatrix& kkt_matrix, const double dtau, 
     const Eigen::MatrixBase<MatrixType2>& T) const {
-  assert(T_next.rows() == T.rows());
-  assert(T_next.rows() == T.rows());
-  assert(dtau >= 0);
-  if (has_floating_base_) {
-    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).template topRows<6>().noalias() 
-        = kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
-            * T_next.template topRows<6>();
-    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).middleRows(6, dimv_-6)
-        = T_next.middleRows(6, dimv_-6);
-    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).template middleRows<6>(dimv_).noalias() 
-        = kkt_matrix.Fqv().template topLeftCorner<6, 6>().transpose() 
-            * T_next.template topRows<6>();
-    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_-6)
-        = dtau * T_next.middleRows(6, dimv_-6);
-  }
-  else {
-    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_) 
-        = T_next.topRows(dimv_);
-    const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_)
-        = dtau * T_next.topRows(dimv_);
-  }
-  const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_).noalias()
-      += kkt_matrix.Fvq().transpose() * T_next.bottomRows(dimv_);
-  const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_).noalias() 
-      +=  kkt_matrix.Fvv().transpose() * T_next.bottomRows(dimv_);
+  // assert(T_next.rows() == T.rows());
+  // assert(T_next.rows() == T.rows());
+  // assert(dtau >= 0);
+  // if (has_floating_base_) {
+  //   const_cast<Eigen::MatrixBase<MatrixType2>&> (T).template topRows<6>().noalias() 
+  //       = kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
+  //           * T_next.template topRows<6>();
+  //   const_cast<Eigen::MatrixBase<MatrixType2>&> (T).middleRows(6, dimv_-6)
+  //       = T_next.middleRows(6, dimv_-6);
+  //   const_cast<Eigen::MatrixBase<MatrixType2>&> (T).template middleRows<6>(dimv_).noalias() 
+  //       = kkt_matrix.Fqv().template topLeftCorner<6, 6>().transpose() 
+  //           * T_next.template topRows<6>();
+  //   const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_-6)
+  //       = dtau * T_next.middleRows(6, dimv_-6);
+  // }
+  // else {
+  //   const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_) 
+  //       = T_next.topRows(dimv_);
+  //   const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_)
+  //       = dtau * T_next.topRows(dimv_);
+  // }
+  // const_cast<Eigen::MatrixBase<MatrixType2>&> (T).topRows(dimv_).noalias()
+  //     += kkt_matrix.Fvq().transpose() * T_next.bottomRows(dimv_);
+  // const_cast<Eigen::MatrixBase<MatrixType2>&> (T).bottomRows(dimv_).noalias() 
+  //     +=  kkt_matrix.Fvv().transpose() * T_next.bottomRows(dimv_);
 }
 
 
@@ -188,9 +188,9 @@ inline void SplitRiccatiFactorizer::computeCostateDirection(
   d.dgmm().noalias()  = riccati.Pqv.transpose() * d.dq();
   d.dgmm().noalias() += riccati.Pvv * d.dv();
   d.dgmm().noalias() -= riccati.sv;
-  if (exist_state_constraint) {
-    d.dlmdgmm().noalias() += riccati.n;
-  }
+  // if (exist_state_constraint) {
+  //   d.dlmdgmm().noalias() += riccati.n;
+  // }
 }
 
 
@@ -200,9 +200,9 @@ inline void SplitRiccatiFactorizer::computeControlInputDirection(
   if (is_dtau_sufficiently_positive_) {
     d.du().noalias()  = lqr_policy_.K * d.dx();
     d.du().noalias() += lqr_policy_.k;
-    if (exist_state_constraint) {
-      d.du().noalias() -= GinvBt_ * riccati_next.n.tail(dimv_);
-    }
+    // if (exist_state_constraint) {
+    //   d.du().noalias() -= GinvBt_ * riccati_next.n.tail(dimv_);
+    // }
   }
   else {
     d.du().setZero();
