@@ -8,15 +8,15 @@
 namespace idocp {
 
 inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler(
-    const Robot& robot, const double penalty) 
+    const Robot& robot) 
   : data_(robot),
-    penalty_(penalty) {
+    penalty_(0) {
 }
 
 
 inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler() 
   : data_(),
-    penalty_(1.e04) {
+    penalty_(0) {
 }
 
 
@@ -48,7 +48,10 @@ inline void ImpulseDynamicsForwardEuler::linearizeImpulseDynamics(
     linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix, 
                                        kkt_residual);
     kkt_residual.lq().noalias() 
-        += penalty_ * kkt_matrix.Pq().transpose() * kkt_residual.P();
+        += s.penalty * kkt_matrix.Pq().transpose() * kkt_residual.P();
+    kkt_residual.lq().noalias() 
+        += kkt_matrix.Pq().transpose() * s.xi_stack();
+    penalty_ = s.penalty;
   }
 }
 

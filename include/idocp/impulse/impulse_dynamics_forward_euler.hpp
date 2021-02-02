@@ -16,7 +16,7 @@ namespace idocp {
 
 class ImpulseDynamicsForwardEuler {
 public:
-  ImpulseDynamicsForwardEuler(const Robot& robot, const double penalty=1.0e04);
+  ImpulseDynamicsForwardEuler(const Robot& robot);
 
   ImpulseDynamicsForwardEuler();
 

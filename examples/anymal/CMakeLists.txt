@@ -6,21 +6,6 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(idocp REQUIRED)
 
 add_executable(
-    ocp_benchmark
-    ocp_benchmark.cpp
-)
-target_link_libraries(
-    ocp_benchmark
-    PRIVATE
-    idocp::idocp
-)
-target_include_directories(
-    ocp_benchmark
-    PRIVATE
-    ${IDOCP_INCLUDE_DIR}
-)
-
-add_executable(
     anymal_trotting
     anymal_trotting.cpp
 )
@@ -85,40 +70,3 @@ if (ENABLE_VIEWER)
         ENABLE_VIEWER    
     )
 endif()
-
-# add_executable(
-#     parnmpc_benchmark
-#     parnmpc_benchmark.cpp
-# )
-# target_link_libraries(
-#     parnmpc_benchmark
-#     PRIVATE
-#     idocp::idocp
-# )
-# target_include_directories(
-#     parnmpc_benchmark
-#     PRIVATE
-#     ${IDOCP_INCLUDE_DIR}
-# )
-
-# add_executable(
-#     anymal_trotting_parnmpc
-#     anymal_trotting_parnmpc.cpp
-# )
-# target_link_libraries(
-#     anymal_trotting_parnmpc
-#     PRIVATE
-#     idocp::idocp
-# )
-# target_include_directories(
-#     anymal_trotting_parnmpc
-#     PRIVATE
-#     ${IDOCP_INCLUDE_DIR}
-# )
-# if (ENABLE_VIEWER)
-#     target_compile_definitions(
-#         anymal_trotting_parnmpc
-#         PRIVATE
-#         ENABLE_VIEWER    
-#     )
-# endif()

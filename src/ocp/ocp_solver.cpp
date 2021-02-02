@@ -11,15 +11,21 @@ OCPSolver::OCPSolver(const Robot& robot,
                      const std::shared_ptr<CostFunction>& cost, 
                      const std::shared_ptr<Constraints>& constraints, 
                      const double T, const int N, const int max_num_impulse, 
-                     const int nthreads, const double penalty)
+                     const int nthreads)
   : robots_(nthreads, robot),
     contact_sequence_(robot, N),
     ocp_linearizer_(N, max_num_impulse, nthreads),
     riccati_solver_(robot, N, max_num_impulse, nthreads),
     line_search_(robot, N, max_num_impulse, nthreads),
-    ocp_(robot, cost, constraints, T, N, max_num_impulse, penalty),
+    ocp_(robot, cost, constraints, T, N, max_num_impulse),
     kkt_matrix_(robot, N, max_num_impulse),
     kkt_residual_(robot, N, max_num_impulse),
+    penalty_(0),
+    vio_prev_(0),
+    beta_(0),
+    gamma_(0),
+    KKT_error_prev_(0),
+    AL_KKT_tol_(0),
     s_(robot, N, max_num_impulse),
     d_(robot, N, max_num_impulse),
     N_(N),
@@ -60,6 +66,62 @@ OCPSolver::~OCPSolver() {
 
 void OCPSolver::initConstraints() {
   ocp_linearizer_.initConstraints(ocp_, robots_, contact_sequence_, s_);
+}
+
+
+void OCPSolver::initAugmentedLagrangian(const double ini_penalty, 
+                                        const double beta, const double gamma,
+                                        const double AL_KKT_tol) {
+  try {
+    if (ini_penalty <= 0) {
+      throw std::out_of_range("invalid value: ini_penalty must be positive!");
+    }
+    if (beta <= 0) {
+      throw std::out_of_range("invalid value: beta must be positive!");
+    }
+    if (gamma <= 0) {
+      throw std::out_of_range("invalid value: beta must be positive!");
+    }
+  }
+  catch(const std::exception& e) {
+    std::cerr << e.what() << '\n';
+    std::exit(EXIT_FAILURE);
+  }
+  for (auto& e : s_.impulse) {
+    e.penalty = ini_penalty;
+  }
+  penalty_ = ini_penalty;
+  beta_ = beta;
+  gamma_ = gamma;
+  AL_KKT_tol_ = AL_KKT_tol;
+}
+
+
+bool OCPSolver::updateAugmentedLagrangian() {
+  if (std::abs(KKT_error_prev_ - KKTError()) < AL_KKT_tol_) {
+    const int num_impulse = ocp_.discrete().numImpulseStages();
+    double vio = 0;
+    for (int i=0; i<num_impulse; ++i) {
+      vio += kkt_residual_.impulse[i].P().squaredNorm();
+    }
+    for (int i=0; i<num_impulse; ++i) {
+      s_.impulse[i].xi_stack().noalias()
+          += s_.impulse[i].penalty * kkt_residual_.impulse[i].P();
+    }
+    if (vio > gamma_ * vio_prev_) {
+      penalty_ *= beta_;
+      for (int i=0; i<num_impulse; ++i) {
+        s_.impulse[i].penalty = penalty_;
+      }
+    }
+    vio_prev_ = vio;
+    KKT_error_prev_ = 0;
+    return true;
+  }
+  else {
+    KKT_error_prev_ = KKTError();
+    return false;
+  }
 }
 
 

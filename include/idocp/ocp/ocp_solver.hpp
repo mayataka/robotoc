@@ -40,8 +40,7 @@ public:
   ///
   OCPSolver(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
             const std::shared_ptr<Constraints>& constraints, const double T, 
-            const int N, const int max_num_impulse=0, const int nthreads=1,
-            const double penalty=1.0e04);
+            const int N, const int max_num_impulse=0, const int nthreads=1);
 
   ///
   /// @brief Default constructor. 
@@ -79,6 +78,13 @@ public:
   /// current solution.
   ///
   void initConstraints();
+
+  void initAugmentedLagrangian(const double ini_penalty=5, const double beta=8, 
+                               const double gamma=0.25, 
+                               const double AL_KKT_tol=1.0e-08);
+
+  bool updateAugmentedLagrangian();
+
 
   ///
   /// @brief Updates the solution by computing the primal-dual Newon direction.
@@ -210,6 +216,7 @@ private:
   Solution s_;
   Direction d_;
   int N_, nthreads_;
+  double penalty_, vio_prev_, beta_, gamma_, KKT_error_prev_, AL_KKT_tol_;
 
   void discretizeSolution();
 

@@ -269,6 +269,8 @@ public:
   static ImpulseSplitSolution Random(const Robot& robot, 
                                      const ImpulseStatus& impulse_status);
 
+  double penalty;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:

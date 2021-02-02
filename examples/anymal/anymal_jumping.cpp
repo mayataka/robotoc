@@ -16,8 +16,8 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
-#include "idocp/constraints/friction_cone.hpp"
-#include "idocp/constraints/impulse_friction_cone.hpp"
+#include "idocp/constraints/linearized_friction_cone.hpp"
+#include "idocp/constraints/linearized_impulse_friction_cone.hpp"
 
 #include "idocp/utils/ocp_benchmarker.hpp"
 
@@ -99,8 +99,8 @@ int main(int argc, char *argv[]) {
   auto joint_torques_lower   = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper   = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
   const double mu = 0.7;
-  auto friction_cone         = std::make_shared<idocp::FrictionCone>(robot, mu);
-  auto impulse_friction_cone = std::make_shared<idocp::ImpulseFrictionCone>(robot, mu);
+  auto friction_cone         = std::make_shared<idocp::LinearizedFrictionCone>(robot, mu);
+  auto impulse_friction_cone = std::make_shared<idocp::LinearizedImpulseFrictionCone>(robot, mu);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -155,8 +155,10 @@ int main(int argc, char *argv[]) {
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
 
-  const bool line_search = true;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 150, line_search);
+  const bool line_search = false;
+  ocp_solver.initAugmentedLagrangian(5, 8.0, 1.0e-08);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 500, line_search);
+  idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 5000, line_search);
 
 #ifdef ENABLE_VIEWER
   if (argc != 2) {

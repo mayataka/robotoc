@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(impulse_friction_cone);
 
   const double T = 6.05; // t_start + max_num_impulse_phase * t_period + 0.05;
-  const int N = 240;
+  const int N = 120;
   const int max_num_impulse_phase = 11;
 
   const int nthreads = 4;
@@ -165,7 +165,9 @@ int main(int argc, char *argv[]) {
   ocp_solver.setSolution("f", f_init);
 
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 25, line_search);
+  ocp_solver.initAugmentedLagrangian(5, 8.0, 1.0e-08);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 1000, line_search);
+  idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 5000, line_search);
 
 #ifdef ENABLE_VIEWER
   if (argc != 2) {
