@@ -228,8 +228,8 @@ int main(int argc, char *argv[]) {
   ocp_solver.setSolution("f", f_init);
 
   const bool line_search = false;
-  ocp_solver.initAugmentedLagrangian(5, 8.0, 1.0e-08);
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 1500, line_search);
+  ocp_solver.initAugmentedLagrangian(5, 8, 0.25, 1.0e-04, 0.50);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 3000, line_search);
   idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 5000, line_search);
 
 #ifdef ENABLE_VIEWER

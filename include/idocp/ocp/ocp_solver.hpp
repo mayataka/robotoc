@@ -81,7 +81,8 @@ public:
 
   void initAugmentedLagrangian(const double ini_penalty=5, const double beta=8, 
                                const double gamma=0.25, 
-                               const double AL_KKT_tol=1.0e-08);
+                               const double AL_KKT_tol=1.0e-08,
+                               const double AL_KKT_tol_descrease=0.1);
 
   bool updateAugmentedLagrangian();
 
@@ -216,7 +217,7 @@ private:
   Solution s_;
   Direction d_;
   int N_, nthreads_;
-  double penalty_, vio_prev_, beta_, gamma_, KKT_error_prev_, AL_KKT_tol_;
+  double penalty_, vio_prev_, beta_, gamma_, AL_KKT_tol_, AL_KKT_tol_descrease_;
 
   void discretizeSolution();
 

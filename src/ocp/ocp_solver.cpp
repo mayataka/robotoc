@@ -24,8 +24,8 @@ OCPSolver::OCPSolver(const Robot& robot,
     vio_prev_(0),
     beta_(0),
     gamma_(0),
-    KKT_error_prev_(0),
     AL_KKT_tol_(0),
+    AL_KKT_tol_descrease_(0),
     s_(robot, N, max_num_impulse),
     d_(robot, N, max_num_impulse),
     N_(N),
@@ -71,7 +71,8 @@ void OCPSolver::initConstraints() {
 
 void OCPSolver::initAugmentedLagrangian(const double ini_penalty, 
                                         const double beta, const double gamma,
-                                        const double AL_KKT_tol) {
+                                        const double AL_KKT_tol,
+                                        const double AL_KKT_tol_descrease) {
   try {
     if (ini_penalty <= 0) {
       throw std::out_of_range("invalid value: ini_penalty must be positive!");
@@ -94,16 +95,18 @@ void OCPSolver::initAugmentedLagrangian(const double ini_penalty,
   beta_ = beta;
   gamma_ = gamma;
   AL_KKT_tol_ = AL_KKT_tol;
+  AL_KKT_tol_descrease_ = AL_KKT_tol_descrease;
 }
 
 
 bool OCPSolver::updateAugmentedLagrangian() {
-  if (std::abs(KKT_error_prev_ - KKTError()) < AL_KKT_tol_) {
-    const int num_impulse = ocp_.discrete().numImpulseStages();
-    double vio = 0;
-    for (int i=0; i<num_impulse; ++i) {
-      vio += kkt_residual_.impulse[i].P().squaredNorm();
-    }
+  double vio = 0;
+  const int num_impulse = ocp_.discrete().numImpulseStages();
+  for (int i=0; i<num_impulse; ++i) {
+    vio += kkt_residual_.impulse[i].P().squaredNorm();
+  }
+  const double KKT_error = std::pow(KKTError(), 2);
+  if (std::sqrt(KKT_error - vio) < AL_KKT_tol_) {
     for (int i=0; i<num_impulse; ++i) {
       s_.impulse[i].xi_stack().noalias()
           += s_.impulse[i].penalty * kkt_residual_.impulse[i].P();
@@ -114,12 +117,11 @@ bool OCPSolver::updateAugmentedLagrangian() {
         s_.impulse[i].penalty = penalty_;
       }
     }
+    AL_KKT_tol_ *= AL_KKT_tol_descrease_;
     vio_prev_ = vio;
-    KKT_error_prev_ = 0;
     return true;
   }
   else {
-    KKT_error_prev_ = KKTError();
     return false;
   }
 }

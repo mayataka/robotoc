@@ -152,12 +152,12 @@ int main(int argc, char *argv[]) {
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
   Eigen::Vector3d f_init;
-  f_init << 0, 0, 0.25*robot.totalWeight();
+  f_init << 0, 0, 0.5*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
 
   const bool line_search = false;
-  ocp_solver.initAugmentedLagrangian(5, 8.0, 1.0e-08);
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 500, line_search);
+  ocp_solver.initAugmentedLagrangian(10000, 8, 0.25, 1.0e-04, 0.5);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 1500, line_search);
   idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 5000, line_search);
 
 #ifdef ENABLE_VIEWER
