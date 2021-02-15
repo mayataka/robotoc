@@ -30,8 +30,6 @@ public:
 
   Eigen::MatrixXd dIDda;
 
-  Vector6d u_passive;
-
   Eigen::Block<Eigen::MatrixXd> dCda();
 
   const Eigen::Block<const Eigen::MatrixXd> dCda() const;

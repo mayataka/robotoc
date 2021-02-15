@@ -186,7 +186,7 @@ void SplitParNMPCTest::testLinearizeOCP(
   ContactDynamics cd(robot, baumgarte_time_step);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dtau, s, kkt_residual_ref);
-  cd.condenseContactDynamicsBackwardEuler(robot, contact_status, dtau, kkt_matrix_ref, kkt_residual_ref);
+  cd.condenseContactDynamics(robot, contact_status, dtau, kkt_matrix_ref, kkt_residual_ref, false);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   SplitDirection d = SplitDirection::Random(robot, contact_status);
@@ -252,7 +252,7 @@ void SplitParNMPCTest::testLinearizeOCP(
   ImpulseDynamicsBackwardEuler::linearizeImpulseCondition(robot, impulse_status,
                                                           s_next, kkt_matrix_ref, 
                                                           kkt_residual_ref);
-  cd.condenseContactDynamicsBackwardEuler(robot, contact_status, dtau, kkt_matrix_ref, kkt_residual_ref);
+  cd.condenseContactDynamics(robot, contact_status, dtau, kkt_matrix_ref, kkt_residual_ref, false);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   SplitDirection d = SplitDirection::Random(robot, contact_status);

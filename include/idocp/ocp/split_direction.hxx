@@ -6,8 +6,7 @@
 namespace idocp {
 
 inline SplitDirection::SplitDirection(const Robot& robot) 
-  : du_passive(Vector6d::Zero()),
-    dnu_passive(Vector6d::Zero()),
+  : dnu_passive(Vector6d::Zero()),
     split_direction_full_(
         Eigen::VectorXd::Zero(4*robot.dimv()+robot.dimu()+robot.max_dimf())),
     daf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
@@ -26,8 +25,7 @@ inline SplitDirection::SplitDirection(const Robot& robot)
 
 
 inline SplitDirection::SplitDirection() 
-  : du_passive(Vector6d::Zero()),
-    dnu_passive(Vector6d::Zero()),
+  : dnu_passive(Vector6d::Zero()),
     split_direction_full_(),
     daf_full_(),
     dbetamu_full_(),
@@ -257,7 +255,6 @@ SplitDirection::dmu() const {
 
 
 inline void SplitDirection::setZero() {
-  du_passive.setZero();
   dnu_passive.setZero();
   split_direction_full_.setZero();
   daf_full_.setZero();
@@ -291,9 +288,6 @@ inline bool SplitDirection::isApprox(const SplitDirection& other) const {
     return false;
   }
   if (has_floating_base_) {
-    if (!du_passive.isApprox(other.du_passive)) {
-      return false;
-    }
     if (!dnu_passive.isApprox(other.dnu_passive)) {
       return false;
     }
@@ -307,7 +301,6 @@ inline void SplitDirection::setRandom() {
   daf().setRandom();
   dbetamu().setRandom();
   if (has_floating_base_) {
-    du_passive.setRandom();
     dnu_passive.setRandom();
   }
 }

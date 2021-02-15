@@ -54,8 +54,6 @@ public:
 
   void set_u_weight(const Eigen::VectorXd& u_weight);
 
-  void set_u_passive_weight(const Vector6d& u_passive_weight);
-
   void set_qf_weight(const Eigen::VectorXd& qf_weight);
 
   void set_vf_weight(const Eigen::VectorXd& vf_weight);
@@ -110,7 +108,6 @@ private:
   Eigen::VectorXd q_ref_, v_ref_, u_ref_, q_weight_, v_weight_, a_weight_, 
                   u_weight_, qf_weight_, vf_weight_, qi_weight_, vi_weight_, 
                   dvi_weight_;
-  Vector6d u_passive_weight_;
 };
 
 } // namespace idocp

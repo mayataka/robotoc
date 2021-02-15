@@ -286,9 +286,6 @@ public:
   ///
   int dimi() const;
 
-  /// @brief Newton direction of SplitSolution::u_passive. Size is 6.
-  Vector6d du_passive;
-
   /// @brief Newton direction of SplitSolution::nu_passive. Size is 6.
   Vector6d dnu_passive;
 

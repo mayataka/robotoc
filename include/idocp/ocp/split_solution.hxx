@@ -17,7 +17,6 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     u(Eigen::VectorXd::Zero(robot.dimu())),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
     mu(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
-    u_passive(Vector6d::Zero()),
     nu_passive(Vector6d::Zero()),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
@@ -39,7 +38,6 @@ inline SplitSolution::SplitSolution()
     u(),
     beta(),
     mu(),
-    u_passive(Vector6d::Zero()),
     nu_passive(Vector6d::Zero()),
     f_stack_(),
     mu_stack_(),
@@ -186,7 +184,6 @@ inline void SplitSolution::integrate(const Robot& robot, const double step_size,
     set_mu_vector();
   }
   if (has_floating_base_) {
-    u_passive.noalias() += step_size * d.du_passive;
     nu_passive.noalias() += step_size * d.dnu_passive;
   }
 }
@@ -202,7 +199,6 @@ inline void SplitSolution::copy(const SplitSolution& other) {
   u            = other.u;
   beta         = other.beta;
   if (has_floating_base_) {
-    u_passive  = other.u_passive;
     nu_passive = other.nu_passive;
   }
   if (has_active_contacts_) {
@@ -230,7 +226,6 @@ inline void SplitSolution::interpolate(const Robot& robot,
   u            = (l2 * s1.u + l1 * s2.u) / (l1 + l2);
   beta         = (l2 * s1.beta + l1 * s2.beta) / (l1 + l2);
   if (has_floating_base_) {
-    u_passive  = (l2 * s1.u_passive + l1 * s2.u_passive) / (l1 + l2);
     nu_passive = (l2 * s1.nu_passive + l1 * s2.nu_passive) / (l1 + l2);
   }
   if (has_active_contacts_) {
@@ -294,9 +289,6 @@ inline bool SplitSolution::isApprox(const SplitSolution& other) const {
     }
   }
   if (has_floating_base_) {
-    if (!u_passive.isApprox(other.u_passive)) {
-      return false;
-    }
     if (!nu_passive.isApprox(other.nu_passive)) {
       return false;
     }
@@ -315,7 +307,6 @@ inline void SplitSolution::setRandom(const Robot& robot) {
   u.setRandom(); 
   beta.setRandom(); 
   if (robot.hasFloatingBase()) {
-    u_passive.setRandom();
     nu_passive.setRandom();
   }
 }

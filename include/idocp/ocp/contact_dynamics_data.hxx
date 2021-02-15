@@ -7,7 +7,6 @@ namespace idocp {
 
 inline ContactDynamicsData::ContactDynamicsData(const Robot& robot) 
   : dIDda(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    u_passive(Vector6d::Zero()),
     dCda_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     dIDCdqv_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
                                         2*robot.dimv())),
@@ -32,7 +31,6 @@ inline ContactDynamicsData::ContactDynamicsData(const Robot& robot)
 
 inline ContactDynamicsData::ContactDynamicsData() 
   : dIDda(),
-    u_passive(Vector6d::Zero()),
     dIDCdqv_full_(),
     MJtJinv_full_(), 
     MJtJinv_dIDCdqv_full_(), 

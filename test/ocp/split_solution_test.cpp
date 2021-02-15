@@ -45,7 +45,6 @@ void SplitSolutionTest::TestWithoutContacts(const Robot& robot) {
   EXPECT_TRUE(s.v.size() == robot.dimv());
   EXPECT_TRUE(s.u.size() == robot.dimu());
   EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.u_passive.size() == 6);
   EXPECT_TRUE(s.nu_passive.size() == 6);
   EXPECT_TRUE(s.mu_stack().size() == 0);
   EXPECT_TRUE(s.f_stack().size() == 0);
@@ -57,7 +56,6 @@ void SplitSolutionTest::TestWithoutContacts(const Robot& robot) {
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd u = Eigen::VectorXd::Random(robot.dimu());
   const Eigen::VectorXd beta = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd u_passive = Eigen::VectorXd::Random(6);
   const Eigen::VectorXd nu_passive = Eigen::VectorXd::Random(6);
   s.lmd = lmd;
   s.gmm = gmm;
@@ -66,7 +64,6 @@ void SplitSolutionTest::TestWithoutContacts(const Robot& robot) {
   s.v = v;
   s.u = u;
   s.beta = beta;
-  s.u_passive = u_passive;
   s.nu_passive = nu_passive;
   EXPECT_TRUE(s.lmd.isApprox(lmd));
   EXPECT_TRUE(s.gmm.isApprox(gmm));
@@ -75,9 +72,7 @@ void SplitSolutionTest::TestWithoutContacts(const Robot& robot) {
   EXPECT_TRUE(s.v.isApprox(v));
   EXPECT_TRUE(s.u.isApprox(u));
   EXPECT_TRUE(s.beta.isApprox(beta));
-  EXPECT_TRUE(s.u_passive.isApprox(u_passive));
   EXPECT_TRUE(s.nu_passive.isApprox(nu_passive));
-  s.u_passive.setZero();
   s.nu_passive.setZero();
   s.setRandom(robot);
   EXPECT_TRUE(s.lmd.size() == robot.dimv());
@@ -89,7 +84,6 @@ void SplitSolutionTest::TestWithoutContacts(const Robot& robot) {
   EXPECT_TRUE(s.v.size() == robot.dimv());
   EXPECT_TRUE(s.u.size() == robot.dimu());
   EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.u_passive.size() == 6);
   EXPECT_TRUE(s.nu_passive.size() == 6);
   EXPECT_TRUE(s.mu_stack().size() == 0);
   EXPECT_TRUE(s.f_stack().size() == 0);
@@ -102,11 +96,9 @@ void SplitSolutionTest::TestWithoutContacts(const Robot& robot) {
   EXPECT_FALSE(s.u.isZero());
   EXPECT_FALSE(s.beta.isZero());
   if (robot.hasFloatingBase()) {
-    EXPECT_FALSE(s.u_passive.isZero());
     EXPECT_FALSE(s.nu_passive.isZero());
   }
   else {
-    EXPECT_TRUE(s.u_passive.isZero());
     EXPECT_TRUE(s.nu_passive.isZero());
   }
   const SplitSolution s_random = SplitSolution::Random(robot);
@@ -119,7 +111,6 @@ void SplitSolutionTest::TestWithoutContacts(const Robot& robot) {
   EXPECT_TRUE(s_random.v.size() == robot.dimv());
   EXPECT_TRUE(s_random.u.size() == robot.dimu());
   EXPECT_TRUE(s_random.beta.size() == robot.dimv());
-  EXPECT_TRUE(s_random.u_passive.size() == 6);
   EXPECT_TRUE(s_random.nu_passive.size() == 6);
   EXPECT_TRUE(s_random.mu_stack().size() == 0);
   EXPECT_TRUE(s_random.f_stack().size() == 0);
@@ -132,11 +123,9 @@ void SplitSolutionTest::TestWithoutContacts(const Robot& robot) {
   EXPECT_FALSE(s_random.u.isZero());
   EXPECT_FALSE(s_random.beta.isZero());
   if (robot.hasFloatingBase()) {
-    EXPECT_FALSE(s_random.u_passive.isZero());
     EXPECT_FALSE(s_random.nu_passive.isZero());
   }
   else {
-    EXPECT_TRUE(s_random.u_passive.isZero());
     EXPECT_TRUE(s_random.nu_passive.isZero());
   }
 }
@@ -162,7 +151,6 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   EXPECT_TRUE(s.v.size() == robot.dimv());
   EXPECT_TRUE(s.u.size() == robot.dimu());
   EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.u_passive.size() == 6);
   EXPECT_TRUE(s.nu_passive.size() == 6);
   EXPECT_TRUE(s.mu_stack().size() == contact_status.dimf());
   EXPECT_TRUE(s.f_stack().size() == contact_status.dimf());
@@ -177,7 +165,6 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd u = Eigen::VectorXd::Random(robot.dimu());
   const Eigen::VectorXd beta = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd u_passive = Eigen::VectorXd::Random(6);
   const Eigen::VectorXd nu_passive = Eigen::VectorXd::Random(6);
   const Eigen::VectorXd f_stack = Eigen::VectorXd::Random(contact_status.dimf());
   const Eigen::VectorXd mu_stack = Eigen::VectorXd::Random(contact_status.dimf());
@@ -188,7 +175,6 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   s.v = v;
   s.u = u;
   s.beta = beta;
-  s.u_passive = u_passive;
   s.nu_passive = nu_passive;
   s.f_stack() = f_stack;
   s.mu_stack() = mu_stack;
@@ -199,7 +185,6 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   EXPECT_TRUE(s.v.isApprox(v));
   EXPECT_TRUE(s.u.isApprox(u));
   EXPECT_TRUE(s.beta.isApprox(beta));
-  EXPECT_TRUE(s.u_passive.isApprox(u_passive));
   EXPECT_TRUE(s.nu_passive.isApprox(nu_passive));
   EXPECT_TRUE(s.f_stack().isApprox(f_stack));
   EXPECT_TRUE(s.mu_stack().isApprox(mu_stack));
@@ -237,7 +222,6 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
       dimf_stack += 3;
     }
   }
-  s.u_passive.setZero();
   s.nu_passive.setZero();
   s = SplitSolution(robot);
   s.setRandom(robot, contact_status);
@@ -256,7 +240,6 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   EXPECT_TRUE(s.v.size() == robot.dimv());
   EXPECT_TRUE(s.u.size() == robot.dimu());
   EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.u_passive.size() == 6);
   EXPECT_TRUE(s.nu_passive.size() == 6);
   EXPECT_TRUE(s.mu_stack().size() == contact_status.dimf());
   EXPECT_TRUE(s.f_stack().size() == contact_status.dimf());
@@ -284,11 +267,9 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
     }
   }
   if (robot.hasFloatingBase()) {
-    EXPECT_FALSE(s.u_passive.isZero());
     EXPECT_FALSE(s.nu_passive.isZero());
   }
   else {
-    EXPECT_TRUE(s.u_passive.isZero());
     EXPECT_TRUE(s.nu_passive.isZero());
   }
   const SplitSolution s_random = SplitSolution::Random(robot, contact_status);
@@ -307,7 +288,6 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
   EXPECT_TRUE(s_random.v.size() == robot.dimv());
   EXPECT_TRUE(s_random.u.size() == robot.dimu());
   EXPECT_TRUE(s_random.beta.size() == robot.dimv());
-  EXPECT_TRUE(s_random.u_passive.size() == 6);
   EXPECT_TRUE(s_random.nu_passive.size() == 6);
   EXPECT_TRUE(s_random.mu_stack().size() == contact_status.dimf());
   EXPECT_TRUE(s_random.f_stack().size() == contact_status.dimf());
@@ -335,11 +315,9 @@ void SplitSolutionTest::TestWithContacts(const Robot& robot,
     }
   }
   if (robot.hasFloatingBase()) {
-    EXPECT_FALSE(s_random.u_passive.isZero());
     EXPECT_FALSE(s_random.nu_passive.isZero());
   }
   else {
-    EXPECT_TRUE(s_random.u_passive.isZero());
     EXPECT_TRUE(s_random.nu_passive.isZero());
   }
 }
@@ -357,7 +335,6 @@ void SplitSolutionTest::TestIsApprox(const Robot& robot,
   EXPECT_FALSE(s.u.isZero());
   EXPECT_FALSE(s.beta.isZero());
   if (robot.hasFloatingBase()) {
-    EXPECT_FALSE(s.u_passive.isZero());
     EXPECT_FALSE(s.nu_passive.isZero());
   }
   if (s.hasActiveContacts()) {
@@ -395,15 +372,12 @@ void SplitSolutionTest::TestIsApprox(const Robot& robot,
   s_ref.beta = s.beta;
   EXPECT_TRUE(s.isApprox(s_ref));
   if (robot.hasFloatingBase()) {
-    s_ref.u_passive.setRandom();
     s_ref.nu_passive.setRandom();
     EXPECT_FALSE(s.isApprox(s_ref));
-    s_ref.u_passive = s.u_passive;
     s_ref.nu_passive = s.nu_passive;
     EXPECT_TRUE(s.isApprox(s_ref));
   }
   else {
-    s_ref.u_passive.setRandom();
     s_ref.nu_passive.setRandom();
     EXPECT_TRUE(s.isApprox(s_ref));
   }
@@ -460,7 +434,6 @@ void SplitSolutionTest::TestIntegrate(const Robot& robot,
     s_ref.set_mu_vector();
   }
   if (robot.hasFloatingBase()) {
-    s_ref.u_passive.noalias() += step_size * d.du_passive;
     s_ref.nu_passive.noalias() += step_size * d.dnu_passive;
   }
   EXPECT_TRUE(s.isApprox(s_ref));

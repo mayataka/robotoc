@@ -53,7 +53,6 @@ void SplitDirectionTest::testSize(const Robot& robot,
   EXPECT_EQ(d.dx().size(), dimx);
   EXPECT_EQ(d.da().size(), dimv);
   EXPECT_EQ(d.dbeta().size(), dimv);
-  EXPECT_EQ(d.du_passive.size(), 6);
   EXPECT_EQ(d.dnu_passive.size(), 6);
   EXPECT_EQ(d.daf().size(), dimv);
   EXPECT_EQ(d.dbetamu().size(), dimv);
@@ -71,7 +70,6 @@ void SplitDirectionTest::testSize(const Robot& robot,
   EXPECT_EQ(d.dx().size(), dimx);
   EXPECT_EQ(d.da().size(), dimv);
   EXPECT_EQ(d.dbeta().size(), dimv);
-  EXPECT_EQ(d.du_passive.size(), 6);
   EXPECT_EQ(d.dnu_passive.size(), 6);
   EXPECT_EQ(d.daf().size(), dimv+dimf);
   EXPECT_EQ(d.dbetamu().size(), dimv+dimf);
@@ -130,7 +128,6 @@ void SplitDirectionTest::testSize(const Robot& robot,
   EXPECT_TRUE(d.dbeta().isZero());
   EXPECT_TRUE(d.dmu().isZero());
   EXPECT_TRUE(d.dbetamu().isZero());
-  EXPECT_TRUE(d.du_passive.isZero());
   EXPECT_TRUE(d.dnu_passive.isZero());
   d.setRandom();
   EXPECT_FALSE(d.splitDirection().isZero());
@@ -154,7 +151,6 @@ void SplitDirectionTest::testSize(const Robot& robot,
   }
   EXPECT_FALSE(d.dbetamu().isZero());
   if (robot.hasFloatingBase()) {
-    EXPECT_FALSE(d.du_passive.isZero());
     EXPECT_FALSE(d.dnu_passive.isZero());
   }
   EXPECT_TRUE(d.daf().head(dimv).isApprox(d.da()));
@@ -171,7 +167,6 @@ void SplitDirectionTest::testSize(const Robot& robot,
   EXPECT_EQ(d_random.dx().size(), dimx);
   EXPECT_EQ(d_random.da().size(), dimv);
   EXPECT_EQ(d_random.dbeta().size(), dimv);
-  EXPECT_EQ(d_random.du_passive.size(), 6);
   EXPECT_EQ(d_random.dnu_passive.size(), 6);
   EXPECT_EQ(d_random.daf().size(), dimv+dimf);
   EXPECT_EQ(d_random.dbetamu().size(), dimv+dimf);
@@ -197,7 +192,6 @@ void SplitDirectionTest::testSize(const Robot& robot,
   }
   EXPECT_FALSE(d_random.dbetamu().isZero());
   if (robot.hasFloatingBase()) {
-    EXPECT_FALSE(d_random.du_passive.isZero());
     EXPECT_FALSE(d_random.dnu_passive.isZero());
   }
   EXPECT_TRUE(d_random.daf().head(dimv).isApprox(d_random.da()));
@@ -283,18 +277,12 @@ void SplitDirectionTest::testIsApprox(const Robot& robot,
     EXPECT_TRUE(d.isApprox(d_ref));
   }
   if (robot.hasFloatingBase()) {
-    d_ref.du_passive.setRandom();
-    EXPECT_FALSE(d.isApprox(d_ref));
-    d_ref.du_passive = d.du_passive;
-    EXPECT_TRUE(d.isApprox(d_ref));
     d_ref.dnu_passive.setRandom();
     EXPECT_FALSE(d.isApprox(d_ref));
     d_ref.dnu_passive = d.dnu_passive;
     EXPECT_TRUE(d.isApprox(d_ref));
   }
   else {
-    d_ref.du_passive.setRandom();
-    EXPECT_TRUE(d.isApprox(d_ref));
     d_ref.dnu_passive.setRandom();
     EXPECT_TRUE(d.isApprox(d_ref));
   }

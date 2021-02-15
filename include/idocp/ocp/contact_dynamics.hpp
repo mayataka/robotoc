@@ -48,29 +48,14 @@ public:
                                          const double baumgarte_time_step, 
                                          ContactDynamicsData& data);
 
-  void condenseContactDynamicsForwardEuler(Robot& robot, 
-                                           const ContactStatus& contact_status, 
-                                           const double dtau, 
-                                           SplitKKTMatrix& kkt_matrix, 
-                                           SplitKKTResidual& kkt_residual);
+  void condenseContactDynamics(Robot& robot, 
+                               const ContactStatus& contact_status, 
+                               const double dtau, SplitKKTMatrix& kkt_matrix, 
+                               SplitKKTResidual& kkt_residual,
+                               const bool is_forward_euler);
 
-  static void condensingForwardEuler(const Robot& robot, const double dtau, 
-                                     ContactDynamicsData& data, 
-                                     SplitKKTMatrix& kkt_matrix, 
-                                     SplitKKTResidual& kkt_residual);
-
-  void condenseContactDynamicsBackwardEuler(Robot& robot, 
-                                            const ContactStatus& contact_status, 
-                                            const double dtau, 
-                                            SplitKKTMatrix& kkt_matrix, 
-                                            SplitKKTResidual& kkt_residual);
-
-  static void condensingBackwardEuler(const Robot& robot, const double dtau, 
-                                      ContactDynamicsData& data, 
-                                      SplitKKTMatrix& kkt_matrix, 
-                                      SplitKKTResidual& kkt_residual);
-
-  void computeCondensedPrimalDirection(const Robot& robot, SplitDirection& d);
+  void computeCondensedPrimalDirection(const Robot& robot, 
+                                       SplitDirection& d) const;
 
   template <typename VectorType>
   void computeCondensedDualDirection(const Robot& robot, const double dtau, 
@@ -78,18 +63,6 @@ public:
                                      const SplitKKTResidual& kkt_residual, 
                                      const Eigen::MatrixBase<VectorType>& dgmm,
                                      SplitDirection& d);
-
-  static void expansionPrimal(const Robot& robot, 
-                              const ContactDynamicsData& data, 
-                              SplitDirection& d);
-
-  template <typename VectorType>
-  static void expansionDual(const Robot& robot, const double dtau, 
-                            ContactDynamicsData& data,
-                            const SplitKKTMatrix& kkt_matrix, 
-                            const SplitKKTResidual& kkt_residual,
-                            const Eigen::MatrixBase<VectorType>& dgmm,
-                            SplitDirection& d);
 
   void computeContactDynamicsResidual(Robot& robot, 
                                       const ContactStatus& contact_status,
@@ -107,8 +80,6 @@ private:
   double baumgarte_time_step_;
   static constexpr int kDimFloatingBase = 6;
   static constexpr double kMindtau = std::numeric_limits<double>::epsilon();
-  // static constexpr double kMindtau
-  //     = std::sqrt(std::numeric_limits<double>::epsilon());
 
   void setContactStatus(const ContactStatus& contact_status);
 

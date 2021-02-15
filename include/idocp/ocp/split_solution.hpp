@@ -173,11 +173,6 @@ public:
   std::vector<Eigen::Vector3d> mu;
 
   ///
-  /// @brief Control input torques of the virtual floating base joint. Size is 6.
-  ///
-  Vector6d u_passive;
-
-  ///
   /// @brief Lagrange multiplier with respect to floating base. Size is 6.
   ///
   Vector6d nu_passive;
