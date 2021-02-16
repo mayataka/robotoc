@@ -45,6 +45,7 @@ protected:
 
   void testConstructorAndSetter(const std::string& path_to_urdf, const std::vector<int>& contact_frames) const;
   void testIntegrateConfiguration(const std::string& path_to_urdf, pinocchio::Model& model) const;
+  void testIntegrateConfigurationDerivatives(const std::string& path_to_urdf, pinocchio::Model& model) const;
   void testSubtractConfiguration(const std::string& path_to_urdf, pinocchio::Model& model) const;
   void testSubtractConfigurationDerivatives(const std::string& path_to_urdf, pinocchio::Model& model) const;
   void testFrameKinematicsGetters(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data, const int frame_id) const;
@@ -155,6 +156,28 @@ void RobotTest::testIntegrateConfiguration(const std::string& path_to_urdf, pino
   Eigen::VectorXd q_integrated2 = q;
   robot.integrateConfiguration(v, integration_length, q_integrated2);
   EXPECT_TRUE(q_integrated2.isApprox(q_integrated));
+}
+
+
+void RobotTest::testIntegrateConfigurationDerivatives(const std::string& path_to_urdf, pinocchio::Model& model) const {
+  Robot robot(path_to_urdf);
+  const Eigen::VectorXd q = pinocchio::randomConfiguration(
+      model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
+  Eigen::MatrixXd dIntdq     = Eigen::MatrixXd::Zero(model.nv, model.nv);
+  Eigen::MatrixXd dIntdv     = Eigen::MatrixXd::Zero(model.nv, model.nv);
+  Eigen::MatrixXd dIntdq_ref = Eigen::MatrixXd::Zero(model.nv, model.nv);
+  Eigen::MatrixXd dIntdv_ref = Eigen::MatrixXd::Zero(model.nv, model.nv);
+  robot.dIntegratedConfiguration(q, v, dIntdq);
+  robot.dIntegratedVelocity(q, v, dIntdv);
+  pinocchio::dIntegrate(model, q, v, dIntdq_ref, pinocchio::ARG0);
+  pinocchio::dIntegrate(model, q, v, dIntdv_ref, pinocchio::ARG1);
+  EXPECT_TRUE(dIntdq.isApprox(dIntdq_ref));
+  EXPECT_TRUE(dIntdv.isApprox(dIntdv_ref));
+  std::cout << "dIntdq" << std::endl;
+  std::cout << dIntdq << std::endl;
+  std::cout << "dIntdv" << std::endl;
+  std::cout << dIntdv << std::endl;
 }
 
 
@@ -380,7 +403,7 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
   robot.updateKinematics(q, v);
-  robot.computeImpulseConditionResidual(impulse_status, impulse_status.contactPoints(), residual.head(impulse_status.dimf()));
+  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(), residual.head(impulse_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
@@ -404,7 +427,7 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
     }
   }
   Eigen::MatrixXd contact_partial_q = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
-  robot.computeImpulseConditionDerivative(impulse_status, contact_partial_q.topRows(impulse_status.dimf()));
+  robot.computeContactDerivative(impulse_status, contact_partial_q.topRows(impulse_status.dimf()));
   EXPECT_TRUE(contact_partial_q.isApprox(contact_partial_q_ref));
 }
 

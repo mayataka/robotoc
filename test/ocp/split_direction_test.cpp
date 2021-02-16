@@ -157,11 +157,12 @@ void SplitDirectionTest::testSize(const Robot& robot,
   EXPECT_TRUE(d.daf().tail(dimf).isApprox(d.df()));
   EXPECT_TRUE(d.dbetamu().head(dimv).isApprox(d.dbeta()));
   EXPECT_TRUE(d.dbetamu().tail(dimf).isApprox(d.dmu()));
-  const SplitDirection d_random = SplitDirection::Random(robot, contact_status);
+  const SplitDirection d_random = SplitDirection::Random(robot, contact_status, 
+                                                         impulse_status);
   EXPECT_EQ(d_random.dlmd().size(), dimv);
   EXPECT_EQ(d_random.dgmm().size(), dimv);
   EXPECT_EQ(d_random.du().size(), dimu);
-  EXPECT_EQ(d_random.dxi().size(), 0);
+  EXPECT_EQ(d_random.dxi().size(), dimi);
   EXPECT_EQ(d_random.dq().size(), dimv);
   EXPECT_EQ(d_random.dv().size(), dimv);
   EXPECT_EQ(d_random.dx().size(), dimx);
@@ -173,7 +174,8 @@ void SplitDirectionTest::testSize(const Robot& robot,
   EXPECT_EQ(d_random.df().size(), dimf);
   EXPECT_EQ(d_random.dmu().size(), dimf);
   EXPECT_EQ(d_random.dimf(), dimf);
-  EXPECT_EQ(d_random.dimKKT(), 4*dimv+dimu);
+  EXPECT_EQ(d_random.dimi(), dimi);
+  EXPECT_EQ(d_random.dimKKT(), 4*dimv+dimu+dimi);
   EXPECT_FALSE(d_random.splitDirection().isZero());
   EXPECT_FALSE(d_random.dlmd().isZero());
   EXPECT_FALSE(d_random.dgmm().isZero());
@@ -182,6 +184,9 @@ void SplitDirectionTest::testSize(const Robot& robot,
   EXPECT_FALSE(d_random.dv().isZero());
   EXPECT_FALSE(d_random.dx().isZero());
   EXPECT_FALSE(d_random.da().isZero());
+  if (robot.hasFloatingBase()) {
+    EXPECT_FALSE(d_random.dnu_passive.isZero());
+  }
   if (dimf > 0) {
     EXPECT_FALSE(d_random.df().isZero());
   }
@@ -190,10 +195,10 @@ void SplitDirectionTest::testSize(const Robot& robot,
   if (dimf > 0) {
     EXPECT_FALSE(d_random.dmu().isZero());
   }
-  EXPECT_FALSE(d_random.dbetamu().isZero());
-  if (robot.hasFloatingBase()) {
-    EXPECT_FALSE(d_random.dnu_passive.isZero());
+  if (dimi > 0) {
+    EXPECT_FALSE(d_random.dxi().isZero());
   }
+  EXPECT_FALSE(d_random.dbetamu().isZero());
   EXPECT_TRUE(d_random.daf().head(dimv).isApprox(d_random.da()));
   EXPECT_TRUE(d_random.daf().tail(dimf).isApprox(d_random.df()));
   EXPECT_TRUE(d_random.dbetamu().head(dimv).isApprox(d_random.dbeta()));
@@ -294,20 +299,17 @@ TEST_F(SplitDirectionTest, fixedBase) {
   Robot robot(fixed_base_urdf, contact_frames);
   ContactStatus contact_status = robot.createContactStatus();
   ImpulseStatus impulse_status = robot.createImpulseStatus();
-  contact_status.setContactStatus({false});
-  impulse_status.setImpulseStatus({false});
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
-  contact_status.setContactStatus({true});
-  impulse_status.setImpulseStatus({false});
+  contact_status.activateContact(0);
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
-  contact_status.setContactStatus({false});
-  impulse_status.setImpulseStatus({true});
+  contact_status.deactivateContact(0);
+  impulse_status.activateImpulse(0);
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
-  contact_status.setContactStatus({true});
-  impulse_status.setImpulseStatus({true});
+  contact_status.activateContact(0);
+  impulse_status.activateImpulse(0);
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
 }
@@ -318,45 +320,30 @@ TEST_F(SplitDirectionTest, floatingBase) {
   Robot robot(floating_base_urdf, contact_frames);
   ContactStatus contact_status = robot.createContactStatus();
   ImpulseStatus impulse_status = robot.createImpulseStatus();
-  std::vector<bool> is_contact_active = {false, false, false, false};
-  std::vector<bool> is_impulse_active = {false, false, false, false};
-  // Both contact and impulse are inactive
-  contact_status.setContactStatus(is_contact_active);
-  impulse_status.setImpulseStatus(is_impulse_active);
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
-  std::random_device rnd;
-  // Contacts are active and impulse are inactive
-  is_contact_active.clear();
-  for (const auto frame : contact_frames) {
-    is_contact_active.push_back(rnd()%2==0);
-  }
-  contact_status.setContactStatus(is_contact_active);
+  contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
-  // Contacts are inactive and impulse are active
-  is_contact_active = {false, false, false, false};
-  is_impulse_active.clear();
-  for (const auto frame : contact_frames) {
-    is_impulse_active.push_back(rnd()%2==0);
+  for (int i=0; i<contact_frames.size(); ++i) {
+    contact_status.deactivateContact(i);
   }
-  impulse_status.setImpulseStatus(is_impulse_active);
+  impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
-  // Both contact and impulse are active
-  is_contact_active.clear();
-  for (const auto frame : contact_frames) {
-    is_contact_active.push_back(rnd()%2==0);
-  }
-  contact_status.setContactStatus(is_contact_active);
+  contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
+  }
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
   }
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);

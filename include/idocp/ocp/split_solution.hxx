@@ -20,10 +20,13 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     nu_passive(Vector6d::Zero()),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
+    xi_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     has_floating_base_(robot.hasFloatingBase()),
     has_active_contacts_(false),
+    has_active_impulse_(false),
     is_contact_active_(robot.maxPointContacts(), false),
-    dimf_(0) {
+    dimf_(0),
+    dimi_(0) {
   robot.normalizeConfiguration(q);
 }
 
@@ -41,10 +44,13 @@ inline SplitSolution::SplitSolution()
     nu_passive(Vector6d::Zero()),
     f_stack_(),
     mu_stack_(),
+    xi_stack_(),
     has_floating_base_(false),
     has_active_contacts_(false),
+    has_active_impulse_(false),
     is_contact_active_(),
-    dimf_(0) {
+    dimf_(0),
+    dimi_(0) {
 }
 
 
@@ -66,6 +72,25 @@ inline void SplitSolution::setContactStatus(const SplitSolution& other) {
   has_active_contacts_ = other.hasActiveContacts();
   is_contact_active_ = other.isContactActive();
   dimf_ = other.dimf();
+}
+
+
+inline void SplitSolution::setImpulseStatus(
+    const ImpulseStatus& impulse_status) {
+  has_active_impulse_ = impulse_status.hasActiveImpulse();
+  dimi_ = impulse_status.dimf();
+}
+
+
+inline void SplitSolution::setImpulseStatus(const SplitSolution& other) {
+  has_active_impulse_ = other.hasActiveImpulse();
+  dimi_ = other.dimi();
+}
+
+
+inline void SplitSolution::setImpulseStatus() {
+  has_active_impulse_ = false;
+  dimi_ = 0;
 }
 
 
@@ -166,6 +191,27 @@ inline bool SplitSolution::hasActiveContacts() const {
 }
 
 
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitSolution::xi_stack() {
+  return xi_stack_.head(dimi_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitSolution::xi_stack() const {
+  return xi_stack_.head(dimi_);
+}
+
+
+inline int SplitSolution::dimi() const {
+  return dimi_;
+}
+
+
+inline bool SplitSolution::hasActiveImpulse() const {
+  return has_active_impulse_;
+}
+
+
 inline void SplitSolution::integrate(const Robot& robot, const double step_size, 
                                      const SplitDirection& d) {
   lmd.noalias() += step_size * d.dlmd();
@@ -175,6 +221,9 @@ inline void SplitSolution::integrate(const Robot& robot, const double step_size,
   a.noalias() += step_size * d.da();
   u.noalias() += step_size * d.du();
   beta.noalias() += step_size * d.dbeta();
+  if (has_floating_base_) {
+    nu_passive.noalias() += step_size * d.dnu_passive;
+  }
   if (has_active_contacts_) {
     assert(f_stack().size() == d.df().size());
     f_stack().noalias() += step_size * d.df();
@@ -183,14 +232,16 @@ inline void SplitSolution::integrate(const Robot& robot, const double step_size,
     mu_stack().noalias() += step_size * d.dmu();
     set_mu_vector();
   }
-  if (has_floating_base_) {
-    nu_passive.noalias() += step_size * d.dnu_passive;
+  if (has_active_impulse_) {
+    assert(xi_stack().size() == d.dxi().size());
+    xi_stack().noalias() += step_size * d.dxi();
   }
 }
 
 
 inline void SplitSolution::copy(const SplitSolution& other) {
   setContactStatus(other);
+  setImpulseStatus(other);
   lmd          = other.lmd;
   gmm          = other.gmm;
   q            = other.q;
@@ -207,35 +258,8 @@ inline void SplitSolution::copy(const SplitSolution& other) {
     set_f_vector();
     set_mu_vector();
   }
-}
-
-
-inline void SplitSolution::interpolate(const Robot& robot, 
-                                       const SplitSolution& s1, 
-                                       const SplitSolution& s2, const double l1, 
-                                       const double l2) {
-  assert(l1 > 0);
-  assert(l2 > 0);
-  lmd          = (l2 * s1.lmd + l1 * s2.lmd) / (l1 + l2);
-  gmm          = (l2 * s1.gmm + l1 * s2.gmm) / (l1 + l2);
-  Eigen::VectorXd dq(robot.dimv());
-  robot.subtractConfiguration(s1.q, s2.q, dq);
-  robot.integrateConfiguration(s1.q, dq, (l1/(l1+l2)), q);
-  v            = (l2 * s1.v + l1 * s2.v) / (l1 + l2);
-  a            = (l2 * s1.a + l1 * s2.a) / (l1 + l2);
-  u            = (l2 * s1.u + l1 * s2.u) / (l1 + l2);
-  beta         = (l2 * s1.beta + l1 * s2.beta) / (l1 + l2);
-  if (has_floating_base_) {
-    nu_passive = (l2 * s1.nu_passive + l1 * s2.nu_passive) / (l1 + l2);
-  }
-  if (has_active_contacts_) {
-    const int max_point_contacts = f.size();
-    for (int i=0; i<max_point_contacts; ++i) {
-      f[i]     = (l2 * s1.f[i] + l1 * s2.f[i]) / (l1 + l2);
-      mu[i]    = (l2 * s1.mu[i] + l1 * s2.mu[i]) / (l1 + l2);
-    }
-    set_f_stack();
-    set_mu_stack();
+  if (has_active_impulse_) {
+    xi_stack() = other.xi_stack();
   }
 }
 
@@ -261,6 +285,11 @@ inline bool SplitSolution::isApprox(const SplitSolution& other) const {
   }
   if (!beta.isApprox(other.beta)) {
     return false;
+  }
+  if (has_floating_base_) {
+    if (!nu_passive.isApprox(other.nu_passive)) {
+      return false;
+    }
   }
   if (has_active_contacts_) {
     if (!f_stack().isApprox(other.f_stack())) {
@@ -288,8 +317,8 @@ inline bool SplitSolution::isApprox(const SplitSolution& other) const {
       }
     }
   }
-  if (has_floating_base_) {
-    if (!nu_passive.isApprox(other.nu_passive)) {
+  if (has_active_impulse_) {
+    if (!xi_stack().isApprox(other.xi_stack())) {
       return false;
     }
   }
@@ -325,6 +354,27 @@ inline void SplitSolution::setRandom(const Robot& robot,
 }
 
 
+inline void SplitSolution::setRandom(const Robot& robot, 
+                                     const ImpulseStatus& impulse_status) {
+  setImpulseStatus(impulse_status);
+  setRandom(robot);
+  if (impulse_status.hasActiveImpulse()) {
+    xi_stack().setRandom();
+  }
+}
+
+
+inline void SplitSolution::setRandom(const Robot& robot, 
+                                     const ContactStatus& contact_status,
+                                     const ImpulseStatus& impulse_status) {
+  setRandom(robot, contact_status);
+  setImpulseStatus(impulse_status);
+  if (impulse_status.hasActiveImpulse()) {
+    xi_stack().setRandom();
+  }
+}
+
+
 inline SplitSolution SplitSolution::Random(const Robot& robot) {
   SplitSolution s(robot);
   s.setRandom(robot);
@@ -336,6 +386,23 @@ inline SplitSolution SplitSolution::Random(
     const Robot& robot, const ContactStatus& contact_status) {
   SplitSolution s(robot);
   s.setRandom(robot, contact_status);
+  return s;
+}
+
+
+inline SplitSolution SplitSolution::Random(
+    const Robot& robot, const ImpulseStatus& impulse_status) {
+  SplitSolution s(robot);
+  s.setRandom(robot, impulse_status);
+  return s;
+}
+
+
+inline SplitSolution SplitSolution::Random(
+    const Robot& robot, const ContactStatus& contact_status, 
+    const ImpulseStatus& impulse_status) {
+  SplitSolution s(robot);
+  s.setRandom(robot, contact_status, impulse_status);
   return s;
 }
 

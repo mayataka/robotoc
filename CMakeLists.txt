@@ -87,11 +87,13 @@ add_library(
   src/ocp/split_kkt_residual.cpp
   src/ocp/split_kkt_matrix.cpp
   src/ocp/split_kkt_matrix_inverter.cpp
+  src/ocp/split_state_constraint_jacobian.cpp
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
   src/ocp/contact_dynamics_data.cpp
   src/ocp/contact_dynamics.cpp
+  src/ocp/switching_constraint.cpp
   src/ocp/split_ocp.cpp
   src/ocp/terminal_ocp.cpp
   src/ocp/ocp_linearizer.cpp

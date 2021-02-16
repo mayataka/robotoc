@@ -245,7 +245,6 @@ double ParNMPCLinearizer::KKTError(const ParNMPC& parnmpc,
 
 
 void ParNMPCLinearizer::integrateSolution(ParNMPC& parnmpc, 
-                                          const BackwardCorrection& corr,
                                           const std::vector<Robot>& robots, 
                                           const KKTMatrix& kkt_matrix, 
                                           const KKTResidual& kkt_residual, 
@@ -272,10 +271,6 @@ void ParNMPCLinearizer::integrateSolution(ParNMPC& parnmpc,
       const int impulse_index  = i - N_;
       const bool is_position_constraint_valid 
           = (parnmpc.discrete().timeStageBeforeImpulse(impulse_index) >= 0);
-      if (is_position_constraint_valid) {
-        corr.aux[impulse_index].computeDirection(s.impulse[impulse_index],
-                                                 d.impulse[impulse_index]);
-      }
       parnmpc.impulse[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
                                                   primal_step_size, 
                                                   d.impulse[impulse_index], 

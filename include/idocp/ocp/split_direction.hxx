@@ -303,11 +303,26 @@ inline void SplitDirection::setRandom() {
   if (has_floating_base_) {
     dnu_passive.setRandom();
   }
+  dxi().setRandom();
 }
 
 
 inline void SplitDirection::setRandom(const ContactStatus& contact_status) {
   setContactStatus(contact_status);
+  setRandom();
+}
+
+
+inline void SplitDirection::setRandom(const ImpulseStatus& impulse_status) {
+  setImpulseStatus(impulse_status);
+  setRandom();
+}
+
+
+inline void SplitDirection::setRandom(const ContactStatus& contact_status, 
+                                      const ImpulseStatus& impulse_status) {
+  setContactStatus(contact_status);
+  setImpulseStatus(impulse_status);
   setRandom();
 }
 
@@ -323,6 +338,23 @@ inline SplitDirection SplitDirection::Random(
     const Robot& robot, const ContactStatus& contact_status) {
   SplitDirection d(robot);
   d.setRandom(contact_status);
+  return d;
+}
+
+
+inline SplitDirection SplitDirection::Random(
+    const Robot& robot, const ImpulseStatus& impulse_status) {
+  SplitDirection d(robot);
+  d.setRandom(impulse_status);
+  return d;
+}
+
+
+inline SplitDirection SplitDirection::Random(
+    const Robot& robot, const ContactStatus& contact_status, 
+    const ImpulseStatus& impulse_status) {
+  SplitDirection d(robot);
+  d.setRandom(contact_status, impulse_status);
   return d;
 }
 

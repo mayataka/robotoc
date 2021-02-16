@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
 
 
 namespace idocp {
@@ -121,7 +122,7 @@ private:
                   MJtJinv_dIDCdqv_full_, Qafqv_full_, 
                   Qafu_full_full_;
   Eigen::VectorXd IDC_full_, MJtJinv_IDC_full_, laf_full_;
-  int dimv_, dimu_, dimvf_, dimf_, dim_passive_;
+  int dimv_, dimu_, dimf_, dimvf_, dim_passive_;
 
 };
 

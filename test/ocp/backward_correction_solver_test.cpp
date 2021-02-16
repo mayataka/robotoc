@@ -147,7 +147,7 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
       corr_ref.aux[impulse_index].coarseUpdate(
           robot_ref, dt_aux, aux_mat, kkt_matrix_ref.aux[impulse_index], 
           kkt_residual_ref.aux[impulse_index], s.aux[impulse_index], 
-          s.impulse[impulse_index], s_new_ref.aux[impulse_index]);
+          s_new_ref.aux[impulse_index]);
       parnmpc_ref.impulse[impulse_index].linearizeOCP(
           robot_ref, contact_sequence.impulseStatus(impulse_index), t_impulse, 
           s.aux[impulse_index].q, s.aux[impulse_index].v, 

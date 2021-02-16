@@ -122,10 +122,9 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> dgmm() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::xi_stack(). 
-  /// Size is ImpulseSplitSolution::dimf().
-  /// @return Reference to the Newton direction of 
-  /// ImpulseSplitSolution::xi_stack().
+  /// @brief Returns the Newton direction of SplitSolution::xi_stack(). 
+  /// Size is SplitSolution::dimi().
+  /// @return Reference to the Newton direction of SplitSolution::xi_stack().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dxi();
 
@@ -309,6 +308,21 @@ public:
   void setRandom(const ContactStatus& contact_status);
 
   ///
+  /// @brief Set each component vector by random value. Impulse status is reset.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setRandom(const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Set each component vector by random value. Contact status and 
+  /// impulse status are reset.
+  /// @param[in] contact_status Contact status.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setRandom(const ContactStatus& contact_status,
+                 const ImpulseStatus& impulse_status);
+
+  ///
   /// @brief Generates split direction filled randomly.
   /// @return Split direction filled randomly.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -323,6 +337,26 @@ public:
   ///
   static SplitDirection Random(const Robot& robot, 
                                const ContactStatus& contact_status);
+
+  ///
+  /// @brief Generates split direction filled randomly.
+  /// @return Split direction filled randomly.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  static SplitDirection Random(const Robot& robot, 
+                               const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Generates split direction filled randomly.
+  /// @return Split direction filled randomly.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  static SplitDirection Random(const Robot& robot, 
+                               const ContactStatus& contact_status,
+                               const ImpulseStatus& impulse_status);
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

@@ -1,0 +1,1 @@
+#include "idocp/ocp/switching_constraint.hpp"

@@ -49,6 +49,7 @@ inline void ImpulseSplitBackwardCorrection::coarseUpdate(
                            data_.KKT_mat_inv());
   data_.splitDirection().noalias() 
       = data_.KKT_mat_inv() * kkt_residual.splitKKTResidual();
+  s_new.setImpulseStatus(s);
   s_new.lmd        = s.lmd         - data_.dlmd();
   s_new.gmm        = s.gmm         - data_.dgmm();
   s_new.mu_stack() = s.mu_stack()  - data_.dmu(); 

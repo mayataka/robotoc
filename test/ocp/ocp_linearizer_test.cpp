@@ -309,8 +309,10 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto d_ref = d;
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
+  std::cout << "before integrateSolution" << std::endl;
   linearizer.integrateSolution(ocp, robots, kkt_matrix, kkt_residual, 
                                primal_step_size, dual_step_size, d, s);
+  std::cout << "after integrateSolution" << std::endl;
   auto robot_ref = robot;
   for (int i=0; i<N; ++i) {
     if (ocp_ref.discrete().isTimeStageBeforeImpulse(i)) {

@@ -257,7 +257,7 @@ void ParNMPCLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto corr_ref = corr;
   auto s_ref = s;
   auto d_ref = d;
-  linearizer.integrateSolution(parnmpc, corr, robots, kkt_matrix, kkt_residual, 
+  linearizer.integrateSolution(parnmpc, robots, kkt_matrix, kkt_residual, 
                                primal_step_size, dual_step_size, d, s);
   auto robot_ref = robot;
   for (int i=0; i<N; ++i) {
@@ -272,7 +272,6 @@ void ParNMPCLinearizerTest::testIntegrateSolution(const Robot& robot) const {
       parnmpc_ref.aux[impulse_index].updatePrimal(robot_ref, primal_step_size, 
                                                   d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
       parnmpc_ref.aux[impulse_index].updateDual(dual_step_size);
-      corr_ref.aux[impulse_index].computeDirection(s_ref.impulse[impulse_index], d_ref.impulse[impulse_index]);
       parnmpc_ref.impulse[impulse_index].updatePrimal(robot_ref, primal_step_size, 
                                                       d_ref.impulse[impulse_index], s_ref.impulse[impulse_index],
                                                       true);

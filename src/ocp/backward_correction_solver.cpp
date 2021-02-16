@@ -172,8 +172,6 @@ void BackwardCorrectionSolver::coarseUpdate(
           s.aux[impulse_index].v, s.impulse[impulse_index], 
           s[time_stage_after_impulse], kkt_matrix.impulse[impulse_index], 
           kkt_residual.impulse[impulse_index]);
-      s_new_.impulse[impulse_index].setImpulseStatus(
-          contact_sequence.impulseStatus(impulse_index));
       corr.impulse[impulse_index].coarseUpdate(
           robots[omp_get_thread_num()], aux_mat_[time_stage_after_impulse], 
           kkt_matrix.impulse[impulse_index], kkt_residual.impulse[impulse_index], 
@@ -199,7 +197,7 @@ void BackwardCorrectionSolver::coarseUpdate(
             parnmpc.discrete().dtau_aux(impulse_index), 
             aux_mat_impulse_[impulse_index], kkt_matrix.aux[impulse_index], 
             kkt_residual.aux[impulse_index], s.aux[impulse_index], 
-            s.impulse[impulse_index], s_new_.aux[impulse_index]);
+            s_new_.aux[impulse_index]);
       }
       else {
         assert(time_stage_before_impulse == -1);
@@ -382,8 +380,8 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
         corr[i].forwardCorrectionParallel(s_new_[i]);
       }
       aux_mat_[i] = - corr[i].auxMat();
-      SplitBackwardCorrection::computeDirection(robots[omp_get_thread_num()], 
-                                                s[i], s_new_[i], d[i]);
+      corr[i].computeDirection(robots[omp_get_thread_num()], 
+                               s[i], s_new_[i], d[i]);
       const double dtau = parnmpc.discrete().dtau(i);
       parnmpc[i].computeCondensedPrimalDirection(robots[omp_get_thread_num()], 
                                                  dtau, s[i], d[i]);
@@ -396,8 +394,8 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
     else if (i == N_-1) {
       corr[i].forwardCorrectionParallel(s_new_[i]);
       aux_mat_[i] = - corr[i].auxMat();
-      SplitBackwardCorrection::computeDirection(robots[omp_get_thread_num()], 
-                                                s[i], s_new_[i], d[i]);
+      corr[i].computeDirection(robots[omp_get_thread_num()], 
+                               s[i], s_new_[i], d[i]);
       const double dtau = parnmpc.discrete().dtau(i);
       parnmpc.terminal.computeCondensedPrimalDirection(
           robots[omp_get_thread_num()], dtau, s[i], d[i]);
@@ -412,7 +410,7 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
       corr.impulse[impulse_index].forwardCorrectionParallel(
           s_new_.impulse[impulse_index]);
       aux_mat_impulse_[impulse_index] = - corr.impulse[impulse_index].auxMat();
-      ImpulseSplitBackwardCorrection::computeDirection(
+      corr.impulse[impulse_index].computeDirection(
           robots[omp_get_thread_num()], s.impulse[impulse_index], 
           s_new_.impulse[impulse_index], d.impulse[impulse_index]);
       parnmpc.impulse[impulse_index].computeCondensedPrimalDirection(
@@ -433,10 +431,10 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
             s_new_.aux[impulse_index]);
         aux_mat_aux_[impulse_index] = - corr.aux[impulse_index].auxMat();
       }
-      SplitBackwardCorrection::computeDirection(robots[omp_get_thread_num()], 
-                                                s.aux[impulse_index], 
-                                                s_new_.aux[impulse_index], 
-                                                d.aux[impulse_index]);
+      corr.aux[impulse_index].computeDirection(robots[omp_get_thread_num()], 
+                                               s.aux[impulse_index], 
+                                               s_new_.aux[impulse_index], 
+                                               d.aux[impulse_index]);
       const double dtau_aux = parnmpc.discrete().dtau_aux(impulse_index);
       parnmpc.aux[impulse_index].computeCondensedPrimalDirection(
           robots[omp_get_thread_num()], dtau_aux, 
@@ -456,10 +454,10 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
             s_new_.lift[lift_index]);
         aux_mat_lift_[lift_index] = - corr.lift[lift_index].auxMat();
       }
-      SplitBackwardCorrection::computeDirection(robots[omp_get_thread_num()], 
-                                                s.lift[lift_index], 
-                                                s_new_.lift[lift_index], 
-                                                d.lift[lift_index]);
+      corr.lift[lift_index].computeDirection(robots[omp_get_thread_num()], 
+                                             s.lift[lift_index], 
+                                             s_new_.lift[lift_index], 
+                                             d.lift[lift_index]);
       const double dtau_lift = parnmpc.discrete().dtau_lift(lift_index);
       parnmpc.lift[lift_index].computeCondensedPrimalDirection(
           robots[omp_get_thread_num()], dtau_lift, 

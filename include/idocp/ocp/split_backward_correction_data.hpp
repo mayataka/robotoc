@@ -55,7 +55,7 @@ public:
   SplitBackwardCorrectionData& operator=(
       SplitBackwardCorrectionData&&) noexcept = default;
 
-  void setImpulseStatus(const int dimf);
+  void setImpulseStatus(const int dimi);
 
   Eigen::Block<Eigen::MatrixXd> KKT_mat_inv();
 
@@ -93,14 +93,10 @@ public:
 
   const Eigen::VectorBlock<const Eigen::VectorXd> dv() const;
 
-  Eigen::VectorBlock<Eigen::VectorXd> xi_stack();
-
-  const Eigen::VectorBlock<const Eigen::VectorXd> xi_stack() const;
-
 private:
-  int dimv_, dimx_, dimu_, dimf_, dimKKT_, du_begin_, dq_begin_, dv_begin_;
+  int dimv_, dimx_, dimu_, dimi_, dimKKT_, du_begin_, dq_begin_, dv_begin_;
   Eigen::MatrixXd KKT_mat_inv_full_;
-  Eigen::VectorXd split_direction_full_, xi_stack_full_;
+  Eigen::VectorXd split_direction_full_;
 
 };
 

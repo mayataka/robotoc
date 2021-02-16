@@ -71,10 +71,10 @@ inline void ImpulseDynamicsForwardEuler::linearizeImpulseVelocityConstraint(
 inline void ImpulseDynamicsForwardEuler::linearizeImpulsePositionConstraint(
       Robot& robot, const ImpulseStatus& impulse_status, 
       ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
-  robot.computeImpulseConditionResidual(impulse_status,
+  robot.computeContactResidual(impulse_status,
                                         impulse_status.contactPoints(),
                                         kkt_residual.P());
-  robot.computeImpulseConditionDerivative(impulse_status, kkt_matrix.Pq());
+  robot.computeContactDerivative(impulse_status, kkt_matrix.Pq());
 }
 
 
@@ -168,7 +168,7 @@ inline void ImpulseDynamicsForwardEuler::computeImpulseDynamicsResidual(
   robot.RNEAImpulse(s.q, s.dv, data_.ImD());
   robot.computeImpulseVelocityResidual(impulse_status, data_.C());
   if (is_state_constraint_valid) {
-    robot.computeImpulseConditionResidual(impulse_status, 
+    robot.computeContactResidual(impulse_status, 
                                           impulse_status.contactPoints(), 
                                           kkt_residual.P());
   }

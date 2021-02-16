@@ -83,8 +83,8 @@ void ImpulseDynamicsForwardEulerTest::testLinearizeImpulsePositionConstraints(Ro
   kkt_residual_ref.setImpulseStatus(impulse_status);
   robot.updateKinematics(s.q, s.v+s.dv);
   ImpulseDynamicsForwardEuler::linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix, kkt_residual);
-  robot.computeImpulseConditionResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
-  robot.computeImpulseConditionDerivative(impulse_status, kkt_matrix_ref.Pq());
+  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
+  robot.computeContactDerivative(impulse_status, kkt_matrix_ref.Pq());
   EXPECT_TRUE(kkt_residual.P().isApprox(kkt_residual_ref.P()));
   EXPECT_TRUE(kkt_matrix.Pq().isApprox(kkt_matrix_ref.Pq()));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -332,7 +332,7 @@ void ImpulseDynamicsForwardEulerTest::testComputeResidual(Robot& robot, const Im
   robot.RNEAImpulse(s.q, s.dv, data.ImD());
   robot.updateKinematics(s.q, s.v+s.dv);
   robot.computeImpulseVelocityResidual(impulse_status, data.C());
-  robot.computeImpulseConditionResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
+  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
   if (is_state_constraint_valid) {
     double l1norm_ref = data.ImDC().lpNorm<1>() + kkt_residual_ref.P().lpNorm<1>();
     double squarednorm_ref = data.ImDC().squaredNorm() + kkt_residual_ref.P().squaredNorm();

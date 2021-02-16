@@ -12,7 +12,7 @@ inline SplitBackwardCorrectionData::SplitBackwardCorrectionData(
   : dimv_(robot.dimv()),
     dimx_(2*robot.dimv()),
     dimu_(robot.dimu()),
-    dimf_(0),
+    dimi_(0),
     dimKKT_(4*robot.dimv()+robot.dimu()),
     du_begin_(2*robot.dimv()), 
     dq_begin_(2*robot.dimv()+robot.dimu()), 
@@ -21,8 +21,7 @@ inline SplitBackwardCorrectionData::SplitBackwardCorrectionData(
         4*robot.dimv()+robot.dimu()+robot.max_dimf(), 
         4*robot.dimv()+robot.dimu()+robot.max_dimf())),
     split_direction_full_(Eigen::VectorXd::Zero(
-        4*robot.dimv()+robot.dimu()+robot.max_dimf())),
-    xi_stack_full_(Eigen::VectorXd::Zero(robot.max_dimf())) {
+        4*robot.dimv()+robot.dimu()+robot.max_dimf())) {
 }
 
 
@@ -30,14 +29,13 @@ inline SplitBackwardCorrectionData::SplitBackwardCorrectionData()
   : dimv_(0),
     dimx_(0),
     dimu_(0),
-    dimf_(0),
+    dimi_(0),
     dimKKT_(0),
     du_begin_(0), 
     dq_begin_(0), 
     dv_begin_(0),
     KKT_mat_inv_full_(),
-    split_direction_full_(),
-    xi_stack_full_() {
+    split_direction_full_() {
 }
 
 
@@ -46,12 +44,12 @@ inline SplitBackwardCorrectionData::~SplitBackwardCorrectionData() {
 
 
 inline void SplitBackwardCorrectionData::setImpulseStatus(
-    const int dimf) {
-  dimf_   = dimf;
-  dimKKT_ = 2*dimx_ + dimu_ + dimf_;
-  du_begin_ = dimx_ + dimf_;
-  dq_begin_ = dimx_ + dimf_ + dimu_;
-  dv_begin_ = dimx_ + dimf_ + dimu_ + dimv_;
+    const int dimi) {
+  dimi_   = dimi;
+  dimKKT_ = 2*dimx_ + dimu_ + dimi_;
+  du_begin_ = dimx_ + dimi_;
+  dq_begin_ = dimx_ + dimi_ + dimu_;
+  dv_begin_ = dimx_ + dimi_ + dimu_ + dimv_;
 }
 
 
@@ -117,13 +115,13 @@ SplitBackwardCorrectionData::dgmm() const {
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
 SplitBackwardCorrectionData::dxi() {
-  return split_direction_full_.segment(dimx_, dimf_);
+  return split_direction_full_.segment(dimx_, dimi_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitBackwardCorrectionData::dxi() const {
-  return split_direction_full_.segment(dimx_, dimf_);
+  return split_direction_full_.segment(dimx_, dimi_);
 }
 
 
@@ -160,18 +158,6 @@ SplitBackwardCorrectionData::dv() {
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitBackwardCorrectionData::dv() const {
   return split_direction_full_.segment(dv_begin_, dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> 
-SplitBackwardCorrectionData::xi_stack() {
-  return xi_stack_full_.head(dimf_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitBackwardCorrectionData::xi_stack() const {
-  return xi_stack_full_.head(dimf_);
 }
 
 } // namespace idocp

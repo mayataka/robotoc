@@ -10,6 +10,7 @@
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/contact_dynamics_data.hpp"
+#include "idocp/ocp/split_state_constraint_jacobian.hpp"
 
 #include <limits>
 #include <cmath>
@@ -64,6 +65,9 @@ public:
                                      const Eigen::MatrixBase<VectorType>& dgmm,
                                      SplitDirection& d);
 
+  void condenseSwitchingConstraint(SplitKKTResidual& kkt_residual, 
+                                   SplitStateConstraintJacobian& jac) const;
+
   void computeContactDynamicsResidual(Robot& robot, 
                                       const ContactStatus& contact_status,
                                       const SplitSolution& s);
@@ -78,6 +82,7 @@ private:
   ContactDynamicsData data_;
   bool has_floating_base_, has_active_contacts_;
   double baumgarte_time_step_;
+  int dimv_, dimu_, dim_passive_;
   static constexpr int kDimFloatingBase = 6;
   static constexpr double kMindtau = std::numeric_limits<double>::epsilon();
 

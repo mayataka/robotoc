@@ -152,6 +152,10 @@ Solution CreateSolution(const Robot& robot, const ContactSequence& contact_seque
     }
     for (int i=0; i<num_impulse; ++i) {
       s.aux[i].setRandom(robot, contact_sequence.contactStatus(parnmpc_discretizer.contactPhaseBeforeImpulse(i)));
+      if (parnmpc_discretizer.timeStageBeforeImpulse(i) >= 0) {
+        s.aux[i].setImpulseStatus(contact_sequence.impulseStatus(i));
+        s.aux[i].xi_stack().setRandom();
+      }
     }
     const int num_lift = contact_sequence.numLiftEvents();
     for (int i=0; i<num_lift; ++i) {
@@ -173,6 +177,13 @@ Solution CreateSolution(const Robot& robot, const ContactSequence& contact_seque
     for (int i=0; i<num_impulse; ++i) {
       s.aux[i].setRandom(robot, contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterImpulse(i)));
     }
+    // for (int i=0; i<num_impulse; ++i) {
+    //   const int time_stage_before_impulse = ocp_discretizer.timeStageBeforeImpulse(i);
+    //   if (time_stage_before_impulse-1 >= 0) {
+    //     s[time_stage_before_impulse-1].setImpulseStatus(contact_sequence.impulseStatus(i));
+    //     s[time_stage_before_impulse-1].xi_stack().setRandom();
+    //   }
+    // }
     const int num_lift = contact_sequence.numLiftEvents();
     for (int i=0; i<num_lift; ++i) {
       s.lift[i].setRandom(robot, contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterLift(i)));
@@ -211,6 +222,10 @@ Direction CreateDirection(const Robot& robot, const ContactSequence& contact_seq
       }
       for (int i=0; i<num_impulse; ++i) {
         d.aux[i].setRandom(contact_sequence.contactStatus(parnmpc_discretizer.contactPhaseBeforeImpulse(i)));
+        if (parnmpc_discretizer.timeStageBeforeImpulse(i) >= 0) {
+          d.aux[i].setImpulseStatus(contact_sequence.impulseStatus(i));
+          d.aux[i].dxi().setRandom();
+        }
       }
       const int num_lift = contact_sequence.numLiftEvents();
       for (int i=0; i<num_lift; ++i) {
@@ -232,6 +247,13 @@ Direction CreateDirection(const Robot& robot, const ContactSequence& contact_seq
       for (int i=0; i<num_impulse; ++i) {
         d.aux[i].setRandom(contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterImpulse(i)));
       }
+      // for (int i=0; i<num_impulse; ++i) {
+      //   const int time_stage_before_impulse = ocp_discretizer.timeStageBeforeImpulse(i);
+      //   if (time_stage_before_impulse-1 >= 0) {
+      //     d[time_stage_before_impulse-1].setImpulseStatus(contact_sequence.impulseStatus(i));
+      //     d[time_stage_before_impulse-1].dxi().setRandom();
+      //   }
+      // }
       const int num_lift = contact_sequence.numLiftEvents();
       for (int i=0; i<num_lift; ++i) {
         d.lift[i].setRandom(contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterLift(i)));

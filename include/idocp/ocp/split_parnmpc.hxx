@@ -2,7 +2,7 @@
 #define IDOCP_SPLIT_PARNMPC_HXX_
 
 #include "idocp/ocp/split_parnmpc.hpp"
-#include "idocp/impulse/impulse_dynamics_backward_euler.hpp"
+#include "idocp/ocp/switching_constraint.hpp"
 
 #include <cassert>
 
@@ -126,9 +126,8 @@ inline void SplitParNMPC::linearizeOCP(Robot& robot,
                                        kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dtau, s, 
                                              kkt_residual);
-  ImpulseDynamicsBackwardEuler::linearizeImpulseCondition(robot, impulse_status,
-                                                          s_next, kkt_matrix, 
-                                                          kkt_residual);
+  switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, s, 
+                                                    kkt_matrix, kkt_residual);
   cost_->computeStageCostHessian(robot, cost_data_, t, dtau, s, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dtau, s, 
                                      kkt_matrix, kkt_residual);
@@ -241,9 +240,8 @@ inline void SplitParNMPC::computeKKTResidual(
                                         kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dtau, s, 
                                              kkt_residual);
-  ImpulseDynamicsBackwardEuler::linearizeImpulseCondition(robot, impulse_status,
-                                                          s_next, kkt_matrix, 
-                                                          kkt_residual);
+  switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, s, 
+                                                    kkt_matrix, kkt_residual);
 }
 
 
@@ -260,8 +258,7 @@ inline double SplitParNMPC::squaredNormKKTResidual(
   error += stateequation::squaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dtau);
   error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
-  error += ImpulseDynamicsBackwardEuler::squaredNormImpulseConditionResidual(
-      kkt_residual);
+  error += switchingconstraint::squaredNormSwitchingConstraintResidual(kkt_residual);
   return error;
 }
 
@@ -324,15 +321,13 @@ inline double SplitParNMPC::constraintViolation(
   stateequation::computeBackwardEulerResidual(robot, dtau, q_prev, v_prev, s, 
                                               kkt_residual);
   contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, s);
-  ImpulseDynamicsBackwardEuler::computeImpulseConditionResidual(robot, 
-                                                                impulse_status, 
-                                                                kkt_residual);
+  switchingconstraint::computeSwitchingConstraintResidual(robot, impulse_status, 
+                                                          kkt_residual);
   double violation = 0;
   violation += stateequation::l1NormStateEuqationResidual(kkt_residual);
   violation += contact_dynamics_.l1NormContactDynamicsResidual(dtau);
   violation += dtau * constraints_->l1NormPrimalResidual(constraints_data_);
-  violation += ImpulseDynamicsBackwardEuler::l1NormImpulseConditionResidual(
-      kkt_residual);
+  violation += switchingconstraint::l1NormSwitchingConstraintResidual(kkt_residual);
   return violation;
 }
 
