@@ -62,8 +62,6 @@ public:
                             const Eigen::MatrixBase<MatrixType3>& Kuq,
                             const Eigen::MatrixBase<MatrixType4>& Kuv) const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   Eigen::VectorXd ID_, lu_condensed_;
   Eigen::MatrixXd dID_dq_, dID_dv_, dID_da_, Quu_, Quu_dID_dq_, Quu_dID_dv_, 

@@ -42,10 +42,10 @@ Direction CreateDirection(const Robot& robot, const ContactSequence& contact_seq
                           const bool is_parnmpc=false);
 
 KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence, 
-                          const int N, const int max_num_impulse);
+                          const int N, const int max_num_impulse, const bool is_parnmpc=false);
 
 KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact_sequence, 
-                              const int N, const int max_num_impulse);
+                              const int N, const int max_num_impulse, const bool is_parnmpc=false);
 
 template <typename Type, typename ImpulseType>
 bool IsApprox(const hybrid_container<Type, ImpulseType>& rhs, 

@@ -68,8 +68,6 @@ public:
               const Eigen::MatrixBase<MatrixType1>& Q,
               const Eigen::MatrixBase<MatrixType2>& KKT_matrix_inverse);
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   Eigen::LLT<Eigen::MatrixXd> llt_Q_, llt_S_;
   Eigen::MatrixXd FQinv_, S_;

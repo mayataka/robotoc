@@ -47,13 +47,10 @@ void SplitImpulseKKTResidualTest::testSize(const Robot& robot,
   EXPECT_EQ(kkt_residual.lq().size(), dimv);
   EXPECT_EQ(kkt_residual.lv().size(), dimv);
   EXPECT_EQ(kkt_residual.lx().size(), 2*dimv);
-  EXPECT_EQ(kkt_residual.P().size(), dimf);
   EXPECT_EQ(kkt_residual.dimf(), dimf);
   EXPECT_EQ(kkt_residual.ldv.size(), dimv);
   kkt_residual.splitKKTResidual()   = Eigen::VectorXd::Random(kkt_residual.dimKKT());
-  const Eigen::VectorXd P_ref   = Eigen::VectorXd::Random(dimf);
   const Eigen::VectorXd ldv_ref = Eigen::VectorXd::Random(dimf);
-  kkt_residual.P() = P_ref;
   kkt_residual.ldv = ldv_ref;
   const Eigen::VectorXd Fq_ref = kkt_residual.splitKKTResidual().segment(0,             dimv);
   const Eigen::VectorXd Fv_ref = kkt_residual.splitKKTResidual().segment(dimv,          dimv);
@@ -72,7 +69,6 @@ void SplitImpulseKKTResidualTest::testSize(const Robot& robot,
   EXPECT_TRUE(kkt_residual.lv().isApprox(lv_ref));
   EXPECT_TRUE(kkt_residual.lx().isApprox(lx_ref));
   EXPECT_TRUE(kkt_residual.ldv.isApprox(ldv_ref));
-  EXPECT_TRUE(kkt_residual.P().isApprox(P_ref));
   ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   kkt_residual_ref.splitKKTResidual().setRandom();
@@ -85,7 +81,6 @@ void SplitImpulseKKTResidualTest::testIsApprox(const Robot& robot,
   ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setImpulseStatus(impulse_status);
   kkt_residual.splitKKTResidual().setRandom();
-  kkt_residual.P().setRandom();
   kkt_residual.ldv.setRandom();
   ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -122,12 +117,6 @@ void SplitImpulseKKTResidualTest::testIsApprox(const Robot& robot,
     EXPECT_FALSE(kkt_residual.isApprox(kkt_residual_ref));
     kkt_residual.lf() = kkt_residual_ref.lf();
     EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
-
-    kkt_residual_ref.P().setRandom();
-    EXPECT_FALSE(kkt_residual.isApprox(kkt_residual_ref));
-    kkt_residual.P() = kkt_residual_ref.P();
-    EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
-
     kkt_residual_ref.V().setRandom();
     EXPECT_FALSE(kkt_residual.isApprox(kkt_residual_ref));
     kkt_residual.V() = kkt_residual_ref.V();
@@ -135,7 +124,6 @@ void SplitImpulseKKTResidualTest::testIsApprox(const Robot& robot,
   }
   else {
     kkt_residual_ref.lf().setRandom();
-    kkt_residual_ref.P().setRandom();
     kkt_residual_ref.V().setRandom();
     EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   }

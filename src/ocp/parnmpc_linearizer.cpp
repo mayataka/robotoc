@@ -269,13 +269,10 @@ void ParNMPCLinearizer::integrateSolution(ParNMPC& parnmpc,
     }
     else if (i < N_+N_impulse) {
       const int impulse_index  = i - N_;
-      const bool is_position_constraint_valid 
-          = (parnmpc.discrete().timeStageBeforeImpulse(impulse_index) >= 0);
       parnmpc.impulse[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
                                                   primal_step_size, 
                                                   d.impulse[impulse_index], 
-                                                  s.impulse[impulse_index],
-                                                  is_position_constraint_valid);
+                                                  s.impulse[impulse_index]);
       parnmpc.impulse[impulse_index].updateDual(dual_step_size);
     }
     else if (i < N_+2*N_impulse) {

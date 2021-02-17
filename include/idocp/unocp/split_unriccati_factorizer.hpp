@@ -111,8 +111,6 @@ public:
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Kq,
                             const Eigen::MatrixBase<MatrixType2>& Kv) const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   int dimv_;
   Eigen::LLT<Eigen::MatrixXd> llt_;

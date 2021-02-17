@@ -9,10 +9,9 @@
 #include "idocp/impulse/impulse_split_ocp.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/ocp/state_constraint_jacobian.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 #include "idocp/ocp/riccati_solver.hpp"
-#include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
-#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/riccati_recursion.hpp"
 #include "idocp/ocp/riccati_direction_calculator.hpp"
 
@@ -78,9 +77,10 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
+  StateConstraintJacobian jac(robot, max_num_impulse);
   std::vector<Robot> robots(nthreads, robot);
   linearizer.initConstraints(ocp, robots, contact_sequence, s);
-  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual, jac);
   Direction d = Direction(robot, N, max_num_impulse);
   auto ocp_ref = ocp;
   auto robots_ref = robots;
@@ -88,16 +88,12 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   RiccatiSolver riccati_solver(robot, N, max_num_impulse, nthreads);
-  riccati_solver.computeNewtonDirection(ocp, robots, contact_sequence, 
-                                        q, v, s, d, kkt_matrix, kkt_residual);
+  riccati_solver.computeNewtonDirection(ocp, robots, contact_sequence, q, v,
+                                        s, d, kkt_matrix, kkt_residual, jac);
   RiccatiRecursion riccati_recursion(robot, N, nthreads);
   RiccatiFactorizer riccati_factorizer(robot, N, max_num_impulse);
   RiccatiFactorization riccati_factorization(robot, N, max_num_impulse);
-  StateConstraintRiccatiFactorizer constraint_factorizer(robot, N, max_num_impulse, nthreads);
-  StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
   RiccatiDirectionCalculator direction_calculator(N, max_num_impulse, nthreads);
-  riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix_ref, kkt_residual_ref, 
-                                                     riccati_factorization);
   riccati_recursion.backwardRiccatiRecursion(riccati_factorizer, ocp_ref.discrete(), 
                                              kkt_matrix_ref, kkt_residual_ref, 
                                              riccati_factorization);
@@ -105,21 +101,7 @@ void RiccatiSolverTest::test(const Robot& robot) const {
   riccati_recursion.forwardRiccatiRecursionParallel(riccati_factorizer, ocp_ref.discrete(),
                                                     kkt_matrix_ref, kkt_residual_ref,
                                                     constraint_factorization);
-  if (ocp_ref.discrete().existStateConstraint()) {
-    riccati_recursion.forwardStateConstraintFactorization(
-        riccati_factorizer, ocp_ref.discrete(), kkt_matrix_ref, kkt_residual_ref, 
-        riccati_factorization);
-    riccati_recursion.backwardStateConstraintFactorization(
-        riccati_factorizer, ocp_ref.discrete(), kkt_matrix_ref, 
-        constraint_factorization);
-  }
   direction_calculator.computeInitialStateDirection(robots_ref, q, v, kkt_matrix_ref, s, d_ref);
-  if (ocp_ref.discrete().existStateConstraint()) {
-    constraint_factorizer.computeLagrangeMultiplierDirection(
-        ocp_ref.discrete(), riccati_factorization, constraint_factorization, d_ref);
-    constraint_factorizer.aggregateLagrangeMultiplierDirection(
-        constraint_factorization, ocp.discrete(), d_ref, riccati_factorization);
-  }
   riccati_recursion.forwardRiccatiRecursion(
       riccati_factorizer, ocp.discrete(), kkt_matrix_ref, kkt_residual_ref, 
       riccati_factorization, d_ref);

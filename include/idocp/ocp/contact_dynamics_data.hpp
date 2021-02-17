@@ -115,8 +115,6 @@ public:
 
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   Eigen::MatrixXd dCda_full_, dIDCdqv_full_, MJtJinv_full_, 
                   MJtJinv_dIDCdqv_full_, Qafqv_full_, 

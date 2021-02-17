@@ -173,20 +173,6 @@ public:
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lx() const;
 
-  ///
-  /// @brief Residual with respect to q and v transition.
-  /// @return Reference to the residual with respect to q and v transition.
-  /// Size is 2 * Robot::dimv().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> P();
-
-  ///
-  /// @brief Residual with respect to q and v transition.
-  /// @return Reference to the residual with respect to q and v transition.
-  /// Size is 2 * Robot::dimv().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> P() const;
-
   Eigen::VectorBlock<Eigen::VectorXd> splitKKTResidual();
 
   const Eigen::VectorBlock<const Eigen::VectorXd> splitKKTResidual() const;
@@ -230,7 +216,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd KKT_residual_full_, P_full_;
+  Eigen::VectorXd KKT_residual_full_;
   int dimv_, dimx_, dimf_, dimKKT_, lf_begin_, lq_begin_, lv_begin_;
 
 };

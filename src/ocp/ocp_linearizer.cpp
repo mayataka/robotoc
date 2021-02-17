@@ -80,9 +80,10 @@ void OCPLinearizer::linearizeOCP(OCP& ocp, std::vector<Robot>& robots,
                                  const Eigen::VectorXd& q, 
                                  const Eigen::VectorXd& v, const Solution& s, 
                                  KKTMatrix& kkt_matrix, 
-                                 KKTResidual& kkt_residual) const {
+                                 KKTResidual& kkt_residual,
+                                 StateConstraintJacobian& jac) const {
   runParallel<internal::LinearizeOCP>(ocp, robots, contact_sequence, q, v, 
-                                      s, kkt_matrix, kkt_residual);
+                                      s, kkt_matrix, kkt_residual, jac);
 }
 
 
@@ -91,9 +92,10 @@ void OCPLinearizer::computeKKTResidual(OCP& ocp, std::vector<Robot>& robots,
                                        const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v, 
                                        const Solution& s, KKTMatrix& kkt_matrix, 
-                                       KKTResidual& kkt_residual) const {
+                                       KKTResidual& kkt_residual,
+                                       StateConstraintJacobian& jac) const {
   runParallel<internal::ComputeKKTResidual>(ocp, robots, contact_sequence, q, v,  
-                                            s, kkt_matrix, kkt_residual);
+                                            s, kkt_matrix, kkt_residual, jac);
 }
 
 
@@ -117,10 +119,9 @@ double OCPLinearizer::KKTError(const OCP& ocp,
       const int impulse_index  = i - (N_+1);
       const int time_stage_before_impulse 
           = ocp.discrete().timeStageBeforeImpulse(impulse_index);
-      const bool is_state_constraint_valid = (time_stage_before_impulse > 0);
       kkt_error_.coeffRef(i) 
           = ocp.impulse[impulse_index].squaredNormKKTResidual(
-              kkt_residual.impulse[impulse_index], is_state_constraint_valid);
+              kkt_residual.impulse[impulse_index]);
     }
     else if (i < N_+1+2*N_impulse) {
       const int impulse_index  = i - (N_+1+N_impulse);
@@ -186,16 +187,14 @@ void OCPLinearizer::integrateSolution(OCP& ocp,
     }
     else if (i < N_+1+N_impulse) {
       const int impulse_index  = i - (N_+1);
-      const bool is_state_constraint_valid 
-          = (ocp.discrete().timeStageBeforeImpulse(impulse_index) > 0);
       ocp.impulse[impulse_index].computeCondensedDualDirection(
           robots[omp_get_thread_num()], kkt_matrix.impulse[impulse_index], 
           kkt_residual.impulse[impulse_index], d.aux[impulse_index], 
           d.impulse[impulse_index]);
-      ocp.impulse[impulse_index].updatePrimal(
-          robots[omp_get_thread_num()], primal_step_size, 
-          d.impulse[impulse_index], s.impulse[impulse_index], 
-          is_state_constraint_valid);
+      ocp.impulse[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
+                                              primal_step_size, 
+                                              d.impulse[impulse_index], 
+                                              s.impulse[impulse_index]);
       ocp.impulse[impulse_index].updateDual(dual_step_size);
     }
     else if (i < N_+1+2*N_impulse) {

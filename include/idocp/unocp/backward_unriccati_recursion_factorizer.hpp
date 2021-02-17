@@ -91,8 +91,6 @@ public:
       const LQRStateFeedbackPolicy& lqr_policy, const double dtau, 
       SplitRiccatiFactorization& riccati);
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   int dimv_;
   Eigen::MatrixXd GK_;

@@ -37,7 +37,7 @@ protected:
   SplitKKTResidual createKKTResidual(const Robot& robot) const;
 
   void test(const Robot& robot) const;
-  void testWithImpulse(const Robot& robot) const;
+  void testWithSwitchingConstraint(const Robot& robot) const;
   void testTerminal(const Robot& robot) const;
 
   double dtau;
@@ -157,7 +157,7 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
 }
 
 
-void SplitBackwardCorrectionTest::testWithImpulse(const Robot& robot) const {
+void SplitBackwardCorrectionTest::testWithSwitchingConstraint(const Robot& robot) const {
   auto impulse_status = robot.createImpulseStatus();
   if (robot.hasFloatingBase()) {
     impulse_status.setRandom();
@@ -294,14 +294,14 @@ void SplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
 
 TEST_F(SplitBackwardCorrectionTest, fixedBase) {
   test(fixed_base_robot);
-  testWithImpulse(fixed_base_robot);
+  testWithSwitchingConstraint(fixed_base_robot);
   testTerminal(fixed_base_robot);
 }
 
 
 TEST_F(SplitBackwardCorrectionTest, floating_base) {
   test(floating_base_robot);
-  testWithImpulse(floating_base_robot);
+  testWithSwitchingConstraint(floating_base_robot);
   testTerminal(floating_base_robot);
 }
 

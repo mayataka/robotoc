@@ -133,8 +133,6 @@ public:
     }
   }
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   int N_, max_num_impulse_, nthreads_, N_all_;
   Solution s_new_;

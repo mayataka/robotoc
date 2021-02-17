@@ -101,8 +101,6 @@ public:
                                  const double t, const ImpulseSplitSolution& s, 
                                  ImpulseSplitKKTMatrix& kkt_matrix) const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   int dimq_, dimv_, dimu_;
   Eigen::VectorXd q_ref_, v_ref_, u_ref_, q_weight_, v_weight_, a_weight_, 

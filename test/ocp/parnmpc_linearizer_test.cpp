@@ -273,8 +273,7 @@ void ParNMPCLinearizerTest::testIntegrateSolution(const Robot& robot) const {
                                                   d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
       parnmpc_ref.aux[impulse_index].updateDual(dual_step_size);
       parnmpc_ref.impulse[impulse_index].updatePrimal(robot_ref, primal_step_size, 
-                                                      d_ref.impulse[impulse_index], s_ref.impulse[impulse_index],
-                                                      true);
+                                                      d_ref.impulse[impulse_index], s_ref.impulse[impulse_index]);
       parnmpc_ref.impulse[impulse_index].updateDual(dual_step_size);
     }
     else if (parnmpc_ref.discrete().isTimeStageBeforeLift(i)) {
@@ -298,8 +297,7 @@ void ParNMPCLinearizerTest::testIntegrateSolution(const Robot& robot) const {
                                                 d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
     parnmpc_ref.aux[impulse_index].updateDual(dual_step_size);
     parnmpc_ref.impulse[impulse_index].updatePrimal(robot_ref, primal_step_size, 
-                                                    d_ref.impulse[impulse_index], s_ref.impulse[impulse_index],
-                                                    false);
+                                                    d_ref.impulse[impulse_index], s_ref.impulse[impulse_index]);
     parnmpc_ref.impulse[impulse_index].updateDual(dual_step_size);
   }
   else if (parnmpc_ref.discrete().isTimeStageAfterLift(0)) {

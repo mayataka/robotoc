@@ -12,7 +12,6 @@ inline ImpulseSplitDirection::ImpulseSplitDirection(const Robot& robot)
   : split_direction(Eigen::VectorXd::Zero(4*robot.dimv())),
     ddvf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dbetamu_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
-    dxi_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dimf_(0), 
@@ -25,7 +24,6 @@ inline ImpulseSplitDirection::ImpulseSplitDirection()
   : split_direction(),
     ddvf_full_(),
     dbetamu_full_(),
-    dxi_full_(),
     dimv_(0), 
     dimx_(0), 
     dimf_(0), 
@@ -183,22 +181,10 @@ ImpulseSplitDirection::dmu() const {
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dxi() {
-  return dxi_full_.head(dimf_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitDirection::dxi() const {
-  return dxi_full_.head(dimf_);
-}
-
-
 inline void ImpulseSplitDirection::setZero() {
   split_direction.setZero();
   ddvf_full_.setZero();
   dbetamu_full_.setZero();
-  dxi_full_.setZero();
 }
 
 
@@ -238,9 +224,6 @@ inline bool ImpulseSplitDirection::isApprox(
   if (!dmu().isApprox(other.dmu())) {
     return false;
   }
-  if (!dxi().isApprox(other.dxi())) {
-    return false;
-  }
   return true;
 }
 
@@ -249,7 +232,6 @@ inline void ImpulseSplitDirection::setRandom() {
   split_direction.setRandom();
   ddvf().setRandom();
   dbetamu().setRandom();
-  dxi().setRandom();
 }
 
 

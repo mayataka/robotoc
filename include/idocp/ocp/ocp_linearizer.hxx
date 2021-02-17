@@ -24,6 +24,20 @@ struct LinearizeOCP {
                            kkt_matrix, kkt_residual);
   }
 
+  static inline void run(SplitOCP& split_ocp, Robot& robot, 
+                         const ContactStatus& contact_status, const double t, 
+                         const double dtau, const Eigen::VectorXd& q_prev, 
+                         const SplitSolution& s, const SplitSolution& s_next, 
+                         SplitKKTMatrix& kkt_matrix, 
+                         SplitKKTResidual& kkt_residual,
+                         const ImpulseStatus& impulse_status, 
+                         const double dtau_next, 
+                         SplitStateConstraintJacobian& jac) {
+    split_ocp.linearizeOCP(robot, contact_status, t, dtau, q_prev, s, s_next,
+                           kkt_matrix, kkt_residual, impulse_status, 
+                           dtau_next, jac);
+  }
+
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot, 
                          const double t, const Eigen::VectorXd& q_prev, 
                          const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
@@ -37,11 +51,9 @@ struct LinearizeOCP {
                          const ImpulseSplitSolution& s, 
                          const SplitSolution& s_next, 
                          ImpulseSplitKKTMatrix& kkt_matrix, 
-                         ImpulseSplitKKTResidual& kkt_residual,
-                         const bool is_state_constraint_valid) {
+                         ImpulseSplitKKTResidual& kkt_residual) {
     impulse_split_ocp.linearizeOCP(robot, impulse_status, t, q_prev, s, s_next,
-                                   kkt_matrix, kkt_residual, 
-                                   is_state_constraint_valid);
+                                   kkt_matrix, kkt_residual);
   }
 };
 
@@ -59,6 +71,20 @@ struct ComputeKKTResidual {
                                  s_next, kkt_matrix, kkt_residual);
   }
 
+  static inline void run(SplitOCP& split_ocp, Robot& robot, 
+                         const ContactStatus& contact_status, const double t, 
+                         const double dtau, const Eigen::VectorXd& q_prev, 
+                         const SplitSolution& s, const SplitSolution& s_next, 
+                         SplitKKTMatrix& kkt_matrix, 
+                         SplitKKTResidual& kkt_residual,
+                         const ImpulseStatus& impulse_status, 
+                         const double dtau_next, 
+                         SplitStateConstraintJacobian& jac) {
+    split_ocp.computeKKTResidual(robot, contact_status, t, dtau, q_prev, s, 
+                                 s_next, kkt_matrix, kkt_residual, 
+                                 impulse_status, dtau_next, jac);
+  }
+
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot,  
                          const double t, const Eigen::VectorXd& q_prev,
                          const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
@@ -72,11 +98,9 @@ struct ComputeKKTResidual {
                          const ImpulseSplitSolution& s, 
                          const SplitSolution& s_next, 
                          ImpulseSplitKKTMatrix& kkt_matrix, 
-                         ImpulseSplitKKTResidual& kkt_residual,
-                         const bool is_state_constraint_valid) {
+                         ImpulseSplitKKTResidual& kkt_residual) {
     impulse_split_ocp.computeKKTResidual(robot, impulse_status, t, q_prev, s, 
-                                         s_next, kkt_matrix, kkt_residual, 
-                                         is_state_constraint_valid);
+                                         s_next, kkt_matrix, kkt_residual);
   }
 };
 
@@ -92,7 +116,8 @@ inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
                                        const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v, 
                                        const Solution& s, KKTMatrix& kkt_matrix,
-                                       KKTResidual& kkt_residual) const {
+                                       KKTResidual& kkt_residual,
+                                       StateConstraintJacobian& jac) const {
   assert(robots.size() == nthreads_);
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
@@ -120,6 +145,17 @@ inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
             s.lift[ocp.discrete().liftIndexAfterTimeStage(i)], 
             kkt_matrix[i], kkt_residual[i]);
       }
+      else if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
+        const int impulse_index  
+            = ocp.discrete().impulseIndexAfterTimeStage(i+1);
+        Algorithm::run(
+            ocp[i], robots[omp_get_thread_num()], 
+            contact_sequence.contactStatus(ocp.discrete().contactPhase(i)), 
+            ocp.discrete().t(i), ocp.discrete().dtau(i), 
+            q_prev(ocp.discrete(), q, s, i), s[i], s[i+1], kkt_matrix[i], 
+            kkt_residual[i], contact_sequence.impulseStatus(impulse_index), 
+            ocp.discrete().dtau(i+1), jac[impulse_index]);
+      }
       else {
         Algorithm::run(
             ocp[i], robots[omp_get_thread_num()], 
@@ -138,14 +174,12 @@ inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
       const int impulse_index  = i - (N_+1);
       const int time_stage_before_impulse 
           = ocp.discrete().timeStageBeforeImpulse(impulse_index);
-      const bool is_state_constraint_valid = (time_stage_before_impulse > 0);
       Algorithm::run(ocp.impulse[impulse_index], robots[omp_get_thread_num()], 
                      contact_sequence.impulseStatus(impulse_index), 
                      ocp.discrete().t_impulse(impulse_index), 
                      s[time_stage_before_impulse].q, s.impulse[impulse_index], 
                      s.aux[impulse_index], kkt_matrix.impulse[impulse_index], 
-                     kkt_residual.impulse[impulse_index], 
-                     is_state_constraint_valid);
+                     kkt_residual.impulse[impulse_index]);
     }
     else if (i < N_+1+2*N_impulse) {
       const int impulse_index  = i - (N_+1+N_impulse);
@@ -164,14 +198,30 @@ inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
       const int lift_index = i - (N_+1+2*N_impulse);
       const int time_stage_after_lift
           = ocp.discrete().timeStageAfterLift(lift_index);
-      Algorithm::run(
-          ocp.lift[lift_index], robots[omp_get_thread_num()], 
-          contact_sequence.contactStatus(
-              ocp.discrete().contactPhaseAfterLift(lift_index)), 
-          ocp.discrete().t_lift(lift_index), 
-          ocp.discrete().dtau_lift(lift_index), s[time_stage_after_lift-1].q, 
-          s.lift[lift_index], s[time_stage_after_lift], 
-          kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
+      if (ocp.discrete().isTimeStageBeforeImpulse(time_stage_after_lift)) {
+        const int impulse_index
+            = ocp.discrete().impulseIndexAfterTimeStage(time_stage_after_lift);
+        Algorithm::run(
+            ocp.lift[lift_index], robots[omp_get_thread_num()], 
+            contact_sequence.contactStatus(
+                ocp.discrete().contactPhaseAfterLift(lift_index)), 
+            ocp.discrete().t_lift(lift_index), 
+            ocp.discrete().dtau_lift(lift_index), s[time_stage_after_lift-1].q, 
+            s.lift[lift_index], s[time_stage_after_lift], 
+            kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index],
+            contact_sequence.impulseStatus(impulse_index), 
+            ocp.discrete().dtau(time_stage_after_lift), jac[impulse_index]);
+      }
+      else {
+        Algorithm::run(
+            ocp.lift[lift_index], robots[omp_get_thread_num()], 
+            contact_sequence.contactStatus(
+                ocp.discrete().contactPhaseAfterLift(lift_index)), 
+            ocp.discrete().t_lift(lift_index), 
+            ocp.discrete().dtau_lift(lift_index), s[time_stage_after_lift-1].q, 
+            s.lift[lift_index], s[time_stage_after_lift], 
+            kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
+      }
     }
   }
 }

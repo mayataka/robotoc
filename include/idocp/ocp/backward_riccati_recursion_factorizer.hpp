@@ -90,8 +90,6 @@ public:
       const LQRStateFeedbackPolicy& lqr_policy, const double dtau, 
       SplitRiccatiFactorization& riccati);
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   bool has_floating_base_;
   int dimv_, dimu_;

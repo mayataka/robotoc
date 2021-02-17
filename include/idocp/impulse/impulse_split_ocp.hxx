@@ -48,8 +48,7 @@ inline void ImpulseSplitOCP::linearizeOCP(
     Robot& robot, const ImpulseStatus& impulse_status, const double t,  
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
     const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual, 
-    const bool is_state_constraint_valid) {
+    ImpulseSplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_residual.setImpulseStatus(impulse_status);
@@ -64,8 +63,7 @@ inline void ImpulseSplitOCP::linearizeOCP(
   stateequation::condenseImpulseForwardEuler(robot, s, s_next.q, 
                                              kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s,
-                                             kkt_matrix, kkt_residual,
-                                             is_state_constraint_valid);
+                                             kkt_matrix, kkt_residual);
   cost_->computeImpulseCostHessian(robot, cost_data_, t, s, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, s, kkt_matrix, 
                                      kkt_residual);
@@ -113,11 +111,10 @@ inline void ImpulseSplitOCP::updateDual(const double dual_step_size) {
 
 inline void ImpulseSplitOCP::updatePrimal(
     const Robot& robot, const double primal_step_size, 
-    const ImpulseSplitDirection& d, ImpulseSplitSolution& s, 
-    const bool is_state_constraint_valid) {
+    const ImpulseSplitDirection& d, ImpulseSplitSolution& s) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
-  s.integrate(robot, primal_step_size, d, is_state_constraint_valid);
+  s.integrate(robot, primal_step_size, d);
   constraints_->updateSlack(constraints_data_, primal_step_size);
 }
 
@@ -126,8 +123,7 @@ inline void ImpulseSplitOCP::computeKKTResidual(
     Robot& robot, const ImpulseStatus& impulse_status, const double t, 
     const Eigen::VectorXd& q_prev, const ImpulseSplitSolution& s, 
     const SplitSolution& s_next, ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual, 
-    const bool is_state_constraint_valid) {
+    ImpulseSplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_residual.setImpulseStatus(impulse_status);
@@ -139,21 +135,18 @@ inline void ImpulseSplitOCP::computeKKTResidual(
   stateequation::linearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
                                               kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
-                                             kkt_matrix, kkt_residual, 
-                                             is_state_constraint_valid);
+                                             kkt_matrix, kkt_residual);
 }
 
 
 inline double ImpulseSplitOCP::squaredNormKKTResidual(
-    const ImpulseSplitKKTResidual& kkt_residual, 
-    const bool is_state_constraint_valid) const {
+    const ImpulseSplitKKTResidual& kkt_residual) const {
   double error = 0;
   error += kkt_residual.lx().squaredNorm();
   error += kkt_residual.ldv.squaredNorm();
   error += kkt_residual.lf().squaredNorm();
   error += stateequation::squaredNormStateEuqationResidual(kkt_residual);
-  error += impulse_dynamics_.squaredNormImpulseDynamicsResidual(
-      kkt_residual, is_state_constraint_valid);
+  error += impulse_dynamics_.squaredNormImpulseDynamicsResidual(kkt_residual);
   error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
   return error;
 }
@@ -180,8 +173,7 @@ inline double ImpulseSplitOCP::stageCost(Robot& robot, const double t,
 inline double ImpulseSplitOCP::constraintViolation(
     Robot& robot, const ImpulseStatus& impulse_status, const double t, 
     const ImpulseSplitSolution& s, const Eigen::VectorXd& q_next, 
-    const Eigen::VectorXd& v_next, ImpulseSplitKKTResidual& kkt_residual,
-    const bool is_state_constraint_valid) {
+    const Eigen::VectorXd& v_next, ImpulseSplitKKTResidual& kkt_residual) {
   assert(q_next.size() == robot.dimq());
   assert(v_next.size() == robot.dimv());
   kkt_residual.setImpulseStatus(impulse_status);
@@ -191,13 +183,11 @@ inline double ImpulseSplitOCP::constraintViolation(
   stateequation::computeImpulseForwardEulerResidual(robot, s, q_next, v_next, 
                                                     kkt_residual);
   impulse_dynamics_.computeImpulseDynamicsResidual(robot, impulse_status, s, 
-                                                   kkt_residual,
-                                                   is_state_constraint_valid);
+                                                   kkt_residual);
   double violation = 0;
   violation += constraints_->l1NormPrimalResidual(constraints_data_);
   violation += stateequation::l1NormStateEuqationResidual(kkt_residual);
-  violation += impulse_dynamics_.l1NormImpulseDynamicsResidual(
-      kkt_residual, is_state_constraint_valid);
+  violation += impulse_dynamics_.l1NormImpulseDynamicsResidual(kkt_residual);
   return violation;
 }
 

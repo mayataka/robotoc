@@ -186,8 +186,6 @@ public:
   ///
   double squaredNormKKTResidual(const SplitKKTResidual& kkt_residual) const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;

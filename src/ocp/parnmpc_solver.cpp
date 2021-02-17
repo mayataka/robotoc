@@ -97,8 +97,8 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   if (use_line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(parnmpc_, robots_, 
-                                                    contact_sequence_, q, v, 
-                                                    s_, d_, max_primal_step_size);
+                                                    contact_sequence_, q, v, s_,
+                                                    d_, max_primal_step_size);
   }
   parnmpc_linearizer_.integrateSolution(parnmpc_, robots_, kkt_matrix_, 
                                         kkt_residual_, primal_step_size, 
@@ -390,132 +390,6 @@ std::vector<Eigen::VectorXd> ParNMPCSolver::getSolution(
     }
   }
   return sol;
-}
-
-
-void ParNMPCSolver::printSolution(const std::string& name, 
-                                  const std::vector<int> frames) const {
-  if (name == "all") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
-      std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
-      std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
-      std::cout << "f[" << i << "] = ";
-      for (int j=0; j<s_[i].f.size(); ++j) {
-        std::cout << s_[i].f[j].transpose() << "; ";
-      }
-      std::cout << std::endl;
-      std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
-    }
-  }
-  if (name == "q") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
-    }
-  }
-  if (name == "v") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
-    }
-  }
-  if (name == "a") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
-    }
-  }
-  if (name == "f") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "f[" << i << "] = ";
-      for (int j=0; j<s_[i].f.size(); ++j) {
-        std::cout << s_[i].f[j].transpose() << "; ";
-      }
-      std::cout << std::endl;
-    }
-  }
-  if (name == "u") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
-    }
-  }
-  if (name == "end-effector") {
-    Robot robot = robots_[0];
-    for (int i=0; i<N_; ++i) {
-      robot.updateFrameKinematics(s_[i].q);
-      for (const auto e : frames) {
-      std::cout << "end-effector[" << i << "][" << e << "] = " 
-                << robot.framePosition(e).transpose() << std::endl;
-      }
-    }
-  }
-  if (name == "dual") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "mu[" << i << "] = " << s_[i].mu_stack().transpose() << std::endl;
-    }
-    for (int i=0; i<parnmpc_.discrete().numImpulseStages(); ++i) {
-      std::cout << "mu.impulse[" << i << "] = " << s_.impulse[i].mu_stack().transpose() << std::endl;
-    }
-    for (int i=0; i<parnmpc_.discrete().numImpulseStages(); ++i) {
-      std::cout << "xi.impulse[" << i << "] = " << s_.impulse[i].xi_stack().transpose() << std::endl;
-    }
-    for (int i=0; i<parnmpc_.discrete().numImpulseStages(); ++i) {
-      std::cout << "mu.aux[" << i << "] = " << s_.aux[i].mu_stack().transpose() << std::endl;
-    }
-    for (int i=0; i<parnmpc_.discrete().numLiftStages(); ++i) {
-      std::cout << "mu.lift[" << i << "] = " << s_.lift[i].mu_stack().transpose() << std::endl;
-    }
-  }
-}
-
-
-void ParNMPCSolver::saveSolution(const std::string& path_to_file, 
-                                 const std::string& name) const {
-  std::ofstream file(path_to_file);
-  if (name == "q") {
-    const int dimq = robots_[0].dimq();
-    for (int i=0; i<N_; ++i) {
-      for (int j=0; j<dimq; ++j) {
-        file << s_[i].q.coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  if (name == "v") {
-    const int dimv = robots_[0].dimv();
-    for (int i=0; i<N_; ++i) {
-      for (int j=0; j<dimv; ++j) {
-        file << s_[i].v.coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  if (name == "a") {
-    const int dimv = robots_[0].dimv();
-    for (int i=0; i<N_; ++i) {
-      for (int j=0; j<dimv; ++j) {
-        file << s_[i].a.coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  if (name == "f") {
-    for (int i=0; i<N_; ++i) {
-      const int dimf = s_[i].f_stack().size();
-      for (int j=0; j<dimf; ++j) {
-        file << s_[i].f_stack().coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  if (name == "u") {
-    const int dimu = robots_[0].dimu();
-    for (int i=0; i<N_; ++i) {
-      for (int j=0; j<dimu; ++j) {
-        file << s_[i].u.coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  file.close();
 }
 
 

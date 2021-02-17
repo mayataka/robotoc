@@ -1,1 +1,0 @@
-#include "idocp/ocp/state_constraint_riccati_lp_factorizer.hpp"

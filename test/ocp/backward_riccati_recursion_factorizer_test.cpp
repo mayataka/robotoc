@@ -87,11 +87,6 @@ SplitRiccatiFactorization BackwardRiccatiRecursionFactorizerTest::createRiccatiF
   riccati.Pvv = seed * seed.transpose();
   riccati.sq.setRandom();
   riccati.sv.setRandom();
-  const int dimx = 2 * robot.dimv();
-  seed = Eigen::MatrixXd::Random(dimx, dimx);
-  riccati.N = seed * seed.transpose();
-  riccati.Pi.setRandom();
-  riccati.pi.setRandom();
   return riccati; 
 }
 

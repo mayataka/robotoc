@@ -49,7 +49,7 @@ protected:
 
 
 SplitRiccatiFactorization SplitUnRiccatiFactorizerTest::createRiccatiFactorization() const {
-  SplitRiccatiFactorization riccati(robot, false);
+  SplitRiccatiFactorization riccati(robot);
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
   riccati.Pqq = seed * seed.transpose();
   riccati.Pqv = Eigen::MatrixXd::Random(dimv, dimv);

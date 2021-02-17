@@ -216,19 +216,6 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> dmu() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::xi_stack(). 
-  /// Size is ImpulseSplitSolution::dimf().
-  /// @return Reference to the Newton direction of 
-  /// ImpulseSplitSolution::xi_stack().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> dxi();
-
-  ///
-  /// @brief Const version of ImpulseSplitDirection::dxi().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> dxi() const;
-
-  ///
   /// @brief Set the all directions zero.
   ///
   void setZero();
@@ -286,10 +273,8 @@ public:
   static ImpulseSplitDirection Random(const Robot& robot, 
                                       const ImpulseStatus& impulse_status);
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
-  Eigen::VectorXd ddvf_full_, dbetamu_full_, dxi_full_;
+  Eigen::VectorXd ddvf_full_, dbetamu_full_;
   int dimv_, dimx_, dimf_, dimKKT_;
   bool has_floating_base_;
 

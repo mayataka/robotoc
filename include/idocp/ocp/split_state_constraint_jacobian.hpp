@@ -1,6 +1,8 @@
 #ifndef IDOCP_SPLIT_STATE_CONSTRAINT_JACOBIAN_HPP_ 
 #define IDOCP_SPLIT_STATE_CONSTRAINT_JACOBIAN_HPP_
 
+#include <vector>
+
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -56,6 +58,8 @@ public:
   ///
   void setImpulseStatus();
 
+  int dimi() const;
+
   Eigen::Block<Eigen::MatrixXd> Phia();
 
   const Eigen::Block<const Eigen::MatrixXd> Phia() const;
@@ -76,15 +80,13 @@ public:
 
   const Eigen::Block<const Eigen::MatrixXd> Phiu() const;
 
-  Eigen::VectorXd q;
-
-  Eigen::VectorXd dq;
-
   Eigen::MatrixXd dintegrate_dq;
 
   Eigen::MatrixXd dintegrate_dv;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  bool isApprox(const SplitStateConstraintJacobian& other) const;
+
+  bool hasNaN() const;
 
 private:
   Eigen::MatrixXd Phia_full_, Phix_full_, Phiu_full_;

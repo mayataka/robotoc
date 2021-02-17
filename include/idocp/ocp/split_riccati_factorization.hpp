@@ -17,32 +17,14 @@ public:
   ///
   /// @brief Allocate Riccati factorization matrix and vector.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] exist_state_constraint Flags for allocating matrices related 
-  /// to state-only constraints. Default is true.
   ///
-  SplitRiccatiFactorization(const Robot& robot, 
-                            const bool exist_state_constraint=true)
+  SplitRiccatiFactorization(const Robot& robot)
     : Pqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Pqv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Pvq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       Pvv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
       sq(Eigen::VectorXd::Zero(robot.dimv())),
-      sv(Eigen::VectorXd::Zero(robot.dimv())),
-      Pi(),
-      pi(),
-      N(),
-      n() {
-    if (exist_state_constraint) {
-      const int dimx = 2*robot.dimv();
-      Pi.resize(dimx, dimx);
-      Pi.setIdentity();
-      pi.resize(dimx);
-      pi.setZero();
-      N.resize(dimx, dimx);
-      N.setZero();
-      n.resize(dimx);
-      n.setZero();
-    }
+      sv(Eigen::VectorXd::Zero(robot.dimv())) {
   }
 
   ///
@@ -54,11 +36,7 @@ public:
       Pvq(),
       Pvv(),
       sq(),
-      sv(),
-      Pi(),
-      pi(),
-      N(),
-      n() {
+      sv() {
   }
 
   ///
@@ -125,32 +103,6 @@ public:
   Eigen::VectorXd sv;
 
   ///
-  /// @brief Riccati factorization for pure-state equality constraints. 
-  /// Size is 2 * Robot::dimv() x 2 * Robot::dimv() if the robot can have
-  /// contacts. Size is 0 x 0 otherwise.
-  ///
-  Eigen::MatrixXd Pi;
-
-  ///
-  /// @brief Riccati factorization for pure-state equality constraints. Size is 
-  /// 2 * Robot::dimv(). Size is 0 otherwise.
-  ///
-  Eigen::VectorXd pi;
-
-  ///
-  /// @brief Riccati factorization for pure-state equality constraints. 
-  /// Size is 2 * Robot::dimv() x 2 * Robot::dimv() if the robot can have
-  /// contacts. Size is 0 x 0 otherwise.
-  ///
-  Eigen::MatrixXd N;
-
-  ///
-  /// @brief Riccati factorization for pure-state equality constraints. Size is 
-  /// 2 * Robot::dimv(). Size is 0 otherwise.
-  ///
-  Eigen::VectorXd n;
-
-  ///
   /// @brief Chech the equivalence of two SplitRiccatiFactorization.
   /// @param[in] other object.
   /// @return true if this and other is same. false otherwise.
@@ -162,10 +114,6 @@ public:
     if (!Pvv.isApprox(other.Pvv)) return false;
     if (!sq.isApprox(other.sq)) return false;
     if (!sv.isApprox(other.sv)) return false;
-    if (!Pi.isApprox(other.Pi)) return false;
-    if (!pi.isApprox(other.pi)) return false;
-    if (!N.isApprox(other.N)) return false;
-    if (!n.isApprox(other.n)) return false;
     return true;
   }
 
@@ -180,14 +128,8 @@ public:
     if (Pvv.hasNaN()) return true;
     if (sq.hasNaN()) return true;
     if (sv.hasNaN()) return true;
-    if (Pi.hasNaN()) return true;
-    if (pi.hasNaN()) return true;
-    if (N.hasNaN()) return true;
-    if (n.hasNaN()) return true;
     return false;
   }
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 };
 

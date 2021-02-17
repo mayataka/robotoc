@@ -25,8 +25,7 @@ inline ImpulseDynamicsForwardEuler::~ImpulseDynamicsForwardEuler() {
 inline void ImpulseDynamicsForwardEuler::linearizeImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status,  
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual, 
-    const bool is_state_constraint_valid) {
+    ImpulseSplitKKTResidual& kkt_residual) {
   setImpulseStatus(impulse_status);
   linearizeInverseImpulseDynamics(robot, impulse_status, s, data_);
   linearizeImpulseVelocityConstraint(robot, impulse_status, data_);
@@ -41,12 +40,6 @@ inline void ImpulseDynamicsForwardEuler::linearizeImpulseDynamics(
   kkt_residual.lv().noalias() += data_.dCdv().transpose() * s.mu_stack();
   // We use an equivalence dCdv_() = dCddv, to avoid redundant calculation.
   kkt_residual.ldv.noalias() += data_.dCdv().transpose() * s.mu_stack();
-  // augment impulse position constraint
-  if (is_state_constraint_valid) {
-    linearizeImpulsePositionConstraint(robot, impulse_status, kkt_matrix, 
-                                       kkt_residual);
-    kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.xi_stack();
-  }
 }
 
 
@@ -65,16 +58,6 @@ inline void ImpulseDynamicsForwardEuler::linearizeImpulseVelocityConstraint(
   robot.computeImpulseVelocityResidual(impulse_status, data.C());
   robot.computeImpulseVelocityDerivatives(impulse_status, data.dCdq(), 
                                           data.dCdv());
-}
-
-
-inline void ImpulseDynamicsForwardEuler::linearizeImpulsePositionConstraint(
-      Robot& robot, const ImpulseStatus& impulse_status, 
-      ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
-  robot.computeContactResidual(impulse_status,
-                                        impulse_status.contactPoints(),
-                                        kkt_residual.P());
-  robot.computeContactDerivative(impulse_status, kkt_matrix.Pq());
 }
 
 
@@ -140,7 +123,7 @@ inline void ImpulseDynamicsForwardEuler::computeCondensedDualDirection(
 inline void ImpulseDynamicsForwardEuler::expansionPrimal(
     const Robot& robot, const ImpulseDynamicsForwardEulerData& data, 
     ImpulseSplitDirection& d) {
-  d.ddvf().noalias() = - data.MJtJinv_dImDCdqv() * d.dx();
+  d.ddvf().noalias()  = - data.MJtJinv_dImDCdqv() * d.dx();
   d.ddvf().noalias() -= data.MJtJinv_ImDC();
   d.df().array() *= -1;
 }
@@ -154,48 +137,30 @@ inline void ImpulseDynamicsForwardEuler::expansionDual(
     const Eigen::MatrixBase<VectorType>& dgmm, ImpulseSplitDirection& d) {
   assert(dgmm.size() == robot.dimv());
   data.ldvf().noalias() += data.Qdvfqv() * d.dx();
-  data.ldv().noalias() += dgmm;
+  data.ldv().noalias()  += dgmm;
   d.dbetamu().noalias() = - data.MJtJinv() * data.ldvf();
 }
 
 
 inline void ImpulseDynamicsForwardEuler::computeImpulseDynamicsResidual(
     Robot& robot, const ImpulseStatus& impulse_status,
-    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual,
-    const bool is_state_constraint_valid) {
+    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) {
   setImpulseStatus(impulse_status);
   robot.setImpulseForces(impulse_status, s.f);
   robot.RNEAImpulse(s.q, s.dv, data_.ImD());
   robot.computeImpulseVelocityResidual(impulse_status, data_.C());
-  if (is_state_constraint_valid) {
-    robot.computeContactResidual(impulse_status, 
-                                          impulse_status.contactPoints(), 
-                                          kkt_residual.P());
-  }
 }
 
 
 inline double ImpulseDynamicsForwardEuler::l1NormImpulseDynamicsResidual(
-    const ImpulseSplitKKTResidual& kkt_residual,
-    const bool is_state_constraint_valid) const {
-  if (is_state_constraint_valid) {
-    return (data_.ImDC().lpNorm<1>() + kkt_residual.P().lpNorm<1>());
-  }
-  else {
-    return data_.ImDC().lpNorm<1>();
-  }
+    const ImpulseSplitKKTResidual& kkt_residual) const {
+  return data_.ImDC().lpNorm<1>();
 }
 
 
 inline double ImpulseDynamicsForwardEuler::squaredNormImpulseDynamicsResidual(
-    const ImpulseSplitKKTResidual& kkt_residual,
-    const bool is_state_constraint_valid) const {
-  if (is_state_constraint_valid) {
-    return (data_.ImDC().squaredNorm() + kkt_residual.P().squaredNorm());
-  }
-  else {
-    return data_.ImDC().squaredNorm();
-  }
+    const ImpulseSplitKKTResidual& kkt_residual) const {
+  return data_.ImDC().squaredNorm();
 }
 
 

@@ -71,7 +71,6 @@ add_library(
   src/impulse/impulse_dynamics_forward_euler.cpp
   src/impulse/impulse_split_ocp.cpp
   src/impulse/impulse_backward_riccati_recursion_factorizer.cpp
-  src/impulse/impulse_forward_riccati_recursion_factorizer.cpp
   src/impulse/impulse_split_riccati_factorizer.cpp
   src/impulse/impulse_dynamics_backward_euler_data.cpp
   src/impulse/impulse_dynamics_backward_euler.cpp
@@ -87,26 +86,24 @@ add_library(
   src/ocp/split_kkt_residual.cpp
   src/ocp/split_kkt_matrix.cpp
   src/ocp/split_kkt_matrix_inverter.cpp
-  src/ocp/split_state_constraint_jacobian.cpp
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
   src/ocp/contact_dynamics_data.cpp
   src/ocp/contact_dynamics.cpp
   src/ocp/switching_constraint.cpp
+  src/ocp/split_state_constraint_jacobian.cpp
+  src/ocp/forward_switching_constraint.cpp
   src/ocp/split_ocp.cpp
   src/ocp/terminal_ocp.cpp
+  src/ocp/state_constraint_jacobian.cpp
   src/ocp/ocp_linearizer.cpp
   src/ocp/split_riccati_factorization.cpp
+  src/ocp/split_constrained_riccati_factorization.cpp
   src/ocp/backward_riccati_recursion_factorizer.cpp
-  src/ocp/forward_riccati_recursion_factorizer.cpp
   src/ocp/lqr_state_feedback_policy.cpp
   src/ocp/split_riccati_factorizer.cpp
   src/ocp/riccati_recursion.cpp
-  src/ocp/split_state_constraint_riccati_factorization.cpp
-  src/ocp/state_constraint_riccati_factorization.cpp
-  src/ocp/state_constraint_riccati_lp_factorizer.cpp
-  src/ocp/state_constraint_riccati_factorizer.cpp
   src/ocp/riccati_direction_calculator.cpp
   src/ocp/riccati_solver.cpp
   src/ocp/ocp_solver.cpp

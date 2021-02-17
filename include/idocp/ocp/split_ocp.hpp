@@ -17,6 +17,8 @@
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/ocp/state_equation.hpp"
 #include "idocp/ocp/contact_dynamics.hpp"
+#include "idocp/ocp/forward_switching_constraint.hpp"
+#include "idocp/ocp/split_state_constraint_jacobian.hpp"
 
 
 namespace idocp {
@@ -106,6 +108,32 @@ public:
                     SplitKKTResidual& kkt_residual);
 
   ///
+  /// @brief Linearize the OCP for Newton's method around the current solution, 
+  /// i.e., computes the KKT residual and Hessian. Also linearize the 
+  /// switching constraint.
+  /// @tparam SplitSolutionType Type of the split solution at the next stage.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status of robot at this stage. 
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] q_prev Configuration of the previous stage.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in] s_next Split solution of the next stage.
+  /// @param[out] kkt_matrix KKT matrix of this stage.
+  /// @param[out] kkt_residual KKT residual of this stage.
+  /// @param[in] impulse_status Impulse status of the next impulse. 
+  /// @param[in] dtau_next Length of the discretization at the next stage. 
+  /// @param[out] jac Jacobian of the switching constraint. 
+  ///
+  void linearizeOCP(Robot& robot, const ContactStatus& contact_status, 
+                    const double t, const double dtau, 
+                    const Eigen::VectorXd& q_prev, const SplitSolution& s, 
+                    const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix,
+                    SplitKKTResidual& kkt_residual, 
+                    const ImpulseStatus& impulse_status, const double dtau_next, 
+                    SplitStateConstraintJacobian& jac);
+
+  ///
   /// @brief Computes the Newton direction of the condensed primal variables  
   /// at this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -190,6 +218,33 @@ public:
                           SplitKKTResidual& kkt_residual);
 
   ///
+  /// @brief Computes the KKT residual of the OCP at this stage.
+  /// @tparam SplitSolutionType Type of the split solution at the next stage.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status of robot at this stage. 
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in] q_prev Configuration of the previous stage.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in] s_next Split solution of the next stage.
+  /// @param[in, out] kkt_matrix KKT matrix of this stage.
+  /// @param[in, out] kkt_residual KKT residual of this stage.
+  /// @param[in] impulse_status Impulse status of the next impulse. 
+  /// @param[in] dtau_next Length of the discretization at the next stage. 
+  /// @param[out] jac Jacobian of the switching constraint. 
+  ///
+  void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
+                          const double t, const double dtau, 
+                          const Eigen::VectorXd& q_prev, const SplitSolution& s, 
+                          const SplitSolution& s_next, 
+                          SplitKKTMatrix& kkt_matrix, 
+                          SplitKKTResidual& kkt_residual, 
+                          const ImpulseStatus& impulse_status, 
+                          const double dtau_next, 
+                          SplitStateConstraintJacobian& jac);
+
+  ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
   /// this function, SplitOCP::linearizeOCP() or SplitOCP::computeKKTResidual()
   /// must be called.
@@ -230,7 +285,29 @@ public:
                              const Eigen::VectorXd& v_next,
                              SplitKKTResidual& kkt_residual);
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  ///
+  /// @brief Computes and returns the constraint violation of the OCP at this 
+  /// stage for line search.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status of robot at this stage. 
+  /// @param[in] t Current time of this stage. 
+  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] s Split solution of this stage.
+  /// @param[in] q_next Configuration at the next stage.
+  /// @param[in] v_next Generaized velocity at the next stage.
+  /// @param[in, out] kkt_residual KKT residual of this stage.
+  /// @param[in] impulse_status Impulse status of the next impulse. 
+  /// @param[in] dtau_next Length of the discretization at the next stage. 
+  /// @return Constraint violation of this stage.
+  ///
+  double constraintViolation(Robot& robot, const ContactStatus& contact_status, 
+                             const double t, const double dtau, 
+                             const SplitSolution& s, 
+                             const Eigen::VectorXd& q_next,
+                             const Eigen::VectorXd& v_next,
+                             SplitKKTResidual& kkt_residual,
+                             const ImpulseStatus& impulse_status, 
+                             const double dtau_next);
 
 private:
   std::shared_ptr<CostFunction> cost_;
@@ -238,6 +315,7 @@ private:
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   ContactDynamics contact_dynamics_;
+  ForwardSwitchingConstraint switching_constraint_;
   bool use_kinematics_, has_floating_base_;
   double stage_cost_, constraint_violation_;
 

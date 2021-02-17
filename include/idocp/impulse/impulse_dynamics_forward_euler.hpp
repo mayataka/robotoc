@@ -36,8 +36,7 @@ public:
                                 const ImpulseStatus& impulse_status, 
                                 const ImpulseSplitSolution& s, 
                                 ImpulseSplitKKTMatrix& kkt_matrix, 
-                                ImpulseSplitKKTResidual& kkt_residual, 
-                                const bool is_state_constraint_valid);
+                                ImpulseSplitKKTResidual& kkt_residual);
 
   static void linearizeInverseImpulseDynamics(
       Robot& robot, const ImpulseStatus& impulse_status, 
@@ -46,10 +45,6 @@ public:
   static void linearizeImpulseVelocityConstraint(
       Robot& robot, const ImpulseStatus& impulse_status, 
       ImpulseDynamicsForwardEulerData& data);
-
-  static void linearizeImpulsePositionConstraint(
-      Robot& robot, const ImpulseStatus& impulse_status, 
-      ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual);
 
   void condenseImpulseDynamics(Robot& robot, 
                                const ImpulseStatus& impulse_status,
@@ -87,18 +82,13 @@ public:
   void computeImpulseDynamicsResidual(Robot& robot, 
                                       const ImpulseStatus& impulse_status,
                                       const ImpulseSplitSolution& s, 
-                                      ImpulseSplitKKTResidual& kkt_residual,
-                                      const bool is_state_constraint_valid);
+                                      ImpulseSplitKKTResidual& kkt_residual);
 
   double l1NormImpulseDynamicsResidual(
-      const ImpulseSplitKKTResidual& kkt_residual, 
-      const bool is_state_constraint_valid) const;
+      const ImpulseSplitKKTResidual& kkt_residual) const;
 
   double squaredNormImpulseDynamicsResidual(
-      const ImpulseSplitKKTResidual& kkt_residual,
-      const bool is_state_constraint_valid) const;
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+      const ImpulseSplitKKTResidual& kkt_residual) const;
 
 private:
   ImpulseDynamicsForwardEulerData data_;

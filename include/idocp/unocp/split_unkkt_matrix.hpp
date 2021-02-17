@@ -228,8 +228,6 @@ public:
 
   Eigen::MatrixXd Q;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   int dimv_, dimx_, dimKKT_;
 

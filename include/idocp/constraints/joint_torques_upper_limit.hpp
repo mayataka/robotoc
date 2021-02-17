@@ -66,8 +66,6 @@ public:
 
   int dimc() const override;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
-
 private:
   int dimc_;
   Eigen::VectorXd umax_;

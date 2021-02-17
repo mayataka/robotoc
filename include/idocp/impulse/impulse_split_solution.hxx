@@ -14,10 +14,8 @@ inline ImpulseSplitSolution::ImpulseSplitSolution(const Robot& robot)
     f(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
     mu(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
-    xi(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
-    xi_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     has_floating_base_(robot.hasFloatingBase()),
     is_impulse_active_(robot.maxPointContacts(), false),
     dimf_(0) {
@@ -34,10 +32,8 @@ inline ImpulseSplitSolution::ImpulseSplitSolution()
     f(),
     beta(),
     mu(),
-    xi(),
     f_stack_(),
     mu_stack_(),
-    xi_stack_(),
     has_floating_base_(false),
     is_impulse_active_(),
     dimf_(0) {
@@ -138,43 +134,6 @@ inline void ImpulseSplitSolution::set_mu_vector() {
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitSolution::xi_stack() {
-  return xi_stack_.head(dimf_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitSolution::xi_stack() const {
-  return xi_stack_.head(dimf_);
-}
-
-
-inline void ImpulseSplitSolution::set_xi_stack() {
-  int contact_index = 0;
-  int segment_start = 0;
-  for (const auto is_impulse_active : is_impulse_active_) {
-    if (is_impulse_active) {
-      xi_stack_.template segment<3>(segment_start) = xi[contact_index];
-      segment_start += 3;
-    }
-    ++contact_index;
-  }
-}
-
-
-inline void ImpulseSplitSolution::set_xi_vector() {
-  int contact_index = 0;
-  int segment_start = 0;
-  for (const auto is_impulse_active : is_impulse_active_) {
-    if (is_impulse_active) {
-      xi[contact_index] = xi_stack_.template segment<3>(segment_start);
-      segment_start += 3;
-    }
-    ++contact_index;
-  }
-}
-
-
 inline int ImpulseSplitSolution::dimf() const {
   return dimf_;
 }
@@ -204,10 +163,8 @@ inline void ImpulseSplitSolution::copy(const ImpulseSplitSolution& other) {
   beta       = other.beta;
   f_stack()  = other.f_stack();
   mu_stack() = other.mu_stack();
-  xi_stack() = other.xi_stack();
   set_f_vector();
   set_mu_vector();
-  set_xi_vector();
 }
 
 
@@ -228,9 +185,9 @@ inline void ImpulseSplitSolution::copyPartial(const SplitSolution& s) {
 }
 
 
-inline void ImpulseSplitSolution::integrate(
-    const Robot& robot, const double step_size, const ImpulseSplitDirection& d, 
-    const bool is_state_constraint_valid) {
+inline void ImpulseSplitSolution::integrate(const Robot& robot, 
+                                            const double step_size, 
+                                            const ImpulseSplitDirection& d) {
   lmd.noalias() += step_size * d.dlmd();
   gmm.noalias() += step_size * d.dgmm();
   robot.integrateConfiguration(d.dq(), step_size, q);
@@ -243,11 +200,6 @@ inline void ImpulseSplitSolution::integrate(
   assert(mu_stack().size() == d.dmu().size());
   mu_stack().noalias() += step_size * d.dmu();
   set_mu_vector();
-  if (is_state_constraint_valid) {
-    assert(xi_stack().size() == d.dxi().size());
-    xi_stack().noalias() += step_size * d.dxi();
-    set_xi_vector();
-  }
 }
 
 
@@ -277,9 +229,6 @@ inline bool ImpulseSplitSolution::isApprox(
   if (!mu_stack().isApprox(other.mu_stack())) {
     return false;
   }
-  if (!xi_stack().isApprox(other.xi_stack())) {
-    return false;
-  }
   for (int i=0; i<is_impulse_active_.size(); ++i) {
     if (is_impulse_active_[i]) {
       if (!other.isImpulseActive(i)) {
@@ -289,9 +238,6 @@ inline bool ImpulseSplitSolution::isApprox(
         return false;
       }
       if (!mu[i].isApprox(other.mu[i])) {
-        return false;
-      }
-      if (!xi[i].isApprox(other.xi[i])) {
         return false;
       }
     }
@@ -323,10 +269,8 @@ inline void ImpulseSplitSolution::setRandom(
   if (impulse_status.hasActiveImpulse()) {
     f_stack().setRandom();
     mu_stack().setRandom();
-    xi_stack().setRandom();
     set_f_vector();
     set_mu_vector();
-    set_xi_vector();
   }
 }
 

@@ -20,6 +20,7 @@ OCPSolver::OCPSolver(const Robot& robot,
     ocp_(robot, cost, constraints, T, N, max_num_impulse),
     kkt_matrix_(robot, N, max_num_impulse),
     kkt_residual_(robot, N, max_num_impulse),
+    jac_(robot, max_num_impulse),
     s_(robot, N, max_num_impulse),
     d_(robot, N, max_num_impulse),
     N_(N),
@@ -71,9 +72,10 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   ocp_.discretize(contact_sequence_, t);
   discretizeSolution();
   ocp_linearizer_.linearizeOCP(ocp_, robots_, contact_sequence_, q, v, s_, 
-                               kkt_matrix_, kkt_residual_);
-  riccati_solver_.computeNewtonDirection(ocp_, robots_, contact_sequence_, q, v, 
-                                         s_, d_, kkt_matrix_, kkt_residual_);
+                               kkt_matrix_, kkt_residual_, jac_);
+  riccati_solver_.computeNewtonDirection(ocp_, robots_, contact_sequence_, 
+                                         q, v, s_, d_, 
+                                         kkt_matrix_, kkt_residual_, jac_);
   double primal_step_size = riccati_solver_.maxPrimalStepSize();
   const double dual_step_size = riccati_solver_.maxDualStepSize();
   if (use_line_search) {
@@ -293,7 +295,7 @@ void OCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
   ocp_.discretize(contact_sequence_, t);
   discretizeSolution();
   ocp_linearizer_.computeKKTResidual(ocp_, robots_, contact_sequence_, q, v, s_, 
-                                     kkt_matrix_, kkt_residual_);
+                                     kkt_matrix_, kkt_residual_, jac_);
 }
 
 
@@ -361,117 +363,6 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     }
   }
   return sol;
-}
-
-
-void OCPSolver::printSolution(const std::string& name, 
-                              const std::vector<int> frames) const {
-  if (name == "all") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
-      std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
-      std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
-      std::cout << "f[" << i << "] = ";
-      for (int j=0; j<s_[i].f.size(); ++j) {
-        std::cout << s_[i].f[j].transpose() << "; ";
-      }
-      std::cout << std::endl;
-      std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
-    }
-    std::cout << "q[" << N_ << "] = " << s_[N_].q.transpose() << std::endl;
-    std::cout << "v[" << N_ << "] = " << s_[N_].v.transpose() << std::endl;
-  }
-  if (name == "q") {
-    for (int i=0; i<=N_; ++i) {
-      std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
-    }
-  }
-  if (name == "v") {
-    for (int i=0; i<=N_; ++i) {
-      std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
-    }
-  }
-  if (name == "a") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
-    }
-  }
-  if (name == "f") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "f[" << i << "] = ";
-      for (int j=0; j<s_[i].f.size(); ++j) {
-        std::cout << s_[i].f[j].transpose() << "; ";
-      }
-      std::cout << std::endl;
-    }
-  }
-  if (name == "u") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
-    }
-  }
-  if (name == "end-effector") {
-    Robot robot = robots_[0];
-    for (int i=0; i<N_; ++i) {
-      robot.updateFrameKinematics(s_[i].q);
-      for (const auto e : frames) {
-      std::cout << "end-effector[" << i << "][" << e << "] = " 
-                << robot.framePosition(e).transpose() << std::endl;
-      }
-    }
-  }
-}
-
-
-void OCPSolver::saveSolution(const std::string& path_to_file, 
-                             const std::string& name) const {
-  std::ofstream file(path_to_file);
-  if (name == "q") {
-    const int dimq = robots_[0].dimq();
-    for (int i=0; i<=N_; ++i) {
-      for (int j=0; j<dimq; ++j) {
-        file << s_[i].q.coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  if (name == "v") {
-    const int dimv = robots_[0].dimv();
-    for (int i=0; i<=N_; ++i) {
-      for (int j=0; j<dimv; ++j) {
-        file << s_[i].v.coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  if (name == "a") {
-    const int dimv = robots_[0].dimv();
-    for (int i=0; i<N_; ++i) {
-      for (int j=0; j<dimv; ++j) {
-        file << s_[i].a.coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  if (name == "f") {
-    for (int i=0; i<N_; ++i) {
-      const int dimf = s_[i].f_stack().size();
-      for (int j=0; j<dimf; ++j) {
-        file << s_[i].f_stack().coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  if (name == "u") {
-    const int dimu = robots_[0].dimu();
-    for (int i=0; i<N_; ++i) {
-      for (int j=0; j<dimu; ++j) {
-        file << s_[i].u.coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  file.close();
 }
 
 

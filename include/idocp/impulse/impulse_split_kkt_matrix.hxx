@@ -14,7 +14,6 @@ inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix(const Robot& robot)
     Fqq_prev_inv(Matrix6d::Zero()),
     FC_(Eigen::MatrixXd::Zero(2*robot.dimv()+robot.max_dimf(), 
                               2*robot.dimv()+robot.max_dimf())),
-    Pq_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv()+robot.max_dimf(), 
                              3*robot.dimv()+robot.max_dimf())),
     dimv_(robot.dimv()), 
@@ -31,7 +30,6 @@ inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix()
     Fqq_inv(Matrix6d::Zero()),
     Fqq_prev_inv(Matrix6d::Zero()),
     FC_(),
-    Pq_full_(),
     Q_(),
     dimv_(0), 
     dimx_(0), 
@@ -140,17 +138,6 @@ inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fxx() {
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Fxx() const {
   return FC_.block(0, dimf_, dimx_, dimx_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Pq() {
-  return Pq_full_.topLeftCorner(dimf_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Pq() const {
-  return Pq_full_.topLeftCorner(dimf_, dimv_);
 }
 
 
@@ -339,7 +326,6 @@ inline void ImpulseSplitKKTMatrix::symmetrize() {
 inline void ImpulseSplitKKTMatrix::setZero() {
   Fqq_prev.setZero();
   FC_.setZero();
-  Pq_full_.setZero();
   Q_.setZero();
 }
 
@@ -358,7 +344,6 @@ inline bool ImpulseSplitKKTMatrix::isApprox(
     const ImpulseSplitKKTMatrix& other) const {
   if (!Fxf().isApprox(other.Fxf())) return false;
   if (!Fxx().isApprox(other.Fxx())) return false;
-  if (!Pq().isApprox(other.Pq())) return false;
   if (!Vq().isApprox(other.Vq())) return false;
   if (!Vv().isApprox(other.Vv())) return false;
   if (!Qdvdvff().isApprox(other.Qdvdvff())) return false;
@@ -372,7 +357,6 @@ inline bool ImpulseSplitKKTMatrix::isApprox(
 inline bool ImpulseSplitKKTMatrix::hasNaN() const {
   if (Fqq_prev.hasNaN()) return true;
   if (FC_.hasNaN()) return true;
-  if (Pq_full_.hasNaN()) return true;
   if (Q_.hasNaN()) return true;
   return false;
 }

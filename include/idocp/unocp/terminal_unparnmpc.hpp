@@ -201,8 +201,6 @@ public:
                                   const SplitSolution& s, 
                                   const Eigen::MatrixBase<MatrixType>& Qxx);
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;

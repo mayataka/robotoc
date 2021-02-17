@@ -7,11 +7,8 @@ namespace idocp {
 
 RiccatiSolver::RiccatiSolver(const Robot& robot, const int N, 
                              const int max_num_impulse, const int nthreads) 
-  : riccati_recursion_(robot, N, nthreads),
-    riccati_factorizer_(robot, N, max_num_impulse),
-    riccati_factorization_(robot, N, max_num_impulse),
-    constraint_factorizer_(robot, N, max_num_impulse, nthreads),
-    constraint_factorization_(robot, N, max_num_impulse),
+  : riccati_recursion_(robot, N, max_num_impulse),
+    factorization_(robot, N, max_num_impulse),
     direction_calculator_(N, max_num_impulse, nthreads) {
   try {
     if (N <= 0) {
@@ -33,10 +30,7 @@ RiccatiSolver::RiccatiSolver(const Robot& robot, const int N,
 
 RiccatiSolver::RiccatiSolver() 
   : riccati_recursion_(),
-    riccati_factorizer_(),
-    riccati_factorization_(),
-    constraint_factorizer_(),
-    constraint_factorization_(),
+    factorization_(),
     direction_calculator_() {
 }
 
@@ -49,40 +43,16 @@ void RiccatiSolver::computeNewtonDirection(
     OCP& ocp, std::vector<Robot>& robots, 
     const ContactSequence& contact_sequence, const Eigen::VectorXd& q, 
     const Eigen::VectorXd& v, const Solution& s, Direction& d, 
-    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual) {
-  riccati_recursion_.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, 
-                                                      riccati_factorization_);
-  riccati_recursion_.backwardRiccatiRecursion(riccati_factorizer_, 
-                                              ocp.discrete(), kkt_matrix, 
-                                              kkt_residual, 
-                                              riccati_factorization_);
-  constraint_factorization_.setConstraintStatus(contact_sequence);
-  riccati_recursion_.forwardRiccatiRecursionParallel(riccati_factorizer_, 
-                                                     ocp.discrete(),
-                                                     kkt_matrix, kkt_residual,
-                                                     constraint_factorization_);
-  const bool exist_state_constraint = ocp.discrete().existStateConstraint();
-  if (exist_state_constraint) {
-    riccati_recursion_.forwardStateConstraintFactorization(
-        riccati_factorizer_, ocp.discrete(), kkt_matrix, kkt_residual, 
-        riccati_factorization_);
-    riccati_recursion_.backwardStateConstraintFactorization(
-        riccati_factorizer_, ocp.discrete(), kkt_matrix, 
-        constraint_factorization_);
-  }
+    KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, 
+    const StateConstraintJacobian& jac) {
+  riccati_recursion_.backwardRiccatiRecursion(ocp.discrete(), kkt_matrix, 
+                                              kkt_residual, jac, factorization_);
   direction_calculator_.computeInitialStateDirection(robots, q, v, kkt_matrix, 
                                                      s, d);
-  if (exist_state_constraint) {
-    constraint_factorizer_.computeLagrangeMultiplierDirection(
-        ocp.discrete(), riccati_factorization_, constraint_factorization_, d);
-    constraint_factorizer_.aggregateLagrangeMultiplierDirection(
-       constraint_factorization_,  ocp.discrete(), d, riccati_factorization_);
-  }
-  riccati_recursion_.forwardRiccatiRecursion(
-      riccati_factorizer_, ocp.discrete(), kkt_matrix, kkt_residual, 
-      riccati_factorization_, d);
+  riccati_recursion_.forwardRiccatiRecursion(ocp.discrete(), kkt_matrix, 
+                                             kkt_residual, d);
   direction_calculator_.computeNewtonDirectionFromRiccatiFactorization(
-      ocp, robots, riccati_factorizer_, riccati_factorization_, s, d);
+      ocp, robots, factorization_, s, d);
 }
 
 
@@ -99,7 +69,6 @@ double RiccatiSolver::maxDualStepSize() const {
 void RiccatiSolver::getStateFeedbackGain(const int time_stage, 
                                          Eigen::MatrixXd& Kq, 
                                          Eigen::MatrixXd& Kv) const {
-  riccati_factorizer_[time_stage].getStateFeedbackGain(Kq, Kv);
 }
 
 } // namespace idocp

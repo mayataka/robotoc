@@ -14,21 +14,6 @@ namespace switchingconstraint {
 
 void linearizeSwitchingConstraint(Robot& robot, 
                                   const ImpulseStatus& impulse_status, 
-                                  const double dtau1, const double dtau2, 
-                                  const SplitSolution& s, 
-                                  SplitKKTMatrix& kkt_matrix, 
-                                  SplitKKTResidual& kkt_residual, 
-                                  SplitStateConstraintJacobian& jac);
-
-void computeSwitchingConstraintResidual(Robot& robot, 
-                                        const ImpulseStatus& impulse_status, 
-                                        const double dtau1, const double dtau2, 
-                                        const SplitSolution& s, 
-                                        SplitKKTResidual& kkt_residual, 
-                                        SplitStateConstraintJacobian& jac);
-
-void linearizeSwitchingConstraint(Robot& robot, 
-                                  const ImpulseStatus& impulse_status, 
                                   const SplitSolution& s, 
                                   SplitKKTMatrix& kkt_matrix, 
                                   SplitKKTResidual& kkt_residual);

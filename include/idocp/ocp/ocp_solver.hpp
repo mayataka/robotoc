@@ -9,16 +9,12 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_direction.hpp"
-#include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/ocp/state_constraint_jacobian.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 #include "idocp/ocp/riccati_solver.hpp"
 #include "idocp/line_search/line_search.hpp"
-
 
 namespace idocp {
 
@@ -176,27 +172,6 @@ public:
   ///
   std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
 
-  ///
-  /// @brief Prints the variable into console. 
-  /// @param[in] name Name of the printed variable. Default is "all" 
-  /// (print all variables).
-  /// @param[in] frame_id Index of the end-effector frames. Only used if 
-  /// name == "end-effector". Default is {} (do not specify any frames).
-  ///
-  void printSolution(const std::string& name="all", 
-                     const std::vector<int> frames={}) const;
-
-  ///
-  /// @brief Save the variable into file. 
-  /// @param[in] name Name of the printed variable. 
-  /// @param[in] frame_id Index of the end-effector frames. Only used if 
-  /// name == "end-effector". Default is {} (do not specify any frames).
-  ///
-  void saveSolution(const std::string& path_to_file,
-                    const std::string& name) const;
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
@@ -206,6 +181,7 @@ private:
   OCP ocp_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
+  StateConstraintJacobian jac_;
   Solution s_;
   Direction d_;
   int N_, nthreads_;

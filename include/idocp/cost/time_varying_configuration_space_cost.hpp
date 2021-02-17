@@ -95,9 +95,6 @@ public:
                                  const double t, const ImpulseSplitSolution& s, 
                                  ImpulseSplitKKTMatrix& kkt_matrix) const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-
   void set_q_ref(const Robot& robot, const double t, 
                  Eigen::VectorXd& q_ref) const {
     if (t > t_begin_ && t < t_end_) {

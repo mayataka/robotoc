@@ -170,8 +170,6 @@ public:
   void saveSolution(const std::string& path_to_file,
                     const std::string& name) const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   std::vector<Robot> robots_;
   UnOCP ocp_;

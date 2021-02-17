@@ -199,8 +199,6 @@ public:
                              const Eigen::VectorXd& v_prev, 
                              const SplitSolution& s);
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;

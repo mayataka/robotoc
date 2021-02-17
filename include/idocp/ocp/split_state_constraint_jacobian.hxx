@@ -8,10 +8,8 @@ namespace idocp {
 
 inline SplitStateConstraintJacobian::SplitStateConstraintJacobian(
     const Robot& robot) 
-  : q(Eigen::VectorXd::Zero(robot.dimq())),
-    dq(Eigen::VectorXd::Zero(robot.dimv())),
-    dintegrate_dq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    dintegrate_dv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+  : dintegrate_dq(),
+    dintegrate_dv(),
     Phia_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     Phix_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), 2*robot.dimv())),
     Phiu_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimu())),
@@ -19,13 +17,17 @@ inline SplitStateConstraintJacobian::SplitStateConstraintJacobian(
     dimx_(2*robot.dimv()),
     dimu_(robot.dimu()),
     dimi_(0) { 
+  if (robot.hasFloatingBase()) {
+    dintegrate_dq.resize(robot.dimv(), robot.dimv());
+    dintegrate_dv.resize(robot.dimv(), robot.dimv());
+    dintegrate_dq.setZero();
+    dintegrate_dv.setZero();
+  }
 }
 
 
 inline SplitStateConstraintJacobian::SplitStateConstraintJacobian() 
-  : q(),
-    dq(),
-    dintegrate_dq(),
+  : dintegrate_dq(),
     dintegrate_dv(),
     Phia_full_(),
     Phix_full_(),
@@ -49,6 +51,11 @@ inline void SplitStateConstraintJacobian::setImpulseStatus(
 
 inline void SplitStateConstraintJacobian::setImpulseStatus() {
   dimi_ = 0;
+}
+
+
+inline int SplitStateConstraintJacobian::dimi() const {
+  return dimi_;
 }
 
 
@@ -104,6 +111,28 @@ inline Eigen::Block<Eigen::MatrixXd> SplitStateConstraintJacobian::Phiu() {
 inline const Eigen::Block<const Eigen::MatrixXd> 
 SplitStateConstraintJacobian::Phiu() const {
   return Phiu_full_.topLeftCorner(dimi_, dimu_);
+}
+
+
+inline bool SplitStateConstraintJacobian::isApprox(
+    const SplitStateConstraintJacobian& other) const {
+  if (dimi() != other.dimi()) return false;
+  if (!Phia().isApprox(other.Phia())) return false;
+  if (!Phix().isApprox(other.Phix())) return false;
+  if (!Phiu().isApprox(other.Phiu())) return false;
+  if (!dintegrate_dq.isApprox(other.dintegrate_dq)) return false;
+  if (!dintegrate_dv.isApprox(other.dintegrate_dv)) return false;
+  return true;
+}
+
+
+inline bool SplitStateConstraintJacobian::hasNaN() const {
+  if (Phia().hasNaN()) return true;
+  if (Phix().hasNaN()) return true;
+  if (Phiu().hasNaN()) return true;
+  if (dintegrate_dq.hasNaN()) return true;
+  if (dintegrate_dv.hasNaN()) return true;
+  return false;
 }
 
 } // namespace idocp

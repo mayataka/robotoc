@@ -178,27 +178,6 @@ public:
   ///
   std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
 
-  ///
-  /// @brief Prints the variable into console. 
-  /// @param[in] name Name of the printed variable. Default is "all" 
-  /// (print all variables).
-  /// @param[in] frame_id Index of the end-effector frames. Only used if 
-  /// name == "end-effector". Default is {} (do not specify any frames).
-  ///
-  void printSolution(const std::string& name="all", 
-                     const std::vector<int> frames={}) const;
-
-  ///
-  /// @brief Save the variable into file. 
-  /// @param[in] name Name of the printed variable. 
-  /// @param[in] frame_id Index of the end-effector frames. Only used if 
-  /// name == "end-effector". Default is {} (do not specify any frames).
-  ///
-  void saveSolution(const std::string& path_to_file,
-                    const std::string& name) const;
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;

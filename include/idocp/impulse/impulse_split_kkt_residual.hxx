@@ -10,7 +10,6 @@ inline ImpulseSplitKKTResidual::ImpulseSplitKKTResidual(const Robot& robot)
   : ldv(Eigen::VectorXd::Zero(robot.dimv())),
     Fq_prev(Vector6d::Zero()),
     KKT_residual_full_(Eigen::VectorXd::Zero(4*robot.dimv()+2*robot.max_dimf())),
-    P_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dimf_(0), 
@@ -25,7 +24,6 @@ inline ImpulseSplitKKTResidual::ImpulseSplitKKTResidual()
   : ldv(),
     Fq_prev(Vector6d::Zero()),
     KKT_residual_full_(),
-    P_full_(),
     dimv_(0), 
     dimx_(0), 
     dimf_(0), 
@@ -138,17 +136,6 @@ ImpulseSplitKKTResidual::lx() const {
 }
 
 
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitKKTResidual::P() {
-  return P_full_.head(dimf_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitKKTResidual::P() const {
-  return P_full_.head(dimf_);
-}
-
-
 inline Eigen::VectorBlock<Eigen::VectorXd> 
 ImpulseSplitKKTResidual::splitKKTResidual() {
   return KKT_residual_full_.head(dimKKT_);
@@ -164,7 +151,6 @@ ImpulseSplitKKTResidual::splitKKTResidual() const {
 inline void ImpulseSplitKKTResidual::setZero() {
   KKT_residual_full_.setZero();
   ldv.setZero();
-  P_full_.setZero();
 }
 
 
@@ -182,9 +168,6 @@ inline bool ImpulseSplitKKTResidual::isApprox(
     const ImpulseSplitKKTResidual& other) const {
   if (!splitKKTResidual().isApprox(other.splitKKTResidual())) return false;
   if (!ldv.isApprox(other.ldv)) return false;
-  if (dimf_ > 0) {
-    if (!P().isApprox(other.P())) return false;
-  }
   return true;
 }
 
@@ -192,7 +175,6 @@ inline bool ImpulseSplitKKTResidual::isApprox(
 inline bool ImpulseSplitKKTResidual::hasNaN() const {
   if (KKT_residual_full_.hasNaN()) return true;
   if (ldv.hasNaN()) return true;
-  if (P_full_.hasNaN()) return true;
   return false;
 }
 

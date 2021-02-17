@@ -76,8 +76,6 @@ public:
 
   double squaredNormContactDynamicsResidual(const double dtau) const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   ContactDynamicsData data_;
   bool has_floating_base_, has_active_contacts_;

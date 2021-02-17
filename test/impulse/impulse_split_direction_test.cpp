@@ -47,7 +47,6 @@ void ImpulseSplitDirectionTest::testSize(const Robot& robot,
   EXPECT_EQ(d.dbetamu().size(), dimv);
   EXPECT_EQ(d.df().size(), 0);
   EXPECT_EQ(d.dmu().size(), 0);
-  EXPECT_EQ(d.dxi().size(), 0);
   EXPECT_EQ(d.dimf(), 0);
   EXPECT_EQ(d.dimKKT(), 4*dimv);
   d.setImpulseStatus(impulse_status);
@@ -62,7 +61,6 @@ void ImpulseSplitDirectionTest::testSize(const Robot& robot,
   EXPECT_EQ(d.dbetamu().size(), dimv+dimf);
   EXPECT_EQ(d.df().size(), dimf);
   EXPECT_EQ(d.dmu().size(), dimf);
-  EXPECT_EQ(d.dxi().size(), dimf);
   EXPECT_EQ(d.dimf(), dimf);
   EXPECT_EQ(d.dimKKT(), 4*dimv);
   const Eigen::VectorXd split_direction = Eigen::VectorXd::Random(d.dimKKT());
@@ -80,8 +78,6 @@ void ImpulseSplitDirectionTest::testSize(const Robot& robot,
   d.dmu() = dmu;
   const Eigen::VectorXd dbeta = Eigen::VectorXd::Random(dimv);
   d.dbeta() = dbeta;
-  const Eigen::VectorXd dxi = Eigen::VectorXd::Random(dimf);
-  d.dxi() = dxi;
   EXPECT_TRUE(dlmd.isApprox(d.dlmd()));
   EXPECT_TRUE(dgmm.isApprox(d.dgmm()));
   EXPECT_TRUE(dq.isApprox(d.dq()));
@@ -91,7 +87,6 @@ void ImpulseSplitDirectionTest::testSize(const Robot& robot,
   EXPECT_TRUE(df.isApprox(d.df()));
   EXPECT_TRUE(dbeta.isApprox(d.dbeta()));
   EXPECT_TRUE(dmu.isApprox(d.dmu()));
-  EXPECT_TRUE(dxi.isApprox(d.dxi()));
   EXPECT_TRUE(d.ddvf().head(dimv).isApprox(d.ddv()));
   EXPECT_TRUE(d.ddvf().tail(dimf).isApprox(d.df()));
   EXPECT_TRUE(d.dbetamu().head(dimv).isApprox(d.dbeta()));
@@ -109,7 +104,6 @@ void ImpulseSplitDirectionTest::testSize(const Robot& robot,
   EXPECT_TRUE(d.dbeta().isZero());
   EXPECT_TRUE(d.dmu().isZero());
   EXPECT_TRUE(d.dbetamu().isZero());
-  EXPECT_TRUE(d.dxi().isZero());
   d.setRandom();
   EXPECT_FALSE(d.split_direction.isZero());
   EXPECT_FALSE(d.dlmd().isZero());
@@ -125,8 +119,6 @@ void ImpulseSplitDirectionTest::testSize(const Robot& robot,
   if (dimf > 0) 
   EXPECT_FALSE(d.dmu().isZero());
   EXPECT_FALSE(d.dbetamu().isZero());
-  if (dimf > 0) 
-  EXPECT_FALSE(d.dxi().isZero());
   EXPECT_TRUE(d.ddvf().head(dimv).isApprox(d.ddv()));
   EXPECT_TRUE(d.ddvf().tail(dimf).isApprox(d.df()));
   EXPECT_TRUE(d.dbetamu().head(dimv).isApprox(d.dbeta()));
@@ -143,7 +135,6 @@ void ImpulseSplitDirectionTest::testSize(const Robot& robot,
   EXPECT_EQ(d_random.dbetamu().size(), dimv+dimf);
   EXPECT_EQ(d_random.df().size(), dimf);
   EXPECT_EQ(d_random.dmu().size(), dimf);
-  EXPECT_EQ(d_random.dxi().size(), dimf);
   EXPECT_EQ(d_random.dimf(), dimf);
   EXPECT_EQ(d_random.dimKKT(), 4*dimv);
   EXPECT_FALSE(d_random.split_direction.isZero());
@@ -160,8 +151,6 @@ void ImpulseSplitDirectionTest::testSize(const Robot& robot,
   if (dimf > 0) 
   EXPECT_FALSE(d_random.dmu().isZero());
   EXPECT_FALSE(d_random.dbetamu().isZero());
-  if (dimf > 0) 
-  EXPECT_FALSE(d_random.dxi().isZero());
   EXPECT_TRUE(d_random.ddvf().head(dimv).isApprox(d_random.ddv()));
   EXPECT_TRUE(d_random.ddvf().tail(dimf).isApprox(d_random.df()));
   EXPECT_TRUE(d_random.dbetamu().head(dimv).isApprox(d_random.dbeta()));
@@ -190,8 +179,6 @@ void ImpulseSplitDirectionTest::testIsApprox(const Robot& robot,
   if (dimf > 0) 
   EXPECT_FALSE(d.dmu().isZero());
   EXPECT_FALSE(d.dbetamu().isZero());
-  if (dimf > 0) 
-  EXPECT_FALSE(d.dxi().isZero());
   EXPECT_TRUE(d.ddvf().head(dimv).isApprox(d.ddv()));
   EXPECT_TRUE(d.ddvf().tail(dimf).isApprox(d.df()));
   EXPECT_TRUE(d.dbetamu().head(dimv).isApprox(d.dbeta()));
@@ -231,17 +218,11 @@ void ImpulseSplitDirectionTest::testIsApprox(const Robot& robot,
     EXPECT_FALSE(d.isApprox(d_ref));
     d_ref.dmu() = d.dmu();
     EXPECT_TRUE(d.isApprox(d_ref));
-    d_ref.dxi().setRandom();
-    EXPECT_FALSE(d.isApprox(d_ref));
-    d_ref.dxi() = d.dxi();
-    EXPECT_TRUE(d.isApprox(d_ref));
   }
   else {
     d_ref.df().setRandom();
     EXPECT_TRUE(d.isApprox(d_ref));
     d_ref.dmu().setRandom();
-    EXPECT_TRUE(d.isApprox(d_ref));
-    d_ref.dxi().setRandom();
     EXPECT_TRUE(d.isApprox(d_ref));
   }
 }

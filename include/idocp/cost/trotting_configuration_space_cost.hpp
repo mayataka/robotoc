@@ -115,8 +115,6 @@ public:
                                  const double t, const ImpulseSplitSolution& s, 
                                  ImpulseSplitKKTMatrix& kkt_matrix) const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   int dimq_, dimv_;
   double t_start_, t_period_, step_length_, v_com_;

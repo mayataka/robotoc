@@ -9,10 +9,10 @@
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/ocp_discretizer.hpp"
-#include "idocp/ocp/state_constraint_riccati_factorizer.hpp"
-#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/riccati_recursion.hpp"
 #include "idocp/ocp/riccati_direction_calculator.hpp"
+#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
+#include "idocp/ocp/split_constrained_riccati_factorization.hpp"
 
 
 namespace idocp {
@@ -78,13 +78,15 @@ public:
   /// @param[in, out] d Direction. 
   /// @param[in, out] kkt_matrix KKT matrix. 
   /// @param[in, out] kkt_residual KKT residual. 
+  /// @param[in] jac State-constraint Jacobian. 
   /// 
   void computeNewtonDirection(OCP& ocp, std::vector<Robot>& robots, 
                               const ContactSequence& contact_sequence,
                               const Eigen::VectorXd& q, 
                               const Eigen::VectorXd& v, const Solution& s, 
                               Direction& d, KKTMatrix& kkt_matrix, 
-                              KKTResidual& kkt_residual);
+                              KKTResidual& kkt_residual, 
+                              const StateConstraintJacobian& jac);
 
   ///
   /// @brief Computes the maximum step size computed from the primal variables. 
@@ -112,10 +114,7 @@ public:
 
 private:
   RiccatiRecursion riccati_recursion_;
-  RiccatiFactorizer riccati_factorizer_;
-  RiccatiFactorization riccati_factorization_;
-  StateConstraintRiccatiFactorizer constraint_factorizer_;
-  StateConstraintRiccatiFactorization constraint_factorization_;
+  RiccatiFactorization factorization_;
   RiccatiDirectionCalculator direction_calculator_;
 
 };

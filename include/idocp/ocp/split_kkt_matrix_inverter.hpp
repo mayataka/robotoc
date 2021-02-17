@@ -76,8 +76,6 @@ public:
 
   void disableRegularization();
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   int dimv_, dimu_, dimx_, dimQ_, dimKKT_, dimf_;
   bool has_floating_base_, regularization_;
