@@ -326,10 +326,8 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
                           q, v, s, kkt_matrix, kkt_residual, jac);
   Direction d(robot, N, max_num_impulse);
   RiccatiSolver riccati_solver(robots[0], N, max_num_impulse, nthreads);
-  std::cout << "before computeNewtonDirection" << std::endl;
-  riccati_solver.computeNewtonDirection(ocp, robots, contact_sequence, q, v, s, d, 
+  riccati_solver.computeNewtonDirection(ocp, robots, q, v, s, d, 
                                         kkt_matrix, kkt_residual, jac);
-  std::cout << "after computeNewtonDirection" << std::endl;
   const double primal_step_size = riccati_solver.maxPrimalStepSize();
   const double dual_step_size = riccati_solver.maxDualStepSize();
   ASSERT_TRUE(primal_step_size > 0);
@@ -409,39 +407,27 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
 
 TEST_F(OCPLinearizerTest, fixedBase) {
   Robot robot(fixed_base_urdf);
-  std::cout << "Aa" << std::endl;
   testLinearizeOCP(robot);
-  std::cout << "Aa" << std::endl;
   testComputeKKTResidual(robot);
-  std::cout << "Aa" << std::endl;
-  // testIntegrateSolution(robot);
+  testIntegrateSolution(robot);
   std::vector<int> contact_frames = {18};
   robot = Robot(fixed_base_urdf, contact_frames);
-  std::cout << "Aa" << std::endl;
   testLinearizeOCP(robot);
-  std::cout << "Aa" << std::endl;
   testComputeKKTResidual(robot);
-  std::cout << "Aa" << std::endl;
-  // testIntegrateSolution(robot);
+  testIntegrateSolution(robot);
 }
 
 
 TEST_F(OCPLinearizerTest, floatingBase) {
   Robot robot(floating_base_urdf);
-  std::cout << "Aa" << std::endl;
   testLinearizeOCP(robot);
-  std::cout << "Aa" << std::endl;
   testComputeKKTResidual(robot);
-  std::cout << "Aa" << std::endl;
-  // testIntegrateSolution(robot);
+  testIntegrateSolution(robot);
   std::vector<int> contact_frames = {14, 24, 34, 44};
   robot = Robot(floating_base_urdf, contact_frames);
-  std::cout << "Aa" << std::endl;
   testLinearizeOCP(robot);
-  std::cout << "Aa" << std::endl;
   testComputeKKTResidual(robot);
-  std::cout << "Aa" << std::endl;
-  // testIntegrateSolution(robot);
+  testIntegrateSolution(robot);
 }
 
 } // namespace idocp

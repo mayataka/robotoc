@@ -48,7 +48,6 @@ void ImpulseSplitDirectionTest::testSize(const Robot& robot,
   EXPECT_EQ(d.df().size(), 0);
   EXPECT_EQ(d.dmu().size(), 0);
   EXPECT_EQ(d.dimf(), 0);
-  EXPECT_EQ(d.dimKKT(), 4*dimv);
   d.setImpulseStatus(impulse_status);
   EXPECT_EQ(d.dlmd().size(), dimv);
   EXPECT_EQ(d.dgmm().size(), dimv);
@@ -62,8 +61,7 @@ void ImpulseSplitDirectionTest::testSize(const Robot& robot,
   EXPECT_EQ(d.df().size(), dimf);
   EXPECT_EQ(d.dmu().size(), dimf);
   EXPECT_EQ(d.dimf(), dimf);
-  EXPECT_EQ(d.dimKKT(), 4*dimv);
-  const Eigen::VectorXd split_direction = Eigen::VectorXd::Random(d.dimKKT());
+  const Eigen::VectorXd split_direction = Eigen::VectorXd::Random(4*dimv);
   d.split_direction = split_direction;
   const Eigen::VectorXd dlmd = split_direction.segment(0,  dimv);
   const Eigen::VectorXd dgmm = split_direction.segment(dimv,  dimv);
@@ -136,7 +134,6 @@ void ImpulseSplitDirectionTest::testSize(const Robot& robot,
   EXPECT_EQ(d_random.df().size(), dimf);
   EXPECT_EQ(d_random.dmu().size(), dimf);
   EXPECT_EQ(d_random.dimf(), dimf);
-  EXPECT_EQ(d_random.dimKKT(), 4*dimv);
   EXPECT_FALSE(d_random.split_direction.isZero());
   EXPECT_FALSE(d_random.dlmd().isZero());
   EXPECT_FALSE(d_random.dgmm().isZero());

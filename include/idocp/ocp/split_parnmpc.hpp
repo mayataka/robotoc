@@ -103,8 +103,7 @@ public:
   template <typename SplitSolutionType>
   void linearizeOCP(Robot& robot, const ContactStatus& contact_status, 
                     const double t, const double dtau, 
-                    const Eigen::VectorXd& q_prev, 
-                    const Eigen::VectorXd& v_prev, 
+                    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
                     const SplitSolution& s, const SplitSolutionType& s_next, 
                     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
 
@@ -115,7 +114,6 @@ public:
   /// @tparam SplitSolutionType Type of the split solution at the next stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] contact_status Contact status at this stage. 
-  /// @param[in] impulse_status Impulse status of the next impulse. 
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] q_prev Configuration of the previous stage.
@@ -124,13 +122,15 @@ public:
   /// @param[in] s_next Split solution of the next stage.
   /// @param[out] kkt_matrix KKT matrix of this stage.
   /// @param[out] kkt_residual KKT residual of this stage.
+  /// @param[in] impulse_status Impulse status of the next impulse. 
   ///
+  template <typename SplitSolutionType>
   void linearizeOCP(Robot& robot, const ContactStatus& contact_status, 
-                    const ImpulseStatus& impulse_status, const double t, 
-                    const double dtau, const Eigen::VectorXd& q_prev, 
-                    const Eigen::VectorXd& v_prev, const SplitSolution& s, 
-                    const ImpulseSplitSolution& s_next, 
-                    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
+                    const double t, const double dtau, 
+                    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
+                    const SplitSolution& s, const SplitSolutionType& s_next, 
+                    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual,
+                    const ImpulseStatus& impulse_status);
 
   ///
   /// @brief Computes the Newton direction of the condensed primal variables  
@@ -217,7 +217,6 @@ public:
   /// @brief Computes the KKT residual of the OCP at this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] contact_status Contact status at this stage. 
-  /// @param[in] impulse_status Impulse status of the next impulse. 
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] q_prev Configuration of the previous stage. Size must be 
@@ -226,14 +225,17 @@ public:
   /// Robot::dimv().
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
+  /// @param[in] impulse_status Impulse status of the next impulse. 
   ///
+  template <typename SplitSolutionType>
   void computeKKTResidual(Robot& robot, const ContactStatus& contact_status, 
-                          const ImpulseStatus& impulse_status, const double t, 
-                          const double dtau, const Eigen::VectorXd& q_prev, 
+                          const double t, const double dtau, 
+                          const Eigen::VectorXd& q_prev, 
                           const Eigen::VectorXd& v_prev, const SplitSolution& s, 
-                          const ImpulseSplitSolution& s_next, 
+                          const SplitSolutionType& s_next, 
                           SplitKKTMatrix& kkt_matrix, 
-                          SplitKKTResidual& kkt_residual);
+                          SplitKKTResidual& kkt_residual,
+                          const ImpulseStatus& impulse_status);
 
   ///
   /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
@@ -284,7 +286,6 @@ public:
   /// @brief Computes the KKT residual of the OCP at this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] contact_status Contact status of robot at this stage. 
-  /// @param[in] impulse_status Impulse status of the next impulse. 
   /// @param[in] t Current time of this stage. 
   /// @param[in] dtau Length of the discretization of the horizon.
   /// @param[in] q_prev Configuration of the previous stage. Size must be 
@@ -293,14 +294,15 @@ public:
   /// Robot::dimv().
   /// @param[in] s Split solution of this stage.
   /// @param[in, out] kkt_residual KKT residual of this stage.
+  /// @param[in] impulse_status Impulse status of the next impulse. 
   ///
   double constraintViolation(Robot& robot, const ContactStatus& contact_status, 
-                             const ImpulseStatus& impulse_status, 
                              const double t, const double dtau, 
                              const Eigen::VectorXd& q_prev,
                              const Eigen::VectorXd& v_prev,
                              const SplitSolution& s,
-                             SplitKKTResidual& kkt_residual);
+                             SplitKKTResidual& kkt_residual,
+                             const ImpulseStatus& impulse_status);
 
 private:
   std::shared_ptr<CostFunction> cost_;

@@ -67,10 +67,9 @@ public:
                                            const KKTMatrix& kkt_matrix, 
                                            const Solution& s, Direction& d);
 
-  void computeNewtonDirectionFromRiccatiFactorization(
-      OCP& ocp, std::vector<Robot>& robots, 
-      const RiccatiFactorization& factorization, 
-      const Solution& s, Direction& d);
+  void computeNewtonDirection(OCP& ocp, std::vector<Robot>& robots, 
+                              const RiccatiFactorization& factorization, 
+                              const Solution& s, Direction& d);
 
   double maxPrimalStepSize() const;
 

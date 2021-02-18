@@ -20,8 +20,7 @@ inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix(const Robot& robot)
     dimx_(2*robot.dimv()), 
     dimf_(0), 
     q_begin_(robot.dimv()),
-    v_begin_(2*robot.dimv()),
-    dimKKT_(4*robot.dimv()) {
+    v_begin_(2*robot.dimv()) {
 }
 
 
@@ -35,8 +34,7 @@ inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix()
     dimx_(0), 
     dimf_(0), 
     q_begin_(0),
-    v_begin_(0),
-    dimKKT_(0) {
+    v_begin_(0) {
 }
 
 
@@ -49,7 +47,6 @@ inline void ImpulseSplitKKTMatrix::setImpulseStatus(
   dimf_ = impulse_status.dimf();
   q_begin_ = dimv_ + dimf_;
   v_begin_ = 2*dimv_ + dimf_;
-  dimKKT_ = 4*dimv_ + 2*dimf_;
 }
 
 
@@ -327,11 +324,6 @@ inline void ImpulseSplitKKTMatrix::setZero() {
   Fqq_prev.setZero();
   FC_.setZero();
   Q_.setZero();
-}
-
-
-inline int ImpulseSplitKKTMatrix::dimKKT() const {
-  return dimKKT_;
 }
 
 

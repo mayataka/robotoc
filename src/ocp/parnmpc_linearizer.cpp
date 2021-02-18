@@ -150,12 +150,12 @@ void ParNMPCLinearizer::computeKKTResidual(
             robots[omp_get_thread_num()], 
             contact_sequence.contactStatus(
                 parnmpc.discrete().contactPhaseBeforeImpulse(impulse_index)), 
-            contact_sequence.impulseStatus(impulse_index),
             parnmpc.discrete().t_impulse(impulse_index), 
             parnmpc.discrete().dtau_aux(impulse_index), 
             s[time_stage_before_impulse].q, s[time_stage_before_impulse].v, 
             s.aux[impulse_index], s.impulse[impulse_index], 
-            kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
+            kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index],
+            contact_sequence.impulseStatus(impulse_index));
       }
       else {
         assert(time_stage_before_impulse == -1);

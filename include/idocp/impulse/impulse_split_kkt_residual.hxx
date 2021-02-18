@@ -154,11 +154,6 @@ inline void ImpulseSplitKKTResidual::setZero() {
 }
 
 
-inline int ImpulseSplitKKTResidual::dimKKT() const {
-  return dimKKT_;
-}
-
-
 inline int ImpulseSplitKKTResidual::dimf() const {
   return dimf_;
 }

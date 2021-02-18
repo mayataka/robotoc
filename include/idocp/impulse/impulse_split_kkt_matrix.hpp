@@ -371,12 +371,6 @@ public:
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the condensed KKT condition.
-  /// @return Dimension of the condensed KKT condition.
-  ///
-  int dimKKT() const;
-
-  ///
   /// @brief Returns the dimension of the stack of contact forces at the current 
   /// contact status.
   /// @return Dimension of the stack of contact forces.
@@ -412,7 +406,7 @@ public:
 
 private:
   Eigen::MatrixXd FC_, Q_;
-  int dimv_, dimx_, dimf_, q_begin_, v_begin_, dimKKT_;
+  int dimv_, dimx_, dimf_, q_begin_, v_begin_;
 
 };
 

@@ -183,12 +183,6 @@ public:
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the KKT at the current contact status.
-  /// @return Dimension of the KKT at the current contact status.
-  ///
-  int dimKKT() const;
-
-  ///
   /// @brief Returns the dimension of the stack of contact forces at the current 
   /// contact status.
   /// @return Dimension of the stack of contact forces.
@@ -197,7 +191,7 @@ public:
 
   ///
   /// @brief Chech the equivalence of two ImpulseSplitKKTResidual.
-  /// @param[in] other Other object.
+  /// @param[in]other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
   bool isApprox(const ImpulseSplitKKTResidual& other) const;

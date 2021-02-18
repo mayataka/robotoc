@@ -52,7 +52,7 @@ inline void SplitUnBackwardCorrection::coarseUpdate(
   unkkt_matrix.Qvq() = unkkt_matrix.Qqv().transpose();
   unkkt_matrix.Qxa() = unkkt_matrix.Qax().transpose();
   kkt_mat_inverter_.invert(dtau, unkkt_matrix.Q, KKT_mat_inv_);
-  d.splitDirection().noalias() = KKT_mat_inv_ * unkkt_residual.KKT_residual;
+  d.split_direction.noalias() = KKT_mat_inv_ * unkkt_residual.KKT_residual;
   s_new.lmd = s.lmd - d.dlmd();
   s_new.gmm = s.gmm - d.dgmm();
   // In the unconstrained backward correction, we regard d.du as d.da.
@@ -81,7 +81,7 @@ inline void SplitUnBackwardCorrection::backwardCorrectionSerial(
 
 inline void SplitUnBackwardCorrection::backwardCorrectionParallel(
     SplitDirection& d, SplitSolution& s_new) const {
-  d.splitDirection().tail(dimKKT_-dimx_).noalias()
+  d.split_direction.tail(dimKKT_-dimx_).noalias()
       = KKT_mat_inv_.block(dimx_, dimKKT_-dimx_, dimKKT_-dimx_, dimx_) * x_res_;
   // In the unconstrained backward correction, we regard d.du as d.da.
   s_new.a.noalias() -= d.du();
@@ -103,7 +103,7 @@ inline void SplitUnBackwardCorrection::forwardCorrectionSerial(
 
 inline void SplitUnBackwardCorrection::forwardCorrectionParallel(
     SplitDirection& d, SplitSolution& s_new) const {
-  d.splitDirection().head(dimKKT_-dimx_).noalias()
+  d.split_direction.head(dimKKT_-dimx_).noalias()
       = KKT_mat_inv_.topLeftCorner(dimKKT_-dimx_, dimx_) * x_res_;
   s_new.lmd.noalias() -= d.dlmd();
   s_new.gmm.noalias() -= d.dgmm();

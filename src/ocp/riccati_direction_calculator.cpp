@@ -64,7 +64,7 @@ void RiccatiDirectionCalculator::computeInitialStateDirection(
 }
 
 
-void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
+void RiccatiDirectionCalculator::computeNewtonDirection(
     OCP& ocp, std::vector<Robot>& robots, 
     const RiccatiFactorization& factorization, 
     const Solution& s, Direction& d) {
@@ -80,6 +80,7 @@ void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
                                              ocp.discrete().dtau(i), s[i], d[i]);
       if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i+1);
+        d[i].setImpulseStatusByDimension(s[i].dimi());
         SplitRiccatiFactorizer::computeLagrangeMultiplierDirection(
             factorization.constraint[impulse_index], d[i]);
       }
@@ -127,6 +128,7 @@ void RiccatiDirectionCalculator::computeNewtonDirectionFromRiccatiFactorization(
       if (ocp.discrete().isTimeStageBeforeImpulse(time_stage_after_lift)) {
         const int impulse_index
             = ocp.discrete().impulseIndexAfterTimeStage(time_stage_after_lift);
+        d.lift[lift_index].setImpulseStatusByDimension(s.lift[lift_index].dimi());
         SplitRiccatiFactorizer::computeLagrangeMultiplierDirection(
             factorization.constraint[impulse_index], d.lift[lift_index]);
       }

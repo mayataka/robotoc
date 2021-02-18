@@ -82,12 +82,11 @@ public:
   /// @param[in] t Initial time of the horizon. Current time in MPC. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] use_line_search If true, filter line search is enabled. If 
-  /// false, it is disabled. Default is false.
+  /// @param[in] line_search If true, filter line search is enabled. If false
+  /// filter line search is disabled. Default is false.
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v, 
-                      const bool use_line_search=false);
+                      const Eigen::VectorXd& v, const bool line_search=false);
 
   ///
   /// @brief Get the const reference to the split solution of a time stage. 

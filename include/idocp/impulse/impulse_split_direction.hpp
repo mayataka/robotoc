@@ -221,12 +221,6 @@ public:
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the condensed KKT conditions.
-  /// @return Dimension of the condensed KKT conditions.
-  ///
-  int dimKKT() const;
-
-  ///
   /// @brief Returns the dimension of the stack of contact forces at the current 
   /// contact status.
   /// @return Dimension of the stack of contact forces.
@@ -275,7 +269,7 @@ public:
 
 private:
   Eigen::VectorXd ddvf_full_, dbetamu_full_;
-  int dimv_, dimx_, dimf_, dimKKT_;
+  int dimv_, dimx_, dimf_;
   bool has_floating_base_;
 
 };

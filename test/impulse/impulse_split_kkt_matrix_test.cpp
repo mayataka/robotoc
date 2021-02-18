@@ -39,7 +39,6 @@ void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus
   const int dimu = robot.dimu();
   const int dimf = impulse_status.dimf();
   EXPECT_EQ(matrix.dimf(), dimf);
-  EXPECT_EQ(matrix.dimKKT(), 4*dimv+2*dimf);
   EXPECT_EQ(matrix.Fqf().rows(), dimv);
   EXPECT_EQ(matrix.Fqf().cols(), dimf);
   EXPECT_EQ(matrix.Fqq().rows(), dimv);

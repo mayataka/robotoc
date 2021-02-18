@@ -40,8 +40,7 @@ RiccatiSolver::~RiccatiSolver() {
 
 
 void RiccatiSolver::computeNewtonDirection(
-    OCP& ocp, std::vector<Robot>& robots, 
-    const ContactSequence& contact_sequence, const Eigen::VectorXd& q, 
+    OCP& ocp, std::vector<Robot>& robots, const Eigen::VectorXd& q, 
     const Eigen::VectorXd& v, const Solution& s, Direction& d, 
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, 
     const StateConstraintJacobian& jac) {
@@ -51,8 +50,7 @@ void RiccatiSolver::computeNewtonDirection(
                                                      s, d);
   riccati_recursion_.forwardRiccatiRecursion(ocp.discrete(), kkt_matrix, 
                                              kkt_residual, d);
-  direction_calculator_.computeNewtonDirectionFromRiccatiFactorization(
-      ocp, robots, factorization_, s, d);
+  direction_calculator_.computeNewtonDirection(ocp, robots, factorization_, s, d);
 }
 
 

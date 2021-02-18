@@ -24,7 +24,6 @@ inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
     dim_passive_(robot.dim_passive()),
     dimf_(0), 
     dimi_(0), 
-    dimKKT_(4*robot.dimv()+robot.dimu()),
     u_begin_(robot.dim_passive()),
     q_begin_(robot.dimv()),
     v_begin_(2*robot.dimv()) {
@@ -46,7 +45,6 @@ inline SplitKKTMatrix::SplitKKTMatrix()
     dim_passive_(0),
     dimf_(0), 
     dimi_(0), 
-    dimKKT_(0),
     u_begin_(0),
     q_begin_(0),
     v_begin_(0) {
@@ -66,13 +64,11 @@ inline void SplitKKTMatrix::setContactStatus(
 inline void SplitKKTMatrix::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   dimi_ = impulse_status.dimf();
-  dimKKT_ = 2*dimx_ + dimu_ + dimi_;
 }
 
 
 inline void SplitKKTMatrix::setImpulseStatus() {
   dimi_ = 0;
-  dimKKT_ = 2*dimx_ + dimu_;
 }
 
 
@@ -524,11 +520,6 @@ inline void SplitKKTMatrix::setZero() {
   Pq_full_.setZero();
   Q_.setZero();
   Qaaff_full_.setZero();
-}
-
-
-inline int SplitKKTMatrix::dimKKT() const {
-  return dimKKT_;
 }
 
 

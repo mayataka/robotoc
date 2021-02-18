@@ -73,7 +73,7 @@ void UnParNMPCSolver::initBackwardCorrection(const double t) {
 
 void UnParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q, 
                                      const Eigen::VectorXd& v, 
-                                     const bool use_line_search) {
+                                     const bool line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   backward_correction_.coarseUpdate(robots_, parnmpc_, t, q, v, unkkt_matrix_,
@@ -81,7 +81,7 @@ void UnParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   backward_correction_.backwardCorrection(robots_, parnmpc_, s_, d_);
   double primal_step_size = backward_correction_.primalStepSize();
   const double dual_step_size   = backward_correction_.dualStepSize();
-  if (use_line_search) {
+  if (line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(parnmpc_, robots_, t, q, v, 
                                                     s_, d_, max_primal_step_size);

@@ -35,7 +35,6 @@ protected:
   virtual void TearDown() {
   }
 
-
   Solution createSolution(const Robot& robot) const;
   Solution createSolution(const Robot& robot, const ContactSequence& contact_sequence) const;
   ContactSequence createContactSequence(const Robot& robot) const;
@@ -68,8 +67,9 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
-  auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
-  auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
+  KKTMatrix kkt_matrix(robot, N, max_num_impulse);
+  KKTResidual kkt_residual(robot, N, max_num_impulse);
+  StateConstraintJacobian jac(robot, max_num_impulse);
   const auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
@@ -78,21 +78,10 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   OCPLinearizer linearizer(N, max_num_impulse, nthreads);
   std::vector<Robot> robots(nthreads, robot);
   linearizer.initConstraints(ocp, robots, contact_sequence, s);
-  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
+  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual, jac);
   RiccatiRecursion riccati_recursion(robot, N, nthreads);
-  StateConstraintRiccatiFactorizer constraint_factorizer(robot, N, max_num_impulse, nthreads);
   RiccatiFactorization factorization(robot, N, max_num_impulse);
-  RiccatiFactorizer factorizer(robot, N, max_num_impulse);
-  StateConstraintRiccatiFactorization constraint_factorization(robot, N, max_num_impulse);
-  constraint_factorization.setConstraintStatus(contact_sequence);
-  riccati_recursion.backwardRiccatiRecursionTerminal(kkt_matrix, kkt_residual, factorization);
-  riccati_recursion.backwardRiccatiRecursion(factorizer, ocp.discrete(), kkt_matrix, kkt_residual, factorization);
-  if (ocp.discrete().existStateConstraint()) {
-    riccati_recursion.forwardStateConstraintFactorization(
-        factorizer, ocp.discrete(), kkt_matrix, kkt_residual, factorization);
-    riccati_recursion.backwardStateConstraintFactorization(
-        factorizer, ocp.discrete(), kkt_matrix, constraint_factorization);
-  }
+  riccati_recursion.backwardRiccatiRecursion(ocp.discrete(), kkt_matrix, kkt_residual, jac, factorization);
   const int num_impulse = ocp.discrete().numImpulseStages();
   const int num_lift = ocp.discrete().numLiftStages();
   Direction d = Direction(robot, N, max_num_impulse);
@@ -110,26 +99,17 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
     d_ref[0].dv() = v - s[0].v;
   }
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
-  if (ocp.discrete().existStateConstraint()) {
-    constraint_factorizer.computeLagrangeMultiplierDirection(
-        ocp.discrete(), factorization, constraint_factorization, d);
-    constraint_factorizer.aggregateLagrangeMultiplierDirection(
-        constraint_factorization, ocp.discrete(), d, factorization);
-  }
-  riccati_recursion.forwardRiccatiRecursion(
-      factorizer, ocp.discrete(), kkt_matrix, kkt_residual, factorization, d);
+  riccati_recursion.forwardRiccatiRecursion(ocp.discrete(), kkt_matrix, kkt_residual, d);
   EXPECT_FALSE(testhelper::HasNaN(factorization));
   EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
   d_ref = d;
   auto ocp_ref = ocp;
   RiccatiDirectionCalculator direction_calculator(N, max_num_impulse, nthreads);
-  direction_calculator.computeNewtonDirectionFromRiccatiFactorization(
-      ocp, robots, factorizer, factorization, s, d);
+  direction_calculator.computeNewtonDirection(ocp, robots, factorization, s, d);
   const double primal_step_size = direction_calculator.maxPrimalStepSize();
   const double dual_step_size = direction_calculator.maxDualStepSize();
   const Eigen::VectorXd dx0 = d_ref[0].dx();
-  const bool exist_state_constraint = ocp.discrete().existStateConstraint();
   double primal_step_size_ref = 1;
   double dual_step_size_ref = 1;
   auto robot_ref = robot;
@@ -142,10 +122,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
       ASSERT_TRUE(dt <= dtau);
       ASSERT_TRUE(dt_aux >= 0);
       ASSERT_TRUE(dt_aux <= dtau);
-      SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], 
-                                                      exist_state_constraint);
-      factorizer[i].computeControlInputDirection(
-          factorization.impulse[impulse_index], d_ref[i], exist_state_constraint);
+      SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i]);
       ocp_ref[i].computeCondensedPrimalDirection(robot_ref, dt, s[i], d_ref[i]);
       if (ocp_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref[i].maxPrimalStepSize();
@@ -153,8 +130,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
         dual_step_size_ref = ocp_ref[i].maxDualStepSize();
       // impulse
       ImpulseSplitRiccatiFactorizer::computeCostateDirection(
-          factorization.impulse[impulse_index], d_ref.impulse[impulse_index], 
-          exist_state_constraint);
+          factorization.impulse[impulse_index], d_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].computeCondensedPrimalDirection(
           robot_ref, s.impulse[impulse_index], d_ref.impulse[impulse_index]);
       if (ocp_ref.impulse[impulse_index].maxPrimalStepSize() < primal_step_size_ref) 
@@ -162,10 +138,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
       if (ocp_ref.impulse[impulse_index].maxDualStepSize() < dual_step_size_ref) 
         dual_step_size_ref = ocp_ref.impulse[impulse_index].maxDualStepSize();
       // aux 
-      SplitRiccatiFactorizer::computeCostateDirection(
-          factorization.aux[impulse_index], d_ref.aux[impulse_index], exist_state_constraint);
-      factorizer.aux[impulse_index].computeControlInputDirection(
-          factorization[i+1], d_ref.aux[impulse_index], exist_state_constraint);
+      SplitRiccatiFactorizer::computeCostateDirection(factorization.aux[impulse_index], d_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].computeCondensedPrimalDirection(
           robot_ref, dt_aux, s.aux[impulse_index], d_ref.aux[impulse_index]);
       if (ocp_ref.aux[impulse_index].maxPrimalStepSize() < primal_step_size_ref) 
@@ -181,41 +154,46 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
       ASSERT_TRUE(dt <= dtau);
       ASSERT_TRUE(dt_lift >= 0);
       ASSERT_TRUE(dt_lift <= dtau);
-      SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], 
-                                                      exist_state_constraint);
-      factorizer[i].computeControlInputDirection(
-          factorization.lift[lift_index], d_ref[i], exist_state_constraint);
+      SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i]);
       ocp_ref[i].computeCondensedPrimalDirection(robot_ref, dt, s[i], d_ref[i]);
       if (ocp_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref[i].maxPrimalStepSize();
       if (ocp_ref[i].maxDualStepSize() < dual_step_size_ref) 
         dual_step_size_ref = ocp_ref[i].maxDualStepSize();
       // lift
-      SplitRiccatiFactorizer::computeCostateDirection(
-          factorization.lift[lift_index], d_ref.lift[lift_index], exist_state_constraint);
-      factorizer.lift[lift_index].computeControlInputDirection(
-          factorization[i+1], d_ref.lift[lift_index], exist_state_constraint);
+      SplitRiccatiFactorizer::computeCostateDirection(factorization.lift[lift_index], d_ref.lift[lift_index]);
       ocp_ref.lift[lift_index].computeCondensedPrimalDirection(
           robot_ref, dt_lift, s.lift[lift_index], d_ref.lift[lift_index]);
       if (ocp_ref.lift[lift_index].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref.lift[lift_index].maxPrimalStepSize();
       if (ocp_ref.lift[lift_index].maxDualStepSize() < dual_step_size_ref) 
         dual_step_size_ref = ocp_ref.lift[lift_index].maxDualStepSize();
+      const int time_stage_after_lift 
+          = ocp.discrete().timeStageAfterLift(lift_index);
+      if (ocp.discrete().isTimeStageBeforeImpulse(time_stage_after_lift)) {
+        const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(time_stage_after_lift);
+        d_ref.lift[lift_index].setImpulseStatus(contact_sequence.impulseStatus(impulse_index));
+        SplitRiccatiFactorizer::computeLagrangeMultiplierDirection(
+            factorization.constraint[impulse_index], d_ref.lift[lift_index]);
+      }
     }
     else {
       const double dt = dtau;
-      SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i], 
-                                                      exist_state_constraint);
-      factorizer[i].computeControlInputDirection(
-          factorization[i+1], d_ref[i], exist_state_constraint);
+      SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i]);
       ocp_ref[i].computeCondensedPrimalDirection(robot_ref, dt, s[i], d_ref[i]);
       if (ocp_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref[i].maxPrimalStepSize();
       if (ocp_ref[i].maxDualStepSize() < dual_step_size_ref) 
         dual_step_size_ref = ocp_ref[i].maxDualStepSize();
+      if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
+        const int impulse_index = ocp_ref.discrete().impulseIndexAfterTimeStage(i+1);
+        d_ref[i].setImpulseStatus(contact_sequence.impulseStatus(impulse_index));
+        SplitRiccatiFactorizer::computeLagrangeMultiplierDirection(
+            factorization.constraint[impulse_index], d_ref[i]);
+      }
     }
   }
-  SplitRiccatiFactorizer::computeCostateDirection(factorization[N], d_ref[N], false);
+  SplitRiccatiFactorizer::computeCostateDirection(factorization[N], d_ref[N]);
   if (ocp_ref.terminal.maxPrimalStepSize() < primal_step_size_ref) 
     primal_step_size_ref = ocp_ref.terminal.maxPrimalStepSize();
   if (ocp_ref.terminal.maxDualStepSize() < dual_step_size_ref) 
@@ -223,15 +201,6 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
   EXPECT_DOUBLE_EQ(primal_step_size, primal_step_size_ref);
   EXPECT_DOUBLE_EQ(dual_step_size, dual_step_size_ref);
-  std::cout << "d_ref[0].dq() = " << d_ref[0].dq().transpose() << std::endl;
-  std::cout << "q = " << q.transpose() << std::endl;
-  std::cout << "s[0].q = " << s[0].q.transpose() << std::endl;
-  Eigen::VectorXd q0pd = s[0].q;  
-  robot.integrateConfiguration(d_ref[0].dq(), 1, q0pd);
-  std::cout << "s[0].q+d_ref[0].dq = " << q0pd.transpose() << std::endl;
-  Eigen::VectorXd qdiff0 = Eigen::VectorXd::Zero(robot.dimv());
-  robot.subtractConfiguration(q0pd, q, qdiff0);
-  std::cout << "(s[0].q+d_ref[0].dq) - q = " << qdiff0.transpose() << std::endl;
 
 }
 

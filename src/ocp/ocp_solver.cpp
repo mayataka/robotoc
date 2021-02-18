@@ -66,19 +66,18 @@ void OCPSolver::initConstraints() {
 
 void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q, 
                                const Eigen::VectorXd& v, 
-                               const bool use_line_search) {
+                               const bool line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   ocp_.discretize(contact_sequence_, t);
   discretizeSolution();
   ocp_linearizer_.linearizeOCP(ocp_, robots_, contact_sequence_, q, v, s_, 
                                kkt_matrix_, kkt_residual_, jac_);
-  riccati_solver_.computeNewtonDirection(ocp_, robots_, contact_sequence_, 
-                                         q, v, s_, d_, 
+  riccati_solver_.computeNewtonDirection(ocp_, robots_, q, v, s_, d_, 
                                          kkt_matrix_, kkt_residual_, jac_);
   double primal_step_size = riccati_solver_.maxPrimalStepSize();
   const double dual_step_size = riccati_solver_.maxDualStepSize();
-  if (use_line_search) {
+  if (line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(ocp_, robots_, 
                                                     contact_sequence_, q, v, 

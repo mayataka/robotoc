@@ -38,7 +38,6 @@ void SplitImpulseKKTResidualTest::testSize(const Robot& robot,
   const int dimu = robot.dimu();
   const int dimf = impulse_status.dimf();
   EXPECT_EQ(kkt_residual.dimf(), dimf);
-  EXPECT_EQ(kkt_residual.dimKKT(), 4*dimv+2*dimf);
   EXPECT_EQ(kkt_residual.splitKKTResidual().size(), 4*dimv+2*dimf);
   EXPECT_EQ(kkt_residual.Fq().size(), dimv);
   EXPECT_EQ(kkt_residual.Fv().size(), dimv);
@@ -49,7 +48,7 @@ void SplitImpulseKKTResidualTest::testSize(const Robot& robot,
   EXPECT_EQ(kkt_residual.lx().size(), 2*dimv);
   EXPECT_EQ(kkt_residual.dimf(), dimf);
   EXPECT_EQ(kkt_residual.ldv.size(), dimv);
-  kkt_residual.splitKKTResidual()   = Eigen::VectorXd::Random(kkt_residual.dimKKT());
+  kkt_residual.splitKKTResidual() = Eigen::VectorXd::Random(4*dimv+2*dimf);
   const Eigen::VectorXd ldv_ref = Eigen::VectorXd::Random(dimf);
   kkt_residual.ldv = ldv_ref;
   const Eigen::VectorXd Fq_ref = kkt_residual.splitKKTResidual().segment(0,             dimv);

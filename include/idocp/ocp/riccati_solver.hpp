@@ -11,7 +11,6 @@
 #include "idocp/hybrid/ocp_discretizer.hpp"
 #include "idocp/ocp/riccati_recursion.hpp"
 #include "idocp/ocp/riccati_direction_calculator.hpp"
-#include "idocp/ocp/state_constraint_riccati_factorization.hpp"
 #include "idocp/ocp/split_constrained_riccati_factorization.hpp"
 
 
@@ -71,7 +70,6 @@ public:
   /// kkt_matrix and kkt_residual.
   /// @param[in] ocp OCP. 
   /// @param[in] robots Robot models. 
-  /// @param[in] contact_sequence Contact sequence. 
   /// @param[in] q Initial configuration vector. 
   /// @param[in] v Initial generalized velocity vector. 
   /// @param[in] s Solution. 
@@ -81,7 +79,6 @@ public:
   /// @param[in] jac State-constraint Jacobian. 
   /// 
   void computeNewtonDirection(OCP& ocp, std::vector<Robot>& robots, 
-                              const ContactSequence& contact_sequence,
                               const Eigen::VectorXd& q, 
                               const Eigen::VectorXd& v, const Solution& s, 
                               Direction& d, KKTMatrix& kkt_matrix, 

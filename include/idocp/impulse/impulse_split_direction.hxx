@@ -15,7 +15,6 @@ inline ImpulseSplitDirection::ImpulseSplitDirection(const Robot& robot)
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dimf_(0), 
-    dimKKT_(4*robot.dimv()),
     has_floating_base_(robot.hasFloatingBase()) {
 }
 
@@ -27,7 +26,6 @@ inline ImpulseSplitDirection::ImpulseSplitDirection()
     dimv_(0), 
     dimx_(0), 
     dimf_(0), 
-    dimKKT_(0),
     has_floating_base_(false) {
 }
 
@@ -185,11 +183,6 @@ inline void ImpulseSplitDirection::setZero() {
   split_direction.setZero();
   ddvf_full_.setZero();
   dbetamu_full_.setZero();
-}
-
-
-inline int ImpulseSplitDirection::dimKKT() const {
-  return dimKKT_;
 }
 
 

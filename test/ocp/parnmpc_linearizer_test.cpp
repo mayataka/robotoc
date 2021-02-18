@@ -130,10 +130,10 @@ void ParNMPCLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
           q_prev, v_prev, s[i], s.aux[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
       parnmpc_ref.aux[impulse_index].initConstraints(robot_ref, 0, s.aux[impulse_index]);
       parnmpc_ref.aux[impulse_index].computeKKTResidual(
-          robot_ref, contact_sequence.contactStatus(contact_phase), 
-          contact_sequence.impulseStatus(impulse_index), t_impulse, dt_aux, 
+          robot_ref, contact_sequence.contactStatus(contact_phase), t_impulse, dt_aux, 
           s[i].q, s[i].v, s.aux[impulse_index], s.impulse[impulse_index], 
-          kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
+          kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index], 
+          contact_sequence.impulseStatus(impulse_index));
       parnmpc_ref.impulse[impulse_index].initConstraints(robot_ref, s.impulse[impulse_index]);
       parnmpc_ref.impulse[impulse_index].computeKKTResidual(
           robot_ref, contact_sequence.impulseStatus(impulse_index), t_impulse, 

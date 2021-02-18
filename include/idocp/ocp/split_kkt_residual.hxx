@@ -194,11 +194,6 @@ inline void SplitKKTResidual::setZero() {
 }
 
 
-inline int SplitKKTResidual::dimKKT() const {
-  return dimKKT_;
-}
-
-
 inline int SplitKKTResidual::dimf() const {
   return dimf_;
 }

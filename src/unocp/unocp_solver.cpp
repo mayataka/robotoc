@@ -72,7 +72,7 @@ void UnOCPSolver::initConstraints() {
 
 void UnOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q, 
                                  const Eigen::VectorXd& v, 
-                                 const bool use_line_search) {
+                                 const bool line_search) {
   assert(q.size() == robots_[0].dimq());
   assert(v.size() == robots_[0].dimv());
   #pragma omp parallel for num_threads(nthreads_)
@@ -113,7 +113,7 @@ void UnOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   }
   double primal_step_size = primal_step_size_.minCoeff();
   const double dual_step_size   = dual_step_size_.minCoeff();
-  if (use_line_search) {
+  if (line_search) {
     const double max_primal_step_size = primal_step_size;
     primal_step_size = line_search_.computeStepSize(ocp_, robots_, t, q, v, 
                                                     s_, d_, max_primal_step_size);
