@@ -47,19 +47,16 @@ ContactSequence ParNMPCDiscretizerTest::createContactSequence(const Robot& robot
   ContactStatus post_contact_status = pre_contact_status;
   std::random_device rnd;
   for (int i=0; i<max_num_events; ++i) {
-    DiscreteEvent tmp(robot);
+    DiscreteEvent tmp(robot.maxPointContacts());
     tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
     while (!tmp.existDiscreteEvent()) {
       post_contact_status.setRandom();
       tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
     }
     const double event_period = 3 * dtau;
-    tmp.eventTime = t + i * event_period + 0.1 * event_period * std::abs(Eigen::VectorXd::Random(1)[0]);
-    discrete_events.push_back(tmp);
+    const double event_time = t + i * event_period + 0.1 * event_period * std::abs(Eigen::VectorXd::Random(1)[0]);
+    contact_sequence.push_back(tmp, event_time);
     pre_contact_status = post_contact_status;
-  }
-  for (int i=0; i<max_num_events; ++i) {
-    contact_sequence.pushBackDiscreteEvent(discrete_events[i]);
   }
   return contact_sequence;
 }

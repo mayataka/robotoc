@@ -282,18 +282,17 @@ void TerminalParNMPCTest::testCostAndConstraintViolation(
 
 TEST_F(TerminalParNMPCTest, fixedBase) {
   std::vector<int> contact_frames = {18};
-  ContactStatus contact_status(contact_frames.size());
+  Robot robot(fixed_base_urdf, contact_frames);
+  auto contact_status = robot.createContactStatus();
   for (int i=0; i<contact_frames.size(); ++i) {
     contact_status.setContactPoint(i, Eigen::Vector3d::Random());
   }
-  Robot robot(fixed_base_urdf, contact_frames);
-  contact_status.setContactStatus({false});
   const auto cost = createCost(robot);
   const auto constraints = createConstraints(robot);
   testLinearizeOCP(robot, contact_status, cost, constraints);
   testComputeKKTResidual(robot, contact_status, cost, constraints);
   testCostAndConstraintViolation(robot, contact_status, cost, constraints);
-  contact_status.setContactStatus({true});
+  contact_status.activateContact(0);
   testLinearizeOCP(robot, contact_status, cost, constraints);
   testComputeKKTResidual(robot, contact_status, cost, constraints);
   testCostAndConstraintViolation(robot, contact_status, cost, constraints);
@@ -302,26 +301,20 @@ TEST_F(TerminalParNMPCTest, fixedBase) {
 
 TEST_F(TerminalParNMPCTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  ContactStatus contact_status(contact_frames.size());
+  Robot robot(floating_base_urdf, contact_frames);
+  auto contact_status = robot.createContactStatus();
   for (int i=0; i<contact_frames.size(); ++i) {
     contact_status.setContactPoint(i, Eigen::Vector3d::Random());
   }
-  Robot robot(floating_base_urdf, contact_frames);
-  contact_status.setContactStatus({false, false, false, false});
   const auto cost = createCost(robot);
   const auto constraints = createConstraints(robot);
   testLinearizeOCP(robot, contact_status, cost, constraints);
   testComputeKKTResidual(robot, contact_status, cost, constraints);
   testCostAndConstraintViolation(robot, contact_status, cost, constraints);
-  std::random_device rnd;
-  std::vector<bool> is_contact_active;
-  for (const auto frame : contact_frames) {
-    is_contact_active.push_back(rnd()%2==0);
-  }
+  contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
-  contact_status.setContactStatus(is_contact_active);
   testLinearizeOCP(robot, contact_status, cost, constraints);
   testComputeKKTResidual(robot, contact_status, cost, constraints);
   testCostAndConstraintViolation(robot, contact_status, cost, constraints);

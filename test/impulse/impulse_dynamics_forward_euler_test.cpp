@@ -98,8 +98,8 @@ void ImpulseDynamicsForwardEulerTest::testLinearizeImpulseDynamics(Robot& robot,
   ImpulseDynamicsForwardEuler::linearizeImpulseVelocityConstraint(robot, impulse_status, data);
   Eigen::MatrixXd dImDdf = Eigen::MatrixXd::Zero(robot.dimv(), impulse_status.dimf());
   robot.updateKinematics(s.q, s.v+s.dv);
-  ContactStatus contact_status(impulse_status.maxPointContacts());
-  contact_status.setContactStatus(impulse_status.isImpulseActive());
+  auto contact_status = robot.createContactStatus();
+  contact_status.setActivity(impulse_status.isImpulseActive());
   robot.dRNEAPartialdFext(contact_status, dImDdf);
   kkt_residual_ref.lq() += data.dImDdq().transpose() * s.beta + data.dCdq().transpose() * s.mu_stack();
   kkt_residual_ref.lv() += data.dCdv().transpose() * s.mu_stack(); 
@@ -307,7 +307,6 @@ TEST_F(ImpulseDynamicsForwardEulerTest, fixedBase) {
   std::vector<int> impulse_frames = {18};
   Robot robot(fixed_base_urdf, impulse_frames);
   auto impulse_status = robot.createImpulseStatus();
-  impulse_status.setImpulseStatus({false});
   testLinearizeInverseImpulseDynamics(robot, impulse_status);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulseDynamics(robot, impulse_status);
@@ -316,7 +315,7 @@ TEST_F(ImpulseDynamicsForwardEulerTest, fixedBase) {
   testExpansionDual(robot, impulse_status);
   testIntegration(robot, impulse_status);
   testComputeResidual(robot, impulse_status);
-  impulse_status.setImpulseStatus({true});
+  impulse_status.activateImpulse(0);
   testLinearizeInverseImpulseDynamics(robot, impulse_status);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulseDynamics(robot, impulse_status);
@@ -332,7 +331,6 @@ TEST_F(ImpulseDynamicsForwardEulerTest, floatingBase) {
   std::vector<int> impulse_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, impulse_frames);
   auto impulse_status = robot.createImpulseStatus();
-  impulse_status.setImpulseStatus({false, false, false, false});
   testLinearizeInverseImpulseDynamics(robot, impulse_status);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulseDynamics(robot, impulse_status);

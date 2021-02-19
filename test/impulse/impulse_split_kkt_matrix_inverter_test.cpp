@@ -28,9 +28,7 @@ protected:
 TEST_F(ImpulseSplitKKTMatrixInverterTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
-  std::random_device rnd;
-  ImpulseStatus impulse_status(contact_frames.size());
-  impulse_status.setImpulseStatus({true});
+  auto impulse_status = robot.createImpulseStatus();
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const int dimf = impulse_status.dimf();
@@ -71,12 +69,7 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
   auto impulse_status = robot.createImpulseStatus();
-  std::random_device rnd;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (rnd() % 2 == 0) {
-      impulse_status.activateImpulse(i);
-    }
-  }
+  impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }

@@ -228,9 +228,7 @@ void ImpulseSplitDirectionTest::testIsApprox(const Robot& robot,
 TEST_F(ImpulseSplitDirectionTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
-  std::vector<bool> is_contact_active = {false};
-  ImpulseStatus impulse_status = ImpulseStatus(robot.maxPointContacts());
-  impulse_status.setImpulseStatus(is_contact_active);
+  auto impulse_status = robot.createImpulseStatus();
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
   impulse_status.activateImpulse(0);
@@ -242,20 +240,13 @@ TEST_F(ImpulseSplitDirectionTest, fixedBase) {
 TEST_F(ImpulseSplitDirectionTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
-  std::vector<bool> is_contact_active = {false, false, false, false};
-  ImpulseStatus impulse_status = ImpulseStatus(robot.maxPointContacts());
-  impulse_status.setImpulseStatus(is_contact_active);
+  auto impulse_status = robot.createImpulseStatus();
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
-  is_contact_active.clear();
-  std::random_device rnd;
-  for (const auto frame : contact_frames) {
-    is_contact_active.push_back(rnd()%2==0);
-  }
+  impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
-  impulse_status.setImpulseStatus(is_contact_active);
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
 }

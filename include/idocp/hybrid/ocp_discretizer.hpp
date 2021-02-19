@@ -43,7 +43,6 @@ public:
   ///
   OCPDiscretizer& operator=(OCPDiscretizer&&) noexcept = default;
 
-  template <bool UseContinuationMethod=false>
   void discretizeOCP(const ContactSequence& contact_sequence, const double t);
 
   int N() const;
@@ -82,8 +81,6 @@ public:
 
   bool isTimeStageAfterLift(const int time_stage) const;
 
-  bool existStateConstraint() const;
-
   double t(const int time_stage) const;
 
   double t_impulse(const int impulse_index) const;
@@ -98,7 +95,7 @@ public:
 
 private:
   double T_, sampling_period_;
-  int N_, max_events_, num_impulse_stages_, num_lift_stages_;
+  int N_, N_ideal_, max_events_, num_impulse_stages_, num_lift_stages_;
   std::vector<int> contact_phase_index_from_time_stage_, 
                    impulse_index_after_time_stage_, 
                    lift_index_after_time_stage_, time_stage_before_impulse_, 

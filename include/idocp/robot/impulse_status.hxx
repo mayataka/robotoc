@@ -29,6 +29,9 @@ inline bool ImpulseStatus::operator==(const ImpulseStatus& other) const {
     if (other.isImpulseActive(i) != isImpulseActive(i)) {
       return false;
     }
+    if (!other.contactPoints()[i].isApprox(contactPoints()[i])) {
+      return false;
+    }
   }
   return true;
 }
@@ -64,7 +67,7 @@ inline int ImpulseStatus::maxPointContacts() const {
 }
 
 
-inline void ImpulseStatus::setImpulseStatus(
+inline void ImpulseStatus::setActivity(
     const ContactStatus& pre_contact_status, 
     const ContactStatus& post_contact_status) {
   assert(pre_contact_status.maxPointContacts() == maxPointContacts());
@@ -85,9 +88,9 @@ inline void ImpulseStatus::setImpulseStatus(
 }
 
 
-inline void ImpulseStatus::setImpulseStatus(
+inline void ImpulseStatus::setActivity(
     const std::vector<bool>& is_impulse_active) {
-  impulse_status_.setContactStatus(is_impulse_active);
+  impulse_status_.setActivity(is_impulse_active);
 }
 
 
@@ -107,9 +110,19 @@ inline void ImpulseStatus::activateImpulse(
 } 
 
 
+inline void ImpulseStatus::activateImpulse() {
+  impulse_status_.activateContacts();
+} 
+
+
 inline void ImpulseStatus::deactivateImpulse(
     const std::vector<int>& contact_indices) {
   impulse_status_.deactivateContacts(contact_indices);
+}
+
+
+inline void ImpulseStatus::deactivateImpulse() {
+  impulse_status_.deactivateContacts();
 }
 
 

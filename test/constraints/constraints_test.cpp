@@ -215,12 +215,11 @@ void ConstraintsTest::timeStage2(Robot& robot, const ContactStatus& contact_stat
 TEST_F(ConstraintsTest, fixedBase) {
   const std::vector<int> frames = {18};
   Robot robot(fixed_base_urdf, frames);
-  ContactStatus contact_status(frames.size());
-  contact_status.setContactStatus({false});
+  auto contact_status = robot.createContactStatus();
   timeStage0(robot, contact_status);
   timeStage1(robot, contact_status);
   timeStage2(robot, contact_status);
-  contact_status.setContactStatus({true});
+  contact_status.activateContact(0);
   timeStage0(robot, contact_status);
   timeStage1(robot, contact_status);
   timeStage2(robot, contact_status);
@@ -230,8 +229,7 @@ TEST_F(ConstraintsTest, fixedBase) {
 TEST_F(ConstraintsTest, floatingBase) {
   const std::vector<int> frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, frames);
-  ContactStatus contact_status(frames.size());
-  contact_status.setContactStatus({false, false, false, false});
+  auto contact_status = robot.createContactStatus();
   timeStage0(robot, contact_status);
   timeStage1(robot, contact_status);
   timeStage2(robot, contact_status);

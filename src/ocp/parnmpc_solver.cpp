@@ -193,47 +193,7 @@ void ParNMPCSolver::setContactStatusUniformly(
 void ParNMPCSolver::pushBackContactStatus(const ContactStatus& contact_status, 
                                           const double switching_time, 
                                           const double t) {
-  const ContactStatus& last_contact_status 
-      = contact_sequence_.contactStatus(contact_sequence_.numContactPhases()-1);
-  DiscreteEvent discrete_event(last_contact_status, contact_status);
-  discrete_event.eventTime = switching_time;
-  contact_sequence_.pushBackDiscreteEvent(discrete_event);
-  parnmpc_.discretize(contact_sequence_, t);
-  if (discrete_event.existImpulse()) {
-    const int last_impulse_index = contact_sequence_.numImpulseEvents() - 1;
-    const int time_stage_before_last_impulse 
-        = parnmpc_.discrete().timeStageBeforeImpulse(last_impulse_index);
-    if (time_stage_before_last_impulse >= 0) {
-      s_.impulse[last_impulse_index].copyPartial(
-          s_[time_stage_before_last_impulse]);
-      s_.aux[last_impulse_index].copy(
-          s_[time_stage_before_last_impulse]);
-    }
-    s_.aux[last_impulse_index].setContactStatus(
-        contact_sequence_.contactStatus(
-            parnmpc_.discrete().contactPhaseBeforeImpulse(last_impulse_index)));
-    s_.impulse[last_impulse_index].setImpulseStatus(
-        contact_sequence_.impulseStatus(last_impulse_index));
-    const int last_contact_phase = contact_sequence_.numContactPhases() - 1;
-    for (int i=time_stage_before_last_impulse+1; i<N_; ++i) {
-      s_[i].setContactStatus(contact_sequence_.contactStatus(last_contact_phase));
-    }
-  }
-  else {
-    const int last_lift_index = contact_sequence_.numLiftEvents() - 1;
-    const int time_stage_before_last_lift 
-        = parnmpc_.discrete().timeStageBeforeLift(last_lift_index);
-    if (time_stage_before_last_lift >= 0) {
-      s_.lift[last_lift_index].copy(s_[time_stage_before_last_lift]);
-    }
-    s_.lift[last_lift_index].setContactStatus(
-        contact_sequence_.contactStatus(
-            parnmpc_.discrete().contactPhaseBeforeLift(last_lift_index)));
-    const int last_contact_phase = contact_sequence_.numContactPhases() - 1;
-    for (int i=time_stage_before_last_lift+1; i<N_; ++i) {
-      s_[i].setContactStatus(contact_sequence_.contactStatus(last_contact_phase));
-    }
-  }
+  contact_sequence_.push_back(contact_status, switching_time);
 }
 
 
@@ -245,60 +205,12 @@ void ParNMPCSolver::setContactPoints(
 
 
 void ParNMPCSolver::popBackDiscreteEvent() {
-  if (contact_sequence_.numDiscreteEvents() > 0) {
-    const int last_discrete_event = contact_sequence_.numDiscreteEvents() - 1;
-    if (contact_sequence_.isImpulseEvent(last_discrete_event)) {
-      const int last_impulse_index = contact_sequence_.numImpulseEvents() - 1;
-      const int time_stage_after_second_last_impulse 
-          = parnmpc_.discrete().timeStageAfterImpulse(last_impulse_index-1);
-      const int second_last_contact_phase = contact_sequence_.numContactPhases() - 2;
-      for (int i=time_stage_after_second_last_impulse; i<N_; ++i) {
-        s_[i].setContactStatus(
-            contact_sequence_.contactStatus(second_last_contact_phase));
-      }
-    }
-    else {
-      const int last_lift_index = contact_sequence_.numLiftEvents() - 1;
-      const int time_stage_after_second_last_lift
-          = parnmpc_.discrete().timeStageAfterLift(last_lift_index-1);
-      const int second_last_contact_phase = contact_sequence_.numContactPhases() - 2;
-      for (int i=time_stage_after_second_last_lift; i<N_; ++i) {
-        s_[i].setContactStatus(
-            contact_sequence_.contactStatus(second_last_contact_phase));
-      }
-    }
-    contact_sequence_.popBackDiscreteEvent();
-  }
+  contact_sequence_.pop_back();
 }
 
 
 void ParNMPCSolver::popFrontDiscreteEvent() {
-  if (contact_sequence_.numDiscreteEvents() > 0) {
-    if (contact_sequence_.isImpulseEvent(0)) {
-      const int time_stage_before_first_impulse 
-          = parnmpc_.discrete().timeStageBeforeImpulse(0);
-      for (int i=0; i<time_stage_before_first_impulse; ++i) {
-        s_[i].setContactStatus(contact_sequence_.contactStatus(1));
-      }
-      for (int i=0; i<contact_sequence_.numImpulseEvents()-2; ++i) {
-        s_.impulse[i].copy(s_.impulse[i+1]);
-      }
-      for (int i=0; i<contact_sequence_.numImpulseEvents()-2; ++i) {
-        s_.aux[i].copy(s_.aux[i+1]);
-      }
-    }
-    else {
-      const int time_stage_before_first_lift 
-          = parnmpc_.discrete().timeStageBeforeLift(0);
-      for (int i=0; i<time_stage_before_first_lift; ++i) {
-        s_[i].setContactStatus(contact_sequence_.contactStatus(1));
-      }
-      for (int i=0; i<contact_sequence_.numLiftEvents()-2; ++i) {
-        s_.lift[i].copy(s_.lift[i+1]);
-      }
-    }
-    contact_sequence_.popFrontDiscreteEvent();
-  }
+  contact_sequence_.pop_front();
 }
 
 

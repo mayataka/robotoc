@@ -27,8 +27,6 @@ protected:
   static void TestWithoutImpulses(const Robot& robot);
   static void TestWithImpulses(const Robot& robot, const ImpulseStatus& impulse_status);
   static void TestIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void TestCopy(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void TestCopyPartial(const Robot& robot, const ImpulseStatus& impulse_status);
   static void TestIntegrate(const Robot& robot, const ImpulseStatus& impulse_status);
 
   double dtau_;
@@ -337,38 +335,6 @@ void ImpulseSplitSolutionTest::TestIsApprox(const Robot& robot,
 }
 
 
-void ImpulseSplitSolutionTest::TestCopy(const Robot& robot, 
-                                        const ImpulseStatus& impulse_status) {
-  ImpulseSplitSolution s(robot);
-  s.setRandom(robot, impulse_status);
-  ImpulseSplitSolution s_new(robot);
-  s_new.copy(s);
-  EXPECT_TRUE(s_new.isApprox(s));
-}
-
-
-void ImpulseSplitSolutionTest::TestCopyPartial(const Robot& robot, 
-                                               const ImpulseStatus& impulse_status) {
-
-  SplitSolution s(robot);
-  ContactStatus contact_status(impulse_status.isImpulseActive().size());
-  contact_status.setContactStatus(impulse_status.isImpulseActive());
-  s.setRandom(robot);
-  s.f_stack().setRandom();
-  s.mu_stack().setRandom();
-  s.set_f_vector();
-  s.set_mu_vector();
-  ImpulseSplitSolution s_new(robot);
-  s_new.copyPartial(s);
-  EXPECT_TRUE(s_new.q.isApprox(s.q));
-  EXPECT_TRUE(s_new.v.isApprox(s.v));
-  EXPECT_TRUE(s_new.dv.isApprox(s.a));
-  EXPECT_TRUE(s_new.beta.isApprox(s.beta));
-  EXPECT_TRUE(s_new.f_stack().isApprox(s.f_stack()));
-  EXPECT_TRUE(s_new.mu_stack().isApprox(s.mu_stack()));
-}
-
-
 void ImpulseSplitSolutionTest::TestIntegrate(const Robot& robot, 
                                              const ImpulseStatus& impulse_status) {
   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
@@ -397,18 +363,12 @@ TEST_F(ImpulseSplitSolutionTest, fixedBase) {
   TestWithoutImpulses(robot_without_impulse);
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
-  std::vector<bool> is_impulse_active = {false};
-  ImpulseStatus impulse_status(is_impulse_active.size());
-  impulse_status.setImpulseStatus(is_impulse_active);
+  auto impulse_status = robot.createImpulseStatus();
   TestIsApprox(robot, impulse_status);
-  TestCopy(robot, impulse_status);
-  TestCopyPartial(robot, impulse_status);
   TestIntegrate(robot, impulse_status);
   impulse_status.activateImpulse(0);
   TestWithImpulses(robot, impulse_status);
   TestIsApprox(robot, impulse_status);
-  TestCopy(robot, impulse_status);
-  TestCopyPartial(robot, impulse_status);
   TestIntegrate(robot, impulse_status);
 }
 
@@ -418,25 +378,15 @@ TEST_F(ImpulseSplitSolutionTest, floatingBase) {
   TestWithoutImpulses(robot_without_impulse);
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
-  std::vector<bool> is_impulse_active = {false, false, false, false};
-  ImpulseStatus impulse_status(is_impulse_active.size());
-  impulse_status.setImpulseStatus(is_impulse_active);
+  auto impulse_status = robot.createImpulseStatus();
   TestIsApprox(robot, impulse_status);
-  TestCopy(robot, impulse_status);
-  TestCopyPartial(robot, impulse_status);
   TestIntegrate(robot, impulse_status);
-  std::random_device rnd;
-  is_impulse_active.clear();
-  for (const auto frame : contact_frames) {
-    is_impulse_active.push_back(rnd()%2==0);
-  }
+  impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
   TestWithImpulses(robot, impulse_status);
   TestIsApprox(robot, impulse_status);
-  TestCopy(robot, impulse_status);
-  TestCopyPartial(robot, impulse_status);
   TestIntegrate(robot, impulse_status);
 }
 

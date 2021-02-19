@@ -251,13 +251,12 @@ TEST_F(ImpulseSplitOCPTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
   auto impulse_status = robot.createImpulseStatus();
-  impulse_status.setImpulseStatus({false});
   const auto cost = createCost(robot);
   const auto constraints = createConstraints(robot);
   testLinearizeOCP(robot, impulse_status, cost, constraints);
   testComputeKKTResidual(robot, impulse_status, cost, constraints);
   testCostAndConstraintViolation(robot, impulse_status, cost, constraints);
-  impulse_status.setImpulseStatus({true});
+  impulse_status.activateImpulse(0);
   testLinearizeOCP(robot, impulse_status, cost, constraints);
   testComputeKKTResidual(robot, impulse_status, cost, constraints);
   testCostAndConstraintViolation(robot, impulse_status, cost, constraints);
@@ -268,7 +267,6 @@ TEST_F(ImpulseSplitOCPTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
   auto impulse_status = robot.createImpulseStatus();
-  impulse_status.setImpulseStatus({false, false, false, false});
   const auto cost = createCost(robot);
   const auto constraints = createConstraints(robot);
   testLinearizeOCP(robot, impulse_status, cost, constraints);

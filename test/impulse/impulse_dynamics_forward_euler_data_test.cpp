@@ -96,27 +96,23 @@ void ImpulseDynamicsForwardEulerDataTest::testSize(const Robot& robot, const Imp
 
 TEST_F(ImpulseDynamicsForwardEulerDataTest, fixedBase) {
   std::vector<int> contact_frames = {18};
-  ImpulseStatus impulse_status(contact_frames.size());
   Robot robot(fixed_base_urdf, contact_frames);
-  impulse_status.setImpulseStatus({false});
+  auto impulse_status = robot.createImpulseStatus();
   testSize(robot, impulse_status);
-  impulse_status.setImpulseStatus({true});
+  impulse_status.activateImpulse(0);
   testSize(robot, impulse_status);
 }
 
 
 TEST_F(ImpulseDynamicsForwardEulerDataTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  ImpulseStatus impulse_status(contact_frames.size());
   Robot robot(floating_base_urdf, contact_frames);
-  impulse_status.setImpulseStatus({false, false, false, false});
+  auto impulse_status = robot.createImpulseStatus();
   testSize(robot, impulse_status);
-  std::random_device rnd;
-  std::vector<bool> is_impulse_active;
-  for (const auto frame : contact_frames) {
-    is_impulse_active.push_back(rnd()%2==0);
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
   }
-  impulse_status.setImpulseStatus(is_impulse_active);
   testSize(robot, impulse_status);
 }
 

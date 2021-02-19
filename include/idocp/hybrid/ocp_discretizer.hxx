@@ -15,6 +15,7 @@ inline OCPDiscretizer::OCPDiscretizer(const double T, const int N,
   : T_(T),
     sampling_period_(sampling_period),
     N_(N),
+    N_ideal_(N),
     max_events_(max_events),
     num_impulse_stages_(0),
     num_lift_stages_(0),
@@ -71,7 +72,6 @@ inline OCPDiscretizer::~OCPDiscretizer() {
 }
 
 
-template <bool UseContinuationMethod>
 inline void OCPDiscretizer::discretizeOCP(
     const ContactSequence& contact_sequence, const double t) {
   countImpulseEvents(contact_sequence, t);
@@ -194,24 +194,6 @@ inline bool OCPDiscretizer::isTimeStageAfterLift(const int time_stage) const {
   assert(time_stage >= 0);
   assert(time_stage <= N_);
   return isTimeStageBeforeLift(time_stage-1);
-}
-
-
-inline bool OCPDiscretizer::existStateConstraint() const {
-  if (numImpulseStages() >= 2) {
-    return true;
-  }
-  else if (numImpulseStages() == 1) {
-    if (timeStageBeforeImpulse(0) > 0) {
-      return true;
-    }
-    else {
-      return false;
-    }
-  }
-  else {
-    return false;
-  }
 }
 
 

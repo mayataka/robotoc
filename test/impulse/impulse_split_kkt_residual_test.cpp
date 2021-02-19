@@ -136,12 +136,10 @@ void SplitImpulseKKTResidualTest::testIsApprox(const Robot& robot,
 TEST_F(SplitImpulseKKTResidualTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
-  std::random_device rnd;
-  ImpulseStatus impulse_status(contact_frames.size());
-  impulse_status.setImpulseStatus({false});
+  auto impulse_status = robot.createImpulseStatus();
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
-  impulse_status.setImpulseStatus({true});
+  impulse_status.activateImpulse(0);
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
 }
@@ -150,17 +148,13 @@ TEST_F(SplitImpulseKKTResidualTest, fixedBase) {
 TEST_F(SplitImpulseKKTResidualTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
-  std::vector<bool> is_contact_active = {false, false, false, false};
-  ImpulseStatus impulse_status(contact_frames.size());
-  impulse_status.setImpulseStatus(is_contact_active);
+  auto impulse_status = robot.createImpulseStatus();
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
-  is_contact_active.clear();
-  std::random_device rnd;
-  for (const auto frame : contact_frames) {
-    is_contact_active.push_back(rnd()%2==0);
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
   }
-  impulse_status.setImpulseStatus(is_contact_active);
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
 }

@@ -96,8 +96,8 @@ void ImpulseDynamicsBackwardEulerTest::testLinearizeImpulseDynamics(Robot& robot
   ImpulseDynamicsBackwardEuler::linearizeImpulseVelocityConstraint(robot, impulse_status, kkt_matrix_ref, kkt_residual_ref);
   Eigen::MatrixXd dImDdf = Eigen::MatrixXd::Zero(robot.dimv(), impulse_status.dimf());
   robot.updateKinematics(s.q, s.v);
-  ContactStatus contact_status(impulse_status.maxPointContacts());
-  contact_status.setContactStatus(impulse_status.isImpulseActive());
+  auto contact_status = robot.createContactStatus();
+  contact_status.setActivity(impulse_status.isImpulseActive());
   robot.dRNEAPartialdFext(contact_status, dImDdf);
   kkt_residual_ref.lq() += data.dImDdq.transpose() * s.beta + kkt_matrix_ref.Vq().transpose() * s.mu_stack();
   kkt_residual_ref.lv() += kkt_matrix_ref.Vv().transpose() * s.mu_stack(); 
@@ -246,19 +246,15 @@ void ImpulseDynamicsBackwardEulerTest::testComputeResidual(Robot& robot, const I
 
 TEST_F(ImpulseDynamicsBackwardEulerTest, fixedBase) {
   std::vector<int> impulse_frames = {18};
-  ImpulseStatus impulse_status(impulse_frames.size());
-  for (int i=0; i<impulse_frames.size(); ++i) {
-    impulse_status.setContactPoint(i, Eigen::Vector3d::Random());
-  }
   Robot robot(fixed_base_urdf, impulse_frames);
-  impulse_status.setImpulseStatus({false});
+  auto impulse_status = robot.createImpulseStatus();
   testLinearizeInverseImpulseDynamics(robot, impulse_status);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulseDynamics(robot, impulse_status);
   testCondensing(robot, impulse_status);
   testIntegration(robot, impulse_status);
   testComputeResidual(robot, impulse_status);
-  impulse_status.setImpulseStatus({true});
+  impulse_status.activateImpulse(0);
   testLinearizeInverseImpulseDynamics(robot, impulse_status);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulseDynamics(robot, impulse_status);
@@ -270,27 +266,18 @@ TEST_F(ImpulseDynamicsBackwardEulerTest, fixedBase) {
 
 TEST_F(ImpulseDynamicsBackwardEulerTest, floatingBase) {
   std::vector<int> impulse_frames = {14, 24, 34, 44};
-  ImpulseStatus impulse_status(impulse_frames.size());
-  for (int i=0; i<impulse_frames.size(); ++i) {
-    impulse_status.setContactPoint(i, Eigen::Vector3d::Random());
-  }
   Robot robot(floating_base_urdf, impulse_frames);
-  impulse_status.setImpulseStatus({false, false, false, false});
+  auto impulse_status = robot.createImpulseStatus();
   testLinearizeInverseImpulseDynamics(robot, impulse_status);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulseDynamics(robot, impulse_status);
   testCondensing(robot, impulse_status);
   testIntegration(robot, impulse_status);
   testComputeResidual(robot, impulse_status);
-  std::random_device rnd;
-  std::vector<bool> is_impulse_active;
-  for (const auto frame : impulse_frames) {
-    is_impulse_active.push_back(rnd()%2==0);
-  }
+  impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
-  impulse_status.setImpulseStatus(is_impulse_active);
   testLinearizeInverseImpulseDynamics(robot, impulse_status);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulseDynamics(robot, impulse_status);

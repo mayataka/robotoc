@@ -396,12 +396,11 @@ void ContactDynamicsTest::testComputeResidual(Robot& robot, const ContactStatus&
 
 TEST_F(ContactDynamicsTest, fixedBase) {
   std::vector<int> contact_frames = {18};
-  ContactStatus contact_status(contact_frames.size());
+  Robot robot(fixed_base_urdf, contact_frames);
+  auto contact_status = robot.createContactStatus();
   for (int i=0; i<contact_frames.size(); ++i) {
     contact_status.setContactPoint(i, Eigen::Vector3d::Random());
   }
-  Robot robot(fixed_base_urdf, contact_frames);
-  contact_status.setContactStatus({false});
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
   testLinearizeContactDynamics(robot, contact_status);
@@ -410,7 +409,7 @@ TEST_F(ContactDynamicsTest, fixedBase) {
   testComputeCondensedPrimalDirection(robot, contact_status);
   testComputeCondensedDualDirection(robot, contact_status);
   testComputeResidual(robot, contact_status);
-  contact_status.setContactStatus({true});
+  contact_status.activateContact(0);
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
   testCondenseContactDynamics(robot, contact_status, true);
@@ -423,12 +422,11 @@ TEST_F(ContactDynamicsTest, fixedBase) {
 
 TEST_F(ContactDynamicsTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  ContactStatus contact_status(contact_frames.size());
+  Robot robot(floating_base_urdf, contact_frames);
+  auto contact_status = robot.createContactStatus();
   for (int i=0; i<contact_frames.size(); ++i) {
     contact_status.setContactPoint(i, Eigen::Vector3d::Random());
   }
-  Robot robot(floating_base_urdf, contact_frames);
-  contact_status.setContactStatus({false, false, false, false});
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
   testLinearizeContactDynamics(robot, contact_status);

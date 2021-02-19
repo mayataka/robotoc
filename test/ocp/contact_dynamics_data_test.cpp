@@ -120,20 +120,18 @@ void ContactDynamicsDataTest::testSize(const Robot& robot, const ContactStatus& 
 
 TEST_F(ContactDynamicsDataTest, fixedBase) {
   std::vector<int> contact_frames = {18};
-  ContactStatus contact_status(contact_frames.size());
   Robot robot(fixed_base_urdf, contact_frames);
-  contact_status.setContactStatus({false});
+  auto contact_status = robot.createContactStatus();
   testSize(robot, contact_status);
-  contact_status.setContactStatus({true});
+  contact_status.activateContact(0);
   testSize(robot, contact_status);
 }
 
 
 TEST_F(ContactDynamicsDataTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  ContactStatus contact_status(contact_frames.size());
   Robot robot(floating_base_urdf, contact_frames);
-  contact_status.setContactStatus({false, false, false, false});
+  auto contact_status = robot.createContactStatus();
   testSize(robot, contact_status);
   contact_status.setRandom();
   testSize(robot, contact_status);

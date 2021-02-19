@@ -213,8 +213,7 @@ void ContactDistanceTest::testComputeSlackAndDualDirection(Robot& robot, const C
 TEST_F(ContactDistanceTest, fixedBase) {
   const std::vector<int> frames = {18};
   Robot robot(fixed_base_urdf, frames);
-  ContactStatus contact_status = robot.createContactStatus();
-  contact_status.setContactStatus({false});
+  auto contact_status = robot.createContactStatus();
   testKinematics(robot, contact_status);
   testIsFeasible(robot, contact_status);
   testSetSlackAndDual(robot, contact_status);
@@ -222,7 +221,7 @@ TEST_F(ContactDistanceTest, fixedBase) {
   testComputePrimalAndDualResidual(robot, contact_status);
   testCondenseSlackAndDual(robot, contact_status);
   testComputeSlackAndDualDirection(robot, contact_status);
-  contact_status.setContactStatus({true});
+  contact_status.activateContact(0);
   testKinematics(robot, contact_status);
   testIsFeasible(robot, contact_status);
   testSetSlackAndDual(robot, contact_status);
@@ -236,8 +235,7 @@ TEST_F(ContactDistanceTest, fixedBase) {
 TEST_F(ContactDistanceTest, floatingBase) {
   const std::vector<int> frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, frames);
-  ContactStatus contact_status = robot.createContactStatus();
-  contact_status.setContactStatus({false, false, false, false});
+  auto contact_status = robot.createContactStatus();
   testKinematics(robot, contact_status);
   testIsFeasible(robot, contact_status);
   testSetSlackAndDual(robot, contact_status);
