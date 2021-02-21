@@ -92,12 +92,12 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
-  /// @param[in] dtau Time step.
+  /// @param[in] dt Time step.
   /// @param[in] s Split solution.
   /// @return Stage cost.
   ///
   double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
-                          const double dtau, const SplitSolution& s) const;
+                          const double dt, const SplitSolution& s) const;
 
   ///
   /// @brief Computes and returns terminal cost. 
@@ -128,13 +128,13 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
-  /// @param[in] dtau Time step.
+  /// @param[in] dt Time step.
   /// @param[in] s Split solution.
   /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
   /// added to this data.
   ///
   void computeStageCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                   const double t, const double dtau, 
+                                   const double t, const double dt, 
                                    const SplitSolution& s, 
                                    SplitKKTResidual& kkt_residual) const;
 
@@ -175,13 +175,13 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
-  /// @param[in] dtau Time step.
+  /// @param[in] dt Time step.
   /// @param[in] s Split solution.
   /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
   /// data.
   ///
   void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
-                               const double t, const double dtau, 
+                               const double t, const double dt, 
                                const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const;
 

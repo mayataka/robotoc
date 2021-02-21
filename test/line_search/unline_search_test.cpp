@@ -26,7 +26,7 @@ protected:
     N = 20;
     nthreads = 4;
     T = 1;
-    dtau = T / N;
+    dt = T / N;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     step_size_reduction_rate = 0.75;
     min_step_size = 0.05;
@@ -41,7 +41,7 @@ protected:
   Robot robot;
   std::string urdf;
   int dimv, N, nthreads;
-  double T, dtau, t, step_size_reduction_rate, min_step_size;
+  double T, dt, t, step_size_reduction_rate, min_step_size;
   std::shared_ptr<CostFunction> cost;
   std::shared_ptr<Constraints> constraints;
 };

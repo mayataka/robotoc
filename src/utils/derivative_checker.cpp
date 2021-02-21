@@ -49,7 +49,7 @@ bool DerivativeChecker::checkFirstOrderStageCostDerivatives(
     const ContactStatus& contact_status) {
   const SplitSolution s = SplitSolution::Random(robot_, contact_status);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   const int dimv = robot_.dimv();
   const int dimu = robot_.dimu();
   const int dimf = contact_status.dimf();
@@ -57,8 +57,8 @@ bool DerivativeChecker::checkFirstOrderStageCostDerivatives(
   kkt_residual.setContactStatus(contact_status);
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v, s.a);
-  cost->computeStageCostDerivatives(robot_, data, t, dtau, s, kkt_residual);
-  double cost0 = cost->computeStageCost(robot_, data, t, dtau, s);
+  cost->computeStageCostDerivatives(robot_, data, t, dt, s, kkt_residual);
+  double cost0 = cost->computeStageCost(robot_, data, t, dt, s);
   SplitSolution s1 = s;
   Eigen::VectorXd lq_ref(dimv);
   for (int i=0; i<dimv; ++i) {
@@ -67,7 +67,7 @@ bool DerivativeChecker::checkFirstOrderStageCostDerivatives(
     dq(i) = 1;
     robot_.integrateConfiguration(s.q, dq, finite_diff_, s1.q);
     robot_.updateKinematics(s1.q, s1.v, s1.a);
-    lq_ref(i) = (cost->computeStageCost(robot_, data, t, dtau, s1) - cost0) / finite_diff_;
+    lq_ref(i) = (cost->computeStageCost(robot_, data, t, dt, s1) - cost0) / finite_diff_;
   }
   if (!kkt_residual.lq().isApprox(lq_ref, test_tol_)) {
     std::cout << "lq is not correct! lq - lq_ref = " 
@@ -79,7 +79,7 @@ bool DerivativeChecker::checkFirstOrderStageCostDerivatives(
     s1 = s;
     s1.v(i) += finite_diff_;
     robot_.updateKinematics(s1.q, s1.v, s1.a);
-    lv_ref(i) = (cost->computeStageCost(robot_, data, t, dtau, s1) - cost0) / finite_diff_;
+    lv_ref(i) = (cost->computeStageCost(robot_, data, t, dt, s1) - cost0) / finite_diff_;
   }
   if (!kkt_residual.lv().isApprox(lv_ref, test_tol_)) {
     std::cout << "lv is not correct! lv - lv_ref = " 
@@ -91,7 +91,7 @@ bool DerivativeChecker::checkFirstOrderStageCostDerivatives(
     s1 = s;
     s1.a(i) += finite_diff_;
     robot_.updateKinematics(s1.q, s1.v, s1.a);
-    la_ref(i) = (cost->computeStageCost(robot_, data, t, dtau, s1) - cost0) / finite_diff_;
+    la_ref(i) = (cost->computeStageCost(robot_, data, t, dt, s1) - cost0) / finite_diff_;
   }
   if (!kkt_residual.la.isApprox(la_ref, test_tol_)) {
     std::cout << "la is not correct! la - la_ref = " 
@@ -102,7 +102,7 @@ bool DerivativeChecker::checkFirstOrderStageCostDerivatives(
   for (int i=0; i<dimu; ++i) {
     s1 = s;
     s1.u(i) += finite_diff_;
-    lu_ref(i) = (cost->computeStageCost(robot_, data, t, dtau, s1) - cost0) / finite_diff_;
+    lu_ref(i) = (cost->computeStageCost(robot_, data, t, dt, s1) - cost0) / finite_diff_;
   }
   if (!kkt_residual.lu().isApprox(lu_ref, test_tol_)) {
     std::cout << "lu is not correct! lu - lu_ref = " 
@@ -115,7 +115,7 @@ bool DerivativeChecker::checkFirstOrderStageCostDerivatives(
       s1 = s;
       s1.f_stack().coeffRef(i) += finite_diff_;
       s1.set_f_vector();
-      lf_ref(i) = (cost->computeStageCost(robot_, data, t, dtau, s1) - cost0) / finite_diff_;
+      lf_ref(i) = (cost->computeStageCost(robot_, data, t, dt, s1) - cost0) / finite_diff_;
     }
     if (!kkt_residual.lf().isApprox(lf_ref, test_tol_)) {
       std::cout << "lf is not correct! lf - lf_ref = " 
@@ -132,7 +132,7 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
   const ContactStatus& contact_status) {
   const SplitSolution s = SplitSolution::Random(robot_, contact_status);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   const int dimv = robot_.dimv();
   const int dimu = robot_.dimu();
   const int dimf = contact_status.dimf();
@@ -140,10 +140,10 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
   kkt_matrix.setContactStatus(contact_status);
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v, s.a);
-  cost->computeStageCostHessian(robot_, data, t, dtau, s, kkt_matrix);
+  cost->computeStageCostHessian(robot_, data, t, dt, s, kkt_matrix);
   SplitKKTResidual kkt_residual0(robot_);
   kkt_residual0.setContactStatus(contact_status);
-  cost->computeStageCostDerivatives(robot_, data, t, dtau, s, kkt_residual0);
+  cost->computeStageCostDerivatives(robot_, data, t, dt, s, kkt_residual0);
   SplitKKTResidual kkt_residual(robot_);
   kkt_residual.setContactStatus(contact_status);
   SplitSolution s1 = s;
@@ -155,7 +155,7 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
     robot_.integrateConfiguration(s.q, dq, finite_diff_, s1.q);
     robot_.updateKinematics(s1.q, s1.v, s1.a);
     kkt_residual.lq().setZero();
-    cost->computeStageCostDerivatives(robot_, data, t, dtau, s1, kkt_residual);
+    cost->computeStageCostDerivatives(robot_, data, t, dt, s1, kkt_residual);
     Qqq_ref.col(i) = (kkt_residual.lq() - kkt_residual0.lq()) / finite_diff_;
   }
   if (!kkt_matrix.Qqq().isApprox(Qqq_ref, test_tol_)) {
@@ -169,7 +169,7 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
     s1.v(i) += finite_diff_;
     robot_.updateKinematics(s1.q, s1.v, s1.a);
     kkt_residual.lv().setZero();
-    cost->computeStageCostDerivatives(robot_, data, t, dtau, s1, kkt_residual);
+    cost->computeStageCostDerivatives(robot_, data, t, dt, s1, kkt_residual);
     Qvv_ref.col(i) = (kkt_residual.lv() - kkt_residual0.lv()) / finite_diff_;
   }
   if (!kkt_matrix.Qvv().isApprox(Qvv_ref, test_tol_)) {
@@ -183,7 +183,7 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
     s1.a(i) += finite_diff_;
     robot_.updateKinematics(s1.q, s1.v, s1.a);
     kkt_residual.la.setZero();
-    cost->computeStageCostDerivatives(robot_, data, t, dtau, s1, kkt_residual);
+    cost->computeStageCostDerivatives(robot_, data, t, dt, s1, kkt_residual);
     Qaa_ref.col(i) = (kkt_residual.la - kkt_residual0.la) / finite_diff_;
   }
   if (!kkt_matrix.Qaa().isApprox(Qaa_ref, test_tol_)) {
@@ -196,7 +196,7 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
     s1 = s;
     s1.u(i) += finite_diff_;
     kkt_residual.lu().setZero();
-    cost->computeStageCostDerivatives(robot_, data, t, dtau, s1, kkt_residual);
+    cost->computeStageCostDerivatives(robot_, data, t, dt, s1, kkt_residual);
     Quu_ref.col(i) = (kkt_residual.lu() - kkt_residual0.lu()) / finite_diff_;
   }
   if (!kkt_matrix.Quu().isApprox(Quu_ref, test_tol_)) {
@@ -211,7 +211,7 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
       s1.f_stack().coeffRef(i) += finite_diff_;
       s1.set_f_vector();
       kkt_residual.lf().setZero();
-      cost->computeStageCostDerivatives(robot_, data, t, dtau, s1, kkt_residual);
+      cost->computeStageCostDerivatives(robot_, data, t, dt, s1, kkt_residual);
       Qff_ref.col(i) = (kkt_residual.lf() - kkt_residual0.lf()) / finite_diff_;
     }
     if (!kkt_matrix.Qff().isApprox(Qff_ref, test_tol_)) {

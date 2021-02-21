@@ -81,7 +81,7 @@ public:
 
 private:
   int N_, nthreads_;
-  double T_, dtau_;
+  double T_, dt_;
   UnBackwardCorrector corrector_;
   UnSolution s_new_;
   std::vector<Eigen::MatrixXd> aux_mat_;

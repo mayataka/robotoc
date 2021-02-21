@@ -53,15 +53,15 @@ inline UnconstrainedDynamics::~UnconstrainedDynamics() {
 
 
 inline void UnconstrainedDynamics::linearizeUnconstrainedDynamics(
-    Robot& robot, const double dtau, const SplitSolution& s, 
+    Robot& robot, const double dt, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) { 
-  assert(dtau >= 0);
+  assert(dt > 0);
   linearizeInverseDynamics(robot, s);
   // augment inverse dynamics constraint
-  kkt_residual.lq().noalias() += dtau * dID_dq_.transpose() * s.beta;
-  kkt_residual.lv().noalias() += dtau * dID_dv_.transpose() * s.beta;
-  kkt_residual.la.noalias()   += dtau * dID_da_.transpose() * s.beta;
-  kkt_residual.lu().noalias() -= dtau * s.beta; 
+  kkt_residual.lq().noalias() += dt * dID_dq_.transpose() * s.beta;
+  kkt_residual.lv().noalias() += dt * dID_dv_.transpose() * s.beta;
+  kkt_residual.la.noalias()   += dt * dID_da_.transpose() * s.beta;
+  kkt_residual.lu().noalias() -= dt * s.beta; 
 }
 
 
@@ -95,14 +95,14 @@ inline void UnconstrainedDynamics::condenseUnconstrainedDynamics(
 
 
 inline void UnconstrainedDynamics::computeCondensedDirection(
-    const double dtau, const SplitKKTMatrix& kkt_matrix, 
+    const double dt, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, SplitDirection& d) {
-  assert(dtau > 0);
+  assert(dt > 0);
   d.du() = ID_;
   d.du().noalias() += dID_dq_ * d.dq();
   d.du().noalias() += dID_dv_ * d.dv();
   d.du().noalias() += dID_da_ * d.da();
-  d.dbeta().noalias() = (kkt_residual.lu()  + kkt_matrix.Quu() * d.du()) / dtau;
+  d.dbeta().noalias() = (kkt_residual.lu()  + kkt_matrix.Quu() * d.du()) / dt;
 }
 
 
@@ -113,16 +113,16 @@ inline void UnconstrainedDynamics::computeUnconstrainedDynamicsResidual(
 
 
 inline double UnconstrainedDynamics::l1NormUnconstrainedDynamicsResidual(
-    const double dtau) const {
-  assert(dtau >= 0);
-  return (dtau * ID_.lpNorm<1>());
+    const double dt) const {
+  assert(dt > 0);
+  return (dt * ID_.lpNorm<1>());
 }
 
 
 inline double UnconstrainedDynamics::squaredNormUnconstrainedDynamicsResidual(
-    const double dtau) const {
-  assert(dtau >= 0);
-  return (dtau * dtau * ID_.squaredNorm());
+    const double dt) const {
+  assert(dt > 0);
+  return (dt * dt * ID_.squaredNorm());
 }
 
 

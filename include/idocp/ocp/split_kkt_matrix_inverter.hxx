@@ -55,7 +55,7 @@ inline SplitKKTMatrixInverter::~SplitKKTMatrixInverter() {
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void SplitKKTMatrixInverter::invert(
-    const double dtau, const Eigen::MatrixBase<MatrixType1>& F,
+    const double dt, const Eigen::MatrixBase<MatrixType1>& F,
     const Eigen::MatrixBase<MatrixType2>& Q,
     const Eigen::MatrixBase<MatrixType3>& KKT_mat_inv) {
   assert(F.rows() == dimx_);
@@ -70,8 +70,8 @@ inline void SplitKKTMatrixInverter::invert(
       .bottomRightCorner(dimQ_, dimQ_).noalias()
       = llt_Q_.solve(Eigen::MatrixXd::Identity(dimQ_, dimQ_));
   dimf_ = 0;
-  multiplyF(dtau, F, KKT_mat_inv.bottomRightCorner(dimQ_, dimQ_), Jac_Qinv());
-  multiplyF(dtau, F, Jac_Qinv().transpose(), S());
+  multiplyF(dt, F, KKT_mat_inv.bottomRightCorner(dimQ_, dimQ_), Jac_Qinv());
+  multiplyF(dt, F, Jac_Qinv().transpose(), S());
   llt_F_.compute(S());
   assert(llt_F_.info() == Eigen::Success);
   const_cast<Eigen::MatrixBase<MatrixType3>&>(KKT_mat_inv)
@@ -91,10 +91,10 @@ inline void SplitKKTMatrixInverter::invert(
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void SplitKKTMatrixInverter::multiplyF(
-    const double dtau, const Eigen::MatrixBase<MatrixType1>& F, 
+    const double dt, const Eigen::MatrixBase<MatrixType1>& F, 
     const Eigen::MatrixBase<MatrixType2>& mat, 
     const Eigen::MatrixBase<MatrixType3>& res) {
-  assert(dtau >= 0);
+  assert(dt > 0);
   assert(F.rows() == dimx_);
   assert(F.cols() == dimQ_);
   if (has_floating_base_) {
@@ -105,13 +105,13 @@ inline void SplitKKTMatrixInverter::multiplyF(
     const_cast<Eigen::MatrixBase<MatrixType3>&>(res).template topRows<6>().noalias()
         += F.template block<6, 6>(0, dimu_+dimv_) * mat.template middleRows<6>(dimu_+dimv_);
     const_cast<Eigen::MatrixBase<MatrixType3>&>(res).middleRows(6, dimv_-6).noalias()
-        += dtau * mat.middleRows(dimu_+dimv_+6, dimv_-6);
+        += dt * mat.middleRows(dimu_+dimv_+6, dimv_-6);
   }
   else {
     const_cast<Eigen::MatrixBase<MatrixType3>&>(res).topRows(dimv_) 
         = - mat.middleRows(dimu_, dimv_);
     const_cast<Eigen::MatrixBase<MatrixType3>&>(res).topRows(dimv_).noalias()
-        += dtau * mat.bottomRows(dimv_);
+        += dt * mat.bottomRows(dimv_);
   }
   const_cast<Eigen::MatrixBase<MatrixType3>&>(res).bottomRows(dimv_).noalias()
       = F.bottomRows(dimv_) * mat;
@@ -121,7 +121,7 @@ inline void SplitKKTMatrixInverter::multiplyF(
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
           typename MatrixType4>
 inline void SplitKKTMatrixInverter::invert(
-    const double dtau, const Eigen::MatrixBase<MatrixType1>& F,
+    const double dt, const Eigen::MatrixBase<MatrixType1>& F,
     const Eigen::MatrixBase<MatrixType2>& Pq, 
     const Eigen::MatrixBase<MatrixType3>& Q,
     const Eigen::MatrixBase<MatrixType4>& KKT_mat_inv) {
@@ -139,9 +139,9 @@ inline void SplitKKTMatrixInverter::invert(
       = llt_Q_.solve(Eigen::MatrixXd::Identity(dimQ_, dimQ_));
   dimf_ = Pq.rows();
   const int dims = dimf_ + dimx_;
-  multiplyFPq(dtau, F, Pq, KKT_mat_inv.bottomRightCorner(dimQ_, dimQ_), 
+  multiplyFPq(dt, F, Pq, KKT_mat_inv.bottomRightCorner(dimQ_, dimQ_), 
               Jac_Qinv());
-  multiplyFPq(dtau, F, Pq, Jac_Qinv().transpose(), S());
+  multiplyFPq(dt, F, Pq, Jac_Qinv().transpose(), S());
   if (regularization_) {
     S().diagonal().tail(dimf_).array() += reg_;
   }
@@ -165,11 +165,11 @@ inline void SplitKKTMatrixInverter::invert(
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
           typename MatrixType4>
 inline void SplitKKTMatrixInverter::multiplyFPq(
-    const double dtau, const Eigen::MatrixBase<MatrixType1>& F, 
+    const double dt, const Eigen::MatrixBase<MatrixType1>& F, 
     const Eigen::MatrixBase<MatrixType2>& Pq, 
     const Eigen::MatrixBase<MatrixType3>& mat, 
     const Eigen::MatrixBase<MatrixType4>& res) {
-  assert(dtau >= 0);
+  assert(dt > 0);
   assert(F.rows() == dimx_);
   assert(F.cols() == dimQ_);
   assert(Pq.cols() == dimv_);
@@ -182,13 +182,13 @@ inline void SplitKKTMatrixInverter::multiplyFPq(
     const_cast<Eigen::MatrixBase<MatrixType4>&>(res).template topRows<6>().noalias()
         += F.template block<6, 6>(0, dimu_+dimv_) * mat.template middleRows<6>(dimu_+dimv_);
     const_cast<Eigen::MatrixBase<MatrixType4>&>(res).middleRows(6, dimv_-6).noalias()
-        += dtau * mat.middleRows(dimu_+dimv_+6, dimv_-6);
+        += dt * mat.middleRows(dimu_+dimv_+6, dimv_-6);
   }
   else {
     const_cast<Eigen::MatrixBase<MatrixType4>&>(res).topRows(dimv_) 
         = - mat.middleRows(dimu_, dimv_);
     const_cast<Eigen::MatrixBase<MatrixType4>&>(res).topRows(dimv_).noalias()
-        += dtau * mat.bottomRows(dimv_);
+        += dt * mat.bottomRows(dimv_);
   }
   const_cast<Eigen::MatrixBase<MatrixType4>&>(res).middleRows(dimv_, dimv_).noalias()
       = F.bottomRows(dimv_) * mat;

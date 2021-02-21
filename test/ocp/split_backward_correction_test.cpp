@@ -27,7 +27,7 @@ protected:
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     fixed_base_robot = Robot(fixed_base_urdf, {18});
     floating_base_robot = Robot(floating_base_urdf, {14, 24, 34, 44});
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -40,7 +40,7 @@ protected:
   void testWithSwitchingConstraint(const Robot& robot) const;
   void testTerminal(const Robot& robot) const;
 
-  double dtau;
+  double dt;
   std::string fixed_base_urdf, floating_base_urdf;
   Robot fixed_base_robot, floating_base_robot;
 };
@@ -91,14 +91,14 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_new = SplitSolution::Random(robot);
   SplitSolution s_new_ref = s_new;
-  corr.coarseUpdate(robot, dtau, aux_mat_next, kkt_matrix, kkt_residual, s, s_new);
+  corr.coarseUpdate(robot, dt, aux_mat_next, kkt_matrix, kkt_residual, s, s_new);
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
   kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
   kkt_matrix_ref.Qux() = kkt_matrix_ref.Qxu().transpose();
   kkt_matrix_ref.Qxx() += aux_mat_next;
   SplitKKTMatrixInverter inverter(robot);
-  inverter.invert(dtau, kkt_matrix.Jac(), kkt_matrix.Qss(), KKT_mat_inv);
+  inverter.invert(dt, kkt_matrix.Jac(), kkt_matrix.Qss(), KKT_mat_inv);
   Eigen::VectorXd d0_ref = KKT_mat_inv * kkt_residual.splitKKTResidual();
   s_new_ref.lmd = s.lmd - d0_ref.head(dimv);
   s_new_ref.gmm = s.gmm - d0_ref.segment(dimv, dimv);
@@ -192,13 +192,13 @@ void SplitBackwardCorrectionTest::testWithSwitchingConstraint(const Robot& robot
   SplitSolution s_new_ref = s_new;
   const SplitSolution s_next = SplitSolution::Random(robot);
   const SplitSolution s_new_next = SplitSolution::Random(robot);
-  corr.coarseUpdate(robot, dtau, aux_mat_next, kkt_matrix, kkt_residual, s, s_new);
+  corr.coarseUpdate(robot, dt, aux_mat_next, kkt_matrix, kkt_residual, s, s_new);
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
   kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
   kkt_matrix_ref.Qux() = kkt_matrix_ref.Qxu().transpose();
   kkt_matrix_ref.Qxx() += aux_mat_next;
   SplitKKTMatrixInverter inverter(robot);
-  inverter.invert(dtau, kkt_matrix.Jac(), kkt_matrix.Pq(), kkt_matrix.Qss(), KKT_mat_inv);
+  inverter.invert(dt, kkt_matrix.Jac(), kkt_matrix.Pq(), kkt_matrix.Qss(), KKT_mat_inv);
   Eigen::VectorXd d0_ref = KKT_mat_inv * kkt_residual.splitKKTResidual();
   s_new_ref.lmd = s.lmd - d0_ref.head(dimv);
   s_new_ref.gmm = s.gmm - d0_ref.segment(dimv, dimv);
@@ -274,13 +274,13 @@ void SplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_new = SplitSolution::Random(robot);
   SplitSolution s_new_ref = s_new;
-  corr.coarseUpdate(robot, dtau, kkt_matrix, kkt_residual, s, s_new);
+  corr.coarseUpdate(robot, dt, kkt_matrix, kkt_residual, s, s_new);
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
   kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
   kkt_matrix_ref.Qux() = kkt_matrix_ref.Qxu().transpose();
   SplitKKTMatrixInverter inverter(robot);
-  inverter.invert(dtau, kkt_matrix_ref.Jac(), kkt_matrix_ref.Qss(), KKT_mat_inv);
+  inverter.invert(dt, kkt_matrix_ref.Jac(), kkt_matrix_ref.Qss(), KKT_mat_inv);
   Eigen::VectorXd d0_ref = KKT_mat_inv * kkt_residual.splitKKTResidual();
   s_new_ref.lmd = s.lmd - d0_ref.head(dimv);
   s_new_ref.gmm = s.gmm - d0_ref.segment(dimv, dimv);

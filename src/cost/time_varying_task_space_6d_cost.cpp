@@ -67,7 +67,7 @@ void TimeVaryingTaskSpace6DCost::set_qi_6d_weight(
  
 
 double TimeVaryingTaskSpace6DCost::computeStageCost(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s) const {
   double l = 0;
   ref_->compute_q_6d_ref(t, data.SE3_ref);
@@ -75,7 +75,7 @@ double TimeVaryingTaskSpace6DCost::computeStageCost(
   data.diff_SE3 = data.SE3_ref_inv * robot.framePlacement(frame_id_);
   data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
   l += (q_6d_weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
-  return 0.5 * dtau * l;
+  return 0.5 * dt * l;
 }
 
 
@@ -106,7 +106,7 @@ double TimeVaryingTaskSpace6DCost::computeImpulseCost(
 
 
 void TimeVaryingTaskSpace6DCost::computeStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   ref_->compute_q_6d_ref(t, data.SE3_ref);
   data.SE3_ref_inv = data.SE3_ref.inverse();
@@ -116,7 +116,7 @@ void TimeVaryingTaskSpace6DCost::computeStageCostDerivatives(
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.JJ_6d.noalias() = data.J_66 * data.J_6d;
   kkt_residual.lq().noalias() 
-      += dtau * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() 
+      += dt * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() 
                                        * data.diff_6d;
 }
 
@@ -153,7 +153,7 @@ void TimeVaryingTaskSpace6DCost::computeImpulseCostDerivatives(
 
 
 void TimeVaryingTaskSpace6DCost::computeStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   ref_->compute_q_6d_ref(t, data.SE3_ref);
   data.SE3_ref_inv = data.SE3_ref.inverse();
@@ -162,7 +162,7 @@ void TimeVaryingTaskSpace6DCost::computeStageCostHessian(
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.JJ_6d.noalias() = data.J_66 * data.J_6d;
   kkt_matrix.Qqq().noalias()
-      += dtau * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() * data.JJ_6d;
+      += dt * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() * data.JJ_6d;
 }
 
 

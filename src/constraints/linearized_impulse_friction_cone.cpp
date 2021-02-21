@@ -1,7 +1,6 @@
 #include "idocp/constraints/linearized_impulse_friction_cone.hpp"
 
 #include <iostream>
-#include <cassert>
 #include <stdexcept>
 
 

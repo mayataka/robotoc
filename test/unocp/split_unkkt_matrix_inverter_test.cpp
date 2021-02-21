@@ -17,7 +17,7 @@ protected:
     std::random_device rnd;
     urdf = "../urdf/iiwa14/iiwa14.urdf";
     robot = Robot(urdf);
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -25,7 +25,7 @@ protected:
 
   std::string urdf;
   Robot robot;
-  double dtau;
+  double dt;
 };
 
 
@@ -38,12 +38,12 @@ TEST_F(SplitUnKKTMatrixInverterTest, test) {
   const Eigen::MatrixXd Q_mat = Q_seed_mat * Q_seed_mat.transpose() + Eigen::MatrixXd::Identity(dimQ, dimQ);
   Eigen::MatrixXd KKT_mat_inv = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
   SplitUnKKTMatrixInverter inverter(robot);
-  inverter.invert(dtau, Q_mat, KKT_mat_inv);
+  inverter.invert(dt, Q_mat, KKT_mat_inv);
   Eigen::MatrixXd KKT_mat_ref = Eigen::MatrixXd::Zero(dimKKT, dimKKT);
   KKT_mat_ref.bottomRightCorner(dimQ, dimQ) = Q_mat;
   KKT_mat_ref.block(   0, 3*dimv, dimv, dimv) = - Eigen::MatrixXd::Identity(dimv, dimv);
-  KKT_mat_ref.block(   0, 4*dimv, dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
-  KKT_mat_ref.block(dimv, 2*dimv, dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
+  KKT_mat_ref.block(   0, 4*dimv, dimv, dimv) = dt * Eigen::MatrixXd::Identity(dimv, dimv);
+  KKT_mat_ref.block(dimv, 2*dimv, dimv, dimv) = dt * Eigen::MatrixXd::Identity(dimv, dimv);
   KKT_mat_ref.block(dimv, 4*dimv, dimv, dimv) = - Eigen::MatrixXd::Identity(dimv, dimv);
   KKT_mat_ref.block(dimx, 0, 3*dimv, 2*dimv) = KKT_mat_ref.block(0, dimx, 2*dimv, 3*dimv).transpose();
   const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat_ref.inverse();

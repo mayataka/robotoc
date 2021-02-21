@@ -24,7 +24,7 @@ protected:
     std::random_device rnd;
     urdf = "../urdf/iiwa14/iiwa14.urdf";
     robot = Robot(urdf);
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -32,7 +32,7 @@ protected:
 
   std::string urdf;
   Robot robot;
-  double dtau;
+  double dt;
 };
 
 
@@ -45,23 +45,23 @@ TEST_F(UnconstrainedDynamicsTest, linearizeUnconstrainedDynamics) {
   kkt_residual.lu().setRandom(); 
   SplitKKTResidual kkt_residual_ref = kkt_residual;
   UnconstrainedDynamics ud(robot);
-  ud.linearizeUnconstrainedDynamics(robot, dtau, s, kkt_residual);
+  ud.linearizeUnconstrainedDynamics(robot, dt, s, kkt_residual);
   Eigen::VectorXd ID(Eigen::VectorXd::Zero(robot.dimv()));
   Eigen::MatrixXd dIDdq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv()));
   Eigen::MatrixXd dIDdv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv()));
   Eigen::MatrixXd dIDda(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv()));
   robot.RNEADerivatives(s.q, s.v, s.a, dIDdq, dIDdv, dIDda);
-  kkt_residual_ref.lq() += dtau * dIDdq.transpose() * s.beta;
-  kkt_residual_ref.lv() += dtau * dIDdv.transpose() * s.beta;
-  kkt_residual_ref.la   += dtau * dIDda.transpose() * s.beta;
-  kkt_residual_ref.lu() -= dtau * s.beta;
+  kkt_residual_ref.lq() += dt * dIDdq.transpose() * s.beta;
+  kkt_residual_ref.lv() += dt * dIDdv.transpose() * s.beta;
+  kkt_residual_ref.la   += dt * dIDda.transpose() * s.beta;
+  kkt_residual_ref.lu() -= dt * s.beta;
   EXPECT_TRUE(kkt_residual_ref.isApprox(kkt_residual));
   robot.RNEA(s.q, s.v, s.a, ID);
   ID.noalias() -= s.u;
-  EXPECT_DOUBLE_EQ(ud.l1NormUnconstrainedDynamicsResidual(dtau), 
-                   dtau*ID.lpNorm<1>());
-  EXPECT_DOUBLE_EQ(ud.squaredNormUnconstrainedDynamicsResidual(dtau), 
-                   dtau*dtau*ID.squaredNorm());
+  EXPECT_DOUBLE_EQ(ud.l1NormUnconstrainedDynamicsResidual(dt), 
+                   dt*ID.lpNorm<1>());
+  EXPECT_DOUBLE_EQ(ud.squaredNormUnconstrainedDynamicsResidual(dt), 
+                   dt*dt*ID.squaredNorm());
 }
 
 
@@ -73,7 +73,7 @@ TEST_F(UnconstrainedDynamicsTest, condenseUnconstrainedDynamics) {
   kkt_residual.la.setRandom();   
   kkt_residual.lu().setRandom(); 
   UnconstrainedDynamics ud(robot);
-  ud.linearizeUnconstrainedDynamics(robot, dtau, s, kkt_residual);
+  ud.linearizeUnconstrainedDynamics(robot, dt, s, kkt_residual);
   SplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.Qqq().setRandom();
   kkt_matrix.Qvv().diagonal().setRandom();
@@ -119,9 +119,9 @@ TEST_F(UnconstrainedDynamicsTest, condenseUnconstrainedDynamics) {
 
   SplitDirection d = SplitDirection::Random(robot);
   SplitDirection d_ref = d;
-  ud.computeCondensedDirection(dtau, kkt_matrix, kkt_residual, d);
+  ud.computeCondensedDirection(dt, kkt_matrix, kkt_residual, d);
   d_ref.du() = ID + dIDdq * d_ref.dq() + dIDdv * d_ref.dv() + dIDda * d_ref.da();
-  d_ref.dbeta() = (kkt_residual.lu() + kkt_matrix.Quu() * d_ref.du()) / dtau;
+  d_ref.dbeta() = (kkt_residual.lu() + kkt_matrix.Quu() * d_ref.du()) / dt;
   EXPECT_TRUE(d_ref.isApprox(d));
 }
 

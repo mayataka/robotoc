@@ -14,14 +14,14 @@ namespace stateequation {
 
 template <typename ConfigVectorType, typename SplitSolutionType>
 void linearizeForwardEuler(
-    const Robot& robot, const double dtau, 
+    const Robot& robot, const double dt, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
     const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual);
 
 template <typename ConfigVectorType>
 void condenseForwardEuler(
-    Robot& robot, const double dtau, const SplitSolution& s, 
+    Robot& robot, const double dt, const SplitSolution& s, 
     const Eigen::MatrixBase<ConfigVectorType>& q_next, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
 
@@ -43,7 +43,7 @@ void correctCostateDirectionForwardEuler(
 template <typename ConfigVectorType, typename TangentVectorType, 
         typename SplitSolutionType>
 void linearizeBackwardEuler(
-    const Robot& robot, const double dtau, 
+    const Robot& robot, const double dt, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
     const SplitSolution& s, const SplitSolutionType& s_next, 
@@ -51,14 +51,14 @@ void linearizeBackwardEuler(
 
 template <typename ConfigVectorType, typename TangentVectorType>
 void linearizeBackwardEulerTerminal(
-    const Robot& robot, const double dtau, 
+    const Robot& robot, const double dt, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual);
 
 template <typename ConfigVectorType>
-void condenseBackwardEuler(Robot& robot, const double dtau, 
+void condenseBackwardEuler(Robot& robot, const double dt, 
                            const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
                            const SplitSolution& s, 
                            SplitKKTMatrix& kkt_matrix, 
@@ -73,14 +73,14 @@ void correctCostateDirectionBackwardEuler(
 
 template <typename ConfigVectorType, typename TangentVectorType>
 void computeForwardEulerResidual(
-    const Robot& robot, const double dtau, const SplitSolution& s, 
+    const Robot& robot, const double dt, const SplitSolution& s, 
     const Eigen::MatrixBase<ConfigVectorType>& q_next, 
     const Eigen::MatrixBase<TangentVectorType>& v_next, 
     SplitKKTResidual& kkt_residual);
 
 template <typename ConfigVectorType, typename TangentVectorType>
 void computeBackwardEulerResidual(
-    const Robot& robot, const double dtau, 
+    const Robot& robot, const double dt, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const Eigen::MatrixBase<TangentVectorType>& v_prev, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual);

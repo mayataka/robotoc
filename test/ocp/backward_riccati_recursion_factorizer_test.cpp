@@ -24,7 +24,7 @@ protected:
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     fixed_base_robot = Robot(fixed_base_urdf, {18});
     floating_base_robot = Robot(floating_base_urdf, {14, 24, 34, 44});
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -36,7 +36,7 @@ protected:
 
   void test(const Robot& robot) const;
 
-  double dtau;
+  double dt;
   std::string fixed_base_urdf, floating_base_urdf;
   Robot fixed_base_robot, floating_base_robot;
 };
@@ -104,7 +104,7 @@ void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
     ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   }
-  factorizer.factorizeKKTMatrix(riccati_next, dtau, kkt_matrix, kkt_residual);
+  factorizer.factorizeKKTMatrix(riccati_next, dt, kkt_matrix, kkt_residual);
   if (!robot.hasFloatingBase()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
     ASSERT_TRUE(kkt_matrix.Fqv().isZero());
@@ -115,7 +115,7 @@ void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
     A.topLeftCorner(robot.dim_passive(), robot.dim_passive()) 
         = kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive());
   }
-  A.topRightCorner(dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
+  A.topRightCorner(dimv, dimv) = dt * Eigen::MatrixXd::Identity(dimv, dimv);
   if (robot.hasFloatingBase()) {
     A.topRightCorner(dimv, dimv).topLeftCorner(robot.dim_passive(), robot.dim_passive()) 
         = kkt_matrix.Fqv().topLeftCorner(robot.dim_passive(), robot.dim_passive());
@@ -150,7 +150,7 @@ void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
     ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   }
-  factorizer.factorizeRiccatiFactorization(riccati_next, kkt_matrix, kkt_residual, lqr_policy, dtau, riccati);
+  factorizer.factorizeRiccatiFactorization(riccati_next, kkt_matrix, kkt_residual, lqr_policy, dt, riccati);
   if (!robot.hasFloatingBase()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
     ASSERT_TRUE(kkt_matrix.Fqv().isZero());

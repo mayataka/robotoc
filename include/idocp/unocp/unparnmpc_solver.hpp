@@ -181,7 +181,7 @@ private:
   UnSolution s_;
   UnDirection d_;
   int N_, nthreads_;
-  double T_, dtau_;
+  double T_, dt_;
   Eigen::VectorXd kkt_error_;
 
 };

@@ -33,7 +33,7 @@ protected:
     std::random_device rnd;
     urdf = "../urdf/iiwa14/iiwa14.urdf";
     robot = Robot(urdf);
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
 
     auto config_cost = std::make_shared<ConfigurationSpaceCost >(robot);
     const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
@@ -83,7 +83,7 @@ protected:
 
   std::string urdf;
   Robot robot;
-  double dtau;
+  double dt;
   std::shared_ptr<CostFunction> cost;
   std::shared_ptr<Constraints> constraints;
 };
@@ -94,12 +94,12 @@ TEST_F(TerminalUnParNMPCTest, linearizeOCP) {
   const SplitSolution s = SplitSolution::Random(robot);
   TerminalUnParNMPC ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, 10, s);
   const int dimv = robot.dimv();
   SplitUnKKTMatrix unkkt_matrix(robot);
   SplitUnKKTResidual unkkt_residual(robot);
-  ocp.linearizeOCP(robot, t, dtau, s_prev.q, s_prev.v, s, unkkt_matrix, unkkt_residual);
+  ocp.linearizeOCP(robot, t, dt, s_prev.q, s_prev.v, s, unkkt_matrix, unkkt_residual);
   SplitKKTMatrix kkt_matrix_ref(robot);
   SplitKKTResidual kkt_residual_ref(robot);
   SplitUnKKTMatrix unkkt_matrix_ref(robot);
@@ -108,23 +108,23 @@ TEST_F(TerminalUnParNMPCTest, linearizeOCP) {
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual_ref);
+  cost->computeStageCostDerivatives(robot, cost_data, t, dt, s, kkt_residual_ref);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
-  cost->computeStageCostHessian(robot, cost_data, t, dtau, s, kkt_matrix_ref);
+  cost->computeStageCostHessian(robot, cost_data, t, dt, s, kkt_matrix_ref);
   cost->computeTerminalCostHessian(robot, cost_data, t, s, kkt_matrix_ref);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual_ref);
-  constraints->condenseSlackAndDual(robot, constraints_data, dtau, s, kkt_matrix_ref, kkt_residual_ref);
-  stateequation::linearizeBackwardEulerTerminal(robot, dtau, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
+  constraints->augmentDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
+  constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
+  stateequation::linearizeBackwardEulerTerminal(robot, dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
   UnconstrainedDynamics ud(robot);
-  ud.linearizeUnconstrainedDynamics(robot, dtau, s, kkt_residual_ref);
+  ud.linearizeUnconstrainedDynamics(robot, dt, s, kkt_residual_ref);
   ud.condenseUnconstrainedDynamics(kkt_matrix_ref, kkt_residual_ref, unkkt_matrix_ref, unkkt_residual_ref);
   EXPECT_TRUE(unkkt_matrix.isApprox(unkkt_matrix_ref));
   EXPECT_TRUE(unkkt_residual.isApprox(unkkt_residual_ref));
   SplitDirection d = SplitDirection::Random(robot);
   auto d_ref = d;
-  ocp.computeCondensedDirection(robot, dtau, s, d);
+  ocp.computeCondensedDirection(robot, dt, s, d);
   constraints->computeSlackAndDualDirection(robot, constraints_data, s, d_ref);
-  ud.computeCondensedDirection(dtau, kkt_matrix_ref, kkt_residual_ref, d_ref);
+  ud.computeCondensedDirection(dt, kkt_matrix_ref, kkt_residual_ref, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
   EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));
@@ -143,31 +143,31 @@ TEST_F(TerminalUnParNMPCTest, computeKKTResidual) {
   const SplitSolution s = SplitSolution::Random(robot);
   TerminalUnParNMPC ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, 10, s);
   const int dimv = robot.dimv();
-  ocp.computeKKTResidual(robot, t, dtau, s_prev.q, s_prev.v, s);
+  ocp.computeKKTResidual(robot, t, dt, s_prev.q, s_prev.v, s);
   SplitKKTResidual kkt_residual_ref(robot);
   SplitKKTMatrix kkt_matrix_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  cost->computeStageCostDerivatives(robot, cost_data, t, dtau, s, kkt_residual_ref);
+  cost->computeStageCostDerivatives(robot, cost_data, t, dt, s, kkt_residual_ref);
   cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  constraints->augmentDualResidual(robot, constraints_data, dtau, s, kkt_residual_ref);
-  stateequation::linearizeBackwardEulerTerminal(robot, dtau, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
+  constraints->augmentDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
+  stateequation::linearizeBackwardEulerTerminal(robot, dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
   UnconstrainedDynamics ud(robot);
-  ud.linearizeUnconstrainedDynamics(robot, dtau, s, kkt_residual_ref);
+  ud.linearizeUnconstrainedDynamics(robot, dt, s, kkt_residual_ref);
   double kkt_error_ref = 0;
   kkt_error_ref += kkt_residual_ref.lx().squaredNorm();
   kkt_error_ref += kkt_residual_ref.la.squaredNorm();
   kkt_error_ref += kkt_residual_ref.lu().squaredNorm();
   kkt_error_ref += stateequation::squaredNormStateEuqationResidual(kkt_residual_ref);
-  kkt_error_ref += ud.squaredNormUnconstrainedDynamicsResidual(dtau);
-  kkt_error_ref += dtau * dtau * constraints->squaredNormPrimalAndDualResidual(constraints_data);
-  EXPECT_DOUBLE_EQ(kkt_error_ref, ocp.squaredNormKKTResidual(dtau));
+  kkt_error_ref += ud.squaredNormUnconstrainedDynamicsResidual(dt);
+  kkt_error_ref += dt * dt * constraints->squaredNormPrimalAndDualResidual(constraints_data);
+  EXPECT_DOUBLE_EQ(kkt_error_ref, ocp.squaredNormKKTResidual(dt));
 }
 
 
@@ -177,30 +177,30 @@ TEST_F(TerminalUnParNMPCTest, costAndConstraintViolation) {
   const SplitDirection d = SplitDirection::Random(robot);
   TerminalUnParNMPC ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const double dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double step_size = 0.3;
   ocp.initConstraints(robot, 10, s);
-  const double stage_cost = ocp.stageCost(robot, t, dtau, s, step_size);
-  const double constraint_violation = ocp.constraintViolation(robot, t, dtau, s_prev.q, s_prev.v, s);
+  const double stage_cost = ocp.stageCost(robot, t, dt, s, step_size);
+  const double constraint_violation = ocp.constraintViolation(robot, t, dt, s_prev.q, s_prev.v, s);
   SplitKKTResidual kkt_residual_ref(robot);
   auto cost_data = cost->createCostFunctionData(robot);
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
   double stage_cost_ref = 0;
-  stage_cost_ref += cost->computeStageCost(robot, cost_data, t, dtau, s);
+  stage_cost_ref += cost->computeStageCost(robot, cost_data, t, dt, s);
   stage_cost_ref += cost->computeTerminalCost(robot, cost_data, t, s);
-  stage_cost_ref += dtau * constraints->costSlackBarrier(constraints_data, step_size);
+  stage_cost_ref += dt * constraints->costSlackBarrier(constraints_data, step_size);
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  stateequation::computeBackwardEulerResidual(robot, dtau, s_prev.q, s_prev.v,
+  stateequation::computeBackwardEulerResidual(robot, dt, s_prev.q, s_prev.v,
                                               s, kkt_residual_ref);
   UnconstrainedDynamics cd(robot);
   cd.computeUnconstrainedDynamicsResidual(robot, s);
   double constraint_violation_ref = 0;
-  constraint_violation_ref += dtau * constraints->l1NormPrimalResidual(constraints_data);
+  constraint_violation_ref += dt * constraints->l1NormPrimalResidual(constraints_data);
   constraint_violation_ref += stateequation::l1NormStateEuqationResidual(kkt_residual_ref);
-  constraint_violation_ref += cd.l1NormUnconstrainedDynamicsResidual(dtau);
+  constraint_violation_ref += cd.l1NormUnconstrainedDynamicsResidual(dt);
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
 }
 

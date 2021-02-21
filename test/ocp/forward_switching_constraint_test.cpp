@@ -21,8 +21,8 @@ protected:
     std::random_device rnd;
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
-    dtau1 = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dtau2 = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt1 = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt2 = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -31,7 +31,7 @@ protected:
   void testLinearizeSwitchingConstraint(Robot& robot) const;
   void testComputeSwitchingConstraintResidual(Robot& robot) const;
 
-  double dtau1, dtau2;
+  double dt1, dt2;
   std::string fixed_base_urdf, floating_base_urdf;
 };
 
@@ -56,10 +56,10 @@ void ForwardSwitchingConstraintTest::testLinearizeSwitchingConstraint(Robot& rob
   auto jac_ref = jac;
   robot.updateKinematics(s.q);
   ForwardSwitchingConstraint switching_constraint(robot);
-  switching_constraint.linearizeSwitchingConstraint(robot, impulse_status, dtau1, dtau2,
+  switching_constraint.linearizeSwitchingConstraint(robot, impulse_status, dt1, dt2,
                                                     s, kkt_matrix, kkt_residual, jac);
   jac_ref.setImpulseStatus(impulse_status);
-  const Eigen::VectorXd dq = (dtau1+dtau2) * s.v + (dtau1*dtau2) * s.a;
+  const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
@@ -69,13 +69,13 @@ void ForwardSwitchingConstraintTest::testLinearizeSwitchingConstraint(Robot& rob
     robot.dIntegratedConfiguration(s.q, dq, jac_ref.dintegrate_dq);
     robot.dIntegratedVelocity(s.q, dq, jac_ref.dintegrate_dv);
     jac_ref.Phiq() = kkt_matrix_ref.Pq() * jac_ref.dintegrate_dq;
-    jac_ref.Phiv() = (dtau1+dtau2) * kkt_matrix_ref.Pq() * jac_ref.dintegrate_dv;
-    jac_ref.Phia() = (dtau1*dtau2) * kkt_matrix_ref.Pq() * jac_ref.dintegrate_dv;
+    jac_ref.Phiv() = (dt1+dt2) * kkt_matrix_ref.Pq() * jac_ref.dintegrate_dv;
+    jac_ref.Phia() = (dt1*dt2) * kkt_matrix_ref.Pq() * jac_ref.dintegrate_dv;
   }
   else {
     jac_ref.Phiq() = kkt_matrix_ref.Pq();
-    jac_ref.Phiv() = (dtau1+dtau2) * kkt_matrix_ref.Pq();
-    jac_ref.Phia() = (dtau1*dtau2) * kkt_matrix_ref.Pq();
+    jac_ref.Phiv() = (dt1+dt2) * kkt_matrix_ref.Pq();
+    jac_ref.Phia() = (dt1*dt2) * kkt_matrix_ref.Pq();
   }
   kkt_residual_ref.lq() += jac_ref.Phiq().transpose() * s.xi_stack();
   kkt_residual_ref.lv() += jac_ref.Phiv().transpose() * s.xi_stack();
@@ -105,8 +105,8 @@ void ForwardSwitchingConstraintTest::testComputeSwitchingConstraintResidual(Robo
   robot.updateKinematics(s.q);
   ForwardSwitchingConstraint switching_constraint(robot);
   switching_constraint.computeSwitchingConstraintResidual(robot, impulse_status, 
-                                                          dtau1, dtau2, s, kkt_residual);
-  const Eigen::VectorXd dq = (dtau1+dtau2) * s.v + (dtau1*dtau2) * s.a;
+                                                          dt1, dt2, s, kkt_residual);
+  const Eigen::VectorXd dq = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);

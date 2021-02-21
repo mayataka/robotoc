@@ -1,7 +1,6 @@
 #include "idocp/constraints/friction_cone.hpp"
 
 #include <iostream>
-#include <cassert>
 #include <stdexcept>
 
 
@@ -97,20 +96,19 @@ void FrictionCone::setSlackAndDual(Robot& robot, ConstraintComponentData& data,
 
 
 void FrictionCone::augmentDualResidual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const int idx1 = 2*i;
-      kkt_residual.lf().coeffRef(dimf_stack+2) -= dtau * data.dual.coeff(idx1);
+      kkt_residual.lf().coeffRef(dimf_stack+2) -= dt * data.dual.coeff(idx1);
       const int idx2 = 2*i+1;
       data.r[i].coeffRef(0) = 2 * s.f[i].coeff(0);
       data.r[i].coeffRef(1) = 2 * s.f[i].coeff(1);
       data.r[i].coeffRef(2) = - 2 * mu_ * mu_ * s.f[i].coeff(2);
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
-          += dtau * data.dual.coeff(idx2) * data.r[i];
+          += dt * data.dual.coeff(idx2) * data.r[i];
       dimf_stack += 3;
     }
   }
@@ -118,26 +116,25 @@ void FrictionCone::augmentDualResidual(
 
 
 void FrictionCone::condenseSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
   computePrimalAndDualResidual(robot, data, s);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const int idx1 = 2*i;
       kkt_matrix.Qff().coeffRef(dimf_stack+2, dimf_stack+2)
-          += dtau * (data.dual.coeff(idx1) / data.slack.coeff(idx1));
+          += dt * (data.dual.coeff(idx1) / data.slack.coeff(idx1));
       kkt_residual.lf().coeffRef(dimf_stack+2) 
-          -= dtau * (data.dual.coeff(idx1)*data.residual.coeff(idx1)-data.duality.coeff(idx1)) 
+          -= dt * (data.dual.coeff(idx1)*data.residual.coeff(idx1)-data.duality.coeff(idx1)) 
               / data.slack.coeff(idx1);
       const int idx2 = 2*i+1;
       kkt_matrix.Qff().template block<3, 3>(dimf_stack, dimf_stack).noalias()
-          += dtau * (data.dual.coeff(idx2) / data.slack.coeff(idx2)) 
+          += dt * (data.dual.coeff(idx2) / data.slack.coeff(idx2)) 
                   * data.r[i] * data.r[i].transpose();
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
-          += dtau * (data.dual.coeff(idx2)*data.residual.coeff(idx2)-data.duality.coeff(idx2)) 
+          += dt * (data.dual.coeff(idx2)*data.residual.coeff(idx2)-data.duality.coeff(idx2)) 
               / data.slack.coeff(idx2)  * data.r[i];
       dimf_stack += 3;
     }

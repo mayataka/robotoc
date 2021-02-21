@@ -89,7 +89,7 @@ public:
 
 private:
   int N_;
-  double T_, dtau_;
+  double T_, dt_;
   UnRiccatiFactorizer factorizer_;
 
 };

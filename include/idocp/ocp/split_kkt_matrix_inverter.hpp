@@ -49,25 +49,25 @@ public:
   SplitKKTMatrixInverter& operator=(SplitKKTMatrixInverter&&) noexcept = default;
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void invert(const double dtau, const Eigen::MatrixBase<MatrixType1>& F, 
+  void invert(const double dt, const Eigen::MatrixBase<MatrixType1>& F, 
               const Eigen::MatrixBase<MatrixType2>& Q, 
               const Eigen::MatrixBase<MatrixType3>& KKT_mat_inv);
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
-  void multiplyF(const double dtau, const Eigen::MatrixBase<MatrixType1>& F, 
+  void multiplyF(const double dt, const Eigen::MatrixBase<MatrixType1>& F, 
                  const Eigen::MatrixBase<MatrixType2>& mat, 
                  const Eigen::MatrixBase<MatrixType3>& res);
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4>
-  void invert(const double dtau, const Eigen::MatrixBase<MatrixType1>& F, 
+  void invert(const double dt, const Eigen::MatrixBase<MatrixType1>& F, 
               const Eigen::MatrixBase<MatrixType2>& Pq, 
               const Eigen::MatrixBase<MatrixType3>& Q, 
               const Eigen::MatrixBase<MatrixType4>& KKT_mat_inv);
 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4>
-  void multiplyFPq(const double dtau, const Eigen::MatrixBase<MatrixType1>& F, 
+  void multiplyFPq(const double dt, const Eigen::MatrixBase<MatrixType1>& F, 
                    const Eigen::MatrixBase<MatrixType2>& Pq, 
                    const Eigen::MatrixBase<MatrixType3>& mat, 
                    const Eigen::MatrixBase<MatrixType4>& res);

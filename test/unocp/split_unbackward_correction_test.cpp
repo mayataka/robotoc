@@ -22,7 +22,7 @@ protected:
     std::random_device rnd;
     urdf = "../urdf/iiwa14/iiwa14.urdf";
     robot = Robot(urdf);
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
     dimv = robot.dimv();
     dimx = 2*robot.dimv();
     dimKKT = 5*robot.dimv();
@@ -43,7 +43,7 @@ protected:
 
   std::string urdf;
   Robot robot;
-  double dtau;
+  double dt;
   int dimv, dimx, dimKKT;
   SplitUnKKTMatrix unkkt_matrix;
   SplitUnKKTResidual unkkt_residual;
@@ -61,12 +61,12 @@ TEST_F(SplitUnBackwardCorrectionTest, test) {
   SplitSolution s_new = SplitSolution::Random(robot);
   SplitSolution s_new_ref = s_new;
   SplitDirection d_ref = d;
-  corr.coarseUpdate(aux_mat_next, dtau, unkkt_matrix, unkkt_residual, s, d, s_new);
+  corr.coarseUpdate(aux_mat_next, dt, unkkt_matrix, unkkt_residual, s, d, s_new);
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(5*dimv, 5*dimv));
   unkkt_matrix_ref.Qxx() += aux_mat_next;
   SplitUnKKTMatrixInverter inverter(robot);
-  inverter.invert(dtau, unkkt_matrix_ref.Q, KKT_mat_inv);
+  inverter.invert(dt, unkkt_matrix_ref.Q, KKT_mat_inv);
   d_ref.split_direction = KKT_mat_inv * unkkt_residual.KKT_residual;
   s_new_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_ref.gmm = s.gmm - d_ref.dgmm();
@@ -133,11 +133,11 @@ TEST_F(SplitUnBackwardCorrectionTest, testTerminal) {
   SplitSolution s_new = SplitSolution::Random(robot);
   SplitSolution s_new_ref = s_new;
   SplitDirection d_ref = d;
-  corr.coarseUpdate(dtau, unkkt_matrix, unkkt_residual, s, d, s_new);
+  corr.coarseUpdate(dt, unkkt_matrix, unkkt_residual, s, d, s_new);
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(5*dimv, 5*dimv));
   SplitUnKKTMatrixInverter inverter(robot);
-  inverter.invert(dtau, unkkt_matrix_ref.Q, KKT_mat_inv);
+  inverter.invert(dt, unkkt_matrix_ref.Q, KKT_mat_inv);
   d_ref.split_direction = KKT_mat_inv * unkkt_residual.KKT_residual;
   s_new_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_ref.gmm = s.gmm - d_ref.dgmm();

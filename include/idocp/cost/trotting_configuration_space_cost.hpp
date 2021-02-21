@@ -79,7 +79,7 @@ public:
   void set_dvi_weight(const Eigen::VectorXd& dvi_weight);
 
   double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
-                          const double dtau, const SplitSolution& s) const;
+                          const double dt, const SplitSolution& s) const;
 
   double computeTerminalCost(Robot& robot, CostFunctionData& data, 
                              const double t, const SplitSolution& s) const;
@@ -89,7 +89,7 @@ public:
                             const ImpulseSplitSolution& s) const;
 
   void computeStageCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                   const double t, const double dtau, 
+                                   const double t, const double dt, 
                                    const SplitSolution& s, 
                                    SplitKKTResidual& kkt_residual) const;
 
@@ -103,7 +103,7 @@ public:
                                      ImpulseSplitKKTResidual& kkt_residual) const;
 
   void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
-                               const double t, const double dtau, 
+                               const double t, const double dt, 
                                const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const;
 

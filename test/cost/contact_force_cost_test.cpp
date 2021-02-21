@@ -24,7 +24,7 @@ protected:
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -35,7 +35,7 @@ protected:
   void testImpulseCost(Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  double dtau, t;
+  double dt, t;
 };
 
 
@@ -64,9 +64,9 @@ void ContactForceCostTest::testStageCost(Robot& robot) const {
   kkt_res.setContactStatus(contact_status);
   kkt_mat.setContactStatus(contact_status);
   SplitSolution s = SplitSolution::Random(robot, contact_status);
-  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dtau, s), 0);
-  cost->computeStageCostDerivatives(robot, data, t, dtau, s, kkt_res);
-  cost->computeStageCostHessian(robot, data, t, dtau, s, kkt_mat);
+  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dt, s), 0);
+  cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
+  cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
   EXPECT_TRUE(kkt_res.lf().isZero());
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   contact_status.setRandom();
@@ -78,27 +78,27 @@ void ContactForceCostTest::testStageCost(Robot& robot) const {
                                     * (s.f[i].array()-f_ref[i].array())).sum();
     }
   }
-  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dtau, s), 0.5*dtau*l_ref);
+  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dt, s), 0.5*dt*l_ref);
   kkt_res.setContactStatus(contact_status);
   kkt_mat.setContactStatus(contact_status);
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
   SplitKKTResidual kkt_res_ref = kkt_res;
   SplitKKTMatrix kkt_mat_ref = kkt_mat;
-  cost->computeStageCostDerivatives(robot, data, t, dtau, s, kkt_res);
-  cost->computeStageCostHessian(robot, data, t, dtau, s, kkt_mat);
+  cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
+  cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
       kkt_res_ref.lf().segment<3>(dimf_stack).array()
-          += dtau * f_weight[i].array() * (s.f[i].array()-f_ref[i].array());
+          += dt * f_weight[i].array() * (s.f[i].array()-f_ref[i].array());
       dimf_stack += 3;
     }
   }
   dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (contact_status.isContactActive(i)) {
-      kkt_mat_ref.Qff().diagonal().segment<3>(dimf_stack) += dtau * f_weight[i];
+      kkt_mat_ref.Qff().diagonal().segment<3>(dimf_stack) += dt * f_weight[i];
       dimf_stack += 3;
     }
   }

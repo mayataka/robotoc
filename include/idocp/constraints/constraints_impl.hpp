@@ -51,7 +51,7 @@ void setSlackAndDual(
 
 void augmentDualResidual(
     const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const double dtau, 
+    std::vector<ConstraintComponentData>& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual);
 
 void augmentDualResidual(
@@ -61,7 +61,7 @@ void augmentDualResidual(
 
 void condenseSlackAndDual(
     const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const double dtau, 
+    std::vector<ConstraintComponentData>& data, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual);
 

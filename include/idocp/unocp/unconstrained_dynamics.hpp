@@ -30,7 +30,7 @@ public:
 
   UnconstrainedDynamics& operator=(UnconstrainedDynamics&&) noexcept = default;
 
-  void linearizeUnconstrainedDynamics(Robot& robot, const double dtau, 
+  void linearizeUnconstrainedDynamics(Robot& robot, const double dt, 
                                       const SplitSolution& s, 
                                       SplitKKTResidual& kkt_residual);
 
@@ -39,7 +39,7 @@ public:
                                      SplitUnKKTMatrix& unkkt_matrix, 
                                      SplitUnKKTResidual& unkkt_residual);
 
-  void computeCondensedDirection(const double dtau, 
+  void computeCondensedDirection(const double dt, 
                                  const SplitKKTMatrix& kkt_matrix, 
                                  const SplitKKTResidual& kkt_residual, 
                                  SplitDirection& d);
@@ -47,9 +47,9 @@ public:
   void computeUnconstrainedDynamicsResidual(Robot& robot, 
                                             const SplitSolution& s);
 
-  double l1NormUnconstrainedDynamicsResidual(const double dtau) const;
+  double l1NormUnconstrainedDynamicsResidual(const double dt) const;
 
-  double squaredNormUnconstrainedDynamicsResidual(const double dtau) const;
+  double squaredNormUnconstrainedDynamicsResidual(const double dt) const;
 
   template <typename MatrixType1, typename MatrixType2>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Ka,

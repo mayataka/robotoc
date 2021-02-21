@@ -84,7 +84,7 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
   BackwardCorrection corr(robot, N_ideal, max_num_impulse);
   auto corr_ref = corr;
   BackwardCorrectionSolver corr_solver(robot, N_ideal, max_num_impulse, nthreads);
-  // corr_solver.initAuxMat(parnmpc, robots, s, kkt_matrix);
+  corr_solver.initAuxMat(parnmpc, robots, s, kkt_matrix);
   corr_solver.coarseUpdate(parnmpc, corr, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   auto robot_ref = robot;
   auto s_new_ref = s;
@@ -93,8 +93,7 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
   const int dimx = 2*robot.dimv();
   parnmpc_ref.terminal.computeTerminalCostHessian(robot_ref, parnmpc_ref.discrete().t(N-1),
                                                   s[N-1], kkt_matrix_ref[N-1]);
-  // const Eigen::MatrixXd aux_mat = kkt_matrix_ref[N-1].Qxx();
-  const Eigen::MatrixXd aux_mat = Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv());
+  const Eigen::MatrixXd aux_mat = kkt_matrix_ref[N-1].Qxx();
   for (int i=0; i<N; ++i) {
     Eigen::VectorXd q_prev, v_prev;
     if (parnmpc_ref.discrete().isTimeStageAfterImpulse(i)) {
@@ -235,16 +234,6 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
         robot_ref, dt_lift, aux_mat, kkt_matrix_ref.lift[lift_index], 
         kkt_residual_ref.lift[lift_index], s.lift[lift_index], 
         s_new_ref.lift[lift_index]);
-  }
-  for (int i=0; i<N; ++i) {
-    std::cout << "i = " << i << std::endl;
-    if (parnmpc_ref.discrete().isTimeStageAfterImpulse(i)) {
-      std::cout << "isTimeStageAfterImpulse!" << std::endl;
-    }
-    if (parnmpc_ref.discrete().isTimeStageAfterLift(i)) {
-      std::cout << "is TimeStageAfterLift!" << std::endl;
-    }
-    EXPECT_TRUE(kkt_matrix[i].isApprox(kkt_matrix_ref[i]));
   }
   for (int i=0; i<parnmpc_ref.discrete().N_impulse(); ++i) {
     EXPECT_TRUE(kkt_matrix.impulse[i].isApprox(kkt_matrix_ref.impulse[i]));

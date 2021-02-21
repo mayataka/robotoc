@@ -27,7 +27,7 @@ protected:
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -38,7 +38,7 @@ protected:
   void testImpulseCost(Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  double dtau, t;
+  double dt, t;
 };
 
 
@@ -83,35 +83,35 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   else {
     q_diff = s.q - q_ref;
   }
-  const double cost_ref = 0.5 * dtau 
+  const double cost_ref = 0.5 * dt 
                            * ((q_weight.array()*q_diff.array()*q_diff.array()).sum()
                             + (v_weight.array()* (s.v-v_ref).array()*(s.v-v_ref).array()).sum()
                             + (a_weight.array()*s.a.array()*s.a.array()).sum()
                             + (u_weight.array()* (s.u-u_ref).array()*(s.u-u_ref).array()).sum());
-  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dtau, s), cost_ref);
-  cost->computeStageCostDerivatives(robot, data, t, dtau, s, kkt_res);
+  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dt, s), cost_ref);
+  cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
-    kkt_res_ref.lq() += dtau * Jq_diff.transpose() * q_weight.asDiagonal() * q_diff;
+    kkt_res_ref.lq() += dt * Jq_diff.transpose() * q_weight.asDiagonal() * q_diff;
   }
   else {
-    kkt_res_ref.lq() += dtau * q_weight.asDiagonal() * (s.q-q_ref);
+    kkt_res_ref.lq() += dt * q_weight.asDiagonal() * (s.q-q_ref);
   }
-  kkt_res_ref.lv() += dtau * v_weight.asDiagonal() * (s.v-v_ref);
-  kkt_res_ref.la += dtau * a_weight.asDiagonal() * s.a;
-  kkt_res_ref.lu() += dtau * u_weight.asDiagonal() * (s.u-u_ref);
+  kkt_res_ref.lv() += dt * v_weight.asDiagonal() * (s.v-v_ref);
+  kkt_res_ref.la += dt * a_weight.asDiagonal() * s.a;
+  kkt_res_ref.lu() += dt * u_weight.asDiagonal() * (s.u-u_ref);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  cost->computeStageCostHessian(robot, data, t, dtau, s, kkt_mat);
+  cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
   if (robot.hasFloatingBase()) {
-    kkt_mat_ref.Qqq() += dtau * Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
+    kkt_mat_ref.Qqq() += dt * Jq_diff.transpose() * q_weight.asDiagonal() * Jq_diff;
   }
   else {
-    kkt_mat_ref.Qqq() += dtau * q_weight.asDiagonal();
+    kkt_mat_ref.Qqq() += dt * q_weight.asDiagonal();
   }
-  kkt_mat_ref.Qvv() += dtau * v_weight.asDiagonal();
-  kkt_mat_ref.Qaa() += dtau * a_weight.asDiagonal();
-  kkt_mat_ref.Quu() += dtau * u_weight.asDiagonal();
+  kkt_mat_ref.Qvv() += dt * v_weight.asDiagonal();
+  kkt_mat_ref.Qaa() += dt * a_weight.asDiagonal();
+  kkt_mat_ref.Quu() += dt * u_weight.asDiagonal();
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
   EXPECT_TRUE(derivative_checker.checkFirstOrderStageCostDerivatives(cost));

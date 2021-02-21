@@ -73,13 +73,13 @@ inline void setSlackAndDual(
 
 inline void augmentDualResidual(
    const std::vector<ConstraintComponentBasePtr>& constraints,
-   Robot& robot, std::vector<ConstraintComponentData>& data, 
-   const double dtau, const SplitSolution& s, SplitKKTResidual& kkt_residual) {
+   Robot& robot, std::vector<ConstraintComponentData>& data, const double dt, 
+   const SplitSolution& s, SplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->augmentDualResidual(robot, data[i], dtau, s, kkt_residual);
+    constraints[i]->augmentDualResidual(robot, data[i], dt, s, kkt_residual);
   }
 }
 
@@ -99,14 +99,14 @@ inline void augmentDualResidual(
 
 inline void condenseSlackAndDual(
     const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const double dtau, 
+    std::vector<ConstraintComponentData>& data, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->condenseSlackAndDual(robot, data[i], dtau, s, kkt_matrix, 
+    constraints[i]->condenseSlackAndDual(robot, data[i], dt, s, kkt_matrix, 
                                          kkt_residual);
   }
 }

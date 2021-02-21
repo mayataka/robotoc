@@ -36,7 +36,7 @@ public:
 
   void linearizeContactDynamics(Robot& robot, 
                                 const ContactStatus& contact_status, 
-                                const double dtau, const SplitSolution& s, 
+                                const double dt, const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual);
 
   static void linearizeInverseDynamics(Robot& robot, 
@@ -51,7 +51,7 @@ public:
 
   void condenseContactDynamics(Robot& robot, 
                                const ContactStatus& contact_status, 
-                               const double dtau, SplitKKTMatrix& kkt_matrix, 
+                               const double dt, SplitKKTMatrix& kkt_matrix, 
                                SplitKKTResidual& kkt_residual,
                                const bool is_forward_euler);
 
@@ -59,7 +59,7 @@ public:
                                        SplitDirection& d) const;
 
   template <typename VectorType>
-  void computeCondensedDualDirection(const Robot& robot, const double dtau, 
+  void computeCondensedDualDirection(const Robot& robot, const double dt, 
                                      const SplitKKTMatrix& kkt_matrix, 
                                      const SplitKKTResidual& kkt_residual, 
                                      const Eigen::MatrixBase<VectorType>& dgmm,
@@ -72,9 +72,9 @@ public:
                                       const ContactStatus& contact_status,
                                       const SplitSolution& s);
 
-  double l1NormContactDynamicsResidual(const double dtau) const;
+  double l1NormContactDynamicsResidual(const double dt) const;
 
-  double squaredNormContactDynamicsResidual(const double dtau) const;
+  double squaredNormContactDynamicsResidual(const double dt) const;
 
 private:
   ContactDynamicsData data_;
@@ -82,7 +82,6 @@ private:
   double baumgarte_time_step_;
   int dimv_, dimu_, dim_passive_;
   static constexpr int kDimFloatingBase = 6;
-  static constexpr double kMindtau = std::numeric_limits<double>::epsilon();
 
   void setContactStatus(const ContactStatus& contact_status);
 

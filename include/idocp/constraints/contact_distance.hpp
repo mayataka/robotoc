@@ -46,11 +46,11 @@ public:
                        const SplitSolution& s) const override;
 
   void augmentDualResidual(Robot& robot, ConstraintComponentData& data, 
-                           const double dtau, const SplitSolution& s,
+                           const double dt, const SplitSolution& s,
                            SplitKKTResidual& kkt_residual) const override;
 
   void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data, 
-                            const double dtau, const SplitSolution& s,
+                            const double dt, const SplitSolution& s,
                             SplitKKTMatrix& kkt_matrix,
                             SplitKKTResidual& kkt_residual) const override;
 

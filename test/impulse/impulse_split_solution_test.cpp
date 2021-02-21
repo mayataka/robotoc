@@ -29,7 +29,7 @@ protected:
   static void TestIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
   static void TestIntegrate(const Robot& robot, const ImpulseStatus& impulse_status);
 
-  double dtau_;
+  double dt_;
   std::string fixed_base_urdf, floating_base_urdf;
 };
 

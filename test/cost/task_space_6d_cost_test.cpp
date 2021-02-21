@@ -23,7 +23,7 @@ protected:
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -34,7 +34,7 @@ protected:
   void testImpulseCost(Robot& robot, const int frame_id) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  double dtau, t;
+  double dt, t;
 };
 
 
@@ -70,17 +70,17 @@ void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   const pinocchio::SE3 placement = robot.framePlacement(frame_id);
   const pinocchio::SE3 diff_SE3 = ref_placement.inverse() * placement;
   const Eigen::VectorXd diff_6d = pinocchio::log6(diff_SE3).toVector();
-  const double l_ref = dtau * 0.5 * diff_6d.transpose() * q_weight.asDiagonal() * diff_6d;
-  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dtau, s), l_ref);
-  cost->computeStageCostDerivatives(robot, data, t, dtau, s, kkt_res);
-  cost->computeStageCostHessian(robot, data, t, dtau, s, kkt_mat);
+  const double l_ref = dt * 0.5 * diff_6d.transpose() * q_weight.asDiagonal() * diff_6d;
+  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dt, s), l_ref);
+  cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
+  cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
   Eigen::MatrixXd J_66 = Eigen::MatrixXd::Zero(6, 6);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   pinocchio::Jlog6(diff_SE3, J_66);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J66_J_6d = J_66 * J_6d;
-  kkt_res_ref.lq() += dtau * J66_J_6d.transpose() * q_weight.asDiagonal() * diff_6d;
-  kkt_mat_ref.Qqq() += dtau * J66_J_6d.transpose() * q_weight.asDiagonal() * J66_J_6d;
+  kkt_res_ref.lq() += dt * J66_J_6d.transpose() * q_weight.asDiagonal() * diff_6d;
+  kkt_mat_ref.Qqq() += dt * J66_J_6d.transpose() * q_weight.asDiagonal() * J66_J_6d;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);

@@ -1,7 +1,6 @@
 #include "idocp/constraints/contact_distance.hpp"
 
 #include <iostream>
-#include <cassert>
 
 
 namespace idocp {
@@ -70,28 +69,26 @@ void ContactDistance::setSlackAndDual(
 
 
 void ContactDistance::augmentDualResidual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
   for (int i=0; i<dimc_; ++i) {
     if (!s.isContactActive(i)) {
       robot.getFrameJacobian(contact_frames_[i], data.J[i]);
       kkt_residual.lq().noalias() 
-          -= dtau * data.dual.coeff(i) * data.J[i].row(2);
+          -= dt * data.dual.coeff(i) * data.J[i].row(2);
     }
   }
 }
 
 
 void ContactDistance::condenseSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
   for (int i=0; i<dimc_; ++i) {
     if (!s.isContactActive(i)) {
       kkt_matrix.Qqq().noalias()
-          += (dtau * data.dual.coeff(i) / data.slack.coeff(i))
+          += (dt * data.dual.coeff(i) / data.slack.coeff(i))
               * data.J[i].row(2).transpose() * data.J[i].row(2);
       data.residual.coeffRef(i) 
           = - robot.framePosition(contact_frames_[i]).coeff(2) 
@@ -99,7 +96,7 @@ void ContactDistance::condenseSlackAndDual(
       data.duality.coeffRef(i) = computeDuality(data.slack.coeff(i), 
                                                 data.dual.coeff(i));
       kkt_residual.lq().noalias()
-          -= (dtau * (data.dual.coeff(i)*data.residual.coeff(i)-data.duality.coeff(i)) 
+          -= (dt * (data.dual.coeff(i)*data.residual.coeff(i)-data.duality.coeff(i)) 
                   / data.slack.coeff(i))
               * data.J[i].row(2);
     }

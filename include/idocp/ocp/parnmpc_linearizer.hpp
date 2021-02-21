@@ -123,9 +123,6 @@ public:
   }
 
 private:
-
-  static constexpr double kMindtau = std::sqrt(std::numeric_limits<double>::epsilon());
-
   int max_num_impulse_, nthreads_;
   Eigen::VectorXd kkt_error_;
 

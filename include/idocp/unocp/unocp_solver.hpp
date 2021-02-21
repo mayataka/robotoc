@@ -182,7 +182,7 @@ private:
   UnDirection d_;
   UnRiccatiFactorization riccati_factorization_;
   int N_, nthreads_;
-  double T_, dtau_;
+  double T_, dt_;
   Eigen::VectorXd primal_step_size_, dual_step_size_, kkt_error_;
 
 };

@@ -38,7 +38,7 @@ inline SplitBackwardCorrection::~SplitBackwardCorrection() {
 
 
 inline void SplitBackwardCorrection::coarseUpdate(
-    const Robot& robot, const double dtau, SplitKKTMatrix& kkt_matrix, 
+    const Robot& robot, const double dt, SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, const SplitSolution& s, 
     SplitSolution& s_new) {
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
@@ -47,11 +47,11 @@ inline void SplitBackwardCorrection::coarseUpdate(
   dimKKT_ = 2*dimx_ + dimu_ + s.dimi();
   is_switching_constraint_valid_ = s.hasActiveImpulse();
   if (is_switching_constraint_valid_) {
-    kkt_mat_inverter_.invert(dtau, kkt_matrix.Jac(), kkt_matrix.Pq(), 
+    kkt_mat_inverter_.invert(dt, kkt_matrix.Jac(), kkt_matrix.Pq(), 
                              kkt_matrix.Qss(), data_.KKT_mat_inv());
   }
   else {
-    kkt_mat_inverter_.invert(dtau, kkt_matrix.Jac(), kkt_matrix.Qss(), 
+    kkt_mat_inverter_.invert(dt, kkt_matrix.Jac(), kkt_matrix.Qss(), 
                              data_.KKT_mat_inv());
   }
   data_.splitDirection().noalias() 
@@ -70,14 +70,14 @@ inline void SplitBackwardCorrection::coarseUpdate(
 
 template <typename MatrixType>
 inline void SplitBackwardCorrection::coarseUpdate(
-    const Robot& robot, const double dtau, 
+    const Robot& robot, const double dt, 
     const Eigen::MatrixBase<MatrixType>& aux_mat_next,
     SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const SplitSolution& s, SplitSolution& s_new) {
   assert(aux_mat_next.rows() == dimx_);
   assert(aux_mat_next.cols() == dimx_);
   kkt_matrix.Qxx().noalias() += aux_mat_next;
-  coarseUpdate(robot, dtau, kkt_matrix, kkt_residual, s, s_new);
+  coarseUpdate(robot, dt, kkt_matrix, kkt_residual, s, s_new);
 }
 
 

@@ -25,7 +25,7 @@ protected:
     dimv = robot.dimv();
     N = 20;
     T = 1;
-    dtau = T / N;
+    dt = T / N;
 
     unkkt_matrix = UnKKTMatrix(N+1, robot);
     unkkt_residual = UnKKTResidual(N+1, robot);
@@ -61,7 +61,7 @@ protected:
   std::string urdf;
   Robot robot;
   int N, dimv;
-  double T, dtau;
+  double T, dt;
   UnKKTMatrix unkkt_matrix;
   UnKKTResidual unkkt_residual;
   SplitKKTMatrix terminal_kkt_matrix;
@@ -91,7 +91,7 @@ TEST_F(UnRiccatiRecursionTest, test) {
   UnRiccatiFactorizer factorizer(N, SplitUnRiccatiFactorizer(robot));
   for (int i=N-1; i>=0; --i) {
     factorizer[i].backwardRiccatiRecursion(
-        riccati_factorization_ref[i+1], dtau, 
+        riccati_factorization_ref[i+1], dt, 
         unkkt_matrix_ref[i], unkkt_residual_ref[i], riccati_factorization_ref[i]);
   }
   for (int i=0; i<=N; ++i) {
@@ -105,7 +105,7 @@ TEST_F(UnRiccatiRecursionTest, test) {
   riccati_recursion.forwardRiccatiRecursion(unkkt_residual, d);
   for (int i=0; i<N; ++i) {
     factorizer[i].forwardRiccatiRecursion(unkkt_residual_ref[i], d_ref[i],  
-                                          dtau, d_ref[i+1]);
+                                          dt, d_ref[i+1]);
   }
   for (int i=0; i<=N; ++i) {
     EXPECT_TRUE(d[i].isApprox(d_ref[i]));

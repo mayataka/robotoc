@@ -38,9 +38,9 @@ inline SplitUnKKTMatrixInverter::~SplitUnKKTMatrixInverter() {
 
 template <typename MatrixType1, typename MatrixType2>
 inline void SplitUnKKTMatrixInverter::invert(
-    const double dtau, const Eigen::MatrixBase<MatrixType1>& Q,
+    const double dt, const Eigen::MatrixBase<MatrixType1>& Q,
     const Eigen::MatrixBase<MatrixType2>& KKT_matrix_inverse) {
-  assert(dtau >= 0);
+  assert(dt > 0);
   assert(KKT_matrix_inverse.rows() == dimKKT_);
   assert(KKT_matrix_inverse.cols() == dimKKT_);
   llt_Q_.compute(Q);
@@ -49,21 +49,21 @@ inline void SplitUnKKTMatrixInverter::invert(
       = llt_Q_.solve(Eigen::MatrixXd::Identity(dimQ_, dimQ_));
   FQinv_.topRows(dimv_) 
       = - KKT_matrix_inverse.block(3*dimv_, 2*dimv_, dimv_, 3*dimv_) 
-        + dtau * KKT_matrix_inverse.block(4*dimv_, 2*dimv_, dimv_, 3*dimv_);
+        + dt * KKT_matrix_inverse.block(4*dimv_, 2*dimv_, dimv_, 3*dimv_);
   FQinv_.bottomRows(dimv_) 
-      = dtau * KKT_matrix_inverse.block(2*dimv_, 2*dimv_, dimv_, 3*dimv_) 
+      = dt * KKT_matrix_inverse.block(2*dimv_, 2*dimv_, dimv_, 3*dimv_) 
         - KKT_matrix_inverse.block(4*dimv_, 2*dimv_, dimv_, 3*dimv_);
   S_.topLeftCorner(dimv_, dimv_) 
       = - FQinv_.block(0, dimv_, dimv_, dimv_) 
-        + dtau * FQinv_.block(0, 2*dimv_, dimv_, dimv_);
+        + dt * FQinv_.block(0, 2*dimv_, dimv_, dimv_);
   S_.topRightCorner(dimv_, dimv_) 
-      = dtau * FQinv_.block(0, 0, dimv_, dimv_) 
+      = dt * FQinv_.block(0, 0, dimv_, dimv_) 
         - FQinv_.block(0, 2*dimv_, dimv_, dimv_);
   S_.bottomLeftCorner(dimv_, dimv_) 
       = - FQinv_.block(dimv_, dimv_, dimv_, dimv_) 
-        + dtau * FQinv_.block(dimv_, 2*dimv_, dimv_, dimv_);
+        + dt * FQinv_.block(dimv_, 2*dimv_, dimv_, dimv_);
   S_.bottomRightCorner(dimv_, dimv_) 
-      = dtau * FQinv_.block(dimv_, 0, dimv_, dimv_) 
+      = dt * FQinv_.block(dimv_, 0, dimv_, dimv_) 
         - FQinv_.block(dimv_, 2*dimv_, dimv_, dimv_);
   llt_S_.compute(S_);
   assert(llt_S_.info() == Eigen::Success);

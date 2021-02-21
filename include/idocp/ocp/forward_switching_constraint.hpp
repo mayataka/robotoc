@@ -49,7 +49,7 @@ public:
 
   void linearizeSwitchingConstraint(Robot& robot, 
                                     const ImpulseStatus& impulse_status, 
-                                    const double dtau1, const double dtau2, 
+                                    const double dt1, const double dt2, 
                                     const SplitSolution& s, 
                                     SplitKKTMatrix& kkt_matrix, 
                                     SplitKKTResidual& kkt_residual, 
@@ -57,8 +57,7 @@ public:
 
   void computeSwitchingConstraintResidual(Robot& robot, 
                                           const ImpulseStatus& impulse_status, 
-                                          const double dtau1, 
-                                          const double dtau2, 
+                                          const double dt1, const double dt2, 
                                           const SplitSolution& s, 
                                           SplitKKTResidual& kkt_residual);
 

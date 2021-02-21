@@ -14,7 +14,7 @@ UnLineSearch::UnLineSearch(const Robot& robot, const double T, const int N,
     N_(N), 
     nthreads_(nthreads),
     T_(T),
-    dtau_(T/N),
+    dt_(T/N),
     step_size_reduction_rate_(step_size_reduction_rate), 
     min_step_size_(min_step_size),
     costs_(Eigen::VectorXd::Zero(N+1)), 
@@ -29,7 +29,7 @@ UnLineSearch::UnLineSearch()
     N_(0), 
     nthreads_(0),
     T_(0),
-    dtau_(0),
+    dt_(0),
     step_size_reduction_rate_(0), 
     min_step_size_(0),
     costs_(), 
@@ -69,11 +69,10 @@ void UnLineSearch::computeCostAndViolation(UnOCP& ocp,
   for (int i=0; i<=N_; ++i) {
     if (i < N_) {
       costs_.coeffRef(i) = ocp[i].stageCost(robots[omp_get_thread_num()], 
-                                            t+i*dtau_, dtau_, s[i], 
+                                            t+i*dt_, dt_, s[i], 
                                             primal_step_size);
       violations_.coeffRef(i) = ocp[i].constraintViolation(
-          robots[omp_get_thread_num()], t+i*dtau_, dtau_, s[i], 
-          s[i+1].q, s[i+1].v);
+          robots[omp_get_thread_num()], t+i*dt_, dt_, s[i], s[i+1].q, s[i+1].v);
     }
     else {
       costs_.coeffRef(i) = ocp.terminal.terminalCost(robots[omp_get_thread_num()], 
@@ -99,25 +98,25 @@ void UnLineSearch::computeCostAndViolation(UnParNMPC& parnmpc,
   for (int i=0; i<N_; ++i) {
     if (i == 0) {
       costs_.coeffRef(0) = parnmpc[0].stageCost(robots[omp_get_thread_num()], 
-                                                t+dtau_, dtau_, s[0], 
+                                                t+dt_, dt_, s[0], 
                                                 primal_step_size);
       violations_.coeffRef(0) = parnmpc[0].constraintViolation(
-          robots[omp_get_thread_num()], t+dtau_, dtau_, q, v, s[0]);
+          robots[omp_get_thread_num()], t+dt_, dt_, q, v, s[0]);
     }
     else if (i < N_-1) {
       costs_.coeffRef(i) = parnmpc[i].stageCost(robots[omp_get_thread_num()], 
-                                                t+(i+1)*dtau_, dtau_, s[i], 
+                                                t+(i+1)*dt_, dt_, s[i], 
                                                 primal_step_size);
       violations_.coeffRef(i) = parnmpc[i].constraintViolation(
-          robots[omp_get_thread_num()], t+(i+1)*dtau_, dtau_, 
+          robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, 
           s[i-1].q, s[i-1].v, s[i]);
     }
     else {
       costs_.coeffRef(i) = parnmpc.terminal.stageCost(
-          robots[omp_get_thread_num()], t+(i+1)*dtau_, dtau_, s[i], 
+          robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, s[i], 
           primal_step_size);
       violations_.coeffRef(i) = parnmpc.terminal.constraintViolation(
-          robots[omp_get_thread_num()], t+(i+1)*dtau_, dtau_, s[i-1].q, 
+          robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, s[i-1].q, 
           s[i-1].v, s[i]);
     }
   }

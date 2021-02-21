@@ -65,13 +65,13 @@ public:
   ///
   /// @brief Performs the backward Riccati recursion. 
   /// @param[in] riccati_next Riccati factorization at the next time stage. 
-  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[in] dt Time step between the current time stage and the next 
   /// @param[in, out] kkt_matrix KKT matrix at the current stage. 
   /// @param[in, out] kkt_residual KKT residual at the current stage. 
   /// @param[out] riccati Riccati factorization at the current stage. 
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
-                                const double dtau, SplitKKTMatrix& kkt_matrix, 
+                                const double dt, SplitKKTMatrix& kkt_matrix, 
                                 SplitKKTResidual& kkt_residual,  
                                 SplitRiccatiFactorization& riccati);
 
@@ -79,7 +79,7 @@ public:
   /// @brief Performs the backward Riccati recursion with the transformed 
   /// constraint. 
   /// @param[in] riccati_next Riccati factorization at the next time stage. 
-  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[in] dt Time step between the current time stage and the next 
   /// @param[in, out] kkt_matrix KKT matrix at the current impulse stage. 
   /// @param[in, out] kkt_residual KKT residual at the current impulse stage. 
   /// @param[in] jac The Jacobian of the transformed pure-state equality 
@@ -88,7 +88,7 @@ public:
   /// @param[out] riccati Riccati factorization at the current stage. 
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
-                                const double dtau, SplitKKTMatrix& kkt_matrix, 
+                                const double dt, SplitKKTMatrix& kkt_matrix, 
                                 SplitKKTResidual& kkt_residual,  
                                 const SplitStateConstraintJacobian& jac,
                                 SplitRiccatiFactorization& riccati,
@@ -99,13 +99,13 @@ public:
   /// @param[in] kkt_matrix KKT matrix at the current time stage. 
   /// @param[in] kkt_residual KKT residual at the current time stage. 
   /// @param[in] d Split direction at the current time stage. 
-  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[in] dt Time step between the current time stage and the next 
   /// @param[out] d_next Split direction at the next time stage. 
   ///
   template <typename SplitDirectionType>
   void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
                                const SplitKKTResidual& kkt_residual,
-                               const double dtau, SplitDirection& d, 
+                               const double dt, SplitDirection& d, 
                                SplitDirectionType& d_next) const;
 
   ///
@@ -144,10 +144,9 @@ public:
                             const Eigen::MatrixBase<MatrixType2>& Kv) const;
 
 private:
-  bool has_floating_base_, is_dtau_sufficiently_positive_;
+  bool has_floating_base_;
   int dimv_, dimu_;
   static constexpr int kDimFloatingBase = 6;
-  static constexpr double kMindtau = std::numeric_limits<double>::epsilon();
   Eigen::LLT<Eigen::MatrixXd> llt_, llt_s_;
   LQRStateFeedbackPolicy lqr_policy_;
   BackwardRiccatiRecursionFactorizer backward_recursion_;
