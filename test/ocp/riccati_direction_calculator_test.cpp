@@ -25,11 +25,11 @@ protected:
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N = 20;
-    max_num_impulse = 5;
+    max_N_impulse = 5;
     nthreads = 4;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dtau = T / N;
+    dt = T / N;
   }
 
   virtual void TearDown() {
@@ -42,24 +42,24 @@ protected:
   void test(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  int N, max_num_impulse, nthreads;
-  double T, t, dtau;
+  int N, max_N_impulse, nthreads;
+  double T, t, dt;
 };
 
 
 
 Solution RiccatiDirectionCalculatorTest::createSolution(const Robot& robot) const {
-  return testhelper::CreateSolution(robot, N, max_num_impulse);
+  return testhelper::CreateSolution(robot, N, max_N_impulse);
 }
 
 
 Solution RiccatiDirectionCalculatorTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
-  return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
+  return testhelper::CreateSolution(robot, contact_sequence, T, N, max_N_impulse, t);
 }
 
 
 ContactSequence RiccatiDirectionCalculatorTest::createContactSequence(const Robot& robot) const {
-  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dtau);
+  return testhelper::CreateContactSequence(robot, N, max_N_impulse, t, 3*dt);
 }
 
 
@@ -67,24 +67,24 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
-  KKTMatrix kkt_matrix(robot, N, max_num_impulse);
-  KKTResidual kkt_residual(robot, N, max_num_impulse);
-  StateConstraintJacobian jac(robot, max_num_impulse);
+  KKTMatrix kkt_matrix(robot, N, max_N_impulse);
+  KKTResidual kkt_residual(robot, N, max_N_impulse);
+  StateConstraintJacobian jac(robot, max_N_impulse);
   const auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
+  auto ocp = OCP(robot, cost, constraints, T, N, max_N_impulse);
   ocp.discretize(contact_sequence, t);
-  OCPLinearizer linearizer(N, max_num_impulse, nthreads);
+  OCPLinearizer linearizer(N, max_N_impulse, nthreads);
   std::vector<Robot> robots(nthreads, robot);
   linearizer.initConstraints(ocp, robots, contact_sequence, s);
   linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual, jac);
   RiccatiRecursion riccati_recursion(robot, N, nthreads);
-  RiccatiFactorization factorization(robot, N, max_num_impulse);
+  RiccatiFactorization factorization(robot, N, max_N_impulse);
   riccati_recursion.backwardRiccatiRecursion(ocp.discrete(), kkt_matrix, kkt_residual, jac, factorization);
-  const int num_impulse = ocp.discrete().numImpulseStages();
-  const int num_lift = ocp.discrete().numLiftStages();
-  Direction d = Direction(robot, N, max_num_impulse);
+  const int N_impulse = ocp.discrete().N_impulse();
+  const int N_lift = ocp.discrete().N_lift();
+  Direction d = Direction(robot, N, max_N_impulse);
   auto d_ref = d;
   RiccatiDirectionCalculator::computeInitialStateDirection(robots, q, v, kkt_matrix, s, d);
   if (robot.hasFloatingBase()) {
@@ -105,7 +105,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
   d_ref = d;
   auto ocp_ref = ocp;
-  RiccatiDirectionCalculator direction_calculator(N, max_num_impulse, nthreads);
+  RiccatiDirectionCalculator direction_calculator(N, max_N_impulse, nthreads);
   direction_calculator.computeNewtonDirection(ocp, robots, factorization, s, d);
   const double primal_step_size = direction_calculator.maxPrimalStepSize();
   const double dual_step_size = direction_calculator.maxDualStepSize();
@@ -116,14 +116,14 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   for (int i=0; i<N; ++i) {
     if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
       const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i);
-      const double dt = ocp.discrete().dtau(i);
-      const double dt_aux = ocp.discrete().dtau_aux(impulse_index);
-      ASSERT_TRUE(dt >= 0);
-      ASSERT_TRUE(dt <= dtau);
+      const double dti = ocp.discrete().dt(i);
+      const double dt_aux = ocp.discrete().dt_aux(impulse_index);
+      ASSERT_TRUE(dti >= 0);
+      ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_aux >= 0);
-      ASSERT_TRUE(dt_aux <= dtau);
+      ASSERT_TRUE(dt_aux <= dt);
       SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i]);
-      ocp_ref[i].computeCondensedPrimalDirection(robot_ref, dt, s[i], d_ref[i]);
+      ocp_ref[i].computeCondensedPrimalDirection(robot_ref, dti, s[i], d_ref[i]);
       if (ocp_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref[i].maxPrimalStepSize();
       if (ocp_ref[i].maxDualStepSize() < dual_step_size_ref) 
@@ -148,14 +148,14 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
     }
     else if (ocp.discrete().isTimeStageBeforeLift(i)) {
       const int lift_index = ocp.discrete().liftIndexAfterTimeStage(i);
-      const double dt = ocp.discrete().dtau(i);
-      const double dt_lift = ocp.discrete().dtau_lift(lift_index);
-      ASSERT_TRUE(dt >= 0);
-      ASSERT_TRUE(dt <= dtau);
+      const double dti = ocp.discrete().dt(i);
+      const double dt_lift = ocp.discrete().dt_lift(lift_index);
+      ASSERT_TRUE(dti >= 0);
+      ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_lift >= 0);
-      ASSERT_TRUE(dt_lift <= dtau);
+      ASSERT_TRUE(dt_lift <= dt);
       SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i]);
-      ocp_ref[i].computeCondensedPrimalDirection(robot_ref, dt, s[i], d_ref[i]);
+      ocp_ref[i].computeCondensedPrimalDirection(robot_ref, dti, s[i], d_ref[i]);
       if (ocp_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref[i].maxPrimalStepSize();
       if (ocp_ref[i].maxDualStepSize() < dual_step_size_ref) 
@@ -178,9 +178,9 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
       }
     }
     else {
-      const double dt = dtau;
+      const double dti = dt;
       SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d_ref[i]);
-      ocp_ref[i].computeCondensedPrimalDirection(robot_ref, dt, s[i], d_ref[i]);
+      ocp_ref[i].computeCondensedPrimalDirection(robot_ref, dti, s[i], d_ref[i]);
       if (ocp_ref[i].maxPrimalStepSize() < primal_step_size_ref) 
         primal_step_size_ref = ocp_ref[i].maxPrimalStepSize();
       if (ocp_ref[i].maxDualStepSize() < dual_step_size_ref) 
@@ -193,7 +193,8 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
       }
     }
   }
-  SplitRiccatiFactorizer::computeCostateDirection(factorization[N], d_ref[N]);
+  SplitRiccatiFactorizer::computeCostateDirection(factorization[ocp_ref.discrete().N()], 
+                                                  d_ref[ocp_ref.discrete().N()]);
   if (ocp_ref.terminal.maxPrimalStepSize() < primal_step_size_ref) 
     primal_step_size_ref = ocp_ref.terminal.maxPrimalStepSize();
   if (ocp_ref.terminal.maxDualStepSize() < dual_step_size_ref) 

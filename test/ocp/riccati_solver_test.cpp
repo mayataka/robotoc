@@ -31,7 +31,7 @@ protected:
     nthreads = 4;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dtau = T / N;
+    dt = T / N;
   }
 
   virtual void TearDown() {
@@ -45,7 +45,7 @@ protected:
 
   std::string fixed_base_urdf, floating_base_urdf;
   int N, max_num_impulse, nthreads;
-  double T, t, dtau;
+  double T, t, dt;
 };
 
 
@@ -60,7 +60,7 @@ Solution RiccatiSolverTest::createSolution(const Robot& robot, const ContactSequ
 
 
 ContactSequence RiccatiSolverTest::createContactSequence(const Robot& robot) const {
-  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dtau);
+  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dt);
 }
 
 

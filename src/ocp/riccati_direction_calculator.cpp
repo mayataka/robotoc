@@ -9,8 +9,7 @@ namespace idocp {
 
 RiccatiDirectionCalculator::RiccatiDirectionCalculator(
     const int N, const int max_num_impulse, const int nthreads) 
-  : N_(N),
-    nthreads_(nthreads),
+  : nthreads_(nthreads),
     N_all_(N+1),
     max_primal_step_sizes_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)), 
     max_dual_step_sizes_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)) {
@@ -33,8 +32,7 @@ RiccatiDirectionCalculator::RiccatiDirectionCalculator(
 
 
 RiccatiDirectionCalculator::RiccatiDirectionCalculator()
-  : N_(0),
-    nthreads_(0),
+  : nthreads_(0),
     N_all_(0),
     max_primal_step_sizes_(), 
     max_dual_step_sizes_() {
@@ -69,15 +67,16 @@ void RiccatiDirectionCalculator::computeNewtonDirection(
     const RiccatiFactorization& factorization, 
     const Solution& s, Direction& d) {
   assert(robots.size() == nthreads_);
-  const int N_impulse = ocp.discrete().numImpulseStages();
-  const int N_lift = ocp.discrete().numLiftStages();
-  N_all_ = N_ + 1 + 2 * N_impulse + N_lift;
+  const int N = ocp.discrete().N();
+  const int N_impulse = ocp.discrete().N_impulse();
+  const int N_lift = ocp.discrete().N_lift();
+  N_all_ = N + 1 + 2*N_impulse + N_lift;
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all_; ++i) {
-    if (i < N_) {
+    if (i < N) {
       SplitRiccatiFactorizer::computeCostateDirection(factorization[i], d[i]);
       ocp[i].computeCondensedPrimalDirection(robots[omp_get_thread_num()], 
-                                             ocp.discrete().dtau(i), s[i], d[i]);
+                                             ocp.discrete().dt(i), s[i], d[i]);
       if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i+1);
         d[i].setImpulseStatusByDimension(s[i].dimi());
@@ -87,13 +86,13 @@ void RiccatiDirectionCalculator::computeNewtonDirection(
       max_primal_step_sizes_.coeffRef(i) = ocp[i].maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(i) = ocp[i].maxDualStepSize();
     }
-    else if (i == N_) {
-      SplitRiccatiFactorizer::computeCostateDirection(factorization[N_], d[N_]);
-      max_primal_step_sizes_.coeffRef(N_) = ocp.terminal.maxPrimalStepSize();
-      max_dual_step_sizes_.coeffRef(N_) = ocp.terminal.maxDualStepSize();
+    else if (i == N) {
+      SplitRiccatiFactorizer::computeCostateDirection(factorization[N], d[N]);
+      max_primal_step_sizes_.coeffRef(N) = ocp.terminal.maxPrimalStepSize();
+      max_dual_step_sizes_.coeffRef(N) = ocp.terminal.maxDualStepSize();
     }
-    else if (i < N_ + 1 + N_impulse) {
-      const int impulse_index  = i - (N_+1);
+    else if (i < N + 1 + N_impulse) {
+      const int impulse_index  = i - (N+1);
       ImpulseSplitRiccatiFactorizer::computeCostateDirection(
           factorization.impulse[impulse_index], d.impulse[impulse_index]);
       ocp.impulse[impulse_index].computeCondensedPrimalDirection(
@@ -104,12 +103,12 @@ void RiccatiDirectionCalculator::computeNewtonDirection(
       max_dual_step_sizes_.coeffRef(i) 
           = ocp.impulse[impulse_index].maxDualStepSize();
     }
-    else if (i < N_ + 1 + 2*N_impulse) {
-      const int impulse_index  = i - (N_+1+N_impulse);
+    else if (i < N + 1 + 2*N_impulse) {
+      const int impulse_index  = i - (N+1+N_impulse);
       SplitRiccatiFactorizer::computeCostateDirection(
           factorization.aux[impulse_index], d.aux[impulse_index]);
       ocp.aux[impulse_index].computeCondensedPrimalDirection(
-          robots[omp_get_thread_num()], ocp.discrete().dtau_aux(impulse_index), 
+          robots[omp_get_thread_num()], ocp.discrete().dt_aux(impulse_index), 
           s.aux[impulse_index], d.aux[impulse_index]);
       max_primal_step_sizes_.coeffRef(i) 
           = ocp.aux[impulse_index].maxPrimalStepSize();
@@ -117,11 +116,11 @@ void RiccatiDirectionCalculator::computeNewtonDirection(
           = ocp.aux[impulse_index].maxDualStepSize();
     }
     else {
-      const int lift_index = i - (N_+1+2*N_impulse);
+      const int lift_index = i - (N+1+2*N_impulse);
       SplitRiccatiFactorizer::computeCostateDirection(
           factorization.lift[lift_index], d.lift[lift_index]);
       ocp.lift[lift_index].computeCondensedPrimalDirection(
-          robots[omp_get_thread_num()], ocp.discrete().dtau_lift(lift_index), 
+          robots[omp_get_thread_num()], ocp.discrete().dt_lift(lift_index), 
           s.lift[lift_index], d.lift[lift_index]);
       const int time_stage_after_lift 
           = ocp.discrete().timeStageAfterLift(lift_index);

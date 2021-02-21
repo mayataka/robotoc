@@ -33,7 +33,7 @@ protected:
     nthreads = 4;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dtau = T / N;
+    dt = T / N;
   }
 
   virtual void TearDown() {
@@ -46,7 +46,7 @@ protected:
   void test(const Robot& robot) const;
 
   int N, max_num_impulse, nthreads;
-  double T, t, dtau;
+  double T, t, dt;
   std::string fixed_base_urdf, floating_base_urdf;
   Robot fixed_base_robot, floating_base_robot;
 };
@@ -63,7 +63,7 @@ KKTResidual RiccatiRecursionTest::createKKTResidual(const Robot& robot, const Co
 
 
 ContactSequence RiccatiRecursionTest::createContactSequence(const Robot& robot) const {
-  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dtau);
+  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dt);
 }
 
 
@@ -92,19 +92,19 @@ void RiccatiRecursionTest::test(const Robot& robot) const {
   RiccatiFactorizer factorizer(robot, N, max_num_impulse);
   const auto ocp_discretizer = ocp.discrete();
   riccati_recursion.backwardRiccatiRecursion(ocp_discretizer, kkt_matrix, kkt_residual, jac, factorization);
-  factorization_ref[N].Pqq = kkt_matrix_ref[N].Qqq();
-  factorization_ref[N].Pvv = kkt_matrix_ref[N].Qvv();
-  factorization_ref[N].sq = - kkt_residual_ref[N].lq();
-  factorization_ref[N].sv = - kkt_residual_ref[N].lv();
+  factorization_ref[ocp_discretizer.N()].Pqq = kkt_matrix_ref[ocp_discretizer.N()].Qqq();
+  factorization_ref[ocp_discretizer.N()].Pvv = kkt_matrix_ref[ocp_discretizer.N()].Qvv();
+  factorization_ref[ocp_discretizer.N()].sq = - kkt_residual_ref[ocp_discretizer.N()].lq();
+  factorization_ref[ocp_discretizer.N()].sv = - kkt_residual_ref[ocp_discretizer.N()].lv();
   for (int i=N-1; i>=0; --i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
       const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
-      const double dt = ocp_discretizer.dtau(i);
-      const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
-      ASSERT_TRUE(dt >= 0);
-      ASSERT_TRUE(dt <= dtau);
+      const double dti = ocp_discretizer.dt(i);
+      const double dt_aux = ocp_discretizer.dt_aux(impulse_index);
+      ASSERT_TRUE(dti >= 0);
+      ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_aux >= 0);
-      ASSERT_TRUE(dt_aux <= dtau);
+      ASSERT_TRUE(dt_aux <= dt);
       factorizer.aux[impulse_index].backwardRiccatiRecursion(
           factorization_ref[i+1], dt_aux, kkt_matrix_ref.aux[impulse_index], 
           kkt_residual_ref.aux[impulse_index], factorization_ref.aux[impulse_index]);
@@ -112,46 +112,46 @@ void RiccatiRecursionTest::test(const Robot& robot) const {
           factorization_ref.aux[impulse_index], kkt_matrix_ref.impulse[impulse_index], 
           kkt_residual_ref.impulse[impulse_index], factorization_ref.impulse[impulse_index]);
       factorizer[i].backwardRiccatiRecursion(
-          factorization_ref.impulse[impulse_index], dt, kkt_matrix_ref[i], 
+          factorization_ref.impulse[impulse_index], dti, kkt_matrix_ref[i], 
           kkt_residual_ref[i], factorization_ref[i]);
     }
     else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
       const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
-      const double dt = ocp_discretizer.dtau(i);
-      const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
-      ASSERT_TRUE(dt >= 0);
-      ASSERT_TRUE(dt <= dtau);
+      const double dti = ocp_discretizer.dt(i);
+      const double dt_lift = ocp_discretizer.dt_lift(lift_index);
+      ASSERT_TRUE(dti >= 0);
+      ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_lift >= 0);
-      ASSERT_TRUE(dt_lift <= dtau);
+      ASSERT_TRUE(dt_lift <= dt);
       if (ocp_discretizer.isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i+1);
         factorizer.lift[lift_index].backwardRiccatiRecursion(
-            factorization_ref[i+1], ocp_discretizer.dtau_lift(lift_index), 
+            factorization_ref[i+1], ocp_discretizer.dt_lift(lift_index), 
             kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
             jac_ref[impulse_index], factorization_ref.lift[lift_index],
             factorization_ref.constraint[impulse_index]);
       }
       else {
         factorizer.lift[lift_index].backwardRiccatiRecursion(
-            factorization_ref[i+1], ocp_discretizer.dtau_lift(lift_index), 
+            factorization_ref[i+1], ocp_discretizer.dt_lift(lift_index), 
             kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
             factorization_ref.lift[lift_index]);
       }
       factorizer[i].backwardRiccatiRecursion(
-          factorization_ref.lift[lift_index], dt, kkt_matrix_ref[i], 
+          factorization_ref.lift[lift_index], dti, kkt_matrix_ref[i], 
           kkt_residual_ref[i], factorization_ref[i]);
     }
     else {
       if (ocp_discretizer.isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i+1);
         factorizer[i].backwardRiccatiRecursion(
-            factorization_ref[i+1], ocp_discretizer.dtau(i), kkt_matrix_ref[i], 
+            factorization_ref[i+1], ocp_discretizer.dt(i), kkt_matrix_ref[i], 
             kkt_residual_ref[i], jac_ref[impulse_index], factorization_ref[i], 
             factorization_ref.constraint[impulse_index]);
       }
       else {
         factorizer[i].backwardRiccatiRecursion(
-            factorization_ref[i+1], dtau, kkt_matrix_ref[i], 
+            factorization_ref[i+1], dt, kkt_matrix_ref[i], 
             kkt_residual_ref[i], factorization_ref[i]);
       }
     }
@@ -166,7 +166,7 @@ void RiccatiRecursionTest::test(const Robot& robot) const {
   EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
   Direction d(robot, N, max_num_impulse);
-  for (int i=0; i<=N; ++i) {
+  for (int i=0; i<=ocp_discretizer.N(); ++i) {
     d[i].dx().setRandom();
     d[i].du().setRandom();
   }
@@ -179,13 +179,13 @@ void RiccatiRecursionTest::test(const Robot& robot) const {
   }
   auto d_ref = d;
   riccati_recursion.forwardRiccatiRecursion(ocp_discretizer, kkt_matrix, kkt_residual, d);
-  for (int i=0; i<N; ++i) {
+  for (int i=0; i<ocp_discretizer.N(); ++i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
       const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
-      const double dt = ocp_discretizer.dtau(i);
-      const double dt_aux = ocp_discretizer.dtau_aux(impulse_index);
+      const double dti = ocp_discretizer.dt(i);
+      const double dt_aux = ocp_discretizer.dt_aux(impulse_index);
       factorizer[i].forwardRiccatiRecursion(
-          kkt_matrix_ref[i], kkt_residual_ref[i], dt, d_ref[i], d_ref.impulse[impulse_index]);
+          kkt_matrix_ref[i], kkt_residual_ref[i], dti, d_ref[i], d_ref.impulse[impulse_index]);
       factorizer.impulse[impulse_index].forwardRiccatiRecursion(
           kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index], 
           d_ref.impulse[impulse_index], d_ref.aux[impulse_index]);
@@ -195,18 +195,18 @@ void RiccatiRecursionTest::test(const Robot& robot) const {
     }
     else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
       const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
-      const double dt = ocp_discretizer.dtau(i);
-      const double dt_lift = ocp_discretizer.dtau_lift(lift_index);
+      const double dti = ocp_discretizer.dt(i);
+      const double dt_lift = ocp_discretizer.dt_lift(lift_index);
       factorizer[i].forwardRiccatiRecursion(
           kkt_matrix_ref[i], kkt_residual_ref[i], 
-          dt, d_ref[i], d_ref.lift[lift_index]);
+          dti, d_ref[i], d_ref.lift[lift_index]);
       factorizer.lift[lift_index].forwardRiccatiRecursion(
           kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
           dt_lift, d_ref.lift[lift_index], d_ref[i+1]);
     }
     else {
       factorizer[i].forwardRiccatiRecursion(kkt_matrix_ref[i], 
-                                            kkt_residual_ref[i], dtau, 
+                                            kkt_residual_ref[i], dt, 
                                             d_ref[i], d_ref[i+1]);
     }
   }

@@ -283,17 +283,17 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
 
 
 void OCPSolver::discretizeSolution() {
-  for (int i=0; i<ocp_.discrete().N(); ++i) {
+  for (int i=0; i<=ocp_.discrete().N(); ++i) {
     s_[i].setContactStatus(
         contact_sequence_.contactStatus(ocp_.discrete().contactPhase(i)));
   }
-  for (int i=0; i<ocp_.discrete().numImpulseStages(); ++i) {
+  for (int i=0; i<ocp_.discrete().N_impulse(); ++i) {
     s_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
     s_.aux[i].setContactStatus(
         contact_sequence_.contactStatus(
             ocp_.discrete().contactPhaseAfterImpulse(i)));
   }
-  for (int i=0; i<ocp_.discrete().numLiftStages(); ++i) {
+  for (int i=0; i<ocp_.discrete().N_lift(); ++i) {
     s_.lift[i].setContactStatus(
         contact_sequence_.contactStatus(
             ocp_.discrete().contactPhaseAfterLift(i)));

@@ -75,14 +75,18 @@ inline void ContactSequence::push_back(const DiscreteEvent& discrete_event,
       throw std::runtime_error(
           "discrete_event.preContactStatus() is not consistent with the last contact status!");
     }
-    if (numDiscreteEvents()+1 >= max_num_events_) {
+    if (numDiscreteEvents()+1 > max_num_events_) {
       throw std::runtime_error(
-          "Number of discrete events exceeds predefined max_num_events!");
+          "Number of discrete events=" + std::to_string(numDiscreteEvents()+1)  
+          + " exceeds predefined max_num_events=" 
+          + std::to_string(max_num_events_) + "!");
     }
     if (numImpulseEvents() > 0 || numLiftEvents() > 0) {
       if (event_time <= event_time_.back()) {
         throw std::runtime_error(
-            "event_time must be larger than the last event time!");
+            "event_time=" + std::to_string(event_time) 
+            + " must be larger than the last event time=" 
+            + std::to_string(event_time_.back()) + "!");
       }
     }
   }
@@ -171,19 +175,25 @@ inline void ContactSequence::updateImpulseTime(const int impulse_index,
     }
     if (impulse_index >= numImpulseEvents()) {
       throw std::runtime_error(
-          "impulse_index must be less than numImpulseEvents()!");
+          "impulse_index=" + std::to_string(impulse_index) 
+          + " must be less than numImpulseEvents()=" 
+          + std::to_string(numImpulseEvents()) + "!");
     }
     const int event_index = event_index_impulse_[impulse_index];
     if (event_index > 0) {
       if (event_time_[event_index-1] >= impulse_time) {
         throw std::runtime_error(
-            "impulse_time must be larger than event_time_[event_index-1]!");
+            "impulse_time=" + std::to_string(impulse_time) 
+            + " must be larger than event_time_[event_index-1]=" 
+            + std::to_string(event_time_[event_index-1]) + "!");
       }
     }
     else if (event_index+1 < numDiscreteEvents()) {
       if (event_time_[event_index+1] <= impulse_time) {
         throw std::runtime_error(
-            "impulse_time must be smaller than event_time_[event_index+1]!");
+            "impulse_time=" + std::to_string(impulse_time) 
+            + " must be larger than event_time_[event_index+1]=" 
+            + std::to_string(event_time_[event_index+1]) + "!");
       }
     }
   }
@@ -207,19 +217,26 @@ inline void ContactSequence::updateLiftTime(const int lift_index,
       throw std::runtime_error("lift_index must be non-negative!");
     }
     if (lift_index >= numLiftEvents()) {
-      throw std::runtime_error("lift_index must be less than numLiftEvents()!");
+      throw std::runtime_error(
+          "lift_index=" + std::to_string(lift_index) 
+          + " must be less than numLiftEvents()=" 
+          + std::to_string(numLiftEvents()) + "!");
     }
     const int event_index = event_index_lift_[lift_index];
     if (event_index > 0) {
       if (event_time_[event_index-1] >= lift_time) {
         throw std::runtime_error(
-            "lift_time must be larger than event_time_[event_index-1]!");
+            "lift_time=" + std::to_string(lift_time) 
+            + " must be larger than event_time_[event_index-1]=" 
+            + std::to_string(event_time_[event_index-1]) + "!");
       }
     }
     else if (event_index+1 < numDiscreteEvents()) {
       if (event_time_[event_index+1] <= lift_time) {
         throw std::runtime_error(
-            "lift_time must be smaller than event_time_[event_index+1]!");
+            "lift_time=" + std::to_string(lift_time) 
+            + " must be larger than event_time_[event_index+1]=" 
+            + std::to_string(event_time_[event_index+1]) + "!");
       }
     }
   }
@@ -238,7 +255,9 @@ inline void ContactSequence::setContactPoints(
   try {
     if (contact_phase >= numContactPhases()) {
       throw std::runtime_error(
-          "contact_phase must be smaller than numContactPhases()!");
+          "contact_phase=" + std::to_string(contact_phase) 
+          + " must be smaller than numContactPhases()" 
+          + std::to_string(numContactPhases()) + "!");
     }
   }
   catch(const std::exception& e) {

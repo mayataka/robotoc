@@ -46,6 +46,14 @@ public:
 
   int N() const;
 
+  int N_impulse() const;
+
+  int N_lift() const; 
+
+  int N_all() const;
+
+  int N_ideal() const;
+
   int numImpulseStages() const;
 
   int numLiftStages() const; 
@@ -97,15 +105,13 @@ public:
   double dtau_lift(const int lift_index) const;
 
 private:
-  double T_, sampling_period_;
-  int N_, max_events_, num_impulse_stages_, num_lift_stages_;
+  double T_;
+  int N_, N_ideal_, max_events_, num_impulse_stages_, num_lift_stages_;
   std::vector<int> contact_phase_index_from_time_stage_, 
                    impulse_index_before_time_stage_, 
                    lift_index_before_time_stage_, time_stage_after_impulse_, 
                    time_stage_after_lift_;
-                  //  time_stage_before_impulse_, time_stage_before_lift_;
   std::vector<bool> is_time_stage_after_impulse_, is_time_stage_after_lift_;
-  // std::vector<bool> is_time_stage_before_impulse_, is_time_stage_before_lift_;
   std::vector<double> t_, t_impulse_, t_lift_, dtau_, dtau_aux_, dtau_lift_;
 
   static constexpr double kMindtau

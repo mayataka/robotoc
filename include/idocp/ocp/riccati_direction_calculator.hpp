@@ -76,7 +76,7 @@ public:
   double maxDualStepSize() const;
 
 private:
-  int N_, nthreads_, N_all_;
+  int nthreads_, N_all_;
   Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 
 };

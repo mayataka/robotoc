@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <random>
+#include <chrono>
 
 namespace idocp {
 
@@ -191,7 +192,8 @@ ContactStatus::contactPoints() const {
 
 
 inline void ContactStatus::setRandom() {
-  std::mt19937 rand(static_cast<unsigned int>(time(nullptr)));
+  std::minstd_rand0 rand(
+      std::chrono::system_clock::now().time_since_epoch().count());
   for (int i=0; i<max_point_contacts_; ++i) {
     if (rand()%2 == 0) {
       activateContact(i);

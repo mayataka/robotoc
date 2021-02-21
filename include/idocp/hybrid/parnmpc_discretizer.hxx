@@ -13,6 +13,7 @@ inline ParNMPCDiscretizer::ParNMPCDiscretizer(const double T, const int N,
                                               const int max_events) 
   : T_(T),
     N_(N),
+    N_ideal_(N),
     max_events_(max_events),
     num_impulse_stages_(0),
     num_lift_stages_(0),
@@ -35,6 +36,7 @@ inline ParNMPCDiscretizer::ParNMPCDiscretizer(const double T, const int N,
 inline ParNMPCDiscretizer::ParNMPCDiscretizer()
   : T_(0),
     N_(0),
+    N_ideal_(0),
     max_events_(0),
     num_impulse_stages_(0),
     num_lift_stages_(0),
@@ -70,6 +72,26 @@ inline void ParNMPCDiscretizer::discretizeOCP(
 
 inline int ParNMPCDiscretizer::N() const {
   return N_;
+}
+
+
+inline int ParNMPCDiscretizer::N_impulse() const {
+  return num_impulse_stages_;
+}
+
+
+inline int ParNMPCDiscretizer::N_lift() const {
+  return num_lift_stages_;
+}
+
+
+inline int ParNMPCDiscretizer::N_all() const {
+  return N()+N_impulse()+N_lift();
+}
+
+
+inline int ParNMPCDiscretizer::N_ideal() const {
+  return N_ideal_;
 }
 
 

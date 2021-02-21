@@ -85,7 +85,6 @@ public:
                                Direction& d) const;
 
 private:
-  int N_;
   RiccatiFactorizer factorizer_;
 
 };
