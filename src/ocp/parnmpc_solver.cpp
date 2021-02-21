@@ -310,13 +310,13 @@ void ParNMPCSolver::discretizeSolution() {
     s_[i].setContactStatus(
         contact_sequence_.contactStatus(parnmpc_.discrete().contactPhase(i)));
   }
-  for (int i=0; i<parnmpc_.discrete().numImpulseStages(); ++i) {
+  for (int i=0; i<parnmpc_.discrete().N_impulse(); ++i) {
     s_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
     s_.aux[i].setContactStatus(
         contact_sequence_.contactStatus(
             parnmpc_.discrete().contactPhaseBeforeImpulse(i)));
   }
-  for (int i=0; i<parnmpc_.discrete().numLiftStages(); ++i) {
+  for (int i=0; i<parnmpc_.discrete().N_lift(); ++i) {
     s_.lift[i].setContactStatus(
         contact_sequence_.contactStatus(
             parnmpc_.discrete().contactPhaseBeforeLift(i)));

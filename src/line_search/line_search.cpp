@@ -206,9 +206,9 @@ void LineSearch::computeCostAndViolation(
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
   const int N = parnmpc.discrete().N();
-  const int N_impulse = parnmpc.discrete().numImpulseStages();
-  const int N_lift = parnmpc.discrete().numLiftStages();
-  const int N_all = N + 2 * N_impulse + N_lift;
+  const int N_impulse = parnmpc.discrete().N_impulse();
+  const int N_lift = parnmpc.discrete().N_lift();
+  const int N_all = N + 2*N_impulse + N_lift;
   clearCosts();
   clearViolations();
   #pragma omp parallel for num_threads(nthreads_)
@@ -216,23 +216,23 @@ void LineSearch::computeCostAndViolation(
     if (i < N-1) {
       costs_.coeffRef(i) = parnmpc[i].stageCost(robots[omp_get_thread_num()], 
                                                 parnmpc.discrete().t(i), 
-                                                parnmpc.discrete().dtau(i), 
+                                                parnmpc.discrete().dt(i), 
                                                 s[i], primal_step_size);
       violations_.coeffRef(i) = parnmpc[i].constraintViolation(
           robots[omp_get_thread_num()], 
           contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)),
-          parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
+          parnmpc.discrete().t(i), parnmpc.discrete().dt(i), 
           q_prev(parnmpc.discrete(), q, s, i), 
           v_prev(parnmpc.discrete(), v, s, i), s[i], kkt_residual_[i]);
     }
     else if (i == N-1) {
       costs_.coeffRef(i) = parnmpc.terminal.stageCost(
           robots[omp_get_thread_num()], parnmpc.discrete().t(i), 
-          parnmpc.discrete().dtau(i), s[i], primal_step_size);
+          parnmpc.discrete().dt(i), s[i], primal_step_size);
       violations_.coeffRef(i) = parnmpc.terminal.constraintViolation(
           robots[omp_get_thread_num()], 
           contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)),
-          parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
+          parnmpc.discrete().t(i), parnmpc.discrete().dt(i), 
           q_prev(parnmpc.discrete(), q, s, i), 
           v_prev(parnmpc.discrete(), v, s, i), s[i], kkt_residual_[i]);
     }
@@ -261,7 +261,7 @@ void LineSearch::computeCostAndViolation(
           = parnmpc.aux[impulse_index].stageCost(
               robots[omp_get_thread_num()], 
               parnmpc.discrete().t_impulse(impulse_index), 
-              parnmpc.discrete().dtau_aux(impulse_index), 
+              parnmpc.discrete().dt_aux(impulse_index), 
               s.aux[impulse_index], primal_step_size);
       if (time_stage_before_impulse >= 0) {
         violations_aux_.coeffRef(impulse_index) 
@@ -270,7 +270,7 @@ void LineSearch::computeCostAndViolation(
                 contact_sequence.contactStatus(
                     parnmpc.discrete().contactPhaseBeforeImpulse(impulse_index)), 
                 parnmpc.discrete().t_impulse(impulse_index), 
-                parnmpc.discrete().dtau_aux(impulse_index), 
+                parnmpc.discrete().dt_aux(impulse_index), 
                 s[time_stage_before_impulse].q, s[time_stage_before_impulse].v, 
                 s.aux[impulse_index], kkt_residual_.aux[impulse_index],
                 contact_sequence.impulseStatus(impulse_index));
@@ -283,7 +283,7 @@ void LineSearch::computeCostAndViolation(
                 contact_sequence.contactStatus(
                     parnmpc.discrete().contactPhaseBeforeImpulse(impulse_index)), 
                 parnmpc.discrete().t_impulse(impulse_index), 
-                parnmpc.discrete().dtau_aux(impulse_index), 
+                parnmpc.discrete().dt_aux(impulse_index), 
                 q, v, s.aux[impulse_index], kkt_residual_.aux[impulse_index]);
       }
     }
@@ -292,9 +292,8 @@ void LineSearch::computeCostAndViolation(
       const int time_stage_before_lift
           = parnmpc.discrete().timeStageBeforeLift(lift_index);
       costs_lift_.coeffRef(lift_index) = parnmpc.lift[lift_index].stageCost(
-          robots[omp_get_thread_num()], 
-          parnmpc.discrete().t_lift(lift_index), 
-          parnmpc.discrete().dtau_lift(lift_index), s.lift[lift_index], 
+          robots[omp_get_thread_num()], parnmpc.discrete().t_lift(lift_index), 
+          parnmpc.discrete().dt_lift(lift_index), s.lift[lift_index], 
           primal_step_size);
       if (time_stage_before_lift >= 0) {
         violations_lift_.coeffRef(lift_index) 
@@ -303,7 +302,7 @@ void LineSearch::computeCostAndViolation(
                 contact_sequence.contactStatus(
                     parnmpc.discrete().contactPhaseBeforeLift(lift_index)), 
                 parnmpc.discrete().t_lift(lift_index), 
-                parnmpc.discrete().dtau_lift(lift_index), 
+                parnmpc.discrete().dt_lift(lift_index), 
                 s[time_stage_before_lift].q, s[time_stage_before_lift].v, 
                 s.lift[lift_index], kkt_residual_.lift[lift_index]);
       }
@@ -315,7 +314,7 @@ void LineSearch::computeCostAndViolation(
                 contact_sequence.contactStatus(
                     parnmpc.discrete().contactPhaseBeforeLift(lift_index)), 
                 parnmpc.discrete().t_lift(lift_index), 
-                parnmpc.discrete().dtau_lift(lift_index), q, v, 
+                parnmpc.discrete().dt_lift(lift_index), q, v, 
                 s.lift[lift_index], kkt_residual_.lift[lift_index]);
       }
     }
@@ -369,9 +368,9 @@ void LineSearch::computeSolution(const ParNMPC& parnmpc,
   assert(step_size > 0);
   assert(step_size <= 1);
   const int N = parnmpc.discrete().N();
-  const int N_impulse = parnmpc.discrete().numImpulseStages();
-  const int N_lift = parnmpc.discrete().numLiftStages();
-  const int N_all = N + 2 * N_impulse + N_lift;
+  const int N_impulse = parnmpc.discrete().N_impulse();
+  const int N_lift = parnmpc.discrete().N_lift();
+  const int N_all = N + 2*N_impulse + N_lift;
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N) {

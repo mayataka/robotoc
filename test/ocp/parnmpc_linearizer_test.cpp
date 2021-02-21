@@ -22,12 +22,12 @@ protected:
     std::random_device rnd;
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
-    N = 20;
+    N_ideal = 20;
     max_num_impulse = 5;
     nthreads = 4;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dtau = T / N;
+    dt = T / N_ideal;
   }
 
   virtual void TearDown() {
@@ -41,8 +41,8 @@ protected:
   void testIntegrateSolution(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  int N, max_num_impulse, nthreads;
-  double T, t, dtau;
+  int N_ideal, max_num_impulse, nthreads;
+  double T, t, dt;
   std::shared_ptr<CostFunction> cost;
   std::shared_ptr<Constraints> constraints;
 };
@@ -50,40 +50,41 @@ protected:
 
 
 Solution ParNMPCLinearizerTest::createSolution(const Robot& robot) const {
-  return testhelper::CreateSolution(robot, N, max_num_impulse);
+  return testhelper::CreateSolution(robot, N_ideal, max_num_impulse);
 }
 
 
 Solution ParNMPCLinearizerTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
-  return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t, true);
+  return testhelper::CreateSolution(robot, contact_sequence, T, N_ideal, max_num_impulse, t, true);
 }
 
 
 ContactSequence ParNMPCLinearizerTest::createContactSequence(const Robot& robot) const {
-  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dtau);
+  return testhelper::CreateContactSequence(robot, N_ideal, max_num_impulse, t, 3*dt);
 }
 
 
 void ParNMPCLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  ParNMPCLinearizer linearizer(N, max_num_impulse, nthreads);
+  ParNMPCLinearizer linearizer(N_ideal, max_num_impulse, nthreads);
   const auto contact_sequence = createContactSequence(robot);
-  auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
-  auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
+  auto kkt_matrix = KKTMatrix(robot, N_ideal, max_num_impulse);
+  auto kkt_residual = KKTResidual(robot, N_ideal, max_num_impulse);
   const auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   std::vector<Robot> robots(nthreads, robot);
-  auto parnmpc = ParNMPC(robot, cost, constraints, T, N, max_num_impulse);
+  auto parnmpc = ParNMPC(robot, cost, constraints, T, N_ideal, max_num_impulse);
   parnmpc.discretize(contact_sequence, t);
   auto parnmpc_ref = parnmpc;
   linearizer.initConstraints(parnmpc, robots, contact_sequence, s);
   linearizer.computeKKTResidual(parnmpc, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   const double kkt_error = linearizer.KKTError(parnmpc, kkt_residual);
   auto robot_ref = robot;
+  const int N = parnmpc_ref.discrete().N();
   double kkt_error_ref = 0;
   for (int i=0; i<N; ++i) {
     Eigen::VectorXd q_prev, v_prev;
@@ -105,11 +106,11 @@ void ParNMPCLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
     }
     if (i == N-1) {
       const int contact_phase = parnmpc_ref.discrete().contactPhase(i);
-      const double dt = parnmpc_ref.discrete().dtau(i);
+      const double dti = parnmpc_ref.discrete().dt(i);
       parnmpc_ref.terminal.initConstraints(robot_ref, i+1, s[i]);
       parnmpc_ref.terminal.computeKKTResidual(
           robot_ref, contact_sequence.contactStatus(contact_phase), 
-          parnmpc_ref.discrete().t(i), dt, q_prev, v_prev,
+          parnmpc_ref.discrete().t(i), dti, q_prev, v_prev,
           s[i], kkt_matrix_ref[i], kkt_residual_ref[i]);
       kkt_error_ref += parnmpc_ref.terminal.squaredNormKKTResidual(kkt_residual_ref[i], dt);
     }
@@ -118,15 +119,15 @@ void ParNMPCLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
       const int impulse_index = parnmpc_ref.discrete().impulseIndexAfterTimeStage(i);
       const double ti = parnmpc_ref.discrete().t(i);
       const double t_impulse = parnmpc_ref.discrete().t_impulse(impulse_index);
-      const double dt = parnmpc_ref.discrete().dtau(i);
-      const double dt_aux = parnmpc_ref.discrete().dtau_aux(impulse_index);
-      ASSERT_TRUE(dt >= 0);
-      ASSERT_TRUE(dt <= dtau);
+      const double dti = parnmpc_ref.discrete().dt(i);
+      const double dt_aux = parnmpc_ref.discrete().dt_aux(impulse_index);
+      ASSERT_TRUE(dti >= 0);
+      ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_aux >= 0);
-      ASSERT_TRUE(dt_aux <= dtau);
+      ASSERT_TRUE(dt_aux <= dt);
       parnmpc_ref[i].initConstraints(robot_ref, i+1, s[i]);
       parnmpc_ref[i].computeKKTResidual(
-          robot_ref, contact_sequence.contactStatus(contact_phase), ti, dt, 
+          robot_ref, contact_sequence.contactStatus(contact_phase), ti, dti, 
           q_prev, v_prev, s[i], s.aux[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
       parnmpc_ref.aux[impulse_index].initConstraints(robot_ref, 0, s.aux[impulse_index]);
       parnmpc_ref.aux[impulse_index].computeKKTResidual(
@@ -140,7 +141,7 @@ void ParNMPCLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
           s.aux[impulse_index].q, s.aux[impulse_index].v, 
           s.impulse[impulse_index], s[i+1], 
           kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index]);
-      kkt_error_ref += parnmpc_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dt);
+      kkt_error_ref += parnmpc_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dti);
       kkt_error_ref += parnmpc_ref.aux[impulse_index].squaredNormKKTResidual(kkt_residual_ref.aux[impulse_index], dt_aux);
       kkt_error_ref += parnmpc_ref.impulse[impulse_index].squaredNormKKTResidual(kkt_residual_ref.impulse[impulse_index]);
     }
@@ -149,33 +150,33 @@ void ParNMPCLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
       const int lift_index = parnmpc_ref.discrete().liftIndexAfterTimeStage(i);
       const double ti = parnmpc_ref.discrete().t(i);
       const double t_lift = parnmpc_ref.discrete().t_lift(lift_index);
-      const double dt = parnmpc_ref.discrete().dtau(i);
-      const double dt_lift = parnmpc_ref.discrete().dtau_lift(lift_index);
-      ASSERT_TRUE(dt >= 0);
-      ASSERT_TRUE(dt <= dtau);
+      const double dti = parnmpc_ref.discrete().dt(i);
+      const double dt_lift = parnmpc_ref.discrete().dt_lift(lift_index);
+      ASSERT_TRUE(dti >= 0);
+      ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_lift >= 0);
-      ASSERT_TRUE(dt_lift <= dtau);
+      ASSERT_TRUE(dt_lift <= dt);
       parnmpc_ref[i].initConstraints(robot_ref, i+1, s[i]);
       parnmpc_ref[i].computeKKTResidual(
-          robot_ref, contact_sequence.contactStatus(contact_phase), ti, dt, 
+          robot_ref, contact_sequence.contactStatus(contact_phase), ti, dti, 
           q_prev, v_prev, s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
       parnmpc_ref.lift[lift_index].initConstraints(robot_ref, 0, s.lift[lift_index]);
       parnmpc_ref.lift[lift_index].computeKKTResidual(
           robot_ref, contact_sequence.contactStatus(contact_phase), t_lift, dt_lift, 
           s[i].q, s[i].v, s.lift[lift_index], s[i+1], 
           kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index]);
-      kkt_error_ref += parnmpc_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dt);
+      kkt_error_ref += parnmpc_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dti);
       kkt_error_ref += parnmpc_ref.lift[lift_index].squaredNormKKTResidual(kkt_residual_ref.lift[lift_index], dt_lift);
     }
     else {
       const int contact_phase = parnmpc_ref.discrete().contactPhase(i);
-      const double dt = parnmpc_ref.discrete().dtau(i);
+      const double dti = parnmpc_ref.discrete().dt(i);
       parnmpc_ref[i].initConstraints(robot_ref, i+1, s[i]);
       parnmpc_ref[i].computeKKTResidual(
           robot_ref, contact_sequence.contactStatus(contact_phase), 
-          parnmpc_ref.discrete().t(i), dt, q_prev, v_prev,
+          parnmpc_ref.discrete().t(i), dti, q_prev, v_prev,
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
-      kkt_error_ref += parnmpc_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dt);
+      kkt_error_ref += parnmpc_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dti);
     }
   }
   // Discrete events before s[0]. (between s[0] and q, v).
@@ -185,7 +186,7 @@ void ParNMPCLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
     ASSERT_EQ(contact_phase, 0);
     ASSERT_EQ(impulse_index, 0);
     const double t_impulse = parnmpc_ref.discrete().t_impulse(impulse_index);
-    const double dt_aux = parnmpc_ref.discrete().dtau_aux(impulse_index);
+    const double dt_aux = parnmpc_ref.discrete().dt_aux(impulse_index);
     parnmpc_ref.aux[impulse_index].initConstraints(robot_ref, 0, s.aux[impulse_index]);
     parnmpc_ref.aux[impulse_index].computeKKTResidual(
         robot_ref, contact_sequence.contactStatus(contact_phase), 
@@ -206,7 +207,7 @@ void ParNMPCLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
     ASSERT_EQ(contact_phase, 0);
     ASSERT_EQ(lift_index, 0);
     const double t_lift = parnmpc_ref.discrete().t_lift(lift_index);
-    const double dt_lift = parnmpc_ref.discrete().dtau_lift(lift_index);
+    const double dt_lift = parnmpc_ref.discrete().dt_lift(lift_index);
     parnmpc_ref.lift[lift_index].initConstraints(robot_ref, 0, s.lift[lift_index]);
     parnmpc_ref.lift[lift_index].computeKKTResidual(
         robot_ref, contact_sequence.contactStatus(contact_phase), t_lift, dt_lift, 
@@ -228,19 +229,19 @@ void ParNMPCLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
-  auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
-  auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
+  auto kkt_matrix = KKTMatrix(robot, N_ideal, max_num_impulse);
+  auto kkt_residual = KKTResidual(robot, N_ideal, max_num_impulse);
   auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   std::vector<Robot> robots(nthreads, robot);
-  auto parnmpc = ParNMPC(robot, cost, constraints, T, N, max_num_impulse);
+  auto parnmpc = ParNMPC(robot, cost, constraints, T, N_ideal, max_num_impulse);
   parnmpc.discretize(contact_sequence, t);
-  ParNMPCLinearizer linearizer(N, max_num_impulse, nthreads);
+  ParNMPCLinearizer linearizer(N_ideal, max_num_impulse, nthreads);
   linearizer.initConstraints(parnmpc, robots, contact_sequence, s);
-  Direction d(robot, N, max_num_impulse);
-  BackwardCorrection corr(robot, N, max_num_impulse);
-  BackwardCorrectionSolver corr_solver(robot, N, max_num_impulse, nthreads);
+  Direction d(robot, N_ideal, max_num_impulse);
+  BackwardCorrection corr(robot, N_ideal, max_num_impulse);
+  BackwardCorrectionSolver corr_solver(robot, N_ideal, max_num_impulse, nthreads);
   corr_solver.initAuxMat(parnmpc, robots, s, kkt_matrix);
   corr_solver.coarseUpdate(parnmpc, corr, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   corr_solver.backwardCorrectionSerial(parnmpc, corr, s);
@@ -260,6 +261,7 @@ void ParNMPCLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   linearizer.integrateSolution(parnmpc, robots, kkt_matrix, kkt_residual, 
                                primal_step_size, dual_step_size, d, s);
   auto robot_ref = robot;
+  const int N = parnmpc_ref.discrete().N();
   for (int i=0; i<N; ++i) {
     if (i == N-1) {
       parnmpc_ref.terminal.updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);

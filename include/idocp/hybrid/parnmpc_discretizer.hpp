@@ -54,10 +54,6 @@ public:
 
   int N_ideal() const;
 
-  int numImpulseStages() const;
-
-  int numLiftStages() const; 
-
   int contactPhase(const int time_stage) const;
 
   int impulseIndexBeforeTimeStage(const int time_stage) const;
@@ -78,11 +74,7 @@ public:
 
   int contactPhaseBeforeImpulse(const int impulse_index) const;
 
-  int contactPhaseAfterImpulse(const int impulse_index) const;
-
   int contactPhaseBeforeLift(const int lift_index) const;
-
-  int contactPhaseAfterLift(const int lift_index) const;
 
   bool isTimeStageBeforeImpulse(const int time_stage) const;
 
@@ -98,35 +90,35 @@ public:
 
   double t_lift(const int lift_index) const;
 
-  double dtau(const int time_stage) const;
+  double dt(const int time_stage) const;
 
-  double dtau_aux(const int impulse_index) const;
+  double dt_aux(const int impulse_index) const;
 
-  double dtau_lift(const int lift_index) const;
+  double dt_lift(const int lift_index) const;
+
+  bool isWellDefined() const;
 
 private:
-  double T_;
-  int N_, N_ideal_, max_events_, num_impulse_stages_, num_lift_stages_;
+  double T_, dt_ideal_, max_dt_;
+  int N_, N_ideal_, N_impulse_, N_lift_, max_events_;
   std::vector<int> contact_phase_index_from_time_stage_, 
                    impulse_index_before_time_stage_, 
                    lift_index_before_time_stage_, time_stage_after_impulse_, 
                    time_stage_after_lift_;
   std::vector<bool> is_time_stage_after_impulse_, is_time_stage_after_lift_;
-  std::vector<double> t_, t_impulse_, t_lift_, dtau_, dtau_aux_, dtau_lift_;
+  std::vector<double> t_, t_impulse_, t_lift_, dt_, dt_aux_, dt_lift_;
 
-  static constexpr double kMindtau
+  static constexpr double min_dt_ 
       = std::sqrt(std::numeric_limits<double>::epsilon());
 
-  void countImpulseEvents(const ContactSequence& contact_sequence, 
-                          const double t);
+  void countDiscreteEvents(const ContactSequence& contact_sequence, 
+                           const double t);
 
-  void countLiftEvents(const ContactSequence& contact_sequence, const double t);
+  void countTimeSteps(const double t);
 
-  void countContactPhase(const ContactSequence& contact_sequence);
+  void countTimeStages();
 
-  void countIsTimeStageBeforeEvents(const ContactSequence& contact_sequence);
-
-  void countTime(const ContactSequence& contact_sequence, const double t);
+  void countContactPhase();
 
 };
 
