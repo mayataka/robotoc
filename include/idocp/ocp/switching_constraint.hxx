@@ -27,13 +27,15 @@ inline void computeSwitchingConstraintResidual(
 
 inline double squaredNormSwitchingConstraintResidual(
     const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.P().squaredNorm();
+  if (kkt_residual.P().size() > 0) { return kkt_residual.P().squaredNorm(); }
+  else { return 0; }
 }
 
 
 inline double l1NormSwitchingConstraintResidual(
     const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.P().lpNorm<1>();
+  if (kkt_residual.P().size() > 0) { return kkt_residual.P().lpNorm<1>(); }
+  else { return 0; }
 }
 
 } // namespace switchingconstraint

@@ -284,19 +284,23 @@ void OCPSolver::discretizeSolution() {
   for (int i=0; i<=ocp_.discrete().N(); ++i) {
     s_[i].setContactStatus(
         contact_sequence_.contactStatus(ocp_.discrete().contactPhase(i)));
+    s_[i].set_f_stack();
     s_[i].setImpulseStatus();
   }
   for (int i=0; i<ocp_.discrete().N_lift(); ++i) {
     s_.lift[i].setContactStatus(
         contact_sequence_.contactStatus(
             ocp_.discrete().contactPhaseAfterLift(i)));
+    s_.lift[i].set_f_stack();
     s_.lift[i].setImpulseStatus();
   }
   for (int i=0; i<ocp_.discrete().N_impulse(); ++i) {
     s_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
+    s_.impulse[i].set_f_stack();
     s_.aux[i].setContactStatus(
         contact_sequence_.contactStatus(
             ocp_.discrete().contactPhaseAfterImpulse(i)));
+    s_.aux[i].set_f_stack();
     const int time_stage_before_impulse 
         = ocp_.discrete().timeStageBeforeImpulse(i);
     if (ocp_.discrete().isTimeStageAfterLift(time_stage_before_impulse)) {

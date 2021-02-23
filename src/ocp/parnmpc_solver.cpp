@@ -305,18 +305,22 @@ void ParNMPCSolver::discretizeSolution() {
   for (int i=0; i<parnmpc_.discrete().N(); ++i) {
     s_[i].setContactStatus(
         contact_sequence_.contactStatus(parnmpc_.discrete().contactPhase(i)));
+    s_[i].set_f_stack();
   }
   for (int i=0; i<parnmpc_.discrete().N_impulse(); ++i) {
     s_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
-    s_.aux[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
+    s_.impulse[i].set_f_stack();
     s_.aux[i].setContactStatus(
         contact_sequence_.contactStatus(
             parnmpc_.discrete().contactPhaseBeforeImpulse(i)));
+    s_.aux[i].set_f_stack();
+    s_.aux[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
   }
   for (int i=0; i<parnmpc_.discrete().N_lift(); ++i) {
     s_.lift[i].setContactStatus(
         contact_sequence_.contactStatus(
             parnmpc_.discrete().contactPhaseBeforeLift(i)));
+    s_.lift[i].set_f_stack();
   }
 }
 
