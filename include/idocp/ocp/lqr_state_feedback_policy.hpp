@@ -25,8 +25,6 @@ struct LQRStateFeedbackPolicy {
   Eigen::MatrixXd K;
   Eigen::VectorXd k;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 };
 
 } // namespace idocp 

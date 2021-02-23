@@ -9,8 +9,7 @@
 namespace idocp {
 
 inline DiscreteEvent::DiscreteEvent(const int max_point_contacts)
-  : eventTime(0),
-    pre_contact_status_(max_point_contacts),
+  : pre_contact_status_(max_point_contacts),
     post_contact_status_(max_point_contacts),
     impulse_status_(max_point_contacts),
     max_point_contacts_(max_point_contacts),
@@ -19,21 +18,9 @@ inline DiscreteEvent::DiscreteEvent(const int max_point_contacts)
 }
 
 
-inline DiscreteEvent::DiscreteEvent(const Robot& robot)
-  : eventTime(0),
-    pre_contact_status_(robot.maxPointContacts()),
-    post_contact_status_(robot.maxPointContacts()),
-    impulse_status_(robot.maxPointContacts()),
-    max_point_contacts_(robot.maxPointContacts()),
-    exist_impulse_(false), 
-    exist_lift_(false) {
-}
-
-
 inline DiscreteEvent::DiscreteEvent(const ContactStatus& pre_contact_status, 
                                     const ContactStatus& post_contact_status)
-  : eventTime(0),
-    pre_contact_status_(pre_contact_status.maxPointContacts()),
+  : pre_contact_status_(pre_contact_status.maxPointContacts()),
     post_contact_status_(pre_contact_status.maxPointContacts()),
     impulse_status_(pre_contact_status.maxPointContacts()),
     max_point_contacts_(pre_contact_status.maxPointContacts()),
@@ -57,11 +44,6 @@ inline DiscreteEvent::~DiscreteEvent() {
 }
 
 
-inline const ImpulseStatus& DiscreteEvent::impulseStatus() const {
-  return impulse_status_;
-}
-
-
 inline bool DiscreteEvent::existDiscreteEvent() const {
   return (exist_impulse_ || exist_lift_);
 }
@@ -74,6 +56,11 @@ inline bool DiscreteEvent::existImpulse() const {
 
 inline bool DiscreteEvent::existLift() const {
   return exist_lift_;
+}
+
+
+inline const ImpulseStatus& DiscreteEvent::impulseStatus() const {
+  return impulse_status_;
 }
 
 
@@ -111,9 +98,9 @@ inline void DiscreteEvent::setDiscreteEvent(
       }
     }
   }
-  pre_contact_status_.set(pre_contact_status);
-  post_contact_status_.set(post_contact_status);
   setContactPoints(post_contact_status.contactPoints());
+  pre_contact_status_ = pre_contact_status;
+  post_contact_status_ = post_contact_status;
 }
 
 
@@ -129,23 +116,6 @@ inline void DiscreteEvent::setContactPoints(
     const std::vector<Eigen::Vector3d>& contact_points) {
   assert(contact_points.size() == max_point_contacts_);
   impulse_status_.setContactPoints(contact_points);
-}
-
-
-inline void DiscreteEvent::setContactPoints(const Robot& robot) {
-  robot.setContactPoints(impulse_status_);
-}
-
-
-inline void DiscreteEvent::disableDiscreteEvent() {
-  for (int i=0; i<max_point_contacts_; ++i) {
-    impulse_status_.deactivateImpulse(i);
-    impulse_status_.setContactPoint(i, Eigen::Vector3d::Zero());
-  }
-  exist_impulse_ = false;
-  exist_lift_ = false;
-  eventTime = 0;
-  post_contact_status_.set(pre_contact_status_);
 }
 
 

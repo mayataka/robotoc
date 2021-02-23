@@ -11,7 +11,7 @@ UnBackwardCorrection::UnBackwardCorrection(const Robot& robot, const double T,
   : N_(N),
     nthreads_(nthreads),
     T_(T),
-    dtau_(T/N),
+    dt_(T/N),
     corrector_(N, SplitUnBackwardCorrection(robot)),
     s_new_(N, SplitSolution(robot)),
     aux_mat_(N, Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
@@ -39,7 +39,7 @@ UnBackwardCorrection::UnBackwardCorrection()
   : N_(0),
     nthreads_(0),
     T_(0),
-    dtau_(0),
+    dt_(0),
     corrector_(),
     s_new_(),
     aux_mat_(),
@@ -74,24 +74,23 @@ void UnBackwardCorrection::coarseUpdate(std::vector<Robot>& robots,
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     if (i == 0) {
-      parnmpc[i].linearizeOCP(robots[omp_get_thread_num()], t+dtau_, dtau_, 
-                              q, v, s[i], s[i+1], 
-                              unkkt_matrix[i], unkkt_residual[i]);
-      corrector_[i].coarseUpdate(aux_mat_[i+1], dtau_, unkkt_matrix[i], 
+      parnmpc[i].linearizeOCP(robots[omp_get_thread_num()], t+dt_, dt_, q, v, 
+                              s[i], s[i+1], unkkt_matrix[i], unkkt_residual[i]);
+      corrector_[i].coarseUpdate(aux_mat_[i+1], dt_, unkkt_matrix[i], 
                                  unkkt_residual[i], s[i], d[i], s_new_[i]);
     }
     else if (i < N_-1) {
-      parnmpc[i].linearizeOCP(robots[omp_get_thread_num()], t+(i+1)*dtau_, 
-                              dtau_, s[i-1].q, s[i-1].v, s[i], s[i+1], 
+      parnmpc[i].linearizeOCP(robots[omp_get_thread_num()], t+(i+1)*dt_, 
+                              dt_, s[i-1].q, s[i-1].v, s[i], s[i+1], 
                               unkkt_matrix[i], unkkt_residual[i]);
-      corrector_[i].coarseUpdate(aux_mat_[i+1], dtau_, unkkt_matrix[i], 
+      corrector_[i].coarseUpdate(aux_mat_[i+1], dt_, unkkt_matrix[i], 
                                  unkkt_residual[i], s[i], d[i], s_new_[i]);
     }
     else {
-      parnmpc.terminal.linearizeOCP(robots[omp_get_thread_num()], t+T_, dtau_, 
+      parnmpc.terminal.linearizeOCP(robots[omp_get_thread_num()], t+T_, dt_, 
                                     s[i-1].q, s[i-1].v, s[i], 
                                     unkkt_matrix[i], unkkt_residual[i]);
-      corrector_[i].coarseUpdate(dtau_, unkkt_matrix[i], unkkt_residual[i], 
+      corrector_[i].coarseUpdate(dt_, unkkt_matrix[i], unkkt_residual[i], 
                                  s[i], d[i], s_new_[i]);
     }
   }
@@ -121,13 +120,13 @@ void UnBackwardCorrection::backwardCorrection(std::vector<Robot>& robots,
     SplitUnBackwardCorrection::computeDirection(s[i], s_new_[i], d[i]);
     if (i < N_-1) {
       parnmpc[i].computeCondensedDirection(robots[omp_get_thread_num()],
-                                           dtau_, s[i], d[i]);
+                                           dt_, s[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc[i].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   = parnmpc[i].maxDualStepSize();
     }
     else {
       parnmpc.terminal.computeCondensedDirection(robots[omp_get_thread_num()],
-                                                 dtau_, s[i], d[i]);
+                                                 dt_, s[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc.terminal.maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   = parnmpc.terminal.maxDualStepSize();
     }

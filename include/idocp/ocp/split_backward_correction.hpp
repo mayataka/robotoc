@@ -64,25 +64,17 @@ public:
   ///
   SplitBackwardCorrection& operator=(SplitBackwardCorrection&&) noexcept = default;
 
-  void coarseUpdate(const Robot& robot, const double dtau, 
+  void coarseUpdate(const Robot& robot, const double dt, 
                     SplitKKTMatrix& kkt_matrix, 
                     const SplitKKTResidual& kkt_residual,
                     const SplitSolution& s, SplitSolution& s_new);
 
   template <typename MatrixType>
-  void coarseUpdate(const Robot& robot, const double dtau,
+  void coarseUpdate(const Robot& robot, const double dt,
                     const Eigen::MatrixBase<MatrixType>& aux_mat_next,
                     SplitKKTMatrix& kkt_matrix, 
                     const SplitKKTResidual& kkt_residual,
                     const SplitSolution& s, SplitSolution& s_new);
-
-  template <typename MatrixType>
-  void coarseUpdate(const Robot& robot, const double dtau,
-                    const Eigen::MatrixBase<MatrixType>& aux_mat_next,
-                    SplitKKTMatrix& kkt_matrix, 
-                    const SplitKKTResidual& kkt_residual,
-                    const SplitSolution& s, const ImpulseSplitSolution& s_next, 
-                    SplitSolution& s_new);
 
   const Eigen::Block<const Eigen::MatrixXd> auxMat() const;
 
@@ -101,16 +93,12 @@ public:
 
   void forwardCorrectionParallel(SplitSolution& s_new);
 
-  static void computeDirection(const Robot& robot, const SplitSolution& s, 
-                               const SplitSolution& s_new, 
-                               SplitDirection& d);
-
-  void computeDirection(const ImpulseSplitSolution& s,
-                        ImpulseSplitDirection& d) const;
+  void computeDirection(const Robot& robot, const SplitSolution& s, 
+                        const SplitSolution& s_new, SplitDirection& d) const;
 
 private:
   int dimv_, dimx_, dimu_, dimKKT_;
-  bool is_impulse_condition_valid_;
+  bool is_switching_constraint_valid_;
   SplitKKTMatrixInverter kkt_mat_inverter_;
   SplitBackwardCorrectionData data_;
   Eigen::VectorXd x_res_, dx_;

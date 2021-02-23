@@ -107,13 +107,39 @@ int main(int argc, char *argv[]) {
   constraints->push_back(friction_cone);
   constraints->push_back(impulse_friction_cone);
 
-  const double T = 6.05; // t_start + max_num_impulse_phase * t_period + 0.05;
-  const int N = 240;
-  const int max_num_impulse_phase = 11;
+  // 11 steps
+  // const double T = 6.05; // t_start + max_num_impulse_phase * t_period + 0.05;
+  // const int N = 120;
+  // const int max_num_impulse_phase = 11;
+
+  // // 10 steps
+  // const double T = 5.55; // t_start + max_num_impulse_phase * t_period + 0.05;
+  // const int N = 110;
+  // const int max_num_impulse_phase = 10;
+
+  // // 8 steps
+  // const double T = 4.55; // t_start + max_num_impulse_phase * t_period + 0.05;
+  // const int N = 90;
+  // const int max_num_impulse_phase = 8;
+
+  // // 6 steps
+  // const double T = 3.55; // t_start + max_num_impulse_phase * t_period + 0.05;
+  // const int N = 70;
+  // const int max_num_impulse_phase = 6;
+
+  // // 4 steps
+  // const double T = 2.55; // t_start + max_num_impulse_phase * t_period + 0.05;
+  // const int N = 50;
+  // const int max_num_impulse_phase = 4;
+
+  // 2 steps
+  const double T = 1.55; // t_start + max_num_impulse_phase * t_period + 0.05;
+  const int N = 30;
+  const int max_num_impulse_phase = 2;
 
   const int nthreads = 4;
   const double t = 0;
-  idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase, nthreads);
+  idocp::OCPSolver ocp_solver(robot, cost, constraints, T, N, max_num_impulse_phase+1, nthreads);
 
   robot.updateFrameKinematics(q_standing);
   std::vector<Eigen::Vector3d> contact_points(robot.maxPointContacts(), Eigen::Vector3d::Zero());
@@ -126,27 +152,27 @@ int main(int argc, char *argv[]) {
   auto contact_status_even = robot.createContactStatus();
   contact_status_even.activateContacts({1, 2});
   contact_status_even.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_even, t_start, t);
+  ocp_solver.pushBackContactStatus(contact_status_even, t_start);
 
   auto contact_status_odd = robot.createContactStatus();
   contact_points[0].coeffRef(0) += 0.5 * step_length;
   contact_points[3].coeffRef(0) += 0.5 * step_length;
   contact_status_odd.activateContacts({0, 3});
   contact_status_odd.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_odd, t_start+t_period, t);
+  ocp_solver.pushBackContactStatus(contact_status_odd, t_start+t_period);
 
   for (int i=2; i<=max_num_impulse_phase; ++i) {
     if (i % 2 == 0) {
       contact_points[1].coeffRef(0) += step_length;
       contact_points[2].coeffRef(0) += step_length;
       contact_status_even.setContactPoints(contact_points);
-      ocp_solver.pushBackContactStatus(contact_status_even, t_start+i*t_period, t);
+      ocp_solver.pushBackContactStatus(contact_status_even, t_start+i*t_period);
     }
     else {
       contact_points[0].coeffRef(0) += step_length;
       contact_points[3].coeffRef(0) += step_length;
       contact_status_odd.setContactPoints(contact_points);
-      ocp_solver.pushBackContactStatus(contact_status_odd, t_start+i*t_period, t);
+      ocp_solver.pushBackContactStatus(contact_status_odd, t_start+i*t_period);
     }
   }
 
@@ -163,6 +189,8 @@ int main(int argc, char *argv[]) {
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
+
+  ocp_solver.initConstraints(t);
 
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 25, line_search);

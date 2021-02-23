@@ -77,8 +77,6 @@ public:
     return (- f.coeff(2));
   }
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
-
 private:
   int dimc_;
   double mu_;

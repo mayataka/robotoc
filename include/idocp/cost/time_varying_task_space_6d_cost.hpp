@@ -81,7 +81,7 @@ public:
                         const Eigen::Vector3d& rotation_weight);
 
   double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
-                          const double dtau, 
+                          const double dt, 
                           const SplitSolution& s) const override;
 
   double computeTerminalCost(Robot& robot, CostFunctionData& data, 
@@ -93,7 +93,7 @@ public:
                             const ImpulseSplitSolution& s) const override;
 
   void computeStageCostDerivatives(
-      Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+      Robot& robot, CostFunctionData& data, const double t, const double dt, 
       const SplitSolution& s, SplitKKTResidual& kkt_residual) const override;
 
   void computeTerminalCostDerivatives(
@@ -106,7 +106,7 @@ public:
       ImpulseSplitKKTResidual& kkt_residual) const;
 
   void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
-                               const double t, const double dtau, 
+                               const double t, const double dt, 
                                const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const override;
 

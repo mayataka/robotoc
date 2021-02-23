@@ -10,7 +10,7 @@ UnRiccatiRecursion::UnRiccatiRecursion(const Robot& robot, const double T,
                                        const int N)
   : N_(N),
     T_(T),
-    dtau_(T/N),
+    dt_(T/N),
     factorizer_(N, SplitUnRiccatiFactorizer(robot)) {
   try {
     if (N <= 0) {
@@ -27,7 +27,7 @@ UnRiccatiRecursion::UnRiccatiRecursion(const Robot& robot, const double T,
 UnRiccatiRecursion::UnRiccatiRecursion()
   : N_(0),
     T_(0),
-    dtau_(0),
+    dt_(0),
     factorizer_() {
 }
 
@@ -51,17 +51,16 @@ void UnRiccatiRecursion::backwardRiccatiRecursion(
     UnKKTMatrix& unkkt_matrix, UnKKTResidual& unkkt_residual, 
     UnRiccatiFactorization& riccati_factorization) {
   for (int i=N_-1; i>=0; --i) {
-    factorizer_[i].backwardRiccatiRecursion(
-        riccati_factorization[i+1], dtau_, 
-        unkkt_matrix[i], unkkt_residual[i], riccati_factorization[i]);
+    factorizer_[i].backwardRiccatiRecursion(riccati_factorization[i+1], dt_, 
+                                            unkkt_matrix[i], unkkt_residual[i], 
+                                            riccati_factorization[i]);
   }
 }
 
 void UnRiccatiRecursion::forwardRiccatiRecursion( 
     const UnKKTResidual& unkkt_residual, UnDirection& d) const {
   for (int i=0; i<N_; ++i) {
-    factorizer_[i].forwardRiccatiRecursion(unkkt_residual[i], d[i], dtau_, 
-                                           d[i+1]);
+    factorizer_[i].forwardRiccatiRecursion(unkkt_residual[i], d[i], dt_, d[i+1]);
   }
 }
 

@@ -187,19 +187,6 @@ inline void PointContact::computeContactResidual(
 }
 
 
-template <typename VectorType1, typename VectorType2>
-inline void PointContact::computeContactResidual(
-    const pinocchio::Model& model, const pinocchio::Data& data, 
-    const double coeff,
-    const Eigen::MatrixBase<VectorType1>& contact_point,
-    const Eigen::MatrixBase<VectorType2>& contact_residual) const {
-  assert(contact_point.size() == 3);
-  assert(contact_residual.size() == 3);
-  (const_cast<Eigen::MatrixBase<VectorType2>&> (contact_residual))
-      = coeff * (data.oMf[contact_frame_id_].translation()-contact_point);
-}
-
-
 template <typename MatrixType>
 inline void PointContact::computeContactDerivative(
     const pinocchio::Model& model, pinocchio::Data& data, 
@@ -210,20 +197,6 @@ inline void PointContact::computeContactDerivative(
                               pinocchio::LOCAL, J_frame_);
   (const_cast<Eigen::MatrixBase<MatrixType>&> (contact_partial_dq)).noalias()
       = data.oMf[contact_frame_id_].rotation() * J_frame_.template topRows<3>();
-}
-
-
-template <typename MatrixType>
-inline void PointContact::computeContactDerivative(
-    const pinocchio::Model& model, pinocchio::Data& data, const double coeff,
-    const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
-  assert(contact_partial_dq.cols() == dimv_);
-  assert(contact_partial_dq.rows() == 3);
-  pinocchio::getFrameJacobian(model, data, contact_frame_id_,  
-                              pinocchio::LOCAL, J_frame_);
-  (const_cast<Eigen::MatrixBase<MatrixType>&> (contact_partial_dq)).noalias()
-      = coeff * data.oMf[contact_frame_id_].rotation() 
-              * J_frame_.template topRows<3>();
 }
 
 

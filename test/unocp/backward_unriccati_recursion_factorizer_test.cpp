@@ -22,7 +22,7 @@ protected:
     std::random_device rnd;
     urdf = "../urdf/iiwa14/iiwa14.urdf";
     robot = Robot(urdf);
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
     dimv = robot.dimv();
 
     unkkt_matrix = SplitUnKKTMatrix(robot);
@@ -40,7 +40,7 @@ protected:
 
   std::string urdf;
   Robot robot;
-  double dtau;
+  double dt;
   int dimv;
   SplitUnKKTMatrix unkkt_matrix;
   SplitUnKKTResidual unkkt_residual;
@@ -48,7 +48,7 @@ protected:
 
 
 SplitRiccatiFactorization BackwardUnRiccatiRecursionFactorizerTest::createRiccatiFactorization() const {
-  SplitRiccatiFactorization riccati(robot, false);
+  SplitRiccatiFactorization riccati(robot);
   Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
   riccati.Pqq = seed * seed.transpose();
   riccati.Pqv = Eigen::MatrixXd::Random(dimv, dimv);
@@ -66,15 +66,15 @@ TEST_F(BackwardUnRiccatiRecursionFactorizerTest, test) {
   const SplitUnKKTMatrix unkkt_matrix_ref = unkkt_matrix;
   const SplitUnKKTResidual unkkt_residual_ref = unkkt_residual;
   BackwardUnRiccatiRecursionFactorizer factorizer(robot);
-  factorizer.factorizeKKTMatrix(riccati_next, dtau, unkkt_matrix, unkkt_residual);
+  factorizer.factorizeKKTMatrix(riccati_next, dt, unkkt_matrix, unkkt_residual);
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
   A.topLeftCorner(dimv, dimv).setIdentity();
-  A.topRightCorner(dimv, dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
+  A.topRightCorner(dimv, dimv) = dt * Eigen::MatrixXd::Identity(dimv, dimv);
   A.bottomLeftCorner(dimv, dimv).setZero();
   A.bottomRightCorner(dimv, dimv).setIdentity();
   Eigen::MatrixXd B = Eigen::MatrixXd::Zero(2*dimv, dimv);
   B.topRows(dimv).setZero();
-  B.bottomRows(dimv) = dtau * Eigen::MatrixXd::Identity(dimv, dimv);
+  B.bottomRows(dimv) = dt * Eigen::MatrixXd::Identity(dimv, dimv);
   Eigen::MatrixXd P_next = Eigen::MatrixXd::Zero(2*dimv, 2*dimv);
   P_next.topLeftCorner(dimv, dimv) = riccati_next.Pqq;
   P_next.topRightCorner(dimv, dimv) = riccati_next.Pqv;
@@ -97,7 +97,7 @@ TEST_F(BackwardUnRiccatiRecursionFactorizerTest, test) {
   LQRStateFeedbackPolicy lqr_policy(robot);
   lqr_policy.K.setRandom();
   lqr_policy.k.setRandom();
-  factorizer.factorizeRiccatiFactorization(riccati_next, unkkt_matrix, unkkt_residual, lqr_policy, dtau, riccati);
+  factorizer.factorizeRiccatiFactorization(riccati_next, unkkt_matrix, unkkt_residual, lqr_policy, dt, riccati);
   const Eigen::MatrixXd P_ref = F_ref - lqr_policy.K.transpose() * G_ref * lqr_policy.K;
   const Eigen::VectorXd s_ref = A.transpose() * sx_next - A.transpose() * P_next * unkkt_residual_ref.Fx() - unkkt_residual_ref.lx() - H_ref * lqr_policy.k;
   EXPECT_TRUE(P_ref.topLeftCorner(dimv, dimv).isApprox(riccati.Pqq));

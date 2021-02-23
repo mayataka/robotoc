@@ -151,8 +151,7 @@ public:
   /// @param[in, out] s Split solution of this stage.
   ///
   void updatePrimal(const Robot& robot, const double primal_step_size, 
-                    const ImpulseSplitDirection& d, ImpulseSplitSolution& s,
-                    const bool is_position_constraint_valid);
+                    const ImpulseSplitDirection& d, ImpulseSplitSolution& s);
 
   ///
   /// @brief Updates dual variables of the inequality constraints.
@@ -218,8 +217,6 @@ public:
                              const Eigen::VectorXd& v_prev, 
                              const ImpulseSplitSolution& s, 
                              ImpulseSplitKKTResidual& kkt_residual);
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   std::shared_ptr<CostFunction> cost_;

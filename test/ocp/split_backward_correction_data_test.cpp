@@ -49,38 +49,36 @@ void SplitBackwardCorrectionDataTest::test(const Robot& robot) const {
   EXPECT_EQ(data.du().size(), dimu);
   EXPECT_EQ(data.dq().size(), dimv);
   EXPECT_EQ(data.dv().size(), dimv);
-  EXPECT_EQ(data.xi_stack().size(), 0);
   data.splitDirection().setRandom();
   EXPECT_TRUE(data.splitDirection().head(dimv).isApprox(data.dlmd()));
   EXPECT_TRUE(data.splitDirection().segment(dimv, dimv).isApprox(data.dgmm()));
   EXPECT_TRUE(data.splitDirection().segment(2*dimv, dimu).isApprox(data.du()));
   EXPECT_TRUE(data.splitDirection().segment(2*dimv+dimu, dimv).isApprox(data.dq()));
   EXPECT_TRUE(data.splitDirection().segment(3*dimv+dimu, dimv).isApprox(data.dv()));
-  int dimf = 3;
+  int dimi = 3;
   if (robot.hasFloatingBase()) {
     std::random_device rnd;
-    dimf += 3 * (rnd() % 4);
+    dimi += 3 * (rnd() % 4);
   }
-  data.setImpulseStatus(dimf);
-  EXPECT_EQ(data.KKT_mat_inv().rows(), dimKKT+dimf);
-  EXPECT_EQ(data.KKT_mat_inv().cols(), dimKKT+dimf);
+  data.setImpulseStatus(dimi);
+  EXPECT_EQ(data.KKT_mat_inv().rows(), dimKKT+dimi);
+  EXPECT_EQ(data.KKT_mat_inv().cols(), dimKKT+dimi);
   data.KKT_mat_inv().setRandom();
   EXPECT_TRUE(data.KKT_mat_inv().topLeftCorner(dimx, dimx).isApprox(data.auxMat()));
-  EXPECT_EQ(data.splitDirection().size(), dimKKT+dimf);
+  EXPECT_EQ(data.splitDirection().size(), dimKKT+dimi);
   EXPECT_EQ(data.dlmd().size(), dimv);
   EXPECT_EQ(data.dgmm().size(), dimv);
-  EXPECT_EQ(data.dxi().size(), dimf);
+  EXPECT_EQ(data.dxi().size(), dimi);
   EXPECT_EQ(data.du().size(), dimu);
   EXPECT_EQ(data.dq().size(), dimv);
   EXPECT_EQ(data.dv().size(), dimv);
-  EXPECT_EQ(data.xi_stack().size(), dimf);
   data.splitDirection().setRandom();
   EXPECT_TRUE(data.splitDirection().head(dimv).isApprox(data.dlmd()));
   EXPECT_TRUE(data.splitDirection().segment(dimv, dimv).isApprox(data.dgmm()));
-  EXPECT_TRUE(data.splitDirection().segment(2*dimv, dimf).isApprox(data.dxi()));
-  EXPECT_TRUE(data.splitDirection().segment(2*dimv+dimf, dimu).isApprox(data.du()));
-  EXPECT_TRUE(data.splitDirection().segment(2*dimv+dimf+dimu, dimv).isApprox(data.dq()));
-  EXPECT_TRUE(data.splitDirection().segment(3*dimv+dimf+dimu, dimv).isApprox(data.dv()));
+  EXPECT_TRUE(data.splitDirection().segment(2*dimv, dimi).isApprox(data.dxi()));
+  EXPECT_TRUE(data.splitDirection().segment(2*dimv+dimi, dimu).isApprox(data.du()));
+  EXPECT_TRUE(data.splitDirection().segment(2*dimv+dimi+dimu, dimv).isApprox(data.dq()));
+  EXPECT_TRUE(data.splitDirection().segment(3*dimv+dimi+dimu, dimv).isApprox(data.dv()));
 }
 
 

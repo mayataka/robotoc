@@ -73,8 +73,7 @@ public:
 
   double KKTError(const ParNMPC& parnmpc, const KKTResidual& kkt_residual);
 
-  void integrateSolution(ParNMPC& parnmpc, const BackwardCorrection& corr,
-                         const std::vector<Robot>& robots,
+  void integrateSolution(ParNMPC& parnmpc, const std::vector<Robot>& robots,
                          const KKTMatrix& kkt_matrix,
                          const KKTResidual& kkt_residual,
                          const double primal_step_size,
@@ -123,14 +122,8 @@ public:
     }
   }
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
-
-  static constexpr double kMindtau
-      = std::sqrt(std::numeric_limits<double>::epsilon());
-
-  int N_, max_num_impulse_, nthreads_;
+  int max_num_impulse_, nthreads_;
   Eigen::VectorXd kkt_error_;
 
 };

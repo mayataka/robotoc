@@ -39,7 +39,6 @@ void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus
   const int dimu = robot.dimu();
   const int dimf = impulse_status.dimf();
   EXPECT_EQ(matrix.dimf(), dimf);
-  EXPECT_EQ(matrix.dimKKT(), 4*dimv+2*dimf);
   EXPECT_EQ(matrix.Fqf().rows(), dimv);
   EXPECT_EQ(matrix.Fqf().cols(), dimf);
   EXPECT_EQ(matrix.Fqq().rows(), dimv);
@@ -56,8 +55,6 @@ void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus
   EXPECT_EQ(matrix.Fxf().cols(), dimf);
   EXPECT_EQ(matrix.Fxx().rows(), 2*dimv);
   EXPECT_EQ(matrix.Fxx().cols(), 2*dimv);
-  EXPECT_EQ(matrix.Pq().rows(), dimf);
-  EXPECT_EQ(matrix.Pq().cols(), dimv);
   EXPECT_EQ(matrix.Vq().rows(), dimf);
   EXPECT_EQ(matrix.Vq().cols(), dimv);
   EXPECT_EQ(matrix.Vv().rows(), dimf);
@@ -87,7 +84,6 @@ void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus
   const Eigen::MatrixXd Fvf = Eigen::MatrixXd::Random(dimv, dimf);
   const Eigen::MatrixXd Fvq = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Fvv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Pq = Eigen::MatrixXd::Random(dimf, dimv);
   const Eigen::MatrixXd Vq = Eigen::MatrixXd::Random(dimf, dimv);
   const Eigen::MatrixXd Vv = Eigen::MatrixXd::Random(dimf, dimv);
   const Eigen::MatrixXd Qdvdv = Eigen::MatrixXd::Random(dimv, dimv);
@@ -103,7 +99,6 @@ void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus
   matrix.Fvf() = Fvf;
   matrix.Fvq() = Fvq;
   matrix.Fvv() = Fvv;
-  matrix.Pq() = Pq;
   matrix.Vq() = Vq;
   matrix.Vv() = Vv;
   matrix.Qdvdv() = Qdvdv;
@@ -125,7 +120,6 @@ void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus
   EXPECT_TRUE(matrix.Fxx().topRightCorner(dimv, dimv).isApprox(Fqv));
   EXPECT_TRUE(matrix.Fxx().bottomLeftCorner(dimv, dimv).isApprox(Fvq));
   EXPECT_TRUE(matrix.Fxx().bottomRightCorner(dimv, dimv).isApprox(Fvv));
-  EXPECT_TRUE(matrix.Pq().isApprox(Pq));
   EXPECT_TRUE(matrix.Vq().isApprox(Vq));
   EXPECT_TRUE(matrix.Vv().isApprox(Vv));
   EXPECT_TRUE(matrix.Qdvdv().isApprox(Qdvdv));
@@ -155,7 +149,6 @@ void SplitImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseSt
   const Eigen::MatrixXd Fvf = Eigen::MatrixXd::Random(dimv, dimf);
   const Eigen::MatrixXd Fvq = Eigen::MatrixXd::Random(dimv, dimv);
   const Eigen::MatrixXd Fvv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Pq = Eigen::MatrixXd::Random(dimf, dimv);
   const Eigen::MatrixXd Vq = Eigen::MatrixXd::Random(dimf, dimv);
   const Eigen::MatrixXd Vv = Eigen::MatrixXd::Random(dimf, dimv);
   const Eigen::MatrixXd Qdvdv = Eigen::MatrixXd::Random(dimv, dimv);
@@ -171,7 +164,6 @@ void SplitImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseSt
   matrix.Fvf() = Fvf;
   matrix.Fvq() = Fvq;
   matrix.Fvv() = Fvv;
-  matrix.Pq() = Pq;
   matrix.Vq() = Vq;
   matrix.Vv() = Vv;
   matrix.Qdvdv() = Qdvdv;
@@ -192,10 +184,6 @@ void SplitImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseSt
     EXPECT_FALSE(matrix.isApprox(matrix_ref));
     matrix_ref = matrix;
     EXPECT_TRUE(matrix.isApprox(matrix_ref));
-    matrix_ref.Pq().setRandom();
-    EXPECT_FALSE(matrix.isApprox(matrix_ref));
-    matrix_ref = matrix;
-    EXPECT_TRUE(matrix.isApprox(matrix_ref));
     matrix_ref.Vq().setRandom();
     EXPECT_FALSE(matrix.isApprox(matrix_ref));
     matrix_ref = matrix;
@@ -207,7 +195,6 @@ void SplitImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseSt
   }
   else {
     matrix_ref.Fxf().setRandom();
-    matrix_ref.Pq().setRandom();
     matrix_ref.Vq().setRandom();
     matrix_ref.Vv().setRandom();
     EXPECT_TRUE(matrix.isApprox(matrix_ref));
@@ -238,12 +225,10 @@ void SplitImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseSt
 TEST_F(SplitImpulseKKTMatrixTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
-  std::random_device rnd;
-  ImpulseStatus impulse_status(contact_frames.size());
-  impulse_status.setImpulseStatus({false});
+  auto impulse_status = robot.createImpulseStatus();
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
-  impulse_status.setImpulseStatus({true});
+  impulse_status.activateImpulse(0);
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
 }
@@ -252,17 +237,13 @@ TEST_F(SplitImpulseKKTMatrixTest, fixedBase) {
 TEST_F(SplitImpulseKKTMatrixTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
-  std::vector<bool> is_impulse_active = {false, false, false, false};
-  ImpulseStatus impulse_status(contact_frames.size());
-  impulse_status.setImpulseStatus(is_impulse_active);
+  auto impulse_status = robot.createImpulseStatus();
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
-  is_impulse_active.clear();
-  std::random_device rnd;
-  for (const auto frame : contact_frames) {
-    is_impulse_active.push_back(rnd()%2==0);
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
   }
-  impulse_status.setImpulseStatus(is_impulse_active);
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
 }

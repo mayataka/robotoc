@@ -22,7 +22,7 @@ protected:
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     barrier = 1.0e-04;
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -36,7 +36,7 @@ protected:
   void testCondenseSlackAndDual(Robot& robot) const;
   void testComputeSlackAndDualDirection(Robot& robot) const;
 
-  double barrier, dtau;
+  double barrier, dt;
   std::string fixed_base_urdf, floating_base_urdf;
 };
 
@@ -82,8 +82,8 @@ void JointPositionUpperLimitTest::testAugmentDualResidual(Robot& robot) const {
   SplitKKTResidual kkt_res(robot);
   kkt_res.lq().setRandom();
   SplitKKTResidual kkt_res_ref = kkt_res;
-  limit.augmentDualResidual(robot, data, dtau, s, kkt_res);
-  kkt_res_ref.lq().tail(dimc) += dtau * data_ref.dual;
+  limit.augmentDualResidual(robot, data, dt, s, kkt_res);
+  kkt_res_ref.lq().tail(dimc) += dt * data_ref.dual;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
 }
 
@@ -118,14 +118,14 @@ void JointPositionUpperLimitTest::testCondenseSlackAndDual(Robot& robot) const {
   kkt_res.lq().setRandom();
   SplitKKTMatrix kkt_mat_ref = kkt_mat;
   SplitKKTResidual kkt_res_ref = kkt_res;
-  limit.condenseSlackAndDual(robot, data, dtau, s, kkt_mat, kkt_res);
+  limit.condenseSlackAndDual(robot, data, dt, s, kkt_mat, kkt_res);
   data_ref.residual = s.q.tail(dimc) - qmax + data_ref.slack;
   pdipm::ComputeDuality(barrier, data_ref);
   kkt_res_ref.lq().tail(dimc).array() 
-      += dtau * (data_ref.dual.array()*data_ref.residual.array()-data_ref.duality.array()) 
+      += dt * (data_ref.dual.array()*data_ref.residual.array()-data_ref.duality.array()) 
                / data_ref.slack.array();
   kkt_mat_ref.Qqq().diagonal().tail(dimc).array() 
-      += dtau * data_ref.dual.array() / data_ref.slack.array();
+      += dt * data_ref.dual.array() / data_ref.slack.array();
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
 }

@@ -45,6 +45,7 @@ protected:
 
   void testConstructorAndSetter(const std::string& path_to_urdf, const std::vector<int>& contact_frames) const;
   void testIntegrateConfiguration(const std::string& path_to_urdf, pinocchio::Model& model) const;
+  void testIntegrateConfigurationDerivatives(const std::string& path_to_urdf, pinocchio::Model& model) const;
   void testSubtractConfiguration(const std::string& path_to_urdf, pinocchio::Model& model) const;
   void testSubtractConfigurationDerivatives(const std::string& path_to_urdf, pinocchio::Model& model) const;
   void testFrameKinematicsGetters(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data, const int frame_id) const;
@@ -158,6 +159,28 @@ void RobotTest::testIntegrateConfiguration(const std::string& path_to_urdf, pino
 }
 
 
+void RobotTest::testIntegrateConfigurationDerivatives(const std::string& path_to_urdf, pinocchio::Model& model) const {
+  Robot robot(path_to_urdf);
+  const Eigen::VectorXd q = pinocchio::randomConfiguration(
+      model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
+  Eigen::MatrixXd dIntdq     = Eigen::MatrixXd::Zero(model.nv, model.nv);
+  Eigen::MatrixXd dIntdv     = Eigen::MatrixXd::Zero(model.nv, model.nv);
+  Eigen::MatrixXd dIntdq_ref = Eigen::MatrixXd::Zero(model.nv, model.nv);
+  Eigen::MatrixXd dIntdv_ref = Eigen::MatrixXd::Zero(model.nv, model.nv);
+  robot.dIntegratedConfiguration(q, v, dIntdq);
+  robot.dIntegratedVelocity(q, v, dIntdv);
+  pinocchio::dIntegrate(model, q, v, dIntdq_ref, pinocchio::ARG0);
+  pinocchio::dIntegrate(model, q, v, dIntdv_ref, pinocchio::ARG1);
+  EXPECT_TRUE(dIntdq.isApprox(dIntdq_ref));
+  EXPECT_TRUE(dIntdv.isApprox(dIntdv_ref));
+  std::cout << "dIntdq" << std::endl;
+  std::cout << dIntdq << std::endl;
+  std::cout << "dIntdv" << std::endl;
+  std::cout << dIntdv << std::endl;
+}
+
+
 void RobotTest::testSubtractConfiguration(const std::string& path_to_urdf, pinocchio::Model& model) const {
   Robot robot(path_to_urdf);
   const Eigen::VectorXd q_plus = pinocchio::randomConfiguration(
@@ -243,17 +266,8 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf, pinocchio::Model&
   ASSERT_EQ(robot.dimv(), model.nv);
   Eigen::VectorXd residual = Eigen::VectorXd::Zero(robot.max_dimf());
   Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(robot.max_dimf());
-  std::vector<bool> is_contacts_active;
-  std::random_device rnd;
-  for (const auto frame : frames) {
-    is_contacts_active.push_back(rnd()%2==0);
-  }
-  ContactStatus contact_status = robot.createContactStatus();
-  EXPECT_EQ(contact_status.maxPointContacts(), frames.size());
-  contact_status.setContactStatus(is_contacts_active);
-  for (int i=0; i<frames.size(); ++i) {
-    contact_status.setContactPoint(i, Eigen::Vector3d::Random());
-  }
+  auto contact_status = robot.createContactStatus();
+  contact_status.setRandom();
   const double time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -310,14 +324,8 @@ void RobotTest::testImpulseVelocity(const std::string& path_to_urdf, pinocchio::
   Robot robot(path_to_urdf, frames);
   Eigen::VectorXd residual = Eigen::VectorXd::Zero(robot.max_dimf());
   Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(robot.max_dimf());
-  std::vector<bool> is_impulse_active;
-  std::random_device rnd;
-  for (const auto frame : frames) {
-    is_impulse_active.push_back(rnd()%2==0);
-  }
-  ImpulseStatus impulse_status = robot.createImpulseStatus();
-  EXPECT_EQ(impulse_status.maxPointContacts(), frames.size());
-  impulse_status.setImpulseStatus(is_impulse_active);
+  auto impulse_status = robot.createImpulseStatus();
+  impulse_status.setRandom();
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
@@ -365,14 +373,8 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
   Robot robot(path_to_urdf, frames);
   Eigen::VectorXd residual = Eigen::VectorXd::Zero(robot.max_dimf());
   Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(robot.max_dimf());
-  std::vector<bool> is_impulse_active;
-  std::random_device rnd;
-  for (const auto frame : frames) {
-    is_impulse_active.push_back(rnd()%2==0);
-  }
-  ImpulseStatus impulse_status = robot.createImpulseStatus();
-  EXPECT_EQ(impulse_status.maxPointContacts(), frames.size());
-  impulse_status.setImpulseStatus(is_impulse_active);
+  auto impulse_status = robot.createImpulseStatus();
+  impulse_status.setRandom();
   for (int i=0; i<frames.size(); ++i) {
     impulse_status.setContactPoint(i, Eigen::Vector3d::Random());
   }
@@ -380,7 +382,7 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
   robot.updateKinematics(q, v);
-  robot.computeImpulseConditionResidual(impulse_status, impulse_status.contactPoints(), residual.head(impulse_status.dimf()));
+  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(), residual.head(impulse_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
@@ -404,7 +406,7 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
     }
   }
   Eigen::MatrixXd contact_partial_q = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
-  robot.computeImpulseConditionDerivative(impulse_status, contact_partial_q.topRows(impulse_status.dimf()));
+  robot.computeContactDerivative(impulse_status, contact_partial_q.topRows(impulse_status.dimf()));
   EXPECT_TRUE(contact_partial_q.isApprox(contact_partial_q_ref));
 }
 
@@ -449,15 +451,11 @@ void RobotTest::testRNEA(const std::string& path_to_urdf, pinocchio::Model& mode
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   const Eigen::VectorXd a = Eigen::VectorXd::Random(model.nv);
   std::vector<Eigen::Vector3d> f;
-  std::vector<bool> is_contacts_active;
-  std::random_device rnd;
   for (const auto frame : frames) {
-    is_contacts_active.push_back(rnd()%2==0);
     f.push_back(Eigen::Vector3d::Random());
   }
-  ContactStatus contact_status = robot.createContactStatus();
-  EXPECT_EQ(contact_status.maxPointContacts(), frames.size());
-  contact_status.setContactStatus(is_contacts_active);
+  auto contact_status = robot.createContactStatus();
+  contact_status.setRandom();
   robot.setContactForces(contact_status, f);
   Eigen::VectorXd tau = Eigen::VectorXd::Zero(model.nv);
   robot.RNEA(q, v, a, tau);
@@ -498,15 +496,11 @@ void RobotTest::testRNEAImpulse(const std::string& path_to_urdf, pinocchio::Mode
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd dv = Eigen::VectorXd::Random(model.nv);
   std::vector<Eigen::Vector3d> f;
-  std::vector<bool> is_impulse_active;
-  std::random_device rnd;
+  auto impulse_status = robot.createImpulseStatus();
+  impulse_status.setRandom();
   for (const auto frame : frames) {
-    is_impulse_active.push_back(rnd()%2==0);
     f.push_back(Eigen::Vector3d::Random());
   }
-  ImpulseStatus impulse_status = robot.createImpulseStatus();
-  EXPECT_EQ(impulse_status.maxPointContacts(), frames.size());
-  impulse_status.setImpulseStatus(is_impulse_active);
   robot.setImpulseForces(impulse_status, f);
   Eigen::VectorXd impulse_res = Eigen::VectorXd::Zero(model.nv);
   robot.RNEAImpulse(q, dv, impulse_res);
@@ -545,14 +539,8 @@ void RobotTest::testMJtJinv(const std::string& path_to_urdf, pinocchio::Model& m
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   const Eigen::VectorXd a = Eigen::VectorXd::Random(model.nv);
-  std::vector<bool> is_contacts_active;
-  std::random_device rnd;
-  for (int i=0; i<frames.size(); ++i) {
-    is_contacts_active.push_back(rnd()%2 == 0);
-  }
-  ContactStatus contact_status = robot.createContactStatus();
-  EXPECT_EQ(contact_status.maxPointContacts(), frames.size());
-  contact_status.setContactStatus(is_contacts_active);
+  auto contact_status = robot.createContactStatus();
+  contact_status.setRandom();
   const int dimf = contact_status.dimf();
   Eigen::MatrixXd dRNEA_dq = Eigen::MatrixXd::Zero(model.nv, model.nv);
   Eigen::MatrixXd dRNEA_dv = Eigen::MatrixXd::Zero(model.nv, model.nv);

@@ -151,21 +151,22 @@ inline void Constraints::setSlackAndDual(Robot& robot, ConstraintsData& data,
 
 
 inline void Constraints::augmentDualResidual(
-    Robot& robot, ConstraintsData& data, const double dtau, 
+    Robot& robot, ConstraintsData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  assert(dt > 0);
   if (data.isPositionLevelValid()) {
     constraintsimpl::augmentDualResidual(position_level_constraints_, robot, 
-                                         data.position_level_data, dtau, s, 
+                                         data.position_level_data, dt, s, 
                                          kkt_residual);
   }
   if (data.isVelocityLevelValid()) {
     constraintsimpl::augmentDualResidual(velocity_level_constraints_, robot, 
-                                         data.velocity_level_data, dtau, s, 
+                                         data.velocity_level_data, dt, s, 
                                          kkt_residual);
   }
   if (data.isAccelerationLevelValid()) {
     constraintsimpl::augmentDualResidual(acceleration_level_constraints_, robot, 
-                                         data.acceleration_level_data, dtau, s, 
+                                         data.acceleration_level_data, dt, s, 
                                          kkt_residual);
   }
 }
@@ -183,22 +184,22 @@ inline void Constraints::augmentDualResidual(
 
 
 inline void Constraints::condenseSlackAndDual(
-    Robot& robot, ConstraintsData& data, const double dtau, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) const {
+    Robot& robot, ConstraintsData& data, const double dt, const SplitSolution& s, 
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
+  assert(dt > 0);
   if (data.isPositionLevelValid()) {
     constraintsimpl::condenseSlackAndDual(position_level_constraints_, robot,
-                                          data.position_level_data, dtau, s, 
+                                          data.position_level_data, dt, s, 
                                           kkt_matrix, kkt_residual);
   }
   if (data.isVelocityLevelValid()) {
     constraintsimpl::condenseSlackAndDual(velocity_level_constraints_, robot,
-                                          data.velocity_level_data, dtau, s, 
+                                          data.velocity_level_data, dt, s, 
                                           kkt_matrix, kkt_residual);
   }
   if (data.isAccelerationLevelValid()) {
     constraintsimpl::condenseSlackAndDual(acceleration_level_constraints_, robot,
-                                          data.acceleration_level_data, dtau, s, 
+                                          data.acceleration_level_data, dt, s, 
                                           kkt_matrix, kkt_residual);
   }
 }

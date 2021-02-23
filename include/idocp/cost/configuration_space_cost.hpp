@@ -54,8 +54,6 @@ public:
 
   void set_u_weight(const Eigen::VectorXd& u_weight);
 
-  void set_u_passive_weight(const Vector6d& u_passive_weight);
-
   void set_qf_weight(const Eigen::VectorXd& qf_weight);
 
   void set_vf_weight(const Eigen::VectorXd& vf_weight);
@@ -67,17 +65,16 @@ public:
   void set_dvi_weight(const Eigen::VectorXd& dvi_weight);
 
   double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
-                          const double dtau, const SplitSolution& s) const;
+                          const double dt, const SplitSolution& s) const;
 
   double computeTerminalCost(Robot& robot, CostFunctionData& data, 
                              const double t, const SplitSolution& s) const;
 
   double computeImpulseCost(Robot& robot, CostFunctionData& data, 
-                            const double t, 
-                            const ImpulseSplitSolution& s) const;
+                            const double t, const ImpulseSplitSolution& s) const;
 
   void computeStageCostDerivatives(Robot& robot, CostFunctionData& data, 
-                                   const double t, const double dtau, 
+                                   const double t, const double dt, 
                                    const SplitSolution& s, 
                                    SplitKKTResidual& kkt_residual) const;
 
@@ -91,7 +88,7 @@ public:
                                      ImpulseSplitKKTResidual& kkt_residual) const;
 
   void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
-                               const double t, const double dtau, 
+                               const double t, const double dt, 
                                const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const;
 
@@ -103,14 +100,11 @@ public:
                                  const double t, const ImpulseSplitSolution& s, 
                                  ImpulseSplitKKTMatrix& kkt_matrix) const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   int dimq_, dimv_, dimu_;
   Eigen::VectorXd q_ref_, v_ref_, u_ref_, q_weight_, v_weight_, a_weight_, 
                   u_weight_, qf_weight_, vf_weight_, qi_weight_, vi_weight_, 
                   dvi_weight_;
-  Vector6d u_passive_weight_;
 };
 
 } // namespace idocp

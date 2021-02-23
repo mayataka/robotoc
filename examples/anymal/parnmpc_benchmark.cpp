@@ -117,6 +117,7 @@ int main () {
   f_init << 0, 0, 0.25*robot.totalWeight();
   parnmpc_solver.setSolution("f", f_init);
   parnmpc_solver.initBackwardCorrection(t);
+  parnmpc_solver.initConstraints(t);
 
   idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 20, false);
   idocp::ocpbenchmarker::CPUTime(parnmpc_solver, t, q, v, 5000, false);

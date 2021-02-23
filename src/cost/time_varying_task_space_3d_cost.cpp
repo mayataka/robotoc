@@ -61,13 +61,13 @@ void TimeVaryingTaskSpace3DCost::set_qi_3d_weight(
 
 
 double TimeVaryingTaskSpace3DCost::computeStageCost(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s) const {
   double l = 0;
   ref_->compute_q_3d_ref(t, data.q_3d_ref);
   data.diff_3d = robot.framePosition(frame_id_) - data.q_3d_ref;
   l += (q_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * dtau * l;
+  return 0.5 * dt * l;
 }
 
 
@@ -94,7 +94,7 @@ double TimeVaryingTaskSpace3DCost::computeImpulseCost(
 
 
 void TimeVaryingTaskSpace3DCost::computeStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   ref_->compute_q_3d_ref(t, data.q_3d_ref);
   data.diff_3d = robot.framePosition(frame_id_) - data.q_3d_ref;
@@ -102,7 +102,7 @@ void TimeVaryingTaskSpace3DCost::computeStageCostDerivatives(
   data.J_3d.noalias() 
       = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
   kkt_residual.lq().noalias() 
-      += dtau * data.J_3d.transpose() * q_3d_weight_.asDiagonal() * data.diff_3d;
+      += dt * data.J_3d.transpose() * q_3d_weight_.asDiagonal() * data.diff_3d;
 }
 
 
@@ -134,13 +134,13 @@ void TimeVaryingTaskSpace3DCost::computeImpulseCostDerivatives(
 
 
 void TimeVaryingTaskSpace3DCost::computeStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
       = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
   kkt_matrix.Qqq().noalias()
-      += dtau * data.J_3d.transpose() * q_3d_weight_.asDiagonal() * data.J_3d;
+      += dt * data.J_3d.transpose() * q_3d_weight_.asDiagonal() * data.J_3d;
 }
 
 

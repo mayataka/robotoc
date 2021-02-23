@@ -113,30 +113,6 @@ public:
   void set_mu_vector();
 
   ///
-  /// @brief Stack of Lagrange multiplier with respect to impulse position 
-  /// constraints that is active at the current impulse status. Size is 
-  /// ImpulseSplitSolution::dimf().
-  /// @return Reference to the stack of Lagrange multiplier with respect to 
-  /// impulse position constraints.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> xi_stack();
-
-  ///
-  /// @brief const version of ImpulseSplitSolution::xi_stack().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> xi_stack() const;
-
-  ///
-  /// @brief Set ImpulseSplitSolution::xi_stack() from ImpulseSplitSolution::mu. 
-  ///
-  void set_xi_stack();
-
-  ///
-  /// @brief Set ImpulseSplitSolution::xi from ImpulseSplitSolution::mu_stack(). 
-  ///
-  void set_xi_vector();
-
-  ///
   /// @brief Returns the dimension of the stack of impulse forces at the current 
   /// impulse status.
   /// @return Dimension of impulse forces.
@@ -190,12 +166,6 @@ public:
   std::vector<Eigen::Vector3d> mu;
 
   ///
-  /// @brief Lagrange multiplier with respect to impulse position constraint. 
-  /// Size is Robot::maxPointContacts().
-  ///
-  std::vector<Eigen::Vector3d> xi;
-
-  ///
   /// @brief Return true if a Impulse is active and false if not.
   /// @param[in] contact_index Index of a contact at impulse. 
   /// @return true if a Impulse is active and false if not. 
@@ -213,12 +183,9 @@ public:
   /// @param[in] robot Robot model.
   /// @param[in] step_size Step size.
   /// @param[in] d Split direction.
-  /// @param[in] is_state_constraint_valid Specify wheather the pure-state
-  /// equality constraint is valid or not.
   ///
   void integrate(const Robot& robot, const double step_size, 
-                 const ImpulseSplitDirection& d, 
-                 const bool is_state_constraint_valid);
+                 const ImpulseSplitDirection& d);
 
   ///
   /// @brief Copy other impulse split solution without reallocating memory.
@@ -272,7 +239,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd mu_stack_, f_stack_, xi_stack_;
+  Eigen::VectorXd mu_stack_, f_stack_;
   bool has_floating_base_;
   std::vector<bool> is_impulse_active_;
   int dimf_;

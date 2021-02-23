@@ -70,6 +70,23 @@ public:
   void setContactStatus(const SplitSolution& other);
 
   ///
+  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @param[in] other Other split solution.
+  ///
+  void setImpulseStatus(const SplitSolution& other);
+
+  ///
+  /// @brief Set impulse status zero.
+  ///
+  void setImpulseStatus();
+
+  ///
   /// @brief Stack of active contact forces. Size is ContactStatus::dimf().
   /// @return Reference to the stack of active contact forces.
   ///
@@ -120,6 +137,53 @@ public:
   /// @return Dimension of contact forces.
   ///
   int dimf() const;
+
+  ///
+  /// @brief Return true if a contact is active and false if not.
+  /// @param[in] contact_index Index of a contact of interedted. 
+  /// @return true if a contact is active and false if not. 
+  ///
+  bool isContactActive(const int contact_index) const;
+
+  ///
+  /// @brief Return contact status.
+  /// @return Contact status. 
+  ///
+  std::vector<bool> isContactActive() const;
+
+  ///
+  /// @brief Return true if there are active contacts and false if not.
+  /// @return true if there are active contacts and false if not. 
+  ///
+  bool hasActiveContacts() const;
+
+  ///
+  /// @brief Stack of Lagrange multiplier with respect to impulse position 
+  /// constraints that is active at the current impulse status. Size is 
+  /// ImpulseSplitSolution::dimf().
+  /// @return Reference to the stack of Lagrange multiplier with respect to 
+  /// impulse position constraints.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> xi_stack();
+
+  ///
+  /// @brief const version of ImpulseSplitSolution::xi_stack().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> xi_stack() const;
+
+  ///
+  /// @brief Returns the dimension of the stack of impulse constraint at the 
+  /// current impulse status.
+  /// @return Dimension of impulse constraint.
+  ///
+  int dimi() const;
+
+  ///
+  /// @brief Return true if there are active impulse constraints and false if 
+  /// not.
+  /// @return true if there are active impulse constraints and false if not. 
+  ///
+  bool hasActiveImpulse() const;
 
   ///
   /// @brief Lagrange multiplier with respect to transition of SplitSolution::q. 
@@ -173,33 +237,9 @@ public:
   std::vector<Eigen::Vector3d> mu;
 
   ///
-  /// @brief Control input torques of the virtual floating base joint. Size is 6.
-  ///
-  Vector6d u_passive;
-
-  ///
   /// @brief Lagrange multiplier with respect to floating base. Size is 6.
   ///
   Vector6d nu_passive;
-
-  ///
-  /// @brief Return true if a contact is active and false if not.
-  /// @param[in] contact_index Index of a contact of interedted. 
-  /// @return true if a contact is active and false if not. 
-  ///
-  bool isContactActive(const int contact_index) const;
-
-  ///
-  /// @brief Return contact status.
-  /// @return Contact status. 
-  ///
-  std::vector<bool> isContactActive() const;
-
-  ///
-  /// @brief Return true if there are active contacts and false if not.
-  /// @return true if there are active contacts and false if not. 
-  ///
-  bool hasActiveContacts() const;
 
   ///
   /// @brief Integrates the solution based on step size and direction. 
@@ -215,17 +255,6 @@ public:
   /// @param[in] other Other split solution.
   ///
   void copy(const SplitSolution& other);
-
-  ///
-  /// @brief Interpolate this solution as s = (l2 * s1 + l1 * s2) / (l1 + l2).
-  /// @param[in] robot Robot model.
-  /// @param[in] s1 Split solution.
-  /// @param[in] s2 Split solution.
-  /// @param[in] l1 Must be positive.
-  /// @param[in] l2 Must be positive.
-  ///
-  void interpolate(const Robot& robot, const SplitSolution& s1, 
-                   const SplitSolution& s2, const double l1, const double l2);
 
   ///
   /// @brief Return true if two SplitSolution have the same value and false if 
@@ -249,6 +278,23 @@ public:
   void setRandom(const Robot& robot, const ContactStatus& contact_status);
 
   ///
+  /// @brief Set each component vector by random value. Impulse status is reset.
+  /// @param[in] robot Robot model.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setRandom(const Robot& robot, const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Set each component vector by random value. Contact status and 
+  /// impulse status are reset.
+  /// @param[in] robot Robot model.
+  /// @param[in] contact_status Contact status.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setRandom(const Robot& robot, const ContactStatus& contact_status,
+                 const ImpulseStatus& impulse_status);
+
+  ///
   /// @brief Generates split solution filled randomly.
   /// @return Split solution filled randomly.
   /// @param[in] robot Robot model. 
@@ -264,13 +310,33 @@ public:
   static SplitSolution Random(const Robot& robot, 
                               const ContactStatus& contact_status);
 
+  ///
+  /// @brief Generates split solution filled randomly.
+  /// @return Split solution filled randomly.
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status.
+  ///
+  static SplitSolution Random(const Robot& robot, 
+                              const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Generates split solution filled randomly.
+  /// @return Split solution filled randomly.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  static SplitSolution Random(const Robot& robot, 
+                              const ContactStatus& contact_status,
+                              const ImpulseStatus& impulse_status);
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd mu_stack_, f_stack_;
-  bool has_floating_base_, has_active_contacts_;
+  Eigen::VectorXd mu_stack_, f_stack_, xi_stack_;
+  bool has_floating_base_, has_active_contacts_, has_active_impulse_;
   std::vector<bool> is_contact_active_;
-  int dimf_;
+  int dimf_, dimi_;
 
 };
 

@@ -7,6 +7,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/ocp/state_constraint_jacobian.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/ocp_discretizer.hpp"
 
@@ -67,13 +68,15 @@ public:
                     const ContactSequence& contact_sequence,
                     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                     const Solution& s, KKTMatrix& kkt_matrix, 
-                    KKTResidual& kkt_residual) const;
+                    KKTResidual& kkt_residual,
+                    StateConstraintJacobian& jac) const;
 
   void computeKKTResidual(OCP& ocp, std::vector<Robot>& robots, 
                           const ContactSequence& contact_sequence,
                           const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                           const Solution& s, KKTMatrix& kkt_matrix, 
-                          KKTResidual& kkt_residual) const;
+                          KKTResidual& kkt_residual,
+                          StateConstraintJacobian& jac) const;
 
   double KKTError(const OCP& ocp, const KKTResidual& kkt_residual);
 
@@ -90,21 +93,16 @@ public:
                                        const Solution& s, const int time_stage);
 
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
-
-  static constexpr double kMindtau
-      = std::sqrt(std::numeric_limits<double>::epsilon());
-
   template <typename Algorithm>
   void runParallel(OCP& ocp, std::vector<Robot>& robots,
                    const ContactSequence& contact_sequence,
                    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                    const Solution& s, KKTMatrix& kkt_matrix, 
-                   KKTResidual& kkt_residual) const;
+                   KKTResidual& kkt_residual,
+                   StateConstraintJacobian& jac) const;
 
-  int N_, max_num_impulse_, nthreads_;
+  int max_num_impulse_, nthreads_;
   Eigen::VectorXd kkt_error_;
 };
 

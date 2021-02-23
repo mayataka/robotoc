@@ -96,11 +96,20 @@ TEST_F(ImpulseStatusTest, activate) {
 }
 
 
+TEST_F(ImpulseStatusTest, activateAll) {
+  ImpulseStatus impulse_status(max_point_contacts);
+  impulse_status.activateImpulse();
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+    EXPECT_TRUE(impulse_status.isImpulseActive(i));
+  }
+}
+
+
 TEST_F(ImpulseStatusTest, deactivate) {
   ImpulseStatus impulse_status(max_point_contacts);
   ContactStatus contact_status(max_point_contacts);
-  contact_status.setContactStatus(std::vector<bool>(max_point_contacts, true));
-  impulse_status.setImpulseStatus(std::vector<bool>(max_point_contacts, true));
+  contact_status.setActivity(std::vector<bool>(max_point_contacts, true));
+  impulse_status.setActivity(std::vector<bool>(max_point_contacts, true));
   EXPECT_EQ(contact_status.maxPointContacts(), max_point_contacts);
   EXPECT_EQ(impulse_status.maxPointContacts(), max_point_contacts);
   EXPECT_TRUE(contact_status.hasActiveContacts());
@@ -148,6 +157,16 @@ TEST_F(ImpulseStatusTest, deactivate) {
   for (int i=7; i<contact_status.maxPointContacts(); ++i) {
     EXPECT_TRUE(contact_status.isContactActive(i));
     EXPECT_TRUE(impulse_status.isImpulseActive(i));
+  }
+}
+
+
+TEST_F(ImpulseStatusTest, deactivateAll) {
+  ImpulseStatus impulse_status(max_point_contacts);
+  impulse_status.setRandom();
+  impulse_status.deactivateImpulse();
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+    EXPECT_FALSE(impulse_status.isImpulseActive(i));
   }
 }
 

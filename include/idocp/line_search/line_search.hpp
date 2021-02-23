@@ -73,7 +73,7 @@ public:
     }
     double primal_step_size = max_primal_step_size;
     while (primal_step_size > min_step_size_) {
-      computeTrySolution(ocp, robots, s, d, primal_step_size);
+      computeSolution(ocp, robots, s, d, primal_step_size);
       computeCostAndViolation(ocp, robots, contact_sequence, q, v, s_try_,
                               primal_step_size);
       const double total_costs = totalCosts();
@@ -104,7 +104,7 @@ public:
 
 private:
   LineSearchFilter filter_;
-  int N_, max_num_impulse_, nthreads_;
+  int max_num_impulse_, nthreads_;
   double step_size_reduction_rate_, min_step_size_;
   Eigen::VectorXd costs_, costs_impulse_, costs_aux_, costs_lift_, violations_, 
                   violations_impulse_, violations_aux_, violations_lift_; 
@@ -117,7 +117,7 @@ private:
                                const Eigen::VectorXd& v, const Solution& s,
                                const double primal_step_size_for_barrier=0);
 
-  void computeTrySolution(const OCP& ocp, const std::vector<Robot>& robots, 
+  void computeSolution(const OCP& ocp, const std::vector<Robot>& robots, 
                           const Solution& s, const Direction& d, 
                           const double step_size);
 
@@ -127,14 +127,13 @@ private:
                                const Eigen::VectorXd& v, const Solution& s,
                                const double primal_step_size_for_barrier=0);
 
-  void computeTrySolution(const ParNMPC& parnmpc, 
-                          const std::vector<Robot>& robots, const Solution& s, 
-                          const Direction& d, const double step_size);
+  void computeSolution(const ParNMPC& parnmpc, const std::vector<Robot>& robots, 
+                       const Solution& s, const Direction& d, 
+                       const double step_size);
 
-  static void computeTrySolution(const Robot& robot, const SplitSolution& s, 
-                                 const SplitDirection& d, 
-                                 const double step_size, 
-                                 SplitSolution& s_try) {
+  static void computeSolution(const Robot& robot, const SplitSolution& s, 
+                              const SplitDirection& d, const double step_size, 
+                              SplitSolution& s_try) {
     s_try.setContactStatus(s);
     robot.integrateConfiguration(s.q, d.dq(), step_size, s_try.q);
     s_try.v = s.v + step_size * d.dv();
@@ -146,11 +145,10 @@ private:
     }
   }
 
-  static void computeTrySolution(const Robot& robot, 
-                                 const ImpulseSplitSolution& s, 
-                                 const ImpulseSplitDirection& d, 
-                                 const double step_size, 
-                                 ImpulseSplitSolution& s_try) {
+  static void computeSolution(const Robot& robot, const ImpulseSplitSolution& s, 
+                              const ImpulseSplitDirection& d, 
+                              const double step_size, 
+                              ImpulseSplitSolution& s_try) {
     s_try.setImpulseStatus(s);
     robot.integrateConfiguration(s.q, d.dq(), step_size, s_try.q);
     s_try.v  = s.v  + step_size * d.dv();

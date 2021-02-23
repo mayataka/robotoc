@@ -62,13 +62,13 @@ public:
   /// @brief Factorize the KKT matrix and KKT residual for the backward Riccati  
   /// recursion, i.e., factorize matrices F, H, G and vectors lx, lu.
   /// @param[in] riccati_next Riccati factorization at the next time stage.
-  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[in] dt Time step between the current time stage and the next 
   /// time stage.
   /// @param[in, out] kkt_matrix The KKT matrix.
   /// @param[in, out] kkt_residual The KKT residual.
   ///
   void factorizeKKTMatrix(const SplitRiccatiFactorization& riccati_next, 
-                          const double dtau, SplitKKTMatrix& kkt_matrix,  
+                          const double dt, SplitKKTMatrix& kkt_matrix,  
                           SplitKKTResidual& kkt_residual);
 
   ///
@@ -80,17 +80,15 @@ public:
   /// BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization().
   /// @param[in] lqr_policy The state feedback control policy of the LQR 
   /// subproblem.
-  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[in] dt Time step between the current time stage and the next 
   /// time stage.
   /// @param[out] riccati The Riccati factorization at this time stage.
   ///
   void factorizeRiccatiFactorization(
       const SplitRiccatiFactorization& riccati_next, 
       const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
-      const LQRStateFeedbackPolicy& lqr_policy, const double dtau, 
+      const LQRStateFeedbackPolicy& lqr_policy, const double dt, 
       SplitRiccatiFactorization& riccati);
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   bool has_floating_base_;

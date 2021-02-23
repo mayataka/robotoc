@@ -17,7 +17,7 @@ protected:
     std::random_device rnd;
     urdf = "../urdf/iiwa14/iiwa14.urdf";
     robot = Robot(urdf);
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -25,7 +25,7 @@ protected:
 
   std::string urdf;
   Robot robot;
-  double dtau;
+  double dt;
 };
 
 

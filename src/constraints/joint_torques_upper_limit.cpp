@@ -1,7 +1,5 @@
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
 
-#include <cassert>
-
 
 namespace idocp {
 
@@ -55,23 +53,21 @@ void JointTorquesUpperLimit::setSlackAndDual(
 
 
 void JointTorquesUpperLimit::augmentDualResidual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
-  kkt_residual.lu().noalias() += dtau * data.dual;
+  kkt_residual.lu().noalias() += dt * data.dual;
 }
 
 
 void JointTorquesUpperLimit::condenseSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
   kkt_matrix.Quu().diagonal().array()
-      += dtau * data.dual.array() / data.slack.array();
+      += dt * data.dual.array() / data.slack.array();
   computePrimalAndDualResidual(robot, data, s);
   kkt_residual.lu().array() 
-      += dtau * (data.dual.array()*data.residual.array()-data.duality.array()) 
+      += dt * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
 }
 

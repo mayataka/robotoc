@@ -159,18 +159,10 @@ void ImpulseSplitParNMPCTest::testLinearizeOCP(
   const double step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
   auto s_updated = s;
   auto s_updated_ref = s;
-  {
-    ocp.updatePrimal(robot, step_size, d, s_updated, true);
-    s_updated_ref.integrate(robot, step_size, d, true);
-    constraints->updateSlack(constraints_data, step_size);
-    EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
-  }
-  {
-    ocp.updatePrimal(robot, step_size, d, s_updated, false);
-    s_updated_ref.integrate(robot, step_size, d, false);
-    constraints->updateSlack(constraints_data, step_size);
-    EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
-  }
+  ocp.updatePrimal(robot, step_size, d, s_updated);
+  s_updated_ref.integrate(robot, step_size, d);
+  constraints->updateSlack(constraints_data, step_size);
+  EXPECT_TRUE(s_updated.isApprox(s_updated_ref));
 }
 
 
@@ -255,18 +247,14 @@ void ImpulseSplitParNMPCTest::testCostAndConstraintViolation(
 
 TEST_F(ImpulseSplitParNMPCTest, fixedBase) {
   std::vector<int> contact_frames = {18};
-  ImpulseStatus impulse_status(contact_frames.size());
-  for (int i=0; i<contact_frames.size(); ++i) {
-    impulse_status.setContactPoint(i, Eigen::Vector3d::Random());
-  }
   Robot robot(fixed_base_urdf, contact_frames);
-  impulse_status.setImpulseStatus({false});
+  auto impulse_status = robot.createImpulseStatus();
   const auto cost = createCost(robot);
   const auto constraints = createConstraints(robot);
   testLinearizeOCP(robot, impulse_status, cost, constraints);
   testComputeKKTResidual(robot, impulse_status, cost, constraints);
   testCostAndConstraintViolation(robot, impulse_status, cost, constraints);
-  impulse_status.setImpulseStatus({true});
+  impulse_status.activateImpulse(0);
   testLinearizeOCP(robot, impulse_status, cost, constraints);
   testComputeKKTResidual(robot, impulse_status, cost, constraints);
   testCostAndConstraintViolation(robot, impulse_status, cost, constraints);
@@ -275,26 +263,17 @@ TEST_F(ImpulseSplitParNMPCTest, fixedBase) {
 
 TEST_F(ImpulseSplitParNMPCTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  ImpulseStatus impulse_status(contact_frames.size());
-  for (int i=0; i<contact_frames.size(); ++i) {
-    impulse_status.setContactPoint(i, Eigen::Vector3d::Random());
-  }
   Robot robot(floating_base_urdf, contact_frames);
-  impulse_status.setImpulseStatus({false, false, false, false});
+  auto impulse_status = robot.createImpulseStatus();
   const auto cost = createCost(robot);
   const auto constraints = createConstraints(robot);
   testLinearizeOCP(robot, impulse_status, cost, constraints);
   testComputeKKTResidual(robot, impulse_status, cost, constraints);
   testCostAndConstraintViolation(robot, impulse_status, cost, constraints);
-  std::random_device rnd;
-  std::vector<bool> is_contact_active;
-  for (const auto frame : contact_frames) {
-    is_contact_active.push_back(rnd()%2==0);
-  }
+  impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
-  impulse_status.setImpulseStatus(is_contact_active);
   testLinearizeOCP(robot, impulse_status, cost, constraints);
   testComputeKKTResidual(robot, impulse_status, cost, constraints);
   testCostAndConstraintViolation(robot, impulse_status, cost, constraints);

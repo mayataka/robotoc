@@ -42,12 +42,12 @@ inline CostFunctionData CostFunction::createCostFunctionData(
 
 
 inline double CostFunction::computeStageCost(
-    Robot& robot,  CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot,  CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s) const {
-  assert(dtau >= 0);
+  assert(dt > 0);
   double l = 0;
   for (const auto cost : costs_) {
-    l += cost->computeStageCost(robot, data, t, dtau, s);
+    l += cost->computeStageCost(robot, data, t, dt, s);
   }
   return l;
 }
@@ -76,11 +76,11 @@ inline double CostFunction::computeImpulseCost(
 
 
 inline void CostFunction::computeStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
+  assert(dt > 0);
   for (const auto cost : costs_) {
-    cost->computeStageCostDerivatives(robot, data, t, dtau, s, kkt_residual);
+    cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_residual);
   }
 }
 
@@ -105,11 +105,11 @@ inline void CostFunction::computeImpulseCostDerivatives(
 
 
 inline void CostFunction::computeStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  assert(dtau >= 0);
+  assert(dt > 0);
   for (const auto cost : costs_) {
-    cost->computeStageCostHessian(robot, data, t, dtau, s, kkt_matrix);
+    cost->computeStageCostHessian(robot, data, t, dt, s, kkt_matrix);
   }
 }
 

@@ -20,6 +20,7 @@
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/ocp/split_riccati_factorization.hpp"
+#include "idocp/ocp/split_constrained_riccati_factorization.hpp"
 #include "idocp/ocp/split_riccati_factorizer.hpp"
 #include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
 #include "idocp/ocp/split_backward_correction.hpp"
@@ -122,6 +123,49 @@ public:
 
   std::vector<Type> data, aux, lift;
   std::vector<ImpulseType> impulse;
+};
+
+
+template <>
+class hybrid_container<SplitRiccatiFactorization, SplitRiccatiFactorization> {
+public:
+  hybrid_container(const Robot& robot, const int N, const int N_impulse=0) 
+    : data(N+1, SplitRiccatiFactorization(robot)), 
+      aux(N_impulse, SplitRiccatiFactorization(robot)), 
+      lift(N_impulse, SplitRiccatiFactorization(robot)),
+      impulse(N_impulse, SplitRiccatiFactorization(robot)),
+      constraint(N_impulse, SplitConstrainedRiccatiFactorization(robot)) {
+  }
+
+  hybrid_container() 
+    : data(), 
+      aux(),
+      lift(),
+      impulse() {
+  }
+
+  hybrid_container(const hybrid_container&) = default;
+
+  hybrid_container& operator=(const hybrid_container&) = default;
+
+  hybrid_container(hybrid_container&&) noexcept = default;
+
+  hybrid_container& operator=(hybrid_container&&) noexcept = default;
+
+  SplitRiccatiFactorization& operator[] (const int i) {
+    assert(i >= 0);
+    assert(i < data.size());
+    return data[i];
+  }
+
+  const SplitRiccatiFactorization& operator[] (const int i) const {
+    assert(i >= 0);
+    assert(i < data.size());
+    return data[i];
+  }
+
+  std::vector<SplitRiccatiFactorization> data, aux, lift, impulse;
+  std::vector<SplitConstrainedRiccatiFactorization> constraint;
 };
 
 

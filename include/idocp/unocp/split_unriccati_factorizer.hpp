@@ -65,13 +65,13 @@ public:
   ///
   /// @brief Performs the backward Riccati recursion. 
   /// @param[in] riccati_next Riccati factorization at the next time stage. 
-  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[in] dt Time step between the current time stage and the next 
   /// @param[in, out] unkkt_matrix KKT matrix at the current impulse stage. 
   /// @param[in, out] unkkt_residual KKT residual at the current impulse stage. 
   /// @param[out] riccati Riccati factorization at the current impulse stage. 
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
-                                const double dtau, 
+                                const double dt, 
                                 SplitUnKKTMatrix& unkkt_matrix, 
                                 SplitUnKKTResidual& unkkt_residual,  
                                 SplitRiccatiFactorization& riccati);
@@ -80,11 +80,11 @@ public:
   /// @brief Performs forward Riccati recursion and computes state direction. 
   /// @param[in] unkkt_residual KKT residual at the current time stage. 
   /// @param[in] d Split direction at the current time stage. 
-  /// @param[in] dtau Time step between the current time stage and the next 
+  /// @param[in] dt Time step between the current time stage and the next 
   /// @param[out] d_next Split direction at the next time stage. 
   ///
   void forwardRiccatiRecursion(const SplitUnKKTResidual& unkkt_residual,
-                               SplitDirection& d, const double dtau, 
+                               SplitDirection& d, const double dt, 
                                SplitDirection& d_next) const;
 
   ///
@@ -110,8 +110,6 @@ public:
   template <typename MatrixType1, typename MatrixType2>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Kq,
                             const Eigen::MatrixBase<MatrixType2>& Kv) const;
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   int dimv_;

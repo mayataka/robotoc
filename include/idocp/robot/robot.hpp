@@ -102,6 +102,36 @@ public:
       const Eigen::MatrixBase<ConfigVectorType2>& q_integrated) const;
 
   ///
+  /// @brief Computes the partial derivative of the function of q + v 
+  /// with respect to q at its tangent space. 
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimq().
+  /// @param[out] dIntegrate_dq The resultant partial derivative. 
+  /// Size must be Robot::dimv() x Robot::dimv().
+  ///
+  template <typename ConfigVectorType, typename TangentVectorType, 
+            typename MatrixType>
+  void dIntegratedConfiguration(
+      const Eigen::MatrixBase<ConfigVectorType>& q,
+      const Eigen::MatrixBase<TangentVectorType>& v,
+      const Eigen::MatrixBase<MatrixType>& dIntegrate_dq) const;
+
+  ///
+  /// @brief Computes the partial derivative of the function of q + v 
+  /// with respect to v at its tangent space. 
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimq().
+  /// @param[out] dIntegrate_dv The resultant partial derivative. 
+  /// Size must be Robot::dimv() x Robot::dimv().
+  ///
+  template <typename ConfigVectorType, typename TangentVectorType, 
+            typename MatrixType>
+  void dIntegratedVelocity(
+      const Eigen::MatrixBase<ConfigVectorType>& q,
+      const Eigen::MatrixBase<TangentVectorType>& v,
+      const Eigen::MatrixBase<MatrixType>& dIntegrate_dv) const;
+
+  ///
   /// @brief Computes q_plus - q_minus at the tangent space. 
   /// @param[in] q_plus Configuration. Size must be Robot::dimq().
   /// @param[in] q_minus Configuration. Size must be Robot::dimq().
@@ -171,6 +201,14 @@ public:
   template <typename ConfigVectorType, typename TangentVectorType>
   void updateKinematics(const Eigen::MatrixBase<ConfigVectorType>& q, 
                         const Eigen::MatrixBase<TangentVectorType>& v);
+
+  ///
+  /// @brief Updates the kinematics of the robot. The frame placements and
+  /// and the Jacobians are calculated. 
+  /// @param[in] q Configuration. Size must be Robot::dimq().
+  ///
+  template <typename ConfigVectorType>
+  void updateKinematics(const Eigen::MatrixBase<ConfigVectorType>& q);
 
   ///
   /// @brief Updates the frame kinematics of the robot. The frame placements 
@@ -286,9 +324,8 @@ public:
       const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv);
 
   ///
-  /// @brief Computes the residual of the implse condition, i.e, contact 
-  /// position constriants at the impulse. Before calling this function, 
-  /// updateKinematics() must be called.
+  /// @brief Computes the residual of the contact position residual at the 
+  /// impulse. Before calling this function, updateKinematics() must be called.
   /// @param[in] impulse_status Impulse status.
   /// @param[in] contact_points Contact points. Size must be 
   /// Robot::maxPointContacts(). 
@@ -296,69 +333,22 @@ public:
   /// stored. Size must be at least 3.
   ///
   template <typename VectorType>
-  void computeImpulseConditionResidual(
+  void computeContactResidual(
       const ImpulseStatus& impulse_status, 
       const std::vector<Eigen::Vector3d>& contact_points,
       const Eigen::MatrixBase<VectorType>& contact_residual) const;
 
   ///
-  /// @brief Computes the residual of the implse condition, i.e, contact 
-  /// position constriants at the impulse. Before calling this function, 
-  /// updateKinematics() must be called.
-  /// @param[in] impulse_status Impulse status.
-  /// @param[in] coeff The coefficient that is multiplied to the result.
-  /// @param[out] contact_residual 3-dimensional vector where the result is 
-  /// stored. Size must be at least 3.
-  ///
-  template <typename VectorType>
-  void computeImpulseConditionResidual(
-      const ImpulseStatus& impulse_status, const double coeff,
-      const Eigen::MatrixBase<VectorType>& contact_residual) const;
-
-  ///
-  /// @brief Computes the residual of the implse condition, i.e, contact 
-  /// position constriants at the impulse. Before calling this function, 
-  /// updateKinematics() must be called.
-  /// @param[in] impulse_status Impulse status.
-  /// @param[in] coeff The coefficient that is multiplied to the result.
-  /// @param[in] contact_points Contact points. Size must be 
-  /// Robot::maxPointContacts(). 
-  /// @param[out] contact_residual 3-dimensional vector where the result is 
-  /// stored. Size must be at least 3.
-  ///
-  template <typename VectorType>
-  void computeImpulseConditionResidual(
-      const ImpulseStatus& impulse_status, const double coeff,
-      const std::vector<Eigen::Vector3d>& contact_points,
-      const Eigen::MatrixBase<VectorType>& contact_residual) const;
-
-  ///
-  /// @brief Computes the partial derivative of the implse condition, i.e, 
-  /// contact  position constriants at the impulse. Before calling this  
-  /// function, updateKinematics() must be called.
+  /// @brief Computes the partial derivative of the contact position at the 
+  /// impulse. Before calling this  function, updateKinematics() must be called.
   /// @param[in] impulse_status Impulse status.
   /// @param[out] contact_partial_dq The result of the partial derivative  
   /// with respect to the configuaration. Rows must be at least 3. Cols must 
   /// be Robot::dimv().
   ///
   template <typename MatrixType>
-  void computeImpulseConditionDerivative(
+  void computeContactDerivative(
       const ImpulseStatus& impulse_status, 
-      const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
-
-  ///
-  /// @brief Computes the partial derivative of the implse condition, i.e, 
-  /// contact  position constriants at the impulse. Before calling this  
-  /// function, updateKinematics() must be called.
-  /// @param[in] impulse_status Impulse status.
-  /// @param[in] coeff The coefficient that is multiplied to the result.
-  /// @param[out] contact_partial_dq The result of the partial derivative  
-  /// with respect to the configuaration. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
-  ///
-  template <typename MatrixType>
-  void computeImpulseConditionDerivative(
-      const ImpulseStatus& impulse_status, const double coeff,
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 
   ///

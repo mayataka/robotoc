@@ -12,7 +12,7 @@ inline SplitBackwardCorrection::SplitBackwardCorrection(const Robot& robot)
     dimx_(2*robot.dimv()),
     dimu_(robot.dimu()),
     dimKKT_(4*robot.dimv()+robot.dimu()),
-    is_impulse_condition_valid_(false),
+    is_switching_constraint_valid_(false),
     kkt_mat_inverter_(robot),
     data_(robot),
     x_res_(Eigen::VectorXd::Zero(2*robot.dimv())),
@@ -25,7 +25,7 @@ inline SplitBackwardCorrection::SplitBackwardCorrection()
     dimx_(0),
     dimu_(0),
     dimKKT_(0),
-    is_impulse_condition_valid_(false),
+    is_switching_constraint_valid_(false),
     kkt_mat_inverter_(),
     data_(),
     x_res_(),
@@ -38,20 +38,30 @@ inline SplitBackwardCorrection::~SplitBackwardCorrection() {
 
 
 inline void SplitBackwardCorrection::coarseUpdate(
-    const Robot& robot, const double dtau, SplitKKTMatrix& kkt_matrix, 
+    const Robot& robot, const double dt, SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, const SplitSolution& s, 
     SplitSolution& s_new) {
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   kkt_matrix.Qux() = kkt_matrix.Qxu().transpose();
-  data_.setImpulseStatus(0);
-  dimKKT_ = 2*dimx_ + dimu_;
-  is_impulse_condition_valid_ = false;
-  kkt_mat_inverter_.invert(dtau, kkt_matrix.Jac(), kkt_matrix.Qss(), 
-                           data_.KKT_mat_inv());
+  data_.setImpulseStatus(s.dimi());
+  dimKKT_ = 2*dimx_ + dimu_ + s.dimi();
+  is_switching_constraint_valid_ = s.hasActiveImpulse();
+  if (is_switching_constraint_valid_) {
+    kkt_mat_inverter_.invert(dt, kkt_matrix.Jac(), kkt_matrix.Pq(), 
+                             kkt_matrix.Qss(), data_.KKT_mat_inv());
+  }
+  else {
+    kkt_mat_inverter_.invert(dt, kkt_matrix.Jac(), kkt_matrix.Qss(), 
+                             data_.KKT_mat_inv());
+  }
   data_.splitDirection().noalias() 
       = data_.KKT_mat_inv() * kkt_residual.splitKKTResidual();
   s_new.lmd = s.lmd - data_.dlmd();
   s_new.gmm = s.gmm - data_.dgmm();
+  if (is_switching_constraint_valid_) {
+    s_new.setImpulseStatus(s);
+    s_new.xi_stack() = s.xi_stack() - data_.dxi();
+  }
   s_new.u   = s.u   - data_.du(); 
   robot.integrateConfiguration(s.q, data_.dq(), -1, s_new.q);
   s_new.v   = s.v   - data_.dv();
@@ -60,42 +70,14 @@ inline void SplitBackwardCorrection::coarseUpdate(
 
 template <typename MatrixType>
 inline void SplitBackwardCorrection::coarseUpdate(
-    const Robot& robot, const double dtau, 
+    const Robot& robot, const double dt, 
     const Eigen::MatrixBase<MatrixType>& aux_mat_next,
     SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const SplitSolution& s, SplitSolution& s_new) {
   assert(aux_mat_next.rows() == dimx_);
   assert(aux_mat_next.cols() == dimx_);
   kkt_matrix.Qxx().noalias() += aux_mat_next;
-  coarseUpdate(robot, dtau, kkt_matrix, kkt_residual, s, s_new);
-}
-
-
-template <typename MatrixType>
-inline void SplitBackwardCorrection::coarseUpdate(
-    const Robot& robot, const double dtau, 
-    const Eigen::MatrixBase<MatrixType>& aux_mat_next,
-    SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
-    const SplitSolution& s, const ImpulseSplitSolution& s_next, 
-    SplitSolution& s_new) {
-  assert(aux_mat_next.rows() == dimx_);
-  assert(aux_mat_next.cols() == dimx_);
-  kkt_matrix.Qxx().noalias() += aux_mat_next;
-  kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
-  kkt_matrix.Qux() = kkt_matrix.Qxu().transpose();
-  data_.setImpulseStatus(s_next.dimf());
-  dimKKT_ = 2*dimx_ + dimu_ + s_next.dimf();
-  is_impulse_condition_valid_ = true;
-  kkt_mat_inverter_.invert(dtau, kkt_matrix.Jac(), kkt_matrix.Pq(), 
-                           kkt_matrix.Qss(), data_.KKT_mat_inv());
-  data_.splitDirection().noalias() 
-      = data_.KKT_mat_inv() * kkt_residual.splitKKTResidual();
-  s_new.lmd        = s.lmd - data_.dlmd();
-  s_new.gmm        = s.gmm - data_.dgmm();
-  data_.xi_stack() = s_next.xi_stack() - data_.dxi();
-  s_new.u          = s.u - data_.du(); 
-  robot.integrateConfiguration(s.q, data_.dq(), -1, s_new.q);
-  s_new.v          = s.v - data_.dv();
+  coarseUpdate(robot, dt, kkt_matrix, kkt_residual, s, s_new);
 }
 
 
@@ -123,8 +105,8 @@ inline void SplitBackwardCorrection::backwardCorrectionParallel(
   data_.splitDirection().tail(dimKKT_-dimx_).noalias()
       = data_.KKT_mat_inv().block(dimx_, dimKKT_-dimx_, dimKKT_-dimx_, dimx_) 
           * x_res_;
-  if (is_impulse_condition_valid_) {
-    data_.xi_stack().noalias() -= data_.dxi();
+  if (is_switching_constraint_valid_) {
+    s_new.xi_stack().noalias() -= data_.dxi();
   }
   s_new.u.noalias() -= data_.du();
   robot.integrateConfiguration(data_.dq(), -1, s_new.q);
@@ -151,8 +133,8 @@ inline void SplitBackwardCorrection::forwardCorrectionParallel(
       = data_.KKT_mat_inv().topLeftCorner(dimKKT_-dimx_, dimx_) * x_res_;
   s_new.lmd.noalias() -= data_.dlmd();
   s_new.gmm.noalias() -= data_.dgmm();
-  if (is_impulse_condition_valid_) {
-    data_.xi_stack().noalias() -= data_.dxi();
+  if (is_switching_constraint_valid_) {
+    s_new.xi_stack().noalias() -= data_.dxi();
   }
   s_new.u.noalias()   -= data_.du();
 }
@@ -160,18 +142,16 @@ inline void SplitBackwardCorrection::forwardCorrectionParallel(
 
 inline void SplitBackwardCorrection::computeDirection(
     const Robot& robot, const SplitSolution& s, const SplitSolution& s_new,
-    SplitDirection& d) {
+    SplitDirection& d) const {
   d.dlmd() = s_new.lmd - s.lmd;
   d.dgmm() = s_new.gmm - s.gmm;
+  if (is_switching_constraint_valid_) {
+    d.setImpulseStatusByDimension(s.dimi());
+    d.dxi() = s_new.xi_stack() - s.xi_stack();
+  }
   d.du()   = s_new.u - s.u;
   robot.subtractConfiguration(s_new.q, s.q, d.dq());
   d.dv()   = s_new.v - s.v;
-}
-
-
-inline void SplitBackwardCorrection::computeDirection(
-    const ImpulseSplitSolution& s, ImpulseSplitDirection& d) const {
-  d.dxi() = data_.xi_stack() - s.xi_stack();
 }
 
 } // namespace idocp

@@ -122,19 +122,6 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> dgmm() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::xi_stack(). 
-  /// Size is ImpulseSplitSolution::dimf().
-  /// @return Reference to the Newton direction of 
-  /// ImpulseSplitSolution::xi_stack().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> dxi();
-
-  ///
-  /// @brief Const version of SplitDirection::dxi().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> dxi() const;
-
-  ///
   /// @brief Returns the Newton direction of SplitSolution::u. Size is 
   /// Robot::dimu().
   /// @return Reference to the Newton direction of SplitSolution::u.
@@ -183,9 +170,17 @@ public:
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dx() const;
 
-  Eigen::VectorBlock<Eigen::VectorXd> splitDirection();
+  ///
+  /// @brief Returns the Newton direction of SplitSolution::xi_stack(). 
+  /// Size is SplitSolution::dimi().
+  /// @return Reference to the Newton direction of SplitSolution::xi_stack().
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> dxi();
 
-  const Eigen::VectorBlock<const Eigen::VectorXd> splitDirection() const;
+  ///
+  /// @brief Const version of SplitDirection::dxi().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> dxi() const;
 
   ///
   /// @brief Returns the Newton direction of SplitSolution::a and 
@@ -267,12 +262,6 @@ public:
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the condensed KKT conditions.
-  /// @return Dimension of the condensed KKT conditions.
-  ///
-  int dimKKT() const;
-
-  ///
   /// @brief Returns the dimension of the stack of contact forces at the current 
   /// contact status.
   /// @return Dimension of the stack of contact forces.
@@ -286,10 +275,14 @@ public:
   ///
   int dimi() const;
 
-  /// @brief Newton direction of SplitSolution::u_passive. Size is 6.
-  Vector6d du_passive;
+  ///
+  /// @brief Stack of the Newton directions dlmd(), dgmm(), du(), dq(), and dv(). 
+  ///
+  Eigen::VectorXd split_direction;
 
+  ///
   /// @brief Newton direction of SplitSolution::nu_passive. Size is 6.
+  ///
   Vector6d dnu_passive;
 
   ///
@@ -312,6 +305,21 @@ public:
   void setRandom(const ContactStatus& contact_status);
 
   ///
+  /// @brief Set each component vector by random value. Impulse status is reset.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setRandom(const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Set each component vector by random value. Contact status and 
+  /// impulse status are reset.
+  /// @param[in] contact_status Contact status.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setRandom(const ContactStatus& contact_status,
+                 const ImpulseStatus& impulse_status);
+
+  ///
   /// @brief Generates split direction filled randomly.
   /// @return Split direction filled randomly.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
@@ -327,11 +335,31 @@ public:
   static SplitDirection Random(const Robot& robot, 
                                const ContactStatus& contact_status);
 
+  ///
+  /// @brief Generates split direction filled randomly.
+  /// @return Split direction filled randomly.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  static SplitDirection Random(const Robot& robot, 
+                               const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Generates split direction filled randomly.
+  /// @return Split direction filled randomly.
+  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] contact_status Contact status.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  static SplitDirection Random(const Robot& robot, 
+                               const ContactStatus& contact_status,
+                               const ImpulseStatus& impulse_status);
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::VectorXd split_direction_full_, daf_full_, dbetamu_full_;
-  int dimv_, dimu_, dimx_, dimf_, dimi_, dimKKT_, 
+  Eigen::VectorXd dxi_full_, daf_full_, dbetamu_full_;
+  int dimv_, dimu_, dimx_, dimf_, dimi_, 
       du_begin_, dq_begin_, dv_begin_;
   bool has_floating_base_;
 

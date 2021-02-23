@@ -27,30 +27,30 @@ inline BackwardUnRiccatiRecursionFactorizer::
 
 
 inline void BackwardUnRiccatiRecursionFactorizer::factorizeKKTMatrix(
-    const SplitRiccatiFactorization& riccati_next, const double dtau, 
+    const SplitRiccatiFactorization& riccati_next, const double dt, 
     SplitUnKKTMatrix& unkkt_matrix, SplitUnKKTResidual& unkkt_residual) {
-  assert(dtau >= 0);
+  assert(dt > 0);
   // Factorize F
   unkkt_matrix.Qqq().noalias() += riccati_next.Pqq;
-  unkkt_matrix.Qqv().noalias() += dtau * riccati_next.Pqq;
+  unkkt_matrix.Qqv().noalias() += dt * riccati_next.Pqq;
   unkkt_matrix.Qqv().noalias() += riccati_next.Pqv;
   unkkt_matrix.Qvq() = unkkt_matrix.Qqv().transpose();
-  unkkt_matrix.Qvv().noalias() += dtau * dtau * riccati_next.Pqq;
-  unkkt_matrix.Qvv().noalias() += dtau * riccati_next.Pqv;
-  unkkt_matrix.Qvv().noalias() += dtau * riccati_next.Pqv.transpose();
+  unkkt_matrix.Qvv().noalias() += dt * dt * riccati_next.Pqq;
+  unkkt_matrix.Qvv().noalias() += dt * riccati_next.Pqv;
+  unkkt_matrix.Qvv().noalias() += dt * riccati_next.Pqv.transpose();
   unkkt_matrix.Qvv().noalias() += riccati_next.Pvv;
   // Factorize H
-  unkkt_matrix.Qaq().transpose().noalias() += dtau * riccati_next.Pqv;
-  unkkt_matrix.Qav().transpose().noalias() += dtau * dtau * riccati_next.Pqv;
-  unkkt_matrix.Qav().transpose().noalias() += dtau * riccati_next.Pvv;
+  unkkt_matrix.Qaq().transpose().noalias() += dt * riccati_next.Pqv;
+  unkkt_matrix.Qav().transpose().noalias() += dt * dt * riccati_next.Pqv;
+  unkkt_matrix.Qav().transpose().noalias() += dt * riccati_next.Pvv;
   // Factorize G
-  unkkt_matrix.Qaa().noalias() += dtau * dtau * riccati_next.Pvv;
+  unkkt_matrix.Qaa().noalias() += dt * dt * riccati_next.Pvv;
   // Factorize vector term
-  unkkt_residual.la().noalias() += dtau * riccati_next.Pqv.transpose() 
+  unkkt_residual.la().noalias() += dt * riccati_next.Pqv.transpose() 
                                         * unkkt_residual.Fq();
-  unkkt_residual.la().noalias() += dtau * riccati_next.Pvv 
+  unkkt_residual.la().noalias() += dt * riccati_next.Pvv 
                                         * unkkt_residual.Fv();
-  unkkt_residual.la().noalias() -= dtau * riccati_next.sv;
+  unkkt_residual.la().noalias() -= dt * riccati_next.sv;
 }
 
 
@@ -58,9 +58,9 @@ inline void BackwardUnRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
     const SplitRiccatiFactorization& riccati_next, 
     const SplitUnKKTMatrix& unkkt_matrix, 
     const SplitUnKKTResidual& unkkt_residual, 
-    const LQRStateFeedbackPolicy& lqr_policy, const double dtau, 
+    const LQRStateFeedbackPolicy& lqr_policy, const double dt, 
     SplitRiccatiFactorization& riccati) {
-  assert(dtau >= 0);
+  assert(dt > 0);
   riccati.Pqq = unkkt_matrix.Qqq();
   riccati.Pqv = unkkt_matrix.Qqv();
   riccati.Pvv = unkkt_matrix.Qvv();
@@ -79,7 +79,7 @@ inline void BackwardUnRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
   riccati.sq.noalias() -= riccati_next.Pqq * unkkt_residual.Fq();
   riccati.sq.noalias() -= riccati_next.Pqv * unkkt_residual.Fv();
   riccati.sv = riccati_next.sv;
-  riccati.sv.noalias() += dtau * riccati.sq;
+  riccati.sv.noalias() += dt * riccati.sq;
   riccati.sv.noalias() -= riccati_next.Pqv.transpose() * unkkt_residual.Fq();
   riccati.sv.noalias() -= riccati_next.Pvv * unkkt_residual.Fv();
   riccati.sq.noalias() -= unkkt_residual.lq();

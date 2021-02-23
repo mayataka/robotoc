@@ -94,19 +94,20 @@ public:
   int maxPointContacts() const;
 
   ///
-  /// @brief Set the contact status from two sequential contact status.
+  /// @brief Set the activity of the impulses from two sequential contact 
+  /// statuses.
   /// @param[in] pre_contact_status Current contact status. 
   /// @param[in] post_contact_status Next contact status. 
   ///
-  void setImpulseStatus(const ContactStatus& pre_contact_status, 
-                        const ContactStatus& post_contact_status);
+  void setActivity(const ContactStatus& pre_contact_status, 
+                   const ContactStatus& post_contact_status);
 
   ///
-  /// @brief Set the impulse status.
-  /// @param[in] is_impulse_active Impulse status. Size must be 
-  /// ImpulseStatus::maxPointContacts();
+  /// @brief Set the activity of the impulses.
+  /// @param[in] is_impulse_active Activity of the impulses. Size must be 
+  /// ContactStatus::maxPointContacts();
   ///
-  void setImpulseStatus(const std::vector<bool>& is_impulse_active);
+  void setActivity(const std::vector<bool>& is_impulse_active);
 
   ///
   /// @brief Activate a impulse.
@@ -127,10 +128,20 @@ public:
   void activateImpulse(const std::vector<int>& contact_indices);
 
   ///
+  /// @brief Activate all impulse.
+  ///
+  void activateImpulse();
+
+  ///
   /// @brief Deactivate impulse.
   /// @param[in] contact_indices Indices of the contacts that are deactivated.
   ///
   void deactivateImpulse(const std::vector<int>& contact_indices);
+
+  ///
+  /// @brief Deactivate all impulse.
+  ///
+  void deactivateImpulse();
 
   ///
   /// @brief Set a contact point.

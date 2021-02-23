@@ -28,11 +28,11 @@ inline SplitUnRiccatiFactorizer::~SplitUnRiccatiFactorizer() {
 
 
 inline void SplitUnRiccatiFactorizer::backwardRiccatiRecursion(
-    const SplitRiccatiFactorization& riccati_next, const double dtau, 
+    const SplitRiccatiFactorization& riccati_next, const double dt, 
     SplitUnKKTMatrix& unkkt_matrix, SplitUnKKTResidual& unkkt_residual,  
     SplitRiccatiFactorization& riccati) {
-  assert(dtau >= 0);
-  backward_recursion_.factorizeKKTMatrix(riccati_next, dtau, unkkt_matrix, 
+  assert(dt > 0);
+  backward_recursion_.factorizeKKTMatrix(riccati_next, dt, unkkt_matrix, 
                                          unkkt_residual);
   llt_.compute(unkkt_matrix.Qaa());
   assert(llt_.info() == Eigen::Success);
@@ -42,18 +42,18 @@ inline void SplitUnRiccatiFactorizer::backwardRiccatiRecursion(
   assert(!lqr_policy_.k.hasNaN());
   backward_recursion_.factorizeRiccatiFactorization(riccati_next, unkkt_matrix, 
                                                     unkkt_residual, lqr_policy_,
-                                                    dtau, riccati);
+                                                    dt, riccati);
 }
 
 
 inline void SplitUnRiccatiFactorizer::forwardRiccatiRecursion(
     const SplitUnKKTResidual& unkkt_residual, SplitDirection& d, 
-    const double dtau, SplitDirection& d_next) const {
-  assert(dtau >= 0);
+    const double dt, SplitDirection& d_next) const {
+  assert(dt > 0);
   d.da().noalias() = lqr_policy_.K * d.dx() + lqr_policy_.k;
   d_next.dx() = unkkt_residual.Fx() + d.dx();
-  d_next.dq().noalias() += dtau * d.dv();
-  d_next.dv().noalias() += dtau * d.da();
+  d_next.dq().noalias() += dt * d.dv();
+  d_next.dv().noalias() += dt * d.da();
 }
 
 

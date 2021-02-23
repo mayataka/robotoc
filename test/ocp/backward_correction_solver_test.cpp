@@ -22,12 +22,12 @@ protected:
     std::random_device rnd;
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
-    N = 20;
+    N_ideal = 20;
     max_num_impulse = 5;
     nthreads = 4;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dtau = T / N;
+    dt = T / N_ideal;
   }
 
   virtual void TearDown() {
@@ -41,8 +41,8 @@ protected:
   void testBackwardCorrection(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  int N, max_num_impulse, nthreads;
-  double T, t, dtau;
+  int N_ideal, max_num_impulse, nthreads;
+  double T, t, dt;
   std::shared_ptr<CostFunction> cost;
   std::shared_ptr<Constraints> constraints;
 };
@@ -50,17 +50,17 @@ protected:
 
 
 Solution BackwardCorrectionSolverTest::createSolution(const Robot& robot) const {
-  return testhelper::CreateSolution(robot, N, max_num_impulse);
+  return testhelper::CreateSolution(robot, N_ideal, max_num_impulse);
 }
 
 
 Solution BackwardCorrectionSolverTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
-  return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t, true);
+  return testhelper::CreateSolution(robot, contact_sequence, T, N_ideal, max_num_impulse, t, true);
 }
 
 
 ContactSequence BackwardCorrectionSolverTest::createContactSequence(const Robot& robot) const {
-  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dtau);
+  return testhelper::CreateContactSequence(robot, N_ideal, max_num_impulse, t, 3*dt);
 }
 
 
@@ -68,33 +68,32 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
-  auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
-  auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
+  auto kkt_matrix = KKTMatrix(robot, N_ideal, max_num_impulse);
+  auto kkt_residual = KKTResidual(robot, N_ideal, max_num_impulse);
   const auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
   std::vector<Robot> robots(nthreads, robot);
-  auto parnmpc = ParNMPC(robot, cost, constraints, T, N, max_num_impulse);
+  auto parnmpc = ParNMPC(robot, cost, constraints, T, N_ideal, max_num_impulse);
   parnmpc.discretize(contact_sequence, t);
-  ParNMPCLinearizer linearizer(N, max_num_impulse, nthreads);
+  ParNMPCLinearizer linearizer(N_ideal, max_num_impulse, nthreads);
   linearizer.initConstraints(parnmpc, robots, contact_sequence, s);
   auto parnmpc_ref = parnmpc;
-  BackwardCorrection corr(robot, N, max_num_impulse);
+  BackwardCorrection corr(robot, N_ideal, max_num_impulse);
   auto corr_ref = corr;
-  BackwardCorrectionSolver corr_solver(robot, N, max_num_impulse, nthreads);
+  BackwardCorrectionSolver corr_solver(robot, N_ideal, max_num_impulse, nthreads);
   corr_solver.initAuxMat(parnmpc, robots, s, kkt_matrix);
   corr_solver.coarseUpdate(parnmpc, corr, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
-
   auto robot_ref = robot;
   auto s_new_ref = s;
+  const int N = parnmpc_ref.discrete().N();
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   parnmpc_ref.terminal.computeTerminalCostHessian(robot_ref, parnmpc_ref.discrete().t(N-1),
                                                   s[N-1], kkt_matrix_ref[N-1]);
   const Eigen::MatrixXd aux_mat = kkt_matrix_ref[N-1].Qxx();
-
   for (int i=0; i<N; ++i) {
     Eigen::VectorXd q_prev, v_prev;
     if (parnmpc_ref.discrete().isTimeStageAfterImpulse(i)) {
@@ -115,12 +114,12 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
     }
     if (i == N-1) {
       const int contact_phase = parnmpc_ref.discrete().contactPhase(i);
-      const double dt = parnmpc_ref.discrete().dtau(i);
+      const double dti = parnmpc_ref.discrete().dt(i);
       parnmpc_ref.terminal.linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase), 
-          parnmpc_ref.discrete().t(i), dt, q_prev, v_prev,
+          parnmpc_ref.discrete().t(i), dti, q_prev, v_prev,
           s[i], kkt_matrix_ref[i], kkt_residual_ref[i]);
-      corr_ref[i].coarseUpdate(robot_ref, dt, kkt_matrix_ref[i], 
+      corr_ref[i].coarseUpdate(robot_ref, dti, kkt_matrix_ref[i], 
                                kkt_residual_ref[i], s[i], s_new_ref[i]);
     }
     else if (parnmpc_ref.discrete().isTimeStageBeforeImpulse(i)) {
@@ -128,26 +127,26 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
       const int impulse_index = parnmpc_ref.discrete().impulseIndexAfterTimeStage(i);
       const double ti = parnmpc_ref.discrete().t(i);
       const double t_impulse = parnmpc_ref.discrete().t_impulse(impulse_index);
-      const double dt = parnmpc_ref.discrete().dtau(i);
-      const double dt_aux = parnmpc_ref.discrete().dtau_aux(impulse_index);
-      ASSERT_TRUE(dt >= 0);
-      ASSERT_TRUE(dt <= dtau);
+      const double dti = parnmpc_ref.discrete().dt(i);
+      const double dt_aux = parnmpc_ref.discrete().dt_aux(impulse_index);
+      ASSERT_TRUE(dti >= 0);
+      ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_aux >= 0);
-      ASSERT_TRUE(dt_aux <= dtau);
+      ASSERT_TRUE(dt_aux <= dt);
       parnmpc_ref[i].linearizeOCP(
-          robot_ref, contact_sequence.contactStatus(contact_phase), ti, dt, 
+          robot_ref, contact_sequence.contactStatus(contact_phase), ti, dti, 
           q_prev, v_prev, s[i], s.aux[impulse_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
-      corr_ref[i].coarseUpdate(robot_ref, dt, aux_mat, kkt_matrix_ref[i], 
+      corr_ref[i].coarseUpdate(robot_ref, dti, aux_mat, kkt_matrix_ref[i], 
                                kkt_residual_ref[i], s[i], s_new_ref[i]);
       parnmpc_ref.aux[impulse_index].linearizeOCP(
-          robot_ref, contact_sequence.contactStatus(contact_phase), 
-          contact_sequence.impulseStatus(impulse_index), t_impulse, dt_aux, 
+          robot_ref, contact_sequence.contactStatus(contact_phase), t_impulse, dt_aux, 
           s[i].q, s[i].v, s.aux[impulse_index], s.impulse[impulse_index], 
-          kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index]);
+          kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index],
+          contact_sequence.impulseStatus(impulse_index));
       corr_ref.aux[impulse_index].coarseUpdate(
           robot_ref, dt_aux, aux_mat, kkt_matrix_ref.aux[impulse_index], 
           kkt_residual_ref.aux[impulse_index], s.aux[impulse_index], 
-          s.impulse[impulse_index], s_new_ref.aux[impulse_index]);
+          s_new_ref.aux[impulse_index]);
       parnmpc_ref.impulse[impulse_index].linearizeOCP(
           robot_ref, contact_sequence.impulseStatus(impulse_index), t_impulse, 
           s.aux[impulse_index].q, s.aux[impulse_index].v, 
@@ -163,16 +162,16 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
       const int lift_index = parnmpc_ref.discrete().liftIndexAfterTimeStage(i);
       const double ti = parnmpc_ref.discrete().t(i);
       const double t_lift = parnmpc_ref.discrete().t_lift(lift_index);
-      const double dt = parnmpc_ref.discrete().dtau(i);
-      const double dt_lift = parnmpc_ref.discrete().dtau_lift(lift_index);
-      ASSERT_TRUE(dt >= 0);
-      ASSERT_TRUE(dt <= dtau);
+      const double dti = parnmpc_ref.discrete().dt(i);
+      const double dt_lift = parnmpc_ref.discrete().dt_lift(lift_index);
+      ASSERT_TRUE(dti >= 0);
+      ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_lift >= 0);
-      ASSERT_TRUE(dt_lift <= dtau);
+      ASSERT_TRUE(dt_lift <= dt);
       parnmpc_ref[i].linearizeOCP(
-          robot_ref, contact_sequence.contactStatus(contact_phase), ti, dt, 
+          robot_ref, contact_sequence.contactStatus(contact_phase), ti, dti, 
           q_prev, v_prev, s[i], s.lift[lift_index], kkt_matrix_ref[i], kkt_residual_ref[i]);
-      corr_ref[i].coarseUpdate(robot_ref, dt, aux_mat, kkt_matrix_ref[i], 
+      corr_ref[i].coarseUpdate(robot_ref, dti, aux_mat, kkt_matrix_ref[i], 
                                kkt_residual_ref[i], s[i], s_new_ref[i]);
       parnmpc_ref.lift[lift_index].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase), t_lift, dt_lift, 
@@ -185,12 +184,12 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
     }
     else {
       const int contact_phase = parnmpc_ref.discrete().contactPhase(i);
-      const double dt = parnmpc_ref.discrete().dtau(i);
+      const double dti = parnmpc_ref.discrete().dt(i);
       parnmpc_ref[i].linearizeOCP(
           robot_ref, contact_sequence.contactStatus(contact_phase), 
-          parnmpc_ref.discrete().t(i), dt, q_prev, v_prev,
+          parnmpc_ref.discrete().t(i), dti, q_prev, v_prev,
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i]);
-      corr_ref[i].coarseUpdate(robot_ref, dt, aux_mat, kkt_matrix_ref[i], 
+      corr_ref[i].coarseUpdate(robot_ref, dti, aux_mat, kkt_matrix_ref[i], 
                                kkt_residual_ref[i], s[i], s_new_ref[i]);
     }
   }
@@ -201,7 +200,7 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
     ASSERT_EQ(contact_phase, 0);
     ASSERT_EQ(impulse_index, 0);
     const double t_impulse = parnmpc_ref.discrete().t_impulse(impulse_index);
-    const double dt_aux = parnmpc_ref.discrete().dtau_aux(impulse_index);
+    const double dt_aux = parnmpc_ref.discrete().dt_aux(impulse_index);
     parnmpc_ref.aux[impulse_index].linearizeOCP(
         robot_ref, contact_sequence.contactStatus(contact_phase), 
         t_impulse, dt_aux, q, v, s.aux[impulse_index], s.impulse[impulse_index], 
@@ -226,7 +225,7 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
     ASSERT_EQ(contact_phase, 0);
     ASSERT_EQ(lift_index, 0);
     const double t_lift = parnmpc_ref.discrete().t_lift(lift_index);
-    const double dt_lift = parnmpc_ref.discrete().dtau_lift(lift_index);
+    const double dt_lift = parnmpc_ref.discrete().dt_lift(lift_index);
     parnmpc_ref.lift[lift_index].linearizeOCP(
         robot_ref, contact_sequence.contactStatus(contact_phase), t_lift, dt_lift, 
         q, v, s.lift[lift_index], s[0], 
@@ -236,7 +235,15 @@ void BackwardCorrectionSolverTest::testCoarseUpdate(const Robot& robot) const {
         kkt_residual_ref.lift[lift_index], s.lift[lift_index], 
         s_new_ref.lift[lift_index]);
   }
-
+  for (int i=0; i<parnmpc_ref.discrete().N_impulse(); ++i) {
+    EXPECT_TRUE(kkt_matrix.impulse[i].isApprox(kkt_matrix_ref.impulse[i]));
+  }
+  for (int i=0; i<parnmpc_ref.discrete().N_impulse(); ++i) {
+    EXPECT_TRUE(kkt_matrix.aux[i].isApprox(kkt_matrix_ref.aux[i]));
+  }
+  for (int i=0; i<parnmpc_ref.discrete().N_lift(); ++i) {
+    EXPECT_TRUE(kkt_matrix.lift[i].isApprox(kkt_matrix_ref.lift[i]));
+  }
   EXPECT_TRUE(testhelper::IsApprox(kkt_matrix, kkt_matrix_ref));
   EXPECT_TRUE(testhelper::IsApprox(kkt_residual, kkt_residual_ref));
   EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
@@ -250,19 +257,19 @@ void BackwardCorrectionSolverTest::testBackwardCorrection(const Robot& robot) co
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
-  auto kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
-  auto kkt_residual = KKTResidual(robot, N, max_num_impulse);
+  auto kkt_matrix = KKTMatrix(robot, N_ideal, max_num_impulse);
+  auto kkt_residual = KKTResidual(robot, N_ideal, max_num_impulse);
   const auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   std::vector<Robot> robots(nthreads, robot);
-  auto parnmpc = ParNMPC(robot, cost, constraints, T, N, max_num_impulse);
+  auto parnmpc = ParNMPC(robot, cost, constraints, T, N_ideal, max_num_impulse);
   parnmpc.discretize(contact_sequence, t);
-  ParNMPCLinearizer linearizer(N, max_num_impulse, nthreads);
+  ParNMPCLinearizer linearizer(N_ideal, max_num_impulse, nthreads);
   linearizer.initConstraints(parnmpc, robots, contact_sequence, s);
   auto parnmpc_ref = parnmpc;
-  BackwardCorrection corr(robot, N, max_num_impulse);
-  BackwardCorrectionSolver corr_solver(robot, N, max_num_impulse, nthreads);
+  BackwardCorrection corr(robot, N_ideal, max_num_impulse);
+  BackwardCorrectionSolver corr_solver(robot, N_ideal, max_num_impulse, nthreads);
   corr_solver.initAuxMat(parnmpc, robots, s, kkt_matrix);
   corr_solver.coarseUpdate(parnmpc, corr, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   auto corr_ref = corr;
@@ -273,7 +280,7 @@ void BackwardCorrectionSolverTest::testBackwardCorrection(const Robot& robot) co
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
 
-  Direction d(robot, N, max_num_impulse);
+  Direction d(robot, N_ideal, max_num_impulse);
 
   corr_solver.backwardCorrectionSerial(parnmpc, corr, s);
   corr_solver.backwardCorrectionParallel(parnmpc, corr, robots);

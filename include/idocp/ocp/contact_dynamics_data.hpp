@@ -4,6 +4,7 @@
 #include "Eigen/Core"
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
+#include "idocp/robot/impulse_status.hpp"
 
 
 namespace idocp {
@@ -29,8 +30,6 @@ public:
   void setContactStatus(const ContactStatus& contact_status);
 
   Eigen::MatrixXd dIDda;
-
-  Vector6d u_passive;
 
   Eigen::Block<Eigen::MatrixXd> dCda();
 
@@ -116,14 +115,12 @@ public:
 
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   Eigen::MatrixXd dCda_full_, dIDCdqv_full_, MJtJinv_full_, 
                   MJtJinv_dIDCdqv_full_, Qafqv_full_, 
                   Qafu_full_full_;
   Eigen::VectorXd IDC_full_, MJtJinv_IDC_full_, laf_full_;
-  int dimv_, dimu_, dimvf_, dimf_, dim_passive_;
+  int dimv_, dimu_, dimf_, dimvf_, dim_passive_;
 
 };
 

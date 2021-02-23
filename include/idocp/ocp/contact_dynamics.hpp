@@ -10,6 +10,7 @@
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/contact_dynamics_data.hpp"
+#include "idocp/ocp/split_state_constraint_jacobian.hpp"
 
 #include <limits>
 #include <cmath>
@@ -35,7 +36,7 @@ public:
 
   void linearizeContactDynamics(Robot& robot, 
                                 const ContactStatus& contact_status, 
-                                const double dtau, const SplitSolution& s, 
+                                const double dt, const SplitSolution& s, 
                                 SplitKKTResidual& kkt_residual);
 
   static void linearizeInverseDynamics(Robot& robot, 
@@ -48,67 +49,39 @@ public:
                                          const double baumgarte_time_step, 
                                          ContactDynamicsData& data);
 
-  void condenseContactDynamicsForwardEuler(Robot& robot, 
-                                           const ContactStatus& contact_status, 
-                                           const double dtau, 
-                                           SplitKKTMatrix& kkt_matrix, 
-                                           SplitKKTResidual& kkt_residual);
+  void condenseContactDynamics(Robot& robot, 
+                               const ContactStatus& contact_status, 
+                               const double dt, SplitKKTMatrix& kkt_matrix, 
+                               SplitKKTResidual& kkt_residual,
+                               const bool is_forward_euler);
 
-  static void condensingForwardEuler(const Robot& robot, const double dtau, 
-                                     ContactDynamicsData& data, 
-                                     SplitKKTMatrix& kkt_matrix, 
-                                     SplitKKTResidual& kkt_residual);
-
-  void condenseContactDynamicsBackwardEuler(Robot& robot, 
-                                            const ContactStatus& contact_status, 
-                                            const double dtau, 
-                                            SplitKKTMatrix& kkt_matrix, 
-                                            SplitKKTResidual& kkt_residual);
-
-  static void condensingBackwardEuler(const Robot& robot, const double dtau, 
-                                      ContactDynamicsData& data, 
-                                      SplitKKTMatrix& kkt_matrix, 
-                                      SplitKKTResidual& kkt_residual);
-
-  void computeCondensedPrimalDirection(const Robot& robot, SplitDirection& d);
+  void computeCondensedPrimalDirection(const Robot& robot, 
+                                       SplitDirection& d) const;
 
   template <typename VectorType>
-  void computeCondensedDualDirection(const Robot& robot, const double dtau, 
+  void computeCondensedDualDirection(const Robot& robot, const double dt, 
                                      const SplitKKTMatrix& kkt_matrix, 
                                      const SplitKKTResidual& kkt_residual, 
                                      const Eigen::MatrixBase<VectorType>& dgmm,
                                      SplitDirection& d);
 
-  static void expansionPrimal(const Robot& robot, 
-                              const ContactDynamicsData& data, 
-                              SplitDirection& d);
-
-  template <typename VectorType>
-  static void expansionDual(const Robot& robot, const double dtau, 
-                            ContactDynamicsData& data,
-                            const SplitKKTMatrix& kkt_matrix, 
-                            const SplitKKTResidual& kkt_residual,
-                            const Eigen::MatrixBase<VectorType>& dgmm,
-                            SplitDirection& d);
+  void condenseSwitchingConstraint(SplitKKTResidual& kkt_residual, 
+                                   SplitStateConstraintJacobian& jac) const;
 
   void computeContactDynamicsResidual(Robot& robot, 
                                       const ContactStatus& contact_status,
                                       const SplitSolution& s);
 
-  double l1NormContactDynamicsResidual(const double dtau) const;
+  double l1NormContactDynamicsResidual(const double dt) const;
 
-  double squaredNormContactDynamicsResidual(const double dtau) const;
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  double squaredNormContactDynamicsResidual(const double dt) const;
 
 private:
   ContactDynamicsData data_;
   bool has_floating_base_, has_active_contacts_;
   double baumgarte_time_step_;
+  int dimv_, dimu_, dim_passive_;
   static constexpr int kDimFloatingBase = 6;
-  static constexpr double kMindtau = std::numeric_limits<double>::epsilon();
-  // static constexpr double kMindtau
-  //     = std::sqrt(std::numeric_limits<double>::epsilon());
 
   void setContactStatus(const ContactStatus& contact_status);
 

@@ -63,12 +63,12 @@ public:
 
   template <typename MatrixType>
   void coarseUpdate(const Eigen::MatrixBase<MatrixType>& aux_mat_next,
-                    const double dtau, SplitUnKKTMatrix& unkkt_matrix, 
+                    const double dt, SplitUnKKTMatrix& unkkt_matrix, 
                     const SplitUnKKTResidual& unkkt_residual,
                     const SplitSolution& s, SplitDirection& d, 
                     SplitSolution& s_new);
 
-  void coarseUpdate(const double dtau, SplitUnKKTMatrix& unkkt_matrix, 
+  void coarseUpdate(const double dt, SplitUnKKTMatrix& unkkt_matrix, 
                     const SplitUnKKTResidual& unkkt_residual,
                     const SplitSolution& s, SplitDirection& d, 
                     SplitSolution& s_new);

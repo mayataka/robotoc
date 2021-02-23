@@ -48,7 +48,6 @@ void SplitKKTMatrixTest::testSize(const Robot& robot,
   const int dim_passive = robot.dim_passive();
   const int dimi = impulse_status.dimf();
   EXPECT_EQ(matrix.dimf(), dimf);
-  EXPECT_EQ(matrix.dimKKT(), 4*dimv+dimu+dimi);
   EXPECT_EQ(matrix.Fqu().rows(), dimv);
   EXPECT_EQ(matrix.Fqu().cols(), dimu);
   EXPECT_EQ(matrix.Fqq().rows(), dimv);
@@ -315,22 +314,22 @@ void SplitKKTMatrixTest::testIsApprox(const Robot& robot,
 TEST_F(SplitKKTMatrixTest, fixedBase) {
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
-  ContactStatus contact_status = robot.createContactStatus();
-  ImpulseStatus impulse_status = robot.createImpulseStatus();
-  contact_status.setContactStatus({false});
-  impulse_status.setImpulseStatus({false});
+  auto contact_status = robot.createContactStatus();
+  auto impulse_status = robot.createImpulseStatus();
+  contact_status.deactivateContact(0);
+  impulse_status.deactivateImpulse(0);
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
-  contact_status.setContactStatus({true});
-  impulse_status.setImpulseStatus({false});
+  contact_status.activateContact(0);
+  impulse_status.deactivateImpulse(0);
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
-  contact_status.setContactStatus({false});
-  impulse_status.setImpulseStatus({true});
+  contact_status.deactivateContact(0);
+  impulse_status.activateImpulse(0);
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
-  contact_status.setContactStatus({true});
-  impulse_status.setImpulseStatus({true});
+  contact_status.activateContact(0);
+  impulse_status.activateImpulse(0);
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
 }
@@ -339,47 +338,37 @@ TEST_F(SplitKKTMatrixTest, fixedBase) {
 TEST_F(SplitKKTMatrixTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
-  ContactStatus contact_status = robot.createContactStatus();
-  ImpulseStatus impulse_status = robot.createImpulseStatus();
-  std::vector<bool> is_contact_active = {false, false, false, false};
-  std::vector<bool> is_impulse_active = {false, false, false, false};
+  auto contact_status = robot.createContactStatus();
+  auto impulse_status = robot.createImpulseStatus();
   // Both contact and impulse are inactive
-  contact_status.setContactStatus(is_contact_active);
-  impulse_status.setImpulseStatus(is_impulse_active);
+  contact_status.deactivateContacts();
+  impulse_status.deactivateImpulse();
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
-  std::random_device rnd;
   // Contacts are active and impulse are inactive
-  is_contact_active.clear();
-  for (const auto frame : contact_frames) {
-    is_contact_active.push_back(rnd()%2==0);
-  }
-  contact_status.setContactStatus(is_contact_active);
+  contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
+  impulse_status.deactivateImpulse();
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
   // Contacts are inactive and impulse are active
-  is_contact_active = {false, false, false, false};
-  is_impulse_active.clear();
-  for (const auto frame : contact_frames) {
-    is_impulse_active.push_back(rnd()%2==0);
-  }
-  impulse_status.setImpulseStatus(is_impulse_active);
+  contact_status.deactivateContacts();
+  impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
   // Both contact and impulse are active
-  is_contact_active.clear();
-  for (const auto frame : contact_frames) {
-    is_contact_active.push_back(rnd()%2==0);
-  }
-  contact_status.setContactStatus(is_contact_active);
+  contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
+  }
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
+    impulse_status.activateImpulse(0);
   }
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);

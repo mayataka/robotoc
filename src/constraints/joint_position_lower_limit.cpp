@@ -1,7 +1,5 @@
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 
-#include <cassert>
-
 
 namespace idocp {
 
@@ -57,23 +55,21 @@ void JointPositionLowerLimit::setSlackAndDual(
 
 
 void JointPositionLowerLimit::augmentDualResidual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
-  kkt_residual.lq().tail(dimc_).noalias() -= dtau * data.dual;
+  kkt_residual.lq().tail(dimc_).noalias() -= dt * data.dual;
 }
 
 
 void JointPositionLowerLimit::condenseSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
   kkt_matrix.Qqq().diagonal().tail(dimc_).array()
-      += dtau * data.dual.array() / data.slack.array();
+      += dt * data.dual.array() / data.slack.array();
   computePrimalAndDualResidual(robot, data, s);
   kkt_residual.lq().tail(dimc_).array() 
-      -= dtau * (data.dual.array()*data.residual.array()-data.duality.array()) 
+      -= dt * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
 }
 

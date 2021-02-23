@@ -57,18 +57,15 @@ public:
 
   ///
   /// @brief Invert the split KKT matrix. 
-  /// @param[in] dtau Discretization size of the optimal control problem.
+  /// @param[in] dt Discretization size of the optimal control problem.
   /// @param[in] Q Hessian of the Lagrangian with respect to the primal 
   /// variables.
   /// @param[out] KKT_matrix_inverse Inverse of the KKT matrix. Size must 
   /// be SplitUnKKTMatrix::dimKKT() x SplitUnKKTMatrix::dimKKT().
   ///
   template <typename MatrixType1, typename MatrixType2>
-  void invert(const double dtau,  
-              const Eigen::MatrixBase<MatrixType1>& Q,
+  void invert(const double dt, const Eigen::MatrixBase<MatrixType1>& Q,
               const Eigen::MatrixBase<MatrixType2>& KKT_matrix_inverse);
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   Eigen::LLT<Eigen::MatrixXd> llt_Q_, llt_S_;

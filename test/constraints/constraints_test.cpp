@@ -34,7 +34,7 @@ protected:
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     barrier = 1.0e-04;
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
     mu = 0.8;
     fixed_base_robot = Robot(fixed_base_urdf);
     floating_base_robot = Robot(floating_base_urdf);
@@ -52,7 +52,7 @@ protected:
   void timeStage1(Robot& robot, const ContactStatus& contact_status) const;
   void timeStage2(Robot& robot, const ContactStatus& contact_status) const;
 
-  double barrier, dtau, mu;
+  double barrier, dt, mu;
   std::string fixed_base_urdf, floating_base_urdf;
   Robot fixed_base_robot, floating_base_robot;
   Eigen::VectorXd amin_fixed, amax_fixed, amin_floating, amax_floating;
@@ -107,7 +107,7 @@ void ConstraintsTest::timeStage0(Robot& robot, const ContactStatus& contact_stat
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   constraints->setSlackAndDual(robot, data, s);
-  constraints->augmentDualResidual(robot, data, dtau, s, kkt_residual);
+  constraints->augmentDualResidual(robot, data, dt, s, kkt_residual);
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_TRUE(kkt_residual.lv().isZero());
   EXPECT_FALSE(kkt_residual.la.isZero());
@@ -115,7 +115,7 @@ void ConstraintsTest::timeStage0(Robot& robot, const ContactStatus& contact_stat
   if (contact_status.hasActiveContacts()) {
     EXPECT_FALSE(kkt_residual.lf().isZero());
   }
-  constraints->condenseSlackAndDual(robot, data, dtau, s, kkt_matrix, kkt_residual);
+  constraints->condenseSlackAndDual(robot, data, dt, s, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
   EXPECT_TRUE(kkt_matrix.Qvv().isZero());
   EXPECT_FALSE(kkt_matrix.Qaa().isZero());
@@ -147,7 +147,7 @@ void ConstraintsTest::timeStage1(Robot& robot, const ContactStatus& contact_stat
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   constraints->setSlackAndDual(robot, data, s);
-  constraints->augmentDualResidual(robot, data, dtau, s, kkt_residual);
+  constraints->augmentDualResidual(robot, data, dt, s, kkt_residual);
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
   EXPECT_FALSE(kkt_residual.la.isZero());
@@ -155,7 +155,7 @@ void ConstraintsTest::timeStage1(Robot& robot, const ContactStatus& contact_stat
   if (contact_status.hasActiveContacts()) {
     EXPECT_FALSE(kkt_residual.lf().isZero());
   }
-  constraints->condenseSlackAndDual(robot, data, dtau, s, kkt_matrix, kkt_residual);
+  constraints->condenseSlackAndDual(robot, data, dt, s, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_matrix.Qqq().isZero());
   EXPECT_FALSE(kkt_matrix.Qvv().isZero());
   EXPECT_FALSE(kkt_matrix.Qaa().isZero());
@@ -188,7 +188,7 @@ void ConstraintsTest::timeStage2(Robot& robot, const ContactStatus& contact_stat
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   constraints->setSlackAndDual(robot, data, s);
-  constraints->augmentDualResidual(robot, data, dtau, s, kkt_residual);
+  constraints->augmentDualResidual(robot, data, dt, s, kkt_residual);
   EXPECT_FALSE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
   EXPECT_FALSE(kkt_residual.la.isZero());
@@ -196,7 +196,7 @@ void ConstraintsTest::timeStage2(Robot& robot, const ContactStatus& contact_stat
   if (contact_status.hasActiveContacts()) {
     EXPECT_FALSE(kkt_residual.lf().isZero());
   }
-  constraints->condenseSlackAndDual(robot, data, dtau, s, kkt_matrix, kkt_residual);
+  constraints->condenseSlackAndDual(robot, data, dt, s, kkt_matrix, kkt_residual);
   EXPECT_FALSE(kkt_matrix.Qqq().isZero());
   EXPECT_FALSE(kkt_matrix.Qvv().isZero());
   EXPECT_FALSE(kkt_matrix.Qaa().isZero());
@@ -215,12 +215,11 @@ void ConstraintsTest::timeStage2(Robot& robot, const ContactStatus& contact_stat
 TEST_F(ConstraintsTest, fixedBase) {
   const std::vector<int> frames = {18};
   Robot robot(fixed_base_urdf, frames);
-  ContactStatus contact_status(frames.size());
-  contact_status.setContactStatus({false});
+  auto contact_status = robot.createContactStatus();
   timeStage0(robot, contact_status);
   timeStage1(robot, contact_status);
   timeStage2(robot, contact_status);
-  contact_status.setContactStatus({true});
+  contact_status.activateContact(0);
   timeStage0(robot, contact_status);
   timeStage1(robot, contact_status);
   timeStage2(robot, contact_status);
@@ -230,8 +229,7 @@ TEST_F(ConstraintsTest, fixedBase) {
 TEST_F(ConstraintsTest, floatingBase) {
   const std::vector<int> frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, frames);
-  ContactStatus contact_status(frames.size());
-  contact_status.setContactStatus({false, false, false, false});
+  auto contact_status = robot.createContactStatus();
   timeStage0(robot, contact_status);
   timeStage1(robot, contact_status);
   timeStage2(robot, contact_status);

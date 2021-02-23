@@ -16,8 +16,8 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
-#include "idocp/constraints/friction_cone.hpp"
-#include "idocp/constraints/impulse_friction_cone.hpp"
+#include "idocp/constraints/linearized_friction_cone.hpp"
+#include "idocp/constraints/linearized_impulse_friction_cone.hpp"
 
 #include "idocp/utils/ocp_benchmarker.hpp"
 
@@ -105,8 +105,8 @@ int main(int argc, char *argv[]) {
   auto joint_torques_lower   = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper   = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
   const double mu = 0.8;
-  auto friction_cone         = std::make_shared<idocp::FrictionCone>(robot, mu);
-  auto impulse_friction_cone = std::make_shared<idocp::ImpulseFrictionCone>(robot, mu);
+  auto friction_cone         = std::make_shared<idocp::LinearizedFrictionCone>(robot, mu);
+  auto impulse_friction_cone = std::make_shared<idocp::LinearizedImpulseFrictionCone>(robot, mu);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(impulse_friction_cone);
 
   const double T = 7; 
-  const int N = 140;
+  const int N = 240;
   const int max_num_impulse_phase = (steps+3)*2;
 
   const int nthreads = 4;
@@ -148,9 +148,9 @@ int main(int argc, char *argv[]) {
   const double t_initial2 = t_initial_front_swing2 + t_initial_front_hip_swing2 + t_initial_hip_swing2;
 
   contact_status_front_swing.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_front_swing, t_start, t);
+  ocp_solver.pushBackContactStatus(contact_status_front_swing, t_start);
   contact_status_front_hip_swing.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_front_hip_swing, t_start+t_initial_front_swing, t);
+  ocp_solver.pushBackContactStatus(contact_status_front_hip_swing, t_start+t_initial_front_swing);
 
   contact_points[0].coeffRef(0) += 0.25 * stride;
   contact_points[1].coeffRef(0) += 0.25 * stride + 0.5 * additive_stride_hip;
@@ -158,12 +158,12 @@ int main(int argc, char *argv[]) {
   contact_points[3].coeffRef(0) += 0.25 * stride + 0.5 * additive_stride_hip;
 
   contact_status_hip_swing.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_hip_swing, t_start+t_initial_front_swing+t_initial_front_hip_swing, t);
+  ocp_solver.pushBackContactStatus(contact_status_hip_swing, t_start+t_initial_front_swing+t_initial_front_hip_swing);
 
   contact_status_front_swing.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_front_swing, t_start+t_initial, t);
+  ocp_solver.pushBackContactStatus(contact_status_front_swing, t_start+t_initial);
   contact_status_front_hip_swing.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_front_hip_swing, t_start+t_initial+t_initial_front_swing2, t);
+  ocp_solver.pushBackContactStatus(contact_status_front_hip_swing, t_start+t_initial+t_initial_front_swing2);
 
   contact_points[0].coeffRef(0) += 0.5 * stride;
   contact_points[1].coeffRef(0) += 0.5 * stride + 0.5 * additive_stride_hip;
@@ -171,27 +171,24 @@ int main(int argc, char *argv[]) {
   contact_points[3].coeffRef(0) += 0.5 * stride + 0.5 * additive_stride_hip;
 
   contact_status_hip_swing.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_hip_swing, t_start+t_initial+t_initial_front_swing2+t_initial_front_hip_swing2, t);
+  ocp_solver.pushBackContactStatus(contact_status_hip_swing, t_start+t_initial+t_initial_front_swing2+t_initial_front_hip_swing2);
   const double t_end_init = t_start+t_initial+t_initial2;
 
   for (int i=0; i<steps; ++i) {
     contact_status_front_swing.setContactPoints(contact_points);
-    ocp_solver.pushBackContactStatus(contact_status_front_swing, 
-                                     t_end_init+i*t_period, t);
-    ocp_solver.pushBackContactStatus(contact_status_front_hip_swing, 
-                                     t_end_init+i*t_period+t_front_swing, t);
+    ocp_solver.pushBackContactStatus(contact_status_front_swing, t_end_init+i*t_period);
+    ocp_solver.pushBackContactStatus(contact_status_front_hip_swing, t_end_init+i*t_period+t_front_swing);
     contact_points[0].coeffRef(0) += stride;
     contact_points[2].coeffRef(0) += stride;
     contact_points[1].coeffRef(0) += stride;
     contact_points[3].coeffRef(0) += stride;
     contact_status_hip_swing.setContactPoints(contact_points);
     ocp_solver.pushBackContactStatus(contact_status_hip_swing, 
-                                     t_end_init+i*t_period+t_front_swing+t_front_hip_swing, t);
+                                     t_end_init+i*t_period+t_front_swing+t_front_hip_swing);
   }
 
   contact_status_front_swing.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_front_swing, 
-                                   t_end_init+steps*t_period, t);
+  ocp_solver.pushBackContactStatus(contact_status_front_swing, t_end_init+steps*t_period);
 
   // For the last step
   const double t_end_front_swing = 0.15;
@@ -200,7 +197,7 @@ int main(int argc, char *argv[]) {
   const double t_end = t_end_front_swing + t_end_front_hip_swing + t_end_hip_swing;
 
   ocp_solver.pushBackContactStatus(contact_status_front_hip_swing, 
-                                   t_end_init+steps*t_period+t_end_front_swing, t);
+                                   t_end_init+steps*t_period+t_end_front_swing);
 
   contact_points[0].coeffRef(0) += 0.5 * stride;
   contact_points[2].coeffRef(0) += 0.5 * stride;
@@ -208,10 +205,9 @@ int main(int argc, char *argv[]) {
   contact_points[3].coeffRef(0) += 0.5 * stride - additive_stride_hip;
   contact_status_hip_swing.setContactPoints(contact_points);
   ocp_solver.pushBackContactStatus(contact_status_hip_swing, 
-                                   t_end_init+steps*t_period+t_end_front_swing+t_end_front_hip_swing, t);
+                                   t_end_init+steps*t_period+t_end_front_swing+t_end_front_hip_swing);
   contact_status_initial.setContactPoints(contact_points);
-  ocp_solver.pushBackContactStatus(contact_status_initial, 
-                                   t_end_init+steps*t_period+t_end, t);
+  ocp_solver.pushBackContactStatus(contact_status_initial, t_end_init+steps*t_period+t_end);
 
   Eigen::VectorXd q(Eigen::VectorXd::Zero(robot.dimq()));
   q << -3, 0, 0.4792, 0, 0, 0, 1, 
@@ -227,8 +223,11 @@ int main(int argc, char *argv[]) {
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
 
-  const bool line_search = true;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 300, line_search);
+  ocp_solver.initConstraints(t);
+
+  const bool line_search = false;
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 350, line_search);
+  // idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 350, line_search);
 
 #ifdef ENABLE_VIEWER
   if (argc != 2) {

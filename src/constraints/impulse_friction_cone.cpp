@@ -1,7 +1,6 @@
 #include "idocp/constraints/impulse_friction_cone.hpp"
 
 #include <iostream>
-#include <cassert>
 
 
 namespace idocp {

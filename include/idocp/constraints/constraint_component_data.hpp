@@ -121,8 +121,6 @@ public:
   ///
   bool isApprox(const ConstraintComponentData& other) const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
-
 private:
   int dimc_;
 

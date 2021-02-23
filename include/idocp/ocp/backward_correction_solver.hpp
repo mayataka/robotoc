@@ -133,10 +133,8 @@ public:
     }
   }
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
-  int N_, max_num_impulse_, nthreads_, N_all_;
+  int max_num_impulse_, nthreads_, N_all_;
   Solution s_new_;
   std::vector<Eigen::MatrixXd> aux_mat_, aux_mat_impulse_, aux_mat_aux_, 
                                aux_mat_lift_;

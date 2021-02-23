@@ -16,8 +16,8 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
-#include "idocp/constraints/friction_cone.hpp"
-#include "idocp/constraints/impulse_friction_cone.hpp"
+#include "idocp/constraints/linearized_friction_cone.hpp"
+#include "idocp/constraints/linearized_impulse_friction_cone.hpp"
 
 #include "idocp/utils/ocp_benchmarker.hpp"
 
@@ -99,8 +99,8 @@ int main(int argc, char *argv[]) {
   auto joint_torques_lower   = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper   = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
   const double mu = 0.7;
-  auto friction_cone         = std::make_shared<idocp::FrictionCone>(robot, mu);
-  auto impulse_friction_cone = std::make_shared<idocp::ImpulseFrictionCone>(robot, mu);
+  auto friction_cone         = std::make_shared<idocp::LinearizedFrictionCone>(robot, mu);
+  auto impulse_friction_cone = std::make_shared<idocp::LinearizedImpulseFrictionCone>(robot, mu);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
   for (int i=0; i<max_num_impulse_phase; ++i) {
     auto contact_status_flying = robot.createContactStatus();
     contact_status_flying.setContactPoints(contact_points);
-    ocp_solver.pushBackContactStatus(contact_status_flying, t_start+i*(t_jumping+t_ground), t);
+    ocp_solver.pushBackContactStatus(contact_status_flying, t_start+i*(t_jumping+t_ground));
 
     auto contact_status_landing = robot.createContactStatus();
     contact_points[0].coeffRef(0) += jump_length;
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
     contact_points[3].coeffRef(0) += jump_length;
     contact_status_landing.activateContacts({0, 1, 2, 3});
     contact_status_landing.setContactPoints(contact_points);
-    ocp_solver.pushBackContactStatus(contact_status_landing, t_start+i*(t_jumping+t_ground)+t_jumping, t);
+    ocp_solver.pushBackContactStatus(contact_status_landing, t_start+i*(t_jumping+t_ground)+t_jumping);
   }
 
   Eigen::VectorXd q(Eigen::VectorXd::Zero(robot.dimq()));
@@ -155,8 +155,11 @@ int main(int argc, char *argv[]) {
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
 
-  const bool line_search = true;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 150, line_search);
+  ocp_solver.initConstraints(t);
+
+  const bool line_search = false;
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 155, line_search);
+  // idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 155, line_search);
 
 #ifdef ENABLE_VIEWER
   if (argc != 2) {

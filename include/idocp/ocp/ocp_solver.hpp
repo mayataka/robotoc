@@ -9,16 +9,12 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/ocp/split_solution.hpp"
-#include "idocp/ocp/split_direction.hpp"
-#include "idocp/impulse/impulse_split_solution.hpp"
-#include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/ocp/state_constraint_jacobian.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
-#include "idocp/ocp/riccati_solver.hpp"
+#include "idocp/ocp/riccati_recursion_solver.hpp"
 #include "idocp/line_search/line_search.hpp"
-
 
 namespace idocp {
 
@@ -77,19 +73,18 @@ public:
   /// and the Lagrange multipliers of inequality constraints. Based on the 
   /// current solution.
   ///
-  void initConstraints();
+  void initConstraints(const double t);
 
   ///
   /// @brief Updates the solution by computing the primal-dual Newon direction.
   /// @param[in] t Initial time of the horizon. Current time in MPC. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] use_line_search If true, filter line search is enabled. If 
-  /// false, it is disabled. Default is false.
+  /// @param[in] line_search If true, filter line search is enabled. If false
+  /// filter line search is disabled. Default is false.
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v, 
-                      const bool use_line_search=false);
+                      const Eigen::VectorXd& v, const bool line_search=false);
 
   ///
   /// @brief Get the const reference to the split solution of a time stage. 
@@ -118,23 +113,20 @@ public:
   void setContactStatusUniformly(const ContactStatus& contact_status);
 
   void pushBackContactStatus(const ContactStatus& contact_status, 
-                             const double switching_time,
-                             const double t);
+                             const double switching_time);
 
   void setContactPoints(const int contact_phase, 
                         const std::vector<Eigen::Vector3d>& contact_points);
 
   ///
-  /// @brief Pop back the discrete event. Contact status after discrete event 
-  /// is also removed. 
+  /// @brief Pop back a contact status. 
   ///
-  void popBackDiscreteEvent();
+  void popBackContactStatus();
 
   ///
-  /// @brief Pop front the discrete event. Contact status before the front 
-  /// discrete event is also removed. 
+  /// @brief Pop front a contact status. 
   ///
-  void popFrontDiscreteEvent();
+  void popFrontContactStatus();
 
   ///
   /// @brief Clear the line search filter. 
@@ -176,39 +168,19 @@ public:
   ///
   std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
 
-  ///
-  /// @brief Prints the variable into console. 
-  /// @param[in] name Name of the printed variable. Default is "all" 
-  /// (print all variables).
-  /// @param[in] frame_id Index of the end-effector frames. Only used if 
-  /// name == "end-effector". Default is {} (do not specify any frames).
-  ///
-  void printSolution(const std::string& name="all", 
-                     const std::vector<int> frames={}) const;
-
-  ///
-  /// @brief Save the variable into file. 
-  /// @param[in] name Name of the printed variable. 
-  /// @param[in] frame_id Index of the end-effector frames. Only used if 
-  /// name == "end-effector". Default is {} (do not specify any frames).
-  ///
-  void saveSolution(const std::string& path_to_file,
-                    const std::string& name) const;
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
   OCPLinearizer ocp_linearizer_;
-  RiccatiSolver riccati_solver_;
+  RiccatiRecursionSolver riccati_solver_;
   LineSearch line_search_;
   OCP ocp_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
+  StateConstraintJacobian jac_;
+  RiccatiFactorization riccati_factorization_;
   Solution s_;
   Direction d_;
-  int N_, nthreads_;
 
   void discretizeSolution();
 

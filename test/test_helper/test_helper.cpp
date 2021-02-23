@@ -20,25 +20,27 @@ ContactSequence CreateContactSequence(const Robot& robot, const int N,
                                       const double event_period) {
   if (robot.max_dimf() > 0) {
     std::vector<DiscreteEvent> discrete_events;
+    std::vector<double> event_times;
     ContactStatus pre_contact_status = robot.createContactStatus();
     pre_contact_status.setRandom();
-    ContactSequence contact_sequence(robot, N);
+    ContactSequence contact_sequence(robot, max_num_impulse);
     contact_sequence.setContactStatusUniformly(pre_contact_status);
     ContactStatus post_contact_status = pre_contact_status;
     std::random_device rnd;
     for (int i=0; i<max_num_impulse; ++i) {
-      DiscreteEvent tmp(robot);
+      DiscreteEvent tmp(robot.maxPointContacts());
       tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
       while (!tmp.existDiscreteEvent()) {
         post_contact_status.setRandom();
         tmp.setDiscreteEvent(pre_contact_status, post_contact_status);
       }
-      tmp.eventTime = t0 + i * event_period + 0.1 * event_period * std::abs(Eigen::VectorXd::Random(1)[0]);
       discrete_events.push_back(tmp);
+      const double event_time = t0 + i * event_period + 0.1 * event_period * std::abs(Eigen::VectorXd::Random(1)[0]);
+      event_times.push_back(event_time);
       pre_contact_status = post_contact_status;
     }
     for (int i=0; i<max_num_impulse; ++i) {
-      contact_sequence.pushBackDiscreteEvent(discrete_events[i]);
+      contact_sequence.push_back(discrete_events[i], event_times[i]);
     }
     return contact_sequence;
   }
@@ -152,6 +154,10 @@ Solution CreateSolution(const Robot& robot, const ContactSequence& contact_seque
     }
     for (int i=0; i<num_impulse; ++i) {
       s.aux[i].setRandom(robot, contact_sequence.contactStatus(parnmpc_discretizer.contactPhaseBeforeImpulse(i)));
+      if (parnmpc_discretizer.timeStageBeforeImpulse(i) >= 0) {
+        s.aux[i].setImpulseStatus(contact_sequence.impulseStatus(i));
+        s.aux[i].xi_stack().setRandom();
+      }
     }
     const int num_lift = contact_sequence.numLiftEvents();
     for (int i=0; i<num_lift; ++i) {
@@ -172,6 +178,13 @@ Solution CreateSolution(const Robot& robot, const ContactSequence& contact_seque
     }
     for (int i=0; i<num_impulse; ++i) {
       s.aux[i].setRandom(robot, contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterImpulse(i)));
+    }
+    for (int i=0; i<num_impulse; ++i) {
+      const int time_stage_before_impulse = ocp_discretizer.timeStageBeforeImpulse(i);
+      if (time_stage_before_impulse-1 >= 0) {
+        s[time_stage_before_impulse-1].setImpulseStatus(contact_sequence.impulseStatus(i));
+        s[time_stage_before_impulse-1].xi_stack().setRandom();
+      }
     }
     const int num_lift = contact_sequence.numLiftEvents();
     for (int i=0; i<num_lift; ++i) {
@@ -211,6 +224,10 @@ Direction CreateDirection(const Robot& robot, const ContactSequence& contact_seq
       }
       for (int i=0; i<num_impulse; ++i) {
         d.aux[i].setRandom(contact_sequence.contactStatus(parnmpc_discretizer.contactPhaseBeforeImpulse(i)));
+        if (parnmpc_discretizer.timeStageBeforeImpulse(i) >= 0) {
+          d.aux[i].setImpulseStatus(contact_sequence.impulseStatus(i));
+          d.aux[i].dxi().setRandom();
+        }
       }
       const int num_lift = contact_sequence.numLiftEvents();
       for (int i=0; i<num_lift; ++i) {
@@ -232,6 +249,13 @@ Direction CreateDirection(const Robot& robot, const ContactSequence& contact_seq
       for (int i=0; i<num_impulse; ++i) {
         d.aux[i].setRandom(contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterImpulse(i)));
       }
+      for (int i=0; i<num_impulse; ++i) {
+        const int time_stage_before_impulse = ocp_discretizer.timeStageBeforeImpulse(i);
+        if (time_stage_before_impulse-1 >= 0) {
+          d[time_stage_before_impulse-1].setImpulseStatus(contact_sequence.impulseStatus(i));
+          d[time_stage_before_impulse-1].dxi().setRandom();
+        }
+      }
       const int num_lift = contact_sequence.numLiftEvents();
       for (int i=0; i<num_lift; ++i) {
         d.lift[i].setRandom(contact_sequence.contactStatus(ocp_discretizer.contactPhaseAfterLift(i)));
@@ -243,7 +267,7 @@ Direction CreateDirection(const Robot& robot, const ContactSequence& contact_seq
 
 
 KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence, 
-                          const int N, const int max_num_impulse) {
+                          const int N, const int max_num_impulse, const bool is_parnmpc) {
   KKTMatrix kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   const int dimx = 2*robot.dimv();
   const int dimu = robot.dimu();
@@ -272,14 +296,13 @@ KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_seq
     }
     kkt_matrix.impulse[i].Fvq().setRandom();
     kkt_matrix.impulse[i].Fvv().setRandom();
-    kkt_matrix.impulse[i].Pq().setRandom();
   }
   for (int i=0; i<num_impulse; ++i) {
     Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx+dimu, dimx+dimu);
     const Eigen::MatrixXd Qxxuu = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx+dimu, dimx+dimu);
-    kkt_matrix[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
-    kkt_matrix[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
-    kkt_matrix[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
+    kkt_matrix.aux[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
+    kkt_matrix.aux[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
+    kkt_matrix.aux[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
     if (robot.hasFloatingBase()) {
       kkt_matrix.aux[i].Fqq().setIdentity();
       kkt_matrix.aux[i].Fqq().topLeftCorner(6, 6).setRandom();
@@ -292,9 +315,9 @@ KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_seq
   for (int i=0; i<num_lift; ++i) {
     Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx+dimu, dimx+dimu);
     const Eigen::MatrixXd Qxxuu = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx+dimu, dimx+dimu);
-    kkt_matrix[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
-    kkt_matrix[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
-    kkt_matrix[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
+    kkt_matrix.lift[i].Qxx() = Qxxuu.topLeftCorner(dimx, dimx);
+    kkt_matrix.lift[i].Quu() = Qxxuu.bottomRightCorner(dimu, dimu);
+    kkt_matrix.lift[i].Qxu() = Qxxuu.topRightCorner(dimx, dimu);
     if (robot.hasFloatingBase()) {
       kkt_matrix.lift[i].Fqq().setIdentity();
       kkt_matrix.lift[i].Fqq().topLeftCorner(6, 6).setRandom();
@@ -303,12 +326,20 @@ KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_seq
     kkt_matrix.lift[i].Fvv().setRandom();
     kkt_matrix.lift[i].Fvu().setRandom();
   }
+  if (is_parnmpc) {
+    for (int i=0; i<num_impulse; ++i) {
+      kkt_matrix.aux[i].setImpulseStatus(contact_sequence.impulseStatus(i));
+      kkt_matrix.aux[i].Pq().setRandom();
+    }
+  }
+  else {
+  }
   return kkt_matrix;
 }
 
 
 KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact_sequence, 
-                              const int N, const int max_num_impulse) {
+                              const int N, const int max_num_impulse, const bool is_parnmpc) {
   KKTResidual kkt_residual = KKTResidual(robot, N, max_num_impulse);
   for (int i=0; i<=N; ++i) {
     kkt_residual[i].lx().setRandom();
@@ -320,7 +351,6 @@ KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact
     kkt_residual.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
     kkt_residual.impulse[i].lx().setRandom();
     kkt_residual.impulse[i].Fx().setRandom();
-    kkt_residual.impulse[i].P().setRandom();
   }
   for (int i=0; i<num_impulse; ++i) {
     kkt_residual.aux[i].lx().setRandom();
@@ -332,6 +362,15 @@ KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact
     kkt_residual.lift[i].lx().setRandom();
     kkt_residual.lift[i].lu().setRandom();
     kkt_residual.lift[i].Fx().setRandom();
+  }
+  if (is_parnmpc) {
+    for (int i=0; i<num_impulse; ++i) {
+      kkt_residual.aux[i].setImpulseStatus(contact_sequence.impulseStatus(i));
+      kkt_residual.aux[i].P().setRandom();
+    }
+  }
+  else {
+
   }
   return kkt_residual;
 }

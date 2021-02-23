@@ -67,13 +67,13 @@ void TaskSpace6DCost::set_qi_6d_weight(const Eigen::Vector3d& position_weight,
  
 
 double TaskSpace6DCost::computeStageCost(Robot& robot, CostFunctionData& data, 
-                                         const double t, const double dtau, 
+                                         const double t, const double dt, 
                                          const SplitSolution& s) const {
   double l = 0;
   data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
   data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
   l += (q_6d_weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
-  return 0.5 * dtau * l;
+  return 0.5 * dt * l;
 }
 
 
@@ -101,7 +101,7 @@ double TaskSpace6DCost::computeImpulseCost(
 
 
 void TaskSpace6DCost::computeStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
   data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
@@ -109,7 +109,7 @@ void TaskSpace6DCost::computeStageCostDerivatives(
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.JJ_6d.noalias() = data.J_66 * data.J_6d;
   kkt_residual.lq().noalias() 
-      += dtau * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() 
+      += dt * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() 
                                        * data.diff_6d;
 }
 
@@ -142,14 +142,14 @@ void TaskSpace6DCost::computeImpulseCostDerivatives(
 
 
 void TaskSpace6DCost::computeStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
   pinocchio::Jlog6(data.diff_SE3, data.J_66);
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.JJ_6d.noalias() = data.J_66 * data.J_6d;
   kkt_matrix.Qqq().noalias()
-      += dtau * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() * data.JJ_6d;
+      += dt * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() * data.JJ_6d;
 }
 
 

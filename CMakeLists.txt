@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 ## Build idocp ##
 #################
 if(NOT CMAKE_BUILD_TYPE MATCHES Release)
-  message(STATUS "WARNING: CMAKE_BUILD_TYPE not set to Release, which can decrease performance significantly")
+  message(STATUS "WARNING: CMAKE_BUILD_TYPE is NOT set to Release, which can decrease performance significantly.")
 endif()
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 # find Eigen
@@ -41,8 +41,6 @@ add_library(
   src/cost/time_varying_task_space_3d_cost.cpp
   src/cost/time_varying_task_space_6d_cost.cpp
   src/cost/trotting_configuration_space_cost.cpp
-  src/cost/trotting_foot_step_cost.cpp
-  src/cost/trotting_foot_height_cost.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
   src/constraints/constraints_impl.cpp
@@ -73,7 +71,6 @@ add_library(
   src/impulse/impulse_dynamics_forward_euler.cpp
   src/impulse/impulse_split_ocp.cpp
   src/impulse/impulse_backward_riccati_recursion_factorizer.cpp
-  src/impulse/impulse_forward_riccati_recursion_factorizer.cpp
   src/impulse/impulse_split_riccati_factorizer.cpp
   src/impulse/impulse_dynamics_backward_euler_data.cpp
   src/impulse/impulse_dynamics_backward_euler.cpp
@@ -94,21 +91,19 @@ add_library(
   src/ocp/state_equation.cpp
   src/ocp/contact_dynamics_data.cpp
   src/ocp/contact_dynamics.cpp
+  src/ocp/switching_constraint.cpp
+  src/ocp/split_state_constraint_jacobian.cpp
+  src/ocp/forward_switching_constraint.cpp
   src/ocp/split_ocp.cpp
   src/ocp/terminal_ocp.cpp
+  src/ocp/state_constraint_jacobian.cpp
   src/ocp/ocp_linearizer.cpp
   src/ocp/split_riccati_factorization.cpp
+  src/ocp/split_constrained_riccati_factorization.cpp
   src/ocp/backward_riccati_recursion_factorizer.cpp
-  src/ocp/forward_riccati_recursion_factorizer.cpp
   src/ocp/lqr_state_feedback_policy.cpp
   src/ocp/split_riccati_factorizer.cpp
-  src/ocp/riccati_recursion.cpp
-  src/ocp/split_state_constraint_riccati_factorization.cpp
-  src/ocp/state_constraint_riccati_factorization.cpp
-  src/ocp/state_constraint_riccati_lp_factorizer.cpp
-  src/ocp/state_constraint_riccati_factorizer.cpp
-  src/ocp/riccati_direction_calculator.cpp
-  src/ocp/riccati_solver.cpp
+  src/ocp/riccati_recursion_solver.cpp
   src/ocp/ocp_solver.cpp
   src/ocp/split_parnmpc.cpp
   src/ocp/terminal_parnmpc.cpp

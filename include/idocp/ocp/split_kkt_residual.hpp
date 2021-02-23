@@ -207,12 +207,6 @@ public:
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the KKT at the current contact status.
-  /// @return Dimension of the KKT at the current contact status.
-  ///
-  int dimKKT() const;
-
-  ///
   /// @brief Returns the dimension of the stack of contact forces at the current 
   /// contact status.
   /// @return Dimension of the stack of contact forces.

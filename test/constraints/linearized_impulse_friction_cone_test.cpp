@@ -254,8 +254,7 @@ TEST_F(LinearizedImpulseFrictionConeTest, frictionConeResidual) {
 TEST_F(LinearizedImpulseFrictionConeTest, fixedBase) {
   const std::vector<int> frames = {18};
   Robot robot(fixed_base_urdf, frames);
-  ImpulseStatus impulse_status = robot.createImpulseStatus();
-  impulse_status.setImpulseStatus({false});
+  auto impulse_status = robot.createImpulseStatus();
   testKinematics(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
   testSetSlackAndDual(robot, impulse_status);
@@ -263,7 +262,7 @@ TEST_F(LinearizedImpulseFrictionConeTest, fixedBase) {
   testComputePrimalAndDualResidual(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
   testComputeSlackAndDualDirection(robot, impulse_status);
-  impulse_status.setImpulseStatus({true});
+  impulse_status.activateImpulse(0);
   testKinematics(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
   testSetSlackAndDual(robot, impulse_status);
@@ -277,8 +276,7 @@ TEST_F(LinearizedImpulseFrictionConeTest, fixedBase) {
 TEST_F(LinearizedImpulseFrictionConeTest, floatingBase) {
   const std::vector<int> frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, frames);
-  ImpulseStatus impulse_status = robot.createImpulseStatus();
-  impulse_status.setImpulseStatus({false, false, false, false});
+  auto impulse_status = robot.createImpulseStatus();
   testKinematics(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
   testSetSlackAndDual(robot, impulse_status);

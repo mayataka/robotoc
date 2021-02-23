@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <random>
+#include <chrono>
 
 namespace idocp {
 
@@ -14,16 +15,6 @@ inline ContactStatus::ContactStatus(const int max_point_contacts)
     dimf_(0),
     max_point_contacts_(max_point_contacts),
     has_active_contacts_(false) {
-}
-
-
-inline ContactStatus::ContactStatus(const std::vector<bool>& is_contact_active)
-  : is_contact_active_(is_contact_active),
-    contact_points_(is_contact_active.size(), Eigen::Vector3d::Zero()),
-    dimf_(0),
-    max_point_contacts_(is_contact_active.size()),
-    has_active_contacts_(false) {
-  setContactStatus(is_contact_active);
 }
 
 
@@ -82,23 +73,12 @@ inline int ContactStatus::dimf() const {
 }
 
 
-// inline int ContactStatus::num_active_contacts() const {
-//   return num_active_contacts_;
-// }
-
-
 inline int ContactStatus::maxPointContacts() const {
   return max_point_contacts_;
 }
 
 
-inline void ContactStatus::set(const ContactStatus& other) {
-  setContactStatus(other.isContactActive());
-  setContactPoints(other.contactPoints());
-}
-
-
-inline void ContactStatus::setContactStatus(
+inline void ContactStatus::setActivity(
     const std::vector<bool>& is_contact_active) {
   assert(is_contact_active.size() == max_point_contacts_);
   is_contact_active_ = is_contact_active;
@@ -149,6 +129,15 @@ inline void ContactStatus::activateContacts(
 }
  
 
+inline void ContactStatus::activateContacts() {
+  for (int i=0; i<max_point_contacts_; ++i) {
+    is_contact_active_[i] = true;
+  }
+  dimf_ = 3*max_point_contacts_;
+  set_has_active_contacts();
+}
+
+
 inline void ContactStatus::deactivateContacts(
     const std::vector<int>& contact_indices) {
   assert(contact_indices.size() <= max_point_contacts_);
@@ -160,6 +149,15 @@ inline void ContactStatus::deactivateContacts(
       dimf_ -= 3;
     }
   }
+  set_has_active_contacts();
+}
+
+
+inline void ContactStatus::deactivateContacts() {
+  for (int i=0; i<max_point_contacts_; ++i) {
+    is_contact_active_[i] = false;
+  }
+  dimf_ = 0;
   set_has_active_contacts();
 }
 
@@ -194,9 +192,10 @@ ContactStatus::contactPoints() const {
 
 
 inline void ContactStatus::setRandom() {
-  std::random_device rnd;
+  std::minstd_rand0 rand(
+      std::chrono::system_clock::now().time_since_epoch().count());
   for (int i=0; i<max_point_contacts_; ++i) {
-    if (rnd()%2 == 0) {
+    if (rand()%2 == 0) {
       activateContact(i);
     }
     else {

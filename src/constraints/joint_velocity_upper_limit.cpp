@@ -1,7 +1,5 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 
-#include <cassert>
-
 
 namespace idocp {
 
@@ -57,23 +55,21 @@ void JointVelocityUpperLimit::setSlackAndDual(
 
 
 void JointVelocityUpperLimit::augmentDualResidual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
-  kkt_residual.lv().tail(dimc_).noalias() += dtau * data.dual;
+  kkt_residual.lv().tail(dimc_).noalias() += dt * data.dual;
 }
 
 
 void JointVelocityUpperLimit::condenseSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
   kkt_matrix.Qvv().diagonal().tail(dimc_).array()
-      += dtau * data.dual.array() / data.slack.array();
+      += dt * data.dual.array() / data.slack.array();
   computePrimalAndDualResidual(robot, data, s);
   kkt_residual.lv().tail(dimc_).array() 
-      += dtau * (data.dual.array()*data.residual.array()-data.duality.array()) 
+      += dt * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
 }
 

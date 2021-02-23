@@ -104,7 +104,7 @@ public:
 private:
   LineSearchFilter filter_;
   int N_, nthreads_;
-  double T_, dtau_, step_size_reduction_rate_, min_step_size_;
+  double T_, dt_, step_size_reduction_rate_, min_step_size_;
   Eigen::VectorXd costs_, violations_;
   UnSolution s_try_;
   UnKKTResidual kkt_residual_;

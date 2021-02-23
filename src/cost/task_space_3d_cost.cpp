@@ -55,12 +55,12 @@ void TaskSpace3DCost::set_qi_3d_weight(const Eigen::Vector3d& qi_3d_weight) {
 
 
 double TaskSpace3DCost::computeStageCost(Robot& robot, CostFunctionData& data, 
-                                         const double t, const double dtau, 
+                                         const double t, const double dt, 
                                          const SplitSolution& s) const {
   double l = 0;
   data.diff_3d = robot.framePosition(frame_id_) - q_3d_ref_;
   l += (q_3d_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * dtau * l;
+  return 0.5 * dt * l;
 }
 
 
@@ -87,14 +87,14 @@ double TaskSpace3DCost::computeImpulseCost(Robot& robot,
 
 
 void TaskSpace3DCost::computeStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   data.diff_3d = robot.framePosition(frame_id_) - q_3d_ref_;
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
       = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
   kkt_residual.lq().noalias() 
-      += dtau * data.J_3d.transpose() * q_3d_weight_.asDiagonal() * data.diff_3d;
+      += dt * data.J_3d.transpose() * q_3d_weight_.asDiagonal() * data.diff_3d;
 }
 
 
@@ -124,13 +124,13 @@ void TaskSpace3DCost::computeImpulseCostDerivatives(
 
 
 void TaskSpace3DCost::computeStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   robot.getFrameJacobian(frame_id_, data.J_6d);
   data.J_3d.noalias() 
       = robot.frameRotation(frame_id_) * data.J_6d.template topRows<3>();
   kkt_matrix.Qqq().noalias()
-      += dtau * data.J_3d.transpose() * q_3d_weight_.asDiagonal() * data.J_3d;
+      += dt * data.J_3d.transpose() * q_3d_weight_.asDiagonal() * data.J_3d;
 }
 
 

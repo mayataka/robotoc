@@ -40,7 +40,6 @@ void ContactDynamicsDataTest::testSize(const Robot& robot, const ContactStatus& 
   data.setContactStatus(contact_status);
   EXPECT_EQ(data.dIDda.rows(), dimv);
   EXPECT_EQ(data.dIDda.cols(), dimv);
-  EXPECT_EQ(data.u_passive.size(), 6);
   EXPECT_EQ(data.dCda().rows(), dimf);
   EXPECT_EQ(data.dCda().cols(), dimv);
   EXPECT_EQ(data.dIDCdqv().rows(), dimv+dimf);
@@ -75,7 +74,6 @@ void ContactDynamicsDataTest::testSize(const Robot& robot, const ContactStatus& 
   EXPECT_EQ(data.la().size(), dimv);
   EXPECT_EQ(data.lf().size(), dimf);
   const Eigen::MatrixXd dIDda_ref = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::VectorXd u_passive_ref = Eigen::VectorXd::Random(6);
   const Eigen::MatrixXd dCda_ref = Eigen::MatrixXd::Random(dimf, dimv);
   const Eigen::MatrixXd dIDCdqv_ref = Eigen::MatrixXd::Random(dimv+dimf, dimx);
   const Eigen::MatrixXd MJtJinv_ref = Eigen::MatrixXd::Random(dimv+dimf, dimv+dimf);
@@ -86,7 +84,6 @@ void ContactDynamicsDataTest::testSize(const Robot& robot, const ContactStatus& 
   const Eigen::VectorXd MJtJinv_IDC_ref = Eigen::VectorXd::Random(dimv+dimf);
   const Eigen::VectorXd laf_ref = Eigen::VectorXd::Random(dimv+dimf);
   data.dIDda = dIDda_ref;
-  data.u_passive = u_passive_ref;
   data.dCda() = dCda_ref;
   data.dIDCdqv() = dIDCdqv_ref;
   data.MJtJinv() = MJtJinv_ref;
@@ -97,7 +94,6 @@ void ContactDynamicsDataTest::testSize(const Robot& robot, const ContactStatus& 
   data.MJtJinv_IDC() = MJtJinv_IDC_ref;
   data.laf() = laf_ref;
   EXPECT_TRUE(data.dIDda.isApprox(dIDda_ref));
-  EXPECT_TRUE(data.u_passive.isApprox(u_passive_ref));
   EXPECT_TRUE(data.dCda().isApprox(dCda_ref));
   EXPECT_TRUE(data.dIDCdqv().isApprox(dIDCdqv_ref));
   EXPECT_TRUE(data.dIDdq().isApprox(dIDCdqv_ref.topLeftCorner(dimv, dimv)));
@@ -124,20 +120,18 @@ void ContactDynamicsDataTest::testSize(const Robot& robot, const ContactStatus& 
 
 TEST_F(ContactDynamicsDataTest, fixedBase) {
   std::vector<int> contact_frames = {18};
-  ContactStatus contact_status(contact_frames.size());
   Robot robot(fixed_base_urdf, contact_frames);
-  contact_status.setContactStatus({false});
+  auto contact_status = robot.createContactStatus();
   testSize(robot, contact_status);
-  contact_status.setContactStatus({true});
+  contact_status.activateContact(0);
   testSize(robot, contact_status);
 }
 
 
 TEST_F(ContactDynamicsDataTest, floatingBase) {
   std::vector<int> contact_frames = {14, 24, 34, 44};
-  ContactStatus contact_status(contact_frames.size());
   Robot robot(floating_base_urdf, contact_frames);
-  contact_status.setContactStatus({false, false, false, false});
+  auto contact_status = robot.createContactStatus();
   testSize(robot, contact_status);
   contact_status.setRandom();
   testSize(robot, contact_status);

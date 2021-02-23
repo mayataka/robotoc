@@ -22,8 +22,7 @@ ConfigurationSpaceCost::ConfigurationSpaceCost(const Robot& robot)
     vf_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     qi_weight_(Eigen::VectorXd::Zero(robot.dimv())),
     vi_weight_(Eigen::VectorXd::Zero(robot.dimv())),
-    dvi_weight_(Eigen::VectorXd::Zero(robot.dimv())),
-    u_passive_weight_(Vector6d::Zero()) {
+    dvi_weight_(Eigen::VectorXd::Zero(robot.dimv())) {
   if (robot.hasFloatingBase()) {
     robot.normalizeConfiguration(q_ref_);
   }
@@ -46,8 +45,7 @@ ConfigurationSpaceCost::ConfigurationSpaceCost()
     vf_weight_(),
     qi_weight_(),
     vi_weight_(),
-    dvi_weight_(),
-    u_passive_weight_(Vector6d::Zero()) {
+    dvi_weight_() {
 }
 
 
@@ -165,12 +163,6 @@ void ConfigurationSpaceCost::set_u_weight(const Eigen::VectorXd& u_weight) {
 }
 
 
-void ConfigurationSpaceCost::set_u_passive_weight(
-    const Vector6d& u_passive_weight) {
-  u_passive_weight_ = u_passive_weight;
-}
-
-
 void ConfigurationSpaceCost::set_qf_weight(const Eigen::VectorXd& qf_weight) {
   try {
     if (qf_weight.size() != dimv_) {
@@ -247,7 +239,7 @@ void ConfigurationSpaceCost::set_dvi_weight(const Eigen::VectorXd& dvi_weight) {
 
 
 double ConfigurationSpaceCost::computeStageCost(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s) const {
   double l = 0;
   if (robot.hasFloatingBase()) {
@@ -260,10 +252,7 @@ double ConfigurationSpaceCost::computeStageCost(
   l += (v_weight_.array()*(s.v-v_ref_).array()*(s.v-v_ref_).array()).sum();
   l += (a_weight_.array()*s.a.array()*s.a.array()).sum();
   l += (u_weight_.array()*(s.u-u_ref_).array()*(s.u-u_ref_).array()).sum();
-  if (robot.hasFloatingBase()) {
-    l += (u_passive_weight_.array()*s.u_passive.array()*s.u_passive.array()).sum();
-  }
-  return 0.5 * dtau * l;
+  return 0.5 * dt * l;
 }
 
 
@@ -301,27 +290,23 @@ double ConfigurationSpaceCost::computeImpulseCost(
 
 
 void ConfigurationSpaceCost::computeStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (robot.hasFloatingBase()) {
     robot.subtractConfiguration(s.q, q_ref_, data.qdiff);
     robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
-        += dtau * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.qdiff;
+        += dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.qdiff;
   }
   else {
     kkt_residual.lq().array()
-        += dtau * q_weight_.array() * (s.q.array()-q_ref_.array());
+        += dt * q_weight_.array() * (s.q.array()-q_ref_.array());
   }
   kkt_residual.lv().array()
-      += dtau * v_weight_.array() * (s.v.array()-v_ref_.array());
-  kkt_residual.la.array() += dtau * a_weight_.array() * s.a.array();
-  if (robot.hasFloatingBase()) {
-    kkt_residual.lu_passive.array()
-      += dtau * u_passive_weight_.array() * s.u_passive.array();
-  }
+      += dt * v_weight_.array() * (s.v.array()-v_ref_.array());
+  kkt_residual.la.array() += dt * a_weight_.array() * s.a.array();
   kkt_residual.lu().array() 
-      += dtau * u_weight_.array() * (s.u.array()-u_ref_.array());
+      += dt * u_weight_.array() * (s.u.array()-u_ref_.array());
 }
 
 
@@ -364,23 +349,19 @@ void ConfigurationSpaceCost::computeImpulseCostDerivatives(
 
 
 void ConfigurationSpaceCost::computeStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dtau, 
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
   if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
     kkt_matrix.Qqq().noalias()
-        += dtau * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
+        += dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.J_qdiff;
   }
   else {
-    kkt_matrix.Qqq().diagonal().noalias() += dtau * q_weight_;
+    kkt_matrix.Qqq().diagonal().noalias() += dt * q_weight_;
   }
-  kkt_matrix.Qvv().diagonal().noalias() += dtau * v_weight_;
-  kkt_matrix.Qaa().diagonal().noalias() += dtau * a_weight_;
-  if (robot.hasFloatingBase()) {
-    kkt_matrix.Quu_passive_topLeft().diagonal().noalias()
-        += dtau * u_passive_weight_;
-  }
-  kkt_matrix.Quu().diagonal().noalias() += dtau * u_weight_;
+  kkt_matrix.Qvv().diagonal().noalias() += dt * v_weight_;
+  kkt_matrix.Qaa().diagonal().noalias() += dt * a_weight_;
+  kkt_matrix.Quu().diagonal().noalias() += dt * u_weight_;
 }
 
 

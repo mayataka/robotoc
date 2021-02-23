@@ -1,7 +1,6 @@
 #include "idocp/constraints/linearized_friction_cone.hpp"
 
 #include <iostream>
-#include <cassert>
 #include <stdexcept>
 
 
@@ -113,14 +112,13 @@ void LinearizedFrictionCone::setSlackAndDual(Robot& robot,
 
 
 void LinearizedFrictionCone::augmentDualResidual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
-          += dtau * Jac_.transpose() * data.dual.template segment<5>(5*i);
+          += dt * Jac_.transpose() * data.dual.template segment<5>(5*i);
       dimf_stack += 3;
     }
   }
@@ -128,10 +126,9 @@ void LinearizedFrictionCone::augmentDualResidual(
 
 
 void LinearizedFrictionCone::condenseSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const double dtau, 
+    Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
-  assert(dtau >= 0);
   computePrimalAndDualResidual(robot, data, s);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
@@ -143,12 +140,12 @@ void LinearizedFrictionCone::condenseSlackAndDual(
               -data.duality.template segment<5>(idx).array())
               / data.slack.template segment<5>(idx).array();
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
-          += dtau * Jac_.transpose() * data.r[i];
+          += dt * Jac_.transpose() * data.r[i];
       data.r[i].array() = data.dual.template segment<5>(idx).array() 
                           / data.slack.template segment<5>(idx).array();
       data.J[i].noalias() = data.r[i].asDiagonal() * Jac_;
       kkt_matrix.Qff().template block<3, 3>(dimf_stack, dimf_stack).noalias()
-          += dtau * Jac_.transpose() * data.J[i];
+          += dt * Jac_.transpose() * data.J[i];
       dimf_stack += 3;
     }
   }

@@ -325,11 +325,6 @@ void PointContactTest::testContactResidual(pinocchio::Model& model, pinocchio::D
   EXPECT_TRUE(residuals.head(5).isZero());
   EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
   EXPECT_TRUE(residuals.tail(2).isZero());
-  const double coeff = Eigen::VectorXd::Random(1)[0];
-  contact.computeContactResidual(model, data, coeff, contact_point, residuals.segment<3>(5));
-  EXPECT_TRUE(residuals.head(5).isZero());
-  EXPECT_TRUE(residuals.segment<3>(5).isApprox(coeff*residual_ref));
-  EXPECT_TRUE(residuals.tail(2).isZero());
 }
 
 
@@ -353,9 +348,6 @@ void PointContactTest::testContactDerivatives(pinocchio::Model& model, pinocchio
   contact_partial_dq_ref 
       = data.oMf[contact_frame_id].rotation() * J_frame.template topRows<3>();
   EXPECT_TRUE(contact_partial_dq_ref.isApprox(contact_partial_dq));
-  const double coeff = Eigen::VectorXd::Random(1)[0];
-  contact.computeContactDerivative(model, data, coeff, contact_partial_dq);
-  EXPECT_TRUE(contact_partial_dq.isApprox(coeff*contact_partial_dq_ref));
 }
 
 

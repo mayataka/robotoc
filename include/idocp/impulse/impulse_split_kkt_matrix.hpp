@@ -163,21 +163,6 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fxx() const;
 
   ///
-  /// @brief Jacobian of the contact position constraint related to impulse 
-  /// condition with respect to the configuration. 
-  /// ImpulseSplitKKTMatrix::setImpulseStatus() muset be called to set the impulse 
-  /// dimension before calling this function.
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is ImpulseStatus::dimf() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Pq();
-
-  ///
-  /// @brief const version of ImpulseSplitKKTMatrix::Pq().
-  ///
-  const Eigen::Block<const Eigen::MatrixXd> Pq() const;
-
-  ///
   /// @brief Jacobian of the contact velocity constraint after impulse with 
   /// respect to the configuration. ImpulseSplitKKTMatrix::setImpulseStatus() must be
   /// called to set the impulse dimension before calling this function.
@@ -386,12 +371,6 @@ public:
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the condensed KKT condition.
-  /// @return Dimension of the condensed KKT condition.
-  ///
-  int dimKKT() const;
-
-  ///
   /// @brief Returns the dimension of the stack of contact forces at the current 
   /// contact status.
   /// @return Dimension of the stack of contact forces.
@@ -426,8 +405,8 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::MatrixXd FC_, Pq_full_, Q_;
-  int dimv_, dimx_, dimf_, q_begin_, v_begin_, dimKKT_;
+  Eigen::MatrixXd FC_, Q_;
+  int dimv_, dimx_, dimf_, q_begin_, v_begin_;
 
 };
 

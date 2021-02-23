@@ -21,13 +21,6 @@ public:
   ContactStatus(const int max_point_contacts);
 
   ///
-  /// @brief Constructor. 
-  /// @param[in] is_contact_active Vector containing bool representing that each 
-  /// point contact is active or not. 
-  ///
-  ContactStatus(const std::vector<bool>& is_contact_active);
-
-  ///
   /// @brief Default constructor. 
   ///
   ContactStatus();
@@ -92,12 +85,6 @@ public:
   ///
   int dimf() const;
 
-  // ///
-  // /// @brief Return the number of the active contacts.
-  // /// @return The number of the active contacts. 
-  // ///
-  // int num_active_contacts() const;
-
   ///
   /// @brief Return the maximum number of the contacts.
   /// @return The maximum number of the contacts. 
@@ -105,17 +92,11 @@ public:
   int maxPointContacts() const;
 
   ///
-  /// @brief Set from other contact status that has the same size.
-  /// @param[in] other Other contact status. 
-  ///
-  void set(const ContactStatus& other);
-
-  ///
-  /// @brief Set the contact status.
-  /// @param[in] is_contact_active Contact status. Size must be 
+  /// @brief Set the activity of the contacts.
+  /// @param[in] is_contact_active Activity of the contacts. Size must be 
   /// ContactStatus::maxPointContacts();
   ///
-  void setContactStatus(const std::vector<bool>& is_contact_active);
+  void setActivity(const std::vector<bool>& is_contact_active);
 
   ///
   /// @brief Activate a contact.
@@ -136,10 +117,20 @@ public:
   void activateContacts(const std::vector<int>& contact_indices);
 
   ///
+  /// @brief Activate all contacts.
+  ///
+  void activateContacts();
+
+  ///
   /// @brief Deactivate contacts.
   /// @param[in] contact_indices Indices of the contacts that are deactivated.
   ///
   void deactivateContacts(const std::vector<int>& contact_indices);
+
+  ///
+  /// @brief Deactivate all contacts.
+  ///
+  void deactivateContacts();
 
   ///
   /// @brief Set a contact point.

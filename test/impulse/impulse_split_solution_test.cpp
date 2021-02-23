@@ -27,11 +27,9 @@ protected:
   static void TestWithoutImpulses(const Robot& robot);
   static void TestWithImpulses(const Robot& robot, const ImpulseStatus& impulse_status);
   static void TestIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void TestCopy(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void TestCopyPartial(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void TestIntegrate(const Robot& robot, const ImpulseStatus& impulse_status, const bool is_state_constraint_valid);
+  static void TestIntegrate(const Robot& robot, const ImpulseStatus& impulse_status);
 
-  double dtau_;
+  double dt_;
   std::string fixed_base_urdf, floating_base_urdf;
 };
 
@@ -47,10 +45,8 @@ void ImpulseSplitSolutionTest::TestWithoutImpulses(const Robot& robot) {
   EXPECT_TRUE(s.beta.size() == robot.dimv());
   EXPECT_TRUE(s.f.size() == 0);
   EXPECT_TRUE(s.mu.size() == 0);
-  EXPECT_TRUE(s.xi.size() == 0);
   EXPECT_TRUE(s.f_stack().size() == 0);
   EXPECT_TRUE(s.mu_stack().size() == 0);
-  EXPECT_TRUE(s.xi_stack().size() == 0);
   EXPECT_EQ(s.dimf(), 0);
   const Eigen::VectorXd lmd = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd gmm = Eigen::VectorXd::Random(robot.dimv());
@@ -80,10 +76,8 @@ void ImpulseSplitSolutionTest::TestWithoutImpulses(const Robot& robot) {
   EXPECT_TRUE(s.beta.size() == robot.dimv());
   EXPECT_TRUE(s.f.size() == 0);
   EXPECT_TRUE(s.mu.size() == 0);
-  EXPECT_TRUE(s.xi.size() == 0);
   EXPECT_TRUE(s.f_stack().size() == 0);
   EXPECT_TRUE(s.mu_stack().size() == 0);
-  EXPECT_TRUE(s.xi_stack().size() == 0);
   EXPECT_EQ(s.dimf(), 0);
   EXPECT_FALSE(s.lmd.isZero());
   EXPECT_FALSE(s.gmm.isZero());
@@ -100,10 +94,8 @@ void ImpulseSplitSolutionTest::TestWithoutImpulses(const Robot& robot) {
   EXPECT_TRUE(s_random.beta.size() == robot.dimv());
   EXPECT_TRUE(s_random.f.size() == 0);
   EXPECT_TRUE(s_random.mu.size() == 0);
-  EXPECT_TRUE(s_random.xi.size() == 0);
   EXPECT_TRUE(s_random.f_stack().size() == 0);
   EXPECT_TRUE(s_random.mu_stack().size() == 0);
-  EXPECT_TRUE(s_random.xi_stack().size() == 0);
   EXPECT_EQ(s_random.dimf(), 0);
   EXPECT_FALSE(s_random.lmd.isZero());
   EXPECT_FALSE(s_random.gmm.isZero());
@@ -127,15 +119,12 @@ void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot,
   EXPECT_TRUE(s.beta.size() == robot.dimv());
   EXPECT_TRUE(s.f.size() == robot.maxPointContacts());
   EXPECT_TRUE(s.mu.size() == robot.maxPointContacts());
-  EXPECT_TRUE(s.xi.size() == robot.maxPointContacts());
   EXPECT_TRUE(s.f_stack().size() == impulse_status.dimf());
   EXPECT_TRUE(s.mu_stack().size() == impulse_status.dimf());
-  EXPECT_TRUE(s.xi_stack().size() == impulse_status.dimf());
   EXPECT_EQ(s.dimf(), impulse_status.dimf());
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_TRUE(s.f[i].size() == 3);
     EXPECT_TRUE(s.mu[i].size() == 3);
-    EXPECT_TRUE(s.xi[i].size() == 3);
   }
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_EQ(s.isImpulseActive(i), impulse_status.isImpulseActive(i));
@@ -148,7 +137,6 @@ void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot,
   const Eigen::VectorXd beta = Eigen::VectorXd::Random(robot.dimv());
   const Eigen::VectorXd f_stack = Eigen::VectorXd::Random(impulse_status.dimf());
   const Eigen::VectorXd mu_stack = Eigen::VectorXd::Random(impulse_status.dimf());
-  const Eigen::VectorXd xi_stack = Eigen::VectorXd::Random(impulse_status.dimf());
   s.lmd = lmd;
   s.gmm = gmm;
   s.q = q;
@@ -157,7 +145,6 @@ void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot,
   s.beta = beta;
   s.f_stack() = f_stack;
   s.mu_stack() = mu_stack;
-  s.xi_stack() = xi_stack;
   EXPECT_TRUE(s.lmd.isApprox(lmd));
   EXPECT_TRUE(s.gmm.isApprox(gmm));
   EXPECT_TRUE(s.q.isApprox(q));
@@ -166,7 +153,6 @@ void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot,
   EXPECT_TRUE(s.beta.isApprox(beta));
   EXPECT_TRUE(s.f_stack().isApprox(f_stack));
   EXPECT_TRUE(s.mu_stack().isApprox(mu_stack));
-  EXPECT_TRUE(s.xi_stack().isApprox(xi_stack));
   s.set_f_vector();
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
@@ -183,20 +169,10 @@ void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot,
       dimf_stack += 3;
     }
   }
-  dimf_stack = 0;
-  s.set_xi_vector();
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s.isImpulseActive(i)) {
-      EXPECT_TRUE(s.xi[i].isApprox(s.xi_stack().segment<3>(dimf_stack)));
-      dimf_stack += 3;
-    }
-  }
   s.f_stack().setZero();
   s.mu_stack().setZero();
-  s.xi_stack().setZero();
   s.set_f_stack();
   s.set_mu_stack();
-  s.set_xi_stack();
   dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
@@ -208,13 +184,6 @@ void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot,
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
       EXPECT_TRUE(s.mu[i].isApprox(s.mu_stack().segment<3>(dimf_stack)));
-      dimf_stack += 3;
-    }
-  }
-  dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s.isImpulseActive(i)) {
-      EXPECT_TRUE(s.xi[i].isApprox(s.xi_stack().segment<3>(dimf_stack)));
       dimf_stack += 3;
     }
   }
@@ -234,13 +203,8 @@ void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot,
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_TRUE(s.mu[i].size() == 3);
   }
-  EXPECT_TRUE(s.xi.size() == robot.maxPointContacts());
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    EXPECT_TRUE(s.xi[i].size() == 3);
-  }
   EXPECT_TRUE(s.f_stack().size() == impulse_status.dimf());
   EXPECT_TRUE(s.mu_stack().size() == impulse_status.dimf());
-  EXPECT_TRUE(s.xi_stack().size() == impulse_status.dimf());
   EXPECT_EQ(s.dimf(), impulse_status.dimf());
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_EQ(s.isImpulseActive(i), impulse_status.isImpulseActive(i));
@@ -254,7 +218,6 @@ void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot,
   if (impulse_status.hasActiveImpulse()) {
     EXPECT_FALSE(s.f_stack().isZero());
     EXPECT_FALSE(s.mu_stack().isZero());
-    EXPECT_FALSE(s.xi_stack().isZero());
   }
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isImpulseActive(i)) {
@@ -281,13 +244,8 @@ void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot,
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_TRUE(s_random.mu[i].size() == 3);
   }
-  EXPECT_TRUE(s_random.xi.size() == robot.maxPointContacts());
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    EXPECT_TRUE(s_random.xi[i].size() == 3);
-  }
   EXPECT_TRUE(s_random.f_stack().size() == impulse_status.dimf());
   EXPECT_TRUE(s_random.mu_stack().size() == impulse_status.dimf());
-  EXPECT_TRUE(s_random.xi_stack().size() == impulse_status.dimf());
   EXPECT_EQ(s_random.dimf(), impulse_status.dimf());
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_EQ(s_random.isImpulseActive(i), impulse_status.isImpulseActive(i));
@@ -301,7 +259,6 @@ void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot,
   if (impulse_status.hasActiveImpulse()) {
     EXPECT_FALSE(s_random.f_stack().isZero());
     EXPECT_FALSE(s_random.mu_stack().isZero());
-    EXPECT_FALSE(s_random.xi_stack().isZero());
   }
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s_random.isImpulseActive(i)) {
@@ -329,7 +286,6 @@ void ImpulseSplitSolutionTest::TestIsApprox(const Robot& robot,
   if (impulse_status.hasActiveImpulse()) {
     EXPECT_FALSE(s.f_stack().isZero());
     EXPECT_FALSE(s.mu_stack().isZero());
-    EXPECT_FALSE(s.xi_stack().isZero());
   }
   ImpulseSplitSolution s_ref = s;
   EXPECT_TRUE(s.isApprox(s_ref));
@@ -368,65 +324,24 @@ void ImpulseSplitSolutionTest::TestIsApprox(const Robot& robot,
     s_ref.mu_stack() = s.mu_stack();
     s_ref.set_mu_vector();
     EXPECT_TRUE(s.isApprox(s_ref));
-    s_ref.xi_stack().setRandom();
-    EXPECT_FALSE(s.isApprox(s_ref));
-    s_ref.xi_stack() = s.xi_stack();
-    s_ref.set_xi_vector();
-    EXPECT_TRUE(s.isApprox(s_ref));
   }
   else {
     s_ref.f_stack().setRandom();
     s_ref.set_f_vector();
     s_ref.mu_stack().setRandom();
     s_ref.set_mu_vector();
-    s_ref.xi_stack().setRandom();
-    s_ref.set_xi_vector();
     EXPECT_TRUE(s.isApprox(s_ref));
   }
 }
 
 
-void ImpulseSplitSolutionTest::TestCopy(const Robot& robot, 
-                                        const ImpulseStatus& impulse_status) {
-  ImpulseSplitSolution s(robot);
-  s.setRandom(robot, impulse_status);
-  ImpulseSplitSolution s_new(robot);
-  s_new.copy(s);
-  EXPECT_TRUE(s_new.isApprox(s));
-}
-
-
-void ImpulseSplitSolutionTest::TestCopyPartial(const Robot& robot, 
-                                               const ImpulseStatus& impulse_status) {
-
-  SplitSolution s(robot);
-  ContactStatus contact_status(impulse_status.isImpulseActive().size());
-  contact_status.setContactStatus(impulse_status.isImpulseActive());
-  s.setRandom(robot);
-  s.f_stack().setRandom();
-  s.mu_stack().setRandom();
-  s.set_f_vector();
-  s.set_mu_vector();
-  ImpulseSplitSolution s_new(robot);
-  s_new.copyPartial(s);
-  EXPECT_TRUE(s_new.q.isApprox(s.q));
-  EXPECT_TRUE(s_new.v.isApprox(s.v));
-  EXPECT_TRUE(s_new.dv.isApprox(s.a));
-  EXPECT_TRUE(s_new.beta.isApprox(s.beta));
-  EXPECT_TRUE(s_new.f_stack().isApprox(s.f_stack()));
-  EXPECT_TRUE(s_new.mu_stack().isApprox(s.mu_stack()));
-  EXPECT_TRUE(s_new.xi_stack().isZero());
-}
-
-
 void ImpulseSplitSolutionTest::TestIntegrate(const Robot& robot, 
-                                             const ImpulseStatus& impulse_status,
-                                             const bool is_state_constraint_valid) {
+                                             const ImpulseStatus& impulse_status) {
   ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   const ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
   ImpulseSplitSolution s_ref = s;
   const double step_size = 0.3;
-  s.integrate(robot, step_size, d, is_state_constraint_valid);
+  s.integrate(robot, step_size, d);
   s_ref.lmd.noalias() += step_size * d.dlmd();
   s_ref.gmm.noalias() += step_size * d.dgmm();
   robot.integrateConfiguration(d.dq(), step_size, s_ref.q);
@@ -438,10 +353,6 @@ void ImpulseSplitSolutionTest::TestIntegrate(const Robot& robot,
     s_ref.set_f_vector();
     s_ref.mu_stack().noalias() += step_size * d.dmu();
     s_ref.set_mu_vector();
-    if (is_state_constraint_valid) {
-      s_ref.xi_stack().noalias() += step_size * d.dxi();
-      s_ref.set_xi_vector();
-    }
   }
   EXPECT_TRUE(s.isApprox(s_ref));
 }
@@ -452,21 +363,13 @@ TEST_F(ImpulseSplitSolutionTest, fixedBase) {
   TestWithoutImpulses(robot_without_impulse);
   std::vector<int> contact_frames = {18};
   Robot robot(fixed_base_urdf, contact_frames);
-  std::vector<bool> is_impulse_active = {false};
-  ImpulseStatus impulse_status(is_impulse_active.size());
-  impulse_status.setImpulseStatus(is_impulse_active);
+  auto impulse_status = robot.createImpulseStatus();
   TestIsApprox(robot, impulse_status);
-  TestCopy(robot, impulse_status);
-  TestCopyPartial(robot, impulse_status);
-  TestIntegrate(robot, impulse_status, false);
-  TestIntegrate(robot, impulse_status, true);
+  TestIntegrate(robot, impulse_status);
   impulse_status.activateImpulse(0);
   TestWithImpulses(robot, impulse_status);
   TestIsApprox(robot, impulse_status);
-  TestCopy(robot, impulse_status);
-  TestCopyPartial(robot, impulse_status);
-  TestIntegrate(robot, impulse_status, false);
-  TestIntegrate(robot, impulse_status, true);
+  TestIntegrate(robot, impulse_status);
 }
 
 
@@ -475,28 +378,16 @@ TEST_F(ImpulseSplitSolutionTest, floatingBase) {
   TestWithoutImpulses(robot_without_impulse);
   std::vector<int> contact_frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, contact_frames);
-  std::vector<bool> is_impulse_active = {false, false, false, false};
-  ImpulseStatus impulse_status(is_impulse_active.size());
-  impulse_status.setImpulseStatus(is_impulse_active);
+  auto impulse_status = robot.createImpulseStatus();
   TestIsApprox(robot, impulse_status);
-  TestCopy(robot, impulse_status);
-  TestCopyPartial(robot, impulse_status);
-  TestIntegrate(robot, impulse_status, false);
-  TestIntegrate(robot, impulse_status, true);
-  std::random_device rnd;
-  is_impulse_active.clear();
-  for (const auto frame : contact_frames) {
-    is_impulse_active.push_back(rnd()%2==0);
-  }
+  TestIntegrate(robot, impulse_status);
+  impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
   TestWithImpulses(robot, impulse_status);
   TestIsApprox(robot, impulse_status);
-  TestCopy(robot, impulse_status);
-  TestCopyPartial(robot, impulse_status);
-  TestIntegrate(robot, impulse_status, false);
-  TestIntegrate(robot, impulse_status, true);
+  TestIntegrate(robot, impulse_status);
 }
 
 } // namespace idocp

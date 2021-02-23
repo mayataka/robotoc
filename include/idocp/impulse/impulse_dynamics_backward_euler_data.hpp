@@ -50,8 +50,6 @@ public:
 
   Eigen::VectorXd ldv;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   Eigen::MatrixXd Qdvf_full_;
   int dimv_, dimf_;

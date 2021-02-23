@@ -1,0 +1,1 @@
+#include "idocp/ocp/split_constrained_riccati_factorization.hpp"

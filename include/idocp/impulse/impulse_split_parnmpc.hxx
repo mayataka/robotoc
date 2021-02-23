@@ -105,11 +105,10 @@ inline double ImpulseSplitParNMPC::maxDualStepSize() {
 
 inline void ImpulseSplitParNMPC::updatePrimal(
     const Robot& robot, const double primal_step_size, 
-    const ImpulseSplitDirection& d, ImpulseSplitSolution& s,
-    const bool is_position_constraint_valid) {
+    const ImpulseSplitDirection& d, ImpulseSplitSolution& s) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
-  s.integrate(robot, primal_step_size, d, is_position_constraint_valid);
+  s.integrate(robot, primal_step_size, d);
   constraints_->updateSlack(constraints_data_, primal_step_size);
 }
 

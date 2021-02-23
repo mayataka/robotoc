@@ -10,8 +10,7 @@ BackwardCorrectionSolver::BackwardCorrectionSolver(const Robot& robot,
                                                    const int N, 
                                                    const int max_num_impulse, 
                                                    const int nthreads)
-  : N_(N),
-    max_num_impulse_(max_num_impulse),
+  : max_num_impulse_(max_num_impulse),
     nthreads_(nthreads),
     N_all_(N),
     s_new_(robot, N, max_num_impulse),
@@ -43,8 +42,7 @@ BackwardCorrectionSolver::BackwardCorrectionSolver(const Robot& robot,
 
 
 BackwardCorrectionSolver::BackwardCorrectionSolver()
-  : N_(0),
-    max_num_impulse_(0),
+  : max_num_impulse_(0),
     nthreads_(0),
     N_all_(0),
     s_new_(),
@@ -65,28 +63,29 @@ void BackwardCorrectionSolver::initAuxMat(ParNMPC& parnmpc,
                                           std::vector<Robot>& robots, 
                                           const Solution& s, 
                                           KKTMatrix& kkt_matrix) {
+  const int N = parnmpc.discrete().N_ideal();
+  const int N_impulse = parnmpc.discrete().N_impulse();
+  const int N_lift = parnmpc.discrete().N_lift();
+  const int N_all = N + 2*N_impulse + N_lift;
   parnmpc.terminal.computeTerminalCostHessian(robots[0], 
-                                              parnmpc.discrete().t(N_-1), 
-                                              s[N_-1], kkt_matrix[N_-1]);
-  const auto& Qxx = kkt_matrix[N_-1].Qxx();
-  const int N_impulse = parnmpc.discrete().numImpulseStages();
-  const int N_lift = parnmpc.discrete().numLiftStages();
-  N_all_ = N_ + 2 * N_impulse + N_lift;
+                                              parnmpc.discrete().t(N-1), 
+                                              s[N-1], kkt_matrix[N-1]);
+  const auto& Qxx = kkt_matrix[N-1].Qxx();
   #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_all_; ++i) {
-    if (i < N_) {
+  for (int i=0; i<N_all; ++i) {
+    if (i < N) {
       aux_mat_[i] = Qxx;
     }
-    else if (i < N_+N_impulse) {
-      const int impulse_index = i - N_;
+    else if (i < N+N_impulse) {
+      const int impulse_index = i - N;
       aux_mat_impulse_[impulse_index] = Qxx;
     }
-    else if (i < N_+2*N_impulse) {
-      const int impulse_index = i - N_ - N_impulse;
+    else if (i < N+2*N_impulse) {
+      const int impulse_index = i - N - N_impulse;
       aux_mat_aux_[impulse_index] = Qxx;
     }
     else {
-      const int lift_index = i - N_ - 2*N_impulse;
+      const int lift_index = i - N - 2*N_impulse;
       aux_mat_lift_[lift_index] = Qxx;
     }
   }
@@ -101,24 +100,25 @@ void BackwardCorrectionSolver::coarseUpdate(
   assert(robots.size() == nthreads_);
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
-  const int N_impulse = parnmpc.discrete().numImpulseStages();
-  const int N_lift = parnmpc.discrete().numLiftStages();
-  N_all_ = N_ + 2 * N_impulse + N_lift;
+  const int N = parnmpc.discrete().N();
+  const int N_impulse = parnmpc.discrete().N_impulse();
+  const int N_lift = parnmpc.discrete().N_lift();
+  const int N_all = N + 2*N_impulse + N_lift;
   #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_all_; ++i) {
-    if (i < N_-1) {
+  for (int i=0; i<N_all; ++i) {
+    if (i < N-1) {
       if (parnmpc.discrete().isTimeStageBeforeImpulse(i)) {
         const int impulse_index 
             = parnmpc.discrete().impulseIndexAfterTimeStage(i);
         parnmpc[i].linearizeOCP(
             robots[omp_get_thread_num()], 
             contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)), 
-            parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
+            parnmpc.discrete().t(i), parnmpc.discrete().dt(i), 
             q_prev(parnmpc.discrete(), q, s, i), 
             v_prev(parnmpc.discrete(), v, s, i), s[i], s.aux[impulse_index], 
             kkt_matrix[i], kkt_residual[i]);
         corr[i].coarseUpdate(robots[omp_get_thread_num()], 
-                             parnmpc.discrete().dtau(i), 
+                             parnmpc.discrete().dt(i), 
                              aux_mat_aux_[impulse_index], kkt_matrix[i], 
                              kkt_residual[i], s[i], s_new_[i]);
       }
@@ -127,42 +127,41 @@ void BackwardCorrectionSolver::coarseUpdate(
         parnmpc[i].linearizeOCP(
             robots[omp_get_thread_num()], 
             contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)), 
-            parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
+            parnmpc.discrete().t(i), parnmpc.discrete().dt(i), 
             q_prev(parnmpc.discrete(), q, s, i), 
             v_prev(parnmpc.discrete(), v, s, i), s[i], s.lift[lift_index], 
             kkt_matrix[i], kkt_residual[i]);
         corr[i].coarseUpdate(robots[omp_get_thread_num()], 
-                             parnmpc.discrete().dtau(i), 
-                             aux_mat_lift_[lift_index], kkt_matrix[i], 
-                             kkt_residual[i], s[i], s_new_[i]);
+                             parnmpc.discrete().dt(i), aux_mat_lift_[lift_index], 
+                             kkt_matrix[i], kkt_residual[i], s[i], s_new_[i]);
       }
       else {
         parnmpc[i].linearizeOCP(
             robots[omp_get_thread_num()], 
             contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)), 
-            parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
+            parnmpc.discrete().t(i), parnmpc.discrete().dt(i), 
             q_prev(parnmpc.discrete(), q, s, i), 
             v_prev(parnmpc.discrete(), v, s, i), 
             s[i], s[i+1], kkt_matrix[i], kkt_residual[i]);
         corr[i].coarseUpdate(robots[omp_get_thread_num()], 
-                             parnmpc.discrete().dtau(i), aux_mat_[i+1], 
+                             parnmpc.discrete().dt(i), aux_mat_[i+1], 
                              kkt_matrix[i], kkt_residual[i], s[i], s_new_[i]);
       }
     }
-    else if (i == N_-1) {
+    else if (i == N-1) {
       parnmpc.terminal.linearizeOCP(
           robots[omp_get_thread_num()], 
           contact_sequence.contactStatus(parnmpc.discrete().contactPhase(i)), 
-          parnmpc.discrete().t(i), parnmpc.discrete().dtau(i), 
+          parnmpc.discrete().t(i), parnmpc.discrete().dt(i), 
           q_prev(parnmpc.discrete(), q, s, i), 
           v_prev(parnmpc.discrete(), v, s, i), 
           s[i], kkt_matrix[i], kkt_residual[i]);
       corr[i].coarseUpdate(robots[omp_get_thread_num()], 
-                           parnmpc.discrete().dtau(i), kkt_matrix[i], 
+                           parnmpc.discrete().dt(i), kkt_matrix[i], 
                            kkt_residual[i], s[i], s_new_[i]);
     }
-    else if (i < N_+N_impulse) {
-      const int impulse_index = i - N_;
+    else if (i < N+N_impulse) {
+      const int impulse_index = i - N;
       const int time_stage_after_impulse 
           = parnmpc.discrete().timeStageAfterImpulse(impulse_index);
       parnmpc.impulse[impulse_index].linearizeOCP(
@@ -172,15 +171,13 @@ void BackwardCorrectionSolver::coarseUpdate(
           s.aux[impulse_index].v, s.impulse[impulse_index], 
           s[time_stage_after_impulse], kkt_matrix.impulse[impulse_index], 
           kkt_residual.impulse[impulse_index]);
-      s_new_.impulse[impulse_index].setImpulseStatus(
-          contact_sequence.impulseStatus(impulse_index));
       corr.impulse[impulse_index].coarseUpdate(
           robots[omp_get_thread_num()], aux_mat_[time_stage_after_impulse], 
           kkt_matrix.impulse[impulse_index], kkt_residual.impulse[impulse_index], 
           s.impulse[impulse_index], s_new_.impulse[impulse_index]);
     }
-    else if (i < N_+2*N_impulse) {
-      const int impulse_index  = i - (N_+N_impulse);
+    else if (i < N+2*N_impulse) {
+      const int impulse_index  = i - (N+N_impulse);
       const int time_stage_before_impulse 
           = parnmpc.discrete().timeStageBeforeImpulse(impulse_index);
       if (time_stage_before_impulse >= 0) {
@@ -188,18 +185,18 @@ void BackwardCorrectionSolver::coarseUpdate(
             robots[omp_get_thread_num()], 
             contact_sequence.contactStatus(
                 parnmpc.discrete().contactPhaseBeforeImpulse(impulse_index)), 
-            contact_sequence.impulseStatus(impulse_index),
             parnmpc.discrete().t_impulse(impulse_index), 
-            parnmpc.discrete().dtau_aux(impulse_index), 
+            parnmpc.discrete().dt_aux(impulse_index), 
             s[time_stage_before_impulse].q, s[time_stage_before_impulse].v, 
             s.aux[impulse_index], s.impulse[impulse_index], 
-            kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
+            kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index],
+            contact_sequence.impulseStatus(impulse_index));
         corr.aux[impulse_index].coarseUpdate(
             robots[omp_get_thread_num()], 
-            parnmpc.discrete().dtau_aux(impulse_index), 
+            parnmpc.discrete().dt_aux(impulse_index), 
             aux_mat_impulse_[impulse_index], kkt_matrix.aux[impulse_index], 
             kkt_residual.aux[impulse_index], s.aux[impulse_index], 
-            s.impulse[impulse_index], s_new_.aux[impulse_index]);
+            s_new_.aux[impulse_index]);
       }
       else {
         assert(time_stage_before_impulse == -1);
@@ -208,19 +205,19 @@ void BackwardCorrectionSolver::coarseUpdate(
             contact_sequence.contactStatus(
                 parnmpc.discrete().contactPhaseBeforeImpulse(impulse_index)), 
             parnmpc.discrete().t_impulse(impulse_index), 
-            parnmpc.discrete().dtau_aux(impulse_index), 
+            parnmpc.discrete().dt_aux(impulse_index), 
             q, v, s.aux[impulse_index], s.impulse[impulse_index], 
             kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index]);
         corr.aux[impulse_index].coarseUpdate(
             robots[omp_get_thread_num()], 
-            parnmpc.discrete().dtau_aux(impulse_index), 
+            parnmpc.discrete().dt_aux(impulse_index), 
             aux_mat_impulse_[impulse_index], kkt_matrix.aux[impulse_index], 
             kkt_residual.aux[impulse_index], s.aux[impulse_index], 
             s_new_.aux[impulse_index]);
       }
     }
     else {
-      const int lift_index = i - (N_+2*N_impulse);
+      const int lift_index = i - (N+2*N_impulse);
       const int time_stage_before_lift
           = parnmpc.discrete().timeStageBeforeLift(lift_index);
       if (time_stage_before_lift >= 0) {
@@ -229,7 +226,7 @@ void BackwardCorrectionSolver::coarseUpdate(
             contact_sequence.contactStatus(
                 parnmpc.discrete().contactPhaseBeforeLift(lift_index)), 
             parnmpc.discrete().t_lift(lift_index), 
-            parnmpc.discrete().dtau_lift(lift_index), 
+            parnmpc.discrete().dt_lift(lift_index), 
             s[time_stage_before_lift].q, s[time_stage_before_lift].v, 
             s.lift[lift_index], s[time_stage_before_lift+1], 
             kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
@@ -241,12 +238,12 @@ void BackwardCorrectionSolver::coarseUpdate(
             contact_sequence.contactStatus(
                 parnmpc.discrete().contactPhaseBeforeLift(lift_index)), 
             parnmpc.discrete().t_lift(lift_index), 
-            parnmpc.discrete().dtau_lift(lift_index), 
+            parnmpc.discrete().dt_lift(lift_index), 
             q, v, s.lift[lift_index], s[time_stage_before_lift+1], 
             kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index]);
       }
       corr.lift[lift_index].coarseUpdate(
-          robots[omp_get_thread_num()], parnmpc.discrete().dtau_lift(lift_index), 
+          robots[omp_get_thread_num()], parnmpc.discrete().dt_lift(lift_index), 
           aux_mat_[time_stage_before_lift+1], kkt_matrix.lift[lift_index], 
           kkt_residual.lift[lift_index], s.lift[lift_index], 
           s_new_.lift[lift_index]);
@@ -257,7 +254,8 @@ void BackwardCorrectionSolver::coarseUpdate(
 
 void BackwardCorrectionSolver::backwardCorrectionSerial(
     const ParNMPC& parnmpc, BackwardCorrection& corr, const Solution& s) {
-  for (int i=N_-2; i>=0; --i) {
+  const int N = parnmpc.discrete().N();
+  for (int i=N-2; i>=0; --i) {
     if (parnmpc.discrete().isTimeStageBeforeImpulse(i)) {
       const int impulse_index 
           = parnmpc.discrete().impulseIndexAfterTimeStage(i);
@@ -296,26 +294,28 @@ void BackwardCorrectionSolver::backwardCorrectionSerial(
 void BackwardCorrectionSolver::backwardCorrectionParallel(
     const ParNMPC& parnmpc, BackwardCorrection& corr, 
     const std::vector<Robot>& robots) {
-  const int N_impulse = parnmpc.discrete().numImpulseStages();
-  const int N_lift = parnmpc.discrete().numLiftStages();
+  const int N = parnmpc.discrete().N();
+  const int N_impulse = parnmpc.discrete().N_impulse();
+  const int N_lift = parnmpc.discrete().N_lift();
+  const int N_all = N + 2*N_impulse + N_lift;
   #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_all_-1; ++i) {
-    if (i < N_-1) {
+  for (int i=0; i<N_all-1; ++i) {
+    if (i < N-1) {
       corr[i].backwardCorrectionParallel(robots[omp_get_thread_num()], 
                                          s_new_[i]);
     }
-    else if (i < N_+N_impulse-1) {
-      const int impulse_index = i - (N_-1);
+    else if (i < N+N_impulse-1) {
+      const int impulse_index = i - (N-1);
       corr.impulse[impulse_index].backwardCorrectionParallel(
           robots[omp_get_thread_num()], s_new_.impulse[impulse_index]);
     }
-    else if (i < N_+2*N_impulse-1) {
-      const int impulse_index  = i - (N_-1+N_impulse);
+    else if (i < N+2*N_impulse-1) {
+      const int impulse_index  = i - (N-1+N_impulse);
       corr.aux[impulse_index].backwardCorrectionParallel(
           robots[omp_get_thread_num()], s_new_.aux[impulse_index]);
     }
     else {
-      const int lift_index = i - (N_-1+2*N_impulse);
+      const int lift_index = i - (N-1+2*N_impulse);
       corr.lift[lift_index].backwardCorrectionParallel(
           robots[omp_get_thread_num()], s_new_.lift[lift_index]);
     }
@@ -326,6 +326,7 @@ void BackwardCorrectionSolver::backwardCorrectionParallel(
 void BackwardCorrectionSolver::forwardCorrectionSerial(
     const ParNMPC& parnmpc, BackwardCorrection& corr, 
     const std::vector<Robot>& robots, const Solution& s) {
+  const int N = parnmpc.discrete().N();
   if (parnmpc.discrete().isTimeStageAfterImpulse(0)) {
     assert(parnmpc.discrete().impulseIndexBeforeTimeStage(0) == 0);
     corr.impulse[0].forwardCorrectionSerial(robots[0], s.aux[0], s_new_.aux[0], 
@@ -338,7 +339,7 @@ void BackwardCorrectionSolver::forwardCorrectionSerial(
     corr[0].forwardCorrectionSerial(robots[0], s.lift[0], s_new_.lift[0], 
                                     s_new_[0]);
   }
-  for (int i=1; i<N_; ++i) {
+  for (int i=1; i<N; ++i) {
     if (parnmpc.discrete().isTimeStageAfterImpulse(i)) {
       const int impulse_index 
           = parnmpc.discrete().impulseIndexBeforeTimeStage(i);
@@ -369,11 +370,14 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
     ParNMPC& parnmpc, BackwardCorrection& corr, std::vector<Robot>& robots, 
     const KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, 
     const Solution& s, Direction& d) {
-  const int N_impulse = parnmpc.discrete().numImpulseStages();
-  const int N_lift = parnmpc.discrete().numLiftStages();
+  const int N = parnmpc.discrete().N();
+  const int N_impulse = parnmpc.discrete().N_impulse();
+  const int N_lift = parnmpc.discrete().N_lift();
+  const int N_all = N + 2*N_impulse + N_lift;
+  N_all_ = N_all;
   #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_all_; ++i) {
-    if (i < N_-1) {
+  for (int i=0; i<N_all; ++i) {
+    if (i < N-1) {
       if (i > 0) {
         corr[i].forwardCorrectionParallel(s_new_[i]);
       }
@@ -382,37 +386,37 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
         corr[i].forwardCorrectionParallel(s_new_[i]);
       }
       aux_mat_[i] = - corr[i].auxMat();
-      SplitBackwardCorrection::computeDirection(robots[omp_get_thread_num()], 
-                                                s[i], s_new_[i], d[i]);
-      const double dtau = parnmpc.discrete().dtau(i);
+      corr[i].computeDirection(robots[omp_get_thread_num()], 
+                               s[i], s_new_[i], d[i]);
+      const double dt = parnmpc.discrete().dt(i);
       parnmpc[i].computeCondensedPrimalDirection(robots[omp_get_thread_num()], 
-                                                 dtau, s[i], d[i]);
+                                                 dt, s[i], d[i]);
       parnmpc[i].computeCondensedDualDirection(robots[omp_get_thread_num()], 
-                                               dtau, kkt_matrix[i], 
+                                               dt, kkt_matrix[i], 
                                                kkt_residual[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc[i].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   = parnmpc[i].maxDualStepSize();
     }
-    else if (i == N_-1) {
+    else if (i == N-1) {
       corr[i].forwardCorrectionParallel(s_new_[i]);
       aux_mat_[i] = - corr[i].auxMat();
-      SplitBackwardCorrection::computeDirection(robots[omp_get_thread_num()], 
-                                                s[i], s_new_[i], d[i]);
-      const double dtau = parnmpc.discrete().dtau(i);
+      corr[i].computeDirection(robots[omp_get_thread_num()], 
+                               s[i], s_new_[i], d[i]);
+      const double dt = parnmpc.discrete().dt(i);
       parnmpc.terminal.computeCondensedPrimalDirection(
-          robots[omp_get_thread_num()], dtau, s[i], d[i]);
+          robots[omp_get_thread_num()], dt, s[i], d[i]);
       parnmpc.terminal.computeCondensedDualDirection(
-          robots[omp_get_thread_num()], dtau, 
+          robots[omp_get_thread_num()], dt, 
           kkt_matrix[i], kkt_residual[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc.terminal.maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   = parnmpc.terminal.maxDualStepSize();
     }
-    else if (i < N_+N_impulse) {
-      const int impulse_index = i - N_;
+    else if (i < N+N_impulse) {
+      const int impulse_index = i - N;
       corr.impulse[impulse_index].forwardCorrectionParallel(
           s_new_.impulse[impulse_index]);
       aux_mat_impulse_[impulse_index] = - corr.impulse[impulse_index].auxMat();
-      ImpulseSplitBackwardCorrection::computeDirection(
+      corr.impulse[impulse_index].computeDirection(
           robots[omp_get_thread_num()], s.impulse[impulse_index], 
           s_new_.impulse[impulse_index], d.impulse[impulse_index]);
       parnmpc.impulse[impulse_index].computeCondensedPrimalDirection(
@@ -426,23 +430,23 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
       dual_step_sizes_.coeffRef(i)   
           = parnmpc.impulse[impulse_index].maxDualStepSize();
     }
-    else if (i < N_+2*N_impulse) {
-      const int impulse_index  = i - (N_+N_impulse);
+    else if (i < N+2*N_impulse) {
+      const int impulse_index  = i - (N+N_impulse);
       if (parnmpc.discrete().timeStageBeforeImpulse(impulse_index) >= 0) {
         corr.aux[impulse_index].forwardCorrectionParallel(
             s_new_.aux[impulse_index]);
         aux_mat_aux_[impulse_index] = - corr.aux[impulse_index].auxMat();
       }
-      SplitBackwardCorrection::computeDirection(robots[omp_get_thread_num()], 
-                                                s.aux[impulse_index], 
-                                                s_new_.aux[impulse_index], 
-                                                d.aux[impulse_index]);
-      const double dtau_aux = parnmpc.discrete().dtau_aux(impulse_index);
+      corr.aux[impulse_index].computeDirection(robots[omp_get_thread_num()], 
+                                               s.aux[impulse_index], 
+                                               s_new_.aux[impulse_index], 
+                                               d.aux[impulse_index]);
+      const double dt_aux = parnmpc.discrete().dt_aux(impulse_index);
       parnmpc.aux[impulse_index].computeCondensedPrimalDirection(
-          robots[omp_get_thread_num()], dtau_aux, 
+          robots[omp_get_thread_num()], dt_aux, 
           s.aux[impulse_index], d.aux[impulse_index]);
       parnmpc.aux[impulse_index].computeCondensedDualDirection(
-          robots[omp_get_thread_num()], dtau_aux, kkt_matrix.aux[impulse_index], 
+          robots[omp_get_thread_num()], dt_aux, kkt_matrix.aux[impulse_index], 
           kkt_residual.aux[impulse_index], d.aux[impulse_index]);
       primal_step_sizes_.coeffRef(i) 
           = parnmpc.aux[impulse_index].maxPrimalStepSize();
@@ -450,22 +454,22 @@ void BackwardCorrectionSolver::forwardCorrectionParallel(
           = parnmpc.aux[impulse_index].maxDualStepSize();
     }
     else {
-      const int lift_index = i - (N_+2*N_impulse);
+      const int lift_index = i - (N+2*N_impulse);
       if (parnmpc.discrete().timeStageBeforeLift(lift_index) >= 0) {
         corr.lift[lift_index].forwardCorrectionParallel(
             s_new_.lift[lift_index]);
         aux_mat_lift_[lift_index] = - corr.lift[lift_index].auxMat();
       }
-      SplitBackwardCorrection::computeDirection(robots[omp_get_thread_num()], 
-                                                s.lift[lift_index], 
-                                                s_new_.lift[lift_index], 
-                                                d.lift[lift_index]);
-      const double dtau_lift = parnmpc.discrete().dtau_lift(lift_index);
+      corr.lift[lift_index].computeDirection(robots[omp_get_thread_num()], 
+                                             s.lift[lift_index], 
+                                             s_new_.lift[lift_index], 
+                                             d.lift[lift_index]);
+      const double dt_lift = parnmpc.discrete().dt_lift(lift_index);
       parnmpc.lift[lift_index].computeCondensedPrimalDirection(
-          robots[omp_get_thread_num()], dtau_lift, 
+          robots[omp_get_thread_num()], dt_lift, 
           s.lift[lift_index], d.lift[lift_index]);
       parnmpc.lift[lift_index].computeCondensedDualDirection(
-          robots[omp_get_thread_num()], dtau_lift, kkt_matrix.lift[lift_index], 
+          robots[omp_get_thread_num()], dt_lift, kkt_matrix.lift[lift_index], 
           kkt_residual.lift[lift_index], d.lift[lift_index]);
       primal_step_sizes_.coeffRef(i) 
           = parnmpc.lift[lift_index].maxPrimalStepSize();

@@ -196,22 +196,6 @@ public:
       const Eigen::MatrixBase<VectorType2>& contact_residual) const;
 
   ///
-  /// @brief Computes the residual of the contact position constraints.
-  /// @param[in] model Pinocchio model of the robot.
-  /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] coeff Coefficient multiplied to the resultant Jacobian.
-  /// @param[in] contact_point Contact point. Size must be 3.
-  /// @param[out] contact_residual Residual of the contact constraint. Size must 
-  /// be 3.
-  /// 
-  template <typename VectorType1, typename VectorType2>
-  void computeContactResidual(
-      const pinocchio::Model& model, const pinocchio::Data& data, 
-      const double coeff,
-      const Eigen::MatrixBase<VectorType1>& contact_point,
-      const Eigen::MatrixBase<VectorType2>& contact_residual) const;
-
-  ///
   /// @brief Computes the partial derivative of the contact position  
   /// constraint with respect to the configuration. 
   /// Before calling this function, you have to update the kinematics of the 
@@ -224,22 +208,6 @@ public:
   template <typename MatrixType>
   void computeContactDerivative(
       const pinocchio::Model& model, pinocchio::Data& data,
-      const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
-
-  ///
-  /// @brief Computes the partial derivative of the contact position  
-  /// constraint with respect to the configuration. 
-  /// Before calling this function, you have to update the kinematics of the 
-  /// model in pinocchio::Data.
-  /// @param[in] model Pinocchio model of the robot.
-  /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] coeff Coefficient multiplied to the resultant Jacobian.
-  /// @param[out] contact_partial_dq The result of the partial derivative  
-  /// with respect to the configuaration. Size must be 3 x Robot::dimv().
-  /// 
-  template <typename MatrixType>
-  void computeContactDerivative(
-      const pinocchio::Model& model, pinocchio::Data& data, const double coeff,
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 
   ///

@@ -80,12 +80,11 @@ public:
   /// @param[in] t Initial time of the horizon. Current time in MPC. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] use_line_search If true, filter line search is enabled. If 
-  /// false, it is disabled. Default is false.
+  /// @param[in] line_search If true, filter line search is enabled. If false
+  /// filter line search is disabled. Default is false.
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
-                      const Eigen::VectorXd& v, 
-                      const bool use_line_search=false);
+                      const Eigen::VectorXd& v, const bool line_search=false);
 
   ///
   /// @brief Get the const reference to the split solution of a time stage. 
@@ -170,8 +169,6 @@ public:
   void saveSolution(const std::string& path_to_file,
                     const std::string& name) const;
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
   std::vector<Robot> robots_;
   UnOCP ocp_;
@@ -185,7 +182,7 @@ private:
   UnDirection d_;
   UnRiccatiFactorization riccati_factorization_;
   int N_, nthreads_;
-  double T_, dtau_;
+  double T_, dt_;
   Eigen::VectorXd primal_step_size_, dual_step_size_, kkt_error_;
 
 };

@@ -33,12 +33,8 @@ TEST_F(DiscreteEventTest, constructor1) {
   EXPECT_FALSE(discrete_event.existDiscreteEvent());
   EXPECT_FALSE(discrete_event.existImpulse());
   EXPECT_FALSE(discrete_event.existLift());
-  EXPECT_DOUBLE_EQ(discrete_event.eventTime, 0);
   ContactStatus contact_status(max_point_contacts);
   EXPECT_EQ(contact_status.dimf(), 0);
-  const double event_time = 10;
-  discrete_event.eventTime = event_time;
-  EXPECT_DOUBLE_EQ(event_time, discrete_event.eventTime);
   EXPECT_TRUE(discrete_event.preContactStatus() == discrete_event.postContactStatus());
 }
 
@@ -77,12 +73,6 @@ TEST_F(DiscreteEventTest, impulse) {
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
   EXPECT_TRUE(discrete_event.existImpulse());
   EXPECT_FALSE(discrete_event.existLift());
-  EXPECT_DOUBLE_EQ(discrete_event.eventTime, 0);
-  discrete_event.disableDiscreteEvent();
-  EXPECT_FALSE(discrete_event.existDiscreteEvent());
-  EXPECT_FALSE(discrete_event.existImpulse());
-  EXPECT_FALSE(discrete_event.existLift());
-  EXPECT_TRUE(discrete_event.preContactStatus() == discrete_event.postContactStatus());
 }
 
 
@@ -98,12 +88,6 @@ TEST_F(DiscreteEventTest, lift) {
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
   EXPECT_FALSE(discrete_event.existImpulse());
   EXPECT_TRUE(discrete_event.existLift());
-  EXPECT_DOUBLE_EQ(discrete_event.eventTime, 0);
-  discrete_event.disableDiscreteEvent();
-  EXPECT_FALSE(discrete_event.existDiscreteEvent());
-  EXPECT_FALSE(discrete_event.existImpulse());
-  EXPECT_FALSE(discrete_event.existLift());
-  EXPECT_TRUE(discrete_event.preContactStatus() == discrete_event.postContactStatus());
 }
 
 
@@ -119,12 +103,6 @@ TEST_F(DiscreteEventTest, impulseAndLift) {
   EXPECT_TRUE(discrete_event.existDiscreteEvent());
   EXPECT_TRUE(discrete_event.existImpulse());
   EXPECT_TRUE(discrete_event.existLift());
-  EXPECT_DOUBLE_EQ(discrete_event.eventTime, 0);
-  discrete_event.disableDiscreteEvent();
-  EXPECT_FALSE(discrete_event.existDiscreteEvent());
-  EXPECT_FALSE(discrete_event.existImpulse());
-  EXPECT_FALSE(discrete_event.existLift());
-  EXPECT_TRUE(discrete_event.preContactStatus() == discrete_event.postContactStatus());
 }
 
 } // namespace idocp

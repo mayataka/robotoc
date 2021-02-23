@@ -61,6 +61,38 @@ inline void Robot::integrateConfiguration(
 }
 
 
+template <typename ConfigVectorType, typename TangentVectorType, 
+          typename MatrixType>
+inline void Robot::dIntegratedConfiguration(
+    const Eigen::MatrixBase<ConfigVectorType>& q,
+    const Eigen::MatrixBase<TangentVectorType>& v,
+    const Eigen::MatrixBase<MatrixType>& dIntegrate_dq) const {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(dIntegrate_dq.rows() == dimv_);
+  assert(dIntegrate_dq.cols() == dimv_);
+  pinocchio::dIntegrate(
+      model_, q, v, const_cast<Eigen::MatrixBase<MatrixType>&>(dIntegrate_dq),
+      pinocchio::ARG0);
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType, 
+          typename MatrixType>
+inline void Robot::dIntegratedVelocity(
+    const Eigen::MatrixBase<ConfigVectorType>& q,
+    const Eigen::MatrixBase<TangentVectorType>& v,
+    const Eigen::MatrixBase<MatrixType>& dIntegrate_dv) const {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(dIntegrate_dv.rows() == dimv_);
+  assert(dIntegrate_dv.cols() == dimv_);
+  pinocchio::dIntegrate(
+      model_, q, v, const_cast<Eigen::MatrixBase<MatrixType>&>(dIntegrate_dv),
+      pinocchio::ARG1);
+}
+
+
 template <typename ConfigVectorType1, typename ConfigVectorType2, 
           typename TangentVectorType>
 inline void Robot::subtractConfiguration(
@@ -185,11 +217,19 @@ inline void Robot::updateKinematics(
 
 
 template <typename ConfigVectorType>
+inline void Robot::updateKinematics(
+    const Eigen::MatrixBase<ConfigVectorType>& q) {
+  assert(q.size() == dimq_);
+  pinocchio::framesForwardKinematics(model_, data_, q);
+  pinocchio::computeJointJacobians(model_, data_, q);
+}
+
+
+template <typename ConfigVectorType>
 inline void Robot::updateFrameKinematics(
     const Eigen::MatrixBase<ConfigVectorType>& q) {
   assert(q.size() == dimq_);
-  pinocchio::forwardKinematics(model_, data_, q);
-  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::framesForwardKinematics(model_, data_, q);
 }
 
 
@@ -279,7 +319,7 @@ inline void Robot::computeImpulseVelocityDerivatives(
 
 
 template <typename VectorType>
-inline void Robot::computeImpulseConditionResidual(
+inline void Robot::computeContactResidual(
     const ImpulseStatus& impulse_status, 
     const std::vector<Eigen::Vector3d>& contact_points,
     const Eigen::MatrixBase<VectorType>& contact_residual) const {
@@ -297,43 +337,8 @@ inline void Robot::computeImpulseConditionResidual(
 }
 
 
-template <typename VectorType>
-inline void Robot::computeImpulseConditionResidual(
-    const ImpulseStatus& impulse_status, const double coeff,
-    const Eigen::MatrixBase<VectorType>& contact_residual) const {
-  int num_active_impulse = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
-      point_contacts_[i].computeContactResidual(
-          model_, data_, coeff,
-          (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
-              .template segment<3>(3*num_active_impulse));
-      ++num_active_impulse;
-    }
-  }
-}
-
-
-template <typename VectorType>
-inline void Robot::computeImpulseConditionResidual(
-    const ImpulseStatus& impulse_status, const double coeff,
-    const std::vector<Eigen::Vector3d>& contact_points,
-    const Eigen::MatrixBase<VectorType>& contact_residual) const {
-  int num_active_impulse = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
-      point_contacts_[i].computeContactResidual(
-          model_, data_, coeff, contact_points[i],
-          (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
-              .template segment<3>(3*num_active_impulse));
-      ++num_active_impulse;
-    }
-  }
-}
-
-
 template <typename MatrixType>
-inline void Robot::computeImpulseConditionDerivative(
+inline void Robot::computeContactDerivative(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
   assert(contact_partial_dq.cols() == dimv_);
@@ -342,24 +347,6 @@ inline void Robot::computeImpulseConditionDerivative(
     if (impulse_status.isImpulseActive(i)) {
       point_contacts_[i].computeContactDerivative(
           model_, data_, 
-          (const_cast<Eigen::MatrixBase<MatrixType>&>(contact_partial_dq))
-              .block(3*num_active_impulse, 0, 3, dimv_));
-      ++num_active_impulse;
-    }
-  }
-}
-
-
-template <typename MatrixType>
-inline void Robot::computeImpulseConditionDerivative(
-    const ImpulseStatus& impulse_status, const double coeff,
-    const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
-  assert(contact_partial_dq.cols() == dimv_);
-  int num_active_impulse = 0;
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
-      point_contacts_[i].computeContactDerivative(
-          model_, data_, coeff,
           (const_cast<Eigen::MatrixBase<MatrixType>&>(contact_partial_dq))
               .block(3*num_active_impulse, 0, 3, dimv_));
       ++num_active_impulse;

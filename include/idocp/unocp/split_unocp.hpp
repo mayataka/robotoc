@@ -89,14 +89,14 @@ public:
   /// @tparam SplitSolutionType Type of the split solution at the next stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] dt Length of the discretization of the horizon.
   /// @param[in] q_prev Configuration of the previous stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
   /// @param[out] unkkt_matrix Condensed KKT matrix of this stage.
   /// @param[out] unkkt_residual Condensed KKT residual of this stage.
   ///
-  void linearizeOCP(Robot& robot, const double t, const double dtau, 
+  void linearizeOCP(Robot& robot, const double t, const double dt, 
                     const Eigen::VectorXd& q_prev, const SplitSolution& s, 
                     const SplitSolution& s_next, SplitUnKKTMatrix& unkkt_matrix,
                     SplitUnKKTResidual& unkkt_residual);
@@ -105,11 +105,11 @@ public:
   /// @brief Computes the Newton direction of the condensed variables  
   /// at this stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] dt Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @param[in, out] d Split direction of this stage.
   /// 
-  void computeCondensedDirection(Robot& robot, const double dtau, 
+  void computeCondensedDirection(Robot& robot, const double dt, 
                                  const SplitSolution& s, SplitDirection& d);
 
   ///
@@ -149,13 +149,13 @@ public:
   /// @tparam SplitSolutionType Type of the split solution at the next stage.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] dt Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @param[in] q_prev Configuration of the previous stage.
   /// @param[in] s Split solution of this stage.
   /// @param[in] s_next Split solution of the next stage.
   ///
-  void computeKKTResidual(Robot& robot, const double t, const double dtau, 
+  void computeKKTResidual(Robot& robot, const double t, const double dt, 
                           const Eigen::VectorXd& q_prev, const SplitSolution& s, 
                           const SplitSolution& s_next);
 
@@ -165,18 +165,18 @@ public:
   /// SplitUnOCP::computeKKTResidual() must be called.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual(const double dtau) const;
+  double squaredNormKKTResidual(const double dt) const;
 
   ///
   /// @brief Computes the stage cost of this stage for line search.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] dt Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @param[in] primal_step_size Primal step size of the OCP. Default is 0.
   /// @return Stage cost of this stage.
   /// 
-  double stageCost(Robot& robot, const double t, const double dtau, 
+  double stageCost(Robot& robot, const double t, const double dt, 
                    const SplitSolution& s, const double primal_step_size=0);
 
   ///
@@ -184,18 +184,16 @@ public:
   /// stage for line search.
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] t Current time of this stage. 
-  /// @param[in] dtau Length of the discretization of the horizon.
+  /// @param[in] dt Length of the discretization of the horizon.
   /// @param[in] s Split solution of this stage.
   /// @param[in] q_next Configuration at the next stage.
   /// @param[in] v_next Generaized velocity at the next stage.
   /// @return Constraint violation of this stage.
   ///
-  double constraintViolation(Robot& robot,  const double t, const double dtau, 
+  double constraintViolation(Robot& robot,  const double t, const double dt, 
                              const SplitSolution& s, 
                              const Eigen::VectorXd& q_next,
                              const Eigen::VectorXd& v_next);
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   std::shared_ptr<CostFunction> cost_;

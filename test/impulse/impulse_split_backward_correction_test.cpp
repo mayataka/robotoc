@@ -75,21 +75,10 @@ ImpulseSplitKKTResidual ImpulseSplitBackwardCorrectionTest::createKKTResidual(
 
 void ImpulseSplitBackwardCorrectionTest::test(const Robot& robot) const {
   auto impulse_status = robot.createImpulseStatus();
-  if (robot.hasFloatingBase()) {
-    std::random_device rnd;
-    for (int i=0; i<robot.maxPointContacts(); ++i) {
-      if (rnd() % 2 == 0) {
-        impulse_status.activateImpulse(i);
-      }
-    }
-    if (!impulse_status.hasActiveImpulse()) {
-      impulse_status.activateImpulse(0);
-    }
-  }
-  else {
+  impulse_status.setRandom();
+  if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
-
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const int dimi = impulse_status.dimf();

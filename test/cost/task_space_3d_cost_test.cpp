@@ -23,7 +23,7 @@ protected:
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -34,7 +34,7 @@ protected:
   void testImpulseCost(Robot& robot, const int frame_id) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  double dtau, t;
+  double dt, t;
 };
 
 
@@ -67,15 +67,15 @@ void TaskSpace3DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   robot.updateKinematics(s.q, s.v, s.a);
   const Eigen::Vector3d q_task = robot.framePosition(frame_id);
   const Eigen::Vector3d q_diff = q_task - q_ref;
-  const double l_ref = dtau * 0.5 * q_diff.transpose() * q_weight.asDiagonal() * q_diff;
-  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dtau, s), l_ref);
-  cost->computeStageCostDerivatives(robot, data, t, dtau, s, kkt_res);
-  cost->computeStageCostHessian(robot, data, t, dtau, s, kkt_mat);
+  const double l_ref = dt * 0.5 * q_diff.transpose() * q_weight.asDiagonal() * q_diff;
+  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dt, s), l_ref);
+  cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
+  cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
   Eigen::MatrixXd J_6d = Eigen::MatrixXd::Zero(6, dimv);
   robot.getFrameJacobian(frame_id, J_6d);
   const Eigen::MatrixXd J_diff = robot.frameRotation(frame_id) * J_6d.topRows(3);
-  kkt_res_ref.lq() += dtau * J_diff.transpose() * q_weight.asDiagonal() * q_diff;
-  kkt_mat_ref.Qqq() += dtau * J_diff.transpose() * q_weight.asDiagonal() * J_diff;
+  kkt_res_ref.lq() += dt * J_diff.transpose() * q_weight.asDiagonal() * q_diff;
+  kkt_mat_ref.Qqq() += dt * J_diff.transpose() * q_weight.asDiagonal() * J_diff;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);

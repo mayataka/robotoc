@@ -24,7 +24,7 @@ protected:
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     barrier = 1.0e-04;
-    dtau = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
     fraction_to_boundary_rate = 0.995;
   }
 
@@ -39,7 +39,7 @@ protected:
   void testCondenseSlackAndDual(Robot& robot, const ContactStatus& contact_status) const;
   void testComputeSlackAndDualDirection(Robot& robot, const ContactStatus& contact_status) const;
 
-  double barrier, dtau, fraction_to_boundary_rate;
+  double barrier, dt, fraction_to_boundary_rate;
   std::string fixed_base_urdf, floating_base_urdf;
 };
 
@@ -97,7 +97,7 @@ void ContactDistanceTest::testAugmentDualResidual(Robot& robot, const ContactSta
   SplitKKTResidual kkt_res_ref = kkt_res;
   robot.updateKinematics(s.q, s.v, s.a);
   limit.allocateExtraData(data);
-  limit.augmentDualResidual(robot, data, dtau, s, kkt_res);
+  limit.augmentDualResidual(robot, data, dt, s, kkt_res);
   std::vector<Eigen::MatrixXd> J(dimc, Eigen::MatrixXd::Zero(6, robot.dimv()));
   for (int i=0; i<dimc; ++i) {
     robot.getFrameJacobian(robot.contactFramesIndices()[i], J[i]);
@@ -105,7 +105,7 @@ void ContactDistanceTest::testAugmentDualResidual(Robot& robot, const ContactSta
   for (int i=0; i<contact_status.maxPointContacts(); ++i) {
     if (!contact_status.isContactActive(i)) {
       const Eigen::VectorXd Jrow2 = J[i].row(2);
-      kkt_res_ref.lq() -= dtau * data_ref.dual.coeff(i) * Jrow2;
+      kkt_res_ref.lq() -= dt * data_ref.dual.coeff(i) * Jrow2;
     }
   }
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
@@ -149,10 +149,10 @@ void ContactDistanceTest::testCondenseSlackAndDual(Robot& robot, const ContactSt
   kkt_res.lq().setRandom();
   robot.updateKinematics(s.q, s.v, s.a);
   limit.allocateExtraData(data);
-  limit.augmentDualResidual(robot, data, dtau, s, kkt_res);
+  limit.augmentDualResidual(robot, data, dt, s, kkt_res);
   SplitKKTMatrix kkt_mat_ref = kkt_mat;
   SplitKKTResidual kkt_res_ref = kkt_res;
-  limit.condenseSlackAndDual(robot, data, dtau, s, kkt_mat, kkt_res);
+  limit.condenseSlackAndDual(robot, data, dt, s, kkt_mat, kkt_res);
   std::vector<Eigen::MatrixXd> J(dimc, Eigen::MatrixXd::Zero(6, robot.dimv()));
   for (int i=0; i<dimc; ++i) {
     robot.getFrameJacobian(robot.contactFramesIndices()[i], J[i]);
@@ -160,14 +160,14 @@ void ContactDistanceTest::testCondenseSlackAndDual(Robot& robot, const ContactSt
   for (int i=0; i<dimc; ++i) {
     if (!contact_status.isContactActive(i)) {
       const Eigen::VectorXd Jrow2 = J[i].row(2);
-      kkt_mat_ref.Qqq() += (dtau * data_ref.dual.coeff(i) / data_ref.slack.coeff(i)) 
+      kkt_mat_ref.Qqq() += (dt * data_ref.dual.coeff(i) / data_ref.slack.coeff(i)) 
                             * Jrow2 * Jrow2.transpose();
       data_ref.residual.coeffRef(i) 
           = - robot.framePosition(robot.contactFramesIndices()[i]).coeff(2) 
               + data_ref.slack.coeff(i);
       data_ref.duality.coeffRef(i) = data_ref.slack.coeff(i) * data_ref.dual.coeff(i) - barrier;
       kkt_res_ref.lq().noalias()
-          -= (dtau * (data_ref.dual.coeff(i)*data_ref.residual.coeff(i)-data_ref.duality.coeff(i)) 
+          -= (dt * (data_ref.dual.coeff(i)*data_ref.residual.coeff(i)-data_ref.duality.coeff(i)) 
                   / data_ref.slack.coeff(i))
               * Jrow2;
     }
@@ -186,7 +186,7 @@ void ContactDistanceTest::testComputeSlackAndDualDirection(Robot& robot, const C
   limit.allocateExtraData(data);
   SplitKKTResidual kkt_res(robot);
   kkt_res.setContactStatus(contact_status);
-  limit.augmentDualResidual(robot, data, dtau, s, kkt_res);
+  limit.augmentDualResidual(robot, data, dt, s, kkt_res);
   data.residual.setRandom();
   data.duality.setRandom();
   ConstraintComponentData data_ref = data;
@@ -213,8 +213,7 @@ void ContactDistanceTest::testComputeSlackAndDualDirection(Robot& robot, const C
 TEST_F(ContactDistanceTest, fixedBase) {
   const std::vector<int> frames = {18};
   Robot robot(fixed_base_urdf, frames);
-  ContactStatus contact_status = robot.createContactStatus();
-  contact_status.setContactStatus({false});
+  auto contact_status = robot.createContactStatus();
   testKinematics(robot, contact_status);
   testIsFeasible(robot, contact_status);
   testSetSlackAndDual(robot, contact_status);
@@ -222,7 +221,7 @@ TEST_F(ContactDistanceTest, fixedBase) {
   testComputePrimalAndDualResidual(robot, contact_status);
   testCondenseSlackAndDual(robot, contact_status);
   testComputeSlackAndDualDirection(robot, contact_status);
-  contact_status.setContactStatus({true});
+  contact_status.activateContact(0);
   testKinematics(robot, contact_status);
   testIsFeasible(robot, contact_status);
   testSetSlackAndDual(robot, contact_status);
@@ -236,8 +235,7 @@ TEST_F(ContactDistanceTest, fixedBase) {
 TEST_F(ContactDistanceTest, floatingBase) {
   const std::vector<int> frames = {14, 24, 34, 44};
   Robot robot(floating_base_urdf, frames);
-  ContactStatus contact_status = robot.createContactStatus();
-  contact_status.setContactStatus({false, false, false, false});
+  auto contact_status = robot.createContactStatus();
   testKinematics(robot, contact_status);
   testIsFeasible(robot, contact_status);
   testSetSlackAndDual(robot, contact_status);
