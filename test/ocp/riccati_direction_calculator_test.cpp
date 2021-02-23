@@ -25,7 +25,7 @@ protected:
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N = 20;
-    max_N_impulse = 5;
+    max_num_impulse = 5;
     nthreads = 4;
     T = 1;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -42,24 +42,23 @@ protected:
   void test(const Robot& robot) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
-  int N, max_N_impulse, nthreads;
+  int N, max_num_impulse, nthreads;
   double T, t, dt;
 };
 
 
-
 Solution RiccatiDirectionCalculatorTest::createSolution(const Robot& robot) const {
-  return testhelper::CreateSolution(robot, N, max_N_impulse);
+  return testhelper::CreateSolution(robot, N, max_num_impulse);
 }
 
 
 Solution RiccatiDirectionCalculatorTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
-  return testhelper::CreateSolution(robot, contact_sequence, T, N, max_N_impulse, t);
+  return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
 }
 
 
 ContactSequence RiccatiDirectionCalculatorTest::createContactSequence(const Robot& robot) const {
-  return testhelper::CreateContactSequence(robot, N, max_N_impulse, t, 3*dt);
+  return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dt);
 }
 
 
@@ -67,24 +66,24 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
-  KKTMatrix kkt_matrix(robot, N, max_N_impulse);
-  KKTResidual kkt_residual(robot, N, max_N_impulse);
-  StateConstraintJacobian jac(robot, max_N_impulse);
+  KKTMatrix kkt_matrix(robot, N, max_num_impulse);
+  KKTResidual kkt_residual(robot, N, max_num_impulse);
+  StateConstraintJacobian jac(robot, max_num_impulse);
   const auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  auto ocp = OCP(robot, cost, constraints, T, N, max_N_impulse);
+  auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
-  OCPLinearizer linearizer(N, max_N_impulse, nthreads);
+  OCPLinearizer linearizer(N, max_num_impulse, nthreads);
   std::vector<Robot> robots(nthreads, robot);
   linearizer.initConstraints(ocp, robots, contact_sequence, s);
   linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual, jac);
   RiccatiRecursion riccati_recursion(robot, N, nthreads);
-  RiccatiFactorization factorization(robot, N, max_N_impulse);
+  RiccatiFactorization factorization(robot, N, max_num_impulse);
   riccati_recursion.backwardRiccatiRecursion(ocp.discrete(), kkt_matrix, kkt_residual, jac, factorization);
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
-  Direction d = Direction(robot, N, max_N_impulse);
+  Direction d = Direction(robot, N, max_num_impulse);
   auto d_ref = d;
   RiccatiDirectionCalculator::computeInitialStateDirection(robots, q, v, kkt_matrix, s, d);
   if (robot.hasFloatingBase()) {
@@ -105,7 +104,7 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
   d_ref = d;
   auto ocp_ref = ocp;
-  RiccatiDirectionCalculator direction_calculator(N, max_N_impulse, nthreads);
+  RiccatiDirectionCalculator direction_calculator(N, max_num_impulse, nthreads);
   direction_calculator.computeNewtonDirection(ocp, robots, factorization, s, d);
   const double primal_step_size = direction_calculator.maxPrimalStepSize();
   const double dual_step_size = direction_calculator.maxDualStepSize();
@@ -202,7 +201,6 @@ void RiccatiDirectionCalculatorTest::test(const Robot& robot) const {
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
   EXPECT_DOUBLE_EQ(primal_step_size, primal_step_size_ref);
   EXPECT_DOUBLE_EQ(dual_step_size, dual_step_size_ref);
-
 }
 
 

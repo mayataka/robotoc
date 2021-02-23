@@ -146,7 +146,7 @@ inline void SplitUnParNMPC::computeKKTResidual(Robot& robot, const double t,
                                                const Eigen::VectorXd& v_prev, 
                                                const SplitSolution& s,
                                                const SplitSolution& s_next) {
-  assert(dt >= 0);
+  assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
   if (use_kinematics_) {

@@ -117,6 +117,8 @@ int main () {
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
 
+  ocp_solver.initConstraints(t);
+
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 10, false);
   idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 5000, false);
 

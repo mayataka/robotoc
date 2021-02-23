@@ -119,14 +119,14 @@ int main(int argc, char *argv[]) {
   auto contact_status_even = robot.createContactStatus();
   contact_status_even.activateContacts({1, 2});
   contact_status_even.setContactPoints(contact_points);
-  parnmpc_solver.pushBackContactStatus(contact_status_even, t_start, t);
+  parnmpc_solver.pushBackContactStatus(contact_status_even, t_start);
 
   auto contact_status_odd = robot.createContactStatus();
   contact_points[0].coeffRef(0) += 0.5 * step_length;
   contact_points[3].coeffRef(0) += 0.5 * step_length;
   contact_status_odd.activateContacts({0, 3});
   contact_status_odd.setContactPoints(contact_points);
-  parnmpc_solver.pushBackContactStatus(contact_status_odd, t_start+t_period, t);
+  parnmpc_solver.pushBackContactStatus(contact_status_odd, t_start+t_period);
 
   Eigen::VectorXd q(Eigen::VectorXd::Zero(robot.dimq()));
   q << 0, 0, 0.4792, 0, 0, 0, 1, 
@@ -141,6 +141,8 @@ int main(int argc, char *argv[]) {
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   parnmpc_solver.setSolution("f", f_init);
+
+  parnmpc_solver.initConstraints(t);
   parnmpc_solver.initBackwardCorrection(t);
 
   const bool line_search = false;

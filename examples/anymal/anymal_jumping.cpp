@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
   for (int i=0; i<max_num_impulse_phase; ++i) {
     auto contact_status_flying = robot.createContactStatus();
     contact_status_flying.setContactPoints(contact_points);
-    ocp_solver.pushBackContactStatus(contact_status_flying, t_start+i*(t_jumping+t_ground), t);
+    ocp_solver.pushBackContactStatus(contact_status_flying, t_start+i*(t_jumping+t_ground));
 
     auto contact_status_landing = robot.createContactStatus();
     contact_points[0].coeffRef(0) += jump_length;
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
     contact_points[3].coeffRef(0) += jump_length;
     contact_status_landing.activateContacts({0, 1, 2, 3});
     contact_status_landing.setContactPoints(contact_points);
-    ocp_solver.pushBackContactStatus(contact_status_landing, t_start+i*(t_jumping+t_ground)+t_jumping, t);
+    ocp_solver.pushBackContactStatus(contact_status_landing, t_start+i*(t_jumping+t_ground)+t_jumping);
   }
 
   Eigen::VectorXd q(Eigen::VectorXd::Zero(robot.dimq()));
@@ -154,6 +154,8 @@ int main(int argc, char *argv[]) {
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
+
+  ocp_solver.initConstraints(t);
 
   const bool line_search = true;
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 150, line_search);

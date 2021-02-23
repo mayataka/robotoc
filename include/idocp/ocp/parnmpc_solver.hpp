@@ -77,7 +77,7 @@ public:
   /// and the Lagrange multipliers of inequality constraints. Based on the 
   /// current solution.
   ///
-  void initConstraints();
+  void initConstraints(const double t);
 
   ///
   /// @brief Initializes the backward correction solver.
@@ -122,23 +122,20 @@ public:
   void setContactStatusUniformly(const ContactStatus& contact_status);
 
   void pushBackContactStatus(const ContactStatus& contact_status, 
-                             const double switching_time,
-                             const double t);
+                             const double switching_time);
 
   void setContactPoints(const int contact_phase, 
                         const std::vector<Eigen::Vector3d>& contact_points);
 
   ///
-  /// @brief Pop back the discrete event. Contact status after discrete event 
-  /// is also removed. 
+  /// @brief Pop back a contact status. 
   ///
-  void popBackDiscreteEvent();
+  void popBackContactStatus();
 
   ///
-  /// @brief Pop front the discrete event. Contact status before the front 
-  /// discrete event is also removed. 
+  /// @brief Pop front a contact status. 
   ///
-  void popFrontDiscreteEvent();
+  void popFrontContactStatus();
 
   ///
   /// @brief Clear the line search filter. 
@@ -192,7 +189,6 @@ private:
   KKTResidual kkt_residual_;
   Solution s_;
   Direction d_;
-  int N_, nthreads_;
 
   void discretizeSolution();
 

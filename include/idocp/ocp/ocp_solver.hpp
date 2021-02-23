@@ -13,7 +13,7 @@
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/ocp/state_constraint_jacobian.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
-#include "idocp/ocp/riccati_solver.hpp"
+#include "idocp/ocp/riccati_recursion_solver.hpp"
 #include "idocp/line_search/line_search.hpp"
 
 namespace idocp {
@@ -73,7 +73,7 @@ public:
   /// and the Lagrange multipliers of inequality constraints. Based on the 
   /// current solution.
   ///
-  void initConstraints();
+  void initConstraints(const double t);
 
   ///
   /// @brief Updates the solution by computing the primal-dual Newon direction.
@@ -113,23 +113,20 @@ public:
   void setContactStatusUniformly(const ContactStatus& contact_status);
 
   void pushBackContactStatus(const ContactStatus& contact_status, 
-                             const double switching_time,
-                             const double t);
+                             const double switching_time);
 
   void setContactPoints(const int contact_phase, 
                         const std::vector<Eigen::Vector3d>& contact_points);
 
   ///
-  /// @brief Pop back the discrete event. Contact status after discrete event 
-  /// is also removed. 
+  /// @brief Pop back a contact status. 
   ///
-  void popBackDiscreteEvent();
+  void popBackContactStatus();
 
   ///
-  /// @brief Pop front the discrete event. Contact status before the front 
-  /// discrete event is also removed. 
+  /// @brief Pop front a contact status. 
   ///
-  void popFrontDiscreteEvent();
+  void popFrontContactStatus();
 
   ///
   /// @brief Clear the line search filter. 
@@ -175,15 +172,15 @@ private:
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;
   OCPLinearizer ocp_linearizer_;
-  RiccatiSolver riccati_solver_;
+  RiccatiRecursionSolver riccati_solver_;
   LineSearch line_search_;
   OCP ocp_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
   StateConstraintJacobian jac_;
+  RiccatiFactorization riccati_factorization_;
   Solution s_;
   Direction d_;
-  int N_, nthreads_;
 
   void discretizeSolution();
 

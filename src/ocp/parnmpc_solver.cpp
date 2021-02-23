@@ -22,9 +22,7 @@ ParNMPCSolver::ParNMPCSolver(const Robot& robot,
     kkt_matrix_(robot, N, max_num_impulse),
     kkt_residual_(robot, N, max_num_impulse),
     s_(robot, N, max_num_impulse),
-    d_(robot, N, max_num_impulse),
-    N_(N),
-    nthreads_(nthreads) {
+    d_(robot, N, max_num_impulse) {
   try {
     if (T <= 0) {
       throw std::out_of_range("invalid value: T must be positive!");
@@ -47,7 +45,6 @@ ParNMPCSolver::ParNMPCSolver(const Robot& robot,
   for (auto& e : s_.impulse) { robot.normalizeConfiguration(e.q); }
   for (auto& e : s_.aux)     { robot.normalizeConfiguration(e.q); }
   for (auto& e : s_.lift)    { robot.normalizeConfiguration(e.q); }
-  initConstraints();
 }
 
 
@@ -59,13 +56,16 @@ ParNMPCSolver::~ParNMPCSolver() {
 }
 
 
-void ParNMPCSolver::initConstraints() {
+void ParNMPCSolver::initConstraints(const double t) {
+  parnmpc_.discretize(contact_sequence_, t);
+  discretizeSolution();
   parnmpc_linearizer_.initConstraints(parnmpc_, robots_, contact_sequence_, s_);
 }
 
 
 void ParNMPCSolver::initBackwardCorrection(const double t) {
   parnmpc_.discretize(contact_sequence_, t);
+  discretizeSolution();
   backward_correction_solver_.initAuxMat(parnmpc_, robots_, s_, kkt_matrix_);
 }
 
@@ -108,7 +108,7 @@ void ParNMPCSolver::updateSolution(const double t, const Eigen::VectorXd& q,
 
 const SplitSolution& ParNMPCSolver::getSolution(const int stage) const {
   assert(stage >= 0);
-  assert(stage < N_);
+  assert(stage < parnmpc_.discrete().N());
   return s_[stage];
 }
 
@@ -117,7 +117,7 @@ void ParNMPCSolver::getStateFeedbackGain(const int time_stage,
                                          Eigen::MatrixXd& Kq, 
                                          Eigen::MatrixXd& Kv) const {
   assert(time_stage >= 0);
-  assert(time_stage < N_);
+  assert(time_stage < parnmpc_.discrete().N());
   assert(Kq.rows() == robots_[0].dimv());
   assert(Kq.cols() == robots_[0].dimv());
   assert(Kv.rows() == robots_[0].dimv());
@@ -177,22 +177,17 @@ void ParNMPCSolver::setSolution(const std::string& name,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  initConstraints();
 }
 
 
 void ParNMPCSolver::setContactStatusUniformly(
     const ContactStatus& contact_status) {
   contact_sequence_.setContactStatusUniformly(contact_status);
-  for (int i=0; i<N_; ++i) {
-    s_[i].setContactStatus(contact_sequence_.contactStatus(0));
-  }
 }
 
 
 void ParNMPCSolver::pushBackContactStatus(const ContactStatus& contact_status, 
-                                          const double switching_time, 
-                                          const double t) {
+                                          const double switching_time) {
   contact_sequence_.push_back(contact_status, switching_time);
 }
 
@@ -204,12 +199,12 @@ void ParNMPCSolver::setContactPoints(
 }
 
 
-void ParNMPCSolver::popBackDiscreteEvent() {
+void ParNMPCSolver::popBackContactStatus() {
   contact_sequence_.pop_back();
 }
 
 
-void ParNMPCSolver::popFrontDiscreteEvent() {
+void ParNMPCSolver::popFrontContactStatus() {
   contact_sequence_.pop_front();
 }
 
@@ -234,14 +229,15 @@ void ParNMPCSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
 
 
 bool ParNMPCSolver::isCurrentSolutionFeasible() {
-  for (int i=0; i<N_-1; ++i) {
+  for (int i=0; i<parnmpc_.discrete().N()-1; ++i) {
     const bool feasible = parnmpc_[i].isFeasible(robots_[0], s_[i]);
     if (!feasible) {
       std::cout << "INFEASIBLE at time stage " << i << std::endl;
       return false;
     }
   }
-  const bool feasible = parnmpc_.terminal.isFeasible(robots_[0], s_[N_-1]);
+  const bool feasible = parnmpc_.terminal.isFeasible(
+      robots_[0], s_[parnmpc_.discrete().N()-1]);
   if (!feasible) {
     std::cout << "INFEASIBLE at the terminal stage" << std::endl;
     return false;
@@ -277,27 +273,27 @@ std::vector<Eigen::VectorXd> ParNMPCSolver::getSolution(
     const std::string& name) const {
   std::vector<Eigen::VectorXd> sol;
   if (name == "q") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<parnmpc_.discrete().N(); ++i) {
       sol.push_back(s_[i].q);
     }
   }
   if (name == "v") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<parnmpc_.discrete().N(); ++i) {
       sol.push_back(s_[i].v);
     }
   }
   if (name == "a") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<parnmpc_.discrete().N(); ++i) {
       sol.push_back(s_[i].a);
     }
   }
   if (name == "f") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<parnmpc_.discrete().N(); ++i) {
       sol.push_back(s_[i].f_stack());
     }
   }
   if (name == "u") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<parnmpc_.discrete().N(); ++i) {
       sol.push_back(s_[i].u);
     }
   }
@@ -312,6 +308,7 @@ void ParNMPCSolver::discretizeSolution() {
   }
   for (int i=0; i<parnmpc_.discrete().N_impulse(); ++i) {
     s_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
+    s_.aux[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
     s_.aux[i].setContactStatus(
         contact_sequence_.contactStatus(
             parnmpc_.discrete().contactPhaseBeforeImpulse(i)));

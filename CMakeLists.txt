@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 ## Build idocp ##
 #################
 if(NOT CMAKE_BUILD_TYPE MATCHES Release)
-  message(STATUS "WARNING: CMAKE_BUILD_TYPE not set to Release, which can decrease performance significantly")
+  message(STATUS "WARNING: CMAKE_BUILD_TYPE is NOT set to Release, which can decrease performance significantly.")
 endif()
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 # find Eigen
@@ -103,9 +103,10 @@ add_library(
   src/ocp/backward_riccati_recursion_factorizer.cpp
   src/ocp/lqr_state_feedback_policy.cpp
   src/ocp/split_riccati_factorizer.cpp
-  src/ocp/riccati_recursion.cpp
-  src/ocp/riccati_direction_calculator.cpp
-  src/ocp/riccati_solver.cpp
+  # src/ocp/riccati_recursion.cpp
+  # src/ocp/riccati_direction_calculator.cpp
+  # src/ocp/riccati_solver.cpp
+  src/ocp/riccati_recursion_solver.cpp
   src/ocp/ocp_solver.cpp
   src/ocp/split_parnmpc.cpp
   src/ocp/terminal_parnmpc.cpp

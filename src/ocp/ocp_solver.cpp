@@ -18,13 +18,12 @@ OCPSolver::OCPSolver(const Robot& robot,
     riccati_solver_(robot, N, max_num_impulse, nthreads),
     line_search_(robot, N, max_num_impulse, nthreads),
     ocp_(robot, cost, constraints, T, N, max_num_impulse),
+    riccati_factorization_(robot, N, max_num_impulse),
     kkt_matrix_(robot, N, max_num_impulse),
     kkt_residual_(robot, N, max_num_impulse),
     jac_(robot, max_num_impulse),
     s_(robot, N, max_num_impulse),
-    d_(robot, N, max_num_impulse),
-    N_(N),
-    nthreads_(nthreads) {
+    d_(robot, N, max_num_impulse) {
   try {
     if (T <= 0) {
       throw std::out_of_range("invalid value: T must be positive!");
@@ -47,7 +46,6 @@ OCPSolver::OCPSolver(const Robot& robot,
   for (auto& e : s_.impulse) { robot.normalizeConfiguration(e.q); }
   for (auto& e : s_.aux)     { robot.normalizeConfiguration(e.q); }
   for (auto& e : s_.lift)    { robot.normalizeConfiguration(e.q); }
-  initConstraints();
 }
 
 
@@ -59,7 +57,9 @@ OCPSolver::~OCPSolver() {
 }
 
 
-void OCPSolver::initConstraints() {
+void OCPSolver::initConstraints(const double t) {
+  ocp_.discretize(contact_sequence_, t);
+  discretizeSolution();
   ocp_linearizer_.initConstraints(ocp_, robots_, contact_sequence_, s_);
 }
 
@@ -73,8 +73,12 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   discretizeSolution();
   ocp_linearizer_.linearizeOCP(ocp_, robots_, contact_sequence_, q, v, s_, 
                                kkt_matrix_, kkt_residual_, jac_);
-  riccati_solver_.computeNewtonDirection(ocp_, robots_, q, v, s_, d_, 
-                                         kkt_matrix_, kkt_residual_, jac_);
+  riccati_solver_.backwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, 
+                                           jac_, riccati_factorization_);
+  riccati_solver_.computeInitialStateDirection(robots_, q, v, 
+                                               kkt_matrix_, s_, d_);
+  riccati_solver_.forwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, d_);
+  riccati_solver_.computeDirection(ocp_, robots_, riccati_factorization_, s_, d_);
   double primal_step_size = riccati_solver_.maxPrimalStepSize();
   const double dual_step_size = riccati_solver_.maxDualStepSize();
   if (line_search) {
@@ -90,7 +94,7 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
 
 const SplitSolution& OCPSolver::getSolution(const int stage) const {
   assert(stage >= 0);
-  assert(stage <= N_);
+  assert(stage <= ocp_.discrete().N());
   return s_[stage];
 }
 
@@ -98,7 +102,7 @@ const SplitSolution& OCPSolver::getSolution(const int stage) const {
 void OCPSolver::getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq, 
                                      Eigen::MatrixXd& Kv) const {
   assert(time_stage >= 0);
-  assert(time_stage < N_);
+  assert(time_stage < ocp_.discrete().N());
   assert(Kq.rows() == robots_[0].dimv());
   assert(Kq.cols() == robots_[0].dimv());
   assert(Kv.rows() == robots_[0].dimv());
@@ -159,23 +163,17 @@ void OCPSolver::setSolution(const std::string& name,
     std::cerr << e.what() << '\n';
     std::exit(EXIT_FAILURE);
   }
-  initConstraints();
 }
 
 
 void OCPSolver::setContactStatusUniformly(const ContactStatus& contact_status) {
   contact_sequence_.setContactStatusUniformly(contact_status);
-  for (int i=0; i<=N_; ++i) {
-    s_[i].setContactStatus(contact_sequence_.contactStatus(0));
-  }
 }
 
 
 void OCPSolver::pushBackContactStatus(const ContactStatus& contact_status, 
-                                      const double switching_time, 
-                                      const double t) {
+                                      const double switching_time) {
   contact_sequence_.push_back(contact_status, switching_time);
-  ocp_.discretize(contact_sequence_, t);
 }
 
 
@@ -186,12 +184,12 @@ void OCPSolver::setContactPoints(
 }
 
 
-void OCPSolver::popBackDiscreteEvent() {
+void OCPSolver::popBackContactStatus() {
   contact_sequence_.pop_back();
 }
 
 
-void OCPSolver::popFrontDiscreteEvent() {
+void OCPSolver::popFrontContactStatus() {
   contact_sequence_.pop_front();
 }
 
@@ -216,7 +214,7 @@ void OCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
 
 
 bool OCPSolver::isCurrentSolutionFeasible() {
-  for (int i=0; i<N_; ++i) {
+  for (int i=0; i<ocp_.discrete().N(); ++i) {
     const bool feasible = ocp_[i].isFeasible(robots_[0], s_[i]);
     if (!feasible) {
       std::cout << "INFEASIBLE at time stage " << i << std::endl;
@@ -254,27 +252,27 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
     const std::string& name) const {
   std::vector<Eigen::VectorXd> sol;
   if (name == "q") {
-    for (int i=0; i<=N_; ++i) {
+    for (int i=0; i<=ocp_.discrete().N(); ++i) {
       sol.push_back(s_[i].q);
     }
   }
   if (name == "v") {
-    for (int i=0; i<=N_; ++i) {
+    for (int i=0; i<=ocp_.discrete().N(); ++i) {
       sol.push_back(s_[i].v);
     }
   }
   if (name == "a") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<ocp_.discrete().N(); ++i) {
       sol.push_back(s_[i].a);
     }
   }
   if (name == "f") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<ocp_.discrete().N(); ++i) {
       sol.push_back(s_[i].f_stack());
     }
   }
   if (name == "u") {
-    for (int i=0; i<N_; ++i) {
+    for (int i=0; i<ocp_.discrete().N(); ++i) {
       sol.push_back(s_[i].u);
     }
   }
@@ -286,17 +284,30 @@ void OCPSolver::discretizeSolution() {
   for (int i=0; i<=ocp_.discrete().N(); ++i) {
     s_[i].setContactStatus(
         contact_sequence_.contactStatus(ocp_.discrete().contactPhase(i)));
+    s_[i].setImpulseStatus();
+  }
+  for (int i=0; i<ocp_.discrete().N_lift(); ++i) {
+    s_.lift[i].setContactStatus(
+        contact_sequence_.contactStatus(
+            ocp_.discrete().contactPhaseAfterLift(i)));
+    s_.lift[i].setImpulseStatus();
   }
   for (int i=0; i<ocp_.discrete().N_impulse(); ++i) {
     s_.impulse[i].setImpulseStatus(contact_sequence_.impulseStatus(i));
     s_.aux[i].setContactStatus(
         contact_sequence_.contactStatus(
             ocp_.discrete().contactPhaseAfterImpulse(i)));
-  }
-  for (int i=0; i<ocp_.discrete().N_lift(); ++i) {
-    s_.lift[i].setContactStatus(
-        contact_sequence_.contactStatus(
-            ocp_.discrete().contactPhaseAfterLift(i)));
+    const int time_stage_before_impulse 
+        = ocp_.discrete().timeStageBeforeImpulse(i);
+    if (ocp_.discrete().isTimeStageAfterLift(time_stage_before_impulse)) {
+      const int lift_index 
+          = ocp_.discrete().liftIndexAfterTimeStage(time_stage_before_impulse-1);
+      s_.lift[lift_index].setImpulseStatus(contact_sequence_.impulseStatus(i));
+    }
+    else if (time_stage_before_impulse > 0) {
+      s_[time_stage_before_impulse-1].setImpulseStatus(
+          contact_sequence_.impulseStatus(i));
+    }
   }
 }
 

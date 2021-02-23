@@ -44,7 +44,7 @@ inline BackwardRiccatiRecursionFactorizer::
 inline void BackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
     const SplitRiccatiFactorization& riccati_next, const double dt, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
-  assert(dt >= 0);
+  assert(dt > 0);
   if (has_floating_base_) {
     AtPqq_.template topRows<6>().noalias() 
         = kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
@@ -119,7 +119,7 @@ inline void BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const LQRStateFeedbackPolicy& lqr_policy, const double dt, 
     SplitRiccatiFactorization& riccati) {
-  assert(dt >= 0);
+  assert(dt > 0);
   riccati.Pqq = kkt_matrix.Qqq();
   riccati.Pqv = kkt_matrix.Qqv();
   riccati.Pvv = kkt_matrix.Qvv();

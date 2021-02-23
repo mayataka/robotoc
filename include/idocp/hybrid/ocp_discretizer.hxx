@@ -246,16 +246,17 @@ inline bool OCPDiscretizer::isWellDefined() const {
 inline void OCPDiscretizer::countDiscreteEvents(
     const ContactSequence& contact_sequence, const double t) {
   N_impulse_ = contact_sequence.numImpulseEvents();
+  assert(N_impulse_ <= max_events_);
   for (int i=0; i<N_impulse_; ++i) {
     t_impulse_[i] = contact_sequence.impulseTime(i);
     time_stage_before_impulse_[i] = std::floor((t_impulse_[i]-t)/dt_ideal_);
   }
   N_lift_ = contact_sequence.numLiftEvents();
+  assert(N_lift_ <= max_events_);
   for (int i=0; i<N_lift_; ++i) {
     t_lift_[i] = contact_sequence.liftTime(i);
     time_stage_before_lift_[i] = std::floor((t_lift_[i]-t)/dt_ideal_);
   }
-  assert((N_impulse_+N_lift_) <= max_events_);
   N_ = N_ideal_;
   assert(isWellDefined());
 }

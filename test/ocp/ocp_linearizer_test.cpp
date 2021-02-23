@@ -9,7 +9,7 @@
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/state_constraint_jacobian.hpp"
-#include "idocp/ocp/riccati_solver.hpp"
+#include "idocp/ocp/riccati_recursion_solver.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 
 #include "test_helper.hpp"
@@ -48,7 +48,6 @@ protected:
   std::shared_ptr<CostFunction> cost;
   std::shared_ptr<Constraints> constraints;
 };
-
 
 
 Solution OCPLinearizerTest::createSolution(const Robot& robot) const {
@@ -331,9 +330,12 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   linearizer.linearizeOCP(ocp, robots, contact_sequence, 
                           q, v, s, kkt_matrix, kkt_residual, jac);
   Direction d(robot, N, max_num_impulse);
-  RiccatiSolver riccati_solver(robots[0], N, max_num_impulse, nthreads);
-  riccati_solver.computeNewtonDirection(ocp, robots, q, v, s, d, 
-                                        kkt_matrix, kkt_residual, jac);
+  RiccatiRecursionSolver riccati_solver(robots[0], N, max_num_impulse, nthreads);
+  RiccatiFactorization riccati_factorization(robots[0], N, max_num_impulse);
+  riccati_solver.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, 
+                                          jac, riccati_factorization);
+  riccati_solver.forwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, d);
+  riccati_solver.computeDirection(ocp, robots, riccati_factorization, s, d);
   const double primal_step_size = riccati_solver.maxPrimalStepSize();
   const double dual_step_size = riccati_solver.maxDualStepSize();
   ASSERT_TRUE(primal_step_size > 0);

@@ -204,14 +204,15 @@ void SplitRiccatiFactorizerTest::testBackwardRecursionWithSwitchingConstraint(co
   riccati_ref.Pvv -= MtKtODtDKM.bottomRightCorner(dimv, dimv);
   riccati_ref.sq.noalias() -= jac_ref.Phix().transpose().topRows(dimv) * km.tail(dimi);
   riccati_ref.sv.noalias() -= jac_ref.Phix().transpose().bottomRows(dimv) * km.tail(dimi);
-  EXPECT_TRUE(c_riccati.DtM.isApprox((jac_ref.Phiu().transpose()*KM.bottomRows(dimi))));
-  EXPECT_TRUE(c_riccati.KtDtM.isApprox((KM.topRows(dimu).transpose()*jac_ref.Phiu().transpose()*KM.bottomRows(dimi))));
-  EXPECT_TRUE(riccati.Pqq.isApprox(riccati_ref.Pqq));
-  EXPECT_TRUE(riccati.Pqv.isApprox(riccati_ref.Pqv));
-  EXPECT_TRUE(riccati.Pvq.isApprox(riccati_ref.Pvq));
-  EXPECT_TRUE(riccati.Pvv.isApprox(riccati_ref.Pvv));
-  EXPECT_TRUE(riccati.sq.isApprox(riccati_ref.sq));
-  EXPECT_TRUE(riccati.sv.isApprox(riccati_ref.sv));
+  constexpr double approx_eps = 1.0e-12;
+  EXPECT_TRUE(c_riccati.DtM.isApprox((jac_ref.Phiu().transpose()*KM.bottomRows(dimi)), approx_eps));
+  EXPECT_TRUE(c_riccati.KtDtM.isApprox((KM.topRows(dimu).transpose()*jac_ref.Phiu().transpose()*KM.bottomRows(dimi)), approx_eps));
+  EXPECT_TRUE(riccati.Pqq.isApprox(riccati_ref.Pqq, approx_eps));
+  EXPECT_TRUE(riccati.Pqv.isApprox(riccati_ref.Pqv, approx_eps));
+  EXPECT_TRUE(riccati.Pvq.isApprox(riccati_ref.Pvq, approx_eps));
+  EXPECT_TRUE(riccati.Pvv.isApprox(riccati_ref.Pvv, approx_eps));
+  EXPECT_TRUE(riccati.sq.isApprox(riccati_ref.sq, approx_eps));
+  EXPECT_TRUE(riccati.sv.isApprox(riccati_ref.sv, approx_eps));
   EXPECT_TRUE(riccati.Pqq.isApprox(riccati.Pqq.transpose()));
   EXPECT_TRUE(riccati.Pvv.isApprox(riccati.Pvv.transpose()));
   EXPECT_TRUE(riccati.Pvq.isApprox(riccati.Pqv.transpose()));
@@ -223,10 +224,10 @@ void SplitRiccatiFactorizerTest::testBackwardRecursionWithSwitchingConstraint(co
   Eigen::MatrixXd Kq(dimu, dimv);
   Eigen::MatrixXd Kv(dimu, dimv);
   factorizer.getStateFeedbackGain(Kq, Kv);
-  EXPECT_TRUE(lqr_policy_ref.K.leftCols(dimv).isApprox(Kq));
-  EXPECT_TRUE(lqr_policy_ref.K.rightCols(dimv).isApprox(Kv));
-  EXPECT_TRUE(c_riccati.M().isApprox(KM.bottomRows(dimi)));
-  EXPECT_TRUE(c_riccati.m().isApprox(km.tail(dimi)));
+  EXPECT_TRUE(lqr_policy_ref.K.leftCols(dimv).isApprox(Kq, approx_eps));
+  EXPECT_TRUE(lqr_policy_ref.K.rightCols(dimv).isApprox(Kv, approx_eps));
+  EXPECT_TRUE(c_riccati.M().isApprox(KM.bottomRows(dimi), approx_eps));
+  EXPECT_TRUE(c_riccati.m().isApprox(km.tail(dimi), approx_eps));
 }
 
 
