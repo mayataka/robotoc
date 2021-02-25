@@ -280,6 +280,11 @@ std::vector<Eigen::VectorXd> OCPSolver::getSolution(
 }
 
 
+void OCPSolver::showInfo() const {
+  ocp_.discrete().showInfo();
+}
+
+
 void OCPSolver::discretizeSolution() {
   for (int i=0; i<=ocp_.discrete().N(); ++i) {
     s_[i].setContactStatus(

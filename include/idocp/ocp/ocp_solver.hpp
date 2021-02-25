@@ -168,6 +168,11 @@ public:
   ///
   std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
 
+  ///
+  /// @brief Shows the information of the optimal control problem.
+  ///
+  void showInfo() const;
+
 private:
   std::vector<Robot> robots_;
   ContactSequence contact_sequence_;

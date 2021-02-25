@@ -269,6 +269,11 @@ bool ParNMPCSolver::isCurrentSolutionFeasible() {
 }
 
 
+void ParNMPCSolver::showInfo() const {
+  parnmpc_.discrete().showInfo();
+}
+
+
 std::vector<Eigen::VectorXd> ParNMPCSolver::getSolution(
     const std::string& name) const {
   std::vector<Eigen::VectorXd> sol;

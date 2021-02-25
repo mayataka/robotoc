@@ -16,6 +16,8 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
+#include "idocp/constraints/linearized_friction_cone.hpp"
+#include "idocp/constraints/linearized_impulse_friction_cone.hpp"
 
 #include "idocp/utils/ocp_benchmarker.hpp"
 
@@ -102,9 +104,9 @@ int main(int argc, char *argv[]) {
 
   const double T = 1.55; // t_start + max_num_impulse_phase * t_period + 0.05;
   const int N = 60;
-  const int max_num_impulse_phase = 3;
+  const int max_num_impulse_phase = 2;
 
-  const int nthreads = 4;
+  const int nthreads = 6;
   const double t = 0;
   idocp::ParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, max_num_impulse_phase, nthreads);
 
@@ -146,7 +148,8 @@ int main(int argc, char *argv[]) {
   parnmpc_solver.initBackwardCorrection(t);
 
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 200, line_search);
+  idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 180, line_search);
+  idocp::ocpbenchmarker::CPUTime(parnmpc_solver, t, q, v);
 
 #ifdef ENABLE_VIEWER
   if (argc != 2) {
