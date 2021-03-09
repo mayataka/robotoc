@@ -178,6 +178,11 @@ inline const pinocchio::SE3& Robot::framePlacement(const int frame_id) const {
 }
 
 
+inline const Eigen::Vector3d& Robot::CoM() const {
+  return data_.com[0];
+}
+
+
 template <typename MatrixType>
 inline void Robot::getFrameJacobian(const int frame_id, 
                                     const Eigen::MatrixBase<MatrixType>& J) {
@@ -185,6 +190,14 @@ inline void Robot::getFrameJacobian(const int frame_id,
   assert(J.cols() == dimv_);
   pinocchio::getFrameJacobian(model_, data_, frame_id, pinocchio::LOCAL, 
                               const_cast<Eigen::MatrixBase<MatrixType>&>(J));
+}
+
+
+template <typename MatrixType>
+inline void Robot::getCoMJacobian(const Eigen::MatrixBase<MatrixType>& J) const {
+  assert(J.rows() == 3);
+  assert(J.cols() == dimv_);
+  const_cast<Eigen::MatrixBase<MatrixType>&>(J) = data_.Jcom;
 }
 
 
@@ -233,6 +246,7 @@ inline void Robot::updateFrameKinematics(
     const Eigen::MatrixBase<ConfigVectorType>& q) {
   assert(q.size() == dimq_);
   pinocchio::framesForwardKinematics(model_, data_, q);
+  pinocchio::centerOfMass(model_, data_, q, false);
 }
 
 
@@ -749,18 +763,6 @@ inline void Robot::getContactPoints(
 
 inline double Robot::totalWeight() const {
   return (- pinocchio::computeTotalMass(model_) * model_.gravity981.coeff(2));
-}
-
-
-template <typename VectorType>
-inline void Robot::get_com(const Eigen::MatrixBase<VectorType>& com) const {
-  const_cast<Eigen::MatrixBase<VectorType>&>(com) = data_.com[0];
-}
-
-
-template <typename MatrixType>
-inline void Robot::get_Jcom(const Eigen::MatrixBase<MatrixType>& J_com) const {
-  const_cast<Eigen::MatrixBase<MatrixType>&>(J_com) = data_.Jcom;
 }
 
 } // namespace idocp

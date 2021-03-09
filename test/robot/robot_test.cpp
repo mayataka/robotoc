@@ -252,6 +252,12 @@ void RobotTest::testFrameKinematicsGetters(const std::string& path_to_urdf, pino
   Eigen::MatrixXd J_ref = Eigen::MatrixXd::Zero(6, model.nv);
   pinocchio::getFrameJacobian(model, data, frame_id, pinocchio::LOCAL, J_ref);
   EXPECT_TRUE(J.isApprox(J_ref));
+  pinocchio::centerOfMass(model, data, q, true);
+  EXPECT_TRUE(data.com[0].isApprox(robot.CoM()));
+  pinocchio::jacobianCenterOfMass(model, data, true);
+  Eigen::MatrixXd Jcom = Eigen::MatrixXd::Zero(3, model.nv);
+  robot.getCoMJacobian(Jcom);
+  EXPECT_TRUE(Jcom.isApprox(data.Jcom));
 }
 
 

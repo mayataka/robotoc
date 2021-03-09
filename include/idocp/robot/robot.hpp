@@ -243,6 +243,12 @@ public:
   const pinocchio::SE3& framePlacement(const int frame_id) const;
 
   ///
+  /// @brief Returns the position of the center of mass. Before calling this 
+  /// function, updateFrameKinematics() or updateKinematics() must be called.
+  /// 
+  const Eigen::Vector3d& CoM() const;
+
+  ///
   /// @brief Computes the frame Jacobian of the position. Before calling this  
   /// function, updateKinematics() must be called.
   /// @param[in] frame_id Index of the frame.
@@ -251,6 +257,14 @@ public:
   template <typename MatrixType>
   void getFrameJacobian(const int frame_id, 
                         const Eigen::MatrixBase<MatrixType>& J);
+
+  ///
+  /// @brief Gets the Jacobian of the position of the center of mass. Before 
+  /// calling this  function, updateKinematics() must be called.
+  /// @param[out] J Jacobian. Size must be 3 x Robot::dimv().
+  ///
+  template <typename MatrixType>
+  void getCoMJacobian(const Eigen::MatrixBase<MatrixType>& J) const;
 
   ///
   /// @brief Computes the residual of the contact constriants represented by 
@@ -683,12 +697,6 @@ public:
   void getContactPoints(std::vector<Eigen::Vector3d>& contact_points) const;
 
   double totalWeight() const;
-
-  template <typename VectorType>
-  void get_com(const Eigen::MatrixBase<VectorType>& com) const;
-
-  template <typename MatrixType>
-  void get_Jcom(const Eigen::MatrixBase<MatrixType>& J_com) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

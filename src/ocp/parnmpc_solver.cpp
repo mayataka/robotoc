@@ -151,15 +151,17 @@ void ParNMPCSolver::setSolution(const std::string& name,
         for (auto& ef : e.f) { ef = value; } 
         e.set_f_stack(); 
       }
-      for (auto& e : s_.impulse) { 
-        for (auto& ef : e.f) { ef = value; } 
-        e.set_f_stack(); 
-      }
       for (auto& e : s_.aux) { 
         for (auto& ef : e.f) { ef = value; } 
         e.set_f_stack(); 
       }
       for (auto& e : s_.lift) { 
+        for (auto& ef : e.f) { ef = value; } 
+        e.set_f_stack(); 
+      }
+    }
+    else if (name == "lmd") {
+      for (auto& e : s_.impulse) { 
         for (auto& ef : e.f) { ef = value; } 
         e.set_f_stack(); 
       }

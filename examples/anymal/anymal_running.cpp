@@ -222,6 +222,7 @@ int main(int argc, char *argv[]) {
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
+  ocp_solver.setSolution("lmd", f_init);
 
   ocp_solver.initConstraints(t);
 
