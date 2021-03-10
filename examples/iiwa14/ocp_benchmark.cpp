@@ -48,8 +48,13 @@ int main() {
   // Solves the OCP.
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
+  ocp_solver.showInfo();
+  std::cout << "before init" << std::endl;
+  ocp_solver.initConstraints(t);
+  std::cout << "after init" << std::endl;
   const int num_iteration = 50;
   const bool line_search = false;
+  std::cout << "before conv" << std::endl;
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);
   const int num_iteration_CPU = 10000;
   idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, num_iteration_CPU, line_search);
