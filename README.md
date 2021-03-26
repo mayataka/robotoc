@@ -58,7 +58,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=False -DBUILD_VIEWER=True
 ```
 
 ## Usage
-You can link your exectables to `idocp` by writing `CMakeLists.txt` as
+You can link your exectables to `idocp` by writing `CMakeLists.txt`, e.g., as
 ```
 find_package(idocp REQUIRED)
 
@@ -119,4 +119,18 @@ The following animations are the solution trajectory of the `idocp::OCPSolver` f
 Simulation of the MPC of systems with rigid contacts are shown in [idocp-sim](https://github.com/mayataka/idocp-sim).
 
 
+## Citing idocp
+
+Citing `idocp::UnOCPSolver` and `idocp::UnParNMPCSolver`:
+```
+@inproceedings{katayama2021idocp,
+  title={Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems},
+  author={S. Katayama and T. Ohtsuka},
+  booktitle={{IEEE International Conference on Robotics and Automation (ICRA)}},
+  year={2021}}
+```
+
 ## Related publications
+- S. Katayama and T. Ohtsuka, Efficient Riccati recursion for optimal control problems with pure-state equality constraints, https://arxiv.org/abs/2102.09731, 2021
+- S. Katayama and T. Ohtsuka, Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems, IEEE International Conference on Robotics and Automation (ICRA), 2021
+- H. Deng and T. Ohtsuka, A parallel Newton-type method for nonlinear model predictive control, Automatica, Vol. 109, pp. 108560, 2019

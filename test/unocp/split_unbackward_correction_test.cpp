@@ -1,4 +1,3 @@
-#include <string>
 #include <memory>
 
 #include <gtest/gtest.h>
@@ -12,6 +11,8 @@
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/unocp/split_unbackward_correction.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -19,9 +20,7 @@ class SplitUnBackwardCorrectionTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    urdf = "../urdf/iiwa14/iiwa14.urdf";
-    robot = Robot(urdf);
+    robot = testhelper::CreateFixedBaseRobot();
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
     dimv = robot.dimv();
     dimx = 2*robot.dimv();
@@ -41,7 +40,6 @@ protected:
   virtual void TearDown() {
   }
 
-  std::string urdf;
   Robot robot;
   double dt;
   int dimv, dimx, dimKKT;

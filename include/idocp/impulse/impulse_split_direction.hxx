@@ -3,6 +3,7 @@
 
 #include "idocp/impulse/impulse_split_direction.hpp"
 
+#include <random>
 #include <cassert>
 
 

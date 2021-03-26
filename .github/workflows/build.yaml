@@ -47,6 +47,7 @@ jobs:
           export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH 
           git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
           cd pinocchio-gepetto-viewer
+          git checkout 86deae3adcbe64d6873cd09b7e5e3e73227eb647 
           mkdir build
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release

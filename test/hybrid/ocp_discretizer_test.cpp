@@ -1,6 +1,5 @@
 #include <random>
 #include <vector>
-#include <algorithm>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -9,14 +8,15 @@
 #include "idocp/hybrid/ocp_discretizer.hpp"
 #include "idocp/robot/robot.hpp"
 
+#include "robot_factory.hpp"
+
+
 namespace idocp {
 
 class OCPDiscretizerTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N = 20;
     max_num_events = 5;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -35,7 +35,6 @@ protected:
   void testDiscretizeOCP(const Robot& robot) const;
   void testDiscretizeOCPOnGrid(const Robot& robot) const;
 
-  std::string fixed_base_urdf, floating_base_urdf;
   int N, max_num_events;
   double t, T, dt, min_dt;
 };
@@ -212,8 +211,7 @@ void OCPDiscretizerTest::testDiscretizeOCPOnGrid(const Robot& robot) const {
 
 
 TEST_F(OCPDiscretizerTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   testConstructor(robot);
   testDiscretizeOCP(robot);
   testDiscretizeOCPOnGrid(robot);
@@ -221,11 +219,10 @@ TEST_F(OCPDiscretizerTest, fixedBase) {
 
 
 TEST_F(OCPDiscretizerTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   testConstructor(robot);
   testDiscretizeOCP(robot);
-  // testDiscretizeOCPOnGrid(robot);
+  testDiscretizeOCPOnGrid(robot);
 }
 
 } // namespace idocp

@@ -1,13 +1,12 @@
-#include <string>
-
 #include <gtest/gtest.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/ocp/split_direction.hpp"
+
+#include "robot_factory.hpp"
 
 
 namespace idocp {
@@ -16,9 +15,7 @@ class SplitDirectionTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -31,7 +28,7 @@ protected:
                            const ContactStatus& contact_status, 
                            const ImpulseStatus& impulse_status);
 
-  std::string fixed_base_urdf, floating_base_urdf;
+  double dt;
 };
 
 
@@ -292,8 +289,7 @@ void SplitDirectionTest::testIsApprox(const Robot& robot,
 
 
 TEST_F(SplitDirectionTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   ContactStatus contact_status = robot.createContactStatus();
   ImpulseStatus impulse_status = robot.createImpulseStatus();
   testSize(robot, contact_status, impulse_status);
@@ -313,8 +309,7 @@ TEST_F(SplitDirectionTest, fixedBase) {
 
 
 TEST_F(SplitDirectionTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   ContactStatus contact_status = robot.createContactStatus();
   ImpulseStatus impulse_status = robot.createImpulseStatus();
   testSize(robot, contact_status, impulse_status);
@@ -325,7 +320,7 @@ TEST_F(SplitDirectionTest, floatingBase) {
   }
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
-  for (int i=0; i<contact_frames.size(); ++i) {
+  for (int i=0; i<robot.contactFrames().size(); ++i) {
     contact_status.deactivateContact(i);
   }
   impulse_status.setRandom();

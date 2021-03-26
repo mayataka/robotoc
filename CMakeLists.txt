@@ -56,11 +56,8 @@ add_library(
   src/constraints/joint_acceleration_lower_limit.cpp
   src/constraints/joint_torques_upper_limit.cpp
   src/constraints/joint_torques_lower_limit.cpp
-  src/constraints/contact_distance.cpp
   src/constraints/friction_cone.cpp
   src/constraints/impulse_friction_cone.cpp
-  src/constraints/linearized_friction_cone.cpp
-  src/constraints/linearized_impulse_friction_cone.cpp
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp
   src/impulse/impulse_split_kkt_residual.cpp

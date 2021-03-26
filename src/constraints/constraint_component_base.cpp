@@ -10,18 +10,18 @@ ConstraintComponentBase::ConstraintComponentBase(
     const double barrier, const double fraction_to_boundary_rate) 
   : barrier_(barrier),
     fraction_to_boundary_rate_(fraction_to_boundary_rate) {
-    try {
+  try {
     if (barrier <= 0) {
       throw std::out_of_range(
-          "invalid argment: barrirer must be positive");
+          "Invalid argment: barrirer must be positive!");
     }
     if (fraction_to_boundary_rate <= 0) {
       throw std::out_of_range(
-          "invalid argment: fraction_to_boundary_rate must be positive");
+          "Invalid argment: fraction_to_boundary_rate must be positive!");
     }
     if (fraction_to_boundary_rate >= 1) {
       throw std::out_of_range(
-          "invalid argment: fraction_to_boundary_rate must be less than 1");
+          "Invalid argment: fraction_to_boundary_rate must be less than 1!");
     }
   }
   catch(const std::exception& e) {

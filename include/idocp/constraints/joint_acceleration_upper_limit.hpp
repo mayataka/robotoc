@@ -14,27 +14,54 @@
 
 namespace idocp {
 
+///
+/// @class JointAccelerationUpperLimit
+/// @brief Constraint on the upper limits of the joint acceleration.
+///
 class JointAccelerationUpperLimit final : public ConstraintComponentBase {
 public:
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] amax Upper limits of the joint acceleration.
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// Default is 1.0e-04.
+  /// @param[in] fraction_to_boundary_rate Must be larger than 0 and smaller 
+  /// than 1. Should be between 0.9 and 0.995. Default is 0.995.
+  ///
   JointAccelerationUpperLimit(const Robot& robot, const Eigen::VectorXd& amax,
                               const double barrier=1.0e-04,
                               const double fraction_to_boundary_rate=0.995);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   JointAccelerationUpperLimit();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~JointAccelerationUpperLimit();
 
-  // Use default copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   JointAccelerationUpperLimit(const JointAccelerationUpperLimit&) = default;
 
-  // Use default copy coperator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   JointAccelerationUpperLimit& operator=(
       const JointAccelerationUpperLimit&) = default;
 
-  // Use default move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   JointAccelerationUpperLimit(JointAccelerationUpperLimit&&) noexcept = default;
 
-  // Use default move assign coperator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   JointAccelerationUpperLimit& operator=(
       JointAccelerationUpperLimit&&) noexcept = default;
 

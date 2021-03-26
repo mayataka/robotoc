@@ -1,13 +1,12 @@
-#include <string>
-
 #include <gtest/gtest.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_kkt_matrix_inverter.hpp"
+
+#include "robot_factory.hpp"
 
 
 namespace idocp {
@@ -17,8 +16,6 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
@@ -28,7 +25,6 @@ protected:
   void test(const Robot& robot) const;
   void testWithImpulse(const Robot& robot) const;
 
-  std::string fixed_base_urdf, floating_base_urdf;
   double dt;
 };
 
@@ -146,17 +142,14 @@ void SplitKKTMatrixInverterTest::testWithImpulse(const Robot& robot) const {
 
 
 TEST_F(SplitKKTMatrixInverterTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
-  std::random_device rnd;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   test(robot);
   testWithImpulse(robot);
 }
 
 
 TEST_F(SplitKKTMatrixInverterTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   test(robot);
   testWithImpulse(robot);
 }

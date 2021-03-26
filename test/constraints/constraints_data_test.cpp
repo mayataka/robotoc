@@ -1,10 +1,4 @@
-#include <string>
-#include <random>
-#include <utility>
-#include <vector>
-
 #include <gtest/gtest.h>
-#include "Eigen/Core"
 
 #include "idocp/constraints/constraints_data.hpp"
 

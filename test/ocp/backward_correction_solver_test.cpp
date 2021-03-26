@@ -1,8 +1,6 @@
-#include <string>
 #include <memory>
 
 #include <gtest/gtest.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -12,6 +10,12 @@
 #include "idocp/ocp/backward_correction_solver.hpp"
 
 #include "test_helper.hpp"
+#include "robot_factory.hpp"
+#include "contact_sequence_factory.hpp"
+#include "solution_factory.hpp"
+#include "cost_factory.hpp"
+#include "constraints_factory.hpp"
+
 
 namespace idocp {
 
@@ -19,9 +23,6 @@ class BackwardCorrectionSolverTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N_ideal = 20;
     max_num_impulse = 5;
     nthreads = 4;
@@ -34,17 +35,15 @@ protected:
   }
 
   Solution createSolution(const Robot& robot) const;
-  Solution createSolution(const Robot& robot, const ContactSequence& contact_sequence) const;
+  Solution createSolution(const Robot& robot, 
+                          const ContactSequence& contact_sequence) const;
   ContactSequence createContactSequence(const Robot& robot) const;
 
   void testCoarseUpdate(const Robot& robot) const;
   void testBackwardCorrection(const Robot& robot) const;
 
-  std::string fixed_base_urdf, floating_base_urdf;
   int N_ideal, max_num_impulse, nthreads;
   double T, t, dt;
-  std::shared_ptr<CostFunction> cost;
-  std::shared_ptr<Constraints> constraints;
 };
 
 
@@ -54,7 +53,8 @@ Solution BackwardCorrectionSolverTest::createSolution(const Robot& robot) const 
 }
 
 
-Solution BackwardCorrectionSolverTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
+Solution BackwardCorrectionSolverTest::createSolution(const Robot& robot, 
+                                                      const ContactSequence& contact_sequence) const {
   return testhelper::CreateSolution(robot, contact_sequence, T, N_ideal, max_num_impulse, t, true);
 }
 
@@ -290,22 +290,20 @@ void BackwardCorrectionSolverTest::testBackwardCorrection(const Robot& robot) co
 
 
 TEST_F(BackwardCorrectionSolverTest, fixedBase) {
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot();
   testCoarseUpdate(robot);
   testBackwardCorrection(robot);
-  std::vector<int> contact_frames = {18};
-  robot = Robot(fixed_base_urdf, contact_frames);
+  robot = testhelper::CreateFixedBaseRobot(dt);
   testCoarseUpdate(robot);
   testBackwardCorrection(robot);
 }
 
 
 TEST_F(BackwardCorrectionSolverTest, floatingBase) {
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot();
   testCoarseUpdate(robot);
   testBackwardCorrection(robot);
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  robot = Robot(floating_base_urdf, contact_frames);
+  robot = testhelper::CreateFloatingBaseRobot(dt);
   testCoarseUpdate(robot);
   testBackwardCorrection(robot);
 }

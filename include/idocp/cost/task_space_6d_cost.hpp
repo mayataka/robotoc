@@ -17,41 +17,84 @@
 
 namespace idocp {
 
+///
+/// @class TaskSpace6DCost
+/// @brief Quadratic cost on the task space pose (SE(3). 
+///
 class TaskSpace6DCost final : public CostFunctionComponentBase {
 public:
   using Vector6d = Eigen::Matrix<double, 6, 1>;
 
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] frame_id Frame of interest.
+  ///
   TaskSpace6DCost(const Robot& robot, const int frame_id);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   TaskSpace6DCost();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~TaskSpace6DCost();
 
-  // Use defalut copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   TaskSpace6DCost(const TaskSpace6DCost&) = default;
 
-  // Use defalut copy operator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   TaskSpace6DCost& operator=(const TaskSpace6DCost&) = default;
 
-  // Use defalut move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   TaskSpace6DCost(TaskSpace6DCost&&) noexcept = default;
 
-  // Use defalut copy operator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   TaskSpace6DCost& operator=(TaskSpace6DCost&&) noexcept = default;
 
-  bool useKinematics() const override;
-
+  ///
+  /// @brief Sets the reference pose. 
+  /// @param[in] position_ref Reference position.
+  /// @param[in] rotation_mat_ref Reference rotation matrix.
+  ///
   void set_q_6d_ref(const Eigen::Vector3d& position_ref, 
                     const Eigen::Matrix3d& rotation_mat_ref);
 
+  ///
+  /// @brief Sets the weight vectors. 
+  /// @param[in] position_weight Weight vector on the position error. 
+  /// @param[in] rotation_weight Weight vector on the rotation error. 
+  ///
   void set_q_6d_weight(const Eigen::Vector3d& position_weight, 
                        const Eigen::Vector3d& rotation_weight);
 
+  ///
+  /// @brief Sets the terminal weight vectors. 
+  /// @param[in] position_weight Temrinal weight vector on the position error. 
+  /// @param[in] rotation_weight Temrinal weight vector on the rotation error. 
+  ///
   void set_qf_6d_weight(const Eigen::Vector3d& position_weight, 
                         const Eigen::Vector3d& rotation_weight);
 
+  ///
+  /// @brief Sets the weight vectors at impulse. 
+  /// @param[in] position_weight Weight vector on the position error at impulse. 
+  /// @param[in] rotation_weight Weight vector on the rotation error at impulse. 
+  ///
   void set_qi_6d_weight(const Eigen::Vector3d& position_weight, 
                         const Eigen::Vector3d& rotation_weight);
+
+  bool useKinematics() const override;
 
   double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
                           const double dt, 

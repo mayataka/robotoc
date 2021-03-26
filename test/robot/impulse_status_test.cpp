@@ -1,9 +1,6 @@
-#include <random>
-#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
-#include "Eigen/Core"
 
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
@@ -41,13 +38,13 @@ TEST_F(ImpulseStatusTest, constructor) {
 TEST_F(ImpulseStatusTest, comparison) {
   ImpulseStatus impulse_status1(max_point_contacts);
   ImpulseStatus impulse_status2(max_point_contacts);
-  impulse_status1.activateImpulse({5, 6, 7});
+  impulse_status1.activateImpulses({5, 6, 7});
   EXPECT_FALSE(impulse_status1 == impulse_status2);
-  impulse_status2.activateImpulse({1, 2, 3});
+  impulse_status2.activateImpulses({1, 2, 3});
   EXPECT_FALSE(impulse_status1 == impulse_status2);
-  impulse_status1.activateImpulse({1, 2, 3});
+  impulse_status1.activateImpulses({1, 2, 3});
   EXPECT_FALSE(impulse_status1 == impulse_status2);
-  impulse_status2.activateImpulse({5, 6, 7});
+  impulse_status2.activateImpulses({5, 6, 7});
   EXPECT_TRUE(impulse_status1 == impulse_status2);
 }
 
@@ -72,7 +69,7 @@ TEST_F(ImpulseStatusTest, activate) {
     EXPECT_FALSE(impulse_status.isImpulseActive(i));
   }
   contact_status.activateContacts({5, 6});
-  impulse_status.activateImpulse({5, 6});
+  impulse_status.activateImpulses({5, 6});
   EXPECT_TRUE(contact_status.hasActiveContacts());
   EXPECT_TRUE(impulse_status.hasActiveImpulse());
   EXPECT_EQ(contact_status.dimf(), 9);
@@ -98,7 +95,7 @@ TEST_F(ImpulseStatusTest, activate) {
 
 TEST_F(ImpulseStatusTest, activateAll) {
   ImpulseStatus impulse_status(max_point_contacts);
-  impulse_status.activateImpulse();
+  impulse_status.activateImpulses();
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     EXPECT_TRUE(impulse_status.isImpulseActive(i));
   }
@@ -137,7 +134,7 @@ TEST_F(ImpulseStatusTest, deactivate) {
     EXPECT_TRUE(impulse_status.isImpulseActive(i));
   }
   contact_status.deactivateContacts({5, 6});
-  impulse_status.deactivateImpulse({5, 6});
+  impulse_status.deactivateImpulses({5, 6});
   EXPECT_TRUE(contact_status.hasActiveContacts());
   EXPECT_TRUE(impulse_status.hasActiveImpulse());
   EXPECT_EQ(contact_status.dimf(), 3*max_point_contacts-9);
@@ -164,7 +161,7 @@ TEST_F(ImpulseStatusTest, deactivate) {
 TEST_F(ImpulseStatusTest, deactivateAll) {
   ImpulseStatus impulse_status(max_point_contacts);
   impulse_status.setRandom();
-  impulse_status.deactivateImpulse();
+  impulse_status.deactivateImpulses();
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     EXPECT_FALSE(impulse_status.isImpulseActive(i));
   }

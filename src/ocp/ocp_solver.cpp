@@ -58,12 +58,8 @@ OCPSolver::~OCPSolver() {
 
 
 void OCPSolver::initConstraints(const double t) {
-  std::cout << "before discretize OCP" << std::endl;
   ocp_.discretize(contact_sequence_, t);
-  std::cout << "after discretize OCP" << std::endl;
-  std::cout << "before discretize s" << std::endl;
   discretizeSolution();
-  std::cout << "after discretize s" << std::endl;
   ocp_linearizer_.initConstraints(ocp_, robots_, contact_sequence_, s_);
 }
 

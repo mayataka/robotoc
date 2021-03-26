@@ -14,6 +14,17 @@
 namespace idocp {
 namespace stateequation {
 
+///
+/// @brief Linearizes the impulse state equation of forward Euler. 
+/// @param[in] robot Robot model. 
+/// @param[in] q_prev Configuration at the previous time stage. 
+/// @param[in] s Solution at the current impulse stage. 
+/// @param[in] s_next Solution at the next time stage. 
+/// @param[in, out] kkt_matrix Impulse split KKT matrix at the current impulse 
+/// stage. 
+/// @param[in, out] kkt_residual Impulse split KKT matrix at the current 
+/// impulse stage. 
+///
 template <typename ConfigVectorType>
 void linearizeImpulseForwardEuler(
     const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 

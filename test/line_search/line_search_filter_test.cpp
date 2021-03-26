@@ -1,5 +1,3 @@
-#include <string>
-#include <memory>
 #include <random>
 
 #include <gtest/gtest.h>
@@ -14,7 +12,6 @@ class LineSearchFilterTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
   }
 
   virtual void TearDown() {

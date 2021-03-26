@@ -1,5 +1,3 @@
-#include <string>
-
 #include <gtest/gtest.h>
 
 #include "Eigen/Core"
@@ -10,6 +8,8 @@
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/impulse/impulse_state_equation.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -17,20 +17,16 @@ class ImpulseStateEquationTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf_ = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf_ = "../urdf/anymal/anymal.urdf";
   }
 
   virtual void TearDown() {
   }
-
-  std::string fixed_base_urdf_, floating_base_urdf_;
 };
 
 
 TEST_F(ImpulseStateEquationTest, forwardEulerFixedBase) {
-  Robot robot(fixed_base_urdf_);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   const SplitSolution s_next = SplitSolution::Random(robot);
@@ -64,7 +60,8 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFixedBase) {
 
 
 TEST_F(ImpulseStateEquationTest, forwardEulerFloatingBase) {
-  Robot robot(floating_base_urdf_);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
@@ -115,8 +112,8 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFloatingBase) {
 
 
 TEST_F(ImpulseStateEquationTest, backwardEulerFixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf_, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   const SplitSolution s_next = SplitSolution::Random(robot);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
@@ -151,8 +148,8 @@ TEST_F(ImpulseStateEquationTest, backwardEulerFixedBase) {
 
 
 TEST_F(ImpulseStateEquationTest, backwardEulerFloatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf_, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   const SplitSolution s_next = SplitSolution::Random(robot);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());

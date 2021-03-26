@@ -1,13 +1,11 @@
-#include <string>
-#include <memory>
-
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/impulse/impulse_split_backward_correction_data.hpp"
 
-#include "test_helper.hpp"
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -15,19 +13,12 @@ class ImpulseSplitBackwardCorrectionDataTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((signed int) time(0));
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
-    fixed_base_robot = Robot(fixed_base_urdf, {18});
-    floating_base_robot = Robot(floating_base_urdf, {14, 24, 34, 44});
   }
 
   virtual void TearDown() {
   }
 
   void test(const Robot& robot) const;
-
-  std::string fixed_base_urdf, floating_base_urdf;
-  Robot fixed_base_robot, floating_base_robot;
 };
 
 
@@ -66,12 +57,16 @@ void ImpulseSplitBackwardCorrectionDataTest::test(const Robot& robot) const {
 
 
 TEST_F(ImpulseSplitBackwardCorrectionDataTest, fixedBase) {
-  test(fixed_base_robot);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  test(robot);
 }
 
 
 TEST_F(ImpulseSplitBackwardCorrectionDataTest, floating_base) {
-  test(floating_base_robot);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  test(robot);
 }
 
 } // namespace idocp

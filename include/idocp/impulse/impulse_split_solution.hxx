@@ -3,6 +3,8 @@
 
 #include "idocp/impulse/impulse_split_solution.hpp"
 
+#include <random>
+
 namespace idocp {
 
 inline ImpulseSplitSolution::ImpulseSplitSolution(const Robot& robot) 

@@ -1,5 +1,3 @@
-#include <string>
-
 #include <gtest/gtest.h>
 
 #include "Eigen/Core"
@@ -9,6 +7,8 @@
 #include "idocp/impulse/impulse_split_solution.hpp"
 #include "idocp/ocp/split_solution.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -16,9 +16,6 @@ class ImpulseSplitSolutionTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
   }
 
   virtual void TearDown() {
@@ -30,7 +27,6 @@ protected:
   static void TestIntegrate(const Robot& robot, const ImpulseStatus& impulse_status);
 
   double dt_;
-  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
@@ -359,10 +355,10 @@ void ImpulseSplitSolutionTest::TestIntegrate(const Robot& robot,
 
 
 TEST_F(ImpulseSplitSolutionTest, fixedBase) {
-  Robot robot_without_impulse(fixed_base_urdf);
+  auto robot_without_impulse = testhelper::CreateFixedBaseRobot();
   TestWithoutImpulses(robot_without_impulse);
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   TestIsApprox(robot, impulse_status);
   TestIntegrate(robot, impulse_status);
@@ -374,10 +370,10 @@ TEST_F(ImpulseSplitSolutionTest, fixedBase) {
 
 
 TEST_F(ImpulseSplitSolutionTest, floatingBase) {
-  Robot robot_without_impulse(floating_base_urdf);
+  auto robot_without_impulse = testhelper::CreateFloatingBaseRobot();
   TestWithoutImpulses(robot_without_impulse);
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   TestIsApprox(robot, impulse_status);
   TestIntegrate(robot, impulse_status);

@@ -1,6 +1,3 @@
-#include <string>
-#include <iostream>
-
 #include <gtest/gtest.h>
 
 #include "Eigen/Core"
@@ -16,6 +13,8 @@
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -23,26 +22,26 @@ class ImpulseDynamicsBackwardEulerTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
   }
 
   virtual void TearDown() {
   }
 
-  static void testLinearizeInverseImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status);
-  static void testLinearizeImpulseVelocityConstraints(Robot& robot, const ImpulseStatus& impulse_status);
-  static void testLinearizeImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status);
+  static void testLinearizeInverseImpulseDynamics(Robot& robot, 
+                                                  const ImpulseStatus& impulse_status);
+  static void testLinearizeImpulseVelocityConstraints(Robot& robot, 
+                                                      const ImpulseStatus& impulse_status);
+  static void testLinearizeImpulseDynamics(Robot& robot, 
+                                           const ImpulseStatus& impulse_status);
   static void testCondensing(Robot& robot, const ImpulseStatus& impulse_status);
   static void testIntegration(Robot& robot, const ImpulseStatus& impulse_status);
   static void testComputeResidual(Robot& robot, const ImpulseStatus& impulse_status);
 
-  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
-void ImpulseDynamicsBackwardEulerTest::testLinearizeInverseImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsBackwardEulerTest::testLinearizeInverseImpulseDynamics(
+    Robot& robot, const ImpulseStatus& impulse_status) {
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   ImpulseDynamicsBackwardEulerData data(robot), data_ref(robot);
   ImpulseDynamicsBackwardEuler::linearizeInverseImpulseDynamics(robot, impulse_status, s, data);
@@ -55,7 +54,8 @@ void ImpulseDynamicsBackwardEulerTest::testLinearizeInverseImpulseDynamics(Robot
 }
 
 
-void ImpulseDynamicsBackwardEulerTest::testLinearizeImpulseVelocityConstraints(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsBackwardEulerTest::testLinearizeImpulseVelocityConstraints(
+    Robot& robot, const ImpulseStatus& impulse_status) {
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   ImpulseSplitKKTMatrix kkt_matrix(robot), kkt_matrix_ref(robot);
   ImpulseSplitKKTResidual kkt_residual(robot), kkt_residual_ref(robot);
@@ -72,7 +72,8 @@ void ImpulseDynamicsBackwardEulerTest::testLinearizeImpulseVelocityConstraints(R
 }
 
 
-void ImpulseDynamicsBackwardEulerTest::testLinearizeImpulseDynamics(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsBackwardEulerTest::testLinearizeImpulseDynamics(
+    Robot& robot, const ImpulseStatus& impulse_status) {
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setImpulseStatus(impulse_status);
@@ -112,7 +113,8 @@ void ImpulseDynamicsBackwardEulerTest::testLinearizeImpulseDynamics(Robot& robot
 }  
 
 
-void ImpulseDynamicsBackwardEulerTest::testCondensing(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsBackwardEulerTest::testCondensing(Robot& robot, 
+                                                      const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimf();
   ImpulseSplitKKTResidual kkt_residual(robot);
@@ -128,6 +130,7 @@ void ImpulseDynamicsBackwardEulerTest::testCondensing(Robot& robot, const Impuls
       = kkt_matrix.Qxx().transpose().template triangularView<Eigen::StrictlyLower>();
   kkt_matrix.Qdvdv().diagonal().setRandom();
   kkt_matrix.Qff().setRandom();
+  kkt_matrix.Qqf().setRandom();
   ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
   ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
   ImpulseDynamicsBackwardEuler id(robot);
@@ -153,9 +156,9 @@ void ImpulseDynamicsBackwardEulerTest::testCondensing(Robot& robot, const Impuls
   const Eigen::MatrixXd Qdvq = kkt_matrix_ref.Qdvdv() * Minv_dImDdq;
   const Eigen::MatrixXd Qdvf = kkt_matrix_ref.Qdvdv() * Minv_dImDdf;
   const Eigen::VectorXd ldv  = kkt_residual_ref.ldv - kkt_matrix_ref.Qdvdv() * Minv_ImD;
-  kkt_matrix_ref.Qqq()  += Minv_dImDdq.transpose() * Qdvq;
-  kkt_matrix_ref.Qfq().transpose()  += Minv_dImDdq.transpose() * Qdvf;
-  kkt_matrix_ref.Qff()  += Minv_dImDdf.transpose() * Qdvf;
+  kkt_matrix_ref.Qqq() += Minv_dImDdq.transpose() * Qdvq;
+  kkt_matrix_ref.Qqf() += Minv_dImDdq.transpose() * Qdvf;
+  kkt_matrix_ref.Qff() += Minv_dImDdf.transpose() * Qdvf;
   kkt_residual_ref.lq() -= Minv_dImDdq.transpose() * ldv;
   kkt_residual_ref.lf() -= Minv_dImDdf.transpose() * ldv;
   kkt_matrix_ref.Fvv() = - Eigen::MatrixXd::Identity(dimv, dimv);
@@ -169,7 +172,8 @@ void ImpulseDynamicsBackwardEulerTest::testCondensing(Robot& robot, const Impuls
 }
 
 
-void ImpulseDynamicsBackwardEulerTest::testIntegration(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsBackwardEulerTest::testIntegration(Robot& robot, 
+                                                       const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimf();
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
@@ -185,6 +189,7 @@ void ImpulseDynamicsBackwardEulerTest::testIntegration(Robot& robot, const Impul
       = kkt_matrix.Qxx().transpose().template triangularView<Eigen::StrictlyLower>();
   kkt_matrix.Qdvdv().diagonal().setRandom();
   kkt_matrix.Qff().setRandom();
+  kkt_matrix.Qqf().setRandom();
   if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
@@ -221,7 +226,8 @@ void ImpulseDynamicsBackwardEulerTest::testIntegration(Robot& robot, const Impul
 }
 
 
-void ImpulseDynamicsBackwardEulerTest::testComputeResidual(Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsBackwardEulerTest::testComputeResidual(Robot& robot, 
+                                                           const ImpulseStatus& impulse_status) {
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   ImpulseDynamicsBackwardEuler id(robot);
   ImpulseSplitKKTResidual kkt_residual(robot);
@@ -245,8 +251,8 @@ void ImpulseDynamicsBackwardEulerTest::testComputeResidual(Robot& robot, const I
 
 
 TEST_F(ImpulseDynamicsBackwardEulerTest, fixedBase) {
-  std::vector<int> impulse_frames = {18};
-  Robot robot(fixed_base_urdf, impulse_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   testLinearizeInverseImpulseDynamics(robot, impulse_status);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
@@ -265,8 +271,8 @@ TEST_F(ImpulseDynamicsBackwardEulerTest, fixedBase) {
 
 
 TEST_F(ImpulseDynamicsBackwardEulerTest, floatingBase) {
-  std::vector<int> impulse_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, impulse_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   testLinearizeInverseImpulseDynamics(robot, impulse_status);
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);

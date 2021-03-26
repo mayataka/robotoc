@@ -1,5 +1,5 @@
-#include <string>
 #include <memory>
+#include <random>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -14,11 +14,11 @@
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
 #include "idocp/cost/cost_function.hpp"
-#include "idocp/cost/cost_function_data.hpp"
-#include "idocp/cost/configuration_space_cost.hpp"
-#include "idocp/cost/contact_force_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/constraints/impulse_friction_cone.hpp"
+
+#include "robot_factory.hpp"
+#include "cost_factory.hpp"
+#include "constraints_factory.hpp"
 
 
 namespace idocp {
@@ -27,93 +27,27 @@ class ImpulseSplitOCPTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
   }
 
   virtual void TearDown() {
   }
 
-  static std::shared_ptr<CostFunction> createCost(const Robot& robot);
-
-  static std::shared_ptr<Constraints> createConstraints(const Robot& robot);
-
-  static ImpulseSplitSolution generateFeasibleSolution(
-      Robot& robot, const ImpulseStatus& impulse_status,
-      const std::shared_ptr<Constraints>& constraints);
-
-  static void testLinearizeOCP(
-      Robot& robot, const ImpulseStatus& impulse_status, 
-      const std::shared_ptr<CostFunction>& cost,
-      const std::shared_ptr<Constraints>& constraints);
-
-  static void testComputeKKTResidual(
-      Robot& robot, const ImpulseStatus& impulse_status, 
-      const std::shared_ptr<CostFunction>& cost,
-      const std::shared_ptr<Constraints>& constraints);
-
-  static void testCostAndConstraintViolation(
-      Robot& robot, const ImpulseStatus& impulse_status, 
-      const std::shared_ptr<CostFunction>& cost,
-      const std::shared_ptr<Constraints>& constraints);
-
-  std::string fixed_base_urdf, floating_base_urdf;
+  static void testLinearizeOCP(Robot& robot, 
+                               const ImpulseStatus& impulse_status);
+  static void testComputeKKTResidual(Robot& robot, 
+                                     const ImpulseStatus& impulse_status);
+  static void testCostAndConstraintViolation(Robot& robot, 
+                                             const ImpulseStatus& impulse_status);
 };
 
 
-std::shared_ptr<CostFunction> ImpulseSplitOCPTest::createCost(const Robot& robot) {
-  auto config_cost = std::make_shared<ConfigurationSpaceCost>(robot);
-  const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  Eigen::VectorXd q_ref = Eigen::VectorXd::Random(robot.dimq());
-  robot.normalizeConfiguration(q_ref);
-  const Eigen::VectorXd v_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd dv_weight = Eigen::VectorXd::Random(robot.dimv()).array().abs();
-  config_cost->set_q_weight(q_weight);
-  config_cost->set_q_ref(q_ref);
-  config_cost->set_v_weight(v_weight);
-  config_cost->set_v_ref(v_ref);
-  config_cost->set_dvi_weight(dv_weight);
-  auto contact_force_cost = std::make_shared<idocp::ContactForceCost>(robot);
-  std::vector<Eigen::Vector3d> f_weight;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    f_weight.push_back(Eigen::Vector3d::Constant(0.001));
-  }
-  contact_force_cost->set_f_weight(f_weight);
-  auto cost = std::make_shared<CostFunction>();
-  cost->push_back(config_cost);
-  cost->push_back(contact_force_cost);
-  return cost;
-}
-
-
-std::shared_ptr<Constraints> ImpulseSplitOCPTest::createConstraints(const Robot& robot) {
-  auto impulse_friction_cone = std::make_shared<ImpulseFrictionCone>(robot, 0.8);
-  auto constraints = std::make_shared<Constraints>();
-  constraints->push_back(impulse_friction_cone);
-  return constraints;
-}
-
-
-ImpulseSplitSolution ImpulseSplitOCPTest::generateFeasibleSolution(
-    Robot& robot, const ImpulseStatus& impulse_status,
-    const std::shared_ptr<Constraints>& constraints) {
-  auto data = constraints->createConstraintsData(robot, -1);
-  ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
-  while (!constraints->isFeasible(robot, data, s)) {
-    s = ImpulseSplitSolution::Random(robot, impulse_status);
-  }
-  return s;
-}
-
-
-void ImpulseSplitOCPTest::testLinearizeOCP(
-    Robot& robot, const ImpulseStatus& impulse_status, 
-    const std::shared_ptr<CostFunction>& cost,
-    const std::shared_ptr<Constraints>& constraints) {
+void ImpulseSplitOCPTest::testLinearizeOCP(Robot& robot, 
+                                           const ImpulseStatus& impulse_status) {
   const SplitSolution s_prev = SplitSolution::Random(robot);
-  const ImpulseSplitSolution s = generateFeasibleSolution(robot, impulse_status, constraints);
+  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   const SplitSolution s_next = SplitSolution::Random(robot);
+  auto cost = testhelper::CreateCost(robot);
+  auto constraints = testhelper::CreateConstraints(robot);
   ImpulseSplitOCP ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, s);
@@ -167,13 +101,13 @@ void ImpulseSplitOCPTest::testLinearizeOCP(
 }
 
 
-void ImpulseSplitOCPTest::testComputeKKTResidual(
-    Robot& robot, const ImpulseStatus& impulse_status, 
-    const std::shared_ptr<CostFunction>& cost,
-    const std::shared_ptr<Constraints>& constraints) {
+void ImpulseSplitOCPTest::testComputeKKTResidual(Robot& robot, 
+                                                 const ImpulseStatus& impulse_status) {
   const SplitSolution s_prev = SplitSolution::Random(robot);
-  const ImpulseSplitSolution s = generateFeasibleSolution(robot, impulse_status, constraints);
+  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   const SplitSolution s_next = SplitSolution::Random(robot);
+  auto cost = testhelper::CreateCost(robot);
+  auto constraints = testhelper::CreateConstraints(robot);
   ImpulseSplitOCP ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   ocp.initConstraints(robot, s);
@@ -191,6 +125,7 @@ void ImpulseSplitOCPTest::testComputeKKTResidual(
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
   cost->computeImpulseCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
+  constraints->computePrimalAndDualResidual(robot, constraints_data, s);
   constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
   stateequation::linearizeImpulseForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamicsForwardEuler id(robot);
@@ -208,13 +143,13 @@ void ImpulseSplitOCPTest::testComputeKKTResidual(
 }
 
 
-void ImpulseSplitOCPTest::testCostAndConstraintViolation(
-    Robot& robot, const ImpulseStatus& impulse_status, 
-    const std::shared_ptr<CostFunction>& cost,
-    const std::shared_ptr<Constraints>& constraints) {
+void ImpulseSplitOCPTest::testCostAndConstraintViolation(Robot& robot, 
+                                                         const ImpulseStatus& impulse_status) {
   const SplitSolution s_prev = SplitSolution::Random(robot);
-  const ImpulseSplitSolution s = generateFeasibleSolution(robot, impulse_status, constraints);
+  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   const ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
+  auto cost = testhelper::CreateCost(robot);
+  auto constraints = testhelper::CreateConstraints(robot);
   ImpulseSplitOCP ocp(robot, cost, constraints);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double step_size = 0.3;
@@ -248,37 +183,33 @@ void ImpulseSplitOCPTest::testCostAndConstraintViolation(
 
 
 TEST_F(ImpulseSplitOCPTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  const auto cost = createCost(robot);
-  const auto constraints = createConstraints(robot);
-  testLinearizeOCP(robot, impulse_status, cost, constraints);
-  testComputeKKTResidual(robot, impulse_status, cost, constraints);
-  testCostAndConstraintViolation(robot, impulse_status, cost, constraints);
+  testLinearizeOCP(robot, impulse_status);
+  testComputeKKTResidual(robot, impulse_status);
+  testCostAndConstraintViolation(robot, impulse_status);
   impulse_status.activateImpulse(0);
-  testLinearizeOCP(robot, impulse_status, cost, constraints);
-  testComputeKKTResidual(robot, impulse_status, cost, constraints);
-  testCostAndConstraintViolation(robot, impulse_status, cost, constraints);
+  testLinearizeOCP(robot, impulse_status);
+  testComputeKKTResidual(robot, impulse_status);
+  testCostAndConstraintViolation(robot, impulse_status);
 }
 
 
 TEST_F(ImpulseSplitOCPTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  const auto cost = createCost(robot);
-  const auto constraints = createConstraints(robot);
-  testLinearizeOCP(robot, impulse_status, cost, constraints);
-  testComputeKKTResidual(robot, impulse_status, cost, constraints);
-  testCostAndConstraintViolation(robot, impulse_status, cost, constraints);
+  testLinearizeOCP(robot, impulse_status);
+  testComputeKKTResidual(robot, impulse_status);
+  testCostAndConstraintViolation(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
-  testLinearizeOCP(robot, impulse_status, cost, constraints);
-  testComputeKKTResidual(robot, impulse_status, cost, constraints);
-  testCostAndConstraintViolation(robot, impulse_status, cost, constraints);
+  testLinearizeOCP(robot, impulse_status);
+  testComputeKKTResidual(robot, impulse_status);
+  testCostAndConstraintViolation(robot, impulse_status);
 }
 
 } // namespace idocp

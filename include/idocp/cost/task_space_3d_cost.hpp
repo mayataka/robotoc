@@ -16,35 +16,74 @@
 
 namespace idocp {
 
+///
+/// @class TaskSpace3DCost
+/// @brief Quadratic cost on the task space position. 
+///
 class TaskSpace3DCost final : public CostFunctionComponentBase {
 public:
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] frame_id Frame of interest.
+  ///
   TaskSpace3DCost(const Robot& robot, const int frame_id);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   TaskSpace3DCost();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~TaskSpace3DCost();
 
-  // Use defalut copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   TaskSpace3DCost(const TaskSpace3DCost&) = default;
 
-  // Use defalut copy operator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   TaskSpace3DCost& operator=(const TaskSpace3DCost&) = default;
 
-  // Use defalut move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   TaskSpace3DCost(TaskSpace3DCost&&) noexcept = default;
 
-  // Use defalut copy operator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   TaskSpace3DCost& operator=(TaskSpace3DCost&&) noexcept = default;
 
-  bool useKinematics() const override;
-
+  ///
+  /// @brief Sets the reference position. 
+  /// @param[in] q_3d_ref Reference position.
+  ///
   void set_q_3d_ref(const Eigen::Vector3d& q_3d_ref);
 
+  ///
+  /// @brief Sets the weight vector. 
+  /// @param[in] q_3d_weight Weight vector on the position error. 
+  ///
   void set_q_3d_weight(const Eigen::Vector3d& q_3d_weight);
 
+  ///
+  /// @brief Sets the terminal weight vector. 
+  /// @param[in] q_3d_weight Terminal weight vector on the position error. 
+  ///
   void set_qf_3d_weight(const Eigen::Vector3d& qf_3d_weight);
 
+  ///
+  /// @brief Sets the weight vector at impulse. 
+  /// @param[in] q_3d_weight Weight vector on the position error at impulse. 
+  ///
   void set_qi_3d_weight(const Eigen::Vector3d& qi_3d_weight);
+
+  bool useKinematics() const override;
 
   double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
                           const double dt, 

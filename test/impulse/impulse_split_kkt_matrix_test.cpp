@@ -1,13 +1,12 @@
-#include <string>
-
 #include <gtest/gtest.h>
 
 #include "Eigen/Core"
-#include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+
+#include "robot_factory.hpp"
 
 
 namespace idocp {
@@ -16,9 +15,6 @@ class SplitImpulseKKTMatrixTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
   }
 
   virtual void TearDown() {
@@ -27,8 +23,6 @@ protected:
   static void testSize(const Robot& robot, const ImpulseStatus& impulse_status);
   static void testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
   static void testInverse(const Robot& robot, const ImpulseStatus& impulse_status);
-
-  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
@@ -59,8 +53,6 @@ void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus
   EXPECT_EQ(matrix.Vq().cols(), dimv);
   EXPECT_EQ(matrix.Vv().rows(), dimf);
   EXPECT_EQ(matrix.Vv().cols(), dimv);
-  EXPECT_EQ(matrix.Qdvdvff().rows(), dimv+dimf);
-  EXPECT_EQ(matrix.Qdvdvff().cols(), dimv+dimf);
   EXPECT_EQ(matrix.Qdvdv().rows(), dimv);
   EXPECT_EQ(matrix.Qdvdv().cols(), dimv);
   EXPECT_EQ(matrix.Qff().rows(), dimf);
@@ -124,8 +116,6 @@ void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus
   EXPECT_TRUE(matrix.Vv().isApprox(Vv));
   EXPECT_TRUE(matrix.Qdvdv().isApprox(Qdvdv));
   EXPECT_TRUE(matrix.Qff().isApprox(Qff));
-  EXPECT_TRUE(matrix.Qdvdvff().topLeftCorner(dimv, dimv).isApprox(Qdvdv));
-  EXPECT_TRUE(matrix.Qdvdvff().bottomRightCorner(dimf, dimf).isApprox(Qff));
   EXPECT_TRUE(matrix.Qfq().isApprox(Qfq));
   EXPECT_TRUE(matrix.Qqq().isApprox(Qqq));
   EXPECT_TRUE(matrix.Qqv().isApprox(Qqv));
@@ -201,11 +191,15 @@ void SplitImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseSt
     matrix_ref = matrix;
     EXPECT_TRUE(matrix.isApprox(matrix_ref));
   }
-  matrix_ref.Qdvdvff().setRandom();
+  matrix_ref.Qdvdv().setRandom();
   EXPECT_FALSE(matrix.isApprox(matrix_ref));
   matrix_ref = matrix;
   EXPECT_TRUE(matrix.isApprox(matrix_ref));
   if (dimf > 0) {
+    matrix_ref.Qff().setRandom();
+    EXPECT_FALSE(matrix.isApprox(matrix_ref));
+    matrix_ref = matrix;
+    EXPECT_TRUE(matrix.isApprox(matrix_ref));
     matrix_ref.Qfq().setRandom();
     EXPECT_FALSE(matrix.isApprox(matrix_ref));
     matrix_ref = matrix;
@@ -223,8 +217,8 @@ void SplitImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseSt
 
 
 TEST_F(SplitImpulseKKTMatrixTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
@@ -235,8 +229,8 @@ TEST_F(SplitImpulseKKTMatrixTest, fixedBase) {
 
 
 TEST_F(SplitImpulseKKTMatrixTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);

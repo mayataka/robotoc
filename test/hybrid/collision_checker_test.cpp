@@ -7,6 +7,8 @@
 #include "idocp/hybrid/collision_checker.hpp"
 #include "idocp/robot/robot.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -14,16 +16,12 @@ class CollisionCheckerTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
   }
 
   virtual void TearDown() {
   }
 
   static void test(Robot& robot);
-
-  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
@@ -35,7 +33,7 @@ void CollisionCheckerTest::test(Robot& robot) {
   std::vector<bool> is_collision_ref(robot.maxPointContacts());
   robot.updateFrameKinematics(q);
   for (int i=0; i<robot.maxPointContacts(); ++i) {
-    ee[i] = robot.framePosition(robot.contactFramesIndices()[i]);
+    ee[i] = robot.framePosition(robot.contactFrames()[i]);
     if (ee[i].coeff(2) <= 0) is_collision_ref[i] = true;
     else is_collision_ref[i] = false;
   }
@@ -48,15 +46,15 @@ void CollisionCheckerTest::test(Robot& robot) {
 
 
 TEST_F(CollisionCheckerTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   test(robot);
 }
 
 
 TEST_F(CollisionCheckerTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   test(robot);
 }
 

@@ -1,6 +1,4 @@
-#include <string>
 #include <memory>
-#include <limits>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -12,6 +10,8 @@
 #include "idocp/unocp/unconstrained_container.hpp"
 #include "idocp/unocp/unriccati_recursion.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -19,9 +19,7 @@ class UnRiccatiRecursionTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    urdf = "../urdf/iiwa14/iiwa14.urdf";
-    robot = Robot(urdf);
+    robot = testhelper::CreateFixedBaseRobot();
     dimv = robot.dimv();
     N = 20;
     T = 1;
@@ -58,7 +56,6 @@ protected:
   virtual void TearDown() {
   }
 
-  std::string urdf;
   Robot robot;
   int N, dimv;
   double T, dt;

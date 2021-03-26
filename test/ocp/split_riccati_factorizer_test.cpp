@@ -1,6 +1,4 @@
-#include <string>
 #include <memory>
-#include <limits>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -16,6 +14,10 @@
 #include "idocp/ocp/split_constrained_riccati_factorization.hpp"
 #include "idocp/ocp/split_riccati_factorizer.hpp"
 
+#include "robot_factory.hpp"
+#include "kkt_factory.hpp"
+
+
 namespace idocp {
 
 class SplitRiccatiFactorizerTest : public ::testing::Test {
@@ -23,18 +25,12 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
   }
 
-  SplitKKTMatrix createKKTMatrix(const Robot& robot) const;
-  static SplitKKTResidual createKKTResidual(const Robot& robot);
-  static SplitKKTResidual createKKTResidual(const Robot& robot, 
-                                            const ImpulseStatus& impulse_status);
   static SplitRiccatiFactorization createRiccatiFactorization(const Robot& robot);
 
   void testBackwardRecursion(const Robot& robot) const;
@@ -42,56 +38,7 @@ protected:
   void testForwardRecursion(const Robot& robot) const;
 
   double dt;
-  std::string fixed_base_urdf, floating_base_urdf;
 };
-
-
-SplitKKTMatrix SplitRiccatiFactorizerTest::createKKTMatrix(const Robot& robot) const {
-  const int dimv = robot.dimv();
-  const int dimu = robot.dimu();
-  Eigen::MatrixXd seed = Eigen::MatrixXd::Random(dimv, dimv);
-  SplitKKTMatrix kkt_matrix(robot);
-  kkt_matrix.Qqq() = seed * seed.transpose();
-  kkt_matrix.Qqv().setRandom();
-  kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
-  seed = Eigen::MatrixXd::Random(dimv, dimv);
-  kkt_matrix.Qvv() = seed * seed.transpose();
-  kkt_matrix.Qqu().setRandom();
-  kkt_matrix.Qvu().setRandom();
-  seed = Eigen::MatrixXd::Random(dimu, dimu);
-  kkt_matrix.Quu() = seed * seed.transpose();
-  kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(dimv, dimv);
-  kkt_matrix.Fqv() = dt * Eigen::MatrixXd::Identity(dimv, dimv);
-  if (robot.hasFloatingBase()) {
-    kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
-    kkt_matrix.Fqv().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
-  }
-  kkt_matrix.Fvq().setRandom();
-  kkt_matrix.Fvv().setRandom();
-  kkt_matrix.Fvu().setRandom();
-  return kkt_matrix;
-}
-
-
-SplitKKTResidual SplitRiccatiFactorizerTest::createKKTResidual(const Robot& robot) {
-  SplitKKTResidual kkt_residual(robot);
-  kkt_residual.lx().setRandom();
-  kkt_residual.lu().setRandom();
-  kkt_residual.Fx().setRandom();
-  return kkt_residual;
-}
-
-
-SplitKKTResidual SplitRiccatiFactorizerTest::createKKTResidual(const Robot& robot, 
-                                                               const ImpulseStatus& impulse_status) {
-  SplitKKTResidual kkt_residual(robot);
-  kkt_residual.setImpulseStatus(impulse_status);
-  kkt_residual.lx().setRandom();
-  kkt_residual.lu().setRandom();
-  kkt_residual.Fx().setRandom();
-  kkt_residual.P().setRandom();
-  return kkt_residual;
-}
 
 
 SplitRiccatiFactorization SplitRiccatiFactorizerTest::createRiccatiFactorization(const Robot& robot) {
@@ -113,8 +60,8 @@ void SplitRiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) const
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const SplitRiccatiFactorization riccati_next = createRiccatiFactorization(robot);
-  SplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
-  SplitKKTResidual kkt_residual = createKKTResidual(robot);
+  SplitKKTMatrix kkt_matrix = testhelper::CreateSplitKKTMatrix(robot, dt);
+  SplitKKTResidual kkt_residual = testhelper::CreateSplitKKTResidual(robot);
   SplitKKTMatrix kkt_matrix_ref = kkt_matrix;
   SplitKKTResidual kkt_residual_ref = kkt_residual;
   SplitRiccatiFactorizer factorizer(robot);
@@ -160,8 +107,8 @@ void SplitRiccatiFactorizerTest::testBackwardRecursionWithSwitchingConstraint(co
   const int dimu = robot.dimu();
   const int dimi = impulse_status.dimf();
   const SplitRiccatiFactorization riccati_next = createRiccatiFactorization(robot);
-  SplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
-  SplitKKTResidual kkt_residual = createKKTResidual(robot, impulse_status);
+  SplitKKTMatrix kkt_matrix = testhelper::CreateSplitKKTMatrix(robot, dt);
+  SplitKKTResidual kkt_residual = testhelper::CreateSplitKKTResidual(robot, impulse_status);
   SplitKKTMatrix kkt_matrix_ref = kkt_matrix;
   SplitKKTResidual kkt_residual_ref = kkt_residual;
   SplitStateConstraintJacobian jac(robot);
@@ -236,8 +183,8 @@ void SplitRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) const 
   const int dimu = robot.dimu();
   SplitRiccatiFactorization riccati_next = createRiccatiFactorization(robot);
   SplitRiccatiFactorization riccati_next_ref = riccati_next;
-  SplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
-  SplitKKTResidual kkt_residual = createKKTResidual(robot);
+  SplitKKTMatrix kkt_matrix = testhelper::CreateSplitKKTMatrix(robot, dt);
+  SplitKKTResidual kkt_residual = testhelper::CreateSplitKKTResidual(robot);
   SplitKKTMatrix kkt_matrix_ref = kkt_matrix;
   SplitKKTResidual kkt_residual_ref = kkt_residual;
   SplitRiccatiFactorizer factorizer(robot);
@@ -289,7 +236,7 @@ void SplitRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) const 
 
 
 TEST_F(SplitRiccatiFactorizerTest, fixedBase) {
-  Robot robot(fixed_base_urdf, {18});
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   testBackwardRecursion(robot);
   testBackwardRecursionWithSwitchingConstraint(robot);
   testForwardRecursion(robot);
@@ -297,7 +244,7 @@ TEST_F(SplitRiccatiFactorizerTest, fixedBase) {
 
 
 TEST_F(SplitRiccatiFactorizerTest, floating_base) {
-  Robot robot(floating_base_urdf, {14, 24, 34, 44});
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   testBackwardRecursion(robot);
   testBackwardRecursionWithSwitchingConstraint(robot);
   testForwardRecursion(robot);

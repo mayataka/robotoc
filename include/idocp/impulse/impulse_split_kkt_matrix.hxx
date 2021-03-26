@@ -160,17 +160,6 @@ ImpulseSplitKKTMatrix::Vv() const {
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qdvdvff() {
-  return Q_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Qdvdvff() const {
-  return Q_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
-}
-
-
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qdvdv() {
   return Q_.topLeftCorner(dimv_, dimv_);
 }
@@ -204,17 +193,6 @@ ImpulseSplitKKTMatrix::Qfq() const {
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qfv() {
-  return Q_.block(dimv_, v_begin_, dimf_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Qfv() const {
-  return Q_.block(dimv_, v_begin_, dimf_, dimv_);
-}
-
-
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qqf() {
   return Q_.block(q_begin_, dimv_, dimv_, dimf_);
 }
@@ -245,17 +223,6 @@ inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qqv() {
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Qqv() const {
   return Q_.block(q_begin_, v_begin_, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qvf() {
-  return Q_.block(v_begin_, dimv_, dimv_, dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Qvf() const {
-  return Q_.block(v_begin_, dimv_, dimv_, dimf_);
 }
 
 
@@ -314,12 +281,6 @@ ImpulseSplitKKTMatrix::Jac() const {
 }
 
 
-inline void ImpulseSplitKKTMatrix::symmetrize() {
-  Q_.template triangularView<Eigen::StrictlyLower>() 
-      = Q_.transpose().template triangularView<Eigen::StrictlyLower>();
-}
-
-
 inline void ImpulseSplitKKTMatrix::setZero() {
   Fqq_prev.setZero();
   FC_.setZero();
@@ -338,7 +299,8 @@ inline bool ImpulseSplitKKTMatrix::isApprox(
   if (!Fxx().isApprox(other.Fxx())) return false;
   if (!Vq().isApprox(other.Vq())) return false;
   if (!Vv().isApprox(other.Vv())) return false;
-  if (!Qdvdvff().isApprox(other.Qdvdvff())) return false;
+  if (!Qdvdv().isApprox(other.Qdvdv())) return false;
+  if (!Qff().isApprox(other.Qff())) return false;
   if (!Qfq().isApprox(other.Qfq())) return false;
   if (!Qqf().isApprox(other.Qqf())) return false;
   if (!Qxx().isApprox(other.Qxx())) return false;

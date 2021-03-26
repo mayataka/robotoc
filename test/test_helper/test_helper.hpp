@@ -1,51 +1,13 @@
 #ifndef IDOCP_TEST_HELPER_HPP_
 #define IDOCP_TEST_HELPER_HPP_
 
-#include <vector>
-#include <memory>
-#include <cassert>
-
 #include "Eigen/Core"
 
-#include "idocp/robot/robot.hpp"
-#include "idocp/hybrid/discrete_event.hpp"
-#include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
-#include "idocp/hybrid/ocp_discretizer.hpp"
-#include "idocp/hybrid/parnmpc_discretizer.hpp"
-#include "idocp/cost/cost_function.hpp"
-#include "idocp/constraints/constraints.hpp"
 
 
 namespace idocp {
 namespace testhelper {
-
-ContactSequence CreateContactSequence(const Robot& robot, const int N, 
-                                      const int max_num_impulse,
-                                      const double t0,
-                                      const double event_period);
-
-std::shared_ptr<CostFunction> CreateCost(const Robot& robot);
-
-std::shared_ptr<Constraints> CreateConstraints(const Robot& robot);
-
-Solution CreateSolution(const Robot& robot, const int N, const int max_num_impulse=0);
-
-Solution CreateSolution(const Robot& robot, const ContactSequence& contact_sequence, 
-                        const double T, const int N, const int max_num_impulse, const double t, 
-                        const bool is_parnmpc=false);
-
-Direction CreateDirection(const Robot& robot, const int N, const int max_num_impulse=0);
-
-Direction CreateDirection(const Robot& robot, const ContactSequence& contact_sequence, 
-                          const double T, const int N, const int max_num_impulse, const double t,
-                          const bool is_parnmpc=false);
-
-KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence, 
-                          const int N, const int max_num_impulse, const bool is_parnmpc=false);
-
-KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact_sequence, 
-                              const int N, const int max_num_impulse, const bool is_parnmpc=false);
 
 template <typename Type, typename ImpulseType>
 bool IsApprox(const hybrid_container<Type, ImpulseType>& rhs, 

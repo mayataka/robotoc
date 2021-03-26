@@ -183,9 +183,9 @@ public:
   OCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
       const std::shared_ptr<Constraints>& constraints, const double T, 
       const int N, const int N_impulse=0) 
-    : data(N, SplitOCP(robot, cost, constraints, (T/N))), 
-      aux(N_impulse, SplitOCP(robot, cost, constraints, (T/N))), 
-      lift(N_impulse, SplitOCP(robot, cost, constraints, (T/N))),
+    : data(N, SplitOCP(robot, cost, constraints)), 
+      aux(N_impulse, SplitOCP(robot, cost, constraints)), 
+      lift(N_impulse, SplitOCP(robot, cost, constraints)),
       impulse(N_impulse, ImpulseSplitOCP(robot, cost, constraints)),
       terminal(TerminalOCP(robot, cost, constraints)),
       discretizer_(T, N, N_impulse) {
@@ -274,11 +274,11 @@ public:
   ParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
           const std::shared_ptr<Constraints>& constraints, const double T, 
           const int N, const int N_impulse=0) 
-    : data(N-1, SplitParNMPC(robot, cost, constraints, (T/N))), 
-      aux(N_impulse, SplitParNMPC(robot, cost, constraints, (T/N))), 
-      lift(N_impulse, SplitParNMPC(robot, cost, constraints, (T/N))),
+    : data(N-1, SplitParNMPC(robot, cost, constraints)), 
+      aux(N_impulse, SplitParNMPC(robot, cost, constraints)), 
+      lift(N_impulse, SplitParNMPC(robot, cost, constraints)),
       impulse(N_impulse, ImpulseSplitParNMPC(robot, cost, constraints)),
-      terminal(TerminalParNMPC(robot, cost, constraints, (T/N))),
+      terminal(TerminalParNMPC(robot, cost, constraints)),
       discretizer_(T, N, N_impulse) {
   }
 

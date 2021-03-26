@@ -94,34 +94,34 @@ inline void ImpulseStatus::setActivity(
 }
 
 
-inline void ImpulseStatus::activateImpulse(const int contact_index) {
-  impulse_status_.activateContact(contact_index);
+inline void ImpulseStatus::activateImpulse(const int impulse_index) {
+  impulse_status_.activateContact(impulse_index);
 }
 
 
-inline void ImpulseStatus::deactivateImpulse(const int contact_index) {
-  impulse_status_.deactivateContact(contact_index);
+inline void ImpulseStatus::deactivateImpulse(const int impulse_index) {
+  impulse_status_.deactivateContact(impulse_index);
 }
 
 
-inline void ImpulseStatus::activateImpulse(
-    const std::vector<int>& contact_indices) {
-  impulse_status_.activateContacts(contact_indices);
+inline void ImpulseStatus::activateImpulses(
+    const std::vector<int>& impulse_indices) {
+  impulse_status_.activateContacts(impulse_indices);
 } 
 
 
-inline void ImpulseStatus::activateImpulse() {
+inline void ImpulseStatus::activateImpulses() {
   impulse_status_.activateContacts();
 } 
 
 
-inline void ImpulseStatus::deactivateImpulse(
-    const std::vector<int>& contact_indices) {
-  impulse_status_.deactivateContacts(contact_indices);
+inline void ImpulseStatus::deactivateImpulses(
+    const std::vector<int>& impulse_indices) {
+  impulse_status_.deactivateContacts(impulse_indices);
 }
 
 
-inline void ImpulseStatus::deactivateImpulse() {
+inline void ImpulseStatus::deactivateImpulses() {
   impulse_status_.deactivateContacts();
 }
 

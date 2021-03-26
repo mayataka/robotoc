@@ -1,13 +1,12 @@
-#include <string>
-
 #include <gtest/gtest.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
+
+#include "robot_factory.hpp"
 
 
 namespace idocp {
@@ -16,9 +15,7 @@ class SplitKKTResidualTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   static void testSize(const Robot& robot, 
@@ -31,7 +28,7 @@ protected:
   virtual void TearDown() {
   }
 
-  std::string fixed_base_urdf, floating_base_urdf;
+  double dt;
 };
 
 
@@ -176,8 +173,7 @@ void SplitKKTResidualTest::testIsApprox(const Robot& robot,
 
 
 TEST_F(SplitKKTResidualTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   auto impulse_status = robot.createImpulseStatus();
   contact_status.deactivateContact(0);
@@ -200,13 +196,12 @@ TEST_F(SplitKKTResidualTest, fixedBase) {
 
 
 TEST_F(SplitKKTResidualTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   auto impulse_status = robot.createImpulseStatus();
   // Both contact and impulse are inactive
   contact_status.deactivateContacts();
-  impulse_status.deactivateImpulse();
+  impulse_status.deactivateImpulses();
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
   // Contacts are active and impulse are inactive
@@ -214,7 +209,7 @@ TEST_F(SplitKKTResidualTest, floatingBase) {
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
-  impulse_status.deactivateImpulse();
+  impulse_status.deactivateImpulses();
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
   // Contacts are inactive and impulse are active

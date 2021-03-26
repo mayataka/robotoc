@@ -12,7 +12,7 @@
 namespace idocp {
 
 ///
-/// @class RiccatiRecursion
+/// @class UnRiccatiRecursion
 /// @brief Riccati recursion.
 ///
 class UnRiccatiRecursion {

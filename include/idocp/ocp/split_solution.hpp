@@ -14,7 +14,7 @@ namespace idocp {
 
 ///
 /// @class SplitSolution
-/// @brief Solution of the optimal control problem split into each time stage. 
+/// @brief Solution of the optimal control problem split into a time stage. 
 ///
 class SplitSolution {
 public:
@@ -23,7 +23,7 @@ public:
 
   ///
   /// @brief Construct a split solution.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] robot Robot model. 
   ///
   SplitSolution(const Robot& robot);
 
@@ -58,25 +58,25 @@ public:
   SplitSolution& operator=(SplitSolution&&) noexcept = default;
 
   ///
-  /// @brief Set contact status, i.e., set dimension of the contacts.
+  /// @brief Set contact status, i.e., set the dimension of the contacts.
   /// @param[in] contact_status Contact status.
   ///
   void setContactStatus(const ContactStatus& contact_status);
 
   ///
-  /// @brief Set contact status, i.e., set dimension of the contacts.
+  /// @brief Set contact status, i.e., set the dimension of the contacts.
   /// @param[in] other Other split solution.
   ///
   void setContactStatus(const SplitSolution& other);
 
   ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @brief Set impulse status, i.e., set the dimension of the impulse.
   /// @param[in] impulse_status Impulse status.
   ///
   void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @brief Set impulse status, i.e., set the dimension of the impulse.
   /// @param[in] other Other split solution.
   ///
   void setImpulseStatus(const SplitSolution& other);
@@ -87,8 +87,8 @@ public:
   void setImpulseStatus();
 
   ///
-  /// @brief Stack of active contact forces. Size is ContactStatus::dimf().
-  /// @return Reference to the stack of active contact forces.
+  /// @brief Stack of the active contact forces. Size is ContactStatus::dimf().
+  /// @return Reference to the stack of the active contact forces.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> f_stack();
 
@@ -98,21 +98,21 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> f_stack() const;
 
   ///
-  /// @brief Set SplitSolution::f_stack() from SplitSolution::f.
+  /// @brief Sets SplitSolution::f_stack() from SplitSolution::f.
   ///
   void set_f_stack();
 
   ///
-  /// @brief Set SplitSolution::f from SplitSolution::f_stack().
+  /// @brief Sets SplitSolution::f from SplitSolution::f_stack().
   ///
   void set_f_vector();
 
   ///
-  /// @brief Stack of Lagrange multiplier with respect to contact constraints 
-  /// that is active at the current contact status. Size is 
+  /// @brief Stack of the Lagrange multipliers with respect to the contact 
+  /// constraints that is active at the current contact status. Size is 
   /// SplitSolution::dimf().
-  /// @return Reference to the stack of Lagrange multiplier with respect to 
-  /// contact constraints.
+  /// @return Reference to the stack of the Lagrange multipliers with respect to 
+  /// the contact constraints.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> mu_stack();
 
@@ -132,37 +132,11 @@ public:
   void set_mu_vector();
 
   ///
-  /// @brief Returns the dimension of the stack of contact forces at the current 
-  /// contact status.
-  /// @return Dimension of contact forces.
-  ///
-  int dimf() const;
-
-  ///
-  /// @brief Return true if a contact is active and false if not.
-  /// @param[in] contact_index Index of a contact of interedted. 
-  /// @return true if a contact is active and false if not. 
-  ///
-  bool isContactActive(const int contact_index) const;
-
-  ///
-  /// @brief Return contact status.
-  /// @return Contact status. 
-  ///
-  std::vector<bool> isContactActive() const;
-
-  ///
-  /// @brief Return true if there are active contacts and false if not.
-  /// @return true if there are active contacts and false if not. 
-  ///
-  bool hasActiveContacts() const;
-
-  ///
-  /// @brief Stack of Lagrange multiplier with respect to impulse position 
-  /// constraints that is active at the current impulse status. Size is 
+  /// @brief Stack of the Lagrange multipliers with respect to the contact 
+  /// position constraints that is active at the current impulse status. Size is 
   /// ImpulseSplitSolution::dimf().
-  /// @return Reference to the stack of Lagrange multiplier with respect to 
-  /// impulse position constraints.
+  /// @return Reference to the stack of the Lagrange multipliers with respect 
+  /// to the contact position constraints.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> xi_stack();
 
@@ -172,27 +146,13 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> xi_stack() const;
 
   ///
-  /// @brief Returns the dimension of the stack of impulse constraint at the 
-  /// current impulse status.
-  /// @return Dimension of impulse constraint.
-  ///
-  int dimi() const;
-
-  ///
-  /// @brief Return true if there are active impulse constraints and false if 
-  /// not.
-  /// @return true if there are active impulse constraints and false if not. 
-  ///
-  bool hasActiveImpulse() const;
-
-  ///
-  /// @brief Lagrange multiplier with respect to transition of SplitSolution::q. 
+  /// @brief Lagrange multiplier with respect to the state equation of q.
   /// Size is Robot::dimv().
   ///
   Eigen::VectorXd lmd;
 
   ///
-  /// @brief Lagrange multiplier with respect to transition of SplitSolution::v. 
+  /// @brief Lagrange multiplier with respect to the state equation of v.
   /// Size is Robot::dimv().
   ///
   Eigen::VectorXd gmm;
@@ -231,7 +191,7 @@ public:
   Eigen::VectorXd beta;
 
   ///
-  /// @brief Lagrange multiplier with respect to contact constraint. 
+  /// @brief Lagrange multiplier with respect to the contact constraint. 
   /// Size is Robot::maxPointContacts().
   ///
   std::vector<Eigen::Vector3d> mu;
@@ -240,6 +200,46 @@ public:
   /// @brief Lagrange multiplier with respect to floating base. Size is 6.
   ///
   Vector6d nu_passive;
+
+  ///
+  /// @brief Returns the dimension of the stack of the contact forces at the 
+  /// current contact status.
+  /// @return Dimension of the contact forces.
+  ///
+  int dimf() const;
+
+  ///
+  /// @brief Return true if a contact is active and false if not.
+  /// @param[in] contact_index Index of a contact of interedted. 
+  /// @return true if a contact is active and false if not. 
+  ///
+  bool isContactActive(const int contact_index) const;
+
+  ///
+  /// @brief Return activities of contacts.
+  /// @return Activities of contacts. 
+  ///
+  std::vector<bool> isContactActive() const;
+
+  ///
+  /// @brief Return true if there are active contacts and false if not.
+  /// @return true if there are active contacts and false if not. 
+  ///
+  bool hasActiveContacts() const;
+
+  ///
+  /// @brief Returns the dimension of the stack of impulse forces at the 
+  /// current impulse status.
+  /// @return Dimension of the impulse forces.
+  ///
+  int dimi() const;
+
+  ///
+  /// @brief Returns true if there are active impulse constraints and false if 
+  /// not.
+  /// @return true if there are active impulse constraints and false if not. 
+  ///
+  bool hasActiveImpulse() const;
 
   ///
   /// @brief Integrates the solution based on step size and direction. 

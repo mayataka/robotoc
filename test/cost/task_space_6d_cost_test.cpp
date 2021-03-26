@@ -1,4 +1,4 @@
-#include <string>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -12,6 +12,7 @@
 
 #include "idocp/utils/derivative_checker.hpp"
 
+#include "robot_factory.hpp"
 
 namespace idocp {
 
@@ -196,8 +197,8 @@ void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
 
 
 TEST_F(TaskSpace6DCostTest, fixedBase) {
-  const int frame_id = 18;
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  const int frame_id = robot.contactFrames()[0];
   testStageCost(robot, frame_id);
   testTerminalCost(robot, frame_id);
   testImpulseCost(robot, frame_id);
@@ -205,8 +206,8 @@ TEST_F(TaskSpace6DCostTest, fixedBase) {
 
 
 TEST_F(TaskSpace6DCostTest, floatingBase) {
-  const std::vector<int> frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  const std::vector<int> frames = robot.contactFrames();
   for (const auto frame_id : frames) {
     testStageCost(robot, frame_id);
     testTerminalCost(robot, frame_id);

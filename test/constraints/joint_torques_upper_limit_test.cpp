@@ -1,6 +1,4 @@
-#include <string>
-#include <random>
-#include <vector>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -13,14 +11,14 @@
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
 #include "idocp/constraints/pdipm.hpp"
 
+#include "robot_factory.hpp"
+
 namespace idocp {
 
 class JointTorquesUpperLimitTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     barrier = 1.0e-04;
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
@@ -37,7 +35,6 @@ protected:
   void testComputeSlackAndDualDirection(Robot& robot) const;
 
   double barrier, dt;
-  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
@@ -50,7 +47,7 @@ void JointTorquesUpperLimitTest::testKinematics(Robot& robot) const {
 
 void JointTorquesUpperLimitTest::testIsFeasible(Robot& robot) const {
   JointTorquesUpperLimit limit(robot); 
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   EXPECT_EQ(limit.dimc(), robot.dimu());
   SplitSolution s(robot);
   EXPECT_TRUE(limit.isFeasible(robot, data, s));
@@ -61,7 +58,7 @@ void JointTorquesUpperLimitTest::testIsFeasible(Robot& robot) const {
 
 void JointTorquesUpperLimitTest::testSetSlackAndDual(Robot& robot) const {
   JointTorquesUpperLimit limit(robot);
-  ConstraintComponentData data(limit.dimc()), data_ref(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier()), data_ref(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   const Eigen::VectorXd umax = robot.jointEffortLimit();
@@ -74,7 +71,7 @@ void JointTorquesUpperLimitTest::testSetSlackAndDual(Robot& robot) const {
 
 void JointTorquesUpperLimitTest::testAugmentDualResidual(Robot& robot) const {
   JointTorquesUpperLimit limit(robot);
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   limit.setSlackAndDual(robot, data, s);
@@ -93,7 +90,7 @@ void JointTorquesUpperLimitTest::testComputePrimalAndDualResidual(Robot& robot) 
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   const Eigen::VectorXd umax = robot.jointEffortLimit();
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   data.slack.setRandom();
   data.dual.setRandom();
   ConstraintComponentData data_ref = data;
@@ -106,7 +103,7 @@ void JointTorquesUpperLimitTest::testComputePrimalAndDualResidual(Robot& robot) 
 
 void JointTorquesUpperLimitTest::testCondenseSlackAndDual(Robot& robot) const {
   JointTorquesUpperLimit limit(robot);
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   const Eigen::VectorXd umax = robot.jointEffortLimit();
@@ -133,7 +130,7 @@ void JointTorquesUpperLimitTest::testCondenseSlackAndDual(Robot& robot) const {
 
 void JointTorquesUpperLimitTest::testComputeSlackAndDualDirection(Robot& robot) const {
   JointTorquesUpperLimit limit(robot);
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   const Eigen::VectorXd umax = robot.jointEffortLimit();
@@ -150,7 +147,7 @@ void JointTorquesUpperLimitTest::testComputeSlackAndDualDirection(Robot& robot) 
 
 
 TEST_F(JointTorquesUpperLimitTest, fixedBase) {
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   testKinematics(robot);
   testIsFeasible(robot);
   testSetSlackAndDual(robot);
@@ -162,7 +159,7 @@ TEST_F(JointTorquesUpperLimitTest, fixedBase) {
 
 
 TEST_F(JointTorquesUpperLimitTest, floatingBase) {
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   testKinematics(robot);
   testIsFeasible(robot);
   testSetSlackAndDual(robot);

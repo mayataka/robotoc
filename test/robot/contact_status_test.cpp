@@ -1,9 +1,6 @@
-#include <random>
-#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
-#include "Eigen/Core"
 
 #include "idocp/robot/contact_status.hpp"
 

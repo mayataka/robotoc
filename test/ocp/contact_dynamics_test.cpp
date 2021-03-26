@@ -1,8 +1,4 @@
-#include <string>
-#include <iostream>
-
 #include <gtest/gtest.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -14,6 +10,8 @@
 #include "idocp/ocp/contact_dynamics_data.hpp"
 #include "idocp/ocp/contact_dynamics.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -22,9 +20,6 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
-    baumgarte_time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
@@ -39,8 +34,7 @@ protected:
   void testComputeCondensedDualDirection(Robot& robot, const ContactStatus& contact_status) const;
   void testComputeResidual(Robot& robot, const ContactStatus& contact_status) const;
 
-  std::string fixed_base_urdf, floating_base_urdf;
-  double baumgarte_time_step, dt;
+  double dt;
 };
 
 
@@ -65,10 +59,11 @@ void ContactDynamicsTest::testLinearizeContactConstraints(Robot& robot, const Co
   data.setContactStatus(contact_status);
   data_ref.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
-  ContactDynamics::linearizeContactConstraint(robot, contact_status, baumgarte_time_step, data);
+  ContactDynamics::linearizeContactConstraint(robot, contact_status, data);
   if (contact_status.hasActiveContacts()) {
-    robot.computeBaumgarteResidual(contact_status, baumgarte_time_step, contact_status.contactPoints(), data_ref.C());
-    robot.computeBaumgarteDerivatives(contact_status, baumgarte_time_step, data_ref.dCdq(), 
+    robot.computeBaumgarteResidual(contact_status, 
+                                   contact_status.contactPoints(), data_ref.C());
+    robot.computeBaumgarteDerivatives(contact_status, data_ref.dCdq(), 
                                       data_ref.dCdv(), data_ref.dCda());
     EXPECT_TRUE(data.IDC().isApprox(data_ref.IDC()));
     EXPECT_TRUE(data.dCda().isApprox(data_ref.dCda()));
@@ -98,7 +93,7 @@ void ContactDynamicsTest::testLinearizeContactDynamics(Robot& robot, const Conta
   Eigen::VectorXd lu_full_ref = Eigen::VectorXd::Zero(robot.dimv());
   lu_full_ref.head(robot.dim_passive()).setZero();
   lu_full_ref.tail(robot.dimu()) = kkt_residual_ref.lu();
-  ContactDynamics cd(robot, baumgarte_time_step);
+  ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual);
   const double l1norm = cd.l1NormContactDynamicsResidual(dt);
@@ -107,7 +102,7 @@ void ContactDynamicsTest::testLinearizeContactDynamics(Robot& robot, const Conta
   data.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
   ContactDynamics::linearizeInverseDynamics(robot, contact_status, s, data);
-  ContactDynamics::linearizeContactConstraint(robot, contact_status, baumgarte_time_step, data);
+  ContactDynamics::linearizeContactConstraint(robot, contact_status, data);
   Eigen::MatrixXd dIDdf = Eigen::MatrixXd::Zero(robot.dimv(), contact_status.dimf());
   robot.updateKinematics(s.q, s.v, s.a);
   robot.dRNEAPartialdFext(contact_status, dIDdf);
@@ -174,7 +169,7 @@ void ContactDynamicsTest::testCondenseContactDynamics(Robot& robot, const Contac
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(dim_passive, dim_passive).setRandom();
   }
-  ContactDynamics cd(robot, baumgarte_time_step);
+  ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual);
   SplitKKTResidual kkt_residual_ref = kkt_residual;
@@ -184,17 +179,20 @@ void ContactDynamicsTest::testCondenseContactDynamics(Robot& robot, const Contac
   data.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
   ContactDynamics::linearizeInverseDynamics(robot, contact_status, s, data);
-  ContactDynamics::linearizeContactConstraint(robot, contact_status, baumgarte_time_step, data);
+  ContactDynamics::linearizeContactConstraint(robot, contact_status, data);
   robot.computeMJtJinv(data.dIDda, data.dCda(), data.MJtJinv());
   data.MJtJinv_dIDCdqv() = data.MJtJinv() * data.dIDCdqv();
   data.MJtJinv_IDC() = data.MJtJinv() * data.IDC();
-  data.Qafqv() = - kkt_matrix_ref.Qaaff() * data.MJtJinv_dIDCdqv();
+  Eigen::MatrixXd Qaaff = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
+  Qaaff.topLeftCorner(dimv, dimv) = kkt_matrix_ref.Qaa();
+  Qaaff.bottomRightCorner(dimf, dimf) = kkt_matrix_ref.Qff();
+  data.Qafqv() = - Qaaff * data.MJtJinv_dIDCdqv();
   Eigen::MatrixXd IO_mat = Eigen::MatrixXd::Zero(dimv+dimf, dimv);
   IO_mat.topRows(dimv).setIdentity();
-  data.Qafu_full() = kkt_matrix_ref.Qaaff() * data.MJtJinv() * IO_mat;
+  data.Qafu_full() = Qaaff * data.MJtJinv() * IO_mat;
   data.la() = kkt_residual_ref.la;
   data.lf() = - kkt_residual_ref.lf();
-  data.laf() -= kkt_matrix_ref.Qaaff() * data.MJtJinv() * data.IDC();
+  data.laf() -= Qaaff * data.MJtJinv() * data.IDC();
   kkt_matrix_ref.Qxx() -= data.MJtJinv_dIDCdqv().transpose() * data.Qafqv();
   kkt_matrix_ref.Qxu_full() -= data.MJtJinv_dIDCdqv().transpose() * data.Qafu_full();
   kkt_matrix_ref.Quu_full() += IO_mat.transpose() * data.MJtJinv() * data.Qafu_full();
@@ -267,7 +265,7 @@ void ContactDynamicsTest::testComputeCondensedPrimalDirection(Robot& robot, cons
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(dim_passive, dim_passive).setRandom();
   }
-  ContactDynamics cd(robot, baumgarte_time_step);
+  ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual);
   SplitKKTResidual kkt_residual_ref = kkt_residual;
@@ -277,7 +275,7 @@ void ContactDynamicsTest::testComputeCondensedPrimalDirection(Robot& robot, cons
   data.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
   ContactDynamics::linearizeInverseDynamics(robot, contact_status, s, data);
-  ContactDynamics::linearizeContactConstraint(robot, contact_status, baumgarte_time_step, data);
+  ContactDynamics::linearizeContactConstraint(robot, contact_status, data);
   robot.computeMJtJinv(data.dIDda, data.dCda(), data.MJtJinv());
   data.MJtJinv_dIDCdqv() = data.MJtJinv() * data.dIDCdqv();
   data.MJtJinv_IDC() = data.MJtJinv() * data.IDC();
@@ -327,7 +325,7 @@ void ContactDynamicsTest::testComputeCondensedDualDirection(Robot& robot, const 
     kkt_matrix.Fqq().setIdentity();
     kkt_matrix.Fqq().topLeftCorner(dim_passive, dim_passive).setRandom();
   }
-  ContactDynamics cd(robot, baumgarte_time_step);
+  ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual);
   cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix, kkt_residual, true);
@@ -335,17 +333,20 @@ void ContactDynamicsTest::testComputeCondensedDualDirection(Robot& robot, const 
   data.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
   ContactDynamics::linearizeInverseDynamics(robot, contact_status, s, data);
-  ContactDynamics::linearizeContactConstraint(robot, contact_status, baumgarte_time_step, data);
+  ContactDynamics::linearizeContactConstraint(robot, contact_status, data);
   robot.computeMJtJinv(data.dIDda, data.dCda(), data.MJtJinv());
   data.MJtJinv_dIDCdqv() = data.MJtJinv() * data.dIDCdqv();
   data.MJtJinv_IDC() = data.MJtJinv() * data.IDC();
-  data.Qafqv() = - kkt_matrix.Qaaff() * data.MJtJinv_dIDCdqv();
+  Eigen::MatrixXd Qaaff = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
+  Qaaff.topLeftCorner(dimv, dimv) = kkt_matrix.Qaa();
+  Qaaff.bottomRightCorner(dimf, dimf) = kkt_matrix.Qff();
+  data.Qafqv() = - Qaaff * data.MJtJinv_dIDCdqv();
   Eigen::MatrixXd IO_mat = Eigen::MatrixXd::Zero(dimv+dimf, dimv);
   IO_mat.topRows(dimv).setIdentity();
-  data.Qafu_full() = kkt_matrix.Qaaff() * data.MJtJinv() * IO_mat;
+  data.Qafu_full() = Qaaff * data.MJtJinv() * IO_mat;
   data.la() = kkt_residual.la;
   data.lf() = - kkt_residual.lf();
-  data.laf() -= kkt_matrix.Qaaff() * data.MJtJinv() * data.IDC();
+  data.laf() -= Qaaff * data.MJtJinv() * data.IDC();
   SplitDirection d = SplitDirection::Random(robot, contact_status);
   SplitDirection d_ref = d;
   const Eigen::VectorXd dlmdgmm = Eigen::VectorXd::Random(2*dimv);
@@ -373,7 +374,7 @@ void ContactDynamicsTest::testComputeCondensedDualDirection(Robot& robot, const 
 
 void ContactDynamicsTest::testComputeResidual(Robot& robot, const ContactStatus& contact_status) const {
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
-  ContactDynamics cd(robot, baumgarte_time_step);
+  ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.computeContactDynamicsResidual(robot, contact_status, s);
   const double l1norm = cd.l1NormContactDynamicsResidual(dt);
@@ -385,7 +386,8 @@ void ContactDynamicsTest::testComputeResidual(Robot& robot, const ContactStatus&
   data.ID().noalias() -= s.u;
   robot.updateKinematics(s.q, s.v, s.a);
   if (contact_status.hasActiveContacts()) {
-    robot.computeBaumgarteResidual(contact_status, baumgarte_time_step, contact_status.contactPoints(), data.C());
+    robot.computeBaumgarteResidual(contact_status, 
+                                   contact_status.contactPoints(), data.C());
   }
   double l1norm_ref = dt * data.IDC().lpNorm<1>();
   double squarednorm_ref = dt * dt * data.IDC().squaredNorm();
@@ -395,10 +397,9 @@ void ContactDynamicsTest::testComputeResidual(Robot& robot, const ContactStatus&
 
 
 TEST_F(ContactDynamicsTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
-  for (int i=0; i<contact_frames.size(); ++i) {
+  for (int i=0; i<robot.contactFrames().size(); ++i) {
     contact_status.setContactPoint(i, Eigen::Vector3d::Random());
   }
   testLinearizeInverseDynamics(robot, contact_status);
@@ -421,10 +422,9 @@ TEST_F(ContactDynamicsTest, fixedBase) {
 
 
 TEST_F(ContactDynamicsTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
-  for (int i=0; i<contact_frames.size(); ++i) {
+  for (int i=0; i<robot.contactFrames().size(); ++i) {
     contact_status.setContactPoint(i, Eigen::Vector3d::Random());
   }
   testLinearizeInverseDynamics(robot, contact_status);

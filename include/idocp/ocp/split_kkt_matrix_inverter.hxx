@@ -4,7 +4,7 @@
 #include "idocp/ocp/split_kkt_matrix_inverter.hpp"
 
 #include <stdexcept>
-#include <assert.h>
+#include <cassert>
 
 #include "Eigen/LU"
 

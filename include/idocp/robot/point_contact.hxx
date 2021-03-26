@@ -66,23 +66,19 @@ inline void PointContact::getContactJacobian(
 template <typename VectorType1, typename VectorType2>
 inline void PointContact::computeBaumgarteResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
-    const double time_step, 
     const Eigen::MatrixBase<VectorType1>& contact_point,
     const Eigen::MatrixBase<VectorType2>& baumgarte_residual) const {
-  assert(time_step > 0);
   assert(contact_point.size() == 3);
   assert(baumgarte_residual.size() == 3);
   const_cast<Eigen::MatrixBase<VectorType2>&> (baumgarte_residual).noalias()
       = pinocchio::getFrameClassicalAcceleration(model, data, contact_frame_id_, 
                                                  pinocchio::LOCAL).linear();
-  const double baumgarte_weight_on_velocity = 2 / time_step;
   (const_cast<Eigen::MatrixBase<VectorType2>&> (baumgarte_residual)).noalias()
-      += baumgarte_weight_on_velocity 
+      += baumgarte_weight_on_velocity_ 
           * pinocchio::getFrameVelocity(model, data, contact_frame_id_, 
                                               pinocchio::LOCAL).linear();
-  const double baumgarte_weight_on_position = 1 / (time_step*time_step);
   (const_cast<Eigen::MatrixBase<VectorType2>&> (baumgarte_residual)).noalias()
-      += baumgarte_weight_on_position
+      += baumgarte_weight_on_position_
           * (data.oMf[contact_frame_id_].translation()-contact_point);
 }
 
@@ -90,11 +86,9 @@ inline void PointContact::computeBaumgarteResidual(
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void PointContact::computeBaumgarteDerivatives(
     const pinocchio::Model& model, pinocchio::Data& data, 
-    const double time_step, 
     const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
     const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da) {
-  assert(time_step > 0);
   assert(baumgarte_partial_dq.cols() == dimv_);
   assert(baumgarte_partial_dv.cols() == dimv_);
   assert(baumgarte_partial_da.cols() == dimv_);
@@ -130,17 +124,15 @@ inline void PointContact::computeBaumgarteDerivatives(
       -= v_linear_skew_ * J_frame_.template bottomRows<3>();
   const_cast<Eigen::MatrixBase<MatrixType3>&> (baumgarte_partial_da)
       = frame_a_partial_da_.template topRows<3>();
-  const double baumgarte_weight_on_velocity = 2 / time_step;
   (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
-      += baumgarte_weight_on_velocity 
+      += baumgarte_weight_on_velocity_
           * frame_v_partial_dq_.template topRows<3>();
   (const_cast<Eigen::MatrixBase<MatrixType2>&> (baumgarte_partial_dv)).noalias() 
-      += baumgarte_weight_on_velocity 
+      += baumgarte_weight_on_velocity_ 
           * frame_a_partial_da_.template topRows<3>();
-  const double baumgarte_weight_on_position = 1 / (time_step*time_step);
   (const_cast<Eigen::MatrixBase<MatrixType1>&> (baumgarte_partial_dq)).noalias()
-      += baumgarte_weight_on_position * data.oMf[contact_frame_id_].rotation()
-                                      * J_frame_.template topRows<3>();
+      += baumgarte_weight_on_position_ * data.oMf[contact_frame_id_].rotation()
+                                       * J_frame_.template topRows<3>();
 }
 
 
@@ -203,16 +195,6 @@ inline void PointContact::computeContactDerivative(
 inline const Eigen::Vector3d& PointContact::contactPoint(
     const pinocchio::Data& data) const {
   return data.oMf[contact_frame_id_].translation();
-}
-
-
-inline double PointContact::frictionCoefficient() const {
-  return friction_coefficient_;
-}
-
-
-inline double PointContact::restitutionCoefficient() const {
-  return restitution_coefficient_;
 }
 
 

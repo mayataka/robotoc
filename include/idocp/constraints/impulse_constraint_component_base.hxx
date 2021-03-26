@@ -4,22 +4,10 @@
 #include "idocp/constraints/impulse_constraint_component_base.hpp"
 #include "idocp/constraints/pdipm.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
-
-inline void ImpulseConstraintComponentBase::setBarrier(const double barrier) {
-  assert(barrier > 0);
-  barrier_ = barrier;
-}
-
-
-inline void ImpulseConstraintComponentBase::setFractionToBoundaryRate(
-    const double fraction_to_boundary_rate) {
-  assert(fraction_to_boundary_rate > 0);
-  fraction_to_boundary_rate_ = fraction_to_boundary_rate;
-}
 
 inline double ImpulseConstraintComponentBase::l1NormPrimalResidual(
     const ConstraintComponentData& data) const {
@@ -68,6 +56,29 @@ inline double ImpulseConstraintComponentBase::costSlackBarrier(
 inline double ImpulseConstraintComponentBase::costSlackBarrier(
     const ConstraintComponentData& data, const double step_size) const {
   return pdipm::CostBarrier(barrier_, data.slack+step_size*data.dslack);
+}
+
+
+inline double ImpulseConstraintComponentBase::barrier() const {
+  return barrier_;
+}
+
+
+inline double ImpulseConstraintComponentBase::fractionToBoundaryRate() const {
+  return fraction_to_boundary_rate_;
+}
+
+
+inline void ImpulseConstraintComponentBase::setBarrier(const double barrier) {
+  assert(barrier > 0);
+  barrier_ = barrier;
+}
+
+
+inline void ImpulseConstraintComponentBase::setFractionToBoundaryRate(
+    const double fraction_to_boundary_rate) {
+  assert(fraction_to_boundary_rate > 0);
+  fraction_to_boundary_rate_ = fraction_to_boundary_rate;
 }
 
 

@@ -7,7 +7,7 @@ namespace idocp {
 
 inline CollisionChecker::CollisionChecker(const Robot& robot)
   : contact_points_(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
-    contact_frames_indices_(robot.contactFramesIndices()) {
+    contact_frames_indices_(robot.contactFrames()) {
 }
 
 

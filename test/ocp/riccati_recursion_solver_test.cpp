@@ -1,4 +1,3 @@
-#include <string>
 #include <memory>
 
 #include <gtest/gtest.h>
@@ -10,6 +9,13 @@
 #include "idocp/ocp/ocp_linearizer.hpp"
 
 #include "test_helper.hpp"
+#include "robot_factory.hpp"
+#include "contact_sequence_factory.hpp"
+#include "solution_factory.hpp"
+#include "kkt_factory.hpp"
+#include "cost_factory.hpp"
+#include "constraints_factory.hpp"
+
 
 namespace idocp {
 
@@ -17,11 +23,6 @@ class RiccatiRecursionSolverTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
-    fixed_base_robot = Robot(fixed_base_urdf, {18});
-    floating_base_robot = Robot(floating_base_urdf, {14, 24, 34, 44});
     N = 20;
     max_num_impulse = 5;
     nthreads = 4;
@@ -35,18 +36,18 @@ protected:
 
   ContactSequence createContactSequence(const Robot& robot) const;
   Solution createSolution(const Robot& robot) const;
-  Solution createSolution(const Robot& robot, const ContactSequence& contact_sequence) const;
-  KKTMatrix createKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence) const;
-  KKTResidual createKKTResidual(const Robot& robot, const ContactSequence& contact_sequence) const;
-
+  Solution createSolution(const Robot& robot, 
+                          const ContactSequence& contact_sequence) const;
+  KKTMatrix createKKTMatrix(const Robot& robot, 
+                            const ContactSequence& contact_sequence) const;
+  KKTResidual createKKTResidual(const Robot& robot, 
+                                const ContactSequence& contact_sequence) const;
   void testComputeInitialStateDirection(const Robot& robot) const;
   void testRiccatiRecursion(const Robot& robot) const;
   void testComputeDirection(const Robot& robot) const;
 
   int N, max_num_impulse, nthreads;
   double T, t, dt;
-  std::string fixed_base_urdf, floating_base_urdf;
-  Robot fixed_base_robot, floating_base_robot;
 };
 
 
@@ -60,17 +61,20 @@ Solution RiccatiRecursionSolverTest::createSolution(const Robot& robot) const {
 }
 
 
-Solution RiccatiRecursionSolverTest::createSolution(const Robot& robot, const ContactSequence& contact_sequence) const {
+Solution RiccatiRecursionSolverTest::createSolution(const Robot& robot, 
+                                                    const ContactSequence& contact_sequence) const {
   return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
 }
 
 
-KKTMatrix RiccatiRecursionSolverTest::createKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence) const {
+KKTMatrix RiccatiRecursionSolverTest::createKKTMatrix(const Robot& robot, 
+                                                      const ContactSequence& contact_sequence) const {
   return testhelper::CreateKKTMatrix(robot, contact_sequence, N, max_num_impulse);
 }
 
 
-KKTResidual RiccatiRecursionSolverTest::createKKTResidual(const Robot& robot, const ContactSequence& contact_sequence) const {
+KKTResidual RiccatiRecursionSolverTest::createKKTResidual(const Robot& robot, 
+                                                          const ContactSequence& contact_sequence) const {
   return testhelper::CreateKKTResidual(robot, contact_sequence, N, max_num_impulse);
 }
 
@@ -391,16 +395,26 @@ void RiccatiRecursionSolverTest::testComputeDirection(const Robot& robot) const 
 
 
 TEST_F(RiccatiRecursionSolverTest, fixedBase) {
-  testComputeInitialStateDirection(fixed_base_robot);
-  testRiccatiRecursion(fixed_base_robot);
-  testComputeDirection(fixed_base_robot);
+  auto robot = testhelper::CreateFixedBaseRobot();
+  testComputeInitialStateDirection(robot);
+  testRiccatiRecursion(robot);
+  testComputeDirection(robot);
+  robot = testhelper::CreateFixedBaseRobot(dt);
+  testComputeInitialStateDirection(robot);
+  testRiccatiRecursion(robot);
+  testComputeDirection(robot);
 }
 
 
 TEST_F(RiccatiRecursionSolverTest, floating_base) {
-  testComputeInitialStateDirection(floating_base_robot);
-  testRiccatiRecursion(floating_base_robot);
-  testComputeDirection(floating_base_robot);
+  auto robot = testhelper::CreateFloatingBaseRobot();
+  testComputeInitialStateDirection(robot);
+  testRiccatiRecursion(robot);
+  testComputeDirection(robot);
+  robot = testhelper::CreateFloatingBaseRobot(dt);
+  testComputeInitialStateDirection(robot);
+  testRiccatiRecursion(robot);
+  testComputeDirection(robot);
 }
 
 } // namespace idocp

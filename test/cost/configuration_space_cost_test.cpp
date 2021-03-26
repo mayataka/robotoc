@@ -1,4 +1,3 @@
-#include <string>
 #include <memory>
 
 #include <gtest/gtest.h>
@@ -16,6 +15,8 @@
 
 #include "idocp/utils/derivative_checker.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -24,8 +25,6 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
@@ -37,7 +36,6 @@ protected:
   void testTerminalCost(Robot& robot) const;
   void testImpulseCost(Robot& robot) const;
 
-  std::string fixed_base_urdf, floating_base_urdf;
   double dt, t;
 };
 
@@ -263,7 +261,7 @@ void ConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
 
 
 TEST_F(ConfigurationSpaceCostTest, fixedBase) {
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   testStageCost(robot);
   testTerminalCost(robot);
   testImpulseCost(robot);
@@ -271,7 +269,7 @@ TEST_F(ConfigurationSpaceCostTest, fixedBase) {
 
 
 TEST_F(ConfigurationSpaceCostTest, floatingBase) {
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   testStageCost(robot);
   testTerminalCost(robot);
   testImpulseCost(robot);

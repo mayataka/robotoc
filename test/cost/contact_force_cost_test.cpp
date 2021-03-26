@@ -1,4 +1,4 @@
-#include <string>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -13,6 +13,7 @@
 
 #include "idocp/utils/derivative_checker.hpp"
 
+#include "robot_factory.hpp"
 
 namespace idocp {
 
@@ -21,8 +22,6 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
@@ -34,7 +33,6 @@ protected:
   void testTerminalCost(Robot& robot) const;
   void testImpulseCost(Robot& robot) const;
 
-  std::string fixed_base_urdf, floating_base_urdf;
   double dt, t;
 };
 
@@ -229,8 +227,7 @@ void ContactForceCostTest::testImpulseCost(Robot& robot) const {
 
 
 TEST_F(ContactForceCostTest, fixedBase) {
-  const std::vector<int> frames = {18};
-  Robot robot(fixed_base_urdf, frames);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   testStageCost(robot);
   testTerminalCost(robot);
   testImpulseCost(robot);
@@ -238,8 +235,7 @@ TEST_F(ContactForceCostTest, fixedBase) {
 
 
 TEST_F(ContactForceCostTest, floatingBase) {
-  const std::vector<int> frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, frames);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   testStageCost(robot);
   testTerminalCost(robot);
   testImpulseCost(robot);

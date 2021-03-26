@@ -14,26 +14,53 @@
 
 namespace idocp {
 
+///
+/// @class ImpulseFrictionCone
+/// @brief Constraint on the inner-approximated impulse firction cone.
+///
 class ImpulseFrictionCone final : public ImpulseConstraintComponentBase {
 public:
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] mu Friction coefficient. Must be positive.
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// Default is 1.0e-04.
+  /// @param[in] fraction_to_boundary_rate Must be larger than 0 and smaller 
+  /// than 1. Should be between 0.9 and 0.995. Default is 0.995.
+  ///
   ImpulseFrictionCone(const Robot& robot, const double mu, 
                       const double barrier=1.0e-04,
                       const double fraction_to_boundary_rate=0.995);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   ImpulseFrictionCone();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~ImpulseFrictionCone();
 
-  // Use default copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   ImpulseFrictionCone(const ImpulseFrictionCone&) = default;
 
-  // Use default copy coperator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   ImpulseFrictionCone& operator=(const ImpulseFrictionCone&) = default;
 
-  // Use default move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   ImpulseFrictionCone(ImpulseFrictionCone&&) noexcept = default;
 
-  // Use default move assign coperator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   ImpulseFrictionCone& operator=(ImpulseFrictionCone&&) noexcept = default;
 
   void setFrictionCoefficient(const double mu);
@@ -66,20 +93,85 @@ public:
   
   int dimc() const override;
 
-  static double frictionConeResidual(const double mu, 
-                                     const Eigen::Vector3d& f) {
-    assert(mu > 0);
-    return (f.coeff(0)*f.coeff(0) + f.coeff(1)*f.coeff(1)
-            - mu*mu*f.coeff(2)*f.coeff(2));
+  ///
+  /// @brief Transforms the contact force from the local coordinate to the 
+  /// world coordinate.
+  /// @param[in] robot Robot model. Kinematics must be updated.
+  /// @param[in] contact_frame_id Index of the contact frame.
+  /// @param[in] f_local Contact force expressed in the local frame.
+  /// @param[out] f_world Contact force expressed in the world frame. Size must 
+  /// be 3.
+  ///
+  template <typename VectorType>
+  static void fLocal2World(const Robot& robot, const int contact_frame_id, 
+                           const Eigen::Vector3d& f_local,
+                           const Eigen::MatrixBase<VectorType>& f_world) {
+    assert(f_world.size() == 3);
+    const_cast<Eigen::MatrixBase<VectorType>&>(f_world).noalias()
+        = robot.frameRotation(contact_frame_id) * f_local;
   }
 
-  static double normalForceResidual(const Eigen::Vector3d& f) {
-    return (- f.coeff(2));
+  ///
+  /// @brief Computes the friction cone residual.
+  /// @param[in] mu Friction coefficient. Must be positive.
+  /// @param[in] f Contact force expressed in the world frame. Size must be 3.
+  /// @param[out] res Friction cone residual. Size must be 5.
+  ///
+  template <typename VectorType1, typename VectorType2>
+  static void frictionConeResidual(const double mu, 
+                                   const Eigen::MatrixBase<VectorType1>& f,
+                                   const Eigen::MatrixBase<VectorType2>& res) {
+    assert(mu > 0);
+    assert(f.size() == 3);
+    assert(res.size() == 5);
+    const_cast<Eigen::MatrixBase<VectorType2>&>(res).coeffRef(0) = - f.coeff(2);
+    const_cast<Eigen::MatrixBase<VectorType2>&>(res).coeffRef(1) 
+        = f.coeff(0) - mu * f.coeff(2) / std::sqrt(2);
+    const_cast<Eigen::MatrixBase<VectorType2>&>(res).coeffRef(2) 
+        = - f.coeff(0) - mu * f.coeff(2) / std::sqrt(2);
+    const_cast<Eigen::MatrixBase<VectorType2>&>(res).coeffRef(3) 
+        = f.coeff(1) - mu * f.coeff(2) / std::sqrt(2);
+    const_cast<Eigen::MatrixBase<VectorType2>&>(res).coeffRef(4) 
+        = - f.coeff(1) - mu * f.coeff(2) / std::sqrt(2);
   }
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW 
 
 private:
-  int dimc_;
+  int dimv_, dimc_, max_point_contacts_;
+  std::vector<int> contact_frame_;
   double mu_;
+  Eigen::Matrix<double, 5, 3> cone_;
+
+  Eigen::VectorXd& fW(ConstraintComponentData& data, 
+                      const int contact_idx) const {
+    return data.r[contact_idx];
+  }
+
+  Eigen::VectorXd& r(ConstraintComponentData& data, 
+                     const int contact_idx) const {
+    return data.r[max_point_contacts_+contact_idx];
+  }
+
+  Eigen::MatrixXd& dg_dq(ConstraintComponentData& data, 
+                         const int contact_idx) const {
+    return data.J[contact_idx];
+  }
+
+  Eigen::MatrixXd& dg_df(ConstraintComponentData& data, 
+                         const int contact_idx) const {
+    return data.J[max_point_contacts_+contact_idx];
+  }
+
+  Eigen::MatrixXd& dfW_dq(ConstraintComponentData& data, 
+                          const int contact_idx) const {
+    return data.J[2*max_point_contacts_+contact_idx];
+  }
+
+  Eigen::MatrixXd& r_dg_df(ConstraintComponentData& data, 
+                           const int contact_idx) const {
+    return data.J[3*max_point_contacts_+contact_idx];
+  }
 
 };
 

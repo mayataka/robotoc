@@ -87,7 +87,7 @@ inline void ImpulseDynamicsBackwardEuler::condensing(
   data.ldv.noalias() 
     -= kkt_matrix.Qdvdv().diagonal().asDiagonal() * data.Minv_ImD;
   kkt_matrix.Qqq().noalias() += kkt_matrix.Fvq().transpose() * data.Qdvq;
-  kkt_matrix.Qfq().transpose().noalias() 
+  kkt_matrix.Qqf().noalias() 
         += kkt_matrix.Fvq().transpose() * data.Qdvf();
   kkt_matrix.Qff().noalias() += kkt_matrix.Fvf().transpose() * data.Qdvf();
   kkt_residual.lq().noalias() += kkt_matrix.Fvq().transpose() * data.ldv;

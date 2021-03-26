@@ -1,13 +1,12 @@
-#include <string>
-
 #include <gtest/gtest.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
+
+#include "robot_factory.hpp"
 
 
 namespace idocp {
@@ -16,14 +15,11 @@ class SplitKKTMatrixTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
   }
-
 
   static void testSize(const Robot& robot, 
                        const ContactStatus& contact_status, 
@@ -32,7 +28,7 @@ protected:
                            const ContactStatus& contact_status, 
                            const ImpulseStatus& impulse_status);
 
-  std::string fixed_base_urdf, floating_base_urdf;
+  double dt;
 };
 
 
@@ -126,8 +122,6 @@ void SplitKKTMatrixTest::testSize(const Robot& robot,
   EXPECT_EQ(matrix.Qaa().cols(), dimv);
   EXPECT_EQ(matrix.Qff().rows(), dimf);
   EXPECT_EQ(matrix.Qff().cols(), dimf);
-  EXPECT_EQ(matrix.Qaaff().rows(), dimv+dimf);
-  EXPECT_EQ(matrix.Qaaff().cols(), dimv+dimf);
   EXPECT_EQ(matrix.Fqq_prev.rows(), dimv);
   EXPECT_EQ(matrix.Fqq_prev.cols(), dimv);
   const Eigen::MatrixXd Fqu = Eigen::MatrixXd::Random(dimv, dimu);
@@ -204,8 +198,6 @@ void SplitKKTMatrixTest::testSize(const Robot& robot,
   EXPECT_TRUE(matrix.Qff().isApprox(Qff));
   EXPECT_TRUE(matrix.Qaa().isApprox(Qaa));
   EXPECT_TRUE(matrix.Qff().isApprox(Qff));
-  EXPECT_TRUE(matrix.Qaaff().topLeftCorner(dimv, dimv).isApprox(Qaa));
-  EXPECT_TRUE(matrix.Qaaff().bottomRightCorner(dimf, dimf).isApprox(Qff));
   EXPECT_TRUE(matrix.Qxx().topLeftCorner(dimv, dimv).isApprox(Qqq));
   EXPECT_TRUE(matrix.Qxx().topRightCorner(dimv, dimv).isApprox(Qqv));
   EXPECT_TRUE(matrix.Qxx().bottomLeftCorner(dimv, dimv).isApprox(Qvq));
@@ -298,10 +290,6 @@ void SplitKKTMatrixTest::testIsApprox(const Robot& robot,
   EXPECT_FALSE(matrix.isApprox(matrix_ref));
   matrix_ref = matrix;
   EXPECT_TRUE(matrix.isApprox(matrix_ref));
-  matrix_ref.Qaaff().setRandom();
-  EXPECT_FALSE(matrix.isApprox(matrix_ref));
-  matrix_ref = matrix;
-  EXPECT_TRUE(matrix.isApprox(matrix_ref));
   if (dimi > 0) {
     matrix_ref.Pq().setRandom();
     EXPECT_FALSE(matrix.isApprox(matrix_ref));
@@ -312,8 +300,7 @@ void SplitKKTMatrixTest::testIsApprox(const Robot& robot,
 
 
 TEST_F(SplitKKTMatrixTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   auto impulse_status = robot.createImpulseStatus();
   contact_status.deactivateContact(0);
@@ -336,13 +323,12 @@ TEST_F(SplitKKTMatrixTest, fixedBase) {
 
 
 TEST_F(SplitKKTMatrixTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   auto impulse_status = robot.createImpulseStatus();
   // Both contact and impulse are inactive
   contact_status.deactivateContacts();
-  impulse_status.deactivateImpulse();
+  impulse_status.deactivateImpulses();
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
   // Contacts are active and impulse are inactive
@@ -350,7 +336,7 @@ TEST_F(SplitKKTMatrixTest, floatingBase) {
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
-  impulse_status.deactivateImpulse();
+  impulse_status.deactivateImpulses();
   testSize(robot, contact_status, impulse_status);
   testIsApprox(robot, contact_status, impulse_status);
   // Contacts are inactive and impulse are active

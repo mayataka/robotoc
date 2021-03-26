@@ -1,4 +1,3 @@
-#include <string>
 #include <memory>
 
 #include <gtest/gtest.h>
@@ -14,6 +13,12 @@
 #include "idocp/line_search/line_search.hpp"
 
 #include "test_helper.hpp"
+#include "robot_factory.hpp"
+#include "contact_sequence_factory.hpp"
+#include "solution_factory.hpp"
+#include "direction_factory.hpp"
+#include "cost_factory.hpp"
+#include "constraints_factory.hpp"
 
 
 namespace idocp {
@@ -22,9 +27,6 @@ class LineSearchTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N = 20;
     max_num_impulse = 5;
     nthreads = 4;
@@ -47,11 +49,8 @@ protected:
   void testOCP(const Robot& robot) const;
   void testParNMPC(const Robot& robot) const;
 
-  std::string fixed_base_urdf, floating_base_urdf;
   int N, max_num_impulse, nthreads;
   double T, t, dt, step_size_reduction_rate, min_step_size;
-  std::shared_ptr<CostFunction> cost;
-  std::shared_ptr<Constraints> constraints;
 };
 
 
@@ -141,22 +140,20 @@ void LineSearchTest::testParNMPC(const Robot& robot) const {
 
 
 TEST_F(LineSearchTest, fixedBase) {
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot();
   testOCP(robot);
   testParNMPC(robot);
-  std::vector<int> contact_frames = {18};
-  robot = Robot(fixed_base_urdf, contact_frames);
+  robot = testhelper::CreateFixedBaseRobot(dt);
   testOCP(robot);
   testParNMPC(robot);
 }
 
 
 TEST_F(LineSearchTest, floatingBase) {
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot();
   testOCP(robot);
   testParNMPC(robot);
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  robot = Robot(floating_base_urdf, contact_frames);
+  robot = testhelper::CreateFloatingBaseRobot(dt);
   testOCP(robot);
   testParNMPC(robot);
 }

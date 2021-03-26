@@ -14,25 +14,51 @@
 
 namespace idocp {
 
+///
+/// @class JointVelocityLowerLimit
+/// @brief Constraint on the lower limits of the joint velocity.
+///
 class JointVelocityLowerLimit final : public ConstraintComponentBase {
 public:
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// Default is 1.0e-04.
+  /// @param[in] fraction_to_boundary_rate Must be larger than 0 and smaller 
+  /// than 1. Should be between 0.9 and 0.995. Default is 0.995.
+  ///
   JointVelocityLowerLimit(const Robot& robot, const double barrier=1.0e-04,
                           const double fraction_to_boundary_rate=0.995);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   JointVelocityLowerLimit();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~JointVelocityLowerLimit();
 
-  // Use default copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   JointVelocityLowerLimit(const JointVelocityLowerLimit&) = default;
 
-  // Use default copy coperator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   JointVelocityLowerLimit& operator=(const JointVelocityLowerLimit&) = default;
 
-  // Use default move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   JointVelocityLowerLimit(JointVelocityLowerLimit&&) noexcept = default;
 
-  // Use default move assign coperator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   JointVelocityLowerLimit& operator=(
       JointVelocityLowerLimit&&) noexcept = default;
 

@@ -14,27 +14,54 @@
 
 namespace idocp {
 
+///
+/// @class JointAccelerationLowerLimit
+/// @brief Constraint on the lower limits of the joint acceleration.
+///
 class JointAccelerationLowerLimit final : public ConstraintComponentBase {
 public:
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] amin Lower limits of the joint acceleration.
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// Default is 1.0e-04.
+  /// @param[in] fraction_to_boundary_rate Must be larger than 0 and smaller 
+  /// than 1. Should be between 0.9 and 0.995. Default is 0.995.
+  ///
   JointAccelerationLowerLimit(const Robot& robot, const Eigen::VectorXd& amin,
                               const double barrier=1.0e-04,
                               const double fraction_to_boundary_rate=0.995);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   JointAccelerationLowerLimit();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~JointAccelerationLowerLimit();
 
-  // Use default copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   JointAccelerationLowerLimit(const JointAccelerationLowerLimit&) = default;
 
-  // Use default copy coperator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   JointAccelerationLowerLimit& operator=(
       const JointAccelerationLowerLimit&) = default;
 
-  // Use default move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   JointAccelerationLowerLimit(JointAccelerationLowerLimit&&) noexcept = default;
 
-  // Use default move assign coperator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   JointAccelerationLowerLimit& operator=(
       JointAccelerationLowerLimit&&) noexcept = default;
 

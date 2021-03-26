@@ -14,25 +14,51 @@
 
 namespace idocp {
 
+///
+/// @class JointTorquesLowerLimit
+/// @brief Constraint on the lower limits of the joint torques.
+///
 class JointTorquesLowerLimit final : public ConstraintComponentBase {
 public:
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// Default is 1.0e-04.
+  /// @param[in] fraction_to_boundary_rate Must be larger than 0 and smaller 
+  /// than 1. Should be between 0.9 and 0.995. Default is 0.995.
+  ///
   JointTorquesLowerLimit(const Robot& robot, const double barrier=1.0e-04,
                           const double fraction_to_boundary_rate=0.995);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   JointTorquesLowerLimit();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~JointTorquesLowerLimit();
 
-  // Use default copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   JointTorquesLowerLimit(const JointTorquesLowerLimit&) = default;
 
-  // Use default copy coperator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   JointTorquesLowerLimit& operator=(const JointTorquesLowerLimit&) = default;
 
-  // Use default move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   JointTorquesLowerLimit(JointTorquesLowerLimit&&) noexcept = default;
 
-  // Use default move assign coperator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   JointTorquesLowerLimit& operator=(
       JointTorquesLowerLimit&&) noexcept = default;
 

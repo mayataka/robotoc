@@ -18,9 +18,11 @@ class ConstraintComponentData {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] dimc Dimension of the constraint component. 
+  /// @param[in] dimc Dimension of the constraint component. Must be positive.
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// Only used to initialize the slack and dual variables.
   ///
-  ConstraintComponentData(const int dimc);
+  ConstraintComponentData(const int dimc, const double barrier);
 
   ///
   /// @brief Default constructor. 

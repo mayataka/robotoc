@@ -4,7 +4,7 @@
 #include "idocp/constraints/pdipm.hpp"
 
 #include <cmath>
-#include <assert.h>
+#include <cassert>
 
 
 namespace idocp {
@@ -83,6 +83,7 @@ inline void ComputeDualDirection(ConstraintComponentData& data) {
 
 inline double CostBarrier(const double barrier, const Eigen::VectorXd& vec) {
   assert(barrier > 0);
+  assert(vec.array().minCoeff() > 0);
   return (- barrier * vec.array().log().sum());
 }
 

@@ -1,8 +1,6 @@
-#include <string>
 #include <memory>
 
 #include <gtest/gtest.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -13,6 +11,12 @@
 #include "idocp/ocp/ocp_linearizer.hpp"
 
 #include "test_helper.hpp"
+#include "robot_factory.hpp"
+#include "contact_sequence_factory.hpp"
+#include "solution_factory.hpp"
+#include "cost_factory.hpp"
+#include "constraints_factory.hpp"
+
 
 namespace idocp {
 
@@ -20,9 +24,6 @@ class OCPLinearizerTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N = 20;
     max_num_impulse = 5;
     nthreads = 4;
@@ -35,18 +36,16 @@ protected:
   }
 
   Solution createSolution(const Robot& robot) const;
-  Solution createSolution(const Robot& robot, const ContactSequence& contact_sequence) const;
+  Solution createSolution(const Robot& robot, 
+                          const ContactSequence& contact_sequence) const;
   ContactSequence createContactSequence(const Robot& robot) const;
 
   void testLinearizeOCP(const Robot& robot) const;
   void testComputeKKTResidual(const Robot& robot) const;
   void testIntegrateSolution(const Robot& robot) const;
 
-  std::string fixed_base_urdf, floating_base_urdf;
   int N, max_num_impulse, nthreads;
   double T, t, dt;
-  std::shared_ptr<CostFunction> cost;
-  std::shared_ptr<Constraints> constraints;
 };
 
 
@@ -416,12 +415,11 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
 
 
 TEST_F(OCPLinearizerTest, fixedBase) {
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot();
   testLinearizeOCP(robot);
   testComputeKKTResidual(robot);
   testIntegrateSolution(robot);
-  std::vector<int> contact_frames = {18};
-  robot = Robot(fixed_base_urdf, contact_frames);
+  robot = testhelper::CreateFixedBaseRobot(dt);
   testLinearizeOCP(robot);
   testComputeKKTResidual(robot);
   testIntegrateSolution(robot);
@@ -429,12 +427,11 @@ TEST_F(OCPLinearizerTest, fixedBase) {
 
 
 TEST_F(OCPLinearizerTest, floatingBase) {
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot();
   testLinearizeOCP(robot);
   testComputeKKTResidual(robot);
   testIntegrateSolution(robot);
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  robot = Robot(floating_base_urdf, contact_frames);
+  robot = testhelper::CreateFloatingBaseRobot(dt);
   testLinearizeOCP(robot);
   testComputeKKTResidual(robot);
   testIntegrateSolution(robot);

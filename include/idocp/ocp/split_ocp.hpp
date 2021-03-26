@@ -34,11 +34,9 @@ public:
   /// @param[in] robot Robot model. Must be initialized by URDF or XML.
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] dt Step size of the discretization of the horizon. Only used 
-  /// to determine the weight parameters of the Baumgarte's stabilization method.
   ///
   SplitOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-           const std::shared_ptr<Constraints>& constraints, const double dt);
+           const std::shared_ptr<Constraints>& constraints);
 
   ///
   /// @brief Default constructor.  

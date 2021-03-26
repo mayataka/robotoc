@@ -1,4 +1,3 @@
-#include <string>
 #include <memory>
 
 #include <gtest/gtest.h>
@@ -10,7 +9,9 @@
 #include "idocp/line_search/line_search_filter.hpp"
 #include "idocp/line_search/unline_search.hpp"
 
-#include "test_helper.hpp"
+#include "robot_factory.hpp"
+#include "cost_factory.hpp"
+#include "constraints_factory.hpp"
 
 
 namespace idocp {
@@ -19,9 +20,7 @@ class UnLineSearchTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    urdf = "../urdf/iiwa14/iiwa14.urdf";
-    robot = Robot(urdf);
+    robot = testhelper::CreateFixedBaseRobot();
     dimv = robot.dimv();
     N = 20;
     nthreads = 4;
@@ -39,11 +38,8 @@ protected:
   UnDirection createUnDirection(const int size) const;
 
   Robot robot;
-  std::string urdf;
   int dimv, N, nthreads;
   double T, dt, t, step_size_reduction_rate, min_step_size;
-  std::shared_ptr<CostFunction> cost;
-  std::shared_ptr<Constraints> constraints;
 };
 
 
