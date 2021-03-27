@@ -66,15 +66,15 @@ inline void ForwardSwitchingConstraint::computeSwitchingConstraintResidual(
 }
 
 
-inline double ForwardSwitchingConstraint::squaredNormSwitchingConstraintResidual(
+inline double ForwardSwitchingConstraint::l1NormSwitchingConstraintResidual(
     const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.P().squaredNorm();
+  return kkt_residual.P().template lpNorm<1>();
 }
 
 
-inline double ForwardSwitchingConstraint::l1NormSwitchingConstraintResidual(
+inline double ForwardSwitchingConstraint::squaredNormSwitchingConstraintResidual(
     const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.P().lpNorm<1>();
+  return kkt_residual.P().squaredNorm();
 }
 
 } // namespace idocp

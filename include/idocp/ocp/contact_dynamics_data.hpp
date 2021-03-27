@@ -9,22 +9,48 @@
 
 namespace idocp {
 
+///
+/// @class ContactDynamicsData
+/// @brief Data used in ContactDynamics.
+///
 class ContactDynamicsData {
 public:
   using Vector6d = Eigen::Matrix<double, 6, 1>;
 
+  ///
+  /// @brief Constructs a data.
+  /// @param[in] robot Robot model. 
+  ///
   ContactDynamicsData(const Robot& robot);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   ContactDynamicsData();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~ContactDynamicsData();
 
+  ///
+  /// @brief Default copy constructor. 
+  ///
   ContactDynamicsData(const ContactDynamicsData&) = default;
 
+  ///
+  /// @brief Default copy operator. 
+  ///
   ContactDynamicsData& operator=(const ContactDynamicsData&) = default;
- 
+
+  ///
+  /// @brief Default move constructor. 
+  ///
   ContactDynamicsData(ContactDynamicsData&&) noexcept = default;
 
+  ///
+  /// @brief Default move assign operator. 
+  ///
   ContactDynamicsData& operator=(ContactDynamicsData&&) noexcept = default;
 
   void setContactStatus(const ContactStatus& contact_status);

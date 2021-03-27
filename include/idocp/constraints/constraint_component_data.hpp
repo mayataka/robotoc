@@ -117,7 +117,7 @@ public:
   bool checkDimensionalConsistency() const;
 
   ///
-  /// @brief Chech the equivalence of two ConstraintComponentData.
+  /// @brief Checks the equivalence of two ConstraintComponentData.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///

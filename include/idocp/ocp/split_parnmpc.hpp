@@ -24,13 +24,14 @@ namespace idocp {
 
 ///
 /// @class SplitParNMPC
-/// @brief Split optimal control problem of ParNMPC algorithm for single stage. 
+/// @brief An optimal control problem for ParNMPC algorithm split into a time 
+/// stage. 
 ///
 class SplitParNMPC {
 public:
   ///
-  /// @brief Construct SplitParNMPC.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Constructs a split optimal control problem.
+  /// @param[in] robot Robot model. 
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   ///
@@ -68,36 +69,34 @@ public:
   SplitParNMPC& operator=(SplitParNMPC&&) noexcept = default;
 
   ///
-  /// @brief Check whether the solution is feasible under inequality constraints.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] s Split solution of this stage.
+  /// @brief Checks whether the solution is feasible under inequality constraints.
+  /// @param[in] robot Robot model. 
+  /// @param[in] s Split solution of this time stage.
   ///
   bool isFeasible(Robot& robot, const SplitSolution& s);
 
   ///
-  /// @brief Initialize the constraints, i.e., set slack and dual variables. 
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] time_step Time step of this stage.
-  /// @param[in] s Split solution of this stage.
+  /// @brief Initializes the constraints, i.e., set slack and dual variables. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] time_stage Time stage.
+  /// @param[in] s Split solution of this time stage.
   ///
   void initConstraints(Robot& robot, const int time_step, 
                        const SplitSolution& s);
 
-
   ///
   /// @brief Linearize the OCP for Newton's method around the current solution, 
   /// i.e., computes the KKT residual and Hessian.
-  /// @tparam SplitSolutionType Type of the split solution at the next stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] dt Length of the discretization of the horizon.
-  /// @param[in] q_prev Configuration of the previous stage.
-  /// @param[in] v_prev Velocity of the previous stage.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] s_next Split solution of the next stage.
-  /// @param[out] kkt_matrix KKT matrix of this stage.
-  /// @param[out] kkt_residual KKT residual of this stage.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
+  /// @param[in] t Time of this time stage. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] v_prev Generalized velocity at the previous time stage.
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   template <typename SplitSolutionType>
   void linearizeOCP(Robot& robot, const ContactStatus& contact_status, 
@@ -110,18 +109,17 @@ public:
   /// @brief Linearize the OCP for Newton's method around the current solution, 
   /// i.e., computes the KKT residual and Hessian. Also linearize the 
   /// switching constraints.
-  /// @tparam SplitSolutionType Type of the split solution at the next stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status at this stage. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] dt Length of the discretization of the horizon.
-  /// @param[in] q_prev Configuration of the previous stage.
-  /// @param[in] v_prev Velocity of the previous stage.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] s_next Split solution of the next stage.
-  /// @param[out] kkt_matrix KKT matrix of this stage.
-  /// @param[out] kkt_residual KKT residual of this stage.
-  /// @param[in] impulse_status Impulse status of the next impulse. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
+  /// @param[in] t Time of this time stage. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] v_prev Generalized velocity at the previous time stage.
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  /// @param[in] impulse_status Impulse status at the switching instant. 
   ///
   template <typename SplitSolutionType>
   void linearizeOCP(Robot& robot, const ContactStatus& contact_status, 
@@ -132,26 +130,25 @@ public:
                     const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Computes the Newton direction of the condensed primal variables  
-  /// at this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] dt Length of the discretization of the horizon.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in, out] d Split direction of this stage.
+  /// @brief Computes the Newton direction of the condensed primal variables of 
+  /// this time stage.
+  /// @param[in] robot Robot model. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] d Split direction of this time stage.
   /// 
   void computeCondensedPrimalDirection(Robot& robot, const double dt, 
                                        const SplitSolution& s, 
                                        SplitDirection& d);
 
   ///
-  /// @brief Computes the Newton direction of the condensed dual variables 
-  /// at this stage.
-  /// @tparam SplitDirectionType Type of the split direction at the next stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] dt Length of the discretization of the horizon.
-  /// @param[in] kkt_matrix KKT matrix of this stage.
-  /// @param[in] kkt_residual KKT residual of this stage.
-  /// @param[in, out] d Split direction of this stage.
+  /// @brief Computes the Newton direction of the condensed dual variables of 
+  /// this time stage.
+  /// @param[in] robot Robot model. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] kkt_matrix KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual KKT residual of this time stage.
+  /// @param[in, out] d Split direction of this time stage.
   /// 
   void computeCondensedDualDirection(const Robot& robot, const double dt, 
                                      const SplitKKTMatrix& kkt_matrix, 
@@ -176,8 +173,8 @@ public:
 
   ///
   /// @brief Updates primal variables of this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] primal_step_size Primal step size of the OCP. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] primal_step_size Primal step size. 
   /// @param[in] d Split direction of this stage.
   /// @param[in, out] s Split solution of this stage.
   ///
@@ -186,22 +183,22 @@ public:
 
   ///
   /// @brief Updates dual variables of the inequality constraints.
-  /// @param[in] dual_step_size Dula step size of the OCP. 
+  /// @param[in] dual_step_size Dula step size. 
   ///
   void updateDual(const double dual_step_size);
 
   ///
-  /// @brief Computes the KKT residual of the OCP at this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] dt Length of the discretization of the horizon.
-  /// @param[in] q_prev Configuration of the previous stage. Size must be 
-  /// Robot::dimq().
-  /// @param[in] v_prev Velocity of the previous stage. Size must be 
-  /// Robot::dimv().
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] s_next Split solution of the next stage.
+  /// @brief Computes the KKT residual of this time stage.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
+  /// @param[in] t Time of this time stage. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] v_prev Generalized velocity at the previous time stage.
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   template <typename SplitSolutionType>
   void computeKKTResidual(Robot& robot, const ContactStatus& contact_status, 
@@ -213,18 +210,19 @@ public:
                           SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Computes the KKT residual of the OCP at this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status at this stage. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] dt Length of the discretization of the horizon.
-  /// @param[in] q_prev Configuration of the previous stage. Size must be 
-  /// Robot::dimq().
-  /// @param[in] v_prev Velocity of the previous stage. Size must be 
-  /// Robot::dimv().
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] s_next Split solution of the next stage.
-  /// @param[in] impulse_status Impulse status of the next impulse. 
+  /// @brief Computes the KKT residual of this time stage including the 
+  /// switching constraint.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
+  /// @param[in] t Time of this time stage. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] v_prev Generalized velocity at the previous time stage.
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
+  /// @param[in] impulse_status Impulse status at the switching instant. 
   ///
   template <typename SplitSolutionType>
   void computeKKTResidual(Robot& robot, const ContactStatus& contact_status, 
@@ -237,40 +235,39 @@ public:
                           const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
-  /// this function, SplitOCP::linearizeOCP or SplitOCP::computeKKTResidual
-  /// must be called.
+  /// @brief Returns the KKT residual of this time stage. Before calling this 
+  /// function, SplitOCP::computeKKTResidual() must be called.
+  /// @param[in] kkt_residual KKT residual of this time stage.
+  /// @param[in] dt Time step of this time stage.
   /// @return The squared norm of the kKT residual.
   ///
   double squaredNormKKTResidual(const SplitKKTResidual& kkt_residual, 
                                 const double dt) const;
 
   ///
-  /// @brief Computes the stage cost of this stage for line search.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] dt Length of the discretization of the horizon.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] primal_step_size Primal step size of the OCP. Default is 0.
-  /// @return Stage cost of this stage.
+  /// @brief Computes the stage cost of this time stage for line search.
+  /// @param[in] robot Robot model. 
+  /// @param[in] t Time of this time stage. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in] primal_step_size Primal step size. Default is 0.
+  /// @return Stage cost of this time stage.
   /// 
   double stageCost(Robot& robot, const double t, const double dt, 
                    const SplitSolution& s, const double primal_step_size=0);
 
   ///
-  /// @brief Computes and returns the constraint violation of the OCP at this 
-  /// stage for line search.
-  /// @brief Computes the KKT residual of the OCP at this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] dt Length of the discretization of the horizon.
-  /// @param[in] q_prev Configuration of the previous stage. Size must be 
-  /// Robot::dimq().
-  /// @param[in] v_prev Velocity of the previous stage. Size must be 
-  /// Robot::dimv().
-  /// @param[in] s Split solution of this stage.
-  /// @param[in, out] kkt_residual KKT residual of this stage.
+  /// @brief Computes the constraint violation of this time stage for line 
+  /// search.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
+  /// @param[in] t Time of this time stage. 
+  /// @param[in] dt Time of this time stage. 
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] v_prev Generalized velocity at the previous time stage.
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] kkt_residual KKT residual of this time stage.
+  /// @return Constraint violation of this time stage.
   ///
   double constraintViolation(Robot& robot, const ContactStatus& contact_status, 
                              const double t, const double dt, 
@@ -280,20 +277,18 @@ public:
                              SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Computes and returns the constraint violation of the OCP at this 
-  /// stage for line search.
-  /// @brief Computes the KKT residual of the OCP at this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] contact_status Contact status of robot at this stage. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] dt Length of the discretization of the horizon.
-  /// @param[in] q_prev Configuration of the previous stage. Size must be 
-  /// Robot::dimq().
-  /// @param[in] v_prev Velocity of the previous stage. Size must be 
-  /// Robot::dimv().
-  /// @param[in] s Split solution of this stage.
-  /// @param[in, out] kkt_residual KKT residual of this stage.
-  /// @param[in] impulse_status Impulse status of the next impulse. 
+  /// @brief Computes the constraint violation of this time stage including
+  /// the switching constraint for line search.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
+  /// @param[in] t Time of this time stage. 
+  /// @param[in] dt Time of this time stage. 
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] v_prev Generalized velocity at the previous time stage.
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] kkt_residual KKT residual of this time stage.
+  /// @param[in] impulse_status Impulse status at the switching instant. 
+  /// @return Constraint violation of this time stage.
   ///
   double constraintViolation(Robot& robot, const ContactStatus& contact_status, 
                              const double t, const double dt, 

@@ -12,14 +12,14 @@
 namespace idocp {
 
 ///
-/// @class SplitUnKKTMatrixInverter
-/// @brief The matrix inveter for SplitUnKKTMatrix.
+/// @class SplitKKTMatrixInverter 
+/// @brief Schur complement for SplitKKTMatrix.
 ///
 class SplitUnKKTMatrixInverter {
 public:
   ///
-  /// @brief Construct a KKT matrix.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Construct a Schur complement.
+  /// @param[in] robot Robot model. 
   ///
   SplitUnKKTMatrixInverter(const Robot& robot);
 
@@ -56,12 +56,10 @@ public:
       SplitUnKKTMatrixInverter&&) noexcept = default;
 
   ///
-  /// @brief Invert the split KKT matrix. 
-  /// @param[in] dt Discretization size of the optimal control problem.
-  /// @param[in] Q Hessian of the Lagrangian with respect to the primal 
-  /// variables.
-  /// @param[out] KKT_matrix_inverse Inverse of the KKT matrix. Size must 
-  /// be SplitUnKKTMatrix::dimKKT() x SplitUnKKTMatrix::dimKKT().
+  /// @brief Computes the inverse of the split KKT matrix of the time stage. 
+  /// @param[in] dt Time step of this time stage.
+  /// @param[in] Q Split KKT matrix.
+  /// @param[in, out] KKT_mat_inv Inverse of the split KKT matrix.
   ///
   template <typename MatrixType1, typename MatrixType2>
   void invert(const double dt, const Eigen::MatrixBase<MatrixType1>& Q,

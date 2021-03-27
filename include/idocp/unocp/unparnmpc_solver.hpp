@@ -18,15 +18,15 @@ namespace idocp {
 
 ///
 /// @class UnParNMPCSolver
-/// @brief Optimal control problem solver by ParNMPC algorithm for 
-/// "unconstrained" rigid-body systems. "Unconstrained" means that the system 
-/// does not have either a floating base or any contacts.
+/// @brief Optimal control problem solver of unconstrained rigid-body systems 
+/// by ParNMPC algorithm. "Unconstrained" means that the system does not have 
+/// either a floating base or any contacts.
 ///
 class UnParNMPCSolver {
 public:
   ///
   /// @brief Construct optimal control problem solver.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] robot Robot model. 
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   /// @param[in] T Length of the horizon. Must be positive.
@@ -69,17 +69,20 @@ public:
   UnParNMPCSolver& operator=(UnParNMPCSolver&&) noexcept = default;
 
   ///
-  /// @brief Initializes the inequality constraints, i.e., set slack variables 
-  /// and the Lagrange multipliers of inequality constraints. Based on the 
-  /// current solution.
+  /// @brief Initializes the priaml-dual interior point method for inequality 
+  /// constraints. 
   ///
   void initConstraints();
 
+  ///
+  /// @brief Initializes the backward correction solver.
+  /// @param[in] t Initial time of the horizon. 
+  ///
   void initBackwardCorrection(const double t);
 
   ///
   /// @brief Updates the solution by computing the primal-dual Newon direction.
-  /// @param[in] t Initial time of the horizon. Current time in MPC. 
+  /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   /// @param[in] line_search If true, filter line search is enabled. If false
@@ -89,27 +92,38 @@ public:
                       const Eigen::VectorXd& v, const bool line_search=false);
 
   ///
-  /// @brief Get the const reference to the split solution of a time stage. 
-  /// For example, you can get the const reference to the control input torques 
-  /// at the initial stage via ocp.getSolution(0).u.
-  /// @param[in] stage Time stage of interest. Must be more than 0 and less 
+  /// @brief Get the split solution of a time stage. For example, the control 
+  /// input torques at the initial stage can be obtained by ocp.getSolution(0).u.
+  /// @param[in] stage Time stage of interest. Must be larger than 0 and smaller
   /// than N.
   /// @return Const reference to the split solution of the specified time stage.
   ///
   const SplitSolution& getSolution(const int stage) const;
 
   ///
-  /// @brief Gets the state-feedback gain for the control input torques.
-  /// @param[in] stage Time stage of interest. Must be more than 0 and less 
-  /// than N-1.
-  /// @param[out] Kq Gain with respec to the configuration. Size must be 
-  /// Robot::dimv() x Robot::dimv().
-  /// @param[out] Kv Gain with respec to the velocity. Size must be
-  /// Robot::dimv() x Robot::dimv().
+  /// @brief Get the solution vector over the horizon. 
+  /// @param[in] name Name of the variable. 
+  /// @return Solution vector.
+  ///
+  std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
+
+  ///
+  /// @brief Gets the state-feedback gain.
+  /// @param[in] stage Time stage of interest. Must be larger than 0 and smaller
+  /// than N.
+  /// @param[out] Kq The state-feedback gain with respec to the configuration. 
+  /// Size must be Robot::dimu() x Robot::dimv().
+  /// @param[out] Kv The state-feedback gain with respec to the velocity. 
+  /// Size must be Robot::dimu() x Robot::dimv().
   ///
   void getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq, 
                             Eigen::MatrixXd& Kv) const;
 
+  ///
+  /// @brief Sets the solution over the horizon. 
+  /// @param[in] name Name of the variable. 
+  /// @param[in] value Value of the specified variable. 
+  ///
   void setSolution(const std::string& name, const Eigen::VectorXd& value);
 
   ///
@@ -118,8 +132,8 @@ public:
   void clearLineSearchFilter();
 
   ///
-  /// @brief Computes the KKT residula of the optimal control problem. 
-  /// @param[in] t Current time. 
+  /// @brief Computes the KKT residual of the optimal control problem. 
+  /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   ///
@@ -127,49 +141,17 @@ public:
                           const Eigen::VectorXd& v);
 
   ///
-  /// @brief Returns the squared KKT error norm by using previously computed 
-  /// results computed by updateSolution(). The result is not exactly the 
-  /// same as the squared KKT error norm of the original optimal control 
-  /// problem. The result is the squared norm of the condensed residual. 
-  /// However, this variables is sufficiently close to the original KKT error norm.
-  /// @return The squared norm of the condensed KKT residual.
+  /// @brief Returns the l2-norm of the KKT residuals.
+  /// OCPsolver::computeKKTResidual() must be computed.  
+  /// @return The l2-norm of the KKT residual.
   ///
   double KKTError();
 
   ///
-  /// @brief Return true if the current solution is feasible under the 
+  /// @return true if the current solution is feasible subject to the 
   /// inequality constraints. Return false if it is not feasible.
-  /// @return true if the current solution is feasible under the inequality 
-  /// constraints. false if it is not feasible.
   ///
   bool isCurrentSolutionFeasible();
-
-  ///
-  /// @brief Get the solution vector. This function is not suitable for 
-  /// real-time application, e.g., MPC, since this function reconstructs the 
-  /// solution vector object.
-  /// @param[in] name Name of the printed variable. 
-  ///
-  std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
-
-  ///
-  /// @brief Prints the variable into console. 
-  /// @param[in] name Name of the printed variable. Default is "all" 
-  /// (print all variables).
-  /// @param[in] frame_id Index of the end-effector frames. Only used if 
-  /// name == "end-effector". Default is {} (do not specify any frames).
-  ///
-  void printSolution(const std::string& name="all", 
-                     const std::vector<int> frames={}) const;
-
-  ///
-  /// @brief Save the variable into file. 
-  /// @param[in] name Name of the printed variable. 
-  /// @param[in] frame_id Index of the end-effector frames. Only used if 
-  /// name == "end-effector". Default is {} (do not specify any frames).
-  ///
-  void saveSolution(const std::string& path_to_file,
-                    const std::string& name) const;
 
 private:
   std::vector<Robot> robots_;

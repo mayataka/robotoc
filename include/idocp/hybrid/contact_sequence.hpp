@@ -19,7 +19,7 @@ class ContactSequence {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] robot Robot model. 
   /// @param[in] max_num_events Maximum number of each discrete events 
   /// (impulse and lift). 
   ///
@@ -56,7 +56,7 @@ public:
   ContactSequence& operator=(ContactSequence&&) noexcept = default;
 
   ///
-  /// @brief Set the contact status over all of the time stages uniformly. Also, 
+  /// @brief Sets the contact status over all of the time stages uniformly. Also, 
   /// disable discrete events over all of the time stages.
   /// @param[in] contact_status Contact status.
   ///
@@ -91,7 +91,7 @@ public:
   void pop_front();
 
   ///
-  /// @brief Update the instant of the impulse event. 
+  /// @brief Updates the instant of the impulse event. 
   /// @param[in] impulse_index Index of the impulse event. Must be non-negative
   /// and less than numImpulseEvents().
   /// @param[in] impulse_time Updated time.
@@ -99,7 +99,7 @@ public:
   void updateImpulseTime(const int impulse_index, const double impulse_time);
 
   ///
-  /// @brief Update the instant of the lfit event. 
+  /// @brief Updates the instant of the lfit event. 
   /// @param[in] lift_index Index of the lift event. Must be non-negative
   /// and less than numLiftEvents().
   /// @param[in] lift_time Updated time.
@@ -107,7 +107,7 @@ public:
   void updateLiftTime(const int lift_index, const double lift_time);
 
   ///
-  /// @brief Set the contact points to contact statsus with specified contact  
+  /// @brief Sets the contact points to contact statsus with specified contact  
   /// phase. Also set the contact points of the discrete event just before the  
   /// contact phase.
   /// @param[in] contact_phase Contact phase.
@@ -142,14 +142,14 @@ public:
   int numContactPhases() const;
 
   ///
-  /// @brief Getter of the contact status. 
+  /// @brief Gets the contact status. 
   /// @param[in] contact_phase Index of contact status phase.
   /// @return const reference to the contact status.
   ///
   const ContactStatus& contactStatus(const int contact_phase) const;
 
   ///
-  /// @brief Getter of the impulse status. 
+  /// @brief Gets the impulse status. 
   /// @param[in] impulse_index Index of impulse event.
   /// @return const reference to the impulse status.
   ///

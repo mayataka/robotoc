@@ -24,13 +24,14 @@ namespace idocp {
 
 ///
 /// @class ImpulseSplitParNMPC
-/// @brief Split optimal control problem of ParNMPC algorithm for single stage. 
+/// @brief An optimal control problem for ParNMPC algorithm split into an 
+/// impulse stage. 
 ///
 class ImpulseSplitParNMPC {
 public:
   ///
-  /// @brief Construct ImpulseSplitParNMPC.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Constructs a split optimal control problem.
+  /// @param[in] robot Robot model. 
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   ///
@@ -69,31 +70,31 @@ public:
   ImpulseSplitParNMPC& operator=(ImpulseSplitParNMPC&&) noexcept = default;
 
   ///
-  /// @brief Check whether the solution is feasible under inequality constraints.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] s Split solution of this stage.
+  /// @brief Checks whether the solution is feasible under inequality constraints.
+  /// @param[in] robot Robot model. 
+  /// @param[in] s Split solution of this impulse stage.
   ///
   bool isFeasible(Robot& robot, const ImpulseSplitSolution& s);
 
   ///
-  /// @brief Initialize the constraints, i.e., set slack and dual variables. 
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] s Split solution of this stage.
+  /// @brief Initializes the constraints, i.e., set slack and dual variables. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] s Split solution of this impulse stage.
   ///
   void initConstraints(Robot& robot, const ImpulseSplitSolution& s);
 
   ///
-  /// @brief Linearize the OCP for Newton's method around the current solution, 
-  /// i.e., computes the KKT residual and Hessian.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] impulse_status Impulse status of robot at this stage. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] q_prev Configuration at the previous stage.
-  /// @param[in] v_prev Generalized velocity at the previous stage.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] s_next Split solution of the next stage.
-  /// @param[out] kkt_matrix KKT matrix of this stage.
-  /// @param[out] kkt_residual KKT residual of this stage.
+  /// @brief Linearizes the split optimal control problem for Newton's method 
+  /// around the current solution, i.e., computes the KKT residual and Hessian.
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status of this impulse stage. 
+  /// @param[in] t Time of this impulse stage. 
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] v_prev Generalized velocity at the previous time stage.
+  /// @param[in] s Split solution of this impulse stage.
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
   ///
   void linearizeOCP(Robot& robot, const ImpulseStatus& impulse_status, 
                     const double t, const Eigen::VectorXd& q_prev, 
@@ -105,11 +106,11 @@ public:
 
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
-  /// this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] kkt_matrix KKT matrix of this stage.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in, out] d Split direction of this stage.
+  /// this impulse stage.
+  /// @param[in] robot Robot model. 
+  /// @param[in] kkt_matrix Split KKT matrix of this impulse stage.
+  /// @param[in] s Split solution of this impulse stage.
+  /// @param[in, out] d Split direction of this impulse stage.
   /// 
   void computeCondensedPrimalDirection(Robot& robot,  
                                        const ImpulseSplitKKTMatrix& kkt_matrix,
@@ -118,9 +119,11 @@ public:
 
   ///
   /// @brief Computes the Newton direction of the condensed dual variables of 
-  /// this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in, out] d Split direction of this stage.
+  /// this impulse stage.
+  /// @param[in] robot Robot model. 
+  /// @param[in] kkt_matrix KKT matrix of this impulse stage.
+  /// @param[in, out] kkt_residual KKT residual of this impulse stage.
+  /// @param[in, out] d Split direction of this impulse stage.
   /// 
   void computeCondensedDualDirection(const Robot& robot, 
                                      const ImpulseSplitKKTMatrix& kkt_matrix, 
@@ -144,32 +147,33 @@ public:
   double maxDualStepSize();
 
   ///
-  /// @brief Updates primal variables of this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] primal_step_size Primal step size of the OCP. 
-  /// @param[in] d Split direction of this stage.
-  /// @param[in, out] s Split solution of this stage.
+  /// @brief Updates primal variables of this impulse stage.
+  /// @param[in] robot Robot model. 
+  /// @param[in] primal_step_size Primal step size.
+  /// @param[in] d Split direction of this impulse stage.
+  /// @param[in, out] s Split solution of this impulse stage.
   ///
   void updatePrimal(const Robot& robot, const double primal_step_size, 
                     const ImpulseSplitDirection& d, ImpulseSplitSolution& s);
 
   ///
   /// @brief Updates dual variables of the inequality constraints.
-  /// @param[in] dual_step_size Dula step size of the OCP. 
+  /// @param[in] dual_step_size Dula step size.
   ///
   void updateDual(const double dual_step_size);
 
   ///
-  /// @brief Computes the KKT residual of the OCP at this stage.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] impulse_status Impulse status of robot at this stage. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] q_prev Configuration at the previous stage.
-  /// @param[in] v_prev Generalized velocity at the previous stage.
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] s_next Split solution of the next stage.
-  /// @param[out] kkt_matrix KKT matrix of this stage.
-  /// @param[out] kkt_residual KKT residual of this stage.
+  /// @brief Linearizes the split optimal control problem for Newton's method 
+  /// around the current solution, i.e., computes the KKT residual and Hessian.
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status of this impulse stage. 
+  /// @param[in] t Time of this impulse stage. 
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] v_prev Generalized velocity at the previous time stage.
+  /// @param[in] s Split solution of this impulse stage.
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
   ///
   void computeKKTResidual(Robot& robot, const ImpulseStatus& impulse_status, 
                           const double t, const Eigen::VectorXd& q_prev, 
@@ -180,37 +184,36 @@ public:
                           ImpulseSplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Returns the KKT residual of the OCP at this stage. Before calling 
-  /// this function, SplitOCP::linearizeOCP or SplitOCP::computeKKTResidual
-  /// must be called.
-  /// @param[in] kkt_residual KKT residual of this stage.
+  /// @brief Returns the KKT residual of this impulse stage. Before calling this 
+  /// function, ImpulseSplitOCP::computeKKTResidual() must be called.
+  /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @return The squared norm of the kKT residual.
   ///
   double squaredNormKKTResidual(
       const ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the stage cost of this stage for line search.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] s Split solution of this stage.
-  /// @param[in] primal_step_size Primal step size of the OCP. Default is 0.
-  /// @return Stage cost of this stage.
+  /// @brief Computes the stage cost of this impulse stage for line search.
+  /// @param[in] robot Robot model. 
+  /// @param[in] t Time of this impulse stage. 
+  /// @param[in] s Split solution of this impulse stage.
+  /// @param[in] primal_step_size Primal step size. Default is 0.
+  /// @return Stage cost of this impulse stage.
   /// 
   double stageCost(Robot& robot, const double t, const ImpulseSplitSolution& s, 
                    const double primal_step_size=0);
 
   ///
-  /// @brief Computes and returns the constraint violation of the OCP at this 
-  /// stage for line search.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] impulse_status Impulse status of robot at this stage. 
-  /// @param[in] t Current time of this stage. 
-  /// @param[in] q_prev Configuration at the previous stage.
-  /// @param[in] v_prev Generalized velocity at the previous stage.
-  /// @param[in] s Split solution of this stage.
-  /// @param[out] kkt_residual KKT residual of this stage.
-  /// @return Constraint violation of this stage.
+  /// @brief Computes the constraint violation of this impulse stage for line 
+  /// search.
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status oif this impulse stage. 
+  /// @param[in] t Time of this impulse stage. 
+  /// @param[in] q_prev Configuration at the previous time stage.
+  /// @param[in] v_prev Generalized velocity at the previous time stage.
+  /// @param[in] s Split solution of this impulse stage.
+  /// @param[in, out] kkt_residual KKT residual of this impulse stage.
+  /// @return Constraint violation of this impulse stage.
   ///
   double constraintViolation(Robot& robot, const ImpulseStatus& impulse_status, 
                              const double t, const Eigen::VectorXd& q_prev, 

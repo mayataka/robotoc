@@ -3,7 +3,6 @@
 #include <omp.h>
 #include <stdexcept>
 #include <cassert>
-#include <fstream>
 
 
 namespace idocp {
@@ -141,6 +140,33 @@ const SplitSolution& UnOCPSolver::getSolution(const int stage) const {
 }
 
 
+std::vector<Eigen::VectorXd> UnOCPSolver::getSolution(
+    const std::string& name) const {
+  std::vector<Eigen::VectorXd> sol;
+  if (name == "q") {
+    for (int i=0; i<=N_; ++i) {
+      sol.push_back(s_[i].q);
+    }
+  }
+  if (name == "v") {
+    for (int i=0; i<=N_; ++i) {
+      sol.push_back(s_[i].v);
+    }
+  }
+  if (name == "a") {
+    for (int i=0; i<N_; ++i) {
+      sol.push_back(s_[i].a);
+    }
+  }
+  if (name == "u") {
+    for (int i=0; i<N_; ++i) {
+      sol.push_back(s_[i].u);
+    }
+  }
+  return sol;
+}
+
+
 void UnOCPSolver::getStateFeedbackGain(const int time_stage, 
                                        Eigen::MatrixXd& Kq, 
                                        Eigen::MatrixXd& Kv) const {
@@ -181,24 +207,8 @@ void UnOCPSolver::setSolution(const std::string& name,
 }
 
 
-
 void UnOCPSolver::clearLineSearchFilter() {
   line_search_.clearFilter();
-}
-
-
-double UnOCPSolver::KKTError() {
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<=N_; ++i) {
-    if (i < N_) {
-      kkt_error_.coeffRef(i) = ocp_[i].squaredNormKKTResidual(dt_);
-    }
-    else {
-      kkt_error_.coeffRef(N_) 
-          = ocp_.terminal.squaredNormKKTResidual(terminal_kkt_residual_);
-    }
-  }
-  return std::sqrt(kkt_error_.sum());
 }
 
 
@@ -225,6 +235,21 @@ void UnOCPSolver::computeKKTResidual(const double t, const Eigen::VectorXd& q,
 }
 
 
+double UnOCPSolver::KKTError() {
+  #pragma omp parallel for num_threads(nthreads_)
+  for (int i=0; i<=N_; ++i) {
+    if (i < N_) {
+      kkt_error_.coeffRef(i) = ocp_[i].squaredNormKKTResidual(dt_);
+    }
+    else {
+      kkt_error_.coeffRef(N_) 
+          = ocp_.terminal.squaredNormKKTResidual(terminal_kkt_residual_);
+    }
+  }
+  return std::sqrt(kkt_error_.sum());
+}
+
+
 bool UnOCPSolver::isCurrentSolutionFeasible() {
   for (int i=0; i<N_; ++i) {
     const bool feasible = ocp_[i].isFeasible(robots_[0], s_[i]);
@@ -234,121 +259,6 @@ bool UnOCPSolver::isCurrentSolutionFeasible() {
     }
   }
   return true;
-}
-
-
-std::vector<Eigen::VectorXd> UnOCPSolver::getSolution(
-    const std::string& name) const {
-  std::vector<Eigen::VectorXd> sol;
-  if (name == "q") {
-    for (int i=0; i<=N_; ++i) {
-      sol.push_back(s_[i].q);
-    }
-  }
-  if (name == "v") {
-    for (int i=0; i<=N_; ++i) {
-      sol.push_back(s_[i].v);
-    }
-  }
-  if (name == "a") {
-    for (int i=0; i<N_; ++i) {
-      sol.push_back(s_[i].a);
-    }
-  }
-  if (name == "u") {
-    for (int i=0; i<N_; ++i) {
-      sol.push_back(s_[i].u);
-    }
-  }
-  return sol;
-}
-
-
-void UnOCPSolver::printSolution(const std::string& name, 
-                                const std::vector<int> frames) const {
-  if (name == "all") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
-      std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
-      std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
-      std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
-    }
-    std::cout << "q[" << N_ << "] = " << s_[N_].q.transpose() << std::endl;
-    std::cout << "v[" << N_ << "] = " << s_[N_].v.transpose() << std::endl;
-  }
-  if (name == "q") {
-    for (int i=0; i<=N_; ++i) {
-      std::cout << "q[" << i << "] = " << s_[i].q.transpose() << std::endl;
-    }
-  }
-  if (name == "v") {
-    for (int i=0; i<=N_; ++i) {
-      std::cout << "v[" << i << "] = " << s_[i].v.transpose() << std::endl;
-    }
-  }
-  if (name == "a") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "a[" << i << "] = " << s_[i].a.transpose() << std::endl;
-    }
-  }
-  if (name == "u") {
-    for (int i=0; i<N_; ++i) {
-      std::cout << "u[" << i << "] = " << s_[i].u.transpose() << std::endl;
-    }
-  }
-  if (name == "end-effector") {
-    Robot robot = robots_[0];
-    for (int i=0; i<N_; ++i) {
-      robot.updateFrameKinematics(s_[i].q);
-      for (const auto e : frames) {
-      std::cout << "end-effector[" << i << "][" << e << "] = " 
-                << robot.framePosition(e).transpose() << std::endl;
-      }
-    }
-  }
-}
-
-
-void UnOCPSolver::saveSolution(const std::string& path_to_file, 
-                               const std::string& name) const {
-  std::ofstream file(path_to_file);
-  if (name == "q") {
-    const int dimq = robots_[0].dimq();
-    for (int i=0; i<=N_; ++i) {
-      for (int j=0; j<dimq; ++j) {
-        file << s_[i].q.coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  if (name == "v") {
-    const int dimv = robots_[0].dimv();
-    for (int i=0; i<=N_; ++i) {
-      for (int j=0; j<dimv; ++j) {
-        file << s_[i].v.coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  if (name == "a") {
-    const int dimv = robots_[0].dimv();
-    for (int i=0; i<N_; ++i) {
-      for (int j=0; j<dimv; ++j) {
-        file << s_[i].a.coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  if (name == "u") {
-    const int dimu = robots_[0].dimu();
-    for (int i=0; i<N_; ++i) {
-      for (int j=0; j<dimu; ++j) {
-        file << s_[i].u.coeff(j) << " ";
-      }
-      file << "\n";
-    }
-  }
-  file.close();
 }
 
 } // namespace idocp

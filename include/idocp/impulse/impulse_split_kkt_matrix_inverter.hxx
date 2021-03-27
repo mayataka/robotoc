@@ -119,16 +119,16 @@ inline void ImpulseSplitKKTMatrixInverter::multiplyJac(
 }
 
 
-inline void ImpulseSplitKKTMatrixInverter::enableRegularization(
-    const double reg) {
+inline void ImpulseSplitKKTMatrixInverter::setRegularization(const double reg) {
   assert(reg >= 0);
-  regularization_ = true;
-  reg_ = reg;
-}
-
-
-inline void ImpulseSplitKKTMatrixInverter::disableRegularization() {
-  regularization_ = false;
+  if (reg == 0.) {
+    regularization_ = false;
+    reg_ = 0.;
+  }
+  else {
+    regularization_ = true;
+    reg_ = reg;
+  }
 }
 
 

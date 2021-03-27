@@ -19,16 +19,13 @@ namespace idocp {
 
 ///
 /// @class ImpulseSplitBackwardCorrection
-/// @brief Split unconstrained backward correction.
+/// @brief Backward correction for an impulse stage.
 ///
 class ImpulseSplitBackwardCorrection {
 public:
   ///
-  /// @brief Construct factorizer.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] nthreads Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
+  /// @brief Constructs a factorizer.
+  /// @param[in] robot Robot model. 
   ///
   ImpulseSplitBackwardCorrection(const Robot& robot);
 
@@ -41,7 +38,7 @@ public:
   /// @brief Destructor. 
   ///
   ~ImpulseSplitBackwardCorrection();
- 
+
   ///
   /// @brief Default copy constructor. 
   ///
@@ -66,6 +63,15 @@ public:
   ImpulseSplitBackwardCorrection& operator=(
       ImpulseSplitBackwardCorrection&&) noexcept = default;
 
+  ///
+  /// @brief Coarse updates the split solution of this impulse stage. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] aux_mat_next Auxiliary matrix of the next time stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage. 
+  /// @param[in] kkt_residual Split KKT residual of this impulse stage. 
+  /// @param[in] s Split solution of this impulse stage.
+  /// @param[in, out] s_new Coarse updated split solution of this impulse stage.
+  ///
   template <typename MatrixType>
   void coarseUpdate(const Robot& robot, 
                     const Eigen::MatrixBase<MatrixType>& aux_mat_next,
@@ -73,21 +79,54 @@ public:
                     const ImpulseSplitKKTResidual& kkt_residual,
                     const ImpulseSplitSolution& s, ImpulseSplitSolution& s_new);
 
+  ///
+  /// @brief Auxiliary matrix of this impulse stage. 
+  /// @return const reference to the auxiliary matrix of this impulse stage. 
+  ///
   const Eigen::Block<const Eigen::MatrixXd> auxMat() const;
 
+  ///
+  /// @brief Performs the serial part of the backward correction. 
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in] s_new_next Coarse updated split solution of the next time stage.
+  /// @param[in, out] s_new Coarse updated split solution of this impulse stage.
+  ///
   void backwardCorrectionSerial(const SplitSolution& s_next, 
                                 const SplitSolution& s_new_next,
                                 ImpulseSplitSolution& s_new);
 
+  ///
+  /// @brief Performs the parallel part of the backward correction. 
+  /// @param[in] robot Robot model. 
+  /// @param[in, out] s_new Coarse updated split solution of this impulse stage.
+  ///
   void backwardCorrectionParallel(const Robot& robot, 
                                   ImpulseSplitSolution& s_new);
 
+  ///
+  /// @brief Performs the serial part of the forward correction. 
+  /// @param[in] s_prev Split solution of the previous time stage.
+  /// @param[in] s_new_prev Coarse updated split solution of the previous time 
+  /// stage.
+  /// @param[in, out] s_new Coarse updated split solution of this impulse stage.
+  ///
   void forwardCorrectionSerial(const Robot& robot, const SplitSolution& s_prev, 
                                const SplitSolution& s_new_prev,
                                ImpulseSplitSolution& s_new);
 
+  ///
+  /// @brief Performs the parallel part of the forward correction. 
+  /// @param[in, out] s_new Coarse updated split solution of this impulse stage.
+  ///
   void forwardCorrectionParallel(ImpulseSplitSolution& s_new);
 
+  ///
+  /// @brief Computes the direction from the results of the forward correction. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] s Split solution of this impulse stage.
+  /// @param[in] s_new Coarse updated split solution of this impulse stage.
+  /// @param[in, out] d Split direction of this impulse stage.
+  ///
   static void computeDirection(const Robot& robot, 
                                const ImpulseSplitSolution& s, 
                                const ImpulseSplitSolution& s_new, 

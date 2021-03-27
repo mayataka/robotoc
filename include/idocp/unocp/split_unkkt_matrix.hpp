@@ -19,7 +19,7 @@ class SplitUnKKTMatrix {
 public:
   ///
   /// @brief Construct a KKT matrix.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] robot Robot model. 
   ///
   SplitUnKKTMatrix(const Robot& robot);
 
@@ -214,14 +214,14 @@ public:
   int dimKKT() const;
 
   ///
-  /// @brief Chech the equivalence of two SplitUnKKTMatrix.
+  /// @brief Checks the equivalence of two SplitUnKKTMatrix.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
   bool isApprox(const SplitUnKKTMatrix& other) const;
 
   ///
-  /// @brief Chech this has at least one NaN.
+  /// @brief Checks this has at least one NaN.
   /// @return true if this has at least one NaN. false otherwise.
   ///
   bool hasNaN() const;

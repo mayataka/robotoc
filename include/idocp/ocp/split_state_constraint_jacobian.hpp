@@ -10,8 +10,16 @@
 
 namespace idocp {
 
+///
+/// @class SplitStateConstraintJacobian
+/// @brief Jacobian of ForwardSwitchingConstraint. 
+///
 class SplitStateConstraintJacobian {
 public:
+  ///
+  /// @brief Constructs a Jacobian of the switching constraint.
+  /// @param[in] robot Robot model. 
+  ///
   SplitStateConstraintJacobian(const Robot& robot);
 
   ///

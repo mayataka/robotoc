@@ -11,14 +11,14 @@ namespace idocp {
 
 ///
 /// @class ImpulseSplitKKTMatrix
-/// @brief The KKT matrix split into a impulse time stage.
+/// @brief KKT matrix split into an impulse time stage.
 ///
 class ImpulseSplitKKTMatrix {
 public:
   using Matrix6d = Eigen::Matrix<double, 6, 6>;
 
   ///
-  /// @brief Construct a split impulse KKT matrix.
+  /// @brief Construct a split KKT matrix.
   /// @param[in] robot Robot model. 
   ///
   ImpulseSplitKKTMatrix(const Robot& robot);
@@ -54,7 +54,7 @@ public:
   ImpulseSplitKKTMatrix& operator=(ImpulseSplitKKTMatrix&&) noexcept = default;
 
   ///
-  /// @brief Set impulse status, i.e., set dimension of the impulses.
+  /// @brief Set the impulse status, i.e., set dimension of the impulses.
   /// @param[in] impulse_status Impulse status.
   ///
   void setImpulseStatus(const ImpulseStatus& impulse_status);
@@ -328,14 +328,14 @@ public:
   int dimf() const;
 
   ///
-  /// @brief Chech the equivalence of two ImpulseSplitKKTMatrix.
+  /// @brief Checks the equivalence of two ImpulseSplitKKTMatrix.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
   bool isApprox(const ImpulseSplitKKTMatrix& other) const;
 
   ///
-  /// @brief Chech this has at least one NaN.
+  /// @brief Checks this has at least one NaN.
   /// @return true if this has at least one NaN. false otherwise.
   ///
   bool hasNaN() const;

@@ -621,14 +621,14 @@ public:
   int dimi() const;
 
   ///
-  /// @brief Chech the equivalence of two SplitKKTMatrix.
+  /// @brief Checks the equivalence of two SplitKKTMatrix.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
   bool isApprox(const SplitKKTMatrix& other) const;
 
   ///
-  /// @brief Chech this has at least one NaN.
+  /// @brief Checks this has at least one NaN.
   /// @return true if this has at least one NaN. false otherwise.
   ///
   bool hasNaN() const;

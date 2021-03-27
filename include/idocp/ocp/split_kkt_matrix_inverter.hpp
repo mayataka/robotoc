@@ -8,13 +8,14 @@
 
 namespace idocp {
 ///
-/// @class SplitKKTMatrixInverter
-/// @brief The KKT matrix of a time stage.
+/// @class SplitKKTMatrixInverter 
+/// @brief Schur complement for SplitKKTMatrix.
 ///
 class SplitKKTMatrixInverter {
 public:
   ///
-  /// @brief Construct a KKT matrix.
+  /// @brief Construct a Schur complement.
+  /// @param[in] robot Robot model. 
   ///
   SplitKKTMatrixInverter(const Robot& robot);
 
@@ -48,16 +49,39 @@ public:
   ///
   SplitKKTMatrixInverter& operator=(SplitKKTMatrixInverter&&) noexcept = default;
 
+  ///
+  /// @brief Computes the inverse of the split KKT matrix of the time stage. 
+  /// @param[in] dt Time step of this time stage.
+  /// @param[in] F Jacobian of the state equation.
+  /// @param[in] Q Hessian of the Lagrangian.
+  /// @param[in, out] KKT_mat_inv Inverse of the split KKT matrix.
+  ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void invert(const double dt, const Eigen::MatrixBase<MatrixType1>& F, 
               const Eigen::MatrixBase<MatrixType2>& Q, 
               const Eigen::MatrixBase<MatrixType3>& KKT_mat_inv);
 
+  ///
+  /// @brief Multiplies the Jacobian of the state equation to a matrix. 
+  /// @param[in] dt Time step of this time stage.
+  /// @param[in] F Jacobian of the state equation.
+  /// @param[in] mat Multiplied matrix.
+  /// @param[in, out] res Result.
+  ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void multiplyF(const double dt, const Eigen::MatrixBase<MatrixType1>& F, 
                  const Eigen::MatrixBase<MatrixType2>& mat, 
                  const Eigen::MatrixBase<MatrixType3>& res);
 
+  ///
+  /// @brief Computes the inverse of the split KKT matrix of the time stage 
+  /// including the switching constraint. 
+  /// @param[in] dt Time step of this time stage.
+  /// @param[in] F Jacobian of the state equation.
+  /// @param[in] Pq Jacobian of the switching constraint.
+  /// @param[in] Q Hessian of the Lagrangian.
+  /// @param[in, out] KKT_mat_inv Inverse of the split KKT matrix.
+  ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4>
   void invert(const double dt, const Eigen::MatrixBase<MatrixType1>& F, 
@@ -65,6 +89,15 @@ public:
               const Eigen::MatrixBase<MatrixType3>& Q, 
               const Eigen::MatrixBase<MatrixType4>& KKT_mat_inv);
 
+  ///
+  /// @brief Multiplies the Jacobians of the state equation and the switching
+  /// constraint to a matrix. 
+  /// @param[in] dt Time step of this time stage.
+  /// @param[in] F Jacobian of the state equation.
+  /// @param[in] Pq Jacobian of the switching constraint.
+  /// @param[in] mat Multiplied matrix.
+  /// @param[in, out] res Result.
+  ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3, 
             typename MatrixType4>
   void multiplyFPq(const double dt, const Eigen::MatrixBase<MatrixType1>& F, 
@@ -72,9 +105,11 @@ public:
                    const Eigen::MatrixBase<MatrixType3>& mat, 
                    const Eigen::MatrixBase<MatrixType4>& res);
 
-  void enableRegularization(const double reg=1.0e-09);
-
-  void disableRegularization();
+  ///
+  /// @brief Sets the regularization. 
+  /// @param[in] reg Regularization factor. Must be non-negative. Default is 0.
+  ///
+  void setRegularization(const double reg=0);
 
 private:
   int dimv_, dimu_, dimx_, dimQ_, dimKKT_, dimf_;

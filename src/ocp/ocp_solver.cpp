@@ -2,7 +2,6 @@
 
 #include <stdexcept>
 #include <cassert>
-#include <fstream>
 
 
 namespace idocp {
@@ -96,6 +95,44 @@ const SplitSolution& OCPSolver::getSolution(const int stage) const {
   assert(stage >= 0);
   assert(stage <= ocp_.discrete().N());
   return s_[stage];
+}
+
+
+std::vector<Eigen::VectorXd> OCPSolver::getSolution(
+    const std::string& name) const {
+  std::vector<Eigen::VectorXd> sol;
+  if (name == "q") {
+    for (int i=0; i<=ocp_.discrete().N(); ++i) {
+      sol.push_back(s_[i].q);
+    }
+  }
+  if (name == "v") {
+    for (int i=0; i<=ocp_.discrete().N(); ++i) {
+      sol.push_back(s_[i].v);
+    }
+  }
+  if (name == "a") {
+    for (int i=0; i<ocp_.discrete().N(); ++i) {
+      sol.push_back(s_[i].a);
+    }
+  }
+  if (name == "f") {
+    for (int i=0; i<ocp_.discrete().N(); ++i) {
+      Eigen::VectorXd f(Eigen::VectorXd::Zero(robots_[0].max_dimf()));
+      for (int j=0; j<robots_[0].maxPointContacts(); ++i) {
+        if (s_[i].isContactActive(j)) {
+          f.template segment<3>(3*j) = s_[i].f[j];
+        }
+      }
+      sol.push_back(f);
+    }
+  }
+  if (name == "u") {
+    for (int i=0; i<ocp_.discrete().N(); ++i) {
+      sol.push_back(s_[i].u);
+    }
+  }
+  return sol;
 }
 
 
@@ -247,38 +284,6 @@ bool OCPSolver::isCurrentSolutionFeasible() {
     }
   }
   return true;
-}
-
-
-std::vector<Eigen::VectorXd> OCPSolver::getSolution(
-    const std::string& name) const {
-  std::vector<Eigen::VectorXd> sol;
-  if (name == "q") {
-    for (int i=0; i<=ocp_.discrete().N(); ++i) {
-      sol.push_back(s_[i].q);
-    }
-  }
-  if (name == "v") {
-    for (int i=0; i<=ocp_.discrete().N(); ++i) {
-      sol.push_back(s_[i].v);
-    }
-  }
-  if (name == "a") {
-    for (int i=0; i<ocp_.discrete().N(); ++i) {
-      sol.push_back(s_[i].a);
-    }
-  }
-  if (name == "f") {
-    for (int i=0; i<ocp_.discrete().N(); ++i) {
-      sol.push_back(s_[i].f_stack());
-    }
-  }
-  if (name == "u") {
-    for (int i=0; i<ocp_.discrete().N(); ++i) {
-      sol.push_back(s_[i].u);
-    }
-  }
-  return sol;
 }
 
 

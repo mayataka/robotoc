@@ -102,13 +102,6 @@ inline double ImpulseSplitOCP::maxDualStepSize() {
 }
 
 
-inline void ImpulseSplitOCP::updateDual(const double dual_step_size) {
-  assert(dual_step_size > 0);
-  assert(dual_step_size <= 1);
-  constraints_->updateDual(constraints_data_, dual_step_size);
-}
-
-
 inline void ImpulseSplitOCP::updatePrimal(
     const Robot& robot, const double primal_step_size, 
     const ImpulseSplitDirection& d, ImpulseSplitSolution& s) {
@@ -116,6 +109,13 @@ inline void ImpulseSplitOCP::updatePrimal(
   assert(primal_step_size <= 1);
   s.integrate(robot, primal_step_size, d);
   constraints_->updateSlack(constraints_data_, primal_step_size);
+}
+
+
+inline void ImpulseSplitOCP::updateDual(const double dual_step_size) {
+  assert(dual_step_size > 0);
+  assert(dual_step_size <= 1);
+  constraints_->updateDual(constraints_data_, dual_step_size);
 }
 
 

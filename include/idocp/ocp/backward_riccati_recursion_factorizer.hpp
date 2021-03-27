@@ -14,13 +14,13 @@ namespace idocp {
 
 ///
 /// @class BackwardRiccatiRecursionFactorizer
-/// @brief Factorizer of the backward Riccati recursion for SplitOCP.
+/// @brief Factorizer of the backward Riccati recursion of a time stage.
 ///
 class BackwardRiccatiRecursionFactorizer {
 public:
   ///
-  /// @brief Construct factorizer.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Constructs a factorizer.
+  /// @param[in] robot Robot model. 
   ///
   BackwardRiccatiRecursionFactorizer(const Robot& robot);
 
@@ -59,30 +59,26 @@ public:
       BackwardRiccatiRecursionFactorizer&&) noexcept = default;
 
   ///
-  /// @brief Factorize the KKT matrix and KKT residual for the backward Riccati  
-  /// recursion, i.e., factorize matrices F, H, G and vectors lx, lu.
-  /// @param[in] riccati_next Riccati factorization at the next time stage.
-  /// @param[in] dt Time step between the current time stage and the next 
-  /// time stage.
-  /// @param[in, out] kkt_matrix The KKT matrix.
-  /// @param[in, out] kkt_residual The KKT residual.
+  /// @brief Factorizes the split KKT matrix and split KKT residual of a time 
+  /// stage for the backward Riccati recursion.
+  /// @param[in] riccati_next Riccati factorization of the next time stage.
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void factorizeKKTMatrix(const SplitRiccatiFactorization& riccati_next, 
                           const double dt, SplitKKTMatrix& kkt_matrix,  
                           SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Factorize the Riccati factorization matrix P and vector s.
-  /// @param[in] riccati_next Riccati factorization at the next time stage.
-  /// @param[in] kkt_matrix The KKT matrix factorized by 
-  /// BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization().
-  /// @param[in] kkt_residual The KKT residual factorized by
-  /// BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization().
+  /// @brief Factorizes the Riccati factorization matrix and vector.
+  /// @param[in] riccati_next Riccati factorization of the next time stage.
+  /// @param[in] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in] lqr_policy The state feedback control policy of the LQR 
   /// subproblem.
-  /// @param[in] dt Time step between the current time stage and the next 
-  /// time stage.
-  /// @param[out] riccati The Riccati factorization at this time stage.
+  /// @param[in] dt Time step of this time stage.
+  /// @param[out] riccati The Riccati factorization of this time stage.
   ///
   void factorizeRiccatiFactorization(
       const SplitRiccatiFactorization& riccati_next, 

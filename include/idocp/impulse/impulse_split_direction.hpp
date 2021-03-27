@@ -17,7 +17,7 @@ namespace idocp {
 class ImpulseSplitDirection {
 public:
   ///
-  /// @brief Construct a impulse split direction.
+  /// @brief Constructs a split direction.
   /// @param[in] robot Robot model. 
   ///
   ImpulseSplitDirection(const Robot& robot);

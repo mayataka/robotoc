@@ -8,26 +8,56 @@
 
 namespace idocp {
 
+///
+/// @class ImpulseDynamicsBackwardEulerData
+/// @brief Data used in ImpulseDynamicsBackwardEuler.
+///
 class ImpulseDynamicsBackwardEulerData {
 public:
+  ///
+  /// @brief Constructs a data.
+  /// @param[in] robot Robot model. 
+  ///
   ImpulseDynamicsBackwardEulerData(const Robot& robot);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   ImpulseDynamicsBackwardEulerData();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~ImpulseDynamicsBackwardEulerData();
 
+  ///
+  /// @brief Default copy constructor. 
+  ///
   ImpulseDynamicsBackwardEulerData(
       const ImpulseDynamicsBackwardEulerData&) = default;
 
+  ///
+  /// @brief Default copy operator. 
+  ///
   ImpulseDynamicsBackwardEulerData& operator=(
       const ImpulseDynamicsBackwardEulerData&) = default;
- 
+
+  ///
+  /// @brief Default move constructor. 
+  ///
   ImpulseDynamicsBackwardEulerData(
       ImpulseDynamicsBackwardEulerData&&) noexcept = default;
 
+  ///
+  /// @brief Default move assign operator. 
+  ///
   ImpulseDynamicsBackwardEulerData& operator=(
       ImpulseDynamicsBackwardEulerData&&) noexcept = default;
 
+  ///
+  /// @brief Set the impulse status, i.e., set dimension of the impulses.
+  /// @param[in] impulse_status Impulse status.
+  ///
   void setImpulseStatus(const ImpulseStatus& Impulse_status);
 
   Eigen::Block<Eigen::MatrixXd> Qdvf();

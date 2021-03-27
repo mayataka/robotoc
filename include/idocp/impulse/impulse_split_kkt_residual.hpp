@@ -11,14 +11,14 @@ namespace idocp {
 
 ///
 /// @class ImpulseSplitKKTResidual
-/// @brief KKT residual split at the impulse stage. 
+/// @brief KKT residual split into an impulse stage. 
 ///
 class ImpulseSplitKKTResidual {
 public:
   using Vector6d = Eigen::Matrix<double, 6, 1>;
 
   ///
-  /// @brief Construct a KKT residual.
+  /// @brief Construct a split KKT residual.
   /// @param[in] robot Robot model. 
   ///
   ImpulseSplitKKTResidual(const Robot& robot);
@@ -55,7 +55,7 @@ public:
       ImpulseSplitKKTResidual&&) noexcept = default;
 
   ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @brief Set the impulse status, i.e., set dimension of the impulse.
   /// @param[in] impulse_status Impulse status.
   ///
   void setImpulseStatus(const ImpulseStatus& impulse_status);

@@ -16,13 +16,13 @@ namespace idocp {
 
 ///
 /// @class ImpulseSplitRiccatiFactorizer
-/// @brief Riccati factorizer for ImpulseSplitOCP.
+/// @brief Riccati factorizer of an impulse stage.
 ///
 class ImpulseSplitRiccatiFactorizer {
 public:
   ///
-  /// @brief Construct factorizer.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Constructs a factorizer.
+  /// @param[in] robot Robot model. 
   ///
   ImpulseSplitRiccatiFactorizer(const Robot& robot);
 
@@ -62,10 +62,10 @@ public:
 
   ///
   /// @brief Performs the backward Riccati recursion. 
-  /// @param[in] riccati_next Riccati factorization at the next time stage. 
-  /// @param[in, out] kkt_matrix KKT matrix at the current impulse stage. 
-  /// @param[in, out] kkt_residual KKT residual at the current impulse stage. 
-  /// @param[out] riccati Riccati factorization at the current impulse stage. 
+  /// @param[in] riccati_next Riccati factorization of the next time stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage. 
+  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage. 
+  /// @param[in, out] riccati Riccati factorization of this impulse stage. 
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
                                 ImpulseSplitKKTMatrix& kkt_matrix, 
@@ -73,11 +73,12 @@ public:
                                 SplitRiccatiFactorization& riccati);
 
   ///
-  /// @brief Performs forward Riccati recursion and computes state direction. 
-  /// @param[in] kkt_matrix KKT matrix at the current time stage. 
-  /// @param[in] kkt_residual KKT residual at the current time stage. 
-  /// @param[in] d Split direction at the current time stage. 
-  /// @param[out] d_next Split direction at the next time stage. 
+  /// @brief Performs the forward Riccati recursion and computes the state 
+  /// direction. 
+  /// @param[in] kkt_matrix Split KKT matrix of this impulse stage. 
+  /// @param[in] kkt_residual Split KKT residual of this impulse stage. 
+  /// @param[in] d Split direction of this impulse stage. 
+  /// @param[in, out] d_next Split direction of the next time stage. 
   ///
   void forwardRiccatiRecursion(const ImpulseSplitKKTMatrix& kkt_matrix, 
                                const ImpulseSplitKKTResidual& kkt_residual,
@@ -85,10 +86,9 @@ public:
                                SplitDirection& d_next) const;
 
   ///
-  /// @brief Computes the Newton direction of the costate vector. 
-  /// @param[in] riccati Riccati factorization at the current impulse stage. 
-  /// @param[out] d Split direction of the current impulse stage. 
-  ///
+  /// @brief Computes the Newton direction of the costate. 
+  /// @param[in] riccati Riccati factorization of this impulse stage. 
+  /// @param[in, out] d Split direction of this impulse stage. 
   ///
   static void computeCostateDirection(const SplitRiccatiFactorization& riccati, 
                                       ImpulseSplitDirection& d);
