@@ -31,12 +31,15 @@ public:
 
   ~TimeVaryingTaskSpace6DRef() {}
 
-  void compute_q_6d_ref(const double t, 
-                        pinocchio::SE3& se3_ref) const override {
+  void update_SE3_ref(const double t, pinocchio::SE3& se3_ref) const override {
     Eigen::Vector3d pos(pos0_);
     pos.coeffRef(1) += radius_ * sin(M_PI*t);
     pos.coeffRef(2) += radius_ * cos(M_PI*t);
     se3_ref = pinocchio::SE3(rotm_, pos);
+  }
+
+  bool isActive(const double t) const override {
+    return true;
   }
 
 private:
@@ -58,8 +61,8 @@ int main(int argc, char *argv[]) {
   // Create a cost function.
   auto cost = std::make_shared<idocp::CostFunction>();
   auto config_cost = std::make_shared<idocp::ConfigurationSpaceCost>(robot);
-  config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 0));
-  config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0));
+  config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
+  config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
   config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
@@ -93,16 +96,9 @@ int main(int argc, char *argv[]) {
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);
 
 #ifdef ENABLE_VIEWER
-  if (argc != 2) {
-    std::cout << "Invalid argment!" << std::endl;
-    std::cout << "Package serach path must be specified as the second argment!" << std::endl;
-  }
-  else {
-    const std::string pkg_search_path = argv[1];
-    idocp::TrajectoryViewer viewer(pkg_search_path, path_to_urdf);
-    const double dt = T/N;
-    viewer.display(ocp_solver.getSolution("q"), dt);
-  }
+  idocp::TrajectoryViewer viewer(path_to_urdf);
+  const double dt = T/N;
+  viewer.display(ocp_solver.getSolution("q"), dt);
 #endif 
 
   return 0;

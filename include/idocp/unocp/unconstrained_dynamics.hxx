@@ -135,9 +135,9 @@ inline void UnconstrainedDynamics::getStateFeedbackGain(
   assert(Ku.rows() == dimv_);
   assert(Ku.cols() == 2*dimv_);
   getStateFeedbackGain(
-    Ka.leftCols(dimv_), Ka.rightCols(dimv_),
-    const_cast<Eigen::MatrixBase<MatrixType2>&>(Ku).leftCols(dimv_),
-    const_cast<Eigen::MatrixBase<MatrixType2>&>(Ku).rightCols(dimv_));
+      Ka.leftCols(dimv_), Ka.rightCols(dimv_),
+      const_cast<Eigen::MatrixBase<MatrixType2>&>(Ku).leftCols(dimv_),
+      const_cast<Eigen::MatrixBase<MatrixType2>&>(Ku).rightCols(dimv_));
 }
 
 

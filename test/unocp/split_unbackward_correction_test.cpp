@@ -64,7 +64,7 @@ TEST_F(SplitUnBackwardCorrectionTest, test) {
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(5*dimv, 5*dimv));
   unkkt_matrix_ref.Qxx() += aux_mat_next;
   SplitUnKKTMatrixInverter inverter(robot);
-  inverter.invert(dt, unkkt_matrix_ref.Q, KKT_mat_inv);
+  inverter.invert(dt, unkkt_matrix_ref.Q.transpose(), KKT_mat_inv);
   d_ref.split_direction = KKT_mat_inv * unkkt_residual.KKT_residual;
   s_new_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_ref.gmm = s.gmm - d_ref.dgmm();
@@ -135,7 +135,7 @@ TEST_F(SplitUnBackwardCorrectionTest, testTerminal) {
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(5*dimv, 5*dimv));
   SplitUnKKTMatrixInverter inverter(robot);
-  inverter.invert(dt, unkkt_matrix_ref.Q, KKT_mat_inv);
+  inverter.invert(dt, unkkt_matrix_ref.Q.transpose(), KKT_mat_inv);
   d_ref.split_direction = KKT_mat_inv * unkkt_residual.KKT_residual;
   s_new_ref.lmd = s.lmd - d_ref.dlmd();
   s_new_ref.gmm = s.gmm - d_ref.dgmm();

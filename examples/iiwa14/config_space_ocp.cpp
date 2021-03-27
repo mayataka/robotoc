@@ -61,16 +61,9 @@ int main(int argc, char *argv[]) {
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);
 
 #ifdef ENABLE_VIEWER
-  if (argc != 2) {
-    std::cout << "Invalid argment!" << std::endl;
-    std::cout << "Package serach path must be specified as the second argment!" << std::endl;
-  }
-  else {
-    const std::string pkg_search_path = argv[1];
-    idocp::TrajectoryViewer viewer(pkg_search_path, path_to_urdf);
-    const double dt = T/N;
-    viewer.display(ocp_solver.getSolution("q"), dt);
-  }
+  idocp::TrajectoryViewer viewer(path_to_urdf);
+  const double dt = T/N;
+  viewer.display(ocp_solver.getSolution("q"), dt);
 #endif 
 
   return 0;
