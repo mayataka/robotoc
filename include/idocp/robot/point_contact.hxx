@@ -168,7 +168,7 @@ inline void PointContact::computeContactVelocityDerivatives(
 
 
 template <typename VectorType1, typename VectorType2>
-inline void PointContact::computeContactResidual(
+inline void PointContact::computeContactPositionResidual(
     const pinocchio::Model& model, const pinocchio::Data& data, 
     const Eigen::MatrixBase<VectorType1>& contact_point,
     const Eigen::MatrixBase<VectorType2>& contact_residual) const {

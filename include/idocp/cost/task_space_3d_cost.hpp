@@ -18,7 +18,7 @@ namespace idocp {
 
 ///
 /// @class TaskSpace3DCost
-/// @brief Quadratic cost on the task space position. 
+/// @brief Cost on the task space position. 
 ///
 class TaskSpace3DCost final : public CostFunctionComponentBase {
 public:
@@ -69,19 +69,19 @@ public:
   /// @brief Sets the weight vector. 
   /// @param[in] q_3d_weight Weight vector on the position error. 
   ///
-  void set_q_3d_weight(const Eigen::Vector3d& q_3d_weight);
+  void set_q_weight(const Eigen::Vector3d& q_3d_weight);
 
   ///
   /// @brief Sets the terminal weight vector. 
-  /// @param[in] q_3d_weight Terminal weight vector on the position error. 
+  /// @param[in] qf_3d_weight Terminal weight vector on the position error. 
   ///
-  void set_qf_3d_weight(const Eigen::Vector3d& qf_3d_weight);
+  void set_qf_weight(const Eigen::Vector3d& qf_3d_weight);
 
   ///
   /// @brief Sets the weight vector at impulse. 
-  /// @param[in] q_3d_weight Weight vector on the position error at impulse. 
+  /// @param[in] qi_3d_weight Weight vector on the position error at impulse. 
   ///
-  void set_qi_3d_weight(const Eigen::Vector3d& qi_3d_weight);
+  void set_qi_weight(const Eigen::Vector3d& qi_3d_weight);
 
   bool useKinematics() const override;
 

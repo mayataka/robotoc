@@ -113,7 +113,7 @@ public:
   ///
   /// @brief Returns the l2-norm of the KKT residual of optimal control problem.
   /// @param[in] ocp Optimal control problem.
-  /// @param[in] kkt_matrix KKT matrix. 
+  /// @param[in] kkt_residual KKT residual. 
   ///
   double KKTError(const OCP& ocp, const KKTResidual& kkt_residual);
 

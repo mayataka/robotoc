@@ -60,7 +60,7 @@ void ForwardSwitchingConstraintTest::testLinearizeSwitchingConstraint(Robot& rob
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
-  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
+  robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
   robot.computeContactDerivative(impulse_status, kkt_matrix_ref.Pq());
   if (robot.hasFloatingBase()) {
     robot.dIntegratedConfiguration(s.q, dq, jac_ref.dintegrate_dq);
@@ -107,7 +107,7 @@ void ForwardSwitchingConstraintTest::testComputeSwitchingConstraintResidual(Robo
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
-  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
+  robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   const double kkt = switching_constraint.squaredNormSwitchingConstraintResidual(kkt_residual);
   const double kkt_ref = kkt_residual_ref.P().squaredNorm();

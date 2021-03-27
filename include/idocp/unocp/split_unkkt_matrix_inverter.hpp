@@ -63,7 +63,7 @@ public:
   ///
   template <typename MatrixType1, typename MatrixType2>
   void invert(const double dt, const Eigen::MatrixBase<MatrixType1>& Q,
-              const Eigen::MatrixBase<MatrixType2>& KKT_matrix_inverse);
+              const Eigen::MatrixBase<MatrixType2>& KKT_mat_inv);
 
 private:
   Eigen::LLT<Eigen::MatrixXd> llt_Q_, llt_S_;

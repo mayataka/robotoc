@@ -18,7 +18,7 @@ namespace idocp {
 
 ///
 /// @class ConfigurationSpaceCost
-/// @brief Configuration space quadratic cost. 
+/// @brief Configuration space cost. 
 ///
 class ConfigurationSpaceCost final : public CostFunctionComponentBase {
 public:
@@ -68,13 +68,13 @@ public:
 
   ///
   /// @brief Sets the reference velocity v. 
-  /// @param[in] q_ref Reference velocity v. Size must be Robot::dimv().
+  /// @param[in] v_ref Reference velocity v. Size must be Robot::dimv().
   ///
   void set_v_ref(const Eigen::VectorXd& v_ref);
 
   ///
   /// @brief Sets the reference control input torques u. 
-  /// @param[in] q_ref Reference control input torques u. Size must be 
+  /// @param[in] u_ref Reference control input torques u. Size must be 
   /// Robot::dimu().
   ///
   void set_u_ref(const Eigen::VectorXd& u_ref);

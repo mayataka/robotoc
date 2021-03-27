@@ -149,8 +149,8 @@ public:
 
   ///
   /// @brief Gets contact point.
-  /// @param[in] contact_indices Indices of the contacts that are activated.
-  /// @return const reference to the contact points. 
+  /// @param[in] contact_index Index of the contact .
+  /// @return const reference to the contact point. 
   ///
   const Eigen::Vector3d& contactPoint(const int contact_index) const;
 

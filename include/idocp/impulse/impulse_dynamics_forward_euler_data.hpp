@@ -58,7 +58,7 @@ public:
   /// @brief Set the impulse status, i.e., set dimension of the impulses.
   /// @param[in] impulse_status Impulse status.
   ///
-  void setImpulseStatus(const ImpulseStatus& Impulse_status);
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   Eigen::MatrixXd dImDddv;
 

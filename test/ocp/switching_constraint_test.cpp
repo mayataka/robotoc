@@ -45,8 +45,8 @@ void SwitchingConstraintTest::testLinearizeSwitchingConstraint(Robot& robot) {
   robot.updateKinematics(s.q);
   switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, s, 
                                                     kkt_matrix, kkt_residual);
-  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(),
-                               kkt_residual_ref.P());
+  robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(),
+                                       kkt_residual_ref.P());
   robot.computeContactDerivative(impulse_status, kkt_matrix_ref.Pq());
   kkt_residual_ref.lq().noalias() += kkt_matrix_ref.Pq().transpose() * s.xi_stack();
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -72,8 +72,8 @@ void SwitchingConstraintTest::testComputeSwitchingConstraintResidual(Robot& robo
   auto kkt_residual_ref = kkt_residual;
   robot.updateKinematics(s.q);
   switchingconstraint::computeSwitchingConstraintResidual(robot, impulse_status, kkt_residual);
-  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(),
-                               kkt_residual_ref.P());
+  robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(),
+                                       kkt_residual_ref.P());
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   const double kkt = switchingconstraint::squaredNormSwitchingConstraintResidual(kkt_residual);
   const double kkt_ref = kkt_residual_ref.P().squaredNorm();

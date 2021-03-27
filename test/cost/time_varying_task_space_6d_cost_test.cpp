@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/cost/task_space_6d_cost.hpp"
+#include "idocp/cost/time_varying_task_space_6d_cost.hpp"
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
@@ -17,13 +17,60 @@
 
 namespace idocp {
 
-class TaskSpace6DCostTest : public ::testing::Test {
+class TimeVaryingTaskSpace6DRef final : public TimeVaryingTaskSpace6DRefBase {
+public:
+  TimeVaryingTaskSpace6DRef(const Eigen::Vector3d& q0_ref, 
+                            const Eigen::Vector3d& v_ref, 
+                            const double t0, const double tf)
+    : q0_ref_(q0_ref),
+      v_ref_(v_ref),
+      t0_(t0),
+      tf_(tf),
+      rotm_(Eigen::Matrix3d::Identity()) {
+  }
+
+  TimeVaryingTaskSpace6DRef() {}
+
+  ~TimeVaryingTaskSpace6DRef() {}
+
+  TimeVaryingTaskSpace6DRef(const TimeVaryingTaskSpace6DRef&) = default;
+
+  TimeVaryingTaskSpace6DRef& operator=( 
+      const TimeVaryingTaskSpace6DRef&) = default;
+
+  TimeVaryingTaskSpace6DRef(
+      TimeVaryingTaskSpace6DRef&&) noexcept = default;
+
+  TimeVaryingTaskSpace6DRef& operator=(
+      TimeVaryingTaskSpace6DRef&&) noexcept = default;
+
+  void update_SE3_ref(const double t, pinocchio::SE3& SE3_ref) const override {
+    SE3_ref = pinocchio::SE3(rotm_, (q0_ref_+(t-t0_)*v_ref_));
+  }
+
+  bool isActive(const double t) const override {
+    if (t0_ <= t && t <= tf_)
+      return true;
+    else 
+      return false;
+  }
+
+private:
+  Eigen::Vector3d q0_ref_, v_ref_;
+  Eigen::Matrix3d rotm_;
+  double t0_, tf_;
+};
+
+
+class TimeVaryingTaskSpace6DCostTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
+    t0 = t - std::abs(Eigen::VectorXd::Random(1)[0]);
+    tf = t + std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -33,11 +80,11 @@ protected:
   void testTerminalCost(Robot& robot, const int frame_id) const;
   void testImpulseCost(Robot& robot, const int frame_id) const;
 
-  double dt, t;
+  double dt, t, t0, tf;
 };
 
 
-void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const {
+void TimeVaryingTaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_mat(robot);
   SplitKKTResidual kkt_res(robot);
@@ -54,18 +101,32 @@ void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6).array().abs();
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6).array().abs();
   const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(6).array().abs();
-  const pinocchio::SE3 ref_placement = pinocchio::SE3::Random();
-  const Eigen::Vector3d position_ref = ref_placement.translation();
-  const Eigen::Matrix3d rotation_ref = ref_placement.rotation();
-  auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id);
+  const Eigen::Vector3d q0_ref = Eigen::Vector3d::Random();
+  const Eigen::Vector3d v_ref = Eigen::Vector3d::Random();
+  auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>(q0_ref, v_ref, t0, tf);
+  auto cost = std::make_shared<TimeVaryingTaskSpace6DCost>(robot, frame_id, ref);
+
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
   cost->set_q_weight(q_weight.tail(3), q_weight.head(3));
   cost->set_qf_weight(qf_weight.tail(3), qf_weight.head(3));
   cost->set_qi_weight(qi_weight.tail(3), qi_weight.head(3));
-  cost->set_q_6d_ref(position_ref, rotation_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
+
+  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t0-dt, dt, s), 0);
+  EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, tf+dt, dt, s), 0);
+  cost->computeStageCostDerivatives(robot, data, t0-dt, dt, s, kkt_res);
+  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
+  cost->computeStageCostDerivatives(robot, data, tf+dt, dt, s, kkt_res);
+  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
+  cost->computeStageCostHessian(robot, data, t0-dt, dt, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  cost->computeStageCostHessian(robot, data, tf+dt, dt, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+
+  const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
+  const pinocchio::SE3 ref_placement = pinocchio::SE3(Eigen::Matrix3d::Identity(), q_ref);
   const pinocchio::SE3 placement = robot.framePlacement(frame_id);
   const pinocchio::SE3 diff_SE3 = ref_placement.inverse() * placement;
   const Eigen::VectorXd diff_6d = pinocchio::log6(diff_SE3).toVector();
@@ -88,7 +149,7 @@ void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const 
 }
 
 
-void TaskSpace6DCostTest::testTerminalCost(Robot& robot, const int frame_id) const {
+void TimeVaryingTaskSpace6DCostTest::testTerminalCost(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
   SplitKKTMatrix kkt_mat(robot);
   SplitKKTResidual kkt_res(robot);
@@ -105,18 +166,32 @@ void TaskSpace6DCostTest::testTerminalCost(Robot& robot, const int frame_id) con
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6).array().abs();
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6).array().abs();
   const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(6).array().abs();
-  const pinocchio::SE3 ref_placement = pinocchio::SE3::Random();
-  const Eigen::Vector3d position_ref = ref_placement.translation();
-  const Eigen::Matrix3d rotation_ref = ref_placement.rotation();
-  auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id);
+  const Eigen::Vector3d q0_ref = Eigen::Vector3d::Random();
+  const Eigen::Vector3d v_ref = Eigen::Vector3d::Random();
+  auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>(q0_ref, v_ref, t0, tf);
+  auto cost = std::make_shared<TimeVaryingTaskSpace6DCost>(robot, frame_id, ref);
+
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
   cost->set_q_weight(q_weight.tail(3), q_weight.head(3));
   cost->set_qf_weight(qf_weight.tail(3), qf_weight.head(3));
   cost->set_qi_weight(qi_weight.tail(3), qi_weight.head(3));
-  cost->set_q_6d_ref(position_ref, rotation_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
+
+  EXPECT_DOUBLE_EQ(cost->computeTerminalCost(robot, data, t0-dt, s), 0);
+  EXPECT_DOUBLE_EQ(cost->computeTerminalCost(robot, data, tf+dt, s), 0);
+  cost->computeTerminalCostDerivatives(robot, data, t0-dt, s, kkt_res);
+  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
+  cost->computeTerminalCostDerivatives(robot, data, tf+dt, s, kkt_res);
+  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
+  cost->computeTerminalCostHessian(robot, data, t0-dt, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  cost->computeTerminalCostHessian(robot, data, tf+dt, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+
+  const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
+  const pinocchio::SE3 ref_placement = pinocchio::SE3(Eigen::Matrix3d::Identity(), q_ref);
   const pinocchio::SE3 placement = robot.framePlacement(frame_id);
   const pinocchio::SE3 diff_SE3 = ref_placement.inverse() * placement;
   const Eigen::VectorXd diff_6d = pinocchio::log6(diff_SE3).toVector();
@@ -139,7 +214,7 @@ void TaskSpace6DCostTest::testTerminalCost(Robot& robot, const int frame_id) con
 }
 
 
-void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) const {
+void TimeVaryingTaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
   ImpulseSplitKKTMatrix kkt_mat(robot);
   ImpulseSplitKKTResidual kkt_res(robot);
@@ -154,18 +229,32 @@ void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6).array().abs();
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6).array().abs();
   const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(6).array().abs();
-  const pinocchio::SE3 ref_placement = pinocchio::SE3::Random();
-  const Eigen::Vector3d position_ref = ref_placement.translation();
-  const Eigen::Matrix3d rotation_ref = ref_placement.rotation();
-  auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id);
+  const Eigen::Vector3d q0_ref = Eigen::Vector3d::Random();
+  const Eigen::Vector3d v_ref = Eigen::Vector3d::Random();
+  auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>(q0_ref, v_ref, t0, tf);
+  auto cost = std::make_shared<TimeVaryingTaskSpace6DCost>(robot, frame_id, ref);
+
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
   cost->set_q_weight(q_weight.tail(3), q_weight.head(3));
   cost->set_qf_weight(qf_weight.tail(3), qf_weight.head(3));
   cost->set_qi_weight(qi_weight.tail(3), qi_weight.head(3));
-  cost->set_q_6d_ref(position_ref, rotation_ref);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
+
+  EXPECT_DOUBLE_EQ(cost->computeImpulseCost(robot, data, t0-dt, s), 0);
+  EXPECT_DOUBLE_EQ(cost->computeImpulseCost(robot, data, tf+dt, s), 0);
+  cost->computeImpulseCostDerivatives(robot, data, t0-dt, s, kkt_res);
+  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
+  cost->computeImpulseCostDerivatives(robot, data, tf+dt, s, kkt_res);
+  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
+  cost->computeImpulseCostHessian(robot, data, t0-dt, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  cost->computeImpulseCostHessian(robot, data, tf+dt, s, kkt_mat);
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+
+  const Eigen::Vector3d q_ref = q0_ref + (t-t0) * v_ref;
+  const pinocchio::SE3 ref_placement = pinocchio::SE3(Eigen::Matrix3d::Identity(), q_ref);
   const pinocchio::SE3 placement = robot.framePlacement(frame_id);
   const pinocchio::SE3 diff_SE3 = ref_placement.inverse() * placement;
   const Eigen::VectorXd diff_6d = pinocchio::log6(diff_SE3).toVector();
@@ -188,7 +277,7 @@ void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
 }
 
 
-TEST_F(TaskSpace6DCostTest, fixedBase) {
+TEST_F(TimeVaryingTaskSpace6DCostTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   const int frame_id = robot.contactFrames()[0];
   testStageCost(robot, frame_id);
@@ -197,7 +286,7 @@ TEST_F(TaskSpace6DCostTest, fixedBase) {
 }
 
 
-TEST_F(TaskSpace6DCostTest, floatingBase) {
+TEST_F(TimeVaryingTaskSpace6DCostTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   const std::vector<int> frames = robot.contactFrames();
   for (const auto frame_id : frames) {

@@ -122,24 +122,24 @@ public:
   void deactivateImpulse(const int contact_index);
 
   ///
-  /// @brief Activates impulse.
-  /// @param[in] contact_indices Indices of the impulses that are activated.
+  /// @brief Activates impulses.
+  /// @param[in] impulse_indices Indices of the impulses that are activated.
   ///
   void activateImpulses(const std::vector<int>& impulse_indices);
 
   ///
-  /// @brief Activates all impulse.
+  /// @brief Activates all impulses.
   ///
   void activateImpulses();
 
   ///
-  /// @brief Deactivates impulse.
-  /// @param[in] contact_indices Indices of the impulses that are deactivated.
+  /// @brief Deactivates impulses.
+  /// @param[in] impulse_indices Indices of the impulses that are deactivated.
   ///
   void deactivateImpulses(const std::vector<int>& impulse_indices);
 
   ///
-  /// @brief Deactivates all impulse.
+  /// @brief Deactivates all impulses.
   ///
   void deactivateImpulses();
 
@@ -159,11 +159,11 @@ public:
   void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
 
   ///
-  /// @brief Gets contact point.
-  /// @param[in] contact_indices Indices of the contacts that are activated.
+  /// @brief Gets contact point of impulse.
+  /// @param[in] impulse_index Index of the impulse.
   /// @return const reference to the contact points. 
   ///
-  const Eigen::Vector3d& contactPoint(const int contact_index) const;
+  const Eigen::Vector3d& contactPoint(const int impulse_index) const;
 
   ///
   /// @brief Gets contact points.

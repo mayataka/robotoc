@@ -70,6 +70,7 @@ public:
   /// computed by the current solution. 
   /// @param[in] robots std::vector of Robot.
   /// @param[in] parnmpc Optimal control problem.
+  /// @param[in] t Initial time of the horizon. 
   /// @param[in] s Solution. 
   ///
   void initAuxMat(std::vector<Robot>& robots, UnParNMPC& parnmpc, 

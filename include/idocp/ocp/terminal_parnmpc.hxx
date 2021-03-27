@@ -180,7 +180,7 @@ inline double TerminalParNMPC::squaredNormKKTResidual(
   error += kkt_residual.lu().squaredNorm();
   error += stateequation::squaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dt);
-  error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
+  error += dt * dt * constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
   return error;
 }
 

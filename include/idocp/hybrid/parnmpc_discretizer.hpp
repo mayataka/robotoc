@@ -22,7 +22,7 @@ public:
   /// @param[in] N Ideal number of the discretization grids of the horizon. 
   /// Note that the actual number of the grids can differ from this value 
   /// depending on the discrete events.
-  /// @param[in] max_num_events Maximum number of each discrete events 
+  /// @param[in] max_events Maximum number of each discrete events 
   /// (impulse and lift). 
   ///
   ParNMPCDiscretizer(const double T, const int N, const int max_events);
@@ -106,7 +106,7 @@ public:
 
   ///
   /// @brief Returns the contact phase before the lift. 
-  /// @param[in] impulse_index Index of the lift of interest. 
+  /// @param[in] lift_index Index of the lift of interest. 
   /// @return Contact phase before the lift. 
   ///
   int contactPhaseBeforeLift(const int lift_index) const;
@@ -155,14 +155,14 @@ public:
 
   ///
   /// @brief Returns the time stage before the lift. 
-  /// @param[in] impulse_index Index of the lift of interest. 
+  /// @param[in] lift_index Index of the lift of interest. 
   /// @return Time stage before the lift. 
   ///
   int timeStageBeforeLift(const int lift_index) const;
 
   ///
   /// @brief Returns the time stage after the lift. 
-  /// @param[in] impulse_index Index of the lift of interest. 
+  /// @param[in] lift_index Index of the lift of interest. 
   /// @return Time stage after the lift. 
   ///
   int timeStageAfterLift(const int lift_index) const;
@@ -211,7 +211,7 @@ public:
 
   ///
   /// @brief Returns the time of the lift. 
-  /// @param[in] impulse_index Index of lift of interest. 
+  /// @param[in] lift_index Index of lift of interest. 
   /// @return Time of the lift of interest.
   ///
   double t_lift(const int lift_index) const;

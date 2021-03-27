@@ -222,7 +222,6 @@ double costSlackBarrier(
 /// @param[in] constraints Vector of the impulse constraints. 
 /// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
-/// @param[in] data Constraint data.
 /// @param[in] s Split solution.
 ///
 template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>

@@ -426,14 +426,14 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
   robot.updateKinematics(q, v);
-  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(), residual.head(impulse_status.dimf()));
+  robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), residual.head(impulse_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   int num_active_impulse = 0;
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      contacts_ref[i].computeContactResidual(
+      contacts_ref[i].computeContactPositionResidual(
         model, data, impulse_status.contactPoints()[i], 
         residual_ref.segment<3>(3*num_active_impulse));
         ++num_active_impulse;

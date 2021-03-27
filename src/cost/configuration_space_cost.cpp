@@ -53,11 +53,6 @@ ConfigurationSpaceCost::~ConfigurationSpaceCost() {
 }
 
 
-bool ConfigurationSpaceCost::useKinematics() const {
-  return false;
-}
-
-
 void ConfigurationSpaceCost::set_q_ref(const Eigen::VectorXd& q_ref) {
   try {
     if (q_ref.size() != dimq_) {
@@ -235,6 +230,11 @@ void ConfigurationSpaceCost::set_dvi_weight(const Eigen::VectorXd& dvi_weight) {
     std::exit(EXIT_FAILURE);
   }
   dvi_weight_ = dvi_weight;
+}
+
+
+bool ConfigurationSpaceCost::useKinematics() const {
+  return false;
 }
 
 

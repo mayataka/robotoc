@@ -75,7 +75,7 @@ public:
   ///
   void backwardRiccatiRecursion(UnKKTMatrix& unkkt_matrix, 
                                 UnKKTResidual& unkkt_residual,
-                                UnRiccatiFactorization& ricccati_factorization);
+                                UnRiccatiFactorization& riccati_factorization);
 
   ///
   /// @brief Performs the forward Riccati recursion and computes the direction.

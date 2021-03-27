@@ -148,7 +148,7 @@ public:
   /// @brief Updates dual variables of the inequality constraints.
   /// @param[in] dual_step_size Dula step size.
   ///
-  void updateDual(const double step_size);
+  void updateDual(const double dual_step_size);
 
   ///
   /// @brief Computes the KKT residual of this terminal stage.

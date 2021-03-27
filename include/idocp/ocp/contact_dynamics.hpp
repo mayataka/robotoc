@@ -96,6 +96,7 @@ public:
   /// @brief Condenses the contact dynamics constraint. 
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
+  /// @param[in] dt Time step of this time stage. 
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   /// @param[in] is_forward_euler If true, the forward Euler is used. If false,
@@ -120,6 +121,7 @@ public:
   /// @brief Computes the Newton direction of the condensed dual variables of 
   /// this time stage.
   /// @param[in] robot Robot model. 
+  /// @param[in] dt Time step of this time stage. 
   /// @param[in] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in] dgmm Direction of the costate of the next time stage.
@@ -152,7 +154,7 @@ public:
 
   ///
   /// @brief Returns l1-norm of the residual in the contact dynamics constraint. 
-  /// @param[in] kkt_residual Split KKT residual of this time stage.
+  /// @param[in] dt Time step of this time stage. 
   /// @return l1-norm of the residual in the contact dynamics constraint.
   ///
   double l1NormContactDynamicsResidual(const double dt) const;
@@ -160,7 +162,7 @@ public:
   ///
   /// @brief Returns squared norm of the residual in the contact dynamics 
   /// constraint. 
-  /// @param[in] kkt_residual Split KKT residual of this time stage.
+  /// @param[in] dt Time step of this time stage. 
   /// @return Squared norm of the residual in the contact dynamics constraint.
   ///
   double squaredNormContactDynamicsResidual(const double dt) const;

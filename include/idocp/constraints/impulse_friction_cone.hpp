@@ -63,11 +63,15 @@ public:
   ///
   ImpulseFrictionCone& operator=(ImpulseFrictionCone&&) noexcept = default;
 
+  ///
+  /// @brief Sets the friction coefficient. 
+  /// @param[in] mu Friction coefficient. Must be positive.
+  ///
   void setFrictionCoefficient(const double mu);
 
   KinematicsLevel kinematicsLevel() const override;
 
-  void allocateExtraData(ConstraintComponentData& data) const;
+  void allocateExtraData(ConstraintComponentData& data) const override;
 
   bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                   const ImpulseSplitSolution& s) const override;

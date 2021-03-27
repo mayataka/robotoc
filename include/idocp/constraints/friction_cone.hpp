@@ -63,13 +63,17 @@ public:
   ///
   FrictionCone& operator=(FrictionCone&&) noexcept = default;
 
+  ///
+  /// @brief Sets the friction coefficient. 
+  /// @param[in] mu Friction coefficient. Must be positive.
+  ///
   void setFrictionCoefficient(const double mu);
 
   bool useKinematics() const override;
 
   KinematicsLevel kinematicsLevel() const override;
 
-  void allocateExtraData(ConstraintComponentData& data) const;
+  void allocateExtraData(ConstraintComponentData& data) const override;
 
   bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                   const SplitSolution& s) const override;

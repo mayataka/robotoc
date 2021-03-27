@@ -188,7 +188,7 @@ public:
   /// be 3.
   /// 
   template <typename VectorType1, typename VectorType2>
-  void computeContactResidual(
+  void computeContactPositionResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
       const Eigen::MatrixBase<VectorType1>& contact_point,
       const Eigen::MatrixBase<VectorType2>& contact_residual) const;

@@ -17,7 +17,7 @@ namespace idocp {
 
 ///
 /// @class ContactForceCost
-/// @brief Quadratic cost on the contact forces expressed in the local frames.
+/// @brief Cost on the contact forces expressed in the local frames.
 ///
 class ContactForceCost final : public CostFunctionComponentBase {
 public:
@@ -73,7 +73,7 @@ public:
 
   ///
   /// @brief Sets the reference impulse forces expressed in the local frames. 
-  /// @param[in] f_ref Reference impulse forces expressed in the local frames. 
+  /// @param[in] fi_ref Reference impulse forces expressed in the local frames. 
   /// Size must be Robot::maxPointContacts().
   ///
   void set_fi_ref(const std::vector<Eigen::Vector3d>& fi_ref);

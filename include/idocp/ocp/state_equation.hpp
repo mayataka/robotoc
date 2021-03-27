@@ -63,6 +63,7 @@ void linearizeForwardEulerTerminal(
 ///
 /// @brief Condenses terms related to the derivatives of the Lie group from the 
 /// linearized state equation of forward Euler at the terminal stage. 
+/// @param[in] robot Robot model. 
 /// @param[in, out] kkt_matrix Split KKT matrix at the current time stage. 
 ///
 void condenseForwardEulerTerminal(Robot& robot, SplitKKTMatrix& kkt_matrix);

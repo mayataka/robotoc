@@ -80,7 +80,7 @@ public:
   /// @param[in] time_stage Time stage.
   /// @param[in] s Split solution of this time stage.
   ///
-  void initConstraints(Robot& robot, const int time_step, 
+  void initConstraints(Robot& robot, const int time_stage, 
                        const SplitSolution& s);
 
   ///

@@ -62,11 +62,12 @@ public:
 
   ///
   /// @brief Coarse updates the split solution of this time stage. 
-  /// @param[in] dt Time stage of time stage. 
   /// @param[in] aux_mat_next Auxiliary matrix of the next time stage. 
-  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage. 
-  /// @param[in] kkt_residual Split KKT residual of this time stage. 
+  /// @param[in] dt Time stage of time stage. 
+  /// @param[in, out] unkkt_matrix Split KKT matrix of this time stage. 
+  /// @param[in] unkkt_residual Split KKT residual of this time stage. 
   /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] d Split direction of this time stage.
   /// @param[in, out] s_new Coarse updated split solution of this time stage.
   ///
   template <typename MatrixType>
@@ -83,6 +84,7 @@ public:
   /// @param[in, out] unkkt_matrix Split KKT matrix of this time stage. 
   /// @param[in] unkkt_residual Split KKT residual of this time stage. 
   /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] d Split direction of this time stage.
   /// @param[in, out] s_new Coarse updated split solution of this time stage.
   ///
   void coarseUpdate(const double dt, SplitUnKKTMatrix& unkkt_matrix, 

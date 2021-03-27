@@ -61,8 +61,9 @@ inline void ForwardSwitchingConstraint::computeSwitchingConstraintResidual(
   dq_ = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   robot.integrateConfiguration(s.q, dq_, 1.0, q_);
   robot.updateKinematics(q_);
-  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(), 
-                               kkt_residual.P());
+  robot.computeContactPositionResidual(impulse_status, 
+                                       impulse_status.contactPoints(), 
+                                       kkt_residual.P());
 }
 
 

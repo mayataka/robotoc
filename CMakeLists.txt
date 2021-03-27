@@ -34,13 +34,14 @@ add_library(
   src/cost/cost_function_data.cpp
   src/cost/cost_function_component_base.cpp
   src/cost/configuration_space_cost.cpp
-  src/cost/time_varying_configuration_space_cost.cpp
-  src/cost/contact_force_cost.cpp
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
+  src/cost/com_cost.cpp
+  src/cost/contact_force_cost.cpp
+  src/cost/time_varying_configuration_space_cost.cpp
   src/cost/time_varying_task_space_3d_cost.cpp
   src/cost/time_varying_task_space_6d_cost.cpp
-  src/cost/trotting_configuration_space_cost.cpp
+  src/cost/time_varying_com_cost.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
   src/constraints/constraints_impl.cpp

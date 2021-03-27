@@ -67,8 +67,8 @@ int main(int argc, char *argv[]) {
   const int ee_frame_id = 22; 
   auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>();
   auto task_cost = std::make_shared<idocp::TimeVaryingTaskSpace6DCost>(robot, ee_frame_id, ref);
-  task_cost->set_q_6d_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
-  task_cost->set_qf_6d_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
+  task_cost->set_q_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
+  task_cost->set_qf_weight(Eigen::Vector3d::Constant(1000), Eigen::Vector3d::Constant(1000));
   cost->push_back(task_cost);
 
   // Create joint constraints.

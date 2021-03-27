@@ -346,7 +346,7 @@ inline void Robot::computeImpulseVelocityDerivatives(
 
 
 template <typename VectorType>
-inline void Robot::computeContactResidual(
+inline void Robot::computeContactPositionResidual(
     const ImpulseStatus& impulse_status, 
     const std::vector<Eigen::Vector3d>& contact_points,
     const Eigen::MatrixBase<VectorType>& contact_residual) const {
@@ -355,7 +355,7 @@ inline void Robot::computeContactResidual(
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      point_contacts_[i].computeContactResidual(
+      point_contacts_[i].computeContactPositionResidual(
           model_, data_, contact_points[i],
           (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
               .template segment<3>(3*num_active_impulse));

@@ -32,11 +32,6 @@ ContactForceCost::~ContactForceCost() {
 }
 
 
-bool ContactForceCost::useKinematics() const {
-  return false;
-}
-
-
 void ContactForceCost::set_f_ref(const std::vector<Eigen::Vector3d>& f_ref) {
   try {
     if (f_ref.size() != max_point_contacts_) {
@@ -100,6 +95,11 @@ void ContactForceCost::set_fi_weight(
     std::exit(EXIT_FAILURE);
   }
   fi_weight_ = fi_weight;
+}
+
+
+bool ContactForceCost::useKinematics() const {
+  return false;
 }
 
 

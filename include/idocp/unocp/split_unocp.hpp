@@ -81,7 +81,7 @@ public:
   /// @param[in] time_stage Time stage.
   /// @param[in] s Split solution of this time stage.
   ///
-  void initConstraints(Robot& robot, const int time_step, 
+  void initConstraints(Robot& robot, const int time_stage, 
                        const SplitSolution& s);
 
   ///
@@ -152,8 +152,6 @@ public:
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] s_next Split solution of the next time stage.
-  /// @param[in, out] unkkt_matrix Split KKT matrix of this time stage.
-  /// @param[in, out] unkkt_residual Split KKT residual of this time stage.
   ///
   void computeKKTResidual(Robot& robot, const double t, const double dt, 
                           const Eigen::VectorXd& q_prev, const SplitSolution& s, 

@@ -1,8 +1,7 @@
-#ifndef IDOCP_TASK_SPACE_6D_COST_HPP_
-#define IDOCP_TASK_SPACE_6D_COST_HPP_
+#ifndef IDOCP_COM_COST_HPP_
+#define IDOCP_COM_COST_HPP_
 
 #include "Eigen/Core"
-#include "pinocchio/spatial/se3.hpp"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function_component_base.hpp"
@@ -18,81 +17,70 @@
 namespace idocp {
 
 ///
-/// @class TaskSpace6DCost
-/// @brief Cost on the task space placement (SE(3)). 
+/// @class CoMCost
+/// @brief Cost on the position of the center of mass. 
 ///
-class TaskSpace6DCost final : public CostFunctionComponentBase {
+class CoMCost final : public CostFunctionComponentBase {
 public:
-  using Vector6d = Eigen::Matrix<double, 6, 1>;
-
   ///
   /// @brief Constructor. 
   /// @param[in] robot Robot model.
-  /// @param[in] frame_id Frame of interest.
   ///
-  TaskSpace6DCost(const Robot& robot, const int frame_id);
+  CoMCost(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  TaskSpace6DCost();
+  CoMCost();
 
   ///
   /// @brief Destructor. 
   ///
-  ~TaskSpace6DCost();
+  ~CoMCost();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  TaskSpace6DCost(const TaskSpace6DCost&) = default;
+  CoMCost(const CoMCost&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  TaskSpace6DCost& operator=(const TaskSpace6DCost&) = default;
+  CoMCost& operator=(const CoMCost&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  TaskSpace6DCost(TaskSpace6DCost&&) noexcept = default;
+  CoMCost(CoMCost&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  TaskSpace6DCost& operator=(TaskSpace6DCost&&) noexcept = default;
+  CoMCost& operator=(CoMCost&&) noexcept = default;
 
   ///
-  /// @brief Sets the reference pose. 
-  /// @param[in] position_ref Reference position.
-  /// @param[in] rotation_mat_ref Reference rotation matrix.
+  /// @brief Sets the reference position of the center of mass. 
+  /// @param[in] CoM_ref Reference position of the center of mass.
   ///
-  void set_q_6d_ref(const Eigen::Vector3d& position_ref, 
-                    const Eigen::Matrix3d& rotation_mat_ref);
+  void set_CoM_ref(const Eigen::Vector3d& CoM_ref);
 
   ///
-  /// @brief Sets the weight vectors. 
-  /// @param[in] position_weight Weight vector on the position error. 
-  /// @param[in] rotation_weight Weight vector on the rotation error. 
+  /// @brief Sets the weight vector. 
+  /// @param[in] q_weight Weight vector on the CoM position error. 
   ///
-  void set_q_weight(const Eigen::Vector3d& position_weight, 
-                       const Eigen::Vector3d& rotation_weight);
+  void set_q_weight(const Eigen::Vector3d& q_weight);
 
   ///
-  /// @brief Sets the terminal weight vectors. 
-  /// @param[in] position_weight Temrinal weight vector on the position error. 
-  /// @param[in] rotation_weight Temrinal weight vector on the rotation error. 
+  /// @brief Sets the terminal weight vector. 
+  /// @param[in] qf_weight Terminal weight vector on the CoM position error. 
   ///
-  void set_qf_weight(const Eigen::Vector3d& position_weight, 
-                        const Eigen::Vector3d& rotation_weight);
+  void set_qf_weight(const Eigen::Vector3d& qf_weight);
 
   ///
-  /// @brief Sets the weight vectors at impulse. 
-  /// @param[in] position_weight Weight vector on the position error at impulse. 
-  /// @param[in] rotation_weight Weight vector on the rotation error at impulse. 
+  /// @brief Sets the weight vector at impulse. 
+  /// @param[in] qi_weight Weight vector on the CoM position error at impulse. 
   ///
-  void set_qi_weight(const Eigen::Vector3d& position_weight, 
-                        const Eigen::Vector3d& rotation_weight);
+  void set_qi_weight(const Eigen::Vector3d& qi_weight);
 
   bool useKinematics() const override;
 
@@ -138,13 +126,11 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  int frame_id_;
-  pinocchio::SE3 SE3_ref_, SE3_ref_inv_;
-  Eigen::VectorXd q_6d_weight_, qf_6d_weight_, qi_6d_weight_;
+  Eigen::Vector3d CoM_ref_, q_weight_, qf_weight_, qi_weight_;
 
 };
 
 } // namespace idocp
 
 
-#endif // IDOCP_TASK_SPACE_6D_COST_HPP_
+#endif // IDOCP_COM_COST_HPP_ 

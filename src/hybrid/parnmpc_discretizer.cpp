@@ -27,6 +27,7 @@ void ParNMPCDiscretizer::showInfo() const {
     }
     std::cout << "i = " << i << ": t = " << t(i) << ": dt = " << dt(i) << std::endl; 
   }
+  std::cout << "-------------------------------------------------------------" << std::endl;
 }
 
 } // namespace idocp 

@@ -20,8 +20,9 @@ inline void linearizeSwitchingConstraint(
 inline void computeSwitchingConstraintResidual(
     Robot& robot, const ImpulseStatus& impulse_status,
     SplitKKTResidual& kkt_residual) {
-  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(),
-                               kkt_residual.P());
+  robot.computeContactPositionResidual(impulse_status, 
+                                       impulse_status.contactPoints(),
+                                       kkt_residual.P());
 }
 
 

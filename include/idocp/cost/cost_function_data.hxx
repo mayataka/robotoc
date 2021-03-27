@@ -6,7 +6,7 @@
 namespace idocp {
 
 inline CostFunctionData::CostFunctionData(const Robot& robot) 
-  : qdiff(),
+  : qdiff(Eigen::VectorXd::Zero(robot.dimv())),
     q_ref(Eigen::VectorXd::Zero(robot.dimq())),
     q_3d_ref(Eigen::VectorXd::Zero(3)),
     diff_3d(Eigen::VectorXd::Zero(3)),

@@ -28,6 +28,7 @@ void OCPDiscretizer::showInfo() const {
     }
   }
   std::cout << "i = " << N() << ": t = " << t(N()) << std::endl; 
+  std::cout << "---------------------------------------------------------" << std::endl;
 }
 
 } // namespace idocp 

@@ -119,6 +119,7 @@ public:
 
   ///
   /// @brief Performs the serial part of the forward correction. 
+  /// @param[in] robot Robot model. 
   /// @param[in] s_prev Split solution of the previous time stage.
   /// @param[in] s_new_prev Coarse updated split solution of the previous time 
   /// stage.

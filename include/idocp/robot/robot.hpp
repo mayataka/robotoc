@@ -189,7 +189,7 @@ public:
   /// with respect to q_minus. 
   /// @param[in] q_plus Configuration. Size must be Robot::dimq().
   /// @param[in] q_minus Configuration. Size must be Robot::dimq().
-  /// @param[out] dsubtract_dqplus The partial derivative of the subtraction. 
+  /// @param[out] dsubtract_dqminus The partial derivative of the subtraction. 
   /// Size must be Robot::dimv() x Robot::dimv().
   ///
   template <typename ConfigVectorType1, typename ConfigVectorType2, 
@@ -203,7 +203,7 @@ public:
   /// @brief Computes the inverse of the partial derivative of the function of 
   /// subtraction. Before calling this function, call 
   /// dSubtractdConfigurationPlus() or dSubtractdConfigurationMinus().
-  /// @param[out] dsubtract_dq The partial derivative of the subtraction. 
+  /// @param[in] dsubtract_dq The partial derivative of the subtraction. 
   /// Size must be larger than 6 x 6.
   /// @param[out] dsubtract_dq_inv The inverse of the partial derivative of the 
   /// subtraction. Size must be larger than 6 x 6.
@@ -211,7 +211,7 @@ public:
   template <typename MatrixType1, typename MatrixType2>
   void dSubtractdConfigurationInverse(
       const Eigen::MatrixBase<MatrixType1>& dsubtract_dq,
-      const Eigen::MatrixBase<MatrixType2>& dSubtract_dq_inv);
+      const Eigen::MatrixBase<MatrixType2>& dsubtract_dq_inv);
 
   ///
   /// @brief Updates the kinematics of the robot. The frame placements, frame 
@@ -354,7 +354,7 @@ public:
   /// @param[in] impulse_status Impulse status.
   /// @param[out] velocity_partial_dq The partial derivative with respect to the 
   /// configuaration. Size must be ImpulseStatus::dimf() x Robot::dimv(). 
-  /// @param[out] velocity_partial_dq The partial derivative with respect to the 
+  /// @param[out] velocity_partial_dv The partial derivative with respect to the 
   /// velocity. Size must be ImpulseStatus::dimf() x Robot::dimv().
   ///
   template <typename MatrixType1, typename MatrixType2>
@@ -373,7 +373,7 @@ public:
   /// Size must be ImpulseStatus::dimf().
   ///
   template <typename VectorType>
-  void computeContactResidual(
+  void computeContactPositionResidual(
       const ImpulseStatus& impulse_status, 
       const std::vector<Eigen::Vector3d>& contact_points,
       const Eigen::MatrixBase<VectorType>& contact_residual) const;

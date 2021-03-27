@@ -307,11 +307,11 @@ void PointContactTest::testContactResidual(pinocchio::Model& model, pinocchio::D
   residual.setZero();
   residual_ref.setZero();
   const Eigen::Vector3d contact_point = Eigen::Vector3d::Random();
-  contact.computeContactResidual(model, data, contact_point, residual);
+  contact.computeContactPositionResidual(model, data, contact_point, residual);
   residual_ref = (data.oMf[contact_frame_id].translation()-contact_point);
   EXPECT_TRUE(residual.isApprox(residual_ref));
   Eigen::VectorXd residuals = Eigen::VectorXd::Zero(10);
-  contact.computeContactResidual(model, data, contact_point, residuals.segment<3>(5));
+  contact.computeContactPositionResidual(model, data, contact_point, residuals.segment<3>(5));
   EXPECT_TRUE(residuals.head(5).isZero());
   EXPECT_TRUE(residuals.segment<3>(5).isApprox(residual_ref));
   EXPECT_TRUE(residuals.tail(2).isZero());

@@ -65,7 +65,7 @@ public:
   /// @param[in, out] kkt_matrix KKT matrix. 
   /// @param[in, out] kkt_residual KKT residual. 
   /// @param[in] jac Jacobian of the switching constraints. 
-  /// @param[out, out] factorization Riccati factorization. 
+  /// @param[in, out] factorization Riccati factorization. 
   ///
   void backwardRiccatiRecursion(const OCP& ocp, KKTMatrix& kkt_matrix, 
                                 KKTResidual& kkt_residual, 
@@ -106,6 +106,7 @@ public:
   /// RiccatiRecursionSolver::forwardRiccatiRecursion().
   /// @param[in] ocp Optimal control problem.
   /// @param[in] robots std::vector of Robot.
+  /// @param[in] factorization Riccati factorization. 
   /// @param[in] s Solution. 
   /// @param[in, out] d Direction. 
   ///
