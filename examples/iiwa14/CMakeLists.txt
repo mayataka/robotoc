@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(idocp_examples_iiwa14 CXX)
+project(idocp_examples_iiwa11 CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -86,7 +86,6 @@ if (ENABLE_VIEWER)
         ENABLE_VIEWER    
     )
 endif()
-
 
 add_executable(
     task_space_ocp

@@ -17,10 +17,8 @@ find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(pinocchio REQUIRED)
 # find OpenMP
 find_package(OpenMP REQUIRED)
-if(OpenMP_FOUND)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 # build idocp 
 add_library(
   ${PROJECT_NAME} 
@@ -131,6 +129,7 @@ add_library(
   src/utils/derivative_checker.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp
+  src/utils/logger.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 
@@ -146,7 +145,7 @@ target_include_directories(
   ${EIGEN3_INCLUDE_DIR}
   ${Boost_INCLUDE_DIR}
   ${PINOCCHIO_INCLUDE_DIRS}
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
 
@@ -154,24 +153,28 @@ target_include_directories(
 ## Build viewer ##
 ##################
 if (BUILD_VIEWER) 
-  # find pinocchio-gepetto-viewer
-  find_package(pinocchio-gepetto-viewer REQUIRED)
-  set(pinocchio-gepetto-viewer_LIBDIR ${pinocchio-gepetto-viewer_DIR}/../..)
-  set(pinocchio-gepetto-viewer_LIBRARIES ${pinocchio-gepetto-viewer_LIBDIR}/libpinocchio-gepetto-viewer.so)
+  include(${PROJECT_SOURCE_DIR}/cmake/pinocchio-gepetto-viewer.cmake) 
+  find_package(PkgConfig)
+  pkg_check_modules(gepetto-viewer REQUIRED gepetto-viewer)
+  pkg_check_modules(gepetto-viewer-corba REQUIRED gepetto-viewer-corba)
   target_sources(
     ${PROJECT_NAME} 
     PRIVATE
     src/utils/trajectory_viewer.cpp
+    src/third-party/viewer.cpp
   )
   target_link_libraries(
     ${PROJECT_NAME} 
     PUBLIC
-    ${pinocchio-gepetto-viewer_LIBRARIES}
+    ${gepetto-viewer_LINK_LIBRARIES}
+    ${gepetto-viewer-corba_LINK_LIBRARIES}
   )
   target_include_directories(
     ${PROJECT_NAME} 
     PUBLIC
-    ${pinocchio-gepetto-viewer_INCLUDE_DIRS}
+    ${gepetto-viewer_INCLUDE_DIRS}
+    ${gepetto-viewer-corba_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/idocp/third-party>
   )
 endif() # end if (BUILD_VIEWER)
 

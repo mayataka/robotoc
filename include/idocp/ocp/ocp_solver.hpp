@@ -100,9 +100,14 @@ public:
   ///
   /// @brief Get the solution vector over the horizon. 
   /// @param[in] name Name of the variable. 
+  /// @param[in] option Option for the solution. If name == "f" and 
+  /// option == "WORLD", the contact forces expressed in the world frame is 
+  /// returned. if option is set to other values, these expressed in the local
+  /// frame are returned.
   /// @return Solution vector.
   ///
-  std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
+  std::vector<Eigen::VectorXd> getSolution(const std::string& name,
+                                           const std::string& option="") const;
 
   ///
   /// @brief Gets the state-feedback gain.

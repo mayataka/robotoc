@@ -113,7 +113,7 @@ const SplitSolution& ParNMPCSolver::getSolution(const int stage) const {
 
 
 std::vector<Eigen::VectorXd> ParNMPCSolver::getSolution(
-    const std::string& name) const {
+    const std::string& name, const std::string& option) const {
   std::vector<Eigen::VectorXd> sol;
   if (name == "q") {
     for (int i=0; i<parnmpc_.discrete().N(); ++i) {
@@ -131,11 +131,24 @@ std::vector<Eigen::VectorXd> ParNMPCSolver::getSolution(
     }
   }
   if (name == "f") {
+    Robot robot = robots_[0];
     for (int i=0; i<parnmpc_.discrete().N(); ++i) {
-      Eigen::VectorXd f(Eigen::VectorXd::Zero(robots_[0].max_dimf()));
-      for (int j=0; j<robots_[0].maxPointContacts(); ++i) {
-        if (s_[i].isContactActive(j)) {
-          f.template segment<3>(3*j) = s_[i].f[j];
+      Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
+      if (option == "WORLD") {
+        robot.updateFrameKinematics(s_[i].q);
+        for (int j=0; j<robot.maxPointContacts(); ++i) {
+          if (s_[i].isContactActive(j)) {
+            const int contact_frame = robot.contactFrames()[j];
+            f.template segment<3>(3*j).noalias() 
+                = robot.frameRotation(contact_frame) * s_[i].f[j];
+          }
+        }
+      }
+      else {
+        for (int j=0; j<robot.maxPointContacts(); ++i) {
+          if (s_[i].isContactActive(j)) {
+            f.template segment<3>(3*j) = s_[i].f[j];
+          }
         }
       }
       sol.push_back(f);
