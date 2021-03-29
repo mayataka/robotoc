@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 #include <memory>
 
@@ -7,8 +6,9 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/parnmpc_solver.hpp"
 #include "idocp/cost/cost_function.hpp"
-#include "idocp/cost/trotting_configuration_space_cost.hpp"
-#include "idocp/cost/contact_force_cost.hpp"
+#include "idocp/cost/configuration_space_cost.hpp"
+#include "idocp/cost/time_varying_task_space_3d_cost.hpp"
+#include "idocp/cost/time_varying_com_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 #include "idocp/constraints/joint_position_upper_limit.hpp"
@@ -16,8 +16,8 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
-#include "idocp/constraints/linearized_friction_cone.hpp"
-#include "idocp/constraints/linearized_impulse_friction_cone.hpp"
+#include "idocp/constraints/friction_cone.hpp"
+#include "idocp/constraints/impulse_friction_cone.hpp"
 
 #include "idocp/utils/ocp_benchmarker.hpp"
 
@@ -25,15 +25,26 @@
 #include "idocp/utils/trajectory_viewer.hpp"
 #endif 
 
+#include "periodic_foot_track_ref.hpp"
+#include "periodic_com_ref.hpp"
+
 
 int main(int argc, char *argv[]) {
-  std::vector<int> contact_frames = {14, 24, 34, 44}; // LF, LH, RF, RH
+  const int LF_foot_id = 14;
+  const int LH_foot_id = 24;
+  const int RF_foot_id = 34;
+  const int RH_foot_id = 44;
+  std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; // LF, LH, RF, RH
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
-  idocp::Robot robot(path_to_urdf, contact_frames);
+  const double baumgarte_time_step = 0.04;
+  idocp::Robot robot(path_to_urdf, contact_frames, baumgarte_time_step);
 
   const double step_length = 0.15;
-  const double t_start = 0.5;
-  const double t_period = 0.5;
+  const double step_height = 0.1;
+  const double period_swing = 0.5;
+  const double period_double_support = 0.04;
+  const double t0 = period_double_support;
+  const int num_steps = 4;
 
   auto cost = std::make_shared<idocp::CostFunction>();
   Eigen::VectorXd q_standing(Eigen::VectorXd::Zero(robot.dimq()));
@@ -43,50 +54,81 @@ int main(int argc, char *argv[]) {
                  0.1,  0.7, -1.0, 
                  0.1, -0.7,  1.0;
   Eigen::VectorXd q_weight(Eigen::VectorXd::Zero(robot.dimv()));
-  q_weight << 10, 10, 10, 10, 10, 10, 
-              10, 10, 10,
-              10, 10, 10,
-              10, 10, 10,
-              10, 10, 10;
+  q_weight << 0, 0, 0, 250000, 250000, 250000, 
+              0.0001, 0.0001, 0.0001, 
+              0.0001, 0.0001, 0.0001,
+              0.0001, 0.0001, 0.0001,
+              0.0001, 0.0001, 0.0001;
   Eigen::VectorXd v_weight(Eigen::VectorXd::Zero(robot.dimv()));
-  v_weight << 1, 1, 1, 1, 1, 1, 
-              0.1, 0.1, 0.1,
-              0.1, 0.1, 0.1,
-              0.1, 0.1, 0.1,
-              0.1, 0.1, 0.1;
-  Eigen::VectorXd a_weight(Eigen::VectorXd::Zero(robot.dimv()));
-  a_weight << 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
-              0.01, 0.01, 0.01,
-              0.01, 0.01, 0.01,
-              0.01, 0.01, 0.01,
-              0.01, 0.01, 0.01;
-
-  idocp::TrottingSwingAngles swing_angles;
-  swing_angles.front_swing_knee   = 1.7; 
-  swing_angles.hip_swing_knee     = 1.7;
-  auto config_cost = std::make_shared<idocp::TrottingConfigurationSpaceCost>(robot);
-  config_cost->set_ref(t_start, t_period, q_standing, step_length, swing_angles);
+  v_weight << 100, 100, 100, 100, 100, 100, 
+              1, 1, 1, 
+              1, 1, 1,
+              1, 1, 1,
+              1, 1, 1;
+  Eigen::VectorXd u_weight = Eigen::VectorXd::Constant(robot.dimu(), 1e-01);
+  Eigen::VectorXd qi_weight(Eigen::VectorXd::Zero(robot.dimv()));
+  qi_weight << 1, 1, 1, 1, 1, 1,  
+               100, 100, 100, 
+               100, 100, 100,
+               100, 100, 100,
+               100, 100, 100;
+  Eigen::VectorXd vi_weight = Eigen::VectorXd::Constant(robot.dimv(), 100);
+  Eigen::VectorXd a_weight = Eigen::VectorXd::Constant(robot.dimv(), 1e-01);
+  Eigen::VectorXd dvi_weight = Eigen::VectorXd::Constant(robot.dimv(), 1e-01);
+  auto config_cost = std::make_shared<idocp::ConfigurationSpaceCost>(robot);
+  config_cost->set_q_ref(q_standing);
   config_cost->set_q_weight(q_weight);
   config_cost->set_qf_weight(q_weight);
   config_cost->set_qi_weight(q_weight);
   config_cost->set_v_weight(v_weight);
   config_cost->set_vf_weight(v_weight);
   config_cost->set_vi_weight(v_weight);
-  config_cost->set_a_weight(a_weight);
-  config_cost->set_dvi_weight(a_weight);
+  config_cost->set_u_weight(u_weight);
+  // config_cost->set_a_weight(a_weight);
+  // config_cost->set_dvi_weight(a_weight);
   cost->push_back(config_cost);
 
-  auto contact_cost = std::make_shared<idocp::ContactForceCost>(robot);
-  std::vector<Eigen::Vector3d> f_weight;
-  for (int i=0; i<contact_frames.size(); ++i) {
-    Eigen::Vector3d fw; 
-    fw << 0.001, 0.001, 0.001;
-    f_weight.push_back(fw);
-  }
-  contact_cost->set_f_weight(f_weight);
-  contact_cost->set_fi_weight(f_weight);
-  contact_cost->set_f_ref(robot);
-  cost->push_back(contact_cost);
+  robot.updateFrameKinematics(q_standing);
+  const Eigen::Vector3d q0_3d_LF = robot.framePosition(LF_foot_id);
+  const Eigen::Vector3d q0_3d_LH = robot.framePosition(LH_foot_id);
+  const Eigen::Vector3d q0_3d_RF = robot.framePosition(RF_foot_id);
+  const Eigen::Vector3d q0_3d_RH = robot.framePosition(RH_foot_id);
+  const double LF_t0 = t0 + period_swing + period_double_support;
+  const double LH_t0 = t0;
+  const double RF_t0 = t0;
+  const double RH_t0 = t0 + period_swing + period_double_support;
+  auto LF_foot_ref = std::make_shared<idocp::PeriodicFootTrackRef>(q0_3d_LF, step_length, step_height, LF_t0, period_swing, 
+                                                                   period_swing+period_double_support, false);
+  auto LH_foot_ref = std::make_shared<idocp::PeriodicFootTrackRef>(q0_3d_LH, step_length, step_height, LH_t0, period_swing, 
+                                                                   period_swing+period_double_support, true);
+  auto RF_foot_ref = std::make_shared<idocp::PeriodicFootTrackRef>(q0_3d_RF, step_length, step_height, RF_t0, period_swing, 
+                                                                   period_swing+period_double_support, true);
+  auto RH_foot_ref = std::make_shared<idocp::PeriodicFootTrackRef>(q0_3d_RH, step_length, step_height, RH_t0, period_swing, 
+                                                                   period_swing+period_double_support, false);
+  auto LF_cost = std::make_shared<idocp::TimeVaryingTaskSpace3DCost>(robot, LF_foot_id, LF_foot_ref);
+  auto LH_cost = std::make_shared<idocp::TimeVaryingTaskSpace3DCost>(robot, LH_foot_id, LH_foot_ref);
+  auto RF_cost = std::make_shared<idocp::TimeVaryingTaskSpace3DCost>(robot, RF_foot_id, RF_foot_ref);
+  auto RH_cost = std::make_shared<idocp::TimeVaryingTaskSpace3DCost>(robot, RH_foot_id, RH_foot_ref);
+  const Eigen::Vector3d foot_track_weight = Eigen::Vector3d::Constant(1.0e06);
+  LF_cost->set_q_weight(foot_track_weight);
+  LH_cost->set_q_weight(foot_track_weight);
+  RF_cost->set_q_weight(foot_track_weight);
+  RH_cost->set_q_weight(foot_track_weight);
+  cost->push_back(LF_cost);
+  cost->push_back(LH_cost);
+  cost->push_back(RF_cost);
+  cost->push_back(RH_cost);
+
+  Eigen::Vector3d CoM_ref0 = (q0_3d_LF + q0_3d_LH + q0_3d_RF + q0_3d_RH) / 4;
+  robot.updateKinematics(q_standing);
+  CoM_ref0(2) = robot.CoM()(2);
+  Eigen::Vector3d v_CoM_ref = Eigen::Vector3d::Zero();
+  v_CoM_ref.coeffRef(0) = 0.5 * step_length / period_swing;
+  auto com_ref = std::make_shared<idocp::PeriodicCoMRef>(CoM_ref0, v_CoM_ref, t0, 2*period_swing, 
+                                                         period_double_support, true);
+  auto com_cost = std::make_shared<idocp::TimeVaryingCoMCost>(robot, com_ref);
+  com_cost->set_q_weight(Eigen::Vector3d::Constant(1.0e06));
+  cost->push_back(com_cost);
 
   auto constraints           = std::make_shared<idocp::Constraints>();
   auto joint_position_lower  = std::make_shared<idocp::JointPositionLowerLimit>(robot);
@@ -95,47 +137,53 @@ int main(int argc, char *argv[]) {
   auto joint_velocity_upper  = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower   = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper   = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
+  const double mu = 0.7;
+  auto friction_cone         = std::make_shared<idocp::FrictionCone>(robot, mu);
+  auto impulse_friction_cone = std::make_shared<idocp::ImpulseFrictionCone>(robot, mu);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
   constraints->push_back(joint_velocity_upper);
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
+  constraints->push_back(friction_cone);
+  constraints->push_back(impulse_friction_cone);
 
-  const double T = 1.55; // t_start + max_num_impulse_phase * t_period + 0.05;
-  const int N = 60;
-  const int max_num_impulse_phase = 2;
+  const double T = t0+2*period_double_support+2*period_swing;
+  const int N = 56; 
+  const int max_num_impulse_phase = 4;
 
-  const int nthreads = 6;
+  const int nthreads = 4;
   const double t = 0;
-  idocp::ParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, max_num_impulse_phase, nthreads);
+  idocp::ParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, max_num_impulse_phase+1, nthreads);
 
-  robot.updateFrameKinematics(q_standing);
-  std::vector<Eigen::Vector3d> contact_points(robot.maxPointContacts(), Eigen::Vector3d::Zero());
-  robot.getContactPoints(contact_points);
+  std::vector<Eigen::Vector3d> contact_points = {q0_3d_LF, q0_3d_LH, q0_3d_RF, q0_3d_RH};
   auto contact_status_initial = robot.createContactStatus();
   contact_status_initial.activateContacts({0, 1, 2, 3});
   contact_status_initial.setContactPoints(contact_points);
   parnmpc_solver.setContactStatusUniformly(contact_status_initial);
 
   auto contact_status_even = robot.createContactStatus();
-  contact_status_even.activateContacts({1, 2});
+  contact_status_even.activateContacts({0, 3});
   contact_status_even.setContactPoints(contact_points);
-  parnmpc_solver.pushBackContactStatus(contact_status_even, t_start);
+  parnmpc_solver.pushBackContactStatus(contact_status_even, t0);
+
+  contact_points[1].coeffRef(0) += 0.5 * step_length;
+  contact_points[2].coeffRef(0) += 0.5 * step_length;
+  contact_status_initial.setContactPoints(contact_points);
+  parnmpc_solver.pushBackContactStatus(contact_status_initial, t0+period_swing);
 
   auto contact_status_odd = robot.createContactStatus();
-  contact_points[0].coeffRef(0) += 0.5 * step_length;
-  contact_points[3].coeffRef(0) += 0.5 * step_length;
-  contact_status_odd.activateContacts({0, 3});
+  contact_status_odd.activateContacts({1, 2});
   contact_status_odd.setContactPoints(contact_points);
-  parnmpc_solver.pushBackContactStatus(contact_status_odd, t_start+t_period);
+  parnmpc_solver.pushBackContactStatus(contact_status_odd, t0+period_swing+period_double_support);
 
-  Eigen::VectorXd q(Eigen::VectorXd::Zero(robot.dimq()));
-  q << 0, 0, 0.4792, 0, 0, 0, 1, 
-       -0.1,  0.7, -1.0, // LF
-       -0.1, -0.7,  1.0, // LH
-        0.1,  0.7, -1.0, // RF
-        0.1, -0.7,  1.0; // RH
+  contact_points[0].coeffRef(0) += step_length;
+  contact_points[3].coeffRef(0) += step_length;
+  contact_status_initial.setContactPoints(contact_points);
+  parnmpc_solver.pushBackContactStatus(contact_status_initial, t0+2*period_swing+period_double_support);
+
+  Eigen::VectorXd q(q_standing);
   Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 
   parnmpc_solver.setSolution("q", q);
@@ -143,19 +191,18 @@ int main(int argc, char *argv[]) {
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   parnmpc_solver.setSolution("f", f_init);
+  parnmpc_solver.setSolution("lmd", f_init);
 
   parnmpc_solver.initConstraints(t);
-  parnmpc_solver.initBackwardCorrection(t);
 
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 180, line_search);
-  idocp::ocpbenchmarker::CPUTime(parnmpc_solver, t, q, v);
+  idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 20, line_search);
 
 #ifdef ENABLE_VIEWER
   idocp::TrajectoryViewer viewer(path_to_urdf);
   const double dt = T/N;
-  viewer.display(robot, mu, ocp_solver.getSolution("q"), 
-                 ocp_solver.getSolution("f", "WORLD"),  dt);
+  viewer.display(robot, parnmpc_solver.getSolution("q"), 
+                 parnmpc_solver.getSolution("f", "WORLD"), dt, mu);
 #endif 
 
   return 0;

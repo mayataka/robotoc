@@ -17,8 +17,7 @@
 - Ubuntu 18.04 or 20.04
 - gcc (at least C++11 is required), CMake (at least version 3.1)
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  
-- [pinocchio](https://github.com/stack-of-tasks/pinocchio) (instruction for installation is found [here](https://stack-of-tasks.github.io/pinocchio/download.html))
-- [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) (Optional to visualize the solution trajectory) 
+- [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git), [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer) (Optional to visualize the solution trajectory) 
 
 ## Installation 
 1. Install the latest stable version of Eigen3 by 
@@ -44,9 +43,13 @@ make -j$(nproc)
 make install
 ```
 
-6. If you want to visualize the solution trajectory of the OCP, first install [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) e.g., by
+6. If you want to visualize the solution trajectory of the OCP, first install [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git) and [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer), e.g., by
 ```
 sudo apt update && sudo apt install robotpkg-py38-qt5-gepetto-viewer-corba -y
+git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive && cd pinocchio-gepetto-viewer
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make install
 ```
 and change the CMake configuration of `idocp` as 
 ```
