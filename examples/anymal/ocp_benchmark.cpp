@@ -21,10 +21,6 @@
 
 #include "idocp/utils/ocp_benchmarker.hpp"
 
-#ifdef ENABLE_VIEWER
-#include "idocp/utils/trajectory_viewer.hpp"
-#endif 
-
 
 int main () {
   // Create a robot with contacts.
@@ -126,14 +122,6 @@ int main () {
 
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 10, false);
   idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 5000, false);
-
-#ifdef ENABLE_VIEWER
-
-  idocp::TrajectoryViewer viewer(path_to_urdf);
-  const double dt = T/N;
-  viewer.display(robot, ocp_solver.getSolution("q"), 
-                 ocp_solver.getSolution("f", "WORLD"), dt, mu);
-#endif 
 
   return 0;
 }

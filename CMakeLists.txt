@@ -157,6 +157,7 @@ if (BUILD_VIEWER)
   find_package(PkgConfig)
   pkg_check_modules(gepetto-viewer REQUIRED gepetto-viewer)
   pkg_check_modules(gepetto-viewer-corba REQUIRED gepetto-viewer-corba)
+  pkg_check_modules(hpp-fcl REQUIRED hpp-fcl)
   target_sources(
     ${PROJECT_NAME} 
     PRIVATE
@@ -168,13 +169,20 @@ if (BUILD_VIEWER)
     PUBLIC
     ${gepetto-viewer_LINK_LIBRARIES}
     ${gepetto-viewer-corba_LINK_LIBRARIES}
+    ${hpp-fcl_LINK_LIBRARIES}
   )
   target_include_directories(
     ${PROJECT_NAME} 
     PUBLIC
     ${gepetto-viewer_INCLUDE_DIRS}
     ${gepetto-viewer-corba_INCLUDE_DIRS}
+    ${hpp-fcl_INCLUDE_DIRS}
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/idocp/third-party>
+  )
+  target_compile_definitions(
+    ${PROJECT_NAME} 
+    PRIVATE
+    PINOCCHIO_WITH_HPP_FCL
   )
 endif() # end if (BUILD_VIEWER)
 

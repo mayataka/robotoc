@@ -31,11 +31,11 @@ public:
 
   ~TimeVaryingTaskSpace6DRef() {}
 
-  void update_SE3_ref(const double t, pinocchio::SE3& se3_ref) const override {
+  void update_SE3_ref(const double t, pinocchio::SE3& SE3_ref) const override {
     Eigen::Vector3d pos(pos0_);
     pos.coeffRef(1) += radius_ * sin(M_PI*t);
     pos.coeffRef(2) += radius_ * cos(M_PI*t);
-    se3_ref = pinocchio::SE3(rotm_, pos);
+    SE3_ref = pinocchio::SE3(rotm_, pos);
   }
 
   bool isActive(const double t) const override {
@@ -96,11 +96,7 @@ int main(int argc, char *argv[]) {
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);
 
 #ifdef ENABLE_VIEWER
-  // idocp::TrajectoryViewer viewer(path_to_urdf);
-  idocp::TrajectoryViewer viewer(
-      "/home/ohtsukalab/src/idocp/examples/iiwa14/iiwa_description/urdf/iiwa14.urdf",
-      "/home/ohtsukalab/src/idocp/examples/iiwa14");
-  
+  idocp::TrajectoryViewer viewer(path_to_urdf);
   const double dt = T/N;
   viewer.display(ocp_solver.getSolution("q"), dt);
 #endif 

@@ -83,9 +83,9 @@ void TrajectoryViewer::display(const std::vector<Eigen::VectorXd>& q_traj,
   }
 
   auto gui = gepetto::viewer::corba::gui();
-  const auto window_id = gui->createWindow("idocp::TrajectoryViewer");
-  gui->createScene("hpp-gui");
-  gui->addSceneToWindow("hpp-gui", window_id);
+  // const auto window_id = gui->createWindow("idocp::TrajectoryViewer");
+  // gui->createScene("hpp-gui");
+  // gui->addSceneToWindow("hpp-gui", window_id);
   viewer.loadViewerModel("hpp-gui");
   for (int i=0; i<model_.nframes; ++i) {
     viewer.addFrame(i);
@@ -120,9 +120,9 @@ void TrajectoryViewer::display(Robot& robot,
   }
 
   auto gui = gepetto::viewer::corba::gui();
-  const auto window_id = gui->createWindow("idocp::TrajectoryViewer");
-  gui->createScene("hpp-gui");
-  gui->addSceneToWindow("hpp-gui", window_id);
+  // const auto window_id = gui->createWindow("idocp::TrajectoryViewer");
+  // gui->createScene("hpp-gui");
+  // gui->addSceneToWindow("hpp-gui", window_id);
   viewer.loadViewerModel("hpp-gui");
   for (int i=0; i<model_.nframes; ++i) {
     viewer.addFrame(i);

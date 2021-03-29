@@ -1,31 +1,24 @@
 cmake_minimum_required(VERSION 3.1)
-project(idocp_examples_anymal CXX)
+project(idocp_examples_ANYmal CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(idocp REQUIRED)
 
 add_executable(
-    ocp_benchmark
-    ocp_benchmark.cpp
+  ocp_benchmark
+  ocp_benchmark.cpp
 )
 target_link_libraries(
-    ocp_benchmark
-    PRIVATE
-    idocp::idocp
+  ocp_benchmark
+  PRIVATE
+  idocp::idocp
 )
 target_include_directories(
-    ocp_benchmark
-    PRIVATE
-    ${IDOCP_INCLUDE_DIR}
+  ocp_benchmark
+  PRIVATE
+  ${IDOCP_INCLUDE_DIR}
 )
-if (ENABLE_VIEWER)
-    target_compile_definitions(
-        ocp_benchmark
-        PRIVATE
-        ENABLE_VIEWER    
-    )
-endif()
 
 # add_executable(
 #     anymal_trotting
@@ -94,25 +87,25 @@ endif()
 # endif()
 
 add_executable(
-    parnmpc_benchmark
-    parnmpc_benchmark.cpp
+  parnmpc_benchmark
+   parnmpc_benchmark.cpp
 )
 target_link_libraries(
-    parnmpc_benchmark
-    PRIVATE
-    idocp::idocp
+  parnmpc_benchmark
+  PRIVATE
+  idocp::idocp
 )
 target_include_directories(
-    parnmpc_benchmark
-    PRIVATE
-    ${IDOCP_INCLUDE_DIR}
+  parnmpc_benchmark
+  PRIVATE
+  ${IDOCP_INCLUDE_DIR}
 )
 if (ENABLE_VIEWER)
-    target_compile_definitions(
-        parnmpc_benchmark
-        PRIVATE
-        ENABLE_VIEWER    
-    )
+  target_compile_definitions(
+    parnmpc_benchmark
+    PRIVATE
+    ENABLE_VIEWER    
+  )
 endif()
 
 # add_executable(
