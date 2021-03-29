@@ -136,7 +136,7 @@ std::vector<Eigen::VectorXd> ParNMPCSolver::getSolution(
       Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
       if (option == "WORLD") {
         robot.updateFrameKinematics(s_[i].q);
-        for (int j=0; j<robot.maxPointContacts(); ++i) {
+        for (int j=0; j<robot.maxPointContacts(); ++j) {
           if (s_[i].isContactActive(j)) {
             const int contact_frame = robot.contactFrames()[j];
             f.template segment<3>(3*j).noalias() 
@@ -145,7 +145,7 @@ std::vector<Eigen::VectorXd> ParNMPCSolver::getSolution(
         }
       }
       else {
-        for (int j=0; j<robot.maxPointContacts(); ++i) {
+        for (int j=0; j<robot.maxPointContacts(); ++j) {
           if (s_[i].isContactActive(j)) {
             f.template segment<3>(3*j) = s_[i].f[j];
           }

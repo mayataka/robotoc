@@ -21,12 +21,17 @@
 
 #include "idocp/utils/ocp_benchmarker.hpp"
 
+#ifdef ENABLE_VIEWER
+#include "idocp/utils/trajectory_viewer.hpp"
+#endif 
+
 
 int main () {
   // Create a robot with contacts.
   std::vector<int> contact_frames = {14, 24, 34, 44}; // LF, LH, RF, RH
-  const std::string urdf_file_name = "../anymal_b_simple_description/urdf/anymal.urdf";
-  idocp::Robot robot(urdf_file_name, contact_frames);
+  const double baumgarte_time_step = 0.5 / 20;
+  const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
+  idocp::Robot robot(path_to_urdf, contact_frames, baumgarte_time_step);
 
   // Create a cost function.
   auto cost = std::make_shared<idocp::CostFunction>();
@@ -109,7 +114,7 @@ int main () {
   auto contact_status = robot.createContactStatus();
   contact_status.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q);
-  robot.setContactPoints(contact_status);
+  robot.getContactPoints(contact_status);
   parnmpc_solver.setContactStatusUniformly(contact_status);
   parnmpc_solver.setSolution("q", q);
   parnmpc_solver.setSolution("v", v);
@@ -121,6 +126,13 @@ int main () {
 
   idocp::ocpbenchmarker::Convergence(parnmpc_solver, t, q, v, 20, false);
   idocp::ocpbenchmarker::CPUTime(parnmpc_solver, t, q, v, 5000, false);
+
+#ifdef ENABLE_VIEWER
+  idocp::TrajectoryViewer viewer(path_to_urdf);
+  const double dt = T/N;
+  viewer.display(robot, parnmpc_solver.getSolution("q"), 
+                 parnmpc_solver.getSolution("f", "WORLD"), dt, mu);
+#endif 
 
   return 0;
 }

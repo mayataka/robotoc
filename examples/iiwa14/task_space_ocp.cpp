@@ -26,7 +26,7 @@ public:
                0, 1, 0,
               -1, 0, 0;
     pos0_ << 0.546, 0, 0.76;
-    radius_ = 0.1;
+    radius_ = 0.05;
   }
 
   ~TimeVaryingTaskSpace6DRef() {}
@@ -61,11 +61,11 @@ int main(int argc, char *argv[]) {
   // Create a cost function.
   auto cost = std::make_shared<idocp::CostFunction>();
   auto config_cost = std::make_shared<idocp::ConfigurationSpaceCost>(robot);
-  config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
-  config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
-  config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
-  config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.01));
+  config_cost->set_q_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
+  config_cost->set_qf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.1));
+  config_cost->set_v_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
+  config_cost->set_vf_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
+  config_cost->set_a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.0001));
   cost->push_back(config_cost);
   const int ee_frame_id = 22; 
   auto ref = std::make_shared<TimeVaryingTaskSpace6DRef>();
@@ -96,7 +96,11 @@ int main(int argc, char *argv[]) {
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);
 
 #ifdef ENABLE_VIEWER
-  idocp::TrajectoryViewer viewer(path_to_urdf);
+  // idocp::TrajectoryViewer viewer(path_to_urdf);
+  idocp::TrajectoryViewer viewer(
+      "/home/ohtsukalab/src/idocp/examples/iiwa14/iiwa_description/urdf/iiwa14.urdf",
+      "/home/ohtsukalab/src/idocp/examples/iiwa14");
+  
   const double dt = T/N;
   viewer.display(ocp_solver.getSolution("q"), dt);
 #endif 

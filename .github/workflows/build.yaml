@@ -37,22 +37,6 @@ jobs:
           sudo apt update
           sudo apt install -qqy robotpkg-py38-pinocchio
           sudo apt install -qqy robotpkg-py38-qt5-gepetto-viewer-corba
-      - name: Install pinocchio-gepetto-viewer
-        run: |
-          export PATH=/opt/openrobots/bin:$PATH >> ~/.bashrc
-          export PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH 
-          export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH 
-          export PYTHONPATH=/opt/openrobots/lib/python2.7/site-packages:$PYTHONPATH 
-          export PYTHONPATH=/opt/openrobots/lib/python3.8/site-packages:$PYTHONPATH 
-          export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH 
-          git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
-          cd pinocchio-gepetto-viewer
-          git checkout 86deae3adcbe64d6873cd09b7e5e3e73227eb647 
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
-          sudo make install
-          cd ../..
       - name: Install lcov
         run: |
           sudo apt-get update -y
@@ -74,6 +58,6 @@ jobs:
         if: 'success()'
         run: |
           lcov --capture --directory . --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' '/opt/*' '"${HOME}"/.cache/*' '*/googletest/*' '*/test/*' '*/c++/*' '*/pinocchio/*' --output-file coverage.info
+          lcov --remove coverage.info '/usr/*' '/opt/*' '"${HOME}"/.cache/*' '*/googletest/*' '*/test/*' '*/c++/*' '*/pinocchio/*' '*/third-party/*' --output-file coverage.info
           lcov --list coverage.info
           bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"

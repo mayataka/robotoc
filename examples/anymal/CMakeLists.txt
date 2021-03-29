@@ -19,72 +19,79 @@ target_include_directories(
     PRIVATE
     ${IDOCP_INCLUDE_DIR}
 )
-
-add_executable(
-    anymal_trotting
-    anymal_trotting.cpp
-)
-target_link_libraries(
-    anymal_trotting
-    PRIVATE
-    idocp::idocp
-)
-target_include_directories(
-    anymal_trotting
-    PRIVATE
-    ${IDOCP_INCLUDE_DIR}
-)
 if (ENABLE_VIEWER)
     target_compile_definitions(
-        anymal_trotting
+        ocp_benchmark
         PRIVATE
         ENABLE_VIEWER    
     )
 endif()
 
-add_executable(
-    anymal_jumping
-    anymal_jumping.cpp
-)
-target_link_libraries(
-    anymal_jumping
-    PRIVATE
-    idocp::idocp
-)
-target_include_directories(
-    anymal_jumping
-    PRIVATE
-    ${IDOCP_INCLUDE_DIR}
-)
-if (ENABLE_VIEWER)
-    target_compile_definitions(
-        anymal_jumping
-        PRIVATE
-        ENABLE_VIEWER    
-    )
-endif()
+# add_executable(
+#     anymal_trotting
+#     anymal_trotting.cpp
+# )
+# target_link_libraries(
+#     anymal_trotting
+#     PRIVATE
+#     idocp::idocp
+# )
+# target_include_directories(
+#     anymal_trotting
+#     PRIVATE
+#     ${IDOCP_INCLUDE_DIR}
+# )
+# if (ENABLE_VIEWER)
+#     target_compile_definitions(
+#         anymal_trotting
+#         PRIVATE
+#         ENABLE_VIEWER    
+#     )
+# endif()
 
-add_executable(
-    anymal_running
-    anymal_running.cpp
-)
-target_link_libraries(
-    anymal_running
-    PRIVATE
-    idocp::idocp
-)
-target_include_directories(
-    anymal_running
-    PRIVATE
-    ${IDOCP_INCLUDE_DIR}
-)
-if (ENABLE_VIEWER)
-    target_compile_definitions(
-        anymal_running
-        PRIVATE
-        ENABLE_VIEWER    
-    )
-endif()
+# add_executable(
+#     anymal_jumping
+#     anymal_jumping.cpp
+# )
+# target_link_libraries(
+#     anymal_jumping
+#     PRIVATE
+#     idocp::idocp
+# )
+# target_include_directories(
+#     anymal_jumping
+#     PRIVATE
+#     ${IDOCP_INCLUDE_DIR}
+# )
+# if (ENABLE_VIEWER)
+#     target_compile_definitions(
+#         anymal_jumping
+#         PRIVATE
+#         ENABLE_VIEWER    
+#     )
+# endif()
+
+# add_executable(
+#     anymal_running
+#     anymal_running.cpp
+# )
+# target_link_libraries(
+#     anymal_running
+#     PRIVATE
+#     idocp::idocp
+# )
+# target_include_directories(
+#     anymal_running
+#     PRIVATE
+#     ${IDOCP_INCLUDE_DIR}
+# )
+# if (ENABLE_VIEWER)
+#     target_compile_definitions(
+#         anymal_running
+#         PRIVATE
+#         ENABLE_VIEWER    
+#     )
+# endif()
 
 add_executable(
     parnmpc_benchmark
@@ -100,25 +107,32 @@ target_include_directories(
     PRIVATE
     ${IDOCP_INCLUDE_DIR}
 )
-
-add_executable(
-    anymal_trotting_parnmpc
-    anymal_trotting_parnmpc.cpp
-)
-target_link_libraries(
-    anymal_trotting_parnmpc
-    PRIVATE
-    idocp::idocp
-)
-target_include_directories(
-    anymal_trotting_parnmpc
-    PRIVATE
-    ${IDOCP_INCLUDE_DIR}
-)
 if (ENABLE_VIEWER)
     target_compile_definitions(
-        anymal_trotting_parnmpc
+        parnmpc_benchmark
         PRIVATE
         ENABLE_VIEWER    
     )
 endif()
+
+# add_executable(
+#     anymal_trotting_parnmpc
+#     anymal_trotting_parnmpc.cpp
+# )
+# target_link_libraries(
+#     anymal_trotting_parnmpc
+#     PRIVATE
+#     idocp::idocp
+# )
+# target_include_directories(
+#     anymal_trotting_parnmpc
+#     PRIVATE
+#     ${IDOCP_INCLUDE_DIR}
+# )
+# if (ENABLE_VIEWER)
+#     target_compile_definitions(
+#         anymal_trotting_parnmpc
+#         PRIVATE
+#         ENABLE_VIEWER    
+#     )
+# endif()

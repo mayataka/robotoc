@@ -6,7 +6,6 @@
 
 #include "Eigen/Core"
 #include "pinocchio/multibody/model.hpp"
-#include "pinocchio/multibody/data.hpp"
 #include "gepetto/viewer/corba/client.hh"
 
 #include "idocp/robot/robot.hpp"
@@ -14,20 +13,74 @@
 
 namespace idocp {
 
+///
+/// @class TrajectoryViewer
+/// @brief Viewer of the solution trajectory of the optimal control problems
+/// based on gepetto-viewer-corba and pinocchio-gepetto-viewer.
+///
 class TrajectoryViewer {
 public:
-  TrajectoryViewer(const std::string& description_pkg_serach_path, 
-                   const std::string& path_to_urdf);
+  ///
+  /// @brief Constructs the viewer.
+  /// @param[in] path_to_urdf Path to the URDF.
+  /// @param[in] path_to_pkg Path to the robot description packages.
+  ///
+  TrajectoryViewer(const std::string& path_to_urdf, 
+                   const std::string& path_to_pkg);
 
+  ///
+  /// @brief Constructs the viewer. The path to the robot description packages 
+  /// is constructed by assuming that the URDF file lies as 
+  /// "*/description_pkd_dir/urdf_dir/path_to_urdf".
+  /// @param[in] path_to_urdf Path to the URDF.
+  ///
   TrajectoryViewer(const std::string& path_to_urdf);
 
+  ///
+  /// @brief Displays the solution trajectory.
+  /// @param[in] q_traj Std vector of the solution trajectory of the
+  /// configuration q. (e.g., returned value of OCPSolver::getSolution("q") or
+  /// ParNMPCSolver::getSolution("q")).
+  /// @param[in] sampling_period_in_sec Sampling period.
+  ///
   void display(const std::vector<Eigen::VectorXd>& q_traj, 
                const double sampling_period_in_sec);
 
-  void display(Robot& robot, const double mu, 
-               const std::vector<Eigen::VectorXd>& q_traj, 
+  ///
+  /// @brief Displays the solution trajectory with contact forces and friction
+  /// cones (optional).
+  /// @param[in] robot Robot model.
+  /// @param[in] q_traj Std vector of the solution trajectory of the
+  /// configuration q. (returned value of OCPSolver::getSolution("q") or
+  /// ParNMPCSolver::getSolution("q"))
+  /// @param[in] f_traj Std vector of the solution trajectory of the stack of 
+  /// the contact forces expressed in the world frame f. If the contact is 
+  /// inactive, the corresponding contact force must be set as 3D zero-vector.
+  /// (e.g., returned value of OCPSolver::getSolution("f", "WORLD") or
+  /// ParNMPCSolver::getSolution("f", "WORLD")).
+  /// @param[in] sampling_period_in_sec Sampling period.
+  /// @param[in] mu Friction coefficient. If set by a positive value, the 
+  /// friction cones are also displayed. If set by zero, they are not displayed.
+  /// Default is zero.
+  ///
+  void display(Robot& robot, const std::vector<Eigen::VectorXd>& q_traj, 
                const std::vector<Eigen::VectorXd>& f_traj,
-               const double sampling_period_in_sec);
+               const double sampling_period_in_sec,
+               const double mu=0);
+
+  ///
+  /// @brief Sets the camera transform. 
+  /// @param[in] position Position of the camera. 
+  /// @param[in] quat Quaternion of rotation of the camera.
+  ///
+  void setCameraTransform(const Eigen::Vector3d& position,
+                          const Eigen::Vector4d& quat);
+
+  ///
+  /// @brief Sets the camera transform to the default position. 
+  ///
+  void setCameraTransformDefault();
+
 
   Eigen::Matrix3d rotationMatrix(const Eigen::Vector3d& vec) const {
     const Eigen::Vector3d vec_nrmrzd = vec.normalized();
@@ -47,12 +100,11 @@ public:
   }
 
 private:
-  std::string description_pkg_serach_path_, path_to_urdf_;
   pinocchio::Model model_;
   pinocchio::GeometryModel vmodel_;
   double force_radius_, force_length_, friction_cone_scale_;
   Eigen::Vector3d x_axis_;
-  gepetto::corbaserver::Color cone_color_;
+  gepetto::corbaserver::Color force_color_, cone_color_;
 
   void setForceProperties();
   void setFrictionConeProperties();
