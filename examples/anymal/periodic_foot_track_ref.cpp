@@ -61,10 +61,10 @@ void PeriodicFootTrackRef::update_q_3d_ref(const double t,
 
 bool PeriodicFootTrackRef::isActive(const double t) const {
   for (int i=0; ; ++i) {
-    if (t < t0_+2*i*period_) {
+    if (t < t0_+i*period_) {
       return false;
     }
-    if (t < t0_+2*i*period_+period_swing_) {
+    if (t < t0_+i*period_+period_swing_) {
       return true;
     }
   }

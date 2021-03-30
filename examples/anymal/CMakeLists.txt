@@ -22,6 +22,9 @@ macro(add_benchmark BENCHMARK)
   )
 endmacro()
 
+add_benchmark(ocp_benchmark)
+add_benchmark(parnmpc_benchmark)
+
 add_library(
   anymal_costs  
   SHARED
@@ -64,9 +67,8 @@ macro(add_example EXAMPLE)
   endif()
 endmacro()
 
-add_benchmark(ocp_benchmark)
-add_benchmark(parnmpc_benchmark)
-add_example(anymal_trotting)
-# add_example(anymal_trotting_parnmpc)
-# add_example(anymal_jumping)
-# add_example(anymal_running)
+add_example(trotting)
+add_example(walking)
+add_example(pacing)
+add_example(jumping)
+add_example(running)

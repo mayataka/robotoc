@@ -43,6 +43,8 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
   const int dimKKT = 4*robot.dimv() + robot.dimu();
 
   auto kkt_matrix = testhelper::CreateSplitKKTMatrix(robot, dt);
+  kkt_matrix.Qux().setZero();
+  kkt_matrix.Qvq().setZero();
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual = testhelper::CreateSplitKKTResidual(robot);
   auto kkt_residual_ref = kkt_residual;
@@ -53,26 +55,18 @@ void SplitBackwardCorrectionTest::test(const Robot& robot) const {
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_new = SplitSolution::Random(robot);
   SplitSolution s_new_ref = s_new;
-  std::cout << "before coarseUpdate()" << std::endl;
   auto kkt_mat_tmp = kkt_matrix;
   kkt_mat_tmp.Qvq() = kkt_mat_tmp.Qqv().transpose();
-  kkt_mat_tmp.Qux() = kkt_mat_tmp.Qxu().transpose();
   std::cout << "kkt_mat_tmp.Qss()" << std::endl;
   std::cout << kkt_mat_tmp.Qss() << std::endl;
-  Eigen::LLT<Eigen::MatrixXd> llt_ref(kkt_mat_tmp.Qss());
-  ASSERT_TRUE(llt_ref.info() == Eigen::Success);
 
   corr.coarseUpdate(robot, dt, aux_mat_next, kkt_matrix, kkt_residual, s, s_new);
-  std::cout << "after coarseUpdate()" << std::endl;
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
   kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
-  kkt_matrix_ref.Qux() = kkt_matrix_ref.Qxu().transpose();
   kkt_matrix_ref.Qxx() += aux_mat_next;
   SplitKKTMatrixInverter inverter(robot);
-  std::cout << "before invert()" << std::endl;
   inverter.invert(dt, kkt_matrix.Jac(), kkt_matrix.Qss(), KKT_mat_inv);
-  std::cout << "after invert()" << std::endl;
   Eigen::VectorXd d0_ref = KKT_mat_inv * kkt_residual.splitKKTResidual();
   s_new_ref.lmd = s.lmd - d0_ref.head(dimv);
   s_new_ref.gmm = s.gmm - d0_ref.segment(dimv, dimv);
@@ -269,13 +263,9 @@ void SplitBackwardCorrectionTest::testTerminal(const Robot& robot) const {
 
 TEST_F(SplitBackwardCorrectionTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
-  std::cout << "aaa" << std::endl;
   test(robot);
-  std::cout << "bbb" << std::endl;
   testWithSwitchingConstraint(robot);
-  std::cout << "ccc" << std::endl;
   testTerminal(robot);
-  std::cout << "ddd" << std::endl;
 }
 
 

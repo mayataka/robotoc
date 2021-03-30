@@ -25,20 +25,19 @@ PeriodicCoMRef::~PeriodicCoMRef() {
 void PeriodicCoMRef::update_CoM_ref(const double t, 
                                     Eigen::VectorXd& CoM_ref) const {
   if (t < t0_+period_swing_) {
-    const double rate = (t-t0_) / period_;
     if (first_step_) 
-      CoM_ref = CoM_ref0_ + 0.5 * rate * v_CoM_ref_;
+      CoM_ref = CoM_ref0_ + 0.5 * (t-t0_) * v_CoM_ref_;
     else 
-      CoM_ref = CoM_ref0_ + rate * v_CoM_ref_;
+      CoM_ref = CoM_ref0_ + (t-t0_) * v_CoM_ref_;
     return;
   }
   for (int i=1; ; ++i) {
     if (t < t0_+i*period_+period_swing_) {
-      const double rate = (t-t0_-i*period_) / period_swing_;
+      const double t1 = (t-t0_-i*period_);
       if (first_step_) 
-        CoM_ref = CoM_ref0_ + (i - 0.5 + rate) * v_CoM_ref_;
+        CoM_ref = CoM_ref0_ + ((i - 0.5) * period_swing_ + t1) * v_CoM_ref_;
       else 
-        CoM_ref = CoM_ref0_ + (i + rate) * v_CoM_ref_;
+        CoM_ref = CoM_ref0_ + (i * period_swing_ + t1) * v_CoM_ref_;
       return;
     }
   }

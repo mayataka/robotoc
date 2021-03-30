@@ -21,6 +21,7 @@ TrajectoryViewer::TrajectoryViewer(const std::string& path_to_urdf,
                                    const std::string& path_to_pkg)
   : force_radius_(0.015),
     force_length_(0.5),
+    force_scale_(0.75),
     friction_cone_scale_(0.15) {
   pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
                               model_);
@@ -30,12 +31,14 @@ TrajectoryViewer::TrajectoryViewer(const std::string& path_to_urdf,
                              boost::filesystem::absolute(path_to_pkg).string());
   setForceProperties();
   setFrictionConeProperties();
+  setCameraTransformDefault();
 }
 
 
 TrajectoryViewer::TrajectoryViewer(const std::string& path_to_urdf)
   : force_radius_(0.015),
     force_length_(0.5),
+    force_scale_(0.75),
     friction_cone_scale_(0.15) {
   std::string path_to_pkg = boost::filesystem::absolute(path_to_urdf).string();
   for (int i=0; i<3; ++i) {
@@ -51,12 +54,14 @@ TrajectoryViewer::TrajectoryViewer(const std::string& path_to_urdf)
                              pinocchio::VISUAL, vmodel_, path_to_pkg);
   setForceProperties();
   setFrictionConeProperties();
+  setCameraTransformDefault();
 }
 
 
 void TrajectoryViewer::setForceProperties() {
   force_radius_ = 0.015;
   force_length_ = 0.5;
+  force_scale_ = 0.75;
   force_color_[0] = 1.0;
   force_color_[1] = 1.0;
   force_color_[2] = 0.0;
@@ -83,9 +88,9 @@ void TrajectoryViewer::display(const std::vector<Eigen::VectorXd>& q_traj,
   }
 
   auto gui = gepetto::viewer::corba::gui();
-  // const auto window_id = gui->createWindow("idocp::TrajectoryViewer");
-  // gui->createScene("hpp-gui");
-  // gui->addSceneToWindow("hpp-gui", window_id);
+  const auto window_id = gui->createWindow("idocp::TrajectoryViewer");
+  gui->createScene("hpp-gui");
+  gui->addSceneToWindow("hpp-gui", window_id);
   viewer.loadViewerModel("hpp-gui");
   for (int i=0; i<model_.nframes; ++i) {
     viewer.addFrame(i);
@@ -99,7 +104,7 @@ void TrajectoryViewer::display(const std::vector<Eigen::VectorXd>& q_traj,
   gui->setBackgroundColor2("idocp::TrajectoryViewer", gepetto::viewer::corba::white);
   gui->setLightingMode("hpp-gui/floor", "OFF");
 
-  setCameraTransformDefault();
+  setCameraTransform();
 
   for (const auto& q : q_traj) {
     viewer.display(q);
@@ -120,9 +125,9 @@ void TrajectoryViewer::display(Robot& robot,
   }
 
   auto gui = gepetto::viewer::corba::gui();
-  // const auto window_id = gui->createWindow("idocp::TrajectoryViewer");
-  // gui->createScene("hpp-gui");
-  // gui->addSceneToWindow("hpp-gui", window_id);
+  const auto window_id = gui->createWindow("idocp::TrajectoryViewer");
+  gui->createScene("hpp-gui");
+  gui->addSceneToWindow("hpp-gui", window_id);
   viewer.loadViewerModel("hpp-gui");
   for (int i=0; i<model_.nframes; ++i) {
     viewer.addFrame(i);
@@ -183,14 +188,14 @@ void TrajectoryViewer::display(Robot& robot,
     gui->setVisibility(("hpp-gui/contact_forces/contact_force_"+std::to_string(j)).c_str(), "ALWAYS_ON_TOP");
   }
 
-  setCameraTransformDefault();
+  setCameraTransform();
 
   for (int i=0; i<f_traj.size(); ++i) {
     robot.updateFrameKinematics(q_traj[i]);
     for (int j=0; j<robot.maxPointContacts(); ++j) {
       const Eigen::Vector3d& f = f_traj[i].template segment<3>(3*j);
       gepetto::corbaserver::Position f_scale;
-      f_scale[0] = std::sqrt(f.norm() / robot.totalWeight());
+      f_scale[0] = force_scale_ * std::sqrt(f.norm() / robot.totalWeight());
       f_scale[1] = 1.;
       f_scale[2] = 1.;
       gui->setVector3Property(("hpp-gui/contact_forces/contact_force_"+std::to_string(j)).c_str(), "Scale", f_scale);
@@ -236,28 +241,40 @@ void TrajectoryViewer::display(Robot& robot,
 }
 
 
-void TrajectoryViewer::setCameraTransform(const Eigen::Vector3d& position,
-                                          const Eigen::Vector4d& quat) {
-  auto gui = gepetto::viewer::corba::gui();
-  const auto window_id = gui->getWindowID("idocp::TrajectoryViewer");
-  std::vector<float> pose(7);
-  pose[0] = position.coeff(0);
-  pose[1] = position.coeff(1);
-  pose[2] = position.coeff(2);
-  pose[3] = quat.normalized().coeff(0);
-  pose[4] = quat.normalized().coeff(1);
-  pose[5] = quat.normalized().coeff(2);
-  pose[6] = quat.normalized().coeff(3);
-  gui->setCameraTransform(window_id, pose.data());
+void TrajectoryViewer::setCameraTransform(const Eigen::Vector3d& camera_pos,
+                                          const Eigen::Vector4d& camera_quat) {
+  camera_pos_ = camera_pos;
+  camera_quat_ = camera_quat;
 }
 
 
 void TrajectoryViewer::setCameraTransformDefault() {
-  Eigen::Vector3d pos;
-  pos << 3., -3., 0.7;
-  Eigen::Vector4d quat;
-  quat << 0.64, 0.253, 0.248, 0.681;
-  setCameraTransform(pos, quat);
+  camera_pos_ << 2.2, -3.5, 1.13;
+  camera_quat_ << 0.60612, 0.166663, 0.19261, 0.753487;
+}
+
+
+void TrajectoryViewer::setCameraTransform() {
+  auto gui = gepetto::viewer::corba::gui();
+  const auto window_id = gui->getWindowID("idocp::TrajectoryViewer");
+
+  // For debugging
+  const auto old_camera = gui->getCameraTransform(window_id);
+  std::cout << "Camera transform before reset is: [";
+  for (int i=0; i<6; ++i) {
+    std::cout << old_camera[i] << ", ";
+  }
+  std::cout << old_camera[6] << "]" << std::endl;
+
+  std::vector<float> pose(7);
+  pose[0] = camera_pos_.coeff(0);
+  pose[1] = camera_pos_.coeff(1);
+  pose[2] = camera_pos_.coeff(2);
+  pose[3] = camera_quat_.normalized().coeff(0);
+  pose[4] = camera_quat_.normalized().coeff(1);
+  pose[5] = camera_quat_.normalized().coeff(2);
+  pose[6] = camera_quat_.normalized().coeff(3);
+  gui->setCameraTransform(window_id, pose.data());
 }
 
 } // namespace idocp

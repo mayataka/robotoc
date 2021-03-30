@@ -40,6 +40,8 @@ ImpulseSplitKKTMatrix ImpulseSplitBackwardCorrectionTest::createKKTMatrix(
   ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_matrix.Qss() = seed * seed.transpose();
+  kkt_matrix.Qfq().setZero();
+  kkt_matrix.Qvq().setZero();
   if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationMinus(robot.generateFeasibleConfiguration(), 
                                        robot.generateFeasibleConfiguration(), kkt_matrix.Fqq());
@@ -88,6 +90,7 @@ void ImpulseSplitBackwardCorrectionTest::test(const Robot& robot) const {
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
   ImpulseSplitKKTMatrixInverter inverter(robot);
+  kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
   kkt_matrix_ref.Qxx() += aux_mat_next;
   inverter.invert(kkt_matrix_ref.Jac(), kkt_matrix_ref.Qss(), KKT_mat_inv);
   Eigen::VectorXd d0_ref = KKT_mat_inv * kkt_residual.splitKKTResidual();

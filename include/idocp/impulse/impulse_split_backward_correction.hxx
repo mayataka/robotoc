@@ -42,6 +42,7 @@ inline void ImpulseSplitBackwardCorrection::coarseUpdate(
     const ImpulseSplitSolution& s, ImpulseSplitSolution& s_new) {
   assert(aux_mat_next.rows() == dimx_);
   assert(aux_mat_next.cols() == dimx_);
+  kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   data_.setImpulseStatus(s.dimf());
   dimKKT_ = 2*dimx_ + 2*s.dimf();
   kkt_matrix.Qxx().noalias() += aux_mat_next;
@@ -54,7 +55,7 @@ inline void ImpulseSplitBackwardCorrection::coarseUpdate(
   s_new.gmm        = s.gmm         - data_.dgmm();
   s_new.mu_stack() = s.mu_stack()  - data_.dmu(); 
   s_new.f_stack()  = s.f_stack()   - data_.df(); 
-  robot.integrateConfiguration(s.q, data_.dq(), -1, s_new.q);
+  robot.integrateConfiguration(s.q,  data_.dq(), -1, s_new.q);
   s_new.v          = s.v           - data_.dv();
 }
 

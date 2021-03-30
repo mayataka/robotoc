@@ -102,12 +102,15 @@ public:
 private:
   pinocchio::Model model_;
   pinocchio::GeometryModel vmodel_;
-  double force_radius_, force_length_, friction_cone_scale_;
-  Eigen::Vector3d x_axis_;
+  double force_radius_, force_length_, force_scale_, friction_cone_scale_;
+  Eigen::Vector3d x_axis_, camera_pos_;
+  Eigen::Vector4d camera_quat_;
   gepetto::corbaserver::Color force_color_, cone_color_;
 
   void setForceProperties();
   void setFrictionConeProperties();
+  void setCameraTransform();
+
 };
 
 } // namespace idocp
