@@ -258,13 +258,13 @@ void TrajectoryViewer::setCameraTransform() {
   auto gui = gepetto::viewer::corba::gui();
   const auto window_id = gui->getWindowID("idocp::TrajectoryViewer");
 
-  // For debugging
-  const auto old_camera = gui->getCameraTransform(window_id);
-  std::cout << "Camera transform before reset is: [";
-  for (int i=0; i<6; ++i) {
-    std::cout << old_camera[i] << ", ";
-  }
-  std::cout << old_camera[6] << "]" << std::endl;
+  // // For debugging
+  // const auto old_camera = gui->getCameraTransform(window_id);
+  // std::cout << "Camera transform before reset is: [";
+  // for (int i=0; i<6; ++i) {
+  //   std::cout << old_camera[i] << ", ";
+  // }
+  // std::cout << old_camera[6] << "]" << std::endl;
 
   std::vector<float> pose(7);
   pose[0] = camera_pos_.coeff(0);

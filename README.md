@@ -3,14 +3,13 @@
 [![build](https://github.com/mayataka/idocp/workflows/build/badge.svg?branch=master)](https://github.com/mayataka/idocp/actions?query=workflow%3Abuild)
 [![codecov](https://codecov.io/gh/mayataka/idocp/branch/master/graph/badge.svg?token=UOWOF0XO51)](https://codecov.io/gh/mayataka/idocp)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_running_minimal.gif" width="600">
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/running_yoko.gif" width="600">
 
 ## Features for efficient optimal control for rigid body systems with contacts
-- Direct multiple-shooting formulation based on inverse dynamics with novel condensing method dedicated for rigid body systems with contacts.
-- Riccati recursion / Parallel Newton's method (ParNMPC) for solving the condensed KKT system.
+- Direct multiple-shooting method based on inverse dynamics.
+- Riccati recursion / Parallel Newton's method (ParNMPC) for solving the KKT systems.
 - Efficient constraint handling method for pure-state equality constraints in Riccati recursion.
 - Primal-dual interior point method for inequality constraints.
-- Filter line-search method.
 - Very fast computation of rigid body dynamics and its sensitivities thanks to [pinocchio](https://github.com/stack-of-tasks/pinocchio).
 
 ## Requirements
@@ -90,28 +89,28 @@ where "unconstrained" rigid-body systems are systems without any contacts or a f
 Examples are found in `examples` directory.
 The following animations are the solution trajectory of the `idocp::UnOCPSolver` for a robot manipulator iiwa14.
 
-- Configuration-space optimal control (`iiwa14/config_space_ocp.cpp`)
+- Configuration-space and task-space optimal control (`iiwa14/config_space_ocp.cpp`, `iiwa14/task_space_ocp.cpp`)
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/iiwa14_config_ocp.gif" width="170">
-
-- Task-space optimal control (`iiwa14/task_space_ocp.cpp`)
-
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/iiwa14_task_ocp.gif" width="170">
-
-The following animations are the solution trajectory of the `idocp::OCPSolver` for a quadruped ANYmal.
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/config_ocp.gif" width="135"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/task_ocp.gif" width="135">
 
 
-- Trotting (`anymal/anymal_trotting.cpp`)
+The following animations are the solution trajectory of the `idocp::OCPSolver` for a quadruped ANYmal (yellow arrows denote contact forces and blue polyhedrons denote linearized friction cone constraints).
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_trotting.gif" width="300">
+- Walking, trotting gaits (`anymal/walking.cpp`, `anymal/trotting.cpp`)
 
-- Jumping (`anymal/anymal_jumping.cpp`)
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/walking.gif" width="250"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/trotting.gif" width="250">
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_jumping.gif" width="300">
+- Pacing, bounding, jumping gaits (`anymal/pacing.cpp`, `anymal/bounding.cpp`, `anymal/jumping.cpp`)
 
-- Running (`anymal/anymal_running.cpp`)
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/pacing.gif" width="250"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/bounding.gif" width="250"> &nbsp;
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/jumping.gif" width="250">
 
-<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/anymal_running.gif" width="600">
+- Running gait (`anymal/running.cpp`)
+
+<img src="https://raw.githubusercontent.com/wiki/mayataka/idocp/images/running.gif" width="520">
 
 
 ## MPC Simulation 

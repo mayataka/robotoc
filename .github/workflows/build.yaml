@@ -45,7 +45,7 @@ jobs:
           export PYTHONPATH=/opt/openrobots/lib/python2.7/site-packages:$PYTHONPATH 
           export PYTHONPATH=/opt/openrobots/lib/python3.8/site-packages:$PYTHONPATH 
           export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH 
-          git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
+          git clone https://github.com/mayataka/pinocchio-gepetto-viewer.git --recursive
           cd pinocchio-gepetto-viewer
           mkdir build
           cd build

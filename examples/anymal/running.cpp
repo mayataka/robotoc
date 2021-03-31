@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
   const double baumgarte_time_step = 0.04;
   idocp::Robot robot(path_to_urdf, contact_frames, baumgarte_time_step);
 
-  const double stride = 0.5;
+  const double stride = 0.45;
   const double additive_stride_hip = 0.2;
   const double t_start = 1.0;
 
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
               1, 1, 1,
               1, 1, 1;
   const double v_ref = stride / t_period;
-  auto config_ref = std::make_shared<TimeVaryingConfigurationRef>(t_start+0.125*t_period, 0.125*t_period+t_start+(0.75+steps+0.75)*t_period, q_standing, v_ref);
+  auto config_ref = std::make_shared<TimeVaryingConfigurationRef>(t_start+0.25*t_period, 0.25*t_period+t_start+(0.75+steps+0.75)*t_period, q_standing, v_ref);
   auto time_varying_config_cost = std::make_shared<idocp::TimeVaryingConfigurationSpaceCost>(robot, config_ref);
   time_varying_config_cost->set_q_weight(q_weight);
   time_varying_config_cost->set_qf_weight(q_weight);
@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
   auto joint_velocity_upper  = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower   = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper   = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
-  const double mu = 0.9;
+  const double mu = 0.7;
   auto friction_cone         = std::make_shared<idocp::FrictionCone>(robot, mu);
   auto impulse_friction_cone = std::make_shared<idocp::ImpulseFrictionCone>(robot, mu);
   constraints->push_back(joint_position_lower);
@@ -139,6 +139,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
   constraints->push_back(impulse_friction_cone);
+  constraints->setBarrier(1.0e-03);
 
   const double T = 7; 
   const int N = 240;
@@ -241,22 +242,27 @@ int main(int argc, char *argv[]) {
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
+  ocp_solver.setSolution("lmd", f_init);
 
   ocp_solver.initConstraints(t);
 
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 240, line_search);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 200, line_search);
   // idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 2500, line_search);
 
 #ifdef ENABLE_VIEWER
   idocp::TrajectoryViewer viewer(path_to_urdf);
   Eigen::Vector3d camera_pos;
   Eigen::Vector4d camera_quat;
-  camera_pos << 6.5, -4.5, 1.3;
-  camera_quat << 0.585373, 0.259855, 0.296255, 0.708553;
+  camera_pos << 5.10483, -3.98692, 1.59321;
+  camera_quat << 0.547037, 0.243328, 0.314829, 0.736495;
   viewer.setCameraTransform(camera_pos, camera_quat);
   viewer.display(robot, ocp_solver.getSolution("q"), 
                  ocp_solver.getSolution("f", "WORLD"), (T/N), mu);
+  camera_pos << 0.119269, -7.96283, 1.95978;
+  camera_quat << 0.609016, 0.00297497, 0.010914, 0.793077;
+  viewer.setCameraTransform(camera_pos, camera_quat);
+  viewer.display(ocp_solver.getSolution("q"), (T/N));
 #endif 
 
   return 0;
