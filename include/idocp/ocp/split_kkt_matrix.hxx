@@ -15,8 +15,8 @@ inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
     F_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv()+robot.dimu())),
     Pq_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     Q_(Eigen::MatrixXd::Zero(3*robot.dimv(), 3*robot.dimv())),
-    Qaaff_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
-                                      robot.dimv()+robot.max_dimf())),
+    Qafq_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
+                                     robot.dimv()+robot.max_dimf())),
     has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
@@ -37,7 +37,7 @@ inline SplitKKTMatrix::SplitKKTMatrix()
     F_(),
     Pq_full_(),
     Q_(),
-    Qaaff_full_(),
+    Qafq_full_(),
     has_floating_base_(false),
     dimv_(0), 
     dimx_(0), 
@@ -458,36 +458,6 @@ inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qxx() const {
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qaaff() {
-  return Qaaff_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qaaff() const {
-  return Qaaff_full_.topLeftCorner(dimv_+dimf_, dimv_+dimf_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qaa() {
-  return Qaaff_full_.topLeftCorner(dimv_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qaa() const {
-  return Qaaff_full_.topLeftCorner(dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qff() {
-  return Qaaff_full_.block(dimv_, dimv_, dimf_, dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qff() const {
-  return Qaaff_full_.block(dimv_, dimv_, dimf_, dimf_);
-}
-
-
 inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qss() {
   return Q_.bottomRightCorner(dimx_+dimu_, dimx_+dimu_);
 }
@@ -508,9 +478,43 @@ inline const Eigen::MatrixXd& SplitKKTMatrix::Jac() const {
 }
 
 
-inline void SplitKKTMatrix::symmetrize() {
-  Q_.template triangularView<Eigen::StrictlyLower>() 
-      = Q_.transpose().template triangularView<Eigen::StrictlyLower>();
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qaa() {
+  return Qafq_full_.topLeftCorner(dimv_, dimv_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qaa() const {
+  return Qafq_full_.topLeftCorner(dimv_, dimv_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qff() {
+  return Qafq_full_.block(dimv_, dimv_, dimf_, dimf_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qff() const {
+  return Qafq_full_.block(dimv_, dimv_, dimf_, dimf_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qqf() {
+  return Qafq_full_.block(0, dimv_, dimv_, dimf_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qqf() const {
+  return Qafq_full_.block(0, dimv_, dimv_, dimf_);
+}
+
+
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qfq() {
+  return Qafq_full_.block(dimv_, 0, dimf_, dimv_);
+}
+
+
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qfq() const {
+  return Qafq_full_.block(dimv_, 0, dimf_, dimv_);
 }
 
 
@@ -519,7 +523,7 @@ inline void SplitKKTMatrix::setZero() {
   F_.setZero();
   Pq_full_.setZero();
   Q_.setZero();
-  Qaaff_full_.setZero();
+  Qafq_full_.setZero();
 }
 
 
@@ -541,7 +545,10 @@ inline bool SplitKKTMatrix::isApprox(const SplitKKTMatrix& other) const {
   if (!Qux_full().isApprox(other.Qux_full())) return false;
   if (!Qxu_full().isApprox(other.Qxu_full())) return false;
   if (!Qxx().isApprox(other.Qxx())) return false;
-  if (!Qaaff().isApprox(other.Qaaff())) return false;
+  if (!Qaa().isApprox(other.Qaa())) return false;
+  if (!Qff().isApprox(other.Qff())) return false;
+  if (!Qqf().isApprox(other.Qqf())) return false;
+  if (!Qfq().isApprox(other.Qfq())) return false;
   return true;
 }
 
@@ -551,7 +558,7 @@ inline bool SplitKKTMatrix::hasNaN() const {
   if (F_.hasNaN()) return true;
   if (Pq_full_.hasNaN()) return true;
   if (Q_.hasNaN()) return true;
-  if (Qaaff_full_.hasNaN()) return true;
+  if (Qafq_full_.hasNaN()) return true;
   return false;
 }
 

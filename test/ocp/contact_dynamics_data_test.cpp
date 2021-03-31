@@ -1,13 +1,11 @@
-#include <string>
-#include <iostream>
-
 #include <gtest/gtest.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/ocp/contact_dynamics_data.hpp"
+
+#include "robot_factory.hpp"
 
 
 namespace idocp {
@@ -16,9 +14,6 @@ class ContactDynamicsDataTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
   }
 
   virtual void TearDown() {
@@ -26,11 +21,11 @@ protected:
 
   static void testSize(const Robot& robot, const ContactStatus& contact_status);
 
-  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
-void ContactDynamicsDataTest::testSize(const Robot& robot, const ContactStatus& contact_status) {
+void ContactDynamicsDataTest::testSize(const Robot& robot, 
+                                       const ContactStatus& contact_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const int dimu = robot.dimu();
@@ -119,8 +114,8 @@ void ContactDynamicsDataTest::testSize(const Robot& robot, const ContactStatus& 
 
 
 TEST_F(ContactDynamicsDataTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  const double dt = 0.01;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   testSize(robot, contact_status);
   contact_status.activateContact(0);
@@ -129,8 +124,8 @@ TEST_F(ContactDynamicsDataTest, fixedBase) {
 
 
 TEST_F(ContactDynamicsDataTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  const double dt = 0.01;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   testSize(robot, contact_status);
   contact_status.setRandom();

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 #include <memory>
 
@@ -48,6 +47,7 @@ int main() {
   // Solves the OCP.
   ocp_solver.setSolution("q", q);
   ocp_solver.setSolution("v", v);
+  ocp_solver.initConstraints(t);
   const int num_iteration = 50;
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, num_iteration, line_search);

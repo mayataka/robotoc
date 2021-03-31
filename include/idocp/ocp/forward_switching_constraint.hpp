@@ -11,8 +11,17 @@
 
 namespace idocp {
 
+///
+/// @class ForwardSwitchingConstraint
+/// @brief Switching constraint expressed by the state-control equality 
+/// constraint for the forward Euler. 
+///
 class ForwardSwitchingConstraint {
 public:
+  ///
+  /// @brief Constructs a switching constraint.
+  /// @param[in] robot Robot model. 
+  ///
   ForwardSwitchingConstraint(const Robot& robot);
 
   ///
@@ -47,6 +56,20 @@ public:
   ForwardSwitchingConstraint& operator=(
       ForwardSwitchingConstraint&&) noexcept = default;
 
+  ///
+  /// @brief Linearizes the switching constraint, i.e., the contact position
+  /// constraint for the forward Euler.
+  /// @param[in] robot Robot model. Kinematics must be updated.
+  /// @param[in] impulse_status Impulse status. 
+  /// @param[in] dt1 Time step of the time stage 2 stage before the impulse.
+  /// @param[in] dt2 Time step of the time stage just before the impulse.
+  /// @param[in] s Split solution of the time stage 2 stage before the impulse.
+  /// @param[in, out] kkt_matrix Split KKT matrix of the time stage 2 stage 
+  /// before the impulse.
+  /// @param[in, out] kkt_residual Split KKT residual of the time stage 2 stage
+  /// before the impulse.
+  /// @param[in, out] jac Jacobian of the switching constraint. 
+  ///
   void linearizeSwitchingConstraint(Robot& robot, 
                                     const ImpulseStatus& impulse_status, 
                                     const double dt1, const double dt2, 
@@ -55,16 +78,39 @@ public:
                                     SplitKKTResidual& kkt_residual, 
                                     SplitStateConstraintJacobian& jac);
 
+  ///
+  /// @brief Computes the residual in the switching constraint, i.e., the 
+  /// contact position constraint for the forward Euler.
+  /// @param[in] robot Robot model. Kinematics must be updated.
+  /// @param[in] impulse_status Impulse status. 
+  /// @param[in] dt1 Time step of the time stage 2 stage before the impulse.
+  /// @param[in] dt2 Time step of the time stage just before the impulse.
+  /// @param[in] s Split solution of the time stage 2 stage before the impulse.
+  /// @param[in, out] kkt_residual Split KKT residual of the time stage 2 stage
+  /// before the impulse.
+  ///
   void computeSwitchingConstraintResidual(Robot& robot, 
                                           const ImpulseStatus& impulse_status, 
                                           const double dt1, const double dt2, 
                                           const SplitSolution& s, 
                                           SplitKKTResidual& kkt_residual);
 
-  static double squaredNormSwitchingConstraintResidual(
+  ///
+  /// @brief Returns l1-norm of the residual in the switching constraint. 
+  /// @param[in] kkt_residual Split KKT residual of the time stage just before
+  /// the impulse.
+  /// @return l1-norm of the residual in the switching constraint.
+  ///
+  static double l1NormSwitchingConstraintResidual(
       const SplitKKTResidual& kkt_residual);
 
-  static double l1NormSwitchingConstraintResidual(
+  ///
+  /// @brief Returns squared norm of the residual in the switching constraint. 
+  /// @param[in] kkt_residual Split KKT residual of the time stage just before
+  /// the impulse.
+  /// @return Squared norm of the residual in the switching constraint.
+  ///
+  static double squaredNormSwitchingConstraintResidual(
       const SplitKKTResidual& kkt_residual);
 
 private:

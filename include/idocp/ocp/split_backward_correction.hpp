@@ -21,16 +21,13 @@ namespace idocp {
 
 ///
 /// @class SplitBackwardCorrection
-/// @brief Split unconstrained backward correction.
+/// @brief Split backward correction.
 ///
 class SplitBackwardCorrection {
 public:
   ///
-  /// @brief Construct factorizer.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] nthreads Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
+  /// @brief Construct split backward correction.
+  /// @param[in] robot Robot model. 
   ///
   SplitBackwardCorrection(const Robot& robot);
 
@@ -64,11 +61,31 @@ public:
   ///
   SplitBackwardCorrection& operator=(SplitBackwardCorrection&&) noexcept = default;
 
+  ///
+  /// @brief Coarse updates the split solution of this time stage. Auxiliary 
+  /// matrix is assumed to zero matrix, i.e., terminal stage.
+  /// @param[in] robot Robot model. 
+  /// @param[in] dt Time stage of time stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage. 
+  /// @param[in] kkt_residual Split KKT residual of this time stage. 
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] s_new Coarse updated split solution of this time stage.
+  ///
   void coarseUpdate(const Robot& robot, const double dt, 
                     SplitKKTMatrix& kkt_matrix, 
                     const SplitKKTResidual& kkt_residual,
                     const SplitSolution& s, SplitSolution& s_new);
 
+  ///
+  /// @brief Coarse updates the split solution of this time stage. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] dt Time stage of time stage. 
+  /// @param[in] aux_mat_next Auxiliary matrix of the next time stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage. 
+  /// @param[in] kkt_residual Split KKT residual of this time stage. 
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] s_new Coarse updated split solution of this time stage.
+  ///
   template <typename MatrixType>
   void coarseUpdate(const Robot& robot, const double dt,
                     const Eigen::MatrixBase<MatrixType>& aux_mat_next,
@@ -76,23 +93,57 @@ public:
                     const SplitKKTResidual& kkt_residual,
                     const SplitSolution& s, SplitSolution& s_new);
 
+  ///
+  /// @brief Auxiliary matrix of this time stage. 
+  /// @return const reference to the auxiliary matrix of this time stage. 
+  ///
   const Eigen::Block<const Eigen::MatrixXd> auxMat() const;
 
+  ///
+  /// @brief Performs the serial part of the backward correction. 
+  /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in] s_new_next Coarse updated split solution of the next time stage.
+  /// @param[in, out] s_new Coarse updated split solution of this time stage.
+  ///
   template <typename SplitSolutionType>
   void backwardCorrectionSerial(const SplitSolutionType& s_next, 
                                 const SplitSolutionType& s_new_next,
                                 SplitSolution& s_new);
 
+  ///
+  /// @brief Performs the parallel part of the backward correction. 
+  /// @param[in] robot Robot model. 
+  /// @param[in, out] s_new Coarse updated split solution of this time stage.
+  ///
   void backwardCorrectionParallel(const Robot& robot, SplitSolution& s_new);
 
+  ///
+  /// @brief Performs the serial part of the forward correction. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] s_prev Split solution of the previous time stage.
+  /// @param[in] s_new_prev Coarse updated split solution of the previous time 
+  /// stage.
+  /// @param[in, out] s_new Coarse updated split solution of this time stage.
+  ///
   template <typename SplitSolutionType>
   void forwardCorrectionSerial(const Robot& robot, 
                                const SplitSolutionType& s_prev, 
                                const SplitSolutionType& s_new_prev,
                                SplitSolution& s_new);
 
+  ///
+  /// @brief Performs the parallel part of the forward correction. 
+  /// @param[in, out] s_new Coarse updated split solution of this time stage.
+  ///
   void forwardCorrectionParallel(SplitSolution& s_new);
 
+  ///
+  /// @brief Computes the direction from the results of the forward correction. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] s Split solution of this time stage.
+  /// @param[in] s_new Coarse updated split solution of this time stage.
+  /// @param[in, out] d Split direction of this time stage.
+  ///
   void computeDirection(const Robot& robot, const SplitSolution& s, 
                         const SplitSolution& s_new, SplitDirection& d) const;
 

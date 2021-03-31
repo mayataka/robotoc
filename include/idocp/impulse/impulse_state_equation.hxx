@@ -3,7 +3,7 @@
 
 #include "idocp/impulse/impulse_state_equation.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 namespace idocp {
 namespace stateequation {

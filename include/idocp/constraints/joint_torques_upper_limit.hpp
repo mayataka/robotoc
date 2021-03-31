@@ -14,25 +14,51 @@
 
 namespace idocp {
 
+///
+/// @class JointTorquesUpperLimit
+/// @brief Constraint on the upper limits of the joint torques.
+///
 class JointTorquesUpperLimit final : public ConstraintComponentBase {
 public:
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] barrier Barrier parameter. Must be positive. Should be small.
+  /// Default is 1.0e-04.
+  /// @param[in] fraction_to_boundary_rate Must be larger than 0 and smaller 
+  /// than 1. Should be between 0.9 and 0.995. Default is 0.995.
+  ///
   JointTorquesUpperLimit(const Robot& robot, const double barrier=1.0e-04,
                           const double fraction_to_boundary_rate=0.995);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   JointTorquesUpperLimit();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~JointTorquesUpperLimit();
 
-  // Use default copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   JointTorquesUpperLimit(const JointTorquesUpperLimit&) = default;
 
-  // Use default copy coperator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   JointTorquesUpperLimit& operator=(const JointTorquesUpperLimit&) = default;
 
-  // Use default move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   JointTorquesUpperLimit(JointTorquesUpperLimit&&) noexcept = default;
 
-  // Use default move assign coperator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   JointTorquesUpperLimit& operator=(
       JointTorquesUpperLimit&&) noexcept = default;
 

@@ -33,40 +33,58 @@ protected:
     floating_base_data = pinocchio::Data(floating_base_robot);
     fixed_base_contact_frames = {18};
     floating_base_contact_frames = {14, 24, 34, 44};
-    friction_coeff = std::abs(Eigen::VectorXd::Random(1)[0]);
-    restitution_coeff = std::abs(Eigen::VectorXd::Random(1)[0]);
-    while (restitution_coeff > 1) {
-      restitution_coeff = std::abs(Eigen::VectorXd::Random(1)[0]);
-    }
+    baumgarte_weight_on_velocity = 10 * std::abs(Eigen::VectorXd::Random(1)[0]);
+    baumgarte_weight_on_position = 10 * std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
   }
 
-  void testConstructorAndSetter(const std::string& path_to_urdf, const std::vector<int>& contact_frames) const;
-  void testIntegrateConfiguration(const std::string& path_to_urdf, pinocchio::Model& model) const;
-  void testIntegrateConfigurationDerivatives(const std::string& path_to_urdf, pinocchio::Model& model) const;
-  void testSubtractConfiguration(const std::string& path_to_urdf, pinocchio::Model& model) const;
-  void testSubtractConfigurationDerivatives(const std::string& path_to_urdf, pinocchio::Model& model) const;
-  void testFrameKinematicsGetters(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data, const int frame_id) const;
-  void testBaumgarte(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data, const std::vector<int>& frames) const;
-  void testImpulseVelocity(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data, const std::vector<int>& frames) const;
-  void testImpulseCondition(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data, const std::vector<int>& frames) const;
-  void testRNEA(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data) const;
-  void testRNEA(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data, const std::vector<int>& frames) const;
-  void testRNEAImpulse(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data, const std::vector<int>& frames) const;
-  void testMJtJinv(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data, const std::vector<int>& frames) const;
-  void testGenConfiguration(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data) const;
+  void testConstructorAndSetter(const std::string& path_to_urdf, 
+                                const std::vector<int>& contact_frames) const;
+  void testIntegrateConfiguration(const std::string& path_to_urdf, 
+                                  pinocchio::Model& model) const;
+  void testIntegrateConfigurationDerivatives(const std::string& path_to_urdf, 
+                                             pinocchio::Model& model) const;
+  void testSubtractConfiguration(const std::string& path_to_urdf, 
+                                 pinocchio::Model& model) const;
+  void testSubtractConfigurationDerivatives(const std::string& path_to_urdf, 
+                                            pinocchio::Model& model) const;
+  void testFrameKinematics(const std::string& path_to_urdf, 
+                           pinocchio::Model& model, pinocchio::Data& data, 
+                           const int frame_id) const;
+  void testBaumgarte(const std::string& path_to_urdf, pinocchio::Model& model, 
+                     pinocchio::Data& data, const std::vector<int>& frames) const;
+  void testBaumgarteTimeStep(const std::string& path_to_urdf, 
+                             pinocchio::Model& model, pinocchio::Data& data, 
+                             const std::vector<int>& frames) const;
+  void testImpulseVelocity(const std::string& path_to_urdf, 
+                           pinocchio::Model& model, pinocchio::Data& data, 
+                           const std::vector<int>& frames) const;
+  void testImpulseCondition(const std::string& path_to_urdf, 
+                            pinocchio::Model& model, pinocchio::Data& data, 
+                            const std::vector<int>& frames) const;
+  void testRNEA(const std::string& path_to_urdf, pinocchio::Model& model, 
+                pinocchio::Data& data) const;
+  void testRNEA(const std::string& path_to_urdf, pinocchio::Model& model, 
+                pinocchio::Data& data, const std::vector<int>& frames) const;
+  void testRNEAImpulse(const std::string& path_to_urdf, pinocchio::Model& model, 
+                       pinocchio::Data& data, const std::vector<int>& frames) const;
+  void testMJtJinv(const std::string& path_to_urdf, pinocchio::Model& model, 
+                   pinocchio::Data& data, const std::vector<int>& frames) const;
+  void testGenConfiguration(const std::string& path_to_urdf, 
+                            pinocchio::Model& model, pinocchio::Data& data) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
   pinocchio::Model fixed_base_robot, floating_base_robot;
   pinocchio::Data fixed_base_data, floating_base_data;
   std::vector<int> fixed_base_contact_frames, floating_base_contact_frames;
-  double friction_coeff, restitution_coeff;
+  double baumgarte_weight_on_velocity, baumgarte_weight_on_position;
 };
 
 
-void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf, const std::vector<int>& contact_frames) const {
+void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf, 
+                                         const std::vector<int>& contact_frames) const {
   Robot robot_empty;
   EXPECT_EQ(robot_empty.dimq(), 0);
   EXPECT_EQ(robot_empty.dimv(), 0);
@@ -89,7 +107,7 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf, const 
     EXPECT_EQ(robot.dim_passive(), 0);
   }
   EXPECT_EQ(robot.maxPointContacts(), 0);
-  Robot robot_contact(path_to_urdf, contact_frames);
+  Robot robot_contact(path_to_urdf, contact_frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
   EXPECT_EQ(robot_contact.dimq(), robot_ref.nq);
   EXPECT_EQ(robot_contact.dimv(), robot_ref.nv);
   EXPECT_EQ(robot_contact.dimu(), robot_ref.nv-robot_contact.dim_passive());
@@ -101,24 +119,6 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf, const 
     EXPECT_EQ(robot_contact.dim_passive(), 0);
   }
   EXPECT_EQ(robot_contact.maxPointContacts(), contact_frames.size());
-  std::vector<double> mu_tmp;
-  for (int i=0; i<robot_contact.maxPointContacts(); ++i) {
-    EXPECT_DOUBLE_EQ(robot_contact.frictionCoefficient(i), 0.8);
-    mu_tmp.push_back(std::abs(Eigen::VectorXd::Random(2)[0]));
-  }
-  robot_contact.setFrictionCoefficient(mu_tmp);
-  for (int i=0; i<robot_contact.maxPointContacts(); ++i) {
-    EXPECT_DOUBLE_EQ(robot_contact.frictionCoefficient(i), mu_tmp[i]);
-  }
-  std::vector<double> rest_tmp;
-  for (int i=0; i<robot_contact.maxPointContacts(); ++i) {
-    EXPECT_DOUBLE_EQ(robot_contact.restitutionCoefficient(i), 0);
-    rest_tmp.push_back(std::abs(Eigen::VectorXd::Random(2)[0]));
-  }
-  robot_contact.setRestitutionCoefficient(rest_tmp);
-  for (int i=0; i<robot_contact.maxPointContacts(); ++i) {
-    EXPECT_DOUBLE_EQ(robot_contact.restitutionCoefficient(i), rest_tmp[i]);
-  }
   robot_contact.printRobotModel();
   EXPECT_EQ(robot.jointEffortLimit().size(), robot.dimu());
   EXPECT_EQ(robot.jointVelocityLimit().size(), robot.dimu());
@@ -142,7 +142,8 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf, const 
 }
 
 
-void RobotTest::testIntegrateConfiguration(const std::string& path_to_urdf, pinocchio::Model& model) const {
+void RobotTest::testIntegrateConfiguration(const std::string& path_to_urdf, 
+                                           pinocchio::Model& model) const {
   Robot robot(path_to_urdf);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -159,7 +160,8 @@ void RobotTest::testIntegrateConfiguration(const std::string& path_to_urdf, pino
 }
 
 
-void RobotTest::testIntegrateConfigurationDerivatives(const std::string& path_to_urdf, pinocchio::Model& model) const {
+void RobotTest::testIntegrateConfigurationDerivatives(const std::string& path_to_urdf, 
+                                                      pinocchio::Model& model) const {
   Robot robot(path_to_urdf);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -181,7 +183,8 @@ void RobotTest::testIntegrateConfigurationDerivatives(const std::string& path_to
 }
 
 
-void RobotTest::testSubtractConfiguration(const std::string& path_to_urdf, pinocchio::Model& model) const {
+void RobotTest::testSubtractConfiguration(const std::string& path_to_urdf, 
+                                          pinocchio::Model& model) const {
   Robot robot(path_to_urdf);
   const Eigen::VectorXd q_plus = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -194,7 +197,8 @@ void RobotTest::testSubtractConfiguration(const std::string& path_to_urdf, pinoc
 }
 
 
-void RobotTest::testSubtractConfigurationDerivatives(const std::string& path_to_urdf, pinocchio::Model& model) const {
+void RobotTest::testSubtractConfigurationDerivatives(const std::string& path_to_urdf, 
+                                                     pinocchio::Model& model) const {
   Robot robot(path_to_urdf);
   const Eigen::VectorXd q_plus = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -227,8 +231,8 @@ void RobotTest::testSubtractConfigurationDerivatives(const std::string& path_to_
 }
 
 
-void RobotTest::testFrameKinematicsGetters(const std::string& path_to_urdf, pinocchio::Model& model, 
-                                           pinocchio::Data& data, const int frame_id) const {
+void RobotTest::testFrameKinematics(const std::string& path_to_urdf, pinocchio::Model& model, 
+                                    pinocchio::Data& data, const int frame_id) const {
   Robot robot(path_to_urdf);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -252,6 +256,12 @@ void RobotTest::testFrameKinematicsGetters(const std::string& path_to_urdf, pino
   Eigen::MatrixXd J_ref = Eigen::MatrixXd::Zero(6, model.nv);
   pinocchio::getFrameJacobian(model, data, frame_id, pinocchio::LOCAL, J_ref);
   EXPECT_TRUE(J.isApprox(J_ref));
+  pinocchio::centerOfMass(model, data, q, true);
+  EXPECT_TRUE(data.com[0].isApprox(robot.CoM()));
+  pinocchio::jacobianCenterOfMass(model, data, true);
+  Eigen::MatrixXd Jcom = Eigen::MatrixXd::Zero(3, model.nv);
+  robot.getCoMJacobian(Jcom);
+  EXPECT_TRUE(Jcom.isApprox(data.Jcom));
 }
 
 
@@ -259,22 +269,21 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf, pinocchio::Model&
                               pinocchio::Data& data, const std::vector<int>& frames) const {
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<frames.size(); ++i) {
-    contacts_ref.push_back(PointContact(model, frames[i]));
+    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weight_on_velocity, baumgarte_weight_on_position));
   }
-  Robot robot(path_to_urdf, frames);
+  Robot robot(path_to_urdf, frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
   ASSERT_EQ(robot.dimq(), model.nq);
   ASSERT_EQ(robot.dimv(), model.nv);
   Eigen::VectorXd residual = Eigen::VectorXd::Zero(robot.max_dimf());
   Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(robot.max_dimf());
   auto contact_status = robot.createContactStatus();
   contact_status.setRandom();
-  const double time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
   const Eigen::VectorXd a = Eigen::VectorXd::Random(model.nv);
   robot.updateKinematics(q, v, a);
-  robot.computeBaumgarteResidual(contact_status, time_step, contact_status.contactPoints(), residual.head(contact_status.dimf()));
+  robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), residual.head(contact_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, a);
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, a);
@@ -282,7 +291,7 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf, pinocchio::Model&
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (contact_status.isContactActive(i)) {
       contacts_ref[i].computeBaumgarteResidual(
-          model, data, time_step, contact_status.contactPoints()[i], 
+          model, data, contact_status.contactPoints()[i], 
           residual_ref.segment<3>(3*num_active_contacts));
       ++num_active_contacts;
     }
@@ -295,8 +304,7 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf, pinocchio::Model&
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (contact_status.isContactActive(i)) {
       contacts_ref[i].computeBaumgarteDerivatives(
-          model, data, time_step, 
-          baumgarte_partial_q_ref.middleRows<3>(3*num_active_contacts), 
+          model, data, baumgarte_partial_q_ref.middleRows<3>(3*num_active_contacts), 
           baumgarte_partial_v_ref.middleRows<3>(3*num_active_contacts), 
           baumgarte_partial_a_ref.middleRows<3>(3*num_active_contacts));
       ++num_active_contacts;
@@ -305,10 +313,46 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf, pinocchio::Model&
   Eigen::MatrixXd baumgarte_partial_q = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
   Eigen::MatrixXd baumgarte_partial_v = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
   Eigen::MatrixXd baumgarte_partial_a = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
-  robot.computeBaumgarteDerivatives(contact_status, time_step, 
+  robot.computeBaumgarteDerivatives(contact_status, 
                                     baumgarte_partial_q.topRows(contact_status.dimf()), 
                                     baumgarte_partial_v.topRows(contact_status.dimf()), 
                                     baumgarte_partial_a.topRows(contact_status.dimf()));
+  EXPECT_TRUE(baumgarte_partial_q.isApprox(baumgarte_partial_q_ref));
+  EXPECT_TRUE(baumgarte_partial_v.isApprox(baumgarte_partial_v_ref));
+  EXPECT_TRUE(baumgarte_partial_a.isApprox(baumgarte_partial_a_ref));
+}
+
+
+void RobotTest::testBaumgarteTimeStep(const std::string& path_to_urdf, pinocchio::Model& model, 
+                                      pinocchio::Data& data, const std::vector<int>& frames) const {
+  const double time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
+  const double baumgarte_weight_velocity = 2.0 / time_step;
+  const double baumgarte_weight_position = 1.0 / (time_step*time_step);
+  Robot robot_time_step(path_to_urdf, frames, time_step);
+  Robot robot(path_to_urdf, frames, baumgarte_weight_velocity, baumgarte_weight_position);
+  auto contact_status = robot.createContactStatus();
+  contact_status.setRandom();
+  Eigen::VectorXd residual = Eigen::VectorXd::Zero(contact_status.dimf());
+  Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(contact_status.dimf());
+  const Eigen::VectorXd q = pinocchio::randomConfiguration(
+      model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
+  const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
+  const Eigen::VectorXd a = Eigen::VectorXd::Random(model.nv);
+  robot_time_step.updateKinematics(q, v, a);
+  robot_time_step.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), residual);
+  robot.updateKinematics(q, v, a);
+  robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), residual_ref);
+  EXPECT_TRUE(residual.isApprox(residual_ref));
+  Eigen::MatrixXd baumgarte_partial_q_ref = Eigen::MatrixXd::Zero(contact_status.dimf(), model.nv);
+  Eigen::MatrixXd baumgarte_partial_v_ref = Eigen::MatrixXd::Zero(contact_status.dimf(), model.nv);
+  Eigen::MatrixXd baumgarte_partial_a_ref = Eigen::MatrixXd::Zero(contact_status.dimf(), model.nv);
+  Eigen::MatrixXd baumgarte_partial_q = Eigen::MatrixXd::Zero(contact_status.dimf(), model.nv);
+  Eigen::MatrixXd baumgarte_partial_v = Eigen::MatrixXd::Zero(contact_status.dimf(), model.nv);
+  Eigen::MatrixXd baumgarte_partial_a = Eigen::MatrixXd::Zero(contact_status.dimf(), model.nv);
+  robot_time_step.computeBaumgarteDerivatives(contact_status, baumgarte_partial_q, 
+                                              baumgarte_partial_v, baumgarte_partial_a);
+  robot.computeBaumgarteDerivatives(contact_status, baumgarte_partial_q_ref, 
+                                    baumgarte_partial_v_ref, baumgarte_partial_a_ref);
   EXPECT_TRUE(baumgarte_partial_q.isApprox(baumgarte_partial_q_ref));
   EXPECT_TRUE(baumgarte_partial_v.isApprox(baumgarte_partial_v_ref));
   EXPECT_TRUE(baumgarte_partial_a.isApprox(baumgarte_partial_a_ref));
@@ -319,9 +363,9 @@ void RobotTest::testImpulseVelocity(const std::string& path_to_urdf, pinocchio::
                                     pinocchio::Data& data, const std::vector<int>& frames) const {
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<frames.size(); ++i) {
-    contacts_ref.push_back(PointContact(model, frames[i]));
+    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weight_on_velocity, baumgarte_weight_on_position));
   }
-  Robot robot(path_to_urdf, frames);
+  Robot robot(path_to_urdf, frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
   Eigen::VectorXd residual = Eigen::VectorXd::Zero(robot.max_dimf());
   Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(robot.max_dimf());
   auto impulse_status = robot.createImpulseStatus();
@@ -368,9 +412,9 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
                                      pinocchio::Data& data, const std::vector<int>& frames) const {
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<frames.size(); ++i) {
-    contacts_ref.push_back(PointContact(model, frames[i]));
+    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weight_on_velocity, baumgarte_weight_on_position));
   }
-  Robot robot(path_to_urdf, frames);
+  Robot robot(path_to_urdf, frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
   Eigen::VectorXd residual = Eigen::VectorXd::Zero(robot.max_dimf());
   Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(robot.max_dimf());
   auto impulse_status = robot.createImpulseStatus();
@@ -382,14 +426,14 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
   robot.updateKinematics(q, v);
-  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(), residual.head(impulse_status.dimf()));
+  robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), residual.head(impulse_status.dimf()));
   pinocchio::forwardKinematics(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   pinocchio::updateFramePlacements(model, data);
   pinocchio::computeForwardKinematicsDerivatives(model, data, q, v, Eigen::VectorXd::Zero(model.nv));
   int num_active_impulse = 0;
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      contacts_ref[i].computeContactResidual(
+      contacts_ref[i].computeContactPositionResidual(
         model, data, impulse_status.contactPoints()[i], 
         residual_ref.segment<3>(3*num_active_impulse));
         ++num_active_impulse;
@@ -411,7 +455,8 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
 }
 
 
-void RobotTest::testRNEA(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data) const {
+void RobotTest::testRNEA(const std::string& path_to_urdf, 
+                         pinocchio::Model& model, pinocchio::Data& data) const {
   Robot robot(path_to_urdf);
   const double time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
@@ -439,11 +484,13 @@ void RobotTest::testRNEA(const std::string& path_to_urdf, pinocchio::Model& mode
 }
 
 
-void RobotTest::testRNEA(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data, const std::vector<int>& frames) const {
-  Robot robot(path_to_urdf, frames);
+void RobotTest::testRNEA(const std::string& path_to_urdf, 
+                         pinocchio::Model& model, pinocchio::Data& data, 
+                         const std::vector<int>& frames) const {
+  Robot robot(path_to_urdf, frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<frames.size(); ++i) {
-    contacts_ref.push_back(PointContact(model, frames[i]));
+    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weight_on_velocity, baumgarte_weight_on_position));
   }
   const double time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
@@ -486,11 +533,13 @@ void RobotTest::testRNEA(const std::string& path_to_urdf, pinocchio::Model& mode
 }
 
 
-void RobotTest::testRNEAImpulse(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data, const std::vector<int>& frames) const {
-  Robot robot(path_to_urdf, frames);
+void RobotTest::testRNEAImpulse(const std::string& path_to_urdf, 
+                                pinocchio::Model& model, pinocchio::Data& data, 
+                                const std::vector<int>& frames) const {
+  Robot robot(path_to_urdf, frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<frames.size(); ++i) {
-    contacts_ref.push_back(PointContact(model, frames[i]));
+    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weight_on_velocity, baumgarte_weight_on_position));
   }
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -532,8 +581,10 @@ void RobotTest::testRNEAImpulse(const std::string& path_to_urdf, pinocchio::Mode
 }
 
 
-void RobotTest::testMJtJinv(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data, const std::vector<int>& frames) const {
-  Robot robot(path_to_urdf, frames);
+void RobotTest::testMJtJinv(const std::string& path_to_urdf, 
+                            pinocchio::Model& model, pinocchio::Data& data, 
+                            const std::vector<int>& frames) const {
+  Robot robot(path_to_urdf, frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
   const double time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -567,7 +618,9 @@ void RobotTest::testMJtJinv(const std::string& path_to_urdf, pinocchio::Model& m
 }
 
 
-void RobotTest::testGenConfiguration(const std::string& path_to_urdf, pinocchio::Model& model, pinocchio::Data& data) const {
+void RobotTest::testGenConfiguration(const std::string& path_to_urdf, 
+                                     pinocchio::Model& model, 
+                                     pinocchio::Data& data) const {
   Robot robot(path_to_urdf);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   EXPECT_TRUE(q.size() == robot.dimq());
@@ -596,7 +649,8 @@ TEST_F(RobotTest, hasFloatingBase) {
   EXPECT_FALSE(fixed_base.hasFloatingBase());
   EXPECT_EQ(fixed_base.dim_passive(), 0);
   EXPECT_EQ(fixed_base.dimu(), fixed_base.dimv());
-  Robot fixed_base_contacts(fixed_base_urdf, fixed_base_contact_frames);
+  Robot fixed_base_contacts(fixed_base_urdf, fixed_base_contact_frames, 
+                            baumgarte_weight_on_velocity, baumgarte_weight_on_position);
   EXPECT_FALSE(fixed_base_contacts.hasFloatingBase());
   EXPECT_EQ(fixed_base_contacts.dim_passive(), 0);
   EXPECT_EQ(fixed_base_contacts.dimu(), fixed_base_contacts.dimv());
@@ -604,56 +658,58 @@ TEST_F(RobotTest, hasFloatingBase) {
   EXPECT_TRUE(floating_base.hasFloatingBase());
   EXPECT_EQ(floating_base.dim_passive(), 6);
   EXPECT_EQ(floating_base.dimu()+floating_base.dim_passive(), floating_base.dimv());
-  Robot floating_base_contacts(floating_base_urdf, floating_base_contact_frames);
+  Robot floating_base_contacts(floating_base_urdf, floating_base_contact_frames, 
+                               baumgarte_weight_on_velocity, baumgarte_weight_on_position);
   EXPECT_TRUE(floating_base_contacts.hasFloatingBase());
   EXPECT_EQ(floating_base_contacts.dim_passive(), 6);
-  EXPECT_EQ(floating_base_contacts.dimu()+floating_base_contacts.dim_passive(), floating_base_contacts.dimv());
+  EXPECT_EQ(floating_base_contacts.dimu()+floating_base_contacts.dim_passive(), 
+            floating_base_contacts.dimv());
 }
 
 
-TEST_F(RobotTest, test) {
-  {
-    const auto path_to_urdf = fixed_base_urdf;
-    const auto contact_frames = fixed_base_contact_frames;
-    pinocchio::Model model = fixed_base_robot;
-    pinocchio::Data data = fixed_base_data;
-    testConstructorAndSetter(path_to_urdf,  contact_frames);
-    testIntegrateConfiguration(path_to_urdf, model);
-    testSubtractConfiguration(path_to_urdf, model);
-    testSubtractConfigurationDerivatives(path_to_urdf, model);
-    for (const auto frame : contact_frames) {
-      testFrameKinematicsGetters(path_to_urdf, model, data, frame);
-    }
-    testBaumgarte(path_to_urdf, model, data, contact_frames);
-    testImpulseVelocity(path_to_urdf, model, data, contact_frames);
-    testImpulseCondition(path_to_urdf, model, data, contact_frames);
-    testRNEA(path_to_urdf, model, data);
-    testRNEA(path_to_urdf, model, data, contact_frames);
-    testRNEAImpulse(path_to_urdf, model, data, contact_frames);
-    testMJtJinv(path_to_urdf, model, data, contact_frames);
-    testGenConfiguration(path_to_urdf, model, data);
+TEST_F(RobotTest, testFixedbase) {
+  const auto path_to_urdf = fixed_base_urdf;
+  const auto contact_frames = fixed_base_contact_frames;
+  pinocchio::Model model = fixed_base_robot;
+  pinocchio::Data data = fixed_base_data;
+  testConstructorAndSetter(path_to_urdf,  contact_frames);
+  testIntegrateConfiguration(path_to_urdf, model);
+  testSubtractConfiguration(path_to_urdf, model);
+  testSubtractConfigurationDerivatives(path_to_urdf, model);
+  for (const auto frame : contact_frames) {
+    testFrameKinematics(path_to_urdf, model, data, frame);
   }
-  {
-    const auto path_to_urdf = floating_base_urdf;
-    const auto contact_frames = floating_base_contact_frames;
-    pinocchio::Model model = floating_base_robot;
-    pinocchio::Data data = floating_base_data;
-    testConstructorAndSetter(path_to_urdf,  contact_frames);
-    testIntegrateConfiguration(path_to_urdf, model);
-    testSubtractConfiguration(path_to_urdf, model);
-    testSubtractConfigurationDerivatives(path_to_urdf, model);
-    for (const auto frame : contact_frames) {
-      testFrameKinematicsGetters(path_to_urdf, model, data, frame);
-    }
-    testBaumgarte(path_to_urdf, model, data, contact_frames);
-    testImpulseVelocity(path_to_urdf, model, data, contact_frames);
-    testImpulseCondition(path_to_urdf, model, data, contact_frames);
-    testRNEA(path_to_urdf, model, data);
-    testRNEA(path_to_urdf, model, data, contact_frames);
-    testRNEAImpulse(path_to_urdf, model, data, contact_frames);
-    testMJtJinv(path_to_urdf, model, data, contact_frames);
-    testGenConfiguration(path_to_urdf, model, data);
+  testBaumgarte(path_to_urdf, model, data, contact_frames);
+  testImpulseVelocity(path_to_urdf, model, data, contact_frames);
+  testImpulseCondition(path_to_urdf, model, data, contact_frames);
+  testRNEA(path_to_urdf, model, data);
+  testRNEA(path_to_urdf, model, data, contact_frames);
+  testRNEAImpulse(path_to_urdf, model, data, contact_frames);
+  testMJtJinv(path_to_urdf, model, data, contact_frames);
+  testGenConfiguration(path_to_urdf, model, data);
+}
+
+
+TEST_F(RobotTest, testFloatingBase) {
+  const auto path_to_urdf = floating_base_urdf;
+  const auto contact_frames = floating_base_contact_frames;
+  pinocchio::Model model = floating_base_robot;
+  pinocchio::Data data = floating_base_data;
+  testConstructorAndSetter(path_to_urdf,  contact_frames);
+  testIntegrateConfiguration(path_to_urdf, model);
+  testSubtractConfiguration(path_to_urdf, model);
+  testSubtractConfigurationDerivatives(path_to_urdf, model);
+  for (const auto frame : contact_frames) {
+    testFrameKinematics(path_to_urdf, model, data, frame);
   }
+  testBaumgarte(path_to_urdf, model, data, contact_frames);
+  testImpulseVelocity(path_to_urdf, model, data, contact_frames);
+  testImpulseCondition(path_to_urdf, model, data, contact_frames);
+  testRNEA(path_to_urdf, model, data);
+  testRNEA(path_to_urdf, model, data, contact_frames);
+  testRNEAImpulse(path_to_urdf, model, data, contact_frames);
+  testMJtJinv(path_to_urdf, model, data, contact_frames);
+  testGenConfiguration(path_to_urdf, model, data);
 }
 
 } // namespace idocp 

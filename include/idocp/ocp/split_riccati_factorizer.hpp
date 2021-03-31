@@ -22,13 +22,13 @@ namespace idocp {
 
 ///
 /// @class SplitRiccatiFactorizer
-/// @brief Riccati factorizer for a time stage.
+/// @brief Riccati factorizer of a time stage.
 ///
 class SplitRiccatiFactorizer {
 public:
   ///
-  /// @brief Construct factorizer.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Constructs a factorizer.
+  /// @param[in] robot Robot model. 
   ///
   SplitRiccatiFactorizer(const Robot& robot);
 
@@ -64,11 +64,11 @@ public:
 
   ///
   /// @brief Performs the backward Riccati recursion. 
-  /// @param[in] riccati_next Riccati factorization at the next time stage. 
-  /// @param[in] dt Time step between the current time stage and the next 
-  /// @param[in, out] kkt_matrix KKT matrix at the current stage. 
-  /// @param[in, out] kkt_residual KKT residual at the current stage. 
-  /// @param[out] riccati Riccati factorization at the current stage. 
+  /// @param[in] riccati_next Riccati factorization of the next time stage. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage. 
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage. 
+  /// @param[in, out] riccati Riccati factorization of this time stage. 
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
                                 const double dt, SplitKKTMatrix& kkt_matrix, 
@@ -76,16 +76,16 @@ public:
                                 SplitRiccatiFactorization& riccati);
 
   ///
-  /// @brief Performs the backward Riccati recursion with the transformed 
+  /// @brief Performs the backward Riccati recursion with the switching 
   /// constraint. 
-  /// @param[in] riccati_next Riccati factorization at the next time stage. 
-  /// @param[in] dt Time step between the current time stage and the next 
-  /// @param[in, out] kkt_matrix KKT matrix at the current impulse stage. 
-  /// @param[in, out] kkt_residual KKT residual at the current impulse stage. 
-  /// @param[in] jac The Jacobian of the transformed pure-state equality 
-  /// constraint.
-  /// @param[in, out] c_riccati Constrianed Riccati factorization at the current stage. 
-  /// @param[out] riccati Riccati factorization at the current stage. 
+  /// @param[in] riccati_next Riccati factorization of the next time stage. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage. 
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage. 
+  /// @param[in] jac Jacobian of the switching constraint. 
+  /// @param[in, out] riccati Riccati factorization of this time stage. 
+  /// @param[in, out] c_riccati Riccati factorization for the switching 
+  /// constraint. 
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
                                 const double dt, SplitKKTMatrix& kkt_matrix, 
@@ -95,12 +95,13 @@ public:
                                 SplitConstrainedRiccatiFactorization& c_riccati);
 
   ///
-  /// @brief Performs forward Riccati recursion and computes state direction. 
-  /// @param[in] kkt_matrix KKT matrix at the current time stage. 
-  /// @param[in] kkt_residual KKT residual at the current time stage. 
-  /// @param[in] d Split direction at the current time stage. 
-  /// @param[in] dt Time step between the current time stage and the next 
-  /// @param[out] d_next Split direction at the next time stage. 
+  /// @brief Performs the forward Riccati recursion and computes the state 
+  /// direction. 
+  /// @param[in] kkt_matrix Split KKT matrix of this time stage. 
+  /// @param[in] kkt_residual Split KKT residual of this time stage. 
+  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] d Split direction of this time stage. 
+  /// @param[in, out] d_next Split direction of the next time stage. 
   ///
   template <typename SplitDirectionType>
   void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
@@ -109,9 +110,9 @@ public:
                                SplitDirectionType& d_next) const;
 
   ///
-  /// @brief Computes the Newton direction of the costate vector. 
-  /// @param[in] riccati Riccati factorization at the current stage. 
-  /// @param[in, out] d Split direction of the current impulse stage. 
+  /// @brief Computes the Newton direction of the costate. 
+  /// @param[in] riccati Riccati factorization of this impulse stage. 
+  /// @param[in, out] d Split direction of this impulse stage. 
   ///
   static void computeCostateDirection(const SplitRiccatiFactorization& riccati, 
                                       SplitDirection& d);
@@ -119,25 +120,24 @@ public:
   ///
   /// @brief Computes the Newton direction of the Lagrange multiplier with 
   /// respect to the switching constraint. 
-  /// @param[in] c_riccati Constrained Riccati factorization at the current 
-  /// stage. 
-  /// @param[in, out] d Split direction of the current stage. 
+  /// @param[in] c_riccati Riccati factorization for the switching constraint.
+  /// @param[in, out] d Split direction of the this time stage. 
   ///
   static void computeLagrangeMultiplierDirection(
       const SplitConstrainedRiccatiFactorization& c_riccati,
       SplitDirection& d);
 
   ///
-  /// @brief Getter of the state feedback gain of the LQR subproblem. 
+  /// @brief Gets the state feedback gain of the LQR subproblem. 
   /// @param[in] K The state feedback gain. 
   ///
   template <typename MatrixType>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType>& K) const;
 
   ///
-  /// @brief Getter of the state feedback gain of the LQR subproblem. 
-  /// @param[in] Kq The state feedback gain with respect to the configuration. 
-  /// @param[in] Kv The state feedback gain with respect to the velocity. 
+  /// @brief Gets the state feedback gains of the LQR subproblem. 
+  /// @param[in] Kq The state feedback gain with respect to the configuration q. 
+  /// @param[in] Kv The state feedback gain with respect to the velocity v. 
   ///
   template <typename MatrixType1, typename MatrixType2>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Kq,

@@ -12,12 +12,13 @@ namespace idocp {
 
 ///
 /// @class ImpulseSplitBackwardCorrectionData
-/// @brief Split unconstrained backward correction.
+/// @brief Data used in ImpulseSplitBackwardCorrection
 ///
 class ImpulseSplitBackwardCorrectionData {
 public:
   ///
-  /// @brief Constructor.
+  /// @brief Constructs a data.
+  /// @param[in] robot Robot model. 
   ///
   ImpulseSplitBackwardCorrectionData(const Robot& robot);
 
@@ -55,6 +56,10 @@ public:
   ImpulseSplitBackwardCorrectionData& operator=(
       ImpulseSplitBackwardCorrectionData&&) noexcept = default;
 
+  ///
+  /// @brief Sets impulse status, i.e., set the dimension of the impulse forces.
+  /// @param[in] dimf Dimension of the impulse.
+  ///
   void setImpulseStatus(const int dimf);
 
   Eigen::Block<Eigen::MatrixXd> KKT_mat_inv();

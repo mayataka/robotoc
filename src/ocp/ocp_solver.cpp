@@ -2,7 +2,6 @@
 
 #include <stdexcept>
 #include <cassert>
-#include <fstream>
 
 
 namespace idocp {
@@ -99,6 +98,57 @@ const SplitSolution& OCPSolver::getSolution(const int stage) const {
 }
 
 
+std::vector<Eigen::VectorXd> OCPSolver::getSolution(
+    const std::string& name, const std::string& option) const {
+  std::vector<Eigen::VectorXd> sol;
+  if (name == "q") {
+    for (int i=0; i<=ocp_.discrete().N(); ++i) {
+      sol.push_back(s_[i].q);
+    }
+  }
+  if (name == "v") {
+    for (int i=0; i<=ocp_.discrete().N(); ++i) {
+      sol.push_back(s_[i].v);
+    }
+  }
+  if (name == "a") {
+    for (int i=0; i<ocp_.discrete().N(); ++i) {
+      sol.push_back(s_[i].a);
+    }
+  }
+  if (name == "f") {
+    Robot robot = robots_[0];
+    for (int i=0; i<ocp_.discrete().N(); ++i) {
+      Eigen::VectorXd f(Eigen::VectorXd::Zero(robot.max_dimf()));
+      if (option == "WORLD") {
+        robot.updateFrameKinematics(s_[i].q);
+        for (int j=0; j<robot.maxPointContacts(); ++j) {
+          if (s_[i].isContactActive(j)) {
+            const int contact_frame = robot.contactFrames()[j];
+            f.template segment<3>(3*j).noalias() 
+                = robot.frameRotation(contact_frame) * s_[i].f[j];
+          }
+        }
+      }
+      else {
+        for (int j=0; j<robot.maxPointContacts(); ++j) {
+          if (s_[i].isContactActive(j)) {
+            f.template segment<3>(3*j) = s_[i].f[j];
+          }
+        }
+      }
+      sol.push_back(f);
+    }
+  }
+  if (name == "u") {
+    for (int i=0; i<ocp_.discrete().N(); ++i) {
+      sol.push_back(s_[i].u);
+    }
+  }
+  return sol;
+}
+
+
 void OCPSolver::getStateFeedbackGain(const int time_stage, Eigen::MatrixXd& Kq, 
                                      Eigen::MatrixXd& Kv) const {
   assert(time_stage >= 0);
@@ -137,15 +187,17 @@ void OCPSolver::setSolution(const std::string& name,
         for (auto& ef : e.f) { ef = value; } 
         e.set_f_stack(); 
       }
-      for (auto& e : s_.impulse) { 
-        for (auto& ef : e.f) { ef = value; } 
-        e.set_f_stack(); 
-      }
       for (auto& e : s_.aux) { 
         for (auto& ef : e.f) { ef = value; } 
         e.set_f_stack(); 
       }
       for (auto& e : s_.lift) { 
+        for (auto& ef : e.f) { ef = value; } 
+        e.set_f_stack(); 
+      }
+    }
+    else if (name == "lmd") {
+      for (auto& e : s_.impulse) { 
         for (auto& ef : e.f) { ef = value; } 
         e.set_f_stack(); 
       }
@@ -248,35 +300,8 @@ bool OCPSolver::isCurrentSolutionFeasible() {
 }
 
 
-std::vector<Eigen::VectorXd> OCPSolver::getSolution(
-    const std::string& name) const {
-  std::vector<Eigen::VectorXd> sol;
-  if (name == "q") {
-    for (int i=0; i<=ocp_.discrete().N(); ++i) {
-      sol.push_back(s_[i].q);
-    }
-  }
-  if (name == "v") {
-    for (int i=0; i<=ocp_.discrete().N(); ++i) {
-      sol.push_back(s_[i].v);
-    }
-  }
-  if (name == "a") {
-    for (int i=0; i<ocp_.discrete().N(); ++i) {
-      sol.push_back(s_[i].a);
-    }
-  }
-  if (name == "f") {
-    for (int i=0; i<ocp_.discrete().N(); ++i) {
-      sol.push_back(s_[i].f_stack());
-    }
-  }
-  if (name == "u") {
-    for (int i=0; i<ocp_.discrete().N(); ++i) {
-      sol.push_back(s_[i].u);
-    }
-  }
-  return sol;
+void OCPSolver::showInfo() const {
+  ocp_.discrete().showInfo();
 }
 
 

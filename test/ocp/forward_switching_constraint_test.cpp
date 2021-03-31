@@ -1,7 +1,4 @@
-#include <string>
-
 #include <gtest/gtest.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -11,6 +8,8 @@
 #include "idocp/ocp/forward_switching_constraint.hpp"
 #include "idocp/ocp/split_state_constraint_jacobian.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -19,10 +18,9 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     dt1 = std::abs(Eigen::VectorXd::Random(1)[0]);
     dt2 = std::abs(Eigen::VectorXd::Random(1)[0]);
+    dt = dt1;
   }
 
   virtual void TearDown() {
@@ -31,8 +29,7 @@ protected:
   void testLinearizeSwitchingConstraint(Robot& robot) const;
   void testComputeSwitchingConstraintResidual(Robot& robot) const;
 
-  double dt1, dt2;
-  std::string fixed_base_urdf, floating_base_urdf;
+  double dt1, dt2, dt;
 };
 
 
@@ -63,7 +60,7 @@ void ForwardSwitchingConstraintTest::testLinearizeSwitchingConstraint(Robot& rob
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
-  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
+  robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
   robot.computeContactDerivative(impulse_status, kkt_matrix_ref.Pq());
   if (robot.hasFloatingBase()) {
     robot.dIntegratedConfiguration(s.q, dq, jac_ref.dintegrate_dq);
@@ -110,7 +107,7 @@ void ForwardSwitchingConstraintTest::testComputeSwitchingConstraintResidual(Robo
   Eigen::VectorXd q = Eigen::VectorXd::Zero(robot.dimq());
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
-  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
+  robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   const double kkt = switching_constraint.squaredNormSwitchingConstraintResidual(kkt_residual);
   const double kkt_ref = kkt_residual_ref.P().squaredNorm();
@@ -122,16 +119,14 @@ void ForwardSwitchingConstraintTest::testComputeSwitchingConstraintResidual(Robo
 
 
 TEST_F(ForwardSwitchingConstraintTest, fixedbase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   testLinearizeSwitchingConstraint(robot);
   testComputeSwitchingConstraintResidual(robot);
 }
 
 
 TEST_F(ForwardSwitchingConstraintTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   testLinearizeSwitchingConstraint(robot);
   testComputeSwitchingConstraintResidual(robot);
 }

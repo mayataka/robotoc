@@ -8,27 +8,57 @@
 
 namespace idocp {
 
+///
+/// @class ImpulseDynamicsForwardEulerData
+/// @brief Data used in ImpulseDynamicsForwardEuler.
+///
 class ImpulseDynamicsForwardEulerData {
 public:
+  ///
+  /// @brief Constructs a data.
+  /// @param[in] robot Robot model. 
+  ///
   ImpulseDynamicsForwardEulerData(const Robot& robot);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   ImpulseDynamicsForwardEulerData();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~ImpulseDynamicsForwardEulerData();
 
+  ///
+  /// @brief Default copy constructor. 
+  ///
   ImpulseDynamicsForwardEulerData(
       const ImpulseDynamicsForwardEulerData&) = default;
 
+  ///
+  /// @brief Default copy operator. 
+  ///
   ImpulseDynamicsForwardEulerData& operator=(
       const ImpulseDynamicsForwardEulerData&) = default;
  
+  ///
+  /// @brief Default move constructor. 
+  ///
   ImpulseDynamicsForwardEulerData(
       ImpulseDynamicsForwardEulerData&&) noexcept = default;
 
+  ///
+  /// @brief Default move assign operator. 
+  ///
   ImpulseDynamicsForwardEulerData& operator=(
       ImpulseDynamicsForwardEulerData&&) noexcept = default;
 
-  void setImpulseStatus(const ImpulseStatus& Impulse_status);
+  ///
+  /// @brief Set the impulse status, i.e., set dimension of the impulses.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   Eigen::MatrixXd dImDddv;
 

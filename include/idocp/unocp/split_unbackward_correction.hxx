@@ -49,9 +49,7 @@ inline void SplitUnBackwardCorrection::coarseUpdate(
     const double dt, SplitUnKKTMatrix& unkkt_matrix, 
     const SplitUnKKTResidual& unkkt_residual, const SplitSolution& s, 
     SplitDirection& d, SplitSolution& s_new) {
-  unkkt_matrix.Qvq() = unkkt_matrix.Qqv().transpose();
-  unkkt_matrix.Qxa() = unkkt_matrix.Qax().transpose();
-  kkt_mat_inverter_.invert(dt, unkkt_matrix.Q, KKT_mat_inv_);
+  kkt_mat_inverter_.invert(dt, unkkt_matrix.Q.transpose(), KKT_mat_inv_);
   d.split_direction.noalias() = KKT_mat_inv_ * unkkt_residual.KKT_residual;
   s_new.lmd = s.lmd - d.dlmd();
   s_new.gmm = s.gmm - d.dgmm();

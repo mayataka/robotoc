@@ -30,11 +30,13 @@ class ParNMPCSolver {
 public:
   ///
   /// @brief Construct optimal control problem solver.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] robot Robot model. 
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   /// @param[in] T Length of the horizon. Must be positive.
   /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
+  /// Must be non-negative. 
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
@@ -73,57 +75,92 @@ public:
   ParNMPCSolver& operator=(ParNMPCSolver&&) noexcept = default;
 
   ///
-  /// @brief Initializes the inequality constraints, i.e., set slack variables 
-  /// and the Lagrange multipliers of inequality constraints. Based on the 
-  /// current solution.
+  /// @brief Initializes the priaml-dual interior point method for inequality 
+  /// constraints. 
+  /// @param[in] t Initial time of the horizon. 
   ///
   void initConstraints(const double t);
 
   ///
   /// @brief Initializes the backward correction solver.
+  /// @param[in] t Initial time of the horizon. 
   ///
   void initBackwardCorrection(const double t);
 
   ///
   /// @brief Updates the solution by computing the primal-dual Newon direction.
-  /// @param[in] t Initial time of the horizon. Current time in MPC. 
+  /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
-  /// @param[in] line_search If true, filter line search is enabled. If false,
+  /// @param[in] line_search If true, filter line search is enabled. If false
   /// filter line search is disabled. Default is false.
   ///
   void updateSolution(const double t, const Eigen::VectorXd& q, 
                       const Eigen::VectorXd& v, const bool line_search=false);
 
   ///
-  /// @brief Get the const reference to the split solution of a time stage. 
-  /// For example, you can get the const reference to the control input torques 
-  /// at the initial stage via ocp.getSolution(0).u.
-  /// @param[in] stage Time stage of interest. Must be more than 0 and less 
+  /// @brief Get the split solution of a time stage. For example, the control 
+  /// input torques at the initial stage can be obtained by ocp.getSolution(0).u.
+  /// @param[in] stage Time stage of interest. Must be larger than 0 and smaller
   /// than N.
   /// @return Const reference to the split solution of the specified time stage.
   ///
   const SplitSolution& getSolution(const int stage) const;
 
   ///
-  /// @brief Gets the state-feedback gain for the control input torques.
-  /// @param[in] stage Time stage of interest. Must be more than 0 and less 
-  /// than N-1.
-  /// @param[out] Kq Gain with respec to the configuration. Size must be 
-  /// Robot::dimv() x Robot::dimv().
-  /// @param[out] Kv Gain with respec to the velocity. Size must be
-  /// Robot::dimv() x Robot::dimv().
+  /// @brief Get the solution vector over the horizon. 
+  /// @param[in] name Name of the variable. 
+  /// @param[in] option Option for the solution. If name == "f" and 
+  /// option == "WORLD", the contact forces expressed in the world frame is 
+  /// returned. if option is set to other values, these expressed in the local
+  /// frame are returned.
+  /// @return Solution vector.
+  ///
+  std::vector<Eigen::VectorXd> getSolution(const std::string& name,
+                                           const std::string& option="") const;
+
+  ///
+  /// @brief Gets the state-feedback gain.
+  /// @param[in] stage Time stage of interest. Must be larger than 0 and smaller
+  /// than N.
+  /// @param[out] Kq The state-feedback gain with respec to the configuration. 
+  /// Size must be Robot::dimu() x Robot::dimv().
+  /// @param[out] Kv The state-feedback gain with respec to the velocity. 
+  /// Size must be Robot::dimu() x Robot::dimv().
   ///
   void getStateFeedbackGain(const int stage, Eigen::MatrixXd& Kq, 
                             Eigen::MatrixXd& Kv) const;
 
+  ///
+  /// @brief Sets the solution over the horizon. 
+  /// @param[in] name Name of the variable. 
+  /// @param[in] value Value of the specified variable. 
+  ///
   void setSolution(const std::string& name, const Eigen::VectorXd& value);
 
+  ///
+  /// @brief Sets the contact status over all of the time stages uniformly. Also, 
+  /// disable discrete events over all of the time stages.
+  /// @param[in] contact_status Contact status.
+  ///
   void setContactStatusUniformly(const ContactStatus& contact_status);
 
+  ///
+  /// @brief Push back the contact status. Discrete events (impulse and lift)
+  /// are also appended to the optimal control problem.
+  /// @param[in] contact_status Contact status.
+  /// @param[in] switching_time Time of the switch of the contact status.
+  ///
   void pushBackContactStatus(const ContactStatus& contact_status, 
                              const double switching_time);
 
+  ///
+  /// @brief Sets the contact points to contact statsus with specified contact  
+  /// phase. Also set the contact points of the discrete event just before the  
+  /// contact phase.
+  /// @param[in] contact_phase Contact phase.
+  /// @param[in] contact_points Contact points.
+  ///
   void setContactPoints(const int contact_phase, 
                         const std::vector<Eigen::Vector3d>& contact_points);
 
@@ -143,8 +180,8 @@ public:
   void clearLineSearchFilter();
 
   ///
-  /// @brief Computes the KKT residula of the optimal control problem. 
-  /// @param[in] t Current time. 
+  /// @brief Computes the KKT residual of the optimal control problem. 
+  /// @param[in] t Initial time of the horizon. 
   /// @param[in] q Initial configuration. Size must be Robot::dimq().
   /// @param[in] v Initial velocity. Size must be Robot::dimv().
   ///
@@ -152,30 +189,23 @@ public:
                           const Eigen::VectorXd& v);
 
   ///
-  /// @brief Returns the squared KKT error norm by using previously computed 
-  /// results computed by updateSolution(). The result is not exactly the 
-  /// same as the squared KKT error norm of the original optimal control 
-  /// problem. The result is the squared norm of the condensed residual. 
-  /// However, this variables is sufficiently close to the original KKT error norm.
-  /// @return The squared norm of the condensed KKT residual.
+  /// @brief Returns the l2-norm of the KKT residuals.
+  /// OCPsolver::computeKKTResidual() must be computed.  
+  /// @return The l2-norm of the KKT residual.
   ///
   double KKTError();
 
   ///
-  /// @brief Return true if the current solution is feasible under the 
+  /// @return true if the current solution is feasible subject to the 
   /// inequality constraints. Return false if it is not feasible.
-  /// @return true if the current solution is feasible under the inequality 
-  /// constraints. false if it is not feasible.
   ///
   bool isCurrentSolutionFeasible();
 
   ///
-  /// @brief Get the solution vector. This function is not suitable for 
-  /// real-time application, e.g., MPC, since this function reconstructs the 
-  /// solution vector object.
-  /// @param[in] name Name of the printed variable. 
+  /// @brief Shows the information of the discretized optimal control problem
+  /// onto console.
   ///
-  std::vector<Eigen::VectorXd> getSolution(const std::string& name) const;
+  void showInfo() const;
 
 private:
   std::vector<Robot> robots_;

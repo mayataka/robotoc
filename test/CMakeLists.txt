@@ -2,22 +2,7 @@
 include(cmake/gtest.cmake)
 
 # build test helper 
-add_library(
-  test_helper
-  SHARED
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_helper/test_helper.cpp
-)
-target_include_directories(
-  test_helper
-  PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_helper
-  ${PROJECT_SOURCE_DIR}/include
-)
-target_link_libraries(
-  test_helper
-  PUBLIC 
-  ${PROJECT_NAME} 
-)
+add_subdirectory(test_helper)
 
 # macto for testing
 macro(add_idocp_test TESTNAME)

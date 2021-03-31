@@ -1,7 +1,5 @@
-#include <iostream>
 #include <string>
 #include <memory>
-#include <chrono>
 
 #include "Eigen/Core"
 
@@ -24,9 +22,14 @@
 
 int main () {
   // Create a robot with contacts.
-  std::vector<int> contact_frames = {14, 24, 34, 44}; // LF, LH, RF, RH
-  const std::string urdf_file_name = "../anymal_b_simple_description/urdf/anymal.urdf";
-  idocp::Robot robot(urdf_file_name, contact_frames);
+  const int LF_foot = 14;
+  const int LH_foot = 24;
+  const int RF_foot = 34;
+  const int RH_foot = 44;
+  std::vector<int> contact_frames = {LF_foot, LH_foot, RF_foot, RH_foot}; // LF, LH, RF, RH
+  const double baumgarte_time_step = 0.5 / 20;
+  const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
+  idocp::Robot robot(path_to_urdf, contact_frames, baumgarte_time_step);
 
   // Create a cost function.
   auto cost = std::make_shared<idocp::CostFunction>();
@@ -109,7 +112,7 @@ int main () {
   auto contact_status = robot.createContactStatus();
   contact_status.activateContacts({0, 1, 2, 3});
   robot.updateFrameKinematics(q);
-  robot.setContactPoints(contact_status);
+  robot.getContactPoints(contact_status);
   parnmpc_solver.setContactStatusUniformly(contact_status);
   parnmpc_solver.setSolution("q", q);
   parnmpc_solver.setSolution("v", v);

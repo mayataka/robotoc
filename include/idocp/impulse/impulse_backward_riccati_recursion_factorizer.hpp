@@ -13,13 +13,13 @@ namespace idocp {
 
 ///
 /// @class ImpulseBackwardRiccatiRecursionFactorizer
-/// @brief Factorizer of the backward Riccati recursion for ImpulseSplitOCP.
+/// @brief Factorizer of the backward Riccati recursion of an impulse stage.
 ///
 class ImpulseBackwardRiccatiRecursionFactorizer {
 public:
   ///
-  /// @brief Construct factorizer.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Constructs a factorizer.
+  /// @param[in] robot Robot model. 
   ///
   ImpulseBackwardRiccatiRecursionFactorizer(const Robot& robot);
 
@@ -58,22 +58,21 @@ public:
       ImpulseBackwardRiccatiRecursionFactorizer&&) noexcept = default;
 
   ///
-  /// @brief Factorize the KKT matrix and KKT residual for the backward Riccati  
-  /// recursion, i.e., factorize matrices F, and vectors lx.
-  /// @param[in] riccati_next Riccati factorization at the next time stage.
-  /// @param[in, out] kkt_matrix The KKT matrix.
+  /// @brief Factorizes the split KKT matrix and split KKT residual of 
+  /// this impulse stage for the backward Riccati recursion.
+  /// @param[in] riccati_next Riccati factorization of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
   ///
   void factorizeKKTMatrix(const SplitRiccatiFactorization& riccati_next, 
                           ImpulseSplitKKTMatrix& kkt_matrix);
 
   ///
-  /// @brief Factorize the Riccati factorization matrix P and vector s.
-  /// @param[in] riccati_next Riccati factorization at the next time stage.
-  /// @param[in] kkt_matrix The KKT matrix factorized by 
-  /// BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization().
-  /// @param[in] kkt_residual The KKT residual factorized by
-  /// BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization().
-  /// @param[out] riccati The Riccati factorization at this time stage.
+  /// @brief Factorizes the Riccati factorization matrix and vector.
+  /// @param[in] riccati_next Riccati factorization of the next time stage.
+  /// @param[in] kkt_matrix Split KKT matrix of this impulse stage. 
+  /// @param[in] kkt_residual Split KKT residual of this impulse stage.
+  /// ImpulseBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix().
+  /// @param[out] riccati The Riccati factorization of this impulse stage.
   ///
   void factorizeRiccatiFactorization(
       const SplitRiccatiFactorization& riccati_next, 

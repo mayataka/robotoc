@@ -25,8 +25,8 @@ namespace idocp {
 class SplitUnRiccatiFactorizer {
 public:
   ///
-  /// @brief Construct factorizer.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Constructs a factorizer.
+  /// @param[in] robot Robot model. 
   ///
   SplitUnRiccatiFactorizer(const Robot& robot);
 
@@ -66,9 +66,9 @@ public:
   /// @brief Performs the backward Riccati recursion. 
   /// @param[in] riccati_next Riccati factorization at the next time stage. 
   /// @param[in] dt Time step between the current time stage and the next 
-  /// @param[in, out] unkkt_matrix KKT matrix at the current impulse stage. 
-  /// @param[in, out] unkkt_residual KKT residual at the current impulse stage. 
-  /// @param[out] riccati Riccati factorization at the current impulse stage. 
+  /// @param[in, out] unkkt_matrix KKT matrix at the this time stage. 
+  /// @param[in, out] unkkt_residual KKT residual at the this time stage. 
+  /// @param[out] riccati Riccati factorization at the this time stage. 
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
                                 const double dt, 
@@ -90,7 +90,7 @@ public:
   ///
   /// @brief Computes the Newton direction of the costate vector. 
   /// @param[in] riccati Riccati factorization at the current stage. 
-  /// @param[in, out] d Split direction of the current impulse stage. 
+  /// @param[in, out] d Split direction of the current this time stage. 
   ///
   static void computeCostateDirection(const SplitRiccatiFactorization& riccati, 
                                       SplitDirection& d);

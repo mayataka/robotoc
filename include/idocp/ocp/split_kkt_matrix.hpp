@@ -19,8 +19,8 @@ public:
   using Matrix6d = Eigen::Matrix<double, 6, 6>;
 
   ///
-  /// @brief Construct a KKT matrix.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Construct a split KKT matrix.
+  /// @param[in] robot Robot model. 
   ///
   SplitKKTMatrix(const Robot& robot);
 
@@ -43,7 +43,7 @@ public:
   /// @brief Default copy operator. 
   ///
   SplitKKTMatrix& operator=(const SplitKKTMatrix&) = default;
- 
+
   ///
   /// @brief Default move constructor. 
   ///
@@ -61,7 +61,7 @@ public:
   void setContactStatus(const ContactStatus& contact_status);
 
   ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @brief Set impulse status, i.e., set dimension of the impulses.
   /// @param[in] impulse_status Impulse status.
   ///
   void setImpulseStatus(const ImpulseStatus& impulse_status);
@@ -72,10 +72,9 @@ public:
   void setImpulseStatus();
 
   ///
-  /// @brief Jacobian of the state equation of the configuration with respect  
-  /// to the control input torques. 
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is Robot::dimv() x Robot::dimu().
+  /// @brief Jacobian of the state equation of q with respect to u.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is Robot::dimv() x Robot::dimu().
   ///
   Eigen::Block<Eigen::MatrixXd> Fqu();
 
@@ -85,10 +84,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fqu() const;
 
   ///
-  /// @brief Jacobian of the state equation of the configuration with respect  
-  /// to the configuration. 
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is Robot::dimv() x Robot::dimv().
+  /// @brief Jacobian of the state equation of q with respect to q.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Fqq();
 
@@ -98,10 +96,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fqq() const;
 
   ///
-  /// @brief Jacobian of the state equation of the configuration with respect  
-  /// to the generalized velocity. 
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is Robot::dimv() x Robot::dimv().
+  /// @brief Jacobian of the state equation of q with respect to v.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Fqv();
 
@@ -111,10 +108,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fqv() const;
 
   ///
-  /// @brief Jacobian of the state equation of the generalized velocity with 
-  /// respect to the control input torques. 
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is Robot::dimv() x Robot::dimu().
+  /// @brief Jacobian of the state equation of v with respect to u.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is Robot::dimv() x Robot::dimu().
   ///
   Eigen::Block<Eigen::MatrixXd> Fvu();
 
@@ -124,10 +120,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fvu() const;
 
   ///
-  /// @brief Jacobian of the state equation of the generalized velocity with 
-  /// respect to the configuration. 
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is Robot::dimv() x Robot::dimv().
+  /// @brief Jacobian of the state equation of v with respect to q.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Fvq();
 
@@ -137,10 +132,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fvq() const;
 
   ///
-  /// @brief Jacobian of the state equation of the generalized velocity with 
-  /// respect to the generalized velocity. 
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is Robot::dimv() x Robot::dimv().
+  /// @brief Jacobian of the state equation of v with respect to v.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Fvv();
 
@@ -150,10 +144,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fvv() const;
 
   ///
-  /// @brief Jacobian of the state equation with respect to the control input 
-  /// torques.
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is 2 * Robot::dimv() x Robot::dimu().
+  /// @brief Jacobian of the state equation with respect to u.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is 2 * Robot::dimv() x Robot::dimu().
   ///
   Eigen::Block<Eigen::MatrixXd> Fxu();
 
@@ -163,10 +156,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fxu() const;
 
   ///
-  /// @brief Jacobian of the state equation with respect to the state, i.e.,
-  /// the configuration and the generalized velocity.
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is 2 * Robot::dimv() x 2 * Robot::dimv().
+  /// @brief Jacobian of the state equation with respect to x.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is 2 * Robot::dimv() x 2 * Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Fxx();
 
@@ -176,10 +168,7 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fxx() const;
 
   ///
-  /// @brief Jacobian of the contact position constraint related to impulse 
-  /// condition with respect to the configuration. 
-  /// ImpulseSplitKKTMatrix::setImpulseStatus() muset be called to set the impulse 
-  /// dimension before calling this function.
+  /// @brief Jacobian of the contact position constraints with respect to q. 
   /// @return Reference to the block part of the Hessian. 
   /// Size is ImpulseStatus::dimf() x Robot::dimv().
   ///
@@ -191,8 +180,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Pq() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the control input torques 
-  /// u. 
+  /// @brief Hessian of the Lagrangian with respect to the extended control 
+  /// input torques [u_passive u]. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Quu_full();
@@ -203,8 +192,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Quu_full() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the control input torques 
-  /// u. 
+  /// @brief Hessian of the Lagrangian with respect to the passive control input 
+  /// torques u_passive.
   /// @return Reference to the Hessian. Size is 
   /// Robot::dim_passive() x Robot::dim_passive().
   ///
@@ -216,8 +205,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Quu_passive_topLeft() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the control input torques 
-  /// u. 
+  /// @brief Hessian of the Lagrangian with respect to the passive control input 
+  /// torques u_passive and the control input torques u.
   /// @return Reference to the Hessian. Size is 
   /// Robot::dimu() x Robot::dim_passive().
   ///
@@ -230,7 +219,7 @@ public:
 
   ///
   /// @brief Hessian of the Lagrangian with respect to the control input torques 
-  /// u. 
+  /// u and the passive control input torques u_passive.
   /// @return Reference to the Hessian. Size is 
   /// Robot::dim_passive() x Robot::dimu().
   ///
@@ -254,8 +243,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Quu() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the control input and 
-  /// configuration. 
+  /// @brief Hessian of the Lagrangian with respect to the extended control 
+  /// input torques [u_passive u] and configuration q. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Quq_full();
@@ -266,8 +255,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Quq_full() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the control input and 
-  /// configuration. 
+  /// @brief Hessian of the Lagrangian with respect to the passive control input 
+  /// torques u_passive and configuration q. 
   /// @return Reference to the Hessian. Size is 
   /// Robot::dim_passive() x Robot::dimv().
   ///
@@ -279,8 +268,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Quq_passive() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the control input and 
-  /// configuration. 
+  /// @brief Hessian of the Lagrangian with respect to the control input 
+  /// torques u and configuration q. 
   /// @return Reference to the Hessian. Size is Robot::dimu() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Quq();
@@ -291,8 +280,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Quq() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the control input and 
-  /// generalized velocity. 
+  /// @brief Hessian of the Lagrangian with respect to the extended control 
+  /// input torques [u_passive u] and velocity v. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Quv_full();
@@ -303,8 +292,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Quv_full() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the control input and 
-  /// generalized velocity. 
+  /// @brief Hessian of the Lagrangian with respect to the passive control input 
+  /// torques u_passive and velocity v. 
   /// @return Reference to the Hessian. Size is 
   /// Robot::dim_passive() x Robot::dimv().
   ///
@@ -316,8 +305,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Quv_passive() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to the control input and 
-  /// generalized velocity. 
+  /// @brief Hessian of the Lagrangian with respect to the control input 
+  /// torques u and velocity q. 
   /// @return Reference to the Hessian. Size is Robot::dimu() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Quv();
@@ -328,8 +317,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Quv() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to configuration and the 
-  /// control input torques. 
+  /// @brief Hessian of the Lagrangian with respect to the configuration q and
+  /// extended control input torques [u_passive u]. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qqu_full();
@@ -340,10 +329,10 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qqu_full() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to configuration and the 
-  /// control input torques. 
+  /// @brief Hessian of the Lagrangian with respect to the configuration q and
+  /// passive control input torques u_passive. 
   /// @return Reference to the Hessian. Size is 
-  /// Robot::dimv() x Robot::dim_passive().
+  /// Robot::dim_passive() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qqu_passive();
 
@@ -353,9 +342,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qqu_passive() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to configuration and the 
-  /// control input torques. 
-  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimu().
+  /// @brief Hessian of the Lagrangian with respect to the configuration q and
+  /// control input torques u. 
+  /// @return Reference to the Hessian. Size is Robot::dimu() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qqu();
 
@@ -365,7 +354,7 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qqu() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to configuration. 
+  /// @brief Hessian of the Lagrangian with respect to the configuration q. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qqq();
@@ -376,8 +365,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qqq() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to generalized velocity and 
-  /// configuration. 
+  /// @brief Hessian of the Lagrangian with respect to the configuration q and 
+  /// velocity v. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qqv();
@@ -388,8 +377,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qqv() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to generalized velocity and 
-  /// control input torques. 
+  /// @brief Hessian of the Lagrangian with respect to the velocity v and
+  /// extended control input torques [u_passive u]. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qvu_full();
@@ -400,10 +389,10 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qvu_full() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to generalized velocity and 
-  /// control input torques. 
+  /// @brief Hessian of the Lagrangian with respect to the velocity v and
+  /// passive control input torques u_passive. 
   /// @return Reference to the Hessian. Size is 
-  /// Robot::dimv() x Robot::dim_passive().
+  /// Robot::dim_passive() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qvu_passive();
 
@@ -413,9 +402,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qvu_passive() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to generalized velocity and 
-  /// control input torques. 
-  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimu().
+  /// @brief Hessian of the Lagrangian with respect to the velocity v and
+  /// control input torques u. 
+  /// @return Reference to the Hessian. Size is Robot::dimu() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qvu();
 
@@ -425,8 +414,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qvu() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to generalized velocity and 
-  /// configuration. 
+  /// @brief Hessian of the Lagrangian with respect to the velocity and 
+  /// configuration q. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qvq();
@@ -437,7 +426,7 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qvq() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to generalized velocity.
+  /// @brief Hessian of the Lagrangian with respect to the velocity v.
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qvv();
@@ -448,8 +437,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qvv() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to control input torques
-  /// and state. 
+  /// @brief Hessian of the Lagrangian with respect to the extended control 
+  /// input torques [u_passive u] and state x. 
   /// @return Reference to the Hessian. Size is 
   /// Robot::dimv() x 2 * Robot::dimv().
   ///
@@ -461,8 +450,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qux_full() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to control input torques
-  /// and state. 
+  /// @brief Hessian of the Lagrangian with respect to the passive control 
+  /// input torques u_passive and state x. 
   /// @return Reference to the Hessian. Size is 
   /// Robot::dim_passive() x 2 * Robot::dimv().
   ///
@@ -474,8 +463,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qux_passive() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to control input torques
-  /// and state. 
+  /// @brief Hessian of the Lagrangian with respect to the control input torques 
+  /// u and state x. 
   /// @return Reference to the Hessian. Size is 
   /// Robot::dimu() x 2 * Robot::dimv().
   ///
@@ -487,8 +476,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qux() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to state and control input
-  /// torques. 
+  /// @brief Hessian of the Lagrangian with respect to the state x and extended 
+  /// control input torques [u_passive u].
   /// @return Reference to the Hessian. Size is 
   /// 2 * Robot::dimv() x Robot::dimv().
   ///
@@ -500,8 +489,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qxu_full() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to state and control input
-  /// torques. 
+  /// @brief Hessian of the Lagrangian with respect to the state x and passive
+  /// control input torques u_passive.
   /// @return Reference to the Hessian. Size is 
   /// 2 * Robot::dimv() x Robot::dim_passive().
   ///
@@ -513,8 +502,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qxu_passive() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to state and control input
-  /// torques. 
+  /// @brief Hessian of the Lagrangian with respect to the state x and control
+  /// input torques u.
   /// @return Reference to the Hessian. Size is 
   /// 2 * Robot::dimv() x Robot::dimu().
   ///
@@ -526,7 +515,7 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qxu() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to state. 
+  /// @brief Hessian of the Lagrangian with respect to the state x. 
   /// @return Reference to the Hessian. Size is 
   /// 2 * Robot::dimv() x 2 * Robot::dimv().
   ///
@@ -538,44 +527,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qxx() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to acceleration and 
-  /// contact forces. 
-  /// @return Reference to the Hessian. Size is 
-  /// Robot::dimv() + ContactStatus::dimf() 
-  /// x  Robot::dimv() + ContactStatus::dimf().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Qaaff();
-
-  ///
-  /// @brief const version of SplitKKTMatrix::Qaaff().
-  ///
-  const Eigen::Block<const Eigen::MatrixXd> Qaaff() const;
-
-  ///
-  /// @brief Hessian of the Lagrangian with respect to acceleration. 
-  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Qaa();
-
-  ///
-  /// @brief const version of SplitKKTMatrix::Qaa().
-  ///
-  const Eigen::Block<const Eigen::MatrixXd> Qaa() const;
-
-  ///
-  /// @brief Hessian of the Lagrangian with respect to acceleration. 
-  /// @return Reference to the Hessian. Size is 
-  /// ContactStatus::dimf() x ContactStatus::dimf().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Qff();
-
-  ///
-  /// @brief const version of SplitKKTMatrix::Qff().
-  ///
-  const Eigen::Block<const Eigen::MatrixXd> Qff() const;
-
-  ///
-  /// @brief Hessian of the Lagrangian with respect to primal variables. 
+  /// @brief Hessian of the Lagrangian with respect to the primal variables 
+  /// (u and x). 
   /// @return Reference to the Hessian. Size is 
   /// 2 * Robot::dimv() + Robot::dimu() x 2 * Robot::dimv() + Robot::dimu().
   ///
@@ -587,7 +540,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qss() const;
 
   ///
-  /// @brief Constraint Jacobian. 
+  /// @brief Jacobian of the constraints with respect to the primal variables 
+  /// (u and x).. 
   /// @return Reference to the Jacobian. Size is 
   /// 2 * Robot::dimv() x 2 * Robot::dimv() + Robot::dimu().
   ///
@@ -598,11 +552,54 @@ public:
   ///
   const Eigen::MatrixXd& Jac() const;
 
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the acceleration a. 
+  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qaa();
 
   ///
-  /// @brief Symmetrize the Hessian for matrix inversion. 
+  /// @brief const version of SplitKKTMatrix::Qaa().
   ///
-  void symmetrize();
+  const Eigen::Block<const Eigen::MatrixXd> Qaa() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the contact forces f. 
+  /// @return Reference to the Hessian. Size is 
+  /// ContactStatus::dimf() x ContactStatus::dimf().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qff();
+
+  ///
+  /// @brief const version of SplitKKTMatrix::Qff().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qff() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the configuration and 
+  /// contact forces. 
+  /// @return Reference to the Hessian. Size is 
+  /// Robot::dimv() x ContactStatus::dimf().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qqf();
+
+  ///
+  /// @brief const version of SplitKKTMatrix::Qqf().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qqf() const;
+
+  ///
+  /// @brief Hessian of the Lagrangian with respect to the contact forces and 
+  /// configuration.
+  /// @return Reference to the Hessian. Size is 
+  /// ContactStatus::dimf() x Robot::dimv().
+  ///
+  Eigen::Block<Eigen::MatrixXd> Qfq();
+
+  ///
+  /// @brief const version of SplitKKTMatrix::Qfq().
+  ///
+  const Eigen::Block<const Eigen::MatrixXd> Qfq() const;
 
   ///
   /// @brief Set the all components zero.
@@ -624,38 +621,44 @@ public:
   int dimi() const;
 
   ///
-  /// @brief Chech the equivalence of two SplitKKTMatrix.
+  /// @brief Checks the equivalence of two SplitKKTMatrix.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
   bool isApprox(const SplitKKTMatrix& other) const;
 
   ///
-  /// @brief Chech this has at least one NaN.
+  /// @brief Checks this has at least one NaN.
   /// @return true if this has at least one NaN. false otherwise.
   ///
   bool hasNaN() const;
 
+  ///
   /// @brief Derivative of the state equation with respect to the 
-  /// configuration of the previous time step q_prev.
+  /// configuration of the previous time stage q_prev. Size is 
+  /// Robot::dimv() x Robot::dimv().
+  ///
   Eigen::MatrixXd Fqq_prev;
 
+  ///
   /// @brief Inverse of the derivative of the state equation with respect to 
-  /// the configuration. 
+  /// the configuration q. 
+  ///
   Matrix6d Fqq_inv;
 
+  ///
   /// @brief Inverse of the derivative of the state equation with respect to 
-  /// the configuration of the previous time step q_prev.
+  /// the configuration of the previous time stage q_prev.
+  ///
   Matrix6d Fqq_prev_inv;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  Eigen::MatrixXd F_, Pq_full_, Q_, Qaaff_full_;
+  Eigen::MatrixXd F_, Pq_full_, Q_, Qafq_full_;
   bool has_floating_base_;
   int dimv_, dimx_, dimu_, dim_passive_, dimf_, dimi_,
       u_begin_, q_begin_, v_begin_;
-  static constexpr int kDimFloatingBase = 6;
 
 };
 

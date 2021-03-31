@@ -84,19 +84,19 @@ public:
   const ImpulseStatus& impulseStatus() const;
 
   ///
-  /// @brief Getter of contact status before this discrete event.
+  /// @brief Gets the contact status before this discrete event.
   /// @return const reference to the pre contact status.
   ///
   const ContactStatus& preContactStatus() const;
 
   ///
-  /// @brief Getter of contact status after this discrete event.
+  /// @brief Gets the contact status after this discrete event.
   /// @return const reference to the post contact status.
   ///
   const ContactStatus& postContactStatus() const;
 
   ///
-  /// @brief Set the contact status from two sequential contact status.
+  /// @brief Sets the contact status from two sequential contact status.
   /// @param[in] pre_contact_status Contact status before this discrete event. 
   /// @param[in] post_contact_status Contact status after this discrete event. 
   ///
@@ -104,7 +104,7 @@ public:
                         const ContactStatus& post_contact_status);
 
   ///
-  /// @brief Set a contact point.
+  /// @brief Sets a contact point.
   /// @param[in] contact_index Index of the contact.
   /// @param[in] contact_point Contact point.
   ///
@@ -112,14 +112,14 @@ public:
                        const Eigen::Vector3d& contact_point);
 
   ///
-  /// @brief Set contact points.
+  /// @brief Sets contact points.
   /// @param[in] contact_points Contact points. Size must be 
   /// ImpulseStatus::maxPointContacts().
   ///
   void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
 
   ///
-  /// @brief Return the maximum number of the contacts.
+  /// @brief Returns the maximum number of the contacts.
   /// @return The maximum number of the contacts. 
   ///
   int maxPointContacts() const;

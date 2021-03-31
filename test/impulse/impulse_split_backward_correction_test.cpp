@@ -1,6 +1,3 @@
-#include <string>
-#include <memory>
-
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
@@ -13,7 +10,8 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_split_backward_correction.hpp"
 
-#include "test_helper.hpp"
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -21,11 +19,6 @@ class ImpulseSplitBackwardCorrectionTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((signed int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
-    fixed_base_robot = Robot(fixed_base_urdf, {18});
-    floating_base_robot = Robot(floating_base_urdf, {14, 24, 34, 44});
   }
 
   virtual void TearDown() {
@@ -35,10 +28,6 @@ protected:
   ImpulseSplitKKTResidual createKKTResidual(const Robot& robot, const ImpulseStatus& impulse_status) const;
 
   void test(const Robot& robot) const;
-  void testTerminal(const Robot& robot) const;
-
-  std::string fixed_base_urdf, floating_base_urdf;
-  Robot fixed_base_robot, floating_base_robot;
 };
 
 
@@ -51,6 +40,8 @@ ImpulseSplitKKTMatrix ImpulseSplitBackwardCorrectionTest::createKKTMatrix(
   ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setImpulseStatus(impulse_status);
   kkt_matrix.Qss() = seed * seed.transpose();
+  kkt_matrix.Qfq().setZero();
+  kkt_matrix.Qvq().setZero();
   if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationMinus(robot.generateFeasibleConfiguration(), 
                                        robot.generateFeasibleConfiguration(), kkt_matrix.Fqq());
@@ -99,6 +90,7 @@ void ImpulseSplitBackwardCorrectionTest::test(const Robot& robot) const {
 
   Eigen::MatrixXd KKT_mat_inv(Eigen::MatrixXd::Zero(dimKKT, dimKKT));
   ImpulseSplitKKTMatrixInverter inverter(robot);
+  kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
   kkt_matrix_ref.Qxx() += aux_mat_next;
   inverter.invert(kkt_matrix_ref.Jac(), kkt_matrix_ref.Qss(), KKT_mat_inv);
   Eigen::VectorXd d0_ref = KKT_mat_inv * kkt_residual.splitKKTResidual();
@@ -164,12 +156,16 @@ void ImpulseSplitBackwardCorrectionTest::test(const Robot& robot) const {
 
 
 TEST_F(ImpulseSplitBackwardCorrectionTest, fixedBase) {
-  test(fixed_base_robot);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  test(robot);
 }
 
 
 TEST_F(ImpulseSplitBackwardCorrectionTest, floating_base) {
-  test(floating_base_robot);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  test(robot);
 }
 
 } // namespace idocp

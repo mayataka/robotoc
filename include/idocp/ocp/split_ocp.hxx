@@ -9,13 +9,12 @@ namespace idocp {
 
 inline SplitOCP::SplitOCP(const Robot& robot, 
                           const std::shared_ptr<CostFunction>& cost,
-                          const std::shared_ptr<Constraints>& constraints, 
-                          const double dt) 
+                          const std::shared_ptr<Constraints>& constraints) 
   : cost_(cost),
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
     constraints_data_(constraints->createConstraintsData(robot, 0)),
-    contact_dynamics_(robot, dt),
+    contact_dynamics_(robot),
     switching_constraint_(robot),
     has_floating_base_(robot.hasFloatingBase()),
     use_kinematics_(false) {

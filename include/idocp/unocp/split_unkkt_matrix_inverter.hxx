@@ -39,20 +39,20 @@ inline SplitUnKKTMatrixInverter::~SplitUnKKTMatrixInverter() {
 template <typename MatrixType1, typename MatrixType2>
 inline void SplitUnKKTMatrixInverter::invert(
     const double dt, const Eigen::MatrixBase<MatrixType1>& Q,
-    const Eigen::MatrixBase<MatrixType2>& KKT_matrix_inverse) {
+    const Eigen::MatrixBase<MatrixType2>& KKT_mat_inv) {
   assert(dt > 0);
-  assert(KKT_matrix_inverse.rows() == dimKKT_);
-  assert(KKT_matrix_inverse.cols() == dimKKT_);
+  assert(KKT_mat_inv.rows() == dimKKT_);
+  assert(KKT_mat_inv.cols() == dimKKT_);
   llt_Q_.compute(Q);
   assert(llt_Q_.info() == Eigen::Success);
-  const_cast<Eigen::MatrixBase<MatrixType2>&> (KKT_matrix_inverse).bottomRightCorner(dimQ_, dimQ_).noalias()
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (KKT_mat_inv).bottomRightCorner(dimQ_, dimQ_).noalias()
       = llt_Q_.solve(Eigen::MatrixXd::Identity(dimQ_, dimQ_));
   FQinv_.topRows(dimv_) 
-      = - KKT_matrix_inverse.block(3*dimv_, 2*dimv_, dimv_, 3*dimv_) 
-        + dt * KKT_matrix_inverse.block(4*dimv_, 2*dimv_, dimv_, 3*dimv_);
+      = - KKT_mat_inv.block(3*dimv_, 2*dimv_, dimv_, 3*dimv_) 
+        + dt * KKT_mat_inv.block(4*dimv_, 2*dimv_, dimv_, 3*dimv_);
   FQinv_.bottomRows(dimv_) 
-      = dt * KKT_matrix_inverse.block(2*dimv_, 2*dimv_, dimv_, 3*dimv_) 
-        - KKT_matrix_inverse.block(4*dimv_, 2*dimv_, dimv_, 3*dimv_);
+      = dt * KKT_mat_inv.block(2*dimv_, 2*dimv_, dimv_, 3*dimv_) 
+        - KKT_mat_inv.block(4*dimv_, 2*dimv_, dimv_, 3*dimv_);
   S_.topLeftCorner(dimv_, dimv_) 
       = - FQinv_.block(0, dimv_, dimv_, dimv_) 
         + dt * FQinv_.block(0, 2*dimv_, dimv_, dimv_);
@@ -67,15 +67,15 @@ inline void SplitUnKKTMatrixInverter::invert(
         - FQinv_.block(dimv_, 2*dimv_, dimv_, dimv_);
   llt_S_.compute(S_);
   assert(llt_S_.info() == Eigen::Success);
-  const_cast<Eigen::MatrixBase<MatrixType2>&> (KKT_matrix_inverse).topLeftCorner(dimx_, dimx_).noalias()
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (KKT_mat_inv).topLeftCorner(dimx_, dimx_).noalias()
       = - llt_S_.solve(Eigen::MatrixXd::Identity(dimx_, dimx_));
-  const_cast<Eigen::MatrixBase<MatrixType2>&> (KKT_matrix_inverse).topRightCorner(dimx_, dimQ_).noalias()
-      = - KKT_matrix_inverse.topLeftCorner(dimx_, dimx_) * FQinv_;
-  const_cast<Eigen::MatrixBase<MatrixType2>&> (KKT_matrix_inverse).bottomLeftCorner(dimQ_, dimx_)
-      = KKT_matrix_inverse.topRightCorner(dimx_, dimQ_).transpose();
-  const_cast<Eigen::MatrixBase<MatrixType2>&> (KKT_matrix_inverse).bottomRightCorner(dimQ_, dimQ_).noalias()
-      -= KKT_matrix_inverse.topRightCorner(dimx_, dimQ_).transpose()
-          * S_ * KKT_matrix_inverse.topRightCorner(dimx_, dimQ_);
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (KKT_mat_inv).topRightCorner(dimx_, dimQ_).noalias()
+      = - KKT_mat_inv.topLeftCorner(dimx_, dimx_) * FQinv_;
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (KKT_mat_inv).bottomLeftCorner(dimQ_, dimx_)
+      = KKT_mat_inv.topRightCorner(dimx_, dimQ_).transpose();
+  const_cast<Eigen::MatrixBase<MatrixType2>&> (KKT_mat_inv).bottomRightCorner(dimQ_, dimQ_).noalias()
+      -= KKT_mat_inv.topRightCorner(dimx_, dimQ_).transpose()
+          * S_ * KKT_mat_inv.topRightCorner(dimx_, dimQ_);
 }
 
 } // namespace idocp 

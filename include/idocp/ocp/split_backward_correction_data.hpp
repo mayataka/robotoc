@@ -12,12 +12,13 @@ namespace idocp {
 
 ///
 /// @class SplitBackwardCorrectionData
-/// @brief Split unconstrained backward correction.
+/// @brief Data used in SplitBackwardCorrection.
 ///
 class SplitBackwardCorrectionData {
 public:
   ///
   /// @brief Constructor.
+  /// @param[in] robot Robot model. 
   ///
   SplitBackwardCorrectionData(const Robot& robot);
 

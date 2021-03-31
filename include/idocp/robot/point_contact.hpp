@@ -12,24 +12,23 @@ namespace idocp {
 
 ///
 /// @class PointContact
-/// @brief Kinematics model of a point contact.
+/// @brief Kinematics and dynamic model of a point contact.
 ///
 class PointContact {
 public:
   ///
-  /// @brief Construct point contact model.
-  /// @param[in] model The pinocchio model. Before call this constructor, 
+  /// @brief Construct a point contact model.
+  /// @param[in] model The pinocchio model. Before calling this constructor, 
   /// pinocchio model must be initialized, e.g., by pinocchio::buildModel().
   /// @param[in] contact_frame_id The index of the contact frame. 
-  /// @param[in] friction_coefficient Friction coefficient. Must be positive.
-  /// Defalut is 0.8.
-  /// @param[in] restitution_coefficient Coefficient of the restitution. Must 
-  /// be nonnegative. Must not be more than 1. Default is 0 
-  /// (complete inelastic).
+  /// @param[in] baumgarte_weight_on_velocity The weight paramter of the error 
+  /// on the contact velocity. Must be non-negative.
+  /// @param[in] baumgarte_weight_on_position The weight paramter of the error 
+  /// on the contact position. Must be non-negative.
   ///
-  PointContact(const pinocchio::Model& model, const int contact_frame_id, 
-               const double friction_coefficient=0.8, 
-               const double restitution_coefficient=0);
+  PointContact(const pinocchio::Model& model, const int contact_frame_id,
+               const double baumgarte_weight_on_velocity,
+               const double baumgarte_weight_on_position); 
 
   ///
   /// @brief Default constructor. 
@@ -62,10 +61,10 @@ public:
   PointContact& operator=(PointContact&&) noexcept = default;
 
   ///
-  /// @brief Converts the contact forces to the corresponding joint forces.
-  /// @param[in] contact_force The contact forces in the local frame.
-  /// @param[out] joint_forces: The corresponding joint forces of the robot 
-  /// model. 
+  /// @brief Converts the 3D contact forces in the local coordinate to the 
+  /// corresponding joint spatial forces.
+  /// @param[in] contact_force The 3D contact forces in the local frame.
+  /// @param[out] joint_forces: The corresponding joint spatial forces.
   ///
   void computeJointForceFromContactForce(
       const Eigen::Vector3d& contact_force, 
@@ -73,17 +72,16 @@ public:
 
   ///
   /// @brief Computes the contact Jacobian represented in the local coordinate 
-  /// of the contact frame. Before calling this function, you have to update the 
-  /// kinematics (with respect to the position, velocity, and acceleration) of 
-  /// the model in pinocchio::Data.
+  /// of the contact frame. Before calling this function, kinematics derivative 
+  /// of the robot model with respect to the frame position must be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
   /// @param[out] Jacobian Jacobian of the contact frame is stored in this 
   /// variable. If transpose=true, size must be Robot::dimv() x 3. 
   /// If transpose=false, size must be 3 x Robot::dimv() 
-  /// @param[in] transpose A flag for transposing the Jacobian or not. If true, 
-  /// the Jacobian is transposed. If false, the Jacobian is not transposed, 
-  /// i.e., the original Jacobian is returned. Default is false.
+  /// @param[in] transpose If true, the Jacobian is transposed. If false, the 
+  /// Jacobian is not transposed, i.e., the original Jacobian is returned. 
+  /// Default is false.
   ///
   template <typename MatrixType>
   void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
@@ -92,19 +90,18 @@ public:
 
   ///
   /// @brief Computes the contact Jacobian represented in the local coordinate 
-  /// of the contact frame multiplied by the user-defined constanct coefficient. 
-  /// Before calling this function, you have to update the kinematics (with 
-  /// respect to the position, velocity, and acceleration) of the model in 
-  /// pinocchio::Data.
+  /// of the contact frame. Before calling this function, kinematics derivative 
+  /// of the robot model with respect to the frame position must be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] coeff Coefficient multiplied to the resultant Jacobian.
+  /// @param[in] coeff A coefficient multiplied to the Jacobian.
   /// @param[out] Jacobian Jacobian of the contact frame is stored in this 
   /// variable. If transpose=true, size must be Robot::dimv() x 3. 
   /// If transpose=false, size must be 3 x Robot::dimv() 
-  /// @param[in] transpose A flag for transposing the Jacobian or not. If true, 
-  /// the Jacobian is transposed. If false, the Jacobian is not transposed, 
-  /// i.e., the original Jacobian is returned. Default is false.
+  /// @param[in] transpose If true, the Jacobian is transposed. If false, the 
+  /// Jacobian is not transposed, i.e., the original Jacobian is returned. 
+  /// Default is false.
+  ///
   ///
   template <typename MatrixType>
   void getContactJacobian(const pinocchio::Model& model, pinocchio::Data& data, 
@@ -114,10 +111,11 @@ public:
 
   ///
   /// @brief Computes the residual of the contact constraints considered by the 
-  /// Baumgarte's stabilization method.  
+  /// Baumgarte's stabilization method. Before calling this function, kinematics 
+  /// of the robot model (frame position, velocity, and acceleration) must be 
+  /// updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] time_step Time step of the discretization. Must be positive.
   /// @param[in] contact_point Contact point. Size must be 3.
   /// @param[out] baumgarte_residual Residual of the Bamgarte's constraint. 
   /// Size must be 3.
@@ -125,37 +123,34 @@ public:
   template <typename VectorType1, typename VectorType2>
   void computeBaumgarteResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
-      const double time_step,
       const Eigen::MatrixBase<VectorType1>& contact_point,
       const Eigen::MatrixBase<VectorType2>& baumgarte_residual) const;
 
   ///
   /// @brief Computes the partial derivatives of the contact constraints
   /// considered by the Baumgarte's stabilization method. Before calling this 
-  /// function, you have to update the kinematics of the model in 
-  /// pinocchio::Data.
+  /// function, kinematics derivatives of the robot model (position, velocity, 
+  /// and acceleration) must be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[in] time_step Time step of the discretization. Must be positive.
-  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
-  /// with respect to the configuaration. Size must be 3 x Robot::dimv().
-  /// @param[out] baumgarte_partial_dv The result of the partial derivative  
-  /// with respect to the velocity. Size must be 3 x Robot::dimv().
-  /// @param[out] baumgarte_partial_da The result of the partial derivative  
-  /// with respect to the acceleration. Size must be 3 x Robot::dimv().
+  /// @param[out] baumgarte_partial_dq The partial derivative with respect to 
+  /// the configuaration. Size must be 3 x Robot::dimv().
+  /// @param[out] baumgarte_partial_dv The partial derivative with respect to 
+  /// the velocity. Size must be 3 x Robot::dimv().
+  /// @param[out] baumgarte_partial_da The partial derivative  with respect to 
+  /// the acceleration. Size must be 3 x Robot::dimv().
   /// 
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
       const pinocchio::Model& model, pinocchio::Data& data, 
-      const double time_step,
       const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
 
   ///
-  /// @brief Computes the residual of the contact velocity constraints 
-  /// Before calling this function, you have to update the kinematics of the 
-  /// model in pinocchio::Data.
+  /// @brief Computes the residual of the contact velocity constraints.
+  /// Before calling this function, kinematics of the robot model 
+  /// (frame position and velocity) must be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
   /// @param[out] velocity_residual Residual of the contact velocity constraint.
@@ -167,14 +162,15 @@ public:
 
   ///
   /// @brief Computes the partial derivatives of the contact velocity 
-  /// constraints. Before calling this function, you have to update the  
-  /// kinematics of the model in pinocchio::Data.
+  /// constraints. Before calling this function, kinematics derivatives of the 
+  /// robot model (position and velocity) must be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
-  /// @param[out] velocity_partial_dq The result of the partial derivative  
-  /// with respect to the configuaration. Size must be 3 x Robot::dimv().
-  /// @param[out] velocity_partial_dv The result of the partial derivative  
-  /// with respect to the velocity. Size must be 3 x Robot::dimv().
+  /// @param[out] velocity_partial_dq The partial derivative with respect to the 
+  /// configuaration. Size must be 3 x Robot::dimv().
+  /// @param[out] velocity_partial_dv The partial derivative with respect to the 
+  /// velocity. Size must be 3 x Robot::dimv().
+  ///
   template <typename MatrixType1, typename MatrixType2>
   void computeContactVelocityDerivatives(
       const pinocchio::Model& model, pinocchio::Data& data,
@@ -182,7 +178,9 @@ public:
       const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv);
 
   ///
-  /// @brief Computes the residual of the contact position constraints.
+  /// @brief Computes the residual of the contact position constraints. Before 
+  /// calling this function, kinematics of the robot model (frame position) must 
+  /// be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
   /// @param[in] contact_point Contact point. Size must be 3.
@@ -190,16 +188,16 @@ public:
   /// be 3.
   /// 
   template <typename VectorType1, typename VectorType2>
-  void computeContactResidual(
+  void computeContactPositionResidual(
       const pinocchio::Model& model, const pinocchio::Data& data, 
       const Eigen::MatrixBase<VectorType1>& contact_point,
       const Eigen::MatrixBase<VectorType2>& contact_residual) const;
 
   ///
   /// @brief Computes the partial derivative of the contact position  
-  /// constraint with respect to the configuration. 
-  /// Before calling this function, you have to update the kinematics of the 
-  /// model in pinocchio::Data.
+  /// constraint with respect to the configuration. Before calling this 
+  /// function, kinematics derivative of the robot model with respect to the 
+  /// frame position must be updated.
   /// @param[in] model Pinocchio model of the robot.
   /// @param[in] data Pinocchio data of the robot kinematics.
   /// @param[out] contact_partial_dq The result of the partial derivative  
@@ -211,50 +209,33 @@ public:
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 
   ///
-  /// @brief Sets the friction coefficient.
-  /// @param[in] friction_coefficient Friction coefficient. Must be positive.
-  ///
-  void setFrictionCoefficient(const double friction_coefficient);
+  /// @brief Sets the weight parameters of the Baumgarte's stabilization method.
+  /// @param[in] baumgarte_weight_on_velocity The weight paramter of the error 
+  /// on the contact velocity.
+  /// @param[in] baumgarte_weight_on_position The weight paramter of the error 
+  /// on the contact position.
+  /// 
+  void setBaumgarteWeights(const double baumgarte_weight_on_velocity , 
+                           const double baumgarte_weight_on_position);
 
   ///
-  /// @brief Sets the coefficient of the resititution.
-  /// @param[in] restitution_coefficient Coefficient of the restitution. Must 
-  /// be nonnegative. Must not be more than 1. Default is 0 
-  /// (complete inelastic).
-  ///
-  void setRestitutionCoefficient(const double restitution_coefficient);
-
-  ///
-  /// @brief Returns the contact point resulted by the current kinematics of 
-  /// the robot. The kinematics is passed through pinocchio::Data. Before 
-  /// calling this function, kinematics (only with respect to the position) in 
-  /// pinocchio::Data must be updated.
-  /// @param[in] data The data including kinematics of the robot.
+  /// @brief Returns the contact point at the current kinematics of the robot. 
+  /// Before calling this function, kinematics of the robot model (frame 
+  /// position) must be updated.
+  /// @param[in] data Pinocchio data of the robot kinematics.
   /// @return Const reference to the contact point.
   ///
   const Eigen::Vector3d& contactPoint(const pinocchio::Data& data) const;
 
   ///
-  /// @brief Returns friction coefficient.
-  /// @return Friction coefficient.
-  ///
-  double frictionCoefficient() const;
-
-  ///
-  /// @brief Returns coefficient of restitution of Newton's impact law.
-  /// @return Coefficient of restitution.
-  ///
-  double restitutionCoefficient() const;
-
-  ///
-  /// @brief Returns contact frame id, the index of the contact frame.
+  /// @brief Returns contact frame id, i.e., the index of the contact frame.
   /// @return Contact frame id.
   /// 
   int contact_frame_id() const;
 
   ///
-  /// @brief Returns parent joint id, the index of the parent joint of the 
-  /// contact frame.
+  /// @brief Returns parent joint id, i.e., the index of the parent joint of 
+  /// the contact frame.
   /// @return Parent joint id.
   /// 
   int parent_joint_id() const;
@@ -263,7 +244,7 @@ public:
 
 private:
   int contact_frame_id_, parent_joint_id_, dimv_;
-  double friction_coefficient_, restitution_coefficient_;
+  double baumgarte_weight_on_velocity_, baumgarte_weight_on_position_;
   pinocchio::SE3 jXf_;
   pinocchio::Motion v_frame_;
   Eigen::Matrix3d v_linear_skew_, v_angular_skew_;

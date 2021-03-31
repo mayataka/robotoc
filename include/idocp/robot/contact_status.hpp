@@ -10,7 +10,7 @@ namespace idocp {
 
   ///
   /// @class ContactStatus
-  /// @brief Contact status.
+  /// @brief Contact status of robot model.
   ///
 class ContactStatus {
 public:
@@ -51,89 +51,89 @@ public:
   ContactStatus& operator=(ContactStatus&&) noexcept = default;
 
   ///
-  /// @brief Define comparison operator. 
+  /// @brief Defines a comparison operator. 
   ///
   bool operator==(const ContactStatus& other) const;
 
   ///
-  /// @brief Define comparison operator. 
+  /// @brief Defines a comparison operator. 
   ///
   bool operator!=(const ContactStatus& other) const;
 
   ///
-  /// @brief Return true if a contact is active and false if not.
+  /// @brief Returns true if a contact is active and false if not.
   /// @param[in] contact_index Index of a contact of interedted. 
   /// @return true if a contact is active and false if not. 
   ///
   bool isContactActive(const int contact_index) const;
 
   ///
-  /// @brief Return contact status.
-  /// @return Const reference to the contact status. 
+  /// @brief Returns the activity of the contacts.
+  /// @return Const reference to the activity of the contacts. 
   ///
   const std::vector<bool>& isContactActive() const;
 
   ///
-  /// @brief Return true if there are active contacts and false if not.
+  /// @brief Returns true if there are active contacts and false if not.
   /// @return true if there are active contacts and false if not. 
   ///
   bool hasActiveContacts() const;
 
   ///
-  /// @brief Return the dimension of the active contacts.
-  /// @return Dimension of the active contacts. 
+  /// @brief Returns the dimension of the active contact forces.
+  /// @return Dimension of the active contacts forces. 
   ///
   int dimf() const;
 
   ///
-  /// @brief Return the maximum number of the contacts.
+  /// @brief Returns the maximum number of the contacts.
   /// @return The maximum number of the contacts. 
   ///
   int maxPointContacts() const;
 
   ///
-  /// @brief Set the activity of the contacts.
+  /// @brief Sets the activity of the contacts.
   /// @param[in] is_contact_active Activity of the contacts. Size must be 
   /// ContactStatus::maxPointContacts();
   ///
   void setActivity(const std::vector<bool>& is_contact_active);
 
   ///
-  /// @brief Activate a contact.
+  /// @brief Activates a contact.
   /// @param[in] contact_index Index of the contact that is activated.
   ///
   void activateContact(const int contact_index);
 
   ///
-  /// @brief Deactivate a contact.
+  /// @brief Deactivates a contact.
   /// @param[in] contact_index Index of the contact that is deactivated.
   ///
   void deactivateContact(const int contact_index);
 
   ///
-  /// @brief Activate contacts.
+  /// @brief Activates contacts.
   /// @param[in] contact_indices Indices of the contacts that are activated.
   ///
   void activateContacts(const std::vector<int>& contact_indices);
 
   ///
-  /// @brief Activate all contacts.
+  /// @brief Activates all contacts.
   ///
   void activateContacts();
 
   ///
-  /// @brief Deactivate contacts.
+  /// @brief Deactivates contacts.
   /// @param[in] contact_indices Indices of the contacts that are deactivated.
   ///
   void deactivateContacts(const std::vector<int>& contact_indices);
 
   ///
-  /// @brief Deactivate all contacts.
+  /// @brief Deactivates all contacts.
   ///
   void deactivateContacts();
 
   ///
-  /// @brief Set a contact point.
+  /// @brief Sets a contact point.
   /// @param[in] contact_index Index of the contact.
   /// @param[in] contact_point Contact point.
   ///
@@ -141,27 +141,27 @@ public:
                        const Eigen::Vector3d& contact_point);
 
   ///
-  /// @brief Set contact points.
+  /// @brief Sets contact points.
   /// @param[in] contact_points Contact points. Size must be 
   /// ContactStatus::maxPointContacts().
   ///
   void setContactPoints(const std::vector<Eigen::Vector3d>& contact_points);
 
   ///
-  /// @brief Get contact point.
-  /// @param[in] contact_indices Indices of the contacts that are activated.
-  /// @return const reference to the contact points. 
+  /// @brief Gets contact point.
+  /// @param[in] contact_index Index of the contact .
+  /// @return const reference to the contact point. 
   ///
   const Eigen::Vector3d& contactPoint(const int contact_index) const;
 
   ///
-  /// @brief Get contact points.
+  /// @brief Gets contact points.
   /// @return const reference to the vector of contact points. 
   ///
   const std::vector<Eigen::Vector3d>& contactPoints() const;
 
   ///
-  /// @brief Fill contact status randomly.
+  /// @brief Fills contact status randomly.
   ///
   void setRandom();
 

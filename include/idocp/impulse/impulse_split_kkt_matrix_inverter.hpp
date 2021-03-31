@@ -16,6 +16,7 @@ class ImpulseSplitKKTMatrixInverter {
 public:
   ///
   /// @brief Construct a Schur complement.
+  /// @param[in] robot Robot model. 
   ///
   ImpulseSplitKKTMatrixInverter(const Robot& robot);
 
@@ -52,19 +53,33 @@ public:
   ImpulseSplitKKTMatrixInverter& operator=(
       ImpulseSplitKKTMatrixInverter&&) noexcept = default;
 
+  ///
+  /// @brief Computes the inverse of the split KKT matrix of the impulse stage. 
+  /// @param[in] Jac Jacobian of the constraints.
+  /// @param[in] Q Hessian of the Lagrangian.
+  /// @param[in, out] KKT_mat_inv Inverse of the split KKT matrix.
+  ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void invert(const Eigen::MatrixBase<MatrixType1>& Jac,
               const Eigen::MatrixBase<MatrixType2>& Q,
               const Eigen::MatrixBase<MatrixType3>& KKT_mat_inv);
 
+  ///
+  /// @brief Multiplies the Jacobian to a matrix. 
+  /// @param[in] Jac Jacobian of the constraints.
+  /// @param[in] mat Multiplied matrix.
+  /// @param[in, out] res Result.
+  ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void multiplyJac(const Eigen::MatrixBase<MatrixType1>& Jac, 
                   const Eigen::MatrixBase<MatrixType2>& mat, 
                   const Eigen::MatrixBase<MatrixType3>& res);
 
-  void enableRegularization(const double reg=1.0e-09);
-
-  void disableRegularization();
+  ///
+  /// @brief Sets the regularization. 
+  /// @param[in] reg Regularization factor. Must be non-negative. Default is 0.
+  ///
+  void setRegularization(const double reg=0);
 
 private:
   int dimv_, max_dimf_, dimQ_;

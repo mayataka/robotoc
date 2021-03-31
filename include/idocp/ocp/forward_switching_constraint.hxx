@@ -61,20 +61,21 @@ inline void ForwardSwitchingConstraint::computeSwitchingConstraintResidual(
   dq_ = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
   robot.integrateConfiguration(s.q, dq_, 1.0, q_);
   robot.updateKinematics(q_);
-  robot.computeContactResidual(impulse_status, impulse_status.contactPoints(), 
-                               kkt_residual.P());
+  robot.computeContactPositionResidual(impulse_status, 
+                                       impulse_status.contactPoints(), 
+                                       kkt_residual.P());
+}
+
+
+inline double ForwardSwitchingConstraint::l1NormSwitchingConstraintResidual(
+    const SplitKKTResidual& kkt_residual) {
+  return kkt_residual.P().template lpNorm<1>();
 }
 
 
 inline double ForwardSwitchingConstraint::squaredNormSwitchingConstraintResidual(
     const SplitKKTResidual& kkt_residual) {
   return kkt_residual.P().squaredNorm();
-}
-
-
-inline double ForwardSwitchingConstraint::l1NormSwitchingConstraintResidual(
-    const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.P().lpNorm<1>();
 }
 
 } // namespace idocp

@@ -1,7 +1,3 @@
-#include <string>
-#include <random>
-#include <utility>
-#include <vector>
 #include <memory>
 
 #include <gtest/gtest.h>
@@ -25,23 +21,17 @@
 #include "idocp/constraints/friction_cone.hpp"
 #include "idocp/constraints/pdipm.hpp"
 
+#include "robot_factory.hpp"
+
 namespace idocp {
 
 class ConstraintsTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     barrier = 1.0e-04;
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
-    mu = 0.8;
-    fixed_base_robot = Robot(fixed_base_urdf);
-    floating_base_robot = Robot(floating_base_urdf);
-    amin_fixed = Eigen::VectorXd::Constant(fixed_base_robot.dimu(), -10);
-    amax_fixed = Eigen::VectorXd::Constant(fixed_base_robot.dimu(), 10);
-    amin_floating = Eigen::VectorXd::Constant(floating_base_robot.dimu(), -10);
-    amax_floating = Eigen::VectorXd::Constant(floating_base_robot.dimu(), 10);
+    mu = 0.7;
   }
 
   virtual void TearDown() {
@@ -53,9 +43,6 @@ protected:
   void timeStage2(Robot& robot, const ContactStatus& contact_status) const;
 
   double barrier, dt, mu;
-  std::string fixed_base_urdf, floating_base_urdf;
-  Robot fixed_base_robot, floating_base_robot;
-  Eigen::VectorXd amin_fixed, amax_fixed, amin_floating, amax_floating;
 };
 
 
@@ -66,17 +53,8 @@ std::shared_ptr<Constraints> ConstraintsTest::createConstraints(Robot& robot) co
   auto joint_velocity_upper = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
-  Eigen::VectorXd amin, amax;
-  if (robot.hasFloatingBase()) {
-    amin = amin_floating;
-    amax = amax_floating;
-  }
-  else {
-    amin = amin_fixed;
-    amax = amax_fixed;
-  }
-  auto joint_accel_lower = std::make_shared<idocp::JointAccelerationLowerLimit>(robot, amin);
-  auto joint_accel_upper = std::make_shared<idocp::JointAccelerationUpperLimit>(robot, amax);
+  auto joint_accel_lower = std::make_shared<idocp::JointAccelerationLowerLimit>(robot, Eigen::VectorXd::Constant(robot.dimv(), -10));
+  auto joint_accel_upper = std::make_shared<idocp::JointAccelerationUpperLimit>(robot, Eigen::VectorXd::Constant(robot.dimv(), 10));
   auto friction_cone = std::make_shared<idocp::FrictionCone>(robot, 0.7);
   auto constraints = std::make_shared<Constraints>();
   constraints->push_back(joint_position_lower);
@@ -92,7 +70,8 @@ std::shared_ptr<Constraints> ConstraintsTest::createConstraints(Robot& robot) co
 }
 
 
-void ConstraintsTest::timeStage0(Robot& robot, const ContactStatus& contact_status) const {
+void ConstraintsTest::timeStage0(Robot& robot, 
+                                 const ContactStatus& contact_status) const {
   const int time_stage = 0;
   auto constraints = createConstraints(robot);
   auto data = constraints->createConstraintsData(robot, time_stage);
@@ -131,7 +110,8 @@ void ConstraintsTest::timeStage0(Robot& robot, const ContactStatus& contact_stat
 }
 
 
-void ConstraintsTest::timeStage1(Robot& robot, const ContactStatus& contact_status) const {
+void ConstraintsTest::timeStage1(Robot& robot, 
+                                 const ContactStatus& contact_status) const {
   const int time_stage = 1;
   auto constraints = createConstraints(robot);
   auto data = constraints->createConstraintsData(robot, time_stage);
@@ -171,7 +151,8 @@ void ConstraintsTest::timeStage1(Robot& robot, const ContactStatus& contact_stat
 }
 
 
-void ConstraintsTest::timeStage2(Robot& robot, const ContactStatus& contact_status) const {
+void ConstraintsTest::timeStage2(Robot& robot, 
+                                 const ContactStatus& contact_status) const {
   const int time_stage = 2;
   auto constraints = createConstraints(robot);
   auto data = constraints->createConstraintsData(robot, time_stage);
@@ -213,8 +194,7 @@ void ConstraintsTest::timeStage2(Robot& robot, const ContactStatus& contact_stat
 
 
 TEST_F(ConstraintsTest, fixedBase) {
-  const std::vector<int> frames = {18};
-  Robot robot(fixed_base_urdf, frames);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   timeStage0(robot, contact_status);
   timeStage1(robot, contact_status);
@@ -227,8 +207,7 @@ TEST_F(ConstraintsTest, fixedBase) {
 
 
 TEST_F(ConstraintsTest, floatingBase) {
-  const std::vector<int> frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, frames);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   timeStage0(robot, contact_status);
   timeStage1(robot, contact_status);

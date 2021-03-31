@@ -11,12 +11,12 @@ namespace idocp {
 
 inline TerminalParNMPC::TerminalParNMPC(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-    const std::shared_ptr<Constraints>& constraints, const double dt) 
+    const std::shared_ptr<Constraints>& constraints) 
   : cost_(cost),
     cost_data_(robot),
     constraints_(constraints),
     constraints_data_(),
-    contact_dynamics_(robot, dt),
+    contact_dynamics_(robot),
     has_floating_base_(robot.hasFloatingBase()),
     use_kinematics_(false) {
   if (cost_->useKinematics() || constraints_->useKinematics() 
@@ -180,7 +180,7 @@ inline double TerminalParNMPC::squaredNormKKTResidual(
   error += kkt_residual.lu().squaredNorm();
   error += stateequation::squaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dt);
-  error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
+  error += dt * dt * constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
   return error;
 }
 

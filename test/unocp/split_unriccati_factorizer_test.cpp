@@ -1,6 +1,4 @@
-#include <string>
 #include <memory>
-#include <limits>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -14,15 +12,16 @@
 #include "idocp/unocp/backward_unriccati_recursion_factorizer.hpp"
 #include "idocp/unocp/split_unriccati_factorizer.hpp"
 
+#include "robot_factory.hpp"
+
+
 namespace idocp {
 
 class SplitUnRiccatiFactorizerTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    urdf = "../urdf/iiwa14/iiwa14.urdf";
-    robot = Robot(urdf);
+    robot = testhelper::CreateFixedBaseRobot();
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
     dimv = robot.dimv();
 
@@ -39,7 +38,6 @@ protected:
 
   SplitRiccatiFactorization createRiccatiFactorization() const;
 
-  std::string urdf;
   Robot robot;
   double dt;
   int dimv;

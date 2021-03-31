@@ -17,10 +17,8 @@ find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(pinocchio REQUIRED)
 # find OpenMP
 find_package(OpenMP REQUIRED)
-if(OpenMP_FOUND)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 # build idocp 
 add_library(
   ${PROJECT_NAME} 
@@ -34,13 +32,14 @@ add_library(
   src/cost/cost_function_data.cpp
   src/cost/cost_function_component_base.cpp
   src/cost/configuration_space_cost.cpp
-  src/cost/time_varying_configuration_space_cost.cpp
-  src/cost/contact_force_cost.cpp
   src/cost/task_space_3d_cost.cpp
   src/cost/task_space_6d_cost.cpp
+  src/cost/com_cost.cpp
+  src/cost/contact_force_cost.cpp
+  src/cost/time_varying_configuration_space_cost.cpp
   src/cost/time_varying_task_space_3d_cost.cpp
   src/cost/time_varying_task_space_6d_cost.cpp
-  src/cost/trotting_configuration_space_cost.cpp
+  src/cost/time_varying_com_cost.cpp
   src/constraints/pdipm.cpp
   src/constraints/constraints.cpp
   src/constraints/constraints_impl.cpp
@@ -56,11 +55,8 @@ add_library(
   src/constraints/joint_acceleration_lower_limit.cpp
   src/constraints/joint_torques_upper_limit.cpp
   src/constraints/joint_torques_lower_limit.cpp
-  src/constraints/contact_distance.cpp
   src/constraints/friction_cone.cpp
   src/constraints/impulse_friction_cone.cpp
-  src/constraints/linearized_friction_cone.cpp
-  src/constraints/linearized_impulse_friction_cone.cpp
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp
   src/impulse/impulse_split_kkt_residual.cpp
@@ -133,6 +129,7 @@ add_library(
   src/utils/derivative_checker.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp
+  src/utils/logger.cpp
 )
 target_link_libraries(
   ${PROJECT_NAME} 
@@ -148,7 +145,7 @@ target_include_directories(
   ${EIGEN3_INCLUDE_DIR}
   ${Boost_INCLUDE_DIR}
   ${PINOCCHIO_INCLUDE_DIRS}
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
 
@@ -156,24 +153,36 @@ target_include_directories(
 ## Build viewer ##
 ##################
 if (BUILD_VIEWER) 
-  # find pinocchio-gepetto-viewer
-  find_package(pinocchio-gepetto-viewer REQUIRED)
-  set(pinocchio-gepetto-viewer_LIBDIR ${pinocchio-gepetto-viewer_DIR}/../..)
-  set(pinocchio-gepetto-viewer_LIBRARIES ${pinocchio-gepetto-viewer_LIBDIR}/libpinocchio-gepetto-viewer.so)
+  include(${PROJECT_SOURCE_DIR}/cmake/pinocchio-gepetto-viewer.cmake) 
+  find_package(PkgConfig)
+  pkg_check_modules(gepetto-viewer REQUIRED gepetto-viewer)
+  pkg_check_modules(gepetto-viewer-corba REQUIRED gepetto-viewer-corba)
+  pkg_check_modules(hpp-fcl REQUIRED hpp-fcl)
   target_sources(
     ${PROJECT_NAME} 
     PRIVATE
     src/utils/trajectory_viewer.cpp
+    src/third-party/viewer.cpp
   )
   target_link_libraries(
     ${PROJECT_NAME} 
     PUBLIC
-    ${pinocchio-gepetto-viewer_LIBRARIES}
+    ${gepetto-viewer_LINK_LIBRARIES}
+    ${gepetto-viewer-corba_LINK_LIBRARIES}
+    ${hpp-fcl_LINK_LIBRARIES}
   )
   target_include_directories(
     ${PROJECT_NAME} 
     PUBLIC
-    ${pinocchio-gepetto-viewer_INCLUDE_DIRS}
+    ${gepetto-viewer_INCLUDE_DIRS}
+    ${gepetto-viewer-corba_INCLUDE_DIRS}
+    ${hpp-fcl_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/idocp/third-party>
+  )
+  target_compile_definitions(
+    ${PROJECT_NAME} 
+    PRIVATE
+    PINOCCHIO_WITH_HPP_FCL
   )
 endif() # end if (BUILD_VIEWER)
 

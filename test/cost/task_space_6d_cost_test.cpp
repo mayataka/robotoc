@@ -1,4 +1,4 @@
-#include <string>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -12,6 +12,8 @@
 
 #include "idocp/utils/derivative_checker.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -20,8 +22,6 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
@@ -33,7 +33,6 @@ protected:
   void testTerminalCost(Robot& robot, const int frame_id) const;
   void testImpulseCost(Robot& robot, const int frame_id) const;
 
-  std::string fixed_base_urdf, floating_base_urdf;
   double dt, t;
 };
 
@@ -61,9 +60,9 @@ void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_6d_weight(q_weight.tail(3), q_weight.head(3));
-  cost->set_qf_6d_weight(qf_weight.tail(3), qf_weight.head(3));
-  cost->set_qi_6d_weight(qi_weight.tail(3), qi_weight.head(3));
+  cost->set_q_weight(q_weight.tail(3), q_weight.head(3));
+  cost->set_qf_weight(qf_weight.tail(3), qf_weight.head(3));
+  cost->set_qi_weight(qi_weight.tail(3), qi_weight.head(3));
   cost->set_q_6d_ref(position_ref, rotation_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -86,8 +85,6 @@ void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   DerivativeChecker derivative_checker(robot);
   derivative_checker.setTestTolerance(1.0e-03);
   EXPECT_TRUE(derivative_checker.checkFirstOrderStageCostDerivatives(cost));
-  // This is due to Gauss-Newton Hessian approximation.
-  EXPECT_FALSE(derivative_checker.checkSecondOrderStageCostDerivatives(cost));
 }
 
 
@@ -114,9 +111,9 @@ void TaskSpace6DCostTest::testTerminalCost(Robot& robot, const int frame_id) con
   auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_6d_weight(q_weight.tail(3), q_weight.head(3));
-  cost->set_qf_6d_weight(qf_weight.tail(3), qf_weight.head(3));
-  cost->set_qi_6d_weight(qi_weight.tail(3), qi_weight.head(3));
+  cost->set_q_weight(q_weight.tail(3), q_weight.head(3));
+  cost->set_qf_weight(qf_weight.tail(3), qf_weight.head(3));
+  cost->set_qi_weight(qi_weight.tail(3), qi_weight.head(3));
   cost->set_q_6d_ref(position_ref, rotation_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -139,8 +136,6 @@ void TaskSpace6DCostTest::testTerminalCost(Robot& robot, const int frame_id) con
   DerivativeChecker derivative_checker(robot);
   derivative_checker.setTestTolerance(1.0e-03);
   EXPECT_TRUE(derivative_checker.checkFirstOrderTerminalCostDerivatives(cost));
-  // This is due to Gauss-Newton Hessian approximation.
-  EXPECT_FALSE(derivative_checker.checkSecondOrderTerminalCostDerivatives(cost));
 }
 
 
@@ -165,9 +160,9 @@ void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
   auto cost = std::make_shared<TaskSpace6DCost>(robot, frame_id);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_6d_weight(q_weight.tail(3), q_weight.head(3));
-  cost->set_qf_6d_weight(qf_weight.tail(3), qf_weight.head(3));
-  cost->set_qi_6d_weight(qi_weight.tail(3), qi_weight.head(3));
+  cost->set_q_weight(q_weight.tail(3), q_weight.head(3));
+  cost->set_qf_weight(qf_weight.tail(3), qf_weight.head(3));
+  cost->set_qi_weight(qi_weight.tail(3), qi_weight.head(3));
   cost->set_q_6d_ref(position_ref, rotation_ref);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
@@ -190,14 +185,12 @@ void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
   DerivativeChecker derivative_checker(robot);
   derivative_checker.setTestTolerance(1.0e-03);
   EXPECT_TRUE(derivative_checker.checkFirstOrderImpulseCostDerivatives(cost));
-  // This is due to Gauss-Newton Hessian approximation.
-  EXPECT_FALSE(derivative_checker.checkSecondOrderImpulseCostDerivatives(cost));
 }
 
 
 TEST_F(TaskSpace6DCostTest, fixedBase) {
-  const int frame_id = 18;
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  const int frame_id = robot.contactFrames()[0];
   testStageCost(robot, frame_id);
   testTerminalCost(robot, frame_id);
   testImpulseCost(robot, frame_id);
@@ -205,8 +198,8 @@ TEST_F(TaskSpace6DCostTest, fixedBase) {
 
 
 TEST_F(TaskSpace6DCostTest, floatingBase) {
-  const std::vector<int> frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  const std::vector<int> frames = robot.contactFrames();
   for (const auto frame_id : frames) {
     testStageCost(robot, frame_id);
     testTerminalCost(robot, frame_id);

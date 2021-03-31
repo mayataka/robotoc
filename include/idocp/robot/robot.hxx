@@ -66,13 +66,13 @@ template <typename ConfigVectorType, typename TangentVectorType,
 inline void Robot::dIntegratedConfiguration(
     const Eigen::MatrixBase<ConfigVectorType>& q,
     const Eigen::MatrixBase<TangentVectorType>& v,
-    const Eigen::MatrixBase<MatrixType>& dIntegrate_dq) const {
+    const Eigen::MatrixBase<MatrixType>& dintegrate_dq) const {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
-  assert(dIntegrate_dq.rows() == dimv_);
-  assert(dIntegrate_dq.cols() == dimv_);
+  assert(dintegrate_dq.rows() == dimv_);
+  assert(dintegrate_dq.cols() == dimv_);
   pinocchio::dIntegrate(
-      model_, q, v, const_cast<Eigen::MatrixBase<MatrixType>&>(dIntegrate_dq),
+      model_, q, v, const_cast<Eigen::MatrixBase<MatrixType>&>(dintegrate_dq),
       pinocchio::ARG0);
 }
 
@@ -82,13 +82,13 @@ template <typename ConfigVectorType, typename TangentVectorType,
 inline void Robot::dIntegratedVelocity(
     const Eigen::MatrixBase<ConfigVectorType>& q,
     const Eigen::MatrixBase<TangentVectorType>& v,
-    const Eigen::MatrixBase<MatrixType>& dIntegrate_dv) const {
+    const Eigen::MatrixBase<MatrixType>& dintegrate_dv) const {
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
-  assert(dIntegrate_dv.rows() == dimv_);
-  assert(dIntegrate_dv.cols() == dimv_);
+  assert(dintegrate_dv.rows() == dimv_);
+  assert(dintegrate_dv.cols() == dimv_);
   pinocchio::dIntegrate(
-      model_, q, v, const_cast<Eigen::MatrixBase<MatrixType>&>(dIntegrate_dv),
+      model_, q, v, const_cast<Eigen::MatrixBase<MatrixType>&>(dintegrate_dv),
       pinocchio::ARG1);
 }
 
@@ -119,14 +119,14 @@ template <typename ConfigVectorType1, typename ConfigVectorType2,
 inline void Robot::dSubtractdConfigurationPlus(
     const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
     const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
-    const Eigen::MatrixBase<MatrixType>& dSubtract_dqplus) const {
+    const Eigen::MatrixBase<MatrixType>& dsubtract_dqplus) const {
   assert(q_plus.size() == dimq_);
   assert(q_minus.size() == dimq_);
-  assert(dSubtract_dqplus.rows() == dimv_);
-  assert(dSubtract_dqplus.cols() == dimv_);
+  assert(dsubtract_dqplus.rows() == dimv_);
+  assert(dsubtract_dqplus.cols() == dimv_);
   pinocchio::dDifference(
       model_, q_minus, q_plus, 
-      const_cast<Eigen::MatrixBase<MatrixType>&>(dSubtract_dqplus),
+      const_cast<Eigen::MatrixBase<MatrixType>&>(dsubtract_dqplus),
       pinocchio::ARG1);
 }
 
@@ -136,30 +136,83 @@ template <typename ConfigVectorType1, typename ConfigVectorType2,
 inline void Robot::dSubtractdConfigurationMinus(
     const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
     const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
-    const Eigen::MatrixBase<MatrixType>& dSubtract_dqminus) const {
+    const Eigen::MatrixBase<MatrixType>& dsubtract_dqminus) const {
   assert(q_plus.size() == dimq_);
   assert(q_minus.size() == dimq_);
-  assert(dSubtract_dqminus.rows() == dimv_);
-  assert(dSubtract_dqminus.cols() == dimv_);
+  assert(dsubtract_dqminus.rows() == dimv_);
+  assert(dsubtract_dqminus.cols() == dimv_);
   pinocchio::dDifference(
       model_, q_minus, q_plus, 
-      const_cast<Eigen::MatrixBase<MatrixType>&>(dSubtract_dqminus),
+      const_cast<Eigen::MatrixBase<MatrixType>&>(dsubtract_dqminus),
       pinocchio::ARG0);
 }
 
 
 template <typename MatrixType1, typename MatrixType2>
 inline void Robot::dSubtractdConfigurationInverse(
-    const Eigen::MatrixBase<MatrixType1>& dSubtract_dq,
-    const Eigen::MatrixBase<MatrixType2>& dSubtract_dq_inv) {
-  const_cast<Eigen::MatrixBase<MatrixType2>&>(dSubtract_dq_inv).template topLeftCorner<3, 3>().noalias()
-      = dSubtract_dq.template topLeftCorner<3, 3>().inverse();
-  const_cast<Eigen::MatrixBase<MatrixType2>&>(dSubtract_dq_inv).template block<3, 3>(3, 3).noalias()
-      = dSubtract_dq.template block<3, 3>(3, 3).inverse();
-  mat_3d_.noalias() = dSubtract_dq.template block<3, 3>(0, 3) 
-                        * dSubtract_dq_inv.template block<3, 3>(3, 3);
-  const_cast<Eigen::MatrixBase<MatrixType2>&>(dSubtract_dq_inv).template block<3, 3>(0, 3).noalias()
-      = - dSubtract_dq_inv.template topLeftCorner<3, 3>() * mat_3d_;
+    const Eigen::MatrixBase<MatrixType1>& dsubtract_dq,
+    const Eigen::MatrixBase<MatrixType2>& dsubtract_dq_inv) {
+  assert(dsubtract_dq.rows() >= 6);
+  assert(dsubtract_dq.cols() >= 6);
+  assert(dsubtract_dq_inv.rows() >= 6);
+  assert(dsubtract_dq_inv.cols() >= 6);
+  const_cast<Eigen::MatrixBase<MatrixType2>&>(dsubtract_dq_inv).template topLeftCorner<3, 3>().noalias()
+      = dsubtract_dq.template topLeftCorner<3, 3>().inverse();
+  const_cast<Eigen::MatrixBase<MatrixType2>&>(dsubtract_dq_inv).template block<3, 3>(3, 3).noalias()
+      = dsubtract_dq.template block<3, 3>(3, 3).inverse();
+  mat_3d_.noalias() = dsubtract_dq.template block<3, 3>(0, 3) 
+                        * dsubtract_dq_inv.template block<3, 3>(3, 3);
+  const_cast<Eigen::MatrixBase<MatrixType2>&>(dsubtract_dq_inv).template block<3, 3>(0, 3).noalias()
+      = - dsubtract_dq_inv.template topLeftCorner<3, 3>() * mat_3d_;
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType1, 
+          typename TangentVectorType2>
+inline void Robot::updateKinematics(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType1>& v, 
+    const Eigen::MatrixBase<TangentVectorType2>& a) {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  assert(a.size() == dimv_);
+  pinocchio::forwardKinematics(model_, data_, q, v, a);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q, v, a);
+  pinocchio::jacobianCenterOfMass(model_, data_, false);
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType>
+inline void Robot::updateKinematics(
+    const Eigen::MatrixBase<ConfigVectorType>& q, 
+    const Eigen::MatrixBase<TangentVectorType>& v) {
+  assert(q.size() == dimq_);
+  assert(v.size() == dimv_);
+  pinocchio::forwardKinematics(model_, data_, q, v);
+  pinocchio::updateFramePlacements(model_, data_);
+  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q, v, 
+                                                 Eigen::VectorXd::Zero(dimv_));
+  pinocchio::jacobianCenterOfMass(model_, data_, false);
+}
+
+
+template <typename ConfigVectorType>
+inline void Robot::updateKinematics(
+    const Eigen::MatrixBase<ConfigVectorType>& q) {
+  assert(q.size() == dimq_);
+  pinocchio::framesForwardKinematics(model_, data_, q);
+  pinocchio::computeJointJacobians(model_, data_, q);
+  pinocchio::jacobianCenterOfMass(model_, data_, false);
+}
+
+
+template <typename ConfigVectorType>
+inline void Robot::updateFrameKinematics(
+    const Eigen::MatrixBase<ConfigVectorType>& q) {
+  assert(q.size() == dimq_);
+  pinocchio::framesForwardKinematics(model_, data_, q);
+  pinocchio::centerOfMass(model_, data_, q, false);
 }
 
 
@@ -178,6 +231,11 @@ inline const pinocchio::SE3& Robot::framePlacement(const int frame_id) const {
 }
 
 
+inline const Eigen::Vector3d& Robot::CoM() const {
+  return data_.com[0];
+}
+
+
 template <typename MatrixType>
 inline void Robot::getFrameJacobian(const int frame_id, 
                                     const Eigen::MatrixBase<MatrixType>& J) {
@@ -188,63 +246,26 @@ inline void Robot::getFrameJacobian(const int frame_id,
 }
 
 
-template <typename ConfigVectorType, typename TangentVectorType1, 
-          typename TangentVectorType2>
-inline void Robot::updateKinematics(
-    const Eigen::MatrixBase<ConfigVectorType>& q, 
-    const Eigen::MatrixBase<TangentVectorType1>& v, 
-    const Eigen::MatrixBase<TangentVectorType2>& a) {
-  assert(q.size() == dimq_);
-  assert(v.size() == dimv_);
-  assert(a.size() == dimv_);
-  pinocchio::forwardKinematics(model_, data_, q, v, a);
-  pinocchio::updateFramePlacements(model_, data_);
-  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q, v, a);
-}
-
-
-template <typename ConfigVectorType, typename TangentVectorType>
-inline void Robot::updateKinematics(
-    const Eigen::MatrixBase<ConfigVectorType>& q, 
-    const Eigen::MatrixBase<TangentVectorType>& v) {
-  assert(q.size() == dimq_);
-  assert(v.size() == dimv_);
-  pinocchio::forwardKinematics(model_, data_, q, v);
-  pinocchio::updateFramePlacements(model_, data_);
-  pinocchio::computeForwardKinematicsDerivatives(model_, data_, q, v, 
-                                                 Eigen::VectorXd::Zero(dimv_));
-}
-
-
-template <typename ConfigVectorType>
-inline void Robot::updateKinematics(
-    const Eigen::MatrixBase<ConfigVectorType>& q) {
-  assert(q.size() == dimq_);
-  pinocchio::framesForwardKinematics(model_, data_, q);
-  pinocchio::computeJointJacobians(model_, data_, q);
-}
-
-
-template <typename ConfigVectorType>
-inline void Robot::updateFrameKinematics(
-    const Eigen::MatrixBase<ConfigVectorType>& q) {
-  assert(q.size() == dimq_);
-  pinocchio::framesForwardKinematics(model_, data_, q);
+template <typename MatrixType>
+inline void Robot::getCoMJacobian(const Eigen::MatrixBase<MatrixType>& J) const {
+  assert(J.rows() == 3);
+  assert(J.cols() == dimv_);
+  const_cast<Eigen::MatrixBase<MatrixType>&>(J) = data_.Jcom;
 }
 
 
 template <typename VectorType>
 inline void Robot::computeBaumgarteResidual(
-    const ContactStatus& contact_status, const double time_step,
+    const ContactStatus& contact_status, 
     const std::vector<Eigen::Vector3d>& contact_points,
     const Eigen::MatrixBase<VectorType>& baumgarte_residual) const {
-  assert(time_step > 0);
-  assert(contact_points.size() == point_contacts_.size());
+  assert(contact_points.size() == maxPointContacts());
+  assert(baumgarte_residual.size() == contact_status.dimf());
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeBaumgarteResidual(
-          model_, data_, time_step, contact_points[i],
+          model_, data_, contact_points[i],
           (const_cast<Eigen::MatrixBase<VectorType>&>(baumgarte_residual))
               .template segment<3>(3*num_active_contacts));
       ++num_active_contacts;
@@ -255,18 +276,21 @@ inline void Robot::computeBaumgarteResidual(
 
 template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
 inline void Robot::computeBaumgarteDerivatives(
-    const ContactStatus& contact_status, const double time_step,
+    const ContactStatus& contact_status,
     const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
     const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da) {
+  assert(baumgarte_partial_dq.rows() == contact_status.dimf());
   assert(baumgarte_partial_dq.cols() == dimv_);
+  assert(baumgarte_partial_dv.rows() == contact_status.dimf());
   assert(baumgarte_partial_dv.cols() == dimv_);
+  assert(baumgarte_partial_da.rows() == contact_status.dimf());
   assert(baumgarte_partial_da.cols() == dimv_);
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (contact_status.isContactActive(i)) {
       point_contacts_[i].computeBaumgarteDerivatives(
-          model_, data_, time_step,
+          model_, data_, 
           (const_cast<Eigen::MatrixBase<MatrixType1>&>(baumgarte_partial_dq))
               .block(3*num_active_contacts, 0, 3, dimv_),
           (const_cast<Eigen::MatrixBase<MatrixType2>&>(baumgarte_partial_dv))
@@ -283,6 +307,7 @@ template <typename VectorType>
 inline void Robot::computeImpulseVelocityResidual(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<VectorType>& velocity_residual) const {
+  assert(velocity_residual.size() == impulse_status.dimf());
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -301,7 +326,9 @@ inline void Robot::computeImpulseVelocityDerivatives(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<MatrixType1>& velocity_partial_dq, 
     const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv) {
+  assert(velocity_partial_dq.rows() == impulse_status.dimf());
   assert(velocity_partial_dq.cols() == dimv_);
+  assert(velocity_partial_dv.rows() == impulse_status.dimf());
   assert(velocity_partial_dv.cols() == dimv_);
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
@@ -319,15 +346,16 @@ inline void Robot::computeImpulseVelocityDerivatives(
 
 
 template <typename VectorType>
-inline void Robot::computeContactResidual(
+inline void Robot::computeContactPositionResidual(
     const ImpulseStatus& impulse_status, 
     const std::vector<Eigen::Vector3d>& contact_points,
     const Eigen::MatrixBase<VectorType>& contact_residual) const {
   assert(contact_points.size() == point_contacts_.size());
+  assert(contact_residual.size() == impulse_status.dimf());
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      point_contacts_[i].computeContactResidual(
+      point_contacts_[i].computeContactPositionResidual(
           model_, data_, contact_points[i],
           (const_cast<Eigen::MatrixBase<VectorType>&>(contact_residual))
               .template segment<3>(3*num_active_impulse));
@@ -341,6 +369,7 @@ template <typename MatrixType>
 inline void Robot::computeContactDerivative(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
+  assert(contact_partial_dq.rows() == impulse_status.dimf());
   assert(contact_partial_dq.cols() == dimv_);
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
@@ -355,59 +384,9 @@ inline void Robot::computeContactDerivative(
 }
 
 
-inline void Robot::setFrictionCoefficient(
-    const std::vector<double>& friction_coefficient) {
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    point_contacts_[i].setFrictionCoefficient(friction_coefficient[i]);
-  }
-}
-
-
-inline double Robot::frictionCoefficient(const int contact_index) const {
-  assert(contact_index >= 0);
-  assert(contact_index < point_contacts_.size());
-  try {
-    if (point_contacts_.empty()) {
-      throw std::runtime_error(
-          "invalid function call: robot has no point contacts!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
-  return point_contacts_[contact_index].frictionCoefficient();
-}
-
-
-inline void Robot::setRestitutionCoefficient(
-    const std::vector<double>& restitution_coefficient) {
-  for (int i=0; i<point_contacts_.size(); ++i) {
-    point_contacts_[i].setRestitutionCoefficient(restitution_coefficient[i]);
-  }
-}
-
-
-inline double Robot::restitutionCoefficient(const int contact_index) const {
-  assert(contact_index >= 0);
-  assert(contact_index < point_contacts_.size());
-  try {
-    if (point_contacts_.empty()) {
-      throw std::runtime_error(
-          "invalid function call: robot has no point contacts!");
-    }
-  }
-  catch(const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    std::exit(EXIT_FAILURE);
-  }
-  return point_contacts_[contact_index].restitutionCoefficient();
-}
-
-
 inline void Robot::setContactForces(const ContactStatus& contact_status, 
                                     const std::vector<Eigen::Vector3d>& f) {
-  assert(f.size() == point_contacts_.size());
+  assert(f.size() == maxPointContacts());
   int num_active_contacts = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (contact_status.isContactActive(i)) {
@@ -424,7 +403,7 @@ inline void Robot::setContactForces(const ContactStatus& contact_status,
 
 inline void Robot::setImpulseForces(const ImpulseStatus& impulse_status, 
                                     const std::vector<Eigen::Vector3d>& f) {
-  assert(f.size() == point_contacts_.size());
+  assert(f.size() == maxPointContacts());
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -661,6 +640,11 @@ inline Eigen::VectorXd Robot::upperJointPositionLimit() const {
 }
 
 
+inline double Robot::totalWeight() const {
+  return (- pinocchio::computeTotalMass(model_) * model_.gravity981.coeff(2));
+}
+
+
 inline int Robot::dimq() const {
   return dimq_;
 }
@@ -696,20 +680,7 @@ inline int Robot::maxPointContacts() const {
 }
 
 
-inline void Robot::initializeJointLimits() {
-  const int dim_joint = model_.nv - floating_base_.dim_passive();
-  joint_effort_limit_.resize(dim_joint);
-  joint_velocity_limit_.resize(dim_joint);
-  lower_joint_position_limit_.resize(dim_joint);
-  upper_joint_position_limit_.resize(dim_joint);
-  joint_effort_limit_ = model_.effortLimit.tail(dim_joint);
-  joint_velocity_limit_ = model_.velocityLimit.tail(dim_joint);
-  lower_joint_position_limit_ = model_.lowerPositionLimit.tail(dim_joint);
-  upper_joint_position_limit_ = model_.upperPositionLimit.tail(dim_joint);
-}
-
-
-inline std::vector<int> Robot::contactFramesIndices() const {
+inline std::vector<int> Robot::contactFrames() const {
   std::vector<int> contact_frames_indices;
   for (const auto& e : point_contacts_) {
     contact_frames_indices.push_back(e.contact_frame_id());
@@ -719,17 +690,18 @@ inline std::vector<int> Robot::contactFramesIndices() const {
 
 
 inline ContactStatus Robot::createContactStatus() const {
-  return ContactStatus(point_contacts_.size());
+  return ContactStatus(maxPointContacts());
 }
 
 
 inline ImpulseStatus Robot::createImpulseStatus() const {
-  return ImpulseStatus(point_contacts_.size());
+  return ImpulseStatus(maxPointContacts());
 }
 
 
 template <typename ContactStatusType>
-inline void Robot::setContactPoints(ContactStatusType& contact_status) const {
+inline void Robot::getContactPoints(ContactStatusType& contact_status) const {
+  assert(contact_status.maxPointContacts() == maxPointContacts());
   for (int i=0; i<point_contacts_.size(); ++i) {
     contact_status.setContactPoint(i, point_contacts_[i].contactPoint(data_));
   }
@@ -738,14 +710,10 @@ inline void Robot::setContactPoints(ContactStatusType& contact_status) const {
 
 inline void Robot::getContactPoints(
     std::vector<Eigen::Vector3d>& contact_points) const {
+  assert(contact_points.size() == maxPointContacts());
   for (int i=0; i<point_contacts_.size(); ++i) {
     contact_points[i] = point_contacts_[i].contactPoint(data_);
   }
-}
-
-
-inline double Robot::totalWeight() const {
-  return (- pinocchio::computeTotalMass(model_) * model_.gravity981.coeff(2));
 }
 
 } // namespace idocp

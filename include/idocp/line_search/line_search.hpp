@@ -21,6 +21,18 @@ namespace idocp {
 ///
 class LineSearch {
 public:
+  ///
+  /// @brief Construct a line search.
+  /// @param[in] robot Robot model. 
+  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
+  /// @param[in] max_num_impulse Maximum number of the impulse on the horizon. 
+  /// Must be non-negative. 
+  /// @param[in] nthreads Number of the threads in solving the optimal control 
+  /// problem. Must be positive. Default is 1.
+  /// @param[in] step_size_reduction_rate Reduction rate of the step size. 
+  /// Defalt is 0.75.
+  /// @param[in] min_step_size Minimum step size. Default is 0.05.
+  ///
   LineSearch(const Robot& robot, const int N, const int max_num_impulse=0, 
              const int nthreads=1, const double step_size_reduction_rate=0.75, 
              const double min_step_size=0.05);
@@ -56,7 +68,15 @@ public:
   LineSearch& operator=(LineSearch&&) noexcept = default;
 
   ///
-  /// @brief Compute primal step size by fliter line search. 
+  /// @brief Compute primal step size by fliter line search method. 
+  /// @param[in, out] ocp optimal control problem.
+  /// @param[in] robots std::vector of Robot.
+  /// @param[in] contact_sequence Contact sequence. 
+  /// @param[in] q Initial configuration.
+  /// @param[in] v Initial generalized velocity.
+  /// @param[in] s Solution. 
+  /// @param[in] d Direction. 
+  /// @param[in] max_primal_step_size Maximum primal step size. 
   ///
   template <typename OCPType>
   double computeStepSize(OCPType& ocp, std::vector<Robot>& robots,
@@ -98,7 +118,8 @@ public:
   void clearFilter();
 
   ///
-  /// @brief Clear the line search filter. 
+  /// @brief Checks wheather the line search filter is empty or not. 
+  /// @return true if the filter is empty. false if not.
   ///
   bool isFilterEmpty() const;
 

@@ -3,7 +3,7 @@
 
 #include "idocp/ocp/state_equation.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 namespace idocp {
 namespace stateequation {

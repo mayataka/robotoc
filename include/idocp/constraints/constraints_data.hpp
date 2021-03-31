@@ -9,7 +9,7 @@
 namespace idocp {
 
 ///
-/// @typedef ConstraintsData
+/// @class ConstraintsData
 /// @brief Data for constraints. Composed of ConstraintComponentData 
 /// corrensponding to the components of Constraints.
 ///

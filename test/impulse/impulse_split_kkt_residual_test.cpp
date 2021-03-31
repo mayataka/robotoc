@@ -1,5 +1,3 @@
-#include <string>
-
 #include <gtest/gtest.h>
 
 #include "Eigen/Core"
@@ -8,6 +6,7 @@
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 
+#include "robot_factory.hpp"
 
 namespace idocp {
 
@@ -15,18 +14,15 @@ class SplitImpulseKKTResidualTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
   }
 
-  static void testSize(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
+  static void testSize(const Robot& robot, 
+                       const ImpulseStatus& impulse_status);
+  static void testIsApprox(const Robot& robot, 
+                           const ImpulseStatus& impulse_status);
 
   virtual void TearDown() {
   }
-
-  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
@@ -134,8 +130,8 @@ void SplitImpulseKKTResidualTest::testIsApprox(const Robot& robot,
 
 
 TEST_F(SplitImpulseKKTResidualTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);
@@ -146,8 +142,8 @@ TEST_F(SplitImpulseKKTResidualTest, fixedBase) {
 
 
 TEST_F(SplitImpulseKKTResidualTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   testSize(robot, impulse_status);
   testIsApprox(robot, impulse_status);

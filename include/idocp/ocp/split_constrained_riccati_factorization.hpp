@@ -12,14 +12,14 @@ namespace idocp {
 
 ///
 /// @class SplitConstrainedRiccatiFactorization
-/// @brief Riccati factorized matrix and vector for the pure-state equality 
-/// constraints.
+/// @brief Riccati factorization matrix and vector for the switching constraint.
 ///
 class SplitConstrainedRiccatiFactorization {
 public:
   ///
-  /// @brief Allocate factorization matrices and vectors.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Constructs Riccati factorization matrix and vector for the 
+  /// switching constraint.
+  /// @param[in] robot Robot model. 
   ///
   SplitConstrainedRiccatiFactorization(const Robot& robot);
 

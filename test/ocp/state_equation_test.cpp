@@ -1,5 +1,3 @@
-#include <string>
-
 #include <gtest/gtest.h>
 
 #include "Eigen/Core"
@@ -10,6 +8,8 @@
 #include "idocp/ocp/split_solution.hpp"
 #include "idocp/ocp/state_equation.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -17,9 +17,6 @@ class StateEquationTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
@@ -27,12 +24,11 @@ protected:
   }
 
   double dt;
-  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
 TEST_F(StateEquationTest, forwardEulerFixedbase) {
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_next = SplitSolution::Random(robot);
@@ -67,7 +63,7 @@ TEST_F(StateEquationTest, forwardEulerFixedbase) {
 
 
 TEST_F(StateEquationTest, forwardEulerTerminalFixedbase) {
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_next = SplitSolution::Random(robot);
@@ -96,8 +92,7 @@ TEST_F(StateEquationTest, forwardEulerTerminalFixedbase) {
 
 
 TEST_F(StateEquationTest, forwardEulerFloatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   SplitSolution s = SplitSolution::Random(robot);
@@ -154,8 +149,7 @@ TEST_F(StateEquationTest, forwardEulerFloatingBase) {
 
 
 TEST_F(StateEquationTest, forwardEulerTerminalFloatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
   robot.normalizeConfiguration(q_prev);
   SplitSolution s = SplitSolution::Random(robot);
@@ -187,8 +181,7 @@ TEST_F(StateEquationTest, forwardEulerTerminalFloatingBase) {
 
 
 TEST_F(StateEquationTest, backwardEulerFixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_next = SplitSolution::Random(robot);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
@@ -233,8 +226,7 @@ TEST_F(StateEquationTest, backwardEulerFixedBase) {
 
 
 TEST_F(StateEquationTest, backwardEulerFloatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   SplitSolution s = SplitSolution::Random(robot);
   SplitSolution s_next = SplitSolution::Random(robot);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());

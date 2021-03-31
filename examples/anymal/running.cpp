@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 #include <memory>
 
@@ -7,8 +6,8 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/ocp_solver.hpp"
 #include "idocp/cost/cost_function.hpp"
+#include "idocp/cost/configuration_space_cost.hpp"
 #include "idocp/cost/time_varying_configuration_space_cost.hpp"
-#include "idocp/cost/contact_force_cost.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 #include "idocp/constraints/joint_position_upper_limit.hpp"
@@ -16,8 +15,8 @@
 #include "idocp/constraints/joint_velocity_upper_limit.hpp"
 #include "idocp/constraints/joint_torques_lower_limit.hpp"
 #include "idocp/constraints/joint_torques_upper_limit.hpp"
-#include "idocp/constraints/linearized_friction_cone.hpp"
-#include "idocp/constraints/linearized_impulse_friction_cone.hpp"
+#include "idocp/constraints/friction_cone.hpp"
+#include "idocp/constraints/impulse_friction_cone.hpp"
 
 #include "idocp/utils/ocp_benchmarker.hpp"
 
@@ -25,13 +24,57 @@
 #include "idocp/utils/trajectory_viewer.hpp"
 #endif 
 
+ 
+class TimeVaryingConfigurationRef final : public idocp::TimeVaryingConfigurationRefBase {
+public:
+  TimeVaryingConfigurationRef(const double t0, const double tf, 
+                              const Eigen::VectorXd& q0, const double v_ref) 
+    : TimeVaryingConfigurationRefBase(),
+      t0_(t0),
+      tf_(tf),
+      q0_(q0),
+      qf_(q0),
+      v_ref_(v_ref) {
+    qf_.coeffRef(0) += (tf-t0) * v_ref;
+  }
+
+  ~TimeVaryingConfigurationRef() {}
+
+  void update_q_ref(const idocp::Robot& robot, const double t, 
+                    Eigen::VectorXd& q_ref) const override {
+    if (t < t0_) {
+      q_ref = q0_;
+    }
+    else if (t < tf_) {
+      q_ref = q0_;
+      q_ref.coeffRef(0) += (t-t0_) * v_ref_;
+    }
+    else {
+      q_ref = qf_;
+    }
+  }
+
+  bool isActive(const double t) const override {
+    return true;
+  }
+
+private:
+  Eigen::VectorXd q0_, qf_;
+  double t0_, tf_, v_ref_;
+};
+
 
 int main(int argc, char *argv[]) {
-  std::vector<int> contact_frames = {14, 24, 34, 44}; // LF, LH, RF, RH
+  const int LF_foot_id = 14;
+  const int LH_foot_id = 24;
+  const int RF_foot_id = 34;
+  const int RH_foot_id = 44;
+  std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; // LF, LH, RF, RH
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
-  idocp::Robot robot(path_to_urdf, contact_frames);
+  const double baumgarte_time_step = 0.04;
+  idocp::Robot robot(path_to_urdf, contact_frames, baumgarte_time_step);
 
-  const double stride = 0.4;
+  const double stride = 0.45;
   const double additive_stride_hip = 0.2;
   const double t_start = 1.0;
 
@@ -42,39 +85,15 @@ int main(int argc, char *argv[]) {
   const int steps = 10;
 
   auto cost = std::make_shared<idocp::CostFunction>();
-  Eigen::VectorXd q_standing(Eigen::VectorXd::Zero(robot.dimq()));
-  q_standing << -3, 0, 0.4792, 0, 0, 0, 1, 
-                -0.1,  0.7, -1.0, 
-                -0.1, -0.7,  1.0, 
-                 0.1,  0.7, -1.0, 
-                 0.1, -0.7,  1.0;
-  Eigen::VectorXd q_weight(Eigen::VectorXd::Zero(robot.dimv()));
-  q_weight << 1, 1, 1, 10, 10, 10, 
-              10, 10, 10,
-              10, 10, 10,
-              10, 10, 10,
-              10, 10, 10;
   Eigen::VectorXd v_weight(Eigen::VectorXd::Zero(robot.dimv()));
   v_weight << 0.01, 0.01, 0.01, 0.1, 0.1, 0.1, 
               0.1, 0.1, 0.1,
               0.1, 0.1, 0.1,
               0.1, 0.1, 0.1,
               0.1, 0.1, 0.1;
-  Eigen::VectorXd a_weight(Eigen::VectorXd::Zero(robot.dimv()));
-  a_weight << 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 
-              0.01, 0.01, 0.01,
-              0.01, 0.01, 0.01,
-              0.01, 0.01, 0.01,
-              0.01, 0.01, 0.01;
+  Eigen::VectorXd a_weight(Eigen::VectorXd::Constant(robot.dimv(), 0.001));
 
-  auto config_cost = std::make_shared<idocp::TimeVaryingConfigurationSpaceCost>(robot);
-  Eigen::VectorXd q_ref = q_standing;
-  Eigen::VectorXd v_ref(Eigen::VectorXd::Zero(robot.dimv()));
-  v_ref(0) = stride / t_period;
-  config_cost->set_ref(robot, t_start, t_start+(0.5+steps)*t_period, q_standing, v_ref);
-  config_cost->set_q_weight(q_weight);
-  config_cost->set_qf_weight(q_weight);
-  config_cost->set_qi_weight(q_weight);
+  auto config_cost = std::make_shared<idocp::ConfigurationSpaceCost>(robot);
   config_cost->set_v_weight(v_weight);
   config_cost->set_vf_weight(v_weight);
   config_cost->set_vi_weight(v_weight);
@@ -82,20 +101,25 @@ int main(int argc, char *argv[]) {
   config_cost->set_dvi_weight(a_weight);
   cost->push_back(config_cost);
 
-  auto contact_cost = std::make_shared<idocp::ContactForceCost>(robot);
-  std::vector<Eigen::Vector3d> f_weight, f_ref;
-  for (int i=0; i<contact_frames.size(); ++i) {
-    Eigen::Vector3d fw; 
-    fw << 1e-01, 1e-01, 1.0e-07;
-    f_weight.push_back(fw);
-    Eigen::Vector3d fr; 
-    fr << 0, 0, 70;
-    f_ref.push_back(fr);
-  }
-  contact_cost->set_f_weight(f_weight);
-  contact_cost->set_fi_weight(f_weight);
-  contact_cost->set_f_ref(f_ref);
-  cost->push_back(contact_cost);
+  Eigen::VectorXd q_standing(Eigen::VectorXd::Zero(robot.dimq()));
+  q_standing << -3, 0, 0.4792, 0, 0, 0, 1, 
+                -0.1,  0.7, -1.0, 
+                -0.1, -0.7,  1.0, 
+                 0.1,  0.7, -1.0, 
+                 0.1, -0.7,  1.0;
+  Eigen::VectorXd q_weight(Eigen::VectorXd::Zero(robot.dimv()));
+  q_weight << 100, 100, 100, 100, 100, 100, 
+              1, 1, 1,
+              1, 1, 1,
+              1, 1, 1,
+              1, 1, 1;
+  const double v_ref = stride / t_period;
+  auto config_ref = std::make_shared<TimeVaryingConfigurationRef>(t_start+0.25*t_period, 0.25*t_period+t_start+(0.75+steps+0.75)*t_period, q_standing, v_ref);
+  auto time_varying_config_cost = std::make_shared<idocp::TimeVaryingConfigurationSpaceCost>(robot, config_ref);
+  time_varying_config_cost->set_q_weight(q_weight);
+  time_varying_config_cost->set_qf_weight(q_weight);
+  time_varying_config_cost->set_qi_weight(q_weight);
+  cost->push_back(time_varying_config_cost);
 
   auto constraints           = std::make_shared<idocp::Constraints>();
   auto joint_position_lower  = std::make_shared<idocp::JointPositionLowerLimit>(robot);
@@ -104,9 +128,9 @@ int main(int argc, char *argv[]) {
   auto joint_velocity_upper  = std::make_shared<idocp::JointVelocityUpperLimit>(robot);
   auto joint_torques_lower   = std::make_shared<idocp::JointTorquesLowerLimit>(robot);
   auto joint_torques_upper   = std::make_shared<idocp::JointTorquesUpperLimit>(robot);
-  const double mu = 0.8;
-  auto friction_cone         = std::make_shared<idocp::LinearizedFrictionCone>(robot, mu);
-  auto impulse_friction_cone = std::make_shared<idocp::LinearizedImpulseFrictionCone>(robot, mu);
+  const double mu = 0.7;
+  auto friction_cone         = std::make_shared<idocp::FrictionCone>(robot, mu);
+  auto impulse_friction_cone = std::make_shared<idocp::ImpulseFrictionCone>(robot, mu);
   constraints->push_back(joint_position_lower);
   constraints->push_back(joint_position_upper);
   constraints->push_back(joint_velocity_lower);
@@ -115,6 +139,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
   constraints->push_back(impulse_friction_cone);
+  constraints->setBarrier(1.0e-03);
 
   const double T = 7; 
   const int N = 240;
@@ -199,22 +224,17 @@ int main(int argc, char *argv[]) {
   ocp_solver.pushBackContactStatus(contact_status_front_hip_swing, 
                                    t_end_init+steps*t_period+t_end_front_swing);
 
-  contact_points[0].coeffRef(0) += 0.5 * stride;
-  contact_points[2].coeffRef(0) += 0.5 * stride;
-  contact_points[1].coeffRef(0) += 0.5 * stride - additive_stride_hip;
-  contact_points[3].coeffRef(0) += 0.5 * stride - additive_stride_hip;
+  contact_points[0].coeffRef(0) += 0.75 * stride;
+  contact_points[2].coeffRef(0) += 0.75 * stride;
+  contact_points[1].coeffRef(0) += 0.75 * stride - additive_stride_hip;
+  contact_points[3].coeffRef(0) += 0.75 * stride - additive_stride_hip;
   contact_status_hip_swing.setContactPoints(contact_points);
   ocp_solver.pushBackContactStatus(contact_status_hip_swing, 
                                    t_end_init+steps*t_period+t_end_front_swing+t_end_front_hip_swing);
   contact_status_initial.setContactPoints(contact_points);
   ocp_solver.pushBackContactStatus(contact_status_initial, t_end_init+steps*t_period+t_end);
 
-  Eigen::VectorXd q(Eigen::VectorXd::Zero(robot.dimq()));
-  q << -3, 0, 0.4792, 0, 0, 0, 1, 
-       -0.1,  0.7, -1.0, // LF
-       -0.1, -0.7,  1.0, // LH
-        0.1,  0.7, -1.0, // RF
-        0.1, -0.7,  1.0; // RH
+  Eigen::VectorXd q(q_standing);
   Eigen::VectorXd v(Eigen::VectorXd::Zero(robot.dimv()));
 
   ocp_solver.setSolution("q", q);
@@ -222,24 +242,27 @@ int main(int argc, char *argv[]) {
   Eigen::Vector3d f_init;
   f_init << 0, 0, 0.25*robot.totalWeight();
   ocp_solver.setSolution("f", f_init);
+  ocp_solver.setSolution("lmd", f_init);
 
   ocp_solver.initConstraints(t);
 
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 350, line_search);
-  // idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 350, line_search);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 200, line_search);
+  // idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 2500, line_search);
 
 #ifdef ENABLE_VIEWER
-  if (argc != 2) {
-    std::cout << "Invalid argment!" << std::endl;
-    std::cout << "Package serach path must be specified as the second argment!" << std::endl;
-  }
-  else {
-    const std::string pkg_search_path = argv[1];
-    idocp::TrajectoryViewer viewer(pkg_search_path, path_to_urdf);
-    const double dt = T/N;
-    viewer.display(ocp_solver.getSolution("q"), dt);
-  }
+  idocp::TrajectoryViewer viewer(path_to_urdf);
+  Eigen::Vector3d camera_pos;
+  Eigen::Vector4d camera_quat;
+  camera_pos << 5.10483, -3.98692, 1.59321;
+  camera_quat << 0.547037, 0.243328, 0.314829, 0.736495;
+  viewer.setCameraTransform(camera_pos, camera_quat);
+  viewer.display(robot, ocp_solver.getSolution("q"), 
+                 ocp_solver.getSolution("f", "WORLD"), (T/N), mu);
+  camera_pos << 0.119269, -7.96283, 1.95978;
+  camera_quat << 0.609016, 0.00297497, 0.010914, 0.793077;
+  viewer.setCameraTransform(camera_pos, camera_quat);
+  viewer.display(ocp_solver.getSolution("q"), (T/N));
 #endif 
 
   return 0;

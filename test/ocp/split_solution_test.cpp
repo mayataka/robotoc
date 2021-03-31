@@ -1,5 +1,3 @@
-#include <string>
-
 #include <gtest/gtest.h>
 
 #include "Eigen/Core"
@@ -9,6 +7,8 @@
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/ocp/split_solution.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -16,9 +16,7 @@ class SplitSolutionTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
+    dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
@@ -38,7 +36,7 @@ protected:
                             const ContactStatus& contact_status, 
                             const ImpulseStatus& impulse_status);
 
-  std::string fixed_base_urdf, floating_base_urdf;
+  double dt;
 };
 
 
@@ -818,10 +816,9 @@ void SplitSolutionTest::TestIntegrate(const Robot& robot,
 
 
 TEST_F(SplitSolutionTest, fixedBase) {
-  Robot robot_without_contacts(fixed_base_urdf);
+  auto robot_without_contacts = testhelper::CreateFixedBaseRobot();
   Test(robot_without_contacts);
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   auto impulse_status = robot.createImpulseStatus();
   TestIsApprox(robot, contact_status, impulse_status);
@@ -839,10 +836,9 @@ TEST_F(SplitSolutionTest, fixedBase) {
 
 
 TEST_F(SplitSolutionTest, floatingBase) {
-  Robot robot_without_contacts(floating_base_urdf);
+  auto robot_without_contacts = testhelper::CreateFloatingBaseRobot();
   Test(robot_without_contacts);
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
   auto impulse_status = robot.createImpulseStatus();
   TestIsApprox(robot, contact_status, impulse_status);

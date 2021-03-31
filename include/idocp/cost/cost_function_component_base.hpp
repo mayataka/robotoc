@@ -21,7 +21,6 @@ namespace idocp {
 ///
 class CostFunctionComponentBase {
 public:
-
   ///
   /// @brief Default constructor. 
   ///
@@ -107,8 +106,8 @@ public:
   /// @param[in] t Time.
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
-  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
-  /// added to this data.
+  /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
+  /// are added to this object.
   ///
   virtual void computeStageCostDerivatives(
       Robot& robot, CostFunctionData& data, const double t, const double dt, 
@@ -121,8 +120,8 @@ public:
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] s Split solution.
-  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
-  /// added to this data.
+  /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
+  /// are added to this object.
   ///
   virtual void computeTerminalCostDerivatives(
       Robot& robot, CostFunctionData& data, const double t, 
@@ -135,8 +134,8 @@ public:
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] s Split solution.
-  /// @param[out] kkt_residual The KKT residual. The partial derivatives are 
-  /// added to this data.
+  /// @param[in, out] kkt_residual Split KKT residual. The partial derivatives 
+  /// are added to this object.
   ///
   virtual void computeImpulseCostDerivatives(
       Robot& robot, CostFunctionData& data, const double t, 
@@ -151,8 +150,8 @@ public:
   /// @param[in] t Time.
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
-  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
-  /// data.
+  /// @param[in, out] kkt_matrix Split KKT matrix. The Hessians are added to 
+  /// this object.
   ///
   virtual void computeStageCostHessian(
       Robot& robot, CostFunctionData& data, const double t, const double dt, 
@@ -165,8 +164,8 @@ public:
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] s Split solution.
-  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
-  /// data.
+  /// @param[in, out] kkt_matrix Split KKT matrix. The Hessians are added to 
+  /// this object.
   ///
   virtual void computeTerminalCostHessian(
       Robot& robot, CostFunctionData& data, const double t, 
@@ -179,8 +178,8 @@ public:
   /// @param[in] data Cost function data.
   /// @param[in] t Time.
   /// @param[in] s Split solution.
-  /// @param[out] kkt_matrix The KKT matrix. The Hessians are added to this 
-  /// data.
+  /// @param[in, out] kkt_matrix Impulse split KKT matrix. The Hessians are  
+  /// added to this object.
   ///
   virtual void computeImpulseCostHessian(
       Robot& robot, CostFunctionData& data, const double t, 

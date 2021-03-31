@@ -42,7 +42,6 @@ inline void SplitBackwardCorrection::coarseUpdate(
     const SplitKKTResidual& kkt_residual, const SplitSolution& s, 
     SplitSolution& s_new) {
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
-  kkt_matrix.Qux() = kkt_matrix.Qxu().transpose();
   data_.setImpulseStatus(s.dimi());
   dimKKT_ = 2*dimx_ + dimu_ + s.dimi();
   is_switching_constraint_valid_ = s.hasActiveImpulse();

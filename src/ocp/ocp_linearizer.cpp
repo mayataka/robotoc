@@ -40,7 +40,7 @@ OCPLinearizer::~OCPLinearizer() {
 void OCPLinearizer::initConstraints(OCP& ocp, std::vector<Robot>& robots, 
                                     const ContactSequence& contact_sequence, 
                                     const Solution& s) const {
-  const int N = ocp.discrete().N_ideal();
+  const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
   const int N_all = N + 1 + 2*N_impulse + N_lift;

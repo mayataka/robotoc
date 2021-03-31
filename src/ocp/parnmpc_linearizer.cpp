@@ -44,7 +44,7 @@ void ParNMPCLinearizer::initConstraints(ParNMPC& parnmpc,
                                         std::vector<Robot>& robots, 
                                         const ContactSequence& contact_sequence, 
                                         const Solution& s) const {
-  const int N = parnmpc.discrete().N_ideal();
+  const int N = parnmpc.discrete().N();
   const int N_impulse = parnmpc.discrete().N_impulse();
   const int N_lift = parnmpc.discrete().N_lift();
   const int N_all = N + 2*N_impulse + N_lift;

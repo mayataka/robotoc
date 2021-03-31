@@ -40,9 +40,9 @@ inline bool TerminalOCP::isFeasible(Robot& robot, const SplitSolution& s) {
 }
 
 
-inline void TerminalOCP::initConstraints(Robot& robot, const int time_step, 
+inline void TerminalOCP::initConstraints(Robot& robot, const int time_stage, 
                                          const SplitSolution& s) {
-  assert(time_step >= 0);
+  assert(time_stage >= 0);
   // TODO: add inequality constraints at the terminal OCP.
 }
 
@@ -75,15 +75,6 @@ inline double TerminalOCP::maxPrimalStepSize() {
 inline double TerminalOCP::maxDualStepSize() {
   return 1;
   // TODO: add inequality constraints at the terminal OCP.
-}
-
-
-inline double TerminalOCP::terminalCost(Robot& robot, const double t, 
-                                        const SplitSolution& s) {
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v);
-  }
-  return cost_->computeTerminalCost(robot, cost_data_, t, s);
 }
 
 
@@ -141,6 +132,15 @@ inline double TerminalOCP::squaredNormKKTResidual(
   double error = 0;
   error += kkt_residual.lx().squaredNorm();
   return error;
+}
+
+
+inline double TerminalOCP::terminalCost(Robot& robot, const double t, 
+                                        const SplitSolution& s) {
+  if (use_kinematics_) {
+    robot.updateKinematics(s.q, s.v);
+  }
+  return cost_->computeTerminalCost(robot, cost_data_, t, s);
 }
 
 } // namespace idocp

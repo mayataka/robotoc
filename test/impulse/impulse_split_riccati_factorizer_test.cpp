@@ -1,4 +1,3 @@
-#include <string>
 #include <memory>
 
 #include <gtest/gtest.h>
@@ -13,6 +12,8 @@
 #include "idocp/impulse/impulse_backward_riccati_recursion_factorizer.hpp"
 #include "idocp/impulse/impulse_split_riccati_factorizer.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -20,11 +21,6 @@ class ImpulseSplitRiccatiFactorizerTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
-    fixed_base_robot = Robot(fixed_base_urdf);
-    floating_base_robot = Robot(floating_base_urdf);
   }
 
   virtual void TearDown() {
@@ -36,9 +32,6 @@ protected:
 
   static void testBackwardRecursion(const Robot& robot);
   static void testForwardRecursion(const Robot& robot);
-
-  std::string fixed_base_urdf, floating_base_urdf;
-  Robot fixed_base_robot, floating_base_robot;
 };
 
 
@@ -123,6 +116,7 @@ void ImpulseSplitRiccatiFactorizerTest::testForwardRecursion(const Robot& robot)
   SplitRiccatiFactorization riccati_ref = riccati;
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
   ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
+  kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
   ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
   ImpulseSplitDirection d(robot);
   d.setRandom();
@@ -144,14 +138,18 @@ void ImpulseSplitRiccatiFactorizerTest::testForwardRecursion(const Robot& robot)
 
 
 TEST_F(ImpulseSplitRiccatiFactorizerTest, fixedBase) {
-  testBackwardRecursion(fixed_base_robot);
-  testForwardRecursion(fixed_base_robot);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  testBackwardRecursion(robot);
+  testForwardRecursion(robot);
 }
 
 
 TEST_F(ImpulseSplitRiccatiFactorizerTest, floating_base) {
-  testBackwardRecursion(floating_base_robot);
-  testForwardRecursion(floating_base_robot);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  testBackwardRecursion(robot);
+  testForwardRecursion(robot);
 }
 
 } // namespace idocp

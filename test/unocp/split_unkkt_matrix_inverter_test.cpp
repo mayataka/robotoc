@@ -1,11 +1,10 @@
-#include <string>
-
 #include <gtest/gtest.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/unocp/split_unkkt_matrix_inverter.hpp"
+
+#include "robot_factory.hpp"
 
 
 namespace idocp {
@@ -14,16 +13,13 @@ class SplitUnKKTMatrixInverterTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    urdf = "../urdf/iiwa14/iiwa14.urdf";
-    robot = Robot(urdf);
+    robot = testhelper::CreateFixedBaseRobot();
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
 
   virtual void TearDown() {
   }
 
-  std::string urdf;
   Robot robot;
   double dt;
 };

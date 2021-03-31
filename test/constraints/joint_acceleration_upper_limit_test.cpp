@@ -1,7 +1,4 @@
-#include <string>
-#include <random>
-#include <utility>
-#include <vector>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -14,14 +11,14 @@
 #include "idocp/constraints/joint_acceleration_upper_limit.hpp"
 #include "idocp/constraints/pdipm.hpp"
 
+#include "robot_factory.hpp"
+
 namespace idocp {
 
 class JointAccelerationUpperLimitTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     barrier = 1.0e-04;
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
@@ -38,7 +35,6 @@ protected:
   void testComputeSlackAndDualDirection(Robot& robot, const Eigen::VectorXd& amax) const;
 
   double barrier, dt;
-  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
@@ -51,7 +47,7 @@ void JointAccelerationUpperLimitTest::testKinematics(Robot& robot, const Eigen::
 
 void JointAccelerationUpperLimitTest::testIsFeasible(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit limit(robot, amax); 
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   EXPECT_EQ(limit.dimc(), robot.dimv()-robot.dim_passive());
   SplitSolution s(robot);
   EXPECT_TRUE(limit.isFeasible(robot, data, s));
@@ -62,7 +58,7 @@ void JointAccelerationUpperLimitTest::testIsFeasible(Robot& robot, const Eigen::
 
 void JointAccelerationUpperLimitTest::testSetSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit limit(robot, amax); 
-  ConstraintComponentData data(limit.dimc()), data_ref(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier()), data_ref(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   limit.setSlackAndDual(robot, data, s);
@@ -74,7 +70,7 @@ void JointAccelerationUpperLimitTest::testSetSlackAndDual(Robot& robot, const Ei
 
 void JointAccelerationUpperLimitTest::testAugmentDualResidual(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit limit(robot, amax); 
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   limit.setSlackAndDual(robot, data, s);
@@ -92,7 +88,7 @@ void JointAccelerationUpperLimitTest::testComputePrimalAndDualResidual(Robot& ro
   JointAccelerationUpperLimit limit(robot, amax); 
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   data.slack.setRandom();
   data.dual.setRandom();
   ConstraintComponentData data_ref = data;
@@ -105,7 +101,7 @@ void JointAccelerationUpperLimitTest::testComputePrimalAndDualResidual(Robot& ro
 
 void JointAccelerationUpperLimitTest::testCondenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit limit(robot, amax); 
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   limit.setSlackAndDual(robot, data, s);
@@ -131,7 +127,7 @@ void JointAccelerationUpperLimitTest::testCondenseSlackAndDual(Robot& robot, con
 
 void JointAccelerationUpperLimitTest::testComputeSlackAndDualDirection(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit limit(robot, amax); 
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   limit.setSlackAndDual(robot, data, s);
@@ -147,7 +143,7 @@ void JointAccelerationUpperLimitTest::testComputeSlackAndDualDirection(Robot& ro
 
 
 TEST_F(JointAccelerationUpperLimitTest, fixedBase) {
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   const Eigen::VectorXd amax = Eigen::VectorXd::Constant(robot.dimv(), 10);
   testKinematics(robot, amax);
   testIsFeasible(robot, amax);
@@ -160,7 +156,7 @@ TEST_F(JointAccelerationUpperLimitTest, fixedBase) {
 
 
 TEST_F(JointAccelerationUpperLimitTest, floatingBase) {
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   const Eigen::VectorXd amax = Eigen::VectorXd::Constant(robot.dimu(), 10);
   testKinematics(robot, amax);
   testIsFeasible(robot, amax);

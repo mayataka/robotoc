@@ -15,37 +15,77 @@
 
 namespace idocp {
 
+///
+/// @class ContactForceCost
+/// @brief Cost on the contact forces expressed in the local frames.
+///
 class ContactForceCost final : public CostFunctionComponentBase {
 public:
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  ///
   ContactForceCost(const Robot& robot);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   ContactForceCost();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~ContactForceCost();
 
-  // Use defalut copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   ContactForceCost(const ContactForceCost&) = default;
 
-  // Use defalut copy operator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   ContactForceCost& operator=(const ContactForceCost&) = default;
 
-  // Use defalut move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   ContactForceCost(ContactForceCost&&) noexcept = default;
 
-  // Use defalut move assign operator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   ContactForceCost& operator=(ContactForceCost&&) noexcept = default;
 
-  bool useKinematics() const override;
-
+  ///
+  /// @brief Sets the reference contact forces expressed in the local frames. 
+  /// @param[in] f_ref Reference contact forces expressed in the local frames. 
+  /// Size must be Robot::maxPointContacts().
+  ///
   void set_f_ref(const std::vector<Eigen::Vector3d>& f_ref);
 
-  void set_f_ref(const Robot& robot);
-
+  ///
+  /// @brief Sets the weight vectors on the contact forces. 
+  /// @param[in] f_weight Weight vectors on the contact forces. 
+  /// Size must be Robot::maxPointContacts().
+  ///
   void set_f_weight(const std::vector<Eigen::Vector3d>& f_weight);
 
+  ///
+  /// @brief Sets the reference impulse forces expressed in the local frames. 
+  /// @param[in] fi_ref Reference impulse forces expressed in the local frames. 
+  /// Size must be Robot::maxPointContacts().
+  ///
   void set_fi_ref(const std::vector<Eigen::Vector3d>& fi_ref);
 
+  ///
+  /// @brief Sets the weight vectors on the impulse forces. 
+  /// @param[in] fi_weight Weight vectors on the impulse forces. 
+  /// Size must be Robot::maxPointContacts().
+  ///
   void set_fi_weight(const std::vector<Eigen::Vector3d>& fi_weight);
+
+  bool useKinematics() const override;
 
   double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
                           const double dt, 

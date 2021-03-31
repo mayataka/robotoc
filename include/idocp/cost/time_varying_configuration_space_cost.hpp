@@ -13,50 +13,142 @@
 
 namespace idocp {
 
+///
+/// @class TimeVaryingConfigurationRefBase 
+/// @brief Base class of time-varying reference of the configuration. 
+///
+class TimeVaryingConfigurationRefBase {
+public:
+  ///
+  /// @brief Default constructor. 
+  ///
+  TimeVaryingConfigurationRefBase() {}
+
+  ///
+  /// @brief Destructor. 
+  ///
+  virtual ~TimeVaryingConfigurationRefBase() {}
+
+  ///
+  /// @brief Default copy constructor. 
+  ///
+  TimeVaryingConfigurationRefBase(
+      const TimeVaryingConfigurationRefBase&) = default;
+
+  ///
+  /// @brief Default copy operator. 
+  ///
+  TimeVaryingConfigurationRefBase& operator=(
+      const TimeVaryingConfigurationRefBase&) = default;
+
+  ///
+  /// @brief Default move constructor. 
+  ///
+  TimeVaryingConfigurationRefBase(
+      TimeVaryingConfigurationRefBase&&) noexcept = default;
+
+  ///
+  /// @brief Default move assign operator. 
+  ///
+  TimeVaryingConfigurationRefBase& operator=(
+      TimeVaryingConfigurationRefBase&&) noexcept = default;
+
+  ///
+  /// @brief Computes the time-varying reference configuration. 
+  /// @param[in] robot Robot model.
+  /// @param[in] t Time.
+  /// @param[in] q_ref Reference position. Size is Robot::dimv().
+  ///
+  virtual void update_q_ref(const Robot& robot, const double t, 
+                            Eigen::VectorXd& q_ref) const = 0;
+
+  ///
+  /// @brief Checks wheather the cost is active or not at the specified time. 
+  /// @param[in] t Time.
+  /// @return true if the cost is active at time t. false if not.
+  ///
+  virtual bool isActive(const double t) const = 0;
+
+};
+
+
+///
+/// @class TimeVaryingConfigurationSpaceCost
+/// @brief Cost on the time-varying configuration. 
+///
 class TimeVaryingConfigurationSpaceCost final : public CostFunctionComponentBase {
 public:
-  TimeVaryingConfigurationSpaceCost(const Robot& robot);
+  ///
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model.
+  /// @param[in] ref Shared ptr to the reference configuration.
+  ///
+  TimeVaryingConfigurationSpaceCost(
+      const Robot& robot, 
+      const std::shared_ptr<TimeVaryingConfigurationRefBase>& ref);
 
+  ///
+  /// @brief Default constructor. 
+  ///
   TimeVaryingConfigurationSpaceCost();
 
+  ///
+  /// @brief Destructor. 
+  ///
   ~TimeVaryingConfigurationSpaceCost();
 
-  // Use defalut copy constructor.
+  ///
+  /// @brief Default copy constructor. 
+  ///
   TimeVaryingConfigurationSpaceCost(
       const TimeVaryingConfigurationSpaceCost&) = default;
 
-  // Use defalut copy operator.
+  ///
+  /// @brief Default copy operator. 
+  ///
   TimeVaryingConfigurationSpaceCost& operator=(
       const TimeVaryingConfigurationSpaceCost&) = default;
 
-  // Use defalut move constructor.
+  ///
+  /// @brief Default move constructor. 
+  ///
   TimeVaryingConfigurationSpaceCost(
       TimeVaryingConfigurationSpaceCost&&) noexcept = default;
 
-  // Use defalut move assign operator.
+  ///
+  /// @brief Default move assign operator. 
+  ///
   TimeVaryingConfigurationSpaceCost& operator=(
       TimeVaryingConfigurationSpaceCost&&) noexcept = default;
 
-  bool useKinematics() const override;
+  ///
+  /// @brief Sets the time-varying reference configuration. 
+  /// @param[in] ref Shared ptr time-varying reference position.
+  ///
+  void set_ref(const std::shared_ptr<TimeVaryingConfigurationRefBase>& ref);
 
-  void set_ref(const Robot& robot, const double t_begin, const double t_end, 
-               const Eigen::VectorXd q_begin, const Eigen::VectorXd v);
-
+  ///
+  /// @brief Sets the weight vector on the configuration q. 
+  /// @param[in] q_weight Weight vector on the configuration q. 
+  /// Size must be Robot::dimv().
+  ///
   void set_q_weight(const Eigen::VectorXd& q_weight);
 
-  void set_v_weight(const Eigen::VectorXd& v_weight);
-
-  void set_a_weight(const Eigen::VectorXd& a_weight);
-
+  ///
+  /// @brief Sets the terminal weight vector on the configuration q. 
+  /// @param[in] qf_weight Terminal weight vector on the configuration q. 
+  /// Size must be Robot::dimv().
+  ///
   void set_qf_weight(const Eigen::VectorXd& qf_weight);
 
-  void set_vf_weight(const Eigen::VectorXd& vf_weight);
-
+  ///
+  /// @brief Sets the weight vector on the configuration q at impulse. 
+  /// @param[in] qi_weight Weight vector on the configuration q at impulse. 
+  /// Size must be Robot::dimv().
+  ///
   void set_qi_weight(const Eigen::VectorXd& qi_weight);
 
-  void set_vi_weight(const Eigen::VectorXd& vi_weight);
-
-  void set_dvi_weight(const Eigen::VectorXd& dvi_weight);
+  bool useKinematics() const override;
 
   double computeStageCost(Robot& robot, CostFunctionData& data, const double t, 
                           const double dt, const SplitSolution& s) const;
@@ -95,33 +187,10 @@ public:
                                  const double t, const ImpulseSplitSolution& s, 
                                  ImpulseSplitKKTMatrix& kkt_matrix) const;
 
-  void set_q_ref(const Robot& robot, const double t, 
-                 Eigen::VectorXd& q_ref) const {
-    if (t > t_begin_ && t < t_end_) {
-      robot.integrateConfiguration(q_begin_, v_ref_, t-t_begin_, q_ref);
-    }
-    else if (t <= t_begin_) {
-      q_ref = q_begin_;
-    }
-    else {
-      q_ref = q_end_;
-    }
-  }
-
-  Eigen::VectorXd v_ref(const double t) const {
-    if (t > t_begin_ && t < t_end_) {
-      return v_ref_;
-    }
-    else {
-      return Eigen::VectorXd::Zero(dimv_);
-    }
-  }
-
 private:
   int dimq_, dimv_;
-  double t_begin_, t_end_;
-  Eigen::VectorXd q_begin_, q_end_, v_ref_, q_weight_, v_weight_, a_weight_,  
-                  qf_weight_, vf_weight_, qi_weight_, vi_weight_, dvi_weight_;
+  std::shared_ptr<TimeVaryingConfigurationRefBase> ref_;
+  Eigen::VectorXd q_weight_, qf_weight_, qi_weight_;
 
 };
 

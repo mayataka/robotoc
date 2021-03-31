@@ -4,7 +4,7 @@
 #include "idocp/ocp/split_kkt_matrix_inverter.hpp"
 
 #include <stdexcept>
-#include <assert.h>
+#include <cassert>
 
 #include "Eigen/LU"
 
@@ -197,15 +197,16 @@ inline void SplitKKTMatrixInverter::multiplyFPq(
 }
 
 
-inline void SplitKKTMatrixInverter::enableRegularization(const double reg) {
+inline void SplitKKTMatrixInverter::setRegularization(const double reg) {
   assert(reg >= 0);
-  regularization_ = true;
-  reg_ = reg;
-}
-
-
-inline void SplitKKTMatrixInverter::disableRegularization() {
-  regularization_ = false;
+  if (reg == 0.) {
+    regularization_ = false;
+    reg_ = 0.;
+  }
+  else {
+    regularization_ = true;
+    reg_ = reg;
+  }
 }
 
 

@@ -15,7 +15,7 @@ class CollisionChecker {
 public:
   ///
   /// @brief Constructor. 
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @param[in] robot Robot model. 
   ///
   CollisionChecker(const Robot& robot);
 

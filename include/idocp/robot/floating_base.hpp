@@ -16,7 +16,7 @@ namespace idocp {
 class FloatingBase {
 public:
   ///
-  /// @brief Construct floating base model.
+  /// @brief Construct floating base model from Pinocchio robot model.
   /// @param[in] model The pinocchio model. Before call this constructor, 
   /// pinocchio model must be initialized, e.g., by pinocchio::buildModel().
   ///

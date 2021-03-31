@@ -10,13 +10,13 @@ namespace idocp {
 
 ///
 /// @class SplitRiccatiFactorization
-/// @brief Riccati factorized matrix and vector split into a time stage.
+/// @brief Riccati factorization matrix and vector for a time stage.
 ///
 struct SplitRiccatiFactorization {
 public:
   ///
-  /// @brief Allocate Riccati factorization matrix and vector.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Constructs Riccati factorization matrix and vector.
+  /// @param[in] robot Robot model. 
   ///
   SplitRiccatiFactorization(const Robot& robot)
     : Pqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
@@ -103,7 +103,7 @@ public:
   Eigen::VectorXd sv;
 
   ///
-  /// @brief Chech the equivalence of two SplitRiccatiFactorization.
+  /// @brief Checks the equivalence of two SplitRiccatiFactorization.
   /// @param[in] other object.
   /// @return true if this and other is same. false otherwise.
   ///
@@ -118,7 +118,7 @@ public:
   }
 
   ///
-  /// @brief Chech this has at least one NaN.
+  /// @brief Checks this object has at least one NaN.
   /// @return true if this has at least one NaN. false otherwise.
   ///
   bool hasNaN() const {

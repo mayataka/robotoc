@@ -11,20 +11,20 @@ namespace idocp {
 
 ///
 /// @class ImpulseSplitKKTResidual
-/// @brief KKT residual split at the impulse stage. 
+/// @brief KKT residual split into an impulse stage. 
 ///
 class ImpulseSplitKKTResidual {
 public:
   using Vector6d = Eigen::Matrix<double, 6, 1>;
 
   ///
-  /// @brief Construct a KKT residual.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Construct a split KKT residual.
+  /// @param[in] robot Robot model. 
   ///
   ImpulseSplitKKTResidual(const Robot& robot);
 
   ///
-  /// @brief Default constructor. Does not construct any datas. 
+  /// @brief Default constructor. 
   ///
   ImpulseSplitKKTResidual();
 
@@ -34,177 +34,172 @@ public:
   ~ImpulseSplitKKTResidual();
 
   ///
-  /// @brief Use default copy constructor. 
+  /// @brief Default copy constructor. 
   ///
   ImpulseSplitKKTResidual(const ImpulseSplitKKTResidual&) = default;
 
   ///
-  /// @brief Use default copy assign operator. 
+  /// @brief Default copy operator. 
   ///
   ImpulseSplitKKTResidual& operator=(const ImpulseSplitKKTResidual&) = default;
 
   ///
-  /// @brief Use default move constructor. 
+  /// @brief Default move constructor. 
   ///
   ImpulseSplitKKTResidual(ImpulseSplitKKTResidual&&) noexcept = default;
 
   ///
-  /// @brief Use default move assign operator. 
+  /// @brief Default move assign operator. 
   ///
   ImpulseSplitKKTResidual& operator=(
       ImpulseSplitKKTResidual&&) noexcept = default;
 
   ///
-  /// @brief Set impulse status from robot model, i.e., set dimension of the 
-  /// impulse and equality constraints.
+  /// @brief Set the impulse status, i.e., set dimension of the impulse.
   /// @param[in] impulse_status Impulse status.
   ///
   void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Residual with respect to q transition.
-  /// @return Reference to the residual with respect to q transition. Size is 
+  /// @brief Residual in the state equation of q.
+  /// @return Reference to the residual in the state equation of q. Size is 
   /// Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> Fq();
 
   ///
-  /// @brief Residual with respect to q transition.
-  /// @return Reference to the residual with respect to q transition. Size is 
-  /// Robot::dimv().
+  /// @brief const version of ImpulseSplitKKTResidual::Fq().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> Fq() const;
 
   ///
-  /// @brief Residual with respect to v transition.
-  /// @return Reference to the residual with respect to v transition. Size is 
+  /// @brief Residual in the state equation of v.
+  /// @return Reference to the residual in the state equation of v. Size is 
   /// Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> Fv();
 
   ///
-  /// @brief Residual with respect to v transition.
-  /// @return Reference to the residual with respect to v transition. Size is 
-  /// Robot::dimv().
+  /// @brief const version of ImpulseSplitKKTResidual::Fv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> Fv() const;
 
   ///
-  /// @brief Residual with respect to q and v transition.
-  /// @return Reference to the residual with respect to q and v transition.
-  /// Size is 2 * Robot::dimv().
+  /// @brief Residual in the state equation.
+  /// @return Reference to the residual in the state equation. Size is 
+  /// 2 * Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> Fx();
 
   ///
-  /// @brief Residual with respect to q and v transition.
-  /// @return Reference to the residual with respect to q and v transition.
-  /// Size is 2 * Robot::dimv().
+  /// @brief const version of ImpulseSplitKKTResidual::Fx().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> Fx() const;
 
   ///
-  /// @brief Residual with respect to q and v transition.
-  /// @return Reference to the residual with respect to q and v transition.
-  /// Size is 2 * Robot::dimv().
+  /// @brief Residual in the impulse velocity constraints.
+  /// @return Reference to the residual in the impulse velocity constraints. 
+  /// Size is ImpulseStatus::dimf().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> V();
 
   ///
-  /// @brief Residual with respect to q and v transition.
-  /// @return Reference to the residual with respect to q and v transition.
-  /// Size is 2 * Robot::dimv().
+  /// @brief const version of ImpulseSplitKKTResidual::V().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> V() const;
 
   ///
-  /// @brief Residual with respect to the stack of the contact forces f.
-  /// @return Reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is ImpulseSplitKKTResidual::dimf().
+  /// @brief KKT residual with respect to the stack of the impulse forces f. 
+  /// @return Reference to the residual with respect to f. Size is 
+  /// ImpulseSplitKKTResidual::dimf().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lf();
 
   ///
-  /// @brief Residual with respect to the stack of the contact forces f.
-  /// @return Reference to the residual with respect to the stack of the  
-  /// contact forces f. Size is ImpulseSplitKKTResidual::dimf().
+  /// @brief const version of ImpulseSplitKKTResidual::lf().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
   ///
-  /// @brief Residual with respect to configuration q.
-  /// @return Reference to the residual with respect to configuration q. Size is 
-  /// Robot::dimv().
+  /// @brief KKT residual with respect to the configuration q. 
+  /// @return Reference to the residual with respect to q. Size is Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lq();
 
   ///
-  /// @brief Residual with respect to configuration q.
-  /// @return Reference to the residual with respect to configuration q. Size is 
-  /// Robot::dimv().
+  /// @brief const version of ImpulseSplitKKTResidual::lq().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lq() const;
 
   ///
-  /// @brief Residual with respect to generalized velocity v.
-  /// @return Reference to the residual with respect to generalized velocity v.
-  /// Size is Robot::dimv().
+  /// @brief KKT residual with respect to the velocity v. 
+  /// @return Reference to the residual with respect to v. Size is Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lv();
 
   ///
-  /// @brief Residual with respect to generalized velocity v.
-  /// @return Reference to the residual with respect to generalized velocity v.
-  /// Size is Robot::dimv().
+  /// @brief const version of ImpulseSplitKKTResidual::lv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lv() const;
 
   ///
-  /// @brief Residual with respect to state x.
-  /// @return Reference to the residual with respect to state x. Size is 
+  /// @brief KKT residual with respect to the state x. 
+  /// @return Reference to the residual with respect to x. Size is 
   /// 2 * Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lx();
 
   ///
-  /// @brief Residual with respect to state x.
-  /// @return Reference to the residual with respect to state x. Size is 
-  /// 2 * Robot::dimv().
+  /// @brief const version of SplitKKTResidual::lx().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lx() const;
 
+  ///
+  /// @brief Split KKT residual at a impulse time stage. 
+  /// @return Reference to the split KKT residual. Size is 
+  /// 4 * Robot::dimv() + ImpulseStatus::dimf().
+  ///
   Eigen::VectorBlock<Eigen::VectorXd> splitKKTResidual();
 
+  ///
+  /// @brief const version of SplitKKTResidual::splitKKTResidual().
+  ///
   const Eigen::VectorBlock<const Eigen::VectorXd> splitKKTResidual() const;
 
   ///
-  /// @brief Set the KKT residual zero.
+  /// @brief Sets the split KKT residual zero.
   ///
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the stack of contact forces at the current 
-  /// contact status.
-  /// @return Dimension of the stack of contact forces.
+  /// @brief Returns the dimension of the stack of the impluse forces at the 
+  /// current impulse status.
+  /// @return Dimension of the stack of the impulse forces.
   ///
   int dimf() const;
 
   ///
-  /// @brief Chech the equivalence of two ImpulseSplitKKTResidual.
-  /// @param[in]other Other object.
+  /// @brief Checks the equivalence of two ImpulseSplitKKTResidual.
+  /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
   bool isApprox(const ImpulseSplitKKTResidual& other) const;
 
   ///
-  /// @brief Chech this has at least one NaN.
+  /// @brief Checks his has at least one NaN.
   /// @return true if this has at least one NaN. false otherwise.
   ///
   bool hasNaN() const;
 
-  /// @brief Residual with respect to control input torques u.
+  /// 
+  /// @brief Residual with respect to the impulse change in the velocity dv. 
+  /// Size is Robot::dimv().
+  /// 
   Eigen::VectorXd ldv;
 
+  /// 
+  /// @brief Residual in the part of the state equation.
+  /// 
   Vector6d Fq_prev;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

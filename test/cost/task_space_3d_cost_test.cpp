@@ -1,4 +1,4 @@
-#include <string>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -12,6 +12,7 @@
 
 #include "idocp/utils/derivative_checker.hpp"
 
+#include "robot_factory.hpp"
 
 namespace idocp {
 
@@ -20,8 +21,6 @@ protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
     std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     t = std::abs(Eigen::VectorXd::Random(1)[0]);
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
@@ -33,7 +32,6 @@ protected:
   void testTerminalCost(Robot& robot, const int frame_id) const;
   void testImpulseCost(Robot& robot, const int frame_id) const;
 
-  std::string fixed_base_urdf, floating_base_urdf;
   double dt, t;
 };
 
@@ -59,9 +57,9 @@ void TaskSpace3DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   auto cost = std::make_shared<TaskSpace3DCost >(robot, frame_id);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_3d_weight(q_weight);
-  cost->set_qf_3d_weight(qf_weight);
-  cost->set_qi_3d_weight(qi_weight);
+  cost->set_q_weight(q_weight);
+  cost->set_qf_weight(qf_weight);
+  cost->set_qi_weight(qi_weight);
   cost->set_q_3d_ref(q_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -80,8 +78,6 @@ void TaskSpace3DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
   EXPECT_TRUE(derivative_checker.checkFirstOrderStageCostDerivatives(cost));
-  // This is due to Gauss-Newton Hessian approximation.
-  EXPECT_FALSE(derivative_checker.checkSecondOrderStageCostDerivatives(cost));
 }
 
 
@@ -106,9 +102,9 @@ void TaskSpace3DCostTest::testTerminalCost(Robot& robot, const int frame_id) con
   auto cost = std::make_shared<TaskSpace3DCost >(robot, frame_id);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_3d_weight(q_weight);
-  cost->set_qf_3d_weight(qf_weight);
-  cost->set_qi_3d_weight(qi_weight);
+  cost->set_q_weight(q_weight);
+  cost->set_qf_weight(qf_weight);
+  cost->set_qi_weight(qi_weight);
   cost->set_q_3d_ref(q_ref);
   const SplitSolution s = SplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -127,8 +123,6 @@ void TaskSpace3DCostTest::testTerminalCost(Robot& robot, const int frame_id) con
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
   EXPECT_TRUE(derivative_checker.checkFirstOrderTerminalCostDerivatives(cost));
-  // This is due to Gauss-Newton Hessian approximation.
-  EXPECT_FALSE(derivative_checker.checkSecondOrderTerminalCostDerivatives(cost));
 }
 
 
@@ -151,9 +145,9 @@ void TaskSpace3DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
   auto cost = std::make_shared<TaskSpace3DCost >(robot, frame_id);
   CostFunctionData data(robot);
   EXPECT_TRUE(cost->useKinematics());
-  cost->set_q_3d_weight(q_weight);
-  cost->set_qf_3d_weight(qf_weight);
-  cost->set_qi_3d_weight(qi_weight);
+  cost->set_q_weight(q_weight);
+  cost->set_qf_weight(qf_weight);
+  cost->set_qi_weight(qi_weight);
   cost->set_q_3d_ref(q_ref);
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
   robot.updateKinematics(s.q, s.v);
@@ -172,14 +166,12 @@ void TaskSpace3DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
   EXPECT_TRUE(derivative_checker.checkFirstOrderImpulseCostDerivatives(cost));
-  // This is due to Gauss-Newton Hessian approximation.
-  EXPECT_FALSE(derivative_checker.checkSecondOrderImpulseCostDerivatives(cost));
 }
 
 
 TEST_F(TaskSpace3DCostTest, fixedBase) {
-  const int frame_id = 18;
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
+  const int frame_id = robot.contactFrames()[0];
   testStageCost(robot, frame_id);
   testTerminalCost(robot, frame_id);
   testImpulseCost(robot, frame_id);
@@ -187,8 +179,8 @@ TEST_F(TaskSpace3DCostTest, fixedBase) {
 
 
 TEST_F(TaskSpace3DCostTest, floatingBase) {
-  const std::vector<int> frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
+  const std::vector<int> frames = robot.contactFrames();
   for (const auto frame_id : frames) {
     testStageCost(robot, frame_id);
     testTerminalCost(robot, frame_id);

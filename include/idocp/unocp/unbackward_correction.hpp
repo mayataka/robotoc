@@ -18,17 +18,19 @@
 namespace idocp {
 
 ///
-/// @class UnBackwardCorrection
-/// @brief Unconstrained backward correction.
+/// @class BackwardCorrectionSolver
+/// @brief Backward correction solver for optimal control problems of 
+/// unconstrained rigid-body systems.
 ///
 class UnBackwardCorrection {
 public:
   ///
-  /// @brief Construct factorizer.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] nthreads Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
+  /// @brief Construct a backward correction solver.
+  /// @param[in] robot Robot model. 
+  /// @param[in] T Length of the horizon. Must be positive.
+  /// @param[in] N Number of discretization of the horizon. 
+  /// @param[in] nthreads Number of the threads used in solving the optimal 
+  /// control problem. Must be positive. 
   ///
   UnBackwardCorrection(const Robot& robot, const double T, const int N, 
                        const int nthreads);
@@ -63,20 +65,57 @@ public:
   ///
   UnBackwardCorrection& operator=(UnBackwardCorrection&&) noexcept = default;
 
+  ///
+  /// @brief Initializes the auxiliary matrices by the terminal cost Hessian 
+  /// computed by the current solution. 
+  /// @param[in] robots std::vector of Robot.
+  /// @param[in] parnmpc Optimal control problem.
+  /// @param[in] t Initial time of the horizon. 
+  /// @param[in] s Solution. 
+  ///
   void initAuxMat(std::vector<Robot>& robots, UnParNMPC& parnmpc, 
                   const double t, const UnSolution& s);
 
+  ///
+  /// @brief Linearizes the optimal control problem and coarse updates the 
+  /// solution in parallel. 
+  /// @param[in] robots std::vector of Robot.
+  /// @param[in, out] parnmpc Optimal control problem.
+  /// @param[in] t Initial time of the horizon.
+  /// @param[in] q Initial configuration.
+  /// @param[in] v Initial generalized velocity.
+  /// @param[in, out] unkkt_matrix KKT matrix. 
+  /// @param[in, out] unkkt_residual KKT residual. 
+  /// @param[in] s Solution. 
+  /// @param[in, out] d Direction. 
+  ///
   void coarseUpdate(std::vector<Robot>& robots, UnParNMPC& parnmpc, 
                     const double t, const Eigen::VectorXd& q, 
                     const Eigen::VectorXd& v, UnKKTMatrix& unkkt_matrix, 
                     UnKKTResidual& unkkt_residual,
                     const UnSolution& s, UnDirection& d);
 
+  ///
+  /// @brief Performs the backward correction for coarse updated solution and 
+  /// computes the Newton direction. 
+  /// @param[in] robots std::vector of Robot.
+  /// @param[in] parnmpc Optimal control problem.
+  /// @param[in] s Solution. 
+  /// @param[in, out] d Direction. 
+  ///
   void backwardCorrection(std::vector<Robot>& robots, UnParNMPC& parnmpc, 
                           const UnSolution& s, UnDirection& d);
 
+  ///
+  /// @brief Returns max primal step size.
+  /// @return max primal step size.
+  /// 
   double primalStepSize() const;
 
+  ///
+  /// @brief Returns max dual step size.
+  /// @return max dual step size.
+  /// 
   double dualStepSize() const;
 
 private:

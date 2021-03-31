@@ -1,0 +1,22 @@
+add_library(
+  test_helper
+  SHARED
+  ${CMAKE_CURRENT_SOURCE_DIR}/robot_factory.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/contact_sequence_factory.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/solution_factory.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/direction_factory.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/cost_factory.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/constraints_factory.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/kkt_factory.cpp
+)
+target_include_directories(
+  test_helper
+  PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_helper
+  ${PROJECT_SOURCE_DIR}/include
+)
+target_link_libraries(
+  test_helper
+  PUBLIC 
+  ${PROJECT_NAME} 
+)

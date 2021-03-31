@@ -26,21 +26,39 @@ namespace idocp {
 class Robot {
 public:
   ///
-  /// @brief Build the robot model and data from URDF. The model is assumed to
-  /// have no contacts with the environment.
+  /// @brief Construct a robot model. Build the Pinocchio robot model and data 
+  /// from URDF. The model is assumed to have no contacts with the environment.
   /// @param[in] path_to_urdf Path to the URDF file.
   ///
   Robot(const std::string& path_to_urdf);
 
   ///
-  /// @brief Build the robot model and data from URDF. The model is assumed to
-  /// have no contacts with the environment.
+  /// @brief Construct a robot model. Build the Pinocchio robot model and data 
+  /// from URDF. The model is assumed to have contacts with the environment.
   /// @param[in] path_to_urdf Path to the URDF file.
   /// @param[in] contact_frames Collection of the frames that can have contacts 
   /// with the environments.
+  /// @param[in] time_step The time step of the discretization. The weight 
+  /// parameters of the Baumgarte's stabilization method are computed 
+  /// according to this value. Must be positive.
   ///
-  Robot(const std::string& path_to_urdf, 
-        const std::vector<int>& contact_frames);
+  Robot(const std::string& path_to_urdf, const std::vector<int>& contact_frames, 
+        const double time_step);
+
+  ///
+  /// @brief Construct a robot model. Build the Pinocchio robot model and data 
+  /// from URDF. The model is assumed to have contacts with the environment.
+  /// @param[in] path_to_urdf Path to the URDF file.
+  /// @param[in] contact_frames Collection of the frames that can have contacts 
+  /// with the environments.
+  /// @param[in] baumgarte_weight_on_velocity The weight paramter of the error 
+  /// on the contact velocity. Must be non-negative.
+  /// @param[in] baumgarte_weight_on_position The weight paramter of the error 
+  /// on the contact position. Must be non-negative.
+  ///
+  Robot(const std::string& path_to_urdf, const std::vector<int>& contact_frames, 
+        const double baumgarte_weight_on_velocity, 
+        const double baumgarte_weight_on_position);
 
   ///
   /// @brief Default constructor. 
@@ -73,11 +91,11 @@ public:
   Robot& operator=(Robot&&) noexcept = default;
 
   ///
-  /// @brief Integrates the generalized velocity by integration_length * v. 
-  // The configuration q is then incremented.
-  /// @param[in, out] q Configuration. Size must be Robot::dimq().
+  /// @brief Integrates the generalized velocity via
+  /// \f[ q \leftto q \oplus integration_length * v . \f]
   /// @param[in] v Generalized velocity. Size must be Robot::dimv().
   /// @param[in] integration_length The length of the integration.
+  /// @param[in, out] q Configuration. Size must be Robot::dimq().
   ///
   template <typename TangentVectorType, typename ConfigVectorType>
   void integrateConfiguration(
@@ -86,12 +104,12 @@ public:
       const Eigen::MatrixBase<ConfigVectorType>& q) const;
 
   ///
-  /// @brief Integrates the generalized velocity by integration_length * v. 
+  /// @brief Integrates the generalized velocity via
+  /// \f[ /// q_{\rm integrated} = q \oplus integration_length * v. \f]
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Generalized velocity. Size must be Robot::dimv().
   /// @param[in] integration_length The length of the integration.
-  /// @param[out] q_integrated Resultant configuration. Size must be 
-  /// Robot::dimq().
+  /// @param[out] q_integrated Configuration. Size must be Robot::dimq().
   ///
   template <typename ConfigVectorType1, typename TangentVectorType,  
             typename ConfigVectorType2>
@@ -102,11 +120,12 @@ public:
       const Eigen::MatrixBase<ConfigVectorType2>& q_integrated) const;
 
   ///
-  /// @brief Computes the partial derivative of the function of q + v 
+  /// @brief Computes the partial derivative of the function of integration
+  /// \f[ q \oplus v. \f]
   /// with respect to q at its tangent space. 
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Generalized velocity. Size must be Robot::dimq().
-  /// @param[out] dIntegrate_dq The resultant partial derivative. 
+  /// @param[out] dintegrate_dq The partial derivative of the integration. 
   /// Size must be Robot::dimv() x Robot::dimv().
   ///
   template <typename ConfigVectorType, typename TangentVectorType, 
@@ -114,14 +133,15 @@ public:
   void dIntegratedConfiguration(
       const Eigen::MatrixBase<ConfigVectorType>& q,
       const Eigen::MatrixBase<TangentVectorType>& v,
-      const Eigen::MatrixBase<MatrixType>& dIntegrate_dq) const;
+      const Eigen::MatrixBase<MatrixType>& dintegrate_dq) const;
 
   ///
-  /// @brief Computes the partial derivative of the function of q + v 
+  /// @brief Computes the partial derivative of the function of integration
+  /// \f[ q \oplus v. \f]
   /// with respect to v at its tangent space. 
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Generalized velocity. Size must be Robot::dimq().
-  /// @param[out] dIntegrate_dv The resultant partial derivative. 
+  /// @param[out] dintegrate_dv The partial derivative of the integration. 
   /// Size must be Robot::dimv() x Robot::dimv().
   ///
   template <typename ConfigVectorType, typename TangentVectorType, 
@@ -129,13 +149,16 @@ public:
   void dIntegratedVelocity(
       const Eigen::MatrixBase<ConfigVectorType>& q,
       const Eigen::MatrixBase<TangentVectorType>& v,
-      const Eigen::MatrixBase<MatrixType>& dIntegrate_dv) const;
+      const Eigen::MatrixBase<MatrixType>& dintegrate_dv) const;
 
   ///
-  /// @brief Computes q_plus - q_minus at the tangent space. 
+  /// @brief Computes 
+  /// \f[ q_{\rm plus} \ominus q_{\rm minus}. \f]
+  /// at the tangent space. 
   /// @param[in] q_plus Configuration. Size must be Robot::dimq().
   /// @param[in] q_minus Configuration. Size must be Robot::dimq().
-  /// @param[out] difference Result. Size must be Robot::dimv().
+  /// @param[out] difference Difference of the configurations. Size must be 
+  /// Robot::dimv().
   ///
   template <typename ConfigVectorType1, typename ConfigVectorType2, 
             typename TangentVectorType>
@@ -145,11 +168,12 @@ public:
       const Eigen::MatrixBase<TangentVectorType>& difference) const;
 
   ///
-  /// @brief Computes the partial derivative of the function of q_plus - q_minus 
-  /// with respect to q_plus at the tangent space. 
+  /// @brief Computes the partial derivative of the function of subtraction
+  /// \f[ q_{\rm plus} \ominus q_{\rm minus}. \f]
+  /// with respect to q_plus. 
   /// @param[in] q_plus Configuration. Size must be Robot::dimq().
   /// @param[in] q_minus Configuration. Size must be Robot::dimq().
-  /// @param[out] dSubtract_dqplus The resultant partial derivative. 
+  /// @param[out] dsubtract_dqplus The partial derivative of the subtraction. 
   /// Size must be Robot::dimv() x Robot::dimv().
   ///
   template <typename ConfigVectorType1, typename ConfigVectorType2, 
@@ -157,14 +181,15 @@ public:
   void dSubtractdConfigurationPlus(
       const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
       const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
-      const Eigen::MatrixBase<MatrixType>& dSubtract_dqplus) const;
+      const Eigen::MatrixBase<MatrixType>& dsubtract_dqplus) const;
 
   ///
-  /// @brief Computes the partial derivative of the function of q_plus - q_minus 
-  /// with respect to q_minus at the tangent space. 
+  /// @brief Computes the partial derivative of the function of subtraction
+  /// \f[ q_{\rm plus} \ominus q_{\rm minus}. \f]
+  /// with respect to q_minus. 
   /// @param[in] q_plus Configuration. Size must be Robot::dimq().
   /// @param[in] q_minus Configuration. Size must be Robot::dimq().
-  /// @param[out] dSubtract_dqminus The resultant partial derivative. 
+  /// @param[out] dsubtract_dqminus The partial derivative of the subtraction. 
   /// Size must be Robot::dimv() x Robot::dimv().
   ///
   template <typename ConfigVectorType1, typename ConfigVectorType2, 
@@ -172,12 +197,21 @@ public:
   void dSubtractdConfigurationMinus(
       const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
       const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
-      const Eigen::MatrixBase<MatrixType>& dSubtract_dqminus) const;
+      const Eigen::MatrixBase<MatrixType>& dsubtract_dqminus) const;
 
+  ///
+  /// @brief Computes the inverse of the partial derivative of the function of 
+  /// subtraction. Before calling this function, call 
+  /// dSubtractdConfigurationPlus() or dSubtractdConfigurationMinus().
+  /// @param[in] dsubtract_dq The partial derivative of the subtraction. 
+  /// Size must be larger than 6 x 6.
+  /// @param[out] dsubtract_dq_inv The inverse of the partial derivative of the 
+  /// subtraction. Size must be larger than 6 x 6.
+  ///
   template <typename MatrixType1, typename MatrixType2>
   void dSubtractdConfigurationInverse(
-      const Eigen::MatrixBase<MatrixType1>& dSubtract_dq,
-      const Eigen::MatrixBase<MatrixType2>& dSubtract_dq_inv);
+      const Eigen::MatrixBase<MatrixType1>& dsubtract_dq,
+      const Eigen::MatrixBase<MatrixType2>& dsubtract_dq_inv);
 
   ///
   /// @brief Updates the kinematics of the robot. The frame placements, frame 
@@ -204,7 +238,7 @@ public:
 
   ///
   /// @brief Updates the kinematics of the robot. The frame placements and
-  /// and the Jacobians are calculated. 
+  /// and the relevant Jacobians are calculated. 
   /// @param[in] q Configuration. Size must be Robot::dimq().
   ///
   template <typename ConfigVectorType>
@@ -220,7 +254,7 @@ public:
 
   ///
   /// @brief Returns the position of the frame. Before calling this function, 
-  /// updateKinematics() must be called.
+  /// updateKinematics() or updateFrameKinematics() must be called.
   /// @param[in] frame_id Index of the frame.
   /// @return Const reference to the position of the frame.
   ///
@@ -228,7 +262,7 @@ public:
 
   ///
   /// @brief Returns the rotation matrix of the frame. Before calling this  
-  /// function, updateKinematics() must be called.
+  /// function, updateKinematics() or updateFrameKinematics() must be called.
   /// @param[in] frame_id Index of the frame.
   /// @return Const reference to the rotation matrix of the frame.
   ///
@@ -236,15 +270,22 @@ public:
 
   ///
   /// @brief Returns the SE(3) of the frame. Before calling this function, 
-  /// updateKinematics() must be called.
+  /// updateKinematics() or updateFrameKinematics() must be called.
   /// @param[in] frame_id Index of the frame.
   /// @return Const reference to the SE(3) of the frame.
   ///
   const pinocchio::SE3& framePlacement(const int frame_id) const;
 
   ///
-  /// @brief Computes the frame Jacobian of the position. Before calling this  
-  /// function, updateKinematics() must be called.
+  /// @brief Returns the position of the center of mass. Before calling this 
+  /// function, updateKinematics() or updateFrameKinematics() must be called.
+  /// 
+  const Eigen::Vector3d& CoM() const;
+
+  ///
+  /// @brief Computes the Jacobian of the frame position expressed in the local 
+  /// coordinate. Before calling this function, updateKinematics() must be 
+  /// called.
   /// @param[in] frame_id Index of the frame.
   /// @param[out] J Jacobian. Size must be 6 x Robot::dimv().
   ///
@@ -253,20 +294,26 @@ public:
                         const Eigen::MatrixBase<MatrixType>& J);
 
   ///
+  /// @brief Gets the Jacobian of the position of the center of mass. Before 
+  /// calling this function, updateKinematics() must be called.
+  /// @param[out] J Jacobian. Size must be 3 x Robot::dimv().
+  ///
+  template <typename MatrixType>
+  void getCoMJacobian(const Eigen::MatrixBase<MatrixType>& J) const;
+
+  ///
   /// @brief Computes the residual of the contact constriants represented by 
   /// Baumgarte's stabilization method. Before calling this function, 
   /// updateKinematics() must be called.
-  /// @param[in] contact_status Current contact status.
-  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
-  /// Must be positive.
+  /// @param[in] contact_status Contact status.
   /// @param[in] contact_points Contact points. Size must be 
   /// Robot::maxPointContacts(). 
-  /// @param[out] baumgarte_residual 3-dimensional vector where the result is 
-  /// stored. Size must be at least 3.
+  /// @param[out] baumgarte_residual Residuals in the contact constraints. Size
+  /// must be ContactStatus::dimf().
   ///
   template <typename VectorType>
   void computeBaumgarteResidual(
-      const ContactStatus& contact_status, const double time_step,
+      const ContactStatus& contact_status, 
       const std::vector<Eigen::Vector3d>& contact_points,
       const Eigen::MatrixBase<VectorType>& baumgarte_residual) const;
 
@@ -274,32 +321,27 @@ public:
   /// @brief Computes the partial derivatives of the contact constriants 
   /// represented by the Baumgarte's stabilization method. 
   /// Before calling this function, updateKinematics() must be called. 
-  /// @param[in] contact_status Current contact status.
-  /// @param[in] time_step Time step of the Baumgarte's stabilization method. 
-  /// Must be positive.
-  /// @param[out] baumgarte_partial_dq The result of the partial derivative  
-  /// with respect to the configuaration. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
-  /// @param[out] baumgarte_partial_dv The result of the partial derivative  
-  /// with respect to the velocity. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
-  /// @param[out] baumgarte_partial_da The result of the partial derivative  
-  /// with respect to the acceleration. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
+  /// @param[in] contact_status Contact status.
+  /// @param[out] baumgarte_partial_dq The partial derivative  with respect to 
+  /// the configuaration. Size must be ContactStatus::dimf() x Robot::dimv().
+  /// @param[out] baumgarte_partial_dv The partial derivative  with respect to 
+  /// the velocity. Size must be ContactStatus::dimf() x Robot::dimv().
+  /// @param[out] baumgarte_partial_da The partial derivative  with respect to 
+  /// the acceleration. Size must be ContactStatus::dimf() x be Robot::dimv().
   ///
   template <typename MatrixType1, typename MatrixType2, typename MatrixType3>
   void computeBaumgarteDerivatives(
-      const ContactStatus& contact_status,  const double time_step,
+      const ContactStatus& contact_status, 
       const Eigen::MatrixBase<MatrixType1>& baumgarte_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& baumgarte_partial_dv, 
       const Eigen::MatrixBase<MatrixType3>& baumgarte_partial_da);
 
   ///
-  /// @brief Computes the residual of the impulse velocity. Before calling this  
-  /// function, updateKinematics() must be called.
+  /// @brief Computes the residual of the impulse velocity constraint. Before 
+  /// calling this function, updateKinematics() must be called.
   /// @param[in] impulse_status Impulse status.
-  /// @param[out] velocity_residual 3-dimensional vector where the result is 
-  /// stored. Size must be at least 3.
+  /// @param[out] velocity_residual Residuals in the contact velocity 
+  /// constraint. Size must be ImpulseStatus::dimf().
   ///
   template <typename VectorType>
   void computeImpulseVelocityResidual(
@@ -307,15 +349,13 @@ public:
       const Eigen::MatrixBase<VectorType>& velocity_residual) const;
 
   ///
-  /// @brief Computes the partial derivatives of the impulse velocity.
+  /// @brief Computes the partial derivatives of the impulse velocity constraint.
   /// Before calling this function, updateKinematics() must be called. 
   /// @param[in] impulse_status Impulse status.
-  /// @param[out] velocity_partial_dq The result of the partial derivative  
-  /// with respect to the configuaration. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
-  /// @param[out] velocity_partial_dv The result of the partial derivative  
-  /// with respect to the velocity. Rows must be at least 3. Cols must 
-  /// be Robot::dimv().
+  /// @param[out] velocity_partial_dq The partial derivative with respect to the 
+  /// configuaration. Size must be ImpulseStatus::dimf() x Robot::dimv(). 
+  /// @param[out] velocity_partial_dv The partial derivative with respect to the 
+  /// velocity. Size must be ImpulseStatus::dimf() x Robot::dimv().
   ///
   template <typename MatrixType1, typename MatrixType2>
   void computeImpulseVelocityDerivatives(
@@ -324,16 +364,16 @@ public:
       const Eigen::MatrixBase<MatrixType2>& velocity_partial_dv);
 
   ///
-  /// @brief Computes the residual of the contact position residual at the 
+  /// @brief Computes the residual of the contact position constraint at the 
   /// impulse. Before calling this function, updateKinematics() must be called.
   /// @param[in] impulse_status Impulse status.
   /// @param[in] contact_points Contact points. Size must be 
   /// Robot::maxPointContacts(). 
-  /// @param[out] contact_residual 3-dimensional vector where the result is 
-  /// stored. Size must be at least 3.
+  /// @param[out] contact_residual Residuals in the contact position constraint.
+  /// Size must be ImpulseStatus::dimf().
   ///
   template <typename VectorType>
-  void computeContactResidual(
+  void computeContactPositionResidual(
       const ImpulseStatus& impulse_status, 
       const std::vector<Eigen::Vector3d>& contact_points,
       const Eigen::MatrixBase<VectorType>& contact_residual) const;
@@ -352,40 +392,8 @@ public:
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 
   ///
-  /// @brief Sets the friction coefficient.
-  /// @param[in] friction_coefficient Friction coefficient of each contact.  
-  /// Size must be Robot::maxPointContacts(). Each element must be positive.
-  /// 
-  void setFrictionCoefficient(const std::vector<double>& friction_coefficient);
-
-  ///
-  /// @brief Returns the friction coefficient of a contact.
-  /// @param[in] contact_index Index of the contact. Must be nonnegative.
-  /// Must be less than Robot::maxPointContacts().
-  /// @return Friction coefficient of the contact of contact_index.
-  /// 
-  double frictionCoefficient(const int contact_index) const;
-
-  ///
-  /// @brief Sets the coefficient of the restitution of each contact.
-  /// @param[in] restitution_coefficient Coefficient of the restitution of 
-  /// each contact. Size must be Robot::maxPointContacts(). 
-  /// Each element must be positive.
-  /// 
-  void setRestitutionCoefficient(
-      const std::vector<double>& restitution_coefficient);
-
-  ///
-  /// @brief Returns the coefficient of the restitution of each contact.
-  /// @param[in] contact_index Index of the contact. Must be nonnegative.
-  /// Must be less than Robot::maxPointContacts().
-  /// @return Coefficient of the restitution of the contact of contact_index.
-  /// 
-  double restitutionCoefficient(const int contact_index) const;
-
-  ///
-  /// @brief Set contact forces for each active contacts.  
-  /// @param[in] contact_status Current contact status.
+  /// @brief Set contact forces in this robot model for each active contacts.  
+  /// @param[in] contact_status Contact status.
   /// @param[in] f The stack of the contact forces represented in the local 
   /// coordinate of the contact frame. Size must be Robot::maxPointContacts(). 
   /// 
@@ -393,8 +401,8 @@ public:
                         const std::vector<Eigen::Vector3d>& f);
 
   ///
-  /// @brief Set impulse forces for each active impulse. 
-  /// @param[in] impulse_status Current contact status.
+  /// @brief Set impulse forces in this robot model for each active impulses. 
+  /// @param[in] impulse_status Impulse status.
   /// @param[in] f The stack of the impulse forces represented in the local 
   /// coordinate of the contact frame. Size must be Robot::maxPointContacts(). 
   /// 
@@ -403,9 +411,9 @@ public:
 
   ///
   /// @brief Computes inverse dynamics, i.e., generalized torques corresponding 
-  /// to the given configuration, velocity, acceleration, and contact forces. 
-  /// If the robot has contacts, update contact forces by calling 
-  /// setContactForces().
+  /// for given configuration, velocity, acceleration, and contact forces. 
+  /// If the robot has contacts, update contact forces via setContactForces() 
+  /// before calling this function.
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Generalized velocity. Size must be Robot::dimv().
   /// @param[in] a Generalized acceleration. Size must be Robot::dimv().
@@ -420,10 +428,10 @@ public:
             const Eigen::MatrixBase<TangentVectorType3>& tau);
 
   ///
-  /// @brief Computes Computes the partial dervatives of the function of 
-  /// inverse dynamics with respect to the given configuration, velocity, and
-  /// acceleration. If the robot has contacts, update contact forces by 
-  /// calling setContactForces().
+  /// @brief Computes the partial dervatives of the function of inverse dynamics 
+  /// with respect to the configuration, velocity, and acceleration. If the 
+  /// robot has contacts, update contact forces via setContactForces() before
+  /// calling this function.
   /// @param[in] q Configuration. Size must be Robot::dimq().
   /// @param[in] v Generalized velocity. Size must be Robot::dimv().
   /// @param[in] a Generalized acceleration. Size must be Robot::dimv().
@@ -448,14 +456,13 @@ public:
                        const Eigen::MatrixBase<MatrixType3>& dRNEA_partial_da);
 
   ///
-  /// @brief Computes the residual of the impulse dynamics for the given 
-  /// configuration and the change in the generalized velocity, and contact 
-  /// forces by using RNEA. Before call this function,   
-  /// update contact forces by calling setContactForces().
+  /// @brief Computes the residual of the impulse dynamics for given 
+  /// configuration and impulse change in the generalized velocity, and impulse 
+  /// forces by using RNEA. Before call this function,   update contact forces 
+  /// via setImpulseForces().
   /// @param[in] q Configuration. Size must be Robot::dimq().
-  /// @param[in] dv Change in velocity. Size must be Robot::dimv().
-  /// @param[out] res Residual of impulse dynamics constraint. Size must be
-  /// Robot::dimv(). 
+  /// @param[in] dv Impulse change in the velocity. Size must be Robot::dimv().
+  /// @param[out] res Residual of impulse dynamics. Size must be Robot::dimv(). 
   ///
   template <typename ConfigVectorType, typename TangentVectorType1, 
             typename TangentVectorType2>
@@ -464,11 +471,11 @@ public:
                    const Eigen::MatrixBase<TangentVectorType2>& res);
 
   ///
-  /// @brief Computes the partial dervatives of the impuse dynamics constraint 
-  /// with respect to configuration and changes in velocity. Before calling
-  /// this function, update contact forces by calling setContactForces().
+  /// @brief Computes the partial dervatives of the function of impuse dynamics 
+  /// with respect to configuration and impulse changes in the velocity. Before 
+  /// calling this function, update contact forces via setImpulseForces().
   /// @param[in] q Configuration. Size must be Robot::dimq().
-  /// @param[in] dv Change in velocity. Size must be Robot::dimv().
+  /// @param[in] dv Impulse change in the velocity. Size must be Robot::dimv().
   /// @param[out] dRNEA_partial_dq The partial derivative of impulse dynamics 
   /// with respect to the configuration. The size must be 
   /// Robot::dimv() x Robot::dimv().
@@ -510,7 +517,7 @@ public:
                    const Eigen::MatrixBase<MatrixType2>& Minv);
 
   ///
-  /// @brief Computes the inverse of the joint inertia matrix M.
+  /// @brief Computes the inverse of the contact dynamics matrix [[M J^T], [J O]].
   /// @param[in] M Joint inertia matrix. Size must be 
   /// Robot::dimv() x Robot::dimv().
   /// @param[in] J Contact Jacobian. Size must be 
@@ -526,7 +533,7 @@ public:
 
   ///
   /// @brief Generates feasible configuration randomly.
-  /// @return The random configuration. Size is Robot::dimq().
+  /// @return The random and feasible configuration. Size is Robot::dimq().
   ///
   Eigen::VectorXd generateFeasibleConfiguration() const;
 
@@ -563,33 +570,10 @@ public:
   Eigen::VectorXd upperJointPositionLimit() const;
 
   ///
-  /// @brief Sets the effort limit of each joints.
-  /// @param[in] joint_effort_limit The effort limit of each joints.
-  /// 
-  void setJointEffortLimit(const Eigen::VectorXd& joint_effort_limit);
-
+  /// @brief Returns the total weight of this robot model.
+  /// @return The total weight of this robot model.
   ///
-  /// @brief Sets the joint velocity limit of each joints.
-  /// @param[in] joint_velocity_limit Sets the joint velocity limit of each 
-  /// joints.
-  ///
-  void setJointVelocityLimit(const Eigen::VectorXd& joint_velocity_limit);
-
-  ///
-  /// @brief Sets the lower limit of the position of each joints.
-  /// @param[in] lower_joint_position_limit The lower limit of the position of 
-  /// each joints.
-  /// 
-  void setLowerJointPositionLimit(
-      const Eigen::VectorXd& lower_joint_position_limit);
-
-  ///
-  /// @brief Sets the upper limit of the position of each joints.
-  /// @param[in] upper_joint_position_limit The upper limit of the position of 
-  /// each joints.
-  ///
-  void setUpperJointPositionLimit(
-      const Eigen::VectorXd& upper_joint_position_limit);
+  double totalWeight() const;
 
   ///
   /// @brief Returns the dimensiton of the configuration.
@@ -638,51 +622,78 @@ public:
   int maxPointContacts() const;
 
   ///
-  /// @brief Prints the robot model into console.
-  ///
-  void printRobotModel() const;
-
-  ///
-  /// @brief Initializes joint_effort_limit_, joint_velocity_limit_, 
-  /// lower_joint_position_limit_, upper_joint_position_limit_, by the URDF.
-  /// 
-  void initializeJointLimits();
-
-  ///
   /// @brief Retruns the indices of the contact frames. 
   /// @return Indices of the contact frames.
   /// 
-  std::vector<int> contactFramesIndices() const;
+  std::vector<int> contactFrames() const;
 
   ///
-  /// @brief Creates a ContactStatus that has consisitent size. 
-  /// @return ContactStatus that has consisitent size.
+  /// @brief Creates a ContactStatus for this robot model. 
+  /// @return ContactStatus for this robot model.
   /// 
   ContactStatus createContactStatus() const;
 
   ///
-  /// @brief Creates a ImpulseStatus that has consisitent size. 
-  /// @return ImpulseStatus that has consisitent size.
+  /// @brief Creates a ImpulseStatus for this robot model. 
+  /// @return ImpulseStatus for this robot model.
   /// 
   ImpulseStatus createImpulseStatus() const;
 
   ///
-  /// @brief Set contact points in contact_status using current kinematics. 
+  /// @brief Gets contact points in contact_status using current kinematics. 
   /// Call Robot::updateFrameKinematics() before calling this function.
   /// @param[out] contact_status ContactStatus or ImpulseStatus.
   /// 
   template <typename ContactStatusType>
-  void setContactPoints(ContactStatusType& contact_status) const;
+  void getContactPoints(ContactStatusType& contact_status) const;
 
   ///
-  /// @brief Get contact points in contact_status using current kinematics. 
+  /// @brief Gets contact points in contact_status using current kinematics. 
   /// Call Robot::updateFrameKinematics() before calling this function.
   /// @param[out] contact_points Contact points. Size must be 
   /// robot::maxPointContacts().
   /// 
   void getContactPoints(std::vector<Eigen::Vector3d>& contact_points) const;
 
-  double totalWeight() const;
+  ///
+  /// @brief Initializes the results of jointEffortLimit(), jointVelocityLimit(), 
+  /// lowerJointPositionLimit(), and upperJointPositionLimit() by the URDF.
+  /// 
+  void initializeJointLimits();
+
+  ///
+  /// @brief Sets the effort limit of each joints.
+  /// @param[in] joint_effort_limit The effort limit of each joints.
+  /// 
+  void setJointEffortLimit(const Eigen::VectorXd& joint_effort_limit);
+
+  ///
+  /// @brief Sets the joint velocity limit of each joints.
+  /// @param[in] joint_velocity_limit Sets the joint velocity limit of each 
+  /// joints.
+  ///
+  void setJointVelocityLimit(const Eigen::VectorXd& joint_velocity_limit);
+
+  ///
+  /// @brief Sets the lower limit of the position of each joints.
+  /// @param[in] lower_joint_position_limit The lower limit of the position of 
+  /// each joints.
+  /// 
+  void setLowerJointPositionLimit(
+      const Eigen::VectorXd& lower_joint_position_limit);
+
+  ///
+  /// @brief Sets the upper limit of the position of each joints.
+  /// @param[in] upper_joint_position_limit The upper limit of the position of 
+  /// each joints.
+  ///
+  void setUpperJointPositionLimit(
+      const Eigen::VectorXd& upper_joint_position_limit);
+
+  ///
+  /// @brief Prints the robot model into console.
+  ///
+  void printRobotModel() const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -695,7 +706,7 @@ private:
   int dimq_, dimv_, dimu_, max_dimf_, dimf_, num_active_contacts_;
   bool has_active_contacts_;
   std::vector<bool> is_each_contact_active_;
-  Eigen::MatrixXd dimpulse_dv_; /// @brief used in RNEAImpulseDerivatives
+  Eigen::MatrixXd dimpulse_dv_; 
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,
                   lower_joint_position_limit_, upper_joint_position_limit_;
   Eigen::Matrix3d mat_3d_;

@@ -1,9 +1,10 @@
-#include <string>
 #include <gtest/gtest.h>
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_riccati_factorization.hpp"
+
+#include "robot_factory.hpp"
 
 
 namespace idocp {
@@ -12,23 +13,12 @@ class RiccatiFactorizationTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
-    fixed_base_robot = Robot(fixed_base_urdf);
-    floating_base_robot = Robot(floating_base_urdf);
-    fixed_base_robot_contact = Robot(fixed_base_urdf, {18});
-    floating_base_robot_contact = Robot(floating_base_urdf, {14, 24, 34, 44});
   }
 
   virtual void TearDown() {
   }
 
   static void test(const Robot& robot);
-
-  std::string fixed_base_urdf, floating_base_urdf;
-  Robot fixed_base_robot, floating_base_robot;
-  Robot fixed_base_robot_contact, floating_base_robot_contact;
 };
 
 
@@ -52,12 +42,14 @@ void RiccatiFactorizationTest::test(const Robot& robot) {
 
 
 TEST_F(RiccatiFactorizationTest, fixed_base) {
-  test(fixed_base_robot);
+  auto robot = testhelper::CreateFixedBaseRobot();
+  test(robot);
 }
 
 
 TEST_F(RiccatiFactorizationTest, floating_base) {
-  test(floating_base_robot);
+  auto robot = testhelper::CreateFloatingBaseRobot();
+  test(robot);
 }
 
 } // namespace idocp

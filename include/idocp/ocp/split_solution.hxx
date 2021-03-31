@@ -3,7 +3,8 @@
 
 #include "idocp/ocp/split_solution.hpp"
 
-#include <assert.h>
+#include <random>
+#include <cassert>
 
 namespace idocp {
 

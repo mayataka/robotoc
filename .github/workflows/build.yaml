@@ -45,7 +45,7 @@ jobs:
           export PYTHONPATH=/opt/openrobots/lib/python2.7/site-packages:$PYTHONPATH 
           export PYTHONPATH=/opt/openrobots/lib/python3.8/site-packages:$PYTHONPATH 
           export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH 
-          git clone https://github.com/stack-of-tasks/pinocchio-gepetto-viewer.git --recursive
+          git clone https://github.com/mayataka/pinocchio-gepetto-viewer.git --recursive
           cd pinocchio-gepetto-viewer
           mkdir build
           cd build
@@ -73,6 +73,6 @@ jobs:
         if: 'success()'
         run: |
           lcov --capture --directory . --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' '/opt/*' '"${HOME}"/.cache/*' '*/googletest/*' '*/test/*' '*/c++/*' '*/pinocchio/*' --output-file coverage.info
+          lcov --remove coverage.info '/usr/*' '/opt/*' '"${HOME}"/.cache/*' '*/googletest/*' '*/test/*' '*/c++/*' '*/pinocchio/*' '*/third-party/*' --output-file coverage.info
           lcov --list coverage.info
           bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"

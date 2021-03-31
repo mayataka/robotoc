@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 #include <memory>
 
@@ -48,6 +47,7 @@ int main() {
   // Solves the OCP.
   parnmpc_solver.setSolution("q", q);
   parnmpc_solver.setSolution("v", v);
+  parnmpc_solver.initConstraints(t);
   parnmpc_solver.initBackwardCorrection(t);
   const int num_iteration = 100;
   const bool line_search = false;

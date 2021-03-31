@@ -1,7 +1,4 @@
-#include <string>
-#include <random>
-#include <utility>
-#include <vector>
+#include <memory>
 
 #include <gtest/gtest.h>
 #include "Eigen/Core"
@@ -14,14 +11,14 @@
 #include "idocp/constraints/joint_position_lower_limit.hpp"
 #include "idocp/constraints/pdipm.hpp"
 
+#include "robot_factory.hpp"
+
 namespace idocp {
 
 class JointPositionLowerLimitTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     barrier = 1.0e-04;
     dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   }
@@ -38,7 +35,6 @@ protected:
   void testComputeSlackAndDualDirection(Robot& robot) const;
 
   double barrier, dt;
-  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
@@ -51,7 +47,7 @@ void JointPositionLowerLimitTest::testKinematics(Robot& robot) const {
 
 void JointPositionLowerLimitTest::testIsFeasible(Robot& robot) const {
   JointPositionLowerLimit limit(robot); 
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   EXPECT_EQ(limit.dimc(), robot.dimv()-robot.dim_passive());
   SplitSolution s(robot);
   EXPECT_TRUE(limit.isFeasible(robot, data, s));
@@ -62,7 +58,7 @@ void JointPositionLowerLimitTest::testIsFeasible(Robot& robot) const {
 
 void JointPositionLowerLimitTest::testSetSlackAndDual(Robot& robot) const {
   JointPositionLowerLimit limit(robot);
-  ConstraintComponentData data(limit.dimc()), data_ref(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier()), data_ref(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   const Eigen::VectorXd qmin = robot.lowerJointPositionLimit();
@@ -75,7 +71,7 @@ void JointPositionLowerLimitTest::testSetSlackAndDual(Robot& robot) const {
 
 void JointPositionLowerLimitTest::testAugmentDualResidual(Robot& robot) const {
   JointPositionLowerLimit limit(robot);
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   limit.setSlackAndDual(robot, data, s);
@@ -94,7 +90,7 @@ void JointPositionLowerLimitTest::testComputePrimalAndDualResidual(Robot& robot)
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   const Eigen::VectorXd qmin = robot.lowerJointPositionLimit();
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   data.slack.setRandom();
   data.dual.setRandom();
   ConstraintComponentData data_ref = data;
@@ -107,7 +103,7 @@ void JointPositionLowerLimitTest::testComputePrimalAndDualResidual(Robot& robot)
 
 void JointPositionLowerLimitTest::testCondenseSlackAndDual(Robot& robot) const {
   JointPositionLowerLimit limit(robot);
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   const Eigen::VectorXd qmin = robot.lowerJointPositionLimit();
@@ -134,7 +130,7 @@ void JointPositionLowerLimitTest::testCondenseSlackAndDual(Robot& robot) const {
 
 void JointPositionLowerLimitTest::testComputeSlackAndDualDirection(Robot& robot) const {
   JointPositionLowerLimit limit(robot);
-  ConstraintComponentData data(limit.dimc());
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
   const SplitSolution s = SplitSolution::Random(robot);
   const Eigen::VectorXd qmin = robot.lowerJointPositionLimit();
@@ -151,7 +147,7 @@ void JointPositionLowerLimitTest::testComputeSlackAndDualDirection(Robot& robot)
 
 
 TEST_F(JointPositionLowerLimitTest, fixedBase) {
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   testKinematics(robot);
   testIsFeasible(robot);
   testSetSlackAndDual(robot);
@@ -163,7 +159,7 @@ TEST_F(JointPositionLowerLimitTest, fixedBase) {
 
 
 TEST_F(JointPositionLowerLimitTest, floatingBase) {
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   testKinematics(robot);
   testIsFeasible(robot);
   testSetSlackAndDual(robot);

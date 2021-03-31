@@ -1,8 +1,6 @@
-#include <string>
 #include <memory>
 
 #include <gtest/gtest.h>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -12,6 +10,12 @@
 #include "idocp/ocp/parnmpc_linearizer.hpp"
 
 #include "test_helper.hpp"
+#include "robot_factory.hpp"
+#include "contact_sequence_factory.hpp"
+#include "solution_factory.hpp"
+#include "cost_factory.hpp"
+#include "constraints_factory.hpp"
+
 
 namespace idocp {
 
@@ -19,9 +23,6 @@ class ParNMPCLinearizerTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     N_ideal = 20;
     max_num_impulse = 5;
     nthreads = 4;
@@ -40,11 +41,8 @@ protected:
   void testComputeKKTResidual(const Robot& robot) const;
   void testIntegrateSolution(const Robot& robot) const;
 
-  std::string fixed_base_urdf, floating_base_urdf;
   int N_ideal, max_num_impulse, nthreads;
   double T, t, dt;
-  std::shared_ptr<CostFunction> cost;
-  std::shared_ptr<Constraints> constraints;
 };
 
 
@@ -315,22 +313,20 @@ void ParNMPCLinearizerTest::testIntegrateSolution(const Robot& robot) const {
 
 
 TEST_F(ParNMPCLinearizerTest, fixedBase) {
-  Robot robot(fixed_base_urdf);
+  auto robot = testhelper::CreateFixedBaseRobot();
   testComputeKKTResidual(robot);
   testIntegrateSolution(robot);
-  std::vector<int> contact_frames = {18};
-  robot = Robot(fixed_base_urdf, contact_frames);
+  robot = testhelper::CreateFixedBaseRobot(dt);
   testComputeKKTResidual(robot);
   testIntegrateSolution(robot);
 }
 
 
 TEST_F(ParNMPCLinearizerTest, floatingBase) {
-  Robot robot(floating_base_urdf);
+  auto robot = testhelper::CreateFloatingBaseRobot();
   testComputeKKTResidual(robot);
   testIntegrateSolution(robot);
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  robot = Robot(floating_base_urdf, contact_frames);
+  robot = testhelper::CreateFloatingBaseRobot(dt);
   testComputeKKTResidual(robot);
   testIntegrateSolution(robot);
 }

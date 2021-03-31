@@ -10,6 +10,8 @@
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/robot/robot.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -17,8 +19,6 @@ class ContactSequenceTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
     max_num_events = 20;
   }
 
@@ -36,7 +36,6 @@ protected:
   void test_pop_back(const Robot& robot) const;
   void test_pop_front(const Robot& robot) const;
 
-  std::string fixed_base_urdf, floating_base_urdf;
   int max_num_events;
 };
 
@@ -256,8 +255,8 @@ void ContactSequenceTest::test_pop_front(const Robot& robot) const {
 
 
 TEST_F(ContactSequenceTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   testConstructor(robot);
   testSetContactStatus(robot);
   test_push_back(robot);
@@ -267,8 +266,8 @@ TEST_F(ContactSequenceTest, fixedBase) {
 
 
 TEST_F(ContactSequenceTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   testConstructor(robot);
   testSetContactStatus(robot);
   test_push_back(robot);

@@ -1,6 +1,3 @@
-#include <string>
-#include <iostream>
-
 #include <gtest/gtest.h>
 
 #include "Eigen/Core"
@@ -9,6 +6,8 @@
 #include "idocp/robot/impulse_status.hpp"
 #include "idocp/impulse/impulse_dynamics_forward_euler_data.hpp"
 
+#include "robot_factory.hpp"
+
 
 namespace idocp {
 
@@ -16,21 +15,17 @@ class ImpulseDynamicsForwardEulerDataTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
   }
 
   virtual void TearDown() {
   }
 
-  static void testSize(const Robot& robot, const ImpulseStatus& impulse_status);
-
-  std::string fixed_base_urdf, floating_base_urdf;
+  static void test(const Robot& robot, const ImpulseStatus& impulse_status);
 };
 
 
-void ImpulseDynamicsForwardEulerDataTest::testSize(const Robot& robot, const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsForwardEulerDataTest::test(const Robot& robot, 
+                                               const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const int dimf = impulse_status.dimf();
@@ -95,25 +90,25 @@ void ImpulseDynamicsForwardEulerDataTest::testSize(const Robot& robot, const Imp
 
 
 TEST_F(ImpulseDynamicsForwardEulerDataTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  testSize(robot, impulse_status);
+  test(robot, impulse_status);
   impulse_status.activateImpulse(0);
-  testSize(robot, impulse_status);
+  test(robot, impulse_status);
 }
 
 
 TEST_F(ImpulseDynamicsForwardEulerDataTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  testSize(robot, impulse_status);
+  test(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
-  testSize(robot, impulse_status);
+  test(robot, impulse_status);
 }
 
 } // namespace idocp

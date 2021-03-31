@@ -12,17 +12,17 @@
 namespace idocp {
 
 ///
-/// @class RiccatiRecursion
-/// @brief Riccati recursion.
+/// @class UnRiccatiRecursion
+/// @brief Riccati recursion solver for optimal control problems of 
+/// unconstrained rigid-body systems.
 ///
 class UnRiccatiRecursion {
 public:
   ///
-  /// @brief Construct factorizer.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
-  /// @param[in] N Number of discretization of the horizon. Must be more than 1. 
-  /// @param[in] nthreads Number of the threads in solving the optimal control 
-  /// problem. Must be positive. Default is 1.
+  /// @brief Construct a Riccati recursion solver.
+  /// @param[in] robot Robot model. 
+  /// @param[in] T Length of the horizon. Must be positive.
+  /// @param[in] N Number of discretization of the horizon. 
   ///
   UnRiccatiRecursion(const Robot& robot, const double T, const int N);
 
@@ -68,21 +68,19 @@ public:
       UnRiccatiFactorization& riccati_factorization) const;
 
   ///
-  /// @brief Performs the backward Riccati recursion. Call 
-  /// RiccatiRecursion::backwardRiccatiRecursionTerminal() before calling this
-  /// function.
+  /// @brief Performs the backward Riccati recursion. 
   /// @param[in, out] unkkt_matrix KKT matrix. 
   /// @param[in, out] unkkt_residual KKT residual. 
+  /// @param[out] riccati_factorization Riccati factorization. 
   ///
   void backwardRiccatiRecursion(UnKKTMatrix& unkkt_matrix, 
                                 UnKKTResidual& unkkt_residual,
-                                UnRiccatiFactorization& ricccati_factorization);
+                                UnRiccatiFactorization& riccati_factorization);
 
   ///
-  /// @brief Performs the forward Riccati recursion.
+  /// @brief Performs the forward Riccati recursion and computes the direction.
   /// @param[in] unkkt_residual KKT residual. 
-  /// @param[in, out] d Direction. d[0].dx() must be computed before 
-  /// calling this function.
+  /// @param[in, out] d Direction. 
   ///
   void forwardRiccatiRecursion(const UnKKTResidual& unkkt_residual, 
                                UnDirection& d) const;

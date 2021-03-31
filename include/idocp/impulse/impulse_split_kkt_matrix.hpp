@@ -11,15 +11,15 @@ namespace idocp {
 
 ///
 /// @class ImpulseSplitKKTMatrix
-/// @brief The KKT matrix of a time stage.
+/// @brief KKT matrix split into an impulse time stage.
 ///
 class ImpulseSplitKKTMatrix {
 public:
   using Matrix6d = Eigen::Matrix<double, 6, 6>;
 
   ///
-  /// @brief Construct a KKT matrix.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Construct a split KKT matrix.
+  /// @param[in] robot Robot model. 
   ///
   ImpulseSplitKKTMatrix(const Robot& robot);
 
@@ -54,14 +54,13 @@ public:
   ImpulseSplitKKTMatrix& operator=(ImpulseSplitKKTMatrix&&) noexcept = default;
 
   ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse.
-  /// @param[in] impulse_status Contact status.
+  /// @brief Set the impulse status, i.e., set dimension of the impulses.
+  /// @param[in] impulse_status Impulse status.
   ///
   void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Jacobian of the state equation of the configuration with respect  
-  /// to the impulse forces. 
+  /// @brief Jacobian of the state equation of q with respect to f.
   /// @return Reference to the block part of the Hessian. 
   /// Size is Robot::dimv() x ImpulseStatus::dimf().
   ///
@@ -73,10 +72,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fqf() const;
 
   ///
-  /// @brief Jacobian of the state equation of the configuration with respect  
-  /// to the configuration. 
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is Robot::dimv() x Robot::dimv().
+  /// @brief Jacobian of the state equation of q with respect to q.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Fqq();
 
@@ -86,10 +84,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fqq() const;
 
   ///
-  /// @brief Jacobian of the state equation of the configuration with respect  
-  /// to the generalized velocity. 
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is Robot::dimv() x Robot::dimv().
+  /// @brief Jacobian of the state equation of q with respect to v.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Fqv();
 
@@ -99,8 +96,7 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fqv() const;
 
   ///
-  /// @brief Jacobian of the state equation of the generalized velocity with 
-  /// respect to the impulse forces. 
+  /// @brief Jacobian of the state equation of v with respect to f.
   /// @return Reference to the block part of the Hessian. 
   /// Size is Robot::dimv() x ImpulseStatus::dimf().
   ///
@@ -112,10 +108,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fvf() const;
 
   ///
-  /// @brief Jacobian of the state equation of the generalized velocity with 
-  /// respect to the configuration. 
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is Robot::dimv() x Robot::dimv().
+  /// @brief Jacobian of the state equation of v with respect to q.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Fvq();
 
@@ -125,10 +120,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fvq() const;
 
   ///
-  /// @brief Jacobian of the state equation of the generalized velocity with 
-  /// respect to the generalized velocity. 
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is Robot::dimv() x Robot::dimv().
+  /// @brief Jacobian of the state equation of v with respect to v.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Fvv();
 
@@ -138,7 +132,7 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fvv() const;
 
   ///
-  /// @brief Jacobian of the state equation with respect to the impulse forces. 
+  /// @brief Jacobian of the state equation with respect to f.
   /// @return Reference to the block part of the Hessian. 
   /// Size is 2 * Robot::dimv() x ImpulseStatus::dimf().
   ///
@@ -150,10 +144,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Fxf() const;
 
   ///
-  /// @brief Jacobian of the state equation with respect to the state, i.e.,
-  /// the configuration and the generalized velocity.
-  /// @return Reference to the block part of the Hessian. 
-  /// Size is 2 * Robot::dimv() x 2 * Robot::dimv().
+  /// @brief Jacobian of the state equation with respect to x.
+  /// @return Reference to the block of the Jacobian of the constraints. Size 
+  /// is 2 * Robot::dimv() x 2 * Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Fxx();
 
@@ -164,8 +157,7 @@ public:
 
   ///
   /// @brief Jacobian of the contact velocity constraint after impulse with 
-  /// respect to the configuration. ImpulseSplitKKTMatrix::setImpulseStatus() must be
-  /// called to set the impulse dimension before calling this function.
+  /// respect to q. 
   /// @return Reference to the block part of the Hessian. 
   /// Size is ImpulseStatus::dimf() x Robot::dimv().
   ///
@@ -178,8 +170,7 @@ public:
 
   ///
   /// @brief Jacobian of the contact velocity constraint after impulse with 
-  /// respect to the velocity. ImpulseSplitKKTMatrix::setImpulseStatus() must be
-  /// called to set the impulse dimension before calling this function.
+  /// respect to v. 
   /// @return Reference to the block part of the Hessian. 
   /// Size is ImpulseStatus::dimf() x Robot::dimv().
   ///
@@ -192,21 +183,7 @@ public:
 
   ///
   /// @brief Hessian of the Lagrangian with respect to the impulse change in 
-  /// velocity and contact forces. 
-  /// @return Reference to the Hessian. Size is 
-  /// Robot::dimv() + ContactStatus::dimf() 
-  /// x  Robot::dimv() + ContactStatus::dimf().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Qdvdvff();
-
-  ///
-  /// @brief const version of ImpulseSplitKKTMatrix::Qdvdvff().
-  ///
-  const Eigen::Block<const Eigen::MatrixXd> Qdvdvff() const;
-
-  ///
-  /// @brief Hessian of the Lagrangian with respect to impulse change in 
-  /// velocity. 
+  /// the velocity dv. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qdvdv();
@@ -217,9 +194,9 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qdvdv() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to acceleration. 
+  /// @brief Hessian of the Lagrangian with respect to the impulse forces f.
   /// @return Reference to the Hessian. Size is 
-  /// ContactStatus::dimf() x ContactStatus::dimf().
+  /// ImpulseStatus::dimf() x ImpulseStatus::dimf().
   ///
   Eigen::Block<Eigen::MatrixXd> Qff();
 
@@ -229,10 +206,10 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qff() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to impulse forces and 
-  /// configuration. 
+  /// @brief Hessian of the Lagrangian with respect to the impulse forces f and 
+  /// configuration q. 
   /// @return Reference to the Hessian. Size is 
-  /// ContactStatus::dimf() x ContactStatus::dimf().
+  /// ImpulseStatus::dimf() x ContactStatus::dimf().
   ///
   Eigen::Block<Eigen::MatrixXd> Qfq();
 
@@ -242,22 +219,10 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qfq() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to impulse forces and 
-  /// velocity. 
+  /// @brief Hessian of the Lagrangian with respect to the configuration q and 
+  /// impulse forces f.
   /// @return Reference to the Hessian. Size is 
-  /// ContactStatus::dimf() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Qfv();
-
-  ///
-  /// @brief const version of ImpulseSplitKKTMatrix::Qfv().
-  ///
-  const Eigen::Block<const Eigen::MatrixXd> Qfv() const;
-
-  ///
-  /// @brief Hessian of the Lagrangian with respect to configuration and 
-  /// impulse forces.
-  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
+  /// Robot::dimv() x ImpulseStatus::dimf().
   ///
   Eigen::Block<Eigen::MatrixXd> Qqf();
 
@@ -267,7 +232,7 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qqf() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to configuration. 
+  /// @brief Hessian of the Lagrangian with respect to the configuration q.
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qqq();
@@ -278,8 +243,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qqq() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to generalized velocity and 
-  /// configuration. 
+  /// @brief Hessian of the Lagrangian with respect to the configuration q and 
+  /// velocity v. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qqv();
@@ -290,20 +255,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qqv() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to velocity and 
-  /// impulse forces.
-  /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Qvf();
-
-  ///
-  /// @brief const version of ImpulseSplitKKTMatrix::Qvf().
-  ///
-  const Eigen::Block<const Eigen::MatrixXd> Qvf() const;
-
-  ///
-  /// @brief Hessian of the Lagrangian with respect to generalized velocity and 
-  /// configuration. 
+  /// @brief Hessian of the Lagrangian with respect to the velocity v and 
+  /// configuration q. 
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qvq();
@@ -314,7 +267,7 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qvq() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to generalized velocity.
+  /// @brief Hessian of the Lagrangian with respect to the velocity v.
   /// @return Reference to the Hessian. Size is Robot::dimv() x Robot::dimv().
   ///
   Eigen::Block<Eigen::MatrixXd> Qvv();
@@ -325,7 +278,7 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qvv() const;
 
   ///
-  /// @brief Hessian of the Lagrangian with respect to state. 
+  /// @brief Hessian of the Lagrangian with respect to the state x. 
   /// @return Reference to the Hessian. Size is 
   /// 2 * Robot::dimv() x 2 * Robot::dimv().
   ///
@@ -337,12 +290,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qxx() const;
 
   ///
-  /// @brief Symmetrize the Hessian for matrix inversion. 
-  ///
-  void symmetrize();
-
-  ///
-  /// @brief Hessian of the Lagrangian with respect to primal variables. 
+  /// @brief Hessian of the Lagrangian with respect to the primal variables 
+  /// (f and x). 
   /// @return Reference to the Hessian. Size is 
   /// Robot::dimv() + ImpulseStatus::dimf() x Robot::dimv() + ImpulseStatus::dimf().
   ///
@@ -354,7 +303,8 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Qss() const;
 
   ///
-  /// @brief Constraint Jacobian. 
+  /// @brief Jacobian of the constraints with respect to the primal variables 
+  /// (f and x). 
   /// @return Reference to the Jacobian. Size is 
   /// Robot::dimv() + ImpulseStatus::dimf() x Robot::dimv() + ImpulseStatus::dimf().
   ///
@@ -371,35 +321,42 @@ public:
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the stack of contact forces at the current 
-  /// contact status.
-  /// @return Dimension of the stack of contact forces.
+  /// @brief Returns the dimension of the stack of impulse forces at the current 
+  /// impulse status.
+  /// @return Dimension of the stack of impulse forces.
   ///
   int dimf() const;
 
   ///
-  /// @brief Chech the equivalence of two ImpulseSplitKKTMatrix.
+  /// @brief Checks the equivalence of two ImpulseSplitKKTMatrix.
   /// @param[in] other Other object.
   /// @return true if this and other is same. false otherwise.
   ///
   bool isApprox(const ImpulseSplitKKTMatrix& other) const;
 
   ///
-  /// @brief Chech this has at least one NaN.
+  /// @brief Checks this has at least one NaN.
   /// @return true if this has at least one NaN. false otherwise.
   ///
   bool hasNaN() const;
 
+  ///
   /// @brief Derivative of the state equation with respect to the 
-  /// configuration of the previous time step q_prev.
+  /// configuration of the previous time stage q_prev. Size is 
+  /// Robot::dimv() x Robot::dimv().
+  ///
   Eigen::MatrixXd Fqq_prev;
 
+  ///
   /// @brief Inverse of the derivative of the state equation with respect to 
-  /// the configuration of the previous time step q_prev.
+  /// the configuration q. 
+  ///
   Matrix6d Fqq_inv;
 
+  ///
   /// @brief Inverse of the derivative of the state equation with respect to 
-  /// the configuration of the previous time step q_prev.
+  /// the configuration of the previous time stage q_prev.
+  ///
   Matrix6d Fqq_prev_inv;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

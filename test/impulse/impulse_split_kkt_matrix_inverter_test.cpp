@@ -1,10 +1,11 @@
-#include <random>
 #include <gtest/gtest.h>
 
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix_inverter.hpp"
+
+#include "robot_factory.hpp"
 
 
 namespace idocp {
@@ -13,21 +14,16 @@ class ImpulseSplitKKTMatrixInverterTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
-    fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
-    floating_base_urdf = "../urdf/anymal/anymal.urdf";
   }
 
   virtual void TearDown() {
   }
-
-  std::string fixed_base_urdf, floating_base_urdf;
 };
 
 
 TEST_F(ImpulseSplitKKTMatrixInverterTest, fixedBase) {
-  std::vector<int> contact_frames = {18};
-  Robot robot(fixed_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
@@ -57,7 +53,7 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, fixedBase) {
   const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat.inverse();
   EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-08));
   EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-06));
-  inverter.enableRegularization();
+  inverter.setRegularization(1.0e-09);
   inverter.invert(FC, Q, KKT_mat_inv);
   KKT_mat.block(dimx, dimx, dimf, dimf).diagonal().array() -= 1.0e-09;
   const Eigen::MatrixXd KKT_mat_inv_ref_reg = KKT_mat.inverse();
@@ -66,8 +62,8 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, fixedBase) {
 
 
 TEST_F(ImpulseSplitKKTMatrixInverterTest, floatingBase) {
-  std::vector<int> contact_frames = {14, 24, 34, 44};
-  Robot robot(floating_base_urdf, contact_frames);
+  const double dt = 0.001;
+  auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
@@ -104,7 +100,7 @@ TEST_F(ImpulseSplitKKTMatrixInverterTest, floatingBase) {
   const Eigen::MatrixXd KKT_mat_inv_ref = KKT_mat.inverse();
   EXPECT_TRUE(KKT_mat_inv.isApprox(KKT_mat_inv_ref, 1.0e-08));
   EXPECT_TRUE((KKT_mat_inv*KKT_mat).isIdentity(1.0e-06));
-  inverter.enableRegularization();
+  inverter.setRegularization(1.0e-09);
   inverter.invert(FC, Q, KKT_mat_inv);
   KKT_mat.block(dimx, dimx, dimf, dimf).diagonal().array() -= 1.0e-09;
   const Eigen::MatrixXd KKT_mat_inv_ref_reg = KKT_mat.inverse();

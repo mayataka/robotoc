@@ -9,9 +9,10 @@
 
 namespace idocp {
 
-inline ConstraintComponentData::ConstraintComponentData(const int dimc)
-  : slack(Eigen::VectorXd::Zero(dimc)),
-    dual(Eigen::VectorXd::Zero(dimc)),
+inline ConstraintComponentData::ConstraintComponentData(const int dimc,
+                                                        const double barrier)
+  : slack(Eigen::VectorXd::Constant(dimc, barrier)),
+    dual(Eigen::VectorXd::Constant(dimc, barrier)),
     residual(Eigen::VectorXd::Zero(dimc)),
     duality(Eigen::VectorXd::Zero(dimc)),
     dslack(Eigen::VectorXd::Zero(dimc)),
@@ -21,7 +22,12 @@ inline ConstraintComponentData::ConstraintComponentData(const int dimc)
     dimc_(dimc) {
   try {
     if (dimc <= 0) {
-      throw std::out_of_range("invalid argment: dimc must be positive!");
+      throw std::out_of_range(
+          "Invalid argment: dimc must be positive!");
+    }
+    if (barrier <= 0) {
+      throw std::out_of_range(
+          "Invalid argment: barrirer must be positive!");
     }
   }
   catch(const std::exception& e) {

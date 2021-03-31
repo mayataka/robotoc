@@ -11,13 +11,14 @@ namespace idocp {
 
 ///
 /// @class ImpulseSplitDirection
-/// @brief Newton direction of an impulse stage. 
+/// @brief Newton direction of the solution of the optimal control problem 
+/// split into an impulse stage. 
 ///
 class ImpulseSplitDirection {
 public:
   ///
-  /// @brief Construct a impulse split direction.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Constructs a split direction.
+  /// @param[in] robot Robot model. 
   ///
   ImpulseSplitDirection(const Robot& robot);
 
@@ -32,55 +33,53 @@ public:
   ~ImpulseSplitDirection();
 
   ///
-  /// @brief Use default copy constructor. 
+  /// @brief Default copy constructor. 
   ///
   ImpulseSplitDirection(const ImpulseSplitDirection&) = default;
 
   ///
-  /// @brief Use default copy assign operator. 
+  /// @brief Default copy operator. 
   ///
   ImpulseSplitDirection& operator=(const ImpulseSplitDirection&) = default;
- 
+
   ///
-  /// @brief Use default move constructor. 
+  /// @brief Default move constructor. 
   ///
   ImpulseSplitDirection(ImpulseSplitDirection&&) noexcept = default;
 
   ///
-  /// @brief Use default move assign operator. 
+  /// @brief Default move assign operator. 
   ///
   ImpulseSplitDirection& operator=(ImpulseSplitDirection&&) noexcept = default;
 
   ///
-  /// @brief Set impulse status from robot model, i.e., set dimension of the 
-  /// impulse.
+  /// @brief Sets impulse status, i.e., set the dimension of the impulse forces.
   /// @param[in] impulse_status Impulse status.
   ///
   void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse.
-  /// @param[in] dimf Total dimension of the impulse.
+  /// @brief Sets impulse status, i.e., set the dimension of the impulse forces.
+  /// @param[in] dimf Dimension of the impulse.
   ///
   void setImpulseStatusByDimension(const int dimf);
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::lmd and 
+  /// @brief Newton direction of ImpulseSplitSolution::lmd and 
   /// SplitSolution::gmm. Size is 2 * Robot::dimv().
-  /// @return Reference to the Newton direction of ImpulseSplitSolution::lmd and 
-  /// ImpulseSplitSolution::gmm.
+  /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dlmdgmm();
 
   ///
-  /// @brief Const verison of ImpulseSplitDirection::dlmdgmm().
+  /// @brief const verison of ImpulseSplitDirection::dlmdgmm().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dlmdgmm() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::lmd. Size is 
+  /// @brief Newton direction of ImpulseSplitSolution::lmd. Size is 
   /// Robot::dimv().
-  /// @return Reference to the Newton direction of ImpulseSplitSolution::lmd.
+  /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dlmd();
 
@@ -90,9 +89,9 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> dlmd() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::gmm. Size is 
+  /// @brief Newton direction of ImpulseSplitSolution::gmm. Size is 
   /// Robot::dimv().
-  /// @return Reference to the Newton direction of ImpulseSplitSolution::gmm.
+  /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dgmm();
 
@@ -102,9 +101,8 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> dgmm() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::q. Size is 
-  /// Robot::dimv().
-  /// @return Reference to the Newton direction of ImpulseSplitSolution::q.
+  /// @brief Newton direction of ImpulseSplitSolution::q. Size is Robot::dimv().
+  /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dq();
 
@@ -114,9 +112,8 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> dq() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::v. Size is 
-  /// Robot::dimv().
-  /// @return Reference to the Newton direction of ImpulseSplitSolution::v.
+  /// @brief Newton direction of ImpulseSplitSolution::v. Size is Robot::dimv().
+  /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dv();
 
@@ -126,10 +123,9 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> dv() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::q and 
+  /// @brief Newton direction of ImpulseSplitSolution::q and 
   /// ImpulseSplitSolution::v. Size is 2 * Robot::dimv().
-  /// @return Reference to the Newton direction of ImpulseSplitSolution::q and 
-  /// ImpulseSplitSolution::v.
+  /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dx();
 
@@ -139,10 +135,9 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> dx() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::dv and 
+  /// @brief Newton direction of ImpulseSplitSolution::dv and 
   /// ImpulseSplitSolution::f. Size is ImpulseStatus::dimf() + Robot::dimv().
-  /// @return Reference to the Newton direction of ImpulseSplitSolution::a and 
-  /// ImpulseSplitSolution::f.
+  /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> ddvf();
 
@@ -152,36 +147,33 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> ddvf() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::dv. Size is 
-  /// Robot::dimv().
-  /// @return Reference to the Newton direction of ImpulseSplitSolution::dv.
+  /// @brief Newton direction of ImpulseSplitSolution::dv. Size is Robot::dimv().
+  /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> ddv();
 
   ///
-  /// @brief Const version of ImpulseSplitDirection::ddv().
+  /// @brief const version of ImpulseSplitDirection::ddv().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> ddv() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::f_stack(). 
+  /// @brief Newton direction of ImpulseSplitSolution::f_stack(). 
   /// Size is ImpulseStatus::dimf().
-  /// @return Reference to the Newton direction of 
-  /// ImpulseSplitSolution::f_stack().
+  /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> df();
 
   ///
-  /// @brief Const version of ImpulseSplitDirection::df().
+  /// @brief const version of ImpulseSplitDirection::df().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> df() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::beta and 
+  /// @brief Newton direction of ImpulseSplitSolution::beta and 
   /// ImpulseSplitSolution::mu_stack(). Size is Robot::dimv() + 
   /// ImpulseStatus::dimf().
-  /// @return Reference to the Newton direction of ImpulseSplitSolution::beta 
-  /// and ImpulseSplitSolution::mu_stack().
+  /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dbetamu();
 
@@ -191,27 +183,26 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> dbetamu() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::beta. Size 
+  /// @brief Newton direction of ImpulseSplitSolution::beta. Size 
   /// is Robot::dimv().
-  /// @return Reference to the Newton direction of ImpulseSplitSolution::beta.
+  /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dbeta();
 
   ///
-  /// @brief Const version of ImpulseSplitDirection::dbeta().
+  /// @brief const version of ImpulseSplitDirection::dbeta().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dbeta() const;
 
   ///
-  /// @brief Returns the Newton direction of ImpulseSplitSolution::mu_stack(). 
+  /// @brief Newton direction of ImpulseSplitSolution::mu_stack(). 
   /// Size is ImpulseSplitSolution::dimf().
-  /// @return Reference to the Newton direction of 
-  /// ImpulseSplitSolution::mu_stack().
+  /// @return Reference to the Newton direction.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> dmu();
 
   ///
-  /// @brief Const version of ImpulseSplitDirection::dmu().
+  /// @brief const version of ImpulseSplitDirection::dmu().
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> dmu() const;
 
@@ -221,32 +212,27 @@ public:
   void setZero();
 
   ///
-  /// @brief Returns the dimension of the stack of contact forces at the current 
-  /// contact status.
-  /// @return Dimension of the stack of contact forces.
+  /// @brief Returns the dimension of the stack of the contact forces at the 
+  /// current contact status.
+  /// @return Dimension of the stack of the contact forces.
   ///
   int dimf() const;
 
-  /// @brief Stack of the Newton direction composed of SplitDirection::dlmd(), 
-  /// SplitDirection::dgmm(), SplitDirection::dq(), 
-  /// and SplitDirection::dv(). Size is 4 * Robot::dimv() + Robot::dimu().
-  Eigen::VectorXd split_direction;
-
   ///
-  /// @brief Return true if two SplitDirection have the same values and false if 
+  /// @brief Returns true if two SplitDirection have the same values and false if 
   /// not. 
   /// @param[in] other Split direction that is compared with this object.
   ///
   bool isApprox(const ImpulseSplitDirection& other) const;
 
   ///
-  /// @brief Set each component vector by random value based on the current 
+  /// @brief Sets each component vector by random value based on the current 
   /// contact status. 
   ///
   void setRandom();
 
   ///
-  /// @brief Set each component vector by random value. Impulse status is reset.
+  /// @brief Sets each component vector by random value. Impulse status is reset.
   /// @param[in] impulse_status Impulse status.
   ///
   void setRandom(const ImpulseStatus& impulse_status);
@@ -266,6 +252,11 @@ public:
   ///
   static ImpulseSplitDirection Random(const Robot& robot, 
                                       const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Stack of the Newton directions dlmd(), dgmm(), dq(), dv().
+  ///
+  Eigen::VectorXd split_direction;
 
 private:
   Eigen::VectorXd ddvf_full_, dbetamu_full_;

@@ -15,13 +15,13 @@ namespace idocp {
 
 ///
 /// @class ImpulseSplitSolution
-/// @brief Solution of the optimal control problem at the impulse stage. 
+/// @brief Solution of the optimal control problem split into an impulse time stage. 
 ///
 class ImpulseSplitSolution {
 public:
   ///
-  /// @brief Construct a split solution.
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Construct an impulse split solution.
+  /// @param[in] robot Robot model. 
   ///
   ImpulseSplitSolution(const Robot& robot);
 
@@ -56,20 +56,20 @@ public:
   ImpulseSplitSolution& operator=(ImpulseSplitSolution&&) noexcept = default;
 
   ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @brief Set impulse status, i.e., set the dimension of the impulse.
   /// @param[in] impulse_status Impulse status.
   ///
   void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse.
+  /// @brief Set impulse status, i.e., set the dimension of the impulse.
   /// @param[in] other Other impulse split solution.
   ///
   void setImpulseStatus(const ImpulseSplitSolution& other);
 
   ///
-  /// @brief Stack of active impulse forces. Size is ImpulseStatus::dimf().
-  /// @return Reference to the stack of active impulse forces.
+  /// @brief Stack of the active impulse forces. Size is ImpulseStatus::dimf().
+  /// @return Reference to the stack of the active impulse forces.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> f_stack();
 
@@ -79,21 +79,21 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> f_stack() const;
 
   ///
-  /// @brief Set ImpulseSplitSolution::f_stack() from ImpulseSplitSolution::f.
+  /// @brief Sets ImpulseSplitSolution::f_stack() from ImpulseSplitSolution::f.
   ///
   void set_f_stack();
 
   ///
-  /// @brief Set ImpulseSplitSolution::f from ImpulseSplitSolution::f_stack().
+  /// @brief Sets ImpulseSplitSolution::f from ImpulseSplitSolution::f_stack().
   ///
   void set_f_vector();
 
   ///
-  /// @brief Stack of Lagrange multiplier with respect to impulse velocity 
+  /// @brief Stack of the Lagrange multipliers with respect to impulse velocity 
   /// constraints that is active at the current impulse status. Size is 
   /// ImpulseSplitSolution::dimf().
-  /// @return Reference to the stack of Lagrange multiplier with respect to 
-  /// impulse velocity constraints.
+  /// @return Reference to the stack of the Lagrange multipliers with respect to 
+  /// the impulse velocity constraints.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> mu_stack();
 
@@ -113,21 +113,14 @@ public:
   void set_mu_vector();
 
   ///
-  /// @brief Returns the dimension of the stack of impulse forces at the current 
-  /// impulse status.
-  /// @return Dimension of impulse forces.
-  ///
-  int dimf() const;
-
-  ///
-  /// @brief Lagrange multiplier with respect to the transition of 
-  /// ImpulseSplitSolution::q. Size is ImpulseStatus::dimf().
+  /// @brief Lagrange multiplier with respect to the state equation of q.
+  /// Size is Robot::dimv().
   ///
   Eigen::VectorXd lmd;
 
   ///
-  /// @brief Lagrange multiplier with respect to the transition of  
-  /// ImpulseSplitSolution::v. Size is Robot::dimv().
+  /// @brief Lagrange multiplier with respect to the state equation of v.
+  /// Size is Robot::dimv().
   ///
   Eigen::VectorXd gmm;
 
@@ -160,21 +153,28 @@ public:
   Eigen::VectorXd beta;
 
   ///
-  /// @brief Lagrange multiplier with respect to impulse velocity constraint. 
+  /// @brief Lagrange multiplier with respect to the impulse velocity constraint. 
   /// Size is Robot::maxPointContacts().
   ///
   std::vector<Eigen::Vector3d> mu;
 
   ///
-  /// @brief Return true if a Impulse is active and false if not.
+  /// @brief Returns the dimension of the stack of the impulse forces at the 
+  /// current impulse status.
+  /// @return Dimension of the impulse forces.
+  ///
+  int dimf() const;
+
+  ///
+  /// @brief Return true if a impulse is active and false if not.
   /// @param[in] contact_index Index of a contact at impulse. 
   /// @return true if a Impulse is active and false if not. 
   ///
   bool isImpulseActive(const int contact_index) const;
 
   ///
-  /// @brief Return impulse status.
-  /// @return Impulse status. 
+  /// @brief Return activities of impulses.
+  /// @return Activities of impulses. 
   ///
   std::vector<bool> isImpulseActive() const;
 

@@ -3,6 +3,8 @@
 
 #include "idocp/ocp/split_direction.hpp"
 
+#include <random>
+
 namespace idocp {
 
 inline SplitDirection::SplitDirection(const Robot& robot) 

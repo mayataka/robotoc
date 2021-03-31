@@ -36,11 +36,11 @@ using UnBackwardCorrector = std::vector<SplitUnBackwardCorrection>;
 struct UnOCP {
 public:
   ///
-  /// @brief Construct only the standard data. 
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model. 
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] N number of the standard data.
+  /// @param[in] N number of the discretization grids of the horizon.
   ///
   UnOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
         const std::shared_ptr<Constraints>& constraints, const int N) 
@@ -103,11 +103,11 @@ public:
 struct UnParNMPC {
 public:
   ///
-  /// @brief Construct only the standard data. 
-  /// @param[in] robot Robot model. Must be initialized by URDF or XML.
+  /// @brief Constructor. 
+  /// @param[in] robot Robot model. 
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
-  /// @param[in] N number of the standard data.
+  /// @param[in] N number of the discretization grids of the horizon.
   ///
   UnParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
             const std::shared_ptr<Constraints>& constraints, const int N) 
