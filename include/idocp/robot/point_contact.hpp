@@ -204,7 +204,7 @@ public:
   /// with respect to the configuaration. Size must be 3 x Robot::dimv().
   /// 
   template <typename MatrixType>
-  void computeContactDerivative(
+  void computeContactPositionDerivative(
       const pinocchio::Model& model, pinocchio::Data& data,
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 

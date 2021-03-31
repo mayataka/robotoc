@@ -61,7 +61,7 @@ void ForwardSwitchingConstraintTest::testLinearizeSwitchingConstraint(Robot& rob
   robot.integrateConfiguration(s.q, dq, 1.0, q);
   robot.updateKinematics(q);
   robot.computeContactPositionResidual(impulse_status, impulse_status.contactPoints(), kkt_residual_ref.P());
-  robot.computeContactDerivative(impulse_status, kkt_matrix_ref.Pq());
+  robot.computeContactPositionDerivative(impulse_status, kkt_matrix_ref.Pq());
   if (robot.hasFloatingBase()) {
     robot.dIntegratedConfiguration(s.q, dq, jac_ref.dintegrate_dq);
     robot.dIntegratedVelocity(s.q, dq, jac_ref.dintegrate_dv);

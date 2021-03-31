@@ -444,13 +444,13 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
   num_active_impulse = 0;
   for (int i=0; i<contacts_ref.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      contacts_ref[i].computeContactDerivative(
+      contacts_ref[i].computeContactPositionDerivative(
           model, data, contact_partial_q_ref.middleRows<3>(3*num_active_impulse));
       ++num_active_impulse;
     }
   }
   Eigen::MatrixXd contact_partial_q = Eigen::MatrixXd::Zero(robot.max_dimf(), model.nv);
-  robot.computeContactDerivative(impulse_status, contact_partial_q.topRows(impulse_status.dimf()));
+  robot.computeContactPositionDerivative(impulse_status, contact_partial_q.topRows(impulse_status.dimf()));
   EXPECT_TRUE(contact_partial_q.isApprox(contact_partial_q_ref));
 }
 

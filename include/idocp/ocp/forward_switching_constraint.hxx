@@ -33,7 +33,7 @@ inline void ForwardSwitchingConstraint::linearizeSwitchingConstraint(
   jac.setImpulseStatus(impulse_status);
   computeSwitchingConstraintResidual(robot, impulse_status, dt1, dt2, s, 
                                      kkt_residual);
-  robot.computeContactDerivative(impulse_status, kkt_matrix.Pq());
+  robot.computeContactPositionDerivative(impulse_status, kkt_matrix.Pq());
   if (robot.hasFloatingBase()) {
     robot.dIntegratedConfiguration(s.q, dq_, jac.dintegrate_dq);
     robot.dIntegratedVelocity(s.q, dq_, jac.dintegrate_dv);

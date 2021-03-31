@@ -366,7 +366,7 @@ inline void Robot::computeContactPositionResidual(
 
 
 template <typename MatrixType>
-inline void Robot::computeContactDerivative(
+inline void Robot::computeContactPositionDerivative(
     const ImpulseStatus& impulse_status, 
     const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
   assert(contact_partial_dq.rows() == impulse_status.dimf());
@@ -374,7 +374,7 @@ inline void Robot::computeContactDerivative(
   int num_active_impulse = 0;
   for (int i=0; i<point_contacts_.size(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
-      point_contacts_[i].computeContactDerivative(
+      point_contacts_[i].computeContactPositionDerivative(
           model_, data_, 
           (const_cast<Eigen::MatrixBase<MatrixType>&>(contact_partial_dq))
               .block(3*num_active_impulse, 0, 3, dimv_));
