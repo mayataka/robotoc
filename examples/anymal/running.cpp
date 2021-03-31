@@ -27,15 +27,31 @@
  
 class TimeVaryingConfigurationRef final : public idocp::TimeVaryingConfigurationRefBase {
 public:
-  TimeVaryingConfigurationRef(const double t0, const double tf, 
+  TimeVaryingConfigurationRef(const double t0, 
+                              const double period_init1, 
+                              const double period_init2, 
+                              const double period,
+                              const double period_final, 
+                              const int steps,
                               const Eigen::VectorXd& q0, const double v_ref) 
     : TimeVaryingConfigurationRefBase(),
       t0_(t0),
-      tf_(tf),
+      period_init1_(period_init1),
+      period_init2_(period_init2),
+      period_(period),
+      period_final_(period_final), 
+      steps_(steps),
+      tf_(t0+period_init1+period_init2+steps*period+period_final),
       q0_(q0),
       qf_(q0),
-      v_ref_(v_ref) {
-    qf_.coeffRef(0) += (tf-t0) * v_ref;
+      v_ref_(v_ref),
+      v_ref_init1_(0.25*v_ref*period/period_init1),
+      v_ref_init2_(0.5*v_ref*period/period_init2),
+      v_ref_final_(0.75*v_ref*period/period_final) {
+    qf_.coeffRef(0) += period_init1 * v_ref_init1_;
+    qf_.coeffRef(0) += period_init2 * v_ref_init2_;
+    qf_.coeffRef(0) += steps * period * v_ref;
+    qf_.coeffRef(0) += period_final * v_ref_final_;
   }
 
   ~TimeVaryingConfigurationRef() {}
@@ -45,9 +61,27 @@ public:
     if (t < t0_) {
       q_ref = q0_;
     }
+    else if (t < t0_ + period_init1_) {
+      q_ref = q0_;
+      q_ref.coeffRef(0) += (t-t0_) * v_ref_init1_;
+    }
+    else if (t < t0_ + period_init1_ + period_init2_) {
+      q_ref = q0_;
+      q_ref.coeffRef(0) += period_init1_ * v_ref_init1_;
+      q_ref.coeffRef(0) += (t-t0_-period_init1_) * v_ref_init2_;
+    }
+    else if (t < tf_-period_final_) {
+      q_ref = q0_;
+      q_ref.coeffRef(0) += period_init1_ * v_ref_init1_;
+      q_ref.coeffRef(0) += period_init2_ * v_ref_init2_;
+      q_ref.coeffRef(0) += (t-t0_-period_init1_-period_init2_) * v_ref_;
+    }
     else if (t < tf_) {
       q_ref = q0_;
-      q_ref.coeffRef(0) += (t-t0_) * v_ref_;
+      q_ref.coeffRef(0) += period_init1_ * v_ref_init1_;
+      q_ref.coeffRef(0) += period_init2_ * v_ref_init2_;
+      q_ref.coeffRef(0) += steps_ * period_ * v_ref_;
+      q_ref.coeffRef(0) += (t-t0_-period_init1_-period_init2_-steps_*period_) * v_ref_final_;
     }
     else {
       q_ref = qf_;
@@ -60,7 +94,9 @@ public:
 
 private:
   Eigen::VectorXd q0_, qf_;
-  double t0_, tf_, v_ref_;
+  double t0_, period_init1_, period_init2_, period_, period_final_, tf_, 
+         v_ref_, v_ref_init1_, v_ref_init2_, v_ref_final_;
+  int steps_;
 };
 
 
@@ -114,7 +150,8 @@ int main(int argc, char *argv[]) {
               1, 1, 1,
               1, 1, 1;
   const double v_ref = stride / t_period;
-  auto config_ref = std::make_shared<TimeVaryingConfigurationRef>(t_start+0.25*t_period, 0.25*t_period+t_start+(0.75+steps+0.75)*t_period, q_standing, v_ref);
+  auto config_ref = std::make_shared<TimeVaryingConfigurationRef>(t_start, 0.255, 0.34, t_period, 0.6, steps,
+                                                                  q_standing, v_ref);
   auto time_varying_config_cost = std::make_shared<idocp::TimeVaryingConfigurationSpaceCost>(robot, config_ref);
   time_varying_config_cost->set_q_weight(q_weight);
   time_varying_config_cost->set_qf_weight(q_weight);
@@ -247,22 +284,22 @@ int main(int argc, char *argv[]) {
   ocp_solver.initConstraints(t);
 
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 200, line_search);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 150, line_search);
   // idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 2500, line_search);
 
 #ifdef ENABLE_VIEWER
   idocp::TrajectoryViewer viewer(path_to_urdf);
   Eigen::Vector3d camera_pos;
   Eigen::Vector4d camera_quat;
+  camera_pos << 0.119269, -7.96283, 1.95978;
+  camera_quat << 0.609016, 0.00297497, 0.010914, 0.793077;
+  viewer.setCameraTransform(camera_pos, camera_quat);
+  viewer.display(ocp_solver.getSolution("q"), (T/N));
   camera_pos << 5.10483, -3.98692, 1.59321;
   camera_quat << 0.547037, 0.243328, 0.314829, 0.736495;
   viewer.setCameraTransform(camera_pos, camera_quat);
   viewer.display(robot, ocp_solver.getSolution("q"), 
                  ocp_solver.getSolution("f", "WORLD"), (T/N), mu);
-  camera_pos << 0.119269, -7.96283, 1.95978;
-  camera_quat << 0.609016, 0.00297497, 0.010914, 0.793077;
-  viewer.setCameraTransform(camera_pos, camera_quat);
-  viewer.display(ocp_solver.getSolution("q"), (T/N));
 #endif 
 
   return 0;

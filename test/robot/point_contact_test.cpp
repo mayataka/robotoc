@@ -330,7 +330,7 @@ void PointContactTest::testContactDerivatives(pinocchio::Model& model, pinocchio
   pinocchio::updateFramePlacement(model, data, contact_frame_id);
   const int parent_joint_id = contact.parent_joint_id();
   Eigen::MatrixXd contact_partial_dq = Eigen::MatrixXd::Zero(3, dimv);
-  contact.computeContactDerivative(model, data, contact_partial_dq);
+  contact.computeContactPositionDerivative(model, data, contact_partial_dq);
   Eigen::MatrixXd contact_partial_dq_ref = Eigen::MatrixXd::Zero(3, dimv);
   Eigen::MatrixXd J_frame = Eigen::MatrixXd::Zero(6, dimv);
   pinocchio::getFrameJacobian(model, data, contact_frame_id, 

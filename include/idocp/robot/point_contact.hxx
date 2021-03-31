@@ -180,7 +180,7 @@ inline void PointContact::computeContactPositionResidual(
 
 
 template <typename MatrixType>
-inline void PointContact::computeContactDerivative(
+inline void PointContact::computeContactPositionDerivative(
     const pinocchio::Model& model, pinocchio::Data& data, 
     const Eigen::MatrixBase<MatrixType>& contact_partial_dq) {
   assert(contact_partial_dq.cols() == dimv_);

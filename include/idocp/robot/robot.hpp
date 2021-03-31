@@ -387,7 +387,7 @@ public:
   /// be Robot::dimv().
   ///
   template <typename MatrixType>
-  void computeContactDerivative(
+  void computeContactPositionDerivative(
       const ImpulseStatus& impulse_status, 
       const Eigen::MatrixBase<MatrixType>& contact_partial_dq);
 

@@ -12,7 +12,7 @@ inline void linearizeSwitchingConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   computeSwitchingConstraintResidual(robot, impulse_status, kkt_residual);
-  robot.computeContactDerivative(impulse_status, kkt_matrix.Pq());
+  robot.computeContactPositionDerivative(impulse_status, kkt_matrix.Pq());
   kkt_residual.lq().noalias() += kkt_matrix.Pq().transpose() * s.xi_stack();
 }
 
