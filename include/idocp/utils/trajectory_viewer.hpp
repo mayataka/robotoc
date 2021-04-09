@@ -81,6 +81,10 @@ public:
   ///
   void setCameraTransformDefault();
 
+  ///
+  /// @brief Prints the current camera transform. 
+  ///
+  void printCurrentCameraTransform() const;
 
   Eigen::Matrix3d rotationMatrix(const Eigen::Vector3d& vec) const {
     const Eigen::Vector3d vec_nrmrzd = vec.normalized();

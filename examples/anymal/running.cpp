@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
               1, 1, 1,
               1, 1, 1;
   const double v_ref = stride / t_period;
-  auto config_ref = std::make_shared<TimeVaryingConfigurationRef>(t_start, 0.255, 0.34, t_period, 0.6, steps,
+  auto config_ref = std::make_shared<TimeVaryingConfigurationRef>(t_start, 0.255, 0.34, t_period, 0.5, steps,
                                                                   q_standing, v_ref);
   auto time_varying_config_cost = std::make_shared<idocp::TimeVaryingConfigurationSpaceCost>(robot, config_ref);
   time_varying_config_cost->set_q_weight(q_weight);
@@ -176,7 +176,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
   constraints->push_back(impulse_friction_cone);
-  constraints->setBarrier(1.0e-03);
+  constraints->setBarrier(1.0e-01);
 
   const double T = 7; 
   const int N = 240;
@@ -284,7 +284,7 @@ int main(int argc, char *argv[]) {
   ocp_solver.initConstraints(t);
 
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 150, line_search);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 80, line_search);
   // idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 2500, line_search);
 
 #ifdef ENABLE_VIEWER

@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
-  constraints->setBarrier(1.0e-03);
+  constraints->setBarrier(1.0e-01);
 
   const double T = t0 + period_flying + 2 * period_ground; 
   const int N = T / dt;
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
   ocp_solver.initConstraints(t);
 
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 60, line_search);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 50, line_search);
 
 #ifdef ENABLE_VIEWER
   idocp::TrajectoryViewer viewer(path_to_urdf);
