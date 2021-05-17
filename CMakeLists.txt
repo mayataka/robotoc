@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.1)
 project(idocp CXX)
 set(CMAKE_CXX_STANDARD 11)
 
+#############
+## Options ##
+#############
+option(OPTIMIZE_FOR_NATIVE "Enable -march=native" OFF)
+option(BUILD_VIEWER "Build trajectory viewer" OFF)
+option(BUILD_TESTS "Build unit tests" OFF)
+
 #################
 ## Build idocp ##
 #################
@@ -11,14 +18,10 @@ endif()
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 # find Eigen
 find_package(Eigen3 REQUIRED)
-# find Boost
-find_package(Boost COMPONENTS system filesystem REQUIRED)
 # find pinocchio
 find_package(pinocchio REQUIRED)
 # find OpenMP
 find_package(OpenMP REQUIRED)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 # build idocp 
 add_library(
   ${PROJECT_NAME} 
@@ -60,28 +63,20 @@ add_library(
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp
   src/impulse/impulse_split_kkt_residual.cpp
-  src/impulse/impulse_split_kkt_matrix_inverter.cpp
   src/impulse/impulse_split_kkt_matrix.cpp
   src/impulse/impulse_state_equation.cpp
-  src/impulse/impulse_dynamics_forward_euler_data.cpp
-  src/impulse/impulse_dynamics_forward_euler.cpp
+  src/impulse/impulse_dynamics_data.cpp
+  src/impulse/impulse_dynamics.cpp
   src/impulse/impulse_split_ocp.cpp
   src/impulse/impulse_backward_riccati_recursion_factorizer.cpp
   src/impulse/impulse_split_riccati_factorizer.cpp
-  src/impulse/impulse_dynamics_backward_euler_data.cpp
-  src/impulse/impulse_dynamics_backward_euler.cpp
-  src/impulse/impulse_split_parnmpc.cpp
-  src/impulse/impulse_split_backward_correction_data.cpp
-  src/impulse/impulse_split_backward_correction.cpp
   src/hybrid/discrete_event.cpp
   src/hybrid/contact_sequence.cpp
   src/hybrid/ocp_discretizer.cpp
-  src/hybrid/parnmpc_discretizer.cpp
   src/hybrid/hybrid_container.cpp
   src/hybrid/collision_checker.cpp
   src/ocp/split_kkt_residual.cpp
   src/ocp/split_kkt_matrix.cpp
-  src/ocp/split_kkt_matrix_inverter.cpp
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
@@ -89,7 +84,7 @@ add_library(
   src/ocp/contact_dynamics.cpp
   src/ocp/switching_constraint.cpp
   src/ocp/split_state_constraint_jacobian.cpp
-  src/ocp/forward_switching_constraint.cpp
+  src/ocp/switching_constraint.cpp
   src/ocp/split_ocp.cpp
   src/ocp/terminal_ocp.cpp
   src/ocp/state_constraint_jacobian.cpp
@@ -97,17 +92,10 @@ add_library(
   src/ocp/split_riccati_factorization.cpp
   src/ocp/split_constrained_riccati_factorization.cpp
   src/ocp/backward_riccati_recursion_factorizer.cpp
-  src/ocp/lqr_state_feedback_policy.cpp
+  src/ocp/lqr_policy.cpp
   src/ocp/split_riccati_factorizer.cpp
   src/ocp/riccati_recursion_solver.cpp
   src/ocp/ocp_solver.cpp
-  src/ocp/split_parnmpc.cpp
-  src/ocp/terminal_parnmpc.cpp
-  src/ocp/parnmpc_linearizer.cpp
-  src/ocp/split_backward_correction_data.cpp
-  src/ocp/split_backward_correction.cpp
-  src/ocp/backward_correction_solver.cpp
-  src/ocp/parnmpc_solver.cpp
   src/unocp/split_unkkt_residual.cpp
   src/unocp/split_unkkt_matrix.cpp
   src/unocp/split_unkkt_matrix_inverter.cpp
@@ -134,19 +122,22 @@ add_library(
 target_link_libraries(
   ${PROJECT_NAME} 
   PUBLIC
-  pthread
-  ${Boost_LIBRARIES}
   ${PINOCCHIO_LIBRARIES}
-  urdfdom_model
+  PRIVATE
+  ${OpenMP_CXX_FLAGS}
 )
 target_include_directories(
   ${PROJECT_NAME} 
   PUBLIC
   ${EIGEN3_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIR}
   ${PINOCCHIO_INCLUDE_DIRS}
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
+)
+target_compile_options(
+  ${PROJECT_NAME} 
+  PRIVATE
+  ${OpenMP_CXX_FLAGS}
 )
 
 ##################
@@ -176,7 +167,7 @@ endif() # end if (BUILD_VIEWER)
 ## Testing ##
 #############
 # Add testing directory
-if (TESTING)
+if (BUILD_TESTS)
   enable_testing()
   # coverage options
   set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --coverage")
@@ -195,7 +186,7 @@ if (TESTING)
     endif()
   endif()
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
-endif() # end if (TESTING)
+endif() # end if (BUILD_TESTS)
 
 #############
 ## Install ##

@@ -99,14 +99,11 @@ public:
   /// @param[in] dt Time step of this time stage. 
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
-  /// @param[in] is_forward_euler If true, the forward Euler is used. If false,
-  /// the backward Euler is used.
   ///
   void condenseContactDynamics(Robot& robot, 
                                const ContactStatus& contact_status, 
                                const double dt, SplitKKTMatrix& kkt_matrix, 
-                               SplitKKTResidual& kkt_residual,
-                               const bool is_forward_euler);
+                               SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 

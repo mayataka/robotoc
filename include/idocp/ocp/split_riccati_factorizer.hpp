@@ -10,7 +10,7 @@
 #include "idocp/ocp/split_state_constraint_jacobian.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/split_riccati_factorization.hpp"
-#include "idocp/ocp/lqr_state_feedback_policy.hpp"
+#include "idocp/ocp/lqr_policy.hpp"
 #include "idocp/ocp/backward_riccati_recursion_factorizer.hpp"
 #include "idocp/ocp/split_constrained_riccati_factorization.hpp"
 
@@ -148,7 +148,7 @@ private:
   int dimv_, dimu_;
   static constexpr int kDimFloatingBase = 6;
   Eigen::LLT<Eigen::MatrixXd> llt_, llt_s_;
-  LQRStateFeedbackPolicy lqr_policy_;
+  LQRPolicy lqr_policy_;
   BackwardRiccatiRecursionFactorizer backward_recursion_;
 
 };

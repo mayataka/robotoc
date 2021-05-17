@@ -48,7 +48,7 @@ SplitKKTResidual CreateSplitKKTResidual(const Robot& robot,
 
 
 KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence, 
-                          const int N, const int max_num_impulse, const bool is_parnmpc) {
+                          const int N, const int max_num_impulse) {
   KKTMatrix kkt_matrix = KKTMatrix(robot, N, max_num_impulse);
   const int dimx = 2*robot.dimv();
   const int dimu = robot.dimu();
@@ -107,20 +107,13 @@ KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_seq
     kkt_matrix.lift[i].Fvv().setRandom();
     kkt_matrix.lift[i].Fvu().setRandom();
   }
-  if (is_parnmpc) {
-    for (int i=0; i<num_impulse; ++i) {
-      kkt_matrix.aux[i].setImpulseStatus(contact_sequence.impulseStatus(i));
-      kkt_matrix.aux[i].Pq().setRandom();
-    }
-  }
-  else {
-  }
+
   return kkt_matrix;
 }
 
 
 KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact_sequence, 
-                              const int N, const int max_num_impulse, const bool is_parnmpc) {
+                              const int N, const int max_num_impulse) {
   KKTResidual kkt_residual = KKTResidual(robot, N, max_num_impulse);
   for (int i=0; i<=N; ++i) {
     kkt_residual[i].lx().setRandom();
@@ -144,15 +137,7 @@ KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact
     kkt_residual.lift[i].lu().setRandom();
     kkt_residual.lift[i].Fx().setRandom();
   }
-  if (is_parnmpc) {
-    for (int i=0; i<num_impulse; ++i) {
-      kkt_residual.aux[i].setImpulseStatus(contact_sequence.impulseStatus(i));
-      kkt_residual.aux[i].P().setRandom();
-    }
-  }
-  else {
 
-  }
   return kkt_residual;
 }
 

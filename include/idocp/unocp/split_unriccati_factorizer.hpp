@@ -9,7 +9,7 @@
 #include "idocp/unocp/split_unkkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/split_riccati_factorization.hpp"
-#include "idocp/ocp/lqr_state_feedback_policy.hpp"
+#include "idocp/ocp/lqr_policy.hpp"
 #include "idocp/unocp/backward_unriccati_recursion_factorizer.hpp"
 
 #include <limits>
@@ -114,7 +114,7 @@ public:
 private:
   int dimv_;
   Eigen::LLT<Eigen::MatrixXd> llt_;
-  LQRStateFeedbackPolicy lqr_policy_;
+  LQRPolicy lqr_policy_;
   BackwardUnRiccatiRecursionFactorizer backward_recursion_;
 
 };

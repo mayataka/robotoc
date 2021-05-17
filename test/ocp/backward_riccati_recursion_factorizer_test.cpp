@@ -6,7 +6,7 @@
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/split_riccati_factorization.hpp"
-#include "idocp/ocp/lqr_state_feedback_policy.hpp"
+#include "idocp/ocp/lqr_policy.hpp"
 #include "idocp/ocp/backward_riccati_recursion_factorizer.hpp"
 
 #include "robot_factory.hpp"
@@ -93,7 +93,7 @@ void BackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   EXPECT_TRUE(kkt_matrix.Quu().isApprox(kkt_matrix.Quu().transpose()));
   EXPECT_TRUE(lu_ref.isApprox(kkt_residual.lu()));
   SplitRiccatiFactorization riccati = createRiccatiFactorization(robot);
-  LQRStateFeedbackPolicy lqr_policy(robot);
+  LQRPolicy lqr_policy(robot);
   lqr_policy.K.setRandom();
   lqr_policy.k.setRandom();
   factorizer.factorizeRiccatiFactorization(riccati_next, kkt_matrix, kkt_residual, lqr_policy, dt, riccati);

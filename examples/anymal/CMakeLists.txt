@@ -5,26 +5,6 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_package(idocp REQUIRED)
 
-macro(add_benchmark BENCHMARK)
-  add_executable(
-    ${BENCHMARK} 
-    ${BENCHMARK}.cpp
-  )
-  target_include_directories(
-    ${BENCHMARK} 
-    PRIVATE
-    ${IDOCP_INCLUDE_DIR}
-  )
-  target_link_libraries(
-    ${BENCHMARK} 
-    PRIVATE
-    idocp::idocp
-  )
-endmacro()
-
-add_benchmark(ocp_benchmark)
-add_benchmark(parnmpc_benchmark)
-
 add_library(
   anymal_costs  
   SHARED
@@ -41,6 +21,23 @@ target_include_directories(
   PRIVATE
   ${IDOCP_INCLUDE_DIR}
 )
+
+macro(add_benchmark BENCHMARK)
+  add_executable(
+    ${BENCHMARK} 
+    ${BENCHMARK}.cpp
+  )
+  target_include_directories(
+    ${BENCHMARK} 
+    PRIVATE
+    ${IDOCP_INCLUDE_DIR}
+  )
+  target_link_libraries(
+    ${BENCHMARK} 
+    PRIVATE
+    idocp::idocp
+  )
+endmacro()
 
 macro(add_example EXAMPLE)
   add_executable(
@@ -66,6 +63,9 @@ macro(add_example EXAMPLE)
     )
   endif()
 endmacro()
+
+
+add_benchmark(ocp_benchmark)
 
 add_example(trotting)
 add_example(walking)

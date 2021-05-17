@@ -1,5 +1,5 @@
-#ifndef IDOCP_LQR_STATE_FEEDBACK_POLICY_HPP_
-#define IDOCP_LQR_STATE_FEEDBACK_POLICY_HPP_
+#ifndef IDOCP_LQR_POLICY_HPP_
+#define IDOCP_LQR_POLICY_HPP_
 
 #include "Eigen/Core"
 
@@ -8,18 +8,18 @@
 
 namespace idocp {
 
-struct LQRStateFeedbackPolicy {
-  LQRStateFeedbackPolicy(const Robot& robot)
+struct LQRPolicy {
+  LQRPolicy(const Robot& robot)
     : K(Eigen::MatrixXd::Zero(robot.dimu(), 2*robot.dimv())),
       k(Eigen::VectorXd::Zero(robot.dimu())) {
   }
 
-  LQRStateFeedbackPolicy() 
+  LQRPolicy() 
     : K(),
       k() {
   }
 
-  ~LQRStateFeedbackPolicy() {
+  ~LQRPolicy() {
   }
 
   Eigen::MatrixXd K;
@@ -29,4 +29,4 @@ struct LQRStateFeedbackPolicy {
 
 } // namespace idocp 
 
-#endif // IDOCP_LQR_STATE_FEEDBACK_POLICY_HPP_ 
+#endif // IDOCP_LQR_POLICY_HPP_ 

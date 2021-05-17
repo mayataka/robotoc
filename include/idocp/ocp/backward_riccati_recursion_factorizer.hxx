@@ -117,7 +117,7 @@ inline void BackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
 inline void BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
     const SplitRiccatiFactorization& riccati_next, 
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
-    const LQRStateFeedbackPolicy& lqr_policy, const double dt, 
+    const LQRPolicy& lqr_policy, const double dt, 
     SplitRiccatiFactorization& riccati) {
   assert(dt > 0);
   riccati.Pqq = kkt_matrix.Qqq();

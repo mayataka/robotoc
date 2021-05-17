@@ -8,7 +8,7 @@
 #include "idocp/unocp/split_unkkt_residual.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/split_riccati_factorization.hpp"
-#include "idocp/ocp/lqr_state_feedback_policy.hpp"
+#include "idocp/ocp/lqr_policy.hpp"
 #include "idocp/unocp/backward_unriccati_recursion_factorizer.hpp"
 #include "idocp/unocp/split_unriccati_factorizer.hpp"
 
@@ -65,7 +65,7 @@ TEST_F(SplitUnRiccatiFactorizerTest, backwardRiccatiRecursion) {
   SplitUnKKTMatrix unkkt_matrix_ref = unkkt_matrix;
   SplitUnKKTResidual unkkt_residual_ref = unkkt_residual;
   SplitUnRiccatiFactorizer factorizer(robot);
-  LQRStateFeedbackPolicy lqr_policy_ref(robot);
+  LQRPolicy lqr_policy_ref(robot);
   BackwardUnRiccatiRecursionFactorizer backward_recursion_ref(robot);
   SplitRiccatiFactorization riccati = createRiccatiFactorization();
   SplitRiccatiFactorization riccati_ref = riccati;
@@ -103,7 +103,7 @@ TEST_F(SplitUnRiccatiFactorizerTest, forwardRiccatiRecursion) {
   SplitUnKKTMatrix unkkt_matrix_ref = unkkt_matrix;
   SplitUnKKTResidual unkkt_residual_ref = unkkt_residual;
   SplitUnRiccatiFactorizer factorizer(robot);
-  LQRStateFeedbackPolicy lqr_policy_ref(robot);
+  LQRPolicy lqr_policy_ref(robot);
   BackwardUnRiccatiRecursionFactorizer backward_recursion_ref(robot);
   SplitRiccatiFactorization riccati = createRiccatiFactorization();
   SplitRiccatiFactorization riccati_ref = riccati;

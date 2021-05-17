@@ -16,7 +16,7 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/impulse/impulse_state_equation.hpp"
-#include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
+#include "idocp/impulse/impulse_dynamics.hpp"
 #include "idocp/ocp/split_direction.hpp"
 
 
@@ -220,7 +220,7 @@ private:
   CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
-  ImpulseDynamicsForwardEuler impulse_dynamics_;
+  ImpulseDynamics impulse_dynamics_;
 
 };
 

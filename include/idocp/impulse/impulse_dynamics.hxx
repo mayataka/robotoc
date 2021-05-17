@@ -1,28 +1,28 @@
-#ifndef IDOCP_IMPULSE_DYNAMICS_FORWARD_EULER_HXX_
-#define IDOCP_IMPULSE_DYNAMICS_FORWARD_EULER_HXX_
+#ifndef IDOCP_IMPULSE_DYNAMICS_HXX_
+#define IDOCP_IMPULSE_DYNAMICS_HXX_
 
-#include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
+#include "idocp/impulse/impulse_dynamics.hpp"
 
 #include <cassert>
 
 namespace idocp {
 
-inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler(
+inline ImpulseDynamics::ImpulseDynamics(
     const Robot& robot) 
   : data_(robot) {
 }
 
 
-inline ImpulseDynamicsForwardEuler::ImpulseDynamicsForwardEuler() 
+inline ImpulseDynamics::ImpulseDynamics() 
   : data_() {
 }
 
 
-inline ImpulseDynamicsForwardEuler::~ImpulseDynamicsForwardEuler() {
+inline ImpulseDynamics::~ImpulseDynamics() {
 }
 
 
-inline void ImpulseDynamicsForwardEuler::linearizeImpulseDynamics(
+inline void ImpulseDynamics::linearizeImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status,  
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual) {
@@ -43,25 +43,25 @@ inline void ImpulseDynamicsForwardEuler::linearizeImpulseDynamics(
 }
 
 
-inline void ImpulseDynamicsForwardEuler::linearizeInverseImpulseDynamics(
+inline void ImpulseDynamics::linearizeInverseImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status, 
-    const ImpulseSplitSolution& s, ImpulseDynamicsForwardEulerData& data) {
+    const ImpulseSplitSolution& s, ImpulseDynamicsData& data) {
   robot.setImpulseForces(impulse_status, s.f);
   robot.RNEAImpulse(s.q, s.dv, data.ImD());
   robot.RNEAImpulseDerivatives(s.q, s.dv, data.dImDdq(), data.dImDddv);
 }
 
 
-inline void ImpulseDynamicsForwardEuler::linearizeImpulseVelocityConstraint(
+inline void ImpulseDynamics::linearizeImpulseVelocityConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, 
-    ImpulseDynamicsForwardEulerData& data) {
+    ImpulseDynamicsData& data) {
   robot.computeImpulseVelocityResidual(impulse_status, data.C());
   robot.computeImpulseVelocityDerivatives(impulse_status, data.dCdq(), 
                                           data.dCdv());
 }
 
 
-inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
+inline void ImpulseDynamics::condenseImpulseDynamics(
     Robot& robot, const ImpulseStatus& impulse_status, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
   robot.computeMJtJinv(data_.dImDddv, data_.dCdv(), data_.MJtJinv());
@@ -69,9 +69,9 @@ inline void ImpulseDynamicsForwardEuler::condenseImpulseDynamics(
 }
 
 
-inline void ImpulseDynamicsForwardEuler::condensing(
+inline void ImpulseDynamics::condensing(
     const Robot& robot, const ImpulseStatus& impulse_status, 
-    ImpulseDynamicsForwardEulerData& data, ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseDynamicsData& data, ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual) {
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimf();
@@ -115,14 +115,14 @@ inline void ImpulseDynamicsForwardEuler::condensing(
 }
 
 
-inline void ImpulseDynamicsForwardEuler::computeCondensedPrimalDirection(
+inline void ImpulseDynamics::computeCondensedPrimalDirection(
     const Robot& robot, ImpulseSplitDirection& d) {
   expansionPrimal(robot, data_, d);
 }
 
 
 template <typename VectorType>
-inline void ImpulseDynamicsForwardEuler::computeCondensedDualDirection(
+inline void ImpulseDynamics::computeCondensedDualDirection(
     const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix, 
     const ImpulseSplitKKTResidual& kkt_residual, 
     const Eigen::MatrixBase<VectorType>& dgmm, ImpulseSplitDirection& d) {
@@ -131,8 +131,8 @@ inline void ImpulseDynamicsForwardEuler::computeCondensedDualDirection(
 }
 
 
-inline void ImpulseDynamicsForwardEuler::expansionPrimal(
-    const Robot& robot, const ImpulseDynamicsForwardEulerData& data, 
+inline void ImpulseDynamics::expansionPrimal(
+    const Robot& robot, const ImpulseDynamicsData& data, 
     ImpulseSplitDirection& d) {
   d.ddvf().noalias()  = - data.MJtJinv_dImDCdqv() * d.dx();
   d.ddvf().noalias() -= data.MJtJinv_ImDC();
@@ -141,8 +141,8 @@ inline void ImpulseDynamicsForwardEuler::expansionPrimal(
 
 
 template <typename VectorType>
-inline void ImpulseDynamicsForwardEuler::expansionDual(
-    const Robot& robot, ImpulseDynamicsForwardEulerData& data, 
+inline void ImpulseDynamics::expansionDual(
+    const Robot& robot, ImpulseDynamicsData& data, 
     const ImpulseSplitKKTMatrix& kkt_matrix, 
     const ImpulseSplitKKTResidual& kkt_residual, 
     const Eigen::MatrixBase<VectorType>& dgmm, ImpulseSplitDirection& d) {
@@ -153,7 +153,7 @@ inline void ImpulseDynamicsForwardEuler::expansionDual(
 }
 
 
-inline void ImpulseDynamicsForwardEuler::computeImpulseDynamicsResidual(
+inline void ImpulseDynamics::computeImpulseDynamicsResidual(
     Robot& robot, const ImpulseStatus& impulse_status,
     const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) {
   setImpulseStatus(impulse_status);
@@ -163,23 +163,23 @@ inline void ImpulseDynamicsForwardEuler::computeImpulseDynamicsResidual(
 }
 
 
-inline double ImpulseDynamicsForwardEuler::l1NormImpulseDynamicsResidual(
+inline double ImpulseDynamics::l1NormImpulseDynamicsResidual(
     const ImpulseSplitKKTResidual& kkt_residual) const {
   return data_.ImDC().lpNorm<1>();
 }
 
 
-inline double ImpulseDynamicsForwardEuler::squaredNormImpulseDynamicsResidual(
+inline double ImpulseDynamics::squaredNormImpulseDynamicsResidual(
     const ImpulseSplitKKTResidual& kkt_residual) const {
   return data_.ImDC().squaredNorm();
 }
 
 
-inline void ImpulseDynamicsForwardEuler::setImpulseStatus(
+inline void ImpulseDynamics::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   data_.setImpulseStatus(impulse_status);
 }
 
 } // namespace idocp 
 
-#endif // IDOCP_IMPULSE_DYNAMICS_FORWARD_EULER_HXX_ 
+#endif // IDOCP_IMPULSE_DYNAMICS_HXX_ 

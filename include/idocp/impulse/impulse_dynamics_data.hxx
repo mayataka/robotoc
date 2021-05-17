@@ -1,11 +1,11 @@
-#ifndef IDOCP_IMPULSE_DYNAMICS_FORWARD_EULER_DATA_HXX_
-#define IDOCP_IMPULSE_DYNAMICS_FORWARD_EULER_DATA_HXX_
+#ifndef IDOCP_IMPULSE_DYNAMICS_DATA_HXX_
+#define IDOCP_IMPULSE_DYNAMICS_DATA_HXX_
 
-#include "idocp/impulse/impulse_dynamics_forward_euler_data.hpp"
+#include "idocp/impulse/impulse_dynamics_data.hpp"
 
 namespace idocp {
 
-inline ImpulseDynamicsForwardEulerData::ImpulseDynamicsForwardEulerData(
+inline ImpulseDynamicsData::ImpulseDynamicsData(
     const Robot& robot) 
   : dImDddv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     dImDCdqv_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
@@ -25,7 +25,7 @@ inline ImpulseDynamicsForwardEulerData::ImpulseDynamicsForwardEulerData(
 }
 
 
-inline ImpulseDynamicsForwardEulerData::ImpulseDynamicsForwardEulerData() 
+inline ImpulseDynamicsData::ImpulseDynamicsData() 
   : dImDddv(),
     dImDCdqv_full_(), 
     MJtJinv_full_(), 
@@ -40,11 +40,11 @@ inline ImpulseDynamicsForwardEulerData::ImpulseDynamicsForwardEulerData()
 }
 
 
-inline ImpulseDynamicsForwardEulerData::~ImpulseDynamicsForwardEulerData() {
+inline ImpulseDynamicsData::~ImpulseDynamicsData() {
 }
 
 
-inline void ImpulseDynamicsForwardEulerData::setImpulseStatus(
+inline void ImpulseDynamicsData::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   dimf_ = impulse_status.dimf();
   dimvf_ = dimv_ + dimf_;
@@ -52,183 +52,183 @@ inline void ImpulseDynamicsForwardEulerData::setImpulseStatus(
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::dImDCdqv() {
+ImpulseDynamicsData::dImDCdqv() {
   return dImDCdqv_full_.topLeftCorner(dimvf_, 2*dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::dImDCdqv() const {
+ImpulseDynamicsData::dImDCdqv() const {
   return dImDCdqv_full_.topLeftCorner(dimvf_, 2*dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::dImDCdq() {
+ImpulseDynamicsData::dImDCdq() {
   return dImDCdqv_full_.topLeftCorner(dimvf_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::dImDCdq() const {
+ImpulseDynamicsData::dImDCdq() const {
   return dImDCdqv_full_.topLeftCorner(dimvf_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::dImDdq() {
+ImpulseDynamicsData::dImDdq() {
   return dImDCdqv_full_.topLeftCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::dImDdq() const {
+ImpulseDynamicsData::dImDdq() const {
   return dImDCdqv_full_.topLeftCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::dCdq() {
+ImpulseDynamicsData::dCdq() {
   return dImDCdqv_full_.block(dimv_, 0, dimf_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::dCdq() const {
+ImpulseDynamicsData::dCdq() const {
   return dImDCdqv_full_.block(dimv_, 0, dimf_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::dCdv() {
+ImpulseDynamicsData::dCdv() {
   return dImDCdqv_full_.block(dimv_, dimv_, dimf_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::dCdv() const {
+ImpulseDynamicsData::dCdv() const {
   return dImDCdqv_full_.block(dimv_, dimv_, dimf_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::MJtJinv() {
+ImpulseDynamicsData::MJtJinv() {
   return MJtJinv_full_.topLeftCorner(dimvf_, dimvf_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::MJtJinv() const {
+ImpulseDynamicsData::MJtJinv() const {
   return MJtJinv_full_.topLeftCorner(dimvf_, dimvf_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::MJtJinv_dImDCdqv() {
+ImpulseDynamicsData::MJtJinv_dImDCdqv() {
   return MJtJinv_dImDCdqv_full_.topLeftCorner(dimvf_, 2*dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::MJtJinv_dImDCdqv() const {
+ImpulseDynamicsData::MJtJinv_dImDCdqv() const {
   return MJtJinv_dImDCdqv_full_.topLeftCorner(dimvf_, 2*dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseDynamicsForwardEulerData::Qdvfqv() {
+inline Eigen::Block<Eigen::MatrixXd> ImpulseDynamicsData::Qdvfqv() {
   return Qdvfqv_full_.topLeftCorner(dimvf_, 2*dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseDynamicsForwardEulerData::Qdvfqv() const {
+ImpulseDynamicsData::Qdvfqv() const {
   return Qdvfqv_full_.topLeftCorner(dimvf_, 2*dimv_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::ImDC() {
+ImpulseDynamicsData::ImDC() {
   return ImDC_full_.head(dimvf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::ImDC() const {
+ImpulseDynamicsData::ImDC() const {
   return ImDC_full_.head(dimvf_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::ImD() {
+ImpulseDynamicsData::ImD() {
   return ImDC_full_.head(dimv_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::ImD() const {
+ImpulseDynamicsData::ImD() const {
   return ImDC_full_.head(dimv_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::C() {
+ImpulseDynamicsData::C() {
   return ImDC_full_.segment(dimv_, dimf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::C() const {
+ImpulseDynamicsData::C() const {
   return ImDC_full_.segment(dimv_, dimf_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::MJtJinv_ImDC() {
+ImpulseDynamicsData::MJtJinv_ImDC() {
   return MJtJinv_ImDC_full_.head(dimvf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::MJtJinv_ImDC() const {
+ImpulseDynamicsData::MJtJinv_ImDC() const {
   return MJtJinv_ImDC_full_.head(dimvf_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::ldvf() {
+ImpulseDynamicsData::ldvf() {
   return ldvf_full_.head(dimvf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::ldvf() const {
+ImpulseDynamicsData::ldvf() const {
   return ldvf_full_.head(dimvf_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::ldv() {
+ImpulseDynamicsData::ldv() {
   return ldvf_full_.head(dimv_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::ldv() const {
+ImpulseDynamicsData::ldv() const {
   return ldvf_full_.head(dimv_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::lf() {
+ImpulseDynamicsData::lf() {
   return ldvf_full_.segment(dimv_, dimf_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseDynamicsForwardEulerData::lf() const {
+ImpulseDynamicsData::lf() const {
   return ldvf_full_.segment(dimv_, dimf_);
 }
 
 } // namespace idocp 
 
-#endif // IDOCP_IMPULSE_DYNAMICS_FORWARD_EULER_DATA_HXX_ 
+#endif // IDOCP_IMPULSE_DYNAMICS_DATA_HXX_ 

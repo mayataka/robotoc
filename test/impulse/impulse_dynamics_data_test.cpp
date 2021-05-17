@@ -4,14 +4,14 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/impulse_status.hpp"
-#include "idocp/impulse/impulse_dynamics_forward_euler_data.hpp"
+#include "idocp/impulse/impulse_dynamics_data.hpp"
 
 #include "robot_factory.hpp"
 
 
 namespace idocp {
 
-class ImpulseDynamicsForwardEulerDataTest : public ::testing::Test {
+class ImpulseDynamicsDataTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -24,12 +24,12 @@ protected:
 };
 
 
-void ImpulseDynamicsForwardEulerDataTest::test(const Robot& robot, 
-                                               const ImpulseStatus& impulse_status) {
+void ImpulseDynamicsDataTest::test(const Robot& robot, 
+                                   const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimx = 2*robot.dimv();
   const int dimf = impulse_status.dimf();
-  ImpulseDynamicsForwardEulerData data(robot);
+  ImpulseDynamicsData data(robot);
   data.setImpulseStatus(impulse_status);
   EXPECT_EQ(data.dImDddv.rows(), dimv);
   EXPECT_EQ(data.dImDddv.cols(), dimv);
@@ -89,7 +89,7 @@ void ImpulseDynamicsForwardEulerDataTest::test(const Robot& robot,
 }
 
 
-TEST_F(ImpulseDynamicsForwardEulerDataTest, fixedBase) {
+TEST_F(ImpulseDynamicsDataTest, fixedBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
@@ -99,7 +99,7 @@ TEST_F(ImpulseDynamicsForwardEulerDataTest, fixedBase) {
 }
 
 
-TEST_F(ImpulseDynamicsForwardEulerDataTest, floatingBase) {
+TEST_F(ImpulseDynamicsDataTest, floatingBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();

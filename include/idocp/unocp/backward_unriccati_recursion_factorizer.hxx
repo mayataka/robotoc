@@ -58,7 +58,7 @@ inline void BackwardUnRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
     const SplitRiccatiFactorization& riccati_next, 
     const SplitUnKKTMatrix& unkkt_matrix, 
     const SplitUnKKTResidual& unkkt_residual, 
-    const LQRStateFeedbackPolicy& lqr_policy, const double dt, 
+    const LQRPolicy& lqr_policy, const double dt, 
     SplitRiccatiFactorization& riccati) {
   assert(dt > 0);
   riccati.Pqq = unkkt_matrix.Qqq();

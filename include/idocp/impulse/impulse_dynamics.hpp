@@ -1,5 +1,5 @@
-#ifndef IDOCP_IMPULSE_DYNAMICS_FORWARD_EULER_HPP_
-#define IDOCP_IMPULSE_DYNAMICS_FORWARD_EULER_HPP_
+#ifndef IDOCP_IMPULSE_DYNAMICS_HPP_
+#define IDOCP_IMPULSE_DYNAMICS_HPP_
 
 #include "Eigen/Core"
 
@@ -9,54 +9,52 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_dynamics_forward_euler_data.hpp"
+#include "idocp/impulse/impulse_dynamics_data.hpp"
 
 
 namespace idocp {
 
 ///
-/// @class ImpulseDynamicsForwardEuler
+/// @class ImpulseDynamics
 /// @brief Impulse dynamics constraint for the forward Euler.
 ///
-class ImpulseDynamicsForwardEuler {
+class ImpulseDynamics {
 public:
   ///
   /// @brief Constructs the impulse dynamics.
   /// @param[in] robot Robot model. 
   ///
-  ImpulseDynamicsForwardEuler(const Robot& robot);
+  ImpulseDynamics(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  ImpulseDynamicsForwardEuler();
+  ImpulseDynamics();
 
   ///
   /// @brief Destructor. 
   ///
-  ~ImpulseDynamicsForwardEuler();
+  ~ImpulseDynamics();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  ImpulseDynamicsForwardEuler(const ImpulseDynamicsForwardEuler&) = default;
+  ImpulseDynamics(const ImpulseDynamics&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  ImpulseDynamicsForwardEuler& operator=(const ImpulseDynamicsForwardEuler&) 
+  ImpulseDynamics& operator=(const ImpulseDynamics&) 
       = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  ImpulseDynamicsForwardEuler(ImpulseDynamicsForwardEuler&&) noexcept = default;
-
+  ImpulseDynamics(ImpulseDynamics&&) noexcept = default;
   ///
   /// @brief Default move assign operator. 
   ///
-  ImpulseDynamicsForwardEuler& operator=(ImpulseDynamicsForwardEuler&&) noexcept 
-      = default;
+  ImpulseDynamics& operator=(ImpulseDynamics&&) noexcept = default;
 
   ///
   /// @brief Linearizes the impulse dynamics constraint. 
@@ -81,7 +79,7 @@ public:
   ///
   static void linearizeInverseImpulseDynamics(
       Robot& robot, const ImpulseStatus& impulse_status, 
-      const ImpulseSplitSolution& s, ImpulseDynamicsForwardEulerData& data);
+      const ImpulseSplitSolution& s, ImpulseDynamicsData& data);
 
   ///
   /// @brief Linearizes the impulse velocity constraint. 
@@ -91,7 +89,7 @@ public:
   ///
   static void linearizeImpulseVelocityConstraint(
       Robot& robot, const ImpulseStatus& impulse_status, 
-      ImpulseDynamicsForwardEulerData& data);
+      ImpulseDynamicsData& data);
 
   ///
   /// @brief Condenses the inverse dynamics constraint. 
@@ -115,7 +113,7 @@ public:
   ///
   static void condensing(const Robot& robot, 
                          const ImpulseStatus& impulse_status,
-                         ImpulseDynamicsForwardEulerData& data, 
+                         ImpulseDynamicsData& data, 
                          ImpulseSplitKKTMatrix& kkt_matrix, 
                          ImpulseSplitKKTResidual& kkt_residual);
 
@@ -152,7 +150,7 @@ public:
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
   static void expansionPrimal(const Robot& robot, 
-                              const ImpulseDynamicsForwardEulerData& data, 
+                              const ImpulseDynamicsData& data, 
                               ImpulseSplitDirection& d);
 
   ///
@@ -167,7 +165,7 @@ public:
   /// 
   template <typename VectorType>
   static void expansionDual(const Robot& robot, 
-                            ImpulseDynamicsForwardEulerData& data,
+                            ImpulseDynamicsData& data,
                             const ImpulseSplitKKTMatrix& kkt_matrix, 
                             const ImpulseSplitKKTResidual& kkt_residual,
                             const Eigen::MatrixBase<VectorType>& dgmm,
@@ -203,7 +201,7 @@ public:
       const ImpulseSplitKKTResidual& kkt_residual) const;
 
 private:
-  ImpulseDynamicsForwardEulerData data_;
+  ImpulseDynamicsData data_;
 
   void setImpulseStatus(const ImpulseStatus& impulse_status);
 
@@ -211,6 +209,6 @@ private:
 
 } // namespace idocp 
 
-#include "idocp/impulse/impulse_dynamics_forward_euler.hxx"
+#include "idocp/impulse/impulse_dynamics.hxx"
 
-#endif // IDOCP_IMPULSE_DYNAMICS_FORWARD_EULER_HPP_ 
+#endif // IDOCP_IMPULSE_DYNAMICS_HPP_ 

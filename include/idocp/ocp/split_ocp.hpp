@@ -17,7 +17,7 @@
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/ocp/state_equation.hpp"
 #include "idocp/ocp/contact_dynamics.hpp"
-#include "idocp/ocp/forward_switching_constraint.hpp"
+#include "idocp/ocp/switching_constraint.hpp"
 #include "idocp/ocp/split_state_constraint_jacobian.hpp"
 
 
@@ -309,7 +309,7 @@ private:
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   ContactDynamics contact_dynamics_;
-  ForwardSwitchingConstraint switching_constraint_;
+  SwitchingConstraint switching_constraint_;
   bool use_kinematics_, has_floating_base_;
   double stage_cost_, constraint_violation_;
 

@@ -12,7 +12,7 @@
 #include "idocp/impulse/impulse_split_direction.hpp"
 #include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
-#include "idocp/impulse/impulse_dynamics_forward_euler.hpp"
+#include "idocp/impulse/impulse_dynamics.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 
@@ -69,7 +69,7 @@ void ImpulseSplitOCPTest::testLinearizeOCP(Robot& robot,
   constraints->condenseSlackAndDual(robot, constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
   stateequation::linearizeImpulseForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   stateequation::condenseImpulseForwardEuler(robot, s, s_next.q, kkt_matrix_ref, kkt_residual_ref);
-  ImpulseDynamicsForwardEuler id(robot);
+  ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref );
   id.condenseImpulseDynamics(robot, impulse_status, kkt_matrix_ref, kkt_residual_ref);
@@ -128,7 +128,7 @@ void ImpulseSplitOCPTest::testComputeKKTResidual(Robot& robot,
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
   constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
   stateequation::linearizeImpulseForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
-  ImpulseDynamicsForwardEuler id(robot);
+  ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref);
   const double kkt_error_ref = kkt_residual_ref.Fx().squaredNorm()
@@ -172,7 +172,7 @@ void ImpulseSplitOCPTest::testCostAndConstraintViolation(Robot& robot,
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
   stateequation::computeImpulseForwardEulerResidual(robot, s, s_prev.q, s_prev.v, kkt_residual_ref);
-  ImpulseDynamicsForwardEuler id(robot);
+  ImpulseDynamics id(robot);
   id.computeImpulseDynamicsResidual(robot, impulse_status, s, kkt_residual_ref);
   double constraint_violation_ref = 0;
   constraint_violation_ref += constraints->l1NormPrimalResidual(constraints_data);

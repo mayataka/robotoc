@@ -9,7 +9,7 @@
 #include "idocp/ocp/split_state_constraint_jacobian.hpp"
 #include "idocp/ocp/split_direction.hpp"
 #include "idocp/ocp/split_riccati_factorization.hpp"
-#include "idocp/ocp/lqr_state_feedback_policy.hpp"
+#include "idocp/ocp/lqr_policy.hpp"
 #include "idocp/ocp/backward_riccati_recursion_factorizer.hpp"
 #include "idocp/ocp/split_constrained_riccati_factorization.hpp"
 #include "idocp/ocp/split_riccati_factorizer.hpp"
@@ -65,7 +65,7 @@ void SplitRiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) const
   SplitKKTMatrix kkt_matrix_ref = kkt_matrix;
   SplitKKTResidual kkt_residual_ref = kkt_residual;
   SplitRiccatiFactorizer factorizer(robot);
-  LQRStateFeedbackPolicy lqr_policy_ref(robot);
+  LQRPolicy lqr_policy_ref(robot);
   BackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
   SplitRiccatiFactorization riccati = createRiccatiFactorization(robot);
   SplitRiccatiFactorization riccati_ref = riccati;
@@ -118,7 +118,7 @@ void SplitRiccatiFactorizerTest::testBackwardRecursionWithSwitchingConstraint(co
   jac.Phiu().setRandom();
   auto jac_ref = jac;
   SplitRiccatiFactorizer factorizer(robot);
-  LQRStateFeedbackPolicy lqr_policy_ref(robot);
+  LQRPolicy lqr_policy_ref(robot);
   BackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
   SplitRiccatiFactorization riccati = createRiccatiFactorization(robot);
   SplitRiccatiFactorization riccati_ref = riccati;
@@ -188,7 +188,7 @@ void SplitRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) const 
   SplitKKTMatrix kkt_matrix_ref = kkt_matrix;
   SplitKKTResidual kkt_residual_ref = kkt_residual;
   SplitRiccatiFactorizer factorizer(robot);
-  LQRStateFeedbackPolicy lqr_policy_ref(robot);
+  LQRPolicy lqr_policy_ref(robot);
   BackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
   SplitRiccatiFactorization riccati = createRiccatiFactorization(robot);
   SplitRiccatiFactorization riccati_ref = riccati;

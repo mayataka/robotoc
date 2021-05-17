@@ -29,7 +29,7 @@ protected:
   void testLinearizeInverseDynamics(Robot& robot, const ContactStatus& contact_status) const;
   void testLinearizeContactConstraints(Robot& robot, const ContactStatus& contact_status) const;
   void testLinearizeContactDynamics(Robot& robot, const ContactStatus& contact_status) const;
-  void testCondenseContactDynamics(Robot& robot, const ContactStatus& contact_status, const bool is_forward_euler) const;
+  void testCondenseContactDynamics(Robot& robot, const ContactStatus& contact_status) const;
   void testComputeCondensedPrimalDirection(Robot& robot, const ContactStatus& contact_status) const;
   void testComputeCondensedDualDirection(Robot& robot, const ContactStatus& contact_status) const;
   void testComputeResidual(Robot& robot, const ContactStatus& contact_status) const;
@@ -136,7 +136,7 @@ void ContactDynamicsTest::testLinearizeContactDynamics(Robot& robot, const Conta
 }  
 
 
-void ContactDynamicsTest::testCondenseContactDynamics(Robot& robot, const ContactStatus& contact_status, const bool is_forward_euler) const {
+void ContactDynamicsTest::testCondenseContactDynamics(Robot& robot, const ContactStatus& contact_status) const {
   const SplitSolution s = SplitSolution::Random(robot, contact_status);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
@@ -174,7 +174,7 @@ void ContactDynamicsTest::testCondenseContactDynamics(Robot& robot, const Contac
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual);
   SplitKKTResidual kkt_residual_ref = kkt_residual;
   SplitKKTMatrix kkt_matrix_ref = kkt_matrix;
-  cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix, kkt_residual, is_forward_euler);
+  cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix, kkt_residual);
   ContactDynamicsData data(robot);
   data.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -215,12 +215,7 @@ void ContactDynamicsTest::testCondenseContactDynamics(Robot& robot, const Contac
   }
   Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*dimv, dimv+dimf);
   OOIO_mat.bottomLeftCorner(dimv, dimv) = dt * Eigen::MatrixXd::Identity(dimv, dimv);
-  if (is_forward_euler) {
-    kkt_matrix_ref.Fvv() = Eigen::MatrixXd::Identity(dimv, dimv);
-  }
-  else {
-    kkt_matrix_ref.Fvv() = - Eigen::MatrixXd::Identity(dimv, dimv);
-  }
+  kkt_matrix_ref.Fvv() = Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_matrix_ref.Fxx() -= OOIO_mat * data.MJtJinv_dIDCdqv();
   const Eigen::MatrixXd Fxu_full = OOIO_mat * data.MJtJinv() * IO_mat;
   kkt_matrix_ref.Fxu() = Fxu_full.rightCols(dimu);
@@ -270,7 +265,7 @@ void ContactDynamicsTest::testComputeCondensedPrimalDirection(Robot& robot, cons
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual);
   SplitKKTResidual kkt_residual_ref = kkt_residual;
   SplitKKTMatrix kkt_matrix_ref = kkt_matrix;
-  cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix, kkt_residual, true);
+  cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix, kkt_residual);
   ContactDynamicsData data(robot);
   data.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -328,7 +323,7 @@ void ContactDynamicsTest::testComputeCondensedDualDirection(Robot& robot, const 
   ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual);
-  cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix, kkt_residual, true);
+  cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix, kkt_residual);
   ContactDynamicsData data(robot);
   data.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
@@ -405,16 +400,14 @@ TEST_F(ContactDynamicsTest, fixedBase) {
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
   testLinearizeContactDynamics(robot, contact_status);
-  testCondenseContactDynamics(robot, contact_status, true);
-  testCondenseContactDynamics(robot, contact_status, false);
+  testCondenseContactDynamics(robot, contact_status);
   testComputeCondensedPrimalDirection(robot, contact_status);
   testComputeCondensedDualDirection(robot, contact_status);
   testComputeResidual(robot, contact_status);
   contact_status.activateContact(0);
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
-  testCondenseContactDynamics(robot, contact_status, true);
-  testCondenseContactDynamics(robot, contact_status, false);
+  testCondenseContactDynamics(robot, contact_status);
   testComputeCondensedPrimalDirection(robot, contact_status);
   testComputeCondensedDualDirection(robot, contact_status);
   testComputeResidual(robot, contact_status);
@@ -430,8 +423,7 @@ TEST_F(ContactDynamicsTest, floatingBase) {
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
   testLinearizeContactDynamics(robot, contact_status);
-  testCondenseContactDynamics(robot, contact_status, true);
-  testCondenseContactDynamics(robot, contact_status, false);
+  testCondenseContactDynamics(robot, contact_status);
   testComputeCondensedPrimalDirection(robot, contact_status);
   testComputeCondensedDualDirection(robot, contact_status);
   testComputeResidual(robot, contact_status);
@@ -442,8 +434,7 @@ TEST_F(ContactDynamicsTest, floatingBase) {
   testLinearizeInverseDynamics(robot, contact_status);
   testLinearizeContactConstraints(robot, contact_status);
   testLinearizeContactDynamics(robot, contact_status);
-  testCondenseContactDynamics(robot, contact_status, true);
-  testCondenseContactDynamics(robot, contact_status, false);
+  testCondenseContactDynamics(robot, contact_status);
   testComputeCondensedPrimalDirection(robot, contact_status);
   testComputeCondensedDualDirection(robot, contact_status);
   testComputeResidual(robot, contact_status);

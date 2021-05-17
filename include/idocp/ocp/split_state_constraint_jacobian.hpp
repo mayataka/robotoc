@@ -12,7 +12,7 @@ namespace idocp {
 
 ///
 /// @class SplitStateConstraintJacobian
-/// @brief Jacobian of ForwardSwitchingConstraint. 
+/// @brief Jacobian of SwitchingConstraint. 
 ///
 class SplitStateConstraintJacobian {
 public:

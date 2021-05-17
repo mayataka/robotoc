@@ -12,7 +12,7 @@
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/state_equation.hpp"
 #include "idocp/ocp/contact_dynamics.hpp"
-#include "idocp/ocp/forward_switching_constraint.hpp"
+#include "idocp/ocp/switching_constraint.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 
@@ -105,15 +105,15 @@ void SplitOCPTest::testLinearizeOCP(Robot& robot,
   robot.updateKinematics(s.q, s.v, s.a);
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual_ref);
   if (switching_constraint) {
-    ForwardSwitchingConstraint sc(robot);
+    SwitchingConstraint sc(robot);
     sc.linearizeSwitchingConstraint(robot, impulse_status, dt, dt_next, s, 
                                     kkt_matrix_ref, kkt_residual_ref, jac_ref);
-    cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix_ref, kkt_residual_ref, true);
+    cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix_ref, kkt_residual_ref);
     cd.condenseSwitchingConstraint(kkt_residual_ref, jac_ref);
     EXPECT_TRUE(jac.isApprox(jac_ref));
   }
   else {
-    cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix_ref, kkt_residual_ref, true);
+    cd.condenseContactDynamics(robot, contact_status, dt, kkt_matrix_ref, kkt_residual_ref);
   }
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -214,7 +214,7 @@ void SplitOCPTest::testComputeKKTResidual(Robot& robot,
   if (switching_constraint) {
     kkt_matrix_ref.setImpulseStatus(impulse_status);
     kkt_residual_ref.setImpulseStatus(impulse_status);
-    ForwardSwitchingConstraint sc(robot);
+    SwitchingConstraint sc(robot);
     sc.linearizeSwitchingConstraint(robot, impulse_status, dt, dt_next, s, 
                                     kkt_matrix_ref, kkt_residual_ref, jac_ref);
     EXPECT_TRUE(jac.isApprox(jac_ref));
@@ -295,7 +295,7 @@ void SplitOCPTest::testCostAndConstraintViolation(Robot& robot,
   cd.computeContactDynamicsResidual(robot, contact_status, s);
   if (switching_constraint) {
     kkt_residual_ref.setImpulseStatus(impulse_status);
-    ForwardSwitchingConstraint sc(robot);
+    SwitchingConstraint sc(robot);
     sc.computeSwitchingConstraintResidual(robot, impulse_status, dt, dt_next, 
                                           s, kkt_residual_ref);
   }

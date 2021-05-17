@@ -60,56 +60,6 @@ inline void condenseImpulseForwardEuler(
 
 
 template <typename ConfigVectorType, typename TangentVectorType>
-inline void linearizeImpulseBackwardEuler(
-    const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const Eigen::MatrixBase<TangentVectorType>& v_prev, 
-    const ImpulseSplitSolution& s, const SplitSolution& s_next,
-    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
-  assert(q_prev.size() == robot.dimq());
-  assert(v_prev.size() == robot.dimv());
-  computeImpulseBackwardEulerResidual(robot, q_prev, v_prev, s, kkt_residual);
-  if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq());
-    robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq_prev);
-    kkt_residual.lq().template head<6>().noalias() 
-        += kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>().transpose() 
-              * s_next.lmd.template head<6>();
-    kkt_residual.lq().template head<6>().noalias() 
-        += kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
-              * s.lmd.template head<6>();
-    kkt_residual.lq().tail(robot.dimv()-6).noalias() 
-        += s_next.lmd.tail(robot.dimv()-6) - s.lmd.tail(robot.dimv()-6);
-  }
-  else {
-    kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
-  }
-  kkt_residual.lv().noalias() += (- s.gmm + s_next.gmm);
-  kkt_residual.ldv.noalias() += s.gmm;
-}
-
-
-template <typename ConfigVectorType>
-inline void condenseImpulseBackwardEuler(
-    Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual) {
-  if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationPlus(q_prev, s.q, kkt_matrix.Fqq_prev);
-    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
-                                         kkt_matrix.Fqq_inv);
-    kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
-        = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-    kkt_residual.Fq_prev = kkt_residual.Fq().template head<6>();
-    kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
-        = kkt_matrix.Fqq_inv 
-            * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
-    kkt_residual.Fq().template head<6>().noalias()
-        = kkt_matrix.Fqq_inv * kkt_residual.Fq_prev;
-  }
-}
-
-
-template <typename ConfigVectorType, typename TangentVectorType>
 inline void computeImpulseForwardEulerResidual(
     const Robot& robot, const ImpulseSplitSolution& s, 
     const Eigen::MatrixBase<ConfigVectorType>& q_next, 
@@ -119,18 +69,6 @@ inline void computeImpulseForwardEulerResidual(
   assert(v_next.size() == robot.dimv());
   robot.subtractConfiguration(s.q, q_next, kkt_residual.Fq());
   kkt_residual.Fv() = s.v + s.dv - v_next;
-}
-
-
-template <typename ConfigVectorType, typename TangentVectorType>
-inline void computeImpulseBackwardEulerResidual(
-    const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const Eigen::MatrixBase<TangentVectorType>& v_prev, 
-    const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual) {
-  assert(q_prev.size() == robot.dimq());
-  assert(v_prev.size() == robot.dimv());
-  robot.subtractConfiguration(q_prev, s.q, kkt_residual.Fq());
-  kkt_residual.Fv() = v_prev - s.v + s.dv;
 }
 
 

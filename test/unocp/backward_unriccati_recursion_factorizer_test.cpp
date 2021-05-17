@@ -8,7 +8,7 @@
 #include "idocp/unocp/split_unkkt_residual.hpp"
 #include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/lqr_state_feedback_policy.hpp"
+#include "idocp/ocp/lqr_policy.hpp"
 #include "idocp/unocp/backward_unriccati_recursion_factorizer.hpp"
 
 #include "robot_factory.hpp"
@@ -92,7 +92,7 @@ TEST_F(BackwardUnRiccatiRecursionFactorizerTest, test) {
   EXPECT_TRUE(unkkt_matrix.Qaa().isApprox(unkkt_matrix.Qaa().transpose()));
   EXPECT_TRUE(la_ref.isApprox(unkkt_residual.la()));
   SplitRiccatiFactorization riccati = createRiccatiFactorization();
-  LQRStateFeedbackPolicy lqr_policy(robot);
+  LQRPolicy lqr_policy(robot);
   lqr_policy.K.setRandom();
   lqr_policy.k.setRandom();
   factorizer.factorizeRiccatiFactorization(riccati_next, unkkt_matrix, unkkt_residual, lqr_policy, dt, riccati);

@@ -86,7 +86,7 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
   constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
                                      kkt_matrix, kkt_residual);
   contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, 
-                                            kkt_matrix, kkt_residual, true);
+                                            kkt_matrix, kkt_residual);
 }
 
 
@@ -128,7 +128,7 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
                                                      dt_next, s, kkt_matrix, 
                                                      kkt_residual, jac);
   contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, 
-                                            kkt_matrix, kkt_residual, true);
+                                            kkt_matrix, kkt_residual);
   contact_dynamics_.condenseSwitchingConstraint(kkt_residual, jac);
 }
 

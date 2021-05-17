@@ -13,8 +13,7 @@ Direction CreateDirection(const Robot& robot, const int N,
                           const int max_num_impulse=0);
 
 Direction CreateDirection(const Robot& robot, const ContactSequence& contact_sequence, 
-                          const double T, const int N, const int max_num_impulse, 
-                          const double t, const bool is_parnmpc=false);
+                          const double T, const int N, const int max_num_impulse, const double t);
 
 
 } // namespace testhelper

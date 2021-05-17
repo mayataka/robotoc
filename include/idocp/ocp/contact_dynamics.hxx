@@ -89,8 +89,7 @@ inline void ContactDynamics::linearizeContactConstraint(
 
 inline void ContactDynamics::condenseContactDynamics(
     Robot& robot, const ContactStatus& contact_status, const double dt,
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual,
-    const bool is_forward_euler) {
+    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   const int dimf = contact_status.dimf();
   robot.computeMJtJinv(data_.dIDda, data_.dCda(), data_.MJtJinv());
@@ -142,17 +141,11 @@ inline void ContactDynamics::condenseContactDynamics(
   }
   kkt_residual.lu().noalias() 
       += data_.MJtJinv().middleRows(dim_passive_, dimu_) * data_.laf();
+
   kkt_matrix.Fvq() = - dt * data_.MJtJinv_dIDCdqv().topLeftCorner(dimv_, dimv_);
-  if (is_forward_euler) {
     kkt_matrix.Fvv().noalias() 
         = - dt * data_.MJtJinv_dIDCdqv().topRightCorner(dimv_, dimv_) 
           + Eigen::MatrixXd::Identity(dimv_, dimv_);
-  }
-  else {
-    kkt_matrix.Fvv().noalias() 
-        = - dt * data_.MJtJinv_dIDCdqv().topRightCorner(dimv_, dimv_) 
-          - Eigen::MatrixXd::Identity(dimv_, dimv_);
-  }
   kkt_matrix.Fvu() = dt * data_.MJtJinv().block(0, dim_passive_, dimv_, dimu_);
   kkt_residual.Fv().noalias() -= dt * data_.MJtJinv_IDC().head(dimv_);
 }

@@ -7,7 +7,7 @@
 #include "idocp/unocp/split_unkkt_matrix.hpp"
 #include "idocp/unocp/split_unkkt_residual.hpp"
 #include "idocp/ocp/split_riccati_factorization.hpp"
-#include "idocp/ocp/lqr_state_feedback_policy.hpp"
+#include "idocp/ocp/lqr_policy.hpp"
 
 
 namespace idocp {
@@ -84,7 +84,7 @@ public:
       const SplitRiccatiFactorization& riccati_next, 
       const SplitUnKKTMatrix& unkkt_matrix, 
       const SplitUnKKTResidual& unkkt_residual, 
-      const LQRStateFeedbackPolicy& lqr_policy, const double dt, 
+      const LQRPolicy& lqr_policy, const double dt, 
       SplitRiccatiFactorization& riccati);
 
 private:

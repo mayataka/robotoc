@@ -1,5 +1,5 @@
-#ifndef IDOCP_IMPULSE_DYNAMICS_FORWARD_EULER_DATA_HPP_ 
-#define IDOCP_IMPULSE_DYNAMICS_FORWARD_EULER_DATA_HPP_
+#ifndef IDOCP_IMPULSE_DYNAMICS_DATA_HPP_ 
+#define IDOCP_IMPULSE_DYNAMICS_DATA_HPP_
 
 #include "Eigen/Core"
 #include "idocp/robot/robot.hpp"
@@ -9,50 +9,46 @@
 namespace idocp {
 
 ///
-/// @class ImpulseDynamicsForwardEulerData
-/// @brief Data used in ImpulseDynamicsForwardEuler.
+/// @class ImpulseDynamicsData
+/// @brief Data used in ImpulseDynamics.
 ///
-class ImpulseDynamicsForwardEulerData {
+class ImpulseDynamicsData {
 public:
   ///
   /// @brief Constructs a data.
   /// @param[in] robot Robot model. 
   ///
-  ImpulseDynamicsForwardEulerData(const Robot& robot);
+  ImpulseDynamicsData(const Robot& robot);
 
   ///
   /// @brief Default constructor. 
   ///
-  ImpulseDynamicsForwardEulerData();
+  ImpulseDynamicsData();
 
   ///
   /// @brief Destructor. 
   ///
-  ~ImpulseDynamicsForwardEulerData();
+  ~ImpulseDynamicsData();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  ImpulseDynamicsForwardEulerData(
-      const ImpulseDynamicsForwardEulerData&) = default;
+  ImpulseDynamicsData(const ImpulseDynamicsData&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  ImpulseDynamicsForwardEulerData& operator=(
-      const ImpulseDynamicsForwardEulerData&) = default;
+  ImpulseDynamicsData& operator=(const ImpulseDynamicsData&) = default;
  
   ///
   /// @brief Default move constructor. 
   ///
-  ImpulseDynamicsForwardEulerData(
-      ImpulseDynamicsForwardEulerData&&) noexcept = default;
+  ImpulseDynamicsData(ImpulseDynamicsData&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  ImpulseDynamicsForwardEulerData& operator=(
-      ImpulseDynamicsForwardEulerData&&) noexcept = default;
+  ImpulseDynamicsData& operator=(ImpulseDynamicsData&&) noexcept = default;
 
   ///
   /// @brief Set the impulse status, i.e., set dimension of the impulses.
@@ -132,6 +128,6 @@ private:
 
 } // namespace idocp 
 
-#include "idocp/impulse/impulse_dynamics_forward_euler_data.hxx"
+#include "idocp/impulse/impulse_dynamics_data.hxx"
 
-#endif // IDOCP_IMPULSE_DYNAMICS_FORWARD_EULER_DATA_HPP_ 
+#endif // IDOCP_IMPULSE_DYNAMICS_DATA_HPP_ 

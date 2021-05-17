@@ -19,12 +19,10 @@ SplitKKTResidual CreateSplitKKTResidual(const Robot& robot,
                                         const ImpulseStatus& impulse_status);
 
 KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence, 
-                          const int N, const int max_num_impulse, 
-                          const bool is_parnmpc=false);
+                          const int N, const int max_num_impulse);
 
 KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact_sequence, 
-                              const int N, const int max_num_impulse, 
-                              const bool is_parnmpc=false);
+                              const int N, const int max_num_impulse);
 
 } // namespace testhelper
 } // namespace idocp
