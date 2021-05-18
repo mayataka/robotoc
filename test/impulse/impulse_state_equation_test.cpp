@@ -28,8 +28,8 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFixedBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   Eigen::VectorXd q_prev = Eigen::VectorXd::Random(robot.dimq());
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot);
-  const SplitSolution s_next = SplitSolution::Random(robot);
+  const auto s = ImpulseSplitSolution::Random(robot);
+  const auto s_next = SplitSolution::Random(robot);
   ImpulseSplitKKTResidual kkt_residual(robot);
   ImpulseSplitKKTMatrix kkt_matrix(robot);
   stateequation::linearizeImpulseForwardEuler(robot, q_prev, s, s_next, 
@@ -40,9 +40,9 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFixedBase) {
   EXPECT_TRUE(kkt_residual.lv().isApprox((s_next.gmm-s.gmm)));
   EXPECT_TRUE(kkt_residual.ldv.isApprox((s_next.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isZero());
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx.lpNorm<1>(), 
                    stateequation::l1NormStateEuqationResidual(kkt_residual));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), 
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx.squaredNorm(), 
                    stateequation::squaredNormStateEuqationResidual(kkt_residual));
   stateequation::condenseImpulseForwardEuler(robot, s, s_next.q, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q-s_next.q)));
@@ -54,7 +54,8 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFixedBase) {
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
   Eigen::VectorXd dlmd = Eigen::VectorXd::Random(robot.dimv());
   Eigen::VectorXd dlmd_ref = dlmd;
-  stateequation::correctCostateDirectionForwardEuler(robot, kkt_matrix, kkt_residual, dlmd);
+  // stateequation::correctCostateDirectionForwardEuler(robot, kkt_matrix, kkt_residual, dlmd);
+  stateequation::correctCostateDirectionImpulseForwardEuler(robot, kkt_matrix, kkt_residual, dlmd);
   EXPECT_TRUE(dlmd.isApprox(dlmd_ref));
 }
 
@@ -83,9 +84,9 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFloatingBase) {
   EXPECT_TRUE(kkt_residual.ldv.isApprox((s_next.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dq));
   EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx.lpNorm<1>(), 
                    stateequation::l1NormStateEuqationResidual(kkt_residual));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), 
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx.squaredNorm(), 
                    stateequation::squaredNormStateEuqationResidual(kkt_residual));
   stateequation::condenseImpulseForwardEuler(robot, s, s_next.q, kkt_matrix, kkt_residual);
   Eigen::MatrixXd dsubtract_dq_prev_inv = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
@@ -105,7 +106,8 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFloatingBase) {
   EXPECT_TRUE(kkt_matrix.Fqq_prev_inv.isApprox(dsubtract_dq_prev_inv.topLeftCorner(robot.dim_passive(), robot.dim_passive())));
   Eigen::VectorXd dlmd = Eigen::VectorXd::Random(robot.dimv());
   Eigen::VectorXd dlmd_ref = dlmd;
-  stateequation::correctCostateDirectionForwardEuler(robot, kkt_matrix, kkt_residual, dlmd);
+  // stateequation::correctCostateDirectionForwardEuler(robot, kkt_matrix, kkt_residual, dlmd);
+  stateequation::correctCostateDirectionImpulseForwardEuler(robot, kkt_matrix, kkt_residual, dlmd);
   dlmd_ref.head(6) = - dsubtract_dq_prev_inv.topLeftCorner(6, 6).transpose() * dlmd_ref.head(6);
   EXPECT_TRUE(dlmd.isApprox(dlmd_ref));
 }

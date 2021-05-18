@@ -84,7 +84,7 @@ inline void ImpulseDynamics::condensing(
   data.MJtJinv_ImDC().noalias() = data.MJtJinv() * data.ImDC();
 
   data.Qdvfqv().topRows(dimv).noalias() 
-      = (- kkt_matrix.Qdvdv().diagonal()).asDiagonal() 
+      = (- kkt_matrix.Qdvdv.diagonal()).asDiagonal() 
           * data.MJtJinv_dImDCdqv().topRows(dimv);
   data.Qdvfqv().bottomRows(dimf).noalias() 
       = - kkt_matrix.Qff() * data.MJtJinv_dImDCdqv().bottomRows(dimf);
@@ -94,16 +94,16 @@ inline void ImpulseDynamics::condensing(
   data.ldv() = kkt_residual.ldv;
   data.lf()  = - kkt_residual.lf();
   data.ldv().noalias() 
-      -= kkt_matrix.Qdvdv().diagonal().asDiagonal() 
+      -= kkt_matrix.Qdvdv.diagonal().asDiagonal() 
           * data.MJtJinv_ImDC().head(dimv);
   data.lf().noalias() -= kkt_matrix.Qff() * data.MJtJinv_ImDC().tail(dimf);
 
-  kkt_matrix.Qxx().noalias() 
+  kkt_matrix.Qxx.noalias() 
       -= data.MJtJinv_dImDCdqv().transpose() * data.Qdvfqv();
-  kkt_matrix.Qxx().topRows(dimv).noalias() 
+  kkt_matrix.Qxx.topRows(dimv).noalias() 
       += kkt_matrix.Qqf() * data.MJtJinv_dImDCdqv().bottomRows(dimf);
 
-  kkt_residual.lx().noalias() 
+  kkt_residual.lx.noalias() 
       -= data.MJtJinv_dImDCdqv().transpose() * data.ldvf();
   kkt_residual.lq().noalias()
       += kkt_matrix.Qqf() * data.MJtJinv_ImDC().tail(dimf);
@@ -134,7 +134,7 @@ inline void ImpulseDynamics::computeCondensedDualDirection(
 inline void ImpulseDynamics::expansionPrimal(
     const Robot& robot, const ImpulseDynamicsData& data, 
     ImpulseSplitDirection& d) {
-  d.ddvf().noalias()  = - data.MJtJinv_dImDCdqv() * d.dx();
+  d.ddvf().noalias()  = - data.MJtJinv_dImDCdqv() * d.dx;
   d.ddvf().noalias() -= data.MJtJinv_ImDC();
   d.df().array() *= -1;
 }
@@ -147,7 +147,7 @@ inline void ImpulseDynamics::expansionDual(
     const ImpulseSplitKKTResidual& kkt_residual, 
     const Eigen::MatrixBase<VectorType>& dgmm, ImpulseSplitDirection& d) {
   assert(dgmm.size() == robot.dimv());
-  data.ldvf().noalias() += data.Qdvfqv() * d.dx();
+  data.ldvf().noalias() += data.Qdvfqv() * d.dx;
   data.ldv().noalias()  += dgmm;
   d.dbetamu().noalias() = - data.MJtJinv() * data.ldvf();
 }

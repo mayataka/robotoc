@@ -49,12 +49,28 @@ inline void condenseImpulseForwardEuler(
                                          kkt_matrix.Fqq_inv);
     kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
         = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-    kkt_residual.Fq_prev = kkt_residual.Fq().template head<6>();
+    kkt_residual.Fq_tmp.template head<6>() 
+        = kkt_residual.Fq().template head<6>();
     kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
         = - kkt_matrix.Fqq_inv 
             * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
     kkt_residual.Fq().template head<6>().noalias()
-        = - kkt_matrix.Fqq_inv * kkt_residual.Fq_prev;
+        = - kkt_matrix.Fqq_inv * kkt_residual.Fq_tmp.template head<6>();
+  }
+}
+
+
+template <typename VectorType>
+inline void correctCostateDirectionImpulseForwardEuler(
+    const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseSplitKKTResidual& kkt_residual,
+    const Eigen::MatrixBase<VectorType>& dlmd) {
+  if (robot.hasFloatingBase()) {
+    kkt_residual.Fq_tmp.template head<6>().noalias() 
+        = kkt_matrix.Fqq_prev_inv.template topLeftCorner<6, 6>().transpose() 
+            * dlmd.template head<6>();
+    const_cast<Eigen::MatrixBase<VectorType>&> (dlmd).template head<6>() 
+        = - kkt_residual.Fq_tmp.template head<6>();
   }
 }
 
@@ -74,13 +90,15 @@ inline void computeImpulseForwardEulerResidual(
 
 inline double l1NormStateEuqationResidual(
     const ImpulseSplitKKTResidual& kkt_residual) {
-  return kkt_residual.Fx().lpNorm<1>();
+  assert(kkt_residual.isDimensionConsistent());
+  return kkt_residual.Fx.lpNorm<1>();
 }
 
 
 inline double squaredNormStateEuqationResidual(
     const ImpulseSplitKKTResidual& kkt_residual) {
-  return kkt_residual.Fx().squaredNorm();
+  assert(kkt_residual.isDimensionConsistent());
+  return kkt_residual.Fx.squaredNorm();
 }
 
 } // namespace stateequation

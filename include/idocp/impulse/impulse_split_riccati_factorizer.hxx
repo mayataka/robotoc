@@ -38,7 +38,7 @@ inline void ImpulseSplitRiccatiFactorizer::forwardRiccatiRecursion(
     const ImpulseSplitKKTMatrix& kkt_matrix, 
     const ImpulseSplitKKTResidual& kkt_residual, 
     const ImpulseSplitDirection& d, SplitDirection& d_next) const {
-  d_next.dx() = kkt_residual.Fx();
+  d_next.dx = kkt_residual.Fx;
   if (has_floating_base_) {
     d_next.dq().template head<6>().noalias() 
         += kkt_matrix.Fqq().template topLeftCorner<6, 6>() 

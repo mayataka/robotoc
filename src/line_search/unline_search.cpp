@@ -82,45 +82,45 @@ void UnLineSearch::computeCostAndViolation(UnOCP& ocp,
 }
 
 
-void UnLineSearch::computeCostAndViolation(UnParNMPC& parnmpc, 
-                                           std::vector<Robot>& robots, 
-                                           const double t, 
-                                           const Eigen::VectorXd& q, 
-                                           const Eigen::VectorXd& v, 
-                                           const UnSolution& s, 
-                                           const double primal_step_size) {
-  assert(robots.size() == nthreads_);
-  assert(q.size() == robots[0].dimq());
-  assert(v.size() == robots[0].dimv());
-  clearCosts();
-  clearViolations();
-  #pragma omp parallel for num_threads(nthreads_)
-  for (int i=0; i<N_; ++i) {
-    if (i == 0) {
-      costs_.coeffRef(0) = parnmpc[0].stageCost(robots[omp_get_thread_num()], 
-                                                t+dt_, dt_, s[0], 
-                                                primal_step_size);
-      violations_.coeffRef(0) = parnmpc[0].constraintViolation(
-          robots[omp_get_thread_num()], t+dt_, dt_, q, v, s[0]);
-    }
-    else if (i < N_-1) {
-      costs_.coeffRef(i) = parnmpc[i].stageCost(robots[omp_get_thread_num()], 
-                                                t+(i+1)*dt_, dt_, s[i], 
-                                                primal_step_size);
-      violations_.coeffRef(i) = parnmpc[i].constraintViolation(
-          robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, 
-          s[i-1].q, s[i-1].v, s[i]);
-    }
-    else {
-      costs_.coeffRef(i) = parnmpc.terminal.stageCost(
-          robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, s[i], 
-          primal_step_size);
-      violations_.coeffRef(i) = parnmpc.terminal.constraintViolation(
-          robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, s[i-1].q, 
-          s[i-1].v, s[i]);
-    }
-  }
-}
+// void UnLineSearch::computeCostAndViolation(UnParNMPC& parnmpc, 
+//                                            std::vector<Robot>& robots, 
+//                                            const double t, 
+//                                            const Eigen::VectorXd& q, 
+//                                            const Eigen::VectorXd& v, 
+//                                            const UnSolution& s, 
+//                                            const double primal_step_size) {
+//   assert(robots.size() == nthreads_);
+//   assert(q.size() == robots[0].dimq());
+//   assert(v.size() == robots[0].dimv());
+//   clearCosts();
+//   clearViolations();
+//   #pragma omp parallel for num_threads(nthreads_)
+//   for (int i=0; i<N_; ++i) {
+//     if (i == 0) {
+//       costs_.coeffRef(0) = parnmpc[0].stageCost(robots[omp_get_thread_num()], 
+//                                                 t+dt_, dt_, s[0], 
+//                                                 primal_step_size);
+//       violations_.coeffRef(0) = parnmpc[0].constraintViolation(
+//           robots[omp_get_thread_num()], t+dt_, dt_, q, v, s[0]);
+//     }
+//     else if (i < N_-1) {
+//       costs_.coeffRef(i) = parnmpc[i].stageCost(robots[omp_get_thread_num()], 
+//                                                 t+(i+1)*dt_, dt_, s[i], 
+//                                                 primal_step_size);
+//       violations_.coeffRef(i) = parnmpc[i].constraintViolation(
+//           robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, 
+//           s[i-1].q, s[i-1].v, s[i]);
+//     }
+//     else {
+//       costs_.coeffRef(i) = parnmpc.terminal.stageCost(
+//           robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, s[i], 
+//           primal_step_size);
+//       violations_.coeffRef(i) = parnmpc.terminal.constraintViolation(
+//           robots[omp_get_thread_num()], t+(i+1)*dt_, dt_, s[i-1].q, 
+//           s[i-1].v, s[i]);
+//     }
+//   }
+// }
 
 
 void UnLineSearch::computeTrySolution(const UnSolution& s, const UnDirection& d, 

@@ -70,7 +70,7 @@ KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_seq
   for (int i=0; i<num_impulse; ++i) {
     kkt_matrix.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
     Eigen::MatrixXd tmp = Eigen::MatrixXd::Random(dimx, dimx);
-    kkt_matrix.impulse[i].Qxx() = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
+    kkt_matrix.impulse[i].Qxx = tmp * tmp.transpose() + Eigen::MatrixXd::Identity(dimx, dimx);
     if (robot.hasFloatingBase()) {
       kkt_matrix.impulse[i].Fqq().setIdentity();
       kkt_matrix.impulse[i].Fqq().topLeftCorner(6, 6).setRandom();
@@ -123,8 +123,8 @@ KKTResidual CreateKKTResidual(const Robot& robot, const ContactSequence& contact
   const int num_impulse = contact_sequence.numImpulseEvents();
   for (int i=0; i<num_impulse; ++i) {
     kkt_residual.impulse[i].setImpulseStatus(contact_sequence.impulseStatus(i));
-    kkt_residual.impulse[i].lx().setRandom();
-    kkt_residual.impulse[i].Fx().setRandom();
+    kkt_residual.impulse[i].lx.setRandom();
+    kkt_residual.impulse[i].Fx.setRandom();
   }
   for (int i=0; i<num_impulse; ++i) {
     kkt_residual.aux[i].lx().setRandom();

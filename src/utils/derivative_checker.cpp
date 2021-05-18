@@ -449,9 +449,9 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
     cost->computeImpulseCostDerivatives(robot_, data, t, s1, kkt_residual);
     Qdvdv_ref.col(i) = (kkt_residual.ldv - kkt_residual0.ldv) / finite_diff_;
   }
-  if (!kkt_matrix.Qdvdv().isApprox(Qdvdv_ref, test_tol_)) {
-    std::cout << "Qaa is not correct! Qdvdv - Qdvdv_ref = " 
-              << (kkt_matrix.Qdvdv() - Qdvdv_ref).transpose() << std::endl;
+  if (!kkt_matrix.Qdvdv.isApprox(Qdvdv_ref, test_tol_)) {
+    std::cout << "Qdvdv is not correct! Qdvdv - Qdvdv_ref = " 
+              << (kkt_matrix.Qdvdv - Qdvdv_ref).transpose() << std::endl;
     return false;
   }
   Eigen::MatrixXd Qff_ref(dimf, dimf);

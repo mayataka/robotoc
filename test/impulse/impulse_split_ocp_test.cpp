@@ -131,8 +131,8 @@ void ImpulseSplitOCPTest::testComputeKKTResidual(Robot& robot,
   ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref);
-  const double kkt_error_ref = kkt_residual_ref.Fx().squaredNorm()
-                                + kkt_residual_ref.lx().squaredNorm()
+  const double kkt_error_ref = kkt_residual_ref.Fx.squaredNorm()
+                                + kkt_residual_ref.lx.squaredNorm()
                                 + kkt_residual_ref.ldv.squaredNorm()
                                 + kkt_residual_ref.lf().squaredNorm()
                                 + id.squaredNormImpulseDynamicsResidual(kkt_residual_ref)

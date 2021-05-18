@@ -392,7 +392,7 @@ void ConfigurationSpaceCost::computeImpulseCostHessian(
     kkt_matrix.Qqq().diagonal().noalias() += qi_weight_;
   }
   kkt_matrix.Qvv().diagonal().noalias() += vi_weight_;
-  kkt_matrix.Qdvdv().diagonal().noalias() += dvi_weight_;
+  kkt_matrix.Qdvdv.diagonal().noalias() += dvi_weight_;
 }
 
 } // namespace idocp

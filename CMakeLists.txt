@@ -106,11 +106,11 @@ add_library(
   src/unocp/split_unriccati_factorizer.cpp
   src/unocp/unriccati_recursion.cpp
   src/unocp/unocp_solver.cpp
-  src/unocp/split_unparnmpc.cpp
-  src/unocp/terminal_unparnmpc.cpp
-  src/unocp/split_unbackward_correction.cpp
-  src/unocp/unbackward_correction.cpp
-  src/unocp/unparnmpc_solver.cpp
+  # src/unocp/split_unparnmpc.cpp
+  # src/unocp/terminal_unparnmpc.cpp
+  # src/unocp/split_unbackward_correction.cpp
+  # src/unocp/unbackward_correction.cpp
+  # src/unocp/unparnmpc_solver.cpp
   src/line_search/line_search_filter.cpp
   src/line_search/line_search.cpp
   src/line_search/unline_search.cpp

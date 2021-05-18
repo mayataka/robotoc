@@ -8,37 +8,37 @@
 namespace idocp {
 
 inline ImpulseSplitSolution::ImpulseSplitSolution(const Robot& robot) 
-  : lmd(Eigen::VectorXd::Zero(robot.dimv())),
-    gmm(Eigen::VectorXd::Zero(robot.dimv())),
-    q(Eigen::VectorXd::Zero(robot.dimq())),
+  : q(Eigen::VectorXd::Zero(robot.dimq())),
     v(Eigen::VectorXd::Zero(robot.dimv())),
     dv(Eigen::VectorXd::Zero(robot.dimv())),
     f(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
+    lmd(Eigen::VectorXd::Zero(robot.dimv())),
+    gmm(Eigen::VectorXd::Zero(robot.dimv())),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
     mu(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
-    has_floating_base_(robot.hasFloatingBase()),
     is_impulse_active_(robot.maxPointContacts(), false),
-    dimf_(0) {
-  robot.normalizeConfiguration(q);
+    dimi_(0) {
+  if (robot.hasFloatingBase()) {
+    q.coeffRef(6) = 1.0;
+  }
 }
 
 
 inline ImpulseSplitSolution::ImpulseSplitSolution() 
-  : lmd(),
-    gmm(),
-    q(),
+  : q(),
     v(),
     dv(),
     f(),
+    lmd(),
+    gmm(),
     beta(),
     mu(),
     f_stack_(),
     mu_stack_(),
-    has_floating_base_(false),
     is_impulse_active_(),
-    dimf_(0) {
+    dimi_(0) {
 }
 
 
@@ -50,7 +50,7 @@ inline void ImpulseSplitSolution::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
   assert(impulse_status.maxPointContacts() == is_impulse_active_.size());
   is_impulse_active_ = impulse_status.isImpulseActive();
-  dimf_ = impulse_status.dimf();
+  dimi_ = impulse_status.dimf();
 }
 
 
@@ -58,18 +58,18 @@ inline void ImpulseSplitSolution::setImpulseStatus(
     const ImpulseSplitSolution& other) {
   assert(other.isImpulseActive().size() == is_impulse_active_.size());
   is_impulse_active_ = other.isImpulseActive();
-  dimf_ = other.dimf();
+  dimi_ = other.dimi();
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitSolution::f_stack() {
-  return f_stack_.head(dimf_);
+  return f_stack_.head(dimi_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ImpulseSplitSolution::f_stack() const {
-  return f_stack_.head(dimf_);
+  return f_stack_.head(dimi_);
 }
 
 
@@ -100,13 +100,13 @@ inline void ImpulseSplitSolution::set_f_vector() {
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitSolution::mu_stack() {
-  return mu_stack_.head(dimf_);
+  return mu_stack_.head(dimi_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ImpulseSplitSolution::mu_stack() const {
-  return mu_stack_.head(dimf_);
+  return mu_stack_.head(dimi_);
 }
 
 
@@ -136,8 +136,8 @@ inline void ImpulseSplitSolution::set_mu_vector() {
 }
 
 
-inline int ImpulseSplitSolution::dimf() const {
-  return dimf_;
+inline int ImpulseSplitSolution::dimi() const {
+  return dimi_;
 }
 
 
@@ -155,64 +155,41 @@ inline std::vector<bool> ImpulseSplitSolution::isImpulseActive() const {
 }
 
 
-inline void ImpulseSplitSolution::copy(const ImpulseSplitSolution& other) {
-  setImpulseStatus(other);
-  lmd        = other.lmd;
-  gmm        = other.gmm;
-  q          = other.q;
-  v          = other.v;
-  dv         = other.dv;
-  beta       = other.beta;
-  f_stack()  = other.f_stack();
-  mu_stack() = other.mu_stack();
+inline void ImpulseSplitSolution::integrate(const Robot& robot, 
+                                            const double step_size, 
+                                            const ImpulseSplitDirection& d) {
+  assert(f_stack().size() == d.df().size());
+  assert(mu_stack().size() == d.dmu().size());
+  robot.integrateConfiguration(d.dq(), step_size, q);
+  v.noalias() += step_size * d.dv();
+  dv.noalias() += step_size * d.ddv();
+  f_stack().noalias() += step_size * d.df();
   set_f_vector();
+  lmd.noalias() += step_size * d.dlmd();
+  gmm.noalias() += step_size * d.dgmm();
+  beta.noalias() += step_size * d.dbeta();
+  mu_stack().noalias() += step_size * d.dmu();
   set_mu_vector();
 }
 
 
-inline void ImpulseSplitSolution::copyPartial(const SplitSolution& s) {
-  lmd        = s.lmd;
-  gmm        = s.gmm;
-  q          = s.q;
-  v          = s.v;
-  dv         = s.a;
-  beta       = s.beta;
-  const int fsize = f.size();
-  for (int i=0; i<fsize; ++i) {
-    f[i] = s.f[i];
-  }
-  for (int i=0; i<fsize; ++i) {
-    mu[i] = s.mu[i];
-  }
-}
-
-
-inline void ImpulseSplitSolution::integrate(const Robot& robot, 
-                                            const double step_size, 
-                                            const ImpulseSplitDirection& d) {
-  lmd.noalias() += step_size * d.dlmd();
-  gmm.noalias() += step_size * d.dgmm();
-  robot.integrateConfiguration(d.dq(), step_size, q);
-  v.noalias() += step_size * d.dv();
-  dv.noalias() += step_size * d.ddv();
-  beta.noalias() += step_size * d.dbeta();
-  assert(f_stack().size() == d.df().size());
-  f_stack().noalias() += step_size * d.df();
+inline void ImpulseSplitSolution::copy(const ImpulseSplitSolution& other) {
+  setImpulseStatus(other);
+  q          = other.q;
+  v          = other.v;
+  dv         = other.dv;
+  f_stack()  = other.f_stack();
   set_f_vector();
-  assert(mu_stack().size() == d.dmu().size());
-  mu_stack().noalias() += step_size * d.dmu();
+  lmd        = other.lmd;
+  gmm        = other.gmm;
+  beta       = other.beta;
+  mu_stack() = other.mu_stack();
   set_mu_vector();
 }
 
 
 inline bool ImpulseSplitSolution::isApprox(
     const ImpulseSplitSolution& other) const {
-  if (!lmd.isApprox(other.lmd)) {
-    return false;
-  }
-  if (!gmm.isApprox(other.gmm)) {
-    return false;
-  }
   if (!q.isApprox(other.q)) {
     return false;
   }
@@ -222,10 +199,16 @@ inline bool ImpulseSplitSolution::isApprox(
   if (!dv.isApprox(other.dv)) {
     return false;
   }
-  if (!beta.isApprox(other.beta)) {
+  if (!f_stack().isApprox(other.f_stack())) {
     return false;
   }
-  if (!f_stack().isApprox(other.f_stack())) {
+  if (!lmd.isApprox(other.lmd)) {
+    return false;
+  }
+  if (!gmm.isApprox(other.gmm)) {
+    return false;
+  }
+  if (!beta.isApprox(other.beta)) {
     return false;
   }
   if (!mu_stack().isApprox(other.mu_stack())) {
@@ -254,12 +237,12 @@ inline bool ImpulseSplitSolution::isApprox(
 
 
 inline void ImpulseSplitSolution::setRandom(const Robot& robot) {
-  lmd.setRandom();
-  gmm.setRandom(); 
   q.setRandom(); 
   robot.normalizeConfiguration(q);
   v.setRandom();
   dv.setRandom(); 
+  lmd.setRandom();
+  gmm.setRandom(); 
   beta.setRandom(); 
 }
 

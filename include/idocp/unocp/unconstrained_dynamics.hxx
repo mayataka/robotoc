@@ -98,11 +98,11 @@ inline void UnconstrainedDynamics::computeCondensedDirection(
     const double dt, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, SplitDirection& d) {
   assert(dt > 0);
-  d.du() = ID_;
-  d.du().noalias() += dID_dq_ * d.dq();
-  d.du().noalias() += dID_dv_ * d.dv();
-  d.du().noalias() += dID_da_ * d.da();
-  d.dbeta().noalias() = (kkt_residual.lu()  + kkt_matrix.Quu() * d.du()) / dt;
+  d.du = ID_;
+  d.du.noalias() += dID_dq_ * d.dq();
+  d.du.noalias() += dID_dv_ * d.dv();
+  d.du.noalias() += dID_da_ * d.da();
+  d.dbeta().noalias() = (kkt_residual.lu()  + kkt_matrix.Quu() * d.du) / dt;
 }
 
 

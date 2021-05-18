@@ -797,7 +797,7 @@ void SplitSolutionTest::TestIntegrate(const Robot& robot,
   robot.integrateConfiguration(d.dq(), step_size, s_ref.q);
   s_ref.v.noalias() += step_size * d.dv();
   s_ref.a.noalias() += step_size * d.da();
-  s_ref.u.noalias() += step_size * d.du();
+  s_ref.u.noalias() += step_size * d.du;
   s_ref.beta.noalias() += step_size * d.dbeta();
   if (robot.hasFloatingBase()) {
     s_ref.nu_passive.noalias() += step_size * d.dnu_passive;

@@ -120,14 +120,14 @@ void ImpulseDynamicsTest::testCondensing(Robot& robot,
   kkt_residual.setImpulseStatus(impulse_status);
   ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setImpulseStatus(impulse_status);
-  kkt_residual.lx().setRandom();
+  kkt_residual.lx.setRandom();
   kkt_residual.ldv.setRandom();
   kkt_residual.lf().setRandom();
-  kkt_residual.Fx().setRandom();
-  kkt_matrix.Qxx().setRandom();
-  kkt_matrix.Qxx().template triangularView<Eigen::StrictlyLower>()
-      = kkt_matrix.Qxx().transpose().template triangularView<Eigen::StrictlyLower>();
-  kkt_matrix.Qdvdv().diagonal().setRandom();
+  kkt_residual.Fx.setRandom();
+  kkt_matrix.Qxx.setRandom();
+  kkt_matrix.Qxx.template triangularView<Eigen::StrictlyLower>()
+      = kkt_matrix.Qxx.transpose().template triangularView<Eigen::StrictlyLower>();
+  kkt_matrix.Qdvdv.diagonal().setRandom();
   const Eigen::MatrixXd Qff_seed = Eigen::MatrixXd::Random(dimf, dimf);
   kkt_matrix.Qff() = Qff_seed * Qff_seed.transpose();
   kkt_matrix.Qqf().setRandom();
@@ -156,22 +156,22 @@ void ImpulseDynamicsTest::testCondensing(Robot& robot,
   data_ref.MJtJinv_dImDCdqv() = data_ref.MJtJinv() * data_ref.dImDCdqv();
   data_ref.MJtJinv_ImDC() = data_ref.MJtJinv() * data_ref.ImDC();
   Eigen::MatrixXd Qdvdvff = Eigen::MatrixXd::Zero(dimv+dimf, dimv+dimf);
-  Qdvdvff.topLeftCorner(dimv, dimv) = kkt_matrix_ref.Qdvdv();
+  Qdvdvff.topLeftCorner(dimv, dimv) = kkt_matrix_ref.Qdvdv;
   Qdvdvff.bottomRightCorner(dimf, dimf) = kkt_matrix_ref.Qff();
   data_ref.Qdvfqv() = - Qdvdvff * data_ref.MJtJinv_dImDCdqv();
   data_ref.Qdvfqv().bottomLeftCorner(dimf, dimv) -= kkt_matrix_ref.Qqf().transpose();
   data_ref.ldvf().head(dimv) = kkt_residual_ref.ldv;
   data_ref.ldvf().tail(dimf) = - kkt_residual_ref.lf();
   data_ref.ldvf() -= Qdvdvff * data_ref.MJtJinv() * data_ref.ImDC();
-  kkt_matrix_ref.Qxx() -= data_ref.MJtJinv_dImDCdqv().transpose() * data_ref.Qdvfqv();
-  kkt_matrix_ref.Qxx().topRows(dimv) += kkt_matrix_ref.Qqf() * data_ref.MJtJinv_dImDCdqv().bottomRows(dimf);
-  kkt_residual_ref.lx() -= data_ref.MJtJinv_dImDCdqv().transpose() * data_ref.ldvf();
-  kkt_residual_ref.lx().head(dimv) += kkt_matrix_ref.Qqf() * data_ref.MJtJinv_ImDC().tail(dimf);
+  kkt_matrix_ref.Qxx -= data_ref.MJtJinv_dImDCdqv().transpose() * data_ref.Qdvfqv();
+  kkt_matrix_ref.Qxx.topRows(dimv) += kkt_matrix_ref.Qqf() * data_ref.MJtJinv_dImDCdqv().bottomRows(dimf);
+  kkt_residual_ref.lx -= data_ref.MJtJinv_dImDCdqv().transpose() * data_ref.ldvf();
+  kkt_residual_ref.lx.head(dimv) += kkt_matrix_ref.Qqf() * data_ref.MJtJinv_ImDC().tail(dimf);
   Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*dimv, dimv+dimf);
   OOIO_mat.bottomLeftCorner(dimv, dimv).setIdentity();
   kkt_matrix_ref.Fvv().setIdentity();
-  kkt_matrix_ref.Fxx() -= OOIO_mat * data_ref.MJtJinv_dImDCdqv();
-  kkt_residual_ref.Fx() -= OOIO_mat * data_ref.MJtJinv_ImDC();
+  kkt_matrix_ref.Fxx -= OOIO_mat * data_ref.MJtJinv_dImDCdqv();
+  kkt_residual_ref.Fx -= OOIO_mat * data_ref.MJtJinv_ImDC();
   EXPECT_TRUE(data_ref.MJtJinv().isApprox(data.MJtJinv()));
   EXPECT_TRUE(data_ref.MJtJinv_dImDCdqv().isApprox(data.MJtJinv_dImDCdqv()));
   EXPECT_TRUE(data_ref.MJtJinv_ImDC().isApprox(data.MJtJinv_ImDC()));
@@ -179,7 +179,7 @@ void ImpulseDynamicsTest::testCondensing(Robot& robot,
   EXPECT_TRUE(data_ref.ldvf().isApprox(data.ldvf()));
   EXPECT_TRUE(kkt_residual_ref.isApprox(kkt_residual));
   EXPECT_TRUE(kkt_matrix_ref.isApprox(kkt_matrix));
-  EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
+  EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));
 }
 
 
@@ -201,7 +201,7 @@ void ImpulseDynamicsTest::testExpansionPrimal(Robot& robot,
   ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
   ImpulseSplitDirection d_ref = d;
   ImpulseDynamics::expansionPrimal(robot, data, d);
-  d_ref.ddvf() = - data.MJtJinv() * (data.dImDCdqv() * d.dx() + data.ImDC());
+  d_ref.ddvf() = - data.MJtJinv() * (data.dImDCdqv() * d.dx + data.ImDC());
   d_ref.df().array() *= -1;
   EXPECT_TRUE(d.isApprox(d_ref));
 }
@@ -232,7 +232,7 @@ void ImpulseDynamicsTest::testExpansionDual(Robot& robot,
   ImpulseDynamics::expansionDual(robot, data, kkt_matrix, kkt_residual, dgmm_next, d);
   Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*dimv, dimv+dimf);
   OOIO_mat.bottomLeftCorner(dimv, dimv).setIdentity();
-  d_ref.dbetamu() = - data_ref.MJtJinv() * (data_ref.Qdvfqv() * d.dx() 
+  d_ref.dbetamu() = - data_ref.MJtJinv() * (data_ref.Qdvfqv() * d.dx 
                                             + OOIO_mat.transpose() * dlmdgmm_next 
                                             + data_ref.ldvf());
   EXPECT_TRUE(d.isApprox(d_ref));
@@ -246,15 +246,15 @@ void ImpulseDynamicsTest::testIntegration(Robot& robot,
   const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
   ImpulseSplitKKTResidual kkt_residual(robot);
   kkt_residual.setImpulseStatus(impulse_status);
-  kkt_residual.lx().setRandom();
+  kkt_residual.lx.setRandom();
   kkt_residual.ldv.setRandom();
-  kkt_residual.Fx().setRandom();
+  kkt_residual.Fx.setRandom();
   ImpulseSplitKKTMatrix kkt_matrix(robot);
   kkt_matrix.setImpulseStatus(impulse_status);
-  kkt_matrix.Qxx().setRandom();
-  kkt_matrix.Qxx().template triangularView<Eigen::StrictlyLower>()
-      = kkt_matrix.Qxx().transpose().template triangularView<Eigen::StrictlyLower>();
-  kkt_matrix.Qdvdv().diagonal().setRandom();
+  kkt_matrix.Qxx.setRandom();
+  kkt_matrix.Qxx.template triangularView<Eigen::StrictlyLower>()
+      = kkt_matrix.Qxx.transpose().template triangularView<Eigen::StrictlyLower>();
+  kkt_matrix.Qdvdv.diagonal().setRandom();
   const Eigen::MatrixXd Qff_seed = Eigen::MatrixXd::Random(dimf, dimf);
   kkt_matrix.Qff() = Qff_seed * Qff_seed.transpose();
   kkt_matrix.Qqf().setRandom();

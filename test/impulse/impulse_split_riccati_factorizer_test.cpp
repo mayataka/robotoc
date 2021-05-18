@@ -57,8 +57,8 @@ ImpulseSplitKKTMatrix ImpulseSplitRiccatiFactorizerTest::createKKTMatrix(const R
 
 ImpulseSplitKKTResidual ImpulseSplitRiccatiFactorizerTest::createKKTResidual(const Robot& robot) {
   ImpulseSplitKKTResidual kkt_residual(robot);
-  kkt_residual.lx().setRandom();
-  kkt_residual.Fx().setRandom();
+  kkt_residual.lx.setRandom();
+  kkt_residual.Fx.setRandom();
   return kkt_residual;
 }
 
@@ -80,15 +80,15 @@ SplitRiccatiFactorization ImpulseSplitRiccatiFactorizerTest::createRiccatiFactor
 
 void ImpulseSplitRiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) {
   const int dimv = robot.dimv();
-  const SplitRiccatiFactorization riccati_next = createRiccatiFactorization(robot);
-  ImpulseSplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
-  ImpulseSplitKKTResidual kkt_residual = createKKTResidual(robot);
-  ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
-  ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
+  const auto riccati_next = createRiccatiFactorization(robot);
+  auto kkt_matrix = createKKTMatrix(robot);
+  auto kkt_residual = createKKTResidual(robot);
+  auto kkt_matrix_ref = kkt_matrix;
+  auto kkt_residual_ref = kkt_residual;
   ImpulseSplitRiccatiFactorizer factorizer(robot);
   ImpulseBackwardRiccatiRecursionFactorizer backward_recursion_ref(robot);
-  SplitRiccatiFactorization riccati = createRiccatiFactorization(robot);
-  SplitRiccatiFactorization riccati_ref = riccati;
+  auto riccati = createRiccatiFactorization(robot);
+  auto riccati_ref = riccati;
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next, kkt_matrix_ref);
   backward_recursion_ref.factorizeRiccatiFactorization(riccati_next, kkt_matrix_ref, kkt_residual_ref, riccati_ref);
@@ -101,33 +101,31 @@ void ImpulseSplitRiccatiFactorizerTest::testBackwardRecursion(const Robot& robot
   EXPECT_TRUE(riccati.Pqq.isApprox(riccati.Pqq.transpose()));
   EXPECT_TRUE(riccati.Pvv.isApprox(riccati.Pvv.transpose()));
   EXPECT_TRUE(riccati.Pvq.isApprox(riccati.Pqv.transpose()));
-  EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
+  EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));
 }
 
 
 void ImpulseSplitRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) {
   const int dimv = robot.dimv();
-  SplitRiccatiFactorization riccati_next = createRiccatiFactorization(robot);
-  SplitRiccatiFactorization riccati_next_ref = riccati_next;
-  ImpulseSplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
-  ImpulseSplitKKTResidual kkt_residual = createKKTResidual(robot);
+  auto riccati_next = createRiccatiFactorization(robot);
+  auto riccati_next_ref = riccati_next;
+  auto kkt_matrix = createKKTMatrix(robot);
+  auto kkt_residual = createKKTResidual(robot);
   ImpulseSplitRiccatiFactorizer factorizer(robot);
-  SplitRiccatiFactorization riccati = createRiccatiFactorization(robot);
-  SplitRiccatiFactorization riccati_ref = riccati;
+  auto riccati = createRiccatiFactorization(robot);
+  auto riccati_ref = riccati;
   factorizer.backwardRiccatiRecursion(riccati_next, kkt_matrix, kkt_residual, riccati);
-  ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
+  auto kkt_matrix_ref = kkt_matrix;
   kkt_matrix_ref.Qvq() = kkt_matrix_ref.Qqv().transpose();
-  ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
-  ImpulseSplitDirection d(robot);
-  d.setRandom();
-  SplitDirection d_next(robot);
-  d_next.setRandom();
-  SplitDirection d_next_ref = d_next;
+  auto kkt_residual_ref = kkt_residual;
+  auto d = ImpulseSplitDirection::Random(robot);
+  auto d_next = SplitDirection::Random(robot);
+  auto d_next_ref = d_next;
   factorizer.forwardRiccatiRecursion(kkt_matrix, kkt_residual, d, d_next);
   if (!robot.hasFloatingBase()) {
     kkt_matrix_ref.Fqq().setIdentity();
   }
-  d_next_ref.dx() = kkt_matrix_ref.Fxx() * d.dx() + kkt_residual_ref.Fx();
+  d_next_ref.dx = kkt_matrix_ref.Fxx * d.dx + kkt_residual_ref.Fx;
   EXPECT_TRUE(d_next.isApprox(d_next_ref));
   ImpulseSplitDirection d_ref = d;
   factorizer.computeCostateDirection(riccati, d);

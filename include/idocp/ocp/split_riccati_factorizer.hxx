@@ -105,9 +105,9 @@ inline void SplitRiccatiFactorizer::forwardRiccatiRecursion(
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     const double dt, SplitDirection& d, SplitDirectionType& d_next) const {
   assert(dt > 0);
-  d.du().noalias()  = lqr_policy_.K * d.dx();
-  d.du().noalias() += lqr_policy_.k;
-  d_next.dx() = kkt_residual.Fx();
+  d.du.noalias()  = lqr_policy_.K * d.dx;
+  d.du.noalias() += lqr_policy_.k;
+  d_next.dx = kkt_residual.Fx();
   if (has_floating_base_) {
     d_next.dq().template head<6>().noalias() 
         += kkt_matrix.Fqq().template topLeftCorner<6, 6>() 
@@ -124,7 +124,7 @@ inline void SplitRiccatiFactorizer::forwardRiccatiRecursion(
   }
   d_next.dv().noalias() += kkt_matrix.Fvq() * d.dq();
   d_next.dv().noalias() += kkt_matrix.Fvv() * d.dv();
-  d_next.dv().noalias() += kkt_matrix.Fvu() * d.du();
+  d_next.dv().noalias() += kkt_matrix.Fvu() * d.du;
 }
 
 
@@ -143,7 +143,7 @@ inline void SplitRiccatiFactorizer::
 computeLagrangeMultiplierDirection(
     const SplitConstrainedRiccatiFactorization& c_riccati, 
     SplitDirection& d) {
-  d.dxi().noalias()  = c_riccati.M() * d.dx();
+  d.dxi().noalias()  = c_riccati.M() * d.dx;
   d.dxi().noalias() += c_riccati.m();
 }
 

@@ -156,14 +156,16 @@ inline void Robot::dSubtractdConfigurationInverse(
   assert(dsubtract_dq.cols() >= 6);
   assert(dsubtract_dq_inv.rows() >= 6);
   assert(dsubtract_dq_inv.cols() >= 6);
-  const_cast<Eigen::MatrixBase<MatrixType2>&>(dsubtract_dq_inv).template topLeftCorner<3, 3>().noalias()
-      = dsubtract_dq.template topLeftCorner<3, 3>().inverse();
-  const_cast<Eigen::MatrixBase<MatrixType2>&>(dsubtract_dq_inv).template block<3, 3>(3, 3).noalias()
-      = dsubtract_dq.template block<3, 3>(3, 3).inverse();
-  mat_3d_.noalias() = dsubtract_dq.template block<3, 3>(0, 3) 
-                        * dsubtract_dq_inv.template block<3, 3>(3, 3);
-  const_cast<Eigen::MatrixBase<MatrixType2>&>(dsubtract_dq_inv).template block<3, 3>(0, 3).noalias()
-      = - dsubtract_dq_inv.template topLeftCorner<3, 3>() * mat_3d_;
+  if (hasFloatingBase()) {
+    const_cast<Eigen::MatrixBase<MatrixType2>&>(dsubtract_dq_inv).template topLeftCorner<3, 3>().noalias()
+        = dsubtract_dq.template topLeftCorner<3, 3>().inverse();
+    const_cast<Eigen::MatrixBase<MatrixType2>&>(dsubtract_dq_inv).template block<3, 3>(3, 3).noalias()
+        = dsubtract_dq.template block<3, 3>(3, 3).inverse();
+    mat_3d_.noalias() = dsubtract_dq.template block<3, 3>(0, 3) 
+                          * dsubtract_dq_inv.template block<3, 3>(3, 3);
+    const_cast<Eigen::MatrixBase<MatrixType2>&>(dsubtract_dq_inv).template block<3, 3>(0, 3).noalias()
+        = - dsubtract_dq_inv.template topLeftCorner<3, 3>() * mat_3d_;
+  }
 }
 
 

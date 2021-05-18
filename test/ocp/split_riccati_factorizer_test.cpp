@@ -208,9 +208,9 @@ void SplitRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) const 
   if (!robot.hasFloatingBase()) {
     kkt_matrix_ref.Fqq().setIdentity();
   }
-  d_ref.du() = lqr_policy_ref.K * d_ref.dx() + lqr_policy_ref.k;
-  d_next_ref.dx() = kkt_matrix_ref.Fxx() * d.dx() + kkt_residual_ref.Fx();
-  d_next_ref.dv() += kkt_matrix_ref.Fvu() * d_ref.du();
+  d_ref.du = lqr_policy_ref.K * d_ref.dx + lqr_policy_ref.k;
+  d_next_ref.dx = kkt_matrix_ref.Fxx() * d.dx + kkt_residual_ref.Fx();
+  d_next_ref.dv() += kkt_matrix_ref.Fvu() * d_ref.du;
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_TRUE(d_next.isApprox(d_next_ref));
   factorizer.computeCostateDirection(riccati, d);
@@ -230,7 +230,7 @@ void SplitRiccatiFactorizerTest::testForwardRecursion(const Robot& robot) const 
   d.dxi().setRandom();
   d_ref = d;
   factorizer.computeLagrangeMultiplierDirection(c_riccati, d);
-  d_ref.dxi() = c_riccati.M() * d.dx() + c_riccati.m();
+  d_ref.dxi() = c_riccati.M() * d.dx + c_riccati.m();
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 

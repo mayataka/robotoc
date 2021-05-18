@@ -140,7 +140,7 @@ void JointTorquesUpperLimitTest::testComputeSlackAndDualDirection(Robot& robot) 
   ConstraintComponentData data_ref = data;
   const SplitDirection d = SplitDirection::Random(robot);
   limit.computeSlackAndDualDirection(robot, data, s, d);
-  data_ref.dslack = - d.du() - data_ref.residual;
+  data_ref.dslack = - d.du - data_ref.residual;
   pdipm::ComputeDualDirection(data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));
 }

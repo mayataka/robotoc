@@ -153,9 +153,9 @@ inline void ContactDynamics::condenseContactDynamics(
 
 inline void ContactDynamics::computeCondensedPrimalDirection(
     const Robot& robot, SplitDirection& d) const {
-  d.daf().noalias() = - data_.MJtJinv_dIDCdqv() * d.dx();
+  d.daf().noalias() = - data_.MJtJinv_dIDCdqv() * d.dx;
   d.daf().noalias() 
-      += data_.MJtJinv().middleCols(robot.dim_passive(), dimu_) * d.du();
+      += data_.MJtJinv().middleCols(robot.dim_passive(), dimu_) * d.du;
   d.daf().noalias() -= data_.MJtJinv_IDC();
   d.df().array() *= -1;
 }
@@ -170,14 +170,14 @@ inline void ContactDynamics::computeCondensedDualDirection(
   assert(dgmm.size() == robot.dimv());
   if (has_floating_base_) {
     d.dnu_passive = kkt_residual.lu_passive;
-    d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topRight() * d.du();
-    d.dnu_passive.noalias() += kkt_matrix.Qxu_passive().transpose() * d.dx();
+    d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topRight() * d.du;
+    d.dnu_passive.noalias() += kkt_matrix.Qxu_passive().transpose() * d.dx;
     d.dnu_passive.noalias() 
         += dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() * dgmm;
     d.dnu_passive.array() *= - (1/dt);
   }
-  data_.laf().noalias() += data_.Qafqv() * d.dx();
-  data_.laf().noalias() += data_.Qafu() * d.du();
+  data_.laf().noalias() += data_.Qafqv() * d.dx;
+  data_.laf().noalias() += data_.Qafu() * d.du;
   data_.la().noalias() += dt * dgmm;
   d.dbetamu().noalias() = - data_.MJtJinv() * data_.laf() * (1/dt);
 }

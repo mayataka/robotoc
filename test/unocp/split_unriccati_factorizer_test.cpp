@@ -120,14 +120,14 @@ TEST_F(SplitUnRiccatiFactorizerTest, forwardRiccatiRecursion) {
   SplitDirection d_ref = d;
   SplitDirection d_next_ref = d_next;
   factorizer.forwardRiccatiRecursion(unkkt_residual, d, dt, d_next);
-  d_ref.da() = lqr_policy_ref.K * d_ref.dx() + lqr_policy_ref.k;
+  d_ref.da() = lqr_policy_ref.K * d_ref.dx + lqr_policy_ref.k;
   Eigen::MatrixXd A(Eigen::MatrixXd::Zero(2*dimv, 2*dimv));
   A.topLeftCorner(dimv, dimv).setIdentity();
   A.topRightCorner(dimv, dimv).diagonal().fill(dt);
   A.bottomRightCorner(dimv, dimv).setIdentity();
   Eigen::MatrixXd B(Eigen::MatrixXd::Zero(2*dimv, dimv));
   B.bottomRows(dimv).diagonal().fill(dt);
-  d_next_ref.dx() = A * d_ref.dx() + B * d_ref.da() + unkkt_residual_ref.Fx();
+  d_next_ref.dx = A * d_ref.dx + B * d_ref.da() + unkkt_residual_ref.Fx();
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_TRUE(d_next.isApprox(d_next_ref));
   factorizer.computeCostateDirection(riccati, d);
@@ -136,7 +136,7 @@ TEST_F(SplitUnRiccatiFactorizerTest, forwardRiccatiRecursion) {
   P.topRightCorner(dimv, dimv) = riccati.Pqv;
   P.bottomLeftCorner(dimv, dimv) = riccati.Pqv.transpose();
   P.bottomRightCorner(dimv, dimv) = riccati.Pvv;
-  d_ref.dlmdgmm() = P * d_ref.dx();
+  d_ref.dlmdgmm = P * d_ref.dx;
   d_ref.dlmd() -= riccati.sq;
   d_ref.dgmm() -= riccati.sv;
   EXPECT_TRUE(d.isApprox(d_ref));

@@ -133,10 +133,10 @@ private:
                                const Eigen::VectorXd& v, const UnSolution& s,
                                const double primal_step_size_for_barrier=0);
 
-  void computeCostAndViolation(UnParNMPC& parnmpc, std::vector<Robot>& robots,
-                               const double t, const Eigen::VectorXd& q, 
-                               const Eigen::VectorXd& v, const UnSolution& s,
-                               const double primal_step_size_for_barrier=0);
+  // void computeCostAndViolation(UnParNMPC& parnmpc, std::vector<Robot>& robots,
+  //                              const double t, const Eigen::VectorXd& q, 
+  //                              const Eigen::VectorXd& v, const UnSolution& s,
+  //                              const double primal_step_size_for_barrier=0);
 
   void computeTrySolution(const UnSolution& s, const UnDirection& d, 
                           const double step_size);
@@ -148,7 +148,7 @@ private:
     s_try.q = s.q + step_size * d.dq();
     s_try.v = s.v + step_size * d.dv();
     s_try.a = s.a + step_size * d.da();
-    s_try.u = s.u + step_size * d.du();
+    s_try.u = s.u + step_size * d.du;
   }
 
   void clearCosts() {

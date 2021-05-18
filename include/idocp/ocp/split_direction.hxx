@@ -8,38 +8,34 @@
 namespace idocp {
 
 inline SplitDirection::SplitDirection(const Robot& robot) 
-  : dnu_passive(Vector6d::Zero()),
-    split_direction(Eigen::VectorXd::Zero(4*robot.dimv()+robot.dimu())),
-    dxi_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
+  : dx(Eigen::VectorXd::Zero(2*robot.dimv())),
+    du(Eigen::VectorXd::Zero(robot.dimu())),
+    dlmdgmm(Eigen::VectorXd::Zero(2*robot.dimv())),
+    dnu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
     daf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dbetamu_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
+    dxi_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimu_(robot.dimu()), 
-    dimx_(2*robot.dimv()), 
+    dim_passive_(robot.dim_passive()), 
     dimf_(0), 
-    dimi_(0),
-    du_begin_(2*robot.dimv()), 
-    dq_begin_(2*robot.dimv()+robot.dimu()), 
-    dv_begin_(3*robot.dimv()+robot.dimu()),
-    has_floating_base_(robot.hasFloatingBase()) {
+    dimi_(0) {
 }
 
 
 inline SplitDirection::SplitDirection() 
-  : dnu_passive(Vector6d::Zero()),
-    split_direction(),
-    dxi_full_(),
+  : dx(),
+    du(),
+    dlmdgmm(),
+    dnu_passive(),
     daf_full_(),
     dbetamu_full_(),
+    dxi_full_(),
     dimv_(0), 
     dimu_(0), 
-    dimx_(0), 
+    dim_passive_(0), 
     dimf_(0), 
-    dimi_(0),
-    du_begin_(0), 
-    dq_begin_(0), 
-    dv_begin_(0),
-    has_floating_base_(false) {
+    dimi_(0) {
 }
 
 
@@ -73,96 +69,29 @@ inline void SplitDirection::setImpulseStatusByDimension(const int dimi) {
 }
 
 
-inline void SplitDirection::setImpulseStatus() {
-  dimi_ = 0;
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dlmdgmm() {
-  return split_direction.head(dimx_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitDirection::dlmdgmm() const {
-  return split_direction.head(dimx_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dlmd() {
-  return split_direction.head(dimv_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitDirection::dlmd() const {
-  return split_direction.head(dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dgmm() {
-  return split_direction.segment(dimv_, dimv_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitDirection::dgmm() const {
-  return split_direction.segment(dimv_, dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::du() {
-  return split_direction.segment(du_begin_, dimu_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitDirection::du() const {
-  return split_direction.segment(du_begin_, dimu_);
-}
-
-
 inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dq() {
-  return split_direction.segment(dq_begin_, dimv_);
+  assert(isDimensionConsistent());
+  return dx.head(dimv_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitDirection::dq() const {
-  return split_direction.segment(dq_begin_, dimv_);
+  assert(isDimensionConsistent());
+  return dx.head(dimv_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dv() {
-  return split_direction.segment(dv_begin_, dimv_);
+  assert(isDimensionConsistent());
+  return dx.tail(dimv_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitDirection::dv() const {
-  return split_direction.segment(dv_begin_, dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dx() {
-  return split_direction.segment(dq_begin_, dimx_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitDirection::dx() const {
-  return split_direction.segment(dq_begin_, dimx_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dxi() {
-  return dxi_full_.head(dimi_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitDirection::dxi() const {
-  return dxi_full_.head(dimi_);
+  assert(isDimensionConsistent());
+  return dx.tail(dimv_);
 }
 
 
@@ -199,6 +128,32 @@ SplitDirection::df() const {
 }
 
 
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dlmd() {
+  assert(isDimensionConsistent());
+  return dlmdgmm.head(dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitDirection::dlmd() const {
+  assert(isDimensionConsistent());
+  return dlmdgmm.head(dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dgmm() {
+  assert(isDimensionConsistent());
+  return dlmdgmm.tail(dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitDirection::dgmm() const {
+  assert(isDimensionConsistent());
+  return dlmdgmm.tail(dimv_);
+}
+
+
 inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dbetamu() {
   return dbetamu_full_.head(dimv_+dimf_);
 }
@@ -232,12 +187,25 @@ SplitDirection::dmu() const {
 }
 
 
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitDirection::dxi() {
+  return dxi_full_.head(dimi_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitDirection::dxi() const {
+  return dxi_full_.head(dimi_);
+}
+
+
 inline void SplitDirection::setZero() {
+  dx.setZero();
+  du.setZero();
+  daf().setZero();
+  dlmdgmm.setZero();
+  dbetamu().setZero();
   dnu_passive.setZero();
-  split_direction.setZero();
-  dxi_full_.setZero();
-  daf_full_.setZero();
-  dbetamu_full_.setZero();
+  dxi().setZero();
 }
 
 
@@ -251,38 +219,54 @@ inline int SplitDirection::dimi() const {
 }
 
 
+inline bool SplitDirection::isDimensionConsistent() const {
+  if (dx.size() != 2*dimv_) return false;
+  if (du.size() != dimu_) return false;
+  if (dlmdgmm.size() != 2*dimv_) return false;
+  if (dnu_passive.size() != dim_passive_) return false;
+  return true;
+}
+
+
 inline bool SplitDirection::isApprox(const SplitDirection& other) const {
+  assert(isDimensionConsistent());
+  assert(other.isDimensionConsistent());
   assert(dimf()==other.dimf());
   assert(dimi()==other.dimi());
-  if (!split_direction.isApprox(other.split_direction)) {
+  if (!dx.isApprox(other.dx)) {
     return false;
   }
-  if (!dxi().isApprox(other.dxi())) {
+  if (!du.isApprox(other.du)) {
     return false;
   }
   if (!daf().isApprox(other.daf())) {
     return false;
   }
+  if (!dlmdgmm.isApprox(other.dlmdgmm)) {
+    return false;
+  }
   if (!dbetamu().isApprox(other.dbetamu())) {
     return false;
   }
-  if (has_floating_base_) {
-    if (!dnu_passive.isApprox(other.dnu_passive)) {
-      return false;
-    }
+  if (!dxi().isApprox(other.dxi())) {
+    return false;
+  }
+  if (!dnu_passive.isApprox(other.dnu_passive)) {
+    return false;
   }
   return true;
 }
 
 
 inline void SplitDirection::setRandom() {
-  split_direction.setRandom();
-  dxi().setRandom();
+  assert(isDimensionConsistent());
+  dx.setRandom();
+  du.setRandom();
   daf().setRandom();
+  dlmdgmm.setRandom();
   dbetamu().setRandom();
-  if (has_floating_base_) {
-    dnu_passive.setRandom();
-  }
+  dnu_passive.setRandom();
+  dxi().setRandom();
 }
 
 

@@ -23,7 +23,7 @@ macro(add_benchmark BENCHMARK)
 endmacro()
 
 add_benchmark(unocp_benchmark)
-add_benchmark(unparnmpc_benchmark)
+# add_benchmark(unparnmpc_benchmark)
 add_benchmark(ocp_benchmark)
 
 macro(add_example EXAMPLE)

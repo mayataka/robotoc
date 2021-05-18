@@ -75,7 +75,7 @@ void JointTorquesLowerLimit::condenseSlackAndDual(
 void JointTorquesLowerLimit::computeSlackAndDualDirection(
     Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
     const SplitDirection& d) const {
-  data.dslack = d.du() - data.residual;
+  data.dslack = d.du - data.residual;
   computeDualDirection(data);
 }
 

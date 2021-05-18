@@ -92,7 +92,7 @@ public:
   /// @param[in] ocp Optimal control problem.
   /// @param[in] kkt_matrix KKT matrix. 
   /// @param[in] kkt_residual KKT residual. 
-  /// @param[in, out] d Direction. d[0].dx() must be computed using 
+  /// @param[in, out] d Direction. d[0].dx must be computed using 
   /// computeInitialStateDirection.
   ///
   void forwardRiccatiRecursion(const OCP& ocp, const KKTMatrix& kkt_matrix, 

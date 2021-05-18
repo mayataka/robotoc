@@ -54,7 +54,7 @@ inline void SplitUnBackwardCorrection::coarseUpdate(
   s_new.lmd = s.lmd - d.dlmd();
   s_new.gmm = s.gmm - d.dgmm();
   // In the unconstrained backward correction, we regard d.du as d.da.
-  s_new.a   = s.a - d.du(); 
+  s_new.a   = s.a - d.du; 
   s_new.q   = s.q - d.dq();
   s_new.v   = s.v - d.dv();
 }
@@ -82,7 +82,7 @@ inline void SplitUnBackwardCorrection::backwardCorrectionParallel(
   d.split_direction.tail(dimKKT_-dimx_).noalias()
       = KKT_mat_inv_.block(dimx_, dimKKT_-dimx_, dimKKT_-dimx_, dimx_) * x_res_;
   // In the unconstrained backward correction, we regard d.du as d.da.
-  s_new.a.noalias() -= d.du();
+  s_new.a.noalias() -= d.du;
   s_new.q.noalias() -= d.dq();
   s_new.v.noalias() -= d.dv();
 }
@@ -106,7 +106,7 @@ inline void SplitUnBackwardCorrection::forwardCorrectionParallel(
   s_new.lmd.noalias() -= d.dlmd();
   s_new.gmm.noalias() -= d.dgmm();
   // In the unconstrained backward correction, we regard d.du as d.da.
-  s_new.a.noalias()   -= d.du();
+  s_new.a.noalias()   -= d.du;
 }
 
 

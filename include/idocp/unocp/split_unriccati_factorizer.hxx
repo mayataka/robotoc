@@ -50,8 +50,8 @@ inline void SplitUnRiccatiFactorizer::forwardRiccatiRecursion(
     const SplitUnKKTResidual& unkkt_residual, SplitDirection& d, 
     const double dt, SplitDirection& d_next) const {
   assert(dt > 0);
-  d.da().noalias() = lqr_policy_.K * d.dx() + lqr_policy_.k;
-  d_next.dx() = unkkt_residual.Fx() + d.dx();
+  d.da().noalias() = lqr_policy_.K * d.dx + lqr_policy_.k;
+  d_next.dx = unkkt_residual.Fx() + d.dx;
   d_next.dq().noalias() += dt * d.dv();
   d_next.dv().noalias() += dt * d.da();
 }

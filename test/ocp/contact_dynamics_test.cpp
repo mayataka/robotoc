@@ -280,8 +280,8 @@ void ContactDynamicsTest::testComputeCondensedPrimalDirection(Robot& robot, cons
   Eigen::MatrixXd IO_mat = Eigen::MatrixXd::Zero(dimv+dimf, dimv);
   IO_mat.topRows(dimv).setIdentity();
   Eigen::VectorXd du_full = Eigen::VectorXd::Zero(dimv);
-  du_full.tail(robot.dimu()) = d_ref.du();
-  d_ref.daf() = - data.MJtJinv() * (data.dIDCdqv() * d.dx() - IO_mat * du_full + data.IDC());
+  du_full.tail(robot.dimu()) = d_ref.du;
+  d_ref.daf() = - data.MJtJinv() * (data.dIDCdqv() * d.dx - IO_mat * du_full + data.IDC());
   d_ref.df().array() *= -1;
   EXPECT_TRUE(d.isApprox(d_ref));
 }
@@ -351,15 +351,15 @@ void ContactDynamicsTest::testComputeCondensedDualDirection(Robot& robot, const 
   OOIO_mat.bottomLeftCorner(dimv, dimv) = dt * Eigen::MatrixXd::Identity(dimv, dimv);
   Eigen::VectorXd du_full = Eigen::VectorXd::Zero(dimv);
   if (robot.hasFloatingBase()) {
-    du_full.tail(dimu) = d_ref.du(); 
-    d_ref.dnu_passive = - (kkt_residual.lu_passive + (kkt_matrix.Qxu_full().leftCols(dim_passive)).transpose() * d_ref.dx() 
+    du_full.tail(dimu) = d_ref.du; 
+    d_ref.dnu_passive = - (kkt_residual.lu_passive + (kkt_matrix.Qxu_full().leftCols(dim_passive)).transpose() * d_ref.dx 
                             + kkt_matrix.Quu_full().topRows(dim_passive) * du_full
                             + (IO_mat.transpose() * data.MJtJinv() * OOIO_mat.transpose() * dlmdgmm).head(dim_passive)) / dt;
   }
   else {
-    du_full = d_ref.du(); 
+    du_full = d_ref.du; 
   }
-  d_ref.dbetamu() = - data.MJtJinv() * (data.Qafqv() * d_ref.dx() 
+  d_ref.dbetamu() = - data.MJtJinv() * (data.Qafqv() * d_ref.dx 
                                         + data.Qafu_full() * du_full 
                                         + OOIO_mat.transpose() * dlmdgmm
                                         + data.laf()) / dt;

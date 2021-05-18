@@ -701,9 +701,9 @@ private:
   pinocchio::Model model_, impulse_model_;
   pinocchio::Data data_, impulse_data_;
   FloatingBase floating_base_;
-  std::vector<PointContact> point_contacts_;
+  std::vector<PointContact, Eigen::aligned_allocator<PointContact>> point_contacts_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
-  int dimq_, dimv_, dimu_, max_dimf_, dimf_, num_active_contacts_;
+  int dimq_, dimv_, dimu_, max_dimf_;
   bool has_active_contacts_;
   std::vector<bool> is_each_contact_active_;
   Eigen::MatrixXd dimpulse_dv_; 

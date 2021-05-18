@@ -204,15 +204,15 @@ void RiccatiRecursionSolverTest::testRiccatiRecursion(const Robot& robot) const 
   EXPECT_FALSE(testhelper::HasNaN(kkt_residual));
   Direction d(robot, N, max_num_impulse);
   for (int i=0; i<=ocp_discretizer.N(); ++i) {
-    d[i].dx().setRandom();
-    d[i].du().setRandom();
+    d[i].dx.setRandom();
+    d[i].du.setRandom();
   }
   for (int i=0; i<max_num_impulse; ++i) {
-    d.impulse[i].dx().setRandom();
-    d.aux[i].dx().setRandom();
-    d.aux[i].du().setRandom();
-    d.lift[i].dx().setRandom();
-    d.lift[i].du().setRandom();
+    d.impulse[i].dx.setRandom();
+    d.aux[i].dx.setRandom();
+    d.aux[i].du.setRandom();
+    d.lift[i].dx.setRandom();
+    d.lift[i].du.setRandom();
   }
   auto d_ref = d;
   riccati_solver.forwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, d);
@@ -298,7 +298,7 @@ void RiccatiRecursionSolverTest::testComputeDirection(const Robot& robot) const 
   riccati_solver.computeDirection(ocp, robots, factorization, s, d);
   const double primal_step_size = riccati_solver.maxPrimalStepSize();
   const double dual_step_size = riccati_solver.maxDualStepSize();
-  const Eigen::VectorXd dx0 = d_ref[0].dx();
+  const Eigen::VectorXd dx0 = d_ref[0].dx;
   double primal_step_size_ref = 1;
   double dual_step_size_ref = 1;
   auto robot_ref = robot;

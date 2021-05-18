@@ -145,7 +145,6 @@ void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
   ImpulseSplitKKTResidual kkt_res(robot);
   kkt_mat.Qqq().setRandom();
   kkt_mat.Qvv().setRandom();
-  kkt_mat.Qdvdv().setRandom();
   kkt_res.lq().setRandom();
   kkt_res.lv().setRandom();
   kkt_res.ldv.setRandom();

@@ -149,7 +149,7 @@ private:
     robot.integrateConfiguration(s.q, d.dq(), step_size, s_try.q);
     s_try.v = s.v + step_size * d.dv();
     s_try.a = s.a + step_size * d.da();
-    s_try.u = s.u + step_size * d.du();
+    s_try.u = s.u + step_size * d.du;
     if (s.hasActiveContacts()) {
       s_try.f_stack() = s.f_stack() + step_size * d.df();
       s_try.set_f_vector();

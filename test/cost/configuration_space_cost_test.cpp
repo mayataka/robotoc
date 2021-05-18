@@ -195,7 +195,7 @@ void ConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
   ImpulseSplitKKTResidual kkt_res(robot);
   kkt_mat.Qqq().setRandom();
   kkt_mat.Qvv().setRandom();
-  kkt_mat.Qdvdv().setRandom();
+  kkt_mat.Qdvdv.setRandom();
   kkt_res.lq().setRandom();
   kkt_res.lv().setRandom();
   kkt_res.ldv.setRandom();
@@ -246,7 +246,7 @@ void ConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
     kkt_mat_ref.Qqq() += qi_weight.asDiagonal();
   }
   kkt_mat_ref.Qvv() += vi_weight.asDiagonal();
-  kkt_mat_ref.Qdvdv() += dvi_weight.asDiagonal();
+  kkt_mat_ref.Qdvdv += dvi_weight.asDiagonal();
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
   EXPECT_TRUE(derivative_checker.checkFirstOrderImpulseCostDerivatives(cost));

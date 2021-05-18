@@ -52,8 +52,8 @@ ImpulseSplitKKTMatrix ImpulseBackwardRiccatiRecursionFactorizerTest::createKKTMa
 
 ImpulseSplitKKTResidual ImpulseBackwardRiccatiRecursionFactorizerTest::createKKTResidual(const Robot& robot) const {
   ImpulseSplitKKTResidual kkt_residual(robot);
-  kkt_residual.lx().setRandom();
-  kkt_residual.Fx().setRandom();
+  kkt_residual.lx.setRandom();
+  kkt_residual.Fx.setRandom();
   return kkt_residual;
 }
 
@@ -75,11 +75,11 @@ SplitRiccatiFactorization ImpulseBackwardRiccatiRecursionFactorizerTest::createR
 
 void ImpulseBackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) const {
   const int dimv = robot.dimv();
-  const SplitRiccatiFactorization riccati_next = createRiccatiFactorization(robot);
-  ImpulseSplitKKTMatrix kkt_matrix = createKKTMatrix(robot);
-  ImpulseSplitKKTResidual kkt_residual = createKKTResidual(robot);
-  const ImpulseSplitKKTMatrix kkt_matrix_ref = kkt_matrix;
-  const ImpulseSplitKKTResidual kkt_residual_ref = kkt_residual;
+  const auto riccati_next = createRiccatiFactorization(robot);
+  auto kkt_matrix = createKKTMatrix(robot);
+  auto kkt_residual = createKKTResidual(robot);
+  const auto kkt_matrix_ref = kkt_matrix;
+  const auto kkt_residual_ref = kkt_residual;
   ImpulseBackwardRiccatiRecursionFactorizer factorizer(robot);
   if (!robot.hasFloatingBase()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
@@ -105,12 +105,12 @@ void ImpulseBackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) con
   P_next.topRightCorner(dimv, dimv) = riccati_next.Pqv;
   P_next.bottomLeftCorner(dimv, dimv) = riccati_next.Pvq;
   P_next.bottomRightCorner(dimv, dimv) = riccati_next.Pvv;
-  const Eigen::MatrixXd F_ref = kkt_matrix_ref.Qxx() + A.transpose() * P_next * A;
+  const Eigen::MatrixXd F_ref = kkt_matrix_ref.Qxx + A.transpose() * P_next * A;
   Eigen::VectorXd sx_next = Eigen::VectorXd::Zero(2*dimv);
   sx_next.head(dimv) = riccati_next.sq;
   sx_next.tail(dimv) = riccati_next.sv;
-  EXPECT_TRUE(F_ref.isApprox(kkt_matrix.Qxx()));
-  EXPECT_TRUE(kkt_matrix.Qxx().isApprox(kkt_matrix.Qxx().transpose()));
+  EXPECT_TRUE(F_ref.isApprox(kkt_matrix.Qxx));
+  EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));
   SplitRiccatiFactorization riccati(robot), riccati_ref(robot);
   if (!robot.hasFloatingBase()) {
     ASSERT_TRUE(kkt_matrix.Fqq().isZero());
@@ -122,7 +122,7 @@ void ImpulseBackwardRiccatiRecursionFactorizerTest::test(const Robot& robot) con
   }
   ASSERT_TRUE(kkt_matrix.Fqv().isZero());
   const Eigen::MatrixXd P_ref = F_ref;
-  const Eigen::VectorXd s_ref = A.transpose() * sx_next - A.transpose() * P_next * kkt_residual_ref.Fx() - kkt_residual_ref.lx();
+  const Eigen::VectorXd s_ref = A.transpose() * sx_next - A.transpose() * P_next * kkt_residual_ref.Fx - kkt_residual_ref.lx;
   EXPECT_TRUE(P_ref.topLeftCorner(dimv, dimv).isApprox(riccati.Pqq));
   EXPECT_TRUE(P_ref.topRightCorner(dimv, dimv).isApprox(riccati.Pqv));
   EXPECT_TRUE(P_ref.bottomLeftCorner(dimv, dimv).isApprox(riccati.Pvq));

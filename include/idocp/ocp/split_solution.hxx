@@ -220,7 +220,7 @@ inline void SplitSolution::integrate(const Robot& robot, const double step_size,
   robot.integrateConfiguration(d.dq(), step_size, q);
   v.noalias() += step_size * d.dv();
   a.noalias() += step_size * d.da();
-  u.noalias() += step_size * d.du();
+  u.noalias() += step_size * d.du;
   beta.noalias() += step_size * d.dbeta();
   if (has_floating_base_) {
     nu_passive.noalias() += step_size * d.dnu_passive;
