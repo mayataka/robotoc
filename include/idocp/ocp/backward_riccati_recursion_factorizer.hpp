@@ -18,6 +18,9 @@ namespace idocp {
 ///
 class BackwardRiccatiRecursionFactorizer {
 public:
+  using MatrixXdRowMajor 
+      = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
   ///
   /// @brief Constructs a factorizer.
   /// @param[in] robot Robot model. 

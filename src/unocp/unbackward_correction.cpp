@@ -52,7 +52,7 @@ UnBackwardCorrection::~UnBackwardCorrection() {
 }
 
 
-void UnBackwardCorrection::initAuxMat(std::vector<Robot>& robots, 
+void UnBackwardCorrection::initAuxMat(aligned_vector<Robot>& robots, 
                                       UnParNMPC& parnmpc, const double t, 
                                       const UnSolution& s) {
   parnmpc.terminal.computeTerminalCostHessian(robots[0], t+T_, s[N_-1], 
@@ -64,7 +64,7 @@ void UnBackwardCorrection::initAuxMat(std::vector<Robot>& robots,
 }
 
 
-void UnBackwardCorrection::coarseUpdate(std::vector<Robot>& robots, 
+void UnBackwardCorrection::coarseUpdate(aligned_vector<Robot>& robots, 
                                         UnParNMPC& parnmpc, const double t, 
                                         const Eigen::VectorXd& q, 
                                         const Eigen::VectorXd& v,
@@ -97,7 +97,7 @@ void UnBackwardCorrection::coarseUpdate(std::vector<Robot>& robots,
 }
 
 
-void UnBackwardCorrection::backwardCorrection(std::vector<Robot>& robots, 
+void UnBackwardCorrection::backwardCorrection(aligned_vector<Robot>& robots, 
                                               UnParNMPC& parnmpc, 
                                               const UnSolution& s, 
                                               UnDirection& d) {

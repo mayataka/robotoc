@@ -62,7 +62,7 @@ bool LineSearch::isFilterEmpty() const {
 
 
 void LineSearch::computeCostAndViolation(
-    OCP& ocp, std::vector<Robot>& robots, 
+    OCP& ocp, aligned_vector<Robot>& robots, 
     const ContactSequence& contact_sequence, const Eigen::VectorXd& q, 
     const Eigen::VectorXd& v, const Solution& s, 
     const double primal_step_size) {
@@ -198,7 +198,7 @@ void LineSearch::computeCostAndViolation(
 
 
 void LineSearch::computeSolution(const OCP& ocp, 
-                                 const std::vector<Robot>& robots, 
+                                 const aligned_vector<Robot>& robots, 
                                  const Solution& s, const Direction& d, 
                                  const double step_size) {
   assert(robots.size() == nthreads_);

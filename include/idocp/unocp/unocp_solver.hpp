@@ -7,6 +7,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/utils/aligned_vector.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/unocp/unriccati_recursion.hpp"
@@ -148,7 +149,7 @@ public:
   bool isCurrentSolutionFeasible();
 
 private:
-  std::vector<Robot> robots_;
+  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots_;
   UnOCP ocp_;
   UnRiccatiRecursion riccati_recursion_;
   UnLineSearch line_search_;

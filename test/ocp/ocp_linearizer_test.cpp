@@ -7,7 +7,7 @@
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/ocp/state_constraint_jacobian.hpp"
-#include "idocp/ocp/riccati_recursion_solver.hpp"
+#include "idocp/ocp/riccati_recursion.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 
 #include "test_helper.hpp"
@@ -76,7 +76,7 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
-  std::vector<Robot> robots(nthreads, robot);
+  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   auto ocp_ref = ocp;
@@ -194,7 +194,7 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
-  std::vector<Robot> robots(nthreads, robot);
+  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   auto ocp_ref = ocp;
@@ -321,7 +321,7 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto s = createSolution(robot, contact_sequence);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  std::vector<Robot> robots(nthreads, robot);
+  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   StateConstraintJacobian jac(robot, max_num_impulse);
@@ -329,7 +329,7 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   linearizer.linearizeOCP(ocp, robots, contact_sequence, 
                           q, v, s, kkt_matrix, kkt_residual, jac);
   Direction d(robot, N, max_num_impulse);
-  RiccatiRecursionSolver riccati_solver(robots[0], N, max_num_impulse, nthreads);
+  RiccatiRecursion riccati_solver(robots[0], N, max_num_impulse, nthreads);
   RiccatiFactorization riccati_factorization(robots[0], N, max_num_impulse);
   riccati_solver.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, 
                                           jac, riccati_factorization);

@@ -6,6 +6,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/utils/aligned_vector.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/unocp/unconstrained_container.hpp"
@@ -78,7 +79,7 @@ public:
   /// @param[in] max_primal_step_size Maximum primal step size. 
   ///
   template <typename UnOCPType>
-  double computeStepSize(UnOCPType& ocp, std::vector<Robot>& robots, 
+  double computeStepSize(UnOCPType& ocp, aligned_vector<Robot>& robots, 
                          const double t, const Eigen::VectorXd& q, 
                          const Eigen::VectorXd& v, const UnSolution& s, 
                          const UnDirection& d, 
@@ -128,12 +129,12 @@ private:
   UnSolution s_try_;
   UnKKTResidual kkt_residual_;
 
-  void computeCostAndViolation(UnOCP& ocp, std::vector<Robot>& robots,
+  void computeCostAndViolation(UnOCP& ocp, aligned_vector<Robot>& robots,
                                const double t, const Eigen::VectorXd& q, 
                                const Eigen::VectorXd& v, const UnSolution& s,
                                const double primal_step_size_for_barrier=0);
 
-  // void computeCostAndViolation(UnParNMPC& parnmpc, std::vector<Robot>& robots,
+  // void computeCostAndViolation(UnParNMPC& parnmpc, aligned_vector<Robot>& robots,
   //                              const double t, const Eigen::VectorXd& q, 
   //                              const Eigen::VectorXd& v, const UnSolution& s,
   //                              const double primal_step_size_for_barrier=0);

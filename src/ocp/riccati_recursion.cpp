@@ -1,4 +1,4 @@
-#include "idocp/ocp/riccati_recursion_solver.hpp"
+#include "idocp/ocp/riccati_recursion.hpp"
 
 #include <omp.h>
 #include <stdexcept>
@@ -6,9 +6,9 @@
 
 namespace idocp {
 
-RiccatiRecursionSolver::RiccatiRecursionSolver(const Robot& robot, const int N, 
-                                               const int max_num_impulse, 
-                                               const int nthreads)
+RiccatiRecursion::RiccatiRecursion(const Robot& robot, const int N, 
+                                   const int max_num_impulse, 
+                                   const int nthreads)
   : nthreads_(nthreads),
     N_all_(N+1),
     factorizer_(robot, N, max_num_impulse),
@@ -32,7 +32,7 @@ RiccatiRecursionSolver::RiccatiRecursionSolver(const Robot& robot, const int N,
 }
 
 
-RiccatiRecursionSolver::RiccatiRecursionSolver()
+RiccatiRecursion::RiccatiRecursion()
   : nthreads_(0),
     N_all_(0),
     factorizer_(),
@@ -41,11 +41,11 @@ RiccatiRecursionSolver::RiccatiRecursionSolver()
 }
 
 
-RiccatiRecursionSolver::~RiccatiRecursionSolver() {
+RiccatiRecursion::~RiccatiRecursion() {
 }
 
 
-void RiccatiRecursionSolver::backwardRiccatiRecursion(
+void RiccatiRecursion::backwardRiccatiRecursion(
     const OCP& ocp, KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, 
     const StateConstraintJacobian& jac, RiccatiFactorization& factorization) {
   const OCPDiscretizer& ocp_discretizer = ocp.discrete();
@@ -107,8 +107,8 @@ void RiccatiRecursionSolver::backwardRiccatiRecursion(
 }
 
 
-void RiccatiRecursionSolver::computeInitialStateDirection(
-    const std::vector<Robot>& robots, const Eigen::VectorXd& q, 
+void RiccatiRecursion::computeInitialStateDirection(
+    const aligned_vector<Robot>& robots, const Eigen::VectorXd& q, 
     const Eigen::VectorXd& v, const KKTMatrix& kkt_matrix, const Solution& s, 
     Direction& d) {
   assert(q.size() == robots[0].dimq());
@@ -126,7 +126,7 @@ void RiccatiRecursionSolver::computeInitialStateDirection(
 }
 
 
-void RiccatiRecursionSolver::forwardRiccatiRecursion(
+void RiccatiRecursion::forwardRiccatiRecursion(
     const OCP& ocp, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, Direction& d) const {
   const OCPDiscretizer& ocp_discretizer = ocp.discrete();
@@ -162,8 +162,8 @@ void RiccatiRecursionSolver::forwardRiccatiRecursion(
 }
 
 
-void RiccatiRecursionSolver::computeDirection(
-    OCP& ocp, std::vector<Robot>& robots, 
+void RiccatiRecursion::computeDirection(
+    OCP& ocp, aligned_vector<Robot>& robots, 
     const RiccatiFactorization& factorization, const Solution& s, 
     Direction& d) {
   assert(robots.size() == nthreads_);
@@ -241,17 +241,17 @@ void RiccatiRecursionSolver::computeDirection(
 }
 
 
-double RiccatiRecursionSolver::maxPrimalStepSize() const {
+double RiccatiRecursion::maxPrimalStepSize() const {
   return max_primal_step_sizes_.head(N_all_).minCoeff();
 }
 
 
-double RiccatiRecursionSolver::maxDualStepSize() const {
+double RiccatiRecursion::maxDualStepSize() const {
   return max_dual_step_sizes_.head(N_all_).minCoeff();
 }
 
 
-void RiccatiRecursionSolver::getStateFeedbackGain(const int time_stage, 
+void RiccatiRecursion::getStateFeedbackGain(const int time_stage, 
                                                   Eigen::MatrixXd& Kq, 
                                                   Eigen::MatrixXd& Kv) const {
   assert(time_stage >= 0);

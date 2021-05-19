@@ -54,7 +54,7 @@ bool UnLineSearch::isFilterEmpty() const {
 
 
 void UnLineSearch::computeCostAndViolation(UnOCP& ocp, 
-                                           std::vector<Robot>& robots, 
+                                           aligned_vector<Robot>& robots, 
                                            const double t, 
                                            const Eigen::VectorXd& q, 
                                            const Eigen::VectorXd& v, 
@@ -83,7 +83,7 @@ void UnLineSearch::computeCostAndViolation(UnOCP& ocp,
 
 
 // void UnLineSearch::computeCostAndViolation(UnParNMPC& parnmpc, 
-//                                            std::vector<Robot>& robots, 
+//                                            aligned_vector<Robot>& robots, 
 //                                            const double t, 
 //                                            const Eigen::VectorXd& q, 
 //                                            const Eigen::VectorXd& v, 

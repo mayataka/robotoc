@@ -27,7 +27,6 @@ add_library(
   ${PROJECT_NAME} 
   SHARED
   src/robot/robot.cpp
-  src/robot/floating_base.cpp
   src/robot/point_contact.cpp
   src/robot/contact_status.cpp
   src/robot/impulse_status.cpp
@@ -94,7 +93,7 @@ add_library(
   src/ocp/backward_riccati_recursion_factorizer.cpp
   src/ocp/lqr_policy.cpp
   src/ocp/split_riccati_factorizer.cpp
-  src/ocp/riccati_recursion_solver.cpp
+  src/ocp/riccati_recursion.cpp
   src/ocp/ocp_solver.cpp
   src/unocp/split_unkkt_residual.cpp
   src/unocp/split_unkkt_matrix.cpp
@@ -139,6 +138,17 @@ target_compile_options(
   PRIVATE
   ${OpenMP_CXX_FLAGS}
 )
+if (OPTIMIZE_FOR_NATIVE)
+  if(BUILD_VIEWER)
+    message(STATUS "WARNING: BUILD_VIEWER MUST BE OFF to avoid alignment error!. We turn it OFF!")
+    set(BUILD_VIEWER OFF)
+  endif()
+  target_compile_options(
+    ${PROJECT_NAME} 
+    PUBLIC
+    -march=native
+  )
+endif()
 
 ##################
 ## Build viewer ##

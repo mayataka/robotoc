@@ -5,7 +5,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
-#include "idocp/ocp/riccati_recursion_solver.hpp"
+#include "idocp/ocp/riccati_recursion.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 
 #include "test_helper.hpp"
@@ -19,7 +19,7 @@
 
 namespace idocp {
 
-class RiccatiRecursionSolverTest : public ::testing::Test {
+class RiccatiRecursionTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -51,44 +51,44 @@ protected:
 };
 
 
-ContactSequence RiccatiRecursionSolverTest::createContactSequence(const Robot& robot) const {
+ContactSequence RiccatiRecursionTest::createContactSequence(const Robot& robot) const {
   return testhelper::CreateContactSequence(robot, N, max_num_impulse, t, 3*dt);
 }
 
 
-Solution RiccatiRecursionSolverTest::createSolution(const Robot& robot) const {
+Solution RiccatiRecursionTest::createSolution(const Robot& robot) const {
   return testhelper::CreateSolution(robot, N, max_num_impulse);
 }
 
 
-Solution RiccatiRecursionSolverTest::createSolution(const Robot& robot, 
+Solution RiccatiRecursionTest::createSolution(const Robot& robot, 
                                                     const ContactSequence& contact_sequence) const {
   return testhelper::CreateSolution(robot, contact_sequence, T, N, max_num_impulse, t);
 }
 
 
-KKTMatrix RiccatiRecursionSolverTest::createKKTMatrix(const Robot& robot, 
+KKTMatrix RiccatiRecursionTest::createKKTMatrix(const Robot& robot, 
                                                       const ContactSequence& contact_sequence) const {
   return testhelper::CreateKKTMatrix(robot, contact_sequence, N, max_num_impulse);
 }
 
 
-KKTResidual RiccatiRecursionSolverTest::createKKTResidual(const Robot& robot, 
+KKTResidual RiccatiRecursionTest::createKKTResidual(const Robot& robot, 
                                                           const ContactSequence& contact_sequence) const {
   return testhelper::CreateKKTResidual(robot, contact_sequence, N, max_num_impulse);
 }
 
 
-void RiccatiRecursionSolverTest::testComputeInitialStateDirection(const Robot& robot) const {
+void RiccatiRecursionTest::testComputeInitialStateDirection(const Robot& robot) const {
   KKTMatrix kkt_matrix(robot, N, max_num_impulse);
   KKTResidual kkt_residual(robot, N, max_num_impulse);
   const auto s = createSolution(robot);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  std::vector<Robot> robots(nthreads, robot);
+  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   Direction d = Direction(robot, N, max_num_impulse);
   auto d_ref = d;
-  RiccatiRecursionSolver::computeInitialStateDirection(robots, q, v, kkt_matrix, s, d);
+  RiccatiRecursion::computeInitialStateDirection(robots, q, v, kkt_matrix, s, d);
   if (robot.hasFloatingBase()) {
     Eigen::VectorXd dq0(Eigen::VectorXd::Zero(robot.dimv()));
     robot.subtractConfiguration(q, s[0].q, dq0);
@@ -104,14 +104,14 @@ void RiccatiRecursionSolverTest::testComputeInitialStateDirection(const Robot& r
 }
 
 
-void RiccatiRecursionSolverTest::testRiccatiRecursion(const Robot& robot) const {
+void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   OCPLinearizer linearizer(N, max_num_impulse, nthreads);
   const auto contact_sequence = createContactSequence(robot);
   KKTMatrix kkt_matrix(robot, N, max_num_impulse);
   KKTResidual kkt_residual(robot, N, max_num_impulse);
-  std::vector<Robot> robots(nthreads, robot);
+  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   StateConstraintJacobian jac(robot, max_num_impulse);
@@ -125,7 +125,7 @@ void RiccatiRecursionSolverTest::testRiccatiRecursion(const Robot& robot) const 
   auto jac_ref = jac;
   RiccatiFactorization factorization(robot, N, max_num_impulse);
   auto factorization_ref = factorization;
-  RiccatiRecursionSolver riccati_solver(robot, N, max_num_impulse, nthreads);
+  RiccatiRecursion riccati_solver(robot, N, max_num_impulse, nthreads);
   RiccatiFactorizer factorizer(robot, N, max_num_impulse);
   const auto ocp_discretizer = ocp.discrete();
   riccati_solver.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, jac, factorization);
@@ -253,7 +253,7 @@ void RiccatiRecursionSolverTest::testRiccatiRecursion(const Robot& robot) const 
 }
 
 
-void RiccatiRecursionSolverTest::testComputeDirection(const Robot& robot) const {
+void RiccatiRecursionTest::testComputeDirection(const Robot& robot) const {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   const auto contact_sequence = createContactSequence(robot);
@@ -266,17 +266,17 @@ void RiccatiRecursionSolverTest::testComputeDirection(const Robot& robot) const 
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   OCPLinearizer linearizer(N, max_num_impulse, nthreads);
-  std::vector<Robot> robots(nthreads, robot);
+  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   linearizer.initConstraints(ocp, robots, contact_sequence, s);
   linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual, jac);
-  RiccatiRecursionSolver riccati_solver(robot, N, max_num_impulse, nthreads);
+  RiccatiRecursion riccati_solver(robot, N, max_num_impulse, nthreads);
   RiccatiFactorization factorization(robot, N, max_num_impulse);
   riccati_solver.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, jac, factorization);
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
   Direction d = Direction(robot, N, max_num_impulse);
   auto d_ref = d;
-  RiccatiRecursionSolver::computeInitialStateDirection(robots, q, v, kkt_matrix, s, d);
+  RiccatiRecursion::computeInitialStateDirection(robots, q, v, kkt_matrix, s, d);
   if (robot.hasFloatingBase()) {
     Eigen::VectorXd dq0(Eigen::VectorXd::Zero(robot.dimv()));
     robot.subtractConfiguration(q, s[0].q, dq0);
@@ -394,7 +394,7 @@ void RiccatiRecursionSolverTest::testComputeDirection(const Robot& robot) const 
 }
 
 
-TEST_F(RiccatiRecursionSolverTest, fixedBase) {
+TEST_F(RiccatiRecursionTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot();
   testComputeInitialStateDirection(robot);
   testRiccatiRecursion(robot);
@@ -406,7 +406,7 @@ TEST_F(RiccatiRecursionSolverTest, fixedBase) {
 }
 
 
-TEST_F(RiccatiRecursionSolverTest, floating_base) {
+TEST_F(RiccatiRecursionTest, floating_base) {
   auto robot = testhelper::CreateFloatingBaseRobot();
   testComputeInitialStateDirection(robot);
   testRiccatiRecursion(robot);

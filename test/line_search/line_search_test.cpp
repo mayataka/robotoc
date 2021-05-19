@@ -89,7 +89,7 @@ void LineSearchTest::test(const Robot& robot) const {
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
   auto kkt_residual_ref = kkt_residual;
-  std::vector<Robot> robots(nthreads, robot);
+  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   OCPLinearizer linearizer(N, max_num_impulse, nthreads);

@@ -7,6 +7,7 @@
 #include "Eigen/LU"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/utils/aligned_vector.hpp"
 #include "idocp/unocp/split_unkkt_matrix.hpp"
 #include "idocp/unocp/split_unkkt_residual.hpp"
 #include "idocp/unocp/split_unbackward_correction.hpp"
@@ -73,7 +74,7 @@ public:
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] s Solution. 
   ///
-  void initAuxMat(std::vector<Robot>& robots, UnParNMPC& parnmpc, 
+  void initAuxMat(std::vector<Robot, Eigen::aligned_allocator<Robot>>& robots, UnParNMPC& parnmpc, 
                   const double t, const UnSolution& s);
 
   ///
@@ -89,7 +90,7 @@ public:
   /// @param[in] s Solution. 
   /// @param[in, out] d Direction. 
   ///
-  void coarseUpdate(std::vector<Robot>& robots, UnParNMPC& parnmpc, 
+  void coarseUpdate(std::vector<Robot, Eigen::aligned_allocator<Robot>>& robots, UnParNMPC& parnmpc, 
                     const double t, const Eigen::VectorXd& q, 
                     const Eigen::VectorXd& v, UnKKTMatrix& unkkt_matrix, 
                     UnKKTResidual& unkkt_residual,
@@ -103,7 +104,7 @@ public:
   /// @param[in] s Solution. 
   /// @param[in, out] d Direction. 
   ///
-  void backwardCorrection(std::vector<Robot>& robots, UnParNMPC& parnmpc, 
+  void backwardCorrection(std::vector<Robot, Eigen::aligned_allocator<Robot>>& robots, UnParNMPC& parnmpc, 
                           const UnSolution& s, UnDirection& d);
 
   ///

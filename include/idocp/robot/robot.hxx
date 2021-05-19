@@ -27,7 +27,7 @@ inline void Robot::integrateConfiguration(
     const Eigen::MatrixBase<ConfigVectorType>& q) const {
   assert(v.size() == dimv_);
   assert(q.size() == dimq_);
-  if (floating_base_.hasFloatingBase()) {
+  if (has_floating_base_) {
     const Eigen::VectorXd q_tmp = q;
     pinocchio::integrate(model_, q_tmp, integration_length*v, 
                          const_cast<Eigen::MatrixBase<ConfigVectorType>&>(q));
@@ -49,7 +49,7 @@ inline void Robot::integrateConfiguration(
   assert(q.size() == dimq_);
   assert(v.size() == dimv_);
   assert(q_integrated.size() == dimq_);
-  if (floating_base_.hasFloatingBase()) {
+  if (has_floating_base_) {
     pinocchio::integrate(
         model_, q, integration_length*v, 
         const_cast<Eigen::MatrixBase<ConfigVectorType2>&>(q_integrated));
@@ -102,7 +102,7 @@ inline void Robot::subtractConfiguration(
   assert(q_plus.size() == dimq_);
   assert(q_minus.size() == dimq_);
   assert(difference.size() == dimv_);
-  if (floating_base_.hasFloatingBase()) {
+  if (has_floating_base_) {
     pinocchio::difference(
         model_, q_minus, q_plus, 
         const_cast<Eigen::MatrixBase<TangentVectorType>&>(difference));
@@ -599,7 +599,7 @@ inline void Robot::computeMJtJinv(
 inline Eigen::VectorXd Robot::generateFeasibleConfiguration() const {
   Eigen::VectorXd q_min = model_.lowerPositionLimit;
   Eigen::VectorXd q_max = model_.upperPositionLimit;
-  if (floating_base_.hasFloatingBase()) {
+  if (has_floating_base_) {
     q_min.head(7) = - Eigen::VectorXd::Ones(7);
     q_max.head(7) = Eigen::VectorXd::Ones(7);
   }
@@ -611,7 +611,7 @@ template <typename ConfigVectorType>
 inline void Robot::normalizeConfiguration(
     const Eigen::MatrixBase<ConfigVectorType>& q) const {
   assert(q.size() == dimq_);
-  if (floating_base_.hasFloatingBase()) {
+  if (has_floating_base_) {
     if (q.template segment<4>(3).squaredNorm() 
           <= std::numeric_limits<double>::epsilon()) {
       (const_cast<Eigen::MatrixBase<ConfigVectorType>&> (q)).coeffRef(3) = 1;
@@ -668,12 +668,12 @@ inline int Robot::max_dimf() const {
 
 
 inline int Robot::dim_passive() const {
-  return floating_base_.dim_passive();
+  return dim_passive_;
 }
 
 
 inline bool Robot::hasFloatingBase() const {
-  return floating_base_.hasFloatingBase();
+  return has_floating_base_;
 }
 
 

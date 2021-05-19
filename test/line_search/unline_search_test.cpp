@@ -68,7 +68,7 @@ TEST_F(UnLineSearchTest, UnOCP) {
   const auto d = createUnDirection(N+1);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  std::vector<Robot> robots(nthreads, robot);
+  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   auto ocp = UnOCP(robot, cost, constraints, N);
   for (int i=0; i<N; ++i) {
     ocp[i].initConstraints(robot, i, s[i]);
@@ -93,7 +93,7 @@ TEST_F(UnLineSearchTest, UnOCP) {
 //   const auto d = createUnDirection(N);
 //   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
 //   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-//   std::vector<Robot> robots(nthreads, robot);
+//   std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
 //   auto parnmpc = UnParNMPC(robot, cost, constraints, N);
 //   for (int i=0; i<N-1; ++i) {
 //     parnmpc[i].initConstraints(robot, i+1, s[i]);

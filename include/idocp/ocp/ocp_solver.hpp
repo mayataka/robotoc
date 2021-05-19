@@ -7,13 +7,14 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/utils/aligned_vector.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/ocp/state_constraint_jacobian.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
-#include "idocp/ocp/riccati_recursion_solver.hpp"
+#include "idocp/ocp/riccati_recursion.hpp"
 #include "idocp/line_search/line_search.hpp"
 
 namespace idocp {
@@ -198,10 +199,10 @@ public:
   void showInfo() const;
 
 private:
-  std::vector<Robot> robots_;
+  aligned_vector<Robot> robots_;
   ContactSequence contact_sequence_;
   OCPLinearizer ocp_linearizer_;
-  RiccatiRecursionSolver riccati_solver_;
+  RiccatiRecursion riccati_solver_;
   LineSearch line_search_;
   OCP ocp_;
   KKTMatrix kkt_matrix_;

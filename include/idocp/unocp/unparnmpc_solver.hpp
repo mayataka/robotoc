@@ -7,6 +7,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/utils/aligned_vector.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/unocp/unbackward_correction.hpp"
@@ -154,7 +155,7 @@ public:
   bool isCurrentSolutionFeasible();
 
 private:
-  std::vector<Robot> robots_;
+  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots_;
   UnParNMPC parnmpc_;
   UnBackwardCorrection backward_correction_;
   UnLineSearch line_search_;

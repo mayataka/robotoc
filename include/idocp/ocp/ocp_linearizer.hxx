@@ -111,7 +111,7 @@ struct ComputeKKTResidual {
 namespace idocp {
 
 template <typename Algorithm>
-inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
+inline void OCPLinearizer::runParallel(OCP& ocp, aligned_vector<Robot>& robots,
                                        const ContactSequence& contact_sequence,
                                        const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v, 

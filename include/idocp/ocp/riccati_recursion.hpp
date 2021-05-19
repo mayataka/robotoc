@@ -1,21 +1,22 @@
-#ifndef IDOCP_RICCATI_RECURSION_SOLVER_HPP_
-#define IDOCP_RICCATI_RECURSION_SOLVER_HPP_
+#ifndef IDOCP_riccati_recursion_HPP_
+#define IDOCP_riccati_recursion_HPP_
 
 #include <vector>
 
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/utils/aligned_vector.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/ocp/state_constraint_jacobian.hpp"
 
 namespace idocp {
 
 ///
-/// @class RiccatiRecursionSolver
+/// @class RiccatiRecursion
 /// @brief Riccati recursion solver for hybrid optimal control problems.
 ///
-class RiccatiRecursionSolver {
+class RiccatiRecursion {
 public:
   ///
   /// @brief Construct a Riccati recursion solver.
@@ -26,38 +27,38 @@ public:
   /// @param[in] nthreads Number of the threads used in solving the optimal 
   /// control problem. Must be positive. 
   ///
-  RiccatiRecursionSolver(const Robot& robot, const int N, 
-                         const int max_num_impulse, const int nthreads);
+  RiccatiRecursion(const Robot& robot, const int N, const int max_num_impulse, 
+                   const int nthreads);
 
   ///
   /// @brief Default constructor. 
   ///
-  RiccatiRecursionSolver();
+  RiccatiRecursion();
 
   ///
   /// @brief Destructor. 
   ///
-  ~RiccatiRecursionSolver();
+  ~RiccatiRecursion();
  
   ///
   /// @brief Default copy constructor. 
   ///
-  RiccatiRecursionSolver(const RiccatiRecursionSolver&) = default;
+  RiccatiRecursion(const RiccatiRecursion&) = default;
 
   ///
   /// @brief Default copy operator. 
   ///
-  RiccatiRecursionSolver& operator=(const RiccatiRecursionSolver&) = default;
+  RiccatiRecursion& operator=(const RiccatiRecursion&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  RiccatiRecursionSolver(RiccatiRecursionSolver&&) noexcept = default;
+  RiccatiRecursion(RiccatiRecursion&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  RiccatiRecursionSolver& operator=(RiccatiRecursionSolver&&) noexcept = default;
+  RiccatiRecursion& operator=(RiccatiRecursion&&) noexcept = default;
 
   ///
   /// @brief Performs the backward Riccati recursion. 
@@ -81,7 +82,7 @@ public:
   /// @param[in] s Solution. 
   /// @param[in, out] d Direction. 
   ///
-  static void computeInitialStateDirection(const std::vector<Robot>& robots, 
+  static void computeInitialStateDirection(const aligned_vector<Robot>& robots, 
                                            const Eigen::VectorXd& q, 
                                            const Eigen::VectorXd& v, 
                                            const KKTMatrix& kkt_matrix, 
@@ -102,15 +103,15 @@ public:
   ///
   /// @brief Compute the Newton direction in parallel from the Riccati 
   /// factorization factorized by 
-  /// RiccatiRecursionSolver::backwardRiccatiRecursion() and 
-  /// RiccatiRecursionSolver::forwardRiccatiRecursion().
+  /// RiccatiRecursion::backwardRiccatiRecursion() and 
+  /// RiccatiRecursion::forwardRiccatiRecursion().
   /// @param[in] ocp Optimal control problem.
   /// @param[in] robots std::vector of Robot.
   /// @param[in] factorization Riccati factorization. 
   /// @param[in] s Solution. 
   /// @param[in, out] d Direction. 
   ///
-  void computeDirection(OCP& ocp, std::vector<Robot>& robots, 
+  void computeDirection(OCP& ocp, aligned_vector<Robot>& robots, 
                         const RiccatiFactorization& factorization, 
                         const Solution& s, Direction& d);
 
@@ -145,4 +146,4 @@ private:
 
 } // namespace idocp
 
-#endif // IDOCP_RICCATI_RECURSION_SOLVER_HPP_ 
+#endif // IDOCP_riccati_recursion_HPP_ 

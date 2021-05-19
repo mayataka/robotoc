@@ -15,7 +15,7 @@ ImpulseFrictionCone::ImpulseFrictionCone(const Robot& robot, const double mu,
     max_point_contacts_(robot.maxPointContacts()),
     contact_frame_(robot.contactFrames()),
     mu_(mu),
-    cone_() {
+    cone_(Eigen::MatrixXd::Zero(5, 3)) {
   try {
     if (robot.maxPointContacts() == 0) {
       throw std::out_of_range(

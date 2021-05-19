@@ -6,6 +6,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/utils/aligned_vector.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
@@ -79,7 +80,7 @@ public:
   /// @param[in] max_primal_step_size Maximum primal step size. 
   ///
   template <typename OCPType>
-  double computeStepSize(OCPType& ocp, std::vector<Robot>& robots,
+  double computeStepSize(OCPType& ocp, aligned_vector<Robot>& robots,
                          const ContactSequence& contact_sequence, 
                          const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                          const Solution& s, const Direction& d,
@@ -132,13 +133,13 @@ private:
   Solution s_try_;
   KKTResidual kkt_residual_;
 
-  void computeCostAndViolation(OCP& ocp, std::vector<Robot>& robots,
+  void computeCostAndViolation(OCP& ocp, aligned_vector<Robot>& robots,
                                const ContactSequence& contact_sequence, 
                                const Eigen::VectorXd& q, 
                                const Eigen::VectorXd& v, const Solution& s,
                                const double primal_step_size_for_barrier=0);
 
-  void computeSolution(const OCP& ocp, const std::vector<Robot>& robots, 
+  void computeSolution(const OCP& ocp, const aligned_vector<Robot>& robots, 
                           const Solution& s, const Direction& d, 
                           const double step_size);
 

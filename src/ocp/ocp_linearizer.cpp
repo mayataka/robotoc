@@ -37,7 +37,7 @@ OCPLinearizer::~OCPLinearizer() {
 }
 
 
-void OCPLinearizer::initConstraints(OCP& ocp, std::vector<Robot>& robots, 
+void OCPLinearizer::initConstraints(OCP& ocp, aligned_vector<Robot>& robots, 
                                     const ContactSequence& contact_sequence, 
                                     const Solution& s) const {
   const int N = ocp.discrete().N();
@@ -71,7 +71,7 @@ void OCPLinearizer::initConstraints(OCP& ocp, std::vector<Robot>& robots,
 }
 
 
-void OCPLinearizer::linearizeOCP(OCP& ocp, std::vector<Robot>& robots, 
+void OCPLinearizer::linearizeOCP(OCP& ocp, aligned_vector<Robot>& robots, 
                                  const ContactSequence& contact_sequence, 
                                  const Eigen::VectorXd& q, 
                                  const Eigen::VectorXd& v, const Solution& s, 
@@ -83,7 +83,7 @@ void OCPLinearizer::linearizeOCP(OCP& ocp, std::vector<Robot>& robots,
 }
 
 
-void OCPLinearizer::computeKKTResidual(OCP& ocp, std::vector<Robot>& robots, 
+void OCPLinearizer::computeKKTResidual(OCP& ocp, aligned_vector<Robot>& robots, 
                                        const ContactSequence& contact_sequence, 
                                        const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v, 
@@ -138,7 +138,7 @@ double OCPLinearizer::KKTError(const OCP& ocp,
 
 
 void OCPLinearizer::integrateSolution(OCP& ocp, 
-                                      const std::vector<Robot>& robots, 
+                                      const aligned_vector<Robot>& robots, 
                                       const KKTMatrix& kkt_matrix, 
                                       KKTResidual& kkt_residual, 
                                       const double primal_step_size, 

@@ -137,10 +137,6 @@ inline void ContactDynamics::condenseContactDynamics(
     kkt_matrix.Qxu.topRows(dimv_).noalias()
         -= kkt_matrix.Qqf() * data_.MJtJinv().bottomLeftCorner(dimf, dimv_);
   }
-  // kkt_matrix.Qxu_full.noalias() 
-  //     -= data_.MJtJinv_dIDCdqv().transpose() * data_.Qafu_full();
-  // kkt_matrix.Qxu_full.topRows(dimv_).noalias()
-  //     -= kkt_matrix.Qqf() * data_.MJtJinv().bottomLeftCorner(dimf, dimv_);
 
   kkt_residual.lx.noalias() 
       -= data_.MJtJinv_dIDCdqv().transpose() * data_.laf();
@@ -157,8 +153,6 @@ inline void ContactDynamics::condenseContactDynamics(
     kkt_matrix.Quu.noalias() 
         += data_.MJtJinv().topRows(dimv_) * data_.Qafu_full();
   }
-  // kkt_matrix.Quu_full.noalias() 
-  //     += data_.MJtJinv().topRows(dimv_) * data_.Qafu_full();
 
   if (has_floating_base_) {
     kkt_residual.lu_passive.noalias() 

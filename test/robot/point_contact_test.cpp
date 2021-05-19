@@ -28,11 +28,13 @@ protected:
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     pinocchio::urdf::buildModel(fixed_base_urdf, fixed_base_robot);
-    pinocchio::urdf::buildModel(floating_base_urdf, floating_base_robot);
+    pinocchio::urdf::buildModel(floating_base_urdf, 
+                                pinocchio::JointModelFreeFlyer(), 
+                                floating_base_robot);
     fixed_base_data = pinocchio::Data(fixed_base_robot);
     floating_base_data = pinocchio::Data(floating_base_robot);
     fixed_base_contact_frames = {18};
-    floating_base_contact_frames = {14, 24, 34, 44};
+    floating_base_contact_frames = {12, 22, 32, 42};
     baumgarte_weight_on_velocity = 10 * std::abs(Eigen::VectorXd::Random(1)[0]);
     baumgarte_weight_on_position = 10 * std::abs(Eigen::VectorXd::Random(1)[0]);
   }
