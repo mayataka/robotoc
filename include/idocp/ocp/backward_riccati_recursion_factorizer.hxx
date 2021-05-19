@@ -74,8 +74,8 @@ inline void BackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
   AtPvq_.noalias() += kkt_matrix.Fvv().transpose() * riccati_next.Pqv.transpose();
   AtPvv_.noalias() += kkt_matrix.Fvv().transpose() * riccati_next.Pvv;
 
-  BtPq_.noalias() = kkt_matrix.Fvu().transpose() * riccati_next.Pqv.transpose();
-  BtPv_.noalias() = kkt_matrix.Fvu().transpose() * riccati_next.Pvv;
+  BtPq_.noalias() = kkt_matrix.Fvu.transpose() * riccati_next.Pqv.transpose();
+  BtPv_.noalias() = kkt_matrix.Fvu.transpose() * riccati_next.Pvv;
   // Factorize F
   if (has_floating_base_) {
     kkt_matrix.Qqq().template leftCols<6>().noalias() 
@@ -103,14 +103,14 @@ inline void BackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
   kkt_matrix.Qvv().noalias() += AtPvv_ * kkt_matrix.Fvv();
   kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   // Factorize H
-  kkt_matrix.Qqu().noalias() += AtPqv_ * kkt_matrix.Fvu();
-  kkt_matrix.Qvu().noalias() += AtPvv_ * kkt_matrix.Fvu();
+  kkt_matrix.Qqu().noalias() += AtPqv_ * kkt_matrix.Fvu;
+  kkt_matrix.Qvu().noalias() += AtPvv_ * kkt_matrix.Fvu;
   // Factorize G
-  kkt_matrix.Quu().noalias() += BtPv_ * kkt_matrix.Fvu();
+  kkt_matrix.Quu.noalias() += BtPv_ * kkt_matrix.Fvu;
   // Factorize vector term
-  kkt_residual.lu().noalias() += BtPq_ * kkt_residual.Fq();
-  kkt_residual.lu().noalias() += BtPv_ * kkt_residual.Fv();
-  kkt_residual.lu().noalias() -= kkt_matrix.Fvu().transpose() * riccati_next.sv;
+  kkt_residual.lu.noalias() += BtPq_ * kkt_residual.Fq();
+  kkt_residual.lu.noalias() += BtPv_ * kkt_residual.Fv();
+  kkt_residual.lu.noalias() -= kkt_matrix.Fvu.transpose() * riccati_next.sv;
 }
 
 
@@ -123,7 +123,7 @@ inline void BackwardRiccatiRecursionFactorizer::factorizeRiccatiFactorization(
   riccati.Pqq = kkt_matrix.Qqq();
   riccati.Pqv = kkt_matrix.Qqv();
   riccati.Pvv = kkt_matrix.Qvv();
-  GK_.noalias() = kkt_matrix.Quu() * lqr_policy.K; 
+  GK_.noalias() = kkt_matrix.Quu * lqr_policy.K; 
   riccati.Pqq.noalias() 
       -= lqr_policy.K.leftCols(dimv_).transpose() * GK_.leftCols(dimv_);
   riccati.Pqv.noalias() 

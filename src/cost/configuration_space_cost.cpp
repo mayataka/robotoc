@@ -305,7 +305,7 @@ void ConfigurationSpaceCost::computeStageCostDerivatives(
   kkt_residual.lv().array()
       += dt * v_weight_.array() * (s.v.array()-v_ref_.array());
   kkt_residual.la.array() += dt * a_weight_.array() * s.a.array();
-  kkt_residual.lu().array() 
+  kkt_residual.lu.array() 
       += dt * u_weight_.array() * (s.u.array()-u_ref_.array());
 }
 
@@ -360,8 +360,8 @@ void ConfigurationSpaceCost::computeStageCostHessian(
     kkt_matrix.Qqq().diagonal().noalias() += dt * q_weight_;
   }
   kkt_matrix.Qvv().diagonal().noalias() += dt * v_weight_;
-  kkt_matrix.Qaa().diagonal().noalias() += dt * a_weight_;
-  kkt_matrix.Quu().diagonal().noalias() += dt * u_weight_;
+  kkt_matrix.Qaa.diagonal().noalias() += dt * a_weight_;
+  kkt_matrix.Quu.diagonal().noalias() += dt * u_weight_;
 }
 
 

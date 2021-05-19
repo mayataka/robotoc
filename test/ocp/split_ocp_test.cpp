@@ -117,8 +117,8 @@ void SplitOCPTest::testLinearizeOCP(Robot& robot,
   }
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
-  EXPECT_TRUE(kkt_residual.lx().isApprox(kkt_residual_ref.lx()));
-  EXPECT_TRUE(kkt_residual.lu().isApprox(kkt_residual_ref.lu()));
+  EXPECT_TRUE(kkt_residual.lx.isApprox(kkt_residual_ref.lx));
+  EXPECT_TRUE(kkt_residual.lu.isApprox(kkt_residual_ref.lu));
   EXPECT_TRUE(kkt_residual.la.isApprox(kkt_residual_ref.la));
   EXPECT_TRUE(kkt_residual.P().isApprox(kkt_residual_ref.P()));
   SplitDirection d;
@@ -219,11 +219,11 @@ void SplitOCPTest::testComputeKKTResidual(Robot& robot,
                                     kkt_matrix_ref, kkt_residual_ref, jac_ref);
     EXPECT_TRUE(jac.isApprox(jac_ref));
   }
-  double kkt_error_ref = kkt_residual_ref.Fx().squaredNorm()
-                         + kkt_residual_ref.lx().squaredNorm()
+  double kkt_error_ref = kkt_residual_ref.Fx.squaredNorm()
+                         + kkt_residual_ref.lx.squaredNorm()
                          + kkt_residual_ref.la.squaredNorm()
                          + kkt_residual_ref.lf().squaredNorm()
-                         + kkt_residual_ref.lu().squaredNorm()
+                         + kkt_residual_ref.lu.squaredNorm()
                          + cd.squaredNormContactDynamicsResidual(dt)
                          + dt * dt * constraints->squaredNormPrimalAndDualResidual(constraints_data);
   if (robot.hasFloatingBase()) {

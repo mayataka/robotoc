@@ -6,6 +6,8 @@
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
 
 
 namespace idocp {
@@ -13,10 +15,14 @@ namespace testhelper {
 
 SplitKKTMatrix CreateSplitKKTMatrix(const Robot& robot, const double dt);
 
+ImpulseSplitKKTMatrix CreateImpulseSplitKKTMatrix(const Robot& robot);
+
 SplitKKTResidual CreateSplitKKTResidual(const Robot& robot);
 
 SplitKKTResidual CreateSplitKKTResidual(const Robot& robot, 
                                         const ImpulseStatus& impulse_status);
+
+ImpulseSplitKKTResidual CreateImpulseSplitKKTResidual(const Robot& robot);
 
 KKTMatrix CreateKKTMatrix(const Robot& robot, const ContactSequence& contact_sequence, 
                           const int N, const int max_num_impulse);

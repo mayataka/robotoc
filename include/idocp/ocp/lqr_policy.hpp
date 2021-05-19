@@ -8,22 +8,32 @@
 
 namespace idocp {
 
-struct LQRPolicy {
+class LQRPolicy {
+public:
   LQRPolicy(const Robot& robot)
     : K(Eigen::MatrixXd::Zero(robot.dimu(), 2*robot.dimv())),
-      k(Eigen::VectorXd::Zero(robot.dimu())) {
+      k(Eigen::VectorXd::Zero(robot.dimu())),
+      dimv_(robot.dimv()),
+      dimu_(robot.dimu()) {
   }
 
   LQRPolicy() 
     : K(),
-      k() {
+      k(),
+      dimv_(0),
+      dimu_(0) {
   }
 
   ~LQRPolicy() {
   }
 
+
   Eigen::MatrixXd K;
+
   Eigen::VectorXd k;
+
+private:
+  int dimv_, dimu_;
 
 };
 

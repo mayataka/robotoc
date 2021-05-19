@@ -251,13 +251,13 @@ inline double SplitOCP::squaredNormKKTResidual(
     const SplitKKTResidual& kkt_residual, const double dt) const {
   assert(dt > 0);
   double error = 0;
-  error += kkt_residual.lx().squaredNorm();
+  error += kkt_residual.lx.squaredNorm();
   error += kkt_residual.la.squaredNorm();
   error += kkt_residual.lf().squaredNorm();
   if (has_floating_base_) {
     error += kkt_residual.lu_passive.squaredNorm();
   }
-  error += kkt_residual.lu().squaredNorm();
+  error += kkt_residual.lu.squaredNorm();
   error += stateequation::squaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dt);
   error += dt * dt * constraints_->squaredNormPrimalAndDualResidual(constraints_data_);

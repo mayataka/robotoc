@@ -43,9 +43,9 @@ TEST_F(StateEquationTest, forwardEulerFixedbase) {
   EXPECT_TRUE(kkt_residual.la.isApprox((dt*s_next.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isZero());
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx.lpNorm<1>(), 
                    stateequation::l1NormStateEuqationResidual(kkt_residual));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), 
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx.squaredNorm(), 
                    stateequation::squaredNormStateEuqationResidual(kkt_residual));
   stateequation::condenseForwardEuler(robot, dt, s, s_next.q, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((s.q+dt*s.v-s_next.q)));
@@ -114,9 +114,9 @@ TEST_F(StateEquationTest, forwardEulerFloatingBase) {
   EXPECT_TRUE(kkt_residual.la.isApprox((dt*s_next.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dq));
   EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx.lpNorm<1>(), 
                    stateequation::l1NormStateEuqationResidual(kkt_residual));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), 
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx.squaredNorm(), 
                    stateequation::squaredNormStateEuqationResidual(kkt_residual));
   std::cout << "kkt_matrix.Fqq()" << std::endl;
   std::cout << kkt_matrix.Fqq() << std::endl;
@@ -207,9 +207,9 @@ TEST_F(StateEquationTest, backwardEulerFixedBase) {
   EXPECT_TRUE(kkt_residual.lv().isApprox((dt*s.lmd-s.gmm)));
   EXPECT_TRUE(kkt_residual.la.isApprox((dt*s.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isZero());
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx.lpNorm<1>(), 
                    stateequation::l1NormStateEuqationResidual(kkt_residual));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), 
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx.squaredNorm(), 
                    stateequation::squaredNormStateEuqationResidual(kkt_residual));
   stateequation::condenseBackwardEuler(robot, dt, q_prev, s, kkt_matrix, kkt_residual);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((q_prev-s.q+dt*s.v)));
@@ -260,9 +260,9 @@ TEST_F(StateEquationTest, backwardEulerFloatingBase) {
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dqminus));
   std::cout << "kkt_matrix.Fqq()" << std::endl;
   std::cout << kkt_matrix.Fqq() << std::endl;
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().lpNorm<1>(), 
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx.lpNorm<1>(), 
                    stateequation::l1NormStateEuqationResidual(kkt_residual));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx().squaredNorm(), 
+  EXPECT_DOUBLE_EQ(kkt_residual.Fx.squaredNorm(), 
                    stateequation::squaredNormStateEuqationResidual(kkt_residual));
   stateequation::condenseBackwardEuler(robot, dt, q_prev, s, kkt_matrix, kkt_residual);
   robot.dSubtractdConfigurationPlus(q_prev, s.q, dsubtract_dqplus);

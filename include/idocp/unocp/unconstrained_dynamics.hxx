@@ -61,7 +61,7 @@ inline void UnconstrainedDynamics::linearizeUnconstrainedDynamics(
   kkt_residual.lq().noalias() += dt * dID_dq_.transpose() * s.beta;
   kkt_residual.lv().noalias() += dt * dID_dv_.transpose() * s.beta;
   kkt_residual.la.noalias()   += dt * dID_da_.transpose() * s.beta;
-  kkt_residual.lu().noalias() -= dt * s.beta; 
+  kkt_residual.lu.noalias() -= dt * s.beta; 
 }
 
 
@@ -69,19 +69,19 @@ inline void UnconstrainedDynamics::condenseUnconstrainedDynamics(
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
     SplitUnKKTMatrix& unkkt_matrix, SplitUnKKTResidual& unkkt_residual) {
   // condense KKT residual
-  lu_condensed_ = kkt_residual.lu();
-  lu_condensed_.noalias() += kkt_matrix.Quu().diagonal().asDiagonal() * ID_;
+  lu_condensed_ = kkt_residual.lu;
+  lu_condensed_.noalias() += kkt_matrix.Quu.diagonal().asDiagonal() * ID_;
   unkkt_residual.lq() = kkt_residual.lq();
   unkkt_residual.lv() = kkt_residual.lv();
   unkkt_residual.la() = kkt_residual.la; 
   unkkt_residual.lq().noalias() += dID_dq_.transpose() * lu_condensed_;
   unkkt_residual.lv().noalias() += dID_dv_.transpose() * lu_condensed_;
   unkkt_residual.la().noalias() += dID_da_.transpose() * lu_condensed_;
-  unkkt_residual.Fx() = kkt_residual.Fx();
+  unkkt_residual.Fx() = kkt_residual.Fx;
   // condense KKT Hessian
-  Quu_dID_dq_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * dID_dq_;
-  Quu_dID_dv_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * dID_dv_;
-  Quu_dID_da_.noalias() = kkt_matrix.Quu().diagonal().asDiagonal() * dID_da_;
+  Quu_dID_dq_.noalias() = kkt_matrix.Quu.diagonal().asDiagonal() * dID_dq_;
+  Quu_dID_dv_.noalias() = kkt_matrix.Quu.diagonal().asDiagonal() * dID_dv_;
+  Quu_dID_da_.noalias() = kkt_matrix.Quu.diagonal().asDiagonal() * dID_da_;
   unkkt_matrix.Qqq().noalias() = dID_dq_.transpose() * Quu_dID_dq_;
   unkkt_matrix.Qqv().noalias() = dID_dq_.transpose() * Quu_dID_dv_;
   unkkt_matrix.Qvv().noalias() = dID_dv_.transpose() * Quu_dID_dv_;
@@ -90,7 +90,7 @@ inline void UnconstrainedDynamics::condenseUnconstrainedDynamics(
   unkkt_matrix.Qaa().noalias() = dID_da_.transpose() * Quu_dID_da_;
   unkkt_matrix.Qqq().noalias() += kkt_matrix.Qqq();
   unkkt_matrix.Qvv().diagonal().noalias() += kkt_matrix.Qvv().diagonal();
-  unkkt_matrix.Qaa().diagonal().noalias() += kkt_matrix.Qaa().diagonal();
+  unkkt_matrix.Qaa().diagonal().noalias() += kkt_matrix.Qaa.diagonal();
 }
 
 
@@ -102,7 +102,7 @@ inline void UnconstrainedDynamics::computeCondensedDirection(
   d.du.noalias() += dID_dq_ * d.dq();
   d.du.noalias() += dID_dv_ * d.dv();
   d.du.noalias() += dID_da_ * d.da();
-  d.dbeta().noalias() = (kkt_residual.lu()  + kkt_matrix.Quu() * d.du) / dt;
+  d.dbeta().noalias() = (kkt_residual.lu  + kkt_matrix.Quu * d.du) / dt;
 }
 
 

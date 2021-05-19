@@ -65,7 +65,7 @@ public:
 
   ///
   /// @brief Residual in the state equation w.r.t. the configuration q.
-  /// @return Reference to the residual in the state equation w.r.t q. Size is 
+  /// @return Reference to the residual in the state equation w.r.t. q. Size is 
   /// Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> Fq();
@@ -77,7 +77,7 @@ public:
 
   ///
   /// @brief Residual in the state equation w.r.t. the joint velocity v.
-  /// @return Reference to the residual in the state equation w.r.t v. Size is 
+  /// @return Reference to the residual in the state equation w.r.t. v. Size is 
   /// Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> Fv();

@@ -48,12 +48,12 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   SplitKKTResidual kkt_res(robot);
   kkt_mat.Qqq().setRandom();
   kkt_mat.Qvv().setRandom();
-  kkt_mat.Qaa().setRandom();
-  kkt_mat.Quu().setRandom();
+  kkt_mat.Qaa.setRandom();
+  kkt_mat.Quu.setRandom();
   kkt_res.lq().setRandom();
   kkt_res.lv().setRandom();
   kkt_res.la.setRandom();
-  kkt_res.lu().setRandom();
+  kkt_res.lu.setRandom();
   SplitKKTMatrix kkt_mat_ref = kkt_mat;
   SplitKKTResidual kkt_res_ref = kkt_res;
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(dimv);
@@ -98,7 +98,7 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   }
   kkt_res_ref.lv() += dt * v_weight.asDiagonal() * (s.v-v_ref);
   kkt_res_ref.la += dt * a_weight.asDiagonal() * s.a;
-  kkt_res_ref.lu() += dt * u_weight.asDiagonal() * (s.u-u_ref);
+  kkt_res_ref.lu += dt * u_weight.asDiagonal() * (s.u-u_ref);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
   if (robot.hasFloatingBase()) {
@@ -108,8 +108,8 @@ void ConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
     kkt_mat_ref.Qqq() += dt * q_weight.asDiagonal();
   }
   kkt_mat_ref.Qvv() += dt * v_weight.asDiagonal();
-  kkt_mat_ref.Qaa() += dt * a_weight.asDiagonal();
-  kkt_mat_ref.Quu() += dt * u_weight.asDiagonal();
+  kkt_mat_ref.Qaa += dt * a_weight.asDiagonal();
+  kkt_mat_ref.Quu += dt * u_weight.asDiagonal();
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
   EXPECT_TRUE(derivative_checker.checkFirstOrderStageCostDerivatives(cost));

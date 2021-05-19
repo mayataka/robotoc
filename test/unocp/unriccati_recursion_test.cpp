@@ -49,8 +49,8 @@ protected:
     seed = Eigen::MatrixXd::Random(dimv, dimv);
     terminal_kkt_matrix.Qvv() = seed * seed.transpose();
     terminal_kkt_residual = SplitKKTResidual(robot);   
-    terminal_kkt_residual.Fx().setRandom();
-    terminal_kkt_residual.lx().setRandom();
+    terminal_kkt_residual.Fx.setRandom();
+    terminal_kkt_residual.lx.setRandom();
   }
 
   virtual void TearDown() {

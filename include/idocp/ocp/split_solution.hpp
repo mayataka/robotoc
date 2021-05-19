@@ -14,13 +14,10 @@ namespace idocp {
 
 ///
 /// @class SplitSolution
-/// @brief Solution of the optimal control problem split into a time stage. 
+/// @brief Solution to the optimal control problem split into a time stage. 
 ///
 class SplitSolution {
 public:
-
-  using Vector6d = Eigen::Matrix<double, 6, 1>;
-
   ///
   /// @brief Construct a split solution.
   /// @param[in] robot Robot model. 
@@ -87,6 +84,33 @@ public:
   void setImpulseStatus();
 
   ///
+  /// @brief Configuration. Size is Robot::dimq().
+  ///
+  Eigen::VectorXd q;
+
+  ///
+  /// @brief Generalized velocity. Size is Robot::dimv().
+  ///
+  Eigen::VectorXd v;
+
+  ///
+  /// @brief Generalized acceleration. 
+  /// Size is Robot::dimv().
+  ///
+  Eigen::VectorXd a;
+
+  ///
+  /// @brief Control input torques. Size is Robot::dimu().
+  ///
+  Eigen::VectorXd u;
+
+  ///
+  /// @brief Contact forces. 
+  /// Size is Robot::maxPointContacts().
+  ///
+  std::vector<Eigen::Vector3d> f;
+
+  ///
   /// @brief Stack of the active contact forces. Size is ContactStatus::dimf().
   /// @return Reference to the stack of the active contact forces.
   ///
@@ -108,11 +132,41 @@ public:
   void set_f_vector();
 
   ///
-  /// @brief Stack of the Lagrange multipliers with respect to the contact 
-  /// constraints that is active at the current contact status. Size is 
+  /// @brief Lagrange multiplier w.r.t. the state equation w.r.t. q.
+  /// Size is Robot::dimv().
+  ///
+  Eigen::VectorXd lmd;
+
+  ///
+  /// @brief Lagrange multiplier w.r.t. the state equation w.r.t. v.
+  /// Size is Robot::dimv().
+  ///
+  Eigen::VectorXd gmm;
+
+  ///
+  /// @brief Lagrange multiplier w.r.t. the inverse dynamics constraint. Size is 
+  /// Robot::dimv().
+  ///
+  Eigen::VectorXd beta;
+
+  ///
+  /// @brief Lagrange multiplier w.r.t. the acceleration-level contact  
+  /// constraint. Size is Robot::maxPointContacts().
+  ///
+  std::vector<Eigen::Vector3d> mu;
+
+  ///
+  /// @brief Lagrange multiplier w.r.t. the passive joint constraint. Size is 
+  /// Robot::dim_passive().
+  ///
+  Eigen::VectorXd nu_passive;
+
+  ///
+  /// @brief Stack of the Lagrange multipliers w.r.t. the acceleration-level 
+  /// contact constraints that is active at the current contact status. Size is 
   /// SplitSolution::dimf().
-  /// @return Reference to the stack of the Lagrange multipliers with respect to 
-  /// the contact constraints.
+  /// @return Reference to the stack of the Lagrange multipliers w.r.t.  the 
+  /// acceleration-level contact constraints.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> mu_stack();
 
@@ -132,11 +186,11 @@ public:
   void set_mu_vector();
 
   ///
-  /// @brief Stack of the Lagrange multipliers with respect to the contact 
-  /// position constraints that is active at the current impulse status. Size is 
+  /// @brief Stack of the Lagrange multipliers w.r.t. the switching constraints
+  /// that is active at the future impulse status. Size is 
   /// ImpulseSplitSolution::dimf().
-  /// @return Reference to the stack of the Lagrange multipliers with respect 
-  /// to the contact position constraints.
+  /// @return Reference to the stack of the Lagrange multipliers w.r.t. the
+  /// switching constraints.
   ///
   Eigen::VectorBlock<Eigen::VectorXd> xi_stack();
 
@@ -146,70 +200,33 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> xi_stack() const;
 
   ///
-  /// @brief Lagrange multiplier with respect to the state equation of q.
-  /// Size is Robot::dimv().
-  ///
-  Eigen::VectorXd lmd;
-
-  ///
-  /// @brief Lagrange multiplier with respect to the state equation of v.
-  /// Size is Robot::dimv().
-  ///
-  Eigen::VectorXd gmm;
-
-  ///
-  /// @brief Configuration. Size is Robot::dimq().
-  ///
-  Eigen::VectorXd q;
-
-  ///
-  /// @brief Generalized velocity. Size is Robot::dimv().
-  ///
-  Eigen::VectorXd v;
-
-  ///
-  /// @brief Generalized acceleration. 
-  /// Size is Robot::dimv().
-  ///
-  Eigen::VectorXd a;
-
-  ///
-  /// @brief Contact forces. 
-  /// Size is Robot::maxPointContacts().
-  ///
-  std::vector<Eigen::Vector3d> f;
-
-  ///
-  /// @brief Control input torques. Size is Robot::dimu().
-  ///
-  Eigen::VectorXd u;
-
-  ///
-  /// @brief Lagrange multiplier with respect to inverse dynamics. Size is 
-  /// Robot::dimv().
-  ///
-  Eigen::VectorXd beta;
-
-  ///
-  /// @brief Lagrange multiplier with respect to the contact constraint. 
-  /// Size is Robot::maxPointContacts().
-  ///
-  std::vector<Eigen::Vector3d> mu;
-
-  ///
-  /// @brief Lagrange multiplier with respect to floating base. Size is 6.
-  ///
-  Vector6d nu_passive;
-
-  ///
-  /// @brief Returns the dimension of the stack of the contact forces at the 
-  /// current contact status.
-  /// @return Dimension of the contact forces.
+  /// @brief Returns the dimension of the contact at the current contact status.
+  /// @return Dimension of the contact.
   ///
   int dimf() const;
 
   ///
-  /// @brief Return true if a contact is active and false if not.
+  /// @brief Returns the dimension of the stack of impulse forces at the 
+  /// current impulse status.
+  /// @return Dimension of the impulse forces.
+  ///
+  int dimi() const;
+
+  ///
+  /// @brief Return true if there are active contacts and false if not.
+  /// @return true if there are active contacts and false if not. 
+  ///
+  bool hasActiveContacts() const;
+
+  ///
+  /// @brief Returns true if there are active impulse constraints and false if 
+  /// not.
+  /// @return true if there are active impulse constraints and false if not. 
+  ///
+  bool hasActiveImpulse() const;
+
+  ///
+  /// @brief Return true if contact is active and false if not.
   /// @param[in] contact_index Index of a contact of interedted. 
   /// @return true if a contact is active and false if not. 
   ///
@@ -222,26 +239,6 @@ public:
   std::vector<bool> isContactActive() const;
 
   ///
-  /// @brief Return true if there are active contacts and false if not.
-  /// @return true if there are active contacts and false if not. 
-  ///
-  bool hasActiveContacts() const;
-
-  ///
-  /// @brief Returns the dimension of the stack of impulse forces at the 
-  /// current impulse status.
-  /// @return Dimension of the impulse forces.
-  ///
-  int dimi() const;
-
-  ///
-  /// @brief Returns true if there are active impulse constraints and false if 
-  /// not.
-  /// @return true if there are active impulse constraints and false if not. 
-  ///
-  bool hasActiveImpulse() const;
-
-  ///
   /// @brief Integrates the solution based on step size and direction. 
   /// @param[in] robot Robot model.
   /// @param[in] step_size Step size.
@@ -249,12 +246,6 @@ public:
   ///
   void integrate(const Robot& robot, const double step_size, 
                  const SplitDirection& d);
-
-  ///
-  /// @brief Copy other split solution without reallocating memory.
-  /// @param[in] other Other split solution.
-  ///
-  void copy(const SplitSolution& other);
 
   ///
   /// @brief Return true if two SplitSolution have the same value and false if 
@@ -329,8 +320,6 @@ public:
   static SplitSolution Random(const Robot& robot, 
                               const ContactStatus& contact_status,
                               const ImpulseStatus& impulse_status);
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   Eigen::VectorXd mu_stack_, f_stack_, xi_stack_;

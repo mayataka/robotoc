@@ -82,8 +82,8 @@ inline void TerminalUnParNMPC::linearizeOCP(Robot& robot, const double t,
   }
   kkt_matrix_.Qqq().setZero();
   kkt_matrix_.Qvv().diagonal().setZero();
-  kkt_matrix_.Qaa().diagonal().setZero();
-  kkt_matrix_.Quu().diagonal().setZero();
+  kkt_matrix_.Qaa.diagonal().setZero();
+  kkt_matrix_.Quu.diagonal().setZero();
   kkt_residual_.setZero();
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, kkt_residual_);
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
@@ -170,9 +170,9 @@ inline double TerminalUnParNMPC::squaredNormKKTResidual(
     const double dt) const {
   assert(dt > 0);
   double error = 0;
-  error += kkt_residual_.lx().squaredNorm();
+  error += kkt_residual_.lx.squaredNorm();
   error += kkt_residual_.la.squaredNorm();
-  error += kkt_residual_.lu().squaredNorm();
+  error += kkt_residual_.lu.squaredNorm();
   error += stateequation::squaredNormStateEuqationResidual(kkt_residual_);
   error += unconstrained_dynamics_.squaredNormUnconstrainedDynamicsResidual(dt);
   error += dt * dt * constraints_->squaredNormPrimalAndDualResidual(constraints_data_);

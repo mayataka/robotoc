@@ -51,14 +51,15 @@ inline void condenseForwardEuler(
                                          kkt_matrix.Fqq_inv);
     kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
         = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-    kkt_residual.Fq_prev = kkt_residual.Fq().template head<6>();
+    kkt_residual.Fq_tmp.template head<6>() 
+        = kkt_residual.Fq().template head<6>();
     kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
         = - kkt_matrix.Fqq_inv 
             * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
     kkt_matrix.Fqv().template topLeftCorner<6, 6>()
         = - dt * kkt_matrix.Fqq_inv;
     kkt_residual.Fq().template head<6>().noalias()
-        = - kkt_matrix.Fqq_inv * kkt_residual.Fq_prev;
+        = - kkt_matrix.Fqq_inv * kkt_residual.Fq_tmp.template head<6>();
   }
 }
 
@@ -100,10 +101,10 @@ inline void correctCostateDirectionForwardEuler(
     SplitKKTResidualType& kkt_residual,
     const Eigen::MatrixBase<VectorType>& dlmd) {
   if (robot.hasFloatingBase()) {
-    kkt_residual.Fq_prev.noalias() 
+    kkt_residual.Fq_tmp.template head<6>().noalias() 
         = kkt_matrix.Fqq_prev_inv.transpose() * dlmd.template head<6>();
     const_cast<Eigen::MatrixBase<VectorType>&> (dlmd).template head<6>() 
-        = - kkt_residual.Fq_prev;
+        = - kkt_residual.Fq_tmp.template head<6>();
   }
 }
 
@@ -179,14 +180,15 @@ inline void condenseBackwardEuler(
                                          kkt_matrix.Fqq_inv);
     kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
         = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-    kkt_residual.Fq_prev = kkt_residual.Fq().template head<6>();
+    kkt_residual.Fq_tmp.template head<6>() 
+        = kkt_residual.Fq().template head<6>();
     kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
         = kkt_matrix.Fqq_inv 
             * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
     kkt_matrix.Fqv().template topLeftCorner<6, 6>()
         = dt * kkt_matrix.Fqq_inv;
     kkt_residual.Fq().template head<6>().noalias()
-        = kkt_matrix.Fqq_inv * kkt_residual.Fq_prev;
+        = kkt_matrix.Fqq_inv * kkt_residual.Fq_tmp.template head<6>();
   }
 }
 
@@ -198,10 +200,10 @@ inline void correctCostateDirectionBackwardEuler(
     SplitKKTResidualType& kkt_residual,
     const Eigen::MatrixBase<VectorType>& dlmd) {
   if (robot.hasFloatingBase()) {
-    kkt_residual.Fq_prev.noalias() 
+    kkt_residual.Fq_tmp.template head<6>().noalias() 
         = kkt_matrix.Fqq_inv.transpose() * dlmd.template head<6>();
     const_cast<Eigen::MatrixBase<VectorType>&> (dlmd).template head<6>() 
-        = kkt_residual.Fq_prev;
+        = kkt_residual.Fq_tmp.template head<6>();
   }
 }
 
@@ -238,13 +240,13 @@ inline void computeBackwardEulerResidual(
 
 inline double l1NormStateEuqationResidual(
     const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.Fx().lpNorm<1>();
+  return kkt_residual.Fx.lpNorm<1>();
 }
 
 
 inline double squaredNormStateEuqationResidual(
     const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.Fx().squaredNorm();
+  return kkt_residual.Fx.squaredNorm();
 }
 
 } // namespace stateequation 

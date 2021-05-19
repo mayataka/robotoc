@@ -112,9 +112,9 @@ TEST_F(SplitUnOCPTest, computeKKTResidual) {
   UnconstrainedDynamics ud(robot);
   ud.linearizeUnconstrainedDynamics(robot, dt, s, kkt_residual_ref);
   double kkt_error_ref = 0;
-  kkt_error_ref += kkt_residual_ref.lx().squaredNorm();
+  kkt_error_ref += kkt_residual_ref.lx.squaredNorm();
   kkt_error_ref += kkt_residual_ref.la.squaredNorm();
-  kkt_error_ref += kkt_residual_ref.lu().squaredNorm();
+  kkt_error_ref += kkt_residual_ref.lu.squaredNorm();
   kkt_error_ref += stateequation::squaredNormStateEuqationResidual(kkt_residual_ref);
   kkt_error_ref += ud.squaredNormUnconstrainedDynamicsResidual(dt);
   kkt_error_ref += dt * dt * constraints->squaredNormPrimalAndDualResidual(constraints_data);

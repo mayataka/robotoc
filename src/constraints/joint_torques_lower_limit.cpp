@@ -55,7 +55,7 @@ void JointTorquesLowerLimit::setSlackAndDual(
 void JointTorquesLowerLimit::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  kkt_residual.lu().noalias() -= dt * data.dual;
+  kkt_residual.lu.noalias() -= dt * data.dual;
 }
 
 
@@ -63,10 +63,10 @@ void JointTorquesLowerLimit::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
-  kkt_matrix.Quu().diagonal().array()
+  kkt_matrix.Quu.diagonal().array()
       += dt * data.dual.array() / data.slack.array();
   computePrimalAndDualResidual(robot, data, s);
-  kkt_residual.lu().array() 
+  kkt_residual.lu.array() 
       -= dt * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
 }

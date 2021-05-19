@@ -10,7 +10,7 @@ inline ImpulseSplitKKTResidual::ImpulseSplitKKTResidual(const Robot& robot)
   : Fx(Eigen::VectorXd::Zero(2*robot.dimv())),
     lx(Eigen::VectorXd::Zero(2*robot.dimv())),
     ldv(Eigen::VectorXd::Zero(robot.dimv())),
-    Fq_tmp(Eigen::VectorXd::Zero(robot.dim_passive())),
+    Fq_tmp(Eigen::VectorXd::Zero(robot.dimv())),
     lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimi_(0) {
