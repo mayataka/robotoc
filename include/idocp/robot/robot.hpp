@@ -20,7 +20,7 @@
 namespace idocp {
 
 ///
-/// @class BaseJointType
+/// @enum BaseJointType
 /// @brief Types of the base joints of robots
 ///
 enum class BaseJointType {

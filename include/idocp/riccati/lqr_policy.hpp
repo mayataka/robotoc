@@ -27,10 +27,23 @@ public:
   ~LQRPolicy() {
   }
 
-
   Eigen::MatrixXd K;
 
   Eigen::VectorXd k;
+
+  const Eigen::Block<const Eigen::MatrixXd> Kq() const {
+    return K.topLeftCorner(dimu_, dimv_);
+  }
+
+  const Eigen::Block<const Eigen::MatrixXd> Kv() const {
+    return K.topRightCorner(dimu_, dimv_);
+  }
+
+  bool isApprox(const LQRPolicy& other) const {
+    if (!K.isApprox(other.K)) return false;
+    if (!k.isApprox(other.k)) return false;
+    return true;
+  }
 
 private:
   int dimv_, dimu_;

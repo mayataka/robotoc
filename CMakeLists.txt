@@ -86,12 +86,13 @@ add_library(
   src/ocp/ocp.cpp
   src/ocp/ocp_linearizer.cpp
   src/riccati/split_riccati_factorization.cpp
+  src/riccati/split_constrained_riccati_factorization.cpp
   src/riccati/lqr_policy.cpp
   src/riccati/backward_riccati_recursion_factorizer.cpp
-  src/riccati/impulse_backward_riccati_recursion_factorizer.cpp
-  src/riccati/split_riccati_factorizer.cpp
-  src/riccati/impulse_split_riccati_factorizer.cpp
-  src/riccati/split_constrained_riccati_factorization.cpp
+  src/riccati/riccati_factorizer.cpp
+  # src/riccati/impulse_backward_riccati_recursion_factorizer.cpp
+  # src/riccati/split_riccati_factorizer.cpp
+  # src/riccati/impulse_split_riccati_factorizer.cpp
   src/riccati/riccati_recursion.cpp
   src/solver/ocp_solver.cpp
   src/unocp/split_unkkt_residual.cpp

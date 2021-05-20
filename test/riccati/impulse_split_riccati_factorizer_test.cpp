@@ -31,6 +31,7 @@ protected:
   static SplitRiccatiFactorization createRiccatiFactorization(const Robot& robot);
 
   static void testBackwardRecursion(const Robot& robot);
+  static void testBackwardRecursionImpulse(const Robot& robot);
   static void testForwardRecursion(const Robot& robot);
 };
 
@@ -78,7 +79,7 @@ SplitRiccatiFactorization ImpulseSplitRiccatiFactorizerTest::createRiccatiFactor
 }
 
 
-void ImpulseSplitRiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) {
+void ImpulseSplitRiccatiFactorizerTest::testBackwardRecursionImpulse(const Robot& robot) {
   const int dimv = robot.dimv();
   const auto riccati_next = createRiccatiFactorization(robot);
   auto kkt_matrix = createKKTMatrix(robot);
@@ -138,6 +139,7 @@ void ImpulseSplitRiccatiFactorizerTest::testForwardRecursion(const Robot& robot)
 TEST_F(ImpulseSplitRiccatiFactorizerTest, fixedBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFixedBaseRobot(dt);
+  testBackwardRecursion(robot);
   testBackwardRecursion(robot);
   testForwardRecursion(robot);
 }

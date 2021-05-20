@@ -6,6 +6,8 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
+#include "idocp/impulse/impulse_split_kkt_matrix.hpp"
+#include "idocp/impulse/impulse_split_kkt_residual.hpp"
 #include "idocp/riccati/split_riccati_factorization.hpp"
 #include "idocp/riccati/lqr_policy.hpp"
 
@@ -14,7 +16,7 @@ namespace idocp {
 
 ///
 /// @class BackwardRiccatiRecursionFactorizer
-/// @brief Factorizer of the backward Riccati recursion of a time stage.
+/// @brief Factorizer of the backward Riccati recursion.
 ///
 class BackwardRiccatiRecursionFactorizer {
 public:
@@ -74,6 +76,15 @@ public:
                           SplitKKTResidual& kkt_residual);
 
   ///
+  /// @brief Factorizes the split KKT matrix and split KKT residual of 
+  /// this impulse stage for the backward Riccati recursion.
+  /// @param[in] riccati_next Riccati factorization of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
+  ///
+  void factorizeKKTMatrix(const SplitRiccatiFactorization& riccati_next, 
+                          ImpulseSplitKKTMatrix& kkt_matrix);
+
+  ///
   /// @brief Factorizes the Riccati factorization matrix and vector.
   /// @param[in] riccati_next Riccati factorization of the next time stage.
   /// @param[in] kkt_matrix Split KKT matrix of this time stage.
@@ -89,11 +100,26 @@ public:
       const LQRPolicy& lqr_policy, const double dt, 
       SplitRiccatiFactorization& riccati);
 
+  ///
+  /// @brief Factorizes the Riccati factorization matrix and vector.
+  /// @param[in] riccati_next Riccati factorization of the next time stage.
+  /// @param[in] kkt_matrix Split KKT matrix of this impulse stage. 
+  /// @param[in] kkt_residual Split KKT residual of this impulse stage.
+  /// ImpulseBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix().
+  /// @param[out] riccati The Riccati factorization of this impulse stage.
+  ///
+  void factorizeRiccatiFactorization(
+      const SplitRiccatiFactorization& riccati_next, 
+      const ImpulseSplitKKTMatrix& kkt_matrix, 
+      const ImpulseSplitKKTResidual& kkt_residual, 
+      SplitRiccatiFactorization& riccati);
+
 private:
   bool has_floating_base_;
   int dimv_, dimu_;
   static constexpr int kDimFloatingBase = 6;
-  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, BtPq_, BtPv_, GK_;
+  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, BtPq_, BtPv_, GK_, 
+                  Pqq_tmp_, Pvv_tmp_;
 
 };
 

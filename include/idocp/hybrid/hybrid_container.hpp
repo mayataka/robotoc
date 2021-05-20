@@ -11,15 +11,15 @@ namespace idocp {
 
 namespace internal {
 ///
-/// @class EmptySwitching 
+/// @class EmptyType
 /// @brief Only used for default template parameter of hybrid_container.
 /// This class does not do anything.
 ///
-class EmptySwitching {
+class EmptyType {
 public:
-  EmptySwitching(const Robot&) {}
-  EmptySwitching() {}
-  ~EmptySwitching() {}
+  EmptyType(const Robot&) {}
+  EmptyType() {}
+  ~EmptyType() {}
 };
 } // namespace internal
 
@@ -31,11 +31,13 @@ public:
 /// (with Type), data for aux stages (with Type), data for impulse stages
 /// (with ImpulseType), and data for switching ingredients.
 /// @tparam Type The type name of the standard data type.
-/// @tparam ImpulseType The type name of the impulse data type.
-/// @tparam SwitchingType The type name of the switching data type.
+/// @tparam ImpulseType The type name of the impulse data type. Defalt is 
+/// internal::EmptyType.
+/// @tparam SwitchingType The type name of the switching data type. Defalt is 
+/// internal::EmptyType.
 ///
-template <typename Type, typename ImpulseType, 
-          typename SwitchingType=internal::EmptySwitching>
+template <typename Type, typename ImpulseType=internal::EmptyType, 
+          typename SwitchingType=internal::EmptyType>
 class hybrid_container {
 public:
   ///

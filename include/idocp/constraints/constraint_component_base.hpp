@@ -12,7 +12,7 @@
 namespace idocp {
 
 ///
-/// @class KinematicsLevel
+/// @enum KinematicsLevel
 /// @brief Kinematics level of the constraint component used in 
 /// ConstraintComponentBase.
 ///

@@ -28,13 +28,30 @@
 
 namespace idocp {
 
+///
+/// @typedef Solution
+/// @brief Solution to the (hybrid) optimal control problem. 
+///
 using Solution = hybrid_container<SplitSolution, ImpulseSplitSolution>;
 
+///
+/// @typedef Direction
+/// @brief Newton direction of the solution to the (hybrid) optimal control 
+/// problem. 
+///
 using Direction = hybrid_container<SplitDirection, ImpulseSplitDirection>;
 
+///
+/// @typedef KKTMatrix 
+/// @brief The KKT matrix of the (hybrid) optimal control problem. 
+///
 using KKTMatrix = hybrid_container<SplitKKTMatrix, ImpulseSplitKKTMatrix, 
                                    SplitSwitchingConstraintJacobian>;
 
+///
+/// @typedef KKTResidual 
+/// @brief The KKT residual of the (hybrid) optimal control problem. 
+///
 using KKTResidual = hybrid_container<SplitKKTResidual, ImpulseSplitKKTResidual, 
                                      SplitSwitchingConstraintResidual>;
 

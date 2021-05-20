@@ -9,21 +9,21 @@
 #include "idocp/utils/aligned_vector.hpp"
 #include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/riccati/split_riccati_factorization.hpp"
-#include "idocp/riccati/split_riccati_factorizer.hpp"
-#include "idocp/riccati/impulse_split_riccati_factorizer.hpp"
 #include "idocp/riccati/split_constrained_riccati_factorization.hpp"
+#include "idocp/riccati/lqr_policy.hpp"
+#include "idocp/riccati/riccati_factorizer.hpp"
 #include "idocp/ocp/ocp.hpp"
 
 
 namespace idocp {
 
+///
+/// @typedef RiccatiFactorization
+/// @brief Riccati factorization matices of the LQR subproblem. 
+///
 using RiccatiFactorization = hybrid_container<SplitRiccatiFactorization, 
                                               SplitRiccatiFactorization, 
                                               SplitConstrainedRiccatiFactorization>;
-
-using RiccatiFactorizer = hybrid_container<SplitRiccatiFactorizer, 
-                                           ImpulseSplitRiccatiFactorizer>; 
-
 
 ///
 /// @class RiccatiRecursion
@@ -150,8 +150,9 @@ public:
                             Eigen::MatrixXd& Kv) const;
 
 private:
-  int nthreads_, N_all_;
+  int nthreads_, N_, N_all_;
   RiccatiFactorizer factorizer_;
+  hybrid_container<LQRPolicy> lqr_policy_;
   Eigen::VectorXd max_primal_step_sizes_, max_dual_step_sizes_;
 
 };
