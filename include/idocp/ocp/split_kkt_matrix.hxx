@@ -22,14 +22,12 @@ inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
     Fqq_prev_inv(),
     Qff_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.max_dimf())),
     Qqf_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
-    Pq_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dimu_(robot.dimu()), 
     dim_passive_(robot.dim_passive()),
-    dimf_(0), 
-    dimi_(0) {
+    dimf_(0) {
   if (robot.hasFloatingBase()) {
     Fqq_prev.resize(robot.dimv(), robot.dimv());
     Fqq_prev.setZero();
@@ -54,14 +52,12 @@ inline SplitKKTMatrix::SplitKKTMatrix()
     Fqq_prev_inv(),
     Qff_full_(),
     Qqf_full_(),
-    Pq_full_(),
     has_floating_base_(false),
     dimv_(0), 
     dimx_(0), 
     dimu_(0), 
     dim_passive_(0),
-    dimf_(0), 
-    dimi_(0) {
+    dimf_(0) {
 }
 
 
@@ -72,17 +68,6 @@ inline SplitKKTMatrix::~SplitKKTMatrix() {
 inline void SplitKKTMatrix::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
-}
-
-
-inline void SplitKKTMatrix::setImpulseStatus(
-    const ImpulseStatus& impulse_status) {
-  dimi_ = impulse_status.dimf();
-}
-
-
-inline void SplitKKTMatrix::setImpulseStatus() {
-  dimi_ = 0;
 }
 
 
@@ -123,16 +108,6 @@ inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Fvv() {
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Fvv() const {
   return Fxx.bottomRightCorner(dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Pq() {
-  return Pq_full_.topLeftCorner(dimi_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Pq() const {
-  return Pq_full_.topLeftCorner(dimi_, dimv_);
 }
 
 
@@ -236,11 +211,6 @@ inline int SplitKKTMatrix::dimf() const {
 }
 
 
-inline int SplitKKTMatrix::dimi() const {
-  return dimi_;
-}
-
-
 inline bool SplitKKTMatrix::isDimensionConsistent() const {
   if (Fxx.rows() != 2*dimv_) return false;
   if (Fxx.cols() != 2*dimv_) return false;
@@ -282,7 +252,6 @@ inline bool SplitKKTMatrix::isApprox(const SplitKKTMatrix& other) const {
   }
   if (!Qff().isApprox(other.Qff())) return false;
   if (!Qqf().isApprox(other.Qqf())) return false;
-  if (!Pq().isApprox(other.Pq())) return false;
   if (!Fqq_prev.isApprox(other.Fqq_prev)) return false;
   return true;
 }
@@ -297,7 +266,6 @@ inline bool SplitKKTMatrix::hasNaN() const {
   if (Quu.hasNaN()) return true;
   if (Qff().hasNaN()) return true;
   if (Qqf().hasNaN()) return true;
-  if (Pq().hasNaN()) return true;
   if (Fqq_prev.hasNaN()) return true;
   return false;
 }

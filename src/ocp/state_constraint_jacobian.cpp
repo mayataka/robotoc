@@ -1,1 +1,0 @@
-#include "idocp/ocp/state_constraint_jacobian.hpp"

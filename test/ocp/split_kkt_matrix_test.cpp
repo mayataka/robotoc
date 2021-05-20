@@ -3,7 +3,6 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/robot/impulse_status.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 
 #include "robot_factory.hpp"
@@ -21,30 +20,22 @@ protected:
   virtual void TearDown() {
   }
 
-  static void test(const Robot& robot, const ContactStatus& contact_status, 
-                   const ImpulseStatus& impulse_status);
-  static void testIsApprox(const Robot& robot, 
-                           const ContactStatus& contact_status, 
-                           const ImpulseStatus& impulse_status);
+  static void test(const Robot& robot, const ContactStatus& contact_status);
+  static void testIsApprox(const Robot& robot, const ContactStatus& contact_status);
 
   double dt;
 };
 
 
-void SplitKKTMatrixTest::test(const Robot& robot, 
-                              const ContactStatus& contact_status,
-                              const ImpulseStatus& impulse_status) {
+void SplitKKTMatrixTest::test(const Robot& robot, const ContactStatus& contact_status) {
   SplitKKTMatrix kkt_mat(robot);
   kkt_mat.setContactStatus(contact_status);
-  kkt_mat.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dimx = 2 * robot.dimv();
   const int dimf = contact_status.dimf();
   const int dim_passive = robot.dim_passive();
-  const int dimi = impulse_status.dimf();
   EXPECT_EQ(kkt_mat.dimf(), dimf);
-  EXPECT_EQ(kkt_mat.dimi(), dimi);
 
   EXPECT_EQ(kkt_mat.Fxx.rows(), dimx);
   EXPECT_EQ(kkt_mat.Fxx.cols(), dimx);
@@ -58,8 +49,6 @@ void SplitKKTMatrixTest::test(const Robot& robot,
   EXPECT_EQ(kkt_mat.Fvv().cols(), dimv);
   EXPECT_EQ(kkt_mat.Fvu.rows(), dimv);
   EXPECT_EQ(kkt_mat.Fvu.cols(), dimu);
-  EXPECT_EQ(kkt_mat.Pq().rows(), dimi);
-  EXPECT_EQ(kkt_mat.Pq().cols(), dimv);
 
   EXPECT_EQ(kkt_mat.Qxx.rows(), dimx);
   EXPECT_EQ(kkt_mat.Qxx.cols(), dimx);
@@ -140,22 +129,17 @@ void SplitKKTMatrixTest::test(const Robot& robot,
 }
 
 
-void SplitKKTMatrixTest::testIsApprox(const Robot& robot, 
-                                      const ContactStatus& contact_status,
-                                      const ImpulseStatus& impulse_status) {
+void SplitKKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& contact_status) {
   SplitKKTMatrix kkt_mat(robot);
   kkt_mat.setContactStatus(contact_status);
-  kkt_mat.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
   const int dimx = 2 * robot.dimv();
   const int dimf = contact_status.dimf();
   const int dim_passive = robot.dim_passive();
-  const int dimi = impulse_status.dimf();
 
   kkt_mat.Fxx.setRandom();
   kkt_mat.Fvu.setRandom();
-  kkt_mat.Pq().setRandom();
   kkt_mat.Qxx.setRandom();
   kkt_mat.Qxu.setRandom();
   kkt_mat.Quu.setRandom();
@@ -194,74 +178,33 @@ void SplitKKTMatrixTest::testIsApprox(const Robot& robot,
     kkt_mat_ref.Qqf() = kkt_mat.Qqf();
     EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   }
-  if (dimi > 0) {
-    kkt_mat_ref.Pq().setRandom();
-    EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
-    kkt_mat_ref.Pq() = kkt_mat.Pq();
-    EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
-  }
 }
 
 
 TEST_F(SplitKKTMatrixTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
-  auto impulse_status = robot.createImpulseStatus();
   contact_status.deactivateContact(0);
-  impulse_status.deactivateImpulse(0);
-  test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test(robot, contact_status);
+  testIsApprox(robot, contact_status);
   contact_status.activateContact(0);
-  impulse_status.deactivateImpulse(0);
-  test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
-  contact_status.deactivateContact(0);
-  impulse_status.activateImpulse(0);
-  test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
-  contact_status.activateContact(0);
-  impulse_status.activateImpulse(0);
-  test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test(robot, contact_status);
+  testIsApprox(robot, contact_status);
 }
 
 
 TEST_F(SplitKKTMatrixTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
-  auto impulse_status = robot.createImpulseStatus();
-  // Both contact and impulse are inactive
   contact_status.deactivateContacts();
-  impulse_status.deactivateImpulses();
-  test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
-  // Contacts are active and impulse are inactive
+  test(robot, contact_status);
+  testIsApprox(robot, contact_status);
   contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
-  impulse_status.deactivateImpulses();
-  test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
-  // Contacts are inactive and impulse are active
-  contact_status.deactivateContacts();
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
-  }
-  test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
-  // Both contact and impulse are active
-  contact_status.setRandom();
-  if (!contact_status.hasActiveContacts()) {
-    contact_status.activateContact(0);
-  }
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
-  }
-  test(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test(robot, contact_status);
+  testIsApprox(robot, contact_status);
 }
 
 } // namespace idocp

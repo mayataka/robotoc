@@ -7,8 +7,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/utils/aligned_vector.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
-#include "idocp/ocp/state_constraint_jacobian.hpp"
+#include "idocp/ocp/ocp.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
 #include "idocp/hybrid/ocp_discretizer.hpp"
 
@@ -83,14 +82,12 @@ public:
   /// @param[in] s Solution. 
   /// @param[in, out] kkt_matrix KKT matrix. 
   /// @param[in, out] kkt_residual KKT residual. 
-  /// @param[in, out] jac Jacobian of the switching constraints. 
   ///
   void linearizeOCP(OCP& ocp, aligned_vector<Robot>& robots,
                     const ContactSequence& contact_sequence,
                     const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                     const Solution& s, KKTMatrix& kkt_matrix, 
-                    KKTResidual& kkt_residual,
-                    StateConstraintJacobian& jac) const;
+                    KKTResidual& kkt_residual) const;
 
   ///
   /// @brief Computes the KKT residual of optimal control problem in parallel. 
@@ -102,14 +99,12 @@ public:
   /// @param[in] s Solution. 
   /// @param[in, out] kkt_matrix KKT matrix. 
   /// @param[in, out] kkt_residual KKT residual. 
-  /// @param[in, out] jac Jacobian of the switching constraints. 
   ///
   void computeKKTResidual(OCP& ocp, aligned_vector<Robot>& robots, 
                           const ContactSequence& contact_sequence,
                           const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                           const Solution& s, KKTMatrix& kkt_matrix, 
-                          KKTResidual& kkt_residual,
-                          StateConstraintJacobian& jac) const;
+                          KKTResidual& kkt_residual) const;
 
   ///
   /// @brief Returns the l2-norm of the KKT residual of optimal control problem.
@@ -146,8 +141,7 @@ private:
                    const ContactSequence& contact_sequence,
                    const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                    const Solution& s, KKTMatrix& kkt_matrix, 
-                   KKTResidual& kkt_residual,
-                   StateConstraintJacobian& jac) const;
+                   KKTResidual& kkt_residual) const;
 
   int max_num_impulse_, nthreads_;
   Eigen::VectorXd kkt_error_;

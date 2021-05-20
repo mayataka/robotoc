@@ -4,10 +4,9 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/ocp/state_constraint_jacobian.hpp"
-#include "idocp/ocp/riccati_recursion.hpp"
+#include "idocp/riccati/riccati_recursion.hpp"
+#include "idocp/ocp/ocp.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 
 #include "test_helper.hpp"
@@ -80,10 +79,8 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   auto ocp_ref = ocp;
-  StateConstraintJacobian jac(robot, max_num_impulse);
-  StateConstraintJacobian jac_ref = jac;
   linearizer.initConstraints(ocp, robots, contact_sequence, s);
-  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual, jac);
+  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   auto robot_ref = robot;
   for (int i=0; i<ocp_ref.discrete().N(); ++i) {
     Eigen::VectorXd q_prev;
@@ -157,7 +154,8 @@ void OCPLinearizerTest::testLinearizeOCP(const Robot& robot) const {
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i],
           contact_sequence.impulseStatus(impulse_index),
-          dt_next, jac_ref[impulse_index]);
+          dt_next, kkt_matrix_ref.switching[impulse_index],
+          kkt_residual_ref.switching[impulse_index]);
     } 
     else {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -198,10 +196,8 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
   auto ocp_ref = ocp;
-  StateConstraintJacobian jac(robot, max_num_impulse);
-  StateConstraintJacobian jac_ref = jac;
   linearizer.initConstraints(ocp, robots, contact_sequence, s);
-  linearizer.computeKKTResidual(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual, jac);
+  linearizer.computeKKTResidual(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   const double kkt_error = linearizer.KKTError(ocp, kkt_residual);
   auto robot_ref = robot;
   double kkt_error_ref = 0;
@@ -282,8 +278,11 @@ void OCPLinearizerTest::testComputeKKTResidual(const Robot& robot) const {
           ocp_ref.discrete().t(i), dti, q_prev, 
           s[i], s[i+1], kkt_matrix_ref[i], kkt_residual_ref[i],
           contact_sequence.impulseStatus(impulse_index),
-          dt_next, jac_ref[impulse_index]);
+          dt_next, kkt_matrix_ref.switching[impulse_index], 
+          kkt_residual_ref.switching[impulse_index]);
       kkt_error_ref += ocp_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dti);
+      kkt_error_ref += switchingconstraint::squaredNormSwitchingConstraintResidual(
+                          kkt_residual_ref.switching[impulse_index]);
     } 
     else {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);
@@ -324,15 +323,12 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
   auto ocp = OCP(robot, cost, constraints, T, N, max_num_impulse);
   ocp.discretize(contact_sequence, t);
-  StateConstraintJacobian jac(robot, max_num_impulse);
   linearizer.initConstraints(ocp, robots, contact_sequence, s);
-  linearizer.linearizeOCP(ocp, robots, contact_sequence, 
-                          q, v, s, kkt_matrix, kkt_residual, jac);
+  linearizer.linearizeOCP(ocp, robots, contact_sequence, q, v, s, kkt_matrix, kkt_residual);
   Direction d(robot, N, max_num_impulse);
   RiccatiRecursion riccati_solver(robots[0], N, max_num_impulse, nthreads);
   RiccatiFactorization riccati_factorization(robots[0], N, max_num_impulse);
-  riccati_solver.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, 
-                                          jac, riccati_factorization);
+  riccati_solver.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, riccati_factorization);
   riccati_solver.forwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, d);
   riccati_solver.computeDirection(ocp, robots, riccati_factorization, s, d);
   const double primal_step_size = riccati_solver.maxPrimalStepSize();
@@ -417,12 +413,12 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
 TEST_F(OCPLinearizerTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot();
   testLinearizeOCP(robot);
-  // testComputeKKTResidual(robot);
-  // testIntegrateSolution(robot);
+  testComputeKKTResidual(robot);
+  testIntegrateSolution(robot);
   robot = testhelper::CreateFixedBaseRobot(dt);
   testLinearizeOCP(robot);
-  // testComputeKKTResidual(robot);
-  // testIntegrateSolution(robot);
+  testComputeKKTResidual(robot);
+  testIntegrateSolution(robot);
 }
 
 

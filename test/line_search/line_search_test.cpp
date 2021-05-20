@@ -5,8 +5,8 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/ocp/ocp.hpp"
 #include "idocp/ocp/ocp_linearizer.hpp"
 #include "idocp/line_search/line_search_filter.hpp"
 #include "idocp/line_search/line_search.hpp"

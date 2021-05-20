@@ -9,8 +9,8 @@
 #include "idocp/utils/aligned_vector.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/ocp/ocp.hpp"
 #include "idocp/line_search/line_search_filter.hpp"
 
 

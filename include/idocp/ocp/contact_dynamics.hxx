@@ -203,11 +203,14 @@ inline void ContactDynamics::computeCondensedDualDirection(
 
 
 inline void ContactDynamics::condenseSwitchingConstraint(
-    SplitKKTResidual& kkt_residual, SplitStateConstraintJacobian& jac) const {
-  jac.Phix().noalias() -= jac.Phia() * data_.MJtJinv_dIDCdqv().topRows(dimv_);
-  jac.Phiu().noalias()  
-    = jac.Phia() * data_.MJtJinv().block(0, dim_passive_, dimv_, dimu_);
-  kkt_residual.P().noalias() -= jac.Phia() * data_.MJtJinv_IDC().topRows(dimv_);
+    SplitSwitchingConstraintJacobian& switch_jacobian,
+    SplitSwitchingConstraintResidual& switch_residual) const {
+  switch_jacobian.Phix().noalias() 
+      -= switch_jacobian.Phia() * data_.MJtJinv_dIDCdqv().topRows(dimv_);
+  switch_jacobian.Phiu().noalias()  
+      = switch_jacobian.Phia() * data_.MJtJinv().block(0, dim_passive_, dimv_, dimu_);
+  switch_residual.P().noalias() 
+      -= switch_jacobian.Phia() * data_.MJtJinv_IDC().topRows(dimv_);
 }
 
 

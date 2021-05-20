@@ -3,7 +3,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/ocp/ocp.hpp"
 
 
 namespace idocp {

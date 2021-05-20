@@ -1,1 +1,0 @@
-#include "idocp/ocp/lqr_policy.hpp"

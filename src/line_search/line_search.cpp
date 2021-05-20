@@ -108,7 +108,7 @@ void LineSearch::computeCostAndViolation(
             contact_sequence.contactStatus(ocp.discrete().contactPhase(i)),
             ocp.discrete().t(i), ocp.discrete().dt(i), s[i], s[i+1].q, s[i+1].v, 
             kkt_residual_[i], contact_sequence.impulseStatus(impulse_index), 
-            ocp.discrete().dt(i+1));
+            ocp.discrete().dt(i+1), kkt_residual_.switching[impulse_index]);
       }
       else {
         violations_.coeffRef(i) = ocp[i].constraintViolation(
@@ -179,7 +179,8 @@ void LineSearch::computeCostAndViolation(
                 s[time_stage_after_lift].q, s[time_stage_after_lift].v,
                 kkt_residual_.lift[lift_index], 
                 contact_sequence.impulseStatus(impulse_index), 
-                ocp.discrete().dt(time_stage_after_lift));
+                ocp.discrete().dt(time_stage_after_lift),
+                kkt_residual_.switching[impulse_index]);
       }
       else {
         violations_lift_.coeffRef(lift_index) 

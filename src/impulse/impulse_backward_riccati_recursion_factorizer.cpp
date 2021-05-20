@@ -1,1 +1,0 @@
-#include "idocp/impulse/impulse_backward_riccati_recursion_factorizer.hpp"

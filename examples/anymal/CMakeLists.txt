@@ -37,11 +37,6 @@ macro(add_benchmark BENCHMARK)
     PRIVATE
     idocp::idocp
   )
-  target_compile_options(
-    ${BENCHMARK} 
-    PUBLIC
-    -march=native
-  )
 endmacro()
 
 macro(add_example EXAMPLE)

@@ -6,9 +6,9 @@
 #include "idocp/robot/robot.hpp"
 #include "idocp/unocp/split_unkkt_matrix.hpp"
 #include "idocp/unocp/split_unkkt_residual.hpp"
-#include "idocp/ocp/split_riccati_factorization.hpp"
 #include "idocp/ocp/split_direction.hpp"
-#include "idocp/ocp/lqr_policy.hpp"
+#include "idocp/riccati/split_riccati_factorization.hpp"
+#include "idocp/riccati/lqr_policy.hpp"
 #include "idocp/unocp/backward_unriccati_recursion_factorizer.hpp"
 
 #include "robot_factory.hpp"

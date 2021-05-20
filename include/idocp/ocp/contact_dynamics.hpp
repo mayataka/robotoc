@@ -10,7 +10,8 @@
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/contact_dynamics_data.hpp"
-#include "idocp/ocp/split_state_constraint_jacobian.hpp"
+#include "idocp/ocp/split_switching_constraint_residual.hpp"
+#include "idocp/ocp/split_switching_constraint_jacobian.hpp"
 
 
 namespace idocp {
@@ -133,11 +134,12 @@ public:
 
   ///
   /// @brief Condenses the switching constraint. 
-  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
-  /// @param[in, out] jac Jacobian of the switching constraint.
+  /// @param[in, out] switch_jacobian Jacobian of the switching constraint. 
+  /// @param[in, out] switch_residual Residual of the switching constraint. 
   ///
-  void condenseSwitchingConstraint(SplitKKTResidual& kkt_residual, 
-                                   SplitStateConstraintJacobian& jac) const;
+  void condenseSwitchingConstraint(
+      SplitSwitchingConstraintJacobian& switch_jacobian,
+      SplitSwitchingConstraintResidual& switch_residual) const;
 
   ///
   /// @brief Computes the residual in the contact dynamics constraint. 

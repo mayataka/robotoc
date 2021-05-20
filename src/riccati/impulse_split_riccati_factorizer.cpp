@@ -1,0 +1,1 @@
+#include "idocp/riccati/impulse_split_riccati_factorizer.hpp"

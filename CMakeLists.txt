@@ -59,6 +59,10 @@ add_library(
   src/constraints/joint_torques_lower_limit.cpp
   src/constraints/friction_cone.cpp
   src/constraints/impulse_friction_cone.cpp
+  src/hybrid/discrete_event.cpp
+  src/hybrid/contact_sequence.cpp
+  src/hybrid/ocp_discretizer.cpp
+  src/hybrid/collision_checker.cpp
   src/impulse/impulse_split_solution.cpp
   src/impulse/impulse_split_direction.cpp
   src/impulse/impulse_split_kkt_residual.cpp
@@ -67,13 +71,6 @@ add_library(
   src/impulse/impulse_dynamics_data.cpp
   src/impulse/impulse_dynamics.cpp
   src/impulse/impulse_split_ocp.cpp
-  src/impulse/impulse_backward_riccati_recursion_factorizer.cpp
-  src/impulse/impulse_split_riccati_factorizer.cpp
-  src/hybrid/discrete_event.cpp
-  src/hybrid/contact_sequence.cpp
-  src/hybrid/ocp_discretizer.cpp
-  src/hybrid/hybrid_container.cpp
-  src/hybrid/collision_checker.cpp
   src/ocp/split_kkt_residual.cpp
   src/ocp/split_kkt_matrix.cpp
   src/ocp/split_solution.cpp
@@ -81,20 +78,22 @@ add_library(
   src/ocp/state_equation.cpp
   src/ocp/contact_dynamics_data.cpp
   src/ocp/contact_dynamics.cpp
-  src/ocp/switching_constraint.cpp
-  src/ocp/split_state_constraint_jacobian.cpp
+  src/ocp/split_switching_constraint_jacobian.cpp
+  src/ocp/split_switching_constraint_residual.cpp
   src/ocp/switching_constraint.cpp
   src/ocp/split_ocp.cpp
   src/ocp/terminal_ocp.cpp
-  src/ocp/state_constraint_jacobian.cpp
+  src/ocp/ocp.cpp
   src/ocp/ocp_linearizer.cpp
-  src/ocp/split_riccati_factorization.cpp
-  src/ocp/split_constrained_riccati_factorization.cpp
-  src/ocp/backward_riccati_recursion_factorizer.cpp
-  src/ocp/lqr_policy.cpp
-  src/ocp/split_riccati_factorizer.cpp
-  src/ocp/riccati_recursion.cpp
-  src/ocp/ocp_solver.cpp
+  src/riccati/split_riccati_factorization.cpp
+  src/riccati/lqr_policy.cpp
+  src/riccati/backward_riccati_recursion_factorizer.cpp
+  src/riccati/impulse_backward_riccati_recursion_factorizer.cpp
+  src/riccati/split_riccati_factorizer.cpp
+  src/riccati/impulse_split_riccati_factorizer.cpp
+  src/riccati/split_constrained_riccati_factorization.cpp
+  src/riccati/riccati_recursion.cpp
+  src/solver/ocp_solver.cpp
   src/unocp/split_unkkt_residual.cpp
   src/unocp/split_unkkt_matrix.cpp
   src/unocp/split_unkkt_matrix_inverter.cpp
@@ -104,12 +103,12 @@ add_library(
   src/unocp/backward_unriccati_recursion_factorizer.cpp
   src/unocp/split_unriccati_factorizer.cpp
   src/unocp/unriccati_recursion.cpp
-  src/unocp/unocp_solver.cpp
+  src/solver/unocp_solver.cpp
   # src/unocp/split_unparnmpc.cpp
   # src/unocp/terminal_unparnmpc.cpp
   # src/unocp/split_unbackward_correction.cpp
   # src/unocp/unbackward_correction.cpp
-  # src/unocp/unparnmpc_solver.cpp
+  # src/solver/unparnmpc_solver.cpp
   src/line_search/line_search_filter.cpp
   src/line_search/line_search.cpp
   src/line_search/unline_search.cpp
@@ -139,10 +138,6 @@ target_compile_options(
   ${OpenMP_CXX_FLAGS}
 )
 if (OPTIMIZE_FOR_NATIVE)
-  if(BUILD_VIEWER)
-    message(STATUS "WARNING: BUILD_VIEWER MUST BE OFF to avoid alignment error!. We turn it OFF!")
-    set(BUILD_VIEWER OFF)
-  endif()
   target_compile_options(
     ${PROJECT_NAME} 
     PUBLIC

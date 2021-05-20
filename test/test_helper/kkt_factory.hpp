@@ -3,7 +3,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/ocp/ocp.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 #include "idocp/ocp/split_kkt_residual.hpp"
 #include "idocp/impulse/impulse_split_kkt_matrix.hpp"
@@ -19,8 +19,7 @@ ImpulseSplitKKTMatrix CreateImpulseSplitKKTMatrix(const Robot& robot);
 
 SplitKKTResidual CreateSplitKKTResidual(const Robot& robot);
 
-SplitKKTResidual CreateSplitKKTResidual(const Robot& robot, 
-                                        const ImpulseStatus& impulse_status);
+SplitKKTResidual CreateSplitKKTResidual(const Robot& robot);
 
 ImpulseSplitKKTResidual CreateImpulseSplitKKTResidual(const Robot& robot);
 

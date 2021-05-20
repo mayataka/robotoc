@@ -5,7 +5,6 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/robot/impulse_status.hpp"
 
 
 namespace idocp {
@@ -57,17 +56,6 @@ public:
   /// @param[in] contact_status Contact status.
   ///
   void setContactStatus(const ContactStatus& contact_status);
-
-  ///
-  /// @brief Set impulse status, i.e., set dimension of the impulses.
-  /// @param[in] impulse_status Impulse status.
-  ///
-  void setImpulseStatus(const ImpulseStatus& impulse_status);
-
-  ///
-  /// @brief Set impulse status, i.e., set dimension of the impulse, to zero.
-  ///
-  void setImpulseStatus();
 
   ///
   /// @brief Jacobian of the state equation w.r.t. the state x.
@@ -126,18 +114,6 @@ public:
   /// @brief Jacobian of the state equation (w.r.t. v) w.r.t. u. 
   ///
   Eigen::MatrixXd Fvu;
-
-  ///
-  /// @brief Jacobian of the swithcing constraint w.r.t. q. 
-  /// @return Reference to the Jacobian. 
-  /// Size is ImpulseStatus::dimf() x Robot::dimv().
-  ///
-  Eigen::Block<Eigen::MatrixXd> Pq();
-
-  ///
-  /// @brief const version of SplitKKTMatrix::Pq().
-  ///
-  const Eigen::Block<const Eigen::MatrixXd> Pq() const;
 
   ///
   /// @brief Hessian w.r.t. to the state x and state x.
@@ -290,13 +266,6 @@ public:
   int dimf() const;
 
   ///
-  /// @brief Returns the dimension of the stack of impulse forces at the current 
-  /// impulse status.
-  /// @return Dimension of the stack of impulse forces.
-  ///
-  int dimi() const;
-
-  ///
   /// @brief Checks dimensional consistency of each component. 
   /// @return true if the dimension is consistent. false if not.
   ///
@@ -316,9 +285,9 @@ public:
   bool hasNaN() const;
 
 private:
-  Eigen::MatrixXd Qff_full_, Qqf_full_, Pq_full_;
+  Eigen::MatrixXd Qff_full_, Qqf_full_;
   bool has_floating_base_;
-  int dimv_, dimx_, dimu_, dim_passive_, dimf_, dimi_;
+  int dimv_, dimx_, dimu_, dim_passive_, dimf_;
 
 };
 

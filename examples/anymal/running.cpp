@@ -3,8 +3,8 @@
 
 #include "Eigen/Core"
 
+#include "idocp/solver/ocp_solver.hpp"
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/ocp_solver.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/configuration_space_cost.hpp"
 #include "idocp/cost/time_varying_configuration_space_cost.hpp"

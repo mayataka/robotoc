@@ -14,12 +14,10 @@ inline SplitKKTResidual::SplitKKTResidual(const Robot& robot)
     lu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
     Fq_tmp(Eigen::VectorXd::Zero(robot.dimv())),
     lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
-    P_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimu_(robot.dimu()),
     dim_passive_(robot.dim_passive()),
     dimf_(0), 
-    dimi_(0), 
     has_floating_base_(robot.hasFloatingBase()) {
 }
 
@@ -32,12 +30,10 @@ inline SplitKKTResidual::SplitKKTResidual()
     lu_passive(),
     Fq_tmp(),
     lf_full_(),
-    P_full_(),
     dimv_(0), 
     dimu_(0),
     dim_passive_(0),
     dimf_(0), 
-    dimi_(0), 
     has_floating_base_(false) {
 }
 
@@ -49,17 +45,6 @@ inline SplitKKTResidual::~SplitKKTResidual() {
 inline void SplitKKTResidual::setContactStatus(
     const ContactStatus& contact_status) {
   dimf_ = contact_status.dimf();
-}
-
-
-inline void SplitKKTResidual::setImpulseStatus(
-    const ImpulseStatus& impulse_status) {
-  dimi_ = impulse_status.dimf();
-}
-
-
-inline void SplitKKTResidual::setImpulseStatus() {
-  dimi_ = 0;
 }
 
 
@@ -82,17 +67,6 @@ inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::Fv() {
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 SplitKKTResidual::Fv() const {
   return Fx.tail(dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> SplitKKTResidual::P() {
-  return P_full_.head(dimi_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitKKTResidual::P() const {
-  return P_full_.head(dimi_);
 }
 
 
@@ -136,17 +110,11 @@ inline void SplitKKTResidual::setZero() {
   lu.setZero();
   lf().setZero();
   lu_passive.setZero();
-  P().setZero();
 }
 
 
 inline int SplitKKTResidual::dimf() const {
   return dimf_;
-}
-
-
-inline int SplitKKTResidual::dimi() const {
-  return dimi_;
 }
 
 
@@ -173,9 +141,6 @@ inline bool SplitKKTResidual::isApprox(const SplitKKTResidual& other) const {
   if (has_floating_base_) {
     if (!lu_passive.isApprox(other.lu_passive)) return false;
   }
-  if (dimi_ > 0) {
-    if (!P().isApprox(other.P())) return false;
-  }
   return true;
 }
 
@@ -188,7 +153,6 @@ inline bool SplitKKTResidual::hasNaN() const {
   if (lu.hasNaN()) return true;
   if (lf().hasNaN()) return true;
   if (lu_passive.hasNaN()) return true;
-  if (P().hasNaN()) return true;
   return false;
 }
 

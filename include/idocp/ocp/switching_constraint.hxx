@@ -6,78 +6,73 @@
 #include <cassert>
 
 namespace idocp {
+namespace switchingconstraint {
 
-inline SwitchingConstraint::SwitchingConstraint(
-    const Robot& robot) 
-  : q_(Eigen::VectorXd::Zero(robot.dimq())), 
-    dq_(Eigen::VectorXd::Zero(robot.dimv())) {
-}
-
-
-inline SwitchingConstraint::SwitchingConstraint() 
-  : q_(), 
-    dq_() {
-}
-
-
-inline SwitchingConstraint::~SwitchingConstraint() {
-}
-
-
-inline void SwitchingConstraint::linearizeSwitchingConstraint(
+inline void linearizeSwitchingConstraint(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
-    const double dt2, const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual, SplitStateConstraintJacobian& jac) {
+    const double dt2, const SplitSolution& s, SplitKKTResidual& kkt_residual, 
+    SplitSwitchingConstraintJacobian& switch_jacobian,
+    SplitSwitchingConstraintResidual& switch_residual) {
   assert(dt1 > 0);
   assert(dt2 > 0);
-  jac.setImpulseStatus(impulse_status);
+  switch_residual.setImpulseStatus(impulse_status);
+  switch_jacobian.setImpulseStatus(impulse_status);
+  switch_residual.setZero();
+  switch_jacobian.setZero();
   computeSwitchingConstraintResidual(robot, impulse_status, dt1, dt2, s, 
-                                     kkt_residual);
-  robot.computeContactPositionDerivative(impulse_status, kkt_matrix.Pq());
+                                     switch_residual);
+  robot.computeContactPositionDerivative(impulse_status, switch_jacobian.Pq());
   if (robot.hasFloatingBase()) {
-    robot.dIntegratedConfiguration(s.q, dq_, jac.dintegrate_dq);
-    robot.dIntegratedVelocity(s.q, dq_, jac.dintegrate_dv);
-    jac.Phiq().noalias() = kkt_matrix.Pq() * jac.dintegrate_dq;
-    jac.Phiv().noalias() = (dt1+dt2) * kkt_matrix.Pq() * jac.dintegrate_dv;
-    jac.Phia().noalias() = (dt1*dt2) * kkt_matrix.Pq() * jac.dintegrate_dv;
+    robot.dIntegratedConfiguration(s.q, switch_residual.dq_pred, 
+                                   switch_jacobian.dintegrate_dq);
+    robot.dIntegratedVelocity(s.q, switch_residual.dq_pred, 
+                              switch_jacobian.dintegrate_dv);
+    switch_jacobian.Phiq().noalias() 
+        = switch_jacobian.Pq() * switch_jacobian.dintegrate_dq;
+    switch_jacobian.Phiv().noalias() 
+        = (dt1+dt2) * switch_jacobian.Pq() * switch_jacobian.dintegrate_dv;
+    switch_jacobian.Phia().noalias() 
+        = (dt1*dt2) * switch_jacobian.Pq() * switch_jacobian.dintegrate_dv;
   }
   else {
-    jac.Phiq() = kkt_matrix.Pq();
-    jac.Phiv() = (dt1+dt2) * kkt_matrix.Pq();
-    jac.Phia() = (dt1*dt2) * kkt_matrix.Pq();
+    switch_jacobian.Phiq() = switch_jacobian.Pq();
+    switch_jacobian.Phiv() = (dt1+dt2) * switch_jacobian.Pq();
+    switch_jacobian.Phia() = (dt1*dt2) * switch_jacobian.Pq();
   }
-  kkt_residual.lq().noalias() += jac.Phiq().transpose() * s.xi_stack();
-  kkt_residual.lv().noalias() += jac.Phiv().transpose() * s.xi_stack();
-  kkt_residual.la.noalias()   += jac.Phia().transpose() * s.xi_stack();
+  kkt_residual.lx.noalias() += switch_jacobian.Phix().transpose() * s.xi_stack();
+  kkt_residual.la.noalias() += switch_jacobian.Phia().transpose() * s.xi_stack();
 }
 
 
-inline void SwitchingConstraint::computeSwitchingConstraintResidual(
+inline void computeSwitchingConstraintResidual(
     Robot& robot, const ImpulseStatus& impulse_status, const double dt1, 
     const double dt2, const SplitSolution& s, 
-    SplitKKTResidual& kkt_residual) {
+    SplitSwitchingConstraintResidual& switch_residual) {
   assert(dt1 > 0);
   assert(dt2 > 0);
-  dq_ = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
-  robot.integrateConfiguration(s.q, dq_, 1.0, q_);
-  robot.updateKinematics(q_);
+  switch_residual.setImpulseStatus(impulse_status);
+  switch_residual.dq_pred = (dt1+dt2) * s.v + (dt1*dt2) * s.a;
+  robot.integrateConfiguration(s.q, switch_residual.dq_pred, 1.0, 
+                               switch_residual.q_pred);
+  robot.updateKinematics(switch_residual.q_pred);
   robot.computeContactPositionResidual(impulse_status, 
                                        impulse_status.contactPoints(), 
-                                       kkt_residual.P());
+                                       switch_residual.P());
 }
 
 
-inline double SwitchingConstraint::l1NormSwitchingConstraintResidual(
-    const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.P().template lpNorm<1>();
+inline double l1NormSwitchingConstraintResidual(
+    const SplitSwitchingConstraintResidual& switch_residual) {
+  return switch_residual.P().template lpNorm<1>();
 }
 
 
-inline double SwitchingConstraint::squaredNormSwitchingConstraintResidual(
-    const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.P().squaredNorm();
+inline double squaredNormSwitchingConstraintResidual(
+    const SplitSwitchingConstraintResidual& switch_residual) {
+  return switch_residual.P().squaredNorm();
 }
 
+} // namespace switchingconstraint 
 } // namespace idocp
 
 #endif // IDOCP_SWITCHING_CONSTRAINT_HXX_

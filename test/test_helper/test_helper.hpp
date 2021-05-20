@@ -9,9 +9,9 @@
 namespace idocp {
 namespace testhelper {
 
-template <typename Type, typename ImpulseType>
-bool IsApprox(const hybrid_container<Type, ImpulseType>& rhs, 
-              const hybrid_container<Type, ImpulseType>& lhs) {
+template <typename Type, typename ImpulseType, typename SwitchingType>
+bool IsApprox(const hybrid_container<Type, ImpulseType, SwitchingType>& rhs, 
+              const hybrid_container<Type, ImpulseType, SwitchingType>& lhs) {
   assert(rhs.data.size() == lhs.data.size());
   assert(rhs.impulse.size() == lhs.impulse.size());
   assert(rhs.aux.size() == lhs.aux.size());
@@ -42,8 +42,8 @@ bool IsApprox(const hybrid_container<Type, ImpulseType>& rhs,
 }
 
 
-template <typename Type, typename ImpulseType>
-bool HasNaN(const hybrid_container<Type, ImpulseType>& obj) {
+template <typename Type, typename ImpulseType, typename SwitchingType>
+bool HasNaN(const hybrid_container<Type, ImpulseType, SwitchingType>& obj) {
   const int N = obj.data.size()-1;
   const int max_num_impulse = obj.impulse.size();
   for (int i=0; i<=N; ++i) {

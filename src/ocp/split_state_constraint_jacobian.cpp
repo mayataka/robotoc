@@ -1,1 +1,0 @@
-#include "idocp/ocp/split_state_constraint_jacobian.hpp"

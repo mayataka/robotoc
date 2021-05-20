@@ -5,7 +5,6 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/robot/impulse_status.hpp"
 
 
 namespace idocp {
@@ -99,18 +98,6 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> Fv() const;
 
   ///
-  /// @brief Residual in the switching constraint.
-  /// @return Reference to the residual in the switching constraints. 
-  /// Size is ImpulseStatus::dimf().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> P();
-
-  ///
-  /// @brief const version of SplitKKTResidual::P().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> P() const;
-
-  ///
   /// @brief KKT Residual w.r.t. the state x. Size is 2 * Robot::dimv().
   ///
   Eigen::VectorXd lx;
@@ -184,13 +171,6 @@ public:
   int dimf() const;
 
   ///
-  /// @brief Returns the dimension of the stack of impulse forces at the current 
-  /// impulse status.
-  /// @return Dimension of the stack of impulse forces.
-  ///
-  int dimi() const;
-
-  ///
   /// @brief Checks dimensional consistency of each component. 
   /// @return true if the dimension is consistent. false if not.
   ///
@@ -210,8 +190,8 @@ public:
   bool hasNaN() const;
 
 private:
-  Eigen::VectorXd lf_full_, P_full_;
-  int dimv_, dimu_, dim_passive_, dimf_, dimi_;
+  Eigen::VectorXd lf_full_;
+  int dimv_, dimu_, dim_passive_, dimf_;
   bool has_floating_base_;
 
 };
