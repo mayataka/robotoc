@@ -15,9 +15,7 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/ocp/state_equation.hpp"
-#include "idocp/unocp/split_unkkt_residual.hpp"
-#include "idocp/unocp/split_unkkt_matrix.hpp"
-#include "idocp/unocp/unconstrained_dynamics.hpp"
+#include "idocp/unconstr/unconstr_dynamics.hpp"
 
 
 namespace idocp {
@@ -35,7 +33,8 @@ public:
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   ///
-  SplitUnconstrOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+  SplitUnconstrOCP(const Robot& robot, 
+                   const std::shared_ptr<CostFunction>& cost,
                    const std::shared_ptr<Constraints>& constraints);
 
   ///
@@ -93,13 +92,13 @@ public:
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] s_next Split solution of the next time stage.
-  /// @param[in, out] unkkt_matrix Split KKT matrix of this time stage.
-  /// @param[in, out] unkkt_residual Split KKT residual of this time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void linearizeOCP(Robot& robot, const double t, const double dt, 
                     const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                    const SplitSolution& s_next, SplitUnKKTMatrix& unkkt_matrix,
-                    SplitUnKKTResidual& unkkt_residual);
+                    const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix,
+                    SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the Newton direction of the condensed variables  
@@ -107,10 +106,15 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] dt Time step of this time stage.
   /// @param[in] s Split solution of this time stage.
+  /// @param[in] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
   void computeCondensedDirection(Robot& robot, const double dt, 
-                                 const SplitSolution& s, SplitDirection& d);
+                                 const SplitSolution& s, 
+                                 const SplitKKTMatrix& kkt_matrix,
+                                 const SplitKKTResidual& kkt_residual,
+                                 SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -152,18 +156,24 @@ public:
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] s_next Split solution of the next time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void computeKKTResidual(Robot& robot, const double t, const double dt, 
                           const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                          const SplitSolution& s_next);
+                          const SplitSolution& s_next, 
+                          SplitKKTMatrix& kkt_matrix, 
+                          SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Returns the KKT residual of this time stage. Before calling this 
   /// function, SplitUnconstrOCP::computeKKTResidual() must be called.
+  /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in] dt Time step of this time stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual(const double dt) const;
+  double squaredNormKKTResidual(const SplitKKTResidual& kkt_residual, 
+                                const double dt) const;
 
   ///
   /// @brief Computes the stage cost of this time stage for line search.
@@ -191,7 +201,8 @@ public:
   double constraintViolation(Robot& robot,  const double t, const double dt, 
                              const SplitSolution& s, 
                              const Eigen::VectorXd& q_next,
-                             const Eigen::VectorXd& v_next);
+                             const Eigen::VectorXd& v_next,
+                             SplitKKTResidual& kkt_residual);
 
 private:
   std::shared_ptr<CostFunction> cost_;
@@ -200,8 +211,6 @@ private:
   ConstraintsData constraints_data_;
   UnconstrDynamics unconstr_dynamics_;
   bool use_kinematics_;
-  SplitKKTMatrix kkt_matrix_;
-  SplitKKTResidual kkt_residual_;
   double stage_cost_, constraint_violation_;
 
 };

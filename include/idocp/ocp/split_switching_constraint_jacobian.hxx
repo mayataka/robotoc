@@ -23,7 +23,9 @@ inline SplitSwitchingConstraintJacobian::SplitSwitchingConstraintJacobian(
     dimi_(0) {
   if (robot.hasFloatingBase()) {
     dintegrate_dq.resize(robot.dimv(), robot.dimv());
+    dintegrate_dq.setZero();
     dintegrate_dv.resize(robot.dimv(), robot.dimv());
+    dintegrate_dv.setZero();
   }
 }
 

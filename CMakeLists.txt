@@ -95,6 +95,12 @@ add_library(
   # src/riccati/impulse_split_riccati_factorizer.cpp
   src/riccati/riccati_recursion.cpp
   src/solver/ocp_solver.cpp
+  # src/unconstr/unconstr_dynamics.cpp
+  # src/unconstr/split_unconstr_ocp.cpp
+  # src/unconstr/unconstr_ocp.cpp
+  # src/riccati/unconstr_backward_riccati_recursion_factorizer.cpp
+  # src/riccati/unconstr_riccati_factorizer.cpp
+  # src/riccati/unconstr_riccati_recursion.cpp
   src/unocp/split_unkkt_residual.cpp
   src/unocp/split_unkkt_matrix.cpp
   src/unocp/split_unkkt_matrix_inverter.cpp
