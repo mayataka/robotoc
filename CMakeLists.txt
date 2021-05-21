@@ -99,16 +99,13 @@ add_library(
   src/riccati/unconstr_riccati_factorizer.cpp
   src/riccati/unconstr_riccati_recursion.cpp
   src/solver/unconstr_ocp_solver.cpp
-  # src/unocp/split_unkkt_residual.cpp
-  # src/unocp/split_unkkt_matrix.cpp
-  # src/unocp/split_unkkt_matrix_inverter.cpp
-  # src/unocp/unconstrained_container.cpp
-  # src/unocp/unconstrained_dynamics.cpp
-  # src/unocp/split_unparnmpc.cpp
-  # src/unocp/terminal_unparnmpc.cpp
-  # src/unocp/split_unbackward_correction.cpp
-  # src/unocp/unbackward_correction.cpp
-  # src/solver/unparnmpc_solver.cpp
+  src/unconstr/split_unconstr_parnmpc.cpp
+  src/unconstr/terminal_unconstr_parnmpc.cpp
+  src/unconstr/unconstr_parnmpc.cpp
+  src/parnmpc/unconstr_kkt_matrix_inverter.cpp
+  src/parnmpc/unconstr_split_backward_correction.cpp
+  src/parnmpc/unconstr_backward_correction.cpp
+  src/solver/unconstr_parnmpc_solver.cpp
   src/line_search/line_search_filter.cpp
   src/line_search/line_search.cpp
   src/line_search/unconstr_line_search.cpp

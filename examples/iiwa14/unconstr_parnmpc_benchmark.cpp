@@ -3,7 +3,7 @@
 
 #include "Eigen/Core"
 
-#include "idocp/solver/unparnmpc_solver.hpp"
+#include "idocp/solver/unconstr_parnmpc_solver.hpp"
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/configuration_space_cost.hpp"
@@ -38,11 +38,12 @@ int main() {
   // Create the ParNMPC solver for unconstrained rigid-body systems.
   const double T = 1;
   const int N = 20;
-  const int nthreads = 4;
+  // Plz set nthreads by the number of the processors of your PC to enjoy ParNMPC!
+  const int nthreads = 8;
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Constant(robot.dimq(), 2);
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  idocp::UnParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, nthreads);
+  idocp::UnconstrParNMPCSolver parnmpc_solver(robot, cost, constraints, T, N, nthreads);
 
   // Solves the OCP.
   parnmpc_solver.setSolution("q", q);

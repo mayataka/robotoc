@@ -48,7 +48,7 @@ endmacro()
 
 
 add_benchmark(unconstr_ocp_benchmark)
-# add_benchmark(unconstr_parnmpc_benchmark)
+add_benchmark(unconstr_parnmpc_benchmark)
 add_benchmark(ocp_benchmark)
 
 add_example(config_space_ocp)

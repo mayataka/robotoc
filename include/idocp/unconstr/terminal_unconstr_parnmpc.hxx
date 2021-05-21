@@ -15,7 +15,7 @@ inline TerminalUnconstrParNMPC::TerminalUnconstrParNMPC(
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
     constraints_data_(constraints->createConstraintsData(robot, 0)),
-    unconstrained_dynamics_(robot),
+    unconstr_dynamics_(robot),
     use_kinematics_(false) {
   if (cost_->useKinematics() || constraints_->useKinematics()) {
     use_kinematics_ = true;
@@ -42,7 +42,7 @@ inline TerminalUnconstrParNMPC::TerminalUnconstrParNMPC()
     cost_data_(),
     constraints_(),
     constraints_data_(),
-    unconstrained_dynamics_(),
+    unconstr_dynamics_(),
     use_kinematics_(false) {
 }
 
@@ -79,8 +79,8 @@ inline void TerminalUnconstrParNMPC::linearizeOCP(Robot& robot, const double t,
   if (use_kinematics_) {
     robot.updateKinematics(s.q);
   }
-  kkt_matrix_.setZero();
-  kkt_residual_.setZero();
+  kkt_matrix.setZero();
+  kkt_residual.setZero();
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, kkt_residual);
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual);
   constraints_->augmentDualResidual(robot, constraints_data_, dt, s, kkt_residual);
@@ -144,7 +144,7 @@ inline void TerminalUnconstrParNMPC::computeKKTResidual(
   if (use_kinematics_) {
     robot.updateKinematics(s.q);
   }
-  kkt_residual_.setZero();
+  kkt_residual.setZero();
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, kkt_residual);
   cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual);
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
@@ -156,7 +156,7 @@ inline void TerminalUnconstrParNMPC::computeKKTResidual(
 
 
 inline double TerminalUnconstrParNMPC::squaredNormKKTResidual(
-    const double dt) const {
+    const SplitKKTResidual& kkt_residual, const double dt) const {
   assert(dt > 0);
   double error = 0;
   error += kkt_residual.lx.squaredNorm();
@@ -196,7 +196,7 @@ inline double TerminalUnconstrParNMPC::stageCost(Robot& robot, const double t,
 inline double TerminalUnconstrParNMPC::constraintViolation(
     Robot& robot, const double t, const double dt, 
     const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
-    const SplitSolution& s) {
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -206,23 +206,22 @@ inline double TerminalUnconstrParNMPC::constraintViolation(
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   stateequation::computeBackwardEulerResidual(robot, dt, q_prev, v_prev, s, 
                                               kkt_residual);
-  unconstrained_dynamics_.computeUnconstrainedDynamicsResidual(robot, s);
+  unconstr_dynamics_.computeUnconstrDynamicsResidual(robot, s);
   double violation = 0;
   violation += stateequation::l1NormStateEuqationResidual(kkt_residual);
-  violation += unconstrained_dynamics_.l1NormUnconstrainedDynamicsResidual(dt);
+  violation += unconstr_dynamics_.l1NormUnconstrDynamicsResidual(dt);
   violation += dt * constraints_->l1NormPrimalResidual(constraints_data_);
   return violation;
 }
 
 
-template <typename MatrixType>
 inline void TerminalUnconstrParNMPC::computeTerminalCostHessian(
     Robot& robot, const double t, const SplitSolution& s, 
     SplitKKTMatrix& kkt_matrix) {
   if (use_kinematics_) {
     robot.updateKinematics(s.q);
   }
-  kkt_matrix_.setZero();
+  kkt_matrix.setZero();
   cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix);
 }
 

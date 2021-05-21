@@ -15,15 +15,13 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/ocp/state_equation.hpp"
-#include "idocp/unocp/split_unkkt_residual.hpp"
-#include "idocp/unocp/split_unkkt_matrix.hpp"
-#include "idocp/unocp/unconstrained_dynamics.hpp"
+#include "idocp/unconstr/unconstr_dynamics.hpp"
 
 
 namespace idocp {
 
 ///
-/// @class TerminalParNMPC
+/// @class TerminalUnconstrParNMPC
 /// @brief An optimal control problem of unconstrained rigid-body systems for 
 /// ParNMPC algorithm split into the terminal stage. 
 ///
@@ -169,11 +167,13 @@ public:
 
   ///
   /// @brief Returns the KKT residual of this time stage. Before calling this 
-  /// function, SplitOCP::computeKKTResidual() must be called.
+  /// function, computeKKTResidual() must be called.
+  /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in] dt Time step of this time stage.
   /// @return The squared norm of the kKT residual.
   ///
-  double squaredNormKKTResidual(const double dt) const;
+  double squaredNormKKTResidual(const SplitKKTResidual& kkt_residual, 
+                                const double dt) const;
 
   ///
   /// @brief Computes the stage cost of this time stage for line search.
@@ -196,12 +196,14 @@ public:
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] v_prev Generalized velocity at the previous time stage.
   /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   /// @return Constraint violation of this time stage.
   ///
   double constraintViolation(Robot& robot,  const double t, const double dt, 
                              const Eigen::VectorXd& q_prev, 
                              const Eigen::VectorXd& v_prev, 
-                             const SplitSolution& s);
+                             const SplitSolution& s, 
+                             SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the terminal cost Hessian to initialize the auxiliary 
@@ -220,7 +222,7 @@ private:
   CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
-  UnconstrainedDynamics unconstrained_dynamics_;
+  UnconstrDynamics unconstr_dynamics_;
   bool use_kinematics_;
   double stage_cost_, constraint_violation_;
 

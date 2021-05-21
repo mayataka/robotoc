@@ -11,6 +11,7 @@
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/ocp/ocp.hpp"
 #include "idocp/unconstr/unconstr_ocp.hpp"
+#include "idocp/unconstr/unconstr_parnmpc.hpp"
 #include "idocp/line_search/line_search_filter.hpp"
 
 
@@ -136,10 +137,10 @@ private:
                                const Eigen::VectorXd& v, const Solution& s,
                                const double primal_step_size_for_barrier=0);
 
-  // void computeCostAndViolation(UnconstrParNMPC& parnmpc, aligned_vector<Robot>& robots,
-  //                              const double t, const Eigen::VectorXd& q, 
-  //                              const Eigen::VectorXd& v, const Solution& s,
-  //                              const double primal_step_size_for_barrier=0);
+  void computeCostAndViolation(UnconstrParNMPC& parnmpc, aligned_vector<Robot>& robots,
+                               const double t, const Eigen::VectorXd& q, 
+                               const Eigen::VectorXd& v, const Solution& s,
+                               const double primal_step_size_for_barrier=0);
 
   void computeTrySolution(const Solution& s, const Direction& d, 
                           const double step_size);

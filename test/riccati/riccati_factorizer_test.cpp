@@ -74,7 +74,8 @@ void RiccatiFactorizerTest::testBackwardRecursion(const Robot& robot) const {
   SplitRiccatiFactorization riccati_ref = riccati;
   factorizer.backwardRiccatiRecursion(riccati_next, dt, kkt_matrix, kkt_residual, riccati, lqr_policy);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next, dt, kkt_matrix_ref, kkt_residual_ref);
-  Eigen::MatrixXd Ginv = kkt_matrix_ref.Quu.inverse();
+  // Eigen::MatrixXd Ginv = kkt_matrix_ref.Quu.inverse();
+  Eigen::MatrixXd Ginv = kkt_matrix_ref.Quu.llt().solve(Eigen::MatrixXd::Identity(dimu, dimu));
   lqr_policy_ref.K = - Ginv  * kkt_matrix_ref.Qxu.transpose();
   lqr_policy_ref.k = - Ginv  * kkt_residual.lu;
   backward_recursion_ref.factorizeRiccatiFactorization(riccati_next, kkt_matrix_ref, kkt_residual_ref, lqr_policy_ref, dt, riccati_ref);
@@ -125,7 +126,8 @@ void RiccatiFactorizerTest::testBackwardRecursionWithSwitchingConstraint(const R
   GDtD.topLeftCorner(dimu, dimu) = kkt_matrix.Quu;
   GDtD.topRightCorner(dimu, dimi) = switch_jacobian.Phiu().transpose();
   GDtD.bottomLeftCorner(dimi, dimu) = switch_jacobian.Phiu();
-  const Eigen::MatrixXd GDtDinv = GDtD.inverse();
+  const Eigen::MatrixXd GDtDinv = GDtD.ldlt().solve(Eigen::MatrixXd::Identity(dimu+dimi, dimu+dimi));
+  // const Eigen::MatrixXd GDtDinv = GDtD.inverse();
   Eigen::MatrixXd HtC = Eigen::MatrixXd::Zero(dimu+dimi, 2*dimv);
   HtC.topRows(dimu) = kkt_matrix_ref.Qxu.transpose();
   HtC.bottomRows(dimi) = switch_jacobian.Phix();
@@ -199,7 +201,7 @@ void RiccatiFactorizerTest::testForwardRecursion(const Robot& robot) const {
   SplitRiccatiFactorization riccati_ref = riccati;
   factorizer.backwardRiccatiRecursion(riccati_next, dt, kkt_matrix, kkt_residual, riccati, lqr_policy);
   backward_recursion_ref.factorizeKKTMatrix(riccati_next, dt, kkt_matrix_ref, kkt_residual_ref);
-  const Eigen::MatrixXd Ginv = kkt_matrix_ref.Quu.inverse();
+  const Eigen::MatrixXd Ginv = kkt_matrix_ref.Quu.llt().solve(Eigen::MatrixXd::Identity(dimu, dimu));
   lqr_policy_ref.K = - Ginv  * kkt_matrix_ref.Qxu.transpose();
   lqr_policy_ref.k = - Ginv  * kkt_residual.lu;
   backward_recursion_ref.factorizeRiccatiFactorization(riccati_next, kkt_matrix_ref, kkt_residual_ref, lqr_policy_ref, dt, riccati_ref);

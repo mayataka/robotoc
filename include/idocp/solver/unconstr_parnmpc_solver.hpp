@@ -1,5 +1,5 @@
-#ifndef IDOCP_UNPARNMPC_SOLVER_HPP_
-#define IDOCP_UNPARNMPC_SOLVER_HPP_
+#ifndef IDOCP_UNCONSTR_PARNMPC_SOLVER_HPP_
+#define IDOCP_UNOCNSTR_PARNMPC_SOLVER_HPP_
 
 #include <vector>
 #include <memory>
@@ -10,20 +10,20 @@
 #include "idocp/utils/aligned_vector.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/unocp/unbackward_correction.hpp"
-#include "idocp/unocp/unconstrained_container.hpp"
-#include "idocp/line_search/unline_search.hpp"
+#include "idocp/unconstr/unconstr_parnmpc.hpp"
+#include "idocp/parnmpc/unconstr_backward_correction.hpp"
+#include "idocp/line_search/unconstr_line_search.hpp"
 
 
 namespace idocp {
 
 ///
-/// @class UnParNMPCSolver
+/// @class UnconstrParNMPCSolver
 /// @brief Optimal control problem solver of unconstrained rigid-body systems 
 /// by ParNMPC algorithm. "Unconstrained" means that the system does not have 
 /// either a floating base or any contacts.
 ///
-class UnParNMPCSolver {
+class UnconstrParNMPCSolver {
 public:
   ///
   /// @brief Construct optimal control problem solver.
@@ -35,39 +35,40 @@ public:
   /// @param[in] nthreads Number of the threads in solving the optimal control 
   /// problem. Must be positive. Default is 1.
   ///
-  UnParNMPCSolver(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
-                  const std::shared_ptr<Constraints>& constraints, 
-                  const double T, const int N, const int nthreads=1);
+  UnconstrParNMPCSolver(const Robot& robot, 
+                        const std::shared_ptr<CostFunction>& cost,
+                        const std::shared_ptr<Constraints>& constraints, 
+                        const double T, const int N, const int nthreads=1);
 
   ///
   /// @brief Default constructor. 
   ///
-  UnParNMPCSolver();
+  UnconstrParNMPCSolver();
 
   ///
   /// @brief Destructor. 
   ///
-  ~UnParNMPCSolver();
+  ~UnconstrParNMPCSolver();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  UnParNMPCSolver(const UnParNMPCSolver&) = default;
+  UnconstrParNMPCSolver(const UnconstrParNMPCSolver&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  UnParNMPCSolver& operator=(const UnParNMPCSolver&) = default;
+  UnconstrParNMPCSolver& operator=(const UnconstrParNMPCSolver&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  UnParNMPCSolver(UnParNMPCSolver&&) noexcept = default;
+  UnconstrParNMPCSolver(UnconstrParNMPCSolver&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  UnParNMPCSolver& operator=(UnParNMPCSolver&&) noexcept = default;
+  UnconstrParNMPCSolver& operator=(UnconstrParNMPCSolver&&) noexcept = default;
 
   ///
   /// @brief Initializes the priaml-dual interior point method for inequality 
@@ -155,14 +156,14 @@ public:
   bool isCurrentSolutionFeasible();
 
 private:
-  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots_;
-  UnParNMPC parnmpc_;
-  UnBackwardCorrection backward_correction_;
-  UnLineSearch line_search_;
-  UnKKTMatrix unkkt_matrix_;
-  UnKKTResidual unkkt_residual_;
-  UnSolution s_;
-  UnDirection d_;
+  aligned_vector<Robot> robots_;
+  UnconstrParNMPC parnmpc_;
+  UnconstrBackwardCorrection backward_correction_;
+  UnconstrLineSearch line_search_;
+  KKTMatrix kkt_matrix_;
+  KKTResidual kkt_residual_;
+  Solution s_;
+  Direction d_;
   int N_, nthreads_;
   double T_, dt_;
   Eigen::VectorXd kkt_error_;
@@ -172,4 +173,4 @@ private:
 } // namespace idocp 
 
 
-#endif // IDOCP_UNPARNMPC_SOLVER_HPP_ 
+#endif // IDOCP_UNOCNSTR_PARNMPC_SOLVER_HPP_ 

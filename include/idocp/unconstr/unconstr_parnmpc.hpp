@@ -1,13 +1,13 @@
-#ifndef IDOCP_UNCONSTR_OCP_HPP_
-#define IDOCP_UNCONSTR_OCP_HPP_
+#ifndef IDOCP_UNCONSTR_PARNMPC_HPP_
+#define IDOCP_UNCONSTR_PARNMPC_HPP_
 
 #include <vector>
 #include <memory>
 
 #include "idocp/robot/robot.hpp"
 
-#include "idocp/unconstr/split_unconstr_ocp.hpp"
-#include "idocp/ocp/terminal_ocp.hpp"
+#include "idocp/unconstr/split_unconstr_parnmpc.hpp"
+#include "idocp/unconstr/terminal_unconstr_parnmpc.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 
@@ -15,11 +15,11 @@
 namespace idocp {
 
 ///
-/// @class UnconstrOCP
+/// @class UnconstrParNMPC
 /// @brief An optimal control problem of unconstrained rigid-body systems for 
 /// Riccati recursion algorithm.
 ///
-class UnconstrOCP {
+class UnconstrParNMPC {
 public:
   ///
   /// @brief Constructor. 
@@ -28,16 +28,16 @@ public:
   /// @param[in] constraints Shared ptr to the constraints.
   /// @param[in] N number of the discretization grids of the horizon.
   ///
-  UnconstrOCP(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
-              const std::shared_ptr<Constraints>& constraints, const int N) 
-    : data(N, SplitUnconstrOCP(robot, cost, constraints)), 
-      terminal(TerminalOCP(robot, cost, constraints)) {
+  UnconstrParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
+                  const std::shared_ptr<Constraints>& constraints, const int N) 
+    : data(N-1, SplitUnconstrParNMPC(robot, cost, constraints)), 
+      terminal(TerminalUnconstrParNMPC(robot, cost, constraints)) {
   }
 
   ///
   /// @brief Default Constructor.
   ///
-  UnconstrOCP() 
+  UnconstrParNMPC() 
     : data(), 
       terminal() {
   }
@@ -45,33 +45,33 @@ public:
   ///
   /// @brief Destructor.
   ///
-  ~UnconstrOCP() {
+  ~UnconstrParNMPC() {
   }
 
   ///
   /// @brief Default copy constructor. 
   ///
-  UnconstrOCP(const UnconstrOCP&) = default;
+  UnconstrParNMPC(const UnconstrParNMPC&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  UnconstrOCP& operator=(const UnconstrOCP&) = default;
+  UnconstrParNMPC& operator=(const UnconstrParNMPC&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  UnconstrOCP(UnconstrOCP&&) noexcept = default;
+  UnconstrParNMPC(UnconstrParNMPC&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  UnconstrOCP& operator=(UnconstrOCP&&) noexcept = default;
+  UnconstrParNMPC& operator=(UnconstrParNMPC&&) noexcept = default;
 
   ///
   /// @brief Overload operator[] to access the data as std::vector. 
   ///
-  SplitUnconstrOCP& operator[] (const int i) {
+  SplitUnconstrParNMPC& operator[] (const int i) {
     assert(i >= 0);
     assert(i < data.size());
     return data[i];
@@ -80,16 +80,16 @@ public:
   ///
   /// @brief const version of hybrid_container::operator[]. 
   ///
-  const SplitUnconstrOCP& operator[] (const int i) const {
+  const SplitUnconstrParNMPC& operator[] (const int i) const {
     assert(i >= 0);
     assert(i < data.size());
     return data[i];
   }
 
-  std::vector<SplitUnconstrOCP> data;
-  TerminalOCP terminal;
+  std::vector<SplitUnconstrParNMPC> data;
+  TerminalUnconstrParNMPC terminal;
 };
 
 } // namespace idocp
 
-#endif // IDOCP_UNCONSTR_OCP_HPP_ 
+#endif // IDOCP_UNCONSTR_PARNMPC_HPP_ 
