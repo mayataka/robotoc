@@ -207,9 +207,9 @@ private:
   OCP ocp_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
-  RiccatiFactorization riccati_factorization_;
   Solution s_;
   Direction d_;
+  RiccatiFactorization riccati_factorization_;
 
   void discretizeSolution();
 

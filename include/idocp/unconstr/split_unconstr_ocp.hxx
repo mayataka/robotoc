@@ -57,7 +57,7 @@ inline bool SplitUnconstrOCP::isFeasible(Robot& robot, const SplitSolution& s) {
 
 
 inline void SplitUnconstrOCP::initConstraints(Robot& robot, const int time_step, 
-                                        const SplitSolution& s) { 
+                                              const SplitSolution& s) { 
   assert(time_step >= 0);
   constraints_data_ = constraints_->createConstraintsData(robot, time_step);
   constraints_->setSlackAndDual(robot, constraints_data_, s);
@@ -138,7 +138,7 @@ inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const double t,
   assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
   if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
+    robot.updateKinematics(s.q);
   }
   kkt_residual.setZero();
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, kkt_residual);
@@ -172,7 +172,7 @@ inline double SplitUnconstrOCP::stageCost(Robot& robot, const double t,
   assert(primal_step_size >= 0);
   assert(primal_step_size <= 1);
   if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
+    robot.updateKinematics(s.q);
   }
   double cost = 0;
   cost += cost_->computeStageCost(robot, cost_data_, t, dt, s);
@@ -193,7 +193,7 @@ inline double SplitUnconstrOCP::constraintViolation(
     SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
+    robot.updateKinematics(s.q);
   }
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   stateequation::computeForwardEulerResidual(robot, dt, s, q_next, v_next, 

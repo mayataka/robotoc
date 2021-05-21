@@ -90,27 +90,20 @@ add_library(
   src/riccati/lqr_policy.cpp
   src/riccati/backward_riccati_recursion_factorizer.cpp
   src/riccati/riccati_factorizer.cpp
-  # src/riccati/impulse_backward_riccati_recursion_factorizer.cpp
-  # src/riccati/split_riccati_factorizer.cpp
-  # src/riccati/impulse_split_riccati_factorizer.cpp
   src/riccati/riccati_recursion.cpp
   src/solver/ocp_solver.cpp
-  # src/unconstr/unconstr_dynamics.cpp
-  # src/unconstr/split_unconstr_ocp.cpp
-  # src/unconstr/unconstr_ocp.cpp
-  # src/riccati/unconstr_backward_riccati_recursion_factorizer.cpp
-  # src/riccati/unconstr_riccati_factorizer.cpp
-  # src/riccati/unconstr_riccati_recursion.cpp
-  src/unocp/split_unkkt_residual.cpp
-  src/unocp/split_unkkt_matrix.cpp
-  src/unocp/split_unkkt_matrix_inverter.cpp
-  src/unocp/unconstrained_container.cpp
-  src/unocp/unconstrained_dynamics.cpp
-  src/unocp/split_unocp.cpp
-  src/unocp/backward_unriccati_recursion_factorizer.cpp
-  src/unocp/split_unriccati_factorizer.cpp
-  src/unocp/unriccati_recursion.cpp
-  src/solver/unocp_solver.cpp
+  src/unconstr/unconstr_dynamics.cpp
+  src/unconstr/split_unconstr_ocp.cpp
+  src/unconstr/unconstr_ocp.cpp
+  src/riccati/unconstr_backward_riccati_recursion_factorizer.cpp
+  src/riccati/unconstr_riccati_factorizer.cpp
+  src/riccati/unconstr_riccati_recursion.cpp
+  src/solver/unconstr_ocp_solver.cpp
+  # src/unocp/split_unkkt_residual.cpp
+  # src/unocp/split_unkkt_matrix.cpp
+  # src/unocp/split_unkkt_matrix_inverter.cpp
+  # src/unocp/unconstrained_container.cpp
+  # src/unocp/unconstrained_dynamics.cpp
   # src/unocp/split_unparnmpc.cpp
   # src/unocp/terminal_unparnmpc.cpp
   # src/unocp/split_unbackward_correction.cpp
@@ -118,7 +111,7 @@ add_library(
   # src/solver/unparnmpc_solver.cpp
   src/line_search/line_search_filter.cpp
   src/line_search/line_search.cpp
-  src/line_search/unline_search.cpp
+  src/line_search/unconstr_line_search.cpp
   src/utils/derivative_checker.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp

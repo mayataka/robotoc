@@ -196,6 +196,7 @@ public:
   /// @param[in] s Split solution of this time stage.
   /// @param[in] q_next Configuration at the next time stage.
   /// @param[in] v_next Generaized velocity at the next time stage.
+  /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @return Constraint violation of this time stage.
   ///
   double constraintViolation(Robot& robot,  const double t, const double dt, 

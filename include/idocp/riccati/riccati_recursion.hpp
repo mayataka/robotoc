@@ -1,8 +1,6 @@
 #ifndef IDOCP_RICCATI_RECURSION_HPP_
 #define IDOCP_RICCATI_RECURSION_HPP_
 
-#include <vector>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"

@@ -16,6 +16,11 @@
 
 namespace idocp {
 
+///
+/// @class UnconstrOCP
+/// @brief An optimal control problem of unconstrained rigid-body systems for 
+/// Riccati recursion algorithm.
+///
 class UnconstrOCP {
 public:
   ///

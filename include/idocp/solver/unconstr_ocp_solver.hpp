@@ -11,7 +11,8 @@
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/unconstr/unconstr_ocp.hpp"
-#include "idocp/line_search/unline_search.hpp"
+#include "idocp/riccati/unconstr_riccati_recursion.hpp"
+#include "idocp/line_search/unconstr_line_search.hpp"
 
 
 namespace idocp {
@@ -149,9 +150,9 @@ public:
 
 private:
   aligned_vector<Robot> robots_;
-  UnconstrOCP ocp_;
   UnconstrRiccatiRecursion riccati_recursion_;
-  UnLineSearch line_search_;
+  UnconstrLineSearch line_search_;
+  UnconstrOCP ocp_;
   KKTMatrix kkt_matrix_;
   KKTResidual kkt_residual_;
   Solution s_;

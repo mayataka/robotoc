@@ -40,18 +40,18 @@ UnconstrRiccatiRecursion::~UnconstrRiccatiRecursion() {
 
 void UnconstrRiccatiRecursion::backwardRiccatiRecursion(
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, 
-    RiccatiFactorization& riccati_factorization) {
-  riccati_factorization[N_].Pqq = kkt_matrix[N_].Qqq();
-  riccati_factorization[N_].Pvv = kkt_matrix[N_].Qvv();
-  riccati_factorization[N_].sq = - kkt_residual[N_].lq();
-  riccati_factorization[N_].sv = - kkt_residual[N_].lv();
+    UnconstrRiccatiFactorization& factorization) {
+  factorization[N_].Pqq = kkt_matrix[N_].Qqq();
+  factorization[N_].Pvv = kkt_matrix[N_].Qvv();
+  factorization[N_].sq = - kkt_residual[N_].lq();
+  factorization[N_].sv = - kkt_residual[N_].lv();
   for (int i=N_-1; i>=0; --i) {
-    factorizer_.backwardRiccatiRecursion(riccati_factorization[i+1], dt_, 
-                                         kkt_matrix[i], kkt_residual[i], 
-                                         riccati_factorization[i], 
+    factorizer_.backwardRiccatiRecursion(factorization[i+1], dt_, kkt_matrix[i], 
+                                         kkt_residual[i], factorization[i], 
                                          lqr_policy_[i]);
   }
 }
+
 
 void UnconstrRiccatiRecursion::forwardRiccatiRecursion( 
     const KKTResidual& kkt_residual, Direction& d) const {
@@ -59,6 +59,16 @@ void UnconstrRiccatiRecursion::forwardRiccatiRecursion(
     factorizer_.forwardRiccatiRecursion(kkt_residual[i], dt_, lqr_policy_[i], 
                                         d[i], d[i+1]);
   }
+}
+
+
+void UnconstrRiccatiRecursion::getStateFeedbackGain(const int time_stage, 
+                                                    Eigen::MatrixXd& Kq, 
+                                                    Eigen::MatrixXd& Kv) const {
+  assert(time_stage >= 0);
+  assert(time_stage < N_);
+  Kq = lqr_policy_[time_stage].Kq();
+  Kv = lqr_policy_[time_stage].Kv();
 }
 
 } // namespace idocp

@@ -19,7 +19,7 @@ UnconstrOCPSolver::UnconstrOCPSolver(
     kkt_residual_(robot, N),
     s_(robot, N),
     d_(robot, N),
-    riccati_factorization_(robot, N, max_num_impulse),
+    riccati_factorization_(N+1, SplitRiccatiFactorization(robot)),
     N_(N),
     nthreads_(nthreads),
     T_(T),
@@ -89,21 +89,18 @@ void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                  kkt_matrix_[N_], kkt_residual_[N_]);
     }
   }
-  riccati_recursion_.backwardRiccatiRecursionTerminal(terminal_kkt_matrix_, 
-                                                      terminal_kkt_residual_,
-                                                      riccati_factorization_);
-  riccati_recursion_.backwardRiccatiRecursion(unkkt_matrix_, unkkt_residual_,
+  riccati_recursion_.backwardRiccatiRecursion(kkt_matrix_, kkt_residual_,
                                               riccati_factorization_);
   d_[0].dq() = q - s_[0].q;
   d_[0].dv() = v - s_[0].v;
-  riccati_recursion_.forwardRiccatiRecursion(unkkt_residual_, d_);
+  riccati_recursion_.forwardRiccatiRecursion(kkt_residual_, d_);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
-    SplitUnRiccatiFactorizer::computeCostateDirection(riccati_factorization_[i], 
-                                                      d_[i]);
+    UnconstrRiccatiFactorizer::computeCostateDirection(riccati_factorization_[i], 
+                                                       d_[i]);
     if (i < N_) {
-      ocp_[i].computeCondensedDirection(robots_[omp_get_thread_num()], dt_,
-                                        s_[i], d_[i]);
+      ocp_[i].computeCondensedDirection(robots_[omp_get_thread_num()], dt_, s_[i], 
+                                        kkt_matrix_[i], kkt_residual_[i], d_[i]);
       primal_step_size_.coeffRef(i) = ocp_[i].maxPrimalStepSize();
       dual_step_size_.coeffRef(i)   = ocp_[i].maxDualStepSize();
     }
@@ -111,9 +108,9 @@ void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   double primal_step_size = primal_step_size_.minCoeff();
   const double dual_step_size   = dual_step_size_.minCoeff();
   if (line_search) {
-    const double max_primal_step_size = primal_step_size;
-    primal_step_size = line_search_.computeStepSize(ocp_, robots_, t, q, v, s_,
-                                                    d_, max_primal_step_size);
+    // const double max_primal_step_size = primal_step_size;
+    // primal_step_size = line_search_.computeStepSize(ocp_, robots_, t, q, v, s_,
+    //                                                 d_, max_primal_step_size);
   }
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
@@ -182,16 +179,16 @@ void UnconstrOCPSolver::setSolution(const std::string& name,
                               const Eigen::VectorXd& value) {
   try {
     if (name == "q") {
-      for (auto& e : s_) { e.q = value; }
+      for (auto& e : s_.data) { e.q = value; }
     }
     else if (name == "v") {
-      for (auto& e : s_) { e.v = value; }
+      for (auto& e : s_.data) { e.v = value; }
     }
     else if (name == "a") {
-      for (auto& e : s_) { e.a  = value; }
+      for (auto& e : s_.data) { e.a  = value; }
     }
     else if (name == "u") {
-      for (auto& e : s_) { e.u = value; }
+      for (auto& e : s_.data) { e.u = value; }
     }
     else {
       throw std::invalid_argument("invalid arugment: name must be q, v, a, or u!");

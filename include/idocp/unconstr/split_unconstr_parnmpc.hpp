@@ -1,5 +1,5 @@
-#ifndef IDOCP_SPLIT_UNPARNMPC_HPP_
-#define IDOCP_SPLIT_UNPARNMPC_HPP_
+#ifndef IDOCP_SPLIT_UNCONSTR_PARNMPC_HPP_
+#define IDOCP_SPLIT_UNCONSTR_PARNMPC_HPP_
 
 #include <memory>
 
@@ -23,11 +23,11 @@
 namespace idocp {
 
 ///
-/// @class SplitUnParNMPC
+/// @class SplitUnconstrParNMPC
 /// @brief An optimal control problem of unconstrained rigid-body systems for 
 /// ParNMPC algorithm split into a time stage. 
 ///
-class SplitUnParNMPC {
+class SplitUnconstrParNMPC {
 public:
   ///
   /// @brief Constructs a split optimal control problem.
@@ -35,38 +35,38 @@ public:
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   ///
-  SplitUnParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
+  SplitUnconstrParNMPC(const Robot& robot, const std::shared_ptr<CostFunction>& cost,
                  const std::shared_ptr<Constraints>& constraints);
 
   ///
   /// @brief Default constructor.  
   ///
-  SplitUnParNMPC();
+  SplitUnconstrParNMPC();
 
   ///
   /// @brief Destructor. 
   ///
-  ~SplitUnParNMPC();
+  ~SplitUnconstrParNMPC();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  SplitUnParNMPC(const SplitUnParNMPC&) = default;
+  SplitUnconstrParNMPC(const SplitUnconstrParNMPC&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  SplitUnParNMPC& operator=(const SplitUnParNMPC&) = default;
+  SplitUnconstrParNMPC& operator=(const SplitUnconstrParNMPC&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  SplitUnParNMPC(SplitUnParNMPC&&) noexcept = default;
+  SplitUnconstrParNMPC(SplitUnconstrParNMPC&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  SplitUnParNMPC& operator=(SplitUnParNMPC&&) noexcept = default;
+  SplitUnconstrParNMPC& operator=(SplitUnconstrParNMPC&&) noexcept = default;
 
   ///
   /// @brief Checks whether the solution is feasible under inequality constraints.
@@ -163,7 +163,7 @@ public:
 
   ///
   /// @brief Returns the KKT residual of this time stage. Before calling this 
-  /// function, SplitUnParNMPC::computeKKTResidual() must be called.
+  /// function, SplitUnconstrParNMPC::computeKKTResidual() must be called.
   /// @param[in] dt Time step of this time stage.
   /// @return The squared norm of the kKT residual.
   ///
@@ -210,6 +210,6 @@ private:
 
 } // namespace idocp
 
-#include "idocp/unocp/split_unparnmpc.hxx"
+#include "idocp/unconstr/split_unconstr_parnmpc.hxx"
 
-#endif // IDOCP_SPLIT_UNPARNMPC_HPP_ 
+#endif // IDOCP_SPLIT_UNCONSTR_PARNMPC_HPP_ 

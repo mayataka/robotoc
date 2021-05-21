@@ -1,5 +1,5 @@
-#ifndef IDOCP_TERMINAL_UNPARNMPC_HPP_
-#define IDOCP_TERMINAL_UNPARNMPC_HPP_
+#ifndef IDOCP_TERMINAL_UNCONSTR_PARNMPC_HPP_
+#define IDOCP_TERMINAL_UNCONSTR_PARNMPC_HPP_
 
 #include <memory>
 
@@ -27,7 +27,7 @@ namespace idocp {
 /// @brief An optimal control problem of unconstrained rigid-body systems for 
 /// ParNMPC algorithm split into the terminal stage. 
 ///
-class TerminalUnParNMPC {
+class TerminalUnconstrParNMPC {
 public:
   ///
   /// @brief Constructs a split optimal control problem.
@@ -35,39 +35,39 @@ public:
   /// @param[in] cost Shared ptr to the cost function.
   /// @param[in] constraints Shared ptr to the constraints.
   ///
-  TerminalUnParNMPC(const Robot& robot, 
-                    const std::shared_ptr<CostFunction>& cost,
-                    const std::shared_ptr<Constraints>& constraints);
+  TerminalUnconstrParNMPC(const Robot& robot, 
+                          const std::shared_ptr<CostFunction>& cost,
+                          const std::shared_ptr<Constraints>& constraints);
 
   ///
   /// @brief Default constructor.  
   ///
-  TerminalUnParNMPC();
+  TerminalUnconstrParNMPC();
 
   ///
   /// @brief Destructor. 
   ///
-  ~TerminalUnParNMPC();
+  ~TerminalUnconstrParNMPC();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  TerminalUnParNMPC(const TerminalUnParNMPC&) = default;
+  TerminalUnconstrParNMPC(const TerminalUnconstrParNMPC&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  TerminalUnParNMPC& operator=(const TerminalUnParNMPC&) = default;
+  TerminalUnconstrParNMPC& operator=(const TerminalUnconstrParNMPC&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  TerminalUnParNMPC(TerminalUnParNMPC&&) noexcept = default;
+  TerminalUnconstrParNMPC(TerminalUnconstrParNMPC&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  TerminalUnParNMPC& operator=(TerminalUnParNMPC&&) noexcept = default;
+  TerminalUnconstrParNMPC& operator=(TerminalUnconstrParNMPC&&) noexcept = default;
 
   ///
   /// @brief Checks whether the solution is feasible under inequality constraints.
@@ -94,24 +94,29 @@ public:
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] v_prev Generalized velocity at the previous time stage.
   /// @param[in] s Split solution of this time stage.
-  /// @param[in, out] unkkt_matrix Split KKT matrix of this time stage.
-  /// @param[in, out] unkkt_residual Split KKT residual of this time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void linearizeOCP(Robot& robot, const double t, const double dt, 
                     const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
-                    const SplitSolution& s, SplitUnKKTMatrix& unkkt_matrix,
-                    SplitUnKKTResidual& unkkt_residual);
+                    const SplitSolution& s, SplitKKTMatrix& kkt_matrix,
+                    SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Computes the Newton direction of the condensed variables of 
-  /// this time stage.
+  /// @brief Computes the Newton direction of the condensed variables  
+  /// at this stage.
   /// @param[in] robot Robot model. 
-  /// @param[in] dt Time step of this time stage. 
+  /// @param[in] dt Time step of this time stage.
   /// @param[in] s Split solution of this time stage.
+  /// @param[in] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
   void computeCondensedDirection(Robot& robot, const double dt, 
-                                 const SplitSolution& s, SplitDirection& d);
+                                 const SplitSolution& s, 
+                                 const SplitKKTMatrix& kkt_matrix,
+                                 const SplitKKTResidual& kkt_residual,
+                                 SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -153,10 +158,14 @@ public:
   /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] v_prev Generalized velocity at the previous time stage.
   /// @param[in] s Split solution of this time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void computeKKTResidual(Robot& robot, const double t, const double dt, 
                           const Eigen::VectorXd& q_prev, 
-                          const Eigen::VectorXd& v_prev, const SplitSolution& s);
+                          const Eigen::VectorXd& v_prev, const SplitSolution& s,
+                          SplitKKTMatrix& kkt_matrix, 
+                          SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Returns the KKT residual of this time stage. Before calling this 
@@ -200,12 +209,11 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] t Time of this time stage. 
   /// @param[in] s Split solution of this time stage.
-  /// @param[in, out] Qxx Hessian with respect to the state.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   ///
-  template <typename MatrixType>
   void computeTerminalCostHessian(Robot& robot, const double t, 
                                   const SplitSolution& s, 
-                                  const Eigen::MatrixBase<MatrixType>& Qxx);
+                                  SplitKKTMatrix& kkt_matrix);
 
 private:
   std::shared_ptr<CostFunction> cost_;
@@ -214,14 +222,12 @@ private:
   ConstraintsData constraints_data_;
   UnconstrainedDynamics unconstrained_dynamics_;
   bool use_kinematics_;
-  SplitKKTMatrix kkt_matrix_;
-  SplitKKTResidual kkt_residual_;
   double stage_cost_, constraint_violation_;
 
 };
 
 } // namespace idocp
 
-#include "idocp/unocp/terminal_unparnmpc.hxx"
+#include "idocp/unconstr/terminal_unconstr_parnmpc.hxx"
 
-#endif // IDOCP_TERMINAL_UNPARNMPC_HPP_ 
+#endif // IDOCP_TERMINAL_UNCONSTR_PARNMPC_HPP_ 

@@ -1,5 +1,5 @@
-#ifndef IDOCP_UNLINE_SEARCH_HPP_
-#define IDOCP_UNLINE_SEARCH_HPP_
+#ifndef IDOCP_UNCONSTR_LINE_SEARCH_HPP_
+#define IDOCP_UNCONSTR_LINE_SEARCH_HPP_
 
 #include <vector>
 
@@ -9,18 +9,19 @@
 #include "idocp/utils/aligned_vector.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/unocp/unconstrained_container.hpp"
+#include "idocp/ocp/ocp.hpp"
+#include "idocp/unconstr/unconstr_ocp.hpp"
 #include "idocp/line_search/line_search_filter.hpp"
 
 
 namespace idocp {
 
 ///
-/// @class UnLineSearch 
+/// @class UnconstrLineSearch 
 /// @brief Line search for optimal control problems for unconstrained 
 /// rigid-body systems.
 ///
-class UnLineSearch {
+class UnconstrLineSearch {
 public:
   ///
   /// @brief Construct a line search.
@@ -33,39 +34,40 @@ public:
   /// Defalt is 0.75.
   /// @param[in] min_step_size Minimum step size. Default is 0.05.
   ///
-  UnLineSearch(const Robot& robot, const double T, const int N, 
-               const int nthreads=1, const double step_size_reduction_rate=0.75, 
-               const double min_step_size=0.05);
+  UnconstrLineSearch(const Robot& robot, const double T, const int N, 
+                     const int nthreads=1, 
+                     const double step_size_reduction_rate=0.75, 
+                     const double min_step_size=0.05);
 
   ///
   /// @brief Default constructor. 
   ///
-  UnLineSearch();
+  UnconstrLineSearch();
 
   ///
   /// @brief Destructor. 
   ///
-  ~UnLineSearch();
+  ~UnconstrLineSearch();
 
   ///
   /// @brief Default copy constructor. 
   ///
-  UnLineSearch(const UnLineSearch&) = default;
+  UnconstrLineSearch(const UnconstrLineSearch&) = default;
 
   ///
   /// @brief Default copy assign operator. 
   ///
-  UnLineSearch& operator=(const UnLineSearch&) = default;
+  UnconstrLineSearch& operator=(const UnconstrLineSearch&) = default;
 
   ///
   /// @brief Default move constructor. 
   ///
-  UnLineSearch(UnLineSearch&&) noexcept = default;
+  UnconstrLineSearch(UnconstrLineSearch&&) noexcept = default;
 
   ///
   /// @brief Default move assign operator. 
   ///
-  UnLineSearch& operator=(UnLineSearch&&) noexcept = default;
+  UnconstrLineSearch& operator=(UnconstrLineSearch&&) noexcept = default;
 
   ///
   /// @brief Compute primal step size by fliter line search method. 
@@ -78,11 +80,11 @@ public:
   /// @param[in] d Direction. 
   /// @param[in] max_primal_step_size Maximum primal step size. 
   ///
-  template <typename UnOCPType>
-  double computeStepSize(UnOCPType& ocp, aligned_vector<Robot>& robots, 
+  template <typename UnconstrOCPType>
+  double computeStepSize(UnconstrOCPType& ocp, aligned_vector<Robot>& robots, 
                          const double t, const Eigen::VectorXd& q, 
-                         const Eigen::VectorXd& v, const UnSolution& s, 
-                         const UnDirection& d, 
+                         const Eigen::VectorXd& v, const Solution& s, 
+                         const Direction& d, 
                          const double max_primal_step_size) {
     assert(max_primal_step_size > 0);
     assert(max_primal_step_size <= 1);
@@ -126,20 +128,20 @@ private:
   int N_, nthreads_;
   double T_, dt_, step_size_reduction_rate_, min_step_size_;
   Eigen::VectorXd costs_, violations_;
-  UnSolution s_try_;
-  UnKKTResidual kkt_residual_;
+  Solution s_try_;
+  KKTResidual kkt_residual_;
 
-  void computeCostAndViolation(UnOCP& ocp, aligned_vector<Robot>& robots,
+  void computeCostAndViolation(UnconstrOCP& ocp, aligned_vector<Robot>& robots,
                                const double t, const Eigen::VectorXd& q, 
-                               const Eigen::VectorXd& v, const UnSolution& s,
+                               const Eigen::VectorXd& v, const Solution& s,
                                const double primal_step_size_for_barrier=0);
 
-  // void computeCostAndViolation(UnParNMPC& parnmpc, aligned_vector<Robot>& robots,
+  // void computeCostAndViolation(UnconstrParNMPC& parnmpc, aligned_vector<Robot>& robots,
   //                              const double t, const Eigen::VectorXd& q, 
-  //                              const Eigen::VectorXd& v, const UnSolution& s,
+  //                              const Eigen::VectorXd& v, const Solution& s,
   //                              const double primal_step_size_for_barrier=0);
 
-  void computeTrySolution(const UnSolution& s, const UnDirection& d, 
+  void computeTrySolution(const Solution& s, const Direction& d, 
                           const double step_size);
 
   static void computeTrySolution(const SplitSolution& s, 
@@ -172,4 +174,4 @@ private:
 
 } // namespace idocp 
 
-#endif // IDOCP_UNLINE_SEARCH_HPP_ 
+#endif // IDOCP_UNCONSTR_LINE_SEARCH_HPP_ 

@@ -5,18 +5,21 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/unocp/unconstrained_container.hpp"
+#include "idocp/utils/aligned_vector.hpp"
+#include "idocp/unconstr/unconstr_ocp.hpp"
 #include "idocp/line_search/line_search_filter.hpp"
-#include "idocp/line_search/unline_search.hpp"
+#include "idocp/line_search/unconstr_line_search.hpp"
 
 #include "robot_factory.hpp"
 #include "cost_factory.hpp"
 #include "constraints_factory.hpp"
+#include "solution_factory.hpp"
+#include "direction_factory.hpp"
 
 
 namespace idocp {
 
-class UnLineSearchTest : public ::testing::Test {
+class UnconstrLineSearchTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -34,46 +37,25 @@ protected:
   virtual void TearDown() {
   }
 
-  UnSolution createUnSolution(const int size) const;
-  UnDirection createUnDirection(const int size) const;
-
   Robot robot;
   int dimv, N, nthreads;
   double T, dt, t, step_size_reduction_rate, min_step_size;
 };
 
 
-UnSolution UnLineSearchTest::createUnSolution(const int size) const {
-  UnSolution s(size, SplitSolution(robot));
-  for (int i=0; i<size; ++i) {
-    s[i].setRandom(robot);
-  }
-  return s;
-}
-
-
-UnDirection UnLineSearchTest::createUnDirection(const int size) const {
-  UnDirection d(size, SplitDirection(robot));
-  for (int i=0; i<size; ++i) {
-    d[i].setRandom();
-  }
-  return d;
-}
-
-
-TEST_F(UnLineSearchTest, UnOCP) {
+TEST_F(UnconstrLineSearchTest, UnOCP) {
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
-  const auto s = createUnSolution(N+1);
-  const auto d = createUnDirection(N+1);
+  const auto s = testhelper::CreateSolution(robot, N, 0);
+  const auto d = testhelper::CreateDirection(robot, N, 0);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  std::vector<Robot, Eigen::aligned_allocator<Robot>> robots(nthreads, robot);
-  auto ocp = UnOCP(robot, cost, constraints, N);
+  aligned_vector<Robot> robots(nthreads, robot);
+  auto ocp = UnconstrOCP(robot, cost, constraints, N);
   for (int i=0; i<N; ++i) {
     ocp[i].initConstraints(robot, i, s[i]);
   }
-  UnLineSearch line_search(robot, T, N, nthreads);
+  UnconstrLineSearch line_search(robot, T, N, nthreads);
   EXPECT_TRUE(line_search.isFilterEmpty());
   const double max_primal_step_size = min_step_size + std::abs(Eigen::VectorXd::Random(1)[0]) * (1-min_step_size);
   const double step_size = line_search.computeStepSize(ocp, robots, t, q, v, s, d, max_primal_step_size);
@@ -86,7 +68,7 @@ TEST_F(UnLineSearchTest, UnOCP) {
 }
 
 
-// TEST_F(UnLineSearchTest, UnParNMPC) {
+// TEST_F(UnconstrLineSearchTest, UnParNMPC) {
 //   auto cost = testhelper::CreateCost(robot);
 //   auto constraints = testhelper::CreateConstraints(robot);
 //   const auto s = createUnSolution(N);

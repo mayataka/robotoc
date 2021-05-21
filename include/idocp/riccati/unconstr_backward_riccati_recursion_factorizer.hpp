@@ -68,13 +68,13 @@ public:
   ///
   void factorizeKKTMatrix(const SplitRiccatiFactorization& riccati_next, 
                           const double dt, SplitKKTMatrix& kkt_matrix,  
-                          SplitKKTResidual& unkkt_residual);
+                          SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Factorizes the Riccati factorization matrix and vector.
   /// @param[in] riccati_next Riccati factorization of the next time stage.
-  /// @param[in] unkkt_matrix Split KKT matrix of this time stage.
-  /// @param[in] unkkt_residual Split KKT residual of this time stage.
+  /// @param[in] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in] lqr_policy The state feedback control policy of the LQR 
   /// subproblem.
   /// @param[in] dt Time step of this time stage.

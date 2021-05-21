@@ -69,6 +69,8 @@ public:
   /// @param[in, out] kkt_matrix KKT matrix at the this time stage. 
   /// @param[in, out] kkt_residual KKT residual at the this time stage. 
   /// @param[out] riccati Riccati factorization at the this time stage. 
+  /// @param[out] lqr_policy The state feedback control policy of the LQR 
+  /// subproblem.
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
                                 const double dt, SplitKKTMatrix& kkt_matrix, 
@@ -79,11 +81,13 @@ public:
   ///
   /// @brief Performs forward Riccati recursion and computes state direction. 
   /// @param[in] kkt_residual KKT residual at the current time stage. 
-  /// @param[in] d Split direction at the current time stage. 
   /// @param[in] dt Time step between the current time stage and the next 
+  /// @param[in] lqr_policy The state feedback control policy of the LQR 
+  /// subproblem.
+  /// @param[in, out] d Split direction at the current time stage. 
   /// @param[out] d_next Split direction at the next time stage. 
   ///
-  void forwardRiccatiRecursion(const SplitKKTResidual& unkkt_residual,
+  void forwardRiccatiRecursion(const SplitKKTResidual& kkt_residual,
                                const double dt, const LQRPolicy& lqr_policy,
                                SplitDirection& d,  SplitDirection& d_next) const;
 
@@ -94,22 +98,6 @@ public:
   ///
   static void computeCostateDirection(const SplitRiccatiFactorization& riccati, 
                                       SplitDirection& d);
-
-  ///
-  /// @brief Getter of the state feedback gain of the LQR subproblem. 
-  /// @param[in] K The state feedback gain. 
-  ///
-  template <typename MatrixType>
-  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType>& K) const;
-
-  ///
-  /// @brief Getter of the state feedback gain of the LQR subproblem. 
-  /// @param[in] Kq The state feedback gain with respect to the configuration. 
-  /// @param[in] Kv The state feedback gain with respect to the velocity. 
-  ///
-  template <typename MatrixType1, typename MatrixType2>
-  void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Kq,
-                            const Eigen::MatrixBase<MatrixType2>& Kv) const;
 
 private:
   int dimv_;

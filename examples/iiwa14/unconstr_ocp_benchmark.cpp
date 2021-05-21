@@ -3,7 +3,7 @@
 
 #include "Eigen/Core"
 
-#include "idocp/solver/unocp_solver.hpp"
+#include "idocp/solver/unconstr_ocp_solver.hpp"
 #include "idocp/robot/robot.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/configuration_space_cost.hpp"
@@ -42,7 +42,7 @@ int main() {
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Constant(robot.dimq(), 2);
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(robot.dimv());
-  idocp::UnOCPSolver ocp_solver(robot, cost, constraints, T, N, nthreads);
+  idocp::UnconstrOCPSolver ocp_solver(robot, cost, constraints, T, N, nthreads);
 
   // Solves the OCP.
   ocp_solver.setSolution("q", q);

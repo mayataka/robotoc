@@ -1,14 +1,14 @@
-#ifndef IDOCP_TERMINAL_UNPARNMPC_HXX_ 
-#define IDOCP_TERMINAL_UNPARNMPC_HXX_
+#ifndef IDOCP_SPLIT_UNPARNMPC_HXX_ 
+#define IDOCP_SPLIT_UNPARNMPC_HXX_
 
-#include "idocp/unocp/terminal_unparnmpc.hpp"
+#include "idocp/unocp/split_unparnmpc.hpp"
 
 #include <stdexcept>
 #include <cassert>
 
 namespace idocp {
 
-inline TerminalUnParNMPC::TerminalUnParNMPC(
+inline SplitUnconstrParNMPC::SplitUnconstrParNMPC(
     const Robot& robot, const std::shared_ptr<CostFunction>& cost, 
     const std::shared_ptr<Constraints>& constraints) 
   : cost_(cost),
@@ -37,7 +37,7 @@ inline TerminalUnParNMPC::TerminalUnParNMPC(
 }
 
 
-inline TerminalUnParNMPC::TerminalUnParNMPC() 
+inline SplitUnconstrParNMPC::SplitUnconstrParNMPC() 
   : cost_(),
     cost_data_(),
     constraints_(),
@@ -49,31 +49,31 @@ inline TerminalUnParNMPC::TerminalUnParNMPC()
 }
 
 
-inline TerminalUnParNMPC::~TerminalUnParNMPC() {
+inline SplitUnconstrParNMPC::~SplitUnconstrParNMPC() {
 }
 
 
-inline bool TerminalUnParNMPC::isFeasible(Robot& robot, const SplitSolution& s) {
+inline bool SplitUnconstrParNMPC::isFeasible(Robot& robot, const SplitSolution& s) {
   return constraints_->isFeasible(robot, constraints_data_, s);
 }
 
 
-inline void TerminalUnParNMPC::initConstraints(Robot& robot, 
-                                               const int time_step, 
-                                               const SplitSolution& s) { 
+inline void SplitUnconstrParNMPC::initConstraints(Robot& robot, const int time_step, 
+                                            const SplitSolution& s) { 
   assert(time_step >= 0);
   constraints_data_ = constraints_->createConstraintsData(robot, time_step);
   constraints_->setSlackAndDual(robot, constraints_data_, s);
 }
 
 
-inline void TerminalUnParNMPC::linearizeOCP(Robot& robot, const double t, 
-                                            const double dt, 
-                                            const Eigen::VectorXd& q_prev, 
-                                            const Eigen::VectorXd& v_prev, 
-                                            const SplitSolution& s, 
-                                            SplitUnKKTMatrix& unkkt_matrix,
-                                            SplitUnKKTResidual& unkkt_residual) {
+inline void SplitUnconstrParNMPC::linearizeOCP(Robot& robot, const double t, 
+                                         const double dt, 
+                                         const Eigen::VectorXd& q_prev, 
+                                         const Eigen::VectorXd& v_prev, 
+                                         const SplitSolution& s, 
+                                         const SplitSolution& s_next, 
+                                         SplitUnKKTMatrix& unkkt_matrix,
+                                         SplitUnKKTResidual& unkkt_residual) {
   assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -82,19 +82,18 @@ inline void TerminalUnParNMPC::linearizeOCP(Robot& robot, const double t,
   }
   kkt_matrix_.Qqq().setZero();
   kkt_matrix_.Qvv().diagonal().setZero();
-  kkt_matrix_.Qaa.diagonal().setZero();
+  kkt_matrix_.Qaa().diagonal().setZero();
   kkt_matrix_.Quu.diagonal().setZero();
   kkt_residual_.setZero();
-  cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, kkt_residual_);
-  cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
+  cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, 
+                                     kkt_residual_);
   constraints_->augmentDualResidual(robot, constraints_data_, dt, s,
                                     kkt_residual_);
-  stateequation::linearizeBackwardEulerTerminal(robot, dt, q_prev, v_prev, s,  
-                                                kkt_matrix_, kkt_residual_);
+  stateequation::linearizeBackwardEuler(robot, dt, q_prev, v_prev, s, s_next, 
+                                        kkt_matrix_, kkt_residual_);
   unconstrained_dynamics_.linearizeUnconstrainedDynamics(robot, dt, s, 
                                                          kkt_residual_);
   cost_->computeStageCostHessian(robot, cost_data_, t, dt, s, kkt_matrix_);
-  cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
                                      kkt_matrix_, kkt_residual_);
   unconstrained_dynamics_.condenseUnconstrainedDynamics(
@@ -102,10 +101,10 @@ inline void TerminalUnParNMPC::linearizeOCP(Robot& robot, const double t,
 }
 
 
-inline void TerminalUnParNMPC::computeCondensedDirection(Robot& robot, 
-                                                         const double dt, 
-                                                         const SplitSolution& s, 
-                                                         SplitDirection& d) {
+inline void SplitUnconstrParNMPC::computeCondensedDirection(Robot& robot, 
+                                                      const double dt, 
+                                                      const SplitSolution& s, 
+                                                      SplitDirection& d) {
   assert(dt > 0);
   unconstrained_dynamics_.computeCondensedDirection(dt, kkt_matrix_, 
                                                     kkt_residual_, d);
@@ -113,20 +112,20 @@ inline void TerminalUnParNMPC::computeCondensedDirection(Robot& robot,
 }
 
 
-inline double TerminalUnParNMPC::maxPrimalStepSize() {
+inline double SplitUnconstrParNMPC::maxPrimalStepSize() {
   return constraints_->maxSlackStepSize(constraints_data_);
 }
 
 
-inline double TerminalUnParNMPC::maxDualStepSize() {
+inline double SplitUnconstrParNMPC::maxDualStepSize() {
   return constraints_->maxDualStepSize(constraints_data_);
 }
 
 
-inline void TerminalUnParNMPC::updatePrimal(const Robot& robot, 
-                                            const double primal_step_size, 
-                                            const SplitDirection& d, 
-                                            SplitSolution& s) {
+inline void SplitUnconstrParNMPC::updatePrimal(const Robot& robot, 
+                                         const double primal_step_size, 
+                                         const SplitDirection& d, 
+                                         SplitSolution& s) {
   assert(primal_step_size > 0);
   assert(primal_step_size <= 1);
   s.integrate(robot, primal_step_size, d);
@@ -134,18 +133,19 @@ inline void TerminalUnParNMPC::updatePrimal(const Robot& robot,
 }
 
 
-inline void TerminalUnParNMPC::updateDual(const double dual_step_size) {
+inline void SplitUnconstrParNMPC::updateDual(const double dual_step_size) {
   assert(dual_step_size > 0);
   assert(dual_step_size <= 1);
   constraints_->updateDual(constraints_data_, dual_step_size);
 }
 
 
-inline void TerminalUnParNMPC::computeKKTResidual(Robot& robot, const double t, 
-                                                  const double dt, 
-                                                  const Eigen::VectorXd& q_prev, 
-                                                  const Eigen::VectorXd& v_prev, 
-                                                  const SplitSolution& s) {
+inline void SplitUnconstrParNMPC::computeKKTResidual(Robot& robot, const double t, 
+                                               const double dt, 
+                                               const Eigen::VectorXd& q_prev, 
+                                               const Eigen::VectorXd& v_prev, 
+                                               const SplitSolution& s,
+                                               const SplitSolution& s_next) {
   assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -155,19 +155,17 @@ inline void TerminalUnParNMPC::computeKKTResidual(Robot& robot, const double t,
   kkt_residual_.setZero();
   cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, 
                                      kkt_residual_);
-  cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual_);
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   constraints_->augmentDualResidual(robot, constraints_data_, dt, s,
                                     kkt_residual_);
-  stateequation::linearizeBackwardEulerTerminal(robot, dt, q_prev, v_prev, s,  
-                                                kkt_matrix_, kkt_residual_);
+  stateequation::linearizeBackwardEuler(robot, dt, q_prev, v_prev, s, s_next, 
+                                        kkt_matrix_, kkt_residual_);
   unconstrained_dynamics_.linearizeUnconstrainedDynamics(robot, dt, s, 
                                                          kkt_residual_);
 }
 
 
-inline double TerminalUnParNMPC::squaredNormKKTResidual(
-    const double dt) const {
+inline double SplitUnconstrParNMPC::squaredNormKKTResidual(const double dt) const {
   assert(dt > 0);
   double error = 0;
   error += kkt_residual_.lx.squaredNorm();
@@ -180,10 +178,10 @@ inline double TerminalUnParNMPC::squaredNormKKTResidual(
 }
 
 
-inline double TerminalUnParNMPC::stageCost(Robot& robot, const double t,  
-                                           const double dt, 
-                                           const SplitSolution& s, 
-                                           const double primal_step_size) {
+inline double SplitUnconstrParNMPC::stageCost(Robot& robot, const double t,  
+                                        const double dt, 
+                                        const SplitSolution& s, 
+                                        const double primal_step_size) {
   assert(dt > 0);
   assert(primal_step_size >= 0);
   assert(primal_step_size <= 1);
@@ -192,7 +190,6 @@ inline double TerminalUnParNMPC::stageCost(Robot& robot, const double t,
   }
   double cost = 0;
   cost += cost_->computeStageCost(robot, cost_data_, t, dt, s);
-  cost += cost_->computeTerminalCost(robot, cost_data_, t, s);
   if (primal_step_size > 0) {
     cost += dt * constraints_->costSlackBarrier(constraints_data_, 
                                                   primal_step_size);
@@ -204,10 +201,11 @@ inline double TerminalUnParNMPC::stageCost(Robot& robot, const double t,
 }
 
 
-inline double TerminalUnParNMPC::constraintViolation(
-    Robot& robot, const double t, const double dt, 
-    const Eigen::VectorXd& q_prev, const Eigen::VectorXd& v_prev, 
-    const SplitSolution& s) {
+inline double SplitUnconstrParNMPC::constraintViolation(Robot& robot, const double t, 
+                                                  const double dt, 
+                                                  const Eigen::VectorXd& q_prev, 
+                                                  const Eigen::VectorXd& v_prev,
+                                                  const SplitSolution& s) {
   assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
   assert(v_prev.size() == robot.dimv());
@@ -225,21 +223,6 @@ inline double TerminalUnParNMPC::constraintViolation(
   return violation;
 }
 
-
-template <typename MatrixType>
-inline void TerminalUnParNMPC::computeTerminalCostHessian(
-    Robot& robot, const double t, const SplitSolution& s, 
-    const Eigen::MatrixBase<MatrixType>& Qxx) {
-  assert(Qxx.rows() == 2*robot.dimv());
-  assert(Qxx.cols() == 2*robot.dimv());
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
-  }
-  kkt_matrix_.Qxx().setZero();
-  cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix_);
-  const_cast<Eigen::MatrixBase<MatrixType>&>(Qxx) = kkt_matrix_.Qxx();
-}
-
 } // namespace idocp
 
-#endif // IDOCP_TERMINAL_UNPARNMPC_HXX_ 
+#endif // IDOCP_SPLIT_UNPARNMPC_HXX_ 
