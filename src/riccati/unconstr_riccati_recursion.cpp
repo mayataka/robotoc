@@ -41,10 +41,8 @@ UnconstrRiccatiRecursion::~UnconstrRiccatiRecursion() {
 void UnconstrRiccatiRecursion::backwardRiccatiRecursion(
     KKTMatrix& kkt_matrix, KKTResidual& kkt_residual, 
     UnconstrRiccatiFactorization& factorization) {
-  factorization[N_].Pqq = kkt_matrix[N_].Qqq();
-  factorization[N_].Pvv = kkt_matrix[N_].Qvv();
-  factorization[N_].sq = - kkt_residual[N_].lq();
-  factorization[N_].sv = - kkt_residual[N_].lv();
+  factorization[N_].P = kkt_matrix[N_].Qxx;
+  factorization[N_].s = - kkt_residual[N_].lx;
   for (int i=N_-1; i>=0; --i) {
     factorizer_.backwardRiccatiRecursion(factorization[i+1], dt_, kkt_matrix[i], 
                                          kkt_residual[i], factorization[i], 

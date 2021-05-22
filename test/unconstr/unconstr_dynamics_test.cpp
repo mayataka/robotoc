@@ -92,6 +92,7 @@ TEST_F(UnconstrDynamicsTest, condenseUnconstrDynamics) {
   const Eigen::MatrixXd Quu_dIDda = kkt_matrix.Quu * dIDda;
   kkt_matrix_ref.Qqq() += dIDdq.transpose() * Quu_dIDdq;
   kkt_matrix_ref.Qqv() += dIDdq.transpose() * Quu_dIDdv;
+  kkt_matrix_ref.Qvq()  = kkt_matrix_ref.Qqv().transpose();
   kkt_matrix_ref.Qvv() += dIDdv.transpose() * Quu_dIDdv;
   kkt_matrix_ref.Qqu().transpose() =  dIDda.transpose() * Quu_dIDdq;
   kkt_matrix_ref.Qvu().transpose() =  dIDda.transpose() * Quu_dIDdv;

@@ -79,6 +79,7 @@ inline void UnconstrDynamics::condenseUnconstrDynamics(
   Quu_dID_da_.noalias() = kkt_matrix.Quu.diagonal().asDiagonal() * dID_da_;
   kkt_matrix.Qqq().noalias() += dID_dq_.transpose() * Quu_dID_dq_;
   kkt_matrix.Qqv().noalias() += dID_dq_.transpose() * Quu_dID_dv_;
+  kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
   kkt_matrix.Qvv().noalias() += dID_dv_.transpose() * Quu_dID_dv_;
   kkt_matrix.Qaa.noalias()   += dID_da_.transpose() * Quu_dID_da_;
   //  this is actually Qqa and Qqv

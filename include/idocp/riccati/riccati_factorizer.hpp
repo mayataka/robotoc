@@ -69,14 +69,13 @@ public:
   ///
   /// @brief Performs the backward Riccati recursion. 
   /// @param[in] riccati_next Riccati factorization of the next stage. 
-  /// @param[in] dt Time step of this stage. 
   /// @param[in, out] kkt_matrix Split KKT matrix of this stage. 
   /// @param[in, out] kkt_residual Split KKT residual of this stage. 
   /// @param[in, out] riccati Riccati factorization of this stage. 
   /// @param[in, out] lqr_policy LQR policy of this stage. 
   ///
   void backwardRiccatiRecursion(const SplitRiccatiFactorization& riccati_next, 
-                                const double dt, SplitKKTMatrix& kkt_matrix, 
+                                SplitKKTMatrix& kkt_matrix, 
                                 SplitKKTResidual& kkt_residual,  
                                 SplitRiccatiFactorization& riccati,
                                 LQRPolicy& lqr_policy);
@@ -85,7 +84,6 @@ public:
   /// @brief Performs the backward Riccati recursion with the switching 
   /// constraint. 
   /// @param[in] riccati_next Riccati factorization of the next stage. 
-  /// @param[in] dt Time step of this stage. 
   /// @param[in, out] kkt_matrix Split KKT matrix of this stage. 
   /// @param[in, out] kkt_residual Split KKT residual of this stage. 
   /// @param[in] switch_jacobian Jacobian of the switching constraint. 
@@ -96,7 +94,7 @@ public:
   /// @param[in, out] lqr_policy LQR policy of this stage. 
   ///
   void backwardRiccatiRecursion(
-      const SplitRiccatiFactorization& riccati_next, const double dt, 
+      const SplitRiccatiFactorization& riccati_next, 
       SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
       const SplitSwitchingConstraintJacobian& switch_jacobian, 
       const SplitSwitchingConstraintResidual& switch_residual, 
@@ -120,7 +118,6 @@ public:
   /// direction. 
   /// @param[in] kkt_matrix Split KKT matrix of this stage. 
   /// @param[in] kkt_residual Split KKT residual of this stage. 
-  /// @param[in] dt Time step of this stage. 
   /// @param[in] lqr_policy LQR policy of this stage. 
   /// @param[in] d Split direction of this stage. 
   /// @param[in, out] d_next Split direction of the next stage. 
@@ -128,8 +125,8 @@ public:
   template <typename SplitDirectionType>
   void forwardRiccatiRecursion(const SplitKKTMatrix& kkt_matrix, 
                                const SplitKKTResidual& kkt_residual,
-                               const double dt, const LQRPolicy& lqr_policy,
-                               SplitDirection& d, SplitDirectionType& d_next) const;
+                               const LQRPolicy& lqr_policy, SplitDirection& d, 
+                               SplitDirectionType& d_next) const;
 
   ///
   /// @brief Performs the forward Riccati recursion and computes the state 

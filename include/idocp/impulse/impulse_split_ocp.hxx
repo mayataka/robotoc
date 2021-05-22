@@ -87,11 +87,8 @@ inline void ImpulseSplitOCP::computeCondensedDualDirection(
   impulse_dynamics_.computeCondensedDualDirection(robot, kkt_matrix,
                                                   kkt_residual, 
                                                   d_next.dgmm(), d);
-  stateequation::correctCostateDirectionImpulseForwardEuler(robot, kkt_matrix, 
-                                                            kkt_residual, 
-                                                            d.dlmd());
-  // stateequation::correctCostateDirectionForwardEuler(robot, kkt_matrix, 
-  //                                                    kkt_residual, d.dlmd());
+  stateequation::correctCostateDirectionForwardEuler(robot, kkt_matrix, 
+                                                     kkt_residual, d.dlmd());
 }
 
 

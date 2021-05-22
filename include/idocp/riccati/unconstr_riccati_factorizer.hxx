@@ -57,12 +57,7 @@ inline void UnconstrRiccatiFactorizer::forwardRiccatiRecursion(
 
 inline void UnconstrRiccatiFactorizer::computeCostateDirection(
     const SplitRiccatiFactorization& riccati, SplitDirection& d) {
-  d.dlmd().noalias()  = riccati.Pqq * d.dq();
-  d.dlmd().noalias() += riccati.Pqv * d.dv();
-  d.dlmd().noalias() -= riccati.sq;
-  d.dgmm().noalias()  = riccati.Pqv.transpose() * d.dq();
-  d.dgmm().noalias() += riccati.Pvv * d.dv();
-  d.dgmm().noalias() -= riccati.sv;
+  d.dlmdgmm.noalias() = riccati.P * d.dx - riccati.s;
 }
 
 } // namespace idocp

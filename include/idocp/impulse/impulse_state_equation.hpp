@@ -50,12 +50,6 @@ void condenseImpulseForwardEuler(
     ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual);
 
-template <typename VectorType>
-void correctCostateDirectionImpulseForwardEuler(
-    const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual,
-    const Eigen::MatrixBase<VectorType>& dlmd);
-
 ///
 /// @brief Computes the residual in the impulse state equation of forward Euler. 
 /// @param[in] robot Robot model. 

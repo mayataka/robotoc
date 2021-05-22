@@ -73,7 +73,7 @@ public:
   ///
   /// @brief Factorizes the Riccati factorization matrix and vector.
   /// @param[in] riccati_next Riccati factorization of the next time stage.
-  /// @param[in] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in] lqr_policy The state feedback control policy of the LQR 
   /// subproblem.
@@ -82,13 +82,13 @@ public:
   ///
   void factorizeRiccatiFactorization(
       const SplitRiccatiFactorization& riccati_next, 
-      const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
+      SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
       const LQRPolicy& lqr_policy, const double dt, 
       SplitRiccatiFactorization& riccati);
 
 private:
   int dimv_;
-  Eigen::MatrixXd GK_, Pqq_tmp_, Pvv_tmp_;
+  Eigen::MatrixXd GK_;
 
 };
 

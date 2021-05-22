@@ -135,69 +135,53 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   const auto ocp_discretizer = ocp.discrete();
   riccati_recursion.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, factorization);
 
-  factorization_ref[ocp_discretizer.N()].Pqq = kkt_matrix_ref[ocp_discretizer.N()].Qqq();
-  factorization_ref[ocp_discretizer.N()].Pvv = kkt_matrix_ref[ocp_discretizer.N()].Qvv();
-  factorization_ref[ocp_discretizer.N()].sq = - kkt_residual_ref[ocp_discretizer.N()].lq();
-  factorization_ref[ocp_discretizer.N()].sv = - kkt_residual_ref[ocp_discretizer.N()].lv();
+  factorization_ref[ocp_discretizer.N()].P = kkt_matrix_ref[ocp_discretizer.N()].Qxx;
+  factorization_ref[ocp_discretizer.N()].s = - kkt_residual_ref[ocp_discretizer.N()].lx;
   for (int i=N-1; i>=0; --i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
       const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
-      const double dti = ocp_discretizer.dt(i);
-      const double dt_aux = ocp_discretizer.dt_aux(impulse_index);
-      ASSERT_TRUE(dti >= 0);
-      ASSERT_TRUE(dti <= dt);
-      ASSERT_TRUE(dt_aux >= 0);
-      ASSERT_TRUE(dt_aux <= dt);
       factorizer.backwardRiccatiRecursion(
-          factorization_ref[i+1], dt_aux, kkt_matrix_ref.aux[impulse_index], 
+          factorization_ref[i+1], kkt_matrix_ref.aux[impulse_index], 
           kkt_residual_ref.aux[impulse_index], factorization_ref.aux[impulse_index],
           lqr_policy.aux[impulse_index]);
       factorizer.backwardRiccatiRecursion(
           factorization_ref.aux[impulse_index], kkt_matrix_ref.impulse[impulse_index], 
           kkt_residual_ref.impulse[impulse_index], factorization_ref.impulse[impulse_index]);
       factorizer.backwardRiccatiRecursion(
-          factorization_ref.impulse[impulse_index], dti, kkt_matrix_ref[i], 
+          factorization_ref.impulse[impulse_index], kkt_matrix_ref[i], 
           kkt_residual_ref[i], factorization_ref[i], lqr_policy[i]);
     }
     else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
       const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
-      const double dti = ocp_discretizer.dt(i);
-      const double dt_lift = ocp_discretizer.dt_lift(lift_index);
-      ASSERT_TRUE(dti >= 0);
-      ASSERT_TRUE(dti <= dt);
-      ASSERT_TRUE(dt_lift >= 0);
-      ASSERT_TRUE(dt_lift <= dt);
       if (ocp_discretizer.isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i+1);
         factorizer.backwardRiccatiRecursion(
-            factorization_ref[i+1], ocp_discretizer.dt_lift(lift_index), 
-            kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
+            factorization_ref[i+1], kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
             kkt_matrix_ref.switching[impulse_index], kkt_residual_ref.switching[impulse_index], 
             factorization_ref.lift[lift_index], factorization_ref.switching[impulse_index], lqr_policy.lift[lift_index]);
       }
       else {
         factorizer.backwardRiccatiRecursion(
-            factorization_ref[i+1], ocp_discretizer.dt_lift(lift_index), 
+            factorization_ref[i+1], 
             kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
             factorization_ref.lift[lift_index], lqr_policy.lift[lift_index]);
       }
       factorizer.backwardRiccatiRecursion(
-          factorization_ref.lift[lift_index], dti, kkt_matrix_ref[i], 
+          factorization_ref.lift[lift_index], kkt_matrix_ref[i], 
           kkt_residual_ref[i], factorization_ref[i], lqr_policy[i]);
     }
     else {
       if (ocp_discretizer.isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i+1);
         factorizer.backwardRiccatiRecursion(
-            factorization_ref[i+1], ocp_discretizer.dt(i), kkt_matrix_ref[i], 
-            kkt_residual_ref[i], kkt_matrix_ref.switching[impulse_index], 
-            kkt_residual_ref.switching[impulse_index], factorization_ref[i], 
-            factorization_ref.switching[impulse_index], lqr_policy[i]);
+            factorization_ref[i+1], kkt_matrix_ref[i], kkt_residual_ref[i], 
+            kkt_matrix_ref.switching[impulse_index], kkt_residual_ref.switching[impulse_index], 
+            factorization_ref[i], factorization_ref.switching[impulse_index], lqr_policy[i]);
       }
       else {
         factorizer.backwardRiccatiRecursion(
-            factorization_ref[i+1], dt, kkt_matrix_ref[i], 
-            kkt_residual_ref[i], factorization_ref[i], lqr_policy[i]);
+            factorization_ref[i+1], kkt_matrix_ref[i], kkt_residual_ref[i], 
+            factorization_ref[i], lqr_policy[i]);
       }
     }
   }
@@ -224,32 +208,28 @@ void RiccatiRecursionTest::testRiccatiRecursion(const Robot& robot) const {
   for (int i=0; i<ocp_discretizer.N(); ++i) {
     if (ocp_discretizer.isTimeStageBeforeImpulse(i)) {
       const int impulse_index = ocp_discretizer.impulseIndexAfterTimeStage(i);
-      const double dti = ocp_discretizer.dt(i);
-      const double dt_aux = ocp_discretizer.dt_aux(impulse_index);
       factorizer.forwardRiccatiRecursion(
-          kkt_matrix_ref[i], kkt_residual_ref[i], dti, 
+          kkt_matrix_ref[i], kkt_residual_ref[i], 
           lqr_policy[i], d_ref[i], d_ref.impulse[impulse_index]);
       factorizer.forwardRiccatiRecursion(
           kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index], 
           d_ref.impulse[impulse_index], d_ref.aux[impulse_index]);
       factorizer.forwardRiccatiRecursion(
-          kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index], dt_aux, 
+          kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index], 
           lqr_policy.aux[impulse_index], d_ref.aux[impulse_index], d_ref[i+1]);
     }
     else if (ocp_discretizer.isTimeStageBeforeLift(i)) {
       const int lift_index = ocp_discretizer.liftIndexAfterTimeStage(i);
-      const double dti = ocp_discretizer.dt(i);
-      const double dt_lift = ocp_discretizer.dt_lift(lift_index);
       factorizer.forwardRiccatiRecursion(
-          kkt_matrix_ref[i], kkt_residual_ref[i], dti, 
+          kkt_matrix_ref[i], kkt_residual_ref[i], 
           lqr_policy[i], d_ref[i], d_ref.lift[lift_index]);
       factorizer.forwardRiccatiRecursion(
-          kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], dt_lift, 
+          kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
           lqr_policy.lift[lift_index], d_ref.lift[lift_index], d_ref[i+1]);
     }
     else {
       factorizer.forwardRiccatiRecursion(kkt_matrix_ref[i], kkt_residual_ref[i],  
-                                         dt, lqr_policy[i], d_ref[i], d_ref[i+1]);
+                                         lqr_policy[i], d_ref[i], d_ref[i+1]);
     }
   }
   EXPECT_TRUE(testhelper::IsApprox(d, d_ref));

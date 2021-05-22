@@ -39,7 +39,8 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFixedBase) {
   EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((s_next.gmm-s.gmm)));
   EXPECT_TRUE(kkt_residual.ldv.isApprox((s_next.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq().isZero());
+  EXPECT_TRUE(kkt_matrix.Fqq().isIdentity());
+  EXPECT_TRUE(kkt_matrix.Fqv().isZero());
   EXPECT_DOUBLE_EQ(kkt_residual.Fx.lpNorm<1>(), 
                    stateequation::l1NormStateEuqationResidual(kkt_residual));
   EXPECT_DOUBLE_EQ(kkt_residual.Fx.squaredNorm(), 
@@ -50,12 +51,11 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFixedBase) {
   EXPECT_TRUE(kkt_residual.lq().isApprox((s_next.lmd-s.lmd)));
   EXPECT_TRUE(kkt_residual.lv().isApprox((s_next.gmm-s.gmm)));
   EXPECT_TRUE(kkt_residual.ldv.isApprox((s_next.gmm)));
-  EXPECT_TRUE(kkt_matrix.Fqq().isZero());
+  EXPECT_TRUE(kkt_matrix.Fqq().isIdentity());
   EXPECT_TRUE(kkt_matrix.Fqv().isZero());
   Eigen::VectorXd dlmd = Eigen::VectorXd::Random(robot.dimv());
   Eigen::VectorXd dlmd_ref = dlmd;
-  // stateequation::correctCostateDirectionForwardEuler(robot, kkt_matrix, kkt_residual, dlmd);
-  stateequation::correctCostateDirectionImpulseForwardEuler(robot, kkt_matrix, kkt_residual, dlmd);
+  stateequation::correctCostateDirectionForwardEuler(robot, kkt_matrix, kkt_residual, dlmd);
   EXPECT_TRUE(dlmd.isApprox(dlmd_ref));
 }
 
@@ -83,6 +83,7 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFloatingBase) {
   EXPECT_TRUE(kkt_residual.lv().isApprox((s_next.gmm-s.gmm)));
   EXPECT_TRUE(kkt_residual.ldv.isApprox((s_next.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dq));
+  EXPECT_TRUE(kkt_matrix.Fqv().isZero());
   EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
   EXPECT_DOUBLE_EQ(kkt_residual.Fx.lpNorm<1>(), 
                    stateequation::l1NormStateEuqationResidual(kkt_residual));
@@ -101,13 +102,13 @@ TEST_F(ImpulseStateEquationTest, forwardEulerFloatingBase) {
   Eigen::MatrixXd Fqv_ref = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Fq_ref.head(6) = - dsubtract_dq_inv.topLeftCorner(6, 6) * qdiff.head(6);
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(Fqq_ref));
+  EXPECT_TRUE(kkt_matrix.Fqv().isZero());
   EXPECT_TRUE(kkt_residual.Fq().isApprox((Fq_ref)));
   EXPECT_TRUE(kkt_matrix.Fqq_inv.isApprox(dsubtract_dq_inv.topLeftCorner(robot.dim_passive(), robot.dim_passive())));
   EXPECT_TRUE(kkt_matrix.Fqq_prev_inv.isApprox(dsubtract_dq_prev_inv.topLeftCorner(robot.dim_passive(), robot.dim_passive())));
   Eigen::VectorXd dlmd = Eigen::VectorXd::Random(robot.dimv());
   Eigen::VectorXd dlmd_ref = dlmd;
-  // stateequation::correctCostateDirectionForwardEuler(robot, kkt_matrix, kkt_residual, dlmd);
-  stateequation::correctCostateDirectionImpulseForwardEuler(robot, kkt_matrix, kkt_residual, dlmd);
+  stateequation::correctCostateDirectionForwardEuler(robot, kkt_matrix, kkt_residual, dlmd);
   dlmd_ref.head(6) = - dsubtract_dq_prev_inv.topLeftCorner(6, 6).transpose() * dlmd_ref.head(6);
   EXPECT_TRUE(dlmd.isApprox(dlmd_ref));
 }

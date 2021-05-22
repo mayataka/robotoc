@@ -32,11 +32,10 @@ inline RiccatiFactorizer::~RiccatiFactorizer() {
 
 
 inline void RiccatiFactorizer::backwardRiccatiRecursion(
-    const SplitRiccatiFactorization& riccati_next, const double dt, 
+    const SplitRiccatiFactorization& riccati_next,  
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     SplitRiccatiFactorization& riccati, LQRPolicy& lqr_policy) {
-  assert(dt > 0);
-  backward_recursion_.factorizeKKTMatrix(riccati_next, dt, kkt_matrix, 
+  backward_recursion_.factorizeKKTMatrix(riccati_next, kkt_matrix, 
                                          kkt_residual);
   llt_.compute(kkt_matrix.Quu);
   assert(llt_.info() == Eigen::Success);
@@ -46,20 +45,18 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
   assert(!lqr_policy.k.hasNaN());
   backward_recursion_.factorizeRiccatiFactorization(riccati_next, kkt_matrix, 
                                                     kkt_residual, lqr_policy,
-                                                    dt, riccati);
+                                                    riccati);
 }
 
 
 inline void RiccatiFactorizer::backwardRiccatiRecursion(
-    const SplitRiccatiFactorization& riccati_next, const double dt, 
+    const SplitRiccatiFactorization& riccati_next, 
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual, 
     const SplitSwitchingConstraintJacobian& switch_jacobian,
     const SplitSwitchingConstraintResidual& switch_residual, 
     SplitRiccatiFactorization& riccati,
     SplitConstrainedRiccatiFactorization& c_riccati, LQRPolicy& lqr_policy) {
-  assert(dt > 0);
-  backward_recursion_.factorizeKKTMatrix(riccati_next, dt, kkt_matrix, 
-                                         kkt_residual);
+  backward_recursion_.factorizeKKTMatrix(riccati_next, kkt_matrix, kkt_residual);
   // Schur complement
   llt_.compute(kkt_matrix.Quu);
   assert(llt_.info() == Eigen::Success);
@@ -85,18 +82,12 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
   assert(!c_riccati.m().hasNaN());
   backward_recursion_.factorizeRiccatiFactorization(riccati_next, kkt_matrix, 
                                                     kkt_residual, lqr_policy,
-                                                    dt, riccati);
+                                                    riccati);
   c_riccati.DtM.noalias()   = switch_jacobian.Phiu().transpose() * c_riccati.M();
   c_riccati.KtDtM.noalias() = lqr_policy.K.transpose() * c_riccati.DtM;
-  riccati.Pqq.noalias() -= c_riccati.KtDtM.topLeftCorner(dimv_, dimv_);
-  riccati.Pqq.noalias() -= c_riccati.KtDtM.topLeftCorner(dimv_, dimv_).transpose();
-  riccati.Pqv.noalias() -= c_riccati.KtDtM.topRightCorner(dimv_, dimv_);
-  riccati.Pqv.noalias() -= c_riccati.KtDtM.bottomLeftCorner(dimv_, dimv_).transpose();
-  riccati.Pvq = riccati.Pqv.transpose();
-  riccati.Pvv.noalias() -= c_riccati.KtDtM.bottomRightCorner(dimv_, dimv_);
-  riccati.Pvv.noalias() -= c_riccati.KtDtM.bottomRightCorner(dimv_, dimv_).transpose();
-  riccati.sq.noalias() -= switch_jacobian.Phix().transpose().topRows(dimv_) * c_riccati.m();
-  riccati.sv.noalias() -= switch_jacobian.Phix().transpose().bottomRows(dimv_) * c_riccati.m();
+  riccati.P.noalias() -= c_riccati.KtDtM;
+  riccati.P.noalias() -= c_riccati.KtDtM.transpose();
+  riccati.s.noalias() -= switch_jacobian.Phix().transpose() * c_riccati.m();
 }
 
 
@@ -113,28 +104,12 @@ inline void RiccatiFactorizer::backwardRiccatiRecursion(
 template <typename SplitDirectionType>
 inline void RiccatiFactorizer::forwardRiccatiRecursion(
     const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
-    const double dt, const LQRPolicy& lqr_policy, 
-    SplitDirection& d, SplitDirectionType& d_next) const {
-  assert(dt > 0);
+    const LQRPolicy& lqr_policy, SplitDirection& d, 
+    SplitDirectionType& d_next) const {
   d.du.noalias()  = lqr_policy.K * d.dx;
   d.du.noalias() += lqr_policy.k;
   d_next.dx = kkt_residual.Fx;
-  if (has_floating_base_) {
-    d_next.dq().template head<6>().noalias() 
-        += kkt_matrix.Fqq().template topLeftCorner<6, 6>() 
-            * d.dq().template head<6>();
-    d_next.dq().tail(dimv_-6).noalias() += d.dq().tail(dimv_-6);
-    d_next.dq().template head<6>().noalias() 
-        += kkt_matrix.Fqv().template topLeftCorner<6, 6>() 
-            * d.dv().template head<6>();
-    d_next.dq().tail(dimv_-6).noalias() += dt * d.dv().tail(dimv_-6);
-  }
-  else {
-    d_next.dq().noalias() += d.dq();
-    d_next.dq().noalias() += dt * d.dv();
-  }
-  d_next.dv().noalias() += kkt_matrix.Fvq() * d.dq();
-  d_next.dv().noalias() += kkt_matrix.Fvv() * d.dv();
+  d_next.dx.noalias() += kkt_matrix.Fxx * d.dx;
   d_next.dv().noalias() += kkt_matrix.Fvu * d.du;
 }
 
@@ -144,29 +119,14 @@ inline void RiccatiFactorizer::forwardRiccatiRecursion(
     const ImpulseSplitKKTResidual& kkt_residual, 
     const ImpulseSplitDirection& d, SplitDirection& d_next) const {
   d_next.dx = kkt_residual.Fx;
-  if (has_floating_base_) {
-    d_next.dq().template head<6>().noalias() 
-        += kkt_matrix.Fqq().template topLeftCorner<6, 6>() 
-            * d.dq().template head<6>();
-    d_next.dq().tail(dimv_-6).noalias() += d.dq().tail(dimv_-6);
-  }
-  else {
-    d_next.dq().noalias() += d.dq();
-  }
-  d_next.dv().noalias() += kkt_matrix.Fvq() * d.dq();
-  d_next.dv().noalias() += kkt_matrix.Fvv() * d.dv();
+  d_next.dx.noalias() += kkt_matrix.Fxx * d.dx;
 }
 
 
 template <typename SplitDirectionType>
 inline void RiccatiFactorizer::computeCostateDirection(
     const SplitRiccatiFactorization& riccati, SplitDirectionType& d) {
-  d.dlmd().noalias()  = riccati.Pqq * d.dq();
-  d.dlmd().noalias() += riccati.Pqv * d.dv();
-  d.dlmd().noalias() -= riccati.sq;
-  d.dgmm().noalias()  = riccati.Pqv.transpose() * d.dq();
-  d.dgmm().noalias() += riccati.Pvv * d.dv();
-  d.dgmm().noalias() -= riccati.sv;
+  d.dlmdgmm.noalias() = riccati.P * d.dx - riccati.s;
 }
 
 

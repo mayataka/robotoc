@@ -11,18 +11,14 @@ namespace idocp {
 inline UnconstrBackwardRiccatiRecursionFactorizer::
 UnconstrBackwardRiccatiRecursionFactorizer(const Robot& robot) 
   : dimv_(robot.dimv()),
-    GK_(Eigen::MatrixXd::Zero(robot.dimv(), 2*robot.dimv())),
-    Pqq_tmp_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Pvv_tmp_(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())) {
+    GK_(Eigen::MatrixXd::Zero(robot.dimv(), 2*robot.dimv())) {
 }
 
 
 inline UnconstrBackwardRiccatiRecursionFactorizer::
 UnconstrBackwardRiccatiRecursionFactorizer() 
   : dimv_(0),
-    GK_(),
-    Pqq_tmp_(),
-    Pvv_tmp_() {
+    GK_() {
 }
 
 
@@ -36,61 +32,44 @@ inline void UnconstrBackwardRiccatiRecursionFactorizer::factorizeKKTMatrix(
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   // Factorize F
-  kkt_matrix.Qqq().noalias() += riccati_next.Pqq;
-  kkt_matrix.Qqv().noalias() += dt * riccati_next.Pqq;
-  kkt_matrix.Qqv().noalias() += riccati_next.Pqv;
-  kkt_matrix.Qvq() = kkt_matrix.Qqv().transpose();
-  kkt_matrix.Qvv().noalias() += (dt*dt) * riccati_next.Pqq;
-  kkt_matrix.Qvv().noalias() += dt * riccati_next.Pqv;
-  kkt_matrix.Qvv().noalias() += dt * riccati_next.Pqv.transpose();
-  kkt_matrix.Qvv().noalias() += riccati_next.Pvv;
+  kkt_matrix.Qxx.noalias() += riccati_next.P;
+  kkt_matrix.Qxx.bottomRows(dimv_).noalias() 
+      += dt * riccati_next.P.topRows(dimv_);
+  kkt_matrix.Qxx.rightCols(dimv_).noalias() 
+      += dt * riccati_next.P.leftCols(dimv_);
+  kkt_matrix.Qxx.bottomRightCorner(dimv_, dimv_).noalias() 
+      += (dt*dt) * riccati_next.P.topLeftCorner(dimv_, dimv_);
   // Factorize H
-  kkt_matrix.Qqu().noalias() += dt * riccati_next.Pqv;
-  kkt_matrix.Qvu().noalias() += (dt*dt) * riccati_next.Pqv;
-  kkt_matrix.Qvu().noalias() += dt * riccati_next.Pvv;
+  kkt_matrix.Qxu.noalias()   += dt * riccati_next.P.rightCols(dimv_);
+  kkt_matrix.Qvu().noalias() += (dt*dt) * riccati_next.Pqv();
   // Factorize G
-  kkt_matrix.Qaa.noalias()   += (dt*dt) * riccati_next.Pvv;
+  kkt_matrix.Qaa.noalias()   += (dt*dt) * riccati_next.Pvv();
   // Factorize vector term
-  kkt_residual.la.noalias() += dt * riccati_next.Pqv.transpose() * kkt_residual.Fq();
-  kkt_residual.la.noalias() += dt * riccati_next.Pvv * kkt_residual.Fv();
-  kkt_residual.la.noalias() -= dt * riccati_next.sv;
+  kkt_residual.la.noalias() += dt * riccati_next.P.bottomRows(dimv_) 
+                                  * kkt_residual.Fx;
+  kkt_residual.la.noalias() -= dt * riccati_next.sv();
 }
 
 
 inline void UnconstrBackwardRiccatiRecursionFactorizer::
 factorizeRiccatiFactorization(const SplitRiccatiFactorization& riccati_next, 
-                              const SplitKKTMatrix& kkt_matrix, 
+                              SplitKKTMatrix& kkt_matrix, 
                               const SplitKKTResidual& kkt_residual, 
                               const LQRPolicy& lqr_policy, const double dt, 
                               SplitRiccatiFactorization& riccati) {
   assert(dt > 0);
-  riccati.Pqq = kkt_matrix.Qqq();
-  riccati.Pqv = kkt_matrix.Qqv();
-  riccati.Pvv = kkt_matrix.Qvv();
   GK_.noalias() = kkt_matrix.Qaa * lqr_policy.K; 
-  riccati.Pqq.noalias() 
-      -= lqr_policy.K.leftCols(dimv_).transpose() * GK_.leftCols(dimv_);
-  riccati.Pqv.noalias() 
-      -= lqr_policy.K.leftCols(dimv_).transpose() * GK_.rightCols(dimv_);
-  riccati.Pvv.noalias() 
-      -= lqr_policy.K.rightCols(dimv_).transpose() * GK_.rightCols(dimv_);
-  riccati.Pvq = riccati.Pqv.transpose();
-  // preserve the symmetry
-  Pqq_tmp_ = riccati.Pqq + riccati.Pqq.transpose();
-  Pvv_tmp_ = riccati.Pvv + riccati.Pvv.transpose();
-  riccati.Pqq = 0.5 * Pqq_tmp_;
-  riccati.Pvv = 0.5 * Pvv_tmp_;
-  riccati.sq = riccati_next.sq;
-  riccati.sq.noalias() -= riccati_next.Pqq * kkt_residual.Fq();
-  riccati.sq.noalias() -= riccati_next.Pqv * kkt_residual.Fv();
-  riccati.sv = riccati_next.sv;
-  riccati.sv.noalias() += dt * riccati.sq;
-  riccati.sv.noalias() -= riccati_next.Pqv.transpose() * kkt_residual.Fq();
-  riccati.sv.noalias() -= riccati_next.Pvv * kkt_residual.Fv();
-  riccati.sq.noalias() -= kkt_residual.lq();
-  riccati.sv.noalias() -= kkt_residual.lv();
-  riccati.sq.noalias() -= kkt_matrix.Qqu() * lqr_policy.k;
-  riccati.sv.noalias() -= kkt_matrix.Qvu() * lqr_policy.k;
+  kkt_matrix.Qxx.noalias() -= lqr_policy.K.transpose() * GK_;
+  // Riccati factorization matrix with preserving the symmetry
+  riccati.P = 0.5 * (kkt_matrix.Qxx + kkt_matrix.Qxx.transpose());
+  // Riccati factorization vector
+  riccati.s = riccati_next.s;
+  riccati.sv().noalias() += dt * riccati_next.sq();
+  riccati.s.noalias() -= riccati_next.P * kkt_residual.Fx;
+  riccati.sv().noalias() -= dt * riccati_next.P.topRows(dimv_) 
+                               * kkt_residual.Fx;
+  riccati.s.noalias() -= kkt_residual.lx;
+  riccati.s.noalias() -= kkt_matrix.Qxu * lqr_policy.k;
 }
 
 } // namespace idocp

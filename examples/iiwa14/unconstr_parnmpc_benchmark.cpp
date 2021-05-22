@@ -38,7 +38,7 @@ int main() {
   // Create the ParNMPC solver for unconstrained rigid-body systems.
   const double T = 1;
   const int N = 20;
-  // Plz set nthreads by the number of the processors of your PC to enjoy ParNMPC!
+  // Please set nthreads by the number of the processors of your PC to enjoy ParNMPC!
   const int nthreads = 8;
   const double t = 0;
   const Eigen::VectorXd q = Eigen::VectorXd::Constant(robot.dimq(), 2);

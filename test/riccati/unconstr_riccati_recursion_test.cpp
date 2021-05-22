@@ -12,6 +12,8 @@
 
 #include "robot_factory.hpp"
 #include "direction_factory.hpp"
+#include "kkt_factory.hpp"
+#include "riccati_factory.hpp"
 
 
 namespace idocp {
@@ -32,22 +34,14 @@ protected:
     d = Direction(robot, N);
     riccati_factorization = UnconstrRiccatiFactorization(N+1, SplitRiccatiFactorization(robot));
     for (int i=0; i<=N; ++i) {
-      Eigen::MatrixXd seed = Eigen::MatrixXd::Random(3*dimv, 3*dimv);
-      const Eigen::MatrixXd Q = seed * seed.transpose();
-      kkt_matrix[i].Qxx = Q.topLeftCorner(dimx, dimx);
-      kkt_matrix[i].Qxu = Q.topRightCorner(dimx, dimv);
-      kkt_matrix[i].Qaa = Q.bottomRightCorner(dimv, dimv);
-      kkt_residual[i].lx.setRandom();
-      kkt_residual[i].la.setRandom();
+      const Eigen::MatrixXd H_seed = Eigen::MatrixXd::Random(dimx+dimv, dimx+dimv);
+      const Eigen::MatrixXd H = H_seed * H_seed.transpose();
+      kkt_matrix[i].Qxx = H.topLeftCorner(dimx, dimx);
+      kkt_matrix[i].Qxu = H.topRightCorner(dimx, dimv);
+      kkt_matrix[i].Qaa = H.bottomRightCorner(dimv, dimv);
+      kkt_residual[i] = testhelper::CreateSplitKKTResidual(robot);
       d[i].setRandom();
-      seed = Eigen::MatrixXd::Random(dimv, dimv);
-      riccati_factorization[i].Pqq = seed * seed.transpose();
-      riccati_factorization[i].Pqv = Eigen::MatrixXd::Random(dimv, dimv);
-      riccati_factorization[i].Pvq = riccati_factorization[i].Pqv.transpose();
-      seed = Eigen::MatrixXd::Random(dimv, dimv);
-      riccati_factorization[i].Pvv = seed * seed.transpose();
-      riccati_factorization[i].sq.setRandom();
-      riccati_factorization[i].sv.setRandom();
+      riccati_factorization[i] = testhelper::CreateSplitRiccatiFactorization(robot);
     }
   }
 
@@ -66,31 +60,27 @@ protected:
 
 TEST_F(UnconstrRiccatiRecursionTest, test) {
   auto riccati_factorization_ref = riccati_factorization;
-  KKTMatrix kkt_matrix_ref = kkt_matrix;
-  KKTResidual kkt_residual_ref = kkt_residual;
+  auto kkt_matrix_ref = kkt_matrix;
+  auto kkt_residual_ref = kkt_residual;
   UnconstrRiccatiRecursion riccati_recursion(robot, T, N);
   riccati_recursion.backwardRiccatiRecursion(kkt_matrix, kkt_residual, 
                                              riccati_factorization);
-  riccati_factorization_ref[N].Pqq = kkt_matrix_ref[N].Qqq();
-  riccati_factorization_ref[N].Pvv = kkt_matrix_ref[N].Qvv();
-  riccati_factorization_ref[N].sq  = - kkt_residual_ref[N].lq();
-  riccati_factorization_ref[N].sv  = - kkt_residual_ref[N].lv();
+  riccati_factorization_ref[N].P = kkt_matrix_ref[N].Qxx;
+  riccati_factorization_ref[N].s = - kkt_residual_ref[N].lx;
   EXPECT_TRUE(riccati_factorization[N].isApprox(riccati_factorization_ref[N]));
   UnconstrRiccatiFactorizer factorizer(robot);
   std::vector<LQRPolicy> lqr_policy(N, LQRPolicy(robot));
   for (int i=N-1; i>=0; --i) {
     factorizer.backwardRiccatiRecursion(
-        riccati_factorization_ref[i+1], dt, 
-        kkt_matrix_ref[i], kkt_residual_ref[i], riccati_factorization_ref[i],
-        lqr_policy[i]);
+        riccati_factorization_ref[i+1], dt, kkt_matrix_ref[i], kkt_residual_ref[i], 
+        riccati_factorization_ref[i], lqr_policy[i]);
   }
   for (int i=0; i<=N; ++i) {
     EXPECT_TRUE(kkt_matrix[i].isApprox(kkt_matrix_ref[i]));
     EXPECT_TRUE(kkt_residual[i].isApprox(kkt_residual_ref[i]));
     EXPECT_TRUE(riccati_factorization[i].isApprox(riccati_factorization_ref[i]));
   }
-  d[0].dq().setRandom();
-  d[0].dv().setRandom();
+  d[0].dx.setRandom();
   auto d_ref = d;
   riccati_recursion.forwardRiccatiRecursion(kkt_residual, d);
   for (int i=0; i<N; ++i) {
@@ -107,7 +97,6 @@ TEST_F(UnconstrRiccatiRecursionTest, test) {
     EXPECT_TRUE(Kq.isApprox(lqr_policy[i].Kq()));
     EXPECT_TRUE(Kv.isApprox(lqr_policy[i].Kv()));
   }
-
 }
 
 } // namespace idocp

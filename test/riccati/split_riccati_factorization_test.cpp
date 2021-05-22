@@ -28,16 +28,19 @@ void RiccatiFactorizationTest::test(const Robot& robot) {
   const int dimx = 2 * robot.dimv();
   const int dimu = robot.dimu();
   SplitRiccatiFactorization riccati(robot);
-  EXPECT_EQ(riccati.Pqq.rows(), dimv);
-  EXPECT_EQ(riccati.Pqq.cols(), dimv);
-  EXPECT_EQ(riccati.Pqv.rows(), dimv);
-  EXPECT_EQ(riccati.Pqv.cols(), dimv);
-  EXPECT_EQ(riccati.Pvq.rows(), dimv);
-  EXPECT_EQ(riccati.Pvq.cols(), dimv);
-  EXPECT_EQ(riccati.Pvv.rows(), dimv);
-  EXPECT_EQ(riccati.Pvv.cols(), dimv);
-  EXPECT_EQ(riccati.sq.size(), dimv);
-  EXPECT_EQ(riccati.sv.size(), dimv);
+  EXPECT_EQ(riccati.P.rows(), dimx);
+  EXPECT_EQ(riccati.P.cols(), dimx);
+  EXPECT_EQ(riccati.s.size(), dimx);
+  EXPECT_EQ(riccati.Pqq().rows(), dimv);
+  EXPECT_EQ(riccati.Pqq().cols(), dimv);
+  EXPECT_EQ(riccati.Pqv().rows(), dimv);
+  EXPECT_EQ(riccati.Pqv().cols(), dimv);
+  EXPECT_EQ(riccati.Pvq().rows(), dimv);
+  EXPECT_EQ(riccati.Pvq().cols(), dimv);
+  EXPECT_EQ(riccati.Pvv().rows(), dimv);
+  EXPECT_EQ(riccati.Pvv().cols(), dimv);
+  EXPECT_EQ(riccati.sq().size(), dimv);
+  EXPECT_EQ(riccati.sv().size(), dimv);
 }
 
 

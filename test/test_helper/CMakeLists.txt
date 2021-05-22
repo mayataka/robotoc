@@ -8,6 +8,7 @@ add_library(
   ${CMAKE_CURRENT_SOURCE_DIR}/cost_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/constraints_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/kkt_factory.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/riccati_factory.cpp
 )
 target_include_directories(
   test_helper

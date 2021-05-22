@@ -67,12 +67,11 @@ public:
   /// @brief Factorizes the split KKT matrix and split KKT residual of a time 
   /// stage for the backward Riccati recursion.
   /// @param[in] riccati_next Riccati factorization of the next time stage.
-  /// @param[in] dt Time step of this time stage. 
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void factorizeKKTMatrix(const SplitRiccatiFactorization& riccati_next, 
-                          const double dt, SplitKKTMatrix& kkt_matrix,  
+                          SplitKKTMatrix& kkt_matrix,  
                           SplitKKTResidual& kkt_residual);
 
   ///
@@ -87,18 +86,16 @@ public:
   ///
   /// @brief Factorizes the Riccati factorization matrix and vector.
   /// @param[in] riccati_next Riccati factorization of the next time stage.
-  /// @param[in] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in] lqr_policy The state feedback control policy of the LQR 
   /// subproblem.
-  /// @param[in] dt Time step of this time stage.
   /// @param[out] riccati The Riccati factorization of this time stage.
   ///
   void factorizeRiccatiFactorization(
       const SplitRiccatiFactorization& riccati_next, 
-      const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
-      const LQRPolicy& lqr_policy, const double dt, 
-      SplitRiccatiFactorization& riccati);
+      SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual, 
+      const LQRPolicy& lqr_policy, SplitRiccatiFactorization& riccati);
 
   ///
   /// @brief Factorizes the Riccati factorization matrix and vector.
@@ -115,11 +112,9 @@ public:
       SplitRiccatiFactorization& riccati);
 
 private:
-  bool has_floating_base_;
   int dimv_, dimu_;
-  static constexpr int kDimFloatingBase = 6;
-  Eigen::MatrixXd AtPqq_, AtPqv_, AtPvq_, AtPvv_, BtPq_, BtPv_, GK_, 
-                  Pqq_tmp_, Pvv_tmp_;
+  MatrixXdRowMajor AtP_, BtP_;
+  Eigen::MatrixXd GK_;
 
 };
 

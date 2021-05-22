@@ -12,31 +12,27 @@ namespace idocp {
 /// @class SplitRiccatiFactorization
 /// @brief Riccati factorization matrix and vector for a time stage.
 ///
-struct SplitRiccatiFactorization {
+class SplitRiccatiFactorization {
 public:
   ///
   /// @brief Constructs Riccati factorization matrix and vector.
   /// @param[in] robot Robot model. 
   ///
   SplitRiccatiFactorization(const Robot& robot)
-    : Pqq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-      Pqv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-      Pvq(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-      Pvv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-      sq(Eigen::VectorXd::Zero(robot.dimv())),
-      sv(Eigen::VectorXd::Zero(robot.dimv())) {
+    : P(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
+      s(Eigen::VectorXd::Zero(2*robot.dimv())),
+      dimv_(robot.dimv()),
+      dimx_(2*robot.dimv()) {
   }
 
   ///
   /// @brief Default constructor. 
   ///
   SplitRiccatiFactorization()
-    : Pqq(),
-      Pqv(),
-      Pvq(),
-      Pvv(),
-      sq(),
-      sv() {
+    : P(),
+      s(),
+      dimv_(0),
+      dimx_(0) {
   }
 
   ///
@@ -70,37 +66,62 @@ public:
 
   ///
   /// @brief Riccati factorization matrix. Size is 
-  /// Robot::dimv() x Robot::dimv().
+  /// 2 * Robot::dimv() x 2 * Robot::dimv().
   ///
-  Eigen::MatrixXd Pqq;
+  Eigen::MatrixXd P;
 
   ///
-  /// @brief Riccati factorization matrix. Size is 
-  /// Robot::dimv() x Robot::dimv().
+  /// @brief Riccati factorization vector. Size is 2 * Robot::dimv().
   ///
-  Eigen::MatrixXd Pqv;
+  Eigen::VectorXd s;
 
-  ///
-  /// @brief Riccati factorization matrix. Size is 
-  /// Robot::dimv() x Robot::dimv().
-  ///
-  Eigen::MatrixXd Pvq;
+  Eigen::Block<Eigen::MatrixXd> Pqq() {
+    return P.topLeftCorner(dimv_, dimv_); 
+  }
 
-  ///
-  /// @brief Riccati factorization matrix. Size is 
-  /// Robot::dimv() x Robot::dimv().
-  ///
-  Eigen::MatrixXd Pvv;
+  const Eigen::Block<const Eigen::MatrixXd> Pqq() const {
+    return P.topLeftCorner(dimv_, dimv_); 
+  }
 
-  ///
-  /// @brief Riccati factorization vector. Size is Robot::dimv().
-  ///
-  Eigen::VectorXd sq;
+  Eigen::Block<Eigen::MatrixXd> Pqv() {
+    return P.topRightCorner(dimv_, dimv_); 
+  }
 
-  ///
-  /// @brief Riccati factorization vector. Size is Robot::dimv().
-  ///
-  Eigen::VectorXd sv;
+  const Eigen::Block<const Eigen::MatrixXd> Pqv() const {
+    return P.topRightCorner(dimv_, dimv_); 
+  }
+
+  Eigen::Block<Eigen::MatrixXd> Pvq() {
+    return P.bottomLeftCorner(dimv_, dimv_); 
+  }
+
+  const Eigen::Block<const Eigen::MatrixXd> Pvq() const {
+    return P.bottomLeftCorner(dimv_, dimv_); 
+  }
+
+  Eigen::Block<Eigen::MatrixXd> Pvv() {
+    return P.bottomRightCorner(dimv_, dimv_); 
+  }
+
+  const Eigen::Block<const Eigen::MatrixXd> Pvv() const {
+    return P.bottomRightCorner(dimv_, dimv_); 
+  }
+
+  Eigen::VectorBlock<Eigen::VectorXd> sq() {
+    return s.head(dimv_);
+  }
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> sq() const {
+    return s.head(dimv_);
+  }
+
+  Eigen::VectorBlock<Eigen::VectorXd> sv() {
+    return s.tail(dimv_);
+  }
+
+  const Eigen::VectorBlock<const Eigen::VectorXd> sv() const {
+    return s.tail(dimv_);
+  }
 
   ///
   /// @brief Checks the equivalence of two SplitRiccatiFactorization.
@@ -108,12 +129,8 @@ public:
   /// @return true if this and other is same. false otherwise.
   ///
   bool isApprox(const SplitRiccatiFactorization& other) const {
-    if (!Pqq.isApprox(other.Pqq)) return false;
-    if (!Pqv.isApprox(other.Pqv)) return false;
-    if (!Pvq.isApprox(other.Pvq)) return false;
-    if (!Pvv.isApprox(other.Pvv)) return false;
-    if (!sq.isApprox(other.sq)) return false;
-    if (!sv.isApprox(other.sv)) return false;
+    if (!P.isApprox(other.P)) return false;
+    if (!s.isApprox(other.s)) return false;
     return true;
   }
 
@@ -122,14 +139,13 @@ public:
   /// @return true if this has at least one NaN. false otherwise.
   ///
   bool hasNaN() const {
-    if (Pqq.hasNaN()) return true;
-    if (Pqv.hasNaN()) return true;
-    if (Pvq.hasNaN()) return true;
-    if (Pvv.hasNaN()) return true;
-    if (sq.hasNaN()) return true;
-    if (sv.hasNaN()) return true;
+    if (P.hasNaN()) return true;
+    if (s.hasNaN()) return true;
     return false;
   }
+
+private:
+  int dimv_, dimx_;
 
 };
 

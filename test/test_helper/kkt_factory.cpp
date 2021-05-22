@@ -15,15 +15,19 @@ SplitKKTMatrix CreateSplitKKTMatrix(const Robot& robot, const double dt) {
     kkt_matrix.Fqv() = dt * Eigen::MatrixXd::Identity(dimv, dimv);
     kkt_matrix.Fqv().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
   }
+  else {
+    kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(dimv, dimv);
+    kkt_matrix.Fqv() = dt * Eigen::MatrixXd::Identity(dimv, dimv);
+  }
   kkt_matrix.Fvq().setRandom();
   kkt_matrix.Fvv().setRandom();
   kkt_matrix.Fvu.setRandom();
-  const Eigen::MatrixXd Qxx_seed = Eigen::MatrixXd::Random(dimx, dimx);
-  kkt_matrix.Qxx = Qxx_seed * Qxx_seed.transpose();
-  kkt_matrix.Qxu.setRandom();
+  const Eigen::MatrixXd H_seed = Eigen::MatrixXd::Random(dimx+dimu, dimx+dimu);
+  const Eigen::MatrixXd H = H_seed * H_seed.transpose();
+  kkt_matrix.Qxx = H.topLeftCorner(dimx, dimx);
+  kkt_matrix.Qxu = H.topRightCorner(dimx, dimu);
+  kkt_matrix.Quu = H.bottomRightCorner(dimu, dimu);
   kkt_matrix.Qxu_passive.setRandom();
-  const Eigen::MatrixXd Quu_seed = Eigen::MatrixXd::Random(dimu, dimu);
-  kkt_matrix.Quu = Quu_seed * Quu_seed.transpose();
   kkt_matrix.Quu_passive_topRight.setRandom();
   return kkt_matrix;
 }
@@ -36,6 +40,9 @@ ImpulseSplitKKTMatrix CreateImpulseSplitKKTMatrix(const Robot& robot) {
   if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(dimv, dimv);
     kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
+  }
+  else {
+    kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(dimv, dimv);
   }
   kkt_matrix.Fvq().setRandom();
   kkt_matrix.Fvv().setRandom();

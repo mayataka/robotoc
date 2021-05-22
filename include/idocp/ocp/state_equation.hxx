@@ -30,8 +30,10 @@ inline void linearizeForwardEuler(
         += s_next.lmd.tail(robot.dimv()-6) - s.lmd.tail(robot.dimv()-6);
   }
   else {
+    kkt_matrix.Fqq().diagonal().fill(1.);
     kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
   }
+  kkt_matrix.Fqv().diagonal().fill(dt);
   kkt_residual.lv().noalias() += dt * s_next.lmd + s_next.gmm - s.gmm;
   kkt_residual.la.noalias() += dt * s_next.gmm;
 }
