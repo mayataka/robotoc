@@ -1,0 +1,7 @@
+add_idocp_test(split_riccati_factorization_test)
+add_idocp_test(backward_riccati_recursion_factorizer_test)
+add_idocp_test(riccati_factorizer_test)
+add_idocp_test(riccati_recursion_test)
+add_idocp_test(unconstr_backward_riccati_recursion_factorizer_test)
+add_idocp_test(unconstr_riccati_factorizer_test)
+add_idocp_test(unconstr_riccati_recursion_test)

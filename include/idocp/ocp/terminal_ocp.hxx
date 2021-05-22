@@ -52,7 +52,7 @@ inline void TerminalOCP::linearizeOCP(Robot& robot, const double t,
                                       const SplitSolution& s,
                                       SplitKKTMatrix& kkt_matrix, 
                                       SplitKKTResidual& kkt_residual) {
-  kkt_residual.lx().setZero();
+  kkt_residual.lx.setZero();
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v);
   }
@@ -116,7 +116,7 @@ inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,
                                             const SplitSolution& s,
                                             SplitKKTMatrix& kkt_matrix,
                                             SplitKKTResidual& kkt_residual) {
-  kkt_residual.lx().setZero();
+  kkt_residual.lx.setZero();
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v);
   }
@@ -130,7 +130,7 @@ inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,
 inline double TerminalOCP::squaredNormKKTResidual(
     const SplitKKTResidual& kkt_residual) const {
   double error = 0;
-  error += kkt_residual.lx().squaredNorm();
+  error += kkt_residual.lx.squaredNorm();
   return error;
 }
 

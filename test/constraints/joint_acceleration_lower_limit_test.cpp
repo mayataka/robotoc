@@ -107,7 +107,7 @@ void JointAccelerationLowerLimitTest::testCondenseSlackAndDual(Robot& robot, con
   limit.setSlackAndDual(robot, data, s);
   ConstraintComponentData data_ref = data;
   SplitKKTMatrix kkt_mat(robot);
-  kkt_mat.Qaa().setRandom();
+  kkt_mat.Qaa.setRandom();
   SplitKKTResidual kkt_res(robot);
   kkt_res.la.setRandom();
   SplitKKTMatrix kkt_mat_ref = kkt_mat;
@@ -118,7 +118,7 @@ void JointAccelerationLowerLimitTest::testCondenseSlackAndDual(Robot& robot, con
   kkt_res_ref.la.tail(dimc).array() 
       -= dt * (data_ref.dual.array()*data_ref.residual.array()-data_ref.duality.array()) 
                / data_ref.slack.array();
-  kkt_mat_ref.Qaa().diagonal().tail(dimc).array() 
+  kkt_mat_ref.Qaa.diagonal().tail(dimc).array() 
       += dt * data_ref.dual.array() / data_ref.slack.array();
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));

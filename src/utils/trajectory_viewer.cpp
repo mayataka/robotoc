@@ -6,7 +6,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include "idocp/third-party/pinocchio/gepetto/viewer.hpp"
+#include "pinocchio/gepetto/viewer.hpp"
 
 #include "pinocchio/parsers/urdf.hpp"
 #include "pinocchio/parsers/utils.hpp"
@@ -254,18 +254,21 @@ void TrajectoryViewer::setCameraTransformDefault() {
 }
 
 
+void TrajectoryViewer::printCurrentCameraTransform() const {
+  auto gui = gepetto::viewer::corba::gui();
+  const auto window_id = gui->getWindowID("idocp::TrajectoryViewer");
+  const auto camera = gui->getCameraTransform(window_id);
+  std::cout << "Current camera transform is: [";
+  for (int i=0; i<6; ++i) {
+    std::cout << camera[i] << ", ";
+  }
+  std::cout << camera[6] << "]" << std::endl;
+}
+
+
 void TrajectoryViewer::setCameraTransform() {
   auto gui = gepetto::viewer::corba::gui();
   const auto window_id = gui->getWindowID("idocp::TrajectoryViewer");
-
-  // // For debugging
-  // const auto old_camera = gui->getCameraTransform(window_id);
-  // std::cout << "Camera transform before reset is: [";
-  // for (int i=0; i<6; ++i) {
-  //   std::cout << old_camera[i] << ", ";
-  // }
-  // std::cout << old_camera[6] << "]" << std::endl;
-
   std::vector<float> pose(7);
   pose[0] = camera_pos_.coeff(0);
   pose[1] = camera_pos_.coeff(1);

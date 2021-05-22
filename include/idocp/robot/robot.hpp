@@ -3,20 +3,30 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "Eigen/Core"
+#include "Eigen/StdVector"
 #include "pinocchio/multibody/model.hpp"
 #include "pinocchio/multibody/data.hpp"
 #include "pinocchio/container/aligned-vector.hpp"
 #include "pinocchio/spatial/force.hpp"
 
 #include "idocp/robot/point_contact.hpp"
-#include "idocp/robot/floating_base.hpp"
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
 
 
 namespace idocp {
+
+///
+/// @enum BaseJointType
+/// @brief Types of the base joints of robots
+///
+enum class BaseJointType {
+  FixedBase,
+  FloatingBase
+};
 
 ///
 /// @class Robot
@@ -26,39 +36,39 @@ namespace idocp {
 class Robot {
 public:
   ///
-  /// @brief Construct a robot model. Build the Pinocchio robot model and data 
-  /// from URDF. The model is assumed to have no contacts with the environment.
+  /// @brief Constructs a robot model. Builds the Pinocchio robot model and data 
+  /// from URDF. 
   /// @param[in] path_to_urdf Path to the URDF file.
+  /// @param[in] base_joint_type Type of the base joint. Choose from 
+  /// BaseJointType::FixedBase or BaseJointType::FloatingBase. Default is 
+  /// BaseJointType::FixedBase.
+  /// @param[in] contact_frames Collection of the frames that can have contacts 
+  /// with the environments. If this is empty, it is assumed that this robot
+  /// never has any contacts. Deault is {} (empty).
+  /// @param[in] baumgarte_weights The weight paramter of the Baumgarte's 
+  /// stabilization method on the error on the contact velocity (first element) 
+  /// and position (second element). Must be non-negative. Defalut is {0, 0}.
   ///
-  Robot(const std::string& path_to_urdf);
+  Robot(const std::string& path_to_urdf, 
+        const BaseJointType& base_joint_type=BaseJointType::FixedBase, 
+        const std::vector<int>& contact_frames={}, 
+        const std::pair<double, double>& baumgarte_weights={0, 0});
 
   ///
-  /// @brief Construct a robot model. Build the Pinocchio robot model and data 
-  /// from URDF. The model is assumed to have contacts with the environment.
+  /// @brief Constructs a robot model. Builds the Pinocchio robot model and data 
+  /// from URDF. The weight parameter of the Baumgarte's stabilization method 
+  /// is constructed by time_step.
   /// @param[in] path_to_urdf Path to the URDF file.
+  /// @param[in] base_joint_type Type of the base joint. Choose from 
+  /// BaseJointType::FixedBase or BaseJointType::FloatingBase. 
   /// @param[in] contact_frames Collection of the frames that can have contacts 
-  /// with the environments.
-  /// @param[in] time_step The time step of the discretization. The weight 
-  /// parameters of the Baumgarte's stabilization method are computed 
-  /// according to this value. Must be positive.
+  /// with the environments. 
+  /// @param[in] time_step Time steps of the Baumgarte's stabilization method.
+  /// The weight parameter on the velocity is set by 2/time_step and that on the 
+  /// position is by 1/(time_step*time_step).
   ///
-  Robot(const std::string& path_to_urdf, const std::vector<int>& contact_frames, 
-        const double time_step);
-
-  ///
-  /// @brief Construct a robot model. Build the Pinocchio robot model and data 
-  /// from URDF. The model is assumed to have contacts with the environment.
-  /// @param[in] path_to_urdf Path to the URDF file.
-  /// @param[in] contact_frames Collection of the frames that can have contacts 
-  /// with the environments.
-  /// @param[in] baumgarte_weight_on_velocity The weight paramter of the error 
-  /// on the contact velocity. Must be non-negative.
-  /// @param[in] baumgarte_weight_on_position The weight paramter of the error 
-  /// on the contact position. Must be non-negative.
-  ///
-  Robot(const std::string& path_to_urdf, const std::vector<int>& contact_frames, 
-        const double baumgarte_weight_on_velocity, 
-        const double baumgarte_weight_on_position);
+  Robot(const std::string& path_to_urdf, const BaseJointType& base_joint_type, 
+        const std::vector<int>& contact_frames, const double time_step);
 
   ///
   /// @brief Default constructor. 
@@ -700,11 +710,10 @@ public:
 private:
   pinocchio::Model model_, impulse_model_;
   pinocchio::Data data_, impulse_data_;
-  FloatingBase floating_base_;
-  std::vector<PointContact> point_contacts_;
+  std::vector<PointContact, Eigen::aligned_allocator<PointContact>> point_contacts_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
-  int dimq_, dimv_, dimu_, max_dimf_, dimf_, num_active_contacts_;
-  bool has_active_contacts_;
+  int dimq_, dimv_, dimu_, dim_passive_, max_dimf_;
+  bool has_floating_base_;
   std::vector<bool> is_each_contact_active_;
   Eigen::MatrixXd dimpulse_dv_; 
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,

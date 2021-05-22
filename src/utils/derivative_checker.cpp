@@ -104,9 +104,9 @@ bool DerivativeChecker::checkFirstOrderStageCostDerivatives(
     s1.u(i) += finite_diff_;
     lu_ref(i) = (cost->computeStageCost(robot_, data, t, dt, s1) - cost0) / finite_diff_;
   }
-  if (!kkt_residual.lu().isApprox(lu_ref, test_tol_)) {
+  if (!kkt_residual.lu.isApprox(lu_ref, test_tol_)) {
     std::cout << "lu is not correct! lu - lu_ref = " 
-              << (kkt_residual.lu() - lu_ref).transpose() << std::endl;
+              << (kkt_residual.lu - lu_ref).transpose() << std::endl;
     return false;
   }
   Eigen::VectorXd lf_ref(dimf);
@@ -186,22 +186,22 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
     cost->computeStageCostDerivatives(robot_, data, t, dt, s1, kkt_residual);
     Qaa_ref.col(i) = (kkt_residual.la - kkt_residual0.la) / finite_diff_;
   }
-  if (!kkt_matrix.Qaa().isApprox(Qaa_ref, test_tol_)) {
+  if (!kkt_matrix.Qaa.isApprox(Qaa_ref, test_tol_)) {
     std::cout << "Qaa is not correct! Qaa - Qaa_ref = " 
-              << (kkt_matrix.Qaa() - Qaa_ref).transpose() << std::endl;
+              << (kkt_matrix.Qaa - Qaa_ref).transpose() << std::endl;
     return false;
   }
   Eigen::MatrixXd Quu_ref(dimu, dimu);
   for (int i=0; i<dimu; ++i) {
     s1 = s;
     s1.u(i) += finite_diff_;
-    kkt_residual.lu().setZero();
+    kkt_residual.lu.setZero();
     cost->computeStageCostDerivatives(robot_, data, t, dt, s1, kkt_residual);
-    Quu_ref.col(i) = (kkt_residual.lu() - kkt_residual0.lu()) / finite_diff_;
+    Quu_ref.col(i) = (kkt_residual.lu - kkt_residual0.lu) / finite_diff_;
   }
-  if (!kkt_matrix.Quu().isApprox(Quu_ref, test_tol_)) {
+  if (!kkt_matrix.Quu.isApprox(Quu_ref, test_tol_)) {
     std::cout << "Quu is not correct! Quu - Quu_ref = " 
-              << (kkt_matrix.Quu() - Quu_ref).transpose() << std::endl;
+              << (kkt_matrix.Quu - Quu_ref).transpose() << std::endl;
     return false;
   }
   Eigen::MatrixXd Qff_ref(dimf, dimf);
@@ -449,9 +449,9 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
     cost->computeImpulseCostDerivatives(robot_, data, t, s1, kkt_residual);
     Qdvdv_ref.col(i) = (kkt_residual.ldv - kkt_residual0.ldv) / finite_diff_;
   }
-  if (!kkt_matrix.Qdvdv().isApprox(Qdvdv_ref, test_tol_)) {
-    std::cout << "Qaa is not correct! Qdvdv - Qdvdv_ref = " 
-              << (kkt_matrix.Qdvdv() - Qdvdv_ref).transpose() << std::endl;
+  if (!kkt_matrix.Qdvdv.isApprox(Qdvdv_ref, test_tol_)) {
+    std::cout << "Qdvdv is not correct! Qdvdv - Qdvdv_ref = " 
+              << (kkt_matrix.Qdvdv - Qdvdv_ref).transpose() << std::endl;
     return false;
   }
   Eigen::MatrixXd Qff_ref(dimf, dimf);

@@ -3,8 +3,8 @@
 
 #include "Eigen/Core"
 
+#include "idocp/solver/ocp_solver.hpp"
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/ocp_solver.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/configuration_space_cost.hpp"
 #include "idocp/cost/time_varying_task_space_3d_cost.hpp"
@@ -29,14 +29,15 @@
 
 
 int main(int argc, char *argv[]) {
-  const int LF_foot_id = 14;
-  const int LH_foot_id = 24;
-  const int RF_foot_id = 34;
-  const int RH_foot_id = 44;
+  const int LF_foot_id = 12;
+  const int LH_foot_id = 22;
+  const int RF_foot_id = 32;
+  const int RH_foot_id = 42;
   std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; // LF, LH, RF, RH
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
   const double baumgarte_time_step = 0.04;
-  idocp::Robot robot(path_to_urdf, contact_frames, baumgarte_time_step);
+  idocp::Robot robot(path_to_urdf, idocp::BaseJointType::FloatingBase, 
+                     contact_frames, baumgarte_time_step);
 
   const double dt = 0.02;
   const double step_length = 0.275;
@@ -145,7 +146,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_lower);
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
-  constraints->setBarrier(1.0e-03);
+  constraints->setBarrier(1.0e-01);
 
   const double T = t0 + cycle*(2*period_double_support+2*period_swing);
   const int N = T / dt; 
@@ -212,7 +213,7 @@ int main(int argc, char *argv[]) {
   ocp_solver.initConstraints(t);
 
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 80, line_search);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 60, line_search);
 
 #ifdef ENABLE_VIEWER
   idocp::TrajectoryViewer viewer(path_to_urdf);

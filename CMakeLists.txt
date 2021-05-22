@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.1)
 project(idocp CXX)
 set(CMAKE_CXX_STANDARD 11)
 
+#############
+## Options ##
+#############
+option(OPTIMIZE_FOR_NATIVE "Enable -march=native" OFF)
+option(BUILD_VIEWER "Build trajectory viewer" OFF)
+option(BUILD_TESTS "Build unit tests" OFF)
+
 #################
 ## Build idocp ##
 #################
@@ -11,20 +18,15 @@ endif()
 set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
 # find Eigen
 find_package(Eigen3 REQUIRED)
-# find Boost
-find_package(Boost COMPONENTS system filesystem REQUIRED)
 # find pinocchio
 find_package(pinocchio REQUIRED)
 # find OpenMP
 find_package(OpenMP REQUIRED)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 # build idocp 
 add_library(
   ${PROJECT_NAME} 
   SHARED
   src/robot/robot.cpp
-  src/robot/floating_base.cpp
   src/robot/point_contact.cpp
   src/robot/contact_status.cpp
   src/robot/impulse_status.cpp
@@ -57,75 +59,56 @@ add_library(
   src/constraints/joint_torques_lower_limit.cpp
   src/constraints/friction_cone.cpp
   src/constraints/impulse_friction_cone.cpp
-  src/impulse/impulse_split_solution.cpp
-  src/impulse/impulse_split_direction.cpp
-  src/impulse/impulse_split_kkt_residual.cpp
-  src/impulse/impulse_split_kkt_matrix_inverter.cpp
-  src/impulse/impulse_split_kkt_matrix.cpp
-  src/impulse/impulse_state_equation.cpp
-  src/impulse/impulse_dynamics_forward_euler_data.cpp
-  src/impulse/impulse_dynamics_forward_euler.cpp
-  src/impulse/impulse_split_ocp.cpp
-  src/impulse/impulse_backward_riccati_recursion_factorizer.cpp
-  src/impulse/impulse_split_riccati_factorizer.cpp
-  src/impulse/impulse_dynamics_backward_euler_data.cpp
-  src/impulse/impulse_dynamics_backward_euler.cpp
-  src/impulse/impulse_split_parnmpc.cpp
-  src/impulse/impulse_split_backward_correction_data.cpp
-  src/impulse/impulse_split_backward_correction.cpp
   src/hybrid/discrete_event.cpp
   src/hybrid/contact_sequence.cpp
   src/hybrid/ocp_discretizer.cpp
-  src/hybrid/parnmpc_discretizer.cpp
-  src/hybrid/hybrid_container.cpp
   src/hybrid/collision_checker.cpp
+  src/impulse/impulse_split_solution.cpp
+  src/impulse/impulse_split_direction.cpp
+  src/impulse/impulse_split_kkt_residual.cpp
+  src/impulse/impulse_split_kkt_matrix.cpp
+  src/impulse/impulse_state_equation.cpp
+  src/impulse/impulse_dynamics_data.cpp
+  src/impulse/impulse_dynamics.cpp
+  src/impulse/impulse_split_ocp.cpp
   src/ocp/split_kkt_residual.cpp
   src/ocp/split_kkt_matrix.cpp
-  src/ocp/split_kkt_matrix_inverter.cpp
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
   src/ocp/contact_dynamics_data.cpp
   src/ocp/contact_dynamics.cpp
+  src/ocp/split_switching_constraint_jacobian.cpp
+  src/ocp/split_switching_constraint_residual.cpp
   src/ocp/switching_constraint.cpp
-  src/ocp/split_state_constraint_jacobian.cpp
-  src/ocp/forward_switching_constraint.cpp
   src/ocp/split_ocp.cpp
   src/ocp/terminal_ocp.cpp
-  src/ocp/state_constraint_jacobian.cpp
+  src/ocp/ocp.cpp
   src/ocp/ocp_linearizer.cpp
-  src/ocp/split_riccati_factorization.cpp
-  src/ocp/split_constrained_riccati_factorization.cpp
-  src/ocp/backward_riccati_recursion_factorizer.cpp
-  src/ocp/lqr_state_feedback_policy.cpp
-  src/ocp/split_riccati_factorizer.cpp
-  src/ocp/riccati_recursion_solver.cpp
-  src/ocp/ocp_solver.cpp
-  src/ocp/split_parnmpc.cpp
-  src/ocp/terminal_parnmpc.cpp
-  src/ocp/parnmpc_linearizer.cpp
-  src/ocp/split_backward_correction_data.cpp
-  src/ocp/split_backward_correction.cpp
-  src/ocp/backward_correction_solver.cpp
-  src/ocp/parnmpc_solver.cpp
-  src/unocp/split_unkkt_residual.cpp
-  src/unocp/split_unkkt_matrix.cpp
-  src/unocp/split_unkkt_matrix_inverter.cpp
-  src/unocp/unconstrained_container.cpp
-  src/unocp/unconstrained_dynamics.cpp
-  src/unocp/split_unocp.cpp
-  src/unocp/backward_unriccati_recursion_factorizer.cpp
-  src/unocp/split_unriccati_factorizer.cpp
-  src/unocp/unriccati_recursion.cpp
-  src/unocp/unocp_solver.cpp
-  src/unocp/split_unparnmpc.cpp
-  src/unocp/terminal_unparnmpc.cpp
-  src/unocp/split_unbackward_correction.cpp
-  src/unocp/unbackward_correction.cpp
-  src/unocp/unparnmpc_solver.cpp
+  src/riccati/split_riccati_factorization.cpp
+  src/riccati/split_constrained_riccati_factorization.cpp
+  src/riccati/lqr_policy.cpp
+  src/riccati/backward_riccati_recursion_factorizer.cpp
+  src/riccati/riccati_factorizer.cpp
+  src/riccati/riccati_recursion.cpp
+  src/solver/ocp_solver.cpp
+  src/unconstr/unconstr_dynamics.cpp
+  src/unconstr/split_unconstr_ocp.cpp
+  src/unconstr/unconstr_ocp.cpp
+  src/riccati/unconstr_backward_riccati_recursion_factorizer.cpp
+  src/riccati/unconstr_riccati_factorizer.cpp
+  src/riccati/unconstr_riccati_recursion.cpp
+  src/solver/unconstr_ocp_solver.cpp
+  src/unconstr/split_unconstr_parnmpc.cpp
+  src/unconstr/terminal_unconstr_parnmpc.cpp
+  src/unconstr/unconstr_parnmpc.cpp
+  src/parnmpc/unconstr_kkt_matrix_inverter.cpp
+  src/parnmpc/unconstr_split_backward_correction.cpp
+  src/parnmpc/unconstr_backward_correction.cpp
+  src/solver/unconstr_parnmpc_solver.cpp
   src/line_search/line_search_filter.cpp
   src/line_search/line_search.cpp
-  src/line_search/unline_search.cpp
+  src/line_search/unconstr_line_search.cpp
   src/utils/derivative_checker.cpp
   src/utils/joint_constraints_factory.cpp
   src/utils/ocp_benchmarker.cpp
@@ -134,55 +117,51 @@ add_library(
 target_link_libraries(
   ${PROJECT_NAME} 
   PUBLIC
-  pthread
-  ${Boost_LIBRARIES}
   ${PINOCCHIO_LIBRARIES}
-  urdfdom_model
+  PRIVATE
+  ${OpenMP_CXX_FLAGS}
 )
 target_include_directories(
   ${PROJECT_NAME} 
   PUBLIC
   ${EIGEN3_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIR}
   ${PINOCCHIO_INCLUDE_DIRS}
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
+target_compile_options(
+  ${PROJECT_NAME} 
+  PRIVATE
+  ${OpenMP_CXX_FLAGS}
+)
+if (OPTIMIZE_FOR_NATIVE)
+  target_compile_options(
+    ${PROJECT_NAME} 
+    PUBLIC
+    -march=native
+  )
+endif()
 
 ##################
 ## Build viewer ##
 ##################
 if (BUILD_VIEWER) 
-  include(${PROJECT_SOURCE_DIR}/cmake/pinocchio-gepetto-viewer.cmake) 
   find_package(PkgConfig)
-  pkg_check_modules(gepetto-viewer REQUIRED gepetto-viewer)
-  pkg_check_modules(gepetto-viewer-corba REQUIRED gepetto-viewer-corba)
-  pkg_check_modules(hpp-fcl REQUIRED hpp-fcl)
+  pkg_check_modules(pinocchio-gepetto-viewer REQUIRED pinocchio-gepetto-viewer)
   target_sources(
     ${PROJECT_NAME} 
     PRIVATE
     src/utils/trajectory_viewer.cpp
-    src/third-party/viewer.cpp
   )
   target_link_libraries(
     ${PROJECT_NAME} 
     PUBLIC
-    ${gepetto-viewer_LINK_LIBRARIES}
-    ${gepetto-viewer-corba_LINK_LIBRARIES}
-    ${hpp-fcl_LINK_LIBRARIES}
+    ${pinocchio-gepetto-viewer_LINK_LIBRARIES}
   )
   target_include_directories(
     ${PROJECT_NAME} 
     PUBLIC
-    ${gepetto-viewer_INCLUDE_DIRS}
-    ${gepetto-viewer-corba_INCLUDE_DIRS}
-    ${hpp-fcl_INCLUDE_DIRS}
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/idocp/third-party>
-  )
-  target_compile_definitions(
-    ${PROJECT_NAME} 
-    PRIVATE
-    PINOCCHIO_WITH_HPP_FCL
+    ${pinocchio-gepetto-viewer_INCLUDE_DIRS}
   )
 endif() # end if (BUILD_VIEWER)
 
@@ -190,7 +169,7 @@ endif() # end if (BUILD_VIEWER)
 ## Testing ##
 #############
 # Add testing directory
-if (TESTING)
+if (BUILD_TESTS)
   enable_testing()
   # coverage options
   set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --coverage")
@@ -209,7 +188,7 @@ if (TESTING)
     endif()
   endif()
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
-endif() # end if (TESTING)
+endif() # end if (BUILD_TESTS)
 
 #############
 ## Install ##

@@ -15,8 +15,6 @@ namespace idocp {
 ///
 class ImpulseSplitKKTResidual {
 public:
-  using Vector6d = Eigen::Matrix<double, 6, 1>;
-
   ///
   /// @brief Construct a split KKT residual.
   /// @param[in] robot Robot model. 
@@ -55,14 +53,19 @@ public:
       ImpulseSplitKKTResidual&&) noexcept = default;
 
   ///
-  /// @brief Set the impulse status, i.e., set dimension of the impulse.
+  /// @brief Sets the impulse status, i.e., set the dimension of the impulse.
   /// @param[in] impulse_status Impulse status.
   ///
   void setImpulseStatus(const ImpulseStatus& impulse_status);
 
   ///
-  /// @brief Residual in the state equation of q.
-  /// @return Reference to the residual in the state equation of q. Size is 
+  /// @brief Residual in the state equation. Size is 2 * Robot::dimv().
+  ///
+  Eigen::VectorXd Fx;
+
+  ///
+  /// @brief Residual in the state equation w.r.t. the configuration q.
+  /// @return Reference to the residual in the state equation w.r.t. q. Size is 
   /// Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> Fq();
@@ -73,8 +76,8 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> Fq() const;
 
   ///
-  /// @brief Residual in the state equation of v.
-  /// @return Reference to the residual in the state equation of v. Size is 
+  /// @brief Residual in the state equation w.r.t. the joint velocity v.
+  /// @return Reference to the residual in the state equation w.r.t. v. Size is 
   /// Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> Fv();
@@ -85,44 +88,13 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> Fv() const;
 
   ///
-  /// @brief Residual in the state equation.
-  /// @return Reference to the residual in the state equation. Size is 
-  /// 2 * Robot::dimv().
+  /// @brief KKT Residual w.r.t. the state x. Size is 2 * Robot::dimv().
   ///
-  Eigen::VectorBlock<Eigen::VectorXd> Fx();
+  Eigen::VectorXd lx;
 
   ///
-  /// @brief const version of ImpulseSplitKKTResidual::Fx().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> Fx() const;
-
-  ///
-  /// @brief Residual in the impulse velocity constraints.
-  /// @return Reference to the residual in the impulse velocity constraints. 
-  /// Size is ImpulseStatus::dimf().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> V();
-
-  ///
-  /// @brief const version of ImpulseSplitKKTResidual::V().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> V() const;
-
-  ///
-  /// @brief KKT residual with respect to the stack of the impulse forces f. 
-  /// @return Reference to the residual with respect to f. Size is 
-  /// ImpulseSplitKKTResidual::dimf().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> lf();
-
-  ///
-  /// @brief const version of ImpulseSplitKKTResidual::lf().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
-
-  ///
-  /// @brief KKT residual with respect to the configuration q. 
-  /// @return Reference to the residual with respect to q. Size is Robot::dimv().
+  /// @brief KKT residual w.r.t. the configuration q. 
+  /// @return Reference to the KKT residual w.r.t. q. Size is Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lq();
 
@@ -132,8 +104,8 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> lq() const;
 
   ///
-  /// @brief KKT residual with respect to the velocity v. 
-  /// @return Reference to the residual with respect to v. Size is Robot::dimv().
+  /// @brief KKT residual w.r.t. the joint velocity v. 
+  /// @return Reference to the KKT residual w.r.t. v. Size is Robot::dimv().
   ///
   Eigen::VectorBlock<Eigen::VectorXd> lv();
 
@@ -142,29 +114,28 @@ public:
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lv() const;
 
-  ///
-  /// @brief KKT residual with respect to the state x. 
-  /// @return Reference to the residual with respect to x. Size is 
-  /// 2 * Robot::dimv().
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> lx();
+  /// 
+  /// @brief KKT residual w.r.t. the impulse change in the velocity ddv. 
+  /// Size is Robot::dimv().
+  /// 
+  Eigen::VectorXd ldv;
 
   ///
-  /// @brief const version of SplitKKTResidual::lx().
+  /// @brief KKT residual w.r.t. the stack of the impulse forces f. 
+  /// @return Reference to the residual w.r.t. f. Size is 
+  /// ImpulseSplitKKTResidual::dimi().
   ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> lx() const;
+  Eigen::VectorBlock<Eigen::VectorXd> lf();
 
   ///
-  /// @brief Split KKT residual at a impulse time stage. 
-  /// @return Reference to the split KKT residual. Size is 
-  /// 4 * Robot::dimv() + ImpulseStatus::dimf().
+  /// @brief const version of ImpulseSplitKKTResidual::lf().
   ///
-  Eigen::VectorBlock<Eigen::VectorXd> splitKKTResidual();
+  const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
-  ///
-  /// @brief const version of SplitKKTResidual::splitKKTResidual().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> splitKKTResidual() const;
+  /// 
+  /// @brief Temporal vector used in the state equation.
+  /// 
+  Eigen::VectorXd Fq_tmp;
 
   ///
   /// @brief Sets the split KKT residual zero.
@@ -176,7 +147,13 @@ public:
   /// current impulse status.
   /// @return Dimension of the stack of the impulse forces.
   ///
-  int dimf() const;
+  int dimi() const;
+
+  ///
+  /// @brief Checks dimensional consistency of each component. 
+  /// @return true if the dimension is consistent. false if not.
+  ///
+  bool isDimensionConsistent() const;
 
   ///
   /// @brief Checks the equivalence of two ImpulseSplitKKTResidual.
@@ -186,27 +163,14 @@ public:
   bool isApprox(const ImpulseSplitKKTResidual& other) const;
 
   ///
-  /// @brief Checks his has at least one NaN.
+  /// @brief Checks if this has at least one NaN.
   /// @return true if this has at least one NaN. false otherwise.
   ///
   bool hasNaN() const;
 
-  /// 
-  /// @brief Residual with respect to the impulse change in the velocity dv. 
-  /// Size is Robot::dimv().
-  /// 
-  Eigen::VectorXd ldv;
-
-  /// 
-  /// @brief Residual in the part of the state equation.
-  /// 
-  Vector6d Fq_prev;
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 private:
-  Eigen::VectorXd KKT_residual_full_;
-  int dimv_, dimx_, dimf_, dimKKT_, lf_begin_, lq_begin_, lv_begin_;
+  Eigen::VectorXd lf_full_;
+  int dimv_, dimi_;
 
 };
 

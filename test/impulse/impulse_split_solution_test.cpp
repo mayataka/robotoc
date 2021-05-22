@@ -21,134 +21,58 @@ protected:
   virtual void TearDown() {
   }
 
-  static void TestWithoutImpulses(const Robot& robot);
-  static void TestWithImpulses(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void TestIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void TestIntegrate(const Robot& robot, const ImpulseStatus& impulse_status);
-
-  double dt_;
+  static void test(const Robot& robot, const ImpulseStatus& impulse_status);
+  static void testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
+  static void testIntegrate(const Robot& robot, const ImpulseStatus& impulse_status);
 };
 
 
-void ImpulseSplitSolutionTest::TestWithoutImpulses(const Robot& robot) { 
-  std::random_device rnd;
-  ImpulseSplitSolution s(robot);
-  EXPECT_TRUE(s.lmd.size() == robot.dimv());
-  EXPECT_TRUE(s.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s.q.size() == robot.dimq());
-  EXPECT_TRUE(s.v.size() == robot.dimv());
-  EXPECT_TRUE(s.dv.size() == robot.dimv());
-  EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.f.size() == 0);
-  EXPECT_TRUE(s.mu.size() == 0);
-  EXPECT_TRUE(s.f_stack().size() == 0);
-  EXPECT_TRUE(s.mu_stack().size() == 0);
-  EXPECT_EQ(s.dimf(), 0);
-  const Eigen::VectorXd lmd = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd gmm = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
-  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd dv = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd beta = Eigen::VectorXd::Random(robot.dimv());
-  s.lmd = lmd;
-  s.gmm = gmm;
-  s.dv = dv;
-  s.q = q;
-  s.v = v;
-  s.dv = dv;
-  s.beta = beta;
-  EXPECT_TRUE(s.lmd.isApprox(lmd));
-  EXPECT_TRUE(s.gmm.isApprox(gmm));
-  EXPECT_TRUE(s.q.isApprox(q));
-  EXPECT_TRUE(s.v.isApprox(v));
-  EXPECT_TRUE(s.dv.isApprox(dv));
-  EXPECT_TRUE(s.beta.isApprox(beta));
-  s.setRandom(robot);
-  EXPECT_TRUE(s.lmd.size() == robot.dimv());
-  EXPECT_TRUE(s.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s.q.size() == robot.dimq());
-  EXPECT_TRUE(s.v.size() == robot.dimv());
-  EXPECT_TRUE(s.dv.size() == robot.dimv());
-  EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.f.size() == 0);
-  EXPECT_TRUE(s.mu.size() == 0);
-  EXPECT_TRUE(s.f_stack().size() == 0);
-  EXPECT_TRUE(s.mu_stack().size() == 0);
-  EXPECT_EQ(s.dimf(), 0);
-  EXPECT_FALSE(s.lmd.isZero());
-  EXPECT_FALSE(s.gmm.isZero());
-  EXPECT_FALSE(s.q.isZero());
-  EXPECT_FALSE(s.v.isZero());
-  EXPECT_FALSE(s.dv.isZero());
-  EXPECT_FALSE(s.beta.isZero());
-  const ImpulseSplitSolution s_random = ImpulseSplitSolution::Random(robot);
-  EXPECT_TRUE(s_random.lmd.size() == robot.dimv());
-  EXPECT_TRUE(s_random.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s_random.q.size() == robot.dimq());
-  EXPECT_TRUE(s_random.v.size() == robot.dimv());
-  EXPECT_TRUE(s_random.dv.size() == robot.dimv());
-  EXPECT_TRUE(s_random.beta.size() == robot.dimv());
-  EXPECT_TRUE(s_random.f.size() == 0);
-  EXPECT_TRUE(s_random.mu.size() == 0);
-  EXPECT_TRUE(s_random.f_stack().size() == 0);
-  EXPECT_TRUE(s_random.mu_stack().size() == 0);
-  EXPECT_EQ(s_random.dimf(), 0);
-  EXPECT_FALSE(s_random.lmd.isZero());
-  EXPECT_FALSE(s_random.gmm.isZero());
-  EXPECT_FALSE(s_random.q.isZero());
-  EXPECT_FALSE(s_random.v.isZero());
-  EXPECT_FALSE(s_random.dv.isZero());
-  EXPECT_FALSE(s_random.beta.isZero());
-}
-
-
-void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot, 
-                                                const ImpulseStatus& impulse_status) { 
+void ImpulseSplitSolutionTest::test(const Robot& robot, const ImpulseStatus& impulse_status) { 
   std::random_device rnd;
   ImpulseSplitSolution s(robot);
   s.setImpulseStatus(impulse_status);
-  EXPECT_TRUE(s.lmd.size() == robot.dimv());
-  EXPECT_TRUE(s.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s.q.size() == robot.dimq());
-  EXPECT_TRUE(s.v.size() == robot.dimv());
-  EXPECT_TRUE(s.dv.size() == robot.dimv());
-  EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.f.size() == robot.maxPointContacts());
-  EXPECT_TRUE(s.mu.size() == robot.maxPointContacts());
-  EXPECT_TRUE(s.f_stack().size() == impulse_status.dimf());
-  EXPECT_TRUE(s.mu_stack().size() == impulse_status.dimf());
-  EXPECT_EQ(s.dimf(), impulse_status.dimf());
+  EXPECT_EQ(s.lmd.size(), robot.dimv());
+  EXPECT_EQ(s.gmm.size(), robot.dimv());
+  EXPECT_EQ(s.q.size(), robot.dimq());
+  EXPECT_EQ(s.v.size(), robot.dimv());
+  EXPECT_EQ(s.dv.size(), robot.dimv());
+  EXPECT_EQ(s.beta.size(), robot.dimv());
+  EXPECT_EQ(s.f.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.mu.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.f_stack().size(), impulse_status.dimf());
+  EXPECT_EQ(s.mu_stack().size(), impulse_status.dimf());
+  EXPECT_EQ(s.dimi(), impulse_status.dimf());
   for (int i=0; i<robot.maxPointContacts(); ++i) {
-    EXPECT_TRUE(s.f[i].size() == 3);
-    EXPECT_TRUE(s.mu[i].size() == 3);
+    EXPECT_EQ(s.f[i].size(), 3);
+    EXPECT_EQ(s.mu[i].size(), 3);
   }
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_EQ(s.isImpulseActive(i), impulse_status.isImpulseActive(i));
   }
-  const Eigen::VectorXd lmd = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd gmm = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd q = Eigen::VectorXd::Random(robot.dimq());
-  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd dv = Eigen::VectorXd::Random(robot.dimv());
-  const Eigen::VectorXd beta = Eigen::VectorXd::Random(robot.dimv());
+  EXPECT_TRUE(s.lmd.isZero());
+  EXPECT_TRUE(s.gmm.isZero());
+  if (robot.hasFloatingBase()) {
+    Eigen::VectorXd q_ref = Eigen::VectorXd::Zero(robot.dimq());
+    q_ref(6) = 1.0;
+    EXPECT_TRUE(s.q.isApprox(q_ref));
+    std::cout << s.q.transpose() << std::endl;
+  }
+  else {
+    EXPECT_TRUE(s.q.isZero());
+  }
+  EXPECT_TRUE(s.v.isZero());
+  EXPECT_TRUE(s.dv.isZero());
+  EXPECT_TRUE(s.beta.isZero());
+  EXPECT_TRUE(s.f_stack().isZero());
+  EXPECT_TRUE(s.mu_stack().isZero());
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
+    EXPECT_TRUE(s.f[i].isZero());
+    EXPECT_TRUE(s.mu[i].isZero());
+  }
   const Eigen::VectorXd f_stack = Eigen::VectorXd::Random(impulse_status.dimf());
   const Eigen::VectorXd mu_stack = Eigen::VectorXd::Random(impulse_status.dimf());
-  s.lmd = lmd;
-  s.gmm = gmm;
-  s.q = q;
-  s.v = v;
-  s.dv = dv;
-  s.beta = beta;
   s.f_stack() = f_stack;
   s.mu_stack() = mu_stack;
-  EXPECT_TRUE(s.lmd.isApprox(lmd));
-  EXPECT_TRUE(s.gmm.isApprox(gmm));
-  EXPECT_TRUE(s.q.isApprox(q));
-  EXPECT_TRUE(s.v.isApprox(v));
-  EXPECT_TRUE(s.dv.isApprox(dv));
-  EXPECT_TRUE(s.beta.isApprox(beta));
-  EXPECT_TRUE(s.f_stack().isApprox(f_stack));
-  EXPECT_TRUE(s.mu_stack().isApprox(mu_stack));
   s.set_f_vector();
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
@@ -183,25 +107,22 @@ void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot,
       dimf_stack += 3;
     }
   }
-  s = ImpulseSplitSolution(robot);
-  s.setRandom(robot, impulse_status);
-  EXPECT_TRUE(s.lmd.size() == robot.dimv());
-  EXPECT_TRUE(s.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s.q.size() == robot.dimq());
-  EXPECT_TRUE(s.v.size() == robot.dimv());
-  EXPECT_TRUE(s.dv.size() == robot.dimv());
-  EXPECT_TRUE(s.beta.size() == robot.dimv());
-  EXPECT_TRUE(s.f.size() == robot.maxPointContacts());
+  s = ImpulseSplitSolution::Random(robot, impulse_status);
+  EXPECT_EQ(s.lmd.size(), robot.dimv());
+  EXPECT_EQ(s.gmm.size(), robot.dimv());
+  EXPECT_EQ(s.q.size(), robot.dimq());
+  EXPECT_EQ(s.v.size(), robot.dimv());
+  EXPECT_EQ(s.dv.size(), robot.dimv());
+  EXPECT_EQ(s.beta.size(), robot.dimv());
+  EXPECT_EQ(s.f.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.mu.size(), robot.maxPointContacts());
+  EXPECT_EQ(s.f_stack().size(), impulse_status.dimf());
+  EXPECT_EQ(s.mu_stack().size(), impulse_status.dimf());
+  EXPECT_EQ(s.dimi(), impulse_status.dimf());
   for (int i=0; i<robot.maxPointContacts(); ++i) {
-    EXPECT_TRUE(s.f[i].size() == 3);
+    EXPECT_EQ(s.f[i].size(), 3);
+    EXPECT_EQ(s.mu[i].size(), 3);
   }
-  EXPECT_TRUE(s.mu.size() == robot.maxPointContacts());
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    EXPECT_TRUE(s.mu[i].size() == 3);
-  }
-  EXPECT_TRUE(s.f_stack().size() == impulse_status.dimf());
-  EXPECT_TRUE(s.mu_stack().size() == impulse_status.dimf());
-  EXPECT_EQ(s.dimf(), impulse_status.dimf());
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     EXPECT_EQ(s.isImpulseActive(i), impulse_status.isImpulseActive(i));
   }
@@ -215,74 +136,12 @@ void ImpulseSplitSolutionTest::TestWithImpulses(const Robot& robot,
     EXPECT_FALSE(s.f_stack().isZero());
     EXPECT_FALSE(s.mu_stack().isZero());
   }
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s.isImpulseActive(i)) {
-      EXPECT_FALSE(s.f[i].isZero());
-    }
-  }
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s.isImpulseActive(i)) {
-      EXPECT_FALSE(s.mu[i].isZero());
-    }
-  }
-  const ImpulseSplitSolution s_random = ImpulseSplitSolution::Random(robot, impulse_status);
-  EXPECT_TRUE(s_random.lmd.size() == robot.dimv());
-  EXPECT_TRUE(s_random.gmm.size() == robot.dimv());
-  EXPECT_TRUE(s_random.q.size() == robot.dimq());
-  EXPECT_TRUE(s_random.v.size() == robot.dimv());
-  EXPECT_TRUE(s_random.dv.size() == robot.dimv());
-  EXPECT_TRUE(s_random.beta.size() == robot.dimv());
-  EXPECT_TRUE(s_random.f.size() == robot.maxPointContacts());
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    EXPECT_TRUE(s_random.f[i].size() == 3);
-  }
-  EXPECT_TRUE(s_random.mu.size() == robot.maxPointContacts());
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    EXPECT_TRUE(s_random.mu[i].size() == 3);
-  }
-  EXPECT_TRUE(s_random.f_stack().size() == impulse_status.dimf());
-  EXPECT_TRUE(s_random.mu_stack().size() == impulse_status.dimf());
-  EXPECT_EQ(s_random.dimf(), impulse_status.dimf());
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    EXPECT_EQ(s_random.isImpulseActive(i), impulse_status.isImpulseActive(i));
-  }
-  EXPECT_FALSE(s_random.lmd.isZero());
-  EXPECT_FALSE(s_random.gmm.isZero());
-  EXPECT_FALSE(s_random.q.isZero());
-  EXPECT_FALSE(s_random.v.isZero());
-  EXPECT_FALSE(s_random.dv.isZero());
-  EXPECT_FALSE(s_random.beta.isZero());
-  if (impulse_status.hasActiveImpulse()) {
-    EXPECT_FALSE(s_random.f_stack().isZero());
-    EXPECT_FALSE(s_random.mu_stack().isZero());
-  }
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s_random.isImpulseActive(i)) {
-      EXPECT_FALSE(s_random.f[i].isZero());
-    }
-  }
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s_random.isImpulseActive(i)) {
-      EXPECT_FALSE(s_random.mu[i].isZero());
-    }
-  }
 }
 
 
-void ImpulseSplitSolutionTest::TestIsApprox(const Robot& robot, 
+void ImpulseSplitSolutionTest::testIsApprox(const Robot& robot, 
                                             const ImpulseStatus& impulse_status) {
-  ImpulseSplitSolution s(robot);
-  s.setRandom(robot, impulse_status);
-  EXPECT_FALSE(s.lmd.isZero());
-  EXPECT_FALSE(s.gmm.isZero());
-  EXPECT_FALSE(s.q.isZero());
-  EXPECT_FALSE(s.v.isZero());
-  EXPECT_FALSE(s.dv.isZero());
-  EXPECT_FALSE(s.beta.isZero());
-  if (impulse_status.hasActiveImpulse()) {
-    EXPECT_FALSE(s.f_stack().isZero());
-    EXPECT_FALSE(s.mu_stack().isZero());
-  }
+  auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   ImpulseSplitSolution s_ref = s;
   EXPECT_TRUE(s.isApprox(s_ref));
   s_ref.lmd.setRandom();
@@ -331,11 +190,11 @@ void ImpulseSplitSolutionTest::TestIsApprox(const Robot& robot,
 }
 
 
-void ImpulseSplitSolutionTest::TestIntegrate(const Robot& robot, 
+void ImpulseSplitSolutionTest::testIntegrate(const Robot& robot, 
                                              const ImpulseStatus& impulse_status) {
-  ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
-  const ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
-  ImpulseSplitSolution s_ref = s;
+  auto s = ImpulseSplitSolution::Random(robot, impulse_status);
+  const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
+  auto s_ref = s;
   const double step_size = 0.3;
   s.integrate(robot, step_size, d);
   s_ref.lmd.noalias() += step_size * d.dlmd();
@@ -355,35 +214,33 @@ void ImpulseSplitSolutionTest::TestIntegrate(const Robot& robot,
 
 
 TEST_F(ImpulseSplitSolutionTest, fixedBase) {
-  auto robot_without_impulse = testhelper::CreateFixedBaseRobot();
-  TestWithoutImpulses(robot_without_impulse);
   const double dt = 0.001;
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  TestIsApprox(robot, impulse_status);
-  TestIntegrate(robot, impulse_status);
+  test(robot, impulse_status);
+  testIsApprox(robot, impulse_status);
+  testIntegrate(robot, impulse_status);
   impulse_status.activateImpulse(0);
-  TestWithImpulses(robot, impulse_status);
-  TestIsApprox(robot, impulse_status);
-  TestIntegrate(robot, impulse_status);
+  test(robot, impulse_status);
+  testIsApprox(robot, impulse_status);
+  testIntegrate(robot, impulse_status);
 }
 
 
 TEST_F(ImpulseSplitSolutionTest, floatingBase) {
-  auto robot_without_impulse = testhelper::CreateFloatingBaseRobot();
-  TestWithoutImpulses(robot_without_impulse);
   const double dt = 0.001;
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  TestIsApprox(robot, impulse_status);
-  TestIntegrate(robot, impulse_status);
+  test(robot, impulse_status);
+  testIsApprox(robot, impulse_status);
+  testIntegrate(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
-  TestWithImpulses(robot, impulse_status);
-  TestIsApprox(robot, impulse_status);
-  TestIntegrate(robot, impulse_status);
+  test(robot, impulse_status);
+  testIsApprox(robot, impulse_status);
+  testIntegrate(robot, impulse_status);
 }
 
 } // namespace idocp

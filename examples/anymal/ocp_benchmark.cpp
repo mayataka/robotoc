@@ -4,7 +4,7 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/ocp_solver.hpp"
+#include "idocp/solver/ocp_solver.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/configuration_space_cost.hpp"
 #include "idocp/cost/contact_force_cost.hpp"
@@ -22,14 +22,15 @@
 
 int main () {
   // Create a robot with contacts.
-  const int LF_foot = 14;
-  const int LH_foot = 24;
-  const int RF_foot = 34;
-  const int RH_foot = 44;
+  const int LF_foot = 12;
+  const int LH_foot = 22;
+  const int RF_foot = 32;
+  const int RH_foot = 42;
   std::vector<int> contact_frames = {LF_foot, LH_foot, RF_foot, RH_foot}; // LF, LH, RF, RH
   const double baumgarte_time_step = 0.5 / 20;
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
-  idocp::Robot robot(path_to_urdf, contact_frames, baumgarte_time_step);
+  idocp::Robot robot(path_to_urdf, idocp::BaseJointType::FloatingBase, 
+                     contact_frames, baumgarte_time_step);
 
   // Create a cost function.
   auto cost = std::make_shared<idocp::CostFunction>();
@@ -123,7 +124,9 @@ int main () {
   ocp_solver.initConstraints(t);
 
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 10, false);
-  idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 5000, false);
+  idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 10000, false);
+
+  // robot.printRobotModel();
 
   return 0;
 }

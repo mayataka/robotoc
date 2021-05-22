@@ -3,7 +3,6 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/robot/contact_status.hpp"
-#include "idocp/robot/impulse_status.hpp"
 #include "idocp/ocp/split_kkt_matrix.hpp"
 
 #include "robot_factory.hpp"
@@ -21,280 +20,163 @@ protected:
   virtual void TearDown() {
   }
 
-  static void testSize(const Robot& robot, 
-                       const ContactStatus& contact_status, 
-                       const ImpulseStatus& impulse_status);
-  static void testIsApprox(const Robot& robot, 
-                           const ContactStatus& contact_status, 
-                           const ImpulseStatus& impulse_status);
+  static void test(const Robot& robot, const ContactStatus& contact_status);
+  static void testIsApprox(const Robot& robot, const ContactStatus& contact_status);
 
   double dt;
 };
 
 
-void SplitKKTMatrixTest::testSize(const Robot& robot, 
-                                  const ContactStatus& contact_status,
-                                  const ImpulseStatus& impulse_status) {
-  SplitKKTMatrix matrix(robot);
-  matrix.setContactStatus(contact_status);
-  matrix.setImpulseStatus(impulse_status);
+void SplitKKTMatrixTest::test(const Robot& robot, const ContactStatus& contact_status) {
+  SplitKKTMatrix kkt_mat(robot);
+  kkt_mat.setContactStatus(contact_status);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
+  const int dimx = 2 * robot.dimv();
   const int dimf = contact_status.dimf();
   const int dim_passive = robot.dim_passive();
-  const int dimi = impulse_status.dimf();
-  EXPECT_EQ(matrix.dimf(), dimf);
-  EXPECT_EQ(matrix.Fqu().rows(), dimv);
-  EXPECT_EQ(matrix.Fqu().cols(), dimu);
-  EXPECT_EQ(matrix.Fqq().rows(), dimv);
-  EXPECT_EQ(matrix.Fqq().cols(), dimv);
-  EXPECT_EQ(matrix.Fqv().rows(), dimv);
-  EXPECT_EQ(matrix.Fqv().cols(), dimv);
-  EXPECT_EQ(matrix.Fvu().rows(), dimv);
-  EXPECT_EQ(matrix.Fvu().cols(), dimu);
-  EXPECT_EQ(matrix.Fvq().rows(), dimv);
-  EXPECT_EQ(matrix.Fvq().cols(), dimv);
-  EXPECT_EQ(matrix.Fvv().rows(), dimv);
-  EXPECT_EQ(matrix.Fvv().cols(), dimv);
-  EXPECT_EQ(matrix.Fxu().rows(), 2*dimv);
-  EXPECT_EQ(matrix.Fxu().cols(), dimu);
-  EXPECT_EQ(matrix.Fxx().rows(), 2*dimv);
-  EXPECT_EQ(matrix.Fxx().cols(), 2*dimv);
-  EXPECT_EQ(matrix.Pq().rows(), dimi);
-  EXPECT_EQ(matrix.Pq().cols(), dimv);
-  EXPECT_EQ(matrix.Quu_full().rows(), dimv);
-  EXPECT_EQ(matrix.Quu_full().cols(), dimv);
-  EXPECT_EQ(matrix.Quu_passive_topLeft().rows(), dim_passive);
-  EXPECT_EQ(matrix.Quu_passive_topLeft().cols(), dim_passive);
-  EXPECT_EQ(matrix.Quu_passive_topRight().rows(), dim_passive);
-  EXPECT_EQ(matrix.Quu_passive_topRight().cols(), dimu);
-  EXPECT_EQ(matrix.Quu_passive_bottomLeft().rows(), dimu);
-  EXPECT_EQ(matrix.Quu_passive_bottomLeft().cols(), dim_passive);
-  EXPECT_EQ(matrix.Quu().rows(), dimu);
-  EXPECT_EQ(matrix.Quu().cols(), dimu);
-  EXPECT_EQ(matrix.Quq_full().rows(), dimv);
-  EXPECT_EQ(matrix.Quq_full().cols(), dimv);
-  EXPECT_EQ(matrix.Quq_passive().rows(), dim_passive);
-  EXPECT_EQ(matrix.Quq_passive().cols(), dimv);
-  EXPECT_EQ(matrix.Quq().rows(), dimu);
-  EXPECT_EQ(matrix.Quq().cols(), dimv);
-  EXPECT_EQ(matrix.Quv_full().rows(), dimv);
-  EXPECT_EQ(matrix.Quv_full().cols(), dimv);
-  EXPECT_EQ(matrix.Quv_passive().rows(), dim_passive);
-  EXPECT_EQ(matrix.Quv_passive().cols(), dimv);
-  EXPECT_EQ(matrix.Quv().rows(), dimu);
-  EXPECT_EQ(matrix.Quv().cols(), dimv);
-  EXPECT_EQ(matrix.Qqu_full().rows(), dimv);
-  EXPECT_EQ(matrix.Qqu_full().cols(), dimv);
-  EXPECT_EQ(matrix.Qqu_passive().rows(), dimv);
-  EXPECT_EQ(matrix.Qqu_passive().cols(), dim_passive);
-  EXPECT_EQ(matrix.Qqu().rows(), dimv);
-  EXPECT_EQ(matrix.Qqu().cols(), dimu);
-  EXPECT_EQ(matrix.Qqq().rows(), dimv);
-  EXPECT_EQ(matrix.Qqq().cols(), dimv);
-  EXPECT_EQ(matrix.Qqv().rows(), dimv);
-  EXPECT_EQ(matrix.Qqv().cols(), dimv);
-  EXPECT_EQ(matrix.Qvu_full().rows(), dimv);
-  EXPECT_EQ(matrix.Qvu_full().cols(), dimv);
-  EXPECT_EQ(matrix.Qvu_passive().rows(), dimv);
-  EXPECT_EQ(matrix.Qvu_passive().cols(), dim_passive);
-  EXPECT_EQ(matrix.Qvu().rows(), dimv);
-  EXPECT_EQ(matrix.Qvu().cols(), dimu);
-  EXPECT_EQ(matrix.Qvq().rows(), dimv);
-  EXPECT_EQ(matrix.Qvq().cols(), dimv);
-  EXPECT_EQ(matrix.Qvv().rows(), dimv);
-  EXPECT_EQ(matrix.Qvv().cols(), dimv);
-  EXPECT_EQ(matrix.Qxx().rows(), 2*dimv);
-  EXPECT_EQ(matrix.Qxx().cols(), 2*dimv);
-  EXPECT_EQ(matrix.Qxu_full().rows(), 2*dimv);
-  EXPECT_EQ(matrix.Qxu_full().cols(), dimv);
-  EXPECT_EQ(matrix.Qxu_passive().rows(), 2*dimv);
-  EXPECT_EQ(matrix.Qxu_passive().cols(), dim_passive);
-  EXPECT_EQ(matrix.Qxu().rows(), 2*dimv);
-  EXPECT_EQ(matrix.Qxu().cols(), dimu);
-  EXPECT_EQ(matrix.Qux_full().rows(), dimv);
-  EXPECT_EQ(matrix.Qux_full().cols(), 2*dimv);
-  EXPECT_EQ(matrix.Qux_passive().rows(), dim_passive);
-  EXPECT_EQ(matrix.Qux_passive().cols(), 2*dimv);
-  EXPECT_EQ(matrix.Qux().rows(), dimu);
-  EXPECT_EQ(matrix.Qux().cols(), 2*dimv);
-  EXPECT_EQ(matrix.Qaa().rows(), dimv);
-  EXPECT_EQ(matrix.Qaa().cols(), dimv);
-  EXPECT_EQ(matrix.Qff().rows(), dimf);
-  EXPECT_EQ(matrix.Qff().cols(), dimf);
-  EXPECT_EQ(matrix.Fqq_prev.rows(), dimv);
-  EXPECT_EQ(matrix.Fqq_prev.cols(), dimv);
-  const Eigen::MatrixXd Fqu = Eigen::MatrixXd::Random(dimv, dimu);
-  const Eigen::MatrixXd Fqq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Fqv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Fvu = Eigen::MatrixXd::Random(dimv, dimu);
-  const Eigen::MatrixXd Fvq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Fvv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Pq  = Eigen::MatrixXd::Random(dimi, dimv);
-  const Eigen::MatrixXd Quu_full = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Quq_full = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Quv_full = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qqu_full = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qqq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qqv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvu_full = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qff = Eigen::MatrixXd::Random(dimf, dimf);
-  const Eigen::MatrixXd Qaa = Eigen::MatrixXd::Random(dimv, dimv);
-  matrix.Fqu() = Fqu;
-  matrix.Fqq() = Fqq;
-  matrix.Fqv() = Fqv;
-  matrix.Fvu() = Fvu;
-  matrix.Fvq() = Fvq;
-  matrix.Fvv() = Fvv;
-  matrix.Pq()  = Pq;
-  matrix.Quu_full() = Quu_full;
-  matrix.Quq_full() = Quq_full;
-  matrix.Quv_full() = Quv_full;
-  matrix.Qqu_full() = Qqu_full;
-  matrix.Qqq() = Qqq;
-  matrix.Qqv() = Qqv;
-  matrix.Qvu_full() = Qvu_full;
-  matrix.Qvq() = Qvq;
-  matrix.Qvv() = Qvv;
-  matrix.Qff() = Qff;
-  matrix.Qaa() = Qaa;
-  EXPECT_TRUE(matrix.Fqu().isApprox(Fqu));
-  EXPECT_TRUE(matrix.Fqq().isApprox(Fqq));
-  EXPECT_TRUE(matrix.Fqv().isApprox(Fqv));
-  EXPECT_TRUE(matrix.Fvu().isApprox(Fvu));
-  EXPECT_TRUE(matrix.Fvq().isApprox(Fvq));
-  EXPECT_TRUE(matrix.Fvv().isApprox(Fvv));
-  EXPECT_TRUE(matrix.Fxu().topRows(dimv).isApprox(Fqu));
-  EXPECT_TRUE(matrix.Fxu().bottomRows(dimv).isApprox(Fvu));
-  EXPECT_TRUE(matrix.Fxx().topLeftCorner(dimv, dimv).isApprox(Fqq));
-  EXPECT_TRUE(matrix.Fxx().topRightCorner(dimv, dimv).isApprox(Fqv));
-  EXPECT_TRUE(matrix.Fxx().bottomLeftCorner(dimv, dimv).isApprox(Fvq));
-  EXPECT_TRUE(matrix.Fxx().bottomRightCorner(dimv, dimv).isApprox(Fvv));
-  EXPECT_TRUE(matrix.Pq().isApprox(Pq));
-  EXPECT_TRUE(matrix.Quu_full().isApprox(Quu_full));
-  EXPECT_TRUE(matrix.Quu().isApprox(Quu_full.bottomRightCorner(dimu, dimu)));
-  EXPECT_TRUE(matrix.Quu_passive_topLeft().isApprox(Quu_full.topLeftCorner(dim_passive, dim_passive)));
-  EXPECT_TRUE(matrix.Quu_passive_topRight().isApprox(Quu_full.topRightCorner(dim_passive, dimu)));
-  EXPECT_TRUE(matrix.Quu_passive_bottomLeft().isApprox(Quu_full.bottomLeftCorner(dimu, dim_passive)));
-  EXPECT_TRUE(matrix.Quq_full().isApprox(Quq_full));
-  EXPECT_TRUE(matrix.Quq_passive().isApprox(Quq_full.topRows(dim_passive)));
-  EXPECT_TRUE(matrix.Quq().isApprox(Quq_full.bottomRows(dimu)));
-  EXPECT_TRUE(matrix.Quv_full().isApprox(Quv_full));
-  EXPECT_TRUE(matrix.Quv_passive().isApprox(Quv_full.topRows(dim_passive)));
-  EXPECT_TRUE(matrix.Quv().isApprox(Quv_full.bottomRows(dimu)));
-  EXPECT_TRUE(matrix.Qqu_full().isApprox(Qqu_full));
-  EXPECT_TRUE(matrix.Qqu_passive().isApprox(Qqu_full.leftCols(dim_passive)));
-  EXPECT_TRUE(matrix.Qqu().isApprox(Qqu_full.rightCols(dimu)));
-  EXPECT_TRUE(matrix.Qqq().isApprox(Qqq));
-  EXPECT_TRUE(matrix.Qqv().isApprox(Qqv));
-  EXPECT_TRUE(matrix.Qvu_full().isApprox(Qvu_full));
-  EXPECT_TRUE(matrix.Qvu_passive().isApprox(Qvu_full.leftCols(dim_passive)));
-  EXPECT_TRUE(matrix.Qvu().isApprox(Qvu_full.rightCols(dimu)));
-  EXPECT_TRUE(matrix.Qvq().isApprox(Qvq));
-  EXPECT_TRUE(matrix.Qvv().isApprox(Qvv));
-  EXPECT_TRUE(matrix.Qaa().isApprox(Qaa));
-  EXPECT_TRUE(matrix.Qff().isApprox(Qff));
-  EXPECT_TRUE(matrix.Qaa().isApprox(Qaa));
-  EXPECT_TRUE(matrix.Qff().isApprox(Qff));
-  EXPECT_TRUE(matrix.Qxx().topLeftCorner(dimv, dimv).isApprox(Qqq));
-  EXPECT_TRUE(matrix.Qxx().topRightCorner(dimv, dimv).isApprox(Qqv));
-  EXPECT_TRUE(matrix.Qxx().bottomLeftCorner(dimv, dimv).isApprox(Qvq));
-  EXPECT_TRUE(matrix.Qxx().bottomRightCorner(dimv, dimv).isApprox(Qvv));
-  EXPECT_TRUE(matrix.Qxu_full().topRows(dimv).isApprox(Qqu_full));
-  EXPECT_TRUE(matrix.Qxu_full().bottomRows(dimv).isApprox(Qvu_full));
-  EXPECT_TRUE(matrix.Qxu_passive().topRows(dimv).isApprox(Qqu_full.leftCols(dim_passive)));
-  EXPECT_TRUE(matrix.Qxu_passive().bottomRows(dimv).isApprox(Qvu_full.leftCols(dim_passive)));
-  EXPECT_TRUE(matrix.Qxu().topRows(dimv).isApprox(Qqu_full.rightCols(dimu)));
-  EXPECT_TRUE(matrix.Qxu().bottomRows(dimv).isApprox(Qvu_full.rightCols(dimu)));
-  EXPECT_TRUE(matrix.Qxu_passive().isApprox(matrix.Qxu_full().leftCols(dim_passive)));
-  EXPECT_TRUE(matrix.Qxu().isApprox(matrix.Qxu_full().rightCols(dimu)));
-  EXPECT_TRUE(matrix.Qux_full().leftCols(dimv).isApprox(Quq_full));
-  EXPECT_TRUE(matrix.Qux_full().rightCols(dimv).isApprox(Quv_full));
-  EXPECT_TRUE(matrix.Qux_passive().leftCols(dimv).isApprox(Quq_full.topRows(dim_passive)));
-  EXPECT_TRUE(matrix.Qux_passive().rightCols(dimv).isApprox(Quv_full.topRows(dim_passive)));
-  EXPECT_TRUE(matrix.Qux().leftCols(dimv).isApprox(Quq_full.bottomRows(dimu)));
-  EXPECT_TRUE(matrix.Qux().rightCols(dimv).isApprox(Quv_full.bottomRows(dimu)));
-  EXPECT_TRUE(matrix.Qux_passive().isApprox(matrix.Qux_full().topRows(dim_passive)));
-  EXPECT_TRUE(matrix.Qux().isApprox(matrix.Qux_full().bottomRows(dimu)));
+  EXPECT_EQ(kkt_mat.dimf(), dimf);
+
+  EXPECT_EQ(kkt_mat.Fxx.rows(), dimx);
+  EXPECT_EQ(kkt_mat.Fxx.cols(), dimx);
+  EXPECT_EQ(kkt_mat.Fqq().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Fqq().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Fqv().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Fqv().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Fvq().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Fvq().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Fvv().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Fvv().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Fvu.rows(), dimv);
+  EXPECT_EQ(kkt_mat.Fvu.cols(), dimu);
+
+  EXPECT_EQ(kkt_mat.Qxx.rows(), dimx);
+  EXPECT_EQ(kkt_mat.Qxx.cols(), dimx);
+  EXPECT_EQ(kkt_mat.Qqq().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qqq().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Qqv().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qqv().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Qvq().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qvq().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Qvv().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qvv().cols(), dimv);
+
+  EXPECT_EQ(kkt_mat.Qxu.rows(), dimx);
+  EXPECT_EQ(kkt_mat.Qxu.cols(), dimu);
+  EXPECT_EQ(kkt_mat.Qqu().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qqu().cols(), dimu);
+  EXPECT_EQ(kkt_mat.Qvu().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qvu().cols(), dimu);
+  EXPECT_EQ(kkt_mat.Qxu_passive.rows(), dimx);
+  EXPECT_EQ(kkt_mat.Qxu_passive.cols(), dim_passive);
+
+  EXPECT_EQ(kkt_mat.Quu.rows(), dimu);
+  EXPECT_EQ(kkt_mat.Quu.cols(), dimu);
+  EXPECT_EQ(kkt_mat.Quu_passive_topRight.rows(), dim_passive);
+  EXPECT_EQ(kkt_mat.Quu_passive_topRight.cols(), dimu);
+
+  EXPECT_EQ(kkt_mat.Qaa.rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qaa.cols(), dimv);
+  EXPECT_EQ(kkt_mat.Qff().rows(), dimf);
+  EXPECT_EQ(kkt_mat.Qff().cols(), dimf);
+  EXPECT_EQ(kkt_mat.Qqf().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qqf().cols(), dimf);
+
+  if (robot.hasFloatingBase()) {
+    EXPECT_EQ(kkt_mat.Fqq_prev.rows(), dimv);
+    EXPECT_EQ(kkt_mat.Fqq_prev.cols(), dimv);
+    EXPECT_EQ(kkt_mat.Fqq_inv.rows(), 6);
+    EXPECT_EQ(kkt_mat.Fqq_inv.cols(), 6);
+    EXPECT_EQ(kkt_mat.Fqq_prev_inv.rows(), 6);
+    EXPECT_EQ(kkt_mat.Fqq_prev_inv.cols(), 6);
+  }
+  else {
+    EXPECT_EQ(kkt_mat.Fqq_prev.rows(), 0);
+    EXPECT_EQ(kkt_mat.Fqq_prev.cols(), 0);
+    EXPECT_EQ(kkt_mat.Fqq_inv.rows(), 0);
+    EXPECT_EQ(kkt_mat.Fqq_inv.cols(), 0);
+    EXPECT_EQ(kkt_mat.Fqq_prev_inv.rows(), 0);
+    EXPECT_EQ(kkt_mat.Fqq_prev_inv.cols(), 0);
+  }
+
+  EXPECT_TRUE(kkt_mat.Fxx.isZero());
+  EXPECT_TRUE(kkt_mat.Fvu.isZero());
+  EXPECT_TRUE(kkt_mat.Qxx.isZero());
+  EXPECT_TRUE(kkt_mat.Qxu.isZero());
+  EXPECT_TRUE(kkt_mat.Qxu_passive.isZero());
+  EXPECT_TRUE(kkt_mat.Quu.isZero());
+  EXPECT_TRUE(kkt_mat.Quu_passive_topRight.isZero());
+  EXPECT_TRUE(kkt_mat.Qaa.isZero());
+  EXPECT_TRUE(kkt_mat.Qff().isZero());
+  EXPECT_TRUE(kkt_mat.Qqf().isZero());
+  EXPECT_TRUE(kkt_mat.Fqq_prev.isZero());
+  EXPECT_TRUE(kkt_mat.Fqq_inv.isZero());
+  EXPECT_TRUE(kkt_mat.Fqq_prev_inv.isZero());
+
+  kkt_mat.Fxx.setRandom();
+  kkt_mat.Qxx.setRandom();
+  kkt_mat.Qxu.setRandom();
+  EXPECT_TRUE(kkt_mat.Fxx.topLeftCorner(dimv, dimv).isApprox(kkt_mat.Fqq()));
+  EXPECT_TRUE(kkt_mat.Fxx.topRightCorner(dimv, dimv).isApprox(kkt_mat.Fqv()));
+  EXPECT_TRUE(kkt_mat.Fxx.bottomLeftCorner(dimv, dimv).isApprox(kkt_mat.Fvq()));
+  EXPECT_TRUE(kkt_mat.Fxx.bottomRightCorner(dimv, dimv).isApprox(kkt_mat.Fvv()));
+  EXPECT_TRUE(kkt_mat.Qxx.topLeftCorner(dimv, dimv).isApprox(kkt_mat.Qqq()));
+  EXPECT_TRUE(kkt_mat.Qxx.topRightCorner(dimv, dimv).isApprox(kkt_mat.Qqv()));
+  EXPECT_TRUE(kkt_mat.Qxx.bottomLeftCorner(dimv, dimv).isApprox(kkt_mat.Qvq()));
+  EXPECT_TRUE(kkt_mat.Qxx.bottomRightCorner(dimv, dimv).isApprox(kkt_mat.Qvv()));
+  EXPECT_TRUE(kkt_mat.Qxu.topRows(dimv).isApprox(kkt_mat.Qqu()));
+  EXPECT_TRUE(kkt_mat.Qxu.bottomRows(dimv).isApprox(kkt_mat.Qvu()));
 }
 
 
-void SplitKKTMatrixTest::testIsApprox(const Robot& robot, 
-                                      const ContactStatus& contact_status,
-                                      const ImpulseStatus& impulse_status) {
-  SplitKKTMatrix matrix(robot);
-  matrix.setContactStatus(contact_status);
-  matrix.setImpulseStatus(impulse_status);
+void SplitKKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& contact_status) {
+  SplitKKTMatrix kkt_mat(robot);
+  kkt_mat.setContactStatus(contact_status);
   const int dimv = robot.dimv();
   const int dimu = robot.dimu();
+  const int dimx = 2 * robot.dimv();
   const int dimf = contact_status.dimf();
   const int dim_passive = robot.dim_passive();
-  const int dimi = impulse_status.dimf();
-  const Eigen::MatrixXd Fqu = Eigen::MatrixXd::Random(dimv, dimu);
-  const Eigen::MatrixXd Fqq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Fqv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Fvu = Eigen::MatrixXd::Random(dimv, dimu);
-  const Eigen::MatrixXd Fvq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Fvv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Pq  = Eigen::MatrixXd::Random(dimi, dimv);
-  const Eigen::MatrixXd Quu_full = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Quq_full = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Quv_full = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qqu_full = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qqq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qqv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvu_full = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qff = Eigen::MatrixXd::Random(dimf, dimf);
-  const Eigen::MatrixXd Qaa = Eigen::MatrixXd::Random(dimv, dimv);
-  matrix.Fqu() = Fqu;
-  matrix.Fqq() = Fqq;
-  matrix.Fqv() = Fqv;
-  matrix.Fvu() = Fvu;
-  matrix.Fvq() = Fvq;
-  matrix.Fvv() = Fvv;
-  matrix.Pq()  = Pq;
-  matrix.Quu_full() = Quu_full;
-  matrix.Quq_full() = Quq_full;
-  matrix.Quv_full() = Quv_full;
-  matrix.Qqu_full() = Qqu_full;
-  matrix.Qqq() = Qqq;
-  matrix.Qqv() = Qqv;
-  matrix.Qvu_full() = Qvu_full;
-  matrix.Qvq() = Qvq;
-  matrix.Qvv() = Qvv;
-  matrix.Qff() = Qff;
-  matrix.Qaa() = Qaa;
-  SplitKKTMatrix matrix_ref = matrix;
-  EXPECT_TRUE(matrix.isApprox(matrix_ref));
-  matrix_ref.Fxx().setRandom();
-  EXPECT_FALSE(matrix.isApprox(matrix_ref));
-  matrix_ref = matrix;
-  EXPECT_TRUE(matrix.isApprox(matrix_ref));
-  matrix_ref.Fxu().setRandom();
-  EXPECT_FALSE(matrix.isApprox(matrix_ref));
-  matrix_ref = matrix;
-  EXPECT_TRUE(matrix.isApprox(matrix_ref));
-  matrix_ref.Qxx().setRandom();
-  EXPECT_FALSE(matrix.isApprox(matrix_ref));
-  matrix_ref = matrix;
-  EXPECT_TRUE(matrix.isApprox(matrix_ref));
-  matrix_ref.Qxu().setRandom();
-  EXPECT_FALSE(matrix.isApprox(matrix_ref));
-  matrix_ref = matrix;
-  EXPECT_TRUE(matrix.isApprox(matrix_ref));
-  matrix_ref.Qux().setRandom();
-  EXPECT_FALSE(matrix.isApprox(matrix_ref));
-  matrix_ref = matrix;
-  EXPECT_TRUE(matrix.isApprox(matrix_ref));
-  if (dimi > 0) {
-    matrix_ref.Pq().setRandom();
-    EXPECT_FALSE(matrix.isApprox(matrix_ref));
-    matrix_ref.Pq() = Pq;
-    EXPECT_TRUE(matrix.isApprox(matrix_ref));
+
+  kkt_mat.Fxx.setRandom();
+  kkt_mat.Fvu.setRandom();
+  kkt_mat.Qxx.setRandom();
+  kkt_mat.Qxu.setRandom();
+  kkt_mat.Quu.setRandom();
+  kkt_mat.Qff().setRandom();
+  kkt_mat.Qqf().setRandom();
+
+  auto kkt_mat_ref = kkt_mat;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Fxx.setRandom();
+  EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Fxx = kkt_mat.Fxx;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Fvu.setRandom();
+  EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Fvu = kkt_mat.Fvu;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Qxx.setRandom();
+  EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Qxx = kkt_mat.Qxx;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Qxu.setRandom();
+  EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Qxu = kkt_mat.Qxu;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Quu.setRandom();
+  EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Quu = kkt_mat.Quu;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  if (dimf > 0) {
+    kkt_mat_ref.Qff().setRandom();
+    EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+    kkt_mat_ref.Qff() = kkt_mat.Qff();
+    EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+    kkt_mat_ref.Qqf().setRandom();
+    EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+    kkt_mat_ref.Qqf() = kkt_mat.Qqf();
+    EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   }
 }
 
@@ -302,62 +184,27 @@ void SplitKKTMatrixTest::testIsApprox(const Robot& robot,
 TEST_F(SplitKKTMatrixTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
-  auto impulse_status = robot.createImpulseStatus();
   contact_status.deactivateContact(0);
-  impulse_status.deactivateImpulse(0);
-  testSize(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test(robot, contact_status);
+  testIsApprox(robot, contact_status);
   contact_status.activateContact(0);
-  impulse_status.deactivateImpulse(0);
-  testSize(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
-  contact_status.deactivateContact(0);
-  impulse_status.activateImpulse(0);
-  testSize(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
-  contact_status.activateContact(0);
-  impulse_status.activateImpulse(0);
-  testSize(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test(robot, contact_status);
+  testIsApprox(robot, contact_status);
 }
 
 
 TEST_F(SplitKKTMatrixTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto contact_status = robot.createContactStatus();
-  auto impulse_status = robot.createImpulseStatus();
-  // Both contact and impulse are inactive
   contact_status.deactivateContacts();
-  impulse_status.deactivateImpulses();
-  testSize(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
-  // Contacts are active and impulse are inactive
+  test(robot, contact_status);
+  testIsApprox(robot, contact_status);
   contact_status.setRandom();
   if (!contact_status.hasActiveContacts()) {
     contact_status.activateContact(0);
   }
-  impulse_status.deactivateImpulses();
-  testSize(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
-  // Contacts are inactive and impulse are active
-  contact_status.deactivateContacts();
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
-  }
-  testSize(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
-  // Both contact and impulse are active
-  contact_status.setRandom();
-  if (!contact_status.hasActiveContacts()) {
-    contact_status.activateContact(0);
-  }
-  impulse_status.setRandom();
-  if (!impulse_status.hasActiveImpulse()) {
-    impulse_status.activateImpulse(0);
-  }
-  testSize(robot, contact_status, impulse_status);
-  testIsApprox(robot, contact_status, impulse_status);
+  test(robot, contact_status);
+  testIsApprox(robot, contact_status);
 }
 
 } // namespace idocp

@@ -24,55 +24,77 @@ class RobotTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
-    std::random_device rnd;
     fixed_base_urdf = "../urdf/iiwa14/iiwa14.urdf";
     floating_base_urdf = "../urdf/anymal/anymal.urdf";
     pinocchio::urdf::buildModel(fixed_base_urdf, fixed_base_robot);
-    pinocchio::urdf::buildModel(floating_base_urdf, floating_base_robot);
+    pinocchio::urdf::buildModel(floating_base_urdf, 
+                                pinocchio::JointModelFreeFlyer(), 
+                                floating_base_robot);
     fixed_base_data = pinocchio::Data(fixed_base_robot);
     floating_base_data = pinocchio::Data(floating_base_robot);
     fixed_base_contact_frames = {18};
-    floating_base_contact_frames = {14, 24, 34, 44};
+    floating_base_contact_frames = {12, 22, 32, 42};
     baumgarte_weight_on_velocity = 10 * std::abs(Eigen::VectorXd::Random(1)[0]);
     baumgarte_weight_on_position = 10 * std::abs(Eigen::VectorXd::Random(1)[0]);
+    baumgarte_weights.first = baumgarte_weight_on_velocity;
+    baumgarte_weights.second = baumgarte_weight_on_position;
   }
 
   virtual void TearDown() {
   }
 
   void testConstructorAndSetter(const std::string& path_to_urdf, 
+                                const BaseJointType& base_joint_type,
                                 const std::vector<int>& contact_frames) const;
   void testIntegrateConfiguration(const std::string& path_to_urdf, 
+                                  const BaseJointType& base_joint_type,
                                   pinocchio::Model& model) const;
   void testIntegrateConfigurationDerivatives(const std::string& path_to_urdf, 
+                                             const BaseJointType& base_joint_type,
                                              pinocchio::Model& model) const;
   void testSubtractConfiguration(const std::string& path_to_urdf, 
+                                 const BaseJointType& base_joint_type,
                                  pinocchio::Model& model) const;
   void testSubtractConfigurationDerivatives(const std::string& path_to_urdf, 
+                                            const BaseJointType& base_joint_type,
                                             pinocchio::Model& model) const;
   void testFrameKinematics(const std::string& path_to_urdf, 
+                           const BaseJointType& base_joint_type,
                            pinocchio::Model& model, pinocchio::Data& data, 
                            const int frame_id) const;
-  void testBaumgarte(const std::string& path_to_urdf, pinocchio::Model& model, 
-                     pinocchio::Data& data, const std::vector<int>& frames) const;
+  void testBaumgarte(const std::string& path_to_urdf, 
+                     const BaseJointType& base_joint_type,
+                     pinocchio::Model& model, pinocchio::Data& data, 
+                     const std::vector<int>& frames) const;
   void testBaumgarteTimeStep(const std::string& path_to_urdf, 
+                             const BaseJointType& base_joint_type,
                              pinocchio::Model& model, pinocchio::Data& data, 
                              const std::vector<int>& frames) const;
   void testImpulseVelocity(const std::string& path_to_urdf, 
+                           const BaseJointType& base_joint_type,
                            pinocchio::Model& model, pinocchio::Data& data, 
                            const std::vector<int>& frames) const;
-  void testImpulseCondition(const std::string& path_to_urdf, 
-                            pinocchio::Model& model, pinocchio::Data& data, 
-                            const std::vector<int>& frames) const;
-  void testRNEA(const std::string& path_to_urdf, pinocchio::Model& model, 
-                pinocchio::Data& data) const;
-  void testRNEA(const std::string& path_to_urdf, pinocchio::Model& model, 
-                pinocchio::Data& data, const std::vector<int>& frames) const;
-  void testRNEAImpulse(const std::string& path_to_urdf, pinocchio::Model& model, 
-                       pinocchio::Data& data, const std::vector<int>& frames) const;
-  void testMJtJinv(const std::string& path_to_urdf, pinocchio::Model& model, 
-                   pinocchio::Data& data, const std::vector<int>& frames) const;
+  void testContactPosition(const std::string& path_to_urdf, 
+                           const BaseJointType& base_joint_type,
+                           pinocchio::Model& model, pinocchio::Data& data, 
+                           const std::vector<int>& frames) const;
+  void testRNEA(const std::string& path_to_urdf, 
+                const BaseJointType& base_joint_type,
+                pinocchio::Model& model, pinocchio::Data& data) const;
+  void testRNEA(const std::string& path_to_urdf, 
+                const BaseJointType& base_joint_type,
+                pinocchio::Model& model, pinocchio::Data& data, 
+                const std::vector<int>& frames) const;
+  void testRNEAImpulse(const std::string& path_to_urdf, 
+                       const BaseJointType& base_joint_type, 
+                       pinocchio::Model& model, pinocchio::Data& data, 
+                       const std::vector<int>& frames) const;
+  void testMJtJinv(const std::string& path_to_urdf, 
+                   const BaseJointType& base_joint_type, 
+                   pinocchio::Model& model, pinocchio::Data& data, 
+                   const std::vector<int>& frames) const;
   void testGenConfiguration(const std::string& path_to_urdf, 
+                            const BaseJointType& base_joint_type, 
                             pinocchio::Model& model, pinocchio::Data& data) const;
 
   std::string fixed_base_urdf, floating_base_urdf;
@@ -80,10 +102,12 @@ protected:
   pinocchio::Data fixed_base_data, floating_base_data;
   std::vector<int> fixed_base_contact_frames, floating_base_contact_frames;
   double baumgarte_weight_on_velocity, baumgarte_weight_on_position;
+  std::pair<double, double> baumgarte_weights;
 };
 
 
 void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf, 
+                                         const BaseJointType& base_joint_type,
                                          const std::vector<int>& contact_frames) const {
   Robot robot_empty;
   EXPECT_EQ(robot_empty.dimq(), 0);
@@ -93,9 +117,15 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf,
   EXPECT_EQ(robot_empty.dim_passive(), 0);
   EXPECT_EQ(robot_empty.maxPointContacts(), 0);
   EXPECT_FALSE(robot_empty.hasFloatingBase());
-  Robot robot(path_to_urdf);
+  Robot robot(path_to_urdf, base_joint_type);
   pinocchio::Model robot_ref;
-  pinocchio::urdf::buildModel(path_to_urdf, robot_ref);
+  if (base_joint_type == BaseJointType::FloatingBase) {
+    pinocchio::urdf::buildModel(path_to_urdf, pinocchio::JointModelFreeFlyer(), 
+                                robot_ref);
+  }
+  else {
+    pinocchio::urdf::buildModel(path_to_urdf, robot_ref);
+  }
   EXPECT_EQ(robot.dimq(), robot_ref.nq);
   EXPECT_EQ(robot.dimv(), robot_ref.nv);
   EXPECT_EQ(robot.dimu(), robot_ref.nv-robot.dim_passive());
@@ -107,7 +137,7 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf,
     EXPECT_EQ(robot.dim_passive(), 0);
   }
   EXPECT_EQ(robot.maxPointContacts(), 0);
-  Robot robot_contact(path_to_urdf, contact_frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+  Robot robot_contact(path_to_urdf, base_joint_type, contact_frames, baumgarte_weights);
   EXPECT_EQ(robot_contact.dimq(), robot_ref.nq);
   EXPECT_EQ(robot_contact.dimv(), robot_ref.nv);
   EXPECT_EQ(robot_contact.dimu(), robot_ref.nv-robot_contact.dim_passive());
@@ -143,8 +173,9 @@ void RobotTest::testConstructorAndSetter(const std::string& path_to_urdf,
 
 
 void RobotTest::testIntegrateConfiguration(const std::string& path_to_urdf, 
+                                           const BaseJointType& base_joint_type,
                                            pinocchio::Model& model) const {
-  Robot robot(path_to_urdf);
+  Robot robot(path_to_urdf, base_joint_type);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
@@ -161,8 +192,9 @@ void RobotTest::testIntegrateConfiguration(const std::string& path_to_urdf,
 
 
 void RobotTest::testIntegrateConfigurationDerivatives(const std::string& path_to_urdf, 
+                                                      const BaseJointType& base_joint_type,
                                                       pinocchio::Model& model) const {
-  Robot robot(path_to_urdf);
+  Robot robot(path_to_urdf, base_joint_type);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Random(model.nv);
@@ -184,8 +216,9 @@ void RobotTest::testIntegrateConfigurationDerivatives(const std::string& path_to
 
 
 void RobotTest::testSubtractConfiguration(const std::string& path_to_urdf, 
+                                          const BaseJointType& base_joint_type,
                                           pinocchio::Model& model) const {
-  Robot robot(path_to_urdf);
+  Robot robot(path_to_urdf, base_joint_type);
   const Eigen::VectorXd q_plus = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd q_minus = pinocchio::randomConfiguration(
@@ -198,8 +231,9 @@ void RobotTest::testSubtractConfiguration(const std::string& path_to_urdf,
 
 
 void RobotTest::testSubtractConfigurationDerivatives(const std::string& path_to_urdf, 
+                                                     const BaseJointType& base_joint_type,
                                                      pinocchio::Model& model) const {
-  Robot robot(path_to_urdf);
+  Robot robot(path_to_urdf, base_joint_type);
   const Eigen::VectorXd q_plus = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd q_minus = pinocchio::randomConfiguration(
@@ -231,9 +265,11 @@ void RobotTest::testSubtractConfigurationDerivatives(const std::string& path_to_
 }
 
 
-void RobotTest::testFrameKinematics(const std::string& path_to_urdf, pinocchio::Model& model, 
+void RobotTest::testFrameKinematics(const std::string& path_to_urdf, 
+                                    const BaseJointType& base_joint_type,
+                                    pinocchio::Model& model, 
                                     pinocchio::Data& data, const int frame_id) const {
-  Robot robot(path_to_urdf);
+  Robot robot(path_to_urdf, base_joint_type);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
   const Eigen::VectorXd v = Eigen::VectorXd::Zero(model.nv);
@@ -265,13 +301,15 @@ void RobotTest::testFrameKinematics(const std::string& path_to_urdf, pinocchio::
 }
 
 
-void RobotTest::testBaumgarte(const std::string& path_to_urdf, pinocchio::Model& model, 
-                              pinocchio::Data& data, const std::vector<int>& frames) const {
+void RobotTest::testBaumgarte(const std::string& path_to_urdf, 
+                              const BaseJointType& base_joint_type,
+                              pinocchio::Model& model, pinocchio::Data& data, 
+                              const std::vector<int>& frames) const {
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<frames.size(); ++i) {
-    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weight_on_velocity, baumgarte_weight_on_position));
+    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weights.first, baumgarte_weights.second));
   }
-  Robot robot(path_to_urdf, frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+  Robot robot(path_to_urdf, base_joint_type, frames, baumgarte_weights);
   ASSERT_EQ(robot.dimq(), model.nq);
   ASSERT_EQ(robot.dimv(), model.nv);
   Eigen::VectorXd residual = Eigen::VectorXd::Zero(robot.max_dimf());
@@ -323,13 +361,16 @@ void RobotTest::testBaumgarte(const std::string& path_to_urdf, pinocchio::Model&
 }
 
 
-void RobotTest::testBaumgarteTimeStep(const std::string& path_to_urdf, pinocchio::Model& model, 
-                                      pinocchio::Data& data, const std::vector<int>& frames) const {
+void RobotTest::testBaumgarteTimeStep(const std::string& path_to_urdf, 
+                                      const BaseJointType& base_joint_type,
+                                      pinocchio::Model& model, pinocchio::Data& data, 
+                                      const std::vector<int>& frames) const {
   const double time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double baumgarte_weight_velocity = 2.0 / time_step;
   const double baumgarte_weight_position = 1.0 / (time_step*time_step);
-  Robot robot_time_step(path_to_urdf, frames, time_step);
-  Robot robot(path_to_urdf, frames, baumgarte_weight_velocity, baumgarte_weight_position);
+  Robot robot_time_step(path_to_urdf, base_joint_type, frames, time_step);
+  Robot robot(path_to_urdf, base_joint_type, frames, 
+              std::make_pair(baumgarte_weight_velocity, baumgarte_weight_position));
   auto contact_status = robot.createContactStatus();
   contact_status.setRandom();
   Eigen::VectorXd residual = Eigen::VectorXd::Zero(contact_status.dimf());
@@ -359,13 +400,15 @@ void RobotTest::testBaumgarteTimeStep(const std::string& path_to_urdf, pinocchio
 }
 
 
-void RobotTest::testImpulseVelocity(const std::string& path_to_urdf, pinocchio::Model& model, 
-                                    pinocchio::Data& data, const std::vector<int>& frames) const {
+void RobotTest::testImpulseVelocity(const std::string& path_to_urdf, 
+                                    const BaseJointType& base_joint_type,
+                                    pinocchio::Model& model, pinocchio::Data& data, 
+                                    const std::vector<int>& frames) const {
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<frames.size(); ++i) {
-    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weight_on_velocity, baumgarte_weight_on_position));
+    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weights.first, baumgarte_weights.second));
   }
-  Robot robot(path_to_urdf, frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+  Robot robot(path_to_urdf, base_joint_type, frames, baumgarte_weights);
   Eigen::VectorXd residual = Eigen::VectorXd::Zero(robot.max_dimf());
   Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(robot.max_dimf());
   auto impulse_status = robot.createImpulseStatus();
@@ -408,13 +451,15 @@ void RobotTest::testImpulseVelocity(const std::string& path_to_urdf, pinocchio::
 }
 
 
-void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio::Model& model, 
-                                     pinocchio::Data& data, const std::vector<int>& frames) const {
+void RobotTest::testContactPosition(const std::string& path_to_urdf, 
+                                    const BaseJointType& base_joint_type, 
+                                    pinocchio::Model& model, pinocchio::Data& data, 
+                                    const std::vector<int>& frames) const {
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<frames.size(); ++i) {
-    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weight_on_velocity, baumgarte_weight_on_position));
+    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weights.first, baumgarte_weights.second));
   }
-  Robot robot(path_to_urdf, frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+  Robot robot(path_to_urdf, base_joint_type, frames, baumgarte_weights);
   Eigen::VectorXd residual = Eigen::VectorXd::Zero(robot.max_dimf());
   Eigen::VectorXd residual_ref = Eigen::VectorXd::Zero(robot.max_dimf());
   auto impulse_status = robot.createImpulseStatus();
@@ -456,8 +501,9 @@ void RobotTest::testImpulseCondition(const std::string& path_to_urdf, pinocchio:
 
 
 void RobotTest::testRNEA(const std::string& path_to_urdf, 
+                         const BaseJointType& base_joint_type, 
                          pinocchio::Model& model, pinocchio::Data& data) const {
-  Robot robot(path_to_urdf);
+  Robot robot(path_to_urdf, base_joint_type);
   const double time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -485,12 +531,13 @@ void RobotTest::testRNEA(const std::string& path_to_urdf,
 
 
 void RobotTest::testRNEA(const std::string& path_to_urdf, 
+                         const BaseJointType& base_joint_type, 
                          pinocchio::Model& model, pinocchio::Data& data, 
                          const std::vector<int>& frames) const {
-  Robot robot(path_to_urdf, frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+  Robot robot(path_to_urdf, base_joint_type, frames, baumgarte_weights);
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<frames.size(); ++i) {
-    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weight_on_velocity, baumgarte_weight_on_position));
+    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weights.first, baumgarte_weights.second));
   }
   const double time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
@@ -534,12 +581,13 @@ void RobotTest::testRNEA(const std::string& path_to_urdf,
 
 
 void RobotTest::testRNEAImpulse(const std::string& path_to_urdf, 
+                                const BaseJointType& base_joint_type, 
                                 pinocchio::Model& model, pinocchio::Data& data, 
                                 const std::vector<int>& frames) const {
-  Robot robot(path_to_urdf, frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+  Robot robot(path_to_urdf, base_joint_type, frames, baumgarte_weights);
   std::vector<PointContact> contacts_ref; 
   for (int i=0; i<frames.size(); ++i) {
-    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weight_on_velocity, baumgarte_weight_on_position));
+    contacts_ref.push_back(PointContact(model, frames[i], baumgarte_weights.first, baumgarte_weights.second));
   }
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -582,9 +630,10 @@ void RobotTest::testRNEAImpulse(const std::string& path_to_urdf,
 
 
 void RobotTest::testMJtJinv(const std::string& path_to_urdf, 
+                            const BaseJointType& base_joint_type, 
                             pinocchio::Model& model, pinocchio::Data& data, 
                             const std::vector<int>& frames) const {
-  Robot robot(path_to_urdf, frames, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+  Robot robot(path_to_urdf, base_joint_type, frames, baumgarte_weights);
   const double time_step = std::abs(Eigen::VectorXd::Random(1)[0]);
   const Eigen::VectorXd q = pinocchio::randomConfiguration(
       model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
@@ -619,9 +668,10 @@ void RobotTest::testMJtJinv(const std::string& path_to_urdf,
 
 
 void RobotTest::testGenConfiguration(const std::string& path_to_urdf, 
+                                     const BaseJointType& base_joint_type, 
                                      pinocchio::Model& model, 
                                      pinocchio::Data& data) const {
-  Robot robot(path_to_urdf);
+  Robot robot(path_to_urdf, base_joint_type);
   const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
   EXPECT_TRUE(q.size() == robot.dimq());
   Eigen::VectorXd qmin = robot.lowerJointPositionLimit();
@@ -649,17 +699,17 @@ TEST_F(RobotTest, hasFloatingBase) {
   EXPECT_FALSE(fixed_base.hasFloatingBase());
   EXPECT_EQ(fixed_base.dim_passive(), 0);
   EXPECT_EQ(fixed_base.dimu(), fixed_base.dimv());
-  Robot fixed_base_contacts(fixed_base_urdf, fixed_base_contact_frames, 
-                            baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+  Robot fixed_base_contacts(fixed_base_urdf, BaseJointType::FixedBase, 
+                            fixed_base_contact_frames, baumgarte_weights);
   EXPECT_FALSE(fixed_base_contacts.hasFloatingBase());
   EXPECT_EQ(fixed_base_contacts.dim_passive(), 0);
   EXPECT_EQ(fixed_base_contacts.dimu(), fixed_base_contacts.dimv());
-  Robot floating_base(floating_base_urdf);
+  Robot floating_base(floating_base_urdf, BaseJointType::FloatingBase);
   EXPECT_TRUE(floating_base.hasFloatingBase());
   EXPECT_EQ(floating_base.dim_passive(), 6);
   EXPECT_EQ(floating_base.dimu()+floating_base.dim_passive(), floating_base.dimv());
-  Robot floating_base_contacts(floating_base_urdf, floating_base_contact_frames, 
-                               baumgarte_weight_on_velocity, baumgarte_weight_on_position);
+  Robot floating_base_contacts(floating_base_urdf, BaseJointType::FloatingBase, 
+                               floating_base_contact_frames, baumgarte_weights);
   EXPECT_TRUE(floating_base_contacts.hasFloatingBase());
   EXPECT_EQ(floating_base_contacts.dim_passive(), 6);
   EXPECT_EQ(floating_base_contacts.dimu()+floating_base_contacts.dim_passive(), 
@@ -672,21 +722,21 @@ TEST_F(RobotTest, testFixedbase) {
   const auto contact_frames = fixed_base_contact_frames;
   pinocchio::Model model = fixed_base_robot;
   pinocchio::Data data = fixed_base_data;
-  testConstructorAndSetter(path_to_urdf,  contact_frames);
-  testIntegrateConfiguration(path_to_urdf, model);
-  testSubtractConfiguration(path_to_urdf, model);
-  testSubtractConfigurationDerivatives(path_to_urdf, model);
+  testConstructorAndSetter(path_to_urdf, BaseJointType::FixedBase, contact_frames);
+  testIntegrateConfiguration(path_to_urdf, BaseJointType::FixedBase, model);
+  testSubtractConfiguration(path_to_urdf, BaseJointType::FixedBase, model);
+  testSubtractConfigurationDerivatives(path_to_urdf, BaseJointType::FixedBase, model);
   for (const auto frame : contact_frames) {
-    testFrameKinematics(path_to_urdf, model, data, frame);
+    testFrameKinematics(path_to_urdf, BaseJointType::FixedBase, model, data, frame);
   }
-  testBaumgarte(path_to_urdf, model, data, contact_frames);
-  testImpulseVelocity(path_to_urdf, model, data, contact_frames);
-  testImpulseCondition(path_to_urdf, model, data, contact_frames);
-  testRNEA(path_to_urdf, model, data);
-  testRNEA(path_to_urdf, model, data, contact_frames);
-  testRNEAImpulse(path_to_urdf, model, data, contact_frames);
-  testMJtJinv(path_to_urdf, model, data, contact_frames);
-  testGenConfiguration(path_to_urdf, model, data);
+  testBaumgarte(path_to_urdf, BaseJointType::FixedBase, model, data, contact_frames);
+  testImpulseVelocity(path_to_urdf, BaseJointType::FixedBase, model, data, contact_frames);
+  testContactPosition(path_to_urdf, BaseJointType::FixedBase, model, data, contact_frames);
+  testRNEA(path_to_urdf, BaseJointType::FixedBase, model, data);
+  testRNEA(path_to_urdf, BaseJointType::FixedBase, model, data, contact_frames);
+  testRNEAImpulse(path_to_urdf, BaseJointType::FixedBase, model, data, contact_frames);
+  testMJtJinv(path_to_urdf, BaseJointType::FixedBase, model, data, contact_frames);
+  testGenConfiguration(path_to_urdf, BaseJointType::FixedBase, model, data);
 }
 
 
@@ -695,21 +745,21 @@ TEST_F(RobotTest, testFloatingBase) {
   const auto contact_frames = floating_base_contact_frames;
   pinocchio::Model model = floating_base_robot;
   pinocchio::Data data = floating_base_data;
-  testConstructorAndSetter(path_to_urdf,  contact_frames);
-  testIntegrateConfiguration(path_to_urdf, model);
-  testSubtractConfiguration(path_to_urdf, model);
-  testSubtractConfigurationDerivatives(path_to_urdf, model);
+  testConstructorAndSetter(path_to_urdf, BaseJointType::FloatingBase, contact_frames);
+  testIntegrateConfiguration(path_to_urdf, BaseJointType::FloatingBase, model);
+  testSubtractConfiguration(path_to_urdf, BaseJointType::FloatingBase, model);
+  testSubtractConfigurationDerivatives(path_to_urdf, BaseJointType::FloatingBase, model);
   for (const auto frame : contact_frames) {
-    testFrameKinematics(path_to_urdf, model, data, frame);
+    testFrameKinematics(path_to_urdf, BaseJointType::FloatingBase, model, data, frame);
   }
-  testBaumgarte(path_to_urdf, model, data, contact_frames);
-  testImpulseVelocity(path_to_urdf, model, data, contact_frames);
-  testImpulseCondition(path_to_urdf, model, data, contact_frames);
-  testRNEA(path_to_urdf, model, data);
-  testRNEA(path_to_urdf, model, data, contact_frames);
-  testRNEAImpulse(path_to_urdf, model, data, contact_frames);
-  testMJtJinv(path_to_urdf, model, data, contact_frames);
-  testGenConfiguration(path_to_urdf, model, data);
+  testBaumgarte(path_to_urdf, BaseJointType::FloatingBase, model, data, contact_frames);
+  testImpulseVelocity(path_to_urdf, BaseJointType::FloatingBase, model, data, contact_frames);
+  testContactPosition(path_to_urdf, BaseJointType::FloatingBase, model, data, contact_frames);
+  testRNEA(path_to_urdf, BaseJointType::FloatingBase, model, data);
+  testRNEA(path_to_urdf, BaseJointType::FloatingBase, model, data, contact_frames);
+  testRNEAImpulse(path_to_urdf, BaseJointType::FloatingBase, model, data, contact_frames);
+  testMJtJinv(path_to_urdf, BaseJointType::FloatingBase, model, data, contact_frames);
+  testGenConfiguration(path_to_urdf, BaseJointType::FloatingBase, model, data);
 }
 
 } // namespace idocp 

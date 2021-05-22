@@ -17,8 +17,9 @@
 #include "idocp/constraints/constraints_data.hpp"
 #include "idocp/ocp/state_equation.hpp"
 #include "idocp/ocp/contact_dynamics.hpp"
-#include "idocp/ocp/forward_switching_constraint.hpp"
-#include "idocp/ocp/split_state_constraint_jacobian.hpp"
+#include "idocp/ocp/switching_constraint.hpp"
+#include "idocp/ocp/split_switching_constraint_residual.hpp"
+#include "idocp/ocp/split_switching_constraint_jacobian.hpp"
 
 
 namespace idocp {
@@ -108,7 +109,7 @@ public:
   ///
   /// @brief Linearizes the split optimal control problem for Newton's method 
   /// around the current solution, i.e., computes the KKT residual and Hessian.
-  /// Also linearizes the switching constraint.
+  /// Also linearizes the ewitching constraint.
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
   /// @param[in] t Time of this time stage. 
@@ -120,7 +121,8 @@ public:
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   /// @param[in] impulse_status Impulse status at the switching instant. 
   /// @param[in] dt_next Time step of the next time stage. 
-  /// @param[in, out] jac Jacobian of the switching constraint. 
+  /// @param[in, out] switch_jacobian Jacobian of the switching constraint. 
+  /// @param[in, out] switch_residual Residual of the switching constraint. 
   ///
   void linearizeOCP(Robot& robot, const ContactStatus& contact_status, 
                     const double t, const double dt, 
@@ -128,7 +130,8 @@ public:
                     const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix,
                     SplitKKTResidual& kkt_residual, 
                     const ImpulseStatus& impulse_status, const double dt_next, 
-                    SplitStateConstraintJacobian& jac);
+                    SplitSwitchingConstraintJacobian& switch_jacobian,
+                    SplitSwitchingConstraintResidual& switch_residual);
 
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
@@ -225,7 +228,8 @@ public:
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   /// @param[in] impulse_status Impulse status at the switching instant. 
   /// @param[in] dt_next Time step of the next time stage. 
-  /// @param[in, out] jac Jacobian of the switching constraint. 
+  /// @param[in, out] switch_jacobian Jacobian of the switching constraint. 
+  /// @param[in, out] switch_residual Residual of the switching constraint. 
   ///
   void computeKKTResidual(Robot& robot, const ContactStatus& contact_status,
                           const double t, const double dt, 
@@ -235,7 +239,8 @@ public:
                           SplitKKTResidual& kkt_residual, 
                           const ImpulseStatus& impulse_status, 
                           const double dt_next, 
-                          SplitStateConstraintJacobian& jac);
+                          SplitSwitchingConstraintJacobian& switch_jacobian,
+                          SplitSwitchingConstraintResidual& switch_residual);
 
   ///
   /// @brief Returns the KKT residual of this time stage. Before calling this 
@@ -292,6 +297,7 @@ public:
   /// @param[in, out] kkt_residual KKT residual of this time stage.
   /// @param[in] impulse_status Impulse status at the switching instant. 
   /// @param[in] dt_next Time step of the next time stage. 
+  /// @param[in, out] switch_residual Residual of the switching constraint. 
   /// @return Constraint violation of this time stage.
   ///
   double constraintViolation(Robot& robot, const ContactStatus& contact_status, 
@@ -301,7 +307,8 @@ public:
                              const Eigen::VectorXd& v_next,
                              SplitKKTResidual& kkt_residual,
                              const ImpulseStatus& impulse_status, 
-                             const double dt_next);
+                             const double dt_next,
+                             SplitSwitchingConstraintResidual& switch_residual);
 
 private:
   std::shared_ptr<CostFunction> cost_;
@@ -309,7 +316,6 @@ private:
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   ContactDynamics contact_dynamics_;
-  ForwardSwitchingConstraint switching_constraint_;
   bool use_kinematics_, has_floating_base_;
   double stage_cost_, constraint_violation_;
 

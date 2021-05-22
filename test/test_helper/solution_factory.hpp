@@ -3,7 +3,7 @@
 
 #include "idocp/robot/robot.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
+#include "idocp/ocp/ocp.hpp"
 
 
 namespace idocp {
@@ -13,8 +13,7 @@ Solution CreateSolution(const Robot& robot, const int N,
                         const int max_num_impulse=0);
 
 Solution CreateSolution(const Robot& robot, const ContactSequence& contact_sequence, 
-                        const double T, const int N, const int max_num_impulse, 
-                        const double t, const bool is_parnmpc=false);
+                        const double T, const int N, const int max_num_impulse, const double t);
 
 } // namespace testhelper
 } // namespace idocp

@@ -11,7 +11,7 @@
 
 namespace idocp {
 
-class SplitImpulseKKTMatrixTest : public ::testing::Test {
+class ImpulseSplitKKTMatrixTest : public ::testing::Test {
 protected:
   virtual void SetUp() {
     srand((unsigned int) time(0));
@@ -20,225 +20,147 @@ protected:
   virtual void TearDown() {
   }
 
-  static void testSize(const Robot& robot, const ImpulseStatus& impulse_status);
+  static void test(const Robot& robot, const ImpulseStatus& impulse_status);
   static void testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status);
-  static void testInverse(const Robot& robot, const ImpulseStatus& impulse_status);
 };
 
 
-void SplitImpulseKKTMatrixTest::testSize(const Robot& robot, const ImpulseStatus& impulse_status) {
-  ImpulseSplitKKTMatrix matrix(robot);
-  matrix.setImpulseStatus(impulse_status);
+void ImpulseSplitKKTMatrixTest::test(const Robot& robot, const ImpulseStatus& impulse_status) {
+  ImpulseSplitKKTMatrix kkt_mat(robot);
+  kkt_mat.setImpulseStatus(impulse_status);
   const int dimv = robot.dimv();
-  const int dimu = robot.dimu();
-  const int dimf = impulse_status.dimf();
-  EXPECT_EQ(matrix.dimf(), dimf);
-  EXPECT_EQ(matrix.Fqf().rows(), dimv);
-  EXPECT_EQ(matrix.Fqf().cols(), dimf);
-  EXPECT_EQ(matrix.Fqq().rows(), dimv);
-  EXPECT_EQ(matrix.Fqq().cols(), dimv);
-  EXPECT_EQ(matrix.Fqv().rows(), dimv);
-  EXPECT_EQ(matrix.Fqv().cols(), dimv);
-  EXPECT_EQ(matrix.Fvf().rows(), dimv);
-  EXPECT_EQ(matrix.Fvf().cols(), dimf);
-  EXPECT_EQ(matrix.Fvq().rows(), dimv);
-  EXPECT_EQ(matrix.Fvq().cols(), dimv);
-  EXPECT_EQ(matrix.Fvv().rows(), dimv);
-  EXPECT_EQ(matrix.Fvv().cols(), dimv);
-  EXPECT_EQ(matrix.Fxf().rows(), 2*dimv);
-  EXPECT_EQ(matrix.Fxf().cols(), dimf);
-  EXPECT_EQ(matrix.Fxx().rows(), 2*dimv);
-  EXPECT_EQ(matrix.Fxx().cols(), 2*dimv);
-  EXPECT_EQ(matrix.Vq().rows(), dimf);
-  EXPECT_EQ(matrix.Vq().cols(), dimv);
-  EXPECT_EQ(matrix.Vv().rows(), dimf);
-  EXPECT_EQ(matrix.Vv().cols(), dimv);
-  EXPECT_EQ(matrix.Qdvdv().rows(), dimv);
-  EXPECT_EQ(matrix.Qdvdv().cols(), dimv);
-  EXPECT_EQ(matrix.Qff().rows(), dimf);
-  EXPECT_EQ(matrix.Qff().cols(), dimf);
-  EXPECT_EQ(matrix.Qfq().rows(), dimf);
-  EXPECT_EQ(matrix.Qfq().cols(), dimv);
-  EXPECT_EQ(matrix.Qqq().rows(), dimv);
-  EXPECT_EQ(matrix.Qqq().cols(), dimv);
-  EXPECT_EQ(matrix.Qqv().rows(), dimv);
-  EXPECT_EQ(matrix.Qqv().cols(), dimv);
-  EXPECT_EQ(matrix.Qvq().cols(), dimv);
-  EXPECT_EQ(matrix.Qvv().rows(), dimv);
-  EXPECT_EQ(matrix.Qvv().cols(), dimv);
-  EXPECT_EQ(matrix.Qxx().rows(), 2*dimv);
-  EXPECT_EQ(matrix.Qxx().cols(), 2*dimv);
-  EXPECT_EQ(matrix.Fqq_prev.rows(), dimv);
-  EXPECT_EQ(matrix.Fqq_prev.cols(), dimv);
-  const Eigen::MatrixXd Fqf = Eigen::MatrixXd::Random(dimv, dimf);
-  const Eigen::MatrixXd Fqq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Fqv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Fvf = Eigen::MatrixXd::Random(dimv, dimf);
-  const Eigen::MatrixXd Fvq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Fvv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Vq = Eigen::MatrixXd::Random(dimf, dimv);
-  const Eigen::MatrixXd Vv = Eigen::MatrixXd::Random(dimf, dimv);
-  const Eigen::MatrixXd Qdvdv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qff = Eigen::MatrixXd::Random(dimf, dimf);
-  const Eigen::MatrixXd Qfq = Eigen::MatrixXd::Random(dimf, dimv);
-  const Eigen::MatrixXd Qqq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qqv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvv = Eigen::MatrixXd::Random(dimv, dimv);
-  matrix.Fqf() = Fqf;
-  matrix.Fqq() = Fqq;
-  matrix.Fqv() = Fqv;
-  matrix.Fvf() = Fvf;
-  matrix.Fvq() = Fvq;
-  matrix.Fvv() = Fvv;
-  matrix.Vq() = Vq;
-  matrix.Vv() = Vv;
-  matrix.Qdvdv() = Qdvdv;
-  matrix.Qff() = Qff;
-  matrix.Qfq() = Qfq;
-  matrix.Qqq() = Qqq;
-  matrix.Qqv() = Qqv;
-  matrix.Qvq() = Qvq;
-  matrix.Qvv() = Qvv;
-  EXPECT_TRUE(matrix.Fqf().isApprox(Fqf));
-  EXPECT_TRUE(matrix.Fqq().isApprox(Fqq));
-  EXPECT_TRUE(matrix.Fqv().isApprox(Fqv));
-  EXPECT_TRUE(matrix.Fvf().isApprox(Fvf));
-  EXPECT_TRUE(matrix.Fvq().isApprox(Fvq));
-  EXPECT_TRUE(matrix.Fvv().isApprox(Fvv));
-  EXPECT_TRUE(matrix.Fxf().topRows(dimv).isApprox(Fqf));
-  EXPECT_TRUE(matrix.Fxf().bottomRows(dimv).isApprox(Fvf));
-  EXPECT_TRUE(matrix.Fxx().topLeftCorner(dimv, dimv).isApprox(Fqq));
-  EXPECT_TRUE(matrix.Fxx().topRightCorner(dimv, dimv).isApprox(Fqv));
-  EXPECT_TRUE(matrix.Fxx().bottomLeftCorner(dimv, dimv).isApprox(Fvq));
-  EXPECT_TRUE(matrix.Fxx().bottomRightCorner(dimv, dimv).isApprox(Fvv));
-  EXPECT_TRUE(matrix.Vq().isApprox(Vq));
-  EXPECT_TRUE(matrix.Vv().isApprox(Vv));
-  EXPECT_TRUE(matrix.Qdvdv().isApprox(Qdvdv));
-  EXPECT_TRUE(matrix.Qff().isApprox(Qff));
-  EXPECT_TRUE(matrix.Qfq().isApprox(Qfq));
-  EXPECT_TRUE(matrix.Qqq().isApprox(Qqq));
-  EXPECT_TRUE(matrix.Qqv().isApprox(Qqv));
-  EXPECT_TRUE(matrix.Qvq().isApprox(Qvq));
-  EXPECT_TRUE(matrix.Qvv().isApprox(Qvv));
-  EXPECT_TRUE(matrix.Qxx().topLeftCorner(dimv, dimv).isApprox(Qqq));
-  EXPECT_TRUE(matrix.Qxx().topRightCorner(dimv, dimv).isApprox(Qqv));
-  EXPECT_TRUE(matrix.Qxx().bottomLeftCorner(dimv, dimv).isApprox(Qvq));
-  EXPECT_TRUE(matrix.Qxx().bottomRightCorner(dimv, dimv).isApprox(Qvv));
-}
-
-
-void SplitImpulseKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status) {
-  ImpulseSplitKKTMatrix matrix(robot);
-  matrix.setImpulseStatus(impulse_status);
-  const int dimv = robot.dimv();
-  const int dimf = impulse_status.dimf();
-  const Eigen::MatrixXd Fqf = Eigen::MatrixXd::Random(dimv, dimf);
-  const Eigen::MatrixXd Fqq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Fqv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Fvf = Eigen::MatrixXd::Random(dimv, dimf);
-  const Eigen::MatrixXd Fvq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Fvv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Vq = Eigen::MatrixXd::Random(dimf, dimv);
-  const Eigen::MatrixXd Vv = Eigen::MatrixXd::Random(dimf, dimv);
-  const Eigen::MatrixXd Qdvdv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qff = Eigen::MatrixXd::Random(dimf, dimf);
-  const Eigen::MatrixXd Qfq = Eigen::MatrixXd::Random(dimf, dimv);
-  const Eigen::MatrixXd Qqq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qqv = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvq = Eigen::MatrixXd::Random(dimv, dimv);
-  const Eigen::MatrixXd Qvv = Eigen::MatrixXd::Random(dimv, dimv);
-  matrix.Fqf() = Fqf;
-  matrix.Fqq() = Fqq;
-  matrix.Fqv() = Fqv;
-  matrix.Fvf() = Fvf;
-  matrix.Fvq() = Fvq;
-  matrix.Fvv() = Fvv;
-  matrix.Vq() = Vq;
-  matrix.Vv() = Vv;
-  matrix.Qdvdv() = Qdvdv;
-  matrix.Qff() = Qff;
-  matrix.Qfq() = Qfq;
-  matrix.Qqq() = Qqq;
-  matrix.Qqv() = Qqv;
-  matrix.Qvq() = Qvq;
-  matrix.Qvv() = Qvv;
-  ImpulseSplitKKTMatrix matrix_ref = matrix;
-  EXPECT_TRUE(matrix.isApprox(matrix_ref));
-  matrix_ref.Fxx().setRandom();
-  EXPECT_FALSE(matrix.isApprox(matrix_ref));
-  matrix_ref = matrix;
-  EXPECT_TRUE(matrix.isApprox(matrix_ref));
-  if (impulse_status.hasActiveImpulse()) {
-    matrix_ref.Fxf().setRandom();
-    EXPECT_FALSE(matrix.isApprox(matrix_ref));
-    matrix_ref = matrix;
-    EXPECT_TRUE(matrix.isApprox(matrix_ref));
-    matrix_ref.Vq().setRandom();
-    EXPECT_FALSE(matrix.isApprox(matrix_ref));
-    matrix_ref = matrix;
-    EXPECT_TRUE(matrix.isApprox(matrix_ref));
-    matrix_ref.Vv().setRandom();
-    EXPECT_FALSE(matrix.isApprox(matrix_ref));
-    matrix_ref = matrix;
-    EXPECT_TRUE(matrix.isApprox(matrix_ref));
+  const int dimi = impulse_status.dimf();
+  const int dimx = 2 * robot.dimv();
+  EXPECT_EQ(kkt_mat.dimi(), dimi);
+  EXPECT_EQ(kkt_mat.Fxx.rows(), 2*dimv);
+  EXPECT_EQ(kkt_mat.Fxx.cols(), 2*dimv);
+  EXPECT_EQ(kkt_mat.Fqq().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Fqq().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Fqv().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Fqv().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Fvq().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Fvq().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Fvv().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Fvv().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Qxx.rows(), 2*dimv);
+  EXPECT_EQ(kkt_mat.Qxx.cols(), 2*dimv);
+  EXPECT_EQ(kkt_mat.Qqq().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qqq().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Qqv().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qqv().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Qvq().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Qvv().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qvv().cols(), dimv);
+  EXPECT_EQ(kkt_mat.Qdvdv.rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qdvdv.cols(), dimv);
+  EXPECT_EQ(kkt_mat.Qff().rows(), dimi);
+  EXPECT_EQ(kkt_mat.Qff().cols(), dimi);
+  EXPECT_EQ(kkt_mat.Qqf().rows(), dimv);
+  EXPECT_EQ(kkt_mat.Qqf().cols(), dimi);
+  if (robot.hasFloatingBase()) {
+    EXPECT_EQ(kkt_mat.Fqq_prev.rows(), dimv);
+    EXPECT_EQ(kkt_mat.Fqq_prev.cols(), dimv);
+    EXPECT_EQ(kkt_mat.Fqq_inv.rows(), 6);
+    EXPECT_EQ(kkt_mat.Fqq_inv.cols(), 6);
+    EXPECT_EQ(kkt_mat.Fqq_prev_inv.rows(), 6);
+    EXPECT_EQ(kkt_mat.Fqq_prev_inv.cols(), 6);
   }
   else {
-    matrix_ref.Fxf().setRandom();
-    matrix_ref.Vq().setRandom();
-    matrix_ref.Vv().setRandom();
-    EXPECT_TRUE(matrix.isApprox(matrix_ref));
-    matrix_ref = matrix;
-    EXPECT_TRUE(matrix.isApprox(matrix_ref));
+    EXPECT_EQ(kkt_mat.Fqq_prev.rows(), 0);
+    EXPECT_EQ(kkt_mat.Fqq_prev.cols(), 0);
+    EXPECT_EQ(kkt_mat.Fqq_inv.rows(), 0);
+    EXPECT_EQ(kkt_mat.Fqq_inv.cols(), 0);
+    EXPECT_EQ(kkt_mat.Fqq_prev_inv.rows(), 0);
+    EXPECT_EQ(kkt_mat.Fqq_prev_inv.cols(), 0);
   }
-  matrix_ref.Qdvdv().setRandom();
-  EXPECT_FALSE(matrix.isApprox(matrix_ref));
-  matrix_ref = matrix;
-  EXPECT_TRUE(matrix.isApprox(matrix_ref));
-  if (dimf > 0) {
-    matrix_ref.Qff().setRandom();
-    EXPECT_FALSE(matrix.isApprox(matrix_ref));
-    matrix_ref = matrix;
-    EXPECT_TRUE(matrix.isApprox(matrix_ref));
-    matrix_ref.Qfq().setRandom();
-    EXPECT_FALSE(matrix.isApprox(matrix_ref));
-    matrix_ref = matrix;
-    EXPECT_TRUE(matrix.isApprox(matrix_ref));
-    matrix_ref.Qqf().setRandom();
-    EXPECT_FALSE(matrix.isApprox(matrix_ref));
-    matrix_ref = matrix;
-    EXPECT_TRUE(matrix.isApprox(matrix_ref));
-  }
-  matrix_ref.Qxx().setRandom();
-  EXPECT_FALSE(matrix.isApprox(matrix_ref));
-  matrix_ref = matrix;
-  EXPECT_TRUE(matrix.isApprox(matrix_ref));
+  EXPECT_TRUE(kkt_mat.Fxx.isZero());
+  EXPECT_TRUE(kkt_mat.Qxx.isZero());
+  EXPECT_TRUE(kkt_mat.Qdvdv.isZero());
+  EXPECT_TRUE(kkt_mat.Qff().isZero());
+  EXPECT_TRUE(kkt_mat.Qqf().isZero());
+  EXPECT_TRUE(kkt_mat.Fqq_prev.isZero());
+  EXPECT_TRUE(kkt_mat.Fqq_inv.isZero());
+  EXPECT_TRUE(kkt_mat.Fqq_prev_inv.isZero());
+
+  kkt_mat.Fxx.setRandom();
+  kkt_mat.Qxx.setRandom();
+  EXPECT_TRUE(kkt_mat.Fxx.topLeftCorner(dimv, dimv).isApprox(kkt_mat.Fqq()));
+  EXPECT_TRUE(kkt_mat.Fxx.topRightCorner(dimv, dimv).isApprox(kkt_mat.Fqv()));
+  EXPECT_TRUE(kkt_mat.Fxx.bottomLeftCorner(dimv, dimv).isApprox(kkt_mat.Fvq()));
+  EXPECT_TRUE(kkt_mat.Fxx.bottomRightCorner(dimv, dimv).isApprox(kkt_mat.Fvv()));
+  EXPECT_TRUE(kkt_mat.Qxx.topLeftCorner(dimv, dimv).isApprox(kkt_mat.Qqq()));
+  EXPECT_TRUE(kkt_mat.Qxx.topRightCorner(dimv, dimv).isApprox(kkt_mat.Qqv()));
+  EXPECT_TRUE(kkt_mat.Qxx.bottomLeftCorner(dimv, dimv).isApprox(kkt_mat.Qvq()));
+  EXPECT_TRUE(kkt_mat.Qxx.bottomRightCorner(dimv, dimv).isApprox(kkt_mat.Qvv()));
 }
 
 
-TEST_F(SplitImpulseKKTMatrixTest, fixedBase) {
+void ImpulseSplitKKTMatrixTest::testIsApprox(const Robot& robot, const ImpulseStatus& impulse_status) {
+  ImpulseSplitKKTMatrix kkt_mat(robot);
+  kkt_mat.setImpulseStatus(impulse_status);
+  const int dimv = robot.dimv();
+  const int dimi = impulse_status.dimf();
+  const int dimx = 2 * robot.dimv();
+  kkt_mat.Fxx.setRandom();
+  kkt_mat.Qxx.setRandom();
+  kkt_mat.Qdvdv.setRandom();
+  kkt_mat.Qff().setRandom();
+  kkt_mat.Qqf().setRandom();
+  auto kkt_mat_ref = kkt_mat;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Fxx.setRandom();
+  EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Fxx = kkt_mat.Fxx;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Qxx.setRandom();
+  EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Qxx = kkt_mat.Qxx;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Qdvdv.setRandom();
+  EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+  kkt_mat_ref.Qdvdv = kkt_mat.Qdvdv;
+  EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  if (impulse_status.hasActiveImpulse()) {
+    kkt_mat_ref.Qff().setRandom();
+    EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+    kkt_mat_ref.Qff() = kkt_mat.Qff();
+    EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+    kkt_mat_ref.Qqf().setRandom();
+    EXPECT_FALSE(kkt_mat.isApprox(kkt_mat_ref));
+    kkt_mat_ref.Qqf() = kkt_mat.Qqf();
+    EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  }
+  else {
+    kkt_mat_ref.Qff().setRandom();
+    kkt_mat_ref.Qqf().setRandom();
+    EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
+  }
+}
+
+
+TEST_F(ImpulseSplitKKTMatrixTest, fixedBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFixedBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  testSize(robot, impulse_status);
+  test(robot, impulse_status);
   testIsApprox(robot, impulse_status);
   impulse_status.activateImpulse(0);
-  testSize(robot, impulse_status);
+  test(robot, impulse_status);
   testIsApprox(robot, impulse_status);
 }
 
 
-TEST_F(SplitImpulseKKTMatrixTest, floatingBase) {
+TEST_F(ImpulseSplitKKTMatrixTest, floatingBase) {
   const double dt = 0.001;
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
   auto impulse_status = robot.createImpulseStatus();
-  testSize(robot, impulse_status);
+  test(robot, impulse_status);
   testIsApprox(robot, impulse_status);
   impulse_status.setRandom();
   if (!impulse_status.hasActiveImpulse()) {
     impulse_status.activateImpulse(0);
   }
-  testSize(robot, impulse_status);
+  test(robot, impulse_status);
   testIsApprox(robot, impulse_status);
 }
 

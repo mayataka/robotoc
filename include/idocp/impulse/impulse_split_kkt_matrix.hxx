@@ -9,32 +9,39 @@
 namespace idocp {
 
 inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix(const Robot& robot) 
-  : Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Fqq_inv(Matrix6d::Zero()),
-    Fqq_prev_inv(Matrix6d::Zero()),
-    FC_(Eigen::MatrixXd::Zero(2*robot.dimv()+robot.max_dimf(), 
-                              2*robot.dimv()+robot.max_dimf())),
-    Q_(Eigen::MatrixXd::Zero(3*robot.dimv()+robot.max_dimf(), 
-                             3*robot.dimv()+robot.max_dimf())),
+  : Fxx(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
+    Qxx(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
+    Qdvdv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Fqq_prev(),
+    Fqq_inv(),
+    Fqq_prev_inv(),
+    Qff_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.max_dimf())),
+    Qqf_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     dimv_(robot.dimv()), 
-    dimx_(2*robot.dimv()), 
-    dimf_(0), 
-    q_begin_(robot.dimv()),
-    v_begin_(2*robot.dimv()) {
+    dimi_(0),
+    has_floating_base_(robot.hasFloatingBase()) {
+  if (robot.hasFloatingBase()) {
+    Fqq_prev.resize(robot.dimv(), robot.dimv());
+    Fqq_prev.setZero();
+    Fqq_inv.resize(6, 6);
+    Fqq_inv.setZero();
+    Fqq_prev_inv.resize(6, 6);
+    Fqq_prev_inv.setZero();
+  }
 }
 
 
 inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix() 
-  : Fqq_prev(),
-    Fqq_inv(Matrix6d::Zero()),
-    Fqq_prev_inv(Matrix6d::Zero()),
-    FC_(),
-    Q_(),
+  : Fxx(),
+    Qxx(),
+    Qdvdv(),
+    Fqq_prev(),
+    Fqq_inv(),
+    Fqq_prev_inv(),
+    Qff_full_(),
+    Qqf_full_(),
     dimv_(0), 
-    dimx_(0), 
-    dimf_(0), 
-    q_begin_(0),
-    v_begin_(0) {
+    dimi_(0) {
 }
 
 
@@ -44,274 +51,174 @@ inline ImpulseSplitKKTMatrix::~ImpulseSplitKKTMatrix() {
 
 inline void ImpulseSplitKKTMatrix::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimf_ = impulse_status.dimf();
-  q_begin_ = dimv_ + dimf_;
-  v_begin_ = 2*dimv_ + dimf_;
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fqf() {
-  return FC_.block(0, 0, dimv_, dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Fqf() const {
-  return FC_.block(0, 0, dimv_, dimf_);
+  dimi_ = impulse_status.dimf();
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fqq() {
-  return FC_.block(0, dimf_, dimv_, dimv_);
+  return Fxx.topLeftCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Fqq() const {
-  return FC_.block(0, dimf_, dimv_, dimv_);
+  return Fxx.topLeftCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fqv() {
-  return FC_.block(0, dimf_+dimv_, dimv_, dimv_);
+  return Fxx.topRightCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Fqv() const {
-  return FC_.block(0, dimf_+dimv_, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fvf() {
-  return FC_.block(dimv_, 0, dimv_, dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Fvf() const {
-  return FC_.block(dimv_, 0, dimv_, dimf_);
+  return Fxx.topRightCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fvq() {
-  return FC_.block(dimv_, dimf_, dimv_, dimv_);
+  return Fxx.bottomLeftCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Fvq() const {
-  return FC_.block(dimv_, dimf_, dimv_, dimv_);
+  return Fxx.bottomLeftCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fvv() {
-  return FC_.block(dimv_, dimf_+dimv_, dimv_, dimv_);
+  return Fxx.bottomRightCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Fvv() const {
-  return FC_.block(dimv_, dimf_+dimv_, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fxf() {
-  return FC_.block(0, 0, dimx_, dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Fxf() const {
-  return FC_.block(0, 0, dimx_, dimf_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Fxx() {
-  return FC_.block(0, dimf_, dimx_, dimx_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Fxx() const {
-  return FC_.block(0, dimf_, dimx_, dimx_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Vq() {
-  return FC_.block(dimx_, dimf_, dimf_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Vq() const {
-  return FC_.block(dimx_, dimf_, dimf_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Vv() {
-  return FC_.block(dimx_, dimf_+dimv_, dimf_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Vv() const {
-  return FC_.block(dimx_, dimf_+dimv_, dimf_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qdvdv() {
-  return Q_.topLeftCorner(dimv_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Qdvdv() const {
-  return Q_.topLeftCorner(dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qff() {
-  return Q_.block(dimv_, dimv_, dimf_, dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Qff() const {
-  return Q_.block(dimv_, dimv_, dimf_, dimf_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qfq() {
-  return Q_.block(dimv_, q_begin_, dimf_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Qfq() const {
-  return Q_.block(dimv_, q_begin_, dimf_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qqf() {
-  return Q_.block(q_begin_, dimv_, dimv_, dimf_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Qqf() const {
-  return Q_.block(q_begin_, dimv_, dimv_, dimf_);
+  return Fxx.bottomRightCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qqq() {
-  return Q_.block(q_begin_, q_begin_, dimv_, dimv_);
+  return Qxx.topLeftCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Qqq() const {
-  return Q_.block(q_begin_, q_begin_, dimv_, dimv_);
+  return Qxx.topLeftCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qqv() {
-  return Q_.block(q_begin_, v_begin_, dimv_, dimv_);
+  return Qxx.topRightCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Qqv() const {
-  return Q_.block(q_begin_, v_begin_, dimv_, dimv_);
+  return Qxx.topRightCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qvq() {
-  return Q_.block(v_begin_, q_begin_, dimv_, dimv_);
+  return Qxx.bottomLeftCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Qvq() const {
-  return Q_.block(v_begin_, q_begin_, dimv_, dimv_);
+  return Qxx.bottomLeftCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qvv() {
-  return Q_.block(v_begin_, v_begin_, dimv_, dimv_);
+  return Qxx.bottomRightCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
 ImpulseSplitKKTMatrix::Qvv() const {
-  return Q_.block(v_begin_, v_begin_, dimv_, dimv_);
+  return Qxx.bottomRightCorner(dimv_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qxx() {
-  return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Qxx() const {
-  return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qss() {
-  return Q_.block(dimv_, dimv_, dimx_+dimf_, dimx_+dimf_); 
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qff() {
+  return Qff_full_.topLeftCorner(dimi_, dimi_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Qss() const {
-  return Q_.block(dimv_, dimv_, dimx_+dimf_, dimx_+dimf_);
+ImpulseSplitKKTMatrix::Qff() const {
+  return Qff_full_.topLeftCorner(dimi_, dimi_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Jac() {
-  return FC_.topLeftCorner(dimx_+dimf_, dimx_+dimf_);
+inline Eigen::Block<Eigen::MatrixXd> ImpulseSplitKKTMatrix::Qqf() {
+  return Qqf_full_.topLeftCorner(dimv_, dimi_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> 
-ImpulseSplitKKTMatrix::Jac() const {
-  return FC_.topLeftCorner(dimx_+dimf_, dimx_+dimf_); 
+ImpulseSplitKKTMatrix::Qqf() const {
+  return Qqf_full_.topLeftCorner(dimv_, dimi_);
 }
 
 
 inline void ImpulseSplitKKTMatrix::setZero() {
+  Fxx.setZero();
+  Qxx.setZero();
+  Qdvdv.setZero();
+  Qff().setZero();
+  Qqf().setZero();
   Fqq_prev.setZero();
-  FC_.setZero();
-  Q_.setZero();
+  Fqq_inv.setZero();
+  Fqq_prev_inv.setZero();
 }
 
 
-inline int ImpulseSplitKKTMatrix::dimf() const {
-  return dimf_;
+inline int ImpulseSplitKKTMatrix::dimi() const {
+  return dimi_;
+}
+
+inline bool ImpulseSplitKKTMatrix::isDimensionConsistent() const {
+  if (Fxx.cols() != 2*dimv_) return false;
+  if (Fxx.rows() != 2*dimv_) return false;
+  if (Qxx.cols() != 2*dimv_) return false;
+  if (Qxx.rows() != 2*dimv_) return false;
+  if (Qdvdv.cols() != dimv_) return false;
+  if (Qdvdv.rows() != dimv_) return false;
+  if (has_floating_base_) {
+    if (Fqq_prev.cols() != dimv_) return false;
+    if (Fqq_prev.rows() != dimv_) return false;
+    if (Fqq_inv.cols() != 6) return false;
+    if (Fqq_inv.rows() != 6) return false;
+    if (Fqq_prev_inv.cols() != 6) return false;
+    if (Fqq_prev_inv.rows() != 6) return false;
+  }
+  return true;
 }
 
 
 inline bool ImpulseSplitKKTMatrix::isApprox(
     const ImpulseSplitKKTMatrix& other) const {
-  if (!Fxf().isApprox(other.Fxf())) return false;
-  if (!Fxx().isApprox(other.Fxx())) return false;
-  if (!Vq().isApprox(other.Vq())) return false;
-  if (!Vv().isApprox(other.Vv())) return false;
-  if (!Qdvdv().isApprox(other.Qdvdv())) return false;
+  if (!Fxx.isApprox(other.Fxx)) return false;
+  if (!Qxx.isApprox(other.Qxx)) return false;
+  if (!Qdvdv.isApprox(other.Qdvdv)) return false;
   if (!Qff().isApprox(other.Qff())) return false;
-  if (!Qfq().isApprox(other.Qfq())) return false;
   if (!Qqf().isApprox(other.Qqf())) return false;
-  if (!Qxx().isApprox(other.Qxx())) return false;
+  if (!Fqq_prev.isApprox(other.Fqq_prev)) return false;
   return true;
 }
 
 
 inline bool ImpulseSplitKKTMatrix::hasNaN() const {
+  if (Fxx.hasNaN()) return true;
+  if (Qxx.hasNaN()) return true;
+  if (Qdvdv.hasNaN()) return true;
+  if (Qff().hasNaN()) return true;
+  if (Qqf().hasNaN()) return true;
   if (Fqq_prev.hasNaN()) return true;
-  if (FC_.hasNaN()) return true;
-  if (Q_.hasNaN()) return true;
   return false;
 }
 

@@ -55,7 +55,7 @@ void JointTorquesUpperLimit::setSlackAndDual(
 void JointTorquesUpperLimit::augmentDualResidual(
     Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  kkt_residual.lu().noalias() += dt * data.dual;
+  kkt_residual.lu.noalias() += dt * data.dual;
 }
 
 
@@ -63,10 +63,10 @@ void JointTorquesUpperLimit::condenseSlackAndDual(
     Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
-  kkt_matrix.Quu().diagonal().array()
+  kkt_matrix.Quu.diagonal().array()
       += dt * data.dual.array() / data.slack.array();
   computePrimalAndDualResidual(robot, data, s);
-  kkt_residual.lu().array() 
+  kkt_residual.lu.array() 
       += dt * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
 }
@@ -75,7 +75,7 @@ void JointTorquesUpperLimit::condenseSlackAndDual(
 void JointTorquesUpperLimit::computeSlackAndDualDirection(
     Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
     const SplitDirection& d) const {
-  data.dslack = - d.du() - data.residual;
+  data.dslack = - d.du - data.residual;
   computeDualDirection(data);
 }
 

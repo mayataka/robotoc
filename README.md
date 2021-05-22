@@ -76,18 +76,17 @@ target_include_directories(
 )
 ```
 
-The following four solvers are provided:
-- `idocp::UnOCPSolver` : Solves the OCP for "unconstrained" rigid-body systems by using Riccati recursion.
-- `idocp::UnParNMPCSolver` : Solves the OCP for "unconstrained" rigid-body systems by using ParNMPC algorithm.
-- `idocp::OCPSolver` : Solves the OCP for rigid-body systems by using Riccati recursion.
-- `idocp::ParNMPCSolver` : Solves the OCP for rigid-body systems by using ParNMPC algorithm.
+The following three solvers are provided:
+- `idocp::UnconstrOCPSolver` : Solves the OCP for "unconstrained" rigid-body systems by using Riccati recursion.
+- `idocp::UnconstrParNMPCSolver` : Solves the OCP for "unconstrained" rigid-body systems by using ParNMPC algorithm.
+- `idocp::OCPSolver` : Solves the OCP for rigid-body systems (possibly with contacts) by using Riccati recursion.
 
 where "unconstrained" rigid-body systems are systems without any contacts or a floating-base.
 
 
 ## Examples
 Examples are found in `examples` directory.
-The following animations are the solution trajectory of the `idocp::UnOCPSolver` for a robot manipulator iiwa14.
+The following animations are the solution trajectory of the `idocp::UnconstrOCPSolver` for a robot manipulator iiwa14.
 
 - Configuration-space and task-space optimal control (`iiwa14/config_space_ocp.cpp`, `iiwa14/task_space_ocp.cpp`)
 
@@ -119,7 +118,7 @@ Simulation of the MPC of systems with rigid contacts are shown in [idocp-sim](ht
 
 ## Citing idocp
 
-Citing `idocp::UnOCPSolver` and `idocp::UnParNMPCSolver`:
+Citing `idocp::UnconstrOCPSolver` and `idocp::UnconstrParNMPCSolver`:
 ```
 @inproceedings{katayama2021idocp,
   title={Efficient solution method based on inverse dynamics for optimal control problems of rigid body systems},

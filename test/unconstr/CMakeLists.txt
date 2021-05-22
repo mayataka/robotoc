@@ -1,0 +1,4 @@
+add_idocp_test(unconstr_dynamics_test)
+add_idocp_test(split_unconstr_ocp_test)
+add_idocp_test(split_unconstr_parnmpc_test)
+add_idocp_test(terminal_unconstr_parnmpc_test)

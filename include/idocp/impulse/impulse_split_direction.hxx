@@ -10,24 +10,22 @@
 namespace idocp {
 
 inline ImpulseSplitDirection::ImpulseSplitDirection(const Robot& robot) 
-  : split_direction(Eigen::VectorXd::Zero(4*robot.dimv())),
+  : dx(Eigen::VectorXd::Zero(2*robot.dimv())),
+    dlmdgmm(Eigen::VectorXd::Zero(2*robot.dimv())),
     ddvf_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dbetamu_full_(Eigen::VectorXd::Zero(robot.dimv()+robot.max_dimf())),
     dimv_(robot.dimv()), 
-    dimx_(2*robot.dimv()), 
-    dimf_(0), 
-    has_floating_base_(robot.hasFloatingBase()) {
+    dimi_(0) {
 }
 
 
 inline ImpulseSplitDirection::ImpulseSplitDirection() 
-  : split_direction(),
+  : dx(),
+    dlmdgmm(),
     ddvf_full_(),
     dbetamu_full_(),
     dimv_(0), 
-    dimx_(0), 
-    dimf_(0), 
-    has_floating_base_(false) {
+    dimi_(0) {
 }
 
 
@@ -37,91 +35,52 @@ inline ImpulseSplitDirection::~ImpulseSplitDirection() {
 
 inline void ImpulseSplitDirection::setImpulseStatus(
     const ImpulseStatus& impulse_status) {
-  dimf_ = impulse_status.dimf();
+  dimi_ = impulse_status.dimf();
 }
 
 
-inline void ImpulseSplitDirection::setImpulseStatusByDimension(const int dimf) {
-  assert(dimf >= 0);
-  assert(dimf % 3 == 0);
-  dimf_ = dimf;
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dlmdgmm() {
-  return split_direction.head(dimx_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitDirection::dlmdgmm() const {
-  return split_direction.head(dimx_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dlmd() {
-  return split_direction.head(dimv_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitDirection::dlmd() const {
-  return split_direction.head(dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dgmm() {
-  return split_direction.segment(dimv_, dimv_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitDirection::dgmm() const {
-  return split_direction.segment(dimv_, dimv_);
+inline void ImpulseSplitDirection::setImpulseStatusByDimension(const int dimi) {
+  assert(dimi >= 0);
+  assert(dimi % 3 == 0);
+  dimi_ = dimi;
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dq() {
-  return split_direction.segment(dimx_, dimv_);
+  assert(isDimensionConsistent());
+  return dx.head(dimv_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ImpulseSplitDirection::dq() const {
-  return split_direction.segment(dimx_, dimv_);
+  assert(isDimensionConsistent());
+  return dx.head(dimv_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dv() {
-  return split_direction.segment(dimx_+dimv_, dimv_);
+  assert(isDimensionConsistent());
+  return dx.tail(dimv_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ImpulseSplitDirection::dv() const {
-  return split_direction.segment(dimx_+dimv_, dimv_);
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dx() {
-  return split_direction.segment(dimx_, dimx_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-ImpulseSplitDirection::dx() const {
-  return split_direction.segment(dimx_, dimx_);
+  assert(isDimensionConsistent());
+  return dx.tail(dimv_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::ddvf() {
-  return ddvf_full_.head(dimv_+dimf_);
+  assert(isDimensionConsistent());
+  return ddvf_full_.head(dimv_+dimi_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ImpulseSplitDirection::ddvf() const {
-  return ddvf_full_.head(dimv_+dimf_);
+  return ddvf_full_.head(dimv_+dimi_);
 }
 
 
@@ -137,24 +96,50 @@ ImpulseSplitDirection::ddv() const {
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::df() {
-  return ddvf_full_.segment(dimv_, dimf_);
+  return ddvf_full_.segment(dimv_, dimi_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ImpulseSplitDirection::df() const {
-  return ddvf_full_.segment(dimv_, dimf_);
+  return ddvf_full_.segment(dimv_, dimi_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dlmd() {
+  assert(isDimensionConsistent());
+  return dlmdgmm.head(dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseSplitDirection::dlmd() const {
+  assert(isDimensionConsistent());
+  return dlmdgmm.head(dimv_);
+}
+
+
+inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dgmm() {
+  assert(isDimensionConsistent());
+  return dlmdgmm.tail(dimv_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+ImpulseSplitDirection::dgmm() const {
+  assert(isDimensionConsistent());
+  return dlmdgmm.tail(dimv_);
 }
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dbetamu() {
-  return dbetamu_full_.head(dimv_+dimf_);
+  return dbetamu_full_.head(dimv_+dimi_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ImpulseSplitDirection::dbetamu() const {
-  return dbetamu_full_.head(dimv_+dimf_);
+  return dbetamu_full_.head(dimv_+dimi_);
 }
 
 
@@ -170,67 +155,61 @@ ImpulseSplitDirection::dbeta() const {
 
 
 inline Eigen::VectorBlock<Eigen::VectorXd> ImpulseSplitDirection::dmu() {
-  return dbetamu_full_.segment(dimv_, dimf_);
+  return dbetamu_full_.segment(dimv_, dimi_);
 }
 
 
 inline const Eigen::VectorBlock<const Eigen::VectorXd> 
 ImpulseSplitDirection::dmu() const {
-  return dbetamu_full_.segment(dimv_, dimf_);
+  return dbetamu_full_.segment(dimv_, dimi_);
 }
 
 
 inline void ImpulseSplitDirection::setZero() {
-  split_direction.setZero();
-  ddvf_full_.setZero();
-  dbetamu_full_.setZero();
+  dx.setZero();
+  ddvf().setZero();
+  dlmdgmm.setZero();
+  dbetamu().setZero();
 }
 
 
-inline int ImpulseSplitDirection::dimf() const {
-  return dimf_;
+inline int ImpulseSplitDirection::dimi() const {
+  return dimi_;
+}
+
+
+inline bool ImpulseSplitDirection::isDimensionConsistent() const {
+  if (dx.size() != 2*dimv_) return false;
+  if (dlmdgmm.size() != 2*dimv_) return false;
+  return true;
 }
 
 
 inline bool ImpulseSplitDirection::isApprox(
     const ImpulseSplitDirection& other) const {
-  if (!dlmd().isApprox(other.dlmd())) {
-    return false;
-  }
-  if (!dgmm().isApprox(other.dgmm())) {
-    return false;
-  }
-  if (!dq().isApprox(other.dq())) {
-    return false;
-  }
-  if (!dv().isApprox(other.dv())) {
-    return false;
-  }
-  if (!ddv().isApprox(other.ddv())) {
-    return false;
-  }
-  if (!df().isApprox(other.df())) {
-    return false;
-  }
-  if (!dbeta().isApprox(other.dbeta())) {
-    return false;
-  }
-  if (!dmu().isApprox(other.dmu())) {
-    return false;
-  }
+  assert(isDimensionConsistent());
+  assert(other.isDimensionConsistent());
+  assert(dimi()==other.dimi());
+  if (!dx.isApprox(other.dx)) return false;
+  if (!ddvf().isApprox(other.ddvf())) return false;
+  if (!dlmdgmm.isApprox(other.dlmdgmm)) return false;
+  if (!dbetamu().isApprox(other.dbetamu())) return false;
   return true;
 }
 
 
 inline void ImpulseSplitDirection::setRandom() {
-  split_direction.setRandom();
+  assert(isDimensionConsistent());
+  dx.setRandom();
   ddvf().setRandom();
+  dlmdgmm.setRandom();
   dbetamu().setRandom();
 }
 
 
 inline void ImpulseSplitDirection::setRandom(
     const ImpulseStatus& impulse_status) {
+  assert(isDimensionConsistent());
   setImpulseStatus(impulse_status);
   setRandom();
 }

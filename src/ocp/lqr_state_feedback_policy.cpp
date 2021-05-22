@@ -1,1 +1,0 @@
-#include "idocp/ocp/lqr_state_feedback_policy.hpp"

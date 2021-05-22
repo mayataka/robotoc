@@ -10,7 +10,7 @@ OCPLinearizer::OCPLinearizer(const int N, const int max_num_impulse,
                              const int nthreads) 
   : max_num_impulse_(max_num_impulse),
     nthreads_(nthreads),
-    kkt_error_(Eigen::VectorXd::Zero(N+1+3*max_num_impulse)) {
+    kkt_error_(Eigen::VectorXd::Zero(N+1+4*max_num_impulse)) {
   try {
     if (max_num_impulse < 0) {
       throw std::out_of_range("invalid value: max_num_impulse must be non-negative!");
@@ -37,7 +37,7 @@ OCPLinearizer::~OCPLinearizer() {
 }
 
 
-void OCPLinearizer::initConstraints(OCP& ocp, std::vector<Robot>& robots, 
+void OCPLinearizer::initConstraints(OCP& ocp, aligned_vector<Robot>& robots, 
                                     const ContactSequence& contact_sequence, 
                                     const Solution& s) const {
   const int N = ocp.discrete().N();
@@ -71,27 +71,25 @@ void OCPLinearizer::initConstraints(OCP& ocp, std::vector<Robot>& robots,
 }
 
 
-void OCPLinearizer::linearizeOCP(OCP& ocp, std::vector<Robot>& robots, 
+void OCPLinearizer::linearizeOCP(OCP& ocp, aligned_vector<Robot>& robots, 
                                  const ContactSequence& contact_sequence, 
                                  const Eigen::VectorXd& q, 
                                  const Eigen::VectorXd& v, const Solution& s, 
                                  KKTMatrix& kkt_matrix, 
-                                 KKTResidual& kkt_residual,
-                                 StateConstraintJacobian& jac) const {
+                                 KKTResidual& kkt_residual) const {
   runParallel<internal::LinearizeOCP>(ocp, robots, contact_sequence, q, v, 
-                                      s, kkt_matrix, kkt_residual, jac);
+                                      s, kkt_matrix, kkt_residual);
 }
 
 
-void OCPLinearizer::computeKKTResidual(OCP& ocp, std::vector<Robot>& robots, 
+void OCPLinearizer::computeKKTResidual(OCP& ocp, aligned_vector<Robot>& robots, 
                                        const ContactSequence& contact_sequence, 
                                        const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v, 
                                        const Solution& s, KKTMatrix& kkt_matrix, 
-                                       KKTResidual& kkt_residual,
-                                       StateConstraintJacobian& jac) const {
+                                       KKTResidual& kkt_residual) const {
   runParallel<internal::ComputeKKTResidual>(ocp, robots, contact_sequence, q, v,  
-                                            s, kkt_matrix, kkt_residual, jac);
+                                            s, kkt_matrix, kkt_residual);
 }
 
 
@@ -100,7 +98,7 @@ double OCPLinearizer::KKTError(const OCP& ocp,
   const int N = ocp.discrete().N();
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
-  const int N_all = N + 1 + 2*N_impulse + N_lift;
+  const int N_all = N + 1 + 3*N_impulse + N_lift;
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i < N) {
@@ -112,7 +110,7 @@ double OCPLinearizer::KKTError(const OCP& ocp,
           = ocp.terminal.squaredNormKKTResidual(kkt_residual[N]);
     }
     else if (i < N+1+N_impulse) {
-      const int impulse_index  = i - (N+1);
+      const int impulse_index = i - (N+1);
       const int time_stage_before_impulse 
           = ocp.discrete().timeStageBeforeImpulse(impulse_index);
       kkt_error_.coeffRef(i) 
@@ -120,17 +118,22 @@ double OCPLinearizer::KKTError(const OCP& ocp,
               kkt_residual.impulse[impulse_index]);
     }
     else if (i < N+1+2*N_impulse) {
-      const int impulse_index  = i - (N+1+N_impulse);
+      const int impulse_index = i - (N+1+N_impulse);
       kkt_error_.coeffRef(i) 
           = ocp.aux[impulse_index].squaredNormKKTResidual(
                 kkt_residual.aux[impulse_index], 
                 ocp.discrete().dt_aux(impulse_index));
     }
-    else {
+    else if (i < N+1+2*N_impulse+N_lift) {
       const int lift_index = i - (N+1+2*N_impulse);
       kkt_error_.coeffRef(i) 
           = ocp.lift[lift_index].squaredNormKKTResidual(
               kkt_residual.lift[lift_index], ocp.discrete().dt_lift(lift_index));
+    }
+    else {
+      const int impulse_index = i - (N+1+2*N_impulse+N_lift);
+      kkt_error_.coeffRef(i)
+          = kkt_residual.switching[impulse_index].P().squaredNorm();
     }
   }
   return std::sqrt(kkt_error_.head(N_all).sum());
@@ -138,7 +141,7 @@ double OCPLinearizer::KKTError(const OCP& ocp,
 
 
 void OCPLinearizer::integrateSolution(OCP& ocp, 
-                                      const std::vector<Robot>& robots, 
+                                      const aligned_vector<Robot>& robots, 
                                       const KKTMatrix& kkt_matrix, 
                                       KKTResidual& kkt_residual, 
                                       const double primal_step_size, 

@@ -147,7 +147,8 @@ private:
   int dimv_, dimc_, max_point_contacts_;
   std::vector<int> contact_frame_;
   double mu_;
-  Eigen::Matrix<double, 5, 3> cone_;
+  Eigen::MatrixXd cone_;
+  // Eigen::Matrix<double, 5, 3> cone_;
 
   Eigen::VectorXd& fW(ConstraintComponentData& data, 
                       const int contact_idx) const {

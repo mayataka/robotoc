@@ -32,10 +32,11 @@ struct LinearizeOCP {
                          SplitKKTResidual& kkt_residual,
                          const ImpulseStatus& impulse_status, 
                          const double dt_next, 
-                         SplitStateConstraintJacobian& jac) {
+                         SplitSwitchingConstraintJacobian& switch_jacobian,
+                         SplitSwitchingConstraintResidual& switch_residual) {
     split_ocp.linearizeOCP(robot, contact_status, t, dt, q_prev, s, s_next,
                            kkt_matrix, kkt_residual, impulse_status, 
-                           dt_next, jac);
+                           dt_next, switch_jacobian, switch_residual);
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot, 
@@ -79,10 +80,11 @@ struct ComputeKKTResidual {
                          SplitKKTResidual& kkt_residual,
                          const ImpulseStatus& impulse_status, 
                          const double dt_next, 
-                         SplitStateConstraintJacobian& jac) {
+                         SplitSwitchingConstraintJacobian& switch_jacobian,
+                         SplitSwitchingConstraintResidual& switch_residual) {
     split_ocp.computeKKTResidual(robot, contact_status, t, dt, q_prev, s, 
-                                 s_next, kkt_matrix, kkt_residual, 
-                                 impulse_status, dt_next, jac);
+                                 s_next, kkt_matrix, kkt_residual, impulse_status, 
+                                 dt_next, switch_jacobian, switch_residual);
   }
 
   static inline void run(TerminalOCP& terminal_ocp, Robot& robot,  
@@ -111,13 +113,12 @@ struct ComputeKKTResidual {
 namespace idocp {
 
 template <typename Algorithm>
-inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
+inline void OCPLinearizer::runParallel(OCP& ocp, aligned_vector<Robot>& robots,
                                        const ContactSequence& contact_sequence,
                                        const Eigen::VectorXd& q, 
                                        const Eigen::VectorXd& v, 
                                        const Solution& s, KKTMatrix& kkt_matrix,
-                                       KKTResidual& kkt_residual,
-                                       StateConstraintJacobian& jac) const {
+                                       KKTResidual& kkt_residual) const {
   assert(robots.size() == nthreads_);
   assert(q.size() == robots[0].dimq());
   assert(v.size() == robots[0].dimv());
@@ -155,7 +156,8 @@ inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
             ocp.discrete().t(i), ocp.discrete().dt(i), 
             q_prev(ocp.discrete(), q, s, i), s[i], s[i+1], kkt_matrix[i], 
             kkt_residual[i], contact_sequence.impulseStatus(impulse_index), 
-            ocp.discrete().dt(i+1), jac[impulse_index]);
+            ocp.discrete().dt(i+1), kkt_matrix.switching[impulse_index],
+            kkt_residual.switching[impulse_index]);
       }
       else {
         Algorithm::run(
@@ -211,7 +213,8 @@ inline void OCPLinearizer::runParallel(OCP& ocp, std::vector<Robot>& robots,
             s.lift[lift_index], s[time_stage_after_lift], 
             kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index],
             contact_sequence.impulseStatus(impulse_index), 
-            ocp.discrete().dt(time_stage_after_lift), jac[impulse_index]);
+            ocp.discrete().dt(time_stage_after_lift), 
+            kkt_matrix.switching[impulse_index], kkt_residual.switching[impulse_index]);
       }
       else {
         Algorithm::run(

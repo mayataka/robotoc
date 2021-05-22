@@ -15,7 +15,7 @@ namespace idocp {
 
 ///
 /// @class ImpulseSplitSolution
-/// @brief Solution of the optimal control problem split into an impulse time stage. 
+/// @brief Solution to the optimal control problem split into an impulse time stage. 
 ///
 class ImpulseSplitSolution {
 public:
@@ -68,63 +68,6 @@ public:
   void setImpulseStatus(const ImpulseSplitSolution& other);
 
   ///
-  /// @brief Stack of the active impulse forces. Size is ImpulseStatus::dimf().
-  /// @return Reference to the stack of the active impulse forces.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> f_stack();
-
-  ///
-  /// @brief const version of ImpulseSplitSolution::f_stack().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> f_stack() const;
-
-  ///
-  /// @brief Sets ImpulseSplitSolution::f_stack() from ImpulseSplitSolution::f.
-  ///
-  void set_f_stack();
-
-  ///
-  /// @brief Sets ImpulseSplitSolution::f from ImpulseSplitSolution::f_stack().
-  ///
-  void set_f_vector();
-
-  ///
-  /// @brief Stack of the Lagrange multipliers with respect to impulse velocity 
-  /// constraints that is active at the current impulse status. Size is 
-  /// ImpulseSplitSolution::dimf().
-  /// @return Reference to the stack of the Lagrange multipliers with respect to 
-  /// the impulse velocity constraints.
-  ///
-  Eigen::VectorBlock<Eigen::VectorXd> mu_stack();
-
-  ///
-  /// @brief const version of ImpulseSplitSolution::mu_stack().
-  ///
-  const Eigen::VectorBlock<const Eigen::VectorXd> mu_stack() const;
-
-  ///
-  /// @brief Set ImpulseSplitSolution::mu_stack() from ImpulseSplitSolution::mu. 
-  ///
-  void set_mu_stack();
-
-  ///
-  /// @brief Set ImpulseSplitSolution::mu from ImpulseSplitSolution::mu_stack(). 
-  ///
-  void set_mu_vector();
-
-  ///
-  /// @brief Lagrange multiplier with respect to the state equation of q.
-  /// Size is Robot::dimv().
-  ///
-  Eigen::VectorXd lmd;
-
-  ///
-  /// @brief Lagrange multiplier with respect to the state equation of v.
-  /// Size is Robot::dimv().
-  ///
-  Eigen::VectorXd gmm;
-
-  ///
   /// @brief Configuration. Size is Robot::dimq().
   ///
   Eigen::VectorXd q;
@@ -147,23 +90,80 @@ public:
   std::vector<Eigen::Vector3d> f;
 
   ///
-  /// @brief Lagrange multiplier with respect to impulse dynamics. Size is 
+  /// @brief Stack of the active impulse forces. Size is ImpulseStatus::dimf().
+  /// @return Reference to the stack of the active impulse forces.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> f_stack();
+
+  ///
+  /// @brief const version of ImpulseSplitSolution::f_stack().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> f_stack() const;
+
+  ///
+  /// @brief Setss ImpulseSplitSolution::f_stack() from ImpulseSplitSolution::f.
+  ///
+  void set_f_stack();
+
+  ///
+  /// @brief Setss ImpulseSplitSolution::f from ImpulseSplitSolution::f_stack().
+  ///
+  void set_f_vector();
+
+  ///
+  /// @brief Lagrange multiplier w.r.t. the state equation w.r.t. q.
+  /// Size is Robot::dimv().
+  ///
+  Eigen::VectorXd lmd;
+
+  ///
+  /// @brief Lagrange multiplier w.r.t. the state equation w.r.t. v.
+  /// Size is Robot::dimv().
+  ///
+  Eigen::VectorXd gmm;
+
+  ///
+  /// @brief Lagrange multiplier w.r.t. impulse inverse dynamics. Size is 
   /// Robot::dimv().
   ///
   Eigen::VectorXd beta;
 
   ///
-  /// @brief Lagrange multiplier with respect to the impulse velocity constraint. 
+  /// @brief Lagrange multiplier w.r.t. the impulse velocity constraint. 
   /// Size is Robot::maxPointContacts().
   ///
   std::vector<Eigen::Vector3d> mu;
+
+  ///
+  /// @brief Stack of the Lagrange multipliers w.r.t. the impulse velocity 
+  /// constraints that are active at the current impulse status. Size is 
+  /// ImpulseSplitSolution::dimf().
+  /// @return Reference to the stack of the Lagrange multipliers w.r.t.
+  /// the impulse velocity constraints.
+  ///
+  Eigen::VectorBlock<Eigen::VectorXd> mu_stack();
+
+  ///
+  /// @brief const version of ImpulseSplitSolution::mu_stack().
+  ///
+  const Eigen::VectorBlock<const Eigen::VectorXd> mu_stack() const;
+
+  ///
+  /// @brief Sets ImpulseSplitSolution::mu_stack() from ImpulseSplitSolution::mu. 
+  ///
+  void set_mu_stack();
+
+  ///
+  /// @brief Sets ImpulseSplitSolution::mu from ImpulseSplitSolution::mu_stack(). 
+  ///
+  void set_mu_vector();
 
   ///
   /// @brief Returns the dimension of the stack of the impulse forces at the 
   /// current impulse status.
   /// @return Dimension of the impulse forces.
   ///
-  int dimf() const;
+  int dimi() const;
 
   ///
   /// @brief Return true if a impulse is active and false if not.
@@ -192,12 +192,6 @@ public:
   /// @param[in] other Other impulse split solution.
   ///
   void copy(const ImpulseSplitSolution& other);
-
-  ///
-  /// @brief Copy other split solution without reallocating memory.
-  /// @param[in] s Split solution.
-  ///
-  void copyPartial(const SplitSolution& s);
 
   ///
   /// @brief Return true if two ImpulseSplitSolution have the same value and  
@@ -240,9 +234,8 @@ public:
 
 private:
   Eigen::VectorXd mu_stack_, f_stack_;
-  bool has_floating_base_;
   std::vector<bool> is_impulse_active_;
-  int dimf_;
+  int dimi_;
 
 };
 

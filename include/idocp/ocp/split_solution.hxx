@@ -9,16 +9,16 @@
 namespace idocp {
 
 inline SplitSolution::SplitSolution(const Robot& robot) 
-  : lmd(Eigen::VectorXd::Zero(robot.dimv())),
-    gmm(Eigen::VectorXd::Zero(robot.dimv())),
-    q(Eigen::VectorXd::Zero(robot.dimq())),
+  : q(Eigen::VectorXd::Zero(robot.dimq())),
     v(Eigen::VectorXd::Zero(robot.dimv())),
     a(Eigen::VectorXd::Zero(robot.dimv())),
-    f(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
     u(Eigen::VectorXd::Zero(robot.dimu())),
+    f(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
+    lmd(Eigen::VectorXd::Zero(robot.dimv())),
+    gmm(Eigen::VectorXd::Zero(robot.dimv())),
     beta(Eigen::VectorXd::Zero(robot.dimv())),
     mu(robot.maxPointContacts(), Eigen::Vector3d::Zero()),
-    nu_passive(Vector6d::Zero()),
+    nu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
     f_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     mu_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
     xi_stack_(Eigen::VectorXd::Zero(robot.max_dimf())),
@@ -28,21 +28,23 @@ inline SplitSolution::SplitSolution(const Robot& robot)
     is_contact_active_(robot.maxPointContacts(), false),
     dimf_(0),
     dimi_(0) {
-  robot.normalizeConfiguration(q);
+  if (robot.hasFloatingBase()) {
+    q.coeffRef(6) = 1.0;
+  }
 }
 
 
 inline SplitSolution::SplitSolution() 
-  : lmd(),
-    gmm(),
-    q(),
+  : q(),
     v(),
     a(),
-    f(),
     u(),
+    f(),
+    lmd(),
+    gmm(),
     beta(),
     mu(),
-    nu_passive(Vector6d::Zero()),
+    nu_passive(),
     f_stack_(),
     mu_stack_(),
     xi_stack_(),
@@ -169,8 +171,34 @@ inline void SplitSolution::set_mu_vector() {
 }
 
 
+inline Eigen::VectorBlock<Eigen::VectorXd> SplitSolution::xi_stack() {
+  return xi_stack_.head(dimi_);
+}
+
+
+inline const Eigen::VectorBlock<const Eigen::VectorXd> 
+SplitSolution::xi_stack() const {
+  return xi_stack_.head(dimi_);
+}
+
+
 inline int SplitSolution::dimf() const {
   return dimf_;
+}
+
+
+inline int SplitSolution::dimi() const {
+  return dimi_;
+}
+
+
+inline bool SplitSolution::hasActiveContacts() const {
+  return has_active_contacts_;
+}
+
+
+inline bool SplitSolution::hasActiveImpulse() const {
+  return has_active_impulse_;
 }
 
 
@@ -187,49 +215,23 @@ inline std::vector<bool> SplitSolution::isContactActive() const {
 }
 
 
-inline bool SplitSolution::hasActiveContacts() const {
-  return has_active_contacts_;
-}
-
-
-inline Eigen::VectorBlock<Eigen::VectorXd> SplitSolution::xi_stack() {
-  return xi_stack_.head(dimi_);
-}
-
-
-inline const Eigen::VectorBlock<const Eigen::VectorXd> 
-SplitSolution::xi_stack() const {
-  return xi_stack_.head(dimi_);
-}
-
-
-inline int SplitSolution::dimi() const {
-  return dimi_;
-}
-
-
-inline bool SplitSolution::hasActiveImpulse() const {
-  return has_active_impulse_;
-}
-
-
 inline void SplitSolution::integrate(const Robot& robot, const double step_size, 
                                      const SplitDirection& d) {
-  lmd.noalias() += step_size * d.dlmd();
-  gmm.noalias() += step_size * d.dgmm();
+  assert(f_stack().size() == d.df().size());
+  assert(mu_stack().size() == d.dmu().size());
   robot.integrateConfiguration(d.dq(), step_size, q);
   v.noalias() += step_size * d.dv();
   a.noalias() += step_size * d.da();
-  u.noalias() += step_size * d.du();
+  u.noalias() += step_size * d.du;
+  lmd.noalias() += step_size * d.dlmd();
+  gmm.noalias() += step_size * d.dgmm();
   beta.noalias() += step_size * d.dbeta();
   if (has_floating_base_) {
     nu_passive.noalias() += step_size * d.dnu_passive;
   }
   if (has_active_contacts_) {
-    assert(f_stack().size() == d.df().size());
     f_stack().noalias() += step_size * d.df();
     set_f_vector();
-    assert(mu_stack().size() == d.dmu().size());
     mu_stack().noalias() += step_size * d.dmu();
     set_mu_vector();
   }
@@ -240,38 +242,7 @@ inline void SplitSolution::integrate(const Robot& robot, const double step_size,
 }
 
 
-inline void SplitSolution::copy(const SplitSolution& other) {
-  setContactStatus(other);
-  setImpulseStatus(other);
-  lmd          = other.lmd;
-  gmm          = other.gmm;
-  q            = other.q;
-  v            = other.v;
-  a            = other.a;
-  u            = other.u;
-  beta         = other.beta;
-  if (has_floating_base_) {
-    nu_passive = other.nu_passive;
-  }
-  if (has_active_contacts_) {
-    f_stack()  = other.f_stack();
-    mu_stack() = other.mu_stack();
-    set_f_vector();
-    set_mu_vector();
-  }
-  if (has_active_impulse_) {
-    xi_stack() = other.xi_stack();
-  }
-}
-
-
 inline bool SplitSolution::isApprox(const SplitSolution& other) const {
-  if (!lmd.isApprox(other.lmd)) {
-    return false;
-  }
-  if (!gmm.isApprox(other.gmm)) {
-    return false;
-  }
   if (!q.isApprox(other.q)) {
     return false;
   }
@@ -282,6 +253,12 @@ inline bool SplitSolution::isApprox(const SplitSolution& other) const {
     return false;
   }
   if (!u.isApprox(other.u)) {
+    return false;
+  }
+  if (!lmd.isApprox(other.lmd)) {
+    return false;
+  }
+  if (!gmm.isApprox(other.gmm)) {
     return false;
   }
   if (!beta.isApprox(other.beta)) {
@@ -328,13 +305,13 @@ inline bool SplitSolution::isApprox(const SplitSolution& other) const {
 
 
 inline void SplitSolution::setRandom(const Robot& robot) {
-  lmd.setRandom();
-  gmm.setRandom(); 
   q.setRandom(); 
   robot.normalizeConfiguration(q);
   v.setRandom();
   a.setRandom(); 
   u.setRandom(); 
+  lmd.setRandom();
+  gmm.setRandom(); 
   beta.setRandom(); 
   if (robot.hasFloatingBase()) {
     nu_passive.setRandom();

@@ -77,10 +77,10 @@ void JointTorquesUpperLimitTest::testAugmentDualResidual(Robot& robot) const {
   limit.setSlackAndDual(robot, data, s);
   ConstraintComponentData data_ref = data;
   SplitKKTResidual kkt_res(robot);
-  kkt_res.lu().setRandom();
+  kkt_res.lu.setRandom();
   SplitKKTResidual kkt_res_ref = kkt_res;
   limit.augmentDualResidual(robot, data, dt, s, kkt_res);
-  kkt_res_ref.lu() += dt * data_ref.dual;
+  kkt_res_ref.lu += dt * data_ref.dual;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
 }
 
@@ -110,18 +110,18 @@ void JointTorquesUpperLimitTest::testCondenseSlackAndDual(Robot& robot) const {
   limit.setSlackAndDual(robot, data, s);
   ConstraintComponentData data_ref = data;
   SplitKKTMatrix kkt_mat(robot);
-  kkt_mat.Quu().setRandom();
+  kkt_mat.Quu.setRandom();
   SplitKKTResidual kkt_res(robot);
-  kkt_res.lu().setRandom();
+  kkt_res.lu.setRandom();
   SplitKKTMatrix kkt_mat_ref = kkt_mat;
   SplitKKTResidual kkt_res_ref = kkt_res;
   limit.condenseSlackAndDual(robot, data, dt, s, kkt_mat, kkt_res);
   data_ref.residual = s.u - umax + data_ref.slack;
   pdipm::ComputeDuality(barrier, data_ref);
-  kkt_res_ref.lu().array() 
+  kkt_res_ref.lu.array() 
       += dt * (data_ref.dual.array()*data_ref.residual.array()-data_ref.duality.array()) 
                / data_ref.slack.array();
-  kkt_mat_ref.Quu().diagonal().array() 
+  kkt_mat_ref.Quu.diagonal().array() 
       += dt * data_ref.dual.array() / data_ref.slack.array();
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
@@ -140,7 +140,7 @@ void JointTorquesUpperLimitTest::testComputeSlackAndDualDirection(Robot& robot) 
   ConstraintComponentData data_ref = data;
   const SplitDirection d = SplitDirection::Random(robot);
   limit.computeSlackAndDualDirection(robot, data, s, d);
-  data_ref.dslack = - d.du() - data_ref.residual;
+  data_ref.dslack = - d.du - data_ref.residual;
   pdipm::ComputeDualDirection(data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));
 }

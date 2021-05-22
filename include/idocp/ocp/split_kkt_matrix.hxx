@@ -9,45 +9,55 @@
 namespace idocp {
 
 inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot) 
-  : Fqq_prev(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
-    Fqq_inv(Matrix6d::Zero()),
-    Fqq_prev_inv(Matrix6d::Zero()),
-    F_(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv()+robot.dimu())),
-    Pq_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
-    Q_(Eigen::MatrixXd::Zero(3*robot.dimv(), 3*robot.dimv())),
-    Qafq_full_(Eigen::MatrixXd::Zero(robot.dimv()+robot.max_dimf(), 
-                                     robot.dimv()+robot.max_dimf())),
+  : Fxx(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
+    Fvu(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimu())),
+    Qxx(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
+    Qaa(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
+    Qxu(Eigen::MatrixXd::Zero(2*robot.dimv(), robot.dimu())),
+    Qxu_passive(Eigen::MatrixXd::Zero(2*robot.dimv(), robot.dim_passive())),
+    Quu(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimu())),
+    Quu_passive_topRight(Eigen::MatrixXd::Zero(robot.dim_passive(), robot.dimu())),
+    Fqq_prev(),
+    Fqq_inv(),
+    Fqq_prev_inv(),
+    Qff_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.max_dimf())),
+    Qqf_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     has_floating_base_(robot.hasFloatingBase()),
     dimv_(robot.dimv()), 
     dimx_(2*robot.dimv()), 
     dimu_(robot.dimu()), 
     dim_passive_(robot.dim_passive()),
-    dimf_(0), 
-    dimi_(0), 
-    u_begin_(robot.dim_passive()),
-    q_begin_(robot.dimv()),
-    v_begin_(2*robot.dimv()) {
+    dimf_(0) {
+  if (robot.hasFloatingBase()) {
+    Fqq_prev.resize(robot.dimv(), robot.dimv());
+    Fqq_prev.setZero();
+    Fqq_inv.resize(6, 6);
+    Fqq_inv.setZero();
+    Fqq_prev_inv.resize(6, 6);
+    Fqq_prev_inv.setZero();
+  }
 }
 
 
 inline SplitKKTMatrix::SplitKKTMatrix() 
-  : Fqq_prev(),
-    Fqq_inv(Matrix6d::Zero()),
-    Fqq_prev_inv(Matrix6d::Zero()),
-    F_(),
-    Pq_full_(),
-    Q_(),
-    Qafq_full_(),
+  : Fxx(),
+    Fvu(),
+    Qxx(),
+    Qaa(),
+    Qxu(),
+    Quu(),
+    Quu_passive_topRight(),
+    Fqq_prev(),
+    Fqq_inv(),
+    Fqq_prev_inv(),
+    Qff_full_(),
+    Qqf_full_(),
     has_floating_base_(false),
     dimv_(0), 
     dimx_(0), 
     dimu_(0), 
     dim_passive_(0),
-    dimf_(0), 
-    dimi_(0), 
-    u_begin_(0),
-    q_begin_(0),
-    v_begin_(0) {
+    dimf_(0) {
 }
 
 
@@ -61,469 +71,138 @@ inline void SplitKKTMatrix::setContactStatus(
 }
 
 
-inline void SplitKKTMatrix::setImpulseStatus(
-    const ImpulseStatus& impulse_status) {
-  dimi_ = impulse_status.dimf();
-}
-
-
-inline void SplitKKTMatrix::setImpulseStatus() {
-  dimi_ = 0;
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Fqu() {
-  return F_.block(0, 0, dimv_, dimu_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Fqu() const {
-  return F_.block(0, 0, dimv_, dimu_);
-}
-
-
 inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Fqq() {
-  return F_.block(0, dimu_, dimv_, dimv_);
+  return Fxx.topLeftCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Fqq() const {
-  return F_.block(0, dimu_, dimv_, dimv_);
+  return Fxx.topLeftCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Fqv() {
-  return F_.block(0, dimu_+dimv_, dimv_, dimv_);
+  return Fxx.topRightCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Fqv() const {
-  return F_.block(0, dimu_+dimv_, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Fvu() {
-  return F_.block(dimv_, 0, dimv_, dimu_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Fvu() const {
-  return F_.block(dimv_, 0, dimv_, dimu_);
+  return Fxx.topRightCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Fvq() {
-  return F_.block(dimv_, dimu_, dimv_, dimv_);
+  return Fxx.bottomLeftCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Fvq() const {
-  return F_.block(dimv_, dimu_, dimv_, dimv_);
+  return Fxx.bottomLeftCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Fvv() {
-  return F_.block(dimv_, dimu_+dimv_, dimv_, dimv_);
+  return Fxx.bottomRightCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Fvv() const {
-  return F_.block(dimv_, dimu_+dimv_, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Fxu() {
-  return F_.block(0, 0, dimx_, dimu_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Fxu() const {
-  return F_.block(0, 0, dimx_, dimu_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Fxx() {
-  return F_.block(0, dimu_, dimx_, dimx_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Fxx() const {
-  return F_.block(0, dimu_, dimx_, dimx_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Pq() {
-  return Pq_full_.topLeftCorner(dimi_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Pq() const {
-  return Pq_full_.topLeftCorner(dimi_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Quu_full() {
-  return Q_.topLeftCorner(dimv_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Quu_full() const {
-  return Q_.topLeftCorner(dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Quu_passive_topLeft() {
-  return Q_.topLeftCorner(dim_passive_, dim_passive_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Quu_passive_topLeft() const {
-  return Q_.topLeftCorner(dim_passive_, dim_passive_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Quu_passive_topRight () {
-  return Q_.block(0, dim_passive_, dim_passive_, dimu_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Quu_passive_topRight() const {
-  return Q_.block(0, dim_passive_, dim_passive_, dimu_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Quu_passive_bottomLeft() {
-  return Q_.block(dim_passive_, 0, dimu_, dim_passive_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Quu_passive_bottomLeft() const {
-  return Q_.block(dim_passive_, 0, dimu_, dim_passive_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Quu() {
-  return Q_.block(u_begin_, u_begin_, dimu_, dimu_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Quu() const {
-  return Q_.block(u_begin_, u_begin_, dimu_, dimu_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Quq_full() {
-  return Q_.block(0, q_begin_, dimv_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Quq_full() const {
-  return Q_.block(0, q_begin_, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Quq_passive() {
-  return Q_.block(0, q_begin_, dim_passive_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Quq_passive() const {
-  return Q_.block(0, q_begin_, dim_passive_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Quq() {
-  return Q_.block(u_begin_, q_begin_, dimu_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Quq() const {
-  return Q_.block(u_begin_, q_begin_, dimu_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Quv_full() {
-  return Q_.block(0, v_begin_, dimv_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Quv_full() const {
-  return Q_.block(0, v_begin_, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Quv_passive() {
-  return Q_.block(0, v_begin_, dim_passive_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Quv_passive() const {
-  return Q_.block(0, v_begin_, dim_passive_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Quv() {
-  return Q_.block(u_begin_, v_begin_, dimu_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Quv() const {
-  return Q_.block(u_begin_, v_begin_, dimu_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qqu_full() {
-  return Q_.block(q_begin_, 0, dimv_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Qqu_full() const {
-  return Q_.block(q_begin_, 0, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qqu_passive() {
-  return Q_.block(q_begin_, 0, dimv_, dim_passive_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Qqu_passive() const {
-  return Q_.block(q_begin_, 0, dimv_, dim_passive_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qqu() {
-  return Q_.block(q_begin_, u_begin_, dimv_, dimu_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qqu() const {
-  return Q_.block(q_begin_, u_begin_, dimv_, dimu_);
+  return Fxx.bottomRightCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qqq() {
-  return Q_.block(q_begin_, q_begin_, dimv_, dimv_);
+  return Qxx.topLeftCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qqq() const {
-  return Q_.block(q_begin_, q_begin_, dimv_, dimv_);
+  return Qxx.topLeftCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qqv() {
-  return Q_.block(q_begin_, v_begin_, dimv_, dimv_);
+  return Qxx.topRightCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qqv() const {
-  return Q_.block(q_begin_, v_begin_, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qvu_full() {
-  return Q_.block(v_begin_, 0, dimv_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Qvu_full() const {
-  return Q_.block(v_begin_, 0, dimv_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qvu_passive() {
-  return Q_.block(v_begin_, 0, dimv_, dim_passive_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Qvu_passive() const {
-  return Q_.block(v_begin_, 0, dimv_, dim_passive_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qvu() {
-  return Q_.block(v_begin_, u_begin_, dimv_, dimu_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qvu() const {
-  return Q_.block(v_begin_, u_begin_, dimv_, dimu_);
+  return Qxx.topRightCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qvq() {
-  return Q_.block(v_begin_, q_begin_, dimv_, dimv_);
+  return Qxx.bottomLeftCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qvq() const {
-  return Q_.block(v_begin_, q_begin_, dimv_, dimv_);
+  return Qxx.bottomLeftCorner(dimv_, dimv_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qvv() {
-  return Q_.block(v_begin_, v_begin_, dimv_, dimv_);
+  return Qxx.bottomRightCorner(dimv_, dimv_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qvv() const {
-  return Q_.block(v_begin_, v_begin_, dimv_, dimv_);
+  return Qxx.bottomRightCorner(dimv_, dimv_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qux_full() {
-  return Q_.block(0, q_begin_, dimv_, dimx_);
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qqu() {
+  return Qxu.topLeftCorner(dimv_, dimu_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Qux_full() const {
-  return Q_.block(0, q_begin_, dimv_, dimx_);
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qqu() const {
+  return Qxu.topLeftCorner(dimv_, dimu_);
 }
 
 
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qux_passive() {
-  return Q_.block(0, q_begin_, dim_passive_, dimx_);
+inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qvu() {
+  return Qxu.bottomLeftCorner(dimv_, dimu_);
 }
 
 
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Qux_passive() const {
-  return Q_.block(0, q_begin_, dim_passive_, dimx_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qux() {
-  return Q_.block(u_begin_, q_begin_, dimu_, dimx_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qux() const {
-  return Q_.block(u_begin_, q_begin_, dimu_, dimx_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qxu_full() {
-  return Q_.block(q_begin_, 0, dimx_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Qxu_full() const {
-  return Q_.block(q_begin_, 0, dimx_, dimv_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qxu_passive() {
-  return Q_.block(q_begin_, 0, dimx_, dim_passive_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> 
-SplitKKTMatrix::Qxu_passive() const {
-  return Q_.block(q_begin_, 0, dimx_, dim_passive_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qxu() {
-  return Q_.block(q_begin_, u_begin_, dimx_, dimu_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qxu() const {
-  return Q_.block(q_begin_, u_begin_, dimx_, dimu_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qxx() {
-  return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qxx() const {
-  return Q_.block(q_begin_, q_begin_, dimx_, dimx_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qss() {
-  return Q_.bottomRightCorner(dimx_+dimu_, dimx_+dimu_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qss() const {
-  return Q_.bottomRightCorner(dimx_+dimu_, dimx_+dimu_);
-}
-
-
-inline Eigen::MatrixXd& SplitKKTMatrix::Jac() {
-  return F_;
-}
-
-
-inline const Eigen::MatrixXd& SplitKKTMatrix::Jac() const {
-  return F_;
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qaa() {
-  return Qafq_full_.topLeftCorner(dimv_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qaa() const {
-  return Qafq_full_.topLeftCorner(dimv_, dimv_);
+inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qvu() const {
+  return Qxu.bottomLeftCorner(dimv_, dimu_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qff() {
-  return Qafq_full_.block(dimv_, dimv_, dimf_, dimf_);
+  return Qff_full_.topLeftCorner(dimf_, dimf_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qff() const {
-  return Qafq_full_.block(dimv_, dimv_, dimf_, dimf_);
+  return Qff_full_.topLeftCorner(dimf_, dimf_);
 }
 
 
 inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qqf() {
-  return Qafq_full_.block(0, dimv_, dimv_, dimf_);
+  return Qqf_full_.topLeftCorner(dimv_, dimf_);
 }
 
 
 inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qqf() const {
-  return Qafq_full_.block(0, dimv_, dimv_, dimf_);
-}
-
-
-inline Eigen::Block<Eigen::MatrixXd> SplitKKTMatrix::Qfq() {
-  return Qafq_full_.block(dimv_, 0, dimf_, dimv_);
-}
-
-
-inline const Eigen::Block<const Eigen::MatrixXd> SplitKKTMatrix::Qfq() const {
-  return Qafq_full_.block(dimv_, 0, dimf_, dimv_);
+  return Qqf_full_.topLeftCorner(dimv_, dimf_);
 }
 
 
 inline void SplitKKTMatrix::setZero() {
+  Fxx.setZero();
+  Fvu.setZero();
+  Qxx.setZero();
+  Qaa.setZero();
+  Qxu.setZero();
+  Qxu_passive.setZero();
+  Quu.setZero();
+  Quu_passive_topRight.setZero();
+  Qff().setZero();
+  Qqf().setZero();
   Fqq_prev.setZero();
-  F_.setZero();
-  Pq_full_.setZero();
-  Q_.setZero();
-  Qafq_full_.setZero();
 }
 
 
@@ -532,33 +211,62 @@ inline int SplitKKTMatrix::dimf() const {
 }
 
 
-inline int SplitKKTMatrix::dimi() const {
-  return dimi_;
+inline bool SplitKKTMatrix::isDimensionConsistent() const {
+  if (Fxx.rows() != 2*dimv_) return false;
+  if (Fxx.cols() != 2*dimv_) return false;
+  if (Fvu.rows() != dimv_) return false;
+  if (Fvu.cols() != dimu_) return false;
+  if (Qxx.rows() != 2*dimv_) return false;
+  if (Qxx.cols() != 2*dimv_) return false;
+  if (Qaa.rows() != dimv_) return false;
+  if (Qaa.cols() != dimv_) return false;
+  if (Qxu.rows() != 2*dimv_) return false;
+  if (Qxu.cols() != dimu_) return false;
+  if (Qxu_passive.rows() != 2*dimv_) return false;
+  if (Qxu_passive.cols() != dim_passive_) return false;
+  if (Quu.rows() != dimu_) return false;
+  if (Quu.cols() != dimu_) return false;
+  if (Quu_passive_topRight.rows() != dim_passive_) return false;
+  if (Quu_passive_topRight.cols() != dimu_) return false;
+  if (has_floating_base_) {
+    if (Fqq_prev.rows() != dimv_) return false;
+    if (Fqq_prev.cols() != dimv_) return false;
+  }
+  return true;
 }
 
 
 inline bool SplitKKTMatrix::isApprox(const SplitKKTMatrix& other) const {
-  if (!Fqq_prev.isApprox(other.Fqq_prev)) return false;
-  if (!Jac().isApprox(other.Jac())) return false;
-  if (!Pq().isApprox(other.Pq())) return false;
-  if (!Quu_full().isApprox(other.Quu_full())) return false;
-  if (!Qux_full().isApprox(other.Qux_full())) return false;
-  if (!Qxu_full().isApprox(other.Qxu_full())) return false;
-  if (!Qxx().isApprox(other.Qxx())) return false;
-  if (!Qaa().isApprox(other.Qaa())) return false;
+  if (!Fxx.isApprox(other.Fxx)) return false;
+  if (!Fvu.isApprox(other.Fvu)) return false;
+  if (!Qxx.isApprox(other.Qxx)) return false;
+  if (!Qaa.isApprox(other.Qaa)) return false;
+  if (!Qxu.isApprox(other.Qxu)) return false;
+  if (has_floating_base_) {
+    if (!Qxu_passive.isApprox(other.Qxu_passive)) return false;
+  }
+  if (!Quu.isApprox(other.Quu)) return false;
+  if (has_floating_base_) {
+    if (!Quu_passive_topRight.isApprox(other.Quu_passive_topRight)) 
+        return false;
+  }
   if (!Qff().isApprox(other.Qff())) return false;
   if (!Qqf().isApprox(other.Qqf())) return false;
-  if (!Qfq().isApprox(other.Qfq())) return false;
+  if (!Fqq_prev.isApprox(other.Fqq_prev)) return false;
   return true;
 }
 
 
 inline bool SplitKKTMatrix::hasNaN() const {
+  if (Fxx.hasNaN()) return true;
+  if (Fvu.hasNaN()) return true;
+  if (Qxx.hasNaN()) return true;
+  if (Qaa.hasNaN()) return true;
+  if (Qxu.hasNaN()) return true;
+  if (Quu.hasNaN()) return true;
+  if (Qff().hasNaN()) return true;
+  if (Qqf().hasNaN()) return true;
   if (Fqq_prev.hasNaN()) return true;
-  if (F_.hasNaN()) return true;
-  if (Pq_full_.hasNaN()) return true;
-  if (Q_.hasNaN()) return true;
-  if (Qafq_full_.hasNaN()) return true;
   return false;
 }
 

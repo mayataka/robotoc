@@ -3,8 +3,8 @@
 
 #include "Eigen/Core"
 
+#include "idocp/solver/ocp_solver.hpp"
 #include "idocp/robot/robot.hpp"
-#include "idocp/ocp/ocp_solver.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/cost/configuration_space_cost.hpp"
 #include "idocp/cost/time_varying_configuration_space_cost.hpp"
@@ -101,14 +101,15 @@ private:
 
 
 int main(int argc, char *argv[]) {
-  const int LF_foot_id = 14;
-  const int LH_foot_id = 24;
-  const int RF_foot_id = 34;
-  const int RH_foot_id = 44;
+  const int LF_foot_id = 12;
+  const int LH_foot_id = 22;
+  const int RF_foot_id = 32;
+  const int RH_foot_id = 42;
   std::vector<int> contact_frames = {LF_foot_id, LH_foot_id, RF_foot_id, RH_foot_id}; // LF, LH, RF, RH
   const std::string path_to_urdf = "../anymal_b_simple_description/urdf/anymal.urdf";
   const double baumgarte_time_step = 0.04;
-  idocp::Robot robot(path_to_urdf, contact_frames, baumgarte_time_step);
+  idocp::Robot robot(path_to_urdf, idocp::BaseJointType::FloatingBase, 
+                     contact_frames, baumgarte_time_step);
 
   const double stride = 0.45;
   const double additive_stride_hip = 0.2;
@@ -150,7 +151,7 @@ int main(int argc, char *argv[]) {
               1, 1, 1,
               1, 1, 1;
   const double v_ref = stride / t_period;
-  auto config_ref = std::make_shared<TimeVaryingConfigurationRef>(t_start, 0.255, 0.34, t_period, 0.6, steps,
+  auto config_ref = std::make_shared<TimeVaryingConfigurationRef>(t_start, 0.255, 0.34, t_period, 0.5, steps,
                                                                   q_standing, v_ref);
   auto time_varying_config_cost = std::make_shared<idocp::TimeVaryingConfigurationSpaceCost>(robot, config_ref);
   time_varying_config_cost->set_q_weight(q_weight);
@@ -176,7 +177,7 @@ int main(int argc, char *argv[]) {
   constraints->push_back(joint_torques_upper);
   constraints->push_back(friction_cone);
   constraints->push_back(impulse_friction_cone);
-  constraints->setBarrier(1.0e-03);
+  constraints->setBarrier(1.0e-01);
 
   const double T = 7; 
   const int N = 240;
@@ -284,7 +285,7 @@ int main(int argc, char *argv[]) {
   ocp_solver.initConstraints(t);
 
   const bool line_search = false;
-  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 150, line_search);
+  idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 80, line_search);
   // idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 2500, line_search);
 
 #ifdef ENABLE_VIEWER

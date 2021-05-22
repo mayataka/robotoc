@@ -74,7 +74,7 @@ inline void ImpulseSplitOCP::linearizeOCP(
 
 inline void ImpulseSplitOCP::computeCondensedPrimalDirection(
     Robot& robot, const ImpulseSplitSolution& s, ImpulseSplitDirection& d) {
-  d.setImpulseStatusByDimension(s.dimf());
+  d.setImpulseStatusByDimension(s.dimi());
   impulse_dynamics_.computeCondensedPrimalDirection(robot, d);
   constraints_->computeSlackAndDualDirection(robot, constraints_data_, s, d);
 }
@@ -142,7 +142,7 @@ inline void ImpulseSplitOCP::computeKKTResidual(
 inline double ImpulseSplitOCP::squaredNormKKTResidual(
     const ImpulseSplitKKTResidual& kkt_residual) const {
   double error = 0;
-  error += kkt_residual.lx().squaredNorm();
+  error += kkt_residual.lx.squaredNorm();
   error += kkt_residual.ldv.squaredNorm();
   error += kkt_residual.lf().squaredNorm();
   error += stateequation::squaredNormStateEuqationResidual(kkt_residual);

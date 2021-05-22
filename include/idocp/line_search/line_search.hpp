@@ -6,10 +6,11 @@
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
+#include "idocp/utils/aligned_vector.hpp"
 #include "idocp/cost/cost_function.hpp"
 #include "idocp/constraints/constraints.hpp"
-#include "idocp/hybrid/hybrid_container.hpp"
 #include "idocp/hybrid/contact_sequence.hpp"
+#include "idocp/ocp/ocp.hpp"
 #include "idocp/line_search/line_search_filter.hpp"
 
 
@@ -79,7 +80,7 @@ public:
   /// @param[in] max_primal_step_size Maximum primal step size. 
   ///
   template <typename OCPType>
-  double computeStepSize(OCPType& ocp, std::vector<Robot>& robots,
+  double computeStepSize(OCPType& ocp, aligned_vector<Robot>& robots,
                          const ContactSequence& contact_sequence, 
                          const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                          const Solution& s, const Direction& d,
@@ -132,25 +133,15 @@ private:
   Solution s_try_;
   KKTResidual kkt_residual_;
 
-  void computeCostAndViolation(OCP& ocp, std::vector<Robot>& robots,
+  void computeCostAndViolation(OCP& ocp, aligned_vector<Robot>& robots,
                                const ContactSequence& contact_sequence, 
                                const Eigen::VectorXd& q, 
                                const Eigen::VectorXd& v, const Solution& s,
                                const double primal_step_size_for_barrier=0);
 
-  void computeSolution(const OCP& ocp, const std::vector<Robot>& robots, 
+  void computeSolution(const OCP& ocp, const aligned_vector<Robot>& robots, 
                           const Solution& s, const Direction& d, 
                           const double step_size);
-
-  void computeCostAndViolation(ParNMPC& parnmpc, std::vector<Robot>& robots,
-                               const ContactSequence& contact_sequence, 
-                               const Eigen::VectorXd& q, 
-                               const Eigen::VectorXd& v, const Solution& s,
-                               const double primal_step_size_for_barrier=0);
-
-  void computeSolution(const ParNMPC& parnmpc, const std::vector<Robot>& robots, 
-                       const Solution& s, const Direction& d, 
-                       const double step_size);
 
   static void computeSolution(const Robot& robot, const SplitSolution& s, 
                               const SplitDirection& d, const double step_size, 
@@ -159,7 +150,7 @@ private:
     robot.integrateConfiguration(s.q, d.dq(), step_size, s_try.q);
     s_try.v = s.v + step_size * d.dv();
     s_try.a = s.a + step_size * d.da();
-    s_try.u = s.u + step_size * d.du();
+    s_try.u = s.u + step_size * d.du;
     if (s.hasActiveContacts()) {
       s_try.f_stack() = s.f_stack() + step_size * d.df();
       s_try.set_f_vector();
@@ -239,48 +230,6 @@ private:
     }
     else {
       return s[time_stage-1].v;
-    }
-  }
-
-  static const Eigen::VectorXd& q_prev(const ParNMPCDiscretizer& discretizer, 
-                                       const Eigen::VectorXd& q, 
-                                       const Solution& s, 
-                                       const int time_stage) {
-    assert(time_stage >= 0);
-    assert(time_stage < discretizer.N());
-    if (discretizer.isTimeStageAfterImpulse(time_stage)) {
-      return s.impulse[discretizer.impulseIndexBeforeTimeStage(time_stage)].q;
-    }
-    else if (discretizer.isTimeStageAfterLift(time_stage)) {
-      return s.lift[discretizer.liftIndexBeforeTimeStage(time_stage)].q;
-    }
-    else if (time_stage > 0) {
-      return s[time_stage-1].q;
-    }
-    else { 
-      assert(time_stage == 0);
-      return q;
-    }
-  }
-
-  static const Eigen::VectorXd& v_prev(const ParNMPCDiscretizer& discretizer, 
-                                       const Eigen::VectorXd& v, 
-                                       const Solution& s, 
-                                       const int time_stage) {
-    assert(time_stage >= 0);
-    assert(time_stage < discretizer.N());
-    if (discretizer.isTimeStageAfterImpulse(time_stage)) {
-      return s.impulse[discretizer.impulseIndexBeforeTimeStage(time_stage)].v;
-    }
-    else if (discretizer.isTimeStageAfterLift(time_stage)) {
-      return s.lift[discretizer.liftIndexBeforeTimeStage(time_stage)].v;
-    }
-    else if (time_stage > 0) {
-      return s[time_stage-1].v;
-    }
-    else { 
-      assert(time_stage == 0);
-      return v;
     }
   }
 

@@ -38,16 +38,6 @@
   </material>
   <!-- Xacro:Properties -->
   <!-- [m] -->
-
-  <!-- World -->  
-  <link name="world"/>
-
-  <!-- Floating base -->  
-  <joint name="floating" type="floating">
-    <origin rpy="0 0 0" xyz="0 0 0"/>      
-    <parent link="world"/>
-    <child link="base"/>
-  </joint>
   <!-- Base link -->
   <link name="base">
     <visual>
@@ -887,4 +877,3 @@
     <origin rpy="0 3.14159265359 0" xyz="0.038 0.06245 0.1837"/>
   </joint>
 </robot>
-
