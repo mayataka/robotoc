@@ -16,7 +16,7 @@
 - Ubuntu 18.04 or 20.04
 - gcc (at least C++11 is required), CMake (at least version 3.1)
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  
-- [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git), [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer) (Optional to visualize the solution trajectory) 
+- [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git), [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer) (optional to visualize the solution trajectory) 
 
 ## Installation 
 1. Install the latest stable version of Eigen3 by 
@@ -37,7 +37,7 @@ cd idocp
 
 ```
 mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=False
+cmake .. -DCMAKE_BUILD_TYPE=Release 
 make -j$(nproc)
 make install
 ```
@@ -52,7 +52,7 @@ make install
 ```
 and change the CMake configuration of `idocp` as 
 ```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=False -DBUILD_VIEWER=True
+cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VIEWER=ON
 ```
 
 ## Usage

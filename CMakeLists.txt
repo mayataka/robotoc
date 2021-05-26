@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD 11)
 option(OPTIMIZE_FOR_NATIVE "Enable -march=native" OFF)
 option(BUILD_VIEWER "Build trajectory viewer" OFF)
 option(BUILD_TESTS "Build unit tests" OFF)
+option(BUILD_PYTHON_INTERFACE "Build Python interface" OFF)
 
 #################
 ## Build idocp ##
@@ -189,6 +190,13 @@ if (BUILD_TESTS)
   endif()
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
 endif() # end if (BUILD_TESTS)
+
+##############
+## Bindings ##
+##############
+if (BUILD_PYTHON_INTERFACE)
+  add_subdirectory(bindings/python)
+endif()
 
 #############
 ## Install ##
