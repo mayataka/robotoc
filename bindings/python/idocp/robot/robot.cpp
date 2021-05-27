@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 
@@ -34,6 +35,7 @@ PYBIND11_MODULE(robot, m) {
       })
     .def("frame_position", &Robot::framePosition)
     .def("frame_rotation", &Robot::frameRotation)
+    .def("frame_placement", &Robot::framePlacement)
     .def("com", &Robot::CoM)
     .def("generate_feasible_configuration", &Robot::generateFeasibleConfiguration)
     .def("normalize_configuration", [](const Robot& self, Eigen::VectorXd& q) {

@@ -1,3 +1,6 @@
+set(IDOCP_PYTHON_VERSION ${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR})
+set(IDOCP_PYTHON_BINDINGS_LIBDIR ${CMAKE_INSTALL_LIBDIR}/python${IDOCP_PYTHON_VERSION}/site-packages/idocp/)
+
 macro(pybind11_add_idocp_module MODULE)
   pybind11_add_module(
     ${MODULE} 
@@ -11,14 +14,25 @@ macro(pybind11_add_idocp_module MODULE)
   )
 endmacro()
 
+macro(install_idocp_pybind CURRENT_DIR_NAME)
+  file(GLOB PYTHON_BINDINGS_${CURRENT_DIR_NAME} ${CMAKE_CURRENT_BINARY_DIR}/*.cpython*)
+  install(
+    FILES ${PYTHON_BINDINGS_${CURRENT_DIR_NAME}}
+    DESTINATION ${IDOCP_PYTHON_BINDINGS_LIBDIR}/${CURRENT_DIR_NAME}
+  )
+  install(
+    FILES __init__.py 
+    DESTINATION ${IDOCP_PYTHON_BINDINGS_LIBDIR}/${CURRENT_DIR_NAME}
+  )
+endmacro()
+
 add_subdirectory(robot)
 add_subdirectory(cost)
 add_subdirectory(constraints)
 add_subdirectory(ocp)
 add_subdirectory(solver)
 
-configure_file(
-  __init__.py
-  ${CMAKE_BINARY_DIR}/bindings/python/idocp/__init__.py
-  COPYONLY
+install(
+  FILES __init__.py 
+  DESTINATION ${IDOCP_PYTHON_BINDINGS_LIBDIR}/
 )
