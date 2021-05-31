@@ -109,11 +109,9 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
   /// this time stage.
-  /// @param[in] robot Robot model. 
   /// @param[in, out] d Split direction of this time stage.
   /// 
-  void computeCondensedPrimalDirection(const Robot& robot, 
-                                       SplitDirection& d) const;
+  void computeCondensedPrimalDirection(SplitDirection& d) const;
 
   ///
   /// @brief Computes the Newton direction of the condensed dual variables of 

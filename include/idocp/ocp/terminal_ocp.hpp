@@ -114,11 +114,10 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
   /// this terminal stage.
-  /// @param[in] robot Robot model. 
   /// @param[in] s Split solution of this terminal stage.
   /// @param[in, out] d Split direction of this terminal stage.
   /// 
-  void computeCondensedPrimalDirection(Robot& robot, const SplitSolution& s, 
+  void computeCondensedPrimalDirection(const SplitSolution& s, 
                                        SplitDirection& d);
 
   ///

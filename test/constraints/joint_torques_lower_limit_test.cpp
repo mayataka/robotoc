@@ -32,7 +32,7 @@ protected:
   void testAugmentDualResidual(Robot& robot) const;
   void testComputePrimalAndDualResidual(Robot& robot) const;
   void testCondenseSlackAndDual(Robot& robot) const;
-  void testComputeSlackAndDualDirection(Robot& robot) const;
+  void testExpandSlackAndDual(Robot& robot) const;
 
   double barrier, dt;
 };
@@ -128,7 +128,7 @@ void JointTorquesLowerLimitTest::testCondenseSlackAndDual(Robot& robot) const {
 }
 
 
-void JointTorquesLowerLimitTest::testComputeSlackAndDualDirection(Robot& robot) const {
+void JointTorquesLowerLimitTest::testExpandSlackAndDual(Robot& robot) const {
   JointTorquesLowerLimit limit(robot);
   ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
@@ -139,7 +139,7 @@ void JointTorquesLowerLimitTest::testComputeSlackAndDualDirection(Robot& robot) 
   data.duality.setRandom();
   ConstraintComponentData data_ref = data;
   const SplitDirection d = SplitDirection::Random(robot);
-  limit.computeSlackAndDualDirection(robot, data, s, d);
+  limit.expandSlackAndDual(data, s, d);
   data_ref.dslack = d.du - data_ref.residual;
   pdipm::ComputeDualDirection(data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));
@@ -154,7 +154,7 @@ TEST_F(JointTorquesLowerLimitTest, fixedBase) {
   testAugmentDualResidual(robot);
   testComputePrimalAndDualResidual(robot);
   testCondenseSlackAndDual(robot);
-  testComputeSlackAndDualDirection(robot);
+  testExpandSlackAndDual(robot);
 }
 
 
@@ -166,7 +166,7 @@ TEST_F(JointTorquesLowerLimitTest, floatingBase) {
   testAugmentDualResidual(robot);
   testComputePrimalAndDualResidual(robot);
   testCondenseSlackAndDual(robot);
-  testComputeSlackAndDualDirection(robot);
+  testExpandSlackAndDual(robot);
 }
 
 } // namespace idocp

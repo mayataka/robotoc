@@ -120,13 +120,11 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
 }
 
 
-inline void SplitOCP::computeCondensedPrimalDirection(Robot& robot, 
-                                                      const double dt, 
-                                                      const SplitSolution& s, 
+inline void SplitOCP::computeCondensedPrimalDirection(const SplitSolution& s, 
                                                       SplitDirection& d) {
   d.setContactStatusByDimension(s.dimf());
-  contact_dynamics_.computeCondensedPrimalDirection(robot, d);
-  constraints_->computeSlackAndDualDirection(robot, constraints_data_, s, d);
+  contact_dynamics_.computeCondensedPrimalDirection(d);
+  constraints_->expandSlackAndDual(constraints_data_, s, d);
 }
 
 

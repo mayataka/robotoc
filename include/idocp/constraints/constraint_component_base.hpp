@@ -120,8 +120,8 @@ public:
                                    SplitKKTResidual& kkt_residual) const = 0;
 
   ///
-  /// @brief Condenses the slack and dual variables and factorizes the condensed 
-  /// Hessians and KKT residuals.
+  /// @brief Condenses the slack and dual variables, i.e., factorizes the  
+  /// condensed Hessians and KKT residuals.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraint data.
   /// @param[in] dt Time step.
@@ -137,15 +137,15 @@ public:
                                     SplitKKTResidual& kkt_residual) const = 0;
 
   ///
-  /// @brief Computes the directions of the slack and dual variables.
-  /// @param[in] robot Robot model.
+  /// @brief Expands the slack and dual, i.e., computes the directions of the 
+  /// slack and dual variables from the directions of the primal variables.
   /// @param[in, out] data Constraint data.
   /// @param[in] s Split solution.
   /// @param[in] d Split direction.
   ///
-  virtual void computeSlackAndDualDirection(
-      Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
-      const SplitDirection& d) const = 0;
+  virtual void expandSlackAndDual(ConstraintComponentData& data, 
+                                  const SplitSolution& s, 
+                                  const SplitDirection& d) const = 0;
 
   ///
   /// @brief Computes the primal and dual residuals of the constraint. 
@@ -275,13 +275,6 @@ protected:
   virtual void computeDuality(ConstraintComponentData& data) const final;
 
   ///
-  /// @brief Computes the direction of the dual variable from slack, residual,
-  /// duality, and the direction of the slack.
-  /// @param[in, out] data Constraint data.
-  ///
-  virtual void computeDualDirection(ConstraintComponentData& data) const final;
-
-  ///
   /// @brief Computes the duality residual between the slack and dual variables.
   /// @param[in] slack An element of the slack variable.
   /// @param[in] dual An element of the dual variable.
@@ -293,15 +286,21 @@ protected:
   ///
   /// @brief Computes the direction of the dual variable from slack, residual,
   /// duality, and the direction of the slack.
+  /// @param[in, out] data Constraint data.
+  ///
+  static void computeDualDirection(ConstraintComponentData& data);
+
+  ///
+  /// @brief Computes the direction of the dual variable from slack, residual,
+  /// duality, and the direction of the slack.
   /// @param[in] slack An element of the slack variable.
   /// @param[in] dual An element of the dual variable.
   /// @param[in] dslack An element of the direction of the slack variable.
   /// @param[in] duality An element of the duality.
   /// @return An element of the direction of the dual variable.
   ///
-  virtual double computeDualDirection(const double slack, const double dual,
-                                      const double dslack, 
-                                      const double duality) const final;
+  static double computeDualDirection(const double slack, const double dual,
+                                     const double dslack, const double duality);
 
 private:
   double barrier_, fraction_to_boundary_rate_;

@@ -103,15 +103,13 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed variables  
   /// at this stage.
-  /// @param[in] robot Robot model. 
   /// @param[in] dt Time step of this time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
-  void computeCondensedDirection(Robot& robot, const double dt, 
-                                 const SplitSolution& s, 
+  void computeCondensedDirection(const double dt, const SplitSolution& s, 
                                  const SplitKKTMatrix& kkt_matrix,
                                  const SplitKKTResidual& kkt_residual,
                                  SplitDirection& d);

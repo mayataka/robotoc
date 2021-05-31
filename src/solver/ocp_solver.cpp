@@ -75,7 +75,7 @@ void OCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
                                               riccati_factorization_);
   riccati_recursion_.computeInitialStateDirection(robots_, q, v, kkt_matrix_, s_, d_);
   riccati_recursion_.forwardRiccatiRecursion(ocp_, kkt_matrix_, kkt_residual_, d_);
-  riccati_recursion_.computeDirection(ocp_, robots_, riccati_factorization_, s_, d_);
+  riccati_recursion_.computeDirection(ocp_, riccati_factorization_, s_, d_);
   double primal_step_size = riccati_recursion_.maxPrimalStepSize();
   const double dual_step_size = riccati_recursion_.maxDualStepSize();
   if (line_search) {

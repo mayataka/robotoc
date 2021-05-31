@@ -94,21 +94,21 @@ inline void ImpulseConstraintComponentBase::computeDuality(
 }
 
 
-inline void ImpulseConstraintComponentBase::computeDualDirection(
-    ConstraintComponentData& data) const {
-  pdipm::ComputeDualDirection(data);
-}
-
-
 inline double ImpulseConstraintComponentBase::computeDuality(
     const double slack, const double dual) const {
   return (slack * dual - barrier_); 
 }
 
 
+inline void ImpulseConstraintComponentBase::computeDualDirection(
+    ConstraintComponentData& data) {
+  pdipm::ComputeDualDirection(data);
+}
+
+
 inline double ImpulseConstraintComponentBase::computeDualDirection(
     const double slack, const double dual, const double dslack, 
-    const double duality) const {
+    const double duality) {
   return (- (dual * dslack + duality) / slack);
 }
 

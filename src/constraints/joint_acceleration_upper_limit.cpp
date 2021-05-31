@@ -8,7 +8,6 @@ JointAccelerationUpperLimit::JointAccelerationUpperLimit(
     const double fraction_to_boundary_rate)
   : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
     dimc_(amax.size()),
-    dim_passive_(robot.dim_passive()),
     amax_(amax) {
 }
 
@@ -16,7 +15,6 @@ JointAccelerationUpperLimit::JointAccelerationUpperLimit(
 JointAccelerationUpperLimit::JointAccelerationUpperLimit()
   : ConstraintComponentBase(),
     dimc_(0),
-    dim_passive_(0),
     amax_() {
 }
 
@@ -74,8 +72,8 @@ void JointAccelerationUpperLimit::condenseSlackAndDual(
 }
 
 
-void JointAccelerationUpperLimit::computeSlackAndDualDirection(
-    Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
+void JointAccelerationUpperLimit::expandSlackAndDual(
+    ConstraintComponentData& data, const SplitSolution& s, 
     const SplitDirection& d) const {
   data.dslack = - d.da().tail(dimc_) - data.residual;
   computeDualDirection(data);

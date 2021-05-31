@@ -32,7 +32,7 @@ protected:
   void testAugmentDualResidual(Robot& robot, const Eigen::VectorXd& amax) const;
   void testComputePrimalAndDualResidual(Robot& robot, const Eigen::VectorXd& amax) const;
   void testCondenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
-  void testComputeSlackAndDualDirection(Robot& robot, const Eigen::VectorXd& amax) const;
+  void testExpandSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
 
   double barrier, dt;
 };
@@ -125,7 +125,7 @@ void JointAccelerationUpperLimitTest::testCondenseSlackAndDual(Robot& robot, con
 }
 
 
-void JointAccelerationUpperLimitTest::testComputeSlackAndDualDirection(Robot& robot, const Eigen::VectorXd& amax) const {
+void JointAccelerationUpperLimitTest::testExpandSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit limit(robot, amax); 
   ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
@@ -135,7 +135,7 @@ void JointAccelerationUpperLimitTest::testComputeSlackAndDualDirection(Robot& ro
   data.duality.setRandom();
   ConstraintComponentData data_ref = data;
   const SplitDirection d = SplitDirection::Random(robot);
-  limit.computeSlackAndDualDirection(robot, data, s, d);
+  limit.expandSlackAndDual(data, s, d);
   data_ref.dslack = - d.da().tail(dimc) - data_ref.residual;
   pdipm::ComputeDualDirection(data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));
@@ -151,7 +151,7 @@ TEST_F(JointAccelerationUpperLimitTest, fixedBase) {
   testAugmentDualResidual(robot, amax);
   testComputePrimalAndDualResidual(robot, amax);
   testCondenseSlackAndDual(robot, amax);
-  testComputeSlackAndDualDirection(robot, amax);
+  testExpandSlackAndDual(robot, amax);
 }
 
 
@@ -164,7 +164,7 @@ TEST_F(JointAccelerationUpperLimitTest, floatingBase) {
   testAugmentDualResidual(robot, amax);
   testComputePrimalAndDualResidual(robot, amax);
   testCondenseSlackAndDual(robot, amax);
-  testComputeSlackAndDualDirection(robot, amax);
+  testExpandSlackAndDual(robot, amax);
 }
 
 } // namespace idocp

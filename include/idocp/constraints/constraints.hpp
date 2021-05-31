@@ -166,8 +166,8 @@ public:
                            ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Consenses the slack and dual variables of the constraints and 
-  /// factorizes the condensed Hessians and KKT residuals.
+  /// @brief Condenses the slack and dual variables, i.e., factorizes the  
+  /// condensed Hessians and KKT residuals.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data. 
   /// @param[in] dt Time step.
@@ -183,8 +183,8 @@ public:
                             SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Consenses the slack and dual variables of the constraints and 
-  /// factorizes the condensed Hessians and KKT residuals.
+  /// @brief Condenses the slack and dual variables, i.e., factorizes the  
+  /// condensed Hessians and KKT residuals.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data.
   /// @param[in] s Split solution.
@@ -199,26 +199,24 @@ public:
                             ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the directions of the slack and dual variables.
-  /// @param[in] robot Robot model.
+  /// @brief Expands the slack and dual, i.e., computes the directions of the 
+  /// slack and dual variables from the directions of the primal variables.
   /// @param[in, out] data Constraints data. 
   /// @param[in] s Split solution.
   /// @param[in] d Split direction.
   ///
-  void computeSlackAndDualDirection(Robot& robot, ConstraintsData& data, 
-                                    const SplitSolution& s,
-                                    const SplitDirection& d) const;
+  void expandSlackAndDual(ConstraintsData& data, const SplitSolution& s, 
+                          const SplitDirection& d) const;
 
   ///
-  /// @brief Computes the directions of the slack and dual variables.
-  /// @param[in] robot Robot model.
+  /// @brief Expands the slack and dual, i.e., computes the directions of the 
+  /// slack and dual variables from the directions of the primal variables.
   /// @param[in, out] data Constraints data. 
   /// @param[in] s Impulse split solution.
   /// @param[in] d Impulse split direction.
   ///
-  void computeSlackAndDualDirection(Robot& robot, ConstraintsData& data, 
-                                    const ImpulseSplitSolution& s,
-                                    const ImpulseSplitDirection& d) const;
+  void expandSlackAndDual(ConstraintsData& data, const ImpulseSplitSolution& s,
+                          const ImpulseSplitDirection& d) const;
 
   ///
   /// @brief Computes and returns the maximum step size by applying 

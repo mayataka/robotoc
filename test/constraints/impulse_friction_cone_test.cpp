@@ -47,8 +47,7 @@ protected:
                                         const ImpulseStatus& impulse_status) const;
   void testCondenseSlackAndDual(Robot& robot, 
                                 const ImpulseStatus& impulse_status) const;
-  void testComputeSlackAndDualDirection(Robot& robot, 
-                                        const ImpulseStatus& impulse_status) const;
+  void testExpandSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const;
 
   double barrier, dt, mu, fraction_to_boundary_rate;
   Eigen::MatrixXd cone;
@@ -272,8 +271,7 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot,
 }
 
 
-void ImpulseFrictionConeTest::testComputeSlackAndDualDirection(Robot& robot, 
-                                                               const ImpulseStatus& impulse_status) const {
+void ImpulseFrictionConeTest::testExpandSlackAndDual(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone limit(robot, mu); 
   ConstraintComponentData data(limit.dimc(), limit.barrier());
   limit.allocateExtraData(data);
@@ -299,7 +297,7 @@ void ImpulseFrictionConeTest::testComputeSlackAndDualDirection(Robot& robot,
   limit.augmentDualResidual(robot, data, s, kkt_res);
   limit.condenseSlackAndDual(robot, data, s, kkt_mat, kkt_res);
   ConstraintComponentData data_ref = data;
-  limit.computeSlackAndDualDirection(robot, data, s, d);
+  limit.expandSlackAndDual(data, s, d);
   data_ref.dslack.fill(1.0);
   data_ref.ddual.fill(1.0);
   int dimf_stack = 0;
@@ -355,7 +353,7 @@ TEST_F(ImpulseFrictionConeTest, fixedBase) {
   testAugmentDualResidual(robot, impulse_status);
   testComputePrimalAndDualResidual(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
-  testComputeSlackAndDualDirection(robot, impulse_status);
+  testExpandSlackAndDual(robot, impulse_status);
   impulse_status.activateImpulse(0);
   testKinematics(robot, impulse_status);
   testfLocal2World(robot, impulse_status);
@@ -364,7 +362,7 @@ TEST_F(ImpulseFrictionConeTest, fixedBase) {
   testAugmentDualResidual(robot, impulse_status);
   testComputePrimalAndDualResidual(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
-  testComputeSlackAndDualDirection(robot, impulse_status);
+  testExpandSlackAndDual(robot, impulse_status);
 }
 
 
@@ -379,7 +377,7 @@ TEST_F(ImpulseFrictionConeTest, floatingBase) {
   testAugmentDualResidual(robot, impulse_status);
   testComputePrimalAndDualResidual(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
-  testComputeSlackAndDualDirection(robot, impulse_status);
+  testExpandSlackAndDual(robot, impulse_status);
   impulse_status.setRandom();
   testKinematics(robot, impulse_status);
   testfLocal2World(robot, impulse_status);
@@ -388,7 +386,7 @@ TEST_F(ImpulseFrictionConeTest, floatingBase) {
   testAugmentDualResidual(robot, impulse_status);
   testComputePrimalAndDualResidual(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
-  testComputeSlackAndDualDirection(robot, impulse_status);
+  testExpandSlackAndDual(robot, impulse_status);
 }
 
 } // namespace idocp

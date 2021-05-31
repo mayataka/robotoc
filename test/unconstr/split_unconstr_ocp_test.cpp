@@ -68,8 +68,8 @@ TEST_F(SplitUnconstrOCPTest, linearizeOCP) {
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   SplitDirection d = SplitDirection::Random(robot);
   auto d_ref = d;
-  ocp.computeCondensedDirection(robot, dt, s, kkt_matrix, kkt_residual, d);
-  constraints->computeSlackAndDualDirection(robot, constraints_data, s, d_ref);
+  ocp.computeCondensedDirection(dt, s, kkt_matrix, kkt_residual, d);
+  constraints->expandSlackAndDual(constraints_data, s, d_ref);
   ud.computeCondensedDirection(dt, kkt_matrix_ref, kkt_residual_ref, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));

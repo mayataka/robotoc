@@ -274,7 +274,7 @@ void ContactDynamicsTest::testComputeCondensedPrimalDirection(Robot& robot, cons
   data.MJtJinv_IDC()     = data.MJtJinv() * data.IDC();
   auto d = SplitDirection::Random(robot, contact_status);
   auto d_ref = d;
-  cd.computeCondensedPrimalDirection(robot, d);
+  cd.computeCondensedPrimalDirection(d);
   Eigen::MatrixXd IO_mat = Eigen::MatrixXd::Zero(dimv+dimf, dimv);
   IO_mat.topRows(dimv).setIdentity();
   Eigen::VectorXd du_full = Eigen::VectorXd::Zero(dimv);

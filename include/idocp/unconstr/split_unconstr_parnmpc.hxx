@@ -99,12 +99,11 @@ inline void SplitUnconstrParNMPC::linearizeOCP(Robot& robot, const double t,
 
 
 inline void SplitUnconstrParNMPC::computeCondensedDirection(
-    Robot& robot, const double dt, const SplitSolution& s, 
-    const SplitKKTMatrix& kkt_matrix, const SplitKKTResidual& kkt_residual,
-    SplitDirection& d) {
+    const double dt, const SplitSolution& s, const SplitKKTMatrix& kkt_matrix, 
+    const SplitKKTResidual& kkt_residual, SplitDirection& d) {
   assert(dt > 0);
   unconstr_dynamics_.computeCondensedDirection(dt, kkt_matrix, kkt_residual, d);
-  constraints_->computeSlackAndDualDirection(robot, constraints_data_, s, d);
+  constraints_->expandSlackAndDual(constraints_data_, s, d);
 }
 
 

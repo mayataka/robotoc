@@ -88,9 +88,9 @@ public:
                             ImpulseSplitKKTMatrix& kkt_matrix,
                             ImpulseSplitKKTResidual& kkt_residual) const override;
 
-  void computeSlackAndDualDirection(Robot& robot, ConstraintComponentData& data, 
-                                    const ImpulseSplitSolution& s,
-                                    const ImpulseSplitDirection& d) const override; 
+  void expandSlackAndDual(ConstraintComponentData& data, 
+                          const ImpulseSplitSolution& s,
+                          const ImpulseSplitDirection& d) const override; 
 
   void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
                                     const ImpulseSplitSolution& s) const override;

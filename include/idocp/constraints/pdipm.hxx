@@ -81,6 +81,12 @@ inline void ComputeDualDirection(ConstraintComponentData& data) {
 }
 
 
+inline double ComputeDualDirection(const double slack, const double dual,
+                                   const double dslack, const double duality) {
+  return (- (dual * dslack + duality) / slack);
+}
+
+
 inline double CostBarrier(const double barrier, const Eigen::VectorXd& vec) {
   assert(barrier > 0);
   assert(vec.array().minCoeff() > 0);

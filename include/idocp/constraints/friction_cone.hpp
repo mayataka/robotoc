@@ -90,9 +90,8 @@ public:
                             SplitKKTMatrix& kkt_matrix,
                             SplitKKTResidual& kkt_residual) const override;
 
-  void computeSlackAndDualDirection(Robot& robot, ConstraintComponentData& data, 
-                                    const SplitSolution& s,
-                                    const SplitDirection& d) const override; 
+  void expandSlackAndDual(ConstraintComponentData& data, const SplitSolution& s,
+                          const SplitDirection& d) const override; 
 
   void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
                                     const SplitSolution& s) const override;
@@ -150,8 +149,8 @@ private:
   Eigen::MatrixXd cone_;
   // Eigen::Matrix<double, 5, 3> cone_;
 
-  Eigen::VectorXd& fW(ConstraintComponentData& data, 
-                      const int contact_idx) const {
+  static Eigen::VectorXd& fW(ConstraintComponentData& data, 
+                             const int contact_idx) {
     return data.r[contact_idx];
   }
 
@@ -160,8 +159,8 @@ private:
     return data.r[max_point_contacts_+contact_idx];
   }
 
-  Eigen::MatrixXd& dg_dq(ConstraintComponentData& data, 
-                         const int contact_idx) const {
+  static Eigen::MatrixXd& dg_dq(ConstraintComponentData& data, 
+                                const int contact_idx) {
     return data.J[contact_idx];
   }
 

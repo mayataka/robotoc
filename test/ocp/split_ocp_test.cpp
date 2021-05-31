@@ -127,9 +127,9 @@ void SplitOCPTest::testLinearizeOCP(Robot& robot,
   }
   auto d_ref = d;
   const SplitDirection d_next = SplitDirection::Random(robot);
-  ocp.computeCondensedPrimalDirection(robot, dt, s, d);
-  cd.computeCondensedPrimalDirection(robot, d_ref);
-  constraints->computeSlackAndDualDirection(robot, constraints_data, s, d_ref);
+  ocp.computeCondensedPrimalDirection(s, d);
+  cd.computeCondensedPrimalDirection(d_ref);
+  constraints->expandSlackAndDual(constraints_data, s, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
   EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));

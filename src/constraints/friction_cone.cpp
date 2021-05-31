@@ -212,9 +212,9 @@ void FrictionCone::condenseSlackAndDual(
 }
 
 
-void FrictionCone::computeSlackAndDualDirection(
-    Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
-    const SplitDirection& d) const {
+void FrictionCone::expandSlackAndDual(ConstraintComponentData& data, 
+                                      const SplitSolution& s, 
+                                      const SplitDirection& d) const {
   // Because data.slack(i) and data.dual(i) are always positive,  
   // - fraction_rate * (slack.coeff(i)/dslack.coeff(i)) and 
   // - fraction_rate * (dual.coeff(i)/ddual.coeff(i))  
@@ -223,7 +223,7 @@ void FrictionCone::computeSlackAndDualDirection(
   data.dslack.fill(1.0);
   data.ddual.fill(1.0);
   int dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     if (s.isContactActive(i)) {
       const int idx = 5*i;
       Eigen::MatrixXd& dgi_dq = dg_dq(data, i);

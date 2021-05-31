@@ -52,12 +52,12 @@ public:
                            robot, data, s, kkt_matrix, kkt_residual);
   }
 
-  void computeSlackAndDualDirection(Robot& robot, ConstraintComponentData& data, 
-                                    const ImpulseSplitSolution& s, 
-                                    const ImpulseSplitDirection& d) const override {
+  void expandSlackAndDual(ConstraintComponentData& data, 
+                          const ImpulseSplitSolution& s, 
+                          const ImpulseSplitDirection& d) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
-                           computeSlackAndDualDirection, 
-                           robot, data, s, d);
+                           expandSlackAndDual, 
+                           data, s, d);
   }
 
   void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 

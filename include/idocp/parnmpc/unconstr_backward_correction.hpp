@@ -100,15 +100,14 @@ public:
   ///
   /// @brief Performs the backward correction for coarse updated solution and 
   /// computes the Newton direction. 
-  /// @param[in] robots std::vector of Robot.
   /// @param[in] parnmpc Optimal control problem.
   /// @param[in] s Solution. 
   /// @param[in] kkt_matrix KKT matrix. 
   /// @param[in] kkt_residual KKT residual. 
   /// @param[in, out] d Direction. 
   ///
-  void backwardCorrection(aligned_vector<Robot>& robots, UnconstrParNMPC& parnmpc, 
-                          const Solution& s, const KKTMatrix& kkt_matrix, 
+  void backwardCorrection(UnconstrParNMPC& parnmpc, const Solution& s, 
+                          const KKTMatrix& kkt_matrix, 
                           const KKTResidual& kkt_residual, Direction& d);
 
   ///

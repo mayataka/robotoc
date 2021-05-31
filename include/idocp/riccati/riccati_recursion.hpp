@@ -116,13 +116,11 @@ public:
   /// RiccatiRecursion::backwardRiccatiRecursion() and 
   /// RiccatiRecursion::forwardRiccatiRecursion().
   /// @param[in] ocp Optimal control problem.
-  /// @param[in] robots std::vector of Robot.
   /// @param[in] factorization Riccati factorization. 
   /// @param[in] s Solution. 
   /// @param[in, out] d Direction. 
   ///
-  void computeDirection(OCP& ocp, aligned_vector<Robot>& robots, 
-                        const RiccatiFactorization& factorization, 
+  void computeDirection(OCP& ocp, const RiccatiFactorization& factorization, 
                         const Solution& s, Direction& d);
 
   ///

@@ -217,31 +217,30 @@ inline void Constraints::condenseSlackAndDual(
 }
 
 
-inline void Constraints::computeSlackAndDualDirection(
-    Robot& robot, ConstraintsData& data, const SplitSolution& s, 
-    const SplitDirection& d) const {
+inline void Constraints::expandSlackAndDual(ConstraintsData& data, 
+                                            const SplitSolution& s, 
+                                            const SplitDirection& d) const {
   if (data.isPositionLevelValid()) {
-    constraintsimpl::computeSlackAndDualDirection(
-        position_level_constraints_, robot, data.position_level_data, s, d);
+    constraintsimpl::expandSlackAndDual(position_level_constraints_, 
+                                        data.position_level_data, s, d);
   }
   if (data.isVelocityLevelValid()) {
-    constraintsimpl::computeSlackAndDualDirection(
-        velocity_level_constraints_, robot, data.velocity_level_data, s, d);
+    constraintsimpl::expandSlackAndDual(velocity_level_constraints_, 
+                                        data.velocity_level_data, s, d);
   }
   if (data.isAccelerationLevelValid()) {
-    constraintsimpl::computeSlackAndDualDirection(
-        acceleration_level_constraints_, robot, data.acceleration_level_data, 
-        s, d);
+    constraintsimpl::expandSlackAndDual(acceleration_level_constraints_, 
+                                        data.acceleration_level_data, s, d);
   }
 }
 
 
-inline void Constraints::computeSlackAndDualDirection(
-    Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s, 
+inline void Constraints::expandSlackAndDual(
+    ConstraintsData& data, const ImpulseSplitSolution& s, 
     const ImpulseSplitDirection& d) const {
   if (data.isImpulseLevelValid()) {
-    constraintsimpl::computeSlackAndDualDirection(
-        impulse_level_constraints_, robot, data.impulse_level_data, s, d);
+    constraintsimpl::expandSlackAndDual(impulse_level_constraints_, 
+                                        data.impulse_level_data, s, d);
   }
 }
 

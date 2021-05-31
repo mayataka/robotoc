@@ -32,7 +32,7 @@ protected:
   void testAugmentDualResidual(Robot& robot, const Eigen::VectorXd& amin) const;
   void testComputePrimalAndDualResidual(Robot& robot, const Eigen::VectorXd& amin) const;
   void testCondenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amin) const;
-  void testComputeSlackAndDualDirection(Robot& robot, const Eigen::VectorXd& amin) const;
+  void testExpandSlackAndDual(Robot& robot, const Eigen::VectorXd& amin) const;
 
   double barrier, dt;
 };
@@ -125,7 +125,7 @@ void JointAccelerationLowerLimitTest::testCondenseSlackAndDual(Robot& robot, con
 }
 
 
-void JointAccelerationLowerLimitTest::testComputeSlackAndDualDirection(Robot& robot, const Eigen::VectorXd& amin) const {
+void JointAccelerationLowerLimitTest::testExpandSlackAndDual(Robot& robot, const Eigen::VectorXd& amin) const {
   JointAccelerationLowerLimit limit(robot, amin); 
   ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
@@ -135,7 +135,7 @@ void JointAccelerationLowerLimitTest::testComputeSlackAndDualDirection(Robot& ro
   data.duality.setRandom();
   ConstraintComponentData data_ref = data;
   const SplitDirection d = SplitDirection::Random(robot);
-  limit.computeSlackAndDualDirection(robot, data, s, d);
+  limit.expandSlackAndDual(data, s, d);
   data_ref.dslack = d.da().tail(dimc) - data_ref.residual;
   pdipm::ComputeDualDirection(data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));
@@ -151,7 +151,7 @@ TEST_F(JointAccelerationLowerLimitTest, fixedBase) {
   testAugmentDualResidual(robot, amin);
   testComputePrimalAndDualResidual(robot, amin);
   testCondenseSlackAndDual(robot, amin);
-  testComputeSlackAndDualDirection(robot, amin);
+  testExpandSlackAndDual(robot, amin);
 }
 
 
@@ -164,7 +164,7 @@ TEST_F(JointAccelerationLowerLimitTest, floatingBase) {
   testAugmentDualResidual(robot, amin);
   testComputePrimalAndDualResidual(robot, amin);
   testCondenseSlackAndDual(robot, amin);
-  testComputeSlackAndDualDirection(robot, amin);
+  testExpandSlackAndDual(robot, amin);
 }
 
 } // namespace idocp

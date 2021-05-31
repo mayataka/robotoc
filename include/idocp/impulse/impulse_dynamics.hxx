@@ -116,8 +116,8 @@ inline void ImpulseDynamics::condensing(
 
 
 inline void ImpulseDynamics::computeCondensedPrimalDirection(
-    const Robot& robot, ImpulseSplitDirection& d) {
-  expansionPrimal(robot, data_, d);
+    ImpulseSplitDirection& d) const {
+  expandPrimal(data_, d);
 }
 
 
@@ -131,9 +131,8 @@ inline void ImpulseDynamics::computeCondensedDualDirection(
 }
 
 
-inline void ImpulseDynamics::expansionPrimal(
-    const Robot& robot, const ImpulseDynamicsData& data, 
-    ImpulseSplitDirection& d) {
+inline void ImpulseDynamics::expandPrimal(const ImpulseDynamicsData& data, 
+                                             ImpulseSplitDirection& d) {
   d.ddvf().noalias()  = - data.MJtJinv_dImDCdqv() * d.dx;
   d.ddvf().noalias() -= data.MJtJinv_ImDC();
   d.df().array() *= -1;

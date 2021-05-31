@@ -8,7 +8,6 @@ JointAccelerationLowerLimit::JointAccelerationLowerLimit(
     const double fraction_to_boundary_rate)
   : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
     dimc_(amin.size()),
-    dim_passive_(robot.dim_passive()),
     amin_(amin) {
 }
 
@@ -16,7 +15,6 @@ JointAccelerationLowerLimit::JointAccelerationLowerLimit(
 JointAccelerationLowerLimit::JointAccelerationLowerLimit()
   : ConstraintComponentBase(),
     dimc_(0),
-    dim_passive_(0),
     amin_() {
 }
 
@@ -74,8 +72,8 @@ void JointAccelerationLowerLimit::condenseSlackAndDual(
 }
 
 
-void JointAccelerationLowerLimit::computeSlackAndDualDirection(
-    Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
+void JointAccelerationLowerLimit::expandSlackAndDual(
+    ConstraintComponentData& data, const SplitSolution& s, 
     const SplitDirection& d) const {
   data.dslack = d.da().tail(dimc_) - data.residual;
   computeDualDirection(data);

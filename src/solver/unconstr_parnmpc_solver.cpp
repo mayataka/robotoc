@@ -79,8 +79,8 @@ void UnconstrParNMPCSolver::updateSolution(const double t,
   assert(v.size() == robots_[0].dimv());
   backward_correction_.coarseUpdate(robots_, parnmpc_, t, q, v, kkt_matrix_,
                                     kkt_residual_, s_);
-  backward_correction_.backwardCorrection(robots_, parnmpc_, s_, 
-                                          kkt_matrix_, kkt_residual_, d_);
+  backward_correction_.backwardCorrection(parnmpc_, s_, kkt_matrix_, 
+                                          kkt_residual_, d_);
   double primal_step_size     = backward_correction_.primalStepSize();
   const double dual_step_size = backward_correction_.dualStepSize();
   if (line_search) {

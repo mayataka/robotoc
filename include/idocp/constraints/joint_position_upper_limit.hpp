@@ -83,9 +83,8 @@ public:
                             SplitKKTMatrix& kkt_matrix,
                             SplitKKTResidual& kkt_residual) const override;
 
-  void computeSlackAndDualDirection(Robot& robot, ConstraintComponentData& data, 
-                                    const SplitSolution& s,
-                                    const SplitDirection& d) const override; 
+  void expandSlackAndDual(ConstraintComponentData& data, const SplitSolution& s,
+                          const SplitDirection& d) const override; 
 
   void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
                                     const SplitSolution& s) const override;

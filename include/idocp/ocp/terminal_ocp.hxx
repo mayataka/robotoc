@@ -79,8 +79,8 @@ inline double TerminalOCP::maxDualStepSize() {
 }
 
 
-inline void TerminalOCP::computeCondensedPrimalDirection(
-    Robot& robot, const SplitSolution& s, SplitDirection& d) {
+inline void TerminalOCP::computeCondensedPrimalDirection(const SplitSolution& s, 
+                                                         SplitDirection& d) {
 }
 
 

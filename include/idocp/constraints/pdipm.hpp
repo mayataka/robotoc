@@ -66,6 +66,18 @@ double FractionToBoundary(const int dim, const double fraction_rate,
 void ComputeDualDirection(ConstraintComponentData& data);
 
 ///
+/// @brief Computes the direction of the dual variable from slack, residual,
+/// duality, and the direction of the slack.
+/// @param[in] slack An element of the slack variable.
+/// @param[in] dual An element of the dual variable.
+/// @param[in] dslack An element of the direction of the slack variable.
+/// @param[in] duality An element of the duality.
+/// @return An element of the direction of the dual variable.
+///
+double ComputeDualDirection(const double slack, const double dual,
+                            const double dslack, const double duality);
+
+///
 /// @brief Computes the barrier function.
 /// @param[in] barrier Barrier parameter. Must be positive. 
 /// @param[in] vec Argument of the log function. All the components must be 

@@ -8,7 +8,6 @@ JointPositionUpperLimit::JointPositionUpperLimit(
     const double fraction_to_boundary_rate)
   : ConstraintComponentBase(barrier, fraction_to_boundary_rate),
     dimc_(robot.lowerJointPositionLimit().size()),
-    dim_passive_(robot.dim_passive()),
     qmax_(robot.upperJointPositionLimit()) {
 }
 
@@ -16,7 +15,6 @@ JointPositionUpperLimit::JointPositionUpperLimit(
 JointPositionUpperLimit::JointPositionUpperLimit()
   : ConstraintComponentBase(),
     dimc_(0),
-    dim_passive_(0),
     qmax_() {
 }
 
@@ -73,8 +71,8 @@ void JointPositionUpperLimit::condenseSlackAndDual(
 }
 
 
-void JointPositionUpperLimit::computeSlackAndDualDirection(
-    Robot& robot, ConstraintComponentData& data, const SplitSolution& s, 
+void JointPositionUpperLimit::expandSlackAndDual(
+    ConstraintComponentData& data, const SplitSolution& s, 
     const SplitDirection& d) const {
   data.dslack = - d.dq().tail(dimc_) - data.residual;
   computeDualDirection(data);

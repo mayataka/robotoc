@@ -123,6 +123,8 @@ void condenseSlackAndDual(
     SplitKKTResidual& kkt_residual);
 
 ///
+/// @brief Condenses the slack and dual variables, i.e., factorizes the  
+/// condensed Hessians and KKT residuals.
 /// @param[in] constraints Vector of the impulse constraints. 
 /// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
@@ -139,18 +141,18 @@ void condenseSlackAndDual(
     ImpulseSplitKKTResidual& kkt_residual);
 
 ///
-/// @brief Computes the directions of the slack and dual variables.
+/// @brief Expands the slack and dual, i.e., computes the directions of the 
+/// slack and dual variables from the directions of the primal variables.
 /// @param[in] constraints Vector of the impulse constraints. 
-/// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
 /// @param[in] s Split solution.
 /// @param[in] d Split direction.
 ///
 template <typename ConstraintComponentBaseTypePtr, 
           typename SplitSolutionType, typename SplitDirectionType>
-void computeSlackAndDualDirection(
+void expandSlackAndDual(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
+    std::vector<ConstraintComponentData>& data, 
     const SplitSolutionType& s, const SplitDirectionType& d);
 
 ///

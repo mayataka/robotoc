@@ -208,8 +208,8 @@ void ImpulseFrictionCone::condenseSlackAndDual(
 }
 
 
-void ImpulseFrictionCone::computeSlackAndDualDirection(
-    Robot& robot, ConstraintComponentData& data, const ImpulseSplitSolution& s, 
+void ImpulseFrictionCone::expandSlackAndDual(
+    ConstraintComponentData& data, const ImpulseSplitSolution& s, 
     const ImpulseSplitDirection& d) const {
   // Because data.slack(i) and data.dual(i) are always positive,  
   // - fraction_rate * (slack.coeff(i)/dslack.coeff(i)) and 
@@ -219,7 +219,7 @@ void ImpulseFrictionCone::computeSlackAndDualDirection(
   data.dslack.fill(1.0);
   data.ddual.fill(1.0);
   int dimf_stack = 0;
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
+  for (int i=0; i<max_point_contacts_; ++i) {
     if (s.isImpulseActive(i)) {
       const int idx = 5*i;
       Eigen::MatrixXd& dgi_dq = dg_dq(data, i);

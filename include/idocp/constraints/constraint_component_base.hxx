@@ -92,22 +92,22 @@ inline void ConstraintComponentBase::computeDuality(
 }
 
 
-inline void ConstraintComponentBase::computeDualDirection(
-    ConstraintComponentData& data) const {
-  pdipm::ComputeDualDirection(data);
-}
-
-
 inline double ConstraintComponentBase::computeDuality(const double slack, 
                                                       const double dual) const {
   return (slack * dual - barrier_); 
 }
 
 
+inline void ConstraintComponentBase::computeDualDirection(
+    ConstraintComponentData& data) {
+  pdipm::ComputeDualDirection(data);
+}
+
+
 inline double ConstraintComponentBase::computeDualDirection(
     const double slack, const double dual, const double dslack, 
-    const double duality) const {
-  return (- (dual * dslack + duality) / slack);
+    const double duality) {
+  return pdipm::ComputeDualDirection(slack, dual, dslack, duality);
 }
 
 } // namespace idocp

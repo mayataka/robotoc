@@ -120,11 +120,9 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
   /// this impulse stage.
-  /// @param[in] robot Robot model. 
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  void computeCondensedPrimalDirection(const Robot& robot, 
-                                       ImpulseSplitDirection& d);
+  void computeCondensedPrimalDirection(ImpulseSplitDirection& d) const;
 
   ///
   /// @brief Computes the Newton direction of the condensed dual variables of 
@@ -145,12 +143,10 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
   /// this impulse stage.
-  /// @param[in] robot Robot model. 
   /// @param[in] data Data for impulse dynamics.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  static void expansionPrimal(const Robot& robot, 
-                              const ImpulseDynamicsData& data, 
+  static void expandPrimal(const ImpulseDynamicsData& data, 
                               ImpulseSplitDirection& d);
 
   ///

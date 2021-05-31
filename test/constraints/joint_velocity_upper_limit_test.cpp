@@ -32,7 +32,7 @@ protected:
   void testAugmentDualResidual(Robot& robot) const;
   void testComputePrimalAndDualResidual(Robot& robot) const;
   void testCondenseSlackAndDual(Robot& robot) const;
-  void testComputeSlackAndDualDirection(Robot& robot) const;
+  void testExpandSlackAndDual(Robot& robot) const;
 
   double barrier, dt;
 };
@@ -128,7 +128,7 @@ void JointVelocityUpperLimitTest::testCondenseSlackAndDual(Robot& robot) const {
 }
 
 
-void JointVelocityUpperLimitTest::testComputeSlackAndDualDirection(Robot& robot) const {
+void JointVelocityUpperLimitTest::testExpandSlackAndDual(Robot& robot) const {
   JointVelocityUpperLimit limit(robot);
   ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
@@ -139,7 +139,7 @@ void JointVelocityUpperLimitTest::testComputeSlackAndDualDirection(Robot& robot)
   data.duality.setRandom();
   ConstraintComponentData data_ref = data;
   const SplitDirection d = SplitDirection::Random(robot);
-  limit.computeSlackAndDualDirection(robot, data, s, d);
+  limit.expandSlackAndDual(data, s, d);
   data_ref.dslack = - d.dv().tail(dimc) - data_ref.residual;
   pdipm::ComputeDualDirection(data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));
@@ -154,7 +154,7 @@ TEST_F(JointVelocityUpperLimitTest, fixedBase) {
   testAugmentDualResidual(robot);
   testComputePrimalAndDualResidual(robot);
   testCondenseSlackAndDual(robot);
-  testComputeSlackAndDualDirection(robot);
+  testExpandSlackAndDual(robot);
 }
 
 
@@ -166,7 +166,7 @@ TEST_F(JointVelocityUpperLimitTest, floatingBase) {
   testAugmentDualResidual(robot);
   testComputePrimalAndDualResidual(robot);
   testCondenseSlackAndDual(robot);
-  testComputeSlackAndDualDirection(robot);
+  testExpandSlackAndDual(robot);
 }
 
 } // namespace idocp

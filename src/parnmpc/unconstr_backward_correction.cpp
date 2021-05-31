@@ -105,8 +105,7 @@ void UnconstrBackwardCorrection::coarseUpdate(aligned_vector<Robot>& robots,
 }
 
 
-void UnconstrBackwardCorrection::backwardCorrection(aligned_vector<Robot>& robots, 
-                                                    UnconstrParNMPC& parnmpc, 
+void UnconstrBackwardCorrection::backwardCorrection(UnconstrParNMPC& parnmpc, 
                                                     const Solution& s, 
                                                     const KKTMatrix& kkt_matrix, 
                                                     const KKTResidual& kkt_residual,
@@ -129,14 +128,14 @@ void UnconstrBackwardCorrection::backwardCorrection(aligned_vector<Robot>& robot
     }
     UnconstrSplitBackwardCorrection::computeDirection(s[i], s_new_[i], d[i]);
     if (i < N_-1) {
-      parnmpc[i].computeCondensedDirection(robots[omp_get_thread_num()], dt_, s[i], 
-                                           kkt_matrix[i], kkt_residual[i], d[i]);
+      parnmpc[i].computeCondensedDirection(dt_, s[i], kkt_matrix[i], 
+                                           kkt_residual[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc[i].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   = parnmpc[i].maxDualStepSize();
     }
     else {
-      parnmpc.terminal.computeCondensedDirection(robots[omp_get_thread_num()], dt_, s[i], 
-                                                 kkt_matrix[i], kkt_residual[i], d[i]);
+      parnmpc.terminal.computeCondensedDirection(dt_, s[i], kkt_matrix[i], 
+                                                 kkt_residual[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc.terminal.maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   = parnmpc.terminal.maxDualStepSize();
     }

@@ -130,15 +130,15 @@ inline void condenseSlackAndDual(
 
 template <typename ConstraintComponentBaseTypePtr, 
           typename SplitSolutionType, typename SplitDirectionType>
-inline void computeSlackAndDualDirection(
+inline void expandSlackAndDual(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints, 
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
+    std::vector<ConstraintComponentData>& data, 
     const SplitSolutionType& s, const SplitDirectionType& d) {
   assert(constraints.size() == data.size());
   for (int i=0; i<constraints.size(); ++i) {
     assert(data[i].dimc() == constraints[i]->dimc());
     assert(data[i].checkDimensionalConsistency());
-    constraints[i]->computeSlackAndDualDirection(robot, data[i], s, d);
+    constraints[i]->expandSlackAndDual(data[i], s, d);
   }
 }
 
