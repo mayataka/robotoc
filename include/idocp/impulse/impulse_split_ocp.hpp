@@ -221,6 +221,7 @@ private:
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   ImpulseDynamics impulse_dynamics_;
+  double impulse_cost_;
 
 };
 

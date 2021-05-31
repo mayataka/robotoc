@@ -117,11 +117,53 @@ double ContactForceCost::computeStageCost(Robot& robot, CostFunctionData& data,
 }
 
 
+void ContactForceCost::computeStageCostDerivatives(
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  int dimf_stack = 0;
+  for (int i=0; i<max_point_contacts_; ++i) {
+    if (s.isContactActive(i)) {
+      kkt_residual.lf().template segment<3>(dimf_stack).array()
+          += dt * f_weight_[i].array() * (s.f[i].array()-f_ref_[i].array());
+      dimf_stack += 3;
+    }
+  }
+}
+
+
+void ContactForceCost::computeStageCostHessian(
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+  int dimf_stack = 0;
+  for (int i=0; i<max_point_contacts_; ++i) {
+    if (s.isContactActive(i)) {
+      kkt_matrix.Qff().diagonal().template segment<3>(dimf_stack).noalias() 
+          += dt * f_weight_[i];
+      dimf_stack += 3;
+    }
+  }
+}
+
+
 double ContactForceCost::computeTerminalCost(Robot& robot, 
                                              CostFunctionData& data, 
                                              const double t, 
                                              const SplitSolution& s) const {
   return 0;
+}
+
+
+void ContactForceCost::computeTerminalCostDerivatives(
+    Robot& robot, CostFunctionData& data, const double t, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  // Do nothing.
+}
+
+
+void ContactForceCost::computeTerminalCostHessian(
+    Robot& robot, CostFunctionData& data, const double t, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+  // Do nothing.
 }
 
 
@@ -139,20 +181,6 @@ double ContactForceCost::computeImpulseCost(
 }
 
 
-void ContactForceCost::computeStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  int dimf_stack = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
-    if (s.isContactActive(i)) {
-      kkt_residual.lf().template segment<3>(dimf_stack).array()
-          += dt * f_weight_[i].array() * (s.f[i].array()-f_ref_[i].array());
-      dimf_stack += 3;
-    }
-  }
-}
-
-
 void ContactForceCost::computeImpulseCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, 
@@ -162,20 +190,6 @@ void ContactForceCost::computeImpulseCostDerivatives(
     if (s.isImpulseActive(i)) {
       kkt_residual.lf().template segment<3>(dimf_stack).array()
           += fi_weight_[i].array() * (s.f[i].array()-fi_ref_[i].array());
-      dimf_stack += 3;
-    }
-  }
-}
-
-
-void ContactForceCost::computeStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  int dimf_stack = 0;
-  for (int i=0; i<max_point_contacts_; ++i) {
-    if (s.isContactActive(i)) {
-      kkt_matrix.Qff().diagonal().template segment<3>(dimf_stack).noalias() 
-          += dt * f_weight_[i];
       dimf_stack += 3;
     }
   }

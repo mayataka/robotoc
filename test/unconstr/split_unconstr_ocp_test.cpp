@@ -57,8 +57,7 @@ TEST_F(SplitUnconstrOCPTest, linearizeOCP) {
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  cost->computeStageCostDerivatives(robot, cost_data, t, dt, s, kkt_residual_ref);
-  cost->computeStageCostHessian(robot, cost_data, t, dt, s, kkt_matrix_ref);
+  const double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->augmentDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
   stateequation::linearizeForwardEuler(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
@@ -103,7 +102,7 @@ TEST_F(SplitUnconstrOCPTest, computeKKTResidual) {
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  cost->computeStageCostDerivatives(robot, cost_data, t, dt, s, kkt_residual_ref);
+  const double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
   constraints->augmentDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
   stateequation::linearizeForwardEuler(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);

@@ -284,6 +284,33 @@ public:
   ///
   bool hasNaN() const;
 
+  ///
+  /// @brief Set by random value based on the current contact status. 
+  ///
+  void setRandom();
+
+  ///
+  /// @brief Set by random value. Contact status is reset.
+  /// @param[in] contact_status Contact status.
+  ///
+  void setRandom(const ContactStatus& contact_status);
+
+  ///
+  /// @brief Generates split KKT matrix filled randomly.
+  /// @return Split KKT matrix filled randomly.
+  /// @param[in] robot Robot model. 
+  ///
+  static SplitKKTMatrix Random(const Robot& robot);
+
+  ///
+  /// @brief Generates split KKT matrix filled randomly.
+  /// @return Split KKT matrix filled randomly.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status.
+  ///
+  static SplitKKTMatrix Random(const Robot& robot, 
+                               const ContactStatus& contact_status);
+
 private:
   Eigen::MatrixXd Qff_full_, Qqf_full_;
   bool has_floating_base_;

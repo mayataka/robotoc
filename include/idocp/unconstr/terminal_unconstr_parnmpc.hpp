@@ -212,10 +212,12 @@ public:
   /// @param[in] t Time of this time stage. 
   /// @param[in] s Split solution of this time stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
+  /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void computeTerminalCostHessian(Robot& robot, const double t, 
                                   const SplitSolution& s, 
-                                  SplitKKTMatrix& kkt_matrix);
+                                  SplitKKTMatrix& kkt_matrix,
+                                  SplitKKTResidual& kkt_residual);
 
 private:
   std::shared_ptr<CostFunction> cost_;

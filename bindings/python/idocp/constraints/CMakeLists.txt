@@ -12,4 +12,4 @@ pybind11_add_idocp_module(joint_torques_upper_limit)
 pybind11_add_idocp_module(friction_cone)
 pybind11_add_idocp_module(impulse_friction_cone)
 
-install_idocp_pybind(constraints)
+install_idocp_pybind_module(constraints)

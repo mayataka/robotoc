@@ -316,7 +316,6 @@ private:
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   ContactDynamics contact_dynamics_;
-  bool use_kinematics_, has_floating_base_;
   double stage_cost_, constraint_violation_;
 
 };

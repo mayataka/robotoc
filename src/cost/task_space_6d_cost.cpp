@@ -75,6 +75,28 @@ double TaskSpace6DCost::computeStageCost(Robot& robot, CostFunctionData& data,
 }
 
 
+void TaskSpace6DCost::computeStageCostDerivatives(
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  data.J_66.setZero();
+  pinocchio::Jlog6(data.diff_SE3, data.J_66);
+  data.J_6d.setZero();
+  robot.getFrameJacobian(frame_id_, data.J_6d);
+  data.JJ_6d.noalias() = data.J_66 * data.J_6d;
+  kkt_residual.lq().noalias() 
+      += dt * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() 
+                                       * data.diff_6d;
+}
+
+
+void TaskSpace6DCost::computeStageCostHessian(
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+  kkt_matrix.Qqq().noalias()
+      += dt * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() * data.JJ_6d;
+}
+
+
 double TaskSpace6DCost::computeTerminalCost(Robot& robot, 
                                             CostFunctionData& data, 
                                             const double t, 
@@ -84,6 +106,27 @@ double TaskSpace6DCost::computeTerminalCost(Robot& robot,
   data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
   l += (qf_6d_weight_.array()*data.diff_6d.array()*data.diff_6d.array()).sum();
   return 0.5 * l;
+}
+
+
+void TaskSpace6DCost::computeTerminalCostDerivatives(
+    Robot& robot, CostFunctionData& data, const double t, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  data.J_66.setZero();
+  pinocchio::Jlog6(data.diff_SE3, data.J_66);
+  data.J_6d.setZero();
+  robot.getFrameJacobian(frame_id_, data.J_6d);
+  data.JJ_6d.noalias() = data.J_66 * data.J_6d;
+  kkt_residual.lq().noalias() 
+      += data.JJ_6d.transpose() * qf_6d_weight_.asDiagonal() * data.diff_6d;
+}
+
+
+void TaskSpace6DCost::computeTerminalCostHessian(
+    Robot& robot, CostFunctionData& data, const double t, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+  kkt_matrix.Qqq().noalias()
+      += data.JJ_6d.transpose() * qf_6d_weight_.asDiagonal() * data.JJ_6d;
 }
 
 
@@ -98,43 +141,10 @@ double TaskSpace6DCost::computeImpulseCost(
 }
 
 
-void TaskSpace6DCost::computeStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
-  data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
-  data.J_66.setZero();
-  pinocchio::Jlog6(data.diff_SE3, data.J_66);
-  data.J_6d.setZero();
-  robot.getFrameJacobian(frame_id_, data.J_6d);
-  data.JJ_6d.noalias() = data.J_66 * data.J_6d;
-  kkt_residual.lq().noalias() 
-      += dt * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() 
-                                       * data.diff_6d;
-}
-
-
-void TaskSpace6DCost::computeTerminalCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
-  data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
-  data.J_66.setZero();
-  pinocchio::Jlog6(data.diff_SE3, data.J_66);
-  data.J_6d.setZero();
-  robot.getFrameJacobian(frame_id_, data.J_6d);
-  data.JJ_6d.noalias() = data.J_66 * data.J_6d;
-  kkt_residual.lq().noalias() 
-      += data.JJ_6d.transpose() * qf_6d_weight_.asDiagonal() * data.diff_6d;
-}
-
-
 void TaskSpace6DCost::computeImpulseCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
-  data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
-  data.diff_6d = pinocchio::log6(data.diff_SE3).toVector();
   data.J_66.setZero();
   pinocchio::Jlog6(data.diff_SE3, data.J_66);
   data.J_6d.setZero();
@@ -145,43 +155,9 @@ void TaskSpace6DCost::computeImpulseCostDerivatives(
 }
 
 
-void TaskSpace6DCost::computeStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
-  data.J_66.setZero();
-  pinocchio::Jlog6(data.diff_SE3, data.J_66);
-  data.J_6d.setZero();
-  robot.getFrameJacobian(frame_id_, data.J_6d);
-  data.JJ_6d.noalias() = data.J_66 * data.J_6d;
-  kkt_matrix.Qqq().noalias()
-      += dt * data.JJ_6d.transpose() * q_6d_weight_.asDiagonal() * data.JJ_6d;
-}
-
-
-void TaskSpace6DCost::computeTerminalCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
-  data.J_66.setZero();
-  pinocchio::Jlog6(data.diff_SE3, data.J_66);
-  data.J_6d.setZero();
-  robot.getFrameJacobian(frame_id_, data.J_6d);
-  data.JJ_6d.noalias() = data.J_66 * data.J_6d;
-  kkt_matrix.Qqq().noalias()
-      += data.JJ_6d.transpose() * qf_6d_weight_.asDiagonal() * data.JJ_6d;
-}
-
-
 void TaskSpace6DCost::computeImpulseCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
-  data.diff_SE3 = SE3_ref_inv_ * robot.framePlacement(frame_id_);
-  data.J_66.setZero();
-  pinocchio::Jlog6(data.diff_SE3, data.J_66);
-  data.J_6d.setZero();
-  robot.getFrameJacobian(frame_id_, data.J_6d);
-  data.JJ_6d.noalias() = data.J_66 * data.J_6d;
   kkt_matrix.Qqq().noalias()
       += data.JJ_6d.transpose() * qi_6d_weight_.asDiagonal() * data.JJ_6d;
 }

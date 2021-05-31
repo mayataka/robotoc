@@ -1,3 +1,3 @@
 pybind11_add_idocp_module(split_solution)
 
-install_idocp_pybind(ocp)
+install_idocp_pybind_module(ocp)

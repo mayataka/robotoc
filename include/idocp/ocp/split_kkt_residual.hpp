@@ -189,6 +189,33 @@ public:
   ///
   bool hasNaN() const;
 
+  ///
+  /// @brief Set by random value based on the current contact status. 
+  ///
+  void setRandom();
+
+  ///
+  /// @brief Set by random value. Contact status is reset.
+  /// @param[in] contact_status Contact status.
+  ///
+  void setRandom(const ContactStatus& contact_status);
+
+  ///
+  /// @brief Generates split KKT residual filled randomly.
+  /// @return Split KKT residual filled randomly.
+  /// @param[in] robot Robot model. 
+  ///
+  static SplitKKTResidual Random(const Robot& robot);
+
+  ///
+  /// @brief Generates split KKT residual filled randomly.
+  /// @return Split KKT residual filled randomly.
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status.
+  ///
+  static SplitKKTResidual Random(const Robot& robot, 
+                                 const ContactStatus& contact_status);
+
 private:
   Eigen::VectorXd lf_full_;
   int dimv_, dimu_, dim_passive_, dimf_;

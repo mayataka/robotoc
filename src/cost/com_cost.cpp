@@ -60,6 +60,24 @@ double CoMCost::computeStageCost(Robot& robot, CostFunctionData& data,
 }
 
 
+void CoMCost::computeStageCostDerivatives(
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  data.J_3d.setZero();
+  robot.getCoMJacobian(data.J_3d);
+  kkt_residual.lq().noalias() 
+      += dt * data.J_3d.transpose() * q_weight_.asDiagonal() * data.diff_3d;
+}
+
+
+void CoMCost::computeStageCostHessian(
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+  kkt_matrix.Qqq().noalias()
+      += dt * data.J_3d.transpose() * q_weight_.asDiagonal() * data.J_3d;
+}
+
+
 double CoMCost::computeTerminalCost(Robot& robot, CostFunctionData& data, 
                                     const double t, 
                                     const SplitSolution& s) const {
@@ -67,28 +85,6 @@ double CoMCost::computeTerminalCost(Robot& robot, CostFunctionData& data,
   data.diff_3d = robot.CoM() - CoM_ref_;
   l += (qf_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
   return 0.5 * l;
-}
-
-
-double CoMCost::computeImpulseCost(Robot& robot,  
-                                           CostFunctionData& data, 
-                                           const double t, 
-                                           const ImpulseSplitSolution& s) const {
-  double l = 0;
-  data.diff_3d = robot.CoM() - CoM_ref_;
-  l += (qi_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
-  return 0.5 * l;
-}
-
-
-void CoMCost::computeStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  data.diff_3d = robot.CoM() - CoM_ref_;
-  data.J_3d.setZero();
-  robot.getCoMJacobian(data.J_3d);
-  kkt_residual.lq().noalias() 
-      += dt * data.J_3d.transpose() * q_weight_.asDiagonal() * data.diff_3d;
 }
 
 
@@ -103,28 +99,6 @@ void CoMCost::computeTerminalCostDerivatives(
 }
 
 
-void CoMCost::computeImpulseCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const ImpulseSplitSolution& s, 
-    ImpulseSplitKKTResidual& kkt_residual) const {
-  data.diff_3d = robot.CoM() - CoM_ref_;
-  data.J_3d.setZero();
-  robot.getCoMJacobian(data.J_3d);
-  kkt_residual.lq().noalias() 
-      += data.J_3d.transpose() * qi_weight_.asDiagonal() * data.diff_3d;
-}
-
-
-void CoMCost::computeStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  data.J_3d.setZero();
-  robot.getCoMJacobian(data.J_3d);
-  kkt_matrix.Qqq().noalias()
-      += dt * data.J_3d.transpose() * q_weight_.asDiagonal() * data.J_3d;
-}
-
-
 void CoMCost::computeTerminalCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
@@ -135,11 +109,31 @@ void CoMCost::computeTerminalCostHessian(
 }
 
 
+double CoMCost::computeImpulseCost(Robot& robot,  
+                                           CostFunctionData& data, 
+                                           const double t, 
+                                           const ImpulseSplitSolution& s) const {
+  double l = 0;
+  data.diff_3d = robot.CoM() - CoM_ref_;
+  l += (qi_weight_.array()*data.diff_3d.array()*data.diff_3d.array()).sum();
+  return 0.5 * l;
+}
+
+
+void CoMCost::computeImpulseCostDerivatives(
+    Robot& robot, CostFunctionData& data, const double t, 
+    const ImpulseSplitSolution& s, 
+    ImpulseSplitKKTResidual& kkt_residual) const {
+  data.J_3d.setZero();
+  robot.getCoMJacobian(data.J_3d);
+  kkt_residual.lq().noalias() 
+      += data.J_3d.transpose() * qi_weight_.asDiagonal() * data.diff_3d;
+}
+
+
 void CoMCost::computeImpulseCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
-  data.J_3d.setZero();
-  robot.getCoMJacobian(data.J_3d);
   kkt_matrix.Qqq().noalias()
       += data.J_3d.transpose() * qi_weight_.asDiagonal() * data.J_3d;
 }

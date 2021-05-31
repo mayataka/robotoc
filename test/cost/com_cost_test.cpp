@@ -28,28 +28,20 @@ protected:
   virtual void TearDown() {
   }
 
-  void testStageCost(Robot& robot, const int frame_id) const;
-  void testTerminalCost(Robot& robot, const int frame_id) const;
-  void testImpulseCost(Robot& robot, const int frame_id) const;
+  void testStageCost(Robot& robot) const;
+  void testTerminalCost(Robot& robot) const;
+  void testImpulseCost(Robot& robot) const;
 
   double dt, t;
 };
 
 
-void CoMCostTest::testStageCost(Robot& robot, const int frame_id) const {
+void CoMCostTest::testStageCost(Robot& robot) const {
   const int dimv = robot.dimv();
-  SplitKKTMatrix kkt_mat(robot);
-  SplitKKTResidual kkt_res(robot);
-  kkt_mat.Qqq().setRandom();
-  kkt_mat.Qvv().setRandom();
-  kkt_mat.Qaa.setRandom();
-  kkt_mat.Quu.setRandom();
-  kkt_res.lq().setRandom();
-  kkt_res.lv().setRandom();
-  kkt_res.la.setRandom();
-  kkt_res.lu.setRandom();
-  SplitKKTMatrix kkt_mat_ref = kkt_mat;
-  SplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qi_weight = Eigen::Vector3d::Random().array().abs();
@@ -79,20 +71,12 @@ void CoMCostTest::testStageCost(Robot& robot, const int frame_id) const {
 }
 
 
-void CoMCostTest::testTerminalCost(Robot& robot, const int frame_id) const {
+void CoMCostTest::testTerminalCost(Robot& robot) const {
   const int dimv = robot.dimv();
-  SplitKKTMatrix kkt_mat(robot);
-  SplitKKTResidual kkt_res(robot);
-  kkt_mat.Qqq().setRandom();
-  kkt_mat.Qvv().setRandom();
-  kkt_mat.Qaa.setRandom();
-  kkt_mat.Quu.setRandom();
-  kkt_res.lq().setRandom();
-  kkt_res.lv().setRandom();
-  kkt_res.la.setRandom();
-  kkt_res.lu.setRandom();
-  SplitKKTMatrix kkt_mat_ref = kkt_mat;
-  SplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qi_weight = Eigen::Vector3d::Random().array().abs();
@@ -122,17 +106,12 @@ void CoMCostTest::testTerminalCost(Robot& robot, const int frame_id) const {
 }
 
 
-void CoMCostTest::testImpulseCost(Robot& robot, const int frame_id) const {
+void CoMCostTest::testImpulseCost(Robot& robot) const {
   const int dimv = robot.dimv();
-  ImpulseSplitKKTMatrix kkt_mat(robot);
-  ImpulseSplitKKTResidual kkt_res(robot);
-  kkt_mat.Qqq().setRandom();
-  kkt_mat.Qvv().setRandom();
-  kkt_res.lq().setRandom();
-  kkt_res.lv().setRandom();
-  kkt_res.ldv.setRandom();
-  ImpulseSplitKKTMatrix kkt_mat_ref = kkt_mat;
-  ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot);
+  auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qi_weight = Eigen::Vector3d::Random().array().abs();
@@ -164,21 +143,17 @@ void CoMCostTest::testImpulseCost(Robot& robot, const int frame_id) const {
 
 TEST_F(CoMCostTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot(dt);
-  const int frame_id = robot.contactFrames()[0];
-  testStageCost(robot, frame_id);
-  testTerminalCost(robot, frame_id);
-  testImpulseCost(robot, frame_id);
+  testStageCost(robot);
+  testTerminalCost(robot);
+  testImpulseCost(robot);
 }
 
 
 TEST_F(CoMCostTest, floatingBase) {
   auto robot = testhelper::CreateFloatingBaseRobot(dt);
-  const std::vector<int> frames = robot.contactFrames();
-  for (const auto frame_id : frames) {
-    testStageCost(robot, frame_id);
-    testTerminalCost(robot, frame_id);
-    testImpulseCost(robot, frame_id);
-  }
+  testStageCost(robot);
+  testTerminalCost(robot);
+  testImpulseCost(robot);
 }
 
 } // namespace idocp

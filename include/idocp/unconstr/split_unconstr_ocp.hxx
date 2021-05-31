@@ -16,7 +16,9 @@ inline SplitUnconstrOCP::SplitUnconstrOCP(
     constraints_(constraints),
     constraints_data_(constraints->createConstraintsData(robot, 0)),
     unconstr_dynamics_(robot),
-    use_kinematics_(false) {
+    use_kinematics_(false),
+    stage_cost_(0),
+    constraint_violation_(0) {
   if (cost_->useKinematics() || constraints_->useKinematics()) {
     use_kinematics_ = true;
   }
@@ -43,7 +45,9 @@ inline SplitUnconstrOCP::SplitUnconstrOCP()
     constraints_(),
     constraints_data_(),
     unconstr_dynamics_(),
-    use_kinematics_(false) {
+    use_kinematics_(false),
+    stage_cost_(0),
+    constraint_violation_(0) {
 }
 
 
@@ -78,12 +82,12 @@ inline void SplitUnconstrOCP::linearizeOCP(Robot& robot, const double t,
   }
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, kkt_residual);
+  stage_cost_ = cost_->quadratizeStageCost(robot, cost_data_, t, dt, s, 
+                                           kkt_residual, kkt_matrix);
   constraints_->augmentDualResidual(robot, constraints_data_, dt, s, kkt_residual);
   stateequation::linearizeForwardEuler(robot, dt, q_prev, s, s_next, 
                                        kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
-  cost_->computeStageCostHessian(robot, cost_data_, t, dt, s, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
                                      kkt_matrix, kkt_residual);
   unconstr_dynamics_.condenseUnconstrDynamics(kkt_matrix, kkt_residual);
@@ -141,7 +145,8 @@ inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const double t,
     robot.updateKinematics(s.q);
   }
   kkt_residual.setZero();
-  cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, kkt_residual);
+  stage_cost_ = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
+                                          kkt_residual);
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   constraints_->augmentDualResidual(robot, constraints_data_, dt, s, kkt_residual);
   stateequation::linearizeForwardEuler(robot, dt, q_prev, s, s_next, 

@@ -168,6 +168,33 @@ public:
   ///
   bool hasNaN() const;
 
+  ///
+  /// @brief Set by random value based on the current impulse status. 
+  ///
+  void setRandom();
+
+  ///
+  /// @brief Set by random value. Impulse status is reset.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setRandom(const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Generates impulse split KKT residual filled randomly.
+  /// @return Impulse split KKT residual filled randomly.
+  /// @param[in] robot Robot model. 
+  ///
+  static ImpulseSplitKKTResidual Random(const Robot& robot);
+
+  ///
+  /// @brief Generates impulse split KKT residual filled randomly.
+  /// @return Impulse split KKT residual filled randomly.
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status.
+  ///
+  static ImpulseSplitKKTResidual Random(const Robot& robot, 
+                                        const ImpulseStatus& impulse_status);
+
 private:
   Eigen::VectorXd lf_full_;
   int dimv_, dimi_;

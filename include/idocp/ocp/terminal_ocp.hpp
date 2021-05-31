@@ -187,6 +187,7 @@ private:
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   bool use_kinematics_;
+  double terminal_cost_;
 
 };
 

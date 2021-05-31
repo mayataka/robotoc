@@ -77,9 +77,9 @@ target_include_directories(
 ```
 
 The following three solvers are provided:
+- `idocp::OCPSolver` : Solves the OCP for rigid-body systems (possibly with contacts) by using Riccati recursion.
 - `idocp::UnconstrOCPSolver` : Solves the OCP for "unconstrained" rigid-body systems by using Riccati recursion.
 - `idocp::UnconstrParNMPCSolver` : Solves the OCP for "unconstrained" rigid-body systems by using ParNMPC algorithm.
-- `idocp::OCPSolver` : Solves the OCP for rigid-body systems (possibly with contacts) by using Riccati recursion.
 
 where "unconstrained" rigid-body systems are systems without any contacts or a floating-base.
 
@@ -114,6 +114,18 @@ The following animations are the solution trajectory of the `idocp::OCPSolver` f
 
 ## MPC Simulation 
 Simulation of the MPC of systems with rigid contacts are shown in [idocp-sim](https://github.com/mayataka/idocp-sim).
+
+
+## Python binding
+Python binding is available (but not tested).
+To build it, modify the CMake configuration as 
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_PYTHON_INTERFACE=ON
+```
+After installing it, add the Python binding path to the environment as (suppose your Python version is 3.8)
+```
+export PYTHONPATH=IDOCP_INSTALL_LOCATION/lib/python3.8/site-packages:$PYTHONPATH
+```
 
 
 ## Citing idocp

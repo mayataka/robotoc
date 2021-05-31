@@ -58,14 +58,16 @@ UnconstrBackwardCorrection::~UnconstrBackwardCorrection() {
 void UnconstrBackwardCorrection::initAuxMat(aligned_vector<Robot>& robots, 
                                             UnconstrParNMPC& parnmpc, 
                                             const double t, const Solution& s, 
-                                            KKTMatrix& kkt_matrix) {
+                                            KKTMatrix& kkt_matrix,
+                                            KKTResidual& kkt_residual) {
   parnmpc.terminal.computeTerminalCostHessian(robots[0], t+T_, s[N_-1], 
-                                              kkt_matrix[0]);
+                                              kkt_matrix[0], kkt_residual[0]);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     aux_mat_[i] = kkt_matrix[0].Qxx;
   }
   kkt_matrix[0].setZero();
+  kkt_residual[0].setZero();
 }
 
 

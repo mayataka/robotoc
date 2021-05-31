@@ -156,6 +156,37 @@ inline bool SplitKKTResidual::hasNaN() const {
   return false;
 }
 
+
+inline void SplitKKTResidual::setRandom() {
+  Fx.setRandom();
+  lx.setRandom();
+  la.setRandom();
+  lu.setRandom();
+  lf().setRandom();
+  lu_passive.setRandom();
+}
+
+
+inline void SplitKKTResidual::setRandom(const ContactStatus& contact_status) {
+  setContactStatus(contact_status);
+  setRandom();
+}
+
+
+inline SplitKKTResidual SplitKKTResidual::Random(const Robot& robot) {
+  SplitKKTResidual kkt_residual(robot);
+  kkt_residual.setRandom();
+  return kkt_residual;
+}
+
+
+inline SplitKKTResidual SplitKKTResidual::Random(
+    const Robot& robot, const ContactStatus& contact_status) {
+  SplitKKTResidual kkt_residual(robot);
+  kkt_residual.setRandom(contact_status);
+  return kkt_residual;
+}
+
 } // namespace idocp 
 
 #endif // IDOCP_SPLIT_KKT_RESIDUAL_HXX_ 

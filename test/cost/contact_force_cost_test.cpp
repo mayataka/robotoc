@@ -50,7 +50,6 @@ void ContactForceCostTest::testStageCost(Robot& robot) const {
   EXPECT_FALSE(cost->useKinematics());
   cost->set_f_weight(f_weight);
   cost->set_f_ref(f_ref);
-  // cost->set_f_ref(robot);
   cost->set_fi_weight(fi_weight);
   cost->set_fi_ref(fi_ref);
   ContactStatus contact_status = robot.createContactStatus();
@@ -61,7 +60,7 @@ void ContactForceCostTest::testStageCost(Robot& robot) const {
   SplitKKTResidual kkt_res(robot);
   kkt_res.setContactStatus(contact_status);
   kkt_mat.setContactStatus(contact_status);
-  SplitSolution s = SplitSolution::Random(robot, contact_status);
+  auto s = SplitSolution::Random(robot, contact_status);
   EXPECT_DOUBLE_EQ(cost->computeStageCost(robot, data, t, dt, s), 0);
   cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
   cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
@@ -81,8 +80,8 @@ void ContactForceCostTest::testStageCost(Robot& robot) const {
   kkt_mat.setContactStatus(contact_status);
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
-  SplitKKTResidual kkt_res_ref = kkt_res;
-  SplitKKTMatrix kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
+  auto kkt_mat_ref = kkt_mat;
   cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
   cost->computeStageCostHessian(robot, data, t, dt, s, kkt_mat);
   int dimf_stack = 0;
@@ -131,7 +130,7 @@ void ContactForceCostTest::testTerminalCost(Robot& robot) const {
   SplitKKTResidual kkt_res(robot);
   kkt_res.setContactStatus(contact_status);
   kkt_mat.setContactStatus(contact_status);
-  SplitSolution s = SplitSolution::Random(robot, contact_status);
+  auto s = SplitSolution::Random(robot, contact_status);
   EXPECT_DOUBLE_EQ(cost->computeTerminalCost(robot, data, t, s), 0);
   cost->computeTerminalCostDerivatives(robot, data, t, s, kkt_res);
   cost->computeTerminalCostHessian(robot, data, t, s, kkt_mat);
@@ -144,8 +143,8 @@ void ContactForceCostTest::testTerminalCost(Robot& robot) const {
   kkt_mat.setContactStatus(contact_status);
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
-  SplitKKTResidual kkt_res_ref = kkt_res;
-  SplitKKTMatrix kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
+  auto kkt_mat_ref = kkt_mat;
   cost->computeTerminalCostDerivatives(robot, data, t, s, kkt_res);
   cost->computeTerminalCostHessian(robot, data, t, s, kkt_mat);
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
@@ -199,8 +198,8 @@ void ContactForceCostTest::testImpulseCost(Robot& robot) const {
   kkt_mat.setImpulseStatus(impulse_status);
   kkt_res.lf().setRandom();
   kkt_mat.Qff().setRandom();
-  ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
-  ImpulseSplitKKTMatrix kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
+  auto kkt_mat_ref = kkt_mat;
   cost->computeImpulseCostDerivatives(robot, data, t, s, kkt_res);
   cost->computeImpulseCostHessian(robot, data, t, s, kkt_mat);
   int dimf_stack = 0;

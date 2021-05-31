@@ -2,4 +2,4 @@ pybind11_add_idocp_module(ocp_solver)
 pybind11_add_idocp_module(unconstr_ocp_solver)
 pybind11_add_idocp_module(unconstr_parnmpc_solver)
 
-install_idocp_pybind(solver)
+install_idocp_pybind_module(solver)

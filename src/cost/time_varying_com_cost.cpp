@@ -70,6 +70,28 @@ double TimeVaryingCoMCost::computeStageCost(Robot& robot,
 }
 
 
+void TimeVaryingCoMCost::computeStageCostDerivatives(
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  if (ref_->isActive(t)) {
+    data.J_3d.setZero();
+    robot.getCoMJacobian(data.J_3d);
+    kkt_residual.lq().noalias() 
+        += dt * data.J_3d.transpose() * q_weight_.asDiagonal() * data.diff_3d;
+  }
+}
+
+
+void TimeVaryingCoMCost::computeStageCostHessian(
+    Robot& robot, CostFunctionData& data, const double t, const double dt, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+  if (ref_->isActive(t)) {
+    kkt_matrix.Qqq().noalias()
+        += dt * data.J_3d.transpose() * q_weight_.asDiagonal() * data.J_3d;
+  }
+}
+
+
 double TimeVaryingCoMCost::computeTerminalCost(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s) const {
@@ -82,6 +104,28 @@ double TimeVaryingCoMCost::computeTerminalCost(
   }
   else {
     return 0;
+  }
+}
+
+
+void TimeVaryingCoMCost::computeTerminalCostDerivatives(
+    Robot& robot, CostFunctionData& data, const double t, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  if (ref_->isActive(t)) {
+    data.J_3d.setZero();
+    robot.getCoMJacobian(data.J_3d);
+    kkt_residual.lq().noalias() 
+        += data.J_3d.transpose() * qf_weight_.asDiagonal() * data.diff_3d;
+  }
+}
+
+
+void TimeVaryingCoMCost::computeTerminalCostHessian(
+    Robot& robot, CostFunctionData& data, const double t, 
+    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
+  if (ref_->isActive(t)) {
+    kkt_matrix.Qqq().noalias()
+        += data.J_3d.transpose() * qf_weight_.asDiagonal() * data.J_3d;
   }
 }
 
@@ -102,41 +146,11 @@ double TimeVaryingCoMCost::computeImpulseCost(
 }
 
 
-void TimeVaryingCoMCost::computeStageCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  if (ref_->isActive(t)) {
-    ref_->update_CoM_ref(t, data.q_3d_ref);
-    data.diff_3d = robot.CoM() - data.q_3d_ref;
-    data.J_3d.setZero();
-    robot.getCoMJacobian(data.J_3d);
-    kkt_residual.lq().noalias() 
-        += dt * data.J_3d.transpose() * q_weight_.asDiagonal() * data.diff_3d;
-  }
-}
-
-
-void TimeVaryingCoMCost::computeTerminalCostDerivatives(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  if (ref_->isActive(t)) {
-    ref_->update_CoM_ref(t, data.q_3d_ref);
-    data.diff_3d = robot.CoM() - data.q_3d_ref;
-    data.J_3d.setZero();
-    robot.getCoMJacobian(data.J_3d);
-    kkt_residual.lq().noalias() 
-        += data.J_3d.transpose() * qf_weight_.asDiagonal() * data.diff_3d;
-  }
-}
-
-
 void TimeVaryingCoMCost::computeImpulseCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   if (ref_->isActive(t)) {
-    ref_->update_CoM_ref(t, data.q_3d_ref);
-    data.diff_3d = robot.CoM() - data.q_3d_ref;
     data.J_3d.setZero();
     robot.getCoMJacobian(data.J_3d);
     kkt_residual.lq().noalias() 
@@ -145,35 +159,10 @@ void TimeVaryingCoMCost::computeImpulseCostDerivatives(
 }
 
 
-void TimeVaryingCoMCost::computeStageCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, const double dt, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  if (ref_->isActive(t)) {
-    data.J_3d.setZero();
-    robot.getCoMJacobian(data.J_3d);
-    kkt_matrix.Qqq().noalias()
-        += dt * data.J_3d.transpose() * q_weight_.asDiagonal() * data.J_3d;
-  }
-}
-
-void TimeVaryingCoMCost::computeTerminalCostHessian(
-    Robot& robot, CostFunctionData& data, const double t, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix) const {
-  if (ref_->isActive(t)) {
-    data.J_3d.setZero();
-    robot.getCoMJacobian(data.J_3d);
-    kkt_matrix.Qqq().noalias()
-        += data.J_3d.transpose() * qf_weight_.asDiagonal() * data.J_3d;
-  }
-}
-
-
 void TimeVaryingCoMCost::computeImpulseCostHessian(
     Robot& robot, CostFunctionData& data, const double t, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTMatrix& kkt_matrix) const {
   if (ref_->isActive(t)) {
-    data.J_3d.setZero();
-    robot.getCoMJacobian(data.J_3d);
     kkt_matrix.Qqq().noalias()
         += data.J_3d.transpose() * qi_weight_.asDiagonal() * data.J_3d;
   }

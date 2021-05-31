@@ -66,7 +66,8 @@ void UnconstrParNMPCSolver::initConstraints() {
 
 
 void UnconstrParNMPCSolver::initBackwardCorrection(const double t) {
-  backward_correction_.initAuxMat(robots_, parnmpc_, t, s_, kkt_matrix_);
+  backward_correction_.initAuxMat(robots_, parnmpc_, t, s_, 
+                                  kkt_matrix_, kkt_residual_);
 }
 
 

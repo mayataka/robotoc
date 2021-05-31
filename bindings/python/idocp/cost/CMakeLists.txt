@@ -11,4 +11,4 @@ pybind11_add_idocp_module(time_varying_task_space_3d_cost)
 pybind11_add_idocp_module(time_varying_task_space_6d_ref_base)
 pybind11_add_idocp_module(time_varying_task_space_6d_cost)
 
-install_idocp_pybind(cost)
+install_idocp_pybind_module(cost)

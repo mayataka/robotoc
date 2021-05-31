@@ -1,4 +1,4 @@
 pybind11_add_idocp_module(contact_status)
 pybind11_add_idocp_module(robot)
 
-install_idocp_pybind(robot)
+install_idocp_pybind_module(robot)

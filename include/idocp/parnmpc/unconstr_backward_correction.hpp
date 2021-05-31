@@ -74,9 +74,11 @@ public:
   /// @param[in] t Initial time of the horizon. 
   /// @param[in] s Solution. 
   /// @param[in, out] kkt_matrix KKT matrix. 
+  /// @param[in, out] kkt_residual KKT residual. 
   ///
   void initAuxMat(aligned_vector<Robot>& robots, UnconstrParNMPC& parnmpc, 
-                  const double t, const Solution& s, KKTMatrix& kkt_matrix);
+                  const double t, const Solution& s, 
+                  KKTMatrix& kkt_matrix, KKTResidual& kkt_residual);
 
   ///
   /// @brief Linearizes the optimal control problem and coarse updates the 
