@@ -86,12 +86,10 @@ protected:
 void TimeVaryingConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   const int dimq = robot.dimq();
   const int dimv = robot.dimv();
-  SplitKKTMatrix kkt_mat(robot);
-  SplitKKTResidual kkt_res(robot);
-  kkt_mat.Qqq().setRandom();
-  kkt_res.lq().setRandom();
-  SplitKKTMatrix kkt_mat_ref = kkt_mat;
-  SplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd q0_ref = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
@@ -149,12 +147,10 @@ void TimeVaryingConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
 void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const {
   const int dimq = robot.dimq();
   const int dimv = robot.dimv();
-  SplitKKTMatrix kkt_mat(robot);
-  SplitKKTResidual kkt_res(robot);
-  kkt_mat.Qqq().setRandom();
-  kkt_res.lq().setRandom();
-  SplitKKTMatrix kkt_mat_ref = kkt_mat;
-  SplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd q0_ref = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 
@@ -212,12 +208,10 @@ void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const
 void TimeVaryingConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const {
   const int dimq = robot.dimq();
   const int dimv = robot.dimv();
-  ImpulseSplitKKTMatrix kkt_mat(robot);
-  ImpulseSplitKKTResidual kkt_res(robot);
-  kkt_mat.Qqq().setRandom();
-  kkt_res.lq().setRandom();
-  ImpulseSplitKKTMatrix kkt_mat_ref = kkt_mat;
-  ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot);
+  auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(dimv);
   const Eigen::VectorXd q0_ref = robot.generateFeasibleConfiguration();
   const Eigen::VectorXd v_ref = Eigen::VectorXd::Random(dimv); 

@@ -76,25 +76,25 @@ public:
   bool isFeasible(Robot& robot, ConstraintComponentData& data, 
                   const ImpulseSplitSolution& s) const override;
 
-  void setSlackAndDual(Robot& robot, ConstraintComponentData& data, 
-                       const ImpulseSplitSolution& s) const override;
+  void setSlack(Robot& robot, ConstraintComponentData& data, 
+                const ImpulseSplitSolution& s) const override;
 
-  void augmentDualResidual(Robot& robot, ConstraintComponentData& data, 
-                           const ImpulseSplitSolution& s,
-                           ImpulseSplitKKTResidual& kkt_residual) const override;
+  void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
+                                    const ImpulseSplitSolution& s) const override;
+
+  void computePrimalResidualDerivatives(Robot& robot, ConstraintComponentData& data, 
+                                        const ImpulseSplitSolution& s,
+                                        ImpulseSplitKKTResidual& kkt_residual) const override;
 
   void condenseSlackAndDual(Robot& robot, ConstraintComponentData& data, 
                             const ImpulseSplitSolution& s,
                             ImpulseSplitKKTMatrix& kkt_matrix,
                             ImpulseSplitKKTResidual& kkt_residual) const override;
 
-  void computeSlackAndDualDirection(Robot& robot, ConstraintComponentData& data, 
-                                    const ImpulseSplitSolution& s,
-                                    const ImpulseSplitDirection& d) const override; 
+  void expandSlackAndDual(ConstraintComponentData& data, 
+                          const ImpulseSplitSolution& s,
+                          const ImpulseSplitDirection& d) const override; 
 
-  void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
-                                    const ImpulseSplitSolution& s) const override;
-  
   int dimc() const override;
 
   ///
@@ -146,7 +146,6 @@ private:
   std::vector<int> contact_frame_;
   double mu_;
   Eigen::MatrixXd cone_;
-  // Eigen::Matrix<double, 5, 3> cone_;
 
   Eigen::VectorXd& fW(ConstraintComponentData& data, 
                       const int contact_idx) const {

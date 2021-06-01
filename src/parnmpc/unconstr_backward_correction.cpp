@@ -58,14 +58,16 @@ UnconstrBackwardCorrection::~UnconstrBackwardCorrection() {
 void UnconstrBackwardCorrection::initAuxMat(aligned_vector<Robot>& robots, 
                                             UnconstrParNMPC& parnmpc, 
                                             const double t, const Solution& s, 
-                                            KKTMatrix& kkt_matrix) {
+                                            KKTMatrix& kkt_matrix,
+                                            KKTResidual& kkt_residual) {
   parnmpc.terminal.computeTerminalCostHessian(robots[0], t+T_, s[N_-1], 
-                                              kkt_matrix[0]);
+                                              kkt_matrix[0], kkt_residual[0]);
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_; ++i) {
     aux_mat_[i] = kkt_matrix[0].Qxx;
   }
   kkt_matrix[0].setZero();
+  kkt_residual[0].setZero();
 }
 
 
@@ -103,8 +105,7 @@ void UnconstrBackwardCorrection::coarseUpdate(aligned_vector<Robot>& robots,
 }
 
 
-void UnconstrBackwardCorrection::backwardCorrection(aligned_vector<Robot>& robots, 
-                                                    UnconstrParNMPC& parnmpc, 
+void UnconstrBackwardCorrection::backwardCorrection(UnconstrParNMPC& parnmpc, 
                                                     const Solution& s, 
                                                     const KKTMatrix& kkt_matrix, 
                                                     const KKTResidual& kkt_residual,
@@ -127,14 +128,14 @@ void UnconstrBackwardCorrection::backwardCorrection(aligned_vector<Robot>& robot
     }
     UnconstrSplitBackwardCorrection::computeDirection(s[i], s_new_[i], d[i]);
     if (i < N_-1) {
-      parnmpc[i].computeCondensedDirection(robots[omp_get_thread_num()], dt_, s[i], 
-                                           kkt_matrix[i], kkt_residual[i], d[i]);
+      parnmpc[i].computeCondensedDirection(dt_, s[i], kkt_matrix[i], 
+                                           kkt_residual[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc[i].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   = parnmpc[i].maxDualStepSize();
     }
     else {
-      parnmpc.terminal.computeCondensedDirection(robots[omp_get_thread_num()], dt_, s[i], 
-                                                 kkt_matrix[i], kkt_residual[i], d[i]);
+      parnmpc.terminal.computeCondensedDirection(dt_, s[i], kkt_matrix[i], 
+                                                 kkt_residual[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc.terminal.maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   = parnmpc.terminal.maxDualStepSize();
     }

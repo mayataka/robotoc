@@ -15,12 +15,7 @@ inline SplitOCP::SplitOCP(const Robot& robot,
     constraints_(constraints),
     constraints_data_(constraints->createConstraintsData(robot, 0)),
     contact_dynamics_(robot),
-    has_floating_base_(robot.hasFloatingBase()),
-    use_kinematics_(false) {
-  if (cost_->useKinematics() || constraints_->useKinematics() 
-                             || robot.maxPointContacts() > 0) {
-    use_kinematics_ = true;
-  }
+    stage_cost_(0) {
 }
 
 
@@ -30,8 +25,7 @@ inline SplitOCP::SplitOCP()
     constraints_(),
     constraints_data_(),
     contact_dynamics_(),
-    has_floating_base_(false),
-    use_kinematics_(false) {
+    stage_cost_(0) {
 }
 
 
@@ -63,24 +57,21 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
                                    SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   assert(q_prev.size() == robot.dimq());
+  robot.updateKinematics(s.q, s.v, s.a);
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
-  }
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, kkt_residual);
-  constraints_->augmentDualResidual(robot, constraints_data_, dt, s, kkt_residual);
+  stage_cost_ = cost_->quadratizeStageCost(robot, cost_data_, t, dt, s, 
+                                           kkt_residual, kkt_matrix);
+  constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
+                                     kkt_matrix, kkt_residual);
   stateequation::linearizeForwardEuler(robot, dt, q_prev, s, s_next, 
                                        kkt_matrix, kkt_residual);
   stateequation::condenseForwardEuler(robot, dt, s, s_next.q, 
                                       kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s, 
                                              kkt_residual);
-  cost_->computeStageCostHessian(robot, cost_data_, t, dt, s, kkt_matrix);
-  constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
-                                     kkt_matrix, kkt_residual);
   contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, 
                                             kkt_matrix, kkt_residual);
 }
@@ -101,25 +92,21 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
   assert(dt > 0);
   assert(dt_next > 0);
   assert(q_prev.size() == robot.dimq());
+  robot.updateKinematics(s.q, s.v, s.a);
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
-  }
   kkt_matrix.setZero();
   kkt_residual.setZero();
-  robot.updateKinematics(s.q, s.v, s.a);
-  cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, kkt_residual);
-  constraints_->augmentDualResidual(robot, constraints_data_, dt, s, kkt_residual);
+  stage_cost_ = cost_->quadratizeStageCost(robot, cost_data_, t, dt, s, 
+                                           kkt_residual, kkt_matrix);
+  constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
+                                     kkt_matrix, kkt_residual);
   stateequation::linearizeForwardEuler(robot, dt, q_prev, s, s_next, 
                                        kkt_matrix, kkt_residual);
   stateequation::condenseForwardEuler(robot, dt, s, s_next.q, 
                                       kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s, 
                                              kkt_residual);
-  cost_->computeStageCostHessian(robot, cost_data_, t, dt, s, kkt_matrix);
-  constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
-                                     kkt_matrix, kkt_residual);
   switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, 
                                                     dt_next, s, kkt_residual, 
                                                     switch_jacobian,
@@ -131,13 +118,11 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
 }
 
 
-inline void SplitOCP::computeCondensedPrimalDirection(Robot& robot, 
-                                                      const double dt, 
-                                                      const SplitSolution& s, 
+inline void SplitOCP::computeCondensedPrimalDirection(const SplitSolution& s, 
                                                       SplitDirection& d) {
   d.setContactStatusByDimension(s.dimf());
-  contact_dynamics_.computeCondensedPrimalDirection(robot, d);
-  constraints_->computeSlackAndDualDirection(robot, constraints_data_, s, d);
+  contact_dynamics_.computeCondensedPrimalDirection(d);
+  constraints_->expandSlackAndDual(constraints_data_, s, d);
 }
 
 
@@ -193,15 +178,14 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
                                          SplitKKTMatrix& kkt_matrix,
                                          SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
+  robot.updateKinematics(s.q, s.v, s.a);
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   kkt_residual.setZero();
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
-  }
-  cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, kkt_residual);
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  constraints_->augmentDualResidual(robot, constraints_data_, dt, s, kkt_residual);
+  stage_cost_ = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
+                                          kkt_residual);
+  constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
+                                               kkt_residual);
   stateequation::linearizeForwardEuler(robot, dt, q_prev, s, s_next, 
                                        kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s, 
@@ -223,15 +207,14 @@ inline void SplitOCP::computeKKTResidual(Robot& robot,
                                          SplitSwitchingConstraintResidual& switch_residual) {
   assert(dt > 0);
   assert(dt_next > 0);
+  robot.updateKinematics(s.q, s.v, s.a);
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   kkt_residual.setZero();
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
-  }
-  cost_->computeStageCostDerivatives(robot, cost_data_, t, dt, s, kkt_residual);
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  constraints_->augmentDualResidual(robot, constraints_data_, dt, s, kkt_residual);
+  stage_cost_ = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
+                                          kkt_residual);
+  constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
+                                               kkt_residual);
   stateequation::linearizeForwardEuler(robot, dt, q_prev, s, s_next, 
                                        kkt_matrix, kkt_residual);
   contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s, 
@@ -250,9 +233,7 @@ inline double SplitOCP::squaredNormKKTResidual(
   error += kkt_residual.lx.squaredNorm();
   error += kkt_residual.la.squaredNorm();
   error += kkt_residual.lf().squaredNorm();
-  if (has_floating_base_) {
-    error += kkt_residual.lu_passive.squaredNorm();
-  }
+  error += kkt_residual.lu_passive.squaredNorm();
   error += kkt_residual.lu.squaredNorm();
   error += stateequation::squaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dt);
@@ -267,9 +248,7 @@ inline double SplitOCP::stageCost(Robot& robot, const double t,
   assert(dt > 0);
   assert(primal_step_size >= 0);
   assert(primal_step_size <= 1);
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
-  }
+  robot.updateKinematics(s.q, s.v, s.a);
   double cost = 0;
   cost += cost_->computeStageCost(robot, cost_data_, t, dt, s);
   if (primal_step_size > 0) {
@@ -292,9 +271,7 @@ inline double SplitOCP::constraintViolation(Robot& robot,
                                             SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
   kkt_residual.setContactStatus(contact_status);
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
-  }
+  robot.updateKinematics(s.q, s.v, s.a);
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   stateequation::computeForwardEulerResidual(robot, dt, s, q_next, v_next, 
                                               kkt_residual);
@@ -316,9 +293,7 @@ inline double SplitOCP::constraintViolation(
   assert(dt > 0);
   assert(dt_next > 0);
   kkt_residual.setContactStatus(contact_status);
-  if (use_kinematics_) {
-    robot.updateKinematics(s.q, s.v, s.a);
-  }
+  robot.updateKinematics(s.q, s.v, s.a);
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   stateequation::computeForwardEulerResidual(robot, dt, s, q_next, v_next, 
                                              kkt_residual);

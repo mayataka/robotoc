@@ -286,10 +286,9 @@ int main(int argc, char *argv[]) {
 
   const bool line_search = false;
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 80, line_search);
-  // idocp::ocpbenchmarker::CPUTime(ocp_solver, t, q, v, 2500, line_search);
 
 #ifdef ENABLE_VIEWER
-  idocp::TrajectoryViewer viewer(path_to_urdf);
+  idocp::TrajectoryViewer viewer(path_to_urdf, idocp::BaseJointType::FloatingBase);
   Eigen::Vector3d camera_pos;
   Eigen::Vector4d camera_quat;
   camera_pos << 0.119269, -7.96283, 1.95978;

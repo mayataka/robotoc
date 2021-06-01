@@ -57,9 +57,7 @@ TEST_F(SplitUnconstrParNMPCTest, linearizeOCP) {
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  cost->computeStageCostDerivatives(robot, cost_data, t, dt, s, kkt_residual_ref);
-  cost->computeStageCostHessian(robot, cost_data, t, dt, s, kkt_matrix_ref);
-  constraints->augmentDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
+  const double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
   stateequation::linearizeBackwardEuler(robot, dt, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
@@ -69,8 +67,8 @@ TEST_F(SplitUnconstrParNMPCTest, linearizeOCP) {
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   SplitDirection d = SplitDirection::Random(robot);
   auto d_ref = d;
-  parnmpc.computeCondensedDirection(robot, dt, s, kkt_matrix, kkt_residual, d);
-  constraints->computeSlackAndDualDirection(robot, constraints_data, s, d_ref);
+  parnmpc.computeCondensedDirection(dt, s, kkt_matrix, kkt_residual, d);
+  constraints->expandSlackAndDual(constraints_data, s, d_ref);
   ud.computeCondensedDirection(dt, kkt_matrix_ref, kkt_residual_ref, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(parnmpc.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
@@ -103,9 +101,8 @@ TEST_F(SplitUnconstrParNMPCTest, computeKKTResidual) {
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  cost->computeStageCostDerivatives(robot, cost_data, t, dt, s, kkt_residual_ref);
-  constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  constraints->augmentDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
+  const double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
+  constraints->linearizePrimalAndDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
   stateequation::linearizeBackwardEuler(robot, dt, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
   ud.linearizeUnconstrDynamics(robot, dt, s, kkt_residual_ref);

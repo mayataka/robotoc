@@ -150,35 +150,61 @@ inline void Constraints::setSlackAndDual(Robot& robot, ConstraintsData& data,
 }
 
 
-inline void Constraints::augmentDualResidual(
-    Robot& robot, ConstraintsData& data, const double dt, 
-    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
-  assert(dt > 0);
+inline void Constraints::computePrimalAndDualResidual(
+    Robot& robot, ConstraintsData& data, const SplitSolution& s) const {
   if (data.isPositionLevelValid()) {
-    constraintsimpl::augmentDualResidual(position_level_constraints_, robot, 
-                                         data.position_level_data, dt, s, 
-                                         kkt_residual);
+    constraintsimpl::computePrimalAndDualResidual(
+        position_level_constraints_, robot, data.position_level_data, s);
   }
   if (data.isVelocityLevelValid()) {
-    constraintsimpl::augmentDualResidual(velocity_level_constraints_, robot, 
-                                         data.velocity_level_data, dt, s, 
-                                         kkt_residual);
+    constraintsimpl::computePrimalAndDualResidual(
+        velocity_level_constraints_, robot, data.velocity_level_data, s);
   }
   if (data.isAccelerationLevelValid()) {
-    constraintsimpl::augmentDualResidual(acceleration_level_constraints_, robot, 
-                                         data.acceleration_level_data, dt, s, 
-                                         kkt_residual);
+    constraintsimpl::computePrimalAndDualResidual(
+        acceleration_level_constraints_, robot, data.acceleration_level_data, s);
   }
 }
 
 
-inline void Constraints::augmentDualResidual(
+inline void Constraints::computePrimalAndDualResidual(
+    Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s) const {
+  if (data.isImpulseLevelValid()) {
+    constraintsimpl::computePrimalAndDualResidual(
+        impulse_level_constraints_, robot, data.impulse_level_data, s);
+  }
+}
+
+
+inline void Constraints::linearizePrimalAndDualResidual(
+    Robot& robot, ConstraintsData& data, const double dt, 
+    const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
+  assert(dt > 0);
+  if (data.isPositionLevelValid()) {
+    constraintsimpl::linearizePrimalAndDualResidual(
+        position_level_constraints_, robot, data.position_level_data, 
+        dt, s, kkt_residual);
+  }
+  if (data.isVelocityLevelValid()) {
+    constraintsimpl::linearizePrimalAndDualResidual(
+        velocity_level_constraints_, robot, data.velocity_level_data, 
+        dt, s, kkt_residual);
+  }
+  if (data.isAccelerationLevelValid()) {
+    constraintsimpl::linearizePrimalAndDualResidual(
+        acceleration_level_constraints_, robot, data.acceleration_level_data, 
+        dt, s, kkt_residual);
+  }
+}
+
+
+inline void Constraints::linearizePrimalAndDualResidual(
     Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s,
     ImpulseSplitKKTResidual& kkt_residual) const {
   if (data.isImpulseLevelValid()) {
-    constraintsimpl::augmentDualResidual(impulse_level_constraints_, robot, 
-                                         data.impulse_level_data, s, 
-                                         kkt_residual);
+    constraintsimpl::linearizePrimalAndDualResidual(
+        impulse_level_constraints_, robot, data.impulse_level_data, 
+        s, kkt_residual);
   }
 }
 
@@ -188,19 +214,19 @@ inline void Constraints::condenseSlackAndDual(
     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) const {
   assert(dt > 0);
   if (data.isPositionLevelValid()) {
-    constraintsimpl::condenseSlackAndDual(position_level_constraints_, robot,
-                                          data.position_level_data, dt, s, 
-                                          kkt_matrix, kkt_residual);
+    constraintsimpl::condenseSlackAndDual(
+        position_level_constraints_, robot, data.position_level_data, 
+        dt, s, kkt_matrix, kkt_residual);
   }
   if (data.isVelocityLevelValid()) {
-    constraintsimpl::condenseSlackAndDual(velocity_level_constraints_, robot,
-                                          data.velocity_level_data, dt, s, 
-                                          kkt_matrix, kkt_residual);
+    constraintsimpl::condenseSlackAndDual(
+        velocity_level_constraints_, robot, data.velocity_level_data, 
+        dt, s, kkt_matrix, kkt_residual);
   }
   if (data.isAccelerationLevelValid()) {
-    constraintsimpl::condenseSlackAndDual(acceleration_level_constraints_, robot,
-                                          data.acceleration_level_data, dt, s, 
-                                          kkt_matrix, kkt_residual);
+    constraintsimpl::condenseSlackAndDual(
+        acceleration_level_constraints_, robot, data.acceleration_level_data, 
+        dt, s, kkt_matrix, kkt_residual);
   }
 }
 
@@ -210,38 +236,37 @@ inline void Constraints::condenseSlackAndDual(
     ImpulseSplitKKTMatrix& kkt_matrix, 
     ImpulseSplitKKTResidual& kkt_residual) const {
   if (data.isImpulseLevelValid()) {
-    constraintsimpl::condenseSlackAndDual(impulse_level_constraints_, robot,
-                                          data.impulse_level_data, s, 
-                                          kkt_matrix, kkt_residual);
+    constraintsimpl::condenseSlackAndDual(
+        impulse_level_constraints_, robot, data.impulse_level_data, 
+        s, kkt_matrix, kkt_residual);
   }
 }
 
 
-inline void Constraints::computeSlackAndDualDirection(
-    Robot& robot, ConstraintsData& data, const SplitSolution& s, 
-    const SplitDirection& d) const {
+inline void Constraints::expandSlackAndDual(ConstraintsData& data, 
+                                            const SplitSolution& s, 
+                                            const SplitDirection& d) const {
   if (data.isPositionLevelValid()) {
-    constraintsimpl::computeSlackAndDualDirection(
-        position_level_constraints_, robot, data.position_level_data, s, d);
+    constraintsimpl::expandSlackAndDual(position_level_constraints_, 
+                                        data.position_level_data, s, d);
   }
   if (data.isVelocityLevelValid()) {
-    constraintsimpl::computeSlackAndDualDirection(
-        velocity_level_constraints_, robot, data.velocity_level_data, s, d);
+    constraintsimpl::expandSlackAndDual(velocity_level_constraints_, 
+                                        data.velocity_level_data, s, d);
   }
   if (data.isAccelerationLevelValid()) {
-    constraintsimpl::computeSlackAndDualDirection(
-        acceleration_level_constraints_, robot, data.acceleration_level_data, 
-        s, d);
+    constraintsimpl::expandSlackAndDual(acceleration_level_constraints_, 
+                                        data.acceleration_level_data, s, d);
   }
 }
 
 
-inline void Constraints::computeSlackAndDualDirection(
-    Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s, 
+inline void Constraints::expandSlackAndDual(
+    ConstraintsData& data, const ImpulseSplitSolution& s, 
     const ImpulseSplitDirection& d) const {
   if (data.isImpulseLevelValid()) {
-    constraintsimpl::computeSlackAndDualDirection(
-        impulse_level_constraints_, robot, data.impulse_level_data, s, d);
+    constraintsimpl::expandSlackAndDual(impulse_level_constraints_, 
+                                        data.impulse_level_data, s, d);
   }
 }
 
@@ -400,32 +425,6 @@ inline double Constraints::costSlackBarrier(const ConstraintsData& data,
                                               step_size);
   }
   return cost;
-}
-
-
-inline void Constraints::computePrimalAndDualResidual(
-    Robot& robot, ConstraintsData& data, const SplitSolution& s) const {
-  if (data.isPositionLevelValid()) {
-    constraintsimpl::computePrimalAndDualResidual(
-        position_level_constraints_, robot, data.position_level_data, s);
-  }
-  if (data.isVelocityLevelValid()) {
-    constraintsimpl::computePrimalAndDualResidual(
-        velocity_level_constraints_, robot, data.velocity_level_data, s);
-  }
-  if (data.isAccelerationLevelValid()) {
-    constraintsimpl::computePrimalAndDualResidual(
-        acceleration_level_constraints_, robot, data.acceleration_level_data, s);
-  }
-}
-
-
-inline void Constraints::computePrimalAndDualResidual(
-    Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s) const {
-  if (data.isImpulseLevelValid()) {
-    constraintsimpl::computePrimalAndDualResidual(
-        impulse_level_constraints_, robot, data.impulse_level_data, s);
-  }
 }
 
 

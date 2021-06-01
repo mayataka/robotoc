@@ -104,12 +104,10 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
   /// this impulse stage.
-  /// @param[in] robot Robot model. 
   /// @param[in] s Split solution of this impulse stage.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  void computeCondensedPrimalDirection(Robot& robot, 
-                                       const ImpulseSplitSolution& s, 
+  void computeCondensedPrimalDirection(const ImpulseSplitSolution& s, 
                                        ImpulseSplitDirection& d);
 
   ///
@@ -221,6 +219,7 @@ private:
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   ImpulseDynamics impulse_dynamics_;
+  double impulse_cost_;
 
 };
 

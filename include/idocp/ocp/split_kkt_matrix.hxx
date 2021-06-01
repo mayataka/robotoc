@@ -270,6 +270,42 @@ inline bool SplitKKTMatrix::hasNaN() const {
   return false;
 }
 
+
+inline void SplitKKTMatrix::setRandom() {
+  Fxx.setRandom();
+  Fvu.setRandom();
+  Qxx.setRandom();
+  Qaa.setRandom();
+  Qxu.setRandom();
+  Qxu_passive.setRandom();
+  Quu.setRandom();
+  Quu_passive_topRight.setRandom();
+  Qff().setRandom();
+  Qqf().setRandom();
+  Fqq_prev.setRandom();
+}
+
+
+inline void SplitKKTMatrix::setRandom(const ContactStatus& contact_status) {
+  setContactStatus(contact_status);
+  setRandom();
+}
+
+
+inline SplitKKTMatrix SplitKKTMatrix::Random(const Robot& robot) {
+  SplitKKTMatrix kkt_matrix(robot);
+  kkt_matrix.setRandom();
+  return kkt_matrix;
+}
+
+
+inline SplitKKTMatrix SplitKKTMatrix::Random(
+    const Robot& robot, const ContactStatus& contact_status) {
+  SplitKKTMatrix kkt_matrix(robot);
+  kkt_matrix.setRandom(contact_status);
+  return kkt_matrix;
+}
+
 } // namespace idocp 
 
 #endif // IDOCP_SPLIT_KKT_MATRIX_HXX_ 

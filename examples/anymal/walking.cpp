@@ -232,7 +232,7 @@ int main(int argc, char *argv[]) {
   idocp::ocpbenchmarker::Convergence(ocp_solver, t, q, v, 20, line_search);
 
 #ifdef ENABLE_VIEWER
-  idocp::TrajectoryViewer viewer(path_to_urdf);
+  idocp::TrajectoryViewer viewer(path_to_urdf, idocp::BaseJointType::FloatingBase);
   viewer.display(robot, ocp_solver.getSolution("q"), 
                  ocp_solver.getSolution("f", "WORLD"), dt, mu);
 #endif 

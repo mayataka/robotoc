@@ -32,7 +32,7 @@ protected:
   static void testLinearizeImpulseDynamics(Robot& robot, 
                                            const ImpulseStatus& impulse_status);
   static void testCondensing(Robot& robot, const ImpulseStatus& impulse_status);
-  static void testExpansionPrimal(Robot& robot, const ImpulseStatus& impulse_status);
+  static void testExpandPrimal(Robot& robot, const ImpulseStatus& impulse_status);
   static void testExpansionDual(Robot& robot, const ImpulseStatus& impulse_status);
   static void testIntegration(Robot& robot, const ImpulseStatus& impulse_status);
   static void testComputeResidual(Robot& robot, const ImpulseStatus& impulse_status);
@@ -183,7 +183,7 @@ void ImpulseDynamicsTest::testCondensing(Robot& robot,
 }
 
 
-void ImpulseDynamicsTest::testExpansionPrimal(Robot& robot, 
+void ImpulseDynamicsTest::testExpandPrimal(Robot& robot, 
                                               const ImpulseStatus& impulse_status) {
   const int dimv = robot.dimv();
   const int dimf = impulse_status.dimf();
@@ -200,7 +200,7 @@ void ImpulseDynamicsTest::testExpansionPrimal(Robot& robot,
   data.MJtJinv_ImDC() = data.MJtJinv() * data.ImDC();
   ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
   ImpulseSplitDirection d_ref = d;
-  ImpulseDynamics::expansionPrimal(robot, data, d);
+  ImpulseDynamics::expandPrimal(data, d);
   d_ref.ddvf() = - data.MJtJinv() * (data.dImDCdqv() * d.dx + data.ImDC());
   d_ref.df().array() *= -1;
   EXPECT_TRUE(d.isApprox(d_ref));
@@ -280,8 +280,8 @@ void ImpulseDynamicsTest::testIntegration(Robot& robot,
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
   ImpulseSplitDirection d_ref = d;
-  id.computeCondensedPrimalDirection(robot, d);
-  ImpulseDynamics::expansionPrimal(robot, data_ref, d_ref);
+  id.computeCondensedPrimalDirection(d);
+  ImpulseDynamics::expandPrimal(data_ref, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   const Eigen::VectorXd dgmm_next = Eigen::VectorXd::Random(dimv);
   id.computeCondensedDualDirection(robot, kkt_matrix, kkt_residual, dgmm_next, d);
@@ -322,7 +322,7 @@ TEST_F(ImpulseDynamicsTest, fixedBase) {
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulseDynamics(robot, impulse_status);
   testCondensing(robot, impulse_status);
-  testExpansionPrimal(robot, impulse_status);
+  testExpandPrimal(robot, impulse_status);
   testExpansionDual(robot, impulse_status);
   testIntegration(robot, impulse_status);
   testComputeResidual(robot, impulse_status);
@@ -331,7 +331,7 @@ TEST_F(ImpulseDynamicsTest, fixedBase) {
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulseDynamics(robot, impulse_status);
   testCondensing(robot, impulse_status);
-  testExpansionPrimal(robot, impulse_status);
+  testExpandPrimal(robot, impulse_status);
   testExpansionDual(robot, impulse_status);
   testIntegration(robot, impulse_status);
   testComputeResidual(robot, impulse_status);
@@ -346,7 +346,7 @@ TEST_F(ImpulseDynamicsTest, floatingBase) {
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulseDynamics(robot, impulse_status);
   testCondensing(robot, impulse_status);
-  testExpansionPrimal(robot, impulse_status);
+  testExpandPrimal(robot, impulse_status);
   testExpansionDual(robot, impulse_status);
   testIntegration(robot, impulse_status);
   testComputeResidual(robot, impulse_status);
@@ -358,7 +358,7 @@ TEST_F(ImpulseDynamicsTest, floatingBase) {
   testLinearizeImpulseVelocityConstraints(robot, impulse_status);
   testLinearizeImpulseDynamics(robot, impulse_status);
   testCondensing(robot, impulse_status);
-  testExpansionPrimal(robot, impulse_status);
+  testExpandPrimal(robot, impulse_status);
   testExpansionDual(robot, impulse_status);
   testIntegration(robot, impulse_status);
   testComputeResidual(robot, impulse_status);

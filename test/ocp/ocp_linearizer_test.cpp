@@ -330,7 +330,7 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   RiccatiFactorization riccati_factorization(robots[0], N, max_num_impulse);
   riccati_solver.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, riccati_factorization);
   riccati_solver.forwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, d);
-  riccati_solver.computeDirection(ocp, robots, riccati_factorization, s, d);
+  riccati_solver.computeDirection(ocp, riccati_factorization, s, d);
   const double primal_step_size = riccati_solver.maxPrimalStepSize();
   const double dual_step_size = riccati_solver.maxDualStepSize();
   ASSERT_TRUE(primal_step_size > 0);

@@ -95,9 +95,7 @@ void SplitOCPTest::testLinearizeOCP(Robot& robot,
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  cost->computeStageCostDerivatives(robot, cost_data, t, dt, s, kkt_residual_ref);
-  cost->computeStageCostHessian(robot, cost_data, t, dt, s, kkt_matrix_ref);
-  constraints->augmentDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
+  const double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
   stateequation::linearizeForwardEuler(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   stateequation::condenseForwardEuler(robot, dt, s, s_next.q, kkt_matrix_ref, kkt_residual_ref);
@@ -128,9 +126,9 @@ void SplitOCPTest::testLinearizeOCP(Robot& robot,
   }
   auto d_ref = d;
   const SplitDirection d_next = SplitDirection::Random(robot);
-  ocp.computeCondensedPrimalDirection(robot, dt, s, d);
-  cd.computeCondensedPrimalDirection(robot, d_ref);
-  constraints->computeSlackAndDualDirection(robot, constraints_data, s, d_ref);
+  ocp.computeCondensedPrimalDirection(s, d);
+  cd.computeCondensedPrimalDirection(d_ref);
+  constraints->expandSlackAndDual(constraints_data, s, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
   EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));
@@ -198,9 +196,8 @@ void SplitOCPTest::testComputeKKTResidual(Robot& robot,
   auto constraints_data = constraints->createConstraintsData(robot, 10);
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
-  cost->computeStageCostDerivatives(robot, cost_data, t, dt, s, kkt_residual_ref);
-  constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  constraints->augmentDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
+  const double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
+  constraints->linearizePrimalAndDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
   stateequation::linearizeForwardEuler(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);

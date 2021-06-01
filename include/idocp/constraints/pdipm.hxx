@@ -31,6 +31,23 @@ inline void ComputeDuality(const double barrier,
 }
 
 
+inline void ComputeDuality(const double barrier, ConstraintComponentData& data,
+                           const int start, const int size) {
+  assert(barrier > 0);
+  assert(data.checkDimensionalConsistency());
+  data.duality.segment(start, size).array() 
+      = data.slack.segment(start, size).array() 
+          * data.dual.segment(start, size).array() - barrier;
+}
+
+
+inline double ComputeDuality(const double barrier, const double slack, 
+                             const double dual) {
+  assert(barrier > 0);
+  return (slack * dual - barrier); 
+}
+
+
 inline double FractionToBoundarySlack(const double fraction_rate, 
                                       const ConstraintComponentData& data) {
   assert(fraction_rate > 0);
@@ -81,7 +98,32 @@ inline void ComputeDualDirection(ConstraintComponentData& data) {
 }
 
 
-inline double CostBarrier(const double barrier, const Eigen::VectorXd& vec) {
+inline void ComputeDualDirection(ConstraintComponentData& data, 
+                                 const int start, const int size) {
+  data.ddual.segment(start, size).array() 
+      = - (data.dual.segment(start, size).array()
+              *data.dslack.segment(start, size).array()
+            +data.duality.segment(start, size).array())
+          / data.slack.segment(start, size).array();
+}
+
+
+inline double ComputeDualDirection(const double slack, const double dual,
+                                   const double dslack, const double duality) {
+  return (- (dual * dslack + duality) / slack);
+}
+
+
+// inline double CostBarrier(const double barrier, const Eigen::VectorXd& vec) {
+//   assert(barrier > 0);
+//   assert(vec.array().minCoeff() > 0);
+//   return (- barrier * vec.array().log().sum());
+// }
+
+
+template <typename VectorType>
+inline double CostBarrier(const double barrier, 
+                          const Eigen::MatrixBase<VectorType>& vec) {
   assert(barrier > 0);
   assert(vec.array().minCoeff() > 0);
   return (- barrier * vec.array().log().sum());

@@ -222,6 +222,41 @@ inline bool ImpulseSplitKKTMatrix::hasNaN() const {
   return false;
 }
 
+
+inline void ImpulseSplitKKTMatrix::setRandom() {
+  Fxx.setRandom();
+  Qxx.setRandom();
+  Qdvdv.setRandom();
+  Qff().setRandom();
+  Qqf().setRandom();
+  Fqq_prev.setRandom();
+  Fqq_inv.setRandom();
+  Fqq_prev_inv.setRandom();
+}
+
+
+inline void ImpulseSplitKKTMatrix::setRandom(
+    const ImpulseStatus& impulse_status) {
+  setImpulseStatus(impulse_status);
+  setRandom();
+}
+
+
+inline ImpulseSplitKKTMatrix ImpulseSplitKKTMatrix::Random(
+    const Robot& robot) {
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
+  kkt_matrix.setRandom();
+  return kkt_matrix;
+}
+
+
+inline ImpulseSplitKKTMatrix ImpulseSplitKKTMatrix::Random(
+    const Robot& robot, const ImpulseStatus& impulse_status) {
+  ImpulseSplitKKTMatrix kkt_matrix(robot);
+  kkt_matrix.setRandom(impulse_status);
+  return kkt_matrix;
+}
+
 } // namespace idocp 
 
 #endif // IDOCP_IMPULSE_SPLIT_KKT_MATRIX_HXX_ 

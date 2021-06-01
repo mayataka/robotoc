@@ -141,33 +141,52 @@ public:
                        const ImpulseSplitSolution& s) const;
 
   ///
-  /// @brief Augments the dual residual of the constraints to the split KKT 
-  /// residual.
+  /// @brief Computes the primal and dual residuals of the constraints. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Constraints data.
+  /// @param[in] s Split solution.
+  ///
+  void computePrimalAndDualResidual(Robot& robot, ConstraintsData& data, 
+                                    const SplitSolution& s) const;
+
+  ///
+  /// @brief Computes the primal and dual residuals of the constraints. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Constraints data.
+  /// @param[in] s Impulse split solution.
+  ///
+  void computePrimalAndDualResidual(Robot& robot, ConstraintsData& data, 
+                                    const ImpulseSplitSolution& s) const;
+
+  ///
+  /// @brief Computes the primal and dual residuals, linearize the 
+  /// constraints, and add it to the KKT residual.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data. 
   /// @param[in] dt Time step.
   /// @param[in] s Split solution.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void augmentDualResidual(Robot& robot, ConstraintsData& data, const double dt, 
-                           const SplitSolution& s, 
-                           SplitKKTResidual& kkt_residual) const;
+  void linearizePrimalAndDualResidual(Robot& robot, ConstraintsData& data, 
+                                      const double dt, const SplitSolution& s, 
+                                      SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Augments the dual residual of the constraints to the impulse split 
-  /// KKT residual 
+  /// @brief Computes the primal and dual residuals, linearize the 
+  /// constraints, and add it to the KKT residual.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data. 
   /// @param[in] s Split solution.
   /// @param[out] kkt_residual KKT residual.
   ///
-  void augmentDualResidual(Robot& robot, ConstraintsData& data,
-                           const ImpulseSplitSolution& s,
-                           ImpulseSplitKKTResidual& kkt_residual) const;
+  void linearizePrimalAndDualResidual(
+      Robot& robot, ConstraintsData& data, const ImpulseSplitSolution& s,
+      ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Consenses the slack and dual variables of the constraints and 
-  /// factorizes the condensed Hessians and KKT residuals.
+  /// @brief Computes the primal and dual residuals, linearize the 
+  /// constraints and add it to the KKT residual, and condense the slack and 
+  /// dual variables.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data. 
   /// @param[in] dt Time step.
@@ -183,8 +202,9 @@ public:
                             SplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Consenses the slack and dual variables of the constraints and 
-  /// factorizes the condensed Hessians and KKT residuals.
+  /// @brief Computes the primal and dual residuals, linearize the 
+  /// constraints and add it to the KKT residual, and condense the slack and 
+  /// dual variables.
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data.
   /// @param[in] s Split solution.
@@ -199,26 +219,24 @@ public:
                             ImpulseSplitKKTResidual& kkt_residual) const;
 
   ///
-  /// @brief Computes the directions of the slack and dual variables.
-  /// @param[in] robot Robot model.
+  /// @brief Expands the slack and dual, i.e., computes the directions of the 
+  /// slack and dual variables from the directions of the primal variables.
   /// @param[in, out] data Constraints data. 
   /// @param[in] s Split solution.
   /// @param[in] d Split direction.
   ///
-  void computeSlackAndDualDirection(Robot& robot, ConstraintsData& data, 
-                                    const SplitSolution& s,
-                                    const SplitDirection& d) const;
+  void expandSlackAndDual(ConstraintsData& data, const SplitSolution& s, 
+                          const SplitDirection& d) const;
 
   ///
-  /// @brief Computes the directions of the slack and dual variables.
-  /// @param[in] robot Robot model.
+  /// @brief Expands the slack and dual, i.e., computes the directions of the 
+  /// slack and dual variables from the directions of the primal variables.
   /// @param[in, out] data Constraints data. 
   /// @param[in] s Impulse split solution.
   /// @param[in] d Impulse split direction.
   ///
-  void computeSlackAndDualDirection(Robot& robot, ConstraintsData& data, 
-                                    const ImpulseSplitSolution& s,
-                                    const ImpulseSplitDirection& d) const;
+  void expandSlackAndDual(ConstraintsData& data, const ImpulseSplitSolution& s,
+                          const ImpulseSplitDirection& d) const;
 
   ///
   /// @brief Computes and returns the maximum step size by applying 
@@ -267,24 +285,6 @@ public:
   ///
   double costSlackBarrier(const ConstraintsData& data, 
                           const double step_size) const;
-
-  ///
-  /// @brief Computes the primal and dual residuals of the constraints. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Constraints data.
-  /// @param[in] s Split solution.
-  ///
-  void computePrimalAndDualResidual(Robot& robot, ConstraintsData& data, 
-                                    const SplitSolution& s) const;
-
-  ///
-  /// @brief Computes the primal and dual residuals of the constraints. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Constraints data.
-  /// @param[in] s Impulse split solution.
-  ///
-  void computePrimalAndDualResidual(Robot& robot, ConstraintsData& data, 
-                                    const ImpulseSplitSolution& s) const;
 
   ///
   /// @brief Returns l1-norm of the primal residual of the constraints.

@@ -171,10 +171,10 @@ inline void ContactDynamics::condenseContactDynamics(
 
 
 inline void ContactDynamics::computeCondensedPrimalDirection(
-    const Robot& robot, SplitDirection& d) const {
+    SplitDirection& d) const {
   d.daf().noalias() = - data_.MJtJinv_dIDCdqv() * d.dx;
   d.daf().noalias() 
-      += data_.MJtJinv().middleCols(robot.dim_passive(), dimu_) * d.du;
+      += data_.MJtJinv().middleCols(dim_passive_, dimu_) * d.du;
   d.daf().noalias() -= data_.MJtJinv_IDC();
   d.df().array() *= -1;
 }

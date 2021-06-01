@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_package(idocp REQUIRED)
 
+option(ENABLE_VIEWER "Enable trajectory viewer" OFF)
+
 macro(add_benchmark BENCHMARK)
   add_executable(
     ${BENCHMARK} 

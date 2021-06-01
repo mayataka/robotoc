@@ -63,9 +63,7 @@ void ImpulseSplitOCPTest::testLinearizeOCP(Robot& robot,
   constraints->setSlackAndDual(robot, constraints_data, s);
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
-  cost->computeImpulseCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
-  cost->computeImpulseCostHessian(robot, cost_data, t, s, kkt_matrix_ref);
-  constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
+  const double impulse_cost = cost->quadratizeImpulseCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
   stateequation::linearizeImpulseForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   stateequation::condenseImpulseForwardEuler(robot, s, s_next.q, kkt_matrix_ref, kkt_residual_ref);
@@ -78,9 +76,9 @@ void ImpulseSplitOCPTest::testLinearizeOCP(Robot& robot,
   ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
   auto d_ref = d;
   const SplitDirection d_next = SplitDirection::Random(robot);
-  ocp.computeCondensedPrimalDirection(robot, s, d);
-  id.computeCondensedPrimalDirection(robot, d_ref);
-  constraints->computeSlackAndDualDirection(robot, constraints_data, s, d_ref);
+  ocp.computeCondensedPrimalDirection(s, d);
+  id.computeCondensedPrimalDirection(d_ref);
+  constraints->expandSlackAndDual(constraints_data, s, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
   EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));
@@ -124,9 +122,8 @@ void ImpulseSplitOCPTest::testComputeKKTResidual(Robot& robot,
   constraints->setSlackAndDual(robot, constraints_data, s);
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
-  cost->computeImpulseCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
-  constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
+  const double impulse_cost = cost->linearizeImpulseCost(robot, cost_data, t, s, kkt_residual_ref);
+  constraints->linearizePrimalAndDualResidual(robot, constraints_data, s, kkt_residual_ref);
   stateequation::linearizeImpulseForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);

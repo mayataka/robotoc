@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD 11)
 option(OPTIMIZE_FOR_NATIVE "Enable -march=native" OFF)
 option(BUILD_VIEWER "Build trajectory viewer" OFF)
 option(BUILD_TESTS "Build unit tests" OFF)
+option(BUILD_PYTHON_INTERFACE "Build Python interface" OFF)
 
 #################
 ## Build idocp ##
@@ -190,6 +191,13 @@ if (BUILD_TESTS)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test)
 endif() # end if (BUILD_TESTS)
 
+##############
+## Bindings ##
+##############
+if (BUILD_PYTHON_INTERFACE)
+  add_subdirectory(bindings/python)
+endif()
+
 #############
 ## Install ##
 #############
@@ -208,12 +216,12 @@ install(
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )
 # Install config file 
-set(config_package_location "share/${PROJECT_NAME}/cmake")
+set(CONFIG_PACKAGE_LOCATION "share/${PROJECT_NAME}/cmake")
 install(
   EXPORT ${PROJECT_NAME}-config
   FILE ${PROJECT_NAME}-config.cmake
   NAMESPACE ${PROJECT_NAME}::
-  DESTINATION ${config_package_location}
+  DESTINATION ${CONFIG_PACKAGE_LOCATION}
 )
 # Install alias
 add_library(

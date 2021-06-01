@@ -16,7 +16,7 @@
 - Ubuntu 18.04 or 20.04
 - gcc (at least C++11 is required), CMake (at least version 3.1)
 - [Eigen3](https://stack-of-tasks.github.io/pinocchio/download.html)  
-- [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git), [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer) (Optional to visualize the solution trajectory) 
+- [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba.git), [pinocchio-gepetto-viewer](https://github.com/stack-of-tasks/pinocchio-gepetto-viewer) (optional to visualize the solution trajectory) 
 
 ## Installation 
 1. Install the latest stable version of Eigen3 by 
@@ -37,7 +37,7 @@ cd idocp
 
 ```
 mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=False
+cmake .. -DCMAKE_BUILD_TYPE=Release 
 make -j$(nproc)
 make install
 ```
@@ -52,7 +52,7 @@ make install
 ```
 and change the CMake configuration of `idocp` as 
 ```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DTESTING=False -DBUILD_VIEWER=True
+cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_VIEWER=ON
 ```
 
 ## Usage
@@ -77,9 +77,9 @@ target_include_directories(
 ```
 
 The following three solvers are provided:
+- `idocp::OCPSolver` : Solves the OCP for rigid-body systems (possibly with contacts) by using Riccati recursion.
 - `idocp::UnconstrOCPSolver` : Solves the OCP for "unconstrained" rigid-body systems by using Riccati recursion.
 - `idocp::UnconstrParNMPCSolver` : Solves the OCP for "unconstrained" rigid-body systems by using ParNMPC algorithm.
-- `idocp::OCPSolver` : Solves the OCP for rigid-body systems (possibly with contacts) by using Riccati recursion.
 
 where "unconstrained" rigid-body systems are systems without any contacts or a floating-base.
 
@@ -114,6 +114,23 @@ The following animations are the solution trajectory of the `idocp::OCPSolver` f
 
 ## MPC Simulation 
 Simulation of the MPC of systems with rigid contacts are shown in [idocp-sim](https://github.com/mayataka/idocp-sim).
+
+
+## Python binding
+You can build Python binding (but currently NOT tested) by changing the CMake configuration as 
+
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release -BUILD_PYTHON_INTERFACE=ON
+```
+
+For example, if your Python version is 3.8, the Python binding will be installed in `IDOCP_INSTALL_DIR/lib/python3.8/site-packages` where `IDOCP_INSTALL_DIR` is the install directory of `idocp` configured in CMake (e.g., by `-DCMAKE_INSTALL_PREFIX`).
+To use the installed Python library, it is convenient to set the environment variable as
+
+```
+export PYTHONPATH=IDOCP_INSTALL_DIR/lib/python3.8/site-packages:$PYTHONPATH 
+```
+
+Note that if you use another Python version than `python3.8`, please adapt it.
 
 
 ## Citing idocp

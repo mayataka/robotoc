@@ -39,18 +39,10 @@ protected:
 
 void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
-  SplitKKTMatrix kkt_mat(robot);
-  SplitKKTResidual kkt_res(robot);
-  kkt_mat.Qqq().setRandom();
-  kkt_mat.Qvv().setRandom();
-  kkt_mat.Qaa.setRandom();
-  kkt_mat.Quu.setRandom();
-  kkt_res.lq().setRandom();
-  kkt_res.lv().setRandom();
-  kkt_res.la.setRandom();
-  kkt_res.lu.setRandom();
-  SplitKKTMatrix kkt_mat_ref = kkt_mat;
-  SplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6).array().abs();
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6).array().abs();
   const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(6).array().abs();
@@ -83,25 +75,17 @@ void TaskSpace6DCostTest::testStageCost(Robot& robot, const int frame_id) const 
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
-  derivative_checker.setTestTolerance(1.0e-03);
+  derivative_checker.setTestTolerance(1.0e-02);
   EXPECT_TRUE(derivative_checker.checkFirstOrderStageCostDerivatives(cost));
 }
 
 
 void TaskSpace6DCostTest::testTerminalCost(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
-  SplitKKTMatrix kkt_mat(robot);
-  SplitKKTResidual kkt_res(robot);
-  kkt_mat.Qqq().setRandom();
-  kkt_mat.Qvv().setRandom();
-  kkt_mat.Qaa.setRandom();
-  kkt_mat.Quu.setRandom();
-  kkt_res.lq().setRandom();
-  kkt_res.lv().setRandom();
-  kkt_res.la.setRandom();
-  kkt_res.lu.setRandom();
-  SplitKKTMatrix kkt_mat_ref = kkt_mat;
-  SplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6).array().abs();
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6).array().abs();
   const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(6).array().abs();
@@ -134,22 +118,17 @@ void TaskSpace6DCostTest::testTerminalCost(Robot& robot, const int frame_id) con
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
-  derivative_checker.setTestTolerance(1.0e-03);
+  derivative_checker.setTestTolerance(1.0e-02);
   EXPECT_TRUE(derivative_checker.checkFirstOrderTerminalCostDerivatives(cost));
 }
 
 
 void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
-  ImpulseSplitKKTMatrix kkt_mat(robot);
-  ImpulseSplitKKTResidual kkt_res(robot);
-  kkt_mat.Qqq().setRandom();
-  kkt_mat.Qvv().setRandom();
-  kkt_res.lq().setRandom();
-  kkt_res.lv().setRandom();
-  kkt_res.ldv.setRandom();
-  ImpulseSplitKKTMatrix kkt_mat_ref = kkt_mat;
-  ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot);
+  auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   const Eigen::VectorXd q_weight = Eigen::VectorXd::Random(6).array().abs();
   const Eigen::VectorXd qf_weight = Eigen::VectorXd::Random(6).array().abs();
   const Eigen::VectorXd qi_weight = Eigen::VectorXd::Random(6).array().abs();
@@ -182,7 +161,7 @@ void TaskSpace6DCostTest::testImpulseCost(Robot& robot, const int frame_id) cons
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   EXPECT_TRUE(kkt_mat.isApprox(kkt_mat_ref));
   DerivativeChecker derivative_checker(robot);
-  derivative_checker.setTestTolerance(1.0e-03);
+  derivative_checker.setTestTolerance(1.0e-02);
   EXPECT_TRUE(derivative_checker.checkFirstOrderImpulseCostDerivatives(cost));
 }
 

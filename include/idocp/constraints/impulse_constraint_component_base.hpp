@@ -84,30 +84,43 @@ public:
                           const ImpulseSplitSolution& s) const = 0;
 
   ///
-  /// @brief Sets the slack and dual variables of each constraint components. 
+  /// @brief Sets the slack variables of each constraint components. 
   /// @param[in] robot Robot model.
   /// @param[out] data Constraint data. 
   /// @param[in] s Impulse split solution.
   ///
-  virtual void setSlackAndDual(Robot& robot, ConstraintComponentData& data, 
-                               const ImpulseSplitSolution& s) const = 0;
+  virtual void setSlack(Robot& robot, ConstraintComponentData& data, 
+                        const ImpulseSplitSolution& s) const = 0;
 
   ///
-  /// @brief Augments the dual residual of the constraint to the KKT residual.
+  /// @brief Computes the primal and dual residuals of the constraint. 
+  /// @param[in] robot Robot model.
+  /// @param[in] data Constraints data.
+  /// @param[in] s Impulse split solution.
+  ///
+  virtual void computePrimalAndDualResidual(
+      Robot& robot, ConstraintComponentData& data, 
+      const ImpulseSplitSolution& s) const = 0;
+
+  ///
+  /// @brief Computes the derivatives of the priaml residual, i.e., the 
+  /// Jacobian of the inequality constraint, and add the product of the 
+  /// Jacobian and the dual variable to the KKT residual. This function is 
+  /// always called just after computePrimalAndDualResidual().
   /// @param[in] robot Robot model.
   /// @param[in] data Constraint data.
   /// @param[in] s Impulse split solution.
   /// @param[out] kkt_residual Impulse split KKT residual.
   ///
-  virtual void augmentDualResidual(
+  virtual void computePrimalResidualDerivatives(
       Robot& robot, ConstraintComponentData& data, 
       const ImpulseSplitSolution& s,
       ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///
-  /// @brief Consense slack and dual of the constraints and factorize condensed
-  /// KKT Hessian and residual with respect to the configuration, velocity, 
-  /// acceleration, and contact forces. 
+  /// @brief Condenses the slack and dual variables, i.e., factorizes the  
+  /// condensed Hessians and KKT residuals. This function is always called 
+  /// just after computePrimalResidualDerivatives().
   /// @param[in] robot Robot model.
   /// @param[in] data Constraints data.
   /// @param[in] s Impulse split solution.
@@ -122,25 +135,15 @@ public:
       ImpulseSplitKKTResidual& kkt_residual) const = 0;
 
   ///
-  /// @brief Compute directions of slack and dual.
-  /// @param[in] robot Robot model.
+  /// @brief Expands the slack and dual, i.e., computes the directions of the 
+  /// slack and dual variables from the directions of the primal variables.
   /// @param[in, out] data Constraints data.
   /// @param[in] s Impulse split solution.
   /// @param[in] d Impulse split direction.
   ///
-  virtual void computeSlackAndDualDirection(
-      Robot& robot, ConstraintComponentData& data, 
-      const ImpulseSplitSolution& s, const ImpulseSplitDirection& d) const = 0;
-
-  ///
-  /// @brief Computes the primal and dual residuals of the constraint. 
-  /// @param[in] robot Robot model.
-  /// @param[in] data Constraints data.
-  /// @param[in] s Impulse split solution.
-  ///
-  virtual void computePrimalAndDualResidual(
-      Robot& robot, ConstraintComponentData& data, 
-      const ImpulseSplitSolution& s) const = 0;
+  virtual void expandSlackAndDual(ConstraintComponentData& data, 
+                                  const ImpulseSplitSolution& s, 
+                                  const ImpulseSplitDirection& d) const = 0;
 
   ///
   /// @brief Returns the size of the constraint. 
@@ -149,14 +152,20 @@ public:
   virtual int dimc() const = 0;
 
   ///
+  /// @brief Sets the slack and dual variables positive.
+  /// @param[in, out] data Constraint data.
+  ///
+  virtual void setSlackAndDualPositive(
+      ConstraintComponentData& data) const final;
+
+  ///
   /// @brief Returns the l1-norm of the primal residual of the constraint. 
   /// Before calling this function, 
   /// ImpulseConstraintComponentBase::computePrimalResidual() must be called.
   /// @param[in] data Constraint data. 
   /// @return l1-norm of the primal residual of the constraint. 
   ///
-  virtual double l1NormPrimalResidual(
-      const ConstraintComponentData& data) const final;
+  static double l1NormPrimalResidual(const ConstraintComponentData& data);
 
   ///
   /// @brief Returns the squared norm of the primal and dual residuals of the 
@@ -165,8 +174,8 @@ public:
   /// @param[in] data Constraint data.
   /// @return Squared norm of the primal and dual residuals of the constraint. 
   ///
-  virtual double squaredNormPrimalAndDualResidual(
-      const ConstraintComponentData& data) const final;
+  static double squaredNormPrimalAndDualResidual(
+      const ConstraintComponentData& data);
 
   ///
   /// @brief Computes and returns the maximum step size by applying 
@@ -191,16 +200,14 @@ public:
   /// @param[in, out] data Constraint data. 
   /// @param[in] step_size Step size. 
   ///
-  virtual void updateSlack(ConstraintComponentData& data, 
-                           const double step_size) const final;
+  static void updateSlack(ConstraintComponentData& data, const double step_size);
 
   ///
   /// @brief Updates the dual variable according to the step size.
   /// @param[in, out] data Constraint data.
   /// @param[in] step_size Step size. 
   ///
-  virtual void updateDual(ConstraintComponentData& data, 
-                          const double step_size) const final;
+  static void updateDual(ConstraintComponentData& data, const double step_size);
 
   ///
   /// @brief Computes and returns the value of the barrier function of the slack 
@@ -247,24 +254,20 @@ public:
 
 protected:
   ///
-  /// @brief Sets the slack and dual variables positive.
-  /// @param[in, out] data Constraint data.
-  ///
-  virtual void setSlackAndDualPositive(
-      ConstraintComponentData& data) const final;
-
-  ///
   /// @brief Computes the duality residual between the slack and dual variables.
   /// @param[in, out] data Constraint data.
   ///
   virtual void computeDuality(ConstraintComponentData& data) const final;
 
   ///
-  /// @brief Computes the direction of the dual variable from slack, residual,
-  /// duality, and the direction of the slack.
+  /// @brief Computes the residual in the duality between a pair of the segment 
+  /// of the slack and dual variables.
   /// @param[in, out] data Constraint data.
+  /// @param[in] start Start position of the segment.
+  /// @param[in] size Size of the segment.
   ///
-  virtual void computeDualDirection(ConstraintComponentData& data) const final;
+  virtual void computeDuality(ConstraintComponentData& data,
+                              const int start, const int size) const final;
 
   ///
   /// @brief Computes the duality residual between the slack and dual variables.
@@ -278,15 +281,33 @@ protected:
   ///
   /// @brief Computes the direction of the dual variable from slack, residual,
   /// duality, and the direction of the slack.
+  /// @param[in, out] data Constraint data.
+  ///
+  static void computeDualDirection(ConstraintComponentData& data);
+
+  ///
+  /// @brief Computes a segment of the direction of the dual variable from 
+  /// the segments of the slack, residual, duality, and the direction of the 
+  /// slack.
+  /// @param[in, out] data Constraint data.
+  /// @param[in] start Start position of the segment.
+  /// @param[in] size Size of the segment.
+  ///
+  static void computeDualDirection(ConstraintComponentData& data, 
+                                   const int start, const int size);
+
+
+  ///
+  /// @brief Computes the direction of the dual variable from slack, residual,
+  /// duality, and the direction of the slack.
   /// @param[in] slack An element of the slack variable.
   /// @param[in] dual An element of the dual variable.
   /// @param[in] dslack An element of the direction of the slack variable.
   /// @param[in] duality An element of the duality.
   /// @return An element of the direction of the dual variable.
   ///
-  virtual double computeDualDirection(const double slack, const double dual,
-                                      const double dslack, 
-                                      const double duality) const final;
+  static double computeDualDirection(const double slack, const double dual,
+                                     const double dslack, const double duality);
 
 private:
   double barrier_, fraction_to_boundary_rate_;

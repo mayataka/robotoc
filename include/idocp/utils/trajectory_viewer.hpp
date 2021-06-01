@@ -24,17 +24,25 @@ public:
   /// @brief Constructs the viewer.
   /// @param[in] path_to_urdf Path to the URDF.
   /// @param[in] path_to_pkg Path to the robot description packages.
+  /// @param[in] base_joint_type Type of the base joint. Choose from 
+  /// BaseJointType::FixedBase or BaseJointType::FloatingBase. Default is 
+  /// BaseJointType::FixedBase.
   ///
   TrajectoryViewer(const std::string& path_to_urdf, 
-                   const std::string& path_to_pkg);
+                   const std::string& path_to_pkg,
+                   const BaseJointType& base_joint_type=BaseJointType::FixedBase);
 
   ///
   /// @brief Constructs the viewer. The path to the robot description packages 
   /// is constructed by assuming that the URDF file lies as 
   /// "*/description_pkd_dir/urdf_dir/path_to_urdf".
   /// @param[in] path_to_urdf Path to the URDF.
+  /// @param[in] base_joint_type Type of the base joint. Choose from 
+  /// BaseJointType::FixedBase or BaseJointType::FloatingBase. Default is 
+  /// BaseJointType::FixedBase.
   ///
-  TrajectoryViewer(const std::string& path_to_urdf);
+  TrajectoryViewer(const std::string& path_to_urdf,
+                   const BaseJointType& base_joint_type=BaseJointType::FixedBase);
 
   ///
   /// @brief Displays the solution trajectory.

@@ -14,7 +14,8 @@ inline TerminalOCP::TerminalOCP(const Robot& robot,
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
     constraints_data_(),
-    use_kinematics_(false) {
+    use_kinematics_(false),
+    terminal_cost_(0) {
   if (cost_->useKinematics() || constraints_->useKinematics()) {
     use_kinematics_ = true;
   }
@@ -26,7 +27,8 @@ inline TerminalOCP::TerminalOCP()
     cost_data_(),
     constraints_(),
     constraints_data_(),
-    use_kinematics_(false) {
+    use_kinematics_(false),
+    terminal_cost_(0) {
 }
 
 
@@ -52,17 +54,16 @@ inline void TerminalOCP::linearizeOCP(Robot& robot, const double t,
                                       const SplitSolution& s,
                                       SplitKKTMatrix& kkt_matrix, 
                                       SplitKKTResidual& kkt_residual) {
-  kkt_residual.lx.setZero();
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v);
   }
-  cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, kkt_residual);
+  kkt_matrix.Qxx.setZero();
+  kkt_residual.lx.setZero();
+  terminal_cost_ = cost_->quadratizeTerminalCost(robot, cost_data_, t, s, 
+                                                 kkt_residual, kkt_matrix);
   stateequation::linearizeForwardEulerTerminal(robot, q_prev, s, 
                                                kkt_matrix, kkt_residual);
   stateequation::condenseForwardEulerTerminal(robot, kkt_matrix);
-  kkt_matrix.Qqq().setZero();
-  kkt_matrix.Qvv().setZero();
-  cost_->computeTerminalCostHessian(robot, cost_data_, t, s, kkt_matrix);
 }
 
  
@@ -78,8 +79,8 @@ inline double TerminalOCP::maxDualStepSize() {
 }
 
 
-inline void TerminalOCP::computeCondensedPrimalDirection(
-    Robot& robot, const SplitSolution& s, SplitDirection& d) {
+inline void TerminalOCP::computeCondensedPrimalDirection(const SplitSolution& s, 
+                                                         SplitDirection& d) {
 }
 
 
@@ -116,12 +117,12 @@ inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,
                                             const SplitSolution& s,
                                             SplitKKTMatrix& kkt_matrix,
                                             SplitKKTResidual& kkt_residual) {
-  kkt_residual.lx.setZero();
   if (use_kinematics_) {
     robot.updateKinematics(s.q, s.v);
   }
-  cost_->computeTerminalCostDerivatives(robot, cost_data_, t, s, 
-                                        kkt_residual);
+  kkt_residual.lx.setZero();
+  terminal_cost_ = cost_->linearizeTerminalCost(robot, cost_data_, t, s, 
+                                                kkt_residual);
   stateequation::linearizeForwardEulerTerminal(robot, q_prev, s, 
                                                kkt_matrix, kkt_residual);
 }

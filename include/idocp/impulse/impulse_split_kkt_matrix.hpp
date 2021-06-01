@@ -239,6 +239,33 @@ public:
   ///
   bool hasNaN() const;
 
+  ///
+  /// @brief Set by random value based on the current impulse status. 
+  ///
+  void setRandom();
+
+  ///
+  /// @brief Set by random value. Impulse status is reset.
+  /// @param[in] impulse_status Impulse status.
+  ///
+  void setRandom(const ImpulseStatus& impulse_status);
+
+  ///
+  /// @brief Generates impulse split KKT matrix filled randomly.
+  /// @return Impulse split KKT matrix filled randomly.
+  /// @param[in] robot Robot model. 
+  ///
+  static ImpulseSplitKKTMatrix Random(const Robot& robot);
+
+  ///
+  /// @brief Generates impulse split KKT matrix filled randomly.
+  /// @return Impulse split KKT matrix filled randomly.
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status.
+  ///
+  static ImpulseSplitKKTMatrix Random(const Robot& robot, 
+                                      const ImpulseStatus& impulse_status);
+
 private:
   Eigen::MatrixXd Qff_full_, Qqf_full_;
   int dimv_, dimi_;

@@ -143,6 +143,37 @@ inline bool ImpulseSplitKKTResidual::hasNaN() const {
   return false;
 }
 
+
+inline void ImpulseSplitKKTResidual::setRandom() {
+  Fx.setRandom();
+  lx.setRandom();
+  ldv.setRandom();
+  lf().setRandom();
+}
+
+
+inline void ImpulseSplitKKTResidual::setRandom(
+    const ImpulseStatus& impulse_status) {
+  setImpulseStatus(impulse_status);
+  setRandom();
+}
+
+
+inline ImpulseSplitKKTResidual ImpulseSplitKKTResidual::Random(
+    const Robot& robot) {
+  ImpulseSplitKKTResidual kkt_residual(robot);
+  kkt_residual.setRandom();
+  return kkt_residual;
+}
+
+
+inline ImpulseSplitKKTResidual ImpulseSplitKKTResidual::Random(
+    const Robot& robot, const ImpulseStatus& impulse_status) {
+  ImpulseSplitKKTResidual kkt_residual(robot);
+  kkt_residual.setRandom(impulse_status);
+  return kkt_residual;
+}
+
 } // namespace idocp 
 
 #endif // IDOCP_IMPULSE_SPLIT_KKT_RESIDUAL_HXX_ 

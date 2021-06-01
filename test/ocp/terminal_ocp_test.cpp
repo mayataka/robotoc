@@ -49,10 +49,9 @@ void TerminalOCPTest::testLinearizeOCP(Robot& robot) {
   SplitKKTResidual kkt_residual_ref(robot);  
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
-  cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
+  const double terminal_cost = cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
   stateequation::linearizeForwardEulerTerminal(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
   stateequation::condenseForwardEulerTerminal(robot, kkt_matrix_ref);
-  cost->computeTerminalCostHessian(robot, cost_data, t, s, kkt_matrix_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   SplitDirection d = SplitDirection::Random(robot);
@@ -96,11 +95,10 @@ void TerminalOCPTest::testComputeKKTResidual(Robot& robot) {
   SplitKKTMatrix kkt_matrix_ref(robot);  
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
-  cost->computeTerminalCostDerivatives(robot, cost_data, t, s, kkt_residual_ref);
+  const double terminal_cost = cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
   stateequation::linearizeForwardEulerTerminal(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
   double KKT_ref = 0;
-  KKT_ref += kkt_residual_ref.lq().squaredNorm();
-  KKT_ref += kkt_residual_ref.lv().squaredNorm();
+  KKT_ref += kkt_residual_ref.lx.squaredNorm();
   EXPECT_DOUBLE_EQ(KKT, KKT_ref);
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
 }

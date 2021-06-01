@@ -136,13 +136,10 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed primal variables of 
   /// this time stage.
-  /// @param[in] robot Robot model. 
-  /// @param[in] dt Time step of this time stage. 
   /// @param[in] s Split solution of this time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
-  void computeCondensedPrimalDirection(Robot& robot, const double dt, 
-                                       const SplitSolution& s, 
+  void computeCondensedPrimalDirection(const SplitSolution& s, 
                                        SplitDirection& d);
 
   ///
@@ -316,7 +313,6 @@ private:
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
   ContactDynamics contact_dynamics_;
-  bool use_kinematics_, has_floating_base_;
   double stage_cost_, constraint_violation_;
 
 };

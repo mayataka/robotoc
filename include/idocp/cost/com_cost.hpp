@@ -88,35 +88,35 @@ public:
                           const double dt, 
                           const SplitSolution& s) const override;
 
-  double computeTerminalCost(Robot& robot, CostFunctionData& data, 
-                             const double t, 
-                             const SplitSolution& s) const override;
-
-  double computeImpulseCost(Robot& robot, CostFunctionData& data, 
-                            const double t, 
-                            const ImpulseSplitSolution& s) const override;
-
   void computeStageCostDerivatives(
       Robot& robot, CostFunctionData& data, const double t, const double dt, 
       const SplitSolution& s, SplitKKTResidual& kkt_residual) const override;
-
-  void computeTerminalCostDerivatives(
-      Robot& robot, CostFunctionData& data, const double t, 
-      const SplitSolution& s, SplitKKTResidual& kkt_residual) const override;
-
-  void computeImpulseCostDerivatives(
-      Robot& robot, CostFunctionData& data, const double t, 
-      const ImpulseSplitSolution& s, 
-      ImpulseSplitKKTResidual& kkt_residual) const;
 
   void computeStageCostHessian(Robot& robot, CostFunctionData& data, 
                                const double t, const double dt, 
                                const SplitSolution& s, 
                                SplitKKTMatrix& kkt_matrix) const override;
 
+  double computeTerminalCost(Robot& robot, CostFunctionData& data, 
+                             const double t, 
+                             const SplitSolution& s) const override;
+
+  void computeTerminalCostDerivatives(
+      Robot& robot, CostFunctionData& data, const double t, 
+      const SplitSolution& s, SplitKKTResidual& kkt_residual) const override;
+
   void computeTerminalCostHessian(Robot& robot, CostFunctionData& data, 
                                   const double t, const SplitSolution& s, 
                                   SplitKKTMatrix& kkt_matrix) const override;
+
+  double computeImpulseCost(Robot& robot, CostFunctionData& data, 
+                            const double t, 
+                            const ImpulseSplitSolution& s) const override;
+
+  void computeImpulseCostDerivatives(
+      Robot& robot, CostFunctionData& data, const double t, 
+      const ImpulseSplitSolution& s, 
+      ImpulseSplitKKTResidual& kkt_residual) const;
 
   void computeImpulseCostHessian(
       Robot& robot, CostFunctionData& data, const double t, 

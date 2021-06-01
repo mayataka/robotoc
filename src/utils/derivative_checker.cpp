@@ -47,7 +47,7 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
 bool DerivativeChecker::checkFirstOrderStageCostDerivatives(
     const std::shared_ptr<CostFunctionComponentBase>& cost, 
     const ContactStatus& contact_status) {
-  const SplitSolution s = SplitSolution::Random(robot_, contact_status);
+  const auto s = SplitSolution::Random(robot_, contact_status);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   const int dimv = robot_.dimv();
@@ -57,9 +57,9 @@ bool DerivativeChecker::checkFirstOrderStageCostDerivatives(
   kkt_residual.setContactStatus(contact_status);
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v, s.a);
-  cost->computeStageCostDerivatives(robot_, data, t, dt, s, kkt_residual);
   double cost0 = cost->computeStageCost(robot_, data, t, dt, s);
-  SplitSolution s1 = s;
+  cost->computeStageCostDerivatives(robot_, data, t, dt, s, kkt_residual);
+  auto s1 = s;
   Eigen::VectorXd lq_ref(dimv);
   for (int i=0; i<dimv; ++i) {
     s1 = s;
@@ -130,23 +130,24 @@ bool DerivativeChecker::checkFirstOrderStageCostDerivatives(
 bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
   const std::shared_ptr<CostFunctionComponentBase>& cost,
   const ContactStatus& contact_status) {
-  const SplitSolution s = SplitSolution::Random(robot_, contact_status);
+  const auto s = SplitSolution::Random(robot_, contact_status);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const double dt = std::abs(Eigen::VectorXd::Random(1)[0]);
   const int dimv = robot_.dimv();
   const int dimu = robot_.dimu();
   const int dimf = contact_status.dimf();
+  SplitKKTResidual kkt_residual0(robot_);
+  kkt_residual0.setContactStatus(contact_status);
   SplitKKTMatrix kkt_matrix(robot_);
   kkt_matrix.setContactStatus(contact_status);
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v, s.a);
-  cost->computeStageCostHessian(robot_, data, t, dt, s, kkt_matrix);
-  SplitKKTResidual kkt_residual0(robot_);
-  kkt_residual0.setContactStatus(contact_status);
+  cost->computeStageCost(robot_, data, t, dt, s);
   cost->computeStageCostDerivatives(robot_, data, t, dt, s, kkt_residual0);
+  cost->computeStageCostHessian(robot_, data, t, dt, s, kkt_matrix);
   SplitKKTResidual kkt_residual(robot_);
   kkt_residual.setContactStatus(contact_status);
-  SplitSolution s1 = s;
+  auto s1 = s;
   Eigen::MatrixXd Qqq_ref(dimv, dimv);
   for (int i=0; i<dimv; ++i) {
     s1 = s;
@@ -155,6 +156,7 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
     robot_.integrateConfiguration(s.q, dq, finite_diff_, s1.q);
     robot_.updateKinematics(s1.q, s1.v, s1.a);
     kkt_residual.lq().setZero();
+    cost->computeStageCost(robot_, data, t, dt, s1);
     cost->computeStageCostDerivatives(robot_, data, t, dt, s1, kkt_residual);
     Qqq_ref.col(i) = (kkt_residual.lq() - kkt_residual0.lq()) / finite_diff_;
   }
@@ -169,6 +171,7 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
     s1.v(i) += finite_diff_;
     robot_.updateKinematics(s1.q, s1.v, s1.a);
     kkt_residual.lv().setZero();
+    cost->computeStageCost(robot_, data, t, dt, s1);
     cost->computeStageCostDerivatives(robot_, data, t, dt, s1, kkt_residual);
     Qvv_ref.col(i) = (kkt_residual.lv() - kkt_residual0.lv()) / finite_diff_;
   }
@@ -183,6 +186,7 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
     s1.a(i) += finite_diff_;
     robot_.updateKinematics(s1.q, s1.v, s1.a);
     kkt_residual.la.setZero();
+    cost->computeStageCost(robot_, data, t, dt, s1);
     cost->computeStageCostDerivatives(robot_, data, t, dt, s1, kkt_residual);
     Qaa_ref.col(i) = (kkt_residual.la - kkt_residual0.la) / finite_diff_;
   }
@@ -196,6 +200,7 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
     s1 = s;
     s1.u(i) += finite_diff_;
     kkt_residual.lu.setZero();
+    cost->computeStageCost(robot_, data, t, dt, s1);
     cost->computeStageCostDerivatives(robot_, data, t, dt, s1, kkt_residual);
     Quu_ref.col(i) = (kkt_residual.lu - kkt_residual0.lu) / finite_diff_;
   }
@@ -211,6 +216,7 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
       s1.f_stack().coeffRef(i) += finite_diff_;
       s1.set_f_vector();
       kkt_residual.lf().setZero();
+      cost->computeStageCost(robot_, data, t, dt, s1);
       cost->computeStageCostDerivatives(robot_, data, t, dt, s1, kkt_residual);
       Qff_ref.col(i) = (kkt_residual.lf() - kkt_residual0.lf()) / finite_diff_;
     }
@@ -226,15 +232,15 @@ bool DerivativeChecker::checkSecondOrderStageCostDerivatives(
 
 bool DerivativeChecker::checkFirstOrderTerminalCostDerivatives(
     const std::shared_ptr<CostFunctionComponentBase>& cost) {
-  const SplitSolution s = SplitSolution::Random(robot_);
+  const auto s = SplitSolution::Random(robot_);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const int dimv = robot_.dimv();
   SplitKKTResidual kkt_residual(robot_);
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v);
-  cost->computeTerminalCostDerivatives(robot_, data, t, s, kkt_residual);
   double cost0 = cost->computeTerminalCost(robot_, data, t, s);
-  SplitSolution s1 = s;
+  cost->computeTerminalCostDerivatives(robot_, data, t, s, kkt_residual);
+  auto s1 = s;
   Eigen::VectorXd lq_ref(dimv);
   for (int i=0; i<dimv; ++i) {
     s1 = s;
@@ -267,17 +273,18 @@ bool DerivativeChecker::checkFirstOrderTerminalCostDerivatives(
 
 bool DerivativeChecker::checkSecondOrderTerminalCostDerivatives(
   const std::shared_ptr<CostFunctionComponentBase>& cost) {
-  const SplitSolution s = SplitSolution::Random(robot_);
+  const auto s = SplitSolution::Random(robot_);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const int dimv = robot_.dimv();
   SplitKKTMatrix kkt_matrix(robot_);
+  SplitKKTResidual kkt_residual0(robot_);
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v);
-  cost->computeTerminalCostHessian(robot_, data, t, s, kkt_matrix);
-  SplitKKTResidual kkt_residual0(robot_);
+  cost->computeTerminalCost(robot_, data, t, s);
   cost->computeTerminalCostDerivatives(robot_, data, t, s, kkt_residual0);
+  cost->computeTerminalCostHessian(robot_, data, t, s, kkt_matrix);
   SplitKKTResidual kkt_residual(robot_);
-  SplitSolution s1 = s;
+  auto s1 = s;
   Eigen::MatrixXd Qqq_ref(dimv, dimv);
   for (int i=0; i<dimv; ++i) {
     s1 = s;
@@ -286,6 +293,7 @@ bool DerivativeChecker::checkSecondOrderTerminalCostDerivatives(
     robot_.integrateConfiguration(s.q, dq, finite_diff_, s1.q);
     robot_.updateKinematics(s1.q, s1.v);
     kkt_residual.lq().setZero();
+    cost->computeTerminalCost(robot_, data, t, s1);
     cost->computeTerminalCostDerivatives(robot_, data, t, s1, kkt_residual);
     Qqq_ref.col(i) = (kkt_residual.lq() - kkt_residual0.lq()) / finite_diff_;
   }
@@ -300,6 +308,7 @@ bool DerivativeChecker::checkSecondOrderTerminalCostDerivatives(
     s1.v(i) += finite_diff_;
     robot_.updateKinematics(s1.q, s1.v);
     kkt_residual.lv().setZero();
+    cost->computeTerminalCost(robot_, data, t, s1);
     cost->computeTerminalCostDerivatives(robot_, data, t, s1, kkt_residual);
     Qvv_ref.col(i) = (kkt_residual.lv() - kkt_residual0.lv()) / finite_diff_;
   }
@@ -327,7 +336,7 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
 bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
     const std::shared_ptr<CostFunctionComponentBase>& cost, 
     const ImpulseStatus& impulse_status) {
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot_, impulse_status);
+  const auto s = ImpulseSplitSolution::Random(robot_, impulse_status);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const int dimv = robot_.dimv();
   const int dimf = impulse_status.dimf();
@@ -335,9 +344,9 @@ bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
   kkt_residual.setImpulseStatus(impulse_status);
   CostFunctionData data(robot_);
   robot_.updateKinematics(s.q, s.v);
-  cost->computeImpulseCostDerivatives(robot_, data, t, s, kkt_residual);
   double cost0 = cost->computeImpulseCost(robot_, data, t, s);
-  ImpulseSplitSolution s1 = s;
+  cost->computeImpulseCostDerivatives(robot_, data, t, s, kkt_residual);
+  auto s1 = s;
   Eigen::VectorXd lq_ref(dimv);
   for (int i=0; i<dimv; ++i) {
     s1 = s;
@@ -396,21 +405,22 @@ bool DerivativeChecker::checkFirstOrderImpulseCostDerivatives(
 bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
     const std::shared_ptr<CostFunctionComponentBase>& cost,
     const ImpulseStatus& impulse_status) {
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot_, impulse_status);
+  const auto s = ImpulseSplitSolution::Random(robot_, impulse_status);
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
   const int dimv = robot_.dimv();
   const int dimf = impulse_status.dimf();
   ImpulseSplitKKTMatrix kkt_matrix(robot_);
   kkt_matrix.setImpulseStatus(impulse_status);
-  CostFunctionData data(robot_);
-  robot_.updateKinematics(s.q, s.v);
-  cost->computeImpulseCostHessian(robot_, data, t, s, kkt_matrix);
   ImpulseSplitKKTResidual kkt_residual0(robot_);
   kkt_residual0.setImpulseStatus(impulse_status);
+  CostFunctionData data(robot_);
+  robot_.updateKinematics(s.q, s.v);
+  cost->computeImpulseCost(robot_, data, t, s);
   cost->computeImpulseCostDerivatives(robot_, data, t, s, kkt_residual0);
+  cost->computeImpulseCostHessian(robot_, data, t, s, kkt_matrix);
   ImpulseSplitKKTResidual kkt_residual(robot_);
   kkt_residual.setImpulseStatus(impulse_status);
-  ImpulseSplitSolution s1 = s;
+  auto s1 = s;
   Eigen::MatrixXd Qqq_ref(dimv, dimv);
   for (int i=0; i<dimv; ++i) {
     s1 = s;
@@ -419,6 +429,7 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
     robot_.integrateConfiguration(s.q, dq, finite_diff_, s1.q);
     kkt_residual.lq().setZero();
     robot_.updateKinematics(s1.q, s1.v);
+    cost->computeImpulseCost(robot_, data, t, s1);
     cost->computeImpulseCostDerivatives(robot_, data, t, s1, kkt_residual);
     Qqq_ref.col(i) = (kkt_residual.lq() - kkt_residual0.lq()) / finite_diff_;
   }
@@ -433,6 +444,7 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
     s1.v(i) += finite_diff_;
     kkt_residual.lv().setZero();
     robot_.updateKinematics(s1.q, s1.v);
+    cost->computeImpulseCost(robot_, data, t, s1);
     cost->computeImpulseCostDerivatives(robot_, data, t, s1, kkt_residual);
     Qvv_ref.col(i) = (kkt_residual.lv() - kkt_residual0.lv()) / finite_diff_;
   }
@@ -446,6 +458,7 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
     s1 = s;
     s1.dv(i) += finite_diff_;
     kkt_residual.ldv.setZero();
+    cost->computeImpulseCost(robot_, data, t, s1);
     cost->computeImpulseCostDerivatives(robot_, data, t, s1, kkt_residual);
     Qdvdv_ref.col(i) = (kkt_residual.ldv - kkt_residual0.ldv) / finite_diff_;
   }
@@ -461,6 +474,7 @@ bool DerivativeChecker::checkSecondOrderImpulseCostDerivatives(
       s1.f_stack().coeffRef(i) += finite_diff_;
       s1.set_f_vector();
       kkt_residual.lf().setZero();
+      cost->computeImpulseCost(robot_, data, t, s1);
       cost->computeImpulseCostDerivatives(robot_, data, t, s1, kkt_residual);
       Qff_ref.col(i) = (kkt_residual.lf() - kkt_residual0.lf()) / finite_diff_;
     }

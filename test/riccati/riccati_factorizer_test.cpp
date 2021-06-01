@@ -106,7 +106,7 @@ void RiccatiFactorizerTest::testBackwardRecursionWithSwitchingConstraint(const R
   GDtD.topLeftCorner(dimu, dimu) = kkt_matrix.Quu;
   GDtD.topRightCorner(dimu, dimi) = switch_jacobian.Phiu().transpose();
   GDtD.bottomLeftCorner(dimi, dimu) = switch_jacobian.Phiu();
-  const Eigen::MatrixXd GDtDinv = GDtD.ldlt().solve(Eigen::MatrixXd::Identity(dimu+dimi, dimu+dimi));
+  const Eigen::MatrixXd GDtDinv = GDtD.inverse();
   Eigen::MatrixXd HtC = Eigen::MatrixXd::Zero(dimu+dimi, 2*dimv);
   HtC.topRows(dimu) = kkt_matrix_ref.Qxu.transpose();
   HtC.bottomRows(dimi) = switch_jacobian.Phix();

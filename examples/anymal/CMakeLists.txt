@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_package(idocp REQUIRED)
 
+option(ENABLE_VIEWER "Enable trajectory viewer" OFF)
+
 add_library(
   anymal_costs  
   SHARED
@@ -63,7 +65,6 @@ macro(add_example EXAMPLE)
     )
   endif()
 endmacro()
-
 
 add_benchmark(ocp_benchmark)
 

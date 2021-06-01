@@ -86,7 +86,7 @@ void ConstraintsTest::timeStage0(Robot& robot,
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   constraints->setSlackAndDual(robot, data, s);
-  constraints->augmentDualResidual(robot, data, dt, s, kkt_residual);
+  constraints->linearizePrimalAndDualResidual(robot, data, dt, s, kkt_residual);
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_TRUE(kkt_residual.lv().isZero());
   EXPECT_FALSE(kkt_residual.la.isZero());
@@ -127,7 +127,7 @@ void ConstraintsTest::timeStage1(Robot& robot,
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   constraints->setSlackAndDual(robot, data, s);
-  constraints->augmentDualResidual(robot, data, dt, s, kkt_residual);
+  constraints->linearizePrimalAndDualResidual(robot, data, dt, s, kkt_residual);
   EXPECT_TRUE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
   EXPECT_FALSE(kkt_residual.la.isZero());
@@ -169,7 +169,7 @@ void ConstraintsTest::timeStage2(Robot& robot,
   kkt_matrix.setContactStatus(contact_status);
   kkt_residual.setContactStatus(contact_status);
   constraints->setSlackAndDual(robot, data, s);
-  constraints->augmentDualResidual(robot, data, dt, s, kkt_residual);
+  constraints->linearizePrimalAndDualResidual(robot, data, dt, s, kkt_residual);
   EXPECT_FALSE(kkt_residual.lq().isZero());
   EXPECT_FALSE(kkt_residual.lv().isZero());
   EXPECT_FALSE(kkt_residual.la.isZero());

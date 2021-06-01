@@ -79,18 +79,10 @@ protected:
 
 void TimeVaryingCoMCostTest::testStageCost(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
-  SplitKKTMatrix kkt_mat(robot);
-  SplitKKTResidual kkt_res(robot);
-  kkt_mat.Qqq().setRandom();
-  kkt_mat.Qvv().setRandom();
-  kkt_mat.Qaa.setRandom();
-  kkt_mat.Quu.setRandom();
-  kkt_res.lq().setRandom();
-  kkt_res.lv().setRandom();
-  kkt_res.la.setRandom();
-  kkt_res.lu.setRandom();
-  SplitKKTMatrix kkt_mat_ref = kkt_mat;
-  SplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qi_weight = Eigen::Vector3d::Random().array().abs();
@@ -138,18 +130,10 @@ void TimeVaryingCoMCostTest::testStageCost(Robot& robot, const int frame_id) con
 
 void TimeVaryingCoMCostTest::testTerminalCost(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
-  SplitKKTMatrix kkt_mat(robot);
-  SplitKKTResidual kkt_res(robot);
-  kkt_mat.Qqq().setRandom();
-  kkt_mat.Qvv().setRandom();
-  kkt_mat.Qaa.setRandom();
-  kkt_mat.Quu.setRandom();
-  kkt_res.lq().setRandom();
-  kkt_res.lv().setRandom();
-  kkt_res.la.setRandom();
-  kkt_res.lu.setRandom();
-  SplitKKTMatrix kkt_mat_ref = kkt_mat;
-  SplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qi_weight = Eigen::Vector3d::Random().array().abs();
@@ -197,15 +181,10 @@ void TimeVaryingCoMCostTest::testTerminalCost(Robot& robot, const int frame_id) 
 
 void TimeVaryingCoMCostTest::testImpulseCost(Robot& robot, const int frame_id) const {
   const int dimv = robot.dimv();
-  ImpulseSplitKKTMatrix kkt_mat(robot);
-  ImpulseSplitKKTResidual kkt_res(robot);
-  kkt_mat.Qqq().setRandom();
-  kkt_mat.Qvv().setRandom();
-  kkt_res.lq().setRandom();
-  kkt_res.lv().setRandom();
-  kkt_res.ldv.setRandom();
-  ImpulseSplitKKTMatrix kkt_mat_ref = kkt_mat;
-  ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot);
+  auto kkt_res = ImpulseSplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   const Eigen::Vector3d q_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qf_weight = Eigen::Vector3d::Random().array().abs();
   const Eigen::Vector3d qi_weight = Eigen::Vector3d::Random().array().abs();
