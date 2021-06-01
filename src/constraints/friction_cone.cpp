@@ -123,8 +123,8 @@ bool FrictionCone::isFeasible(Robot& robot, ConstraintComponentData& data,
 }
 
 
-void FrictionCone::setSlackAndDual(Robot& robot, ConstraintComponentData& data, 
-                                   const SplitSolution& s) const {
+void FrictionCone::setSlack(Robot& robot, ConstraintComponentData& data, 
+                            const SplitSolution& s) const {
   robot.updateFrameKinematics(s.q);
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     Eigen::VectorXd& fWi = fW(data, i);
@@ -133,11 +133,30 @@ void FrictionCone::setSlackAndDual(Robot& robot, ConstraintComponentData& data,
     data.slack.template segment<5>(5*i)
         = - data.residual.template segment<5>(5*i);
   }
-  setSlackAndDualPositive(data);
 }
 
 
-void FrictionCone::augmentDualResidual(
+void FrictionCone::computePrimalAndDualResidual(Robot& robot, 
+                                                ConstraintComponentData& data, 
+                                                const SplitSolution& s) const {
+  data.residual.setZero();
+  data.duality.setZero();
+  for (int i=0; i<robot.maxPointContacts(); ++i) {
+    if (s.isContactActive(i)) {
+      const int idx = 5*i;
+      // Contact force expressed in the world frame.
+      Eigen::VectorXd& fWi = fW(data, i);
+      fLocal2World(robot, contact_frame_[i], s.f[i], fWi);
+      frictionConeResidual(mu_, fWi, data.residual.template segment<5>(5*i));
+      data.residual.template segment<5>(idx).noalias()
+          += data.slack.template segment<5>(idx);
+      computeDuality(data, idx, 5);
+    }
+  }
+}
+
+
+void FrictionCone::computePrimalResidualDerivatives(
     Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   assert(dt > 0);
@@ -145,8 +164,7 @@ void FrictionCone::augmentDualResidual(
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       // Contact force expressed in the world frame.
-      Eigen::VectorXd& fWi = fW(data, i);
-      fLocal2World(robot, contact_frame_[i], s.f[i], fWi);
+      const Eigen::VectorXd& fWi = fW(data, i);
       // Jacobian of the contact force expressed in the world frame fWi 
       // with respect to the configuration q.
       Eigen::MatrixXd& dfWi_dq = dfW_dq(data, i);
@@ -157,13 +175,13 @@ void FrictionCone::augmentDualResidual(
             = dfWi_dq.template bottomRows<3>().col(j).cross(fWi.template head<3>());
       }
       // Jacobian of the frition cone constraint with respect to the 
-      // configuration q.
+      // configuration, i.e., s.q.
       Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
       dgi_dq.noalias() = cone_ * dfWi_dq.template topRows<3>();
       kkt_residual.lq().noalias()
           += dt * dgi_dq.transpose() * data.dual.template segment<5>(5*i);
       // Jacobian of the frition cone constraint with respect to the contact
-      // force expressed in the local frame.
+      // force expressed in the local frame, i.e., s.f[i].
       Eigen::MatrixXd& dgi_df = dg_df(data, i);
       dgi_df.noalias() = cone_ * robot.frameRotation(contact_frame_[i]);
       kkt_residual.lf().template segment<3>(dimf_stack).noalias()
@@ -179,14 +197,13 @@ void FrictionCone::condenseSlackAndDual(
     const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
     SplitKKTResidual& kkt_residual) const {
   assert(dt > 0);
-  computePrimalAndDualResidual(robot, data, s);
   int dimf_stack = 0;
   for (int i=0; i<robot.maxPointContacts(); ++i) {
     if (s.isContactActive(i)) {
       const int idx = 5*i;
+      const Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
+      const Eigen::MatrixXd& dgi_df = dg_df(data, i);
       Eigen::VectorXd& ri = r(data, i);
-      Eigen::MatrixXd& dgi_dq = dg_dq(data, i);
-      Eigen::MatrixXd& dgi_df = dg_df(data, i);
       ri.array() = (data.dual.template segment<5>(idx).array()
                     *data.residual.template segment<5>(idx).array()
                     -data.duality.template segment<5>(idx).array())
@@ -216,10 +233,8 @@ void FrictionCone::expandSlackAndDual(ConstraintComponentData& data,
                                       const SplitSolution& s, 
                                       const SplitDirection& d) const {
   // Because data.slack(i) and data.dual(i) are always positive,  
-  // - fraction_rate * (slack.coeff(i)/dslack.coeff(i)) and 
-  // - fraction_rate * (dual.coeff(i)/ddual.coeff(i))  
-  // at the inactive constraint index i are always negative, 
-  // and therefore do not affect to step size.
+  // positive data.dslack and data.ddual do not affect the step size 
+  // determined by the fraction-to-boundary-rule.
   data.dslack.fill(1.0);
   data.ddual.fill(1.0);
   int dimf_stack = 0;
@@ -231,35 +246,8 @@ void FrictionCone::expandSlackAndDual(ConstraintComponentData& data,
       data.dslack.template segment<5>(idx).noalias()
           = - dgi_dq * d.dq() - dgi_df * d.df().template segment<3>(dimf_stack) 
             - data.residual.template segment<5>(idx);
-      for (int j=0; j<5; ++j) {
-        data.ddual.coeffRef(idx+j) = computeDualDirection(data.slack.coeff(idx+j), 
-                                                          data.dual.coeff(idx+j), 
-                                                          data.dslack.coeff(idx+j), 
-                                                          data.duality.coeff(idx+j));
-      }
+      computeDualDirection(data, idx, 5);
       dimf_stack += 3;
-    }
-  }
-}
-
-
-void FrictionCone::computePrimalAndDualResidual(
-    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
-  data.residual.setZero();
-  data.duality.setZero();
-  for (int i=0; i<robot.maxPointContacts(); ++i) {
-    if (s.isContactActive(i)) {
-      const int idx = 5*i;
-      // Contact force expressed in the world frame.
-      Eigen::VectorXd& fWi = fW(data, i);
-      fLocal2World(robot, contact_frame_[i], s.f[i], fWi);
-      frictionConeResidual(mu_, fWi, data.residual.template segment<5>(5*i));
-      data.residual.template segment<5>(idx).noalias()
-          += data.slack.template segment<5>(idx);
-      for (int j=0; j<5; ++j) {
-        data.duality.coeffRef(idx+j) = computeDuality(data.slack.coeff(idx+j), 
-                                                      data.dual.coeff(idx+j));
-      }
     }
   }
 }

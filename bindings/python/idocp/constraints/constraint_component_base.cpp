@@ -33,18 +33,25 @@ public:
                            robot, data, s);
   }
 
-  void setSlackAndDual(Robot& robot, ConstraintComponentData& data, 
-                       const SplitSolution& s) const override {
+  void setSlack(Robot& robot, ConstraintComponentData& data, 
+                const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
-                           setSlackAndDual, 
+                           setSlack, 
                            robot, data, s);
   }
 
-  void augmentDualResidual(Robot& robot, ConstraintComponentData& data,
-                           const double dt, const SplitSolution& s,
-                           SplitKKTResidual& kkt_residual) const override {
+  void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
+                                    const SplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
-                           augmentDualResidual, 
+                           computePrimalAndDualResidual, 
+                           robot, data, s);
+  }
+
+  void computePrimalResidualDerivatives(Robot& robot, ConstraintComponentData& data,
+                                        const double dt, const SplitSolution& s,
+                                        SplitKKTResidual& kkt_residual) const override {
+    PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
+                           computePrimalResidualDerivatives, 
                            robot, data, dt, s, kkt_residual);
   }
 
@@ -62,13 +69,6 @@ public:
     PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
                            expandSlackAndDual, 
                            data, s, d);
-  }
-
-  void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
-                                    const SplitSolution& s) const override {
-    PYBIND11_OVERRIDE_PURE(void, ConstraintComponentBase, 
-                           computePrimalAndDualResidual, 
-                           robot, data, s);
   }
 
   int dimc() const override {

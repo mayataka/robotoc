@@ -25,6 +25,27 @@ void SetSlackAndDualPositive(const double barrier,
 void ComputeDuality(const double barrier, ConstraintComponentData& data);
 
 ///
+/// @brief Computes the residual in the duality between a pair of the segment 
+/// of the slack and dual variables.
+/// @param[in] barrier Barrier parameter. Must be positive. 
+/// @param[in, out] data Constraint data.
+/// @param[in] start Start position of the segment.
+/// @param[in] size Size of the segment.
+///
+void ComputeDuality(const double barrier, ConstraintComponentData& data,
+                    const int start, const int size);
+
+///
+/// @brief Computes the duality residual between the slack and dual variables.
+/// @param[in] barrier Barrier parameter. Must be positive. 
+/// @param[in] slack An element of the slack variable.
+/// @param[in] dual An element of the dual variable.
+/// @return An element of the duality of the slack and dual variables.
+///
+double ComputeDuality(const double barrier, const double slack, 
+                      const double dual);
+
+///
 /// @brief Applies the fraction-to-boundary-rule to the directions of the slack 
 /// variables.
 /// @param[in] fraction_rate Must be larger than 0 and smaller than 1. Should be 
@@ -66,6 +87,17 @@ double FractionToBoundary(const int dim, const double fraction_rate,
 void ComputeDualDirection(ConstraintComponentData& data);
 
 ///
+/// @brief Computes a segment of the direction of the dual variable from 
+/// the segments of the slack, residual, duality, and the direction of the 
+/// slack.
+/// @param[in, out] data Constraint data.
+/// @param[in] start Start position of the segment.
+/// @param[in] size Size of the segment.
+///
+void ComputeDualDirection(ConstraintComponentData& data, 
+                          const int start, const int size);
+
+///
 /// @brief Computes the direction of the dual variable from slack, residual,
 /// duality, and the direction of the slack.
 /// @param[in] slack An element of the slack variable.
@@ -84,7 +116,9 @@ double ComputeDualDirection(const double slack, const double dual,
 /// positive.
 /// @return Barrier function.
 ///
-double CostBarrier(const double barrier, const Eigen::VectorXd& vec);
+template <typename VectorType>
+double CostBarrier(const double barrier, 
+                   const Eigen::MatrixBase<VectorType>& vec);
 
 } // namespace pdipm
 } // namespace idocp

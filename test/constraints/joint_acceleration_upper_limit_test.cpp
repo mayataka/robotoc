@@ -28,9 +28,9 @@ protected:
 
   void testKinematics(Robot& robot, const Eigen::VectorXd& amax) const;
   void testIsFeasible(Robot& robot, const Eigen::VectorXd& amax) const;
-  void testSetSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
-  void testAugmentDualResidual(Robot& robot, const Eigen::VectorXd& amax) const;
+  void testSetSlack(Robot& robot, const Eigen::VectorXd& amax) const;
   void testComputePrimalAndDualResidual(Robot& robot, const Eigen::VectorXd& amax) const;
+  void testComputePrimalResidualDerivatives(Robot& robot, const Eigen::VectorXd& amax) const;
   void testCondenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
   void testExpandSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const;
 
@@ -56,42 +56,25 @@ void JointAccelerationUpperLimitTest::testIsFeasible(Robot& robot, const Eigen::
 }
 
 
-void JointAccelerationUpperLimitTest::testSetSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const {
+void JointAccelerationUpperLimitTest::testSetSlack(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit limit(robot, amax); 
   ConstraintComponentData data(limit.dimc(), limit.barrier()), data_ref(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
-  const SplitSolution s = SplitSolution::Random(robot);
-  limit.setSlackAndDual(robot, data, s);
+  const auto s = SplitSolution::Random(robot);
+  limit.setSlack(robot, data, s);
   data_ref.slack = amax - s.a.tail(dimc);
-  pdipm::SetSlackAndDualPositive(barrier, data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));
-}
-
-
-void JointAccelerationUpperLimitTest::testAugmentDualResidual(Robot& robot, const Eigen::VectorXd& amax) const {
-  JointAccelerationUpperLimit limit(robot, amax); 
-  ConstraintComponentData data(limit.dimc(), limit.barrier());
-  const int dimc = limit.dimc();
-  const SplitSolution s = SplitSolution::Random(robot);
-  limit.setSlackAndDual(robot, data, s);
-  ConstraintComponentData data_ref = data;
-  SplitKKTResidual kkt_res(robot);
-  kkt_res.la.setRandom();
-  SplitKKTResidual kkt_res_ref = kkt_res;
-  limit.augmentDualResidual(robot, data, dt, s, kkt_res);
-  kkt_res_ref.la.tail(dimc) += dt * data_ref.dual;
-  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
 }
 
 
 void JointAccelerationUpperLimitTest::testComputePrimalAndDualResidual(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit limit(robot, amax); 
   const int dimc = limit.dimc();
-  const SplitSolution s = SplitSolution::Random(robot);
+  const auto s = SplitSolution::Random(robot);
   ConstraintComponentData data(limit.dimc(), limit.barrier());
   data.slack.setRandom();
   data.dual.setRandom();
-  ConstraintComponentData data_ref = data;
+  auto data_ref = data;
   limit.computePrimalAndDualResidual(robot, data, s);
   data_ref.residual = s.a.tail(dimc) - amax + data_ref.slack;
   pdipm::ComputeDuality(barrier, data_ref);
@@ -99,22 +82,33 @@ void JointAccelerationUpperLimitTest::testComputePrimalAndDualResidual(Robot& ro
 }
 
 
+void JointAccelerationUpperLimitTest::testComputePrimalResidualDerivatives(Robot& robot, const Eigen::VectorXd& amax) const {
+  JointAccelerationUpperLimit limit(robot, amax); 
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
+  const int dimc = limit.dimc();
+  const auto s = SplitSolution::Random(robot);
+  limit.setSlack(robot, data, s);
+  auto data_ref = data;
+  auto kkt_res = SplitKKTResidual::Random(robot);
+  auto kkt_res_ref = kkt_res;
+  limit.computePrimalResidualDerivatives(robot, data, dt, s, kkt_res);
+  kkt_res_ref.la.tail(dimc) += dt * data_ref.dual;
+  EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
+}
+
+
 void JointAccelerationUpperLimitTest::testCondenseSlackAndDual(Robot& robot, const Eigen::VectorXd& amax) const {
   JointAccelerationUpperLimit limit(robot, amax); 
   ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
-  const SplitSolution s = SplitSolution::Random(robot);
-  limit.setSlackAndDual(robot, data, s);
-  ConstraintComponentData data_ref = data;
-  SplitKKTMatrix kkt_mat(robot);
-  kkt_mat.Qaa.setRandom();
-  SplitKKTResidual kkt_res(robot);
-  kkt_res.la.setRandom();
-  SplitKKTMatrix kkt_mat_ref = kkt_mat;
-  SplitKKTResidual kkt_res_ref = kkt_res;
+  const auto s = SplitSolution::Random(robot);
+  limit.setSlack(robot, data, s);
+  auto data_ref = data;
+  auto kkt_mat = SplitKKTMatrix::Random(robot);
+  auto kkt_res = SplitKKTResidual::Random(robot);
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   limit.condenseSlackAndDual(robot, data, dt, s, kkt_mat, kkt_res);
-  data_ref.residual = s.a.tail(dimc) - amax + data_ref.slack;
-  pdipm::ComputeDuality(barrier, data_ref);
   kkt_res_ref.la.tail(dimc).array() 
       += dt * (data_ref.dual.array()*data_ref.residual.array()-data_ref.duality.array()) 
                / data_ref.slack.array();
@@ -129,12 +123,12 @@ void JointAccelerationUpperLimitTest::testExpandSlackAndDual(Robot& robot, const
   JointAccelerationUpperLimit limit(robot, amax); 
   ConstraintComponentData data(limit.dimc(), limit.barrier());
   const int dimc = limit.dimc();
-  const SplitSolution s = SplitSolution::Random(robot);
-  limit.setSlackAndDual(robot, data, s);
+  const auto s = SplitSolution::Random(robot);
+  limit.setSlack(robot, data, s);
   data.residual.setRandom();
   data.duality.setRandom();
-  ConstraintComponentData data_ref = data;
-  const SplitDirection d = SplitDirection::Random(robot);
+  auto data_ref = data;
+  const auto d = SplitDirection::Random(robot);
   limit.expandSlackAndDual(data, s, d);
   data_ref.dslack = - d.da().tail(dimc) - data_ref.residual;
   pdipm::ComputeDualDirection(data_ref);
@@ -147,9 +141,9 @@ TEST_F(JointAccelerationUpperLimitTest, fixedBase) {
   const Eigen::VectorXd amax = Eigen::VectorXd::Constant(robot.dimv(), 10);
   testKinematics(robot, amax);
   testIsFeasible(robot, amax);
-  testSetSlackAndDual(robot, amax);
-  testAugmentDualResidual(robot, amax);
+  testSetSlack(robot, amax);
   testComputePrimalAndDualResidual(robot, amax);
+  testComputePrimalResidualDerivatives(robot, amax);
   testCondenseSlackAndDual(robot, amax);
   testExpandSlackAndDual(robot, amax);
 }
@@ -160,9 +154,9 @@ TEST_F(JointAccelerationUpperLimitTest, floatingBase) {
   const Eigen::VectorXd amax = Eigen::VectorXd::Constant(robot.dimu(), 10);
   testKinematics(robot, amax);
   testIsFeasible(robot, amax);
-  testSetSlackAndDual(robot, amax);
-  testAugmentDualResidual(robot, amax);
+  testSetSlack(robot, amax);
   testComputePrimalAndDualResidual(robot, amax);
+  testComputePrimalResidualDerivatives(robot, amax);
   testCondenseSlackAndDual(robot, amax);
   testExpandSlackAndDual(robot, amax);
 }

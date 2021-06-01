@@ -79,33 +79,51 @@ void setSlackAndDual(
     const SplitSolutionType& s);
 
 ///
-/// @brief Augments the dual residual of the constraint to the KKT residual.
-/// @param[in] constraints Vector of the constraints. 
+/// @brief Computes the primal and dual residuals of the constraints. 
+/// @param[in] constraints Vector of the impulse constraints. 
 /// @param[in] robot Robot model.
-/// @param[in, out] data Constraint data.
-/// @param[in] dt Time step.
+/// @param[in, out] data Vector of the constraints data.
 /// @param[in] s Split solution.
-/// @param[in, out] kkt_residual Split KKT residual.
 ///
-void augmentDualResidual(
-    const std::vector<ConstraintComponentBasePtr>& constraints, Robot& robot, 
-    std::vector<ConstraintComponentData>& data, const double dt, 
+template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
+void computePrimalAndDualResidual(
+    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
+    Robot& robot, std::vector<ConstraintComponentData>& data, 
+    const SplitSolutionType& s);
+
+///
+/// @brief Computes the primal and dual residuals, linearize the 
+/// constraints, and add it to the KKT residual.
+/// @param[in] constraints Vector of the impulse constraints. 
+/// @param[in] robot Robot model.
+/// @param[in, out] data Vector of the constraints data.
+/// @param[in] dt Time step.
+/// @param[in] s Impulse split solution.
+/// @param[in, out] kkt_residual Impulse split KKT residual.
+///
+void computePrimalResidualDerivatives(
+    const std::vector<ConstraintComponentBasePtr>& constraints,
+    Robot& robot, std::vector<ConstraintComponentData>& data, const double dt,
     const SplitSolution& s, SplitKKTResidual& kkt_residual);
 
 ///
-/// @brief Augments the dual residual of the constraint to the KKT residual.
+/// @brief Computes the primal and dual residuals, linearize the 
+/// constraints, and add it to the KKT residual.
 /// @param[in] constraints Vector of the impulse constraints. 
 /// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
 /// @param[in] s Impulse split solution.
 /// @param[in, out] kkt_residual Impulse split KKT residual.
 ///
-void augmentDualResidual(
+void computePrimalResidualDerivatives(
     const std::vector<ImpulseConstraintComponentBasePtr>& constraints,
     Robot& robot, std::vector<ConstraintComponentData>& data, 
     const ImpulseSplitSolution& s, ImpulseSplitKKTResidual& kkt_residual);
 
 ///
+/// @brief Computes the primal and dual residuals, linearize the 
+/// constraints and add it to the KKT residual, and condense the slack and 
+/// dual variables.
 /// @param[in] constraints Vector of the constraints. 
 /// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
@@ -123,8 +141,9 @@ void condenseSlackAndDual(
     SplitKKTResidual& kkt_residual);
 
 ///
-/// @brief Condenses the slack and dual variables, i.e., factorizes the  
-/// condensed Hessians and KKT residuals.
+/// @brief Computes the primal and dual residuals, linearize the 
+/// constraints and add it to the KKT residual, and condense the slack and 
+/// dual variables.
 /// @param[in] constraints Vector of the impulse constraints. 
 /// @param[in] robot Robot model.
 /// @param[in, out] data Vector of the constraints data.
@@ -218,45 +237,6 @@ double costSlackBarrier(
     const std::vector<ConstraintComponentBaseTypePtr>& constraints,
     const std::vector<ConstraintComponentData>& data, 
     const double step_size);
-
-///
-/// @brief Computes the primal and dual residuals of the constraints. 
-/// @param[in] constraints Vector of the impulse constraints. 
-/// @param[in] robot Robot model.
-/// @param[in, out] data Vector of the constraints data.
-/// @param[in] s Split solution.
-///
-template <typename ConstraintComponentBaseTypePtr, typename SplitSolutionType>
-void computePrimalAndDualResidual(
-    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    Robot& robot, std::vector<ConstraintComponentData>& data, 
-    const SplitSolutionType& s);
-
-///
-/// @brief Returns the l1-norm of the primal residual of the constraints. 
-/// Before calling this function, constraintsimpl::computePrimalResidual() must 
-/// be called.
-/// @param[in] constraints Vector of the impulse constraints. 
-/// @param[in] data Vector of the constraints data.
-/// @return l1-norm of the primal residuals and duality of the constraints. 
-///
-template <typename ConstraintComponentBaseTypePtr>
-double l1NormPrimalResidual(
-    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    const std::vector<ConstraintComponentData>& data);
-
-///
-/// @brief Returns the squared norm of the primal and dual residuals of the 
-/// constraint. Before calling this function, 
-/// constraintsimpl::computePrimalResidual() must be called.
-/// @param[in] constraints Vector of the impulse constraints. 
-/// @param[in] data Vector of the constraints data.
-/// @return Squared norm of the primal and dual residuals of the constraints. 
-///
-template <typename ConstraintComponentBaseTypePtr>
-double squaredNormPrimalAndDualResidual(
-    const std::vector<ConstraintComponentBaseTypePtr>& constraints,
-    const std::vector<ConstraintComponentData>& data);
 
 ///
 /// @brief Returns the l1-norm of the primal residuals of the constraints. 

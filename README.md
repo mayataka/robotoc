@@ -117,15 +117,20 @@ Simulation of the MPC of systems with rigid contacts are shown in [idocp-sim](ht
 
 
 ## Python binding
-Python binding is available (but not tested).
-To build it, modify the CMake configuration as 
+You can build Python binding (but currently NOT tested) by changing the CMake configuration as 
+
 ```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_PYTHON_INTERFACE=ON
+cmake .. -DCMAKE_BUILD_TYPE=Release -BUILD_PYTHON_INTERFACE=ON
 ```
-After installing it, add the Python binding path to the environment as (suppose your Python version is 3.8)
+
+For example, if your Python version is 3.8, the Python binding will be installed in `IDOCP_INSTALL_DIR/lib/python3.8/site-packages` where `IDOCP_INSTALL_DIR` is the install directory of `idocp` configured in CMake (e.g., by `-DCMAKE_INSTALL_PREFIX`).
+To use the installed Python library, it is convenient to set the environment variable as
+
 ```
-export PYTHONPATH=IDOCP_INSTALL_LOCATION/lib/python3.8/site-packages:$PYTHONPATH
+export PYTHONPATH=IDOCP_INSTALL_DIR/lib/python3.8/site-packages:$PYTHONPATH 
 ```
+
+Note that if you use another Python version than `python3.8`, please adapt it.
 
 
 ## Citing idocp

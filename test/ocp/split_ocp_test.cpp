@@ -96,7 +96,6 @@ void SplitOCPTest::testLinearizeOCP(Robot& robot,
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
   const double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
-  constraints->augmentDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
   stateequation::linearizeForwardEuler(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   stateequation::condenseForwardEuler(robot, dt, s, s_next.q, kkt_matrix_ref, kkt_residual_ref);
@@ -198,8 +197,7 @@ void SplitOCPTest::testComputeKKTResidual(Robot& robot,
   constraints->setSlackAndDual(robot, constraints_data, s);
   robot.updateKinematics(s.q, s.v, s.a);
   const double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
-  constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  constraints->augmentDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
+  constraints->linearizePrimalAndDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
   stateequation::linearizeForwardEuler(robot, dt, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ContactDynamics cd(robot);
   robot.updateKinematics(s.q, s.v, s.a);

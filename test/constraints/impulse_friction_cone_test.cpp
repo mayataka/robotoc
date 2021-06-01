@@ -39,10 +39,9 @@ protected:
   void testKinematics(Robot& robot, const ImpulseStatus& impulse_status) const;
   void testfLocal2World(Robot& robot, const ImpulseStatus& impulse_status) const;
   void testIsFeasible(Robot& robot, const ImpulseStatus& impulse_status) const;
-  void testSetSlackAndDual(Robot& robot, 
-                           const ImpulseStatus& impulse_status) const;
-  void testAugmentDualResidual(Robot& robot, 
-                               const ImpulseStatus& impulse_status) const;
+  void testSetSlack(Robot& robot, const ImpulseStatus& impulse_status) const;
+  void testComputePrimalResidualDerivatives(Robot& robot, 
+                                            const ImpulseStatus& impulse_status) const;
   void testComputePrimalAndDualResidual(Robot& robot, 
                                         const ImpulseStatus& impulse_status) const;
   void testCondenseSlackAndDual(Robot& robot, 
@@ -101,8 +100,7 @@ void ImpulseFrictionConeTest::testIsFeasible(Robot& robot,
 }
 
 
-void ImpulseFrictionConeTest::testSetSlackAndDual(Robot& robot, 
-                                                  const ImpulseStatus& impulse_status) const {
+void ImpulseFrictionConeTest::testSetSlack(Robot& robot, const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone limit(robot, mu); 
   ConstraintComponentData data(limit.dimc(), limit.barrier()), data_ref(limit.dimc(), limit.barrier());
   limit.allocateExtraData(data);
@@ -110,36 +108,65 @@ void ImpulseFrictionConeTest::testSetSlackAndDual(Robot& robot,
   const int dimc = limit.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateFrameKinematics(s.q);
-  limit.setSlackAndDual(robot, data, s);
+  limit.setSlack(robot, data, s);
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
     ImpulseFrictionCone::fLocal2World(robot, robot.contactFrames()[i], s.f[i], f_world);
     ImpulseFrictionCone::frictionConeResidual(mu, f_world, data_ref.residual.segment(5*i, 5));
     data_ref.slack.segment(5*i, 5) = - data_ref.residual.segment(5*i, 5);
   }
-  pdipm::SetSlackAndDualPositive(barrier, data_ref);
   EXPECT_TRUE(data.isApprox(data_ref));
 }
 
 
-void ImpulseFrictionConeTest::testAugmentDualResidual(Robot& robot, 
-                                                      const ImpulseStatus& impulse_status) const {
+void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, 
+                                                               const ImpulseStatus& impulse_status) const {
+  ImpulseFrictionCone limit(robot, mu); 
+  const int dimc = limit.dimc();
+  const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
+  robot.updateKinematics(s.q);
+  ConstraintComponentData data(limit.dimc(), limit.barrier());
+  limit.allocateExtraData(data);
+  data.slack.setRandom();
+  data.dual.setRandom();
+  data.residual.setRandom();
+  data.duality.setRandom();
+  auto data_ref = data;
+  limit.computePrimalAndDualResidual(robot, data, s);
+  data_ref.residual.setZero();
+  data_ref.duality.setZero();
+  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
+    if (impulse_status.isImpulseActive(i)) {
+      Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
+      ImpulseFrictionCone::fLocal2World(robot, robot.contactFrames()[i], s.f[i], f_world);
+      ImpulseFrictionCone::frictionConeResidual(mu, f_world, data_ref.residual.segment(5*i, 5));
+      data_ref.residual.template segment<5>(5*i) += data_ref.slack.segment(5*i, 5);
+      for (int j=0; j<5; ++j) {
+        data_ref.duality.coeffRef(5*i+j) 
+            = data_ref.slack.coeff(5*i+j) * data_ref.dual.coeff(5*i+j) - barrier;
+      }
+    }
+  }
+  EXPECT_TRUE(data.isApprox(data_ref));
+}
+
+
+void ImpulseFrictionConeTest::testComputePrimalResidualDerivatives(Robot& robot, 
+                                                                   const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone limit(robot, mu); 
   ConstraintComponentData data(limit.dimc(), limit.barrier());
   limit.allocateExtraData(data);
   const int dimc = limit.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q);
-  limit.setSlackAndDual(robot, data, s);
+  limit.setSlack(robot, data, s);
   data.slack.setRandom();
   data.dual.setRandom();
-  ConstraintComponentData data_ref = data;
-  ImpulseSplitKKTResidual kkt_res(robot);
-  kkt_res.setImpulseStatus(impulse_status);
-  kkt_res.lq().setRandom();
-  kkt_res.lf().setRandom();
-  ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
-  limit.augmentDualResidual(robot, data, s, kkt_res);
+  limit.computePrimalAndDualResidual(robot, data, s);
+  auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
+  auto data_ref = data;
+  auto kkt_res_ref = kkt_res;
+  limit.computePrimalResidualDerivatives(robot, data, s, kkt_res);
   int dimf_stack = 0;
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -164,38 +191,6 @@ void ImpulseFrictionConeTest::testAugmentDualResidual(Robot& robot,
 }
 
 
-void ImpulseFrictionConeTest::testComputePrimalAndDualResidual(Robot& robot, 
-                                                               const ImpulseStatus& impulse_status) const {
-  ImpulseFrictionCone limit(robot, mu); 
-  const int dimc = limit.dimc();
-  const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
-  robot.updateKinematics(s.q);
-  ConstraintComponentData data(limit.dimc(), limit.barrier());
-  limit.allocateExtraData(data);
-  data.slack.setRandom();
-  data.dual.setRandom();
-  data.residual.setRandom();
-  data.duality.setRandom();
-  ConstraintComponentData data_ref = data;
-  limit.computePrimalAndDualResidual(robot, data, s);
-  data_ref.residual.setZero();
-  data_ref.duality.setZero();
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
-      Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-      ImpulseFrictionCone::fLocal2World(robot, robot.contactFrames()[i], s.f[i], f_world);
-      ImpulseFrictionCone::frictionConeResidual(mu, f_world, data_ref.residual.segment(5*i, 5));
-      data_ref.residual.template segment<5>(5*i) += data_ref.slack.segment(5*i, 5);
-      for (int j=0; j<5; ++j) {
-        data_ref.duality.coeffRef(5*i+j) 
-            = data_ref.slack.coeff(5*i+j) * data_ref.dual.coeff(5*i+j) - barrier;
-      }
-    }
-  }
-  EXPECT_TRUE(data.isApprox(data_ref));
-}
-
-
 void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot, 
                                                        const ImpulseStatus& impulse_status) const {
   ImpulseFrictionCone limit(robot, mu); 
@@ -204,39 +199,19 @@ void ImpulseFrictionConeTest::testCondenseSlackAndDual(Robot& robot,
   const int dimc = limit.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
   robot.updateKinematics(s.q);
-  limit.setSlackAndDual(robot, data, s);
+  limit.setSlack(robot, data, s);
   data.slack.setRandom();
   data.dual.setRandom();
   data.residual.setRandom();
   data.duality.setRandom();
-  ConstraintComponentData data_ref = data;
-  ImpulseSplitKKTMatrix kkt_mat(robot);
-  kkt_mat.setImpulseStatus(impulse_status);
-  kkt_mat.Qqq().setRandom();
-  kkt_mat.Qqf().setRandom();
-  kkt_mat.Qff().setRandom();
-  ImpulseSplitKKTResidual kkt_res(robot);
-  kkt_res.setImpulseStatus(impulse_status);
-  kkt_res.lq().setRandom();
-  kkt_res.lf().setRandom();
-  limit.augmentDualResidual(robot, data, s, kkt_res);
-  ImpulseSplitKKTMatrix kkt_mat_ref = kkt_mat;
-  ImpulseSplitKKTResidual kkt_res_ref = kkt_res;
+  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot, impulse_status);
+  auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
+  limit.computePrimalAndDualResidual(robot, data, s);
+  limit.computePrimalResidualDerivatives(robot, data, s, kkt_res);
+  auto data_ref = data;
+  auto kkt_mat_ref = kkt_mat;
+  auto kkt_res_ref = kkt_res;
   limit.condenseSlackAndDual(robot, data, s, kkt_mat, kkt_res);
-  data_ref.residual.setZero();
-  data_ref.duality.setZero();
-  for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
-    if (impulse_status.isImpulseActive(i)) {
-      Eigen::Vector3d f_world = Eigen::Vector3d::Zero();
-      ImpulseFrictionCone::fLocal2World(robot, robot.contactFrames()[i], s.f[i], f_world);
-      ImpulseFrictionCone::frictionConeResidual(mu, f_world, data_ref.residual.segment(5*i, 5));
-      data_ref.residual.template segment<5>(5*i) += data_ref.slack.segment(5*i, 5);
-      for (int j=0; j<5; ++j) {
-        data_ref.duality.coeffRef(5*i+j) 
-            = data_ref.slack.coeff(5*i+j) * data_ref.dual.coeff(5*i+j) - barrier;
-      }
-    }
-  }
   int dimf_stack = 0;
   for (int i=0; i<impulse_status.maxPointContacts(); ++i) {
     if (impulse_status.isImpulseActive(i)) {
@@ -277,26 +252,20 @@ void ImpulseFrictionConeTest::testExpandSlackAndDual(Robot& robot, const Impulse
   limit.allocateExtraData(data);
   const int dimc = limit.dimc();
   const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
-  limit.setSlackAndDual(robot, data, s);
+  limit.setSlack(robot, data, s);
   data.slack.setRandom();
   data.dual.setRandom();
   data.residual.setRandom();
   data.duality.setRandom();
   data.dslack.setRandom();
   data.ddual.setRandom();
-  const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
-  ImpulseSplitKKTMatrix kkt_mat(robot);
-  kkt_mat.setImpulseStatus(impulse_status);
-  kkt_mat.Qqq().setRandom();
-  kkt_mat.Qqf().setRandom();
-  kkt_mat.Qff().setRandom();
-  ImpulseSplitKKTResidual kkt_res(robot);
-  kkt_res.setImpulseStatus(impulse_status);
-  kkt_res.lq().setRandom();
-  kkt_res.lf().setRandom();
-  limit.augmentDualResidual(robot, data, s, kkt_res);
+  auto kkt_mat = ImpulseSplitKKTMatrix::Random(robot, impulse_status);
+  auto kkt_res = ImpulseSplitKKTResidual::Random(robot, impulse_status);
+  limit.computePrimalAndDualResidual(robot, data, s);
+  limit.computePrimalResidualDerivatives(robot, data, s, kkt_res);
   limit.condenseSlackAndDual(robot, data, s, kkt_mat, kkt_res);
-  ConstraintComponentData data_ref = data;
+  auto data_ref = data;
+  const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
   limit.expandSlackAndDual(data, s, d);
   data_ref.dslack.fill(1.0);
   data_ref.ddual.fill(1.0);
@@ -349,18 +318,18 @@ TEST_F(ImpulseFrictionConeTest, fixedBase) {
   testKinematics(robot, impulse_status);
   testfLocal2World(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
-  testSetSlackAndDual(robot, impulse_status);
-  testAugmentDualResidual(robot, impulse_status);
+  testSetSlack(robot, impulse_status);
   testComputePrimalAndDualResidual(robot, impulse_status);
+  testComputePrimalResidualDerivatives(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
   testExpandSlackAndDual(robot, impulse_status);
   impulse_status.activateImpulse(0);
   testKinematics(robot, impulse_status);
   testfLocal2World(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
-  testSetSlackAndDual(robot, impulse_status);
-  testAugmentDualResidual(robot, impulse_status);
+  testSetSlack(robot, impulse_status);
   testComputePrimalAndDualResidual(robot, impulse_status);
+  testComputePrimalResidualDerivatives(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
   testExpandSlackAndDual(robot, impulse_status);
 }
@@ -373,18 +342,18 @@ TEST_F(ImpulseFrictionConeTest, floatingBase) {
   testKinematics(robot, impulse_status);
   testfLocal2World(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
-  testSetSlackAndDual(robot, impulse_status);
-  testAugmentDualResidual(robot, impulse_status);
+  testSetSlack(robot, impulse_status);
   testComputePrimalAndDualResidual(robot, impulse_status);
+  testComputePrimalResidualDerivatives(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
   testExpandSlackAndDual(robot, impulse_status);
   impulse_status.setRandom();
   testKinematics(robot, impulse_status);
   testfLocal2World(robot, impulse_status);
   testIsFeasible(robot, impulse_status);
-  testSetSlackAndDual(robot, impulse_status);
-  testAugmentDualResidual(robot, impulse_status);
+  testSetSlack(robot, impulse_status);
   testComputePrimalAndDualResidual(robot, impulse_status);
+  testComputePrimalResidualDerivatives(robot, impulse_status);
   testCondenseSlackAndDual(robot, impulse_status);
   testExpandSlackAndDual(robot, impulse_status);
 }

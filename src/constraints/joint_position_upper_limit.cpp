@@ -44,14 +44,21 @@ bool JointPositionUpperLimit::isFeasible(Robot& robot,
 }
 
 
-void JointPositionUpperLimit::setSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+void JointPositionUpperLimit::setSlack(Robot& robot, 
+                                       ConstraintComponentData& data, 
+                                       const SplitSolution& s) const {
   data.slack = qmax_ - s.q.tail(dimc_);
-  setSlackAndDualPositive(data);
 }
 
 
-void JointPositionUpperLimit::augmentDualResidual(
+void JointPositionUpperLimit::computePrimalAndDualResidual(
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  data.residual = s.q.tail(dimc_) - qmax_ + data.slack;
+  computeDuality(data);
+}
+
+
+void JointPositionUpperLimit::computePrimalResidualDerivatives(
     Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   kkt_residual.lq().tail(dimc_).noalias() += dt * data.dual;
@@ -64,7 +71,6 @@ void JointPositionUpperLimit::condenseSlackAndDual(
     SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Qqq().diagonal().tail(dimc_).array()
       += dt * data.dual.array() / data.slack.array();
-  computePrimalAndDualResidual(robot, data, s);
   kkt_residual.lq().tail(dimc_).array() 
       += dt * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
@@ -76,13 +82,6 @@ void JointPositionUpperLimit::expandSlackAndDual(
     const SplitDirection& d) const {
   data.dslack = - d.dq().tail(dimc_) - data.residual;
   computeDualDirection(data);
-}
-
-
-void JointPositionUpperLimit::computePrimalAndDualResidual(
-    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
-  data.residual = s.q.tail(dimc_) - qmax_ + data.slack;
-  computeDuality(data);
 }
 
 

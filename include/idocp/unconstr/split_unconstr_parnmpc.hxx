@@ -88,12 +88,11 @@ inline void SplitUnconstrParNMPC::linearizeOCP(Robot& robot, const double t,
   kkt_residual.setZero();
   stage_cost_ = cost_->quadratizeStageCost(robot, cost_data_, t, dt, s, 
                                            kkt_residual, kkt_matrix);
-  constraints_->augmentDualResidual(robot, constraints_data_, dt, s, kkt_residual);
+  constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
+                                     kkt_matrix, kkt_residual);
   stateequation::linearizeBackwardEuler(robot, dt, q_prev, v_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
-  constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
-                                     kkt_matrix, kkt_residual);
   unconstr_dynamics_.condenseUnconstrDynamics(kkt_matrix, kkt_residual);
 }
 
@@ -149,8 +148,8 @@ inline void SplitUnconstrParNMPC::computeKKTResidual(
   kkt_residual.setZero();
   stage_cost_ = cost_->linearizeStageCost(robot, cost_data_, t, dt, s, 
                                           kkt_residual);
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  constraints_->augmentDualResidual(robot, constraints_data_, dt, s, kkt_residual);
+  constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
+                                               kkt_residual);
   stateequation::linearizeBackwardEuler(robot, dt, q_prev, v_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);

@@ -58,7 +58,6 @@ TEST_F(TerminalUnconstrParNMPCTest, linearizeOCP) {
   robot.updateKinematics(s.q, s.v, s.a);
   double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   stage_cost += cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
-  constraints->augmentDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
   stateequation::linearizeBackwardEulerTerminal(robot, dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
@@ -103,8 +102,7 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTResidual) {
   robot.updateKinematics(s.q, s.v, s.a);
   double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
   stage_cost += cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
-  constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  constraints->augmentDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
+  constraints->linearizePrimalAndDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
   stateequation::linearizeBackwardEulerTerminal(robot, dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
   ud.linearizeUnconstrDynamics(robot, dt, s, kkt_residual_ref);

@@ -28,18 +28,25 @@ public:
                            robot, data, s);
   }
 
-  void setSlackAndDual(Robot& robot, ConstraintComponentData& data, 
-                       const ImpulseSplitSolution& s) const override {
+  void setSlack(Robot& robot, ConstraintComponentData& data, 
+                const ImpulseSplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
-                           setSlackAndDual, 
+                           setSlack, 
                            robot, data, s);
   }
 
-  void augmentDualResidual(Robot& robot, ConstraintComponentData& data,
-                           const ImpulseSplitSolution& s,
-                           ImpulseSplitKKTResidual& kkt_residual) const override {
+  void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
+                                    const ImpulseSplitSolution& s) const override {
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
-                           augmentDualResidual, 
+                           computePrimalAndDualResidual, 
+                           robot, data, s);
+  }
+
+  void computePrimalResidualDerivatives(Robot& robot, ConstraintComponentData& data,
+                                        const ImpulseSplitSolution& s,
+                                        ImpulseSplitKKTResidual& kkt_residual) const override {
+    PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
+                           computePrimalResidualDerivatives, 
                            robot, data, s, kkt_residual);
   }
 
@@ -58,13 +65,6 @@ public:
     PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
                            expandSlackAndDual, 
                            data, s, d);
-  }
-
-  void computePrimalAndDualResidual(Robot& robot, ConstraintComponentData& data, 
-                                    const ImpulseSplitSolution& s) const override {
-    PYBIND11_OVERRIDE_PURE(void, ImpulseConstraintComponentBase, 
-                           computePrimalAndDualResidual, 
-                           robot, data, s);
   }
 
   int dimc() const override {

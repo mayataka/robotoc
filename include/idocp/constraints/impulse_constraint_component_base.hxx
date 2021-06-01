@@ -10,13 +10,13 @@
 namespace idocp {
 
 inline double ImpulseConstraintComponentBase::l1NormPrimalResidual(
-    const ConstraintComponentData& data) const {
+    const ConstraintComponentData& data) {
   return data.residual.lpNorm<1>();
 }
 
 
 inline double ImpulseConstraintComponentBase::squaredNormPrimalAndDualResidual(
-    const ConstraintComponentData& data) const {
+    const ConstraintComponentData& data) {
   return (data.residual.squaredNorm() + data.duality.squaredNorm());
 }
 
@@ -34,14 +34,14 @@ inline double ImpulseConstraintComponentBase::maxDualStepSize(
 
 
 inline void ImpulseConstraintComponentBase::updateSlack(
-    ConstraintComponentData& data, const double step_size) const {
+    ConstraintComponentData& data, const double step_size) {
   assert(step_size > 0);
   data.slack.noalias() += step_size * data.dslack;
 }
 
 
 inline void ImpulseConstraintComponentBase::updateDual(
-    ConstraintComponentData& data, const double step_size) const {
+    ConstraintComponentData& data, const double step_size) {
   assert(step_size > 0);
   data.dual.noalias() += step_size * data.ddual;
 }
@@ -94,6 +94,12 @@ inline void ImpulseConstraintComponentBase::computeDuality(
 }
 
 
+inline void ImpulseConstraintComponentBase::computeDuality(
+    ConstraintComponentData& data, const int start, const int size) const {
+  pdipm::ComputeDuality(barrier_, data, start, size);
+}
+
+
 inline double ImpulseConstraintComponentBase::computeDuality(
     const double slack, const double dual) const {
   return (slack * dual - barrier_); 
@@ -103,6 +109,12 @@ inline double ImpulseConstraintComponentBase::computeDuality(
 inline void ImpulseConstraintComponentBase::computeDualDirection(
     ConstraintComponentData& data) {
   pdipm::ComputeDualDirection(data);
+}
+
+
+inline void ImpulseConstraintComponentBase::computeDualDirection(
+    ConstraintComponentData& data, const int start, const int size) {
+  pdipm::ComputeDualDirection(data, start, size);
 }
 
 

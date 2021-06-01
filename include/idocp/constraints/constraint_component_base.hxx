@@ -8,13 +8,13 @@
 namespace idocp {
 
 inline double ConstraintComponentBase::l1NormPrimalResidual(
-    const ConstraintComponentData& data) const {
+    const ConstraintComponentData& data) {
   return data.residual.lpNorm<1>();
 }
 
 
 inline double ConstraintComponentBase::squaredNormPrimalAndDualResidual(
-    const ConstraintComponentData& data) const {
+    const ConstraintComponentData& data) {
   return (data.residual.squaredNorm() + data.duality.squaredNorm());
 }
 
@@ -32,14 +32,14 @@ inline double ConstraintComponentBase::maxDualStepSize(
 
 
 inline void ConstraintComponentBase::updateSlack(ConstraintComponentData& data, 
-                                                 const double step_size) const {
+                                                 const double step_size) {
   assert(step_size > 0);
   data.slack.noalias() += step_size * data.dslack;
 }
 
 
 inline void ConstraintComponentBase::updateDual(ConstraintComponentData& data, 
-                                                const double step_size) const {
+                                                const double step_size) {
   assert(step_size > 0);
   data.dual.noalias() += step_size * data.ddual;
 }
@@ -92,15 +92,27 @@ inline void ConstraintComponentBase::computeDuality(
 }
 
 
+inline void ConstraintComponentBase::computeDuality(
+    ConstraintComponentData& data, const int start, const int size) const {
+  pdipm::ComputeDuality(barrier_, data, start, size);
+}
+
+
 inline double ConstraintComponentBase::computeDuality(const double slack, 
                                                       const double dual) const {
-  return (slack * dual - barrier_); 
+  return pdipm::ComputeDuality(barrier_, slack, dual);
 }
 
 
 inline void ConstraintComponentBase::computeDualDirection(
     ConstraintComponentData& data) {
   pdipm::ComputeDualDirection(data);
+}
+
+
+inline void ConstraintComponentBase::computeDualDirection(
+    ConstraintComponentData& data, const int start, const int size) {
+  pdipm::ComputeDualDirection(data, start, size);
 }
 
 

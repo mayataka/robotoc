@@ -45,14 +45,21 @@ bool JointAccelerationLowerLimit::isFeasible(Robot& robot,
 }
 
 
-void JointAccelerationLowerLimit::setSlackAndDual(
-    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+void JointAccelerationLowerLimit::setSlack(Robot& robot, 
+                                           ConstraintComponentData& data, 
+                                           const SplitSolution& s) const {
   data.slack = s.a.tail(dimc_) - amin_;
-  setSlackAndDualPositive(data);
 }
 
 
-void JointAccelerationLowerLimit::augmentDualResidual(
+void JointAccelerationLowerLimit::computePrimalAndDualResidual(
+    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
+  data.residual = amin_ - s.a.tail(dimc_) + data.slack;
+  computeDuality(data);
+}
+
+
+void JointAccelerationLowerLimit::computePrimalResidualDerivatives(
     Robot& robot, ConstraintComponentData& data, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   kkt_residual.la.tail(dimc_).noalias() -= dt * data.dual;
@@ -65,7 +72,6 @@ void JointAccelerationLowerLimit::condenseSlackAndDual(
     SplitKKTResidual& kkt_residual) const {
   kkt_matrix.Qaa.diagonal().tail(dimc_).array()
       += dt * data.dual.array() / data.slack.array();
-  computePrimalAndDualResidual(robot, data, s);
   kkt_residual.la.tail(dimc_).array() 
       -= dt * (data.dual.array()*data.residual.array()-data.duality.array()) 
               / data.slack.array();
@@ -77,13 +83,6 @@ void JointAccelerationLowerLimit::expandSlackAndDual(
     const SplitDirection& d) const {
   data.dslack = d.da().tail(dimc_) - data.residual;
   computeDualDirection(data);
-}
-
-
-void JointAccelerationLowerLimit::computePrimalAndDualResidual(
-    Robot& robot, ConstraintComponentData& data, const SplitSolution& s) const {
-  data.residual = amin_ - s.a.tail(dimc_) + data.slack;
-  computeDuality(data);
 }
 
 

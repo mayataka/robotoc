@@ -89,12 +89,11 @@ inline void TerminalUnconstrParNMPC::linearizeOCP(Robot& robot, const double t,
                                             kkt_residual, kkt_matrix);
   stage_cost_ += cost_->quadratizeTerminalCost(robot, cost_data_, t, s, 
                                                kkt_residual, kkt_matrix);
-  constraints_->augmentDualResidual(robot, constraints_data_, dt, s, kkt_residual);
+  constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
+                                     kkt_matrix, kkt_residual);
   stateequation::linearizeBackwardEulerTerminal(robot, dt, q_prev, v_prev, s,  
                                                 kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
-  constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
-                                     kkt_matrix, kkt_residual);
   unconstr_dynamics_.condenseUnconstrDynamics(kkt_matrix, kkt_residual);
 }
 
@@ -152,8 +151,8 @@ inline void TerminalUnconstrParNMPC::computeKKTResidual(
                                            kkt_residual);
   stage_cost_ += cost_->linearizeTerminalCost(robot, cost_data_, t, s, 
                                               kkt_residual);
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  constraints_->augmentDualResidual(robot, constraints_data_, dt, s, kkt_residual);
+  constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
+                                               kkt_residual);
   stateequation::linearizeBackwardEulerTerminal(robot, dt, q_prev, v_prev, s,  
                                                 kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);

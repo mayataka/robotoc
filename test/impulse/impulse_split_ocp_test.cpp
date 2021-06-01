@@ -64,7 +64,6 @@ void ImpulseSplitOCPTest::testLinearizeOCP(Robot& robot,
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
   const double impulse_cost = cost->quadratizeImpulseCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
-  constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, s, kkt_matrix_ref, kkt_residual_ref);
   stateequation::linearizeImpulseForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   stateequation::condenseImpulseForwardEuler(robot, s, s_next.q, kkt_matrix_ref, kkt_residual_ref);
@@ -124,8 +123,7 @@ void ImpulseSplitOCPTest::testComputeKKTResidual(Robot& robot,
   const Eigen::VectorXd v_after_impulse = s.v + s.dv;
   robot.updateKinematics(s.q, v_after_impulse);
   const double impulse_cost = cost->linearizeImpulseCost(robot, cost_data, t, s, kkt_residual_ref);
-  constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  constraints->augmentDualResidual(robot, constraints_data, s, kkt_residual_ref);
+  constraints->linearizePrimalAndDualResidual(robot, constraints_data, s, kkt_residual_ref);
   stateequation::linearizeImpulseForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
