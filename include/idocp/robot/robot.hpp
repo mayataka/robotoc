@@ -6,7 +6,6 @@
 #include <utility>
 
 #include "Eigen/Core"
-#include "Eigen/StdVector"
 #include "pinocchio/multibody/model.hpp"
 #include "pinocchio/multibody/data.hpp"
 #include "pinocchio/container/aligned-vector.hpp"
@@ -15,6 +14,7 @@
 #include "idocp/robot/point_contact.hpp"
 #include "idocp/robot/contact_status.hpp"
 #include "idocp/robot/impulse_status.hpp"
+#include "idocp/utils/aligned_vector.hpp"
 
 
 namespace idocp {
@@ -710,7 +710,7 @@ public:
 private:
   pinocchio::Model model_, impulse_model_;
   pinocchio::Data data_, impulse_data_;
-  std::vector<PointContact, Eigen::aligned_allocator<PointContact>> point_contacts_;
+  aligned_vector<PointContact> point_contacts_;
   pinocchio::container::aligned_vector<pinocchio::Force> fjoint_;
   int dimq_, dimv_, dimu_, dim_passive_, max_dimf_;
   bool has_floating_base_;

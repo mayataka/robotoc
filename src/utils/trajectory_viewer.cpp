@@ -18,13 +18,22 @@
 namespace idocp {
 
 TrajectoryViewer::TrajectoryViewer(const std::string& path_to_urdf,
-                                   const std::string& path_to_pkg)
+                                   const std::string& path_to_pkg, 
+                                   const BaseJointType& base_joint_type)
   : force_radius_(0.015),
     force_length_(0.5),
     force_scale_(0.75),
     friction_cone_scale_(0.15) {
-  pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
-                              model_);
+  switch (base_joint_type) {
+    case BaseJointType::FloatingBase:
+      pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
+                                  pinocchio::JointModelFreeFlyer(), model_);
+      break;
+    default:
+      pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
+                                  model_);
+      break;
+  }
   pinocchio::urdf::buildGeom(model_, 
                              boost::filesystem::absolute(path_to_urdf).string(), 
                              pinocchio::VISUAL, vmodel_, 
@@ -35,7 +44,8 @@ TrajectoryViewer::TrajectoryViewer(const std::string& path_to_urdf,
 }
 
 
-TrajectoryViewer::TrajectoryViewer(const std::string& path_to_urdf)
+TrajectoryViewer::TrajectoryViewer(const std::string& path_to_urdf,
+                                   const BaseJointType& base_joint_type)
   : force_radius_(0.015),
     force_length_(0.5),
     force_scale_(0.75),
@@ -47,8 +57,16 @@ TrajectoryViewer::TrajectoryViewer(const std::string& path_to_urdf)
     for (int j=0; j<file_name_length; ++j) path_to_pkg.pop_back();
     path_to_pkg.pop_back();
   }
-  pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
-                              model_);
+  switch (base_joint_type) {
+    case BaseJointType::FloatingBase:
+      pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
+                                  pinocchio::JointModelFreeFlyer(), model_);
+      break;
+    default:
+      pinocchio::urdf::buildModel(boost::filesystem::absolute(path_to_urdf).string(), 
+                                  model_);
+      break;
+  }
   pinocchio::urdf::buildGeom(model_, 
                              boost::filesystem::absolute(path_to_urdf).string(), 
                              pinocchio::VISUAL, vmodel_, path_to_pkg);
