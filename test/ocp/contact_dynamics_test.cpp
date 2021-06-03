@@ -342,7 +342,7 @@ void ContactDynamicsTest::testComputeCondensedDualDirection(Robot& robot, const 
   auto d_ref = d;
   const Eigen::VectorXd dlmdgmm = Eigen::VectorXd::Random(2*dimv);
   const Eigen::VectorXd dgmm = dlmdgmm.tail(dimv);
-  cd.computeCondensedDualDirection(robot, dt, kkt_matrix, kkt_residual, dgmm, d);
+  cd.computeCondensedDualDirection(dt, kkt_matrix, kkt_residual, dgmm, d);
   Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*dimv, dimv+dimf);
   OOIO_mat.bottomLeftCorner(dimv, dimv) = dt * Eigen::MatrixXd::Identity(dimv, dimv);
   Eigen::VectorXd du_full = Eigen::VectorXd::Zero(dimv);

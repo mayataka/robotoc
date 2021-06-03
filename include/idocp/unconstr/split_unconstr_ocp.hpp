@@ -14,7 +14,7 @@
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
-#include "idocp/ocp/state_equation.hpp"
+#include "idocp/unconstr/unconstr_state_equation.hpp"
 #include "idocp/unconstr/unconstr_dynamics.hpp"
 
 
@@ -89,16 +89,14 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] t Time of this time stage. 
   /// @param[in] dt Time step of this time stage. 
-  /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] s_next Split solution of the next time stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void linearizeOCP(Robot& robot, const double t, const double dt, 
-                    const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                    const SplitSolution& s_next, SplitKKTMatrix& kkt_matrix,
-                    SplitKKTResidual& kkt_residual);
+                    const SplitSolution& s, const SplitSolution& s_next, 
+                    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
 
   ///
   /// @brief Computes the Newton direction of the condensed variables  
@@ -151,15 +149,13 @@ public:
   /// @param[in] robot Robot model. 
   /// @param[in] t Time of this time stage. 
   /// @param[in] dt Time step of this time stage. 
-  /// @param[in] q_prev Configuration at the previous time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] s_next Split solution of the next time stage.
   /// @param[in, out] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in, out] kkt_residual Split KKT residual of this time stage.
   ///
   void computeKKTResidual(Robot& robot, const double t, const double dt, 
-                          const Eigen::VectorXd& q_prev, const SplitSolution& s, 
-                          const SplitSolution& s_next, 
+                          const SplitSolution& s, const SplitSolution& s_next, 
                           SplitKKTMatrix& kkt_matrix, 
                           SplitKKTResidual& kkt_residual);
 

@@ -14,7 +14,7 @@
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
-#include "idocp/ocp/state_equation.hpp"
+#include "idocp/unconstr/unconstr_state_equation.hpp"
 #include "idocp/unconstr/unconstr_dynamics.hpp"
 
 

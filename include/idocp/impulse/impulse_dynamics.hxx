@@ -123,16 +123,15 @@ inline void ImpulseDynamics::computeCondensedPrimalDirection(
 
 template <typename VectorType>
 inline void ImpulseDynamics::computeCondensedDualDirection(
-    const Robot& robot, const ImpulseSplitKKTMatrix& kkt_matrix, 
+    const ImpulseSplitKKTMatrix& kkt_matrix, 
     const ImpulseSplitKKTResidual& kkt_residual, 
     const Eigen::MatrixBase<VectorType>& dgmm, ImpulseSplitDirection& d) {
-  assert(dgmm.size() == robot.dimv());
-  expansionDual(robot, data_, kkt_matrix, kkt_residual, dgmm, d);
+  expansionDual(data_, kkt_matrix, kkt_residual, dgmm, d);
 }
 
 
 inline void ImpulseDynamics::expandPrimal(const ImpulseDynamicsData& data, 
-                                             ImpulseSplitDirection& d) {
+                                          ImpulseSplitDirection& d) {
   d.ddvf().noalias()  = - data.MJtJinv_dImDCdqv() * d.dx;
   d.ddvf().noalias() -= data.MJtJinv_ImDC();
   d.df().array() *= -1;
@@ -141,11 +140,9 @@ inline void ImpulseDynamics::expandPrimal(const ImpulseDynamicsData& data,
 
 template <typename VectorType>
 inline void ImpulseDynamics::expansionDual(
-    const Robot& robot, ImpulseDynamicsData& data, 
-    const ImpulseSplitKKTMatrix& kkt_matrix, 
+    ImpulseDynamicsData& data, const ImpulseSplitKKTMatrix& kkt_matrix, 
     const ImpulseSplitKKTResidual& kkt_residual, 
     const Eigen::MatrixBase<VectorType>& dgmm, ImpulseSplitDirection& d) {
-  assert(dgmm.size() == robot.dimv());
   data.ldvf().noalias() += data.Qdvfqv() * d.dx;
   data.ldv().noalias()  += dgmm;
   d.dbetamu().noalias() = - data.MJtJinv() * data.ldvf();

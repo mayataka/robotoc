@@ -13,8 +13,6 @@ inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix(const Robot& robot)
     Qxx(Eigen::MatrixXd::Zero(2*robot.dimv(), 2*robot.dimv())),
     Qdvdv(Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv())),
     Fqq_prev(),
-    Fqq_inv(),
-    Fqq_prev_inv(),
     Qff_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.max_dimf())),
     Qqf_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     dimv_(robot.dimv()), 
@@ -23,10 +21,6 @@ inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix(const Robot& robot)
   if (robot.hasFloatingBase()) {
     Fqq_prev.resize(robot.dimv(), robot.dimv());
     Fqq_prev.setZero();
-    Fqq_inv.resize(6, 6);
-    Fqq_inv.setZero();
-    Fqq_prev_inv.resize(6, 6);
-    Fqq_prev_inv.setZero();
   }
 }
 
@@ -36,8 +30,6 @@ inline ImpulseSplitKKTMatrix::ImpulseSplitKKTMatrix()
     Qxx(),
     Qdvdv(),
     Fqq_prev(),
-    Fqq_inv(),
-    Fqq_prev_inv(),
     Qff_full_(),
     Qqf_full_(),
     dimv_(0), 
@@ -172,8 +164,6 @@ inline void ImpulseSplitKKTMatrix::setZero() {
   Qff().setZero();
   Qqf().setZero();
   Fqq_prev.setZero();
-  Fqq_inv.setZero();
-  Fqq_prev_inv.setZero();
 }
 
 
@@ -191,10 +181,6 @@ inline bool ImpulseSplitKKTMatrix::isDimensionConsistent() const {
   if (has_floating_base_) {
     if (Fqq_prev.cols() != dimv_) return false;
     if (Fqq_prev.rows() != dimv_) return false;
-    if (Fqq_inv.cols() != 6) return false;
-    if (Fqq_inv.rows() != 6) return false;
-    if (Fqq_prev_inv.cols() != 6) return false;
-    if (Fqq_prev_inv.rows() != 6) return false;
   }
   return true;
 }
@@ -230,8 +216,6 @@ inline void ImpulseSplitKKTMatrix::setRandom() {
   Qff().setRandom();
   Qqf().setRandom();
   Fqq_prev.setRandom();
-  Fqq_inv.setRandom();
-  Fqq_prev_inv.setRandom();
 }
 
 

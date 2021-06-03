@@ -153,11 +153,6 @@ public:
   /// 
   Eigen::VectorXd lu_passive;
 
-  /// 
-  /// @brief Temporal vector used in the state equation.
-  /// 
-  Eigen::VectorXd Fq_tmp;
-
   ///
   /// @brief Sets the split KKT residual zero.
   ///

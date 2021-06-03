@@ -14,7 +14,7 @@
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
-#include "idocp/ocp/state_equation.hpp"
+#include "idocp/ocp/terminal_state_equation.hpp"
 
 
 namespace idocp {
@@ -123,15 +123,9 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed dual variables of 
   /// this terminal stage.
-  /// @param[in] robot Robot model. 
-  /// @param[in] kkt_matrix KKT matrix of this terminal stage.
-  /// @param[in, out] kkt_residual KKT residual of this terminal stage.
   /// @param[in, out] d Split direction of this terminal stage.
   /// 
-  void computeCondensedDualDirection(const Robot& robot, 
-                                     const SplitKKTMatrix& kkt_matrix, 
-                                     SplitKKTResidual& kkt_residual,
-                                     SplitDirection& d);
+  void computeCondensedDualDirection(SplitDirection& d);
 
   ///
   /// @brief Updates primal variables of this terminal stage.
@@ -185,6 +179,7 @@ private:
   CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
+  TerminalStateEquation state_equation_;
   bool use_kinematics_;
   double terminal_cost_;
 

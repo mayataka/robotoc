@@ -127,15 +127,13 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed dual variables of 
   /// this impulse stage.
-  /// @param[in] robot Robot model. 
   /// @param[in] kkt_matrix Split KKT matrix of this impulse stage.
   /// @param[in] kkt_residual Split KKT residual of this impulse stage.
   /// @param[in] dgmm Direction of the costate of the next time stage.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
   template <typename VectorType>
-  void computeCondensedDualDirection(const Robot& robot, 
-                                     const ImpulseSplitKKTMatrix& kkt_matrix, 
+  void computeCondensedDualDirection(const ImpulseSplitKKTMatrix& kkt_matrix, 
                                      const ImpulseSplitKKTResidual& kkt_residual, 
                                      const Eigen::MatrixBase<VectorType>& dgmm,
                                      ImpulseSplitDirection& d);
@@ -147,12 +145,11 @@ public:
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
   static void expandPrimal(const ImpulseDynamicsData& data, 
-                              ImpulseSplitDirection& d);
+                           ImpulseSplitDirection& d);
 
   ///
   /// @brief Computes the Newton direction of the condensed dual variables of 
   /// this impulse stage.
-  /// @param[in] robot Robot model. 
   /// @param[in] data Data for impulse dynamics.
   /// @param[in] kkt_matrix Split KKT matrix of this impulse stage.
   /// @param[in] kkt_residual Split KKT residual of this impulse stage.
@@ -160,8 +157,7 @@ public:
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
   template <typename VectorType>
-  static void expansionDual(const Robot& robot, 
-                            ImpulseDynamicsData& data,
+  static void expansionDual(ImpulseDynamicsData& data,
                             const ImpulseSplitKKTMatrix& kkt_matrix, 
                             const ImpulseSplitKKTResidual& kkt_residual,
                             const Eigen::MatrixBase<VectorType>& dgmm,

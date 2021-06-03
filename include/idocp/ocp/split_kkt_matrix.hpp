@@ -241,19 +241,6 @@ public:
   Eigen::MatrixXd Fqq_prev;
 
   ///
-  /// @brief Inverse of the Jacobian of the state equation (w.r.t. q) w.r.t. q.
-  /// If Robot::hasFloatingBase() is true, size is 6 x 6. Otherwise, 0 x 0.
-  ///
-  Eigen::MatrixXd Fqq_inv;
-
-  ///
-  /// @brief Inverse of the Jacobian of the state equation (w.r.t. q) w.r.t. 
-  /// q_prev. If Robot::hasFloatingBase() is true, size is 6 x 6. 
-  /// Otherwise, 0 x 0.
-  ///
-  Eigen::MatrixXd Fqq_prev_inv;
-
-  ///
   /// @brief Set the all components zero.
   ///
   void setZero();

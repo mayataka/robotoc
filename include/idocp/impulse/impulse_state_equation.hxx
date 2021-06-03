@@ -6,15 +6,61 @@
 #include <cassert>
 
 namespace idocp {
-namespace stateequation {
+
+inline ImpulseStateEquation::ImpulseStateEquation(const Robot& robot)
+  : Fqq_inv_(),
+    Fqq_prev_inv_(),
+    Fqq_tmp_(),
+    Fq_tmp_(),
+    lie_der_inverter_(),
+    has_floating_base_(robot.hasFloatingBase()) {
+  if (robot.hasFloatingBase()) {
+    Fqq_inv_.resize(6, 6);
+    Fqq_inv_.setZero();
+    Fqq_prev_inv_.resize(6, 6);
+    Fqq_prev_inv_.setZero();
+    Fqq_tmp_.resize(6, 6);
+    Fqq_tmp_.setZero();
+    Fq_tmp_.resize(6);
+    Fq_tmp_.setZero();
+  }
+}
+
+
+inline ImpulseStateEquation::ImpulseStateEquation()
+  : Fqq_inv_(),
+    Fqq_prev_inv_(),
+    Fqq_tmp_(),
+    Fq_tmp_(),
+    lie_der_inverter_(),
+    has_floating_base_(false) {
+}
+
+
+inline ImpulseStateEquation::~ImpulseStateEquation() {
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType>
+inline void ImpulseStateEquation::computeForwardEulerResidual(
+    const Robot& robot, const ImpulseSplitSolution& s, 
+    const Eigen::MatrixBase<ConfigVectorType>& q_next, 
+    const Eigen::MatrixBase<TangentVectorType>& v_next, 
+    ImpulseSplitKKTResidual& kkt_residual) {
+  assert(q_next.size() == robot.dimq());
+  assert(v_next.size() == robot.dimv());
+  robot.subtractConfiguration(s.q, q_next, kkt_residual.Fq());
+  kkt_residual.Fv() = s.v + s.dv - v_next;
+}
+
 
 template <typename ConfigVectorType>
-inline void linearizeImpulseForwardEuler(
+inline void ImpulseStateEquation::linearizeForwardEuler(
     const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
     const ImpulseSplitSolution& s, const SplitSolution& s_next, 
     ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
   assert(q_prev.size() == robot.dimq());
-  computeImpulseForwardEulerResidual(robot, s, s_next.q, s_next.v, kkt_residual);
+  computeForwardEulerResidual(robot, s, s_next.q, s_next.v, kkt_residual);
   if (robot.hasFloatingBase()) {
     robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq());
     robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
@@ -37,57 +83,46 @@ inline void linearizeImpulseForwardEuler(
 
 
 template <typename ConfigVectorType>
-inline void condenseImpulseForwardEuler(
-    Robot& robot, const ImpulseSplitSolution& s, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_next, 
-    ImpulseSplitKKTMatrix& kkt_matrix, 
-    ImpulseSplitKKTResidual& kkt_residual) {
-  if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
-                                         kkt_matrix.Fqq_prev_inv);
-    robot.dSubtractdConfigurationMinus(s.q, q_next, kkt_matrix.Fqq_prev);
-    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
-                                         kkt_matrix.Fqq_inv);
-    kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
-        = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-    kkt_residual.Fq_tmp.template head<6>() 
-        = kkt_residual.Fq().template head<6>();
-    kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
-        = - kkt_matrix.Fqq_inv 
-            * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
-    kkt_residual.Fq().template head<6>().noalias()
-        = - kkt_matrix.Fqq_inv * kkt_residual.Fq_tmp.template head<6>();
+inline void ImpulseStateEquation::linearizeForwardEulerLieDerivative(
+    const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
+    const ImpulseSplitSolution& s, const SplitSolution& s_next, 
+    ImpulseSplitKKTMatrix& kkt_matrix, ImpulseSplitKKTResidual& kkt_residual) {
+  linearizeForwardEuler(robot, q_prev, s, s_next, kkt_matrix, kkt_residual);
+  if (has_floating_base_) {
+    lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, 
+                                                  Fqq_prev_inv_);
+    robot.dSubtractdConfigurationMinus(s.q, s_next.q, kkt_matrix.Fqq_prev);
+    lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, Fqq_inv_);
+    Fqq_tmp_ = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
+    Fq_tmp_  = kkt_residual.Fq().template head<6>();
+    kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias() = - Fqq_inv_ * Fqq_tmp_;
+    kkt_residual.Fq().template head<6>().noalias() = - Fqq_inv_ * Fq_tmp_;
   }
 }
 
 
-template <typename ConfigVectorType, typename TangentVectorType>
-inline void computeImpulseForwardEulerResidual(
-    const Robot& robot, const ImpulseSplitSolution& s, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_next, 
-    const Eigen::MatrixBase<TangentVectorType>& v_next, 
-    ImpulseSplitKKTResidual& kkt_residual) {
-  assert(q_next.size() == robot.dimq());
-  assert(v_next.size() == robot.dimv());
-  robot.subtractConfiguration(s.q, q_next, kkt_residual.Fq());
-  kkt_residual.Fv() = s.v + s.dv - v_next;
+inline void ImpulseStateEquation::correctCostateDirection(
+    ImpulseSplitDirection& d) {
+  if (has_floating_base_) {
+    Fq_tmp_ = Fqq_prev_inv_.transpose() * d.dlmdgmm.template head<6>();
+    d.dlmdgmm.template head<6>() = - Fq_tmp_;
+  }
 }
 
 
-inline double l1NormStateEuqationResidual(
+inline double ImpulseStateEquation::l1NormStateEuqationResidual(
     const ImpulseSplitKKTResidual& kkt_residual) {
   assert(kkt_residual.isDimensionConsistent());
   return kkt_residual.Fx.lpNorm<1>();
 }
 
 
-inline double squaredNormStateEuqationResidual(
+inline double ImpulseStateEquation::squaredNormStateEuqationResidual(
     const ImpulseSplitKKTResidual& kkt_residual) {
   assert(kkt_residual.isDimensionConsistent());
   return kkt_residual.Fx.squaredNorm();
 }
 
-} // namespace stateequation
 } // namespace idocp 
 
 #endif // IDOCP_IMPULSE_STATE_EQUATION_HXX_

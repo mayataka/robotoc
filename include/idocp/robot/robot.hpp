@@ -210,20 +210,6 @@ public:
       const Eigen::MatrixBase<MatrixType>& dsubtract_dqminus) const;
 
   ///
-  /// @brief Computes the inverse of the partial derivative of the function of 
-  /// subtraction. Before calling this function, call 
-  /// dSubtractdConfigurationPlus() or dSubtractdConfigurationMinus().
-  /// @param[in] dsubtract_dq The partial derivative of the subtraction. 
-  /// Size must be larger than 6 x 6.
-  /// @param[out] dsubtract_dq_inv The inverse of the partial derivative of the 
-  /// subtraction. Size must be larger than 6 x 6.
-  ///
-  template <typename MatrixType1, typename MatrixType2>
-  void dSubtractdConfigurationInverse(
-      const Eigen::MatrixBase<MatrixType1>& dsubtract_dq,
-      const Eigen::MatrixBase<MatrixType2>& dsubtract_dq_inv);
-
-  ///
   /// @brief Updates the kinematics of the robot. The frame placements, frame 
   /// velocity, frame acceleration, and the relevant Jacobians are calculated. 
   /// @param[in] q Configuration. Size must be Robot::dimq().
@@ -718,7 +704,6 @@ private:
   Eigen::MatrixXd dimpulse_dv_; 
   Eigen::VectorXd joint_effort_limit_, joint_velocity_limit_,
                   lower_joint_position_limit_, upper_joint_position_limit_;
-  Eigen::Matrix3d mat_3d_;
 };
 
 } // namespace idocp

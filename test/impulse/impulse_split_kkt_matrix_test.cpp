@@ -60,18 +60,10 @@ void ImpulseSplitKKTMatrixTest::test(const Robot& robot, const ImpulseStatus& im
   if (robot.hasFloatingBase()) {
     EXPECT_EQ(kkt_mat.Fqq_prev.rows(), dimv);
     EXPECT_EQ(kkt_mat.Fqq_prev.cols(), dimv);
-    EXPECT_EQ(kkt_mat.Fqq_inv.rows(), 6);
-    EXPECT_EQ(kkt_mat.Fqq_inv.cols(), 6);
-    EXPECT_EQ(kkt_mat.Fqq_prev_inv.rows(), 6);
-    EXPECT_EQ(kkt_mat.Fqq_prev_inv.cols(), 6);
   }
   else {
     EXPECT_EQ(kkt_mat.Fqq_prev.rows(), 0);
     EXPECT_EQ(kkt_mat.Fqq_prev.cols(), 0);
-    EXPECT_EQ(kkt_mat.Fqq_inv.rows(), 0);
-    EXPECT_EQ(kkt_mat.Fqq_inv.cols(), 0);
-    EXPECT_EQ(kkt_mat.Fqq_prev_inv.rows(), 0);
-    EXPECT_EQ(kkt_mat.Fqq_prev_inv.cols(), 0);
   }
   EXPECT_TRUE(kkt_mat.Fxx.isZero());
   EXPECT_TRUE(kkt_mat.Qxx.isZero());
@@ -79,8 +71,6 @@ void ImpulseSplitKKTMatrixTest::test(const Robot& robot, const ImpulseStatus& im
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   EXPECT_TRUE(kkt_mat.Qqf().isZero());
   EXPECT_TRUE(kkt_mat.Fqq_prev.isZero());
-  EXPECT_TRUE(kkt_mat.Fqq_inv.isZero());
-  EXPECT_TRUE(kkt_mat.Fqq_prev_inv.isZero());
 
   kkt_mat.Fxx.setRandom();
   kkt_mat.Qxx.setRandom();

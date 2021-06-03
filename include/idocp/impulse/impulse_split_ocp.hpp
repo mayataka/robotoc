@@ -113,15 +113,13 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed dual variables of 
   /// this impulse stage.
-  /// @param[in] robot Robot model. 
   /// @param[in] kkt_matrix KKT matrix of this impulse stage.
-  /// @param[in, out] kkt_residual KKT residual of this impulse stage.
+  /// @param[in] kkt_residual KKT residual of this impulse stage.
   /// @param[in] d_next Split direction of the next time stage.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  void computeCondensedDualDirection(const Robot& robot, 
-                                     const ImpulseSplitKKTMatrix& kkt_matrix, 
-                                     ImpulseSplitKKTResidual& kkt_residual,
+  void computeCondensedDualDirection(const ImpulseSplitKKTMatrix& kkt_matrix, 
+                                     const ImpulseSplitKKTResidual& kkt_residual,
                                      const SplitDirection& d_next, 
                                      ImpulseSplitDirection& d);
 
@@ -218,6 +216,7 @@ private:
   CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
+  ImpulseStateEquation state_equation_;
   ImpulseDynamics impulse_dynamics_;
   double impulse_cost_;
 

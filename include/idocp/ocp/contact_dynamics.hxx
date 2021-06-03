@@ -182,11 +182,11 @@ inline void ContactDynamics::computeCondensedPrimalDirection(
 
 template <typename VectorType>
 inline void ContactDynamics::computeCondensedDualDirection(
-    const Robot& robot, const double dt, const SplitKKTMatrix& kkt_matrix, 
+    const double dt, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, 
     const Eigen::MatrixBase<VectorType>& dgmm, SplitDirection& d) {
   assert(dt > 0);
-  assert(dgmm.size() == robot.dimv());
+  assert(dgmm.size() == dimv_);
   if (has_floating_base_) {
     d.dnu_passive = kkt_residual.lu_passive;
     d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topRight * d.du;

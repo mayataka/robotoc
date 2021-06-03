@@ -75,13 +75,12 @@ void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i == 0) {
-      ocp_[0].linearizeOCP(robots_[omp_get_thread_num()], t, dt_, q, 
+      ocp_[0].linearizeOCP(robots_[omp_get_thread_num()], t, dt_, 
                            s_[0], s_[1], kkt_matrix_[0], kkt_residual_[0]);
     }
     else if (i < N_) {
       ocp_[i].linearizeOCP(robots_[omp_get_thread_num()], t+i*dt_, dt_, 
-                           s_[i-1].q, s_[i], s_[i+1], 
-                           kkt_matrix_[i], kkt_residual_[i]);
+                           s_[i], s_[i+1], kkt_matrix_[i], kkt_residual_[i]);
     }
     else {
       ocp_.terminal.linearizeOCP(robots_[omp_get_thread_num()], t+T_, 
@@ -163,8 +162,8 @@ std::vector<Eigen::VectorXd> UnconstrOCPSolver::getSolution(
 
 
 void UnconstrOCPSolver::getStateFeedbackGain(const int time_stage, 
-                                       Eigen::MatrixXd& Kq, 
-                                       Eigen::MatrixXd& Kv) const {
+                                             Eigen::MatrixXd& Kq, 
+                                             Eigen::MatrixXd& Kv) const {
   assert(time_stage >= 0);
   assert(time_stage < N_);
   assert(Kq.rows() == robots_[0].dimv());
@@ -176,7 +175,7 @@ void UnconstrOCPSolver::getStateFeedbackGain(const int time_stage,
 
 
 void UnconstrOCPSolver::setSolution(const std::string& name, 
-                              const Eigen::VectorXd& value) {
+                                    const Eigen::VectorXd& value) {
   try {
     if (name == "q") {
       for (auto& e : s_.data) { e.q = value; }
@@ -215,13 +214,12 @@ void UnconstrOCPSolver::computeKKTResidual(const double t,
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<=N_; ++i) {
     if (i == 0) {
-      ocp_[0].computeKKTResidual(robots_[omp_get_thread_num()], t, dt_, q, 
+      ocp_[0].computeKKTResidual(robots_[omp_get_thread_num()], t, dt_, 
                                  s_[0], s_[1], kkt_matrix_[0], kkt_residual_[0]);
     }
     else if (i < N_) {
       ocp_[i].computeKKTResidual(robots_[omp_get_thread_num()], t+i*dt_, dt_,  
-                                 s_[i-1].q, s_[i], s_[i+1], 
-                                 kkt_matrix_[i], kkt_residual_[i]);
+                                 s_[i], s_[i+1], kkt_matrix_[i], kkt_residual_[i]);
     }
     else {
       ocp_.terminal.computeKKTResidual(robots_[omp_get_thread_num()], t+T_, 

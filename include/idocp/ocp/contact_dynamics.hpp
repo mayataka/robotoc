@@ -116,7 +116,6 @@ public:
   ///
   /// @brief Computes the Newton direction of the condensed dual variables of 
   /// this time stage.
-  /// @param[in] robot Robot model. 
   /// @param[in] dt Time step of this time stage. 
   /// @param[in] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in] kkt_residual Split KKT residual of this time stage.
@@ -124,7 +123,7 @@ public:
   /// @param[in, out] d Split direction of this time stage.
   /// 
   template <typename VectorType>
-  void computeCondensedDualDirection(const Robot& robot, const double dt, 
+  void computeCondensedDualDirection(const double dt, 
                                      const SplitKKTMatrix& kkt_matrix, 
                                      const SplitKKTResidual& kkt_residual, 
                                      const Eigen::MatrixBase<VectorType>& dgmm,

@@ -84,27 +84,11 @@ public:
                                 RiccatiFactorization& factorization);
 
   ///
-  /// @brief Computes initial state direction.
-  /// @param[in] robots std::vector of Robot.
-  /// @param[in] q Initial configuration.
-  /// @param[in] v Initial generalized velocity.
-  /// @param[in] kkt_matrix KKT matrix. 
-  /// @param[in] s Solution. 
-  /// @param[in, out] d Direction. 
-  ///
-  static void computeInitialStateDirection(const aligned_vector<Robot>& robots, 
-                                           const Eigen::VectorXd& q, 
-                                           const Eigen::VectorXd& v, 
-                                           const KKTMatrix& kkt_matrix, 
-                                           const Solution& s, Direction& d);
-
-  ///
   /// @brief Performs the forward Riccati recursion.
   /// @param[in] ocp Optimal control problem.
   /// @param[in] kkt_matrix KKT matrix. 
   /// @param[in] kkt_residual KKT residual. 
-  /// @param[in, out] d Direction. d[0].dx must be computed using 
-  /// computeInitialStateDirection.
+  /// @param[in, out] d Direction. d[0].dx is assumed to be computed. 
   ///
   void forwardRiccatiRecursion(const OCP& ocp, const KKTMatrix& kkt_matrix, 
                                const KKTResidual& kkt_residual, 

@@ -229,7 +229,7 @@ void ImpulseDynamicsTest::testExpansionDual(Robot& robot,
   const Eigen::VectorXd dgmm_next = dlmdgmm_next.tail(dimv);
   ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
   ImpulseSplitDirection d_ref = d;
-  ImpulseDynamics::expansionDual(robot, data, kkt_matrix, kkt_residual, dgmm_next, d);
+  ImpulseDynamics::expansionDual(data, kkt_matrix, kkt_residual, dgmm_next, d);
   Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*dimv, dimv+dimf);
   OOIO_mat.bottomLeftCorner(dimv, dimv).setIdentity();
   d_ref.dbetamu() = - data_ref.MJtJinv() * (data_ref.Qdvfqv() * d.dx 
@@ -284,8 +284,8 @@ void ImpulseDynamicsTest::testIntegration(Robot& robot,
   ImpulseDynamics::expandPrimal(data_ref, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   const Eigen::VectorXd dgmm_next = Eigen::VectorXd::Random(dimv);
-  id.computeCondensedDualDirection(robot, kkt_matrix, kkt_residual, dgmm_next, d);
-  ImpulseDynamics::expansionDual(robot, data_ref, kkt_matrix_ref, kkt_residual_ref, dgmm_next, d_ref);
+  id.computeCondensedDualDirection(kkt_matrix, kkt_residual, dgmm_next, d);
+  ImpulseDynamics::expansionDual(data_ref, kkt_matrix_ref, kkt_residual_ref, dgmm_next, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 

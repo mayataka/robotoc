@@ -18,8 +18,6 @@ inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
     Quu(Eigen::MatrixXd::Zero(robot.dimu(), robot.dimu())),
     Quu_passive_topRight(Eigen::MatrixXd::Zero(robot.dim_passive(), robot.dimu())),
     Fqq_prev(),
-    Fqq_inv(),
-    Fqq_prev_inv(),
     Qff_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.max_dimf())),
     Qqf_full_(Eigen::MatrixXd::Zero(robot.dimv(), robot.max_dimf())),
     has_floating_base_(robot.hasFloatingBase()),
@@ -31,10 +29,6 @@ inline SplitKKTMatrix::SplitKKTMatrix(const Robot& robot)
   if (robot.hasFloatingBase()) {
     Fqq_prev.resize(robot.dimv(), robot.dimv());
     Fqq_prev.setZero();
-    Fqq_inv.resize(6, 6);
-    Fqq_inv.setZero();
-    Fqq_prev_inv.resize(6, 6);
-    Fqq_prev_inv.setZero();
   }
 }
 
@@ -48,8 +42,6 @@ inline SplitKKTMatrix::SplitKKTMatrix()
     Quu(),
     Quu_passive_topRight(),
     Fqq_prev(),
-    Fqq_inv(),
-    Fqq_prev_inv(),
     Qff_full_(),
     Qqf_full_(),
     has_floating_base_(false),

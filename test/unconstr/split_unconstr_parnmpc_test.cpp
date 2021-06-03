@@ -59,7 +59,7 @@ TEST_F(SplitUnconstrParNMPCTest, linearizeOCP) {
   robot.updateKinematics(s.q, s.v, s.a);
   const double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
-  stateequation::linearizeBackwardEuler(robot, dt, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  unconstr::stateequation::linearizeBackwardEuler(dt, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
   ud.linearizeUnconstrDynamics(robot, dt, s, kkt_residual_ref);
   ud.condenseUnconstrDynamics(kkt_matrix_ref, kkt_residual_ref);
@@ -103,14 +103,14 @@ TEST_F(SplitUnconstrParNMPCTest, computeKKTResidual) {
   robot.updateKinematics(s.q, s.v, s.a);
   const double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
   constraints->linearizePrimalAndDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
-  stateequation::linearizeBackwardEuler(robot, dt, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
+  unconstr::stateequation::linearizeBackwardEuler(dt, s_prev.q, s_prev.v, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
   ud.linearizeUnconstrDynamics(robot, dt, s, kkt_residual_ref);
   double kkt_error_ref = 0;
   kkt_error_ref += kkt_residual_ref.lx.squaredNorm();
   kkt_error_ref += kkt_residual_ref.la.squaredNorm();
   kkt_error_ref += kkt_residual_ref.lu.squaredNorm();
-  kkt_error_ref += stateequation::squaredNormStateEuqationResidual(kkt_residual_ref);
+  kkt_error_ref += unconstr::stateequation::squaredNormStateEuqationResidual(kkt_residual_ref);
   kkt_error_ref += ud.squaredNormUnconstrDynamicsResidual(dt);
   kkt_error_ref += dt * dt * constraints->squaredNormPrimalAndDualResidual(constraints_data);
   EXPECT_DOUBLE_EQ(kkt_error_ref, parnmpc.squaredNormKKTResidual(kkt_residual, dt));
@@ -141,13 +141,13 @@ TEST_F(SplitUnconstrParNMPCTest, costAndConstraintViolation) {
   stage_cost_ref += dt * constraints->costSlackBarrier(constraints_data, step_size);
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  stateequation::computeBackwardEulerResidual(robot, dt, s_prev.q, s_prev.v,
-                                              s, kkt_residual_ref);
+  unconstr::stateequation::computeBackwardEulerResidual(dt, s_prev.q, s_prev.v,
+                                                        s, kkt_residual_ref);
   UnconstrDynamics cd(robot);
   cd.computeUnconstrDynamicsResidual(robot, s);
   double constraint_violation_ref = 0;
   constraint_violation_ref += dt * constraints->l1NormPrimalResidual(constraints_data);
-  constraint_violation_ref += stateequation::l1NormStateEuqationResidual(kkt_residual_ref);
+  constraint_violation_ref += unconstr::stateequation::l1NormStateEuqationResidual(kkt_residual_ref);
   constraint_violation_ref += cd.l1NormUnconstrDynamicsResidual(dt);
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));

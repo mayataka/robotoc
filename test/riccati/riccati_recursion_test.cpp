@@ -48,7 +48,6 @@ protected:
                             const ContactSequence& contact_sequence) const;
   KKTResidual createKKTResidual(const Robot& robot, 
                                 const ContactSequence& contact_sequence) const;
-  void testComputeInitialStateDirection(const Robot& robot) const;
   void testRiccatiRecursion(const Robot& robot) const;
   void testComputeDirection(const Robot& robot) const;
 
@@ -82,31 +81,6 @@ KKTMatrix RiccatiRecursionTest::createKKTMatrix(const Robot& robot,
 KKTResidual RiccatiRecursionTest::createKKTResidual(const Robot& robot, 
                                                     const ContactSequence& contact_sequence) const {
   return testhelper::CreateKKTResidual(robot, contact_sequence, N, max_num_impulse);
-}
-
-
-void RiccatiRecursionTest::testComputeInitialStateDirection(const Robot& robot) const {
-  KKTMatrix kkt_matrix(robot, N, max_num_impulse);
-  KKTResidual kkt_residual(robot, N, max_num_impulse);
-  const auto s = createSolution(robot);
-  const Eigen::VectorXd q = robot.generateFeasibleConfiguration();
-  const Eigen::VectorXd v = Eigen::VectorXd::Random(robot.dimv());
-  aligned_vector<Robot> robots(nthreads, robot);
-  Direction d = Direction(robot, N, max_num_impulse);
-  auto d_ref = d;
-  RiccatiRecursion::computeInitialStateDirection(robots, q, v, kkt_matrix, s, d);
-  if (robot.hasFloatingBase()) {
-    Eigen::VectorXd dq0(Eigen::VectorXd::Zero(robot.dimv()));
-    robot.subtractConfiguration(q, s[0].q, dq0);
-    d_ref[0].dq() = dq0;
-    d_ref[0].dq().head(6) = - kkt_matrix[0].Fqq_prev_inv * dq0.head(6);
-    d_ref[0].dv() = v - s[0].v;
-  }
-  else {
-    d_ref[0].dq() = q - s[0].q;
-    d_ref[0].dv() = v - s[0].v;
-  }
-  EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
 }
 
 
@@ -266,20 +240,8 @@ void RiccatiRecursionTest::testComputeDirection(const Robot& robot) const {
   const int N_impulse = ocp.discrete().N_impulse();
   const int N_lift = ocp.discrete().N_lift();
   Direction d = Direction(robot, N, max_num_impulse);
+  linearizer.computeInitialStateDirection(ocp, robots, q, v, s, d);
   auto d_ref = d;
-  RiccatiRecursion::computeInitialStateDirection(robots, q, v, kkt_matrix, s, d);
-  if (robot.hasFloatingBase()) {
-    Eigen::VectorXd dq0(Eigen::VectorXd::Zero(robot.dimv()));
-    robot.subtractConfiguration(q, s[0].q, dq0);
-    d_ref[0].dq() = dq0;
-    d_ref[0].dq().head(6) = - kkt_matrix[0].Fqq_prev_inv * dq0.head(6);
-    d_ref[0].dv() = v - s[0].v;
-  }
-  else {
-    d_ref[0].dq() = q - s[0].q;
-    d_ref[0].dv() = v - s[0].v;
-  }
-  EXPECT_TRUE(testhelper::IsApprox(d, d_ref));
   riccati_recursion.forwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, d);
   EXPECT_FALSE(testhelper::HasNaN(factorization));
   EXPECT_FALSE(testhelper::HasNaN(kkt_matrix));
@@ -376,11 +338,9 @@ void RiccatiRecursionTest::testComputeDirection(const Robot& robot) const {
 
 TEST_F(RiccatiRecursionTest, fixedBase) {
   auto robot = testhelper::CreateFixedBaseRobot();
-  testComputeInitialStateDirection(robot);
   testRiccatiRecursion(robot);
   testComputeDirection(robot);
   robot = testhelper::CreateFixedBaseRobot(dt);
-  testComputeInitialStateDirection(robot);
   testRiccatiRecursion(robot);
   testComputeDirection(robot);
 }
@@ -388,11 +348,9 @@ TEST_F(RiccatiRecursionTest, fixedBase) {
 
 TEST_F(RiccatiRecursionTest, floating_base) {
   auto robot = testhelper::CreateFloatingBaseRobot();
-  testComputeInitialStateDirection(robot);
   testRiccatiRecursion(robot);
   testComputeDirection(robot);
   robot = testhelper::CreateFloatingBaseRobot(dt);
-  testComputeInitialStateDirection(robot);
   testRiccatiRecursion(robot);
   testComputeDirection(robot);
 }
