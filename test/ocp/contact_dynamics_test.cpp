@@ -77,17 +77,18 @@ void ContactDynamicsTest::testLinearize(Robot& robot, const ContactStatus& conta
   kkt_residual_ref.lf() -= dt * data.dCda() * s.beta;
   Eigen::VectorXd lu_full = Eigen::VectorXd::Zero(robot.dimv());
   lu_full.head(robot.dim_passive()).setZero();
-  lu_full.tail(robot.dimu())        = kkt_residual_ref.lu;
+  lu_full.tail(robot.dimu()) = kkt_residual_ref.lu;
   lu_full -= dt * s.beta;
   kkt_residual_ref.lq() += dt * data.dCdq().transpose() * s.mu_stack();
   kkt_residual_ref.lv() += dt * data.dCdv().transpose() * s.mu_stack(); 
   kkt_residual_ref.la   += dt * data.dCda().transpose() * s.mu_stack();
   lu_full.head(robot.dim_passive()) += dt * s.nu_passive;
-  kkt_residual_ref.lu_passive = lu_full.head(robot.dim_passive());
-  kkt_residual_ref.lu         = lu_full.tail(robot.dimu());
+  data.lu_passive     = lu_full.head(robot.dim_passive());
+  kkt_residual_ref.lu = lu_full.tail(robot.dimu());
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   const double l1norm_ref = dt * data.IDC().lpNorm<1>();
-  const double squarednorm_ref = dt * dt * data.IDC().squaredNorm();
+  const double squarednorm_ref = (dt*dt) * data.IDC().squaredNorm() 
+                                    + data.lu_passive.squaredNorm();
   EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);
   EXPECT_DOUBLE_EQ(squarednorm, squarednorm_ref);
 }
@@ -112,8 +113,6 @@ void ContactDynamicsTest::testCondense(Robot& robot, const ContactStatus& contac
   const int dim_passive = robot.dim_passive();
   const int dimf = contact_status.dimf();
   auto kkt_matrix = SplitKKTMatrix::Random(robot, contact_status);
-  kkt_matrix.Quu_passive_topRight.setZero();
-  kkt_matrix.Qxu_passive.setZero();
   kkt_matrix.Qaa.setZero();
   kkt_matrix.Qaa.diagonal().setRandom();
   kkt_matrix.Fxx.setZero();
@@ -146,19 +145,19 @@ void ContactDynamicsTest::testCondense(Robot& robot, const ContactStatus& contac
   Qxu_full.rightCols(dimu) = kkt_matrix_ref.Qxu;
   Qxu_full -= data.MJtJinv_dIDCdqv().transpose() * data.Qafu_full();
   Qxu_full.topRows(dimv) -= kkt_matrix_ref.Qqf() * data.MJtJinv().bottomLeftCorner(dimf, dimv);
-  kkt_matrix_ref.Qxu_passive = Qxu_full.leftCols(dim_passive);
+  data.Qxu_passive   = Qxu_full.leftCols(dim_passive);
   kkt_matrix_ref.Qxu = Qxu_full.rightCols(dimu);
   const Eigen::MatrixXd Quu_full = IO_mat.transpose() * data.MJtJinv() * data.Qafu_full();
-  kkt_matrix_ref.Quu_passive_topRight += Quu_full.topRightCorner(dim_passive, dimu);
-  kkt_matrix_ref.Quu += Quu_full.bottomRightCorner(dimu, dimu);
+  data.Quu_passive_topRight = Quu_full.topRightCorner(dim_passive, dimu);
+  kkt_matrix_ref.Quu       += Quu_full.bottomRightCorner(dimu, dimu);
   kkt_residual_ref.lx -= data.MJtJinv_dIDCdqv().transpose() * data.laf();
   kkt_residual_ref.lq() += kkt_matrix_ref.Qqf() * data.MJtJinv_IDC().tail(dimf);
   Eigen::VectorXd lu_full = Eigen::VectorXd::Zero(dimv);
-  lu_full.head(dim_passive) = kkt_residual_ref.lu_passive;
+  lu_full.head(dim_passive) = dt * s.nu_passive - dt * s.beta.head(dim_passive);
   lu_full.tail(dimu)        = kkt_residual_ref.lu;
   lu_full += IO_mat.transpose() * data.MJtJinv() * data.laf();
-  kkt_residual_ref.lu_passive = lu_full.head(dim_passive);
-  kkt_residual_ref.lu         = lu_full.tail(dimu);
+  data.lu_passive     = lu_full.head(dim_passive);
+  kkt_residual_ref.lu = lu_full.tail(dimu);
   Eigen::MatrixXd OOIO_mat = Eigen::MatrixXd::Zero(2*dimv, dimv+dimf);
   OOIO_mat.bottomLeftCorner(dimv, dimv) = dt * Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_matrix_ref.Fvv() = Eigen::MatrixXd::Identity(dimv, dimv);
@@ -171,9 +170,6 @@ void ContactDynamicsTest::testCondense(Robot& robot, const ContactStatus& contac
   EXPECT_TRUE(kkt_matrix.Qxx.isApprox(kkt_matrix.Qxx.transpose()));
   EXPECT_TRUE(kkt_matrix.Quu.isApprox(kkt_matrix.Quu.transpose()));
 
-  EXPECT_TRUE(kkt_matrix_ref.Qxx.isApprox(kkt_matrix.Qxx));
-  EXPECT_TRUE(kkt_matrix_ref.Qxu.isApprox(kkt_matrix.Qxu));
-
   auto d = SplitDirection::Random(robot, contact_status);
   auto d_ref = d;
   cd.expandPrimal(d);
@@ -185,12 +181,12 @@ void ContactDynamicsTest::testCondense(Robot& robot, const ContactStatus& contac
   EXPECT_TRUE(d.isApprox(d_ref));
 
   const auto d_next = SplitDirection::Random(robot);
-  cd.expandDual(dt, kkt_matrix, kkt_residual, d_next, d);
+  cd.expandDual(dt, d_next, d);
   if (robot.hasFloatingBase()) {
     Eigen::VectorXd du_full = Eigen::VectorXd::Zero(dimv);
     du_full.tail(dimu) = d_ref.du; 
-    d_ref.dnu_passive = - (kkt_residual.lu_passive + kkt_matrix.Qxu_passive.transpose() * d_ref.dx 
-                            + kkt_matrix.Quu_passive_topRight * d_ref.du
+    d_ref.dnu_passive = - (data.lu_passive + data.Qxu_passive.transpose() * d_ref.dx 
+                            + data.Quu_passive_topRight * d_ref.du
                             + (IO_mat.transpose() * data.MJtJinv() * OOIO_mat.transpose() * d_next.dlmdgmm).head(dim_passive)) / dt;
   }
   d_ref.dbetamu() = - data.MJtJinv() * (data.Qafqv() * d_ref.dx 

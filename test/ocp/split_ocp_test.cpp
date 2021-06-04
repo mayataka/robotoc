@@ -132,8 +132,8 @@ void SplitOCPTest::testLinearizeOCP(Robot& robot,
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
   EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));
-  ocp.expandDual(dt, kkt_matrix, kkt_residual, d_next, d);
-  cd.expandDual(dt, kkt_matrix, kkt_residual, d_next, d_ref);
+  ocp.expandDual(dt, d_next, d);
+  cd.expandDual(dt, d_next, d_ref);
   state_equation.correctCostateDirection(d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   const double step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -215,9 +215,6 @@ void SplitOCPTest::testComputeKKTResidual(Robot& robot,
                          + kkt_residual_ref.lu.squaredNorm()
                          + cd.squaredNormContactDynamicsResidual(dt)
                          + dt * dt * constraints->squaredNormPrimalAndDualResidual(constraints_data);
-  if (robot.hasFloatingBase()) {
-    kkt_error_ref += kkt_residual_ref.lu_passive.squaredNorm();
-  }
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));

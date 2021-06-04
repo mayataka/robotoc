@@ -174,8 +174,6 @@ public:
   ///
   Eigen::MatrixXd Qxu;
 
-  Eigen::MatrixXd Qxu_passive;
-
   ///
   /// @brief Hessian of the Lagrangian with respect to the configuration q and
   /// control input torques u. 
@@ -205,8 +203,6 @@ public:
   /// torques u.
   ///
   Eigen::MatrixXd Quu;
-
-  Eigen::MatrixXd Quu_passive_topRight;
 
   ///
   /// @brief Hessian of the Lagrangian with respect to the contact forces f. 
@@ -301,7 +297,7 @@ public:
 private:
   Eigen::MatrixXd Qff_full_, Qqf_full_;
   bool has_floating_base_;
-  int dimv_, dimx_, dimu_, dim_passive_, dimf_;
+  int dimv_, dimx_, dimu_, dimf_;
 
 };
 

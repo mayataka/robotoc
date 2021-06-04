@@ -145,15 +145,12 @@ public:
   /// @brief Expands the condensed dual variables, i.e., computes the Newton 
   /// direction of the condensed dual variables of this stage.
   /// @param[in] dt Time step of this time stage. 
-  /// @param[in] kkt_matrix KKT matrix of this time stage.
-  /// @param[in] kkt_residual KKT residual of this time stage.
   /// @param[in] d_next Split direction of the next time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
   template <typename SplitDirectionType>
-  void expandDual(const double dt, const SplitKKTMatrix& kkt_matrix, 
-                  const SplitKKTResidual& kkt_residual,
-                  const SplitDirectionType& d_next, SplitDirection& d);
+  void expandDual(const double dt, const SplitDirectionType& d_next, 
+                  SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 

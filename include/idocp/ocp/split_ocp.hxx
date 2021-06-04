@@ -125,12 +125,10 @@ inline void SplitOCP::expandPrimal(const SplitSolution& s, SplitDirection& d) {
 
 template <typename SplitDirectionType>
 inline void SplitOCP::expandDual(const double dt, 
-                                 const SplitKKTMatrix& kkt_matrix, 
-                                 const SplitKKTResidual& kkt_residual, 
                                  const SplitDirectionType& d_next, 
                                  SplitDirection& d) {
   assert(dt > 0);
-  contact_dynamics_.expandDual(dt, kkt_matrix, kkt_residual, d_next, d);
+  contact_dynamics_.expandDual(dt, d_next, d);
   state_equation_.correctCostateDirection(d);
 }
 
@@ -228,7 +226,6 @@ inline double SplitOCP::squaredNormKKTResidual(
   error += kkt_residual.lx.squaredNorm();
   error += kkt_residual.la.squaredNorm();
   error += kkt_residual.lf().squaredNorm();
-  error += kkt_residual.lu_passive.squaredNorm();
   error += kkt_residual.lu.squaredNorm();
   error += state_equation_.squaredNormStateEuqationResidual(kkt_residual);
   error += contact_dynamics_.squaredNormContactDynamicsResidual(dt);

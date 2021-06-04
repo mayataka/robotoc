@@ -60,9 +60,9 @@ inline void ContactDynamics::linearizeContactDynamics(
   }
   if (has_floating_base_) {
     // augment floating base constraint
-    kkt_residual.lu_passive            = dt * s.nu_passive;
-    kkt_residual.lu_passive.noalias() -= dt * s.beta.template head<kDimFloatingBase>(); 
-    kkt_residual.lu.noalias()         -= dt * s.beta.tail(robot.dimu()); 
+    data_.lu_passive            = dt * s.nu_passive;
+    data_.lu_passive.noalias() -= dt * s.beta.template head<kDimFloatingBase>(); 
+    kkt_residual.lu.noalias()  -= dt * s.beta.tail(robot.dimu()); 
   }
   else {
     kkt_residual.lu.noalias() -= dt * s.beta; 
@@ -115,12 +115,12 @@ inline void ContactDynamics::condenseContactDynamics(
   kkt_matrix.Qxx.topRows(dimv).noalias() 
       += kkt_matrix.Qqf() * data_.MJtJinv_dIDCdqv().bottomRows(dimf);
   if (has_floating_base_) {
-    kkt_matrix.Qxu_passive.noalias() 
-        -= data_.MJtJinv_dIDCdqv().transpose() * data_.Qafu_full().leftCols(dim_passive);
+    data_.Qxu_passive.noalias() 
+        = - data_.MJtJinv_dIDCdqv().transpose() * data_.Qafu_full().leftCols(dim_passive);
+    data_.Qxu_passive.topRows(dimv).noalias()
+        -= kkt_matrix.Qqf() * data_.MJtJinv().bottomLeftCorner(dimf, dimv).leftCols(dim_passive);
     kkt_matrix.Qxu.noalias() 
         -= data_.MJtJinv_dIDCdqv().transpose() * data_.Qafu_full().rightCols(dimu);
-    kkt_matrix.Qxu_passive.topRows(dimv).noalias()
-        -= kkt_matrix.Qqf() * data_.MJtJinv().bottomLeftCorner(dimf, dimv).leftCols(dim_passive);
     kkt_matrix.Qxu.topRows(dimv).noalias()
         -= kkt_matrix.Qqf() * data_.MJtJinv().bottomLeftCorner(dimf, dimv).rightCols(dimu);
   }
@@ -136,8 +136,8 @@ inline void ContactDynamics::condenseContactDynamics(
       += kkt_matrix.Qqf() * data_.MJtJinv_IDC().tail(dimf);
 
   if (has_floating_base_) {
-    kkt_matrix.Quu_passive_topRight.noalias() 
-        += data_.MJtJinv().topRows(dim_passive) * data_.Qafu_full().rightCols(dimu);
+    data_.Quu_passive_topRight.noalias() 
+        = data_.MJtJinv().topRows(dim_passive) * data_.Qafu_full().rightCols(dimu);
     kkt_matrix.Quu.noalias() 
         += data_.MJtJinv().middleRows(dim_passive, dimu) * data_.Qafu_full().rightCols(dimu);
   }
@@ -146,14 +146,14 @@ inline void ContactDynamics::condenseContactDynamics(
         += data_.MJtJinv().topRows(dimv) * data_.Qafu_full();
   }
   if (has_floating_base_) {
-    kkt_residual.lu_passive.noalias() 
+    data_.lu_passive.noalias() 
         += data_.MJtJinv().template topRows<kDimFloatingBase>() * data_.laf();
   }
   kkt_residual.lu.noalias() 
       += data_.MJtJinv().middleRows(dim_passive, dimu) * data_.laf();
 
   kkt_matrix.Fvq() = - dt * data_.MJtJinv_dIDCdqv().topLeftCorner(dimv, dimv);
-    kkt_matrix.Fvv().noalias() 
+  kkt_matrix.Fvv().noalias() 
         = - dt * data_.MJtJinv_dIDCdqv().topRightCorner(dimv, dimv) 
           + Eigen::MatrixXd::Identity(dimv, dimv);
   kkt_matrix.Fvu = dt * data_.MJtJinv().block(0, dim_passive, dimv, dimu);
@@ -172,15 +172,13 @@ inline void ContactDynamics::expandPrimal(SplitDirection& d) const {
 
 template <typename SplitDirectionType>
 inline void ContactDynamics::expandDual(const double dt, 
-                                        const SplitKKTMatrix& kkt_matrix, 
-                                        const SplitKKTResidual& kkt_residual, 
                                         const SplitDirectionType& d_next, 
                                         SplitDirection& d) {
   assert(dt > 0);
   if (has_floating_base_) {
-    d.dnu_passive = kkt_residual.lu_passive;
-    d.dnu_passive.noalias() += kkt_matrix.Quu_passive_topRight * d.du;
-    d.dnu_passive.noalias() += kkt_matrix.Qxu_passive.transpose() * d.dx;
+    d.dnu_passive            = data_.lu_passive;
+    d.dnu_passive.noalias() += data_.Quu_passive_topRight * d.du;
+    d.dnu_passive.noalias() += data_.Qxu_passive.transpose() * d.dx;
     d.dnu_passive.noalias() 
         += dt * data_.MJtJinv().leftCols(dimv_).template topRows<kDimFloatingBase>() 
               * d_next.dgmm();
@@ -215,7 +213,7 @@ inline double ContactDynamics::l1NormContactDynamicsResidual(
 inline double ContactDynamics::squaredNormContactDynamicsResidual(
     const double dt) const {
   assert(dt > 0);
-  return (dt * dt * data_.IDC().squaredNorm());
+  return ((dt*dt)*data_.IDC().squaredNorm() + data_.lu_passive.squaredNorm());
 }
 
 } // namespace idocp 

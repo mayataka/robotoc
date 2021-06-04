@@ -11,13 +11,10 @@ inline SplitKKTResidual::SplitKKTResidual(const Robot& robot)
     lx(Eigen::VectorXd::Zero(2*robot.dimv())),
     la(Eigen::VectorXd::Zero(robot.dimv())),
     lu(Eigen::VectorXd::Zero(robot.dimu())),
-    lu_passive(Eigen::VectorXd::Zero(robot.dim_passive())),
     lf_full_(Eigen::VectorXd::Zero(robot.max_dimf())),
     dimv_(robot.dimv()), 
     dimu_(robot.dimu()),
-    dim_passive_(robot.dim_passive()),
-    dimf_(0), 
-    has_floating_base_(robot.hasFloatingBase()) {
+    dimf_(0) {
 }
 
 
@@ -26,13 +23,10 @@ inline SplitKKTResidual::SplitKKTResidual()
     lx(),
     la(),
     lu(),
-    lu_passive(),
     lf_full_(),
     dimv_(0), 
     dimu_(0),
-    dim_passive_(0),
-    dimf_(0), 
-    has_floating_base_(false) {
+    dimf_(0) {
 }
 
 
@@ -107,7 +101,6 @@ inline void SplitKKTResidual::setZero() {
   la.setZero();
   lu.setZero();
   lf().setZero();
-  lu_passive.setZero();
 }
 
 
@@ -121,7 +114,6 @@ inline bool SplitKKTResidual::isDimensionConsistent() const {
   if (lx.size() != 2*dimv_) return false;
   if (la.size() != dimv_) return false;
   if (lu.size() != dimu_) return false;
-  if (lu_passive.size() != dim_passive_) return false;
   return true;
 }
 
@@ -136,9 +128,6 @@ inline bool SplitKKTResidual::isApprox(const SplitKKTResidual& other) const {
   if (dimf_ > 0) {
     if (!lf().isApprox(other.lf())) return false;
   }
-  if (has_floating_base_) {
-    if (!lu_passive.isApprox(other.lu_passive)) return false;
-  }
   return true;
 }
 
@@ -150,7 +139,6 @@ inline bool SplitKKTResidual::hasNaN() const {
   if (la.hasNaN()) return true;
   if (lu.hasNaN()) return true;
   if (lf().hasNaN()) return true;
-  if (lu_passive.hasNaN()) return true;
   return false;
 }
 
@@ -161,7 +149,6 @@ inline void SplitKKTResidual::setRandom() {
   la.setRandom();
   lu.setRandom();
   lf().setRandom();
-  lu_passive.setRandom();
 }
 
 

@@ -132,16 +132,12 @@ public:
   /// @brief Integrates the solution in parallel.
   /// @param[in, out] ocp Optimal control problem.
   /// @param[in] robots std::vector of Robot.
-  /// @param[in] kkt_matrix KKT matrix. 
-  /// @param[in] kkt_residual KKT residual. 
   /// @param[in] primal_step_size Primal step size.
   /// @param[in] dual_step_size Dual step size.
   /// @param[in, out] d Direction. 
   /// @param[in, out] s Solution. 
   ///
   void integrateSolution(OCP& ocp, const aligned_vector<Robot>& robots,
-                         const KKTMatrix& kkt_matrix, 
-                         const KKTResidual& kkt_residual,
                          const double primal_step_size,
                          const double dual_step_size,
                          Direction& d, Solution& s) const;

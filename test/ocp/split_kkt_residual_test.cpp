@@ -34,7 +34,6 @@ void SplitKKTResidualTest::test(const Robot& robot, const ContactStatus& contact
   const int dimx = 2 * robot.dimv();
   const int dimu = robot.dimu();
   const int dimf = contact_status.dimf();
-  const int dim_passive = robot.dim_passive();
   EXPECT_EQ(kkt_res.dimf(), dimf);
   EXPECT_EQ(kkt_res.Fx.size(), dimx);
   EXPECT_EQ(kkt_res.Fq().size(), dimv);
@@ -44,7 +43,6 @@ void SplitKKTResidualTest::test(const Robot& robot, const ContactStatus& contact
   EXPECT_EQ(kkt_res.lv().size(), dimv);
   EXPECT_EQ(kkt_res.la.size(), dimv);
   EXPECT_EQ(kkt_res.lu.size(), dimu);
-  EXPECT_EQ(kkt_res.lu_passive.size(), dim_passive);
   EXPECT_EQ(kkt_res.lf().size(), dimf);
 
   kkt_res.Fx.setRandom();
@@ -64,7 +62,6 @@ void SplitKKTResidualTest::testIsApprox(const Robot& robot, const ContactStatus&
   kkt_res.la.setRandom();
   kkt_res.lu.setRandom();
   kkt_res.lf().setRandom();
-  kkt_res.lu_passive.setRandom();
 
   auto kkt_res_ref = kkt_res;
   EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
@@ -92,16 +89,6 @@ void SplitKKTResidualTest::testIsApprox(const Robot& robot, const ContactStatus&
   }
   else {
     kkt_res_ref.lf().setRandom();
-    EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  }
-  if (robot.hasFloatingBase()) {
-    kkt_res_ref.lu_passive.setRandom();
-    EXPECT_FALSE(kkt_res.isApprox(kkt_res_ref));
-    kkt_res.lu_passive = kkt_res_ref.lu_passive;
-    EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
-  }
-  else {
-    kkt_res_ref.lu_passive.setRandom();
     EXPECT_TRUE(kkt_res.isApprox(kkt_res_ref));
   }
 }
