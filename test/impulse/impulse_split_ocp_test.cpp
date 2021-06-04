@@ -43,9 +43,9 @@ protected:
 
 void ImpulseSplitOCPTest::testLinearizeOCP(Robot& robot, 
                                            const ImpulseStatus& impulse_status) {
-  const SplitSolution s_prev = SplitSolution::Random(robot);
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
-  const SplitSolution s_next = SplitSolution::Random(robot);
+  const auto s_prev = SplitSolution::Random(robot);
+  const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
+  const auto s_next = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   ImpulseSplitOCP ocp(robot, cost, constraints);
@@ -69,21 +69,21 @@ void ImpulseSplitOCPTest::testLinearizeOCP(Robot& robot,
   state_equation.linearizeForwardEulerLieDerivative(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
-  id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref );
+  id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual_ref );
   id.condenseImpulseDynamics(robot, impulse_status, kkt_matrix_ref, kkt_residual_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
   auto d_ref = d;
   const SplitDirection d_next = SplitDirection::Random(robot);
-  ocp.computeCondensedPrimalDirection(s, d);
-  id.computeCondensedPrimalDirection(d_ref);
+  ocp.expandPrimal(s, d);
+  id.expandPrimal(d_ref);
   constraints->expandSlackAndDual(constraints_data, s, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(ocp.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
   EXPECT_DOUBLE_EQ(ocp.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));
-  ocp.computeCondensedDualDirection(kkt_matrix, kkt_residual, d_next, d);
-  id.computeCondensedDualDirection(kkt_matrix, kkt_residual, d_next.dgmm(), d_ref);
+  ocp.expandDual(d_next, d);
+  id.expandDual(d_next, d_ref);
   state_equation.correctCostateDirection(d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   const double step_size = std::abs(Eigen::VectorXd::Random(1)[0]);
@@ -98,9 +98,9 @@ void ImpulseSplitOCPTest::testLinearizeOCP(Robot& robot,
 
 void ImpulseSplitOCPTest::testComputeKKTResidual(Robot& robot, 
                                                  const ImpulseStatus& impulse_status) {
-  const SplitSolution s_prev = SplitSolution::Random(robot);
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
-  const SplitSolution s_next = SplitSolution::Random(robot);
+  const auto s_prev = SplitSolution::Random(robot);
+  const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
+  const auto s_next = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   ImpulseSplitOCP ocp(robot, cost, constraints);
@@ -125,12 +125,12 @@ void ImpulseSplitOCPTest::testComputeKKTResidual(Robot& robot,
   ImpulseStateEquation::linearizeForwardEuler(robot, s_prev.q, s, s_next, kkt_matrix_ref, kkt_residual_ref);
   ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
-  id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_matrix_ref, kkt_residual_ref);
+  id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual_ref);
   const double kkt_error_ref = kkt_residual_ref.Fx.squaredNorm()
                                 + kkt_residual_ref.lx.squaredNorm()
                                 + kkt_residual_ref.ldv.squaredNorm()
                                 + kkt_residual_ref.lf().squaredNorm()
-                                + id.squaredNormImpulseDynamicsResidual(kkt_residual_ref)
+                                + id.squaredNormImpulseDynamicsResidual()
                                 + constraints->squaredNormPrimalAndDualResidual(constraints_data);
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
@@ -140,9 +140,9 @@ void ImpulseSplitOCPTest::testComputeKKTResidual(Robot& robot,
 
 void ImpulseSplitOCPTest::testCostAndConstraintViolation(Robot& robot, 
                                                          const ImpulseStatus& impulse_status) {
-  const SplitSolution s_prev = SplitSolution::Random(robot);
-  const ImpulseSplitSolution s = ImpulseSplitSolution::Random(robot, impulse_status);
-  const ImpulseSplitDirection d = ImpulseSplitDirection::Random(robot, impulse_status);
+  const auto s_prev = SplitSolution::Random(robot);
+  const auto s = ImpulseSplitSolution::Random(robot, impulse_status);
+  const auto d = ImpulseSplitDirection::Random(robot, impulse_status);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   ImpulseSplitOCP ocp(robot, cost, constraints);
@@ -168,11 +168,11 @@ void ImpulseSplitOCPTest::testCostAndConstraintViolation(Robot& robot,
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
   ImpulseStateEquation::computeForwardEulerResidual(robot, s, s_prev.q, s_prev.v, kkt_residual_ref);
   ImpulseDynamics id(robot);
-  id.computeImpulseDynamicsResidual(robot, impulse_status, s, kkt_residual_ref);
+  id.computeImpulseDynamicsResidual(robot, impulse_status, s);
   double constraint_violation_ref = 0;
   constraint_violation_ref += constraints->l1NormPrimalResidual(constraints_data);
   constraint_violation_ref += ImpulseStateEquation::l1NormStateEuqationResidual(kkt_residual_ref);
-  constraint_violation_ref += id.l1NormImpulseDynamicsResidual(kkt_residual_ref);
+  constraint_violation_ref += id.l1NormImpulseDynamicsResidual();
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
 }
 

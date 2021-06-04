@@ -266,13 +266,17 @@ inline bool SplitKKTMatrix::hasNaN() const {
 inline void SplitKKTMatrix::setRandom() {
   Fxx.setRandom();
   Fvu.setRandom();
-  Qxx.setRandom();
-  Qaa.setRandom();
-  Qxu.setRandom();
+  const Eigen::MatrixXd Qxxuu_seed = Eigen::MatrixXd::Random(dimx_+dimu_, dimx_+dimu_);
+  const Eigen::MatrixXd Qxxuu = Qxxuu_seed * Qxxuu_seed.transpose();
+  Qxx = Qxxuu.topLeftCorner(dimx_, dimx_);
+  Qxu = Qxxuu.topRightCorner(dimx_, dimu_);
+  Quu = Qxxuu.bottomRightCorner(dimu_, dimu_);
   Qxu_passive.setRandom();
-  Quu.setRandom();
   Quu_passive_topRight.setRandom();
-  Qff().setRandom();
+  const Eigen::MatrixXd Qaaff_seed = Eigen::MatrixXd::Random(dimv_+dimf_, dimv_+dimf_);
+  const Eigen::MatrixXd Qaaff = Qaaff_seed * Qaaff_seed.transpose();
+  Qaa = Qaaff.topLeftCorner(dimv_, dimv_);
+  Qff() = Qaaff.bottomRightCorner(dimf_, dimf_);
   Qqf().setRandom();
   Fqq_prev.setRandom();
 }

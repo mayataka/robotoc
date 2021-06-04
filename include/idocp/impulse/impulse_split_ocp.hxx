@@ -65,27 +65,24 @@ inline void ImpulseSplitOCP::linearizeOCP(
                                      kkt_matrix, kkt_residual);
   state_equation_.linearizeForwardEulerLieDerivative(robot, q_prev, s, s_next, 
                                                      kkt_matrix, kkt_residual);
-  impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s,
-                                             kkt_matrix, kkt_residual);
-  impulse_dynamics_.condenseImpulseDynamics(robot, impulse_status, 
+  impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
+                                             kkt_residual);
+  impulse_dynamics_.condenseImpulseDynamics(robot, impulse_status,
                                             kkt_matrix, kkt_residual);
 }
 
 
-inline void ImpulseSplitOCP::computeCondensedPrimalDirection(
-    const ImpulseSplitSolution& s, ImpulseSplitDirection& d) {
+inline void ImpulseSplitOCP::expandPrimal(const ImpulseSplitSolution& s, 
+                                          ImpulseSplitDirection& d) {
   d.setImpulseStatusByDimension(s.dimi());
-  impulse_dynamics_.computeCondensedPrimalDirection(d);
+  impulse_dynamics_.expandPrimal(d);
   constraints_->expandSlackAndDual(constraints_data_, s, d);
 }
 
 
-inline void ImpulseSplitOCP::computeCondensedDualDirection(
-    const ImpulseSplitKKTMatrix& kkt_matrix, 
-    const ImpulseSplitKKTResidual& kkt_residual, const SplitDirection& d_next, 
-    ImpulseSplitDirection& d) {
-  impulse_dynamics_.computeCondensedDualDirection(kkt_matrix, kkt_residual, 
-                                                  d_next.dgmm(), d);
+inline void ImpulseSplitOCP::expandDual(const SplitDirection& d_next, 
+                                        ImpulseSplitDirection& d) {
+  impulse_dynamics_.expandDual(d_next, d);
   state_equation_.correctCostateDirection(d);
 }
 
@@ -135,7 +132,7 @@ inline void ImpulseSplitOCP::computeKKTResidual(
   state_equation_.linearizeForwardEuler(robot, q_prev, s, s_next, 
                                         kkt_matrix, kkt_residual);
   impulse_dynamics_.linearizeImpulseDynamics(robot, impulse_status, s, 
-                                             kkt_matrix, kkt_residual);
+                                             kkt_residual);
 }
 
 
@@ -146,7 +143,7 @@ inline double ImpulseSplitOCP::squaredNormKKTResidual(
   error += kkt_residual.ldv.squaredNorm();
   error += kkt_residual.lf().squaredNorm();
   error += state_equation_.squaredNormStateEuqationResidual(kkt_residual);
-  error += impulse_dynamics_.squaredNormImpulseDynamicsResidual(kkt_residual);
+  error += impulse_dynamics_.squaredNormImpulseDynamicsResidual();
   error += constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
   return error;
 }
@@ -182,12 +179,11 @@ inline double ImpulseSplitOCP::constraintViolation(
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   state_equation_.computeForwardEulerResidual(robot, s, q_next, v_next, 
                                               kkt_residual);
-  impulse_dynamics_.computeImpulseDynamicsResidual(robot, impulse_status, s, 
-                                                   kkt_residual);
+  impulse_dynamics_.computeImpulseDynamicsResidual(robot, impulse_status, s);
   double violation = 0;
   violation += constraints_->l1NormPrimalResidual(constraints_data_);
   violation += state_equation_.l1NormStateEuqationResidual(kkt_residual);
-  violation += impulse_dynamics_.l1NormImpulseDynamicsResidual(kkt_residual);
+  violation += impulse_dynamics_.l1NormImpulseDynamicsResidual();
   return violation;
 }
 

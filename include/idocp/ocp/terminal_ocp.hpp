@@ -112,20 +112,19 @@ public:
   double maxDualStepSize();
 
   ///
-  /// @brief Computes the Newton direction of the condensed primal variables of 
-  /// this terminal stage.
+  /// @brief Expands the condensed primal variables, i.e., computes the Newton 
+  /// direction of the condensed primal variables of the terminal stage.
   /// @param[in] s Split solution of this terminal stage.
   /// @param[in, out] d Split direction of this terminal stage.
   /// 
-  void computeCondensedPrimalDirection(const SplitSolution& s, 
-                                       SplitDirection& d);
+  void expandPrimal(const SplitSolution& s, SplitDirection& d);
 
   ///
-  /// @brief Computes the Newton direction of the condensed dual variables of 
-  /// this terminal stage.
+  /// @brief Expands the condensed dual variables, i.e., computes the Newton 
+  /// direction of the condensed dual variables of the terminal stage.
   /// @param[in, out] d Split direction of this terminal stage.
   /// 
-  void computeCondensedDualDirection(SplitDirection& d);
+  void expandDual(SplitDirection& d);
 
   ///
   /// @brief Updates primal variables of this terminal stage.

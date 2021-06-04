@@ -56,7 +56,7 @@ void TerminalOCPTest::testLinearizeOCP(Robot& robot) {
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   auto d = SplitDirection::Random(robot);
   auto d_ref = d;
-  ocp.computeCondensedDualDirection(d);
+  ocp.expandDual(d);
   state_equation.correctCostateDirection(d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
 }

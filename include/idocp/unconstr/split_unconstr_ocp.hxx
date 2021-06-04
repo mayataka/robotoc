@@ -91,11 +91,12 @@ inline void SplitUnconstrOCP::linearizeOCP(Robot& robot, const double t,
 }
 
 
-inline void SplitUnconstrOCP::computeCondensedDirection(
+inline void SplitUnconstrOCP::expandPrimalAndDual(
     const double dt, const SplitSolution& s, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, SplitDirection& d) {
   assert(dt > 0);
-  unconstr_dynamics_.computeCondensedDirection(dt, kkt_matrix, kkt_residual, d);
+  unconstr_dynamics_.expandPrimal(d);
+  unconstr_dynamics_.expandDual(dt, kkt_matrix, kkt_residual, d);
   constraints_->expandSlackAndDual(constraints_data_, s, d);
 }
 

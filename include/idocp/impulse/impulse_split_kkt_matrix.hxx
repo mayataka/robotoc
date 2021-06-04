@@ -211,9 +211,12 @@ inline bool ImpulseSplitKKTMatrix::hasNaN() const {
 
 inline void ImpulseSplitKKTMatrix::setRandom() {
   Fxx.setRandom();
-  Qxx.setRandom();
-  Qdvdv.setRandom();
-  Qff().setRandom();
+  const Eigen::MatrixXd Qxx_seed = Eigen::MatrixXd::Random(2*dimv_, 2*dimv_);
+  Qxx = Qxx_seed * Qxx_seed.transpose();
+  const Eigen::MatrixXd Qdvdvff_seed = Eigen::MatrixXd::Random(dimv_+dimi_, dimv_+dimi_);
+  const Eigen::MatrixXd Qdvdvff = Qdvdvff_seed * Qdvdvff_seed.transpose();
+  Qdvdv = Qdvdvff.topLeftCorner(dimv_, dimv_);
+  Qff() = Qdvdvff.bottomRightCorner(dimi_, dimi_);
   Qqf().setRandom();
   Fqq_prev.setRandom();
 }

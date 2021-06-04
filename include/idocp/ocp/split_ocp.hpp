@@ -134,17 +134,16 @@ public:
                     SplitSwitchingConstraintResidual& switch_residual);
 
   ///
-  /// @brief Computes the Newton direction of the condensed primal variables of 
-  /// this time stage.
+  /// @brief Expands the condensed primal variables, i.e., computes the Newton 
+  /// direction of the condensed primal variables of this stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
-  void computeCondensedPrimalDirection(const SplitSolution& s, 
-                                       SplitDirection& d);
+  void expandPrimal(const SplitSolution& s, SplitDirection& d);
 
   ///
-  /// @brief Computes the Newton direction of the condensed dual variables of 
-  /// this time stage.
+  /// @brief Expands the condensed dual variables, i.e., computes the Newton 
+  /// direction of the condensed dual variables of this stage.
   /// @param[in] dt Time step of this time stage. 
   /// @param[in] kkt_matrix KKT matrix of this time stage.
   /// @param[in] kkt_residual KKT residual of this time stage.
@@ -152,11 +151,9 @@ public:
   /// @param[in, out] d Split direction of this time stage.
   /// 
   template <typename SplitDirectionType>
-  void computeCondensedDualDirection(const double dt, 
-                                     const SplitKKTMatrix& kkt_matrix, 
-                                     const SplitKKTResidual& kkt_residual,
-                                     const SplitDirectionType& d_next,
-                                     SplitDirection& d);
+  void expandDual(const double dt, const SplitKKTMatrix& kkt_matrix, 
+                  const SplitKKTResidual& kkt_residual,
+                  const SplitDirectionType& d_next, SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 

@@ -70,7 +70,7 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
                                      kkt_matrix, kkt_residual);
   state_equation_.linearizeForwardEulerLieDerivative(robot, dt, q_prev, s, s_next, 
                                                      kkt_matrix, kkt_residual);
-  contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s, 
+  contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s,
                                              kkt_residual);
   contact_dynamics_.condenseContactDynamics(robot, contact_status, dt, 
                                             kkt_matrix, kkt_residual);
@@ -103,7 +103,7 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
                                      kkt_matrix, kkt_residual);
   state_equation_.linearizeForwardEulerLieDerivative(robot, dt, q_prev, s, s_next, 
                                                      kkt_matrix, kkt_residual);
-  contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s, 
+  contact_dynamics_.linearizeContactDynamics(robot, contact_status, dt, s,
                                              kkt_residual);
   switchingconstraint::linearizeSwitchingConstraint(robot, impulse_status, dt, 
                                                     dt_next, s, kkt_residual, 
@@ -116,22 +116,21 @@ inline void SplitOCP::linearizeOCP(Robot& robot,
 }
 
 
-inline void SplitOCP::computeCondensedPrimalDirection(const SplitSolution& s, 
-                                                      SplitDirection& d) {
+inline void SplitOCP::expandPrimal(const SplitSolution& s, SplitDirection& d) {
   d.setContactStatusByDimension(s.dimf());
-  contact_dynamics_.computeCondensedPrimalDirection(d);
+  contact_dynamics_.expandPrimal(d);
   constraints_->expandSlackAndDual(constraints_data_, s, d);
 }
 
 
 template <typename SplitDirectionType>
-inline void SplitOCP::computeCondensedDualDirection(
-    const double dt, const SplitKKTMatrix& kkt_matrix, 
-    const SplitKKTResidual& kkt_residual, const SplitDirectionType& d_next, 
-    SplitDirection& d) {
+inline void SplitOCP::expandDual(const double dt, 
+                                 const SplitKKTMatrix& kkt_matrix, 
+                                 const SplitKKTResidual& kkt_residual, 
+                                 const SplitDirectionType& d_next, 
+                                 SplitDirection& d) {
   assert(dt > 0);
-  contact_dynamics_.computeCondensedDualDirection(dt, kkt_matrix, kkt_residual, 
-                                                  d_next.dgmm(), d);
+  contact_dynamics_.expandDual(dt, kkt_matrix, kkt_residual, d_next, d);
   state_equation_.correctCostateDirection(d);
 }
 

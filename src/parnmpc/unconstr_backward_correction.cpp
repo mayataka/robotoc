@@ -128,14 +128,14 @@ void UnconstrBackwardCorrection::backwardCorrection(UnconstrParNMPC& parnmpc,
     }
     UnconstrSplitBackwardCorrection::computeDirection(s[i], s_new_[i], d[i]);
     if (i < N_-1) {
-      parnmpc[i].computeCondensedDirection(dt_, s[i], kkt_matrix[i], 
-                                           kkt_residual[i], d[i]);
+      parnmpc[i].expandPrimalAndDual(dt_, s[i], kkt_matrix[i], 
+                                     kkt_residual[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc[i].maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   = parnmpc[i].maxDualStepSize();
     }
     else {
-      parnmpc.terminal.computeCondensedDirection(dt_, s[i], kkt_matrix[i], 
-                                                 kkt_residual[i], d[i]);
+      parnmpc.terminal.expandPrimalAndDual(dt_, s[i], kkt_matrix[i], 
+                                           kkt_residual[i], d[i]);
       primal_step_sizes_.coeffRef(i) = parnmpc.terminal.maxPrimalStepSize();
       dual_step_sizes_.coeffRef(i)   = parnmpc.terminal.maxDualStepSize();
     }

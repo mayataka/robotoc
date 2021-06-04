@@ -98,8 +98,8 @@ void UnconstrOCPSolver::updateSolution(const double t, const Eigen::VectorXd& q,
     UnconstrRiccatiFactorizer::computeCostateDirection(riccati_factorization_[i], 
                                                        d_[i]);
     if (i < N_) {
-      ocp_[i].computeCondensedDirection(dt_, s_[i], kkt_matrix_[i], 
-                                        kkt_residual_[i], d_[i]);
+      ocp_[i].expandPrimalAndDual(dt_, s_[i], kkt_matrix_[i], 
+                                  kkt_residual_[i], d_[i]);
       primal_step_size_.coeffRef(i) = ocp_[i].maxPrimalStepSize();
       dual_step_size_.coeffRef(i)   = ocp_[i].maxDualStepSize();
     }

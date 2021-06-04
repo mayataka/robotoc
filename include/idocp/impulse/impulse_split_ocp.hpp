@@ -102,26 +102,20 @@ public:
                     ImpulseSplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Computes the Newton direction of the condensed primal variables of 
-  /// this impulse stage.
+  /// @brief Expands the condensed primal variables, i.e., computes the Newton 
+  /// direction of the condensed primal variables of this impulse stage.
   /// @param[in] s Split solution of this impulse stage.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  void computeCondensedPrimalDirection(const ImpulseSplitSolution& s, 
-                                       ImpulseSplitDirection& d);
+  void expandPrimal(const ImpulseSplitSolution& s, ImpulseSplitDirection& d);
 
   ///
-  /// @brief Computes the Newton direction of the condensed dual variables of 
-  /// this impulse stage.
-  /// @param[in] kkt_matrix KKT matrix of this impulse stage.
-  /// @param[in] kkt_residual KKT residual of this impulse stage.
+  /// @brief Expands the condensed dual variables, i.e., computes the Newton 
+  /// direction of the condensed dual variables of this impulse stage.
   /// @param[in] d_next Split direction of the next time stage.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  void computeCondensedDualDirection(const ImpulseSplitKKTMatrix& kkt_matrix, 
-                                     const ImpulseSplitKKTResidual& kkt_residual,
-                                     const SplitDirection& d_next, 
-                                     ImpulseSplitDirection& d);
+  void expandDual(const SplitDirection& d_next, ImpulseSplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 

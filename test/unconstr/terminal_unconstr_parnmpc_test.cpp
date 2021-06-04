@@ -67,9 +67,10 @@ TEST_F(TerminalUnconstrParNMPCTest, linearizeOCP) {
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   auto d = SplitDirection::Random(robot);
   auto d_ref = d;
-  parnmpc.computeCondensedDirection(dt, s, kkt_matrix, kkt_residual, d);
+  parnmpc.expandPrimalAndDual(dt, s, kkt_matrix, kkt_residual, d);
   constraints->expandSlackAndDual(constraints_data, s, d_ref);
-  ud.computeCondensedDirection(dt, kkt_matrix_ref, kkt_residual_ref, d_ref);
+  ud.expandPrimal(d_ref);
+  ud.expandDual(dt, kkt_matrix_ref, kkt_residual_ref, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(parnmpc.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
   EXPECT_DOUBLE_EQ(parnmpc.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));

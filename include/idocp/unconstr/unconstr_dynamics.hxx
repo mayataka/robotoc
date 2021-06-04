@@ -52,12 +52,20 @@ inline UnconstrDynamics::~UnconstrDynamics() {
 }
 
 
+inline void UnconstrDynamics::computeUnconstrDynamicsResidual(
+    Robot& robot, const SplitSolution& s) {
+  robot.RNEA(s.q, s.v, s.a, ID_);
+  ID_.noalias() -= s.u;
+}
+
+
 inline void UnconstrDynamics::linearizeUnconstrDynamics(
     Robot& robot, const double dt, const SplitSolution& s, 
     SplitKKTResidual& kkt_residual) { 
   assert(dt > 0);
-  linearizeInverseDynamics(robot, s);
+  computeUnconstrDynamicsResidual(robot, s);
   // augment inverse dynamics constraint
+  robot.RNEADerivatives(s.q, s.v, s.a, dID_dq_, dID_dv_, dID_da_);
   kkt_residual.lq().noalias() += dt * dID_dq_.transpose() * s.beta;
   kkt_residual.lv().noalias() += dt * dID_dv_.transpose() * s.beta;
   kkt_residual.la.noalias()   += dt * dID_da_.transpose() * s.beta;
@@ -88,21 +96,21 @@ inline void UnconstrDynamics::condenseUnconstrDynamics(
 }
 
 
-inline void UnconstrDynamics::computeCondensedDirection(
-    const double dt, const SplitKKTMatrix& kkt_matrix, 
-    const SplitKKTResidual& kkt_residual, SplitDirection& d) {
-  assert(dt > 0);
+inline void UnconstrDynamics::expandPrimal(SplitDirection& d) const {
   d.du = ID_;
   d.du.noalias() += dID_dq_ * d.dq();
   d.du.noalias() += dID_dv_ * d.dv();
   d.du.noalias() += dID_da_ * d.da();
-  d.dbeta().noalias() = (kkt_residual.lu  + kkt_matrix.Quu * d.du) / dt;
 }
 
 
-inline void UnconstrDynamics::computeUnconstrDynamicsResidual(
-    Robot& robot, const SplitSolution& s) {
-  computeInverseDynamicsResidual(robot, s);
+
+inline void UnconstrDynamics::expandDual(const double dt, 
+                                         const SplitKKTMatrix& kkt_matrix, 
+                                         const SplitKKTResidual& kkt_residual, 
+                                         SplitDirection& d) {
+  assert(dt > 0);
+  d.dbeta().noalias() = (kkt_residual.lu  + kkt_matrix.Quu * d.du) / dt;
 }
 
 
@@ -154,20 +162,6 @@ inline void UnconstrDynamics::getStateFeedbackGain(
   const_cast<Eigen::MatrixBase<MatrixType3>&>(Kuq).noalias() += dID_da_ * Kaq;
   const_cast<Eigen::MatrixBase<MatrixType4>&>(Kuv) = dID_dv_;
   const_cast<Eigen::MatrixBase<MatrixType4>&>(Kuv).noalias() += dID_da_ * Kav;
-}
-
-
-inline void UnconstrDynamics::linearizeInverseDynamics(
-    Robot& robot, const SplitSolution& s) {
-  computeInverseDynamicsResidual(robot, s);
-  robot.RNEADerivatives(s.q, s.v, s.a, dID_dq_, dID_dv_, dID_da_);
-}
-
-
-inline void UnconstrDynamics::computeInverseDynamicsResidual(
-    Robot& robot, const SplitSolution& s) {
-  robot.RNEA(s.q, s.v, s.a, ID_);
-  ID_.noalias() -= s.u;
 }
 
 } // namespace idocp 

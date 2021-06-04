@@ -80,12 +80,14 @@ inline double TerminalOCP::maxDualStepSize() {
 }
 
 
-inline void TerminalOCP::computeCondensedPrimalDirection(const SplitSolution& s, 
-                                                         SplitDirection& d) {
+inline void TerminalOCP::expandPrimal(const SplitSolution& s, 
+                                      SplitDirection& d) {
+  // TODO: add inequality constraints at the terminal OCP.
 }
 
 
-inline void TerminalOCP::computeCondensedDualDirection(SplitDirection& d) {
+inline void TerminalOCP::expandDual(SplitDirection& d) {
+  // TODO: add inequality constraints at the terminal OCP.
   state_equation_.correctCostateDirection(d);
 }
 

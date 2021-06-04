@@ -59,7 +59,18 @@ public:
   ContactDynamics& operator=(ContactDynamics&&) noexcept = default;
 
   ///
-  /// @brief Linearizes the contact dynamics constraint. 
+  /// @brief Computes the residual in the contact dynamics constraint. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] contact_status Contact status of this time stage. 
+  /// @param[in] s Split solution of this time stage.
+  ///
+  void computeContactDynamicsResidual(Robot& robot, 
+                                      const ContactStatus& contact_status,
+                                      const SplitSolution& s);
+
+  ///
+  /// @brief Computes the residual and derivatives of the contact dynamics  
+  /// constraint and derivatives of it. 
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
   /// @param[in] dt Time step of this time stage. 
@@ -72,29 +83,8 @@ public:
                                 SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Linearizes the inverse dynamics constraint. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] s Split solution of this time stage.
-  /// @param[in, out] data Data for contact dynamics.
-  ///
-  static void linearizeInverseDynamics(Robot& robot, 
-                                       const ContactStatus& contact_status,
-                                       const SplitSolution& s, 
-                                       ContactDynamicsData& data);
-
-  ///
-  /// @brief Linearizes the contact constraint. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in, out] data Data for contact dynamics.
-  ///
-  static void linearizeContactConstraint(Robot& robot, 
-                                         const ContactStatus& contact_status, 
-                                         ContactDynamicsData& data);
-
-  ///
-  /// @brief Condenses the contact dynamics constraint. 
+  /// @brief Condenses the acceleration, contact forces, and Lagrange
+  /// multipliers. 
   /// @param[in] robot Robot model. 
   /// @param[in] contact_status Contact status of this time stage. 
   /// @param[in] dt Time step of this time stage. 
@@ -107,27 +97,26 @@ public:
                                SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Computes the Newton direction of the condensed primal variables of 
-  /// this time stage.
+  /// @brief Expands the primal variables, i.e., computes the Newton direction 
+  /// of the condensed primal variables (acceleration a and the contact forces 
+  /// f) of this stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
-  void computeCondensedPrimalDirection(SplitDirection& d) const;
+  void expandPrimal(SplitDirection& d) const;
 
   ///
-  /// @brief Computes the Newton direction of the condensed dual variables of 
-  /// this time stage.
+  /// @brief Expands the dual variables, i.e., computes the Newton direction 
+  /// of the condensed dual variables (Lagrange multipliers) of this stage.
   /// @param[in] dt Time step of this time stage. 
   /// @param[in] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in] kkt_residual Split KKT residual of this time stage.
-  /// @param[in] dgmm Direction of the costate of the next time stage.
+  /// @param[in] d_next Split direction of the next stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
-  template <typename VectorType>
-  void computeCondensedDualDirection(const double dt, 
-                                     const SplitKKTMatrix& kkt_matrix, 
-                                     const SplitKKTResidual& kkt_residual, 
-                                     const Eigen::MatrixBase<VectorType>& dgmm,
-                                     SplitDirection& d);
+  template <typename SplitDirectionType>
+  void expandDual(const double dt, const SplitKKTMatrix& kkt_matrix, 
+                  const SplitKKTResidual& kkt_residual, 
+                  const SplitDirectionType& d_next, SplitDirection& d);
 
   ///
   /// @brief Condenses the switching constraint. 
@@ -137,16 +126,6 @@ public:
   void condenseSwitchingConstraint(
       SplitSwitchingConstraintJacobian& switch_jacobian,
       SplitSwitchingConstraintResidual& switch_residual) const;
-
-  ///
-  /// @brief Computes the residual in the contact dynamics constraint. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] contact_status Contact status of this time stage. 
-  /// @param[in] s Split solution of this time stage.
-  ///
-  void computeContactDynamicsResidual(Robot& robot, 
-                                      const ContactStatus& contact_status,
-                                      const SplitSolution& s);
 
   ///
   /// @brief Returns l1-norm of the residual in the contact dynamics constraint. 
@@ -168,8 +147,6 @@ private:
   bool has_floating_base_, has_active_contacts_;
   int dimv_, dimu_, dim_passive_;
   static constexpr int kDimFloatingBase = 6;
-
-  void setContactStatus(const ContactStatus& contact_status);
 
 };
 
