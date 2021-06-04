@@ -329,6 +329,10 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   RiccatiRecursion riccati_solver(robots[0], N, max_num_impulse, nthreads);
   RiccatiFactorization riccati_factorization(robots[0], N, max_num_impulse);
   riccati_solver.backwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, riccati_factorization);
+  OCPLinearizer::computeInitialStateDirection(ocp, robots, q, v, s, d);
+  SplitDirection d0_ref(robot);
+  ocp[0].computeInitialStateDirection(robots[0], q, v, s[0], d0_ref);
+  EXPECT_TRUE(d[0].isApprox(d0_ref));
   riccati_solver.forwardRiccatiRecursion(ocp, kkt_matrix, kkt_residual, d);
   riccati_solver.computeDirection(ocp, riccati_factorization, s, d);
   const double primal_step_size = riccati_solver.maxPrimalStepSize();
@@ -342,8 +346,7 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
   auto d_ref = d;
   auto kkt_matrix_ref = kkt_matrix;
   auto kkt_residual_ref = kkt_residual;
-  linearizer.integrateSolution(ocp, robots, kkt_matrix, kkt_residual, 
-                               primal_step_size, dual_step_size, d, s);
+  linearizer.integrateSolution(ocp, robots, primal_step_size, dual_step_size, d, s);
   auto robot_ref = robot;
   for (int i=0; i<ocp_ref.discrete().N(); ++i) {
     if (ocp_ref.discrete().isTimeStageBeforeImpulse(i)) {
@@ -354,20 +357,14 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_aux >= 0);
       ASSERT_TRUE(dt_aux <= dt);
-      ocp_ref[i].computeCondensedDualDirection(
-          robot_ref, dti, kkt_matrix_ref[i], kkt_residual_ref[i], 
-          d_ref.impulse[impulse_index], d_ref[i]);
+      ocp_ref[i].expandDual(dti, d_ref.impulse[impulse_index], d_ref[i]);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
-      ocp_ref.impulse[impulse_index].computeCondensedDualDirection(
-          robot_ref, kkt_matrix_ref.impulse[impulse_index], kkt_residual_ref.impulse[impulse_index], 
-          d_ref.aux[impulse_index], d_ref.impulse[impulse_index]);
+      ocp_ref.impulse[impulse_index].expandDual(d_ref.aux[impulse_index], d_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.impulse[impulse_index], s_ref.impulse[impulse_index]);
       ocp_ref.impulse[impulse_index].updateDual(dual_step_size);
-      ocp_ref.aux[impulse_index].computeCondensedDualDirection(
-          robot_ref, dt_aux, kkt_matrix_ref.aux[impulse_index], kkt_residual_ref.aux[impulse_index],
-          d_ref[i+1], d_ref.aux[impulse_index]);
+      ocp_ref.aux[impulse_index].expandDual(dt_aux, d_ref[i+1], d_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].updatePrimal(
           robot_ref, primal_step_size, d_ref.aux[impulse_index], s_ref.aux[impulse_index]);
       ocp_ref.aux[impulse_index].updateDual(dual_step_size);
@@ -380,29 +377,21 @@ void OCPLinearizerTest::testIntegrateSolution(const Robot& robot) const {
       ASSERT_TRUE(dti <= dt);
       ASSERT_TRUE(dt_lift >= 0);
       ASSERT_TRUE(dt_lift <= dt);
-      ocp_ref[i].computeCondensedDualDirection(
-          robot_ref, dti, kkt_matrix_ref[i], kkt_residual_ref[i], 
-          d_ref.lift[lift_index], d_ref[i]);
+      ocp_ref[i].expandDual(dti, d_ref.lift[lift_index], d_ref[i]);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
-      ocp_ref.lift[lift_index].computeCondensedDualDirection(
-          robot_ref, dt_lift, kkt_matrix_ref.lift[lift_index], kkt_residual_ref.lift[lift_index], 
-          d_ref[i+1], d_ref.lift[lift_index]);
+      ocp_ref.lift[lift_index].expandDual(dt_lift, d_ref[i+1], d_ref.lift[lift_index]);
       ocp_ref.lift[lift_index].updatePrimal(robot_ref, primal_step_size, d_ref.lift[lift_index], s_ref.lift[lift_index]);
       ocp_ref.lift[lift_index].updateDual(dual_step_size);
     }
     else {
       const double dti = ocp_ref.discrete().dt(i);
-      ocp_ref[i].computeCondensedDualDirection(
-          robot_ref, dti, kkt_matrix_ref[i], kkt_residual_ref[i], d_ref[i+1], d_ref[i]);
+      ocp_ref[i].expandDual(dti, d_ref[i+1], d_ref[i]);
       ocp_ref[i].updatePrimal(robot_ref, primal_step_size, d_ref[i], s_ref[i]);
       ocp_ref[i].updateDual(dual_step_size);
     }
   }
-  ocp_ref.terminal.computeCondensedDualDirection(robot_ref, 
-                                                 kkt_matrix_ref[ocp_ref.discrete().N()], 
-                                                 kkt_residual_ref[ocp_ref.discrete().N()], 
-                                                 d_ref[ocp_ref.discrete().N()]);
+  ocp_ref.terminal.expandDual(d_ref[ocp_ref.discrete().N()]);
   ocp_ref.terminal.updatePrimal(robot_ref, primal_step_size, d_ref[ocp_ref.discrete().N()], s_ref[ocp_ref.discrete().N()]);
   ocp_ref.terminal.updateDual(dual_step_size);
   EXPECT_TRUE(testhelper::IsApprox(s, s_ref));

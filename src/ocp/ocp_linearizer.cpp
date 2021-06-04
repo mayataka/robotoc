@@ -13,7 +13,8 @@ OCPLinearizer::OCPLinearizer(const int N, const int max_num_impulse,
     kkt_error_(Eigen::VectorXd::Zero(N+1+4*max_num_impulse)) {
   try {
     if (max_num_impulse < 0) {
-      throw std::out_of_range("invalid value: max_num_impulse must be non-negative!");
+      throw std::out_of_range(
+          "invalid value: max_num_impulse must be non-negative!");
     }
     if (nthreads <= 0) {
       throw std::out_of_range("invalid value: nthreads must be positive!");
@@ -140,10 +141,16 @@ double OCPLinearizer::KKTError(const OCP& ocp,
 }
 
 
+void OCPLinearizer::computeInitialStateDirection(
+    const OCP& ocp, const aligned_vector<Robot>& robots, 
+    const Eigen::VectorXd& q0, const Eigen::VectorXd& v0, 
+    const Solution& s, Direction& d) {
+  ocp[0].computeInitialStateDirection(robots[0], q0, v0, s[0], d[0]);
+}
+
+
 void OCPLinearizer::integrateSolution(OCP& ocp, 
                                       const aligned_vector<Robot>& robots, 
-                                      const KKTMatrix& kkt_matrix, 
-                                      KKTResidual& kkt_residual, 
                                       const double primal_step_size, 
                                       const double dual_step_size, 
                                       Direction& d, Solution& s) const {
@@ -156,40 +163,32 @@ void OCPLinearizer::integrateSolution(OCP& ocp,
   for (int i=0; i<N_all; ++i) {
     if (i < N) {
       if (ocp.discrete().isTimeStageBeforeImpulse(i)) {
-        ocp[i].computeCondensedDualDirection(
-            robots[omp_get_thread_num()], ocp.discrete().dt(i), 
-            kkt_matrix[i], kkt_residual[i], 
+        ocp[i].expandDual(
+            ocp.discrete().dt(i), 
             d.impulse[ocp.discrete().impulseIndexAfterTimeStage(i)], d[i]);
       }
       else if (ocp.discrete().isTimeStageBeforeLift(i)) {
-        ocp[i].computeCondensedDualDirection(
-            robots[omp_get_thread_num()], ocp.discrete().dt(i), 
-            kkt_matrix[i], kkt_residual[i], 
+        ocp[i].expandDual(
+            ocp.discrete().dt(i), 
             d.lift[ocp.discrete().liftIndexAfterTimeStage(i)], d[i]);
       }
       else {
-        ocp[i].computeCondensedDualDirection(
-            robots[omp_get_thread_num()], ocp.discrete().dt(i), 
-            kkt_matrix[i], kkt_residual[i], d[i+1], d[i]);
+        ocp[i].expandDual(ocp.discrete().dt(i), d[i+1], d[i]);
       }
       ocp[i].updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
                           d[i], s[i]);
       ocp[i].updateDual(dual_step_size);
     }
     else if (i == N) {
-      ocp.terminal.computeCondensedDualDirection(robots[omp_get_thread_num()], 
-                                                 kkt_matrix[N], 
-                                                 kkt_residual[N], d[N]);
+      ocp.terminal.expandDual(d[N]);
       ocp.terminal.updatePrimal(robots[omp_get_thread_num()], primal_step_size, 
                                 d[N], s[N]);
       ocp.terminal.updateDual(dual_step_size);
     }
     else if (i < N+1+N_impulse) {
       const int impulse_index  = i - (N+1);
-      ocp.impulse[impulse_index].computeCondensedDualDirection(
-          robots[omp_get_thread_num()], kkt_matrix.impulse[impulse_index], 
-          kkt_residual.impulse[impulse_index], d.aux[impulse_index], 
-          d.impulse[impulse_index]);
+      ocp.impulse[impulse_index].expandDual(d.aux[impulse_index], 
+                                            d.impulse[impulse_index]);
       ocp.impulse[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
                                               primal_step_size, 
                                               d.impulse[impulse_index], 
@@ -198,9 +197,8 @@ void OCPLinearizer::integrateSolution(OCP& ocp,
     }
     else if (i < N+1+2*N_impulse) {
       const int impulse_index  = i - (N+1+N_impulse);
-      ocp.aux[impulse_index].computeCondensedDualDirection(
-          robots[omp_get_thread_num()], ocp.discrete().dt_aux(impulse_index),
-          kkt_matrix.aux[impulse_index], kkt_residual.aux[impulse_index],
+      ocp.aux[impulse_index].expandDual(
+          ocp.discrete().dt_aux(impulse_index), 
           d[ocp.discrete().timeStageAfterImpulse(impulse_index)], 
           d.aux[impulse_index]);
       ocp.aux[impulse_index].updatePrimal(robots[omp_get_thread_num()], 
@@ -211,9 +209,8 @@ void OCPLinearizer::integrateSolution(OCP& ocp,
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);
-      ocp.lift[lift_index].computeCondensedDualDirection(
-          robots[omp_get_thread_num()], ocp.discrete().dt_lift(lift_index), 
-          kkt_matrix.lift[lift_index], kkt_residual.lift[lift_index], 
+      ocp.lift[lift_index].expandDual(
+          ocp.discrete().dt_lift(lift_index), 
           d[ocp.discrete().timeStageAfterLift(lift_index)], d.lift[lift_index]);
       ocp.lift[lift_index].updatePrimal(robots[omp_get_thread_num()], 
                                         primal_step_size, 

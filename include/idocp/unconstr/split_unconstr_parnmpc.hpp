@@ -14,7 +14,7 @@
 #include "idocp/cost/cost_function_data.hpp"
 #include "idocp/constraints/constraints.hpp"
 #include "idocp/constraints/constraints_data.hpp"
-#include "idocp/ocp/state_equation.hpp"
+#include "idocp/unconstr/unconstr_state_equation.hpp"
 #include "idocp/unconstr/unconstr_dynamics.hpp"
 
 namespace idocp {
@@ -101,18 +101,18 @@ public:
                     SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Computes the Newton direction of the condensed variables  
-  /// at this stage.
+  /// @brief Expands the primal and dual variables, i.e., computes the Newton 
+  /// direction of the condensed variables of this stage.
   /// @param[in] dt Time step of this time stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
-  void computeCondensedDirection(const double dt, const SplitSolution& s, 
-                                 const SplitKKTMatrix& kkt_matrix,
-                                 const SplitKKTResidual& kkt_residual,
-                                 SplitDirection& d);
+  void expandPrimalAndDual(const double dt, const SplitSolution& s, 
+                           const SplitKKTMatrix& kkt_matrix,
+                           const SplitKKTResidual& kkt_residual,
+                           SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 

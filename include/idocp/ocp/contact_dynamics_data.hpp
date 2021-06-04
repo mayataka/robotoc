@@ -55,6 +55,12 @@ public:
 
   void setContactStatus(const ContactStatus& contact_status);
 
+  Eigen::MatrixXd Qxu_passive;
+
+  Eigen::MatrixXd Quu_passive_topRight;
+
+  Eigen::VectorXd lu_passive;
+
   Eigen::MatrixXd dIDda;
 
   Eigen::Block<Eigen::MatrixXd> dCda();

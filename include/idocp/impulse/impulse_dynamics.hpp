@@ -57,39 +57,26 @@ public:
   ImpulseDynamics& operator=(ImpulseDynamics&&) noexcept = default;
 
   ///
+  /// @brief Computes the residual in the impulse dynamics constraint. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] impulse_status Impulse status of this impulse stage. 
+  /// @param[in] s Split solution of this impulse stage.
+  ///
+  void computeImpulseDynamicsResidual(Robot& robot, 
+                                      const ImpulseStatus& impulse_status,
+                                      const ImpulseSplitSolution& s);
+
+  ///
   /// @brief Linearizes the impulse dynamics constraint. 
   /// @param[in] robot Robot model. 
   /// @param[in] impulse_status Impulse status of this impulse stage. 
   /// @param[in] s Split solution of this impulse stage.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
   /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
   ///
   void linearizeImpulseDynamics(Robot& robot, 
                                 const ImpulseStatus& impulse_status, 
                                 const ImpulseSplitSolution& s, 
-                                ImpulseSplitKKTMatrix& kkt_matrix, 
                                 ImpulseSplitKKTResidual& kkt_residual);
-
-  ///
-  /// @brief Linearizes the inverse impulse dynamics constraint. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] impulse_status Impulse status of this impulse stage. 
-  /// @param[in] s Split solution of this impulse stage.
-  /// @param[in, out] data Data for impulse dynamics.
-  ///
-  static void linearizeInverseImpulseDynamics(
-      Robot& robot, const ImpulseStatus& impulse_status, 
-      const ImpulseSplitSolution& s, ImpulseDynamicsData& data);
-
-  ///
-  /// @brief Linearizes the impulse velocity constraint. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] impulse_status Impulse status of this impulse stage. 
-  /// @param[in, out] data Data for impulse dynamics.
-  ///
-  static void linearizeImpulseVelocityConstraint(
-      Robot& robot, const ImpulseStatus& impulse_status, 
-      ImpulseDynamicsData& data);
 
   ///
   /// @brief Condenses the inverse dynamics constraint. 
@@ -104,102 +91,38 @@ public:
                                ImpulseSplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Condenses the inverse dynamics constraint. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] impulse_status Impulse status of this impulse stage. 
-  /// @param[in, out] data Data for impulse dynamics.
-  /// @param[in, out] kkt_matrix Split KKT matrix of this impulse stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
-  ///
-  static void condensing(const Robot& robot, 
-                         const ImpulseStatus& impulse_status,
-                         ImpulseDynamicsData& data, 
-                         ImpulseSplitKKTMatrix& kkt_matrix, 
-                         ImpulseSplitKKTResidual& kkt_residual);
-
-  ///
-  /// @brief Computes the Newton direction of the condensed primal variables of 
-  /// this impulse stage.
+  /// @brief Expands the primal variables, i.e., computes the Newton direction 
+  /// of the condensed primal variables (impulse change in the velocity dv and 
+  /// the impulse forces f) of this impulse stage.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  void computeCondensedPrimalDirection(ImpulseSplitDirection& d) const;
+  void expandPrimal(ImpulseSplitDirection& d) const;
 
   ///
-  /// @brief Computes the Newton direction of the condensed dual variables of 
-  /// this impulse stage.
-  /// @param[in] robot Robot model. 
-  /// @param[in] kkt_matrix Split KKT matrix of this impulse stage.
-  /// @param[in] kkt_residual Split KKT residual of this impulse stage.
-  /// @param[in] dgmm Direction of the costate of the next time stage.
+  /// @brief Expands the dual variables, i.e., computes the Newton direction 
+  /// of the condensed dual variables (Lagrange multipliers) of this impulse 
+  /// stage.
+  /// @param[in] d_next Split direction of the next stage.
   /// @param[in, out] d Split direction of this impulse stage.
   /// 
-  template <typename VectorType>
-  void computeCondensedDualDirection(const Robot& robot, 
-                                     const ImpulseSplitKKTMatrix& kkt_matrix, 
-                                     const ImpulseSplitKKTResidual& kkt_residual, 
-                                     const Eigen::MatrixBase<VectorType>& dgmm,
-                                     ImpulseSplitDirection& d);
-
-  ///
-  /// @brief Computes the Newton direction of the condensed primal variables of 
-  /// this impulse stage.
-  /// @param[in] data Data for impulse dynamics.
-  /// @param[in, out] d Split direction of this impulse stage.
-  /// 
-  static void expandPrimal(const ImpulseDynamicsData& data, 
-                              ImpulseSplitDirection& d);
-
-  ///
-  /// @brief Computes the Newton direction of the condensed dual variables of 
-  /// this impulse stage.
-  /// @param[in] robot Robot model. 
-  /// @param[in] data Data for impulse dynamics.
-  /// @param[in] kkt_matrix Split KKT matrix of this impulse stage.
-  /// @param[in] kkt_residual Split KKT residual of this impulse stage.
-  /// @param[in] dgmm Direction of the costate of the next time stage.
-  /// @param[in, out] d Split direction of this impulse stage.
-  /// 
-  template <typename VectorType>
-  static void expansionDual(const Robot& robot, 
-                            ImpulseDynamicsData& data,
-                            const ImpulseSplitKKTMatrix& kkt_matrix, 
-                            const ImpulseSplitKKTResidual& kkt_residual,
-                            const Eigen::MatrixBase<VectorType>& dgmm,
-                            ImpulseSplitDirection& d);
-
-  ///
-  /// @brief Computes the residual in the impulse dynamics constraint. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] impulse_status Impulse status of this impulse stage. 
-  /// @param[in] s Split solution of this impulse stage.
-  /// @param[in, out] kkt_residual Split KKT residual of this impulse stage.
-  ///
-  void computeImpulseDynamicsResidual(Robot& robot, 
-                                      const ImpulseStatus& impulse_status,
-                                      const ImpulseSplitSolution& s, 
-                                      ImpulseSplitKKTResidual& kkt_residual);
+  template <typename SplitDirectionType>
+  void expandDual(const SplitDirectionType& d_next, ImpulseSplitDirection& d);
 
   ///
   /// @brief Returns l1-norm of the residual in the impulse dynamics constraint. 
-  /// @param[in] kkt_residual Split KKT residual of this impulse stage.
   /// @return l1-norm of the residual in the impulse dynamics constraint.
   ///
-  double l1NormImpulseDynamicsResidual(
-      const ImpulseSplitKKTResidual& kkt_residual) const;
+  double l1NormImpulseDynamicsResidual() const;
 
   ///
   /// @brief Returns squared norm of the residual in the impulse dynamics 
   /// constraint. 
-  /// @param[in] kkt_residual Split KKT residual of this impulse stage.
   /// @return Squared norm of the residual in the impulse dynamics constraint.
   ///
-  double squaredNormImpulseDynamicsResidual(
-      const ImpulseSplitKKTResidual& kkt_residual) const;
+  double squaredNormImpulseDynamicsResidual() const;
 
 private:
   ImpulseDynamicsData data_;
-
-  void setImpulseStatus(const ImpulseStatus& impulse_status);
 
 };
 

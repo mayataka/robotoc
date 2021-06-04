@@ -134,30 +134,23 @@ public:
                     SplitSwitchingConstraintResidual& switch_residual);
 
   ///
-  /// @brief Computes the Newton direction of the condensed primal variables of 
-  /// this time stage.
+  /// @brief Expands the condensed primal variables, i.e., computes the Newton 
+  /// direction of the condensed primal variables of this stage.
   /// @param[in] s Split solution of this time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
-  void computeCondensedPrimalDirection(const SplitSolution& s, 
-                                       SplitDirection& d);
+  void expandPrimal(const SplitSolution& s, SplitDirection& d);
 
   ///
-  /// @brief Computes the Newton direction of the condensed dual variables of 
-  /// this time stage.
-  /// @param[in] robot Robot model. 
+  /// @brief Expands the condensed dual variables, i.e., computes the Newton 
+  /// direction of the condensed dual variables of this stage.
   /// @param[in] dt Time step of this time stage. 
-  /// @param[in] kkt_matrix KKT matrix of this time stage.
-  /// @param[in, out] kkt_residual KKT residual of this time stage.
   /// @param[in] d_next Split direction of the next time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
   template <typename SplitDirectionType>
-  void computeCondensedDualDirection(const Robot& robot, const double dt, 
-                                     const SplitKKTMatrix& kkt_matrix, 
-                                     SplitKKTResidual& kkt_residual,
-                                     const SplitDirectionType& d_next,
-                                     SplitDirection& d);
+  void expandDual(const double dt, const SplitDirectionType& d_next, 
+                  SplitDirection& d);
 
   ///
   /// @brief Returns maximum stap size of the primal variables that satisfies 
@@ -307,11 +300,27 @@ public:
                              const double dt_next,
                              SplitSwitchingConstraintResidual& switch_residual);
 
+  ///
+  /// @brief Computes the initial state direction using the result of  
+  /// SplitOCP::linearizeOCP().
+  /// @param[in] robot Robot model. 
+  /// @param[in] q0 Initial configuration. 
+  /// @param[in] v0 Initial generalized velocity. 
+  /// @param[in] s0 Split solution at the initial stage. 
+  /// @param[in] d0 Split direction at the initial stage. 
+  ///
+  void computeInitialStateDirection(const Robot& robot, 
+                                    const Eigen::VectorXd& q0, 
+                                    const Eigen::VectorXd& v0, 
+                                    const SplitSolution& s0, 
+                                    SplitDirection& d0) const;
+
 private:
   std::shared_ptr<CostFunction> cost_;
   CostFunctionData cost_data_;
   std::shared_ptr<Constraints> constraints_;
   ConstraintsData constraints_data_;
+  StateEquation state_equation_;
   ContactDynamics contact_dynamics_;
   double stage_cost_, constraint_violation_;
 

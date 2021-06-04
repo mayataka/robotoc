@@ -25,8 +25,7 @@ Robot::Robot(const std::string& path_to_urdf,
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
-    upper_joint_position_limit_(),
-    mat_3d_(Eigen::Matrix3d::Zero()) {
+    upper_joint_position_limit_() {
   try {
     if (baumgarte_weights.first < 0 || baumgarte_weights.second < 0) {
       throw std::out_of_range(
@@ -106,8 +105,7 @@ Robot::Robot()
     joint_effort_limit_(),
     joint_velocity_limit_(),
     lower_joint_position_limit_(),
-    upper_joint_position_limit_(),
-    mat_3d_() {
+    upper_joint_position_limit_() {
 }
 
 

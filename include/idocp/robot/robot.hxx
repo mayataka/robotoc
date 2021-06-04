@@ -148,27 +148,6 @@ inline void Robot::dSubtractdConfigurationMinus(
 }
 
 
-template <typename MatrixType1, typename MatrixType2>
-inline void Robot::dSubtractdConfigurationInverse(
-    const Eigen::MatrixBase<MatrixType1>& dsubtract_dq,
-    const Eigen::MatrixBase<MatrixType2>& dsubtract_dq_inv) {
-  assert(dsubtract_dq.rows() >= 6);
-  assert(dsubtract_dq.cols() >= 6);
-  assert(dsubtract_dq_inv.rows() >= 6);
-  assert(dsubtract_dq_inv.cols() >= 6);
-  if (hasFloatingBase()) {
-    const_cast<Eigen::MatrixBase<MatrixType2>&>(dsubtract_dq_inv).template topLeftCorner<3, 3>().noalias()
-        = dsubtract_dq.template topLeftCorner<3, 3>().inverse();
-    const_cast<Eigen::MatrixBase<MatrixType2>&>(dsubtract_dq_inv).template block<3, 3>(3, 3).noalias()
-        = dsubtract_dq.template block<3, 3>(3, 3).inverse();
-    mat_3d_.noalias() = dsubtract_dq.template block<3, 3>(0, 3) 
-                          * dsubtract_dq_inv.template block<3, 3>(3, 3);
-    const_cast<Eigen::MatrixBase<MatrixType2>&>(dsubtract_dq_inv).template block<3, 3>(0, 3).noalias()
-        = - dsubtract_dq_inv.template topLeftCorner<3, 3>() * mat_3d_;
-  }
-}
-
-
 template <typename ConfigVectorType, typename TangentVectorType1, 
           typename TangentVectorType2>
 inline void Robot::updateKinematics(

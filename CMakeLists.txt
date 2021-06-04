@@ -31,6 +31,7 @@ add_library(
   src/robot/point_contact.cpp
   src/robot/contact_status.cpp
   src/robot/impulse_status.cpp
+  src/robot/lie_derivative_inverter.cpp
   src/cost/cost_function.cpp
   src/cost/cost_function_data.cpp
   src/cost/cost_function_component_base.cpp
@@ -77,6 +78,7 @@ add_library(
   src/ocp/split_solution.cpp
   src/ocp/split_direction.cpp
   src/ocp/state_equation.cpp
+  src/ocp/terminal_state_equation.cpp
   src/ocp/contact_dynamics_data.cpp
   src/ocp/contact_dynamics.cpp
   src/ocp/split_switching_constraint_jacobian.cpp
@@ -93,6 +95,7 @@ add_library(
   src/riccati/riccati_factorizer.cpp
   src/riccati/riccati_recursion.cpp
   src/solver/ocp_solver.cpp
+  src/unconstr/unconstr_state_equation.cpp
   src/unconstr/unconstr_dynamics.cpp
   src/unconstr/split_unconstr_ocp.cpp
   src/unconstr/unconstr_ocp.cpp

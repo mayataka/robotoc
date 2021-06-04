@@ -6,10 +6,58 @@
 #include <cassert>
 
 namespace idocp {
-namespace stateequation {
+
+inline StateEquation::StateEquation(const Robot& robot)
+  : Fqq_inv_(),
+    Fqq_prev_inv_(),
+    Fqq_tmp_(),
+    Fq_tmp_(),
+    lie_der_inverter_(),
+    has_floating_base_(robot.hasFloatingBase()) {
+  if (robot.hasFloatingBase()) {
+    Fqq_inv_.resize(6, 6);
+    Fqq_inv_.setZero();
+    Fqq_prev_inv_.resize(6, 6);
+    Fqq_prev_inv_.setZero();
+    Fqq_tmp_.resize(6, 6);
+    Fqq_tmp_.setZero();
+    Fq_tmp_.resize(6);
+    Fq_tmp_.setZero();
+  }
+}
+
+
+inline StateEquation::StateEquation()
+  : Fqq_inv_(),
+    Fqq_prev_inv_(),
+    Fqq_tmp_(),
+    Fq_tmp_(),
+    lie_der_inverter_(),
+    has_floating_base_(false) {
+}
+
+
+inline StateEquation::~StateEquation() {
+}
+
+
+template <typename ConfigVectorType, typename TangentVectorType>
+inline void StateEquation::computeForwardEulerResidual(
+    const Robot& robot, const double dt, const SplitSolution& s, 
+    const Eigen::MatrixBase<ConfigVectorType>& q_next, 
+    const Eigen::MatrixBase<TangentVectorType>& v_next, 
+    SplitKKTResidual& kkt_residual) {
+  assert(dt > 0);
+  assert(q_next.size() == robot.dimq());
+  assert(v_next.size() == robot.dimv());
+  robot.subtractConfiguration(s.q, q_next, kkt_residual.Fq());
+  kkt_residual.Fq().noalias() += dt * s.v;
+  kkt_residual.Fv() = s.v + dt * s.a - v_next;
+}
+
 
 template <typename ConfigVectorType, typename SplitSolutionType>
-inline void linearizeForwardEuler(
+inline void StateEquation::linearizeForwardEuler(
     const Robot& robot, const double dt, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
     const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
@@ -39,219 +87,61 @@ inline void linearizeForwardEuler(
 }
 
 
-template <typename ConfigVectorType>
-inline void condenseForwardEuler(
-    Robot& robot, const double dt, const SplitSolution& s, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_next, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
-  if (robot.hasFloatingBase()) {
-    assert(dt > 0);
-    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
-                                         kkt_matrix.Fqq_prev_inv);
-    robot.dSubtractdConfigurationMinus(s.q, q_next, kkt_matrix.Fqq_prev);
-    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
-                                         kkt_matrix.Fqq_inv);
-    kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
-        = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-    kkt_residual.Fq_tmp.template head<6>() 
-        = kkt_residual.Fq().template head<6>();
-    kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
-        = - kkt_matrix.Fqq_inv 
-            * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
-    kkt_matrix.Fqv().template topLeftCorner<6, 6>()
-        = - dt * kkt_matrix.Fqq_inv;
-    kkt_residual.Fq().template head<6>().noalias()
-        = - kkt_matrix.Fqq_inv * kkt_residual.Fq_tmp.template head<6>();
-  }
-}
-
-
-template <typename ConfigVectorType>
-inline void linearizeForwardEulerTerminal(
-    const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) {
-  assert(q_prev.size() == robot.dimq());
-  if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq_prev);
-    kkt_residual.lq().template head<6>().noalias() 
-        += kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>().transpose() 
-              * s.lmd.template head<6>();
-    kkt_residual.lq().tail(robot.dimv()-6).noalias() 
-        -= s.lmd.tail(robot.dimv()-6);
-  }
-  else {
-    kkt_residual.lq().noalias() -= s.lmd;
-  }
-  kkt_residual.lv().noalias() -= s.gmm;
-}
-
-
-inline void condenseForwardEulerTerminal(Robot& robot, 
-                                         SplitKKTMatrix& kkt_matrix) {
-  if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
-                                         kkt_matrix.Fqq_prev_inv);
-  }
-}
-
-
-template <typename SplitKKTMatrixType, typename SplitKKTResidualType, 
-          typename VectorType>
-inline void correctCostateDirectionForwardEuler(
-    const Robot& robot, const SplitKKTMatrixType& kkt_matrix, 
-    SplitKKTResidualType& kkt_residual,
-    const Eigen::MatrixBase<VectorType>& dlmd) {
-  if (robot.hasFloatingBase()) {
-    kkt_residual.Fq_tmp.template head<6>().noalias() 
-        = kkt_matrix.Fqq_prev_inv.transpose() * dlmd.template head<6>();
-    const_cast<Eigen::MatrixBase<VectorType>&> (dlmd).template head<6>() 
-        = - kkt_residual.Fq_tmp.template head<6>();
-  }
-}
-
-
-template <typename ConfigVectorType, typename TangentVectorType, 
-          typename SplitSolutionType>
-inline void linearizeBackwardEuler(
+template <typename ConfigVectorType, typename SplitSolutionType>
+inline void StateEquation::linearizeForwardEulerLieDerivative(
     const Robot& robot, const double dt, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const Eigen::MatrixBase<TangentVectorType>& v_prev, 
-    const SplitSolution& s, const SplitSolutionType& s_next,
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
-  assert(dt > 0);
-  assert(q_prev.size() == robot.dimq());
-  assert(v_prev.size() == robot.dimv());
-  computeBackwardEulerResidual(robot, dt, q_prev, v_prev, s, kkt_residual);
-  if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq());
-    robot.dSubtractdConfigurationPlus(s.q, s_next.q, kkt_matrix.Fqq_prev);
-    kkt_residual.lq().template head<6>().noalias() 
-        += kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>().transpose() 
-              * s_next.lmd.template head<6>();
-    kkt_residual.lq().template head<6>().noalias() 
-        += kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
-              * s.lmd.template head<6>();
-    kkt_residual.lq().tail(robot.dimv()-6).noalias() 
-        += s_next.lmd.tail(robot.dimv()-6) - s.lmd.tail(robot.dimv()-6);
-  }
-  else {
-    kkt_residual.lq().noalias() += s_next.lmd - s.lmd;
-  }
-  kkt_residual.lv().noalias() += dt * s.lmd - s.gmm + s_next.gmm;
-  kkt_residual.la.noalias() += dt * s.gmm;
-}
-
-
-template <typename ConfigVectorType, typename TangentVectorType>
-inline void linearizeBackwardEulerTerminal(
-    const Robot& robot, const double dt, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const Eigen::MatrixBase<TangentVectorType>& v_prev, 
-    const SplitSolution& s, SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual) {
-  assert(dt > 0);
-  assert(q_prev.size() == robot.dimq());
-  assert(v_prev.size() == robot.dimv());
-  computeBackwardEulerResidual(robot, dt, q_prev, v_prev, s, kkt_residual);
-  if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationMinus(q_prev, s.q, kkt_matrix.Fqq());
-    kkt_residual.lq().template head<6>().noalias() 
-        += kkt_matrix.Fqq().template topLeftCorner<6, 6>().transpose() 
-              * s.lmd.template head<6>();
-    kkt_residual.lq().tail(robot.dimv()-6).noalias() 
-        -= s.lmd.tail(robot.dimv()-6);
-  }
-  else {
-    kkt_residual.lq().noalias() -= s.lmd;
-  }
-  kkt_residual.lv().noalias() += dt * s.lmd - s.gmm;
-  kkt_residual.la.noalias() += dt * s.gmm;
-}
-
-
-template <typename ConfigVectorType>
-inline void condenseBackwardEuler(
-    Robot& robot, const double dt, 
     const Eigen::MatrixBase<ConfigVectorType>& q_prev, const SplitSolution& s, 
-    SplitKKTMatrix& kkt_matrix, SplitKKTResidual& kkt_residual) {
-  if (robot.hasFloatingBase()) {
+    const SplitSolutionType& s_next, SplitKKTMatrix& kkt_matrix, 
+    SplitKKTResidual& kkt_residual) {
+  linearizeForwardEuler(robot, dt, q_prev, s, s_next, kkt_matrix, kkt_residual);
+  if (has_floating_base_) {
     assert(dt > 0);
-    robot.dSubtractdConfigurationPlus(q_prev, s.q, kkt_matrix.Fqq_prev);
-    robot.dSubtractdConfigurationInverse(kkt_matrix.Fqq_prev, 
-                                         kkt_matrix.Fqq_inv);
-    kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>() 
-        = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
-    kkt_residual.Fq_tmp.template head<6>() 
-        = kkt_residual.Fq().template head<6>();
-    kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias()
-        = kkt_matrix.Fqq_inv 
-            * kkt_matrix.Fqq_prev.template topLeftCorner<6, 6>();
-    kkt_matrix.Fqv().template topLeftCorner<6, 6>()
-        = dt * kkt_matrix.Fqq_inv;
-    kkt_residual.Fq().template head<6>().noalias()
-        = kkt_matrix.Fqq_inv * kkt_residual.Fq_tmp.template head<6>();
+    lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, 
+                                                  Fqq_prev_inv_);
+    robot.dSubtractdConfigurationMinus(s.q, s_next.q, kkt_matrix.Fqq_prev);
+    lie_der_inverter_.computeLieDerivativeInverse(kkt_matrix.Fqq_prev, Fqq_inv_);
+    Fqq_tmp_ = kkt_matrix.Fqq().template topLeftCorner<6, 6>();
+    Fq_tmp_  = kkt_residual.Fq().template head<6>();
+    kkt_matrix.Fqq().template topLeftCorner<6, 6>().noalias() = - Fqq_inv_ * Fqq_tmp_;
+    kkt_matrix.Fqv().template topLeftCorner<6, 6>() = - dt * Fqq_inv_;
+    kkt_residual.Fq().template head<6>().noalias() = - Fqq_inv_ * Fq_tmp_;
   }
 }
 
 
-template <typename SplitKKTMatrixType, typename SplitKKTResidualType, 
-          typename VectorType>
-inline void correctCostateDirectionBackwardEuler(
-    const Robot& robot, const SplitKKTMatrixType& kkt_matrix, 
-    SplitKKTResidualType& kkt_residual,
-    const Eigen::MatrixBase<VectorType>& dlmd) {
-  if (robot.hasFloatingBase()) {
-    kkt_residual.Fq_tmp.template head<6>().noalias() 
-        = kkt_matrix.Fqq_inv.transpose() * dlmd.template head<6>();
-    const_cast<Eigen::MatrixBase<VectorType>&> (dlmd).template head<6>() 
-        = kkt_residual.Fq_tmp.template head<6>();
+inline void StateEquation::correctCostateDirection(SplitDirection& d) {
+  if (has_floating_base_) {
+    Fq_tmp_ = Fqq_prev_inv_.transpose() * d.dlmdgmm.template head<6>();
+    d.dlmdgmm.template head<6>() = - Fq_tmp_;
   }
 }
 
 
-template <typename ConfigVectorType, typename TangentVectorType>
-inline void computeForwardEulerResidual(
-    const Robot& robot, const double dt, const SplitSolution& s, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_next, 
-    const Eigen::MatrixBase<TangentVectorType>& v_next, 
-    SplitKKTResidual& kkt_residual) {
-  assert(dt > 0);
-  assert(q_next.size() == robot.dimq());
-  assert(v_next.size() == robot.dimv());
-  robot.subtractConfiguration(s.q, q_next, kkt_residual.Fq());
-  kkt_residual.Fq().noalias() += dt * s.v;
-  kkt_residual.Fv() = s.v + dt * s.a - v_next;
-}
-
-
-template <typename ConfigVectorType, typename TangentVectorType>
-inline void computeBackwardEulerResidual(
-    const Robot& robot, const double dt, 
-    const Eigen::MatrixBase<ConfigVectorType>& q_prev, 
-    const Eigen::MatrixBase<TangentVectorType>& v_prev, const SplitSolution& s, 
-    SplitKKTResidual& kkt_residual) {
-  assert(dt > 0);
-  assert(q_prev.size() == robot.dimq());
-  assert(v_prev.size() == robot.dimv());
-  robot.subtractConfiguration(q_prev, s.q, kkt_residual.Fq());
-  kkt_residual.Fq().noalias() += dt * s.v;
-  kkt_residual.Fv() = v_prev - s.v + dt * s.a;
-}
-
-
-inline double l1NormStateEuqationResidual(
+inline double StateEquation::l1NormStateEuqationResidual(
     const SplitKKTResidual& kkt_residual) {
   return kkt_residual.Fx.lpNorm<1>();
 }
 
 
-inline double squaredNormStateEuqationResidual(
+inline double StateEquation::squaredNormStateEuqationResidual(
     const SplitKKTResidual& kkt_residual) {
   return kkt_residual.Fx.squaredNorm();
 }
 
-} // namespace stateequation 
+
+template <typename ConfigVectorType, typename TangentVectorType>
+inline void StateEquation::computeInitialStateDirection(
+    const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q0, 
+    const Eigen::MatrixBase<TangentVectorType>& v0, 
+    const SplitSolution& s0, SplitDirection& d0) const {
+  robot.subtractConfiguration(q0, s0.q, d0.dq());
+  if (robot.hasFloatingBase()) {
+    d0.dq().template head<6>().noalias() 
+        = - Fqq_prev_inv_ * d0.dq().template head<6>();
+  }
+  d0.dv() = v0 - s0.v;
+}
+
 } // namespace idocp 
 
 #endif // IDOCP_STATE_EQUATION_HXX_

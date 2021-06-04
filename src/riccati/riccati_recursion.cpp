@@ -116,25 +116,6 @@ void RiccatiRecursion::backwardRiccatiRecursion(
 }
 
 
-void RiccatiRecursion::computeInitialStateDirection(
-    const aligned_vector<Robot>& robots, const Eigen::VectorXd& q, 
-    const Eigen::VectorXd& v, const KKTMatrix& kkt_matrix, const Solution& s, 
-    Direction& d) {
-  assert(q.size() == robots[0].dimq());
-  assert(v.size() == robots[0].dimv());
-  if (robots[0].hasFloatingBase()) {
-    robots[0].subtractConfiguration(q, s[0].q, d[0].dq());
-    d[0].dq().template head<6>() 
-        = - kkt_matrix[0].Fqq_prev_inv * d[0].dq().template head<6>();
-    d[0].dv() = v - s[0].v;
-  }
-  else {
-    d[0].dq() = q - s[0].q;
-    d[0].dv() = v - s[0].v;
-  }
-}
-
-
 void RiccatiRecursion::forwardRiccatiRecursion(
     const OCP& ocp, const KKTMatrix& kkt_matrix, 
     const KKTResidual& kkt_residual, Direction& d) const {
@@ -183,7 +164,7 @@ void RiccatiRecursion::computeDirection(
   for (int i=0; i<N_all; ++i) {
     if (i < N) {
       RiccatiFactorizer::computeCostateDirection(factorization[i], d[i]);
-      ocp[i].computeCondensedPrimalDirection(s[i], d[i]);
+      ocp[i].expandPrimal(s[i], d[i]);
       if (ocp.discrete().isTimeStageBeforeImpulse(i+1)) {
         const int impulse_index = ocp.discrete().impulseIndexAfterTimeStage(i+1);
         d[i].setImpulseStatusByDimension(s[i].dimi());
@@ -202,8 +183,8 @@ void RiccatiRecursion::computeDirection(
       const int impulse_index  = i - (N+1);
       RiccatiFactorizer::computeCostateDirection(
           factorization.impulse[impulse_index], d.impulse[impulse_index]);
-      ocp.impulse[impulse_index].computeCondensedPrimalDirection(
-          s.impulse[impulse_index], d.impulse[impulse_index]);
+      ocp.impulse[impulse_index].expandPrimal(s.impulse[impulse_index], 
+                                              d.impulse[impulse_index]);
       max_primal_step_sizes_.coeffRef(i) 
           = ocp.impulse[impulse_index].maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(i) 
@@ -213,8 +194,8 @@ void RiccatiRecursion::computeDirection(
       const int impulse_index  = i - (N+1+N_impulse);
       RiccatiFactorizer::computeCostateDirection(
           factorization.aux[impulse_index], d.aux[impulse_index]);
-      ocp.aux[impulse_index].computeCondensedPrimalDirection(
-          s.aux[impulse_index], d.aux[impulse_index]);
+      ocp.aux[impulse_index].expandPrimal(s.aux[impulse_index], 
+                                          d.aux[impulse_index]);
       max_primal_step_sizes_.coeffRef(i) 
           = ocp.aux[impulse_index].maxPrimalStepSize();
       max_dual_step_sizes_.coeffRef(i) 
@@ -224,8 +205,7 @@ void RiccatiRecursion::computeDirection(
       const int lift_index = i - (N+1+2*N_impulse);
       RiccatiFactorizer::computeCostateDirection(factorization.lift[lift_index], 
                                                  d.lift[lift_index]);
-      ocp.lift[lift_index].computeCondensedPrimalDirection(
-          s.lift[lift_index], d.lift[lift_index]);
+      ocp.lift[lift_index].expandPrimal(s.lift[lift_index], d.lift[lift_index]);
       const int time_stage_after_lift 
           = ocp.discrete().timeStageAfterLift(lift_index);
       if (ocp.discrete().isTimeStageBeforeImpulse(time_stage_after_lift)) {

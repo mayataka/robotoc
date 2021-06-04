@@ -132,11 +132,6 @@ public:
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
-  /// 
-  /// @brief Temporal vector used in the state equation.
-  /// 
-  Eigen::VectorXd Fq_tmp;
-
   ///
   /// @brief Sets the split KKT residual zero.
   ///

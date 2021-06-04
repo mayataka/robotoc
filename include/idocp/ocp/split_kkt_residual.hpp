@@ -147,17 +147,6 @@ public:
   ///
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
-  /// 
-  /// @brief KKT residual w.r.t. the passive joint torques. Size is 
-  /// Robot::dim_passive().
-  /// 
-  Eigen::VectorXd lu_passive;
-
-  /// 
-  /// @brief Temporal vector used in the state equation.
-  /// 
-  Eigen::VectorXd Fq_tmp;
-
   ///
   /// @brief Sets the split KKT residual zero.
   ///
@@ -218,8 +207,7 @@ public:
 
 private:
   Eigen::VectorXd lf_full_;
-  int dimv_, dimu_, dim_passive_, dimf_;
-  bool has_floating_base_;
+  int dimv_, dimu_, dimf_;
 
 };
 

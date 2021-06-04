@@ -250,18 +250,6 @@ void RobotTest::testSubtractConfigurationDerivatives(const std::string& path_to_
   EXPECT_TRUE(dSubdq_minus.isApprox(dSubdq_minus_ref));
   Eigen::MatrixXd dSubdq_plus_inv =  Eigen::MatrixXd::Zero(model.nv, model.nv);
   Eigen::MatrixXd dSubdq_minus_inv =  Eigen::MatrixXd::Zero(model.nv, model.nv);
-  if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationInverse(dSubdq_plus, dSubdq_plus_inv);
-    robot.dSubtractdConfigurationInverse(dSubdq_minus, dSubdq_minus_inv);
-    EXPECT_TRUE((dSubdq_plus.topLeftCorner(6, 6)*dSubdq_plus_inv.topLeftCorner(6, 6)).isIdentity());
-    EXPECT_TRUE((dSubdq_minus.topLeftCorner(6, 6)*dSubdq_minus_inv.topLeftCorner(6, 6)).isIdentity());
-    std::cout << dSubdq_plus << std::endl;
-    std::cout << dSubdq_plus_inv << std::endl;
-    std::cout << dSubdq_plus * dSubdq_plus_inv  << std::endl;
-    std::cout << dSubdq_minus << std::endl;
-    std::cout << dSubdq_minus_inv << std::endl;
-    std::cout << dSubdq_minus * dSubdq_minus_inv << std::endl;
-  }
 }
 
 

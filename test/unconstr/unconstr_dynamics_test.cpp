@@ -102,8 +102,10 @@ TEST_F(UnconstrDynamicsTest, condenseUnconstrDynamics) {
 
   auto d = SplitDirection::Random(robot);
   auto d_ref = d;
-  ud.computeCondensedDirection(dt, kkt_matrix, kkt_residual, d);
+  ud.expandPrimal(d);
   d_ref.du = ID + dIDdq * d_ref.dq() + dIDdv * d_ref.dv() + dIDda * d_ref.da();
+  EXPECT_TRUE(d_ref.isApprox(d));
+  ud.expandDual(dt, kkt_matrix, kkt_residual, d);
   d_ref.dbeta() = (kkt_residual.lu + kkt_matrix.Quu * d_ref.du) / dt;
   EXPECT_TRUE(d_ref.isApprox(d));
 }

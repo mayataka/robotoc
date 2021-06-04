@@ -36,8 +36,8 @@ protected:
 
 void TerminalOCPTest::testLinearizeOCP(Robot& robot) {
   const double t = std::abs(Eigen::VectorXd::Random(1)[0]);
-  const SplitSolution s = SplitSolution::Random(robot);
-  const SplitSolution s_prev = SplitSolution::Random(robot);
+  const auto s = SplitSolution::Random(robot);
+  const auto s_prev = SplitSolution::Random(robot);
   auto cost = testhelper::CreateCost(robot);
   auto constraints = testhelper::CreateConstraints(robot);
   TerminalOCP ocp(robot, cost, constraints);
@@ -50,17 +50,14 @@ void TerminalOCPTest::testLinearizeOCP(Robot& robot) {
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
   const double terminal_cost = cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
-  stateequation::linearizeForwardEulerTerminal(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
-  stateequation::condenseForwardEulerTerminal(robot, kkt_matrix_ref);
+  TerminalStateEquation state_equation(robot);
+  state_equation.linearizeForwardEulerLieDerivative(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
-  SplitDirection d = SplitDirection::Random(robot);
-  SplitDirection d_ref = d;
-  ocp.computeCondensedDualDirection(robot, kkt_matrix, kkt_residual, d);
-  Eigen::VectorXd dlmd_ref = d_ref.dlmd();
-  if (robot.hasFloatingBase()) {
-    d_ref.dlmd().head(6) = - kkt_matrix_ref.Fqq_prev_inv.transpose() * dlmd_ref.head(6);
-  }
+  auto d = SplitDirection::Random(robot);
+  auto d_ref = d;
+  ocp.expandDual(d);
+  state_equation.correctCostateDirection(d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
 }
 
@@ -96,7 +93,8 @@ void TerminalOCPTest::testComputeKKTResidual(Robot& robot) {
   robot.updateKinematics(s.q, s.v);
   auto cost_data = cost->createCostFunctionData(robot);
   const double terminal_cost = cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
-  stateequation::linearizeForwardEulerTerminal(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
+  TerminalStateEquation state_equation(robot);
+  state_equation.linearizeForwardEuler(robot, s_prev.q, s, kkt_matrix_ref, kkt_residual_ref);
   double KKT_ref = 0;
   KKT_ref += kkt_residual_ref.lx.squaredNorm();
   EXPECT_DOUBLE_EQ(KKT, KKT_ref);

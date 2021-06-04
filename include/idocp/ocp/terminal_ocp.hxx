@@ -14,6 +14,7 @@ inline TerminalOCP::TerminalOCP(const Robot& robot,
     cost_data_(cost->createCostFunctionData(robot)),
     constraints_(constraints),
     constraints_data_(),
+    state_equation_(robot),
     use_kinematics_(false),
     terminal_cost_(0) {
   if (cost_->useKinematics() || constraints_->useKinematics()) {
@@ -27,6 +28,7 @@ inline TerminalOCP::TerminalOCP()
     cost_data_(),
     constraints_(),
     constraints_data_(),
+    state_equation_(),
     use_kinematics_(false),
     terminal_cost_(0) {
 }
@@ -61,9 +63,8 @@ inline void TerminalOCP::linearizeOCP(Robot& robot, const double t,
   kkt_residual.lx.setZero();
   terminal_cost_ = cost_->quadratizeTerminalCost(robot, cost_data_, t, s, 
                                                  kkt_residual, kkt_matrix);
-  stateequation::linearizeForwardEulerTerminal(robot, q_prev, s, 
-                                               kkt_matrix, kkt_residual);
-  stateequation::condenseForwardEulerTerminal(robot, kkt_matrix);
+  state_equation_.linearizeForwardEulerLieDerivative(robot, q_prev, s, 
+                                                     kkt_matrix, kkt_residual);
 }
 
  
@@ -79,16 +80,15 @@ inline double TerminalOCP::maxDualStepSize() {
 }
 
 
-inline void TerminalOCP::computeCondensedPrimalDirection(const SplitSolution& s, 
-                                                         SplitDirection& d) {
+inline void TerminalOCP::expandPrimal(const SplitSolution& s, 
+                                      SplitDirection& d) {
+  // TODO: add inequality constraints at the terminal OCP.
 }
 
 
-inline void TerminalOCP::computeCondensedDualDirection(
-    const Robot& robot, const SplitKKTMatrix& kkt_matrix, 
-    SplitKKTResidual& kkt_residual, SplitDirection& d) {
-  stateequation::correctCostateDirectionForwardEuler(robot, kkt_matrix, 
-                                                     kkt_residual, d.dlmd());
+inline void TerminalOCP::expandDual(SplitDirection& d) {
+  // TODO: add inequality constraints at the terminal OCP.
+  state_equation_.correctCostateDirection(d);
 }
 
 
@@ -123,8 +123,8 @@ inline void TerminalOCP::computeKKTResidual(Robot& robot, const double t,
   kkt_residual.lx.setZero();
   terminal_cost_ = cost_->linearizeTerminalCost(robot, cost_data_, t, s, 
                                                 kkt_residual);
-  stateequation::linearizeForwardEulerTerminal(robot, q_prev, s, 
-                                               kkt_matrix, kkt_residual);
+  state_equation_.linearizeForwardEuler(robot, q_prev, s, 
+                                        kkt_matrix, kkt_residual);
 }
 
 

@@ -70,13 +70,11 @@ inline void SplitUnconstrOCP::initConstraints(Robot& robot, const int time_step,
 
 inline void SplitUnconstrOCP::linearizeOCP(Robot& robot, const double t, 
                                            const double dt, 
-                                           const Eigen::VectorXd& q_prev, 
                                            const SplitSolution& s, 
                                            const SplitSolution& s_next, 
                                            SplitKKTMatrix& kkt_matrix,
                                            SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
-  assert(q_prev.size() == robot.dimq());
   if (use_kinematics_) {
     robot.updateKinematics(s.q);
   }
@@ -86,18 +84,19 @@ inline void SplitUnconstrOCP::linearizeOCP(Robot& robot, const double t,
                                            kkt_residual, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
                                      kkt_matrix, kkt_residual);
-  stateequation::linearizeForwardEuler(robot, dt, q_prev, s, s_next, 
-                                       kkt_matrix, kkt_residual);
+  unconstr::stateequation::linearizeForwardEuler(dt, s, s_next, 
+                                                 kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
   unconstr_dynamics_.condenseUnconstrDynamics(kkt_matrix, kkt_residual);
 }
 
 
-inline void SplitUnconstrOCP::computeCondensedDirection(
+inline void SplitUnconstrOCP::expandPrimalAndDual(
     const double dt, const SplitSolution& s, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, SplitDirection& d) {
   assert(dt > 0);
-  unconstr_dynamics_.computeCondensedDirection(dt, kkt_matrix, kkt_residual, d);
+  unconstr_dynamics_.expandPrimal(d);
+  unconstr_dynamics_.expandDual(dt, kkt_matrix, kkt_residual, d);
   constraints_->expandSlackAndDual(constraints_data_, s, d);
 }
 
@@ -132,13 +131,11 @@ inline void SplitUnconstrOCP::updateDual(const double dual_step_size) {
 
 inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const double t, 
                                                  const double dt, 
-                                                 const Eigen::VectorXd& q_prev, 
                                                  const SplitSolution& s,
                                                  const SplitSolution& s_next,
                                                  SplitKKTMatrix& kkt_matrix, 
                                                  SplitKKTResidual& kkt_residual) {
   assert(dt > 0);
-  assert(q_prev.size() == robot.dimq());
   if (use_kinematics_) {
     robot.updateKinematics(s.q);
   }
@@ -147,8 +144,8 @@ inline void SplitUnconstrOCP::computeKKTResidual(Robot& robot, const double t,
                                           kkt_residual);
   constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
                                                kkt_residual);
-  stateequation::linearizeForwardEuler(robot, dt, q_prev, s, s_next, 
-                                       kkt_matrix, kkt_residual);
+  unconstr::stateequation::linearizeForwardEuler(dt, s, s_next, 
+                                                 kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
 }
 
@@ -160,7 +157,7 @@ inline double SplitUnconstrOCP::squaredNormKKTResidual(
   error += kkt_residual.lx.squaredNorm();
   error += kkt_residual.la.squaredNorm();
   error += kkt_residual.lu.squaredNorm();
-  error += stateequation::squaredNormStateEuqationResidual(kkt_residual);
+  error += unconstr::stateequation::squaredNormStateEuqationResidual(kkt_residual);
   error += unconstr_dynamics_.squaredNormUnconstrDynamicsResidual(dt);
   error += dt * dt * constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
   return error;
@@ -199,11 +196,11 @@ inline double SplitUnconstrOCP::constraintViolation(
     robot.updateKinematics(s.q);
   }
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  stateequation::computeForwardEulerResidual(robot, dt, s, q_next, v_next, 
-                                             kkt_residual);
+  unconstr::stateequation::computeForwardEulerResidual(dt, s, q_next, v_next, 
+                                                       kkt_residual);
   unconstr_dynamics_.computeUnconstrDynamicsResidual(robot, s);
   double violation = 0;
-  violation += stateequation::l1NormStateEuqationResidual(kkt_residual);
+  violation += unconstr::stateequation::l1NormStateEuqationResidual(kkt_residual);
   violation += unconstr_dynamics_.l1NormUnconstrDynamicsResidual(dt);
   violation += dt * constraints_->l1NormPrimalResidual(constraints_data_);
   return violation;

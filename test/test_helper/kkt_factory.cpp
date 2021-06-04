@@ -11,9 +11,9 @@ SplitKKTMatrix CreateSplitKKTMatrix(const Robot& robot, const double dt) {
   SplitKKTMatrix kkt_matrix(robot);
   if (robot.hasFloatingBase()) {
     kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(dimv, dimv);
-    kkt_matrix.Fqq().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
+    kkt_matrix.Fqq().topLeftCorner(6, 6).setRandom();
     kkt_matrix.Fqv() = dt * Eigen::MatrixXd::Identity(dimv, dimv);
-    kkt_matrix.Fqv().topLeftCorner(robot.dim_passive(), robot.dim_passive()).setRandom();
+    kkt_matrix.Fqv().topLeftCorner(6, 6).setRandom();
   }
   else {
     kkt_matrix.Fqq() = Eigen::MatrixXd::Identity(dimv, dimv);
@@ -27,8 +27,6 @@ SplitKKTMatrix CreateSplitKKTMatrix(const Robot& robot, const double dt) {
   kkt_matrix.Qxx = H.topLeftCorner(dimx, dimx);
   kkt_matrix.Qxu = H.topRightCorner(dimx, dimu);
   kkt_matrix.Quu = H.bottomRightCorner(dimu, dimu);
-  kkt_matrix.Qxu_passive.setRandom();
-  kkt_matrix.Quu_passive_topRight.setRandom();
   return kkt_matrix;
 }
 
@@ -57,7 +55,6 @@ SplitKKTResidual CreateSplitKKTResidual(const Robot& robot) {
   kkt_residual.Fx.setRandom();
   kkt_residual.lx.setRandom();
   kkt_residual.lu.setRandom();
-  kkt_residual.lu_passive.setRandom();
   return kkt_residual;
 }
 

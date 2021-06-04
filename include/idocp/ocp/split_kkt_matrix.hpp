@@ -174,8 +174,6 @@ public:
   ///
   Eigen::MatrixXd Qxu;
 
-  Eigen::MatrixXd Qxu_passive;
-
   ///
   /// @brief Hessian of the Lagrangian with respect to the configuration q and
   /// control input torques u. 
@@ -205,8 +203,6 @@ public:
   /// torques u.
   ///
   Eigen::MatrixXd Quu;
-
-  Eigen::MatrixXd Quu_passive_topRight;
 
   ///
   /// @brief Hessian of the Lagrangian with respect to the contact forces f. 
@@ -239,19 +235,6 @@ public:
   /// Otherwise, 0 x 0.
   ///
   Eigen::MatrixXd Fqq_prev;
-
-  ///
-  /// @brief Inverse of the Jacobian of the state equation (w.r.t. q) w.r.t. q.
-  /// If Robot::hasFloatingBase() is true, size is 6 x 6. Otherwise, 0 x 0.
-  ///
-  Eigen::MatrixXd Fqq_inv;
-
-  ///
-  /// @brief Inverse of the Jacobian of the state equation (w.r.t. q) w.r.t. 
-  /// q_prev. If Robot::hasFloatingBase() is true, size is 6 x 6. 
-  /// Otherwise, 0 x 0.
-  ///
-  Eigen::MatrixXd Fqq_prev_inv;
 
   ///
   /// @brief Set the all components zero.
@@ -314,7 +297,7 @@ public:
 private:
   Eigen::MatrixXd Qff_full_, Qqf_full_;
   bool has_floating_base_;
-  int dimv_, dimx_, dimu_, dim_passive_, dimf_;
+  int dimv_, dimx_, dimu_, dimf_;
 
 };
 

@@ -91,18 +91,19 @@ inline void TerminalUnconstrParNMPC::linearizeOCP(Robot& robot, const double t,
                                                kkt_residual, kkt_matrix);
   constraints_->condenseSlackAndDual(robot, constraints_data_, dt, s, 
                                      kkt_matrix, kkt_residual);
-  stateequation::linearizeBackwardEulerTerminal(robot, dt, q_prev, v_prev, s,  
-                                                kkt_matrix, kkt_residual);
+  unconstr::stateequation::linearizeBackwardEulerTerminal(dt, q_prev, v_prev, s,  
+                                                          kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
   unconstr_dynamics_.condenseUnconstrDynamics(kkt_matrix, kkt_residual);
 }
 
 
-inline void TerminalUnconstrParNMPC::computeCondensedDirection(
+inline void TerminalUnconstrParNMPC::expandPrimalAndDual(
     const double dt, const SplitSolution& s, const SplitKKTMatrix& kkt_matrix, 
     const SplitKKTResidual& kkt_residual, SplitDirection& d) {
   assert(dt > 0);
-  unconstr_dynamics_.computeCondensedDirection(dt, kkt_matrix, kkt_residual, d);
+  unconstr_dynamics_.expandPrimal(d);
+  unconstr_dynamics_.expandDual(dt, kkt_matrix, kkt_residual, d);
   constraints_->expandSlackAndDual(constraints_data_, s, d);
 }
 
@@ -153,8 +154,8 @@ inline void TerminalUnconstrParNMPC::computeKKTResidual(
                                               kkt_residual);
   constraints_->linearizePrimalAndDualResidual(robot, constraints_data_, dt, s, 
                                                kkt_residual);
-  stateequation::linearizeBackwardEulerTerminal(robot, dt, q_prev, v_prev, s,  
-                                                kkt_matrix, kkt_residual);
+  unconstr::stateequation::linearizeBackwardEulerTerminal(dt, q_prev, v_prev, s,  
+                                                          kkt_matrix, kkt_residual);
   unconstr_dynamics_.linearizeUnconstrDynamics(robot, dt, s, kkt_residual);
 }
 
@@ -166,7 +167,7 @@ inline double TerminalUnconstrParNMPC::squaredNormKKTResidual(
   error += kkt_residual.lx.squaredNorm();
   error += kkt_residual.la.squaredNorm();
   error += kkt_residual.lu.squaredNorm();
-  error += stateequation::squaredNormStateEuqationResidual(kkt_residual);
+  error += unconstr::stateequation::squaredNormStateEuqationResidual(kkt_residual);
   error += unconstr_dynamics_.squaredNormUnconstrDynamicsResidual(dt);
   error += dt * dt * constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
   return error;
@@ -208,11 +209,11 @@ inline double TerminalUnconstrParNMPC::constraintViolation(
     robot.updateKinematics(s.q);
   }
   constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
-  stateequation::computeBackwardEulerResidual(robot, dt, q_prev, v_prev, s, 
-                                              kkt_residual);
+  unconstr::stateequation::computeBackwardEulerResidual(dt, q_prev, v_prev, s, 
+                                                        kkt_residual);
   unconstr_dynamics_.computeUnconstrDynamicsResidual(robot, s);
   double violation = 0;
-  violation += stateequation::l1NormStateEuqationResidual(kkt_residual);
+  violation += unconstr::stateequation::l1NormStateEuqationResidual(kkt_residual);
   violation += unconstr_dynamics_.l1NormUnconstrDynamicsResidual(dt);
   violation += dt * constraints_->l1NormPrimalResidual(constraints_data_);
   return violation;

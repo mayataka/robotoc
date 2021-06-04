@@ -34,7 +34,6 @@ void SplitKKTMatrixTest::test(const Robot& robot, const ContactStatus& contact_s
   const int dimu = robot.dimu();
   const int dimx = 2 * robot.dimv();
   const int dimf = contact_status.dimf();
-  const int dim_passive = robot.dim_passive();
   EXPECT_EQ(kkt_mat.dimf(), dimf);
 
   EXPECT_EQ(kkt_mat.Fxx.rows(), dimx);
@@ -67,13 +66,9 @@ void SplitKKTMatrixTest::test(const Robot& robot, const ContactStatus& contact_s
   EXPECT_EQ(kkt_mat.Qqu().cols(), dimu);
   EXPECT_EQ(kkt_mat.Qvu().rows(), dimv);
   EXPECT_EQ(kkt_mat.Qvu().cols(), dimu);
-  EXPECT_EQ(kkt_mat.Qxu_passive.rows(), dimx);
-  EXPECT_EQ(kkt_mat.Qxu_passive.cols(), dim_passive);
 
   EXPECT_EQ(kkt_mat.Quu.rows(), dimu);
   EXPECT_EQ(kkt_mat.Quu.cols(), dimu);
-  EXPECT_EQ(kkt_mat.Quu_passive_topRight.rows(), dim_passive);
-  EXPECT_EQ(kkt_mat.Quu_passive_topRight.cols(), dimu);
 
   EXPECT_EQ(kkt_mat.Qaa.rows(), dimv);
   EXPECT_EQ(kkt_mat.Qaa.cols(), dimv);
@@ -85,33 +80,21 @@ void SplitKKTMatrixTest::test(const Robot& robot, const ContactStatus& contact_s
   if (robot.hasFloatingBase()) {
     EXPECT_EQ(kkt_mat.Fqq_prev.rows(), dimv);
     EXPECT_EQ(kkt_mat.Fqq_prev.cols(), dimv);
-    EXPECT_EQ(kkt_mat.Fqq_inv.rows(), 6);
-    EXPECT_EQ(kkt_mat.Fqq_inv.cols(), 6);
-    EXPECT_EQ(kkt_mat.Fqq_prev_inv.rows(), 6);
-    EXPECT_EQ(kkt_mat.Fqq_prev_inv.cols(), 6);
   }
   else {
     EXPECT_EQ(kkt_mat.Fqq_prev.rows(), 0);
     EXPECT_EQ(kkt_mat.Fqq_prev.cols(), 0);
-    EXPECT_EQ(kkt_mat.Fqq_inv.rows(), 0);
-    EXPECT_EQ(kkt_mat.Fqq_inv.cols(), 0);
-    EXPECT_EQ(kkt_mat.Fqq_prev_inv.rows(), 0);
-    EXPECT_EQ(kkt_mat.Fqq_prev_inv.cols(), 0);
   }
 
   EXPECT_TRUE(kkt_mat.Fxx.isZero());
   EXPECT_TRUE(kkt_mat.Fvu.isZero());
   EXPECT_TRUE(kkt_mat.Qxx.isZero());
   EXPECT_TRUE(kkt_mat.Qxu.isZero());
-  EXPECT_TRUE(kkt_mat.Qxu_passive.isZero());
   EXPECT_TRUE(kkt_mat.Quu.isZero());
-  EXPECT_TRUE(kkt_mat.Quu_passive_topRight.isZero());
   EXPECT_TRUE(kkt_mat.Qaa.isZero());
   EXPECT_TRUE(kkt_mat.Qff().isZero());
   EXPECT_TRUE(kkt_mat.Qqf().isZero());
   EXPECT_TRUE(kkt_mat.Fqq_prev.isZero());
-  EXPECT_TRUE(kkt_mat.Fqq_inv.isZero());
-  EXPECT_TRUE(kkt_mat.Fqq_prev_inv.isZero());
 
   kkt_mat.Fxx.setRandom();
   kkt_mat.Qxx.setRandom();
@@ -136,7 +119,6 @@ void SplitKKTMatrixTest::testIsApprox(const Robot& robot, const ContactStatus& c
   const int dimu = robot.dimu();
   const int dimx = 2 * robot.dimv();
   const int dimf = contact_status.dimf();
-  const int dim_passive = robot.dim_passive();
 
   kkt_mat.Fxx.setRandom();
   kkt_mat.Fvu.setRandom();

@@ -59,7 +59,7 @@ TEST_F(TerminalUnconstrParNMPCTest, linearizeOCP) {
   double stage_cost = cost->quadratizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref, kkt_matrix_ref);
   stage_cost += cost->quadratizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref, kkt_matrix_ref);
   constraints->condenseSlackAndDual(robot, constraints_data, dt, s, kkt_matrix_ref, kkt_residual_ref);
-  stateequation::linearizeBackwardEulerTerminal(robot, dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
+  unconstr::stateequation::linearizeBackwardEulerTerminal(dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
   ud.linearizeUnconstrDynamics(robot, dt, s, kkt_residual_ref);
   ud.condenseUnconstrDynamics(kkt_matrix_ref, kkt_residual_ref);
@@ -67,9 +67,10 @@ TEST_F(TerminalUnconstrParNMPCTest, linearizeOCP) {
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
   auto d = SplitDirection::Random(robot);
   auto d_ref = d;
-  parnmpc.computeCondensedDirection(dt, s, kkt_matrix, kkt_residual, d);
+  parnmpc.expandPrimalAndDual(dt, s, kkt_matrix, kkt_residual, d);
   constraints->expandSlackAndDual(constraints_data, s, d_ref);
-  ud.computeCondensedDirection(dt, kkt_matrix_ref, kkt_residual_ref, d_ref);
+  ud.expandPrimal(d_ref);
+  ud.expandDual(dt, kkt_matrix_ref, kkt_residual_ref, d_ref);
   EXPECT_TRUE(d.isApprox(d_ref));
   EXPECT_DOUBLE_EQ(parnmpc.maxPrimalStepSize(), constraints->maxSlackStepSize(constraints_data));
   EXPECT_DOUBLE_EQ(parnmpc.maxDualStepSize(), constraints->maxDualStepSize(constraints_data));
@@ -103,14 +104,14 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTResidual) {
   double stage_cost = cost->linearizeStageCost(robot, cost_data, t, dt, s, kkt_residual_ref);
   stage_cost += cost->linearizeTerminalCost(robot, cost_data, t, s, kkt_residual_ref);
   constraints->linearizePrimalAndDualResidual(robot, constraints_data, dt, s, kkt_residual_ref);
-  stateequation::linearizeBackwardEulerTerminal(robot, dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
+  unconstr::stateequation::linearizeBackwardEulerTerminal(dt, s_prev.q, s_prev.v, s, kkt_matrix_ref, kkt_residual_ref);
   UnconstrDynamics ud(robot);
   ud.linearizeUnconstrDynamics(robot, dt, s, kkt_residual_ref);
   double kkt_error_ref = 0;
   kkt_error_ref += kkt_residual_ref.lx.squaredNorm();
   kkt_error_ref += kkt_residual_ref.la.squaredNorm();
   kkt_error_ref += kkt_residual_ref.lu.squaredNorm();
-  kkt_error_ref += stateequation::squaredNormStateEuqationResidual(kkt_residual_ref);
+  kkt_error_ref += unconstr::stateequation::squaredNormStateEuqationResidual(kkt_residual_ref);
   kkt_error_ref += ud.squaredNormUnconstrDynamicsResidual(dt);
   kkt_error_ref += dt * dt * constraints->squaredNormPrimalAndDualResidual(constraints_data);
   EXPECT_DOUBLE_EQ(kkt_error_ref, parnmpc.squaredNormKKTResidual(kkt_residual, dt));
@@ -142,13 +143,13 @@ TEST_F(TerminalUnconstrParNMPCTest, costAndConstraintViolation) {
   stage_cost_ref += dt * constraints->costSlackBarrier(constraints_data, step_size);
   EXPECT_DOUBLE_EQ(stage_cost, stage_cost_ref);
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
-  stateequation::computeBackwardEulerResidual(robot, dt, s_prev.q, s_prev.v,
-                                              s, kkt_residual_ref);
+  unconstr::stateequation::computeBackwardEulerResidual(dt, s_prev.q, s_prev.v,
+                                                        s, kkt_residual_ref);
   UnconstrDynamics cd(robot);
   cd.computeUnconstrDynamicsResidual(robot, s);
   double constraint_violation_ref = 0;
   constraint_violation_ref += dt * constraints->l1NormPrimalResidual(constraints_data);
-  constraint_violation_ref += stateequation::l1NormStateEuqationResidual(kkt_residual_ref);
+  constraint_violation_ref += unconstr::stateequation::l1NormStateEuqationResidual(kkt_residual_ref);
   constraint_violation_ref += cd.l1NormUnconstrDynamicsResidual(dt);
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));

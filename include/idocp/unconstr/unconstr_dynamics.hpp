@@ -56,6 +56,13 @@ public:
   UnconstrDynamics& operator=(UnconstrDynamics&&) noexcept = default;
 
   ///
+  /// @brief Computes the residual in the unconstrained dynamics constraint. 
+  /// @param[in] robot Robot model. 
+  /// @param[in] s Split solution of this time stage.
+  ///
+  void computeUnconstrDynamicsResidual(Robot& robot, const SplitSolution& s);
+
+  ///
   /// @brief Linearizes the unconstrained dynamics constraint. 
   /// @param[in] robot Robot model. 
   /// @param[in] dt Time step of this time stage. 
@@ -75,24 +82,23 @@ public:
                                 SplitKKTResidual& kkt_residual);
 
   ///
-  /// @brief Computes the Newton direction of the condensed variables of this 
-  /// time stage.
+  /// @brief Expands the primal variables, i.e., computes the Newton direction 
+  /// of the condensed primal variable (control input torques) of this stage.
+  /// @param[in, out] d Split direction of this time stage.
+  /// 
+  void expandPrimal(SplitDirection& d) const;
+
+  ///
+  /// @brief Expands the dual variables, i.e., computes the Newton direction 
+  /// of the condensed dual variable (Lagrange multiplier) of this stage.
   /// @param[in] dt Time step of this time stage. 
   /// @param[in] kkt_matrix Split KKT matrix of this time stage.
   /// @param[in] kkt_residual Split KKT residual of this time stage.
   /// @param[in, out] d Split direction of this time stage.
   /// 
-  void computeCondensedDirection(const double dt, 
-                                 const SplitKKTMatrix& kkt_matrix, 
-                                 const SplitKKTResidual& kkt_residual, 
-                                 SplitDirection& d);
-
-  ///
-  /// @brief Computes the residual in the unconstrained dynamics constraint. 
-  /// @param[in] robot Robot model. 
-  /// @param[in] s Split solution of this time stage.
-  ///
-  void computeUnconstrDynamicsResidual(Robot& robot, const SplitSolution& s);
+  static void expandDual(const double dt, const SplitKKTMatrix& kkt_matrix, 
+                         const SplitKKTResidual& kkt_residual, 
+                         SplitDirection& d);
 
   ///
   /// @brief Returns l1-norm of the residual in the unconstrained dynamics 
@@ -127,10 +133,6 @@ private:
   Eigen::MatrixXd dID_dq_, dID_dv_, dID_da_, Quu_, Quu_dID_dq_, Quu_dID_dv_, 
                   Quu_dID_da_;
   int dimv_;
-
-  void linearizeInverseDynamics(Robot& robot, const SplitSolution& s);
-
-  void computeInverseDynamicsResidual(Robot& robot, const SplitSolution& s);
 
 };
 

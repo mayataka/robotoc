@@ -8,10 +8,10 @@
 
 namespace idocp {
 
-  ///
-  /// @class ContactStatus
-  /// @brief Contact status of robot model.
-  ///
+///
+/// @class ContactStatus
+/// @brief Contact status of robot model.
+///
 class ContactStatus {
 public:
   ///
