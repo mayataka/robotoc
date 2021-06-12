@@ -255,7 +255,7 @@ void ConfigurationSpaceCost::computeStageCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, const double dt, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
+    robot.dSubtractConfiguration_dqf(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
         += dt * data.J_qdiff.transpose() * q_weight_.asDiagonal() * data.qdiff;
   }
@@ -301,7 +301,7 @@ void ConfigurationSpaceCost::computeTerminalCostDerivatives(
     Robot& robot, CostFunctionData& data, const double t, 
     const SplitSolution& s, SplitKKTResidual& kkt_residual) const {
   if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
+    robot.dSubtractConfiguration_dqf(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
         += data.J_qdiff.transpose() * qf_weight_.asDiagonal() * data.qdiff;
   }
@@ -344,7 +344,7 @@ void ConfigurationSpaceCost::computeImpulseCostDerivatives(
     const ImpulseSplitSolution& 
     s, ImpulseSplitKKTResidual& kkt_residual) const {
   if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationPlus(s.q, q_ref_, data.J_qdiff);
+    robot.dSubtractConfiguration_dqf(s.q, q_ref_, data.J_qdiff);
     kkt_residual.lq().noalias()
         += data.J_qdiff.transpose() * qi_weight_.asDiagonal() * data.qdiff;
   }

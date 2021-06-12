@@ -10,9 +10,7 @@ namespace idocp {
 
 inline SplitSwitchingConstraintJacobian::SplitSwitchingConstraintJacobian(
     const Robot& robot)
-  : dintegrate_dq(),
-    dintegrate_dv(),
-    Pq_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
+  : Pq_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     Phix_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), 2*robot.dimv())),
     Phia_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimv())),
     Phiu_full_(Eigen::MatrixXd::Zero(robot.max_dimf(), robot.dimu())),
@@ -21,19 +19,11 @@ inline SplitSwitchingConstraintJacobian::SplitSwitchingConstraintJacobian(
     dimx_(2*robot.dimv()),
     dimu_(robot.dimu()),
     dimi_(0) {
-  if (robot.hasFloatingBase()) {
-    dintegrate_dq.resize(robot.dimv(), robot.dimv());
-    dintegrate_dq.setZero();
-    dintegrate_dv.resize(robot.dimv(), robot.dimv());
-    dintegrate_dv.setZero();
-  }
 }
 
 
 inline SplitSwitchingConstraintJacobian::SplitSwitchingConstraintJacobian()
-  : dintegrate_dq(),
-    dintegrate_dv(),
-    Pq_full_(),
+  : Pq_full_(),
     Phix_full_(),
     Phia_full_(),
     Phiu_full_(),
@@ -127,8 +117,6 @@ inline Eigen::Block<Eigen::MatrixXd> SplitSwitchingConstraintJacobian::Phiu() {
 
 
 inline void SplitSwitchingConstraintJacobian::setZero() {
-  dintegrate_dq.setZero();
-  dintegrate_dv.setZero();
   Pq().setZero();
   Phix().setZero();
   Phia().setZero();
@@ -138,17 +126,6 @@ inline void SplitSwitchingConstraintJacobian::setZero() {
 
 inline int SplitSwitchingConstraintJacobian::dimi() const {
   return dimi_;
-}
-
-
-inline bool SplitSwitchingConstraintJacobian::isDimensionConsistent() const {
-  if (has_floating_base_) {
-    if(dintegrate_dq.rows() != dimv_) return false;
-    if(dintegrate_dq.cols() != dimv_) return false;
-    if(dintegrate_dv.rows() != dimv_) return false;
-    if(dintegrate_dv.cols() != dimv_) return false;
-  }
-  return true;
 }
 
 

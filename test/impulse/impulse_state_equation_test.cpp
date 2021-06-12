@@ -81,8 +81,8 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   robot.subtractConfiguration(s.q, s_next.q, qdiff);
   Eigen::MatrixXd dsubtract_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd dsubtract_dq_prev = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  robot.dSubtractdConfigurationPlus(s.q, s_next.q, dsubtract_dq);
-  robot.dSubtractdConfigurationMinus(q_prev, s.q, dsubtract_dq_prev);
+  robot.dSubtractConfiguration_dqf(s.q, s_next.q, dsubtract_dq);
+  robot.dSubtractConfiguration_dq0(q_prev, s.q, dsubtract_dq_prev);
   EXPECT_TRUE(kkt_residual.Fq().isApprox((qdiff)));
   EXPECT_TRUE(kkt_residual.Fv().isApprox((s.v+s.dv-s_next.v)));
   EXPECT_TRUE(kkt_residual.lq().isApprox((dsubtract_dq.transpose()*s_next.lmd+dsubtract_dq_prev.transpose()*s.lmd)));
@@ -100,7 +100,7 @@ TEST_F(ImpulseStateEquationTest, floatingBase) {
   state_equation.linearizeForwardEulerLieDerivative(robot, q_prev, s, s_next, 
                                                     kkt_matrix, kkt_residual);
   const Eigen::MatrixXd dsubtract_dq_prev_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();
-  robot.dSubtractdConfigurationMinus(s.q, s_next.q, dsubtract_dq_prev);
+  robot.dSubtractConfiguration_dq0(s.q, s_next.q, dsubtract_dq_prev);
   Eigen::MatrixXd dsubtract_dq_inv = dsubtract_dq_prev.topLeftCorner(6, 6).inverse();
   Eigen::MatrixXd Fqq_ref = dsubtract_dq;
   Fqq_ref.topLeftCorner(6, 6) 

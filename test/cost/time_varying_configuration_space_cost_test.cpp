@@ -121,7 +121,7 @@ void TimeVaryingConfigurationSpaceCostTest::testStageCost(Robot& robot) const {
   cost->computeStageCostDerivatives(robot, data, t, dt, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
+    robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
     kkt_res_ref.lq() += dt * Jq_diff.transpose() * q_weight.asDiagonal() * q_diff;
   }
   else {
@@ -182,7 +182,7 @@ void TimeVaryingConfigurationSpaceCostTest::testTerminalCost(Robot& robot) const
   cost->computeTerminalCostDerivatives(robot, data, t, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
+    robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
     kkt_res_ref.lq() += Jq_diff.transpose() * qf_weight.asDiagonal() * q_diff;
   }
   else {
@@ -243,7 +243,7 @@ void TimeVaryingConfigurationSpaceCostTest::testImpulseCost(Robot& robot) const 
   cost->computeImpulseCostDerivatives(robot, data, t, s, kkt_res);
   Eigen::MatrixXd Jq_diff = Eigen::MatrixXd::Zero(dimv, dimv);
   if (robot.hasFloatingBase()) {
-    robot.dSubtractdConfigurationPlus(s.q, q_ref, Jq_diff);
+    robot.dSubtractConfiguration_dqf(s.q, q_ref, Jq_diff);
     kkt_res_ref.lq() += Jq_diff.transpose() * qi_weight.asDiagonal() * q_diff;
   }
   else {

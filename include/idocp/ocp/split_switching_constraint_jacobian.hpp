@@ -139,22 +139,6 @@ public:
   const Eigen::Block<const Eigen::MatrixXd> Phiu() const;
 
   ///
-  /// @brief Jacobian of the integration on Lie group. Used for computing 
-  /// the Jacobian of the switching constraints if the system has a floating 
-  /// base. Size is Robot::dimv() x Robot::dimv() if Robot::hasFloatingBase() 
-  /// is true. Otherwise, size is 0 x 0.
-  ///
-  Eigen::MatrixXd dintegrate_dq;
-
-  ///
-  /// @brief Jacobian of the integration on Lie group. Used for computing 
-  /// the Jacobian of the switching constraints if the system has a floating 
-  /// base. Size is Robot::dimv() x Robot::dimv() if Robot::hasFloatingBase() 
-  /// is true. Otherwise, size is 0 x 0.
-  ///
-  Eigen::MatrixXd dintegrate_dv;
-
-  ///
   /// @brief Set the all components zero.
   ///
   void setZero();
@@ -165,12 +149,6 @@ public:
   /// @return Dimension of the stack of impulse forces.
   ///
   int dimi() const;
-
-  ///
-  /// @brief Checks dimensional consistency of each component. 
-  /// @return true if the dimension is consistent. false if not.
-  ///
-  bool isDimensionConsistent() const;
 
   ///
   /// @brief Checks the equivalence of two SplitSwitchingConstraintJacobian.

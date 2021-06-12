@@ -23,16 +23,12 @@ inline void linearizeSwitchingConstraint(
                                      switch_residual);
   robot.computeContactPositionDerivative(impulse_status, switch_jacobian.Pq());
   if (robot.hasFloatingBase()) {
-    robot.dIntegratedConfiguration(s.q, switch_residual.dq_pred, 
-                                   switch_jacobian.dintegrate_dq);
-    robot.dIntegratedVelocity(s.q, switch_residual.dq_pred, 
-                              switch_jacobian.dintegrate_dv);
-    switch_jacobian.Phiq().noalias() 
-        = switch_jacobian.Pq() * switch_jacobian.dintegrate_dq;
-    switch_jacobian.Phiv().noalias() 
-        = (dt1+dt2) * switch_jacobian.Pq() * switch_jacobian.dintegrate_dv;
-    switch_jacobian.Phia().noalias() 
-        = (dt1*dt2) * switch_jacobian.Pq() * switch_jacobian.dintegrate_dv;
+    robot.dIntegrateTransport_dq(s.q, switch_residual.dq_pred, 
+                                 switch_jacobian.Pq(), switch_jacobian.Phiq());
+    robot.dIntegrateTransport_dv(s.q, switch_residual.dq_pred, 
+                                 switch_jacobian.Pq(), switch_jacobian.Phiv());
+    switch_jacobian.Phia() = (dt1*dt2) * switch_jacobian.Phiv();
+    switch_jacobian.Phiv().array() *= (dt1+dt2);
   }
   else {
     switch_jacobian.Phiq() = switch_jacobian.Pq();

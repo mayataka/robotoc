@@ -47,8 +47,6 @@ protected:
   void testComputeJointForcesFromContactForce(pinocchio::Model& model, 
                                               pinocchio::Data& data, 
                                               const int contact_frame_id) const;
-  void testGetContactJacobian(pinocchio::Model& model, pinocchio::Data& data, 
-                              const int contact_frame_id) const;
   void testBaumgarteResidual(pinocchio::Model& model, pinocchio::Data& data, 
                               const int contact_frame_id) const;
   void testBaumgarteDerivative(pinocchio::Model& model, pinocchio::Data& data, 
@@ -102,43 +100,6 @@ void PointContactTest::testComputeJointForcesFromContactForce(
   for (int i=0; i<fjoint.size(); ++i) {
     EXPECT_TRUE(fjoint[i].isApprox(fjoint_ref[i]));
   }
-}
-
-
-void PointContactTest::testGetContactJacobian(
-    pinocchio::Model& model, pinocchio::Data& data, const int contact_frame_id) const {
-  PointContact contact(model, contact_frame_id, baumgarte_weight_on_velocity, baumgarte_weight_on_position);
-  const Eigen::VectorXd q = pinocchio::randomConfiguration(
-      model, -Eigen::VectorXd::Ones(model.nq), Eigen::VectorXd::Ones(model.nq));
-  const int dimv = model.nv;
-  pinocchio::forwardKinematics(model, data, q);
-  pinocchio::computeJointJacobians(model, data, q);
-  Eigen::MatrixXd J = Eigen::MatrixXd::Zero(3, dimv);
-  Eigen::MatrixXd J_trans = Eigen::MatrixXd::Zero(dimv, 3);
-  Eigen::MatrixXd J_ref = Eigen::MatrixXd::Zero(6, dimv);
-  contact.getContactJacobian(model, data, J);
-  pinocchio::getFrameJacobian(model, data, contact_frame_id, pinocchio::LOCAL, J_ref);
-  EXPECT_TRUE(J.isApprox(J_ref.topRows(3)));
-  const bool transpose = true;
-  contact.getContactJacobian(model, data, J_trans, transpose);
-  EXPECT_TRUE(J_trans.isApprox(J_ref.topRows(3).transpose()));
-  const int block_rows_begin = rand() % 5;
-  const int block_cols_begin = rand() % 5;
-  Eigen::MatrixXd J_block 
-      = Eigen::MatrixXd::Zero(3+2*block_rows_begin, dimv+2*block_cols_begin);
-  contact.getContactJacobian(model, data, J_block.block(block_rows_begin, 
-                                                         block_cols_begin,
-                                                         3, dimv));
-  EXPECT_TRUE(J_block.block(block_rows_begin, block_cols_begin, 3, dimv).
-              isApprox(J));
-  Eigen::MatrixXd J_trans_block 
-      = Eigen::MatrixXd::Zero(dimv+2*block_cols_begin, 3+2*block_rows_begin);
-  contact.getContactJacobian(model, data, J_trans_block.block(block_cols_begin, 
-                                                               block_rows_begin,
-                                                               dimv, 3), transpose);
-  EXPECT_TRUE(J_block.isApprox(J_trans_block.transpose()));
-  J_block.block(block_rows_begin, block_cols_begin, 3, dimv) -= J;
-  EXPECT_TRUE(J_block.isZero());
 }
 
 
@@ -349,7 +310,6 @@ TEST_F(PointContactTest, test) {
     pinocchio::Data data = fixed_base_data;
     testConstructor(robot, data, frame);
     testComputeJointForcesFromContactForce(robot, data, frame);
-    testGetContactJacobian(robot, data, frame);
     testBaumgarteResidual(robot, data, frame);
     testBaumgarteDerivative(robot, data, frame);
     testContactVelocityResidual(robot, data, frame);
@@ -362,7 +322,6 @@ TEST_F(PointContactTest, test) {
     pinocchio::Data data = floating_base_data;
     testConstructor(robot, data, frame);
     testComputeJointForcesFromContactForce(robot, data, frame);
-    testGetContactJacobian(robot, data, frame);
     testBaumgarteResidual(robot, data, frame);
     testBaumgarteDerivative(robot, data, frame);
     testContactVelocityResidual(robot, data, frame);

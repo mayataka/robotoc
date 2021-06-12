@@ -74,7 +74,7 @@ TEST_F(TerminalStateEquationTest, floatingBase) {
   Eigen::VectorXd qdiff = Eigen::VectorXd::Zero(robot.dimv());
   Eigen::MatrixXd dsubtract_dq = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
   Eigen::MatrixXd dsubtract_dq_prev = Eigen::MatrixXd::Zero(robot.dimv(), robot.dimv());
-  robot.dSubtractdConfigurationMinus(q_prev, s.q, dsubtract_dq_prev);
+  robot.dSubtractConfiguration_dq0(q_prev, s.q, dsubtract_dq_prev);
   EXPECT_TRUE(kkt_residual.Fq().isZero());
   EXPECT_TRUE(kkt_residual.Fv().isZero());
   EXPECT_TRUE(kkt_residual.lq().isApprox((dsubtract_dq_prev.transpose()*s.lmd)));

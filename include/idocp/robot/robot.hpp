@@ -130,84 +130,86 @@ public:
       const Eigen::MatrixBase<ConfigVectorType2>& q_integrated) const;
 
   ///
-  /// @brief Computes the partial derivative of the function of integration
-  /// \f[ q \oplus v. \f]
-  /// with respect to q at its tangent space. 
+  /// @brief Transport the Jacobian w.r.t. the configuration evaluated at 
+  /// the integrated configuration q + v to q. 
   /// @param[in] q Configuration. Size must be Robot::dimq().
-  /// @param[in] v Generalized velocity. Size must be Robot::dimq().
-  /// @param[out] dintegrate_dq The partial derivative of the integration. 
-  /// Size must be Robot::dimv() x Robot::dimv().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
+  /// @param[in] Jin The Jacobian w.r.t. the configuration evaluated at 
+  /// q + v. Cols must be Robot::dimv().
+  /// @param[out] Jout The resultant Jacobian w.r.t. the configuration evaluated 
+  /// at q. The number of columns must be Robot::dimv().
   ///
   template <typename ConfigVectorType, typename TangentVectorType, 
-            typename MatrixType>
-  void dIntegratedConfiguration(
+            typename MatrixType1, typename MatrixType2>
+  void dIntegrateTransport_dq(
       const Eigen::MatrixBase<ConfigVectorType>& q,
       const Eigen::MatrixBase<TangentVectorType>& v,
-      const Eigen::MatrixBase<MatrixType>& dintegrate_dq) const;
+      const Eigen::MatrixBase<MatrixType1>& Jin,
+      const Eigen::MatrixBase<MatrixType2>& Jout) const;
 
   ///
-  /// @brief Computes the partial derivative of the function of integration
-  /// \f[ q \oplus v. \f]
-  /// with respect to v at its tangent space. 
+  /// @brief Transport the Jacobian w.r.t. the generalized velocity evaluated at 
+  /// the integrated configuration q + v to q. 
   /// @param[in] q Configuration. Size must be Robot::dimq().
-  /// @param[in] v Generalized velocity. Size must be Robot::dimq().
-  /// @param[out] dintegrate_dv The partial derivative of the integration. 
-  /// Size must be Robot::dimv() x Robot::dimv().
+  /// @param[in] v Generalized velocity. Size must be Robot::dimv().
+  /// @param[in] Jin The Jacobian w.r.t. the generalized velocity evaluated at 
+  /// q + v. Cols must be Robot::dimv().
+  /// @param[out] Jout The resultant Jacobian w.r.t. the generalized velocity 
+  /// evaluated at q. The number of columns must be Robot::dimv().
   ///
   template <typename ConfigVectorType, typename TangentVectorType, 
-            typename MatrixType>
-  void dIntegratedVelocity(
+            typename MatrixType1, typename MatrixType2>
+  void dIntegrateTransport_dv(
       const Eigen::MatrixBase<ConfigVectorType>& q,
       const Eigen::MatrixBase<TangentVectorType>& v,
-      const Eigen::MatrixBase<MatrixType>& dintegrate_dv) const;
+      const Eigen::MatrixBase<MatrixType1>& Jin,
+      const Eigen::MatrixBase<MatrixType2>& Jout) const;
 
   ///
-  /// @brief Computes 
-  /// \f[ q_{\rm plus} \ominus q_{\rm minus}. \f]
-  /// at the tangent space. 
-  /// @param[in] q_plus Configuration. Size must be Robot::dimq().
-  /// @param[in] q_minus Configuration. Size must be Robot::dimq().
-  /// @param[out] difference Difference of the configurations. Size must be 
+  /// @brief Computes \f[ qf \ominus q0. \f] at the tangent space. 
+  /// The result means that the unit velocity from initial configuration
+  /// q0 to terminal configuration qf.
+  /// @param[in] qf Terminal configuration. Size must be Robot::dimq().
+  /// @param[in] q0 Initial configuration. Size must be Robot::dimq().
+  /// @param[out] qdiff Difference of the configurations, qf - q0. Size must be 
   /// Robot::dimv().
   ///
   template <typename ConfigVectorType1, typename ConfigVectorType2, 
             typename TangentVectorType>
   void subtractConfiguration(
-      const Eigen::MatrixBase<ConfigVectorType1>& q_plus, 
-      const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
-      const Eigen::MatrixBase<TangentVectorType>& difference) const;
+      const Eigen::MatrixBase<ConfigVectorType1>& qf, 
+      const Eigen::MatrixBase<ConfigVectorType2>& q0,
+      const Eigen::MatrixBase<TangentVectorType>& qdiff) const;
 
   ///
   /// @brief Computes the partial derivative of the function of subtraction
-  /// \f[ q_{\rm plus} \ominus q_{\rm minus}. \f]
-  /// with respect to q_plus. 
-  /// @param[in] q_plus Configuration. Size must be Robot::dimq().
-  /// @param[in] q_minus Configuration. Size must be Robot::dimq().
-  /// @param[out] dsubtract_dqplus The partial derivative of the subtraction. 
+  /// \f[ qf \ominus q0. \f] w.r.t. the terminal configuration qf. 
+  /// @param[in] qf Terminal configuration. Size must be Robot::dimq().
+  /// @param[in] q0 Initial configuration. Size must be Robot::dimq().
+  /// @param[out] dqdiff_dqf The partial derivative of the subtraction.
   /// Size must be Robot::dimv() x Robot::dimv().
   ///
   template <typename ConfigVectorType1, typename ConfigVectorType2, 
             typename MatrixType>
-  void dSubtractdConfigurationPlus(
-      const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
-      const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
-      const Eigen::MatrixBase<MatrixType>& dsubtract_dqplus) const;
+  void dSubtractConfiguration_dqf(
+      const Eigen::MatrixBase<ConfigVectorType1>& qf,
+      const Eigen::MatrixBase<ConfigVectorType2>& q0,
+      const Eigen::MatrixBase<MatrixType>& dqdiff_dqf) const;
 
   ///
   /// @brief Computes the partial derivative of the function of subtraction
-  /// \f[ q_{\rm plus} \ominus q_{\rm minus}. \f]
-  /// with respect to q_minus. 
-  /// @param[in] q_plus Configuration. Size must be Robot::dimq().
-  /// @param[in] q_minus Configuration. Size must be Robot::dimq().
-  /// @param[out] dsubtract_dqminus The partial derivative of the subtraction. 
+  /// \f[ qf \ominus q0. \f] w.r.t. the initial configuration qf. 
+  /// @param[in] qf Terminal configuration. Size must be Robot::dimq().
+  /// @param[in] q0 Initial configuration. Size must be Robot::dimq().
+  /// @param[out] dqdiff_dq0 The partial derivative of the subtraction.
   /// Size must be Robot::dimv() x Robot::dimv().
   ///
   template <typename ConfigVectorType1, typename ConfigVectorType2, 
             typename MatrixType>
-  void dSubtractdConfigurationMinus(
-      const Eigen::MatrixBase<ConfigVectorType1>& q_plus,
-      const Eigen::MatrixBase<ConfigVectorType2>& q_minus,
-      const Eigen::MatrixBase<MatrixType>& dsubtract_dqminus) const;
+  void dSubtractConfiguration_dq0(
+      const Eigen::MatrixBase<ConfigVectorType1>& qf,
+      const Eigen::MatrixBase<ConfigVectorType2>& q0,
+      const Eigen::MatrixBase<MatrixType>& dqdiff_dq0) const;
 
   ///
   /// @brief Updates the kinematics of the robot. The frame placements, frame 
@@ -486,20 +488,6 @@ public:
       const Eigen::MatrixBase<TangentVectorType>& dv, 
       const Eigen::MatrixBase<MatrixType1>& dRNEA_partial_dq, 
       const Eigen::MatrixBase<MatrixType2>& dRNEA_partial_ddv);
-
-  ///
-  /// @brief Computes the partial dervative of the function of inverse dynamics 
-  /// with respect to the contact forces. Before calling this function, call 
-  /// updateKinematics().
-  /// @param[in] contact_status Current contact status.
-  /// @param[out] dRNEA_partial_dfext The partial derivative of inverse dynamics 
-  /// with respect to the contact forces. Rows must be at least Robot::dimf(). 
-  /// Cols must be Robot::dimv().
-  ///   
-  template <typename MatrixType>
-  void dRNEAPartialdFext(
-      const ContactStatus& contact_status,
-      const Eigen::MatrixBase<MatrixType>& dRNEA_partial_dfext);
 
   ///
   /// @brief Computes the inverse of the joint inertia matrix M.
