@@ -64,7 +64,7 @@ public:
   /// @brief Initializes the priaml-dual interior point method for inequality 
   /// constraints. 
   /// @param[in, out] ocp Optimal control problem.
-  /// @param[in] robots std::vector of Robot.
+  /// @param[in] robots aligned_vector of Robot.
   /// @param[in] contact_sequence Contact sequence. 
   /// @param[in] s Solution. 
   ///
@@ -75,7 +75,7 @@ public:
   ///
   /// @brief Linearizes the optimal control problem in parallel. 
   /// @param[in, out] ocp Optimal control problem.
-  /// @param[in] robots std::vector of Robot.
+  /// @param[in] robots aligned_vector of Robot.
   /// @param[in] contact_sequence Contact sequence. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
@@ -92,7 +92,7 @@ public:
   ///
   /// @brief Computes the KKT residual of optimal control problem in parallel. 
   /// @param[in, out] ocp Optimal control problem.
-  /// @param[in] robots std::vector of Robot.
+  /// @param[in] robots aligned_vector of Robot.
   /// @param[in] contact_sequence Contact sequence. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
@@ -116,7 +116,7 @@ public:
   ///
   /// @brief Computes the initial state direction.
   /// @param[in] ocp Optimal control problem.
-  /// @param[in] robots std::vector of Robot.
+  /// @param[in] robots aligned_vector of Robot.
   /// @param[in] q0 Initial configuration. 
   /// @param[in] v0 Initial generalized velocity. 
   /// @param[in] s Solution. 
@@ -131,7 +131,7 @@ public:
   ///
   /// @brief Integrates the solution in parallel.
   /// @param[in, out] ocp Optimal control problem.
-  /// @param[in] robots std::vector of Robot.
+  /// @param[in] robots aligned_vector of Robot.
   /// @param[in] primal_step_size Primal step size.
   /// @param[in] dual_step_size Dual step size.
   /// @param[in, out] d Direction. 

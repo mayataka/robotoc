@@ -1,8 +1,6 @@
 #ifndef IDOCP_LINE_SEARCH_HPP_
 #define IDOCP_LINE_SEARCH_HPP_
 
-#include <vector>
-
 #include "Eigen/Core"
 
 #include "idocp/robot/robot.hpp"
@@ -71,7 +69,7 @@ public:
   ///
   /// @brief Compute primal step size by fliter line search method. 
   /// @param[in, out] ocp optimal control problem.
-  /// @param[in] robots std::vector of Robot.
+  /// @param[in] robots aligned_vector of Robot.
   /// @param[in] contact_sequence Contact sequence. 
   /// @param[in] q Initial configuration.
   /// @param[in] v Initial generalized velocity.
@@ -79,39 +77,11 @@ public:
   /// @param[in] d Direction. 
   /// @param[in] max_primal_step_size Maximum primal step size. 
   ///
-  template <typename OCPType>
-  double computeStepSize(OCPType& ocp, aligned_vector<Robot>& robots,
+  double computeStepSize(OCP& ocp, aligned_vector<Robot>& robots,
                          const ContactSequence& contact_sequence, 
                          const Eigen::VectorXd& q, const Eigen::VectorXd& v, 
                          const Solution& s, const Direction& d,
-                         const double max_primal_step_size) {
-    assert(max_primal_step_size > 0);
-    assert(max_primal_step_size <= 1);
-    // If filter is empty, augment the current solution to the filter.
-    if (filter_.isEmpty()) {
-      computeCostAndViolation(ocp, robots, contact_sequence, q, v, s);
-      filter_.augment(totalCosts(), totalViolations());
-    }
-    double primal_step_size = max_primal_step_size;
-    while (primal_step_size > min_step_size_) {
-      computeSolution(ocp, robots, s, d, primal_step_size);
-      computeCostAndViolation(ocp, robots, contact_sequence, q, v, s_try_,
-                              primal_step_size);
-      const double total_costs = totalCosts();
-      const double total_violations = totalViolations();
-      if (filter_.isAccepted(total_costs, total_violations)) {
-        filter_.augment(total_costs, total_violations);
-        break;
-      }
-      primal_step_size *= step_size_reduction_rate_;
-    }
-    if (primal_step_size > min_step_size_) {
-      return primal_step_size;
-    }
-    else {
-      return min_step_size_;
-    }
-  }
+                         const double max_primal_step_size);
 
   ///
   /// @brief Clear the line search filter. 
@@ -130,7 +100,7 @@ private:
   double step_size_reduction_rate_, min_step_size_;
   Eigen::VectorXd costs_, costs_impulse_, costs_aux_, costs_lift_, violations_, 
                   violations_impulse_, violations_aux_, violations_lift_; 
-  Solution s_try_;
+  Solution s_trial_;
   KKTResidual kkt_residual_;
 
   void computeCostAndViolation(OCP& ocp, aligned_vector<Robot>& robots,
@@ -139,34 +109,36 @@ private:
                                const Eigen::VectorXd& v, const Solution& s,
                                const double primal_step_size_for_barrier=0);
 
-  void computeSolution(const OCP& ocp, const aligned_vector<Robot>& robots, 
-                          const Solution& s, const Direction& d, 
-                          const double step_size);
+  void computeSolutionTrial(const OCP& ocp, const aligned_vector<Robot>& robots, 
+                            const Solution& s, const Direction& d, 
+                            const double step_size);
 
-  static void computeSolution(const Robot& robot, const SplitSolution& s, 
-                              const SplitDirection& d, const double step_size, 
-                              SplitSolution& s_try) {
-    s_try.setContactStatus(s);
-    robot.integrateConfiguration(s.q, d.dq(), step_size, s_try.q);
-    s_try.v = s.v + step_size * d.dv();
-    s_try.a = s.a + step_size * d.da();
-    s_try.u = s.u + step_size * d.du;
+  static void computeSolutionTrial(const Robot& robot, const SplitSolution& s, 
+                                   const SplitDirection& d, 
+                                   const double step_size, 
+                                   SplitSolution& s_trial) {
+    s_trial.setContactStatus(s);
+    robot.integrateConfiguration(s.q, d.dq(), step_size, s_trial.q);
+    s_trial.v = s.v + step_size * d.dv();
+    s_trial.a = s.a + step_size * d.da();
+    s_trial.u = s.u + step_size * d.du;
     if (s.hasActiveContacts()) {
-      s_try.f_stack() = s.f_stack() + step_size * d.df();
-      s_try.set_f_vector();
+      s_trial.f_stack() = s.f_stack() + step_size * d.df();
+      s_trial.set_f_vector();
     }
   }
 
-  static void computeSolution(const Robot& robot, const ImpulseSplitSolution& s, 
-                              const ImpulseSplitDirection& d, 
-                              const double step_size, 
-                              ImpulseSplitSolution& s_try) {
-    s_try.setImpulseStatus(s);
-    robot.integrateConfiguration(s.q, d.dq(), step_size, s_try.q);
-    s_try.v  = s.v  + step_size * d.dv();
-    s_try.dv = s.dv + step_size * d.ddv();
-    s_try.f_stack() = s.f_stack() + step_size * d.df();
-    s_try.set_f_vector();
+  static void computeSolutionTrial(const Robot& robot, 
+                                   const ImpulseSplitSolution& s, 
+                                   const ImpulseSplitDirection& d, 
+                                   const double step_size, 
+                                   ImpulseSplitSolution& s_trial) {
+    s_trial.setImpulseStatus(s);
+    robot.integrateConfiguration(s.q, d.dq(), step_size, s_trial.q);
+    s_trial.v  = s.v  + step_size * d.dv();
+    s_trial.dv = s.dv + step_size * d.ddv();
+    s_trial.f_stack() = s.f_stack() + step_size * d.df();
+    s_trial.set_f_vector();
   }
 
   void clearCosts() {

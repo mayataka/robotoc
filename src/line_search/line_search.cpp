@@ -23,7 +23,7 @@ LineSearch::LineSearch(const Robot& robot, const int N,
     violations_impulse_(Eigen::VectorXd::Zero(max_num_impulse)), 
     violations_aux_(Eigen::VectorXd::Zero(max_num_impulse)), 
     violations_lift_(Eigen::VectorXd::Zero(max_num_impulse)),
-    s_try_(robot, N, max_num_impulse), 
+    s_trial_(robot, N, max_num_impulse), 
     kkt_residual_(robot, N, max_num_impulse) {
 }
 
@@ -42,12 +42,46 @@ LineSearch::LineSearch()
     violations_impulse_(), 
     violations_aux_(), 
     violations_lift_(),
-    s_try_(), 
+    s_trial_(), 
     kkt_residual_() {
 }
 
 
 LineSearch::~LineSearch() {
+}
+
+
+double LineSearch::computeStepSize(OCP& ocp, aligned_vector<Robot>& robots,
+                                   const ContactSequence& contact_sequence, 
+                                   const Eigen::VectorXd& q, 
+                                   const Eigen::VectorXd& v, 
+                                   const Solution& s, const Direction& d, 
+                                   const double max_primal_step_size) {
+  assert(max_primal_step_size > 0);
+  assert(max_primal_step_size <= 1);
+  if (filter_.isEmpty()) {
+    computeCostAndViolation(ocp, robots, contact_sequence, q, v, s);
+    filter_.augment(totalCosts(), totalViolations());
+  }
+  double primal_step_size = max_primal_step_size;
+  while (primal_step_size > min_step_size_) {
+    computeSolutionTrial(ocp, robots, s, d, primal_step_size);
+    computeCostAndViolation(ocp, robots, contact_sequence, q, v, s_trial_,
+                            primal_step_size);
+    const double total_costs = totalCosts();
+    const double total_violations = totalViolations();
+    if (filter_.isAccepted(total_costs, total_violations)) {
+      filter_.augment(total_costs, total_violations);
+      break;
+    }
+    primal_step_size *= step_size_reduction_rate_;
+  }
+  if (primal_step_size > min_step_size_) {
+    return primal_step_size;
+  }
+  else {
+    return min_step_size_;
+  }
 }
 
 
@@ -198,10 +232,10 @@ void LineSearch::computeCostAndViolation(
 }
 
 
-void LineSearch::computeSolution(const OCP& ocp, 
-                                 const aligned_vector<Robot>& robots, 
-                                 const Solution& s, const Direction& d, 
-                                 const double step_size) {
+void LineSearch::computeSolutionTrial(const OCP& ocp, 
+                                      const aligned_vector<Robot>& robots, 
+                                      const Solution& s, const Direction& d, 
+                                      const double step_size) {
   assert(robots.size() == nthreads_);
   assert(step_size > 0);
   assert(step_size <= 1);
@@ -212,25 +246,27 @@ void LineSearch::computeSolution(const OCP& ocp,
   #pragma omp parallel for num_threads(nthreads_)
   for (int i=0; i<N_all; ++i) {
     if (i <= N) {
-      computeSolution(robots[omp_get_thread_num()], s[i], d[i], step_size, 
-                      s_try_[i]);
+      computeSolutionTrial(robots[omp_get_thread_num()], s[i], d[i], step_size, 
+                           s_trial_[i]);
     }
     else if (i < N+1+N_impulse) {
       const int impulse_index = i - (N+1);
-      computeSolution(robots[omp_get_thread_num()], s.impulse[impulse_index], 
-                      d.impulse[impulse_index], step_size, 
-                      s_try_.impulse[impulse_index]);
+      computeSolutionTrial(robots[omp_get_thread_num()], 
+                           s.impulse[impulse_index], 
+                           d.impulse[impulse_index], step_size, 
+                           s_trial_.impulse[impulse_index]);
     }
     else if (i < N+1+2*N_impulse) {
       const int impulse_index  = i - (N+1+N_impulse);
-      computeSolution(robots[omp_get_thread_num()], s.aux[impulse_index], 
-                      d.aux[impulse_index], step_size, 
-                      s_try_.aux[impulse_index]);
+      computeSolutionTrial(robots[omp_get_thread_num()], s.aux[impulse_index], 
+                           d.aux[impulse_index], step_size, 
+                           s_trial_.aux[impulse_index]);
     }
     else {
       const int lift_index = i - (N+1+2*N_impulse);
-      computeSolution(robots[omp_get_thread_num()], s.lift[lift_index], 
-                      d.lift[lift_index], step_size, s_try_.lift[lift_index]);
+      computeSolutionTrial(robots[omp_get_thread_num()], s.lift[lift_index], 
+                           d.lift[lift_index], step_size, 
+                           s_trial_.lift[lift_index]);
     }
   }
 }
