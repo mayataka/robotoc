@@ -153,14 +153,11 @@ inline void SplitUnconstrOCP::updateDual(const double dual_step_size) {
 inline double SplitUnconstrOCP::squaredNormKKTResidual(
     const SplitKKTResidual& kkt_residual, const double dt) const {
   assert(dt > 0);
-  double error = 0;
-  error += kkt_residual.lx.squaredNorm();
-  error += kkt_residual.la.squaredNorm();
-  error += kkt_residual.lu.squaredNorm();
-  error += unconstr::stateequation::squaredNormStateEuqationResidual(kkt_residual);
-  error += unconstr_dynamics_.squaredNormUnconstrDynamicsResidual(dt);
-  error += dt * dt * constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
-  return error;
+  double nrm = 0;
+  nrm += kkt_residual.squaredNormKKTResidual();
+  nrm += (dt*dt) * unconstr_dynamics_.squaredNormKKTResidual();
+  nrm += (dt*dt) * constraints_data_.squaredNormKKTResidual();
+  return nrm;
 }
 
 
@@ -200,9 +197,9 @@ inline double SplitUnconstrOCP::constraintViolation(
                                                        kkt_residual);
   unconstr_dynamics_.computeUnconstrDynamicsResidual(robot, s);
   double violation = 0;
-  violation += unconstr::stateequation::l1NormStateEuqationResidual(kkt_residual);
-  violation += unconstr_dynamics_.l1NormUnconstrDynamicsResidual(dt);
-  violation += dt * constraints_->l1NormPrimalResidual(constraints_data_);
+  violation += kkt_residual.l1NormConstraintViolation();
+  violation += dt * unconstr_dynamics_.l1NormConstraintViolation();
+  violation += dt * constraints_data_.l1NormConstraintViolation();
   return violation;
 }
 

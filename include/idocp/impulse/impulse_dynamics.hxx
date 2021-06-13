@@ -110,13 +110,13 @@ inline void ImpulseDynamics::expandDual(const SplitDirectionType& d_next,
 }
 
 
-inline double ImpulseDynamics::l1NormImpulseDynamicsResidual() const {
-  return data_.ImDC().lpNorm<1>();
+inline double ImpulseDynamics::squaredNormKKTResidual() const {
+  return data_.ImDC().squaredNorm();
 }
 
 
-inline double ImpulseDynamics::squaredNormImpulseDynamicsResidual() const {
-  return data_.ImDC().squaredNorm();
+inline double ImpulseDynamics::l1NormConstraintViolation() const {
+  return data_.ImDC().lpNorm<1>();
 }
 
 } // namespace idocp 

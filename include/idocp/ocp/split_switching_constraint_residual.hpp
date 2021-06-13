@@ -91,6 +91,20 @@ public:
   Eigen::VectorXd dq_pred;
 
   ///
+  /// @brief Returns the squared norm of the KKT residual, that is, 
+  /// the primal and dual residual of the switching constraint. 
+  /// @return Squared norm of the KKT residual in the switching constraint.
+  ///
+  double squaredNormKKTResidual() const;
+
+  ///
+  /// @brief Returns l1-norm of the constraint violation, that is, the primal
+  /// residual in the switchign constraint. 
+  /// @return l1-norm of the constraint violation.
+  ///
+  double l1NormConstraintViolation() const;
+
+  ///
   /// @brief Sets the split KKT residual zero.
   ///
   void setZero();

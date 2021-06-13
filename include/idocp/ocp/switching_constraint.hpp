@@ -48,22 +48,6 @@ void computeSwitchingConstraintResidual(
     const double dt2, const SplitSolution& s, 
     SplitSwitchingConstraintResidual& switch_residual);
 
-///
-/// @brief Returns l1-norm of the residual in the switching constraint. 
-/// @param[in] switch_residual Residual of the switching constraint. 
-/// @return l1-norm of the residual in the switching constraint.
-///
-double l1NormSwitchingConstraintResidual(
-    const SplitSwitchingConstraintResidual& switch_residual);
-
-///
-/// @brief Returns squared norm of the residual in the switching constraint. 
-/// @param[in] switch_residual Residual of the switching constraint. 
-/// @return Squared norm of the residual in the switching constraint.
-///
-double squaredNormSwitchingConstraintResidual(
-    const SplitSwitchingConstraintResidual& switch_residual);
-
 } // namespace switchingconstraint 
 
 } // namespace idocp

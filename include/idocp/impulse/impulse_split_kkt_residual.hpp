@@ -133,6 +133,20 @@ public:
   const Eigen::VectorBlock<const Eigen::VectorXd> lf() const;
 
   ///
+  /// @brief Returns the squared norm of the KKT residual, that is, 
+  /// the primal and dual residual. 
+  /// @return The squared norm of the KKT residual.
+  ///
+  double squaredNormKKTResidual() const;
+
+  ///
+  /// @brief Returns the l1 norm of the constraint violation, that is,
+  /// the primal residual in the state equation. 
+  /// @return The l1 norm of the constraint violation.
+  ///
+  double l1NormConstraintViolation() const;
+
+  ///
   /// @brief Sets the split KKT residual zero.
   ///
   void setZero();

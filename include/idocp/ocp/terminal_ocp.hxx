@@ -130,9 +130,9 @@ inline void TerminalOCP::updateDual(const double step_size) {
 
 inline double TerminalOCP::squaredNormKKTResidual(
     const SplitKKTResidual& kkt_residual) const {
-  double error = 0;
-  error += kkt_residual.lx.squaredNorm();
-  return error;
+  double nrm = 0;
+  nrm += kkt_residual.lx.squaredNorm();
+  return nrm;
 }
 
 

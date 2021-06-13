@@ -133,7 +133,7 @@ double DirectMultipleShooting::KKTError(const OCP& ocp,
     else {
       const int impulse_index = i - (N+1+2*N_impulse+N_lift);
       kkt_error_.coeffRef(i)
-          = kkt_residual.switching[impulse_index].P().squaredNorm();
+          = kkt_residual.switching[impulse_index].squaredNormKKTResidual();
     }
   }
   return std::sqrt(kkt_error_.head(N_all).sum());

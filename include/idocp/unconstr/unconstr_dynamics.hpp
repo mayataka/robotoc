@@ -101,21 +101,19 @@ public:
                          SplitDirection& d);
 
   ///
-  /// @brief Returns l1-norm of the residual in the unconstrained dynamics 
-  /// constraint. 
-  /// @param[in] dt Time step of this time stage. 
-  /// @return l1-norm of the residual in the unconstrained dynamics constraint.
-  ///
-  double l1NormUnconstrDynamicsResidual(const double dt) const;
-
-  ///
-  /// @brief Returns squared norm of the residual in the unconstrained dynamics 
-  /// constraint. 
-  /// @param[in] dt Time step of this time stage. 
+  /// @brief Returns squared norm of the KKT residual, that is, the residual in 
+  /// the unconstrained dynamics constraint. 
   /// @return Squared norm of the residual in the unconstrained dynamics 
   /// constraint.
   ///
-  double squaredNormUnconstrDynamicsResidual(const double dt) const;
+  double squaredNormKKTResidual() const;
+
+  ///
+  /// @brief Returns l1-norm of the constraint violation, that is, the primal
+  /// residual in the unconstrained dynamics constraint. 
+  /// @return l1-norm of the constraint violation.
+  ///
+  double l1NormConstraintViolation() const;
 
   template <typename MatrixType1, typename MatrixType2>
   void getStateFeedbackGain(const Eigen::MatrixBase<MatrixType1>& Ka,

@@ -56,18 +56,6 @@ inline void computeSwitchingConstraintResidual(
                                        switch_residual.P());
 }
 
-
-inline double l1NormSwitchingConstraintResidual(
-    const SplitSwitchingConstraintResidual& switch_residual) {
-  return switch_residual.P().template lpNorm<1>();
-}
-
-
-inline double squaredNormSwitchingConstraintResidual(
-    const SplitSwitchingConstraintResidual& switch_residual) {
-  return switch_residual.P().squaredNorm();
-}
-
 } // namespace switchingconstraint 
 } // namespace idocp
 

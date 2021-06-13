@@ -109,20 +109,6 @@ inline void ImpulseStateEquation::correctCostateDirection(
   }
 }
 
-
-inline double ImpulseStateEquation::l1NormStateEuqationResidual(
-    const ImpulseSplitKKTResidual& kkt_residual) {
-  assert(kkt_residual.isDimensionConsistent());
-  return kkt_residual.Fx.lpNorm<1>();
-}
-
-
-inline double ImpulseStateEquation::squaredNormStateEuqationResidual(
-    const ImpulseSplitKKTResidual& kkt_residual) {
-  assert(kkt_residual.isDimensionConsistent());
-  return kkt_residual.Fx.squaredNorm();
-}
-
 } // namespace idocp 
 
 #endif // IDOCP_IMPULSE_STATE_EQUATION_HXX_

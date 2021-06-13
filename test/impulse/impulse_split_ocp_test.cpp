@@ -71,12 +71,9 @@ void ImpulseSplitOCPTest::testComputeKKTResidual(Robot& robot,
   ImpulseDynamics id(robot);
   robot.updateKinematics(s.q, v_after_impulse);
   id.linearizeImpulseDynamics(robot, impulse_status, s, kkt_residual_ref);
-  const double kkt_error_ref = kkt_residual_ref.Fx.squaredNorm()
-                                + kkt_residual_ref.lx.squaredNorm()
-                                + kkt_residual_ref.ldv.squaredNorm()
-                                + kkt_residual_ref.lf().squaredNorm()
-                                + id.squaredNormImpulseDynamicsResidual()
-                                + constraints->squaredNormPrimalAndDualResidual(constraints_data);
+  const double kkt_error_ref = kkt_residual_ref.squaredNormKKTResidual()
+                                + id.squaredNormKKTResidual()
+                                + constraints_data.squaredNormKKTResidual();
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -170,9 +167,9 @@ void ImpulseSplitOCPTest::testCostAndConstraintViolation(Robot& robot,
   ImpulseDynamics id(robot);
   id.computeImpulseDynamicsResidual(robot, impulse_status, s);
   double constraint_violation_ref = 0;
-  constraint_violation_ref += constraints->l1NormPrimalResidual(constraints_data);
-  constraint_violation_ref += ImpulseStateEquation::l1NormStateEuqationResidual(kkt_residual_ref);
-  constraint_violation_ref += id.l1NormImpulseDynamicsResidual();
+  constraint_violation_ref += kkt_residual_ref.l1NormConstraintViolation();
+  constraint_violation_ref += constraints_data.l1NormConstraintViolation();
+  constraint_violation_ref += id.l1NormConstraintViolation();
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
 }
 

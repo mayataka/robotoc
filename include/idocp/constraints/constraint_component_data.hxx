@@ -54,6 +54,16 @@ inline ConstraintComponentData::~ConstraintComponentData() {
 }
 
 
+inline double ConstraintComponentData::squaredNormKKTResidual() const {
+  return (residual.squaredNorm() + duality.squaredNorm());
+}
+
+
+inline double ConstraintComponentData::l1NormConstraintViolation() const {
+  return residual.template lpNorm<1>();
+}
+
+
 inline int ConstraintComponentData::dimc() const {
   return dimc_;
 }

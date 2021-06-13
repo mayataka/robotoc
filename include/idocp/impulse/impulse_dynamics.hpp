@@ -109,17 +109,19 @@ public:
   void expandDual(const SplitDirectionType& d_next, ImpulseSplitDirection& d);
 
   ///
-  /// @brief Returns l1-norm of the residual in the impulse dynamics constraint. 
-  /// @return l1-norm of the residual in the impulse dynamics constraint.
+  /// @brief Returns the squared norm of the KKT residual, that is, 
+  /// the primal and dual residual of the impulse dynamics constraint. 
+  /// @return Squared norm of the KKT residual in the impulse dynamics 
+  /// constraint.
   ///
-  double l1NormImpulseDynamicsResidual() const;
+  double squaredNormKKTResidual() const;
 
   ///
-  /// @brief Returns squared norm of the residual in the impulse dynamics 
-  /// constraint. 
-  /// @return Squared norm of the residual in the impulse dynamics constraint.
+  /// @brief Returns l1-norm of the constraint violation, that is, the primal
+  /// residual in the impulse dynamics constraint. 
+  /// @return l1-norm of the constraint violation.
   ///
-  double squaredNormImpulseDynamicsResidual() const;
+  double l1NormConstraintViolation() const;
 
 private:
   ImpulseDynamicsData data_;

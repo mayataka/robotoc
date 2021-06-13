@@ -164,8 +164,7 @@ void DirectMultipleShootingTest::testComputeKKTResidual(const Robot& robot) cons
           dt_next, kkt_matrix_ref.switching[impulse_index], 
           kkt_residual_ref.switching[impulse_index]);
       kkt_error_ref += ocp_ref[i].squaredNormKKTResidual(kkt_residual_ref[i], dti);
-      kkt_error_ref += switchingconstraint::squaredNormSwitchingConstraintResidual(
-                          kkt_residual_ref.switching[impulse_index]);
+      kkt_error_ref += kkt_residual_ref.switching[impulse_index].squaredNormKKTResidual();
     } 
     else {
       const int contact_phase = ocp_ref.discrete().contactPhase(i);

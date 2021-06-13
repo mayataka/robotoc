@@ -71,18 +71,6 @@ inline void computeBackwardEulerResidual(
   kkt_residual.Fv() = v_prev - s.v + dt * s.a;
 }
 
-
-inline double l1NormStateEuqationResidual(
-    const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.Fx.lpNorm<1>();
-}
-
-
-inline double squaredNormStateEuqationResidual(
-    const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.Fx.squaredNorm();
-}
-
 } // namespace stateequation 
 } // namespace unconstr 
 } // namespace idocp 

@@ -117,18 +117,6 @@ inline void StateEquation::correctCostateDirection(SplitDirection& d) {
 }
 
 
-inline double StateEquation::l1NormStateEuqationResidual(
-    const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.Fx.lpNorm<1>();
-}
-
-
-inline double StateEquation::squaredNormStateEuqationResidual(
-    const SplitKKTResidual& kkt_residual) {
-  return kkt_residual.Fx.squaredNorm();
-}
-
-
 template <typename ConfigVectorType, typename TangentVectorType>
 inline void StateEquation::computeInitialStateDirection(
     const Robot& robot, const Eigen::MatrixBase<ConfigVectorType>& q0, 

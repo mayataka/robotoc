@@ -46,10 +46,6 @@ TEST_F(StateEquationTest, fixedbase) {
   EXPECT_TRUE(kkt_residual.la.isApprox((dt*s_next.gmm)));
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
   EXPECT_TRUE(kkt_matrix.Fqv().isApprox(dt*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx.lpNorm<1>(), 
-                   state_equation.l1NormStateEuqationResidual(kkt_residual));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx.squaredNorm(), 
-                   state_equation.squaredNormStateEuqationResidual(kkt_residual));
   kkt_matrix.setZero();
   kkt_residual.setZero();
   state_equation.linearizeForwardEulerLieDerivative(robot, dt, q_prev, s, s_next, 
@@ -92,10 +88,6 @@ TEST_F(StateEquationTest, floatingBase) {
   EXPECT_TRUE(kkt_matrix.Fqq().isApprox(dsubtract_dq));
   EXPECT_TRUE(kkt_matrix.Fqv().isApprox(dt*Eigen::MatrixXd::Identity(robot.dimv(), robot.dimv())));
   EXPECT_TRUE(kkt_matrix.Fqq_prev.isApprox(dsubtract_dq_prev));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx.lpNorm<1>(), 
-                   state_equation.l1NormStateEuqationResidual(kkt_residual));
-  EXPECT_DOUBLE_EQ(kkt_residual.Fx.squaredNorm(), 
-                   state_equation.squaredNormStateEuqationResidual(kkt_residual));
   kkt_matrix.setZero();
   kkt_residual.setZero();
   state_equation.linearizeForwardEulerLieDerivative(robot, dt, q_prev, s, s_next, 

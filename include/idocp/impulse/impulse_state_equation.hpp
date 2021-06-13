@@ -117,20 +117,6 @@ public:
   ///
   void correctCostateDirection(ImpulseSplitDirection& d);
 
-  ///
-  /// @brief Returns the l1-norm of the residual in the impulse state equation.
-  /// @param[in] kkt_residual Impulse split KKT residual at the current impulse stage. 
-  ///
-  static double l1NormStateEuqationResidual(
-      const ImpulseSplitKKTResidual& kkt_residual);
-
-  ///
-  /// @brief Returns the squared norm of the residual in the impulse state equation.
-  /// @param[in] kkt_residual Impulse split KKT residual at the current impulse stage. 
-  ///
-  static double squaredNormStateEuqationResidual(
-      const ImpulseSplitKKTResidual& kkt_residual);
-
 private:
   Eigen::MatrixXd Fqq_inv_, Fqq_prev_inv_, Fqq_tmp_;  
   Eigen::VectorXd Fq_tmp_;

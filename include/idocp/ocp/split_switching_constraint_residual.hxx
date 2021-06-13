@@ -56,6 +56,16 @@ SplitSwitchingConstraintResidual::P() const {
 }
 
 
+inline double SplitSwitchingConstraintResidual::squaredNormKKTResidual() const {
+  return P().squaredNorm();
+}
+
+
+inline double SplitSwitchingConstraintResidual::l1NormConstraintViolation() const {
+  return P().template lpNorm<1>();
+}
+
+
 inline void SplitSwitchingConstraintResidual::setZero() {
   P().setZero();
 }

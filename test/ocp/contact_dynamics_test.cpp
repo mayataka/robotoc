@@ -39,15 +39,15 @@ void ContactDynamicsTest::testComputeResidual(Robot& robot, const ContactStatus&
   robot.updateKinematics(s.q, s.v, s.a);
   ContactDynamics cd(robot);
   cd.computeContactDynamicsResidual(robot, contact_status, s);
-  const double l1norm = cd.l1NormContactDynamicsResidual(dt);
-  const double squarednorm = cd.squaredNormContactDynamicsResidual(dt);
+  const double l1norm = cd.l1NormConstraintViolation();
+  const double squarednorm = cd.squaredNormKKTResidual(dt);
   ContactDynamicsData data(robot);
   data.setContactStatus(contact_status);
   robot.setContactForces(contact_status, s.f);
   robot.RNEA(s.q, s.v, s.a, data.ID_full());
   data.ID().noalias() -= s.u;
   robot.computeBaumgarteResidual(contact_status, contact_status.contactPoints(), data.C());
-  double l1norm_ref = dt * data.IDC().lpNorm<1>();
+  double l1norm_ref = data.IDC().lpNorm<1>();
   double squarednorm_ref = dt * dt * data.IDC().squaredNorm();
   EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);
   EXPECT_DOUBLE_EQ(squarednorm, squarednorm_ref);
@@ -61,8 +61,8 @@ void ContactDynamicsTest::testLinearize(Robot& robot, const ContactStatus& conta
   auto kkt_residual = SplitKKTResidual::Random(robot, contact_status);
   auto kkt_residual_ref = kkt_residual;
   cd.linearizeContactDynamics(robot, contact_status, dt, s, kkt_residual);
-  const double l1norm = cd.l1NormContactDynamicsResidual(dt);
-  const double squarednorm = cd.squaredNormContactDynamicsResidual(dt);
+  const double l1norm = cd.l1NormConstraintViolation();
+  const double squarednorm = cd.squaredNormKKTResidual(dt);
   ContactDynamicsData data(robot);
   data.setContactStatus(contact_status);
   robot.setContactForces(contact_status, s.f);
@@ -86,7 +86,7 @@ void ContactDynamicsTest::testLinearize(Robot& robot, const ContactStatus& conta
   data.lu_passive     = lu_full.head(robot.dim_passive());
   kkt_residual_ref.lu = lu_full.tail(robot.dimu());
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
-  const double l1norm_ref = dt * data.IDC().lpNorm<1>();
+  const double l1norm_ref = data.IDC().lpNorm<1>();
   const double squarednorm_ref = (dt*dt) * data.IDC().squaredNorm() 
                                     + data.lu_passive.squaredNorm();
   EXPECT_DOUBLE_EQ(l1norm, l1norm_ref);

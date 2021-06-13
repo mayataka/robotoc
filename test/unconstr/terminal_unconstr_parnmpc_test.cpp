@@ -108,12 +108,9 @@ TEST_F(TerminalUnconstrParNMPCTest, computeKKTResidual) {
   UnconstrDynamics ud(robot);
   ud.linearizeUnconstrDynamics(robot, dt, s, kkt_residual_ref);
   double kkt_error_ref = 0;
-  kkt_error_ref += kkt_residual_ref.lx.squaredNorm();
-  kkt_error_ref += kkt_residual_ref.la.squaredNorm();
-  kkt_error_ref += kkt_residual_ref.lu.squaredNorm();
-  kkt_error_ref += unconstr::stateequation::squaredNormStateEuqationResidual(kkt_residual_ref);
-  kkt_error_ref += ud.squaredNormUnconstrDynamicsResidual(dt);
-  kkt_error_ref += dt * dt * constraints->squaredNormPrimalAndDualResidual(constraints_data);
+  kkt_error_ref += kkt_residual_ref.squaredNormKKTResidual();
+  kkt_error_ref += (dt*dt) * ud.squaredNormKKTResidual();
+  kkt_error_ref += (dt*dt) * constraints_data.squaredNormKKTResidual();
   EXPECT_DOUBLE_EQ(kkt_error_ref, parnmpc.squaredNormKKTResidual(kkt_residual, dt));
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -145,12 +142,12 @@ TEST_F(TerminalUnconstrParNMPCTest, costAndConstraintViolation) {
   constraints->computePrimalAndDualResidual(robot, constraints_data, s);
   unconstr::stateequation::computeBackwardEulerResidual(dt, s_prev.q, s_prev.v,
                                                         s, kkt_residual_ref);
-  UnconstrDynamics cd(robot);
-  cd.computeUnconstrDynamicsResidual(robot, s);
+  UnconstrDynamics ud(robot);
+  ud.computeUnconstrDynamicsResidual(robot, s);
   double constraint_violation_ref = 0;
-  constraint_violation_ref += dt * constraints->l1NormPrimalResidual(constraints_data);
-  constraint_violation_ref += unconstr::stateequation::l1NormStateEuqationResidual(kkt_residual_ref);
-  constraint_violation_ref += cd.l1NormUnconstrDynamicsResidual(dt);
+  constraint_violation_ref += kkt_residual_ref.l1NormConstraintViolation();
+  constraint_violation_ref += dt * constraints_data.l1NormConstraintViolation();
+  constraint_violation_ref += dt * ud.l1NormConstraintViolation();
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
 }

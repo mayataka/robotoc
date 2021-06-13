@@ -110,13 +110,9 @@ void SplitOCPTest::testComputeKKTResidual(Robot& robot,
     EXPECT_TRUE(switch_jac.isApprox(switch_jac_ref));
     EXPECT_TRUE(switch_res.isApprox(switch_res_ref));
   }
-  double kkt_error_ref = kkt_residual_ref.Fx.squaredNorm()
-                         + kkt_residual_ref.lx.squaredNorm()
-                         + kkt_residual_ref.la.squaredNorm()
-                         + kkt_residual_ref.lf().squaredNorm()
-                         + kkt_residual_ref.lu.squaredNorm()
-                         + cd.squaredNormContactDynamicsResidual(dt)
-                         + dt * dt * constraints->squaredNormPrimalAndDualResidual(constraints_data);
+  const double kkt_error_ref = kkt_residual_ref.squaredNormKKTResidual()
+                                + cd.squaredNormKKTResidual(dt)
+                                + (dt*dt) * constraints_data.squaredNormKKTResidual();
   EXPECT_DOUBLE_EQ(kkt_error, kkt_error_ref);
   EXPECT_TRUE(kkt_matrix.isApprox(kkt_matrix_ref));
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));
@@ -288,9 +284,9 @@ void SplitOCPTest::testCostAndConstraintViolation(Robot& robot,
     switch_violation_ref = switch_res_ref.P().lpNorm<1>();
   }
   double constraint_violation_ref = 0;
-  constraint_violation_ref += dt * constraints->l1NormPrimalResidual(constraints_data);
-  constraint_violation_ref += state_equation.l1NormStateEuqationResidual(kkt_residual_ref);
-  constraint_violation_ref += cd.l1NormContactDynamicsResidual(dt);
+  constraint_violation_ref += kkt_residual_ref.l1NormConstraintViolation();
+  constraint_violation_ref += dt * constraints_data.l1NormConstraintViolation();
+  constraint_violation_ref += dt * cd.l1NormConstraintViolation();
   constraint_violation_ref += switch_violation_ref;
   EXPECT_DOUBLE_EQ(constraint_violation, constraint_violation_ref);
   EXPECT_TRUE(kkt_residual.isApprox(kkt_residual_ref));

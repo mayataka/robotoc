@@ -1,3 +1,4 @@
+add_idocp_test(constraint_component_data_test)
 add_idocp_test(pdipm_test)
 add_idocp_test(joint_position_lower_limit_test)
 add_idocp_test(joint_position_upper_limit_test)

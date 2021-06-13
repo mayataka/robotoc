@@ -231,15 +231,11 @@ inline void SplitOCP::updateDual(const double dual_step_size) {
 inline double SplitOCP::squaredNormKKTResidual(
     const SplitKKTResidual& kkt_residual, const double dt) const {
   assert(dt > 0);
-  double error = 0;
-  error += kkt_residual.lx.squaredNorm();
-  error += kkt_residual.la.squaredNorm();
-  error += kkt_residual.lf().squaredNorm();
-  error += kkt_residual.lu.squaredNorm();
-  error += state_equation_.squaredNormStateEuqationResidual(kkt_residual);
-  error += contact_dynamics_.squaredNormContactDynamicsResidual(dt);
-  error += dt * dt * constraints_->squaredNormPrimalAndDualResidual(constraints_data_);
-  return error;
+  double nrm = 0;
+  nrm += kkt_residual.squaredNormKKTResidual();
+  nrm += contact_dynamics_.squaredNormKKTResidual(dt);
+  nrm += (dt*dt) * constraints_data_.squaredNormKKTResidual();
+  return nrm;
 }
 
 
@@ -273,14 +269,14 @@ inline double SplitOCP::constraintViolation(Robot& robot,
   assert(dt > 0);
   kkt_residual.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   state_equation_.computeForwardEulerResidual(robot, dt, s, q_next, v_next, 
                                               kkt_residual);
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, s);
   double violation = 0;
-  violation += state_equation_.l1NormStateEuqationResidual(kkt_residual);
-  violation += contact_dynamics_.l1NormContactDynamicsResidual(dt);
-  violation += dt * constraints_->l1NormPrimalResidual(constraints_data_);
+  violation += kkt_residual.l1NormConstraintViolation();
+  violation += dt * contact_dynamics_.l1NormConstraintViolation();
+  violation += dt * constraints_data_.l1NormConstraintViolation();
   return violation;
 }
 
@@ -295,18 +291,18 @@ inline double SplitOCP::constraintViolation(
   assert(dt_next > 0);
   kkt_residual.setContactStatus(contact_status);
   robot.updateKinematics(s.q, s.v, s.a);
-  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   state_equation_.computeForwardEulerResidual(robot, dt, s, q_next, v_next, 
                                               kkt_residual);
+  constraints_->computePrimalAndDualResidual(robot, constraints_data_, s);
   contact_dynamics_.computeContactDynamicsResidual(robot, contact_status, s);
   switchingconstraint::computeSwitchingConstraintResidual(robot, impulse_status,  
                                                           dt, dt_next, s, 
                                                           switch_residual);
   double violation = 0;
-  violation += state_equation_.l1NormStateEuqationResidual(kkt_residual);
-  violation += contact_dynamics_.l1NormContactDynamicsResidual(dt);
-  violation += dt * constraints_->l1NormPrimalResidual(constraints_data_);
-  violation += switchingconstraint::l1NormSwitchingConstraintResidual(switch_residual);
+  violation += kkt_residual.l1NormConstraintViolation();
+  violation += dt * contact_dynamics_.l1NormConstraintViolation();
+  violation += dt * constraints_data_.l1NormConstraintViolation();
+  violation += switch_residual.l1NormConstraintViolation();
   return violation;
 }
 

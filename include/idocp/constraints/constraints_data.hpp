@@ -90,6 +90,56 @@ public:
     return is_impulse_level_valid_;
   }
 
+  double squaredNormKKTResidual() const {
+    double nrm = 0.0;
+    if (isPositionLevelValid()) {
+      for (const auto& data : position_level_data) {
+        nrm += data.squaredNormKKTResidual();
+      }
+    }
+    if (isVelocityLevelValid()) {
+      for (const auto& data : velocity_level_data) {
+        nrm += data.squaredNormKKTResidual();
+      }
+    }
+    if (isAccelerationLevelValid()) {
+      for (const auto& data : acceleration_level_data) {
+        nrm += data.squaredNormKKTResidual();
+      }
+    }
+    if (isImpulseLevelValid()) {
+      for (const auto& data : impulse_level_data) {
+        nrm += data.squaredNormKKTResidual();
+      }
+    }
+    return nrm;
+  }
+
+  double l1NormConstraintViolation() const {
+    double nrm = 0.0;
+    if (isPositionLevelValid()) {
+      for (const auto& data : position_level_data) {
+        nrm += data.l1NormConstraintViolation();
+      }
+    }
+    if (isVelocityLevelValid()) {
+      for (const auto& data : velocity_level_data) {
+        nrm += data.l1NormConstraintViolation();
+      }
+    }
+    if (isAccelerationLevelValid()) {
+      for (const auto& data : acceleration_level_data) {
+        nrm += data.l1NormConstraintViolation();
+      }
+    }
+    if (isImpulseLevelValid()) {
+      for (const auto& data : impulse_level_data) {
+        nrm += data.l1NormConstraintViolation();
+      }
+    }
+    return nrm;
+  }
+
   std::vector<ConstraintComponentData> position_level_data;
   std::vector<ConstraintComponentData> velocity_level_data;
   std::vector<ConstraintComponentData> acceleration_level_data;
